@@ -119,7 +119,7 @@ export function docMeta(slug: string): DocMeta | null {
   return DOC_BY_SLUG[slug] ?? null
 }
 
-/** First-class doc hosts (not legacy). */
+/** First-class doc hosts (every package; missing CE → empty state). */
 export const FIRST_CLASS_HOSTS = new Set(
-  DOC_PACKAGES.filter((m) => m.host !== 'legacy').map((m) => m.slug),
+  DOC_PACKAGES.map((m) => m.slug),
 )

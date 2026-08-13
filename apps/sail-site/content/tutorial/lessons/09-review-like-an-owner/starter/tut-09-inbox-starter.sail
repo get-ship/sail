@@ -11,11 +11,11 @@
     title = 'Support inbox'
   }
 
-  style messageRow = { box: padX(3).padY(2), paint: bg(surface-1).borderWidth(1).border(border-subtle).radius(md) }
-  style unreadDot = { box: display(inline-block).w(1_5).h(1_5), paint: radius(full).bg(primary) }
-  style from = { text: fontSize(sm) }
-  style muted = { paint: fg(muted-foreground) }
-  style emptyImprovised = { box: pad(4), paint: fg(muted-foreground), text: fontSize(sm) }
+  style messageRow = { box: space({ pad-x: 3, pad-y: 2 }), paint: fill({ color: surface-1 }).border({ color: border-subtle, width: 1 }).radius(md) }
+  style unreadDot = { box: flow({ display: inline-block }).size(1_5), paint: radius(full).fill({ color: primary }) }
+  style from = { text: type({ size: sm }) }
+  style muted = { paint: ink({ color: muted-foreground }) }
+  style emptyImprovised = { box: space({ pad: 4 }), paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
 </scope>
 <controller>
 import { inboxClient } from '@/compositions/tut-09-inbox-client'
@@ -31,9 +31,7 @@ export default controller(() => {
     const visible = derived(() => {
       const state = inbox()
       if (state.kind !== 'ok') return []
-      return state.value.filter(
-        (m) => !archived().includes(m.id) && (filter() === 'all' || !m.read),
-      )
+      return state.value.filter((m) => !archived().includes(m.id) && (filter() === 'all' || !m.read))
     })
 
     return {
@@ -71,7 +69,7 @@ export default controller(() => {
             })
           >
             <if {!m.read}><span style(unreadDot)></span></if>
-            <column gap="0" style({ box: grow(1) })>
+            <column gap="0" style({ box: flow({ grow: 1 }) })>
               <strong style(from)>{m.from}</strong>
               <small style(muted)>{m.subject}</small>
             </column>

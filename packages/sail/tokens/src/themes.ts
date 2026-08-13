@@ -3,7 +3,7 @@
  *
  * Every theme is a full aesthetic bundle — palette, surfaces, radii,
  * shadows, motion, typography, and interaction strength. Dark is a
- * **mode** (`data-mode`), not a twin theme id.
+ * **mode** (`mode=`), not a twin theme id.
  *
  * Palette definitions: `./themes.css` (per-theme mode overrides) and
  * `./tokens.css` (base). Consumers need this module for theme ids,
@@ -53,7 +53,7 @@ export interface Theme {
   label: string
   /**
    * Whether the **default mode** is a dark surface.
-   * Mode switches use `applyMode` / `data-mode`, not twin theme ids.
+   * Mode switches use `applyMode` / `mode=`, not twin theme ids.
    */
   dark: boolean
   /** Shipping tier — core defaults vs catalog extras. */
@@ -258,7 +258,7 @@ export const THEME_DEFAULT_MODE_META = 'sail-default-mode'
 /**
  * Classic FOUC-guard body for deck `index.html`.
  *
- * Source of truth for the pre-paint seam (storage keys + `theme`/`data-mode`
+ * Source of truth for the pre-paint seam (storage keys + `theme`/`mode`
  * attrs). Deck pastes this via `include_str!` of `./prepaint-theme.js` —
  * tokens tests keep that file equal to this constant. No modules available
  * yet when this runs.
@@ -288,7 +288,8 @@ export const PREPAINT_THEME_SCRIPT = [
   "    _paint = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)",
   "      ? 'dark' : 'light';",
   '  }',
-  "  _d.setAttribute('data-mode', _paint);",
+  "  _d.setAttribute('mode', _paint);",
+  "  _d.removeAttribute('data-mode');",
   "  if (_d.classList) _d.classList.remove('dark');",
   '} catch (_e) {}',
   '',
@@ -303,9 +304,40 @@ export const isDarkTheme = (id: ThemeId): boolean =>
 
 /**
  * Document paint modes only. `"system"` is a **preference** that resolves
- * before paint — never a `data-mode` value.
+ * before paint — never a `mode` value.
  */
 export type PaintMode = 'light' | 'dark'
+
+/** Product paint attr. Light|dark only. Never `data-mode`. */
+export const THEME_MODE_ATTR = 'mode'
+
+/** Stamp `mode=` and strip leftover `data-mode`. */
+export function writePaintMode(el: HTMLElement, paint: PaintMode): void {
+  el.setAttribute(THEME_MODE_ATTR, paint)
+  el.removeAttribute('data-mode')
+}
+
+/** Read product `mode`. Heals a leftover `data-mode` stamp once, then strips it. */
+export function readPaintModeAttr(el: HTMLElement | null | undefined): PaintMode | null {
+  if (!el) return null
+  const raw = el.getAttribute(THEME_MODE_ATTR)
+  if (raw === 'light' || raw === 'dark') {
+    if (el.hasAttribute('data-mode')) el.removeAttribute('data-mode')
+    return raw
+  }
+  const leftover = el.getAttribute('data-mode')
+  if (leftover) {
+    const healed = paintMode(leftover)
+    writePaintMode(el, healed)
+    return healed
+  }
+  if (raw) {
+    const healed = paintMode(raw)
+    writePaintMode(el, healed)
+    return healed
+  }
+  return null
+}
 
 /**
  * User mode preference stored in `THEME_MODE_STORAGE_KEY`.
@@ -395,7 +427,7 @@ export function readModePreference(): ModePreference {
  * Returns an unsubscribe function. No-op when `matchMedia` is unavailable.
  *
  * Callers that want to repaint should typically: `applyMode('system')` or
- * `paintMode('system')` + set `dataset.mode` without clearing preference.
+ * `paintMode('system')` + set `mode=` without clearing preference.
  */
 export function subscribeSystemPreference(
   cb: (paint: PaintMode) => void,
@@ -456,9 +488,9 @@ export function subscribeThemeChange(
  * Apply a theme (+ optional mode) to the given root element (or
  * documentElement by default).
  *
- * Runtime model: **only** `theme` + `data-mode`. No `.dark` class,
- * no `data-theme` / `data-theme-preview`.
- * `data-mode` is always `light` | `dark` — never `"system"`.
+ * Runtime model: **only** `theme` + `mode`. No `.dark` class,
+ * no `data-theme` / `data-theme-preview` / `data-mode`.
+ * `mode` is always `light` | `dark` — never `"system"`.
  * Returns the applied ThemeId.
  */
 export function applyTheme(
@@ -468,11 +500,11 @@ export function applyTheme(
 ): ThemeId {
   const next: ThemeId = isValidTheme(id) ? id : DEFAULT_THEME
   const resolvedMode = paintMode(resolveMode(next, mode))
-  // Author IR: plain `theme` attr (not data-theme). dataset.theme would set data-theme.
+  // Author IR: plain `theme` + `mode` (not data-*).
   root.setAttribute('theme', next)
   root.removeAttribute('data-theme')
   root.removeAttribute('data-theme-preview')
-  root.dataset.mode = resolvedMode
+  writePaintMode(root, resolvedMode)
   // Explicitly clear legacy .dark if present (no dual mechanism).
   root.classList.remove('dark')
   const dark = resolvedMode === 'dark'
@@ -504,12 +536,12 @@ export function modesForTheme(id: string): readonly string[] {
  * Paint mode for a **nested** themed host (`theme=` on a subtree, not `:root`).
  *
  * Product rule (C-TH-NEST-1): nested roots should carry **theme + mode**.
- * When the author only sets `theme=`, stamp `data-mode` with this helper so
- * dual-mode themes pick the correct CSS block and `color-scheme` matches.
+ * When the author only sets `theme=`, CSS inherits document `mode`
+ * (`:root[mode=X] [theme=id]:not([mode])`). This helper is for explicit stamps.
  *
  * Resolution order:
  * 1. Explicit `preferred` (light|dark|system → paint) if the theme supports it
- * 2. Document `data-mode` when the nested theme declares that mode
+ * 2. Document `mode` when the nested theme declares that mode
  * 3. Theme defaultMode / first declared mode
  *
  * Single-mode themes (paper/console/…) always resolve to their only mode —
@@ -532,7 +564,7 @@ export function resolveNestedPaintMode(
   const fromPreferred = clamp(preferred)
   if (fromPreferred) return fromPreferred
 
-  const docMode = documentRoot?.getAttribute('data-mode')
+  const docMode = readPaintModeAttr(documentRoot)
   const fromDoc = clamp(docMode)
   if (fromDoc) return fromDoc
 
@@ -549,7 +581,7 @@ export function resolveNestedPaintMode(
 
 /**
  * Apply theme + paint mode on a **nested** host (not the document product root).
- * Sets `theme` + `data-mode` only — no persistence, no `ship:theme:change`.
+ * Sets `theme` + `mode` only — no persistence, no `ship:theme:change`.
  * Use for demos / previews / framed apps (e.g. shanty on `/showcase`).
  *
  * `host` is the mount host (web: HTMLElement / SailHost identity). DOM ops stay
@@ -568,7 +600,7 @@ export function applyNestedTheme(
   const mode = resolveNestedPaintMode(next, preferredMode)
   const el = host as HTMLElement
   el.setAttribute('theme', next)
-  el.dataset.mode = mode
+  writePaintMode(el, mode)
   el.removeAttribute('data-theme')
   el.removeAttribute('data-theme-preview')
   el.classList.remove('dark')
@@ -631,7 +663,7 @@ function resolveMode(id: ThemeId, mode?: string | null): string {
 /**
  * Pre-paint / early boot: stamp current seam attrs from storage → project
  * config meta → package defaults. Same writer family as {@link applyTheme}
- * (`theme` + `data-mode` light|dark; strip legacy `data-theme`). Does **not**
+ * (`theme` + `mode` light|dark; strip leftover `data-theme` / `data-mode`). Does **not**
  * persist and does **not** dispatch `ship:theme:change` (pre-module FOUC path).
  *
  * Classic-script twin: {@link PREPAINT_THEME_SCRIPT} / `prepaint-theme.js`.
@@ -673,7 +705,7 @@ export function bootTheme(
   root.setAttribute('theme', theme)
   root.removeAttribute('data-theme')
   root.removeAttribute('data-theme-preview')
-  root.dataset.mode = mode
+  writePaintMode(root, mode)
   root.classList.remove('dark')
   return { theme, mode }
 }
@@ -707,9 +739,9 @@ export function persistMode(mode: string): void {
 }
 
 /**
- * Apply mode for the current theme (sets data-mode only).
+ * Apply mode for the current theme (sets `mode=` only).
  * Always paints `light` | `dark` — `"system"` resolves via prefers-color-scheme
- * and is never written to `data-mode` (studio / site parity).
+ * and is never written to `mode` (studio / site parity).
  *
  * **Preference vs paint:** when `mode` is `"system"`, stores preference
  * `"system"` and paints the resolved light|dark. When `mode` is light|dark,
@@ -728,7 +760,7 @@ export function applyMode(
 
   // Pass preference through so resolveMode can honor system + single-mode clamp.
   applyTheme(id, root, preference)
-  const paint = (root.dataset.mode as PaintMode) || paintMode(preference)
+  const paint = readPaintModeAttr(root) || paintMode(preference)
 
   // Persist preference intent — never collapse system → resolved paint.
   // Single-mode themes still clamp paint; preference may remain system

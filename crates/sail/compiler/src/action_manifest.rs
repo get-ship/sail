@@ -296,6 +296,13 @@ pub const ACTIONS: &[ActionEntry] = &[
         writes: &[],
     },
     ActionEntry {
+        name: "passwordReveal",
+        param: "void",
+        summary: "Internal: password field peek toggle (stamped on type=password when reveal is not false).",
+        auto_import: true,
+        writes: &[],
+    },
+    ActionEntry {
         name: "pin",
         param: "PinPoint | null | undefined",
         summary: "Pin one corner of an element to a fixed viewport coordinate.",
@@ -527,6 +534,7 @@ pub const BUILTIN_ACTION_NAMES: &[&str] = &[
     "mediaFallback",
     "menu",
     "pagination",
+    "passwordReveal",
     "pin",
     "portEdge",
     "pressable",

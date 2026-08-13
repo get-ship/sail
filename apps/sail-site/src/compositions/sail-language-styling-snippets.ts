@@ -3,31 +3,30 @@
 // samples are real compiler output, captured verbatim.
 import { signal, derived } from '@ship/sail-runtime'
 export const code = {
-  sx: `<card style({ box: pad(5), paint: bg(surface-1).borderWidth(1).border(border).radius(lg).shadow(sm) })>
-  <p style({ paint: fg(muted-foreground), text: fontSize(sm) })>
+  sx: `<card style({ box: space({ pad: 5 }), paint: fill({ color: surface-1 }).border({ color: border, width: 1 }).radius(lg).elevation(sm) })>
+  <p style({ paint: ink({ color: muted-foreground }), text: type({ size: sm }) })>
     On the system, or it does not compile.</p>
 </card>`,
 
-  sxError: `error: [sail-style] unknown Style token on setter \`radius\`: huge
-  \`radius\` accepts scale tokens (none, sm, md, lg, xl, full, …); did you mean \`full\`?`,
+  sxError: `error: [sail-style] Style error: style \`radius(huge)\` is retired — use \`radius(md) or radius({ all: md })\``,
 
-  current: `<row gap="1" align="center" style({ box: pad(1), paint: bg(surface-2).borderWidth(1).border(border).radius(full) })>
-  <a href="/docs" current={onDocs() ? 'page' : null} style({ box: padX(3).padY(1), paint: radius(full), text: fontSize(sm), when: { current: { paint: bg(primary).fg(primary-foreground) } } })>
+  current: `<row gap="1" align="center" style({ box: space({ pad: 1 }), paint: fill({ color: surface-2 }).border({ color: border, width: 1 }).radius(full) })>
+  <a href="/docs" current={onDocs() ? 'page' : null} style({ box: space({ pad-x: 3, pad-y: 1 }), paint: radius(full), text: type({ size: sm }), when: { current: { paint: fill({ color: primary }).ink({ color: primary-foreground }) } } })>
     Docs</a>
-  <a href="/blog" current={onDocs() ? null : 'page'} style({ box: padX(3).padY(1), paint: radius(full), text: fontSize(sm), when: { current: { paint: bg(primary).fg(primary-foreground) } } })>
+  <a href="/blog" current={onDocs() ? null : 'page'} style({ box: space({ pad-x: 3, pad-y: 1 }), paint: radius(full), text: type({ size: sm }), when: { current: { paint: fill({ color: primary }).ink({ color: primary-foreground }) } } })>
     Blog</a>
 </row>`,
 
-  conditions: `<column gap="2" style({ box: pad(3), paint: bg(surface-1).borderWidth(1).border(border).radius(lg), when: { tablet: { box: pad(6) } } })>
-  <p style({ text: fontSize(sm) })>
-    pad(3) on a phone; when: { tablet: { box: pad(6) } } from 768px up.</p>
+  conditions: `<column gap="2" style({ box: space({ pad: 3 }), paint: fill({ color: surface-1 }).border({ color: border, width: 1 }).radius(lg), when: { tablet: { box: space({ pad: 6 }) } } })>
+  <p style({ text: type({ size: sm }) })>
+    space({ pad: 3 }) on a phone; when: { tablet: { box: space({ pad: 6 }) } } from 768px up.</p>
 </column>`,
 
-  states: `<button style({ when: { hover: { paint: bg(muted) } } })>
-    hover → bg(muted)</button>
-<button style({ when: { hover: { paint: fg(primary) } } })>
-  hover → fg(primary)</button>
-<button style({ when: { active: { paint: bg(primary).fg(primary-foreground) } } })>
+  states: `<button style({ when: { hover: { paint: fill({ color: muted }) } } })>
+    hover → fill({ color: muted })</button>
+<button style({ when: { hover: { paint: ink({ color: primary }) } } })>
+  hover → ink({ color: primary })</button>
+<button style({ when: { active: { paint: fill({ color: primary }).ink({ color: primary-foreground }) } } })>
   active:…</button>`,
 
   variants: `<scope>
@@ -36,10 +35,10 @@ export const code = {
     emphasis: 'solid' | 'soft' | 'outline' = 'solid'
   }
 
-  style base = { box: padX(3).padY(1), paint: radius(md) }
-  style solid = { paint: bg(primary).fg(primary-foreground) }
-  style soft = { paint: bg(muted).fg(foreground) }
-  style outline = { paint: borderWidth(1).border(border) }
+  style base = { box: space({ pad-x: 3, pad-y: 1 }), paint: radius(md) }
+  style solid = { paint: fill({ color: primary }).ink({ color: primary-foreground }) }
+  style soft = { paint: fill({ color: muted }).ink({ color: foreground }) }
+  style outline = { paint: border({ color: border, width: 1 }) }
 </scope>
 
 <button style(base, {
@@ -63,8 +62,8 @@ export default controller(() => {
 })
 </controller>
 
-<input type="range" min="0" max="200" bind:value={shift} />
-<card style({ box: w(9).h(9), paint: bg(primary).radius(md).translateX(bind(shiftPx)) })>
+<slider min="0" max="200" bind:value={shift} />
+<card style({ box: size(9), paint: fill({ color: primary }).radius(md).motion({ x: bind(shiftPx) }) })>
 </card>`,
 
   layout: `<row gap="3" align="center">...</row>

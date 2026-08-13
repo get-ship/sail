@@ -17,7 +17,7 @@ use crate::diagnostics::{CompileError, Span};
 
 const VOID_TAGS: &[&str] = &[
     "area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track",
-    "wbr",
+    "wbr", "textarea",
 ];
 
 /// Framework blocks that are not element hosts for Style attachment.
@@ -66,7 +66,7 @@ pub(crate) fn preprocess_impl(source: &str, expand_elements: bool) -> Result<Str
     refuse_body_style_statements(&s)?;
     // L1 stdlib elements: splice structure; skins live in framework sheet.
     let (s, elements_css) = if expand_elements {
-        lower_stdlib_elements(&s)
+        lower_stdlib_elements(&s)?
     } else {
         (s, String::new())
     };
@@ -856,14 +856,14 @@ pub(crate) fn collect_used_l1_tags(source: &str) -> BTreeSet<&'static str> {
 ///
 /// Only tags present in the file are walked. Unused registry entries never
 /// splice. Adding/removing a used L1 changes the set and therefore the expand.
-fn lower_stdlib_elements(source: &str) -> (String, String) {
+fn lower_stdlib_elements(source: &str) -> Result<(String, String), CompileError> {
     let registry = crate::stdlib::elements();
     if registry.is_empty() {
-        return (source.to_string(), String::new());
+        return Ok((source.to_string(), String::new()));
     }
     let used = collect_used_l1_tags(source);
     if used.is_empty() {
-        return (source.to_string(), String::new());
+        return Ok((source.to_string(), String::new()));
     }
     let used_els: Vec<&crate::stdlib::StdlibElement> =
         registry.iter().filter(|el| used.contains(el.tag)).collect();
@@ -884,8 +884,8 @@ fn lower_stdlib_elements(source: &str) -> (String, String) {
     // same one link (`sail.css`) delivers both. LAYOUT css is different and stays
     // inline: the preprocessor generates only the rules a file actually uses, so it is
     // not in the framework sheet and has nothing to be deduplicated against.
-    lower_into(source, &used_els, &mut out, &mut css, &mut css_done);
-    (out, css)
+    lower_into(source, &used_els, &mut out, &mut css, &mut css_done)?;
+    Ok((out, css))
 }
 
 /// The recursive core of stdlib lowering. Factored out so a nested element
@@ -902,7 +902,7 @@ fn lower_into(
     out: &mut String,
     css: &mut String,
     css_done: &mut std::collections::HashSet<&'static str>,
-) {
+) -> Result<(), CompileError> {
     let bytes = source.as_bytes();
     let mut i = 0;
     'outer: while i < bytes.len() {
@@ -981,6 +981,19 @@ fn lower_into(
                         out.push_str(&source[i..end]);
                         i = end;
                         continue 'outer;
+                    }
+                    // Freeform `<input type=…>` products that have own tags are
+                    // not Sail API — hard error with redirect (no dual path).
+                    if tag == "input" {
+                        if let Some(ty) = open_tag_attr(open_tag, "type") {
+                            let ty = ty.trim_matches(['"', '\'']);
+                            if let Some(instead) = crate::authoring_bans::banned_input_type(ty) {
+                                return Err(CompileError::new(format!(
+                                    "`<input type=\"{ty}\">` is not part of the Sail API. Use {instead} instead."
+                                ))
+                                .with_span(Span::new(i, k + 1)));
+                            }
+                        }
                     }
                     out.push_str(&stamp_native_host(
                         open_tag,
@@ -1061,7 +1074,7 @@ fn lower_into(
                     css_done.insert(tag);
                     // Lower nested elements in the children, then splice.
                     let mut lowered = String::new();
-                    lower_into(children, registry, &mut lowered, css, css_done);
+                    lower_into(children, registry, &mut lowered, css, css_done)?;
                     out.push_str(&splice_element(&el.out, &use_attrs, &lowered));
                     i = end;
                     continue 'outer;
@@ -1076,6 +1089,7 @@ fn lower_into(
         out.push_str(&source[i..next]);
         i = next;
     }
+    Ok(())
 }
 
 /// Byte offset just past the close tag matching the `<tag …>` open whose
@@ -1437,6 +1451,29 @@ fn stamp_native_host(
             bind_style.push_str(&format!("--{bridge}: var(--{public});"));
         }
     }
+    // Password product: stamp reveal when type=password and reveal is not off.
+    // Native freeform does not inherit use: from element structure — inject here.
+    let stamp_password_reveal = if tag_name == "input" {
+        let ty = rest_attrs
+            .iter()
+            .find(|(n, _)| *n == "type")
+            .map(|(_, v)| v.trim_matches(['"', '\'']))
+            .or_else(|| {
+                default_attrs
+                    .iter()
+                    .find(|(n, _)| n == "type")
+                    .map(|(_, v)| v.as_str())
+            })
+            .unwrap_or("text");
+        let reveal_explicit_false = rest_attrs.iter().any(|(n, v)| {
+            *n == "reveal" && matches!(v.trim_matches(['"', '\'']), "false" | "0" | "off")
+        });
+        ty == "password"
+            && !reveal_explicit_false
+            && !rest_attrs.iter().any(|(n, _)| *n == "use:passwordReveal")
+    } else {
+        false
+    };
     let mut wrote_style = false;
     for (n, v) in rest_attrs {
         outb.push(' ');
@@ -1468,6 +1505,9 @@ fn stamp_native_host(
             outb.push_str(v);
             outb.push('"');
         }
+    }
+    if stamp_password_reveal {
+        outb.push_str(" use:passwordReveal");
     }
     if self_closing {
         outb.push('/');
@@ -3455,6 +3495,7 @@ export default controller(() => {
         );
     }
 
+
     #[test]
     fn stdlib_dropdown_splice_is_popover_overlay() {
         let out = preprocess(r#"<dropdown placement="bottom-end"><p>menu</p></dropdown>"#)
@@ -3466,6 +3507,29 @@ export default controller(() => {
     }
 
     #[test]
+    fn freeform_banned_input_types_error() {
+        for (src, needle) in [
+            (r#"<input type="range" />"#, "slider"),
+            (r#"<input type="checkbox" />"#, "checkbox"),
+            (r#"<input type="file" />"#, "file"),
+            (r#"<input type="color" />"#, "color"),
+            (r#"<input type="date" />"#, "date"),
+        ] {
+            let err = preprocess(src).expect_err(src);
+            let msg = format!("{err:?}");
+            assert!(
+                msg.contains("not part of the Sail API") && msg.contains(needle),
+                "src={src} msg={msg}"
+            );
+        }
+        // Preferred tags still lower
+        let ok = preprocess(r#"<slider value="40" /><checkbox /><file /><color /><date />"#)
+            .expect("product tags ok");
+        assert!(ok.contains("type=\"range\"") || ok.contains("type='range'") || ok.contains("sail-slider"), "{ok}");
+    }
+
+    #[test]
+
     fn stdlib_spinner_lowers_at_use_site() {
         let out = preprocess(
             r#"<div class="page"><spinner size="sm" aria-label="Saving"></spinner></div>"#,

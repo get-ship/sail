@@ -4,7 +4,6 @@ import path from 'node:path'
 
 const root = 'apps/sail-site/src/component-docs'
 fs.mkdirSync(path.join(root, '_chrome'), { recursive: true })
-fs.mkdirSync(path.join(root, '_legacy'), { recursive: true })
 
 const cat = fs.readFileSync('apps/sail-site/src/compositions/component-catalog.ts', 'utf8')
 const det = fs.readFileSync('apps/sail-site/src/compositions/component-details.ts', 'utf8')
@@ -75,7 +74,7 @@ for (const r of rows) {
   const kind = kindFor(r.slug)
   const blurb = blurbFor(r.slug)
   const heading = headingFor(r.slug)
-  const host = HOSTS.has(r.slug) ? `doc-${r.slug}` : 'legacy'
+  const host = `doc-${r.slug}`
   const stageOwnsKnobs = owns.has(r.slug)
 
   const ts = `import type { DocMeta } from '../types'
@@ -124,8 +123,8 @@ export interface DocMeta {
   /** Override h1 (e.g. layout keywords). */
   heading?: string
   /**
-   * Hyphenated CE tag for the docs host, or 'legacy' to use doc-legacy-detail.
-   * First-class packages set host to doc-<slug>.
+   * Hyphenated CE tag for the docs host (`doc-<slug>`).
+   * A host without a matching CE mount is the missing-host empty state.
    */
   host: string
   /** Stage owns configurator knobs (hide viewer variant strip). */
@@ -155,9 +154,9 @@ export function docMeta(slug: string): DocMeta | null {
   return DOC_BY_SLUG[slug] ?? null
 }
 
-/** First-class doc hosts (not legacy). */
+/** First-class doc hosts (every package; missing CE → empty state). */
 export const FIRST_CLASS_HOSTS = new Set(
-  DOC_PACKAGES.filter((m) => m.host !== 'legacy').map((m) => m.slug),
+  DOC_PACKAGES.map((m) => m.slug),
 )
 `,
 )
@@ -166,18 +165,15 @@ export const FIRST_CLASS_HOSTS = new Set(
 fs.writeFileSync(
   path.join(root, '_chrome/stage-styles.ts'),
   `/**
- * Shared configurator chrome tokens for docs packages.
- * Prefer L1 layout keywords (row/column/center) + these Style atoms
- * rather than inventing a second design language per package.
- *
- * Packages may inline equivalent style() blocks — this module documents the
- * canonical stageSplit / stageCanvas / knobPanel geometry used by the legacy
- * detail host and first-class packages.
+ * Shared configurator chrome for docs packages.
+ * Layout SSOT lives in <sail-component-viewer> (specimen | knobs).
+ * Geometry atoms for hosts still inlining the row. Width is space scale
+ * (w(64)), never panel-max-w-*.
  */
 export const STAGE_SPLIT = '{ box: w(full).minW(0).minH(64) }'
 export const STAGE_CANVAS = '{ box: grow(1).basis(0).minW(0).minH(64).pad(8) }'
-export const KNOB_PANEL =
-  '{ box: w(panel-max-w-sm).shrink(0).pad(5).minH(64), paint: borderLWidth(1).borderL(border-subtle) }'
+export const KNOB_COLUMN =
+  '{ box: w(64).shrink(0).pad(5).minH(64), paint: borderLWidth(1).borderL(border-subtle) }'
 export const KNOB_LABEL =
   '{ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).tracking(wide).textCase(uppercase) }'
 `,
@@ -186,5 +182,5 @@ export const KNOB_LABEL =
 console.log('packages', metas.length)
 console.log(
   'first-class',
-  metas.filter((m) => m.host !== 'legacy').map((m) => m.slug),
+  metas.map((m) => m.slug),
 )

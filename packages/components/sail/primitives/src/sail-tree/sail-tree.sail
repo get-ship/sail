@@ -130,11 +130,11 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   role="tree"
   aria-label={label() || null}
   aria-multiselectable={selectable() === 'multi' ? 'true' : null}
-  style({ box: w(full).h(full).minH(0).overflow(hidden), paint: fg(foreground) })
+  style({ box: size({ w: full, h: full, min-h: 0 }).overflow({ all: hidden }), paint: ink({ color: foreground }) })
 >
   <!-- display(contents) text wrap: no box so scroll child % height resolves on host. -->
-  <span style({ box: display(contents), text: fontFamily(body).fontSize(density) })>
-  <div style({ box: w(full).h(full).minH(0).overflowY(auto) })>
+  <span style({ box: flow({ display: contents }), text: type({ family: body, size: density }) })>
+  <div style({ box: size({ w: full, h: full, min-h: 0 }).overflow({ y: auto }) })>
     <for {flowItems() as w} key={w.key}>
       <row
         align="center"
@@ -156,17 +156,17 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         tabindex={w.id === activeRowId() ? '0' : '-1'}
         use:cellPad={w.indent}
         style({
-          box: w(full).padY(density-row-py).padR(density-row-px).padS(bind(cellPs)),
-          paint: group().radius(sm).cursor(pointer).fg(foreground),
+          box: size({ w: full }).space({ pad-y: density-row-py, pad-l: bind(cellPs), pad-r: density-row-px }),
+          paint: group().radius(sm).cursor(pointer).ink({ color: foreground }),
           when: {
-            hover: { paint: bg(hover-bg) },
-            selected: { paint: bg(selected-bg) },
-            busy: { paint: fg(muted-foreground).cursor(default) },
-            focus: { paint: outline(ring) },
+            hover: { paint: fill({ color: hover-bg }) },
+            selected: { paint: fill({ color: selected-bg }) },
+            busy: { paint: ink({ color: muted-foreground }).cursor(default) },
+            focus: { paint: border({ kind: outline, color: ring }) },
           },
         })
       >
-        <span style({ box: display(contents), when: { selected: { text: fontWeight(medium) }, busy: { text: italic(true) } } })>
+        <span style({ box: flow({ display: contents }), when: { selected: { text: type({ weight: medium }) }, busy: { text: type({ italic: true }) } } })>
         <!-- Chevron paint only; expand is the row (aria-expanded / data-expanded). -->
         <if {w.canExpand}>
           <row
@@ -175,41 +175,41 @@ export default controller((_ctx: ControllerScope<Scope>) => {
             align="center"
             justify="center"
             style({
-              box: w(8).h(8).minW(8),
-              paint: fg(muted-foreground),
-              when: { groupExpanded: { paint: rotate(90) } },
+              box: size({ w: 8, h: 8, min-w: 8 }),
+              paint: ink({ color: muted-foreground }),
+              when: { groupExpanded: { paint: motion({ rotate: 90 }) } },
             })
           >
             <icon name="chevron-right" size="sm"></icon>
           </row>
-        {else => <span aria-hidden="true" style({ box: w(density-icon).minW(density-icon) })></span>}</if>
+        {else => <span aria-hidden="true" style({ box: size({ w: density-icon, min-w: density-icon }) })></span>}</if>
 
         <if {selectable() === 'multi'}>
           <span>
-            <input
-              type="checkbox"
-              size="sm"
-              aria-label={`Select ${w.label}`}
-              checked={w.checked}
-              indeterminate={w.someSelected}
-            />
+            <checkbox
+       
+       size="sm"
+       aria-label={`Select ${w.label}`}
+       checked={w.checked}
+       indeterminate={w.someSelected}
+      />
           </span>
         </if>
         <if {w.icon !== ''}>
           <icon
             name={w.icon}
             size="sm"
-            style({ paint: fg(muted-foreground), when: { groupSelected: { paint: fg(foreground) } } })
+            style({ paint: ink({ color: muted-foreground }), when: { groupSelected: { paint: ink({ color: foreground }) } } })
           ></icon>
         {else => <slot name="node-icon"></slot>}</if>
-        <span style({ box: grow(1).minW(0), text: truncate() })>{w.label}</span>
-        <span style({ box: ml(auto), text: fontSize(xs) })>
+        <span style({ box: flow({ grow: 1 }).size({ min-w: 0 }), text: type({ wrap: truncate }) })>{w.label}</span>
+        <span style({ box: space({ ml: auto }), text: type({ size: xs }) })>
           <if {w.trailing !== ''}>
             <if {w.trailing === '●'}>
-              <span aria-label="Unsaved" style({ paint: fg(warning) })>●</span>
-            {else => <span aria-label={`Meta ${w.trailing}`} style({ paint: fg(muted-foreground) })>{w.trailing}</span>}</if>
+              <span aria-label="Unsaved" style({ paint: ink({ color: warning }) })>●</span>
+            {else => <span aria-label={`Meta ${w.trailing}`} style({ paint: ink({ color: muted-foreground }) })>{w.trailing}</span>}</if>
           </if>
-          <span style({ paint: fg(muted-foreground) })><slot name="node-trailing"></slot></span>
+          <span style({ paint: ink({ color: muted-foreground }) })><slot name="node-trailing"></slot></span>
         </span>
         </span>
       </row>

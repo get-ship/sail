@@ -7,38 +7,38 @@
 -->
 
 <scope>
-  style root = { box: h(fill).minH(0).overflow(hidden), paint: bg(background).fg(foreground) }
-  style chrome = { box: shrink(1).pad(3).padX(5), paint: borderBWidth(1).border(border) }
-  style brand = { paint: fg(primary), text: fontFamily(mono).fontSize(lg) }
-  style tagline = { box: grow(1), paint: fg(muted-foreground), text: fontSize(sm) }
-  style body = { box: grow(1).minH(0) }
-  style rail = { box: w(64).pad(4).minH(0).overflowY(auto), paint: borderRWidth(1).border(border) }
-  style sectionLabel = { paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
-  style listRow = { box: pad(2), paint: radius(md).cursor(pointer), when: { hover: { paint: bg(muted) }, current: { paint: bg(muted) } } }
-  style mainCol = { box: grow(1).minW(0).minH(0) }
-  style playlistHead = { box: shrink(1).pad(6).padB(4), animate: enter({ opacity: 'fade', translate-y: 'spring:gentle' }) }
-  style accentLabel = { paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
-  style title = { text: fontSize(3xl) }
-  style mutedSm = { paint: fg(muted-foreground), text: fontSize(sm) }
-  style trackScroll = { box: grow(1).minH(0).padX(6).padB(4) }
-  style trackRow = { box: pad(2).padX(3), paint: radius(md).cursor(pointer), animate: enter({ opacity: 'fade', stagger: '0.03s' }), when: { hover: { paint: bg(muted) }, current: { paint: bg(muted) } } }
-  style cover = { box: shrink(0).position(relative).w(10).h(10).overflow(hidden), paint: radius(sm).bg(muted) }
-  style coverImg = { box: display(block).w(full).h(full), paint: objectFit(cover) }
-  style playingMask = { box: position(absolute).inset(0), paint: bg(background).opacity(70) }
-  style eqBar = { box: w(1).h(3), paint: radius(full).bg(primary), animate: loop({ translate-y: 'spring:gentle', stagger: '0.08s' }) }
-  style eqBarMid = { box: w(1).h(4), paint: radius(full).bg(primary), animate: loop({ translate-y: 'spring:gentle', stagger: '0.08s' }) }
-  style eqBarShort = { box: w(1).h(2), paint: radius(full).bg(primary), animate: loop({ translate-y: 'spring:gentle', stagger: '0.08s' }) }
-  style trackMeta = { box: grow(1).minW(0) }
-  style trackTitle = { when: { groupCurrent: { paint: fg(primary) } } }
-  style albumCol = { box: display(none), paint: fg(muted-foreground), text: fontSize(sm), when: { desktop: { box: display(block) } } }
-  style len = { paint: fg(muted-foreground), text: fontFamily(mono).fontSize(sm) }
-  style nowPlaying = { box: shrink(1).pad(3).padX(5), paint: borderTWidth(1).border(border) }
-  style nowCover = { box: shrink(0).w(12).h(12).overflow(hidden), paint: radius(md).bg(muted).borderWidth(1).border(border) }
-  style growMin = { box: grow(1).minW(0) }
-  style transport = { box: grow(1) }
-  style progressShell = { box: grow(1).minW(0) }
-  style time = { box: shrink(1), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) }
-  style volumeTrack = { box: w(20).minW(20) }
+  style root = { box: size({ h: fill, min-h: 0 }).overflow({ all: hidden }), paint: fill({ color: background }).ink({ color: foreground }) }
+  style chrome = { box: flow({ shrink: 1 }).space({ pad: 3, pad-x: 5 }), paint: border({ color: border, width: 1, edge: b }) }
+  style brand = { paint: ink({ color: primary }), text: type({ family: mono, size: lg }) }
+  style tagline = { box: flow({ grow: 1 }), paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
+  style body = { box: flow({ grow: 1 }).size({ min-h: 0 }) }
+  style rail = { box: size({ w: 64, min-h: 0 }).space({ pad: 4 }).overflow({ y: auto }), paint: border({ color: border, width: 1, edge: r }) }
+  style sectionLabel = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
+  style listRow = { box: space({ pad: 2 }), paint: radius(md).cursor(pointer), when: { hover: { paint: fill({ color: muted }) }, current: { paint: fill({ color: muted }) } } }
+  style mainCol = { box: flow({ grow: 1 }).size({ min-w: 0, min-h: 0 }) }
+  style playlistHead = { box: flow({ shrink: 1 }).space({ pad: 6, pad-b: 4 }), animate: enter({ opacity: 'fade', translate-y: 'spring:gentle' }) }
+  style accentLabel = { paint: ink({ color: accent }), text: type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
+  style title = { text: type({ size: 3xl }) }
+  style mutedSm = { paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
+  style trackScroll = { box: flow({ grow: 1 }).size({ min-h: 0 }).space({ pad-x: 6, pad-b: 4 }) }
+  style trackRow = { box: space({ pad: 2, pad-x: 3 }), paint: radius(md).cursor(pointer), animate: enter({ opacity: 'fade', stagger: '0.03s' }), when: { hover: { paint: fill({ color: muted }) }, current: { paint: fill({ color: muted }) } } }
+  style cover = { box: flow({ shrink: 0 }).place({ position: relative }).size(10).overflow({ all: hidden }), paint: radius(sm).fill({ color: muted }) }
+  style coverImg = { box: flow({ display: block }).size(full), paint: objectFit(cover) }
+  style playingMask = { box: place({ position: absolute, inset: 0 }), paint: fill({ color: background }).filter({ opacity: 70 }) }
+  style eqBar = { box: size({ w: 1, h: 3 }), paint: radius(full).fill({ color: primary }), animate: loop({ translate-y: 'spring:gentle', stagger: '0.08s' }) }
+  style eqBarMid = { box: size({ w: 1, h: 4 }), paint: radius(full).fill({ color: primary }), animate: loop({ translate-y: 'spring:gentle', stagger: '0.08s' }) }
+  style eqBarShort = { box: size({ w: 1, h: 2 }), paint: radius(full).fill({ color: primary }), animate: loop({ translate-y: 'spring:gentle', stagger: '0.08s' }) }
+  style trackMeta = { box: flow({ grow: 1 }).size({ min-w: 0 }) }
+  style trackTitle = { when: { groupCurrent: { paint: ink({ color: primary }) } } }
+  style albumCol = { box: flow({ display: none }), paint: ink({ color: muted-foreground }), text: type({ size: sm }), when: { desktop: { box: flow({ display: block }) } } }
+  style len = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: sm }) }
+  style nowPlaying = { box: flow({ shrink: 1 }).space({ pad: 3, pad-x: 5 }), paint: border({ color: border, width: 1, edge: t }) }
+  style nowCover = { box: flow({ shrink: 0 }).size(12).overflow({ all: hidden }), paint: radius(md).fill({ color: muted }).border({ color: border, width: 1 }) }
+  style growMin = { box: flow({ grow: 1 }).size({ min-w: 0 }) }
+  style transport = { box: flow({ grow: 1 }) }
+  style progressShell = { box: flow({ grow: 1 }).size({ min-w: 0 }) }
+  style time = { box: flow({ shrink: 1 }), paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs }) }
+  style volumeTrack = { box: size({ w: 20, min-w: 20 }) }
   style pressBtn = { animate: press({ scale: 'press' }) }
 
   type PlaylistRowProps = {
@@ -132,7 +132,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       <img src={cover} alt="" style(coverImg)>
       <if {isCurrent && isPlaying}>
         <center style(playingMask)>
-          <row gap="1" align="end" justify="center" style({ box: minH(4) })>
+          <row gap="1" align="end" justify="center" style({ box: size({ min-h: 4 }) })>
             <i style(eqBar)></i>
             <i style(eqBarMid)></i>
             <i style(eqBarShort)></i>
@@ -158,7 +158,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 </partial>
 
 <!-- Fill remaining viewport under sticky site chrome (`h:fill`).
-     Nested theme root: theme= attr + applyNestedTheme stamps data-mode
+     Nested theme root: theme= + mode= (applyNestedTheme)
      (C-TH-NEST-1; data-* banned in app .sail markup — mode is runtime). -->
 <column id="shanty-frame" theme={theme()} gap="0" style(root)>
   <row align="center" gap="3" style(chrome)>
@@ -232,7 +232,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         <div style(nowCover)>
           <img src={current().cover} alt="" style(coverImg)>
         </div>
-        <column gap="0" style({ box: minW(0) })>
+        <column gap="0" style({ box: size({ min-w: 0 }) })>
           <strong>{current().title}</strong>
           <p style(mutedSm)>{current().artist} · {current().album}</p>
         </column>
@@ -247,7 +247,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           <button on:click={() => advance(1)} variant="ghost">⏭</button>
           <button on:click={() => repeat.set(!repeat())} variant={repeat() ? 'solid' : 'ghost'} size="sm">repeat</button>
         </row>
-        <row gap="2" align="center" nowrap style({ box: w(full).maxW(panel-max-w-md) })>
+        <row gap="2" align="center" nowrap style({ box: size({ w: full, max-w: panel-max-w-md }) })>
           <span style(time)>{positionLabel()}</span>
           <row style(progressShell)>
             <progress value={position()} max={current().secs}></progress>

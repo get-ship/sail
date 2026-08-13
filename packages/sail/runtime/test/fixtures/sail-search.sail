@@ -20,7 +20,7 @@ export default controller(() => {
 
 <div>
   <input data-testid="query" bind:value={query} />
-  <input data-testid="case" type="checkbox" bind:checked={caseSensitive} />
+  <checkbox data-testid="case" bind:checked={caseSensitive} />
   <if {filtered().length === 0}>
     <p data-testid="empty">No results for {query()}</p>
   </if>

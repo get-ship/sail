@@ -39,11 +39,33 @@ type TokenEntry = {
   value?: string
 }
 
+type CompositeEntry = {
+  name: string
+  path: string
+  type: string
+  members: Record<string, string>
+}
+
+export type CompositeRef = {
+  /** Public identity (`dialog.border`). */
+  name: string
+  /** Storage path (`component.dialog.border`). */
+  path: string
+  /** Member slot when `path` is a member leaf (`color`), else empty. */
+  member: string
+}
+
 const GROUP_ORDER = [
   'color',
+  'fill',
+  'ink',
+  'border',
   'space',
+  'size',
+  'type',
   'typography',
   'radius',
+  'elevation',
   'shadow',
   'motion',
   'component',
@@ -59,9 +81,15 @@ const GROUP_ORDER = [
 
 const GROUP_LABELS: Record<string, string> = {
   color: 'Color',
+  fill: 'Fill',
+  ink: 'Ink',
+  border: 'Border',
   space: 'Space',
+  size: 'Size',
+  type: 'Type',
   typography: 'Text',
   radius: 'Radius',
+  elevation: 'Elevation',
   shadow: 'Shadow',
   motion: 'Motion',
   component: 'Components',
@@ -174,6 +202,44 @@ function pathGroup(path: string): string {
   return path.split('.')[0] || 'other'
 }
 
+function listComposites(): CompositeEntry[] {
+  const raw = (registry as { composites?: Record<string, Omit<CompositeEntry, 'name'>> }).composites
+    || {}
+  return Object.entries(raw).map(([name, entry]) => ({
+    name,
+    path: entry.path || name,
+    type: entry.type || '',
+    members: entry.members || {},
+  }))
+}
+
+const ALL_COMPOSITES = listComposites()
+
+/** Registry composite for a storage path, public identity, or member css/path. */
+export function compositeForPath(path: string): CompositeRef | null {
+  const bare = path.replace(/^modes\.(light|dark)\./, '').replace(/\.\$value$/, '')
+  if (!bare) return null
+  for (const c of ALL_COMPOSITES) {
+    if (bare === c.path || bare === c.name) {
+      return { name: c.name, path: c.path, member: '' }
+    }
+    for (const [slot, css] of Object.entries(c.members)) {
+      if (bare === `${c.path}.${slot}` || bare === css || bare === `${c.name}.${slot}`) {
+        return { name: c.name, path: c.path, member: slot }
+      }
+    }
+  }
+  return null
+}
+
+/** Inspector label: folded composite members as one face (`dialog.border · color`). */
+export function componentKnobLabel(path: string, fallback: string): string {
+  const c = compositeForPath(path)
+  if (c?.member) return `${c.name} · ${c.member}`
+  if (c) return c.name
+  return fallback
+}
+
 function buildKnobs(): TokenKnob[] {
   const raw = (registry as { tokens?: Record<string, TokenEntry> }).tokens || {}
   const out: TokenKnob[] = []
@@ -190,7 +256,7 @@ function buildKnobs(): TokenKnob[] {
       type,
       kind,
       base,
-      label: humanLabel(path),
+      label: componentKnobLabel(path, humanLabel(path)),
     }
     if (dim && (kind === 'dimension' || kind === 'duration' || kind === 'number')) {
       const b = dimBounds(dim.unit, path)

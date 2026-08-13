@@ -3,46 +3,46 @@
   Catalog rail | live stage | override inspector. Overrides write component.* leaves.
 -->
 <scope>
-  style sectionTitle = { text: fontSize(sm).fontWeight(semibold) }
-  style fieldHint = { paint: fg(muted-foreground), text: fontSize(xs) }
-  style pathMeta = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
-  style doorTitle = { text: fontWeight(semibold) }
-  style bandStatus = { box: padX(4).padY(2) }
-  style bandError = { box: padX(4).padY(2), paint: borderBWidth(1).borderB(border) }
-  style railCol = { box: padX(3).padT(4).padB(6).minW(0) }
-  style inspectorCol = { box: padX(4).padT(4).padB(8).minW(0) }
-  style fullBtn = { box: w(full) }
-  style chipCol = { box: minW(0) }
+  style sectionTitle = { text: type({ size: sm, weight: semibold }) }
+  style fieldHint = { paint: ink({ color: muted-foreground }), text: type({ size: xs }) }
+  style pathMeta = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs }) }
+  style doorTitle = { text: type({ weight: semibold }) }
+  style bandStatus = { box: space({ pad-x: 4, pad-y: 2 }) }
+  style bandError = { box: space({ pad-x: 4, pad-y: 2 }), paint: border({ edge: b, color: border, width: 1 }) }
+  style railCol = { box: space({ pad-x: 3, pad-t: 4, pad-b: 6 }).size({ min-w: 0 }) }
+  style inspectorCol = { box: space({ pad-x: 4, pad-t: 4, pad-b: 8 }).size({ min-w: 0 }) }
+  style fullBtn = { box: size({ w: full }) }
+  style chipCol = { box: size({ min-w: 0 }) }
   // Selected rail row: soft fill + subtle border.
-  style listRow = { box: padX(2_5).padY(2), paint: radius(md).cursor(pointer).borderWidth(1).border(transparent), when: { hover: { paint: bg(hover-bg) }, selected: { paint: bg(surface-2).border(border-subtle) } } }
-  style eyebrow = { paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold).tracking(wide).textCase(uppercase) }
-  style tokenStrip = { box: padX(2).padY(1), paint: fg(muted-foreground).radius(sm).bg(surface-0), text: fontSize(xs).fontFamily(mono) }
-  style tokenRow = { box: padY(1_5), paint: borderBWidth(1).borderB(border-subtle) }
-  style surfaceRoot = { box: grow(1).minH(0).h(full).minW(0).overflow(hidden), paint: bg(background) }
-  style workbench = { box: grow(1).minH(0).basis(0).h(full).minW(0).overflow(hidden), paint: bg(background) }
-  style panelRail = { box: shrink(0).minW(panel-min-w-sm).maxW(panel-max-w-sm).w(panel-max-w-sm).minH(0).h(full), paint: borderRWidth(1).borderR(border-subtle).bg(background) }
-  style panelInspector = { box: shrink(0).minW(panel-min-w-sm).maxW(panel-max-w-sm).w(panel-max-w-sm).minH(0).h(full), paint: borderLWidth(1).borderL(border-subtle).bg(background) }
-  style specimenDock = { box: grow(1).minW(0).basis(0).minH(0).h(full).overflow(hidden), paint: bg(background) }
-  style specimenPad = { box: grow(1).minH(0).h(full).pad(4) }
-  style specimenFrame = { box: minW(0).minH(0).h(full).overflow(hidden), paint: shadow(lg) }
-  style specimenChrome = { box: shrink(0).padX(3).h(8).minH(8).minW(0), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1) }
-  style specimenVariants = { box: shrink(0).padX(3).padY(2).minW(0), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1) }
-  style trafficDots = { box: shrink(0).minW(12) }
-  style trafficDot = { box: shrink(0).w(2).h(2).minW(2).minH(2), paint: radius(full) }
-  style chromeTitle = { box: grow(1).minW(0), paint: fg(muted-foreground), text: fontSize(xs).truncate() }
-  style errorText = { box: grow(1).minW(0), paint: fg(destructive), text: fontSize(sm).truncate() }
-  style growMin = { box: grow(1).minW(0) }
-  style shrink0 = { box: shrink(0) }
-  style tapFloor = { box: shrink(0).minW(control-h-sm).minH(control-h-sm) }
-  style iconBtn = { box: shrink(0).w(control-h-sm).h(control-h-sm).minW(control-h-sm).minH(control-h-sm) }
-  style stageHost = { box: w(full) }
-  style sampleMax = { box: w(full).maxW(panel-max-w-sm) }
-  style scrollGrow = { box: grow(1).minH(0).basis(0).h(full), paint: bg(background) }
-  style stageBody = { box: pad(5).minW(0).minH(full) }
-  style stageTitle = { text: fontSize(md).fontWeight(semibold).fontFamily(heading) }
-  style stageBlurb = { paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed).fontFamily(body) }
-  style inspectorTitle = { text: fontSize(xl).fontWeight(semibold).tracking(tight).fontFamily(heading) }
-  style tokenChip = { box: shrink(0).position(relative).w(9).h(9).minW(9).minH(9).overflow(hidden), paint: radius(md).borderWidth(1).border(border-subtle).bg(surface-0) }
+  style listRow = { box: space({ pad-x: 2_5, pad-y: 2 }), paint: radius(md).cursor(pointer).border({ color: transparent, width: 1 }), when: { hover: { paint: fill({ color: hover-bg }) }, selected: { paint: fill({ color: surface-2 }).border({ color: border-subtle }) } } }
+  style eyebrow = { paint: ink({ color: muted-foreground }), text: type({ size: xs, weight: semibold, tracking: wide, case: uppercase }) }
+  style tokenStrip = { box: space({ pad-x: 2, pad-y: 1 }), paint: ink({ color: muted-foreground }).radius(sm).fill({ color: surface-0 }), text: type({ family: mono, size: xs }) }
+  style tokenRow = { box: space({ pad-y: 1_5 }), paint: border({ edge: b, color: border-subtle, width: 1 }) }
+  style surfaceRoot = { box: flow({ grow: 1 }).size({ h: full, min-w: 0, min-h: 0 }).overflow({ all: hidden }), paint: fill({ color: background }) }
+  style workbench = { box: flow({ grow: 1 }).size({h: full, min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }), paint: fill({ color: background }) }
+  style panelRail = { box: flow({ shrink: 0 }).size({ w: panel-max-w-sm, h: full, min-w: panel-min-w-sm, min-h: 0, max-w: panel-max-w-sm }), paint: border({ edge: r, color: border-subtle, width: 1 }).fill({ color: background }) }
+  style panelInspector = { box: flow({ shrink: 0 }).size({ w: panel-max-w-sm, h: full, min-w: panel-min-w-sm, min-h: 0, max-w: panel-max-w-sm }), paint: border({ edge: l, color: border-subtle, width: 1 }).fill({ color: background }) }
+  style specimenDock = { box: flow({ grow: 1 }).size({h: full, min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }), paint: fill({ color: background }) }
+  style specimenPad = { box: flow({ grow: 1 }).size({ h: full, min-h: 0 }).space({ pad: 4 }) }
+  style specimenFrame = { box: size({ h: full, min-w: 0, min-h: 0 }).overflow({ all: hidden }), paint: elevation(lg) }
+  style specimenChrome = { box: flow({ shrink: 0 }).space({ pad-x: 3 }).size({ h: 8, min-w: 0, min-h: 8 }), paint: border({ edge: b, color: border-subtle, width: 1 }).fill({ color: surface-1 }) }
+  style specimenVariants = { box: flow({ shrink: 0 }).space({ pad-x: 3, pad-y: 2 }).size({ min-w: 0 }), paint: border({ edge: b, color: border-subtle, width: 1 }).fill({ color: surface-1 }) }
+  style trafficDots = { box: flow({ shrink: 0 }).size({ min-w: 12 }) }
+  style trafficDot = { box: flow({ shrink: 0 }).size({ w: 2, h: 2, min-w: 2, min-h: 2 }), paint: radius(full) }
+  style chromeTitle = { box: flow({ grow: 1 }).size({ min-w: 0 }), paint: ink({ color: muted-foreground }), text: type({ size: xs, wrap: truncate }) }
+  style errorText = { box: flow({ grow: 1 }).size({ min-w: 0 }), paint: ink({ color: destructive }), text: type({ size: sm, wrap: truncate }) }
+  style growMin = { box: flow({ grow: 1 }).size({ min-w: 0 }) }
+  style shrink0 = { box: flow({ shrink: 0 }) }
+  style tapFloor = { box: flow({ shrink: 0 }).size({ min-w: control-h-sm, min-h: control-h-sm }) }
+  style iconBtn = { box: flow({ shrink: 0 }).size({ w: control-h-sm, h: control-h-sm, min-w: control-h-sm, min-h: control-h-sm }) }
+  style stageHost = { box: size({ w: full }) }
+  style sampleMax = { box: size({ w: full, max-w: panel-max-w-sm }) }
+  style scrollGrow = { box: flow({ grow: 1 }).size({h: full, min-h: 0, basis: 0}), paint: fill({ color: background }) }
+  style stageBody = { box: space({ pad: 5 }).size({ min-w: 0, min-h: full }) }
+  style stageTitle = { text: type({ family: heading, size: md, weight: semibold }) }
+  style stageBlurb = { paint: ink({ color: muted-foreground }), text: type({ family: body, size: sm, leading: relaxed }) }
+  style inspectorTitle = { text: type({ family: heading, size: xl, weight: semibold, tracking: tight }) }
+  style tokenChip = { box: flow({ shrink: 0 }).place({ position: relative }).size({ w: 9, h: 9, min-w: 9, min-h: 9 }).overflow({ all: hidden }), paint: radius(md).border({ color: border-subtle, width: 1 }).fill({ color: surface-0 }) }
   type ComponentRailRowProps = {
     id: string
     label: string
@@ -91,14 +91,14 @@ export default controller(() => {
   <theme-facet-chrome session={session}></theme-facet-chrome>
 
   <if {session.hasError()}>
-    <row components-error align="center" gap="2" style(bandError, { box: shrink(0) })>
+    <row components-error align="center" gap="2" style(bandError, { box: flow({ shrink: 0 }) })>
       <p style(errorText)>{session.errorText()}</p>
       <button type="button" size="sm" variant="ghost" components-retry on:click={session.onRetry}>Retry</button>
     </row>
   </if>
 
   <if {session.loading()}>
-    <row components-loading align="center" gap="2" style(bandStatus, { box: shrink(0) })>
+    <row components-loading align="center" gap="2" style(bandStatus, { box: flow({ shrink: 0 }) })>
       <spinner size="sm"></spinner>
       <p style(fieldHint)>Loading…</p>
     </row>
@@ -109,7 +109,7 @@ export default controller(() => {
       <column gap="3" style(railCol)>
         <column gap="2">
           <p style(eyebrow)>Components</p>
-          <p style({ text: fontSize(md).fontWeight(semibold).tracking(tight) })>Components</p>
+          <p style({ text: type({ size: md, weight: semibold, tracking: tight }) })>Components</p>
           <p l1-facet-blurb style(fieldHint)>
             Per-element exceptions for this theme — not the project Components library.
           </p>
@@ -146,27 +146,27 @@ export default controller(() => {
 
     <column specimen-dock components-stage gap="0" style(specimenDock)>
       <column gap="0" style(specimenPad)>
-        <!-- Preview host: draft paint via applyScope (theme + data-mode). No free mode= attr. -->
+        <!-- Preview host: draft paint via applyScope (theme + mode). -->
         <card
           components-specimen
           preview-specimen
           padding="none" style(specimenFrame)>
-          <column gap="0" style({  box: grow(1).minH(0).h(full)  })>
+          <column gap="0" style({  box: flow({ grow: 1 }).size({ h: full, min-h: 0 })  })>
             <row preview-chrome align="center" gap="2" nowrap style(specimenChrome)>
               <row gap="2" align="center" nowrap hidden="true" style(trafficDots)>
-                <stack style(trafficDot, { paint: bg(destructive) })></stack>
-                <stack style(trafficDot, { paint: bg(warning) })></stack>
-                <stack style(trafficDot, { paint: bg(success) })></stack>
+                <stack style(trafficDot, { paint: fill({ color: destructive }) })></stack>
+                <stack style(trafficDot, { paint: fill({ color: warning }) })></stack>
+                <stack style(trafficDot, { paint: fill({ color: success }) })></stack>
               </row>
               <p style(chromeTitle)>
                 Preview · {session.nameEdit()} · {components.selectedLabel()}
               </p>
-              <p style(pathMeta, { box: shrink(0) })>{session.paintMode()}</p>
+              <p style(pathMeta, { box: flow({ shrink: 0 }) })>{session.paintMode()}</p>
             </row>
 
             <if {components.hasVariants()}>
               <row specimen-variants align="center" gap="2" nowrap on:click={components.onVariantPick} style(specimenVariants)>
-                <p style(pathMeta, { box: shrink(0) })>{components.viewerVariantAttr()}:</p>
+                <p style(pathMeta, { box: flow({ shrink: 0 }) })>{components.viewerVariantAttr()}:</p>
                 <for {components.variantChips() as c} key={c.key}>
                   <button
                     type="button"
@@ -202,6 +202,7 @@ export default controller(() => {
                   <theme-l1-feedback components={components}></theme-l1-feedback>
                   <theme-l1-display components={components}></theme-l1-display>
                   <theme-l1-overlay components={components}></theme-l1-overlay>
+
                 </column>
               </column>
             </scroll-area>

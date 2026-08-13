@@ -76,11 +76,11 @@ export default controller((_ctx: ControllerScope<Scope>, _host?: HostBag) => {
     gap="3"
     align="start"
     style({
-      box: padY(4).padX(5),
-      paint: borderWidth(1).border(destructive).radius(md).bg(muted).fg(foreground).shadow(xs),
+      box: space({ pad-x: 5, pad-y: 4 }),
+      paint: border({ color: destructive, width: 1 }).radius(md).fill({ color: muted }).ink({ color: foreground }).elevation(xs),
     })
   >
-    <span style({ box: display(contents), text: fontFamily(body).fontSize(sm) })>
+    <span style({ box: flow({ display: contents }), text: type({ family: body, size: sm }) })>
       <svg
         viewBox="0 0 24 24"
         fill="none"
@@ -89,15 +89,15 @@ export default controller((_ctx: ControllerScope<Scope>, _host?: HostBag) => {
         stroke-linecap="round"
         stroke-linejoin="round"
         aria-hidden="true"
-        style({ box: w(icon-size-lg).h(icon-size-lg).minW(icon-size-lg).mt(1), paint: fg(destructive) })
+        style({ box: size({ w: icon-size-lg, h: icon-size-lg, min-w: icon-size-lg }).space({ mt: 1 }), paint: ink({ color: destructive }) })
       >
         <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"></path>
         <path d="M12 9v4"></path>
         <path d="M12 17h.01"></path>
       </svg>
       <column gap="1">
-        <div style({ paint: fg(muted-foreground) })>
-          <span style({ box: display(contents), text: leading(normal) })>
+        <div style({ paint: ink({ color: muted-foreground }) })>
+          <span style({ box: flow({ display: contents }), text: type({ leading: normal }) })>
             {fallbackText() || 'Something went wrong'}
           </span>
         </div>

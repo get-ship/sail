@@ -1,0 +1,2 @@
+/* leftover: borderImage has no concern slot that preserves --corner-image */
+.sail-card { border-image: var(--corner-image); }

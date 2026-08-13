@@ -1,5 +1,5 @@
 // theme-select — catalog filter tabs (no paint on tab), theme row applies,
-// mode-only cycle, never data-mode=system on the document.
+// mode-only cycle, never mode=system on the document.
 // P-1: product grid uses effective emit set, not always full THEMES.
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -85,7 +85,7 @@ function harness(opts?: { modeOnly?: boolean; extraOption?: string }) {
   for (const m of ['light', 'dark', 'system'] as const) {
     const b = document.createElement('button')
     b.type = 'button'
-    b.setAttribute('data-mode', m)
+    b.setAttribute('mode', m)
     b.setAttribute('role', 'tab')
     b.textContent = m
     modeBar.appendChild(b)
@@ -113,7 +113,7 @@ function harness(opts?: { modeOnly?: boolean; extraOption?: string }) {
     const row = document.createElement('div')
     const preview = document.createElement('div')
     preview.setAttribute('theme', id)
-    preview.setAttribute('data-mode', 'light')
+    preview.setAttribute('mode', 'light')
     const title = document.createElement('span')
     title.setAttribute('data-swatch-title', '')
     title.textContent = label
@@ -136,7 +136,7 @@ function harness(opts?: { modeOnly?: boolean; extraOption?: string }) {
 
   document.body.appendChild(root)
   document.documentElement.setAttribute('theme', 'ship')
-  document.documentElement.dataset.mode = 'light'
+  document.documentElement.setAttribute('mode', 'light')
   return {
     root,
     trigger,
@@ -154,7 +154,7 @@ describe('themeSelect — catalog filter + theme apply', () => {
     setEffectiveThemeIds(null)
     vi.unstubAllGlobals()
     document.documentElement.removeAttribute('theme')
-    document.documentElement.removeAttribute('data-mode')
+    document.documentElement.removeAttribute('mode')
     document.documentElement.classList.remove('dark')
     delete document.documentElement.dataset.studioPreview
     document.head
@@ -176,7 +176,7 @@ describe('themeSelect — catalog filter + theme apply', () => {
     vi.unstubAllGlobals()
     document.body.replaceChildren()
     document.documentElement.removeAttribute('theme')
-    document.documentElement.removeAttribute('data-mode')
+    document.documentElement.removeAttribute('mode')
     delete document.documentElement.dataset.studioPreview
     document.head
       .querySelectorAll(
@@ -408,10 +408,10 @@ describe('themeSelect — catalog filter + theme apply', () => {
     const action = themeSelect(root)
     destroy = action?.destroy
 
-    const system = root.querySelector<HTMLElement>('button[data-mode="system"]')
+    const system = root.querySelector<HTMLElement>('button[mode="system"]')
     expect(system?.hidden).toBe(false)
-    const light = root.querySelector<HTMLElement>('button[data-mode="light"]')
-    const dark = root.querySelector<HTMLElement>('button[data-mode="dark"]')
+    const light = root.querySelector<HTMLElement>('button[mode="light"]')
+    const dark = root.querySelector<HTMLElement>('button[mode="dark"]')
     expect(light?.hidden).toBe(false)
     expect(dark?.hidden).toBe(false)
   })
@@ -425,37 +425,37 @@ describe('themeSelect — catalog filter + theme apply', () => {
 
     const before = {
       theme: document.documentElement.getAttribute('theme'),
-      mode: document.documentElement.dataset.mode,
+      mode: document.documentElement.getAttribute('mode'),
       stored: localStorage.getItem(THEME_MODE_STORAGE_KEY),
       pref: readModePreference(),
     }
 
-    root.querySelector<HTMLButtonElement>('button[data-mode="dark"]')!.click()
+    root.querySelector<HTMLButtonElement>('button[mode="dark"]')!.click()
     expect(document.documentElement.getAttribute('theme')).toBe(before.theme)
-    expect(document.documentElement.dataset.mode).toBe(before.mode)
+    expect(document.documentElement.getAttribute('mode')).toBe(before.mode)
     expect(localStorage.getItem(THEME_MODE_STORAGE_KEY)).toBe(before.stored)
     expect(readModePreference()).toBe(before.pref)
     expect(root.getAttribute('data-catalog-filter')).toBe('dark')
 
-    root.querySelector<HTMLButtonElement>('button[data-mode="system"]')!.click()
+    root.querySelector<HTMLButtonElement>('button[mode="system"]')!.click()
     expect(document.documentElement.getAttribute('theme')).toBe(before.theme)
-    expect(document.documentElement.dataset.mode).toBe(before.mode)
+    expect(document.documentElement.getAttribute('mode')).toBe(before.mode)
     expect(localStorage.getItem(THEME_MODE_STORAGE_KEY)).toBe(before.stored)
-    expect(document.documentElement.dataset.mode).not.toBe('system')
+    expect(document.documentElement.getAttribute('mode')).not.toBe('system')
     expect(root.getAttribute('data-catalog-filter')).toBe('system')
 
-    root.querySelector<HTMLButtonElement>('button[data-mode="light"]')!.click()
-    expect(document.documentElement.dataset.mode).toBe(before.mode)
+    root.querySelector<HTMLButtonElement>('button[mode="light"]')!.click()
+    expect(document.documentElement.getAttribute('mode')).toBe(before.mode)
     expect(localStorage.getItem(THEME_MODE_STORAGE_KEY)).toBe(before.stored)
     expect(root.getAttribute('data-catalog-filter')).toBe('light')
   })
 
-  it('dark tab hides light-only themes; shows dark-only and duals with data-mode=dark', () => {
+  it('dark tab hides light-only themes; shows dark-only and duals with mode=dark', () => {
     const { root } = harness()
     const action = themeSelect(root)
     destroy = action?.destroy
 
-    root.querySelector<HTMLButtonElement>('button[data-mode="dark"]')!.click()
+    root.querySelector<HTMLButtonElement>('button[mode="dark"]')!.click()
 
     // light-only (glass) hidden; dark-only (synthwave) visible
     expect(root.querySelector<HTMLElement>('[role="option"][value="glass"]')?.hidden).toBe(true)
@@ -465,25 +465,25 @@ describe('themeSelect — catalog filter + theme apply', () => {
     // duals visible with dark preview
     expect(root.querySelector<HTMLElement>('[role="option"][value="ship"]')?.hidden).toBe(false)
     expect(
-      root.querySelector('[theme="ship"]')?.getAttribute('data-mode'),
+      root.querySelector('[theme="ship"]')?.getAttribute('mode'),
     ).toBe('dark')
     expect(
-      root.querySelector('[theme="synthwave"]')?.getAttribute('data-mode'),
+      root.querySelector('[theme="synthwave"]')?.getAttribute('mode'),
     ).toBe('dark')
     expect(root.querySelector('[data-catalog-label]')?.textContent).toMatch(/Dark/i)
     expect(
-      root.querySelector('button[data-mode="dark"]')?.getAttribute('aria-selected'),
+      root.querySelector('button[mode="dark"]')?.getAttribute('aria-selected'),
     ).toBe('true')
   })
 
-  it('light tab hides dark-only; duals get data-mode=light', () => {
+  it('light tab hides dark-only; duals get mode=light', () => {
     const { root } = harness()
     const action = themeSelect(root)
     destroy = action?.destroy
 
     // Switch to dark first, then back to light (filter only)
-    root.querySelector<HTMLButtonElement>('button[data-mode="dark"]')!.click()
-    root.querySelector<HTMLButtonElement>('button[data-mode="light"]')!.click()
+    root.querySelector<HTMLButtonElement>('button[mode="dark"]')!.click()
+    root.querySelector<HTMLButtonElement>('button[mode="light"]')!.click()
 
     expect(root.querySelector<HTMLElement>('[role="option"][value="synthwave"]')?.hidden).toBe(
       true,
@@ -491,10 +491,10 @@ describe('themeSelect — catalog filter + theme apply', () => {
     expect(root.querySelector<HTMLElement>('[role="option"][value="glass"]')?.hidden).toBe(false)
     expect(root.querySelector<HTMLElement>('[role="option"][value="ship"]')?.hidden).toBe(false)
     expect(
-      root.querySelector('[theme="ship"]')?.getAttribute('data-mode'),
+      root.querySelector('[theme="ship"]')?.getAttribute('mode'),
     ).toBe('light')
     expect(
-      root.querySelector('[theme="glass"]')?.getAttribute('data-mode'),
+      root.querySelector('[theme="glass"]')?.getAttribute('mode'),
     ).toBe('light')
     expect(root.querySelector('[data-catalog-label]')?.textContent).toMatch(/Light/i)
   })
@@ -504,7 +504,7 @@ describe('themeSelect — catalog filter + theme apply', () => {
     const action = themeSelect(root)
     destroy = action?.destroy
 
-    root.querySelector<HTMLButtonElement>('button[data-mode="system"]')!.click()
+    root.querySelector<HTMLButtonElement>('button[mode="system"]')!.click()
 
     expect(root.querySelector<HTMLElement>('[role="option"][value="glass"]')?.hidden).toBe(true)
     expect(root.querySelector<HTMLElement>('[role="option"][value="synthwave"]')?.hidden).toBe(
@@ -513,7 +513,7 @@ describe('themeSelect — catalog filter + theme apply', () => {
     expect(root.querySelector<HTMLElement>('[role="option"][value="ship"]')?.hidden).toBe(false)
     expect(root.querySelector('[data-catalog-label]')?.textContent).toMatch(/Dual/i)
     // Document paint unchanged by tab
-    expect(document.documentElement.dataset.mode).not.toBe('system')
+    expect(document.documentElement.getAttribute('mode')).not.toBe('system')
   })
 
   it('clicking a theme under dark filter applies that theme with dark paint', () => {
@@ -523,9 +523,9 @@ describe('themeSelect — catalog filter + theme apply', () => {
     const action = themeSelect(root)
     destroy = action?.destroy
 
-    root.querySelector<HTMLButtonElement>('button[data-mode="dark"]')!.click()
+    root.querySelector<HTMLButtonElement>('button[mode="dark"]')!.click()
     // Tab must not have painted yet
-    expect(document.documentElement.dataset.mode).toBe('light')
+    expect(document.documentElement.getAttribute('mode')).toBe('light')
 
     // neutral is dual-mode (visible under dark); paper is light-only
     const neutral = root.querySelector<HTMLButtonElement>('[role="option"][value="neutral"]')!
@@ -533,7 +533,7 @@ describe('themeSelect — catalog filter + theme apply', () => {
     neutral.click()
 
     expect(document.documentElement.getAttribute('theme')).toBe('neutral')
-    expect(document.documentElement.dataset.mode).toBe('dark')
+    expect(document.documentElement.getAttribute('mode')).toBe('dark')
     expect(readModePreference()).toBe('dark')
     expect(localStorage.getItem(THEME_MODE_STORAGE_KEY)).toBe('dark')
   })
@@ -586,11 +586,11 @@ describe('themeSelect — catalog filter + theme apply', () => {
 
     applyTheme('ship', document.documentElement, 'light')
     persistMode('light')
-    root.querySelector<HTMLButtonElement>('button[data-mode="light"]')!.click()
+    root.querySelector<HTMLButtonElement>('button[mode="light"]')!.click()
     const neutral = root.querySelector<HTMLButtonElement>('[role="option"][value="neutral"]')!
     neutral.click()
     expect(document.documentElement.getAttribute('theme')).toBe('neutral')
-    expect(document.documentElement.dataset.mode).toBe('light')
+    expect(document.documentElement.getAttribute('mode')).toBe('light')
     expect(neutral.getAttribute('aria-selected')).toBe('true')
     expect(
       root.querySelector('[role="option"][value="ship"]')?.getAttribute('aria-selected'),
@@ -604,21 +604,21 @@ describe('themeSelect — catalog filter + theme apply', () => {
     const action = themeSelect(root)
     destroy = action?.destroy
 
-    root.querySelector<HTMLButtonElement>('button[data-mode="system"]')!.click()
+    root.querySelector<HTMLButtonElement>('button[mode="system"]')!.click()
     expect(localStorage.getItem(THEME_MODE_STORAGE_KEY)).toBe('light') // filter only
 
     // dual-mode theme under system filter
     root.querySelector<HTMLButtonElement>('[role="option"][value="neutral"]')!.click()
     expect(document.documentElement.getAttribute('theme')).toBe('neutral')
     expect(readModePreference()).toBe('system')
-    expect(document.documentElement.dataset.mode).not.toBe('system')
-    expect(['light', 'dark']).toContain(document.documentElement.dataset.mode)
+    expect(document.documentElement.getAttribute('mode')).not.toBe('system')
+    expect(['light', 'dark']).toContain(document.documentElement.getAttribute('mode'))
   })
 
   it('modeOnly hides theme grid and cycles mode on trigger', () => {
     const { root, grid, modeTrigger } = harness({ modeOnly: true })
     document.documentElement.setAttribute('theme', 'ship')
-    document.documentElement.dataset.mode = 'light'
+    document.documentElement.setAttribute('mode', 'light')
     persistMode('light')
     const action = themeSelect(root)
     destroy = action?.destroy
@@ -628,20 +628,20 @@ describe('themeSelect — catalog filter + theme apply', () => {
 
     // Cycle light → dark
     modeTrigger.click()
-    expect(document.documentElement.dataset.mode).toBe('dark')
+    expect(document.documentElement.getAttribute('mode')).toBe('dark')
     expect(readModePreference()).toBe('dark')
     expect(modeTrigger.getAttribute('aria-label')).toMatch(/Dark/i)
 
     // Cycle dark → system
     modeTrigger.click()
     expect(readModePreference()).toBe('system')
-    expect(document.documentElement.dataset.mode).not.toBe('system')
+    expect(document.documentElement.getAttribute('mode')).not.toBe('system')
     expect(modeTrigger.getAttribute('aria-label')).toMatch(/System/i)
 
     // Cycle system → light
     modeTrigger.click()
     expect(readModePreference()).toBe('light')
-    expect(document.documentElement.dataset.mode).toBe('light')
+    expect(document.documentElement.getAttribute('mode')).toBe('light')
   })
 
   it('unique popover id links trigger for anchor', () => {
@@ -662,27 +662,17 @@ describe('themeSelect — catalog filter + theme apply', () => {
     expect(b.trigger.getAttribute('popovertarget')).toBe(idB)
   })
 
-  it('heals legacy data-mode=system on the document', () => {
-    document.documentElement.setAttribute('theme', 'ship')
-    document.documentElement.dataset.mode = 'system'
-    const { root } = harness()
-    const action = themeSelect(root)
-    destroy = action?.destroy
-    expect(document.documentElement.dataset.mode).not.toBe('system')
-    expect(['light', 'dark']).toContain(document.documentElement.dataset.mode)
-  })
-
   it('no-ops document paint while studioPreview is active (U2.1c)', () => {
     const { root } = harness()
     const action = themeSelect(root)
     destroy = action?.destroy
     document.documentElement.setAttribute('theme', 'ship')
-    document.documentElement.dataset.mode = 'light'
+    document.documentElement.setAttribute('mode', 'light')
     document.documentElement.dataset.studioPreview = '1'
 
     // Tabs still filter locally but never paint (already true)
-    root.querySelector<HTMLButtonElement>('button[data-mode="dark"]')!.click()
-    expect(document.documentElement.dataset.mode).toBe('light')
+    root.querySelector<HTMLButtonElement>('button[mode="dark"]')!.click()
+    expect(document.documentElement.getAttribute('mode')).toBe('light')
     expect(root.getAttribute('data-catalog-filter')).toBe('dark')
 
     root.querySelector<HTMLButtonElement>('[role="option"][value="paper"]')!.click()
@@ -697,16 +687,15 @@ describe('themeSelect — catalog filter + theme apply', () => {
 
     const { root } = harness()
     document.documentElement.setAttribute('theme', 'ship')
-    document.documentElement.dataset.mode = 'dark'
-
+    document.documentElement.setAttribute('mode', 'dark')
     const action = themeSelect(root)
     destroy = action?.destroy
 
     expect(root.getAttribute('data-catalog-filter')).toBe('dark')
     expect(document.documentElement.getAttribute('theme')).toBe('ship')
-    expect(document.documentElement.dataset.mode).toBe('dark')
+    expect(document.documentElement.getAttribute('mode')).toBe('dark')
     expect(
-      root.querySelector('button[data-mode="dark"]')?.getAttribute('aria-selected'),
+      root.querySelector('button[mode="dark"]')?.getAttribute('aria-selected'),
     ).toBe('true')
     // Dark-capable catalog row (8bit) is visible under dark filter.
     const eight = root.querySelector<HTMLElement>('[role="option"][value="8bit"]')
@@ -719,7 +708,7 @@ describe('themeSelect — catalog filter + theme apply', () => {
     persistMode('light')
     const { root } = harness()
     document.documentElement.setAttribute('theme', 'ship')
-    document.documentElement.dataset.mode = 'light'
+    document.documentElement.setAttribute('mode', 'light')
     const action = themeSelect(root)
     destroy = action?.destroy
     expect(root.getAttribute('data-catalog-filter')).toBe('light')
@@ -730,7 +719,7 @@ describe('themeSelect — catalog filter + theme apply', () => {
 
     expect(root.getAttribute('data-catalog-filter')).toBe('dark')
     expect(
-      root.querySelector('button[data-mode="dark"]')?.getAttribute('aria-selected'),
+      root.querySelector('button[mode="dark"]')?.getAttribute('aria-selected'),
     ).toBe('true')
   })
 })

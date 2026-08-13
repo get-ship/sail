@@ -12,7 +12,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 
-use anyhow::{Context, Result, anyhow, bail};
+use anyhow::{anyhow, bail, Context, Result};
 use serde_json::{Map, Value};
 
 /// Compile-time baked catalog (`packages/sail/tokens/model/**` at build).
@@ -118,11 +118,15 @@ const THEME_SAIL_KEYS: &[&str] = &[
     "ordered",
 ];
 
-/// Allowed paint mode names (`data-mode` values).
+/// Allowed paint mode names (`mode` values).
 const THEME_PAINT_MODES: &[&str] = &["light", "dark"];
 
 /// Allowed top-level groups inside a mode body (scale + component overrides).
 /// DTCG `$extensions` on the mode object is also allowed.
+///
+/// SPIN-1: `border` / `size` / `elevation` / `type` hold DTCG composites
+/// (`border.subtle`, `size.control-md`, …). Radius stays its own group —
+/// corner geometry is not a border concern.
 const THEME_MODE_GROUP_KEYS: &[&str] = &[
     "$extensions",
     "color",
@@ -140,6 +144,55 @@ const THEME_MODE_GROUP_KEYS: &[&str] = &[
     "panel",
     "z",
     "breakpoint",
+    "border",
+    "size",
+    "elevation",
+    "type",
+    "fill",
+    "ink",
+];
+
+/// DTCG composite `$type` values (SPIN-1). Object `$value` + one of these
+/// is a composite; members flatten to the CSS vars the runtime already reads.
+pub const COMPOSITE_TYPES: &[&str] = &[
+    "border",
+    "shadow",
+    "typography",
+    "transition",
+    "gradient",
+    "strokeStyle",
+    "size",
+    "elevation",
+    "type",
+    "fill",
+    "ink",
+];
+
+/// Required members of a `border` composite (DTCG + concern set).
+/// Radius is deliberately absent — it is not a border concern.
+pub const BORDER_MEMBERS: &[&str] = &["color", "width", "style"];
+
+/// Box-geometry members legal on a `$type: size` composite. Pad is space.
+pub const SIZE_MEMBERS: &[&str] = &["w", "h", "min-w", "min-h", "max-w", "max-h", "aspect"];
+
+/// Members that must never appear on a size composite (SPEC-SPINNAKER-2 §3.2).
+/// Empty [`required_composite_members`] is not enough — this is a forbid list.
+pub const SIZE_FORBIDDEN_MEMBERS: &[&str] = &[
+    "pad", "pad-x", "pad-y", "pad-t", "pad-b", "pad-l", "pad-r", "pad-s", "pad-e", "space",
+];
+
+/// Required member of an `elevation` composite.
+pub const ELEVATION_MEMBERS: &[&str] = &["shadow"];
+
+/// Required color slot on `fill` / `ink` named identities.
+pub const FILL_INK_MEMBERS: &[&str] = &["color"];
+
+/// Hyphenated sibling keys that are the old dual form of a `*.border` composite.
+const PSEUDO_BORDER_SIBLINGS: &[&str] = &[
+    "border-width",
+    "border-style",
+    "border-radius",
+    "border-color",
 ];
 
 /// Override resolution order (highest wins first). THEMES-1 WI3 / freeze §6.
@@ -205,6 +258,9 @@ struct Token {
     /// `$description` — emitted as a doc comment above the declaration in
     /// the channel block (the old hand-authored block's prose, now SSOT).
     description: Option<String>,
+    /// True when this is a DTCG composite identity (not a CSS leaf).
+    /// Scalar `$type: shadow` strings stay false so emit still writes them.
+    composite_identity: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -233,6 +289,9 @@ struct Layer {
 struct NameIndex {
     path_to_css: HashMap<String, String>,
     css_to_path: HashMap<String, String>,
+    /// Composite path or dotted public name → color-member cssName.
+    /// `{border.subtle}` used as a color alias resolves here.
+    composite_color_css: HashMap<String, String>,
 }
 
 /// Summary of a successful generate run (for CLI logging / tests).
@@ -319,7 +378,7 @@ pub enum CatalogAllowlist {
 pub struct ThemeConfig {
     /// Preferred default theme id (scaffold / host paint).
     pub default: Option<String>,
-    /// Initial `data-mode` (prefer `light` when omitted at host).
+    /// Initial `mode` (prefer `light` when omitted at host).
     pub default_mode: Option<String>,
     /// Catalog theme allowlist (T0). See [`CatalogAllowlist`].
     pub enabled: CatalogAllowlist,
@@ -850,7 +909,7 @@ fn build_themes_meta_ts(layers: &[&Layer]) -> String {
     ));
     out.push_str("export type ThemeSailKey = (typeof THEME_SAIL_KEYS)[number]\n\n");
 
-    out.push_str("/** Allowed paint mode names (`data-mode` values). */\n");
+    out.push_str("/** Allowed paint mode names (`mode` values). */\n");
     out.push_str(&format!(
         "export const THEME_PAINT_MODES = [{}] as const\n",
         THEME_PAINT_MODES
@@ -894,7 +953,7 @@ fn build_themes_meta_ts(layers: &[&Layer]) -> String {
 
     out.push_str("export interface ThemeMeta {\n");
     out.push_str("  id: string\n");
-    out.push_str("  /** Whether the default mode is a dark surface (data-mode dark). */\n");
+    out.push_str("  /** Whether the default mode is a dark surface (`mode=dark`). */\n");
     out.push_str("  dark: boolean\n");
     out.push_str("  /** Mode names when modes-in-file; empty = legacy single-block theme. */\n");
     out.push_str("  modes: readonly string[]\n");
@@ -982,6 +1041,188 @@ fn is_group(node: &Value) -> bool {
         .unwrap_or(false)
 }
 
+/// True when `$type` is a DTCG / Sail composite type (SPIN-1).
+pub fn is_composite_type(ty: &str) -> bool {
+    COMPOSITE_TYPES.contains(&ty)
+}
+
+/// Required member names for a composite `$type` (empty = any members allowed).
+pub fn required_composite_members(ty: &str) -> &'static [&'static str] {
+    match ty {
+        "border" => BORDER_MEMBERS,
+        "elevation" => ELEVATION_MEMBERS,
+        "fill" | "ink" => FILL_INK_MEMBERS,
+        _ => &[],
+    }
+}
+
+/// True when `member` is pad/space (or a pad-* / space-* sibling) on a size composite.
+pub fn is_forbidden_size_member(member: &str) -> bool {
+    SIZE_FORBIDDEN_MEMBERS.contains(&member)
+        || member == "pad"
+        || member == "space"
+        || member.starts_with("pad-")
+        || member.starts_with("space-")
+        || member.starts_with("space.")
+}
+
+/// Infer a member's DTCG `$type` from the parent composite type + member name.
+pub fn infer_composite_member_type(composite_ty: &str, member: &str) -> &'static str {
+    match (composite_ty, member) {
+        ("border", "color") => "color",
+        ("border", "width") => "dimension",
+        ("border", "style") => "string",
+        ("shadow", "color") => "color",
+        ("shadow", "offsetX" | "offsetY" | "blur" | "spread") => "dimension",
+        ("typography" | "type", "color") => "color",
+        ("typography" | "type", "fontSize" | "lineHeight" | "letterSpacing") => "dimension",
+        ("type", "family") => "fontFamily",
+        ("type", "size" | "tracking") => "dimension",
+        ("type", "weight" | "leading") => "number",
+        ("type", "align" | "case" | "wrap") => "string",
+        ("size", "w" | "h" | "min-w" | "min-h" | "max-w" | "max-h" | "aspect") => "dimension",
+        ("elevation", "shadow") => "shadow",
+        ("fill" | "ink", "color") => "color",
+        ("fill", "image" | "clip" | "glow") => "string",
+        ("ink", "caret" | "accent") => "color",
+        (_, "color" | "fg" | "foreground" | "bg" | "background") => "color",
+        _ => "string",
+    }
+}
+
+/// Refuse size composites that carry pad/space (or any non-geometry member).
+///
+/// SPEC-SPINNAKER-2 §3.2: size is box geometry only. A composite that
+/// carries pad is a **schema error** — empty required-members is not enough.
+pub fn validate_composite_schema(node: &Value, label: &str) -> Result<()> {
+    walk_composite_schema(node, &[], label)
+}
+
+fn walk_composite_schema(node: &Value, prefix: &[String], label: &str) -> Result<()> {
+    let Some(obj) = node.as_object() else {
+        return Ok(());
+    };
+    if let Some(ty) = obj.get("$type").and_then(|v| v.as_str()) {
+        if is_composite_type(ty) && obj.get("$value").is_some_and(Value::is_object) {
+            let path = prefix.join(".");
+            let ident = composite_public_name(&path);
+            let Some(Value::Object(members)) = obj.get("$value") else {
+                return Ok(());
+            };
+            let have: Vec<String> = members
+                .keys()
+                .filter(|k| !k.starts_with('$'))
+                .cloned()
+                .collect();
+            if ty == "size" {
+                validate_size_composite_members(&ident, &have, label)?;
+            }
+            return Ok(());
+        }
+    }
+    if obj.contains_key("$value") {
+        return Ok(());
+    }
+    for (k, child) in obj {
+        if k.starts_with('$') || !child.is_object() {
+            continue;
+        }
+        let mut next = prefix.to_vec();
+        next.push(k.clone());
+        walk_composite_schema(child, &next, label)?;
+    }
+    Ok(())
+}
+
+fn validate_size_composite_members(ident: &str, have: &[String], label: &str) -> Result<()> {
+    let forbidden: Vec<&str> = have
+        .iter()
+        .filter(|m| is_forbidden_size_member(m))
+        .map(String::as_str)
+        .collect();
+    if !forbidden.is_empty() {
+        bail!(
+            "{label}: size composite `{ident}` carries forbidden member {} — \
+             size is box geometry only (w/h/min-w/min-h/max-w/max-h/aspect); \
+             pad/space belong on space (schema error)",
+            forbidden.join(", ")
+        );
+    }
+    let unknown: Vec<&str> = have
+        .iter()
+        .filter(|m| !SIZE_MEMBERS.contains(&m.as_str()))
+        .map(String::as_str)
+        .collect();
+    if !unknown.is_empty() {
+        bail!(
+            "{label}: size composite `{ident}` has non-geometry member {} — \
+             size members are only {} (schema error)",
+            unknown.join(", "),
+            SIZE_MEMBERS.join(", ")
+        );
+    }
+    Ok(())
+}
+
+/// Dotted public identity for a composite path (`component.dialog.border` →
+/// `dialog.border`, `border.subtle` → `border.subtle`).
+pub fn composite_public_name(path: &str) -> String {
+    let parts: Vec<&str> = path.split('.').collect();
+    if parts.first() == Some(&"component") && parts.len() >= 3 {
+        return parts[1..].join(".");
+    }
+    if parts.first() == Some(&"color") && parts.len() >= 2 {
+        return parts[1..].join(".");
+    }
+    parts.join(".")
+}
+
+/// CSS custom-property name (no `--`) for one composite member.
+///
+/// Color members of `component.*.border` keep the historical kebab name
+/// (`dialog-border`) so emit still lands the vars the runtime consumes.
+/// Semantic `border.*` color members use a `-color` suffix so they do not
+/// collide with the `color.border.*` paint scalars.
+pub fn composite_member_css_name(composite_path: &str, member: &str) -> String {
+    let ident = composite_public_name(composite_path);
+    let kebab = ident.replace('.', "-");
+    let parts: Vec<&str> = composite_path.split('.').collect();
+    let component_border_color =
+        parts.first() == Some(&"component") && parts.last() == Some(&"border") && member == "color";
+    if component_border_color {
+        return kebab;
+    }
+    format!("{kebab}-{member}")
+}
+
+fn is_composite_leaf(node: &Value, inherited_type: Option<&str>) -> bool {
+    let Some(obj) = node.as_object() else {
+        return false;
+    };
+    // Object `$value` is the DTCG composite shape. A string `$value` with a
+    // composite-ish `$type` (e.g. color.edgeHighlight `$type: shadow`) is a
+    // scalar CSS value — not a member map.
+    if !obj.get("$value").is_some_and(Value::is_object) {
+        return false;
+    }
+    let ty = obj
+        .get("$type")
+        .and_then(|v| v.as_str())
+        .or(inherited_type)
+        .unwrap_or("");
+    is_composite_type(ty)
+}
+
+fn leaf_value_string(value: &Value) -> String {
+    match value {
+        Value::String(s) => s.clone(),
+        Value::Number(n) => n.to_string(),
+        Value::Bool(b) => b.to_string(),
+        Value::Null => "null".into(),
+        other => other.to_string(),
+    }
+}
+
 /// Generator-owned public short name for a DTCG path.
 ///
 /// Design identity is the path; CSS/Style public names (`primary`, `chip`, …)
@@ -997,6 +1238,15 @@ pub fn public_name(path: &str) -> String {
     let parts: Vec<&str> = path.split('.').collect();
     if parts.is_empty() || (parts.len() == 1 && parts[0].is_empty()) {
         return String::new();
+    }
+    // SPIN-1 member paths: component.{pack}.border.{color|width|style}
+    // Color member keeps the historical kebab (`dialog-border`).
+    if parts.len() == 4 && parts[0] == "component" && parts[2] == "border" {
+        return composite_member_css_name(&parts[..3].join("."), parts[3]);
+    }
+    // Semantic composite members: border.subtle.color → border-subtle-color.
+    if parts.len() == 3 && parts[0] == "border" {
+        return composite_member_css_name(&parts[..2].join("."), parts[2]);
     }
     let root = parts[0];
     if root == "component" && parts.len() >= 2 {
@@ -1097,6 +1347,11 @@ fn camel_to_kebab(s: &str) -> String {
 }
 
 /// Flatten a DTCG document into ordered leaves.
+///
+/// SPIN-1: a composite (`$type` in [`COMPOSITE_TYPES`], object `$value`)
+/// emits an identity token (not CSS) plus one leaf per member. Member CSS
+/// names preserve the runtime vars (e.g. `component.dialog.border.color`
+/// → `--dialog-border`).
 fn flatten_tokens(doc: &Value, path_prefix: &[String], inherited_type: Option<&str>) -> Vec<Token> {
     let mut out = Vec::new();
     let Some(obj) = doc.as_object() else {
@@ -1109,7 +1364,85 @@ fn flatten_tokens(doc: &Value, path_prefix: &[String], inherited_type: Option<&s
         if !node.is_object() {
             continue;
         }
-        if is_token_leaf(node) {
+        if is_composite_leaf(node, inherited_type) {
+            let mut path_parts = path_prefix.to_vec();
+            path_parts.push(key.clone());
+            let path = path_parts.join(".");
+            let ty = node
+                .get("$type")
+                .and_then(|v| v.as_str())
+                .map(|s| s.to_string())
+                .or_else(|| inherited_type.map(|s| s.to_string()))
+                .unwrap_or_else(|| "border".into());
+            let channel = node
+                .pointer("/$extensions/sail/channel")
+                .or_else(|| node.pointer("/$extensions/ship/channel"))
+                .and_then(|v| v.as_bool())
+                .unwrap_or(false);
+            let description = node
+                .get("$description")
+                .and_then(|v| v.as_str())
+                .map(|s| s.to_string());
+            match node.get("$value") {
+                Some(Value::Object(members)) => {
+                    out.push(Token {
+                        path: path.clone(),
+                        css_name: composite_public_name(&path),
+                        r#type: ty.clone(),
+                        value: String::new(),
+                        css_value: String::new(),
+                        channel,
+                        description: description.clone(),
+                        composite_identity: true,
+                    });
+                    for (member, mval) in members {
+                        if member.starts_with('$') {
+                            continue;
+                        }
+                        let mpath = format!("{path}.{member}");
+                        let (mty, mvalue) = match mval {
+                            Value::Object(mobj) if mobj.contains_key("$value") => {
+                                let mt = mobj
+                                    .get("$type")
+                                    .and_then(|v| v.as_str())
+                                    .unwrap_or_else(|| infer_composite_member_type(&ty, member))
+                                    .to_string();
+                                (mt, leaf_value_string(&mobj["$value"]))
+                            }
+                            other => (
+                                infer_composite_member_type(&ty, member).to_string(),
+                                leaf_value_string(other),
+                            ),
+                        };
+                        out.push(Token {
+                            path: mpath,
+                            css_name: composite_member_css_name(&path, member),
+                            r#type: mty,
+                            value: mvalue,
+                            css_value: String::new(),
+                            channel,
+                            description: None,
+                            composite_identity: false,
+                        });
+                    }
+                }
+                Some(Value::String(alias)) => {
+                    // Whole-composite alias; members resolve from the target
+                    // at emit/gate time via [`NameIndex::composite_color_css`].
+                    out.push(Token {
+                        path: path.clone(),
+                        css_name: composite_public_name(&path),
+                        r#type: ty,
+                        value: alias.clone(),
+                        css_value: String::new(),
+                        channel,
+                        description,
+                        composite_identity: true,
+                    });
+                }
+                _ => {}
+            }
+        } else if is_token_leaf(node) {
             let mut path_parts = path_prefix.to_vec();
             path_parts.push(key.clone());
             let path = path_parts.join(".");
@@ -1122,11 +1455,7 @@ fn flatten_tokens(doc: &Value, path_prefix: &[String], inherited_type: Option<&s
                 .or_else(|| inherited_type.map(|s| s.to_string()))
                 .unwrap_or_else(|| "string".into());
             let value = match node.get("$value") {
-                Some(Value::String(s)) => s.clone(),
-                Some(Value::Number(n)) => n.to_string(),
-                Some(Value::Bool(b)) => b.to_string(),
-                Some(Value::Null) => "null".into(),
-                Some(other) => other.to_string(),
+                Some(v) => leaf_value_string(v),
                 None => continue,
             };
             let channel = node
@@ -1146,6 +1475,7 @@ fn flatten_tokens(doc: &Value, path_prefix: &[String], inherited_type: Option<&s
                 css_value: String::new(),
                 channel,
                 description,
+                composite_identity: false,
             });
         } else if is_group(node) {
             let group_type = node
@@ -1166,6 +1496,21 @@ fn build_name_index(tokens: &[Token]) -> NameIndex {
         idx.path_to_css.insert(t.path.clone(), t.css_name.clone());
         idx.css_to_path.insert(t.css_name.clone(), t.path.clone());
     }
+    for t in tokens {
+        if !t.composite_identity {
+            continue;
+        }
+        let color_path = format!("{}.color", t.path);
+        let color_css = idx
+            .path_to_css
+            .get(&color_path)
+            .cloned()
+            .unwrap_or_else(|| composite_member_css_name(&t.path, "color"));
+        idx.composite_color_css
+            .insert(t.path.clone(), color_css.clone());
+        idx.composite_color_css
+            .insert(t.css_name.clone(), color_css);
+    }
     idx
 }
 
@@ -1185,14 +1530,28 @@ fn resolve_value(value: &str, name_index: &NameIndex) -> Result<String> {
 }
 
 /// Map `{path}` / `{cssName}` to a known public cssName, or None if dangling.
+/// Composite identities resolve to the color member (per-member alias edges).
 fn resolve_alias_target(ref_name: &str, name_index: &NameIndex) -> Option<String> {
+    if let Some(c) = name_index.composite_color_css.get(ref_name) {
+        return Some(c.clone());
+    }
     if let Some(c) = name_index.path_to_css.get(ref_name) {
+        if is_composite_type_name(c, name_index) {
+            return name_index.composite_color_css.get(ref_name).cloned();
+        }
         return Some(c.clone());
     }
     if name_index.css_to_path.contains_key(ref_name) {
+        if let Some(c) = name_index.composite_color_css.get(ref_name) {
+            return Some(c.clone());
+        }
         return Some(ref_name.to_string());
     }
     None
+}
+
+fn is_composite_type_name(css_name: &str, name_index: &NameIndex) -> bool {
+    name_index.composite_color_css.contains_key(css_name)
 }
 
 /// Detect alias cycles across token `$value` edges. Hard error (SPEC-D1).
@@ -1347,6 +1706,8 @@ fn load_base_layers(model_dir: &Path) -> Result<(Vec<Layer>, NameIndex, Vec<Toke
     // Component token packs live under model/components/*.json and merge into
     // the base layer (paths like component.card.bg → public cssNames).
     merge_component_sources(model_dir, &mut base_doc)?;
+    reject_pseudo_composite_dual_forms(&base_doc, &[], "base")?;
+    validate_composite_schema(&base_doc, "base")?;
     let base_tokens_raw = flatten_tokens(&base_doc, &[], None);
     check_alias_cycles(&base_tokens_raw)?;
     let name_index = build_name_index(&base_tokens_raw);
@@ -1363,6 +1724,10 @@ fn load_base_layers(model_dir: &Path) -> Result<(Vec<Layer>, NameIndex, Vec<Toke
         let raw = flatten_tokens(&doc, &[], None);
         let mut tokens = Vec::with_capacity(raw.len());
         for mut t in raw {
+            if t.composite_identity {
+                tokens.push(t);
+                continue;
+            }
             t.css_value = resolve_value(&t.value, &name_index)?;
             tokens.push(t);
         }
@@ -1377,6 +1742,54 @@ fn load_base_layers(model_dir: &Path) -> Result<(Vec<Layer>, NameIndex, Vec<Toke
         .unwrap_or_default();
 
     Ok((layers, name_index, base_tokens))
+}
+
+/// Refuse leftover hyphenated siblings next to a `border` composite
+/// (`component-border-width` beside `component.border`). Dual forms are
+/// not the supported model — fold them into the composite members.
+fn reject_pseudo_composite_dual_forms(node: &Value, prefix: &[String], label: &str) -> Result<()> {
+    let Some(obj) = node.as_object() else {
+        return Ok(());
+    };
+    if obj.contains_key("$value") {
+        return Ok(());
+    }
+    let has_composite_border = obj.get("border").is_some_and(|n| {
+        n.get("$type")
+            .and_then(|v| v.as_str())
+            .is_some_and(is_composite_type)
+    });
+    if has_composite_border {
+        let here = if prefix.is_empty() {
+            String::new()
+        } else {
+            prefix.join(".")
+        };
+        for sib in PSEUDO_BORDER_SIBLINGS {
+            if obj.contains_key(*sib) {
+                let parent = if here.is_empty() {
+                    "border".into()
+                } else {
+                    format!("{here}.border")
+                };
+                let ident = composite_public_name(&parent);
+                bail!(
+                    "{label}: pseudo-composite dual form `{sib}` next to composite `{ident}` \
+                     — fold `{sib}` into `{ident}` members (color/width/style); \
+                     radius stays a standalone setter, not a border member"
+                );
+            }
+        }
+    }
+    for (k, child) in obj {
+        if k.starts_with('$') || !child.is_object() {
+            continue;
+        }
+        let mut next = prefix.to_vec();
+        next.push(k.clone());
+        reject_pseudo_composite_dual_forms(child, &next, label)?;
+    }
+    Ok(())
 }
 
 /// Deep-merge `model/components/*.json` into the base DTCG document.
@@ -1631,19 +2044,19 @@ fn load_theme_layers_from_dir(
         }
 
         // Only light|dark (and future named modes) — reject unknown paint modes
-        // that would never apply via data-mode.
+        // that would never apply via mode=.
         for m in &mode_names {
             if m != "light" && m != "dark" {
                 bail!(
                     "theme {label}: unsupported mode name {m:?} \
-                     (only \"light\" and \"dark\" are valid data-mode values)"
+                     (only \"light\" and \"dark\" are valid mode values)"
                 );
             }
         }
 
         // Path parity among **declared** modes only (single-mode ⇒ no check).
         // Multi-mode: every mode must declare the same $value leaves so
-        // data-mode switches cannot leave sticky CSS vars from another mode.
+        // mode switches cannot leave sticky CSS vars from another mode.
         if mode_names.len() >= 2 {
             let path_sets: Vec<(String, std::collections::BTreeSet<String>)> = mode_names
                 .iter()
@@ -1738,38 +2151,44 @@ fn load_theme_layers_from_dir(
             // Selector family (hard cutover — theme attr only):
             //   • `:root[theme=…]` — app product theme on documentElement
             //   • `[theme=…]` — scoped hosts
-            // Nested hosts without data-mode inherit document mode via
-            // `:root[data-mode=X] [theme=id]:not([data-mode])` — no JS.
-            // Do not emit a global `[theme=id]:not([data-mode])` on the
+            // Nested hosts without mode inherit document mode via
+            // `:root[mode=X] [theme=id]:not([mode])` — no JS.
+            // Do not emit a global `[theme=id]:not([mode])` on the
             // default-mode block (that pinned nested hosts to default).
             let is_default = default_mode.as_deref() == Some(mode_name.as_str());
             meta.selector = if is_default && !multi_mode {
-                // Only mode: a nested host without data-mode always gets these tokens
+                // Only mode: a nested host without mode always gets these tokens
                 // (paper island inside a dark document).
                 format!(
-                    ":root[theme='{id}'][data-mode='{mode_name}'],\n\
-                     :root[theme='{id}']:not([data-mode]),\n\
-                     [theme='{id}'][data-mode='{mode_name}'],\n\
-                     [theme='{id}']:not([data-mode])"
+                    ":root[theme='{id}'][mode='{mode_name}'],\n\
+                     :root[theme='{id}']:not([mode]),\n\
+                     [theme='{id}'][mode='{mode_name}'],\n\
+                     [theme='{id}']:not([mode])"
                 )
             } else if is_default {
                 format!(
-                    ":root[theme='{id}'][data-mode='{mode_name}'],\n\
-                     :root[theme='{id}']:not([data-mode]),\n\
-                     [theme='{id}'][data-mode='{mode_name}'],\n\
-                     :root[data-mode='{mode_name}'] [theme='{id}']:not([data-mode]),\n\
-                     :root:not([data-mode]) [theme='{id}']:not([data-mode])"
+                    ":root[theme='{id}'][mode='{mode_name}'],\n\
+                     :root[theme='{id}']:not([mode]),\n\
+                     [theme='{id}'][mode='{mode_name}'],\n\
+                     :root[mode='{mode_name}'] [theme='{id}']:not([mode]),\n\
+                     :root:not([mode]) [theme='{id}']:not([mode])"
                 )
             } else {
                 format!(
-                    ":root[theme='{id}'][data-mode='{mode_name}'],\n\
-                     [theme='{id}'][data-mode='{mode_name}'],\n\
-                     :root[data-mode='{mode_name}'] [theme='{id}']:not([data-mode])"
+                    ":root[theme='{id}'][mode='{mode_name}'],\n\
+                     [theme='{id}'][mode='{mode_name}'],\n\
+                     :root[mode='{mode_name}'] [theme='{id}']:not([mode])"
                 )
             };
+            reject_pseudo_composite_dual_forms(&mode_doc, &[], &label)?;
+            validate_composite_schema(&mode_doc, &label)?;
             let raw = flatten_tokens(&mode_doc, &[], None);
             let mut tokens = Vec::with_capacity(raw.len());
             for mut t in raw {
+                if t.composite_identity {
+                    tokens.push(t);
+                    continue;
+                }
                 t.css_value = resolve_value(&t.value, name_index)?;
                 tokens.push(t);
             }
@@ -2270,7 +2689,7 @@ pub fn scaffold_theme_config(project_dir: &Path, theme_id: &str) -> Result<Optio
     let body = format!(
         "{{\n\
          \x20\x20// Sail app config — theme (product) + deck (bundler/serve).\n\
-         \x20\x20// `default` / `defaultMode` drive first paint (theme / data-mode).\n\
+         \x20\x20// `default` / `defaultMode` drive first paint (theme / mode).\n\
          \x20\x20// `enabled` is the catalog allowlist for app CSS emit:\n\
          \x20\x20//   omit → default theme ship; [] → no catalog; [\"id\"] → those; \"all\" → full.\n\
          \x20\x20// Project themes under themes/ always emit. Package generate\n\
@@ -2745,6 +3164,9 @@ fn emit_block(
         lines.push(format!("{indent}color-scheme: {scheme};"));
     }
     for t in tokens {
+        if t.composite_identity {
+            continue;
+        }
         lines.push(format!("{indent}--{}: {};", t.css_name, t.css_value));
     }
     lines.push("}".into());
@@ -2757,7 +3179,7 @@ fn emit_compat_aliases(selector: &str, aliases: &BTreeMap<String, String>) -> St
     }
     let mut lines = vec![
         format!("{selector} {{"),
-        "  /* Legacy aliases (PE compat) */".into(),
+        "  /* Legacy aliases (host Style compat) */".into(),
     ];
     // BTreeMap iterates sorted — matches localeCompare for ASCII names.
     for (old_name, new_name) in aliases {
@@ -2877,7 +3299,26 @@ fn emit_layer(layer: &Layer) -> String {
 fn build_registry(base_tokens: &[Token], aliases: &BTreeMap<String, String>) -> Value {
     // Preserve insertion order of base tokens then aliases (like JS object).
     let mut tokens: Map<String, Value> = Map::new();
+    let mut composites: Map<String, Value> = Map::new();
     for t in base_tokens {
+        if t.composite_identity {
+            let mut members = Map::new();
+            let prefix = format!("{}.", t.path);
+            for m in base_tokens {
+                if let Some(member) = m.path.strip_prefix(&prefix) {
+                    if !member.contains('.') {
+                        members.insert(member.to_string(), Value::String(m.css_name.clone()));
+                    }
+                }
+            }
+            let mut meta = Map::new();
+            meta.insert("path".into(), Value::String(t.path.clone()));
+            meta.insert("cssName".into(), Value::String(t.css_name.clone()));
+            meta.insert("type".into(), Value::String(t.r#type.clone()));
+            meta.insert("members".into(), Value::Object(members));
+            composites.insert(t.css_name.clone(), Value::Object(meta));
+            continue;
+        }
         let mut meta = Map::new();
         meta.insert("path".into(), Value::String(t.path.clone()));
         meta.insert("cssName".into(), Value::String(t.css_name.clone()));
@@ -2977,6 +3418,7 @@ fn build_registry(base_tokens: &[Token], aliases: &BTreeMap<String, String>) -> 
     out.insert("tokens".into(), Value::Object(tokens));
     out.insert("paths".into(), Value::Object(paths));
     out.insert("aliases".into(), Value::Object(alias_entries));
+    out.insert("composites".into(), Value::Object(composites));
     Value::Object(out)
 }
 
@@ -3562,7 +4004,7 @@ mod tests {
 
         let themes_css = fs::read_to_string(&report.themes_css).unwrap();
         assert!(
-            themes_css.contains("theme='paper'][data-mode='light'")
+            themes_css.contains("theme='paper'][mode='light'")
                 || themes_css.contains(":root[theme='paper']"),
             "paper modes selectors missing: {themes_css}"
         );
@@ -3572,29 +4014,23 @@ mod tests {
         let reg: Value =
             serde_json::from_str(&fs::read_to_string(&report.registry_json).unwrap()).unwrap();
         assert_eq!(reg["version"], 2);
-        assert!(
-            reg["names"]
-                .as_array()
-                .unwrap()
-                .iter()
-                .any(|v| v.as_str() == Some("space-4"))
-        );
-        assert!(
-            reg["names"]
-                .as_array()
-                .unwrap()
-                .iter()
-                .any(|v| v.as_str() == Some("app-primary"))
-        );
+        assert!(reg["names"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|v| v.as_str() == Some("space-4")));
+        assert!(reg["names"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|v| v.as_str() == Some("app-primary")));
         assert_eq!(reg["tokens"]["app-primary"]["aliasOf"], "primary");
         assert_eq!(reg["paths"]["space.4"], "space-4");
-        assert!(
-            reg["colors"]
-                .as_array()
-                .unwrap()
-                .iter()
-                .any(|v| v.as_str() == Some("primary"))
-        );
+        assert!(reg["colors"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|v| v.as_str() == Some("primary")));
 
         let unions = fs::read_to_string(&report.unions_ts).unwrap();
         assert!(unions.contains("GENERATED FILE"));
@@ -3638,6 +4074,7 @@ mod tests {
             css_value: "oklch(0.5 0.1 250)".into(),
             channel: false,
             description: None,
+            composite_identity: false,
         }];
         let (names, source) = tone_names_from_tokens(&tokens);
         assert_eq!(
@@ -3676,6 +4113,226 @@ mod tests {
         assert_eq!(public_name("control.press.translate"), "press-translate");
         assert_eq!(public_name("icon.sm"), "icon-size-sm");
         assert_eq!(public_name("color.mix.surfaceMix"), "mix-surface");
+        // SPIN-1 composite members keep historical CSS names for the color slot.
+        assert_eq!(
+            public_name("component.dialog.border.color"),
+            "dialog-border"
+        );
+        assert_eq!(
+            public_name("component.dialog.border.width"),
+            "dialog-border-width"
+        );
+        assert_eq!(public_name("border.subtle.color"), "border-subtle-color");
+        assert_eq!(
+            composite_public_name("component.dialog.border"),
+            "dialog.border"
+        );
+        assert_eq!(composite_public_name("border.subtle"), "border.subtle");
+        assert_eq!(
+            composite_public_name("component.card.border"),
+            "card.border"
+        );
+    }
+
+    #[test]
+    fn flatten_expands_border_composite_members() {
+        let doc: Value = serde_json::json!({
+            "border": {
+                "subtle": {
+                    "$type": "border",
+                    "$value": {
+                        "color": "{color.border.default}",
+                        "width": "1px",
+                        "style": "solid"
+                    }
+                }
+            },
+            "color": {
+                "border": {
+                    "default": { "$value": "oklch(0.2 0 0)", "$type": "color" }
+                }
+            }
+        });
+        let tokens = flatten_tokens(&doc, &[], None);
+        let ident = tokens.iter().find(|t| t.path == "border.subtle").unwrap();
+        assert_eq!(ident.css_name, "border.subtle");
+        assert_eq!(ident.r#type, "border");
+        let color = tokens
+            .iter()
+            .find(|t| t.path == "border.subtle.color")
+            .unwrap();
+        assert_eq!(color.css_name, "border-subtle-color");
+        assert_eq!(color.r#type, "color");
+        assert_eq!(color.value, "{color.border.default}");
+        assert!(tokens.iter().any(|t| t.path == "border.subtle.width"));
+        assert!(tokens.iter().any(|t| t.path == "border.subtle.style"));
+    }
+
+    #[test]
+    fn string_shadow_type_stays_scalar() {
+        let doc: Value = serde_json::json!({
+            "color": {
+                "edgeHighlight": {
+                    "$value": "inset 0 1px 0 0 black",
+                    "$type": "shadow"
+                }
+            }
+        });
+        let tokens = flatten_tokens(&doc, &[], None);
+        let hits: Vec<_> = tokens
+            .iter()
+            .filter(|t| t.path.starts_with("color.edgeHighlight"))
+            .collect();
+        assert_eq!(hits.len(), 1, "{hits:?}");
+        assert!(!hits[0].composite_identity);
+        assert_eq!(hits[0].css_name, "edge-highlight");
+        assert_eq!(hits[0].r#type, "shadow");
+        assert_eq!(hits[0].value, "inset 0 1px 0 0 black");
+    }
+
+    #[test]
+    fn generate_emits_composite_member_css_and_registry() {
+        let dir = tempfile::tempdir().unwrap();
+        let model = dir.path().join("model");
+        let out = dir.path().join("src");
+        write_file(
+            &model.join("base.json"),
+            r#"{
+  "$extensions": { "sail": { "selector": ":root", "layer": "base" } },
+  "color": {
+    "border": {
+      "default": { "$value": "oklch(0.2 0 0)", "$type": "color" }
+    },
+    "background": { "$value": "oklch(0.98 0 0)", "$type": "color" },
+    "foreground": { "$value": "oklch(0.20 0 0)", "$type": "color" },
+    "primary": {
+      "default": { "$value": "oklch(0.45 0.12 250)", "$type": "color" },
+      "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
+    },
+    "muted": {
+      "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
+      "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
+    },
+    "brandAccent": {
+      "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
+      "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
+    }
+  },
+  "border": {
+    "subtle": {
+      "$type": "border",
+      "$value": {
+        "color": "{color.border.default}",
+        "width": "1px",
+        "style": "solid"
+      }
+    }
+  },
+  "component": {
+    "card": {
+      "border": {
+        "$type": "border",
+        "$value": {
+          "color": "{color.border.default}",
+          "width": "1px",
+          "style": "solid"
+        }
+      }
+    }
+  }
+}
+"#,
+        );
+        write_file(
+            &model.join("themes/probe.json"),
+            r#"{
+  "$extensions": { "sail": { "themeId": "probe", "defaultMode": "light" } },
+  "modes": {
+    "light": {
+      "color": {
+        "background": { "$value": "oklch(0.98 0 0)", "$type": "color" },
+        "foreground": { "$value": "oklch(0.20 0 0)", "$type": "color" },
+        "primary": {
+          "default": { "$value": "oklch(0.45 0.12 250)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
+        },
+        "muted": {
+          "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
+        },
+        "brandAccent": {
+          "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
+        }
+      }
+    }
+  }
+}
+"#,
+        );
+        let report = generate(&model, &out).expect("generate composites");
+        let css = fs::read_to_string(&report.tokens_css).unwrap();
+        assert!(
+            css.contains("--card-border: var(--border);"),
+            "color member must keep historical CSS name: {css}"
+        );
+        assert!(css.contains("--card-border-width:"));
+        assert!(css.contains("--card-border-style:"));
+        assert!(css.contains("--border-subtle-color: var(--border);"));
+        assert!(
+            !css.contains("--card.border:"),
+            "composite identity is not a CSS var: {css}"
+        );
+        let themes = fs::read_to_string(&report.themes_css).unwrap();
+        assert!(
+            themes.contains("theme='probe'") || themes.contains("theme=\"probe\""),
+            "{themes}"
+        );
+        let reg: Value =
+            serde_json::from_str(&fs::read_to_string(&report.registry_json).unwrap()).unwrap();
+        assert_eq!(reg["paths"]["component.card.border.color"], "card-border");
+        assert_eq!(reg["composites"]["card.border"]["type"], "border");
+        assert_eq!(
+            reg["composites"]["card.border"]["members"]["color"],
+            "card-border"
+        );
+        assert!(
+            reg["names"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .all(|n| n.as_str() != Some("card.border")),
+            "dotted composite identity is not a CSS name"
+        );
+    }
+
+    #[test]
+    fn reject_pseudo_composite_dual_form() {
+        let dir = tempfile::tempdir().unwrap();
+        let model = dir.path().join("model");
+        let out = dir.path().join("src");
+        write_file(
+            &model.join("base.json"),
+            r#"{
+  "$extensions": { "sail": { "selector": ":root", "layer": "base" } },
+  "component": {
+    "card": {
+      "border": {
+        "$type": "border",
+        "$value": { "color": "oklch(0.2 0 0)", "width": "1px", "style": "solid" }
+      },
+      "border-width": { "$value": "2px", "$type": "dimension" }
+    }
+  }
+}
+"#,
+        );
+        let err = generate(&model, &out).unwrap_err().to_string();
+        assert!(
+            err.contains("dual form") && err.contains("border-width"),
+            "expected dual-form refuse, got: {err}"
+        );
+        assert!(err.contains("card.border"), "{err}");
     }
 
     #[test]
@@ -4805,11 +5462,11 @@ mod tests {
         generate(&model, &out).expect("single-mode theme must generate");
         let css = fs::read_to_string(out.join("themes.css")).unwrap();
         assert!(
-            css.contains("theme='glass'][data-mode='light']"),
+            css.contains("theme='glass'][mode='light']"),
             "expected light selector, got: {css}"
         );
         assert!(
-            !css.contains("theme='glass'][data-mode='dark']"),
+            !css.contains("theme='glass'][mode='dark']"),
             "single-mode glass must not emit dark block"
         );
         let meta = fs::read_to_string(out.join("generated/themes-meta.ts")).unwrap();
@@ -5021,7 +5678,7 @@ mod tests {
     }
 
     #[test]
-    fn modes_in_file_emit_data_theme_and_data_mode() {
+    fn modes_in_file_emit_theme_and_mode() {
         let dir = tempfile::tempdir().unwrap();
         let model = dir.path().join("model");
         let out = dir.path().join("src");
@@ -5100,40 +5757,40 @@ mod tests {
         assert_eq!(report.theme_count, 1, "one theme id, two modes");
         let css = fs::read_to_string(&report.themes_css).unwrap();
         assert!(
-            css.contains("theme='ship'][data-mode='light'")
-                || css.contains(r#"theme='ship'][data-mode='light'"#),
+            css.contains("theme='ship'][mode='light'")
+                || css.contains(r#"theme='ship'][mode='light'"#),
             "light mode selector missing: {css}"
         );
         assert!(
-            css.contains("theme='ship'][data-mode='dark'"),
+            css.contains("theme='ship'][mode='dark'"),
             "dark mode selector missing: {css}"
         );
         assert!(
-            css.contains("[theme='ship'][data-mode='light']") || css.contains("[theme='ship']"),
+            css.contains("[theme='ship'][mode='light']") || css.contains("[theme='ship']"),
             "author IR [theme=id] selector missing: {css}"
         );
         assert!(
-            css.contains(":root[data-mode='dark'] [theme='ship']:not([data-mode])"),
+            css.contains(":root[mode='dark'] [theme='ship']:not([mode])"),
             "dual-mode nested host must inherit document dark: {css}"
         );
         assert!(
-            css.contains(":root[data-mode='light'] [theme='ship']:not([data-mode])")
-                || css.contains(":root:not([data-mode]) [theme='ship']:not([data-mode])"),
+            css.contains(":root[mode='light'] [theme='ship']:not([mode])")
+                || css.contains(":root:not([mode]) [theme='ship']:not([mode])"),
             "dual-mode nested host must inherit document light/cold: {css}"
         );
         assert!(
             css.contains("color-scheme: light") && css.contains("color-scheme: dark"),
             "theme mode blocks must set color-scheme: {css}"
         );
-        // Global `[theme=id]:not([data-mode])` would pin nested dual-mode hosts
+        // Global `[theme=id]:not([mode])` would pin nested dual-mode hosts
         // to the default mode. Only ancestor-qualified forms are allowed.
         let global_bare = css.lines().any(|l| {
-            l.trim() == "[theme='ship']:not([data-mode])"
-                || l.trim() == "[theme='ship']:not([data-mode]),"
+            l.trim() == "[theme='ship']:not([mode])"
+                || l.trim() == "[theme='ship']:not([mode]),"
         });
         assert!(
             !global_bare,
-            "dual-mode must not emit a global [theme=id]:not([data-mode]) selector: {css}"
+            "dual-mode must not emit a global [theme=id]:not([mode]) selector: {css}"
         );
         let meta = fs::read_to_string(out.join("generated/themes-meta.ts")).unwrap();
         assert!(meta.contains("id: 'ship'"));
@@ -5281,6 +5938,379 @@ mod tests {
         assert!(
             err.contains("alias cycle"),
             "expected alias cycle diagnostic, got: {err}"
+        );
+    }
+
+    #[test]
+    fn infer_size_members_are_geometry_only() {
+        for m in SIZE_MEMBERS {
+            assert_eq!(
+                infer_composite_member_type("size", m),
+                "dimension",
+                "size.{m}"
+            );
+        }
+        assert_ne!(
+            infer_composite_member_type("size", "pad-x"),
+            "dimension",
+            "pad-x is not a size member"
+        );
+        assert_ne!(
+            infer_composite_member_type("size", "text"),
+            "dimension",
+            "text is not a size member"
+        );
+        assert!(is_forbidden_size_member("pad"));
+        assert!(is_forbidden_size_member("pad-x"));
+        assert!(is_forbidden_size_member("pad-y"));
+        assert!(is_forbidden_size_member("space"));
+        assert!(!is_forbidden_size_member("h"));
+        assert_eq!(infer_composite_member_type("type", "family"), "fontFamily");
+        assert_eq!(infer_composite_member_type("elevation", "shadow"), "shadow");
+        assert_eq!(infer_composite_member_type("fill", "color"), "color");
+        assert_eq!(infer_composite_member_type("ink", "color"), "color");
+    }
+
+    #[test]
+    fn flatten_expands_size_type_elevation_members() {
+        let doc: Value = serde_json::json!({
+            "control": { "h-md": { "$value": "34px", "$type": "dimension" } },
+            "shadow": { "sm": { "$value": "0 1px 2px black", "$type": "shadow" } },
+            "typography": {
+                "body": { "font": { "$value": "Inter", "$type": "fontFamily" } },
+                "text": { "base": { "$value": "13px", "$type": "dimension" } }
+            },
+            "size": {
+                "control-md": {
+                    "$type": "size",
+                    "$value": { "h": "{control.h-md}" }
+                },
+                "full": {
+                    "$type": "size",
+                    "$value": { "w": "100%", "h": "100%" }
+                }
+            },
+            "type": {
+                "body": {
+                    "$type": "type",
+                    "$value": {
+                        "family": "{typography.body.font}",
+                        "size": "{typography.text.base}"
+                    }
+                }
+            },
+            "elevation": {
+                "sm": { "$type": "elevation", "$value": { "shadow": "{shadow.sm}" } },
+                "none": { "$type": "elevation", "$value": { "shadow": "none" } }
+            }
+        });
+        let tokens = flatten_tokens(&doc, &[], None);
+        let size_md = tokens.iter().find(|t| t.path == "size.control-md").unwrap();
+        assert!(size_md.composite_identity);
+        assert_eq!(size_md.css_name, "size.control-md");
+        assert_eq!(size_md.r#type, "size");
+        let h = tokens
+            .iter()
+            .find(|t| t.path == "size.control-md.h")
+            .unwrap();
+        assert_eq!(h.css_name, "size-control-md-h");
+        assert_eq!(h.r#type, "dimension");
+        assert_eq!(h.value, "{control.h-md}");
+        assert!(tokens.iter().any(|t| t.path == "size.full.w"));
+        assert!(tokens.iter().any(|t| t.path == "size.full.h"));
+        let family = tokens
+            .iter()
+            .find(|t| t.path == "type.body.family")
+            .unwrap();
+        assert_eq!(family.css_name, "type-body-family");
+        assert_eq!(family.r#type, "fontFamily");
+        let elev = tokens
+            .iter()
+            .find(|t| t.path == "elevation.sm.shadow")
+            .unwrap();
+        assert_eq!(elev.css_name, "elevation-sm-shadow");
+        assert_eq!(elev.r#type, "shadow");
+        assert!(tokens
+            .iter()
+            .any(|t| t.path == "elevation.none" && t.composite_identity));
+    }
+
+    #[test]
+    fn generate_emits_catalog_identities_and_member_css() {
+        let dir = tempfile::tempdir().unwrap();
+        let model = dir.path().join("model");
+        let out = dir.path().join("src");
+        write_file(
+            &model.join("base.json"),
+            r#"{
+  "$extensions": { "sail": { "selector": ":root", "layer": "base" } },
+  "control": {
+    "h-sm": { "$value": "28px", "$type": "dimension" },
+    "h-md": { "$value": "34px", "$type": "dimension" },
+    "h-lg": { "$value": "40px", "$type": "dimension" }
+  },
+  "shadow": {
+    "xs": { "$value": "0 1px 2px black", "$type": "shadow" },
+    "sm": { "$value": "0 1px 3px black", "$type": "shadow" },
+    "md": { "$value": "0 4px 12px black", "$type": "shadow" },
+    "lg": { "$value": "0 12px 32px black", "$type": "shadow" },
+    "xl": { "$value": "0 24px 64px black", "$type": "shadow" }
+  },
+  "typography": {
+    "text": {
+      "xs": { "$value": "11px", "$type": "dimension" },
+      "sm": { "$value": "12px", "$type": "dimension" },
+      "base": { "$value": "13px", "$type": "dimension" },
+      "xl": { "$value": "20px", "$type": "dimension" }
+    },
+    "body": {
+      "font": { "$value": "Inter", "$type": "fontFamily" },
+      "weight": { "$value": "400", "$type": "number" }
+    },
+    "heading": {
+      "font": { "$value": "Syne", "$type": "fontFamily" },
+      "weight": { "$value": "600", "$type": "number" },
+      "tracking": { "$value": "-0.01em", "$type": "dimension" },
+      "transform": { "$value": "none", "$type": "string" }
+    },
+    "label": {
+      "font": { "$value": "Inter", "$type": "fontFamily" },
+      "weight": { "$value": "600", "$type": "number" },
+      "tracking": { "$value": "0.04em", "$type": "dimension" },
+      "transform": { "$value": "uppercase", "$type": "string" }
+    },
+    "monoFont": { "$value": "JetBrains Mono", "$type": "fontFamily" },
+    "font": { "weight-normal": { "$value": "400", "$type": "number" } },
+    "leading": {
+      "normal": { "$value": "1.5", "$type": "number" },
+      "tight": { "$value": "1.2", "$type": "number" },
+      "snug": { "$value": "1.35", "$type": "number" },
+      "code": { "$value": "1.6", "$type": "number" }
+    },
+    "tracking": { "normal": { "$value": "0", "$type": "dimension" } }
+  },
+  "color": {
+    "surface": { "1": { "$value": "oklch(1 0 0)", "$type": "color" } },
+    "foreground": { "$value": "oklch(0.2 0 0)", "$type": "color" },
+    "muted": {
+      "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
+      "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
+    },
+    "background": { "$value": "oklch(0.98 0 0)", "$type": "color" },
+    "primary": {
+      "default": { "$value": "oklch(0.45 0.12 250)", "$type": "color" },
+      "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
+    },
+    "brandAccent": {
+      "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
+      "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
+    }
+  },
+  "component": {
+    "card": {
+      "bg": { "$value": "{color.surface.1}", "$type": "color" },
+      "fg": { "$value": "{color.foreground}", "$type": "color" }
+    },
+    "button": {
+      "bg": { "$value": "{color.background}", "$type": "color" },
+      "fg": { "$value": "{color.foreground}", "$type": "color" }
+    }
+  },
+  "size": {
+    "control-sm": { "$type": "size", "$value": { "h": "{control.h-sm}" } },
+    "control-md": { "$type": "size", "$value": { "h": "{control.h-md}" } },
+    "control-lg": { "$type": "size", "$value": { "h": "{control.h-lg}" } },
+    "full": { "$type": "size", "$value": { "w": "100%", "h": "100%" } }
+  },
+  "type": {
+    "body": {
+      "$type": "type",
+      "$value": {
+        "family": "{typography.body.font}",
+        "size": "{typography.text.base}",
+        "weight": "{typography.body.weight}",
+        "leading": "{typography.leading.normal}",
+        "tracking": "{typography.tracking.normal}"
+      }
+    },
+    "body-sm": {
+      "$type": "type",
+      "$value": {
+        "family": "{typography.body.font}",
+        "size": "{typography.text.sm}"
+      }
+    },
+    "label": {
+      "$type": "type",
+      "$value": {
+        "family": "{typography.label.font}",
+        "size": "{typography.text.xs}",
+        "case": "{typography.label.transform}"
+      }
+    },
+    "heading": {
+      "$type": "type",
+      "$value": {
+        "family": "{typography.heading.font}",
+        "size": "{typography.text.xl}"
+      }
+    },
+    "mono": {
+      "$type": "type",
+      "$value": { "family": "{typography.monoFont}" }
+    }
+  },
+  "elevation": {
+    "xs": { "$type": "elevation", "$value": { "shadow": "{shadow.xs}" } },
+    "sm": { "$type": "elevation", "$value": { "shadow": "{shadow.sm}" } },
+    "md": { "$type": "elevation", "$value": { "shadow": "{shadow.md}" } },
+    "lg": { "$type": "elevation", "$value": { "shadow": "{shadow.lg}" } },
+    "xl": { "$type": "elevation", "$value": { "shadow": "{shadow.xl}" } },
+    "none": { "$type": "elevation", "$value": { "shadow": "none" } }
+  },
+  "fill": {
+    "surface": { "$type": "fill", "$value": { "color": "{color.surface.1}" } }
+  },
+  "ink": {
+    "foreground": { "$type": "ink", "$value": { "color": "{color.foreground}" } }
+  }
+}
+"#,
+        );
+        let report = generate(&model, &out).expect("generate catalog identities");
+        let css = fs::read_to_string(&report.tokens_css).unwrap();
+        assert!(
+            css.contains("--size-control-md-h: var(--control-h-md);"),
+            "{css}"
+        );
+        assert!(css.contains("--size-full-w: 100%;"), "{css}");
+        assert!(
+            css.contains("--type-body-family: var(--body-font);"),
+            "{css}"
+        );
+        assert!(
+            css.contains("--elevation-sm-shadow: var(--shadow-sm);"),
+            "{css}"
+        );
+        assert!(css.contains("--elevation-none-shadow: none;"), "{css}");
+        assert!(
+            css.contains("--fill-surface-color: var(--surface-1);"),
+            "{css}"
+        );
+        assert!(
+            css.contains("--ink-foreground-color: var(--foreground);"),
+            "{css}"
+        );
+        assert!(
+            !css.contains("--size.control-md:"),
+            "composite identity is not a CSS var: {css}"
+        );
+        let reg: Value =
+            serde_json::from_str(&fs::read_to_string(&report.registry_json).unwrap()).unwrap();
+        for ident in [
+            "size.control-sm",
+            "size.control-md",
+            "size.control-lg",
+            "size.full",
+            "type.body",
+            "type.body-sm",
+            "type.label",
+            "type.heading",
+            "type.mono",
+            "elevation.xs",
+            "elevation.sm",
+            "elevation.md",
+            "elevation.lg",
+            "elevation.xl",
+            "elevation.none",
+            "fill.surface",
+            "ink.foreground",
+        ] {
+            assert_eq!(
+                reg["composites"][ident]["type"].as_str().unwrap_or(""),
+                ident.split('.').next().unwrap(),
+                "missing composite {ident}"
+            );
+            assert!(
+                reg["names"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .all(|n| n.as_str() != Some(ident)),
+                "dotted identity {ident} must not be a CSS name"
+            );
+        }
+        assert_eq!(
+            reg["composites"]["size.control-md"]["members"]["h"],
+            "size-control-md-h"
+        );
+        assert!(reg["composites"]["size.control-md"]["members"]
+            .get("pad")
+            .is_none());
+        assert!(reg["composites"]["size.control-md"]["members"]
+            .get("pad-x")
+            .is_none());
+        assert_eq!(
+            reg["composites"]["type.body"]["members"]["family"],
+            "type-body-family"
+        );
+        assert_eq!(
+            reg["composites"]["elevation.sm"]["members"]["shadow"],
+            "elevation-sm-shadow"
+        );
+    }
+
+    #[test]
+    fn reject_size_composite_that_carries_pad() {
+        let dir = tempfile::tempdir().unwrap();
+        let model = dir.path().join("model");
+        let out = dir.path().join("src");
+        write_file(
+            &model.join("base.json"),
+            r#"{
+  "$extensions": { "sail": { "selector": ":root", "layer": "base" } },
+  "size": {
+    "control-md": {
+      "$type": "size",
+      "$value": { "h": "34px", "pad": "8px" }
+    }
+  }
+}
+"#,
+        );
+        let err = generate(&model, &out).unwrap_err().to_string();
+        assert!(
+            err.contains("schema error") && err.contains("pad") && err.contains("size.control-md"),
+            "expected named size-pad schema error, got: {err}"
+        );
+        assert!(
+            err.contains("geometry") || err.contains("space"),
+            "error should say pad belongs on space / geometry only: {err}"
+        );
+    }
+
+    #[test]
+    fn reject_size_composite_that_carries_pad_x() {
+        let dir = tempfile::tempdir().unwrap();
+        let model = dir.path().join("model");
+        let out = dir.path().join("src");
+        write_file(
+            &model.join("base.json"),
+            r#"{
+  "$extensions": { "sail": { "selector": ":root", "layer": "base" } },
+  "size": {
+    "control-md": {
+      "$type": "size",
+      "$value": { "h": "34px", "pad-x": "8px" }
+    }
+  }
+}
+"#,
+        );
+        let err = generate(&model, &out).unwrap_err().to_string();
+        assert!(
+            err.contains("schema error") && err.contains("pad-x"),
+            "expected pad-x schema error, got: {err}"
         );
     }
 }

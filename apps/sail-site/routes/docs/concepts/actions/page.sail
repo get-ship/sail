@@ -3,12 +3,12 @@
 -->
 
 <scope>
-  style page = { box: maxW(breakpoint-tablet).mx(auto) }
-  style eyebrow = { box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
-  style lead = { paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) }
-  style demoField = { box: maxW(panel-max-w-sm) }
-  style footNote = { box: mt(4), paint: fg(muted-foreground), text: fontSize(sm) }
-  style footNav = { box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) }
+  style page = { box: size({ max-w: breakpoint-tablet }).space({ mx: auto }) }
+  style eyebrow = { box: space({ mb: 2 }), paint: ink({ color: accent }), text: type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
+  style lead = { paint: ink({ color: muted-foreground }), text: type({ size: lg, leading: relaxed }) }
+  style demoField = { box: size({ max-w: panel-max-w-sm }) }
+  style footNote = { box: space({ mt: 4 }), paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
+  style footNav = { box: space({ pad-t: 4, mt: 8 }), paint: border({ color: border, width: 1, edge: t }) }
 </scope>
 
 <controller>
@@ -38,7 +38,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     grows to fit — the action measures the content and sets the height, and
     when the element leaves the page, the action’s cleanup runs with it:
   </p>
-  <textarea use:autosize placeholder="Type a few lines here…" style(demoField)></textarea>
+  <textarea use:autosize placeholder="Type a few lines here…" style(demoField) />
 
   <h2>Why there is no ref</h2>
   <p>

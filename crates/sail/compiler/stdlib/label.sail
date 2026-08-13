@@ -10,14 +10,14 @@
     required = false
   }
 
-  style base = { paint: fg(label.foreground).cursor(pointer).group(), text: fontFamily(body).fontWeight(bind(labelWeight)).tracking(normal).fontSize(base) }
-  style sizeMd = { text: fontSize(base) }
-  style sizeSm = { text: fontSize(sm) }
-  style sizeLg = { text: fontSize(lg) }
-  style req = { box: display(none).ms(1), paint: fg(label.required), text: fontWeight(bold) }
+  style base = {paint: ink({ color: label.foreground }).cursor(pointer).group(), text: type({ family: body, weight: bind(labelWeight), tracking: normal, size: base })}
+  style sizeMd = {text: type({ size: base })}
+  style sizeSm = {text: type({ size: sm })}
+  style sizeLg = {text: type({ size: lg })}
+  style req = {box: flow({ display: none }).space({ ms: 1 }), paint: ink({ color: label.required }), text: type({ weight: bold })}
 </scope>
 
 <label style(base, { match: { size: { md: sizeMd, sm: sizeSm, lg: sizeLg } } })>
   <slot></slot>
-  <span hidden="true" style(req, { when: { group-required: { box: display(inline) } } })>*</span>
+  <span hidden="true" style(req, {when: {group-required: {box: flow({ display: inline })}}})>*</span>
 </label>

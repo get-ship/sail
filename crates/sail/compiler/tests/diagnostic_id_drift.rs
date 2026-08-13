@@ -74,6 +74,7 @@ const PINNED_RULE_IDS: &[&str] = &[
     "sail-space-literal",
     "sail-state-set-call",
     "sail-style",
+    "sail-style-concern",
     "sail-style-value-enumeration",
     "sail-sub-min-tap-target",
     "sail-surface-not-card",

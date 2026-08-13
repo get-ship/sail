@@ -13,55 +13,55 @@
   }
 
   style root = {
-    box: w(full).minW(0).overflowX(auto),
-    paint: bg(surface-0),
+    box: size({ w: full, min-w: 0 }).overflow({ x: auto }),
+    paint: fill({ color: surface-0 }),
   }
   style mono = {
-    box: display(contents),
-    text: fontFamily(mono).fontSize(xs).leading(normal),
+    box: flow({ display: contents }),
+    text: type({ family: mono, size: xs, leading: normal }),
   }
   style lineAdd = {
-    box: padX(2).padY(px).w(full).minW(0),
-    paint: colorMix(success, 15),
+    box: space({ pad-x: 2, pad-y: px }).size({ w: full, min-w: 0 }),
+    paint: fill({ color: success, mix: 15 }),
   }
   style lineDel = {
-    box: padX(2).padY(px).w(full).minW(0),
-    paint: colorMix(destructive, 15),
+    box: space({ pad-x: 2, pad-y: px }).size({ w: full, min-w: 0 }),
+    paint: fill({ color: destructive, mix: 15 }),
   }
   style lineHunk = {
-    box: padX(2).padY(px).w(full).minW(0),
-    paint: bg(muted),
+    box: space({ pad-x: 2, pad-y: px }).size({ w: full, min-w: 0 }),
+    paint: fill({ color: muted }),
   }
   style lineCtx = {
-    box: padX(2).padY(px).w(full).minW(0),
+    box: space({ pad-x: 2, pad-y: px }).size({ w: full, min-w: 0 }),
   }
   style signAdd = {
-    box: shrink(0).w(4),
-    paint: fg(success),
-    text: fontWeight(semibold),
+    box: flow({ shrink: 0 }).size({ w: 4 }),
+    paint: ink({ color: success }),
+    text: type({ weight: semibold }),
   }
   style signDel = {
-    box: shrink(0).w(4),
-    paint: fg(destructive),
-    text: fontWeight(semibold),
+    box: flow({ shrink: 0 }).size({ w: 4 }),
+    paint: ink({ color: destructive }),
+    text: type({ weight: semibold }),
   }
   style signHunk = {
-    box: shrink(0).w(4),
-    paint: fg(info),
+    box: flow({ shrink: 0 }).size({ w: 4 }),
+    paint: ink({ color: info }),
   }
   style signCtx = {
-    box: shrink(0).w(4),
-    paint: fg(muted-foreground),
+    box: flow({ shrink: 0 }).size({ w: 4 }),
+    paint: ink({ color: muted-foreground }),
   }
   style textBody = {
-    box: grow(1).minW(0),
-    paint: fg(foreground),
-    text: fontSize(xs),
+    box: flow({ grow: 1 }).size({ min-w: 0 }),
+    paint: ink({ color: foreground }),
+    text: type({ size: xs }),
   }
   style textHunk = {
-    box: grow(1).minW(0),
-    paint: fg(info),
-    text: fontSize(xs),
+    box: flow({ grow: 1 }).size({ min-w: 0 }),
+    paint: ink({ color: info }),
+    text: type({ size: xs }),
   }
 </scope>
 

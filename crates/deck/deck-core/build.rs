@@ -102,7 +102,7 @@ fn main() {
         .expect("repo root (three levels above crates/deck/deck-core)")
         .to_path_buf();
     let framework_src = deck_config::deck_out_path(&repo_root).join("framework");
-    let framework_stamp = deck_config::deck_out_path(&repo_root).join("framework-stamp");
+    let framework_stamp = deck_config::framework_stamp_path(&repo_root);
 
     fs::create_dir_all(&assets).unwrap_or_else(|e| panic!("build.rs: mkdir assets: {e}"));
 
@@ -184,18 +184,16 @@ fn main() {
 
     // ── rerun-if-changed: watch the framework bake stamp ───────────────────────
     //
-    // `deck build-assets` touches `.deck/framework-stamp` after it finishes
-    // baking and stamping the framework singletons. Watching that stamp (rather
-    // than the individual `.deck/framework/*.js` files) lets Cargo re-run this
-    // build script once per explicit bake, while tests can invoke
-    // `deck build-assets --no-stamp` to avoid re-triggering the script while
-    // downstream doctests are queued.
+    // `deck build-assets` touches crates/deck/deck-core/framework-stamp after
+    // it finishes baking. Watching that stamp (rather than the individual
+    // `.deck/framework/*.js` files) lets Cargo re-run this build script once
+    // per explicit bake; tests pass `--no-stamp` so they do not re-trigger
+    // while downstream doctests are queued.
     //
-    // The stamp is committed empty so it is a stable, present path on fresh
-    // checkouts; `build-assets` updates its mtime to trigger re-staging. Cargo
-    // treats a *missing* `rerun-if-changed` path as a stale fingerprint, which
-    // itself invalidates downstream crates mid-doctest, so we never rely on a
-    // missing-path watch.
+    // The stamp is a tracked empty file in this crate — never under `.deck/`.
+    // `build-assets` updates mtime only. Cargo treats a *missing*
+    // `rerun-if-changed` path as a stale fingerprint, so the file must exist
+    // on a fresh checkout.
     //
     // We intentionally do NOT watch `assets/<name>`: those files are WRITTEN by
     // this build script. Watching outputs created a self-triggering rebuild loop

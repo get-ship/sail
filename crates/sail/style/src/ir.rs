@@ -14,6 +14,8 @@ pub enum PaintArg {
     /// Static roots resolve to a public token id before CSS lower. Bound roots
     /// (`tone`) expand over the group family at emit with attr-gated classes.
     MemberPath { root: String, path: Vec<String> },
+    /// Concern slot object: `border({ color: muted, width: hairline })`.
+    Slots(BTreeMap<String, PaintArg>),
 }
 
 impl PaintArg {
@@ -28,6 +30,14 @@ impl PaintArg {
                 } else {
                     format!("{root}.{}", path.join("."))
                 }
+            }
+            PaintArg::Slots(slots) => {
+                let inner = slots
+                    .iter()
+                    .map(|(k, v)| format!("{k}: {}", v.display()))
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                format!("{{ {inner} }}")
             }
         }
     }
@@ -174,6 +184,24 @@ pub enum StyleDiagnostic {
         message: String,
         source: String,
     },
+    /// Slot name is not on this concern (`border({ radius: md })`).
+    UnknownConcernSlot {
+        setter: String,
+        slot: String,
+        source: String,
+    },
+    /// Same slot written twice inside one concern object.
+    DuplicateSlot {
+        setter: String,
+        slot: String,
+        source: String,
+    },
+    /// Covered property setter / color-only `border(x)` — concern form only.
+    RetiredSetter {
+        setter: String,
+        replacement: String,
+        source: String,
+    },
 }
 
 impl StyleDiagnostic {
@@ -225,6 +253,28 @@ impl StyleDiagnostic {
                 )
             }
             StyleDiagnostic::BadScrutinee { message, .. } => message.clone(),
+            StyleDiagnostic::UnknownConcernSlot { setter, slot, .. } => match setter.as_str() {
+                "border" if slot == "radius" => {
+                    "style `border` does not take `radius` — corner geometry uses `radius(…)`"
+                        .into()
+                }
+                "size" if slot.starts_with("pad") || slot == "text" => {
+                    format!(
+                        "style `size` does not take `{slot}` — padding uses `space(…)`; type size uses `type(…)`"
+                    )
+                }
+                _ => format!(
+                    "style `{setter}({{ {slot}: … }})` — `{slot}` is not a slot on this concern"
+                ),
+            },
+            StyleDiagnostic::DuplicateSlot { setter, slot, .. } => format!(
+                "style `{setter}` assigns `{slot}` twice in one slot object (fail closed; no last-wins)"
+            ),
+            StyleDiagnostic::RetiredSetter {
+                setter,
+                replacement,
+                ..
+            } => format!("style `{setter}` is retired — use `{replacement}`"),
         }
     }
 
@@ -238,7 +288,10 @@ impl StyleDiagnostic {
             | StyleDiagnostic::UnknownWhenKey { source, .. }
             | StyleDiagnostic::UnknownRef { source, .. }
             | StyleDiagnostic::ResidualProduct { source, .. }
-            | StyleDiagnostic::BadScrutinee { source, .. } => source,
+            | StyleDiagnostic::BadScrutinee { source, .. }
+            | StyleDiagnostic::UnknownConcernSlot { source, .. }
+            | StyleDiagnostic::DuplicateSlot { source, .. }
+            | StyleDiagnostic::RetiredSetter { source, .. } => source,
             StyleDiagnostic::Clash { first, .. } => first,
         }
     }

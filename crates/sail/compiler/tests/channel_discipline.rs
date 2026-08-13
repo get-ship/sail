@@ -138,7 +138,7 @@ fn no_skin_hardcodes_a_channel_governed_property() {
 /// element skins). Ratchet: count may fall, never rise. Prefer `--border-width`.
 #[test]
 fn literal_border_widths_in_skins_do_not_increase() {
-    const BASELINE: usize = 0; // ratchet after PE dissolve into skins/channels
+    const BASELINE: usize = 0; // ratchet after host Style dissolve into skins/channels
 
     fn count_literal_borders(src: &str) -> usize {
         let mut count = 0usize;
@@ -178,7 +178,7 @@ fn literal_border_widths_in_skins_do_not_increase() {
     );
 }
 
-/// Contract-owned tone channel vars. PE untoned defaults write these only
+/// Contract-owned tone channel vars. host Style untoned defaults write these only
 /// under `:not([tone])` / `[tone='default']`. Bare `.sail-* { … }` must not —
 /// same specificity as branded `[tone=X]` would clobber them after load order.
 const CONTRACT_TONE_CHANNELS: &[&str] = &[
@@ -194,7 +194,7 @@ const CONTRACT_TONE_CHANNELS: &[&str] = &[
 /// Fail-closed channel ownership: a bare `.sail-*` host must not write the
 /// framework tone contract vars. Soft-status / untoned defaults key on
 /// `:not([tone])` or `[tone='default']` so branded `[tone=X]` is not clobbered
-/// at equal specificity. Positive invariant — not a eulogy for deleted PE.
+/// at equal specificity. Positive invariant — not a eulogy for deleted host CSS.
 #[test]
 fn bare_sail_host_must_not_write_contract_tone_channels() {
     let mut breaches = Vec::new();

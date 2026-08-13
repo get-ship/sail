@@ -163,27 +163,27 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   aria-disabled={disabled() ? 'true' : 'false'}
   use:dropTarget
   style({
-    box: padY(6).padX(4),
-    paint: group().borderWidth(1).border(border).border(dashed).radius(lg).cursor(pointer).fg(muted-foreground).select(none),
+    box: space({ pad-x: 4, pad-y: 6 }),
+    paint: group().border({ color: border, width: 1, style: dashed }).radius(lg).cursor(pointer).ink({ color: muted-foreground }).select(none),
     when: {
-      focus: { paint: outline(ring) },
-      stateOver: { paint: borderWidth(1).border(ring).bg(muted) },
+      focus: { paint: border({ kind: outline, color: ring }) },
+      stateOver: { paint: border({ color: ring, width: 1 }).fill({ color: muted }) },
     },
   })
 >
-  <span style({ box: display(contents), text: textAlign(center) })>
+  <span style({ box: flow({ display: contents }), text: type({ align: center }) })>
     <row
       align="center"
       justify="center"
       gap="0"
       aria-hidden="true"
       style({
-        box: w(9).h(9).minW(9),
-        paint: radius(lg).bg(muted).fg(muted-foreground),
-        when: { groupStateOver: { paint: bg(selected-bg).fg(ring) } },
+        box: size({ w: 9, h: 9, min-w: 9 }),
+        paint: radius(lg).fill({ color: muted }).ink({ color: muted-foreground }),
+        when: { groupStateOver: { paint: fill({ color: selected-bg }).ink({ color: ring }) } },
       })
     >
-      <span style({ box: display(contents), text: fontSize(lg).leading(none) })>
+      <span style({ box: flow({ display: contents }), text: type({ size: lg, leading: none }) })>
         <svg
           viewBox="0 0 24 24"
           fill="none"
@@ -191,34 +191,33 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           stroke-width="2"
           stroke-linecap="round"
           stroke-linejoin="round"
-          style({ box: w(icon-size-md).h(icon-size-md) })
+          style({ box: size({ w: icon-size-md, h: icon-size-md }) })
         ><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
       </span>
     </row>
-    <span>Drag &amp; drop or <span style({ paint: fg(primary) })>browse</span></span>
+    <span>Drag &amp; drop or <span style({ paint: ink({ color: primary }) })>browse</span></span>
   </span>
 </center>
-<input
-  type="file"
+<file
   accept={accept()}
   multiple={multiple()}
   aria-hidden="true"
   tabindex="-1"
   use:captureInput
-  style({ box: display(none) })
->
+  style({ box: flow({ display: none }) })
+/>
 <if {errorMsg()}>
-  <div role="alert" style({ paint: fg(destructive) })>
-    <span style({ box: display(contents), text: fontSize(sm) })>
+  <div role="alert" style({ paint: ink({ color: destructive }) })>
+    <span style({ box: flow({ display: contents }), text: type({ size: sm }) })>
       {errorMsg()}
     </span>
   </div>
 </if>
 <if {displayFiles().length > 0}>
-  <column gap="1" aria-live="polite" style({ box: mt(2) })>
+  <column gap="1" aria-live="polite" style({ box: space({ mt: 2 }) })>
     <for {displayFiles() as f} key={f.key}>
       <row align="center" gap="3">
-        <span aria-hidden="true" style({ paint: fg(muted-foreground) })>
+        <span aria-hidden="true" style({ paint: ink({ color: muted-foreground }) })>
           <svg
             viewBox="0 0 24 24"
             fill="none"
@@ -226,12 +225,12 @@ export default controller((_ctx: ControllerScope<Scope>) => {
             stroke-width="2"
             stroke-linecap="round"
             stroke-linejoin="round"
-            style({ box: w(icon-size-sm).h(icon-size-sm) })
+            style({ box: size({ w: icon-size-sm, h: icon-size-sm }) })
           ><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2 2V8z"/><path d="M14 2v6h6"/></svg>
         </span>
-        <column gap="1" style({ box: grow(1).minW(0) })>
-          <span style({ paint: fg(foreground), text: fontSize(sm).truncate() })>{f.name}</span>
-          <span style({ paint: fg(muted-foreground), text: fontSize(xs) })>{f.sizeStr}</span>
+        <column gap="1" style({ box: flow({ grow: 1 }).size({ min-w: 0 }) })>
+          <span style({ paint: ink({ color: foreground }), text: type({ size: sm, wrap: truncate }) })>{f.name}</span>
+          <span style({ paint: ink({ color: muted-foreground }), text: type({ size: xs }) })>{f.sizeStr}</span>
         </column>
         <button variant="ghost" size="sm" type="button" data-idx={f.idx} aria-label={'Remove ' + f.name}>×</button>
       </row>

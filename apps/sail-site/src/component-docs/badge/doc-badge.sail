@@ -4,33 +4,30 @@
 -->
 
 <scope>
-  style page = { box: maxW(breakpoint-desktop).mx(auto).w(full) }
+  style page = { box: size({ w: full, max-w: breakpoint-desktop }).space({ mx: auto }) }
   style knobLabel = {
-    paint: fg(muted-foreground),
-    text: fontSize(xs).fontWeight(medium).tracking(wide).textCase(uppercase),
-  }
-  style sizeValue = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
-  style tickRow = { box: w(full).padT(1).padX(1_5) }
-  style tick = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
+    paint: ink({ color: muted-foreground }),
+    text: type({ size: xs, weight: medium, tracking: wide, case: uppercase }),
+}
+  style sizeValue = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs }) }
+  style tickRow = { box: size({ w: full }).space({ pad-x: 1_5, pad-t: 1 }) }
+  style tick = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs }) }
   style swatch = {
-    box: size(7).shrink(0),
-    paint: radius(full).cursor(pointer).borderWidth(2).border(transparent).shadow(xs),
-    when: {
-      selected: { paint: border(foreground).shadow(sm) },
-      hover: { paint: opacity(90) },
-    },
-  }
-  style swatchPrimary = { paint: bg(primary) }
-  style swatchSuccess = { paint: bg(success) }
-  style swatchWarning = { paint: bg(warning) }
-  style swatchDestructive = { paint: bg(destructive) }
-  style swatchAccent = { paint: bg(accent) }
-  style swatchMuted = { paint: bg(muted).border(border) }
-  style swatchInfo = { paint: bg(info) }
-  style swatchRest = { paint: bg(background).border(border) }
-  style exampleBlock = { box: w(full).padT(2).padB(4) }
-  style sectionLabel = { paint: fg(muted-foreground), text: fontSize(xs).textCase(uppercase).tracking(wide) }
-  style demoRow = { box: w(full).padY(2) }
+    box: size(7).flow({ shrink: 0 }),
+    paint: radius(full).cursor(pointer).border({ color: transparent, width: 2 }).elevation(xs),
+    when: { selected: { paint: border({ color: foreground }).elevation(sm) }, hover: { paint: filter({ opacity: 90 }) } },
+}
+  style swatchPrimary = { paint: fill({ color: primary }) }
+  style swatchSuccess = { paint: fill({ color: success }) }
+  style swatchWarning = { paint: fill({ color: warning }) }
+  style swatchDestructive = { paint: fill({ color: destructive }) }
+  style swatchAccent = { paint: fill({ color: accent }) }
+  style swatchMuted = { paint: fill({ color: muted }).border({ color: border }) }
+  style swatchInfo = { paint: fill({ color: info }) }
+  style swatchRest = { paint: fill({ color: background }).border({ color: border }) }
+  style exampleBlock = { box: size({ w: full }).space({ pad-t: 2, pad-b: 4 }) }
+  style sectionLabel = { paint: ink({ color: muted-foreground }), text: type({ size: xs, tracking: wide, case: uppercase }) }
+  style demoRow = { box: size({ w: full }).space({ pad-y: 2 }) }
 </scope>
 
 <controller>
@@ -41,7 +38,7 @@ export default controller((_ctx: Scope) => {
   const BDG_SIZES = ['sm', 'md', 'lg'] as const
   const variant = signal('soft')
   const sizeIdx = signal(1)
-  const badgeTone = signal('primary')
+  const badgeTone = signal('muted')
   const badgePill = signal(false)
   const pickBadgeTone = (t: string): void => badgeTone.set(t)
   const clearBadgeTone = (): void => badgeTone.set('')
@@ -71,7 +68,7 @@ export default controller((_ctx: Scope) => {
   const bdgExPill = () =>
     `<badge variant="solid" tone="primary" pill>12</badge>\n<badge variant="soft" tone="destructive" pill>3</badge>`
   const bdgExDefault = () =>
-    `<badge variant="soft">default</badge>\n<badge variant="solid">default</badge>\n<badge variant="outline">default</badge>`
+    `<badge variant="soft">muted</badge>\n<badge variant="solid">muted</badge>\n<badge variant="outline">muted</badge>`
 
   return {
     variant,
@@ -187,12 +184,7 @@ export default controller((_ctx: Scope) => {
           <label style(knobLabel)>Size</label>
           <span style(sizeValue)>{badgeSize()}</span>
         </row>
-        <slider bind:value={sizeIdx} min="0" max="2" step="1" size="sm" label="Size"></slider>
-        <row gap="0" align="center" justify="between" style(tickRow)>
-          <span style(tick)>sm</span>
-          <span style(tick)>md</span>
-          <span style(tick)>lg</span>
-        </row>
+        <slider bind:value={sizeIdx} min="0" max="2" step="1" size="sm" label="Size" ticks="sm,md,lg"></slider>
       </column>
       <column gap="2">
         <label style(knobLabel)>Pill</label>
@@ -233,13 +225,13 @@ export default controller((_ctx: Scope) => {
 
       <doc-example
         title="Default (theme)"
-        lead="No tone uses the theme’s default badge colors."
+        lead="Default tone is muted — a real colour, not the page background."
         code={bdgExDefault()}
       >
         <row gap="2" align="center" style(demoRow)>
-          <badge variant="soft">default</badge>
-          <badge variant="solid">default</badge>
-          <badge variant="outline">default</badge>
+          <badge variant="soft">muted</badge>
+          <badge variant="solid">muted</badge>
+          <badge variant="outline">muted</badge>
         </row>
       </doc-example>
     </column>

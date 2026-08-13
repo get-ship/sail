@@ -5,7 +5,7 @@
 // It only asserts that after generate + applyTheme, critical *emitted* vars
 // resolve on a real page (/components) so mode-incomplete themes fail CI.
 //
-// Apply path: theme + data-mode (same as applyTheme / applyMode).
+// Apply path: theme + mode (same as applyTheme / applyMode).
 //
 // Single-mode themes (supportedModes / only one key under modes): skip missing
 // modes in the matrix — path parity is among declared modes only.
@@ -87,7 +87,7 @@ async function applyThemeMode(page: Page, theme: string, mode: string) {
     mode: document.documentElement.dataset.mode ?? '',
   }))
   expect(applied.theme, `expected theme=${theme}`).toBe(theme)
-  expect(applied.mode, `expected data-mode=${mode}`).toBe(mode)
+  expect(applied.mode, `expected mode=${mode}`).toBe(mode)
 }
 
 async function readCriticalVars(page: Page): Promise<Record<string, string>> {

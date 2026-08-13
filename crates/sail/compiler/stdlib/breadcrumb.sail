@@ -3,11 +3,7 @@
   Host list Style: flex + component-token fg before skins attach.
 -->
 <scope>
-  style list = {
-    box: display(flex).gap(2).m(0).pad(0),
-    paint: list(none).fg(breadcrumb.foreground),
-    text: fontFamily(body).fontSize(sm),
-  }
+  style list = {box: flow({ display: flex }).space({ m: 0, pad: 0 }), paint: ink({ color: breadcrumb.foreground }), text: type({ family: body, size: sm, list: none })}
 </scope>
 <nav label="Breadcrumb">
   <ol style(list)>

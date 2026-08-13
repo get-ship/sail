@@ -8,31 +8,31 @@
 -->
 
 <scope>
-  style page = { box: maxW(breakpoint-tablet).mx(auto) }
-  style eyebrow = { box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
-  style lead = { paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) }
-  style mutedSm = { paint: fg(muted-foreground), text: fontSize(sm) }
+  style page = { box: size({ max-w: breakpoint-tablet }).space({ mx: auto }) }
+  style eyebrow = { box: space({ mb: 2 }), paint: ink({ color: accent }), text: type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
+  style lead = { paint: ink({ color: muted-foreground }), text: type({ size: lg, leading: relaxed }) }
+  style mutedSm = { paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
   style pressBtn = { animate: press({ scale: 'press' }) }
-  style tileRow = { box: minH(9) }
-  style tile = { box: w(9).h(9), paint: radius(md).bg(primary), animate: enter({ translate-y: 'spring:snappy', stagger: '0.07s' }) }
-  style tileDim = { box: w(9).h(9), paint: radius(md).bg(primary).opacity(75), animate: enter({ translate-y: 'spring:snappy', stagger: '0.07s' }) }
-  style demoPanel = { box: pad(6).minH(8), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) }
-  style demoPanelTall = { box: pad(6).minH(11), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) }
-  style enterCard = { box: pad(4), animate: enter({ opacity: 'fade', scale: 'spring:snappy' }).exit({ opacity: 'fade-out' }) }
-  style loopTileFast = { box: w(8).h(8), paint: radius(md).bg(primary), animate: loop({ translate-x: { from: 0, to: '80px' }, duration: 500 }) }
-  style loopTileSlow = { box: w(8).h(8), paint: radius(md).bg(primary).opacity(75), animate: loop({ translate-x: { from: 0, to: '80px' }, duration: 2500 }) }
-  style revealCard = { box: pad(6), animate: reveal({ opacity: 'fade', translate-y: 'spring:gentle' }) }
-  style revealSpring = { box: pad(6), animate: reveal({ scale: 'spring:bouncy', opacity: 'fade' }) }
-  style ambientDot = { box: w(4).h(4), paint: radius(full).bg(primary), animate: loop({ translate-y: 'spring:gentle', stagger: '0.15s' }) }
-  style ambientDotDim = { box: w(4).h(4), paint: radius(full).bg(primary).opacity(75), animate: loop({ translate-y: 'spring:gentle', stagger: '0.15s' }) }
-  style spinTile = { box: w(8).h(8), paint: radius(md).bg(primary), animate: loop({ rotate: 'spin' }) }
-  style grow1 = { box: grow(1) }
-  style scrub = { box: grow(1).minW(0) }
-  style scrubVal = { box: w(8), paint: fg(muted-foreground), text: textAlign(end).fontFamily(mono).fontSize(sm) }
-  style timelineTile = { box: shrink(0).w(9).h(9), paint: bg(primary).radius(md) }
+  style tileRow = { box: size({ min-h: 9 }) }
+  style tile = { box: size(9), paint: radius(md).fill({ color: primary }), animate: enter({ translate-y: 'spring:snappy', stagger: '0.07s' }) }
+  style tileDim = { box: size(9), paint: radius(md).fill({ color: primary }).filter({ opacity: 75 }), animate: enter({ translate-y: 'spring:snappy', stagger: '0.07s' }) }
+  style demoPanel = { box: space({ pad: 6 }).size({ min-h: 8 }), paint: border({ color: border, width: 1 }).radius(lg).fill({ color: surface-1 }) }
+  style demoPanelTall = { box: space({ pad: 6 }).size({ min-h: 11 }), paint: border({ color: border, width: 1 }).radius(lg).fill({ color: surface-1 }) }
+  style enterCard = { box: space({ pad: 4 }), animate: enter({ opacity: 'fade', scale: 'spring:snappy' }).exit({ opacity: 'fade-out' }) }
+  style loopTileFast = { box: size(8), paint: radius(md).fill({ color: primary }), animate: loop({ translate-x: { from: 0, to: '80px' }, duration: 500 }) }
+  style loopTileSlow = { box: size(8), paint: radius(md).fill({ color: primary }).filter({ opacity: 75 }), animate: loop({ translate-x: { from: 0, to: '80px' }, duration: 2500 }) }
+  style revealCard = { box: space({ pad: 6 }), animate: reveal({ opacity: 'fade', translate-y: 'spring:gentle' }) }
+  style revealSpring = { box: space({ pad: 6 }), animate: reveal({ scale: 'spring:bouncy', opacity: 'fade' }) }
+  style ambientDot = { box: size(4), paint: radius(full).fill({ color: primary }), animate: loop({ translate-y: 'spring:gentle', stagger: '0.15s' }) }
+  style ambientDotDim = { box: size(4), paint: radius(full).fill({ color: primary }).filter({ opacity: 75 }), animate: loop({ translate-y: 'spring:gentle', stagger: '0.15s' }) }
+  style spinTile = { box: size(8), paint: radius(md).fill({ color: primary }), animate: loop({ rotate: 'spin' }) }
+  style grow1 = { box: flow({ grow: 1 }) }
+  style scrub = { box: flow({ grow: 1 }).size({ min-w: 0 }) }
+  style scrubVal = { box: size({ w: 8 }), paint: ink({ color: muted-foreground }), text: type({ family: mono, size: sm, align: end }) }
+  style timelineTile = { box: flow({ shrink: 0 }).size(9), paint: fill({ color: primary }).radius(md) }
   style focusBtn = { animate: focus-visible({ scale: 'spring:snappy' }) }
-  style footNote = { box: mt(4), paint: fg(muted-foreground), text: fontSize(sm) }
-  style footNav = { box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) }
+  style footNote = { box: space({ mt: 4 }), paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
+  style footNav = { box: space({ pad-t: 4, mt: 8 }), paint: border({ color: border, width: 1, edge: t }) }
 </scope>
 
 <controller>
@@ -214,12 +214,12 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   </p>
   <column gap="4" style(demoPanelTall)>
     <row align="center" gap="3">
-      <input type="range" min="0" max="100" step="1" bind:value={scrubText} testid="timeline-scrub" style(scrub)>
+      <slider min="0" max="100" step="1" bind:value={scrubText} testid="timeline-scrub" style(scrub) />
       <span style(scrubVal)>{scrubText()}</span>
     </row>
     <row align="center" style(tileRow)>
       <!-- Plain div (not card): card host paints surface, so primary fill would not win. -->
-      <div testid="timeline-tile" style(timelineTile, { paint: translateX(bind(tileX)).rotate(bind(tileRotate)).scale(bind(tileScale)) })></div>
+      <div testid="timeline-tile" style(timelineTile, { paint: motion({ x: bind(tileX), rotate: bind(tileRotate), scale: bind(tileScale) }) })></div>
     </row>
   </column>
   <p>
@@ -228,7 +228,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     keyframes per property, and returns one signal per property. Those
     signals reach Style the way any signal does, through
     <code>bind&#40;name&#41;</code> on a setter
-    (<code>style&#40;&#123; paint: translateX(bind(tileX)) &#125;&#41;</code>):
+    (<code>style&#40;&#123; paint: motion(&#123; x: bind(tileX) &#125;) &#125;&#41;</code>):
   </p>
   <code-block code={code.choreography}></code-block>
   <p>

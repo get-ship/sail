@@ -198,6 +198,16 @@ enum Command {
         #[arg(long)]
         out: Option<PathBuf>,
     },
+    /// Rewrite covered `borderWidth` + `border(` property chains to concern
+    /// form (`border(dialog)` / `border({ color, width })`). Dry-run unless
+    /// `--write`. Does not delete property setters.
+    RewriteConcern {
+        /// `.sail` file or directory to walk.
+        input: PathBuf,
+        /// Write rewritten source in place.
+        #[arg(long)]
+        write: bool,
+    },
     /// Emit the sail ambient TypeScript pack (`node_modules/.sail/types.d.ts`)
     /// from the same manifests that drive the compiler (runtime ambient
     /// vocabulary + Style setters + token scales). Regenerable editor helper —
@@ -291,6 +301,7 @@ fn main() -> Result<()> {
         Command::Duplicates { dir, out } => gen_duplicates_report(dir, out),
         Command::Vocabulary { out } => gen_vocabulary(out),
         Command::Tokens { model, out } => gen_tokens(model, out),
+        Command::RewriteConcern { input, write } => rewrite_concern_cmd(input, write),
         Command::Types {
             project,
             tsconfig_out,
@@ -321,6 +332,68 @@ fn run_profile(workspace: Option<PathBuf>, out: PathBuf, skip_dev_rss: bool) -> 
             "  {name}: {} files, {:.0}ms wall, {} ok, {} err",
             tree.files, tree.wall_ms, tree.ok, tree.err
         );
+    }
+    Ok(())
+}
+
+fn rewrite_concern_cmd(input: PathBuf, write: bool) -> Result<()> {
+    let mut files = Vec::new();
+    collect_sail_files(&input, &mut files)?;
+    if files.is_empty() {
+        anyhow::bail!("no .sail files under {}", input.display());
+    }
+    files.sort();
+    let mut changed = 0usize;
+    for path in &files {
+        let src = fs::read_to_string(path).with_context(|| format!("read {}", path.display()))?;
+        let next = sail_lint::style::rewrite_concern_source(&src);
+        if next == src {
+            continue;
+        }
+        changed += 1;
+        println!("{}", path.display());
+        if write {
+            fs::write(path, next).with_context(|| format!("write {}", path.display()))?;
+        }
+    }
+    println!(
+        "rewrite-concern: {changed} of {} files {}",
+        files.len(),
+        if write {
+            "written"
+        } else {
+            "would change (pass --write)"
+        }
+    );
+    Ok(())
+}
+
+fn collect_sail_files(path: &Path, out: &mut Vec<PathBuf>) -> Result<()> {
+    if path.is_file() {
+        if path.extension().and_then(|e| e.to_str()) == Some("sail") {
+            out.push(path.to_path_buf());
+        }
+        return Ok(());
+    }
+    if !path.is_dir() {
+        anyhow::bail!("not a file or directory: {}", path.display());
+    }
+    for entry in fs::read_dir(path).with_context(|| format!("read_dir {}", path.display()))? {
+        let entry = entry?;
+        let p = entry.path();
+        let name = entry.file_name();
+        let name = name.to_string_lossy();
+        if p.is_dir() {
+            if matches!(
+                name.as_ref(),
+                "node_modules" | "target" | ".git" | ".deck" | "dist"
+            ) {
+                continue;
+            }
+            collect_sail_files(&p, out)?;
+        } else if p.extension().and_then(|e| e.to_str()) == Some("sail") {
+            out.push(p);
+        }
     }
     Ok(())
 }
@@ -453,8 +526,9 @@ fn gen_framework_css(out: Option<PathBuf>) -> Result<()> {
     };
     let banner = "/* GENERATED from the sail-compiler stdlib registry — do not hand-edit.\n \
                   * Regenerate: cargo run -p sail-compiler -- framework-css\n \
-                  * L1 element skins: lowered host sx + CVA-in-props attr rules.\n \
-                  * sail-base (platform document floor) rides in sail-base.css. */\n";
+                  * L1 element skins: lowered host Style + CVA-in-props attr rules.\n \
+                  * Platform adaptor CSS (stdlib/platform/*.css) is spliced in under\n \
+                  * @provenance headers. sail-base is the document floor. */\n";
     // Same `sail` cascade layer as route/page style install. Page atomics
     // must not ship unlayered — they share class names with skins and would
     // crush compound fills (e.g. solid bg loses to .s-bgtransparent).
@@ -491,9 +565,13 @@ fn gen_prop_registry(out: Option<PathBuf>, ts_out: Option<PathBuf>) -> Result<()
         // SPEC-D1: dotted surface members (`fg(spinner.foreground)`) are legal
         // only under that L1 host unit. Prop-registry re-parses stdlib sources
         // outside `compile_element`, so install the same host surface context.
-        let program =
-            sail_lint::style::with_host_surface(Some(tag), || sail_compiler::parse::parse(source))
-                .map_err(|e| anyhow!("stdlib {tag} failed to parse: {e:?}"))?;
+        // Element sources use parse_element_source (no stdlib expand) — structure
+        // may contain private native types (type=checkbox inside <checkbox> host)
+        // that freeform author markup may not use.
+        let program = sail_lint::style::with_host_surface(Some(tag), || {
+            sail_compiler::parse::parse_element_source(source)
+        })
+        .map_err(|e| anyhow!("stdlib {tag} failed to parse: {e:?}"))?;
         let mut props = std::collections::BTreeMap::new();
         let mut ts_props: Vec<serde_json::Value> = Vec::new();
         for p in &program.props {
@@ -597,6 +675,26 @@ fn gen_prop_registry(out: Option<PathBuf>, ts_out: Option<PathBuf>) -> Result<()
     sf.push_str("export interface SxAtom {\n  prop: string\n  values: string[]\n}\n\n");
     sf.push_str("export const SX_ATOMS: SxAtom[] = ");
     sf.push_str(&serde_json::to_string_pretty(&atoms)?);
+    sf.push_str("\n\n");
+    // SPEC-SPINNAKER-2: concern atlas + markers are the live Style table.
+    let concern_rows: Vec<serde_json::Value> = sail_lint::style::concerns()
+        .iter()
+        .map(|c| {
+            serde_json::json!({
+                "name": c.name,
+                "channel": c.channel.key(),
+                "slots": c.slots.iter().map(|s| s.name).collect::<Vec<_>>(),
+            })
+        })
+        .collect();
+    sf.push_str(
+        "export interface ConcernDoc {\n  name: string\n  channel: string\n  slots: string[]\n}\n\n",
+    );
+    sf.push_str("export const CONCERNS: ConcernDoc[] = ");
+    sf.push_str(&serde_json::to_string_pretty(&concern_rows)?);
+    sf.push_str("\n\n");
+    sf.push_str("export const MARKERS: string[] = ");
+    sf.push_str(&serde_json::to_string_pretty(&sail_lint::style::MARKERS)?);
     sf.push_str("\n\n");
     let states: Vec<serde_json::Value> = sail_lint::rules::style_rule::STATE_PREFIXES
         .iter()
@@ -963,28 +1061,22 @@ fn workspace_root() -> Result<PathBuf> {
     }
 }
 
-/// One skill bullet for a Style setter. Two-arg color helpers document arity
-/// so agents do not invent single-arg calls that fail closed at lint.
-fn skill_setter_line(s: &sail_lint::style::setters::SetterSpec) -> String {
-    let scale = s.scale.unwrap_or("—");
-    let kws = if s.keywords.is_empty() {
-        String::new()
-    } else {
-        format!(" keywords: {}", s.keywords.join(", "))
-    };
-    let arity = match s.name {
-        "colorMix" => {
-            " **`(colorToken, pct)`** — soft fill: color-mix toward transparent; pct 5..95 step 5"
-        }
-        "colorDeepen" => {
-            " **`(colorToken, pct)`** — solid deepen: color-mix toward foreground; pct 5..95 step 5"
-        }
-        _ => "",
-    };
-    format!(
-        "`style.{}(…)` → vocab `{}` scale `{scale}`{kws}{arity}",
-        s.name, s.vocab
-    )
+/// One skill bullet for a concern — object/channel form, not constructor `style.padX`.
+fn skill_concern_line(spec: &sail_lint::style::ConcernSpec) -> String {
+    let slots: Vec<&str> = spec.slots.iter().map(|s| s.name).collect();
+    let mut line = format!(
+        "`{}:` `{}(…)` · slots `{}`",
+        spec.channel.key(),
+        spec.name,
+        slots.join("`/`")
+    );
+    if spec.name == "border" {
+        line.push_str(" · radius is not a slot · kind is a family key");
+    }
+    if spec.name == "size" {
+        line.push_str(" · pad is not a slot (use space)");
+    }
+    line
 }
 
 /// Fenced Style demos for `gen_skill`. Product attach is a **tag-position call**
@@ -995,11 +1087,11 @@ fn style_skill_demo(raw_containers: bool) -> &'static str {
     if raw_containers {
         "```
 \
-         <div style({ box: pad(4), paint: bg(surface-2).radius(lg) }).when(hover, { paint: bg(muted) })>
+         <div style({ box: space({ pad: 4 }), paint: fill(surface).radius(lg) }).when(hover, { paint: fill(muted) })>
 \
          </div>
 \
-         <span style({ paint: fg(muted-foreground), text: fontSize(sm) })>
+         <span style({ paint: ink(muted), text: type(body-sm) })>
 \
          </span>
 \
@@ -1009,9 +1101,9 @@ fn style_skill_demo(raw_containers: bool) -> &'static str {
     } else {
         "```
 \
-         <column gap=\"3\" style({ box: pad(4), paint: bg(surface-2).radius(lg) }).when(hover, { paint: bg(muted) })>
+         <column gap=\"3\" style({ box: space({ pad: 4 }), paint: fill(surface).radius(lg) }).when(hover, { paint: fill(muted) })>
 \
-           <p style({ paint: fg(muted-foreground), text: fontSize(sm) })>
+           <p style({ paint: ink(muted), text: type(body-sm) })>
 \
              …
 \
@@ -1048,9 +1140,9 @@ fn print_policy(mode: String, dir: Option<PathBuf>, as_json: bool) -> Result<()>
 /// Generate the agent-authoring skill for `dir` — **progressive disclosure**.
 ///
 /// Default SKILL.md is ~one screen: hard rules, layout/participation, core
-/// Style setters only, and pointers to MCP tools for full tables (setters,
+/// Style concerns only, and pointers to MCP tools for full tables (atlas,
 /// tokens, L1, control-flow). Full inventories live in `sail_surface` (MCP) /
-/// compiler SSOT — never dump every setter + L1 tag into the skill by default.
+/// compiler SSOT — never dump absorbed property setters + L1 tags into the skill.
 fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
     use sail_compiler::check::policy::Policy;
     use std::fmt::Write as _;
@@ -1087,8 +1179,8 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
         md,
         "GENERATED from the compiler's vocabulary + resolved styling policy. Off-list\n\
          values are compile errors that name the allowed list. Trust errors over memory.\n\n\
-         **Progressive disclosure:** this skill is the core screen only. Full Style\n\
-         setter tables, token scales, L1 inventory, motion detail, and control-flow\n\
+         **Progressive disclosure:** this skill is the core screen only. The concern\n\
+         atlas, token scales, L1 inventory, motion detail, and control-flow\n\
          grammar come from tooling — not from this file.\n\n\
          | need | tool |\n\
          | --- | --- |\n\
@@ -1139,7 +1231,7 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
         md,
         "- NO `<style>` blocks, NO product Style as an HTML attribute. NO raw values (px/hex) — spend a token.\n\
          - NO retired utility-string / `sx=` forms (`sx=\"p-4 bg-surface-2\"`). Product is a **tag** Style call:\n  \
-           `style({{ box: pad(4), paint: bg(surface-2) }})` / `.when(hover, {{ paint: … }})` / `match`.\n\
+           `style({{ box: space({{ pad: 4 }}), paint: fill(surface) }})` / `.when(hover, {{ paint: … }})` / `match`.\n\
          - NO `data-*` in app markup (`sail-no-data-attr`). The compiler stamps\n  \
            `data-sail-host` on L1 as closed-widget part identity — never author it.\n  \
            App tests use role / accessible name / visible text, not that stamp.\n\
@@ -1150,12 +1242,12 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
            `<stack>` with `gap` / `align` / `justify` / `cols` attrs. Rows **wrap by\n  \
            default**; `<row nowrap>` is the single-line row. Unrecognized attrs on a\n  \
            layout keyword are a compile error.\n\
-         - **Participation on the box channel** — `style({{ box: grow(1).minW(0).w(full) }})`\n  \
-           (or `shrink(0)`). Bare attrs `grow` / `shrink` / `w` / `min-w` / `max-w` are a\n  \
+         - **Participation on the box channel** — `style({{ box: size({{ w: full, min-w: 0 }}).flow({{ grow: 1 }}) }})`\n  \
+           (or `flow({{ shrink: 0 }})`). Bare attrs `grow` / `shrink` / `w` / `min-w` / `max-w` are a\n  \
            hard lint (`sail-participation-style`). Layout-keyword **axis** attrs\n  \
-           (`gap` / `align` / `justify` on row|column|grid) stay. Paint (bg, type,\n  \
+           (`gap` / `align` / `justify` on row|column|grid) stay. Paint (fill, ink,\n  \
            chrome) stays on paint/text channels.\n\
-         - **Never `style.display(…)` on layout keywords** (`row`/`column`/`grid`/\n  \
+         - **Never `flow({{ display: … }})` on layout keywords** (`row`/`column`/`grid`/\n  \
            `center`/`stack`). Bases own `display:flex|grid` and beat `.s-displaynone`\n  \
            (`.sail-col` footgun). Hide a plain host and nest the layout inside\n  \
            (`sail-display-on-layout`).\n\
@@ -1176,18 +1268,18 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
              and first-class **`bind(name)`** for values that track props/signals/\n\
              derived/tokens/action writes. Style is compile-time static — no dynamic\n\
              JS expressions inside Style (computation lives in the controller; the\n\
-             template names it). Full closed setter table: MCP `sail_surface` topic\n\
+             template names it). Concern atlas: MCP `sail_surface` topic\n\
              `style`. Layout atoms refused by name: MCP topic `layout`\n\
              (same `style_vocab::refusals()`).\n\
              \n\
              ### `bind(name)` units contract\n\
              \n\
-             | Source → setter | Realization |\n\
+             | Source → slot | Realization |\n\
              |---|---|\n\
-             | number → length (`top`, `w`, `pad`, …) | legal; means **px** (`@property` length + reflection) |\n\
-             | number → number (`opacity`, `z`) | direct |\n\
+             | number → length (`place.top`, `size.w`, `space.pad`, …) | legal; means **px** (`@property` length + reflection) |\n\
+             | number → number (`filter.opacity`, `place.z`) | direct |\n\
              | string → any | pass-through (`syntax: '*'`) |\n\
-             | number → color (`bg`, `fg`, …) | **compile error** |\n\
+             | number → color (`fill`, `ink`, …) | **compile error** |\n\
              | `derived` by name | allowed (read-only); annotate `(): number` for length |\n\
              | action write (`use:anchor` → `anchorLeft`) | via action manifest `writes` |\n\
              \n\
@@ -1195,42 +1287,26 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
              that is `sail-style-value-enumeration`; use `bind(name)` instead.\n"
         );
 
-        // Core setters only — no full table dump.
-        const CORE_SETTERS: &[&str] = &[
-            "bg",
-            "fg",
-            "border",
-            "borderWidth",
-            "radius",
-            "pad",
-            "padX",
-            "padY",
-            "fontSize",
-            "fontWeight",
-            "fontFamily",
-            "leading",
-            "tracking",
-            "shadow",
-            "opacity",
-            "overflow",
-            "display",
-            "h",
-            "size",
-            "minH",
-            "colorMix",
-            "colorDeepen",
-        ];
-        let _ = writeln!(md, "### Core Style setters (start here)\n");
+        // Concern atlas only — absorbed property names are not offered.
+        let _ = writeln!(md, "### Core Style concerns (start here)\n");
         let _ = writeln!(
             md,
-            "Everyday paint from `style::setters`. **Not listed:** full inventory +\n\
-             `grow`/`shrink` live on `box:` (`sail-participation-style` refuses bare attrs).\n"
+            "Object/channel form is the language (`paint: fill(surface)`), not constructor\n\
+             `style.padX`. Named composite or slot object. **Not listed:** absorbed\n\
+             property names (`bg`/`fg`/`padX`/`fontSize`/`truncate`/`shadow`). Participation\n\
+             (`grow`/`shrink`/`w`) lives on `box:` via `flow`/`size`.\n"
         );
-        for s in sail_lint::style::setters::setters() {
-            if !CORE_SETTERS.contains(&s.name) {
-                continue;
-            }
-            let _ = writeln!(md, "- {}", skill_setter_line(s));
+        for spec in sail_lint::style::concerns() {
+            let _ = writeln!(md, "- {}", skill_concern_line(spec));
+        }
+        let _ = writeln!(md);
+        let _ = writeln!(md, "### Markers (verbs, not concerns)\n");
+        let _ = writeln!(
+            md,
+            "Flags or a single switch. Full list: MCP `sail_surface` topic `style`.\n"
+        );
+        for name in ["cursor", "group", "isolate", "srOnly", "select"] {
+            let _ = writeln!(md, "- `{name}(…)`");
         }
         let _ = writeln!(md);
 
@@ -1260,7 +1336,7 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
              A variant is a prop. Prefer `match` / scope Style consts over residual\n\
              utility maps. Token-group props (e.g. `tone: Tone`) and Size ladders are\n\
              ordinary typed props — not special language features. Color groups bind\n\
-             in Style paint (`bg(tone)`); Size is discrete `match` conditionality.\n"
+             in Style paint (`fill({{ color: tone }})`); Size is discrete `match` conditionality.\n"
         );
     }
     if !effective.raw_containers {
@@ -1324,11 +1400,9 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
          ```\n"
     );
 
-    let stdlib_n = {
-        let (s, r) = sail_compiler::l1_by_kind();
-        debug_assert!(r.is_empty(), "native reskins retired");
-        s.len()
-    };
+    // Count source rows — do not compile stdlib here. Rewriter owns corpus
+    // compile; `l1_by_kind()` / `elements()` panic on unmigrated elements.
+    let stdlib_n = sail_compiler::stdlib::sources().len();
     let _ = writeln!(md, "## L1 elements (pointer)\n");
     let _ = writeln!(
         md,

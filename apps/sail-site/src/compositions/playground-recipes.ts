@@ -17,6 +17,11 @@ export const BLANK_SOURCE = `<!--
   Blank playground — a single column and some text.
   Edit freely, then Run (or wait for auto-compile).
 -->
+<scope>
+  style muted = { paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
+</scope>
+
+
 <column gap="3">
   <h2>Hello Sail</h2>
   <p>Edit this source and hit Run. Pick a recipe above for a fuller example.</p>

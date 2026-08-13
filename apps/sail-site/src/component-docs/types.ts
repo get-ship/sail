@@ -24,8 +24,8 @@ export interface DocMeta {
   /** Override h1 (e.g. layout keywords). */
   heading?: string
   /**
-   * Hyphenated CE tag for the docs host, or 'legacy' to use doc-legacy-detail.
-   * First-class packages set host to doc-<slug>.
+   * Hyphenated CE tag for the docs host (`doc-<slug>`).
+   * A host without a matching CE mount is the missing-host empty state.
    */
   host: string
   /** Stage owns configurator knobs (hide viewer variant strip). */

@@ -88,7 +88,7 @@ Language surface on `@ship/sail-runtime`. Compiler ABI (`bindFor`, `runAction`, 
 ### Not breaking (but know)
 
 - L1 still stamps host classes for CSS; actions discover via `data-sail-host`  
-- Ambient PE: `style.animate(spin)` still CSS keyframe catalog (rename later)  
+- Ambient host Style: `style.animate(spin)` still CSS keyframe catalog (rename later)  
 - Bundle: L1 library delta ~**7.3 kB gzip** (was stale 1.3 kB claim)  
 - Public `use:` catalog remains 12 names; stdlib stamps more internally  
 

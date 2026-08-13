@@ -68,7 +68,7 @@ export default controller(({ series, width, height, grid, label, loading }: Scop
   })
 
 </controller>
-<column gap="0" style({ box: w(full) })>
+<column gap="0" style({ box: size({ w: full }) })>
   <if {loading()}>
     <skeleton
       shape="block"
@@ -90,7 +90,7 @@ export default controller(({ series, width, height, grid, label, loading }: Scop
       aria-label={ariaLabel()}
       aria-describedby="chart-data"
       use:observeViewport
-      style({ box: display(block).w(full).overflow(hidden) })
+      style({ box: flow({ display: block }).size({ w: full }).overflow({ all: hidden }) })
     >
       <for {gridLines() as g} key={g.id}>
         <line
@@ -133,8 +133,8 @@ export default controller(({ series, width, height, grid, label, loading }: Scop
       </slot>
     </column>
   }</if>
-  <row gap="3" align="stretch" style({ box: mt(1_5), paint: fg(muted-foreground) })>
-    <span style({ box: display(contents), text: fontFamily(body).fontSize(xs) })>
+  <row gap="3" align="stretch" style({ box: space({ mt: 1_5 }), paint: ink({ color: muted-foreground }) })>
+    <span style({ box: flow({ display: contents }), text: type({ family: body, size: xs }) })>
       <slot></slot>
     </span>
   </row>

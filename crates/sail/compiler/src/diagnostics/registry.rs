@@ -1093,6 +1093,17 @@ const DIAG_SPECS: &[DiagSpec] = &[
         docs_anchor: None,
     },
     DiagSpec {
+        id: "sail-style-concern",
+        jurisdiction: Jurisdiction::Lint,
+        default_severity: DiagSeverity::Warning,
+        message_template: "retired — absorbed Style setters are RetiredSetter compile errors",
+        allowed_list_source: Some("sail_style::concerns::concerns"),
+        fix_text: Some(
+            "Use the concern setter (named composite or slot object). Retirement is a compile error, not a lint.",
+        ),
+        docs_anchor: Some("SPEC-SPINNAKER-2#what-is-deleted"),
+    },
+    DiagSpec {
         id: "sail-style-match-exhaustive",
         jurisdiction: Jurisdiction::Lint,
         default_severity: DiagSeverity::Warning,

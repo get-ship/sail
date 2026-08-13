@@ -1,59 +1,53 @@
 <!--
   <button> — native <button>. L1 platform control. Style value language only.
-  `default` is an alias of `solid` (prop default solid). tone always paints when set.
-  solid without tone → inverted fg/bg; solid + tone → filled tone.
-  soft / outline / ghost take tone the same way.
-  Sizes: xs–lg text; icon / iconSm / iconLg square hit targets.
+  `default` is an alias of `solid` (prop default solid). tone defaults to
+  primary — a bare <button> is a finished control, never an untoned invert.
+  Explicit tone always paints. Sizes: xs–lg text; icon / iconSm / iconLg squares.
 -->
 
 <scope>
-  props: {
-    // default ≡ solid (kept as enum value so existing markup doesn't break).
+  props: {// default ≡ solid (kept as enum value so existing markup doesn't break).
     variant: 'default' | 'solid' | 'soft' | 'outline' | 'ghost' = 'solid'
-    tone: 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted'
+    tone: 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted' = 'primary'
     // icon / iconSm / iconLg = square hit targets (no hyphen — Style match keys are idents).
     size: 'xs' | 'sm' | 'md' | 'lg' | 'icon' | 'iconSm' | 'iconLg' = 'md'
     disabled = false
   }
 
   // border(solid) kills UA button outset so freeform demos use design-system chrome.
-  // No base bg(transparent): unlayered product .s-bgtransparent beats layered solid
-  // skins and empties primary fills. Variants own background; ghost is the transparent fill.
+  // No base bg(transparent) or border(transparent): unlayered product atomics
+  // (.s-bgtransparent / .s-bordertransparent) beat layered variant fills and
+  // outline strokes. Variants own fill + border color; ghost is the transparent pair.
   // Cursor is NOT on base: base cursor(pointer) + when-disabled cursor(not-allowed) both
   // stamp classes and pointer was winning in the cascade. Match on the disabled prop so
   // only one cursor utility is active.
-  style base = {
-    box: display(inline-flex).position(relative).gap(2),
-    paint: appearance(none).radius(md).borderWidth(control-stroke).border(solid).border(transparent).borderImage(corner-image).isolate().controlFrame().select(none),
-    text: fontWeight(medium).leading(none).whitespace(nowrap),
-    when: { hover: { paint: controlLift() }, active: { paint: press() } },
-  }
-  style cursorOn = { paint: cursor(pointer) }
-  style cursorOff = { paint: cursor(not-allowed).opacity(50) }
+  style base = {box: flow({ display: inline-flex }).place({ position: relative }), paint: appearance(none).radius(md).border({ width: control-stroke, style: solid }).isolate().controlFrame().select(none), text: type({ weight: medium, leading: none, wrap: nowrap }), when: {hover: {paint: controlLift()}, active: {paint: press()}}}
+  style cursorOn = {paint: cursor(pointer)}
+  style cursorOff = {paint: cursor(not-allowed).filter({ opacity: 50 })}
 
-  style sizeXs = { box: minH(control-h-2xs).padX(2), text: fontSize(xs) }
-  style sizeSm = { box: minH(control-h-sm).padX(2_5), text: fontSize(sm) }
-  style sizeMd = { box: minH(control-h-md).padX(3), text: fontSize(base) }
-  style sizeLg = { box: minH(control-h-lg).padX(4), text: fontSize(md) }
+  style sizeXs = {box: size({ min-h: control-h-2xs }).space({ pad-x: 2 }), text: type({ size: xs })}
+  style sizeSm = {box: size({ min-h: control-h-sm }).space({ pad-x: 2_5 }), text: type({ size: sm })}
+  style sizeMd = {box: size({ min-h: control-h-md }).space({ pad-x: 3 }), text: type({ size: base })}
+  style sizeLg = {box: size({ min-h: control-h-lg }).space({ pad-x: 4 }), text: type({ size: md })}
   // Square icon hit targets — explicit w/h (not minW: parent .sail-col zeros min-width).
-  style sizeIcon = { box: w(control-h-md).h(control-h-md).pad(0).padX(0), text: fontSize(base) }
-  style sizeIconSm = { box: w(control-h-sm).h(control-h-sm).pad(0).padX(0), text: fontSize(sm) }
-  style sizeIconLg = { box: w(control-h-lg).h(control-h-lg).pad(0).padX(0), text: fontSize(md) }
+  style sizeIcon = {box: size({ w: control-h-md, h: control-h-md }).space({ pad: 0, pad-x: 0 }), text: type({ size: base })}
+  style sizeIconSm = {box: size({ w: control-h-sm, h: control-h-sm }).space({ pad: 0, pad-x: 0 }), text: type({ size: sm })}
+  style sizeIconLg = {box: size({ w: control-h-lg, h: control-h-lg }).space({ pad: 0, pad-x: 0 }), text: type({ size: md })}
 
-  // solid / default without tone: inverted · + tone: filled tone (IACVT).
-  style vSolid = { paint: bg(foreground).border(foreground).fg(background).shadow(xs), when: { hover: { paint: opacity(90).shadow(sm) } } }
-  style vSolidTone = { paint: bg(tone).border(tone).fg(tone.foreground).shadow(xs), when: { hover: { paint: opacity(90).shadow(sm) } } }
-  style vSoft = { paint: bg(hover-bg).border(button.border).fg(button.foreground), when: { hover: { paint: opacity(90) } } }
-  style vSoftTone = { paint: colorMix(tone, 15).border(tone).fg(tone), when: { hover: { paint: colorMix(tone, 25) } } }
-  style vOutline = { paint: bg(transparent).border(button.foreground).fg(button.foreground), when: { hover: { paint: bg(hover-bg) }, disabled: { paint: bg(transparent) } } }
-  style vOutlineTone = { paint: bg(transparent).border(tone).fg(tone), when: { hover: { paint: bg(hover-bg) }, disabled: { paint: bg(transparent) } } }
-  style vGhost = { paint: bg(transparent).fg(button.foreground), when: { hover: { paint: bg(hover-bg) }, disabled: { paint: bg(transparent) } } }
-  style vGhostTone = { paint: bg(transparent).fg(tone), when: { hover: { paint: bg(hover-bg) }, disabled: { paint: bg(transparent) } } }
+  // Untoned invert is not a product default (tone defaults to primary).
+  // These still exist so an explicit empty tone does not go naked.
+  style vSolid = {paint: fill({ color: foreground }).border({ color: foreground }).ink({ color: background }).elevation(xs), when: {hover: {paint: filter({ opacity: 90 }).elevation(sm)}}}
+  style vSolidTone = {paint: fill({ color: tone }).border({ color: tone }).ink({ color: tone.foreground }).elevation(xs), when: {hover: {paint: filter({ opacity: 90 }).elevation(sm)}}}
+  style vSoft = {paint: fill({ color: hover-bg }).border({ color: button.border }).ink(button), when: {hover: {paint: filter({ opacity: 90 })}}}
+  style vSoftTone = {paint: fill({ color: tone, mix: 15 }).border({ color: tone }).ink({ color: tone }), when: {hover: {paint: fill({ color: tone, mix: 25 })}}}
+  style vOutline = {paint: fill({ color: transparent }).border({ color: button.foreground }).ink(button), when: {hover: {paint: fill({ color: hover-bg })}, disabled: {paint: fill({ color: transparent })}}}
+  style vOutlineTone = {paint: fill({ color: transparent }).border({ color: tone }).ink({ color: tone }), when: {hover: {paint: fill({ color: hover-bg })}, disabled: {paint: fill({ color: transparent })}}}
+  style vGhost = {paint: fill({ color: transparent }).border({ color: transparent }).ink(button), when: {hover: {paint: fill({ color: hover-bg })}, disabled: {paint: fill({ color: transparent })}}}
+  style vGhostTone = {paint: fill({ color: transparent }).border({ color: transparent }).ink({ color: tone }), when: {hover: {paint: fill({ color: hover-bg })}, disabled: {paint: fill({ color: transparent })}}}
 </scope>
 
 <button
-  style(base, {
-    match: {
+  style(base, {match: {
       disabled: {
         true: cursorOff,
         false: cursorOn,
@@ -75,15 +69,13 @@
         iconSm: sizeIconSm,
         iconLg: sizeIconLg,
       },
-    },
-    compound: [
-      { tone: muted, variant: default, paint: bg(muted-foreground).border(muted-foreground).fg(background) },
-      { tone: muted, variant: solid, paint: bg(muted-foreground).border(muted-foreground).fg(background) },
-      { tone: muted, variant: soft, paint: bg(muted).border(border-strong).fg(foreground) },
-      { tone: muted, variant: outline, paint: border(muted-foreground).fg(muted-foreground) },
-      { tone: muted, variant: ghost, paint: fg(muted-foreground) },
-    ],
-  })
+    }, compound: [
+      {tone: muted, variant: default, paint: fill({ color: muted-foreground }).border({ color: muted-foreground }).ink({ color: background })},
+      {tone: muted, variant: solid, paint: fill({ color: muted-foreground }).border({ color: muted-foreground }).ink({ color: background })},
+      {tone: muted, variant: soft, paint: fill(muted).border({ color: border-strong }).ink(foreground)},
+      {tone: muted, variant: outline, paint: border({ color: muted-foreground }).ink({ color: muted-foreground })},
+      {tone: muted, variant: ghost, paint: ink({ color: muted-foreground })},
+    ]})
 >
   <slot></slot>
 </button>

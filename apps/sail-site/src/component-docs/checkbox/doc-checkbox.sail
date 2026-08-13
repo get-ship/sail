@@ -4,23 +4,23 @@
 -->
 
 <scope>
-  style page = { box: maxW(breakpoint-desktop).mx(auto).w(full).overflow(visible) }
-  style fieldShell = { box: w(full).maxW(64).pad(2).overflow(visible) }
-  style fullW = { box: w(full) }
+  style page = { box: size({ w: full, max-w: breakpoint-desktop }).space({ mx: auto }).overflow({ all: visible }) }
+  style fieldShell = { box: size({ w: full, max-w: 64 }).space({ pad: 2 }).overflow({ all: visible }) }
+  style fullW = { box: size({ w: full }) }
   style knobLabel = {
-    paint: fg(muted-foreground),
-    text: fontSize(xs).fontWeight(medium).tracking(wide).textCase(uppercase),
-  }
-  style sizeValue = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
-  style tickRow = { box: w(full).padT(1).padX(1_5) }
-  style tick = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
-  style exampleBlock = { box: w(full).padT(2).padB(4).overflow(visible) }
-  style exampleLead = { paint: fg(muted-foreground), text: fontSize(sm) }
+    paint: ink({ color: muted-foreground }),
+    text: type({ size: xs, weight: medium, tracking: wide, case: uppercase }),
+}
+  style sizeValue = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs }) }
+  style tickRow = { box: size({ w: full }).space({ pad-x: 1_5, pad-t: 1 }) }
+  style tick = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs }) }
+  style exampleBlock = { box: size({ w: full }).space({ pad-t: 2, pad-b: 4 }).overflow({ all: visible }) }
+  style exampleLead = { paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
   style sectionLabel = {
-    paint: fg(muted-foreground),
-    text: fontSize(xs).textCase(uppercase).tracking(wide),
-  }
-  style demoRow = { box: w(full).padY(2) }
+    paint: ink({ color: muted-foreground }),
+    text: type({ size: xs, tracking: wide, case: uppercase }),
+}
+  style demoRow = { box: size({ w: full }).space({ pad-y: 2 }) }
 </scope>
 
 <controller>
@@ -93,7 +93,7 @@ export default controller((_ctx: Scope) => {
           size={size()}
           invalid={boxInvalid()}
           disabled={boxDisabled()}
-        />
+       />
         I agree to the terms
       </label>
     </column>
@@ -104,13 +104,7 @@ export default controller((_ctx: Scope) => {
           <label style(knobLabel)>Size</label>
           <span style(sizeValue)>{size()}</span>
         </row>
-        <slider bind:value={sizeIdx} min="0" max="3" step="1" size="sm" label="Size"></slider>
-        <row gap="0" align="center" justify="between" style(tickRow)>
-          <span style(tick)>xs</span>
-          <span style(tick)>sm</span>
-          <span style(tick)>md</span>
-          <span style(tick)>lg</span>
-        </row>
+        <slider bind:value={sizeIdx} min="0" max="3" step="1" size="sm" label="Size" ticks="xs,sm,md,lg"></slider>
       </column>
       <row gap="4" align="center">
         <label><checkbox bind:checked={checked} size="sm" /> Checked</label>

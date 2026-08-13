@@ -21,7 +21,7 @@ use sail_compiler::{bindings, keys::BindingKind, parse};
 use serde_json::json;
 use tower::ServiceExt;
 
-/// The PE form endpoint is a deliberate 410 tombstone in deck's router —
+/// The progressive-enhancement form endpoint is a deliberate 410 tombstone in deck's router —
 /// the URL is still composed as the no-JS `<form>` action, so it must answer
 /// Gone (the surface existed and was retired), never 404.
 #[tokio::test(flavor = "multi_thread")]
@@ -42,7 +42,7 @@ async fn mutation_post_is_tombstoned_410() {
     assert_eq!(
         resp.status(),
         StatusCode::GONE,
-        "PE form mutations are retired; the tombstone must answer 410"
+        "progressive-enhancement form mutations are retired; the tombstone must answer 410"
     );
 }
 

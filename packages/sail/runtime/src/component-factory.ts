@@ -17,6 +17,8 @@ import type { Decoder } from './decode'
 import { effect, signal, type Signal } from './signal'
 import type { MountSetup, MountModule } from './component-mount'
 import { mountComponent } from './compose'
+import { navigate } from './navigate'
+import type { RouteSignals } from './route-signals'
 import { projectSlots } from './slot-project'
 import { ensureLightContracts } from './styles/contracts-seam'
 import { hostRoute } from './host-route'
@@ -161,13 +163,20 @@ const injectScopedStyles = (tag: string, css: string): void => {
   if (document.getElementById(id)) return
   const style = document.createElement('style')
   style.id = id
-  // The @scope DONUT: rules apply from this component's element down, and
-  // STOP at any nested component boundary — style containment by
-  // construction (Sail is light DOM). The compiler rewrites legacy
-  // authoring idioms (:host → :scope / .sail-root, ::slotted → slot >)
-  // for exactly this wrapper.
-  style.textContent =
-    `@scope ([data-component="${tag}"]) to ([data-component]) { ${css} }`
+  // Scope from this component host down through the light-DOM tree.
+  //
+  // Do NOT use a `to ([data-component])` lower boundary (the old "donut").
+  // Light-DOM composition projects host-authored children into nested
+  // components via <slot> (specimen | knobs | stage on sail-component-viewer).
+  // Those nodes remain descendants of the nested host in the DOM, but they
+  // are authored and styled by the PARENT .sail file — a lower boundary
+  // made every host Style utility (s-w7 swatches, knob widths, …) a no-op
+  // inside the viewer, collapsing tone dots to 0×0.
+  //
+  // Nested components still inject their own scoped sheets; same-specificity
+  // atomic utilities match, and later sheets win when both apply. The
+  // compiler rewrites :host → :scope / .sail-root for this wrapper.
+  style.textContent = `@scope ([data-component="${tag}"]) { ${css} }`
   document.head.appendChild(style)
 }
 
@@ -353,16 +362,28 @@ export function component<Bindings>(
     // shared signals on the element — that's scope-homed now via
     // `useStore` / `provideContext` (see `./store` / `./effect-scope`), so
     // `host` here is for imperative reach, not shared-state publication.
+    //
+    // `route` / `navigate` match the page mount contract: compiled setup
+    // does `$scope.route = route`. The host publishes the live RouteSignals
+    // on `__shipRouteSignals` (same port pattern as `__shipRouterPort`).
+    // Both CE class paths (form-associated + normal) share this factory,
+    // so both see the same object — reused chrome updates on navigate
+    // without remounting. Isolated unit tests leave the port unset.
+    const route = globalThis.__shipRouteSignals as RouteSignals | undefined
     const ctx: {
       props: Record<string, Signal<unknown>>
       host: HTMLElement
+      navigate: typeof navigate
+      route?: RouteSignals
       internals?: ElementInternals
       route?: RouteSignals
       navigate?: (path: string) => void
     } = {
       props: propSignals,
       host,
+      navigate,
     }
+    if (route) ctx.route = route
     if (internals) ctx.internals = internals
     // Deck injects ctx.route for layout CEs (and any other CE whose host
     // registered a route). Pages already receive route via mount(); this

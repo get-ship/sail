@@ -117,7 +117,7 @@ enum Command {
 
     /// Bake all framework + consumer bundles via the in-process Rolldown bundler.
     BuildAssets {
-        /// Skip writing the `.deck/framework-stamp` file (tests).
+        /// Skip touching `crates/deck/deck-core/framework-stamp` (tests).
         #[arg(long = "no-stamp")]
         no_stamp: bool,
     },
@@ -623,10 +623,10 @@ fn build_assets(no_stamp: bool) -> Result<()> {
         // can run `deck build-assets` without re-triggering this build script
         // while downstream doctests are queued.
         if !no_stamp {
-            let stamp_path = deck_config::deck_out_path(&repo_root).join("framework-stamp");
+            let stamp_path = deck_config::framework_stamp_path(&repo_root);
             deck_bundler::atomic::write(
                 &stamp_path,
-                // Empty content keeps the committed stamp unmodified in git;
+                // Empty content keeps the tracked crate stamp unmodified in git;
                 // Cargo's rerun-if-changed tracks mtime, not content.
                 b"",
             )
@@ -706,7 +706,7 @@ fn build_assets(no_stamp: bool) -> Result<()> {
 ///   - stale AND regeneration is possible (a real Cargo workspace + `cargo`
 ///     on PATH, and we haven't already tried once this restart cycle): log
 ///     loud, run `build_assets()` in-process to re-stage `.deck/framework/`
-///     with a fresh stamp and update `.deck/framework-stamp`, then
+///     with a fresh stamp and update `crates/deck/deck-core/framework-stamp`, then
 ///     `cargo run -p deck-cli -- dev …` — cargo picks up the changed stamp
 ///     via `build.rs`'s `cargo:rerun-if-changed`, rebuilds `deck-core`
 ///     (re-baking the fresh, now-stamped bundle) and `deck-cli`, and launches
@@ -1062,9 +1062,13 @@ fn dev(project: PathBuf, addr: String) -> Result<()> {
         let app_ext = Arc::new(app_cfg.clone());
 
         // Sail Studio (apps/studio): when the monorepo ships Studio and the
-        // primary project is NOT Studio itself, also bundle + serve it at
-        // `/_studio` for the overlay bridge (TOOL-4). Fail-soft: missing or
-        // broken studio build never blocks the primary app.
+        // primary project is NOT Studio itself, also serve it at `/_studio`
+        // for the overlay bridge (TOOL-4). Fail-soft: missing/broken/hung
+        // studio build never blocks the primary app.
+        //
+        // Reuse existing `.deck` by default — a full studio rebuild can hang
+        // in layout (theme-shape etc.) and used to block docs from ever
+        // reaching `serving`. Set DECK_STUDIO_FORCE_REBUILD=1 to force rebuild.
         let studio_dir = workspace_root.join("apps/studio");
         let primary_is_studio = project_dir
             .canonicalize()
@@ -1079,68 +1083,102 @@ fn dev(project: PathBuf, addr: String) -> Result<()> {
         )> = None;
         if studio_dir.is_dir() && !primary_is_studio {
             let studio_out = deck_config::deck_out_path(&studio_dir);
-            match deck_bundler::app::bundle_app(
-                &workspace_root,
-                &cfg.packs,
-                &studio_dir,
-                &studio_out,
-                false,
-                false,
-            )
-            .await
-            {
-                Ok(studio_build) => {
-                    let mut studio_cfg =
-                        deck_config::AppServeConfig::load_from_project(&studio_dir)
-                            .unwrap_or_default();
-                    studio_cfg.name = studio_build.url_namespace.clone();
-                    studio_cfg.route = "/_studio".to_string();
-                    studio_cfg.source = deck_config::DECK_OUT_DIRNAME.to_string();
-                    // Tools (explorer/checks/design/tasks) target the *primary*
-                    // app under `sail dev --project`, not apps/studio itself.
-                    if let Some(rel) = deck_core::sail_project_rel_from_root(&project_dir) {
-                        studio_cfg.ops_project = Some(rel);
+            let force_rebuild = std::env::var_os("DECK_STUDIO_FORCE_REBUILD").is_some();
+            let has_out = studio_out.join("index.html").is_file();
+            let reuse = has_out && !force_rebuild;
+
+            let namespace: Option<String> = if reuse {
+                println!(
+                    "sail dev: reusing studio out {} (DECK_STUDIO_FORCE_REBUILD=1 to rebuild)",
+                    studio_out.display()
+                );
+                // On-disk index references /studio/* assets.
+                Some("studio".to_string())
+            } else {
+                println!("sail dev: building studio overlay…");
+                match tokio::time::timeout(
+                    std::time::Duration::from_secs(180),
+                    deck_bundler::app::bundle_app(
+                        &workspace_root,
+                        &cfg.packs,
+                        &studio_dir,
+                        &studio_out,
+                        false,
+                        false,
+                    ),
+                )
+                .await
+                {
+                    Ok(Ok(studio_build)) => Some(studio_build.url_namespace),
+                    Ok(Err(e)) => {
+                        eprintln!("sail dev: studio overlay build skipped: {e:#}");
+                        None
                     }
-                    // Studio opts into SSR; share the primary renderer if already
-                    // spun up, else start one when Studio needs it.
-                    let studio_renderer: Option<Arc<dyn deck_core::synthetic_ssr::SyntheticSsr>> =
-                        if studio_cfg.render == deck_config::RenderMode::Ssr {
-                            if let Some(r) = renderer.clone() {
-                                Some(r)
-                            } else {
-                                match deck_ssr::serve::engine(None) {
-                                    Ok(r) => {
-                                        println!(
-                                            "sail dev: ship-js SSR engine ready (studio overlay)"
-                                        );
-                                        Some(r)
-                                    }
-                                    Err(e) => {
-                                        eprintln!(
-                                            "sail dev: studio SSR unavailable, CSR overlay: {e:#}"
-                                        );
-                                        None
-                                    }
-                                }
-                            }
+                    Err(_) => {
+                        eprintln!(
+                            "sail dev: studio overlay rebuild timed out after 180s"
+                        );
+                        if has_out {
+                            eprintln!(
+                                "sail dev: falling back to existing studio out {}",
+                                studio_out.display()
+                            );
+                            Some("studio".to_string())
                         } else {
                             None
-                        };
-                    let studio_resolution =
-                        Arc::new(deck_core::Resolution::new().with_root(studio_dir.clone()));
-                    println!(
-                        "sail dev: studio overlay at /_studio (namespace {})",
-                        studio_cfg.name
-                    );
-                    studio_mount = Some((
-                        Arc::new(studio_cfg),
-                        studio_resolution,
-                        studio_renderer,
-                    ));
+                        }
+                    }
                 }
-                Err(e) => {
-                    eprintln!("sail dev: studio overlay build skipped: {e:#}");
+            };
+
+            if let Some(url_namespace) = namespace {
+                let mut studio_cfg =
+                    deck_config::AppServeConfig::load_from_project(&studio_dir)
+                        .unwrap_or_default();
+                studio_cfg.name = url_namespace;
+                studio_cfg.route = "/_studio".to_string();
+                studio_cfg.source = deck_config::DECK_OUT_DIRNAME.to_string();
+                // Tools (explorer/checks/design/tasks) target the *primary*
+                // app under `sail dev --project`, not apps/studio itself.
+                if let Some(rel) = deck_core::sail_project_rel_from_root(&project_dir) {
+                    studio_cfg.ops_project = Some(rel);
                 }
+                // Studio opts into SSR; share the primary renderer if already
+                // spun up, else start one when Studio needs it.
+                let studio_renderer: Option<Arc<dyn deck_core::synthetic_ssr::SyntheticSsr>> =
+                    if studio_cfg.render == deck_config::RenderMode::Ssr {
+                        if let Some(r) = renderer.clone() {
+                            Some(r)
+                        } else {
+                            match deck_ssr::serve::engine(None) {
+                                Ok(r) => {
+                                    println!(
+                                        "sail dev: ship-js SSR engine ready (studio overlay)"
+                                    );
+                                    Some(r)
+                                }
+                                Err(e) => {
+                                    eprintln!(
+                                        "sail dev: studio SSR unavailable, CSR overlay: {e:#}"
+                                    );
+                                    None
+                                }
+                            }
+                        }
+                    } else {
+                        None
+                    };
+                let studio_resolution =
+                    Arc::new(deck_core::Resolution::new().with_root(studio_dir.clone()));
+                println!(
+                    "sail dev: studio overlay at /_studio (namespace {})",
+                    studio_cfg.name
+                );
+                studio_mount = Some((
+                    Arc::new(studio_cfg),
+                    studio_resolution,
+                    studio_renderer,
+                ));
             }
         }
 

@@ -4,18 +4,18 @@
 -->
 
 <scope>
-  style page = { box: maxW(breakpoint-desktop).mx(auto).w(full).overflow(visible) }
-  style specimen = { box: w(full).maxW(full).pad(2).overflow(visible) }
+  style page = { box: size({ w: full, max-w: breakpoint-desktop }).space({ mx: auto }).overflow({ all: visible }) }
+  style specimen = { box: size({ w: full, max-w: full }).space({ pad: 2 }).overflow({ all: visible }) }
   style knobLabel = {
-    paint: fg(muted-foreground),
-    text: fontSize(xs).fontWeight(medium).tracking(wide).textCase(uppercase),
-  }
-  style sizeValue = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
-  style exampleBlock = { box: w(full).padT(2).padB(4).overflow(visible) }
+    paint: ink({ color: muted-foreground }),
+    text: type({ size: xs, weight: medium, tracking: wide, case: uppercase }),
+}
+  style sizeValue = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs }) }
+  style exampleBlock = { box: size({ w: full }).space({ pad-t: 2, pad-b: 4 }).overflow({ all: visible }) }
   style sectionLabel = {
-    paint: fg(muted-foreground),
-    text: fontSize(xs).textCase(uppercase).tracking(wide),
-  }
+    paint: ink({ color: muted-foreground }),
+    text: type({ size: xs, tracking: wide, case: uppercase }),
+}
 </scope>
 
 <controller>
@@ -104,7 +104,7 @@ export default controller((_ctx: Scope) => {
 
     <column slot="knobs" gap="4" align="stretch">
       <column gap="2">
-        <label style(knobLabel)>Value</label>
+        <label style(knobLabel)>Selected theme</label>
         <select size="sm" bind:value={value} label="Value">
           <option value="">(site default)</option>
           <option value="ship">ship</option>
@@ -133,22 +133,22 @@ export default controller((_ctx: Scope) => {
         <theme-picker></theme-picker>
       </doc-example>
       <doc-example
-        title="Bound value"
-        lead="value + on-theme-change for controlled selection."
+        title="Selected theme"
+        lead="value is the selected theme id — it applies that theme."
         code={exValue()}
       >
         <theme-picker value="console" on-theme-change={onThemeChange}></theme-picker>
       </doc-example>
       <doc-example
         title="Mode only"
-        lead="Light / dark / system cycle — no full catalog."
+        lead="mode-only cycles light / dark / system. No catalog."
         code={exMode()}
       >
         <theme-picker mode-only></theme-picker>
       </doc-example>
       <doc-example
         title="Inline"
-        lead="Panel in document flow (no floating chrome)."
+        lead="Catalog stays in the page — no popover, no hidden trigger."
         code={exInline()}
       >
         <theme-picker inline></theme-picker>

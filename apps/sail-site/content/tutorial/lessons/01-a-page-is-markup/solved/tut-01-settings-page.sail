@@ -6,10 +6,10 @@
   the layout keywords, appearance from the tone/variant/size contracts.
 -->
 <scope>
-  style title = { text: tracking(tight) }
-  style muted = { paint: fg(muted-foreground), text: fontSize(sm) }
-  style hint = { paint: fg(muted-foreground) }
-  style rowLabel = { text: fontSize(sm) }
+  style title = { text: type({ tracking: tight }) }
+  style muted = { paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
+  style hint = { paint: ink({ color: muted-foreground }) }
+  style rowLabel = { text: type({ size: sm }) }
   type NotifyRowProps = { label: string; detail: string; enabled: boolean }
 </scope>
 

@@ -1,5 +1,4 @@
-// /components/[tag] — detail data for the FULL L1 surface (the 48 elements
-// the l1-conformance gate renders, minus nothing). slug → { heading,
+// /components/[tag] — detail data for the FULL L1 surface. slug → { heading,
 // blurb, variants, props, usage }. Props tables are GENERATED from the
 // compiler's prop registry (see genProps below); regen with
 // `cargo run -p sail-compiler -- prop-registry` after touching a stdlib
@@ -96,6 +95,11 @@ const DETAILS_MAP = {
         type: 'xs · sm · md · lg · icon · iconSm · iconLg',
       },
       { name: 'disabled', desc: 'Non-interactive', type: 'bool' },
+      {
+        name: 'label',
+        desc: 'Accessible name — required on icon-only (lowers to aria-label)',
+        type: 'string',
+      },
     ],
   }),
   a: lang('a', 'a', {
@@ -231,13 +235,14 @@ const DETAILS_MAP = {
     ],
   }),
   file: lang('file', 'file', {
-    blurb: 'Opens the system file picker. Use dropzone when you need drag-and-drop.',
-    variants: [],
-    variantAttr: '',
+    blurb: 'Opens the system file picker. variant="drop" is the dashed drop surface — same control.',
+    variants: ['picker', 'drop'],
+    variantAttr: 'variant',
     props: [
+      { name: 'variant', desc: 'picker is the system control; drop is the drag target', type: 'picker · drop' },
       { name: 'accept', desc: 'MIME / extension filter', type: 'string' },
       { name: 'multiple', desc: 'Allow multiple files', type: 'bool' },
-      { name: 'size', desc: 'Control height (default md)', type: 'xs · sm · md · lg' },
+      { name: 'size', desc: 'Picker height (default md)', type: 'xs · sm · md · lg' },
       { name: 'invalid · disabled · name · required', desc: 'State + form', type: 'mixed' },
     ],
   }),
@@ -290,7 +295,7 @@ const DETAILS_MAP = {
     ],
   }),
   slider: lang('slider', 'slider', {
-    blurb: 'A single-thumb range control. Set min, max, and step as needed.',
+    blurb: 'A single-thumb range control. Set min, max, and step as needed. ticks labels sit on thumb centers.',
     variants: [],
     variantAttr: '',
     props: [
@@ -300,6 +305,7 @@ const DETAILS_MAP = {
       { name: 'max', desc: 'Maximum (default 100)', type: 'number' },
       { name: 'step', desc: 'Increment (default 1)', type: 'number' },
       { name: 'size', desc: 'Track size (default md)', type: 'sm · md · lg' },
+      { name: 'ticks', desc: 'Comma-separated labels under each thumb stop', type: 'string' },
       { name: 'disabled', desc: 'Non-interactive', type: 'bool' },
       { name: 'name', desc: 'Form name', type: 'string' },
     ],
@@ -352,23 +358,24 @@ const DETAILS_MAP = {
   // legend is NOT a top-level DETAILS/catalog topic — documented inside fieldset.
   dropzone: lang('dropzone', 'dropzone', {
     blurb:
-      'An attribute, not a component: put dropzone on a surface to wire drag-over states, click-to-browse, and the file input.',
+      'Dashed drop surface. Drag files onto it, or click to browse. accept and multiple are the same as file.',
     variants: [],
     variantAttr: '',
     props: [
-      { name: 'dropzone', desc: 'Attribute that makes any surface a drop target', type: 'attr' },
-      { name: 'tone', desc: 'Border and highlight colour', type: TONES },
+      { name: 'accept', desc: 'MIME / extension filter', type: 'string' },
+      { name: 'multiple', desc: 'Allow multiple files', type: 'bool' },
+      { name: 'invalid · disabled · name · required', desc: 'State + form', type: 'mixed' },
     ],
   }),
   'theme-picker': lang('theme-picker', 'themePicker', {
     blurb:
-      'Theme switcher. Opens a panel of live theme cards, or cycles light / dark / system when mode-only.',
+      'Pick a theme. The trigger opens a catalog of live specimens. value is the selected theme id; mode-only cycles light / dark / system; inline keeps the catalog in the page.',
     variants: [],
     variantAttr: '',
     props: [
-      { name: 'value', desc: 'Active theme id', type: 'string' },
-      { name: 'inline', desc: 'Panel in document flow (no floating chrome)', type: 'bool' },
-      { name: 'modeOnly', desc: 'Light / dark / system only — no full catalog', type: 'bool' },
+      { name: 'value', desc: 'Selected theme id (applies that theme)', type: 'string' },
+      { name: 'inline', desc: 'Show the catalog in-flow instead of a popover', type: 'bool' },
+      { name: 'mode-only', desc: 'Cycle light / dark / system — no catalog', type: 'bool' },
       { name: 'onThemeChange', desc: 'Fires with { theme, mode, preference }', type: 'callback' },
     ],
   }),
@@ -539,7 +546,7 @@ const DETAILS_MAP = {
   // ── Display ──────────────────────────────────────────────────────────
   badge: lang('badge', 'badge', {
     blurb:
-      'A small statement of state. Soft by default; solid or outline when it must shout or whisper. Omit tone for theme default colors; set tone and the semantic colour always paints.',
+      'A small statement of state. Default tone is muted. Soft by default; solid or outline when it must shout or whisper.',
     variants: ['soft', 'solid', 'outline'],
     variantAttr: 'variant',
     props: [

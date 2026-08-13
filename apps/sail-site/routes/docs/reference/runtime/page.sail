@@ -2,19 +2,19 @@
   Author runtime (tier B) — exports from author-surface.json via runtime-surface composition.
 -->
 <scope>
-  style root = { box: minW(0) }
-  style intro = { box: maxW(breakpoint-tablet) }
-  style eyebrow = { paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
-  style lead = { paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) }
-  style sectionLead = { box: maxW(breakpoint-tablet) }
-  style sectionSummary = { box: maxW(breakpoint-tablet), paint: fg(muted-foreground) }
-  style cardMin = { box: minW(0) }
-  style cardDoc = { box: maxW(panel-max-w-sm), paint: fg(muted-foreground) }
-  style exportRow = { box: padX(3).padY(2), paint: radius(md).borderWidth(1).border(border) }
-  style exportName = { box: minW(32) }
-  style exportSig = { paint: fg(muted-foreground), text: fontFamily(mono) }
-  style exportDoc = { paint: fg(muted-foreground) }
-  style exportBody = { box: minW(0) }
+  style root = { box: size({ min-w: 0 }) }
+  style intro = { box: size({ max-w: breakpoint-tablet }) }
+  style eyebrow = { paint: ink({ color: accent }), text: type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
+  style lead = { paint: ink({ color: muted-foreground }), text: type({ size: lg, leading: relaxed }) }
+  style sectionLead = { box: size({ max-w: breakpoint-tablet }) }
+  style sectionSummary = { box: size({ max-w: breakpoint-tablet }), paint: ink({ color: muted-foreground }) }
+  style cardMin = { box: size({ min-w: 0 }) }
+  style cardDoc = { box: size({ max-w: panel-max-w-sm }), paint: ink({ color: muted-foreground }) }
+  style exportRow = { box: space({ pad-x: 3, pad-y: 2 }), paint: radius(md).border({ color: border, width: 1 }) }
+  style exportName = { box: size({ min-w: 32 }) }
+  style exportSig = { paint: ink({ color: muted-foreground }), text: type({ family: mono }) }
+  style exportDoc = { paint: ink({ color: muted-foreground }) }
+  style exportBody = { box: size({ min-w: 0 }) }
 </scope>
 
 <controller>

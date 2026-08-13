@@ -166,7 +166,8 @@
           "destructive",
           "accent",
           "muted"
-        ]
+        ],
+        "default": "primary"
       },
       "variant": {
         "values": [
@@ -176,7 +177,7 @@
           "outline",
           "ghost"
         ],
-        "default": "default"
+        "default": "solid"
       }
     },
     "card": {
@@ -226,6 +227,37 @@
           "outline"
         ],
         "default": "default"
+      }
+    },
+    "checkbox": {
+      "disabled": {
+        "type": "bool",
+        "default": "false"
+      },
+      "invalid": {
+        "type": "bool",
+        "default": "false"
+      },
+      "name": {
+        "type": "string",
+        "default": ""
+      },
+      "required": {
+        "type": "bool",
+        "default": "false"
+      },
+      "size": {
+        "values": [
+          "xs",
+          "sm",
+          "md",
+          "lg"
+        ],
+        "default": "md"
+      },
+      "value": {
+        "type": "string",
+        "default": ""
       }
     },
     "chip": {
@@ -280,6 +312,24 @@
         "default": "sail"
       }
     },
+    "color": {
+      "disabled": {
+        "type": "bool",
+        "default": "false"
+      },
+      "invalid": {
+        "type": "bool",
+        "default": "false"
+      },
+      "name": {
+        "type": "string",
+        "default": ""
+      },
+      "value": {
+        "type": "string",
+        "default": "#000000"
+      }
+    },
     "combobox": {
       "placeholder": {
         "type": "string",
@@ -292,6 +342,67 @@
     },
     "context-menu": {
       "for": {
+        "type": "string",
+        "default": ""
+      }
+    },
+    "date": {
+      "disabled": {
+        "type": "bool",
+        "default": "false"
+      },
+      "invalid": {
+        "type": "bool",
+        "default": "false"
+      },
+      "max": {
+        "type": "string",
+        "default": ""
+      },
+      "min": {
+        "type": "string",
+        "default": ""
+      },
+      "name": {
+        "type": "string",
+        "default": ""
+      },
+      "placeholder": {
+        "type": "string",
+        "default": ""
+      },
+      "readonly": {
+        "type": "bool",
+        "default": "false"
+      },
+      "required": {
+        "type": "bool",
+        "default": "false"
+      },
+      "size": {
+        "values": [
+          "xs",
+          "sm",
+          "md",
+          "lg"
+        ],
+        "default": "md"
+      },
+      "step": {
+        "type": "string",
+        "default": ""
+      },
+      "type": {
+        "values": [
+          "date",
+          "time",
+          "datetime-local",
+          "month",
+          "week"
+        ],
+        "default": "date"
+      },
+      "value": {
         "type": "string",
         "default": ""
       }
@@ -334,6 +445,32 @@
       "placement": {
         "type": "string",
         "default": ""
+      }
+    },
+    "dropzone": {
+      "accept": {
+        "type": "string",
+        "default": ""
+      },
+      "disabled": {
+        "type": "bool",
+        "default": "false"
+      },
+      "invalid": {
+        "type": "bool",
+        "default": "false"
+      },
+      "multiple": {
+        "type": "bool",
+        "default": "false"
+      },
+      "name": {
+        "type": "string",
+        "default": ""
+      },
+      "required": {
+        "type": "bool",
+        "default": "false"
       }
     },
     "empty-state": {
@@ -405,6 +542,48 @@
         "default": "false"
       }
     },
+    "file": {
+      "accept": {
+        "type": "string",
+        "default": ""
+      },
+      "disabled": {
+        "type": "bool",
+        "default": "false"
+      },
+      "invalid": {
+        "type": "bool",
+        "default": "false"
+      },
+      "multiple": {
+        "type": "bool",
+        "default": "false"
+      },
+      "name": {
+        "type": "string",
+        "default": ""
+      },
+      "required": {
+        "type": "bool",
+        "default": "false"
+      },
+      "size": {
+        "values": [
+          "xs",
+          "sm",
+          "md",
+          "lg"
+        ],
+        "default": "md"
+      },
+      "variant": {
+        "values": [
+          "picker",
+          "drop"
+        ],
+        "default": "picker"
+      }
+    },
     "hover-card": {
       "placement": {
         "type": "string",
@@ -440,17 +619,61 @@
       }
     },
     "input": {
+      "autocomplete": {
+        "type": "string",
+        "default": ""
+      },
       "disabled": {
         "type": "bool",
         "default": "false"
+      },
+      "inputmode": {
+        "type": "string",
+        "default": ""
       },
       "invalid": {
         "type": "bool",
         "default": "false"
       },
+      "max": {
+        "type": "string",
+        "default": ""
+      },
+      "maxlength": {
+        "type": "string",
+        "default": ""
+      },
+      "min": {
+        "type": "string",
+        "default": ""
+      },
+      "minlength": {
+        "type": "string",
+        "default": ""
+      },
+      "name": {
+        "type": "string",
+        "default": ""
+      },
+      "pattern": {
+        "type": "string",
+        "default": ""
+      },
       "placeholder": {
         "type": "string",
         "default": ""
+      },
+      "readonly": {
+        "type": "bool",
+        "default": "false"
+      },
+      "required": {
+        "type": "bool",
+        "default": "false"
+      },
+      "reveal": {
+        "type": "bool",
+        "default": "true"
       },
       "size": {
         "values": [
@@ -461,6 +684,10 @@
         ],
         "default": "md"
       },
+      "step": {
+        "type": "string",
+        "default": ""
+      },
       "type": {
         "values": [
           "text",
@@ -470,20 +697,13 @@
           "search",
           "tel",
           "url",
-          "date",
-          "time",
-          "datetime-local",
-          "month",
-          "week",
-          "file",
-          "color",
-          "checkbox",
-          "radio",
-          "range",
-          "submit",
           "hidden"
         ],
         "default": "text"
+      },
+      "value": {
+        "type": "string",
+        "default": ""
       }
     },
     "label": {
@@ -753,6 +973,11 @@
       "step": {
         "type": "number",
         "default": "1"
+      },
+      "ticks": {
+        "type": "string",
+        "default": "",
+        "description": "Comma-separated labels under thumb-centers. Owned by the slider — not a docs pad hack."
       },
       "value": {
         "type": "number",

@@ -20,7 +20,7 @@ export interface RuntimeCategoryDoc {
 }
 
 /** Documented tier-B allowlist size (author-surface.json). */
-export const AUTHOR_RUNTIME_COUNT = 126
+export const AUTHOR_RUNTIME_COUNT = 128
 
 export const RUNTIME_CATEGORIES: RuntimeCategoryDoc[] = [
   {
@@ -61,7 +61,7 @@ export const RUNTIME_CATEGORIES: RuntimeCategoryDoc[] = [
   {
     "id": "actions",
     "summary": "Public use: actions + Action types (full use: table also on /sail/reference/actions)",
-    "count": 21
+    "count": 23
   },
   {
     "id": "errors",
@@ -583,7 +583,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(): void",
     "doc": "Wipe ALL runtime theme overrides — both this session's previews and the committed overrides held in memory — and remove them from `:root`. Does NOT touch localStorage or the host backend (a full \"forget the persisted theme\" is `theme.commit({})` semantics plus a storage clear the host owns). Useful for a host tearing down / switching workspaces, and for test isolation.",
-    "loc": "src/theme.ts:213"
+    "loc": "src/theme.ts:215"
   },
   {
     "subpath": ".",
@@ -592,7 +592,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(host: HTMLElement): void",
     "doc": "Teardown a prior {@link theme.applyScope} on `host` — removes written custom properties and the theme/mode attrs this API set. Safe if never applied.",
-    "loc": "src/theme.ts:621"
+    "loc": "src/theme.ts:618"
   },
   {
     "subpath": ".",
@@ -601,7 +601,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(): void",
     "doc": "Rehydrate committed overrides from localStorage and apply them to `:root`. The live-persistence boot step: a host's pre-paint script calls this so a committed live-preview survives a reload (the dev path needs no boot — the theme data file IS the source, and HMR re-themes). Safe to call server-side (no-op) and idempotent.",
-    "loc": "src/theme.ts:230"
+    "loc": "src/theme.ts:232"
   },
   {
     "subpath": ".",
@@ -610,7 +610,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "interface",
     "signature": "export interface LoweredThemeToken { path: string cssName: string value: string cssValue: string type: string }",
     "doc": "Leaf from the DTCG walk (mirrors compiler Token before css_value resolve).",
-    "loc": "src/theme.ts:284"
+    "loc": "src/theme.ts:286"
   },
   {
     "subpath": ".",
@@ -619,7 +619,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(doc: ThemeDoc, mode?: string | null): LowerThemeResult",
     "doc": "Lower a DTCG theme document for one mode into CSS custom-property writes.",
-    "loc": "src/theme.ts:438"
+    "loc": "src/theme.ts:435"
   },
   {
     "subpath": ".",
@@ -628,7 +628,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "interface",
     "signature": "export interface LowerThemeResult { mode: string themeId: string tokens: LoweredThemeToken[] patch: ThemeScopePatch }",
     "doc": "",
-    "loc": "src/theme.ts:292"
+    "loc": "src/theme.ts:294"
   },
   {
     "subpath": ".",
@@ -637,7 +637,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(hook: ThemePersist | null): void",
     "doc": "Register (or clear) the host persistence hook. Call once at host startup. Same seam shape as `@ship/tokens`' `setThemeTransport` — the runtime names no daemon URL; the host plugs one in.",
-    "loc": "src/theme.ts:54"
+    "loc": "src/theme.ts:56"
   },
   {
     "subpath": ".",
@@ -646,7 +646,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "const",
     "signature": "{ readonly preview: (patch: ThemePatch) => void; readonly commit: (patch: ThemePatch) => void; readonly reset: () => void; readonly current: () => ThemeState; readonly applyScope: (host: HTMLElement, options: ThemeApplyScopeOptions) => () => void; readonly clearScope: (host: HTMLElement) => void; }",
     "doc": "`theme` — the sanctioned runtime theme-write hatch.",
-    "loc": "src/theme.ts:644"
+    "loc": "src/theme.ts:641"
   },
   {
     "subpath": ".",
@@ -655,7 +655,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "type",
     "signature": "export type Theme = typeof theme",
     "doc": "",
-    "loc": "src/theme.ts:654"
+    "loc": "src/theme.ts:651"
   },
   {
     "subpath": ".",
@@ -664,7 +664,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "interface",
     "signature": "export interface ThemeApplyScopeOptions { doc: ThemeDoc mode?: string | null }",
     "doc": "Options for {@link theme.applyScope}.",
-    "loc": "src/theme.ts:270"
+    "loc": "src/theme.ts:272"
   },
   {
     "subpath": ".",
@@ -673,7 +673,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "type",
     "signature": "export type ThemeDoc = Record<string, unknown>",
     "doc": "Loose DTCG theme document (modes-in-file or flat).",
-    "loc": "src/theme.ts:267"
+    "loc": "src/theme.ts:269"
   },
   {
     "subpath": ".",
@@ -682,7 +682,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "type",
     "signature": "export type ThemePatch = Record<ThemeTokenName, string>",
     "doc": "",
-    "loc": "src/theme.ts:27"
+    "loc": "src/theme.ts:29"
   },
   {
     "subpath": ".",
@@ -691,7 +691,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "type",
     "signature": "export type ThemePersist = (patch: ThemePatch) => void | Promise<void>",
     "doc": "Host persistence hook. Registered once at host startup via `setThemePersist`. - dev: serialize the patch into the app's theme data file (the `themes.ts` fork) so HMR re-themes and it round-trips in source. - live: write-through to a host-configured backend. Omitted ⇒ persistence is localStorage-only (the default, owner-recommended). Fire-and-forget; a rejected promise is swallowed (the local cache is still correct).",
-    "loc": "src/theme.ts:47"
+    "loc": "src/theme.ts:49"
   },
   {
     "subpath": ".",
@@ -700,7 +700,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "type",
     "signature": "export type ThemeScopePatch = Record<string, string>",
     "doc": "One lowered token: css custom-property name (`--x`) → CSS value.",
-    "loc": "src/theme.ts:281"
+    "loc": "src/theme.ts:283"
   },
   {
     "subpath": ".",
@@ -709,7 +709,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "interface",
     "signature": "export interface ThemeState { id: string tokens: Record<string, string> }",
     "doc": "What `theme.current()` reports.",
-    "loc": "src/theme.ts:30"
+    "loc": "src/theme.ts:32"
   },
   {
     "subpath": ".",
@@ -718,7 +718,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "type",
     "signature": "export type ThemeTokenName = string",
     "doc": "A patch maps token names (`--foo`) to CSS values. TokenName is validated at write time against the registered `@property` tokens (or a declared `:root` var); a non-token key is refused.",
-    "loc": "src/theme.ts:26"
+    "loc": "src/theme.ts:28"
   },
   {
     "subpath": ".",
@@ -924,8 +924,8 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "name": "autosize",
     "kind": "function",
     "signature": "(node: Element, param: void): void | ActionResult<void>",
-    "doc": "Make a `<textarea>` grow in height, or a single-line `<input>` grow in width, to fit its content. Reflows on input and once on mount. `use:autosize` — no parameter.",
-    "loc": "src/actions/autosize.ts:23"
+    "doc": "Make a `<textarea>` grow in height, or a single-line `<input>` grow in width, to fit its content. Reflows on input and after mount layout settles. `use:autosize` — no parameter.",
+    "loc": "src/actions/autosize.ts:29"
   },
   {
     "subpath": ".",
@@ -961,7 +961,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(node: Element, param: void): void | ActionResult<void>",
     "doc": "`use:contextMenu` — opens the L1 `<context-menu>` (a native `[popover]`) at the pointer on right-click. The menu's `for` attribute names the target element (or it defaults to the menu's parent); we suppress the native context menu, place the popover at the pointer, and show it. Item semantics/keyboard come from `use:menu`; light-dismiss + top-layer come from the native popover.",
-    "loc": "src/actions/context-menu.ts:10"
+    "loc": "src/actions/context-menu.ts:14"
   },
   {
     "subpath": ".",
@@ -980,6 +980,15 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "signature": "(node: Element, param: undefined): void | ActionResult<undefined>",
     "doc": "Wire click-to-browse + drag-and-drop onto a container holding an `<input type=\"file\">`.",
     "loc": "src/actions/dropzone.ts:24"
+  },
+  {
+    "subpath": ".",
+    "category": "actions",
+    "name": "focus",
+    "kind": "function",
+    "signature": "(node: Element, param: boolean | void | null | undefined): void | ActionResult<boolean | void | null | undefined>",
+    "doc": "Focus the host element. With a boolean param, focus whenever the param is truthy (including the first mount). Without a param, focus once on mount.",
+    "loc": "src/actions/focus.ts:17"
   },
   {
     "subpath": ".",
@@ -1020,11 +1029,20 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
   {
     "subpath": ".",
     "category": "actions",
-    "name": "icon",
+    "name": "inView",
     "kind": "function",
-    "signature": "(node: Element): { destroy: () => void; }",
+    "signature": "(node: Element, param: InViewHandler | undefined): void | ActionResult<InViewHandler | undefined>",
+    "doc": "Observe the host; invoke `onEnter` whenever it becomes intersecting. Environments without `IntersectionObserver` (jsdom without a stub) are a silent no-op so SSR / tests stay quiet.",
+    "loc": "src/actions/in-view.ts:19"
+  },
+  {
+    "subpath": ".",
+    "category": "actions",
+    "name": "InViewHandler",
+    "kind": "type",
+    "signature": "export type InViewHandler = (entry: IntersectionObserverEntry) => void",
     "doc": "",
-    "loc": "src/actions/icon.ts:80"
+    "loc": "src/actions/in-view.ts:10"
   },
   {
     "subpath": ".",
@@ -1050,8 +1068,8 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "name": "tipDescribe",
     "kind": "function",
     "signature": "(node: Element, param: void): void | ActionResult<void>",
-    "doc": "`use:tipDescribe` — the L1 `<tooltip>` element's behavior. Show/hide is pure CSS (group-hover / group-focus-within opacity on the bubble). This action supplies only what CSS can't alone: - placement geometry vars the bubble sx reads (box + arrow insets), - the bubble text (from the `content` attribute) + `aria-describedby` wiring from the trigger to the bubble, - Escape blurs the host to dismiss. Written once in the toolchain — no per-instance controller, compiles away.",
-    "loc": "src/actions/tip-describe.ts:71"
+    "doc": "`use:tipDescribe` — the L1 `<tooltip>` element's behavior. Show is CSS (group-hover / group-focus-within opacity on the bubble). Hide is forced snappy: bubble Style has no opacity transition, and this action clears residual open paint on mouseleave / focusout / Escape. Also supplies: - placement geometry vars the bubble sx reads (box + arrow insets), - the bubble text (from the `content` attribute) + `aria-describedby` wiring from the trigger to the bubble, - Escape blurs the host to dismiss. Written once in the toolchain — no per-instance controller, compiles away.",
+    "loc": "src/actions/tip-describe.ts:76"
   },
   {
     "subpath": ".",

@@ -36,6 +36,7 @@ import {
 // is at the size cap). Re-exported so `@ship/deck-router` is one import site.
 export { resolveLayoutChain, type LayoutShape } from './layouts'
 export { mountRouter, type MountRouterOptions, type RouterHandle } from './mount-router'
+export { setRouteSignals } from './route-port'
 export {
   installRouteBoundary,
   isDevMode,
@@ -510,4 +511,6 @@ declare global {
   var __shipSetRouteUpdate: (() => void) | undefined
   // eslint-disable-next-line no-var
   var __shipRouterPort: RouterPort | undefined
+  // eslint-disable-next-line no-var
+  var __shipRouteSignals: RouteSignals | undefined
 }

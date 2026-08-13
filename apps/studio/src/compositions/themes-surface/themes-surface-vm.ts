@@ -5,7 +5,7 @@ import { inputChecked, type UiEvent } from '../ui-event'
  *
  * Paint mode is per-theme (from theme meta), not the studio shell mode.
  * Light-only themes (paper, glass, halo, brut, …) have no dark CSS tables —
- * forcing data-mode=dark makes preview fall through to :root (studio).
+ * forcing mode=dark makes preview fall through to :root (studio).
  *
  * Membership model = project file on disk (catalog vs project).
  * Delete + Add to project require confirm. UI never says "fork".

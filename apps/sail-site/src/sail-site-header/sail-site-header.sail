@@ -8,15 +8,15 @@
 -->
 
 <scope>
-  style brand = { text: fontSize(lg).tracking(tight).whitespace(nowrap) }
-  style brandMark = { paint: fg(primary) }
-  style productSwitch = { box: pad(half).maxW(full).minW(0).overflowX(auto), paint: bg(muted).borderWidth(1).border(solid).border(border).radius(full) }
-  style productLink = { box: display(inline-flex).padX(1_5).h(control-h-sm), paint: radius(full).fg(muted-foreground), text: fontSize(xs).fontWeight(medium).leading(none).underline(none).whitespace(nowrap), when: { hover: { paint: fg(foreground).bg(hover-bg) }, current: { paint: bg(primary).fg(primary-foreground) }, tablet: { box: padX(2_5), text: fontSize(sm) } } }
-  style brandWord = { box: display(none), text: whitespace(nowrap), when: { tablet: { box: display(inline) } } }
-  style shell = { box: minH(screen).h(screen) }
-  style landingMain = { box: basis(0).minH(0).minW(0).maxW(full).overflowX(hidden).overflowY(auto) }
-  style appMain = { box: display(flex).flexDir(column).basis(0).minH(0).minW(0).overflow(hidden) }
-  style githubLink = { box: display(inline-flex).pad(1).minW(control-h-xs).minH(control-h-xs), paint: radius(md).fg(muted-foreground), when: { hover: { paint: fg(foreground).bg(hover-bg) } } }
+  style brand = { text: type({ size: lg, tracking: tight, wrap: nowrap }) }
+  style brandMark = { paint: ink({ color: primary }) }
+  style productSwitch = { box: space({ pad: half }).size({ min-w: 0, max-w: full }).overflow({ x: auto }), paint: fill({ color: muted }).border({ color: border, width: 1, style: solid }).radius(full) }
+  style productLink = { box: flow({ display: inline-flex }).space({ pad-x: 1_5 }).size({ h: control-h-sm }), paint: radius(full).ink({ color: muted-foreground }), text: type({size: xs, weight: medium, leading: none, wrap: nowrap, decoration: none}), when: { hover: { paint: ink({ color: foreground }).fill({ color: hover-bg }) }, current: { paint: fill({ color: primary }).ink({ color: primary-foreground }) }, tablet: { box: space({ pad-x: 2_5 }), text: type({ size: sm }) } } }
+  style brandWord = { box: flow({ display: none }), text: type({ wrap: nowrap }), when: { tablet: { box: flow({ display: inline }) } } }
+  style shell = { box: size({ h: screen, min-h: screen }) }
+  style landingMain = { box: size({basis: 0, min-w: 0, min-h: 0, max-w: full}).overflow({ x: hidden, y: auto }) }
+  style appMain = { box: flow({ display: flex, dir: column }).size({min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }) }
+  style githubLink = { box: flow({ display: inline-flex }).space({ pad: 1 }).size({ min-w: control-h-xs, min-h: control-h-xs }), paint: radius(md).ink({ color: muted-foreground }), when: { hover: { paint: ink({ color: foreground }).fill({ color: hover-bg }) } } }
 </scope>
 
 <controller>
@@ -33,18 +33,21 @@ function sectionFor(p: string): string {
 }
 
 function livePath(ctx: { route?: { pathname?: () => string } }): string {
-  // Route signal only — no location/document. Product brand-hue used to be a
-  // data-product shadow on :root; that died. Nested theme=/applyScope cannot
-  // express the product hue axis today (theme-system gap — see RESULT-JOB-E2b).
-  return ctx.route?.pathname?.() ?? '/'
+  // Empty — not '/' — when route is missing. Defaulting to '/' used to turn
+  // on landing autohide (position:fixed navbar) on every page after a bake
+  // that did not inject route into this layout CE.
+  const fn = ctx.route?.pathname
+  if (typeof fn !== 'function') return ''
+  return fn() || ''
 }
 
 export default controller((ctx) => {
     const path = derived(() => livePath(ctx as { route?: { pathname?: () => string } }))
-    const section = derived(() => sectionFor(path()))
+    const section = derived(() => (path() ? sectionFor(path()) : 'docs'))
     // Workbench owns its chrome — hide the site bar so editor gets the pixels.
     const workbench = derived(() => section() === 'playground')
-    const autohide = derived(() => section() === 'home')
+    // Only the real landing page tucks the bar. Unknown path stays persistent.
+    const autohide = derived(() => path() === '/')
     const landing = derived(() => path() === '/')
     effect(() => {
       applyTheme(readStoredTheme())
@@ -54,10 +57,10 @@ export default controller((ctx) => {
 })
 </controller>
 
-<column gap="0" style(shell, { box: w(full) })>
+<column gap="0" style(shell, { box: size({ w: full }) })>
   <if {!workbench()}>
-    <navbar sticky bordered autohide={autohide()} use:chromeOffset>
-      <a slot="brand" href="/" label="SHIP UI home" style({ box: shrink(0) })>
+    <navbar sticky bordered autohide={autohide() ? true : null} use:chromeOffset>
+      <a slot="brand" href="/" label="SHIP UI home" style({ box: flow({ shrink: 0 }) })>
         <row gap="2" align="center" nowrap>
           <svg width="22" height="22" viewBox="0 0 26 26" fill="none" hidden="true">
             <circle cx="6" cy="6" r="3.4" fill="var(--primary)" />
@@ -70,10 +73,10 @@ export default controller((ctx) => {
         </row>
       </a>
 
-      <row slot="center" gap="1" align="center" nowrap testid="site-nav" label="Site" style(productSwitch, { box: minW(0) })>
-        <a href="/docs" current={section() === 'docs' ? 'page' : null} style(productLink, { box: shrink(0) })>Docs</a>
-        <a href="/components" current={section() === 'components' ? 'page' : null} style(productLink, { box: shrink(0) })>Components</a>
-        <a href="/playground" current={section() === 'playground' ? 'page' : null} style(productLink, { box: shrink(0) })>Playground</a>
+      <row slot="center" gap="1" align="center" nowrap testid="site-nav" label="Site" style(productSwitch, { box: size({ min-w: 0 }) })>
+        <a href="/docs" current={section() === 'docs' ? 'page' : null} style(productLink, { box: flow({ shrink: 0 }) })>Docs</a>
+        <a href="/components" current={section() === 'components' ? 'page' : null} style(productLink, { box: flow({ shrink: 0 }) })>Components</a>
+        <a href="/playground" current={section() === 'playground' ? 'page' : null} style(productLink, { box: flow({ shrink: 0 }) })>Playground</a>
       </row>
 
       <row slot="actions" gap="2" align="center" nowrap>
@@ -94,10 +97,10 @@ export default controller((ctx) => {
   </if>
 
   <if {landing()}>
-    <main style(landingMain, { box: grow(1).minW(0).w(full) })>
+    <main style(landingMain, { box: flow({ grow: 1 }).size({ w: full, min-w: 0 }) })>
       <slot name="route"></slot>
     </main>
-  {else => <main style(appMain, { box: grow(1).minW(0).w(full) })>
+  {else => <main style(appMain, { box: flow({ grow: 1 }).size({ w: full, min-w: 0 }) })>
       <slot name="route"></slot>
     </main>}</if>
 </column>

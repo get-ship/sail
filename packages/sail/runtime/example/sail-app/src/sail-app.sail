@@ -178,29 +178,29 @@ export default controller(() => {
 </controller>
 
 <scope>
-  style page = { box: pad(6).maxW(breakpoint-tablet).mx(auto) }
-  style header = { box: padB(4).mb(6), paint: borderBWidth(1).borderB(border) }
-  style muted = { paint: fg(muted-foreground), text: fontSize(sm) }
-  style section = { box: my(6) }
-  style sectionTitle = { box: mb(2), paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold).tracking(wide).textCase(uppercase) }
-  style stat = { box: padX(3).padY(2), paint: bg(surface-1).borderWidth(1).border(border).radius(md), text: fontFamily(mono).fontSize(sm) }
-  style tickLog = { box: pad(3).maxH(panel-max-h-sm).overflowY(auto), paint: bg(surface-1).borderWidth(1).border(border).radius(md), text: fontFamily(mono).fontSize(xs) }
-  style tickFresh = { paint: fg(success) }
-  style tickWarn = { paint: fg(warning) }
-  style tickMuted = { paint: fg(muted-foreground) }
-  style col = { box: pad(3).minH(panel-min-h-daycol), paint: bg(surface-1).borderWidth(1).border(border).radius(lg) }
-  style colHead = { box: mb(2), text: fontSize(sm).fontWeight(semibold) }
-  style swatch = { box: w(2).h(2), paint: radius(full) }
+  style page = { box: space({ pad: 6, mx: auto }).size({ max-w: breakpoint-tablet }) }
+  style header = { box: space({ pad-b: 4, mb: 6 }), paint: border({ edge: b, color: border, width: 1 }) }
+  style muted = { paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
+  style section = { box: space({ my: 6 }) }
+  style sectionTitle = { box: space({ mb: 2 }), paint: ink({ color: muted-foreground }), text: type({ size: xs, weight: semibold, tracking: wide, case: uppercase }) }
+  style stat = { box: space({ pad-x: 3, pad-y: 2 }), paint: fill({ color: surface-1 }).border({ color: border, width: 1 }).radius(md), text: type({ family: mono, size: sm }) }
+  style tickLog = { box: space({ pad: 3 }).size({ max-h: panel-max-h-sm }).overflow({ y: auto }), paint: fill({ color: surface-1 }).border({ color: border, width: 1 }).radius(md), text: type({ family: mono, size: xs }) }
+  style tickFresh = { paint: ink({ color: success }) }
+  style tickWarn = { paint: ink({ color: warning }) }
+  style tickMuted = { paint: ink({ color: muted-foreground }) }
+  style col = { box: space({ pad: 3 }).size({ min-h: panel-min-h-daycol }), paint: fill({ color: surface-1 }).border({ color: border, width: 1 }).radius(lg) }
+  style colHead = { box: space({ mb: 2 }), text: type({ size: sm, weight: semibold }) }
+  style swatch = { box: size({ w: 2, h: 2 }), paint: radius(full) }
   style card = {
-    box: pad(3),
-    paint: bg(background).borderWidth(1).border(border).radius(md).cursor(grab),
+    box: space({ pad: 3 }),
+    paint: fill({ color: background }).border({ color: border, width: 1 }).radius(md).cursor(grab),
     animate: enter({ scale: 'spring:snappy', opacity: 'fade' }).exit({ opacity: 'fade-out' }),
   }
-  style cardTitle = { box: mb(1), text: fontSize(sm).fontWeight(semibold) }
-  style cardMeta = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
-  style pillHigh = { box: padX(1).ml(1), paint: radius(full).bg(destructive).fg(primary-foreground), text: fontSize(xs).fontFamily(mono) }
-  style pillLow = { box: padX(1).ml(1), paint: radius(full).bg(muted).fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
-  style dropZone = { box: pad(3), paint: borderWidth(1).border(border).cursor(default).fg(muted-foreground), text: textAlign(center).fontSize(sm) }
+  style cardTitle = { box: space({ mb: 1 }), text: type({ size: sm, weight: semibold }) }
+  style cardMeta = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs }) }
+  style pillHigh = { box: space({ pad-x: 1, ml: 1 }), paint: radius(full).fill({ color: destructive }).ink({ color: primary-foreground }), text: type({ family: mono, size: xs }) }
+  style pillLow = { box: space({ pad-x: 1, ml: 1 }), paint: radius(full).fill({ color: muted }).ink({ color: muted-foreground }), text: type({ family: mono, size: xs }) }
+  style dropZone = { box: space({ pad: 3 }), paint: border({ color: border, width: 1 }).cursor(default).ink({ color: muted-foreground }), text: type({ size: sm, align: center }) }
 </scope>
 
 <column style(page)>
@@ -245,7 +245,7 @@ export default controller(() => {
 
   <column style(section) gap="3">
     <h2 style(sectionTitle)>Kanban — keyed for + DnD + transitions</h2>
-    <row gap="2" align="center" style({ box: mb(1) })>
+    <row gap="2" align="center" style({ box: space({ mb: 1 }) })>
       <div style(muted)>{totalCards()} cards</div>
       <button on:click={() => addRandom()}>+ add</button>
       <button on:click={() => chaos()}>chaos × 20</button>
@@ -255,7 +255,7 @@ export default controller(() => {
       <for {columns() as col} key={col.id}>
         <column style(col) gap="2">
           <row align="center" gap="2" style(colHead)>
-            <span use:swatch={col.tone} style(swatch, { paint: bg(bind(swatchColor)) })></span>
+            <span use:swatch={col.tone} style(swatch, { paint: fill({ color: bind(swatchColor) }) })></span>
             <span>{col.title}</span>
             <span style(muted)>({col.cards.length})</span>
           </row>

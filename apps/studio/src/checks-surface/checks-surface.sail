@@ -9,33 +9,33 @@
     /** true when hosted in shell findings drawer — compact layout only */
     panel = false
   }
-  style surfaceRoot = { box: grow(1).minH(0).h(full).minW(0).overflow(hidden) }
-  style shrink0 = { box: shrink(0) }
-  style growMin = { box: grow(1).minW(0) }
-  style filterW = { box: w(28) }
-  style filterFull = { box: w(full).minW(0) }
-  style sepH = { box: h(4) }
-  style mutedXs = { paint: fg(muted-foreground), text: fontSize(xs) }
-  style errorCount = { paint: fg(destructive), text: fontSize(xs) }
-  style warnCount = { paint: fg(warning), text: fontSize(xs) }
-  style errorText = { box: grow(1).minW(0), paint: fg(destructive), text: fontSize(xs).truncate() }
-  style errorBand = { box: shrink(0).h(7).padX(3), paint: borderBWidth(1).borderB(border) }
-  style panelTools = { box: shrink(0).padX(3).padY(2).minW(0), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1) }
-  style findingsScroll = { box: grow(1).minW(0).minH(0).h(full).basis(0) }
-  style groupHeader = { box: h(6).padX(3), when: { hover: { paint: bg(hover-bg) } } }
-  style ruleMono = { box: grow(1).minW(0), paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold).fontFamily(mono).truncate() }
-  style findingTrigger = { box: h(6).padX(3).w(full), when: { hover: { paint: bg(hover-bg) } } }
-  style monoXs = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
-  style msgSm = { box: grow(1).minW(0), text: fontSize(sm).truncate() }
-  style fixChip = { paint: fg(primary), text: fontSize(xs) }
-  style detailPad = { box: padX(2).padB(2) }
-  style whyPre = { box: pad(2).minH(0).maxH(40).overflow(auto), paint: bg(surface-0).radius(sm), text: fontFamily(mono).fontSize(xs).whitespace(pre-wrap) }
-  style snippetBox = { box: pad(2), paint: bg(surface-0).radius(sm) }
-  style snippetLine = { text: fontFamily(mono).fontSize(xs) }
-  style statusBar = { box: shrink(0).h(6).padX(3), paint: borderTWidth(1).borderT(border-subtle).fg(muted-foreground) }
-  style reviewSheet = { box: shrink(0).pad(3).minW(0).maxH(56).overflow(auto), paint: borderTWidth(1).borderT(border).bg(surface-1) }
-  style titleSm = { text: fontSize(sm).fontWeight(semibold) }
-  style fullW = { box: w(full) }
+  style surfaceRoot = { box: flow({ grow: 1 }).size({ h: full, min-w: 0, min-h: 0 }).overflow({ all: hidden }) }
+  style shrink0 = { box: flow({ shrink: 0 }) }
+  style growMin = { box: flow({ grow: 1 }).size({ min-w: 0 }) }
+  style filterW = { box: size({ w: 28 }) }
+  style filterFull = { box: size({ w: full, min-w: 0 }) }
+  style sepH = { box: size({ h: 4 }) }
+  style mutedXs = { paint: ink({ color: muted-foreground }), text: type({ size: xs }) }
+  style errorCount = { paint: ink({ color: destructive }), text: type({ size: xs }) }
+  style warnCount = { paint: ink({ color: warning }), text: type({ size: xs }) }
+  style errorText = { box: flow({ grow: 1 }).size({ min-w: 0 }), paint: ink({ color: destructive }), text: type({ size: xs, wrap: truncate }) }
+  style errorBand = { box: flow({ shrink: 0 }).size({ h: 7 }).space({ pad-x: 3 }), paint: border({ edge: b, color: border, width: 1 }) }
+  style panelTools = { box: flow({ shrink: 0 }).space({ pad-x: 3, pad-y: 2 }).size({ min-w: 0 }), paint: border({ edge: b, color: border-subtle, width: 1 }).fill({ color: surface-1 }) }
+  style findingsScroll = { box: flow({ grow: 1 }).size({h: full, min-w: 0, min-h: 0, basis: 0}) }
+  style groupHeader = { box: size({ h: 6 }).space({ pad-x: 3 }), when: { hover: { paint: fill({ color: hover-bg }) } } }
+  style ruleMono = { box: flow({ grow: 1 }).size({ min-w: 0 }), paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs, weight: semibold, wrap: truncate }) }
+  style findingTrigger = { box: size({ w: full, h: 6 }).space({ pad-x: 3 }), when: { hover: { paint: fill({ color: hover-bg }) } } }
+  style monoXs = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs }) }
+  style msgSm = { box: flow({ grow: 1 }).size({ min-w: 0 }), text: type({ size: sm, wrap: truncate }) }
+  style fixChip = { paint: ink({ color: primary }), text: type({ size: xs }) }
+  style detailPad = { box: space({ pad-x: 2, pad-b: 2 }) }
+  style whyPre = { box: space({ pad: 2 }).size({ min-h: 0, max-h: 40 }).overflow({ all: auto }), paint: fill({ color: surface-0 }).radius(sm), text: type({ family: mono, size: xs, wrap: pre-wrap }) }
+  style snippetBox = { box: space({ pad: 2 }), paint: fill({ color: surface-0 }).radius(sm) }
+  style snippetLine = { text: type({ family: mono, size: xs }) }
+  style statusBar = { box: flow({ shrink: 0 }).size({ h: 6 }).space({ pad-x: 3 }), paint: border({ edge: t, color: border-subtle, width: 1 }).ink({ color: muted-foreground }) }
+  style reviewSheet = { box: flow({ shrink: 0 }).space({ pad: 3 }).size({ min-w: 0, max-h: 56 }).overflow({ all: auto }), paint: border({ edge: t, color: border, width: 1 }).fill({ color: surface-1 }) }
+  style titleSm = { text: type({ size: sm, weight: semibold }) }
+  style fullW = { box: size({ w: full }) }
 </scope>
 
 <controller>
@@ -153,7 +153,7 @@ export default controller(() => {
   <!-- Drawer: one dense tools strip — no dual headers, no overflowing selects -->
   <if {panel()}>
     <column findings-panel-tools gap="2" style(panelTools)>
-      <row align="center" justify="between" nowrap gap="2" style({ box: minW(0) })>
+      <row align="center" justify="between" nowrap gap="2" style({ box: size({ min-w: 0 }) })>
         <row align="center" gap="2" nowrap style(growMin)>
           <badge error-count tone="destructive" size="sm" variant="soft" pill>{errorCountLabel()}</badge>
           <badge warning-count tone="warning" size="sm" variant="soft" pill>{warningCountLabel()}</badge>
@@ -172,7 +172,7 @@ export default controller(() => {
           <option value={opt.value}>{opt.label}</option>
         </for>
       </select>
-      <p last-run style(mutedXs, { text: truncate() })>{lastRunLabel()}</p>
+      <p last-run style(mutedXs, { text: type({ wrap: truncate }) })>{lastRunLabel()}</p>
     </column>
   </if>
 
@@ -186,7 +186,7 @@ export default controller(() => {
   </if>
 
   <scroll-area findings-list findings-table findings-table-host style(findingsScroll)>
-    <column gap="0" style({ box: padY(1) })>
+    <column gap="0" style({ box: space({ pad-y: 1 }) })>
       <if {!hasFindings()}>
         <if {!hasChecksError()}>
           <studio-empty
@@ -378,7 +378,7 @@ export default controller(() => {
     </column>
   </scroll-area>
 
-  <row checks-status align="center" style(statusBar)>    <p style({ text: fontSize(xs) })>      {checksStatusNote()}
+  <row checks-status align="center" style(statusBar)>    <p style({ text: type({ size: xs }) })>      {checksStatusNote()}
     </p>
 </row>
 
@@ -406,7 +406,7 @@ export default controller(() => {
               <badge tone="primary" size="sm" variant="soft">{item.rule}</badge>
               <p style(msgSm)>{item.message}</p>
             </row>
-            <column review-diff gap="1" style({ box: minW(0) })>
+            <column review-diff gap="1" style({ box: size({ min-w: 0 }) })>
               <sail-diff from={item.before} to={item.after}></sail-diff>
             </column>
             <row gap="2">

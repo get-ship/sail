@@ -29,11 +29,11 @@ export default controller(() => {
 </controller>
 
 <scope>
-  style page = { box: pad(6).maxW(breakpoint-tablet).mx(auto) }
-  style muted = { paint: fg(muted-foreground), text: fontSize(sm) }
+  style page = { box: space({ pad: 6, mx: auto }).size({ max-w: breakpoint-tablet }) }
+  style muted = { paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
   style todoRow = {
-    box: padX(3).padY(2),
-    paint: borderWidth(1).border(border).radius(md).bg(surface-1),
+    box: space({ pad-x: 3, pad-y: 2 }),
+    paint: border({ color: border, width: 1 }).radius(md).fill({ color: surface-1 }),
   }
 </scope>
 

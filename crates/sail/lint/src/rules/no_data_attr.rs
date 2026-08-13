@@ -17,9 +17,9 @@ const REMEDY: &str = "Do not use data-* in .sail markup. Prefer role, accessible
      data-sail-host is compiler-only L1 part identity — never author it.";
 
 const THEME_SUBSTRATE: &[&str] = &["data-theme", "data-product", "data-mode"];
-const THEME_SUBSTRATE_REMEDY: &str = "Do not author theme substrate as data-*. Use theme= (theme id) — \
-     the compiler emits data-mode for nested scopes. Override tokens in \
-     the theme document, not data-theme / data-product / data-mode.";
+const THEME_SUBSTRATE_REMEDY: &str = "Do not author theme substrate as data-*. Use theme= (theme id) \
+     and mode= (light|dark). Override tokens in the theme document, \
+     not data-theme / data-product / data-mode.";
 
 /// Scan .sail source for data-* attributes and [data- selectors.
 pub fn check(path: &Path, source: &str) -> Vec<Finding> {
@@ -77,7 +77,7 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                             "data-product is theme substrate — use theme= (theme id), not data-product"
                         }
                         _ => {
-                            "data-mode is theme substrate — use theme= (theme id); mode follows the document / theme capability"
+                            "data-mode is theme substrate — use theme= (theme id) and mode= (light|dark)"
                         }
                     },
                     THEME_SUBSTRATE_REMEDY,
@@ -120,7 +120,7 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                             "data-product is theme substrate — use theme= (theme id), not data-product"
                         }
                         _ => {
-                            "data-mode is theme substrate — use theme= (theme id); mode follows the document / theme capability"
+                            "data-mode is theme substrate — use theme= (theme id) and mode= (light|dark)"
                         }
                     },
                     THEME_SUBSTRATE_REMEDY,

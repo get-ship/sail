@@ -2,7 +2,7 @@
 //
 // Capability mix-in: warning|destructive → role=alert + aria-live=assertive;
 // else role=status + aria-live=polite. Re-syncs when `tone` changes. Static
-// PE defaults (status/polite) already announce correctly before hydrate; this
+// host defaults (status/polite) already announce correctly before hydrate; this
 // only sharpens urgent tones. Stacked with `use:dismissControl` on L1 <alert>.
 
 import type { Action } from '../action'

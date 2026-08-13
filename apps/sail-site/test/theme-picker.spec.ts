@@ -1,6 +1,6 @@
 // U2.1b — Site theme-picker (header chrome).
 // Catalog filter tabs (no paint on tab click); theme row applies paint;
-// never data-mode=system on the document.
+// never mode=system on the document.
 
 import { test, expect, type Page } from '@playwright/test'
 
@@ -35,11 +35,11 @@ test.describe('U2.1b site theme-picker', () => {
     expect(optionValues.some((v) => v.includes('-dark') || v.includes('-light'))).toBe(false)
 
     // Dual-mode default theme: Light | Dark | System visible.
-    const modeLabels = await panel.locator('[data-mode-bar] button, button[data-mode]').evaluateAll((els) =>
+    const modeLabels = await panel.locator('[data-mode-bar] button, button[mode]').evaluateAll((els) =>
       els
         .filter((e) => !(e as HTMLElement).hidden)
         .map((e) => ({
-          mode: e.getAttribute('data-mode'),
+          mode: e.getAttribute('mode'),
           text: (e.textContent ?? '').trim(),
         })),
     )
@@ -49,7 +49,7 @@ test.describe('U2.1b site theme-picker', () => {
     expect(modes).toContain('system')
   })
 
-  test('filter tabs do not paint document; only filter + preview data-mode', async ({
+  test('filter tabs do not paint document; only filter + preview mode', async ({
     page,
   }) => {
     const { panel } = await openHeaderPicker(page)
@@ -60,12 +60,12 @@ test.describe('U2.1b site theme-picker', () => {
       pref: localStorage.getItem('ship-site-theme-mode'),
     }))
 
-    await panel.locator('button[data-mode="dark"]').click()
+    await panel.locator('button[mode="dark"]').click()
     // Give the filter a tick to update previews — document must stay put.
     await page.waitForFunction(
       () => {
         const tab = document.querySelector(
-          'sail-site-header button[data-mode="dark"]',
+          'sail-site-header button[mode="dark"]',
         )
         return tab?.getAttribute('aria-selected') === 'true'
       },
@@ -87,14 +87,14 @@ test.describe('U2.1b site theme-picker', () => {
     const shipSwatch = await panel
       .locator('[theme="ship"], [theme="sail"]')
       .first()
-      .getAttribute('data-mode')
+      .getAttribute('mode')
     expect(shipSwatch).toBe('dark')
 
-    await panel.locator('button[data-mode="system"]').click()
+    await panel.locator('button[mode="system"]').click()
     await page.waitForFunction(
       () => {
         const tab = document.querySelector(
-          'sail-site-header button[data-mode="system"]',
+          'sail-site-header button[mode="system"]',
         )
         return tab?.getAttribute('aria-selected') === 'true'
       },
@@ -111,11 +111,11 @@ test.describe('U2.1b site theme-picker', () => {
     expect(afterSystem.pref).toBe(before.pref)
     expect(afterSystem.mode).not.toBe('system')
 
-    await panel.locator('button[data-mode="light"]').click()
+    await panel.locator('button[mode="light"]').click()
     await page.waitForFunction(
       () => {
         const tab = document.querySelector(
-          'sail-site-header button[data-mode="light"]',
+          'sail-site-header button[mode="light"]',
         )
         return tab?.getAttribute('aria-selected') === 'true'
       },
@@ -136,7 +136,7 @@ test.describe('U2.1b site theme-picker', () => {
     const { trigger, panel } = await openHeaderPicker(page)
 
     // Ensure light filter so paper applies light.
-    await panel.locator('button[data-mode="light"]').click()
+    await panel.locator('button[mode="light"]').click()
 
     // paper remains dual-mode; safe pick that keeps light valid.
     await panel.locator('[role="option"][value="paper"]').click()
@@ -189,11 +189,11 @@ test.describe('U2.1b site theme-picker', () => {
       expect(colCount).toBeLessThanOrEqual(1)
     }
 
-    await panel.locator('button[data-mode="dark"]').click()
+    await panel.locator('button[mode="dark"]').click()
     await page.waitForFunction(
       () => {
         const tab = document.querySelector(
-          'sail-site-header button[data-mode="dark"]',
+          'sail-site-header button[mode="dark"]',
         )
         return tab?.getAttribute('aria-selected') === 'true'
       },
@@ -201,7 +201,7 @@ test.describe('U2.1b site theme-picker', () => {
       { timeout: 10_000 },
     )
     // dark tab selected (filter chrome only)
-    await expect(panel.locator('button[data-mode="dark"]')).toHaveAttribute(
+    await expect(panel.locator('button[mode="dark"]')).toHaveAttribute(
       'aria-selected',
       'true',
     )
@@ -216,7 +216,7 @@ test.describe('U2.1b site theme-picker', () => {
     const shipMode = await panel
       .locator('[theme="ship"], [theme="sail"]')
       .first()
-      .getAttribute('data-mode')
+      .getAttribute('mode')
     expect(shipMode).toBe('dark')
 
     // Theme click under dark filter is what paints the site (dual-mode theme).

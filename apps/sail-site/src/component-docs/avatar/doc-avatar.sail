@@ -4,34 +4,31 @@
 -->
 
 <scope>
-  style page = { box: maxW(breakpoint-desktop).mx(auto).w(full) }
+  style page = { box: size({ w: full, max-w: breakpoint-desktop }).space({ mx: auto }) }
   style knobLabel = {
-    paint: fg(muted-foreground),
-    text: fontSize(xs).fontWeight(medium).tracking(wide).textCase(uppercase),
-  }
-  style sizeValue = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
-  style tickRow = { box: w(full).padT(1).padX(1_5) }
-  style tick = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
+    paint: ink({ color: muted-foreground }),
+    text: type({ size: xs, weight: medium, tracking: wide, case: uppercase }),
+}
+  style sizeValue = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs }) }
+  style tickRow = { box: size({ w: full }).space({ pad-x: 1_5, pad-t: 1 }) }
+  style tick = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs }) }
   style swatch = {
-    box: size(7).shrink(0),
-    paint: radius(full).cursor(pointer).borderWidth(2).border(transparent).shadow(xs),
-    when: {
-      selected: { paint: border(foreground).shadow(sm) },
-      hover: { paint: opacity(90) },
-    },
-  }
-  style swatchRest = { paint: bg(surface-1).border(border) }
-  style swatchPrimary = { paint: bg(primary) }
-  style swatchInfo = { paint: bg(info) }
-  style swatchSuccess = { paint: bg(success) }
-  style swatchWarning = { paint: bg(warning) }
-  style swatchDestructive = { paint: bg(destructive) }
-  style swatchAccent = { paint: bg(accent) }
-  style swatchMuted = { paint: bg(muted).border(border) }
-  style exampleBlock = { box: w(full).padT(2).padB(4) }
-  style sectionLabel = { paint: fg(muted-foreground), text: fontSize(xs).textCase(uppercase).tracking(wide) }
-  style demoRow = { box: w(full).padY(2) }
-  style mutedXs = { paint: fg(muted-foreground), text: fontSize(xs) }
+    box: size(7).flow({ shrink: 0 }),
+    paint: radius(full).cursor(pointer).border({ color: transparent, width: 2 }).elevation(xs),
+    when: { selected: { paint: border({ color: foreground }).elevation(sm) }, hover: { paint: filter({ opacity: 90 }) } },
+}
+  style swatchRest = { paint: fill({ color: surface-1 }).border({ color: border }) }
+  style swatchPrimary = { paint: fill({ color: primary }) }
+  style swatchInfo = { paint: fill({ color: info }) }
+  style swatchSuccess = { paint: fill({ color: success }) }
+  style swatchWarning = { paint: fill({ color: warning }) }
+  style swatchDestructive = { paint: fill({ color: destructive }) }
+  style swatchAccent = { paint: fill({ color: accent }) }
+  style swatchMuted = { paint: fill({ color: muted }).border({ color: border }) }
+  style exampleBlock = { box: size({ w: full }).space({ pad-t: 2, pad-b: 4 }) }
+  style sectionLabel = { paint: ink({ color: muted-foreground }), text: type({ size: xs, tracking: wide, case: uppercase }) }
+  style demoRow = { box: size({ w: full }).space({ pad-y: 2 }) }
+  style mutedXs = { paint: ink({ color: muted-foreground }), text: type({ size: xs }) }
 </scope>
 
 <controller>
@@ -130,14 +127,7 @@ export default controller((_ctx: Scope) => {
           <label style(knobLabel)>Size</label>
           <span style(sizeValue)>{size()}</span>
         </row>
-        <slider bind:value={sizeIdx} min="0" max="4" step="1" size="sm" label="Size"></slider>
-        <row gap="0" align="center" justify="between" style(tickRow)>
-          <span style(tick)>xs</span>
-          <span style(tick)>sm</span>
-          <span style(tick)>md</span>
-          <span style(tick)>lg</span>
-          <span style(tick)>xl</span>
-        </row>
+        <slider bind:value={sizeIdx} min="0" max="4" step="1" size="sm" label="Size" ticks="xs,sm,md,lg,xl"></slider>
       </column>
       <column gap="2">
         <label style(knobLabel)>Shape</label>

@@ -25,6 +25,7 @@ import {
   navigate,
   route as createRoute,
   setRouterPort,
+  setRouteSignals,
   type RouteShape,
 } from './index'
 import { resolveLayoutChain, type LayoutShape } from './layouts'
@@ -104,6 +105,7 @@ export function mountRouter(opts: MountRouterOptions): RouterHandle {
   // `mount({ route })`.
   const routeSignals = createRoute({ routes: opts.routes })
   setHostRoute({ route: routeSignals, navigate })
+  setRouteSignals(routeSignals)
   const layouts = opts.layouts ?? []
   const layoutModules = opts.layoutModules ?? {}
   const errorBoundaryEnabled = opts.errorBoundary !== false
@@ -398,6 +400,7 @@ export function mountRouter(opts: MountRouterOptions): RouterHandle {
       prevChainKey = ''
       prevRouteTarget = null
       setHostRoute(null)
+      setRouteSignals(undefined)
     },
   }
 }

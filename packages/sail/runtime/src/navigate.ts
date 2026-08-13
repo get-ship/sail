@@ -1,6 +1,8 @@
 // Ambient navigate — host router port (same contract as deck-router navigate).
 // Controllers get this via RUNTIME_AMBIENT inject; no @ship/deck/router import.
 
+import type { RouteSignals } from './route-signals'
+
 export type NavigateOpts = { replace?: boolean }
 
 declare global {
@@ -10,6 +12,15 @@ declare global {
     | undefined
   // eslint-disable-next-line no-var
   var __shipSetRouteUpdate: (() => void) | undefined
+  // Live RouteSignals the host publishes so registered CEs (and mount
+  // without opts.route) see the same object pages get via mount({ route }).
+  // eslint-disable-next-line no-var
+  var __shipRouteSignals: RouteSignals | undefined
+}
+
+/** Host-published live route, when the router has published one. */
+export function hostRouteSignals(): RouteSignals | undefined {
+  return globalThis.__shipRouteSignals
 }
 
 /**

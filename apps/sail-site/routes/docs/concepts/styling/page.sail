@@ -4,18 +4,18 @@
 -->
 
 <scope>
-  style page = { box: maxW(breakpoint-tablet).mx(auto) }
-  style eyebrow = { box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
-  style lead = { paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) }
-  style demoCard = { box: pad(5), paint: bg(surface-1).borderWidth(1).border(border).radius(lg).shadow(sm) }
-  style demoMuted = { paint: fg(muted-foreground), text: fontSize(sm) }
-  style demoPanel = { box: pad(5), paint: bg(surface-1).borderWidth(1).border(border).radius(lg) }
-  style responsivePanel = { box: pad(3), paint: bg(surface-1).borderWidth(1).border(border).radius(lg), when: { tablet: { box: pad(6) } } }
-  style bodySm = { text: fontSize(sm) }
-  style rangeTrack = { box: minW(0) }
-  style shiftTile = { box: w(9).h(9), paint: bg(primary).radius(md).translateX(bind(shiftPx)) }
-  style footNote = { box: mt(4), paint: fg(muted-foreground), text: fontSize(sm) }
-  style footNav = { box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) }
+  style page = { box: size({ max-w: breakpoint-tablet }).space({ mx: auto }) }
+  style eyebrow = { box: space({ mb: 2 }), paint: ink({ color: accent }), text: type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
+  style lead = { paint: ink({ color: muted-foreground }), text: type({ size: lg, leading: relaxed }) }
+  style demoCard = { box: space({ pad: 5 }), paint: fill({ color: surface-1 }).border({ color: border, width: 1 }).radius(lg).elevation(sm) }
+  style demoMuted = { paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
+  style demoPanel = { box: space({ pad: 5 }), paint: fill({ color: surface-1 }).border({ color: border, width: 1 }).radius(lg) }
+  style responsivePanel = { box: space({ pad: 3 }), paint: fill({ color: surface-1 }).border({ color: border, width: 1 }).radius(lg), when: { tablet: { box: space({ pad: 6 }) } } }
+  style bodySm = { text: type({ size: sm }) }
+  style rangeTrack = { box: size({ min-w: 0 }) }
+  style shiftTile = { box: size(9), paint: fill({ color: primary }).radius(md).motion({ x: bind(shiftPx) }) }
+  style footNote = { box: space({ mt: 4 }), paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
+  style footNav = { box: space({ pad-t: 4, mt: 8 }), paint: border({ color: border, width: 1, edge: t }) }
 </scope>
 
 <controller>
@@ -24,7 +24,7 @@ import type { Scope } from './page.sail'
 import { code } from '../../../../src/compositions/sail-language-styling-snippets'
 
 export default controller((_ctx: ControllerScope<Scope>) => {
-  // Range bind:value is string; number derived feeds translateX(bind) as px.
+  // Range bind:value is string; number derived feeds motion({ x: bind }) as px.
   const shift = signal('0')
   const shiftPx = derived((): number => Number(shift()) || 0)
   return { code, shift, shiftPx }
@@ -45,7 +45,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   </p>
   <p>
     Familiar spacing and color ideas still apply
-    (<code>pad(4)</code>, <code>bg(surface-1)</code>, <code>radius(lg)</code>),
+    (<code>space(&#123; pad: 4 &#125;)</code>, <code>fill(&#123; color: surface-1 &#125;)</code>, <code>radius(lg)</code>),
     but the product form is a typed channel spine, not a utility string. Closed and
     token-backed is what makes the theme switch in this site’s header work —
     swap the theme and everything repaints, because nothing held a raw color.
@@ -63,7 +63,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <code-block code={code.sxError}></code-block>
   <p>
     Prefer a named Style when the same paint repeats:
-    <code>style card = &#123; box: pad(5), paint: bg(surface-1) &#125;</code> then
+    <code>style card = &#123; box: space(&#123; pad: 5 &#125;), paint: fill(&#123; color: surface-1 &#125;) &#125;</code> then
     attach <code>style&#40;card&#41;</code> or compose Style pieces
     <code>style&#40;base, emphasis&#41;</code> on the host. (That is paint
     composition — not an in-file <code>&lt;partial&gt;</code>, which reuses
@@ -76,9 +76,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     Browser and ARIA state are a map, not string prefixes. Hover these:
   </p>
   <row gap="3" style(demoPanel)>
-    <button style({ when: { hover: { paint: bg(muted) } } })>hover → bg(muted)</button>
-    <button style({ when: { hover: { paint: fg(primary) } } })>hover → fg(primary)</button>
-    <button style({ when: { active: { paint: bg(primary).fg(primary-foreground) } } })>active:…</button>
+    <button style({ when: { hover: { paint: fill({ color: muted }) } } })>hover → fill muted</button>
+    <button style({ when: { hover: { paint: ink({ color: primary }) } } })>hover → ink primary</button>
+    <button style({ when: { active: { paint: fill({ color: primary }).ink({ color: primary-foreground }) } } })>active:…</button>
   </row>
   <code-block code={code.states}></code-block>
   <p>
@@ -99,7 +99,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     pad more from 768px up:
   </p>
   <column gap="2" style(responsivePanel)>
-    <p style(bodySm)>pad(3) on a phone; when tablet → pad(6).</p>
+    <p style(bodySm)>space pad 3 on a phone; when tablet → space pad 6</p>
   </column>
   <code-block code={code.conditions}></code-block>
   <p>
@@ -129,7 +129,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     setter is px. Drag:
   </p>
   <column gap="3" style(demoPanel)>
-    <input type="range" min="0" max="200" step="1" bind:value={shift} style(rangeTrack)>
+    <slider min="0" max="200" step="1" bind:value={shift} style(rangeTrack) />
     <card style(shiftTile)></card>
   </column>
   <code-block code={code.dynamic}></code-block>
@@ -148,7 +148,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     compile errors in application code. Utility-string hosts
     (<code>sx="…"</code> / <code>style="…"</code>) are refused the same way —
     dead forms; product paint is
-    <code>style&#40;&#123; box: pad(4), paint: bg(muted) &#125;&#41;</code>. When the vocabulary can’t express
+    <code>style&#40;&#123; box: space(&#123; pad: 4 &#125;), paint: fill(&#123; color: muted &#125;) &#125;&#41;</code>. When the vocabulary can’t express
     something you need, file a gap: the system grows a setter or token, not a
     hole.
   </p>

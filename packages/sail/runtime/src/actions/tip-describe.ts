@@ -8,7 +8,7 @@ type Placement = 'top' | 'bottom' | 'left' | 'right'
  * Publish placement geometry as CSS custom properties the bubble sx reads
  * (`top-(--tt-top)`, `translate-x-(--tt-tx)`, arrow after:* insets). Absolute
  * positioning against the host (`relative`) — same visual as the old CSS
- * Anchor Positioning matrix, expressible without contracts PE.
+ * Anchor Positioning matrix, expressible without contracts host CSS.
  */
 const applyPlacement = (el: HTMLElement, raw: string | null): void => {
   const p = (raw === 'bottom' || raw === 'left' || raw === 'right' ? raw : 'top') as Placement

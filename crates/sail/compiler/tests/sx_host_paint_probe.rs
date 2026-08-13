@@ -144,7 +144,7 @@ fn badge_soft_base_on_host_sx() {
         "solid/outline/size via Style match:\n{}",
         out.skin_css
     );
-    // soft+default compound → muted soft PE.
+    // soft+default compound → muted soft host Style.
     assert!(
         (src.contains("variant: soft") || src.contains("variant: 'soft'"))
             && (src.contains("bg(muted)") || src.contains("bg-muted") || src.contains("muted"))
@@ -169,7 +169,7 @@ fn badge_soft_base_on_host_sx() {
 
 #[test]
 fn avatar_tracking_and_inset_ring_on_host_sx() {
-    // Paint stripe: tracking + inset ring + PE gradient left contracts → host sx.
+    // Paint stripe: tracking + inset ring + host gradient left contracts → host sx.
     // Layout row centers content; avatar-media child pack sizes injected img.
     let src = include_str!("../stdlib/avatar.sail");
     let out = compile_element(src, "avatar").expect("avatar compiles");
@@ -198,10 +198,10 @@ fn avatar_tracking_and_inset_ring_on_host_sx() {
             && (out.structure_html.contains("s-fontFamilybody")
                 || out.structure_html.contains("s-fontbody")
                 || out.skin_css.contains("var(--body-font)")),
-        "attr-absent PE size=md + shape round + type on host sx:\n{}",
+        "attr-absent host Style size=md + shape round + type on host sx:\n{}",
         out.structure_html
     );
-    // PE gradient: Style bgImage(primary-accent) (not TW gradient pack).
+    // host gradient: Style bgImage(primary-accent) (not TW gradient pack).
     assert!(
         src.contains("bgImage(primary-accent)")
             || src.contains("bg-gradient-primary-accent")
@@ -246,36 +246,36 @@ fn avatar_tracking_and_inset_ring_on_host_sx() {
         env!("CARGO_MANIFEST_DIR"),
         "/../../../packages/sail/tokens/src/sail-base.css"
     ));
-    // Deleted paint PE only.
+    // Deleted paint host only.
     assert!(
         !contracts.contains("letter-spacing: 0.02em"),
-        "letter-spacing PE must be gone (tracking-wide on host)"
+        "letter-spacing host CSS must be gone (tracking-wide on host)"
     );
     assert!(
         !contracts.contains("inset 0 0 0 1px var(--border), inset 0 1px 0 var(--background)"),
-        "inset ring PE must be gone (shadow-inset-ring on host)"
+        "inset ring host CSS must be gone (shadow-inset-ring on host)"
     );
     assert!(
         !contracts.contains("linear-gradient(135deg, var(--primary), var(--accent))")
             && !contracts
                 .lines()
                 .any(|l| l.contains(".sail-avatar") && l.contains("linear-gradient")),
-        "avatar PE gradient must be gone from contracts"
+        "avatar host gradient must be gone from contracts"
     );
-    // Layout + img PE gone (row + avatar-media pack).
+    // Layout + img host CSS gone (row + avatar-media pack).
     assert!(
         !contracts.contains(".sail-avatar img")
             && !contracts
                 .lines()
                 .any(|l| l.contains(".sail-avatar") && l.contains("align-items")),
-        "avatar flex/img PE must be gone from contracts"
+        "avatar flex/img host CSS must be gone from contracts"
     );
 }
 
 #[test]
 fn empty_state_child_paint_on_structure_sx() {
     // Style product: stretch host + grow copy + semantic child tokens.
-    // match(size/variant/tone) + when(empty/forced-colors). Zero contracts PE.
+    // match(size/variant/tone) + when(empty/forced-colors). Zero contracts host CSS.
     let src = include_str!("../stdlib/empty-state.sail");
     let out = compile_element(src, "empty-state").expect("empty-state compiles");
     assert!(
@@ -299,7 +299,7 @@ fn empty_state_child_paint_on_structure_sx() {
             && src.contains("maxW(panel-ch-w-md)")
             && src.contains("empty:")
             && src.contains("forced-colors"),
-        "empty-state Style product + stretch/grow + PE child tokens"
+        "empty-state Style product + stretch/grow + host child tokens"
     );
     assert!(
         out.skin_css.contains("font-size:var(--text-md)")
@@ -370,7 +370,7 @@ fn empty_state_child_paint_on_structure_sx() {
                 .lines()
                 .filter(|l| l.contains(".sail-empty-state"))
                 .all(|l| l.trim_start().starts_with("/*") || l.trim_start().starts_with("//")),
-        "empty-state must have zero contracts PE rules"
+        "empty-state must have zero contracts host CSS rules"
     );
 }
 
@@ -428,11 +428,11 @@ fn tab_selected_underline_and_inset_focus_on_host_sx() {
         !contracts.contains(".sail-tab[aria-selected='true']")
             && !contracts.contains(".sail-tab-list[variant='pill'] .sail-tab")
             && !contracts.contains(".sail-tab-list[variant='enclosed'] .sail-tab"),
-        "tab selected / pill/enclosed parent→child PE must be gone from contracts"
+        "tab selected / pill/enclosed parent→child host must be gone from contracts"
     );
     assert!(
         !contracts.contains(".sail-tab:focus-visible"),
-        "tab focus-visible PE must be gone from contracts"
+        "tab focus-visible host CSS must be gone from contracts"
     );
     let tab_src = include_str!("../stdlib/tab.sail");
     assert!(
@@ -472,7 +472,7 @@ fn toggle_pressed_focus_stack_on_host_sx() {
         !contracts.contains(".sail-toggle[aria-pressed='true']")
             && !contracts.contains(".sail-toggle:focus-visible")
             && !contracts.contains(".sail-toggle-group > .sail-toggle"),
-        "toggle pressed/focus + toggle-group join PE must be gone from contracts"
+        "toggle pressed/focus + toggle-group join host CSS must be gone from contracts"
     );
     assert!(
         out.structure_html.contains("first")
@@ -623,12 +623,12 @@ fn switch_host_track_paint_on_host_sx() {
             !sw_pe.contains("--sw-w:")
                 && !sw_pe.contains("::before")
                 && !sw_pe.contains("appearance:"),
-            "switch PE must be gone:\n{sw_pe}"
+            "switch host CSS must be gone:\n{sw_pe}"
         );
     } else {
         assert!(
             !contracts.contains(".sail-switch") && !contracts.contains("--sw-w:"),
-            "switch PE fully deleted from contracts"
+            "switch host CSS fully deleted from contracts"
         );
     }
 }
@@ -704,7 +704,7 @@ fn toggle_pressed_uses_primary_not_invert() {
 
 #[test]
 fn toast_start_stripe_on_host_sx() {
-    // PE was border-inline-start: 3px solid var(--tone-fg). Now Style borderSWidth(3)
+    // host CSS was border-inline-start: 3px solid var(--tone-fg). Now Style borderSWidth(3)
     // + match(tone) semantic borderS tokens.
     let out = compile_element(include_str!("../stdlib/toast.sail"), "toast").expect("toast");
     assert!(
@@ -741,9 +741,9 @@ fn toast_start_stripe_on_host_sx() {
         !contracts.contains("border-inline-start: 3px solid var(--tone-fg")
             && !contracts.contains(".sail-toast {\n  border-inline-start")
             && !contracts.contains("[data-toast-close]"),
-        "toast host stripe + close anatomy PE must be gone"
+        "toast host stripe + close anatomy host CSS must be gone"
     );
-    // Close control is structure with sx (not parent PE).
+    // Close control is structure with sx (not parent host CSS).
     let src = include_str!("../stdlib/toast.sail");
     assert!(
         src.contains("data-toast-close")
@@ -757,7 +757,7 @@ fn toast_start_stripe_on_host_sx() {
 
 #[test]
 fn card_host_paint_bulk_on_host_sx() {
-    // Full card PE dissolved: border-image, backdrop, status-rail (paint +
+    // Full card host CSS dissolved: border-image, backdrop, status-rail (paint +
     // pad-adjust), interactive lift/forced-colors, branded tone border,
     // accent-bar, header/footer chrome → host sx / CVA / structure slots.
     let src = include_str!("../stdlib/card.sail");
@@ -886,7 +886,7 @@ fn card_host_paint_bulk_on_host_sx() {
         out.skin_css
     );
 
-    // header/footer real named slots with chrome sx (no parent→child PE)
+    // header/footer real named slots with chrome sx (no parent→child host)
     assert!(
         src.contains(r#"slot name="header""#)
             && src.contains(r#"slot name="footer""#)
@@ -914,7 +914,7 @@ fn card_host_paint_bulk_on_host_sx() {
         env!("CARGO_MANIFEST_DIR"),
         "/../../../packages/sail/tokens/src/sail-base.css"
     ));
-    // Zero card PE — entire block deleted.
+    // Zero card host CSS — entire block deleted.
     assert!(
         !contracts.contains(".sail-card")
             && !contracts.contains("--card-px")
@@ -925,7 +925,7 @@ fn card_host_paint_bulk_on_host_sx() {
             && !contracts.contains("[slot='footer']")
             && !contracts.contains("/* ── card")
             && !contracts.contains("/* card surface"),
-        "card PE must be fully gone from contracts.css"
+        "card host CSS must be fully gone from contracts.css"
     );
 }
 
@@ -1051,7 +1051,7 @@ fn navbar_host_paint_on_sx_cva() {
             && !contracts.contains(".sail-nav-actions")
             && !contracts.contains("--rail-offset")
             && !contracts.contains("/* ── navbar"),
-        "navbar PE matrix must be fully deleted from contracts.css"
+        "navbar host matrix must be fully deleted from contracts.css"
     );
 }
 
@@ -1155,14 +1155,14 @@ fn error_state_child_paint_on_structure_sx() {
         !contracts.contains(".sail-error-state")
             && !contracts.contains("data-has-details")
             && !contracts.contains("data-details-open"),
-        "error-state must have zero contracts PE rules"
+        "error-state must have zero contracts host CSS rules"
     );
 }
 
 #[test]
 fn radio_nested_row_kills_label_flex_pe() {
     // Root stays <label> for native semantics; type paint on host Style.
-    // Flex/gap for label+control is contracts PE (cannot nest <row> on label).
+    // Flex/gap for label+control is contracts host CSS (cannot nest <row> on label).
     let src = include_str!("../stdlib/radio.sail");
     let out = compile_element(src, "radio").expect("radio compiles");
     assert!(
@@ -1193,11 +1193,11 @@ fn radio_nested_row_kills_label_flex_pe() {
         env!("CARGO_MANIFEST_DIR"),
         "/../../../packages/sail/tokens/src/sail-base.css"
     ));
-    // No hand sail-radio PE matrix (native label flex may remain in contracts).
+    // No hand sail-radio host matrix (native label flex may remain in contracts).
     assert!(
         !contracts.contains("label.sail-radio")
             && !contracts.contains(".sail-radio {\n  display: inline-flex"),
-        "radio label flex PE must be gone from contracts"
+        "radio label flex host CSS must be gone from contracts"
     );
 }
 
@@ -1246,7 +1246,7 @@ fn toggle_group_segmented_and_join_on_skins_not_pe() {
             && !contracts.contains(".sail-toggle-group > .sail-toggle")
             && !contracts.contains(".sail-toggle-group[orientation")
             && !contracts.contains(".sail-toggle-group[variant='ghost']"),
-        "toggle-group hand PE must be gone from contracts"
+        "toggle-group hand host CSS must be gone from contracts"
     );
     let toggle_src = include_str!("../stdlib/toggle.sail");
     let toggle_out = compile_element(toggle_src, "toggle").expect("toggle compiles");
@@ -1278,8 +1278,8 @@ fn toggle_group_segmented_and_join_on_skins_not_pe() {
 #[test]
 fn alert_tone_stripe_before_on_host_sx() {
     // Host <row nowrap align=start gap=3> owns ico|content|close (layout
-    // keywords — free grid-template PE forbidden). Stripe/empty/dismiss +
-    // forced-colors via Style when/match. Zero alert PE in contracts.
+    // keywords — free grid-template host Style forbidden). Stripe/empty/dismiss +
+    // forced-colors via Style when/match. Zero alert host Style in contracts.
     let src = include_str!("../stdlib/alert.sail");
     let out = compile_element(src, "alert").expect("alert");
     assert!(
@@ -1304,7 +1304,7 @@ fn alert_tone_stripe_before_on_host_sx() {
                 .skin_css
                 .contains("grid-template-columns: auto 1fr auto")
             && !out.skin_css.contains("grid-template-columns:auto 1fr auto"),
-        "must not emit free grid-template PE in structure/skin:\n{}\n{}",
+        "must not emit free grid-template host Style in structure/skin:\n{}\n{}",
         out.structure_html,
         out.skin_css
     );
@@ -1320,7 +1320,7 @@ fn alert_tone_stripe_before_on_host_sx() {
             && src.contains("forced-colors")
             && src.contains("CanvasText")
             && !src.contains("tone-bg"),
-        "host/child Style must carry stripe PE, empty gates, group-dismissible, forced-colors"
+        "host/child Style must carry stripe, empty gates, group-dismissible, forced-colors"
     );
     // Rest stripe = alert-stripe; brand via bound tone bridge var, not hand match matrix.
     assert!(
@@ -1353,7 +1353,7 @@ fn alert_tone_stripe_before_on_host_sx() {
     );
     assert!(
         out.skin_css.contains("var(--alert-stripe)") || out.skin_css.contains("alert-stripe"),
-        "PE default stripe must bind alert-stripe:\n{}",
+        "host default stripe must bind alert-stripe:\n{}",
         out.skin_css
     );
     assert!(
@@ -1398,7 +1398,7 @@ fn alert_tone_stripe_before_on_host_sx() {
             && !contracts.contains("grid-template-columns: auto 1fr auto")
             && !contracts.contains("aria-label='Dismiss'")
             && !contracts.contains(".sail-alert:not([tone])"),
-        "all alert PE (grid/empty/svg/dismiss/soft-tone/forced-colors) must be gone from contracts"
+        "all alert host CSS (grid/empty/svg/dismiss/soft-tone/forced-colors) must be gone from contracts"
     );
     assert!(
         out.structure_html.contains("sail-row") || out.structure_html.contains("sail-col"),
@@ -1409,7 +1409,7 @@ fn alert_tone_stripe_before_on_host_sx() {
 
 #[test]
 fn toast_region_host_paint_on_sx_cva() {
-    // Width + bottom reverse + paint left contracts PE → host Style + CVA.
+    // Width + bottom reverse + paint left contracts host CSS → host Style + CVA.
     // Child hit targets: toast host pointer-events-auto (region is none).
     let src = include_str!("../stdlib/toast-region.sail");
     let out = compile_element(src, "toast-region").expect("toast-region compiles");
@@ -1459,7 +1459,7 @@ fn toast_region_host_paint_on_sx_cva() {
         env!("CARGO_MANIFEST_DIR"),
         "/../../../packages/sail/tokens/src/sail-base.css"
     ));
-    // toast-region PE section may be fully deleted.
+    // toast-region host Style section may be fully deleted.
     if let Some(tr) = contracts
         .split("/* toast-region")
         .nth(1)
@@ -1473,12 +1473,12 @@ fn toast_region_host_paint_on_sx_cva() {
                 && !tr.contains("flex-direction: column-reverse")
                 && !tr.contains("pointer-events: auto")
                 && !tr.contains("pointer-events: none"),
-            "toast-region PE must be gone from contracts:\n{tr}"
+            "toast-region host CSS must be gone from contracts:\n{tr}"
         );
     } else {
         assert!(
             !contracts.contains(".sail-toast-region"),
-            "toast-region PE fully deleted from contracts"
+            "toast-region host CSS fully deleted from contracts"
         );
     }
 }
@@ -1550,7 +1550,7 @@ fn theme_picker_host_paint_on_structure_sx() {
         env!("CARGO_MANIFEST_DIR"),
         "/../../../packages/sail/tokens/src/sail-base.css"
     ));
-    // Paint piles fully dissolved — no contracts PE for theme-picker anatomy.
+    // Paint piles fully dissolved — no contracts host CSS for theme-picker anatomy.
     assert!(
         !contracts.contains(".sail-theme-trigger svg")
             && !contracts.contains(".sail-theme-swatch")
@@ -1584,7 +1584,7 @@ fn theme_picker_host_paint_on_structure_sx() {
 fn prose_host_paint_on_sx_descendants_generated() {
     // Host block + body typeface/color/leading → host Style.
     // Descendant recipe: freeform HTML → compiler prose map → element-skins
-    // (not hand contracts PE).
+    // (not hand contracts host CSS).
     let src = include_str!("../stdlib/prose.sail");
     let out = compile_element(src, "prose").expect("prose compiles");
     assert!(
@@ -1618,28 +1618,29 @@ fn prose_host_paint_on_sx_descendants_generated() {
         "host paint atoms on structure:\n{}",
         out.structure_html
     );
-    // Generated descendant skin (owned by prose map).
+    // Descendant anatomy lives in the platform adaptor, not compile_element skin.
+    let skins = sail_compiler::stdlib::skins_css();
     assert!(
-        out.skin_css.contains(".sail-prose h1")
-            && out.skin_css.contains(".sail-prose p")
-            && out.skin_css.contains(".sail-prose a")
-            && out.skin_css.contains(".sail-prose code")
-            && out.skin_css.contains(".sail-prose pre")
-            && out.skin_css.contains(".sail-prose blockquote")
-            && out.skin_css.contains(".sail-prose ul")
-            && out.skin_css.contains(".sail-prose table")
-            && out.skin_css.contains(".sail-prose strong")
-            && out.skin_css.contains("li::marker")
-            && out.skin_css.contains("font-family:var(--heading-font)")
-            && out.skin_css.contains("color:var(--primary)"),
-        "prose descendant recipe must generate into skin_css:\n{}",
-        out.skin_css
+        skins.contains("/* @provenance platform/prose.css */")
+            && skins.contains(".sail-prose h1")
+            && skins.contains(".sail-prose p")
+            && skins.contains(".sail-prose a")
+            && skins.contains(".sail-prose code")
+            && skins.contains(".sail-prose pre")
+            && skins.contains(".sail-prose blockquote")
+            && skins.contains(".sail-prose ul")
+            && skins.contains(".sail-prose table")
+            && skins.contains(".sail-prose strong")
+            && skins.contains("li::marker")
+            && skins.contains("font-family:var(--heading-font)")
+            && skins.contains("color:var(--primary)"),
+        "prose descendant recipe must live in platform/prose.css via skins_css"
     );
     let contracts = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),
         "/../../../packages/sail/tokens/src/sail-base.css"
     ));
-    // No hand PE descendant rules.
+    // No hand host Style descendant rules.
     assert!(
         !contracts.contains(".sail-prose h1")
             && !contracts.contains(".sail-prose p")
@@ -1647,14 +1648,14 @@ fn prose_host_paint_on_sx_descendants_generated() {
             && !contracts.contains(".sail-prose code")
             && !contracts.contains(".sail-prose blockquote")
             && !contracts.contains(".sail-prose table"),
-        "prose descendant PE must be gone from contracts"
+        "prose descendant host CSS must be gone from contracts"
     );
 }
 
 #[test]
 fn tab_list_sticky_and_variant_on_host_not_parent_pe() {
     // Sticky + variant on <tab-list> host. Pill track CVA. Child tab matrices
-    // are stamped variant CVA on tab.sail (not parent PE). Vertical host axis
+    // are stamped variant CVA on tab.sail (not parent host CSS). Vertical host axis
     // is layout-owned; list/panel orientation stamped by use:tabs.
     let src = include_str!("../stdlib/tab-list.sail");
     let out = compile_element(src, "tab-list").expect("tab-list compiles");
@@ -1758,7 +1759,7 @@ fn tab_list_sticky_and_variant_on_host_not_parent_pe() {
             && !contracts.contains(".sail-tab-list[variant=")
             && !contracts.contains("--tab-py:")
             && !contracts.contains(".sail-tabs[size="),
-        "tabs/tab-list hand PE must be gone from contracts"
+        "tabs/tab-list hand host CSS must be gone from contracts"
     );
 }
 
@@ -1814,7 +1815,7 @@ fn scroll_area_standard_scrollbar_on_host_sx() {
         env!("CARGO_MANIFEST_DIR"),
         "/../../../packages/sail/tokens/src/sail-base.css"
     ));
-    // No hand scroll-area PE (section may be fully deleted).
+    // No hand scroll-area host CSS (section may be fully deleted).
     if let Some(sa) = contracts
         .split("/* scroll-area")
         .nth(1)
@@ -1828,12 +1829,12 @@ fn scroll_area_standard_scrollbar_on_host_sx() {
                     let t = l.trim();
                     t.starts_with(".sail-scroll-area {") || t.starts_with(".sail-scroll-area{")
                 }),
-            "scroll-area scrollbar PE (standard + webkit) must be gone:\n{sa}"
+            "scroll-area scrollbar host CSS (standard + webkit) must be gone:\n{sa}"
         );
     } else {
         assert!(
             !contracts.contains(".sail-scroll-area"),
-            "scroll-area PE fully deleted from contracts"
+            "scroll-area host CSS fully deleted from contracts"
         );
     }
 }
@@ -1841,7 +1842,7 @@ fn scroll_area_standard_scrollbar_on_host_sx() {
 #[test]
 fn code_block_pre_tab_and_tok_generated() {
     // pre tab-size:2 + line-height code → pre Style (tab(2) + leading(code)).
-    // .tok-* highlighter ink: compiler code-block map → element-skins (not PE).
+    // .tok-* highlighter ink: compiler code-block map → element-skins (not host Style).
     let src = include_str!("../stdlib/code-block.sail");
     let out = compile_element(src, "code-block").expect("code-block compiles");
     assert!(
@@ -1878,16 +1879,17 @@ fn code_block_pre_tab_and_tok_generated() {
         "leading-code must lower:\n{}",
         out.skin_css
     );
-    // Generated .tok-* skin.
+    // .tok-* highlighter ink is platform adaptor CSS, not host Style.
+    let skins = sail_compiler::stdlib::skins_css();
     assert!(
-        out.skin_css.contains(".sail-code-block .tok-tag")
-            && out.skin_css.contains("var(--syntax-tag)")
-            && out.skin_css.contains(".tok-keyword")
-            && out.skin_css.contains("var(--syntax-keyword)")
-            && out.skin_css.contains(".tok-comment")
-            && out.skin_css.contains("font-style:italic"),
-        "code-block .tok-* must generate into skin_css:\n{}",
-        out.skin_css
+        skins.contains("/* @provenance platform/code-block.css */")
+            && skins.contains(".sail-code-block .tok-tag")
+            && skins.contains("var(--syntax-tag)")
+            && skins.contains(".tok-keyword")
+            && skins.contains("var(--syntax-keyword)")
+            && skins.contains(".tok-comment")
+            && skins.contains("font-style:italic"),
+        "code-block .tok-* must live in platform/code-block.css via skins_css"
     );
     let contracts = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),
@@ -1897,7 +1899,7 @@ fn code_block_pre_tab_and_tok_generated() {
         !contracts.contains(".sail-code-block .tok-tag")
             && !contracts.contains(".sail-code-block .tok-keyword")
             && !contracts.contains(".sail-code-block pre"),
-        "code-block .tok-* PE must be gone from contracts"
+        "code-block .tok-* host CSS must be gone from contracts"
     );
 }
 
@@ -1949,12 +1951,12 @@ fn field_empty_and_invalid_hint_on_structure_sx() {
             !field.contains(".sail-field .hint:empty")
                 && !field.contains(".sail-field[invalid] .hint")
                 && !field.contains(".sail-field:not([invalid]) .error"),
-            "field hint/error PE rules must be gone:\n{field}"
+            "field hint/error host Style rules must be gone:\n{field}"
         );
     } else {
         assert!(
             !contracts.contains(".sail-field .hint") && !contracts.contains(".sail-field[invalid]"),
-            "field hint/error PE fully deleted from contracts"
+            "field hint/error host CSS fully deleted from contracts"
         );
     }
 }
@@ -1980,7 +1982,7 @@ fn label_req_gate_in_element_skins_anatomy() {
     assert!(
         !contracts.contains("label .req { display: none; }")
             && !contracts.contains("label[required] .req { display: inline; }"),
-        "label .req PE must be gone from contracts"
+        "label .req host CSS must be gone from contracts"
     );
     assert!(
         out.structure_html.contains("aria-hidden")
@@ -2010,7 +2012,7 @@ fn label_req_gate_in_element_skins_anatomy() {
 #[test]
 fn pagination_size_cva_on_page() {
     // Size Style match lives on each <page>; <pagination> is layout-only (no size prop).
-    // No --pg-* PE in contracts.
+    // No --pg-* host Style in contracts.
     let page_src = include_str!("../stdlib/page.sail");
     let pag_src = include_str!("../stdlib/pagination.sail");
     let page = compile_element(page_src, "page").expect("page compiles");
@@ -2052,7 +2054,7 @@ fn pagination_size_cva_on_page() {
         !contracts.contains("--pg-h:")
             && !contracts.contains("--pg-size:")
             && !contracts.contains(".sail-pagination { --pg-"),
-        "pagination --pg-* PE must be gone from contracts"
+        "pagination --pg-* host CSS must be gone from contracts"
     );
     assert!(
         pag_src.contains("use:pagination"),
@@ -2133,7 +2135,7 @@ fn overlay_family_anchor_geometry_on_host_sx() {
     ] {
         assert!(
             !contracts.contains(needle),
-            "overlay host PE must be gone: {needle}"
+            "overlay host CSS must be gone: {needle}"
         );
     }
 }
@@ -2202,7 +2204,7 @@ fn combobox_listbox_geometry_on_child_sx_options_on_popover_skin() {
         !contracts.contains(".sail-combobox .listbox")
             && !contracts.contains(".sail-combobox .empty")
             && !contracts.contains("anchor-size(width"),
-        "combobox component PE must be gone:\n{}",
+        "combobox component host CSS must be gone:\n{}",
         contracts
             .lines()
             .filter(|l| l.contains("combobox") || l.contains("anchor-size"))
@@ -2260,6 +2262,6 @@ fn tooltip_geometry_and_show_on_sx_no_contracts_pe() {
             && !contracts.contains("position-area:")
             && !contracts.contains(".sail-tooltip .bubble")
             && !contracts.contains(".sail-tooltip:hover .bubble"),
-        "tooltip contracts PE matrix must be gone"
+        "tooltip contracts host CSS matrix must be gone"
     );
 }

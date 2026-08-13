@@ -10,14 +10,14 @@
     selected = false
   }
   style rowRoot = {
-    box: minW(0).h(6).padX(3),
+    box: size({ h: 6, min-w: 0 }).space({ pad-x: 3 }),
     when: {
-      hover: { paint: bg(hover-bg) },
-      selected: { paint: bg(surface-2) },
+      hover: { paint: fill({ color: hover-bg }) },
+      selected: { paint: fill({ color: surface-2 }) },
     },
   }
-  style titleText = { box: grow(1).minW(0), text: fontSize(sm).truncate() }
-  style metaText = { box: shrink(0), paint: fg(muted-foreground), text: fontSize(xs) }
+  style titleText = { box: flow({ grow: 1 }).size({ min-w: 0 }), text: type({ size: sm, wrap: truncate }) }
+  style metaText = { box: flow({ shrink: 0 }), paint: ink({ color: muted-foreground }), text: type({ size: xs }) }
 </scope>
 
 <row studio-list-row selected={selected() ? 'true' : 'false'} gap="2" align="center" nowrap style(rowRoot)>

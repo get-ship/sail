@@ -1,5 +1,5 @@
 <!-- /components/:id — library selection deep link. -->
 <scope>
-  style surfaceFill = { box: grow(1).minH(0).h(full).minW(0).overflow(hidden) }
+  style surfaceFill = { box: flow({ grow: 1 }).size({ h: full, min-w: 0, min-h: 0 }).overflow({ all: hidden }) }
 </scope>
 <components-surface style(surfaceFill)></components-surface>

@@ -3,13 +3,12 @@
   Docs SSOT: apps/sail-site/src/component-docs/<slug>/meta.ts
   Mounts exactly one docs host:
     - first-class package CE (doc-button, doc-badge, …) when meta.host is doc-*
-    - or <doc-legacy-detail> only when meta.host is legacy / unmigrated
     - explicit missing-host empty state if first-class meta but no CE wired
     - empty state when no package / pack meta
 -->
 
 <scope>
-  style page = { box: maxW(breakpoint-desktop).mx(auto).w(full) }
+  style page = { box: size({ w: full, max-w: breakpoint-desktop }).space({ mx: auto }) }
   style emptyEnter = { animate: enter({ opacity: 'fade', translate-y: 'spring:snappy' }) }
 </scope>
 
@@ -78,6 +77,7 @@ const DOC_CE_SLUGS = new Set([
   'accordion',
   'combobox',
   'theme-picker',
+  'dropzone',
 ])
 
 export default controller((ctx: ControllerScope<Scope>) => {
@@ -88,13 +88,11 @@ export default controller((ctx: ControllerScope<Scope>) => {
   const knownPack = derived(() => PACK_TAGS.has(tag()))
   const showViewer = derived(() => knownDoc() || knownPack())
 
-  // FIRST_CLASS_HOSTS is SSOT from meta.host !== 'legacy'. Never route first-class → legacy.
+  // FIRST_CLASS_HOSTS is SSOT from meta.host !== 'legacy'.
   const firstClass = derived(() => FIRST_CLASS_HOSTS.has(tag()))
   const hasDocCe = derived(() => DOC_CE_SLUGS.has(tag()))
   const useDocHost = derived(() => firstClass() && hasDocCe())
-  const missingDocHost = derived(() => firstClass() && !hasDocCe())
-  // Legacy residual only when NOT first-class.
-  const useLegacy = derived(() => showViewer() && !firstClass())
+  const missingDocHost = derived(() => showViewer() && !useDocHost())
 
   const useButton = derived(() => tag() === 'button' && useDocHost())
   const useBadge = derived(() => tag() === 'badge' && useDocHost())
@@ -147,6 +145,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
   const useAccordion = derived(() => tag() === 'accordion' && useDocHost())
   const useCombobox = derived(() => tag() === 'combobox' && useDocHost())
   const useThemePicker = derived(() => tag() === 'theme-picker' && useDocHost())
+  const useDropzone = derived(() => tag() === 'dropzone' && useDocHost())
 
   const heading = () => meta()?.heading ?? entry()?.heading ?? tag()
   const blurb = () => meta()?.blurb ?? entry()?.blurb ?? packBlurbFor(tag())
@@ -213,7 +212,8 @@ export default controller((ctx: ControllerScope<Scope>) => {
     useAccordion,
     useCombobox,
     useThemePicker,
-    useLegacy,
+    useDropzone,
+
     heading,
     blurb,
     packLabel,
@@ -376,6 +376,9 @@ export default controller((ctx: ControllerScope<Scope>) => {
   <if {useThemePicker()}>
     <doc-theme-picker></doc-theme-picker>
   </if>
+  <if {useDropzone()}>
+    <doc-dropzone></doc-dropzone>
+  </if>
   <if {missingDocHost()}>
     <breadcrumb>
       <a href="/components">components</a>
@@ -389,9 +392,6 @@ export default controller((ctx: ControllerScope<Scope>) => {
     <row gap="2">
       <a variant="solid" tone="primary" href="/components">← All components</a>
     </row>
-  </if>
-  <if {useLegacy()}>
-    <doc-legacy-detail doc-tag={tag()}></doc-legacy-detail>
   </if>
   <if {!showViewer()}>
     <breadcrumb>

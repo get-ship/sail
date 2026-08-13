@@ -5359,11 +5359,11 @@ export const SX_ATOMS: SxAtom[] = [
 export const SX_STATE_PREFIXES: Array<{ prefix: string; selector: string }> = [
   {
     "prefix": "hover",
-    "selector": ":hover"
+    "selector": ":hover:not(:disabled):not([aria-disabled='true'])"
   },
   {
     "prefix": "focus",
-    "selector": ":focus-visible"
+    "selector": ":focus-visible:not(:disabled):not([aria-disabled='true'])"
   },
   {
     "prefix": "focus-within",
@@ -5371,7 +5371,7 @@ export const SX_STATE_PREFIXES: Array<{ prefix: string; selector: string }> = [
   },
   {
     "prefix": "active",
-    "selector": ":active"
+    "selector": ":active:not(:disabled):not([aria-disabled='true'])"
   },
   {
     "prefix": "disabled",
@@ -5769,6 +5769,10 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
       "description": "L1 anchored menu (element mode)."
     },
     {
+      "tag": "dropzone",
+      "description": "dashed drop surface that accepts files."
+    },
+    {
       "tag": "empty-state",
       "description": "L1 centered empty placeholder."
     },
@@ -6151,6 +6155,41 @@ export const AUTHORING_BANS: AuthoringBanDoc[] = [
     "syntax": "raw <script>",
     "rule": "sail-no-script",
     "instead": "imperative logic lives in the <controller> block"
+  },
+  {
+    "syntax": "<input type=\"checkbox\">",
+    "rule": "sail-no-freeform-input-type",
+    "instead": "<checkbox>"
+  },
+  {
+    "syntax": "<input type=\"radio\">",
+    "rule": "sail-no-freeform-input-type",
+    "instead": "<radio> inside <radio-group>"
+  },
+  {
+    "syntax": "<input type=\"range\">",
+    "rule": "sail-no-freeform-input-type",
+    "instead": "<slider>"
+  },
+  {
+    "syntax": "<input type=\"file\">",
+    "rule": "sail-no-freeform-input-type",
+    "instead": "<file>"
+  },
+  {
+    "syntax": "<input type=\"color\">",
+    "rule": "sail-no-freeform-input-type",
+    "instead": "<color>"
+  },
+  {
+    "syntax": "<input type=\"date|time|datetime-local|month|week\">",
+    "rule": "sail-no-freeform-input-type",
+    "instead": "<date type=\"date|time|datetime-local|month|week\">"
+  },
+  {
+    "syntax": "<input type=\"submit\">",
+    "rule": "sail-no-freeform-input-type",
+    "instead": "<button type=\"submit\">"
   }
 ]
 
@@ -6393,6 +6432,13 @@ export const ACTIONS: ActionDoc[] = [
     "name": "pagination",
     "param": "void",
     "summary": "Internal: L1 <pagination> closed behavior (not public use: — attach the widget).",
+    "public": false,
+    "writes": []
+  },
+  {
+    "name": "passwordReveal",
+    "param": "void",
+    "summary": "Internal: password field peek toggle (stamped on type=password when reveal is not false).",
     "public": false,
     "writes": []
   },
@@ -8369,3 +8415,138 @@ export const REGION_CAPABILITY_MATRIX: RegionCapabilityDoc[] = [
 
 /** Thin-controller LOC threshold (sail-controller-size). */
 export const CONTROLLER_SIZE_THRESHOLD = 50
+
+export interface ConcernDoc {
+  name: string
+  channel: string
+  slots: string[]
+}
+
+/** SPEC-SPINNAKER-2 concern atlas — the live Style setter table. */
+export const CONCERNS: ConcernDoc[] = [
+  {
+    "name": "fill",
+    "channel": "paint",
+    "slots": ["color", "mix", "image", "clip", "glow"]
+  },
+  {
+    "name": "ink",
+    "channel": "paint",
+    "slots": ["color", "caret", "accent"]
+  },
+  {
+    "name": "border",
+    "channel": "paint",
+    "slots": ["color", "width", "style", "edge", "kind", "offset"]
+  },
+  {
+    "name": "radius",
+    "channel": "paint",
+    "slots": ["all", "t", "b", "l", "r"]
+  },
+  {
+    "name": "elevation",
+    "channel": "paint",
+    "slots": ["shadow"]
+  },
+  {
+    "name": "filter",
+    "channel": "paint",
+    "slots": [
+      "blur",
+      "brightness",
+      "contrast",
+      "grayscale",
+      "hue",
+      "invert",
+      "sepia",
+      "saturate",
+      "backdrop",
+      "blend",
+      "opacity"
+    ]
+  },
+  {
+    "name": "size",
+    "channel": "box",
+    "slots": ["w", "h", "min-w", "min-h", "max-w", "max-h", "aspect"]
+  },
+  {
+    "name": "space",
+    "channel": "box",
+    "slots": [
+      "pad",
+      "pad-x",
+      "pad-y",
+      "pad-t",
+      "pad-b",
+      "pad-l",
+      "pad-r",
+      "pad-s",
+      "pad-e",
+      "m",
+      "mx",
+      "my",
+      "mt",
+      "mb",
+      "ml",
+      "mr",
+      "ms",
+      "me"
+    ]
+  },
+  {
+    "name": "place",
+    "channel": "box",
+    "slots": ["position", "inset", "top", "bottom", "left", "right", "z", "order"]
+  },
+  {
+    "name": "flow",
+    "channel": "box",
+    "slots": ["display", "dir", "grow", "shrink", "self"]
+  },
+  {
+    "name": "overflow",
+    "channel": "box",
+    "slots": ["all", "x", "y", "overscroll", "scroll"]
+  },
+  {
+    "name": "type",
+    "channel": "text",
+    "slots": ["family", "size", "weight", "leading", "tracking", "align", "case", "wrap", "list", "decoration"]
+  },
+  {
+    "name": "motion",
+    "channel": "paint",
+    "slots": ["rotate", "scale", "x", "y", "origin", "ease", "duration", "property", "animate"]
+  }
+]
+
+/** SPEC-SPINNAKER-2 markers — verbs, not concerns. */
+export const MARKERS: string[] = [
+  "group",
+  "isolate",
+  "srOnly",
+  "press",
+  "controlFrame",
+  "controlLift",
+  "cursor",
+  "select",
+  "pointerEvents",
+  "tapHighlight",
+  "touch",
+  "appearance",
+  "tab",
+  "content",
+  "boxSizing",
+  "objectFit",
+  "objectPosition",
+  "scrollbarThumb",
+  "scrollbarTrack",
+  "scrollbarThin",
+  "avatarMedia",
+  "glyphFill",
+  "container",
+  "containerType",
+  "containerName"
+]

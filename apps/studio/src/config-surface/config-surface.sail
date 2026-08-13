@@ -2,29 +2,29 @@
   <config-surface> — project/runtime settings. Nav categories + field tables.
 -->
 <scope>
-  style eyebrow = { paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide) }
-  style muted = { paint: fg(muted-foreground), text: fontSize(sm) }
-  style surfaceRoot = { box: grow(1).minH(0).h(full).minW(0).overflow(hidden), paint: bg(background) }
-  style workbench = { box: grow(1).minH(0).basis(0).h(full).minW(0).overflow(hidden) }
-  style navPane = { box: grow(1).minH(0).h(full).minW(panel-min-w-sm).maxW(panel-max-w-sm).basis(0).overflow(hidden), paint: borderRWidth(1).borderR(border-subtle).bg(surface-1) }
-  style navHead = { box: shrink(0).padX(3).padT(3).padB(2), paint: borderBWidth(1).borderB(border-subtle) }
-  style scrollGrow = { box: grow(1).minH(0).basis(0).h(full) }
-  style navListPad = { box: pad(2) }
-  style fullBtn = { box: w(full) }
-  style mainPane = { box: grow(1).minH(0).h(full).minW(0).basis(0).overflow(hidden), paint: bg(background) }
-  style mainHead = { box: shrink(0).padX(5).padY(3), paint: borderBWidth(1).borderB(border-subtle).bg(surface-0) }
-  style sectionTitle = { text: fontSize(lg).fontWeight(semibold).tracking(tight) }
-  style bodyPad = { box: pad(4).minW(0) }
-  style configBlock = { box: minW(0).overflow(hidden), paint: radius(md).borderWidth(1).border(border-subtle).bg(surface-0) }
-  style blockPad = { box: pad(3), paint: borderBWidth(1).borderB(border-subtle) }
-  style dangerBand = { box: pad(4), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1) }
-  style cloudCard = { box: minW(0), paint: borderWidth(1).border(primary).bg(surface-1) }
-  style growMin = { box: grow(1).minW(0) }
-  style shrink0 = { box: shrink(0) }
-  style cardTitle = { text: fontSize(md).fontWeight(semibold) }
-  style fieldLabel = { text: fontSize(sm).fontWeight(semibold) }
-  style fieldValue = { text: fontSize(sm).fontFamily(mono) }
-  style tableFill = { box: w(full) }
+  style eyebrow = { paint: ink({ color: muted-foreground }), text: type({ size: xs, weight: semibold, tracking: wide, case: uppercase }) }
+  style muted = { paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
+  style surfaceRoot = { box: flow({ grow: 1 }).size({ h: full, min-w: 0, min-h: 0 }).overflow({ all: hidden }), paint: fill({ color: background }) }
+  style workbench = { box: flow({ grow: 1 }).size({h: full, min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }) }
+  style navPane = { box: flow({ grow: 1 }).size({h: full, min-w: panel-min-w-sm, min-h: 0, max-w: panel-max-w-sm, basis: 0}).overflow({ all: hidden }), paint: border({ edge: r, color: border-subtle, width: 1 }).fill({ color: surface-1 }) }
+  style navHead = { box: flow({ shrink: 0 }).space({ pad-x: 3, pad-t: 3, pad-b: 2 }), paint: border({ edge: b, color: border-subtle, width: 1 }) }
+  style scrollGrow = { box: flow({ grow: 1 }).size({h: full, min-h: 0, basis: 0}) }
+  style navListPad = { box: space({ pad: 2 }) }
+  style fullBtn = { box: size({ w: full }) }
+  style mainPane = { box: flow({ grow: 1 }).size({h: full, min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }), paint: fill({ color: background }) }
+  style mainHead = { box: flow({ shrink: 0 }).space({ pad-x: 5, pad-y: 3 }), paint: border({ edge: b, color: border-subtle, width: 1 }).fill({ color: surface-0 }) }
+  style sectionTitle = { text: type({ size: lg, weight: semibold, tracking: tight }) }
+  style bodyPad = { box: space({ pad: 4 }).size({ min-w: 0 }) }
+  style configBlock = { box: size({ min-w: 0 }).overflow({ all: hidden }), paint: radius(md).border({ color: border-subtle, width: 1 }).fill({ color: surface-0 }) }
+  style blockPad = { box: space({ pad: 3 }), paint: border({ edge: b, color: border-subtle, width: 1 }) }
+  style dangerBand = { box: space({ pad: 4 }), paint: border({ edge: b, color: border-subtle, width: 1 }).fill({ color: surface-1 }) }
+  style cloudCard = { box: size({ min-w: 0 }), paint: border({ color: primary, width: 1 }).fill({ color: surface-1 }) }
+  style growMin = { box: flow({ grow: 1 }).size({ min-w: 0 }) }
+  style shrink0 = { box: flow({ shrink: 0 }) }
+  style cardTitle = { text: type({ size: md, weight: semibold }) }
+  style fieldLabel = { text: type({ size: sm, weight: semibold }) }
+  style fieldValue = { text: type({ family: mono, size: sm }) }
+  style tableFill = { box: size({ w: full }) }
 </scope>
 
 <controller>

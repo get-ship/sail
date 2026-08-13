@@ -5,16 +5,16 @@
 -->
 
 <scope>
-  style page = { box: maxW(breakpoint-desktop).mx(auto).w(full) }
-  style mutedSm = { paint: fg(muted-foreground), text: fontSize(sm) }
-  style mutedXs = { paint: fg(muted-foreground), text: fontSize(xs) }
+  style page = { box: size({ w: full, max-w: breakpoint-desktop }).space({ mx: auto }) }
+  style mutedSm = { paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
+  style mutedXs = { paint: ink({ color: muted-foreground }), text: type({ size: xs }) }
   style knobLabel = {
-    paint: fg(muted-foreground),
-    text: fontSize(xs).fontWeight(medium).tracking(wide).textCase(uppercase),
-  }
-  style exampleBlock = { box: w(full).padT(2).padB(4) }
-  style sectionLabel = { paint: fg(muted-foreground), text: fontSize(xs).textCase(uppercase).tracking(wide) }
-  style demoRow = { box: w(full).padY(2) }
+    paint: ink({ color: muted-foreground }),
+    text: type({ size: xs, weight: medium, tracking: wide, case: uppercase }),
+}
+  style exampleBlock = { box: size({ w: full }).space({ pad-t: 2, pad-b: 4 }) }
+  style sectionLabel = { paint: ink({ color: muted-foreground }), text: type({ size: xs, tracking: wide, case: uppercase }) }
+  style demoRow = { box: size({ w: full }).space({ pad-y: 2 }) }
 </scope>
 
 <controller>

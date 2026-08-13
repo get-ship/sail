@@ -130,11 +130,12 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
     {
       "name": "variant",
       "type": "default · solid · soft · outline · ghost",
-      "default": "default"
+      "default": "solid"
     },
     {
       "name": "tone",
-      "type": "primary · info · success · warning · destructive · accent · muted"
+      "type": "primary · info · success · warning · destructive · accent · muted",
+      "default": "primary"
     },
     {
       "name": "size",
@@ -181,6 +182,38 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "name": "fill",
       "type": "bool",
       "default": "false"
+    }
+  ],
+  "checkbox": [
+    {
+      "name": "size",
+      "type": "xs · sm · md · lg",
+      "default": "md"
+    },
+    {
+      "name": "invalid",
+      "type": "bool",
+      "default": "false"
+    },
+    {
+      "name": "disabled",
+      "type": "bool",
+      "default": "false"
+    },
+    {
+      "name": "name",
+      "type": "string",
+      "default": ""
+    },
+    {
+      "name": "required",
+      "type": "bool",
+      "default": "false"
+    },
+    {
+      "name": "value",
+      "type": "string",
+      "default": ""
     }
   ],
   "chip": [
@@ -230,6 +263,28 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "default": "sail"
     }
   ],
+  "color": [
+    {
+      "name": "value",
+      "type": "string",
+      "default": "#000000"
+    },
+    {
+      "name": "disabled",
+      "type": "bool",
+      "default": "false"
+    },
+    {
+      "name": "invalid",
+      "type": "bool",
+      "default": "false"
+    },
+    {
+      "name": "name",
+      "type": "string",
+      "default": ""
+    }
+  ],
   "combobox": [
     {
       "name": "placeholder",
@@ -255,6 +310,68 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
     {
       "name": "onSelect",
       "type": "(detail: { value: string }) => void"
+    }
+  ],
+  "date": [
+    {
+      "name": "type",
+      "type": "date · time · datetime-local · month · week",
+      "default": "date"
+    },
+    {
+      "name": "size",
+      "type": "xs · sm · md · lg",
+      "default": "md"
+    },
+    {
+      "name": "invalid",
+      "type": "bool",
+      "default": "false"
+    },
+    {
+      "name": "disabled",
+      "type": "bool",
+      "default": "false"
+    },
+    {
+      "name": "placeholder",
+      "type": "string",
+      "default": ""
+    },
+    {
+      "name": "name",
+      "type": "string",
+      "default": ""
+    },
+    {
+      "name": "required",
+      "type": "bool",
+      "default": "false"
+    },
+    {
+      "name": "readonly",
+      "type": "bool",
+      "default": "false"
+    },
+    {
+      "name": "value",
+      "type": "string",
+      "default": ""
+    },
+    {
+      "name": "min",
+      "type": "string",
+      "default": ""
+    },
+    {
+      "name": "max",
+      "type": "string",
+      "default": ""
+    },
+    {
+      "name": "step",
+      "type": "string",
+      "default": ""
     }
   ],
   "dialog": [
@@ -297,6 +414,38 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
     {
       "name": "onSelect",
       "type": "(detail: { value: string }) => void"
+    }
+  ],
+  "dropzone": [
+    {
+      "name": "accept",
+      "type": "string",
+      "default": ""
+    },
+    {
+      "name": "multiple",
+      "type": "bool",
+      "default": "false"
+    },
+    {
+      "name": "disabled",
+      "type": "bool",
+      "default": "false"
+    },
+    {
+      "name": "invalid",
+      "type": "bool",
+      "default": "false"
+    },
+    {
+      "name": "name",
+      "type": "string",
+      "default": ""
+    },
+    {
+      "name": "required",
+      "type": "bool",
+      "default": "false"
     }
   ],
   "empty-state": [
@@ -361,6 +510,48 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "default": "false"
     }
   ],
+  "file": [
+    {
+      "name": "size",
+      "type": "xs · sm · md · lg",
+      "default": "md"
+    },
+    {
+      "name": "invalid",
+      "type": "bool",
+      "default": "false"
+    },
+    {
+      "name": "disabled",
+      "type": "bool",
+      "default": "false"
+    },
+    {
+      "name": "name",
+      "type": "string",
+      "default": ""
+    },
+    {
+      "name": "required",
+      "type": "bool",
+      "default": "false"
+    },
+    {
+      "name": "accept",
+      "type": "string",
+      "default": ""
+    },
+    {
+      "name": "multiple",
+      "type": "bool",
+      "default": "false"
+    },
+    {
+      "name": "variant",
+      "type": "picker · drop",
+      "default": "picker"
+    }
+  ],
   "hover-card": [
     {
       "name": "placement",
@@ -398,7 +589,7 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
   "input": [
     {
       "name": "type",
-      "type": "text · email · password · number · search · tel · url · date · time · datetime-local · month · week · file · color · checkbox · radio · range · submit · hidden",
+      "type": "text · email · password · number · search · tel · url · hidden",
       "default": "text"
     },
     {
@@ -420,6 +611,71 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "name": "placeholder",
       "type": "string",
       "default": ""
+    },
+    {
+      "name": "name",
+      "type": "string",
+      "default": ""
+    },
+    {
+      "name": "required",
+      "type": "bool",
+      "default": "false"
+    },
+    {
+      "name": "readonly",
+      "type": "bool",
+      "default": "false"
+    },
+    {
+      "name": "value",
+      "type": "string",
+      "default": ""
+    },
+    {
+      "name": "min",
+      "type": "string",
+      "default": ""
+    },
+    {
+      "name": "max",
+      "type": "string",
+      "default": ""
+    },
+    {
+      "name": "step",
+      "type": "string",
+      "default": ""
+    },
+    {
+      "name": "minlength",
+      "type": "string",
+      "default": ""
+    },
+    {
+      "name": "maxlength",
+      "type": "string",
+      "default": ""
+    },
+    {
+      "name": "pattern",
+      "type": "string",
+      "default": ""
+    },
+    {
+      "name": "autocomplete",
+      "type": "string",
+      "default": ""
+    },
+    {
+      "name": "inputmode",
+      "type": "string",
+      "default": ""
+    },
+    {
+      "name": "reveal",
+      "type": "bool",
+      "default": "true"
     }
   ],
   "label": [
@@ -697,6 +953,12 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "name": "name",
       "type": "string",
       "default": ""
+    },
+    {
+      "name": "ticks",
+      "type": "string",
+      "default": "",
+      "desc": "Comma-separated labels under thumb-centers. Owned by the slider — not a docs pad hack."
     }
   ],
   "spinner": [

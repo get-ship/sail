@@ -11,7 +11,7 @@ export default controller(() => {
 })
 </controller>
 
-<button variant="solid" tone="primary" on:click={save}>
+<button on:click={save}>
   {saved() ? 'Saved ✓' : 'Save changes'}
 </button>`,
 
@@ -67,7 +67,7 @@ export default controller(() => ({ bio: signal('') }))
   size="md"
   rows="3"
   bind:value={bio}
-></textarea>
+/>
 <p>{bio().length} characters</p>`,
 
   select: `<controller>
@@ -180,18 +180,15 @@ export default controller(() => ({ volume: signal(48) }))
   </column>
 </fieldset>`,
 
-  dropzone: `<card dropzone>
-    style({ box: pad(6), animate: enter({ opacity: 'fade' }) })
-  Drop a file, or click to browse
-</card>`,
+  dropzone: `<dropzone accept="image/*" multiple />`,
 
   'theme-picker': `<!-- the whole switcher: trigger, panel, live previews -->
 <theme-picker>
   style({ animate: enter({ opacity: 'fade' }) })
 </theme-picker>`,
 
-  ticker: `<ticker duration="normal" style({ box: w(full).overflow(hidden).padY(2), paint: bg(muted).radius(md) })>
-  <p style({ box: padX(3), paint: fg(muted-foreground), text: fontSize(sm).fontFamily(mono).whitespace(nowrap) })>
+  ticker: `<ticker duration="normal" style({ box: size({ w: full }).overflow({ all: hidden }).space({ pad-y: 2 }), paint: fill({ color: muted }).radius(md) })>
+  <p style({ box: space({ pad-x: 3 }), paint: ink({ color: muted-foreground }), text: type({ size: sm, family: mono, wrap: nowrap }) })>
     tokens · signals · a11y · hot reload ·&nbsp;
   </p>
 </ticker>`,
@@ -237,7 +234,7 @@ export default controller(() => ({ loading: signal(true) }))
 
   skeleton: `<row gap="3" align="center">
   <skeleton shape="circle" size="md"></skeleton>
-  <column gap="2" style({ box: grow(1) })>
+  <column gap="2" style({ box: flow({ grow: 1 }) })>
     <skeleton shape="text" size="sm"></skeleton>
     <skeleton shape="text" size="sm"></skeleton>
   </column>
@@ -258,7 +255,7 @@ export default controller(() => ({ loading: signal(true) }))
 
   'error-boundary': `<error-boundary message="This panel could not load.">
   <card>
-    style({ box: pad(4), animate: enter({ opacity: 'fade' }) })
+    style({ box: space({ pad: 4 }), animate: enter({ opacity: 'fade' }) })
     <p>A risky subtree. If a render throw happens inside,
        the fallback takes this card's place — Retry resets it.</p>
   </card>
@@ -308,10 +305,10 @@ export default controller(() => {
 </if>`,
 
   card: `<card interactive>
-    style({ box: pad(5) })
+    style({ box: space({ pad: 5 }) })
   <strong>A surface</strong>
   <p>
-    style({ paint: fg(muted-foreground), text: fontSize(sm) })
+    style({ paint: ink({ color: muted-foreground }), text: type({ size: sm }) })
     Tone, padding and the hover lift are attributes.
   </p>
 </card>`,
@@ -372,10 +369,10 @@ export default controller(() => {
 <hover-card id="profile">
   style({ animate: enter({ opacity: 'fade' }) })
   <card>
-    style({ box: pad(4) })
+    style({ box: space({ pad: 4 }) })
     <strong>Ada Lovelace</strong>
     <p>
-      style({ paint: fg(muted-foreground), text: fontSize(sm) })
+      style({ paint: ink({ color: muted-foreground }), text: type({ size: sm }) })
       wrote the first program.</p>
   </card>
 </hover-card>`,
@@ -385,7 +382,7 @@ export default controller(() => {
 <popover id="pop" placement="bottom">
   style({ animate: enter({ opacity: 'fade' }) })
   <card>
-    style({ box: pad(4) })
+    style({ box: space({ pad: 4 }) })
     Rides the platform top layer — no z-index war.</card>
 </popover>`,
 
@@ -399,7 +396,7 @@ export default controller(() => {
 </dropdown>`,
 
   'context-menu': `<card id="canvas">
-    style({ box: pad(6), animate: enter({ opacity: 'fade' }) })
+    style({ box: space({ pad: 6 }), animate: enter({ opacity: 'fade' }) })
   right-click target
 </card>
 
@@ -505,23 +502,23 @@ export default controller(() => ({
   </row>
   <grid cols="3" gap="2">
     <card>
-      style({ box: pad(3) })
+      style({ box: space({ pad: 3 }) })
       1</card>
     <card>
-      style({ box: pad(3) })
+      style({ box: space({ pad: 3 }) })
       2</card>
     <card>
-      style({ box: pad(3) })
+      style({ box: space({ pad: 3 }) })
       3</card>
   </grid>
   <center>
-    style({ box: pad(4), paint: borderWidth(1).border(border-subtle).radius(md) })
+    style({ box: space({ pad: 4 }), paint: border({ color: border-subtle, width: 1 }).radius(md) })
     <p>center — both axes</p>
   </center>
 </column>`,
 
   'scroll-area': `<scroll-area orientation="vertical"
-  style({ box: maxH(panel-max-h-sm).pad(3), paint: borderWidth(1).border(border-subtle).radius(md) })>
+  style({ box: size({ max-h: panel-max-h-sm }).space({ pad: 3 }), paint: border({ color: border-subtle, width: 1 }).radius(md) })>
   <p>Constrain height/width with Style — overflow scrolls behind thin themed thumbs.</p>
   <p>orientation picks the axis (vertical · horizontal · both).</p>
   <p>Thumb from the theme; hover uses the stronger border colour.</p>

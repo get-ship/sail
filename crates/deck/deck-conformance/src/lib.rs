@@ -108,7 +108,7 @@ pub fn deck_app_with_mode(app_dir: PathBuf, mode: DaemonMode) -> Router {
 }
 
 /// Like [`deck_app_with_mode`] but with a caller-owned [`DemoStore`]. Tests
-/// use this to mutate the store directly (the PE form endpoint is a 410
+/// use this to mutate the store directly (the progressive-enhancement form endpoint is a 410
 /// tombstone in deck's router) and assert the live SSE surface reflects it.
 pub fn deck_app_with_store(app_dir: PathBuf, mode: DaemonMode, store: Arc<DemoStore>) -> Router {
     let cfg = Arc::new(deck::config::DeckConfig::defaults());

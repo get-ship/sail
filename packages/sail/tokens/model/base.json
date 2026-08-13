@@ -1152,6 +1152,229 @@
       }
     }
   },
+  "border": {
+    "default": {
+      "$type": "border",
+      "$description": "Semantic default border (color + width + style). Color member aliases color.border.default so --border stays the paint token.",
+      "$value": {
+        "color": "{color.border.default}",
+        "width": "{color.border.width}",
+        "style": "solid"
+      }
+    },
+    "subtle": {
+      "$type": "border",
+      "$description": "Semantic subtle border composite. Color member aliases color.border.subtle (--border-subtle).",
+      "$value": {
+        "color": "{color.border.subtle}",
+        "width": "{color.border.width}",
+        "style": "solid"
+      }
+    },
+    "strong": {
+      "$type": "border",
+      "$description": "Semantic strong border composite. Color member aliases color.border.strong (--border-strong).",
+      "$value": {
+        "color": "{color.border.strong}",
+        "width": "{color.border.width}",
+        "style": "solid"
+      }
+    }
+  },
+  "size": {
+    "control-sm": {
+      "$type": "size",
+      "$description": "Control height step sm. Geometry only — pad is space.",
+      "$value": {
+        "h": "{control.h-sm}"
+      }
+    },
+    "control-md": {
+      "$type": "size",
+      "$description": "Control height step md. Geometry only — pad is space.",
+      "$value": {
+        "h": "{control.h-md}"
+      }
+    },
+    "control-lg": {
+      "$type": "size",
+      "$description": "Control height step lg. Geometry only — pad is space.",
+      "$value": {
+        "h": "{control.h-lg}"
+      }
+    },
+    "full": {
+      "$type": "size",
+      "$description": "Fill the containing box (width + height 100%). Geometry only.",
+      "$value": {
+        "w": "100%",
+        "h": "100%"
+      }
+    }
+  },
+  "type": {
+    "body": {
+      "$type": "type",
+      "$description": "Body type role. Aliases typography.body + text-base; does not invent a second scale.",
+      "$value": {
+        "family": "{typography.body.font}",
+        "size": "{typography.text.base}",
+        "weight": "{typography.body.weight}",
+        "leading": "{typography.leading.normal}",
+        "tracking": "{typography.tracking.normal}"
+      }
+    },
+    "body-sm": {
+      "$type": "type",
+      "$description": "Small body type role. Same family/weight as body at text-sm.",
+      "$value": {
+        "family": "{typography.body.font}",
+        "size": "{typography.text.sm}",
+        "weight": "{typography.body.weight}",
+        "leading": "{typography.leading.normal}",
+        "tracking": "{typography.tracking.normal}"
+      }
+    },
+    "label": {
+      "$type": "type",
+      "$description": "Label / eyebrow type role. Includes case because typography.label owns transform.",
+      "$value": {
+        "family": "{typography.label.font}",
+        "size": "{typography.text.xs}",
+        "weight": "{typography.label.weight}",
+        "leading": "{typography.leading.snug}",
+        "tracking": "{typography.label.tracking}",
+        "case": "{typography.label.transform}"
+      }
+    },
+    "heading": {
+      "$type": "type",
+      "$description": "Heading type role. Includes case because typography.heading owns transform.",
+      "$value": {
+        "family": "{typography.heading.font}",
+        "size": "{typography.text.xl}",
+        "weight": "{typography.heading.weight}",
+        "leading": "{typography.leading.tight}",
+        "tracking": "{typography.heading.tracking}",
+        "case": "{typography.heading.transform}"
+      }
+    },
+    "mono": {
+      "$type": "type",
+      "$description": "Mono / code type role. Aliases typography.monoFont + text-sm + leading.code.",
+      "$value": {
+        "family": "{typography.monoFont}",
+        "size": "{typography.text.sm}",
+        "weight": "{typography.font.weight-normal}",
+        "leading": "{typography.leading.code}",
+        "tracking": "{typography.tracking.normal}"
+      }
+    }
+  },
+  "elevation": {
+    "xs": {
+      "$type": "elevation",
+      "$description": "Elevation step xs. Shadow member aliases shadow.xs.",
+      "$value": {
+        "shadow": "{shadow.xs}"
+      }
+    },
+    "sm": {
+      "$type": "elevation",
+      "$description": "Elevation step sm. Shadow member aliases shadow.sm.",
+      "$value": {
+        "shadow": "{shadow.sm}"
+      }
+    },
+    "md": {
+      "$type": "elevation",
+      "$description": "Elevation step md. Shadow member aliases shadow.md.",
+      "$value": {
+        "shadow": "{shadow.md}"
+      }
+    },
+    "lg": {
+      "$type": "elevation",
+      "$description": "Elevation step lg. Shadow member aliases shadow.lg.",
+      "$value": {
+        "shadow": "{shadow.lg}"
+      }
+    },
+    "xl": {
+      "$type": "elevation",
+      "$description": "Elevation step xl. Shadow member aliases shadow.xl.",
+      "$value": {
+        "shadow": "{shadow.xl}"
+      }
+    },
+    "none": {
+      "$type": "elevation",
+      "$description": "No elevation. Shadow member is the CSS none keyword.",
+      "$value": {
+        "shadow": "none"
+      }
+    }
+  },
+  "fill": {
+    "surface": {
+      "$type": "fill",
+      "$description": "Surface fill identity. Color member aliases color.surface.1 (--surface-1).",
+      "$value": {
+        "color": "{color.surface.1}"
+      }
+    },
+    "muted": {
+      "$type": "fill",
+      "$description": "Muted fill identity. Color member aliases color.muted.default (--muted).",
+      "$value": {
+        "color": "{color.muted.default}"
+      }
+    },
+    "card": {
+      "$type": "fill",
+      "$description": "Card fill face. Color member aliases component.card.bg (--card).",
+      "$value": {
+        "color": "{component.card.bg}"
+      }
+    },
+    "button": {
+      "$type": "fill",
+      "$description": "Button fill face. Color member aliases component.button.bg (--button).",
+      "$value": {
+        "color": "{component.button.bg}"
+      }
+    }
+  },
+  "ink": {
+    "foreground": {
+      "$type": "ink",
+      "$description": "Foreground ink identity. Color member aliases color.foreground (--foreground).",
+      "$value": {
+        "color": "{color.foreground}"
+      }
+    },
+    "muted": {
+      "$type": "ink",
+      "$description": "Muted ink identity. Color member aliases color.muted.foreground (--muted-foreground).",
+      "$value": {
+        "color": "{color.muted.foreground}"
+      }
+    },
+    "card": {
+      "$type": "ink",
+      "$description": "Card ink face. Color member aliases component.card.fg (--card-foreground).",
+      "$value": {
+        "color": "{component.card.fg}"
+      }
+    },
+    "button": {
+      "$type": "ink",
+      "$description": "Button ink face. Color member aliases component.button.fg (--button-foreground).",
+      "$value": {
+        "color": "{component.button.fg}"
+      }
+    }
+  },
   "z": {
     "base": {
       "$value": "0",

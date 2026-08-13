@@ -1,16 +1,16 @@
 <!--
   <studio-panel> — bordered workbench panel (header + body + footer).
-  Header h(8) matches shell header rhythm. Props: title. Slots: header, actions, default, footer.
+  Header height 8 matches shell header rhythm. Props: title. Slots: header, actions, default, footer.
 -->
 <scope>
   props: {
     title = ''
   }
-  style panelRoot = { box: grow(1).minW(0).minH(0).h(full).overflow(hidden), paint: borderWidth(1).border(border-subtle).radius(md).bg(surface-1) }
-  style panelHeader = { box: shrink(0).h(8).minH(8).padX(3), paint: borderBWidth(1).borderB(border-subtle) }
-  style eyebrow = { paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide) }
-  style actionsRow = { box: shrink(0) }
-  style panelBody = { box: grow(1).minW(0).minH(0).basis(0).overflow(hidden) }
+  style panelRoot = { box: flow({ grow: 1 }).size({ h: full, min-w: 0, min-h: 0 }).overflow({ all: hidden }), paint: border({ color: border-subtle, width: 1 }).radius(md).fill({ color: surface-1 }) }
+  style panelHeader = { box: flow({ shrink: 0 }).size({ h: 8, min-h: 8 }).space({ pad-x: 3 }), paint: border({ edge: b, color: border-subtle, width: 1 }) }
+  style eyebrow = { paint: ink({ color: muted-foreground }), text: type({ size: xs, weight: semibold, tracking: wide, case: uppercase }) }
+  style actionsRow = { box: flow({ shrink: 0 }) }
+  style panelBody = { box: flow({ grow: 1 }).size({min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }) }
 </scope>
 
 <column studio-panel gap="0" style(panelRoot)>

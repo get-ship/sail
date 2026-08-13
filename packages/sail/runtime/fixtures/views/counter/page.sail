@@ -5,9 +5,9 @@ export default controller(() => ({ count: signal(0) }))
 </controller>
 
 <scope>
-  style page = { box: pad(8).maxW(breakpoint-mobile).mx(auto), text: textAlign(center) }
-  style value = { text: fontFamily(mono).fontSize(2xl) }
-  style caption = { box: mt(6), paint: fg(muted-foreground), text: fontSize(sm) }
+  style page = { box: space({ pad: 8, mx: auto }).size({ max-w: breakpoint-mobile }), text: type({ align: center }) }
+  style value = { text: type({ family: mono, size: 2xl }) }
+  style caption = { box: space({ mt: 6 }), paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
 </scope>
 
 <column gap="4" style(page)>

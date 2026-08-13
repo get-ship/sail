@@ -13,24 +13,12 @@
     }
   }
 
-  style base = {
-    box: position(fixed).pad(4).top(0).right(auto).bottom(auto).left(0).w(panel-w-toast),
-    paint: z(z-toast).pointerEvents(none),
-  }
+  style base = {box: place({ position: fixed, top: 0, right: auto, bottom: auto, left: 0, z: toast }).space({ pad: 4 }).size({ w: panel-w-toast }), paint: pointerEvents(none)}
 </scope>
 
 <column
   gap="2"
-  style(base, {
-    match: {
-      position: {
-        top-start: { box: top(0).right(auto).bottom(auto).left(0) },
-        top-end: { box: top(0).right(0).bottom(auto).left(auto) },
-        bottom-start: { box: top(auto).right(auto).bottom(0).left(0).flexDir(column-reverse) },
-        bottom-end: { box: top(auto).right(0).bottom(0).left(auto).flexDir(column-reverse) },
-      },
-    },
-  })
+  style(base, {match: {position: {top-start: {box: place({ top: 0, right: auto, bottom: auto, left: 0 })}, top-end: {box: place({ top: 0, right: 0, bottom: auto, left: auto })}, bottom-start: {box: place({ top: auto, right: auto, bottom: 0, left: 0 }).flow({ dir: column-reverse })}, bottom-end: {box: place({ top: auto, right: 0, bottom: 0, left: auto }).flow({ dir: column-reverse })}}}})
 >
   <slot></slot>
 </column>

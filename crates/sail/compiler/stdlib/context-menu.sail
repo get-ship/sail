@@ -9,7 +9,7 @@
     onSelect: (detail: { value: string }) => void
   }
 
-  style host = { box: position(fixed).inset(auto).m(0).left(bind(anchorLeft)).top(bind(anchorTop)).pad(1), paint: fg(context-menu.foreground).bg(context-menu).borderWidth(1).border(context-menu.border).radius(md).shadow(md).z(popover) }
+  style host = {box: place({ position: fixed, inset: auto, left: bind(anchorLeft), top: bind(anchorTop), z: popover }).space({ m: 0, pad: 1 }), paint: ink({ color: context-menu.foreground }).fill({ color: context-menu }).border({ color: context-menu.border, width: 1 }).radius(md).elevation(md)}
 </scope>
 
 <div popover use:contextMenu use:menu style(host)><slot></slot></div>

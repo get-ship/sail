@@ -4,16 +4,16 @@
   match: / compound: / when:. Setter scales, when keys, refusals.
 -->
 <scope>
-  style root = { box: minW(0) }
-  style intro = { box: maxW(breakpoint-tablet) }
-  style mutedSm = { box: maxW(breakpoint-tablet), paint: fg(muted-foreground), text: fontSize(sm) }
-  style mutedBody = { box: maxW(breakpoint-tablet) }
-  style cardShell = { box: minW(0) }
-  style valueText = { box: maxW(panel-max-w-sm), paint: fg(muted-foreground) }
-  style banCode = { paint: fg(destructive) }
-  style prefixRow = { box: padX(3).padY(1), paint: radius(md) }
-  style prefixCode = { box: minW(9) }
-  style mediaLine = { box: maxW(ch-24), paint: fg(muted-foreground), text: fontFamily(mono) }
+  style root = { box: size({ min-w: 0 }) }
+  style intro = { box: size({ max-w: breakpoint-tablet }) }
+  style mutedSm = { box: size({ max-w: breakpoint-tablet }), paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
+  style mutedBody = { box: size({ max-w: breakpoint-tablet }) }
+  style cardShell = { box: size({ min-w: 0 }) }
+  style valueText = { box: size({ max-w: panel-max-w-sm }), paint: ink({ color: muted-foreground }) }
+  style banCode = { paint: ink({ color: destructive }) }
+  style prefixRow = { box: space({ pad-x: 3, pad-y: 1 }), paint: radius(md) }
+  style prefixCode = { box: size({ min-w: 9 }) }
+  style mediaLine = { box: size({ max-w: ch-24 }), paint: ink({ color: muted-foreground }), text: type({ family: mono }) }
 </scope>
 
 <controller>
@@ -59,7 +59,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     <p token="doc-lead">
       Product paint is a <strong>block statement</strong> on the host with a
       channel spine:
-      <code>style&#40;&#123; box: padX(2), paint: bg(primary), text: fontSize(sm), animate: enter(&#123;…&#125;) &#125;&#41;</code>.
+      <code>style&#40;&#123; box: space(&#123; pad-x: 2 &#125;), paint: fill(&#123; color: primary &#125;), text: type(&#123; size: sm &#125;), animate: enter(&#123;…&#125;) &#125;&#41;</code>.
       Reuse named Style in scope with
       <code>style name = &#123; … &#125;</code>, attach as
       <code>style&#40;name&#41;</code>, and compose pieces
@@ -70,7 +70,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     <p style(mutedSm)>
       Utility-string <code>style="…"</code> / <code>sx="…"</code> is not product
       (dead form — refuse). Responsive and state paint use object keys:
-      <code>style&#40;&#123; when: &#123; tablet: &#123; text: fontSize(lg) &#125;, hover: &#123; paint: bg(muted) &#125; &#125; &#125;&#41;</code>
+      <code>style&#40;&#123; when: &#123; tablet: &#123; text: type(&#123; size: lg &#125;) &#125;, hover: &#123; paint: fill(&#123; color: muted &#125;) &#125; &#125; &#125;&#41;</code>
       — not <code>tablet:</code> / <code>hover:</code> prefixes on atoms.
       {styleCount()} scale entries feed the setters. Region legality lives on the
       <a href="/docs/reference/regions">region matrix</a>.
@@ -82,8 +82,8 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     <p style(mutedSm)>
       Rows are named by historical atom heads (<code>bg</code>, <code>p</code>,
       <code>rounded</code>, …). In product form you call the Style setter:
-      <code>style&#40;&#123; paint: bg(…) &#125;&#41;</code>, <code>style&#40;&#123; box: pad(…) &#125;&#41;</code>,
-      <code>style&#40;&#123; paint: radius(…) &#125;&#41;</code>, <code>style&#40;&#123; paint: fg(…) &#125;&#41;</code>, and so on.
+      <code>style&#40;&#123; paint: fill(&#123; color: … &#125;) &#125;&#41;</code>, <code>style&#40;&#123; box: space(&#123; pad: … &#125;) &#125;&#41;</code>,
+      <code>style&#40;&#123; paint: radius(…) &#125;&#41;</code>, <code>style&#40;&#123; paint: ink(&#123; color: … &#125;) &#125;&#41;</code>, and so on.
     </p>
     <grid cols="2" gap="2">
       <for {styleRows() as a} key={a.prop}>
@@ -120,7 +120,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     <h3>when keys — interaction &amp; ARIA</h3>
     <p style(mutedSm)>
       Product form:
-      <code>style&#40;&#123; when: &#123; hover: &#123; paint: bg(muted) &#125;, current: &#123; paint: fg(primary) &#125; &#125; &#125;&#41;</code>.
+      <code>style&#40;&#123; when: &#123; hover: &#123; paint: fill(&#123; color: muted &#125;) &#125;, current: &#123; paint: ink(&#123; color: primary &#125;) &#125; &#125; &#125;&#41;</code>.
       Historical prefix names below map 1:1 to those keys.
     </p>
     <grid cols="3" gap="2">
@@ -142,7 +142,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     <p style(mutedSm)>
       Breakpoints are locked to design-token <code>breakpoint-*</code> lengths.
       Use
-      <code>style&#40;&#123; when: &#123; tablet: &#123; text: fontSize(lg) &#125;, desktop: &#123; text: fontSize(xl) &#125; &#125; &#125;&#41;</code>.
+      <code>style&#40;&#123; when: &#123; tablet: &#123; text: type(&#123; size: lg &#125;) &#125;, desktop: &#123; text: type(&#123; size: xl &#125;) &#125; &#125; &#125;&#41;</code>.
     </p>
     <grid cols="3" gap="2">
       <for {conditionPrefixes() as c} key={c.prefix}>

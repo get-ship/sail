@@ -60,6 +60,15 @@ pub enum StyleCompleteContext {
         partial: String,
         host: Option<String>,
     },
+    /// Inside `border({ ¦` — concern slot names.
+    ConcernSlotKey { setter: String, partial: String },
+    /// Inside `border({ color: ¦` — values legal for that slot's scale.
+    ConcernSlotArg {
+        setter: String,
+        slot: String,
+        partial: String,
+        host: Option<String>,
+    },
     /// Object key position `{ ¦` / after comma at style-object level.
     ObjectKey { partial: String },
     /// Inside `when: { ¦` key position.
@@ -112,6 +121,7 @@ pub fn when_keys() -> Vec<&'static str> {
         "groupStateOpen",
         "groupCaught",
         "groupInline",
+        "groupDrop",
     ];
     for (name, _) in CONDITION_PREFIXES {
         // Prefer camelCase product spellings for multi-word media keys.
@@ -191,25 +201,33 @@ pub fn style_complete_for_context(
         ),
         StyleCompleteContext::SetterName { partial, channel } => {
             let ch = channel.as_deref().and_then(parse_channel);
-            let setters = setters::setters().iter().filter(|s| match ch {
-                Some(c) => channel::channel_for_setter(s.name) == Some(c),
-                None => true,
-            });
-            filter_sort(
-                setters.map(|s| {
-                    let detail = match s.scale {
-                        Some(scale) => format!("setter · scale `{scale}`"),
-                        None => "setter".into(),
-                    };
-                    item(
-                        s.name.to_string(),
-                        StyleCompleteKind::Setter,
-                        Some(detail),
-                        Some(format!("{}(", s.name)),
-                    )
-                }),
-                partial,
-            )
+            let mut items: Vec<StyleCompleteItem> = Vec::new();
+            for spec in crate::concerns::concerns() {
+                if ch.is_some_and(|c| spec.channel != c) {
+                    continue;
+                }
+                items.push(item(
+                    spec.name.to_string(),
+                    StyleCompleteKind::Setter,
+                    Some(format!("concern · {}", spec.channel.key())),
+                    Some(format!("{}(", spec.name)),
+                ));
+            }
+            for s in setters::setters() {
+                if !crate::concerns::is_marker(s.name) {
+                    continue;
+                }
+                if ch.is_some_and(|c| channel::channel_for_setter(s.name) != Some(c)) {
+                    continue;
+                }
+                items.push(item(
+                    s.name.to_string(),
+                    StyleCompleteKind::Setter,
+                    Some("marker".into()),
+                    Some(format!("{}(", s.name)),
+                ));
+            }
+            filter_sort(items.into_iter(), partial)
         }
         StyleCompleteContext::SetterArg {
             setter,
@@ -220,6 +238,36 @@ pub fn style_complete_for_context(
                 return Vec::new();
             };
             filter_sort(setter_arg_items(spec, host.as_deref()), partial)
+        }
+        StyleCompleteContext::ConcernSlotKey { setter, partial } => {
+            let Some(concern) = crate::concerns::find_concern(setter) else {
+                return Vec::new();
+            };
+            filter_sort(
+                concern.slots.iter().map(|s| {
+                    item(
+                        s.name.to_string(),
+                        StyleCompleteKind::ObjectKey,
+                        Some(format!("slot · {}", setter)),
+                        Some(format!("{}: ", s.name)),
+                    )
+                }),
+                partial,
+            )
+        }
+        StyleCompleteContext::ConcernSlotArg {
+            setter,
+            slot,
+            partial,
+            host,
+        } => {
+            let Some(concern) = crate::concerns::find_concern(setter) else {
+                return Vec::new();
+            };
+            let Some(slot_spec) = crate::concerns::find_slot(concern, slot) else {
+                return Vec::new();
+            };
+            filter_sort(concern_slot_arg_items(slot_spec, host.as_deref()), partial)
         }
         StyleCompleteContext::StyleRef { partial } => {
             let names = collect_style_const_names(source);
@@ -245,6 +293,23 @@ fn setter_arg_items(
     host: Option<&str>,
 ) -> impl Iterator<Item = StyleCompleteItem> {
     let mut labels: Vec<(String, StyleCompleteKind, Option<String>)> = Vec::new();
+
+    if let Some(concern) = crate::concerns::find_concern(spec.name) {
+        for composite in crate::tokens::composites_of_type(concern.name) {
+            let short = composite
+                .name
+                .strip_prefix(&format!("{}.", concern.name))
+                .or_else(|| composite.name.strip_suffix(&format!(".{}", concern.name)))
+                .unwrap_or(composite.name);
+            if !labels.iter().any(|(l, _, _)| l == short) {
+                labels.push((
+                    short.to_string(),
+                    StyleCompleteKind::Token,
+                    Some(format!("composite `{}`", composite.name)),
+                ));
+            }
+        }
+    }
 
     if spec.scale == Some("color") {
         let mut v: Vec<String> = color_paint_vocabulary(host).into_iter().collect();
@@ -276,6 +341,44 @@ fn setter_arg_items(
         ));
     }
 
+    labels
+        .into_iter()
+        .map(|(label, kind, detail)| item(label, kind, detail, None))
+}
+
+fn concern_slot_arg_items(
+    slot: &crate::concerns::ConcernSlot,
+    host: Option<&str>,
+) -> impl Iterator<Item = StyleCompleteItem> {
+    let mut labels: Vec<(String, StyleCompleteKind, Option<String>)> = Vec::new();
+    if slot.scale == Some("color") {
+        let mut v: Vec<String> = color_paint_vocabulary(host).into_iter().collect();
+        v.sort();
+        for t in v {
+            labels.push((t, StyleCompleteKind::Token, Some("color paint".into())));
+        }
+    } else if let Some(scale) = slot.scale {
+        let mut v = scales::values(scale);
+        v.sort();
+        v.dedup();
+        for t in v {
+            labels.push((
+                t,
+                StyleCompleteKind::Token,
+                Some(format!("scale `{scale}`")),
+            ));
+        }
+    }
+    for k in slot.keywords {
+        if labels.iter().any(|(l, _, _)| l == *k) {
+            continue;
+        }
+        labels.push((
+            (*k).to_string(),
+            StyleCompleteKind::Keyword,
+            Some(format!("keyword · {}", slot.name)),
+        ));
+    }
     labels
         .into_iter()
         .map(|(label, kind, detail)| item(label, kind, detail, None))
@@ -431,6 +534,13 @@ fn classify_in_style(
             b'{' => {
                 let kind = match stack.last() {
                     Some(Frame::WhenValue) => Frame::WhenMap,
+                    Some(Frame::SetterCall { name })
+                        if crate::concerns::find_concern(name).is_some() =>
+                    {
+                        Frame::SlotObject {
+                            setter: name.clone(),
+                        }
+                    }
                     Some(Frame::Object) | Some(Frame::Partial) | None => {
                         if stack.is_empty() {
                             Frame::Object
@@ -577,6 +687,30 @@ fn classify_in_style(
     }
 
     // Classify caret using stack + flags.
+    if let Some(Frame::SlotObject { setter }) = stack.last() {
+        if after_colon {
+            let slot = last_word
+                .map(|(s, e)| before[s..e].to_string())
+                .unwrap_or_default();
+            let slot_name = slot_key_before_colon(before).unwrap_or(slot);
+            return StyleCompleteContext::ConcernSlotArg {
+                setter: setter.clone(),
+                slot: slot_name,
+                partial,
+                host: host.map(|h| h.to_string()),
+            };
+        }
+        if after_comma_or_open || looks_like_object_key_position(before) {
+            return StyleCompleteContext::ConcernSlotKey {
+                setter: setter.clone(),
+                partial,
+            };
+        }
+        return StyleCompleteContext::ConcernSlotKey {
+            setter: setter.clone(),
+            partial,
+        };
+    }
     if let Some(Frame::SetterCall { name }) = stack.last() {
         return StyleCompleteContext::SetterArg {
             setter: name.clone(),
@@ -671,8 +805,25 @@ enum Frame {
     WhenValue,
     WhenMap,
     SetterCall { name: String },
+    SlotObject { setter: String },
     Paren,
     Bracket,
+}
+
+fn slot_key_before_colon(before: &str) -> Option<String> {
+    let trimmed = before.trim_end();
+    let colon = trimmed.rfind(':')?;
+    let head = trimmed[..colon].trim_end();
+    let start = head
+        .rfind(|c: char| !c.is_ascii_alphanumeric() && c != '-' && c != '_')
+        .map(|i| i + 1)
+        .unwrap_or(0);
+    let key = &head[start..];
+    if key.is_empty() {
+        None
+    } else {
+        Some(key.to_string())
+    }
 }
 
 fn classify_style_ref_head(before: &str, partial: &str) -> Option<StyleCompleteContext> {
@@ -895,8 +1046,8 @@ mod tests {
     }
 
     #[test]
-    fn bg_arg_includes_primary_and_surface_excludes_radius_and_chip_fg() {
-        let (src, off) = at_caret("style({ paint: bg(¦) })");
+    fn fill_color_slot_includes_primary_and_surface_excludes_radius_and_chip_fg() {
+        let (src, off) = at_caret("style({ paint: fill({ color: ¦ }) })");
         let items = style_complete_at(&src, None, off, None);
         let labs = labels(&items);
         assert!(labs.contains(&"primary"), "primary: {labs:?}");
@@ -962,7 +1113,7 @@ mod tests {
 
     #[test]
     fn host_chip_includes_surface_author_forms() {
-        let (src, off) = at_caret("style({ paint: bg(¦) })");
+        let (src, off) = at_caret("style({ paint: fill({ color: ¦ }) })");
         let items = style_complete_at(&src, None, off, Some("chip"));
         let labs = labels(&items);
         assert!(labs.contains(&"chip"), "chip form: {labs:?}");
@@ -978,24 +1129,13 @@ mod tests {
 
     #[test]
     fn complete_tokens_subset_of_validate_for_common_setters() {
-        for setter in ["bg", "fg", "pad", "radius"] {
+        for setter in ["radius"] {
             let (src, off) = at_caret(&format!("style({{ paint: {setter}(¦) }})"));
-            // pad is box channel; still validates under paint mis-channel at token level
-            // via validate_op — use correct channel for pad:
-            let (src, off) = if setter == "pad" {
-                at_caret("style({ box: pad(¦) })")
-            } else {
-                (src, off)
-            };
             let items = style_complete_at(&src, None, off, None);
             assert!(!items.is_empty(), "{setter} must complete something");
             // Sample up to 40 labels (stable sort) and prove validate accepts.
             for it in items.iter().take(40) {
-                let expr = if setter == "pad" {
-                    format!("style({{ box: pad({}) }})", it.label)
-                } else {
-                    format!("style({{ paint: {setter}({}) }})", it.label)
-                };
+                let expr = format!("style({{ paint: {setter}({}) }})", it.label);
                 let check = || {
                     let (_, diags) = parse::parse(&expr);
                     let bad = diags.iter().any(|d| {
@@ -1040,7 +1180,7 @@ mod tests {
 
     #[test]
     fn when_key_position() {
-        let (src, off) = at_caret("style({ paint: bg(primary), when: { ¦ } })");
+        let (src, off) = at_caret("style({ paint: fill({ color: primary }), when: { ¦ } })");
         let items = style_complete_at(&src, None, off, None);
         let labs = labels(&items);
         assert!(labs.contains(&"hover"), "when keys: {labs:?}");
@@ -1055,18 +1195,64 @@ mod tests {
         let (src, off) = at_caret("style({ paint: ¦ })");
         let items = style_complete_at(&src, None, off, None);
         let labs = labels(&items);
-        assert!(labs.contains(&"bg"), "setters: {labs:?}");
+        assert!(labs.contains(&"fill"), "setters: {labs:?}");
+        assert!(labs.contains(&"ink"), "setters: {labs:?}");
         assert!(labs.contains(&"radius"), "setters: {labs:?}");
-        // box-only setter should be filtered when channel is paint
+        // box-only concern should be filtered when channel is paint
         assert!(
-            !labs.contains(&"pad"),
-            "pad is box channel, not paint: {labs:?}"
+            !labs.contains(&"space"),
+            "space is box channel, not paint: {labs:?}"
+        );
+        assert!(labs.contains(&"elevation"), "concern setter: {labs:?}");
+    }
+
+    #[test]
+    fn border_arg_completes_concern_names() {
+        let (src, off) = at_caret("style({ paint: border(¦) })");
+        let items = style_complete_at(&src, None, off, None);
+        let labs = labels(&items);
+        assert!(labs.contains(&"subtle"), "border.subtle: {labs:?}");
+        assert!(labs.contains(&"card"), "card.border: {labs:?}");
+        assert!(labs.contains(&"dialog"), "dialog.border: {labs:?}");
+    }
+
+    #[test]
+    fn border_slot_object_keys() {
+        let (src, off) = at_caret("style({ paint: border({ ¦ }) })");
+        let items = style_complete_at(&src, None, off, None);
+        let labs = labels(&items);
+        assert!(labs.contains(&"color"), "{labs:?}");
+        assert!(labs.contains(&"width"), "{labs:?}");
+        assert!(labs.contains(&"style"), "{labs:?}");
+        assert!(!labs.contains(&"radius"), "radius is not a border slot");
+    }
+
+    #[test]
+    fn border_color_slot_completes_color_roles() {
+        let (src, off) = at_caret("style({ paint: border({ color: ¦ }) })");
+        let items = style_complete_at(&src, None, off, None);
+        let labs = labels(&items);
+        assert!(
+            labs.contains(&"primary") || labs.contains(&"muted"),
+            "{labs:?}"
+        );
+        for width in ["hairline", "control-stroke", "0", "1", "2", "8"] {
+            assert!(
+                !labs.contains(&width),
+                "width token `{width}` must not appear in color slot: {labs:?}"
+            );
+        }
+        assert!(
+            !items
+                .iter()
+                .any(|i| i.detail.as_deref() == Some("scale `border-width`")),
+            "color slot must not offer width scale: {labs:?}"
         );
     }
 
     #[test]
     fn style_ref_from_const() {
-        let src = "const filled = style({ paint: bg(primary) })\nstyle(fil¦)";
+        let src = "const filled = style({ paint: fill({ color: primary }) })\nstyle(fil¦)";
         let (src, off) = at_caret(src);
         let items = style_complete_at(&src, None, off, None);
         let labs = labels(&items);
@@ -1086,7 +1272,7 @@ mod tests {
 
     #[test]
     fn partial_prefix_filters() {
-        let (src, off) = at_caret("style({ paint: bg(pri¦) })");
+        let (src, off) = at_caret("style({ paint: fill({ color: pri¦ }) })");
         let items = style_complete_at(&src, None, off, None);
         assert!(!items.is_empty());
         for it in &items {
@@ -1101,11 +1287,11 @@ mod tests {
 
     #[test]
     fn context_detection_helpers() {
-        let src = "style({ paint: bg() })";
-        let off = offset_of(src, "bg(") + 3; // inside parens
+        let src = "style({ paint: fill() })";
+        let off = offset_of(src, "fill(") + 5; // inside parens
         let ctx = style_complete_context_at(src, off, None);
         assert!(
-            matches!(ctx, StyleCompleteContext::SetterArg { ref setter, .. } if setter == "bg"),
+            matches!(ctx, StyleCompleteContext::SetterArg { ref setter, .. } if setter == "fill"),
             "{ctx:?}"
         );
     }

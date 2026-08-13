@@ -11,8 +11,12 @@
         "$type": "color"
       },
       "border": {
-        "$value": "{color.border.default}",
-        "$type": "color"
+        "$type": "border",
+        "$value": {
+          "color": "{color.border.default}",
+          "width": "{color.border.width}",
+          "style": "solid"
+        }
       },
       "divider": {
         "$value": "{color.border.subtle}",

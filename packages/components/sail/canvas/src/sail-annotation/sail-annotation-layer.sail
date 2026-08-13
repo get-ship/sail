@@ -283,12 +283,12 @@ export default controller((props: ControllerScope<Scope>, _host?: HostBag) => {
   })
 
 </controller>
-<div style({ box: position(relative).w(full).h(full) })>  <span style({ box: display(contents), text: fontFamily(body) })>    <slot></slot>
-  <div use:overlayAction data-state={captureState()} style({ box: position(absolute).top(0).right(0).bottom(0).left(0), paint: z(dropdown).pointerEvents(none), when: { stateCapture: { paint: pointerEvents(auto) } } })>
+<div style({ box: place({ position: relative }).size({ w: full, h: full }) })>  <span style({ box: flow({ display: contents }), text: type({ family: body }) })>    <slot></slot>
+  <div use:overlayAction data-state={captureState()} style({ box: place({ position: absolute, top: 0, bottom: 0, left: 0, right: 0 }), paint: place({ z: dropdown }).pointerEvents(none), when: { stateCapture: { paint: pointerEvents(auto) } } })>
     <if {dragVisible()}>
       <div
         aria-hidden="true"
-        use:rect={dragRect()} style({ box: position(absolute).left(bind(boxLeft)).top(bind(boxTop)).w(bind(boxW)).h(bind(boxH)), paint: pointerEvents(none).bg(hover-bg).borderWidth(1).border(primary).border(dashed).radius(sm) })></div>
+        use:rect={dragRect()} style({ box: place({ position: absolute, top: bind(boxTop), left: bind(boxLeft) }).size({ w: bind(boxW), h: bind(boxH) }), paint: pointerEvents(none).fill({ color: hover-bg }).border({ color: primary, width: 1, style: dashed }).radius(sm) })></div>
     </if>
     <for {markers() as m} key={m.id}>
       <sail-annotation-marker
@@ -306,12 +306,12 @@ export default controller((props: ControllerScope<Scope>, _host?: HostBag) => {
         use:rect={popoverPos()}
         on:pointerdown={(e) => e.stopPropagation()}
 
-       style({ box: position(absolute).left(bind(boxLeft)).top(bind(boxTop)).minW(panel-min-w-md).pad(2), paint: z(sticky).bg(surface-1).fg(foreground).borderWidth(1).border(border).radius(md).shadow(lg).pointerEvents(auto) })>
+       style({ box: place({ position: absolute, top: bind(boxTop), left: bind(boxLeft) }).size({ min-w: panel-min-w-md }).space({ pad: 2 }), paint: place({ z: sticky }).fill({ color: surface-1 }).ink({ color: foreground }).border({ color: border, width: 1 }).radius(md).elevation(lg).pointerEvents(auto) })>
 
-        <textarea placeholder="Add a note…" bind:value={noteText} on:keydown={onNoteKeydown} style({ box: w(full), paint: radius(sm) })></textarea>
+        <textarea placeholder="Add a note…" bind:value={noteText} on:keydown={onNoteKeydown} style({ box: size({ w: full }), paint: radius(sm) }) />
         <row gap="2" justify="end">
-          <button type="button" on:click={cancelPending} style({ box: padX(2_5), paint: radius(sm).cursor(pointer), text: fontSize(sm) })>Cancel</button>
-          <button type="button" data-primary variant="solid" tone="primary" on:click={sendNote} style({ box: padX(2_5), paint: radius(sm).cursor(pointer), text: fontSize(sm) })>Send</button>
+          <button type="button" on:click={cancelPending} style({ box: space({ pad-x: 2_5 }), paint: radius(sm).cursor(pointer), text: type({ size: sm }) })>Cancel</button>
+          <button type="button" data-primary variant="solid" tone="primary" on:click={sendNote} style({ box: space({ pad-x: 2_5 }), paint: radius(sm).cursor(pointer), text: type({ size: sm }) })>Send</button>
         </row>
       </column>
     </if>

@@ -4,19 +4,19 @@
 -->
 
 <scope>
-  style page = { box: maxW(breakpoint-desktop).mx(auto).w(full).overflow(visible) }
-  style specimen = { box: w(full).maxW(panel-max-w-md).pad(2).overflow(visible) }
+  style page = { box: size({ w: full, max-w: breakpoint-desktop }).space({ mx: auto }).overflow({ all: visible }) }
+  style specimen = { box: size({ w: full, max-w: panel-max-w-md }).space({ pad: 2 }).overflow({ all: visible }) }
   style knobLabel = {
-    paint: fg(muted-foreground),
-    text: fontSize(xs).fontWeight(medium).tracking(wide).textCase(uppercase),
-  }
-  style sizeValue = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
-  style exampleBlock = { box: w(full).padT(2).padB(4).overflow(visible) }
+    paint: ink({ color: muted-foreground }),
+    text: type({ size: xs, weight: medium, tracking: wide, case: uppercase }),
+}
+  style sizeValue = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs }) }
+  style exampleBlock = { box: size({ w: full }).space({ pad-t: 2, pad-b: 4 }).overflow({ all: visible }) }
   style sectionLabel = {
-    paint: fg(muted-foreground),
-    text: fontSize(xs).textCase(uppercase).tracking(wide),
-  }
-  style tableW = { box: w(full).maxW(panel-max-w-md) }
+    paint: ink({ color: muted-foreground }),
+    text: type({ size: xs, tracking: wide, case: uppercase }),
+}
+  style tableW = { box: size({ w: full, max-w: panel-max-w-md }) }
 </scope>
 
 <controller>

@@ -20,6 +20,7 @@
 
 import { signal, isSignal, type Signal } from './signal'
 import type { RouteSignals } from './route-signals'
+import { navigate as runtimeNavigate } from './navigate'
 import { createScope, withScope } from './effect-scope'
 import { morph } from './morph'
 import type { LiveState, LiveSignal } from './live-state'
@@ -151,7 +152,7 @@ export async function mount<Scope = Record<string, unknown>>(
   //     from `[param]` directory segments during resolution, so a
   //     dynamic-route controller (`route.params.id()`) reads the real
   //     segment value without depending on client-side path matching.
-  seedRouteParams(opts.route, payload.params)
+  seedRouteParams(opts.route ?? globalThis.__shipRouteSignals, payload.params)
 
   // 1. Adopt SSR markup if present (morph in place), else clean-mount.
   //    The view-host shell ships SSR content inside `target` before this
@@ -185,20 +186,21 @@ export async function mount<Scope = Record<string, unknown>>(
   // (`emit/js/setup.rs` destructures it and assigns `$scope.route`); only the
   // SSR/synthesize emit self-constructs one from the manifest's
   // `construct: true` entry (`deck_core::host_context::host_context_clients`).
-  // Mount creates no fallback: there is no route implementation in this
-  // package to fall back to. A host that grants no route leaves this
-  // `undefined`, and because the compiled module still writes
-  // `$scope.route = undefined`, that undefined SPREADS OVER
-  // `controller-resolver`'s `ctx.route ?? {}` guard — the guard only protects
-  // callers that pass no `ctx.scope` at all.
+  // Missing opts.route falls back to the host port (`__shipRouteSignals`)
+  // so a mount that forgot to pass route still sees the live router object.
+  // Explicit opts.route still wins. A host that grants no route AND no
+  // port leaves this `undefined`, and because the compiled module still
+  // writes `$scope.route = undefined`, that undefined SPREADS OVER
+  // `controller-resolver`'s `ctx.route ?? {}` guard — the guard only
+  // protects callers that pass no `ctx.scope` at all.
   //
   // Flat host inject: named providers are top-level on opts (and/or under
   // `providers`, which flattens). No nested `clients` bag, no `ship` alias.
   // Spread each provider by name so an expression reading bare `X` resolves.
   // Before `...built.scope` so author scope still shadows.
   const providers = collectMountProviders(opts)
-  const route = opts.route
-  const navigate = opts.navigate ?? noop
+  const route = opts.route ?? globalThis.__shipRouteSignals
+  const navigate = opts.navigate ?? runtimeNavigate
   const baseScope: Record<string, unknown> = {
     ...providers,
     route,
@@ -555,10 +557,6 @@ function injectCss(
     target.parentNode?.insertBefore(style, target)
   }
   return style
-}
-
-function noop(_p: string): void {
-  /* default navigate */
 }
 
 // ── Live SSE channel (parallel to ui-dom's attach/live-channel) ────────

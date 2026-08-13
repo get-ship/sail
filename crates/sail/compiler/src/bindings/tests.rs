@@ -40,7 +40,7 @@ fn bind_value_emits_bind_value_binding() {
 
 #[test]
 fn bind_checked_emits_bind_checked_binding() {
-    let r = build_for("<input type=\"checkbox\" bind:checked={on} />");
+    let r = build_for("<checkbox bind:checked={on} />");
     assert_eq!(r.len(), 1);
     assert_eq!(r.get(0).unwrap().kind, BindingKind::BindChecked);
 }

@@ -17,59 +17,40 @@
     offset: number = 0
   }
 
-  style base = {
-    paint: bg(navbar).fg(navbar.foreground),
-    text: underline(none),
-  }
-  style placeBar = { box: position(relative).minH(14).padY(2).padX(4) }
-  style placeRail = { box: minH(0).padY(5).padX(4).minW(panel-rail-w).flexDir(column) }
-  style brand = { box: shrink(0).minW(0), text: fontWeight(semibold) }
+  style base = {paint: fill({ color: navbar }).ink({ color: navbar.foreground }), text: type({ decoration: none })}
+  style placeBar = {box: place({ position: relative }).size({ min-h: 12 }).space({ pad-x: 4 })}
+  style placeRail = {box: size({ min-h: 0, min-w: panel-rail-w }).space({ pad-y: 5, pad-x: 4 }).flow({ dir: column })}
+  style brand = {box: flow({ shrink: 0 }).size({ min-w: 0 }), text: type({ weight: semibold })}
   // True geometric center: fill the bar, then justify-center the pills.
   // MUST use inset(0) (or w(full)+h(full)) — left(0).right(0).top(0).bottom(0)
   // emits s-right0/s-bottom0 atoms that are often ABSENT from the global
   // skins sheet, so right/bottom stay auto and the track shrink-wraps to
   // content width at left:0 (nav stuck under the brand). inset(0) is present
   // in element-skins and fills the relative bar.
-  style centerTrack = {
-    box: position(absolute).inset(0).pointerEvents(none).minW(0),
-  }
-  style centerInner = { box: pointerEvents(auto).minW(0).maxW(full) }
-  style actions = { box: shrink(0).ms(auto).minW(0) }
+  style centerTrack = {box: place({ position: absolute, inset: 0 }).size({ min-w: 0 }).pointerEvents(none)}
+  style centerInner = {box: pointerEvents(auto).size({ min-w: 0, max-w: full })}
+  style actions = {box: flow({ shrink: 0 }).space({ ms: auto }).size({ min-w: 0 })}
 </scope>
 
 <row
   nowrap
   align="center"
   gap="4"
-  style(base, {
-    box: w(full),
-    match: {
+  style(base, {box: size({ w: full }), match: {
       placement: {
         top: placeBar,
         bottom: placeBar,
         rail: placeRail,
       },
-    },
-    compound: [
-      { sticky: true, box: position(sticky).top(bind(offset)), paint: z(sticky) },
-      {
-        autohide: true,
-        sticky: true,
-        box: position(fixed).left(0).right(0).top(0).w(full),
-        paint: z(sticky).transition(transform).duration(fast).ease(out),
-      },
-      { bordered: true, paint: borderBWidth(1).border(navbar.border) },
-      { placement: bottom, sticky: true, box: top(auto).bottom(0) },
-      { bordered: true, placement: bottom, paint: borderBWidth(0).borderTWidth(1).border(navbar.border) },
-      { bordered: true, placement: rail, paint: borderBWidth(0).borderEWidth(1).border(navbar.border) },
-      {
-        placement: rail,
-        sticky: true,
-        box: position(sticky).top(bind(offset)).bottom(0).self(start).overflowY(auto),
-        paint: z(dropdown),
-      },
-    ],
-  })
+    }, compound: [
+      {sticky: true, box: place({ position: sticky, top: bind(offset), z: sticky })},
+      {autohide: true, sticky: true, box: place({ position: fixed, left: 0, right: 0, top: 0, z: sticky }).size({ w: full }), paint: motion({ property: transform, duration: fast, ease: out })},
+      {bordered: true, paint: border({ color: navbar.border, edge: l }).border({ color: navbar.border, edge: r }).border({ color: navbar.border, edge: t }).border({ color: navbar.border, width: 1, edge: b })},
+      {placement: bottom, sticky: true, box: place({ top: auto, bottom: 0 })},
+      {bordered: true, placement: bottom, paint: border({ color: navbar.border, edge: l }).border({ color: navbar.border, edge: r }).border({ color: navbar.border, width: 0, edge: b }).border({ color: navbar.border, width: 1, edge: t })},
+      {bordered: true, placement: rail, paint: border({ color: navbar.border, edge: s }).border({ color: navbar.border, edge: t }).border({ color: navbar.border, width: 0, edge: b }).border({ color: navbar.border, width: 1, edge: e })},
+      {placement: rail, sticky: true, box: place({ position: sticky, top: bind(offset), bottom: 0, z: dropdown }).flow({ self: start }).overflow({ y: auto })},
+    ]})
 >
   <row inline nowrap align="center" justify="start" gap="2" style(brand)>
     <slot name="brand"></slot>

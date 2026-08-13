@@ -96,7 +96,7 @@ in `PipelineOutput.html` and in the raster.
 - No full CSR fidelity: no timers, no `query()`, no pure-`derived` evaluation.
 - Nested components / custom elements still paint as placeholders when unknown
   to the static layout tree.
-- `deck-ssr` isomorphism (hydration markers, form PE actions) is **not**
+- `deck-ssr` isomorphism (hydration markers, progressive-enhancement form actions) is **not**
   reproduced; static projection is paint-honest for S-tier initials only.
 - **Unevaluable `<if>` / `<for>`:** both branches / the loop body are **dropped**
   from the paint tree (empty hole + `dynamics` entry for the cond/`of` expr).

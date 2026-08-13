@@ -115,7 +115,7 @@ export function createShanty() {
   const theme = signal('sail')
 
   // Nested frame: theme + mode (C-TH-NEST-1). Template binds theme=;
-  // applyNestedTheme stamps data-mode (data-* banned in app .sail markup).
+  // applyNestedTheme stamps mode= (data-* banned in app .sail markup).
   // Host is handed via use:bindFrame — never ambient getElementById.
   let frameHost: SailHost | null = null
 

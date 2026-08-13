@@ -123,6 +123,50 @@ describe('component token write behavior', () => {
   })
 })
 
+describe('composite component knobs (SPIN-3)', () => {
+  it('dialog.border / card.border members label as one face', async () => {
+    const { compositeForPath, componentKnobLabel } = await import('../src/design')
+    const color = compositeForPath('component.dialog.border.color')
+    expect(color?.name).toBe('dialog.border')
+    expect(color?.member).toBe('color')
+    const width = compositeForPath('component.card.border.width')
+    expect(width?.name).toBe('card.border')
+    expect(width?.member).toBe('width')
+    expect(componentKnobLabel('component.dialog.border.color', 'border')).toBe(
+      'dialog.border · color',
+    )
+    expect(componentKnobLabel('component.card.border.style', 'border')).toBe(
+      'card.border · style',
+    )
+    expect(compositeForPath('component.dialog.bg')).toBeNull()
+  })
+
+  it('size / type / elevation composites fold as faces, not pad-on-size', async () => {
+    const { compositeForPath, componentKnobLabel, listTokenGroups, getKnob } = await import(
+      '../src/design'
+    )
+    expect(compositeForPath('size.control-md.h')?.name).toBe('size.control-md')
+    expect(compositeForPath('size.control-md.h')?.member).toBe('h')
+    expect(componentKnobLabel('size.control-md.h', 'h')).toBe('size.control-md · h')
+    expect(compositeForPath('size.control-md.pad')).toBeNull()
+    expect(compositeForPath('size.control-sm')?.member).toBe('')
+
+    expect(compositeForPath('type.heading.family')?.name).toBe('type.heading')
+    expect(componentKnobLabel('type.heading.size', 'size')).toBe('type.heading · size')
+    expect(compositeForPath('elevation.sm.shadow')?.name).toBe('elevation.sm')
+    expect(componentKnobLabel('elevation.sm.shadow', 'shadow')).toBe('elevation.sm · shadow')
+    expect(compositeForPath('fill.surface.color')?.name).toBe('fill.surface')
+
+    const groups = listTokenGroups()
+    for (const id of ['size', 'type', 'elevation', 'fill', 'ink']) {
+      expect(groups.some((g) => g.id === id)).toBe(true)
+    }
+    const sizeGroup = groups.find((g) => g.id === 'size')
+    expect(sizeGroup?.knobs.some((k) => k.path.includes('pad'))).toBe(false)
+    expect(getKnob('size.control-md.h')?.label).toBe('size.control-md · h')
+  })
+})
+
 describe('component state leaf parking (SPEC-D1 rest-only)', () => {
   it('parked hover storage leaf write is a hard error (not a silent look no-op)', async () => {
     const { setTokenValue } = await import('../src/design')

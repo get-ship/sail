@@ -111,7 +111,6 @@ monologue, or process ids (`job/…`, `task #N`, mission paths). Enforced by
 | `bun run typecheck` | Law | `scripts/typecheck-components.mjs` (also runs `gen-component-types`) |
 | `cargo install --path crates/deck/deck-cli --bin sail` | Product tool | Public CLI (`dev`, `build`, `check`, `lsp`, `mcp`, …) |
 | `cd apps/sail-site && bun run qa` / `qa:fast` / `qa:probe` | Recipe | Layout probe (`qa/probe.mjs`); needs dev server |
-| `cd apps/sail-site && bun run qa:l1` | Recipe | L1 conformance (`packages/sail/l1-conformance/run.mjs`); own harness, not under `qa/` |
 
 ### `scripts/` (repo root — curated; ≤2 files)
 
@@ -135,7 +134,6 @@ Repo sanitization / boundary guards live under `tests/hygiene/` (`bun run test:h
 | Path | Class | Notes |
 |------|-------|-------|
 | `probe.mjs` | Recipe | Deterministic layout/contrast probe; `bun run qa` |
-| `behavior.mjs` | Recipe | Prop / overlay / surface-consistency harness (manual) |
 
 One-off screenshot helpers (`snap-cell`, `snap-hero`, `inspect-catalog`) and the thinner `sweep.mjs` (superseded by `probe --sweep`) were removed.
 

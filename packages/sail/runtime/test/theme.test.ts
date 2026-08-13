@@ -259,10 +259,10 @@ describe('theme.applyScope — host only + teardown', () => {
     expect(sibling.style.getPropertyValue('--primary')).toBe('')
   })
 
-  it('sets framework theme + data-mode only (never data-theme / data-theme-preview)', () => {
+  it('sets framework theme + mode only (never data-theme / data-theme-preview)', () => {
     theme.applyScope(asSailHost(host), { doc: sampleDoc({ themeId: 'paper' }), mode: 'dark' })
     expect(host.getAttribute('theme')).toBe('paper')
-    expect(host.getAttribute('data-mode')).toBe('dark')
+    expect(host.getAttribute('mode')).toBe('dark')
     expect(host.hasAttribute('data-theme')).toBe(false)
     expect(host.hasAttribute('data-theme-preview')).toBe(false)
   })
@@ -274,7 +274,7 @@ describe('theme.applyScope — host only + teardown', () => {
     expect(host.style.getPropertyValue('--primary')).toBe('')
     expect(host.style.getPropertyValue('--background')).toBe('')
     expect(host.hasAttribute('theme')).toBe(false)
-    expect(host.hasAttribute('data-mode')).toBe(false)
+    expect(host.hasAttribute('mode')).toBe(false)
     expect(host.hasAttribute('data-theme')).toBe(false)
   })
 
@@ -298,7 +298,7 @@ describe('theme.applyScope — host only + teardown', () => {
       mode: 'dark',
     })
     expect(host.style.getPropertyValue('--primary')).toBe('oklch(0.9 0.1 200)')
-    expect(host.getAttribute('data-mode')).toBe('dark')
+    expect(host.getAttribute('mode')).toBe('dark')
   })
 
   it('does not use :root session maps (applyScope ≠ preview)', () => {

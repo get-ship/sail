@@ -25,7 +25,7 @@ import { fileURLToPath } from 'node:url'
 import { parseThemeList, isDarkTheme } from '../../../packages/sail/tokens/src/qa-themes.mjs'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
-const BASE = process.env.SAIL_PROBE_BASE ?? process.env.SAIL_BEHAVIOR_BASE ?? 'http://127.0.0.1:7890'
+const BASE = process.env.SAIL_PROBE_BASE ?? 'http://127.0.0.1:7890'
 // Empty-by-contract: these render nothing at the host BY DESIGN, so an
 // EMPTY-RENDER on them is expected, not a defect. sail-portal teleports its
 // children out of the host; sail-toast-host is an empty stack until a notify
@@ -52,7 +52,7 @@ const SKIP = new Set(['style', 'slot', 'script', 'template', 'link', 'meta', 'de
 export async function probe(page, tag, theme) {
   await page.evaluate(([t, d]) => {
     const r = document.documentElement
-    r.setAttribute('theme', t); r.setAttribute('data-mode', d ? 'dark' : 'light'); r.classList.remove('dark')
+    r.setAttribute('theme', t); r.setAttribute('mode', d ? 'dark' : 'light'); r.classList.remove('dark')
   }, [theme, isDarkTheme(theme)])
   await page.waitForTimeout(350)
   return page.evaluate(({ tag, SKIP }) => {

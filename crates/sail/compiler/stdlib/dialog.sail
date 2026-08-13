@@ -19,29 +19,17 @@
   // pad 0 — air lives on >header / >section / >footer (DIALOG_MAP). Flat content
   // without those gets a :has() floor in the map. h(fit) keeps inset:0 from
   // stretching the shell to the full viewport.
-  style base = { box: position(fixed).inset(0).m(auto).pad(0).w(full).maxW(panel-max-w-md).minW(panel-max-w-sm).overflow(hidden), paint: borderWidth(1).border(dialog.border).radius(xl).bg(dialog).fg(dialog.foreground).shadow(xl), text: fontFamily(body) }
-  style open = { box: display(flex).flexDir(column).h(fit).maxH(panel-vh-md) }
-  style sizeSm = { box: maxW(panel-max-w-sm).minW(0) }
-  style sizeMd = { box: maxW(panel-max-w-md) }
-  style sizeLg = { box: maxW(panel-max-w-lg) }
-  style sizeFull = { box: maxW(full).maxH(full).minW(0).h(full) }
+  style base = {box: place({ position: fixed, inset: 0 }).space({ m: auto, pad: 0 }).size({ w: full, max-w: panel-max-w-md, min-w: panel-max-w-sm }).overflow({ all: hidden }), paint: border(dialog).radius(xl).fill({ color: dialog }).ink({ color: dialog.foreground }).elevation(xl), text: type({ family: body })}
+  style open = {box: flow({ display: flex, dir: column }).size({ h: fit, max-h: panel-vh-md })}
+  style sizeSm = {box: size({ max-w: panel-max-w-sm, min-w: 0 })}
+  style sizeMd = {box: size({ max-w: panel-max-w-md })}
+  style sizeLg = {box: size({ max-w: panel-max-w-lg })}
+  style sizeFull = {box: size({ max-w: full, max-h: full, min-w: 0, h: full })}
   // Side sheets: radius/inset floor; edge margin + 100vh width live in DIALOG_MAP.
-  style sideEdge = { box: inset(0).maxW(panel-max-w-sm).m(0), paint: radius(none) }
-  style sideBand = { box: inset(0).w(full).maxW(none).m(0), paint: radius(none) }
+  style sideEdge = {box: place({ inset: 0 }).size({ max-w: panel-max-w-sm }).space({ m: 0 }), paint: radius(none)}
+  style sideBand = {box: place({ inset: 0 }).size({ w: full, max-w: none }).space({ m: 0 }), paint: radius(none)}
 </scope>
 
-<dialog style(base, {
-  when: { open: open },
-  match: {
-    size: { sm: sizeSm, md: sizeMd, lg: sizeLg, full: sizeFull },
-    side: {
-      center: { box: m(auto) },
-      start: sideEdge,
-      end: sideEdge,
-      top: sideBand,
-      bottom: sideBand,
-    },
-  },
-})>
+<dialog style(base, {when: { open: open }, match: {size: { sm: sizeSm, md: sizeMd, lg: sizeLg, full: sizeFull }, side: {center: {box: space({ m: auto })}, start: sideEdge, end: sideEdge, top: sideBand, bottom: sideBand}}})>
   <slot></slot>
 </dialog>

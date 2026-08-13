@@ -17,7 +17,7 @@ export default controller(() => {
       themes: (): Theme[] => THEMES,
       active,
       // applyTheme is the only writer of the page theme (data-theme +
-      // data-mode on <html>). Components repaint because they read tokens,
+      // mode on <html>). Components repaint because they read tokens,
       // not colors. persistTheme keeps the choice across reloads.
       pick: (id: ThemeId): void => {
         applyTheme(id)
@@ -29,10 +29,10 @@ export default controller(() => {
 </controller>
 
 <scope>
-  style muted = { paint: fg(muted-foreground) }
-  style preview = { box: pad(4), paint: radius(lg).borderWidth(1).border(border).bg(background).fg(foreground) }
-  style title = { text: fontSize(sm) }
-  style body = { paint: fg(muted-foreground), text: fontSize(sm) }
+  style muted = { paint: ink({ color: muted-foreground }) }
+  style preview = { box: space({ pad: 4 }), paint: radius(lg).border({ color: border, width: 1 }).fill({ color: background }).ink({ color: foreground }) }
+  style title = { text: type({ size: sm }) }
+  style body = { paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
   type PinnedPreviewProps = { pin: string }
 </scope>
 

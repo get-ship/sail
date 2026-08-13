@@ -11,13 +11,10 @@
   }
 
   // Track/fill ride component.progress tokens (global fallbacks in the pack).
-  style base = {
-    box: display(inline-block).w(full).h(2).overflow(hidden),
-    paint: appearance(none).align(middle).borderWidth(0).radius(full).bg(progress).fg(progress.fill),
-  }
-  style sizeSm = { box: h(1_5) }
-  style sizeMd = { box: h(2) }
-  style sizeLg = { box: h(3) }
+  style base = {box: flow({ display: inline-block }).size({ w: full, h: 2 }).overflow({ all: hidden }), paint: appearance(none).align(middle).border({ width: 0 }).radius(full).fill({ color: progress }).ink({ color: progress.fill })}
+  style sizeSm = {box: size({ h: 1_5 })}
+  style sizeMd = {box: size({ h: 2 })}
+  style sizeLg = {box: size({ h: 3 })}
 </scope>
 
 <progress style(base, {

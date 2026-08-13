@@ -6,7 +6,7 @@ export const meta = {
   key: 'file',
   category: 'inputs',
   kind: 'host',
-  blurb: 'Opens the system file picker. Use dropzone for drag-and-drop.',
+  blurb: 'System file picker. variant="drop" is the drag-and-drop surface.',
   heading: '<file>',
   host: 'doc-file',
   stageOwnsKnobs: true,

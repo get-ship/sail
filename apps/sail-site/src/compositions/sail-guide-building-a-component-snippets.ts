@@ -7,12 +7,12 @@ import { signal, derived } from '@ship/sail-runtime'
 export const code = {
   // Step 1 — markup only. No props, no controller: a .sail file with nothing
   // but a template is a valid component.
-  markup: `<card style({ box: pad(4).w(full).maxW(panel-max-w-sm) })>
+  markup: `<card style({ box: space({ pad: 4 }).size({ w: full, max-w: panel-max-w-sm }) })>
   <column gap="3">
     <row align="center" justify="between" nowrap>
-      <strong style({ text: textCase(uppercase).tracking(wide).fontSize(sm) })>
+      <strong style({ text: type({ size: sm, tracking: wide, case: uppercase }) })>
         Dinner</strong>
-      <span style({ paint: fg(muted-foreground), text: fontFamily(mono).fontSize(sm) })>
+      <span style({ paint: ink({ color: muted-foreground }), text: type({ family: mono, size: sm }) })>
         $96.00</span>
     </row>
   </column>
@@ -26,12 +26,12 @@ export const code = {
   }
 </scope>
 
-<card style({ box: pad(4).w(full).maxW(panel-max-w-sm) })>
+<card style({ box: space({ pad: 4 }).size({ w: full, max-w: panel-max-w-sm }) })>
   <column gap="3">
     <row align="center" justify="between" nowrap>
-      <strong style({ text: textCase(uppercase).tracking(wide).fontSize(sm) })>
+      <strong style({ text: type({ size: sm, tracking: wide, case: uppercase }) })>
         {label()}</strong>
-      <span style({ paint: fg(muted-foreground), text: fontFamily(mono).fontSize(sm) })>
+      <span style({ paint: ink({ color: muted-foreground }), text: type({ family: mono, size: sm }) })>
         {total()}</span>
     </row>
   </column>
@@ -60,11 +60,11 @@ export default controller((ctx) => {
   counterRow: `<row align="center" justify="between" nowrap gap="3">
   <row align="center" gap="2" nowrap>
     <button size="sm" variant="outline" on:click={() => remove()} label="One fewer person">−</button>
-    <span style({ box: w(8), text: fontFamily(mono).fontSize(sm).nums(tabular).textAlign(center) })>
+    <span style({ box: size({ w: 8 }), text: type({ family: mono, size: sm, align: center, nums: tabular }) })>
       {people()}</span>
     <button size="sm" variant="outline" on:click={() => add()} label="One more person">+</button>
   </row>
-  <span style({ text: fontFamily(mono).fontSize(2xl).nums(tabular) })>
+  <span style({ text: type({ family: mono, size: 2xl, nums: tabular }) })>
     {share()}</span>
 </row>`,
 
@@ -76,7 +76,7 @@ export default controller((ctx) => {
 
   // Step 6 — using the finished component from a page.
   usage: `<bill-split label="Dinner" total="96">
-  <p slot="note" style({ paint: fg(muted-foreground), text: fontSize(xs) })>
+  <p slot="note" style({ paint: ink({ color: muted-foreground }), text: type({ size: xs }) })>
     Tip included. Arguments not.
   </p>
 </bill-split>`,

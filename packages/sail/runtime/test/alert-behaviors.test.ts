@@ -71,7 +71,7 @@ describe('liveRegion / dismissControl (alert use: stack)', () => {
   })
 
   it('liveRegion: first paint syncs without waiting for observer', () => {
-    // Static PE attrs are status/polite; action must overwrite on attach.
+    // Static host props are status/polite; action must overwrite on attach.
     const el = makeAlert({ tone: 'destructive' })
     expect(el.getAttribute('role')).toBe('status')
     liveRegion(el)

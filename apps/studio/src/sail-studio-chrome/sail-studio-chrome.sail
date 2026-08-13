@@ -3,22 +3,22 @@
   Rail: Edit · Components · Themes · Tasks · Config (Checks = status panel).
 -->
 <scope>
-  style shellRoot = { box: w(full).minH(screen).h(screen).minW(0).overflow(hidden), paint: bg(background).fg(foreground) }
-  style railItem = { box: w(10).h(10).minW(10).minH(10), paint: radius(md).fg(muted-foreground), when: { hover: { paint: bg(hover-bg).fg(foreground) }, current: { paint: bg(selected-bg).fg(primary) } } }
-  style exitBtn = { box: w(10).h(10).minW(10).minH(10), paint: radius(md).fg(muted-foreground).bg(transparent).borderWidth(0).cursor(pointer), when: { hover: { paint: bg(hover-bg).fg(foreground) } } }
-  style centerFill = { box: w(full).h(full) }
-  style mainCol = { box: grow(1).minW(0).minH(0).basis(0).overflow(hidden).h(full) }
-  style batchTray = { box: shrink(0).padX(3).h(7).minH(7), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1) }
-  style batchLabel = { paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold) }
-  style grow1 = { box: grow(1) }
-  style contentRow = { box: grow(1).minW(0).minH(0).basis(0).overflow(hidden).h(full) }
-  style surfaceSlot = { box: grow(1).minW(0).minH(0).basis(0).overflow(hidden).h(full) }
-  style statusBar = { box: shrink(0).minW(0).h(6).minH(6).padX(3).overflow(hidden), paint: borderTWidth(1).borderT(border).bg(surface-0).fg(muted-foreground) }
-  style statusLine = { box: grow(1).minW(0), text: fontFamily(mono).fontSize(xs).truncate() }
-  style statusMeta = { box: shrink(0), text: fontSize(xs) }
-  style statusMuted = { box: shrink(0), paint: fg(muted-foreground), text: fontSize(xs) }
-  style findingsBtn = { box: shrink(0).padX(2).h(6).minH(6) }
-  style healthChip = { box: shrink(0).padX(1), when: { hover: { paint: bg(hover-bg) } } }
+  style shellRoot = { box: size({ w: full, h: screen, min-w: 0, min-h: screen }).overflow({ all: hidden }), paint: fill({ color: background }).ink({ color: foreground }) }
+  style railItem = { box: size({ w: 10, h: 10, min-w: 10, min-h: 10 }), paint: radius(md).ink({ color: muted-foreground }), when: { hover: { paint: fill({ color: hover-bg }).ink({ color: foreground }) }, current: { paint: fill({ color: selected-bg }).ink({ color: primary }) } } }
+  style exitBtn = { box: size({ w: 10, h: 10, min-w: 10, min-h: 10 }), paint: radius(md).ink({ color: muted-foreground }).fill({ color: transparent }).border({ width: 0 }).cursor(pointer), when: { hover: { paint: fill({ color: hover-bg }).ink({ color: foreground }) } } }
+  style centerFill = { box: size(full) }
+  style mainCol = { box: flow({ grow: 1 }).size({h: full, min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }) }
+  style batchTray = { box: flow({ shrink: 0 }).space({ pad-x: 3 }).size({ h: 7, min-h: 7 }), paint: border({ edge: b, color: border-subtle, width: 1 }).fill({ color: surface-1 }) }
+  style batchLabel = { paint: ink({ color: muted-foreground }), text: type({ size: xs, weight: semibold }) }
+  style grow1 = { box: flow({ grow: 1 }) }
+  style contentRow = { box: flow({ grow: 1 }).size({h: full, min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }) }
+  style surfaceSlot = { box: flow({ grow: 1 }).size({h: full, min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }) }
+  style statusBar = { box: flow({ shrink: 0 }).size({ h: 6, min-w: 0, min-h: 6 }).space({ pad-x: 3 }).overflow({ all: hidden }), paint: border({ edge: t, color: border, width: 1 }).fill({ color: surface-0 }).ink({ color: muted-foreground }) }
+  style statusLine = { box: flow({ grow: 1 }).size({ min-w: 0 }), text: type({ family: mono, size: xs, wrap: truncate }) }
+  style statusMeta = { box: flow({ shrink: 0 }), text: type({ size: xs }) }
+  style statusMuted = { box: flow({ shrink: 0 }), paint: ink({ color: muted-foreground }), text: type({ size: xs }) }
+  style findingsBtn = { box: flow({ shrink: 0 }).space({ pad-x: 2 }).size({ h: 6, min-h: 6 }) }
+  style healthChip = { box: flow({ shrink: 0 }).space({ pad-x: 1 }), when: { hover: { paint: fill({ color: hover-bg }) } } }
 </scope>
 
 <controller>

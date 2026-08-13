@@ -1,15 +1,15 @@
 <!--
   <studio-activity-bar> — VS Code activity rail.
-  Outer w(12); items w/h 10 with padX(1). overflow visible so right tooltips are not clipped.
+  Outer width 12; items 10×10 with pad-x 1. overflow visible so right tooltips are not clipped.
   Slots: brand, default (items), footer.
 -->
 <scope>
-  style railRoot = { box: shrink(0).display(flex).flexDir(column).w(12).minW(12).maxW(12).minH(0).h(full).overflow(visible), paint: bg(surface-0).borderRWidth(1).borderR(border) }
-  style brandSlot = { box: shrink(0).w(full).h(12).minH(12).padX(1).padY(1), paint: borderBWidth(1).borderB(border-subtle) }
-  style brandMark = { box: w(10).h(10).minW(10).minH(10), paint: radius(md).bg(surface-1).fg(muted-foreground).borderWidth(1).border(border-subtle) }
-  style itemsCol = { box: shrink(0).w(full).padY(2).padX(1) }
-  style spacer = { box: grow(1).minH(0) }
-  style footerCol = { box: shrink(0).w(full).padY(2).padX(1), paint: borderTWidth(1).borderT(border-subtle) }
+  style railRoot = { box: flow({ display: flex, dir: column, shrink: 0 }).size({ w: 12, h: full, min-w: 12, min-h: 0, max-w: 12 }).overflow({ all: visible }), paint: fill({ color: surface-0 }).border({ edge: r, color: border, width: 1 }) }
+  style brandSlot = { box: flow({ shrink: 0 }).size({ w: full, h: 12, min-h: 12 }).space({ pad-x: 1, pad-y: 1 }), paint: border({ edge: b, color: border-subtle, width: 1 }) }
+  style brandMark = { box: size({ w: 10, h: 10, min-w: 10, min-h: 10 }), paint: radius(md).fill({ color: surface-1 }).ink({ color: muted-foreground }).border({ color: border-subtle, width: 1 }) }
+  style itemsCol = { box: flow({ shrink: 0 }).size({ w: full }).space({ pad-x: 1, pad-y: 2 }) }
+  style spacer = { box: flow({ grow: 1 }).size({ min-h: 0 }) }
+  style footerCol = { box: flow({ shrink: 0 }).size({ w: full }).space({ pad-x: 1, pad-y: 2 }), paint: border({ edge: t, color: border-subtle, width: 1 }) }
 </scope>
 
 <nav label="Studio activities" style(railRoot)>

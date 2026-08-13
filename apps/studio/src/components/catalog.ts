@@ -16,7 +16,7 @@ function attrType(a: CatalogAttribute): string {
   return a.type.text || 'unknown'
 }
 
-function mapProps(attrs: CatalogAttribute[] | undefined): ComponentProp[] {
+function mapProps(attrs: readonly CatalogAttribute[] | undefined): ComponentProp[] {
   if (!Array.isArray(attrs)) return []
   return attrs
     .filter((a) => a?.name)

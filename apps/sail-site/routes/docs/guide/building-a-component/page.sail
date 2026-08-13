@@ -4,12 +4,12 @@
 -->
 
 <scope>
-  style page = { box: maxW(breakpoint-tablet).mx(auto) }
-  style eyebrow = { box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
-  style lead = { paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) }
-  style mutedSm = { paint: fg(muted-foreground), text: fontSize(sm) }
-  style mutedXs = { paint: fg(muted-foreground), text: fontSize(xs) }
-  style footNav = { box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) }
+  style page = { box: size({ max-w: breakpoint-tablet }).space({ mx: auto }) }
+  style eyebrow = { box: space({ mb: 2 }), paint: ink({ color: accent }), text: type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
+  style lead = { paint: ink({ color: muted-foreground }), text: type({ size: lg, leading: relaxed }) }
+  style mutedSm = { paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
+  style mutedXs = { paint: ink({ color: muted-foreground }), text: type({ size: xs }) }
+  style footNav = { box: space({ pad-t: 4, mt: 8 }), paint: border({ color: border, width: 1, edge: t }) }
 </scope>
 
 <controller>
@@ -100,16 +100,16 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <p>
     There is no stylesheet and no <code>&lt;style&gt;</code> block. Attach
     <strong>Style</strong> as a block statement on the host:
-    <code>style&#40;&#123; box: pad(4), paint: fg(muted-foreground), text: fontSize(sm) &#125;&#41;</code>.
+    <code>style&#40;&#123; box: space(&#123; pad: 4 &#125;), paint: ink(&#123; color: muted-foreground &#125;), text: type(&#123; size: sm &#125;) &#125;&#41;</code>.
     Channels group the setters — <code>box</code> for space and size,
     <code>paint</code> for color and border, <code>text</code> for type.
-    Values are design tokens: <code>fontSize(sm)</code>,
-    <code>fg(muted-foreground)</code>, <code>pad(4)</code>. Prefer
+    Values are design tokens: <code>type(&#123; size: sm &#125;)</code>,
+    <code>ink(&#123; color: muted-foreground &#125;)</code>, <code>space(&#123; pad: 4 &#125;)</code>. Prefer
     <code>style name = &#123; … &#125;</code> in scope when the same paint
     repeats, then attach <code>style&#40;name&#41;</code>.
   </p>
   <p>
-    The values are a closed set. <code>fg(muted-foreground)</code> compiles;
+    The values are a closed set. <code>ink(&#123; color: muted-foreground &#125;)</code> compiles;
     a hex code or a pixel value does not, and the error names what you may
     use instead. That is what keeps a component readable under all nine
     themes: it never names a color, only a role. Utility-string hosts
@@ -117,9 +117,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   </p>
   <p>
     Two setters above are worth naming.
-    <code>fontFamily(mono)</code> with <code>nums(tabular)</code> gives
+    <code>type(&#123; family: mono &#125;)</code> with <code>type(&#123; nums: tabular &#125;)</code> gives
     digits a fixed width, so the total does not jitter as it recalculates.
-    <code>maxW(panel-max-w-sm)</code> stops the card from stretching to the
+    <code>size(&#123; max-w: panel-max-w-sm &#125;)</code> stops the card from stretching to the
     width of the page.
   </p>
 

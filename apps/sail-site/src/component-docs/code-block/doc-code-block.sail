@@ -4,25 +4,35 @@
 -->
 
 <scope>
-  style page = { box: maxW(breakpoint-desktop).mx(auto).w(full) }
-  style specimen = { box: w(panel-max-w-md).maxW(full) }
-  style fullW = { box: w(full) }
-  style mutedXs = { paint: fg(muted-foreground), text: fontSize(xs) }
+  style page = { box: size({ w: full, max-w: breakpoint-desktop }).space({ mx: auto }) }
+  style specimen = { box: size({ w: panel-max-w-md, max-w: full }) }
+  style fullW = { box: size({ w: full }) }
+  style mutedXs = { paint: ink({ color: muted-foreground }), text: type({ size: xs }) }
   style knobLabel = {
-    paint: fg(muted-foreground),
-    text: fontSize(xs).fontWeight(medium).tracking(wide).textCase(uppercase),
-  }
-  style exampleBlock = { box: w(full).padT(2).padB(4) }
-  style sectionLabel = { paint: fg(muted-foreground), text: fontSize(xs).textCase(uppercase).tracking(wide) }
+    paint: ink({ color: muted-foreground }),
+    text: type({ size: xs, weight: medium, tracking: wide, case: uppercase }),
+}
+  style exampleBlock = { box: size({ w: full }).space({ pad-t: 2, pad-b: 4 }) }
+  style sectionLabel = { paint: ink({ color: muted-foreground }), text: type({ size: xs, tracking: wide, case: uppercase }) }
 </scope>
 
 <controller>
 import type { Scope } from './doc-code-block.sail'
 import { DETAILS } from '../../compositions/component-details'
+import {
+  CB_MARKUP,
+  CB_PLAIN,
+  CB_SIGNAL,
+  cbExBasic,
+  cbExMarkup,
+  cbExPlain,
+  codeBlockSnippet,
+  sampleForLang,
+} from '../../compositions/code-block-snippets'
 
 export default controller((_ctx: Scope) => {
   const lang = signal('sail')
-  const code = signal('const n = signal(0)\nconst double = derived(() => n() * 2)')
+  const code = signal(CB_SIGNAL)
 
   const entry = DETAILS['code-block']
   const heading = () => entry.heading
@@ -30,31 +40,11 @@ export default controller((_ctx: Scope) => {
   const props = () => entry.props
   const usageCode = () => entry.usage
 
-  const specimenCode = derived(() => {
-    const escaped = code().replace(/\\/g, '\\\\').replace(/'/g, "\\'")
-    const a: string[] = [`code={'${escaped}'}`]
-    if (lang() !== 'sail') a.push(`lang="${lang()}"`)
-    else a.push('lang="sail"')
-    return `<code-block\n  ${a.join('\n  ')}\n></code-block>`
-  })
-
+  const specimenCode = derived(() => codeBlockSnippet(code(), lang()))
   const setLang = (l: string): void => {
     lang.set(l)
-    if (l === 'ts') {
-      code.set('const n = signal(0)\nconst double = derived(() => n() * 2)')
-    } else if (l === 'css') {
-      code.set('.chip {\n  border-radius: var(--radius-full);\n}')
-    } else {
-      code.set('<button variant="solid" tone="primary">Save</button>')
-    }
+    code.set(sampleForLang(l))
   }
-
-  const cbExBasic = () =>
-    `<code-block\n  code={'const n = signal(0)'}\n  lang="sail"\n></code-block>`
-  const cbExMarkup = () =>
-    `<code-block\n  code={'<button variant="solid">Save</button>'}\n  lang="sail"\n></code-block>`
-  const cbExPlain = () =>
-    `<code-block code={'// your source here'}></code-block>`
 
   return {
     lang,
@@ -68,6 +58,9 @@ export default controller((_ctx: Scope) => {
     cbExBasic,
     cbExMarkup,
     cbExPlain,
+    CB_SIGNAL,
+    CB_MARKUP,
+    CB_PLAIN,
   }
 })
 </controller>
@@ -107,7 +100,7 @@ export default controller((_ctx: Scope) => {
           rows="6"
           placeholder="source text"
           style(fullW)
-        ></textarea>
+        />
         <p style(mutedXs)>Pass source as the code string prop — not children.</p>
       </column>
     </column>
@@ -141,7 +134,7 @@ export default controller((_ctx: Scope) => {
         code={cbExMarkup()}
       >
         <code-block
-          code={'<button variant="solid" tone="primary">Save</button>'}
+          code={CB_MARKUP}
           lang="sail"
           style(specimen)
         ></code-block>

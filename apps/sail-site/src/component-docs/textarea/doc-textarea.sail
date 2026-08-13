@@ -3,21 +3,21 @@
 -->
 
 <scope>
-  style page = { box: maxW(breakpoint-desktop).mx(auto).w(full).overflow(visible) }
-  style specimen = { box: w(64).maxW(full).pad(2).overflow(visible) }
-  style controlW = { box: w(full) }
+  style page = { box: size({ w: full, max-w: breakpoint-desktop }).space({ mx: auto }).overflow({ all: visible }) }
+  style specimen = { box: size({ w: 64, max-w: full }).space({ pad: 2 }).overflow({ all: visible }) }
+  style controlW = { box: size({ w: full }) }
   style knobLabel = {
-    paint: fg(muted-foreground),
-    text: fontSize(xs).fontWeight(medium).tracking(wide).textCase(uppercase),
-  }
-  style sizeValue = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
-  style tickRow = { box: w(full).padT(1).padX(1_5) }
-  style tick = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
-  style exampleBlock = { box: w(full).padT(2).padB(4).overflow(visible) }
+    paint: ink({ color: muted-foreground }),
+    text: type({ size: xs, weight: medium, tracking: wide, case: uppercase }),
+}
+  style sizeValue = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs }) }
+  style tickRow = { box: size({ w: full }).space({ pad-x: 1_5, pad-t: 1 }) }
+  style tick = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs }) }
+  style exampleBlock = { box: size({ w: full }).space({ pad-t: 2, pad-b: 4 }).overflow({ all: visible }) }
   style sectionLabel = {
-    paint: fg(muted-foreground),
-    text: fontSize(xs).textCase(uppercase).tracking(wide),
-  }
+    paint: ink({ color: muted-foreground }),
+    text: type({ size: xs, tracking: wide, case: uppercase }),
+}
 </scope>
 
 <controller>
@@ -54,13 +54,13 @@ export default controller((_ctx: Scope) => {
     if (placeholder()) a.push(`placeholder="${placeholder()}"`)
     if (invalid()) a.push('invalid')
     if (disabled()) a.push('disabled')
-    return `<textarea ${a.join(' ')}></textarea>`
+    return `<textarea ${a.join(' ')} />`
   })
 
   const exBind = () =>
-    `<textarea rows="3" placeholder="Notes" bind:value={notes}></textarea>`
+    `<textarea rows="3" placeholder="Notes" bind:value={notes} />`
   const exSizes = () =>
-    `<textarea size="xs" rows="2" placeholder="xs"></textarea>\n<textarea size="sm" rows="2" placeholder="sm"></textarea>\n<textarea rows="2" placeholder="md"></textarea>\n<textarea size="lg" rows="2" placeholder="lg"></textarea>`
+    `<textarea size="xs" rows="2" placeholder="xs" />\n<textarea size="sm" rows="2" placeholder="sm" />\n<textarea rows="2" placeholder="md" />\n<textarea size="lg" rows="2" placeholder="lg" />`
 
   return {
     sizeIdx,
@@ -102,7 +102,7 @@ export default controller((_ctx: Scope) => {
         invalid={invalid()}
         disabled={disabled()}
         style(controlW)
-      ></textarea>
+     />
     </column>
 
     <column slot="knobs" gap="4" align="stretch">
@@ -115,13 +115,7 @@ export default controller((_ctx: Scope) => {
           <label style(knobLabel)>Size</label>
           <span style(sizeValue)>{size()}</span>
         </row>
-        <slider bind:value={sizeIdx} min="0" max="3" step="1" size="sm" label="Size"></slider>
-        <row gap="0" align="center" justify="between" style(tickRow)>
-          <span style(tick)>xs</span>
-          <span style(tick)>sm</span>
-          <span style(tick)>md</span>
-          <span style(tick)>lg</span>
-        </row>
+        <slider bind:value={sizeIdx} min="0" max="3" step="1" size="sm" label="Size" ticks="xs,sm,md,lg"></slider>
       </column>
       <column gap="2">
         <row gap="2" align="center" justify="between">
@@ -137,7 +131,7 @@ export default controller((_ctx: Scope) => {
     </column>
 
     <column slot="usage-preview" gap="3" style(specimen)>
-      <textarea rows="3" placeholder="Notes" bind:value={bio} style(controlW)></textarea>
+      <textarea rows="3" placeholder="Notes" bind:value={bio} style(controlW) />
     </column>
 
     <column gap="2" style(exampleBlock)>
@@ -147,7 +141,7 @@ export default controller((_ctx: Scope) => {
         lead="Two-way binding keeps the field and your signal in lockstep."
         code={exBind()}
       >
-        <textarea rows="3" placeholder="Notes" bind:value={bio} style(specimen)></textarea>
+        <textarea rows="3" placeholder="Notes" bind:value={bio} style(specimen) />
       </doc-example>
       <doc-example
         title="Sizes"
@@ -155,10 +149,10 @@ export default controller((_ctx: Scope) => {
         code={exSizes()}
       >
         <column gap="2" style(specimen)>
-          <textarea size="xs" rows="2" placeholder="xs"></textarea>
-          <textarea size="sm" rows="2" placeholder="sm"></textarea>
-          <textarea rows="2" placeholder="md"></textarea>
-          <textarea size="lg" rows="2" placeholder="lg"></textarea>
+          <textarea size="xs" rows="2" placeholder="xs" />
+          <textarea size="sm" rows="2" placeholder="sm" />
+          <textarea rows="2" placeholder="md" />
+          <textarea size="lg" rows="2" placeholder="lg" />
         </column>
       </doc-example>
     </column>

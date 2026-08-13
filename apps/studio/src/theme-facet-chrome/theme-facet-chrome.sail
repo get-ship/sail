@@ -3,21 +3,21 @@
   Identity bind: session={session}. Path crumb, mode switch, Save/Add, leave dialog.
 -->
 <scope>
-  style chromeRoot = { box: shrink(0).minW(0) }
-  style chromeBar = { box: shrink(0).padX(4).h(10).minH(10).minW(0).overflowX(auto), paint: borderBWidth(1).borderB(border-subtle).bg(background) }
-  style growMin = { box: grow(1).minW(0) }
-  style shrink0 = { box: shrink(0) }
-  style tapFloor = { box: shrink(0).minW(control-h-sm).minH(control-h-sm) }
-  style iconBtn = { box: shrink(0).w(control-h-sm).h(control-h-sm).minW(control-h-sm).minH(control-h-sm) }
-  style slashMuted = { paint: fg(muted-foreground), text: fontSize(sm) }
-  style nameInput = { box: maxW(48), paint: borderWidth(0), text: fontWeight(semibold) }
-  style diffMenu = { box: pad(3).minW(panel-min-w-md).maxW(panel-max-w-md) }
-  style diffTitle = { paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold) }
-  style diffPath = { paint: fg(foreground), text: fontSize(xs).fontFamily(mono).truncate() }
-  style diffDelta = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono).truncate() }
-  style diffEmpty = { paint: fg(muted-foreground), text: fontSize(xs) }
-  style modeIcon = { box: shrink(0), paint: fg(muted-foreground) }
-  style divider = { box: w(half).h(5).minW(half), paint: bg(border-subtle) }
+  style chromeRoot = { box: flow({ shrink: 0 }).size({ min-w: 0 }) }
+  style chromeBar = { box: flow({ shrink: 0 }).space({ pad-x: 4 }).size({ h: 10, min-w: 0, min-h: 10 }).overflow({ x: auto }), paint: border({ edge: b, color: border-subtle, width: 1 }).fill({ color: background }) }
+  style growMin = { box: flow({ grow: 1 }).size({ min-w: 0 }) }
+  style shrink0 = { box: flow({ shrink: 0 }) }
+  style tapFloor = { box: flow({ shrink: 0 }).size({ min-w: control-h-sm, min-h: control-h-sm }) }
+  style iconBtn = { box: flow({ shrink: 0 }).size({ w: control-h-sm, h: control-h-sm, min-w: control-h-sm, min-h: control-h-sm }) }
+  style slashMuted = { paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
+  style nameInput = { box: size({ max-w: 48 }), paint: border({ width: 0 }), text: type({ weight: semibold }) }
+  style diffMenu = { box: space({ pad: 3 }).size({ min-w: panel-min-w-md, max-w: panel-max-w-md }) }
+  style diffTitle = { paint: ink({ color: muted-foreground }), text: type({ size: xs, weight: semibold }) }
+  style diffPath = { paint: ink({ color: foreground }), text: type({ family: mono, size: xs, wrap: truncate }) }
+  style diffDelta = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs, wrap: truncate }) }
+  style diffEmpty = { paint: ink({ color: muted-foreground }), text: type({ size: xs }) }
+  style modeIcon = { box: flow({ shrink: 0 }), paint: ink({ color: muted-foreground }) }
+  style divider = { box: size({ w: half, h: 5, min-w: half }), paint: fill({ color: border-subtle }) }
 </scope>
 
 <controller>
@@ -156,7 +156,7 @@ export default controller(() => {
       <dropdown id={pathMenuId()} placement="bottom-start" on-select={onPathSelect}>
         <for {pathNav() as item} key={item.key}>
           <menu-item value={item.value}>
-            <icon name={item.icon} size="sm" style({ box: shrink(0) })></icon>
+            <icon name={item.icon} size="sm" style({ box: flow({ shrink: 0 }) })></icon>
             {item.label}
           </menu-item>
         </for>
@@ -187,7 +187,7 @@ export default controller(() => {
           <column gap="2" style(diffMenu)>
             <p style(diffTitle)>Unsaved changes</p>
             <if {hasDiffRows()}>
-              <scroll-area style({ box: maxH(48) })>
+              <scroll-area style({ box: size({ max-h: 48 }) })>
                 <column gap="2">
                   <for {diffRows() as row} key={row.key}>
                     <column gap="0" diff-row>

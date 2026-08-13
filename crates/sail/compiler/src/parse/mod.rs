@@ -53,7 +53,8 @@ pub fn parse_author(source: &str) -> Result<Program, CompileError> {
 /// Parse an ELEMENT source (element mode / the stdlib registry): identical
 /// pipeline minus the stdlib-element expansion pass — an element source may
 /// not use stdlib elements (no recursion, no element-in-element).
-pub(crate) fn parse_element_source(source: &str) -> Result<Program, CompileError> {
+/// Parse an ELEMENT source (stdlib / element mode): no stdlib-element expansion.
+pub fn parse_element_source(source: &str) -> Result<Program, CompileError> {
     parse_inner(source, false)
 }
 

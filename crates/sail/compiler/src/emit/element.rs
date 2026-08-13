@@ -18,10 +18,10 @@
 //! to `runAction` at the use site); an inline `<controller>` block is an
 //! L2-component facility and is REJECTED here (see `compile_element`).
 
-use crate::CompileError;
 use crate::diagnostics::Span;
 use crate::ir::*;
-use serde_json::{Value, json};
+use crate::CompileError;
+use serde_json::{json, Value};
 
 const RULE_ID: &str = "sail-element-mode";
 /// Spans on `Program`/`Instr` are byte offsets into the PREPROCESSED source
@@ -272,8 +272,7 @@ pub fn emit_element_with_bindings(
     } else {
         format!(".{root_class}")
     };
-    let mut skin_css = element_skin_selectors(&program.styles, &skin_root);
-    crate::stdlib::append_descendant_skin(name, &mut skin_css);
+    let skin_css = element_skin_selectors(&program.styles, &skin_root);
 
     let attributes: Vec<Value> = program
         .props

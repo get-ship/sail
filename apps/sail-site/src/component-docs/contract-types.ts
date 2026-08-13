@@ -45,14 +45,13 @@ export interface SurfaceContract {
   kind: 'host' | 'alias' | 'action' | 'keywords'
   axes: Record<string, AxisDef>
   /**
-   * Docs-only demo knobs that are not host props (e.g. progress indeterminate =
-   * omit value). Checker allowlists these for reverse fantasy checks.
+   * Docs-only demo knobs that are not host props (e.g. progress omit-value).
    */
   demoOnly?: readonly string[]
   /** component.* leaves this host actually paints (host paint only). */
   faces: readonly FaceLeaf[]
   visual: {
-    /** Zero-config / default row required in l1-conformance rows(). */
+    /** Docs configurator includes a zero-config / default rest cell. */
     defaultRow: boolean
     /** Paint-affecting axes visual rows should cross. */
     cross: readonly string[]

@@ -2,33 +2,33 @@
   <tasks-surface> — thread list + conversation + composer.
 -->
 <scope>
-  style surfaceRoot = { box: grow(1).minH(0).h(full).minW(0).overflow(hidden) }
-  style pageHeader = { box: shrink(0).h(10).padX(4), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1) }
-  style growMin = { box: grow(1).minW(0) }
-  style shrink0 = { box: shrink(0) }
-  style titleMd = { text: fontSize(md).fontWeight(semibold) }
-  style countMono = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
-  style filterOpen = { box: w(24) }
-  style filterActor = { box: w(28) }
-  style errorBand = { box: shrink(0).padX(3).h(7), paint: borderBWidth(1).borderB(border) }
-  style errorText = { box: grow(1).minW(0), paint: fg(destructive), text: fontSize(xs).truncate() }
-  style workbench = { box: grow(1).minH(0).basis(0).h(full).minW(0).overflow(hidden) }
-  style navPane = { box: grow(1).minH(0).h(full).minW(panel-min-w-md).maxW(panel-max-w-md).basis(0).overflow(hidden), paint: borderRWidth(1).borderR(border-subtle).bg(surface-1) }
-  style scrollGrow = { box: grow(1).minH(0).basis(0).h(full) }
-  style listPad = { box: padY(1).padX(1) }
-  style detailPane = { box: grow(1).minW(0).minH(0).h(full).basis(0).overflow(hidden), paint: bg(surface-0) }
-  style emptyCenter = { box: grow(1).minH(0).h(full).pad(4) }
-  style fullW = { box: w(full) }
-  style detailHead = { box: shrink(0).h(10).padX(3).minW(0), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1) }
-  style titleTruncate = { text: fontSize(md).truncate() }
-  style anchorRow = { box: shrink(0).padX(3).padY(2).minW(0), paint: borderBWidth(1).borderB(border-subtle).bg(surface-0) }
-  style pathMono = { box: grow(1).minW(0), text: fontSize(xs).fontFamily(mono).truncate() }
-  style attachRow = { box: shrink(0).padX(3).padY(2), paint: borderBWidth(1).borderB(border-subtle) }
-  style conversation = { box: grow(1).minH(0).basis(0).h(full).overflow(hidden) }
-  style mdScroll = { box: shrink(0).maxH(32).minH(0) }
-  style mdPad = { box: pad(3) }
-  style messagesHost = { box: grow(1).minH(0).h(full).w(full).basis(0) }
-  style composer = { box: shrink(0).pad(3), paint: borderTWidth(1).borderT(border-subtle).bg(surface-1) }
+  style surfaceRoot = { box: flow({ grow: 1 }).size({ h: full, min-w: 0, min-h: 0 }).overflow({ all: hidden }) }
+  style pageHeader = { box: flow({ shrink: 0 }).size({ h: 10 }).space({ pad-x: 4 }), paint: border({ edge: b, color: border-subtle, width: 1 }).fill({ color: surface-1 }) }
+  style growMin = { box: flow({ grow: 1 }).size({ min-w: 0 }) }
+  style shrink0 = { box: flow({ shrink: 0 }) }
+  style titleMd = { text: type({ size: md, weight: semibold }) }
+  style countMono = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs }) }
+  style filterOpen = { box: size({ w: 24 }) }
+  style filterActor = { box: size({ w: 28 }) }
+  style errorBand = { box: flow({ shrink: 0 }).space({ pad-x: 3 }).size({ h: 7 }), paint: border({ edge: b, color: border, width: 1 }) }
+  style errorText = { box: flow({ grow: 1 }).size({ min-w: 0 }), paint: ink({ color: destructive }), text: type({ size: xs, wrap: truncate }) }
+  style workbench = { box: flow({ grow: 1 }).size({h: full, min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }) }
+  style navPane = { box: flow({ grow: 1 }).size({h: full, min-w: panel-min-w-md, min-h: 0, max-w: panel-max-w-md, basis: 0}).overflow({ all: hidden }), paint: border({ edge: r, color: border-subtle, width: 1 }).fill({ color: surface-1 }) }
+  style scrollGrow = { box: flow({ grow: 1 }).size({h: full, min-h: 0, basis: 0}) }
+  style listPad = { box: space({ pad-x: 1, pad-y: 1 }) }
+  style detailPane = { box: flow({ grow: 1 }).size({h: full, min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }), paint: fill({ color: surface-0 }) }
+  style emptyCenter = { box: flow({ grow: 1 }).size({ h: full, min-h: 0 }).space({ pad: 4 }) }
+  style fullW = { box: size({ w: full }) }
+  style detailHead = { box: flow({ shrink: 0 }).size({ h: 10, min-w: 0 }).space({ pad-x: 3 }), paint: border({ edge: b, color: border-subtle, width: 1 }).fill({ color: surface-1 }) }
+  style titleTruncate = { text: type({ size: md, wrap: truncate }) }
+  style anchorRow = { box: flow({ shrink: 0 }).space({ pad-x: 3, pad-y: 2 }).size({ min-w: 0 }), paint: border({ edge: b, color: border-subtle, width: 1 }).fill({ color: surface-0 }) }
+  style pathMono = { box: flow({ grow: 1 }).size({ min-w: 0 }), text: type({ family: mono, size: xs, wrap: truncate }) }
+  style attachRow = { box: flow({ shrink: 0 }).space({ pad-x: 3, pad-y: 2 }), paint: border({ edge: b, color: border-subtle, width: 1 }) }
+  style conversation = { box: flow({ grow: 1 }).size({h: full, min-h: 0, basis: 0}).overflow({ all: hidden }) }
+  style mdScroll = { box: flow({ shrink: 0 }).size({ min-h: 0, max-h: 32 }) }
+  style mdPad = { box: space({ pad: 3 }) }
+  style messagesHost = { box: flow({ grow: 1 }).size({w: full, h: full, min-h: 0, basis: 0}) }
+  style composer = { box: flow({ shrink: 0 }).space({ pad: 3 }), paint: border({ edge: t, color: border-subtle, width: 1 }).fill({ color: surface-1 }) }
 </scope>
 
 <controller>

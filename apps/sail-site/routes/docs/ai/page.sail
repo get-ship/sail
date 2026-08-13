@@ -3,11 +3,11 @@
 -->
 
 <scope>
-  style page = { box: pad(0).maxW(breakpoint-tablet).mx(auto) }
-  style eyebrow = { box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
-  style lead = { paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) }
-  style callout = { box: pad(3).padX(4), paint: borderWidth(1).border(border).borderLWidth(3).borderL(primary).radius(md).fg(muted-foreground), text: fontSize(sm) }
-  style footNav = { box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) }
+  style page = { box: space({ pad: 0, mx: auto }).size({ max-w: breakpoint-tablet }) }
+  style eyebrow = { box: space({ mb: 2 }), paint: ink({ color: accent }), text: type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
+  style lead = { paint: ink({ color: muted-foreground }), text: type({ size: lg, leading: relaxed }) }
+  style callout = { box: space({ pad: 3, pad-x: 4 }), paint: border({ edge: t, color: border, width: 1 }).border({ edge: r, color: border, width: 1 }).border({ edge: b, color: border, width: 1 }).border({ edge: l, color: primary, width: 3 }).radius(md).ink({ color: muted-foreground }), text: type({ size: sm }) }
+  style footNav = { box: space({ pad-t: 4, mt: 8 }), paint: border({ color: border, width: 1, edge: t }) }
 </scope>
 
 <column style(page)>

@@ -23,58 +23,31 @@
     size: 'md' | 'sm' | 'lg' = 'md'
   }
 
-  style base = {
-    box: position(relative).display(inline-block).m(0).w(control-h-sm).h(icon-size-md),
-    paint: appearance(none).boxSizing(border).align(middle).cursor(pointer).bg(none).bg(switch).borderWidth(1).border(switch.border).radius(full).tapHighlight(none).transition(colors).duration(fast).ease(out),
-  }
-  style sizeMd = { box: w(control-h-sm).h(icon-size-md) }
-  style sizeSm = { box: w(control-h-xs).h(icon-size-sm) }
-  style sizeLg = { box: w(7).h(icon-size-lg) }
-  style thumbMd = { box: size(3) }
-  style thumbSm = { box: size(2_5) }
-  style thumbLg = { box: size(icon-size-sm) }
+  style base = {box: place({ position: relative }).flow({ display: inline-block }).space({ m: 0 }).size({ w: control-h-sm, h: icon-size-md }), paint: appearance(none).boxSizing(border).align(middle).cursor(pointer).fill({ color: switch }).border({ color: switch.border, width: 1 }).radius(full).motion({ property: colors, duration: fast, ease: out }).tapHighlight(none)}
+  style sizeMd = {box: size({ w: control-h-sm, h: icon-size-md })}
+  style sizeSm = {box: size({ w: control-h-xs, h: icon-size-sm })}
+  style sizeLg = {box: size({ w: 7, h: icon-size-lg })}
+  style thumbMd = {box: size(3)}
+  style thumbSm = {box: size(2_5)}
+  style thumbLg = {box: size(icon-size-sm)}
 </scope>
 
 <input
   type="checkbox"
-  style(base, {
-    box: shrink(0),
-    when: {
-      hover: { paint: border(muted-foreground) },
-      checked: {
-        paint: bg(primary).border(selected-border).shadow(xs),
-        when: {
-          // Track only — never host opacity wash (would fade switch.thumb).
-          hover: { paint: bg(primary).border(selected-border) },
-          // Slide the knob; paint stays switch.thumb from rest before.
-          before: { box: left(auto).right(px) },
-        },
-      },
-      focus: { paint: outline(solid).outline(2).outline(primary).outlineOffset(ring-offset) },
-      disabled: { paint: cursor(not-allowed).bg(switch).border(border).saturate(60).shadow(none) },
-      before: {
-        box: position(absolute).top(0).bottom(0).my(auto).left(px).size(3),
-        paint: content(empty).bg(switch.thumb).radius(full).shadow(sm).transition(all).duration(fast).ease(out),
-      },
-      disabled: { when: { before: { paint: shadow(xs) } } },
-      motion-reduce: { when: { before: { paint: transition(none) } } },
-      forced-colors: { paint: border(CanvasText) },
-      forced-colors: { when: { checked: { paint: bg(Highlight) }, focus: { paint: outline(CanvasText) } } },
-    },
-    match: {
+  style(base, {box: flow({ shrink: 0 }), when: {hover: {paint: border({ color: muted-foreground })}, checked: {paint: fill({ color: primary }).border({ color: selected-border }).elevation(xs), when: {// Track only — never host opacity wash (would fade switch.thumb).
+          hover: {paint: fill({ color: primary }).border({ color: selected-border })}, // Slide the knob; paint stays switch.thumb from rest before.
+          before: {box: place({ left: auto, right: px })}}}, focus: {paint: border({ style: solid, kind: outline, width: 2, color: primary, offset: ring-offset })}, disabled: {paint: cursor(not-allowed).fill({ color: switch }).border({ color: border }).filter({ saturate: 60 }).elevation(none)}, before: {box: place({ position: absolute, top: 0, bottom: 0, left: px }).space({ my: auto }).size(3), paint: content(empty).fill({ color: switch.thumb }).radius(full).elevation(sm).motion({ property: all, duration: fast, ease: out })}, disabled: {when: {before: {paint: elevation(xs)}}}, motion-reduce: {when: {before: {paint: motion({ property: none })}}}, forced-colors: {paint: border({ color: CanvasText })}, forced-colors: {when: {checked: {paint: fill({ color: Highlight })}, focus: {paint: border({ color: CanvasText, kind: outline })}}}}, match: {
       size: {
         md: style(sizeMd, { when: { before: thumbMd } }),
         sm: style(sizeSm, { when: { before: thumbSm } }),
         lg: style(sizeLg, { when: { before: thumbLg } }),
       },
-    },
-    compound: [
+    }, compound: [
       // Tone present → track (and focus) only. Thumb never leaves switch.thumb.
-      { tone: *, when: { checked: { paint: bg(tone).border(selected-border).shadow(xs) } } },
-      { tone: *, when: { checked: { when: { hover: { paint: bg(tone).border(selected-border) } } } } },
-      { tone: *, when: { focus: { paint: outline(tone) } } },
-      { tone: muted, when: { checked: { paint: bg(muted-foreground) }, focus: { paint: outline(muted-foreground) } } },
-      { tone: muted, when: { checked: { when: { hover: { paint: bg(muted-foreground) } } } } },
-    ],
-  })
+      {tone: *, when: {checked: {paint: fill({ color: tone }).border({ color: selected-border }).elevation(xs)}}},
+      {tone: *, when: {checked: {when: {hover: {paint: fill({ color: tone }).border({ color: selected-border })}}}}},
+      {tone: *, when: {focus: {paint: border({ color: tone, kind: outline })}}},
+      {tone: muted, when: {checked: {paint: fill({ color: muted-foreground })}, focus: {paint: border({ color: muted-foreground, kind: outline })}}},
+      {tone: muted, when: {checked: {when: {hover: {paint: fill({ color: muted-foreground })}}}}},
+    ]})
 >

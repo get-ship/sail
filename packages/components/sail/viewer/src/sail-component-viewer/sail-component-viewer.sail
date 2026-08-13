@@ -54,44 +54,44 @@
     onVariantChange: (detail: { variant: string }) => void
   }
   style sectionLabel = {
-    paint: fg(muted-foreground),
-    text: fontSize(xs).textCase(uppercase).tracking(wide),
+    paint: ink({ color: muted-foreground }),
+    text: type({ size: xs, tracking: wide, case: uppercase }),
   }
-  style stageSplit = { box: w(full).minW(0).minH(64).overflow(visible) }
+  style stageSplit = { box: size({ w: full, min-w: 0, min-h: 64 }).overflow({ all: visible }) }
   /**
    * Specimen canvas. pad must clear focus ring (ring-width + ring-offset ≈ 5px;
    * use pad(4)+ so knobs and specimen never clip outlines on the frame edge).
    */
   style stageCanvas = {
-    box: grow(1).basis(0).minW(0).minH(64).pad(6).overflow(visible),
+    box: flow({ grow: 1 }).size({ min-w: 0, min-h: 64 }).space({ pad: 6 }).overflow({ all: visible }),
   }
-  style specimenStack = { box: w(full).maxW(full).pad(1).overflow(visible) }
+  style specimenStack = { box: size({ w: full, max-w: full }).space({ pad: 1 }).overflow({ all: visible }) }
   /**
    * Snippet frame wraps the bordered code-block. Copy is absolute *inside*
    * that frame (top-right of the pre box). Hover-reveal; pre padE reserves
    * room so glyphs never sit under the button.
    */
   style snippetShell = {
-    box: w(full).maxW(full).position(relative),
+    box: size({ w: full, max-w: full }).place({ position: relative }),
     paint: group(),
   }
   style snippetCopy = {
-    box: position(absolute).top(3).right(3).z(2),
-    paint: bg(surface-0).fg(muted-foreground).radius(sm).opacity(0).pointerEvents(none).shadow(xs),
+    box: place({ position: absolute, top: 3, right: 3, z: 2 }),
+    paint: fill({ color: surface-0 }).ink({ color: muted-foreground }).radius(sm).filter({ opacity: 0 }).pointerEvents(none).elevation(xs),
     when: {
-      group-hover: { paint: opacity(100).pointerEvents(auto) },
+      group-hover: { paint: filter({ opacity: 100 }).pointerEvents(auto) },
     },
   }
   /** Knobs rail: space scale, never panel-* tokens. Pad for focus rings. */
   style knobColumn = {
-    box: w(64).minW(64).shrink(0).pad(5).minH(64).overflow(visible),
-    paint: borderLWidth(1).borderL(border-subtle),
+    box: size({ w: 64, min-w: 64, min-h: 64 }).flow({ shrink: 0 }).space({ pad: 5 }).overflow({ all: visible }),
+    paint: border({ edge: l, color: border-subtle, width: 1 }),
   }
   style usageFrame = {
-    box: w(full).pad(4).overflow(visible),
-    paint: radius(lg).borderWidth(1).border(border).bg(surface-0),
+    box: size({ w: full }).space({ pad: 4 }).overflow({ all: visible }),
+    paint: radius(lg).border({ color: border, width: 1 }).fill({ color: surface-0 }),
   }
-  style usagePreviewPad = { box: w(full).pad(4).overflow(visible) }
+  style usagePreviewPad = { box: size({ w: full }).space({ pad: 4 }).overflow({ all: visible }) }
 </scope>
 
 <controller>
@@ -191,9 +191,9 @@ export default controller(({ variants, rows, usage, snippet, usageLive, variantA
 })
 </controller>
 
-<column gap="4" style({ box: w(full).overflow(visible) })>
+<column gap="4" style({ box: size({ w: full }).overflow({ all: visible }) })>
   <row gap="3" align="center">
-    <h2 style({ text: fontFamily(mono).tracking(tight) })>{name()}</h2>
+    <h2 style({ text: type({ family: mono, tracking: tight }) })>{name()}</h2>
     <if {pack() !== ''}>
       <badge tone="primary" variant="soft">{pack()}</badge>
     </if>
@@ -202,13 +202,13 @@ export default controller(({ variants, rows, usage, snippet, usageLive, variantA
     </if>
   </row>
   <if {blurb() !== ''}>
-    <p style({ paint: fg(muted-foreground) })>{blurb()}</p>
+    <p style({ paint: ink({ color: muted-foreground }) })>{blurb()}</p>
   </if>
 
-  <column gap="0" style({ box: pad(0).overflow(visible), paint: radius(lg).borderWidth(1).border(border).bg(surface-0) })>
+  <column gap="0" style({ box: space({ pad: 0 }).overflow({ all: visible }), paint: radius(lg).border({ color: border, width: 1 }).fill({ color: surface-0 }) })>
     <if {hasVariants()}>
-      <row gap="2" align="center" style({ box: padX(5).padT(4).padB(2) })>
-        <span style({ paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) })>{variantAttr()}:</span>
+      <row gap="2" align="center" style({ box: space({ pad-x: 5, pad-t: 4, pad-b: 2 }) })>
+        <span style({ paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs }) })>{variantAttr()}:</span>
         <for {chips() as c} key={c.v}>
           <button size="sm" tone="primary" variant={c.variant} on:click={() => pickVariant(c.v)}>{c.v}</button>
         </for>
@@ -251,7 +251,7 @@ export default controller(({ variants, rows, usage, snippet, usageLive, variantA
   <slot></slot>
 
   <if {hasUsage()}>
-    <column gap="3" style({ box: padT(2).overflow(visible) })>
+    <column gap="3" style({ box: space({ pad-t: 2 }).overflow({ all: visible }) })>
       <row gap="3" align="center" justify="between">
         <p style(sectionLabel)>Usage — a complete program</p>
         <if {hasUsageLive()}>
@@ -298,9 +298,9 @@ export default controller(({ variants, rows, usage, snippet, usageLive, variantA
           <code-block code={usage()} lang="sail"></code-block>
         </div>
       {else =>
-        <row gap="4" align="start" style({ box: w(full).minW(0).overflow(visible) })>
+        <row gap="4" align="start" style({ box: size({ w: full, min-w: 0 }).overflow({ all: visible }) })>
           <if {usageIsSplit()}>
-            <div style(snippetShell, { box: grow(1).basis(0).minW(0) })>
+            <div style(snippetShell, { box: flow({ grow: 1 }).size({ min-w: 0 }) })>
               <button
                 size="sm"
                 variant="ghost"
@@ -314,7 +314,7 @@ export default controller(({ variants, rows, usage, snippet, usageLive, variantA
               <code-block code={usage()} lang="sail"></code-block>
             </div>
           </if>
-          <column gap="3" style(usageFrame, { box: grow(1).basis(0).minW(0) })>
+          <column gap="3" style(usageFrame, { box: flow({ grow: 1 }).size({ min-w: 0 }) })>
             <slot name="usage-preview"></slot>
           </column>
         </row>}</if>
@@ -322,17 +322,17 @@ export default controller(({ variants, rows, usage, snippet, usageLive, variantA
   </if>
 
   <if {hasProps()}>
-    <card style({ box: pad(4) })>
+    <card style({ box: space({ pad: 4 }) })>
       <column gap="3">
         <p style(sectionLabel)>Props</p>
         <for {propRows() as r} key={r.name}>
           <column gap="1">
             <row gap="3" align="baseline">
               <code>{r.name}</code>
-              <span style({ box: grow(1), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) })>{r.type}</span>
+              <span style({ box: flow({ grow: 1 }), paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs }) })>{r.type}</span>
             </row>
             <if {r.desc !== ''}>
-              <p style({ paint: fg(muted-foreground), text: fontSize(sm) })>{r.desc}</p>
+              <p style({ paint: ink({ color: muted-foreground }), text: type({ size: sm }) })>{r.desc}</p>
             </if>
           </column>
         </for>

@@ -253,11 +253,11 @@ export default controller(({ value, min, max, disabled }: ControllerScope<Scope>
   })
 
 </controller>
-<column gap="0" style({ box: position(relative).w(full) })>
+<column gap="0" style({ box: place({ position: relative }).size({ w: full }) })>
   <row gap="2" align="center" style({
-    box: w(full).h(control-h-md).padX(2_5),
-    paint: bg(background).fg(foreground).borderWidth(1).border(border).radius(md),
-    when: { focusWithin: { paint: outline(ring) } },
+    box: size({ w: full, h: control-h-md }).space({ pad-x: 2_5 }),
+    paint: fill({ color: background }).ink({ color: foreground }).border({ color: border, width: 1 }).radius(md),
+    when: { focusWithin: { paint: border({ kind: outline, color: ring }) } },
   })>
     <input
       type="text"
@@ -272,8 +272,8 @@ export default controller(({ value, min, max, disabled }: ControllerScope<Scope>
       bind:value={value}
       use:captureInput
       style({
-        box: grow(1).minW(0),
-        text: fontFamily(body),
+        box: flow({ grow: 1 }).size({ min-w: 0 }),
+        text: type({ family: body }),
         when: { disabled: { paint: cursor(not-allowed) } },
       })
     >
@@ -286,8 +286,8 @@ export default controller(({ value, min, max, disabled }: ControllerScope<Scope>
       stroke-linecap="round"
       stroke-linejoin="round"
       style({
-        box: w(icon-size-sm).h(icon-size-sm).minW(icon-size-sm),
-        paint: fg(muted-foreground).pointerEvents(none),
+        box: size({ w: icon-size-sm, h: icon-size-sm, min-w: icon-size-sm }),
+        paint: ink({ color: muted-foreground }).pointerEvents(none),
       })
     >
       <rect x="2" y="3" width="12" height="11" rx="1.5"></rect>
@@ -299,31 +299,31 @@ export default controller(({ value, min, max, disabled }: ControllerScope<Scope>
       role="dialog"
       aria-label="Choose date"
       style({
-        box: position(absolute).left(0).w(panel-max-w-sm).pad(2).mt(1),
-        paint: z(popover).bg(surface-1).fg(foreground).borderWidth(1).border(border).radius(md).shadow(md),
+        box: place({ position: absolute, left: 0 }).size({ w: panel-max-w-sm }).space({ pad: 2, mt: 1 }),
+        paint: place({ z: popover }).fill({ color: surface-1 }).ink({ color: foreground }).border({ color: border, width: 1 }).radius(md).elevation(md),
       })
     >
-      <span style({ box: display(contents), text: fontFamily(body) })>
-        <row align="center" justify="between" style({ box: mb(1) })>
+      <span style({ box: flow({ display: contents }), text: type({ family: body }) })>
+        <row align="center" justify="between" style({ box: space({ mb: 1 }) })>
           <button
             type="button"
             data-act="prev"
             aria-label="Previous month"
             style({
-              box: w(icon-size-2xl).h(icon-size-2xl),
-              paint: radius(sm).fg(muted-foreground).cursor(pointer),
-              when: { hover: { paint: bg(muted).fg(foreground) } },
+              box: size({ w: icon-size-2xl, h: icon-size-2xl }),
+              paint: radius(sm).ink({ color: muted-foreground }).cursor(pointer),
+              when: { hover: { paint: fill({ color: muted }).ink({ color: foreground }) } },
             })
           >‹</button>
-          <span style({ box: grow(1), text: fontWeight(semibold).textAlign(center) })>{monthLabel()}</span>
+          <span style({ box: flow({ grow: 1 }), text: type({ weight: semibold, align: center }) })>{monthLabel()}</span>
           <button
             type="button"
             data-act="next"
             aria-label="Next month"
             style({
-              box: w(icon-size-2xl).h(icon-size-2xl),
-              paint: radius(sm).fg(muted-foreground).cursor(pointer),
-              when: { hover: { paint: bg(muted).fg(foreground) } },
+              box: size({ w: icon-size-2xl, h: icon-size-2xl }),
+              paint: radius(sm).ink({ color: muted-foreground }).cursor(pointer),
+              when: { hover: { paint: fill({ color: muted }).ink({ color: foreground }) } },
             })
           >›</button>
         </row>
@@ -332,9 +332,9 @@ export default controller(({ value, min, max, disabled }: ControllerScope<Scope>
             <span
               role="columnheader"
               style({
-                box: padY(1),
-                paint: fg(muted-foreground),
-                text: fontSize(sm).fontWeight(medium).textAlign(center),
+                box: space({ pad-y: 1 }),
+                paint: ink({ color: muted-foreground }),
+                text: type({ size: sm, weight: medium, align: center }),
               })
             >{d.label}</span>
           </for>
@@ -348,16 +348,16 @@ export default controller(({ value, min, max, disabled }: ControllerScope<Scope>
               data-state={cell.state || null}
               data-iso={cell.iso}
               style({
-                box: h(control-h-sm),
-                paint: radius(sm).cursor(pointer).fg(foreground),
-                text: textAlign(center),
+                box: size({ h: control-h-sm }),
+                paint: radius(sm).cursor(pointer).ink({ color: foreground }),
+                text: type({ align: center }),
                 when: {
-                  hover: { paint: bg(hover-bg) },
-                  selected: { paint: bg(primary).fg(primary-foreground) },
-                  disabled: { paint: fg(muted-foreground).opacity(50).cursor(not-allowed) },
-                  stateEmpty: { paint: visibility(hidden) },
-                  stateToday: { paint: outline(border-strong) },
-                  focus: { paint: outline(ring) },
+                  hover: { paint: fill({ color: hover-bg }) },
+                  selected: { paint: fill({ color: primary }).ink({ color: primary-foreground }) },
+                  disabled: { paint: ink({ color: muted-foreground }).filter({ opacity: 50 }).cursor(not-allowed) },
+                  stateEmpty: { paint: filter({ opacity: 0 }) },
+                  stateToday: { paint: border({ kind: outline, color: border-strong }) },
+                  focus: { paint: border({ kind: outline, color: ring }) },
                 },
               })
             >{cell.empty ? '' : cell.day}</button>

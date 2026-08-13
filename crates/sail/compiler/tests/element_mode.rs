@@ -133,6 +133,23 @@ fn element_skins_css_matches_registry() {
 }
 
 #[test]
+fn skins_css_names_element_and_platform_provenance() {
+    let css = sail_compiler::stdlib::skins_css();
+    assert!(
+        css.contains("/* @element checkbox */"),
+        "compiled skins name the element: {css}"
+    );
+    assert!(
+        css.contains("/* @provenance platform/checkbox.css */"),
+        "platform paint must be visible in the artifact: {css}"
+    );
+    assert!(
+        !css.contains("DescRule") && !css.contains("CHECKBOX_MAP"),
+        "skins must not leak rust map names"
+    );
+}
+
+#[test]
 fn ticker_loops_via_two_slots_and_marquee_action() {
     let src = sail_compiler::stdlib::sources()
         .iter()
@@ -147,7 +164,7 @@ fn ticker_loops_via_two_slots_and_marquee_action() {
         "two independently-filled slots build the seamless-loop duplicate track: {}",
         el.structure_html
     );
-    // Track animation is use:marquee (fx:loop), not contracts PE.
+    // Track animation is use:marquee (fx:loop), not contracts host CSS.
     assert!(
         el.structure_html.contains("use:marquee"),
         "track stamps use:marquee for duration/reverse-driven fx: {}",
@@ -163,7 +180,7 @@ fn ticker_loops_via_two_slots_and_marquee_action() {
             && !contracts
                 .lines()
                 .any(|l| l.contains("sail-ticker") && l.contains("animation")),
-        "ticker animation PE must be gone from contracts: {contracts}"
+        "ticker animation host CSS must be gone from contracts: {contracts}"
     );
     // Layout track: nowrap row + w-max on structure
     assert!(
@@ -212,7 +229,7 @@ fn stdlib_elements_can_self_nest() {
     // the first </card>. Regression — after card was promoted to L1 the old
     // `find("</card>")` paired the inner close with the outer card and broke
     // the /components showcase (a card of cards is an essential pattern).
-    use sail_compiler::{CompileMode, CompileOpts, compile};
+    use sail_compiler::{compile, CompileMode, CompileOpts};
     let opts = CompileOpts {
         route_params: None,
         setup_url: None,

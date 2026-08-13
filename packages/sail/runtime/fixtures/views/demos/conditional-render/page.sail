@@ -5,11 +5,11 @@ export default controller(() => ({ enabled: signal(false) }))
 </controller>
 
 <scope>
-  style page = { box: pad(6).maxW(breakpoint-tablet).mx(auto) }
-  style muted = { paint: fg(muted-foreground), text: fontSize(sm) }
+  style page = { box: space({ pad: 6, mx: auto }).size({ max-w: breakpoint-tablet }) }
+  style muted = { paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
   style panel = {
-    box: pad(4),
-    paint: borderWidth(1).border(border).radius(md).bg(surface-1),
+    box: space({ pad: 4 }),
+    paint: border({ color: border, width: 1 }).radius(md).fill({ color: surface-1 }),
   }
 </scope>
 
@@ -24,7 +24,7 @@ export default controller(() => ({ enabled: signal(false) }))
   </column>
 
   <label>
-    <input type="checkbox" data-test="toggle" bind:checked={enabled} />
+    <checkbox data-test="toggle" bind:checked={enabled} />
     Show secret panel
   </label>
 

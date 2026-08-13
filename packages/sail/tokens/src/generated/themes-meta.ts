@@ -15,12 +15,12 @@ export type ThemeRootKey = (typeof THEME_ROOT_KEYS)[number]
 export const THEME_SAIL_KEYS = ['layer', 'themeId', 'defaultMode', 'supportedModes', 'density', 'ordered'] as const
 export type ThemeSailKey = (typeof THEME_SAIL_KEYS)[number]
 
-/** Allowed paint mode names (`data-mode` values). */
+/** Allowed paint mode names (`mode` values). */
 export const THEME_PAINT_MODES = ['light', 'dark'] as const
 export type ThemePaintMode = (typeof THEME_PAINT_MODES)[number]
 
 /** Allowed top-level groups inside a mode body (scale + component overrides). */
-export const THEME_MODE_GROUP_KEYS = ['$extensions', 'color', 'component', 'control', 'interaction', 'motion', 'radius', 'scrollbar', 'shadow', 'typography', 'space', 'icon', 'density', 'panel', 'z', 'breakpoint'] as const
+export const THEME_MODE_GROUP_KEYS = ['$extensions', 'color', 'component', 'control', 'interaction', 'motion', 'radius', 'scrollbar', 'shadow', 'typography', 'space', 'icon', 'density', 'panel', 'z', 'breakpoint', 'border', 'size', 'elevation', 'type', 'fill', 'ink'] as const
 export type ThemeModeGroupKey = (typeof THEME_MODE_GROUP_KEYS)[number]
 
 /**
@@ -36,7 +36,7 @@ export type ModeCapability = 'light' | 'dark' | 'both'
 
 export interface ThemeMeta {
   id: string
-  /** Whether the default mode is a dark surface (data-mode dark). */
+  /** Whether the default mode is a dark surface (`mode=dark`). */
   dark: boolean
   /** Mode names when modes-in-file; empty = legacy single-block theme. */
   modes: readonly string[]

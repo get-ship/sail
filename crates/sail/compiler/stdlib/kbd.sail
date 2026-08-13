@@ -6,7 +6,7 @@
 <scope>
   props: {}
 
-  style base = { box: display(inline-block).padY(px).padX(1_5), paint: bg(kbd).borderWidth(1).border(kbd.border).borderBWidth(2).radius(sm).fg(kbd.foreground).align(middle), text: fontFamily(mono).fontSize(xs).leading(none).whitespace(nowrap) }
+  style base = {box: flow({ display: inline-block }).space({ pad-y: px, pad-x: 1_5 }), paint: fill({ color: kbd }).border({ color: kbd.border, width: 1, edge: l }).border({ color: kbd.border, width: 1, edge: r }).border({ color: kbd.border, width: 1, edge: t }).border({ color: kbd.border, width: 2, edge: b }).radius(sm).ink({ color: kbd.foreground }).align(middle), text: type({ family: mono, size: xs, leading: none, wrap: nowrap })}
 </scope>
 
 <kbd style(base)>

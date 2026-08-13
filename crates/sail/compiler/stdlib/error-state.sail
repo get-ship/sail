@@ -11,24 +11,24 @@
     code = ''
   }
 
-  style base = { box: padY(8).padX(4), paint: fg(error-state.foreground).borderWidth(1).border(error-state.border).radius(lg).bg(error-state).shadow(xs).group(), text: fontFamily(body).textAlign(center) }
-  style sizeMd = { box: padY(8).padX(4) }
-  style sizeSm = { box: padY(7) }
-  style sizeLg = { box: padY(8).padX(6) }
-  style variantDefault = { paint: borderWidth(1).border(error-state.border).radius(lg).bg(error-state).shadow(xs), text: textAlign(center) }
+  style base = {box: space({ pad-y: 8, pad-x: 4 }), paint: ink({ color: error-state.foreground }).border({ color: error-state.border, width: 1 }).radius(lg).fill({ color: error-state }).elevation(xs).group(), text: type({ family: body, align: center })}
+  style sizeMd = {box: space({ pad-y: 8, pad-x: 4 })}
+  style sizeSm = {box: space({ pad-y: 7 })}
+  style sizeLg = {box: space({ pad-y: 8, pad-x: 6 })}
+  style variantDefault = {paint: border({ color: error-state.border, width: 1 }).radius(lg).fill({ color: error-state }).elevation(xs), text: type({ align: center })}
   // Inline: brand-destructive border + muted fill (intentional).
-  style variantInline = { box: padY(3).padX(4), paint: borderWidth(1).border(destructive).radius(md).bg(muted).shadow(none), text: textAlign(start) }
+  style variantInline = {box: space({ pad-y: 3, pad-x: 4 }), paint: border({ color: destructive, width: 1 }).radius(md).fill(muted).elevation(none), text: type({ align: start })}
   // Icon face: brand-destructive on muted wash (intentional, not pack rest).
-  style icon = { box: self(center).size(control-h-xl), paint: radius(lg).bg(muted).fg(destructive).outline(1).outline(solid).outline(destructive).outlineOffset(ring-inset) }
-  style glyph = { box: size(control-h-2xs) }
-  style copy = { box: self(stretch) }
+  style icon = {box: flow({ self: center }).size(control-h-xl), paint: radius(lg).fill(muted).ink({ color: destructive }).border({ width: 1, kind: outline, style: solid, color: destructive, offset: ring-inset })}
+  style glyph = {box: size(control-h-2xs)}
+  style copy = {box: flow({ self: stretch })}
   // Strong title ink — free foreground (same path as empty-state title weight).
-  style title = { paint: fg(foreground), text: fontFamily(heading).fontWeight(semibold).leading(tight).fontSize(md) }
-  style desc = { box: maxW(panel-ch-w-md), paint: fg(error-state.foreground), text: leading(loose).fontSize(sm) }
-  style codeBox = { box: padY(1).padX(2).mt(1), paint: fg(error-state.foreground).bg(error-state).borderWidth(1).border(error-state.border).radius(sm), text: fontFamily(mono).fontSize(xs) }
-  style detailsToggle = { box: display(none).mt(1).padY(1).padX(2), paint: borderWidth(0).bg(transparent).fg(error-state.foreground).radius(sm).cursor(pointer), text: fontFamily(body).fontSize(xs) }
-  style details = { box: display(none).mt(2).padY(2).padX(3).maxW(panel-ch-w-lg), paint: bg(error-state).radius(sm).fg(error-state.foreground), text: fontFamily(mono).fontSize(xs).whitespace(pre-wrap).break(words).textAlign(start) }
-  style actions = { box: self(center) }
+  style title = {paint: ink(foreground), text: type({ family: heading, weight: semibold, leading: tight, size: md })}
+  style desc = {box: size({ max-w: panel-ch-w-md }), paint: ink({ color: error-state.foreground }), text: type({ leading: loose, size: sm })}
+  style codeBox = {box: space({ pad-y: 1, pad-x: 2, mt: 1 }), paint: ink({ color: error-state.foreground }).fill({ color: error-state }).border({ color: error-state.border, width: 1 }).radius(sm), text: type({ family: mono, size: xs })}
+  style detailsToggle = {box: flow({ display: none }).space({ mt: 1, pad-y: 1, pad-x: 2 }), paint: border({ width: 0 }).fill({ color: transparent }).ink({ color: error-state.foreground }).radius(sm).cursor(pointer), text: type({ family: body, size: xs })}
+  style details = {box: flow({ display: none }).space({ mt: 2, pad-y: 2, pad-x: 3 }).size({ max-w: panel-ch-w-lg }), paint: fill({ color: error-state }).radius(sm).ink({ color: error-state.foreground }), text: type({ family: mono, size: xs, wrap: words, align: start })}
+  style actions = {box: flow({ self: center })}
 </scope>
 
 <column
@@ -36,13 +36,10 @@
   justify="center"
   gap="3"
   use:recoverySurface
-  style(base, {
-    when: { forced-colors: { paint: border(CanvasText) } },
-    match: {
+  style(base, {when: {forced-colors: {paint: border({ color: CanvasText })}}, match: {
       size: { md: sizeMd, sm: sizeSm, lg: sizeLg },
       variant: { default: variantDefault, inline: variantInline },
-    },
-  })
+    }})
 >
   <row
     inline
@@ -50,10 +47,7 @@
     align="center"
     justify="center"
     hidden="true"
-    style(icon, {
-      box: shrink(1),
-      when: { forced-colors: { paint: bg(Canvas).fg(CanvasText) } },
-    })
+    style(icon, {box: flow({ shrink: 1 }), when: {forced-colors: {paint: fill({ color: Canvas }).ink({ color: CanvasText })}}})
   >
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style(glyph)>
       <circle cx="12" cy="12" r="9"></circle>
@@ -61,31 +55,25 @@
       <path d="M12 16h.01"></path>
     </svg>
   </row>
-  <column align="stretch" gap="1" style(copy, { box: grow(1).minW(0) })>
+  <column align="stretch" gap="1" style(copy, {box: flow({ grow: 1 }).size({ min-w: 0 })})>
     <div style(title)>
       <slot name="title">Something went wrong</slot>
     </div>
-    <div style(desc, { when: { empty: { box: display(none) } } })>
+    <div style(desc, {when: {empty: {box: flow({ display: none })}}})>
       <slot></slot>
     </div>
-    <div style(codeBox, { when: { empty: { box: display(none) } } })></div>
+    <div style(codeBox, {when: {empty: {box: flow({ display: none })}}})></div>
     <button
       type="button"
       anatomy
       expanded="false"
-      style(detailsToggle, {
-        when: {
-          group-state-has-details: { box: display(inline-block) },
-          hover: { paint: fg(foreground).bg(error-state) },
-          focus: { paint: outline(solid).outline(2).outline(ring).outlineOffset(2) },
-        },
-      })
+      style(detailsToggle, {when: {group-state-has-details: {box: flow({ display: inline-block })}, hover: {paint: ink(foreground).fill({ color: error-state })}, focus: {paint: border({ style: solid, kind: outline, width: 2, color: ring, offset: 2 })}}})
     >Show details</button>
-    <div style(details, { when: { group-state-open: { box: display(block) } } })>
+    <div style(details, {when: {group-state-open: {box: flow({ display: block })}}})>
       <slot name="details"></slot>
     </div>
   </column>
-  <row align="center" justify="center" gap="2" style(actions, { when: { empty: { box: display(none) } } })>
+  <row align="center" justify="center" gap="2" style(actions, {when: {empty: {box: flow({ display: none })}}})>
     <slot name="action"></slot>
   </row>
 </column>

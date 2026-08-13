@@ -59,6 +59,13 @@ pub fn deck_out_path(root: &Path) -> PathBuf {
     root.join(DECK_OUT_DIRNAME)
 }
 
+/// Cargo rebuild trigger for restaging `.deck/framework/*` into deck-core
+/// assets. Lives in the crate (tracked, empty), never under `.deck/`.
+/// `deck build-assets` touches mtime; `deck-core/build.rs` watches it.
+pub fn framework_stamp_path(repo_root: &Path) -> PathBuf {
+    repo_root.join("crates/deck/deck-core/framework-stamp")
+}
+
 /// Filenames the host may find for a project's compiler policy config.
 /// `jsonc` is preferred when both exist (app-level studio convention).
 ///

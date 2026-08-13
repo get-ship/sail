@@ -20,104 +20,65 @@
   }
 
   // Default solid rides component.chip tokens. Brand tones only when tone= is set.
-  style base = {
-    box: display(inline-flex).minH(control-h-2xs).padX(2).padY(px).gap(1),
-    paint: group().appearance(none).cursor(pointer).select(none).tapHighlight(none).radius(full).borderWidth(1).border(solid).bg(chip).fg(chip.foreground).border(chip.border).transition(colors).duration(fast).ease(out),
-    text: fontFamily(body).fontWeight(medium).leading(none).whitespace(nowrap).fontSize(xs),
-  }
-  style sizeMd = { box: minH(control-h-2xs).padX(2_5), text: fontSize(sm) }
-  style sizeSm = { box: minH(control-h-2xs).padX(2), text: fontSize(xs) }
-  style sizeLg = { box: minH(control-h-xs).padX(3), text: fontSize(sm) }
-  style remove = { box: display(none).size(icon-size-xs).pad(0), paint: borderWidth(0).bg(transparent).fg(currentColor).cursor(pointer).radius(full).transition(colors).duration(fast).ease(out) }
-  style leading = { box: display(contents) }
-  style xmark = { box: display(block).size(full), paint: stroke(currentColor).fill(none) }
+  style base = {box: flow({ display: inline-flex }).size({ min-h: control-h-2xs }).space({ pad-x: 2, pad-y: px }), paint: group().appearance(none).cursor(pointer).select(none).tapHighlight(none).radius(full).border({ color: chip.border, width: 1, style: solid }).fill({ color: chip }).ink({ color: chip.foreground }).motion({ property: colors, duration: fast, ease: out }), text: type({ family: body, weight: medium, leading: none, wrap: nowrap, size: xs })}
+  style sizeMd = {box: size({ min-h: control-h-2xs }).space({ pad-x: 2_5 }), text: type({ size: sm })}
+  style sizeSm = {box: size({ min-h: control-h-2xs }).space({ pad-x: 2 }), text: type({ size: xs })}
+  style sizeLg = {box: size({ min-h: control-h-xs }).space({ pad-x: 3 }), text: type({ size: sm })}
+  style remove = {box: flow({ display: none }).size(icon-size-xs).space({ pad: 0 }), paint: border({ width: 0 }).fill({ color: transparent }).ink({ color: currentColor }).radius(full).motion({ property: colors, duration: fast, ease: out }).cursor(pointer)}
+  style leading = {box: flow({ display: contents })}
+  style xmark = {box: flow({ display: block }).size(full)}
 </scope>
 
 <span
   use:pressable
   use:pressed
   use:dismissible
-  style(base, {
-    when: {
-      pressed: {
-        paint: bg(primary).fg(primary-foreground).border(primary).shadow(xs),
-        text: fontWeight(semibold),
-      },
-      disabled: {
-        paint: cursor(not-allowed).bg(chip).border(border-subtle).fg(chip.foreground).saturate(65).shadow(none),
-      },
-      focus: {
-        paint: outline(solid).outline(2).outline(ring).outlineOffset(2),
-      },
-    },
-    match: {
-      size: {
+  style(base, {when: {pressed: {paint: fill({ color: primary }).ink({ color: primary-foreground }).border({ color: primary }).elevation(xs), text: type({ weight: semibold })}, disabled: {paint: cursor(not-allowed).fill({ color: chip }).border({ color: border-subtle }).ink({ color: chip.foreground }).filter({ saturate: 65 }).elevation(none)}, focus: {paint: border({ style: solid, kind: outline, width: 2, color: ring, offset: 2 })}}, match: {size: {
         md: sizeMd,
         sm: sizeSm,
         lg: sizeLg,
-      },
-      variant: {
-        // Rest solid (no tone) keeps base chip tokens. Tone+solid is compound.
-        solid: {
-          paint: bg(chip).fg(chip.foreground).border(chip.border),
-          when: { hover: { paint: opacity(90) } },
-        },
-        // Soft without tone: component.chip.* (themeable rest). Soft+tone: wash compounds below.
-        soft: {
-          paint: bg(chip).fg(chip.foreground).border(chip.border),
-          when: { hover: { paint: opacity(90) } },
-        },
-        outline: {
-          paint: bg(transparent).fg(chip.foreground).border(chip.border),
-          when: { hover: { paint: bg(hover-bg) } },
-        },
-        ghost: {
-          paint: bg(transparent).border(transparent).fg(chip.foreground),
-          when: { hover: { paint: bg(hover-bg) } },
-        },
-      },
-    },
-    compound: [
+      }, variant: {// Rest solid (no tone) keeps base chip tokens. Tone+solid is compound.
+        solid: {paint: fill({ color: chip }).ink({ color: chip.foreground }).border({ color: chip.border }), when: {hover: {paint: filter({ opacity: 90 })}}}, // Soft without tone: component.chip.* (themeable rest). Soft+tone: wash compounds below.
+        soft: {paint: fill({ color: chip }).ink({ color: chip.foreground }).border({ color: chip.border }), when: {hover: {paint: filter({ opacity: 90 })}}}, outline: {paint: fill({ color: transparent }).ink({ color: chip.foreground }).border({ color: chip.border }), when: {hover: {paint: fill({ color: hover-bg })}}}, ghost: {paint: fill({ color: transparent }).border({ color: transparent }).ink({ color: chip.foreground }), when: {hover: {paint: fill({ color: hover-bg })}}}}}, compound: [
       // Tone + solid
-      { tone: primary, variant: solid, paint: bg(primary).fg(primary-foreground).border(primary) },
-      { tone: info, variant: solid, paint: bg(info).fg(info-foreground).border(info) },
-      { tone: success, variant: solid, paint: bg(success).fg(success-foreground).border(success) },
-      { tone: warning, variant: solid, paint: bg(warning).fg(warning-foreground).border(warning) },
-      { tone: destructive, variant: solid, paint: bg(destructive).fg(destructive-foreground).border(destructive) },
-      { tone: accent, variant: solid, paint: bg(accent).fg(accent-foreground).border(accent) },
-      { tone: muted, variant: solid, paint: bg(muted).fg(muted-foreground).border(border) },
+      {tone: primary, variant: solid, paint: fill({ color: primary }).ink({ color: primary-foreground }).border({ color: primary })},
+      {tone: info, variant: solid, paint: fill({ color: info }).ink({ color: info-foreground }).border({ color: info })},
+      {tone: success, variant: solid, paint: fill({ color: success }).ink({ color: success-foreground }).border({ color: success })},
+      {tone: warning, variant: solid, paint: fill({ color: warning }).ink({ color: warning-foreground }).border({ color: warning })},
+      {tone: destructive, variant: solid, paint: fill({ color: destructive }).ink({ color: destructive-foreground }).border({ color: destructive })},
+      {tone: accent, variant: solid, paint: fill({ color: accent }).ink({ color: accent-foreground }).border({ color: accent })},
+      {tone: muted, variant: solid, paint: fill(muted).ink({ color: muted-foreground }).border({ color: border })},
       // Tone + soft (wash)
-      { tone: primary, variant: soft, paint: colorMix(primary, 15).border(primary).fg(primary), when: { hover: { paint: colorMix(primary, 25) } } },
-      { tone: info, variant: soft, paint: colorMix(info, 15).border(info).fg(info), when: { hover: { paint: colorMix(info, 25) } } },
-      { tone: success, variant: soft, paint: colorMix(success, 15).border(success).fg(success), when: { hover: { paint: colorMix(success, 25) } } },
-      { tone: warning, variant: soft, paint: colorMix(warning, 15).border(warning).fg(warning), when: { hover: { paint: colorMix(warning, 25) } } },
-      { tone: destructive, variant: soft, paint: colorMix(destructive, 15).border(destructive).fg(destructive), when: { hover: { paint: colorMix(destructive, 25) } } },
-      { tone: accent, variant: soft, paint: colorMix(accent, 15).border(accent).fg(accent), when: { hover: { paint: colorMix(accent, 25) } } },
-      { tone: muted, variant: soft, paint: colorMix(muted, 15).border(border).fg(muted-foreground), when: { hover: { paint: colorMix(muted, 25) } } },
+      {tone: primary, variant: soft, paint: fill({ color: primary, mix: 15 }).border({ color: primary }).ink({ color: primary }), when: {hover: {paint: fill({ color: primary, mix: 25 })}}},
+      {tone: info, variant: soft, paint: fill({ color: info, mix: 15 }).border({ color: info }).ink({ color: info }), when: {hover: {paint: fill({ color: info, mix: 25 })}}},
+      {tone: success, variant: soft, paint: fill({ color: success, mix: 15 }).border({ color: success }).ink({ color: success }), when: {hover: {paint: fill({ color: success, mix: 25 })}}},
+      {tone: warning, variant: soft, paint: fill({ color: warning, mix: 15 }).border({ color: warning }).ink({ color: warning }), when: {hover: {paint: fill({ color: warning, mix: 25 })}}},
+      {tone: destructive, variant: soft, paint: fill({ color: destructive, mix: 15 }).border({ color: destructive }).ink({ color: destructive }), when: {hover: {paint: fill({ color: destructive, mix: 25 })}}},
+      {tone: accent, variant: soft, paint: fill({ color: accent, mix: 15 }).border({ color: accent }).ink({ color: accent }), when: {hover: {paint: fill({ color: accent, mix: 25 })}}},
+      {tone: muted, variant: soft, paint: fill({ color: muted, mix: 15 }).border({ color: border }).ink({ color: muted-foreground }), when: {hover: {paint: fill({ color: muted, mix: 25 })}}},
       // Tone + outline / ghost
-      { tone: primary, variant: outline, paint: bg(transparent).fg(primary).border(primary) },
-      { tone: info, variant: outline, paint: bg(transparent).fg(info).border(info) },
-      { tone: success, variant: outline, paint: bg(transparent).fg(success).border(success) },
-      { tone: warning, variant: outline, paint: bg(transparent).fg(warning).border(warning) },
-      { tone: destructive, variant: outline, paint: bg(transparent).fg(destructive).border(destructive) },
-      { tone: accent, variant: outline, paint: bg(transparent).fg(accent).border(accent) },
-      { tone: muted, variant: outline, paint: fg(muted-foreground).border(border) },
-      { tone: primary, variant: ghost, paint: bg(transparent).border(transparent).fg(primary) },
-      { tone: info, variant: ghost, paint: bg(transparent).border(transparent).fg(info) },
-      { tone: success, variant: ghost, paint: bg(transparent).border(transparent).fg(success) },
-      { tone: warning, variant: ghost, paint: bg(transparent).border(transparent).fg(warning) },
-      { tone: destructive, variant: ghost, paint: bg(transparent).border(transparent).fg(destructive) },
-      { tone: accent, variant: ghost, paint: bg(transparent).border(transparent).fg(accent) },
-      { tone: muted, variant: ghost, paint: fg(muted-foreground) },
+      {tone: primary, variant: outline, paint: fill({ color: transparent }).ink({ color: primary }).border({ color: primary })},
+      {tone: info, variant: outline, paint: fill({ color: transparent }).ink({ color: info }).border({ color: info })},
+      {tone: success, variant: outline, paint: fill({ color: transparent }).ink({ color: success }).border({ color: success })},
+      {tone: warning, variant: outline, paint: fill({ color: transparent }).ink({ color: warning }).border({ color: warning })},
+      {tone: destructive, variant: outline, paint: fill({ color: transparent }).ink({ color: destructive }).border({ color: destructive })},
+      {tone: accent, variant: outline, paint: fill({ color: transparent }).ink({ color: accent }).border({ color: accent })},
+      {tone: muted, variant: outline, paint: ink({ color: muted-foreground }).border({ color: border })},
+      {tone: primary, variant: ghost, paint: fill({ color: transparent }).border({ color: transparent }).ink({ color: primary })},
+      {tone: info, variant: ghost, paint: fill({ color: transparent }).border({ color: transparent }).ink({ color: info })},
+      {tone: success, variant: ghost, paint: fill({ color: transparent }).border({ color: transparent }).ink({ color: success })},
+      {tone: warning, variant: ghost, paint: fill({ color: transparent }).border({ color: transparent }).ink({ color: warning })},
+      {tone: destructive, variant: ghost, paint: fill({ color: transparent }).border({ color: transparent }).ink({ color: destructive })},
+      {tone: accent, variant: ghost, paint: fill({ color: transparent }).border({ color: transparent }).ink({ color: accent })},
+      {tone: muted, variant: ghost, paint: ink({ color: muted-foreground })},
       // Selected beats tone×variant (same/higher attr count so it can win cascade).
-      { selected: true, paint: bg(primary).fg(primary-foreground).border(primary).shadow(xs) },
-      { selected: true, variant: solid, paint: bg(primary).fg(primary-foreground).border(primary).shadow(xs) },
-      { selected: true, variant: soft, paint: bg(primary).fg(primary-foreground).border(primary).shadow(xs) },
-      { selected: true, variant: outline, paint: bg(primary).fg(primary-foreground).border(primary).shadow(xs) },
-      { selected: true, variant: ghost, paint: bg(primary).fg(primary-foreground).border(primary).shadow(xs) },
-      { selected: true, when: { hover: { paint: opacity(90) } } },
-    ],
-  })
+      {selected: true, paint: fill({ color: primary }).ink({ color: primary-foreground }).border({ color: primary }).elevation(xs)},
+      {selected: true, variant: solid, paint: fill({ color: primary }).ink({ color: primary-foreground }).border({ color: primary }).elevation(xs)},
+      {selected: true, variant: soft, paint: fill({ color: primary }).ink({ color: primary-foreground }).border({ color: primary }).elevation(xs)},
+      {selected: true, variant: outline, paint: fill({ color: primary }).ink({ color: primary-foreground }).border({ color: primary }).elevation(xs)},
+      {selected: true, variant: ghost, paint: fill({ color: primary }).ink({ color: primary-foreground }).border({ color: primary }).elevation(xs)},
+      {selected: true, when: {hover: {paint: filter({ opacity: 90 })}}},
+    ]})
 >
   <span style(leading)>
     <slot name="leading"></slot>
@@ -129,16 +90,9 @@
     data-dismiss
     label="Remove"
     tabindex="-1"
-    style(remove, {
-      box: shrink(0),
-      when: {
-        group-removable: { box: display(inline-flex) },
-        hover: { paint: bg(chip).fg(chip.foreground) },
-        focus: { paint: outline(solid).outline(2).outline(ring).outlineOffset(2) },
-      },
-    })
+    style(remove, {box: flow({ shrink: 0 }), match: {removable: {true: {box: flow({ display: inline-flex })}, false: {box: flow({ display: none })}}}, when: {hover: {paint: fill({ color: chip }).ink({ color: chip.foreground })}, focus: {paint: border({ style: solid, kind: outline, width: 2, color: ring, offset: 2 })}}})
   >
-    <svg viewBox="0 0 10 10" hidden="true" stroke-width="1.75" stroke-linecap="round" style(xmark)>
+    <svg viewBox="0 0 10 10" stroke-width="1.75" stroke-linecap="round" stroke="currentColor" fill="none" style(xmark)>
       <path d="M2 2 L8 8 M8 2 L2 8"></path>
     </svg>
   </button>

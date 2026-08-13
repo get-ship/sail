@@ -67,6 +67,7 @@ export function route(): RouteSignals {
 export function defineRoutes(): void {}
 export function navigate(): void {}
 export function setRouterPort(): void {}
+export function setRouteSignals(): void {}
 export function setEditMode(): void {}
 export function isEditMode(): boolean {
   return false

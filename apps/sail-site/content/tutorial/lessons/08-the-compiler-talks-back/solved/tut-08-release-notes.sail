@@ -1,7 +1,7 @@
 <!--
   Lesson 08 solved — every rejection answered on the compiler's terms.
 
-  style({ box: pad(12px) }) became the token pad(4); the motion preset is 'fade'
+  style({ box: space({ pad: 12px }) }) became the token space({ pad: 4 }); the motion preset is 'fade'
   (the closed set); the date is a zero-arg derived read; the <style>
   block is gone — the row surface it hand-painted is tip Style on the note row.
   No fix fought the language.
@@ -34,10 +34,10 @@ export default controller(() => {
 </controller>
 
 <scope>
-  style page = { box: pad(4) }
-  style meta = { paint: fg(muted-foreground), text: fontSize(sm) }
-  style noteRow = { box: padX(3).padY(2), paint: bg(surface-1).radius(md) }
-  style noteText = { text: fontSize(sm) }
+  style page = { box: space({ pad: 4 }) }
+  style meta = { paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
+  style noteRow = { box: space({ pad-x: 3, pad-y: 2 }), paint: fill({ color: surface-1 }).radius(md) }
+  style noteText = { text: type({ size: sm }) }
 </scope>
 
 <column gap="4" style(page)>

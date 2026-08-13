@@ -744,6 +744,7 @@ fn paint_arg_to_spacing(arg: &sail_lint::style::PaintArg) -> Option<SpacingValue
             }
             Some(SpacingValue::Expression)
         }
+        PaintArg::Slots(_) => None,
     }
 }
 

@@ -11,15 +11,8 @@
     onDismiss: () => void
   }
 
-  style base = {
-    box: padY(3).padX(4),
-    paint: fg(toast.foreground).bg(toast).radius(md).shadow(md).borderWidth(1).border(toast.border).borderSWidth(3).borderS(toast.stripe).pointerEvents(auto),
-    text: fontFamily(body).fontSize(sm),
-  }
-  style close = {
-    box: ms(auto).shrink(0).minW(control-h-xs).minH(control-h-xs).w(control-h-xs).h(control-h-xs),
-    paint: fg(toast.foreground).bg(transparent).borderWidth(0).radius(sm).cursor(pointer).opacity(70),
-  }
+  style base = {box: space({ pad-y: 3, pad-x: 4 }), paint: ink({ color: toast.foreground }).fill({ color: toast }).radius(md).elevation(md).border({ color: toast.border, width: 1, edge: b }).border({ color: toast.border, width: 1, edge: e }).border({ color: toast.border, width: 1, edge: t }).border({ color: toast.stripe, width: 3, edge: s }).pointerEvents(auto), text: type({ family: body, size: sm })}
+  style close = {box: space({ ms: auto }).size({ min-w: control-h-xs, min-h: control-h-xs, w: control-h-xs, h: control-h-xs }), paint: ink({ color: toast.foreground }).fill({ color: transparent }).border({ width: 0 }).radius(sm).filter({ opacity: 70 }).cursor(pointer)}
 </scope>
 
 <row
@@ -27,12 +20,9 @@
   gap="3"
   use:autoDismiss
   use:dismissControl
-  style(base, {
-    paint: borderS(tone),
-    compound: [
-      { tone: muted, paint: borderS(muted-foreground) },
-    ],
-  })
+  style(base, {paint: border({ color: tone, edge: s }), compound: [
+      {tone: muted, paint: border({ color: muted-foreground, edge: s })},
+    ]})
 >
   <slot></slot>
   <button
@@ -40,9 +30,6 @@
     type="button"
     anatomy
     label="Dismiss"
-    style(close, {
-      box: shrink(0).grow(0),
-      when: { hover: { paint: fg(toast.foreground).bg(toast).opacity(100) } },
-    })
+    style(close, {box: flow({ shrink: 0, grow: 0 }), when: {hover: {paint: ink({ color: toast.foreground }).fill({ color: toast }).filter({ opacity: 100 })}}})
   >✕</button>
 </row>

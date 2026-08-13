@@ -16,102 +16,71 @@
     fill = false
   }
 
-  style base = { box: position(relative).overflow(clip).padY(4).padX(5), paint: isolate().radius(lg).border(1, border).fg(card.foreground).shadow(card-rest).transition(colors).duration(fast).ease(out).bg(card).backdrop(card-backdrop-filter).borderImage(corner-image) }
-  style outline = { paint: bg(transparent) }
-  style padMd = { box: padY(4).padX(5) }
-  style padNone = { box: pad(0) }
-  style padSm = { box: padY(2).padX(3) }
-  style padLg = { box: padY(5).padX(6) }
+  style base = {box: place({ position: relative }).overflow({ all: clip }).space({ pad-y: 4, pad-x: 5 }), paint: isolate().radius(lg).border({ color: border, width: 1 }).ink(card).elevation({ shadow: card-rest }).motion({ property: colors, duration: fast, ease: out }).fill(card).filter({ backdrop: card-backdrop-filter })}
+  style outline = {paint: fill({ color: transparent })}
+  style padMd = {box: space({ pad-y: 4, pad-x: 5 })}
+  style padNone = {box: space({ pad: 0 })}
+  style padSm = {box: space({ pad-y: 2, pad-x: 3 })}
+  style padLg = {box: space({ pad-y: 5, pad-x: 6 })}
   // Header/footer chrome: negative margins cancel host pad so chrome bleeds edge-to-edge.
   // Each step mirrors the padding match (sm/md/lg/none) — never hard-code padMd only.
-  style headerChromeBase = { paint: borderB(1, border-subtle), text: fontFamily(heading) }
-  style headerChromeMd = { box: mt(-4).mx(-5).mb(3).padX(5).padY(4) }
-  style headerChromeSm = { box: mt(-2).mx(-3).mb(2).padX(3).padY(2) }
-  style headerChromeLg = { box: mt(-5).mx(-6).mb(4).padX(6).padY(5) }
-  style headerChromeNone = { box: mb(3).padY(3).padX(0) }
-  style footerChromeBase = { paint: borderT(1, border-subtle) }
-  style footerChromeMd = { box: mt(3).mx(-5).mb(-4).padX(5).padY(4) }
-  style footerChromeSm = { box: mt(2).mx(-3).mb(-2).padX(3).padY(2) }
-  style footerChromeLg = { box: mt(4).mx(-6).mb(-5).padX(6).padY(5) }
-  style footerChromeNone = { box: mt(3).padY(3).padX(0) }
+  style headerChromeBase = {paint: border({ color: border-subtle, width: 1, edge: b }), text: type({ family: heading })}
+  style headerChromeMd = {box: space({ mt: -4, mx: -5, mb: 3, pad-x: 5, pad-y: 4 })}
+  style headerChromeSm = {box: space({ mt: -2, mx: -3, mb: 2, pad-x: 3, pad-y: 2 })}
+  style headerChromeLg = {box: space({ mt: -5, mx: -6, mb: 4, pad-x: 6, pad-y: 5 })}
+  style headerChromeNone = {box: space({ mb: 3, pad-y: 3, pad-x: 0 })}
+  style footerChromeBase = {paint: border({ color: border-subtle, width: 1, edge: t })}
+  style footerChromeMd = {box: space({ mt: 3, mx: -5, mb: -4, pad-x: 5, pad-y: 4 })}
+  style footerChromeSm = {box: space({ mt: 2, mx: -3, mb: -2, pad-x: 3, pad-y: 2 })}
+  style footerChromeLg = {box: space({ mt: 4, mx: -6, mb: -5, pad-x: 6, pad-y: 5 })}
+  style footerChromeNone = {box: space({ mt: 3, pad-y: 3, pad-x: 0 })}
   // Shared ::before stripe for accent-bar static/hover; opacity differs per arm.
-  style accentBar = { box: position(absolute).left(0).right(0).top(0).h(half), paint: content(empty).bgImage(primary-accent).radiusT(lg).pointerEvents(none).transition(opacity).duration(medium).ease(out) }
+  style accentBar = {box: place({ position: absolute, left: 0, right: 0, top: 0 }).size({ h: half }), paint: content(empty).fill({ image: primary-accent }).radius({ t: lg }).motion({ property: opacity, duration: medium, ease: out }).pointerEvents(none)}
 </scope>
 
 <div
-  style(base, {
-    paint: border(tone),
-    match: {
-      variant: {
-        default: { paint: bg(card) },
-        outline: outline,
-      },
-      padding: {
+  style(base, {match: {variant: {default: {paint: fill(card)}, outline: outline}, padding: {
         md: padMd,
         none: padNone,
         sm: padSm,
         lg: padLg,
-      },
-    },
-    compound: [
-      {
-        interactive: true,
-        paint: cursor(pointer).tapHighlight(none),
-        when: {
-          hover: { paint: border(border-strong).shadow(hover).translateY(-px) },
-          active: { paint: shadow(card-rest).translateY(0).duration(instant) },
-          motion-reduce: { paint: translateY(0) },
-          focus: { paint: outline(2) },
-          forced-colors: { when: { focus: { paint: outline(CanvasText) } } },
-        },
-      },
-      { fill: true, paint: bg(muted).border(border) },
-      { tone: muted, paint: border(border) },
-      { status-rail: true, box: padS(4), paint: borderS(3, border-strong) },
+      }}, compound: [
+      {tone: *, paint: border({ color: tone })},
+      {interactive: true, paint: cursor(pointer).tapHighlight(none), when: {hover: {paint: border({ color: border-strong }).elevation({ shadow: hover }).motion({ y: -px })}, active: {paint: elevation({ shadow: card-rest }).motion({ y: 0, duration: instant })}, motion-reduce: {paint: motion({ y: 0 })}, focus: {paint: border({ width: 2, kind: outline })}, forced-colors: {when: {focus: {paint: border({ color: CanvasText, kind: outline })}}}}},
+      {fill: true, paint: fill(muted).border({ color: border })},
+      {tone: muted, paint: border({ color: border })},
+      {status-rail: true, box: space({ pad-s: 4 }), paint: border({ color: border-strong, width: 3, edge: s })},
       // padS tracks named padding tokens (not continuous) — keep as compounds.
-      { padding: sm, status-rail: true, box: padS(2) },
-      { padding: md, status-rail: true, box: padS(4) },
-      { padding: lg, status-rail: true, box: padS(5) },
-      { padding: none, status-rail: true, box: padS(0) },
-      { accent-bar: static, when: { before: style(accentBar, { paint: opacity(100) }) } },
-      {
-        accent-bar: hover,
-        when: {
-          before: style(accentBar, { paint: opacity(0) }),
-          hover: { when: { before: { paint: opacity(100) } } },
-        },
-      },
-    ],
-  })
+      {padding: sm, status-rail: true, box: space({ pad-s: 2 })},
+      {padding: md, status-rail: true, box: space({ pad-s: 4 })},
+      {padding: lg, status-rail: true, box: space({ pad-s: 5 })},
+      {padding: none, status-rail: true, box: space({ pad-s: 0 })},
+      {accent-bar: static, when: {before: style(accentBar, {paint: filter({ opacity: 100 })})}},
+      {accent-bar: hover, when: {before: style(accentBar, {paint: filter({ opacity: 0 })}), hover: {when: {before: {paint: filter({ opacity: 100 })}}}}},
+    ]})
 >
   <div
-    style(headerChromeBase, {
-      match: {
+    style(headerChromeBase, {match: {
         padding: {
           md: headerChromeMd,
           sm: headerChromeSm,
           lg: headerChromeLg,
           none: headerChromeNone,
         },
-      },
-      when: { empty: { box: display(none) } },
-    })
+      }, when: {empty: {box: flow({ display: none })}}})
   >
     <slot name="header"></slot>
   </div>
   <slot></slot>
   <div
-    style(footerChromeBase, {
-      match: {
+    style(footerChromeBase, {match: {
         padding: {
           md: footerChromeMd,
           sm: footerChromeSm,
           lg: footerChromeLg,
           none: footerChromeNone,
         },
-      },
-      when: { empty: { box: display(none) } },
-    })
+      }, when: {empty: {box: flow({ display: none })}}})
   >
     <slot name="footer"></slot>
   </div>

@@ -4,35 +4,32 @@
 -->
 
 <scope>
-  style page = { box: maxW(breakpoint-desktop).mx(auto).w(full).overflow(visible) }
-  style specimen = { box: w(full).maxW(panel-max-w-sm).pad(2).overflow(visible) }
-  style stageCol = { box: w(panel-max-w-md).maxW(full) }
-  style mutedSm = { paint: fg(muted-foreground), text: fontSize(sm) }
+  style page = { box: size({ w: full, max-w: breakpoint-desktop }).space({ mx: auto }).overflow({ all: visible }) }
+  style specimen = { box: size({ w: full, max-w: panel-max-w-sm }).space({ pad: 2 }).overflow({ all: visible }) }
+  style stageCol = { box: size({ w: panel-max-w-md, max-w: full }) }
+  style mutedSm = { paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
   style knobLabel = {
-    paint: fg(muted-foreground),
-    text: fontSize(xs).fontWeight(medium).tracking(wide).textCase(uppercase),
-  }
+    paint: ink({ color: muted-foreground }),
+    text: type({ size: xs, weight: medium, tracking: wide, case: uppercase }),
+}
   style swatch = {
-    box: size(7).shrink(0),
-    paint: radius(full).cursor(pointer).borderWidth(2).border(transparent).shadow(xs),
-    when: {
-      selected: { paint: border(foreground).shadow(sm) },
-      hover: { paint: opacity(90) },
-    },
-  }
-  style swatchRest = { paint: bg(background).border(border) }
-  style swatchPrimary = { paint: bg(primary) }
-  style swatchInfo = { paint: bg(info) }
-  style swatchSuccess = { paint: bg(success) }
-  style swatchWarning = { paint: bg(warning) }
-  style swatchDestructive = { paint: bg(destructive) }
-  style swatchAccent = { paint: bg(accent) }
-  style swatchMuted = { paint: bg(muted).border(border) }
-  style exampleBlock = { box: w(full).padT(2).padB(4).overflow(visible) }
+    box: size(7).flow({ shrink: 0 }),
+    paint: radius(full).cursor(pointer).border({ color: transparent, width: 2 }).elevation(xs),
+    when: { selected: { paint: border({ color: foreground }).elevation(sm) }, hover: { paint: filter({ opacity: 90 }) } },
+}
+  style swatchRest = { paint: fill({ color: background }).border({ color: border }) }
+  style swatchPrimary = { paint: fill({ color: primary }) }
+  style swatchInfo = { paint: fill({ color: info }) }
+  style swatchSuccess = { paint: fill({ color: success }) }
+  style swatchWarning = { paint: fill({ color: warning }) }
+  style swatchDestructive = { paint: fill({ color: destructive }) }
+  style swatchAccent = { paint: fill({ color: accent }) }
+  style swatchMuted = { paint: fill({ color: muted }).border({ color: border }) }
+  style exampleBlock = { box: size({ w: full }).space({ pad-t: 2, pad-b: 4 }).overflow({ all: visible }) }
   style sectionLabel = {
-    paint: fg(muted-foreground),
-    text: fontSize(xs).textCase(uppercase).tracking(wide),
-  }
+    paint: ink({ color: muted-foreground }),
+    text: type({ size: xs, tracking: wide, case: uppercase }),
+}
 </scope>
 
 <controller>

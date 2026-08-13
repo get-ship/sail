@@ -246,8 +246,8 @@ export default controller((ctx: ControllerScope<Scope>) => {
 
 </controller>
 <error-boundary fallback-text="The specimen threw while rendering.">
-  <column gap="2" style({ box: position(relative).minH(8), paint: fg(foreground) })>    <span style({ box: display(contents), text: fontFamily(body) })>      <if {compiling()}>
-      <row align="center" justify="center" style({ box: pad(4) })>
+  <column gap="2" style({ box: place({ position: relative }).size({ min-h: 8 }), paint: ink({ color: foreground }) })>    <span style({ box: flow({ display: contents }), text: type({ family: body }) })>      <if {compiling()}>
+      <row align="center" justify="center" style({ box: space({ pad: 4 }) })>
         <sail-spinner size="sm" label="Compiling"></sail-spinner>
       </row>
     </if>
@@ -255,12 +255,12 @@ export default controller((ctx: ControllerScope<Scope>) => {
     <if {compileError() !== null}>
       <column gap="2" data-test="compile-error">
         <alert tone="destructive">{compileErrorSummary()}</alert>
-        <div role="region" aria-label="text code block" style({ box: overflow(hidden), paint: bg(surface-2).fg(foreground).borderWidth(1).border(border-subtle).radius(md) })>
-          <header style({ box: pad(2).padX(3), paint: fg(muted-foreground).bg(muted) })>            <span style({ box: display(contents), text: fontSize(xs).fontWeight(medium).tracking(wide) })>              TEXT
+        <div role="region" aria-label="text code block" style({ box: overflow({ all: hidden }), paint: fill({ color: surface-2 }).ink({ color: foreground }).border({ color: border-subtle, width: 1 }).radius(md) })>
+          <header style({ box: space({ pad: 2, pad-x: 3 }), paint: ink({ color: muted-foreground }).fill({ color: muted }) })>            <span style({ box: flow({ display: contents }), text: type({ size: xs, weight: medium, tracking: wide }) })>              TEXT
             </span>
 </header>
-          <separator style({ box: m(0) })></separator>
-          <pre style({ box: padY(3).padX(4).overflowX(auto), text: leading(loose) })>{compileErrorBody()}</pre>
+          <separator style({ box: space({ m: 0 }) })></separator>
+          <pre style({ box: space({ pad-x: 4, pad-y: 3 }).overflow({ x: auto }), text: type({ leading: loose }) })>{compileErrorBody()}</pre>
         </div>
       </column>
     </if>
@@ -268,17 +268,17 @@ export default controller((ctx: ControllerScope<Scope>) => {
     <if {runtimeError() !== null}>
       <column gap="2" data-test="runtime-error">
         <alert tone="destructive">The specimen threw at runtime.</alert>
-        <div role="region" aria-label="text code block" style({ box: overflow(hidden), paint: bg(surface-2).fg(foreground).borderWidth(1).border(border-subtle).radius(md) })>
-          <header style({ box: pad(2).padX(3), paint: fg(muted-foreground).bg(muted) })>            <span style({ box: display(contents), text: fontSize(xs).fontWeight(medium).tracking(wide) })>              TEXT
+        <div role="region" aria-label="text code block" style({ box: overflow({ all: hidden }), paint: fill({ color: surface-2 }).ink({ color: foreground }).border({ color: border-subtle, width: 1 }).radius(md) })>
+          <header style({ box: space({ pad: 2, pad-x: 3 }), paint: ink({ color: muted-foreground }).fill({ color: muted }) })>            <span style({ box: flow({ display: contents }), text: type({ size: xs, weight: medium, tracking: wide }) })>              TEXT
             </span>
 </header>
-          <separator style({ box: m(0) })></separator>
-          <pre style({ box: padY(3).padX(4).overflowX(auto), text: leading(loose) })>{runtimeError()}</pre>
+          <separator style({ box: space({ m: 0 }) })></separator>
+          <pre style({ box: space({ pad-x: 4, pad-y: 3 }).overflow({ x: auto }), text: type({ leading: loose }) })>{runtimeError()}</pre>
         </div>
       </column>
     </if>
 
-    <div use:captureStage use:maxWidth={stageMaxWidth()} style({ box: w(full).ml(auto).mr(auto).maxW(bind(maxW)) })></div>
+    <div use:captureStage use:maxWidth={stageMaxWidth()} style({ box: size({ w: full, max-w: bind(maxW) }).space({ ml: auto, mr: auto }) })></div>
     </span>
 </column>
 </error-boundary>

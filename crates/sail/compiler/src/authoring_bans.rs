@@ -44,4 +44,73 @@ pub const AUTHORING_BANS: &[AuthoringBan] = &[
         rule: "sail-no-script",
         instead: "imperative logic lives in the <controller> block",
     },
+    AuthoringBan {
+        syntax: r#"<input type="checkbox">"#,
+        rule: "sail-no-freeform-input-type",
+        instead: "<checkbox>",
+    },
+    AuthoringBan {
+        syntax: r#"<input type="radio">"#,
+        rule: "sail-no-freeform-input-type",
+        instead: "<radio> inside <radio-group>",
+    },
+    AuthoringBan {
+        syntax: r#"<input type="range">"#,
+        rule: "sail-no-freeform-input-type",
+        instead: "<slider>",
+    },
+    AuthoringBan {
+        syntax: r#"<input type="file">"#,
+        rule: "sail-no-freeform-input-type",
+        instead: "<file>",
+    },
+    AuthoringBan {
+        syntax: r#"<input type="color">"#,
+        rule: "sail-no-freeform-input-type",
+        instead: "<color>",
+    },
+    AuthoringBan {
+        syntax: r#"<input type="date|time|datetime-local|month|week">"#,
+        rule: "sail-no-freeform-input-type",
+        instead: r#"<date type="date|time|datetime-local|month|week">"#,
+    },
+    AuthoringBan {
+        syntax: r#"<input type="submit">"#,
+        rule: "sail-no-freeform-input-type",
+        instead: r#"<button type="submit">"#,
+    },
 ];
+
+/// Freeform `<input type=…>` values that are not part of the Sail public API.
+/// Hosts may still emit these types in closed structure; authors must use the
+/// product tags listed in AUTHORING_BANS.
+pub fn banned_input_type(ty: &str) -> Option<&'static str> {
+    match ty {
+        "checkbox" => Some("<checkbox>"),
+        "radio" => Some("<radio> inside <radio-group>"),
+        "range" => Some("<slider>"),
+        "file" => Some("<file>"),
+        "color" => Some("<color>"),
+        "date" | "time" | "datetime-local" | "month" | "week" => {
+            Some(r#"<date type="…">"#)
+        }
+        "submit" | "image" | "reset" | "button" => Some(r#"<button type="…">"#),
+        _ => None,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn banned_types_redirect() {
+        assert_eq!(banned_input_type("range"), Some("<slider>"));
+        assert_eq!(banned_input_type("checkbox"), Some("<checkbox>"));
+        assert_eq!(banned_input_type("file"), Some("<file>"));
+        assert_eq!(banned_input_type("color"), Some("<color>"));
+        assert!(banned_input_type("date").unwrap().contains("date"));
+        assert!(banned_input_type("text").is_none());
+        assert!(banned_input_type("password").is_none());
+    }
+}

@@ -4,12 +4,12 @@
   that must not carry a docs rail.
 -->
 <scope>
-  style shell = { box: w(full).grow(1).minW(0).minH(0).h(full).overflow(hidden) }
-  style mainWorkbench = { box: display(flex).flexDir(column).basis(0).minH(0).minW(0).h(fill).overflow(hidden) }
+  style shell = { box: size({ w: full, h: full, min-w: 0, min-h: 0 }).flow({ grow: 1 }).overflow({ all: hidden }) }
+  style mainWorkbench = { box: flow({ display: flex, dir: column }).size({h: fill, min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }) }
 </scope>
 
 <row nowrap align="stretch" gap="0" style(shell)>
-  <main testid="fill-shell" style(mainWorkbench, { box: grow(1).minW(0).w(full) })>
+  <main testid="fill-shell" style(mainWorkbench, { box: flow({ grow: 1 }).size({ w: full, min-w: 0 }) })>
     <slot name="route"></slot>
   </main>
 </row>

@@ -7,10 +7,7 @@
     placement = ''
   }
 
-  style panel = {
-    box: position(fixed).inset(auto).m(0).left(bind(anchorLeft)).top(bind(anchorTop)).minW(panel-menu-min-w).pad(3),
-    paint: fg(popover.foreground).bg(popover).borderWidth(1).border(popover.border).radius(md).shadow(md).z(popover),
-  }
+  style panel = {box: place({ position: fixed, inset: auto, left: bind(anchorLeft), top: bind(anchorTop), z: popover }).space({ m: 0, pad: 3 }).size({ min-w: panel-menu-min-w }), paint: ink({ color: popover.foreground }).fill({ color: popover }).border({ color: popover.border, width: 1 }).radius(md).elevation(md)}
 </scope>
 
 <div popover use:anchor style(panel)>

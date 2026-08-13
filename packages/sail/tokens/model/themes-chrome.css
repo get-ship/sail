@@ -18,9 +18,9 @@
   box-shadow: var(--shadow-inset-soft);
 }
 :root[theme='ship'] body,
-:root[theme='ship'][data-mode='dark'] body,
+:root[theme='ship'][mode='dark'] body,
 [theme='ship'].tc-bg,
-[theme='ship'][data-mode='dark'].tc-bg {
+[theme='ship'][mode='dark'].tc-bg {
   background-image: linear-gradient(
     to bottom,
     color-mix(in oklch, var(--surface-0) 100%, white 1.5%) 0%,
@@ -38,7 +38,7 @@
     radial-gradient(ellipse 60% 45% at 100% 0%, oklch(0.93 0.04 300 / 10%), transparent 80%);
   background-attachment: fixed;
 }
-:root[theme='ship'][data-mode='dark'] body {
+:root[theme='ship'][mode='dark'] body {
   background-image:
     radial-gradient(ellipse 60% 40% at 0% 0%, oklch(1 0 0 / 4%), transparent 60%),
     linear-gradient(
@@ -114,12 +114,12 @@
   0%, 49%   { box-shadow: var(--shadow-accent); }
   50%, 100% { box-shadow: 0 0 0 2px oklch(0.78 0.20 145 / 20%); }
 }
-/* Dark-mode syntax palette — data-mode only (no .dark / twin theme ids). */
-:root[data-mode='dark'],
-:root[theme='console'][data-mode='dark'],
-:root[theme='contrast'][data-mode='dark'],
-:root[theme='console']:not([data-mode]),
-:root[theme='contrast']:not([data-mode]) {
+/* Dark-mode syntax palette — mode attr only (no .dark / twin theme ids). */
+:root[mode='dark'],
+:root[theme='console'][mode='dark'],
+:root[theme='contrast'][mode='dark'],
+:root[theme='console']:not([mode]),
+:root[theme='contrast']:not([mode]) {
   --syntax-keyword:  oklch(0.78 0.16 290);
   --syntax-string:   oklch(0.80 0.15 145);
   --syntax-number:   oklch(0.78 0.14 230);

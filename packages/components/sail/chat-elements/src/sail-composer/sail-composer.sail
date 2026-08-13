@@ -16,28 +16,28 @@
   }
 
   style frame = {
-    box: w(full).minW(0).pad(3),
-    paint: fg(foreground).bg(background).borderWidth(1).border(border).radius(lg),
+    box: size({ w: full, min-w: 0 }).space({ pad: 3 }),
+    paint: ink({ color: foreground }).fill({ color: background }).border({ color: border, width: 1 }).radius(lg),
     when: {
-      focusWithin: { paint: borderWidth(1).border(primary).outline(ring) },
-      stateDisabled: { paint: bg(muted).opacity(75) },
+      focusWithin: { paint: border({ color: primary, width: 1 }).border({ kind: outline, color: ring }) },
+      stateDisabled: { paint: fill({ color: muted }).filter({ opacity: 75 }) },
     },
   }
   // Chat field: full width. rows="3" + fixed autosize (never height:0) is the
   // empty-state floor — L1 size=md minH(control-h-md) only floors, it does not
   // cap. maxH caps the open box once content grows.
   style fieldMulti = {
-    box: w(full).minW(0).minH(20).maxH(48).padY(2).padX(2).overflowY(auto),
-    paint: fg(foreground).bg(transparent).borderWidth(0).radius(none).shadow(none),
-    text: fontFamily(body).fontSize(base).leading(relaxed),
+    box: size({ w: full, min-w: 0, min-h: 20, max-h: 48 }).space({ pad-x: 2, pad-y: 2 }).overflow({ y: auto }),
+    paint: ink({ color: foreground }).fill({ color: transparent }).border({ width: 0 }).radius(none).elevation(none),
+    text: type({ family: body, size: base, leading: relaxed }),
   }
   style field = {
-    box: w(full).minW(0).minH(control-h-md).padY(1_5).padX(2),
-    paint: fg(foreground).bg(transparent).borderWidth(0).radius(none).shadow(none),
-    text: fontFamily(body).fontSize(base).leading(normal),
+    box: size({ w: full, min-w: 0, min-h: control-h-md }).space({ pad-x: 2, pad-y: 1_5 }),
+    paint: ink({ color: foreground }).fill({ color: transparent }).border({ width: 0 }).radius(none).elevation(none),
+    text: type({ family: body, size: base, leading: normal }),
   }
-  style actions = { box: w(full) }
-  style send = { box: shrink(0) }
+  style actions = { box: size({ w: full }) }
+  style send = { box: flow({ shrink: 0 }) }
 </scope>
 
 <controller>
@@ -94,7 +94,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   data-state={disabled() ? 'disabled' : ''}
   style(frame)
 >
-  <div style({ box: display(contents) })>
+  <div style({ box: flow({ display: contents }) })>
     <slot name="attachments"></slot>
   </div>
   <if {multiline()}>
@@ -106,7 +106,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       use:fieldKeys
       use:autosize
       style(fieldMulti)
-    ></textarea>
+    />
     <row nowrap gap="1" align="center" justify="end" style(actions)>
       <slot name="trailing"></slot>
       <button
@@ -122,7 +122,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     </row>
   </if>
   <if {!multiline()}>
-    <row nowrap gap="2" align="center" style({ box: w(full) })>
+    <row nowrap gap="2" align="center" style({ box: size({ w: full }) })>
       <input
         type="text"
         placeholder={placeholder()}
@@ -131,7 +131,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         use:fieldKeys
         style(field)
       >
-      <row nowrap gap="1" align="center" style({ box: shrink(0) })>
+      <row nowrap gap="1" align="center" style({ box: flow({ shrink: 0 }) })>
         <slot name="trailing"></slot>
         <button
           use:sendClick

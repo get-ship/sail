@@ -36,9 +36,9 @@ fn chip_compiles_with_style_and_capability_mixins() {
     );
     let attrs = out.manifest["attributes"].as_array().unwrap();
     let variant = attrs.iter().find(|a| a["name"] == "variant").unwrap();
-    assert_eq!(variant["default"], "solid", "PE solid default: {variant}");
+    assert_eq!(variant["default"], "solid", "host Style solid default: {variant}");
     let size = attrs.iter().find(|a| a["name"] == "size").unwrap();
-    assert_eq!(size["default"], "md", "PE size=md default: {size}");
+    assert_eq!(size["default"], "md", "host Style size=md default: {size}");
     // tone is optional — no default member / no forced tone attr
     let tone = attrs.iter().find(|a| a["name"] == "tone");
     if let Some(tone) = tone {
@@ -54,7 +54,7 @@ fn chip_compiles_with_style_and_capability_mixins() {
             && (out.structure_html.contains("s-minhcontrolhxs")
                 || out.skin_css.contains("control-h-xs")
                 || out.structure_html.contains("controlhxs")),
-        "attr-absent PE size=md + solid base: {}",
+        "attr-absent host Style size=md + solid base: {}",
         out.structure_html
     );
 }
@@ -81,12 +81,12 @@ fn badge_and_card_compile_style() {
     );
     let battrs = badge.manifest["attributes"].as_array().unwrap();
     let bsize = battrs.iter().find(|a| a["name"] == "size").unwrap();
-    assert_eq!(bsize["default"], "md", "PE badge size=md: {bsize}");
+    assert_eq!(bsize["default"], "md", "host Style badge size=md: {bsize}");
     assert!(
         badge.structure_html.contains("s-")
             && (badge.structure_html.contains("s-minhcontrolh2xs")
                 || badge.skin_css.contains("control-h-2xs")),
-        "attr-absent PE badge size=md + soft base: {}",
+        "attr-absent host Style badge size=md + soft base: {}",
         badge.structure_html
     );
 
@@ -98,11 +98,11 @@ fn badge_and_card_compile_style() {
     );
     let cattrs = card.manifest["attributes"].as_array().unwrap();
     let pad = cattrs.iter().find(|a| a["name"] == "padding").unwrap();
-    assert_eq!(pad["default"], "md", "PE card padding=md: {pad}");
+    assert_eq!(pad["default"], "md", "host Style card padding=md: {pad}");
     assert!(
         card.structure_html.contains("s-")
             && (card.structure_html.contains("s-py4") || card.skin_css.contains("padding")),
-        "attr-absent PE card padding=md + surface base: {}",
+        "attr-absent host Style card padding=md + surface base: {}",
         card.structure_html
     );
     assert!(
@@ -132,7 +132,7 @@ fn alert_compiles_with_style_capability_mixins() {
         out.skin_css.contains("::before")
             && (out.skin_css.contains("var(--alert-stripe)")
                 || out.skin_css.contains("alert-stripe")),
-        "stripe PE on ::before: {}",
+        "stripe host Style on ::before: {}",
         out.skin_css
     );
 }
