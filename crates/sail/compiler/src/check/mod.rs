@@ -15,6 +15,7 @@ pub mod css_token;
 pub mod expr_subset;
 pub mod for_iterable;
 pub mod handler_complexity;
+pub mod icons;
 pub(crate) mod js_scan;
 pub mod key_identity;
 pub mod layout;
@@ -96,6 +97,7 @@ pub fn run(
     // Bare names are the language's namespace — reject unknown bare tags
     // (typos / not-yet-language elements) so L1 growth is safe.
     pass!("reserved-names", reserved_names::check(program))?;
+    pass!("icons", icons::check(program, source_path))?;
     pass!(
         "handler-complexity",
         handler_complexity::check(program, controller.is_some())
@@ -328,6 +330,7 @@ pub fn collect(
     }
     push(key_identity::check(program), source, &mut diags);
     push(for_iterable::check(program), source, &mut diags);
+    push_all(icons::collect(program, source_path), source, &mut diags);
     push_all(semantic_a11y::collect(program), source, &mut diags);
     if has_scope_context {
         push_all(

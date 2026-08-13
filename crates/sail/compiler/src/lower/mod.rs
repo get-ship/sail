@@ -59,8 +59,9 @@ pub struct Lowered {
     /// route's import graph (the per-route resolver). Collected once here; the
     /// emitter decides whether to write the imports.
     pub used_component_tags: BTreeSet<String>,
-    /// Static lucide glyph names from `<icon name="…">` / `use:icon` hosts.
-    /// The bundler emits these as `/_deck/icons/{name}.svg` assets (TOOL-10).
+    /// Static icon **roles** from `<icon name="…">` / `use:icon` hosts.
+    /// The bundler resolves them through the role registry and emits only
+    /// those glyphs.
     pub used_icons: BTreeSet<String>,
 }
 

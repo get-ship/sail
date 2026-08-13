@@ -1,6 +1,6 @@
-//! Compile-time collection of lucide (icon pack) glyph names referenced by a
-//! template. Used by the bundler to emit only the glyphs an app needs as
-//! static `/_deck/icons/{name}.svg` assets — no runtime CDN.
+//! Compile-time collection of icon **roles** referenced by a template.
+//! The bundler resolves roles through [`crate::icons::RoleRegistry`] and
+//! emits only those glyphs — no runtime CDN, no full-pack embed.
 
 use std::collections::BTreeSet;
 

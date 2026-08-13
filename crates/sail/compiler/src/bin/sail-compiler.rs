@@ -879,9 +879,43 @@ fn gen_prop_registry(out: Option<PathBuf>, ts_out: Option<PathBuf>) -> Result<()
             })
         })
         .collect();
-    sf.push_str("export interface ConfigKeyDoc {\n  key: string\n  type: string\n  default: string\n  doc: string\n  layer: \"POLICY\" | \"TASTE\"\n}\n\n");
+    sf.push_str("export interface ConfigKeyDoc {\n  key: string\n  type: string\n  default: string\n  doc: string\n  layer: \"POLICY\" | \"TASTE\" | \"PRODUCT\"\n}\n\n");
     sf.push_str("export const CONFIG_KEYS: ConfigKeyDoc[] = ");
     sf.push_str(&serde_json::to_string_pretty(&config_keys)?);
+    sf.push_str("\n\n");
+
+    // ICONS — role table from the same registry LSP / MCP / compile resolve use.
+    let icon_roles: Vec<serde_json::Value> = sail_compiler::RoleRegistry::core()
+        .role_surfaces()
+        .into_iter()
+        .map(|row| {
+            serde_json::json!({
+                "role": row.role,
+                "summary": row.summary,
+                "pack": row.pack,
+                "glyph": row.glyph,
+            })
+        })
+        .collect();
+    let icon_packs: Vec<serde_json::Value> = sail_compiler::ICONIFY_CATALOG
+        .iter()
+        .map(|p| {
+            serde_json::json!({
+                "id": p.id,
+                "title": p.title,
+                "summary": p.summary,
+            })
+        })
+        .collect();
+    sf.push_str("export interface IconRoleDoc {\n  role: string\n  summary: string\n  pack: string\n  glyph: string\n}\n\n");
+    sf.push_str("export const ICON_ROLES: IconRoleDoc[] = ");
+    sf.push_str(&serde_json::to_string_pretty(&icon_roles)?);
+    sf.push_str("\n\n");
+    sf.push_str(
+        "export interface IconPackDoc {\n  id: string\n  title: string\n  summary: string\n}\n\n",
+    );
+    sf.push_str("export const ICON_PACKS: IconPackDoc[] = ");
+    sf.push_str(&serde_json::to_string_pretty(&icon_packs)?);
     sf.push_str("\n\n");
 
     // SX EXTRAS — the group/state-<value>/(--var) forms that are grammar

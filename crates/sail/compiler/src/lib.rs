@@ -46,6 +46,7 @@ pub mod emit;
 pub mod escape;
 pub mod fmt;
 pub mod grammar_vocabulary;
+pub mod icons;
 pub mod ir;
 pub mod keys;
 pub mod l1_manifest;
@@ -83,6 +84,12 @@ pub use fmt::{
     FormatError, FormatOpts, FormatResult, format_source, format_source_with, is_formatted,
 };
 pub use grammar_vocabulary::{GrammarVocabulary, to_json as grammar_vocabulary_to_json};
+pub use icons::{
+    DEFAULT_PACK, ICONIFY_CATALOG, IconConfig, PackCatalogEntry, PackRef, PackSurface,
+    RULE_ICON_GLYPH, RULE_UNKNOWN_ICON, RoleBinding, RoleRegistry, RoleSurface, UsedGlyph,
+    collect_static_roles, load_glyph_svg, pack_glyph_ids, parse_icon_config, resolve_used_glyphs,
+    unknown_role_message,
+};
 pub use l1_manifest::{
     L1Attribute, L1ComponentToken, L1Entry, L1Js, L1JsKind, L1Kind, L1SlotType, VOID_TAGS,
     l1_by_kind, l1_count, l1_entries, l1_kind,

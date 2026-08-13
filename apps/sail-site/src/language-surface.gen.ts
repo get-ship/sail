@@ -5702,7 +5702,7 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
   "stdlib": [
     {
       "tag": "a",
-      "description": "native <a>. Bare (no variant) = text link (sail-base color). With"
+      "description": "native <a>. Dual mode:"
     },
     {
       "tag": "accordion",
@@ -5733,6 +5733,10 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
       "description": "L1 surface with header/body/footer slots, tone border, status rail,"
     },
     {
+      "tag": "checkbox",
+      "description": "boolean check product. Impl: native input type=checkbox."
+    },
+    {
       "tag": "chip",
       "description": "filter/selection pill."
     },
@@ -5741,12 +5745,20 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
       "description": "syntax-highlighted source."
     },
     {
+      "tag": "color",
+      "description": "system color swatch product. Impl: native input type=color."
+    },
+    {
       "tag": "combobox",
       "description": "L1 filtering picker. Text input filters a listbox"
     },
     {
       "tag": "context-menu",
       "description": "L1 right-click menu. Native [popover] + use:contextMenu"
+    },
+    {
+      "tag": "date",
+      "description": "temporal picker product. Impl: native input; type prop selects"
     },
     {
       "tag": "dialog",
@@ -5777,6 +5789,10 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
       "description": "form group. Style product only."
     },
     {
+      "tag": "file",
+      "description": "system file picker product. Impl: native input type=file."
+    },
+    {
       "tag": "hover-card",
       "description": "L1 hover-preview overlay. Style value language only."
     },
@@ -5786,7 +5802,7 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
     },
     {
       "tag": "input",
-      "description": "native field / toggle / range surface. Style product only."
+      "description": "text field product. Style product only."
     },
     {
       "tag": "kbd",
@@ -5846,7 +5862,7 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
     },
     {
       "tag": "select",
-      "description": "native picker. Field surface + size ladder (Style)."
+      "description": "native closed picker only (host Style). Not a combobox/listbox."
     },
     {
       "tag": "separator",
@@ -6114,7 +6130,12 @@ export const AUTHORING_BANS: AuthoringBanDoc[] = [
   {
     "syntax": "data-*",
     "rule": "sail-no-data-attr",
-    "instead": "prefer accessible name, visible text, or authored id; event wiring via on: + closed-over state. `data-sail-host` is compiler-only L1 part identity for closed widgets — never author it; app tests use role/name/text"
+    "instead": "prefer accessible name, visible text, or authored id; event wiring via on: + closed-over state. `data-sail-host` is compiler-only L1 part identity for closed widgets — never author it; app tests use role/name/text. `data-theme` / `data-product` / `data-mode` are theme substrate — use theme="
+  },
+  {
+    "syntax": "L1 component token in app style() / unsanctioned attrs",
+    "rule": "sail-no-component-token",
+    "instead": "component tokens are theme-owned; override via theme= or the theme document. App style() uses semantic slots (bg(primary))"
   },
   {
     "syntax": "free aria-* / role=",
@@ -6704,6 +6725,18 @@ export const CONTROLLER_AMBIENT: AmbientDoc[] = [
     "doc": "compiler-only lowering target for `invalidate(ref)`; never authored directly"
   },
   {
+    "name": "applyTheme",
+    "doc": "paint the document theme session (tokens API on runtime ambient)"
+  },
+  {
+    "name": "asSailHost",
+    "doc": "coerce an action node (or host value) to opaque SailHost"
+  },
+  {
+    "name": "attachBoundary",
+    "doc": "register an error-boundary handle on a host element"
+  },
+  {
     "name": "batch",
     "doc": "coalesce multiple signal writes into one flush"
   },
@@ -6712,28 +6745,152 @@ export const CONTROLLER_AMBIENT: AmbientDoc[] = [
     "doc": "the controller factory — wraps a setup function into a bound scope"
   },
   {
+    "name": "createVirtualizer",
+    "doc": "windowed list adapter — reactive Virtual surface over the virtual core"
+  },
+  {
+    "name": "debounce",
+    "doc": "coalesce rapid calls to a function until a quiet window elapses"
+  },
+  {
+    "name": "defineHostProperty",
+    "doc": "install an identity property on a SailHost (get/set) without Object.defineProperty"
+  },
+  {
+    "name": "defineStore",
+    "doc": "declare a shared store definition (id + setup)"
+  },
+  {
     "name": "derived",
     "doc": "a read-only signal computed from other signals, recomputed on dependency change"
+  },
+  {
+    "name": "detachBoundary",
+    "doc": "remove an error-boundary handle from a host element"
   },
   {
     "name": "effect",
     "doc": "run a side effect on mount and whenever its read signals change"
   },
   {
+    "name": "filteredList",
+    "doc": "derive a filtered/sorted list signal from a source list"
+  },
+  {
+    "name": "form",
+    "doc": "reactive form state helper"
+  },
+  {
+    "name": "hostCreateElement",
+    "doc": "create an element without naming document"
+  },
+  {
+    "name": "hostCssVar",
+    "doc": "read a CSS custom property from the document element"
+  },
+  {
+    "name": "hostFindById",
+    "doc": "document.getElementById without naming document"
+  },
+  {
+    "name": "hostGetAttr",
+    "doc": "read a host attribute via SailHost (Pure-safe)"
+  },
+  {
+    "name": "hostHasAttr",
+    "doc": "test host attribute presence via SailHost (Pure-safe)"
+  },
+  {
+    "name": "hostIsDarkMode",
+    "doc": "true when html data-mode is dark"
+  },
+  {
+    "name": "hostListenDocument",
+    "doc": "add a document event listener; returns disposer"
+  },
+  {
+    "name": "hostObserveRootAttrs",
+    "doc": "MutationObserver on documentElement attributes; returns disposer"
+  },
+  {
+    "name": "hostSetAttr",
+    "doc": "write or remove a host attribute via SailHost (Pure-safe)"
+  },
+  {
+    "name": "interval",
+    "doc": "run a callback on a fixed period while the controller is mounted"
+  },
+  {
     "name": "mount",
     "doc": "run a callback once, after the controller's first render"
+  },
+  {
+    "name": "mutation",
+    "doc": "public write primitive — returns a Mutation handle"
+  },
+  {
+    "name": "navigate",
+    "doc": "navigate to a path via the host router port"
+  },
+  {
+    "name": "objectUrlFromBytes",
+    "doc": "mint a blob object URL from bytes (Pure-safe Blob/createObjectURL stand-in)"
+  },
+  {
+    "name": "observeContentBox",
+    "doc": "observe an element content-box size (Pure-safe ResizeObserver stand-in)"
+  },
+  {
+    "name": "observeHostAttrs",
+    "doc": "observe attribute mutations on a host node; returns disposer"
   },
   {
     "name": "onCleanup",
     "doc": "register a callback to run when the controller tears down"
   },
   {
+    "name": "persistTheme",
+    "doc": "persist the chosen theme id for next boot"
+  },
+  {
+    "name": "provideStore",
+    "doc": "park a scoped store instance on the current controller scope"
+  },
+  {
+    "name": "query",
+    "doc": "public read primitive — compiler derives the cache key"
+  },
+  {
+    "name": "readStoredTheme",
+    "doc": "read the persisted theme id"
+  },
+  {
+    "name": "revokeObjectUrl",
+    "doc": "revoke a URL from objectUrlFromBytes"
+  },
+  {
+    "name": "scheduleFrame",
+    "doc": "schedule work on the next animation frame (Pure-safe rAF substitute)"
+  },
+  {
     "name": "signal",
     "doc": "a reactive value cell — read by calling it, written by calling it with a value"
   },
   {
+    "name": "theme",
+    "doc": "runtime theme surface — current / preview / commit / applyScope"
+  },
+  {
+    "name": "timeline",
+    "doc": "compose multi-track motion timelines"
+  },
+  {
     "name": "untrack",
     "doc": "read signals inside without subscribing the enclosing effect/derived"
+  },
+  {
+    "name": "useStore",
+    "doc": "resolve nearest-or-root store instance for a StoreDef"
   }
 ]
 
@@ -7326,7 +7483,7 @@ export interface ForeignIdiomDoc {
 export const FOREIGN_IDIOMS: ForeignIdiomDoc[] = [
   {
     "syntax": "class= / class:<name>",
-    "instead": "styling is a tag-position style({…}) / style(name) / style(partial, …) call on the element"
+    "instead": "class: is retired — styling is a tag-position style({…}) / style(name) / style(partial, …) call on the element"
   },
   {
     "syntax": "style= / style:<prop>",
@@ -7490,7 +7647,7 @@ export const SCOPE_REFUSALS: ScopeRefusalDoc[] = [
   {
     "syntax": "runtime value import",
     "instead": "import type { … } for types, or import { styleName } from './peer.sail' for Style values — behavior imports belong in <controller>",
-    "example": "<scope>\n  \n  props: { open = false }\n</scope>\n<p>ok</p>"
+    "example": "<scope>\n  import { signal } from '@ship/sail-runtime'\n  props: { open = false }\n</scope>\n<p>ok</p>"
   },
   {
     "syntax": "let / var / non-Style const",
@@ -7600,10 +7757,38 @@ export const CONFIG_KEYS: ConfigKeyDoc[] = [
     "layer": "POLICY"
   },
   {
+    "key": "layoutExperimental",
+    "type": "boolean",
+    "default": "false",
+    "doc": "enable experimental layout kinds (unintended-overflow, clipped-text) without full lint strict (SPEC-LAYOUT-DIAG-1 / S4.1)",
+    "layer": "POLICY"
+  },
+  {
+    "key": "layoutTextMetrics",
+    "type": "boolean",
+    "default": "false",
+    "doc": "enable text-metrics-dependent layout kind clipped-text (noisy until takumi-grade metrics; S4.1)",
+    "layer": "POLICY"
+  },
+  {
     "key": "policy",
     "type": "{ layout.raw_containers?, lint.severity.<rule-id>? }",
     "default": "registry defaults (see `sail-compiler policy`)",
     "doc": "typed compiler policy registry object; unknown keys are a hard error naming the closest valid key",
+    "layer": "POLICY"
+  },
+  {
+    "key": "strict",
+    "type": "boolean",
+    "default": "false",
+    "doc": "every lint finding is Error at the build gate (Warn→Error); per-rule off still silences; never downgrades compiler errors",
+    "layer": "POLICY"
+  },
+  {
+    "key": "lint",
+    "type": "{ severity?: \"off\"|\"warn\"|\"error\", rules?: { <rule-id>: \"off\"|\"warn\"|\"error\" } }",
+    "default": "natural rule severities (no global floor, no per-rule tree)",
+    "doc": "global lint severity floor + per-rule overrides (SPEC-LINTS-1 §3); dual-read with policy.lint.severity.*",
     "layer": "POLICY"
   },
   {
@@ -7619,6 +7804,402 @@ export const CONFIG_KEYS: ConfigKeyDoc[] = [
     "default": "vscode (studio default when unset)",
     "doc": "studio deep-link preference for open-in-editor — product taste, not language behavior",
     "layer": "TASTE"
+  }
+]
+
+export interface IconRoleDoc {
+  role: string
+  summary: string
+  pack: string
+  glyph: string
+}
+
+export const ICON_ROLES: IconRoleDoc[] = [
+  {
+    "role": "activity",
+    "summary": "activity",
+    "pack": "lucide",
+    "glyph": "activity"
+  },
+  {
+    "role": "add",
+    "summary": "add / create",
+    "pack": "lucide",
+    "glyph": "plus"
+  },
+  {
+    "role": "alarm-clock",
+    "summary": "alarm",
+    "pack": "lucide",
+    "glyph": "alarm-clock"
+  },
+  {
+    "role": "alert-triangle",
+    "summary": "warning (lucide id)",
+    "pack": "lucide",
+    "glyph": "alert-triangle"
+  },
+  {
+    "role": "arrow-left",
+    "summary": "back / previous",
+    "pack": "lucide",
+    "glyph": "arrow-left"
+  },
+  {
+    "role": "arrow-right",
+    "summary": "forward / next",
+    "pack": "lucide",
+    "glyph": "arrow-right"
+  },
+  {
+    "role": "attach",
+    "summary": "attach",
+    "pack": "lucide",
+    "glyph": "paperclip"
+  },
+  {
+    "role": "check",
+    "summary": "confirm / done",
+    "pack": "lucide",
+    "glyph": "check"
+  },
+  {
+    "role": "check-circle",
+    "summary": "success (lucide id)",
+    "pack": "lucide",
+    "glyph": "check-circle"
+  },
+  {
+    "role": "chevron-down",
+    "summary": "expand / sort desc",
+    "pack": "lucide",
+    "glyph": "chevron-down"
+  },
+  {
+    "role": "chevron-left",
+    "summary": "drill out",
+    "pack": "lucide",
+    "glyph": "chevron-left"
+  },
+  {
+    "role": "chevron-right",
+    "summary": "drill in",
+    "pack": "lucide",
+    "glyph": "chevron-right"
+  },
+  {
+    "role": "chevron-up",
+    "summary": "collapse / sort asc",
+    "pack": "lucide",
+    "glyph": "chevron-up"
+  },
+  {
+    "role": "circle",
+    "summary": "circle",
+    "pack": "lucide",
+    "glyph": "circle"
+  },
+  {
+    "role": "close",
+    "summary": "dismiss / close",
+    "pack": "lucide",
+    "glyph": "x"
+  },
+  {
+    "role": "compass",
+    "summary": "explore",
+    "pack": "lucide",
+    "glyph": "compass"
+  },
+  {
+    "role": "download",
+    "summary": "download",
+    "pack": "lucide",
+    "glyph": "download"
+  },
+  {
+    "role": "edit",
+    "summary": "edit",
+    "pack": "lucide",
+    "glyph": "pencil"
+  },
+  {
+    "role": "ellipsis",
+    "summary": "more actions",
+    "pack": "lucide",
+    "glyph": "ellipsis"
+  },
+  {
+    "role": "error",
+    "summary": "error",
+    "pack": "lucide",
+    "glyph": "x-circle"
+  },
+  {
+    "role": "file",
+    "summary": "file",
+    "pack": "lucide",
+    "glyph": "file"
+  },
+  {
+    "role": "file-code",
+    "summary": "source file",
+    "pack": "lucide",
+    "glyph": "file-code-2"
+  },
+  {
+    "role": "file-code-2",
+    "summary": "source file (lucide id)",
+    "pack": "lucide",
+    "glyph": "file-code-2"
+  },
+  {
+    "role": "folder",
+    "summary": "folder",
+    "pack": "lucide",
+    "glyph": "folder"
+  },
+  {
+    "role": "git",
+    "summary": "git",
+    "pack": "lucide",
+    "glyph": "git-branch"
+  },
+  {
+    "role": "git-branch",
+    "summary": "git branch",
+    "pack": "lucide",
+    "glyph": "git-branch"
+  },
+  {
+    "role": "heart",
+    "summary": "favorite",
+    "pack": "lucide",
+    "glyph": "heart"
+  },
+  {
+    "role": "home",
+    "summary": "go home",
+    "pack": "lucide",
+    "glyph": "home"
+  },
+  {
+    "role": "image",
+    "summary": "image / media",
+    "pack": "lucide",
+    "glyph": "image"
+  },
+  {
+    "role": "inbox",
+    "summary": "empty / inbox",
+    "pack": "lucide",
+    "glyph": "inbox"
+  },
+  {
+    "role": "info",
+    "summary": "informational",
+    "pack": "lucide",
+    "glyph": "info"
+  },
+  {
+    "role": "log-out",
+    "summary": "sign out",
+    "pack": "lucide",
+    "glyph": "log-out"
+  },
+  {
+    "role": "menu",
+    "summary": "open navigation",
+    "pack": "lucide",
+    "glyph": "menu"
+  },
+  {
+    "role": "moon",
+    "summary": "dark mode",
+    "pack": "lucide",
+    "glyph": "moon"
+  },
+  {
+    "role": "more-vertical",
+    "summary": "overflow menu",
+    "pack": "lucide",
+    "glyph": "more-vertical"
+  },
+  {
+    "role": "plus",
+    "summary": "add",
+    "pack": "lucide",
+    "glyph": "plus"
+  },
+  {
+    "role": "radio",
+    "summary": "live / broadcast",
+    "pack": "lucide",
+    "glyph": "radio"
+  },
+  {
+    "role": "redo-2",
+    "summary": "redo",
+    "pack": "lucide",
+    "glyph": "redo-2"
+  },
+  {
+    "role": "refresh",
+    "summary": "refresh",
+    "pack": "lucide",
+    "glyph": "refresh-cw"
+  },
+  {
+    "role": "refresh-cw",
+    "summary": "refresh (lucide id)",
+    "pack": "lucide",
+    "glyph": "refresh-cw"
+  },
+  {
+    "role": "rocket",
+    "summary": "launch",
+    "pack": "lucide",
+    "glyph": "rocket"
+  },
+  {
+    "role": "search",
+    "summary": "search",
+    "pack": "lucide",
+    "glyph": "search"
+  },
+  {
+    "role": "send",
+    "summary": "send",
+    "pack": "lucide",
+    "glyph": "send"
+  },
+  {
+    "role": "settings",
+    "summary": "settings / preferences",
+    "pack": "lucide",
+    "glyph": "settings"
+  },
+  {
+    "role": "ship",
+    "summary": "ship / brand",
+    "pack": "lucide",
+    "glyph": "ship"
+  },
+  {
+    "role": "sparkles",
+    "summary": "highlight",
+    "pack": "lucide",
+    "glyph": "sparkles"
+  },
+  {
+    "role": "star",
+    "summary": "star",
+    "pack": "lucide",
+    "glyph": "star"
+  },
+  {
+    "role": "stop",
+    "summary": "stop",
+    "pack": "lucide",
+    "glyph": "stop-circle"
+  },
+  {
+    "role": "success",
+    "summary": "success",
+    "pack": "lucide",
+    "glyph": "check-circle"
+  },
+  {
+    "role": "sun",
+    "summary": "light mode",
+    "pack": "lucide",
+    "glyph": "sun"
+  },
+  {
+    "role": "trash",
+    "summary": "delete",
+    "pack": "lucide",
+    "glyph": "trash-2"
+  },
+  {
+    "role": "trash-2",
+    "summary": "delete (lucide id)",
+    "pack": "lucide",
+    "glyph": "trash-2"
+  },
+  {
+    "role": "undo-2",
+    "summary": "undo",
+    "pack": "lucide",
+    "glyph": "undo-2"
+  },
+  {
+    "role": "warning",
+    "summary": "warning",
+    "pack": "lucide",
+    "glyph": "triangle-alert"
+  },
+  {
+    "role": "x",
+    "summary": "close (lucide id)",
+    "pack": "lucide",
+    "glyph": "x"
+  },
+  {
+    "role": "x-circle",
+    "summary": "error (lucide id)",
+    "pack": "lucide",
+    "glyph": "x-circle"
+  },
+  {
+    "role": "zap",
+    "summary": "power / instant",
+    "pack": "lucide",
+    "glyph": "zap"
+  }
+]
+
+export interface IconPackDoc {
+  id: string
+  title: string
+  summary: string
+}
+
+export const ICON_PACKS: IconPackDoc[] = [
+  {
+    "id": "lucide",
+    "title": "Lucide",
+    "summary": "outline UI set — framework default"
+  },
+  {
+    "id": "mdi",
+    "title": "Material Design Icons",
+    "summary": "Google-style filled / outline"
+  },
+  {
+    "id": "heroicons-outline",
+    "title": "Heroicons outline",
+    "summary": "Tailwind-adjacent outline"
+  },
+  {
+    "id": "heroicons-solid",
+    "title": "Heroicons solid",
+    "summary": "Tailwind-adjacent filled"
+  },
+  {
+    "id": "tabler",
+    "title": "Tabler",
+    "summary": "outline UI"
+  },
+  {
+    "id": "ph",
+    "title": "Phosphor",
+    "summary": "flexible weights"
+  },
+  {
+    "id": "feather",
+    "title": "Feather",
+    "summary": "minimal outline"
   }
 ]
 
