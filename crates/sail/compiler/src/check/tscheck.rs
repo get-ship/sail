@@ -26,8 +26,11 @@
 //!    (requested names); package roots prefer real `node_modules/@ship` types.
 //!    TS2305/TS2614 are **not** suppressed (pattern ambient always reports
 //!    `Module '"@ship/*"'` for both roots and subpaths).
-//! 2. **Sibling tree** — relative imports resolve against the author file's
-//!    real directory (open-any stubs when present; missing → TS2307).
+//! 2. **Sibling tree** — `rootDirs` overlays the harness mirror on the
+//!    author project so relative `.ts` imports see the real named exports.
+//!    Requested-name stubs would cache the first writer's bindings and
+//!    invent names the sibling does not export. `.sail` siblings are not
+//!    TS modules and stay stubs. Missing → TS2307.
 //! 3. **`@/` paths** — `at_alias_paths()` + per-import stubs; missing → TS2307.
 //!
 //! We deliberately do **not** reuse `emit/synthetic` output here — that path
@@ -1112,8 +1115,9 @@ fn write_region_harness(
         format!("{}\n{}", region.body, scope_types)
     };
 
-    // Sibling-tree parity (E4b R2): mirror author dir so `./` / `../` resolve.
-    // Present siblings → open-any stubs (existence proven). Missing → TS2307.
+    // Sibling-tree: mirror the author dir so `./` / `../` keep their shape.
+    // Present `.ts` files resolve through `rootDirs` onto the real tree.
+    // `.sail` siblings are not TS modules — stub those. Missing → TS2307.
     let mirror_rel = mirror_region_rel(source_path, project_root);
     let region_path = out_dir.join("mirror").join(&mirror_rel).join("region.ts");
     if let Some(parent) = region_path.parent() {
@@ -1140,8 +1144,7 @@ fn write_region_harness(
     {
         files.push(format!("\"{stub_rel}\""));
     }
-    let (at_files, at_paths_block) =
-        materialize_at_alias_stubs(&import_scan_body, out_dir, project_root)?;
+    let (at_files, at_missing_paths) = materialize_at_alias_stubs(&import_scan_body, project_root)?;
     for f in at_files {
         files.push(format!("\"{f}\""));
     }
@@ -1170,16 +1173,15 @@ fn write_region_harness(
         .collect::<Vec<_>>()
         .join(", ");
 
-    let base_paths = if at_paths_block.is_empty() {
-        region_harness_paths_block(project_root, out_dir)
-    } else {
-        at_paths_block
-    };
+    // Keep `@/` pointed at the real project. Missing specs get a dead
+    // override so they stay TS2307 instead of an open-any stub.
+    let base_paths = region_harness_paths_block(project_root, out_dir);
     let ship_paths = ship_nm
         .as_ref()
         .and_then(|nm| ship_packages_paths_entry(nm, out_dir))
         .unwrap_or_default();
-    let paths_block = merge_paths_blocks(&[base_paths, ship_paths]);
+    let paths_block = merge_paths_blocks(&[base_paths, at_missing_paths, ship_paths]);
+    let root_dirs = region_harness_root_dirs(project_root);
 
     // noImplicitAny true (product pure law). Open-any sibling stubs still make
     // callback params `any` (TS7006) — those are filtered in `map_region_diag`,
@@ -1209,6 +1211,7 @@ fn write_region_harness(
     "noUncheckedIndexedAccess": true,
     "isolatedModules": true,
 {resolution_opts},
+{root_dirs},
     "paths": {{
 {paths_block}
     }}
@@ -1258,7 +1261,9 @@ fn mirror_region_rel(source_path: Option<&Path>, project_root: Option<&Path>) ->
     let Some(src) = source_path else {
         return "__region".to_string();
     };
-    let parent = if src.is_file() {
+    // Tests pass a `.sail` path that is not always on disk. Treat known
+    // source extensions as files so `./sibling` stays next to the author.
+    let parent = if src.is_file() || is_author_source_path(src) {
         src.parent().unwrap_or(src)
     } else {
         src
@@ -1276,6 +1281,26 @@ fn mirror_region_rel(source_path: Option<&Path>, project_root: Option<&Path>) ->
         .and_then(|s| s.to_str())
         .map(|s| format!("__region/{s}"))
         .unwrap_or_else(|| "__region".to_string())
+}
+
+fn is_author_source_path(p: &Path) -> bool {
+    matches!(
+        p.extension().and_then(|e| e.to_str()),
+        Some("sail" | "ts" | "tsx")
+    )
+}
+
+fn region_harness_root_dirs(project_root: Option<&Path>) -> String {
+    let Some(root) = project_root else {
+        return "    \"rootDirs\": [\"./mirror\"]".to_string();
+    };
+    let root_s = root
+        .canonicalize()
+        .unwrap_or_else(|_| root.to_path_buf())
+        .to_string_lossy()
+        .replace('\\', "/")
+        .replace('"', "");
+    format!("    \"rootDirs\": [\"./mirror\", \"{root_s}\"]")
 }
 
 fn region_harness_paths_block(project_root: Option<&Path>, out_dir: &Path) -> String {
@@ -1764,8 +1789,9 @@ struct RelativeStub {
     has_namespace: bool,
 }
 
-/// Materialize relative imports from the **real sibling tree** (E4b R2).
-/// Present on disk → open-any stub at mirrored path. Missing → no stub (TS2307).
+/// Materialize relative imports from the **real sibling tree**.
+/// Present `.ts` / `.tsx` stay unstubbed so `rootDirs` sees real named
+/// exports. `.sail` is not a TS module — stub those. Missing → no file → TS2307.
 fn materialize_relative_import_siblings(
     body: &str,
     out_dir: &Path,
@@ -1774,7 +1800,7 @@ fn materialize_relative_import_siblings(
 ) -> std::io::Result<Vec<String>> {
     let stubs = collect_relative_import_stubs(body);
     let author_dir = source_path.and_then(|p| {
-        if p.is_file() {
+        if p.is_file() || is_author_source_path(p) {
             p.parent().map(|d| d.to_path_buf())
         } else {
             Some(p.to_path_buf())
@@ -1782,13 +1808,17 @@ fn materialize_relative_import_siblings(
     });
     let mirror_region_dir = out_dir.join("mirror").join(mirror_rel);
     let mut files = Vec::new();
-    for (spec, stub) in stubs {
+    for (spec, mut stub) in stubs {
         let real = author_dir
             .as_ref()
             .and_then(|dir| resolve_relative_module(dir, &spec));
         let Some(real_path) = real else {
             continue;
         };
+        let is_sail = real_path.extension().and_then(|e| e.to_str()) == Some("sail");
+        if !is_sail {
+            continue;
+        }
         let dest = mirror_join(&mirror_region_dir, &spec);
         let Some(dest) = dest else {
             continue;
@@ -1797,6 +1827,7 @@ fn materialize_relative_import_siblings(
         if let Some(parent) = dest.parent() {
             std::fs::create_dir_all(parent)?;
         }
+        merge_existing_stub_names(&dest, &mut stub);
         write_open_any_stub(&dest, &stub)?;
         if let Ok(rel) = dest.strip_prefix(out_dir) {
             let rel_s = rel.to_string_lossy().replace('\\', "/");
@@ -1804,6 +1835,28 @@ fn materialize_relative_import_siblings(
         }
     }
     Ok(files)
+}
+
+fn merge_existing_stub_names(dest: &Path, stub: &mut RelativeStub) {
+    let Ok(existing) = std::fs::read_to_string(dest) else {
+        return;
+    };
+    for line in existing.lines() {
+        let line = line.trim();
+        let rest = line
+            .strip_prefix("export type ")
+            .or_else(|| line.strip_prefix("export const "));
+        let Some(rest) = rest else {
+            continue;
+        };
+        let name = rest
+            .split(|c: char| !c.is_ascii_alphanumeric() && c != '_' && c != '$')
+            .next()
+            .unwrap_or("");
+        if is_ts_ident(name) {
+            stub.named.insert(name.to_string());
+        }
+    }
 }
 
 fn write_open_any_stub(dest: &Path, stub: &RelativeStub) -> std::io::Result<()> {
@@ -2093,7 +2146,6 @@ fn collect_at_alias_import_stubs(body: &str) -> HashMap<String, RelativeStub> {
 
 fn materialize_at_alias_stubs(
     body: &str,
-    out_dir: &Path,
     project_root: Option<&Path>,
 ) -> std::io::Result<(Vec<String>, String)> {
     let stubs = collect_at_alias_import_stubs(body);
@@ -2107,11 +2159,13 @@ fn materialize_at_alias_stubs(
             .collect();
         return Ok((Vec::new(), paths.join(",\n")));
     };
-    let mut files = Vec::new();
+    // Present `@/` targets use `region_harness_paths_block` (real tree).
+    // Only missing specs get a dead override — an open-any stub here
+    // would hide a real missing export the same way relative stubs did.
     let mut path_entries = Vec::new();
     let mut i = 0usize;
-    for (spec, stub) in stubs {
-        let resolved = crate::project_map::resolve_at_alias(root, &spec);
+    for spec in stubs.keys() {
+        let resolved = crate::project_map::resolve_at_alias(root, spec);
         let exists = resolved.as_ref().is_some_and(|p| {
             p.is_file()
                 || p.with_extension("ts").is_file()
@@ -2121,19 +2175,9 @@ fn materialize_at_alias_stubs(
         if !exists {
             path_entries.push(format!("      \"{spec}\": [\"./__missing_at__/{i}\"]"));
             i += 1;
-            continue;
         }
-        let stub_name = format!("at_stub_{i}.ts");
-        i += 1;
-        let dest = out_dir.join("at").join(&stub_name);
-        if let Some(parent) = dest.parent() {
-            std::fs::create_dir_all(parent)?;
-        }
-        write_open_any_stub(&dest, &stub)?;
-        files.push(format!("./at/{stub_name}"));
-        path_entries.push(format!("      \"{spec}\": [\"./at/{stub_name}\"]"));
     }
-    Ok((files, path_entries.join(",\n")))
+    Ok((Vec::new(), path_entries.join(",\n")))
 }
 
 fn is_ts_ident(name: &str) -> bool {
@@ -4731,6 +4775,102 @@ export default controller((ctx) => {
                 d.rule.as_deref() == Some(RULE_TYPE_GATE) && d.message.contains("TS2307")
             }),
             "missing ./missing-sibling.sail must hard-fail TS2307 (no *.sail ambient mask), got {diags:?}"
+        );
+    }
+
+    fn write_export_kind_fixture(project: &Path) {
+        std::fs::create_dir_all(project.join("src")).unwrap();
+        std::fs::write(
+            project.join("package.json"),
+            r#"{"name":"@ship/region-export-kinds"}"#,
+        )
+        .unwrap();
+        std::fs::write(
+            project.join("src/kinds.ts"),
+            "export function makeValue() {\n  return { n: 1 }\n}\n\
+             export interface Face {\n  n: number\n}\n\
+             export type Alias = ReturnType<typeof makeValue>\n",
+        )
+        .unwrap();
+    }
+
+    fn region_importing(bindings: &str) -> String {
+        format!(
+            "\
+<controller>
+import {{ {bindings} }} from './kinds'
+
+export default controller(() => {{
+  return {{ }}
+}})
+</controller>
+<div />
+"
+        )
+    }
+
+    #[test]
+    fn reused_region_sees_all_sibling_export_kinds() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .ancestors()
+            .nth(3)
+            .expect("workspace root");
+        if resolve_tsgo(Some(root)).is_none() {
+            panic!("tsgo required");
+        }
+        let tmp = tempfile::tempdir().unwrap();
+        let project = tmp.path();
+        write_export_kind_fixture(project);
+        reset_type_gate_servers();
+
+        // First writer imports only the value — the old stub would cache
+        // just `makeValue` and phantom-TS2305 the later type imports.
+        let first = project.join("src/first.sail");
+        let first_diags = collect_sail_type_gate(&region_importing("makeValue"), Some(&first));
+        let first_errs = type_gate_errs(&first_diags);
+        assert!(
+            first_errs.is_empty(),
+            "value export must be green: {first_errs:?}"
+        );
+
+        let second = project.join("src/second.sail");
+        let second_diags = collect_sail_type_gate(
+            &region_importing("makeValue, type Face, type Alias"),
+            Some(&second),
+        );
+        let second_errs = type_gate_errs(&second_diags);
+        assert!(
+            second_errs.is_empty(),
+            "reuse must see value + interface + typeof-alias on the real sibling: {second_errs:?}"
+        );
+        assert!(
+            !lsp_is_disabled(),
+            "export-kind coverage must use the live program"
+        );
+    }
+
+    #[test]
+    fn relative_sibling_missing_export_is_ts2305() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .ancestors()
+            .nth(3)
+            .expect("workspace root");
+        if resolve_tsgo(Some(root)).is_none() {
+            panic!("tsgo required");
+        }
+        let tmp = tempfile::tempdir().unwrap();
+        let project = tmp.path();
+        write_export_kind_fixture(project);
+        reset_type_gate_servers();
+        let path = project.join("src/broken.sail");
+        let diags = collect_sail_type_gate(&region_importing("noSuch"), Some(&path));
+        assert!(
+            type_gate_errs(&diags).iter().any(|d| {
+                d.message.contains("TS2305")
+                    || d.message.contains("no exported member")
+                    || d.message.contains("noSuch")
+            }),
+            "missing named export on a real sibling must be TS2305, not stub-green: {diags:?}"
         );
     }
 

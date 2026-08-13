@@ -12,8 +12,8 @@ use sail_compiler::ambients::{
 };
 use sail_compiler::check::tscheck::{
     TsDiag, TsDiagKey, check_project_type_gate, collect_project_gate_files,
-    collect_project_ts_diags, lsp_is_disabled, parse_tsc_diagnostics, rel_diag_path,
-    reset_type_gate_servers, resolve_product_path, resolve_tsgo, ts_diag_key,
+    collect_project_ts_diags, collect_sail_type_gate, lsp_is_disabled, parse_tsc_diagnostics,
+    rel_diag_path, reset_type_gate_servers, resolve_product_path, resolve_tsgo, ts_diag_key,
     tsgo_invocation_count,
 };
 
@@ -393,5 +393,145 @@ fn kind_config_evicts_mirror_session() {
         keys.iter()
             .all(|k| k.code != "TS2882" && k.code != "TS2307"),
         "in-place kind program must resolve @/ and *.css: {keys:?}"
+    );
+}
+
+fn region_src(bindings: &str, body: &str) -> String {
+    format!(
+        "\
+<controller>
+import {{ {bindings} }} from './kinds'
+
+export default controller(() => {{
+{body}
+}})
+</controller>
+<div />
+"
+    )
+}
+
+fn write_kinds_mod(project: &Path) {
+    std::fs::create_dir_all(project.join("src")).unwrap();
+    std::fs::write(
+        project.join("package.json"),
+        r#"{"name":"@ship/parity-export-kinds"}"#,
+    )
+    .unwrap();
+    std::fs::write(
+        project.join("src/kinds.ts"),
+        "export function makeValue() {\n  return { n: 1 }\n}\n\
+         export interface Face {\n  n: number\n}\n\
+         export type Alias = ReturnType<typeof makeValue>\n",
+    )
+    .unwrap();
+}
+
+/// Gate ≡ `tsc -p` for value / interface / typeof-alias exports imported
+/// from a `.sail` region via a relative path. Lives on the region program
+/// (not the project-batch CLI).
+#[test]
+fn sail_region_relative_export_kinds_match_tsc_p() {
+    let root = workspace_root();
+    if resolve_tsgo(Some(&root)).is_none() {
+        panic!("tsgo required");
+    }
+    let tsc = tsc_bin(&root);
+    let tmp = tempfile::tempdir().unwrap();
+    let project = tmp.path();
+    write_kinds_mod(project);
+    std::fs::write(
+        project.join("src/widget.ts"),
+        "import { makeValue, type Face, type Alias } from './kinds'\n\
+         export const v: Face = makeValue()\n\
+         export const a: Alias = v\n",
+    )
+    .unwrap();
+    write_project_type_configs(project).expect("kind configs");
+
+    let tsc_diags = run_tsc_p(project, &tsc, PROJECT_TSCONFIG_PURE_REL);
+    let tsc_export_errs: Vec<_> = tsc_diags
+        .iter()
+        .filter(|d| d.code == "TS2305" || d.code == "TS2614" || d.code == "TS2724")
+        .collect();
+    assert!(
+        tsc_export_errs.is_empty(),
+        "tsc -p must see all three export kinds: {tsc_diags:?}"
+    );
+
+    reset_type_gate_servers();
+    // Reuse order that used to phantom: value-only first, then all three.
+    let first = collect_sail_type_gate(
+        &region_src("makeValue", "  const v = makeValue()\n  return { v }"),
+        Some(&project.join("src/first.sail")),
+    );
+    assert!(
+        !first.iter().any(|d| d.severity == DiagSeverity::Error),
+        "value-only region must be green: {first:?}"
+    );
+    let gate = collect_sail_type_gate(
+        &region_src(
+            "makeValue, type Face, type Alias",
+            "  const v: Face = makeValue()\n  const a: Alias = v\n  return { v, a }",
+        ),
+        Some(&project.join("src/widget.sail")),
+    );
+    assert!(
+        !lsp_is_disabled(),
+        "export-kind parity must use the live program, not CLI tsgo -p"
+    );
+    let gate_export_errs: Vec<_> = gate
+        .iter()
+        .filter(|d| {
+            d.severity == DiagSeverity::Error
+                && (d.message.contains("TS2305")
+                    || d.message.contains("TS2614")
+                    || d.message.contains("TS2724")
+                    || d.message.contains("no exported member"))
+        })
+        .collect();
+    assert!(
+        gate_export_errs.is_empty(),
+        "live region program must match tsc on value + interface + typeof-alias: {gate:?}"
+    );
+}
+
+#[test]
+fn sail_region_missing_export_is_red_like_tsc_p() {
+    let root = workspace_root();
+    if resolve_tsgo(Some(&root)).is_none() {
+        panic!("tsgo required");
+    }
+    let tsc = tsc_bin(&root);
+    let tmp = tempfile::tempdir().unwrap();
+    let project = tmp.path();
+    write_kinds_mod(project);
+    std::fs::write(
+        project.join("src/broken.ts"),
+        "import { noSuch } from './kinds'\nexport const x = noSuch\n",
+    )
+    .unwrap();
+    write_project_type_configs(project).expect("kind configs");
+
+    let tsc_diags = run_tsc_p(project, &tsc, PROJECT_TSCONFIG_PURE_REL);
+    assert!(
+        tsc_diags
+            .iter()
+            .any(|d| d.code == "TS2305" && d.message.contains("noSuch")),
+        "tsc -p must refuse a missing named export: {tsc_diags:?}"
+    );
+
+    reset_type_gate_servers();
+    let gate = collect_sail_type_gate(
+        &region_src("noSuch", "  return { noSuch }"),
+        Some(&project.join("src/broken.sail")),
+    );
+    assert!(!lsp_is_disabled(), "live program required");
+    assert!(
+        gate.iter().any(|d| {
+            d.severity == DiagSeverity::Error
+                && (d.message.contains("TS2305") || d.message.contains("noSuch"))
+        }),
+        "region gate must go red on a missing export (stub would silent-green): {gate:?}"
     );
 }
