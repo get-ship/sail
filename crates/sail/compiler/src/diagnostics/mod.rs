@@ -123,7 +123,11 @@ pub enum DiagSeverity {
 /// - **OnType** — parse + vocabulary + semantic checks (LSP `didOpen` /
 ///   `didChange`). Never runs the taffy layout / compose pass.
 /// - **OnSave** — full stream including taffy layout + compose (LSP
-///   `didSave`, `sail check`, MCP `sail_check`, compile gate).
+///   `didSave`, `sail check`, MCP `sail_check`, `sail_edit`).
+///
+/// `compile()` / `check::gate` take the Error-severity subset of this stream
+/// **without** compose. Layout + type-gate + lint still fail the build;
+/// compose findings are Fix by default and belong on the check path.
 ///
 /// Render stays **on-demand** outside this enum (MCP `sail_render` / CLI) —
 /// never part of the push-diagnostic pipeline.
@@ -138,8 +142,16 @@ pub enum DiagnosticTier {
 }
 
 impl DiagnosticTier {
-    /// Whether this tier runs the taffy layout (and taffy-backed compose) pass.
+    /// Whether this tier runs the taffy layout pass.
     pub const fn includes_layout(self) -> bool {
+        matches!(self, Self::OnSave)
+    }
+
+    /// Whether this tier runs the compose (Fix) pass.
+    ///
+    /// `compile()` / `gate()` never consult this: they skip compose even
+    /// when the rest of the OnSave Error stream runs.
+    pub const fn includes_compose(self) -> bool {
         matches!(self, Self::OnSave)
     }
 }
@@ -228,5 +240,7 @@ mod tests {
         assert!(!DiagnosticTier::OnType.includes_layout());
         assert!(DiagnosticTier::OnSave.includes_layout());
         assert!(DiagnosticTier::default().includes_layout());
+        assert!(!DiagnosticTier::OnType.includes_compose());
+        assert!(DiagnosticTier::OnSave.includes_compose());
     }
 }

@@ -267,11 +267,15 @@ pub struct CompileOutput {
     pub meta: Option<serde_json::Value>,
     /// Static icon glyph names collected from the template (TOOL-10).
     pub used_icons: std::collections::BTreeSet<String>,
+    /// The `collect()` stream from the Error gate. Empty of Error (those
+    /// fail `compile()`); Warning/Fix stay so a host can print them
+    /// without a second `collect()`.
+    pub diagnostics: Vec<Diagnostic>,
 }
 
 /// Check a `.sail` source string and return **every** diagnostic, not just
 /// the first. Full stream ([`DiagnosticTier::OnSave`]) — taffy layout +
-/// compose included. Entry point for CLI / MCP / compile-adjacent tooling.
+/// compose included. Entry point for CLI / MCP / `sail_edit` / LSP OnSave.
 ///
 /// Prefer [`check_all_with_tier`] for the LSP push path (OnType vs OnSave).
 ///
@@ -508,12 +512,11 @@ pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, Compile
         )
     })
     .map_err(|e| attach_path(e, &opts))?;
-    // One contract per boundary (#255): the full Error-severity lint stream
-    // (sail-prop-value, sail-attr-bool-prop, sail-css-content-text, controller-*)
-    // gates `compile()` itself, so the daemon + napi harness reject exactly
-    // what the CLI does. The CLI's post-compile `fatal_diagnostics_gate` is now
-    // redundant-but-harmless.
-    compile_span("gate", || {
+    // One contract per boundary (#255): the Error-severity lint + layout +
+    // type-gate stream gates `compile()` itself, so the daemon + napi harness
+    // reject exactly what the CLI does. Compose is Fix by default and stays
+    // on `check_all` / LSP OnSave / `sail_edit` — `gate` does not run it.
+    let diagnostics = compile_span("gate", || {
         check::gate(
             &program,
             effective_source,
@@ -572,6 +575,7 @@ pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, Compile
         dts,
         meta,
         used_icons: lowered.used_icons,
+        diagnostics,
     })
 }
 

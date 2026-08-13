@@ -160,7 +160,7 @@ pub fn run(
     Ok(())
 }
 
-/// Gate compilation on the **full Error-severity diagnostic stream**, not just
+/// Gate compilation on the **Error-severity** diagnostic stream, not just
 /// the structural passes [`run`] invokes. `run` covers the expr-subset /
 /// scope-bound / type-strengthening passes; it does NOT invoke the
 /// Error-severity `sail-lint` rules (`sail-prop-value`, `sail-attr-bool-prop`,
@@ -170,14 +170,21 @@ pub fn run(
 /// harness both call. One contract per boundary: a `Severity::Error` finding is
 /// a compile error in ALL three artifacts (CLI, daemon, harness).
 ///
-/// The type gate (JOB-E1, `tscheck`) joins this same stream — DOM globals in
-/// Pure regions, action-surface law, `@ts-ignore` bans — so `compile()` hard-
-/// fails identically to `check_all` / MCP / LSP OnSave.
+/// The type gate (`tscheck`) joins this same stream — DOM globals in Pure
+/// regions, action-surface law, `@ts-ignore` bans — so `compile()` hard-fails
+/// on Error-severity lint + layout + type-gate identically to `check_all` /
+/// MCP / LSP OnSave.
+///
+/// Compose does **not** run here. Its default severity is Fix; it belongs on
+/// [`collect`] / `check_all` / LSP OnSave / `sail_edit`, which consume Fix
+/// diagnostics. A Fix-only compose finding must not pay compile wall.
 ///
 /// Returns the first Error-severity diagnostic as a span-bearing
 /// [`CompileError`] (its line/col mapped back to a byte offset so the
-/// napi/wasm surface can render coordinates), or `Ok(())` when the stream is
-/// clean. Runs after [`run`] in [`crate::compile`], so the structural passes
+/// napi/wasm surface can render coordinates), or `Ok(diags)` when the
+/// stream has no Error. `Ok` keeps the Warning/Fix findings from this
+/// `collect()` so a host can print them without walking the file again.
+/// Runs after [`run`] in [`crate::compile`], so the structural passes
 /// short-circuit first and this catches only the lint Error rules they skip.
 ///
 /// `author_source` is the original `.sail` text (controller still present) so
@@ -191,8 +198,8 @@ pub fn gate(
     controller: Option<&controller_parse::ParsedController>,
     overrides: &[crate::check::lint_overrides::LintOverride],
     route_params: Option<&[String]>,
-) -> Result<(), CompileError> {
-    let fatal = collect(
+) -> Result<Vec<Diagnostic>, CompileError> {
+    let diags = collect_stream(
         program,
         source,
         author_source,
@@ -201,22 +208,21 @@ pub fn gate(
         overrides,
         route_params,
         DiagnosticTier::OnSave,
-    )
-    .into_iter()
-    .find(|d| d.severity == DiagSeverity::Error);
-    let Some(d) = fatal else {
-        return Ok(());
-    };
-    // Prefer author_source for offset mapping so type-gate lines in the
-    // controller region land on the right byte (stripped blanks the block).
-    let offset = offset_for_line_col(author_source, d.line, d.col);
-    let mut err = CompileError::new(d.message)
-        .with_span(crate::diagnostics::Span::point(offset))
-        .with_category(RULE_CHECK_GATE);
-    if let Some(rule) = d.rule {
-        err = err.with_category(rule);
+        false,
+    );
+    if let Some(d) = diags.iter().find(|d| d.severity == DiagSeverity::Error) {
+        // Prefer author_source for offset mapping so type-gate lines in the
+        // controller region land on the right byte (stripped blanks the block).
+        let offset = offset_for_line_col(author_source, d.line, d.col);
+        let mut err = CompileError::new(d.message.clone())
+            .with_span(crate::diagnostics::Span::point(offset))
+            .with_category(RULE_CHECK_GATE);
+        if let Some(rule) = &d.rule {
+            err = err.with_category(rule.clone());
+        }
+        return Err(err);
     }
-    Err(err)
+    Ok(diags)
 }
 
 /// Map a 1-based (line, col) back to a byte offset into `source`. Inverse of
@@ -251,7 +257,7 @@ fn offset_for_line_col(source: &str, line: usize, col: usize) -> usize {
 /// - [`DiagnosticTier::OnType`] — parse / vocabulary / semantic; **no taffy**,
 ///   **no type gate** (LSP keystrokes stay fast)
 /// - [`DiagnosticTier::OnSave`] — full stream including layout + compose +
-///   type gate (JOB-E1)
+///   type gate. [`gate`] / `compile()` reuse this stream minus compose.
 ///
 /// `author_source` is the original `.sail` text (inline `<controller>` still
 /// present). Structural passes use `source` (controller blanked); the type
@@ -274,6 +280,33 @@ pub fn collect(
     overrides: &[crate::check::lint_overrides::LintOverride],
     route_params: Option<&[String]>,
     tier: DiagnosticTier,
+) -> Vec<Diagnostic> {
+    collect_stream(
+        program,
+        source,
+        author_source,
+        source_path,
+        controller,
+        overrides,
+        route_params,
+        tier,
+        true,
+    )
+}
+
+/// Shared diagnostic walk for [`collect`] (check / LSP / `sail_edit`) and
+/// [`gate`] (`compile()`). `include_compose` is the jurisdiction switch:
+/// Fix consumers set it; the Error gate does not.
+fn collect_stream(
+    program: &Program,
+    source: &str,
+    author_source: &str,
+    source_path: Option<&Path>,
+    controller: Option<&controller_parse::ParsedController>,
+    overrides: &[crate::check::lint_overrides::LintOverride],
+    route_params: Option<&[String]>,
+    tier: DiagnosticTier,
+    include_compose: bool,
 ) -> Vec<Diagnostic> {
     let mut diags: Vec<Diagnostic> = Vec::new();
 
@@ -427,10 +460,9 @@ pub fn collect(
         }
     }
 
-    // Layout + compose (taffy) — SPEC-TOOLING-1 §WI6: OnSave only.
-    // On-type must never compute a box tree; typing a 500-line buffer must
-    // not pay for multi-viewport layout. Compose rebuilds taffy today, so
-    // it rides the same gate (not a separate "reuse" of layout's tree).
+    // Layout (taffy) — SPEC-TOOLING-1 §WI6: OnSave only. On-type must never
+    // compute a box tree; typing a 500-line buffer must not pay for
+    // multi-viewport layout. Layout stays on `compile()` / `gate()`.
     if tier.includes_layout() {
         // Layout diagnostics — build the same box tree the runtime will build
         // and report collapsed / overflow findings. Soft findings stay
@@ -442,10 +474,11 @@ pub fn collect(
         diags.extend(check_span("layout", || {
             layout::collect_for(source, source_path)
         }));
+    }
 
-        // Compose auto-fix — sibling rhythm (spacing) consistency. Emits
-        // `Fix` severity diagnostics that the `sail_edit` path turns into
-        // source rewrites.
+    // Compose is the Fix stream (rhythm / contrast / spacing). `check_all`
+    // / LSP OnSave / `sail_edit` consume it; `gate()` / `compile()` do not.
+    if include_compose && tier.includes_compose() {
         diags.extend(check_span("compose", || {
             compose::collect(source, source_path, overrides)
         }));
@@ -743,6 +776,26 @@ mod gate_tests {
         let src = r#"<badge size="md">x</badge>"#;
         let program = parse::parse(src).unwrap();
         super::gate(&program, src, src, None, None, &[], None).unwrap();
+    }
+
+    /// Fix-only rhythm stays off the Error gate. `check_all` still emits it.
+    #[test]
+    fn gate_passes_fix_only_compose_rhythm() {
+        let src = r#"<column>
+  <p style({ box: mb(4) })>a</p>
+  <p style({ box: mb(4) })>b</p>
+  <p style({ box: mb(8) })>c</p>
+</column>"#;
+        let program = parse::parse(src).unwrap();
+        super::gate(&program, src, src, None, None, &[], None)
+            .expect("Fix compose must not fail gate");
+        let diags = crate::check_all(src, None, &[], None);
+        assert!(
+            diags
+                .iter()
+                .any(|d| d.rule.as_deref() == Some("sail-compose-rhythm")),
+            "check_all must still emit rhythm: {diags:?}"
+        );
     }
 
     /// The gate's span must map back to the offending line/col so the

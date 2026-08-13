@@ -93,50 +93,41 @@ pub fn compile_sail(
     };
     match compile(&source, opts) {
         Ok(out) => {
-            // deck build only BLOCKS on Error severity (`compile()` runs
-            // `check::gate` over the full Error stream). The Warning-level
-            // `sail-lint` findings (`check::collect`) are advisory — surface
-            // them to stderr during the build so authors see them, without
-            // failing. A compile that reached here already passed the Error
-            // gate, so only Warnings remain. Re-runs the collect() pass (a
-            // parse + lint over this one file); cheap next to bundling and
-            // only on the build path.
-            emit_build_warnings(
-                sail_file,
-                &source,
-                &policy_overrides,
-                route_params.as_deref(),
-            );
+            // Warning-level findings are advisory — print them without
+            // failing. `compile()` already ran `collect()` inside `gate`;
+            // a second `check_all` would walk the file again.
+            emit_build_warnings(sail_file, &out.diagnostics);
             Ok(out.js)
         }
         Err(e) => Err(CompileError::Compile(e.render(&source))),
     }
 }
 
-/// Print Warning-severity diagnostics for `source` to stderr (the build
-/// surfacing seam for #2). Errors never appear — they fail `compile()` before
-/// this is reached. Mirrors the CLI/MCP rendering: `<path>:<line>:<col>
-/// [<rule>] <message>`.
-fn emit_build_warnings(
-    sail_file: &Path,
-    source: &str,
-    overrides: &[sail_compiler::LintOverride],
-    route_params: Option<&[String]>,
-) {
-    for d in sail_compiler::check_all(source, Some(sail_file), overrides, route_params) {
-        if d.severity != sail_compiler::DiagSeverity::Warning {
-            continue;
-        }
-        let rule = d.rule.as_deref().unwrap_or("sail-lint");
-        eprintln!(
-            "deck warn {}:{}:{} [{}] {}",
-            sail_file.display(),
-            d.line,
-            d.col,
-            rule,
-            d.message
-        );
+/// Print Warning-severity diagnostics to stderr. Errors never appear —
+/// they fail `compile()` before this is reached. Mirrors the CLI/MCP
+/// rendering: `<path>:<line>:<col> [<rule>] <message>`.
+fn emit_build_warnings(sail_file: &Path, diagnostics: &[sail_compiler::Diagnostic]) {
+    for line in warning_lines(sail_file, diagnostics) {
+        eprintln!("{line}");
     }
+}
+
+fn warning_lines(sail_file: &Path, diagnostics: &[sail_compiler::Diagnostic]) -> Vec<String> {
+    diagnostics
+        .iter()
+        .filter(|d| d.severity == sail_compiler::DiagSeverity::Warning)
+        .map(|d| {
+            let rule = d.rule.as_deref().unwrap_or("sail-lint");
+            format!(
+                "deck warn {}:{}:{} [{}] {}",
+                sail_file.display(),
+                d.line,
+                d.col,
+                rule,
+                d.message
+            )
+        })
+        .collect()
 }
 
 /// The setup-import specifier for a `.sail`'s controller — SFC first. An inline
@@ -419,5 +410,137 @@ mod tests {
             Some(v) => unsafe { std::env::set_var("SAIL_CLIENT_EMIT", v) },
             None => unsafe { std::env::remove_var("SAIL_CLIENT_EMIT") },
         }
+    }
+
+    #[test]
+    fn warning_severity_lint_surfaces_from_compile_diagnostics() {
+        let src = tempdir().unwrap();
+        let sail = src.path().join("warn-chip.sail");
+        std::fs::write(
+            &sail,
+            r#"
+<scope>
+props: {
+  variant: 'a' | 'b' | 'c' = 'a'
+}
+</scope>
+<div style({ match: { variant: { a: { paint: bg(primary) }, b: { paint: bg(muted) } } } })>x</div>
+"#,
+        )
+        .unwrap();
+        let js = compile_sail(&sail, CompileMode::Component, "warn-chip", false)
+            .expect("a Warning must not fail compile");
+        assert!(
+            js.contains("@ship/sail-runtime"),
+            "component still emits: {js}"
+        );
+
+        let source = std::fs::read_to_string(&sail).unwrap();
+        let out = compile(
+            &source,
+            CompileOpts {
+                setup_url: None,
+                mode: SailCompileMode::Component,
+                source_path: Some(sail.clone()),
+                component_meta: Some(ComponentMeta {
+                    name: "warn-chip".into(),
+                }),
+                route_params: None,
+                emit_dts: false,
+                scope_capabilities: Vec::new(),
+                emit_component_imports: false,
+                lint_overrides: Policy::overrides_for(&sail),
+            },
+        )
+        .expect("same source compiles");
+        let lines = warning_lines(&sail, &out.diagnostics);
+        assert!(
+            lines
+                .iter()
+                .any(|l| l.contains("sail-style-match-exhaustive")),
+            "warning-severity lint must still print: {lines:?}"
+        );
+    }
+
+    #[test]
+    fn type_gate_still_fails_compile() {
+        let src = tempdir().unwrap();
+        let sail = src.path().join("page.sail");
+        std::fs::write(
+            &sail,
+            r#"
+<controller>
+export function setup() {
+  const n: number = "nope";
+  return {};
+}
+</controller>
+<div>hi</div>
+"#,
+        )
+        .unwrap();
+        let err = compile_sail(&sail, CompileMode::Route, "page", false)
+            .expect_err("type-gate must still fail compile");
+        assert!(matches!(err, CompileError::Compile(_)), "{err}");
+    }
+
+    #[test]
+    fn compile_sail_does_not_double_collect_on_showcase() {
+        let mut root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        for _ in 0..3 {
+            root.pop();
+        }
+        let sail = root.join("apps/sail-site/routes/showcase/page.sail");
+        assert!(
+            sail.is_file(),
+            "showcase fixture missing: {}",
+            sail.display()
+        );
+
+        let source = std::fs::read_to_string(&sail).unwrap();
+        let opts = CompileOpts {
+            setup_url: controller_specifier(&sail, "page", &source),
+            mode: SailCompileMode::Component,
+            source_path: Some(sail.clone()),
+            component_meta: None,
+            route_params: deck_core::routes::route_params_for(&sail),
+            emit_dts: false,
+            scope_capabilities: Vec::new(),
+            emit_component_imports: false,
+            lint_overrides: Policy::overrides_for(&sail),
+        };
+
+        // Warm caches so the timed pass matches an HMR miss, not process start.
+        let _ = compile(&source, opts.clone());
+        let _ = compile_sail(&sail, CompileMode::Route, "page", false);
+
+        let t = std::time::Instant::now();
+        let out = compile(&source, opts).expect("showcase compiles");
+        let compile_ms = t.elapsed().as_secs_f64() * 1000.0;
+
+        let t = std::time::Instant::now();
+        let lines = warning_lines(&sail, &out.diagnostics);
+        let warn_ms = t.elapsed().as_secs_f64() * 1000.0;
+        let _ = lines.len();
+
+        let t = std::time::Instant::now();
+        compile_sail(&sail, CompileMode::Route, "page", false).expect("showcase compiles");
+        let sail_ms = t.elapsed().as_secs_f64() * 1000.0;
+        eprintln!(
+            "showcase HMR probe: compile={compile_ms:.1}ms warn={warn_ms:.3}ms compile_sail={sail_ms:.1}ms"
+        );
+
+        assert!(
+            warn_ms < 5.0,
+            "reusing compile() diagnostics must be cheap, got {warn_ms:.3}ms"
+        );
+        assert!(
+            sail_ms < compile_ms * 1.25 + 5.0,
+            "compile_sail must not pay a second collect(): compile={compile_ms:.1}ms sail={sail_ms:.1}ms"
+        );
+        assert!(
+            compile_ms + warn_ms < 1300.0,
+            "showcase compile+warn {compile_ms:.1}+{warn_ms:.3}ms exceeds 1.3s"
+        );
     }
 }
