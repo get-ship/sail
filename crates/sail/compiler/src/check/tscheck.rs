@@ -545,10 +545,21 @@ pub fn check_project_type_gate(project: &Path) -> Vec<Diagnostic> {
     collect_project_type_gate(project, &files)
 }
 
-/// Incremental HMR entry: skip tsgo when no product `.ts` changed; otherwise
-/// reuse the kind tsconfig incremental program (`tsBuildInfoFile`).
-pub fn check_project_type_gate_incremental(project: &Path, changed: &[PathBuf]) -> Vec<Diagnostic> {
-    if !changed.is_empty() && !changed.iter().any(|p| is_project_gate_ts(p)) {
+/// HMR project-gate entry.
+///
+/// * `force` — unknown/lossy path list (notify overflow). Always run the gate.
+/// * otherwise skip tsgo when `changed` is non-empty and contains no product
+///   `.ts`. A `.sail`-only tick is the cheap path.
+///
+/// A product `.ts` tick still shells `tsgo -p`. That is a full spawn, not
+/// in-process program reuse. Kind tsconfigs may emit `tsBuildInfoFile`;
+/// measured warm ≈ cold on the fixture (spawn dominates).
+pub fn check_project_type_gate_incremental(
+    project: &Path,
+    changed: &[PathBuf],
+    force: bool,
+) -> Vec<Diagnostic> {
+    if !force && !changed.is_empty() && !changed.iter().any(|p| is_project_gate_ts(p)) {
         return Vec::new();
     }
     check_project_type_gate(project)

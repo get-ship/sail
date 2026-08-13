@@ -1219,6 +1219,7 @@ fn dev(project: PathBuf, addr: String) -> Result<()> {
             let need_gen = Arc::clone(&need_tokens_generate);
             let proj_edit = Arc::clone(&project_theme_edit);
             let cat_edit = Arc::clone(&catalog_model_edit);
+            let gate_unknown = Arc::clone(&hmr_gate_unknown);
             let project_for_cb = project_dir.clone();
             let workspace_for_watch = workspace_root.clone();
             // Attach commands: callback must not call `watch` re-entrantly on
@@ -1323,8 +1324,12 @@ fn dev(project: PathBuf, addr: String) -> Result<()> {
                     deck_bundler::sail_plugin::invalidate_component_index();
                 }
                 // Coalesce a save's event burst into one rebuild via the debounce
-                // below; dropping on a full channel is fine (the next tick rebuilds).
-                let _ = tx.try_send(ev.paths.clone());
+                // below. Overflow is no longer safe to drop silently: skip keys
+                // off this path list, so a lost `.ts` + later `.sail` would skip
+                // the Pure gate. Mark unknown and still try to enqueue a tick.
+                if tx.try_send(ev.paths.clone()).is_err() {
+                    gate_unknown.store(true, Ordering::Release);
+                }
             })
             .map_err(|e| anyhow::anyhow!("sail dev: HMR watcher init: {e}"))?;
             let mut watched: Vec<PathBuf> = Vec::new();
@@ -1418,6 +1423,7 @@ fn dev(project: PathBuf, addr: String) -> Result<()> {
             let need_gen = Arc::clone(&need_tokens_generate);
             let proj_edit = Arc::clone(&project_theme_edit);
             let cat_edit = Arc::clone(&catalog_model_edit);
+            let gate_unknown = Arc::clone(&hmr_gate_unknown);
             tokio::spawn(async move {
                 while let Some(first) = hmr_rx.recv().await {
                     let mut changed = first;
@@ -1426,6 +1432,7 @@ fn dev(project: PathBuf, addr: String) -> Result<()> {
                     while let Ok(more) = hmr_rx.try_recv() {
                         changed.extend(more);
                     }
+                    let force_gate = gate_unknown.swap(false, Ordering::AcqRel);
                     // Theme/model/config edit → dual generate (T1 B1):
                     // package full catalog + app-local .deck/themes/themes.css.
                     if need_gen.swap(false, Ordering::AcqRel) {
@@ -1465,7 +1472,7 @@ fn dev(project: PathBuf, addr: String) -> Result<()> {
                     let _ = sail_compiler::ambients::write_project_type_configs(&proj);
                     let gate_diags =
                         sail_compiler::check::tscheck::check_project_type_gate_incremental(
-                            &proj, &changed,
+                            &proj, &changed, force_gate,
                         );
                     let gate_errs: Vec<_> = gate_diags
                         .into_iter()

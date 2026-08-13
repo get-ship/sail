@@ -1,7 +1,7 @@
-//! JOB-DEV-GATE-1 — project Pure gate on every code-accepting path.
+//! Project Pure gate on HMR, build, and `tsc -p tsconfig.pure.json`.
 //!
-//! Confession replay: DOM in a compositions sidecar must fail HMR, build,
-//! and CI (`tsc -p tsconfig.pure.json`) — same teaching.
+//! Confession replay: DOM in a compositions sidecar must fail all three
+//! paths with the same teaching.
 
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -99,8 +99,11 @@ fn incremental_skips_when_only_sail_changed() {
     write_app(project);
     write_project_type_configs(project).expect("kind configs");
     let before = tsgo_invocation_count();
-    let diags =
-        check_project_type_gate_incremental(project, &[project.join("src/widget/widget.sail")]);
+    let diags = check_project_type_gate_incremental(
+        project,
+        &[project.join("src/widget/widget.sail")],
+        false,
+    );
     assert!(diags.is_empty(), "non-ts change must not emit: {diags:?}");
     assert_eq!(
         tsgo_invocation_count(),
@@ -117,7 +120,7 @@ fn incremental_reruns_on_composition_change() {
     let bad = project.join("src/compositions/current-nav.ts");
     std::fs::write(&bad, SIDECAR).unwrap();
     write_project_type_configs(project).expect("kind configs");
-    let diags = check_project_type_gate_incremental(project, &[bad]);
+    let diags = check_project_type_gate_incremental(project, &[bad], false);
     assert!(
         diags
             .iter()
@@ -142,7 +145,7 @@ fn overlay_names_the_law() {
     );
 }
 
-/// HMR overhead: skip is ~0; warm incremental reuses tsBuildInfo.
+/// HMR skip is cheap; a `.ts` tick still pays a tsgo spawn (warm ≈ cold).
 #[test]
 fn incremental_hmr_overhead_measured() {
     let tmp = tempfile::tempdir().unwrap();
@@ -168,12 +171,38 @@ fn incremental_hmr_overhead_measured() {
     let warm_ms = t1.elapsed().as_secs_f64() * 1000.0;
     assert!(second.iter().all(|d| d.severity != DiagSeverity::Error));
     let t2 = std::time::Instant::now();
-    let skipped =
-        check_project_type_gate_incremental(project, &[project.join("src/widget/widget.sail")]);
+    let skipped = check_project_type_gate_incremental(
+        project,
+        &[project.join("src/widget/widget.sail")],
+        false,
+    );
     let skip_ms = t2.elapsed().as_secs_f64() * 1000.0;
     assert!(skipped.is_empty());
+    // Honest: this is skip incrementality, not in-process program reuse.
     eprintln!(
-        "HMR project-gate overhead: cold={cold_ms:.1}ms warm={warm_ms:.1}ms skip={skip_ms:.2}ms"
+        "HMR project-gate overhead: cold={cold_ms:.1}ms warm={warm_ms:.1}ms skip={skip_ms:.2}ms \
+         (warm≈cold is a tsgo spawn; skip is the cheap path)"
+    );
+}
+
+#[test]
+fn overflow_force_runs_gate_on_sail_only_tick() {
+    let tmp = tempfile::tempdir().unwrap();
+    let project = tmp.path();
+    write_app(project);
+    let bad = project.join("src/compositions/current-nav.ts");
+    std::fs::write(&bad, SIDECAR).unwrap();
+    write_project_type_configs(project).expect("kind configs");
+    let diags = check_project_type_gate_incremental(
+        project,
+        &[project.join("src/widget/widget.sail")],
+        true,
+    );
+    assert!(
+        diags
+            .iter()
+            .any(|d| d.rule.as_deref() == Some("sail-pure-region")),
+        "force (lossy path list) must still run the Pure gate: {diags:?}"
     );
 }
 
@@ -191,13 +220,22 @@ fn confession_sidecar_fails_tsc_pure_config() {
     std::fs::write(project.join("src/compositions/current-nav.ts"), SIDECAR).unwrap();
     write_project_type_configs(project).expect("kind configs");
     // Point tsc at the workspace typescript so the generated config resolves.
-    let status = Command::new(&tsc)
+    let output = Command::new(&tsc)
         .args(["--noEmit", "-p", "node_modules/.sail/tsconfig.pure.json"])
         .current_dir(project)
-        .status()
+        .output()
         .expect("run tsc");
     assert!(
-        !status.success(),
+        !output.status.success(),
         "tsc -p tsconfig.pure.json must fail a compositions location sidecar"
+    );
+    let text = format!(
+        "{}{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert!(
+        text.contains("location") && (text.contains("TS2304") || text.contains("Cannot find name")),
+        "CI-path fixture must name `location` / TS2304, not a broken tsconfig: {text}"
     );
 }
