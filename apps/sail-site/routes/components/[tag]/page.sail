@@ -17,7 +17,7 @@
 import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 import { docMeta, FIRST_CLASS_HOSTS } from '../../../src/compositions/component-docs-registry'
-import { DETAILS, type DetailEntry } from '../../../src/compositions/component-details'
+import { detailFor, type DetailEntry } from '../../../src/compositions/component-details'
 import {
   PACK_PROPS,
   PACK_TAGS,
@@ -83,7 +83,7 @@ const DOC_CE_SLUGS = new Set([
 export default controller((ctx: ControllerScope<Scope>) => {
   const tag = derived(() => ctx.route.params.tag?.() ?? '')
   const meta = derived(() => docMeta(tag()))
-  const entry = derived<DetailEntry | null>(() => DETAILS[tag()] ?? null)
+  const entry = derived<DetailEntry | null>(() => detailFor(tag()) ?? null)
   const knownDoc = derived(() => meta() !== null)
   const knownPack = derived(() => PACK_TAGS.has(tag()))
   const showViewer = derived(() => knownDoc() || knownPack())

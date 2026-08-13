@@ -73,7 +73,7 @@ const lang = (
   usage: usage[tag] ?? '',
 })
 
-export const DETAILS: Record<string, DetailEntry> = {
+const DETAILS_MAP = {
   // ── Inputs ───────────────────────────────────────────────────────────
   button: lang('button', 'button', {
     blurb: 'Buttons for what people do next — save, cancel, confirm, open.',
@@ -882,6 +882,17 @@ export const DETAILS: Record<string, DetailEntry> = {
   // Actions live in the action table, not in this element detail
   // catalog. (`spotlight` / `targetCursor` were here when there was
   // an `fx` pack; both packs and entries are gone now.)
-}
+} satisfies Record<string, DetailEntry>
+
+// Closed map: DETAILS.card / DETAILS['hover-card'] are DetailEntry.
+// Record<string, …> would make every index `| undefined` under
+// noUncheckedIndexedAccess (kind gate). Dynamic slugs stay honest
+// via detailFor().
+export const DETAILS = DETAILS_MAP
+
+export type DetailTag = keyof typeof DETAILS
+
+export const detailFor = (tag: string): DetailEntry | undefined =>
+  (DETAILS as Record<string, DetailEntry>)[tag]
 
 export const DETAIL_TAGS = Object.keys(DETAILS)

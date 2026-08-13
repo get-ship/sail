@@ -42,7 +42,7 @@
 
 <controller>
 import type { Scope } from './doc-legacy-detail.sail'
-import { DETAILS, type DetailEntry } from '../../compositions/component-details'
+import { detailFor, type DetailEntry } from '../../compositions/component-details'
 import {
   DEMO_PHOTO,
   PACK_PROPS,
@@ -61,7 +61,7 @@ export default controller((ctx: Scope) => {
   })
 
   const meta = derived(() => docMeta(tag()))
-  const entry = derived<DetailEntry | null>(() => DETAILS[tag()] ?? null)
+  const entry = derived<DetailEntry | null>(() => detailFor(tag()) ?? null)
   const knownPack = derived(() => PACK_TAGS.has(tag()))
 
   const variant = signal('')
