@@ -5,7 +5,7 @@ import { signal, timeline } from '@ship/sail-runtime'
 export const code = {
   stagger: `<if {dealt()}>
   <row gap="3">
-    <div style({ box: w(9).h(9), paint: radius(md).bg(primary), animate: enter({ translate-y: 'spring:snappy', stagger: '0.07s' }) })>
+    <div style({ box: size(9), paint: radius(md).fill({ color: primary }), animate: enter({ translate-y: 'spring:snappy', stagger: '0.07s' }) })>
     </div>
     <!-- ×5 — each waits 0.07s after its previous sibling -->
   </row>
@@ -55,7 +55,7 @@ export default controller(() => {
 </controller>
 
 <slider min="0" max="100" bind:value={scrubText} />
-<card style({ paint: translateX(bind(tileX)).rotate(bind(tileRotate)).scale(bind(tileScale)) })>
+<card style({ paint: motion({ x: bind(tileX), rotate: bind(tileRotate), scale: bind(tileScale) }) })>
 </card>`,
 
   drivers: `const p = () => Number(scrubText()) / 100  // the slider above

@@ -18,7 +18,7 @@ export const BLANK_SOURCE = `<!--
   Edit freely, then Run (or wait for auto-compile).
 -->
 <scope>
-  style muted = { paint: fg(muted-foreground), text: fontSize(sm) }
+  style muted = { paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
 </scope>
 
 <column gap="3">
