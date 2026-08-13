@@ -324,9 +324,9 @@ pub fn check_all_with_tier(
             body,
         )
     });
-    match parse::parse(&stripped) {
-        Ok(program) => check::collect(
-            &program,
+    match parse::parse_full(&stripped) {
+        Ok(parsed) => check::collect(
+            &parsed.program,
             &stripped,
             source, // author source — type gate maps controller spans here
             source_path,
@@ -334,6 +334,7 @@ pub fn check_all_with_tier(
             overrides,
             route_params,
             tier,
+            Some(parsed.preprocessed),
         ),
         Err(e) => {
             // Fatal parse/preprocess error — still surface confluent off-scale
@@ -483,8 +484,9 @@ pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, Compile
     });
     let effective_overrides = opts.lint_overrides.clone();
 
-    let program = compile_span("parse-total", || parse::parse(effective_source))
+    let parsed = compile_span("parse-total", || parse::parse_full(effective_source))
         .map_err(|e| attach_path(e, &opts))?;
+    let program = parsed.program;
     // `<scope>` member sets are POSITION-SCOPED: the same input that names a
     // file (a tag = component; tagless = route/page) decides which members
     // are addable. A route receives params from the router, never props from
@@ -525,6 +527,7 @@ pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, Compile
             controller.as_ref(),
             &effective_overrides,
             opts.route_params.as_deref(),
+            Some(parsed.preprocessed),
         )
     })
     .map_err(|e| attach_path(e, &opts))?;

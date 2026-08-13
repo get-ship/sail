@@ -198,6 +198,7 @@ pub fn gate(
     controller: Option<&controller_parse::ParsedController>,
     overrides: &[crate::check::lint_overrides::LintOverride],
     route_params: Option<&[String]>,
+    preprocessed: Option<String>,
 ) -> Result<Vec<Diagnostic>, CompileError> {
     let diags = collect_stream(
         program,
@@ -209,6 +210,7 @@ pub fn gate(
         route_params,
         DiagnosticTier::OnSave,
         false,
+        preprocessed,
     );
     if let Some(d) = diags.iter().find(|d| d.severity == DiagSeverity::Error) {
         // Prefer author_source for offset mapping so type-gate lines in the
@@ -280,6 +282,7 @@ pub fn collect(
     overrides: &[crate::check::lint_overrides::LintOverride],
     route_params: Option<&[String]>,
     tier: DiagnosticTier,
+    preprocessed: Option<String>,
 ) -> Vec<Diagnostic> {
     collect_stream(
         program,
@@ -291,6 +294,7 @@ pub fn collect(
         route_params,
         tier,
         true,
+        preprocessed,
     )
 }
 
@@ -307,6 +311,7 @@ fn collect_stream(
     route_params: Option<&[String]>,
     tier: DiagnosticTier,
     include_compose: bool,
+    preprocessed: Option<String>,
 ) -> Vec<Diagnostic> {
     let mut diags: Vec<Diagnostic> = Vec::new();
 
@@ -463,24 +468,31 @@ fn collect_stream(
     // Layout (taffy) — SPEC-TOOLING-1 §WI6: OnSave only. On-type must never
     // compute a box tree; typing a 500-line buffer must not pay for
     // multi-viewport layout. Layout stays on `compile()` / `gate()`.
-    if tier.includes_layout() {
-        // Layout diagnostics — build the same box tree the runtime will build
-        // and report collapsed / overflow findings. Soft findings stay
-        // warnings unless the package sets `"layout": "error"` (studio
-        // profile) — then gate-gap kinds promote to Error and fail
-        // `compile` / `sail check`. Must run on the preprocessed source so
-        // class tokens line up with the CSS the compiler emits; spans map
-        // back to the author's original source.
-        diags.extend(check_span("layout", || {
-            layout::collect_for(source, source_path)
-        }));
-    }
+    // One forest + one taffy tree per viewport; compose reuses the trees.
+    let shared_boxes = if tier.includes_layout() {
+        let (layout_diags, boxes) = check_span("layout", || {
+            let pre = match preprocessed {
+                Some(p) => p,
+                None => match crate::parse::preprocess::preprocess(source) {
+                    Ok(p) => p,
+                    Err(_) => return (Vec::new(), None),
+                },
+            };
+            let boxes = layout::prepare_boxes(pre);
+            let diags = layout::collect_from(source, source_path, &boxes);
+            (diags, Some(boxes))
+        });
+        diags.extend(layout_diags);
+        boxes
+    } else {
+        None
+    };
 
     // Compose is the Fix stream (rhythm / contrast / spacing). `check_all`
     // / LSP OnSave / `sail_edit` consume it; `gate()` / `compile()` do not.
     if include_compose && tier.includes_compose() {
         diags.extend(check_span("compose", || {
-            compose::collect(source, source_path, overrides)
+            compose::collect_with(source, source_path, overrides, shared_boxes.as_ref())
         }));
     }
 
@@ -767,7 +779,7 @@ mod gate_tests {
     fn gate_rejects_lint_error_rule_run_skips() {
         let src = r#"<badge size="huge">x</badge>"#;
         let program = parse::parse(src).unwrap();
-        let err = super::gate(&program, src, src, None, None, &[], None).unwrap_err();
+        let err = super::gate(&program, src, src, None, None, &[], None, None).unwrap_err();
         assert_eq!(err.category.as_deref(), Some("sail-prop-value"), "{err:?}");
     }
 
@@ -775,7 +787,7 @@ mod gate_tests {
     fn gate_passes_valid_source() {
         let src = r#"<badge size="md">x</badge>"#;
         let program = parse::parse(src).unwrap();
-        super::gate(&program, src, src, None, None, &[], None).unwrap();
+        super::gate(&program, src, src, None, None, &[], None, None).unwrap();
     }
 
     /// Fix-only rhythm stays off the Error gate. `check_all` still emits it.
@@ -787,7 +799,7 @@ mod gate_tests {
   <p style({ box: mb(8) })>c</p>
 </column>"#;
         let program = parse::parse(src).unwrap();
-        super::gate(&program, src, src, None, None, &[], None)
+        super::gate(&program, src, src, None, None, &[], None, None)
             .expect("Fix compose must not fail gate");
         let diags = crate::check_all(src, None, &[], None);
         assert!(
@@ -805,7 +817,7 @@ mod gate_tests {
     fn gate_error_span_round_trips_to_finding_location() {
         let src = "<div>\n  <badge size=\"huge\">x</badge>\n</div>";
         let program = parse::parse(src).unwrap();
-        let err = super::gate(&program, src, src, None, None, &[], None).unwrap_err();
+        let err = super::gate(&program, src, src, None, None, &[], None, None).unwrap_err();
         let span = err.span.expect("gate error carries a span");
         let (line, _col) = line_col(src, span.start);
         assert_eq!(line, 2, "the bad size is on line 2");

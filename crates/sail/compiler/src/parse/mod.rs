@@ -26,7 +26,19 @@ pub use html::{Attr, Node};
 
 /// Parse a `.sail` source string into an IR program.
 pub fn parse(source: &str) -> Result<Program, CompileError> {
-    parse_inner(source, true)
+    Ok(parse_full(source)?.program)
+}
+
+/// IR plus the lowered HTML `parse` already produced. Layout and compose
+/// consume this so they do not re-enter preprocess on the same bytes.
+pub struct Parsed {
+    pub program: Program,
+    pub preprocessed: String,
+}
+
+/// Like [`parse`], retaining the preprocessed HTML.
+pub fn parse_full(source: &str) -> Result<Parsed, CompileError> {
+    parse_inner_full(source, true)
 }
 
 /// Author-facing template IR for tooling: no stdlib splice, no sx/layout
@@ -46,10 +58,18 @@ pub(crate) fn parse_element_source(source: &str) -> Result<Program, CompileError
 }
 
 fn parse_inner(source: &str, expand_elements: bool) -> Result<Program, CompileError> {
+    Ok(parse_inner_full(source, expand_elements)?.program)
+}
+
+fn parse_inner_full(source: &str, expand_elements: bool) -> Result<Parsed, CompileError> {
     let prepared = profile_span("preprocess", || {
         preprocess::preprocess_impl(source, expand_elements)
     })?;
-    profile_span("parse", || parse_prepared(source, &prepared))
+    let program = profile_span("parse", || parse_prepared(source, &prepared))?;
+    Ok(Parsed {
+        program,
+        preprocessed: prepared,
+    })
 }
 
 fn profile_span<R>(phase: &'static str, f: impl FnOnce() -> R) -> R {

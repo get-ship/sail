@@ -11,11 +11,12 @@
 //! space-scale token. No mode → WARN only (deliberate asymmetry).
 //! Contrast: fg/bg token pairs under WCAG AA → confluent in-scale repair.
 //! Alignment-drift: sibling edges 2–6px off a dominant edge → advisory WARN
-//! when a laid-out tree is available; this pass does not rebuild one.
+//! when layout's shared box tree is available; this pass does not rebuild one.
 
 use std::collections::HashMap;
 use std::path::Path;
 
+use crate::check::layout::{SharedBoxes, SharedViewport};
 use crate::check::lint_overrides::{LintOverride, OverrideSeverity};
 use crate::diagnostics::{DiagSeverity, Diagnostic};
 
@@ -43,17 +44,44 @@ pub fn collect(
     source_path: Option<&Path>,
     overrides: &[LintOverride],
 ) -> Vec<Diagnostic> {
+    collect_with(source, source_path, overrides, None)
+}
+
+/// Like [`collect`], using layout's forest + trees when the check walk
+/// already built them. Does not rebuild taffy.
+pub fn collect_with(
+    source: &str,
+    source_path: Option<&Path>,
+    overrides: &[LintOverride],
+    boxes: Option<&SharedBoxes>,
+) -> Vec<Diagnostic> {
     let severity = match resolve_severity(source_path, overrides) {
         Some(s) => s,
         None => return Vec::new(),
     };
 
-    let Ok(preprocessed) = crate::parse::preprocess::preprocess(source) else {
-        // Style errors can prevent preprocess; still surface off-scale spacing
-        // from raw author tags so starter rewrites stay available.
-        return collect_off_scale_for_check(source, source_path, overrides);
+    let owned_pre;
+    let owned_elements;
+    let (preprocessed, elements, trees): (
+        &str,
+        &[sail_layout::html::Element],
+        Option<&[SharedViewport]>,
+    ) = if let Some(b) = boxes {
+        (b.preprocessed.as_str(), b.forest.elements(), Some(&b.trees))
+    } else {
+        match crate::parse::preprocess::preprocess(source) {
+            Ok(p) => {
+                owned_pre = p;
+                owned_elements = sail_layout::html::parse_source(&owned_pre);
+                (&owned_pre, owned_elements.as_slice(), None)
+            }
+            Err(_) => {
+                // Style errors can prevent preprocess; still surface off-scale
+                // spacing from raw author tags so starter rewrites stay available.
+                return collect_off_scale_for_check(source, source_path, overrides);
+            }
+        }
     };
-    let elements = sail_layout::html::parse_source(&preprocessed);
 
     // Per-parent-instance rhythm data (elem_idx). Key by elem_idx — not
     // fingerprint alone — so two sibling <row>s with the same tag fingerprint
@@ -205,13 +233,13 @@ pub fn collect(
         }
     }
 
-    // Contrast + off-scale spacing. Alignment needs laid-out edges; do not
-    // rebuild taffy here (see collect_alignment).
+    // Contrast + off-scale spacing. Alignment walks layout's shared trees.
     out.extend(collect_contrast(source, severity));
     out.extend(collect_alignment(
         source,
-        &preprocessed,
-        &elements,
+        preprocessed,
+        elements,
+        trees,
         severity,
     ));
     out.extend(collect_off_scale_spacing(
@@ -270,6 +298,17 @@ fn container_kind_from_element(elem: &sail_layout::html::Element) -> ContainerKi
         "row" => ContainerKind::Row,
         "column" => ContainerKind::Column,
         _ => ContainerKind::None,
+    }
+}
+
+fn container_kind(style: &sail_layout::taffy::style::Style) -> ContainerKind {
+    use sail_layout::taffy::style::{Display, FlexDirection};
+    if style.display != Display::Flex {
+        return ContainerKind::None;
+    }
+    match style.flex_direction {
+        FlexDirection::Row | FlexDirection::RowReverse => ContainerKind::Row,
+        FlexDirection::Column | FlexDirection::ColumnReverse => ContainerKind::Column,
     }
 }
 
@@ -1381,7 +1420,6 @@ fn unique_nearest_space_token(px: f32, nearest: &str) -> bool {
 
 /// Pure detector: siblings whose left edge is 2–6px from the dominant left.
 /// Returns `(child_index, drift_px, dominant_left)`.
-#[cfg_attr(not(test), allow(dead_code))]
 fn left_edge_drifts(
     lefts: &[(usize, f32)],
     min_drift: f32,
@@ -1409,14 +1447,78 @@ fn left_edge_drifts(
 }
 
 fn collect_alignment(
-    _source: &str,
-    _preprocessed: &str,
-    _elements: &[sail_layout::html::Element],
-    _severity: DiagSeverity,
+    source: &str,
+    preprocessed: &str,
+    elements: &[sail_layout::html::Element],
+    trees: Option<&[SharedViewport]>,
+    severity: DiagSeverity,
 ) -> Vec<Diagnostic> {
-    // Needs sibling box positions. Do not rebuild taffy here.
-    let _ = (ALIGN_RULE, ALIGN_DRIFT_MIN, ALIGN_DRIFT_MAX);
-    Vec::new()
+    if !matches!(
+        severity,
+        DiagSeverity::Fix | DiagSeverity::Warning | DiagSeverity::Error
+    ) {
+        return Vec::new();
+    }
+    let Some(trees) = trees else {
+        return Vec::new();
+    };
+    // First successful viewport (mobile is first). Do not rebuild taffy.
+    let Some(layout) = trees.iter().find_map(|t| t.layout.as_ref().ok()) else {
+        return Vec::new();
+    };
+    let mut out = Vec::new();
+    for elem_idx in 1..elements.len() {
+        let Some(node_id) = layout.nodes[elem_idx] else {
+            continue;
+        };
+        let style = &layout.styles[elem_idx].style;
+        if container_kind(style) == ContainerKind::None {
+            continue;
+        }
+        let Ok(taffy_children) = layout.taffy.children(node_id) else {
+            continue;
+        };
+        if taffy_children.len() < 2 {
+            continue;
+        }
+        let mut lefts: Vec<(usize, f32)> = Vec::new();
+        for child_node in taffy_children {
+            let Ok(child_layout) = layout.taffy.layout(child_node).cloned() else {
+                continue;
+            };
+            let Some(ctx) = layout.taffy.get_node_context(child_node) else {
+                continue;
+            };
+            lefts.push((ctx.elem_index, child_layout.location.x));
+        }
+        if lefts.len() < 2 {
+            continue;
+        }
+        for (child_idx, drift, dom_f) in left_edge_drifts(&lefts, ALIGN_DRIFT_MIN, ALIGN_DRIFT_MAX)
+        {
+            let child = &elements[child_idx];
+            let fp = element_fingerprint(&child.class, &child.tag).unwrap_or_else(|| Fingerprint {
+                base_tag: Some(child.tag.clone()),
+                sx_atoms: Vec::new(),
+            });
+            let pre_i = count_fingerprint_before(elements, &fp, child.span.0);
+            if let Some(span) = find_original_span(source, preprocessed, &fp, pre_i) {
+                let (line, col, end_line, end_col) = span_to_coords(source, span);
+                out.push(Diagnostic {
+                    line,
+                    col,
+                    end_line,
+                    end_col,
+                    severity: DiagSeverity::Warning,
+                    message: format!(
+                        "alignment drift: left edge is {drift:.1}px from dominant left ({dom_f:.0}px) — advisory only [sail:fix:warn]"
+                    ),
+                    rule: Some(ALIGN_RULE.into()),
+                });
+            }
+        }
+    }
+    out
 }
 
 #[cfg(test)]
@@ -1461,5 +1563,49 @@ mod tests {
         let hits = left_edge_drifts(&lefts, ALIGN_DRIFT_MIN, ALIGN_DRIFT_MAX);
         assert_eq!(hits.len(), 1);
         assert_eq!(hits[0].0, 3);
+    }
+
+    // Centered column: w(10)=40px vs w(12)=48px → 4px left-edge drift.
+    // Margin is not in taffy's model, so this uses align-items + width.
+    const ALIGN_DRIFT_SRC: &str = r#"<column align="center">
+  <p style({ box: w(10) })>a</p>
+  <p style({ box: w(10) })>b</p>
+  <p style({ box: w(12) })>c</p>
+</column>"#;
+
+    #[test]
+    fn standalone_collect_does_not_emit_align() {
+        let diags = collect(ALIGN_DRIFT_SRC, None, &[]);
+        assert!(
+            diags.iter().all(|d| d.rule.as_deref() != Some(ALIGN_RULE)),
+            "no shared tree → no alignment: {diags:?}"
+        );
+    }
+
+    #[test]
+    fn shared_tree_alignment_emits_without_rebuild() {
+        let pre = crate::parse::preprocess::preprocess(ALIGN_DRIFT_SRC).expect("preprocess");
+        let boxes = crate::check::layout::prepare_boxes(pre);
+        let layout = boxes.trees[0].layout.as_ref().expect("mobile tree");
+        let mut lefts = Vec::new();
+        for idx in 1..layout.elements.len() {
+            if let Some(computed) = layout.computed(idx) {
+                lefts.push((idx, layout.elements[idx].tag.clone(), computed.location.x));
+            }
+        }
+        let before = sail_layout::layout_pass_count();
+        let diags = collect_with(ALIGN_DRIFT_SRC, None, &[], Some(&boxes));
+        assert_eq!(
+            sail_layout::layout_pass_count(),
+            before,
+            "compose must not rebuild taffy"
+        );
+        assert!(
+            diags
+                .iter()
+                .any(|d| d.rule.as_deref() == Some(ALIGN_RULE)
+                    && d.severity == DiagSeverity::Warning),
+            "shared tree must surface alignment drift: diags={diags:?} lefts={lefts:?}"
+        );
     }
 }
