@@ -33,6 +33,8 @@
   style errorText = { box: grow(1).minW(0), paint: fg(destructive), text: fontSize(sm).truncate() }
   style growMin = { box: grow(1).minW(0) }
   style shrink0 = { box: shrink(0) }
+  style tapFloor = { box: shrink(0).minW(control-h-sm).minH(control-h-sm) }
+  style iconBtn = { box: shrink(0).w(control-h-sm).h(control-h-sm).minW(control-h-sm).minH(control-h-sm) }
   style stageHost = { box: w(full) }
   style sampleMax = { box: w(full).maxW(panel-max-w-sm) }
   style scrollGrow = { box: grow(1).minH(0).basis(0).h(full), paint: bg(background) }
@@ -171,6 +173,7 @@ export default controller(() => {
                     size="sm"
                     tone="primary"
                     variant={c.v}
+                    style(tapFloor)
                   >
                     {c.v}
                   </button>
@@ -207,7 +210,7 @@ export default controller(() => {
                           <button type="button" size="sm" variant="solid" tone="warning">Warning</button>
                           <button type="button" size="sm" variant="solid" tone="destructive">Destructive</button>
                           <button type="button" size="sm" variant="solid" tone="accent">Accent</button>
-                          <button type="button" size="icon" variant="solid" tone="primary" label="Settings">
+                          <button type="button" size="iconSm" variant="solid" tone="primary" label="Settings" style(iconBtn)>
                             <icon name="settings"></icon>
                           </button>
                         </row>

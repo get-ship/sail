@@ -19,7 +19,8 @@
   style iconCell = { box: w(9).h(9).minW(9).minH(9), paint: radius(md).borderWidth(1).border(border-subtle).bg(surface-0) }
   style bandStatus = { box: padX(4).padY(2) }
   style bandError = { box: padX(4).padY(2), paint: borderBWidth(1).borderB(border) }
-  style fullBtn = { box: w(full) }
+  style fullBtn = { box: w(full).minW(control-h-sm).minH(control-h-sm) }
+  style specimenBtn = { box: shrink(0).minW(control-h-sm).minH(6) }
   style surfaceRoot = { box: grow(1).minH(0).h(full).minW(0).overflow(hidden), paint: bg(background) }
   style workbench = { box: grow(1).minH(0).basis(0).h(full).minW(0).overflow(hidden), paint: bg(background) }
   style editorScroll = { box: grow(1).minW(0).minH(0).basis(0).h(full), paint: bg(background) }
@@ -260,9 +261,9 @@ export default controller(() => {
               <div
                 specimen-body style({ box: display(flex).flexDir(column).w(full).minW(0).pad(bind(densityPad)).gap(bind(specimenGap)) })>
                 <row gap="2" align="center" nowrap specimen-buttons>
-                  <button type="button" size={overview.controlSize()} variant="solid" tone="primary">Primary</button>
-                  <button type="button" size={overview.controlSize()} variant="solid" tone="accent">Accent</button>
-                  <button type="button" size={overview.controlSize()} variant="outline" tone="primary">Outline</button>
+                  <button type="button" size={overview.controlSize()} variant="solid" tone="primary" style(specimenBtn)>Primary</button>
+                  <button type="button" size={overview.controlSize()} variant="solid" tone="accent" style(specimenBtn)>Accent</button>
+                  <button type="button" size={overview.controlSize()} variant="outline" tone="primary" style(specimenBtn)>Outline</button>
                 </row>
                 <row gap="2" align="center" nowrap specimen-badges>
                   <badge tone="primary" size={overview.badgeSize()} variant="solid" pill>Primary</badge>
@@ -299,8 +300,8 @@ export default controller(() => {
                       Nested card in this theme.
                     </p>
                     <row gap="2" nowrap>
-                      <button type="button" size={overview.controlSize()} variant="solid" tone="primary">Continue</button>
-                      <button type="button" size={overview.controlSize()} variant="ghost" tone="muted">Cancel</button>
+                      <button type="button" size={overview.controlSize()} variant="solid" tone="primary" style(specimenBtn)>Continue</button>
+                      <button type="button" size={overview.controlSize()} variant="ghost" tone="muted" style(specimenBtn)>Cancel</button>
                     </row>
                   </div>
                 </card>

@@ -17,7 +17,7 @@
   }
   style tabLabel = { box: grow(1).minW(0), text: fontSize(sm).truncate() }
   style dirtyDot = { paint: fg(warning), text: fontSize(xs) }
-  style tabClose = { box: w(5).h(5) }
+  style tabClose = { box: shrink(0).w(control-h-sm).h(control-h-sm).minW(control-h-sm).minH(control-h-sm) }
   style tabsTrail = { box: shrink(0).padX(2).h(full), paint: borderLWidth(1).borderL(border-subtle) }
   style routeLabel = { box: maxW(40), paint: fg(muted-foreground), text: fontSize(xs).truncate() }
   style errorBand = { box: padX(3).padY(1), paint: bg(surface-1).borderBWidth(1).borderB(border) }
@@ -94,7 +94,7 @@ export default controller(() => {
               <button
                 type="button"
                 tab-close
-                size="sm"
+                size="iconSm"
                 variant="ghost"
                 label="Close tab"
                 style(tabClose)

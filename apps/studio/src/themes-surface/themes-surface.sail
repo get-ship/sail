@@ -49,6 +49,8 @@
   style cardTitle = { text: fontSize(md).fontWeight(semibold).fontFamily(heading) }
   style cardBody = { paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed).fontFamily(body) }
   style fullW = { box: w(full) }
+  style tapFloor = { box: shrink(0).minW(control-h-sm).minH(control-h-sm) }
+  style iconBtn = { box: shrink(0).w(control-h-sm).h(control-h-sm).minW(control-h-sm).minH(control-h-sm) }
 
   type ThemeSwatchProps = {
     previewId: string
@@ -116,18 +118,20 @@
           theme-add-project
           label="Add to project"
           on:click={(e) => onAddToProject(id, e)}
+          style(tapFloor)
         >
           Add
         </button>
         <button
           type="button"
-          size="sm"
+          size="iconSm"
           variant="ghost"
           tone="muted"
           popovertarget={menuId}
           theme-menu
           label="Theme menu"
           on:click={(e) => onMenuOpen(id, e)}
+          style(iconBtn)
         >
           <icon name="ellipsis" size="sm"></icon>
         </button>
@@ -142,13 +146,14 @@
       <row gap="1" align="center" nowrap style(shrink0)>
         <button
           type="button"
-          size="sm"
+          size="iconSm"
           variant="ghost"
           tone="muted"
           popovertarget={menuId}
           theme-menu
           label="Theme menu"
           on:click={(e) => onMenuOpen(id, e)}
+          style(iconBtn)
         >
           <icon name="ellipsis" size="sm"></icon>
         </button>
@@ -237,7 +242,7 @@ export default controller(() => {
       </p>
     </column>
     <row gap="2" align="center" nowrap style(shrink0)>
-      <button type="button" size="sm" variant="solid" tone="primary" new-theme on:click={onNewTheme}>
+      <button type="button" size="sm" variant="solid" tone="primary" new-theme on:click={onNewTheme} style(tapFloor)>
         New theme
       </button>
     </row>
@@ -372,15 +377,15 @@ export default controller(() => {
 
             <row gap="2" align="center">
               <if {previewInProject()}>
-                <button type="button" size="sm" variant="solid" tone="primary" preview-open on:click={onPreviewOpen}>
+                <button type="button" size="sm" variant="solid" tone="primary" preview-open on:click={onPreviewOpen} style(tapFloor)>
                   Open
                 </button>
               </if>
               <if {previewIsCatalog()}>
-                <button type="button" size="sm" variant="solid" tone="primary" preview-add-project on:click={onPreviewAddToProject}>
+                <button type="button" size="sm" variant="solid" tone="primary" preview-add-project on:click={onPreviewAddToProject} style(tapFloor)>
                   Add to project
                 </button>
-                <button type="button" size="sm" variant="outline" tone="primary" preview-open on:click={onPreviewOpen}>
+                <button type="button" size="sm" variant="outline" tone="primary" preview-open on:click={onPreviewOpen} style(tapFloor)>
                   Open
                 </button>
               </if>
@@ -467,10 +472,10 @@ export default controller(() => {
                       Controls, badges, and fields read this theme’s token table.
                     </p>
                     <row gap="2" align="center">
-                      <button type="button" size="sm" variant="solid" tone="primary">Primary</button>
-                      <button type="button" size="sm" variant="solid" tone="accent">Accent</button>
-                      <button type="button" size="sm" variant="outline" tone="primary">Outline</button>
-                      <button type="button" size="sm" variant="ghost" tone="muted">Ghost</button>
+                      <button type="button" size="sm" variant="solid" tone="primary" style(tapFloor)>Primary</button>
+                      <button type="button" size="sm" variant="solid" tone="accent" style(tapFloor)>Accent</button>
+                      <button type="button" size="sm" variant="outline" tone="primary" style(tapFloor)>Outline</button>
+                      <button type="button" size="sm" variant="ghost" tone="muted" style(tapFloor)>Ghost</button>
                     </row>
                     <row gap="2" align="center">
                       <badge tone="primary" size="sm" variant="solid" pill>Primary</badge>
