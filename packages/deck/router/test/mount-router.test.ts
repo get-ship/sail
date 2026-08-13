@@ -2,15 +2,25 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 
 // Record every runtime.mount() call. Hoisted so the vi.mock factory (also
 // hoisted) can close over it.
-const { mountCalls } = vi.hoisted(() => ({
-  mountCalls: [] as Array<{ target: unknown; name: unknown; opts: any }>,
-}))
+const { mountCalls, mount } = vi.hoisted(() => {
+  const mountCalls = [] as Array<{ target: unknown; name: unknown; opts: any }>
+  const mount = vi.fn(async (target: unknown, name: unknown, opts: any) => {
+    if (opts?.module?.__mount) {
+      opts.module.__mount(target)
+    }
+    mountCalls.push({ target, name, opts })
+    return { dispose: vi.fn() }
+  })
+  return { mountCalls, mount }
+})
 
 // Mock the runtime instead of importing it: the real @ship/sail-runtime pulls
 // chrome.ts → @ship/deck-router, a cycle vitest can't resolve (pre-existing).
 // A minimal signal + a recording mount is all the router needs.
 // The mock calls opts.module.__mount(target) when present so layout-module
 // stubs can simulate rendering (proves authored markup is rendered, not dropped).
+// mountRouter imports `mount` from `@ship/sail-runtime/internal`; signal +
+// boundary helpers still come from the package root.
 vi.mock('@ship/sail-runtime', () => {
   const signal = <T>(initial: T) => {
     let v = initial
@@ -20,13 +30,6 @@ vi.mock('@ship/sail-runtime', () => {
     s.__peek = () => v
     return s
   }
-  const mount = vi.fn(async (target: unknown, name: unknown, opts: any) => {
-    if (opts?.module?.__mount) {
-      opts.module.__mount(target)
-    }
-    mountCalls.push({ target, name, opts })
-    return { dispose: vi.fn() }
-  })
   // Faithful re-implementation of the runtime's error-boundary helpers (same
   // Symbol key + DOM walk) so the router's default route boundary behaves
   // exactly as it does against the real runtime, without pulling the cycle.
@@ -52,6 +55,8 @@ vi.mock('@ship/sail-runtime', () => {
   }
   return { signal, mount, attachBoundary, detachBoundary, findNearestBoundary, runProtected }
 })
+
+vi.mock('@ship/sail-runtime/internal', () => ({ mount }))
 
 import { mountRouter, type RouterHandle } from '../src/mount-router'
 import { navigate, setEditMode } from '../src/index'
@@ -200,6 +205,22 @@ describe('mountRouter', () => {
     await flush()
     expect(mountCalls[0].opts.providers).toBe(providers)
   })
+
+  it('publishes the same RouteSignals on the host port as mount({ route })', async () => {
+    router = start()
+    await flush()
+    expect(globalThis.__shipRouteSignals).toBeDefined()
+    expect(globalThis.__shipRouteSignals).toBe(mountCalls[0].opts.route)
+  })
+
+  it('clears the RouteSignals host port on dispose', async () => {
+    router = start()
+    await flush()
+    expect(globalThis.__shipRouteSignals).toBeDefined()
+    router.dispose()
+    router = undefined
+    expect(globalThis.__shipRouteSignals).toBeUndefined()
+  })
 })
 
 // ---------------------------------------------------------------------------
@@ -216,6 +237,12 @@ describe('layout module rendering', () => {
       extra.setAttribute('slot', 'foo')
       chrome.appendChild(extra)
       target.appendChild(chrome)
+    },
+  }
+
+  const LAYOUT_MOD = {
+    __mount(target: Element) {
+      target.appendChild(document.createElement('x-chrome'))
     },
   }
 
@@ -240,11 +267,6 @@ describe('layout module rendering', () => {
   it('mounts route content into the innermost layout slot="route"', async () => {
     // Existing slotting contract holds: route mounts into div[slot="route"]
     // inside the chrome, even when the chrome is rendered via a layout module.
-    const LAYOUT_MOD = {
-      __mount(target: Element) {
-        target.appendChild(document.createElement('x-chrome'))
-      },
-    }
     history.replaceState({}, '', '/a/b')
     router = mountRouter({
       root: '#root',
@@ -261,11 +283,29 @@ describe('layout module rendering', () => {
     // Workbench fill: auto-height slot host collapsed studio panes to a top strip.
     expect(slot.style.display).toBe('flex')
     expect(slot.style.flexDirection).toBe('column')
-    expect(slot.style.minHeight).toBe('0px')
+    expect(slot.style.minHeight.replace('px', '')).toBe('0')
     expect(slot.style.height).toBe('100%')
     const routeMountCall = mountCalls.find((c) => c.opts?.module === MOD_LEAF)
     expect(routeMountCall).toBeDefined()
     expect(routeMountCall!.target).toBe(slot)
+  })
+
+  it('layout and leaf mount() share the host RouteSignals port', async () => {
+    history.replaceState({}, '', '/a/b')
+    router = mountRouter({
+      root: '#root',
+      routes: [{ pattern: '/a/b' }],
+      layouts: [{ pathPrefix: '/a', tag: 'x-chrome' }],
+      modules: { '/a/b': MOD_LEAF },
+      layoutModules: { '/a': LAYOUT_MOD },
+    })
+    await vi.waitFor(() => expect(mountCalls.length).toBeGreaterThan(1))
+    const layoutCall = mountCalls.find((c) => c.opts?.module === LAYOUT_MOD)
+    const leafCall = mountCalls.find((c) => c.opts?.module === MOD_LEAF)
+    expect(layoutCall?.opts.route).toBeDefined()
+    expect(leafCall?.opts.route).toBeDefined()
+    expect(layoutCall!.opts.route).toBe(globalThis.__shipRouteSignals)
+    expect(leafCall!.opts.route).toBe(globalThis.__shipRouteSignals)
   })
 
   it('composes a 2-layout chain outer→inner with route at the innermost slot', async () => {
