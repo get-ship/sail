@@ -7,7 +7,7 @@ use crate::scales;
 use crate::style_ir::{self, SxDecl, SxValue};
 use crate::style_vocab::{self, Resolved};
 
-use super::ir::{PaintArg, PaintOp, StyleDiagnostic};
+use super::ir::{PaintArg, PaintOp, Style, StyleDiagnostic};
 
 /// One product setter: `style.bg(token)`.
 #[derive(Debug, Clone, Copy)]
@@ -1945,6 +1945,68 @@ pub fn when_selector(key: &str) -> Option<String> {
 }
 
 /// Validate paint arg against setter table; fail closed.
+/// True when a `fontFamily` arg is a raw family string / URL, not a role token.
+/// Quoted words keep their quotes from the tokenizer (`"Inter"`).
+pub fn is_raw_font_family_arg(tok: &str) -> bool {
+    let bare = tok.trim();
+    if bare.is_empty() {
+        return true;
+    }
+    if (bare.starts_with('"') && bare.ends_with('"'))
+        || (bare.starts_with('\'') && bare.ends_with('\''))
+    {
+        return true;
+    }
+    if bare.contains("://") || bare.contains(".woff") || bare.contains("fonts.g") {
+        return true;
+    }
+    // Multi-word family names never tokenize as a single unquoted role.
+    bare.contains(' ')
+}
+
+/// Closed built-in font roles. App-custom roles are additional unquoted idents
+/// registered via project `fonts.roles` (lint) / theme `--*-font` vars.
+pub const FONT_ROLES: &[&str] = &["body", "heading", "mono", "display"];
+
+/// Roles reachable from a compiled Style tree (`fontFamily(role)`).
+pub fn collect_font_roles(style: &Style) -> std::collections::BTreeSet<String> {
+    let mut out = std::collections::BTreeSet::new();
+    walk_font_roles(style, &mut out);
+    out
+}
+
+fn walk_font_roles(style: &Style, out: &mut std::collections::BTreeSet<String>) {
+    match style {
+        Style::Empty | Style::Ref(_) | Style::MotionAttach { .. } => {}
+        Style::Set(op) => {
+            if op.setter == "fontFamily" {
+                if let PaintArg::Token(tok) = op.first_arg() {
+                    let bare = tok.trim().trim_matches(|c| c == '"' || c == '\'');
+                    if !bare.is_empty() && !is_raw_font_family_arg(tok) {
+                        out.insert(bare.to_string());
+                    }
+                }
+            }
+        }
+        Style::Chain(items) | Style::List(items) => {
+            for item in items {
+                walk_font_roles(item, out);
+            }
+        }
+        Style::When { entries } => {
+            for (_, body) in entries {
+                walk_font_roles(body, out);
+            }
+        }
+        Style::Match { arms, .. } => {
+            for (_, body) in arms {
+                walk_font_roles(body, out);
+            }
+        }
+        Style::Compound { body, .. } => walk_font_roles(body, out),
+    }
+}
+
 pub fn validate_op(op: &PaintOp) -> Result<(), StyleDiagnostic> {
     let Some(spec) = find_setter(&op.setter) else {
         return Err(StyleDiagnostic::UnknownSetter {
@@ -1995,6 +2057,15 @@ pub fn validate_op(op: &PaintOp) -> Result<(), StyleDiagnostic> {
                     name: tok.clone(),
                     source: op.source.clone(),
                 });
+            }
+            if spec.name == "fontFamily" {
+                if is_raw_font_family_arg(bare) {
+                    return Err(StyleDiagnostic::BadToken {
+                        setter: op.setter.clone(),
+                        value: tok.clone(),
+                        source: op.source.clone(),
+                    });
+                }
             }
             if spec.keywords.iter().any(|k| *k == bare) {
                 return Ok(());
@@ -3883,5 +3954,35 @@ mod tests {
             )),
             "{css:?}"
         );
+    }
+
+    #[test]
+    fn font_family_accepts_role_tokens_only() {
+        for role in FONT_ROLES {
+            let src = format!("style({{ text: fontFamily({role}) }})");
+            let (style, diags) = parse(&src);
+            assert!(
+                diags.is_empty(),
+                "{role}: {:?}",
+                diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+            );
+            let roles = collect_font_roles(&style);
+            assert!(roles.contains(*role), "{roles:?}");
+        }
+        for raw in [
+            r#"style({ text: fontFamily("Inter") })"#,
+            r#"style({ text: fontFamily("Comic Sans") })"#,
+            r#"style({ text: fontFamily('Syne') })"#,
+            "style({ text: fontFamily(https://fonts.googleapis.com/css2) })",
+        ] {
+            let (_, diags) = parse(raw);
+            assert!(
+                diags.iter().any(|d| {
+                    matches!(d, StyleDiagnostic::BadToken { setter, .. } if setter == "fontFamily")
+                        && d.message().contains("role tokens only")
+                }),
+                "expected role-only refuse for {raw}: {diags:?}"
+            );
+        }
     }
 }

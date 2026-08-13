@@ -27,7 +27,7 @@ pub mod style {
     pub use sail_style::{
         CONDITION_PREFIXES, Channel, CssRule, OBJECT_KEYS, PaintArg, PaintOp, Style,
         StyleCompleteContext, StyleCompleteItem, StyleCompleteKind, StyleDiagnostic, StyleEnv,
-        TEXT_BEARING_ELEMENTS, all_surface_packs, channel_for_setter, clash,
+        TEXT_BEARING_ELEMENTS, all_surface_packs, channel_for_setter, clash, collect_font_roles,
         collect_motion_attaches, collect_motion_attaches_env, collect_style_const_names,
         color_paint_vocabulary, condition_media, conditions, emit, emit_style, ir,
         is_geometry_setter, is_interaction_when_key, is_text_bearing, is_theme_owned_author_root,

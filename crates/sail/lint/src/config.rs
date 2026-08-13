@@ -42,8 +42,9 @@ pub const CONFIG_FILES: &[&str] = &["sail.config.jsonc", "sail.config.json"];
 /// used to fail closed with zero signal).
 ///
 /// Layer discipline (SPEC-HARDENING-1 WI5 / SPEC-SAIL-CONFIG-1): every key is
-/// POLICY (capability / serve / safety) or TASTE (product preference). No
-/// behavior knobs that change language semantics under the author's feet.
+/// POLICY (capability / serve / safety), TASTE (product preference), or
+/// PRODUCT (design-system resources — icons, fonts). No behavior knobs that
+/// change language semantics under the author's feet.
 /// See [`CONFIG_KEY_DOCS`] column "layer" via the 5th field on each row.
 ///
 /// Bundler/serve settings live under the top-level **`deck`** object only
@@ -54,7 +55,7 @@ pub const CONFIG_FILES: &[&str] = &["sail.config.jsonc", "sail.config.json"];
 /// - `"strict": true` — every lint finding is Error at the build gate
 /// - `"lint": { "severity", "rules" }` — global floor + per-rule tree (dual-read
 ///   with nested `policy.lint.severity.*`)
-pub const RECOGNIZED_KEYS: [&str; 18] = [
+pub const RECOGNIZED_KEYS: [&str; 20] = [
     "preset",
     "sx",
     "variants",
@@ -65,6 +66,10 @@ pub const RECOGNIZED_KEYS: [&str; 18] = [
     "network",
     "unconfined",
     "theme",
+    // SPEC-ICONS-1 / SPEC-SAIL-CONFIG-1 C2 — product icon packs + roles.
+    "icons",
+    // SPEC-FONTS-1 — role→face pins (Fontsource / vendored). Sibling of icons.
+    "fonts",
     "layout",
     // SPEC-LAYOUT-DIAG-1 / S4.1 — experimental layout finding kinds.
     "layoutExperimental",
@@ -80,7 +85,7 @@ pub const RECOGNIZED_KEYS: [&str; 18] = [
 ];
 
 /// Documentation rows for [`RECOGNIZED_KEYS`] — key, value type, default
-/// when absent, one line of semantics, and layer (`POLICY` | `TASTE`).
+/// when absent, one line of semantics, and layer (`POLICY` | `TASTE` | `PRODUCT`).
 /// The reference generator / RESULT audit renders this table; the test
 /// below keeps it in lockstep with the recognized set.
 pub const CONFIG_KEY_DOCS: &[(&str, &str, &str, &str, &str)] = &[
@@ -155,6 +160,20 @@ pub const CONFIG_KEY_DOCS: &[(&str, &str, &str, &str, &str)] = &[
         "POLICY",
     ),
     (
+        "icons",
+        "{ pack?: string | { id, version? }, version?, packs?: { [id]: { version } }, roles?: { [role]: glyph | \"pack:glyph\" | { pack, glyph } } }",
+        "framework default pack lucide + core role table (no app overrides)",
+        "icon pack pin + role→glyph map (SPEC-ICONS-1). Author markup uses roles, never pack prefixes",
+        "PRODUCT",
+    ),
+    (
+        "fonts",
+        "{ roles: { <role>: { source, id, version? } } }",
+        "omitted — vendored @ship/tokens FONTS + theme --font-*-app (no regression)",
+        "pin font roles (body, heading, mono, display, app-custom) to Fontsource package ids or local faces; unused families do not ship",
+        "PRODUCT",
+    ),
+    (
         "layout",
         "\"warn\" | \"error\"",
         "warn — taffy soft findings stay warnings; silent-clip stays Error",
@@ -211,6 +230,15 @@ pub const CONFIG_KEY_DOCS: &[(&str, &str, &str, &str, &str)] = &[
         "TASTE",
     ),
 ];
+
+/// One `fonts.roles.<role>` pin (SPEC-FONTS-1).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct FontRoleBinding {
+    pub role: String,
+    pub source: String,
+    pub id: String,
+    pub version: Option<String>,
+}
 
 /// The parsed contents of the nearest `sail.config.json` on the walk up. Holds
 /// the raw JSON; typed accessors read individual fields leniently.
@@ -345,6 +373,56 @@ impl SailConfig {
             .unwrap_or_default()
     }
 
+    /// Raw `"icons"` object when present (SPEC-ICONS-1). Typed parse lives in
+    /// `sail_compiler::icons` — this crate only exposes the value so there is
+    /// still one disk reader.
+    pub fn icons_value(&self) -> Option<&serde_json::Value> {
+        self.raw.get("icons")
+    }
+
+    /// Raw `"fonts"` object when present (SPEC-FONTS-1).
+    pub fn fonts_value(&self) -> Option<&serde_json::Value> {
+        self.raw.get("fonts")
+    }
+
+    /// Role→face bindings from `"fonts".roles`. Absent / wrong-typed → empty.
+    /// Each binding is `(role, source, id, version)`.
+    pub fn fonts_roles(&self) -> Vec<FontRoleBinding> {
+        let Some(roles) = self
+            .raw
+            .get("fonts")
+            .and_then(|v| v.get("roles"))
+            .and_then(|v| v.as_object())
+        else {
+            return Vec::new();
+        };
+        let mut out = Vec::new();
+        for (role, spec) in roles {
+            let Some(obj) = spec.as_object() else {
+                continue;
+            };
+            let source = obj
+                .get("source")
+                .and_then(|v| v.as_str())
+                .unwrap_or("fontsource")
+                .to_string();
+            let Some(id) = obj.get("id").and_then(|v| v.as_str()) else {
+                continue;
+            };
+            let version = obj
+                .get("version")
+                .and_then(|v| v.as_str())
+                .map(str::to_string);
+            out.push(FontRoleBinding {
+                role: role.clone(),
+                source,
+                id: id.to_string(),
+                version,
+            });
+        }
+        out
+    }
+
     /// `"layout": "error"` → strict layout gate. Absent / `"warn"` / other → soft.
     /// Wrong-typed values are treated as soft (lenient extract).
     pub fn layout_is_error(&self) -> bool {
@@ -455,11 +533,11 @@ pub fn grant_hint(path: &Path, key: &str) -> String {
 /// refusal/announcement message.
 ///
 /// **Note:** Capability Policy still prefers pure `.json` package configs
-/// (primitives packs, routes). App-level `.jsonc` may carry `theme`, `deck`,
-/// and `editor` which are recognized ([`RECOGNIZED_KEYS`]) as POLICY/TASTE.
-/// Serve keys nest under `deck` only. Layout severity still uses
-/// [`layout_is_error_for`], which may walk past a capability config that has
-/// no `"layout"` key up to an app-level profile.
+/// (primitives packs, routes). App-level `.jsonc` may carry `theme`, `icons`,
+/// `deck`, and `editor` which are recognized ([`RECOGNIZED_KEYS`]) as
+/// POLICY / TASTE / PRODUCT. Serve keys nest under `deck` only. Layout
+/// severity still uses [`layout_is_error_for`], which may walk past a
+/// capability config that has no `"layout"` key up to an app-level profile.
 pub fn resolve(dir: &Path) -> Option<(PathBuf, SailConfig)> {
     let mut cur = Some(dir);
     while let Some(d) = cur {
@@ -472,6 +550,44 @@ pub fn resolve(dir: &Path) -> Option<(PathBuf, SailConfig)> {
         cur = d.parent();
     }
     None
+}
+
+/// Nearest app-level config for product keys (`icons`, `theme`).
+///
+/// Prefers `sail.config.jsonc` then `.json` at each directory. A capability-only
+/// package config (no `icons`) does not stop the walk — app jsonc further up
+/// still wins. Broken bodies are skipped.
+pub fn resolve_product(from: &Path) -> Option<(PathBuf, SailConfig)> {
+    let mut cur = if from.is_file() {
+        from.parent()
+    } else {
+        Some(from)
+    };
+    let mut first_ok: Option<(PathBuf, SailConfig)> = None;
+    while let Some(d) = cur {
+        for name in CONFIG_FILES {
+            let path = d.join(name);
+            let Ok(text) = std::fs::read_to_string(&path) else {
+                continue;
+            };
+            let cfg = if name.ends_with('c') {
+                SailConfig::from_jsonc(&text)
+            } else {
+                SailConfig::from_json(&text)
+            };
+            if !cfg.parse_ok() {
+                continue;
+            }
+            if cfg.has_key("icons") {
+                return Some((path, cfg));
+            }
+            if first_ok.is_none() {
+                first_ok = Some((path, cfg));
+            }
+        }
+        cur = d.parent();
+    }
+    first_ok
 }
 
 /// True when the nearest config that declares `"layout"` sets it to `"error"`.
@@ -619,13 +735,50 @@ mod config_doc_tests {
     }
 
     #[test]
-    fn every_key_is_policy_or_taste() {
+    fn every_key_is_policy_taste_or_product() {
         for (key, _, _, _, layer) in CONFIG_KEY_DOCS {
             assert!(
-                *layer == "POLICY" || *layer == "TASTE",
-                "key `{key}` layer must be POLICY or TASTE, got `{layer}`"
+                *layer == "POLICY" || *layer == "TASTE" || *layer == "PRODUCT",
+                "key `{key}` layer must be POLICY, TASTE, or PRODUCT, got `{layer}`"
             );
         }
+    }
+
+    #[test]
+    fn icons_key_is_recognized_product() {
+        let cfg = SailConfig::from_json(r#"{ "icons": { "pack": "lucide" } }"#);
+        assert!(cfg.unknown_keys().is_empty(), "{:?}", cfg.unknown_keys());
+        assert!(cfg.has_key("icons"));
+        assert_eq!(
+            cfg.icons_value()
+                .and_then(|v| v.get("pack"))
+                .and_then(|v| v.as_str()),
+            Some("lucide")
+        );
+        let layer = CONFIG_KEY_DOCS
+            .iter()
+            .find(|(k, _, _, _, _)| *k == "icons")
+            .map(|r| r.4);
+        assert_eq!(layer, Some("PRODUCT"));
+    }
+
+    #[test]
+    fn fonts_key_is_recognized_product() {
+        let cfg = SailConfig::from_json(
+            r#"{ "fonts": { "roles": { "body": { "source": "fontsource", "id": "@fontsource-variable/dm-sans", "version": "5.3.0" } } } }"#,
+        );
+        assert!(cfg.unknown_keys().is_empty(), "{:?}", cfg.unknown_keys());
+        assert!(cfg.has_key("fonts"));
+        let roles = cfg.fonts_roles();
+        assert_eq!(roles.len(), 1);
+        assert_eq!(roles[0].role, "body");
+        assert_eq!(roles[0].id, "@fontsource-variable/dm-sans");
+        assert_eq!(roles[0].version.as_deref(), Some("5.3.0"));
+        let layer = CONFIG_KEY_DOCS
+            .iter()
+            .find(|(k, _, _, _, _)| *k == "fonts")
+            .map(|r| r.4);
+        assert_eq!(layer, Some("PRODUCT"));
     }
 
     #[test]

@@ -7504,7 +7504,7 @@ export interface ConfigKeyDoc {
   type: string
   default: string
   doc: string
-  layer: "POLICY" | "TASTE"
+  layer: "POLICY" | "TASTE" | "PRODUCT"
 }
 
 export const CONFIG_KEYS: ConfigKeyDoc[] = [
@@ -7577,6 +7577,20 @@ export const CONFIG_KEYS: ConfigKeyDoc[] = [
     "default": "no theme section — thin app emit (no catalog); package generate still full catalog",
     "doc": "app theme emit set: default id, optional mode, catalog allowlist (omit/[] thin; \"all\" full; list filter). Project themes/ always emit",
     "layer": "POLICY"
+  },
+  {
+    "key": "icons",
+    "type": "{ pack?: string | { id, version? }, version?, packs?: { [id]: { version } }, roles?: { [role]: glyph | \"pack:glyph\" | { pack, glyph } } }",
+    "default": "framework default pack lucide + core role table (no app overrides)",
+    "doc": "icon pack pin + role→glyph map (SPEC-ICONS-1). Author markup uses roles, never pack prefixes",
+    "layer": "PRODUCT"
+  },
+  {
+    "key": "fonts",
+    "type": "{ roles: { <role>: { source, id, version? } } }",
+    "default": "omitted — vendored @ship/tokens FONTS + theme --font-*-app (no regression)",
+    "doc": "pin font roles (body, heading, mono, display, app-custom) to Fontsource package ids or local faces; unused families do not ship",
+    "layer": "PRODUCT"
   },
   {
     "key": "layout",

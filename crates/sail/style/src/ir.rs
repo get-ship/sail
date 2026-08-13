@@ -189,7 +189,16 @@ impl StyleDiagnostic {
                 None => format!("style unknown setter `{setter}`"),
             },
             StyleDiagnostic::BadToken { setter, value, .. } => {
-                format!("style `{setter}({value})` — value is not a token on this setter's scale")
+                if setter == "fontFamily" {
+                    format!(
+                        "style `fontFamily({value})` — fontFamily accepts role tokens only \
+                         (body, heading, mono, display), not family strings or URLs"
+                    )
+                } else {
+                    format!(
+                        "style `{setter}({value})` — value is not a token on this setter's scale"
+                    )
+                }
             }
             StyleDiagnostic::ThemeOwnedToken { name, .. } => {
                 format!(

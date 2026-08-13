@@ -52,6 +52,7 @@ pub use parse::{
 pub use rewrite::{
     lift_style_attr_hosts, rewrite_source, rewrite_style_expr, rewrite_teaching_source,
 };
+pub use setters::{FONT_ROLES, collect_font_roles, is_raw_font_family_arg};
 
 #[cfg(test)]
 mod tests {

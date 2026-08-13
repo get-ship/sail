@@ -76,11 +76,99 @@ fn suggest_text(family: &str, role: &str) -> String {
     )
 }
 
-/// Lint a `.sail` source. Walks every `<style>...</style>` block; for
-/// every `font-family: …;` declaration, looks for a whole-token
-/// occurrence of any palette name in the value.
+/// Role tokens `fontFamily` accepts. Quoted strings / family names are red.
+const FONT_FAMILY_ROLES: &[&str] = &["body", "heading", "mono", "display"];
+
+/// Scan Style `fontFamily(...)` calls. A quoted string or non-role ident
+/// is a product-UI family leak — authors bind roles, not faces.
+fn check_style_font_family(path: &Path, source: &str) -> Vec<Finding> {
+    let mut findings = Vec::new();
+    let bytes = source.as_bytes();
+    let needle = b"fontFamily";
+    let mut i = 0;
+    while i + needle.len() < bytes.len() {
+        if &bytes[i..i + needle.len()] != needle {
+            i += 1;
+            continue;
+        }
+        let after = i + needle.len();
+        // word boundary: not part of a longer ident
+        if i > 0 && is_ident_byte(bytes[i - 1]) {
+            i = after;
+            continue;
+        }
+        let mut k = after;
+        while k < bytes.len() && bytes[k].is_ascii_whitespace() {
+            k += 1;
+        }
+        if k >= bytes.len() || bytes[k] != b'(' {
+            i = after;
+            continue;
+        }
+        k += 1;
+        while k < bytes.len() && bytes[k].is_ascii_whitespace() {
+            k += 1;
+        }
+        if k >= bytes.len() {
+            break;
+        }
+        let arg_start = k;
+        let arg = if bytes[k] == b'"' || bytes[k] == b'\'' {
+            let q = bytes[k];
+            k += 1;
+            while k < bytes.len() && bytes[k] != q {
+                k += 1;
+            }
+            if k < bytes.len() {
+                k += 1;
+            }
+            &source[arg_start..k]
+        } else {
+            let start = k;
+            while k < bytes.len()
+                && (is_ident_byte(bytes[k]) || bytes[k] == b':' || bytes[k] == b'/')
+            {
+                k += 1;
+            }
+            &source[start..k]
+        };
+        let trimmed = arg.trim();
+        if trimmed.is_empty() || trimmed.starts_with("bind") {
+            i = k;
+            continue;
+        }
+        let inner = trimmed.trim_matches(|c| c == '"' || c == '\'');
+        let quoted = (trimmed.starts_with('"') && trimmed.ends_with('"'))
+            || (trimmed.starts_with('\'') && trimmed.ends_with('\''));
+        let is_role = FONT_FAMILY_ROLES.iter().any(|r| *r == inner);
+        if quoted || !is_role {
+            let (line, col) = byte_offset_to_line_col(source, arg_start);
+            findings.push(Finding {
+                file: path.to_path_buf(),
+                line,
+                col,
+                rule: RULE_ID,
+                severity: Severity::Error,
+                message: format!(
+                    "fontFamily accepts role tokens only (body, heading, mono, display), not `{trimmed}`"
+                ),
+                suggest: Some(
+                    "Use fontFamily(body), fontFamily(heading), fontFamily(mono), or fontFamily(display). Bind faces in theme / sail.config fonts.roles."
+                        .into(),
+                ),
+            });
+        }
+        i = k;
+    }
+    findings
+}
+
+/// Lint a `.sail` source. Walks Style `fontFamily(...)` plus every
+/// `<style>...</style>` block; for every `font-family: …;` declaration,
+/// looks for a whole-token occurrence of any palette name in the value.
 pub fn check(path: &Path, source: &str) -> Vec<Finding> {
     let mut findings = Vec::new();
+    findings.extend(check_style_font_family(path, source));
     for block in scan_style_blocks(source) {
         let local = collect_local_definitions(block.content);
         for decl in scan_declarations(block.content) {
@@ -610,6 +698,31 @@ mod tests {
             code { font-family: var(--mono-font); }
             .label { font-family: var(--label-font); }
         </style>"#;
+        assert!(run(src).is_empty(), "{:?}", run(src));
+    }
+
+    #[test]
+    fn style_font_family_quoted_string_is_red() {
+        let src = r#"<p style({ text: fontFamily("Inter") })>hi</p>"#;
+        let f = run(src);
+        assert_eq!(f.len(), 1, "{f:?}");
+        assert_eq!(f[0].severity, Severity::Error);
+        assert!(
+            f[0].message.contains("role tokens only"),
+            "{}",
+            f[0].message
+        );
+    }
+
+    #[test]
+    fn style_font_family_role_token_is_clean() {
+        let src = r#"<p style({ text: fontFamily(body).fontSize(sm) })>hi</p>"#;
+        assert!(run(src).is_empty(), "{:?}", run(src));
+    }
+
+    #[test]
+    fn style_font_family_bind_is_clean() {
+        let src = r#"<p style({ text: fontFamily(bind(role)) })>hi</p>"#;
         assert!(run(src).is_empty(), "{:?}", run(src));
     }
 }
