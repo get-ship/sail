@@ -202,6 +202,21 @@ pub enum StyleDiagnostic {
         replacement: String,
         source: String,
     },
+    /// Name is a concern / axis / plain setter — not a style reference.
+    NotAStyleRef {
+        name: String,
+        source: String,
+    },
+    /// File-local style under `styling: themed`. One-offs belong in the theme.
+    ThemedLocalStyle {
+        name: String,
+        source: String,
+    },
+    /// Unknown after vocabulary + theme named styles + (open) locals.
+    UnknownVocabulary {
+        name: String,
+        source: String,
+    },
 }
 
 impl StyleDiagnostic {
@@ -275,6 +290,17 @@ impl StyleDiagnostic {
                 replacement,
                 ..
             } => format!("style `{setter}` is retired — use `{replacement}`"),
+            StyleDiagnostic::NotAStyleRef { name, .. } => {
+                format!("`{name}` is vocabulary, not a style ref")
+            }
+            StyleDiagnostic::ThemedLocalStyle { name, .. } => {
+                format!(
+                    "local style `{name}` is not legal in themed mode — one-offs belong in the theme; create `{name}` in studio"
+                )
+            }
+            StyleDiagnostic::UnknownVocabulary { name, .. } => {
+                format!("unknown vocabulary `{name}`")
+            }
         }
     }
 
@@ -291,7 +317,10 @@ impl StyleDiagnostic {
             | StyleDiagnostic::BadScrutinee { source, .. }
             | StyleDiagnostic::UnknownConcernSlot { source, .. }
             | StyleDiagnostic::DuplicateSlot { source, .. }
-            | StyleDiagnostic::RetiredSetter { source, .. } => source,
+            | StyleDiagnostic::RetiredSetter { source, .. }
+            | StyleDiagnostic::NotAStyleRef { source, .. }
+            | StyleDiagnostic::ThemedLocalStyle { source, .. }
+            | StyleDiagnostic::UnknownVocabulary { source, .. } => source,
             StyleDiagnostic::Clash { first, .. } => first,
         }
     }
