@@ -52,6 +52,7 @@ const PINNED_RULE_IDS: &[&str] = &[
     "sail-no-ambient-storage",
     "sail-no-ambient-timers",
     "sail-no-class",
+    "sail-no-component-token",
     "sail-no-data-attr",
     "sail-no-free-aria",
     "sail-no-imperative-style",

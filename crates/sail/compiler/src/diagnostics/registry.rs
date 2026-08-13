@@ -631,6 +631,15 @@ const DIAG_SPECS: &[DiagSpec] = &[
         docs_anchor: None,
     },
     DiagSpec {
+        id: "sail-no-component-token",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "component token is theme-owned; override via theme= or the theme document",
+        allowed_list_source: None,
+        fix_text: Some("override via theme= or the theme document"),
+        docs_anchor: None,
+    },
+    DiagSpec {
         id: "sail-no-data-attr",
         jurisdiction: Jurisdiction::CompilerError,
         default_severity: DiagSeverity::Error,

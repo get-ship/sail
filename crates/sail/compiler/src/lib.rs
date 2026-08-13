@@ -61,6 +61,7 @@ pub mod scope_manifest;
 pub mod semantic_props;
 pub mod stdlib;
 pub mod theme_gate;
+pub mod theme_surface;
 pub mod tokens_generate;
 pub mod used_icons;
 pub mod used_tags;
@@ -81,7 +82,8 @@ pub use fmt::{
 };
 pub use grammar_vocabulary::{GrammarVocabulary, to_json as grammar_vocabulary_to_json};
 pub use l1_manifest::{
-    L1Attribute, L1Entry, L1Kind, VOID_TAGS, l1_by_kind, l1_count, l1_entries, l1_kind,
+    L1Attribute, L1ComponentToken, L1Entry, L1Js, L1JsKind, L1Kind, L1SlotType, VOID_TAGS,
+    l1_by_kind, l1_count, l1_entries, l1_kind,
 };
 pub use region_capability::{
     CONTROLLER_SIZE_THRESHOLD, REGION_CAPABILITY_MATRIX, RegionCapability,
@@ -89,6 +91,11 @@ pub use region_capability::{
 pub use semantic_props::{
     HOST_ANATOMY, HostAnatomy, SEMANTIC_PROPS, SemanticKind, SemanticProp, host_anatomy,
     is_free_aria_attr, lookup as lookup_semantic_prop, lower_attr_name_str,
+};
+pub use theme_surface::{
+    ThemeTokenHover, ThemeTokenKind, ThemeTokenRef, catalog_theme_ids, infer_active_theme_mode,
+    resolve_theme_token, theme_attr_completions, theme_attr_partial, theme_complete_at,
+    theme_hover_at, theme_override_vocabulary,
 };
 pub use used_icons::{collect_used_icons, collect_used_icons_from_source};
 /// Identity stamp embedded in every emitted artifact (JS leading

@@ -250,11 +250,13 @@ pub fn write(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
     }
 
     // Parse + THEMES-1 document gate + ordered-scale gate (refuse before write).
-    if let Ok(doc) = serde_json::from_str::<Value>(content) {
-        sail_compiler::theme_gate::validate_theme_gate(&doc, rel)
-            .map_err(|e| OpError::InvalidArgument(e.to_string()))?;
-        validate_ordered_scales(&doc)?;
-    }
+    // Invalid JSON is a schema refusal — never write a document the gate
+    // cannot inspect.
+    let doc: Value = serde_json::from_str(content)
+        .map_err(|e| OpError::InvalidArgument(format!("theme schema invalid (JSON): {e}")))?;
+    sail_compiler::theme_gate::validate_theme_gate(&doc, rel)
+        .map_err(|e| OpError::InvalidArgument(e.to_string()))?;
+    validate_ordered_scales(&doc)?;
 
     let target = ctx.workspace_root.join(rel);
     let resolved = ensure_under_workspace(&ctx.workspace_root, &target)?;
@@ -1156,6 +1158,98 @@ mod tests {
             sm.contains("unknown root key") && sm.contains("ok"),
             "expected schema lock error, got {sm}"
         );
+    }
+
+    fn write_err(ctx: &Ctx, rel: &str, content: &str) -> String {
+        write(&json!({ "path": rel, "content": content }), ctx)
+            .unwrap_err()
+            .to_string()
+    }
+
+    #[test]
+    fn write_refuses_invalid_json_schema() {
+        let dir = tempdir().unwrap();
+        let ws = dir.path();
+        std::fs::create_dir_all(ws.join("themes")).unwrap();
+        let ctx = Ctx::new(ws, ws, ws);
+        let err = write_err(&ctx, "themes/bad.json", "{not json");
+        assert!(
+            err.contains("schema invalid") || err.contains("JSON"),
+            "{err}"
+        );
+        assert!(!ws.join("themes/bad.json").exists());
+    }
+
+    #[test]
+    fn write_refuses_missing_required_slot() {
+        let dir = tempdir().unwrap();
+        let ws = dir.path();
+        std::fs::create_dir_all(ws.join("themes")).unwrap();
+        let ctx = Ctx::new(ws, ws, ws);
+        let mut doc: Value = serde_json::from_str(&gate_theme("probe", false)).unwrap();
+        doc["modes"]["light"]["color"]
+            .as_object_mut()
+            .unwrap()
+            .remove("foreground");
+        let err = write_err(&ctx, "themes/missing-slot.json", &doc.to_string());
+        assert!(err.contains("foreground"), "{err}");
+        assert!(err.contains("missing required"), "{err}");
+        assert!(!ws.join("themes/missing-slot.json").exists());
+    }
+
+    #[test]
+    fn write_refuses_dangling_alias() {
+        let dir = tempdir().unwrap();
+        let ws = dir.path();
+        std::fs::create_dir_all(ws.join("themes")).unwrap();
+        let ctx = Ctx::new(ws, ws, ws);
+        let mut extra = serde_json::Map::new();
+        extra.insert(
+            "secondary".into(),
+            json!({ "$value": "{no-such-token}", "$type": "color" }),
+        );
+        let mut doc: Value = serde_json::from_str(&gate_theme("probe", false)).unwrap();
+        if let Some(color) = doc["modes"]["light"]["color"].as_object_mut() {
+            color.insert("secondary".into(), extra["secondary"].clone());
+        }
+        let err = write_err(&ctx, "themes/dangling.json", &doc.to_string());
+        assert!(err.contains("dangling alias"), "{err}");
+        assert!(err.contains("no-such-token"), "{err}");
+        assert!(!ws.join("themes/dangling.json").exists());
+    }
+
+    #[test]
+    fn write_refuses_missing_supported_mode() {
+        let dir = tempdir().unwrap();
+        let ws = dir.path();
+        std::fs::create_dir_all(ws.join("themes")).unwrap();
+        let ctx = Ctx::new(ws, ws, ws);
+        let mut doc: Value = serde_json::from_str(&gate_theme("probe", false)).unwrap();
+        doc["$extensions"]["sail"]["supportedModes"] = json!(["light", "dark"]);
+        let err = write_err(&ctx, "themes/missing-mode.json", &doc.to_string());
+        assert!(
+            err.contains("missing mode") && err.contains("dark"),
+            "{err}"
+        );
+        assert!(!ws.join("themes/missing-mode.json").exists());
+    }
+
+    #[test]
+    fn write_refuses_contrast_floor() {
+        let dir = tempdir().unwrap();
+        let ws = dir.path();
+        std::fs::create_dir_all(ws.join("themes")).unwrap();
+        let ctx = Ctx::new(ws, ws, ws);
+        let mut doc: Value = serde_json::from_str(&gate_theme("probe", false)).unwrap();
+        doc["modes"]["light"]["color"]["muted"] = json!({
+            "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
+            "foreground": { "$value": "oklch(0.85 0 0)", "$type": "color" }
+        });
+        let err = write_err(&ctx, "themes/contrast.json", &doc.to_string());
+        assert!(err.contains("muted-foreground"), "{err}");
+        assert!(err.contains("muted"), "{err}");
+        assert!(err.contains("floor 4.5:1"), "{err}");
+        assert!(!ws.join("themes/contrast.json").exists());
     }
 
     #[test]

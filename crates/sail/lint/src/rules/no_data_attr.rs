@@ -16,6 +16,11 @@ const REMEDY: &str = "Do not use data-* in .sail markup. Prefer role, accessible
      visible text, or authored id. Event wiring: on: handlers + closed-over state. \
      data-sail-host is compiler-only L1 part identity — never author it.";
 
+const THEME_SUBSTRATE: &[&str] = &["data-theme", "data-product", "data-mode"];
+const THEME_SUBSTRATE_REMEDY: &str = "Do not author theme substrate as data-*. Use theme= (theme id) — \
+     the compiler emits data-mode for nested scopes. Override tokens in \
+     the theme document, not data-theme / data-product / data-mode.";
+
 /// Scan .sail source for data-* attributes and [data- selectors.
 pub fn check(path: &Path, source: &str) -> Vec<Finding> {
     if !is_ambient_app_path(path) {
@@ -53,12 +58,37 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
         // [data- selector
         if i + 6 <= bytes.len() && &bytes[i..i + 6] == b"[data-" {
             let is_host = source[i..].starts_with("[data-sail-host");
-            let msg = if is_host {
-                "data-sail-host selector is banned — compiler-only part identity; use role/name/text"
+            let substrate = THEME_SUBSTRATE
+                .iter()
+                .copied()
+                .find(|n| source[i + 1..].starts_with(n));
+            let (msg, remedy) = if is_host {
+                (
+                    "data-sail-host selector is banned — compiler-only part identity; use role/name/text",
+                    REMEDY,
+                )
+            } else if let Some(name) = substrate {
+                (
+                    match name {
+                        "data-theme" => {
+                            "data-theme is theme substrate — use theme= (theme id), not data-theme"
+                        }
+                        "data-product" => {
+                            "data-product is theme substrate — use theme= (theme id), not data-product"
+                        }
+                        _ => {
+                            "data-mode is theme substrate — use theme= (theme id); mode follows the document / theme capability"
+                        }
+                    },
+                    THEME_SUBSTRATE_REMEDY,
+                )
             } else {
-                "data-* selector is banned (style/test channel bypass)"
+                (
+                    "data-* selector is banned (style/test channel bypass)",
+                    REMEDY,
+                )
             };
-            if let Some(f) = finding(path, source, i, RULE_ID, msg, REMEDY) {
+            if let Some(f) = finding(path, source, i, RULE_ID, msg, remedy) {
                 findings.push(f);
             }
             i += 6;
@@ -71,12 +101,34 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
             && bytes.get(i + 6).is_some_and(|b| b.is_ascii_alphabetic())
         {
             let is_host = source[i + 1..].starts_with("data-sail-host");
-            let msg = if is_host {
-                "data-sail-host is compiler-only part identity — not an author API"
+            let substrate = THEME_SUBSTRATE
+                .iter()
+                .copied()
+                .find(|n| source[i + 1..].starts_with(n));
+            let (msg, remedy) = if is_host {
+                (
+                    "data-sail-host is compiler-only part identity — not an author API",
+                    REMEDY,
+                )
+            } else if let Some(name) = substrate {
+                (
+                    match name {
+                        "data-theme" => {
+                            "data-theme is theme substrate — use theme= (theme id), not data-theme"
+                        }
+                        "data-product" => {
+                            "data-product is theme substrate — use theme= (theme id), not data-product"
+                        }
+                        _ => {
+                            "data-mode is theme substrate — use theme= (theme id); mode follows the document / theme capability"
+                        }
+                    },
+                    THEME_SUBSTRATE_REMEDY,
+                )
             } else {
-                "data-* attributes are banned in app .sail markup"
+                ("data-* attributes are banned in app .sail markup", REMEDY)
             };
-            if let Some(f) = finding(path, source, i + 1, RULE_ID, msg, REMEDY) {
+            if let Some(f) = finding(path, source, i + 1, RULE_ID, msg, remedy) {
                 findings.push(f);
             }
             i += 6;
@@ -101,6 +153,30 @@ mod tests {
             r#"<button data-action="go">x</button>"#,
         );
         assert!(!f.is_empty(), "{f:?}");
+    }
+
+    #[test]
+    fn flags_theme_substrate_and_teaches_theme_eq() {
+        for (src, needle) in [
+            (r#"<column data-theme="ship">x</column>"#, "data-theme"),
+            (r#"<column data-product="sail">x</column>"#, "data-product"),
+            (r#"<column data-mode="dark">x</column>"#, "data-mode"),
+        ] {
+            let f = check(Path::new("apps/sail-site/src/x.sail"), src);
+            assert_eq!(f.len(), 1, "{needle}: {f:?}");
+            assert_eq!(f[0].rule, RULE_ID);
+            assert!(
+                f[0].message.contains("theme=") && f[0].message.contains(needle),
+                "{needle} message must teach theme=: {}",
+                f[0].message
+            );
+            if let Some(s) = &f[0].suggest {
+                assert!(
+                    s.contains("theme="),
+                    "{needle} remedy must name theme=: {s}"
+                );
+            }
+        }
     }
 
     #[test]

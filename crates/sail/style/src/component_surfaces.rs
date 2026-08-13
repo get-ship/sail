@@ -137,6 +137,46 @@ pub fn is_component_public_name(css_name: &str) -> bool {
     index().all_public_names.contains(css_name)
 }
 
+/// Whether `root` is an L1 surface pack stem (`button`, `card`, …).
+/// App Style must not resolve these (THEMES-1-ENFORCE).
+pub fn is_theme_owned_author_root(root: &str) -> bool {
+    index().by_pack.contains_key(root)
+}
+
+/// Every L1 surface pack name (sorted).
+pub fn all_surface_packs() -> Vec<&'static str> {
+    index().by_pack.keys().copied().collect()
+}
+
+/// True when `name` is a theme-owned component token author or emit form:
+/// pack stem (`button`), author path (`button.foreground`, `button.bg`),
+/// or public emit label (`button-foreground`).
+pub fn is_theme_owned_token_name(name: &str) -> bool {
+    let n = name.trim();
+    if n.is_empty() {
+        return false;
+    }
+    if is_component_public_name(n) {
+        return true;
+    }
+    if let Some((root, rest)) = n.split_once('.') {
+        if !is_theme_owned_author_root(root) {
+            return false;
+        }
+        if rest.is_empty() {
+            return true;
+        }
+        // Author member (`foreground`) or storage leaf (`bg`).
+        if let Some(slots) = surface_slots(root) {
+            return slots
+                .iter()
+                .any(|s| s.author_member == rest || s.storage_leaf == rest);
+        }
+        return true;
+    }
+    is_theme_owned_author_root(n)
+}
+
 /// Whether `css_name` is a rest surface emit label (kebab form forbidden in Style).
 pub fn is_rest_surface_public_name(css_name: &str) -> bool {
     index().rest_public_names.contains(css_name)
@@ -362,6 +402,12 @@ mod tests {
         assert!(!is_component_public_name("primary"));
         assert!(is_rest_surface_public_name("chip-foreground"));
         assert!(!is_rest_surface_public_name("button-hover-bg"));
+        assert!(is_theme_owned_token_name("button"));
+        assert!(is_theme_owned_token_name("button.bg"));
+        assert!(is_theme_owned_token_name("button.foreground"));
+        assert!(is_theme_owned_token_name("card"));
+        assert!(!is_theme_owned_token_name("primary"));
+        assert!(!is_theme_owned_token_name("primary.foreground"));
     }
 
     #[test]
@@ -385,6 +431,39 @@ mod emit_integration {
     use crate::host_ctx::with_host_surface;
     use crate::{lower_style, parse};
     use std::collections::HashMap;
+
+    #[test]
+    fn app_style_teaches_theme_owned_for_button() {
+        with_host_surface(None, || {
+            let (_, diags) = parse("style({ paint: bg(button) })");
+            assert!(
+                diags.iter().any(|d| {
+                    matches!(d, crate::ir::StyleDiagnostic::ThemeOwnedToken { name, .. } if name == "button")
+                        && d.message().contains("theme-owned")
+                        && d.message().contains("theme=")
+                }),
+                "{:?}",
+                diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+            );
+            let (_, diags) = parse("style({ paint: bg(button.bg) })");
+            assert!(
+                diags.iter().any(|d| {
+                    matches!(d, crate::ir::StyleDiagnostic::ThemeOwnedToken { name, .. } if name == "button.bg")
+                        && d.message().contains("theme-owned")
+                }),
+                "{:?}",
+                diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+            );
+            let (_, diags) = parse("style({ paint: bg(primary) })");
+            assert!(
+                !diags
+                    .iter()
+                    .any(|d| matches!(d, crate::ir::StyleDiagnostic::ThemeOwnedToken { .. })),
+                "bg(primary) must stay legal: {:?}",
+                diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+            );
+        });
+    }
 
     #[test]
     fn host_surface_emits_css_var() {

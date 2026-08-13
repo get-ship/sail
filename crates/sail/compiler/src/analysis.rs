@@ -655,6 +655,28 @@ pub fn hover_at(
     col: usize,
 ) -> Option<Hover> {
     let offset = offset_of(source, line, col);
+    // THEMES-2 §3: token / theme-id hover shows the resolved value under the
+    // active theme + mode (and flags mode divergence). Shared with MCP.
+    let (theme, mode) = crate::theme_surface::infer_active_theme_mode(source);
+    if let Some(th) = crate::theme_surface::theme_hover_at(source, offset, &theme, &mode) {
+        let mut src = format!(
+            "**{}** · `{}`\n\ntheme `{}` / {}",
+            th.css_name, th.value, th.theme, th.mode
+        );
+        if let Some(div) = &th.mode_divergence {
+            src.push_str(&format!(
+                "\n\nMode divergence: {} = `{}`",
+                div.other_mode, div.other_value
+            ));
+        }
+        return Some(Hover {
+            name: th.name,
+            kind: "theme-token".into(),
+            source: src,
+            line,
+            col,
+        });
+    }
     // SPEC-PARTIAL-1: file-local partial name / invocation tag hover (author
     // source — partials expand away in `parse`, so this path is pre-parse).
     if let Some(tag) = tag_name_at(source, offset)
@@ -784,6 +806,25 @@ pub fn completions_at_offset(
     let ctx = sail_lint::style::style_complete_context_at(source, byte_offset, host);
     if !matches!(ctx, sail_lint::style::StyleCompleteContext::Unknown) {
         return Vec::new();
+    }
+    let theme_items = crate::theme_surface::theme_complete_at(source, byte_offset, host);
+    if !theme_items.is_empty() {
+        return theme_items
+            .into_iter()
+            .map(|it| Symbol {
+                name: it.name,
+                kind: match it.kind {
+                    crate::theme_surface::ThemeTokenKind::ThemeId => "theme-id".into(),
+                    crate::theme_surface::ThemeTokenKind::SemanticSlot => "semantic-slot".into(),
+                    crate::theme_surface::ThemeTokenKind::ComponentToken => {
+                        "component-token".into()
+                    }
+                },
+                source: "theme".into(),
+                line: 0,
+                col: 0,
+            })
+            .collect();
     }
     completions_at(source, source_path)
 }

@@ -22,7 +22,12 @@ pub const AUTHORING_BANS: &[AuthoringBan] = &[
     AuthoringBan {
         syntax: "data-*",
         rule: "sail-no-data-attr",
-        instead: "prefer accessible name, visible text, or authored id; event wiring via on: + closed-over state. `data-sail-host` is compiler-only L1 part identity for closed widgets — never author it; app tests use role/name/text",
+        instead: "prefer accessible name, visible text, or authored id; event wiring via on: + closed-over state. `data-sail-host` is compiler-only L1 part identity for closed widgets — never author it; app tests use role/name/text. `data-theme` / `data-product` / `data-mode` are theme substrate — use theme=",
+    },
+    AuthoringBan {
+        syntax: "L1 component token in app style() / unsanctioned attrs",
+        rule: "sail-no-component-token",
+        instead: "component tokens are theme-owned; override via theme= or the theme document. App style() uses semantic slots (bg(primary))",
     },
     AuthoringBan {
         syntax: "free aria-* / role=",

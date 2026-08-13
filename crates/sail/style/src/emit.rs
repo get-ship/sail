@@ -240,9 +240,7 @@ fn class_name(op: &PaintOp, ctx: &Ctx) -> String {
     let mut arg = String::new();
     for a in &op.args {
         match a {
-            PaintArg::Token(t) => {
-                arg.extend(t.chars().filter(|c| c.is_ascii_alphanumeric()))
-            }
+            PaintArg::Token(t) => arg.extend(t.chars().filter(|c| c.is_ascii_alphanumeric())),
             PaintArg::Bind(n) => {
                 arg.push_str("bind");
                 arg.extend(n.chars().filter(|c| c.is_ascii_alphanumeric()));
@@ -292,8 +290,6 @@ fn build_selector(class: &str, ctx: &Ctx, child: &str) -> String {
         child = child
     )
 }
-
-
 
 fn op_has_surface_member(op: &PaintOp) -> bool {
     op.args.iter().any(|a| {
@@ -377,6 +373,7 @@ pub fn lower_style_source_with_motion(
     if diags.iter().any(|d| {
         match d {
             super::ir::StyleDiagnostic::BadToken { .. }
+            | super::ir::StyleDiagnostic::ThemeOwnedToken { .. }
             | super::ir::StyleDiagnostic::UnknownSetter { .. }
             | super::ir::StyleDiagnostic::UnknownWhenKey { .. }
             | super::ir::StyleDiagnostic::BadArity { .. } => true,

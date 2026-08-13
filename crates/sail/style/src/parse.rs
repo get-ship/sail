@@ -139,9 +139,7 @@ fn collect_motion_attaches_inner(
                 collect_motion_attaches_inner(body, env, out, resolving);
             }
         }
-        Style::Compound { body, .. } => {
-            collect_motion_attaches_inner(body, env, out, resolving)
-        }
+        Style::Compound { body, .. } => collect_motion_attaches_inner(body, env, out, resolving),
         Style::When { entries } => {
             for (_, body) in entries {
                 collect_motion_attaches_inner(body, env, out, resolving);
@@ -280,11 +278,7 @@ fn looks_like_style_compose_rhs(input: &str) -> bool {
         return false;
     };
     let head = head.trim();
-    if head.is_empty()
-        || !head
-            .bytes()
-            .all(|b| b.is_ascii_alphanumeric() || b == b'_')
-    {
+    if head.is_empty() || !head.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'_') {
         return false;
     }
     let rest = rest.trim_start();
@@ -890,8 +884,7 @@ fn flat_chain_style_chain_body(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnost
             let args = parse_paren_args(p, diags);
             let arg_text = format_arg_text(&args);
             diags.push(StyleDiagnostic::ParseError {
-                message: "`style.box(…)` was renamed to `style.boxSizing(…)` for box-sizing"
-                    .into(),
+                message: "`style.box(…)` was renamed to `style.boxSizing(…)` for box-sizing".into(),
                 source: format!("style.box({arg_text})"),
             });
             if p.pos == before {
@@ -904,8 +897,9 @@ fn flat_chain_style_chain_body(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnost
             let args = parse_paren_args(p, diags);
             let arg_text = format_arg_text(&args);
             diags.push(StyleDiagnostic::ParseError {
-                message: "`color(…)` was renamed to `fg(…)` — use paint channel `fg` for text color"
-                    .into(),
+                message:
+                    "`color(…)` was renamed to `fg(…)` — use paint channel `fg` for text color"
+                        .into(),
                 source: format!("style.color({arg_text})"),
             });
             if p.pos == before {
@@ -1079,7 +1073,8 @@ fn parse_style_arg(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Styl
                             base = Style::chain(vec![base, Style::When { entries }]);
                         } else {
                             diags.push(StyleDiagnostic::ParseError {
-                                message: "`.when(…)` is retired — use `style(ref, { when: {…} })`".into(),
+                                message: "`.when(…)` is retired — use `style(ref, { when: {…} })`"
+                                    .into(),
                                 source: ".when".into(),
                             });
                             let _ = parse_when_args(p, diags);
@@ -1090,7 +1085,8 @@ fn parse_style_arg(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Styl
                         }
                     } else {
                         diags.push(StyleDiagnostic::ParseError {
-                            message: "only motion (`.enter` / `.exit` / …) may follow a Style ref".into(),
+                            message: "only motion (`.enter` / `.exit` / …) may follow a Style ref"
+                                .into(),
                             source: p.remainder(),
                         });
                         break;
@@ -1508,11 +1504,7 @@ fn parse_compound_row(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> S
 }
 
 /// Partial: StyleObj | StyleRef | style(…) | residual free forms.
-fn parse_partial(
-    p: &mut Parser<'_>,
-    diags: &mut Vec<StyleDiagnostic>,
-    allow_axes: bool,
-) -> Style {
+fn parse_partial(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>, allow_axes: bool) -> Style {
     match p.peek() {
         Some(Tok::LBrace) => parse_style_object(p, diags, allow_axes),
         Some(Tok::Word("style")) => parse_style_chain(p, diags),
@@ -1642,8 +1634,9 @@ fn parse_channel_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> 
             let args = parse_paren_args(p, diags);
             let arg_text = format_arg_text(&args);
             diags.push(StyleDiagnostic::ParseError {
-                message: "`color(…)` was renamed to `fg(…)` — use paint channel `fg` for text color"
-                    .into(),
+                message:
+                    "`color(…)` was renamed to `fg(…)` — use paint channel `fg` for text color"
+                        .into(),
                 source: format!("color({arg_text})"),
             });
             if p.pos == before {
@@ -1663,8 +1656,9 @@ fn parse_channel_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> 
         };
         if motion_object {
             diags.push(StyleDiagnostic::ParseError {
-                message: "motion methods belong in the `animate:` channel — not inside box/paint/text"
-                    .into(),
+                message:
+                    "motion methods belong in the `animate:` channel — not inside box/paint/text"
+                        .into(),
                 source: method.to_string(),
             });
             let _ = parse_motion_call(p, method, diags);
@@ -1716,8 +1710,9 @@ fn parse_animate_channel_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnost
             Some(Tok::Word(w)) => w,
             _ => {
                 diags.push(StyleDiagnostic::ParseError {
-                    message: "expected motion trigger in `animate:` (`enter` / `exit` / `loop` / …)"
-                        .into(),
+                    message:
+                        "expected motion trigger in `animate:` (`enter` / `exit` / `loop` / …)"
+                            .into(),
                     source: p.remainder(),
                 });
                 break;
@@ -1801,7 +1796,10 @@ fn parse_paren_args(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Vec
 }
 
 fn format_arg_text(args: &[PaintArg]) -> String {
-    args.iter().map(PaintArg::display).collect::<Vec<_>>().join(", ")
+    args.iter()
+        .map(PaintArg::display)
+        .collect::<Vec<_>>()
+        .join(", ")
 }
 
 fn push_paint_op(
@@ -1930,6 +1928,18 @@ fn normalize_paint_arg(
         return PaintArg::MemberPath { root, path };
     }
 
+    // App / foreign host: dotted L1 component paths (`button.bg`, `chip.foreground`)
+    // do not resolve (THEMES-1-ENFORCE). Bare pack stems (`button`, `popover`)
+    // stay Tokens so non-color scales can still spell `z(popover)`.
+    if super::component_surfaces::is_theme_owned_author_root(&root) && !path.is_empty() {
+        let name = format!("{root}.{}", path.join("."));
+        diags.push(StyleDiagnostic::ThemeOwnedToken {
+            name: name.clone(),
+            source: source.clone(),
+        });
+        return PaintArg::Token(name);
+    }
+
     // Static group stem first (`primary`, `primary.foreground`) → public Token.
     if static_token_group(&root).is_some() {
         if path.is_empty() {
@@ -1971,17 +1981,6 @@ fn normalize_paint_arg(
     // emit labels (e.g. `z(popover)` → z-popover). No early reject here.
     if path.is_empty() {
         return PaintArg::Token(root);
-    }
-
-    // Dotted path that looks like a foreign/out-of-scope surface.
-    if super::component_surfaces::surface_slots(&root).is_some() {
-        let value = format!("{root}.{}", path.join("."));
-        diags.push(StyleDiagnostic::BadToken {
-            setter: String::new(),
-            value: value.clone(),
-            source: source.clone(),
-        });
-        return PaintArg::Token(value);
     }
 
     let value = format!("{root}.{}", path.join("."));
@@ -2205,8 +2204,7 @@ fn parse_when_partial(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> S
         }
         _ => {
             diags.push(StyleDiagnostic::ParseError {
-                message: "expected when partial (`{ box|paint|text|animate: … }` or name)"
-                    .into(),
+                message: "expected when partial (`{ box|paint|text|animate: … }` or name)".into(),
                 source: p.remainder(),
             });
             Style::Empty
@@ -2397,7 +2395,7 @@ mod utility_detect_tests {
 
 #[cfg(test)]
 mod const_rhs_tests {
-    use super::{parse_style_const_rhs, Style};
+    use super::{Style, parse_style_const_rhs};
 
     #[test]
     fn bare_object_form() {
