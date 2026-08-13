@@ -45,6 +45,7 @@ pub struct Classified {
 ///
 /// Shape rules (S1.1 minimal):
 /// - `.sail` + path contains a `routes` segment → Route
+///   (wins over a later `themes` segment: `routes/themes/page.sail`)
 /// - `.sail` elsewhere → Component
 /// - `defineStore(` in source → Store (even under compositions — misplacement)
 /// - path under `src/actions/` → Action
@@ -55,16 +56,8 @@ pub fn classify(path: &Path, source: Option<&str>) -> Classified {
     let path_str = path_as_str(path);
     let segs = path_segments(path);
 
-    // Theme: under themes/
-    if has_segment(&segs, "themes") {
-        return Classified {
-            kind: FileKind::Theme,
-            home: home_for(FileKind::Theme).to_string(),
-            ok: true,
-        };
-    }
-
-    // .sail: routes/ → Route, else Component
+    // .sail: routes/ → Route, else Component.
+    // Must beat the themes/ check: `routes/themes/page.sail` is a route.
     if is_sail(path) {
         if has_segment(&segs, "routes") {
             return Classified {
@@ -78,6 +71,15 @@ pub fn classify(path: &Path, source: Option<&str>) -> Classified {
         return Classified {
             kind: FileKind::Component,
             home: home_for(FileKind::Component).to_string(),
+            ok: true,
+        };
+    }
+
+    // Theme assets (JSON etc.) under themes/. .sail already returned above.
+    if has_segment(&segs, "themes") {
+        return Classified {
+            kind: FileKind::Theme,
+            home: home_for(FileKind::Theme).to_string(),
             ok: true,
         };
     }

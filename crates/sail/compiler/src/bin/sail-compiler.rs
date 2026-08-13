@@ -1862,7 +1862,8 @@ fn compile_target(
         (_, Some(name)) => Some(ComponentMeta { name }),
         // Directory auto: prefer `<tag>/<tag>.sail`, else filename stem
         // (covers co-located siblings like sail-timeline/sail-timeline-item.sail).
-        _ if dir_auto_component => Some(ComponentMeta {
+        // Routes stay tagless — `page.sail` is FileKind::Route, not a CE name.
+        _ if dir_auto_component && !is_route_file(path) => Some(ComponentMeta {
             name: path_tag.unwrap_or_else(|| stem_of(path)),
         }),
         _ => None,
@@ -1943,7 +1944,14 @@ fn is_sail_source(name: &str) -> bool {
 /// component JS with no tag. The bundle succeeds, the browser loads it,
 /// nothing happens — no custom element registers, because no
 /// `customElements.define()` call was emitted.
+///
+/// Routes (`page.sail` under `routes/`) share the `<stem>/<stem>.sail`
+/// shape when the segment is literally `page/` — classify() wins so a
+/// route is never treated as a custom-element source.
 fn looks_like_component_path(path: &Path) -> Option<String> {
+    if is_route_file(path) {
+        return None;
+    }
     let stem = path.file_stem().and_then(|s| s.to_str())?;
     let parent = path.parent()?.file_name().and_then(|s| s.to_str())?;
     if stem == parent {
@@ -1951,6 +1959,11 @@ fn looks_like_component_path(path: &Path) -> Option<String> {
     } else {
         None
     }
+}
+
+fn is_route_file(path: &Path) -> bool {
+    sail_compiler::project_map::classify(path, None).kind
+        == sail_compiler::project_map::FileKind::Route
 }
 
 fn collect_targets(dir: &Path, out: &mut Vec<PathBuf>) -> Result<()> {

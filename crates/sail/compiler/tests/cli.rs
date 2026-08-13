@@ -184,3 +184,46 @@ fn cli_directory_builds_two_fixtures() {
         "expected two-file summary, got: {stdout}"
     );
 }
+
+#[test]
+fn cli_directory_build_does_not_tag_route_page() {
+    let bin = binary_path();
+    if !bin.exists() {
+        eprintln!("binary not built; run `cargo build -p sail-compiler`");
+        return;
+    }
+    let tmp = tempfile::tempdir().unwrap();
+    // `sail-compiler build <dir>` auto-tags every .sail from the stem.
+    // `page.sail` is FileKind::Route — stamping `page` is sail-component-name.
+    let root = tmp.path().join("build");
+    let page_dir = root.join("routes").join("foo");
+    std::fs::create_dir_all(&page_dir).unwrap();
+    std::fs::write(page_dir.join("page.sail"), "<h1>route</h1>\n").unwrap();
+    // `<tag>/<tag>.sail` under routes/ is still a route, not a component.
+    let page_page = root.join("routes").join("page");
+    std::fs::create_dir_all(&page_page).unwrap();
+    std::fs::write(page_page.join("page.sail"), "<h1>also a route</h1>\n").unwrap();
+    let out = tmp.path().join("out");
+    let output = Command::new(&bin)
+        .args(["build"])
+        .arg(&root)
+        .args(["--out"])
+        .arg(&out)
+        .output()
+        .expect("invoke sail-compiler directory build");
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(
+        !stderr.contains("sail-component-name") && !stdout.contains("sail-component-name"),
+        "route page.sail must not be tagged as a component:\n{stderr}"
+    );
+    assert!(
+        output.status.success(),
+        "directory build of routes/foo/page.sail failed: {stderr}"
+    );
+    assert!(
+        out.join("page.js").exists(),
+        "expected emitted page.js under {}",
+        out.display()
+    );
+}

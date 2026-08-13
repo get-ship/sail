@@ -28,6 +28,16 @@ fn route_page_classifies_as_route() {
 }
 
 #[test]
+fn route_under_themes_segment_is_still_a_route() {
+    let c = kind_of("apps/x/routes/themes/page.sail", None);
+    assert_eq!(
+        c.kind,
+        FileKind::Route,
+        "routes/themes/page.sail is a route, not a theme asset"
+    );
+}
+
+#[test]
 fn component_sail_classifies_as_component() {
     let c = kind_of("apps/x/src/widget/widget.sail", None);
     assert_eq!(

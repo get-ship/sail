@@ -555,15 +555,16 @@ fn compile_opts(path: &Path) -> CompileOpts {
 }
 
 fn component_meta_for(path: &Path) -> Option<ComponentMeta> {
+    // Same SSOT as the CLI operator: routes are not custom elements.
+    if crate::project_map::classify(path, None).kind == crate::project_map::FileKind::Route {
+        return None;
+    }
     let stem = path.file_stem()?.to_str()?.to_string();
     let parent = path.parent()?.file_name()?.to_str()?;
     if stem == parent {
         return Some(ComponentMeta { name: stem });
     }
     let s = path.to_string_lossy();
-    if s.contains("/routes/") {
-        return None;
-    }
     if s.contains("/src/") || s.contains("/packages/components/") {
         return Some(ComponentMeta { name: stem });
     }
