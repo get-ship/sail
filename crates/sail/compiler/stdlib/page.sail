@@ -10,27 +10,15 @@
     size: 'md' | 'sm' | 'lg' = 'md'
   }
 
-  style base = {
-    box: padX(2),
-    paint: fg(page.foreground).bg(transparent).radius(md).cursor(pointer).select(none).borderWidth(1).border(transparent).transition(colors).duration(fast).ease(out),
-    text: fontFamily(body).fontWeight(medium),
-  }
-  style sizeMd = { box: minW(control-h-md).h(control-h-md), text: fontSize(sm) }
-  style sizeSm = { box: minW(control-h-sm).h(control-h-sm), text: fontSize(xs) }
-  style sizeLg = { box: minW(control-h-lg).h(control-h-lg), text: fontSize(base) }
+  style base = {box: space({ pad-x: 2 }), paint: ink({ color: page.foreground }).fill({ color: transparent }).radius(md).border({ color: transparent, width: 1 }).motion({ property: colors, duration: fast, ease: out }).cursor(pointer).select(none), text: type({ family: body, weight: medium })}
+  style sizeMd = {box: size({ min-w: control-h-md, h: control-h-md }), text: type({ size: sm })}
+  style sizeSm = {box: size({ min-w: control-h-sm, h: control-h-sm }), text: type({ size: xs })}
+  style sizeLg = {box: size({ min-w: control-h-lg, h: control-h-lg }), text: type({ size: base })}
 </scope>
 
 <button
   type="button"
-  style(base, {
-    when: {
-      hover: { paint: bg(hover-bg) },
-      current: { paint: bg(page.current-bg).fg(page.current-fg).border(page.current-bg) },
-      disabled: { paint: opacity(50).cursor(not-allowed) },
-      focus: { paint: outline(solid).outline(2).outline(ring) },
-    },
-    match: { size: { md: sizeMd, sm: sizeSm, lg: sizeLg } },
-  })
+  style(base, {when: {hover: {paint: fill({ color: hover-bg })}, current: {paint: fill({ color: page.current-bg }).ink({ color: page.current-fg }).border({ color: page.current-bg })}, disabled: {paint: filter({ opacity: 50 }).cursor(not-allowed)}, focus: {paint: border({ style: solid, kind: outline, width: 2, color: ring })}}, match: { size: { md: sizeMd, sm: sizeSm, lg: sizeLg } }})
 >
   <slot></slot>
 </button>

@@ -12,19 +12,19 @@
     tone: 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted'
   }
 
-  style base = { box: padY(16).padX(4), paint: fg(empty-state.foreground).borderWidth(1).border(empty-state.border).radius(lg).bg(empty-state).shadow(xs), text: fontFamily(body).textAlign(center) }
-  style sizeMd = { box: padY(16).padX(4) }
-  style sizeSm = { box: padY(7).padX(4) }
-  style sizeLg = { box: padY(24).padX(6) }
-  style variantDefault = { paint: borderWidth(1).border(empty-state.border).radius(lg).bg(empty-state).shadow(xs), text: textAlign(center) }
-  style variantInline = { box: padY(3).padX(4), paint: borderWidth(1).border(dashed).border(empty-state.border).radius(md).bg(empty-state).shadow(none), text: textAlign(start) }
+  style base = {box: space({ pad-y: 16, pad-x: 4 }), paint: ink({ color: empty-state.foreground }).border({ color: empty-state.border, width: 1 }).radius(lg).fill({ color: empty-state }).elevation(xs), text: type({ family: body, align: center })}
+  style sizeMd = {box: space({ pad-y: 16, pad-x: 4 })}
+  style sizeSm = {box: space({ pad-y: 7, pad-x: 4 })}
+  style sizeLg = {box: space({ pad-y: 24, pad-x: 6 })}
+  style variantDefault = {paint: border({ color: empty-state.border, width: 1 }).radius(lg).fill({ color: empty-state }).elevation(xs), text: type({ align: center })}
+  style variantInline = {box: space({ pad-y: 3, pad-x: 4 }), paint: border({ color: empty-state.border, width: 1, style: dashed }).radius(md).fill({ color: empty-state }).elevation(none), text: type({ align: start })}
   // placeholder + connecting share bare (borderless/transparent) chrome.
-  style variantBare = { box: padY(6), paint: borderWidth(0).bg(transparent).radius(none).shadow(none), text: textAlign(center) }
-  style icon = { box: self(center).size(12), paint: radius(lg).bg(empty-state).fg(empty-state.foreground) }
-  style copy = { box: self(stretch) }
-  style title = { paint: fg(empty-state.title), text: fontFamily(heading).fontWeight(semibold).leading(tight).fontSize(md) }
-  style desc = { box: maxW(panel-ch-w-md), paint: fg(empty-state.foreground), text: leading(loose).fontSize(sm) }
-  style actions = { box: self(center) }
+  style variantBare = {box: space({ pad-y: 6 }), paint: border({ width: 0 }).fill({ color: transparent }).radius(none).elevation(none), text: type({ align: center })}
+  style icon = {box: flow({ self: center }).size(12), paint: radius(lg).fill({ color: empty-state }).ink({ color: empty-state.foreground })}
+  style copy = {box: flow({ self: stretch })}
+  style title = {paint: ink({ color: empty-state.title }), text: type({ family: heading, weight: semibold, leading: tight, size: md })}
+  style desc = {box: size({ max-w: panel-ch-w-md }), paint: ink({ color: empty-state.foreground }), text: type({ leading: loose, size: sm })}
+  style actions = {box: flow({ self: center })}
 </scope>
 
 <column
@@ -32,9 +32,7 @@
   justify="center"
   gap="3"
   use:variantLive
-  style(base, {
-    when: { forced-colors: { paint: border(CanvasText) } },
-    match: {
+  style(base, {when: {forced-colors: {paint: border({ color: CanvasText })}}, match: {
       size: { md: sizeMd, sm: sizeSm, lg: sizeLg },
       variant: {
         default: variantDefault,
@@ -42,8 +40,7 @@
         placeholder: variantBare,
         connecting: variantBare,
       },
-    },
-  })
+    }})
 >
   <row
     inline
@@ -51,24 +48,19 @@
     align="center"
     justify="center"
     hidden="true"
-    style(icon, {
-      box: shrink(1),
-      paint: bg(empty-state).fg(tone),
-      when: { empty: { box: display(none) }, forced-colors: { paint: bg(Canvas).fg(CanvasText) } },
-      compound: [{ tone: muted, paint: bg(empty-state).fg(empty-state.foreground) }],
-    })
+    style(icon, {box: flow({ shrink: 1 }), paint: fill({ color: empty-state }).ink({ color: tone }), when: {empty: {box: flow({ display: none })}, forced-colors: {paint: fill({ color: Canvas }).ink({ color: CanvasText })}}, compound: [{tone: muted, paint: fill({ color: empty-state }).ink({ color: empty-state.foreground })}]})
   >
     <slot name="icon"></slot>
   </row>
-  <column align="stretch" gap="1" style(copy, { box: grow(1).minW(0) })>
-    <div style(title, { when: { empty: { box: display(none) } } })>
+  <column align="stretch" gap="1" style(copy, {box: flow({ grow: 1 }).size({ min-w: 0 })})>
+    <div style(title, {when: {empty: {box: flow({ display: none })}}})>
       <slot name="title"></slot>
     </div>
-    <div style(desc, { when: { empty: { box: display(none) } } })>
+    <div style(desc, {when: {empty: {box: flow({ display: none })}}})>
       <slot></slot>
     </div>
   </column>
-  <row align="center" justify="center" gap="2" style(actions, { when: { empty: { box: display(none) } } })>
+  <row align="center" justify="center" gap="2" style(actions, {when: {empty: {box: flow({ display: none })}}})>
     <slot name="action"></slot>
   </row>
 </column>

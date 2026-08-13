@@ -9,7 +9,7 @@
     onTabChange: (detail: { name: string }) => void
   }
 
-  style host = { box: minW(0) }
+  style host = {box: size({ min-w: 0 })}
 </scope>
 <column gap="3" use:tabs style(host)>
   <slot></slot>

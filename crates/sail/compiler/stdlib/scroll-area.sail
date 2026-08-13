@@ -10,25 +10,20 @@
     orientation: 'vertical' | 'horizontal' | 'both' = 'vertical'
   }
 
-  style base = {
-    paint: overscroll(contain).scrollbarThin().scrollbarThumb(scroll-area.thumb).scrollbarTrack(transparent),
-  }
-  style vertical = { box: overflowX(hidden).overflowY(auto) }
-  style horizontal = { box: overflowX(auto).overflowY(hidden) }
-  style both = { box: overflow(auto) }
+  style base = {paint: scrollbarThin().scrollbarThumb(scroll-area.thumb).scrollbarTrack(transparent), box: overflow({ overscroll: contain })}
+  style vertical = {box: overflow({ x: hidden, y: auto })}
+  style horizontal = {box: overflow({ x: auto, y: hidden })}
+  style both = {box: overflow({ all: auto })}
 </scope>
 
 <div
-  style(base, {
-    when: { hover: { paint: scrollbarThumb(border-strong) } },
-    match: {
+  style(base, {when: {hover: {paint: scrollbarThumb(border-strong)}}, match: {
       orientation: {
         vertical: vertical,
         horizontal: horizontal,
         both: both,
       },
-    },
-  })
+    }})
 >
   <slot></slot>
 </div>

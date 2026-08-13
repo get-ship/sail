@@ -14,35 +14,29 @@
     variant: 'solid' | 'dashed' = 'solid'
   }
 
-  style base = {
-    box: display(block).w(full).h(border-width).my(2).pad(0),
-    paint: borderWidth(0).bg(separator.line),
-  }
-  style orientH = { box: display(block).w(full).h(border-width).my(2).mx(0) }
-  style orientV = { box: display(inline-block).self(stretch).w(border-width).h(full).mx(2).my(0) }
-  style solid = { box: pad(0), paint: bg(separator.line).borderWidth(0) }
-  style dashed = { box: pad(0), paint: bg(transparent).borderWidth(0) }
+  style base = {box: flow({ display: block }).size({ w: full, h: border-width }).space({ my: 2, pad: 0 }), paint: border({ width: 0 }).fill({ color: separator.line })}
+  style orientH = {box: flow({ display: block }).size({ w: full, h: border-width }).space({ my: 2, mx: 0 })}
+  style orientV = {box: flow({ display: inline-block, self: stretch }).size({ w: border-width, h: full }).space({ mx: 2, my: 0 })}
+  style solid = {box: space({ pad: 0 }), paint: fill({ color: separator.line }).border({ width: 0 })}
+  style dashed = {box: space({ pad: 0 }), paint: fill({ color: transparent }).border({ width: 0 })}
 </scope>
 
 <hr
-  style(base, {
-    match: {
+  style(base, {match: {
       orientation: { horizontal: orientH, vertical: orientV },
       variant: {
         solid: solid,
         dashed: dashed,
       },
-    },
-    compound: [
-      { orientation: horizontal, variant: dashed, box: h(0), paint: borderTWidth(1).border(dashed).borderT(separator.line) },
-      { orientation: vertical, variant: dashed, box: w(0), paint: borderLWidth(1).border(dashed).borderL(separator.line) },
+    }, compound: [
+      {orientation: horizontal, variant: dashed, box: size({ h: 0 }), paint: border({ style: dashed, edge: b }).border({ style: dashed, edge: l }).border({ style: dashed, edge: r }).border({ style: dashed, width: 1, edge: t, color: separator.line })},
+      {orientation: vertical, variant: dashed, box: size({ w: 0 }), paint: border({ style: dashed, edge: b }).border({ style: dashed, edge: r }).border({ style: dashed, edge: t }).border({ style: dashed, width: 1, edge: l, color: separator.line })},
       // Tone only when present — never empty bg(tone)/border*(tone) on rest.
-      { tone: *, variant: solid, paint: bg(tone) },
-      { orientation: horizontal, tone: *, variant: dashed, paint: borderT(tone) },
-      { orientation: vertical, tone: *, variant: dashed, paint: borderL(tone) },
-      { tone: muted, variant: solid, paint: bg(border-subtle) },
-      { orientation: horizontal, tone: muted, variant: dashed, paint: borderT(border-subtle) },
-      { orientation: vertical, tone: muted, variant: dashed, paint: borderL(border-subtle) },
-    ],
-  })
+      {tone: *, variant: solid, paint: fill({ color: tone })},
+      {orientation: horizontal, tone: *, variant: dashed, paint: border({ color: tone, edge: t })},
+      {orientation: vertical, tone: *, variant: dashed, paint: border({ color: tone, edge: l })},
+      {tone: muted, variant: solid, paint: fill({ color: border-subtle })},
+      {orientation: horizontal, tone: muted, variant: dashed, paint: border({ color: border-subtle, edge: t })},
+      {orientation: vertical, tone: muted, variant: dashed, paint: border({ color: border-subtle, edge: l })},
+    ]})
 >

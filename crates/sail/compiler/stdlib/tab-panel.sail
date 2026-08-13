@@ -7,9 +7,9 @@
     orientation: 'horizontal' | 'vertical' = 'horizontal'
   }
 
-  style base = { box: minW(0) }
-  style horizontal = { box: padT(4).minW(0) }
-  style vertical = { box: padT(0).padS(4).minW(0) }
+  style base = {box: size({ min-w: 0 })}
+  style horizontal = {box: space({ pad-t: 4 }).size({ min-w: 0 })}
+  style vertical = {box: space({ pad-t: 0, pad-s: 4 }).size({ min-w: 0 })}
 </scope>
 <div
   style(base, {

@@ -8,7 +8,7 @@
     placement = ''
   }
 
-  style panel = { box: position(fixed).inset(auto).m(0).left(bind(anchorLeft)).top(bind(anchorTop)).w(max).maxW(panel-max-w-sm).pad(3), paint: fg(hover-card.foreground).bg(hover-card).borderWidth(1).border(hover-card.border).radius(md).shadow(md).z(popover), text: fontFamily(body).fontSize(sm) }
+  style panel = {box: place({ position: fixed, inset: auto, left: bind(anchorLeft), top: bind(anchorTop), z: popover }).space({ m: 0, pad: 3 }).size({ w: max, max-w: panel-max-w-sm }), paint: ink({ color: hover-card.foreground }).fill({ color: hover-card }).border({ color: hover-card.border, width: 1 }).radius(md).elevation(md), text: type({ family: body, size: sm })}
 </scope>
 
 <div popover use:anchor use:hoverSurface style(panel)><slot></slot></div>

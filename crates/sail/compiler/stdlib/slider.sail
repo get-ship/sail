@@ -16,14 +16,10 @@
     ticks = ''
   }
 
-  style base = {
-    box: w(full).h(5),
-    paint: appearance(none).bg(transparent).cursor(pointer),
-    when: { disabled: { paint: cursor(not-allowed).opacity(50) } },
-  }
-  style sizeSm = { box: h(4) }
-  style sizeMd = { box: h(5) }
-  style sizeLg = { box: h(6) }
+  style base = {box: size({ w: full, h: 5 }), paint: appearance(none).fill({ color: transparent }).cursor(pointer), when: {disabled: {paint: cursor(not-allowed).filter({ opacity: 50 })}}}
+  style sizeSm = {box: size({ h: 4 })}
+  style sizeMd = {box: size({ h: 5 })}
+  style sizeLg = {box: size({ h: 6 })}
 </scope>
 
 <input

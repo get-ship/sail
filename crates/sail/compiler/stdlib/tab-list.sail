@@ -11,29 +11,26 @@
     variant: 'line' | 'pill' | 'enclosed' = 'line'
   }
 
-  style base = { paint: borderBWidth(1).border(tab-list.border).bg(tab-list) }
+  style base = {paint: border({ color: tab-list.border, edge: l }).border({ color: tab-list.border, edge: r }).border({ color: tab-list.border, edge: t }).border({ color: tab-list.border, width: 1, edge: b }).fill({ color: tab-list })}
   // line + enclosed share the bottom-edge strip chrome.
-  style variantStrip = { paint: borderBWidth(1).border(tab-list.border) }
-  style pill = { box: pad(1), paint: borderWidth(0).radius(md).bg(tab-list.rail).borderBWidth(0) }
+  style variantStrip = {paint: border({ color: tab-list.border, edge: l }).border({ color: tab-list.border, edge: r }).border({ color: tab-list.border, edge: t }).border({ color: tab-list.border, width: 1, edge: b })}
+  style pill = {box: space({ pad: 1 }), paint: border({ width: 0, edge: l }).border({ width: 0, edge: r }).border({ width: 0, edge: t }).border({ width: 0, edge: b }).radius(md).fill({ color: tab-list.rail })}
 </scope>
 
 <row
   align="stretch"
   gap="1"
-  style(base, {
-    match: {
+  style(base, {match: {
       variant: {
         line: variantStrip,
         pill: pill,
         enclosed: variantStrip,
       },
-    },
-    compound: [
-      { sticky: true, box: position(sticky).top(0), paint: z(sticky) },
-      { orientation: vertical, paint: borderBWidth(0).borderEWidth(1).border(tab-list.border) },
-      { orientation: vertical, variant: pill, paint: borderEWidth(0) },
-    ],
-  })
+    }, compound: [
+      {sticky: true, box: place({ position: sticky, top: 0, z: sticky })},
+      {orientation: vertical, paint: border({ color: tab-list.border, edge: s }).border({ color: tab-list.border, edge: t }).border({ color: tab-list.border, width: 0, edge: b }).border({ color: tab-list.border, width: 1, edge: e })},
+      {orientation: vertical, variant: pill, paint: border({ width: 0, edge: e })},
+    ]})
 >
   <slot></slot>
 </row>

@@ -13,11 +13,7 @@
   }
 
   // Host text rides component.table tokens (global fallbacks in the pack).
-  style base = {
-    box: w(full),
-    paint: fg(table.foreground),
-    text: fontFamily(body).fontSize(sm).leading(normal).textAlign(start),
-  }
+  style base = {box: size({ w: full }), paint: ink({ color: table.foreground }), text: type({ family: body, size: sm, leading: normal, align: start })}
 </scope>
 
 <table style(base)>

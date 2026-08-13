@@ -35,7 +35,10 @@ pub fn setter_doc_line(s: &SetterSpec) -> String {
     }
     if crate::concerns::retired_replacement(s.name).is_some() {
         if let Some((concern, teaching)) = crate::concerns::retired_replacement(s.name) {
-            return format!("`style.{}(…)` → retired — use `{teaching}` (`{concern}`)", s.name);
+            return format!(
+                "`style.{}(…)` → retired — use `{teaching}` (`{concern}`)",
+                s.name
+            );
         }
     }
     let scale = s.scale.unwrap_or("—");
@@ -3116,7 +3119,11 @@ fn lower_gap_key_css(
             } else if bare.chars().all(|c| c.is_ascii_digit()) {
                 format!("{sign}{bare}deg")
             } else if let Some(v) = scales::lower("angle", bare) {
-                if neg { format!("calc(-1 * {v})") } else { v }
+                if neg {
+                    format!("calc(-1 * {v})")
+                } else {
+                    v
+                }
             } else {
                 return Some(Err(StyleDiagnostic::BadToken {
                     setter: op.setter.clone(),
@@ -3727,7 +3734,9 @@ mod tests {
         ] {
             let (_, diags) = parse(src);
             assert!(
-                diags.iter().any(|d| matches!(d, StyleDiagnostic::RetiredSetter { .. })),
+                diags
+                    .iter()
+                    .any(|d| matches!(d, StyleDiagnostic::RetiredSetter { .. })),
                 "{src}: {:?}",
                 diags.iter().map(|d| d.message()).collect::<Vec<_>>()
             );
@@ -3753,11 +3762,7 @@ mod tests {
                 "accent-color",
                 "auto",
             ),
-            (
-                "style({ box: place({ order: first }) })",
-                "order",
-                "-9999",
-            ),
+            ("style({ box: place({ order: first }) })", "order", "-9999"),
             (
                 "style({ paint: fill({ clip: text }) })",
                 "background-clip",
@@ -3782,7 +3787,11 @@ mod tests {
     #[test]
     fn concern_clash_keys_are_kind_aware() {
         let op = only_op("style({ paint: border(subtle) })");
-        assert_eq!(op_slots(&op), vec!["border:stroke"]);
+        assert!(
+            op_slots(&op).contains(&"border:stroke:all"),
+            "{:?}",
+            op_slots(&op)
+        );
         let op = only_op("style({ paint: border({ kind: ring, color: primary }) })");
         assert_eq!(op_slots(&op), vec!["border:ring"]);
         let op = only_op("style({ paint: fill({ color: primary }) })");

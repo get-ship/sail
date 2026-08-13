@@ -20,26 +20,15 @@
   }
 
   // Rest: component.field surface (shared with input/textarea).
-  style base = {
-    box: display(block).minH(control-h-md).padY(1_5).padS(3).padE(8).w(full),
-    paint: fg(field.foreground).bg(field).borderWidth(1).border(field.border).radius(md).shadow(xs).cursor(pointer),
-    text: fontSize(base),
-    when: {
-      hover: { paint: border(border-strong) },
-      disabled: { paint: cursor(not-allowed).opacity(50) },
-    },
-  }
-  style sizeXs = { box: minH(control-h-2xs).padS(2), text: fontSize(xs) }
-  style sizeSm = { box: minH(control-h-sm).padS(2_5), text: fontSize(sm) }
-  style sizeMd = { box: minH(control-h-md).padS(3), text: fontSize(base) }
-  style sizeLg = { box: minH(control-h-lg).padS(4), text: fontSize(md) }
+  style base = {box: flow({ display: block }).size({ min-h: control-h-md, w: full }).space({ pad-y: 1_5, pad-s: 3, pad-e: 8 }), paint: ink({ color: field.foreground }).fill({ color: field }).border({ color: field.border, width: 1 }).radius(md).elevation(xs).cursor(pointer), text: type({ size: base }), when: {hover: {paint: border({ color: border-strong })}, disabled: {paint: cursor(not-allowed).filter({ opacity: 50 })}}}
+  style sizeXs = {box: size({ min-h: control-h-2xs }).space({ pad-s: 2 }), text: type({ size: xs })}
+  style sizeSm = {box: size({ min-h: control-h-sm }).space({ pad-s: 2_5 }), text: type({ size: sm })}
+  style sizeMd = {box: size({ min-h: control-h-md }).space({ pad-s: 3 }), text: type({ size: base })}
+  style sizeLg = {box: size({ min-h: control-h-lg }).space({ pad-s: 4 }), text: type({ size: md })}
 </scope>
 
 <select
-  style(base, {
-    match: { size: { xs: sizeXs, sm: sizeSm, md: sizeMd, lg: sizeLg } },
-    compound: [{ invalid: true, paint: border(destructive) }],
-  })
+  style(base, {match: { size: { xs: sizeXs, sm: sizeSm, md: sizeMd, lg: sizeLg } }, compound: [{invalid: true, paint: border({ color: destructive })}]})
 >
   <slot></slot>
 </select>

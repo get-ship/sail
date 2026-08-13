@@ -14,20 +14,18 @@
   }
 
   // Shell + trigger from component.accordion tokens.
-  style host = { box: display(block), paint: borderWidth(1).border(accordion.border).radius(lg).bg(accordion), text: fontFamily(body) }
+  style host = {box: flow({ display: block }), paint: border({ color: accordion.border, width: 1 }).radius(lg).fill({ color: accordion }), text: type({ family: body })}
   // list(none) + after chevron: kill UA marker; single themed caret.
-  style summary = { box: display(flex).padY(3).padX(4), paint: fg(accordion.foreground).cursor(pointer).list(none).select(none).radius(lg).transition(colors).duration(fast).ease(out), text: fontSize(sm).fontWeight(semibold), when: { hover: { paint: bg(hover-bg) }, after: { box: ms(auto).size(4), paint: content(empty).bg(accordion.chevron) } } }
-  style content = { box: padX(4).padY(3) }
+  style summary = {box: flow({ display: flex }).space({ pad-y: 3, pad-x: 4 }), paint: ink({ color: accordion.foreground }).radius(lg).motion({ property: colors, duration: fast, ease: out }).cursor(pointer).select(none), text: type({ size: sm, weight: semibold, list: none }), when: {hover: {paint: fill({ color: hover-bg })}, after: {box: space({ ms: auto }).size(4), paint: content(empty).fill({ color: accordion.chevron })}}}
+  style content = {box: space({ pad-x: 4, pad-y: 3 })}
 </scope>
 
 <details
   use:detailsToggle
   use:detailsDisabled
-  style(host, {
-    compound: [
-      { disabled: true, paint: opacity(50).cursor(not-allowed) },
-    ],
-  })
+  style(host, {compound: [
+      {disabled: true, paint: filter({ opacity: 50 }).cursor(not-allowed)},
+    ]})
 >
   <summary style(summary)><slot name="trigger"></slot></summary>
   <div>

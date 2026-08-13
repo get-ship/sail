@@ -2,7 +2,7 @@
 //!
 //! Phase 3 also owns text-bearing host law and geometry-class interaction gating.
 
-use crate::ir::Style;
+use crate::ir::{PaintArg, PaintOp, Style};
 
 /// Author channel for a Style setter or motion trigger.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -223,6 +223,13 @@ pub fn is_geometry_setter(name: &str) -> bool {
     }
 }
 
+fn place_gates_layout(op: &PaintOp) -> bool {
+    match op.first_arg() {
+        PaintArg::Slots(slots) => slots.keys().any(|k| k != "z"),
+        _ => true,
+    }
+}
+
 /// True when `style` contains dimensional geometry that interaction state
 /// must not gate. Nested structural when keys (`before`/`after`/`empty`/…)
 /// own their own pseudo boxes — geometry there is not counted as gated by
@@ -230,7 +237,15 @@ pub fn is_geometry_setter(name: &str) -> bool {
 pub fn style_contains_geometry(style: &Style) -> bool {
     match style {
         Style::Empty | Style::MotionAttach { .. } | Style::Ref(_) => false,
-        Style::Set(op) => is_geometry_setter(&op.setter),
+        Style::Set(op) => {
+            // `place({ z })` is stacking, not box geometry — z lived on paint
+            // before SPEC-2 and must still be legal under interaction when().
+            if op.setter == "place" {
+                place_gates_layout(op)
+            } else {
+                is_geometry_setter(&op.setter)
+            }
+        }
         Style::Chain(items) | Style::List(items) => items.iter().any(style_contains_geometry),
         Style::Match { arms, .. } => arms.iter().any(|(_, b)| style_contains_geometry(b)),
         Style::Compound { body, .. } => style_contains_geometry(body),
@@ -388,7 +403,8 @@ mod tests {
 
     #[test]
     fn geometry_in_interaction_when_refused() {
-        let (_, diags) = parse("style({ box: space({ pad: 2 }), when: { hover: { box: space({ pad: 4 }) } } })");
+        let (_, diags) =
+            parse("style({ box: space({ pad: 2 }), when: { hover: { box: space({ pad: 4 }) } } })");
         assert!(
             diags
                 .iter()
@@ -396,7 +412,9 @@ mod tests {
             "{:?}",
             diags.iter().map(|d| d.message()).collect::<Vec<_>>()
         );
-        let (_, diags) = parse("style({ box: space({ pad: 2 }), when: { tablet: { box: space({ pad: 4 }) } } })");
+        let (_, diags) = parse(
+            "style({ box: space({ pad: 2 }), when: { tablet: { box: space({ pad: 4 }) } } })",
+        );
         assert!(
             !diags
                 .iter()
@@ -404,7 +422,9 @@ mod tests {
             "media may gate box: {:?}",
             diags.iter().map(|d| d.message()).collect::<Vec<_>>()
         );
-        let (_, diags) = parse("style({ box: space({ pad: 2 }), when: { hover: { paint: fill({ color: muted }) } } })");
+        let (_, diags) = parse(
+            "style({ box: space({ pad: 2 }), when: { hover: { paint: fill({ color: muted }) } } })",
+        );
         assert!(
             !diags
                 .iter()

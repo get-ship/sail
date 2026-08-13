@@ -129,6 +129,8 @@ const PLATFORM: &[(&str, &str)] = &[
         "breadcrumb",
         include_str!("../stdlib/platform/breadcrumb.css"),
     ),
+    ("button", include_str!("../stdlib/platform/button.css")),
+    ("card", include_str!("../stdlib/platform/card.css")),
     ("checkbox", include_str!("../stdlib/platform/checkbox.css")),
     ("chip", include_str!("../stdlib/platform/chip.css")),
     (
@@ -138,6 +140,10 @@ const PLATFORM: &[(&str, &str)] = &[
     ("color", include_str!("../stdlib/platform/color.css")),
     ("dialog", include_str!("../stdlib/platform/dialog.css")),
     ("file", include_str!("../stdlib/platform/file.css")),
+    (
+        "menu-item",
+        include_str!("../stdlib/platform/menu-item.css"),
+    ),
     ("meter", include_str!("../stdlib/platform/meter.css")),
     ("progress", include_str!("../stdlib/platform/progress.css")),
     ("prose", include_str!("../stdlib/platform/prose.css")),

@@ -14,7 +14,7 @@
     onChange: (detail: { value: string }) => void
   }
 
-  style host = { text: fontFamily(body) }
+  style host = {text: type({ family: body })}
 </scope>
 
 <column gap="2" use:radioGroup style(host)>

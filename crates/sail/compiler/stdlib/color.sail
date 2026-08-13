@@ -13,19 +13,10 @@
   }
 
   // One field border only; swatch is edge-to-edge inside it.
-  style color = {
-    box: w(9).h(control-h-md).pad(0).overflow(hidden).minH(0),
-    paint: appearance(none).borderWidth(1).border(solid).border(field.border).radius(md).bg(field).cursor(pointer),
-    when: {
-      hover: { paint: border(border-strong) },
-      disabled: { paint: cursor(not-allowed).opacity(50) },
-    },
-  }
+  style color = {box: size({ w: 9, h: control-h-md, min-h: 0 }).space({ pad: 0 }).overflow({ all: hidden }), paint: appearance(none).border({ color: field.border, width: 1, style: solid }).radius(md).fill({ color: field }).cursor(pointer), when: {hover: {paint: border({ color: border-strong })}, disabled: {paint: cursor(not-allowed).filter({ opacity: 50 })}}}
 </scope>
 
 <input
   type="color"
-  style(color, {
-    compound: [{ invalid: true, paint: border(destructive) }],
-  })
+  style(color, {compound: [{invalid: true, paint: border({ color: destructive })}]})
 >

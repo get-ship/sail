@@ -18,12 +18,15 @@ Reason classes:
 |---|---|---|---|---|
 | accordion.css | accordion | native-anatomy | Hosted `<summary>` chevron mask + UA marker kill; sibling-stack radius merge | none |
 | breadcrumb.css | breadcrumb | native-anatomy | Projected `ol`/`li`/`a` crumbs + `::before` separator | none |
+| button.css | button | vocab-gap | Style `gap` is not a space slot; `borderImage` has no concern slot. Host is `<button>`, not `<row>` | SPEC-SPINNAKER-2 |
+| card.css | card | vocab-gap | `borderImage(corner-image)` leftover — no concern slot preserves `--corner-image` | SPEC-SPINNAKER-2 |
 | checkbox.css | checkbox | vocab-gap | `:checked` / `:indeterminate` fill + data-uri marks. Style `bg()` loses to unlayered component scopes | BUG-STDLIB-LAYER-1 |
-| chip.css | chip | native-anatomy | Removable-button visibility keyed on host `removable` (child Style cannot see host attr) | none |
+| chip.css | chip | native-anatomy | Removable-button visibility keyed on host `removable`; Style `gap` leftover (host is not `<row>`) | SPEC-SPINNAKER-2 |
 | code-block.css | code-block | native-anatomy | Highlighter token spans (`.tok-*`) inside the host | none |
 | color.css | color | vendor-pseudo | Kill UA double-rim on `::-webkit-color-swatch` / `::-moz-color-swatch` | none |
 | dialog.css | dialog | native-anatomy | `::backdrop`, side-sheet `min()` geometry, slot header/section/footer | GAP-STDLIB-VOCAB-1 |
 | file.css | file | native-anatomy | `variant=drop` hides native picker / shows drop label (child Style cannot see host `variant`) | none |
+| menu-item.css | menu-item | vocab-gap | Style `gap` leftover — host is `<button>`, not `<row>` | SPEC-SPINNAKER-2 |
 | meter.css | meter | vendor-pseudo | WebKit / Firefox meter bar + optimum bands | none |
 | progress.css | progress | vendor-pseudo | WebKit / Firefox progress bar + indeterminate shimmer | GAP-STDLIB-VOCAB-1 |
 | prose.css | prose | native-anatomy | Freeform descendant type scale (`h1`…`table`) — prose owns its children | none |
@@ -35,7 +38,7 @@ Reason classes:
 
 ## Ledger
 
-- **vocab-gap rows:** 4 (checkbox, radio, select, + skeleton/progress/dialog share the composite/geometry filing)
+- **vocab-gap rows:** 8 (checkbox, radio, select, button, card, menu-item, chip gap leftover, + skeleton/progress/dialog share the composite/geometry filing)
 - **allowlisted value-gate hits:** select chevron `#888888`; checkbox/radio/accordion data-uri `white` / `#000` strokes
 
 Do not add a row without a file. Do not add a file without a row.

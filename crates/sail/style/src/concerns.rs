@@ -68,13 +68,30 @@ pub fn concerns() -> &'static [ConcernSpec] {
                     name: "color",
                     css_prop: "background-color",
                     scale: Some("color"),
-                    keywords: &["transparent", "current", "currentColor", "inherit", "none"],
+                    keywords: &[
+                        "transparent",
+                        "current",
+                        "currentColor",
+                        "inherit",
+                        "none",
+                        "CanvasText",
+                        "Highlight",
+                    ],
+                },
+                ConcernSlot {
+                    name: "mix",
+                    css_prop: "background-color",
+                    scale: None,
+                    keywords: &[
+                        "5", "10", "15", "20", "25", "30", "35", "40", "45", "50", "55", "60",
+                        "65", "70", "75", "80", "85", "90", "95",
+                    ],
                 },
                 ConcernSlot {
                     name: "image",
                     css_prop: "background-image",
                     scale: None,
-                    keywords: &["none"],
+                    keywords: &["none", "primary-accent"],
                 },
                 ConcernSlot {
                     name: "clip",
@@ -106,7 +123,14 @@ pub fn concerns() -> &'static [ConcernSpec] {
                     name: "color",
                     css_prop: "color",
                     scale: Some("color"),
-                    keywords: &["transparent", "current", "currentColor", "inherit"],
+                    keywords: &[
+                        "transparent",
+                        "current",
+                        "currentColor",
+                        "inherit",
+                        "CanvasText",
+                        "Highlight",
+                    ],
                 },
                 ConcernSlot {
                     name: "caret",
@@ -131,13 +155,29 @@ pub fn concerns() -> &'static [ConcernSpec] {
                     name: "color",
                     css_prop: "border-color",
                     scale: Some("color"),
-                    keywords: &["transparent", "current", "currentColor"],
+                    keywords: &[
+                        "transparent",
+                        "current",
+                        "currentColor",
+                        "CanvasText",
+                        "Highlight",
+                    ],
                 },
                 ConcernSlot {
                     name: "width",
                     css_prop: "border-width",
                     scale: Some("border-width"),
-                    keywords: &["0", "1", "2", "3", "4", "8", "control-stroke", "hairline"],
+                    keywords: &[
+                        "0",
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "8",
+                        "control-stroke",
+                        "hairline",
+                        "ring-width",
+                    ],
                 },
                 ConcernSlot {
                     name: "style",
@@ -156,6 +196,12 @@ pub fn concerns() -> &'static [ConcernSpec] {
                     css_prop: "",
                     scale: None,
                     keywords: &["stroke", "outline", "ring", "image"],
+                },
+                ConcernSlot {
+                    name: "offset",
+                    css_prop: "outline-offset",
+                    scale: Some("space"),
+                    keywords: &["0", "1", "2", "ring-offset", "ring-inset"],
                 },
             ],
             covered_setters: &[
@@ -243,7 +289,9 @@ pub fn concerns() -> &'static [ConcernSpec] {
                     name: "brightness",
                     css_prop: "filter",
                     scale: None,
-                    keywords: &["0", "50", "75", "90", "95", "100", "105", "110", "125", "150"],
+                    keywords: &[
+                        "0", "50", "75", "90", "95", "100", "105", "110", "125", "150",
+                    ],
                 },
                 ConcernSlot {
                     name: "contrast",
@@ -279,7 +327,7 @@ pub fn concerns() -> &'static [ConcernSpec] {
                     name: "saturate",
                     css_prop: "filter",
                     scale: None,
-                    keywords: &["0", "50", "100", "150", "200"],
+                    keywords: &["0", "50", "60", "65", "100", "150", "200"],
                 },
                 ConcernSlot {
                     name: "backdrop",
@@ -335,19 +383,39 @@ pub fn concerns() -> &'static [ConcernSpec] {
                     name: "w",
                     css_prop: "width",
                     scale: Some("size"),
-                    keywords: &["0", "full", "auto", "fit", "min", "max", "screen"],
+                    keywords: &[
+                        "0",
+                        "full",
+                        "auto",
+                        "fit",
+                        "min",
+                        "max",
+                        "screen",
+                        "border-width",
+                        "half",
+                    ],
                 },
                 ConcernSlot {
                     name: "h",
                     css_prop: "height",
                     scale: Some("size"),
-                    keywords: &["0", "full", "auto", "fit", "min", "max", "screen"],
+                    keywords: &[
+                        "0",
+                        "full",
+                        "auto",
+                        "fit",
+                        "min",
+                        "max",
+                        "screen",
+                        "border-width",
+                        "half",
+                    ],
                 },
                 ConcernSlot {
                     name: "min-w",
                     css_prop: "min-width",
                     scale: Some("size"),
-                    keywords: &["0", "full", "screen"],
+                    keywords: &["0", "full", "screen", "panel-menu-min-w", "panel-rail-w"],
                 },
                 ConcernSlot {
                     name: "min-h",
@@ -419,6 +487,18 @@ pub fn concerns() -> &'static [ConcernSpec] {
                 ConcernSlot {
                     name: "pad-r",
                     css_prop: "padding-right",
+                    scale: Some("space"),
+                    keywords: &["0"],
+                },
+                ConcernSlot {
+                    name: "pad-s",
+                    css_prop: "padding-inline-start",
+                    scale: Some("space"),
+                    keywords: &["0"],
+                },
+                ConcernSlot {
+                    name: "pad-e",
+                    css_prop: "padding-inline-end",
                     scale: Some("space"),
                     keywords: &["0"],
                 },
@@ -582,7 +662,14 @@ pub fn concerns() -> &'static [ConcernSpec] {
                     keywords: &["auto", "start", "end", "center", "stretch", "baseline"],
                 },
             ],
-            covered_setters: &["display", "flexDir", "grow", "shrink", "self", "justifySelf"],
+            covered_setters: &[
+                "display",
+                "flexDir",
+                "grow",
+                "shrink",
+                "self",
+                "justifySelf",
+            ],
             channel: Channel::Box,
         },
         ConcernSpec {
@@ -674,13 +761,31 @@ pub fn concerns() -> &'static [ConcernSpec] {
                     name: "case",
                     css_prop: "text-transform",
                     scale: None,
-                    keywords: &["uppercase", "lowercase", "capitalize", "normal", "label-transform"],
+                    keywords: &[
+                        "uppercase",
+                        "lowercase",
+                        "capitalize",
+                        "normal",
+                        "label-transform",
+                    ],
                 },
                 ConcernSlot {
                     name: "wrap",
                     css_prop: "white-space",
                     scale: None,
-                    keywords: &["normal", "nowrap", "truncate", "pretty"],
+                    keywords: &["normal", "nowrap", "truncate", "pretty", "words"],
+                },
+                ConcernSlot {
+                    name: "list",
+                    css_prop: "list-style-type",
+                    scale: None,
+                    keywords: &["none", "disc", "decimal"],
+                },
+                ConcernSlot {
+                    name: "decoration",
+                    css_prop: "text-decoration-line",
+                    scale: None,
+                    keywords: &["none", "underline", "line-through"],
                 },
             ],
             covered_setters: &[
@@ -737,8 +842,15 @@ pub fn concerns() -> &'static [ConcernSpec] {
                     css_prop: "transform-origin",
                     scale: None,
                     keywords: &[
-                        "center", "top", "bottom", "left", "right", "top-left", "top-right",
-                        "bottom-left", "bottom-right",
+                        "center",
+                        "top",
+                        "bottom",
+                        "left",
+                        "right",
+                        "top-left",
+                        "top-right",
+                        "bottom-left",
+                        "bottom-right",
                     ],
                 },
                 ConcernSlot {
@@ -752,6 +864,18 @@ pub fn concerns() -> &'static [ConcernSpec] {
                     css_prop: "transition-duration",
                     scale: Some("duration"),
                     keywords: &["0", "75", "100", "150", "200", "300", "500", "700", "1000"],
+                },
+                ConcernSlot {
+                    name: "property",
+                    css_prop: "transition-property",
+                    scale: None,
+                    keywords: &["none", "all", "colors", "opacity", "shadow", "transform"],
+                },
+                ConcernSlot {
+                    name: "animate",
+                    css_prop: "animation",
+                    scale: None,
+                    keywords: &["spin", "none"],
                 },
             ],
             covered_setters: &[
@@ -790,10 +914,7 @@ pub fn find_slot(spec: &ConcernSpec, name: &str) -> Option<&'static ConcernSlot>
 /// Teaching string for a retired property setter. `None` if `name` is live.
 pub fn retired_replacement(name: &str) -> Option<(&'static str, String)> {
     if matches!(name, "gap" | "gapX" | "gapY") {
-        return Some((
-            "gap",
-            "<row gap=\"4\"> (layout attr, not Style)".into(),
-        ));
+        return Some(("gap", "<row gap=\"4\"> (layout attr, not Style)".into()));
     }
     if name == "truncate" {
         return Some(("type", "type({ wrap: truncate })".into()));
@@ -916,16 +1037,77 @@ pub fn concern_kind(op: &PaintOp) -> &'static str {
     }
 }
 
-/// Clash keys: per-`(concern, kind)`. Two ring calls in one scope share `border:ring`.
+/// Clash keys: per-`(concern, kind)` and, for stroke borders, per-edge.
+/// Different edges coexist (tooltip carets). `edge: all` overlaps every edge.
 pub fn concern_clash_keys(op: &PaintOp) -> Option<Vec<&'static str>> {
     let spec = find_concern(&op.setter)?;
     if op.args.len() != 1 {
         return None;
     }
     match op.first_arg() {
-        PaintArg::Slots(_) | PaintArg::Token(_) | PaintArg::Bind(_) | PaintArg::MemberPath { .. } => {
-            Some(vec![clash_key(spec.name, concern_kind(op))])
+        PaintArg::Slots(_)
+        | PaintArg::Token(_)
+        | PaintArg::Bind(_)
+        | PaintArg::MemberPath { .. } => {
+            if spec.name == "border" {
+                Some(border_clash_keys(concern_kind(op), concern_edge(op)))
+            } else {
+                Some(vec![clash_key(spec.name, concern_kind(op))])
+            }
         }
+    }
+}
+
+fn concern_edge(op: &PaintOp) -> &'static str {
+    match op.first_arg() {
+        PaintArg::Slots(slots) => match slots.get("edge") {
+            Some(PaintArg::Token(e)) => match e.as_str() {
+                "x" => "x",
+                "y" => "y",
+                "t" => "t",
+                "b" => "b",
+                "l" => "l",
+                "r" => "r",
+                "s" => "s",
+                "e" => "e",
+                _ => "all",
+            },
+            _ => "all",
+        },
+        _ => "all",
+    }
+}
+
+fn border_clash_keys(kind: &str, edge: &str) -> Vec<&'static str> {
+    match kind {
+        "outline" => vec!["border:outline"],
+        "ring" => vec!["border:ring"],
+        "image" => vec!["border:image"],
+        _ => match edge {
+            // Per-edge keys only — opposite edges coexist (tooltip carets).
+            // `all` / `x` / `y` overlap the edges they write.
+            "t" => vec!["border:stroke:t"],
+            "b" => vec!["border:stroke:b"],
+            "l" => vec!["border:stroke:l"],
+            "r" => vec!["border:stroke:r"],
+            "s" => vec!["border:stroke:s"],
+            "e" => vec!["border:stroke:e"],
+            "x" => vec![
+                "border:stroke:l",
+                "border:stroke:r",
+                "border:stroke:s",
+                "border:stroke:e",
+            ],
+            "y" => vec!["border:stroke:t", "border:stroke:b"],
+            _ => vec![
+                "border:stroke:t",
+                "border:stroke:b",
+                "border:stroke:l",
+                "border:stroke:r",
+                "border:stroke:s",
+                "border:stroke:e",
+            ],
+        },
     }
 }
 
@@ -1005,7 +1187,10 @@ pub fn validate_concern_op(spec: &ConcernSpec, op: &PaintOp) -> Result<(), Style
     }
 }
 
-fn reject_size_pad_members(composite: &CompositeToken, op: &PaintOp) -> Result<(), StyleDiagnostic> {
+fn reject_size_pad_members(
+    composite: &CompositeToken,
+    op: &PaintOp,
+) -> Result<(), StyleDiagnostic> {
     for (member, _) in composite.members {
         if member.starts_with("pad") || *member == "m" || member.starts_with("m-") {
             return Err(StyleDiagnostic::UnknownConcernSlot {
@@ -1134,7 +1319,10 @@ pub fn validate_slot_value(
     }
 }
 
-pub fn lower_concern_op(spec: &ConcernSpec, op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnostic> {
+pub fn lower_concern_op(
+    spec: &ConcernSpec,
+    op: &PaintOp,
+) -> Result<Vec<(String, String)>, StyleDiagnostic> {
     if op.args.len() != 1 {
         return Err(StyleDiagnostic::RetiredSetter {
             setter: spec.name.to_string(),
@@ -1188,7 +1376,10 @@ fn primary_decls(spec: &ConcernSpec, css: String) -> Vec<(String, String)> {
     }
 }
 
-fn lower_named_scale_step(spec: &ConcernSpec, name: &str) -> Result<Vec<(String, String)>, StyleDiagnostic> {
+fn lower_named_scale_step(
+    spec: &ConcernSpec,
+    name: &str,
+) -> Result<Vec<(String, String)>, StyleDiagnostic> {
     match spec.name {
         "radius" => {
             let slot = find_slot(spec, "all").unwrap();
@@ -1202,10 +1393,7 @@ fn lower_named_scale_step(spec: &ConcernSpec, name: &str) -> Result<Vec<(String,
             let w = find_slot(spec, "w").unwrap();
             let h = find_slot(spec, "h").unwrap();
             let tok = PaintArg::Token(name.into());
-            Ok(vec![
-                lower_slot_value(w, &tok)?,
-                lower_slot_value(h, &tok)?,
-            ])
+            Ok(vec![lower_slot_value(w, &tok)?, lower_slot_value(h, &tok)?])
         }
         _ => Ok(Vec::new()),
     }
@@ -1244,6 +1432,9 @@ fn lower_slot_object(
 ) -> Result<Vec<(String, String)>, StyleDiagnostic> {
     if spec.name == "border" {
         return lower_border_slots(spec, op, slots);
+    }
+    if spec.name == "fill" {
+        return lower_fill_slots(spec, op, slots);
     }
     if spec.name == "filter" {
         return lower_filter_slots(spec, op, slots);
@@ -1339,13 +1530,28 @@ fn lower_border_slots(
         "outline" => {
             let mut out = Vec::new();
             if let Some(v) = color {
-                out.push(lower_named_css("outline-color", find_slot(spec, "color").unwrap(), v)?);
+                out.push(lower_named_css(
+                    "outline-color",
+                    find_slot(spec, "color").unwrap(),
+                    v,
+                )?);
             }
             if let Some(v) = width {
-                out.push(lower_named_css("outline-width", find_slot(spec, "width").unwrap(), v)?);
+                out.push(lower_named_css(
+                    "outline-width",
+                    find_slot(spec, "width").unwrap(),
+                    v,
+                )?);
             }
             if let Some(v) = style {
-                out.push(lower_named_css("outline-style", find_slot(spec, "style").unwrap(), v)?);
+                out.push(lower_named_css(
+                    "outline-style",
+                    find_slot(spec, "style").unwrap(),
+                    v,
+                )?);
+            }
+            if let Some(v) = slots.get("offset") {
+                out.push(lower_outline_offset(v)?);
             }
             Ok(out)
         }
@@ -1353,7 +1559,11 @@ fn lower_border_slots(
         "image" => {
             let mut out = Vec::new();
             if let Some(v) = color {
-                out.push(lower_named_css("border-image-source", find_slot(spec, "color").unwrap(), v)?);
+                out.push(lower_named_css(
+                    "border-image",
+                    find_slot(spec, "color").unwrap(),
+                    v,
+                )?);
             }
             Ok(out)
         }
@@ -1443,6 +1653,85 @@ fn lower_named_css(
     Ok((prop.to_string(), css))
 }
 
+fn lower_outline_offset(value: &PaintArg) -> Result<(String, String), StyleDiagnostic> {
+    let css = match value {
+        PaintArg::Token(t) => match t.as_str() {
+            "ring-offset" => "var(--ring-offset)".into(),
+            "ring-inset" => "calc(-1 * var(--ring-width))".into(),
+            other => {
+                let slot = find_slot(find_concern("border").unwrap(), "offset").unwrap();
+                lower_slot_value(slot, &PaintArg::Token(other.into()))?.1
+            }
+        },
+        other => {
+            let slot = find_slot(find_concern("border").unwrap(), "offset").unwrap();
+            lower_slot_value(slot, other)?.1
+        }
+    };
+    Ok(("outline-offset".into(), css))
+}
+
+fn lower_fill_slots(
+    spec: &ConcernSpec,
+    _op: &PaintOp,
+    slots: &std::collections::BTreeMap<String, PaintArg>,
+) -> Result<Vec<(String, String)>, StyleDiagnostic> {
+    if let (Some(color), Some(mix)) = (slots.get("color"), slots.get("mix")) {
+        let token = lower_slot_value(find_slot(spec, "color").unwrap(), color)?.1;
+        let pct = match mix {
+            PaintArg::Token(t) => t.clone(),
+            PaintArg::Bind(n) => format!("var(--{})", css_name_for_bind(n)),
+            other => other.display(),
+        };
+        let mut out = vec![(
+            "background-color".into(),
+            format!("color-mix(in oklch, {token} {pct}%, transparent)"),
+        )];
+        for (name, value) in slots {
+            if name == "color" || name == "mix" {
+                continue;
+            }
+            let Some(slot) = find_slot(spec, name) else {
+                continue;
+            };
+            if slot.css_prop.is_empty() || slot.css_prop == "background-color" {
+                continue;
+            }
+            out.push(lower_slot_value(slot, value)?);
+        }
+        return Ok(out);
+    }
+    let mut out = Vec::new();
+    for (name, value) in slots {
+        if name == "mix" {
+            continue;
+        }
+        if name == "image" {
+            if let PaintArg::Token(t) = value {
+                if t == "primary-accent" {
+                    out.push((
+                        "background-image".into(),
+                        "linear-gradient(135deg, var(--primary), var(--accent))".into(),
+                    ));
+                    continue;
+                }
+                if t == "none" {
+                    out.push(("background-image".into(), "none".into()));
+                    continue;
+                }
+            }
+        }
+        let Some(slot) = find_slot(spec, name) else {
+            continue;
+        };
+        if slot.css_prop.is_empty() {
+            continue;
+        }
+        out.push(lower_slot_value(slot, value)?);
+    }
+    Ok(out)
+}
+
 fn lower_filter_slots(
     spec: &ConcernSpec,
     _op: &PaintOp,
@@ -1529,6 +1818,7 @@ fn lower_type_slots(
                 }
                 "nowrap" => out.push(("white-space".into(), "nowrap".into())),
                 "normal" => out.push(("white-space".into(), "normal".into())),
+                "words" => out.push(("overflow-wrap".into(), "break-word".into())),
                 _ => out.push(lower_slot_value(slot, value)?),
             }
             continue;
@@ -1577,6 +1867,29 @@ fn lower_motion_slots(
                 };
                 out.push(("scale".into(), scaled));
             }
+            "property" => {
+                let css = match value {
+                    PaintArg::Token(t) => match t.as_str() {
+                        "colors" => {
+                            "color, background-color, border-color, outline-color, fill, stroke"
+                                .into()
+                        }
+                        "shadow" => "box-shadow".into(),
+                        "transform" => "transform, translate, scale, rotate".into(),
+                        other => other.to_string(),
+                    },
+                    other => other.display(),
+                };
+                out.push(("transition-property".into(), css));
+            }
+            "animate" => {
+                let css = match value {
+                    PaintArg::Token(t) if t == "spin" => "var(--animate-spin)".into(),
+                    PaintArg::Token(t) if t == "none" => "none".into(),
+                    other => other.display(),
+                };
+                out.push(("animation".into(), css));
+            }
             _ => out.push(lower_slot_value(slot, value)?),
         }
     }
@@ -1612,6 +1925,12 @@ pub fn lower_slot_value(
                 "var(--border-width)".into()
             } else if bare == "control-stroke" && slot.name == "width" {
                 "var(--control-stroke)".into()
+            } else if bare == "ring-width" && slot.name == "width" {
+                "var(--ring-width)".into()
+            } else if bare == "border-width" && matches!(slot.name, "w" | "h") {
+                "var(--border-width)".into()
+            } else if bare == "half" && matches!(slot.name, "w" | "h") {
+                "50%".into()
             } else if slot.name == "aspect" {
                 match bare {
                     "square" => "1 / 1".into(),
@@ -1699,8 +2018,19 @@ mod tests {
     fn atlas_lists_full_concern_set_not_markers() {
         let names: Vec<&str> = concerns().iter().map(|c| c.name).collect();
         for want in [
-            "fill", "ink", "border", "radius", "elevation", "filter", "size", "space", "place",
-            "flow", "overflow", "type", "motion",
+            "fill",
+            "ink",
+            "border",
+            "radius",
+            "elevation",
+            "filter",
+            "size",
+            "space",
+            "place",
+            "flow",
+            "overflow",
+            "type",
+            "motion",
         ] {
             assert!(names.contains(&want), "missing concern {want} in {names:?}");
         }
@@ -1875,14 +2205,16 @@ mod tests {
             .expect("expected clash");
         let msg = clash.message();
         assert!(msg.contains("border(subtle)"), "{msg}");
-        assert!(msg.contains("border({ color: primary })") || msg.contains("color: primary"), "{msg}");
+        assert!(
+            msg.contains("border({ color: primary })") || msg.contains("color: primary"),
+            "{msg}"
+        );
     }
 
     #[test]
     fn stroke_plus_ring_do_not_clash() {
-        let (style, diags) = parse(
-            "style({ paint: border(subtle).border({ kind: ring, color: primary }) })",
-        );
+        let (style, diags) =
+            parse("style({ paint: border(subtle).border({ kind: ring, color: primary }) })");
         assert!(
             diags.is_empty(),
             "{:?}",

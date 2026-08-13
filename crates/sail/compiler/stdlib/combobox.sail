@@ -12,11 +12,11 @@
     onSelect: (detail: { value: string; label: string }) => void
   }
 
-  style host = { box: display(block).position(relative).w(full), text: fontFamily(body) }
+  style host = {box: flow({ display: block }).place({ position: relative }).size({ w: full }), text: type({ family: body })}
   // Field chrome matches bare text input so combobox survives theme swaps.
-  style input = { box: display(block).w(full).minH(control-h-md).padY(1_5).padX(3), paint: fg(foreground).bg(background).borderWidth(1).border(border).radius(md).shadow(xs), text: fontSize(base), when: { hover: { paint: border(border-strong) }, focus: { paint: outline(solid).outline(2).outline(ring).outlineOffset(2) }, disabled: { paint: cursor(not-allowed).opacity(50) } } }
+  style input = {box: flow({ display: block }).size({ w: full, min-h: control-h-md }).space({ pad-y: 1_5, pad-x: 3 }), paint: ink(foreground).fill({ color: background }).border({ color: border, width: 1 }).radius(md).elevation(xs), text: type({ size: base }), when: {hover: {paint: border({ color: border-strong })}, focus: {paint: border({ style: solid, kind: outline, width: 2, color: ring, offset: 2 })}, disabled: {paint: cursor(not-allowed).filter({ opacity: 50 })}}}
   // w + minW both from --anchor-width so the list matches the field (min alone hugs content when options are short).
-  style listbox = { box: position(fixed).inset(auto).m(0).left(bind(anchorLeft)).top(bind(anchorTop)).w(bind(anchorWidth)).minW(bind(anchorWidth)).maxH(panel-max-h-sm).overflowY(auto).pad(1), paint: overscroll(contain).fg(combobox.foreground).bg(combobox).borderWidth(1).border(border).radius(md).shadow(lg).z(popover) }
+  style listbox = {box: place({ position: fixed, inset: auto, left: bind(anchorLeft), top: bind(anchorTop), z: popover }).space({ m: 0, pad: 1 }).size({ w: bind(anchorWidth), min-w: bind(anchorWidth), max-h: panel-max-h-sm }).overflow({ y: auto, overscroll: contain }), paint: ink({ color: combobox.foreground }).fill({ color: combobox }).border({ color: border, width: 1 }).radius(md).elevation(lg)}
 </scope>
 
 <div use:combobox style(host)>
