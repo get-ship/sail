@@ -4,7 +4,8 @@
  *
  * For each fixture under ./fixtures:
  *   1. Taffy boxes via `sail op SailAuthoring/LayoutCheck` (preprocess + check_preprocessed).
- *   2. Browser boxes via sail build SPA (or lowered-HTML fallback) + Playwright CDP/DOM.
+ *   2. Browser boxes via sail build SPA (or lowered-HTML fallback) + Playwright
+ *      getBoundingClientRect on chromium, firefox, and webkit.
  *   3. Diff report (width/height + parent-relative x/y within tolerance).
  *
  * Paint (takumi ↔ browser style) lives in tests/parity/paint/run.ts (RENDER-1).
@@ -16,12 +17,12 @@
  *   fixtures here until an SSR-defaults contract is defined product-wide.
  *
  * Invoke:
- *   node tests/parity/geometry/run.ts
- *   node tests/parity/geometry/run.ts --fixture column-stack
- *   node tests/parity/geometry/run.ts --strict          # size_fail === 0
- *   node tests/parity/geometry/run.ts --strict-spa      # require sail-build mode
- *   node tests/parity/geometry/run.ts --report-only     # harness ok only (structure non-fatal)
- *   SAIL_BIN=target/release/sail node tests/parity/geometry/run.ts
+ *   bun tests/parity/geometry/run.ts
+ *   bun tests/parity/geometry/run.ts --browser chromium
+ *   bun tests/parity/geometry/run.ts --browser chromium,firefox,webkit
+ *   bun tests/parity/geometry/run.ts --fixture column-stack
+ *   bun tests/parity/geometry/run.ts --strict
+ *   SAIL_BIN=target/release/sail bun tests/parity/geometry/run.ts
  *
  * Exit codes (default / non-report-only):
  *   0 — harness ok AND structure_ok for every fixture (size Δ reported, non-fatal)
@@ -46,7 +47,7 @@ import { createServer } from 'node:http'
 import { createReadStream } from 'node:fs'
 import { tmpdir } from 'node:os'
 import net from 'node:net'
-import { resolveChrome } from '../chrome.ts'
+import { loadPlaywright, parseBrowsers, type BrowserName } from '../browsers.ts'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const repoRoot = resolve(__dirname, '../../..')
@@ -67,12 +68,9 @@ const SAIL_COMPILER =
   (existsSync(join(repoRoot, 'target/release/sail-compiler'))
     ? join(repoRoot, 'target/release/sail-compiler')
     : join(repoRoot, 'target/debug/sail-compiler'))
-const chromeResolved = resolveChrome()
-const CHROME = chromeResolved.path
-
 const args = process.argv.slice(2)
-// `--strict` → fail on size divergences. Default still fails on structure fail
-// (unless `--report-only`). Structure and size are separate gates.
+const skipBrowser = args.includes('--taffy-only') || process.env.PARITY_TAFFY_ONLY === '1'
+const browsers: BrowserName[] = skipBrowser ? [] : parseBrowsers(args)
 const strict = args.includes('--strict') || process.env.PARITY_GEOM_STRICT === '1'
 const reportOnly = args.includes('--report-only')
 const strictSpa =
@@ -81,7 +79,6 @@ const fixtureFilter = (() => {
   const i = args.indexOf('--fixture')
   return i >= 0 ? args[i + 1] : null
 })()
-const skipBrowser = args.includes('--taffy-only') || process.env.PARITY_TAFFY_ONLY === '1'
 
 function die(msg) {
   console.error(`error: ${msg}`)
@@ -282,32 +279,25 @@ ${links.map((c) => `<link rel="stylesheet" href="${c}"/>`).join('\n')}
   )
 }
 
-async function measureBrowser(serveDir) {
-  if (!CHROME || !existsSync(CHROME)) {
-    return {
-      skipped: true,
-      reason: `chrome missing (source=${chromeResolved.source}): ${CHROME || 'null'}`,
+type Measured =
+  | { skipped: true; browser: BrowserName; reason: string }
+  | {
+      skipped: false
+      browser: BrowserName
+      boxes: Array<{
+        tag: string
+        class: string
+        x: number
+        y: number
+        width: number
+        height: number
+        offset: { x: number; y: number; w: number; h: number }
+      }>
     }
-  }
-  // dynamic import playwright from repo
-  let chromium
-  try {
-    ;({ chromium } = await import(
-      join(repoRoot, 'node_modules/playwright/index.mjs').replace(
-        'index.mjs',
-        'index.js',
-      )
-    ))
-  } catch {
-    try {
-      ;({ chromium } = await import('playwright'))
-    } catch (e) {
-      return { skipped: true, reason: `playwright import failed: ${e.message}` }
-    }
-  }
 
+async function serveStatic(serveDir: string): Promise<{ url: string; close: () => Promise<void> }> {
   const port = await freePort()
-  const server = await new Promise((resolveP, reject) => {
+  const server = await new Promise<import('node:http').Server>((resolveP, reject) => {
     const srv = createServer((req, res) => {
       let urlPath = decodeURIComponent((req.url || '/').split('?')[0])
       if (urlPath === '/') urlPath = '/index.html'
@@ -318,7 +308,7 @@ async function measureBrowser(serveDir) {
         return
       }
       const ext = file.split('.').pop()
-      const types = {
+      const types: Record<string, string> = {
         html: 'text/html',
         css: 'text/css',
         js: 'application/javascript',
@@ -326,90 +316,100 @@ async function measureBrowser(serveDir) {
         png: 'image/png',
         svg: 'image/svg+xml',
       }
-      res.writeHead(200, { 'Content-Type': types[ext] || 'application/octet-stream' })
+      res.writeHead(200, { 'Content-Type': types[ext || ''] || 'application/octet-stream' })
       createReadStream(file).pipe(res)
     })
     srv.listen(port, '127.0.0.1', () => resolveP(srv))
     srv.on('error', reject)
   })
+  return {
+    url: `http://127.0.0.1:${port}/`,
+    close: () => new Promise((r) => server.close(() => r())),
+  }
+}
 
+async function measureBrowser(url: string, name: BrowserName): Promise<Measured> {
+  let pw
   try {
-    const browser = await chromium.launch({
-      headless: true,
-      executablePath: CHROME,
-    })
-    try {
-      const page = await browser.newPage({
-        viewport: { width: VIEWPORT.width, height: VIEWPORT.height },
-      })
-      await page.goto(`http://127.0.0.1:${port}/`, {
-        waitUntil: 'domcontentloaded',
-        timeout: 45000,
-      })
-      // SPA: wait for mount if present
-      try {
-        await page.waitForFunction(
-          () => {
-            const r = document.querySelector('#root')
-            return r && (r.childElementCount > 0 || r.textContent.trim().length > 0)
-          },
-          { timeout: 8000 },
-        )
-      } catch {
-        /* static may already be filled */
-      }
-      await page.waitForTimeout(300)
-
-      // Absolute viewport coords via getBoundingClientRect (CDP-equivalent box model).
-      // Parent-relative offset* is recorded for debug but not used for size gates.
-      const boxes = await page.evaluate(() => {
-        const root = document.querySelector('#root') || document.body
-        const out = []
-        const walk = (el) => {
-          if (el.nodeType !== 1) return
-          const tag = el.tagName.toLowerCase()
-          if (tag === 'script' || tag === 'style' || tag === 'link' || tag === 'meta') return
-          const cs = getComputedStyle(el)
-          if (cs.display === 'contents') {
-            for (const c of el.children) walk(c)
-            return
-          }
-          const r = el.getBoundingClientRect()
-          out.push({
-            tag,
-            class: el.className?.toString?.() || '',
-            x: r.x,
-            y: r.y,
-            width: r.width,
-            height: r.height,
-            offset: { x: el.offsetLeft, y: el.offsetTop, w: el.offsetWidth, h: el.offsetHeight },
-          })
-          for (const c of el.children) walk(c)
-        }
-        if (root.id === 'root') {
-          for (const c of root.children) walk(c)
-        } else {
-          walk(root)
-        }
-        return out
-      })
-
-      // Optional CDP sample on first box for protocol proof
-      let cdpSample = null
-      try {
-        const client = await page.context().newCDPSession(page)
-        const { root } = await client.send('DOM.getDocument', { depth: 1 })
-        cdpSample = { documentNodeId: root.nodeId, protocol: 'CDP DOM.getDocument ok' }
-      } catch (e) {
-        cdpSample = { error: String(e.message || e) }
-      }
-
-      return { boxes, cdpSample, skipped: false }
-    } finally {
-      await browser.close()
+    pw = await loadPlaywright()
+  } catch (e) {
+    return { skipped: true, browser: name, reason: String((e as Error).message) }
+  }
+  const engine = pw[name]
+  const launchOpts: { headless: boolean; executablePath?: string } = { headless: true }
+  if (name === 'chromium' && process.env.CHROME_PATH && existsSync(process.env.CHROME_PATH)) {
+    launchOpts.executablePath = process.env.CHROME_PATH
+  }
+  let browser
+  try {
+    browser = await engine.launch(launchOpts)
+  } catch (e) {
+    return {
+      skipped: true,
+      browser: name,
+      reason: `${name} launch failed: ${String((e as Error).message).slice(0, 200)}`,
     }
+  }
+  try {
+    const page = await browser.newPage({
+      viewport: { width: VIEWPORT.width, height: VIEWPORT.height },
+    })
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 45000 })
+    try {
+      await page.waitForFunction(
+        () => {
+          const r = document.querySelector('#root')
+          return r && (r.childElementCount > 0 || (r.textContent || '').trim().length > 0)
+        },
+        { timeout: 8000 },
+      )
+    } catch {
+      /* static may already be filled */
+    }
+    await page.waitForTimeout(300)
+
+    const boxes = await page.evaluate(() => {
+      const root = document.querySelector('#root') || document.body
+      const out: Array<{
+        tag: string
+        class: string
+        x: number
+        y: number
+        width: number
+        height: number
+        offset: { x: number; y: number; w: number; h: number }
+      }> = []
+      const walk = (el: Element) => {
+        const tag = el.tagName.toLowerCase()
+        if (tag === 'script' || tag === 'style' || tag === 'link' || tag === 'meta') return
+        const cs = getComputedStyle(el)
+        if (cs.display === 'contents') {
+          for (const c of el.children) walk(c)
+          return
+        }
+        const r = el.getBoundingClientRect()
+        const html = el as HTMLElement
+        out.push({
+          tag,
+          class: el.className?.toString?.() || '',
+          x: r.x,
+          y: r.y,
+          width: r.width,
+          height: r.height,
+          offset: { x: html.offsetLeft, y: html.offsetTop, w: html.offsetWidth, h: html.offsetHeight },
+        })
+        for (const c of el.children) walk(c)
+      }
+      if (root && root.id === 'root') {
+        for (const c of root.children) walk(c)
+      } else if (root) {
+        walk(root)
+      }
+      return out
+    })
+    return { skipped: false, browser: name, boxes }
   } finally {
-    await new Promise((r) => server.close(() => r()))
+    await browser.close()
   }
 }
 
@@ -588,7 +588,9 @@ async function main() {
   console.log(`PARITY-1 geometry — viewport ${VIEWPORT.width}x${VIEWPORT.height} tol=${TOL}px`)
   console.log(`sail=${SAIL_BIN}`)
   console.log(
-    `chrome=${CHROME || 'null'} (${chromeResolved.source})${skipBrowser ? ' (taffy-only)' : ''}`,
+    skipBrowser
+      ? 'browsers= (taffy-only)'
+      : `browsers=${browsers.join(',')}`,
   )
   console.log(`fixtures=${fixtures.length}${skipBrowser ? ' (taffy-only)' : ''}`)
   console.log('')
@@ -634,54 +636,73 @@ async function main() {
           row.browser_ok = false
           row.structure_ok = false
         } else {
-          const measured = await measureBrowser(built.serveDir)
-          if (measured.skipped) {
-            row.note = measured.reason
-            row.pass = false
-            row.browser_ok = false
-          } else {
-            row.browser_ok = true
-            row.browser_boxes = measured.boxes.length
-            const diff = diffBoxes(taffy.boxes, measured.boxes)
-            row.compared = diff.compared
-            row.size_match = diff.size_match
-            row.size_fail = diff.size_fail
-            row.pos_fail = diff.pos_fail
-            row.error_count = diff.error_count
-            row.warn_count = diff.warn_count
-            row.structure_ok = diff.structure_ok
-            row.tag_diverge = diff.tag_diverge
-            // Structure pass vs size pass are separate (see exit rules).
-            row.pass = diff.compared > 0 && diff.structure_ok
-            row.strict_pass = row.pass && diff.size_fail === 0
-            if (!row.pass && diff.compared === 0) {
-              row.note = 'no comparable hosts'
-            } else if (diff.tag_diverge > 0) {
-              row.note = `tag diverge ${diff.tag_diverge}`
-            } else if (diff.size_fail > 0) {
-              row.note = `geom Δ: ${diff.error_count}e/${diff.warn_count}w`
+          const httpd = await serveStatic(built.serveDir)
+          try {
+            const perBrowser: Array<Record<string, unknown>> = []
+            let allStruct = true
+            let anyOk = false
+            let notes: string[] = []
+            let cmp = 0
+            let szOk = 0
+            let szFail = 0
+            let errN = 0
+            for (const bName of browsers) {
+              const measured = await measureBrowser(httpd.url, bName)
+              if (measured.skipped) {
+                allStruct = false
+                notes.push(`${bName}: ${measured.reason}`)
+                perBrowser.push({ browser: bName, skipped: true, reason: measured.reason })
+                continue
+              }
+              anyOk = true
+              const diff = diffBoxes(taffy.boxes, measured.boxes)
+              cmp += diff.compared
+              szOk += diff.size_match
+              szFail += diff.size_fail
+              errN += diff.error_count
+              const ok = diff.compared > 0 && diff.structure_ok
+              if (!ok) allStruct = false
+              if (!ok && diff.compared === 0) notes.push(`${bName}: no comparable hosts`)
+              else if (diff.tag_diverge > 0) notes.push(`${bName}: tag diverge ${diff.tag_diverge}`)
+              else if (diff.size_fail > 0) notes.push(`${bName}: geom Δ ${diff.error_count}e/${diff.warn_count}w`)
+              perBrowser.push({
+                browser: bName,
+                boxes: measured.boxes.length,
+                structure_ok: diff.structure_ok,
+                size_fail: diff.size_fail,
+                compared: diff.compared,
+                tag_diverge: diff.tag_diverge,
+              })
+              writeFileSync(
+                join(outDir, `${basename(name, '.sail')}.${bName}.report.json`),
+                JSON.stringify(
+                  {
+                    fixture: name,
+                    browser: bName,
+                    taffy,
+                    measured: { boxes: measured.boxes, mode: built.mode },
+                    diff,
+                  },
+                  null,
+                  2,
+                ),
+              )
             }
+            row.browser_ok = anyOk
+            row.browser_boxes = perBrowser
+            row.compared = cmp
+            row.size_match = szOk
+            row.size_fail = szFail
+            row.error_count = errN
+            row.structure_ok = allStruct && anyOk
+            row.pass = row.structure_ok
+            row.strict_pass = row.pass && szFail === 0
+            row.note = notes.join('; ')
             if (built.spa_fallback) {
               row.note = (row.note ? row.note + '; ' : '') + 'spa→lowered-html'
             }
-            writeFileSync(
-              join(outDir, `${basename(name, '.sail')}.report.json`),
-              JSON.stringify(
-                {
-                  fixture: name,
-                  taffy,
-                  browser: {
-                    boxes: measured.boxes,
-                    cdp: measured.cdpSample,
-                    mode: built.mode,
-                    spa_fallback: !!built.spa_fallback,
-                  },
-                  diff,
-                },
-                null,
-                2,
-              ),
-            )
+          } finally {
+            await httpd.close()
           }
         }
       }
@@ -731,7 +752,7 @@ async function main() {
   const summary = {
     viewport: VIEWPORT,
     tol: TOL,
-    chrome: { path: CHROME, source: chromeResolved.source },
+    browsers,
     skipBrowser,
     strict,
     strictSpa,

@@ -4,7 +4,7 @@ Two complementary suites:
 
 | Suite | Path | Compares | Default gate |
 |-------|------|----------|--------------|
-| **Geometry** | `geometry/run.ts` | taffy box tree ↔ browser boxes | **structure** (counts/tags/root width) |
+| **Geometry** | `geometry/run.ts` | taffy box tree ↔ Chromium / Firefox / WebKit boxes | **structure** (counts/tags/root width) |
 | **Paint** | `paint/run.ts` | takumi `regions[].style` ↔ browser `getComputedStyle` | **structure** (L1 host pairing) |
 
 Style/size deltas are **reported** by default and only fail the process with `--strict`.
@@ -30,8 +30,9 @@ Style/size deltas are **reported** by default and only fail the process with `--
 ## Run
 
 ```bash
-# Geometry — structure gate (CI default)
+# Geometry — structure gate (CI default: chromium + firefox + webkit)
 bun tests/parity/geometry/run.ts
+bun tests/parity/geometry/run.ts --browser chromium
 
 # Geometry — soft report (harness only; structure non-fatal)
 bun tests/parity/geometry/run.ts --report-only
@@ -109,7 +110,8 @@ L1 hosts: button, card, field, input, switch, badge, navbar, sidebar, dialog, ta
 
 ### Chrome resolution
 
-Shared helper: `tests/parity/chrome.ts` (used by geometry, paint, and CI):
+Geometry engines: `tests/parity/browsers.ts` (Playwright `chromium` / `firefox` / `webkit`).
+Paint still uses `tests/parity/chrome.ts` for the Chromium binary:
 
 1. `CHROME_PATH` if set and exists  
 2. `playwright` / `playwright-core` `chromium.executablePath()`  

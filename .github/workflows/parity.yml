@@ -70,8 +70,8 @@ jobs:
       - name: Install JS deps
         run: bun install --frozen-lockfile || bun install
 
-      - name: Install Playwright Chromium
-        run: bunx playwright install chromium --with-deps
+      - name: Install Playwright browsers
+        run: bunx playwright install chromium firefox webkit --with-deps
 
       - name: Build sail binary
         run: cargo build -p deck-cli --release
@@ -79,12 +79,8 @@ jobs:
       - name: Geometry suite
         env:
           SAIL_BIN: ${{ github.workspace }}/target/release/sail
-          # Leave CHROME_PATH unset so suites use tests/parity/chrome.ts
-          # (playwright.executablePath → ms-playwright cache → pinned fallback).
         run: |
           set -euo pipefail
-          # Optional: pre-print the same resolution the suite uses (debugging).
-          bun -e "import('./tests/parity/chrome.ts').then(m=>console.log(JSON.stringify(m.resolveChrome())))"
           MODE="${{ github.event.inputs.mode || 'structure' }}"
           FLAGS=()
           if [ "$MODE" = "report-only" ]; then FLAGS+=(--report-only); fi
