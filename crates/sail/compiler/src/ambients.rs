@@ -864,7 +864,7 @@ pub fn emit_project_tsconfig_json_for(env: TypeEnv, include_globs: &[&str]) -> S
     format!(
         "{{\n  \
          \"$comment\": \"Sail kind tsconfig under {sail_dir}/ (G2c / TOOLING-1 WI2 / SPEC-PLATFORM-NEUTRALITY-1). GENERATED — hand edits are overwritten on build. {env_note} Lives beside types.d.ts; root tsconfig.json is a solution that references this file. No baseUrl (tsgo TS5102); paths are relative to this file.\",\n  \
-         \"compilerOptions\": {{\n    {opts_inner},\n    \"paths\": {{\n{paths}\n    }}\n  }},\n  \
+         \"compilerOptions\": {{\n    {opts_inner},\n    \"incremental\": true,\n    \"tsBuildInfoFile\": \"./{tsbuild}\",\n    \"paths\": {{\n{paths}\n    }}\n  }},\n  \
          \"files\": [{files}],\n  \
          \"include\": [{inc}],\n  \
          \"exclude\": [{exclude}]\n\
@@ -873,6 +873,10 @@ pub fn emit_project_tsconfig_json_for(env: TypeEnv, include_globs: &[&str]) -> S
         paths = paths_block,
         files = files.join(", "),
         inc = includes.join(", "),
+        tsbuild = match env {
+            TypeEnv::Action => "tsconfig.action.tsbuildinfo",
+            _ => "tsconfig.pure.tsbuildinfo",
+        },
     )
 }
 

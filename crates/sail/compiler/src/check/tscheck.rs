@@ -53,6 +53,7 @@
 //! invoke tsgo for the same file contents in one process.
 
 use std::collections::{BTreeSet, HashMap};
+use std::fmt::Write as _;
 use std::hash::{Hash, Hasher};
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -455,6 +456,20 @@ fn collect_project_type_gate_native(
         if env == TypeEnv::Framework {
             continue;
         }
+        for f in sail_lint::lint_app_source_source(path, src) {
+            if f.rule != sail_lint::rules::directory_jurisdiction::RULE_ID {
+                continue;
+            }
+            diags.push(Diagnostic {
+                line: f.line,
+                col: f.col,
+                end_line: f.line,
+                end_col: f.col + 1,
+                severity: DiagSeverity::Error,
+                message: format!("{} [{}]", f.message, path.display()),
+                rule: Some(f.rule.to_string()),
+            });
+        }
         for d in scan_ts_ignore(src) {
             let mut d = d;
             d.message = format!("{} ({})", d.message, path.display());
@@ -500,6 +515,114 @@ fn io_fail_diag(e: &std::io::Error) -> Diagnostic {
         ),
         rule: Some(RULE_TYPE_GATE.to_string()),
     }
+}
+
+/// True when `path` is a product `.ts` file the project Pure/Action gate owns.
+pub fn is_project_gate_ts(path: &Path) -> bool {
+    let s = path.to_string_lossy().replace('\\', "/");
+    if !s.ends_with(".ts")
+        || s.ends_with(".d.ts")
+        || s.ends_with(".test.ts")
+        || s.ends_with(".spec.ts")
+    {
+        return false;
+    }
+    if s.contains("/node_modules/") || s.contains("/dist/") || s.contains("/.deck/") {
+        return false;
+    }
+    s.contains("/src/")
+        || s.contains("/routes/")
+        || s.starts_with("src/")
+        || s.starts_with("routes/")
+}
+
+/// Collect on-disk product `.ts` and run the project type gate (E1b).
+pub fn check_project_type_gate(project: &Path) -> Vec<Diagnostic> {
+    let mut files: Vec<(PathBuf, String)> = Vec::new();
+    if let Err(e) = collect_project_ts_sources(project, project, &mut files) {
+        return vec![io_fail_diag(&e)];
+    }
+    collect_project_type_gate(project, &files)
+}
+
+/// Incremental HMR entry: skip tsgo when no product `.ts` changed; otherwise
+/// reuse the kind tsconfig incremental program (`tsBuildInfoFile`).
+pub fn check_project_type_gate_incremental(project: &Path, changed: &[PathBuf]) -> Vec<Diagnostic> {
+    if !changed.is_empty() && !changed.iter().any(|p| is_project_gate_ts(p)) {
+        return Vec::new();
+    }
+    check_project_type_gate(project)
+}
+
+/// Overlay body for a failed project gate (HMR compile-error event).
+pub fn format_project_gate_overlay(diags: &[Diagnostic]) -> String {
+    let mut out = String::from("Project Pure gate failed.\n");
+    out.push_str(sail_lint::rules::directory_jurisdiction::LAW);
+    out.push('\n');
+    for d in diags.iter().filter(|d| d.severity == DiagSeverity::Error) {
+        let rule = d.rule.as_deref().unwrap_or("sail-type-gate");
+        let _ = writeln!(out, "{}:{} [{}] {}", d.line, d.col, rule, d.message);
+    }
+    out
+}
+
+fn collect_project_ts_sources(
+    project: &Path,
+    dir: &Path,
+    out: &mut Vec<(PathBuf, String)>,
+) -> std::io::Result<()> {
+    let skip = [
+        "node_modules",
+        "dist",
+        ".deck",
+        "target",
+        ".git",
+        "test",
+        "tests",
+        "__tests__",
+    ];
+    let entries = match std::fs::read_dir(dir) {
+        Ok(e) => e,
+        Err(_) => return Ok(()),
+    };
+    for entry in entries {
+        let entry = entry?;
+        let p = entry.path();
+        let name = entry.file_name();
+        let name = name.to_string_lossy();
+        if p.is_dir() {
+            if skip.iter().any(|s| *s == name) {
+                continue;
+            }
+            collect_project_ts_sources(project, &p, out)?;
+            continue;
+        }
+        if !name.ends_with(".ts") || name.ends_with(".d.ts") {
+            continue;
+        }
+        if name.ends_with(".test.ts")
+            || name.ends_with(".spec.ts")
+            || name == "test-utils.ts"
+            || name == "setup.ts"
+            || name == "index.ts"
+        {
+            continue;
+        }
+        let rel = p.strip_prefix(project).unwrap_or(&p);
+        let rel_s = rel.to_string_lossy();
+        let product = rel_s.contains("src/actions/")
+            || rel_s.contains("src/compositions/")
+            || rel_s.contains("src/stores/")
+            || rel_s.contains("routes/")
+            || (rel_s.starts_with("src/") && rel_s.ends_with(".ts"));
+        if !product {
+            continue;
+        }
+        if let Ok(src) = std::fs::read_to_string(&p) {
+            out.push((p, src));
+        }
+    }
+    Ok(())
 }
 
 // ── region harness ─────────────────────────────────────────────────────────
@@ -2158,6 +2281,7 @@ fn typecheck_project_env_via_kind_config(
             None => continue,
         };
         if let Some(mut mapped) = map_region_diag(&d, env) {
+            mapped.message = teach_compositions_law(&real, mapped.message);
             mapped.message = format!("{} [{}]", mapped.message, real.display());
             diags.push(mapped);
         }
@@ -2332,6 +2456,7 @@ fn typecheck_project_env_mirror(
         if let Some(mut mapped) = map_region_diag(&d, env) {
             // Bracketed real path — CLI `project_ts_type_gate` prints it as the
             // diagnostic file path (`path:line:col`).
+            mapped.message = teach_compositions_law(Path::new(&real), mapped.message);
             mapped.message = format!("{} [{}]", mapped.message, real);
             diags.push(mapped);
         }
@@ -2361,6 +2486,20 @@ const NAME_CODES: &[&str] = &["TS2304", "TS2552", "TS2584", "TS2503", "TS2551", 
 /// Residual harness module-resolution noise (`TS2307` for relative / `@ship/`
 /// / `@/` project-alias specs) is **not** promoted until the region runs
 /// under full project resolution — see module docs.
+fn teach_compositions_law(path: &Path, message: String) -> String {
+    let s = path.to_string_lossy().replace('\\', "/");
+    if s.contains("/compositions/") || s.contains("src/compositions/") {
+        if !message.contains(sail_lint::rules::directory_jurisdiction::LAW) {
+            return format!(
+                "{} — {}",
+                message,
+                sail_lint::rules::directory_jurisdiction::LAW
+            );
+        }
+    }
+    message
+}
+
 fn map_region_diag(d: &TsDiag, env: TypeEnv) -> Option<Diagnostic> {
     // Node ambient / @types/node advice is the wrong lesson for product code.
     if let Some(diag) = map_node_surface_diag(d) {

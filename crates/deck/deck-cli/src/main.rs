@@ -1193,7 +1193,7 @@ fn dev(project: PathBuf, addr: String) -> Result<()> {
         //     app:     T0 effective set → <project>/.deck/themes/themes.css (B1)
         //   → HMR swaps CSS. No client IR / :root setProperty.
         let hmr_packs = cfg.packs.clone();
-        let (hmr_tx, mut hmr_rx) = tokio::sync::mpsc::channel::<()>(8);
+        let (hmr_tx, mut hmr_rx) = tokio::sync::mpsc::channel::<Vec<std::path::PathBuf>>(8);
         // Set when a watched path is theme/model/config source; rebuild loop runs
         // dual `tokens_generate` before `bundle_app` so delivery CSS stays
         // regenerate-only (package full + app-local filtered themes).
@@ -1321,7 +1321,7 @@ fn dev(project: PathBuf, addr: String) -> Result<()> {
                 }
                 // Coalesce a save's event burst into one rebuild via the debounce
                 // below; dropping on a full channel is fine (the next tick rebuilds).
-                let _ = tx.try_send(());
+                let _ = tx.try_send(ev.paths.clone());
             })
             .map_err(|e| anyhow::anyhow!("sail dev: HMR watcher init: {e}"))?;
             let mut watched: Vec<PathBuf> = Vec::new();
@@ -1416,10 +1416,13 @@ fn dev(project: PathBuf, addr: String) -> Result<()> {
             let proj_edit = Arc::clone(&project_theme_edit);
             let cat_edit = Arc::clone(&catalog_model_edit);
             tokio::spawn(async move {
-                while hmr_rx.recv().await.is_some() {
+                while let Some(first) = hmr_rx.recv().await {
+                    let mut changed = first;
                     // Debounce: settle the burst, then drain coalesced ticks.
                     tokio::time::sleep(std::time::Duration::from_millis(150)).await;
-                    while hmr_rx.try_recv().is_ok() {}
+                    while let Ok(more) = hmr_rx.try_recv() {
+                        changed.extend(more);
+                    }
                     // Theme/model/config edit → dual generate (T1 B1):
                     // package full catalog + app-local .deck/themes/themes.css.
                     if need_gen.swap(false, Ordering::AcqRel) {
@@ -1455,6 +1458,36 @@ fn dev(project: PathBuf, addr: String) -> Result<()> {
                                 // the overlay surfaces the generate failure.
                             }
                         }
+                    }
+                    let _ = sail_compiler::ambients::write_project_type_configs(&proj);
+                    let gate_diags =
+                        sail_compiler::check::tscheck::check_project_type_gate_incremental(
+                            &proj, &changed,
+                        );
+                    let gate_errs: Vec<_> = gate_diags
+                        .into_iter()
+                        .filter(|d| d.severity == sail_compiler::DiagSeverity::Error)
+                        .collect();
+                    if !gate_errs.is_empty() {
+                        let message =
+                            sail_compiler::check::tscheck::format_project_gate_overlay(&gate_errs);
+                        eprintln!("sail dev: project Pure gate failed");
+                        let file = gate_errs.first().and_then(|d| {
+                            d.message
+                                .rsplit_once('[')
+                                .and_then(|(_, rest)| rest.strip_suffix(']'))
+                                .map(|s| s.to_string())
+                        });
+                        let _ = bundler_hmr.emit_watch_event(
+                            deck_bundler::BundlerEvent::CompileError {
+                                target: "app".to_string(),
+                                message,
+                                line: gate_errs.first().map(|d| d.line as u32),
+                                col: gate_errs.first().map(|d| d.col as u32),
+                                file,
+                            },
+                        );
+                        continue;
                     }
                     match deck_bundler::app::bundle_app(&ws, &hmr_packs, &proj, &od, false, false).await {
                         Ok(_) => {

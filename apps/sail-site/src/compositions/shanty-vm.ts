@@ -3,10 +3,10 @@ import type { SailHost } from '@ship/sail-runtime'
 // Nested frame mode stamping uses a handed host via `use:bindFrame` + the
 // tokens theme-change subscription API (no ambient document lookup).
 
-import type { Action } from '@ship/sail-runtime'
 import { applyNestedTheme, resolveNestedPaintMode, subscribeThemeChange } from '@ship/tokens/themes'
 
 import { signal, derived, effect, interval, scheduleFrame, asSailHost } from '@ship/sail-runtime'
+
 export interface Track {
   id: number
   title: string
@@ -137,18 +137,15 @@ export function createShanty() {
     stampFrameModeSoon(theme())
   })
 
-  /**
-   * Action: capture the nested theme host and subscribe to product theme
-   * changes via the tokens runtime API (not ambient document listeners).
-   */
-  const bindFrame: Action<void> = (node) => {
-    frameHost = asSailHost(node)
+  const bindFrame = (node: unknown) => {
+    const host = asSailHost(node)
+    frameHost = host
     stampFrameMode(theme())
     const unsub = subscribeThemeChange(() => stampFrameModeSoon(theme()))
     return {
       destroy: () => {
         unsub()
-        if (frameHost === node) frameHost = null
+        if (frameHost === host) frameHost = null
       },
     }
   }

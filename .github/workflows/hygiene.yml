@@ -76,3 +76,8 @@ jobs:
         run: |
           cargo run -p sail-compiler --quiet -- build apps/sail-site/src
           cargo run -p sail-compiler --quiet -- build apps/studio/src
+
+      - name: Project Pure typecheck (studio / site / components)
+        run: |
+          cargo run -p sail-compiler --quiet -- types --project packages/components/sail
+          bun run typecheck:pure

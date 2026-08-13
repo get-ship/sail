@@ -36,6 +36,7 @@ const PINNED_RULE_IDS: &[&str] = &[
     "sail-css-literals",
     "sail-css-token",
     "sail-dimension-literal",
+    "sail-directory-jurisdiction",
     "sail-display-on-layout",
     "sail-event-name",
     "sail-font-literal",

@@ -11,6 +11,56 @@ const { mountCalls } = vi.hoisted(() => ({
 // A minimal signal + a recording mount is all the router needs.
 // The mock calls opts.module.__mount(target) when present so layout-module
 // stubs can simulate rendering (proves authored markup is rendered, not dropped).
+vi.mock('@ship/sail-runtime/internal', () => {
+  const signal = <T>(initial: T) => {
+    let v = initial
+    const s = (() => v) as { (): T; set(n: T): void; peek(): T; __peek(): T }
+    s.set = (n: T) => { v = n }
+    s.peek = () => v
+    s.__peek = () => v
+    return s
+  }
+  const mount = vi.fn(async (target: unknown, name: unknown, opts: any) => {
+    if (opts?.module?.__mount) {
+      opts.module.__mount(target)
+    }
+    mountCalls.push({ target, name, opts })
+    return { dispose: vi.fn() }
+  })
+  const setHostRoute = (handle: unknown) => {
+    ;(globalThis as { __shipHostRoute?: unknown }).__shipHostRoute = handle ?? undefined
+  }
+  const BOUNDARY_KEY = Symbol.for('sail:error-boundary')
+  const attachBoundary = (host: any, handle: unknown) => { host[BOUNDARY_KEY] = handle }
+  const detachBoundary = (host: any) => { delete host[BOUNDARY_KEY] }
+  const findNearestBoundary = (node: any): unknown => {
+    let cur: any = node
+    while (cur) {
+      if (cur instanceof Element && cur[BOUNDARY_KEY]) return cur[BOUNDARY_KEY]
+      cur = cur.parentNode ?? cur.host ?? null
+    }
+    return null
+  }
+  const runProtected = (node: any, source: string, fn: () => unknown): unknown => {
+    try {
+      return fn()
+    } catch (err) {
+      const handle = findNearestBoundary(node) as { catch(e: unknown, s: string): void } | null
+      if (handle) { handle.catch(err, source); return undefined }
+      throw err
+    }
+  }
+  return {
+    signal,
+    mount,
+    setHostRoute,
+    attachBoundary,
+    detachBoundary,
+    findNearestBoundary,
+    runProtected,
+  }
+})
+
 vi.mock('@ship/sail-runtime', () => {
   const signal = <T>(initial: T) => {
     let v = initial
@@ -27,6 +77,9 @@ vi.mock('@ship/sail-runtime', () => {
     mountCalls.push({ target, name, opts })
     return { dispose: vi.fn() }
   })
+  const setHostRoute = (handle: unknown) => {
+    ;(globalThis as { __shipHostRoute?: unknown }).__shipHostRoute = handle ?? undefined
+  }
   // Faithful re-implementation of the runtime's error-boundary helpers (same
   // Symbol key + DOM walk) so the router's default route boundary behaves
   // exactly as it does against the real runtime, without pulling the cycle.
@@ -50,7 +103,15 @@ vi.mock('@ship/sail-runtime', () => {
       throw err
     }
   }
-  return { signal, mount, attachBoundary, detachBoundary, findNearestBoundary, runProtected }
+  return {
+    signal,
+    mount,
+    setHostRoute,
+    attachBoundary,
+    detachBoundary,
+    findNearestBoundary,
+    runProtected,
+  }
 })
 
 import { mountRouter, type RouterHandle } from '../src/mount-router'
@@ -90,6 +151,19 @@ const start = (layouts: { pathPrefix: string; tag: string }[] = []) =>
 const flush = () => vi.waitFor(() => expect(mountCalls.length).toBeGreaterThan(0))
 
 describe('mountRouter', () => {
+  it('registers the live route handle for layout custom elements', async () => {
+    router = start([{ pathPrefix: '/', tag: 'x-chrome' }])
+    await flush()
+    const handle = (globalThis as { __shipHostRoute?: { route?: { pathname?: () => string } } })
+      .__shipHostRoute
+    expect(handle?.route?.pathname).toBeTypeOf('function')
+    router?.dispose()
+    router = undefined
+    expect(
+      (globalThis as { __shipHostRoute?: unknown }).__shipHostRoute,
+    ).toBeUndefined()
+  })
+
   it('mounts the matched index module into root on start', async () => {
     router = start()
     await flush()

@@ -113,39 +113,39 @@ describe('no documentElement.style under apps/**', () => {
   })
 })
 
-describe('no residual xtask-deck / phantom gen-* task refs', () => {
-  // After HYGIENE-0, `cargo xtask` is real. Ban the retired crate name and
-  // never-landed gen-* family (only gen-icons exists).
-  const retiredName = /xtask-deck/
-  const phantomGen =
-    /(?:cargo\s+xtask|cargo\s+run\s+-p\s+xtask)\b[^\n]*\bgen-(tokens|types|skills|fixtures|ops|sdk)\b/
+describe('no residual xtask / gen-icons / full-pack embed', () => {
+  const retiredName = /xtask-deck|\bcargo xtask\b|cargo run -p xtask/
+  const genIcons = /gen-icons/
+  const fullPackEmbed =
+    /include_str!\s*!\s*\(\s*"[^"]*lucide-icons\.json"|include_str!\("[^"]*lucide-icons\.json"\)|assets\/lucide-icons\.json/
 
-  test('no xtask-deck package name left in source/docs', () => {
+  test('no xtask crate or cargo xtask product ritual', () => {
     const hits: string[] = []
     for (const file of walkFiles(REPO)) {
       const rel = relative(REPO, file)
       if (rel === 'Cargo.lock') continue
       if (rel.startsWith('tests/hygiene/')) continue
+      if (rel.includes('RESULT-ICONS')) continue
       if (skipBinaryRel(rel)) continue
       const text = readText(file)
       if (!text) continue
-      if (retiredName.test(text)) {
+      if (retiredName.test(text) || genIcons.test(text)) {
         hits.push(rel)
       }
     }
     expect(hits).toEqual([])
   })
 
-  test('no phantom gen-* tasks beyond gen-icons', () => {
+  test('no full lucide pack embed', () => {
     const hits: string[] = []
     for (const file of walkFiles(REPO)) {
       const rel = relative(REPO, file)
       if (rel.startsWith('tests/hygiene/')) continue
-      if (rel === 'Cargo.lock') continue
+      if (rel.includes('RESULT-ICONS')) continue
       if (skipBinaryRel(rel)) continue
       const text = readText(file)
       if (!text) continue
-      if (phantomGen.test(text)) {
+      if (fullPackEmbed.test(text)) {
         hits.push(rel)
       }
     }
@@ -294,5 +294,38 @@ describe('sanitization standing scan (paths / mission / monologue markers)', () 
     expect(classes[3]!.pattern.test('task #80:')).toBe(true)
     expect(classes[3]!.pattern.test('Task #34 regression')).toBe(true)
     expect(classes[4]!.pattern.test('Owner ruling 2026-07-18')).toBe(true)
+  })
+})
+
+describe('project Pure gate is wired on every code-accepting path', () => {
+  const requiredScripts = [
+    'typecheck:studio-pure',
+    'typecheck:site-pure',
+    'typecheck:components-pure',
+    'typecheck:pure',
+  ]
+
+  test('root package.json exposes Pure typecheck scripts', () => {
+    const pkg = JSON.parse(readText(join(REPO, 'package.json')) ?? '{}') as {
+      scripts?: Record<string, string>
+    }
+    const scripts = pkg.scripts ?? {}
+    for (const name of requiredScripts) {
+      expect(scripts[name], `missing script ${name}`).toBeDefined()
+    }
+    for (const name of ['typecheck:studio-pure', 'typecheck:site-pure', 'typecheck:components-pure']) {
+      expect(scripts[name]).toContain('tsconfig.pure.json')
+    }
+    expect(scripts.test ?? '', 'root test must invoke typecheck:pure').toContain(
+      'typecheck:pure',
+    )
+  })
+
+  test('CI type-gate job runs typecheck:pure (not a manual-only script)', () => {
+    const yml = readText(join(REPO, '.github/workflows/hygiene.yml')) ?? ''
+    expect(yml).toContain('typecheck:pure')
+    expect(yml).toContain('App corpus builds')
+    expect(yml).toContain('build apps/sail-site/src')
+    expect(yml).toContain('build apps/studio/src')
   })
 })

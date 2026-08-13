@@ -2,6 +2,8 @@ import { describe, expect, it, vi } from 'vitest'
 import { component, prop } from '../src/component-factory'
 import { onCleanup } from '../src/effect-scope'
 import type { Signal } from '../src/signal'
+import { setHostRoute } from '../src/host-route'
+import { signal } from '../src/signal'
 
 let tagCounter = 0
 const nextTag = () => `sail-cf-${++tagCounter}`
@@ -72,6 +74,30 @@ describe('component() — bool prop with reflect', () => {
     document.body.appendChild(el)
     expect(captured!()).toBe(true)
     el.remove()
+  })
+})
+
+describe('component() — host route inject for layout CEs', () => {
+  it('passes registered ctx.route into the module setup', () => {
+    const tag = nextTag()
+    const route = {
+      params: {},
+      query: {},
+      pathname: signal('/components/button'),
+      hash: signal(''),
+    }
+    const navigate = vi.fn()
+    setHostRoute({ route, navigate })
+    const setup = vi.fn(() => ({}))
+    component(tag, { props: {} }, component(setup))
+    const el = document.createElement(tag)
+    document.body.appendChild(el)
+    const ctx = setup.mock.calls[0]![0] as { route?: typeof route; navigate?: typeof navigate }
+    expect(ctx.route).toBe(route)
+    expect(ctx.navigate).toBe(navigate)
+    expect(ctx.route?.pathname()).toBe('/components/button')
+    el.remove()
+    setHostRoute(null)
   })
 })
 

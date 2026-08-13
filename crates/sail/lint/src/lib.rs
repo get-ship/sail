@@ -54,6 +54,7 @@ pub const RETIRED_RULE_IDS: &[&str] = &[
     "sail-legacy-layout",
     // S2.3 / SPEC-PLATFORM-NEUTRALITY-1: dual ambient-DOM floors — TypeEnv Pure
     // makes document/window/localStorage/location unnameable; lint dual path gone.
+    // Retirement coverage (HMR + build + CI) lives in sail_compiler::diagnostics::RETIREMENT_COVERAGE.
     "sail-no-ambient-dom",
     "sail-no-ambient-events",
     "sail-no-ambient-nav",

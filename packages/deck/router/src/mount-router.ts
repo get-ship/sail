@@ -13,7 +13,7 @@
 //   - deck → sail only: this imports the runtime's `mount()`; the runtime never
 //     imports this.
 
-import { mount, type MountHandle, type RoutePayload } from '@ship/sail-runtime/internal'
+import { mount, setHostRoute, type MountHandle, type RoutePayload } from '@ship/sail-runtime/internal'
 import {
   installScrollRestoration,
   onNavigate,
@@ -99,8 +99,11 @@ export function mountRouter(opts: MountRouterOptions): RouterHandle {
   }
 
   // Registers the patterns (route() calls defineRoutes internally) and returns
-  // the reactive URL handle injected into every mounted route.
+  // the reactive URL handle injected into every mounted route. Also publish
+  // it for layout custom elements — they upgrade on connect and never see
+  // `mount({ route })`.
   const routeSignals = createRoute({ routes: opts.routes })
+  setHostRoute({ route: routeSignals, navigate })
   const layouts = opts.layouts ?? []
   const layoutModules = opts.layoutModules ?? {}
   const errorBoundaryEnabled = opts.errorBoundary !== false
@@ -394,6 +397,7 @@ export function mountRouter(opts: MountRouterOptions): RouterHandle {
       prevLayoutHandles = []
       prevChainKey = ''
       prevRouteTarget = null
+      setHostRoute(null)
     },
   }
 }

@@ -19,6 +19,8 @@ import type { MountSetup, MountModule } from './component-mount'
 import { mountComponent } from './compose'
 import { projectSlots } from './slot-project'
 import { ensureLightContracts } from './styles/contracts-seam'
+import { hostRoute } from './host-route'
+import type { RouteSignals } from './route-signals'
 
 /** Declarative description of a component prop. */
 export interface PropDef<T> {
@@ -355,11 +357,21 @@ export function component<Bindings>(
       props: Record<string, Signal<unknown>>
       host: HTMLElement
       internals?: ElementInternals
+      route?: RouteSignals
+      navigate?: (path: string) => void
     } = {
       props: propSignals,
       host,
     }
     if (internals) ctx.internals = internals
+    // Deck injects ctx.route for layout CEs (and any other CE whose host
+    // registered a route). Pages already receive route via mount(); this
+    // is the CE connect path that used to leave route undefined.
+    const injected = hostRoute()
+    if (injected) {
+      ctx.route = injected.route
+      ctx.navigate = injected.navigate
+    }
     // `mountComponent` treats the module opaquely (it only reads `setup`); the
     // cast erases the per-component `Bindings` to the default module shape.
     cleanups.push(mountComponent(module as MountModule, host, ctx))

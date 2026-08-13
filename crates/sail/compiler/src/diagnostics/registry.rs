@@ -347,6 +347,17 @@ const DIAG_SPECS: &[DiagSpec] = &[
         docs_anchor: None,
     },
     DiagSpec {
+        id: "sail-directory-jurisdiction",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "Action-typed function outside src/actions/** — compositions wire state; the DOM floor lives in src/actions/",
+        allowed_list_source: None,
+        fix_text: Some(
+            "Move the Action to src/actions/ (handed node, observation pack). compositions wire state; the DOM floor lives in src/actions/",
+        ),
+        docs_anchor: None,
+    },
+    DiagSpec {
         id: "sail-dimension-literal",
         jurisdiction: Jurisdiction::Lint,
         default_severity: DiagSeverity::Warning,
@@ -488,6 +499,17 @@ const DIAG_SPECS: &[DiagSpec] = &[
             "close the tag, match the closer to the opener, and finish attribute values",
         ),
         docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-icon-glyph",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "icon role is bound to a missing offline pack glyph",
+        allowed_list_source: Some("sail_compiler::icons"),
+        fix_text: Some(
+            "pin the pack in sail.config `icons` and install its offline JSON, or fix the role binding",
+        ),
+        docs_anchor: Some("SPEC-ICONS-1"),
     },
     DiagSpec {
         id: "sail-internal-check-gate",
@@ -1171,6 +1193,17 @@ const DIAG_SPECS: &[DiagSpec] = &[
         docs_anchor: None,
     },
     DiagSpec {
+        id: "sail-unknown-icon",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "unknown icon role — not in the project role set",
+        allowed_list_source: Some("sail_compiler::icons"),
+        fix_text: Some(
+            "use a core or sail.config `icons.roles` name; the diagnostic lists close matches",
+        ),
+        docs_anchor: Some("SPEC-ICONS-1"),
+    },
+    DiagSpec {
         id: "sail-unintended-overflow",
         jurisdiction: Jurisdiction::Lint,
         default_severity: DiagSeverity::Warning,
@@ -1206,6 +1239,74 @@ const DIAG_SPECS: &[DiagSpec] = &[
 /// Full DiagSpec table.
 pub fn registry() -> &'static [DiagSpec] {
     DIAG_SPECS
+}
+
+/// Replacement coverage for a retired rule id.
+///
+/// Lint retirement requires proof the replacement fires on every path the
+/// retired lint covered. A tombstone without a row here is incomplete.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct RetirementCoverage {
+    /// Retired (tombstoned) rule id.
+    pub retired_id: &'static str,
+    /// Live rule ids that replace it.
+    pub replacement_ids: &'static [&'static str],
+    /// Code-accepting paths that must run the replacement (`hmr`, `build`, `ci`).
+    pub required_paths: &'static [&'static str],
+    /// Audit checklist — each item is a fixture or command that must stay red.
+    pub audit_checklist: &'static [&'static str],
+}
+
+/// Retirement-coverage manifest. Every `RETIRED_RULE_IDS` entry that was a
+/// dual-floor / path-coverage retire must have a row.
+pub const RETIREMENT_COVERAGE: &[RetirementCoverage] = &[
+    RetirementCoverage {
+        retired_id: "sail-no-ambient-dom",
+        replacement_ids: &[
+            "sail-pure-region",
+            "sail-type-gate",
+            "sail-directory-jurisdiction",
+        ],
+        required_paths: &["hmr", "build", "ci"],
+        audit_checklist: &[
+            "DOM in compositions sidecar fails project Pure gate (build / collect_project_type_gate)",
+            "same fixture fails incremental HMR overlay (check_project_type_gate_incremental)",
+            "same fixture fails typecheck:*-pure (tsc -p tsconfig.pure.json) in CI",
+            "Action-typed export outside src/actions/** fails sail-directory-jurisdiction",
+        ],
+    },
+    RetirementCoverage {
+        retired_id: "sail-no-ambient-events",
+        replacement_ids: &["sail-pure-region", "sail-type-gate"],
+        required_paths: &["hmr", "build", "ci"],
+        audit_checklist: &[
+            "`window.addEventListener` in Pure product .ts fails sail-pure-region",
+            "HMR / build / typecheck:*-pure all run the Pure project gate",
+        ],
+    },
+    RetirementCoverage {
+        retired_id: "sail-no-ambient-nav",
+        replacement_ids: &["sail-pure-region", "sail-type-gate"],
+        required_paths: &["hmr", "build", "ci"],
+        audit_checklist: &[
+            "`location` / `history` in compositions sidecar fails sail-pure-region",
+            "HMR / build / typecheck:*-pure all run the Pure project gate",
+        ],
+    },
+    RetirementCoverage {
+        retired_id: "sail-no-ambient-storage",
+        replacement_ids: &["sail-pure-region", "sail-type-gate"],
+        required_paths: &["hmr", "build", "ci"],
+        audit_checklist: &[
+            "`localStorage` in Pure product .ts fails sail-pure-region",
+            "HMR / build / typecheck:*-pure all run the Pure project gate",
+        ],
+    },
+];
+
+/// Retirement-coverage table.
+pub fn retirement_coverage() -> &'static [RetirementCoverage] {
+    RETIREMENT_COVERAGE
 }
 
 /// Look up a [`DiagSpec`] by stable rule id.

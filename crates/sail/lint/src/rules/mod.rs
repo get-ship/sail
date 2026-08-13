@@ -37,6 +37,7 @@ pub mod css_literal;
 pub mod css_literals;
 pub mod css_token;
 pub mod dimension_literal;
+pub mod directory_jurisdiction;
 pub mod display_on_layout;
 pub mod event_name;
 pub mod font_literal;
@@ -213,6 +214,12 @@ pub const APP_SOURCE_RULES: &[(&str, RuleFn)] = &[
     (no_node_import::RULE_ID, no_node_import::check),
     // SPEC-CTX-1 teach-side (warn only).
     (prefer_query::RULE_ID, prefer_query::check),
+    // Action-typed functions outside src/actions/** — LAW: compositions wire
+    // state; the DOM floor lives in src/actions/.
+    (
+        directory_jurisdiction::RULE_ID,
+        directory_jurisdiction::check,
+    ),
 ];
 
 /// Rules that lint an **author** `use:` Action body (ACTIONS-1 regime).
