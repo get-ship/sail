@@ -283,6 +283,17 @@ pub fn hover_with_session(
     col_1based: u32,
 ) -> Option<HoverPayload> {
     let offset = line_col_to_byte_offset(source, line_1based as usize, col_1based as usize);
+    let structure =
+        sail_compiler::hover_at(source, path, line_1based as usize, col_1based as usize);
+    // theme_hover_at is already site-gated; prefer that payload over tsgo.
+    if let Some(h) = &structure {
+        if h.kind == "partial" || h.kind == "theme-token" {
+            return Some(HoverPayload {
+                contents: h.source.clone(),
+                range: None,
+            });
+        }
+    }
     if tsgo.is_live() {
         if let Some(raw) = tsgo.hover_mapped(uri_key, source, offset) {
             if let Some(h) = hover_payload_from_tsgo(raw) {
@@ -290,15 +301,7 @@ pub fn hover_with_session(
             }
         }
     }
-    let h = sail_compiler::hover_at(source, path, line_1based as usize, col_1based as usize)?;
-    // SPEC-PARTIAL-1: partial hover carries preformatted markdown in `source`.
-    // THEMES-2 §3: theme-token hover is already formatted markdown.
-    if h.kind == "partial" || h.kind == "theme-token" {
-        return Some(HoverPayload {
-            contents: h.source,
-            range: None,
-        });
-    }
+    let h = structure?;
     let loc = if h.line > 0 {
         format!("\n\nDeclared at controller {}:{}", h.line, h.col)
     } else {
@@ -678,13 +681,13 @@ export default controller((ctx) => ({ count: signal(0) }))
     }
 
     #[test]
-    fn complete_sail_style_bg_tokens_without_tsgo() {
-        // SPEC-STYLE-COMPLETE-1: Style complete inside style({ paint: bg(¦) })
+    fn complete_sail_style_fill_tokens_without_tsgo() {
+        // SPEC-STYLE-COMPLETE-1: Style complete inside style({ paint: fill({ color: ¦ }) })
         // does not require tsgo.
         let mut intel =
             Intelligence::start(Some(Path::new("/nonexistent-sail-tsgo-root-for-intel")));
-        let src = r#"<div style({ paint: bg() })>x</div>"#;
-        let offset = src.find("bg(").expect("bg(") + 3;
+        let src = r#"<div style({ paint: fill({ color:  }) })>x</div>"#;
+        let offset = src.find("color: ").expect("color") + 7;
         let (line0, col0) = offset_to_lsp_position(src, offset);
         let items = intel.complete_sail(src, Some("app.sail"), line0 + 1, col0 + 1);
         assert!(
@@ -718,8 +721,8 @@ export default controller((ctx) => ({ count: signal(0) }))
 import { controller, signal } from '@ship/sail-runtime'
 export default controller(() => ({ primary: signal(0) }))
 </controller>
-<div style({ paint: bg() })>{primary()}</div>"#;
-        let offset = src.find("bg(").expect("bg(") + 3;
+<div style({ paint: fill({ color:  }) })>{primary()}</div>"#;
+        let offset = src.find("color: ").expect("color") + 7;
         let (line0, col0) = offset_to_lsp_position(src, offset);
         let items = intel.complete_sail(src, None, line0 + 1, col0 + 1);
         assert!(

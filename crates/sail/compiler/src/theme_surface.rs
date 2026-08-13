@@ -182,6 +182,10 @@ pub fn theme_complete_at(
 }
 
 /// Hover for the token / theme-id under `byte_offset`.
+///
+/// Token resolve is gated to `theme=` / override objects and Style
+/// SetterArg / ConcernSlotArg. Setter names, StyleRefs, and anything
+/// after a closed `style({…})` do not go through `resolve_theme_token`.
 pub fn theme_hover_at(
     source: &str,
     byte_offset: usize,
@@ -201,30 +205,37 @@ pub fn theme_hover_at(
             mode_divergence: None,
         });
     }
-    if !in_style_or_theme_site(source, byte_offset) {
-        return None;
+    if theme_override_object_at(source, byte_offset) {
+        return resolve_theme_token(&name, theme, mode);
     }
-    resolve_theme_token(&name, theme, mode)
+    let ctx = sail_lint::style::style_complete_context_at(source, byte_offset, None);
+    match ctx {
+        sail_lint::style::StyleCompleteContext::SetterArg { setter, .. } => {
+            let resolved = concern_arg_name(&setter, &name);
+            resolve_theme_token(&resolved, theme, mode)
+        }
+        sail_lint::style::StyleCompleteContext::ConcernSlotArg { .. } => {
+            resolve_theme_token(&name, theme, mode)
+        }
+        _ => None,
+    }
 }
 
-fn in_style_or_theme_site(source: &str, offset: usize) -> bool {
-    if theme_attr_partial(source, offset).is_some() || theme_override_object_at(source, offset) {
-        return true;
-    }
-    let off = offset.min(source.len());
-    let before = &source[..off];
-    before
-        .rfind("style(")
-        .is_some_and(|i| !before[i..].contains(')'))
-        || before
-            .rfind("style({")
-            .is_some_and(|i| before[i..].matches('{').count() > before[i..].matches('}').count())
+/// Concern-scoped identity (`subtle` inside `border(…)` → `border.subtle`).
+fn concern_arg_name(setter: &str, name: &str) -> String {
+    sail_lint::style::find_concern(setter)
+        .and_then(|c| sail_lint::style::resolve_concern_name(c, name))
+        .map(|c| c.name.to_string())
+        .unwrap_or_else(|| name.to_string())
 }
 
-/// Resolve a semantic slot or component token under `theme` + `mode`.
+/// Resolve a semantic slot, composite, or component token under `theme` + `mode`.
 pub fn resolve_theme_token(name: &str, theme: &str, mode: &str) -> Option<ThemeTokenHover> {
     let theme = if theme.is_empty() { "ship" } else { theme };
     let mode = if mode.is_empty() { "light" } else { mode };
+    if let Some(composite) = sail_lint::tokens::find_composite(name) {
+        return Some(resolve_composite_hover(composite, theme, mode));
+    }
     let css = css_name_for_author(name)?;
     let (value, divergence) = resolved_values(theme, mode, &css)?;
     Some(ThemeTokenHover {
@@ -235,6 +246,83 @@ pub fn resolve_theme_token(name: &str, theme: &str, mode: &str) -> Option<ThemeT
         css_name: css,
         mode_divergence: divergence,
     })
+}
+
+fn resolve_composite_hover(
+    composite: &sail_lint::tokens::CompositeToken,
+    theme: &str,
+    mode: &str,
+) -> ThemeTokenHover {
+    let mut members: Vec<(&str, &str)> = composite.members.to_vec();
+    members.sort_by_key(|(slot, _)| *slot);
+    let value = members
+        .iter()
+        .map(|(slot, css)| format!("{slot}: {}", resolve_css_or_registry(theme, mode, css)))
+        .collect::<Vec<_>>()
+        .join("; ");
+    ThemeTokenHover {
+        name: composite.name.to_string(),
+        theme: theme.to_string(),
+        mode: mode.to_string(),
+        value,
+        css_name: composite.name.to_string(),
+        mode_divergence: None,
+    }
+}
+
+fn resolve_css_or_registry(theme: &str, mode: &str, css: &str) -> String {
+    if let Some((v, _)) = resolved_values(theme, mode, css) {
+        return expand_fully(theme, mode, &v);
+    }
+    if let Some(base) = sail_lint::tokens::token_value(css) {
+        return expand_fully(theme, mode, base);
+    }
+    css.to_string()
+}
+
+fn expand_fully(theme: &str, mode: &str, raw: &str) -> String {
+    let mut cur = raw.to_string();
+    for _ in 0..8 {
+        let s = cur.trim();
+        let inner = if let Some(i) = s.strip_prefix('{').and_then(|x| x.strip_suffix('}')) {
+            Some(i.trim().to_string())
+        } else if let Some(i) = s.strip_prefix("var(--").and_then(|x| x.strip_suffix(')')) {
+            Some(i.split(',').next().unwrap_or(i).trim().to_string())
+        } else {
+            None
+        };
+        let Some(inner) = inner else {
+            break;
+        };
+        let css = crate::tokens_generate::public_name(&inner);
+        let next = resolved_values(theme, mode, &inner)
+            .map(|(v, _)| v)
+            .or_else(|| resolved_values(theme, mode, &css).map(|(v, _)| v))
+            .or_else(|| {
+                sail_lint::tokens::token_value(&inner)
+                    .or_else(|| sail_lint::tokens::token_value(&css))
+                    .map(str::to_string)
+            });
+        match next {
+            Some(v) if v != cur && v != s => cur = v,
+            _ => {
+                cur = if css.is_empty() { inner } else { css };
+                break;
+            }
+        }
+    }
+    if let Some(name) = cur
+        .strip_prefix("var(--")
+        .and_then(|x| x.strip_suffix(')'))
+        .map(|i| i.split(',').next().unwrap_or(i).trim().to_string())
+    {
+        if let Some(v) = sail_lint::tokens::token_value(&name) {
+            if !v.starts_with("var(") {
+                return v.to_string();
+            }
+        }
+    }
+    cur
 }
 
 /// Default theme + mode inferred from source (`theme="id"`; mode defaults light).
@@ -317,6 +405,28 @@ fn walk_leaves(node: &Value, path: &str, out: &mut BTreeMap<String, String>) {
         return;
     };
     if let Some(val) = obj.get("$value") {
+        if let Some(members) = val.as_object() {
+            for (member, mval) in members {
+                if member.starts_with('$') {
+                    continue;
+                }
+                let member_path = if path.is_empty() {
+                    member.clone()
+                } else {
+                    format!("{path}.{member}")
+                };
+                let css = public_name(&member_path);
+                if css.is_empty() {
+                    continue;
+                }
+                let s = match mval {
+                    Value::String(s) => s.clone(),
+                    other => other.to_string(),
+                };
+                out.insert(css, s);
+            }
+            return;
+        }
         let css = public_name(path);
         if !css.is_empty() {
             let s = match val {
@@ -541,5 +651,162 @@ mod tests {
         // Dual-mode catalog themes should diverge on background; if a theme is
         // identical, None is honest — just ensure the field is well-formed.
         let _ = h.mode_divergence;
+    }
+
+    #[test]
+    fn hover_border_subtle_shows_resolved_members() {
+        let h = resolve_theme_token("border.subtle", "ship", "light").expect("border.subtle");
+        assert_eq!(h.name, "border.subtle");
+        assert!(
+            h.value.contains("color:") && h.value.contains("width:") && h.value.contains("style:"),
+            "members: {}",
+            h.value
+        );
+        assert!(
+            h.value.contains("oklch") || h.value.contains("color-mix") || h.value.contains("solid"),
+            "resolved paint: {}",
+            h.value
+        );
+        assert!(h.value.contains("solid"), "style member: {}", h.value);
+        assert!(
+            !h.value.contains("border-subtle-color")
+                || h.value.contains("oklch")
+                || h.value.contains("color-mix"),
+            "color member should resolve past the emit label: {}",
+            h.value
+        );
+    }
+
+    #[test]
+    fn hover_dialog_border_shows_resolved_members() {
+        let h = resolve_theme_token("dialog.border", "ship", "light").expect("dialog.border");
+        assert_eq!(h.name, "dialog.border");
+        assert!(
+            h.value.contains("color:") && h.value.contains("width:") && h.value.contains("style:"),
+            "members: {}",
+            h.value
+        );
+        assert!(h.value.contains("solid"), "style member: {}", h.value);
+    }
+
+    #[test]
+    fn hover_size_type_elevation_fill_show_resolved_members() {
+        let size = resolve_theme_token("size.control-md", "ship", "light").expect("size");
+        assert_eq!(size.name, "size.control-md");
+        assert!(size.value.contains("h:"), "size members: {}", size.value);
+        assert!(
+            !size.value.contains("pad"),
+            "size must not carry pad: {}",
+            size.value
+        );
+
+        let typ = resolve_theme_token("type.heading", "ship", "light").expect("type");
+        assert_eq!(typ.name, "type.heading");
+        assert!(
+            typ.value.contains("family:") && typ.value.contains("size:"),
+            "type members: {}",
+            typ.value
+        );
+
+        let elev = resolve_theme_token("elevation.sm", "ship", "light").expect("elevation");
+        assert_eq!(elev.name, "elevation.sm");
+        assert!(
+            elev.value.contains("shadow:"),
+            "elevation members: {}",
+            elev.value
+        );
+
+        let fill = resolve_theme_token("fill.surface", "ship", "light").expect("fill");
+        assert_eq!(fill.name, "fill.surface");
+        assert!(
+            fill.value.contains("color:"),
+            "fill members: {}",
+            fill.value
+        );
+    }
+
+    #[test]
+    fn hover_unqualified_control_md_inside_size_setter() {
+        let src = "style({ box: size(control-md) })";
+        let off = src.find("control-md").expect("control-md");
+        let h = theme_hover_at(src, off, "ship", "light").expect("hover");
+        assert_eq!(h.name, "size.control-md");
+        assert!(h.value.contains("h:"), "{}", h.value);
+    }
+
+    #[test]
+    fn hover_unqualified_subtle_inside_border_setter() {
+        let src = "style({ paint: border(subtle) })";
+        let off = src.find("subtle").expect("subtle");
+        let h = theme_hover_at(src, off, "ship", "light").expect("hover");
+        assert_eq!(h.name, "border.subtle");
+        assert!(
+            h.value.contains("color:") && h.value.contains("style:"),
+            "{}",
+            h.value
+        );
+    }
+
+    #[test]
+    fn hover_setter_arg_primary_still_resolves() {
+        let src = "style({ paint: bg(primary) })";
+        let off = src.find("primary").expect("primary");
+        let h = theme_hover_at(src, off, "ship", "light").expect("primary arg");
+        assert_eq!(h.name, "primary");
+        assert!(!h.value.is_empty(), "{h:?}");
+    }
+
+    #[test]
+    fn hover_slot_color_arg_resolves() {
+        let src = "style({ paint: border({ color: muted }) })";
+        let off = src.find("muted").expect("muted");
+        let h = theme_hover_at(src, off, "ship", "light").expect("slot arg");
+        assert_eq!(h.name, "muted");
+    }
+
+    #[test]
+    fn hover_setter_name_is_not_theme_token() {
+        let src = "style({ paint: border(subtle) })";
+        let off = src.find("border").expect("setter");
+        assert!(
+            theme_hover_at(src, off, "ship", "light").is_none(),
+            "setter name must not resolve as the paint slot"
+        );
+    }
+
+    #[test]
+    fn hover_style_ref_is_not_theme_token() {
+        let src = "const primary = style({ paint: bg(muted) })\nstyle(primary)";
+        let off = src.rfind("primary").expect("style ref");
+        assert!(
+            theme_hover_at(src, off, "ship", "light").is_none(),
+            "StyleRef must not resolve as a color token"
+        );
+    }
+
+    #[test]
+    fn hover_after_closed_style_does_not_steal_tag_or_interp() {
+        let src = "<div style({ paint: bg(primary) })><card>{primary()}</card></div>";
+        let card = src.find("<card>").expect("card") + 1;
+        assert!(
+            theme_hover_at(src, card, "ship", "light").is_none(),
+            "tag after closed style() must not be theme-token"
+        );
+        let interp = src.find("{primary()").expect("interp") + 1;
+        assert!(
+            theme_hover_at(src, interp, "ship", "light").is_none(),
+            "interpolation after closed style() must not be theme-token"
+        );
+
+        let card_hover = crate::hover_at(src, None, 1, card + 1);
+        assert!(
+            card_hover.as_ref().map(|h| h.kind.as_str()) != Some("theme-token"),
+            "hover_at card: {card_hover:?}"
+        );
+        let interp_hover = crate::hover_at(src, None, 1, interp + 1);
+        assert!(
+            interp_hover.as_ref().map(|h| h.kind.as_str()) != Some("theme-token"),
+            "hover_at primary(): {interp_hover:?}"
+        );
     }
 }

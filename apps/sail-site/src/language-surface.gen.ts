@@ -8005,3 +8005,138 @@ export const REGION_CAPABILITY_MATRIX: RegionCapabilityDoc[] = [
 
 /** Thin-controller LOC threshold (sail-controller-size). */
 export const CONTROLLER_SIZE_THRESHOLD = 50
+
+export interface ConcernDoc {
+  name: string
+  channel: string
+  slots: string[]
+}
+
+/** SPEC-SPINNAKER-2 concern atlas — the live Style setter table. */
+export const CONCERNS: ConcernDoc[] = [
+  {
+    "name": "fill",
+    "channel": "paint",
+    "slots": ["color", "mix", "image", "clip", "glow"]
+  },
+  {
+    "name": "ink",
+    "channel": "paint",
+    "slots": ["color", "caret", "accent"]
+  },
+  {
+    "name": "border",
+    "channel": "paint",
+    "slots": ["color", "width", "style", "edge", "kind", "offset"]
+  },
+  {
+    "name": "radius",
+    "channel": "paint",
+    "slots": ["all", "t", "b", "l", "r"]
+  },
+  {
+    "name": "elevation",
+    "channel": "paint",
+    "slots": ["shadow"]
+  },
+  {
+    "name": "filter",
+    "channel": "paint",
+    "slots": [
+      "blur",
+      "brightness",
+      "contrast",
+      "grayscale",
+      "hue",
+      "invert",
+      "sepia",
+      "saturate",
+      "backdrop",
+      "blend",
+      "opacity"
+    ]
+  },
+  {
+    "name": "size",
+    "channel": "box",
+    "slots": ["w", "h", "min-w", "min-h", "max-w", "max-h", "aspect"]
+  },
+  {
+    "name": "space",
+    "channel": "box",
+    "slots": [
+      "pad",
+      "pad-x",
+      "pad-y",
+      "pad-t",
+      "pad-b",
+      "pad-l",
+      "pad-r",
+      "pad-s",
+      "pad-e",
+      "m",
+      "mx",
+      "my",
+      "mt",
+      "mb",
+      "ml",
+      "mr",
+      "ms",
+      "me"
+    ]
+  },
+  {
+    "name": "place",
+    "channel": "box",
+    "slots": ["position", "inset", "top", "bottom", "left", "right", "z", "order"]
+  },
+  {
+    "name": "flow",
+    "channel": "box",
+    "slots": ["display", "dir", "grow", "shrink", "self"]
+  },
+  {
+    "name": "overflow",
+    "channel": "box",
+    "slots": ["all", "x", "y", "overscroll", "scroll"]
+  },
+  {
+    "name": "type",
+    "channel": "text",
+    "slots": ["family", "size", "weight", "leading", "tracking", "align", "case", "wrap", "list", "decoration"]
+  },
+  {
+    "name": "motion",
+    "channel": "paint",
+    "slots": ["rotate", "scale", "x", "y", "origin", "ease", "duration", "property", "animate"]
+  }
+]
+
+/** SPEC-SPINNAKER-2 markers — verbs, not concerns. */
+export const MARKERS: string[] = [
+  "group",
+  "isolate",
+  "srOnly",
+  "press",
+  "controlFrame",
+  "controlLift",
+  "cursor",
+  "select",
+  "pointerEvents",
+  "tapHighlight",
+  "touch",
+  "appearance",
+  "tab",
+  "content",
+  "boxSizing",
+  "objectFit",
+  "objectPosition",
+  "scrollbarThumb",
+  "scrollbarTrack",
+  "scrollbarThin",
+  "avatarMedia",
+  "glyphFill",
+  "container",
+  "containerType",
+  "containerName"
+]
