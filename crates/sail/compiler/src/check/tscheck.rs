@@ -2546,30 +2546,44 @@ fn typecheck_project_env_reused(
 /// CLI walks store CWD-relative paths that already include the project
 /// prefix. Joining those onto `project_root` again opens a directory that
 /// does not exist, and relative imports become TS2307 for siblings on disk.
-pub fn resolve_product_path(project_root: &Path, p: &Path) -> PathBuf {
-    if let Ok(c) = p.canonicalize() {
-        return c;
-    }
-    let root = project_root
-        .canonicalize()
-        .unwrap_or_else(|_| project_root.to_path_buf());
-    let joined = root.join(p);
-    if let Ok(c) = joined.canonicalize() {
-        return c;
-    }
-    let comps: Vec<_> = p.components().collect();
-    for i in 0..comps.len() {
-        let suffix: PathBuf = comps[i..].iter().collect();
-        let cand = root.join(&suffix);
-        if let Ok(c) = cand.canonicalize() {
-            return c;
+///
+/// `None` when no candidate is a real file under the project — callers must
+/// skip the entry rather than `didOpen` the naive join (the ghost URI).
+pub fn resolve_product_path(project_root: &Path, p: &Path) -> Option<PathBuf> {
+    let root = project_root.canonicalize().ok()?;
+    let file_under_root = |cand: &Path| -> Option<PathBuf> {
+        let c = cand.canonicalize().ok()?;
+        if c.is_file() && c.starts_with(&root) {
+            Some(c)
+        } else {
+            None
         }
+    };
+
+    if let Some(c) = file_under_root(p) {
+        return Some(c);
     }
-    if p.is_absolute() {
-        p.to_path_buf()
-    } else {
-        joined
+    if let Some(c) = file_under_root(&root.join(p)) {
+        return Some(c);
     }
+
+    // Longest suffix whose leading strip is a tail of the project path
+    // (`apps/studio` + `apps/studio/src/foo.ts`). A shorter suffix would
+    // snap a missing `…/other-types.ts` onto an existing `types.ts`.
+    let p_comps: Vec<_> = p.components().collect();
+    let root_comps: Vec<_> = root.components().collect();
+    for strip in 1..p_comps.len() {
+        let prefix = &p_comps[..strip];
+        if !root_comps.ends_with(prefix) {
+            continue;
+        }
+        let rel: PathBuf = p_comps[strip..].iter().collect();
+        if let Some(c) = file_under_root(&root.join(rel)) {
+            return Some(c);
+        }
+        return None;
+    }
+    None
 }
 
 /// Live program for one TypeEnv. Kind projects stay at the real root.
@@ -2593,13 +2607,13 @@ fn env_program_ts_diags(
         let cfg = std::fs::read_to_string(project_root.join(kind_rel))?;
         let entries: Vec<(PathBuf, String, String)> = files
             .iter()
-            .map(|(p, src)| {
-                let abs = resolve_product_path(project_root, p);
-                (
+            .filter_map(|(p, src)| {
+                let abs = resolve_product_path(project_root, p)?;
+                Some((
                     abs.clone(),
                     (*src).to_string(),
                     abs.to_string_lossy().into_owned(),
-                )
+                ))
             })
             .collect();
         (cfg, entries, false)
@@ -3843,21 +3857,55 @@ mod tests {
         std::fs::write(&file, "export type T = number\n").unwrap();
         let canon = file.canonicalize().unwrap();
 
-        assert_eq!(resolve_product_path(&project, &file), canon);
+        assert_eq!(resolve_product_path(&project, &file), Some(canon.clone()));
         assert_eq!(
             resolve_product_path(&project, Path::new("src/design/types.ts")),
-            canon
+            Some(canon.clone())
         );
 
         let cli_walk = PathBuf::from("apps/studio/src/design/types.ts");
         assert_eq!(
             resolve_product_path(&project, &cli_walk),
-            canon,
+            Some(canon.clone()),
             "CWD-prefixed walk path must open the real file, not project/apps/studio/..."
         );
         assert!(
             !project.join(&cli_walk).exists(),
             "sanity: naive join is the ghost path"
+        );
+    }
+
+    #[test]
+    fn resolve_product_path_missing_walk_is_none_not_sibling() {
+        let tmp = tempfile::tempdir().unwrap();
+        let project = tmp.path().join("apps").join("studio");
+        let file = project.join("src").join("design").join("types.ts");
+        std::fs::create_dir_all(file.parent().unwrap()).unwrap();
+        std::fs::write(&file, "export type T = number\n").unwrap();
+        let types = file.canonicalize().unwrap();
+
+        let missing_cli = PathBuf::from("apps/studio/src/design/other-types.ts");
+        assert_eq!(
+            resolve_product_path(&project, &missing_cli),
+            None,
+            "missing CLI-shaped path must stay unresolved"
+        );
+        assert_ne!(
+            resolve_product_path(&project, &missing_cli),
+            Some(types.clone()),
+            "must not snap other-types.ts onto types.ts"
+        );
+
+        let missing_nested = PathBuf::from("apps/studio/src/design/missing/types.ts");
+        assert_eq!(
+            resolve_product_path(&project, &missing_nested),
+            None,
+            "missing nested types.ts must not snap to src/design/types.ts"
+        );
+
+        assert!(
+            !project.join(&missing_cli).exists(),
+            "sanity: naive join is still the ghost path"
         );
     }
 

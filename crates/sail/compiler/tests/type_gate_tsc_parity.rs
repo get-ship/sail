@@ -13,7 +13,8 @@ use sail_compiler::ambients::{
 use sail_compiler::check::tscheck::{
     TsDiag, TsDiagKey, check_project_type_gate, collect_project_gate_files,
     collect_project_ts_diags, lsp_is_disabled, parse_tsc_diagnostics, rel_diag_path,
-    reset_type_gate_servers, resolve_tsgo, ts_diag_key, tsgo_invocation_count,
+    reset_type_gate_servers, resolve_product_path, resolve_tsgo, ts_diag_key,
+    tsgo_invocation_count,
 };
 
 fn workspace_root() -> PathBuf {
@@ -164,6 +165,14 @@ fn relative_cli_walk_paths_match_tsc_p() {
             walked.iter().any(|(p, _)| !p.is_absolute()),
             "{label}: CLI walk paths must stay CWD-relative"
         );
+        for (p, _) in &walked {
+            let resolved = resolve_product_path(&project, p);
+            assert!(
+                resolved.as_ref().is_some_and(|r| r.is_file()),
+                "{label}: {} must resolve to a real file, got {resolved:?}",
+                p.display()
+            );
+        }
         let product = product_rels(&project, &files);
         reset_type_gate_servers();
         let gate = collect_project_ts_diags(&project, &walked).expect("live program");
