@@ -1514,7 +1514,7 @@ fn flatten_tokens(doc: &Value, path_prefix: &[String], inherited_type: Option<&s
     out
 }
 
-/// Public identity for a Sail extension path (`style.card-chrome` → `card-chrome`).
+/// Public identity for a Sail extension path (`style.sample` → `sample`).
 pub fn sail_public_name(path: &str) -> String {
     if let Some(rest) = path.strip_prefix("style.") {
         return rest.to_string();
@@ -1527,7 +1527,7 @@ pub fn sail_public_name(path: &str) -> String {
 
 /// Collect `$type: sail.style` / `sail.keyframes` identities from a DTCG doc.
 ///
-/// Registry keys are the public names (`card-chrome`, `fade`); values keep
+/// Registry keys are the public names (`sample`, `fade`); values keep
 /// `$type` plus the authored `$value` (and `when` / `animate` when present).
 fn collect_sail_identities(doc: &Value) -> (Map<String, Value>, Map<String, Value>) {
     let mut styles = Map::new();
@@ -6310,20 +6310,6 @@ mod tests {
       "$type": "type",
       "$value": { "family": "{typography.monoFont}" }
     },
-    "heading-2": {
-      "$type": "type",
-      "$value": {
-        "family": "{typography.heading.font}",
-        "size": "{typography.text.lg}"
-      }
-    },
-    "heading-3": {
-      "$type": "type",
-      "$value": {
-        "family": "{typography.heading.font}",
-        "size": "{typography.text.base}"
-      }
-    },
     "display-sm": {
       "$type": "type",
       "$value": {
@@ -6396,8 +6382,6 @@ mod tests {
             "type.label",
             "type.heading",
             "type.mono",
-            "type.heading-2",
-            "type.heading-3",
             "type.display-sm",
             "type.mono-sm",
             "elevation.xs",
@@ -6522,45 +6506,16 @@ mod tests {
     "font": { "weight-normal": { "$value": "400", "$type": "number" } }
   },
   "type": {
-    "heading-2": {
-      "$type": "type",
-      "$value": { "family": "{typography.heading.font}", "size": "{typography.text.lg}" }
-    },
-    "heading-3": {
-      "$type": "type",
-      "$value": { "family": "{typography.heading.font}", "size": "{typography.text.base}" }
-    },
     "display-sm": {
       "$type": "type",
       "$value": { "family": "{typography.displayFont}", "size": "{typography.text.4xl}" }
-    },
-    "mono-sm": {
-      "$type": "type",
-      "$value": { "family": "{typography.monoFont}", "size": "{typography.text.xs}" }
     }
   },
   "style": {
-    "card-chrome": {
+    "sample": {
       "$type": "sail.style",
-      "$value": {
-        "bg": "card",
-        "border": "subtle",
-        "radius": "lg",
-        "size": "full",
-        "pad": { "x": 5, "y": 4 }
-      }
-    },
-    "muted": {
-      "$type": "sail.style",
-      "$value": { "type": "body-sm", "fg": "muted-foreground" }
-    },
-    "navLink": {
-      "$type": "sail.style",
-      "$value": { "pad": { "x": 3, "y": 2 }, "radius": "md", "type": "label" },
-      "when": {
-        "hover": { "bg": "surface-2" },
-        "current": { "bg": "primary", "fg": "primary-foreground" }
-      }
+      "$value": { "bg": "card", "pad": { "x": 5 } },
+      "when": { "hover": { "bg": "surface-2" } }
     }
   },
   "keyframes": {
@@ -6597,11 +6552,11 @@ mod tests {
         let report = generate(&model, &out).expect("generate styles + keyframes");
         let css = fs::read_to_string(&report.tokens_css).unwrap();
         assert!(
-            css.contains("--type-heading-2-family:"),
+            css.contains("--type-display-sm-family:"),
             "type role members flatten to CSS: {css}"
         );
         assert!(
-            !css.contains("--card-chrome"),
+            !css.contains("--sample"),
             "named styles are not CSS vars: {css}"
         );
         assert!(
@@ -6614,37 +6569,10 @@ mod tests {
         );
         let reg: Value =
             serde_json::from_str(&fs::read_to_string(&report.registry_json).unwrap()).unwrap();
-        for ident in [
-            "type.heading-2",
-            "type.heading-3",
-            "type.display-sm",
-            "type.mono-sm",
-        ] {
-            assert_eq!(
-                reg["composites"][ident]["type"].as_str().unwrap_or(""),
-                "type",
-                "missing type role {ident}"
-            );
-        }
-        for ident in ["card-chrome", "muted", "navLink"] {
-            assert_eq!(
-                reg["styles"][ident]["type"].as_str().unwrap_or(""),
-                "sail.style",
-                "missing style {ident}"
-            );
-            assert!(
-                reg["styles"][ident].get("value").is_some(),
-                "style {ident} must carry value"
-            );
-        }
-        assert_eq!(reg["styles"]["card-chrome"]["value"]["bg"], "card");
-        assert_eq!(reg["styles"]["card-chrome"]["value"]["pad"]["x"], 5);
-        assert_eq!(reg["styles"]["muted"]["value"]["type"], "body-sm");
-        assert_eq!(reg["styles"]["navLink"]["when"]["hover"]["bg"], "surface-2");
-        assert_eq!(
-            reg["styles"]["navLink"]["when"]["current"]["fg"],
-            "primary-foreground"
-        );
+        assert_eq!(reg["composites"]["type.display-sm"]["type"], "type");
+        assert_eq!(reg["styles"]["sample"]["type"], "sail.style");
+        assert_eq!(reg["styles"]["sample"]["value"]["bg"], "card");
+        assert_eq!(reg["styles"]["sample"]["when"]["hover"]["bg"], "surface-2");
         for ident in ["fade", "fade-scale-in", "slide-up"] {
             assert_eq!(
                 reg["keyframes"][ident]["type"].as_str().unwrap_or(""),
@@ -6671,7 +6599,7 @@ mod tests {
             "play-colors-property"
         );
         let names = reg["names"].as_array().unwrap();
-        for banned in ["card-chrome", "navLink", "fade", "style.card-chrome"] {
+        for banned in ["sample", "fade", "style.sample"] {
             assert!(
                 names.iter().all(|n| n.as_str() != Some(banned)),
                 "identity {banned} must not be a CSS name"
@@ -6683,7 +6611,7 @@ mod tests {
     fn flatten_skips_sail_style_and_keyframes() {
         let doc: Value = serde_json::json!({
             "style": {
-                "card-chrome": {
+                "sample": {
                     "$type": "sail.style",
                     "$value": { "bg": "card" }
                 }
@@ -6700,10 +6628,10 @@ mod tests {
         });
         let tokens = flatten_tokens(&doc, &[], None);
         assert!(tokens.iter().any(|t| t.path == "space.4"));
-        assert!(tokens.iter().all(|t| t.path != "style.card-chrome"));
+        assert!(tokens.iter().all(|t| t.path != "style.sample"));
         assert!(tokens.iter().all(|t| t.path != "keyframes.fade"));
         let (styles, keyframes) = collect_sail_identities(&doc);
-        assert_eq!(styles["card-chrome"]["type"], "sail.style");
+        assert_eq!(styles["sample"]["type"], "sail.style");
         assert_eq!(keyframes["fade"]["type"], "sail.keyframes");
     }
 }

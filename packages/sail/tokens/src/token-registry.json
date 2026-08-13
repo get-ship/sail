@@ -476,18 +476,6 @@
     "type-display-sm-size",
     "type-display-sm-tracking",
     "type-display-sm-weight",
-    "type-heading-2-case",
-    "type-heading-2-family",
-    "type-heading-2-leading",
-    "type-heading-2-size",
-    "type-heading-2-tracking",
-    "type-heading-2-weight",
-    "type-heading-3-case",
-    "type-heading-3-family",
-    "type-heading-3-leading",
-    "type-heading-3-size",
-    "type-heading-3-tracking",
-    "type-heading-3-weight",
     "type-heading-case",
     "type-heading-family",
     "type-heading-leading",
@@ -2467,78 +2455,6 @@
       "type": "dimension",
       "value": "var(--tracking-normal)"
     },
-    "type-heading-2-family": {
-      "path": "type.heading-2.family",
-      "cssName": "type-heading-2-family",
-      "type": "fontFamily",
-      "value": "var(--heading-font)"
-    },
-    "type-heading-2-size": {
-      "path": "type.heading-2.size",
-      "cssName": "type-heading-2-size",
-      "type": "dimension",
-      "value": "var(--text-lg)"
-    },
-    "type-heading-2-weight": {
-      "path": "type.heading-2.weight",
-      "cssName": "type-heading-2-weight",
-      "type": "number",
-      "value": "var(--heading-weight)"
-    },
-    "type-heading-2-leading": {
-      "path": "type.heading-2.leading",
-      "cssName": "type-heading-2-leading",
-      "type": "number",
-      "value": "var(--leading-tight)"
-    },
-    "type-heading-2-tracking": {
-      "path": "type.heading-2.tracking",
-      "cssName": "type-heading-2-tracking",
-      "type": "dimension",
-      "value": "var(--heading-tracking)"
-    },
-    "type-heading-2-case": {
-      "path": "type.heading-2.case",
-      "cssName": "type-heading-2-case",
-      "type": "string",
-      "value": "var(--heading-transform)"
-    },
-    "type-heading-3-family": {
-      "path": "type.heading-3.family",
-      "cssName": "type-heading-3-family",
-      "type": "fontFamily",
-      "value": "var(--heading-font)"
-    },
-    "type-heading-3-size": {
-      "path": "type.heading-3.size",
-      "cssName": "type-heading-3-size",
-      "type": "dimension",
-      "value": "var(--text-base)"
-    },
-    "type-heading-3-weight": {
-      "path": "type.heading-3.weight",
-      "cssName": "type-heading-3-weight",
-      "type": "number",
-      "value": "var(--heading-weight)"
-    },
-    "type-heading-3-leading": {
-      "path": "type.heading-3.leading",
-      "cssName": "type-heading-3-leading",
-      "type": "number",
-      "value": "var(--leading-tight)"
-    },
-    "type-heading-3-tracking": {
-      "path": "type.heading-3.tracking",
-      "cssName": "type-heading-3-tracking",
-      "type": "dimension",
-      "value": "var(--heading-tracking)"
-    },
-    "type-heading-3-case": {
-      "path": "type.heading-3.case",
-      "cssName": "type-heading-3-case",
-      "type": "string",
-      "value": "var(--heading-transform)"
-    },
     "type-display-sm-family": {
       "path": "type.display-sm.family",
       "cssName": "type-display-sm-family",
@@ -4346,18 +4262,6 @@
     "type.display-sm.size": "type-display-sm-size",
     "type.display-sm.tracking": "type-display-sm-tracking",
     "type.display-sm.weight": "type-display-sm-weight",
-    "type.heading-2.case": "type-heading-2-case",
-    "type.heading-2.family": "type-heading-2-family",
-    "type.heading-2.leading": "type-heading-2-leading",
-    "type.heading-2.size": "type-heading-2-size",
-    "type.heading-2.tracking": "type-heading-2-tracking",
-    "type.heading-2.weight": "type-heading-2-weight",
-    "type.heading-3.case": "type-heading-3-case",
-    "type.heading-3.family": "type-heading-3-family",
-    "type.heading-3.leading": "type-heading-3-leading",
-    "type.heading-3.size": "type-heading-3-size",
-    "type.heading-3.tracking": "type-heading-3-tracking",
-    "type.heading-3.weight": "type-heading-3-weight",
     "type.heading.case": "type-heading-case",
     "type.heading.family": "type-heading-family",
     "type.heading.leading": "type-heading-leading",
@@ -4517,32 +4421,6 @@
         "weight": "type-mono-weight",
         "leading": "type-mono-leading",
         "tracking": "type-mono-tracking"
-      }
-    },
-    "type.heading-2": {
-      "path": "type.heading-2",
-      "cssName": "type.heading-2",
-      "type": "type",
-      "members": {
-        "family": "type-heading-2-family",
-        "size": "type-heading-2-size",
-        "weight": "type-heading-2-weight",
-        "leading": "type-heading-2-leading",
-        "tracking": "type-heading-2-tracking",
-        "case": "type-heading-2-case"
-      }
-    },
-    "type.heading-3": {
-      "path": "type.heading-3",
-      "cssName": "type.heading-3",
-      "type": "type",
-      "members": {
-        "family": "type-heading-3-family",
-        "size": "type-heading-3-size",
-        "weight": "type-heading-3-weight",
-        "leading": "type-heading-3-leading",
-        "tracking": "type-heading-3-tracking",
-        "case": "type-heading-3-case"
       }
     },
     "type.display-sm": {
@@ -4710,51 +4588,7 @@
       }
     }
   },
-  "styles": {
-    "card-chrome": {
-      "path": "style.card-chrome",
-      "type": "sail.style",
-      "value": {
-        "bg": "card",
-        "border": "subtle",
-        "radius": "lg",
-        "size": "full",
-        "pad": {
-          "x": 5,
-          "y": 4
-        }
-      }
-    },
-    "muted": {
-      "path": "style.muted",
-      "type": "sail.style",
-      "value": {
-        "type": "body-sm",
-        "fg": "muted-foreground"
-      }
-    },
-    "navLink": {
-      "path": "style.navLink",
-      "type": "sail.style",
-      "value": {
-        "pad": {
-          "x": 3,
-          "y": 2
-        },
-        "radius": "md",
-        "type": "label"
-      },
-      "when": {
-        "hover": {
-          "bg": "surface-2"
-        },
-        "current": {
-          "bg": "primary",
-          "fg": "primary-foreground"
-        }
-      }
-    }
-  },
+  "styles": {},
   "keyframes": {
     "fade": {
       "path": "keyframes.fade",
