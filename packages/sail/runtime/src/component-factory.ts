@@ -17,6 +17,8 @@ import type { Decoder } from './decode'
 import { effect, signal, type Signal } from './signal'
 import type { MountSetup, MountModule } from './component-mount'
 import { mountComponent } from './compose'
+import { navigate } from './navigate'
+import type { RouteSignals } from './route-signals'
 import { projectSlots } from './slot-project'
 import { ensureLightContracts } from './styles/contracts-seam'
 
@@ -358,14 +360,26 @@ export function component<Bindings>(
     // shared signals on the element — that's scope-homed now via
     // `useStore` / `provideContext` (see `./store` / `./effect-scope`), so
     // `host` here is for imperative reach, not shared-state publication.
+    //
+    // `route` / `navigate` match the page mount contract: compiled setup
+    // does `$scope.route = route`. The host publishes the live RouteSignals
+    // on `__shipRouteSignals` (same port pattern as `__shipRouterPort`).
+    // Both CE class paths (form-associated + normal) share this factory,
+    // so both see the same object — reused chrome updates on navigate
+    // without remounting. Isolated unit tests leave the port unset.
+    const route = globalThis.__shipRouteSignals as RouteSignals | undefined
     const ctx: {
       props: Record<string, Signal<unknown>>
       host: HTMLElement
+      navigate: typeof navigate
+      route?: RouteSignals
       internals?: ElementInternals
     } = {
       props: propSignals,
       host,
+      navigate,
     }
+    if (route) ctx.route = route
     if (internals) ctx.internals = internals
     // `mountComponent` treats the module opaquely (it only reads `setup`); the
     // cast erases the per-component `Bindings` to the default module shape.
