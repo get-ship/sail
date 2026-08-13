@@ -2,14 +2,29 @@ import type { ClientOptions } from '@ship/sail-studio-client'
 import { sailAuthoringEdit, sailAuthoringCheck, sailAuthoringLayoutCheck, sailInspectModel, sailInspectState, sailInspectTree, sailInspectTokenUsage, sailRenderScreenshot, sailTaskList, sailTaskGet, sailTaskCreate, sailTaskComment, sailTaskAddArtifact, sailTaskAgentNote, sailTaskThreadCreate, sailTaskThreadReply, sailTaskThreadList, sailTaskReanchor, sailTaskCommitIntent, sailThemeFork, sailThemeList, sailThemeRead, sailThemeWrite, sailThemeDelete, sailThemeGenerate, sailThemeGraph, sailThemeEffectiveIds, sailThemeFontAdd, sailThemeFontSearch } from '@ship/sail-studio-client'
 import type { OpsClient } from './types'
 
+/** Injected or host fetch — `ClientOptions.fetch` is the sanctioned type. */
+type StudioFetch = NonNullable<ClientOptions['fetch']>
+
+/** Host view: ES `globalThis` plus the optional fetch slot this file uses. */
+type StudioHost = typeof globalThis & { fetch?: StudioFetch }
+
+function resolveFetch(opts?: ClientOptions): StudioFetch {
+  if (opts?.fetch) return opts.fetch
+  const host: StudioHost = globalThis
+  const fetchFn = host.fetch
+  if (!fetchFn) {
+    throw new Error('host fetch is not available')
+  }
+  return fetchFn.bind(host)
+}
+
 async function writeSourceHttp(
   path: string,
   content: string,
   opts?: ClientOptions,
 ): Promise<void> {
   const base = opts?.baseUrl ?? ''
-  // Prefer injected fetch; fall back to host global (not bare ambient `fetch` id).
-  const fetchFn = opts?.fetch ?? globalThis.fetch.bind(globalThis)
+  const fetchFn = resolveFetch(opts)
   const res = await fetchFn(`${base}/sail.ops.v1.SailAuthoring/Edit`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -44,7 +59,7 @@ async function listFilesHttp(
   opts?: ClientOptions,
 ): Promise<{ ok: boolean; project: string; files: string[] }> {
   const base = opts?.baseUrl ?? ''
-  const fetchFn = opts?.fetch ?? globalThis.fetch.bind(globalThis)
+  const fetchFn = resolveFetch(opts)
   const res = await fetchFn(`${base}/sail.ops.v1.SailAuthoring/ListFiles`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },

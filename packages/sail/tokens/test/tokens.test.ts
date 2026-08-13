@@ -605,6 +605,50 @@ describe('@ship/tokens — theme catalog (THEMES export)', () => {
     nested.remove()
   })
 
+  it('nested theme= without data-mode inherits document mode (no JS)', () => {
+    const style = document.createElement('style')
+    style.textContent = `
+      :root[theme='ship'][data-mode='dark'],
+      [theme='ship'][data-mode='dark'],
+      :root[data-mode='dark'] [theme='ship']:not([data-mode]) {
+        --primary: #111111;
+      }
+      :root[theme='ship'][data-mode='light'],
+      :root[theme='ship']:not([data-mode]),
+      [theme='ship'][data-mode='light'],
+      :root[data-mode='light'] [theme='ship']:not([data-mode]),
+      :root:not([data-mode]) [theme='ship']:not([data-mode]) {
+        --primary: #eeeeee;
+      }
+      :root[theme='paper'][data-mode='light'],
+      :root[theme='paper']:not([data-mode]),
+      [theme='paper'][data-mode='light'],
+      [theme='paper']:not([data-mode]) {
+        --primary: #abcdef;
+      }
+    `
+    document.head.appendChild(style)
+    const root = document.documentElement
+    root.setAttribute('theme', 'ship')
+    root.setAttribute('data-mode', 'dark')
+
+    const nestedShip = document.createElement('div')
+    nestedShip.setAttribute('theme', 'ship')
+    document.body.appendChild(nestedShip)
+
+    const nestedPaper = document.createElement('div')
+    nestedPaper.setAttribute('theme', 'paper')
+    nestedShip.appendChild(nestedPaper)
+
+    const shipPrimary = getComputedStyle(nestedShip).getPropertyValue('--primary').trim()
+    const paperPrimary = getComputedStyle(nestedPaper).getPropertyValue('--primary').trim()
+    expect(shipPrimary.toLowerCase()).toBe('#111111')
+    expect(paperPrimary.toLowerCase()).toBe('#abcdef')
+
+    style.remove()
+    nestedShip.remove()
+  })
+
   it('never sets data-mode=system on document (paintMode resolves)', () => {
     const root = document.documentElement
     applyTheme('sail', root, 'light')
@@ -999,9 +1043,9 @@ describe('@ship/tokens — DTCG SSOT / generate drift lock', () => {
     expect(selectors.has('console') || selectors.has('ship')).toBe(true)
     // Theme JSON files exist for the catalog
     const paper = JSON.parse(loadSrc('../model/themes/paper.json')) as {
-      $extensions?: { ship?: { themeId?: string } }
+      $extensions?: { sail?: { themeId?: string } }
     }
-    expect(paper.$extensions?.ship?.themeId).toBe('paper')
+    expect(paper.$extensions?.sail?.themeId).toBe('paper')
   })
 
   it('theme override blocks redeclare public cssNames only (registry-known vars)', () => {

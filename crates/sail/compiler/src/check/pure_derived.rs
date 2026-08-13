@@ -19,6 +19,7 @@ use crate::check::controller_parse::{ParsedController, ScopeKind};
 use crate::check::js_scan::is_ident_cont;
 use crate::diagnostics::{CompileError, Span};
 
+const RULE_ID: &str = "sail-pure-derived";
 struct Pattern {
     /// What we render in the error message.
     label: &'static str,
@@ -95,7 +96,7 @@ pub fn check(controller: &ParsedController) -> Result<(), CompileError> {
             ))
             .with_span(span)
             .with_path(controller.path.clone())
-            .with_category(format!("derived.{}", member.name)));
+            .with_category(RULE_ID));
         }
     }
     Ok(())

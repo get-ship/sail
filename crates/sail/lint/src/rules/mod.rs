@@ -50,6 +50,7 @@ pub mod layout_primitive;
 pub mod no_ambient_network;
 pub mod no_ambient_timers;
 pub mod no_class;
+pub mod no_component_token;
 pub mod no_data_attr;
 pub mod no_free_aria;
 pub mod no_imperative_style;
@@ -161,6 +162,7 @@ pub const SUI_TEMPLATE_RULES: &[(&str, RuleFn)] = &[
     (no_sx::RULE_ID, no_sx::check),
     (no_variants::RULE_ID, no_variants::check),
     (no_class::RULE_ID, no_class::check),
+    (no_component_token::RULE_ID, no_component_token::check),
     (no_inline_style::RULE_ID, no_inline_style::check),
     (animate_token_only::RULE_ID, animate_token_only::check),
     // SPEC-DOMDEC-1: data-* ban on app .sail only (path-gated inside rule).

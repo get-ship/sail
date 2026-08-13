@@ -37,6 +37,8 @@ use crate::CompileMode;
 use crate::diagnostics::CompileError;
 use crate::ir::*;
 
+const RULE_ID: &str = "sail-synthesize";
+const RULE_MANIFEST: &str = "sail-app-manifest";
 /// One app-manifest entry: a free name → the real ESM import that provides
 /// it. `construct` distinguishes a value bound directly from the import
 /// (`import { x }`) from a handle constructed from an imported factory
@@ -79,8 +81,9 @@ impl AppManifest {
     /// checked-in manifest can document itself.
     pub fn parse(src: &str) -> Result<Self, CompileError> {
         let stripped = strip_line_comments(src);
-        serde_json::from_str(&stripped)
-            .map_err(|e| CompileError::new(format!("app manifest: {e}")).with_category("manifest"))
+        serde_json::from_str(&stripped).map_err(|e| {
+            CompileError::new(format!("app manifest: {e}")).with_category(RULE_MANIFEST)
+        })
     }
 }
 
@@ -214,7 +217,7 @@ pub(super) fn emit_controller(
              props flow in at mount, which the standalone synthetic controller \
              can't model. (Phase 2: a props-parameterized scope factory.)",
         )
-        .with_category("synthesize"));
+        .with_category(RULE_ID));
     }
 
     let mut w = Writer::new();

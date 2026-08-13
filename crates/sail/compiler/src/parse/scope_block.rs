@@ -37,6 +37,7 @@ use crate::ir::directive::{PropDecl, PropKind};
 
 use super::preprocess::{parse_object_fields, unquote};
 
+const RULE_ID: &str = "sail-scope-block";
 /// Everything a `<scope>` block contributes to the Program.
 #[derive(Debug)]
 pub(crate) struct ScopeBlock {
@@ -136,7 +137,8 @@ pub(crate) fn parse_scope_block_at(
                     return Err(CompileError::new(format!(
                         "Style `{name}` is declared twice in `<scope>`."
                     ))
-                    .with_span(span));
+                    .with_span(span)
+                    .with_category(RULE_ID));
                 }
                 out.style_env.insert(name, style);
                 i = end;
@@ -149,7 +151,8 @@ pub(crate) fn parse_scope_block_at(
                     return Err(CompileError::new(format!(
                         "Style `{name}` is declared twice in `<scope>`."
                     ))
-                    .with_span(span));
+                    .with_span(span)
+                    .with_category(RULE_ID));
                 }
                 out.style_env.insert(name, style);
                 i = end;
@@ -159,7 +162,8 @@ pub(crate) fn parse_scope_block_at(
                     "unexpected `{}` in `<scope>` — {ALLOWED_HINT}.",
                     char_at(body, i)
                 ))
-                .with_span(span));
+                .with_span(span)
+                .with_category(RULE_ID));
             }
             other => {
                 // Name the closest wrong turn we can recognize.
@@ -173,7 +177,8 @@ pub(crate) fn parse_scope_block_at(
                 return Err(CompileError::new(format!(
                     "`{other}` is not a `<scope>` member — {ALLOWED_HINT}.{hint}"
                 ))
-                .with_span(span));
+                .with_span(span)
+                .with_category(RULE_ID));
             }
         }
     }
@@ -204,11 +209,15 @@ fn parse_scope_import(
     // consume `import`
     let (word, after) = read_word(s, i);
     if word != "import" {
-        return Err(CompileError::new("expected `import`").with_span(span));
+        return Err(CompileError::new("expected `import`")
+            .with_span(span)
+            .with_category(RULE_ID));
     }
     i = skip_trivia(s, after, None);
     if i >= bytes.len() {
-        return Err(CompileError::new("incomplete `import` in `<scope>`").with_span(span));
+        return Err(CompileError::new("incomplete `import` in `<scope>`")
+            .with_span(span)
+            .with_category(RULE_ID));
     }
 
     // `import type …`
@@ -226,14 +235,17 @@ fn parse_scope_import(
              (`import { filled } from './peer.sail'`) only; runtime behavior \
              belongs in `<controller>`.",
         )
-        .with_span(span));
+        .with_span(span)
+        .with_category(RULE_ID));
     }
 
     // Default import: `import Foo from` / `import type Foo from`
     if bytes[i] != b'{' && bytes[i] != b'*' {
         let (name, after_name) = read_word(s, i);
         if name.is_empty() {
-            return Err(CompileError::new("malformed `import` in `<scope>`").with_span(span));
+            return Err(CompileError::new("malformed `import` in `<scope>`")
+                .with_span(span)
+                .with_category(RULE_ID));
         }
         i = skip_trivia(s, after_name, None);
         // `import type Foo from '…'` is type-only default — allow.
@@ -247,7 +259,8 @@ fn parse_scope_import(
              from '…'` for types, or `import { name } from './peer.sail'` for \
              Style values. Runtime defaults belong in `<controller>`.",
         )
-        .with_span(span));
+        .with_span(span)
+        .with_category(RULE_ID));
     }
 
     // Namespace: `import * as ns from`
@@ -256,12 +269,15 @@ fn parse_scope_import(
             "namespace `import * as` is not a `<scope>` member — import named \
              types or Style values only.",
         )
-        .with_span(span));
+        .with_span(span)
+        .with_category(RULE_ID));
     }
 
     // Named: `import { … } from '…'`
     if bytes[i] != b'{' {
-        return Err(CompileError::new("malformed `import` in `<scope>`").with_span(span));
+        return Err(CompileError::new("malformed `import` in `<scope>`")
+            .with_span(span)
+            .with_category(RULE_ID));
     }
     let brace_end = skip_balanced_brace(s, i)?;
     let inner = s[i + 1..brace_end].trim();
@@ -280,7 +296,8 @@ fn parse_scope_import(
             "mixed type/value `import` in `<scope>` — use `import type { … }` \
              for types, or a pure value import for Style consts; do not mix.",
         )
-        .with_span(span));
+        .with_span(span)
+        .with_category(RULE_ID));
     }
 
     // Value import → Style-value (channel) import only.
@@ -290,7 +307,8 @@ fn parse_scope_import(
              imports types and Style values only (relative `.sail` Style \
              consts). Runtime packages belong in `<controller>`."
         ))
-        .with_span(span));
+        .with_span(span)
+        .with_category(RULE_ID));
     }
     let names: Vec<String> = specs.into_iter().map(|sp| sp.local).collect();
     Ok((stmt, end, ScopeImportKind::StyleValue { names, module }))
@@ -326,7 +344,8 @@ fn parse_import_specifiers(inner: &str, span: Span) -> Result<Vec<ImportSpec>, C
         if local.is_empty() || !is_import_ident(local) {
             return Err(
                 CompileError::new(format!("bad import specifier `{p}` in `<scope>`"))
-                    .with_span(span),
+                    .with_span(span)
+                    .with_category(RULE_ID),
             );
         }
         out.push(ImportSpec {
@@ -335,7 +354,9 @@ fn parse_import_specifiers(inner: &str, span: Span) -> Result<Vec<ImportSpec>, C
         });
     }
     if out.is_empty() {
-        return Err(CompileError::new("empty `import { }` in `<scope>`").with_span(span));
+        return Err(CompileError::new("empty `import { }` in `<scope>`")
+            .with_span(span)
+            .with_category(RULE_ID));
     }
     Ok(out)
 }
@@ -354,12 +375,16 @@ fn consume_import_tail(s: &str, mut i: usize, span: Span) -> Result<usize, Compi
     i = skip_trivia(s, i, None);
     let (from_word, after_from) = read_word(s, i);
     if from_word != "from" {
-        return Err(CompileError::new("`import` in `<scope>` needs `from '…'`.").with_span(span));
+        return Err(CompileError::new("`import` in `<scope>` needs `from '…'`.")
+            .with_span(span)
+            .with_category(RULE_ID));
     }
     i = skip_trivia(s, after_from, None);
     if i >= bytes.len() || (bytes[i] != b'\'' && bytes[i] != b'"') {
         return Err(
-            CompileError::new("`import … from` needs a string module specifier.").with_span(span),
+            CompileError::new("`import … from` needs a string module specifier.")
+                .with_span(span)
+                .with_category(RULE_ID),
         );
     }
     let q = bytes[i];
@@ -372,7 +397,9 @@ fn consume_import_tail(s: &str, mut i: usize, span: Span) -> Result<usize, Compi
         i += 1;
     }
     if i >= bytes.len() {
-        return Err(CompileError::new("unclosed import module string").with_span(span));
+        return Err(CompileError::new("unclosed import module string")
+            .with_span(span)
+            .with_category(RULE_ID));
     }
     i += 1; // closing quote
     i = skip_trivia(s, i, None);
@@ -410,7 +437,7 @@ fn module_looks_like_package(module: &str) -> bool {
 fn skip_balanced_brace(s: &str, open: usize) -> Result<usize, CompileError> {
     let bytes = s.as_bytes();
     if bytes.get(open) != Some(&b'{') {
-        return Err(CompileError::new("expected `{`"));
+        return Err(CompileError::new("expected `{`").with_category(RULE_ID));
     }
     let mut i = open;
     let mut depth = 0i32;
@@ -438,7 +465,7 @@ fn skip_balanced_brace(s: &str, open: usize) -> Result<usize, CompileError> {
         }
         i += 1;
     }
-    Err(CompileError::new("unclosed `{` in import"))
+    Err(CompileError::new("unclosed `{` in import").with_category(RULE_ID))
 }
 
 fn merge_style_value_imports(
@@ -457,7 +484,8 @@ fn merge_style_value_imports(
             return Err(CompileError::new(format!(
                 "Style const `{name}` is declared twice in `<scope>` (import + local)."
             ))
-            .with_span(span));
+            .with_span(span)
+            .with_category(RULE_ID));
         }
         if let Some(ref peer) = peer_env {
             if let Some(style) = peer.get(name) {
@@ -468,7 +496,8 @@ fn merge_style_value_imports(
                 "Style-value import `{name}` not found in `{module}` — export a \
                  `const {name} = style.….` from that `.sail` scope."
             ))
-            .with_span(span));
+            .with_span(span)
+            .with_category(RULE_ID));
         }
         // Peer not on disk (unit tests, missing path): keep the name as a
         // known Style ref so the import is legal; paint is empty until resolved.
@@ -673,7 +702,9 @@ fn parse_named_style_binding(
                 }
             }
         };
-        return Err(CompileError::new(msg).with_span(span));
+        return Err(CompileError::new(msg)
+            .with_span(span)
+            .with_category(RULE_ID));
     }
     let mut j = skip_trivia(s, after_name, None);
     if j >= bytes.len() || bytes[j] != b'=' {
@@ -689,7 +720,8 @@ fn parse_named_style_binding(
                 StyleBindingKw::Style => "style",
             },
         ))
-        .with_span(span));
+        .with_span(span)
+        .with_category(RULE_ID));
     }
     if j + 1 < bytes.len() && bytes[j + 1] == b'>' {
         return Err(CompileError::new(format!(
@@ -700,7 +732,8 @@ fn parse_named_style_binding(
                 StyleBindingKw::Style => "style",
             },
         ))
-        .with_span(span));
+        .with_span(span)
+        .with_category(RULE_ID));
     }
     j = skip_trivia(s, j + 1, None);
     let start = j;
@@ -714,7 +747,8 @@ fn parse_named_style_binding(
                 StyleBindingKw::Style => "style",
             },
         ))
-        .with_span(span));
+        .with_span(span)
+        .with_category(RULE_ID));
     }
     if !looks_like_style_const_rhs(rhs) {
         return Err(CompileError::new(format!(
@@ -726,11 +760,14 @@ fn parse_named_style_binding(
                 StyleBindingKw::Style => "style",
             },
         ))
-        .with_span(span));
+        .with_span(span)
+        .with_category(RULE_ID));
     }
     let (style, diags) = sail_lint::style::parse_style_const_rhs(rhs);
     if let Some(msg) = style_const_diag_message(&diags) {
-        return Err(CompileError::new(format!("Style `{name}`: {msg}")).with_span(span));
+        return Err(CompileError::new(format!("Style `{name}`: {msg}"))
+            .with_span(span)
+            .with_category(RULE_ID));
     }
     let mut after = skip_trivia(s, end, None);
     if after < bytes.len() && bytes[after] == b';' {
@@ -893,7 +930,7 @@ fn consume_type_alias(s: &str, i: usize) -> Result<usize, CompileError> {
     if kw != "type" {
         return Err(CompileError::new(format!(
             "`export {kw}` is not a `<scope>` member — only `export type` is exportable here; {ALLOWED_HINT}."
-        )));
+        )).with_category(RULE_ID));
     }
     let bytes = s.as_bytes();
     let mut k = after_kw;
@@ -925,7 +962,8 @@ fn consume_type_alias(s: &str, i: usize) -> Result<usize, CompileError> {
     if !seen_eq {
         return Err(CompileError::new(
             "`type` declaration in `<scope>` has no `=` — write `type Name = …`.".to_string(),
-        ));
+        )
+        .with_category(RULE_ID));
     }
     Ok(bytes.len())
 }
@@ -943,14 +981,16 @@ fn expect_member_object(
         return Err(CompileError::new(format!(
             "`{member}` in `<scope>` is a member — write `{member}: {{ … }}`."
         ))
-        .with_span(span));
+        .with_span(span)
+        .with_category(RULE_ID));
     }
     i = skip_trivia(s, i + 1, None);
     if i >= bytes.len() || bytes[i] != b'{' {
         return Err(CompileError::new(format!(
             "`{member}:` expects an object body — write `{member}: {{ … }}`."
         ))
-        .with_span(span));
+        .with_span(span)
+        .with_category(RULE_ID));
     }
     let close = find_balanced(s, i)?;
     Ok((i, close))
@@ -969,14 +1009,15 @@ fn expect_member_array(
         return Err(CompileError::new(format!(
             "`{member}` in `<scope>` is a member — write `{member}: [ … ]`."
         ))
-        .with_span(span));
+        .with_span(span)
+        .with_category(RULE_ID));
     }
     i = skip_trivia(s, i + 1, None);
     if i >= bytes.len() || bytes[i] != b'[' {
         return Err(CompileError::new(format!(
             "`{member}:` expects an array body — write `{member}: [ {{ when: {{…}}, sx: '…' }}, … ]`."
         ))
-        .with_span(span));
+        .with_span(span).with_category(RULE_ID));
     }
     let close = find_balanced_bracket(s, i)?;
     Ok((i, close))
@@ -1006,7 +1047,7 @@ fn find_balanced_bracket(s: &str, open: usize) -> Result<usize, CompileError> {
         }
         i += 1;
     }
-    Err(CompileError::new("unclosed `[` in `<scope>` member."))
+    Err(CompileError::new("unclosed `[` in `<scope>` member.").with_category(RULE_ID))
 }
 
 // ── props fields ─────────────────────────────────────────────────────────────
@@ -1041,7 +1082,8 @@ fn parse_props_fields(body: &str, span: Span) -> Result<Vec<PropDecl>, CompileEr
                  or a union `name: 'a' | 'b' = 'a'`.",
                 char_at(body, i)
             ))
-            .with_span(span));
+            .with_span(span)
+            .with_category(RULE_ID));
         }
         i = skip_trivia(body, after, None);
 
@@ -1055,7 +1097,7 @@ fn parse_props_fields(body: &str, span: Span) -> Result<Vec<PropDecl>, CompileEr
                 return Err(CompileError::new(format!(
                     "prop `{name}` has `:` but no type — write `{name}: Type` or `{name} = literal`."
                 ))
-                .with_span(span));
+                .with_span(span).with_category(RULE_ID));
             }
             annotation = Some(text.to_string());
             i = end;
@@ -1072,7 +1114,8 @@ fn parse_props_fields(body: &str, span: Span) -> Result<Vec<PropDecl>, CompileEr
                 return Err(CompileError::new(format!(
                     "prop `{name}` has `=` but no value — give a literal default or drop the `=`."
                 ))
-                .with_span(span));
+                .with_span(span)
+                .with_category(RULE_ID));
             }
             // `<literal> as <Type>` — TypeScript's widening idiom for an empty
             // array/object literal whose type can't be inferred (`[] as
@@ -1084,7 +1127,8 @@ fn parse_props_fields(body: &str, span: Span) -> Result<Vec<PropDecl>, CompileEr
                     "prop `{name}` default `{text}` is not a literal — `<scope>` holds types and \
                      literal values only; computed values belong in `<controller>`."
                 ))
-                .with_span(span));
+                .with_span(span)
+                .with_category(RULE_ID));
             }
             if annotation.is_none()
                 && let Some(ty) = cast_ty
@@ -1135,7 +1179,8 @@ fn classify_field(
                         return Err(CompileError::new(format!(
                             "prop `{name}` default {v} is not a member of its union `{ann}`."
                         ))
-                        .with_span(span));
+                        .with_span(span)
+                        .with_category(RULE_ID));
                     }
                     Some(d)
                 }
@@ -1176,7 +1221,8 @@ fn classify_field(
             "prop `{name}` declares neither a type nor a default — write \
              `{name}: Type`, `{name} = literal`, or `{name}: Type = literal`."
         ))
-        .with_span(span));
+        .with_span(span)
+        .with_category(RULE_ID));
     };
     // Shared stdlib tone/size convention: a bare vocabulary default types as
     // the full shared union (ordinary reflected props / CVA axes).
@@ -1193,7 +1239,8 @@ fn classify_field(
                  `{vocab}` (got {v}). For a custom union, annotate it: \
                  `{name}: 'a' | 'b' = 'a'`."
             ))
-            .with_span(span));
+            .with_span(span)
+            .with_category(RULE_ID));
         }
         let members = vocab.split('|').map(str::to_string).collect();
         return Ok(decl(PropKind::Union(members), Some(d), true));
@@ -1213,7 +1260,8 @@ fn classify_field(
         "prop `{name}` has an object/array default but no type — annotate it: \
          `{name}: T = {v}`."
     ))
-    .with_span(span))
+    .with_span(span)
+    .with_category(RULE_ID))
 }
 
 /// `'a' | 'b' | 'c'` → the members; anything else → None.
@@ -1562,7 +1610,7 @@ fn find_balanced(s: &str, open: usize) -> Result<usize, CompileError> {
         }
         i += 1;
     }
-    Err(CompileError::new("unclosed `{` in `<scope>`.".to_string()))
+    Err(CompileError::new("unclosed `{` in `<scope>`.".to_string()).with_category(RULE_ID))
 }
 
 #[cfg(test)]

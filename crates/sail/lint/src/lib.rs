@@ -27,14 +27,15 @@ pub mod style {
     pub use sail_style::{
         CONDITION_PREFIXES, Channel, CssRule, OBJECT_KEYS, PaintArg, PaintOp, Style,
         StyleCompleteContext, StyleCompleteItem, StyleCompleteKind, StyleDiagnostic, StyleEnv,
-        TEXT_BEARING_ELEMENTS, channel_for_setter, clash, collect_motion_attaches,
-        collect_motion_attaches_env, collect_style_const_names, color_paint_vocabulary,
-        condition_media, conditions, emit, emit_style, ir, is_geometry_setter,
-        is_interaction_when_key, is_text_bearing, looks_like_utility_string_product, lower_style,
+        TEXT_BEARING_ELEMENTS, all_surface_packs, channel_for_setter, clash,
+        collect_motion_attaches, collect_motion_attaches_env, collect_style_const_names,
+        color_paint_vocabulary, condition_media, conditions, emit, emit_style, ir,
+        is_geometry_setter, is_interaction_when_key, is_text_bearing, is_theme_owned_author_root,
+        is_theme_owned_token_name, looks_like_utility_string_product, lower_style,
         lower_style_source, lower_style_source_with_motion, parse, parse_style_const_rhs, prefixes,
         setters, style_complete_at, style_complete_context_at, style_complete_for_context,
         style_contains_geometry, style_uses_text_channel, style_uses_text_channel_env,
-        surface_pack_for_host, text_channel_host_error, token_groups, when_keys,
+        surface_pack_for_host, surface_slots, text_channel_host_error, token_groups, when_keys,
         with_bound_group_props, with_host_surface,
     };
 }
@@ -62,7 +63,11 @@ pub const RETIRED_RULE_IDS: &[&str] = &[
 /// Layout-pass finding kinds mapped to stable `sail-*` rule ids
 /// (SPEC-LAYOUT-DIAG-1 / S4.1). Emitted by the compiler layout bridge, not
 /// by template lint modules — still registered for the diagnostic ratchet.
-pub const LAYOUT_DIAG_RULE_IDS: &[&str] = &["sail-clipped-text", "sail-unintended-overflow"];
+pub const LAYOUT_DIAG_RULE_IDS: &[&str] = &[
+    "sail-clipped-text",
+    "sail-sub-min-tap-target",
+    "sail-unintended-overflow",
+];
 
 /// All rule IDs defined by this crate (live rules + layout diag ids + retired forever-ids).
 pub fn all_rule_ids() -> Vec<&'static str> {

@@ -292,7 +292,8 @@ pub fn hover_with_session(
     }
     let h = sail_compiler::hover_at(source, path, line_1based as usize, col_1based as usize)?;
     // SPEC-PARTIAL-1: partial hover carries preformatted markdown in `source`.
-    if h.kind == "partial" {
+    // THEMES-2 §3: theme-token hover is already formatted markdown.
+    if h.kind == "partial" || h.kind == "theme-token" {
         return Some(HoverPayload {
             contents: h.source,
             range: None,
@@ -325,15 +326,16 @@ pub fn complete_with_session(
     // Infer L1 host from path stem when it matches a known surface pack
     // (stdlib `chip.sail` → host `chip`); app paths yield None.
     let host = infer_style_host(path);
-    let style_items =
-        sail_lint::style::style_complete_at(source, path, offset, host.as_deref());
+    let style_items = sail_lint::style::style_complete_at(source, path, offset, host.as_deref());
     if !style_items.is_empty() {
         return style_items
             .into_iter()
             .map(|it| CompletionItemPayload {
                 label: it.label,
                 kind: Some(it.kind.as_str().to_string()),
-                detail: it.detail.or_else(|| Some(format!("{} (style)", it.kind.as_str()))),
+                detail: it
+                    .detail
+                    .or_else(|| Some(format!("{} (style)", it.kind.as_str()))),
                 insert_text: it.insert_text,
                 documentation: None,
             })
@@ -344,6 +346,24 @@ pub fn complete_with_session(
         // Classified Style position with empty set — do not fall through to
         // weak tsgo / scope noise.
         return Vec::new();
+    }
+    // THEMES-2 §3: theme= / override vocabulary from the same registry MCP uses.
+    let theme_items = sail_compiler::theme_complete_at(source, offset, host.as_deref());
+    if !theme_items.is_empty() {
+        return theme_items
+            .into_iter()
+            .map(|it| CompletionItemPayload {
+                label: it.name,
+                kind: Some(match it.kind {
+                    sail_compiler::ThemeTokenKind::ThemeId => "enumMember".into(),
+                    sail_compiler::ThemeTokenKind::SemanticSlot => "color".into(),
+                    sail_compiler::ThemeTokenKind::ComponentToken => "field".into(),
+                }),
+                detail: it.detail,
+                insert_text: None,
+                documentation: it.storage_path,
+            })
+            .collect();
     }
     if tsgo.is_live() {
         if let Some(raw) = tsgo.completion_mapped(uri_key, source, offset) {
@@ -703,7 +723,9 @@ export default controller(() => ({ primary: signal(0) }))
         let (line0, col0) = offset_to_lsp_position(src, offset);
         let items = intel.complete_sail(src, None, line0 + 1, col0 + 1);
         assert!(
-            items.iter().any(|i| i.label == "primary" && i.kind.as_deref() == Some("token")),
+            items
+                .iter()
+                .any(|i| i.label == "primary" && i.kind.as_deref() == Some("token")),
             "Style token primary must win: {:?}",
             items
         );

@@ -18,7 +18,7 @@
 //! Implementer: do not weaken these assertions to green-wash a partial land.
 //! Adversarial "must not fire" cases are part of the promotion law.
 
-use sail_layout::{check_preprocessed, check_preprocessed_with, CheckOptions, Diagnostic};
+use sail_layout::{CheckOptions, Diagnostic, check_preprocessed, check_preprocessed_with};
 
 const VP: (f32, f32) = (400.0, 300.0);
 
@@ -592,5 +592,141 @@ fn unintended_overflow_fires_when_tablet_at_desktop_viewport() {
         has_kind(&desktop.diagnostics, KIND_UNINTENDED_OVERFLOW),
         "<when {{tablet}}> at 1440 is on-screen; no-opt-in overflow must stay red: {:?}",
         desktop.diagnostics
+    );
+}
+
+const KIND_TAP: &str = "sub-min-tap-target";
+
+const TAP_AT_FLOOR: &str = r#"<button style:w="24px" style:h="24px">ok</button>"#;
+const TAP_UNDER_WIDTH: &str = r#"<button style:w="23px" style:h="40px">x</button>"#;
+const TAP_UNDER_HEIGHT: &str = r#"<button style:w="40px" style:h="23px">x</button>"#;
+const TAP_TEXT_ONLY: &str = r#"<div style:w="16px" style:h="16px">not a control</div>"#;
+
+#[test]
+fn tap_target_at_floor_does_not_fire() {
+    let result = check_preprocessed_with(TAP_AT_FLOOR, VP, experimental()).expect("layout");
+    assert!(
+        !has_kind(&result.diagnostics, KIND_TAP),
+        "24px floor must not fire: {:?}",
+        result.diagnostics
+    );
+}
+
+#[test]
+fn tap_target_under_floor_fires() {
+    for (label, src) in [("width", TAP_UNDER_WIDTH), ("height", TAP_UNDER_HEIGHT)] {
+        let result = check_preprocessed_with(src, VP, experimental()).expect("layout");
+        assert!(
+            has_kind(&result.diagnostics, KIND_TAP),
+            "{label} under 24px must fire: {:?}",
+            result.diagnostics
+        );
+    }
+}
+
+#[test]
+fn tap_target_ignores_non_interactive() {
+    let result = check_preprocessed_with(TAP_TEXT_ONLY, VP, experimental()).expect("layout");
+    assert!(
+        !has_kind(&result.diagnostics, KIND_TAP),
+        "plain text box is not a tap target: {:?}",
+        result.diagnostics
+    );
+}
+
+#[test]
+fn tap_target_experimental_off() {
+    let result = check_preprocessed(TAP_UNDER_WIDTH, VP).expect("layout");
+    assert!(
+        !has_kind(&result.diagnostics, KIND_TAP),
+        "tap target stays experimental: {:?}",
+        result.diagnostics
+    );
+}
+
+const TAP_ROLE_BUTTON_UNDER: &str = r#"<div role="button" style:w="23px" style:h="40px">x</div>"#;
+const TAP_ON_CLICK_UNDER: &str = r#"<div on:click="{go}" style:w="40px" style:h="23px">x</div>"#;
+const TAP_HREF_UNDER: &str = r##"<a href="#" style:w="23px" style:h="40px">x</a>"##;
+const TAP_LABEL_UNDER: &str = r#"<label style:w="23px" style:h="40px">x</label>"#;
+const TAP_UNDER_BESIDE_FLOOR: &str = r#"
+<div class="sail-row">
+  <button style:w="24px" style:h="24px">ok</button>
+  <button style:w="23px" style:h="40px">x</button>
+</div>
+"#;
+
+#[test]
+fn tap_target_role_on_handler_href_and_label_under_floor_stay_red() {
+    for (label, src) in [
+        ("role=button", TAP_ROLE_BUTTON_UNDER),
+        ("on:click", TAP_ON_CLICK_UNDER),
+        ("a[href]", TAP_HREF_UNDER),
+        ("label", TAP_LABEL_UNDER),
+    ] {
+        let result = check_preprocessed_with(src, VP, experimental()).expect("layout");
+        assert!(
+            has_kind(&result.diagnostics, KIND_TAP),
+            "{label} under 24px must stay red: {:?}",
+            result.diagnostics
+        );
+    }
+}
+
+#[test]
+fn tap_target_floor_sibling_does_not_exempt_under_floor_neighbor() {
+    let result =
+        check_preprocessed_with(TAP_UNDER_BESIDE_FLOOR, VP, experimental()).expect("layout");
+    assert!(
+        has_kind(&result.diagnostics, KIND_TAP),
+        "a 24px sibling must not swallow a 23px neighbor: {:?}",
+        result.diagnostics
+    );
+}
+
+const TAP_UNDER_INSIDE_CUSTOM_HOST: &str = r#"
+<studio-list-row>
+  <button style:w="23px" style:h="40px">x</button>
+</studio-list-row>
+"#;
+
+const TAP_UNKNOWN_HOST_UNDER: &str =
+    r#"<studio-list-row role="button" style:w="23px" style:h="40px">x</studio-list-row>"#;
+
+const TAP_KNOWN_HOST_UNKNOWN_CHILD: &str = r#"
+<button style:w="23px" style:h="40px">
+  <sail-code-editor></sail-code-editor>
+</button>
+"#;
+
+#[test]
+fn tap_target_unknown_host_does_not_swallow_known_under_floor_child() {
+    let result =
+        check_preprocessed_with(TAP_UNDER_INSIDE_CUSTOM_HOST, VP, experimental()).expect("layout");
+    assert!(
+        has_kind(&result.diagnostics, KIND_TAP),
+        "unknown custom host must not hide a measurable 23px button: {:?}",
+        result.diagnostics
+    );
+}
+
+#[test]
+fn tap_target_unknown_interactive_host_under_floor_stays_quiet() {
+    let result =
+        check_preprocessed_with(TAP_UNKNOWN_HOST_UNDER, VP, experimental()).expect("layout");
+    assert!(
+        !has_kind(&result.diagnostics, KIND_TAP),
+        "hyphenated host box is a measurement lie — must stay quiet: {:?}",
+        result.diagnostics
+    );
+}
+
+#[test]
+fn tap_target_known_host_with_unknown_child_stays_red() {
+    let result =
+        check_preprocessed_with(TAP_KNOWN_HOST_UNKNOWN_CHILD, VP, experimental()).expect("layout");
+    assert!(
+        has_kind(&result.diagnostics, KIND_TAP),
+        "known 23px button must stay red even when a descendant is unknown: {:?}",
+        result.diagnostics
     );
 }

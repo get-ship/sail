@@ -14,7 +14,8 @@
   style heroInner = { box: position(relative).w(full).maxW(breakpoint-desktop).mx(auto).minW(0) }
   style eyebrow = { paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
   style display = { box: minW(0).maxW(full).overflow(hidden), paint: fg(foreground), text: fontSize(display).fontFamily(display).fontWeight(bold).tracking(tighter).leading(none).textAlign(center) }
-  style line = { box: display(block).minW(0).overflow(hidden) }
+  style line = { box: display(block).minW(0).w(full) }
+  style wordLine = { box: display(block).minW(0).w(full).overflow(hidden), text: truncate() }
   style lead = { box: maxW(breakpoint-mobile).minW(0), paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed).textAlign(center) }
   style ctaRow = { box: w(full).minW(0) }
   style cta = { box: padX(8), paint: radius(full) }
@@ -37,7 +38,7 @@
   style metric = { paint: fg(foreground), text: fontFamily(mono).fontSize(2xl).fontWeight(semibold).nums(tabular).leading(none) }
   style metricUnit = { paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) }
   style swatch = { box: w(6).h(6), paint: radius(sm).borderWidth(1).border(border) }
-  style statusLine = { paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) }
+  style statusLine = { box: minW(0), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).truncate() }
   style term = { box: padX(3).padY(2_5), paint: bg(surface-0).borderWidth(1).border(border).radius(md).fg(muted-foreground), text: fontFamily(mono).fontSize(xs) }
   style termAccent = { paint: fg(primary) }
   style foot = { box: padX(4).padT(8), when: { tablet: { box: padX(8).padT(12) } } }
@@ -208,7 +209,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       <p style(eyebrow)>SHIP UI · 0.2.0</p>
 
       <h1 style(display)>
-        <span style(line)>
+        <span style(wordLine)>
           <for {word() as w} key={w}>
             <b style(wordPrimary)>{w}</b>
           </for>

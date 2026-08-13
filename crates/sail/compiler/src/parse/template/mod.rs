@@ -12,6 +12,7 @@ use crate::diagnostics::CompileError;
 use crate::ir::*;
 use crate::parse::{expr, html, html::Node};
 
+const RULE_ID: &str = "sail-template-parse";
 mod attrs;
 mod blocks;
 mod control_elements;
@@ -97,7 +98,8 @@ pub(crate) fn parse_tokens(
             | TokenKind::CloseWhen => {
                 return Err(
                     CompileError::new(format!("unexpected token: {}", tok.kind.label()))
-                        .with_span(tok.span),
+                        .with_span(tok.span)
+                        .with_category(RULE_ID),
                 );
             }
         }

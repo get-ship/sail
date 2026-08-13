@@ -19,6 +19,7 @@ use crate::diagnostics::CompileError;
 use crate::ir::{AttrInstr, Instr, Program};
 use crate::parse::expr::{AstKind, parse_expression_with_arrows};
 
+const RULE_ID: &str = "sail-on-callable";
 pub fn check(program: &Program, controller: Option<&ParsedController>) -> Result<(), CompileError> {
     let table = SymbolTable::build(program, controller);
     let ctx_head = controller.map(|c| c.ctx_param.as_str()).unwrap_or("");
@@ -87,7 +88,7 @@ fn validate(
             "on:{event}={{…}} cannot be a call expression — that fires the action at render time, not on the event. Use `on:{event}={{scope.handlerName}}` (no parens) or wrap in an arrow `(e) => scope.handlerName()`."
         ))
         .with_span(handler.span)
-        .with_category(format!("on:{event}"))),
+        .with_category(RULE_ID)),
         AstKind::Ident(name) => {
             if is_callable_name(name, table) {
                 Ok(())
@@ -97,7 +98,7 @@ fn validate(
                     "on:{event}={{{name}}} expects a callable handler — `{name}` is {kind_label}. Declare it as an `on:` action, a scope action `{name}: (e) => ...`, or wrap inline `(e) => ...`."
                 ))
                 .with_span(handler.span)
-                .with_category(format!("on:{event}")))
+                .with_category(RULE_ID))
             }
         }
         AstKind::Member { obj, prop, .. } => {
@@ -114,7 +115,7 @@ fn validate(
                         k.label()
                     ))
                     .with_span(handler.span)
-                    .with_category(format!("on:{event}"))),
+                    .with_category(RULE_ID)),
                     None => Ok(()),
                 }
             } else {

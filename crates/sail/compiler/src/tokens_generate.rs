@@ -215,7 +215,6 @@ struct LayerMeta {
     media: Option<String>,
     layer: String,
     theme_id: Option<String>,
-    #[allow(dead_code)]
     dark: bool,
     /// Mode name when this layer is a modes-in-file emit (Phase D). `None` =
     /// legacy single-block theme (twin light/dark ids).
@@ -1578,7 +1577,7 @@ fn load_theme_layers_from_dir(
         let fallback = file.trim_end_matches(".json");
         let label = format!("{label_prefix}/{file}");
 
-        // THEMES-1 schema lock — unknown envelope keys refuse with valid list.
+        // Envelope first so modes-in-file / twin-id errors stay specific.
         validate_theme_doc_schema(&doc, &label)?;
 
         // Modes-in-file only — one theme id, mode blocks under `modes`.
@@ -1707,6 +1706,11 @@ fn load_theme_layers_from_dir(
                 );
             }
         }
+        // Paint gate after envelope / twin-id / mode-set (slots, aliases, contrast).
+        crate::theme_gate::validate_theme_gate(&doc, &label)?;
+
+        let multi_mode = mode_names.len() >= 2;
+
         // Stable mode order: light, dark, then remaining alpha.
         mode_names.sort_by(|a, b| {
             let rank = |m: &str| match m {
@@ -1733,24 +1737,34 @@ fn load_theme_layers_from_dir(
             meta.layer = "theme".into();
             // Selector family (hard cutover — theme attr only):
             //   • `:root[theme=…]` — app product theme on documentElement
-            //   • `[theme=…]` — scoped hosts (Studio cards, draft cold path,
-            //     picker specimens, nested previews)
-            // Mode is a cascade bit via `data-mode` (light|dark). No data-theme
-            // / data-theme-preview dual-emit.
-            // Default mode also matches bare `theme` (no data-mode) so cold
-            // loads without applyTheme still paint the default mode.
+            //   • `[theme=…]` — scoped hosts
+            // Nested hosts without data-mode inherit document mode via
+            // `:root[data-mode=X] [theme=id]:not([data-mode])` — no JS.
+            // Do not emit a global `[theme=id]:not([data-mode])` on the
+            // default-mode block (that pinned nested hosts to default).
             let is_default = default_mode.as_deref() == Some(mode_name.as_str());
-            meta.selector = if is_default {
+            meta.selector = if is_default && !multi_mode {
+                // Only mode: a nested host without data-mode always gets these tokens
+                // (paper island inside a dark document).
                 format!(
                     ":root[theme='{id}'][data-mode='{mode_name}'],\n\
                      :root[theme='{id}']:not([data-mode]),\n\
                      [theme='{id}'][data-mode='{mode_name}'],\n\
                      [theme='{id}']:not([data-mode])"
                 )
+            } else if is_default {
+                format!(
+                    ":root[theme='{id}'][data-mode='{mode_name}'],\n\
+                     :root[theme='{id}']:not([data-mode]),\n\
+                     [theme='{id}'][data-mode='{mode_name}'],\n\
+                     :root[data-mode='{mode_name}'] [theme='{id}']:not([data-mode]),\n\
+                     :root:not([data-mode]) [theme='{id}']:not([data-mode])"
+                )
             } else {
                 format!(
                     ":root[theme='{id}'][data-mode='{mode_name}'],\n\
-                     [theme='{id}'][data-mode='{mode_name}']"
+                     [theme='{id}'][data-mode='{mode_name}'],\n\
+                     :root[data-mode='{mode_name}'] [theme='{id}']:not([data-mode])"
                 )
             };
             let raw = flatten_tokens(&mode_doc, &[], None);
@@ -2717,11 +2731,19 @@ fn products_registry_meta(axis: &ProductsAxis) -> Value {
     Value::Object(out)
 }
 
-fn emit_block(selector: &str, tokens: &[Token], indent: &str) -> String {
+fn emit_block(
+    selector: &str,
+    tokens: &[Token],
+    indent: &str,
+    color_scheme: Option<&str>,
+) -> String {
     if tokens.is_empty() {
         return String::new();
     }
     let mut lines = vec![format!("{selector} {{")];
+    if let Some(scheme) = color_scheme {
+        lines.push(format!("{indent}color-scheme: {scheme};"));
+    }
     for t in tokens {
         lines.push(format!("{indent}--{}: {};", t.css_name, t.css_value));
     }
@@ -2825,7 +2847,12 @@ fn emit_layer(layer: &Layer) -> String {
     if !layer.meta.description.is_empty() {
         parts.push(format!("/* {} */", layer.meta.description));
     }
-    let block = emit_block(&layer.meta.selector, &layer.tokens, "  ");
+    let color_scheme = if layer.meta.theme_id.is_some() {
+        Some(if layer.meta.dark { "dark" } else { "light" })
+    } else {
+        None
+    };
+    let block = emit_block(&layer.meta.selector, &layer.tokens, "  ", color_scheme);
     if let Some(media) = &layer.meta.media {
         parts.push(format!("@media {media} {{"));
         let indented: String = block
@@ -3469,9 +3496,18 @@ mod tests {
     "light": {
       "color": {
         "primary": {
-          "$value": "oklch(0.4 0.05 75)",
-          "$type": "color",
-          "$extensions": { "sail": { "cssName": "primary" } }
+          "default": { "$value": "oklch(0.4 0.05 75)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
+        },
+        "background": { "$value": "oklch(0.98 0 0)", "$type": "color" },
+        "foreground": { "$value": "oklch(0.20 0 0)", "$type": "color" },
+        "muted": {
+          "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
+        },
+        "brandAccent": {
+          "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
         }
       }
     },
@@ -3479,9 +3515,18 @@ mod tests {
       "$extensions": { "sail": { "dark": true } },
       "color": {
         "primary": {
-          "$value": "oklch(0.7 0.08 75)",
-          "$type": "color",
-          "$extensions": { "sail": { "cssName": "primary" } }
+          "default": { "$value": "oklch(0.7 0.08 75)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.18 0 0)", "$type": "color" }
+        },
+        "background": { "$value": "oklch(0.98 0 0)", "$type": "color" },
+        "foreground": { "$value": "oklch(0.20 0 0)", "$type": "color" },
+        "muted": {
+          "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
+        },
+        "brandAccent": {
+          "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
         }
       }
     }
@@ -3691,6 +3736,22 @@ mod tests {
   },
   "modes": {
     "light": {
+      "color": {
+        "background": { "$value": "oklch(0.98 0 0)", "$type": "color" },
+        "foreground": { "$value": "oklch(0.20 0 0)", "$type": "color" },
+        "primary": {
+          "default": { "$value": "oklch(0.45 0.12 250)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
+        },
+        "muted": {
+          "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
+        },
+        "brandAccent": {
+          "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
+        }
+      },
       "component": {
         "card": {
           "bg": {
@@ -3703,6 +3764,22 @@ mod tests {
     },
     "dark": {
       "$extensions": { "sail": { "dark": true } },
+      "color": {
+        "background": { "$value": "oklch(0.98 0 0)", "$type": "color" },
+        "foreground": { "$value": "oklch(0.20 0 0)", "$type": "color" },
+        "primary": {
+          "default": { "$value": "oklch(0.45 0.12 250)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
+        },
+        "muted": {
+          "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
+        },
+        "brandAccent": {
+          "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
+        }
+      },
       "component": {
         "card": {
           "bg": {
@@ -3902,12 +3979,21 @@ mod tests {
             r#"{
   "$extensions": { "sail": { "selector": ":root", "layer": "base" } },
   "color": {
-    "primary": {
-      "$value": "oklch(0.5 0.1 250)",
-      "$type": "color",
-      "$extensions": { "sail": { "cssName": "primary" } }
-    }
-  }
+        "primary": {
+          "default": { "$value": "oklch(0.5 0.1 250)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
+        },
+        "background": { "$value": "oklch(0.98 0 0)", "$type": "color" },
+        "foreground": { "$value": "oklch(0.20 0 0)", "$type": "color" },
+        "muted": {
+          "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
+        },
+        "brandAccent": {
+          "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
+        }
+      }
 }
 "#,
         );
@@ -3915,7 +4001,37 @@ mod tests {
             &model.join("themes/paper.json"),
             r#"{
   "$extensions": { "sail": { "layer": "theme", "themeId": "paper", "defaultMode": "light" } },
-  "modes": { "light": { "color": { "primary": { "$value": "oklch(0.4 0.05 75)", "$type": "color", "$extensions": { "sail": { "cssName": "primary" } } } } }, "dark": { "$extensions": { "sail": { "dark": true } }, "color": { "primary": { "$value": "oklch(0.7 0.1 75)", "$type": "color", "$extensions": { "sail": { "cssName": "primary" } } } } } }
+  "modes": { "light": { "color": {
+        "primary": {
+          "default": { "$value": "oklch(0.4 0.05 75)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
+        },
+        "background": { "$value": "oklch(0.98 0 0)", "$type": "color" },
+        "foreground": { "$value": "oklch(0.20 0 0)", "$type": "color" },
+        "muted": {
+          "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
+        },
+        "brandAccent": {
+          "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
+        }
+      } }, "dark": { "$extensions": { "sail": { "dark": true } }, "color": {
+        "primary": {
+          "default": { "$value": "oklch(0.7 0.1 75)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.18 0 0)", "$type": "color" }
+        },
+        "background": { "$value": "oklch(0.98 0 0)", "$type": "color" },
+        "foreground": { "$value": "oklch(0.20 0 0)", "$type": "color" },
+        "muted": {
+          "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
+        },
+        "brandAccent": {
+          "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
+        }
+      } } }
 }
 "#,
         );
@@ -3923,7 +4039,37 @@ mod tests {
             &project.join("tokens/themes/custom.json"),
             r#"{
   "$extensions": { "sail": { "layer": "theme", "themeId": "custom", "defaultMode": "light" } },
-  "modes": { "light": { "color": { "primary": { "$value": "oklch(0.55 0.2 140)", "$type": "color", "$extensions": { "sail": { "cssName": "primary" } } } } }, "dark": { "$extensions": { "sail": { "dark": true } }, "color": { "primary": { "$value": "oklch(0.6 0.15 140)", "$type": "color", "$extensions": { "sail": { "cssName": "primary" } } } } } }
+  "modes": { "light": { "color": {
+        "primary": {
+          "default": { "$value": "oklch(0.45 0.2 140)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
+        },
+        "background": { "$value": "oklch(0.98 0 0)", "$type": "color" },
+        "foreground": { "$value": "oklch(0.20 0 0)", "$type": "color" },
+        "muted": {
+          "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
+        },
+        "brandAccent": {
+          "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
+        }
+      } }, "dark": { "$extensions": { "sail": { "dark": true } }, "color": {
+        "primary": {
+          "default": { "$value": "oklch(0.6 0.15 140)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.18 0 0)", "$type": "color" }
+        },
+        "background": { "$value": "oklch(0.98 0 0)", "$type": "color" },
+        "foreground": { "$value": "oklch(0.20 0 0)", "$type": "color" },
+        "muted": {
+          "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
+        },
+        "brandAccent": {
+          "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
+        }
+      } } }
 }
 "#,
         );
@@ -3961,7 +4107,37 @@ mod tests {
             &model.join("themes/ship.json"),
             r#"{
   "$extensions": { "sail": { "layer": "theme", "themeId": "ship", "defaultMode": "light" } },
-  "modes": { "light": { "color": { "primary": { "$value": "oklch(0.5 0.1 250)", "$type": "color", "$extensions": { "sail": { "cssName": "primary" } } } } }, "dark": { "$extensions": { "sail": { "dark": true } }, "color": { "primary": { "$value": "oklch(0.3 0.05 250)", "$type": "color", "$extensions": { "sail": { "cssName": "primary" } } } } } }
+  "modes": { "light": { "color": {
+        "primary": {
+          "default": { "$value": "oklch(0.5 0.1 250)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
+        },
+        "background": { "$value": "oklch(0.98 0 0)", "$type": "color" },
+        "foreground": { "$value": "oklch(0.20 0 0)", "$type": "color" },
+        "muted": {
+          "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
+        },
+        "brandAccent": {
+          "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
+        }
+      } }, "dark": { "$extensions": { "sail": { "dark": true } }, "color": {
+        "primary": {
+          "default": { "$value": "oklch(0.3 0.05 250)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
+        },
+        "background": { "$value": "oklch(0.98 0 0)", "$type": "color" },
+        "foreground": { "$value": "oklch(0.20 0 0)", "$type": "color" },
+        "muted": {
+          "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
+        },
+        "brandAccent": {
+          "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
+        }
+      } } }
 }
 "#,
         );
@@ -4007,12 +4183,21 @@ mod tests {
             r#"{
   "$extensions": { "sail": { "selector": ":root", "layer": "base" } },
   "color": {
-    "primary": {
-      "$value": "oklch(0.5 0.1 250)",
-      "$type": "color",
-      "$extensions": { "sail": { "cssName": "primary" } }
-    }
-  }
+        "primary": {
+          "default": { "$value": "oklch(0.5 0.1 250)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
+        },
+        "background": { "$value": "oklch(0.98 0 0)", "$type": "color" },
+        "foreground": { "$value": "oklch(0.20 0 0)", "$type": "color" },
+        "muted": {
+          "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
+        },
+        "brandAccent": {
+          "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
+        }
+      }
 }
 "#,
         );
@@ -4030,9 +4215,18 @@ mod tests {
     "light": {
       "color": {
         "primary": {
-          "$value": "oklch(0.4 0.05 75)",
-          "$type": "color",
-          "$extensions": { "sail": { "cssName": "primary" } }
+          "default": { "$value": "oklch(0.4 0.05 75)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
+        },
+        "background": { "$value": "oklch(0.98 0 0)", "$type": "color" },
+        "foreground": { "$value": "oklch(0.20 0 0)", "$type": "color" },
+        "muted": {
+          "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
+        },
+        "brandAccent": {
+          "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
         }
       }
     },
@@ -4040,9 +4234,18 @@ mod tests {
       "$extensions": { "sail": { "dark": true } },
       "color": {
         "primary": {
-          "$value": "oklch(0.4 0.05 75)",
-          "$type": "color",
-          "$extensions": { "sail": { "cssName": "primary" } }
+          "default": { "$value": "oklch(0.4 0.05 75)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
+        },
+        "background": { "$value": "oklch(0.98 0 0)", "$type": "color" },
+        "foreground": { "$value": "oklch(0.20 0 0)", "$type": "color" },
+        "muted": {
+          "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
+        },
+        "brandAccent": {
+          "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
         }
       }
     }
@@ -4064,9 +4267,18 @@ mod tests {
     "light": {
       "color": {
         "primary": {
-          "$value": "oklch(0.8 0.05 200)",
-          "$type": "color",
-          "$extensions": { "sail": { "cssName": "primary" } }
+          "default": { "$value": "oklch(0.8 0.05 200)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.18 0 0)", "$type": "color" }
+        },
+        "background": { "$value": "oklch(0.98 0 0)", "$type": "color" },
+        "foreground": { "$value": "oklch(0.20 0 0)", "$type": "color" },
+        "muted": {
+          "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
+        },
+        "brandAccent": {
+          "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
         }
       }
     },
@@ -4074,9 +4286,18 @@ mod tests {
       "$extensions": { "sail": { "dark": true } },
       "color": {
         "primary": {
-          "$value": "oklch(0.8 0.05 200)",
-          "$type": "color",
-          "$extensions": { "sail": { "cssName": "primary" } }
+          "default": { "$value": "oklch(0.8 0.05 200)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.18 0 0)", "$type": "color" }
+        },
+        "background": { "$value": "oklch(0.98 0 0)", "$type": "color" },
+        "foreground": { "$value": "oklch(0.20 0 0)", "$type": "color" },
+        "muted": {
+          "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
+        },
+        "brandAccent": {
+          "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
         }
       }
     }
@@ -4099,9 +4320,18 @@ mod tests {
     "light": {
       "color": {
         "primary": {
-          "$value": "oklch(0.12 0.34 99)",
-          "$type": "color",
-          "$extensions": { "sail": { "cssName": "primary" } }
+          "default": { "$value": "oklch(0.12 0.34 99)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
+        },
+        "background": { "$value": "oklch(0.98 0 0)", "$type": "color" },
+        "foreground": { "$value": "oklch(0.20 0 0)", "$type": "color" },
+        "muted": {
+          "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
+        },
+        "brandAccent": {
+          "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
         }
       }
     },
@@ -4109,9 +4339,18 @@ mod tests {
       "$extensions": { "sail": { "dark": true } },
       "color": {
         "primary": {
-          "$value": "oklch(0.12 0.34 99)",
-          "$type": "color",
-          "$extensions": { "sail": { "cssName": "primary" } }
+          "default": { "$value": "oklch(0.12 0.34 99)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
+        },
+        "background": { "$value": "oklch(0.98 0 0)", "$type": "color" },
+        "foreground": { "$value": "oklch(0.20 0 0)", "$type": "color" },
+        "muted": {
+          "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
+        },
+        "brandAccent": {
+          "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
         }
       }
     }
@@ -4133,9 +4372,18 @@ mod tests {
     "light": {
       "color": {
         "primary": {
-          "$value": "oklch(0.55 0.2 140)",
-          "$type": "color",
-          "$extensions": { "sail": { "cssName": "primary" } }
+          "default": { "$value": "oklch(0.45 0.2 140)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
+        },
+        "background": { "$value": "oklch(0.98 0 0)", "$type": "color" },
+        "foreground": { "$value": "oklch(0.20 0 0)", "$type": "color" },
+        "muted": {
+          "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
+        },
+        "brandAccent": {
+          "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
         }
       }
     },
@@ -4143,9 +4391,18 @@ mod tests {
       "$extensions": { "sail": { "dark": true } },
       "color": {
         "primary": {
-          "$value": "oklch(0.55 0.2 140)",
-          "$type": "color",
-          "$extensions": { "sail": { "cssName": "primary" } }
+          "default": { "$value": "oklch(0.45 0.2 140)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
+        },
+        "background": { "$value": "oklch(0.98 0 0)", "$type": "color" },
+        "foreground": { "$value": "oklch(0.20 0 0)", "$type": "color" },
+        "muted": {
+          "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
+        },
+        "brandAccent": {
+          "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
         }
       }
     }
@@ -4475,9 +4732,18 @@ mod tests {
     "light": {
       "color": {
         "primary": {
-          "$value": "oklch(0.5 0.1 50)",
-          "$type": "color",
-          "$extensions": { "sail": { "cssName": "primary" } }
+          "default": { "$value": "oklch(0.5 0.1 50)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
+        },
+        "background": { "$value": "oklch(0.98 0 0)", "$type": "color" },
+        "foreground": { "$value": "oklch(0.20 0 0)", "$type": "color" },
+        "muted": {
+          "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
+        },
+        "brandAccent": {
+          "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
         }
       }
     }
@@ -4517,9 +4783,18 @@ mod tests {
     "light": {
       "color": {
         "primary": {
-          "$value": "oklch(0.62 0.16 50)",
-          "$type": "color",
-          "$extensions": { "sail": { "cssName": "primary" } }
+          "default": { "$value": "oklch(0.62 0.16 50)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.18 0 0)", "$type": "color" }
+        },
+        "background": { "$value": "oklch(0.98 0 0)", "$type": "color" },
+        "foreground": { "$value": "oklch(0.20 0 0)", "$type": "color" },
+        "muted": {
+          "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
+        },
+        "brandAccent": {
+          "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
         }
       }
     }
@@ -4571,9 +4846,18 @@ mod tests {
     "light": {
       "color": {
         "primary": {
-          "$value": "oklch(0.5 0.1 50)",
-          "$type": "color",
-          "$extensions": { "sail": { "cssName": "primary" } }
+          "default": { "$value": "oklch(0.5 0.1 50)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
+        },
+        "background": { "$value": "oklch(0.98 0 0)", "$type": "color" },
+        "foreground": { "$value": "oklch(0.20 0 0)", "$type": "color" },
+        "muted": {
+          "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
+        },
+        "brandAccent": {
+          "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
         }
       }
     }
@@ -4693,9 +4977,18 @@ mod tests {
     "light": {
       "color": {
         "primary": {
-          "$value": "oklch(0.7 0.1 100)",
-          "$type": "color",
-          "$extensions": { "sail": { "cssName": "primary" } }
+          "default": { "$value": "oklch(0.7 0.1 100)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.18 0 0)", "$type": "color" }
+        },
+        "background": { "$value": "oklch(0.98 0 0)", "$type": "color" },
+        "foreground": { "$value": "oklch(0.20 0 0)", "$type": "color" },
+        "muted": {
+          "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
+        },
+        "brandAccent": {
+          "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
         }
       }
     },
@@ -4737,12 +5030,21 @@ mod tests {
             r#"{
   "$extensions": { "sail": { "selector": ":root", "layer": "base" } },
   "color": {
-    "primary": {
-      "$value": "oklch(0.5 0.1 250)",
-      "$type": "color",
-      "$extensions": { "sail": { "cssName": "primary" } }
-    }
-  }
+        "primary": {
+          "default": { "$value": "oklch(0.5 0.1 250)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
+        },
+        "background": { "$value": "oklch(0.98 0 0)", "$type": "color" },
+        "foreground": { "$value": "oklch(0.20 0 0)", "$type": "color" },
+        "muted": {
+          "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
+        },
+        "brandAccent": {
+          "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
+        }
+      }
 }
 "#,
         );
@@ -4756,9 +5058,18 @@ mod tests {
     "light": {
       "color": {
         "primary": {
-          "$value": "oklch(0.7 0.16 58)",
-          "$type": "color",
-          "$extensions": { "sail": { "cssName": "primary" } }
+          "default": { "$value": "oklch(0.7 0.16 58)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.18 0 0)", "$type": "color" }
+        },
+        "background": { "$value": "oklch(0.98 0 0)", "$type": "color" },
+        "foreground": { "$value": "oklch(0.20 0 0)", "$type": "color" },
+        "muted": {
+          "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
+        },
+        "brandAccent": {
+          "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
         }
       }
     },
@@ -4766,9 +5077,18 @@ mod tests {
       "$extensions": { "sail": { "dark": true } },
       "color": {
         "primary": {
-          "$value": "oklch(0.77 0.16 70)",
-          "$type": "color",
-          "$extensions": { "sail": { "cssName": "primary" } }
+          "default": { "$value": "oklch(0.77 0.16 70)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.18 0 0)", "$type": "color" }
+        },
+        "background": { "$value": "oklch(0.98 0 0)", "$type": "color" },
+        "foreground": { "$value": "oklch(0.20 0 0)", "$type": "color" },
+        "muted": {
+          "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
+        },
+        "brandAccent": {
+          "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
         }
       }
     }
@@ -4793,8 +5113,27 @@ mod tests {
             "author IR [theme=id] selector missing: {css}"
         );
         assert!(
-            css.contains(":not([data-mode])"),
-            "default mode must match bare theme (no data-mode)"
+            css.contains(":root[data-mode='dark'] [theme='ship']:not([data-mode])"),
+            "dual-mode nested host must inherit document dark: {css}"
+        );
+        assert!(
+            css.contains(":root[data-mode='light'] [theme='ship']:not([data-mode])")
+                || css.contains(":root:not([data-mode]) [theme='ship']:not([data-mode])"),
+            "dual-mode nested host must inherit document light/cold: {css}"
+        );
+        assert!(
+            css.contains("color-scheme: light") && css.contains("color-scheme: dark"),
+            "theme mode blocks must set color-scheme: {css}"
+        );
+        // Global `[theme=id]:not([data-mode])` would pin nested dual-mode hosts
+        // to the default mode. Only ancestor-qualified forms are allowed.
+        let global_bare = css.lines().any(|l| {
+            l.trim() == "[theme='ship']:not([data-mode])"
+                || l.trim() == "[theme='ship']:not([data-mode]),"
+        });
+        assert!(
+            !global_bare,
+            "dual-mode must not emit a global [theme=id]:not([data-mode]) selector: {css}"
         );
         let meta = fs::read_to_string(out.join("generated/themes-meta.ts")).unwrap();
         assert!(meta.contains("id: 'ship'"));
@@ -4813,12 +5152,21 @@ mod tests {
             r#"{
   "$extensions": { "sail": { "selector": ":root", "layer": "base" } },
   "color": {
-    "primary": {
-      "$value": "oklch(0.5 0.1 250)",
-      "$type": "color",
-      "$extensions": { "sail": { "cssName": "primary" } }
-    }
-  }
+        "primary": {
+          "default": { "$value": "oklch(0.5 0.1 250)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
+        },
+        "background": { "$value": "oklch(0.98 0 0)", "$type": "color" },
+        "foreground": { "$value": "oklch(0.20 0 0)", "$type": "color" },
+        "muted": {
+          "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
+        },
+        "brandAccent": {
+          "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
+        }
+      }
 }
 "#,
         );
@@ -4837,9 +5185,18 @@ mod tests {
     "light": {
       "color": {
         "primary": {
-          "$value": "oklch(0.4 0.05 75)",
-          "$type": "color",
-          "$extensions": { "sail": { "cssName": "primary" } },
+          "default": { "$value": "oklch(0.4 0.05 75)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" },
+        },
+        "background": { "$value": "oklch(0.98 0 0)", "$type": "color" },
+        "foreground": { "$value": "oklch(0.20 0 0)", "$type": "color" },
+        "muted": {
+          "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" },
+        },
+        "brandAccent": {
+          "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" },
         },
       },
     },
@@ -4847,9 +5204,18 @@ mod tests {
       "$extensions": { "sail": { "dark": true } },
       "color": {
         "primary": {
-          "$value": "oklch(0.7 0.08 75)",
-          "$type": "color",
-          "$extensions": { "sail": { "cssName": "primary" } },
+          "default": { "$value": "oklch(0.7 0.08 75)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.18 0 0)", "$type": "color" },
+        },
+        "background": { "$value": "oklch(0.98 0 0)", "$type": "color" },
+        "foreground": { "$value": "oklch(0.20 0 0)", "$type": "color" },
+        "muted": {
+          "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" },
+        },
+        "brandAccent": {
+          "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" },
         },
       },
     },
@@ -4870,11 +5236,21 @@ mod tests {
             r#"{
   "$extensions": { "sail": { "selector": ":root", "layer": "base" } },
   "color": {
-    "primary": {
-      "$value": "{color.does.not.exist}",
-      "$type": "color"
-    }
-  }
+        "primary": {
+          "default": { "$value": "{color.does.not.exist}", "$type": "color" },
+          "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
+        },
+        "background": { "$value": "oklch(0.98 0 0)", "$type": "color" },
+        "foreground": { "$value": "oklch(0.20 0 0)", "$type": "color" },
+        "muted": {
+          "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
+        },
+        "brandAccent": {
+          "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
+        }
+      }
 }
 "#,
         );

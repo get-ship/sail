@@ -2,7 +2,7 @@
 
 use std::collections::HashSet;
 
-use sail_compiler::l1_manifest::{L1Kind, l1_by_kind, l1_entries, l1_kind};
+use sail_compiler::l1_manifest::{L1JsKind, L1Kind, l1_by_kind, l1_entries, l1_kind};
 use sail_compiler::stdlib;
 
 #[test]
@@ -152,4 +152,101 @@ fn skeleton_description_names_loading_placeholder() {
     let names: Vec<&str> = sk.attributes.iter().map(|a| a.name.as_str()).collect();
     assert!(names.contains(&"shape"), "skeleton must declare shape prop");
     assert!(names.contains(&"size"), "skeleton must declare size prop");
+}
+
+#[test]
+fn every_l1_entry_declares_component_tokens_and_js() {
+    let entries = l1_entries();
+    assert_eq!(entries.len(), 59, "stdlib L1 count");
+    for e in &entries {
+        // Fields must be present (empty vec / None-kind is valid).
+        let _ = &e.component_tokens;
+        let _ = &e.js;
+        for tok in &e.component_tokens {
+            assert!(
+                !tok.name.trim().is_empty(),
+                "L1 `{}` component token has empty name",
+                e.tag
+            );
+            assert!(
+                matches!(
+                    tok.ty,
+                    sail_compiler::L1SlotType::Scalar | sail_compiler::L1SlotType::Composite
+                ),
+                "L1 `{}` token `{}` slot type",
+                e.tag,
+                tok.name
+            );
+        }
+        match e.js.kind {
+            L1JsKind::None => assert!(
+                e.js.behaviors.is_empty(),
+                "L1 `{}` js=none must have empty behaviors: {:?}",
+                e.tag,
+                e.js.behaviors
+            ),
+            L1JsKind::Enhancement | L1JsKind::Required => assert!(
+                !e.js.behaviors.is_empty(),
+                "L1 `{}` js={:?} must list behaviors",
+                e.tag,
+                e.js.kind
+            ),
+        }
+    }
+}
+
+#[test]
+fn component_tokens_and_js_drift_pin_against_compiled_metadata() {
+    let entries = l1_entries();
+    for el in stdlib::elements() {
+        let row = entries
+            .iter()
+            .find(|e| e.tag == el.tag)
+            .unwrap_or_else(|| panic!("manifest missing {}", el.tag));
+        let html = &el.out.structure_html;
+        for behavior in &row.js.behaviors {
+            let stamp = format!("use:{behavior}");
+            assert!(
+                html.contains(&stamp),
+                "L1 `{}` lists js behavior `{behavior}` not present as `{stamp}` in structure",
+                el.tag
+            );
+        }
+        // Every use: in structure is listed.
+        let mut i = 0;
+        let bytes = html.as_bytes();
+        while i + 4 < bytes.len() {
+            if &bytes[i..i + 4] == b"use:" {
+                let start = i + 4;
+                let mut end = start;
+                while end < bytes.len()
+                    && (bytes[end].is_ascii_alphanumeric() || bytes[end] == b'-')
+                {
+                    end += 1;
+                }
+                if end > start {
+                    let name = &html[start..end];
+                    assert!(
+                        row.js.behaviors.iter().any(|b| b == name),
+                        "L1 `{}` structure has `{name}` but manifest js.behaviors={:?}",
+                        el.tag,
+                        row.js.behaviors
+                    );
+                }
+                i = end;
+                continue;
+            }
+            i += 1;
+        }
+        if sail_lint::style::surface_pack_for_host(el.tag).is_some()
+            && !row.component_tokens.is_empty()
+        {
+            assert!(
+                row.component_tokens.iter().any(|t| !t.name.is_empty()),
+                "L1 `{}` pack tokens missing a named slot: {:?}",
+                el.tag,
+                row.component_tokens
+            );
+        }
+    }
 }

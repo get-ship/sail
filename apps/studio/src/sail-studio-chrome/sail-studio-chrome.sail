@@ -17,7 +17,7 @@
   style statusLine = { box: grow(1).minW(0), text: fontFamily(mono).fontSize(xs).truncate() }
   style statusMeta = { box: shrink(0), text: fontSize(xs) }
   style statusMuted = { box: shrink(0), paint: fg(muted-foreground), text: fontSize(xs) }
-  style findingsBtn = { box: shrink(0).padX(2).h(5).minH(5) }
+  style findingsBtn = { box: shrink(0).padX(2).h(6).minH(6) }
   style healthChip = { box: shrink(0).padX(1), when: { hover: { paint: bg(hover-bg) } } }
 </scope>
 

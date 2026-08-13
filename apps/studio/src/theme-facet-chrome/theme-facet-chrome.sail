@@ -7,6 +7,8 @@
   style chromeBar = { box: shrink(0).padX(4).h(10).minH(10).minW(0), paint: borderBWidth(1).borderB(border-subtle).bg(background) }
   style growMin = { box: grow(1).minW(0) }
   style shrink0 = { box: shrink(0) }
+  style tapFloor = { box: shrink(0).minW(control-h-sm).minH(control-h-sm) }
+  style iconBtn = { box: shrink(0).w(control-h-sm).h(control-h-sm).minW(control-h-sm).minH(control-h-sm) }
   style slashMuted = { paint: fg(muted-foreground), text: fontSize(sm) }
   style nameInput = { box: maxW(48), paint: borderWidth(0), text: fontWeight(semibold) }
   style diffMenu = { box: pad(3).minW(panel-min-w-md).maxW(panel-max-w-md) }
@@ -123,7 +125,7 @@ export default controller(() => {
 <column theme-facet-chrome-root gap="0" style(chromeRoot)>
   <row theme-facet-chrome align="center" justify="between" gap="3" nowrap style(chromeBar)>
     <row align="center" gap="2" nowrap style(growMin)>
-      <button type="button" size="sm" variant="ghost" tone="muted" facet-back on:click={goBack} label="Back to Themes">
+      <button type="button" size="sm" variant="ghost" tone="muted" facet-back on:click={goBack} label="Back to Themes" style(tapFloor)>
         Themes
       </button>
       <p hidden="true" style(slashMuted)>/</p>
@@ -168,10 +170,10 @@ export default controller(() => {
 
     <row align="center" gap="3" nowrap style(shrink0)>
       <row edit-cluster align="center" gap="1" nowrap style(shrink0)>
-        <button type="button" size="sm" variant="ghost" tone="muted" facet-undo label="Undo" disabled={!canUndo()} on:click={onUndo} style(shrink0)>
+        <button type="button" size="iconSm" variant="ghost" tone="muted" facet-undo label="Undo" disabled={!canUndo()} on:click={onUndo} style(iconBtn)>
           <icon name="undo-2" size="sm"></icon>
         </button>
-        <button type="button" size="sm" variant="ghost" tone="muted" facet-redo label="Redo" disabled={!canRedo()} on:click={onRedo} style(shrink0)>
+        <button type="button" size="iconSm" variant="ghost" tone="muted" facet-redo label="Redo" disabled={!canRedo()} on:click={onRedo} style(iconBtn)>
           <icon name="redo-2" size="sm"></icon>
         </button>
         <!-- Diff dropdown always mounted so the trigger can open it when dirty. -->

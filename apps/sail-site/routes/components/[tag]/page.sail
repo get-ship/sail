@@ -3,7 +3,6 @@
   Docs SSOT: apps/sail-site/src/component-docs/<slug>/meta.ts
   Mounts exactly one docs host:
     - first-class package CE (doc-button, doc-badge, …) when meta.host is doc-*
-    - or <doc-legacy-detail> only when meta.host is legacy / unmigrated
     - explicit missing-host empty state if first-class meta but no CE wired
     - empty state when no package / pack meta
 -->
@@ -89,13 +88,11 @@ export default controller((ctx: ControllerScope<Scope>) => {
   const knownPack = derived(() => PACK_TAGS.has(tag()))
   const showViewer = derived(() => knownDoc() || knownPack())
 
-  // FIRST_CLASS_HOSTS is SSOT from meta.host !== 'legacy'. Never route first-class → legacy.
+  // FIRST_CLASS_HOSTS is SSOT from meta.host !== 'legacy'.
   const firstClass = derived(() => FIRST_CLASS_HOSTS.has(tag()))
   const hasDocCe = derived(() => DOC_CE_SLUGS.has(tag()))
   const useDocHost = derived(() => firstClass() && hasDocCe())
-  const missingDocHost = derived(() => firstClass() && !hasDocCe())
-  // Legacy residual only when NOT first-class.
-  const useLegacy = derived(() => showViewer() && !firstClass())
+  const missingDocHost = derived(() => showViewer() && !useDocHost())
 
   const useButton = derived(() => tag() === 'button' && useDocHost())
   const useBadge = derived(() => tag() === 'badge' && useDocHost())
@@ -216,7 +213,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
     useCombobox,
     useThemePicker,
     useDropzone,
-    useLegacy,
+
     heading,
     blurb,
     packLabel,
@@ -395,9 +392,6 @@ export default controller((ctx: ControllerScope<Scope>) => {
     <row gap="2">
       <a variant="solid" tone="primary" href="/components">← All components</a>
     </row>
-  </if>
-  <if {useLegacy()}>
-    <doc-legacy-detail doc-tag={tag()}></doc-legacy-detail>
   </if>
   <if {!showViewer()}>
     <breadcrumb>

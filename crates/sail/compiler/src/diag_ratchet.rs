@@ -1,7 +1,7 @@
 //! Anonymous diagnostic ratchet (SPEC-LINTS-1 Phase 0).
 //!
-//! Prevents **growth** of anonymous compiler diagnostic throw sites.
-//! Existing debt may remain until migration waves; new anonymous sites fail CI.
+//! Every compiler throw site must carry a stable `sail-*` id. Anonymous
+//! sites must stay exactly 0; new unregistered diagnostics fail CI.
 //!
 //! # API
 //!
@@ -10,7 +10,8 @@
 //! | [`is_stable_rule_id`] | `true` iff `id` matches `^sail-[a-z0-9-]+$` |
 //! | [`classify_snippet`] | Classify a throw-site source window as id'd or anonymous |
 //! | [`count_anonymous_sites`] | Scan live `crates/sail/compiler/src/**/*.rs` throw sites |
-//! | [`anonymous_baseline`] | Deliberate pin from a real tip remeasure (not a guess) |
+//! | [`idd_rule_ids`] | Unique `sail-*` ids attached at live Idd sites |
+//! | [`anonymous_baseline`] | Product pin (`0`); do not raise |
 //!
 //! A construction site is **id'd** iff its emitted rule/category resolves to a
 //! stable id matching `^sail-[a-z0-9-]+$` via `.with_category("sail-…")`,
@@ -25,9 +26,8 @@
 //!
 //! # Baseline policy
 //!
-//! Assert `count_anonymous_sites() <= anonymous_baseline()`. Drops pass without
-//! pin update (debt reduction is free); only growth fails. Implementer must
-//! remeasure tip and set the pin — do not hardcode inventory 181 without scan.
+//! Assert `count_anonymous_sites() == 0`. Do not raise [`ANONYMOUS_BASELINE`].
+//! Attach a `sail-*` id and a DiagSpec row to every new throw site.
 
 use std::collections::HashMap;
 use std::fs;
@@ -42,11 +42,8 @@ pub enum SiteClass {
     Anonymous,
 }
 
-/// Pinned anonymous baseline from tip remeasure (see `count_anonymous_sites`).
-///
-/// Gate: `count_anonymous_sites() <= ANONYMOUS_BASELINE`. Prefer `<=` so debt
-/// reduction does not require a pin update in the same PR.
-const ANONYMOUS_BASELINE: usize = 140;
+/// Product pin: anonymous sites must stay exactly 0. Do not raise this.
+const ANONYMOUS_BASELINE: usize = 0;
 
 /// Return `true` when `id` is a stable sail rule id (`^sail-[a-z0-9-]+$`).
 pub fn is_stable_rule_id(id: &str) -> bool {
@@ -77,16 +74,40 @@ pub fn classify_snippet(source: &str) -> SiteClass {
 
 /// Count anonymous throw sites under live `crates/sail/compiler/src/**/*.rs`.
 pub fn count_anonymous_sites() -> usize {
+    anonymous_site_locations().len()
+}
+
+/// Stable `sail-*` ids attached at live Idd throw sites (unique, sorted).
+pub fn idd_rule_ids() -> Vec<String> {
+    let mut ids: Vec<String> = scan_compiler_src()
+        .into_iter()
+        .filter(|s| s.class == SiteClass::Idd)
+        .filter_map(|s| s.id)
+        .collect();
+    ids.sort();
+    ids.dedup();
+    ids
+}
+
+/// File + line of each anonymous throw site (for ratchet diagnosis).
+pub fn anonymous_site_locations() -> Vec<(String, usize)> {
     scan_compiler_src()
         .into_iter()
         .filter(|s| s.class == SiteClass::Anonymous)
-        .count()
+        .map(|s| {
+            (
+                s.path
+                    .strip_prefix(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src"))
+                    .unwrap_or(&s.path)
+                    .display()
+                    .to_string(),
+                s.line,
+            )
+        })
+        .collect()
 }
 
-/// Pinned anonymous baseline. Set from a real tip remeasure.
-///
-/// Gate: `count_anonymous_sites() <= anonymous_baseline()`. Prefer `<=` so
-/// debt reduction does not require a pin update in the same PR.
+/// Product pin. Must stay 0 — do not raise [`ANONYMOUS_BASELINE`].
 pub fn anonymous_baseline() -> usize {
     ANONYMOUS_BASELINE
 }
@@ -96,28 +117,28 @@ pub fn anonymous_baseline() -> usize {
 // ---------------------------------------------------------------------------
 
 fn classify_with_consts(source: &str, consts: &HashMap<String, String>) -> SiteClass {
-    if let Some(id) = extract_with_category(source) {
-        return if resolves_stable(&id, consts) {
-            SiteClass::Idd
-        } else {
-            SiteClass::Anonymous
-        };
+    if resolved_id(source, consts).is_some() {
+        SiteClass::Idd
+    } else {
+        SiteClass::Anonymous
     }
-    if let Some(id) = extract_rule_some(source) {
-        return if resolves_stable(&id, consts) {
-            SiteClass::Idd
-        } else {
-            SiteClass::Anonymous
-        };
-    }
-    SiteClass::Anonymous
 }
 
-fn resolves_stable(token: &str, consts: &HashMap<String, String>) -> bool {
-    if is_stable_rule_id(token) {
-        return true;
+fn resolved_id(source: &str, consts: &HashMap<String, String>) -> Option<String> {
+    if let Some(id) = extract_with_category(source) {
+        return resolved_stable_id(&id, consts);
     }
-    consts.get(token).is_some_and(|v| is_stable_rule_id(v))
+    if let Some(id) = extract_rule_some(source) {
+        return resolved_stable_id(&id, consts);
+    }
+    None
+}
+
+fn resolved_stable_id(token: &str, consts: &HashMap<String, String>) -> Option<String> {
+    if is_stable_rule_id(token) {
+        return Some(token.to_string());
+    }
+    consts.get(token).filter(|v| is_stable_rule_id(v)).cloned()
 }
 
 /// Collect `const NAME: &str = "…"` (optionally `pub`) string bindings.
@@ -301,6 +322,7 @@ struct Site {
     #[allow(dead_code)]
     line: usize,
     class: SiteClass,
+    id: Option<String>,
 }
 
 fn scan_compiler_src() -> Vec<Site> {
@@ -346,11 +368,17 @@ fn scan_file(path: &Path, src: &str, sites: &mut Vec<Site>) {
         if src[i..].starts_with("CompileError::new(") {
             let line = line_number(src, i);
             let window = compile_error_statement_window(src, i);
-            let class = classify_with_consts(window, &consts);
+            let id = resolved_id(window, &consts);
+            let class = if id.is_some() {
+                SiteClass::Idd
+            } else {
+                SiteClass::Anonymous
+            };
             sites.push(Site {
                 path: path.to_path_buf(),
                 line,
                 class,
+                id,
             });
             i += "CompileError::new(".len();
             continue;
@@ -360,6 +388,11 @@ fn scan_file(path: &Path, src: &str, sites: &mut Vec<Site>) {
             let after_name = i + "Diagnostic".len();
             // not DiagnosticTier / Diagnostic:: / etc.
             if after_name < bytes.len() && is_ident_byte(bytes[after_name]) {
+                i = next_char_boundary(src, i + 1);
+                continue;
+            }
+            // Foreign types (`sail_layout::Diagnostic`) are not compiler throw sites.
+            if i >= 2 && bytes[i - 1] == b':' && bytes[i - 2] == b':' {
                 i = next_char_boundary(src, i + 1);
                 continue;
             }
@@ -377,11 +410,17 @@ fn scan_file(path: &Path, src: &str, sites: &mut Vec<Site>) {
                 // product emissions set `message:`; type fields alone aren't emissions
                 if has_message_field(window) {
                     let line = line_number(src, i);
-                    let class = classify_with_consts(window, &consts);
+                    let id = resolved_id(window, &consts);
+                    let class = if id.is_some() {
+                        SiteClass::Idd
+                    } else {
+                        SiteClass::Anonymous
+                    };
                     sites.push(Site {
                         path: path.to_path_buf(),
                         line,
                         class,
+                        id,
                     });
                 }
                 i = next_char_boundary(src, j + 1);
@@ -466,6 +505,10 @@ fn first_site_window(source: &str) -> Option<&str> {
         if source[i..].starts_with("Diagnostic") {
             let after_name = i + "Diagnostic".len();
             if after_name < bytes.len() && is_ident_byte(bytes[after_name]) {
+                i = next_char_boundary(source, i + 1);
+                continue;
+            }
+            if i >= 2 && bytes[i - 1] == b':' && bytes[i - 2] == b':' {
                 i = next_char_boundary(source, i + 1);
                 continue;
             }
@@ -733,6 +776,7 @@ mod tests {
     fn stable_ids() {
         assert!(is_stable_rule_id("sail-foo"));
         assert!(is_stable_rule_id("sail-light-shadow-root"));
+        assert!(is_stable_rule_id("sail-internal-lint-gate"));
         assert!(!is_stable_rule_id("expression"));
         assert!(!is_stable_rule_id(""));
         assert!(!is_stable_rule_id("sail-"));
@@ -834,6 +878,23 @@ mod tests {
         assert_eq!(sites[1].class, SiteClass::Idd);
     }
 
+    /// `sail_layout::Diagnostic` is a foreign type, not a compiler throw site.
+    #[test]
+    fn foreign_layout_diagnostic_is_not_a_compiler_site() {
+        let src = r#"
+            let d = sail_layout::Diagnostic {
+                message: "layout".into(),
+                rule: None,
+            };
+        "#;
+        let mut sites = Vec::new();
+        scan_file(Path::new("fixture.rs"), src, &mut sites);
+        assert!(
+            sites.is_empty(),
+            "sail_layout::Diagnostic must not count as a compiler throw site, got {sites:?}"
+        );
+    }
+
     #[test]
     fn statement_window_includes_builder_chain() {
         let src = r#"
@@ -846,17 +907,14 @@ mod tests {
     }
 
     #[test]
-    fn baseline_matches_scan() {
+    fn baseline_is_zero() {
         let count = count_anonymous_sites();
-        assert!(
-            count <= anonymous_baseline(),
-            "remeasure: anonymous={count} baseline={}",
-            anonymous_baseline()
+        assert_eq!(
+            count,
+            0,
+            "anonymous diagnostic sites must be zero (found {count}): {:?}",
+            anonymous_site_locations()
         );
-        // Print for operators remeasuring the pin.
-        eprintln!(
-            "diag_ratchet remeasure: anonymous={count} baseline={}",
-            anonymous_baseline()
-        );
+        assert_eq!(anonymous_baseline(), 0);
     }
 }

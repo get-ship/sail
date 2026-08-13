@@ -160,6 +160,95 @@ pub(crate) fn try_skip_regex(bytes: &[u8], i: usize, end: usize) -> Option<usize
     skip_regex(bytes, i, end)
 }
 
+/// At `'`, `"`, or `` ` ``, return the offset just past the closing quote.
+///
+/// Template interpolations `${…}` are scanned as JS (nested strings, regex,
+/// comments, nested templates). A backtick inside `${}` must not terminate
+/// the outer template — otherwise `</controller>` after that inner backtick
+/// is read as the SFC close.
+pub(crate) fn skip_string_or_template(bytes: &[u8], i: usize, end: usize) -> usize {
+    if i >= end {
+        return i;
+    }
+    match bytes[i] {
+        b'\'' | b'"' => skip_quoted(bytes, i, end, bytes[i]),
+        b'`' => skip_template(bytes, i, end),
+        _ => i,
+    }
+}
+
+fn skip_quoted(bytes: &[u8], i: usize, end: usize, q: u8) -> usize {
+    let mut k = i + 1;
+    while k < end {
+        let c = bytes[k];
+        if c == b'\\' {
+            k = (k + 2).min(end);
+            continue;
+        }
+        if c == q {
+            return k + 1;
+        }
+        k += 1;
+    }
+    end
+}
+
+fn skip_template(bytes: &[u8], i: usize, end: usize) -> usize {
+    let mut k = i + 1;
+    while k < end {
+        let c = bytes[k];
+        if c == b'\\' {
+            k = (k + 2).min(end);
+            continue;
+        }
+        if c == b'`' {
+            return k + 1;
+        }
+        if c == b'$' && k + 1 < end && bytes[k + 1] == b'{' {
+            k = skip_template_interpolation(bytes, k + 2, end);
+            continue;
+        }
+        k += 1;
+    }
+    end
+}
+
+fn skip_template_interpolation(bytes: &[u8], i: usize, end: usize) -> usize {
+    let mut k = i;
+    let mut depth = 0i32;
+    while k < end {
+        match bytes[k] {
+            b'\'' | b'"' | b'`' => k = skip_string_or_template(bytes, k, end),
+            b'/' if k + 1 < end && bytes[k + 1] == b'/' => {
+                while k < end && bytes[k] != b'\n' {
+                    k += 1;
+                }
+            }
+            b'/' if k + 1 < end && bytes[k + 1] == b'*' => {
+                k += 2;
+                while k + 1 < end && !(bytes[k] == b'*' && bytes[k + 1] == b'/') {
+                    k += 1;
+                }
+                k = (k + 2).min(end);
+            }
+            b'/' => k = try_skip_regex(bytes, k, end).unwrap_or(k + 1),
+            b'{' => {
+                depth += 1;
+                k += 1;
+            }
+            b'}' => {
+                if depth == 0 {
+                    return k + 1;
+                }
+                depth -= 1;
+                k += 1;
+            }
+            _ => k += 1,
+        }
+    }
+    end
+}
+
 /// At a `(`, `{`, or `[`, return the offset just past the matching closer,
 /// within `[i, end)`. String/template-literal contents and `//`+`/* */`
 /// comments are skipped. Returns `i + 1` when `bytes[i]` isn't an opener so
@@ -276,6 +365,27 @@ mod tests {
         assert_eq!(
             skip_balanced(b, 0, b.len()),
             src.find(") rest").unwrap() + 1
+        );
+    }
+
+    #[test]
+    fn skip_string_walks_escaped_quotes() {
+        let src = r#"'it\'s' rest"#;
+        let b = src.as_bytes();
+        assert_eq!(
+            skip_string_or_template(b, 0, b.len()),
+            src.find(" rest").unwrap()
+        );
+    }
+
+    #[test]
+    fn skip_template_does_not_close_on_inner_backtick() {
+        // `${'`'}` must not terminate the outer template.
+        let src = "`foo ${'`'} bar` rest";
+        let b = src.as_bytes();
+        assert_eq!(
+            skip_string_or_template(b, 0, b.len()),
+            src.find(" rest").unwrap()
         );
     }
 }

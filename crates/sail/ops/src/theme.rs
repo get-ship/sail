@@ -249,12 +249,14 @@ pub fn write(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
         )));
     }
 
-    // Parse + THEMES-1 schema lock + ordered-scale gate (refuse before write).
-    if let Ok(doc) = serde_json::from_str::<Value>(content) {
-        sail_compiler::tokens_generate::validate_theme_doc_schema(&doc, rel)
-            .map_err(|e| OpError::InvalidArgument(e.to_string()))?;
-        validate_ordered_scales(&doc)?;
-    }
+    // Parse + THEMES-1 document gate + ordered-scale gate (refuse before write).
+    // Invalid JSON is a schema refusal — never write a document the gate
+    // cannot inspect.
+    let doc: Value = serde_json::from_str(content)
+        .map_err(|e| OpError::InvalidArgument(format!("theme schema invalid (JSON): {e}")))?;
+    sail_compiler::theme_gate::validate_theme_gate(&doc, rel)
+        .map_err(|e| OpError::InvalidArgument(e.to_string()))?;
+    validate_ordered_scales(&doc)?;
 
     let target = ctx.workspace_root.join(rel);
     let resolved = ensure_under_workspace(&ctx.workspace_root, &target)?;
@@ -924,6 +926,20 @@ mod tests {
     use serde_json::json;
     use tempfile::tempdir;
 
+    const GATE_COLOR: &str = r#""color":{"background":{"$value":"oklch(0.98 0 0)","$type":"color"},"foreground":{"$value":"oklch(0.20 0 0)","$type":"color"},"primary":{"default":{"$value":"oklch(0.45 0.12 250)","$type":"color"},"foreground":{"$value":"oklch(0.98 0 0)","$type":"color"}},"muted":{"default":{"$value":"oklch(0.92 0 0)","$type":"color"},"foreground":{"$value":"oklch(0.35 0 0)","$type":"color"}},"brandAccent":{"default":{"$value":"oklch(0.45 0.16 300)","$type":"color"},"foreground":{"$value":"oklch(0.98 0 0)","$type":"color"}}}"#;
+
+    fn gate_theme(id: &str, dual: bool) -> String {
+        if dual {
+            format!(
+                r#"{{"$extensions":{{"sail":{{"themeId":"{id}","defaultMode":"light","layer":"theme"}}}},"modes":{{"light":{{{GATE_COLOR}}},"dark":{{{GATE_COLOR}}}}}}}"#
+            )
+        } else {
+            format!(
+                r#"{{"$extensions":{{"sail":{{"themeId":"{id}","defaultMode":"light","layer":"theme"}}}},"modes":{{"light":{{{GATE_COLOR}}}}}}}"#
+            )
+        }
+    }
+
     #[test]
     fn graph_returns_alias_edges_and_refuses_css() {
         let dir = tempdir().unwrap();
@@ -975,20 +991,23 @@ mod tests {
         let ctx = Ctx::new(ws, ws.join("apps/demo"), ws);
 
         // THEMES-1: radius lives under modes.*; envelope must be schema-valid.
-        let bad = r#"{
-          "$extensions": { "sail": { "themeId": "bad-radius", "defaultMode": "light", "layer": "theme" } },
-          "modes": {
-            "light": {
-              "radius": {
-                "sm": { "$value": "8px", "$type": "dimension" },
-                "md": { "$value": "4px", "$type": "dimension" },
-                "lg": { "$value": "10px", "$type": "dimension" },
-                "xl": { "$value": "14px", "$type": "dimension" },
-                "$extensions": { "ordered": ["sm", "md", "lg", "xl"] }
-              }
-            }
-          }
-        }"#;
+        let bad = format!(
+            r#"{{
+          "$extensions": {{ "sail": {{ "themeId": "bad-radius", "defaultMode": "light", "layer": "theme" }} }},
+          "modes": {{
+            "light": {{
+              {GATE_COLOR},
+              "radius": {{
+                "sm": {{ "$value": "8px", "$type": "dimension" }},
+                "md": {{ "$value": "4px", "$type": "dimension" }},
+                "lg": {{ "$value": "10px", "$type": "dimension" }},
+                "xl": {{ "$value": "14px", "$type": "dimension" }},
+                "$extensions": {{ "ordered": ["sm", "md", "lg", "xl"] }}
+              }}
+            }}
+          }}
+        }}"#
+        );
         let err = write(
             &json!({
                 "path": "apps/demo/tokens/themes/bad-radius.json",
@@ -1004,20 +1023,23 @@ mod tests {
         );
         assert!(!ws.join("apps/demo/tokens/themes/bad-radius.json").exists());
 
-        let good = r#"{
-          "$extensions": { "sail": { "themeId": "good-radius", "defaultMode": "light", "layer": "theme" } },
-          "modes": {
-            "light": {
-              "radius": {
-                "sm": { "$value": "4px", "$type": "dimension" },
-                "md": { "$value": "6px", "$type": "dimension" },
-                "lg": { "$value": "10px", "$type": "dimension" },
-                "xl": { "$value": "16px", "$type": "dimension" },
-                "$extensions": { "ordered": ["sm", "md", "lg", "xl"] }
-              }
-            }
-          }
-        }"#;
+        let good = format!(
+            r#"{{
+          "$extensions": {{ "sail": {{ "themeId": "good-radius", "defaultMode": "light", "layer": "theme" }} }},
+          "modes": {{
+            "light": {{
+              {GATE_COLOR},
+              "radius": {{
+                "sm": {{ "$value": "4px", "$type": "dimension" }},
+                "md": {{ "$value": "6px", "$type": "dimension" }},
+                "lg": {{ "$value": "10px", "$type": "dimension" }},
+                "xl": {{ "$value": "16px", "$type": "dimension" }},
+                "$extensions": {{ "ordered": ["sm", "md", "lg", "xl"] }}
+              }}
+            }}
+          }}
+        }}"#
+        );
         let ok = write(
             &json!({
                 "path": "apps/demo/tokens/themes/good-radius.json",
@@ -1107,7 +1129,7 @@ mod tests {
         );
         assert!(matches!(denied, Err(OpError::PermissionDenied(_))));
 
-        let body = r#"{"$extensions":{"sail":{"themeId":"custom","defaultMode":"light","layer":"theme"}},"modes":{"light":{"color":{}}}}"#;
+        let body = r#"{"$extensions":{"sail":{"themeId":"custom","defaultMode":"light","layer":"theme"}},"modes":{"light":{"color":{"background":{"$value":"oklch(0.98 0 0)","$type":"color"},"foreground":{"$value":"oklch(0.20 0 0)","$type":"color"},"primary":{"default":{"$value":"oklch(0.45 0.12 250)","$type":"color"},"foreground":{"$value":"oklch(0.98 0 0)","$type":"color"}},"muted":{"default":{"$value":"oklch(0.92 0 0)","$type":"color"},"foreground":{"$value":"oklch(0.35 0 0)","$type":"color"}},"brandAccent":{"default":{"$value":"oklch(0.45 0.16 300)","$type":"color"},"foreground":{"$value":"oklch(0.98 0 0)","$type":"color"}}}}}}"#;
         let ok = write(
             &json!({
                 "path": "apps/demo/tokens/themes/custom.json",
@@ -1136,6 +1158,98 @@ mod tests {
             sm.contains("unknown root key") && sm.contains("ok"),
             "expected schema lock error, got {sm}"
         );
+    }
+
+    fn write_err(ctx: &Ctx, rel: &str, content: &str) -> String {
+        write(&json!({ "path": rel, "content": content }), ctx)
+            .unwrap_err()
+            .to_string()
+    }
+
+    #[test]
+    fn write_refuses_invalid_json_schema() {
+        let dir = tempdir().unwrap();
+        let ws = dir.path();
+        std::fs::create_dir_all(ws.join("themes")).unwrap();
+        let ctx = Ctx::new(ws, ws, ws);
+        let err = write_err(&ctx, "themes/bad.json", "{not json");
+        assert!(
+            err.contains("schema invalid") || err.contains("JSON"),
+            "{err}"
+        );
+        assert!(!ws.join("themes/bad.json").exists());
+    }
+
+    #[test]
+    fn write_refuses_missing_required_slot() {
+        let dir = tempdir().unwrap();
+        let ws = dir.path();
+        std::fs::create_dir_all(ws.join("themes")).unwrap();
+        let ctx = Ctx::new(ws, ws, ws);
+        let mut doc: Value = serde_json::from_str(&gate_theme("probe", false)).unwrap();
+        doc["modes"]["light"]["color"]
+            .as_object_mut()
+            .unwrap()
+            .remove("foreground");
+        let err = write_err(&ctx, "themes/missing-slot.json", &doc.to_string());
+        assert!(err.contains("foreground"), "{err}");
+        assert!(err.contains("missing required"), "{err}");
+        assert!(!ws.join("themes/missing-slot.json").exists());
+    }
+
+    #[test]
+    fn write_refuses_dangling_alias() {
+        let dir = tempdir().unwrap();
+        let ws = dir.path();
+        std::fs::create_dir_all(ws.join("themes")).unwrap();
+        let ctx = Ctx::new(ws, ws, ws);
+        let mut extra = serde_json::Map::new();
+        extra.insert(
+            "secondary".into(),
+            json!({ "$value": "{no-such-token}", "$type": "color" }),
+        );
+        let mut doc: Value = serde_json::from_str(&gate_theme("probe", false)).unwrap();
+        if let Some(color) = doc["modes"]["light"]["color"].as_object_mut() {
+            color.insert("secondary".into(), extra["secondary"].clone());
+        }
+        let err = write_err(&ctx, "themes/dangling.json", &doc.to_string());
+        assert!(err.contains("dangling alias"), "{err}");
+        assert!(err.contains("no-such-token"), "{err}");
+        assert!(!ws.join("themes/dangling.json").exists());
+    }
+
+    #[test]
+    fn write_refuses_missing_supported_mode() {
+        let dir = tempdir().unwrap();
+        let ws = dir.path();
+        std::fs::create_dir_all(ws.join("themes")).unwrap();
+        let ctx = Ctx::new(ws, ws, ws);
+        let mut doc: Value = serde_json::from_str(&gate_theme("probe", false)).unwrap();
+        doc["$extensions"]["sail"]["supportedModes"] = json!(["light", "dark"]);
+        let err = write_err(&ctx, "themes/missing-mode.json", &doc.to_string());
+        assert!(
+            err.contains("missing mode") && err.contains("dark"),
+            "{err}"
+        );
+        assert!(!ws.join("themes/missing-mode.json").exists());
+    }
+
+    #[test]
+    fn write_refuses_contrast_floor() {
+        let dir = tempdir().unwrap();
+        let ws = dir.path();
+        std::fs::create_dir_all(ws.join("themes")).unwrap();
+        let ctx = Ctx::new(ws, ws, ws);
+        let mut doc: Value = serde_json::from_str(&gate_theme("probe", false)).unwrap();
+        doc["modes"]["light"]["color"]["muted"] = json!({
+            "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
+            "foreground": { "$value": "oklch(0.85 0 0)", "$type": "color" }
+        });
+        let err = write_err(&ctx, "themes/contrast.json", &doc.to_string());
+        assert!(err.contains("muted-foreground"), "{err}");
+        assert!(err.contains("muted"), "{err}");
+        assert!(err.contains("floor 4.5:1"), "{err}");
+        assert!(!ws.join("themes/contrast.json").exists());
     }
 
     #[test]
@@ -1186,7 +1300,7 @@ mod tests {
         let w = write(
             &json!({
                 "path": "themes/custom.json",
-                "content": r#"{"$extensions":{"sail":{"themeId":"custom","defaultMode":"light","layer":"theme"}},"modes":{"light":{"color":{}}}}"#
+                "content": gate_theme("custom", false)
             }),
             &ctx,
         )
@@ -1209,7 +1323,7 @@ mod tests {
         let ok = write(
             &json!({
                 "path": "tokens/themes/legacy.json",
-                "content": r#"{"$extensions":{"sail":{"themeId":"legacy","defaultMode":"light","layer":"theme"}},"modes":{"light":{"color":{}}}}"#
+                "content": gate_theme("legacy", false)
             }),
             &ctx,
         )
@@ -1229,7 +1343,7 @@ mod tests {
         std::fs::create_dir_all(ws.join("packages/sail/tokens/model/themes")).unwrap();
         std::fs::write(
             ws.join("packages/sail/tokens/model/themes/ship.json"),
-            r#"{"$extensions":{"sail":{"themeId":"ship"}},"modes":{"light":{},"dark":{}}}"#,
+            gate_theme("ship", true),
         )
         .unwrap();
         let ctx = Ctx::new(ws, ws.join("apps/demo"), ws);
@@ -1281,7 +1395,7 @@ mod tests {
         std::fs::create_dir_all(project.join("packages/sail/tokens/model/themes")).unwrap();
         std::fs::write(
             project.join("packages/sail/tokens/model/themes/ship.json"),
-            r#"{"$extensions":{"sail":{"themeId":"ship"}},"modes":{"light":{},"dark":{}}}"#,
+            gate_theme("ship", true),
         )
         .unwrap();
         let ctx = Ctx::new(project, project, project);

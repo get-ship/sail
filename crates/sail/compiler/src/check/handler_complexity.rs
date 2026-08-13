@@ -7,6 +7,7 @@
 use crate::diagnostics::CompileError;
 use crate::ir::{AttrInstr, Instr, Program};
 
+const RULE_ID: &str = "sail-handler-complexity";
 /// Entry point. Skipped entirely when the source has a controller (its inline
 /// `<controller>` block) — the controller is responsible for complex handler
 /// logic. `has_controller` is resolved in-memory; there is no paired-file probe.
@@ -66,7 +67,10 @@ fn check_instr(instr: &Instr) -> Result<(), CompileError> {
 }
 
 fn check_attr(attr: &AttrInstr) -> Result<(), CompileError> {
-    let AttrInstr::On { event, handler, .. } = attr else {
+    let AttrInstr::On {
+        event: _, handler, ..
+    } = attr
+    else {
         return Ok(());
     };
     if let Some(block_body) = arrow_block_body(&handler.source)
@@ -77,7 +81,7 @@ fn check_attr(attr: &AttrInstr) -> Result<(), CompileError> {
                  (name the handler there and reference it) for tier-2 work",
         )
         .with_span(handler.span)
-        .with_category(format!("on:{event} handler")));
+        .with_category(RULE_ID));
     }
     Ok(())
 }

@@ -24,6 +24,7 @@ use crate::diagnostics::{CompileError, Span};
 use crate::emit::util::camel_of;
 use crate::ir::{Program, PropKind};
 
+const RULE_TOKEN_GROUP: &str = "sail-style-token-group";
 /// Which returned-scope shapes a `bind(name)` may resolve to.
 ///
 /// `signal(...)` and stock progress drivers are plain signals. A
@@ -122,7 +123,8 @@ pub fn resolve(
                      (primary·info·success·warning·destructive·accent·muted).",
                     site.member.as_deref().unwrap_or("")
                 ))
-                .with_span(site.span));
+                .with_span(site.span)
+                .with_category(RULE_TOKEN_GROUP));
             }
             continue;
         }
@@ -136,7 +138,8 @@ pub fn resolve(
                 return Err(CompileError::new(format!(
                     "`{scope_name}.{member}` is not a valid color-group member — {msg}"
                 ))
-                .with_span(site.span));
+                .with_span(site.span)
+                .with_category(RULE_TOKEN_GROUP));
             }
         }
         let css_name = camel_to_kebab(&scope_name);

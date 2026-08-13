@@ -277,9 +277,9 @@ fn setter_arg_items(
         ));
     }
 
-    labels.into_iter().map(|(label, kind, detail)| {
-        item(label, kind, detail, None)
-    })
+    labels
+        .into_iter()
+        .map(|(label, kind, detail)| item(label, kind, detail, None))
 }
 
 // ── context detection ───────────────────────────────────────────────────────
@@ -861,9 +861,11 @@ where
             }
         })
         .collect();
-    out.sort_by(|a, b| a.label.cmp(&b.label).then_with(|| {
-        a.kind.as_str().cmp(b.kind.as_str())
-    }));
+    out.sort_by(|a, b| {
+        a.label
+            .cmp(&b.label)
+            .then_with(|| a.kind.as_str().cmp(b.kind.as_str()))
+    });
     out.dedup_by(|a, b| a.label == b.label);
     out
 }
@@ -871,12 +873,13 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::host_ctx::with_host_surface;
     use crate::ir::StyleDiagnostic;
     use crate::parse;
-    use crate::host_ctx::with_host_surface;
 
     fn offset_of(src: &str, needle: &str) -> usize {
-        src.find(needle).unwrap_or_else(|| panic!("needle `{needle}` not in source"))
+        src.find(needle)
+            .unwrap_or_else(|| panic!("needle `{needle}` not in source"))
     }
 
     /// Caret just after `¦` marker (marker removed from source).
@@ -905,9 +908,17 @@ mod tests {
             "color complete should be color tokens, not radius-first"
         );
         // Bare radius token name isn't a color paint token
-        assert!(!labs.iter().any(|l| *l == "full" && items.iter().any(|i| i.label == "full" && i.detail.as_deref() == Some("scale `radius`"))));
+        assert!(!labs.iter().any(|l| {
+            *l == "full"
+                && items
+                    .iter()
+                    .any(|i| i.label == "full" && i.detail.as_deref() == Some("scale `radius`"))
+        }));
         // D1: app complete excludes component public names
-        assert!(!labs.contains(&"chip-foreground"), "chip-foreground: {labs:?}");
+        assert!(
+            !labs.contains(&"chip-foreground"),
+            "chip-foreground: {labs:?}"
+        );
         assert!(!labs.contains(&"chip"), "bare chip: {labs:?}");
     }
 
@@ -916,8 +927,14 @@ mod tests {
         let (src, off) = at_caret("style({ paint: radius(¦) })");
         let items = style_complete_at(&src, None, off, None);
         let labs = labels(&items);
-        assert!(labs.contains(&"md") || labs.contains(&"sm"), "radius steps: {labs:?}");
-        assert!(labs.contains(&"full") || labs.contains(&"none"), "radius keywords: {labs:?}");
+        assert!(
+            labs.contains(&"md") || labs.contains(&"sm"),
+            "radius steps: {labs:?}"
+        );
+        assert!(
+            labs.contains(&"full") || labs.contains(&"none"),
+            "radius keywords: {labs:?}"
+        );
         // Color primaries may coincidentally not appear; ensure radius set is scale-driven.
         let radius_vals = scales::values("radius");
         assert!(
@@ -937,7 +954,9 @@ mod tests {
         let (src, off) = at_caret("style({ ¦ })");
         let items = style_complete_at(&src, None, off, None);
         let labs = labels(&items);
-        for k in ["box", "paint", "when", "text", "animate", "match", "compound"] {
+        for k in [
+            "box", "paint", "when", "text", "animate", "match", "compound",
+        ] {
             assert!(labs.contains(&k), "missing object key `{k}` in {labs:?}");
         }
     }
@@ -952,7 +971,10 @@ mod tests {
             labs.contains(&"chip.foreground") || labs.iter().any(|l| l.starts_with("chip.")),
             "chip surface dotted forms: {labs:?}"
         );
-        assert!(!labs.contains(&"chip-foreground"), "kebab emit label forbidden: {labs:?}");
+        assert!(
+            !labs.contains(&"chip-foreground"),
+            "kebab emit label forbidden: {labs:?}"
+        );
     }
 
     #[test]
@@ -981,6 +1003,7 @@ mod tests {
                         matches!(
                             d,
                             StyleDiagnostic::BadToken { .. }
+                                | StyleDiagnostic::ThemeOwnedToken { .. }
                                 | StyleDiagnostic::UnknownSetter { .. }
                         )
                     });
@@ -998,7 +1021,11 @@ mod tests {
             if let Some(spec) = setters::find_setter(setter) {
                 if let Some(scale) = spec.scale {
                     if scale != "color" {
-                        for it in items.iter().filter(|i| i.kind == StyleCompleteKind::Token).take(20) {
+                        for it in items
+                            .iter()
+                            .filter(|i| i.kind == StyleCompleteKind::Token)
+                            .take(20)
+                        {
                             assert!(
                                 scales::contains(scale, &it.label)
                                     || spec.keywords.contains(&it.label.as_str()),
@@ -1018,7 +1045,10 @@ mod tests {
         let items = style_complete_at(&src, None, off, None);
         let labs = labels(&items);
         assert!(labs.contains(&"hover"), "when keys: {labs:?}");
-        assert!(labs.contains(&"tablet") || labs.contains(&"desktop"), "{labs:?}");
+        assert!(
+            labs.contains(&"tablet") || labs.contains(&"desktop"),
+            "{labs:?}"
+        );
     }
 
     #[test]

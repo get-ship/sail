@@ -61,12 +61,10 @@ fn multi_stmt_fails_without_ts() {
         err.message
     );
     assert!(err.span.is_some(), "error must carry a span");
-    assert!(
-        err.category
-            .as_deref()
-            .map(|c| c.contains("on:"))
-            .unwrap_or(false),
-        "category should name the on: event, got: {:?}",
+    assert_eq!(
+        err.category.as_deref(),
+        Some("sail-handler-complexity"),
+        "category must be the stable rule id, got: {:?}",
         err.category
     );
 }

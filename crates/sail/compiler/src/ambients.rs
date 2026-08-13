@@ -403,7 +403,8 @@ pub fn lib_for_type_env(env: TypeEnv) -> &'static [&'static str] {
 
 /// Framework-owned platform values that stock tsc pulls from the DOM lib.
 /// Pure/Action stay ESNext-only — these names are declared here, never via
-/// `lib: ["DOM"]`. Isolated harness and the generated pack share this list.
+/// `lib: ["DOM"]`. Isolated harness and the generated pack share
+/// `emit_framework_platform`; this list is the pack-test name lock.
 pub const FRAMEWORK_PLATFORM_VALUE_NAMES: &[&str] = &[
     "AbortController",
     "AbortSignal",
@@ -2200,15 +2201,57 @@ mod tests {
     #[test]
     fn pack_declares_framework_platform_names() {
         let dts = emit_types_dts();
+        for name in [
+            "setTimeout",
+            "clearTimeout",
+            "setInterval",
+            "clearInterval",
+            "queueMicrotask",
+            "structuredClone",
+            "atob",
+            "btoa",
+        ] {
+            assert!(
+                dts.contains(&format!("function {name}")),
+                "generated pack must declare typed function `{name}`"
+            );
+        }
+        for name in [
+            "URL",
+            "URLSearchParams",
+            "TextEncoder",
+            "TextDecoder",
+            "AbortController",
+            "AbortSignal",
+            "console",
+        ] {
+            assert!(
+                dts.contains(&format!("const {name}:")),
+                "generated pack must declare value `{name}` as `const {name}:`"
+            );
+        }
         for name in FRAMEWORK_PLATFORM_VALUE_NAMES {
             assert!(
                 dts.contains(name),
-                "generated pack must declare framework platform `{name}`"
+                "FRAMEWORK_PLATFORM_VALUE_NAMES entry `{name}` missing from pack"
             );
         }
+    }
+
+    #[test]
+    fn css_side_effect_module_is_script_form() {
+        let dts = emit_css_side_effect_module();
         assert!(
-            dts.contains("function setTimeout") && dts.contains("function clearTimeout"),
-            "timers must be typed functions, not a DOM lib pull"
+            dts.contains("declare module '*.css'"),
+            "CSS ambient must declare the wildcard:\n{dts}"
+        );
+        assert!(
+            !dts.contains("import") && !dts.contains("export"),
+            "css-modules sibling must stay a script (no import/export) or tsgo TS2882 returns:\n{dts}"
+        );
+        assert!(
+            !dts.contains("CSSStyleSheet") && !dts.contains("className"),
+            "side-effect CSS must not grow a value export:\n{dts}"
         );
     }
 
@@ -2354,6 +2397,20 @@ mod tests {
         assert!(
             pure.exists() && action.exists(),
             "canonical pure/action must remain after sweep"
+        );
+
+        let css = project.join(PROJECT_CSS_MODULES_REL);
+        assert!(
+            css.is_file(),
+            "write_project_type_configs must materialize {}",
+            PROJECT_CSS_MODULES_REL
+        );
+        let css_body = fs::read_to_string(&css).unwrap();
+        assert!(
+            css_body.contains("declare module '*.css'")
+                && !css_body.contains("import")
+                && !css_body.contains("export"),
+            "written css-modules.d.ts must be script-form:\n{css_body}"
         );
 
         // Hand-authored root is preserved.

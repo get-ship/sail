@@ -28,10 +28,11 @@ pub use idents::collect_idents;
 
 use crate::diagnostics::{CompileError, Span};
 
-pub fn validate(expr: &str, allow_arrow: bool, location: &str) -> Result<(), CompileError> {
+const RULE_ID: &str = "sail-expression";
+pub fn validate(expr: &str, allow_arrow: bool, _location: &str) -> Result<(), CompileError> {
     let trimmed = expr.trim();
     if trimmed.is_empty() {
-        return Err(CompileError::new("empty expression").with_category(location.to_string()));
+        return Err(CompileError::new("empty expression").with_category(RULE_ID));
     }
     if trimmed.contains("__sail_retired_block__") {
         return Err(CompileError::new(
@@ -40,7 +41,7 @@ pub fn validate(expr: &str, allow_arrow: bool, location: &str) -> Result<(), Com
              <match {…}>…</match>, <when {token}>…</when>. \
              Arms are `{pattern as binding => …}` / `{else => …}` inside the block.",
         )
-        .with_category(location.to_string()));
+        .with_category(RULE_ID));
     }
     let bytes = trimmed.as_bytes();
     let mut in_string: Option<u8> = None;
@@ -103,14 +104,14 @@ pub fn validate(expr: &str, allow_arrow: bool, location: &str) -> Result<(), Com
             return Err(CompileError::new(format!(
                 "statements are not allowed in expressions: `{trimmed}`"
             ))
-            .with_category(location.to_string()));
+            .with_category(RULE_ID));
         }
         if c == b'=' && next == b'>' {
             if !allow_arrow {
                 return Err(CompileError::new(format!(
                     "arrow functions are not allowed here: `{trimmed}`"
                 ))
-                .with_category(location.to_string()));
+                .with_category(RULE_ID));
             }
             i += 2;
             continue;
@@ -121,7 +122,7 @@ pub fn validate(expr: &str, allow_arrow: bool, location: &str) -> Result<(), Com
                 return Err(CompileError::new(format!(
                     "assignments are not allowed in expressions: `{trimmed}`"
                 ))
-                .with_category(location.to_string()));
+                .with_category(RULE_ID));
             }
         }
         i += 1;
@@ -129,7 +130,7 @@ pub fn validate(expr: &str, allow_arrow: bool, location: &str) -> Result<(), Com
     if in_string.is_some() {
         return Err(
             CompileError::new(format!("unterminated string in expression: `{trimmed}`"))
-                .with_category(location.to_string()),
+                .with_category(RULE_ID),
         );
     }
     let _ = paren_depth;

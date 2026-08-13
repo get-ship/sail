@@ -4,6 +4,7 @@ use crate::diagnostics::{CompileError, Span};
 
 use super::{Attr, Comment, Element, Node, RAW_TEXT_TAGS, Text, VOID_TAGS, decode_entities};
 
+const RULE_ID: &str = "sail-html-parse";
 pub(super) struct Parser<'a> {
     src: &'a str,
     bytes: &'a [u8],
@@ -40,7 +41,8 @@ impl<'a> Parser<'a> {
                     "unexpected </{close}> while inside <{}>",
                     parent_tag.unwrap_or("?")
                 ))
-                .with_span(Span::point(self.i)));
+                .with_span(Span::point(self.i))
+                .with_category(RULE_ID));
             }
             if self.starts_with("<!--") {
                 out.push(Node::Comment(self.parse_comment()?));
@@ -119,7 +121,8 @@ impl<'a> Parser<'a> {
         }
         if let Some(parent) = parent_tag {
             return Err(CompileError::new(format!("unterminated <{parent}>"))
-                .with_span(Span::point(self.bytes.len())));
+                .with_span(Span::point(self.bytes.len()))
+                .with_category(RULE_ID));
         }
         Ok(out)
     }
@@ -139,7 +142,9 @@ impl<'a> Parser<'a> {
             }
             self.i += 1;
         }
-        Err(CompileError::new("unterminated <!-- comment").with_span(Span::point(start)))
+        Err(CompileError::new("unterminated <!-- comment")
+            .with_span(Span::point(start))
+            .with_category(RULE_ID))
     }
 
     fn parse_element(&mut self) -> Result<Element, CompileError> {
@@ -150,7 +155,9 @@ impl<'a> Parser<'a> {
             self.i += 1;
         }
         if self.i == tag_start {
-            return Err(CompileError::new("expected tag name").with_span(Span::point(start)));
+            return Err(CompileError::new("expected tag name")
+                .with_span(Span::point(start))
+                .with_category(RULE_ID));
         }
         let tag = self.src[tag_start..self.i].to_ascii_lowercase();
         let attributes = self.parse_attrs()?;
@@ -174,9 +181,9 @@ impl<'a> Parser<'a> {
             self.parse_children(Some(&tag))?
         };
         if self.peek2() != Some((b'<', b'/')) {
-            return Err(
-                CompileError::new(format!("missing </{tag}>")).with_span(Span::point(self.i))
-            );
+            return Err(CompileError::new(format!("missing </{tag}>"))
+                .with_span(Span::point(self.i))
+                .with_category(RULE_ID));
         }
         let close_at = self.i;
         self.i += 2;
@@ -189,13 +196,14 @@ impl<'a> Parser<'a> {
             return Err(CompileError::new(format!(
                 "mismatched close tag </{close_name}> for <{tag}>"
             ))
-            .with_span(Span::point(close_at)));
+            .with_span(Span::point(close_at))
+            .with_category(RULE_ID));
         }
         self.skip_ws();
         if self.i >= self.bytes.len() || self.bytes[self.i] != b'>' {
-            return Err(
-                CompileError::new(format!("malformed </{tag}>")).with_span(Span::point(close_at))
-            );
+            return Err(CompileError::new(format!("malformed </{tag}>"))
+                .with_span(Span::point(close_at))
+                .with_category(RULE_ID));
         }
         self.i += 1;
         Ok(Element {
@@ -273,7 +281,8 @@ impl<'a> Parser<'a> {
                     "unexpected character `{}` while parsing attributes",
                     c as char
                 ))
-                .with_span(Span::point(self.i)));
+                .with_span(Span::point(self.i))
+                .with_category(RULE_ID));
             }
             // Lowercase mirrors DOMParser's behavior — EXCEPT `use:<action>`,
             // whose suffix is a case-sensitive JS identifier (the action/hook in
@@ -344,7 +353,9 @@ impl<'a> Parser<'a> {
             self.skip_ws();
         }
         if self.i >= self.bytes.len() || self.bytes[self.i] != b'>' {
-            return Err(CompileError::new("expected `>`").with_span(Span::point(self.i)));
+            return Err(CompileError::new("expected `>`")
+                .with_span(Span::point(self.i))
+                .with_category(RULE_ID));
         }
         self.i += 1;
         Ok(self_closed)
@@ -373,9 +384,9 @@ impl<'a> Parser<'a> {
             self.i += 1;
         }
         if self.i >= self.bytes.len() {
-            return Err(
-                CompileError::new("unterminated attribute value").with_span(Span::point(qstart))
-            );
+            return Err(CompileError::new("unterminated attribute value")
+                .with_span(Span::point(qstart))
+                .with_category(RULE_ID));
         }
         let v = self.src[value_start..self.i].to_string();
         let vs = Span::new(value_start, self.i);
@@ -422,7 +433,8 @@ impl<'a> Parser<'a> {
             self.i += 1;
         }
         Err(CompileError::new("unterminated `{…}` attribute expression")
-            .with_span(Span::point(start)))
+            .with_span(Span::point(start))
+            .with_category(RULE_ID))
     }
 
     fn skip_ws(&mut self) {
@@ -455,7 +467,9 @@ impl<'a> Parser<'a> {
             j += 1;
         }
         if j == start {
-            return Err(CompileError::new("malformed close tag").with_span(Span::point(self.i)));
+            return Err(CompileError::new("malformed close tag")
+                .with_span(Span::point(self.i))
+                .with_category(RULE_ID));
         }
         Ok(self.src[start..j].to_ascii_lowercase())
     }

@@ -493,8 +493,8 @@ fn extract_controller_region(source: &str) -> Option<ControllerRegion> {
     let start = find_outside_comments(source, "<controller")?;
     let open_rel = source[start..].find('>')?;
     let body_start = start + open_rel + 1;
-    let rel = source[body_start..].find("</controller>")?;
-    let body_end = body_start + rel;
+    // Must use the same close scan as `extract_controller_block` so string/regex/template contents cannot end the region.
+    let body_end = crate::parse::preprocess::find_controller_close(source, body_start)?;
     let raw = &source[body_start..body_end];
     // Skip leading blank lines only — do **not** strip indentation on the first
     // content line (that would shift diagnostic columns left).
@@ -2057,6 +2057,33 @@ fn typecheck_project_env_via_kind_config(
     let kind_abs = project_root.join(kind_rel);
     if !kind_abs.is_file() {
         return Ok(false);
+    }
+
+    // Kind `files` siblings must exist. tsgo "file not found" lands under
+    // `node_modules/.sail/` and is filtered as ambient noise below — a missing
+    // required pack would silent-green product CSS/timer checks.
+    if let Some(sail_dir) = kind_abs.parent() {
+        let mut required = vec!["types.d.ts", "css-modules.d.ts"];
+        if env == TypeEnv::Action {
+            required.push("action-observation.d.ts");
+        }
+        for name in required {
+            let path = sail_dir.join(name);
+            if !path.is_file() {
+                diags.push(Diagnostic {
+                    line: 1,
+                    col: 1,
+                    end_line: 1,
+                    end_col: 1,
+                    severity: DiagSeverity::Error,
+                    message: format!(
+                        "kind tsconfig lists `./{name}` but {} is missing",
+                        path.display()
+                    ),
+                    rule: Some(RULE_TYPE_GATE.to_string()),
+                });
+            }
+        }
     }
 
     // Product file set for attribution + filtering (same homes the batch walked).
@@ -3792,6 +3819,75 @@ export default controller((ctx) => {
     }
 
     #[test]
+    fn controller_region_ignores_close_inside_sample_literals() {
+        let src = r#"
+<controller>
+export default controller(() => {
+  const heading = () => 'ok'
+  const escaped = ''.replace(/\\/g, '\\\\').replace(/'/g, "\\'")
+  const fenced = "```sail\n</controller>\n```"
+  const quotedAttr = 'code="</controller>"'
+  const exprTmpl = `<x code={'</controller>'}>${'</controller>'}</x>`
+  return { heading, escaped, fenced, quotedAttr, exprTmpl }
+})
+</controller>
+<view name={heading()}></view>
+"#;
+        let r = extract_controller_region(src).expect("region");
+        assert!(
+            r.body.contains("return { heading"),
+            "region must include code after sample-literal fake closes: {}",
+            r.body
+        );
+        assert!(
+            r.body.contains("exprTmpl"),
+            "region must reach the real end of the controller: {}",
+            r.body
+        );
+        assert_eq!(r.body_start_line, 3, "body starts on first content line");
+    }
+
+    #[test]
+    fn template_expression_error_maps_to_author_line_not_eof() {
+        let src = r#"
+<controller>
+export default controller(() => {
+  const heading = () => 'ok'
+  const escaped = ''.replace(/\\/g, '\\\\').replace(/'/g, "\\'")
+  const fenced = "```sail\n</controller>\n```"
+  const quotedAttr = 'code="</controller>"'
+  const exprTmpl = `<x code={'</controller>'}>${'</controller>'}</x>`
+  return { heading, escaped, fenced, quotedAttr, exprTmpl }
+})
+</controller>
+<view name={heading()} missing={nope()}></view>
+"#;
+        let author_line = src
+            .lines()
+            .position(|l| l.contains("nope()"))
+            .expect("nope() line")
+            + 1;
+        let eof_plus_one = src.lines().count() + 1;
+        let path = Path::new("apps/fake/src/widget/widget.sail");
+        let diags = crate::check_all(src, Some(path), &[], None);
+        assert!(
+            !diags
+                .iter()
+                .any(|d| d.message.contains("Identifier 'heading' is not declared")),
+            "heading must stay in scope: {diags:?}"
+        );
+        let hit = diags
+            .iter()
+            .find(|d| d.message.contains("Identifier 'nope' is not declared"))
+            .unwrap_or_else(|| panic!("expected undeclared `nope`, got {diags:?}"));
+        assert_eq!(
+            hit.line, author_line,
+            "expression error must land on the author line, not EOF+1 ({eof_plus_one}): {hit:?}"
+        );
+        assert_ne!(hit.line, eof_plus_one);
+    }
+
+    #[test]
     fn missing_relative_sail_module_hard_fails_ts2307() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
             .ancestors()
@@ -4109,6 +4205,39 @@ export function props<T extends Record<string, Prop<unknown> | readonly string[]
         assert!(
             type_errs.is_empty(),
             ".ts relative + @/ alias must gate-clean (no TS2307/TS5102): {type_errs:?} all={diags:?}"
+        );
+    }
+
+    #[test]
+    fn missing_css_modules_sibling_is_type_gate_error() {
+        let tmp = tempfile::tempdir().expect("tmpdir");
+        let project = tmp.path();
+        std::fs::create_dir_all(project.join("src/compositions")).unwrap();
+        std::fs::write(
+            project.join("package.json"),
+            r#"{"name":"@ship/css-sibling-missing"}"#,
+        )
+        .unwrap();
+        let src = project.join("src/compositions/tokens.ts");
+        std::fs::write(
+            &src,
+            "import '@ship/tokens/tokens.css'\nexport const ok = 1\n",
+        )
+        .unwrap();
+        crate::ambients::write_project_type_configs(project).expect("write kind configs");
+        std::fs::remove_file(project.join(crate::ambients::PROJECT_CSS_MODULES_REL))
+            .expect("drop script sibling");
+        let diags = collect_project_type_gate(
+            project,
+            &[(src.clone(), std::fs::read_to_string(&src).unwrap())],
+        );
+        assert!(
+            diags.iter().any(|d| {
+                d.rule.as_deref() == Some(RULE_TYPE_GATE)
+                    && d.message.contains("css-modules.d.ts")
+                    && d.message.contains("missing")
+            }),
+            "missing kind `files` sibling must be a hard type-gate error, not filtered noise: {diags:?}"
         );
     }
 

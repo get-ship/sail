@@ -18,6 +18,7 @@
 use crate::diagnostics::CompileError;
 use crate::ir::*;
 
+const RULE_ID: &str = "sail-reserved-name";
 pub fn check(program: &Program) -> Result<(), CompileError> {
     walk(&program.template, None)
 }
@@ -77,7 +78,8 @@ fn check_tag(el: &ElementInstr, parent_tag: Option<&str>) -> Result<(), CompileE
              Do not use it as a tag; app tests live outside .sail source via \
              @ship/sail-test semantic queries + mock seams.",
         )
-        .with_span(el.span));
+        .with_span(el.span)
+        .with_category(RULE_ID));
     }
     // `<on key=… action=…>` is the `<use-kbd>` template hook's declarative
     // shortcut record (see `dom_emit::collect_kbd_shortcuts`) — a bare tag
@@ -98,7 +100,8 @@ fn check_tag(el: &ElementInstr, parent_tag: Option<&str>) -> Result<(), CompileE
          or check the spelling; `<{tag}>` is not a known HTML element or a \
          language element."
     ))
-    .with_span(el.span))
+    .with_span(el.span)
+    .with_category(RULE_ID))
 }
 
 /// Case-insensitive membership. The parser normalizes tag case (`linearGradient`

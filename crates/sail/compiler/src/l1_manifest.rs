@@ -23,6 +23,48 @@ pub struct L1Entry {
     /// Typed props. The shape is `{ name, type, default? }` so the agent
     /// can read a prop table, not a paragraph.
     pub attributes: Vec<L1Attribute>,
+    /// Component-token slots this host owns (THEMES-2 §2 SSOT).
+    /// Theme studio + gate read this — no parallel tables.
+    pub component_tokens: Vec<L1ComponentToken>,
+    /// JS participation: none / enhancement / required + `use:` behaviors.
+    pub js: L1Js,
+}
+
+/// One L1 component-token slot: author name, default semantic slot, kind.
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+pub struct L1ComponentToken {
+    /// Author / storage leaf (`bg`, `foreground`, `border`).
+    pub name: String,
+    /// Semantic slot this defaults to (`background`, `foreground`, `border`).
+    pub default: String,
+    /// `scalar` (single paint) or `composite` (multi-value).
+    #[serde(rename = "type")]
+    pub ty: L1SlotType,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum L1SlotType {
+    Scalar,
+    Composite,
+}
+
+/// JS requirement for an L1 host.
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+pub struct L1Js {
+    /// `none` | `enhancement` | `required`.
+    pub kind: L1JsKind,
+    /// `use:` behavior names stamped on the structure.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub behaviors: Vec<String>,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum L1JsKind {
+    None,
+    Enhancement,
+    Required,
 }
 
 /// An L1 element's prop. The declared `props:` block in the stdlib source.
@@ -146,11 +188,15 @@ static STDLIB_ROWS: LazyLock<Vec<L1Entry>> = LazyLock::new(|| {
                         .collect()
                 })
                 .unwrap_or_default();
+            let component_tokens = component_tokens_for_tag(el.tag);
+            let js = js_for_element(el);
             L1Entry {
                 tag: el.tag.to_string(),
                 kind: L1Kind::StdlibElement,
                 description,
                 attributes,
+                component_tokens,
+                js,
             }
         })
         .collect();
@@ -205,6 +251,88 @@ fn strip_tag_emdash(trimmed: &str) -> String {
         .find('—')
         .map(|i| trimmed[i + '—'.len_utf8()..].trim_start().to_string())
         .unwrap_or_else(|| trimmed.to_string())
+}
+
+fn component_tokens_for_tag(tag: &str) -> Vec<L1ComponentToken> {
+    let Some(pack) = sail_lint::style::surface_pack_for_host(tag) else {
+        return Vec::new();
+    };
+    let Some(slots) = sail_lint::style::surface_slots(pack) else {
+        return Vec::new();
+    };
+    let mut out: Vec<L1ComponentToken> = slots
+        .iter()
+        .map(|s| {
+            let name = if s.author_member.is_empty() {
+                "bg".to_string()
+            } else {
+                s.author_member.to_string()
+            };
+            let default = semantic_default_for_public(s.public_name);
+            let ty = if looks_composite(s.public_name) {
+                L1SlotType::Composite
+            } else {
+                L1SlotType::Scalar
+            };
+            L1ComponentToken { name, default, ty }
+        })
+        .collect();
+    out.sort_by(|a, b| a.name.cmp(&b.name));
+    out
+}
+
+fn semantic_default_for_public(public: &str) -> String {
+    let Some(raw) = sail_lint::tokens::token_value(public) else {
+        return String::new();
+    };
+    if let Some(inner) = raw.strip_prefix("var(--").and_then(|s| s.strip_suffix(')')) {
+        return inner.to_string();
+    }
+    raw.to_string()
+}
+
+fn looks_composite(public: &str) -> bool {
+    let Some(raw) = sail_lint::tokens::token_value(public) else {
+        return false;
+    };
+    // Multi-function / space-separated CSS values (filters, shadows).
+    raw.contains(") ") || raw.contains(',')
+}
+
+fn js_for_element(el: &crate::stdlib::StdlibElement) -> L1Js {
+    let behaviors = extract_use_behaviors(&el.out.structure_html);
+    let kind = if behaviors.is_empty() {
+        L1JsKind::None
+    } else if el.out.native {
+        L1JsKind::Enhancement
+    } else {
+        L1JsKind::Required
+    };
+    L1Js { kind, behaviors }
+}
+
+fn extract_use_behaviors(html: &str) -> Vec<String> {
+    let mut out = Vec::new();
+    let bytes = html.as_bytes();
+    let mut i = 0usize;
+    while i + 4 < bytes.len() {
+        if &bytes[i..i + 4] == b"use:" {
+            let start = i + 4;
+            let mut end = start;
+            while end < bytes.len() && (bytes[end].is_ascii_alphanumeric() || bytes[end] == b'-') {
+                end += 1;
+            }
+            if end > start {
+                out.push(html[start..end].to_string());
+            }
+            i = end;
+            continue;
+        }
+        i += 1;
+    }
+    out.sort();
+    out.dedup();
+    out
 }
 
 // ── the public surface ──────────────────────────────────────────────────

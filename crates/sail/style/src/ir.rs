@@ -13,10 +13,7 @@ pub enum PaintArg {
     ///
     /// Static roots resolve to a public token id before CSS lower. Bound roots
     /// (`tone`) expand over the group family at emit with attr-gated classes.
-    MemberPath {
-        root: String,
-        path: Vec<String>,
-    },
+    MemberPath { root: String, path: Vec<String> },
 }
 
 impl PaintArg {
@@ -144,6 +141,11 @@ pub enum StyleDiagnostic {
         value: String,
         source: String,
     },
+    /// L1 component token named in app Style — theme-owned (THEMES-1-ENFORCE).
+    ThemeOwnedToken {
+        name: String,
+        source: String,
+    },
     /// Setter called with more positional args than it takes. Border composites
     /// plus two-arg paint composites (`colorDeepen` / `colorMix`) accept two.
     BadArity {
@@ -189,6 +191,11 @@ impl StyleDiagnostic {
             StyleDiagnostic::BadToken { setter, value, .. } => {
                 format!("style `{setter}({value})` — value is not a token on this setter's scale")
             }
+            StyleDiagnostic::ThemeOwnedToken { name, .. } => {
+                format!(
+                    "component token `{name}` is theme-owned; override via theme= or the theme document"
+                )
+            }
             StyleDiagnostic::BadArity { setter, got, .. } => {
                 format!("style `{setter}` does not accept {got} positional arguments")
             }
@@ -217,6 +224,7 @@ impl StyleDiagnostic {
             StyleDiagnostic::ParseError { source, .. }
             | StyleDiagnostic::UnknownSetter { source, .. }
             | StyleDiagnostic::BadToken { source, .. }
+            | StyleDiagnostic::ThemeOwnedToken { source, .. }
             | StyleDiagnostic::BadArity { source, .. }
             | StyleDiagnostic::UnknownWhenKey { source, .. }
             | StyleDiagnostic::UnknownRef { source, .. }

@@ -15,7 +15,7 @@
       "color": {
         "brandAccent": {
           "default": {
-            "$value": "oklch(0.62 0.24 28)",
+            "$value": "oklch(0.55 0.24 28)",
             "$type": "color"
           },
           "foreground": {

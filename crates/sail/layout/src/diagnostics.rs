@@ -18,9 +18,9 @@
 //!
 //! Each span is into the **preprocessed** source.
 
+use crate::CheckOptions;
 use crate::metrics::{self, table as metrics_table};
 use crate::taffy_tree::Layout;
-use crate::CheckOptions;
 use serde::Serialize;
 use taffy::style::Overflow;
 
@@ -370,6 +370,10 @@ pub fn scan_with(
     // without a truncate marker while overflow clips on the inline axis.
     if options.experimental && options.text_metrics_enabled() {
         scan_clipped_text(layout, &mut out)?;
+    }
+
+    if options.experimental {
+        crate::tap_targets::scan(layout, &mut out)?;
     }
 
     Ok(ScanResult {

@@ -2864,30 +2864,21 @@ pub fn extract_controller_block(source: &str) -> (String, Option<String>) {
     (stripped, Some(body))
 }
 
-/// First `</controller>` at/after `body_start` that is outside JS/TS string and
-/// template literals (and line / block comments). Usage snippets like
-/// `` const x = () => `<controller>…</controller>…` `` must not terminate the
-/// real SFC block.
-fn find_controller_close(source: &str, body_start: usize) -> Option<usize> {
+/// First `</controller>` at/after `body_start` that is outside JS/TS string,
+/// template, and regex literals (and line / block comments).
+///
+/// Two failure modes share a symptom (empty template scope):
+/// - a fake `</controller>` *inside* a string is taken as the close
+/// - quote mode desyncs (regex `/'.…` or `${'`'`}`), so the *real* close
+///   is treated as still inside a string and the extract returns `None`
+pub(crate) fn find_controller_close(source: &str, body_start: usize) -> Option<usize> {
     let bytes = source.as_bytes();
     if body_start > bytes.len() {
         return None;
     }
     let mut i = body_start;
-    let mut str_quote: Option<u8> = None;
     while i < bytes.len() {
         let c = bytes[i];
-        if let Some(q) = str_quote {
-            if c == b'\\' {
-                i = (i + 2).min(bytes.len());
-                continue;
-            }
-            if c == q {
-                str_quote = None;
-            }
-            i += 1;
-            continue;
-        }
         // Line comment — stay out of quote mode for prose like `// don't`.
         if c == b'/' && i + 1 < bytes.len() && bytes[i + 1] == b'/' {
             i += 2;
@@ -2905,9 +2896,16 @@ fn find_controller_close(source: &str, body_start: usize) -> Option<usize> {
             i = (i + 2).min(bytes.len());
             continue;
         }
+        // `/'/g` is a regex, not an open quote — otherwise the real close is
+        // swallowed and extract returns None.
+        if c == b'/' {
+            if let Some(next) = crate::scan::try_skip_regex(bytes, i, bytes.len()) {
+                i = next;
+                continue;
+            }
+        }
         if c == b'"' || c == b'\'' || c == b'`' {
-            str_quote = Some(c);
-            i += 1;
+            i = crate::scan::skip_string_or_template(bytes, i, bytes.len());
             continue;
         }
         if c == b'<'
@@ -3235,6 +3233,39 @@ export default controller((ctx) => {
         );
         assert!(
             stripped.contains("<button type=\"button\">ok</button>"),
+            "template after the real close must remain: {stripped}"
+        );
+        assert!(
+            !stripped.contains("export default controller"),
+            "controller body must be blanked from the template stream"
+        );
+    }
+
+    /// Product form: `/'/g` (and fenced / quoted-attr / `{expr}` samples)
+    /// must not desync quote mode so the real close is missed.
+    #[test]
+    fn controller_close_survives_regex_quote_and_sample_literals() {
+        let src = r#"
+<controller>
+export default controller(() => {
+  const heading = () => 'ok'
+  const escaped = ''.replace(/\\/g, '\\\\').replace(/'/g, "\\'")
+  const fenced = "```sail\n<controller>\nexport default controller(() => ({}))\n</controller>\n```"
+  const quotedAttr = 'code="</controller>"'
+  const exprTmpl = `<code-block code={'</controller>'}>${'</controller>'}</code-block>`
+  return { heading, escaped, fenced, quotedAttr, exprTmpl }
+})
+</controller>
+<view name={heading()}></view>
+"#;
+        let (stripped, body) = extract_controller_block(src);
+        let body = body.expect("real controller body");
+        assert!(
+            body.contains("return { heading"),
+            "regex/sample literals must not cut the body short: {body}"
+        );
+        assert!(
+            stripped.contains("name={heading()}"),
             "template after the real close must remain: {stripped}"
         );
         assert!(

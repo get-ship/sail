@@ -1042,7 +1042,19 @@ pub fn setters() -> &'static [SetterSpec] {
             name: "clipPath",
             vocab: "clip-path",
             scale: None,
-            keywords: &["none", "circle", "ellipse", "inset-0", "border-box", "padding-box", "content-box", "fill-box", "stroke-box", "view-box", "margin-box"],
+            keywords: &[
+                "none",
+                "circle",
+                "ellipse",
+                "inset-0",
+                "border-box",
+                "padding-box",
+                "content-box",
+                "fill-box",
+                "stroke-box",
+                "view-box",
+                "margin-box",
+            ],
             negatable: false,
             slots: &["clip-path"],
         },
@@ -1074,7 +1086,9 @@ pub fn setters() -> &'static [SetterSpec] {
             name: "brightness",
             vocab: "brightness",
             scale: None,
-            keywords: &["0", "50", "75", "90", "95", "100", "105", "110", "125", "150", "200"],
+            keywords: &[
+                "0", "50", "75", "90", "95", "100", "105", "110", "125", "150", "200",
+            ],
             negatable: false,
             slots: &["filter"],
         },
@@ -1082,7 +1096,9 @@ pub fn setters() -> &'static [SetterSpec] {
             name: "contrast",
             vocab: "contrast",
             scale: None,
-            keywords: &["0", "50", "75", "90", "95", "100", "105", "110", "125", "150", "200"],
+            keywords: &[
+                "0", "50", "75", "90", "95", "100", "105", "110", "125", "150", "200",
+            ],
             negatable: false,
             slots: &["filter"],
         },
@@ -1979,14 +1995,14 @@ pub fn validate_op(op: &PaintOp) -> Result<(), StyleDiagnostic> {
                     source: op.source.clone(),
                 });
             }
-            // SPEC-D1: component surface public names are emit labels only —
-            // not Style author Tokens. Host units use dotted MemberPath.
+            // SPEC-D1 / THEMES-1-ENFORCE: component surface public names are
+            // emit labels only — not Style author Tokens. Host units use
+            // dotted MemberPath. App Style gets a theme-owned teaching error.
             if spec.scale == Some("color")
                 && crate::component_surfaces::is_component_public_name(bare)
             {
-                return Err(StyleDiagnostic::BadToken {
-                    setter: op.setter.clone(),
-                    value: tok.clone(),
+                return Err(StyleDiagnostic::ThemeOwnedToken {
+                    name: tok.clone(),
                     source: op.source.clone(),
                 });
             }
@@ -2565,7 +2581,10 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
                 return Ok(vec![(prop.into(), "var(--border-width)".into())]);
             }
             ("w", "panel-toast-region-width") => {
-                return Ok(vec![("width".into(), "var(--panel-toast-region-width)".into())]);
+                return Ok(vec![(
+                    "width".into(),
+                    "var(--panel-toast-region-width)".into(),
+                )]);
             }
             // Closed product keyframe catalog (packages/sail/runtime
             // keyframes-catalog.ts). Style.animate(name) → CSS host Style var;
@@ -2979,11 +2998,7 @@ fn lower_gap_key_css(
             } else if bare.chars().all(|c| c.is_ascii_digit()) {
                 format!("{sign}{bare}deg")
             } else if let Some(v) = scales::lower("angle", bare) {
-                if neg {
-                    format!("calc(-1 * {v})")
-                } else {
-                    v
-                }
+                if neg { format!("calc(-1 * {v})") } else { v }
             } else {
                 return Some(Err(StyleDiagnostic::BadToken {
                     setter: op.setter.clone(),
@@ -3308,9 +3323,7 @@ fn lower_color_deepen_arg(
                 _ => format!("var(--{bare})"),
             }
         }
-        PaintArg::MemberPath { root, path } => {
-            crate::token_groups::bridge_var_ref(root, path)
-        }
+        PaintArg::MemberPath { root, path } => crate::token_groups::bridge_var_ref(root, path),
     };
     let pct = match pct_arg {
         PaintArg::Bind(name) => format!("var(--{})", css_name_for_bind(name)),
@@ -3347,9 +3360,7 @@ fn lower_color_mix_wash_arg(
                 _ => format!("var(--{bare})"),
             }
         }
-        PaintArg::MemberPath { root, path } => {
-            crate::token_groups::bridge_var_ref(root, path)
-        }
+        PaintArg::MemberPath { root, path } => crate::token_groups::bridge_var_ref(root, path),
     };
     let pct = match pct_arg {
         PaintArg::Bind(name) => format!("var(--{})", css_name_for_bind(name)),
@@ -3689,7 +3700,11 @@ mod tests {
                 "text-decoration-color",
                 "var(--accent)",
             ),
-            ("style({ text: indent(2) })", "text-indent", "var(--space-2)"),
+            (
+                "style({ text: indent(2) })",
+                "text-indent",
+                "var(--space-2)",
+            ),
             (
                 "style({ text: underlineOffset(auto) })",
                 "text-underline-offset",
@@ -3700,17 +3715,41 @@ mod tests {
                 "-webkit-font-smoothing",
                 "antialiased",
             ),
-            ("style({ paint: caret(primary) })", "caret-color", "var(--primary)"),
-            ("style({ paint: accent(accent) })", "accent-color", "var(--accent)"),
+            (
+                "style({ paint: caret(primary) })",
+                "caret-color",
+                "var(--primary)",
+            ),
+            (
+                "style({ paint: accent(accent) })",
+                "accent-color",
+                "var(--accent)",
+            ),
             ("style({ paint: accent(auto) })", "accent-color", "auto"),
-            ("style({ paint: objectPosition(top) })", "object-position", "top"),
+            (
+                "style({ paint: objectPosition(top) })",
+                "object-position",
+                "top",
+            ),
             ("style({ box: order(first) })", "order", "-9999"),
-            ("style({ box: justifySelf(center) })", "justify-self", "center"),
+            (
+                "style({ box: justifySelf(center) })",
+                "justify-self",
+                "center",
+            ),
             ("style({ paint: bgClip(text) })", "background-clip", "text"),
             ("style({ paint: touch(pan-x) })", "touch-action", "pan-x"),
             ("style({ box: resize(y) })", "resize", "vertical"),
-            ("style({ paint: scroll(smooth) })", "scroll-behavior", "smooth"),
-            ("style({ paint: willChange(transform) })", "will-change", "transform"),
+            (
+                "style({ paint: scroll(smooth) })",
+                "scroll-behavior",
+                "smooth",
+            ),
+            (
+                "style({ paint: willChange(transform) })",
+                "will-change",
+                "transform",
+            ),
             ("style({ paint: contain(layout) })", "contain", "layout"),
         ];
         for (src, prop, val) in cases {

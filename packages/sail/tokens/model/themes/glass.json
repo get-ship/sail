@@ -15,7 +15,7 @@
       "color": {
         "brandAccent": {
           "default": {
-            "$value": "oklch(0.62 0.14 var(--brand-hue, 280))",
+            "$value": "oklch(0.55 0.14 var(--brand-hue, 280))",
             "$type": "color"
           },
           "foreground": {
@@ -73,7 +73,7 @@
         },
         "primary": {
           "default": {
-            "$value": "oklch(0.62 0.16 var(--brand-hue, 50))",
+            "$value": "oklch(0.55 0.16 var(--brand-hue, 50))",
             "$type": "color"
           },
           "foreground": {

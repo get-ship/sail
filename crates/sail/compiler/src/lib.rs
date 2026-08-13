@@ -60,6 +60,8 @@ pub(crate) mod scan;
 pub mod scope_manifest;
 pub mod semantic_props;
 pub mod stdlib;
+pub mod theme_gate;
+pub mod theme_surface;
 pub mod tokens_generate;
 pub mod used_icons;
 pub mod used_tags;
@@ -80,7 +82,8 @@ pub use fmt::{
 };
 pub use grammar_vocabulary::{GrammarVocabulary, to_json as grammar_vocabulary_to_json};
 pub use l1_manifest::{
-    L1Attribute, L1Entry, L1Kind, VOID_TAGS, l1_by_kind, l1_count, l1_entries, l1_kind,
+    L1Attribute, L1ComponentToken, L1Entry, L1Js, L1JsKind, L1Kind, L1SlotType, VOID_TAGS,
+    l1_by_kind, l1_count, l1_entries, l1_kind,
 };
 pub use region_capability::{
     CONTROLLER_SIZE_THRESHOLD, REGION_CAPABILITY_MATRIX, RegionCapability,
@@ -88,6 +91,11 @@ pub use region_capability::{
 pub use semantic_props::{
     HOST_ANATOMY, HostAnatomy, SEMANTIC_PROPS, SemanticKind, SemanticProp, host_anatomy,
     is_free_aria_attr, lookup as lookup_semantic_prop, lower_attr_name_str,
+};
+pub use theme_surface::{
+    ThemeTokenHover, ThemeTokenKind, ThemeTokenRef, catalog_theme_ids, infer_active_theme_mode,
+    resolve_theme_token, theme_attr_completions, theme_attr_partial, theme_complete_at,
+    theme_hover_at, theme_override_vocabulary,
 };
 pub use used_icons::{collect_used_icons, collect_used_icons_from_source};
 /// Identity stamp embedded in every emitted artifact (JS leading
@@ -387,7 +395,8 @@ pub fn compile_element(
     if let Some(rest) = name.strip_prefix("sail-") {
         return Err(CompileError::new(format!(
             "element name `{name}` is in the `sail-` component namespace — an L1 element is a              bare lowercase name (`{rest}`), and the compiler adds the `sail-` prefix to its              root class itself. A `sail-`-prefixed tag is a custom element, i.e. a component."
-        )));
+        ))
+        .with_category("sail-element-name"));
     }
     if name.is_empty()
         || !name
@@ -396,7 +405,8 @@ pub fn compile_element(
     {
         return Err(CompileError::new(format!(
             "element name `{name}` must be a bare lowercase name (hyphens allowed: `tab-list`)."
-        )));
+        ))
+        .with_category("sail-element-name"));
     }
     // A `<controller>` block is the L2-component behavior channel; L1
     // elements carry behavior as stacked `use:<behavior>` stamps on their
@@ -408,7 +418,8 @@ pub fn compile_element(
         return Err(CompileError::new(
             "element mode: `<controller>` is not supported — attach behavior with `use:<behavior>`.",
         )
-        .with_span(crate::diagnostics::Span::point(at)));
+        .with_span(crate::diagnostics::Span::point(at))
+        .with_category("sail-element-mode"));
     }
     // parse_element_source: the pipeline minus the stdlib-element pass — an
     // element source may not use stdlib elements (no recursion).
@@ -435,7 +446,8 @@ pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, Compile
             "invalid component name `{}`: {why}. A custom-element tag must be lowercase, \
              start with a letter, and contain a hyphen — e.g. `dash-panel`, not `dashboard`.",
             meta.name
-        )));
+        ))
+        .with_category("sail-component-name"));
     }
     // SPEC-PROJECT-STRUCTURE-1 §4: `<scope>` before `<controller>` is grammar.
     // Check on the author source before stripping the controller block.
@@ -469,7 +481,8 @@ pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, Compile
                  parent to fill props; it receives route params from the router. \
                  Props are component members."
                     .to_string(),
-            ),
+            )
+            .with_category("sail-route-props"),
             &opts,
         ));
     }

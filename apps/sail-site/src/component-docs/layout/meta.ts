@@ -9,6 +9,6 @@ export const meta = {
   kind: 'keywords',
   blurb: "Not components — keywords. The preprocessor lowers them to a div plus exactly the rules used, and they are the one family that accepts dynamic values.",
   heading: "row · column · grid · center",
-  host: 'legacy',
+  host: 'doc-layout',
   stageOwnsKnobs: false,
 } as const satisfies DocMeta

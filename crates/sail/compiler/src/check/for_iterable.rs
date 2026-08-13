@@ -14,6 +14,7 @@ use crate::diagnostics::CompileError;
 use crate::ir::{ForInstr, Instr, Program};
 use crate::parse::expr::{AstKind, parse_expression};
 
+const RULE_ID: &str = "sail-for-iterable";
 pub fn check(program: &Program) -> Result<(), CompileError> {
     walk(&program.template)
 }
@@ -58,7 +59,7 @@ fn check_for(f: &ForInstr) -> Result<(), CompileError> {
     {
         return Err(CompileError::new(format!("<for> iterable: {reason}"))
             .with_span(it.span)
-            .with_category("for-iterable".to_string()));
+            .with_category(RULE_ID));
     }
     walk(&f.body)?;
     if let Some(eb) = &f.else_body {
