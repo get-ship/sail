@@ -479,26 +479,40 @@ fn skip_template_text(src: &str, i: usize) -> Option<usize> {
     if i >= bytes.len() || bytes[i] == b'<' {
         return None;
     }
-    if !preceded_by_tag_close(bytes, i) {
+    if !preceded_by_markup_tag_close(src, i) {
         return None;
     }
     src[i..].find('<').map(|rel| i + rel)
 }
 
-fn preceded_by_tag_close(bytes: &[u8], i: usize) -> bool {
-    let mut j = i;
-    while j > 0 {
-        j -= 1;
-        match bytes[j] {
-            b'>' => {
-                if j > 0 && matches!(bytes[j - 1], b'=' | b'!' | b'-') {
-                    return false;
-                }
-                return true;
-            }
-            b'<' => return false,
+/// True when `src[..i]` already closed an open tag at brace/paren depth 0.
+/// `{n > 0}` / `{n>0}` on the same tag is a comparison, not a closer.
+fn preceded_by_markup_tag_close(src: &str, i: usize) -> bool {
+    let bytes = src.as_bytes();
+    let Some(lt) = bytes[..i].iter().rposition(|&c| c == b'<') else {
+        return false;
+    };
+    let mut pos = lt + 1;
+    let mut depth_brace = 0i32;
+    let mut depth_paren = 0i32;
+    let mut depth_brack = 0i32;
+    while pos < i {
+        let c = bytes[pos];
+        if c == b'\'' || c == b'"' {
+            pos = scan_string_end(src, pos);
+            continue;
+        }
+        match c {
+            b'{' => depth_brace += 1,
+            b'}' => depth_brace = depth_brace.saturating_sub(1),
+            b'(' => depth_paren += 1,
+            b')' => depth_paren = depth_paren.saturating_sub(1),
+            b'[' => depth_brack += 1,
+            b']' => depth_brack = depth_brack.saturating_sub(1),
+            b'>' if depth_brace == 0 && depth_paren == 0 && depth_brack == 0 => return true,
             _ => {}
         }
+        pos += 1;
     }
     false
 }
@@ -729,5 +743,31 @@ mod tests {
         assert_eq!(rw(src), src);
         let attr = "<div style({ paint: borderWidth(1).border(dialog.border) })>x</div>";
         assert_eq!(rw(attr), "<div style({ paint: border(dialog) })>x</div>");
+    }
+
+    #[test]
+    fn comparison_gt_on_same_tag_still_folds_style() {
+        let spaced =
+            "<div hidden={n > 0} style({ paint: borderWidth(1).border(dialog.border) })></div>";
+        assert_eq!(
+            rw(spaced),
+            "<div hidden={n > 0} style({ paint: border(dialog) })></div>"
+        );
+        let tight =
+            "<div hidden={n>0} style({ paint: borderWidth(1).border(dialog.border) })></div>";
+        assert_eq!(
+            rw(tight),
+            "<div hidden={n>0} style({ paint: border(dialog) })></div>"
+        );
+    }
+
+    #[test]
+    fn scope_declarations_still_fold() {
+        let src =
+            "<scope>\n  style foo = { paint: borderWidth(1).border(dialog.border) }\n</scope>";
+        assert_eq!(
+            rw(src),
+            "<scope>\n  style foo = { paint: border(dialog) }\n</scope>"
+        );
     }
 }

@@ -184,7 +184,7 @@ mod tests {
     #[test]
     fn virtual_row_without_translate_fails() {
         let src = r#"
-            <div use:virtualRow={w.start} style({ box: position(absolute).left(0).w(full) })>              row
+            <div use:virtualRow={w.start} style({ box: place({ position: absolute, left: 0 }).size({ w: full }) })>              row
             </div>
         "#;
         let f = lint(src);
@@ -197,7 +197,7 @@ mod tests {
     #[test]
     fn virtual_row_with_translate_passes() {
         let src = r#"
-            <row use:virtualRow={w.start} style({ box: position(absolute).left(0).w(full), paint: translateY(bind(rowY)) })>              row
+            <row use:virtualRow={w.start} style({ box: place({ position: absolute, left: 0 }).size({ w: full }), paint: motion({ y: bind(rowY) }) })>              row
             </row>
         "#;
         assert!(lint(src).is_empty(), "{:?}", lint(src));
@@ -206,7 +206,7 @@ mod tests {
     #[test]
     fn virtual_spacer_without_height_fails() {
         let src = r#"
-            <div use:virtualSpacer={totalSize()} style({ box: position(relative).w(full) })>            </div>
+            <div use:virtualSpacer={totalSize()} style({ box: place({ position: relative }).size({ w: full }) })>            </div>
         "#;
         let f = lint(src);
         assert_eq!(f.len(), 1, "{f:?}");
@@ -229,10 +229,12 @@ mod tests {
         assert!(lint(src).is_empty(), "{:?}", lint(src));
     }
 
+    /// Loose matcher still greens retired `translateY` so old snippets do not
+    /// flip the rule while the corpus finishes the fold. Compile still RetiredSetter.
     #[test]
-    fn token_form_translate_accepted() {
+    fn retired_translate_y_still_accepted_compat() {
         let src = r#"
-            <grid use:virtualRow={w.start} style({ box: position(absolute).left(0).w(full), paint: translateY(bind(rowY)) })>            </grid>
+            <grid use:virtualRow={w.start} style({ box: place({ position: absolute, left: 0 }).size({ w: full }), paint: translateY(bind(rowY)) })>            </grid>
         "#;
         assert!(lint(src).is_empty(), "{:?}", lint(src));
     }

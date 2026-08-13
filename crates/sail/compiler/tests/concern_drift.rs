@@ -236,10 +236,18 @@ const ABSORBED: &[&str] = &[
 
 fn skip_string(src: &str, i: usize) -> Option<usize> {
     let b = src.as_bytes();
-    if i >= b.len() || (b[i] != b'\'' && b[i] != b'"') {
+    if i >= b.len() {
         return None;
     }
     let q = b[i];
+    if q != b'"' && q != b'\'' {
+        return None;
+    }
+    // Prose apostrophes (`Don't`) are not string opens. `'` only starts a
+    // string in attr/arg position (`=`, `(`, …).
+    if q == b'\'' && !apostrophe_opens_string(b, i) {
+        return None;
+    }
     let mut j = i + 1;
     while j < b.len() {
         if b[j] == b'\\' && j + 1 < b.len() {
@@ -252,6 +260,18 @@ fn skip_string(src: &str, i: usize) -> Option<usize> {
         j += 1;
     }
     Some(j)
+}
+
+fn apostrophe_opens_string(b: &[u8], i: usize) -> bool {
+    let mut j = i;
+    while j > 0 {
+        j -= 1;
+        if b[j].is_ascii_whitespace() {
+            continue;
+        }
+        return matches!(b[j], b'=' | b'(' | b'[' | b',' | b':' | b'{');
+    }
+    false
 }
 
 fn skip_line_comment(src: &str, i: usize) -> Option<usize> {
@@ -463,6 +483,38 @@ fn sx_attr_site(src: &str) -> Option<String> {
         i += src[i..].chars().next().map(|c| c.len_utf8()).unwrap_or(1);
     }
     None
+}
+
+#[test]
+fn absorbed_scanner_exemption_edges() {
+    let cases: &[(&str, bool)] = &[
+        ("inset (number)", false),
+        ("inset(0)", true),
+        ("{position()}", false),
+        ("duration={duration()}", false),
+        ("Don't call bg(primary)", true),
+        ("<p>Sticky top/left inset (number).</p>", false),
+    ];
+    for (src, want_hit) in cases {
+        let sites = absorbed_setter_sites(src);
+        assert_eq!(!sites.is_empty(), *want_hit, "{src}: sites={sites:?}");
+    }
+}
+
+#[test]
+fn sx_scanner_exemption_edges() {
+    assert!(
+        sx_attr_site(r#"<code>sx="…"</code>"#).is_none(),
+        "teaching sx= in <code> is not a product attr"
+    );
+    assert!(
+        sx_attr_site(r#"<div sx={style({ paint: fill({ color: primary }) })}>x</div>"#).is_some(),
+        "product sx= must hit"
+    );
+    assert!(
+        sx_attr_site(r#"<div sx="p-4">x</div>"#).is_some(),
+        "quoted product sx= must hit"
+    );
 }
 
 #[test]
