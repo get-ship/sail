@@ -150,7 +150,15 @@ const THEME_MODE_GROUP_KEYS: &[&str] = &[
     "type",
     "fill",
     "ink",
+    "style",
+    "keyframes",
+    "play",
 ];
+
+/// Sail theme extensions (SPEC-SPINNAKER-3 §8 / §10). Not DTCG composites —
+/// they do not flatten to CSS vars. Generate emits them as registry maps.
+pub const SAIL_STYLE_TYPE: &str = "sail.style";
+pub const SAIL_KEYFRAMES_TYPE: &str = "sail.keyframes";
 
 /// DTCG composite `$type` values (SPIN-1). Object `$value` + one of these
 /// is a composite; members flatten to the CSS vars the runtime already reads.
@@ -645,7 +653,7 @@ pub fn generate_with_options(
     out_dir: &Path,
     opts: &GenerateOptions,
 ) -> Result<GenerateReport> {
-    let (layers, name_index, base_tokens) = load_base_layers(model_dir)?;
+    let (layers, name_index, base_tokens, styles, keyframes, plays) = load_base_layers(model_dir)?;
     if layers.is_empty() {
         bail!("No model/*.json files found in {}", model_dir.display());
     }
@@ -804,7 +812,7 @@ pub fn generate_with_options(
         write_with_trailing_newline(&products_css, &emit_products_css(axis))?;
     }
 
-    let mut registry = build_registry(&base_tokens, &aliases);
+    let mut registry = build_registry(&base_tokens, &aliases, &styles, &keyframes, &plays);
     if let Some(ref axis) = products {
         if let Some(obj) = registry.as_object_mut() {
             obj.insert("products".into(), products_registry_meta(axis));
@@ -1046,6 +1054,11 @@ pub fn is_composite_type(ty: &str) -> bool {
     COMPOSITE_TYPES.contains(&ty)
 }
 
+/// True when `$type` is a Sail theme extension (`sail.style` / `sail.keyframes`).
+pub fn is_sail_extension_type(ty: &str) -> bool {
+    ty == SAIL_STYLE_TYPE || ty == SAIL_KEYFRAMES_TYPE
+}
+
 /// Required member names for a composite `$type` (empty = any members allowed).
 pub fn required_composite_members(ty: &str) -> &'static [&'static str] {
     match ty {
@@ -1085,6 +1098,9 @@ pub fn infer_composite_member_type(composite_ty: &str, member: &str) -> &'static
         ("fill" | "ink", "color") => "color",
         ("fill", "image" | "clip" | "glow") => "string",
         ("ink", "caret" | "accent") => "color",
+        ("transition", "property") => "string",
+        ("transition", "duration" | "delay") => "duration",
+        ("transition", "timingFunction" | "ease") => "cubicBezier",
         (_, "color" | "fg" | "foreground" | "bg" | "background") => "color",
         _ => "string",
     }
@@ -1364,6 +1380,14 @@ fn flatten_tokens(doc: &Value, path_prefix: &[String], inherited_type: Option<&s
         if !node.is_object() {
             continue;
         }
+        // Named styles / keyframe presets are theme data, not CSS leaves.
+        if node
+            .get("$type")
+            .and_then(|v| v.as_str())
+            .is_some_and(is_sail_extension_type)
+        {
+            continue;
+        }
         if is_composite_leaf(node, inherited_type) {
             let mut path_parts = path_prefix.to_vec();
             path_parts.push(key.clone());
@@ -1488,6 +1512,110 @@ fn flatten_tokens(doc: &Value, path_prefix: &[String], inherited_type: Option<&s
         }
     }
     out
+}
+
+/// Public identity for a Sail extension path (`style.card-chrome` → `card-chrome`).
+pub fn sail_public_name(path: &str) -> String {
+    if let Some(rest) = path.strip_prefix("style.") {
+        return rest.to_string();
+    }
+    if let Some(rest) = path.strip_prefix("keyframes.") {
+        return rest.to_string();
+    }
+    path.split('.').next_back().unwrap_or(path).to_string()
+}
+
+/// Collect `$type: sail.style` / `sail.keyframes` identities from a DTCG doc.
+///
+/// Registry keys are the public names (`card-chrome`, `fade`); values keep
+/// `$type` plus the authored `$value` (and `when` / `animate` when present).
+fn collect_sail_identities(doc: &Value) -> (Map<String, Value>, Map<String, Value>) {
+    let mut styles = Map::new();
+    let mut keyframes = Map::new();
+    walk_sail_identities(doc, &[], &mut styles, &mut keyframes);
+    (styles, keyframes)
+}
+
+fn walk_sail_identities(
+    node: &Value,
+    prefix: &[String],
+    styles: &mut Map<String, Value>,
+    keyframes: &mut Map<String, Value>,
+) {
+    let Some(obj) = node.as_object() else {
+        return;
+    };
+    if let Some(ty) = obj.get("$type").and_then(|v| v.as_str()) {
+        if is_sail_extension_type(ty) {
+            let path = prefix.join(".");
+            let ident = sail_public_name(&path);
+            if ident.is_empty() {
+                return;
+            }
+            let mut meta = Map::new();
+            meta.insert("path".into(), Value::String(path));
+            meta.insert("type".into(), Value::String(ty.to_string()));
+            if let Some(val) = obj.get("$value") {
+                meta.insert("value".into(), val.clone());
+            }
+            if let Some(when) = obj.get("when") {
+                meta.insert("when".into(), when.clone());
+            }
+            if let Some(animate) = obj.get("animate") {
+                meta.insert("animate".into(), animate.clone());
+            }
+            if ty == SAIL_STYLE_TYPE {
+                styles.insert(ident, Value::Object(meta));
+            } else {
+                keyframes.insert(ident, Value::Object(meta));
+            }
+            return;
+        }
+    }
+    if obj.contains_key("$value") {
+        return;
+    }
+    for (k, child) in obj {
+        if k.starts_with('$') || !child.is_object() {
+            continue;
+        }
+        let mut next = prefix.to_vec();
+        next.push(k.clone());
+        walk_sail_identities(child, &next, styles, keyframes);
+    }
+}
+
+/// Named play property-sets (`play.colors` as `$type: transition`).
+///
+/// These are not keyframes. They land in registry `plays` so a resolver can
+/// see `play(colors)` as a prop-set name.
+fn collect_play_property_sets(doc: &Value) -> Map<String, Value> {
+    let mut plays = Map::new();
+    let Some(play) = doc.get("play").and_then(|v| v.as_object()) else {
+        return plays;
+    };
+    for (name, node) in play {
+        if name.starts_with('$') {
+            continue;
+        }
+        let Some(obj) = node.as_object() else {
+            continue;
+        };
+        let Some(ty) = obj.get("$type").and_then(|v| v.as_str()) else {
+            continue;
+        };
+        if ty != "transition" {
+            continue;
+        }
+        let mut meta = Map::new();
+        meta.insert("path".into(), Value::String(format!("play.{name}")));
+        meta.insert("type".into(), Value::String(ty.to_string()));
+        if let Some(val) = obj.get("$value") {
+            meta.insert("value".into(), val.clone());
+        }
+        plays.insert(name.clone(), Value::Object(meta));
+    }
+    plays
 }
 
 fn build_name_index(tokens: &[Token]) -> NameIndex {
@@ -1684,7 +1812,16 @@ fn layer_meta(doc: &Value, file: &str, fallback_layer: &str) -> LayerMeta {
     }
 }
 
-fn load_base_layers(model_dir: &Path) -> Result<(Vec<Layer>, NameIndex, Vec<Token>)> {
+fn load_base_layers(
+    model_dir: &Path,
+) -> Result<(
+    Vec<Layer>,
+    NameIndex,
+    Vec<Token>,
+    Map<String, Value>,
+    Map<String, Value>,
+    Map<String, Value>,
+)> {
     let mut files: Vec<String> = fs::read_dir(model_dir)
         .with_context(|| format!("read dir {}", model_dir.display()))?
         .filter_map(|e| e.ok())
@@ -1741,7 +1878,10 @@ fn load_base_layers(model_dir: &Path) -> Result<(Vec<Layer>, NameIndex, Vec<Toke
         .or_else(|| layers.first().map(|l| l.tokens.clone()))
         .unwrap_or_default();
 
-    Ok((layers, name_index, base_tokens))
+    let (styles, keyframes) = collect_sail_identities(&base_doc);
+    let plays = collect_play_property_sets(&base_doc);
+
+    Ok((layers, name_index, base_tokens, styles, keyframes, plays))
 }
 
 /// Refuse leftover hyphenated siblings next to a `border` composite
@@ -3296,7 +3436,13 @@ fn emit_layer(layer: &Layer) -> String {
     parts.join("\n")
 }
 
-fn build_registry(base_tokens: &[Token], aliases: &BTreeMap<String, String>) -> Value {
+fn build_registry(
+    base_tokens: &[Token],
+    aliases: &BTreeMap<String, String>,
+    styles: &Map<String, Value>,
+    keyframes: &Map<String, Value>,
+    plays: &Map<String, Value>,
+) -> Value {
     // Preserve insertion order of base tokens then aliases (like JS object).
     let mut tokens: Map<String, Value> = Map::new();
     let mut composites: Map<String, Value> = Map::new();
@@ -3419,6 +3565,9 @@ fn build_registry(base_tokens: &[Token], aliases: &BTreeMap<String, String>) -> 
     out.insert("paths".into(), Value::Object(paths));
     out.insert("aliases".into(), Value::Object(alias_entries));
     out.insert("composites".into(), Value::Object(composites));
+    out.insert("styles".into(), Value::Object(styles.clone()));
+    out.insert("keyframes".into(), Value::Object(keyframes.clone()));
+    out.insert("plays".into(), Value::Object(plays.clone()));
     Value::Object(out)
 }
 
@@ -5785,8 +5934,7 @@ mod tests {
         // Global `[theme=id]:not([mode])` would pin nested dual-mode hosts
         // to the default mode. Only ancestor-qualified forms are allowed.
         let global_bare = css.lines().any(|l| {
-            l.trim() == "[theme='ship']:not([mode])"
-                || l.trim() == "[theme='ship']:not([mode]),"
+            l.trim() == "[theme='ship']:not([mode])" || l.trim() == "[theme='ship']:not([mode]),"
         });
         assert!(
             !global_bare,
@@ -6061,8 +6209,11 @@ mod tests {
       "xs": { "$value": "11px", "$type": "dimension" },
       "sm": { "$value": "12px", "$type": "dimension" },
       "base": { "$value": "13px", "$type": "dimension" },
-      "xl": { "$value": "20px", "$type": "dimension" }
+      "lg": { "$value": "16px", "$type": "dimension" },
+      "xl": { "$value": "20px", "$type": "dimension" },
+      "4xl": { "$value": "36px", "$type": "dimension" }
     },
+    "displayFont": { "$value": "Syne", "$type": "fontFamily" },
     "body": {
       "font": { "$value": "Inter", "$type": "fontFamily" },
       "weight": { "$value": "400", "$type": "number" }
@@ -6158,6 +6309,34 @@ mod tests {
     "mono": {
       "$type": "type",
       "$value": { "family": "{typography.monoFont}" }
+    },
+    "heading-2": {
+      "$type": "type",
+      "$value": {
+        "family": "{typography.heading.font}",
+        "size": "{typography.text.lg}"
+      }
+    },
+    "heading-3": {
+      "$type": "type",
+      "$value": {
+        "family": "{typography.heading.font}",
+        "size": "{typography.text.base}"
+      }
+    },
+    "display-sm": {
+      "$type": "type",
+      "$value": {
+        "family": "{typography.displayFont}",
+        "size": "{typography.text.4xl}"
+      }
+    },
+    "mono-sm": {
+      "$type": "type",
+      "$value": {
+        "family": "{typography.monoFont}",
+        "size": "{typography.text.xs}"
+      }
     }
   },
   "elevation": {
@@ -6217,6 +6396,10 @@ mod tests {
             "type.label",
             "type.heading",
             "type.mono",
+            "type.heading-2",
+            "type.heading-3",
+            "type.display-sm",
+            "type.mono-sm",
             "elevation.xs",
             "elevation.sm",
             "elevation.md",
@@ -6312,5 +6495,215 @@ mod tests {
             err.contains("schema error") && err.contains("pad-x"),
             "expected pad-x schema error, got: {err}"
         );
+    }
+
+    #[test]
+    fn generate_emits_named_styles_type_roles_and_keyframes() {
+        let dir = tempfile::tempdir().unwrap();
+        let model = dir.path().join("model");
+        let out = dir.path().join("src");
+        write_file(
+            &model.join("base.json"),
+            r#"{
+  "$extensions": { "sail": { "selector": ":root", "layer": "base" } },
+  "typography": {
+    "text": {
+      "xs": { "$value": "11px", "$type": "dimension" },
+      "lg": { "$value": "16px", "$type": "dimension" },
+      "base": { "$value": "13px", "$type": "dimension" },
+      "4xl": { "$value": "36px", "$type": "dimension" }
+    },
+    "heading": {
+      "font": { "$value": "Syne", "$type": "fontFamily" },
+      "weight": { "$value": "600", "$type": "number" }
+    },
+    "displayFont": { "$value": "Syne", "$type": "fontFamily" },
+    "monoFont": { "$value": "JetBrains Mono", "$type": "fontFamily" },
+    "font": { "weight-normal": { "$value": "400", "$type": "number" } }
+  },
+  "type": {
+    "heading-2": {
+      "$type": "type",
+      "$value": { "family": "{typography.heading.font}", "size": "{typography.text.lg}" }
+    },
+    "heading-3": {
+      "$type": "type",
+      "$value": { "family": "{typography.heading.font}", "size": "{typography.text.base}" }
+    },
+    "display-sm": {
+      "$type": "type",
+      "$value": { "family": "{typography.displayFont}", "size": "{typography.text.4xl}" }
+    },
+    "mono-sm": {
+      "$type": "type",
+      "$value": { "family": "{typography.monoFont}", "size": "{typography.text.xs}" }
+    }
+  },
+  "style": {
+    "card-chrome": {
+      "$type": "sail.style",
+      "$value": {
+        "bg": "card",
+        "border": "subtle",
+        "radius": "lg",
+        "size": "full",
+        "pad": { "x": 5, "y": 4 }
+      }
+    },
+    "muted": {
+      "$type": "sail.style",
+      "$value": { "type": "body-sm", "fg": "muted-foreground" }
+    },
+    "navLink": {
+      "$type": "sail.style",
+      "$value": { "pad": { "x": 3, "y": 2 }, "radius": "md", "type": "label" },
+      "when": {
+        "hover": { "bg": "surface-2" },
+        "current": { "bg": "primary", "fg": "primary-foreground" }
+      }
+    }
+  },
+  "keyframes": {
+    "fade": {
+      "$type": "sail.keyframes",
+      "$value": { "from": { "opacity": 0 }, "to": { "opacity": 1 } }
+    },
+    "fade-scale-in": {
+      "$type": "sail.keyframes",
+      "$value": {
+        "from": { "opacity": 0, "transform": "scale(0.96)" },
+        "to": { "opacity": 1, "transform": "scale(1)" }
+      }
+    },
+    "slide-up": {
+      "$type": "sail.keyframes",
+      "$value": {
+        "from": { "opacity": 0, "transform": "translateY(8px)" },
+        "to": { "opacity": 1, "transform": "translateY(0)" }
+      }
+    }
+  },
+  "play": {
+    "colors": {
+      "$type": "transition",
+      "$value": {
+        "property": "color, background-color, border-color, outline-color, fill, stroke"
+      }
+    }
+  }
+}
+"#,
+        );
+        let report = generate(&model, &out).expect("generate styles + keyframes");
+        let css = fs::read_to_string(&report.tokens_css).unwrap();
+        assert!(
+            css.contains("--type-heading-2-family:"),
+            "type role members flatten to CSS: {css}"
+        );
+        assert!(
+            !css.contains("--card-chrome"),
+            "named styles are not CSS vars: {css}"
+        );
+        assert!(
+            !css.contains("--fade:"),
+            "keyframes are not CSS vars: {css}"
+        );
+        assert!(
+            css.contains("--play-colors-property:"),
+            "play property-set members flatten: {css}"
+        );
+        let reg: Value =
+            serde_json::from_str(&fs::read_to_string(&report.registry_json).unwrap()).unwrap();
+        for ident in [
+            "type.heading-2",
+            "type.heading-3",
+            "type.display-sm",
+            "type.mono-sm",
+        ] {
+            assert_eq!(
+                reg["composites"][ident]["type"].as_str().unwrap_or(""),
+                "type",
+                "missing type role {ident}"
+            );
+        }
+        for ident in ["card-chrome", "muted", "navLink"] {
+            assert_eq!(
+                reg["styles"][ident]["type"].as_str().unwrap_or(""),
+                "sail.style",
+                "missing style {ident}"
+            );
+            assert!(
+                reg["styles"][ident].get("value").is_some(),
+                "style {ident} must carry value"
+            );
+        }
+        assert_eq!(reg["styles"]["card-chrome"]["value"]["bg"], "card");
+        assert_eq!(reg["styles"]["card-chrome"]["value"]["pad"]["x"], 5);
+        assert_eq!(reg["styles"]["muted"]["value"]["type"], "body-sm");
+        assert_eq!(reg["styles"]["navLink"]["when"]["hover"]["bg"], "surface-2");
+        assert_eq!(
+            reg["styles"]["navLink"]["when"]["current"]["fg"],
+            "primary-foreground"
+        );
+        for ident in ["fade", "fade-scale-in", "slide-up"] {
+            assert_eq!(
+                reg["keyframes"][ident]["type"].as_str().unwrap_or(""),
+                "sail.keyframes",
+                "missing keyframe {ident}"
+            );
+            assert!(
+                reg["keyframes"][ident].get("value").is_some(),
+                "keyframe {ident} must carry value"
+            );
+        }
+        assert!(
+            reg["keyframes"].get("colors").is_none(),
+            "colors is a play property-set, not a keyframe"
+        );
+        assert_eq!(reg["plays"]["colors"]["type"], "transition");
+        assert_eq!(
+            reg["plays"]["colors"]["value"]["property"],
+            "color, background-color, border-color, outline-color, fill, stroke"
+        );
+        assert_eq!(reg["composites"]["play.colors"]["type"], "transition");
+        assert_eq!(
+            reg["composites"]["play.colors"]["members"]["property"],
+            "play-colors-property"
+        );
+        let names = reg["names"].as_array().unwrap();
+        for banned in ["card-chrome", "navLink", "fade", "style.card-chrome"] {
+            assert!(
+                names.iter().all(|n| n.as_str() != Some(banned)),
+                "identity {banned} must not be a CSS name"
+            );
+        }
+    }
+
+    #[test]
+    fn flatten_skips_sail_style_and_keyframes() {
+        let doc: Value = serde_json::json!({
+            "style": {
+                "card-chrome": {
+                    "$type": "sail.style",
+                    "$value": { "bg": "card" }
+                }
+            },
+            "keyframes": {
+                "fade": {
+                    "$type": "sail.keyframes",
+                    "$value": { "from": { "opacity": 0 }, "to": { "opacity": 1 } }
+                }
+            },
+            "space": {
+                "4": { "$value": "16px", "$type": "dimension" }
+            }
+        });
+        let tokens = flatten_tokens(&doc, &[], None);
+        assert!(tokens.iter().any(|t| t.path == "space.4"));
+        assert!(tokens.iter().all(|t| t.path != "style.card-chrome"));
+        assert!(tokens.iter().all(|t| t.path != "keyframes.fade"));
+        let (styles, keyframes) = collect_sail_identities(&doc);
+        assert_eq!(styles["card-chrome"]["type"], "sail.style");
+        assert_eq!(keyframes["fade"]["type"], "sail.keyframes");
     }
 }
