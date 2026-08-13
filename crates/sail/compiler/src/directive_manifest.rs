@@ -792,6 +792,22 @@ pub const FOREIGN_IDIOMS: &[ForeignIdiomEntry] = &[
         syntax: "document.querySelector / getElementById in a controller",
         instead: "a local use: action that captures the node on mount (and clears on destroy), or closed-over state + on: handlers — controllers do not reach into the DOM by selector",
     },
+    ForeignIdiomEntry {
+        syntax: "padding / padding-*",
+        instead: "pad(3) / pad({ x: 3, y: 2 }) — not a CSS padding property",
+    },
+    ForeignIdiomEntry {
+        syntax: "font-size",
+        instead: "type(body-sm) — not a CSS font-size property",
+    },
+    ForeignIdiomEntry {
+        syntax: "border-width",
+        instead: "border({ width: 1 }) — not a CSS border-width property",
+    },
+    ForeignIdiomEntry {
+        syntax: "p-4 / text-sm",
+        instead: "pad(4) / type(body-sm) — not a Tailwind utility class",
+    },
 ];
 
 /// One value form the motion config grammar accepts (compiler-private Style
