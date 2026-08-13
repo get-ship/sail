@@ -104,31 +104,31 @@ export default controller((ctx) => {
   });
 </controller>
 
-<center use:paintDiagram hidden={hasError()} style({ box: w(full).minH(8) })></center>
+<center use:paintDiagram hidden={hasError()} style({ box: size({ w: full, min-h: 8 }) })></center>
 
 <if {error()}>
   <column
     gap="2"
     style({
-      box: w(full).pad(3).padX(4),
-      paint: borderWidth(1).border(destructive).radius(md).bg(muted),
+      box: size({ w: full }).space({ pad: 3, pad-x: 4 }),
+      paint: border({ color: destructive, width: 1 }).radius(md).fill({ color: muted }),
     })
   >
-    <span style({ box: display(contents), text: fontSize(sm) })>
-      <row gap="2" align="center" style({ paint: fg(destructive) })>
-        <span style({ box: display(contents), text: fontWeight(semibold) })>
+    <span style({ box: flow({ display: contents }), text: type({ size: sm }) })>
+      <row gap="2" align="center" style({ paint: ink({ color: destructive }) })>
+        <span style({ box: flow({ display: contents }), text: type({ weight: semibold }) })>
           <icon name="alert-triangle" label="" size="sm"></icon>
           Diagram failed to render
         </span>
       </row>
-      <pre style({ paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).whitespace(pre-wrap) })>{error()}</pre>
+      <pre style({ paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs, wrap: pre-wrap }) })>{error()}</pre>
       <details>
-        <summary style({ paint: cursor(pointer).fg(muted-foreground), text: fontSize(xs) })>mermaid source</summary>
+        <summary style({ paint: cursor(pointer).ink({ color: muted-foreground }), text: type({ size: xs }) })>mermaid source</summary>
         <pre
           style({
-            box: mt(2).pad(2).padX(3).overflowX(auto),
-            paint: bg(surface-2).borderWidth(1).border(border-subtle).radius(sm),
-            text: fontFamily(mono).fontSize(xs).whitespace(pre-wrap),
+            box: space({ pad: 2, pad-x: 3, mt: 2 }).overflow({ x: auto }),
+            paint: fill({ color: surface-2 }).border({ color: border-subtle, width: 1 }).radius(sm),
+            text: type({ family: mono, size: xs, wrap: pre-wrap }),
           })
         >{value()}</pre>
       </details>

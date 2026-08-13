@@ -13,19 +13,19 @@
     interactive = false
   }
 
-  style host = { box: position(relative) }
-  style gutter = { box: w(5) }
-  style connectorHide = { box: w(half).h(3), paint: visibility(hidden) }
-  style connector = { box: w(half).h(3), paint: bg(border-subtle) }
-  style connectorGrowHide = { box: grow(1).w(half), paint: visibility(hidden) }
-  style connectorGrow = { box: grow(1).w(half), paint: bg(border-subtle) }
-  style dot = { box: w(2_5).h(2_5), paint: radius(full).bg(foreground) }
-  style bodyCol = { box: grow(1).minW(0).padY(2) }
-  style head = { paint: fg(foreground) }
-  style titleSlot = { box: display(contents), text: fontSize(sm).fontWeight(medium).fontFamily(body) }
-  style atTime = { paint: fg(muted-foreground), text: fontSize(xs).tracking(wide).fontFamily(mono) }
-  style body = { box: mt(1), paint: fg(muted-foreground) }
-  style bodySlot = { box: display(contents), text: fontSize(sm).leading(normal) }
+  style host = { box: place({ position: relative }) }
+  style gutter = { box: size({ w: 5 }) }
+  style connectorHide = { box: size({ w: half, h: 3 }), paint: filter({ opacity: 0 }) }
+  style connector = { box: size({ w: half, h: 3 }), paint: fill({ color: border-subtle }) }
+  style connectorGrowHide = { box: flow({ grow: 1 }).size({ w: half }), paint: filter({ opacity: 0 }) }
+  style connectorGrow = { box: flow({ grow: 1 }).size({ w: half }), paint: fill({ color: border-subtle }) }
+  style dot = { box: size({ w: 2_5, h: 2_5 }), paint: radius(full).fill({ color: foreground }) }
+  style bodyCol = { box: flow({ grow: 1 }).size({ min-w: 0 }).space({ pad-y: 2 }) }
+  style head = { paint: ink({ color: foreground }) }
+  style titleSlot = { box: flow({ display: contents }), text: type({ family: body, size: sm, weight: medium }) }
+  style atTime = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs, tracking: wide }) }
+  style body = { box: space({ mt: 1 }), paint: ink({ color: muted-foreground }) }
+  style bodySlot = { box: flow({ display: contents }), text: type({ size: sm, leading: normal }) }
 </scope>
 
 <controller>
@@ -86,8 +86,8 @@ export default controller((ctx) => {
       interactive: true,
       paint: cursor(pointer).radius(sm),
       when: {
-        hover: { paint: bg(muted) },
-        focus: { paint: outline(solid).outline(2).outline(ring).outlineOffset(2) },
+        hover: { paint: fill({ color: muted }) },
+        focus: { paint: border({ kind: outline, color: ring, width: 2, style: solid }) },
       },
     }],
   })
@@ -99,8 +99,8 @@ export default controller((ctx) => {
       <span style(connector)></span>
     }</if>
     <span style(dot, {
-      paint: bg(tone),
-      compound: [{ tone: muted, paint: bg(muted-foreground) }],
+      paint: fill({ color: tone }),
+      compound: [{ tone: muted, paint: fill({ color: muted-foreground }) }],
     })></span>
     <if {last()}>
       <span style(connectorGrowHide)></span>

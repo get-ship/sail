@@ -13,36 +13,36 @@
   }
 
   style host = {
-    box: maxW(full),
-    paint: group().fg(foreground),
-    text: fontFamily(body),
+    box: size({ max-w: full }),
+    paint: group().ink({ color: foreground }),
+    text: type({ family: body }),
   }
   style meta = {
-    box: padX(half),
-    paint: fg(muted-foreground),
-    text: fontSize(xs),
+    box: space({ pad-x: half }),
+    paint: ink({ color: muted-foreground }),
+    text: type({ size: xs }),
   }
-  style fromLabel = { text: fontWeight(medium) }
+  style fromLabel = { text: type({ weight: medium }) }
   style bubble = {
-    box: padY(2).padX(3),
-    paint: radius(lg).bg(surface-1).borderWidth(1).border(border).fg(foreground),
-    text: fontSize(base).leading(normal),
+    box: space({ pad-x: 3, pad-y: 2 }),
+    paint: radius(lg).fill({ color: surface-1 }).border({ color: border, width: 1 }).ink({ color: foreground }),
+    text: type({ size: base, leading: normal }),
     when: {
-      groupStateUser: { paint: bg(hover-bg).borderWidth(1).border(primary) },
-      groupStateSystem: { paint: bg(muted).fg(muted-foreground) },
-      groupStateTool: { paint: bg(hover-bg).borderWidth(1).border(accent) },
-      groupStateError: { paint: borderWidth(1).border(destructive) },
-      groupStateSending: { paint: opacity(75) },
-      groupStateCode: { text: fontFamily(mono).fontSize(sm).whitespace(pre-wrap) },
-      groupStateToolCall: { text: fontFamily(mono).fontSize(sm).whitespace(pre-wrap) },
+      groupStateUser: { paint: fill({ color: hover-bg }).border({ color: primary, width: 1 }) },
+      groupStateSystem: { paint: fill({ color: muted }).ink({ color: muted-foreground }) },
+      groupStateTool: { paint: fill({ color: hover-bg }).border({ color: accent, width: 1 }) },
+      groupStateError: { paint: border({ color: destructive, width: 1 }) },
+      groupStateSending: { paint: filter({ opacity: 75 }) },
+      groupStateCode: { text: type({ family: mono, size: sm, wrap: pre-wrap }) },
+      groupStateToolCall: { text: type({ family: mono, size: sm, wrap: pre-wrap }) },
       groupStateTerminalSnapshot: {
-        paint: bg(surface-inverse).fg(background).borderWidth(1).border(border-subtle),
-        text: fontFamily(mono).fontSize(sm).whitespace(pre-wrap),
+        paint: fill({ color: surface-inverse }).ink({ color: background }).border({ color: border-subtle, width: 1 }),
+        text: type({ family: mono, size: sm, wrap: pre-wrap }),
       },
     },
   }
   // contents: no trailing box when empty so column gap never opens under it.
-  style trailing = { box: display(contents) }
+  style trailing = { box: flow({ display: contents }) }
 </scope>
 
 <column

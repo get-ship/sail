@@ -82,14 +82,14 @@ export default controller(({
 {else-if {chart.error()} =>
   <error-state></error-state>
 }{else =>
-  <stack style({ box: w(fit) })>
+  <stack style({ box: size({ w: fit }) })>
     <svg
       viewBox={'0 0 ' + diameter() + ' ' + diameter()}
       width={diameter()}
       height={diameter()}
       role="img"
       aria-label={ariaLabel()}
-      style({ box: display(block) })
+      style({ box: flow({ display: block }) })
     >
       <path
         d={arc().trackD}
@@ -108,10 +108,10 @@ export default controller(({
         ></path>
       </if>
     </svg>
-    <center style({ paint: fg(foreground) })>
+    <center style({ paint: ink({ color: foreground }) })>
       <span style({
-        box: display(contents),
-        text: fontFamily(heading).fontWeight(semibold).fontSize(xl),
+        box: flow({ display: contents }),
+        text: type({ family: heading, size: xl, weight: semibold }),
       })>
         <slot></slot>
       </span>

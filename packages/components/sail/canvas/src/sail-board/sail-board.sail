@@ -199,13 +199,13 @@ export default controller(({ value, layout }: Scope) => {
   role="application"
   aria-label={label()}
   canvas={canvas}
-  readonly={readonly()} style({ box: display(block).position(relative).w(full).h(full) })>
-  <svg aria-hidden="true" style({ box: position(absolute).top(0).left(0).overflow(visible), paint: pointerEvents(none) })>
+  readonly={readonly()} style({ box: flow({ display: block }).place({ position: relative }).size({ w: full, h: full }) })>
+  <svg aria-hidden="true" style({ box: place({ position: absolute, top: 0, left: 0 }).overflow({ all: visible }), paint: pointerEvents(none) })>
     <for {routes() as r} key={r.id}>
-      <path d={r.path} data-edge-id={r.id} data-state={incidentSet().has(r.id) ? 'incident' : null} stroke-width="2" style({ paint: fill(none).stroke(border), when: { stateIncident: { paint: stroke(primary) } } })></path>
+      <path d={r.path} data-edge-id={r.id} data-state={incidentSet().has(r.id) ? 'incident' : null} fill="none" stroke="currentColor" stroke-width="2" style({ paint: ink({ color: border }), when: { stateIncident: { paint: ink({ color: primary }) } } })></path>
     </for>
     <if {pendingPath()}>
-      <path d={pendingPath()} stroke-width="2" stroke-dasharray="6 4" style({ paint: fill(none).stroke(primary) })></path>
+      <path d={pendingPath()} fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="6 4" style({ paint: ink({ color: primary }) })></path>
     </if>
   </svg>
 
@@ -217,14 +217,14 @@ export default controller(({ value, layout }: Scope) => {
       aria-selected={selectedSet().has(n.id) ? 'true' : 'false'}
       data-node-id={n.id}
       use:rect={{top: n.rect.y, left: n.rect.x, width: n.rect.w, height: n.rect.h}}
-      on:pointerdown={nodePointerDown} style({ box: pad(2), paint: boxSizing(border).bg(surface-1).fg(foreground).borderWidth(1).border(border).radius(md).cursor(grab).select(none).outline(none), when: { focus: { paint: outline(solid).outline(2).outline(ring).outlineOffset(2) }, selected: { paint: border(primary).outline(primary) } } })>
+      on:pointerdown={nodePointerDown} style({ box: space({ pad: 2 }), paint: boxSizing(border).fill({ color: surface-1 }).ink({ color: foreground }).border({ color: border, width: 1 }).radius(md).cursor(grab).select(none).border({ kind: outline, style: none }), when: { focus: { paint: border({ kind: outline, color: ring, width: 2, style: solid }) }, selected: { paint: border({ color: primary }).border({ kind: outline, color: primary }) } } })>
       <slot name={n.id}></slot>
       <for {n.ports as p} key={p.id}>
         <span
           data-port-id={p.id}
           data-state={p.side}
           use:portEdge={p.side}
-          on:pointerdown={portPointerDown} style({ box: position(absolute).w(3).h(3).left(bind(portLeft)).right(bind(portRight)).top(bind(portTop)).bottom(bind(portBottom)), paint: radius(full).bg(background).borderWidth(1).border(primary).cursor(crosshair) })></span>
+          on:pointerdown={portPointerDown} style({ box: place({ position: absolute, top: bind(portTop), bottom: bind(portBottom), left: bind(portLeft), right: bind(portRight) }).size({ w: 3, h: 3 }), paint: radius(full).fill({ color: background }).border({ color: primary, width: 1 }).cursor(crosshair) })></span>
       </for>
     </div>
   </for>

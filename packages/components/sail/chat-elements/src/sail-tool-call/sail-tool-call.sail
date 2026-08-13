@@ -13,48 +13,48 @@
   }
 
   style host = {
-    box: position(relative).overflow(hidden),
-    paint: group().borderWidth(1).border(border).radius(md).bg(surface-1),
+    box: place({ position: relative }).overflow({ all: hidden }),
+    paint: group().border({ color: border, width: 1 }).radius(md).fill({ color: surface-1 }),
   }
   style statusBg = {
     when: {
-      groupStateRunning: { paint: bg(info) },
-      groupStateOk: { paint: bg(success) },
-      groupStateError: { paint: bg(destructive) },
+      groupStateRunning: { paint: fill({ color: info }) },
+      groupStateOk: { paint: fill({ color: success }) },
+      groupStateError: { paint: fill({ color: destructive }) },
     },
   }
   style statusFg = {
     when: {
-      groupStateRunning: { paint: fg(info) },
-      groupStateOk: { paint: fg(success) },
-      groupStateError: { paint: fg(destructive) },
+      groupStateRunning: { paint: ink({ color: info }) },
+      groupStateOk: { paint: ink({ color: success }) },
+      groupStateError: { paint: ink({ color: destructive }) },
     },
   }
   // Status rail only — accordion owns the caret.
-  style rail = { box: position(absolute).left(0).top(0).bottom(0).w(1) }
-  style dot = { paint: shadow(none) }
+  style rail = { box: place({ position: absolute, top: 0, bottom: 0, left: 0 }).size({ w: 1 }) }
+  style dot = { paint: elevation(none) }
   style statusLabel = {
-    box: ml(auto),
-    text: fontSize(xs).textCase(uppercase).tracking(wide),
+    box: space({ ml: auto }),
+    text: type({ size: xs, tracking: wide, case: uppercase }),
   }
   // padS clears the absolute rail so the first glyph never sits under it.
-  style trigger = { box: padY(2).padS(4).padE(3) }
+  style trigger = { box: space({ pad-y: 2, pad-l: 4, pad-r: 3 }) }
   style nameText = {
-    paint: fg(foreground),
-    text: fontFamily(mono).fontSize(sm).fontWeight(medium).truncate(),
+    paint: ink({ color: foreground }),
+    text: type({ family: mono, size: sm, weight: medium, wrap: truncate }),
   }
   style body = {
-    box: padY(2).padS(4).padE(3),
-    paint: borderTWidth(1).borderT(border),
-    text: fontFamily(mono).fontSize(sm).leading(normal),
+    box: space({ pad-y: 2, pad-l: 4, pad-r: 3 }),
+    paint: border({ edge: t, color: border, width: 1 }),
+    text: type({ family: mono, size: sm, leading: normal }),
   }
   style sectionLabel = {
-    box: display(block).mb(1),
-    paint: fg(muted-foreground),
-    text: fontFamily(body).fontSize(xs).textCase(uppercase).tracking(wide),
+    box: flow({ display: block }).space({ mb: 1 }),
+    paint: ink({ color: muted-foreground }),
+    text: type({ family: body, size: xs, tracking: wide, case: uppercase }),
   }
-  style pre = { text: whitespace(pre-wrap) }
-  style resultBlock = { box: mt(2) }
+  style pre = { text: type({ wrap: pre-wrap }) }
+  style resultBlock = { box: space({ mt: 2 }) }
 </scope>
 
 <div data-state={status()} style(host)>

@@ -16,22 +16,22 @@
   }
 
   style anchor = {
-    box: position(absolute).w(0).h(0).left(bind(pinX)).top(bind(pinY)),
+    box: place({ position: absolute, top: bind(pinY), left: bind(pinX) }).size({ w: 0, h: 0 }),
   }
   style pin = {
-    box: w(6).h(6),
-    paint: radius(full).bg(primary).fg(primary-foreground).borderWidth(1).border(background).shadow(sm).cursor(pointer).pointerEvents(auto),
+    box: size({ w: 6, h: 6 }),
+    paint: radius(full).fill({ color: primary }).ink({ color: primary-foreground }).border({ color: background, width: 1 }).elevation(sm).cursor(pointer).pointerEvents(auto),
     when: {
-      stateActive: { paint: outline(ring-color) },
+      stateActive: { paint: border({ kind: outline, color: ring-color }) },
     },
   }
   style badge = {
-    box: display(contents),
-    text: fontSize(xs).fontWeight(medium).fontFamily(body),
+    box: flow({ display: contents }),
+    text: type({ family: body, size: xs, weight: medium }),
   }
   style region = {
-    box: position(absolute).left(bind(boxLeft)).top(bind(boxTop)).w(bind(boxW)).h(bind(boxH)),
-    paint: bg(hover-bg).borderWidth(1).border(primary).border(dashed).radius(sm).cursor(pointer).pointerEvents(auto),
+    box: place({ position: absolute, top: bind(boxTop), left: bind(boxLeft) }).size({ w: bind(boxW), h: bind(boxH) }),
+    paint: fill({ color: hover-bg }).border({ color: primary, width: 1, style: dashed }).radius(sm).cursor(pointer).pointerEvents(auto),
   }
 </scope>
 
@@ -73,7 +73,7 @@ export default controller(({ kind, rect, index, active }: Scope) => {
 </controller>
 <if {isPoint()}>
   <div use:pin={{x: x(), y: y()}} style(anchor)>
-    <center style({ box: h(0) })>
+    <center style({ box: size({ h: 0 }) })>
       <row
         role="button"
         tabindex="0"

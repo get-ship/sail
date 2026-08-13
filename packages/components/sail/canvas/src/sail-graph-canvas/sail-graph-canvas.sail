@@ -110,11 +110,11 @@ export default controller(({ nodes, edges, width, height, layout, selectedId }: 
   })
 </controller>
 
-<div style({ box: position(relative).w(full).overflow(hidden), paint: bg(surface-1).borderWidth(1).border(border).radius(md) })>
+<div style({ box: place({ position: relative }).size({ w: full }).overflow({ all: hidden }), paint: fill({ color: surface-1 }).border({ color: border, width: 1 }).radius(md) })>
   <svg
     viewBox={`0 0 ${width() || 1000} ${height() || 600}`}
     preserveAspectRatio="none"
-    aria-hidden="true" style({ box: display(block).w(full).h(auto), paint: pointerEvents(none) })>
+    aria-hidden="true" style({ box: flow({ display: block }).size({ w: full, h: auto }), paint: pointerEvents(none) })>
     <for {edgeViews() as e} key={e.key}>
       <path
         d={e.d}
@@ -130,8 +130,8 @@ export default controller(({ nodes, edges, width, height, layout, selectedId }: 
   </svg>
 
   <for {nodeViews() as n} key={n.id}>
-    <div use:rect={{left: n.left, top: n.top}} style({ box: position(absolute).w(0).h(0).left(bind(boxLeft)).top(bind(boxTop)) })>
-      <center style({ box: h(0) })>
+    <div use:rect={{left: n.left, top: n.top}} style({ box: place({ position: absolute, top: bind(boxTop), left: bind(boxLeft) }).size({ w: 0, h: 0 }) })>
+      <center style({ box: size({ h: 0 }) })>
         <column
           gap="0"
           role="button"
@@ -145,18 +145,18 @@ export default controller(({ nodes, edges, width, height, layout, selectedId }: 
           on:keydown={(e) => activate(n, e)}
           on:mouseover={() => hover(n)}
 
-         style({ box: w(bind(boxW)).padY(2).padX(3), paint: bg(surface-1).fg(foreground).borderWidth(1).border(border).radius(md).shadow(xs).cursor(pointer), when: { hover: { paint: shadow(sm) }, focus: { paint: outline(ring) }, current: { paint: borderWidth(1).border(ring).shadow(sm) }, stateAgent: { paint: borderLWidth(1).borderL(primary) }, stateSkill: { paint: borderLWidth(1).borderL(success) }, stateMcp: { paint: borderLWidth(1).borderL(info) }, stateRule: { paint: borderLWidth(1).borderL(warning) }, statePerm: { paint: borderLWidth(1).borderL(destructive) }, stateHarness: { paint: borderLWidth(1).borderL(accent) } } })>
+         style({ box: size({ w: bind(boxW) }).space({ pad-x: 3, pad-y: 2 }), paint: fill({ color: surface-1 }).ink({ color: foreground }).border({ color: border, width: 1 }).radius(md).elevation(xs).cursor(pointer), when: { hover: { paint: elevation(sm) }, focus: { paint: border({ kind: outline, color: ring }) }, current: { paint: border({ color: ring, width: 1 }).elevation(sm) }, stateAgent: { paint: border({ edge: l, color: primary, width: 1 }) }, stateSkill: { paint: border({ edge: l, color: success, width: 1 }) }, stateMcp: { paint: border({ edge: l, color: info, width: 1 }) }, stateRule: { paint: border({ edge: l, color: warning, width: 1 }) }, statePerm: { paint: border({ edge: l, color: destructive, width: 1 }) }, stateHarness: { paint: border({ edge: l, color: accent, width: 1 }) } } })>
 
           <if {n.body !== ''}>
             <div use:nodeBody={n.body}></div>
-          {else => <row gap="2" align="center" style({ box: mb(1) })>
-              <span style({ paint: fg(muted-foreground), text: fontFamily(body).fontSize(xs).fontWeight(semibold).tracking(wide).textCase(uppercase) })>{n.kind}</span>
+          {else => <row gap="2" align="center" style({ box: space({ mb: 1 }) })>
+              <span style({ paint: ink({ color: muted-foreground }), text: type({ family: body, size: xs, weight: semibold, tracking: wide, case: uppercase }) })>{n.kind}</span>
             </row>
-            <div style({ paint: fg(foreground) })>              <span style({ box: display(contents), text: fontFamily(body).fontSize(sm).fontWeight(semibold) })>                {n.title}
+            <div style({ paint: ink({ color: foreground }) })>              <span style({ box: flow({ display: contents }), text: type({ family: body, size: sm, weight: semibold }) })>                {n.title}
               </span>
 </div>
             <if {n.sub !== ''}>
-              <div style({ paint: fg(muted-foreground) })>                <span style({ box: display(contents), text: fontFamily(body).fontSize(xs) })>                  {n.sub}
+              <div style({ paint: ink({ color: muted-foreground }) })>                <span style({ box: flow({ display: contents }), text: type({ family: body, size: xs }) })>                  {n.sub}
                 </span>
 </div>
             </if>}</if>

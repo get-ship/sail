@@ -75,7 +75,7 @@ export default controller(({ data, tone, width, height, label, loading }: Scope)
     width={viewport.width()}
     height={viewport.height()}
     aria-hidden="true"
-    style({ box: display(inline-block).overflow(visible) })
+    style({ box: flow({ display: inline-block }).overflow({ all: visible }) })
   ></svg>
 }{else =>
   <svg
@@ -85,7 +85,7 @@ export default controller(({ data, tone, width, height, label, loading }: Scope)
     role="img"
     aria-label={ariaLabel()}
     use:observeViewport
-    style({ box: display(inline-block).overflow(visible) })
+    style({ box: flow({ display: inline-block }).overflow({ all: visible }) })
   >
     <for {seriesPaths() as s} key={s.name}>
       <if {fill()}>

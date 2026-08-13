@@ -214,32 +214,32 @@ export default controller((_ctx: Scope) => {
     role="img"
     aria-label={alt()}
     use:svgInline
-    style({ box: position(relative).w(full).h(full).minH(28).overflow(hidden), paint: bg(surface-1).radius(md) })
+    style({ box: place({ position: relative }).size({ w: full, h: full, min-h: 28 }).overflow({ all: hidden }), paint: fill({ color: surface-1 }).radius(md) })
   ></center>
 {else =>
   <center
     tabindex="0"
     use:zoomStage
-    style({ box: position(relative).w(full).h(full).minH(28).overflow(hidden), paint: bg(surface-1).radius(md) })
+    style({ box: place({ position: relative }).size({ w: full, h: full, min-h: 28 }).overflow({ all: hidden }), paint: fill({ color: surface-1 }).radius(md) })
   >
     <img
       alt={alt()}
       use:rasterImg
       use:zoomPan={zoomPanSig()}
-      style({ box: display(block).w(full).h(full).maxH(full), paint: objectFit(cover).transform(bind(zoomTx)) })
+      style({ box: flow({ display: block }).size({ w: full, h: full, max-h: full }), paint: objectFit(cover).transform(bind(zoomTx)) })
     >
   </center>
   <if {isGallery()}>
-    <row role="listbox" aria-label="Image gallery" gap="2" use:galleryStrip style({ box: pad(2).overflowX(auto) })>
+    <row role="listbox" aria-label="Image gallery" gap="2" use:galleryStrip style({ box: space({ pad: 2 }).overflow({ x: auto }) })>
       <for {galleryItems() as item} key={item.id}>
         <row
           role="option"
           gap="0"
           aria-selected={item.selected ? 'true' : 'false'}
           style({
-            box: grow(0).pad(0).overflow(hidden),
-            paint: bg(surface-1).borderWidth(1).border(border).radius(sm).cursor(pointer),
-            when: { selected: { paint: borderWidth(1).border(primary).shadow(accent) } },
+            box: flow({ grow: 0 }).space({ pad: 0 }).overflow({ all: hidden }),
+            paint: fill({ color: surface-1 }).border({ color: border, width: 1 }).radius(sm).cursor(pointer),
+            when: { selected: { paint: border({ color: primary, width: 1 }).elevation(accent) } },
           })
         >
           <img src={item.url} alt="" />

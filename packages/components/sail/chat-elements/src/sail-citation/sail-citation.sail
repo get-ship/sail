@@ -10,22 +10,22 @@
   }
 
   style pill = {
-    box: minH(0).padY(half).padL(0_75).padR(2),
-    paint: radius(full).fg(foreground).bg(muted).borderWidth(1).border(border).shadow(none).cursor(pointer),
-    text: fontSize(xs).leading(snug).fontWeight(normal),
+    box: size({ min-h: 0 }).space({ pad-y: half, pad-l: 0_75, pad-r: 2 }),
+    paint: radius(full).ink({ color: foreground }).fill({ color: muted }).border({ color: border, width: 1 }).elevation(none).cursor(pointer),
+    text: type({ size: xs, weight: normal, leading: snug }),
     when: {
-      hover: { paint: bg(selected-bg).borderWidth(1).border(primary) },
+      hover: { paint: fill({ color: selected-bg }).border({ color: primary, width: 1 }) },
     },
   }
   style badge = {
-    box: minW(4).h(4).padX(1),
-    paint: fg(primary-foreground).bg(primary).radius(full),
+    box: size({ h: 4, min-w: 4 }).space({ pad-x: 1 }),
+    paint: ink({ color: primary-foreground }).fill({ color: primary }).radius(full),
   }
   style badgeNum = {
-    box: display(contents),
-    text: fontWeight(semibold),
+    box: flow({ display: contents }),
+    text: type({ weight: semibold }),
   }
-  style label = { text: truncate() }
+  style label = { text: type({ wrap: truncate }) }
 </scope>
 
 <controller>

@@ -6,32 +6,32 @@
 
 <scope>
   style empty = {
-    box: padY(1).padX(2),
-    paint: fg(muted-foreground),
-    text: fontFamily(body).fontSize(sm),
+    box: space({ pad-x: 2, pad-y: 1 }),
+    paint: ink({ color: muted-foreground }),
+    text: type({ family: body, size: sm }),
   }
   style list = {
-    paint: fg(foreground),
-    text: fontFamily(body).fontSize(sm),
+    paint: ink({ color: foreground }),
+    text: type({ family: body, size: sm }),
   }
   style row = {
-    box: padY(1).padX(2),
-    paint: bg(background).borderWidth(1).border(border).radius(sm),
+    box: space({ pad-x: 2, pad-y: 1 }),
+    paint: fill({ color: background }).border({ color: border, width: 1 }).radius(sm),
   }
   style kind = {
-    paint: fg(muted-foreground),
-    text: fontSize(xs).textCase(uppercase).tracking(wide),
+    paint: ink({ color: muted-foreground }),
+    text: type({ size: xs, tracking: wide, case: uppercase }),
   }
   style note = {
-    box: grow(1),
-    text: truncate(),
+    box: flow({ grow: 1 }),
+    text: type({ wrap: truncate }),
   }
   style remove = {
-    box: minH(0).padX(1_5).padY(half),
-    paint: radius(sm).bg(transparent).borderWidth(1).border(border).fg(muted-foreground).cursor(pointer),
-    text: fontSize(xs),
+    box: size({ min-h: 0 }).space({ pad-x: 1_5, pad-y: half }),
+    paint: radius(sm).fill({ color: transparent }).border({ color: border, width: 1 }).ink({ color: muted-foreground }).cursor(pointer),
+    text: type({ size: xs }),
     when: {
-      hover: { paint: fg(destructive).borderWidth(1).border(destructive) },
+      hover: { paint: ink({ color: destructive }).border({ color: destructive, width: 1 }) },
     },
   }
 </scope>

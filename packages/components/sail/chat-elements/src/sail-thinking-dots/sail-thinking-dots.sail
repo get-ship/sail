@@ -17,21 +17,21 @@
 
   style track = { paint: group() }
   style dot = {
-    box: w(2).h(2),
-    paint: radius(full).bg(muted-foreground),
+    box: size({ w: 2, h: 2 }),
+    paint: radius(full).fill({ color: muted-foreground }),
     animate: loop({
       translate-y: { from: 0, to: '-10px', duration: 480, easing: 'ease-in-out' },
       stagger: '150ms',
     }),
     when: {
-      groupStateSm: { paint: scale(75) },
-      groupStateLg: { paint: scale(125) },
-      groupStatePrimary: { paint: bg(primary) },
-      groupStateInfo: { paint: bg(info) },
-      groupStateSuccess: { paint: bg(success) },
-      groupStateWarning: { paint: bg(warning) },
-      groupStateDestructive: { paint: bg(destructive) },
-      groupStateAccent: { paint: bg(accent) },
+      groupStateSm: { paint: motion({ scale: 75 }) },
+      groupStateLg: { paint: motion({ scale: 125 }) },
+      groupStatePrimary: { paint: fill({ color: primary }) },
+      groupStateInfo: { paint: fill({ color: info }) },
+      groupStateSuccess: { paint: fill({ color: success }) },
+      groupStateWarning: { paint: fill({ color: warning }) },
+      groupStateDestructive: { paint: fill({ color: destructive }) },
+      groupStateAccent: { paint: fill({ color: accent }) },
     },
   }
 </scope>

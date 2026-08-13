@@ -81,7 +81,7 @@ export default controller(({ data, values, rows, cols, tone, cellSize, gap, labe
     role="img"
     aria-label={ariaLabel()}
     aria-describedby="chart-data"
-    style({ box: display(inline-block).overflow(visible) })
+    style({ box: flow({ display: inline-block }).overflow({ all: visible }) })
   >
     <for {cells() as cell} key={cell.id}>
       <rect x={cell.x} y={cell.y} width={cell.w} height={cell.h} rx="2" fill={cell.color} fill-opacity={cell.intensity}>
