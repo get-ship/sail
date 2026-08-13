@@ -860,6 +860,35 @@
       "$value": "oklch(0.147 0.004 49.25 / 25%)",
       "$type": "color"
     },
+    "card": {
+      "default": {
+        "$value": "{color.surface.1}",
+        "$type": "color",
+        "$description": "Card / panel fill. Themes remap this (was component.card.bg). Public name --card."
+      },
+      "foreground": {
+        "$value": "{color.foreground}",
+        "$type": "color",
+        "$description": "Ink on card. Public name --card-foreground."
+      }
+    },
+    "popover": {
+      "default": {
+        "$value": "{color.surface.1}",
+        "$type": "color",
+        "$description": "Floating panel fill. Themes remap this (was component.popover.bg). Public name --popover."
+      },
+      "foreground": {
+        "$value": "{color.foreground}",
+        "$type": "color",
+        "$description": "Ink on popover. Public name --popover-foreground."
+      }
+    },
+    "knob": {
+      "$value": "oklch(1 0 0)",
+      "$type": "color",
+      "$description": "Light control knob (switch thumb). Not surface-1: muted ≈ surface-1 in dark modes, so a dedicated light face keeps track/thumb contrast."
+    },
     "success": {
       "default": {
         "$value": "oklch(0.65 0.2 150)",
@@ -1354,16 +1383,16 @@
     },
     "card": {
       "$type": "fill",
-      "$description": "Card fill face. Color member aliases component.card.bg (--card).",
+      "$description": "Card fill face. Color member aliases color.card (--card).",
       "$value": {
-        "color": "{component.card.bg}"
+        "color": "{color.card.default}"
       }
     },
     "button": {
       "$type": "fill",
-      "$description": "Button fill face. Color member aliases component.button.bg (--button).",
+      "$description": "Button fill face. Color member aliases color.background.",
       "$value": {
-        "color": "{component.button.bg}"
+        "color": "{color.background}"
       }
     }
   },
@@ -1384,16 +1413,16 @@
     },
     "card": {
       "$type": "ink",
-      "$description": "Card ink face. Color member aliases component.card.fg (--card-foreground).",
+      "$description": "Card ink face. Color member aliases color.card.foreground (--card-foreground).",
       "$value": {
-        "color": "{component.card.fg}"
+        "color": "{color.card.foreground}"
       }
     },
     "button": {
       "$type": "ink",
-      "$description": "Button ink face. Color member aliases component.button.fg (--button-foreground).",
+      "$description": "Button ink face. Color member aliases color.foreground.",
       "$value": {
-        "color": "{component.button.fg}"
+        "color": "{color.foreground}"
       }
     }
   },
@@ -1660,6 +1689,30 @@
       "$type": "dimension"
     },
     "$type": "dimension"
+  },
+  "filter": {
+    "card-backdrop": {
+      "$value": "none",
+      "$type": "string",
+      "$description": "Card backdrop-filter. Public name --card-backdrop-filter (skin still reads that var). Glass remaps to blur."
+    }
+  },
+  "image": {
+    "card-texture": {
+      "$value": "none",
+      "$type": "string",
+      "$description": "Card texture image. Public name --card-texture (themes remap; leftover/lint still name the var)."
+    },
+    "card-texture-blend": {
+      "$value": "overlay",
+      "$type": "string",
+      "$description": "Card texture mix-blend-mode. Public name --card-texture-blend."
+    },
+    "card-texture-opacity": {
+      "$value": "1",
+      "$type": "number",
+      "$description": "Card texture opacity. Public name --card-texture-opacity."
+    }
   },
   "keyframes": {
     "fade": {

@@ -1,6 +1,6 @@
 <!--
   <chip> — filter/selection pill.
-  Rest paint = component.chip tokens when tone is omitted.
+  Rest paint = muted when tone is omitted.
   Semantic paint = bound tone group paths.
 
   Host is a text-bearing <span> (text channel + Style match). Size/variant/
@@ -19,8 +19,8 @@
     onRemove: () => void
   }
 
-  // Default solid rides component.chip tokens. Brand tones only when tone= is set.
-  style base = {box: flow({ display: inline-flex }).size({ min-h: control-h-2xs }).space({ pad-x: 2, pad-y: px }), paint: group().appearance(none).cursor(pointer).select(none).tapHighlight(none).radius(full).border({ color: chip.border, width: 1, style: solid }).fill({ color: chip }).ink({ color: chip.foreground }).motion({ property: colors, duration: fast, ease: out }), text: type({ family: body, weight: medium, leading: none, wrap: nowrap, size: xs })}
+  // Default solid rides muted. Brand tones only when tone= is set.
+  style base = {box: flow({ display: inline-flex }).size({ min-h: control-h-2xs }).space({ pad-x: 2, pad-y: px }), paint: group().appearance(none).cursor(pointer).select(none).tapHighlight(none).radius(full).border({ color: border, width: 1, style: solid }).fill({ color: muted }).ink({ color: muted-foreground }).motion({ property: colors, duration: fast, ease: out }), text: type({ family: body, weight: medium, leading: none, wrap: nowrap, size: xs })}
   style sizeMd = {box: size({ min-h: control-h-2xs }).space({ pad-x: 2_5 }), text: type({ size: sm })}
   style sizeSm = {box: size({ min-h: control-h-2xs }).space({ pad-x: 2 }), text: type({ size: xs })}
   style sizeLg = {box: size({ min-h: control-h-xs }).space({ pad-x: 3 }), text: type({ size: sm })}
@@ -33,13 +33,13 @@
   use:pressable
   use:pressed
   use:dismissible
-  style(base, {when: {pressed: {paint: fill({ color: primary }).ink({ color: primary-foreground }).border({ color: primary }).elevation(xs), text: type({ weight: semibold })}, disabled: {paint: cursor(not-allowed).fill({ color: chip }).border({ color: border-subtle }).ink({ color: chip.foreground }).filter({ saturate: 65 }).elevation(none)}, focus: {paint: border({ style: solid, kind: outline, width: 2, color: ring, offset: 2 })}}, match: {size: {
+  style(base, {when: {pressed: {paint: fill({ color: primary }).ink({ color: primary-foreground }).border({ color: primary }).elevation(xs), text: type({ weight: semibold })}, disabled: {paint: cursor(not-allowed).fill({ color: muted }).border({ color: border-subtle }).ink({ color: muted-foreground }).filter({ saturate: 65 }).elevation(none)}, focus: {paint: border({ style: solid, kind: outline, width: 2, color: ring, offset: 2 })}}, match: {size: {
         md: sizeMd,
         sm: sizeSm,
         lg: sizeLg,
-      }, variant: {// Rest solid (no tone) keeps base chip tokens. Tone+solid is compound.
-        solid: {paint: fill({ color: chip }).ink({ color: chip.foreground }).border({ color: chip.border }), when: {hover: {paint: filter({ opacity: 90 })}}}, // Soft without tone: component.chip.* (themeable rest). Soft+tone: wash compounds below.
-        soft: {paint: fill({ color: chip }).ink({ color: chip.foreground }).border({ color: chip.border }), when: {hover: {paint: filter({ opacity: 90 })}}}, outline: {paint: fill({ color: transparent }).ink({ color: chip.foreground }).border({ color: chip.border }), when: {hover: {paint: fill({ color: hover-bg })}}}, ghost: {paint: fill({ color: transparent }).border({ color: transparent }).ink({ color: chip.foreground }), when: {hover: {paint: fill({ color: hover-bg })}}}}}, compound: [
+      }, variant: {// Rest solid (no tone) keeps muted. Tone+solid is compound.
+        solid: {paint: fill({ color: muted }).ink({ color: muted-foreground }).border({ color: border }), when: {hover: {paint: filter({ opacity: 90 })}}}, // Soft without tone: muted. Soft+tone: wash compounds below.
+        soft: {paint: fill({ color: muted }).ink({ color: muted-foreground }).border({ color: border }), when: {hover: {paint: filter({ opacity: 90 })}}}, outline: {paint: fill({ color: transparent }).ink({ color: muted-foreground }).border({ color: border }), when: {hover: {paint: fill({ color: hover-bg })}}}, ghost: {paint: fill({ color: transparent }).border({ color: transparent }).ink({ color: muted-foreground }), when: {hover: {paint: fill({ color: hover-bg })}}}}}, compound: [
       // Tone + solid
       {tone: primary, variant: solid, paint: fill({ color: primary }).ink({ color: primary-foreground }).border({ color: primary })},
       {tone: info, variant: solid, paint: fill({ color: info }).ink({ color: info-foreground }).border({ color: info })},
@@ -90,7 +90,7 @@
     data-dismiss
     label="Remove"
     tabindex="-1"
-    style(remove, {box: flow({ shrink: 0 }), match: {removable: {true: {box: flow({ display: inline-flex })}, false: {box: flow({ display: none })}}}, when: {hover: {paint: fill({ color: chip }).ink({ color: chip.foreground })}, focus: {paint: border({ style: solid, kind: outline, width: 2, color: ring, offset: 2 })}}})
+    style(remove, {box: flow({ shrink: 0 }), match: {removable: {true: {box: flow({ display: inline-flex })}, false: {box: flow({ display: none })}}}, when: {hover: {paint: fill({ color: muted }).ink({ color: muted-foreground })}, focus: {paint: border({ style: solid, kind: outline, width: 2, color: ring, offset: 2 })}}})
   >
     <svg viewBox="0 0 10 10" stroke-width="1.75" stroke-linecap="round" stroke="currentColor" fill="none" style(xmark)>
       <path d="M2 2 L8 8 M8 2 L2 8"></path>

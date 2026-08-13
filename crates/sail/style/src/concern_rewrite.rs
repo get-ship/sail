@@ -604,10 +604,10 @@ mod tests {
     }
 
     #[test]
-    fn dialog_width_plus_member_becomes_concern_name() {
+    fn subtle_width_plus_member_becomes_concern_name() {
         assert_eq!(
-            rw("style({ paint: borderWidth(1).border(dialog.border) })"),
-            "style({ paint: border(dialog) })"
+            rw("style({ paint: borderWidth(1).border(subtle) })"),
+            "style({ paint: border(subtle) })"
         );
     }
 
@@ -665,7 +665,7 @@ mod tests {
 
     #[test]
     fn already_concern_form_is_identity() {
-        let src = "style({ paint: border(dialog).radius(xl) })";
+        let src = "style({ paint: border(subtle).radius(xl) })";
         assert_eq!(rw(src), src);
         let src = "style({ paint: border({ color: muted, width: 1 }) })";
         assert_eq!(rw(src), src);
@@ -713,7 +713,7 @@ mod tests {
 
     #[test]
     fn rewrite_is_idempotent() {
-        let src = "style({ paint: borderWidth(1).border(dialog.border).radius(md) })";
+        let src = "style({ paint: borderWidth(1).border(subtle).radius(md) })";
         let once = rw(src);
         assert_eq!(rw(&once), once);
     }
@@ -726,7 +726,7 @@ mod tests {
         assert_eq!(sites.len(), 1, "{sites:?}");
         assert!(sites[0].contains("borderWidth(1)"), "{sites:?}");
         assert!(sites[0].contains("border(primary)"), "{sites:?}");
-        assert!(retired_dual_border_sites("style({ paint: border(dialog) })").is_empty());
+        assert!(retired_dual_border_sites("style({ paint: border(subtle) })").is_empty());
     }
 
     #[test]
@@ -741,33 +741,33 @@ mod tests {
     fn template_text_is_not_rewritten() {
         let src = "<p>Sticky top/left inset (number). borderWidth(1).border(primary)</p>";
         assert_eq!(rw(src), src);
-        let attr = "<div style({ paint: borderWidth(1).border(dialog.border) })>x</div>";
-        assert_eq!(rw(attr), "<div style({ paint: border(dialog) })>x</div>");
+        let attr = "<div style({ paint: borderWidth(1).border(subtle) })>x</div>";
+        assert_eq!(rw(attr), "<div style({ paint: border(subtle) })>x</div>");
     }
 
     #[test]
     fn comparison_gt_on_same_tag_still_folds_style() {
         let spaced =
-            "<div hidden={n > 0} style({ paint: borderWidth(1).border(dialog.border) })></div>";
+            "<div hidden={n > 0} style({ paint: borderWidth(1).border(subtle) })></div>";
         assert_eq!(
             rw(spaced),
-            "<div hidden={n > 0} style({ paint: border(dialog) })></div>"
+            "<div hidden={n > 0} style({ paint: border(subtle) })></div>"
         );
         let tight =
-            "<div hidden={n>0} style({ paint: borderWidth(1).border(dialog.border) })></div>";
+            "<div hidden={n>0} style({ paint: borderWidth(1).border(subtle) })></div>";
         assert_eq!(
             rw(tight),
-            "<div hidden={n>0} style({ paint: border(dialog) })></div>"
+            "<div hidden={n>0} style({ paint: border(subtle) })></div>"
         );
     }
 
     #[test]
     fn scope_declarations_still_fold() {
         let src =
-            "<scope>\n  style foo = { paint: borderWidth(1).border(dialog.border) }\n</scope>";
+            "<scope>\n  style foo = { paint: borderWidth(1).border(subtle) }\n</scope>";
         assert_eq!(
             rw(src),
-            "<scope>\n  style foo = { paint: border(dialog) }\n</scope>"
+            "<scope>\n  style foo = { paint: border(subtle) }\n</scope>"
         );
     }
 }

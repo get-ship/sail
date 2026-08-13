@@ -13,10 +13,10 @@
     onToggle: (detail: { open: boolean }) => void
   }
 
-  // Shell + trigger from component.accordion tokens.
-  style host = {box: flow({ display: block }), paint: border({ color: accordion.border, width: 1 }).radius(lg).fill({ color: accordion }), text: type({ family: body })}
+  // Shell + trigger from background / foreground / border.
+  style host = {box: flow({ display: block }), paint: border({ color: border, width: 1 }).radius(lg).fill({ color: background }), text: type({ family: body })}
   // list(none) + after chevron: kill UA marker; single themed caret.
-  style summary = {box: flow({ display: flex }).space({ pad-y: 3, pad-x: 4 }), paint: ink({ color: accordion.foreground }).radius(lg).motion({ property: colors, duration: fast, ease: out }).cursor(pointer).select(none), text: type({ size: sm, weight: semibold, list: none }), when: {hover: {paint: fill({ color: hover-bg })}, after: {box: space({ ms: auto }).size(4), paint: content(empty).fill({ color: accordion.chevron })}}}
+  style summary = {box: flow({ display: flex }).space({ pad-y: 3, pad-x: 4 }), paint: ink({ color: foreground }).radius(lg).motion({ property: colors, duration: fast, ease: out }).cursor(pointer).select(none), text: type({ size: sm, weight: semibold, list: none }), when: {hover: {paint: fill({ color: hover-bg })}, after: {box: space({ ms: auto }).size(4), paint: content(empty).fill({ color: muted-foreground })}}}
   style content = {box: space({ pad-x: 4, pad-y: 3 })}
 </scope>
 

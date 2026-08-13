@@ -20,24 +20,10 @@
     "accent-skills",
     "accent-specs",
     "accent-theme",
-    "accordion",
-    "accordion-border",
-    "accordion-chevron",
-    "accordion-foreground",
-    "accordion-hover-bg",
     "active-bg",
     "active-strength",
-    "alert",
-    "alert-border",
-    "alert-foreground",
-    "alert-stripe",
-    "avatar",
-    "avatar-foreground",
     "backdrop",
     "background",
-    "badge",
-    "badge-border",
-    "badge-foreground",
     "body-font",
     "body-weight",
     "border",
@@ -53,34 +39,15 @@
     "border-subtle-style",
     "border-subtle-width",
     "border-width",
-    "breadcrumb-current",
-    "breadcrumb-foreground",
     "breakpoint-desktop",
     "breakpoint-mobile",
     "breakpoint-tablet",
-    "button",
-    "button-border",
-    "button-foreground",
-    "button-hover-bg",
     "card",
     "card-backdrop-filter",
-    "card-border",
-    "card-border-style",
-    "card-border-width",
     "card-foreground",
     "card-texture",
     "card-texture-blend",
     "card-texture-opacity",
-    "chip",
-    "chip-border",
-    "chip-foreground",
-    "code-block",
-    "code-block-foreground",
-    "combobox",
-    "combobox-foreground",
-    "context-menu",
-    "context-menu-border",
-    "context-menu-foreground",
     "control-frame",
     "control-h-2xs",
     "control-h-lg",
@@ -98,19 +65,8 @@
     "density-text",
     "destructive",
     "destructive-foreground",
-    "dialog",
-    "dialog-border",
-    "dialog-border-style",
-    "dialog-border-width",
-    "dialog-divider",
-    "dialog-footer",
-    "dialog-foreground",
-    "dialog-muted-foreground",
     "display-font",
     "divider",
-    "dropdown",
-    "dropdown-border",
-    "dropdown-foreground",
     "duration-deliberate",
     "duration-fast",
     "duration-glacial",
@@ -129,27 +85,6 @@
     "elevation-sm-shadow",
     "elevation-xl-shadow",
     "elevation-xs-shadow",
-    "empty-state",
-    "empty-state-border",
-    "empty-state-foreground",
-    "empty-state-title",
-    "error-boundary",
-    "error-boundary-border",
-    "error-boundary-foreground",
-    "error-boundary-icon",
-    "error-boundary-message-foreground",
-    "error-boundary-retry-bg",
-    "error-boundary-retry-foreground",
-    "error-state",
-    "error-state-border",
-    "error-state-foreground",
-    "field",
-    "field-border",
-    "field-border-hover",
-    "field-error",
-    "field-foreground",
-    "field-hint",
-    "fieldset-border",
     "fill-button-color",
     "fill-card-color",
     "fill-muted-color",
@@ -179,9 +114,6 @@
     "heading-transform",
     "heading-weight",
     "hover-bg",
-    "hover-card",
-    "hover-card-border",
-    "hover-card-foreground",
     "hover-strength",
     "hue-amber",
     "hue-blue",
@@ -215,12 +147,8 @@
     "ink-foreground-color",
     "ink-muted-color",
     "input",
-    "kbd",
-    "kbd-border",
-    "kbd-foreground",
+    "knob",
     "label-font",
-    "label-foreground",
-    "label-required",
     "label-tracking",
     "label-transform",
     "label-weight",
@@ -231,26 +159,12 @@
     "leading-relaxed",
     "leading-snug",
     "leading-tight",
-    "legend-foreground",
-    "menu-item-foreground",
-    "menu-item-hover-bg",
-    "meter",
-    "meter-optimum",
-    "meter-sub-suboptimum",
-    "meter-suboptimum",
     "mix-bg",
     "mix-border",
     "mix-hover",
     "mono-font",
     "muted",
     "muted-foreground",
-    "navbar",
-    "navbar-border",
-    "navbar-foreground",
-    "page-current-bg",
-    "page-current-foreground",
-    "page-foreground",
-    "page-hover-bg",
     "panel-body-pad-y",
     "panel-ch-w-lg",
     "panel-ch-w-md",
@@ -282,7 +196,6 @@
     "panel-w-toast",
     "play-colors-property",
     "popover",
-    "popover-border",
     "popover-foreground",
     "press-scale",
     "press-shadow",
@@ -290,10 +203,6 @@
     "primary",
     "primary-foreground",
     "primary-hover",
-    "progress",
-    "progress-fill",
-    "prose-foreground",
-    "radio-foreground",
     "radius",
     "radius-full",
     "radius-lg",
@@ -306,8 +215,6 @@
     "ring-opacity",
     "ring-width",
     "scrim",
-    "scroll-area-thumb",
-    "scroll-area-thumb-hover",
     "scrollbar-radius",
     "scrollbar-thumb",
     "scrollbar-thumb-hover",
@@ -319,7 +226,6 @@
     "selected-bg",
     "selected-border",
     "selected-strength",
-    "separator-line",
     "shadow-accent",
     "shadow-card-rest",
     "shadow-edge-top",
@@ -346,11 +252,6 @@
     "size-control-sm-h",
     "size-full-h",
     "size-full-w",
-    "skeleton",
-    "skeleton-highlight",
-    "slider-fill",
-    "slider-track",
-    "slider-track-border",
     "space-0_75",
     "space-1",
     "space-10",
@@ -385,8 +286,6 @@
     "space-9",
     "space-half",
     "space-px",
-    "spinner-foreground",
-    "spinner-track",
     "status-amber",
     "status-blue",
     "status-gray",
@@ -405,9 +304,6 @@
     "surface-overlay",
     "surface-overlay-blend",
     "surface-overlay-opacity",
-    "switch",
-    "switch-border",
-    "switch-thumb",
     "syntax-attr",
     "syntax-comment",
     "syntax-function",
@@ -417,17 +313,6 @@
     "syntax-tag",
     "syntax-type",
     "syntax-variable",
-    "tab-border",
-    "tab-foreground",
-    "tab-list",
-    "tab-list-border",
-    "tab-list-rail",
-    "tab-selected-bg",
-    "tab-selected-foreground",
-    "table-foreground",
-    "table-muted-foreground",
-    "table-sticky-bg",
-    "table-stripe",
     "text-2xl",
     "text-3xl",
     "text-4xl",
@@ -438,22 +323,6 @@
     "text-sm",
     "text-xl",
     "text-xs",
-    "theme-picker",
-    "theme-picker-foreground",
-    "theme-picker-option-foreground",
-    "theme-picker-option-hover-bg",
-    "theme-picker-trigger-foreground",
-    "toast",
-    "toast-border",
-    "toast-foreground",
-    "toast-stripe",
-    "toggle",
-    "toggle-border",
-    "toggle-foreground",
-    "toggle-group",
-    "toggle-group-border",
-    "tooltip",
-    "tooltip-foreground",
     "tooltip-hide-delay",
     "tooltip-show-delay",
     "tracking-normal",
@@ -528,90 +397,26 @@
     "accent-skills",
     "accent-specs",
     "accent-theme",
-    "accordion",
-    "accordion-border",
-    "accordion-chevron",
-    "accordion-foreground",
-    "accordion-hover-bg",
     "active-bg",
-    "alert",
-    "alert-border",
-    "alert-foreground",
-    "alert-stripe",
-    "avatar",
-    "avatar-foreground",
     "backdrop",
     "background",
-    "badge",
-    "badge-border",
-    "badge-foreground",
     "border",
     "border-default-color",
     "border-strong",
     "border-strong-color",
     "border-subtle",
     "border-subtle-color",
-    "breadcrumb-current",
-    "breadcrumb-foreground",
-    "button",
-    "button-border",
-    "button-foreground",
-    "button-hover-bg",
     "card",
-    "card-border",
     "card-foreground",
-    "chip",
-    "chip-border",
-    "chip-foreground",
-    "code-block",
-    "code-block-foreground",
-    "combobox",
-    "combobox-foreground",
-    "context-menu",
-    "context-menu-border",
-    "context-menu-foreground",
     "destructive",
     "destructive-foreground",
-    "dialog",
-    "dialog-border",
-    "dialog-divider",
-    "dialog-footer",
-    "dialog-foreground",
-    "dialog-muted-foreground",
     "divider",
-    "dropdown",
-    "dropdown-border",
-    "dropdown-foreground",
-    "empty-state",
-    "empty-state-border",
-    "empty-state-foreground",
-    "empty-state-title",
-    "error-boundary",
-    "error-boundary-border",
-    "error-boundary-foreground",
-    "error-boundary-icon",
-    "error-boundary-message-foreground",
-    "error-boundary-retry-bg",
-    "error-boundary-retry-foreground",
-    "error-state",
-    "error-state-border",
-    "error-state-foreground",
-    "field",
-    "field-border",
-    "field-border-hover",
-    "field-error",
-    "field-foreground",
-    "field-hint",
-    "fieldset-border",
     "fill-button-color",
     "fill-card-color",
     "fill-muted-color",
     "fill-surface-color",
     "foreground",
     "hover-bg",
-    "hover-card",
-    "hover-card-border",
-    "hover-card-foreground",
     "hue-amber",
     "hue-blue",
     "hue-cyan",
@@ -635,49 +440,23 @@
     "ink-foreground-color",
     "ink-muted-color",
     "input",
-    "kbd",
-    "kbd-border",
-    "kbd-foreground",
-    "label-foreground",
-    "label-required",
-    "legend-foreground",
-    "menu-item-foreground",
-    "menu-item-hover-bg",
-    "meter",
-    "meter-optimum",
-    "meter-sub-suboptimum",
-    "meter-suboptimum",
+    "knob",
     "muted",
     "muted-foreground",
-    "navbar",
-    "navbar-border",
-    "navbar-foreground",
-    "page-current-bg",
-    "page-current-foreground",
-    "page-foreground",
-    "page-hover-bg",
     "popover",
-    "popover-border",
     "popover-foreground",
     "primary",
     "primary-foreground",
     "primary-hover",
-    "progress",
-    "progress-fill",
-    "prose-foreground",
-    "radio-foreground",
     "ring",
     "ring-color",
     "scrim",
-    "scroll-area-thumb",
-    "scroll-area-thumb-hover",
     "scrollbar-thumb",
     "scrollbar-thumb-hover",
     "secondary",
     "secondary-foreground",
     "selected-bg",
     "selected-border",
-    "separator-line",
     "sidebar",
     "sidebar-accent",
     "sidebar-accent-foreground",
@@ -686,13 +465,6 @@
     "sidebar-primary",
     "sidebar-primary-foreground",
     "sidebar-ring",
-    "skeleton",
-    "skeleton-highlight",
-    "slider-fill",
-    "slider-track",
-    "slider-track-border",
-    "spinner-foreground",
-    "spinner-track",
     "status-amber",
     "status-blue",
     "status-gray",
@@ -708,9 +480,6 @@
     "surface-2",
     "surface-3",
     "surface-inverse",
-    "switch",
-    "switch-border",
-    "switch-thumb",
     "syntax-attr",
     "syntax-comment",
     "syntax-function",
@@ -720,33 +489,6 @@
     "syntax-tag",
     "syntax-type",
     "syntax-variable",
-    "tab-border",
-    "tab-foreground",
-    "tab-list",
-    "tab-list-border",
-    "tab-list-rail",
-    "tab-selected-bg",
-    "tab-selected-foreground",
-    "table-foreground",
-    "table-muted-foreground",
-    "table-sticky-bg",
-    "table-stripe",
-    "theme-picker",
-    "theme-picker-foreground",
-    "theme-picker-option-foreground",
-    "theme-picker-option-hover-bg",
-    "theme-picker-trigger-foreground",
-    "toast",
-    "toast-border",
-    "toast-foreground",
-    "toast-stripe",
-    "toggle",
-    "toggle-border",
-    "toggle-foreground",
-    "toggle-group",
-    "toggle-group-border",
-    "tooltip",
-    "tooltip-foreground",
     "warning",
     "warning-foreground"
   ],
@@ -1801,6 +1543,36 @@
       "type": "color",
       "value": "oklch(0.147 0.004 49.25 / 25%)"
     },
+    "card": {
+      "path": "color.card.default",
+      "cssName": "card",
+      "type": "color",
+      "value": "var(--surface-1)"
+    },
+    "card-foreground": {
+      "path": "color.card.foreground",
+      "cssName": "card-foreground",
+      "type": "color",
+      "value": "var(--foreground)"
+    },
+    "popover": {
+      "path": "color.popover.default",
+      "cssName": "popover",
+      "type": "color",
+      "value": "var(--surface-1)"
+    },
+    "popover-foreground": {
+      "path": "color.popover.foreground",
+      "cssName": "popover-foreground",
+      "type": "color",
+      "value": "var(--foreground)"
+    },
+    "knob": {
+      "path": "color.knob",
+      "cssName": "knob",
+      "type": "color",
+      "value": "oklch(1 0 0)"
+    },
     "success": {
       "path": "color.success.default",
       "cssName": "success",
@@ -2573,7 +2345,7 @@
       "path": "fill.button.color",
       "cssName": "fill-button-color",
       "type": "color",
-      "value": "var(--button)"
+      "value": "var(--background)"
     },
     "ink-foreground-color": {
       "path": "ink.foreground.color",
@@ -2597,7 +2369,7 @@
       "path": "ink.button.color",
       "cssName": "ink-button-color",
       "type": "color",
-      "value": "var(--button-foreground)"
+      "value": "var(--foreground)"
     },
     "z-base": {
       "path": "z.base",
@@ -2941,851 +2713,35 @@
       "type": "dimension",
       "value": "999px"
     },
-    "play-colors-property": {
-      "path": "play.colors.property",
-      "cssName": "play-colors-property",
-      "type": "string",
-      "value": "color, background-color, border-color, outline-color, fill, stroke"
-    },
-    "accordion": {
-      "path": "component.accordion.bg",
-      "cssName": "accordion",
-      "type": "color",
-      "value": "var(--surface-1)"
-    },
-    "accordion-foreground": {
-      "path": "component.accordion.fg",
-      "cssName": "accordion-foreground",
-      "type": "color",
-      "value": "var(--foreground)"
-    },
-    "accordion-border": {
-      "path": "component.accordion.border",
-      "cssName": "accordion-border",
-      "type": "color",
-      "value": "var(--border)"
-    },
-    "accordion-hover-bg": {
-      "path": "component.accordion.hover-bg",
-      "cssName": "accordion-hover-bg",
-      "type": "color",
-      "value": "var(--hover-bg)"
-    },
-    "accordion-chevron": {
-      "path": "component.accordion.chevron",
-      "cssName": "accordion-chevron",
-      "type": "color",
-      "value": "var(--muted-foreground)"
-    },
-    "alert": {
-      "path": "component.alert.bg",
-      "cssName": "alert",
-      "type": "color",
-      "value": "var(--surface-1)"
-    },
-    "alert-foreground": {
-      "path": "component.alert.fg",
-      "cssName": "alert-foreground",
-      "type": "color",
-      "value": "var(--foreground)"
-    },
-    "alert-border": {
-      "path": "component.alert.border",
-      "cssName": "alert-border",
-      "type": "color",
-      "value": "var(--border)"
-    },
-    "alert-stripe": {
-      "path": "component.alert.stripe",
-      "cssName": "alert-stripe",
-      "type": "color",
-      "value": "var(--muted-foreground)"
-    },
-    "avatar": {
-      "path": "component.avatar.bg",
-      "cssName": "avatar",
-      "type": "color",
-      "value": "var(--muted)"
-    },
-    "avatar-foreground": {
-      "path": "component.avatar.fg",
-      "cssName": "avatar-foreground",
-      "type": "color",
-      "value": "var(--foreground)"
-    },
-    "badge": {
-      "path": "component.badge.bg",
-      "cssName": "badge",
-      "type": "color",
-      "value": "var(--muted)"
-    },
-    "badge-foreground": {
-      "path": "component.badge.fg",
-      "cssName": "badge-foreground",
-      "type": "color",
-      "value": "var(--muted-foreground)"
-    },
-    "badge-border": {
-      "path": "component.badge.border",
-      "cssName": "badge-border",
-      "type": "color",
-      "value": "var(--border)"
-    },
-    "breadcrumb-foreground": {
-      "path": "component.breadcrumb.fg",
-      "cssName": "breadcrumb-foreground",
-      "type": "color",
-      "value": "var(--muted-foreground)"
-    },
-    "breadcrumb-current": {
-      "path": "component.breadcrumb.current",
-      "cssName": "breadcrumb-current",
-      "type": "color",
-      "value": "var(--foreground)"
-    },
-    "button": {
-      "path": "component.button.bg",
-      "cssName": "button",
-      "type": "color",
-      "value": "var(--background)"
-    },
-    "button-foreground": {
-      "path": "component.button.fg",
-      "cssName": "button-foreground",
-      "type": "color",
-      "value": "var(--foreground)"
-    },
-    "button-border": {
-      "path": "component.button.border",
-      "cssName": "button-border",
-      "type": "color",
-      "value": "var(--border)"
-    },
-    "button-hover-bg": {
-      "path": "component.button.hover-bg",
-      "cssName": "button-hover-bg",
-      "type": "color",
-      "value": "var(--muted)"
-    },
-    "card": {
-      "path": "component.card.bg",
-      "cssName": "card",
-      "type": "color",
-      "value": "var(--surface-1)"
-    },
-    "card-foreground": {
-      "path": "component.card.fg",
-      "cssName": "card-foreground",
-      "type": "color",
-      "value": "var(--foreground)"
-    },
-    "card-border": {
-      "path": "component.card.border.color",
-      "cssName": "card-border",
-      "type": "color",
-      "value": "var(--border)"
-    },
-    "card-border-width": {
-      "path": "component.card.border.width",
-      "cssName": "card-border-width",
-      "type": "dimension",
-      "value": "var(--border-width)"
-    },
-    "card-border-style": {
-      "path": "component.card.border.style",
-      "cssName": "card-border-style",
-      "type": "string",
-      "value": "solid"
-    },
     "card-backdrop-filter": {
-      "path": "component.card.backdrop-filter",
+      "path": "filter.card-backdrop",
       "cssName": "card-backdrop-filter",
       "type": "string",
       "value": "none"
     },
     "card-texture": {
-      "path": "component.card.texture",
+      "path": "image.card-texture",
       "cssName": "card-texture",
       "type": "string",
       "value": "none"
     },
     "card-texture-blend": {
-      "path": "component.card.texture-blend",
+      "path": "image.card-texture-blend",
       "cssName": "card-texture-blend",
       "type": "string",
       "value": "overlay"
     },
     "card-texture-opacity": {
-      "path": "component.card.texture-opacity",
+      "path": "image.card-texture-opacity",
       "cssName": "card-texture-opacity",
       "type": "number",
       "value": "1"
     },
-    "chip": {
-      "path": "component.chip.bg",
-      "cssName": "chip",
-      "type": "color",
-      "value": "var(--muted)"
-    },
-    "chip-foreground": {
-      "path": "component.chip.fg",
-      "cssName": "chip-foreground",
-      "type": "color",
-      "value": "var(--muted-foreground)"
-    },
-    "chip-border": {
-      "path": "component.chip.border",
-      "cssName": "chip-border",
-      "type": "color",
-      "value": "var(--border)"
-    },
-    "code-block": {
-      "path": "component.code-block.bg",
-      "cssName": "code-block",
-      "type": "color",
-      "value": "var(--surface-1)"
-    },
-    "code-block-foreground": {
-      "path": "component.code-block.fg",
-      "cssName": "code-block-foreground",
-      "type": "color",
-      "value": "var(--foreground)"
-    },
-    "combobox": {
-      "path": "component.combobox.bg",
-      "cssName": "combobox",
-      "type": "color",
-      "value": "var(--popover)"
-    },
-    "combobox-foreground": {
-      "path": "component.combobox.fg",
-      "cssName": "combobox-foreground",
-      "type": "color",
-      "value": "var(--popover-foreground)"
-    },
-    "context-menu": {
-      "path": "component.context-menu.bg",
-      "cssName": "context-menu",
-      "type": "color",
-      "value": "var(--background)"
-    },
-    "context-menu-foreground": {
-      "path": "component.context-menu.fg",
-      "cssName": "context-menu-foreground",
-      "type": "color",
-      "value": "var(--foreground)"
-    },
-    "context-menu-border": {
-      "path": "component.context-menu.border",
-      "cssName": "context-menu-border",
-      "type": "color",
-      "value": "var(--border)"
-    },
-    "dialog": {
-      "path": "component.dialog.bg",
-      "cssName": "dialog",
-      "type": "color",
-      "value": "var(--surface-1)"
-    },
-    "dialog-foreground": {
-      "path": "component.dialog.fg",
-      "cssName": "dialog-foreground",
-      "type": "color",
-      "value": "var(--foreground)"
-    },
-    "dialog-border": {
-      "path": "component.dialog.border.color",
-      "cssName": "dialog-border",
-      "type": "color",
-      "value": "var(--border)"
-    },
-    "dialog-border-width": {
-      "path": "component.dialog.border.width",
-      "cssName": "dialog-border-width",
-      "type": "dimension",
-      "value": "var(--border-width)"
-    },
-    "dialog-border-style": {
-      "path": "component.dialog.border.style",
-      "cssName": "dialog-border-style",
+    "play-colors-property": {
+      "path": "play.colors.property",
+      "cssName": "play-colors-property",
       "type": "string",
-      "value": "solid"
-    },
-    "dialog-divider": {
-      "path": "component.dialog.divider",
-      "cssName": "dialog-divider",
-      "type": "color",
-      "value": "var(--border-subtle)"
-    },
-    "dialog-footer": {
-      "path": "component.dialog.footer",
-      "cssName": "dialog-footer",
-      "type": "color",
-      "value": "var(--muted)"
-    },
-    "dialog-muted-foreground": {
-      "path": "component.dialog.muted-fg",
-      "cssName": "dialog-muted-foreground",
-      "type": "color",
-      "value": "var(--muted-foreground)"
-    },
-    "dropdown": {
-      "path": "component.dropdown.bg",
-      "cssName": "dropdown",
-      "type": "color",
-      "value": "var(--background)"
-    },
-    "dropdown-foreground": {
-      "path": "component.dropdown.fg",
-      "cssName": "dropdown-foreground",
-      "type": "color",
-      "value": "var(--foreground)"
-    },
-    "dropdown-border": {
-      "path": "component.dropdown.border",
-      "cssName": "dropdown-border",
-      "type": "color",
-      "value": "var(--border)"
-    },
-    "empty-state": {
-      "path": "component.empty-state.bg",
-      "cssName": "empty-state",
-      "type": "color",
-      "value": "var(--muted)"
-    },
-    "empty-state-foreground": {
-      "path": "component.empty-state.fg",
-      "cssName": "empty-state-foreground",
-      "type": "color",
-      "value": "var(--muted-foreground)"
-    },
-    "empty-state-border": {
-      "path": "component.empty-state.border",
-      "cssName": "empty-state-border",
-      "type": "color",
-      "value": "var(--border)"
-    },
-    "empty-state-title": {
-      "path": "component.empty-state.title",
-      "cssName": "empty-state-title",
-      "type": "color",
-      "value": "var(--foreground)"
-    },
-    "error-boundary": {
-      "path": "component.error-boundary.bg",
-      "cssName": "error-boundary",
-      "type": "color",
-      "value": "var(--muted)"
-    },
-    "error-boundary-border": {
-      "path": "component.error-boundary.border",
-      "cssName": "error-boundary-border",
-      "type": "color",
-      "value": "var(--destructive)"
-    },
-    "error-boundary-foreground": {
-      "path": "component.error-boundary.fg",
-      "cssName": "error-boundary-foreground",
-      "type": "color",
-      "value": "var(--foreground)"
-    },
-    "error-boundary-message-foreground": {
-      "path": "component.error-boundary.message-fg",
-      "cssName": "error-boundary-message-foreground",
-      "type": "color",
-      "value": "var(--muted-foreground)"
-    },
-    "error-boundary-icon": {
-      "path": "component.error-boundary.icon-fg",
-      "cssName": "error-boundary-icon",
-      "type": "color",
-      "value": "var(--destructive)"
-    },
-    "error-boundary-retry-bg": {
-      "path": "component.error-boundary.retry-bg",
-      "cssName": "error-boundary-retry-bg",
-      "type": "color",
-      "value": "var(--surface-1)"
-    },
-    "error-boundary-retry-foreground": {
-      "path": "component.error-boundary.retry-fg",
-      "cssName": "error-boundary-retry-foreground",
-      "type": "color",
-      "value": "var(--foreground)"
-    },
-    "error-state": {
-      "path": "component.error-state.bg",
-      "cssName": "error-state",
-      "type": "color",
-      "value": "var(--muted)"
-    },
-    "error-state-foreground": {
-      "path": "component.error-state.fg",
-      "cssName": "error-state-foreground",
-      "type": "color",
-      "value": "var(--muted-foreground)"
-    },
-    "error-state-border": {
-      "path": "component.error-state.border",
-      "cssName": "error-state-border",
-      "type": "color",
-      "value": "var(--border)"
-    },
-    "field": {
-      "path": "component.field.bg",
-      "cssName": "field",
-      "type": "color",
-      "value": "var(--background)"
-    },
-    "field-foreground": {
-      "path": "component.field.fg",
-      "cssName": "field-foreground",
-      "type": "color",
-      "value": "var(--foreground)"
-    },
-    "field-border": {
-      "path": "component.field.border",
-      "cssName": "field-border",
-      "type": "color",
-      "value": "var(--border)"
-    },
-    "field-border-hover": {
-      "path": "component.field.border-hover",
-      "cssName": "field-border-hover",
-      "type": "color",
-      "value": "var(--border-strong)"
-    },
-    "field-hint": {
-      "path": "component.field.hint",
-      "cssName": "field-hint",
-      "type": "color",
-      "value": "var(--muted-foreground)"
-    },
-    "field-error": {
-      "path": "component.field.error",
-      "cssName": "field-error",
-      "type": "color",
-      "value": "var(--destructive)"
-    },
-    "fieldset-border": {
-      "path": "component.fieldset.border",
-      "cssName": "fieldset-border",
-      "type": "color",
-      "value": "var(--border)"
-    },
-    "hover-card": {
-      "path": "component.hover-card.bg",
-      "cssName": "hover-card",
-      "type": "color",
-      "value": "var(--popover)"
-    },
-    "hover-card-foreground": {
-      "path": "component.hover-card.fg",
-      "cssName": "hover-card-foreground",
-      "type": "color",
-      "value": "var(--popover-foreground)"
-    },
-    "hover-card-border": {
-      "path": "component.hover-card.border",
-      "cssName": "hover-card-border",
-      "type": "color",
-      "value": "var(--popover-border)"
-    },
-    "kbd": {
-      "path": "component.kbd.bg",
-      "cssName": "kbd",
-      "type": "color",
-      "value": "var(--muted)"
-    },
-    "kbd-foreground": {
-      "path": "component.kbd.fg",
-      "cssName": "kbd-foreground",
-      "type": "color",
-      "value": "var(--foreground)"
-    },
-    "kbd-border": {
-      "path": "component.kbd.border",
-      "cssName": "kbd-border",
-      "type": "color",
-      "value": "var(--border)"
-    },
-    "label-foreground": {
-      "path": "component.label.fg",
-      "cssName": "label-foreground",
-      "type": "color",
-      "value": "var(--foreground)"
-    },
-    "label-required": {
-      "path": "component.label.required",
-      "cssName": "label-required",
-      "type": "color",
-      "value": "var(--destructive)"
-    },
-    "legend-foreground": {
-      "path": "component.legend.fg",
-      "cssName": "legend-foreground",
-      "type": "color",
-      "value": "var(--foreground)"
-    },
-    "menu-item-foreground": {
-      "path": "component.menu-item.fg",
-      "cssName": "menu-item-foreground",
-      "type": "color",
-      "value": "var(--foreground)"
-    },
-    "menu-item-hover-bg": {
-      "path": "component.menu-item.hover-bg",
-      "cssName": "menu-item-hover-bg",
-      "type": "color",
-      "value": "var(--muted)"
-    },
-    "meter": {
-      "path": "component.meter.track",
-      "cssName": "meter",
-      "type": "color",
-      "value": "var(--muted)"
-    },
-    "meter-optimum": {
-      "path": "component.meter.optimum",
-      "cssName": "meter-optimum",
-      "type": "color",
-      "value": "var(--success)"
-    },
-    "meter-suboptimum": {
-      "path": "component.meter.suboptimum",
-      "cssName": "meter-suboptimum",
-      "type": "color",
-      "value": "var(--warning)"
-    },
-    "meter-sub-suboptimum": {
-      "path": "component.meter.sub-suboptimum",
-      "cssName": "meter-sub-suboptimum",
-      "type": "color",
-      "value": "var(--destructive)"
-    },
-    "navbar": {
-      "path": "component.navbar.bg",
-      "cssName": "navbar",
-      "type": "color",
-      "value": "var(--background)"
-    },
-    "navbar-foreground": {
-      "path": "component.navbar.fg",
-      "cssName": "navbar-foreground",
-      "type": "color",
-      "value": "var(--foreground)"
-    },
-    "navbar-border": {
-      "path": "component.navbar.border",
-      "cssName": "navbar-border",
-      "type": "color",
-      "value": "var(--border)"
-    },
-    "page-foreground": {
-      "path": "component.page.fg",
-      "cssName": "page-foreground",
-      "type": "color",
-      "value": "var(--foreground)"
-    },
-    "page-hover-bg": {
-      "path": "component.page.hover-bg",
-      "cssName": "page-hover-bg",
-      "type": "color",
-      "value": "var(--muted)"
-    },
-    "page-current-bg": {
-      "path": "component.page.current-bg",
-      "cssName": "page-current-bg",
-      "type": "color",
-      "value": "var(--primary)"
-    },
-    "page-current-foreground": {
-      "path": "component.page.current-fg",
-      "cssName": "page-current-foreground",
-      "type": "color",
-      "value": "var(--primary-foreground)"
-    },
-    "popover": {
-      "path": "component.popover.bg",
-      "cssName": "popover",
-      "type": "color",
-      "value": "var(--surface-1)"
-    },
-    "popover-foreground": {
-      "path": "component.popover.fg",
-      "cssName": "popover-foreground",
-      "type": "color",
-      "value": "var(--foreground)"
-    },
-    "popover-border": {
-      "path": "component.popover.border",
-      "cssName": "popover-border",
-      "type": "color",
-      "value": "var(--border)"
-    },
-    "progress": {
-      "path": "component.progress.track",
-      "cssName": "progress",
-      "type": "color",
-      "value": "var(--muted)"
-    },
-    "progress-fill": {
-      "path": "component.progress.fill",
-      "cssName": "progress-fill",
-      "type": "color",
-      "value": "var(--primary)"
-    },
-    "prose-foreground": {
-      "path": "component.prose.fg",
-      "cssName": "prose-foreground",
-      "type": "color",
-      "value": "var(--foreground)"
-    },
-    "radio-foreground": {
-      "path": "component.radio.fg",
-      "cssName": "radio-foreground",
-      "type": "color",
-      "value": "var(--foreground)"
-    },
-    "scroll-area-thumb": {
-      "path": "component.scroll-area.thumb",
-      "cssName": "scroll-area-thumb",
-      "type": "color",
-      "value": "var(--border)"
-    },
-    "scroll-area-thumb-hover": {
-      "path": "component.scroll-area.thumb-hover",
-      "cssName": "scroll-area-thumb-hover",
-      "type": "color",
-      "value": "var(--muted-foreground)"
-    },
-    "separator-line": {
-      "path": "component.separator.line",
-      "cssName": "separator-line",
-      "type": "color",
-      "value": "var(--border)"
-    },
-    "skeleton": {
-      "path": "component.skeleton.bg",
-      "cssName": "skeleton",
-      "type": "color",
-      "value": "var(--muted)"
-    },
-    "skeleton-highlight": {
-      "path": "component.skeleton.highlight",
-      "cssName": "skeleton-highlight",
-      "type": "color",
-      "value": "color-mix(in oklch, var(--skeleton) 60%, var(--background))"
-    },
-    "slider-track": {
-      "path": "component.slider.track",
-      "cssName": "slider-track",
-      "type": "color",
-      "value": "var(--muted)"
-    },
-    "slider-fill": {
-      "path": "component.slider.fill",
-      "cssName": "slider-fill",
-      "type": "color",
-      "value": "var(--primary)"
-    },
-    "slider-track-border": {
-      "path": "component.slider.track-border",
-      "cssName": "slider-track-border",
-      "type": "color",
-      "value": "var(--border)"
-    },
-    "spinner-foreground": {
-      "path": "component.spinner.fg",
-      "cssName": "spinner-foreground",
-      "type": "color",
-      "value": "var(--muted-foreground)"
-    },
-    "spinner-track": {
-      "path": "component.spinner.track",
-      "cssName": "spinner-track",
-      "type": "color",
-      "value": "var(--border-subtle)"
-    },
-    "switch": {
-      "path": "component.switch.track",
-      "cssName": "switch",
-      "type": "color",
-      "value": "var(--muted)"
-    },
-    "switch-border": {
-      "path": "component.switch.border",
-      "cssName": "switch-border",
-      "type": "color",
-      "value": "var(--border-strong)"
-    },
-    "switch-thumb": {
-      "path": "component.switch.thumb",
-      "cssName": "switch-thumb",
-      "type": "color",
-      "value": "oklch(1 0 0)"
-    },
-    "tab-list": {
-      "path": "component.tab-list.bg",
-      "cssName": "tab-list",
-      "type": "color",
-      "value": "var(--background)"
-    },
-    "tab-list-border": {
-      "path": "component.tab-list.border",
-      "cssName": "tab-list-border",
-      "type": "color",
-      "value": "var(--border)"
-    },
-    "tab-list-rail": {
-      "path": "component.tab-list.rail",
-      "cssName": "tab-list-rail",
-      "type": "color",
-      "value": "var(--muted)"
-    },
-    "tab-foreground": {
-      "path": "component.tab.fg",
-      "cssName": "tab-foreground",
-      "type": "color",
-      "value": "var(--muted-foreground)"
-    },
-    "tab-selected-foreground": {
-      "path": "component.tab.selected-fg",
-      "cssName": "tab-selected-foreground",
-      "type": "color",
-      "value": "var(--foreground)"
-    },
-    "tab-selected-bg": {
-      "path": "component.tab.selected-bg",
-      "cssName": "tab-selected-bg",
-      "type": "color",
-      "value": "var(--background)"
-    },
-    "tab-border": {
-      "path": "component.tab.border",
-      "cssName": "tab-border",
-      "type": "color",
-      "value": "var(--border)"
-    },
-    "table-foreground": {
-      "path": "component.table.fg",
-      "cssName": "table-foreground",
-      "type": "color",
-      "value": "var(--foreground)"
-    },
-    "table-muted-foreground": {
-      "path": "component.table.muted-fg",
-      "cssName": "table-muted-foreground",
-      "type": "color",
-      "value": "var(--muted-foreground)"
-    },
-    "table-stripe": {
-      "path": "component.table.stripe",
-      "cssName": "table-stripe",
-      "type": "color",
-      "value": "var(--surface-2)"
-    },
-    "table-sticky-bg": {
-      "path": "component.table.sticky-bg",
-      "cssName": "table-sticky-bg",
-      "type": "color",
-      "value": "var(--background)"
-    },
-    "theme-picker": {
-      "path": "component.theme-picker.bg",
-      "cssName": "theme-picker",
-      "type": "color",
-      "value": "var(--popover)"
-    },
-    "theme-picker-foreground": {
-      "path": "component.theme-picker.fg",
-      "cssName": "theme-picker-foreground",
-      "type": "color",
-      "value": "var(--popover-foreground)"
-    },
-    "theme-picker-trigger-foreground": {
-      "path": "component.theme-picker.trigger-fg",
-      "cssName": "theme-picker-trigger-foreground",
-      "type": "color",
-      "value": "var(--foreground)"
-    },
-    "theme-picker-option-foreground": {
-      "path": "component.theme-picker.option-fg",
-      "cssName": "theme-picker-option-foreground",
-      "type": "color",
-      "value": "var(--muted-foreground)"
-    },
-    "theme-picker-option-hover-bg": {
-      "path": "component.theme-picker.option-hover-bg",
-      "cssName": "theme-picker-option-hover-bg",
-      "type": "color",
-      "value": "var(--hover-bg)"
-    },
-    "toast": {
-      "path": "component.toast.bg",
-      "cssName": "toast",
-      "type": "color",
-      "value": "var(--background)"
-    },
-    "toast-foreground": {
-      "path": "component.toast.fg",
-      "cssName": "toast-foreground",
-      "type": "color",
-      "value": "var(--foreground)"
-    },
-    "toast-border": {
-      "path": "component.toast.border",
-      "cssName": "toast-border",
-      "type": "color",
-      "value": "var(--border)"
-    },
-    "toast-stripe": {
-      "path": "component.toast.stripe",
-      "cssName": "toast-stripe",
-      "type": "color",
-      "value": "var(--foreground)"
-    },
-    "toggle-group": {
-      "path": "component.toggle-group.bg",
-      "cssName": "toggle-group",
-      "type": "color",
-      "value": "var(--muted)"
-    },
-    "toggle-group-border": {
-      "path": "component.toggle-group.border",
-      "cssName": "toggle-group-border",
-      "type": "color",
-      "value": "var(--border)"
-    },
-    "toggle": {
-      "path": "component.toggle.bg",
-      "cssName": "toggle",
-      "type": "color",
-      "value": "var(--background)"
-    },
-    "toggle-foreground": {
-      "path": "component.toggle.fg",
-      "cssName": "toggle-foreground",
-      "type": "color",
-      "value": "var(--foreground)"
-    },
-    "toggle-border": {
-      "path": "component.toggle.border",
-      "cssName": "toggle-border",
-      "type": "color",
-      "value": "var(--border)"
-    },
-    "tooltip": {
-      "path": "component.tooltip.bg",
-      "cssName": "tooltip",
-      "type": "color",
-      "value": "var(--foreground)"
-    },
-    "tooltip-foreground": {
-      "path": "component.tooltip.fg",
-      "cssName": "tooltip-foreground",
-      "type": "color",
-      "value": "var(--background)"
+      "value": "color, background-color, border-color, outline-color, fill, stroke"
     }
   },
   "paths": {
@@ -3806,24 +2762,10 @@
     "color.accent.skills": "accent-skills",
     "color.accent.specs": "accent-specs",
     "color.accent.theme": "accent-theme",
-    "component.accordion.bg": "accordion",
-    "component.accordion.border": "accordion-border",
-    "component.accordion.chevron": "accordion-chevron",
-    "component.accordion.fg": "accordion-foreground",
-    "component.accordion.hover-bg": "accordion-hover-bg",
     "interaction.active.bg": "active-bg",
     "interaction.active.strength": "active-strength",
-    "component.alert.bg": "alert",
-    "component.alert.border": "alert-border",
-    "component.alert.fg": "alert-foreground",
-    "component.alert.stripe": "alert-stripe",
-    "component.avatar.bg": "avatar",
-    "component.avatar.fg": "avatar-foreground",
     "color.backdrop": "backdrop",
     "color.background": "background",
-    "component.badge.bg": "badge",
-    "component.badge.border": "badge-border",
-    "component.badge.fg": "badge-foreground",
     "typography.body.font": "body-font",
     "typography.body.weight": "body-weight",
     "color.border.default": "border",
@@ -3839,34 +2781,15 @@
     "border.subtle.style": "border-subtle-style",
     "border.subtle.width": "border-subtle-width",
     "color.border.width": "border-width",
-    "component.breadcrumb.current": "breadcrumb-current",
-    "component.breadcrumb.fg": "breadcrumb-foreground",
     "breakpoint.desktop": "breakpoint-desktop",
     "breakpoint.mobile": "breakpoint-mobile",
     "breakpoint.tablet": "breakpoint-tablet",
-    "component.button.bg": "button",
-    "component.button.border": "button-border",
-    "component.button.fg": "button-foreground",
-    "component.button.hover-bg": "button-hover-bg",
-    "component.card.bg": "card",
-    "component.card.backdrop-filter": "card-backdrop-filter",
-    "component.card.border.color": "card-border",
-    "component.card.border.style": "card-border-style",
-    "component.card.border.width": "card-border-width",
-    "component.card.fg": "card-foreground",
-    "component.card.texture": "card-texture",
-    "component.card.texture-blend": "card-texture-blend",
-    "component.card.texture-opacity": "card-texture-opacity",
-    "component.chip.bg": "chip",
-    "component.chip.border": "chip-border",
-    "component.chip.fg": "chip-foreground",
-    "component.code-block.bg": "code-block",
-    "component.code-block.fg": "code-block-foreground",
-    "component.combobox.bg": "combobox",
-    "component.combobox.fg": "combobox-foreground",
-    "component.context-menu.bg": "context-menu",
-    "component.context-menu.border": "context-menu-border",
-    "component.context-menu.fg": "context-menu-foreground",
+    "color.card.default": "card",
+    "filter.card-backdrop": "card-backdrop-filter",
+    "color.card.foreground": "card-foreground",
+    "image.card-texture": "card-texture",
+    "image.card-texture-blend": "card-texture-blend",
+    "image.card-texture-opacity": "card-texture-opacity",
     "control.frame": "control-frame",
     "control.h-2xs": "control-h-2xs",
     "control.h-lg": "control-h-lg",
@@ -3884,19 +2807,8 @@
     "density.text": "density-text",
     "color.destructive.default": "destructive",
     "color.destructive.foreground": "destructive-foreground",
-    "component.dialog.bg": "dialog",
-    "component.dialog.border.color": "dialog-border",
-    "component.dialog.border.style": "dialog-border-style",
-    "component.dialog.border.width": "dialog-border-width",
-    "component.dialog.divider": "dialog-divider",
-    "component.dialog.footer": "dialog-footer",
-    "component.dialog.fg": "dialog-foreground",
-    "component.dialog.muted-fg": "dialog-muted-foreground",
     "typography.displayFont": "display-font",
     "color.divider": "divider",
-    "component.dropdown.bg": "dropdown",
-    "component.dropdown.border": "dropdown-border",
-    "component.dropdown.fg": "dropdown-foreground",
     "motion.duration.deliberate": "duration-deliberate",
     "motion.duration.fast": "duration-fast",
     "motion.duration.glacial": "duration-glacial",
@@ -3915,27 +2827,6 @@
     "elevation.sm.shadow": "elevation-sm-shadow",
     "elevation.xl.shadow": "elevation-xl-shadow",
     "elevation.xs.shadow": "elevation-xs-shadow",
-    "component.empty-state.bg": "empty-state",
-    "component.empty-state.border": "empty-state-border",
-    "component.empty-state.fg": "empty-state-foreground",
-    "component.empty-state.title": "empty-state-title",
-    "component.error-boundary.bg": "error-boundary",
-    "component.error-boundary.border": "error-boundary-border",
-    "component.error-boundary.fg": "error-boundary-foreground",
-    "component.error-boundary.icon-fg": "error-boundary-icon",
-    "component.error-boundary.message-fg": "error-boundary-message-foreground",
-    "component.error-boundary.retry-bg": "error-boundary-retry-bg",
-    "component.error-boundary.retry-fg": "error-boundary-retry-foreground",
-    "component.error-state.bg": "error-state",
-    "component.error-state.border": "error-state-border",
-    "component.error-state.fg": "error-state-foreground",
-    "component.field.bg": "field",
-    "component.field.border": "field-border",
-    "component.field.border-hover": "field-border-hover",
-    "component.field.error": "field-error",
-    "component.field.fg": "field-foreground",
-    "component.field.hint": "field-hint",
-    "component.fieldset.border": "fieldset-border",
     "fill.button.color": "fill-button-color",
     "fill.card.color": "fill-card-color",
     "fill.muted.color": "fill-muted-color",
@@ -3965,9 +2856,6 @@
     "typography.heading.transform": "heading-transform",
     "typography.heading.weight": "heading-weight",
     "interaction.hover.bg": "hover-bg",
-    "component.hover-card.bg": "hover-card",
-    "component.hover-card.border": "hover-card-border",
-    "component.hover-card.fg": "hover-card-foreground",
     "interaction.hover.strength": "hover-strength",
     "color.hue.amber": "hue-amber",
     "color.hue.blue": "hue-blue",
@@ -4001,12 +2889,8 @@
     "ink.foreground.color": "ink-foreground-color",
     "ink.muted.color": "ink-muted-color",
     "color.input": "input",
-    "component.kbd.bg": "kbd",
-    "component.kbd.border": "kbd-border",
-    "component.kbd.fg": "kbd-foreground",
+    "color.knob": "knob",
     "typography.label.font": "label-font",
-    "component.label.fg": "label-foreground",
-    "component.label.required": "label-required",
     "typography.label.tracking": "label-tracking",
     "typography.label.transform": "label-transform",
     "typography.label.weight": "label-weight",
@@ -4017,26 +2901,12 @@
     "typography.leading.relaxed": "leading-relaxed",
     "typography.leading.snug": "leading-snug",
     "typography.leading.tight": "leading-tight",
-    "component.legend.fg": "legend-foreground",
-    "component.menu-item.fg": "menu-item-foreground",
-    "component.menu-item.hover-bg": "menu-item-hover-bg",
-    "component.meter.track": "meter",
-    "component.meter.optimum": "meter-optimum",
-    "component.meter.sub-suboptimum": "meter-sub-suboptimum",
-    "component.meter.suboptimum": "meter-suboptimum",
     "color.mix.bgMix": "mix-bg",
     "color.mix.borderMix": "mix-border",
     "color.mix.hoverMix": "mix-hover",
     "typography.monoFont": "mono-font",
     "color.muted.default": "muted",
     "color.muted.foreground": "muted-foreground",
-    "component.navbar.bg": "navbar",
-    "component.navbar.border": "navbar-border",
-    "component.navbar.fg": "navbar-foreground",
-    "component.page.current-bg": "page-current-bg",
-    "component.page.current-fg": "page-current-foreground",
-    "component.page.fg": "page-foreground",
-    "component.page.hover-bg": "page-hover-bg",
     "panel.body-pad-y": "panel-body-pad-y",
     "panel.ch-w-lg": "panel-ch-w-lg",
     "panel.ch-w-md": "panel-ch-w-md",
@@ -4067,19 +2937,14 @@
     "panel.w-side": "panel-w-side",
     "panel.w-toast": "panel-w-toast",
     "play.colors.property": "play-colors-property",
-    "component.popover.bg": "popover",
-    "component.popover.border": "popover-border",
-    "component.popover.fg": "popover-foreground",
+    "color.popover.default": "popover",
+    "color.popover.foreground": "popover-foreground",
     "control.press.scale": "press-scale",
     "control.press.shadow": "press-shadow",
     "control.press.translate": "press-translate",
     "color.primary.default": "primary",
     "color.primary.foreground": "primary-foreground",
     "color.primary.hover": "primary-hover",
-    "component.progress.track": "progress",
-    "component.progress.fill": "progress-fill",
-    "component.prose.fg": "prose-foreground",
-    "component.radio.fg": "radio-foreground",
     "radius.default": "radius",
     "radius.full": "radius-full",
     "radius.lg": "radius-lg",
@@ -4092,8 +2957,6 @@
     "color.ring.opacity": "ring-opacity",
     "color.ring.width": "ring-width",
     "color.scrim": "scrim",
-    "component.scroll-area.thumb": "scroll-area-thumb",
-    "component.scroll-area.thumb-hover": "scroll-area-thumb-hover",
     "scrollbar.radius": "scrollbar-radius",
     "scrollbar.thumb": "scrollbar-thumb",
     "scrollbar.thumb-hover": "scrollbar-thumb-hover",
@@ -4105,7 +2968,6 @@
     "interaction.selected.bg": "selected-bg",
     "interaction.selected.border": "selected-border",
     "interaction.selected.strength": "selected-strength",
-    "component.separator.line": "separator-line",
     "shadow.accent": "shadow-accent",
     "shadow.card-rest": "shadow-card-rest",
     "shadow.edge-top": "shadow-edge-top",
@@ -4132,11 +2994,6 @@
     "size.control-sm.h": "size-control-sm-h",
     "size.full.h": "size-full-h",
     "size.full.w": "size-full-w",
-    "component.skeleton.bg": "skeleton",
-    "component.skeleton.highlight": "skeleton-highlight",
-    "component.slider.fill": "slider-fill",
-    "component.slider.track": "slider-track",
-    "component.slider.track-border": "slider-track-border",
     "space.0_75": "space-0_75",
     "space.1": "space-1",
     "space.10": "space-10",
@@ -4171,8 +3028,6 @@
     "space.9": "space-9",
     "space.half": "space-half",
     "space.px": "space-px",
-    "component.spinner.fg": "spinner-foreground",
-    "component.spinner.track": "spinner-track",
     "color.status.amber": "status-amber",
     "color.status.blue": "status-blue",
     "color.status.gray": "status-gray",
@@ -4191,9 +3046,6 @@
     "color.surface.overlay": "surface-overlay",
     "color.surface.overlay-blend": "surface-overlay-blend",
     "color.surface.overlay-opacity": "surface-overlay-opacity",
-    "component.switch.track": "switch",
-    "component.switch.border": "switch-border",
-    "component.switch.thumb": "switch-thumb",
     "color.syntax.attr": "syntax-attr",
     "color.syntax.comment": "syntax-comment",
     "color.syntax.function": "syntax-function",
@@ -4203,17 +3055,6 @@
     "color.syntax.tag": "syntax-tag",
     "color.syntax.type": "syntax-type",
     "color.syntax.variable": "syntax-variable",
-    "component.tab.border": "tab-border",
-    "component.tab.fg": "tab-foreground",
-    "component.tab-list.bg": "tab-list",
-    "component.tab-list.border": "tab-list-border",
-    "component.tab-list.rail": "tab-list-rail",
-    "component.tab.selected-bg": "tab-selected-bg",
-    "component.tab.selected-fg": "tab-selected-foreground",
-    "component.table.fg": "table-foreground",
-    "component.table.muted-fg": "table-muted-foreground",
-    "component.table.sticky-bg": "table-sticky-bg",
-    "component.table.stripe": "table-stripe",
     "typography.text.2xl": "text-2xl",
     "typography.text.3xl": "text-3xl",
     "typography.text.4xl": "text-4xl",
@@ -4224,22 +3065,6 @@
     "typography.text.sm": "text-sm",
     "typography.text.xl": "text-xl",
     "typography.text.xs": "text-xs",
-    "component.theme-picker.bg": "theme-picker",
-    "component.theme-picker.fg": "theme-picker-foreground",
-    "component.theme-picker.option-fg": "theme-picker-option-foreground",
-    "component.theme-picker.option-hover-bg": "theme-picker-option-hover-bg",
-    "component.theme-picker.trigger-fg": "theme-picker-trigger-foreground",
-    "component.toast.bg": "toast",
-    "component.toast.border": "toast-border",
-    "component.toast.fg": "toast-foreground",
-    "component.toast.stripe": "toast-stripe",
-    "component.toggle.bg": "toggle",
-    "component.toggle.border": "toggle-border",
-    "component.toggle.fg": "toggle-foreground",
-    "component.toggle-group.bg": "toggle-group",
-    "component.toggle-group.border": "toggle-group-border",
-    "component.tooltip.bg": "tooltip",
-    "component.tooltip.fg": "tooltip-foreground",
     "motion.tooltip.hide-delay": "tooltip-hide-delay",
     "motion.tooltip.show-delay": "tooltip-show-delay",
     "typography.tracking.normal": "tracking-normal",
@@ -4565,26 +3390,6 @@
       "type": "transition",
       "members": {
         "property": "play-colors-property"
-      }
-    },
-    "card.border": {
-      "path": "component.card.border",
-      "cssName": "card.border",
-      "type": "border",
-      "members": {
-        "color": "card-border",
-        "width": "card-border-width",
-        "style": "card-border-style"
-      }
-    },
-    "dialog.border": {
-      "path": "component.dialog.border",
-      "cssName": "dialog.border",
-      "type": "border",
-      "members": {
-        "color": "dialog-border",
-        "width": "dialog-border-width",
-        "style": "dialog-border-style"
       }
     }
   },

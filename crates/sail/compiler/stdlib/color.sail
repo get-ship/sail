@@ -13,7 +13,7 @@
   }
 
   // One field border only; swatch is edge-to-edge inside it.
-  style color = {box: size({ w: 9, h: control-h-md, min-h: 0 }).space({ pad: 0 }).overflow({ all: hidden }), paint: appearance(none).border({ color: field.border, width: 1, style: solid }).radius(md).fill({ color: field }).cursor(pointer), when: {hover: {paint: border({ color: border-strong })}, disabled: {paint: cursor(not-allowed).filter({ opacity: 50 })}}}
+  style color = {box: size({ w: 9, h: control-h-md, min-h: 0 }).space({ pad: 0 }).overflow({ all: hidden }), paint: appearance(none).border({ color: border, width: 1, style: solid }).radius(md).fill({ color: input }).cursor(pointer), when: {hover: {paint: border({ color: border-strong })}, disabled: {paint: cursor(not-allowed).filter({ opacity: 50 })}}}
 </scope>
 
 <input

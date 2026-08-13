@@ -14,25 +14,25 @@
 
   style host = {paint: group()}
 
-  style trigger = {box: size(control-h-sm).space({ pad: 0 }), paint: ink({ color: theme-picker.trigger-fg }).fill({ color: transparent }).border({ color: border, width: hairline }).radius(full).cursor(pointer)}
-  style modeTrigger = {box: size({ min-w: control-h-sm }).space({ pad: 0 }), paint: ink({ color: theme-picker.trigger-fg }).fill({ color: transparent }).border({ color: border, width: hairline }).radius(full).cursor(pointer)}
+  style trigger = {box: size(control-h-sm).space({ pad: 0 }), paint: ink({ color: foreground }).fill({ color: transparent }).border({ color: border, width: hairline }).radius(full).cursor(pointer)}
+  style modeTrigger = {box: size({ min-w: control-h-sm }).space({ pad: 0 }), paint: ink({ color: foreground }).fill({ color: transparent }).border({ color: border, width: hairline }).radius(full).cursor(pointer)}
   style triggerIcon = {box: size(icon-size-md).flow({ display: block })}
-  style glyph = {paint: ink({ color: theme-picker.trigger-fg }), text: type({ size: sm, leading: none })}
+  style glyph = {paint: ink({ color: foreground }), text: type({ size: sm, leading: none })}
 
-  style panel = {box: place({ position: fixed, inset: auto, left: bind(anchorLeft), top: bind(anchorTop), z: popover }).space({ m: 0, pad: 0 }).size({ w: panel-max-w-sm, max-w: panel-w-toast, min-w: 0, max-h: panel-vh-md }).overflow({ x: hidden, y: auto, overscroll: contain }), paint: ink({ color: theme-picker.foreground }).fill({ color: theme-picker }).border({ color: border, width: hairline }).radius(lg).elevation(lg)}
+  style panel = {box: place({ position: fixed, inset: auto, left: bind(anchorLeft), top: bind(anchorTop), z: popover }).space({ m: 0, pad: 0 }).size({ w: panel-max-w-sm, max-w: panel-w-toast, min-w: 0, max-h: panel-vh-md }).overflow({ x: hidden, y: auto, overscroll: contain }), paint: ink({ color: popover-foreground }).fill({ color: popover }).border({ color: border, width: hairline }).radius(lg).elevation(lg)}
   style panelInline = {box: place({ position: static, inset: auto }).space({ m: 0, pad: 0 }).size({ w: full, max-w: none, min-w: 0 }).overflow({ x: hidden }), paint: elevation(none).fill({ color: transparent }).border({ width: 0 })}
 
   style header = {box: size({ w: full, min-w: 0 }).space({ pad-x: 3, pad-t: 3, pad-b: 0 })}
-  style headerEyebrow = {paint: ink({ color: theme-picker.option-fg }), text: type({ size: xs, weight: semibold, tracking: wide, case: label-transform, leading: none })}
-  style headerTitle = {paint: ink({ color: theme-picker.foreground }), text: type({ family: heading, weight: bind(heading-weight), size: base, leading: tight, wrap: truncate })}
-  style headerMeta = {paint: ink({ color: theme-picker.option-fg }), text: type({ size: xs, leading: none })}
+  style headerEyebrow = {paint: ink({ color: muted-foreground }), text: type({ size: xs, weight: semibold, tracking: wide, case: label-transform, leading: none })}
+  style headerTitle = {paint: ink({ color: popover-foreground }), text: type({ family: heading, weight: bind(heading-weight), size: base, leading: tight, wrap: truncate })}
+  style headerMeta = {paint: ink({ color: muted-foreground }), text: type({ size: xs, leading: none })}
 
   // Filter tabs — always readable on popover chrome. Selected uses hover-bg +
   // primary underline (never primary fill — breaks on brut).
   style modeSeg = {box: size({ w: full, min-w: 0 }).space({ pad-x: 1 }), paint: border({ width: 1, edge: b, color: border })}
-  style modeSegBtn = {box: flow({ grow: 1 }).size({ min-w: 0 }).space({ pad-y: 2, pad-x: 2 }), paint: ink({ color: theme-picker.option-fg }).fill({ color: transparent }).border({ width: 0, edge: l }).border({ width: 0, edge: r }).border({ width: 0, edge: t }).border({ width: 2, edge: b, color: transparent }).radius({ t: sm }).cursor(pointer).select(none).tapHighlight(none), text: type({ size: xs, weight: medium, align: center, wrap: nowrap }), when: {hover: {paint: ink({ color: theme-picker.foreground }).fill({ color: hover-bg })}, focus: {paint: border({ style: solid, kind: outline, width: 2, color: ring, offset: ring-offset })}, selected: {paint: ink({ color: theme-picker.foreground }).fill({ color: hover-bg }).border({ color: primary, edge: b }), text: type({ weight: semibold })}}}
+  style modeSegBtn = {box: flow({ grow: 1 }).size({ min-w: 0 }).space({ pad-y: 2, pad-x: 2 }), paint: ink({ color: muted-foreground }).fill({ color: transparent }).border({ width: 0, edge: l }).border({ width: 0, edge: r }).border({ width: 0, edge: t }).border({ width: 2, edge: b, color: transparent }).radius({ t: sm }).cursor(pointer).select(none).tapHighlight(none), text: type({ size: xs, weight: medium, align: center, wrap: nowrap }), when: {hover: {paint: ink({ color: popover-foreground }).fill({ color: hover-bg })}, focus: {paint: border({ style: solid, kind: outline, width: 2, color: ring, offset: ring-offset })}, selected: {paint: ink({ color: popover-foreground }).fill({ color: hover-bg }).border({ color: primary, edge: b }), text: type({ weight: semibold })}}}
 
-  style catalogHead = {box: size({ w: full, min-w: 0 }).space({ pad-x: 3, pad-t: 2, pad-b: 1 }), paint: ink({ color: theme-picker.option-fg }), text: type({ size: xs, weight: semibold, tracking: wide, case: label-transform })}
+  style catalogHead = {box: size({ w: full, min-w: 0 }).space({ pad-x: 3, pad-t: 2, pad-b: 1 }), paint: ink({ color: muted-foreground }), text: type({ size: xs, weight: semibold, tracking: wide, case: label-transform })}
 
   style panelList = {box: size({ w: full, min-w: 0 }).space({ pad: 1_5 })}
   style option = {box: size({ w: full, min-w: 0 }).space({ pad: 0 }).overflow({ all: hidden }), paint: fill({ color: transparent }).border({ color: transparent, width: hairline }).radius(md).cursor(pointer), text: type({ align: start })}

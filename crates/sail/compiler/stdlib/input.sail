@@ -3,7 +3,7 @@
   type: text | email | password | search | tel | url | number | hidden.
   Other controls are own tags: checkbox, radio, slider, date, file, color, switch.
   Actions use <button> — type=submit is not an input type.
-  Shared component.field surface with select/textarea.
+  Shared input / foreground / border with select/textarea.
   reveal (default true): password peek chrome (padE + use:passwordReveal).
 -->
 
@@ -29,10 +29,10 @@
     reveal = true
   }
 
-  // Text-like fields share component.field surface with select/textarea.
-  style field = {box: flow({ display: block }).size({ min-h: control-h-md, w: full }).space({ pad-y: 1_5, pad-x: 3 }), paint: ink({ color: field.foreground }).fill({ color: field }).border({ color: field.border, width: 1 }).radius(md).elevation(xs), text: type({ size: base }), when: {hover: {paint: border({ color: border-strong })}, disabled: {paint: cursor(not-allowed).filter({ opacity: 50 })}}}
+  // Text-like fields share input / foreground / border with select/textarea.
+  style field = {box: flow({ display: block }).size({ min-h: control-h-md, w: full }).space({ pad-y: 1_5, pad-x: 3 }), paint: ink({ color: foreground }).fill({ color: input }).border({ color: border, width: 1 }).radius(md).elevation(xs), text: type({ size: base }), when: {hover: {paint: border({ color: border-strong })}, disabled: {paint: cursor(not-allowed).filter({ opacity: 50 })}}}
   // Password: reserve end chrome for reveal (select chevron model — padE, not padX).
-  style fieldPassword = {box: flow({ display: block }).size({ min-h: control-h-md, w: full }).space({ pad-y: 1_5, pad-s: 3, pad-e: 8 }), paint: ink({ color: field.foreground }).fill({ color: field }).border({ color: field.border, width: 1 }).radius(md).elevation(xs), text: type({ size: base }), when: {hover: {paint: border({ color: border-strong })}, disabled: {paint: cursor(not-allowed).filter({ opacity: 50 })}}}
+  style fieldPassword = {box: flow({ display: block }).size({ min-h: control-h-md, w: full }).space({ pad-y: 1_5, pad-s: 3, pad-e: 8 }), paint: ink({ color: foreground }).fill({ color: input }).border({ color: border, width: 1 }).radius(md).elevation(xs), text: type({ size: base }), when: {hover: {paint: border({ color: border-strong })}, disabled: {paint: cursor(not-allowed).filter({ opacity: 50 })}}}
   style sizeXs = {box: size({ min-h: control-h-2xs }).space({ pad-x: 2 }), text: type({ size: xs })}
   style sizeSm = {box: size({ min-h: control-h-sm }).space({ pad-x: 2_5 }), text: type({ size: sm })}
   style sizeMd = {box: size({ min-h: control-h-md }).space({ pad-x: 3 }), text: type({ size: base })}

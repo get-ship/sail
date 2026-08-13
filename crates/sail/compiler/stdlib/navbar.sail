@@ -17,7 +17,7 @@
     offset: number = 0
   }
 
-  style base = {paint: fill({ color: navbar }).ink({ color: navbar.foreground }), text: type({ decoration: none })}
+  style base = {paint: fill({ color: background }).ink({ color: foreground }), text: type({ decoration: none })}
   style placeBar = {box: place({ position: relative }).size({ min-h: 12 }).space({ pad-x: 4 })}
   style placeRail = {box: size({ min-h: 0, min-w: panel-rail-w }).space({ pad-y: 5, pad-x: 4 }).flow({ dir: column })}
   style brand = {box: flow({ shrink: 0 }).size({ min-w: 0 }), text: type({ weight: semibold })}
@@ -45,10 +45,10 @@
     }, compound: [
       {sticky: true, box: place({ position: sticky, top: bind(offset), z: sticky })},
       {autohide: true, sticky: true, box: place({ position: fixed, left: 0, right: 0, top: 0, z: sticky }).size({ w: full }), paint: motion({ property: transform, duration: fast, ease: out })},
-      {bordered: true, paint: border({ color: navbar.border, edge: l }).border({ color: navbar.border, edge: r }).border({ color: navbar.border, edge: t }).border({ color: navbar.border, width: 1, edge: b })},
+      {bordered: true, paint: border({ color: border, edge: l }).border({ color: border, edge: r }).border({ color: border, edge: t }).border({ color: border, width: 1, edge: b })},
       {placement: bottom, sticky: true, box: place({ top: auto, bottom: 0 })},
-      {bordered: true, placement: bottom, paint: border({ color: navbar.border, edge: l }).border({ color: navbar.border, edge: r }).border({ color: navbar.border, width: 0, edge: b }).border({ color: navbar.border, width: 1, edge: t })},
-      {bordered: true, placement: rail, paint: border({ color: navbar.border, edge: s }).border({ color: navbar.border, edge: t }).border({ color: navbar.border, width: 0, edge: b }).border({ color: navbar.border, width: 1, edge: e })},
+      {bordered: true, placement: bottom, paint: border({ color: border, edge: l }).border({ color: border, edge: r }).border({ color: border, width: 0, edge: b }).border({ color: border, width: 1, edge: t })},
+      {bordered: true, placement: rail, paint: border({ color: border, edge: s }).border({ color: border, edge: t }).border({ color: border, width: 0, edge: b }).border({ color: border, width: 1, edge: e })},
       {placement: rail, sticky: true, box: place({ position: sticky, top: bind(offset), bottom: 0, z: dropdown }).flow({ self: start }).overflow({ y: auto })},
     ]})
 >

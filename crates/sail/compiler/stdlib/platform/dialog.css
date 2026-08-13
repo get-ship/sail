@@ -10,6 +10,6 @@
 .sail-dialog[side][size='md'] { --sheet-size:var(--panel-max-w-md); }
 .sail-dialog[side][size='lg'] { --sheet-size:var(--panel-max-w-lg); }
 .sail-dialog[open]:not(:has(> header)):not(:has(> section)):not(:has(> footer)) { padding:var(--space-5) var(--space-6);gap:var(--space-4); }
-.sail-dialog > header { flex:0 0 auto;padding:var(--space-4_5) var(--space-6);border-bottom:1px solid var(--dialog-divider);font-size:var(--text-lg);font-weight:var(--font-weight-semibold);color:var(--dialog-foreground); }
-.sail-dialog > section { flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:var(--space-4) var(--space-6);font-size:var(--text-base);line-height:var(--leading-normal);color:var(--dialog-muted-foreground); }
-.sail-dialog > footer { flex:0 0 auto;display:flex;gap:var(--space-2);align-items:center;justify-content:flex-end;padding:var(--space-4) var(--space-6);border-top:1px solid var(--dialog-divider);background:var(--dialog-footer); }
+.sail-dialog > header { flex:0 0 auto;padding:var(--space-4_5) var(--space-6);border-bottom:1px solid var(--border-subtle);font-size:var(--text-lg);font-weight:var(--font-weight-semibold);color:var(--card-foreground); }
+.sail-dialog > section { flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:var(--space-4) var(--space-6);font-size:var(--text-base);line-height:var(--leading-normal);color:var(--muted-foreground); }
+.sail-dialog > footer { flex:0 0 auto;display:flex;gap:var(--space-2);align-items:center;justify-content:flex-end;padding:var(--space-4) var(--space-6);border-top:1px solid var(--border-subtle);background:var(--muted); }

@@ -14,8 +14,8 @@
     size: 'sm' | 'md' | 'lg' = 'md'
   }
 
-  // Track rides component.meter tokens (global fallbacks in the pack).
-  style base = {box: flow({ display: inline-block }).size({ w: full, h: 2 }).overflow({ all: hidden }), paint: appearance(none).align(middle).border({ width: 0 }).radius(full).fill({ color: meter })}
+  // Track rides muted.
+  style base = {box: flow({ display: inline-block }).size({ w: full, h: 2 }).overflow({ all: hidden }), paint: appearance(none).align(middle).border({ width: 0 }).radius(full).fill({ color: muted })}
   style sizeSm = {box: size({ h: 1_5 })}
   style sizeMd = {box: size({ h: 2 })}
   style sizeLg = {box: size({ h: 3 })}

@@ -105,28 +105,21 @@ mod tests {
     use super::*;
 
     #[test]
-    fn flags_unsanctioned_component_token_attr() {
+    fn gone_pack_names_are_not_theme_owned() {
         let f = check(
             Path::new("apps/demo/src/page.sail"),
             r#"<div button.bg="primary">x</div>"#,
         );
-        assert_eq!(f.len(), 1, "{f:?}");
-        assert_eq!(f[0].rule, RULE_ID);
-        assert!(
-            f[0].message.contains("theme-owned") && f[0].message.contains("theme="),
-            "{}",
-            f[0].message
-        );
+        assert!(f.is_empty(), "component.* names are gone: {f:?}");
     }
 
     #[test]
-    fn flags_card_foreground_attr() {
+    fn card_foreground_attr_is_not_theme_owned() {
         let f = check(
             Path::new("apps/demo/routes/page.sail"),
             r#"<column card.foreground="primary">x</column>"#,
         );
-        assert!(!f.is_empty(), "{f:?}");
-        assert!(f[0].message.contains("card.foreground"), "{}", f[0].message);
+        assert!(f.is_empty(), "card is a global, not theme-owned: {f:?}");
     }
 
     #[test]

@@ -10,8 +10,8 @@
     size: 'sm' | 'md' | 'lg' = 'md'
   }
 
-  // Track/fill ride component.progress tokens (global fallbacks in the pack).
-  style base = {box: flow({ display: inline-block }).size({ w: full, h: 2 }).overflow({ all: hidden }), paint: appearance(none).align(middle).border({ width: 0 }).radius(full).fill({ color: progress }).ink({ color: progress.fill })}
+  // Track/fill ride muted / primary.
+  style base = {box: flow({ display: inline-block }).size({ w: full, h: 2 }).overflow({ all: hidden }), paint: appearance(none).align(middle).border({ width: 0 }).radius(full).fill({ color: muted }).ink({ color: primary })}
   style sizeSm = {box: size({ h: 1_5 })}
   style sizeMd = {box: size({ h: 2 })}
   style sizeLg = {box: size({ h: 3 })}

@@ -404,7 +404,7 @@ mod tests {
     #[test]
     fn composites_include_border_identities() {
         let names: Vec<&str> = all_composites().iter().map(|c| c.name).collect();
-        for want in ["border.subtle", "card.border", "dialog.border"] {
+        for want in ["border.subtle", "border.default", "border.strong"] {
             assert!(names.contains(&want), "missing `{want}`: {names:?}");
         }
         let subtle = find_composite("border.subtle").expect("border.subtle");
@@ -415,8 +415,8 @@ mod tests {
             subtle.members
         );
         assert_eq!(
-            composite_for_member_css("dialog-border").map(|c| c.name),
-            Some("dialog.border")
+            composite_for_member_css("border-subtle-color").map(|c| c.name),
+            Some("border.subtle")
         );
     }
 

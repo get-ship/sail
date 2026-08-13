@@ -1,6 +1,6 @@
 <!--
   <badge> — L1 language element. Style value language only.
-  Rest paint = component.badge tokens when tone is omitted.
+  Rest paint = muted when tone is omitted.
   Semantic paint = bound tone.
 -->
 
@@ -14,9 +14,9 @@
 
   style base = {box: flow({ display: inline-flex }).size({ min-h: control-h-2xs }).space({ pad-x: 2, pad-y: px }), paint: border({ width: 1 }).radius(sm), text: type({ family: body, weight: semibold, leading: none, wrap: nowrap, size: xs })}
 
-  style soft = {paint: fill({ color: badge }).ink({ color: badge.foreground }).border({ color: badge.border })}
-  style solid = {paint: fill({ color: badge }).ink({ color: badge.foreground }).border({ color: badge.border }).elevation(xs)}
-  style outline = {paint: fill({ color: transparent }).ink({ color: badge.foreground }).border({ color: badge.border })}
+  style soft = {paint: fill({ color: muted }).ink({ color: muted-foreground }).border({ color: border })}
+  style solid = {paint: fill({ color: muted }).ink({ color: muted-foreground }).border({ color: border }).elevation(xs)}
+  style outline = {paint: fill({ color: transparent }).ink({ color: muted-foreground }).border({ color: border })}
 
   style sizeMd = {box: size({ min-h: control-h-2xs }).space({ pad-x: 2 }), text: type({ size: xs })}
   style sizeSm = {box: size({ min-h: 4 }).space({ pad-x: 1_5 }), text: type({ size: xs })}

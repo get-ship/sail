@@ -1064,12 +1064,13 @@ mod tests {
                     .iter()
                     .any(|i| i.label == "full" && i.detail.as_deref() == Some("scale `radius`"))
         }));
-        // D1: app complete excludes component public names
+        // Pack names are gone — complete spends globals.
         assert!(
             !labs.contains(&"chip-foreground"),
             "chip-foreground: {labs:?}"
         );
         assert!(!labs.contains(&"chip"), "bare chip: {labs:?}");
+        assert!(labs.contains(&"card"), "card is a global: {labs:?}");
     }
 
     #[test]
@@ -1112,18 +1113,16 @@ mod tests {
     }
 
     #[test]
-    fn host_chip_includes_surface_author_forms() {
+    fn host_chip_spends_globals() {
         let (src, off) = at_caret("style({ paint: fill({ color: ¦ }) })");
         let items = style_complete_at(&src, None, off, Some("chip"));
         let labs = labels(&items);
-        assert!(labs.contains(&"chip"), "chip form: {labs:?}");
-        assert!(
-            labs.contains(&"chip.foreground") || labs.iter().any(|l| l.starts_with("chip.")),
-            "chip surface dotted forms: {labs:?}"
-        );
+        assert!(labs.contains(&"muted"), "muted: {labs:?}");
+        assert!(labs.contains(&"card"), "card: {labs:?}");
+        assert!(!labs.contains(&"chip"), "pack name gone: {labs:?}");
         assert!(
             !labs.contains(&"chip-foreground"),
-            "kebab emit label forbidden: {labs:?}"
+            "kebab pack label gone: {labs:?}"
         );
     }
 
@@ -1212,8 +1211,9 @@ mod tests {
         let items = style_complete_at(&src, None, off, None);
         let labs = labels(&items);
         assert!(labs.contains(&"subtle"), "border.subtle: {labs:?}");
-        assert!(labs.contains(&"card"), "card.border: {labs:?}");
-        assert!(labs.contains(&"dialog"), "dialog.border: {labs:?}");
+        assert!(labs.contains(&"default"), "border.default: {labs:?}");
+        assert!(labs.contains(&"strong"), "border.strong: {labs:?}");
+        assert!(!labs.contains(&"dialog"), "dialog.border is gone: {labs:?}");
     }
 
     #[test]

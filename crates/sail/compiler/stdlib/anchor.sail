@@ -3,7 +3,7 @@
     • bare (no variant attr) = text link (sail-base a.sail-a; freeform skips
       stamping variant/tone so every href stays inline).
     • variant set = button-link chrome (inline-flex control).
-  default ≠ solid: rest uses component.button.* (not inverted fill).
+  default ≠ solid: rest uses background / foreground / border.
   solid rest = inverted free; solid + tone = filled tone.
   soft / outline / ghost rest → button.* ; tone always paints when set.
   No size axis (use button for sized CTAs). disabled paint needs
@@ -22,13 +22,13 @@
   // display(inline-flex) so freeform never leaves the label top-aligned in a block box.
   style base = {box: flow({ display: inline-flex }).size({ min-h: control-h-md }).space({ pad-x: 3 }), paint: appearance(none).radius(md).border({ color: transparent, width: control-stroke, style: solid }).select(none).cursor(pointer), text: type({ weight: medium, leading: none, size: base, wrap: nowrap, decoration: none })}
   // default rest = themeable button surface (not solid invert).
-  style vDefault = {paint: fill(button).border({ color: button.border }).ink(button).elevation(xs), when: {hover: {paint: fill({ color: hover-bg }).border({ color: border-strong })}}}
+  style vDefault = {paint: fill(button).border({ color: border }).ink(button).elevation(xs), when: {hover: {paint: fill({ color: hover-bg }).border({ color: border-strong })}}}
   style vDefaultTone = {paint: fill({ color: tone, mix: 15 }).border({ color: tone }).ink({ color: tone }), when: {hover: {paint: fill({ color: tone, mix: 25 })}}}
   style vSolid = {paint: fill({ color: foreground }).border({ color: foreground }).ink({ color: background }).elevation(xs), when: {hover: {paint: filter({ opacity: 90 }).elevation(sm)}}}
   style vSolidTone = {paint: fill({ color: tone }).border({ color: tone }).ink({ color: tone.foreground }).elevation(xs), when: {hover: {paint: filter({ opacity: 90 }).elevation(sm)}}}
-  style vSoft = {paint: fill({ color: hover-bg }).border({ color: button.border }).ink(button), when: {hover: {paint: filter({ opacity: 90 })}}}
+  style vSoft = {paint: fill({ color: hover-bg }).border({ color: border }).ink(button), when: {hover: {paint: filter({ opacity: 90 })}}}
   style vSoftTone = {paint: fill({ color: tone, mix: 15 }).border({ color: tone }).ink({ color: tone }), when: {hover: {paint: fill({ color: tone, mix: 25 })}}}
-  style vOutline = {paint: fill({ color: transparent }).border({ color: button.foreground }).ink(button), when: {hover: {paint: fill({ color: hover-bg })}, disabled: {paint: fill({ color: transparent })}}}
+  style vOutline = {paint: fill({ color: transparent }).border({ color: foreground }).ink(button), when: {hover: {paint: fill({ color: hover-bg })}, disabled: {paint: fill({ color: transparent })}}}
   style vOutlineTone = {paint: fill({ color: transparent }).border({ color: tone }).ink({ color: tone }), when: {hover: {paint: fill({ color: hover-bg })}, disabled: {paint: fill({ color: transparent })}}}
   style vGhost = {paint: fill({ color: transparent }).border({ color: transparent }).ink(button), when: {hover: {paint: fill({ color: hover-bg })}, disabled: {paint: fill({ color: transparent })}}}
   style vGhostTone = {paint: fill({ color: transparent }).ink({ color: tone }), when: {hover: {paint: fill({ color: hover-bg })}, disabled: {paint: fill({ color: transparent })}}}

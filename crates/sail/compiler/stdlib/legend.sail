@@ -5,8 +5,8 @@
 <scope>
   props: {}
 
-  // Caption rides component.legend tokens (global fallbacks in the pack).
-  style base = {box: space({ pad-x: 2 }), paint: ink({ color: legend.foreground }), text: type({ size: sm, weight: medium })}
+  // Caption rides foreground.
+  style base = {box: space({ pad-x: 2 }), paint: ink({ color: foreground }), text: type({ size: sm, weight: medium })}
 </scope>
 
 <legend style(base)>

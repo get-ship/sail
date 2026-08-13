@@ -1,6 +1,6 @@
 <!--
   <error-boundary> — group-caught swap on Style when.
-  Fallback chrome from component.error-boundary tokens.
+  Fallback chrome from muted / destructive / foreground.
 -->
 <scope>
   props: {
@@ -12,11 +12,11 @@
   style root = {box: flow({ display: contents }), paint: group()}
   style content = {box: flow({ display: contents })}
   style fallback = {box: flow({ display: none })}
-  style alert = {box: space({ pad-y: 4, pad-x: 5 }), paint: fill({ color: error-boundary }).border({ color: error-boundary.border, width: 1 }).radius(md).elevation(xs).ink({ color: error-boundary.foreground }), text: type({ family: body, size: sm })}
-  style icon = {box: size(icon-size-lg).space({ mt: 1 }), paint: ink({ color: error-boundary.icon-fg })}
+  style alert = {box: space({ pad-y: 4, pad-x: 5 }), paint: fill({ color: muted }).border({ color: destructive, width: 1 }).radius(md).elevation(xs).ink({ color: foreground }), text: type({ family: body, size: sm })}
+  style icon = {box: size(icon-size-lg).space({ mt: 1 }), paint: ink({ color: destructive })}
   style body = {box: size({ min-w: 0 })}
-  style message = {paint: ink({ color: error-boundary.message-fg }), text: type({ leading: normal })}
-  style retry = {box: flow({ self: start }).space({ pad-y: 1, pad-x: 3 }), paint: fill({ color: error-boundary.retry-bg }).border({ color: border, width: 1 }).radius(sm).ink({ color: error-boundary.retry-fg }).elevation(xs).cursor(pointer), text: type({ family: body, size: xs, weight: semibold })}
+  style message = {paint: ink({ color: muted-foreground }), text: type({ leading: normal })}
+  style retry = {box: flow({ self: start }).space({ pad-y: 1, pad-x: 3 }), paint: fill({ color: card }).border({ color: border, width: 1 }).radius(sm).ink({ color: foreground }).elevation(xs).cursor(pointer), text: type({ family: body, size: xs, weight: semibold })}
 </scope>
 <div use:catchRender style(root)>
   <div style(content, {when: {group-caught: {box: flow({ display: none })}}})><slot></slot></div>

@@ -1,7 +1,7 @@
 <!--
   <label> — size match; weight token; .req gate via group-required when.
   Host + .req via style chains / match / when.
-  Tokens: component.label (label.foreground, label.required) + label-weight.
+  Tokens: foreground + label-weight.
 -->
 
 <scope>
@@ -10,11 +10,11 @@
     required = false
   }
 
-  style base = {paint: ink({ color: label.foreground }).cursor(pointer).group(), text: type({ family: body, weight: bind(labelWeight), tracking: normal, size: base })}
+  style base = {paint: ink({ color: foreground }).cursor(pointer).group(), text: type({ family: body, weight: bind(labelWeight), tracking: normal, size: base })}
   style sizeMd = {text: type({ size: base })}
   style sizeSm = {text: type({ size: sm })}
   style sizeLg = {text: type({ size: lg })}
-  style req = {box: flow({ display: none }).space({ ms: 1 }), paint: ink({ color: label.required }), text: type({ weight: bold })}
+  style req = {box: flow({ display: none }).space({ ms: 1 }), paint: ink({ color: destructive }), text: type({ weight: bold })}
 </scope>
 
 <label style(base, { match: { size: { md: sizeMd, sm: sizeSm, lg: sizeLg } } })>

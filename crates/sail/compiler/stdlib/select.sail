@@ -1,6 +1,6 @@
 <!--
   <select> — native closed picker only (host Style). Not a combobox/listbox.
-  Rest surface shares component.field.* with input/textarea
+  Rest surface shares input / foreground / border with input/textarea
   (fg · bg · border → --field-foreground / --field / --field-border).
   Hover spends free border-strong (SPEC-D1 rest-only; field-border-hover is
   storage residual, not a host Style rest leaf). invalid → destructive border.
@@ -19,8 +19,8 @@
     multiple = false
   }
 
-  // Rest: component.field surface (shared with input/textarea).
-  style base = {box: flow({ display: block }).size({ min-h: control-h-md, w: full }).space({ pad-y: 1_5, pad-s: 3, pad-e: 8 }), paint: ink({ color: field.foreground }).fill({ color: field }).border({ color: field.border, width: 1 }).radius(md).elevation(xs).cursor(pointer), text: type({ size: base }), when: {hover: {paint: border({ color: border-strong })}, disabled: {paint: cursor(not-allowed).filter({ opacity: 50 })}}}
+  // Rest: input / foreground / border (shared with input/textarea).
+  style base = {box: flow({ display: block }).size({ min-h: control-h-md, w: full }).space({ pad-y: 1_5, pad-s: 3, pad-e: 8 }), paint: ink({ color: foreground }).fill({ color: input }).border({ color: border, width: 1 }).radius(md).elevation(xs).cursor(pointer), text: type({ size: base }), when: {hover: {paint: border({ color: border-strong })}, disabled: {paint: cursor(not-allowed).filter({ opacity: 50 })}}}
   style sizeXs = {box: size({ min-h: control-h-2xs }).space({ pad-s: 2 }), text: type({ size: xs })}
   style sizeSm = {box: size({ min-h: control-h-sm }).space({ pad-s: 2_5 }), text: type({ size: sm })}
   style sizeMd = {box: size({ min-h: control-h-md }).space({ pad-s: 3 }), text: type({ size: base })}

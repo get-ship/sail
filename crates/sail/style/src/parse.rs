@@ -2004,18 +2004,6 @@ fn normalize_paint_arg(
         return PaintArg::MemberPath { root, path };
     }
 
-    // App / foreign host: dotted L1 component paths (`button.bg`, `chip.foreground`)
-    // do not resolve (THEMES-1-ENFORCE). Bare pack stems (`button`, `popover`)
-    // stay Tokens so non-color scales can still spell `z(popover)`.
-    if super::component_surfaces::is_theme_owned_author_root(&root) && !path.is_empty() {
-        let name = format!("{root}.{}", path.join("."));
-        diags.push(StyleDiagnostic::ThemeOwnedToken {
-            name: name.clone(),
-            source: source.clone(),
-        });
-        return PaintArg::Token(name);
-    }
-
     // Static group stem first (`primary`, `primary.foreground`) → public Token.
     if static_token_group(&root).is_some() {
         if path.is_empty() {
@@ -2052,9 +2040,8 @@ fn normalize_paint_arg(
         return PaintArg::MemberPath { root, path };
     }
 
-    // Bare tokens: color scale excludes component surface public names
-    // (SPEC-D1). Non-color scales may still use short names that collide with
-    // emit labels (e.g. `z(popover)` → z-popover). No early reject here.
+    // Bare tokens. Non-color scales may still use short names that collide
+    // with emit labels (e.g. `z(popover)` → z-popover). No early reject here.
     if path.is_empty() {
         return PaintArg::Token(root);
     }

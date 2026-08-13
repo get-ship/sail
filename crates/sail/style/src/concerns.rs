@@ -2240,17 +2240,17 @@ mod tests {
     }
 
     #[test]
-    fn resolve_card_as_component_composite() {
+    fn resolve_default_as_border_composite() {
         let spec = find_concern("border").unwrap();
-        let c = resolve_concern_name(spec, "card").expect("card.border");
-        assert_eq!(c.name, "card.border");
+        let c = resolve_concern_name(spec, "default").expect("border.default");
+        assert_eq!(c.name, "border.default");
     }
 
     #[test]
-    fn resolve_dialog_as_component_composite() {
+    fn pack_border_composites_are_gone() {
         let spec = find_concern("border").unwrap();
-        let c = resolve_concern_name(spec, "dialog").expect("dialog.border");
-        assert_eq!(c.name, "dialog.border");
+        assert!(resolve_concern_name(spec, "card").is_none());
+        assert!(resolve_concern_name(spec, "dialog").is_none());
     }
 
     #[test]
@@ -2287,15 +2287,12 @@ mod tests {
     }
 
     #[test]
-    fn border_card_emits_component_member_vars() {
-        let op = only_op("style({ paint: border(card) })");
+    fn border_default_emits_member_vars() {
+        let op = only_op("style({ paint: border(default) })");
         let css = lower_op_css(&op).unwrap();
         assert!(
-            css.contains(&("border-color".into(), "var(--card-border)".into())),
-            "{css:?}"
-        );
-        assert!(
-            css.contains(&("border-width".into(), "var(--card-border-width)".into())),
+            css.contains(&("border-color".into(), "var(--border-default-color)".into()))
+                || css.contains(&("border-color".into(), "var(--border)".into())),
             "{css:?}"
         );
     }
@@ -2360,13 +2357,14 @@ mod tests {
     }
 
     #[test]
-    fn slot_color_refuses_theme_owned_public_name() {
+    fn slot_color_unknown_pack_name_is_bad_token() {
         let (_, diags) = parse("style({ paint: border({ color: dialog-border }) })");
         assert!(
             diags
                 .iter()
-                .any(|d| matches!(d, StyleDiagnostic::ThemeOwnedToken { name, .. } if name == "dialog-border")),
-            "{:?}",
+                .any(|d| matches!(d, StyleDiagnostic::BadToken { value, .. } if value == "dialog-border")
+                    || matches!(d, StyleDiagnostic::ThemeOwnedToken { name, .. } if name == "dialog-border")),
+            "gone pack names are unknown, not theme-owned: {:?}",
             diags.iter().map(|d| d.message()).collect::<Vec<_>>()
         );
     }

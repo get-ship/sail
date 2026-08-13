@@ -16,7 +16,7 @@
 
   // border(solid) is required — bare <button> UA is border-style:outset; without
   // it the outline join paints as separate browser chrome (not a segment).
-  style base = {box: place({ position: relative }).flow({ display: inline-flex }).size({ h: control-h-md }).space({ pad-x: 3, ms: -px }), paint: appearance(none).ink({ color: toggle.foreground }).fill({ color: toggle }).border({ color: toggle.border, width: 1, style: solid }).radius(none).motion({ property: colors, duration: fast, ease: out }).cursor(pointer).select(none).tapHighlight(none), text: type({ family: body, weight: medium, leading: none, wrap: nowrap, size: sm })}
+  style base = {box: place({ position: relative }).flow({ display: inline-flex }).size({ h: control-h-md }).space({ pad-x: 3, ms: -px }), paint: appearance(none).ink({ color: foreground }).fill({ color: background }).border({ color: border, width: 1, style: solid }).radius(none).motion({ property: colors, duration: fast, ease: out }).cursor(pointer).select(none).tapHighlight(none), text: type({ family: body, weight: medium, leading: none, wrap: nowrap, size: sm })}
   style sizeMd = {box: size({ h: control-h-md }).space({ pad-x: 3 }), text: type({ size: sm })}
   style sizeSm = {box: size({ h: control-h-sm }).space({ pad-x: 2_5 }), text: type({ size: xs })}
   style sizeLg = {box: size({ h: control-h-lg }).space({ pad-x: 4 }), text: type({ size: base })}

@@ -38,9 +38,9 @@
   // These still exist so an explicit empty tone does not go naked.
   style vSolid = {paint: fill({ color: foreground }).border({ color: foreground }).ink({ color: background }).elevation(xs), when: {hover: {paint: filter({ opacity: 90 }).elevation(sm)}}}
   style vSolidTone = {paint: fill({ color: tone }).border({ color: tone }).ink({ color: tone.foreground }).elevation(xs), when: {hover: {paint: filter({ opacity: 90 }).elevation(sm)}}}
-  style vSoft = {paint: fill({ color: hover-bg }).border({ color: button.border }).ink(button), when: {hover: {paint: filter({ opacity: 90 })}}}
+  style vSoft = {paint: fill({ color: hover-bg }).border({ color: border }).ink(button), when: {hover: {paint: filter({ opacity: 90 })}}}
   style vSoftTone = {paint: fill({ color: tone, mix: 15 }).border({ color: tone }).ink({ color: tone }), when: {hover: {paint: fill({ color: tone, mix: 25 })}}}
-  style vOutline = {paint: fill({ color: transparent }).border({ color: button.foreground }).ink(button), when: {hover: {paint: fill({ color: hover-bg })}, disabled: {paint: fill({ color: transparent })}}}
+  style vOutline = {paint: fill({ color: transparent }).border({ color: foreground }).ink(button), when: {hover: {paint: fill({ color: hover-bg })}, disabled: {paint: fill({ color: transparent })}}}
   style vOutlineTone = {paint: fill({ color: transparent }).border({ color: tone }).ink({ color: tone }), when: {hover: {paint: fill({ color: hover-bg })}, disabled: {paint: fill({ color: transparent })}}}
   style vGhost = {paint: fill({ color: transparent }).border({ color: transparent }).ink(button), when: {hover: {paint: fill({ color: hover-bg })}, disabled: {paint: fill({ color: transparent })}}}
   style vGhostTone = {paint: fill({ color: transparent }).border({ color: transparent }).ink({ color: tone }), when: {hover: {paint: fill({ color: hover-bg })}, disabled: {paint: fill({ color: transparent })}}}

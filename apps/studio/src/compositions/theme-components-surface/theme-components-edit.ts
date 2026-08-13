@@ -1,10 +1,8 @@
 import { closestAttr, inputValue, type UiEvent } from '../ui-event'
 /**
- * Themes → Components facet — component-scoped DTCG overrides for this theme.
- * - List faces with component.* tokens (or explicit global hooks).
- * - Composite faces (tabs, toast) collapse sub-tags; radio is its own face.
- * - Defaults: model/registry aliases → theme color paths (never var(--*) labels).
- * - Overrides write component.* leaves; Clear removes them.
+ * Themes → Components facet — L1 specimen + global knobs.
+ * component.* packs are gone. Faces edit globals (card/popover promoted;
+ * everything else is muted/input/surface/border). Override is style().
  */
 import { signal } from '@ship/sail-runtime'
 import { L1_CATALOG, allKnobs, clearTokenValue, getDesignState, getPathValue, isParkedComponentStateLeaf, l1Label, setTokenValue, type L1Id, type TokenKnob } from '../../design/index.ts'
@@ -126,9 +124,17 @@ const FACE_GLOBALS: Record<string, { path: string; label: string }[]> = {
     { path: 'radius.md', label: 'Radius md (global · button-link)' },
   ],
   card: [
-    { path: 'color.surface.3', label: 'Card surface (global)' },
+    { path: 'color.card.default', label: 'Card' },
+    { path: 'color.card.foreground', label: 'Card foreground' },
+    { path: 'filter.card-backdrop', label: 'Card backdrop' },
+    { path: 'image.card-texture', label: 'Card texture' },
+    { path: 'color.surface.3', label: 'Surface 3 (global)' },
     { path: 'color.foreground', label: 'Foreground (global)' },
     { path: 'radius.lg', label: 'Radius lg (global)' },
+  ],
+  popover: [
+    { path: 'color.popover.default', label: 'Popover' },
+    { path: 'color.popover.foreground', label: 'Popover foreground' },
   ],
   switch: [
     { path: 'color.muted.default', label: 'Muted (global · rest track alias)' },

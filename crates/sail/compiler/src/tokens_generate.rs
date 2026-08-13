@@ -103,7 +103,7 @@ const THEME_ORDER: &[&str] = &[
 // ── THEMES-1 schema lock (authoring contract) ───────────────────────────────
 // Theme DATA MODEL is the forever contract — DTCG JSON is storage only.
 // A theme = { name (themeId), modes capability (light|dark|both), scale
-// overrides, component-token overrides }. Unknown keys refuse naming valid ones.
+// overrides }. Unknown keys refuse naming valid ones.
 
 /// Allowed top-level keys on a theme document.
 const THEME_ROOT_KEYS: &[&str] = &["$description", "$extensions", "modes"];
@@ -121,7 +121,7 @@ const THEME_SAIL_KEYS: &[&str] = &[
 /// Allowed paint mode names (`mode` values).
 const THEME_PAINT_MODES: &[&str] = &["light", "dark"];
 
-/// Allowed top-level groups inside a mode body (scale + component overrides).
+/// Allowed top-level groups inside a mode body (scale overrides).
 /// DTCG `$extensions` on the mode object is also allowed.
 ///
 /// SPIN-1: `border` / `size` / `elevation` / `type` hold DTCG composites
@@ -130,7 +130,8 @@ const THEME_PAINT_MODES: &[&str] = &["light", "dark"];
 const THEME_MODE_GROUP_KEYS: &[&str] = &[
     "$extensions",
     "color",
-    "component",
+    "filter",
+    "image",
     "control",
     "interaction",
     "motion",
@@ -1247,6 +1248,19 @@ fn leaf_value_string(value: &Value) -> String {
 pub fn public_name(path: &str) -> String {
     if path == "component.error-boundary.icon-fg" {
         return "error-boundary-icon".into();
+    }
+    // Card skin still reads these historical CSS vars.
+    if path == "filter.card-backdrop" {
+        return "card-backdrop-filter".into();
+    }
+    if path == "image.card-texture" {
+        return "card-texture".into();
+    }
+    if path == "image.card-texture-blend" {
+        return "card-texture-blend".into();
+    }
+    if path == "image.card-texture-opacity" {
+        return "card-texture-opacity".into();
     }
     if path == "radius.default" {
         return "radius".into();
@@ -4250,37 +4264,19 @@ mod tests {
             public_name("color.brandAccent.foreground"),
             "accent-foreground"
         );
-        assert_eq!(public_name("component.chip.bg"), "chip");
-        assert_eq!(public_name("component.chip.fg"), "chip-foreground");
-        assert_eq!(public_name("component.chip.border"), "chip-border");
+        assert_eq!(public_name("color.card.default"), "card");
+        assert_eq!(public_name("color.card.foreground"), "card-foreground");
+        assert_eq!(public_name("color.popover.default"), "popover");
+        assert_eq!(public_name("color.popover.foreground"), "popover-foreground");
+        assert_eq!(public_name("filter.card-backdrop"), "card-backdrop-filter");
+        assert_eq!(public_name("image.card-texture"), "card-texture");
         assert_eq!(public_name("radius.default"), "radius");
         assert_eq!(public_name("space.4"), "space-4");
-        assert_eq!(
-            public_name("component.error-boundary.icon-fg"),
-            "error-boundary-icon"
-        );
         assert_eq!(public_name("control.press.translate"), "press-translate");
         assert_eq!(public_name("icon.sm"), "icon-size-sm");
         assert_eq!(public_name("color.mix.surfaceMix"), "mix-surface");
-        // SPIN-1 composite members keep historical CSS names for the color slot.
-        assert_eq!(
-            public_name("component.dialog.border.color"),
-            "dialog-border"
-        );
-        assert_eq!(
-            public_name("component.dialog.border.width"),
-            "dialog-border-width"
-        );
         assert_eq!(public_name("border.subtle.color"), "border-subtle-color");
-        assert_eq!(
-            composite_public_name("component.dialog.border"),
-            "dialog.border"
-        );
         assert_eq!(composite_public_name("border.subtle"), "border.subtle");
-        assert_eq!(
-            composite_public_name("component.card.border"),
-            "card.border"
-        );
     }
 
     #[test]
@@ -4377,15 +4373,13 @@ mod tests {
       }
     }
   },
-  "component": {
-    "card": {
-      "border": {
-        "$type": "border",
-        "$value": {
-          "color": "{color.border.default}",
-          "width": "1px",
-          "style": "solid"
-        }
+  "frame": {
+    "border": {
+      "$type": "border",
+      "$value": {
+        "color": "{color.border.default}",
+        "width": "1px",
+        "style": "solid"
       }
     }
   }
@@ -4422,14 +4416,14 @@ mod tests {
         let report = generate(&model, &out).expect("generate composites");
         let css = fs::read_to_string(&report.tokens_css).unwrap();
         assert!(
-            css.contains("--card-border: var(--border);"),
-            "color member must keep historical CSS name: {css}"
+            css.contains("--frame-border-color: var(--border);"),
+            "composite color member: {css}"
         );
-        assert!(css.contains("--card-border-width:"));
-        assert!(css.contains("--card-border-style:"));
+        assert!(css.contains("--frame-border-width:"));
+        assert!(css.contains("--frame-border-style:"));
         assert!(css.contains("--border-subtle-color: var(--border);"));
         assert!(
-            !css.contains("--card.border:"),
+            !css.contains("--frame.border:"),
             "composite identity is not a CSS var: {css}"
         );
         let themes = fs::read_to_string(&report.themes_css).unwrap();
@@ -4439,18 +4433,18 @@ mod tests {
         );
         let reg: Value =
             serde_json::from_str(&fs::read_to_string(&report.registry_json).unwrap()).unwrap();
-        assert_eq!(reg["paths"]["component.card.border.color"], "card-border");
-        assert_eq!(reg["composites"]["card.border"]["type"], "border");
+        assert_eq!(reg["paths"]["frame.border.color"], "frame-border-color");
+        assert_eq!(reg["composites"]["frame.border"]["type"], "border");
         assert_eq!(
-            reg["composites"]["card.border"]["members"]["color"],
-            "card-border"
+            reg["composites"]["frame.border"]["members"]["color"],
+            "frame-border-color"
         );
         assert!(
             reg["names"]
                 .as_array()
                 .unwrap()
                 .iter()
-                .all(|n| n.as_str() != Some("card.border")),
+                .all(|n| n.as_str() != Some("frame.border")),
             "dotted composite identity is not a CSS name"
         );
     }
@@ -4464,14 +4458,12 @@ mod tests {
             &model.join("base.json"),
             r#"{
   "$extensions": { "sail": { "selector": ":root", "layer": "base" } },
-  "component": {
-    "card": {
-      "border": {
-        "$type": "border",
-        "$value": { "color": "oklch(0.2 0 0)", "width": "1px", "style": "solid" }
-      },
-      "border-width": { "$value": "2px", "$type": "dimension" }
-    }
+  "frame": {
+    "border": {
+      "$type": "border",
+      "$value": { "color": "oklch(0.2 0 0)", "width": "1px", "style": "solid" }
+    },
+    "border-width": { "$value": "2px", "$type": "dimension" }
   }
 }
 "#,
@@ -4481,11 +4473,11 @@ mod tests {
             err.contains("dual form") && err.contains("border-width"),
             "expected dual-form refuse, got: {err}"
         );
-        assert!(err.contains("card.border"), "{err}");
+        assert!(err.contains("frame.border"), "{err}");
     }
 
     #[test]
-    fn component_sources_merge_into_base_with_stable_css_names() {
+    fn color_card_theme_override_keeps_public_names() {
         let dir = tempfile::tempdir().unwrap();
         let model = dir.path().join("model");
         let out = dir.path().join("src");
@@ -4495,36 +4487,12 @@ mod tests {
   "$extensions": { "sail": { "selector": ":root", "layer": "base" } },
   "color": {
     "surface": {
-      "1": {
-        "$value": "oklch(0.98 0 0)",
-        "$type": "color",
-        "$extensions": { "sail": { "cssName": "surface-1" } }
-      }
+      "1": { "$value": "oklch(0.98 0 0)", "$type": "color" }
     },
-    "foreground": {
-      "$value": "oklch(0.2 0 0)",
-      "$type": "color",
-      "$extensions": { "sail": { "cssName": "foreground" } }
-    }
-  }
-}
-"#,
-        );
-        write_file(
-            &model.join("components/card.json"),
-            r#"{
-  "component": {
+    "foreground": { "$value": "oklch(0.2 0 0)", "$type": "color" },
     "card": {
-      "bg": {
-        "$value": "{color.surface.1}",
-        "$type": "color",
-        "$extensions": { "sail": { "cssName": "card" } }
-      },
-      "fg": {
-        "$value": "{color.foreground}",
-        "$type": "color",
-        "$extensions": { "sail": { "cssName": "card-foreground" } }
-      }
+      "default": { "$value": "{color.surface.1}", "$type": "color" },
+      "foreground": { "$value": "{color.foreground}", "$type": "color" }
     }
   }
 }
@@ -4556,15 +4524,10 @@ mod tests {
         "brandAccent": {
           "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
           "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
-        }
-      },
-      "component": {
+        },
         "card": {
-          "bg": {
-            "$value": "oklch(1 0 0 / 55%)",
-            "$type": "color",
-            "$extensions": { "sail": { "cssName": "card" } }
-          }
+          "default": { "$value": "oklch(1 0 0 / 55%)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.22 0.02 250)", "$type": "color" }
         }
       }
     },
@@ -4584,15 +4547,10 @@ mod tests {
         "brandAccent": {
           "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
           "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
-        }
-      },
-      "component": {
+        },
         "card": {
-          "bg": {
-            "$value": "oklch(0.2 0 0 / 55%)",
-            "$type": "color",
-            "$extensions": { "sail": { "cssName": "card" } }
-          }
+          "default": { "$value": "oklch(0.2 0 0 / 55%)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.90 0 0)", "$type": "color" }
         }
       }
     }
@@ -4612,14 +4570,14 @@ mod tests {
         let themes_css = fs::read_to_string(&report.themes_css).unwrap();
         assert!(
             themes_css.contains("--card: oklch(1 0 0 / 55%);"),
-            "theme overrides component.card only: {themes_css}"
+            "theme remaps color.card: {themes_css}"
         );
 
         let reg: Value =
             serde_json::from_str(&fs::read_to_string(&report.registry_json).unwrap()).unwrap();
-        assert_eq!(reg["paths"]["component.card.bg"], "card");
-        assert_eq!(reg["paths"]["component.card.fg"], "card-foreground");
-        assert!(reg["paths"].get("color.card.foreground").is_none());
+        assert_eq!(reg["paths"]["color.card.default"], "card");
+        assert_eq!(reg["paths"]["color.card.foreground"], "card-foreground");
+        assert!(reg["paths"].get("component.card.bg").is_none());
         assert!(reg["paths"].get("misc.card").is_none());
     }
 

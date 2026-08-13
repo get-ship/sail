@@ -1,6 +1,6 @@
 <!--
   <toast> — auto-dismiss + close. Style value language only.
-  Start stripe rest = toast.stripe when tone is omitted.
+  Start stripe rest = primary when tone is omitted.
   Semantic paint = bound tone group paths.
 -->
 
@@ -11,8 +11,8 @@
     onDismiss: () => void
   }
 
-  style base = {box: space({ pad-y: 3, pad-x: 4 }), paint: ink({ color: toast.foreground }).fill({ color: toast }).radius(md).elevation(md).border({ color: toast.border, width: 1, edge: b }).border({ color: toast.border, width: 1, edge: e }).border({ color: toast.border, width: 1, edge: t }).border({ color: toast.stripe, width: 3, edge: s }).pointerEvents(auto), text: type({ family: body, size: sm })}
-  style close = {box: space({ ms: auto }), paint: ink({ color: toast.foreground }).fill({ color: transparent }).border({ width: 0 }).radius(sm).filter({ opacity: 70 }).cursor(pointer)}
+  style base = {box: space({ pad-y: 3, pad-x: 4 }), paint: ink({ color: foreground }).fill({ color: card }).radius(md).elevation(md).border({ color: border, width: 1, edge: b }).border({ color: border, width: 1, edge: e }).border({ color: border, width: 1, edge: t }).border({ color: primary, width: 3, edge: s }).pointerEvents(auto), text: type({ family: body, size: sm })}
+  style close = {box: space({ ms: auto }), paint: ink({ color: foreground }).fill({ color: transparent }).border({ width: 0 }).radius(sm).filter({ opacity: 70 }).cursor(pointer)}
 </scope>
 
 <row
@@ -30,6 +30,6 @@
     type="button"
     anatomy
     label="Dismiss"
-    style(close, {box: flow({ shrink: 0, grow: 0 }), when: {hover: {paint: ink({ color: toast.foreground }).fill({ color: toast }).filter({ opacity: 100 })}}})
+    style(close, {box: flow({ shrink: 0, grow: 0 }), when: {hover: {paint: ink({ color: foreground }).fill({ color: card }).filter({ opacity: 100 })}}})
   >✕</button>
 </row>

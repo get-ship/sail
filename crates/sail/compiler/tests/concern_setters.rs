@@ -144,12 +144,14 @@ fn duplicate_slot_fails_compilation() {
 }
 
 #[test]
-fn slot_color_refuses_theme_owned_public_name() {
+fn slot_color_unknown_pack_name_is_bad_token() {
     let diags = lower_must_fail("style({ paint: border({ color: dialog-border }) })");
     assert!(
-        diags.iter().any(
-            |d| matches!(d, StyleDiagnostic::ThemeOwnedToken { name, .. } if name == "dialog-border")
-        ),
+        diags.iter().any(|d| match d {
+            StyleDiagnostic::BadToken { value, .. } if value == "dialog-border" => true,
+            StyleDiagnostic::ThemeOwnedToken { name, .. } if name == "dialog-border" => true,
+            _ => false,
+        }),
         "{:?}",
         diags.iter().map(|d| d.message()).collect::<Vec<_>>()
     );

@@ -1,5 +1,5 @@
 {
-  "$description": "Sail brand theme — dual-mode with cooler electric primary (framework default).",
+  "$description": "Sail brand theme \u2014 dual-mode with cooler electric primary (framework default).",
   "$extensions": {
     "sail": {
       "layer": "theme",
@@ -177,6 +177,16 @@
             "$value": "oklch(0.72 0.15 75)",
             "$type": "color"
           }
+        },
+        "card": {
+          "default": {
+            "$value": "oklch(1 0 0)",
+            "$type": "color"
+          },
+          "foreground": {
+            "$value": "oklch(0.22 0.035 255)",
+            "$type": "color"
+          }
         }
       },
       "typography": {
@@ -261,34 +271,6 @@
           "$type": "shadow"
         }
       },
-      "component": {
-        "card": {
-          "backdrop-filter": {
-            "$value": "none",
-            "$type": "string"
-          },
-          "texture": {
-            "$value": "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='c'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23c)' opacity='0.03'/%3E%3C/svg%3E\")",
-            "$type": "string"
-          },
-          "texture-blend": {
-            "$value": "overlay",
-            "$type": "string"
-          },
-          "texture-opacity": {
-            "$value": "1",
-            "$type": "number"
-          },
-          "fg": {
-            "$value": "oklch(0.22 0.035 255)",
-            "$type": "color"
-          },
-          "bg": {
-            "$value": "oklch(1 0 0)",
-            "$type": "color"
-          }
-        }
-      },
       "$extensions": {
         "sail": {
           "dark": false
@@ -300,6 +282,26 @@
             "$value": "14%",
             "$type": "number"
           }
+        }
+      },
+      "filter": {
+        "card-backdrop": {
+          "$value": "none",
+          "$type": "string"
+        }
+      },
+      "image": {
+        "card-texture": {
+          "$value": "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='c'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23c)' opacity='0.03'/%3E%3C/svg%3E\")",
+          "$type": "string"
+        },
+        "card-texture-blend": {
+          "$value": "overlay",
+          "$type": "string"
+        },
+        "card-texture-opacity": {
+          "$value": "1",
+          "$type": "number"
         }
       }
     },
@@ -477,6 +479,16 @@
             "$value": "oklch(0.78 0.15 75)",
             "$type": "color"
           }
+        },
+        "card": {
+          "default": {
+            "$value": "oklch(0.205 0.035 255)",
+            "$type": "color"
+          },
+          "foreground": {
+            "$value": "oklch(0.97 0.01 250)",
+            "$type": "color"
+          }
         }
       },
       "typography": {
@@ -569,32 +581,24 @@
           "$type": "shadow"
         }
       },
-      "component": {
-        "card": {
-          "backdrop-filter": {
-            "$value": "none",
-            "$type": "string"
-          },
-          "texture": {
-            "$value": "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='c'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23c)' opacity='0.03'/%3E%3C/svg%3E\")",
-            "$type": "string"
-          },
-          "texture-blend": {
-            "$value": "overlay",
-            "$type": "string"
-          },
-          "texture-opacity": {
-            "$value": "1",
-            "$type": "number"
-          },
-          "fg": {
-            "$value": "oklch(0.97 0.01 250)",
-            "$type": "color"
-          },
-          "bg": {
-            "$value": "oklch(0.205 0.035 255)",
-            "$type": "color"
-          }
+      "filter": {
+        "card-backdrop": {
+          "$value": "none",
+          "$type": "string"
+        }
+      },
+      "image": {
+        "card-texture": {
+          "$value": "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='c'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23c)' opacity='0.03'/%3E%3C/svg%3E\")",
+          "$type": "string"
+        },
+        "card-texture-blend": {
+          "$value": "overlay",
+          "$type": "string"
+        },
+        "card-texture-opacity": {
+          "$value": "1",
+          "$type": "number"
         }
       }
     }

@@ -1,9 +1,8 @@
-//! THEMES-1-ENFORCE + THEMES-2 §1: component-token invisibility + substrate.
+//! Theme substrate after component.* deletion.
 
 use std::path::PathBuf;
 
 use sail_compiler::{CompileMode, CompileOpts, compile};
-use sail_lint::rules::no_component_token;
 use sail_lint::rules::no_data_attr;
 
 fn app_opts() -> CompileOpts {
@@ -26,34 +25,18 @@ fn compile_err(src: &str) -> String {
 }
 
 #[test]
-fn style_bg_button_is_theme_owned() {
-    let msg = compile_err(r#"<div style({ paint: bg(button) })>x</div>"#);
-    assert!(
-        msg.contains("theme-owned") && msg.contains("theme="),
-        "teaching missing: {msg}"
-    );
-    assert!(msg.contains("button"), "must name the token: {msg}");
-}
-
-#[test]
-fn style_bg_button_dot_bg_is_theme_owned() {
-    let msg = compile_err(r#"<div style({ paint: bg(button.bg) })>x</div>"#);
-    assert!(
-        msg.contains("theme-owned") && msg.contains("button.bg"),
-        "{msg}"
-    );
-}
-
-#[test]
-fn style_bg_card_is_theme_owned() {
-    let msg = compile_err(r#"<div style({ paint: bg(card) })>x</div>"#);
-    assert!(msg.contains("theme-owned") && msg.contains("card"), "{msg}");
+fn style_bg_card_is_legal_global() {
+    compile(
+        r#"<div style({ paint: fill({ color: card }) })>x</div>"#,
+        app_opts(),
+    )
+    .expect("card is a global color");
 }
 
 #[test]
 fn style_bg_primary_ok() {
-    compile(r#"<div style({ paint: bg(primary) })>x</div>"#, app_opts())
-        .expect("bg(primary) must compile");
+    compile(r#"<div style({ paint: fill({ color: primary }) })>x</div>"#, app_opts())
+        .expect("fill({ color: primary }) must compile");
 }
 
 #[test]
@@ -62,28 +45,12 @@ fn theme_eq_id_ok() {
 }
 
 #[test]
-fn unsanctioned_attr_button_bg_is_red() {
-    let f = no_component_token::check(
-        std::path::Path::new("apps/demo/src/page.sail"),
-        r#"<div button.bg="primary">x</div>"#,
-    );
-    assert_eq!(f.len(), 1, "{f:?}");
-    assert_eq!(f[0].rule, no_component_token::RULE_ID);
-    assert!(
-        f[0].message.contains("theme-owned") && f[0].message.contains("theme="),
-        "{}",
-        f[0].message
-    );
-}
-
-#[test]
-fn sanctioned_theme_json_component_path_is_known() {
-    assert!(sail_lint::component_surfaces::is_known_component_storage_path("component.button.bg"));
-    assert!(
-        sail_lint::component_surfaces::is_known_component_storage_path(
-            "modes.light.component.card.bg.$value"
-        )
-    );
+fn component_storage_paths_are_gone() {
+    assert!(!sail_lint::component_surfaces::is_known_component_storage_path(
+        "component.button.bg"
+    ));
+    assert!(!sail_lint::component_surfaces::is_theme_owned_token_name("button"));
+    assert!(!sail_lint::component_surfaces::is_theme_owned_token_name("card"));
 }
 
 #[test]

@@ -47,8 +47,6 @@ struct SurfaceIndex {
     by_pack: BTreeMap<&'static str, &'static [SurfaceSlot]>,
     /// storage path → public_name
     path_to_public: HashMap<&'static str, &'static str>,
-    /// Every component public name (rest + state) — excluded from app color paint.
-    all_public_names: HashSet<&'static str>,
     /// Rest-only public names that have dotted author form (dual-spelling ban).
     rest_public_names: HashSet<&'static str>,
 }
@@ -65,14 +63,12 @@ fn leak_str(s: impl Into<String>) -> &'static str {
 fn build_index() -> SurfaceIndex {
     let mut pack_slots: BTreeMap<String, Vec<SurfaceSlot>> = BTreeMap::new();
     let mut path_to_public: HashMap<&'static str, &'static str> = HashMap::new();
-    let mut all_public_names: HashSet<&'static str> = HashSet::new();
     let mut rest_public_names: HashSet<&'static str> = HashSet::new();
 
     for (path, css) in tokens::component_color_paths() {
         let path_s = leak_str(path);
         let css_s = leak_str(css);
         path_to_public.insert(path_s, css_s);
-        all_public_names.insert(css_s);
 
         let Some(rest) = path_s.strip_prefix("component.") else {
             continue;
@@ -122,7 +118,6 @@ fn build_index() -> SurfaceIndex {
     SurfaceIndex {
         by_pack,
         path_to_public,
-        all_public_names,
         rest_public_names,
     }
 }
@@ -141,15 +136,14 @@ fn author_member_for_leaf(pack: &str, leaf: &str) -> String {
     }
 }
 
-/// Whether `css_name` is any component surface public name (app color paint must exclude).
-pub fn is_component_public_name(css_name: &str) -> bool {
-    index().all_public_names.contains(css_name)
+/// Gone with `component.*`. Kept as an empty predicate so call sites compile.
+pub fn is_component_public_name(_css_name: &str) -> bool {
+    false
 }
 
-/// Whether `root` is an L1 surface pack stem (`button`, `card`, …).
-/// App Style must not resolve these (THEMES-1-ENFORCE).
-pub fn is_theme_owned_author_root(root: &str) -> bool {
-    index().by_pack.contains_key(root)
+/// Gone with `component.*`. No theme-owned author roots remain.
+pub fn is_theme_owned_author_root(_root: &str) -> bool {
+    false
 }
 
 /// Every L1 surface pack name (sorted).
@@ -157,33 +151,9 @@ pub fn all_surface_packs() -> Vec<&'static str> {
     index().by_pack.keys().copied().collect()
 }
 
-/// True when `name` is a theme-owned component token author or emit form:
-/// pack stem (`button`), author path (`button.foreground`, `button.bg`),
-/// or public emit label (`button-foreground`).
-pub fn is_theme_owned_token_name(name: &str) -> bool {
-    let n = name.trim();
-    if n.is_empty() {
-        return false;
-    }
-    if is_component_public_name(n) {
-        return true;
-    }
-    if let Some((root, rest)) = n.split_once('.') {
-        if !is_theme_owned_author_root(root) {
-            return false;
-        }
-        if rest.is_empty() {
-            return true;
-        }
-        // Author member (`foreground`) or storage leaf (`bg`).
-        if let Some(slots) = surface_slots(root) {
-            return slots
-                .iter()
-                .any(|s| s.author_member == rest || s.storage_leaf == rest);
-        }
-        return true;
-    }
-    is_theme_owned_author_root(n)
+/// Gone with `component.*`. No theme-owned token names remain.
+pub fn is_theme_owned_token_name(_name: &str) -> bool {
+    false
 }
 
 /// Whether `css_name` is a rest surface emit label (kebab form forbidden in Style).
@@ -302,7 +272,6 @@ pub fn surface_pack_for_host(host: &str) -> Option<&'static str> {
 pub fn color_paint_vocabulary(host: Option<&str>) -> HashSet<String> {
     let mut set: HashSet<String> = tokens::color_values()
         .iter()
-        .filter(|s| !is_component_public_name(s))
         .map(|s| (*s).to_string())
         .collect();
     // Static tone group paths (non-default members).
@@ -328,156 +297,51 @@ pub fn color_paint_vocabulary(host: Option<&str>) -> HashSet<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::host_ctx::with_host_surface;
 
     #[test]
-    fn folded_dialog_border_color_is_historical_surface_slot() {
-        with_host_surface(Some("dialog"), || {
-            assert_eq!(
-                resolve_surface_author("dialog", &["border".into()]).unwrap(),
-                "dialog-border"
-            );
-        });
-        let slots = surface_slots("dialog").expect("dialog pack");
-        let border = slots
-            .iter()
-            .find(|s| s.storage_leaf == "border")
-            .expect("dialog.border slot");
-        assert_eq!(border.author_member, "border");
-        assert_eq!(border.public_name, "dialog-border");
-    }
-
-    #[test]
-    fn chip_surface_tone_parallel() {
-        with_host_surface(Some("chip"), || {
-            assert_eq!(resolve_surface_author("chip", &[]).unwrap(), "chip");
-            assert_eq!(
-                resolve_surface_author("chip", &["foreground".into()]).unwrap(),
-                "chip-foreground"
-            );
-            assert_eq!(
-                resolve_surface_author("chip", &["border".into()]).unwrap(),
-                "chip-border"
-            );
-            assert!(resolve_surface_author("chip", &["hover-bg".into()]).is_err());
-        });
-    }
-
-    #[test]
-    fn app_context_rejects_surfaces() {
-        with_host_surface(None, || {
-            assert!(resolve_surface_author("chip", &[]).is_err());
-        });
-    }
-
-    #[test]
-    fn foreign_host_surface_rejected() {
-        with_host_surface(Some("chip"), || {
-            assert!(resolve_surface_author("button", &[]).is_err());
-        });
-    }
-
-    #[test]
-    fn field_alias_for_input() {
-        with_host_surface(Some("input"), || {
-            assert_eq!(current_surface_pack(), Some("field"));
-            assert_eq!(resolve_surface_author("field", &[]).unwrap(), "field");
-            assert_eq!(
-                resolve_surface_author("field", &["foreground".into()]).unwrap(),
-                "field-foreground"
-            );
-        });
-    }
-
-    #[test]
-    fn field_alias_for_date_file_color() {
-        for host in ["date", "file", "color"] {
-            with_host_surface(Some(host), || {
-                assert_eq!(current_surface_pack(), Some("field"), "host={host}");
-                assert_eq!(
-                    resolve_surface_author("field", &["foreground".into()]).unwrap(),
-                    "field-foreground",
-                    "host={host}"
-                );
-                assert_eq!(
-                    resolve_surface_author("field", &["border".into()]).unwrap(),
-                    "field-border",
-                    "host={host}"
-                );
-            });
-        }
-    }
-
-    #[test]
-    fn unaliased_host_rejects_field_surface() {
-        with_host_surface(Some("chip"), || {
-            assert_eq!(current_surface_pack(), Some("chip"));
-            let err = resolve_surface_author("field", &["foreground".into()]).unwrap_err();
-            assert!(
-                err.contains("not in scope") || err.contains("field"),
-                "{err}"
-            );
-        });
-    }
-
-    #[test]
-    fn component_public_names_indexed() {
-        assert!(is_component_public_name("chip"));
-        assert!(is_component_public_name("chip-foreground"));
-        assert!(is_component_public_name("button-hover-bg"));
+    fn component_namespace_is_gone() {
+        assert!(!is_component_public_name("chip"));
+        assert!(!is_component_public_name("chip-foreground"));
+        assert!(!is_component_public_name("button-hover-bg"));
         assert!(!is_component_public_name("primary"));
-        assert!(is_rest_surface_public_name("chip-foreground"));
-        assert!(!is_rest_surface_public_name("button-hover-bg"));
-        assert!(is_theme_owned_token_name("button"));
-        assert!(is_theme_owned_token_name("button.bg"));
-        assert!(is_theme_owned_token_name("button.foreground"));
-        assert!(is_theme_owned_token_name("card"));
-        assert!(!is_theme_owned_token_name("primary"));
-        assert!(!is_theme_owned_token_name("primary.foreground"));
+        assert!(!is_theme_owned_author_root("button"));
+        assert!(!is_theme_owned_author_root("card"));
+        assert!(!is_theme_owned_author_root("chip"));
+        assert!(!is_theme_owned_token_name("button"));
+        assert!(!is_theme_owned_token_name("button.bg"));
+        assert!(!is_theme_owned_token_name("card"));
+        assert!(all_surface_packs().is_empty());
+        assert!(current_surface_pack().is_none());
     }
 
     #[test]
-    fn app_vocab_excludes_chip_surface() {
+    fn app_vocab_includes_promoted_globals() {
         let app = color_paint_vocabulary(None);
         assert!(app.contains("primary"));
+        assert!(app.contains("card"));
+        assert!(app.contains("card-foreground"));
+        assert!(app.contains("popover"));
+        assert!(app.contains("popover-foreground"));
         assert!(!app.contains("chip"));
         assert!(!app.contains("chip.foreground"));
-        assert!(!app.contains("chip-foreground"));
-        let host = color_paint_vocabulary(Some("chip"));
-        assert!(host.contains("chip"));
-        assert!(host.contains("chip.foreground"));
-        assert!(host.contains("chip.border"));
-        assert!(!host.contains("chip-foreground"));
     }
 }
 
 #[cfg(test)]
 mod emit_integration {
-    use super::*;
     use crate::host_ctx::with_host_surface;
     use crate::{lower_style, parse};
     use std::collections::HashMap;
 
     #[test]
-    fn app_style_teaches_theme_owned_for_button() {
+    fn app_style_card_is_a_global() {
         with_host_surface(None, || {
-            let (_, diags) = parse("style({ paint: fill({ color: button }) })");
+            let (_, diags) = parse("style({ paint: fill({ color: card }) })");
             assert!(
-                diags.iter().any(|d| {
-                    matches!(d, crate::ir::StyleDiagnostic::ThemeOwnedToken { name, .. } if name == "button")
-                        && d.message().contains("theme-owned")
-                        && d.message().contains("theme=")
-                }),
-                "{:?}",
-                diags.iter().map(|d| d.message()).collect::<Vec<_>>()
-            );
-            let (_, diags) = parse("style({ paint: fill({ color: button.bg }) })");
-            assert!(
-                diags.iter().any(|d| {
-                    matches!(d, crate::ir::StyleDiagnostic::ThemeOwnedToken { name, .. } if name == "button.bg")
-                        && d.message().contains("theme-owned")
-                }),
-                "{:?}",
+                !diags
+                    .iter()
+                    .any(|d| matches!(d, crate::ir::StyleDiagnostic::ThemeOwnedToken { .. })),
+                "card is a global color: {:?}",
                 diags.iter().map(|d| d.message()).collect::<Vec<_>>()
             );
             let (_, diags) = parse("style({ paint: fill({ color: primary }) })");
@@ -492,21 +356,19 @@ mod emit_integration {
     }
 
     #[test]
-    fn host_surface_emits_css_var() {
+    fn skins_spend_globals() {
         with_host_surface(Some("chip"), || {
-            assert_eq!(current_surface_pack(), Some("chip"));
-            assert_eq!(resolve_surface_author("chip", &[]).unwrap(), "chip");
             let (style, diags) =
-                parse("style({ paint: fill({ color: chip }).ink({ color: chip.foreground }).border({ color: chip.border }) })");
+                parse("style({ paint: fill({ color: muted }).ink({ color: muted-foreground }).border({ color: border }) })");
             assert!(
                 diags.is_empty(),
                 "{:?}",
                 diags.iter().map(|d| d.message()).collect::<Vec<_>>()
             );
             let (_, css) = lower_style(&style, &HashMap::new());
-            assert!(css.contains("var(--chip)"), "css={css}");
-            assert!(css.contains("var(--chip-foreground)"), "css={css}");
-            assert!(css.contains("var(--chip-border)"), "css={css}");
+            assert!(css.contains("var(--muted)"), "css={css}");
+            assert!(css.contains("var(--muted-foreground)"), "css={css}");
+            assert!(css.contains("var(--border)"), "css={css}");
         });
     }
 }

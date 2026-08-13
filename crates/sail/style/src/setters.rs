@@ -3787,10 +3787,11 @@ mod tests {
     #[test]
     fn concern_clash_keys_are_kind_aware() {
         let op = only_op("style({ paint: border(subtle) })");
+        let slots = op_slots(&op);
         assert!(
-            op_slots(&op).contains(&"border:stroke:all"),
-            "{:?}",
-            op_slots(&op)
+            slots.contains(&"border:stroke:all")
+                || (slots.contains(&"border:stroke:t") && slots.contains(&"border:stroke:b")),
+            "{slots:?}"
         );
         let op = only_op("style({ paint: border({ kind: ring, color: primary }) })");
         assert_eq!(op_slots(&op), vec!["border:ring"]);

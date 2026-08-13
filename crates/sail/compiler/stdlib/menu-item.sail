@@ -13,7 +13,7 @@
   // max-content menu and the panel width becomes the SUM of labels.
   // padY(2)+padX(3)+gap(2_5) ≈ 32px hit; icons align. Button floor already
   // supplies align-items:center.
-  style base = {box: flow({ display: flex }).space({ pad-y: 2, pad-x: 3 }).size({ w: full }), paint: border({ width: 0 }).ink({ color: menu-item.foreground }).fill({ color: transparent }).radius(sm).cursor(pointer), text: type({ align: start, family: body, size: sm, leading: tight, wrap: nowrap })}
+  style base = {box: flow({ display: flex }).space({ pad-y: 2, pad-x: 3 }).size({ w: full }), paint: border({ width: 0 }).ink({ color: foreground }).fill({ color: transparent }).radius(sm).cursor(pointer), text: type({ align: start, family: body, size: sm, leading: tight, wrap: nowrap })}
 </scope>
 
 <button
