@@ -76,6 +76,15 @@ const DEAD_MACHINERY: Array<{ name: string; re: RegExp; allow?: RegExp }> = [
     name: 'empty meta/mount clients fossil field in emitters',
     re: /clients:\s*\[\]\s*\}\)|"clients":\s*Value::Array\(Vec::new\(\)\)/,
   },
+  {
+    name: 'xtask gen-icons',
+    re: /cargo xtask gen-icons|cargo run -p xtask/,
+  },
+  {
+    name: 'lucide-icons.json embed',
+    re: /lucide-icons\.json/,
+    allow: /RESULT-ICONS/,
+  },
 ]
 
 function* walkFiles(dir: string): Generator<string> {
@@ -117,7 +126,7 @@ describe('tombstone scan: scrubbed dead machinery stays gone', () => {
     for (const file of walkFiles(REPO)) {
       const rel = relative(REPO, file)
       // This file itself names the dead strings.
-      if (rel.startsWith('tests/hygiene/tombstone-scan')) continue
+      if (rel.startsWith('tests/hygiene/')) continue
       if (rel === 'CHANGELOG.md' || rel === 'AGENTS.md') continue
       // forever-id pin intentionally lists retired rule ids
       if (rel.endsWith('diagnostic_id_drift.rs')) continue

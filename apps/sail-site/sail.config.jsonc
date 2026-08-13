@@ -10,6 +10,10 @@
     "defaultMode": "dark",
     "enabled": "all"
   },
+  "icons": {
+    "pack": "lucide",
+    "version": "1.28.0"
+  },
   // Deck bundler/serve (SPEC-SAIL-CONFIG-1). clientsModule is side-effect-only.
   "deck": {
     "entry": {

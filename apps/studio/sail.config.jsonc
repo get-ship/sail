@@ -21,6 +21,10 @@
       "synthwave"
     ]
   },
+  "icons": {
+    "pack": "lucide",
+    "version": "1.28.0"
+  },
   "editor": "vscode",
   "network": ["self"],
   // Ban <div>/<span> for app-local components under src/ (routes/ has its own).

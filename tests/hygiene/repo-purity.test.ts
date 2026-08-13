@@ -18,7 +18,7 @@ const TOP_LEVEL_ALLOWLIST = new Set([
   'AGENTS.md', 'CHANGELOG.md', 'Cargo.lock', 'Cargo.toml', 'LICENSE', 'README.md',
   'apps', 'bun.lock', 'crates', 'package.json', 'packages',
   'rust-toolchain.toml', 'scripts', 'skills', 'tests', 'third_party',
-  'vitest.config.ts', 'xtask',
+  'vitest.config.ts',
 ])
 
 /** Path patterns that are never product, at any depth. */
@@ -37,7 +37,7 @@ const FORBIDDEN_TRACKED = [
   /\.wasm$/,
 ]
 
-/** Tracked blob size budget: current max is ~400K (lucide-icons.json). */
+/** Tracked blob size budget. Full icon packs must not be committed. */
 const MAX_TRACKED_BYTES = 1_000_000
 
 describe('repo purity', () => {

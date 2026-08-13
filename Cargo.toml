@@ -25,7 +25,6 @@ members = [
     "crates/deck/deck-conformance",
     "crates/deck/deck-ssr",
     "packages/sail/grammar",
-    "xtask",
 ]
 # A bare `cargo build` (no -p) builds this subset, which EXCLUDES deck-ssr.
 # deck-ssr links V8 (via ship-js git dep); `cargo test` of it fails to link as `-shared`

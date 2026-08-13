@@ -91,9 +91,8 @@ Cold start never requires an undocumented `node foo.mjs` — use the package.jso
 | Audience | Command | Owns |
 |----------|---------|------|
 | **User toolchain** | `sail` (from `deck-cli`) | `dev`, `build`, `check`, `lsp`, `mcp`, … |
-| **Repo automation** | `cargo xtask` | Cross-language codegen (today: `gen-icons`) |
 
-No third drawer: ad-hoc one-shots do not land under `scripts/`.
+No third drawer: ad-hoc one-shots do not land under `scripts/`. Icon packs are declared in `sail.config` (`icons.pack` + pinned version); used glyphs land in the app `.deck` graph.
 
 ### Comment hygiene
 
@@ -111,7 +110,6 @@ monologue, or process ids (`job/…`, `task #N`, mission paths). Enforced by
 | `bun run test` | Law | vitest + `tests/hygiene` repo guards |
 | `bun run typecheck` | Law | `scripts/typecheck-components.mjs` (also runs `gen-component-types`) |
 | `cargo install --path crates/deck/deck-cli --bin sail` | Product tool | Public CLI (`dev`, `build`, `check`, `lsp`, `mcp`, …) |
-| `cargo xtask gen-icons` | Product tool | Bake lucide SVGs → `crates/deck/deck-core/assets/lucide-icons.json` (after `lucide-static` bump) |
 | `cd apps/sail-site && bun run qa` / `qa:fast` / `qa:probe` | Recipe | Layout probe (`qa/probe.mjs`); needs dev server |
 | `cd apps/sail-site && bun run qa:l1` | Recipe | L1 conformance (`packages/sail/l1-conformance/run.mjs`); own harness, not under `qa/` |
 
@@ -141,8 +139,6 @@ Repo sanitization / boundary guards live under `tests/hygiene/` (`bun run test:h
 
 One-off screenshot helpers (`snap-cell`, `snap-hero`, `inspect-catalog`) and the thinner `sweep.mjs` (superseded by `probe --sweep`) were removed.
 
-### `xtask` (repo automation)
+### Icons
 
-| Path | Class | Notes |
-|------|-------|-------|
-| `xtask` (`gen-icons`) | Product tool | Cross-language icon bake; assets are committed — not part of every cold-start `gen` |
+Declare a pinned pack in `sail.config.jsonc` (`icons.pack`, optional `icons.version` / `icons.roles`). Author markup uses roles (`<icon name="settings" />`), never pack prefixes. The compiler collects used roles; Deck writes only those glyph bytes into `.deck`.

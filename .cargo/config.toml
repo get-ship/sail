@@ -6,8 +6,3 @@
 
 [build]
 target-dir = "target"
-
-# Repo automation entry point — `cargo xtask <cmd>` (see xtask/ crate).
-# User-facing toolchain is the `sail` binary from deck-cli.
-[alias]
-xtask = "run -p xtask --"
