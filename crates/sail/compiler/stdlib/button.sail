@@ -1,16 +1,15 @@
 <!--
   <button> — native <button>. L1 platform control. Style value language only.
-  `default` is an alias of `solid` (prop default solid). tone always paints when set.
-  solid without tone → inverted fg/bg; solid + tone → filled tone.
-  soft / outline / ghost take tone the same way.
-  Sizes: xs–lg text; icon / iconSm / iconLg square hit targets.
+  `default` is an alias of `solid` (prop default solid). tone defaults to
+  primary — a bare <button> is a finished control, never an untoned invert.
+  Explicit tone always paints. Sizes: xs–lg text; icon / iconSm / iconLg squares.
 -->
 
 <scope>
   props: {
     // default ≡ solid (kept as enum value so existing markup doesn't break).
     variant: 'default' | 'solid' | 'soft' | 'outline' | 'ghost' = 'solid'
-    tone: 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted'
+    tone: 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted' = 'primary'
     // icon / iconSm / iconLg = square hit targets (no hyphen — Style match keys are idents).
     size: 'xs' | 'sm' | 'md' | 'lg' | 'icon' | 'iconSm' | 'iconLg' = 'md'
     disabled = false
@@ -41,7 +40,8 @@
   style sizeIconSm = { box: w(control-h-sm).h(control-h-sm).pad(0).padX(0), text: fontSize(sm) }
   style sizeIconLg = { box: w(control-h-lg).h(control-h-lg).pad(0).padX(0), text: fontSize(md) }
 
-  // solid / default without tone: inverted · + tone: filled tone (IACVT).
+  // Untoned invert is not a product default (tone defaults to primary).
+  // These still exist so an explicit empty tone does not go naked.
   style vSolid = { paint: bg(foreground).border(foreground).fg(background).shadow(xs), when: { hover: { paint: opacity(90).shadow(sm) } } }
   style vSolidTone = { paint: bg(tone).border(tone).fg(tone.foreground).shadow(xs), when: { hover: { paint: opacity(90).shadow(sm) } } }
   style vSoft = { paint: bg(hover-bg).border(button.border).fg(button.foreground), when: { hover: { paint: opacity(90) } } }

@@ -11,7 +11,7 @@ export default controller(() => {
 })
 </controller>
 
-<button variant="solid" tone="primary" on:click={save}>
+<button on:click={save}>
   {saved() ? 'Saved ✓' : 'Save changes'}
 </button>`,
 

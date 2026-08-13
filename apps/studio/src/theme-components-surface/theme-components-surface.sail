@@ -203,8 +203,9 @@ export default controller(() => {
                   <if {components.stage.button()}>
                     <column gap="4" style(stageHost)>
                       <column gap="2">
-                        <p style(fieldHint)>Rest (no tone) · component.button.*</p>
+                        <p style(fieldHint)>Default · solid primary · no extra attrs</p>
                         <row gap="2" align="center" nowrap>
+                          <button type="button" size="sm">Save</button>
                           <button type="button" size="sm" variant="solid">Solid</button>
                           <button type="button" size="sm" variant="soft">Soft</button>
                           <button type="button" size="sm" variant="outline">Outline</button>

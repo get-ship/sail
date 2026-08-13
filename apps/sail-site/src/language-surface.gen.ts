@@ -5769,6 +5769,10 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
       "description": "L1 anchored menu (element mode)."
     },
     {
+      "tag": "dropzone",
+      "description": "dashed drop surface that accepts files."
+    },
+    {
       "tag": "empty-state",
       "description": "L1 centered empty placeholder."
     },
@@ -5790,7 +5794,7 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
     },
     {
       "tag": "file",
-      "description": "system file picker product. Impl: native input type=file."
+      "description": "system file picker."
     },
     {
       "tag": "hover-card",
@@ -6130,7 +6134,12 @@ export const AUTHORING_BANS: AuthoringBanDoc[] = [
   {
     "syntax": "data-*",
     "rule": "sail-no-data-attr",
-    "instead": "prefer accessible name, visible text, or authored id; event wiring via on: + closed-over state. `data-sail-host` is compiler-only L1 part identity for closed widgets — never author it; app tests use role/name/text"
+    "instead": "prefer accessible name, visible text, or authored id; event wiring via on: + closed-over state. `data-sail-host` is compiler-only L1 part identity for closed widgets — never author it; app tests use role/name/text. `data-theme` / `data-product` / `data-mode` are theme substrate — use theme="
+  },
+  {
+    "syntax": "L1 component token in app style() / unsanctioned attrs",
+    "rule": "sail-no-component-token",
+    "instead": "component tokens are theme-owned; override via theme= or the theme document. App style() uses semantic slots (bg(primary))"
   },
   {
     "syntax": "free aria-* / role=",
@@ -6762,6 +6771,18 @@ export const CONTROLLER_AMBIENT: AmbientDoc[] = [
     "doc": "compiler-only lowering target for `invalidate(ref)`; never authored directly"
   },
   {
+    "name": "applyTheme",
+    "doc": "paint the document theme session (tokens API on runtime ambient)"
+  },
+  {
+    "name": "asSailHost",
+    "doc": "coerce an action node (or host value) to opaque SailHost"
+  },
+  {
+    "name": "attachBoundary",
+    "doc": "register an error-boundary handle on a host element"
+  },
+  {
     "name": "batch",
     "doc": "coalesce multiple signal writes into one flush"
   },
@@ -6770,28 +6791,152 @@ export const CONTROLLER_AMBIENT: AmbientDoc[] = [
     "doc": "the controller factory — wraps a setup function into a bound scope"
   },
   {
+    "name": "createVirtualizer",
+    "doc": "windowed list adapter — reactive Virtual surface over the virtual core"
+  },
+  {
+    "name": "debounce",
+    "doc": "coalesce rapid calls to a function until a quiet window elapses"
+  },
+  {
+    "name": "defineHostProperty",
+    "doc": "install an identity property on a SailHost (get/set) without Object.defineProperty"
+  },
+  {
+    "name": "defineStore",
+    "doc": "declare a shared store definition (id + setup)"
+  },
+  {
     "name": "derived",
     "doc": "a read-only signal computed from other signals, recomputed on dependency change"
+  },
+  {
+    "name": "detachBoundary",
+    "doc": "remove an error-boundary handle from a host element"
   },
   {
     "name": "effect",
     "doc": "run a side effect on mount and whenever its read signals change"
   },
   {
+    "name": "filteredList",
+    "doc": "derive a filtered/sorted list signal from a source list"
+  },
+  {
+    "name": "form",
+    "doc": "reactive form state helper"
+  },
+  {
+    "name": "hostCreateElement",
+    "doc": "create an element without naming document"
+  },
+  {
+    "name": "hostCssVar",
+    "doc": "read a CSS custom property from the document element"
+  },
+  {
+    "name": "hostFindById",
+    "doc": "document.getElementById without naming document"
+  },
+  {
+    "name": "hostGetAttr",
+    "doc": "read a host attribute via SailHost (Pure-safe)"
+  },
+  {
+    "name": "hostHasAttr",
+    "doc": "test host attribute presence via SailHost (Pure-safe)"
+  },
+  {
+    "name": "hostIsDarkMode",
+    "doc": "true when html data-mode is dark"
+  },
+  {
+    "name": "hostListenDocument",
+    "doc": "add a document event listener; returns disposer"
+  },
+  {
+    "name": "hostObserveRootAttrs",
+    "doc": "MutationObserver on documentElement attributes; returns disposer"
+  },
+  {
+    "name": "hostSetAttr",
+    "doc": "write or remove a host attribute via SailHost (Pure-safe)"
+  },
+  {
+    "name": "interval",
+    "doc": "run a callback on a fixed period while the controller is mounted"
+  },
+  {
     "name": "mount",
     "doc": "run a callback once, after the controller's first render"
+  },
+  {
+    "name": "mutation",
+    "doc": "public write primitive — returns a Mutation handle"
+  },
+  {
+    "name": "navigate",
+    "doc": "navigate to a path via the host router port"
+  },
+  {
+    "name": "objectUrlFromBytes",
+    "doc": "mint a blob object URL from bytes (Pure-safe Blob/createObjectURL stand-in)"
+  },
+  {
+    "name": "observeContentBox",
+    "doc": "observe an element content-box size (Pure-safe ResizeObserver stand-in)"
+  },
+  {
+    "name": "observeHostAttrs",
+    "doc": "observe attribute mutations on a host node; returns disposer"
   },
   {
     "name": "onCleanup",
     "doc": "register a callback to run when the controller tears down"
   },
   {
+    "name": "persistTheme",
+    "doc": "persist the chosen theme id for next boot"
+  },
+  {
+    "name": "provideStore",
+    "doc": "park a scoped store instance on the current controller scope"
+  },
+  {
+    "name": "query",
+    "doc": "public read primitive — compiler derives the cache key"
+  },
+  {
+    "name": "readStoredTheme",
+    "doc": "read the persisted theme id"
+  },
+  {
+    "name": "revokeObjectUrl",
+    "doc": "revoke a URL from objectUrlFromBytes"
+  },
+  {
+    "name": "scheduleFrame",
+    "doc": "schedule work on the next animation frame (Pure-safe rAF substitute)"
+  },
+  {
     "name": "signal",
     "doc": "a reactive value cell — read by calling it, written by calling it with a value"
   },
   {
+    "name": "theme",
+    "doc": "runtime theme surface — current / preview / commit / applyScope"
+  },
+  {
+    "name": "timeline",
+    "doc": "compose multi-track motion timelines"
+  },
+  {
     "name": "untrack",
     "doc": "read signals inside without subscribing the enclosing effect/derived"
+  },
+  {
+    "name": "useStore",
+    "doc": "resolve nearest-or-root store instance for a StoreDef"
   }
 ]
 
@@ -7384,7 +7529,7 @@ export interface ForeignIdiomDoc {
 export const FOREIGN_IDIOMS: ForeignIdiomDoc[] = [
   {
     "syntax": "class= / class:<name>",
-    "instead": "styling is a tag-position style({…}) / style(name) / style(partial, …) call on the element"
+    "instead": "class: is retired — styling is a tag-position style({…}) / style(name) / style(partial, …) call on the element"
   },
   {
     "syntax": "style= / style:<prop>",
@@ -7548,7 +7693,7 @@ export const SCOPE_REFUSALS: ScopeRefusalDoc[] = [
   {
     "syntax": "runtime value import",
     "instead": "import type { … } for types, or import { styleName } from './peer.sail' for Style values — behavior imports belong in <controller>",
-    "example": "<scope>\n  \n  props: { open = false }\n</scope>\n<p>ok</p>"
+    "example": "<scope>\n  import { signal } from '@ship/sail-runtime'\n  props: { open = false }\n</scope>\n<p>ok</p>"
   },
   {
     "syntax": "let / var / non-Style const",
@@ -7644,10 +7789,38 @@ export const CONFIG_KEYS: ConfigKeyDoc[] = [
     "layer": "POLICY"
   },
   {
+    "key": "layoutExperimental",
+    "type": "boolean",
+    "default": "false",
+    "doc": "enable experimental layout kinds (unintended-overflow, clipped-text) without full lint strict (SPEC-LAYOUT-DIAG-1 / S4.1)",
+    "layer": "POLICY"
+  },
+  {
+    "key": "layoutTextMetrics",
+    "type": "boolean",
+    "default": "false",
+    "doc": "enable text-metrics-dependent layout kind clipped-text (noisy until takumi-grade metrics; S4.1)",
+    "layer": "POLICY"
+  },
+  {
     "key": "policy",
     "type": "{ layout.raw_containers?, lint.severity.<rule-id>? }",
     "default": "registry defaults (see `sail-compiler policy`)",
     "doc": "typed compiler policy registry object; unknown keys are a hard error naming the closest valid key",
+    "layer": "POLICY"
+  },
+  {
+    "key": "strict",
+    "type": "boolean",
+    "default": "false",
+    "doc": "every lint finding is Error at the build gate (Warn→Error); per-rule off still silences; never downgrades compiler errors",
+    "layer": "POLICY"
+  },
+  {
+    "key": "lint",
+    "type": "{ severity?: \"off\"|\"warn\"|\"error\", rules?: { <rule-id>: \"off\"|\"warn\"|\"error\" } }",
+    "default": "natural rule severities (no global floor, no per-rule tree)",
+    "doc": "global lint severity floor + per-rule overrides (SPEC-LINTS-1 §3); dual-read with policy.lint.severity.*",
     "layer": "POLICY"
   },
   {

@@ -166,7 +166,8 @@
           "destructive",
           "accent",
           "muted"
-        ]
+        ],
+        "default": "primary"
       },
       "variant": {
         "values": [
@@ -305,11 +306,6 @@
       "code": {
         "type": "string",
         "default": ""
-      },
-      "copy": {
-        "type": "bool",
-        "default": "false",
-        "description": "When true, show a Copy control in the top-right of the block."
       },
       "lang": {
         "type": "string",
@@ -451,6 +447,32 @@
         "default": ""
       }
     },
+    "dropzone": {
+      "accept": {
+        "type": "string",
+        "default": ""
+      },
+      "disabled": {
+        "type": "bool",
+        "default": "false"
+      },
+      "invalid": {
+        "type": "bool",
+        "default": "false"
+      },
+      "multiple": {
+        "type": "bool",
+        "default": "false"
+      },
+      "name": {
+        "type": "string",
+        "default": ""
+      },
+      "required": {
+        "type": "bool",
+        "default": "false"
+      }
+    },
     "empty-state": {
       "size": {
         "values": [
@@ -553,6 +575,13 @@
           "lg"
         ],
         "default": "md"
+      },
+      "variant": {
+        "values": [
+          "picker",
+          "drop"
+        ],
+        "default": "picker"
       }
     },
     "hover-card": {
@@ -944,6 +973,11 @@
       "step": {
         "type": "number",
         "default": "1"
+      },
+      "ticks": {
+        "type": "string",
+        "default": "",
+        "description": "Comma-separated labels under thumb-centers. Owned by the slider — not a docs pad hack."
       },
       "value": {
         "type": "number",

@@ -134,7 +134,8 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
     },
     {
       "name": "tone",
-      "type": "primary · info · success · warning · destructive · accent · muted"
+      "type": "primary · info · success · warning · destructive · accent · muted",
+      "default": "primary"
     },
     {
       "name": "size",
@@ -260,12 +261,6 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "name": "lang",
       "type": "string",
       "default": "sail"
-    },
-    {
-      "name": "copy",
-      "type": "bool",
-      "default": "false",
-      "desc": "When true, show a Copy control in the top-right of the block."
     }
   ],
   "color": [
@@ -421,6 +416,38 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "type": "(detail: { value: string }) => void"
     }
   ],
+  "dropzone": [
+    {
+      "name": "accept",
+      "type": "string",
+      "default": ""
+    },
+    {
+      "name": "multiple",
+      "type": "bool",
+      "default": "false"
+    },
+    {
+      "name": "disabled",
+      "type": "bool",
+      "default": "false"
+    },
+    {
+      "name": "invalid",
+      "type": "bool",
+      "default": "false"
+    },
+    {
+      "name": "name",
+      "type": "string",
+      "default": ""
+    },
+    {
+      "name": "required",
+      "type": "bool",
+      "default": "false"
+    }
+  ],
   "empty-state": [
     {
       "name": "variant",
@@ -518,6 +545,11 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "name": "multiple",
       "type": "bool",
       "default": "false"
+    },
+    {
+      "name": "variant",
+      "type": "picker · drop",
+      "default": "picker"
     }
   ],
   "hover-card": [
@@ -921,6 +953,12 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "name": "name",
       "type": "string",
       "default": ""
+    },
+    {
+      "name": "ticks",
+      "type": "string",
+      "default": "",
+      "desc": "Comma-separated labels under thumb-centers. Owned by the slider — not a docs pad hack."
     }
   ],
   "spinner": [

@@ -60,7 +60,19 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                 let name = &source[start..j];
                 // Skip tags (`<button`) and sanctioned `theme`.
                 let after_lt = bytes[i] == b'<';
-                if !after_lt && name != "theme" && sail_style::is_theme_owned_token_name(name) {
+                let mut k = j;
+                while k < bytes.len() && bytes[k].is_ascii_whitespace() {
+                    k += 1;
+                }
+                let is_attr = k < bytes.len() && bytes[k] == b'=';
+                // Attr assignment only: `button.bg="…"`. `style page =` has no
+                // dot; `page.sail` in prose has no `=`.
+                if !after_lt
+                    && is_attr
+                    && name.contains('.')
+                    && name != "theme"
+                    && sail_style::is_theme_owned_token_name(name)
+                {
                     let msg = format!(
                         "component token `{name}` is theme-owned; override via theme= or the theme document"
                     );
@@ -115,6 +127,24 @@ mod tests {
         );
         assert!(!f.is_empty(), "{f:?}");
         assert!(f[0].message.contains("card.foreground"), "{}", f[0].message);
+    }
+
+    #[test]
+    fn allows_prose_page_dot_sail() {
+        let f = check(
+            Path::new("apps/demo/routes/page.sail"),
+            "<p>See routes/page.sail and table.columns in the docs.</p>",
+        );
+        assert!(f.is_empty(), "{f:?}");
+    }
+
+    #[test]
+    fn allows_style_ident_named_page() {
+        let f = check(
+            Path::new("apps/demo/routes/page.sail"),
+            "<scope>\n  style page = { box: maxW(breakpoint-tablet) }\n</scope>\n",
+        );
+        assert!(f.is_empty(), "{f:?}");
     }
 
     #[test]

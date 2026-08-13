@@ -34,7 +34,7 @@
         },
         "brandAccent": {
           "default": {
-            "$value": "oklch(0.61 0.23 303)",
+            "$value": "oklch(0.50 0.23 303)",
             "$type": "color"
           },
           "foreground": {
@@ -74,7 +74,7 @@
         },
         "primary": {
           "default": {
-            "$value": "oklch(0.67 0.16 58)",
+            "$value": "oklch(0.55 0.16 58)",
             "$type": "color"
           },
           "foreground": {
@@ -124,7 +124,7 @@
             "$type": "color"
           },
           "primary": {
-            "$value": "oklch(0.67 0.16 var(--brand-hue, 58))",
+            "$value": "oklch(0.55 0.16 var(--brand-hue, 58))",
             "$type": "color"
           },
           "primary-foreground": {
