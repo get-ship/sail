@@ -10,6 +10,14 @@
         "$value": "{color.foreground}",
         "$type": "color"
       },
+      "border": {
+        "$type": "border",
+        "$value": {
+          "color": "{color.border.default}",
+          "width": "{color.border.width}",
+          "style": "solid"
+        }
+      },
       "backdrop-filter": {
         "$value": "none",
         "$type": "string"
