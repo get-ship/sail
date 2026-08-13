@@ -111,35 +111,35 @@ export type StateRowUi = {
   key: string
 }
 
-/** CEM-ish catalog shape (components.gen + fixtures). */
+/** CEM-ish catalog shape (components.gen `as const` + fixtures). */
 export type CatalogAttribute = {
-  name?: string
-  type?: { text?: string } | string
-  default?: string
-  required?: boolean
-  description?: string
+  readonly name?: string
+  readonly type?: { readonly text?: string } | string
+  readonly default?: string
+  readonly required?: boolean
+  readonly description?: string
 }
 
 export type CatalogDeclaration = {
-  kind?: string
-  name?: string
-  tagName?: string
-  customElement?: boolean
-  description?: string
-  attributes?: CatalogAttribute[]
-  slots?: string[] | { name?: string }[]
-  cssParts?: unknown
-  cssProperties?: unknown
+  readonly kind?: string
+  readonly name?: string
+  readonly tagName?: string
+  readonly customElement?: boolean
+  readonly description?: string
+  readonly attributes?: readonly CatalogAttribute[]
+  readonly slots?: readonly (string | { readonly name?: string })[]
+  readonly cssParts?: unknown
+  readonly cssProperties?: unknown
 }
 
 export type CatalogModule = {
-  kind?: string
-  path?: string
-  package?: string
-  declarations?: CatalogDeclaration[]
+  readonly kind?: string
+  readonly path?: string
+  readonly package?: string
+  readonly declarations?: readonly CatalogDeclaration[]
 }
 
 export type ComponentsCatalog = {
-  schemaVersion?: string
-  modules?: CatalogModule[]
+  readonly schemaVersion?: string
+  readonly modules?: readonly CatalogModule[]
 }

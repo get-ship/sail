@@ -5,7 +5,6 @@
 import type {
   CatalogAttribute,
   CatalogDeclaration,
-  CatalogModule,
   ComponentProp,
   ComponentRecord,
   ComponentsCatalog,
@@ -55,7 +54,7 @@ export function recordsFromCatalog(
   if (!Array.isArray(modules)) return []
   const out: ComponentRecord[] = []
   const seen = new Set<string>()
-  for (const mod of modules as CatalogModule[]) {
+  for (const mod of modules) {
     const pkg = mod.package ? String(mod.package) : ''
     const modPath = mod.path ? String(mod.path) : ''
     const decls = Array.isArray(mod.declarations) ? mod.declarations : []
