@@ -1094,10 +1094,13 @@ pub async fn bundle_app_with_base(
         .with_plugins(vec![
             Arc::new(app_plugin),
             Arc::new(sail_plugin),
-            Arc::new(if minify {
-                crate::ship_asset_css::ShipAssetCssPlugin::production()
-            } else {
-                crate::ship_asset_css::ShipAssetCssPlugin::development()
+            Arc::new({
+                let used = crate::fonts::used_font_files_for_project(Some(project));
+                if minify {
+                    crate::ship_asset_css::ShipAssetCssPlugin::production().with_used_fonts(used)
+                } else {
+                    crate::ship_asset_css::ShipAssetCssPlugin::development().with_used_fonts(used)
+                }
             }),
         ])
         .build()

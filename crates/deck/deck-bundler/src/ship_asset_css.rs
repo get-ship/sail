@@ -65,10 +65,13 @@
 //! - It does not resolve `data:` URLs. Those are inlined content; no
 //!   rewrite needed.
 
+use std::collections::HashSet;
 use std::path::{Component, Path, PathBuf};
 use std::sync::Arc;
 
 use anyhow::{Context, anyhow};
+
+use crate::fonts;
 use rolldown::plugin::{
     HookGenerateBundleArgs, HookLoadArgs, HookLoadOutput, HookLoadReturn, HookNoopReturn,
     HookUsage, Plugin, PluginContext, PluginHookMeta, PluginOrder, SharedLoadPluginContext,
@@ -95,28 +98,52 @@ const REWRITE_EXTENSIONS: &[&str] = &[
 
 /// Rolldown plugin: rewrite local `url(...)` in CSS assets to hashed paths,
 /// and optionally minify the CSS body (production).
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub struct ShipAssetCssPlugin {
     /// When true, minify every emitted CSS asset after URL rewrites resolve.
     /// Dev builds leave CSS readable.
     pub minify: bool,
+    /// Framework woff2 basenames reachable from the token/style graph.
+    /// `None` = do not filter (synthetic CSS tests). `Some` = strip unused
+    /// `@font-face` for known FONTS files before emit.
+    pub used_font_files: Option<Arc<HashSet<String>>>,
 }
 
 impl Default for ShipAssetCssPlugin {
     fn default() -> Self {
-        Self { minify: false }
+        Self {
+            minify: false,
+            used_font_files: None,
+        }
     }
 }
 
 impl ShipAssetCssPlugin {
-    /// Production helper — minify on.
+    /// Production helper — minify on. Used-set filled by [`Self::with_used_fonts`].
     pub fn production() -> Self {
-        Self { minify: true }
+        Self {
+            minify: true,
+            used_font_files: None,
+        }
     }
 
     /// Development helper — readable CSS.
     pub fn development() -> Self {
-        Self { minify: false }
+        Self {
+            minify: false,
+            used_font_files: None,
+        }
+    }
+
+    /// Restrict framework font emit to `files` (SPEC-FONTS-1 unused-family drop).
+    pub fn with_used_fonts(mut self, files: HashSet<String>) -> Self {
+        self.used_font_files = Some(Arc::new(files));
+        self
+    }
+
+    /// Default used-set from the document-floor token graph (no catalog themes).
+    pub fn with_default_used_fonts(self) -> Self {
+        self.with_used_fonts(fonts::used_font_files_for_project(None))
     }
 }
 
@@ -175,7 +202,7 @@ impl Plugin for ShipAssetCssPlugin {
         // hazard (the consumer would silently get the asset-plugin's
         // default behaviour and any `url(...)` references would 404 at
         // runtime).
-        let body = match std::fs::read_to_string(css_path) {
+        let mut body = match std::fs::read_to_string(css_path) {
             Ok(b) => b,
             Err(e) => {
                 return Err(anyhow!(
@@ -184,6 +211,9 @@ impl Plugin for ShipAssetCssPlugin {
                 ));
             }
         };
+        if let Some(used) = self.used_font_files.as_deref() {
+            body = fonts::strip_unused_framework_faces(&body, used);
+        }
 
         // Scan for `url(...)` references to local asset files. We only
         // rewrite references that (a) point at a path the bundler can

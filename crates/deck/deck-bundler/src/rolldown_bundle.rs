@@ -120,10 +120,17 @@ pub async fn bundle_target(
             .with_options(options)
             .with_plugins(vec![
                 Arc::new(plugin),
-                Arc::new(if production {
-                    crate::ship_asset_css::ShipAssetCssPlugin::production()
-                } else {
-                    crate::ship_asset_css::ShipAssetCssPlugin::development()
+                Arc::new({
+                    // Framework targets have no app theme emit set — document
+                    // floor roles only. App builds pass the project via app.rs.
+                    let used = crate::fonts::used_font_files_for_project(None);
+                    if production {
+                        crate::ship_asset_css::ShipAssetCssPlugin::production()
+                            .with_used_fonts(used)
+                    } else {
+                        crate::ship_asset_css::ShipAssetCssPlugin::development()
+                            .with_used_fonts(used)
+                    }
                 }),
             ])
             .build()

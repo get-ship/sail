@@ -10,7 +10,7 @@ use crate::DaemonMode;
 /// revalidate. Picked per-response so the adapter needs no mode awareness.
 #[derive(Clone, Copy, Debug)]
 pub enum CachePolicy {
-    /// Framework bundles (runtime/dom/components/islands) + per-icon lucide SVGs.
+    /// Framework bundles (runtime/dom/components/islands) + used icon SVGs.
     Asset,
     /// Route artifacts (template/setup/css/payload/host).
     Route,
@@ -40,12 +40,9 @@ pub enum CachePolicy {
 //     SAIL primitives. `'unsafe-inline'` is required because deck inlines
 //     scripts (`inject_globals`) and SAIL templates may inline styles; the
 //     policy still restricts external origins so a stored XSS cannot load
-//     attacker-controlled scripts. font-src / style-src admit Google Fonts
-//     because the shell's `index.html` loads Syne / DM Sans / JetBrains Mono
-//     from fonts.googleapis.com (see apps/shell/index.html). Without these,
-//     the design system falls back to system fonts and the page looks visually
-//     broken (icons tied to those families disappear). We could self-host; for
-//     the dev loop a CSP allow is the smallest fix. img-src allows 'self',
+//     attacker-controlled scripts. Fonts are self-hosted (SPEC-FONTS-1):
+//     hashed woff2 under assets/, no runtime font CDN — font-src 'self'
+//     only. img-src allows 'self',
 //     data/blob (object URLs from media), and https images (demo photos /
 //     remote media). connect-src 'self' still blocks exfiltration;
 //     frame-ancestors 'self' mirrors X-Frame-Options for CSP framing.
@@ -54,7 +51,7 @@ pub const HTML_SECURITY_HEADERS: &[(&str, &str)] = &[
     ("X-Content-Type-Options", "nosniff"),
     (
         "Content-Security-Policy",
-        "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self'; frame-ancestors 'self'",
+        "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob: https:; connect-src 'self'; frame-ancestors 'self'",
     ),
 ];
 
@@ -65,7 +62,7 @@ pub const HTML_SECURITY_HEADERS: &[(&str, &str)] = &[
 /// `PolicyResolution::network`). Split out so [`html_security_headers_for`]
 /// cannot drift from [`HTML_SECURITY_HEADERS`]'s hand-written string on any
 /// clause OTHER than `connect-src`.
-const CSP_PREFIX: &str = "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:;";
+const CSP_PREFIX: &str = "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob: https:;";
 const CSP_SUFFIX: &str = "frame-ancestors 'self'";
 
 /// Derive the `connect-src` CSP clause from a package's resolved `"network"`
@@ -505,8 +502,7 @@ mod tests {
     #[test]
     fn html_route_for_emits_network_connect_src() {
         let network = vec!["https://api.example.com".to_string()];
-        let resp =
-            DeckResponse::html_route_for("<html></html>", DaemonMode::Development, &network);
+        let resp = DeckResponse::html_route_for("<html></html>", DaemonMode::Development, &network);
         let csp = header_value(&resp, "Content-Security-Policy").expect("CSP present");
         assert!(
             csp.contains("connect-src https://api.example.com"),
@@ -514,8 +510,7 @@ mod tests {
         );
         // Empty network path is the default html_route bytes.
         let empty = DeckResponse::html_route("<html></html>", DaemonMode::Development);
-        let via_for =
-            DeckResponse::html_route_for("<html></html>", DaemonMode::Development, &[]);
+        let via_for = DeckResponse::html_route_for("<html></html>", DaemonMode::Development, &[]);
         assert_eq!(
             empty.extra_headers, via_for.extra_headers,
             "html_route and html_route_for(&[]) must be byte-identical"

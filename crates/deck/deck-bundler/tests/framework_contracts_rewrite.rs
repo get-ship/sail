@@ -108,7 +108,7 @@ export default () => ({})
         .with_options(options)
         .with_plugins(vec![
             Arc::new(sail_plugin),
-            Arc::new(ShipAssetCssPlugin::development()),
+            Arc::new(ShipAssetCssPlugin::development().with_default_used_fonts()),
         ])
         .build()
         .expect("bundler build");
@@ -132,9 +132,19 @@ export default () => ({})
         .collect();
     assert_eq!(
         woff2_assets.len(),
-        4,
-        "expected exactly 4 hashed woff2 assets (DM Sans, Syne, JetBrains Mono, Press Start 2P), got {woff2_assets:?}"
+        3,
+        "document floor uses body/heading/mono only — Press Start 2P must not ship: {woff2_assets:?}"
     );
+    assert!(
+        !woff2_assets.iter().any(|n| n.contains("press-start")),
+        "unused family Press Start 2P must be excluded: {woff2_assets:?}"
+    );
+    for needle in ["dm-sans", "syne", "jetbrains-mono"] {
+        assert!(
+            woff2_assets.iter().any(|n| n.contains(needle)),
+            "expected used family `{needle}` in {woff2_assets:?}"
+        );
+    }
     let base_css = names
         .iter()
         .find(|n| n.starts_with("sail-base-") && n.ends_with(".css"))
@@ -176,24 +186,24 @@ export default () => ({})
         "sail-base.css must reference at least one of the emitted woff2 ({woff2_assets:?}), got body:\n{}",
         base_body
     );
-    // The body must have four `@font-face` blocks (one per family in
-    // the FONTS manifest) — confirms the drift lock carried through
-    // the bundler without losing rows.
+    // Used-set only: body / heading / mono (3). Press Start 2P is unused
+    // without the 8bit theme in the emit set.
     let font_face_count = base_body.matches("@font-face").count();
     assert_eq!(
-        font_face_count, 4,
-        "expected 4 @font-face rules in sail-base.css, got {font_face_count} (manifest drift?)"
+        font_face_count, 3,
+        "expected 3 used @font-face rules in sail-base.css, got {font_face_count} (unused-family leak?)"
     );
-    // The three variable faces keep `format('woff2-variations')`; the static
-    // Press Start 2P face uses `format('woff2')`. Verify both shapes are present.
     let variations_count = base_body.matches("format('woff2-variations')").count();
     assert_eq!(
         variations_count, 3,
         "expected 3 woff2-variations format() decls in sail-base.css, got {variations_count}"
     );
-    let woff2_count = base_body.matches("format('woff2')").count();
-    assert_eq!(
-        woff2_count, 1,
-        "expected 1 woff2 format() decl in sail-base.css, got {woff2_count}"
+    assert!(
+        !base_body.contains("Press Start 2P"),
+        "unused Press Start 2P @font-face must be stripped, got body:\n{base_body}"
+    );
+    assert!(
+        !base_body.contains("fonts.googleapis.com") && !base_body.contains("fonts.gstatic.com"),
+        "offline paint: no runtime font CDN, got body:\n{base_body}"
     );
 }
