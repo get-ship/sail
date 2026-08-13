@@ -3,15 +3,15 @@
   authoring bans. From language-surface.gen (sail-compiler prop-registry).
 -->
 <scope>
-  style root = { box: minW(0) }
-  style intro = { box: maxW(breakpoint-tablet) }
-  style mutedSm = { box: maxW(breakpoint-tablet), paint: fg(muted-foreground), text: fontSize(sm) }
-  style cardShell = { box: minW(0) }
-  style valueText = { box: maxW(panel-max-w-sm), paint: fg(muted-foreground) }
-  style muted = { paint: fg(muted-foreground) }
-  style banCode = { paint: fg(destructive) }
-  style bodySm = { text: fontSize(sm) }
-  style bodyMutedSm = { paint: fg(muted-foreground), text: fontSize(sm) }
+  style root = { box: size({ min-w: 0 }) }
+  style intro = { box: size({ max-w: breakpoint-tablet }) }
+  style mutedSm = { box: size({ max-w: breakpoint-tablet }), paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
+  style cardShell = { box: size({ min-w: 0 }) }
+  style valueText = { box: size({ max-w: panel-max-w-sm }), paint: ink({ color: muted-foreground }) }
+  style muted = { paint: ink({ color: muted-foreground }) }
+  style banCode = { paint: ink({ color: destructive }) }
+  style bodySm = { text: type({ size: sm }) }
+  style bodyMutedSm = { paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
 </scope>
 
 <controller>

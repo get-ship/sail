@@ -36,19 +36,19 @@ export default controller(() => {
 })
 </controller>
 
-<column gap="4" style({ box: pad(12px) })>
+<column gap="4" style({ box: space({ pad: 12px }) })>
   <row align="center" justify="between">
     <h3>Release notes</h3>
     <badge tone="primary" variant="soft" style({ animate: enter({ opacity: 'whoosh' }) })>v2.4.0</badge>
   </row>
 
-  <p style({ paint: fg(muted-foreground), text: fontSize(sm) })>published {formatDate(publishedAt())}</p>
+  <p style({ paint: ink({ color: muted-foreground }), text: type({ size: sm }) })>published {formatDate(publishedAt())}</p>
 
   <column gap="1">
     <for {notes() as note} key={note.id}>
-      <row gap="3" align="center" style({ box: padX(3).padY(2), paint: bg(surface-1).radius(md) })>
+      <row gap="3" align="center" style({ box: space({ pad-x: 3, pad-y: 2 }), paint: fill({ color: surface-1 }).radius(md) })>
         <badge tone="muted" variant="outline" size="sm">{note.tag}</badge>
-        <p style({ text: fontSize(sm) })>{note.text}</p>
+        <p style({ text: type({ size: sm }) })>{note.text}</p>
       </row>
     </for>
   </column>

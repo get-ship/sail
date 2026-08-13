@@ -11,14 +11,14 @@
     code = ''
   }
 
-  style section = { box: w(full).padY(4).overflow(visible) }
-  style heading = { text: fontSize(md).fontWeight(semibold) }
-  style leadText = { paint: fg(muted-foreground), text: fontSize(sm) }
+  style section = { box: size({ w: full }).space({ pad-y: 4 }).overflow({ all: visible }) }
+  style heading = { text: type({ size: md, weight: semibold }) }
+  style leadText = { paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
   style liveFrame = {
-    box: grow(1).basis(0).minW(0).pad(4).overflow(visible),
-    paint: radius(lg).borderWidth(1).border(border).bg(surface-0),
-  }
-  style codeCol = { box: grow(1).basis(0).minW(0) }
+    box: flow({ grow: 1 }).basis(0).size({ min-w: 0 }).space({ pad: 4 }).overflow({ all: visible }),
+    paint: radius(lg).border({ color: border, width: 1 }).fill({ color: surface-0 }),
+}
+  style codeCol = { box: flow({ grow: 1 }).basis(0).size({ min-w: 0 }) }
 </scope>
 
 <column gap="3" style(section)>
@@ -28,7 +28,7 @@
   <if {lead() !== ''}>
     <p style(leadText)>{lead()}</p>
   </if>
-  <row gap="4" align="start" style({ box: w(full).minW(0).overflow(visible) })>
+  <row gap="4" align="start" style({ box: size({ w: full, min-w: 0 }).overflow({ all: visible }) })>
     <column gap="3" style(liveFrame)>
       <slot></slot>
     </column>

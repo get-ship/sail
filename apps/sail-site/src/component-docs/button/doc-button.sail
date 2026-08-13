@@ -4,44 +4,41 @@
 -->
 
 <scope>
-  style page = { box: maxW(breakpoint-desktop).mx(auto).w(full) }
-  style monoXs = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
+  style page = { box: size({ w: full, max-w: breakpoint-desktop }).space({ mx: auto }) }
+  style monoXs = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs }) }
   style knobLabel = {
-    paint: fg(muted-foreground),
-    text: fontSize(xs).fontWeight(medium).tracking(wide).textCase(uppercase),
-  }
-  style sizeValue = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
+    paint: ink({ color: muted-foreground }),
+    text: type({ size: xs, weight: medium, tracking: wide, case: uppercase }),
+}
+  style sizeValue = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs }) }
   /**
    * Discrete steps: padX ≈ half thumb so ends sit under the thumb center;
    * justify-between places labels at 0%…100% (not column midpoints).
    */
-  style tickRow = { box: w(full).padT(1).padX(1_5) }
+  style tickRow = { box: size({ w: full }).space({ pad-x: 1_5, pad-t: 1 }) }
   style tick = {
-    paint: fg(muted-foreground),
-    text: fontSize(xs).fontFamily(mono),
-  }
+    paint: ink({ color: muted-foreground }),
+    text: type({ family: mono, size: xs }),
+}
   /** Tone dots — plain divs (never <button>). size() sets w+h together. */
   style swatch = {
-    box: size(7).shrink(0),
-    paint: radius(full).cursor(pointer).borderWidth(2).border(transparent).shadow(xs),
-    when: {
-      selected: { paint: border(foreground).shadow(sm) },
-      hover: { paint: opacity(90) },
-    },
-  }
-  style swatchPrimary = { paint: bg(primary) }
-  style swatchSuccess = { paint: bg(success) }
-  style swatchWarning = { paint: bg(warning) }
-  style swatchDestructive = { paint: bg(destructive) }
-  style swatchAccent = { paint: bg(accent) }
-  style swatchMuted = { paint: bg(muted).border(border) }
-  style swatchInfo = { paint: bg(info) }
-  style exampleBlock = { box: w(full).padT(2).padB(4) }
-  style exampleSection = { box: w(full).padY(4) }
-  style exampleH = { text: fontSize(md).fontWeight(semibold) }
-  style exampleLead = { paint: fg(muted-foreground), text: fontSize(sm) }
-  style sectionLabel = { paint: fg(muted-foreground), text: fontSize(xs).textCase(uppercase).tracking(wide) }
-  style demoRow = { box: w(full).padY(2) }
+    box: size(7).flow({ shrink: 0 }),
+    paint: radius(full).cursor(pointer).border({ color: transparent, width: 2 }).elevation(xs),
+    when: { selected: { paint: border({ color: foreground }).elevation(sm) }, hover: { paint: filter({ opacity: 90 }) } },
+}
+  style swatchPrimary = { paint: fill({ color: primary }) }
+  style swatchSuccess = { paint: fill({ color: success }) }
+  style swatchWarning = { paint: fill({ color: warning }) }
+  style swatchDestructive = { paint: fill({ color: destructive }) }
+  style swatchAccent = { paint: fill({ color: accent }) }
+  style swatchMuted = { paint: fill({ color: muted }).border({ color: border }) }
+  style swatchInfo = { paint: fill({ color: info }) }
+  style exampleBlock = { box: size({ w: full }).space({ pad-t: 2, pad-b: 4 }) }
+  style exampleSection = { box: size({ w: full }).space({ pad-y: 4 }) }
+  style exampleH = { text: type({ size: md, weight: semibold }) }
+  style exampleLead = { paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
+  style sectionLabel = { paint: ink({ color: muted-foreground }), text: type({ size: xs, tracking: wide, case: uppercase }) }
+  style demoRow = { box: size({ w: full }).space({ pad-y: 2 }) }
 </scope>
 
 <controller>
@@ -89,14 +86,12 @@ export default controller((_ctx: Scope) => {
   const heading = () => entry.heading
   const blurb = () => entry.blurb
   const props = () =>
-    entry.props.filter(
-      (r) =>
+    entry.props.filter((r) =>
         r.name === 'variant' ||
         r.name === 'tone' ||
         r.name === 'size' ||
         r.name === 'disabled' ||
-        r.name === 'label',
-    )
+        r.name === 'label')
   const usageCode = () => entry.usage
 
   const btnExWithIcon = () =>
@@ -247,14 +242,14 @@ export default controller((_ctx: Scope) => {
         <slider bind:value={sizeIdx} min="0" max="6" step="1" size="sm" label="Size" ticks="xs,sm,md,lg,icon,iSm,iLg"></slider>
       </column>
       <row gap="5" align="start">
-        <column gap="2" style({ box: grow(1).minW(0) })>
+        <column gap="2" style({ box: flow({ grow: 1 }).size({ min-w: 0 }) })>
           <label style(knobLabel)>Icon</label>
           <if {isIconSize()}>
             <p style(sizeValue)>Required for icon sizes</p>
           {else =>
             <switch bind:checked={withIcon} size="sm" label="Show icon"></switch>}</if>
         </column>
-        <column gap="2" style({ box: grow(1).minW(0) })>
+        <column gap="2" style({ box: flow({ grow: 1 }).size({ min-w: 0 }) })>
           <label style(knobLabel)>Disabled</label>
           <switch bind:checked={disabled} size="sm" label="Disabled"></switch>
         </column>

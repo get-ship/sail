@@ -45,11 +45,11 @@ export default controller(() => {
 </controller>
 
 <scope>
-  style muteLabel = { paint: fg(muted-foreground), text: fontSize(sm) }
-  style loadingRow = { box: pad(4), paint: bg(surface-1).radius(md) }
-  style muted = { paint: fg(muted-foreground) }
-  style memberRow = { box: padX(3).padY(2), paint: bg(surface-1).radius(md) }
-  style memberName = { text: fontSize(sm) }
+  style muteLabel = { paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
+  style loadingRow = { box: space({ pad: 4 }), paint: fill({ color: surface-1 }).radius(md) }
+  style muted = { paint: ink({ color: muted-foreground }) }
+  style memberRow = { box: space({ pad-x: 3, pad-y: 2 }), paint: fill({ color: surface-1 }).radius(md) }
+  style memberName = { text: type({ size: sm }) }
 </scope>
 
 <column gap="4">
@@ -77,7 +77,7 @@ export default controller(() => {
       <column gap="1">
         <for {value as m} key={m.id}>
           <row gap="3" align="center" style(memberRow)>
-            <strong style(memberName, { box: grow(1) })>{m.name}</strong>
+            <strong style(memberName, { box: flow({ grow: 1 }) })>{m.name}</strong>
             <if {m.role === 'admin'}>
               <badge tone="primary" variant="soft" size="sm">admin</badge>
             </if>

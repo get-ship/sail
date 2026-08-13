@@ -7,19 +7,19 @@
 -->
 
 <scope>
-  style page = { box: maxW(breakpoint-tablet).mx(auto) }
-  style eyebrow = { box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
-  style lead = { paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) }
-  style demo = { box: pad(4), paint: bg(surface-1).borderWidth(1).border(border).radius(md) }
-  style demoCenter = { box: minH(11).pad(4), paint: bg(surface-1).borderWidth(1).border(border).radius(md) }
-  style cardPad = { box: pad(4) }
-  style cardPadSm = { box: pad(3) }
-  style stackCard = { box: w(24).h(12), paint: bg(muted).radius(md) }
-  style stackDot = { box: w(4).h(4), paint: radius(full).bg(primary) }
-  style growMin = { box: grow(1).minW(0) }
-  style shrink0 = { box: shrink(0) }
-  style footNote = { box: mt(4), paint: fg(muted-foreground), text: fontSize(sm) }
-  style footNav = { box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) }
+  style page = { box: size({ max-w: breakpoint-tablet }).space({ mx: auto }) }
+  style eyebrow = { box: space({ mb: 2 }), paint: ink({ color: accent }), text: type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
+  style lead = { paint: ink({ color: muted-foreground }), text: type({ size: lg, leading: relaxed }) }
+  style demo = { box: space({ pad: 4 }), paint: fill({ color: surface-1 }).border({ color: border, width: 1 }).radius(md) }
+  style demoCenter = { box: size({ min-h: 11 }).space({ pad: 4 }), paint: fill({ color: surface-1 }).border({ color: border, width: 1 }).radius(md) }
+  style cardPad = { box: space({ pad: 4 }) }
+  style cardPadSm = { box: space({ pad: 3 }) }
+  style stackCard = { box: size({ w: 24, h: 12 }), paint: fill({ color: muted }).radius(md) }
+  style stackDot = { box: size(4), paint: radius(full).fill({ color: primary }) }
+  style growMin = { box: flow({ grow: 1 }).size({ min-w: 0 }) }
+  style shrink0 = { box: flow({ shrink: 0 }) }
+  style footNote = { box: space({ mt: 4 }), paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
+  style footNav = { box: space({ pad-t: 4, mt: 8 }), paint: border({ color: border, width: 1, edge: t }) }
 </scope>
 
 <controller>
@@ -169,8 +169,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <code-block code={code.grow}></code-block>
   <p>
     Participation is one spelling: the box channel.
-    <code>grow(1)</code> / <code>shrink(0)</code> are flex participation;
-    <code>w(full)</code>, <code>minW(0)</code>, and <code>maxW(…)</code> take
+    <code>flow({ grow: 1 })</code> / <code>flow({ shrink: 0 })</code> are flex participation;
+    <code>size({ w: full })</code>, <code>size({ min-w: 0 })</code>, and <code>size({ max-w: … })</code> take
     the same size tokens as other Style box setters. Bare attrs
     (<code>grow</code>, <code>min-w=</code>, <code>shrink</code>) are refused
     (<code>sail-participation-style</code>) — write
@@ -186,7 +186,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     badges — all as a block Style statement. Every child of a layout element
     is also born with <code>min-width: 0</code> — the browser default where an
     item refuses to shrink below its content is corrected at the language
-    level, so <code style({ text: truncate() })></code> works the first time.
+    level, so <code style({ text: type({ wrap: truncate }) })></code> works the first time.
   </p>
 
   <h2><code>&lt;when&gt;</code> — different trees per breakpoint</h2>

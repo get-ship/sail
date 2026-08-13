@@ -4,35 +4,35 @@
   stepper, solution toggle, or diff tab.
 -->
 <scope>
-  style workbench = { box: w(full).h(fill).minH(0).minW(0).overflow(hidden) }
-  style workbenchMobile = { box: w(full).h(fill).minH(0).overflow(hidden) }
+  style workbench = { box: size({ w: full, h: fill, min-w: 0, min-h: 0 }).overflow({ all: hidden }) }
+  style workbenchMobile = { box: size({ w: full, h: fill, min-h: 0 }).overflow({ all: hidden }) }
   // Full-bleed workbench: single chrome bar, no site navbar tax.
-  style playground = { box: grow(1).basis(0).minW(0).minH(0).pad(half), paint: bg(surface-0) }
+  style playground = { box: flow({ grow: 1 }).basis(0).size({ min-w: 0, min-h: 0 }).space({ pad: half }), paint: fill({ color: surface-0 }) }
   // Desktop: editor | preview+console side by side (not stacked).
-  style split = { box: grow(1).basis(0).minW(0).minH(0) }
-  style card = { box: grow(1).basis(0).minW(0).minH(0).overflow(hidden), paint: borderWidth(1).border(border).radius(md).bg(surface-1) }
-  style toolbar = { box: shrink(0).padY(1).padX(2), paint: borderBWidth(1).borderB(border).bg(surface-1) }
-  style paneCol = { box: grow(1).minH(0).minW(0).overflow(hidden) }
-  style monoXs = { paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).tracking(wide) }
-  style countLabel = { paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).tracking(wide) }
-  style pgLabel = { paint: fg(primary), text: fontFamily(mono).fontSize(xs).fontWeight(medium).tracking(wide) }
-  style backLink = { box: display(inline-flex).padX(1_5).h(control-h-sm), paint: radius(md).fg(muted-foreground), text: fontSize(sm).fontWeight(medium).underline(none).whitespace(nowrap), when: { hover: { paint: fg(foreground).bg(hover-bg) } } }
-  style recipeSelect = { box: minW(48).maxW(64) }
-  style descClamp = { box: minW(0).maxW(64).overflow(hidden), paint: fg(muted-foreground), text: fontSize(sm).whitespace(nowrap) }
+  style split = { box: flow({ grow: 1 }).basis(0).size({ min-w: 0, min-h: 0 }) }
+  style card = { box: flow({ grow: 1 }).basis(0).size({ min-w: 0, min-h: 0 }).overflow({ all: hidden }), paint: border({ color: border, width: 1 }).radius(md).fill({ color: surface-1 }) }
+  style toolbar = { box: flow({ shrink: 0 }).space({ pad-x: 2, pad-y: 1 }), paint: border({ color: border, width: 1, edge: b }).fill({ color: surface-1 }) }
+  style paneCol = { box: flow({ grow: 1 }).size({ min-w: 0, min-h: 0 }).overflow({ all: hidden }) }
+  style monoXs = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs, tracking: wide }) }
+  style countLabel = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs, tracking: wide }) }
+  style pgLabel = { paint: ink({ color: primary }), text: type({ family: mono, size: xs, weight: medium, tracking: wide }) }
+  style backLink = { box: flow({ display: inline-flex }).space({ pad-x: 1_5 }).size({ h: control-h-sm }), paint: radius(md).ink({ color: muted-foreground }), text: type({ size: sm, weight: medium, wrap: nowrap }).underline(none), when: { hover: { paint: ink({ color: foreground }).fill({ color: hover-bg }) } } }
+  style recipeSelect = { box: size({ min-w: 48, max-w: 64 }) }
+  style descClamp = { box: size({ min-w: 0, max-w: 64 }).overflow({ all: hidden }), paint: ink({ color: muted-foreground }), text: type({ size: sm, wrap: nowrap }) }
   // Side-by-side pane: fill height of the split; console stays a fixed foot.
-  style previewBand = { box: grow(1).basis(0).minW(0).minH(0).overflow(hidden), paint: borderWidth(1).border(border).radius(md).bg(surface-1) }
-  style previewBandMobile = { box: shrink(0).h(40).minH(32).overflow(hidden), paint: borderWidth(1).border(border).radius(md).bg(surface-1) }
-  style previewBar = { box: shrink(0).padY(1).padX(2), paint: borderBWidth(1).borderB(border) }
-  style previewHost = { box: w(full).h(full).minH(0).overflow(auto).pad(4), paint: bg(surface-0) }
-  style console = { box: shrink(0).h(16).minH(16).padY(1).padX(2).overflowY(auto), paint: borderTWidth(1).borderT(border).bg(surface-0) }
-  style consoleMobile = { box: shrink(0).h(14).minH(14).padY(1).padX(2).overflowY(auto), paint: borderTWidth(1).borderT(border).bg(surface-0) }
-  style monoContents = { box: display(contents), text: fontFamily(mono).fontSize(xs) }
-  style ts = { paint: fg(muted-foreground).opacity(50) }
-  style logOk = { paint: fg(success) }
-  style logWarn = { paint: fg(warning) }
-  style logErr = { paint: fg(destructive) }
-  style logInfo = { paint: fg(muted-foreground) }
-  style logErrRow = { box: pad(1).padX(2), paint: bg(muted).radius(sm) }
+  style previewBand = { box: flow({ grow: 1 }).basis(0).size({ min-w: 0, min-h: 0 }).overflow({ all: hidden }), paint: border({ color: border, width: 1 }).radius(md).fill({ color: surface-1 }) }
+  style previewBandMobile = { box: flow({ shrink: 0 }).size({ h: 40, min-h: 32 }).overflow({ all: hidden }), paint: border({ color: border, width: 1 }).radius(md).fill({ color: surface-1 }) }
+  style previewBar = { box: flow({ shrink: 0 }).space({ pad-x: 2, pad-y: 1 }), paint: border({ color: border, width: 1, edge: b }) }
+  style previewHost = { box: size({ w: full, h: full, min-h: 0 }).overflow({ all: auto }).space({ pad: 4 }), paint: fill({ color: surface-0 }) }
+  style console = { box: flow({ shrink: 0 }).size({ h: 16, min-h: 16 }).space({ pad-x: 2, pad-y: 1 }).overflow({ y: auto }), paint: border({ color: border, width: 1, edge: t }).fill({ color: surface-0 }) }
+  style consoleMobile = { box: flow({ shrink: 0 }).size({ h: 14, min-h: 14 }).space({ pad-x: 2, pad-y: 1 }).overflow({ y: auto }), paint: border({ color: border, width: 1, edge: t }).fill({ color: surface-0 }) }
+  style monoContents = { box: flow({ display: contents }), text: type({ family: mono, size: xs }) }
+  style ts = { paint: ink({ color: muted-foreground }).filter({ opacity: 50 }) }
+  style logOk = { paint: ink({ color: success }) }
+  style logWarn = { paint: ink({ color: warning }) }
+  style logErr = { paint: ink({ color: destructive }) }
+  style logInfo = { paint: ink({ color: muted-foreground }) }
+  style logErrRow = { box: space({ pad: 1, pad-x: 2 }), paint: fill({ color: muted }).radius(sm) }
   type LogLineProps = {
     ts: string
     kind: string
@@ -294,7 +294,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 <column gap="0" style(workbench, playground)>
   <!-- One chrome bar: exit + recipe + theme + run. No site navbar, no SOURCE tax. -->
   <row align="center" justify="between" gap="2" style(toolbar) testid="pg-toolbar">
-    <row gap="2" align="center" nowrap style({ box: minW(0).grow(1) })>
+    <row gap="2" align="center" nowrap style({ box: size({ min-w: 0 }).flow({ grow: 1 }) })>
       <a href="/docs" label="Back to Docs" style(backLink) testid="pg-back">← Docs</a>
       <p style(pgLabel)>PLAYGROUND</p>
       <select
@@ -310,14 +310,14 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       </select>
       <small style(descClamp)>{recipeDesc()}</small>
     </row>
-    <row gap="1" align="center" nowrap style({ box: shrink(0) })>
+    <row gap="1" align="center" nowrap style({ box: flow({ shrink: 0 }) })>
       <theme-picker></theme-picker>
       <button variant="ghost" size="sm" on:click={reset}>↺ Reset</button>
       <button variant="outline" tone="primary" size="sm" on:click={run}>▶ Run</button>
     </row>
   </row>
 
-  <row nowrap gap="1" align="stretch" style(split, { box: pad(half) })>
+  <row nowrap gap="1" align="stretch" style(split, { box: space({ pad: half }) })>
     <column gap="0" style(card)>
       <column gap="0" style(paneCol)>
         <sail-code-editor
@@ -362,7 +362,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 <!-- Phone: stacked editor over preview — still one chrome bar. -->
 <column gap="0" style(workbenchMobile, playground)>
   <row align="center" justify="between" gap="2" style(toolbar) testid="pg-toolbar">
-    <row gap="2" align="center" nowrap style({ box: minW(0).grow(1) })>
+    <row gap="2" align="center" nowrap style({ box: size({ min-w: 0 }).flow({ grow: 1 }) })>
       <a href="/docs" label="Back to Docs" style(backLink) testid="pg-back">← Docs</a>
       <select size="sm" bind:value={recipeId} label="Recipe" testid="pg-recipe" style(recipeSelect)>
         <for {recipes as r} key={r.id}>
@@ -370,13 +370,13 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         </for>
       </select>
     </row>
-    <row gap="1" align="center" nowrap style({ box: shrink(0) })>
+    <row gap="1" align="center" nowrap style({ box: flow({ shrink: 0 }) })>
       <theme-picker></theme-picker>
       <button variant="ghost" size="sm" on:click={reset}>↺</button>
       <button variant="outline" tone="primary" size="sm" on:click={run}>▶</button>
     </row>
   </row>
-  <column gap="0" style(card, { box: grow(1).minH(0) })>
+  <column gap="0" style(card, { box: flow({ grow: 1 }).size({ min-h: 0 }) })>
     <column gap="0" style(paneCol)>
       <sail-code-editor
         pane="source"

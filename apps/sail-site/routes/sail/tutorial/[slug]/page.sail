@@ -6,46 +6,46 @@
   panel token); no transform/gradient stepper polish.
 -->
 <scope>
-  style workbench = { box: w(full).h(fill).minH(0).minW(0).overflow(hidden) }
-  style workbenchMobile = { box: w(full).h(fill).minH(0).overflow(hidden) }
-  style lessonPane = { box: shrink(1).w(panel-max-w-md).minW(0).maxW(panel-max-w-md).minH(0), paint: bg(surface-1).borderRWidth(1).borderR(border) }
-  style lessonScroll = { box: grow(1).minH(0).overflowY(auto).overflowX(hidden).padX(5).padY(4) }
-  style tutLabel = { paint: fg(primary), text: fontFamily(mono).fontSize(xs).fontWeight(medium).tracking(wide) }
-  style countLabel = { paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).tracking(wide) }
-  style stepDone = { box: grow(1).h(1), paint: radius(full).bg(primary) }
-  style stepCurrent = { box: grow(1).h(1), paint: radius(full).bg(primary).opacity(50) }
-  style stepTodo = { box: grow(1).h(1), paint: radius(full).bg(surface-2) }
-  style title = { text: fontSize(2xl).leading(tight) }
-  style titleSm = { text: fontSize(xl).leading(tight) }
-  style desc = { paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed) }
-  style descSm = { paint: fg(muted-foreground), text: fontSize(sm) }
-  style proseHost = { box: w(full).minW(0).overflowX(hidden) }
-  style lessonFoot = { box: shrink(0).padY(2).padX(4), paint: borderTWidth(1).borderT(border).bg(surface-1) }
-  style allLessons = { box: display(inline-flex).padY(1_5).padX(3), paint: radius(md).fg(muted-foreground), text: fontSize(sm).fontWeight(semibold), when: { hover: { paint: fg(foreground).bg(surface-2) } } }
-  style allLessonsSm = { paint: fg(muted-foreground), text: fontSize(xs) }
-  style playground = { box: grow(1).basis(0).minW(0).minH(0).pad(1), paint: bg(surface-0) }
-  style card = { box: grow(1).basis(0).minH(0).overflow(hidden), paint: borderWidth(1).border(border).radius(md).bg(surface-1) }
-  style cardBar = { box: shrink(0).padY(1).padX(2), paint: borderBWidth(1).borderB(border).bg(surface-1) }
-  style paneCol = { box: grow(1).minH(0).overflow(hidden) }
-  style diffBar = { box: shrink(0).padY(1).padX(2), paint: borderBWidth(1).borderB(border) }
-  style monoXs = { paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).tracking(wide) }
-  style diffShell = { box: grow(1).minH(0).position(relative).overflow(hidden) }
-  style diffAbs = { box: position(absolute).inset(0).overflowY(auto).overflowX(auto).w(full) }
-  style previewBand = { box: shrink(0).h(56).minH(48).overflow(hidden), paint: borderWidth(1).border(border).radius(md).bg(surface-1) }
-  style previewBandMobile = { box: shrink(0).h(40).minH(32).overflow(hidden), paint: borderWidth(1).border(border).radius(md).bg(surface-1) }
-  style previewBar = { box: shrink(0).padY(1).padX(2), paint: borderBWidth(1).borderB(border) }
-  style previewHost = { box: w(full).h(full).minH(0).overflow(auto).pad(4), paint: bg(surface-0) }
-  style console = { box: shrink(0).h(16).minH(16).padY(1).padX(2).overflowY(auto), paint: borderTWidth(1).borderT(border).bg(surface-0) }
-  style consoleMobile = { box: shrink(0).h(14).minH(14).padY(1).padX(2).overflowY(auto), paint: borderTWidth(1).borderT(border).bg(surface-0) }
-  style monoContents = { box: display(contents), text: fontFamily(mono).fontSize(xs) }
-  style ts = { paint: fg(muted-foreground).opacity(50) }
-  style logOk = { paint: fg(success) }
-  style logWarn = { paint: fg(warning) }
-  style logErr = { paint: fg(destructive) }
-  style logInfo = { paint: fg(muted-foreground) }
-  style logErrRow = { box: pad(1).padX(2), paint: bg(muted).radius(sm) }
-  style mobileHead = { box: shrink(0).padX(4).padY(3).maxH(40).overflowY(auto), paint: borderBWidth(1).borderB(border).bg(surface-1) }
-  style growMin = { box: grow(1).minH(0).overflow(hidden) }
+  style workbench = { box: size({ w: full, h: fill, min-w: 0, min-h: 0 }).overflow({ all: hidden }) }
+  style workbenchMobile = { box: size({ w: full, h: fill, min-h: 0 }).overflow({ all: hidden }) }
+  style lessonPane = { box: flow({ shrink: 1 }).size({ w: panel-max-w-md, min-w: 0, min-h: 0, max-w: panel-max-w-md }), paint: fill({ color: surface-1 }).border({ color: border, width: 1, edge: r }) }
+  style lessonScroll = { box: flow({ grow: 1 }).size({ min-h: 0 }).overflow({ x: hidden, y: auto }).space({ pad-x: 5, pad-y: 4 }) }
+  style tutLabel = { paint: ink({ color: primary }), text: type({ family: mono, size: xs, weight: medium, tracking: wide }) }
+  style countLabel = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs, tracking: wide }) }
+  style stepDone = { box: flow({ grow: 1 }).size({ h: 1 }), paint: radius(full).fill({ color: primary }) }
+  style stepCurrent = { box: flow({ grow: 1 }).size({ h: 1 }), paint: radius(full).fill({ color: primary }).filter({ opacity: 50 }) }
+  style stepTodo = { box: flow({ grow: 1 }).size({ h: 1 }), paint: radius(full).fill({ color: surface-2 }) }
+  style title = { text: type({ size: 2xl, leading: tight }) }
+  style titleSm = { text: type({ size: xl, leading: tight }) }
+  style desc = { paint: ink({ color: muted-foreground }), text: type({ size: sm, leading: relaxed }) }
+  style descSm = { paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
+  style proseHost = { box: size({ w: full, min-w: 0 }).overflow({ x: hidden }) }
+  style lessonFoot = { box: flow({ shrink: 0 }).space({ pad-x: 4, pad-y: 2 }), paint: border({ color: border, width: 1, edge: t }).fill({ color: surface-1 }) }
+  style allLessons = { box: flow({ display: inline-flex }).space({ pad-x: 3, pad-y: 1_5 }), paint: radius(md).ink({ color: muted-foreground }), text: type({ size: sm, weight: semibold }), when: { hover: { paint: ink({ color: foreground }).fill({ color: surface-2 }) } } }
+  style allLessonsSm = { paint: ink({ color: muted-foreground }), text: type({ size: xs }) }
+  style playground = { box: flow({ grow: 1 }).basis(0).size({ min-w: 0, min-h: 0 }).space({ pad: 1 }), paint: fill({ color: surface-0 }) }
+  style card = { box: flow({ grow: 1 }).basis(0).size({ min-h: 0 }).overflow({ all: hidden }), paint: border({ color: border, width: 1 }).radius(md).fill({ color: surface-1 }) }
+  style cardBar = { box: flow({ shrink: 0 }).space({ pad-x: 2, pad-y: 1 }), paint: border({ color: border, width: 1, edge: b }).fill({ color: surface-1 }) }
+  style paneCol = { box: flow({ grow: 1 }).size({ min-h: 0 }).overflow({ all: hidden }) }
+  style diffBar = { box: flow({ shrink: 0 }).space({ pad-x: 2, pad-y: 1 }), paint: border({ color: border, width: 1, edge: b }) }
+  style monoXs = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs, tracking: wide }) }
+  style diffShell = { box: flow({ grow: 1 }).size({ min-h: 0 }).place({ position: relative }).overflow({ all: hidden }) }
+  style diffAbs = { box: place({ position: absolute, inset: 0 }).overflow({ x: auto, y: auto }).size({ w: full }) }
+  style previewBand = { box: flow({ shrink: 0 }).size({ h: 56, min-h: 48 }).overflow({ all: hidden }), paint: border({ color: border, width: 1 }).radius(md).fill({ color: surface-1 }) }
+  style previewBandMobile = { box: flow({ shrink: 0 }).size({ h: 40, min-h: 32 }).overflow({ all: hidden }), paint: border({ color: border, width: 1 }).radius(md).fill({ color: surface-1 }) }
+  style previewBar = { box: flow({ shrink: 0 }).space({ pad-x: 2, pad-y: 1 }), paint: border({ color: border, width: 1, edge: b }) }
+  style previewHost = { box: size({ w: full, h: full, min-h: 0 }).overflow({ all: auto }).space({ pad: 4 }), paint: fill({ color: surface-0 }) }
+  style console = { box: flow({ shrink: 0 }).size({ h: 16, min-h: 16 }).space({ pad-x: 2, pad-y: 1 }).overflow({ y: auto }), paint: border({ color: border, width: 1, edge: t }).fill({ color: surface-0 }) }
+  style consoleMobile = { box: flow({ shrink: 0 }).size({ h: 14, min-h: 14 }).space({ pad-x: 2, pad-y: 1 }).overflow({ y: auto }), paint: border({ color: border, width: 1, edge: t }).fill({ color: surface-0 }) }
+  style monoContents = { box: flow({ display: contents }), text: type({ family: mono, size: xs }) }
+  style ts = { paint: ink({ color: muted-foreground }).filter({ opacity: 50 }) }
+  style logOk = { paint: ink({ color: success }) }
+  style logWarn = { paint: ink({ color: warning }) }
+  style logErr = { paint: ink({ color: destructive }) }
+  style logInfo = { paint: ink({ color: muted-foreground }) }
+  style logErrRow = { box: space({ pad: 1, pad-x: 2 }), paint: fill({ color: muted }).radius(sm) }
+  style mobileHead = { box: flow({ shrink: 0 }).space({ pad-x: 4, pad-y: 3 }).size({ max-h: 40 }).overflow({ y: auto }), paint: border({ color: border, width: 1, edge: b }).fill({ color: surface-1 }) }
+  style growMin = { box: flow({ grow: 1 }).size({ min-h: 0 }).overflow({ all: hidden }) }
 
   type LogLineProps = {
     ts: string
@@ -55,7 +55,7 @@
 </scope>
 
 <!--
-  h(fill) not h(full): shell is display:contents up the tree, so % height collapses.
+  size({ h: fill }) not size({ h: full }): shell is display:contents up the tree, so % height collapses.
   Tabs drive a signal; panes are plain grow columns (tab-panel pad ate the editor).
   tablet+: side-by-side; mobile/SSR else: stacked.
 -->
@@ -487,7 +487,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
           label="Tutorial preview"
           use:captureHost style(previewHost)></div>
       </column>
-      <!-- h(16) ≈ 4rem ≈ 5 mono lines; was maxH(7)=28px under a gap-4 column. -->
+      <!-- size({ h: 16 }) ≈ 4rem ≈ 5 mono lines; was size({ max-h: 7 })=28px under a gap-4 column. -->
       <column live="polite" label="Preview console" gap="0" style(console)>
         <span style(monoContents)>
           <for {logs() as line} key={line.id}>

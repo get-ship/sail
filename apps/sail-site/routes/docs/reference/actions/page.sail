@@ -2,13 +2,13 @@
   /docs/reference/actions — public use: registry from language-surface gen.
 -->
 <scope>
-  style root = { box: minW(0) }
-  style intro = { box: maxW(breakpoint-tablet) }
-  style eyebrow = { paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
-  style lead = { paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) }
-  style cardMin = { box: minW(0) }
-  style param = { paint: fg(muted-foreground) }
-  style cardDoc = { box: maxW(panel-max-w-sm), paint: fg(muted-foreground) }
+  style root = { box: size({ min-w: 0 }) }
+  style intro = { box: size({ max-w: breakpoint-tablet }) }
+  style eyebrow = { paint: ink({ color: accent }), text: type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
+  style lead = { paint: ink({ color: muted-foreground }), text: type({ size: lg, leading: relaxed }) }
+  style cardMin = { box: size({ min-w: 0 }) }
+  style param = { paint: ink({ color: muted-foreground }) }
+  style cardDoc = { box: size({ max-w: panel-max-w-sm }), paint: ink({ color: muted-foreground }) }
 </scope>
 
 <controller>

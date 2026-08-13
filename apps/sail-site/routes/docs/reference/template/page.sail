@@ -3,14 +3,14 @@
   bind: targets, foreign idioms, block vocabulary. From language-surface.gen.
 -->
 <scope>
-  style root = { box: minW(0) }
-  style intro = { box: maxW(breakpoint-tablet) }
-  style mutedBody = { box: maxW(breakpoint-tablet) }
-  style cardShell = { box: minW(0) }
-  style valueText = { box: maxW(panel-max-w-sm), paint: fg(muted-foreground) }
-  style muted = { paint: fg(muted-foreground) }
-  style banCode = { paint: fg(destructive) }
-  style directiveCode = { box: minW(40) }
+  style root = { box: size({ min-w: 0 }) }
+  style intro = { box: size({ max-w: breakpoint-tablet }) }
+  style mutedBody = { box: size({ max-w: breakpoint-tablet }) }
+  style cardShell = { box: size({ min-w: 0 }) }
+  style valueText = { box: size({ max-w: panel-max-w-sm }), paint: ink({ color: muted-foreground }) }
+  style muted = { paint: ink({ color: muted-foreground }) }
+  style banCode = { paint: ink({ color: destructive }) }
+  style directiveCode = { box: size({ min-w: 40 }) }
 </scope>
 
 <controller>

@@ -12,16 +12,14 @@
   }
 
   style host = {
-    box: display(block).position(relative).w(full),
+    box: flow({ display: block }).place({ position: relative }).size({ w: full }),
     paint: group(),
-  }
+}
   style copyBtn = {
-    box: position(absolute).top(3).right(3).z(2),
-    paint: bg(surface-0).fg(muted-foreground).radius(sm).opacity(0).pointerEvents(none).shadow(xs),
-    when: {
-      group-hover: { paint: opacity(100).pointerEvents(auto) },
-    },
-  }
+    box: place({ position: absolute, top: 3, right: 3, z: 2 }),
+    paint: fill({ color: surface-0 }).ink({ color: muted-foreground }).radius(sm).filter({ opacity: 0 }).pointerEvents(none).elevation(xs),
+    when: { group-hover: { paint: filter({ opacity: 100 }).pointerEvents(auto) } },
+}
 </scope>
 
 <controller>

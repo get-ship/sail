@@ -2,8 +2,8 @@
   Third reader of the shared tally store (State chapter demo).
 -->
 <scope>
-  style line = { paint: fg(muted-foreground), text: fontSize(sm) }
-  style total = { paint: fg(foreground) }
+  style line = { paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
+  style total = { paint: ink({ color: foreground }) }
 </scope>
 
 <controller>

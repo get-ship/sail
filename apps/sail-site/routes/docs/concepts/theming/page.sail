@@ -3,12 +3,12 @@
 -->
 
 <scope>
-  style page = { box: maxW(breakpoint-tablet).mx(auto) }
-  style eyebrow = { box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
-  style lead = { paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) }
-  style list = { box: padL(6), paint: list(decimal) }
-  style footNote = { box: mt(4), paint: fg(muted-foreground), text: fontSize(sm) }
-  style footNav = { box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) }
+  style page = { box: size({ max-w: breakpoint-tablet }).space({ mx: auto }) }
+  style eyebrow = { box: space({ mb: 2 }), paint: ink({ color: accent }), text: type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
+  style lead = { paint: ink({ color: muted-foreground }), text: type({ size: lg, leading: relaxed }) }
+  style list = { box: space({ pad-l: 6 }), paint: list(decimal) }
+  style footNote = { box: space({ mt: 4 }), paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
+  style footNav = { box: space({ pad-t: 4, mt: 8 }), paint: border({ color: border, width: 1, edge: t }) }
 </scope>
 
 <controller>
@@ -96,10 +96,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       <code>--destructive</code>, <code>--info</code>, <code>--accent</code>,
       <code>--muted</code> (and their <code>-foreground</code> partners).
       Status UI spends these directly via Style
-      (<code>style&#40;&#123; paint: bg(destructive) &#125;&#41;</code>,
+      (<code>style&#40;&#123; paint: fill({ color: destructive }) &#125;&#41;</code>,
       <code>style&#40;&#123; paint: colorMix(primary, 15) &#125;&#41;</code>).
       A color-group typed prop (often named <code>tone</code>, type <code>Tone</code>)
-      binds in Style paint (<code>bg(tone)</code>, <code>fg(tone.foreground)</code>) —
+      binds in Style paint (<code>fill({ color: tone })</code>, <code>ink({ color: tone.foreground })</code>) —
       type-keyed, not a special channel; rest paint is omit the attribute.
     </li>
     <li>

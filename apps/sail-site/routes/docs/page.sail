@@ -3,16 +3,16 @@
 -->
 
 <scope>
-  style page = { box: maxW(breakpoint-tablet).mx(auto) }
-  style intro = { box: maxW(breakpoint-tablet) }
-  style eyebrow = { paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
-  style lead = { paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) }
-  style section = { box: mt(2) }
-  style cardGrid = { box: w(full) }
-  style card = { box: pad(4).h(full), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) }
-  style cardTitle = { text: fontSize(md).fontWeight(semibold) }
-  style cardBody = { paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed) }
-  style ctaRow = { box: mt(4).padT(4), paint: borderTWidth(1).borderT(border) }
+  style page = { box: size({ max-w: breakpoint-tablet }).space({ mx: auto }) }
+  style intro = { box: size({ max-w: breakpoint-tablet }) }
+  style eyebrow = { paint: ink({ color: accent }), text: type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
+  style lead = { paint: ink({ color: muted-foreground }), text: type({ size: lg, leading: relaxed }) }
+  style section = { box: space({ mt: 2 }) }
+  style cardGrid = { box: size({ w: full }) }
+  style card = { box: space({ pad: 4 }).size({ h: full }), paint: border({ color: border, width: 1 }).radius(lg).fill({ color: surface-1 }) }
+  style cardTitle = { text: type({ size: md, weight: semibold }) }
+  style cardBody = { paint: ink({ color: muted-foreground }), text: type({ size: sm, leading: relaxed }) }
+  style ctaRow = { box: space({ pad-t: 4, mt: 4 }), paint: border({ color: border, width: 1, edge: t }) }
 </scope>
 
 <column gap="6" style(page)>

@@ -54,11 +54,11 @@ export default controller(() => {
 </controller>
 
 <scope>
-  style face = { box: pad(6), paint: bg(surface-1).borderWidth(1).border(border).radius(lg) }
-  style clockFace = { text: fontSize(4xl).tracking(tight) }
-  style lapRow = { box: padX(3).padY(1), paint: bg(surface-1).radius(md) }
-  style lapMeta = { paint: fg(muted-foreground) }
-  style lapAt = { text: fontSize(sm) }
+  style face = { box: space({ pad: 6 }), paint: fill({ color: surface-1 }).border({ color: border, width: 1 }).radius(lg) }
+  style clockFace = { text: type({ size: 4xl, tracking: tight }) }
+  style lapRow = { box: space({ pad-x: 3, pad-y: 1 }), paint: fill({ color: surface-1 }).radius(md) }
+  style lapMeta = { paint: ink({ color: muted-foreground }) }
+  style lapAt = { text: type({ size: sm }) }
 </scope>
 
 <column gap="4">

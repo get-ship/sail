@@ -3,10 +3,10 @@
   Tier A: compiler tables. Tier B: author-surface.json → runtime-surface.gen.
 -->
 <scope>
-  style root = { box: minW(0) }
-  style intro = { box: maxW(breakpoint-tablet) }
-  style cardShell = { box: minW(0).h(full) }
-  style muted = { paint: fg(muted-foreground) }
+  style root = { box: size({ min-w: 0 }) }
+  style intro = { box: size({ max-w: breakpoint-tablet }) }
+  style cardShell = { box: size({ h: full, min-w: 0 }) }
+  style muted = { paint: ink({ color: muted-foreground }) }
 </scope>
 
 <controller>

@@ -7,14 +7,14 @@
     city: string
   }
 
-  style board = { box: pad(4) }
-  style boardTitle = { text: fontSize(sm).textCase(uppercase).tracking(wide) }
-  style departedBadge = { box: padX(1), paint: fg(muted-foreground).radius(sm), text: fontSize(xs).fontFamily(mono), when: { stateLive: { paint: bg(primary).fg(primary-foreground) } } }
-  style list = { box: mt(3), text: fontFamily(mono).fontSize(sm) }
-  style city = { text: truncate() }
-  style stage = { box: pad(3), paint: borderWidth(1).border(border).opacity(50), when: { stateLive: { paint: opacity(100).border(primary).bg(muted) } } }
-  style stageTitle = { text: fontSize(sm) }
-  style stageBody = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
+  style board = { box: space({ pad: 4 }) }
+  style boardTitle = { text: type({ size: sm, tracking: wide, case: uppercase }) }
+  style departedBadge = { box: space({ pad-x: 1 }), paint: ink({ color: muted-foreground }).radius(sm), text: type({ family: mono, size: xs }), when: { stateLive: { paint: fill({ color: primary }).ink({ color: primary-foreground }) } } }
+  style list = { box: space({ mt: 3 }), text: type({ family: mono, size: sm }) }
+  style city = { text: type({ wrap: truncate }) }
+  style stage = { box: space({ pad: 3 }), paint: border({ color: border, width: 1 }).filter({ opacity: 50 }), when: { stateLive: { paint: filter({ opacity: 100 }).border({ color: primary }).fill({ color: muted }) } } }
+  style stageTitle = { text: type({ size: sm }) }
+  style stageBody = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs }) }
 </scope>
 
 <controller>

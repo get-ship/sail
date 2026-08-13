@@ -8,7 +8,7 @@
 -->
 
 <scope>
-  style page = { box: maxW(breakpoint-desktop).mx(auto).w(full) }
+  style page = { box: size({ w: full, max-w: breakpoint-desktop }).space({ mx: auto }) }
   style emptyEnter = { animate: enter({ opacity: 'fade', translate-y: 'spring:snappy' }) }
 </scope>
 

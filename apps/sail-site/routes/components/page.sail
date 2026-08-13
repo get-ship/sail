@@ -8,33 +8,33 @@
 -->
 
 <scope>
-  style page = { box: maxW(breakpoint-desktop).mx(auto).padX(4).padY(4).w(full), when: { tablet: { box: padX(6).padY(5) } } }
+  style page = { box: size({ w: full, max-w: breakpoint-desktop }).space({ pad-x: 4, pad-y: 4, mx: auto }), when: { tablet: { box: space({ pad-x: 6, pad-y: 5 }) } } }
   // Tooltips/hover-cards escape the tile; media stages clip themselves.
-  style tile = { box: overflow(visible) }
-  style tileCol = { box: h(full).overflow(visible) }
+  style tile = { box: overflow({ all: visible }) }
+  style tileCol = { box: size({ h: full }).overflow({ all: visible }) }
   // <row> preview: grid max-content tracks zero out w-full progress/meter.
-  style preview = { box: pad(4).minH(11), paint: borderBWidth(1).borderB(border-subtle).bg(surface-0) }
-  style tileMeta = { box: padX(3).padY(2) }
-  style tileName = { text: fontSize(sm).fontWeight(semibold).fontFamily(mono) }
-  style cat = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
-  style mutedSm = { box: maxW(panel-max-w-lg), paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed) }
-  style eyebrow = { box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
-  style sectionTitle = { box: mt(2), text: fontSize(sm).fontWeight(semibold) }
+  style preview = { box: space({ pad: 4 }).size({ min-h: 11 }), paint: border({ color: border-subtle, width: 1, edge: b }).fill({ color: surface-0 }) }
+  style tileMeta = { box: space({ pad-x: 3, pad-y: 2 }) }
+  style tileName = { text: type({ family: mono, size: sm, weight: semibold }) }
+  style cat = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs }) }
+  style mutedSm = { box: size({ max-w: panel-max-w-lg }), paint: ink({ color: muted-foreground }), text: type({ size: sm, leading: relaxed }) }
+  style eyebrow = { box: space({ mb: 2 }), paint: ink({ color: accent }), text: type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
+  style sectionTitle = { box: space({ mt: 2 }), text: type({ size: sm, weight: semibold }) }
   // Pack chip strip (row flex + overflowX); avoid column base that zeros the grid.
-  style packStack = { box: display(flex).flexDir(row).gap(2).overflowX(auto).padB(1).maxW(full) }
-  style packBtn = { box: pad(0).overflow(hidden), paint: radius(md).cursor(pointer).borderWidth(1).border(solid).border(border).bg(transparent), text: textAlign(start).whitespace(nowrap), when: { hover: { paint: bg(hover-bg) }, pressed: { paint: bg(muted).border(primary).shadow(sm) } } }
-  style packLabel = { text: fontSize(sm) }
-  style packCount = { paint: fg(primary), text: fontSize(xs).fontFamily(mono) }
-  style railNote = { paint: fg(muted-foreground), text: fontSize(xs).leading(relaxed) }
-  style search = { box: w(full).maxW(panel-max-w-sm) }
-  style mutedXs = { paint: fg(muted-foreground), text: fontSize(xs) }
-  style count = { paint: fg(muted-foreground), text: fontSize(sm).fontFamily(mono) }
-  style dormant = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono).textAlign(center) }
-  style fieldLabel = { text: fontSize(sm).fontWeight(medium) }
+  style packStack = { box: flow({ display: flex, dir: row }).gap(2).overflow({ x: auto }).space({ pad-b: 1 }).size({ max-w: full }) }
+  style packBtn = { box: space({ pad: 0 }).overflow({ all: hidden }), paint: radius(md).cursor(pointer).border({ color: border, width: 1, style: solid }).fill({ color: transparent }), text: type({ align: start, wrap: nowrap }), when: { hover: { paint: fill({ color: hover-bg }) }, pressed: { paint: fill({ color: muted }).border({ color: primary }).elevation(sm) } } }
+  style packLabel = { text: type({ size: sm }) }
+  style packCount = { paint: ink({ color: primary }), text: type({ family: mono, size: xs }) }
+  style railNote = { paint: ink({ color: muted-foreground }), text: type({ size: xs, leading: relaxed }) }
+  style search = { box: size({ w: full, max-w: panel-max-w-sm }) }
+  style mutedXs = { paint: ink({ color: muted-foreground }), text: type({ size: xs }) }
+  style count = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: sm }) }
+  style dormant = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs, align: center }) }
+  style fieldLabel = { text: type({ size: sm, weight: medium }) }
   // Definite box: CE host is display:contents — without height the img collapses.
-  style mediaFrame = { box: w(full).h(40).minH(40).overflow(hidden), paint: radius(md).bg(muted).borderWidth(1).border(border) }
-  style mediaStage = { box: w(full).h(full).minH(40) }
-  style catRow = { box: overflowX(auto).maxW(full) }
+  style mediaFrame = { box: size({ w: full, h: 40, min-h: 40 }).overflow({ all: hidden }), paint: radius(md).fill({ color: muted }).border({ color: border, width: 1 }) }
+  style mediaStage = { box: size({ w: full, h: full, min-h: 40 }) }
+  style catRow = { box: overflow({ x: auto }).size({ max-w: full }) }
 </scope>
 
 <controller>
@@ -148,21 +148,21 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 })
 </controller>
 
-<column gap="5" style(page, { box: w(full).minW(0) })>
+<column gap="5" style(page, { box: size({ w: full, min-w: 0 }) })>
   <column gap="1">
     <p style(eyebrow)>Components</p>
-    <h1 style({ text: fontSize(2xl).fontWeight(semibold).tracking(tight) })>Catalog</h1>
+    <h1 style({ text: type({ size: 2xl, weight: semibold, tracking: tight }) })>Catalog</h1>
     <p style(mutedSm)>
       Every tile is a live element — click a name for API, variants, and usage.
       Packs other than Component primitives load when you select them.
     </p>
   </column>
 
-  <column gap="2" style({ box: w(full).minW(0) })>
+  <column gap="2" style({ box: size({ w: full, min-w: 0 }) })>
     <p style(eyebrow)>Packs</p>
     <div label="Component packs" style(packStack)>
       <for {packs() as p} key={p.id}>
-        <button on:click={() => pickPack(p.id)} pressed={packSel() === p.id ? 'true' : 'false'} style(packBtn, { box: shrink(0) })>
+        <button on:click={() => pickPack(p.id)} pressed={packSel() === p.id ? 'true' : 'false'} style(packBtn, { box: flow({ shrink: 0 }) })>
 
           <row gap="2" align="center" style(tileMeta)>
             <strong style(packLabel)>{p.label}</strong>
@@ -176,7 +176,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     </p>
   </column>
 
-  <column gap="4" style({ box: w(full).minW(0) })>
+  <column gap="4" style({ box: size({ w: full, min-w: 0 }) })>
     <row gap="2" align="center" justify="between">
       <row gap="2" align="center">
         <if {countLabel()}>
@@ -197,7 +197,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         <for {visibleList() as e} key={e.key}>
           <card padding="none" tile={e.tag} live={e.live ? 'true' : null} style(tile)>
             <column gap="0" style(tileCol)>
-              <row align="center" justify="center" style(preview, { box: grow(1).w(full) })>
+              <row align="center" justify="center" style(preview, { box: flow({ grow: 1 }).size({ w: full }) })>
                 <if {!e.live}>
                   <p style(dormant)>Select pack in the rail to mount</p>
                 {else-if {e.tag === 'button'} => <row gap="2" align="center">
@@ -208,24 +208,24 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                     <a href="#">text link</a>
                     <a href="#" variant="solid" tone="primary">solid</a>
                     <a href="#" variant="outline">outline</a>
-                  </row>}{else-if {e.tag === 'input'} => <column gap="2" style({ box: w(full) })>
+                  </row>}{else-if {e.tag === 'input'} => <column gap="2" style({ box: size({ w: full }) })>
                     <input type="email" size="sm" placeholder="you@company.com" bind:value={email} />
                     <row gap="2" align="center">
                       <checkbox checked />
                       <checkbox />
                       <checkbox disabled />
                     </row>
-                  </column>}{else-if {e.tag === 'textarea'} => <column gap="1" style({ box: w(full) })>
+                  </column>}{else-if {e.tag === 'textarea'} => <column gap="1" style({ box: size({ w: full }) })>
                     <label style(fieldLabel)>Release notes</label>
                     <textarea size="sm" rows="2" placeholder="What changed in this ship?" />
-                  </column>}{else-if {e.tag === 'select'} => <column gap="1" style({ box: w(full) })>
+                  </column>}{else-if {e.tag === 'select'} => <column gap="1" style({ box: size({ w: full }) })>
                     <label style(fieldLabel)>Team</label>
                     <select bind:value={team}>
                       <option>Engineering</option>
                       <option>Design</option>
                       <option>Research</option>
                     </select>
-                  </column>}{else-if {e.tag === 'combobox'} => <column gap="1" style({ box: w(full) })>
+                  </column>}{else-if {e.tag === 'combobox'} => <column gap="1" style({ box: size({ w: full }) })>
                     <label style(fieldLabel)>Framework</label>
                     <combobox placeholder="Filter…">
                       <option value="sail">Sail</option>
@@ -233,10 +233,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                       <option value="svelte">Svelte</option>
                     </combobox>
                   </column>}{else-if {e.tag === 'checkbox'} => <column gap="2">
-                    <label style({ text: fontSize(sm) })>
+                    <label style({ text: type({ size: sm }) })>
                       <checkbox bind:checked={agreed} /> Email me product updates
                     </label>
-                    <label style({ paint: fg(muted-foreground), text: fontSize(sm) })>
+                    <label style({ paint: ink({ color: muted-foreground }), text: type({ size: sm }) })>
                       <checkbox disabled /> Admin-only (disabled)
                     </label>
                     <p style(mutedXs)>input type=checkbox — not a separate tag</p>
@@ -250,17 +250,17 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                   </radio-group>}{else-if {e.tag === 'switch'} => <row gap="2" align="center">
                     <switch bind:checked={notify}></switch>
                     <p style(mutedXs)>{notify() ? 'Notifications on' : 'Notifications off'}</p>
-                  </row>}{else-if {e.tag === 'slider'} => <column gap="1" style({ box: w(full) })>
+                  </row>}{else-if {e.tag === 'slider'} => <column gap="1" style({ box: size({ w: full }) })>
                     <row justify="between" align="center">
                       <span style(fieldLabel)>Volume</span>
                       <span style(cat)>{volume()}%</span>
                     </row>
-                    <slider bind:value={volume} style({ box: w(full) })></slider>
+                    <slider bind:value={volume} style({ box: size({ w: full }) })></slider>
                   </column>}{else-if {e.tag === 'toggle-group'} => <toggle-group value="day" label="Range">
                     <toggle value="day">Day</toggle>
                     <toggle value="week">Week</toggle>
                     <toggle value="month">Month</toggle>
-                  </toggle-group>}{else-if {e.tag === 'field'} => <field style({ box: w(full) })>
+                  </toggle-group>}{else-if {e.tag === 'field'} => <field style({ box: size({ w: full }) })>
                     <label slot="label">Email</label>
                     <input type="email" placeholder="you@ship.dev" />
                     <span slot="hint" style(mutedXs)>We’ll never share this.</span>
@@ -270,26 +270,26 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                   </column>}{else-if {e.tag === 'fieldset'} => <fieldset>
                     <legend>Billing options</legend>
                     <column gap="1">
-                      <label style({ text: fontSize(sm) })><checkbox checked /> Include trials</label>
-                      <label style({ text: fontSize(sm) })><checkbox /> Annual discount</label>
+                      <label style({ text: type({ size: sm }) })><checkbox checked /> Include trials</label>
+                      <label style({ text: type({ size: sm }) })><checkbox /> Annual discount</label>
                     </column>
-                  </fieldset>}{else-if {e.tag === 'dropzone'} => <div dropzone style({  box: w(full).minH(14).pad(3)  })>
-                    <p style({ text: fontSize(sm).fontWeight(medium) })>Drop manifests here</p>
+                  </fieldset>}{else-if {e.tag === 'dropzone'} => <div dropzone style({  box: size({ w: full, min-h: 14 }).space({ pad: 3 })  })>
+                    <p style({ text: type({ size: sm, weight: medium }) })>Drop manifests here</p>
                     <p style(mutedXs)>or click to browse · .json, .yaml</p>
-                  </div>}{else-if {e.tag === 'theme-picker'} => <theme-picker></theme-picker>}{else-if {e.tag === 'ticker'} => <ticker duration="normal" style({ box: w(full).overflow(hidden).padY(2), paint: bg(muted).radius(md) })>
-                    <p style({ box: padX(3), paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono).whitespace(nowrap) })>tokens · signals · a11y · hot reload · SSR ·&nbsp;</p>
-                  </ticker>}{else-if {e.tag === 'alert'} => <alert tone="success"><strong>Deployed.</strong> v0.4.2 is live on production.</alert>}{else-if {e.tag === 'progress'} => <column gap="1" style({ box: w(full) })>
+                  </div>}{else-if {e.tag === 'theme-picker'} => <theme-picker></theme-picker>}{else-if {e.tag === 'ticker'} => <ticker duration="normal" style({ box: size({ w: full }).overflow({ all: hidden }).space({ pad-y: 2 }), paint: fill({ color: muted }).radius(md) })>
+                    <p style({ box: space({ pad-x: 3 }), paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs, wrap: nowrap }) })>tokens · signals · a11y · hot reload · SSR ·&nbsp;</p>
+                  </ticker>}{else-if {e.tag === 'alert'} => <alert tone="success"><strong>Deployed.</strong> v0.4.2 is live on production.</alert>}{else-if {e.tag === 'progress'} => <column gap="1" style({ box: size({ w: full }) })>
                     <span style(mutedXs)>Uploading assets… 62%</span>
-                    <progress value="0.62" style({ box: w(full) })></progress>
-                  </column>}{else-if {e.tag === 'meter'} => <column gap="1" style({ box: w(full) })>
+                    <progress value="0.62" style({ box: size({ w: full }) })></progress>
+                  </column>}{else-if {e.tag === 'meter'} => <column gap="1" style({ box: size({ w: full }) })>
                     <span style(mutedXs)>Storage used</span>
-                    <meter value="0.7" min="0" max="1" style({ box: w(full) })></meter>
+                    <meter value="0.7" min="0" max="1" style({ box: size({ w: full }) })></meter>
                   </column>}{else-if {e.tag === 'spinner'} => <row gap="2" align="center">
                     <spinner></spinner>
                     <span style(mutedXs)>Syncing…</span>
-                  </row>}{else-if {e.tag === 'skeleton'} => <column gap="2" style({ box: w(full) })>
-                    <skeleton size="md" style({ box: w(full).h(3) })></skeleton>
-                    <skeleton size="sm" style({ box: w(28).h(2) })></skeleton>
+                  </row>}{else-if {e.tag === 'skeleton'} => <column gap="2" style({ box: size({ w: full }) })>
+                    <skeleton size="md" style({ box: size({ w: full, h: 3 }) })></skeleton>
+                    <skeleton size="sm" style({ box: size({ w: 28, h: 2 }) })></skeleton>
                   </column>}{else-if {e.tag === 'empty-state'} => <empty-state>
                     <strong slot="title">No deploys yet</strong>
                     Ship something from the CLI to populate this list.
@@ -298,7 +298,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                     Retry in a moment — the registry is slow.
                   </error-state>}{else-if {e.tag === 'error-boundary'} => <error-boundary>
                     <p style(mutedXs)>Child tree isolated from render faults.</p>
-                  </error-boundary>}{else-if {e.tag === 'toast'} => <column gap="2" style({ box: w(full).minW(0) })>
+                  </error-boundary>}{else-if {e.tag === 'toast'} => <column gap="2" style({ box: size({ w: full, min-w: 0 }) })>
                     <button type="button" size="sm" variant="ghost" on:click={pushCatalogToast} toast-show>Show toast</button>
                     <for {catalogToastItems() as t} key={t.key}>
                       <toast tone="primary" duration="0" on-dismiss={onCatalogToastDismiss}>Invite sent to ada@ship.dev</toast>
@@ -313,7 +313,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                     </if>
                     <chip size="sm" variant="outline">a11y</chip>
                     <chip size="sm" variant="outline">ssr</chip>
-                  </row>}{else-if {e.tag === 'card'} => <card interactive style({ box: pad(3).w(full) })>
+                  </row>}{else-if {e.tag === 'card'} => <card interactive style({ box: space({ pad: 3 }).size({ w: full }) })>
                     <strong>Harbor Signals</strong>
                     <p style(mutedXs)>4 tracks · last played today</p>
                   </card>}{else-if {e.tag === 'avatar'} => <row gap="2" align="center">
@@ -324,27 +324,27 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                     <icon name="check"></icon>
                     <icon name="search"></icon>
                     <icon name="settings"></icon>
-                  </row>}{else-if {e.tag === 'separator'} => <column gap="2" style({ box: w(full) })>
+                  </row>}{else-if {e.tag === 'separator'} => <column gap="2" style({ box: size({ w: full }) })>
                     <p style(mutedXs)>Section A</p>
-                    <separator style({ box: w(full) })></separator>
+                    <separator style({ box: size({ w: full }) })></separator>
                     <p style(mutedXs)>Section B</p>
                     <row gap="2" align="center">
                       <span style(mutedXs)>Left</span>
                       <separator orientation="vertical"></separator>
                       <span style(mutedXs)>Right</span>
                     </row>
-                  </column>}{else-if {e.tag === 'accordion'} => <accordion style({ box: w(full) })>
-                    <span slot="trigger" style({ text: fontSize(sm).fontWeight(semibold) })>Webhook endpoints</span>
+                  </column>}{else-if {e.tag === 'accordion'} => <accordion style({ box: size({ w: full }) })>
+                    <span slot="trigger" style({ text: type({ size: sm, weight: semibold }) })>Webhook endpoints</span>
                     <p style(mutedXs)>POST /v1/hooks · signed with your workspace secret.</p>
                   </accordion>}{else-if {e.tag === 'kbd'} => <row gap="1" align="center">
                     <kbd>Ctrl</kbd>
                     <span style(mutedXs)>+</span>
                     <kbd>K</kbd>
-                  </row>}{else-if {e.tag === 'code-block'} => <code-block code={'const x = signal(1)'} lang="ts" style({ box: w(full).minW(0) })></code-block>}{else-if {e.tag === 'prose'} => <prose><p>Body type with <strong>emphasis</strong>, <code>inline()</code>, and lists — no class soup.</p></prose>}{else-if {e.tag === 'tooltip'} => <!-- placement bottom so the bubble stays inside the tile band -->
+                  </row>}{else-if {e.tag === 'code-block'} => <code-block code={'const x = signal(1)'} lang="ts" style({ box: size({ w: full, min-w: 0 }) })></code-block>}{else-if {e.tag === 'prose'} => <prose><p>Body type with <strong>emphasis</strong>, <code>inline()</code>, and lists — no class soup.</p></prose>}{else-if {e.tag === 'tooltip'} => <!-- placement bottom so the bubble stays inside the tile band -->
                   <tooltip content="Copy URL" placement="bottom">
-                    <span style({ paint: fg(muted-foreground).borderBWidth(1).borderB(border).border(dashed).cursor(help), text: fontSize(sm) })>ship.dev/d/ab12</span>
+                    <span style({ paint: ink({ color: muted-foreground }).border({ color: border, width: 1, style: dashed, edge: b }).cursor(help), text: type({ size: sm }) })>ship.dev/d/ab12</span>
                   </tooltip>}{else-if {e.tag === 'hover-card'} => <column gap="2" align="center">
-                    <a href="#" popovertarget="grid-hc" style({ paint: fg(primary), text: fontSize(sm) })>@ada</a>
+                    <a href="#" popovertarget="grid-hc" style({ paint: ink({ color: primary }), text: type({ size: sm }) })>@ada</a>
                     <hover-card id="grid-hc">
                       <row gap="2" align="center">
                         <avatar name="Ada Lovelace" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=64&h=64&fit=crop&auto=format&q=80" size="sm"></avatar>
@@ -358,9 +358,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                     <button size="sm" variant="outline" popovertarget="grid-pop">Filters</button>
                     <popover id="grid-pop">
                       <column gap="2">
-                        <p style({ text: fontSize(sm).fontWeight(medium) })>Status</p>
-                        <label style({ text: fontSize(sm) })><checkbox checked /> Healthy</label>
-                        <label style({ text: fontSize(sm) })><checkbox /> Failed</label>
+                        <p style({ text: type({ size: sm, weight: medium }) })>Status</p>
+                        <label style({ text: type({ size: sm }) })><checkbox checked /> Healthy</label>
+                        <label style({ text: type({ size: sm }) })><checkbox /> Failed</label>
                       </column>
                     </popover>
                   </column>}{else-if {e.tag === 'dropdown'} => <column gap="2" align="center">
@@ -371,7 +371,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                       <menu-item value="archive">Archive</menu-item>
                     </dropdown>
                   </column>}{else-if {e.tag === 'context-menu'} => <column gap="2" align="center">
-                    <p id="grid-cm-target" style({ box: pad(3), paint: fg(muted-foreground).borderWidth(1).border(border).border(dashed).radius(md), text: fontSize(sm) })>Right-click this card</p>
+                    <p id="grid-cm-target" style({ box: space({ pad: 3 }), paint: ink({ color: muted-foreground }).border({ color: border, width: 1, style: dashed }).radius(md), text: type({ size: sm }) })>Right-click this card</p>
                     <context-menu for="grid-cm-target" id="grid-cm">
                       <menu-item value="copy">Copy id</menu-item>
                       <menu-item value="paste">Paste</menu-item>
@@ -392,7 +392,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                         <button command="close" commandfor="grid-dlg" variant="solid" tone="primary" size="sm">Send invite</button>
                       </footer>
                     </dialog>
-                  </column>}{else-if {e.tag === 'tabs'} => <tabs style({ box: w(full) })>
+                  </column>}{else-if {e.tag === 'tabs'} => <tabs style({ box: size({ w: full }) })>
                     <tab-list>
                       <tab>Overview</tab>
                       <tab>Metrics</tab>
@@ -407,24 +407,24 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                     <page value="1">1</page>
                     <page value="2">2</page>
                     <page value="3">3</page>
-                  </pagination>}{else-if {e.tag === 'navbar'} => <navbar bordered style({ box: w(full) })>
-                    <strong slot="brand" style({ text: fontSize(sm) })>Harbor</strong>
-                    <span style({ box: padX(2).padY(1), paint: radius(md).fg(muted-foreground), text: fontSize(sm) })>Docs</span>
-                    <span style({ box: padX(2).padY(1), paint: radius(md).bg(muted), text: fontSize(sm).fontWeight(medium) })>App</span>
-                  </navbar>}{else-if {e.tag === 'table'} => <table style({ box: w(full) })>
+                  </pagination>}{else-if {e.tag === 'navbar'} => <navbar bordered style({ box: size({ w: full }) })>
+                    <strong slot="brand" style({ text: type({ size: sm }) })>Harbor</strong>
+                    <span style({ box: space({ pad-x: 2, pad-y: 1 }), paint: radius(md).ink({ color: muted-foreground }), text: type({ size: sm }) })>Docs</span>
+                    <span style({ box: space({ pad-x: 2, pad-y: 1 }), paint: radius(md).fill({ color: muted }), text: type({ size: sm, weight: medium }) })>App</span>
+                  </navbar>}{else-if {e.tag === 'table'} => <table style({ box: size({ w: full }) })>
                     <thead><tr><th>Service</th><th>Status</th></tr></thead>
                     <tbody>
                       <tr><td>api</td><td>healthy</td></tr>
                       <tr><td>worker</td><td>degraded</td></tr>
                     </tbody>
-                  </table>}{else-if {e.tag === 'layout'} => <row gap="2" style({ box: w(full) })>
-                    <div style({  box: grow(1).pad(2), paint: bg(muted).radius(sm)  })>                      <span style({ box: display(contents), text: fontSize(xs).fontFamily(mono) })>                        main
+                  </table>}{else-if {e.tag === 'layout'} => <row gap="2" style({ box: size({ w: full }) })>
+                    <div style({  box: flow({ grow: 1 }).space({ pad: 2 }), paint: fill({ color: muted }).radius(sm)  })>                      <span style({ box: flow({ display: contents }), text: type({ family: mono, size: xs }) })>                        main
                       </span>
 </div>
-                    <div style({ box: pad(2).w(16), paint: bg(muted).radius(sm) })>                      <span style({ box: display(contents), text: fontSize(xs).fontFamily(mono) })>                        aside
+                    <div style({ box: space({ pad: 2 }).size({ w: 16 }), paint: fill({ color: muted }).radius(sm) })>                      <span style({ box: flow({ display: contents }), text: type({ family: mono, size: xs }) })>                        aside
                       </span>
 </div>
-                  </row>}{else-if {e.tag === 'scroll-area'} => <scroll-area style({ box: h(32).w(full).minH(32).pad(3), paint: borderWidth(1).border(border).radius(md).bg(surface-0) })>
+                  </row>}{else-if {e.tag === 'scroll-area'} => <scroll-area style({ box: size({ w: full, h: 32, min-h: 32 }).space({ pad: 3 }), paint: border({ color: border, width: 1 }).radius(md).fill({ color: surface-0 }) })>
                     <column gap="2">
                       <p style(mutedXs)>Build 1842 · shipped · 14:02</p>
                       <p style(mutedXs)>Build 1841 · shipped · 11:40</p>
@@ -435,13 +435,13 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                     </column>
                   </scroll-area>}{else-if {e.tag === 'sail-sparkline'} => <sail-sparkline data="2,5,3,8,4,6,7" width="120" height="40"></sail-sparkline>}{else-if {e.tag === 'sail-area-chart'} => <sail-area-chart series='[{"name":"a","data":[2,4,3,5]}]' labels="Q1,Q2,Q3,Q4" width="160" height="60"></sail-area-chart>}{else-if {e.tag === 'sail-bar-chart'} => <sail-bar-chart data="2,5,3,8,4" labels="A,B,C,D,E" width="160" height="60"></sail-bar-chart>}{else-if {e.tag === 'sail-donut'} => <sail-donut data='[{"label":"a","value":40},{"label":"b","value":30},{"label":"c","value":30}]' diameter="80" thickness="10"></sail-donut>}{else-if {e.tag === 'sail-gauge'} => <sail-gauge value="72" diameter="80" thickness="10"></sail-gauge>}{else-if {e.tag === 'sail-heatmap'} => <sail-heatmap rows="3" cols="5" values="1,2,3,4,3,4,5,6,5,4,3,2,1,2,3" cell-size="18" gap="3" tone="primary"></sail-heatmap>}{else-if {e.tag === 'sail-line-chart'} => <sail-line-chart series='[{"name":"a","data":[2,4,3,5]}]' labels="Q1,Q2,Q3,Q4" width="160" height="60"></sail-line-chart>}{else-if {e.tag === 'sail-media-image'} => <div style(mediaFrame)>
                     <sail-media-image src={DEMO_PHOTO} alt="Mountain lake at dusk" fit="cover" zoomable={false} style(mediaStage)></sail-media-image>
-                  </div>}{else-if {e.tag === 'sail-media-av'} => <sail-media-av></sail-media-av>}{else-if {e.tag === 'sail-code-editor'} => <sail-code-editor value={editorSample()} language="javascript" line-numbers></sail-code-editor>}{else-if {e.tag === 'sail-mermaid'} => <sail-mermaid value="graph TD; A[Idea]-->B[Build]; B-->C[Ship]"></sail-mermaid>}{else-if {e.tag === 'sail-message'} => <column gap="2" style({ box: w(full) })>
+                  </div>}{else-if {e.tag === 'sail-media-av'} => <sail-media-av></sail-media-av>}{else-if {e.tag === 'sail-code-editor'} => <sail-code-editor value={editorSample()} language="javascript" line-numbers></sail-code-editor>}{else-if {e.tag === 'sail-mermaid'} => <sail-mermaid value="graph TD; A[Idea]-->B[Build]; B-->C[Ship]"></sail-mermaid>}{else-if {e.tag === 'sail-message'} => <column gap="2" style({ box: size({ w: full }) })>
                     <sail-message from="user" status="sent">Can you summarize yesterday’s deploy?</sail-message>
                     <sail-message from="assistant" status="sent">v0.4.2 went out at 14:02 — 3 services, zero rollbacks.</sail-message>
-                  </column>}{else-if {e.tag === 'sail-citation'} => <sail-citation source="docs.ship.dev" href="https://docs.ship.dev">Deploy pipeline overview</sail-citation>}{else-if {e.tag === 'sail-composer'} => <sail-composer placeholder="Message the agent…" style({  box: w(full).minW(0)  })></sail-composer>}{else-if {e.tag === 'sail-thinking-dots'} => <row gap="2" align="center">
+                  </column>}{else-if {e.tag === 'sail-citation'} => <sail-citation source="docs.ship.dev" href="https://docs.ship.dev">Deploy pipeline overview</sail-citation>}{else-if {e.tag === 'sail-composer'} => <sail-composer placeholder="Message the agent…" style({  box: size({ w: full, min-w: 0 })  })></sail-composer>}{else-if {e.tag === 'sail-thinking-dots'} => <row gap="2" align="center">
                     <sail-thinking-dots></sail-thinking-dots>
                     <span style(mutedXs)>Agent is thinking…</span>
-                  </row>}{else-if {e.tag === 'sail-tool-call'} => <sail-tool-call name="list_deploys" status="ok" open style({ box: w(full) })>
+                  </row>}{else-if {e.tag === 'sail-tool-call'} => <sail-tool-call name="list_deploys" status="ok" open style({ box: size({ w: full }) })>
                     {toolArgs()}
                     <span slot="result">{toolResult()}</span>
                   </sail-tool-call>}{else => <p style(dormant)>{e.tag}</p>}</if>

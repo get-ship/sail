@@ -3,11 +3,11 @@
   Authoring content lives in language + Tutorial, not here.
 -->
 <scope>
-  style page = { box: maxW(breakpoint-tablet).mx(auto) }
-  style eyebrow = { box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
-  style card = { box: pad(5), paint: borderWidth(1).border(border).bg(surface-1) }
-  style muted = { paint: fg(muted-foreground), text: fontSize(sm) }
-  style footNav = { box: mt(4).padT(4), paint: borderTWidth(1).borderT(border) }
+  style page = { box: size({ max-w: breakpoint-tablet }).space({ mx: auto }) }
+  style eyebrow = { box: space({ mb: 2 }), paint: ink({ color: accent }), text: type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
+  style card = { box: space({ pad: 5 }), paint: border({ color: border, width: 1 }).fill({ color: surface-1 }) }
+  style muted = { paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
+  style footNav = { box: space({ pad-t: 4, mt: 4 }), paint: border({ color: border, width: 1, edge: t }) }
 </scope>
 
 <column gap="4" style(page)>

@@ -56,9 +56,9 @@ export default controller(() => {
 </controller>
 
 <scope>
-  style envRow = { box: padX(3).padY(2), paint: bg(surface-1).radius(md) }
-  style envName = { text: fontSize(sm) }
-  style envRegion = { paint: fg(muted-foreground) }
+  style envRow = { box: space({ pad-x: 3, pad-y: 2 }), paint: fill({ color: surface-1 }).radius(md) }
+  style envName = { text: type({ size: sm }) }
+  style envRegion = { paint: ink({ color: muted-foreground }) }
 </scope>
 
 <column gap="4">
@@ -89,7 +89,7 @@ export default controller(() => {
     <for {filtered() as env} key={env.id}>
       <row gap="3" align="center" style(envRow)>
         <badge tone={env.tier === 'prod' ? 'primary' : 'muted'} variant="outline" size="sm">{env.tier}</badge>
-        <strong style(envName, { box: grow(1) })>{env.name}</strong>
+        <strong style(envName, { box: flow({ grow: 1 }) })>{env.name}</strong>
         <small style(envRegion)>{env.region}</small>
         <button size="sm" variant="ghost" on:click={() => promote(env.id)}>Promote</button>
       </row>

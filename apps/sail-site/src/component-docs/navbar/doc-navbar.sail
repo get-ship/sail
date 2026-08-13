@@ -5,20 +5,20 @@
 -->
 
 <scope>
-  style page = { box: maxW(breakpoint-desktop).mx(auto).w(full).overflow(visible) }
-  style mutedXs = { paint: fg(muted-foreground), text: fontSize(xs) }
-  style specimen = { box: w(full).pad(2).overflow(visible) }
-  style fullW = { box: w(full) }
+  style page = { box: size({ w: full, max-w: breakpoint-desktop }).space({ mx: auto }).overflow({ all: visible }) }
+  style mutedXs = { paint: ink({ color: muted-foreground }), text: type({ size: xs }) }
+  style specimen = { box: size({ w: full }).space({ pad: 2 }).overflow({ all: visible }) }
+  style fullW = { box: size({ w: full }) }
   style knobLabel = {
-    paint: fg(muted-foreground),
-    text: fontSize(xs).fontWeight(medium).tracking(wide).textCase(uppercase),
-  }
-  style sizeValue = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
-  style exampleBlock = { box: w(full).padT(2).padB(4).overflow(visible) }
+    paint: ink({ color: muted-foreground }),
+    text: type({ size: xs, weight: medium, tracking: wide, case: uppercase }),
+}
+  style sizeValue = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs }) }
+  style exampleBlock = { box: size({ w: full }).space({ pad-t: 2, pad-b: 4 }).overflow({ all: visible }) }
   style sectionLabel = {
-    paint: fg(muted-foreground),
-    text: fontSize(xs).textCase(uppercase).tracking(wide),
-  }
+    paint: ink({ color: muted-foreground }),
+    text: type({ size: xs, tracking: wide, case: uppercase }),
+}
 </scope>
 
 <controller>
@@ -138,7 +138,7 @@ export default controller((_ctx: Scope) => {
           <option value="16">16</option>
           <option value="48">48</option>
         </select>
-        <p style(mutedXs)>Sticky top/left inset (number).</p>
+        <p style(mutedXs)>Sticky top/left place({ inset: number })</p>
       </column>
     </column>
 
@@ -168,7 +168,7 @@ export default controller((_ctx: Scope) => {
         lead={'placement="rail" — side nav geometry.'}
         code={navExRail()}
       >
-        <navbar placement="rail" bordered style({ box: minH(40) })>
+        <navbar placement="rail" bordered style({ box: size({ min-h: 40 }) })>
           <strong slot="brand">Ship</strong>
           <a href="/docs">Docs</a>
           <a href="/components">Components</a>

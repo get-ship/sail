@@ -5,32 +5,32 @@
 -->
 
 <scope>
-  style page = { box: maxW(breakpoint-desktop).mx(auto).w(full).overflow(visible) }
-  style monoXs = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
-  style mutedSm = { paint: fg(muted-foreground), text: fontSize(sm) }
+  style page = { box: size({ w: full, max-w: breakpoint-desktop }).space({ mx: auto }).overflow({ all: visible }) }
+  style monoXs = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs }) }
+  style mutedSm = { paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
   /** Shared demo width + ring clearance. */
-  style fieldShell = { box: w(full).maxW(64).pad(2).overflow(visible) }
-  style fullW = { box: w(full).overflow(visible) }
+  style fieldShell = { box: size({ w: full, max-w: 64 }).space({ pad: 2 }).overflow({ all: visible }) }
+  style fullW = { box: size({ w: full }).overflow({ all: visible }) }
   style knobLabel = {
-    paint: fg(muted-foreground),
-    text: fontSize(xs).fontWeight(medium).tracking(wide).textCase(uppercase),
-  }
-  style sizeValue = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
-  style tickRow = { box: w(full).padT(1).padX(1_5) }
-  style tick = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
-  style exampleBlock = { box: w(full).padT(2).padB(4).overflow(visible) }
-  style exampleSection = { box: w(full).padY(4).overflow(visible) }
-  style exampleH = { text: fontSize(md).fontWeight(semibold) }
-  style exampleLead = { paint: fg(muted-foreground), text: fontSize(sm) }
+    paint: ink({ color: muted-foreground }),
+    text: type({ size: xs, weight: medium, tracking: wide, case: uppercase }),
+}
+  style sizeValue = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs }) }
+  style tickRow = { box: size({ w: full }).space({ pad-x: 1_5, pad-t: 1 }) }
+  style tick = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs }) }
+  style exampleBlock = { box: size({ w: full }).space({ pad-t: 2, pad-b: 4 }).overflow({ all: visible }) }
+  style exampleSection = { box: size({ w: full }).space({ pad-y: 4 }).overflow({ all: visible }) }
+  style exampleH = { text: type({ size: md, weight: semibold }) }
+  style exampleLead = { paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
   style sectionLabel = {
-    paint: fg(muted-foreground),
-    text: fontSize(xs).textCase(uppercase).tracking(wide),
-  }
+    paint: ink({ color: muted-foreground }),
+    text: type({ size: xs, tracking: wide, case: uppercase }),
+}
   style typeCard = {
-    box: w(full).maxW(64).pad(4).overflow(visible),
-    paint: radius(md).borderWidth(1).border(border-subtle),
-  }
-  style mapRow = { box: w(full).padY(1) }
+    box: size({ w: full, max-w: 64 }).space({ pad: 4 }).overflow({ all: visible }),
+    paint: radius(md).border({ color: border-subtle, width: 1 }),
+}
+  style mapRow = { box: size({ w: full }).space({ pad-y: 1 }) }
 </scope>
 
 <controller>
@@ -204,11 +204,11 @@ export default controller((_ctx: Scope) => {
         </column>
       </if>
       <row gap="5" align="start">
-        <column gap="2" style({ box: grow(1).minW(0) })>
+        <column gap="2" style({ box: flow({ grow: 1 }).size({ min-w: 0 }) })>
           <label style(knobLabel)>Invalid</label>
           <switch bind:checked={inputInvalid} size="sm" label="Invalid"></switch>
         </column>
-        <column gap="2" style({ box: grow(1).minW(0) })>
+        <column gap="2" style({ box: flow({ grow: 1 }).size({ min-w: 0 }) })>
           <label style(knobLabel)>Disabled</label>
           <switch bind:checked={inputDisabled} size="sm" label="Disabled"></switch>
         </column>
@@ -231,18 +231,18 @@ export default controller((_ctx: Scope) => {
         </p>
         <column gap="2">
           <row gap="3" align="baseline" style(mapRow)>
-            <code style({ box: minW(28) })>&lt;input&gt;</code>
+            <code style({ box: size({ min-w: 28 }) })>&lt;input&gt;</code>
             <span style(mutedSm)>Text, email, password, search, number, tel, url, hidden</span>
           </row>
           <row gap="3" align="baseline" style(mapRow)>
-            <code style({ box: minW(28) })>&lt;checkbox&gt;</code>
+            <code style({ box: size({ min-w: 28 }) })>&lt;checkbox&gt;</code>
             <span style(mutedSm)>
               Boolean check —
               <a href="/components/checkbox">checkbox</a>
             </span>
           </row>
           <row gap="3" align="baseline" style(mapRow)>
-            <code style({ box: minW(28) })>&lt;date&gt; · &lt;file&gt; · &lt;color&gt;</code>
+            <code style({ box: size({ min-w: 28 }) })>&lt;date&gt; · &lt;file&gt; · &lt;color&gt;</code>
             <span style(mutedSm)>
               Elevated pickers —
               <a href="/components/date">date</a> ·
@@ -251,7 +251,7 @@ export default controller((_ctx: Scope) => {
             </span>
           </row>
           <row gap="3" align="baseline" style(mapRow)>
-            <code style({ box: minW(28) })>&lt;radio&gt;</code>
+            <code style({ box: size({ min-w: 28 }) })>&lt;radio&gt;</code>
             <span style(mutedSm)>
               One option in a group — not bare <code>type="radio"</code>.
               <a href="/components/radio">radio</a> ·
@@ -259,15 +259,15 @@ export default controller((_ctx: Scope) => {
             </span>
           </row>
           <row gap="3" align="baseline" style(mapRow)>
-            <code style({ box: minW(28) })>&lt;slider&gt;</code>
+            <code style({ box: size({ min-w: 28 }) })>&lt;slider&gt;</code>
             <span style(mutedSm)>Continuous value — <a href="/components/slider">slider</a></span>
           </row>
           <row gap="3" align="baseline" style(mapRow)>
-            <code style({ box: minW(28) })>&lt;switch&gt;</code>
+            <code style({ box: size({ min-w: 28 }) })>&lt;switch&gt;</code>
             <span style(mutedSm)>On / off — <a href="/components/switch">switch</a></span>
           </row>
           <row gap="3" align="baseline" style(mapRow)>
-            <code style({ box: minW(28) })>&lt;select&gt; · &lt;combobox&gt;</code>
+            <code style({ box: size({ min-w: 28 }) })>&lt;select&gt; · &lt;combobox&gt;</code>
             <span style(mutedSm)>
               Lists —
               <a href="/components/select">select</a> ·
@@ -275,15 +275,15 @@ export default controller((_ctx: Scope) => {
             </span>
           </row>
           <row gap="3" align="baseline" style(mapRow)>
-            <code style({ box: minW(28) })>&lt;textarea&gt;</code>
+            <code style({ box: size({ min-w: 28 }) })>&lt;textarea&gt;</code>
             <span style(mutedSm)>Multi-line — <a href="/components/textarea">textarea</a></span>
           </row>
           <row gap="3" align="baseline" style(mapRow)>
-            <code style({ box: minW(28) })>&lt;button&gt;</code>
+            <code style({ box: size({ min-w: 28 }) })>&lt;button&gt;</code>
             <span style(mutedSm)>Actions and form submit — <a href="/components/button">button</a></span>
           </row>
           <row gap="3" align="baseline" style(mapRow)>
-            <code style({ box: minW(28) })>&lt;field&gt;</code>
+            <code style({ box: size({ min-w: 28 }) })>&lt;field&gt;</code>
             <span style(mutedSm)>Label, hint, and error around a control — <a href="/components/field">field</a></span>
           </row>
         </column>

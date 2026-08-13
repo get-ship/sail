@@ -4,9 +4,9 @@
   never a path-if branch inside this rail.
 
   Geometry (viewport-locked site-header <main> is the parent):
-  - shell h(full) + overflow hidden — fill the budget, no page-level scroll
-  - rail: independent overflowY(auto), fixed width, stretches to shell height
-  - mainDocs: independent overflowY(auto) — content scrolls; rail does not leave
+  - shell size({ h: full }) + overflow hidden — fill the budget, no page-level scroll
+  - rail: independent overflow({ y: auto }), fixed width, stretches to shell height
+  - mainDocs: independent overflow({ y: auto }) — content scrolls; rail does not leave
 
   Responsive — style when:{ tablet } + structural <when {tablet}> for drawer:
   - tablet+ (768px): fixed-width side rail
@@ -14,27 +14,27 @@
     s-displaynone); Menu opens a fixed drawer
 
   Rail is a <div display:flex; flex-dir:column>, never <column>, so
-  display(none) is not overridden by .sail-col { display:flex }.
+  flow({ display: none }) is not overridden by .sail-col { display:flex }.
 -->
 
 <scope>
   // Fill the site-header <main> budget. Independent rail + main scrollports.
-  style shell = { box: minH(0).h(full).minW(0).overflow(hidden) }
+  style shell = { box: size({ h: full, min-w: 0, min-h: 0 }).overflow({ all: hidden }) }
   // Plain div rail: fixed width, never grows into the content pane.
-  // Mobile base = display(none); tablet+ restores flex column.
+  // Mobile base = flow({ display: none }); tablet+ restores flex column.
   // NOT <column> — .sail-col { display:flex } beats .s-displaynone.
   // 14rem rail (space-56 ≡ --panel-rail-w).
-  style rail = { box: display(none).flexDir(column).w(56).minH(0).h(full).padY(4).padX(3).overflowY(auto).overflowX(hidden), paint: borderEWidth(1).border(border).bg(background).fg(foreground), when: { tablet: { box: display(flex) } } }
-  style railLabel = { box: mt(4).mb(1), paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide) }
+  style rail = { box: flow({ display: none, dir: column }).size({ w: 56, h: full, min-h: 0 }).space({ pad-x: 3, pad-y: 4 }).overflow({ x: hidden, y: auto }), paint: border({ color: border, width: 1, edge: e }).fill({ color: background }).ink({ color: foreground }), when: { tablet: { box: flow({ display: flex }) } } }
+  style railLabel = { box: space({ mt: 4, mb: 1 }), paint: ink({ color: muted-foreground }), text: type({ size: xs, weight: semibold, tracking: wide, case: uppercase }) }
   // Current must paint over the base muted ink — filled pill for active page.
-  style railLink = { box: display(block).padY(1).padX(2), paint: radius(md).fg(muted-foreground), text: fontSize(sm), when: { hover: { paint: fg(foreground).bg(hover-bg) }, current: { paint: fg(primary).bg(muted), text: fontWeight(semibold) } } }
-  style mainDocs = { box: pad(4).basis(0).minH(0).overflowX(hidden).overflowY(auto), when: { tablet: { box: pad(6) } } }
+  style railLink = { box: flow({ display: block }).space({ pad-x: 2, pad-y: 1 }), paint: radius(md).ink({ color: muted-foreground }), text: type({ size: sm }), when: { hover: { paint: ink({ color: foreground }).fill({ color: hover-bg }) }, current: { paint: ink({ color: primary }).fill({ color: muted }), text: type({ weight: semibold }) } } }
+  style mainDocs = { box: space({ pad: 4 }).basis(0).size({ min-h: 0 }).overflow({ x: hidden, y: auto }), when: { tablet: { box: space({ pad: 6 }) } } }
   // Mobile-only chrome — plain div so display:none wins at tablet+.
-  style mobileBar = { box: display(flex).gap(2).padX(3).padY(2), paint: borderBWidth(1).borderB(border).bg(background), when: { tablet: { box: display(none) } } }
-  style contentCol = { box: minH(0).minW(0) }
-  style mobileLabel = { paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) }
-  style drawerTitle = { text: fontSize(sm) }
-  style fullW = { box: w(full) }
+  style mobileBar = { box: flow({ display: flex }).gap(2).space({ pad-x: 3, pad-y: 2 }), paint: border({ color: border, width: 1, edge: b }).fill({ color: background }), when: { tablet: { box: flow({ display: none }) } } }
+  style contentCol = { box: size({ min-w: 0, min-h: 0 }) }
+  style mobileLabel = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs }) }
+  style drawerTitle = { text: type({ size: sm }) }
+  style fullW = { box: size({ w: full }) }
 
   type DocsNavProps = {
     path: any
@@ -114,17 +114,17 @@ export default controller((ctx) => {
   <a href="/docs/reference/regions" on:click={onNav} current={path() === '/docs/reference/regions' ? 'page' : null} style(railLink)>Region matrix</a>
 </partial>
 
-<row nowrap align="stretch" gap="0" style(shell, { box: w(full).grow(1).minW(0) })>
-  <nav label="Docs" testid="docs-rail" style(rail, { box: shrink(0) })>
+<row nowrap align="stretch" gap="0" style(shell, { box: size({ w: full, min-w: 0 }).flow({ grow: 1 }) })>
+  <nav label="Docs" testid="docs-rail" style(rail, { box: flow({ shrink: 0 }) })>
     <docs-nav path={path} onNav={noopNav}></docs-nav>
   </nav>
 
-  <column gap="0" style(contentCol, { box: grow(1).minW(0) })>
+  <column gap="0" style(contentCol, { box: flow({ grow: 1 }).size({ min-w: 0 }) })>
     <div style(mobileBar)>
       <button type="button" variant="outline" size="sm" on:click={openNav} expanded={navOpen() ? 'true' : 'false'}>Menu</button>
       <small style(mobileLabel)>Docs</small>
     </div>
-    <main style(mainDocs, { box: grow(1).minW(0) })>
+    <main style(mainDocs, { box: flow({ grow: 1 }).size({ min-w: 0 }) })>
       <slot name="route"></slot>
     </main>
   </column>
