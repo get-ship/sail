@@ -207,7 +207,7 @@ pub fn collect(
 
     // Contrast + off-scale spacing. Alignment needs laid-out edges; do not
     // rebuild taffy here (see collect_alignment).
-    out.extend(collect_contrast(source, &preprocessed, &elements, severity));
+    out.extend(collect_contrast(source, severity));
     out.extend(collect_alignment(
         source,
         &preprocessed,
@@ -1134,33 +1134,35 @@ fn nearest_passing_fg(bg: &str, current_fg: &str) -> Option<&'static str> {
     })
 }
 
-fn collect_contrast(
-    source: &str,
-    preprocessed: &str,
-    elements: &[sail_layout::html::Element],
-    severity: DiagSeverity,
-) -> Vec<Diagnostic> {
+fn collect_contrast(source: &str, severity: DiagSeverity) -> Vec<Diagnostic> {
     if severity == DiagSeverity::Error {
         // strict autofix: still report, but as Error without rewrite payload path
     }
     let mut out = Vec::new();
-    for (idx, elem) in elements.iter().enumerate().skip(1) {
-        let fp = element_fingerprint(&elem.class, &elem.tag).unwrap_or_else(|| Fingerprint {
-            base_tag: Some(elem.tag.clone()),
-            sx_atoms: Vec::new(),
-        });
-        let pre_i = count_fingerprint_before(elements, &fp, elem.span.0);
-        let Some(span) = find_original_span(source, preprocessed, &fp, pre_i) else {
+    let mut skip_to = 0usize;
+    for (pos, ch) in source.char_indices() {
+        if pos < skip_to {
+            continue;
+        }
+        if source[pos..].starts_with("<!--") {
+            if let Some(end) = source[pos..].find("-->") {
+                skip_to = pos + end + 3;
+            } else {
+                break;
+            }
+            continue;
+        }
+        if ch != '<' {
+            continue;
+        }
+        let Some((tag_end, _tag, attrs)) = parse_open_tag(source, pos) else {
             continue;
         };
-        let Some((_, _, attrs)) = parse_open_tag(source, span.0) else {
+        skip_to = tag_end;
+        let Some(sx) = element_style_expr(source, tag_end, &attrs) else {
             continue;
         };
-        let Some(sx) = attr_value(&attrs, "style") else {
-            continue;
-        };
-        let expr = strip_sx_braces(&sx);
-        let (style, _) = sail_lint::style::parse(expr);
+        let (style, _) = sail_lint::style::parse(&sx);
         let mut ops = Vec::new();
         collect_paint_ops(&style, &mut ops);
         let mut bg: Option<String> = None;
@@ -1183,6 +1185,7 @@ fn collect_contrast(
         let (Some(bg_t), Some(fg_t)) = (bg, fg) else {
             continue;
         };
+        let span = (pos, tag_end);
         let (Some(bl), Some(fl)) = (token_luminance(&bg_t), token_luminance(&fg_t)) else {
             // Off-scale / unknown → WARN only.
             if matches!(severity, DiagSeverity::Fix | DiagSeverity::Warning) {
@@ -1218,7 +1221,6 @@ fn collect_contrast(
                 ),
                 rule: Some(CONTRAST_RULE.into()),
             });
-            let _ = idx;
         } else {
             // No same-family confluent repair — WARN only.
             out.push(Diagnostic {

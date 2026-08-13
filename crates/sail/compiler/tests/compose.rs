@@ -47,6 +47,23 @@ fn compile_still_fails_error_lint() {
 }
 
 #[test]
+fn onsave_compose_of_studio_megapage_is_cheap() {
+    let path = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../../apps/studio/src/theme-components-surface/theme-components-surface.sail"
+    );
+    let src = std::fs::read_to_string(path).expect("megapage fixture");
+    let t = std::time::Instant::now();
+    let _ = sail_compiler::check::compose::collect(&src, Some(std::path::Path::new(path)), &[]);
+    let ms = t.elapsed().as_secs_f64() * 1000.0;
+    // compile() no longer runs compose. This guards the remaining OnSave walk.
+    assert!(
+        ms < 5000.0,
+        "OnSave compose of theme-components-surface must stay under 5s, got {ms:.1}ms"
+    );
+}
+
+#[test]
 fn on_type_skips_compose() {
     let diags = check_all_with_tier(RED_RHYTHM, None, &[], None, DiagnosticTier::OnType);
     assert!(
