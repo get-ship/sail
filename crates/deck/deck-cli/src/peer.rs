@@ -31,6 +31,9 @@ pub fn print_version(brand: &str) {
 }
 
 /// Local environment health check (C6).
+///
+/// Never prints `status: ok` on an empty probe. bun, tsc/tsgo, and
+/// `node_modules/.sail/types.d.ts` are required for a first-user typecheck.
 pub fn doctor(brand: &str) -> Result<()> {
     println!("{brand} doctor");
     println!("  binary: {brand} {}", env!("CARGO_PKG_VERSION"));
@@ -60,8 +63,58 @@ pub fn doctor(brand: &str) -> Result<()> {
     println!("  sail op: in-process (sail-ops Connect handlers)");
     println!("  sail layout: in-process (sail-layout)");
     println!("  sail render: in-process (sail-render)");
-    println!("  status: ok");
-    Ok(())
+
+    let mut missing = Vec::new();
+    if !tool_ok(&cwd, "bun", &["--version"]) {
+        missing.push("bun");
+    } else {
+        println!("  bun: ok");
+    }
+    let tsc = tool_ok(&cwd, "tsc", &["--version"]);
+    let tsgo = tool_ok(&cwd, "tsgo", &["--version"]);
+    if !tsc && !tsgo {
+        missing.push("tsc or tsgo");
+    } else {
+        if tsc {
+            println!("  tsc: ok");
+        }
+        if tsgo {
+            println!("  tsgo: ok");
+        }
+    }
+    let types = cwd.join("node_modules/.sail/types.d.ts");
+    if types.is_file() {
+        println!("  types: {}", types.display());
+    } else {
+        println!("  types: missing at {}", types.display());
+        missing.push("node_modules/.sail/types.d.ts (run `sail types`)");
+    }
+
+    if missing.is_empty() {
+        println!("  status: ok");
+        Ok(())
+    } else {
+        println!("  status: fail");
+        bail!("doctor: missing {}", missing.join(", "));
+    }
+}
+
+fn tool_ok(cwd: &Path, bin: &str, args: &[&str]) -> bool {
+    let local = cwd.join("node_modules/.bin").join(bin);
+    if local.is_file() && cmd_ok(&local, args) {
+        return true;
+    }
+    cmd_ok(Path::new(bin), args)
+}
+
+fn cmd_ok(bin: &Path, args: &[&str]) -> bool {
+    Command::new(bin)
+        .args(args)
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::null())
+        .status()
+        .map(|s| s.success())
+        .unwrap_or(false)
 }
 
 fn topmost_cargo_root(start: &Path) -> Option<PathBuf> {
@@ -88,6 +141,7 @@ pub fn types(
     project: Option<PathBuf>,
     out: Option<PathBuf>,
     tsconfig_out: Option<PathBuf>,
+    check: bool,
 ) -> Result<()> {
     let cwd = std::env::current_dir().context("cwd")?;
     let project_dir = match project {
@@ -139,6 +193,45 @@ pub fn types(
     }
     // Dual-types packages: emit dist/*.d.ts when this is the monorepo (script present).
     emit_monorepo_package_dts(&project_dir)?;
+    if check {
+        types_check(&project_dir)?;
+    }
+    Ok(())
+}
+
+/// Run tsc on the generated sail + action kind configs. Fail if red.
+fn types_check(project_dir: &Path) -> Result<()> {
+    let sail = project_dir.join(sail_compiler::ambients::PROJECT_TSCONFIG_SAIL_REL);
+    let action = project_dir.join(sail_compiler::ambients::PROJECT_TSCONFIG_ACTION_REL);
+    if !sail.is_file() || !action.is_file() {
+        bail!(
+            "sail types --check: kind configs missing (expected {} and {})",
+            sail.display(),
+            action.display()
+        );
+    }
+    let tsc = project_dir.join("node_modules/.bin/tsc");
+    let tsc: PathBuf = if tsc.is_file() {
+        tsc
+    } else {
+        PathBuf::from("tsc")
+    };
+    for cfg in [&sail, &action] {
+        let status = Command::new(&tsc)
+            .args(["--noEmit", "-p"])
+            .arg(cfg)
+            .current_dir(project_dir)
+            .status()
+            .with_context(|| format!("run tsc -p {}", cfg.display()))?;
+        if !status.success() {
+            bail!(
+                "sail types --check: tsc -p {} failed (exit {:?})",
+                cfg.display(),
+                status.code()
+            );
+        }
+        println!("sail types --check: {} ok", cfg.display());
+    }
     Ok(())
 }
 
@@ -927,8 +1020,12 @@ pub fn mcp() {
 }
 
 /// `sail mcp install` — write MCP server entries into agent host configs.
-pub fn mcp_install(project: PathBuf) -> Result<()> {
-    let report = sail_mcp::install(&project).map_err(|e| anyhow::anyhow!(e))?;
+pub fn mcp_install(project: PathBuf, bin: Option<PathBuf>) -> Result<()> {
+    let report = match bin {
+        Some(p) => sail_mcp::install_with_bin(&project, Some(&p)),
+        None => sail_mcp::install(&project),
+    }
+    .map_err(|e| anyhow::anyhow!(e))?;
     print!("{}", sail_mcp::format_report(&report));
     Ok(())
 }

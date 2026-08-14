@@ -34,13 +34,20 @@ pub struct InstallReport {
 ///
 /// Merges a `sail` entry into each host's config, preserving other servers.
 pub fn install(project_root: &Path) -> Result<InstallReport, String> {
+    install_with_bin(project_root, None)
+}
+
+/// Like [`install`]. `bin` overrides the command (developers only).
+/// Default is always `sail mcp` — never `cargo run`, never a worktree
+/// `target/debug/sail` unless `--bin` was passed.
+pub fn install_with_bin(project_root: &Path, bin: Option<&Path>) -> Result<InstallReport, String> {
     fs::create_dir_all(project_root)
         .map_err(|e| format!("mkdir project root {}: {e}", project_root.display()))?;
     let project_root = project_root
         .canonicalize()
         .map_err(|e| format!("canonicalize project root {}: {e}", project_root.display()))?;
 
-    let launch = server_launch(&project_root);
+    let launch = server_launch(bin);
     let entry = server_entry(&launch, &project_root);
 
     let mut writes = Vec::new();
@@ -123,43 +130,28 @@ struct Launch {
 }
 
 /// Choose how hosts should launch the Sail MCP server.
-fn server_launch(project_root: &Path) -> Launch {
-    // Prefer the running `sail` / `sail-mcp` binary when install is invoked from it.
-    if let Ok(exe) = std::env::current_exe() {
-        if let Some(name) = exe.file_name().and_then(|n| n.to_str()) {
-            let name = name.trim_end_matches(".exe");
-            if name == "sail" {
-                return Launch {
-                    command: exe.display().to_string(),
-                    args: vec!["mcp".into()],
-                    cwd: Some(project_root.to_path_buf()),
-                };
-            }
-            if name == "sail-mcp" {
-                return Launch {
-                    command: exe.display().to_string(),
-                    args: vec![],
-                    cwd: Some(project_root.to_path_buf()),
-                };
-            }
-        }
-    }
-    // Monorepo: cargo run -p sail-mcp from workspace root.
-    if project_root.join("crates/sail/mcp/Cargo.toml").is_file()
-        || (project_root.join("Cargo.toml").is_file()
-            && project_root.join("crates/sail/mcp").is_dir())
-    {
+fn server_launch(bin: Option<&Path>) -> Launch {
+    if let Some(bin) = bin {
+        let name = bin
+            .file_name()
+            .and_then(|n| n.to_str())
+            .unwrap_or("")
+            .trim_end_matches(".exe");
+        let args = if name == "sail-mcp" {
+            vec![]
+        } else {
+            vec!["mcp".into()]
+        };
         return Launch {
-            command: "cargo".into(),
-            args: vec!["run".into(), "-q".into(), "-p".into(), "sail-mcp".into()],
-            cwd: Some(project_root.to_path_buf()),
+            command: bin.display().to_string(),
+            args,
+            cwd: None,
         };
     }
-    // Installed product binary.
     Launch {
         command: "sail".into(),
         args: vec!["mcp".into()],
-        cwd: Some(project_root.to_path_buf()),
+        cwd: None,
     }
 }
 
@@ -252,15 +244,6 @@ mod tests {
     fn install_writes_claude_code_mcp_json() {
         let dir = tempfile::tempdir().unwrap();
         let root = dir.path();
-        // Fake monorepo markers so launch uses cargo.
-        std::fs::create_dir_all(root.join("crates/sail/mcp")).unwrap();
-        std::fs::write(root.join("Cargo.toml"), "[workspace]\n").unwrap();
-        std::fs::write(
-            root.join("crates/sail/mcp/Cargo.toml"),
-            "[package]\nname=\"sail-mcp\"\nversion=\"0.1.0\"\n",
-        )
-        .unwrap();
-
         let report = install(root).expect("install");
         assert!(
             report.writes.iter().any(|w| w.host == "claude-code"),
@@ -271,7 +254,14 @@ mod tests {
         assert!(path.is_file(), "expected {}", path.display());
         let v: Value = serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
         let sail = &v["mcpServers"]["sail"];
-        assert!(sail.get("command").is_some(), "{sail}");
+        assert_eq!(sail["command"], "sail", "{sail}");
+        assert_eq!(sail["args"], json!(["mcp"]), "{sail}");
+        assert!(
+            sail["command"]
+                .as_str()
+                .is_some_and(|c| !c.contains("cargo") && !c.contains("worktrees")),
+            "must not pin cargo run or a worktree binary: {sail}"
+        );
         assert_eq!(
             sail["env"]["SAIL_MCP_ROOT"].as_str(),
             Some(root.canonicalize().unwrap().to_str().unwrap())

@@ -380,10 +380,6 @@ impl TemplateEmitter {
     /// each effect costs a closure + cleanup slot × every row × every
     /// render.
     pub(super) fn is_static_row_expr(&self, source: &str) -> bool {
-        // TEMP-DISABLE for A/B bench measurement; revert before commit.
-        if std::env::var_os("SAIL_D5_DISABLE").is_some() {
-            return false;
-        }
         self.for_in_scope
             && !source.contains('(')
             && !source.contains("?.")

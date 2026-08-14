@@ -393,7 +393,7 @@ pub fn run_create(name: PathBuf) -> Result<()> {
          \"dev\": \"sail dev\",\n    \
          \"build\": \"sail build\",\n    \
          \"check\": \"sail check .\",\n    \
-         \"typecheck\": \"sail types && tsc --noEmit -p node_modules/.sail/tsconfig.sail.json && tsc --noEmit -p node_modules/.sail/tsconfig.action.json\",\n    \
+         \"typecheck\": \"sail types --check\",\n    \
          \"lint\": \"oxlint .\"\n  \
          }},\n  \
          \"dependencies\": {{\n    \
@@ -469,7 +469,7 @@ pub fn run_create(name: PathBuf) -> Result<()> {
     println!("[create] next steps:");
     println!("  1. cd {rel}");
     println!("  2. bun install   # after @ship packages are published");
-    println!("  3. bun run typecheck && bun run lint  # typecheck runs sail types first");
+    println!("  3. bun run typecheck && bun run lint  # typecheck is `sail types --check`");
     println!("  4. sail dev");
     println!("  5. sail check .");
     Ok(())

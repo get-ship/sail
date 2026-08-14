@@ -17,7 +17,7 @@ mod protocol;
 mod stdio;
 
 // Re-exports for tests / downstream that still import sail_mcp surface types.
-pub use install::{InstallReport, format_report, install};
+pub use install::{InstallReport, format_report, install, install_with_bin};
 pub use sail_ops::authoring::{run_check as sail_check, sail_layout_check};
 pub use sail_ops::{CheckDiag, SurfaceTopic, surface_markdown};
 

@@ -170,6 +170,9 @@ enum Command {
         /// Also write a recommended project tsconfig (use `-` for stdout).
         #[arg(long)]
         tsconfig_out: Option<PathBuf>,
+        /// After writing kind configs, run tsc on sail + action and fail if red.
+        #[arg(long)]
+        check: bool,
     },
 
     /// Run compile-time checks on `.sail` files.
@@ -310,6 +313,9 @@ enum McpCmd {
         /// Project root for config files. Default: cwd.
         #[arg(long, default_value = ".")]
         project: PathBuf,
+        /// Pin a specific binary (developers). Default: `sail mcp` on PATH.
+        #[arg(long)]
+        bin: Option<PathBuf>,
     },
 }
 
@@ -446,7 +452,8 @@ fn run() -> Result<()> {
             project,
             out,
             tsconfig_out,
-        } => peer::types(project, out, tsconfig_out),
+            check,
+        } => peer::types(project, out, tsconfig_out, check),
         Command::Check { input, fix } => peer::check(input, fix),
         Command::Fmt { input, check } => peer::fmt(input, check),
         Command::Inspect {
@@ -459,7 +466,7 @@ fn run() -> Result<()> {
         } => peer::inspect(topic, path, viewport, token, theme_id, node_id),
         Command::Lsp => peer::lsp(),
         Command::Mcp { cmd, list_tools } => match cmd {
-            Some(McpCmd::Install { project }) => peer::mcp_install(project),
+            Some(McpCmd::Install { project, bin }) => peer::mcp_install(project, bin),
             None if list_tools => {
                 println!(
                     "{}",
