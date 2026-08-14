@@ -4,7 +4,7 @@ description: "Layout keywords and component props carry a whole screen — zero 
 order: 1
 slug: "01-a-page-is-markup"
 prev: null
-next: "02-styling-is-sx"
+next: "02-styling-is-style"
 chapter: "surface"
 ---
 

@@ -2,7 +2,7 @@
 title: "Styling is Style"
 description: "Object Style, a flat chain, when for states — tokens only, never utility strings."
 order: 2
-slug: "02-styling-is-sx"
+slug: "02-styling-is-style"
 prev: "01-a-page-is-markup"
 next: "03-state-is-a-controller"
 chapter: "surface"

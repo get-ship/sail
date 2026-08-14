@@ -3,7 +3,7 @@ title: "State is a controller"
 description: "signal, derived, and effect — one owner for state, and templates bind only what the controller returns."
 order: 3
 slug: "03-state-is-a-controller"
-prev: "02-styling-is-sx"
+prev: "02-styling-is-style"
 next: "04-templates-react"
 chapter: "state"
 ---
