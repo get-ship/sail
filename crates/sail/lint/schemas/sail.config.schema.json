@@ -1,0 +1,109 @@
+{
+  "$id": "https://ship.dev/schemas/sail.config.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "autofix": {
+      "description": "compose autofix preset: confluent fixes on / all error / pass silent (default: repair; layer: POLICY)",
+      "x-sail-layer": "POLICY",
+      "x-sail-type": "\"repair\" | \"strict\" | \"off\""
+    },
+    "compose_rhythm": {
+      "description": "auto-fix sibling rhythm violations; false warns only (default: true; layer: POLICY)",
+      "x-sail-layer": "POLICY",
+      "x-sail-type": "boolean"
+    },
+    "deck": {
+      "description": "Deck bundler/serve settings (SPEC-SAIL-CONFIG-1); nested only — top-level render/entry/injectGlobals refuse as unknown (default: absent — fully conventional serve defaults (csr, no entry, no inject); layer: POLICY)",
+      "x-sail-layer": "POLICY",
+      "x-sail-type": "{ render?: \"csr\"|\"ssr\", entry?: { clientsModule, exposeNames[] }, injectGlobals?: { [k]: template } }"
+    },
+    "editor": {
+      "description": "studio deep-link preference for open-in-editor — product taste, not language behavior (default: vscode (studio default when unset); layer: TASTE)",
+      "x-sail-layer": "TASTE",
+      "x-sail-type": "string | { scheme, pathTemplate? }"
+    },
+    "fonts": {
+      "description": "pin font roles (body, heading, mono, display, app-custom) to Fontsource package ids or local faces; unused families do not ship (default: omitted — vendored @ship/tokens FONTS + theme --font-*-app (no regression); layer: PRODUCT)",
+      "x-sail-layer": "PRODUCT",
+      "x-sail-type": "{ roles: { <role>: { source, id, version? } } }"
+    },
+    "icons": {
+      "description": "icon pack pin + role→glyph map (SPEC-ICONS-1). Author markup uses roles, never pack prefixes (default: framework default pack lucide + core role table (no app overrides); layer: PRODUCT)",
+      "x-sail-layer": "PRODUCT",
+      "x-sail-type": "{ pack?: string | { id, version? }, version?, packs?: { [id]: { version } }, roles?: { [role]: glyph | \"pack:glyph\" | { pack, glyph } } }"
+    },
+    "layout": {
+      "description": "promote gate-gap layout findings (main-axis overflow, collapsed box, height-chain) to Error so check/dev exit non-zero (studio strict profile) (default: warn — taffy soft findings stay warnings; silent-clip stays Error; layer: POLICY)",
+      "x-sail-layer": "POLICY",
+      "x-sail-type": "\"warn\" | \"error\""
+    },
+    "layoutExperimental": {
+      "description": "enable experimental layout kinds (sub-min-tap-target) without full lint strict (SPEC-LAYOUT-DIAG-1 / S4.1) (default: false; layer: POLICY)",
+      "x-sail-layer": "POLICY",
+      "x-sail-type": "boolean"
+    },
+    "layoutTextMetrics": {
+      "description": "kill switch for text-metrics layout kind clipped-text (LAYOUT-5 default on; false disables) (default: false; layer: POLICY)",
+      "x-sail-layer": "POLICY",
+      "x-sail-type": "boolean"
+    },
+    "lint": {
+      "description": "global lint severity floor + per-rule overrides (SPEC-LINTS-1 §3); dual-read with policy.lint.severity.* (default: natural rule severities (no global floor, no per-rule tree); layer: POLICY)",
+      "x-sail-layer": "POLICY",
+      "x-sail-type": "{ severity?: \"off\"|\"warn\"|\"error\", rules?: { <rule-id>: \"off\"|\"warn\"|\"error\" } }"
+    },
+    "network": {
+      "description": "fetch/WebSocket/EventSource allowlist; [] grants nothing explicitly; a wrong-typed value fails closed (default: absent = full refusal; layer: POLICY)",
+      "x-sail-layer": "POLICY",
+      "x-sail-type": "string[] of origins"
+    },
+    "policy": {
+      "description": "typed compiler policy registry object; unknown keys are a hard error naming the closest valid key (default: registry defaults (see `sail-compiler policy`); layer: POLICY)",
+      "x-sail-layer": "POLICY",
+      "x-sail-type": "{ layout.raw_containers?, lint.severity.<rule-id>? }"
+    },
+    "preset": {
+      "description": "select a capability tier above the floor in one word (default: no tier — capabilities opt in individually; layer: POLICY)",
+      "x-sail-layer": "POLICY",
+      "x-sail-type": "\"strict\" | \"full\" | \"repair\" | \"off\""
+    },
+    "raw_containers": {
+      "description": "capability override: allow raw container elements instead of the layout keywords (default: off; layer: POLICY)",
+      "x-sail-layer": "POLICY",
+      "x-sail-type": "boolean"
+    },
+    "strict": {
+      "description": "every lint finding is Error at the build gate (Warn→Error); per-rule off still silences; never downgrades compiler errors (default: false; layer: POLICY)",
+      "x-sail-layer": "POLICY",
+      "x-sail-type": "boolean"
+    },
+    "stylesheets": {
+      "description": "the CSS files this package may ship; an undeclared stylesheet fails the floor check (default: none; layer: POLICY)",
+      "x-sail-layer": "POLICY",
+      "x-sail-type": "string[]"
+    },
+    "sx": {
+      "description": "capability override: allow the sx surface beyond the floor allowance (default: off; layer: POLICY)",
+      "x-sail-layer": "POLICY",
+      "x-sail-type": "boolean"
+    },
+    "theme": {
+      "description": "app theme emit set: default id, optional mode, catalog allowlist (omit/[] thin; \"all\" full; list filter). Project themes/ always emit (default: no theme section — thin app emit (no catalog); package generate still full catalog; layer: POLICY)",
+      "x-sail-layer": "POLICY",
+      "x-sail-type": "{ default, defaultMode?, enabled: \"all\" | string[] }"
+    },
+    "unconfined": {
+      "description": "opt out of controller ambient-authority confinement entirely; a wrong-typed value stays confined (default: confined; layer: POLICY)",
+      "x-sail-layer": "POLICY",
+      "x-sail-type": "boolean"
+    },
+    "variants": {
+      "description": "capability override: allow CVA-in-props variance matrices (key→sx maps on props) and compound: (default: off; layer: POLICY)",
+      "x-sail-layer": "POLICY",
+      "x-sail-type": "boolean"
+    }
+  },
+  "title": "SailConfig",
+  "type": "object"
+}

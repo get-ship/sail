@@ -22,6 +22,7 @@ pub use spinnaker::{host_ctx, scales, style_vocab, token_groups, tokens};
 #[cfg(test)]
 mod tests;
 
+pub use config::{SailConfig, emit_sail_config_schema};
 pub use report::{Category, Finding, Severity};
 
 /// Scrubbed rule IDs are history. They do not stay registered — git

@@ -238,6 +238,33 @@ pub const CONFIG_KEY_DOCS: &[(&str, &str, &str, &str, &str)] = &[
     ),
 ];
 
+/// JSON Schema view of [`CONFIG_KEY_DOCS`]. Loaders stay lenient until
+/// the operator rules wrong-type refuse. This file is the drift pin.
+pub fn emit_sail_config_schema() -> String {
+    let mut properties = serde_json::Map::new();
+    for (key, ty, default, summary, layer) in CONFIG_KEY_DOCS {
+        properties.insert(
+            (*key).to_string(),
+            serde_json::json!({
+                "description": format!("{summary} (default: {default}; layer: {layer})"),
+                "x-sail-type": ty,
+                "x-sail-layer": layer,
+            }),
+        );
+    }
+    let schema = serde_json::json!({
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$id": "https://ship.dev/schemas/sail.config.schema.json",
+        "title": "SailConfig",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": properties,
+    });
+    let mut out = serde_json::to_string_pretty(&schema).expect("schema json");
+    out.push('\n');
+    out
+}
+
 /// One `fonts.roles.<role>` pin (SPEC-FONTS-1).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct FontRoleBinding {
@@ -735,6 +762,24 @@ fn strip_jsonc_comments(input: &str) -> String {
 #[cfg(test)]
 mod config_doc_tests {
     use super::*;
+
+    #[test]
+    fn committed_schema_matches_emit() {
+        let path = concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/schemas/sail.config.schema.json"
+        );
+        if std::env::var("SAIL_WRITE_SCHEMA").is_ok() {
+            std::fs::create_dir_all(concat!(env!("CARGO_MANIFEST_DIR"), "/schemas")).unwrap();
+            std::fs::write(path, emit_sail_config_schema()).unwrap();
+        }
+        let committed = std::fs::read_to_string(path).expect("committed schema");
+        assert_eq!(
+            committed,
+            emit_sail_config_schema(),
+            "sail.config.schema.json drifted — SAIL_WRITE_SCHEMA=1 cargo test -p sail-lint --lib committed_schema"
+        );
+    }
 
     #[test]
     fn every_recognized_key_has_a_doc_row_and_no_extras() {
