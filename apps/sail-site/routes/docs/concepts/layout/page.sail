@@ -159,7 +159,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <h2>How children size themselves</h2>
   <p>
     The parent decides how children sit; a child decides how it fills the
-    space it was given on the <strong>box channel</strong> — legal on any
+    space it was given with <strong>Style</strong> — legal on any
     element, not only layout keywords:
   </p>
   <row gap="3" align="center" style(demo)>
@@ -168,10 +168,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   </row>
   <code-block code={code.grow}></code-block>
   <p>
-    Participation is one spelling: the box channel.
-    <code>flow(&#123; grow: 1 &#125;)</code> / <code>flow(&#123; shrink: 0 &#125;)</code> are flex participation;
+    Participation is one spelling: Style.
+    <code>grow(1)</code> / <code>shrink(0)</code> are flex participation;
     <code>size(&#123; w: full &#125;)</code>, <code>size(&#123; min-w: 0 &#125;)</code>, and <code>size(&#123; max-w: … &#125;)</code> take
-    the same size tokens as other Style box setters. Bare attrs
+    the same size tokens as other Style setters. Bare attrs
     (<code>grow</code>, <code>min-w=</code>, <code>shrink</code>) are refused
     (<code>sail-participation-style</code>) — write
     <code style(growMin)></code> instead.

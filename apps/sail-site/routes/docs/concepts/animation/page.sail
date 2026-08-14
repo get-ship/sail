@@ -228,7 +228,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     keyframes per property, and returns one signal per property. Those
     signals reach Style the way any signal does, through
     <code>bind&#40;name&#41;</code> on a setter
-    (<code>style&#40;&#123; paint: motion(&#123; x: bind(tileX) &#125;) &#125;&#41;</code>):
+    (<code>style&#40;&#123; translateX(bind(tileX)) &#125;&#41;</code>):
   </p>
   <code-block code={code.choreography}></code-block>
   <p>
