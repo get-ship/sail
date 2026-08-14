@@ -112,15 +112,15 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 <scroll-area
   orientation="vertical"
   use:captureScroll
-  style({ box: place({ position: relative }).size({ h: full, min-h: 0 }).space({ pad: 3 }) })
+  style({ position(relative).size({ h: full, min-h: 0 }).pad(3) })
 >
-  <span style({ box: flow({ display: contents }), text: type({ family: body }) })>
-    <div use:virtualSpacer={totalSize()} style({ box: place({ position: relative }).size({ w: full, h: bind(rowsH) }) })>
+  <span style({ display(contents).type({ family: body }) })>
+    <div use:virtualSpacer={totalSize()} style({ position(relative).size({ w: full, h: bind(rowsH) }) })>
     <for {windowItems() as w} key={w.key}>
       <column
         gap="0"
         use:virtualRow={w.start}
-        style({ box: place({ position: absolute, left: 3, right: 3 }), paint: motion({ y: bind(rowY) }) })
+        style({ position({ scheme: absolute, l: 3, r: 3 }).translateY(bind(rowY)) })
       >
         <sail-message
           from={w.item.from || 'assistant'}

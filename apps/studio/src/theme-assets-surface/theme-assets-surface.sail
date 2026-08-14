@@ -3,38 +3,38 @@
   Thin shell: chrome + editor + specimen (draft paint via applyScope bind).
 -->
 <scope>
-  style sectionTitle = { text: type({ size: sm, weight: semibold }) }
-  style fieldHint = { paint: ink({ color: muted-foreground }), text: type({ size: xs }) }
-  style pathMeta = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs }) }
-  style doorTitle = { text: type({ weight: semibold }) }
-  style editorCol = { box: space({ pad-x: 6, pad-t: 6, pad-b: 10 }).size({ max-w: panel-max-w-lg }) }
-  style bandStatus = { box: space({ pad-x: 4, pad-y: 2 }) }
-  style bandError = { box: space({ pad-x: 4, pad-y: 2 }), paint: border({ edge: b, color: border, width: 1 }) }
-  style iconCell = { box: size({ w: 10, h: 10, min-w: 10, min-h: 10 }), paint: radius(md).border({ color: border-subtle, width: 1 }).fill({ color: surface-0 }) }
-  style fullBtn = { box: size({ w: full }) }
-  style fontHit = { box: space({ pad: 2_5 }).size({ min-w: 0 }), paint: radius(md).border({ color: border-subtle, width: 1 }).fill({ color: surface-0 }) }
-  style fontSample = { box: size({ min-w: 0 }), paint: ink({ color: foreground }), text: type({ size: lg, leading: snug }) }
-  style catChip = { when: { selected: { paint: fill({ color: selected-bg }).ink({ color: foreground }).border({ color: border }) } } }
-  style surfaceRoot = { box: flow({ grow: 1 }).size({ h: full, min-w: 0, min-h: 0 }).overflow({ all: hidden }), paint: fill({ color: background }) }
-  style workbench = { box: flow({ grow: 1 }).size({h: full, min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }), paint: fill({ color: background }) }
-  style editorScroll = { box: flow({ grow: 1 }).size({h: full, min-w: 0, min-h: 0, basis: 0}), paint: fill({ color: background }) }
-  style pageTitle = { text: type({ size: xl, weight: semibold, tracking: tight }) }
-  style errorText = { box: flow({ grow: 1 }).size({ min-w: 0 }), paint: ink({ color: destructive }), text: type({ size: sm, wrap: truncate }) }
-  style growMin = { box: flow({ grow: 1 }).size({ min-w: 0 }) }
-  style shrink0 = { box: flow({ shrink: 0 }) }
-  style catsScroll = { box: overflow({ x: auto }).size({ min-w: 0 }) }
-  style specimenDock = { box: flow({ grow: 1 }).size({h: full, min-w: 0, min-h: 0, max-w: panel-max-w-md, basis: 0}).overflow({ all: hidden }), paint: border({ edge: l, color: border-subtle, width: 1 }).fill({ color: background }) }
-  style specimenPad = { box: flow({ grow: 1 }).size({ h: full, min-h: 0 }).space({ pad: 4 }) }
-  style specimenFrame = { box: size({ h: full, min-w: 0, min-h: 0 }).overflow({ all: hidden }), paint: elevation(lg) }
-  style specimenChrome = { box: flow({ shrink: 0 }).space({ pad-x: 3 }).size({ h: 8, min-w: 0, min-h: 8 }), paint: border({ edge: b, color: border-subtle, width: 1 }).fill({ color: surface-1 }) }
-  style trafficDots = { box: flow({ shrink: 0 }).size({ min-w: 12 }) }
-  style trafficDot = { box: flow({ shrink: 0 }).size({ w: 2, h: 2, min-w: 2, min-h: 2 }), paint: radius(full) }
-  style chromeTitle = { box: flow({ grow: 1 }).size({ min-w: 0 }), paint: ink({ color: muted-foreground }), text: type({ size: xs, wrap: truncate }) }
-  style scrollGrow = { box: flow({ grow: 1 }).size({ h: full, min-h: 0 }), paint: fill({ color: background }) }
-  style stageBody = { box: space({ pad: 5 }).size({ min-w: 0 }) }
-  style typeDisplay = { text: type({ family: display, size: 2xl, weight: semibold, tracking: tight }) }
-  style typeBody = { text: type({ family: body, size: sm, leading: relaxed }) }
-  style typeMono = { text: type({ family: mono, size: xs }) }
+  style sectionTitle = { type({ size: sm, weight: semibold }) }
+  style fieldHint = { fg(muted-foreground).type({ size: xs }) }
+  style pathMeta = { fg(muted-foreground).type({ family: mono, size: xs }) }
+  style doorTitle = { type({ weight: semibold }) }
+  style editorCol = { pad({ x: 6, t: 6, b: 10 }).size({ max-w: panel-max-w-lg }) }
+  style bandStatus = { pad({ x: 4, y: 2 }) }
+  style bandError = { pad({ x: 4, y: 2 }).border({ edge: b, color: border, width: 1 }) }
+  style iconCell = { size({ w: 10, h: 10, min-w: 10, min-h: 10 }).radius(md).border({ color: border-subtle, width: 1 }).bg(surface-0) }
+  style fullBtn = { size({ w: full }) }
+  style fontHit = { pad(2_5).size({ min-w: 0 }).radius(md).border({ color: border-subtle, width: 1 }).bg(surface-0) }
+  style fontSample = { size({ min-w: 0 }).fg(foreground).type({ size: lg, leading: snug }) }
+  style catChip = { when: { selected: bg(selected-bg).fg(foreground).border({ color: border }) } }
+  style surfaceRoot = { grow(1).size({ h: full, min-w: 0, min-h: 0 }).overflow({ all: hidden }).bg(background) }
+  style workbench = { grow(1).size({h: full, min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }).bg(background) }
+  style editorScroll = { grow(1).size({h: full, min-w: 0, min-h: 0, basis: 0}).bg(background) }
+  style pageTitle = { type({ size: xl, weight: semibold, tracking: tight }) }
+  style errorText = { grow(1).size({ min-w: 0 }).fg(destructive).type({ size: sm, wrap: truncate }) }
+  style growMin = { grow(1).size({ min-w: 0 }) }
+  style shrink0 = { shrink(0) }
+  style catsScroll = { overflow({ x: auto }).size({ min-w: 0 }) }
+  style specimenDock = { grow(1).size({h: full, min-w: 0, min-h: 0, max-w: panel-max-w-md, basis: 0}).overflow({ all: hidden }).border({ edge: l, color: border-subtle, width: 1 }).bg(background) }
+  style specimenPad = { grow(1).size({ h: full, min-h: 0 }).pad(4) }
+  style specimenFrame = { size({ h: full, min-w: 0, min-h: 0 }).overflow({ all: hidden }).elevation(lg) }
+  style specimenChrome = { shrink(0).pad({ x: 3 }).size({ h: 8, min-w: 0, min-h: 8 }).border({ edge: b, color: border-subtle, width: 1 }).bg(surface-1) }
+  style trafficDots = { shrink(0).size({ min-w: 12 }) }
+  style trafficDot = { shrink(0).size({ w: 2, h: 2, min-w: 2, min-h: 2 }).radius(full) }
+  style chromeTitle = { grow(1).size({ min-w: 0 }).fg(muted-foreground).type({ size: xs, wrap: truncate }) }
+  style scrollGrow = { grow(1).size({ h: full, min-h: 0 }).bg(background) }
+  style stageBody = { pad(5).size({ min-w: 0 }) }
+  style typeDisplay = { type({ family: display, size: 2xl, weight: semibold, tracking: tight }) }
+  style typeBody = { type({ family: body, size: sm, leading: relaxed }) }
+  style typeMono = { type({ family: mono, size: xs }) }
   type TypeRoleSelectProps = {
     token: string
     label: string
@@ -67,8 +67,8 @@
 <partial font-hit-row props: FontHitProps>
   <column gap="2" font-hit font-family={family} style(fontHit)>
     <row align="baseline" justify="between" gap="2" nowrap>
-      <p style(doorTitle, { box: flow({ grow: 1 }).size({ min-w: 0 }) })>{family}</p>
-      <p style(pathMeta, { box: flow({ shrink: 0 }) })>{category}</p>
+      <p style(doorTitle, { grow(1).size({ min-w: 0 }) })>{family}</p>
+      <p style(pathMeta, { shrink(0) })>{category}</p>
     </row>
     <p font-sample face={family} style(fontSample)>{sample}</p>
     <row gap="1" align="center">
@@ -108,14 +108,14 @@ export default controller(() => {
   <theme-facet-chrome session={session}></theme-facet-chrome>
 
   <if {session.hasError()}>
-    <row assets-error align="center" gap="2" style(bandError, { box: flow({ shrink: 0 }) })>
+    <row assets-error align="center" gap="2" style(bandError, { shrink(0) })>
       <p style(errorText)>{session.errorText()}</p>
       <button type="button" size="sm" variant="ghost" assets-retry on:click={session.onRetry}>Retry</button>
     </row>
   </if>
 
   <if {session.loading()}>
-    <row assets-loading align="center" gap="2" style(bandStatus, { box: flow({ shrink: 0 }) })>
+    <row assets-loading align="center" gap="2" style(bandStatus, { shrink(0) })>
       <spinner size="sm"></spinner>
       <p style(fieldHint)>Loading…</p>
     </row>
@@ -184,7 +184,7 @@ export default controller(() => {
             </row>
             <row gap="1" align="center" nowrap font-cats style(catsScroll)>
               <for {assets.fontCategoryOpts() as c} key={c.key}>
-                <button type="button" size="xs" variant="outline" tone="muted" font-cat={c.id} selected={c.on ? 'true' : null} on:click={() => assets.onFontCategory(c.id)} style(catChip, { box: flow({ shrink: 0 }) })>
+                <button type="button" size="xs" variant="outline" tone="muted" font-cat={c.id} selected={c.on ? 'true' : null} on:click={() => assets.onFontCategory(c.id)} style(catChip, { shrink(0) })>
                   {c.label}
                 </button>
               </for>
@@ -241,7 +241,7 @@ export default controller(() => {
           <if {assets.hasIconGlyphs()}>
             <grid cols="4" gap="2" icon-grid>
               <for {assets.iconGlyphs() as g} key={g.key}>
-                <center title={g.name} style(iconCell, { box: flow({ shrink: 0 }) })>
+                <center title={g.name} style(iconCell, { shrink(0) })>
                   <icon name={g.name} size="md" label={g.name}></icon>
                 </center>
               </for>
@@ -281,15 +281,15 @@ export default controller(() => {
           assets-specimen
           preview-specimen
           padding="none" style(specimenFrame)>
-          <column gap="0" style({  box: flow({ grow: 1 }).size({ h: full, min-h: 0 })  })>
+          <column gap="0" style({ grow(1).size({ h: full, min-h: 0 }) })>
             <row preview-chrome align="center" gap="2" nowrap style(specimenChrome)>
               <row gap="2" align="center" nowrap hidden="true" style(trafficDots)>
-                <stack style(trafficDot, { paint: fill({ color: destructive }) })></stack>
-                <stack style(trafficDot, { paint: fill({ color: warning }) })></stack>
-                <stack style(trafficDot, { paint: fill({ color: success }) })></stack>
+                <stack style(trafficDot, { bg(destructive) })></stack>
+                <stack style(trafficDot, { bg(warning) })></stack>
+                <stack style(trafficDot, { bg(success) })></stack>
               </row>
               <p style(chromeTitle)>Preview · {session.nameEdit()}</p>
-              <p style(pathMeta, { box: flow({ shrink: 0 }) })>{session.paintMode()}</p>
+              <p style(pathMeta, { shrink(0) })>{session.paintMode()}</p>
             </row>
           <scroll-area style(scrollGrow)>
             <column specimen-body gap="5" style(stageBody)>
@@ -320,7 +320,7 @@ export default controller(() => {
               <if {assets.hasIconGlyphs()}>
                 <row specimen-icons gap="3" align="center" nowrap>
                   <for {assets.iconGlyphs() as g} key={g.key}>
-                    <icon name={g.name} size={assets.iconPreviewSize()} label={g.name} style({ box: flow({ shrink: 0 }) })></icon>
+                    <icon name={g.name} size={assets.iconPreviewSize()} label={g.name} style({ shrink(0) })></icon>
                   </for>
                 </row>
               </if>

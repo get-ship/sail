@@ -9,7 +9,7 @@
     expanded = false
     depth = 1
   }
-  style guidePad = { box: size({ w: 3 }), paint: border({ edge: l, color: border-subtle, width: 1 }) }
+  style guidePad = { size({ w: 3 }).border({ edge: l, color: border-subtle, width: 1 }) }
 </scope>
 
 <controller>
@@ -53,9 +53,9 @@ export default controller(({ data, expanded, depth }: Scope) => {
 </controller>
 
 <column gap="0">
-  <span style({ box: flow({ display: contents }), text: type({ family: mono, size: sm, leading: loose }) })>
+  <span style({ display(contents).type({ family: mono, size: sm, leading: loose }) })>
     <if {parseError() !== ''}>
-      <span role="alert" style({ paint: ink({ color: destructive }) })>Invalid JSON: {parseError()}</span>
+      <span role="alert" style({ fg(destructive) })>Invalid JSON: {parseError()}</span>
     </if>
     <for {rows() as row} key={row.k}>
       <match {row.kind}>
@@ -68,48 +68,43 @@ export default controller(({ data, expanded, depth }: Scope) => {
           align="center"
           on:click={() => toggle(row.path, row.open)}
           on:keydown|key:Enter={() => toggle(row.path, row.open)}
-          style({ paint: group().radius(sm).cursor(pointer), when: { hover: { paint: fill({ color: hover-bg }) } } })
+          style({ group().radius(sm).cursor(pointer), when: { hover: bg(hover-bg) } })
         >
           <for {row.pads as pad} key={pad.i}>
             <span style(guidePad)></span>
           </for>
           <span
             aria-hidden="true"
-            style({
-              box: space({ pad-x: 1 }),
-              paint: ink({ color: muted-foreground }),
-              text: type({ size: xs }),
-              when: { groupExpanded: { paint: motion({ rotate: 90 }) } },
-            })
+            style({ pad({ x: 1 }).fg(muted-foreground).type({ size: xs }), when: { groupExpanded: rotate(90) } })
           >▶</span>
           <if {row.label !== ''}>
-            <span style({ text: type({ weight: medium }) })>"{row.label}"</span><span style({ paint: ink({ color: muted-foreground }) })>:&nbsp;</span>
+            <span style({ type({ weight: medium }) })>"{row.label}"</span><span style({ fg(muted-foreground) })>:&nbsp;</span>
           </if>
-          <span style({ paint: ink({ color: muted-foreground }) })>{row.openBracket}</span>
-          <span style({ box: space({ pad-x: 1, ml: 1 }), paint: ink({ color: muted-foreground }).fill({ color: muted }).radius(full), text: type({ size: xs }) })>{row.meta}</span>
+          <span style({ fg(muted-foreground) })>{row.openBracket}</span>
+          <span style({ pad({ x: 1 }).margin({ l: 1 }).fg(muted-foreground).bg(muted).radius(full).type({ size: xs }) })>{row.meta}</span>
           <if {!row.open}>
-            <span style({ paint: ink({ color: muted-foreground }) })>…{row.closeBracket}</span>
+            <span style({ fg(muted-foreground) })>…{row.closeBracket}</span>
           </if>
         </row>}{'close' => <row gap="0" align="center">
           <for {row.pads as pad} key={pad.i}>
             <span style(guidePad)></span>
           </for>
-          <span style({ box: space({ pad-x: 1 }), paint: ink({ color: muted-foreground }) })>{row.text}</span>
+          <span style({ pad({ x: 1 }).fg(muted-foreground) })>{row.text}</span>
         </row>}{else => <row
           role="treeitem"
           aria-level={row.ariaLevel}
           gap="0"
           align="center"
-          style({ paint: radius(sm), when: { hover: { paint: fill({ color: hover-bg }) } } })
+          style({ radius(sm), when: { hover: bg(hover-bg) } })
         >
           <for {row.pads as pad} key={pad.i}>
             <span style(guidePad)></span>
           </for>
           <if {row.label !== ''}>
-            <span style({ box: space({ pad-x: 1 }), text: type({ weight: medium }) })>"{row.label}"</span><span style({ paint: ink({ color: muted-foreground }) })>:&nbsp;</span>
+            <span style({ pad({ x: 1 }).type({ weight: medium }) })>"{row.label}"</span><span style({ fg(muted-foreground) })>:&nbsp;</span>
           </if>
           <match {row.kind}>
-            {'str' => <span style({ paint: ink({ color: success }) })>{row.text}</span>}{'num' => <span style({ paint: ink({ color: info }) })>{row.text}</span>}{'bool' => <span style({ paint: ink({ color: accent }), text: type({ weight: medium }) })>{row.text}</span>}{'null' => <span style({ paint: ink({ color: muted-foreground }) })>{row.text}</span>}{else => <span style({ paint: ink({ color: muted-foreground }) })>{row.text}</span>}</match>
+            {'str' => <span style({ fg(success) })>{row.text}</span>}{'num' => <span style({ fg(info) })>{row.text}</span>}{'bool' => <span style({ fg(accent).type({ weight: medium }) })>{row.text}</span>}{'null' => <span style({ fg(muted-foreground) })>{row.text}</span>}{else => <span style({ fg(muted-foreground) })>{row.text}</span>}</match>
         </row>}</match>
     </for>
   </span>

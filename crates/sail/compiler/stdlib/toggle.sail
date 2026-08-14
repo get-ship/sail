@@ -16,33 +16,29 @@
 
   // border(solid) is required — bare <button> UA is border-style:outset; without
   // it the outline join paints as separate browser chrome (not a segment).
-  style base = {box: place({ position: relative }).flow({ display: inline-flex }).size({ h: control-h-md }).space({ pad-x: 3, ms: -px }), paint: appearance(none).ink({ color: foreground }).fill({ color: background }).border({ color: border, width: 1, style: solid }).radius(none).motion({ property: colors, duration: fast, ease: out }).cursor(pointer).select(none).tapHighlight(none), text: type({ family: body, weight: medium, leading: none, wrap: nowrap, size: sm })}
-  style sizeMd = {box: size({ h: control-h-md }).space({ pad-x: 3 }), text: type({ size: sm })}
-  style sizeSm = {box: size({ h: control-h-sm }).space({ pad-x: 2_5 }), text: type({ size: xs })}
-  style sizeLg = {box: size({ h: control-h-lg }).space({ pad-x: 4 }), text: type({ size: base })}
-  style outline = {box: space({ ms: -px }), paint: radius(none)}
-  style ghost = {box: space({ ms: 0, me: 1 }), paint: border({ color: transparent }).radius(md)}
-  style segmented = {box: space({ ms: 0, me: 1 }), paint: border({ color: transparent }).radius(sm)}
+  style base = {position(relative).display(inline-flex).size({ h: control-h-md }).pad({ x: 3 }).margin({ s: -px }).appearance(none).fg(foreground).bg(background).border({ color: border, width: 1, style: solid }).radius(none).cursor(pointer).select(none).tapHighlight(none).type({ family: body, weight: medium, leading: none, wrap: nowrap, size: sm }), animate: { transition: play(colors, fast) }}
+  style sizeMd = {size({ h: control-h-md }).pad({ x: 3 }).type({ size: sm })}
+  style sizeSm = {size({ h: control-h-sm }).pad({ x: 2_5 }).type({ size: xs })}
+  style sizeLg = {size({ h: control-h-lg }).pad({ x: 4 }).type({ size: base })}
+  style outline = {margin({ s: -px }).radius(none)}
+  style ghost = {margin({ s: 0, e: 1 }).border({ color: transparent }).radius(md)}
+  style segmented = {margin({ s: 0, e: 1 }).border({ color: transparent }).radius(sm)}
 </scope>
 
 <button
   type="button"
-  style(base, {when: {hover: {paint: fill({ color: hover-bg }).ink(foreground)}, pressed: {paint: fill({ color: primary }).ink({ color: primary-foreground }).border({ color: primary }), when: {// Selected must survive hover (not hover-bg wash / unselected look).
-          hover: {paint: fill({ color: primary }).ink({ color: primary-foreground }).border({ color: primary }).filter({ opacity: 90 })}}, box: place({ z: 1 })}, disabled: {paint: filter({ opacity: 50 }).cursor(not-allowed)}, focus: {paint: border({ style: solid, kind: outline, width: 2, color: ring }), box: place({ z: 2 })}}, match: {
-      size: { md: sizeMd, sm: sizeSm, lg: sizeLg },
-      variant: { outline: outline, ghost: ghost, segmented: segmented },
-    }, compound: [
-      {orientation: vertical, variant: outline, box: space({ mt: -px, ms: 0, me: 0 }), paint: radius(none)},
-      {variant: ghost, box: space({ ms: 0, mt: 0, me: 1 }), paint: border({ color: transparent }).radius(md)},
-      {variant: segmented, box: space({ ms: 0, mt: 0, me: 1 }), paint: border({ color: transparent }).radius(sm)},
-      {orientation: vertical, variant: ghost, box: space({ ms: 0, mt: 0, me: 0, mb: 1 }), paint: border({ color: transparent }).radius(md)},
-      {orientation: vertical, variant: segmented, box: space({ ms: 0, mt: 0, me: 0, mb: 1 }), paint: border({ color: transparent }).radius(sm)},
-      {orientation: horizontal, variant: outline, when: {first: {box: space({ ms: 0 }), paint: radius({ l: md })}, last: {paint: radius({ r: md })}}},
-      {orientation: vertical, variant: outline, when: {first: {box: space({ mt: 0 }), paint: radius({ t: md })}, last: {paint: radius({ b: md })}}},
-      {variant: ghost, when: {last: {box: space({ me: 0 })}}},
-      {variant: segmented, when: {last: {box: space({ me: 0 })}}},
-      {orientation: vertical, variant: ghost, when: {last: {box: space({ mb: 0 })}}},
-      {orientation: vertical, variant: segmented, when: {last: {box: space({ mb: 0 })}}},
+  style(base, {when: {hover: bg(hover-bg).fg(foreground), pressed: {bg(primary).fg(primary-foreground).border({ color: primary }), when: {hover: bg(primary).fg(primary-foreground).border({ color: primary }).filter({ opacity: 90 })}, position({ z: 1 })}, disabled: filter({ opacity: 50 }).cursor(not-allowed), focus: border({ style: solid, kind: outline, width: 2, color: ring }).position({ z: 2 })}, match: { size: { md: sizeMd, sm: sizeSm, lg: sizeLg }, variant: { outline: outline, ghost: ghost, segmented: segmented } }, compound: [
+      {orientation: vertical, variant: outline, margin({ t: -px, s: 0, e: 0 }).radius(none)},
+      {variant: ghost, margin({ s: 0, t: 0, e: 1 }).border({ color: transparent }).radius(md)},
+      {variant: segmented, margin({ s: 0, t: 0, e: 1 }).border({ color: transparent }).radius(sm)},
+      {orientation: vertical, variant: ghost, margin({ s: 0, t: 0, e: 0, b: 1 }).border({ color: transparent }).radius(md)},
+      {orientation: vertical, variant: segmented, margin({ s: 0, t: 0, e: 0, b: 1 }).border({ color: transparent }).radius(sm)},
+      {orientation: horizontal, variant: outline, when: {first: margin({ s: 0 }).radius({ l: md }), last: radius({ r: md })}},
+      {orientation: vertical, variant: outline, when: {first: margin({ t: 0 }).radius({ t: md }), last: radius({ b: md })}},
+      {variant: ghost, when: {last: margin({ e: 0 })}},
+      {variant: segmented, when: {last: margin({ e: 0 })}},
+      {orientation: vertical, variant: ghost, when: {last: margin({ b: 0 })}},
+      {orientation: vertical, variant: segmented, when: {last: margin({ b: 0 })}},
     ]})
 >
   <slot></slot>

@@ -3,13 +3,13 @@ export default null
 </controller>
 
 <scope>
-  style page = { box: space({ pad: 6, mx: auto }).size({ max-w: breakpoint-tablet }) }
-  style caption = { paint: ink({ color: muted-foreground }) }
+  style page = { pad(6).margin({ x: auto }).size({ max-w: breakpoint-tablet }) }
+  style caption = { fg(muted-foreground) }
   type DemoLinkProps = { href: string; name: string; blurb: string }
 </scope>
 
 <partial demo-link props: DemoLinkProps>
-  <column gap="1" style({ box: space({ pad: 3 }), paint: border({ color: border, width: 1 }).radius(md).fill({ color: surface-1 }) })>
+  <column gap="1" style({ pad(3).border({ color: border, width: 1 }).radius(md).bg(surface-1) })>
     <a href={href}>{name}</a>
     <p style(caption)>{blurb}</p>
   </column>

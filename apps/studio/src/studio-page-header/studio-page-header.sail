@@ -6,10 +6,10 @@
   props: {
     title = ''
   }
-  style headerRoot = { box: flow({ shrink: 0 }).size({ h: 7 }).space({ pad-x: 3 }), paint: border({ edge: b, color: border-subtle, width: 1 }).fill({ color: surface-1 }) }
-  style leadRow = { box: flow({ grow: 1 }).size({ min-w: 0 }) }
-  style eyebrow = { paint: ink({ color: muted-foreground }), text: type({ size: xs, weight: semibold, tracking: wide, case: uppercase }) }
-  style actionsRow = { box: flow({ shrink: 0 }) }
+  style headerRoot = { shrink(0).size({ h: 7 }).pad({ x: 3 }).border({ edge: b, color: border-subtle, width: 1 }).bg(surface-1) }
+  style leadRow = { grow(1).size({ min-w: 0 }) }
+  style eyebrow = { fg(muted-foreground).type({ size: xs, weight: semibold, tracking: wide, case: uppercase }) }
+  style actionsRow = { shrink(0) }
 </scope>
 
 <row studio-page-header align="center" gap="2" nowrap justify="between" style(headerRoot)>

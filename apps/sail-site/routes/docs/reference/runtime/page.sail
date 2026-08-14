@@ -2,19 +2,19 @@
   Author runtime (tier B) — exports from author-surface.json via runtime-surface composition.
 -->
 <scope>
-  style root = { box: size({ min-w: 0 }) }
-  style intro = { box: size({ max-w: breakpoint-tablet }) }
-  style eyebrow = { paint: ink({ color: accent }), text: type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
-  style lead = { paint: ink({ color: muted-foreground }), text: type({ size: lg, leading: relaxed }) }
-  style sectionLead = { box: size({ max-w: breakpoint-tablet }) }
-  style sectionSummary = { box: size({ max-w: breakpoint-tablet }), paint: ink({ color: muted-foreground }) }
-  style cardMin = { box: size({ min-w: 0 }) }
-  style cardDoc = { box: size({ max-w: panel-max-w-sm }), paint: ink({ color: muted-foreground }) }
-  style exportRow = { box: space({ pad-x: 3, pad-y: 2 }), paint: radius(md).border({ color: border, width: 1 }) }
-  style exportName = { box: size({ min-w: 32 }) }
-  style exportSig = { paint: ink({ color: muted-foreground }), text: type({ family: mono }) }
-  style exportDoc = { paint: ink({ color: muted-foreground }) }
-  style exportBody = { box: size({ min-w: 0 }) }
+  style root = { size({ min-w: 0 }) }
+  style intro = { size({ max-w: breakpoint-tablet }) }
+  style eyebrow = { fg(accent).type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
+  style lead = { fg(muted-foreground).type({ size: lg, leading: relaxed }) }
+  style sectionLead = { size({ max-w: breakpoint-tablet }) }
+  style sectionSummary = { size({ max-w: breakpoint-tablet }).fg(muted-foreground) }
+  style cardMin = { size({ min-w: 0 }) }
+  style cardDoc = { size({ max-w: panel-max-w-sm }).fg(muted-foreground) }
+  style exportRow = { pad({ x: 3, y: 2 }).radius(md).border({ color: border, width: 1 }) }
+  style exportName = { size({ min-w: 32 }) }
+  style exportSig = { fg(muted-foreground).type({ family: mono }) }
+  style exportDoc = { fg(muted-foreground) }
+  style exportBody = { size({ min-w: 0 }) }
 </scope>
 
 <controller>

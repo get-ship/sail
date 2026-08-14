@@ -6,7 +6,7 @@
   props: {}
 
   // Caption rides foreground.
-  style base = {box: space({ pad-x: 2 }), paint: ink({ color: foreground }), text: type({ size: sm, weight: medium })}
+  style base = {pad({ x: 2 }).fg(foreground).type({ size: sm, weight: medium })}
 </scope>
 
 <legend style(base)>

@@ -43,13 +43,13 @@ export default controller(() => {
 </controller>
 
 <scope>
-  style brand = { text: fontSize(lg).tracking(tight) }
-  style brandDeck = { paint: fg(primary) }
-  style version = { box: padX(2), paint: fg(muted-foreground).borderWidth(1).border(border).radius(full), text: fontFamily(mono).fontSize(xs) }
-  style main = { box: grow(1).minW(0).pad(7).maxW(breakpoint-tablet) }
+  style brand = { fontSize(lg).tracking(tight) }
+  style brandDeck = { fg(primary) }
+  style version = { padX(2).fg(muted-foreground).borderWidth(1).border(border).radius(full).fontFamily(mono).fontSize(xs) }
+  style main = { grow(1).minW(0).pad(7).maxW(breakpoint-tablet) }
   // Rail default-slot is a nowrap row; short labels wrap to 6–13px letters.
   // control-h-xs is the 24px tap floor (control-h-2xs is 22).
-  style railLink = { box: minW(control-h-xs).minH(control-h-xs) }
+  style railLink = { minW(control-h-xs).minH(control-h-xs) }
 </scope>
 
 <navbar sticky bordered>

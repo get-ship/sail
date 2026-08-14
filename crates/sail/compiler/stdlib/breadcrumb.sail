@@ -3,7 +3,7 @@
   Host list Style: flex + muted-foreground before skins attach.
 -->
 <scope>
-  style list = {box: flow({ display: flex }).space({ m: 0, pad: 0 }), paint: ink({ color: muted-foreground }), text: type({ family: body, size: sm, list: none })}
+  style list = {display(flex).pad(0).margin(0).fg(muted-foreground).type({ family: body, size: sm, list: none })}
 </scope>
 <nav label="Breadcrumb">
   <ol style(list)>

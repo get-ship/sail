@@ -4,18 +4,15 @@
 -->
 
 <scope>
-  style page = { box: size({ w: full, max-w: breakpoint-desktop }).space({ mx: auto }) }
-  style mutedXs = { paint: ink({ color: muted-foreground }), text: type({ size: xs }) }
-  style knobLabel = {
-    paint: ink({ color: muted-foreground }),
-    text: type({ size: xs, weight: medium, tracking: wide, case: uppercase }),
-}
-  style sizeValue = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs }) }
-  style tickRow = { box: size({ w: full }).space({ pad-x: 1_5, pad-t: 1 }) }
-  style tick = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs }) }
-  style exampleBlock = { box: size({ w: full }).space({ pad-t: 2, pad-b: 4 }) }
-  style sectionLabel = { paint: ink({ color: muted-foreground }), text: type({ size: xs, tracking: wide, case: uppercase }) }
-  style demoRow = { box: size({ w: full }).space({ pad-y: 2 }) }
+  style page = { size({ w: full, max-w: breakpoint-desktop }).margin({ x: auto }) }
+  style mutedXs = { fg(muted-foreground).type({ size: xs }) }
+  style knobLabel = { fg(muted-foreground).type({ size: xs, weight: medium, tracking: wide, case: uppercase }) }
+  style sizeValue = { fg(muted-foreground).type({ family: mono, size: xs }) }
+  style tickRow = { size({ w: full }).pad({ x: 1_5, t: 1 }) }
+  style tick = { fg(muted-foreground).type({ family: mono, size: xs }) }
+  style exampleBlock = { size({ w: full }).pad({ t: 2, b: 4 }) }
+  style sectionLabel = { fg(muted-foreground).type({ size: xs, tracking: wide, case: uppercase }) }
+  style demoRow = { size({ w: full }).pad({ y: 2 }) }
 </scope>
 
 <controller>
@@ -55,7 +52,7 @@ export default controller((_ctx: Scope) => {
   const iconExSpin = () =>
     `<icon name="refresh-cw" spin label="Refreshing"></icon>`
   const iconExColor = () =>
-    `<span style({ paint: ink({ color: primary }) })>\n  <icon name="heart"></icon>\n</span>`
+    `<span style({ fg(primary) })>\n  <icon name="heart"></icon>\n</span>`
 
   return {
     sizeIdx,
@@ -118,11 +115,11 @@ export default controller((_ctx: Scope) => {
         <slider bind:value={sizeIdx} min="0" max="4" step="1" size="sm" label="Size" ticks="xs,sm,md,lg,xl"></slider>
       </column>
       <row gap="5" align="start">
-        <column gap="2" style({ box: flow({ grow: 1 }).size({ min-w: 0 }) })>
+        <column gap="2" style({ grow(1).size({ min-w: 0 }) })>
           <label style(knobLabel)>Spin</label>
           <switch bind:checked={iconSpin} size="sm" label="Spin"></switch>
         </column>
-        <column gap="2" style({ box: flow({ grow: 1 }).size({ min-w: 0 }) })>
+        <column gap="2" style({ grow(1).size({ min-w: 0 }) })>
           <label style(knobLabel)>Label</label>
           <switch bind:checked={iconLabeled} size="sm" label="Accessible label"></switch>
         </column>
@@ -182,8 +179,8 @@ export default controller((_ctx: Scope) => {
         code={iconExColor()}
       >
         <row gap="3" align="center" style(demoRow)>
-          <span style({ paint: ink({ color: primary }) })><icon name="heart"></icon></span>
-          <span style({ paint: ink({ color: destructive }) })><icon name="heart"></icon></span>
+          <span style({ fg(primary) })><icon name="heart"></icon></span>
+          <span style({ fg(destructive) })><icon name="heart"></icon></span>
         </row>
       </doc-example>
     </column>

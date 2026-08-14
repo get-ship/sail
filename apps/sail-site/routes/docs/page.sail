@@ -3,16 +3,16 @@
 -->
 
 <scope>
-  style page = { box: size({ max-w: breakpoint-tablet }).space({ mx: auto }) }
-  style intro = { box: size({ max-w: breakpoint-tablet }) }
-  style eyebrow = { paint: ink({ color: accent }), text: type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
-  style lead = { paint: ink({ color: muted-foreground }), text: type({ size: lg, leading: relaxed }) }
-  style section = { box: space({ mt: 2 }) }
-  style cardGrid = { box: size({ w: full }) }
-  style card = { box: space({ pad: 4 }).size({ h: full }), paint: border({ color: border, width: 1 }).radius(lg).fill({ color: surface-1 }) }
-  style cardTitle = { text: type({ size: md, weight: semibold }) }
-  style cardBody = { paint: ink({ color: muted-foreground }), text: type({ size: sm, leading: relaxed }) }
-  style ctaRow = { box: space({ pad-t: 4, mt: 4 }), paint: border({ color: border, width: 1, edge: t }) }
+  style page = { size({ max-w: breakpoint-tablet }).margin({ x: auto }) }
+  style intro = { size({ max-w: breakpoint-tablet }) }
+  style eyebrow = { fg(accent).type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
+  style lead = { fg(muted-foreground).type({ size: lg, leading: relaxed }) }
+  style section = { margin({ t: 2 }) }
+  style cardGrid = { size({ w: full }) }
+  style card = { pad(4).size({ h: full }).border({ color: border, width: 1 }).radius(lg).bg(surface-1) }
+  style cardTitle = { type({ size: md, weight: semibold }) }
+  style cardBody = { fg(muted-foreground).type({ size: sm, leading: relaxed }) }
+  style ctaRow = { pad({ t: 4 }).margin({ t: 4 }).border({ color: border, width: 1, edge: t }) }
 </scope>
 
 <column gap="6" style(page)>

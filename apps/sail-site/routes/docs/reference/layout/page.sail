@@ -2,12 +2,12 @@
   /docs/reference/layout — layout keyword vocabulary from language-surface.
 -->
 <scope>
-  style root = { box: size({ min-w: 0 }) }
-  style intro = { box: size({ max-w: breakpoint-tablet }) }
-  style eyebrow = { paint: ink({ color: accent }), text: type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
-  style lead = { paint: ink({ color: muted-foreground }), text: type({ size: lg, leading: relaxed }) }
-  style cardMin = { box: size({ min-w: 0 }) }
-  style propsLine = { box: size({ max-w: panel-max-w-sm }), paint: ink({ color: muted-foreground }) }
+  style root = { size({ min-w: 0 }) }
+  style intro = { size({ max-w: breakpoint-tablet }) }
+  style eyebrow = { fg(accent).type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
+  style lead = { fg(muted-foreground).type({ size: lg, leading: relaxed }) }
+  style cardMin = { size({ min-w: 0 }) }
+  style propsLine = { size({ max-w: panel-max-w-sm }).fg(muted-foreground) }
 </scope>
 
 <controller>

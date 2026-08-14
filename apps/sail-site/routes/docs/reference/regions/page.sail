@@ -2,14 +2,14 @@
   /docs/reference/regions — region/expression capability matrix (compiler SSOT).
 -->
 <scope>
-  style root = { box: size({ min-w: 0 }) }
-  style intro = { box: size({ max-w: breakpoint-tablet }) }
-  style eyebrow = { paint: ink({ color: accent }), text: type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
-  style lead = { paint: ink({ color: muted-foreground }), text: type({ size: lg, leading: relaxed }) }
-  style meta = { paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
-  style cardMin = { box: size({ min-w: 0 }) }
-  style monoMuted = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs }) }
-  style notes = { box: size({ max-w: breakpoint-tablet }), paint: ink({ color: muted-foreground }) }
+  style root = { size({ min-w: 0 }) }
+  style intro = { size({ max-w: breakpoint-tablet }) }
+  style eyebrow = { fg(accent).type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
+  style lead = { fg(muted-foreground).type({ size: lg, leading: relaxed }) }
+  style meta = { fg(muted-foreground).type({ size: sm }) }
+  style cardMin = { size({ min-w: 0 }) }
+  style monoMuted = { fg(muted-foreground).type({ family: mono, size: xs }) }
+  style notes = { size({ max-w: breakpoint-tablet }).fg(muted-foreground) }
 </scope>
 
 <controller>

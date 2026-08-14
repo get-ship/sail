@@ -5,12 +5,9 @@ export default controller(() => ({ enabled: signal(false) }))
 </controller>
 
 <scope>
-  style page = { box: space({ pad: 6, mx: auto }).size({ max-w: breakpoint-tablet }) }
-  style muted = { paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
-  style panel = {
-    box: space({ pad: 4 }),
-    paint: border({ color: border, width: 1 }).radius(md).fill({ color: surface-1 }),
-  }
+  style page = { pad(6).margin({ x: auto }).size({ max-w: breakpoint-tablet }) }
+  style muted = { fg(muted-foreground).type({ size: sm }) }
+  style panel = { pad(4).border({ color: border, width: 1 }).radius(md).bg(surface-1) }
 </scope>
 
 <column gap="4" style(page)>

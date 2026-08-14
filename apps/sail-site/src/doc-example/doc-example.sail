@@ -11,14 +11,11 @@
     code = ''
   }
 
-  style section = { box: size({ w: full }).space({ pad-y: 4 }).overflow({ all: visible }) }
-  style heading = { text: type({ size: md, weight: semibold }) }
-  style leadText = { paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
-  style liveFrame = {
-    box: flow({ grow: 1 }).size({min-w: 0, basis: 0}).space({ pad: 4 }).overflow({ all: visible }),
-    paint: radius(lg).border({ color: border, width: 1 }).fill({ color: surface-0 }),
-}
-  style codeCol = { box: flow({ grow: 1 }).size({min-w: 0, basis: 0}) }
+  style section = { size({ w: full }).pad({ y: 4 }).overflow({ all: visible }) }
+  style heading = { type({ size: md, weight: semibold }) }
+  style leadText = { fg(muted-foreground).type({ size: sm }) }
+  style liveFrame = { grow(1).size({min-w: 0, basis: 0}).pad(4).overflow({ all: visible }).radius(lg).border({ color: border, width: 1 }).bg(surface-0) }
+  style codeCol = { grow(1).size({min-w: 0, basis: 0}) }
 </scope>
 
 <column gap="3" style(section)>
@@ -28,7 +25,7 @@
   <if {lead() !== ''}>
     <p style(leadText)>{lead()}</p>
   </if>
-  <row gap="4" align="start" style({ box: size({ w: full, min-w: 0 }).overflow({ all: visible }) })>
+  <row gap="4" align="start" style({ size({ w: full, min-w: 0 }).overflow({ all: visible }) })>
     <column gap="3" style(liveFrame)>
       <slot></slot>
     </column>

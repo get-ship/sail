@@ -12,37 +12,12 @@
     status: 'sent' | 'sending' | 'error' = 'sent'
   }
 
-  style host = {
-    box: size({ max-w: full }),
-    paint: group().ink({ color: foreground }),
-    text: type({ family: body }),
-  }
-  style meta = {
-    box: space({ pad-x: half }),
-    paint: ink({ color: muted-foreground }),
-    text: type({ size: xs }),
-  }
-  style fromLabel = { text: type({ weight: medium }) }
-  style bubble = {
-    box: space({ pad-x: 3, pad-y: 2 }),
-    paint: radius(lg).fill({ color: surface-1 }).border({ color: border, width: 1 }).ink({ color: foreground }),
-    text: type({ size: base, leading: normal }),
-    when: {
-      groupStateUser: { paint: fill({ color: hover-bg }).border({ color: primary, width: 1 }) },
-      groupStateSystem: { paint: fill({ color: muted }).ink({ color: muted-foreground }) },
-      groupStateTool: { paint: fill({ color: hover-bg }).border({ color: accent, width: 1 }) },
-      groupStateError: { paint: border({ color: destructive, width: 1 }) },
-      groupStateSending: { paint: filter({ opacity: 75 }) },
-      groupStateCode: { text: type({ family: mono, size: sm, wrap: pre-wrap }) },
-      groupStateToolCall: { text: type({ family: mono, size: sm, wrap: pre-wrap }) },
-      groupStateTerminalSnapshot: {
-        paint: fill({ color: surface-inverse }).ink({ color: background }).border({ color: border-subtle, width: 1 }),
-        text: type({ family: mono, size: sm, wrap: pre-wrap }),
-      },
-    },
-  }
+  style host = { size({ max-w: full }).group().fg(foreground).type({ family: body }) }
+  style meta = { pad({ x: half }).fg(muted-foreground).type({ size: xs }) }
+  style fromLabel = { type({ weight: medium }) }
+  style bubble = { pad({ x: 3, y: 2 }).radius(lg).bg(surface-1).border({ color: border, width: 1 }).fg(foreground).type({ size: base, leading: normal }), when: { groupStateUser: bg(hover-bg).border({ color: primary, width: 1 }), groupStateSystem: bg(muted).fg(muted-foreground), groupStateTool: bg(hover-bg).border({ color: accent, width: 1 }), groupStateError: border({ color: destructive, width: 1 }), groupStateSending: filter({ opacity: 75 }), groupStateCode: type({ family: mono, size: sm, wrap: pre-wrap }), groupStateToolCall: type({ family: mono, size: sm, wrap: pre-wrap }), groupStateTerminalSnapshot: bg(surface-inverse).fg(background).border({ color: border-subtle, width: 1 }).type({ family: mono, size: sm, wrap: pre-wrap }) } }
   // contents: no trailing box when empty so column gap never opens under it.
-  style trailing = { box: flow({ display: contents }) }
+  style trailing = { display(contents) }
 </scope>
 
 <column

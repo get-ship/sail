@@ -12,57 +12,18 @@
     value = ''
   }
 
-  style root = {
-    box: size({ w: full, min-w: 0 }).overflow({ x: auto }),
-    paint: fill({ color: surface-0 }),
-  }
-  style mono = {
-    box: flow({ display: contents }),
-    text: type({ family: mono, size: xs, leading: normal }),
-  }
-  style lineAdd = {
-    box: space({ pad-x: 2, pad-y: px }).size({ w: full, min-w: 0 }),
-    paint: fill({ color: success, mix: 15 }),
-  }
-  style lineDel = {
-    box: space({ pad-x: 2, pad-y: px }).size({ w: full, min-w: 0 }),
-    paint: fill({ color: destructive, mix: 15 }),
-  }
-  style lineHunk = {
-    box: space({ pad-x: 2, pad-y: px }).size({ w: full, min-w: 0 }),
-    paint: fill({ color: muted }),
-  }
-  style lineCtx = {
-    box: space({ pad-x: 2, pad-y: px }).size({ w: full, min-w: 0 }),
-  }
-  style signAdd = {
-    box: flow({ shrink: 0 }).size({ w: 4 }),
-    paint: ink({ color: success }),
-    text: type({ weight: semibold }),
-  }
-  style signDel = {
-    box: flow({ shrink: 0 }).size({ w: 4 }),
-    paint: ink({ color: destructive }),
-    text: type({ weight: semibold }),
-  }
-  style signHunk = {
-    box: flow({ shrink: 0 }).size({ w: 4 }),
-    paint: ink({ color: info }),
-  }
-  style signCtx = {
-    box: flow({ shrink: 0 }).size({ w: 4 }),
-    paint: ink({ color: muted-foreground }),
-  }
-  style textBody = {
-    box: flow({ grow: 1 }).size({ min-w: 0 }),
-    paint: ink({ color: foreground }),
-    text: type({ size: xs }),
-  }
-  style textHunk = {
-    box: flow({ grow: 1 }).size({ min-w: 0 }),
-    paint: ink({ color: info }),
-    text: type({ size: xs }),
-  }
+  style root = { size({ w: full, min-w: 0 }).overflow({ x: auto }).bg(surface-0) }
+  style mono = { display(contents).type({ family: mono, size: xs, leading: normal }) }
+  style lineAdd = { pad({ x: 2, y: px }).size({ w: full, min-w: 0 }).bg({ color: success, mix: 15 }) }
+  style lineDel = { pad({ x: 2, y: px }).size({ w: full, min-w: 0 }).bg({ color: destructive, mix: 15 }) }
+  style lineHunk = { pad({ x: 2, y: px }).size({ w: full, min-w: 0 }).bg(muted) }
+  style lineCtx = { pad({ x: 2, y: px }).size({ w: full, min-w: 0 }) }
+  style signAdd = { shrink(0).size({ w: 4 }).fg(success).type({ weight: semibold }) }
+  style signDel = { shrink(0).size({ w: 4 }).fg(destructive).type({ weight: semibold }) }
+  style signHunk = { shrink(0).size({ w: 4 }).fg(info) }
+  style signCtx = { shrink(0).size({ w: 4 }).fg(muted-foreground) }
+  style textBody = { grow(1).size({ min-w: 0 }).fg(foreground).type({ size: xs }) }
+  style textHunk = { grow(1).size({ min-w: 0 }).fg(info).type({ size: xs }) }
 </scope>
 
 <controller>

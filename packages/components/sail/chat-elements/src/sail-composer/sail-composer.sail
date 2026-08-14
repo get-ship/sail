@@ -15,29 +15,14 @@
     multiline = true
   }
 
-  style frame = {
-    box: size({ w: full, min-w: 0 }).space({ pad: 3 }),
-    paint: ink({ color: foreground }).fill({ color: background }).border({ color: border, width: 1 }).radius(lg),
-    when: {
-      focusWithin: { paint: border({ color: primary, width: 1 }).border({ kind: outline, color: ring }) },
-      stateDisabled: { paint: fill({ color: muted }).filter({ opacity: 75 }) },
-    },
-  }
+  style frame = { size({ w: full, min-w: 0 }).pad(3).fg(foreground).bg(background).border({ color: border, width: 1 }).radius(lg), when: { focusWithin: border({ color: primary, width: 1 }).border({ kind: outline, color: ring }), stateDisabled: bg(muted).filter({ opacity: 75 }) } }
   // Chat field: full width. rows="3" + fixed autosize (never height:0) is the
   // empty-state floor — L1 size=md minH(control-h-md) only floors, it does not
   // cap. maxH caps the open box once content grows.
-  style fieldMulti = {
-    box: size({ w: full, min-w: 0, min-h: 20, max-h: 48 }).space({ pad-x: 2, pad-y: 2 }).overflow({ y: auto }),
-    paint: ink({ color: foreground }).fill({ color: transparent }).border({ width: 0 }).radius(none).elevation(none),
-    text: type({ family: body, size: base, leading: relaxed }),
-  }
-  style field = {
-    box: size({ w: full, min-w: 0, min-h: control-h-md }).space({ pad-x: 2, pad-y: 1_5 }),
-    paint: ink({ color: foreground }).fill({ color: transparent }).border({ width: 0 }).radius(none).elevation(none),
-    text: type({ family: body, size: base, leading: normal }),
-  }
-  style actions = { box: size({ w: full }) }
-  style send = { box: flow({ shrink: 0 }) }
+  style fieldMulti = { size({ w: full, min-w: 0, min-h: 20, max-h: 48 }).pad({ x: 2, y: 2 }).overflow({ y: auto }).fg(foreground).bg(transparent).border({ width: 0 }).radius(none).elevation(none).type({ family: body, size: base, leading: relaxed }) }
+  style field = { size({ w: full, min-w: 0, min-h: control-h-md }).pad({ x: 2, y: 1_5 }).fg(foreground).bg(transparent).border({ width: 0 }).radius(none).elevation(none).type({ family: body, size: base, leading: normal }) }
+  style actions = { size({ w: full }) }
+  style send = { shrink(0) }
 </scope>
 
 <controller>
@@ -94,7 +79,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   data-state={disabled() ? 'disabled' : ''}
   style(frame)
 >
-  <div style({ box: flow({ display: contents }) })>
+  <div style({ display(contents) })>
     <slot name="attachments"></slot>
   </div>
   <if {multiline()}>
@@ -122,7 +107,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     </row>
   </if>
   <if {!multiline()}>
-    <row nowrap gap="2" align="center" style({ box: size({ w: full }) })>
+    <row nowrap gap="2" align="center" style({ size({ w: full }) })>
       <input
         type="text"
         placeholder={placeholder()}
@@ -131,7 +116,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         use:fieldKeys
         style(field)
       >
-      <row nowrap gap="1" align="center" style({ box: flow({ shrink: 0 }) })>
+      <row nowrap gap="1" align="center" style({ shrink(0) })>
         <slot name="trailing"></slot>
         <button
           use:sendClick

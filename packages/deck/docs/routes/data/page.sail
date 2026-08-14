@@ -15,13 +15,13 @@ export default controller((ctx: ControllerScope<Scope>) => ({
 </controller>
 
 <scope>
-  style page = { box: maxW(breakpoint-tablet).mx(auto) }
-  style eyebrow = { box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
-  style lead = { paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) }
-  style demo = { box: pad(5), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) }
-  style big = { box: mb(3), paint: fg(foreground), text: fontFamily(mono).fontWeight(bold).fontSize(4xl).leading(none) }
-  style demoMuted = { box: mt(3), paint: fg(muted-foreground), text: fontSize(sm) }
-  style footNav = { box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) }
+  style page = { maxW(breakpoint-tablet).mx(auto) }
+  style eyebrow = { mb(2).fg(accent).fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
+  style lead = { fg(muted-foreground).fontSize(lg).leading(relaxed) }
+  style demo = { pad(5).borderWidth(1).border(border).radius(lg).bg(surface-1) }
+  style big = { mb(3).fg(foreground).fontFamily(mono).fontWeight(bold).fontSize(4xl).leading(none) }
+  style demoMuted = { mt(3).fg(muted-foreground).fontSize(sm) }
+  style footNav = { mt(8).padT(4).borderTWidth(1).borderT(border) }
 </scope>
 
 <article style(page)>

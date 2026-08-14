@@ -28,7 +28,7 @@ export default controller((ctx: Scope) => {
 
 </controller>
 <prose>
-  <div use:paintMarkdown style({ box: flow({ display: block }) })>
-    <span style({ box: flow({ display: contents }), text: type({ size: base }) })></span>
+  <div use:paintMarkdown style({ display(block) })>
+    <span style({ display(contents).type({ size: base }) })></span>
   </div>
 </prose>

@@ -19,6 +19,7 @@ pub mod ir;
 pub mod parse;
 pub mod prefixes;
 pub mod rewrite;
+pub mod rewrite_v3;
 pub mod scales;
 pub mod setters;
 pub mod style_ir;
@@ -30,15 +31,15 @@ pub mod type_resolve;
 pub mod vocab;
 
 pub use complete::{
+    OBJECT_KEYS, StyleCompleteContext, StyleCompleteItem, StyleCompleteKind,
     collect_style_const_names, style_complete_at, style_complete_context_at,
-    style_complete_for_context, when_keys, StyleCompleteContext, StyleCompleteItem,
-    StyleCompleteKind, OBJECT_KEYS,
+    style_complete_for_context, when_keys,
 };
 
 pub use channel::{
-    channel_for_setter, is_animate_trigger, is_geometry_setter, is_interaction_when_key,
-    is_text_bearing, style_contains_geometry, style_uses_text_channel, style_uses_text_channel_env,
-    text_channel_host_error, Channel, TEXT_BEARING_ELEMENTS,
+    Channel, TEXT_BEARING_ELEMENTS, channel_for_setter, is_animate_trigger, is_geometry_setter,
+    is_interaction_when_key, is_text_bearing, style_contains_geometry, style_uses_text_channel,
+    style_uses_text_channel_env, text_channel_host_error,
 };
 pub use component_surfaces::{
     all_surface_packs, color_paint_vocabulary, is_component_public_name,
@@ -46,12 +47,12 @@ pub use component_surfaces::{
 };
 pub use concern_rewrite::{retired_dual_border_sites, rewrite_concern_source};
 pub use concerns::{
-    alias_concern_call, concern_doc_line, concern_kind, concerns, find_concern, is_concern_form,
-    is_marker, resolve_concern_name, retired_replacement, ConcernSlot, ConcernSpec, MARKERS,
+    ConcernSlot, ConcernSpec, MARKERS, alias_concern_call, concern_doc_line, concern_kind,
+    concerns, find_concern, is_concern_form, is_marker, resolve_concern_name, retired_replacement,
 };
-pub use conditions::{condition_media, CONDITION_PREFIXES};
+pub use conditions::{CONDITION_PREFIXES, condition_media};
 pub use emit::{
-    emit_style, lower_style, lower_style_source, lower_style_source_with_motion, CssRule, StyleEnv,
+    CssRule, StyleEnv, emit_style, lower_style, lower_style_source, lower_style_source_with_motion,
 };
 pub use host_ctx::{with_bound_group_props, with_host_surface};
 pub use ir::{PaintArg, PaintOp, Style, StyleDiagnostic};
@@ -62,12 +63,13 @@ pub use parse::{
 pub use rewrite::{
     lift_style_attr_hosts, rewrite_source, rewrite_style_expr, rewrite_teaching_source,
 };
+pub use rewrite_v3::rewrite_v3_source;
 pub use theme_env::{
-    current_styling_policy, with_styling_policy, NamedStyle, PlayPreset, StylingPolicy, TagDefault,
-    ThemeStyleEnv, VocabTag,
+    NamedStyle, PlayPreset, StylingPolicy, TagDefault, ThemeStyleEnv, VocabTag,
+    current_styling_policy, with_styling_policy,
 };
-pub use vocab::{find_vocab, offered_rows, resolve_vocab, vocab_rows, VocabRow};
-pub use type_resolve::{resolve_type, resolve_type_for_tag, resolve_type_role, ResolvedType};
+pub use type_resolve::{ResolvedType, resolve_type, resolve_type_for_tag, resolve_type_role};
+pub use vocab::{VocabRow, find_vocab, offered_rows, resolve_vocab, vocab_rows};
 
 #[cfg(test)]
 mod tests {

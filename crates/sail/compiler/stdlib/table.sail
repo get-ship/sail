@@ -13,7 +13,7 @@
   }
 
   // Host text rides foreground.
-  style base = {box: size({ w: full }), paint: ink({ color: foreground }), text: type({ family: body, size: sm, leading: normal, align: start })}
+  style base = {size({ w: full }).fg(foreground).type({ family: body, size: sm, leading: normal, align: start })}
 </scope>
 
 <table style(base)>

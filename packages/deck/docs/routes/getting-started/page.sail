@@ -9,12 +9,12 @@ export default controller((_ctx: ControllerScope<Scope>) => ({ pageExample, cont
 </controller>
 
 <scope>
-  style page = { box: maxW(breakpoint-tablet).mx(auto) }
-  style eyebrow = { box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
-  style lead = { paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) }
-  style callout = { box: padY(3).padX(4), paint: borderWidth(1).border(border).borderLWidth(3).borderL(primary).radius(md).bg(surface-1), text: fontSize(sm) }
-  style calloutStrong = { paint: fg(foreground) }
-  style footNav = { box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) }
+  style page = { maxW(breakpoint-tablet).mx(auto) }
+  style eyebrow = { mb(2).fg(accent).fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
+  style lead = { fg(muted-foreground).fontSize(lg).leading(relaxed) }
+  style callout = { padY(3).padX(4).borderWidth(1).border(border).borderLWidth(3).borderL(primary).radius(md).bg(surface-1).fontSize(sm) }
+  style calloutStrong = { fg(foreground) }
+  style footNav = { mt(8).padT(4).borderTWidth(1).borderT(border) }
 </scope>
 
 <article style(page)>

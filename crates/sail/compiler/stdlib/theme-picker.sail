@@ -12,47 +12,47 @@
     onThemeChange: (detail: { theme: string; mode: string; preference: string }) => void
   }
 
-  style host = {paint: group()}
+  style host = {group()}
 
-  style trigger = {box: size(control-h-sm).space({ pad: 0 }), paint: ink({ color: foreground }).fill({ color: transparent }).border({ color: border, width: hairline }).radius(full).cursor(pointer)}
-  style modeTrigger = {box: size({ min-w: control-h-sm }).space({ pad: 0 }), paint: ink({ color: foreground }).fill({ color: transparent }).border({ color: border, width: hairline }).radius(full).cursor(pointer)}
-  style triggerIcon = {box: size(icon-size-md).flow({ display: block })}
-  style glyph = {paint: ink({ color: foreground }), text: type({ size: sm, leading: none })}
+  style trigger = {size(control-h-sm).pad(0).fg(foreground).bg(transparent).border({ color: border, width: hairline }).radius(full).cursor(pointer)}
+  style modeTrigger = {size({ min-w: control-h-sm }).pad(0).fg(foreground).bg(transparent).border({ color: border, width: hairline }).radius(full).cursor(pointer)}
+  style triggerIcon = {size(icon-size-md).display(block)}
+  style glyph = {fg(foreground).type({ size: sm, leading: none })}
 
-  style panel = {box: place({ position: fixed, inset: auto, left: bind(anchorLeft), top: bind(anchorTop), z: popover }).space({ m: 0, pad: 0 }).size({ w: panel-max-w-sm, max-w: panel-w-toast, min-w: 0, max-h: panel-vh-md }).overflow({ x: hidden, y: auto, overscroll: contain }), paint: ink({ color: popover-foreground }).fill({ color: popover }).border({ color: border, width: hairline }).radius(lg).elevation(lg)}
-  style panelInline = {box: place({ position: static, inset: auto }).space({ m: 0, pad: 0 }).size({ w: full, max-w: none, min-w: 0 }).overflow({ x: hidden }), paint: elevation(none).fill({ color: transparent }).border({ width: 0 })}
+  style panel = {position({ scheme: fixed, inset: auto, l: bind(anchorLeft), t: bind(anchorTop), z: popover }).pad(0).margin(0).size({ w: panel-max-w-sm, max-w: panel-w-toast, min-w: 0, max-h: panel-vh-md }).overflow({ x: hidden, y: auto, overscroll: contain }).fg(popover-foreground).bg(popover).border({ color: border, width: hairline }).radius(lg).elevation(lg)}
+  style panelInline = {position({ scheme: static, inset: auto }).pad(0).margin(0).size({ w: full, max-w: none, min-w: 0 }).overflow({ x: hidden }).elevation(none).bg(transparent).border({ width: 0 })}
 
-  style header = {box: size({ w: full, min-w: 0 }).space({ pad-x: 3, pad-t: 3, pad-b: 0 })}
-  style headerEyebrow = {paint: ink({ color: muted-foreground }), text: type({ size: xs, weight: semibold, tracking: wide, case: label-transform, leading: none })}
-  style headerTitle = {paint: ink({ color: popover-foreground }), text: type({ family: heading, weight: bind(heading-weight), size: base, leading: tight, wrap: truncate })}
-  style headerMeta = {paint: ink({ color: muted-foreground }), text: type({ size: xs, leading: none })}
+  style header = {size({ w: full, min-w: 0 }).pad({ x: 3, t: 3, b: 0 })}
+  style headerEyebrow = {fg(muted-foreground).type({ size: xs, weight: semibold, tracking: wide, case: label-transform, leading: none })}
+  style headerTitle = {fg(popover-foreground).type({ family: heading, weight: bind(heading-weight), size: base, leading: tight, wrap: truncate })}
+  style headerMeta = {fg(muted-foreground).type({ size: xs, leading: none })}
 
   // Filter tabs — always readable on popover chrome. Selected uses hover-bg +
   // primary underline (never primary fill — breaks on brut).
-  style modeSeg = {box: size({ w: full, min-w: 0 }).space({ pad-x: 1 }), paint: border({ width: 1, edge: b, color: border })}
-  style modeSegBtn = {box: flow({ grow: 1 }).size({ min-w: 0 }).space({ pad-y: 2, pad-x: 2 }), paint: ink({ color: muted-foreground }).fill({ color: transparent }).border({ width: 0, edge: l }).border({ width: 0, edge: r }).border({ width: 0, edge: t }).border({ width: 2, edge: b, color: transparent }).radius({ t: sm }).cursor(pointer).select(none).tapHighlight(none), text: type({ size: xs, weight: medium, align: center, wrap: nowrap }), when: {hover: {paint: ink({ color: popover-foreground }).fill({ color: hover-bg })}, focus: {paint: border({ style: solid, kind: outline, width: 2, color: ring, offset: ring-offset })}, selected: {paint: ink({ color: popover-foreground }).fill({ color: hover-bg }).border({ color: primary, edge: b }), text: type({ weight: semibold })}}}
+  style modeSeg = {size({ w: full, min-w: 0 }).pad({ x: 1 }).border({ width: 1, edge: b, color: border })}
+  style modeSegBtn = {grow(1).size({ min-w: 0 }).pad({ y: 2, x: 2 }).fg(muted-foreground).bg(transparent).border({ width: 0, edge: l }).border({ width: 0, edge: r }).border({ width: 0, edge: t }).border({ width: 2, edge: b, color: transparent }).radius({ t: sm }).cursor(pointer).select(none).tapHighlight(none).type({ size: xs, weight: medium, align: center, wrap: nowrap }), when: {hover: fg(popover-foreground).bg(hover-bg), focus: border({ style: solid, kind: outline, width: 2, color: ring, offset: ring-offset }), selected: fg(popover-foreground).bg(hover-bg).border({ color: primary, edge: b }).type({ weight: semibold })}}
 
-  style catalogHead = {box: size({ w: full, min-w: 0 }).space({ pad-x: 3, pad-t: 2, pad-b: 1 }), paint: ink({ color: muted-foreground }), text: type({ size: xs, weight: semibold, tracking: wide, case: label-transform })}
+  style catalogHead = {size({ w: full, min-w: 0 }).pad({ x: 3, t: 2, b: 1 }).fg(muted-foreground).type({ size: xs, weight: semibold, tracking: wide, case: label-transform })}
 
-  style panelList = {box: size({ w: full, min-w: 0 }).space({ pad: 1_5 })}
-  style option = {box: size({ w: full, min-w: 0 }).space({ pad: 0 }).overflow({ all: hidden }), paint: fill({ color: transparent }).border({ color: transparent, width: hairline }).radius(md).cursor(pointer), text: type({ align: start })}
-  style optionCol = {box: size({ w: full, min-w: 0 })}
+  style panelList = {size({ w: full, min-w: 0 }).pad(1_5)}
+  style option = {size({ w: full, min-w: 0 }).pad(0).overflow({ all: hidden }).bg(transparent).border({ color: transparent, width: hairline }).radius(md).cursor(pointer).type({ align: start })}
+  style optionCol = {size({ w: full, min-w: 0 })}
 
   // Live specimen — full-bleed via theme= (theme fonts + tokens).
-  style swatch = {box: place({ position: relative }).size({ w: full, min-w: 0, h: 20, min-h: 20 }).overflow({ all: hidden }), paint: radius(md).fill({ color: background }).ink(foreground).isolate()}
-  style overlay = {box: place({ position: absolute, inset: 0, z: 1 }), paint: filter({ opacity: bind(surface-overlay-opacity), blend: bind(surface-overlay-blend) }).fill({ color: bind(surface-overlay) }).pointerEvents(none)}
-  style specimen = {box: place({ position: relative, z: 2 }).size({ w: full, h: full, min-w: 0 }).space({ pad: 2_5 })}
-  style title = {paint: ink({ color: foreground }), text: type({ family: heading, weight: bind(heading-weight), size: sm, leading: tight, wrap: truncate })}
+  style swatch = {position(relative).size({ w: full, min-w: 0, h: 20, min-h: 20 }).overflow({ all: hidden }).radius(md).bg(background).fg(foreground).isolate()}
+  style overlay = {position({ scheme: absolute, inset: 0, z: 1 }).filter({ opacity: bind(surface-overlay-opacity), blend: bind(surface-overlay-blend) }).bg(bind(surface-overlay)).pointerEvents(none)}
+  style specimen = {position({ scheme: relative, z: 2 }).size({ w: full, h: full, min-w: 0 }).pad(2_5)}
+  style title = {fg(foreground).type({ family: heading, weight: bind(heading-weight), size: sm, leading: tight, wrap: truncate })}
   // Chromatic trio: primary · secondary · accent
-  style stripPrimary = {box: size({ h: 3, min-w: 0 }), paint: radius(sm).fill({ color: primary })}
-  style stripSecondary = {box: size({ h: 3, min-w: 0 }), paint: radius(sm).fill({ color: secondary })}
-  style stripAccent = {box: size({ h: 3, min-w: 0 }), paint: radius(sm).fill({ color: accent })}
-  style btnGhost = {box: space({ pad-y: px, pad-x: 1_5 }), paint: radius(sm).fill({ color: transparent }).ink(foreground).border({ color: border, width: hairline }), text: type({ family: body, weight: medium, size: xs, leading: none })}
-  style btnSolid = {box: space({ pad-y: px, pad-x: 1_5 }), paint: radius(sm).fill({ color: primary }).ink({ color: primary-foreground }), text: type({ family: body, weight: medium, size: xs, leading: none })}
-  style checkMark = {paint: ink({ color: primary }), text: type({ size: sm, weight: semibold, leading: none })}
+  style stripPrimary = {size({ h: 3, min-w: 0 }).radius(sm).bg(primary)}
+  style stripSecondary = {size({ h: 3, min-w: 0 }).radius(sm).bg(secondary)}
+  style stripAccent = {size({ h: 3, min-w: 0 }).radius(sm).bg(accent)}
+  style btnGhost = {pad({ y: px, x: 1_5 }).radius(sm).bg(transparent).fg(foreground).border({ color: border, width: hairline }).type({ family: body, weight: medium, size: xs, leading: none })}
+  style btnSolid = {pad({ y: px, x: 1_5 }).radius(sm).bg(primary).fg(primary-foreground).type({ family: body, weight: medium, size: xs, leading: none })}
+  style checkMark = {fg(primary).type({ size: sm, weight: semibold, leading: none })}
 
-  style focusRing = {when: {focus: {paint: border({ style: solid, kind: outline, width: 2, color: ring, offset: ring-offset })}}}
-  style triggerHover = {when: {hover: {paint: fill({ color: hover-bg })}}}
+  style focusRing = {when: {focus: border({ style: solid, kind: outline, width: 2, color: ring, offset: ring-offset })}}
+  style triggerHover = {when: {hover: bg(hover-bg)}}
 </scope>
 
 <row inline use:themeSelect data-theme-picker="1" style(host)>
@@ -61,9 +61,9 @@
     popovertarget="sail-theme-panel"
     data-picker-trigger="full"
     label="Choose theme"
-    style(trigger, triggerHover, focusRing, {when: {group-inline: {box: flow({ display: none })}}})
+    style(trigger, triggerHover, focusRing, {when: {group-inline: display(none)}})
   >
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" hidden="true" style(triggerIcon, {box: flow({ shrink: 0 })})>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" hidden="true" style(triggerIcon, {shrink(0)})>
       <circle cx="13.5" cy="6.5" r="1.5"></circle>
       <circle cx="17.5" cy="10.5" r="1.5"></circle>
       <circle cx="8.5" cy="7.5" r="1.5"></circle>
@@ -80,9 +80,9 @@
     hidden
     style(modeTrigger, triggerHover, focusRing)
   >
-    <span data-mode-icon="light" hidden="true" style(glyph, {box: flow({ shrink: 0 })})>☀</span>
-    <span data-mode-icon="dark" hidden="true" style(glyph, {box: flow({ shrink: 0 })})>☾</span>
-    <span data-mode-icon="system" hidden="true" style(glyph, {box: flow({ shrink: 0 })})>◐</span>
+    <span data-mode-icon="light" hidden="true" style(glyph, {shrink(0)})>☀</span>
+    <span data-mode-icon="dark" hidden="true" style(glyph, {shrink(0)})>☾</span>
+    <span data-mode-icon="system" hidden="true" style(glyph, {shrink(0)})>◐</span>
   </button>
 
   <!-- listbox role stamped by use:themeSelect (closed multi-part anatomy) -->
@@ -93,18 +93,14 @@
     placement="bottom-end"
     label="Theme"
     data-theme-listbox
-    style(panel, {match: {
-        inline: {
-          true: panelInline,
-        },
-      }})
+    style(panel, {match: { inline: { true: panelInline } }})
   >
     <column gap="2" data-picker-header style(header)>
-      <column gap="1" style({box: size({ min-w: 0 })})>
+      <column gap="1" style({size({ min-w: 0 })})>
         <span style(headerEyebrow)>Active</span>
-        <row align="center" gap="2" nowrap style({box: size({ min-w: 0 })})>
-          <span data-selected-label style(headerTitle, {box: flow({ grow: 1 }).size({ min-w: 0 })})>—</span>
-          <span data-selected-tier style(headerMeta, {box: flow({ shrink: 0 })})></span>
+        <row align="center" gap="2" nowrap style({size({ min-w: 0 })})>
+          <span data-selected-label style(headerTitle, {grow(1).size({ min-w: 0 })})>—</span>
+          <span data-selected-tier style(headerMeta, {shrink(0)})></span>
         </row>
       </column>
 
@@ -115,7 +111,7 @@
         data-mode-bar
         data-mode-segment
         nowrap
-        style(modeSeg, {box: size({ min-w: 0 })})
+        style(modeSeg, {size({ min-w: 0 })})
       >
         <button type="button" mode="light" selected="true" data-active="true" title="Show light themes" style(modeSegBtn)>
           Light
@@ -131,28 +127,28 @@
 
     <span data-catalog-label style(catalogHead)>Light themes</span>
 
-    <column gap="2" data-theme-grid style(panelList, {box: size({ min-w: 0 })})>
+    <column gap="2" data-theme-grid style(panelList, {size({ min-w: 0 })})>
       <button
         type="button"
         value="sail"
-        style(option, {when: {hover: {paint: border({ color: border })}, focus: {paint: border({ style: solid, kind: outline, width: 2, color: ring, offset: ring-offset })}, selected: {paint: border({ color: primary })}, forced-colors: {when: {selected: {paint: border({ color: CanvasText })}}}}})
+        style(option, {when: {hover: border({ color: border }), focus: border({ style: solid, kind: outline, width: 2, color: ring, offset: ring-offset }), selected: border({ color: primary }), forced-colors: {when: {selected: border({ color: CanvasText })}}}})
       >
-        <column gap="0" style(optionCol, {box: size({ min-w: 0 })})>
+        <column gap="0" style(optionCol, {size({ min-w: 0 })})>
           <column theme="sail" mode="light" hidden="true" style(swatch)>
             <span style(overlay)></span>
-            <column gap="2" justify="between" style(specimen, {box: size({ min-w: 0 })})>
-              <row align="center" gap="2" nowrap style({box: size({ min-w: 0, w: full })})>
-                <span data-swatch-title style(title, {box: flow({ grow: 1 }).size({ min-w: 0 })})>Sail</span>
-                <span data-selected-check hidden="true" style(checkMark, {box: flow({ shrink: 0 })})>✓</span>
+            <column gap="2" justify="between" style(specimen, {size({ min-w: 0 })})>
+              <row align="center" gap="2" nowrap style({size({ min-w: 0, w: full })})>
+                <span data-swatch-title style(title, {grow(1).size({ min-w: 0 })})>Sail</span>
+                <span data-selected-check hidden="true" style(checkMark, {shrink(0)})>✓</span>
               </row>
-              <row align="center" gap="1" nowrap hidden="true" style({box: size({ min-w: 0, w: full })})>
-                <span style(stripPrimary, {box: flow({ grow: 1 }).size({ min-w: 0 })})></span>
-                <span style(stripSecondary, {box: flow({ grow: 1 }).size({ min-w: 0 })})></span>
-                <span style(stripAccent, {box: flow({ grow: 1 }).size({ min-w: 0 })})></span>
+              <row align="center" gap="1" nowrap hidden="true" style({size({ min-w: 0, w: full })})>
+                <span style(stripPrimary, {grow(1).size({ min-w: 0 })})></span>
+                <span style(stripSecondary, {grow(1).size({ min-w: 0 })})></span>
+                <span style(stripAccent, {grow(1).size({ min-w: 0 })})></span>
               </row>
-              <row align="center" gap="1" nowrap style({box: size({ min-w: 0 })})>
-                <row inline nowrap style(btnGhost, {box: flow({ shrink: 0 })})>Cancel</row>
-                <row inline nowrap style(btnSolid, {box: flow({ shrink: 0 })})>Continue</row>
+              <row align="center" gap="1" nowrap style({size({ min-w: 0 })})>
+                <row inline nowrap style(btnGhost, {shrink(0)})>Cancel</row>
+                <row inline nowrap style(btnSolid, {shrink(0)})>Continue</row>
               </row>
             </column>
           </column>

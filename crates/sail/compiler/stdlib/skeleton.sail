@@ -11,23 +11,23 @@
     size: 'md' | 'sm' | 'lg' = 'md'
   }
 
-  style base = {box: flow({ display: inline-block }).size({ min-w: 8, min-h: 3 }), paint: align(middle).radius(sm)}
+  style base = {display(inline-block).size({ min-w: 8, min-h: 3 }).align(middle).radius(sm)}
   // text + line share the full-width bar geometry.
-  style shapeBar = {box: size({ w: full, h: 3, min-h: 0 })}
-  style shapeBlock = {box: flow({ display: block }).size({ w: full, min-h: 20 })}
-  style shapeCircle = {box: size({ min-w: 7, min-h: 7, aspect: square }), paint: radius(full)}
+  style shapeBar = {size({ w: full, h: 3, min-h: 0 })}
+  style shapeBlock = {display(block).size({ w: full, min-h: 20 })}
+  style shapeCircle = {size({ min-w: 7, min-h: 7, aspect: square }).radius(full)}
 </scope>
 
 <span
   style(base, {match: {shape: {text: shapeBar, line: shapeBar, block: shapeBlock, circle: shapeCircle}}, compound: [
-      {shape: text, size: sm, box: size({ h: 2 })},
-      {shape: text, size: md, box: size({ h: 3 })},
-      {shape: text, size: lg, box: size({ h: 4 })},
-      {shape: line, size: sm, box: size({ h: 2 })},
-      {shape: line, size: md, box: size({ h: 3 })},
-      {shape: line, size: lg, box: size({ h: 4 })},
-      {shape: circle, size: sm, box: size({ min-w: 0, min-h: 0 })},
-      {shape: circle, size: md, box: size({ min-w: 0, min-h: 0 })},
-      {shape: circle, size: lg, box: size({ min-w: 0, min-h: 0 })},
+      {shape: text, size: sm, size({ h: 2 })},
+      {shape: text, size: md, size({ h: 3 })},
+      {shape: text, size: lg, size({ h: 4 })},
+      {shape: line, size: sm, size({ h: 2 })},
+      {shape: line, size: md, size({ h: 3 })},
+      {shape: line, size: lg, size({ h: 4 })},
+      {shape: circle, size: sm, size({ min-w: 0, min-h: 0 })},
+      {shape: circle, size: md, size({ min-w: 0, min-h: 0 })},
+      {shape: circle, size: lg, size({ min-w: 0, min-h: 0 })},
     ]})
 ></span>

@@ -1,8 +1,8 @@
 <scope>
-  style page = { box: space({ pad: 6, mx: auto }).size({ max-w: breakpoint-tablet }) }
-  style section = { box: space({ pad: 4, my: 4 }), paint: border({ color: border, width: 1 }).radius(lg) }
-  style sectionTitle = { box: space({ mb: 2 }), paint: ink({ color: muted-foreground }), text: type({ size: sm, weight: semibold }) }
-  style muted = { paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
+  style page = { pad(6).margin({ x: auto }).size({ max-w: breakpoint-tablet }) }
+  style section = { pad(4).margin({ y: 4 }).border({ color: border, width: 1 }).radius(lg) }
+  style sectionTitle = { margin({ b: 2 }).fg(muted-foreground).type({ size: sm, weight: semibold }) }
+  style muted = { fg(muted-foreground).type({ size: sm }) }
 </scope>
 
 <column gap="4" style(page)>

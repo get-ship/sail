@@ -4,18 +4,18 @@
 -->
 
 <scope>
-  style page = { box: size({ max-w: breakpoint-tablet }).space({ mx: auto }) }
-  style eyebrow = { box: space({ mb: 2 }), paint: ink({ color: accent }), text: type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
-  style lead = { paint: ink({ color: muted-foreground }), text: type({ size: lg, leading: relaxed }) }
-  style demoCard = { box: space({ pad: 5 }), paint: fill({ color: surface-1 }).border({ color: border, width: 1 }).radius(lg).elevation(sm) }
-  style demoMuted = { paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
-  style demoPanel = { box: space({ pad: 5 }), paint: fill({ color: surface-1 }).border({ color: border, width: 1 }).radius(lg) }
-  style responsivePanel = { box: space({ pad: 3 }), paint: fill({ color: surface-1 }).border({ color: border, width: 1 }).radius(lg), when: { tablet: { box: space({ pad: 6 }) } } }
-  style bodySm = { text: type({ size: sm }) }
-  style rangeTrack = { box: size({ min-w: 0 }) }
-  style shiftTile = { box: size(9), paint: fill({ color: primary }).radius(md).motion({ x: bind(shiftPx) }) }
-  style footNote = { box: space({ mt: 4 }), paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
-  style footNav = { box: space({ pad-t: 4, mt: 8 }), paint: border({ color: border, width: 1, edge: t }) }
+  style page = { size({ max-w: breakpoint-tablet }).margin({ x: auto }) }
+  style eyebrow = { margin({ b: 2 }).fg(accent).type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
+  style lead = { fg(muted-foreground).type({ size: lg, leading: relaxed }) }
+  style demoCard = { pad(5).bg(surface-1).border({ color: border, width: 1 }).radius(lg).elevation(sm) }
+  style demoMuted = { fg(muted-foreground).type({ size: sm }) }
+  style demoPanel = { pad(5).bg(surface-1).border({ color: border, width: 1 }).radius(lg) }
+  style responsivePanel = { pad(3).bg(surface-1).border({ color: border, width: 1 }).radius(lg), when: { tablet: pad(6) } }
+  style bodySm = { type({ size: sm }) }
+  style rangeTrack = { size({ min-w: 0 }) }
+  style shiftTile = { size(9).bg(primary).radius(md).translateX(bind(shiftPx)) }
+  style footNote = { margin({ t: 4 }).fg(muted-foreground).type({ size: sm }) }
+  style footNav = { pad({ t: 4 }).margin({ t: 8 }).border({ color: border, width: 1, edge: t }) }
 </scope>
 
 <controller>
@@ -76,9 +76,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     Browser and ARIA state are a map, not string prefixes. Hover these:
   </p>
   <row gap="3" style(demoPanel)>
-    <button style({ when: { hover: { paint: fill({ color: muted }) } } })>hover → fill muted</button>
-    <button style({ when: { hover: { paint: ink({ color: primary }) } } })>hover → ink primary</button>
-    <button style({ when: { active: { paint: fill({ color: primary }).ink({ color: primary-foreground }) } } })>active:…</button>
+    <button style({ when: { hover: bg(muted) } })>hover → fill muted</button>
+    <button style({ when: { hover: fg(primary) } })>hover → ink primary</button>
+    <button style({ when: { active: bg(primary).fg(primary-foreground) } })>active:…</button>
   </row>
   <code-block code={code.states}></code-block>
   <p>

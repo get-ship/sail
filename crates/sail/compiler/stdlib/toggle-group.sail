@@ -12,9 +12,9 @@
     onToggleChange: (detail: { value: string }) => void
   }
 
-  style segmented = {box: space({ pad: 1 }), paint: fill({ color: muted }).border({ color: border, width: 1 }).radius(md)}
+  style segmented = {pad(1).bg(muted).border({ color: border, width: 1 }).radius(md)}
 </scope>
 
-<row inline gap="0" use:toggleGroup style({match: {variant: {outline: {paint: fill({ color: transparent })}, ghost: {paint: fill({ color: transparent })}, segmented: segmented}}})>
+<row inline gap="0" use:toggleGroup style({match: {variant: {outline: bg(transparent), ghost: bg(transparent), segmented: segmented}}})>
   <slot></slot>
 </row>

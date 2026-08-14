@@ -405,7 +405,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     gap="0"
     data-color-picker-root
     data-variant="swatch"
-    style({ box: place({ position: absolute, top: 0, bottom: 0, left: 0, right: 0 }).size({ min-w: 0, min-h: 0 }) })
+    style({ position({ scheme: absolute, t: 0, b: 0, l: 0, r: 0 }).size({ min-w: 0, min-h: 0 }) })
   >
     <button
       type="button"
@@ -420,11 +420,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       aria-label="Choose color"
       use:captureInput
       use:swatch={value() || '#000000'}
-      style({
-        box: size({ w: full, h: full, min-w: 0, min-h: 0 }).space({ pad: 0 }),
-        paint: radius(md).border({ color: border-subtle, width: 1 }).fill({ color: bind(swatchColor) }).cursor(pointer).elevation(none),
-        when: { focusWithin: { paint: border({ kind: outline, color: ring }) } },
-      })
+      style({ size({ w: full, h: full, min-w: 0, min-h: 0 }).pad(0).radius(md).border({ color: border-subtle, width: 1 }).bg(bind(swatchColor)).cursor(pointer).elevation(none), when: { focusWithin: border({ kind: outline, color: ring }) } })
     ></button>
     <if {open() && !disabled()}>
       <div
@@ -435,20 +431,14 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         placement="bottom-start"
         role="dialog"
         aria-label="Choose color"
-        style({
-          box: size({ w: panel-max-w-md }).space({ pad: 3 }),
-          paint: place({ z: popover }).fill({ color: surface-1 }).ink({ color: foreground }).border({ color: border, width: 1 }).radius(md).elevation(md),
-        })
+        style({ size({ w: panel-max-w-md }).pad(3).position({ z: popover }).bg(surface-1).fg(foreground).border({ color: border, width: 1 }).radius(md).elevation(md) })
       >
-        <span style({ box: flow({ display: contents }), text: type({ size: size-fs }) })>
+        <span style({ display(contents).type({ size: size-fs }) })>
           <column gap="3">
             <div
               use:swatch={value() || '#000000'}
               aria-hidden="true"
-              style({
-                box: size({ w: full, h: 16 }),
-                paint: radius(md).border({ color: border, width: 1 }).fill({ color: bind(swatchColor) }).elevation(sm),
-              })
+              style({ size({ w: full, h: 16 }).radius(md).border({ color: border, width: 1 }).bg(bind(swatchColor)).elevation(sm) })
             ></div>
             <grid cols="6" gap="2">
               <for {swatches() as sw} key={sw.hex}>
@@ -458,40 +448,36 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                   data-hex={sw.hex}
                   aria-label={sw.label}
                   use:swatch={sw.hex}
-                  style({
-                    box: space({ pad: 0 }).size({ aspect: square }),
-                    paint: border({ color: border-subtle, width: 1 }).radius(sm).cursor(pointer).fill({ color: bind(swatchColor) }),
-                    when: { selected: { paint: border({ kind: outline, color: primary }) } },
-                  })
+                  style({ pad(0).size({ aspect: square }).border({ color: border-subtle, width: 1 }).radius(sm).cursor(pointer).bg(bind(swatchColor)), when: { selected: border({ kind: outline, color: primary }) } })
                 ></button>
               </for>
             </grid>
             <column gap="2">
               <row align="center" gap="2">
-                <label for={hueId()} style({ box: size({ w: 4 }), paint: ink({ color: muted-foreground }), text: type({ size: xs }) })>H</label>
-                <slider id={hueId()} min="0" max="360" step="1" bind:value={hueText} data-axis="h" use:rangeFill aria-label="Hue" style({ box: flow({ grow: 1 }).size({ min-w: 0 }) }) />
-                <span style({ box: size({ w: 8 }), paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs, align: end }) })>{hue()}°</span>
+                <label for={hueId()} style({ size({ w: 4 }).fg(muted-foreground).type({ size: xs }) })>H</label>
+                <slider id={hueId()} min="0" max="360" step="1" bind:value={hueText} data-axis="h" use:rangeFill aria-label="Hue" style({ grow(1).size({ min-w: 0 }) }) />
+                <span style({ size({ w: 8 }).fg(muted-foreground).type({ family: mono, size: xs, align: end }) })>{hue()}°</span>
               </row>
               <row align="center" gap="2">
-                <label for={satId()} style({ box: size({ w: 4 }), paint: ink({ color: muted-foreground }), text: type({ size: xs }) })>S</label>
-                <slider id={satId()} min="0" max="100" step="1" bind:value={satText} data-axis="s" use:rangeFill aria-label="Saturation" style({ box: flow({ grow: 1 }).size({ min-w: 0 }) }) />
-                <span style({ box: size({ w: 8 }), paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs, align: end }) })>{sat()}%</span>
+                <label for={satId()} style({ size({ w: 4 }).fg(muted-foreground).type({ size: xs }) })>S</label>
+                <slider id={satId()} min="0" max="100" step="1" bind:value={satText} data-axis="s" use:rangeFill aria-label="Saturation" style({ grow(1).size({ min-w: 0 }) }) />
+                <span style({ size({ w: 8 }).fg(muted-foreground).type({ family: mono, size: xs, align: end }) })>{sat()}%</span>
               </row>
               <row align="center" gap="2">
-                <label for={lightId()} style({ box: size({ w: 4 }), paint: ink({ color: muted-foreground }), text: type({ size: xs }) })>L</label>
-                <slider id={lightId()} min="0" max="100" step="1" bind:value={lightText} data-axis="l" use:rangeFill aria-label="Lightness" style({ box: flow({ grow: 1 }).size({ min-w: 0 }) }) />
-                <span style({ box: size({ w: 8 }), paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs, align: end }) })>{light()}%</span>
+                <label for={lightId()} style({ size({ w: 4 }).fg(muted-foreground).type({ size: xs }) })>L</label>
+                <slider id={lightId()} min="0" max="100" step="1" bind:value={lightText} data-axis="l" use:rangeFill aria-label="Lightness" style({ grow(1).size({ min-w: 0 }) }) />
+                <span style({ size({ w: 8 }).fg(muted-foreground).type({ family: mono, size: xs, align: end }) })>{light()}%</span>
               </row>
             </column>
             <row align="center" gap="2">
-              <span style({ paint: ink({ color: muted-foreground }), text: type({ size: xs }) })>Hex</span>
+              <span style({ fg(muted-foreground).type({ size: xs }) })>Hex</span>
               <input
                 type="text"
                 bind:value={hexDraft}
                 spellcheck="false"
                 autocomplete="off"
                 aria-label="Hex color"
-                style({ box: flow({ grow: 1 }).size({ min-w: 0 }), text: type({ family: mono, size: xs, case: lowercase }) })
+                style({ grow(1).size({ min-w: 0 }).type({ family: mono, size: xs, case: lowercase }) })
               >
             </row>
           </column>
@@ -505,17 +491,13 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     gap="0"
     data-color-picker-root
     data-variant="default"
-    style({ box: place({ position: relative }).size({ w: full, min-h: 0 }) })
+    style({ position(relative).size({ w: full, min-h: 0 }) })
   >
     <row
       data-color-trigger
       align="center"
       gap="2"
-      style({
-        box: size({ w: full, min-h: size-h }).space({ pad-x: 1_5, pad-y: 1 }),
-        paint: fill({ color: background }).ink({ color: foreground }).border({ color: border, width: 1 }).radius(md).cursor(pointer),
-        when: { focusWithin: { paint: border({ kind: outline, color: ring }) } },
-      })
+      style({ size({ w: full, min-h: size-h }).pad({ x: 1_5, y: 1 }).bg(background).fg(foreground).border({ color: border, width: 1 }).radius(md).cursor(pointer), when: { focusWithin: border({ kind: outline, color: ring }) } })
     >
       <button
         type="button"
@@ -526,10 +508,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         aria-label="Choose color"
         use:captureInput
         use:swatch={value() || '#000000'}
-        style({
-          box: flow({ shrink: 0 }).size({ w: 10, h: 10, min-w: 10 }).space({ pad: 0 }),
-          paint: radius(md).border({ color: border, width: 1 }).fill({ color: bind(swatchColor) }).cursor(pointer),
-        })
+        style({ shrink(0).size({ w: 10, h: 10, min-w: 10 }).pad(0).radius(md).border({ color: border, width: 1 }).bg(bind(swatchColor)).cursor(pointer) })
       ></button>
       <if {showHexUi()}>
         <input
@@ -541,11 +520,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           autocomplete="off"
           aria-label="Hex color"
           bind:value={value}
-          style({
-            box: flow({ grow: 1 }).size({ min-w: 0 }),
-            paint: cursor(pointer),
-            text: type({ family: mono, case: lowercase }),
-          })
+          style({ grow(1).size({ min-w: 0 }).cursor(pointer).type({ family: mono, case: lowercase }) })
         >
       </if>
     </row>
@@ -558,20 +533,14 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         placement="bottom-start"
         role="dialog"
         aria-label="Choose color"
-        style({
-          box: size({ w: panel-max-w-md }).space({ pad: 3 }),
-          paint: place({ z: popover }).fill({ color: surface-1 }).ink({ color: foreground }).border({ color: border, width: 1 }).radius(md).elevation(md),
-        })
+        style({ size({ w: panel-max-w-md }).pad(3).position({ z: popover }).bg(surface-1).fg(foreground).border({ color: border, width: 1 }).radius(md).elevation(md) })
       >
-        <span style({ box: flow({ display: contents }), text: type({ size: size-fs }) })>
+        <span style({ display(contents).type({ size: size-fs }) })>
           <column gap="3">
             <div
               use:swatch={value() || '#000000'}
               aria-hidden="true"
-              style({
-                box: size({ w: full, h: 16 }),
-                paint: radius(md).border({ color: border, width: 1 }).fill({ color: bind(swatchColor) }).elevation(sm),
-              })
+              style({ size({ w: full, h: 16 }).radius(md).border({ color: border, width: 1 }).bg(bind(swatchColor)).elevation(sm) })
             ></div>
             <grid cols="6" gap="2">
               <for {swatches() as sw} key={sw.hex}>
@@ -581,41 +550,37 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                   data-hex={sw.hex}
                   aria-label={sw.label}
                   use:swatch={sw.hex}
-                  style({
-                    box: space({ pad: 0 }).size({ aspect: square }),
-                    paint: border({ color: border-subtle, width: 1 }).radius(sm).cursor(pointer).fill({ color: bind(swatchColor) }),
-                    when: { selected: { paint: border({ kind: outline, color: primary }) } },
-                  })
+                  style({ pad(0).size({ aspect: square }).border({ color: border-subtle, width: 1 }).radius(sm).cursor(pointer).bg(bind(swatchColor)), when: { selected: border({ kind: outline, color: primary }) } })
                 ></button>
               </for>
             </grid>
             <column gap="2">
               <row align="center" gap="2">
-                <label for={hueId()} style({ box: size({ w: 4 }), paint: ink({ color: muted-foreground }), text: type({ size: xs }) })>H</label>
-                <slider id={hueId()} min="0" max="360" step="1" bind:value={hueText} data-axis="h" use:rangeFill aria-label="Hue" style({ box: flow({ grow: 1 }).size({ min-w: 0 }) }) />
-                <span style({ box: size({ w: 8 }), paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs, align: end }) })>{hue()}°</span>
+                <label for={hueId()} style({ size({ w: 4 }).fg(muted-foreground).type({ size: xs }) })>H</label>
+                <slider id={hueId()} min="0" max="360" step="1" bind:value={hueText} data-axis="h" use:rangeFill aria-label="Hue" style({ grow(1).size({ min-w: 0 }) }) />
+                <span style({ size({ w: 8 }).fg(muted-foreground).type({ family: mono, size: xs, align: end }) })>{hue()}°</span>
               </row>
               <row align="center" gap="2">
-                <label for={satId()} style({ box: size({ w: 4 }), paint: ink({ color: muted-foreground }), text: type({ size: xs }) })>S</label>
-                <slider id={satId()} min="0" max="100" step="1" bind:value={satText} data-axis="s" use:rangeFill aria-label="Saturation" style({ box: flow({ grow: 1 }).size({ min-w: 0 }) }) />
-                <span style({ box: size({ w: 8 }), paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs, align: end }) })>{sat()}%</span>
+                <label for={satId()} style({ size({ w: 4 }).fg(muted-foreground).type({ size: xs }) })>S</label>
+                <slider id={satId()} min="0" max="100" step="1" bind:value={satText} data-axis="s" use:rangeFill aria-label="Saturation" style({ grow(1).size({ min-w: 0 }) }) />
+                <span style({ size({ w: 8 }).fg(muted-foreground).type({ family: mono, size: xs, align: end }) })>{sat()}%</span>
               </row>
               <row align="center" gap="2">
-                <label for={lightId()} style({ box: size({ w: 4 }), paint: ink({ color: muted-foreground }), text: type({ size: xs }) })>L</label>
-                <slider id={lightId()} min="0" max="100" step="1" bind:value={lightText} data-axis="l" use:rangeFill aria-label="Lightness" style({ box: flow({ grow: 1 }).size({ min-w: 0 }) }) />
-                <span style({ box: size({ w: 8 }), paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs, align: end }) })>{light()}%</span>
+                <label for={lightId()} style({ size({ w: 4 }).fg(muted-foreground).type({ size: xs }) })>L</label>
+                <slider id={lightId()} min="0" max="100" step="1" bind:value={lightText} data-axis="l" use:rangeFill aria-label="Lightness" style({ grow(1).size({ min-w: 0 }) }) />
+                <span style({ size({ w: 8 }).fg(muted-foreground).type({ family: mono, size: xs, align: end }) })>{light()}%</span>
               </row>
             </column>
             <if {showHexUi()}>
               <row align="center" gap="2">
-                <span style({ paint: ink({ color: muted-foreground }), text: type({ size: xs }) })>Hex</span>
+                <span style({ fg(muted-foreground).type({ size: xs }) })>Hex</span>
                 <input
                   type="text"
                   bind:value={hexDraft}
                   spellcheck="false"
                   autocomplete="off"
                   aria-label="Hex color"
-                  style({ box: flow({ grow: 1 }).size({ min-w: 0 }), text: type({ family: mono, size: xs, case: lowercase }) })
+                  style({ grow(1).size({ min-w: 0 }).type({ family: mono, size: xs, case: lowercase }) })
                 >
               </row>
             </if>

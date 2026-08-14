@@ -12,55 +12,26 @@
     open = false
   }
 
-  style host = {
-    box: place({ position: relative }).overflow({ all: hidden }),
-    paint: group().border({ color: border, width: 1 }).radius(md).fill({ color: surface-1 }),
-  }
-  style statusBg = {
-    when: {
-      groupStateRunning: { paint: fill({ color: info }) },
-      groupStateOk: { paint: fill({ color: success }) },
-      groupStateError: { paint: fill({ color: destructive }) },
-    },
-  }
-  style statusFg = {
-    when: {
-      groupStateRunning: { paint: ink({ color: info }) },
-      groupStateOk: { paint: ink({ color: success }) },
-      groupStateError: { paint: ink({ color: destructive }) },
-    },
-  }
+  style host = { position(relative).overflow({ all: hidden }).group().border({ color: border, width: 1 }).radius(md).bg(surface-1) }
+  style statusBg = { when: { groupStateRunning: bg(info), groupStateOk: bg(success), groupStateError: bg(destructive) } }
+  style statusFg = { when: { groupStateRunning: fg(info), groupStateOk: fg(success), groupStateError: fg(destructive) } }
   // Status rail only — accordion owns the caret.
-  style rail = { box: place({ position: absolute, top: 0, bottom: 0, left: 0 }).size({ w: 1 }) }
-  style dot = { paint: elevation(none) }
-  style statusLabel = {
-    box: space({ ml: auto }),
-    text: type({ size: xs, tracking: wide, case: uppercase }),
-  }
+  style rail = { position({ scheme: absolute, t: 0, b: 0, l: 0 }).size({ w: 1 }) }
+  style dot = { elevation(none) }
+  style statusLabel = { margin({ l: auto }).type({ size: xs, tracking: wide, case: uppercase }) }
   // padS clears the absolute rail so the first glyph never sits under it.
-  style trigger = { box: space({ pad-y: 2, pad-l: 4, pad-r: 3 }) }
-  style nameText = {
-    paint: ink({ color: foreground }),
-    text: type({ family: mono, size: sm, weight: medium, wrap: truncate }),
-  }
-  style body = {
-    box: space({ pad-y: 2, pad-l: 4, pad-r: 3 }),
-    paint: border({ edge: t, color: border, width: 1 }),
-    text: type({ family: mono, size: sm, leading: normal }),
-  }
-  style sectionLabel = {
-    box: flow({ display: block }).space({ mb: 1 }),
-    paint: ink({ color: muted-foreground }),
-    text: type({ family: body, size: xs, tracking: wide, case: uppercase }),
-  }
-  style pre = { text: type({ wrap: pre-wrap }) }
-  style resultBlock = { box: space({ mt: 2 }) }
+  style trigger = { pad({ y: 2, l: 4, r: 3 }) }
+  style nameText = { fg(foreground).type({ family: mono, size: sm, weight: medium, wrap: truncate }) }
+  style body = { pad({ y: 2, l: 4, r: 3 }).border({ edge: t, color: border, width: 1 }).type({ family: mono, size: sm, leading: normal }) }
+  style sectionLabel = { display(block).margin({ b: 1 }).fg(muted-foreground).type({ family: body, size: xs, tracking: wide, case: uppercase }) }
+  style pre = { type({ wrap: pre-wrap }) }
+  style resultBlock = { margin({ t: 2 }) }
 </scope>
 
 <div data-state={status()} style(host)>
   <span aria-hidden="true" style(rail, statusBg)></span>
 
-  <accordion open={open()} style({ paint: group() })>
+  <accordion open={open()} style({ group() })>
     <row slot="trigger" gap="2" align="center" style(trigger)>
       <span
         dot

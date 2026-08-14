@@ -10,15 +10,15 @@
     size: 'md' | 'sm' | 'lg' = 'md'
   }
 
-  style base = {box: space({ pad-x: 2 }), paint: ink({ color: foreground }).fill({ color: transparent }).radius(md).border({ color: transparent, width: 1 }).motion({ property: colors, duration: fast, ease: out }).cursor(pointer).select(none), text: type({ family: body, weight: medium })}
-  style sizeMd = {box: size({ min-w: control-h-md, h: control-h-md }), text: type({ size: sm })}
-  style sizeSm = {box: size({ min-w: control-h-sm, h: control-h-sm }), text: type({ size: xs })}
-  style sizeLg = {box: size({ min-w: control-h-lg, h: control-h-lg }), text: type({ size: base })}
+  style base = {pad({ x: 2 }).fg(foreground).bg(transparent).radius(md).border({ color: transparent, width: 1 }).cursor(pointer).select(none).type({ family: body, weight: medium }), animate: { transition: play(colors, fast) }}
+  style sizeMd = {size({ min-w: control-h-md, h: control-h-md }).type({ size: sm })}
+  style sizeSm = {size({ min-w: control-h-sm, h: control-h-sm }).type({ size: xs })}
+  style sizeLg = {size({ min-w: control-h-lg, h: control-h-lg }).type({ size: base })}
 </scope>
 
 <button
   type="button"
-  style(base, {when: {hover: {paint: fill({ color: hover-bg })}, current: {paint: fill({ color: muted }).ink({ color: foreground }).border({ color: muted })}, disabled: {paint: filter({ opacity: 50 }).cursor(not-allowed)}, focus: {paint: border({ style: solid, kind: outline, width: 2, color: ring })}}, match: { size: { md: sizeMd, sm: sizeSm, lg: sizeLg } }})
+  style(base, {when: {hover: bg(hover-bg), current: bg(muted).fg(foreground).border({ color: muted }), disabled: filter({ opacity: 50 }).cursor(not-allowed), focus: border({ style: solid, kind: outline, width: 2, color: ring })}, match: { size: { md: sizeMd, sm: sizeSm, lg: sizeLg } }})
 >
   <slot></slot>
 </button>

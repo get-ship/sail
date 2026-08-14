@@ -65,7 +65,7 @@ export default controller(({ series, width, height, grid, label, loading }: Scop
   })
 
 </controller>
-<column gap="0" style({ box: size({ w: full }) })>
+<column gap="0" style({ size({ w: full }) })>
   <if {loading()}>
     <skeleton shape="block" size="lg" role="status" aria-label="Loading" aria-live="polite" aria-busy="true"></skeleton>
   {else-if {chart.error()} => <error-state></error-state>}{else-if {chart.isEmpty()} => <empty-state></empty-state>}{else => <svg
@@ -75,7 +75,7 @@ export default controller(({ series, width, height, grid, label, loading }: Scop
       aria-label={ariaLabel()}
       aria-describedby="chart-data"
       use:observeViewport
-      style({ box: flow({ display: block }).size({ w: full }).overflow({ all: hidden }) })
+      style({ display(block).size({ w: full }).overflow({ all: hidden }) })
     >
       <for {gridLines() as g} key={g.id}>
         <line x1="0" x2={viewport.width()} y1={g.y} y2={g.y} stroke="var(--border)" stroke-width="1" stroke-dasharray="2 3"></line>
@@ -90,7 +90,7 @@ export default controller(({ series, width, height, grid, label, loading }: Scop
         </if>
       </for>
     </svg>
-    <column id="chart-data" style({ paint: srOnly() })>
+    <column id="chart-data" style({ srOnly() })>
       <slot name="description">
         <table>
           <for {chart.ariaTable() as row} key={row[0].id}>
@@ -103,8 +103,8 @@ export default controller(({ series, width, height, grid, label, loading }: Scop
         </table>
       </slot>
     </column>}</if>
-  <row gap="3" align="stretch" style({ box: space({ mt: 1_5 }), paint: ink({ color: muted-foreground }) })>
-    <span style({ box: flow({ display: contents }), text: type({ family: body, size: xs }) })>
+  <row gap="3" align="stretch" style({ margin({ t: 1_5 }).fg(muted-foreground) })>
+    <span style({ display(contents).type({ family: body, size: xs }) })>
       <slot></slot>
     </span>
   </row>

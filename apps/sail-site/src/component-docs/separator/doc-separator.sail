@@ -4,26 +4,19 @@
 -->
 
 <scope>
-  style page = { box: size({ w: full, max-w: breakpoint-desktop }).space({ mx: auto }) }
-  style fullW = { box: size({ w: full }) }
-  style mutedSm = { paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
-  style knobLabel = {
-    paint: ink({ color: muted-foreground }),
-    text: type({ size: xs, weight: medium, tracking: wide, case: uppercase }),
-}
-  style swatch = {
-    box: size(7).flow({ shrink: 0 }),
-    paint: radius(full).cursor(pointer).border({ color: transparent, width: 2 }).elevation(xs),
-    when: { selected: { paint: border({ color: foreground }).elevation(sm) }, hover: { paint: filter({ opacity: 90 }) } },
-}
-  style swatchPrimary = { paint: fill({ color: primary }) }
-  style swatchDestructive = { paint: fill({ color: destructive }) }
-  style swatchMuted = { paint: fill({ color: muted }).border({ color: border }) }
-  style swatchRest = { paint: fill({ color: background }).border({ color: border }) }
-  style exampleBlock = { box: size({ w: full }).space({ pad-t: 2, pad-b: 4 }) }
-  style sectionLabel = { paint: ink({ color: muted-foreground }), text: type({ size: xs, tracking: wide, case: uppercase }) }
-  style sepVRow = { box: size({ h: 10 }) }
-  style sepStageCol = { box: size({ w: full, max-w: panel-max-w-sm }) }
+  style page = { size({ w: full, max-w: breakpoint-desktop }).margin({ x: auto }) }
+  style fullW = { size({ w: full }) }
+  style mutedSm = { fg(muted-foreground).type({ size: sm }) }
+  style knobLabel = { fg(muted-foreground).type({ size: xs, weight: medium, tracking: wide, case: uppercase }) }
+  style swatch = { size(7).shrink(0).radius(full).cursor(pointer).border({ color: transparent, width: 2 }).elevation(xs), when: { selected: border({ color: foreground }).elevation(sm), hover: filter({ opacity: 90 }) } }
+  style swatchPrimary = { bg(primary) }
+  style swatchDestructive = { bg(destructive) }
+  style swatchMuted = { bg(muted).border({ color: border }) }
+  style swatchRest = { bg(background).border({ color: border }) }
+  style exampleBlock = { size({ w: full }).pad({ t: 2, b: 4 }) }
+  style sectionLabel = { fg(muted-foreground).type({ size: xs, tracking: wide, case: uppercase }) }
+  style sepVRow = { size({ h: 10 }) }
+  style sepStageCol = { size({ w: full, max-w: panel-max-w-sm }) }
 </scope>
 
 <controller>

@@ -1,7 +1,7 @@
 <!-- Legacy path redirect → /docs/concepts/templates -->
 <scope>
-  style redirectRoot = { box: flow({ grow: 1 }).size({ h: full, min-h: 0 }), paint: fill({ color: background }) }
-  style redirectText = { paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
+  style redirectRoot = { grow(1).size({ h: full, min-h: 0 }).bg(background) }
+  style redirectText = { fg(muted-foreground).type({ size: sm }) }
 </scope>
 
 <controller>

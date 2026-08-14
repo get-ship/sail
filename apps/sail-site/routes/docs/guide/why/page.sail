@@ -2,10 +2,10 @@
   Why Sail — argument for one constrained system for agents and newcomers.
 -->
 <scope>
-  style page = { box: size({ max-w: breakpoint-tablet }).space({ mx: auto }) }
-  style eyebrow = { box: space({ mb: 2 }), paint: ink({ color: accent }), text: type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
-  style lead = { paint: ink({ color: muted-foreground }), text: type({ size: lg, leading: relaxed }) }
-  style footNav = { box: space({ pad-t: 4, mt: 8 }), paint: border({ color: border, width: 1, edge: t }) }
+  style page = { size({ max-w: breakpoint-tablet }).margin({ x: auto }) }
+  style eyebrow = { margin({ b: 2 }).fg(accent).type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
+  style lead = { fg(muted-foreground).type({ size: lg, leading: relaxed }) }
+  style footNav = { pad({ t: 4 }).margin({ t: 8 }).border({ color: border, width: 1, edge: t }) }
 </scope>
 
 <column gap="4" style(page)>

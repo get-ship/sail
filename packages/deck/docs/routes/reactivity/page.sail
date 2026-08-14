@@ -43,78 +43,32 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 </controller>
 
 <scope>
-  style page = { box: maxW(breakpoint-tablet).mx(auto).padY(5) }
-  style head = { box: mb(5) }
-  style eyebrow = {
-    box: mb(2),
-    paint: fg(accent),
-    text: fontFamily(mono).fontSize(xs).tracking(wide).textCase(uppercase),
-  }
-  style lead = { box: maxW(panel-max-w-md), paint: fg(muted-foreground), text: leading(relaxed) }
-  style graph = { box: w(full).mb(5) }
-  style node = {
-    box: w(full).maxW(panel-max-w-md).padX(5).padY(4).mx(auto),
-    paint: bg(surface-1).borderWidth(1).border(border).radius(lg),
-    text: textAlign(center),
-  }
-  style nodeHead = { box: mb(1) }
-  style nodeName = { paint: fg(foreground), text: fontFamily(mono).fontWeight(bold).fontSize(sm) }
-  style nodeKind = { paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) }
-  style val = {
-    box: my(2),
-    paint: fg(foreground),
-    text: fontFamily(mono).fontWeight(bold).fontSize(2xl).leading(none),
-  }
-  style valJoin = {
-    box: my(2),
-    paint: fg(accent),
-    text: fontFamily(mono).fontWeight(bold).fontSize(3xl).leading(none),
-  }
-  style controls = { box: mt(3) }
-  style edge = {
-    box: my(2),
-    paint: fg(muted-foreground),
-    text: fontFamily(mono).fontSize(xs).tracking(wide).textAlign(center),
-  }
-  style pair = {
-    box: w(full).maxW(panel-max-w-md).mx(auto),
-    paint: borderWidth(1).border(border).radius(lg).overflow(hidden),
-  }
-  style pairNode = {
-    box: padX(5).padY(4).grow(1),
-    paint: borderRWidth(1).borderR(border),
-    text: textAlign(center),
-  }
-  style pairNodeLast = { box: padX(5).padY(4).grow(1), text: textAlign(center) }
-  style proof = {
-    box: pad(5).mb(5),
-    paint: borderWidth(1).border(border).radius(lg).bg(surface-2),
-  }
-  style proofStats = { box: mb(3) }
-  style stat = { box: minW(24) }
-  style statK = {
-    paint: fg(muted-foreground),
-    text: fontSize(xs).textCase(uppercase).tracking(wide),
-  }
-  style statV = { text: fontFamily(mono).fontSize(xl).fontWeight(bold) }
-  style statAccent = { paint: fg(accent), text: fontFamily(mono).fontSize(xl).fontWeight(bold) }
-  style proofNote = {
-    box: maxW(panel-max-w-md),
-    paint: fg(muted-foreground),
-    text: fontSize(sm).leading(relaxed),
-  }
-  style footNav = {
-    box: padT(4),
-    paint: borderTWidth(1).borderT(border),
-  }
-  style toneDot = {
-    box: w(2).h(2).shrink(0),
-    paint: radius(full).bg(accent),
-  }
-  style toneDotMuted = {
-    box: w(2).h(2).shrink(0),
-    paint: radius(full).bg(muted-foreground),
-  }
+  style page = { maxW(breakpoint-tablet).mx(auto).padY(5) }
+  style head = { mb(5) }
+  style eyebrow = { mb(2).fg(accent).fontFamily(mono).fontSize(xs).tracking(wide).textCase(uppercase) }
+  style lead = { maxW(panel-max-w-md).fg(muted-foreground).leading(relaxed) }
+  style graph = { w(full).mb(5) }
+  style node = { w(full).maxW(panel-max-w-md).padX(5).padY(4).mx(auto).bg(surface-1).borderWidth(1).border(border).radius(lg).textAlign(center) }
+  style nodeHead = { mb(1) }
+  style nodeName = { fg(foreground).fontFamily(mono).fontWeight(bold).fontSize(sm) }
+  style nodeKind = { fg(muted-foreground).fontFamily(mono).fontSize(xs) }
+  style val = { my(2).fg(foreground).fontFamily(mono).fontWeight(bold).fontSize(2xl).leading(none) }
+  style valJoin = { my(2).fg(accent).fontFamily(mono).fontWeight(bold).fontSize(3xl).leading(none) }
+  style controls = { mt(3) }
+  style edge = { my(2).fg(muted-foreground).fontFamily(mono).fontSize(xs).tracking(wide).textAlign(center) }
+  style pair = { w(full).maxW(panel-max-w-md).mx(auto).borderWidth(1).border(border).radius(lg).overflow(hidden) }
+  style pairNode = { padX(5).padY(4).grow(1).borderRWidth(1).borderR(border).textAlign(center) }
+  style pairNodeLast = { padX(5).padY(4).grow(1).textAlign(center) }
+  style proof = { pad(5).mb(5).borderWidth(1).border(border).radius(lg).bg(surface-2) }
+  style proofStats = { mb(3) }
+  style stat = { minW(24) }
+  style statK = { fg(muted-foreground).fontSize(xs).textCase(uppercase).tracking(wide) }
+  style statV = { fontFamily(mono).fontSize(xl).fontWeight(bold) }
+  style statAccent = { fg(accent).fontFamily(mono).fontSize(xl).fontWeight(bold) }
+  style proofNote = { maxW(panel-max-w-md).fg(muted-foreground).fontSize(sm).leading(relaxed) }
+  style footNav = { padT(4).borderTWidth(1).borderT(border) }
+  style toneDot = { w(2).h(2).shrink(0).radius(full).bg(accent) }
+  style toneDotMuted = { w(2).h(2).shrink(0).radius(full).bg(muted-foreground) }
 </scope>
 
 <section style(page)>

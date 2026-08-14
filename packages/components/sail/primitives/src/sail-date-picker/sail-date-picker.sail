@@ -253,12 +253,8 @@ export default controller(({ value, min, max, disabled }: ControllerScope<Scope>
   })
 
 </controller>
-<column gap="0" style({ box: place({ position: relative }).size({ w: full }) })>
-  <row gap="2" align="center" style({
-    box: size({ w: full, h: control-h-md }).space({ pad-x: 2_5 }),
-    paint: fill({ color: background }).ink({ color: foreground }).border({ color: border, width: 1 }).radius(md),
-    when: { focusWithin: { paint: border({ kind: outline, color: ring }) } },
-  })>
+<column gap="0" style({ position(relative).size({ w: full }) })>
+  <row gap="2" align="center" style({ size({ w: full, h: control-h-md }).pad({ x: 2_5 }).bg(background).fg(foreground).border({ color: border, width: 1 }).radius(md), when: { focusWithin: border({ kind: outline, color: ring }) } })>
     <input
       type="text"
       flush
@@ -271,11 +267,7 @@ export default controller(({ value, min, max, disabled }: ControllerScope<Scope>
       aria-expanded={open() ? 'true' : 'false'}
       bind:value={value}
       use:captureInput
-      style({
-        box: flow({ grow: 1 }).size({ min-w: 0 }),
-        text: type({ family: body }),
-        when: { disabled: { paint: cursor(not-allowed) } },
-      })
+      style({ grow(1).size({ min-w: 0 }).type({ family: body }), when: { disabled: cursor(not-allowed) } })
     >
     <svg
       viewBox="0 0 16 16"
@@ -285,10 +277,7 @@ export default controller(({ value, min, max, disabled }: ControllerScope<Scope>
       stroke-width="1.5"
       stroke-linecap="round"
       stroke-linejoin="round"
-      style({
-        box: size({ w: icon-size-sm, h: icon-size-sm, min-w: icon-size-sm }),
-        paint: ink({ color: muted-foreground }).pointerEvents(none),
-      })
+      style({ size({ w: icon-size-sm, h: icon-size-sm, min-w: icon-size-sm }).fg(muted-foreground).pointerEvents(none) })
     >
       <rect x="2" y="3" width="12" height="11" rx="1.5"></rect>
       <path d="M2 6h12 M5 1.5v3 M11 1.5v3"></path>
@@ -298,44 +287,29 @@ export default controller(({ value, min, max, disabled }: ControllerScope<Scope>
     <div
       role="dialog"
       aria-label="Choose date"
-      style({
-        box: place({ position: absolute, left: 0 }).size({ w: panel-max-w-sm }).space({ pad: 2, mt: 1 }),
-        paint: place({ z: popover }).fill({ color: surface-1 }).ink({ color: foreground }).border({ color: border, width: 1 }).radius(md).elevation(md),
-      })
+      style({ position({ scheme: absolute, l: 0 }).size({ w: panel-max-w-sm }).pad(2).margin({ t: 1 }).position({ z: popover }).bg(surface-1).fg(foreground).border({ color: border, width: 1 }).radius(md).elevation(md) })
     >
-      <span style({ box: flow({ display: contents }), text: type({ family: body }) })>
-        <row align="center" justify="between" style({ box: space({ mb: 1 }) })>
+      <span style({ display(contents).type({ family: body }) })>
+        <row align="center" justify="between" style({ margin({ b: 1 }) })>
           <button
             type="button"
             data-act="prev"
             aria-label="Previous month"
-            style({
-              box: size({ w: icon-size-2xl, h: icon-size-2xl }),
-              paint: radius(sm).ink({ color: muted-foreground }).cursor(pointer),
-              when: { hover: { paint: fill({ color: muted }).ink({ color: foreground }) } },
-            })
+            style({ size({ w: icon-size-2xl, h: icon-size-2xl }).radius(sm).fg(muted-foreground).cursor(pointer), when: { hover: bg(muted).fg(foreground) } })
           >‹</button>
-          <span style({ box: flow({ grow: 1 }), text: type({ weight: semibold, align: center }) })>{monthLabel()}</span>
+          <span style({ grow(1).type({ weight: semibold, align: center }) })>{monthLabel()}</span>
           <button
             type="button"
             data-act="next"
             aria-label="Next month"
-            style({
-              box: size({ w: icon-size-2xl, h: icon-size-2xl }),
-              paint: radius(sm).ink({ color: muted-foreground }).cursor(pointer),
-              when: { hover: { paint: fill({ color: muted }).ink({ color: foreground }) } },
-            })
+            style({ size({ w: icon-size-2xl, h: icon-size-2xl }).radius(sm).fg(muted-foreground).cursor(pointer), when: { hover: bg(muted).fg(foreground) } })
           >›</button>
         </row>
         <grid role="grid" cols="7" gap="1">
           <for {dayHeaders() as d} key={d.key}>
             <span
               role="columnheader"
-              style({
-                box: space({ pad-y: 1 }),
-                paint: ink({ color: muted-foreground }),
-                text: type({ size: sm, weight: medium, align: center }),
-              })
+              style({ pad({ y: 1 }).fg(muted-foreground).type({ size: sm, weight: medium, align: center }) })
             >{d.label}</span>
           </for>
           <for {monthCells() as cell} key={cell.key}>
@@ -347,19 +321,7 @@ export default controller(({ value, min, max, disabled }: ControllerScope<Scope>
               tabindex={cell.focused ? '0' : '-1'}
               data-state={cell.state || null}
               data-iso={cell.iso}
-              style({
-                box: size({ h: control-h-sm }),
-                paint: radius(sm).cursor(pointer).ink({ color: foreground }),
-                text: type({ align: center }),
-                when: {
-                  hover: { paint: fill({ color: hover-bg }) },
-                  selected: { paint: fill({ color: primary }).ink({ color: primary-foreground }) },
-                  disabled: { paint: ink({ color: muted-foreground }).filter({ opacity: 50 }).cursor(not-allowed) },
-                  stateEmpty: { paint: filter({ opacity: 0 }) },
-                  stateToday: { paint: border({ kind: outline, color: border-strong }) },
-                  focus: { paint: border({ kind: outline, color: ring }) },
-                },
-              })
+              style({ size({ h: control-h-sm }).radius(sm).cursor(pointer).fg(foreground).type({ align: center }), when: { hover: bg(hover-bg), selected: bg(primary).fg(primary-foreground), disabled: fg(muted-foreground).filter({ opacity: 50 }).cursor(not-allowed), stateEmpty: filter({ opacity: 0 }), stateToday: border({ kind: outline, color: border-strong }), focus: border({ kind: outline, color: ring }) } })
             >{cell.empty ? '' : cell.day}</button>
           </for>
         </grid>

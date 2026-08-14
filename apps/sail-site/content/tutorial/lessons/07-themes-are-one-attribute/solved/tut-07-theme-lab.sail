@@ -29,10 +29,10 @@ export default controller(() => {
 </controller>
 
 <scope>
-  style muted = { paint: ink({ color: muted-foreground }) }
-  style preview = { box: space({ pad: 4 }), paint: radius(lg).border({ color: border, width: 1 }).fill({ color: background }).ink({ color: foreground }) }
-  style title = { text: type({ size: sm }) }
-  style body = { paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
+  style muted = { fg(muted-foreground) }
+  style preview = { pad(4).radius(lg).border({ color: border, width: 1 }).bg(background).fg(foreground) }
+  style title = { type({ size: sm }) }
+  style body = { fg(muted-foreground).type({ size: sm }) }
   type PinnedPreviewProps = { pin: string }
 </scope>
 

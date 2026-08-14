@@ -3,13 +3,13 @@
 -->
 
 <scope>
-  style page = { box: size({ max-w: breakpoint-tablet }).space({ mx: auto }) }
-  style eyebrow = { box: space({ mb: 2 }), paint: ink({ color: accent }), text: type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
-  style lead = { paint: ink({ color: muted-foreground }), text: type({ size: lg, leading: relaxed }) }
-  style lessonCard = { box: space({ pad: 4 }), paint: radius(lg).border({ color: border, width: 1 }).fill({ color: surface-1 }), when: { hover: { paint: fill({ color: surface-2 }).border({ color: border-strong, width: 1 }) } } }
-  style lessonBody = { box: flow({ grow: 1 }) }
-  style lessonDesc = { paint: ink({ color: muted-foreground }) }
-  style footNav = { box: space({ pad-t: 4, mt: 8 }), paint: border({ color: border, width: 1, edge: t }) }
+  style page = { size({ max-w: breakpoint-tablet }).margin({ x: auto }) }
+  style eyebrow = { margin({ b: 2 }).fg(accent).type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
+  style lead = { fg(muted-foreground).type({ size: lg, leading: relaxed }) }
+  style lessonCard = { pad(4).radius(lg).border({ color: border, width: 1 }).bg(surface-1), when: { hover: bg(surface-2).border({ color: border-strong, width: 1 }) } }
+  style lessonBody = { grow(1) }
+  style lessonDesc = { fg(muted-foreground) }
+  style footNav = { pad({ t: 4 }).margin({ t: 8 }).border({ color: border, width: 1, edge: t }) }
 </scope>
 
 <controller>

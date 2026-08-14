@@ -6,9 +6,9 @@
     label = 'Counter'
   }
 
-  style card = { box: space({ pad: 4 }) }
-  style labelText = { paint: ink({ color: muted-foreground }), text: type({ size: xs, tracking: wide, case: uppercase }) }
-  style count = { text: type({ size: lg }) }
+  style card = { pad(4) }
+  style labelText = { fg(muted-foreground).type({ size: xs, tracking: wide, case: uppercase }) }
+  style count = { type({ size: lg }) }
 </scope>
 
 <controller>

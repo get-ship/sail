@@ -11,12 +11,10 @@
   }
 
   // Track/fill ride muted / primary.
-  style base = {box: flow({ display: inline-block }).size({ w: full, h: 2 }).overflow({ all: hidden }), paint: appearance(none).align(middle).border({ width: 0 }).radius(full).fill({ color: muted }).ink({ color: primary })}
-  style sizeSm = {box: size({ h: 1_5 })}
-  style sizeMd = {box: size({ h: 2 })}
-  style sizeLg = {box: size({ h: 3 })}
+  style base = {display(inline-block).size({ w: full, h: 2 }).overflow({ all: hidden }).appearance(none).align(middle).border({ width: 0 }).radius(full).bg(muted).fg(primary)}
+  style sizeSm = {size({ h: 1_5 })}
+  style sizeMd = {size({ h: 2 })}
+  style sizeLg = {size({ h: 3 })}
 </scope>
 
-<progress style(base, {
-  match: { size: { sm: sizeSm, md: sizeMd, lg: sizeLg } },
-})></progress>
+<progress style(base, { match: { size: { sm: sizeSm, md: sizeMd, lg: sizeLg } } })></progress>

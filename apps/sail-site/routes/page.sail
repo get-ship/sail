@@ -8,54 +8,54 @@
   // size({ min-w: 0 }) + overflowX clip — diagonal tickers use negative inset; clip stops sideways growth.
   // Do NOT pair overflow({ x: hidden }) with height-capped flex parent and leave Y visible:
   // CSS coerces Y→auto and sections become independent scrollports.
-  style page = { box: size({ w: full, min-w: 0, max-w: full }).overflow({ x: hidden }), paint: fill({ color: surface-0 }) }
-  style hero = { box: place({ position: relative }).space({ pad-x: 4, pad-t: 8, pad-b: 10 }).size({ min-w: 0 }).overflow({ x: hidden }), when: { tablet: { box: space({ pad-x: 8, pad-t: 10, pad-b: 16 }) } } }
-  style glow = { box: place({ top: 0, left: 0, right: 0, z: base }).size({ h: 64 }), paint: fill({ glow: accent }) }
-  style heroInner = { box: place({ position: relative }).size({ w: full, min-w: 0, max-w: breakpoint-desktop }).space({ mx: auto }) }
-  style eyebrow = { paint: ink({ color: accent }), text: type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
-  style display = { box: size({ min-w: 0, max-w: full }).overflow({ all: hidden }), paint: ink({ color: foreground }), text: type({ family: display, size: display, weight: bold, leading: none, tracking: tighter, align: center }) }
-  style line = { box: flow({ display: block }).size({ w: full, min-w: 0 }) }
-  style wordLine = { box: flow({ display: block }).size({ w: full, min-w: 0 }).overflow({ all: hidden }), text: type({ wrap: truncate }) }
-  style lead = { box: size({ min-w: 0, max-w: breakpoint-mobile }), paint: ink({ color: muted-foreground }), text: type({ size: lg, leading: relaxed, align: center }) }
-  style ctaRow = { box: size({ w: full, min-w: 0 }) }
-  style cta = { box: space({ pad-x: 8 }), paint: radius(full) }
-  style tickerSection = { box: place({ position: relative, z: elevated }).size({ w: full, h: 44, min-w: 0, max-w: full }).overflow({ all: hidden }).space({ my: 8 }) }
-  style tickerBand = { box: place({ position: absolute, top: 24, left: -10, right: -10 }), paint: motion({ rotate: 2 }) }
-  style tickerDark = { box: space({ pad-y: 3 }).overflow({ all: hidden }), paint: border({ color: border, width: 1, edge: y }).fill({ color: surface-2 }) }
-  style tickerMono = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: sm, wrap: nowrap }) }
-  style tickerBandTop = { box: place({ position: absolute, top: 12, left: -10, right: -10, z: popover }), paint: motion({ rotate: -2 }) }
-  style tickerPrimary = { box: space({ pad-y: 3 }).overflow({ all: hidden }), paint: fill({ color: primary }) }
-  style tickerBold = { paint: ink({ color: primary-foreground }), text: type({ size: md, weight: bold, tracking: wide, case: uppercase, wrap: nowrap }) }
-  style bento = { box: space({ pad-x: 4, pad-t: 6, pad-b: 10 }).size({ min-w: 0 }).overflow({ x: hidden }), when: { tablet: { box: space({ pad-x: 8, pad-t: 8, pad-b: 12 }) } } }
-  style grid = { box: size({ w: full, min-w: 0, max-w: breakpoint-desktop }).space({ mx: auto }) }
-  style cardLink = { box: flow({ display: block }).size({ w: full, min-w: 0 }), paint: ink({ color: foreground }), text: type({ decoration: none }), when: { hover: { paint: ink({ color: foreground }) } } }
-  style cardFill = { box: size({ h: full }).overflow({ all: hidden }), when: { tablet: { box: size({ min-h: 52 }) } } }
-  style cardCol = { box: size({ h: full }).space({ pad: 4 }), when: { tablet: { box: space({ pad: 5 }) } } }
-  style cardEyebrow = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
-  style cardTitle = { box: space({ mt: 1 }), paint: ink({ color: foreground }), text: type({ size: md, weight: semibold, leading: snug }) }
-  style cardBody = { box: space({ mt: 2 }), paint: ink({ color: muted-foreground }), text: type({ size: sm, leading: relaxed }) }
-  style cardFoot = { box: space({ pad-t: 5, mt: auto }) }
-  style metric = { paint: ink({ color: foreground }), text: type({family: mono, size: 2xl, weight: semibold, leading: none, nums: tabular}) }
-  style metricUnit = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs }) }
-  style swatch = { box: size(6), paint: radius(sm).border({ color: border, width: 1 }) }
-  style statusLine = { box: size({ min-w: 0 }), paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs, wrap: truncate }) }
-  style term = { box: space({ pad-x: 3, pad-y: 2_5 }), paint: fill({ color: surface-0 }).border({ color: border, width: 1 }).radius(md).ink({ color: muted-foreground }), text: type({ family: mono, size: xs }) }
-  style termAccent = { paint: ink({ color: primary }) }
-  style foot = { box: space({ pad-x: 4, pad-t: 8 }), when: { tablet: { box: space({ pad-x: 8, pad-t: 12 }) } } }
-  style footRow = { box: size({ w: full, max-w: breakpoint-desktop }).space({ pad-b: 6, mx: auto }), paint: border({ color: border, width: 1, edge: b }).ink({ color: muted-foreground }), text: type({ family: mono, size: sm }) }
-  style footLink = { paint: ink({ color: muted-foreground }), text: type({ decoration: none }), when: { hover: { paint: ink({ color: primary }) } } }
-  style diamond = { box: flow({ display: inline-block }).size(2), paint: motion({ rotate: 45 }).fill({ color: primary }).radius(sm) }
-  style wordmarkWrap = { box: size({ w: full, min-w: 0, max-w: full }).overflow({ all: hidden }) }
-  style wordmark = { box: space({ mb: -8 }).size({ min-w: 0, max-w: full }), paint: ink({ gradient: primary }).select(none), text: type({ family: display, size: display, weight: bold, leading: none, tracking: tighter, align: center }) }
-  style wordPrimary = { paint: ink({ color: primary }) }
+  style page = { size({ w: full, min-w: 0, max-w: full }).overflow({ x: hidden }).bg(surface-0) }
+  style hero = { position(relative).pad({ x: 4, t: 8, b: 10 }).size({ min-w: 0 }).overflow({ x: hidden }), when: { tablet: pad({ x: 8, t: 10, b: 16 }) } }
+  style glow = { position({ t: 0, l: 0, r: 0, z: base }).size({ h: 64 }).bg({ glow: accent }) }
+  style heroInner = { position(relative).size({ w: full, min-w: 0, max-w: breakpoint-desktop }).margin({ x: auto }) }
+  style eyebrow = { fg(accent).type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
+  style display = { size({ min-w: 0, max-w: full }).overflow({ all: hidden }).fg(foreground).type({ family: display, size: display, weight: bold, leading: none, tracking: tighter, align: center }) }
+  style line = { display(block).size({ w: full, min-w: 0 }) }
+  style wordLine = { display(block).size({ w: full, min-w: 0 }).overflow({ all: hidden }).type({ wrap: truncate }) }
+  style lead = { size({ min-w: 0, max-w: breakpoint-mobile }).fg(muted-foreground).type({ size: lg, leading: relaxed, align: center }) }
+  style ctaRow = { size({ w: full, min-w: 0 }) }
+  style cta = { pad({ x: 8 }).radius(full) }
+  style tickerSection = { position({ scheme: relative, z: elevated }).size({ w: full, h: 44, min-w: 0, max-w: full }).overflow({ all: hidden }).margin({ y: 8 }) }
+  style tickerBand = { position({ scheme: absolute, t: 24, l: -10, r: -10 }).rotate(2) }
+  style tickerDark = { pad({ y: 3 }).overflow({ all: hidden }).border({ color: border, width: 1, edge: y }).bg(surface-2) }
+  style tickerMono = { fg(muted-foreground).type({ family: mono, size: sm, wrap: nowrap }) }
+  style tickerBandTop = { position({ scheme: absolute, t: 12, l: -10, r: -10, z: popover }).rotate(-2) }
+  style tickerPrimary = { pad({ y: 3 }).overflow({ all: hidden }).bg(primary) }
+  style tickerBold = { fg(primary-foreground).type({ size: md, weight: bold, tracking: wide, case: uppercase, wrap: nowrap }) }
+  style bento = { pad({ x: 4, t: 6, b: 10 }).size({ min-w: 0 }).overflow({ x: hidden }), when: { tablet: pad({ x: 8, t: 8, b: 12 }) } }
+  style grid = { size({ w: full, min-w: 0, max-w: breakpoint-desktop }).margin({ x: auto }) }
+  style cardLink = { display(block).size({ w: full, min-w: 0 }).fg(foreground).type({ decoration: none }), when: { hover: fg(foreground) } }
+  style cardFill = { size({ h: full }).overflow({ all: hidden }), when: { tablet: size({ min-h: 52 }) } }
+  style cardCol = { size({ h: full }).pad(4), when: { tablet: pad(5) } }
+  style cardEyebrow = { fg(muted-foreground).type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
+  style cardTitle = { margin({ t: 1 }).fg(foreground).type({ size: md, weight: semibold, leading: snug }) }
+  style cardBody = { margin({ t: 2 }).fg(muted-foreground).type({ size: sm, leading: relaxed }) }
+  style cardFoot = { pad({ t: 5 }).margin({ t: auto }) }
+  style metric = { fg(foreground).type({family: mono, size: 2xl, weight: semibold, leading: none, nums: tabular}) }
+  style metricUnit = { fg(muted-foreground).type({ family: mono, size: xs }) }
+  style swatch = { size(6).radius(sm).border({ color: border, width: 1 }) }
+  style statusLine = { size({ min-w: 0 }).fg(muted-foreground).type({ family: mono, size: xs, wrap: truncate }) }
+  style term = { pad({ x: 3, y: 2_5 }).bg(surface-0).border({ color: border, width: 1 }).radius(md).fg(muted-foreground).type({ family: mono, size: xs }) }
+  style termAccent = { fg(primary) }
+  style foot = { pad({ x: 4, t: 8 }), when: { tablet: pad({ x: 8, t: 12 }) } }
+  style footRow = { size({ w: full, max-w: breakpoint-desktop }).pad({ b: 6 }).margin({ x: auto }).border({ color: border, width: 1, edge: b }).fg(muted-foreground).type({ family: mono, size: sm }) }
+  style footLink = { fg(muted-foreground).type({ decoration: none }), when: { hover: fg(primary) } }
+  style diamond = { display(inline-block).size(2).rotate(45).bg(primary).radius(sm) }
+  style wordmarkWrap = { size({ w: full, min-w: 0, max-w: full }).overflow({ all: hidden }) }
+  style wordmark = { margin({ b: -8 }).size({ min-w: 0, max-w: full }).fg({ gradient: primary }).select(none).type({ family: display, size: display, weight: bold, leading: none, tracking: tighter, align: center }) }
+  style wordPrimary = { fg(primary) }
   // Spring bar-loop — the MOTION bento's live proof that style.loop moves
   // translate-y (animation.spec.ts samples computed translate over time).
-  style bar40 = { box: size({ w: 1_5, h: 6 }), paint: radius(sm).fill({ color: primary }).filter({ opacity: 40 }), animate: loop({ translate-y: 'spring:bouncy' }) }
-  style bar60 = { box: size({ w: 1_5, h: 10 }), paint: radius(sm).fill({ color: primary }).filter({ opacity: 60 }), animate: loop({ translate-y: 'spring:gentle', stagger: '0.12s' }) }
-  style bar70 = { box: size({ w: 1_5, h: 8 }), paint: radius(sm).fill({ color: primary }).filter({ opacity: 70 }), animate: loop({ translate-y: 'spring:bouncy', stagger: '0.12s' }) }
-  style barFull = { box: size({ w: 1_5, h: 14 }), paint: radius(sm).fill({ color: primary }), animate: loop({ translate-y: 'spring:gentle', stagger: '0.12s' }) }
-  style bar60b = { box: size({ w: 1_5, h: 9 }), paint: radius(sm).fill({ color: primary }).filter({ opacity: 60 }), animate: loop({ translate-y: 'spring:bouncy', stagger: '0.12s' }) }
-  style bar40b = { box: size({ w: 1_5, h: 11 }), paint: radius(sm).fill({ color: primary }).filter({ opacity: 40 }), animate: loop({ translate-y: 'spring:gentle', stagger: '0.12s' }) }
+  style bar40 = { size({ w: 1_5, h: 6 }).radius(sm).bg(primary).filter({ opacity: 40 }), animate: loop({ translate-y: 'spring:bouncy' }) }
+  style bar60 = { size({ w: 1_5, h: 10 }).radius(sm).bg(primary).filter({ opacity: 60 }), animate: loop({ translate-y: 'spring:gentle', stagger: '0.12s' }) }
+  style bar70 = { size({ w: 1_5, h: 8 }).radius(sm).bg(primary).filter({ opacity: 70 }), animate: loop({ translate-y: 'spring:bouncy', stagger: '0.12s' }) }
+  style barFull = { size({ w: 1_5, h: 14 }).radius(sm).bg(primary), animate: loop({ translate-y: 'spring:gentle', stagger: '0.12s' }) }
+  style bar60b = { size({ w: 1_5, h: 9 }).radius(sm).bg(primary).filter({ opacity: 60 }), animate: loop({ translate-y: 'spring:bouncy', stagger: '0.12s' }) }
+  style bar40b = { size({ w: 1_5, h: 11 }).radius(sm).bg(primary).filter({ opacity: 40 }), animate: loop({ translate-y: 'spring:gentle', stagger: '0.12s' }) }
   // Empty prop bags for in-file partials (no params; expand at preprocess).
   type MotionBarsProps = {}
   type BentoCardProps = {}
@@ -120,12 +120,12 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         <strong style(cardTitle)>Nine themes. One token graph.</strong>
         <p style(cardBody)>Swap theme and every surface, ink, and control re-resolves.</p>
         <row gap="2" style(cardFoot)>
-          <div style(swatch, { paint: fill({ color: primary }) })></div>
-          <div style(swatch, { paint: fill({ color: accent }) })></div>
-          <div style(swatch, { paint: fill({ color: success }) })></div>
-          <div style(swatch, { paint: fill({ color: warning }) })></div>
-          <div style(swatch, { paint: fill({ color: info }) })></div>
-          <div style(swatch, { paint: fill({ color: muted }) })></div>
+          <div style(swatch, { bg(primary) })></div>
+          <div style(swatch, { bg(accent) })></div>
+          <div style(swatch, { bg(success) })></div>
+          <div style(swatch, { bg(warning) })></div>
+          <div style(swatch, { bg(info) })></div>
+          <div style(swatch, { bg(muted) })></div>
         </row>
       </column>
     </card>
@@ -202,7 +202,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 <!-- cols not breakpoint-aware — structural when owns layout. -->
 <column gap="0" style(page)>
 
-  <section style(hero, { box: flow({ shrink: 0 }) })>
+  <section style(hero, { shrink(0) })>
     <div style(glow)></div>
 
     <column gap="8" align="center" style(heroInner)>
@@ -230,7 +230,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     </column>
   </section>
 
-  <section style(tickerSection, { box: flow({ shrink: 0 }) })>
+  <section style(tickerSection, { shrink(0) })>
     <div style(tickerBand)>
       <ticker duration="slow" reverse style(tickerDark)>
         <p style(tickerMono)>forms + validation&nbsp;&nbsp;·&nbsp;&nbsp;live data&nbsp;&nbsp;·&nbsp;&nbsp;springs + tweens&nbsp;&nbsp;·&nbsp;&nbsp;ssr&nbsp;&nbsp;·&nbsp;&nbsp;hot reload&nbsp;&nbsp;·&nbsp;&nbsp;design tokens&nbsp;&nbsp;·&nbsp;&nbsp;</p>
@@ -243,7 +243,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     </div>
   </section>
 
-  <section style(bento, { box: flow({ shrink: 0 }) })>
+  <section style(bento, { shrink(0) })>
     <when {tablet}>
       <grid cols="3" gap="4" style(grid)>
         <bento-animation></bento-animation>
@@ -263,7 +263,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       </grid>}</when>
   </section>
 
-  <section style(foot, { box: flow({ shrink: 0 }) })>
+  <section style(foot, { shrink(0) })>
     <row justify="between" align="center" gap="3" style(footRow)>
       <row gap="6" align="center">
         <a href="/docs/guide/introduction" style(footLink)>Docs</a>
@@ -276,7 +276,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     </row>
   </section>
 
-  <div style(wordmarkWrap, { box: flow({ shrink: 0 }) })>
+  <div style(wordmarkWrap, { shrink(0) })>
     <p style(wordmark)>SHIP</p>
   </div>
 </column>

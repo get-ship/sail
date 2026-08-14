@@ -4,34 +4,24 @@
 -->
 
 <scope>
-  style page = { box: size({ w: full, max-w: breakpoint-desktop }).space({ mx: auto }).overflow({ all: visible }) }
-  style specimen = { box: size({ w: full, max-w: panel-max-w-md }).space({ pad: 2 }).overflow({ all: visible }) }
-  style fullW = { box: size({ w: full }) }
-  style knobLabel = {
-    paint: ink({ color: muted-foreground }),
-    text: type({ size: xs, weight: medium, tracking: wide, case: uppercase }),
-}
-  style sizeValue = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs }) }
-  style tickRow = { box: size({ w: full }).space({ pad-x: 1_5, pad-t: 1 }) }
-  style tick = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs }) }
-  style swatch = {
-    box: size(7).flow({ shrink: 0 }),
-    paint: radius(full).cursor(pointer).border({ color: transparent, width: 2 }).elevation(xs),
-    when: { selected: { paint: border({ color: foreground }).elevation(sm) }, hover: { paint: filter({ opacity: 90 }) } },
-}
-  style swatchPrimary = { paint: fill({ color: primary }) }
-  style swatchSuccess = { paint: fill({ color: success }) }
-  style swatchWarning = { paint: fill({ color: warning }) }
-  style swatchDestructive = { paint: fill({ color: destructive }) }
-  style swatchAccent = { paint: fill({ color: accent }) }
-  style swatchMuted = { paint: fill({ color: muted }).border({ color: border }) }
-  style swatchInfo = { paint: fill({ color: info }) }
-  style swatchRest = { paint: fill({ color: background }).border({ color: border }) }
-  style exampleBlock = { box: size({ w: full }).space({ pad-t: 2, pad-b: 4 }).overflow({ all: visible }) }
-  style sectionLabel = {
-    paint: ink({ color: muted-foreground }),
-    text: type({ size: xs, tracking: wide, case: uppercase }),
-}
+  style page = { size({ w: full, max-w: breakpoint-desktop }).margin({ x: auto }).overflow({ all: visible }) }
+  style specimen = { size({ w: full, max-w: panel-max-w-md }).pad(2).overflow({ all: visible }) }
+  style fullW = { size({ w: full }) }
+  style knobLabel = { fg(muted-foreground).type({ size: xs, weight: medium, tracking: wide, case: uppercase }) }
+  style sizeValue = { fg(muted-foreground).type({ family: mono, size: xs }) }
+  style tickRow = { size({ w: full }).pad({ x: 1_5, t: 1 }) }
+  style tick = { fg(muted-foreground).type({ family: mono, size: xs }) }
+  style swatch = { size(7).shrink(0).radius(full).cursor(pointer).border({ color: transparent, width: 2 }).elevation(xs), when: { selected: border({ color: foreground }).elevation(sm), hover: filter({ opacity: 90 }) } }
+  style swatchPrimary = { bg(primary) }
+  style swatchSuccess = { bg(success) }
+  style swatchWarning = { bg(warning) }
+  style swatchDestructive = { bg(destructive) }
+  style swatchAccent = { bg(accent) }
+  style swatchMuted = { bg(muted).border({ color: border }) }
+  style swatchInfo = { bg(info) }
+  style swatchRest = { bg(background).border({ color: border }) }
+  style exampleBlock = { size({ w: full }).pad({ t: 2, b: 4 }).overflow({ all: visible }) }
+  style sectionLabel = { fg(muted-foreground).type({ size: xs, tracking: wide, case: uppercase }) }
 </scope>
 
 <controller>

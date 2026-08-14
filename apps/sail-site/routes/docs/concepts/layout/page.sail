@@ -7,19 +7,19 @@
 -->
 
 <scope>
-  style page = { box: size({ max-w: breakpoint-tablet }).space({ mx: auto }) }
-  style eyebrow = { box: space({ mb: 2 }), paint: ink({ color: accent }), text: type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
-  style lead = { paint: ink({ color: muted-foreground }), text: type({ size: lg, leading: relaxed }) }
-  style demo = { box: space({ pad: 4 }), paint: fill({ color: surface-1 }).border({ color: border, width: 1 }).radius(md) }
-  style demoCenter = { box: size({ min-h: 11 }).space({ pad: 4 }), paint: fill({ color: surface-1 }).border({ color: border, width: 1 }).radius(md) }
-  style cardPad = { box: space({ pad: 4 }) }
-  style cardPadSm = { box: space({ pad: 3 }) }
-  style stackCard = { box: size({ w: 24, h: 12 }), paint: fill({ color: muted }).radius(md) }
-  style stackDot = { box: size(4), paint: radius(full).fill({ color: primary }) }
-  style growMin = { box: flow({ grow: 1 }).size({ min-w: 0 }) }
-  style shrink0 = { box: flow({ shrink: 0 }) }
-  style footNote = { box: space({ mt: 4 }), paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
-  style footNav = { box: space({ pad-t: 4, mt: 8 }), paint: border({ color: border, width: 1, edge: t }) }
+  style page = { size({ max-w: breakpoint-tablet }).margin({ x: auto }) }
+  style eyebrow = { margin({ b: 2 }).fg(accent).type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
+  style lead = { fg(muted-foreground).type({ size: lg, leading: relaxed }) }
+  style demo = { pad(4).bg(surface-1).border({ color: border, width: 1 }).radius(md) }
+  style demoCenter = { size({ min-h: 11 }).pad(4).bg(surface-1).border({ color: border, width: 1 }).radius(md) }
+  style cardPad = { pad(4) }
+  style cardPadSm = { pad(3) }
+  style stackCard = { size({ w: 24, h: 12 }).bg(muted).radius(md) }
+  style stackDot = { size(4).radius(full).bg(primary) }
+  style growMin = { grow(1).size({ min-w: 0 }) }
+  style shrink0 = { shrink(0) }
+  style footNote = { margin({ t: 4 }).fg(muted-foreground).type({ size: sm }) }
+  style footNav = { pad({ t: 4 }).margin({ t: 8 }).border({ color: border, width: 1, edge: t }) }
 </scope>
 
 <controller>
@@ -186,7 +186,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     badges — all as a block Style statement. Every child of a layout element
     is also born with <code>min-width: 0</code> — the browser default where an
     item refuses to shrink below its content is corrected at the language
-    level, so <code style({ text: type({ wrap: truncate }) })></code> works the first time.
+    level, so <code style({ type({ wrap: truncate }) })></code> works the first time.
   </p>
 
   <h2><code>&lt;when&gt;</code> — different trees per breakpoint</h2>

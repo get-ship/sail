@@ -3,46 +3,46 @@
   Catalog rail | live stage | override inspector. Overrides write component.* leaves.
 -->
 <scope>
-  style sectionTitle = { text: type({ size: sm, weight: semibold }) }
-  style fieldHint = { paint: ink({ color: muted-foreground }), text: type({ size: xs }) }
-  style pathMeta = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs }) }
-  style doorTitle = { text: type({ weight: semibold }) }
-  style bandStatus = { box: space({ pad-x: 4, pad-y: 2 }) }
-  style bandError = { box: space({ pad-x: 4, pad-y: 2 }), paint: border({ edge: b, color: border, width: 1 }) }
-  style railCol = { box: space({ pad-x: 3, pad-t: 4, pad-b: 6 }).size({ min-w: 0 }) }
-  style inspectorCol = { box: space({ pad-x: 4, pad-t: 4, pad-b: 8 }).size({ min-w: 0 }) }
-  style fullBtn = { box: size({ w: full }) }
-  style chipCol = { box: size({ min-w: 0 }) }
+  style sectionTitle = { type({ size: sm, weight: semibold }) }
+  style fieldHint = { fg(muted-foreground).type({ size: xs }) }
+  style pathMeta = { fg(muted-foreground).type({ family: mono, size: xs }) }
+  style doorTitle = { type({ weight: semibold }) }
+  style bandStatus = { pad({ x: 4, y: 2 }) }
+  style bandError = { pad({ x: 4, y: 2 }).border({ edge: b, color: border, width: 1 }) }
+  style railCol = { pad({ x: 3, t: 4, b: 6 }).size({ min-w: 0 }) }
+  style inspectorCol = { pad({ x: 4, t: 4, b: 8 }).size({ min-w: 0 }) }
+  style fullBtn = { size({ w: full }) }
+  style chipCol = { size({ min-w: 0 }) }
   // Selected rail row: soft fill + subtle border.
-  style listRow = { box: space({ pad-x: 2_5, pad-y: 2 }), paint: radius(md).cursor(pointer).border({ color: transparent, width: 1 }), when: { hover: { paint: fill({ color: hover-bg }) }, selected: { paint: fill({ color: surface-2 }).border({ color: border-subtle }) } } }
-  style eyebrow = { paint: ink({ color: muted-foreground }), text: type({ size: xs, weight: semibold, tracking: wide, case: uppercase }) }
-  style tokenStrip = { box: space({ pad-x: 2, pad-y: 1 }), paint: ink({ color: muted-foreground }).radius(sm).fill({ color: surface-0 }), text: type({ family: mono, size: xs }) }
-  style tokenRow = { box: space({ pad-y: 1_5 }), paint: border({ edge: b, color: border-subtle, width: 1 }) }
-  style surfaceRoot = { box: flow({ grow: 1 }).size({ h: full, min-w: 0, min-h: 0 }).overflow({ all: hidden }), paint: fill({ color: background }) }
-  style workbench = { box: flow({ grow: 1 }).size({h: full, min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }), paint: fill({ color: background }) }
-  style panelRail = { box: flow({ shrink: 0 }).size({ w: panel-max-w-sm, h: full, min-w: panel-min-w-sm, min-h: 0, max-w: panel-max-w-sm }), paint: border({ edge: r, color: border-subtle, width: 1 }).fill({ color: background }) }
-  style panelInspector = { box: flow({ shrink: 0 }).size({ w: panel-max-w-sm, h: full, min-w: panel-min-w-sm, min-h: 0, max-w: panel-max-w-sm }), paint: border({ edge: l, color: border-subtle, width: 1 }).fill({ color: background }) }
-  style specimenDock = { box: flow({ grow: 1 }).size({h: full, min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }), paint: fill({ color: background }) }
-  style specimenPad = { box: flow({ grow: 1 }).size({ h: full, min-h: 0 }).space({ pad: 4 }) }
-  style specimenFrame = { box: size({ h: full, min-w: 0, min-h: 0 }).overflow({ all: hidden }), paint: elevation(lg) }
-  style specimenChrome = { box: flow({ shrink: 0 }).space({ pad-x: 3 }).size({ h: 8, min-w: 0, min-h: 8 }), paint: border({ edge: b, color: border-subtle, width: 1 }).fill({ color: surface-1 }) }
-  style specimenVariants = { box: flow({ shrink: 0 }).space({ pad-x: 3, pad-y: 2 }).size({ min-w: 0 }), paint: border({ edge: b, color: border-subtle, width: 1 }).fill({ color: surface-1 }) }
-  style trafficDots = { box: flow({ shrink: 0 }).size({ min-w: 12 }) }
-  style trafficDot = { box: flow({ shrink: 0 }).size({ w: 2, h: 2, min-w: 2, min-h: 2 }), paint: radius(full) }
-  style chromeTitle = { box: flow({ grow: 1 }).size({ min-w: 0 }), paint: ink({ color: muted-foreground }), text: type({ size: xs, wrap: truncate }) }
-  style errorText = { box: flow({ grow: 1 }).size({ min-w: 0 }), paint: ink({ color: destructive }), text: type({ size: sm, wrap: truncate }) }
-  style growMin = { box: flow({ grow: 1 }).size({ min-w: 0 }) }
-  style shrink0 = { box: flow({ shrink: 0 }) }
-  style tapFloor = { box: flow({ shrink: 0 }).size({ min-w: control-h-sm, min-h: control-h-sm }) }
-  style iconBtn = { box: flow({ shrink: 0 }).size({ w: control-h-sm, h: control-h-sm, min-w: control-h-sm, min-h: control-h-sm }) }
-  style stageHost = { box: size({ w: full }) }
-  style sampleMax = { box: size({ w: full, max-w: panel-max-w-sm }) }
-  style scrollGrow = { box: flow({ grow: 1 }).size({h: full, min-h: 0, basis: 0}), paint: fill({ color: background }) }
-  style stageBody = { box: space({ pad: 5 }).size({ min-w: 0, min-h: full }) }
-  style stageTitle = { text: type({ family: heading, size: md, weight: semibold }) }
-  style stageBlurb = { paint: ink({ color: muted-foreground }), text: type({ family: body, size: sm, leading: relaxed }) }
-  style inspectorTitle = { text: type({ family: heading, size: xl, weight: semibold, tracking: tight }) }
-  style tokenChip = { box: flow({ shrink: 0 }).place({ position: relative }).size({ w: 9, h: 9, min-w: 9, min-h: 9 }).overflow({ all: hidden }), paint: radius(md).border({ color: border-subtle, width: 1 }).fill({ color: surface-0 }) }
+  style listRow = { pad({ x: 2_5, y: 2 }).radius(md).cursor(pointer).border({ color: transparent, width: 1 }), when: { hover: bg(hover-bg), selected: bg(surface-2).border({ color: border-subtle }) } }
+  style eyebrow = { fg(muted-foreground).type({ size: xs, weight: semibold, tracking: wide, case: uppercase }) }
+  style tokenStrip = { pad({ x: 2, y: 1 }).fg(muted-foreground).radius(sm).bg(surface-0).type({ family: mono, size: xs }) }
+  style tokenRow = { pad({ y: 1_5 }).border({ edge: b, color: border-subtle, width: 1 }) }
+  style surfaceRoot = { grow(1).size({ h: full, min-w: 0, min-h: 0 }).overflow({ all: hidden }).bg(background) }
+  style workbench = { grow(1).size({h: full, min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }).bg(background) }
+  style panelRail = { shrink(0).size({ w: panel-max-w-sm, h: full, min-w: panel-min-w-sm, min-h: 0, max-w: panel-max-w-sm }).border({ edge: r, color: border-subtle, width: 1 }).bg(background) }
+  style panelInspector = { shrink(0).size({ w: panel-max-w-sm, h: full, min-w: panel-min-w-sm, min-h: 0, max-w: panel-max-w-sm }).border({ edge: l, color: border-subtle, width: 1 }).bg(background) }
+  style specimenDock = { grow(1).size({h: full, min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }).bg(background) }
+  style specimenPad = { grow(1).size({ h: full, min-h: 0 }).pad(4) }
+  style specimenFrame = { size({ h: full, min-w: 0, min-h: 0 }).overflow({ all: hidden }).elevation(lg) }
+  style specimenChrome = { shrink(0).pad({ x: 3 }).size({ h: 8, min-w: 0, min-h: 8 }).border({ edge: b, color: border-subtle, width: 1 }).bg(surface-1) }
+  style specimenVariants = { shrink(0).pad({ x: 3, y: 2 }).size({ min-w: 0 }).border({ edge: b, color: border-subtle, width: 1 }).bg(surface-1) }
+  style trafficDots = { shrink(0).size({ min-w: 12 }) }
+  style trafficDot = { shrink(0).size({ w: 2, h: 2, min-w: 2, min-h: 2 }).radius(full) }
+  style chromeTitle = { grow(1).size({ min-w: 0 }).fg(muted-foreground).type({ size: xs, wrap: truncate }) }
+  style errorText = { grow(1).size({ min-w: 0 }).fg(destructive).type({ size: sm, wrap: truncate }) }
+  style growMin = { grow(1).size({ min-w: 0 }) }
+  style shrink0 = { shrink(0) }
+  style tapFloor = { shrink(0).size({ min-w: control-h-sm, min-h: control-h-sm }) }
+  style iconBtn = { shrink(0).size({ w: control-h-sm, h: control-h-sm, min-w: control-h-sm, min-h: control-h-sm }) }
+  style stageHost = { size({ w: full }) }
+  style sampleMax = { size({ w: full, max-w: panel-max-w-sm }) }
+  style scrollGrow = { grow(1).size({h: full, min-h: 0, basis: 0}).bg(background) }
+  style stageBody = { pad(5).size({ min-w: 0, min-h: full }) }
+  style stageTitle = { type({ family: heading, size: md, weight: semibold }) }
+  style stageBlurb = { fg(muted-foreground).type({ family: body, size: sm, leading: relaxed }) }
+  style inspectorTitle = { type({ family: heading, size: xl, weight: semibold, tracking: tight }) }
+  style tokenChip = { shrink(0).position(relative).size({ w: 9, h: 9, min-w: 9, min-h: 9 }).overflow({ all: hidden }).radius(md).border({ color: border-subtle, width: 1 }).bg(surface-0) }
   type ComponentRailRowProps = {
     id: string
     label: string
@@ -91,14 +91,14 @@ export default controller(() => {
   <theme-facet-chrome session={session}></theme-facet-chrome>
 
   <if {session.hasError()}>
-    <row components-error align="center" gap="2" style(bandError, { box: flow({ shrink: 0 }) })>
+    <row components-error align="center" gap="2" style(bandError, { shrink(0) })>
       <p style(errorText)>{session.errorText()}</p>
       <button type="button" size="sm" variant="ghost" components-retry on:click={session.onRetry}>Retry</button>
     </row>
   </if>
 
   <if {session.loading()}>
-    <row components-loading align="center" gap="2" style(bandStatus, { box: flow({ shrink: 0 }) })>
+    <row components-loading align="center" gap="2" style(bandStatus, { shrink(0) })>
       <spinner size="sm"></spinner>
       <p style(fieldHint)>Loading…</p>
     </row>
@@ -109,7 +109,7 @@ export default controller(() => {
       <column gap="3" style(railCol)>
         <column gap="2">
           <p style(eyebrow)>Components</p>
-          <p style({ text: type({ size: md, weight: semibold, tracking: tight }) })>Components</p>
+          <p style({ type({ size: md, weight: semibold, tracking: tight }) })>Components</p>
           <p l1-facet-blurb style(fieldHint)>
             Per-element exceptions for this theme — not the project Components library.
           </p>
@@ -151,22 +151,22 @@ export default controller(() => {
           components-specimen
           preview-specimen
           padding="none" style(specimenFrame)>
-          <column gap="0" style({  box: flow({ grow: 1 }).size({ h: full, min-h: 0 })  })>
+          <column gap="0" style({ grow(1).size({ h: full, min-h: 0 }) })>
             <row preview-chrome align="center" gap="2" nowrap style(specimenChrome)>
               <row gap="2" align="center" nowrap hidden="true" style(trafficDots)>
-                <stack style(trafficDot, { paint: fill({ color: destructive }) })></stack>
-                <stack style(trafficDot, { paint: fill({ color: warning }) })></stack>
-                <stack style(trafficDot, { paint: fill({ color: success }) })></stack>
+                <stack style(trafficDot, { bg(destructive) })></stack>
+                <stack style(trafficDot, { bg(warning) })></stack>
+                <stack style(trafficDot, { bg(success) })></stack>
               </row>
               <p style(chromeTitle)>
                 Preview · {session.nameEdit()} · {components.selectedLabel()}
               </p>
-              <p style(pathMeta, { box: flow({ shrink: 0 }) })>{session.paintMode()}</p>
+              <p style(pathMeta, { shrink(0) })>{session.paintMode()}</p>
             </row>
 
             <if {components.hasVariants()}>
               <row specimen-variants align="center" gap="2" nowrap on:click={components.onVariantPick} style(specimenVariants)>
-                <p style(pathMeta, { box: flow({ shrink: 0 }) })>{components.viewerVariantAttr()}:</p>
+                <p style(pathMeta, { shrink(0) })>{components.viewerVariantAttr()}:</p>
                 <for {components.variantChips() as c} key={c.key}>
                   <button
                     type="button"
@@ -589,7 +589,7 @@ export default controller(() => {
                         <row gap="3" align="center">
                           <skeleton shape="circle" size="md"></skeleton>
                           <skeleton shape="circle" size="sm"></skeleton>
-                          <skeleton shape="block" style({ box: size({ w: 24, min-h: 16 }) })></skeleton>
+                          <skeleton shape="block" style({ size({ w: 24, min-h: 16 }) })></skeleton>
                         </row>
                       </column>
                     </column>
@@ -662,7 +662,7 @@ export default controller(() => {
                     </toast>
                   </if>
                   <if {components.stage.toastRegion()}>
-                    <column gap="2" style({  box: size({ w: full, min-h: 24, max-w: panel-max-w-sm }).place({ position: relative })  })>
+                    <column gap="2" style({ size({ w: full, min-h: 24, max-w: panel-max-w-sm }).position(relative) })>
                       <p style(fieldHint)>Toast region hosts stacked toasts (fixed in product).</p>
                       <toast tone="info" duration="0">Region child toast</toast>
                     </column>
@@ -744,10 +744,10 @@ export default controller(() => {
                         <p style(fieldHint)>Spin · use:icon motion · currentColor ink</p>
                         <row gap="4" align="center" nowrap>
                           <icon name="refresh-cw" spin label="Refreshing"></icon>
-                          <span style({ paint: ink({ color: primary }) })>
+                          <span style({ fg(primary) })>
                             <icon name="heart" size="lg" label="primary ink"></icon>
                           </span>
-                          <span style({ paint: ink({ color: destructive }) })>
+                          <span style({ fg(destructive) })>
                             <icon name="heart" size="lg" label="destructive ink"></icon>
                           </span>
                         </row>
@@ -763,7 +763,7 @@ export default controller(() => {
                       </column>
                       <column gap="2">
                         <p style(fieldHint)>Vertical · same face between labels</p>
-                        <row gap="3" align="center" style({ box: size({ h: 10 }) })>
+                        <row gap="3" align="center" style({ size({ h: 10 }) })>
                           <span style(fieldHint)>A</span>
                           <separator orientation="vertical"></separator>
                           <span style(fieldHint)>B</span>
@@ -851,7 +851,7 @@ export default controller(() => {
                     <column gap="2" align="center">
                       <button type="button" size="sm" variant="ghost" popovertarget="theme-l1-hc">@ada</button>
                       <hover-card id="theme-l1-hc">
-                        <column gap="1" style({ box: space({ pad: 3 }) })>
+                        <column gap="1" style({ pad(3) })>
                           <p style(doorTitle)>Ada Lovelace</p>
                           <p style(fieldHint)>Hover card body.</p>
                         </column>
@@ -862,7 +862,7 @@ export default controller(() => {
                     <column gap="2" align="center">
                       <button type="button" size="sm" popovertarget="theme-l1-pop">Open popover</button>
                       <popover id="theme-l1-pop">
-                        <p style({ box: space({ pad: 3 }) })>Popover panel under theme paint.</p>
+                        <p style({ pad(3) })>Popover panel under theme paint.</p>
                       </popover>
                     </column>
                   </if>
@@ -877,7 +877,7 @@ export default controller(() => {
                     </column>
                   </if>
                   <if {components.stage.menuItem()}>
-                    <column gap="1" style({  box: size({ w: full, max-w: panel-max-w-sm }).space({ pad: 1 }), paint: border({ color: border, width: 1 }).radius(md).fill({ color: surface-1 })  })>
+                    <column gap="1" style({ size({ w: full, max-w: panel-max-w-sm }).pad(1).border({ color: border, width: 1 }).radius(md).bg(surface-1) })>
                       <menu-item>Edit theme</menu-item>
                       <menu-item>Duplicate</menu-item>
                       <menu-item>Export</menu-item>
@@ -885,7 +885,7 @@ export default controller(() => {
                   </if>
                   <if {components.stage.contextMenu()}>
                     <column gap="2" align="center" style(sampleMax)>
-                      <column id="theme-l1-ctx" gap="1" style({  box: size({ w: full }).space({ pad: 3 }), paint: border({ color: border, width: 1 }).radius(md)  })>
+                      <column id="theme-l1-ctx" gap="1" style({ size({ w: full }).pad(3).border({ color: border, width: 1 }).radius(md) })>
                         <p style(fieldHint)>Right-click this area</p>
                       </column>
                       <context-menu for="theme-l1-ctx">
@@ -984,7 +984,7 @@ export default controller(() => {
                     <column gap="3" style(sampleMax)>
                       <column gap="2">
                         <p style(fieldHint)>Vertical · rest thumb component.scroll-area.thumb · hover border-strong</p>
-                        <scroll-area orientation="vertical" style({ box: size({ w: full, max-w: panel-max-w-sm, max-h: 32 }).space({ pad: 3 }), paint: border({ color: border-subtle, width: 1 }).radius(md) })>
+                        <scroll-area orientation="vertical" style({ size({ w: full, max-w: panel-max-w-sm, max-h: 32 }).pad(3).border({ color: border-subtle, width: 1 }).radius(md) })>
                           <column gap="2">
                             <p style(fieldHint)>Scroll me — themed thin scrollbar.</p>
                             <p style(fieldHint)>Line 2</p>
@@ -999,8 +999,8 @@ export default controller(() => {
                       </column>
                       <column gap="2">
                         <p style(fieldHint)>Horizontal · orientation="horizontal"</p>
-                        <scroll-area orientation="horizontal" style({ box: size({ w: full, max-w: panel-max-w-sm }).space({ pad: 3 }), paint: border({ color: border-subtle, width: 1 }).radius(md) })>
-                          <p style({ box: space({ pad-y: 1 }), text: type({ wrap: nowrap }) })>
+                        <scroll-area orientation="horizontal" style({ size({ w: full, max-w: panel-max-w-sm }).pad(3).border({ color: border-subtle, width: 1 }).radius(md) })>
+                          <p style({ pad({ y: 1 }).type({ wrap: nowrap }) })>
                             Wide band that overflows on the x axis → scroll with thin themed thumb · component.scroll-area.*
                           </p>
                         </scroll-area>
@@ -1012,13 +1012,13 @@ export default controller(() => {
                       <p style(fieldHint)>
                         Geometry host + use:marquee · no component.ticker.* · author paint
                       </p>
-                      <ticker duration="normal" style(sampleMax, { box: overflow({ all: hidden }).space({ pad-y: 2 }), paint: fill({ color: muted }).radius(md) })>
-                        <span style({ box: space({ pad-x: 3 }), paint: ink({ color: muted-foreground }), text: type({ family: mono, size: sm, wrap: nowrap }) })>
+                      <ticker duration="normal" style(sampleMax, { overflow({ all: hidden }).pad({ y: 2 }).bg(muted).radius(md) })>
+                        <span style({ pad({ x: 3 }).fg(muted-foreground).type({ family: mono, size: sm, wrap: nowrap }) })>
                           Live ticker · muted band · normal ·&nbsp;
                         </span>
                       </ticker>
-                      <ticker duration="slow" reverse style(sampleMax, { box: overflow({ all: hidden }).space({ pad-y: 2 }), paint: fill({ color: primary }).radius(md) })>
-                        <span style({ box: space({ pad-x: 3 }), paint: ink({ color: primary-foreground }), text: type({ size: sm, weight: bold, wrap: nowrap }) })>
+                      <ticker duration="slow" reverse style(sampleMax, { overflow({ all: hidden }).pad({ y: 2 }).bg(primary).radius(md) })>
+                        <span style({ pad({ x: 3 }).fg(primary-foreground).type({ size: sm, weight: bold, wrap: nowrap }) })>
                           Reverse · slow · brand paint ·&nbsp;
                         </span>
                       </ticker>

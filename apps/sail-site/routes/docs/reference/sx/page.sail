@@ -4,16 +4,16 @@
   match: / compound: / when:. Setter scales, when keys, refusals.
 -->
 <scope>
-  style root = { box: size({ min-w: 0 }) }
-  style intro = { box: size({ max-w: breakpoint-tablet }) }
-  style mutedSm = { box: size({ max-w: breakpoint-tablet }), paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
-  style mutedBody = { box: size({ max-w: breakpoint-tablet }) }
-  style cardShell = { box: size({ min-w: 0 }) }
-  style valueText = { box: size({ max-w: panel-max-w-sm }), paint: ink({ color: muted-foreground }) }
-  style banCode = { paint: ink({ color: destructive }) }
-  style prefixRow = { box: space({ pad-x: 3, pad-y: 1 }), paint: radius(md) }
-  style prefixCode = { box: size({ min-w: 9 }) }
-  style mediaLine = { box: size({ max-w: ch-24 }), paint: ink({ color: muted-foreground }), text: type({ family: mono }) }
+  style root = { size({ min-w: 0 }) }
+  style intro = { size({ max-w: breakpoint-tablet }) }
+  style mutedSm = { size({ max-w: breakpoint-tablet }).fg(muted-foreground).type({ size: sm }) }
+  style mutedBody = { size({ max-w: breakpoint-tablet }) }
+  style cardShell = { size({ min-w: 0 }) }
+  style valueText = { size({ max-w: panel-max-w-sm }).fg(muted-foreground) }
+  style banCode = { fg(destructive) }
+  style prefixRow = { pad({ x: 3, y: 1 }).radius(md) }
+  style prefixCode = { size({ min-w: 9 }) }
+  style mediaLine = { size({ max-w: ch-24 }).fg(muted-foreground).type({ family: mono }) }
 </scope>
 
 <controller>

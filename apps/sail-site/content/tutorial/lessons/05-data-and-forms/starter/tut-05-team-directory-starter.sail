@@ -36,9 +36,9 @@ export default controller(() => {
 </controller>
 
 <scope>
-  style muteLabel = { paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
-  style memberRow = { box: space({ pad-x: 3, pad-y: 2 }), paint: fill({ color: surface-1 }).radius(md) }
-  style memberName = { text: type({ size: sm }) }
+  style muteLabel = { fg(muted-foreground).type({ size: sm }) }
+  style memberRow = { pad({ x: 3, y: 2 }).bg(surface-1).radius(md) }
+  style memberName = { type({ size: sm }) }
 </scope>
 
 <column gap="4">
@@ -62,7 +62,7 @@ export default controller(() => {
     <column gap="1">
       <for {team().value as m} key={m.id}>
         <row gap="3" align="center" style(memberRow)>
-          <strong style(memberName, { box: flow({ grow: 1 }) })>{m.name}</strong>
+          <strong style(memberName, { grow(1) })>{m.name}</strong>
           <if {m.role === 'admin'}><badge tone="primary" variant="soft" size="sm">admin</badge></if>
         </row>
       </for>

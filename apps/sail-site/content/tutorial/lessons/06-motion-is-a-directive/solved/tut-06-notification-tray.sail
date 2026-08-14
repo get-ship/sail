@@ -42,10 +42,10 @@ export default controller(() => {
 </controller>
 
 <scope>
-  style unreadDot = { box: flow({ display: inline-block }).size(1_5), paint: radius(full).fill({ color: destructive }) }
-  style noteRow = { box: space({ pad: 3 }), paint: fill({ color: surface-1 }).border({ color: border-subtle, width: 1 }).radius(md) }
-  style noteText = { text: type({ size: sm }) }
-  style empty = { box: space({ pad: 3 }), paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
+  style unreadDot = { display(inline-block).size(1_5).radius(full).bg(destructive) }
+  style noteRow = { pad(3).bg(surface-1).border({ color: border-subtle, width: 1 }).radius(md) }
+  style noteText = { type({ size: sm }) }
+  style empty = { pad(3).fg(muted-foreground).type({ size: sm }) }
 </scope>
 
 <column gap="4">
@@ -82,12 +82,10 @@ export default controller(() => {
         <row
           gap="3"
           align="center"
-          style(noteRow, {
-            animate: enter({ opacity: 'fade', translate-x: 'spring:gentle', stagger: '50ms' }).exit({ opacity: 'fade-out' }),
-})
+          style(noteRow, { animate: enter({ opacity: 'fade', translate-x: 'spring:gentle', stagger: '50ms' }).exit({ opacity: 'fade-out' }) })
         >
           <badge tone={n.tone} variant="soft" size="sm">{n.kind}</badge>
-          <p style(noteText, { box: flow({ grow: 1 }) })>{n.text}</p>
+          <p style(noteText, { grow(1) })>{n.text}</p>
           <button variant="ghost" size="sm" on:click={() => dismiss(n.id)}>Dismiss</button>
         </row>
       </for>

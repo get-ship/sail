@@ -2,32 +2,25 @@
   <edit-surface> — file explorer + doc tabs + source editor. Live app is the host.
 -->
 <scope>
-  style surfaceRoot = { box: flow({ grow: 1 }).size({h: full, min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }) }
-  style explorerHost = { box: flow({ shrink: 0 }).size({ h: full, min-h: 0 }).overflow({ all: hidden }) }
-  style mainCol = { box: flow({ grow: 1 }).size({h: full, min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }) }
-  style tabsStrip = { box: flow({ shrink: 0 }).size({ h: 8, min-w: 0 }).overflow({ all: hidden }), paint: border({ edge: b, color: border, width: 1 }).fill({ color: surface-1 }) }
-  style tabList = { box: flow({ grow: 1 }).size({h: full, min-w: 0, basis: 0}).overflow({ x: auto, y: hidden }) }
-  style docTab = {
-    box: flow({ shrink: 0 }).size({ h: full, max-w: 48 }).space({ pad-x: 3 }),
-    paint: border({ edge: r, color: border-subtle, width: 1 }).border({ edge: t, color: transparent, width: 2 }).fill({ color: surface-1 }).ink({ color: muted-foreground }).cursor(pointer),
-    when: {
-      hover: { paint: fill({ color: hover-bg }).ink({ color: foreground }) },
-      current: { paint: fill({ color: surface-0 }).ink({ color: foreground }).border({ edge: t, color: primary }) },
-    },
-  }
-  style tabLabel = { box: flow({ grow: 1 }).size({ min-w: 0 }), text: type({ size: sm, wrap: truncate }) }
-  style dirtyDot = { paint: ink({ color: warning }), text: type({ size: xs }) }
-  style tabClose = { box: flow({ shrink: 0 }).size({ w: control-h-sm, h: control-h-sm, min-w: control-h-sm, min-h: control-h-sm }) }
-  style tabsTrail = { box: flow({ shrink: 0 }).space({ pad-x: 2 }).size({ h: full }), paint: border({ edge: l, color: border-subtle, width: 1 }) }
-  style routeLabel = { box: size({ max-w: 40 }), paint: ink({ color: muted-foreground }), text: type({ size: xs, wrap: truncate }) }
-  style errorBand = { box: space({ pad-x: 3, pad-y: 1 }), paint: fill({ color: surface-1 }).border({ edge: b, color: border, width: 1 }) }
-  style errorText = { paint: ink({ color: destructive }), text: type({ size: xs }) }
-  style emptyHost = { box: flow({ grow: 1 }).size({ h: full, min-h: 0 }).overflow({ all: hidden }), paint: fill({ color: surface-0 }) }
-  style emptyFrame = { box: size({ w: full }).space({ pad: 4 }), paint: border({ color: border-subtle, width: 1 }).radius(md) }
-  style sourceHost = { box: flow({ grow: 1 }).size({h: full, min-h: 0, basis: 0}).overflow({ all: hidden }), paint: fill({ color: surface-0 }) }
-  style emptyInset = { box: size({ w: full }).space({ pad: 3, m: 3 }), paint: border({ color: border-subtle, width: 1 }).radius(md) }
-  style fillCol = { box: flow({ grow: 1 }).size({h: full, min-h: 0, basis: 0}).overflow({ all: hidden }) }
-  style editorFill = { box: size({ w: full, h: full, min-h: 0 }) }
+  style surfaceRoot = { grow(1).size({h: full, min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }) }
+  style explorerHost = { shrink(0).size({ h: full, min-h: 0 }).overflow({ all: hidden }) }
+  style mainCol = { grow(1).size({h: full, min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }) }
+  style tabsStrip = { shrink(0).size({ h: 8, min-w: 0 }).overflow({ all: hidden }).border({ edge: b, color: border, width: 1 }).bg(surface-1) }
+  style tabList = { grow(1).size({h: full, min-w: 0, basis: 0}).overflow({ x: auto, y: hidden }) }
+  style docTab = { shrink(0).size({ h: full, max-w: 48 }).pad({ x: 3 }).border({ edge: r, color: border-subtle, width: 1 }).border({ edge: t, color: transparent, width: 2 }).bg(surface-1).fg(muted-foreground).cursor(pointer), when: { hover: bg(hover-bg).fg(foreground), current: bg(surface-0).fg(foreground).border({ edge: t, color: primary }) } }
+  style tabLabel = { grow(1).size({ min-w: 0 }).type({ size: sm, wrap: truncate }) }
+  style dirtyDot = { fg(warning).type({ size: xs }) }
+  style tabClose = { shrink(0).size({ w: control-h-sm, h: control-h-sm, min-w: control-h-sm, min-h: control-h-sm }) }
+  style tabsTrail = { shrink(0).pad({ x: 2 }).size({ h: full }).border({ edge: l, color: border-subtle, width: 1 }) }
+  style routeLabel = { size({ max-w: 40 }).fg(muted-foreground).type({ size: xs, wrap: truncate }) }
+  style errorBand = { pad({ x: 3, y: 1 }).bg(surface-1).border({ edge: b, color: border, width: 1 }) }
+  style errorText = { fg(destructive).type({ size: xs }) }
+  style emptyHost = { grow(1).size({ h: full, min-h: 0 }).overflow({ all: hidden }).bg(surface-0) }
+  style emptyFrame = { size({ w: full }).pad(4).border({ color: border-subtle, width: 1 }).radius(md) }
+  style sourceHost = { grow(1).size({h: full, min-h: 0, basis: 0}).overflow({ all: hidden }).bg(surface-0) }
+  style emptyInset = { size({ w: full }).pad(3).margin(3).border({ color: border-subtle, width: 1 }).radius(md) }
+  style fillCol = { grow(1).size({h: full, min-h: 0, basis: 0}).overflow({ all: hidden }) }
+  style editorFill = { size({ w: full, h: full, min-h: 0 }) }
 </scope>
 
 <controller>

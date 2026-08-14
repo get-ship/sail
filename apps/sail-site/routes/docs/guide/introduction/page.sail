@@ -3,15 +3,15 @@
 -->
 
 <scope>
-  style page = { box: size({ max-w: breakpoint-tablet }).space({ mx: auto }) }
-  style intro = { box: size({ max-w: breakpoint-tablet }) }
-  style eyebrow = { paint: ink({ color: accent }), text: type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
-  style lead = { paint: ink({ color: muted-foreground }), text: type({ size: lg, leading: relaxed }) }
-  style colGrow = { box: flow({ grow: 1 }).size({min-w: 0, basis: breakpoint-mobile}) }
-  style demoPane = { box: flow({ grow: 1 }).size({min-w: 0, basis: 64}).space({ pad: 4 }), paint: fill({ color: muted }).border({ color: border, width: 1 }).radius(lg) }
-  style pathLabel = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs }) }
-  style mutedSm = { paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
-  style ctaRow = { box: space({ pad-t: 4, mt: 4 }), paint: border({ color: border, width: 1, edge: t }) }
+  style page = { size({ max-w: breakpoint-tablet }).margin({ x: auto }) }
+  style intro = { size({ max-w: breakpoint-tablet }) }
+  style eyebrow = { fg(accent).type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
+  style lead = { fg(muted-foreground).type({ size: lg, leading: relaxed }) }
+  style colGrow = { grow(1).size({min-w: 0, basis: breakpoint-mobile}) }
+  style demoPane = { grow(1).size({min-w: 0, basis: 64}).pad(4).bg(muted).border({ color: border, width: 1 }).radius(lg) }
+  style pathLabel = { fg(muted-foreground).type({ family: mono, size: xs }) }
+  style mutedSm = { fg(muted-foreground).type({ size: sm }) }
+  style ctaRow = { pad({ t: 4 }).margin({ t: 4 }).border({ color: border, width: 1, edge: t }) }
 </scope>
 
 <controller>

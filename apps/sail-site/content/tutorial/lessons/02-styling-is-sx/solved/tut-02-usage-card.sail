@@ -8,14 +8,14 @@
   style(name).
 -->
 <scope>
-  style pill = { box: space({ pad-x: 3, pad-y: 1 }), paint: radius(full).ink({ color: muted-foreground }), text: type({ size: sm, weight: semibold }), when: { hover: { paint: ink({ color: foreground }).fill({ color: surface-2 }) }, current: { paint: fill({ color: primary }).ink({ color: primary-foreground }) } } }
-  style card = { box: space({ pad: 5 }), paint: fill({ color: surface-1 }).border({ color: border, width: 1 }).radius(lg).elevation(sm), when: { hover: { paint: elevation(hover) } } }
-  style label = { paint: ink({ color: muted-foreground }), text: type({ size: sm, tracking: wide }) }
-  style muted = { paint: ink({ color: muted-foreground }) }
-  style value = { text: type({ size: 3xl, tracking: tight }) }
-  style of = { box: space({ pad-b: 1 }), paint: ink({ color: muted-foreground }) }
-  style body = { paint: ink({ color: muted-foreground }), text: type({ size: sm, leading: relaxed }) }
-  style alertRow = { box: space({ pad: 2 }), paint: radius(md).border({ color: border-subtle, width: 1 }), when: { focusWithin: { paint: border({ color: primary }) } } }
+  style pill = { pad({ x: 3, y: 1 }).radius(full).fg(muted-foreground).type({ size: sm, weight: semibold }), when: { hover: fg(foreground).bg(surface-2), current: bg(primary).fg(primary-foreground) } }
+  style card = { pad(5).bg(surface-1).border({ color: border, width: 1 }).radius(lg).elevation(sm), when: { hover: elevation(hover) } }
+  style label = { fg(muted-foreground).type({ size: sm, tracking: wide }) }
+  style muted = { fg(muted-foreground) }
+  style value = { type({ size: 3xl, tracking: tight }) }
+  style of = { pad({ b: 1 }).fg(muted-foreground) }
+  style body = { fg(muted-foreground).type({ size: sm, leading: relaxed }) }
+  style alertRow = { pad(2).radius(md).border({ color: border-subtle, width: 1 }), when: { focusWithin: border({ color: primary }) } }
 </scope>
 
 <column gap="4">

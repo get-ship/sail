@@ -19,22 +19,22 @@
 
 <scope>
   // Fill the site-header <main> budget. Independent rail + main scrollports.
-  style shell = { box: size({ h: full, min-w: 0, min-h: 0 }).overflow({ all: hidden }) }
+  style shell = { size({ h: full, min-w: 0, min-h: 0 }).overflow({ all: hidden }) }
   // Plain div rail: fixed width, never grows into the content pane.
   // Mobile base = flow({ display: none }); tablet+ restores flex column.
   // NOT <column> — .sail-col { display:flex } beats .s-displaynone.
   // 14rem rail (space-56 ≡ --panel-rail-w).
-  style rail = { box: flow({ display: none, dir: column }).size({ w: 56, h: full, min-h: 0 }).space({ pad-x: 3, pad-y: 4 }).overflow({ x: hidden, y: auto }), paint: border({ color: border, width: 1, edge: e }).fill({ color: background }).ink({ color: foreground }), when: { tablet: { box: flow({ display: flex }) } } }
-  style railLabel = { box: space({ mt: 4, mb: 1 }), paint: ink({ color: muted-foreground }), text: type({ size: xs, weight: semibold, tracking: wide, case: uppercase }) }
+  style rail = { display(none).dir(column).size({ w: 56, h: full, min-h: 0 }).pad({ x: 3, y: 4 }).overflow({ x: hidden, y: auto }).border({ color: border, width: 1, edge: e }).bg(background).fg(foreground), when: { tablet: display(flex) } }
+  style railLabel = { margin({ t: 4, b: 1 }).fg(muted-foreground).type({ size: xs, weight: semibold, tracking: wide, case: uppercase }) }
   // Current must paint over the base muted ink — filled pill for active page.
-  style railLink = { box: flow({ display: block }).space({ pad-x: 2, pad-y: 1 }), paint: radius(md).ink({ color: muted-foreground }), text: type({ size: sm }), when: { hover: { paint: ink({ color: foreground }).fill({ color: hover-bg }) }, current: { paint: ink({ color: primary }).fill({ color: muted }), text: type({ weight: semibold }) } } }
-  style mainDocs = { box: space({ pad: 4 }).size({min-h: 0, basis: 0}).overflow({ x: hidden, y: auto }), when: { tablet: { box: space({ pad: 6 }) } } }
+  style railLink = { display(block).pad({ x: 2, y: 1 }).radius(md).fg(muted-foreground).type({ size: sm }), when: { hover: fg(foreground).bg(hover-bg), current: fg(primary).bg(muted).type({ weight: semibold }) } }
+  style mainDocs = { pad(4).size({min-h: 0, basis: 0}).overflow({ x: hidden, y: auto }), when: { tablet: pad(6) } }
   // Mobile-only chrome — plain div so display:none wins at tablet+.
-  style mobileBar = { box: flow({ display: flex }).space({ pad-x: 3, pad-y: 2 }), paint: border({ color: border, width: 1, edge: b }).fill({ color: background }), when: { tablet: { box: flow({ display: none }) } } }
-  style contentCol = { box: size({ min-w: 0, min-h: 0 }) }
-  style mobileLabel = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs }) }
-  style drawerTitle = { text: type({ size: sm }) }
-  style fullW = { box: size({ w: full }) }
+  style mobileBar = { display(flex).pad({ x: 3, y: 2 }).border({ color: border, width: 1, edge: b }).bg(background), when: { tablet: display(none) } }
+  style contentCol = { size({ min-w: 0, min-h: 0 }) }
+  style mobileLabel = { fg(muted-foreground).type({ family: mono, size: xs }) }
+  style drawerTitle = { type({ size: sm }) }
+  style fullW = { size({ w: full }) }
 
   type DocsNavProps = {
     path: any
@@ -114,19 +114,19 @@ export default controller((ctx) => {
   <a href="/docs/reference/regions" on:click={onNav} current={path() === '/docs/reference/regions' ? 'page' : null} style(railLink)>Region matrix</a>
 </partial>
 
-<row nowrap align="stretch" gap="0" style(shell, { box: size({ w: full, min-w: 0 }).flow({ grow: 1 }) })>
-  <nav label="Docs" testid="docs-rail" style(rail, { box: flow({ shrink: 0 }) })>
+<row nowrap align="stretch" gap="0" style(shell, { size({ w: full, min-w: 0 }).grow(1) })>
+  <nav label="Docs" testid="docs-rail" style(rail, { shrink(0) })>
     <docs-nav path={path} onNav={noopNav}></docs-nav>
   </nav>
 
-  <column gap="0" style(contentCol, { box: flow({ grow: 1 }).size({ min-w: 0 }) })>
+  <column gap="0" style(contentCol, { grow(1).size({ min-w: 0 }) })>
     <div style(mobileBar)>
       <row gap="2" align="center">
         <button type="button" variant="outline" size="sm" on:click={openNav} expanded={navOpen() ? 'true' : 'false'}>Menu</button>
         <small style(mobileLabel)>Docs</small>
       </row>
     </div>
-    <main style(mainDocs, { box: flow({ grow: 1 }).size({ min-w: 0 }) })>
+    <main style(mainDocs, { grow(1).size({ min-w: 0 }) })>
       <slot name="route"></slot>
     </main>
   </column>

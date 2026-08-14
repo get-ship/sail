@@ -4,7 +4,7 @@
 -->
 
 <scope>
-  style host = {box: flow({ display: block }), paint: ink({ color: foreground }), text: type({ family: body, leading: loose })}
+  style host = {display(block).fg(foreground).type({ family: body, leading: loose })}
 </scope>
 
 <div style(host)>

@@ -6,11 +6,11 @@
   props: {
     title = ''
   }
-  style panelRoot = { box: flow({ grow: 1 }).size({ h: full, min-w: 0, min-h: 0 }).overflow({ all: hidden }), paint: border({ color: border-subtle, width: 1 }).radius(md).fill({ color: surface-1 }) }
-  style panelHeader = { box: flow({ shrink: 0 }).size({ h: 8, min-h: 8 }).space({ pad-x: 3 }), paint: border({ edge: b, color: border-subtle, width: 1 }) }
-  style eyebrow = { paint: ink({ color: muted-foreground }), text: type({ size: xs, weight: semibold, tracking: wide, case: uppercase }) }
-  style actionsRow = { box: flow({ shrink: 0 }) }
-  style panelBody = { box: flow({ grow: 1 }).size({min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }) }
+  style panelRoot = { grow(1).size({ h: full, min-w: 0, min-h: 0 }).overflow({ all: hidden }).border({ color: border-subtle, width: 1 }).radius(md).bg(surface-1) }
+  style panelHeader = { shrink(0).size({ h: 8, min-h: 8 }).pad({ x: 3 }).border({ edge: b, color: border-subtle, width: 1 }) }
+  style eyebrow = { fg(muted-foreground).type({ size: xs, weight: semibold, tracking: wide, case: uppercase }) }
+  style actionsRow = { shrink(0) }
+  style panelBody = { grow(1).size({min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }) }
 </scope>
 
 <column studio-panel gap="0" style(panelRoot)>
