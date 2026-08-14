@@ -221,7 +221,7 @@ fn emit_play(
         sanitize_ident(&preset),
         sanitize_ident(&duration_tok)
     );
-    let selector = build_selector(&class, ctx, "");
+    let selector = build_selector(&class, ctx);
     let decls = vec![
         ("transition-property".into(), property),
         ("transition-duration".into(), duration),
@@ -284,12 +284,6 @@ fn emit_op(op: &PaintOp, ctx: &Ctx, out: &mut Vec<CssRule>, seen: &mut HashSet<S
         return;
     }
     let class = class_name(op_ref, ctx);
-    let mut child = "";
-    if op.setter == "avatarMedia" {
-        child = " img";
-    } else if op.setter == "glyphFill" {
-        child = " svg";
-    }
     // Tone-bound paint (`bg(tone)`, `fg(tone.foreground)`, mix on --tone)
     // must be `[tone]`-gated. Rest fills in the same match arm share
     // `[variant=soft].s-variantsoft-bgmuted`; later elements re-emit that
@@ -301,7 +295,7 @@ fn emit_op(op: &PaintOp, ctx: &Ctx, out: &mut Vec<CssRule>, seen: &mut HashSet<S
     } else {
         ctx
     };
-    let selector = build_selector(&class, sel_ctx, child);
+    let selector = build_selector(&class, sel_ctx);
     let key = format!("{selector}|{decls:?}|{:?}", ctx.media);
     if seen.insert(key) {
         out.push(CssRule {
@@ -311,38 +305,9 @@ fn emit_op(op: &PaintOp, ctx: &Ctx, out: &mut Vec<CssRule>, seen: &mut HashSet<S
             media: ctx.media.clone(),
         });
     }
-    // Avatar media roles: photos (`src`) cover the disc; brand glyphs
-    // (`icon-slug`) keep contain + pad so simpleicons logos aren't clipped.
-    if op.setter == "avatarMedia" {
-        let icon_decls = vec![
-            ("display".into(), "block".into()),
-            ("width".into(), "100%".into()),
-            ("height".into(), "100%".into()),
-            ("object-fit".into(), "contain".into()),
-            ("padding".into(), "10%".into()),
-            ("box-sizing".into(), "border-box".into()),
-        ];
-        // Presence gate on host: `.s-avatarmedia[icon-slug] img`
-        let icon_selector = format!(".{class}[icon-slug] img");
-        let icon_key = format!("{icon_selector}|{icon_decls:?}|{:?}", ctx.media);
-        if seen.insert(icon_key) {
-            out.push(CssRule {
-                class,
-                selector: icon_selector,
-                declarations: icon_decls,
-                media: ctx.media.clone(),
-            });
-        }
-    }
 }
 
 fn class_name(op: &PaintOp, ctx: &Ctx) -> String {
-    if op.setter == "avatarMedia" {
-        return "s-avatarmedia".into();
-    }
-    if op.setter == "glyphFill" {
-        return "s-glyphfill".into();
-    }
     // All args feed the class name — composites like border(1, border) vs
     // border(1, primary) must not share an atomic class.
     let mut arg = String::new();
@@ -385,7 +350,7 @@ fn class_name(op: &PaintOp, ctx: &Ctx) -> String {
     }
 }
 
-fn build_selector(class: &str, ctx: &Ctx, child: &str) -> String {
+fn build_selector(class: &str, ctx: &Ctx) -> String {
     let mut attrs = String::new();
     for (k, v) in &ctx.attrs {
         // `true` (bool prop) and `*` (any-set wildcard) → presence gate [k].
@@ -398,10 +363,9 @@ fn build_selector(class: &str, ctx: &Ctx, child: &str) -> String {
         }
     }
     format!(
-        "{ancestor}{attrs}.{class}{pseudo}{child}",
+        "{ancestor}{attrs}.{class}{pseudo}",
         ancestor = ctx.ancestor,
         pseudo = ctx.pseudo,
-        child = child
     )
 }
 
@@ -566,9 +530,8 @@ pub fn lower_style_source_with_motion(
             }
             continue;
         }
-        // Dedupe CSS by selector (not class). avatarMedia emits two rules that
-        // share class `s-avatarmedia` but differ: `img` cover vs `[icon-slug] img`
-        // contain+pad. Class-keyed dedupe would drop the icon path.
+        // Dedupe CSS by selector (not class). Two rules can share a class
+        // while targeting different selectors; class-keyed dedupe would drop one.
         let dedupe_key = if r.selector.is_empty() {
             r.class.clone()
         } else {

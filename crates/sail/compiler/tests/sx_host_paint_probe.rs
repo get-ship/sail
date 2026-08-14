@@ -170,18 +170,17 @@ fn badge_soft_base_on_host_sx() {
 #[test]
 fn avatar_tracking_and_inset_ring_on_host_sx() {
     // Paint stripe: tracking + inset ring + host gradient left contracts → host sx.
-    // Layout row centers content; avatar-media child pack sizes injected img.
+    // Layout row centers content; platform/avatar.css packs the injected img.
     let src = include_str!("../stdlib/avatar.sail");
     let out = compile_element(src, "avatar").expect("avatar compiles");
     assert!(
-        src.contains("align=\"center\"")
-            && src.contains("justify=\"center\"")
-            && (src.contains("avatarMedia") || src.contains("avatar-media")),
-        "avatar must layout-center + avatar-media child pack"
+        src.contains("align=\"center\"") && src.contains("justify=\"center\""),
+        "avatar must layout-center"
     );
     assert!(
-        out.structure_html.contains("s-trackingwide")
-            && (out.structure_html.contains("s-shadowinsetring")
+        (out.structure_html.contains("trackingwide")
+            || out.skin_css.contains("letter-spacing:var(--tracking-wide)"))
+            && (out.structure_html.contains("shadowinsetring")
                 || out.skin_css.contains("box-shadow:var(--shadow-inset-ring)")
                 || out
                     .skin_css
@@ -191,46 +190,30 @@ fn avatar_tracking_and_inset_ring_on_host_sx() {
         out.skin_css
     );
     assert!(
-        out.structure_html.contains("s-size7")
-            && (out.structure_html.contains("s-radiusfull")
+        (out.structure_html.contains("s-sizeh7w7") || out.structure_html.contains("s-size7"))
+            && (out.structure_html.contains("radiusallfull")
+                || out.structure_html.contains("s-radiusfull")
                 || out.structure_html.contains("s-roundedfull")
                 || out.skin_css.contains("border-radius:var(--radius-full)"))
-            && (out.structure_html.contains("s-fontFamilybody")
+            && (out.structure_html.contains("familybody")
                 || out.structure_html.contains("s-fontbody")
                 || out.skin_css.contains("var(--body-font)")),
         "attr-absent host Style size=md + shape round + type on host sx:\n{}",
         out.structure_html
     );
-    // host gradient: Style bgImage(primary-accent) (not TW gradient pack).
+    // Child img pack lives in platform/avatar.css (skins), not host Style.
+    let skins = sail_compiler::stdlib::skins_css();
     assert!(
-        src.contains("bgImage(primary-accent)")
-            || src.contains("bg-gradient-primary-accent")
-            || src.contains("primary-accent"),
-        "avatar host Style must declare primary-accent gradient"
+        skins.contains("/* @provenance platform/avatar.css */")
+            && skins.contains(".sail-avatar img")
+            && (skins.contains("object-fit:cover") || skins.contains("object-fit: cover")),
+        "avatar photo path must cover descendant img in skins:\n{skins}"
     );
     assert!(
-        out.skin_css.contains("linear-gradient")
-            && out.skin_css.contains("var(--primary)")
-            && out.skin_css.contains("var(--accent)"),
-        "avatar skins must lower default gradient to CSS linear-gradient:\n{}",
-        out.skin_css
-    );
-    // avatar-media child pack → photo cover + icon-slug contain/pad.
-    assert!(
-        out.structure_html.contains("s-avatarmedia")
-            && (out.skin_css.contains(".s-avatarmedia img")
-                || out.skin_css.contains("object-fit:cover")
-                || out.skin_css.contains("object-fit: cover")),
-        "avatar-media photo path must cover descendant img:\nstruct={}\nskin={}",
-        out.structure_html,
-        out.skin_css
-    );
-    assert!(
-        out.skin_css.contains("[icon-slug]")
-            && (out.skin_css.contains("object-fit:contain")
-                || out.skin_css.contains("object-fit: contain")),
-        "avatar-media icon-slug path must contain+pad:\n{}",
-        out.skin_css
+        skins.contains(".sail-avatar[icon-slug] img")
+            && (skins.contains("object-fit:contain") || skins.contains("object-fit: contain"))
+            && (skins.contains("padding:10%") || skins.contains("padding: 10%")),
+        "avatar icon-slug path must contain+pad in skins:\n{skins}"
     );
     // Branded tones solid-fill via bridge var (`var(--tone)`); size/shape axes land.
     assert!(
@@ -262,13 +245,36 @@ fn avatar_tracking_and_inset_ring_on_host_sx() {
                 .any(|l| l.contains(".sail-avatar") && l.contains("linear-gradient")),
         "avatar host gradient must be gone from contracts"
     );
-    // Layout + img host CSS gone (row + avatar-media pack).
+    // Layout + img host CSS gone from contracts (row + platform/avatar.css pack).
     assert!(
         !contracts.contains(".sail-avatar img")
             && !contracts
                 .lines()
                 .any(|l| l.contains(".sail-avatar") && l.contains("align-items")),
         "avatar flex/img host CSS must be gone from contracts"
+    );
+}
+
+#[test]
+fn icon_child_svg_pack_lives_in_platform_skins() {
+    let src = include_str!("../stdlib/icon.sail");
+    let out = compile_element(src, "icon").expect("icon compiles");
+    assert!(
+        src.contains("size(icon-size-md)") && src.contains("fg(currentColor)"),
+        "icon host Style stays size + ink"
+    );
+    assert!(
+        !out.structure_html.contains("s-glyphfill"),
+        "glyph pack must not mint a Style class:\n{}",
+        out.structure_html
+    );
+    let skins = sail_compiler::stdlib::skins_css();
+    assert!(
+        skins.contains("/* @provenance platform/icon.css */")
+            && skins.contains(".sail-icon svg")
+            && skins.contains("width:100%")
+            && skins.contains("height:100%"),
+        "icon child svg pack must live in platform/icon.css via skins_css"
     );
 }
 

@@ -287,8 +287,6 @@ pub fn when_target(key: &str) -> Option<WhenTarget> {
         "group-caught" | "groupCaught" => Some(ancestor_static(".sail-grp[data-caught] ")),
         // theme-picker `inline` presence attr on the group host.
         "group-inline" | "groupInline" => Some(ancestor_static(".sail-grp[inline] ")),
-        // <file variant="drop"> — hide the native picker, show the hint.
-        "group-drop" | "groupDrop" => Some(ancestor_static(".sail-grp[variant='drop'] ")),
         other => {
             let kebab = when_key_kebab(other);
             if let Some(m) = super::conditions::condition_media(other)
@@ -981,24 +979,6 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
                     "background-image".into(),
                     "linear-gradient(135deg, var(--primary), var(--accent))".into(),
                 )]);
-            }
-            // Photo path default: cover fill (no letterbox). Icon-slug path is
-            // a second rule in emit (`[icon-slug] img` → contain + pad).
-            ("avatarMedia", "true" | "on") => {
-                return Ok(vec![
-                    ("display".into(), "block".into()),
-                    ("width".into(), "100%".into()),
-                    ("height".into(), "100%".into()),
-                    ("object-fit".into(), "cover".into()),
-                    ("box-sizing".into(), "border-box".into()),
-                ]);
-            }
-            ("glyphFill", "true" | "on") => {
-                return Ok(vec![
-                    ("display".into(), "block".into()),
-                    ("width".into(), "100%".into()),
-                    ("height".into(), "100%".into()),
-                ]);
             }
             ("w", "max") => {
                 return Ok(vec![("width".into(), "max-content".into())]);

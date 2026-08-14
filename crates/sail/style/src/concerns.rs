@@ -53,8 +53,6 @@ pub const MARKERS: &[&str] = &[
     "scrollbarThumb",
     "scrollbarTrack",
     "scrollbarThin",
-    "avatarMedia",
-    "glyphFill",
     "container",
     "containerType",
     "containerName",

@@ -17,6 +17,7 @@ Reason classes:
 | file | element | reason | justification | gap-filed |
 |---|---|---|---|---|
 | accordion.css | accordion | native-anatomy | Hosted `<summary>` chevron mask + UA marker kill; sibling-stack radius merge | none |
+| avatar.css | avatar | native-anatomy | Hosted `img` pack: cover for photo src; contain+pad when `icon-slug` (child Style cannot see host attr) | none |
 | breadcrumb.css | breadcrumb | native-anatomy | Projected `ol`/`li`/`a` crumbs + `::before` separator | none |
 | button.css | button | vocab-gap | Style `gap` is not a space slot; `borderImage` has no concern slot. Host is `<button>`, not `<row>` | SPEC-SPINNAKER-2 |
 | card.css | card | vocab-gap | `borderImage(corner-image)` leftover — no concern slot preserves `--corner-image` | SPEC-SPINNAKER-2 |
@@ -26,6 +27,7 @@ Reason classes:
 | color.css | color | vendor-pseudo | Kill UA double-rim on `::-webkit-color-swatch` / `::-moz-color-swatch` | none |
 | dialog.css | dialog | native-anatomy | `::backdrop`, side-sheet `min()` geometry, slot header/section/footer | GAP-STDLIB-VOCAB-1 |
 | file.css | file | native-anatomy | `variant=drop` hides native picker / shows drop label (child Style cannot see host `variant`) | none |
+| icon.css | icon | native-anatomy | Hosted child `svg` pack (width/height 100%) — glyph fill is anatomy, not a Style verb | none |
 | menu-item.css | menu-item | vocab-gap | Style `gap` leftover — host is `<button>`, not `<row>` | SPEC-SPINNAKER-2 |
 | meter.css | meter | vendor-pseudo | WebKit / Firefox meter bar + optimum bands | none |
 | progress.css | progress | vendor-pseudo | WebKit / Firefox progress bar + indeterminate shimmer | GAP-STDLIB-VOCAB-1 |

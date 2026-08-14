@@ -46,8 +46,9 @@ const SELF_WHEN_KEYS: &[&str] = &[
     "stateLive",
 ];
 
-/// Closed group-relative `when:` keys. L1-shaped names stay here until Phase 3
-/// evicts them; Intent still records the *author name*, never a selector.
+/// Closed group-relative `when:` keys. Group+attr grammar (`group-caught`,
+/// `group-dismissible`, `group-inline`, …). Intent records the author name,
+/// never a selector.
 const GROUP_WHEN_KEYS: &[&str] = &[
     "group-current",
     "groupCurrent",
@@ -75,8 +76,6 @@ const GROUP_WHEN_KEYS: &[&str] = &[
     "groupCaught",
     "group-inline",
     "groupInline",
-    "group-drop",
-    "groupDrop",
 ];
 
 /// Presence attrs `group-<name>` may name. Closed — free attrs stay closed.
@@ -197,7 +196,6 @@ pub fn closed_when_keys() -> Vec<&'static str> {
         "groupStateOpen",
         "groupCaught",
         "groupInline",
-        "groupDrop",
     ];
     for name in CONDITION_KEYS {
         let camel = condition_complete_name(name);

@@ -47,11 +47,6 @@ fn walk(
     match style {
         Style::Empty | Style::MotionAttach { .. } => {}
         Style::Set(op) => {
-            // Child-pack setters paint a descendant selector (`img` / `svg`), not
-            // the host box — their width/height/display must not clash with host size.
-            if matches!(op.setter.as_str(), "avatarMedia" | "glyphFill") {
-                return;
-            }
             // Key on the setter's per-call paint slots, not lowered decls:
             // cross-setter conflicts on one slot are caught without running
             // the lowering pipeline. Unknown setters produce no writes (the

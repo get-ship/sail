@@ -1,7 +1,8 @@
 <!--
   <avatar> — L1 language element. Style value language only.
-  avatarMedia child pack: cover for photo src; contain+pad when icon-slug.
-  Default = avatar surface tokens (muted disc). Tone is opt-in brand fill.
+  Child img pack lives in platform/avatar.css: cover for photo src;
+  contain+pad when icon-slug. Default = avatar surface tokens (muted disc).
+  Tone is opt-in brand fill.
 -->
 
 <scope>
@@ -15,7 +16,7 @@
     shape: 'round' | 'square' = 'round'
   }
 
-  style base = {position(relative).overflow({ all: hidden }).size(7).fg(foreground).bg(muted).radius(full).elevation({ shadow: inset-ring }).select(none).align(middle).avatarMedia(true).type({ family: body, weight: bold, leading: none, tracking: wide, size: base })}
+  style base = {position(relative).overflow({ all: hidden }).size(7).fg(foreground).bg(muted).radius(full).elevation({ shadow: inset-ring }).select(none).align(middle).type({ family: body, weight: bold, leading: none, tracking: wide, size: base })}
   style sizeMd = {size(7).type({ size: base })}
   style sizeXs = {size(5).type({ size: xs })}
   style sizeSm = {size(control-h-sm).type({ size: xs })}

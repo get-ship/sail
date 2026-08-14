@@ -578,15 +578,14 @@ mod tests {
     }
 
     #[test]
-    fn glyph_fill_and_list_setters_lower() {
-        let (style, diags) = parse("style({ glyphFill(true).isolate() })");
+    fn isolate_lowers() {
+        let (style, diags) = parse("style({ isolate() })");
         assert!(
             diags.is_empty(),
             "{:?}",
             diags.iter().map(|d| d.message()).collect::<Vec<_>>()
         );
         let (_, css) = lower_style(&style, &HashMap::new());
-        assert!(css.contains(" svg") || css.contains("width:100%"), "{css}");
         assert!(
             css.contains("isolation:isolate") || css.contains("isolation: isolate"),
             "{css}"
@@ -1288,32 +1287,6 @@ mod tests {
         assert!(
             !css.contains("vertical-align"),
             "type align must not emit vertical-align: {css}"
-        );
-    }
-}
-
-#[cfg(test)]
-mod avatar_media_emit_tests {
-    use super::*;
-    use std::collections::HashMap;
-
-    #[test]
-    fn avatar_media_emits_cover_and_icon_slug_contain() {
-        let (style, diags) = parse("style({ avatarMedia(true) })");
-        assert!(diags.is_empty(), "{:?}", diags);
-        let (_, css) = lower_style(&style, &HashMap::new());
-        assert!(
-            css.contains("object-fit:cover") || css.contains("object-fit: cover"),
-            "photo cover: {css}"
-        );
-        assert!(
-            css.contains("[icon-slug]")
-                && (css.contains("object-fit:contain") || css.contains("object-fit: contain")),
-            "icon contain: {css}"
-        );
-        assert!(
-            css.contains("padding:10%") || css.contains("padding: 10%"),
-            "pad: {css}"
         );
     }
 }

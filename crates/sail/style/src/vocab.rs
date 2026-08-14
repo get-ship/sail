@@ -88,8 +88,6 @@ pub static VOCAB: &[VocabRow] = &[
     row("scrollbarThumb", PLAIN, None, "paint", true),
     row("scrollbarTrack", PLAIN, None, "paint", true),
     row("scrollbarThin", PLAIN, None, "paint", true),
-    row("avatarMedia", PLAIN, None, "paint", true),
-    row("glyphFill", PLAIN, None, "paint", true),
     row("container", PLAIN, None, "paint", true),
     row("containerType", PLAIN, None, "paint", true),
     row("containerName", PLAIN, None, "paint", true),

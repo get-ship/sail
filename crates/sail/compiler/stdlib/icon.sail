@@ -1,5 +1,6 @@
 <!--
-  <icon> — glyph box + size match. use:icon owns spin. glyphFill packs child svg.
+  <icon> — glyph box + size match. use:icon owns spin.
+  Child svg pack lives in platform/icon.css.
 -->
 <scope>
   props: {
@@ -10,7 +11,7 @@
     spin = false
   }
 
-  style base = {display(inline-block).size(icon-size-md).align(middle).fg(currentColor).glyphFill(true)}
+  style base = {display(inline-block).size(icon-size-md).align(middle).fg(currentColor)}
   style sizeMd = {size(icon-size-md)}
   style sizeXs = {size(icon-size-2xs)}
   style sizeSm = {size(icon-size-sm)}
