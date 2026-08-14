@@ -145,6 +145,14 @@
         "type": "bool",
         "default": "false"
       },
+      "loading": {
+        "type": "bool",
+        "default": "false"
+      },
+      "pill": {
+        "type": "bool",
+        "default": "false"
+      },
       "size": {
         "values": [
           "xs",
@@ -939,6 +947,10 @@
         "type": "string",
         "default": ""
       },
+      "range": {
+        "type": "bool",
+        "default": "false"
+      },
       "size": {
         "values": [
           "sm",
@@ -953,12 +965,15 @@
       },
       "ticks": {
         "type": "string",
-        "default": "",
-        "description": "Comma-separated labels under thumb-centers. Owned by the slider — not a docs pad hack."
+        "default": ""
       },
       "value": {
         "type": "number",
         "default": "0"
+      },
+      "value-end": {
+        "type": "number",
+        "default": "100"
       }
     },
     "spinner": {

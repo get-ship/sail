@@ -22,6 +22,8 @@ export const contract = {
       control: 'slider',
     },
     disabled: { default: false, control: 'switch' },
+    loading: { default: false, control: 'switch' },
+    pill: { default: false, control: 'switch' },
   },
   faces: [
     { path: 'component.button.bg', label: 'Fill' },

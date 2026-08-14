@@ -1415,7 +1415,7 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
     },
     {
       "tag": "slider",
-      "description": "native range alias. use:rangeFill → --rng-pct (WebKit fill)."
+      "description": "native range. Single thumb by default."
     },
     {
       "tag": "spinner",
@@ -2030,6 +2030,13 @@ export const ACTIONS: ActionDoc[] = [
     "writes": [
       "rngPct"
     ]
+  },
+  {
+    "name": "rangePair",
+    "param": "void",
+    "summary": "L1 <slider> host: sync value / value-end onto one or two range thumbs.",
+    "public": false,
+    "writes": []
   },
   {
     "name": "recoverySurface",

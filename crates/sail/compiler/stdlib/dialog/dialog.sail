@@ -19,7 +19,7 @@
   // pad 0 — air lives on >header / >section / >footer (DIALOG_MAP). Flat content
   // without those gets a :has() floor in the map. h(fit) keeps inset:0 from
   // stretching the shell to the full viewport.
-  style base = {position({ scheme: fixed, inset: 0 }).pad(0).margin(auto).size({ w: full, max-w: panel-max-w-md, min-w: panel-max-w-sm }).overflow({ all: hidden }).border({ color: border, width: 1 }).radius(xl).bg(card).fg(card-foreground).elevation(xl).type({ family: body })}
+  style base = {position({ scheme: fixed, inset: 0 }).pad(0).margin(auto).size({ w: full, max-w: panel-max-w-md, min-w: panel-max-w-sm }).overflow({ all: hidden }).border({ color: border, width: 1 }).radius(xl).bg(card).fg(card-foreground).elevation(xl).type({ family: body }), animate: { transition: play(surface, fast) }}
   style open = {display(flex).dir(column).size({ h: fit, max-h: panel-vh-md })}
   style sizeSm = {size({ max-w: panel-max-w-sm, min-w: 0 })}
   style sizeMd = {size({ max-w: panel-max-w-md })}

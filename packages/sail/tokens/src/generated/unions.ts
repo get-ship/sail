@@ -76,7 +76,6 @@ export const THEME_IDS = [
   '8bit',
   'synthwave',
   'sail',
-  'studio',
 ] as const
 export type ThemeId = (typeof THEME_IDS)[number]
 
@@ -531,6 +530,8 @@ export type CssTokenName =
   | 'panel-w-side'
   | 'panel-w-toast'
   | 'play-colors-property'
+  | 'play-control-property'
+  | 'play-surface-property'
   | 'popover'
   | 'popover-foreground'
   | 'press-scale'

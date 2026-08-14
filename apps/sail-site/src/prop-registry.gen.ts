@@ -146,6 +146,16 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "name": "disabled",
       "type": "bool",
       "default": "false"
+    },
+    {
+      "name": "loading",
+      "type": "bool",
+      "default": "false"
+    },
+    {
+      "name": "pill",
+      "type": "bool",
+      "default": "false"
     }
   ],
   "card": [
@@ -893,6 +903,11 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "default": "0"
     },
     {
+      "name": "value-end",
+      "type": "number",
+      "default": "100"
+    },
+    {
       "name": "min",
       "type": "number",
       "default": "0"
@@ -913,6 +928,11 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "default": "false"
     },
     {
+      "name": "range",
+      "type": "bool",
+      "default": "false"
+    },
+    {
       "name": "size",
       "type": "sm · md · lg",
       "default": "md"
@@ -925,8 +945,7 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
     {
       "name": "ticks",
       "type": "string",
-      "default": "",
-      "desc": "Comma-separated labels under thumb-centers. Owned by the slider — not a docs pad hack."
+      "default": ""
     }
   ],
   "spinner": [

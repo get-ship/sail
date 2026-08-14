@@ -377,6 +377,8 @@
   --card-texture-blend: overlay;
   --card-texture-opacity: 1;
   --play-colors-property: color, background-color, border-color, outline-color, fill, stroke;
+  --play-control-property: color, background-color, border-color, outline-color, transform, box-shadow, opacity;
+  --play-surface-property: color, background-color, border-color, box-shadow, transform, opacity;
 }
 
 /* ─── Expression channels (Tier 2) ──────────────────────────────────

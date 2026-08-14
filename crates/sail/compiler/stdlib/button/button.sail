@@ -12,6 +12,8 @@
     // icon / iconSm / iconLg = square hit targets (no hyphen — Style match keys are idents).
     size: 'xs' | 'sm' | 'md' | 'lg' | 'icon' | 'iconSm' | 'iconLg' = 'md'
     disabled = false
+    loading = false
+    pill = false
   }
 
   // border(solid) kills UA button outset so freeform demos use design-system chrome.
@@ -21,7 +23,8 @@
   // Cursor is NOT on base: base cursor(pointer) + when-disabled cursor(not-allowed) both
   // stamp classes and pointer was winning in the cascade. Match on the disabled prop so
   // only one cursor utility is active.
-  style base = {display(inline-flex).position(relative).appearance(none).radius(md).border({ width: control-stroke, style: solid }).isolate().controlFrame().select(none).type({ weight: medium, leading: none, wrap: nowrap }), when: {hover: controlLift(), active: press()}}
+  style base = {display(inline-flex).position(relative).appearance(none).radius(md).border({ width: control-stroke, style: solid }).isolate().controlFrame().select(none).type({ weight: medium, leading: none, wrap: nowrap }), when: {hover: controlLift(), active: press()}, animate: { transition: play(control, fast) }}
+  style pill = {radius(full)}
   style cursorOn = {cursor(pointer)}
   style cursorOff = {cursor(not-allowed).filter({ opacity: 50 })}
 
@@ -47,7 +50,8 @@
 </scope>
 
 <button
-  style(base, {match: { disabled: { true: cursorOff, false: cursorOn }, variant: { default: style(vSolid, vSolidTone), solid: style(vSolid, vSolidTone), soft: style(vSoft, vSoftTone), outline: style(vOutline, vOutlineTone), ghost: style(vGhost, vGhostTone) }, size: { xs: sizeXs, sm: sizeSm, md: sizeMd, lg: sizeLg, icon: sizeIcon, iconSm: sizeIconSm, iconLg: sizeIconLg } }, compound: [
+  style(base, {match: { disabled: { true: cursorOff, false: cursorOn }, variant: { default: style(vSolid, vSolidTone), solid: style(vSolid, vSolidTone), soft: style(vSoft, vSoftTone), outline: style(vOutline, vOutlineTone), ghost: style(vGhost, vGhostTone) }, size: { xs: sizeXs, sm: sizeSm, md: sizeMd, lg: sizeLg, icon: sizeIcon, iconSm: sizeIconSm, iconLg: sizeIconLg }, pill: { true: pill } }, compound: [
+      {loading: true, cursor(wait).pointerEvents(none)},
       {tone: muted, variant: default, bg(muted-foreground).border({ color: muted-foreground }).fg(background)},
       {tone: muted, variant: solid, bg(muted-foreground).border({ color: muted-foreground }).fg(background)},
       {tone: muted, variant: soft, bg(muted).border({ color: border-strong }).fg(foreground)},

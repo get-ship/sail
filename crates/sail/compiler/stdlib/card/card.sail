@@ -17,7 +17,7 @@
     fill = false
   }
 
-  style base = {position(relative).overflow({ all: clip }).pad({ y: 4, x: 5 }).isolate().radius(lg).border({ color: border, width: 1 }).fg(card-foreground).elevation({ shadow: card-rest }).bg(card).filter({ backdrop: card-backdrop-filter }), animate: { transition: play(colors, fast) }}
+  style base = {position(relative).overflow({ all: clip }).pad({ y: 4, x: 5 }).isolate().radius(lg).border({ color: border, width: 1 }).fg(card-foreground).elevation({ shadow: card-rest }).bg(card).filter({ backdrop: card-backdrop-filter }), animate: { transition: play(surface, fast) }}
   style outline = {bg(transparent)}
   style soft = {bg(muted).border({ color: border })}
   style elevated = {elevation({ shadow: lg }).border({ color: border-subtle })}

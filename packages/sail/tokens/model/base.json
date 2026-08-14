@@ -1751,6 +1751,14 @@
         "from": { "opacity": 0, "transform": "translateY(8px)" },
         "to": { "opacity": 1, "transform": "translateY(0)" }
       }
+    },
+    "spin": {
+      "$type": "sail.keyframes",
+      "$description": "Full rotation. Loading marks spend this.",
+      "$value": {
+        "from": { "transform": "rotate(0deg)" },
+        "to": { "transform": "rotate(360deg)" }
+      }
     }
   },
   "play": {
@@ -1759,6 +1767,20 @@
       "$description": "Named play property-set: color-bearing CSS properties. Not a keyframe.",
       "$value": {
         "property": "color, background-color, border-color, outline-color, fill, stroke"
+      }
+    },
+    "control": {
+      "$type": "transition",
+      "$description": "Wave 0 motion tier — controls hover/press (color + transform + shadow).",
+      "$value": {
+        "property": "color, background-color, border-color, outline-color, transform, box-shadow, opacity"
+      }
+    },
+    "surface": {
+      "$type": "transition",
+      "$description": "Wave 0 motion tier — interactive surfaces (color + shadow + transform).",
+      "$value": {
+        "property": "color, background-color, border-color, box-shadow, transform, opacity"
       }
     }
   },

@@ -6,7 +6,7 @@ export const meta = {
   key: 'slider',
   category: 'inputs',
   kind: 'host',
-  blurb: 'A single-thumb range control. Set min, max, and step as needed.',
+  blurb: 'Range control. Single thumb by default; range adds a second thumb (value-end).',
   heading: '<slider>',
   host: 'doc-slider',
   stageOwnsKnobs: true,

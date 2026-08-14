@@ -345,6 +345,13 @@ pub const ACTIONS: &[ActionEntry] = &[
         writes: &["rngPct"],
     },
     ActionEntry {
+        name: "rangePair",
+        param: "void",
+        summary: "L1 <slider> host: sync value / value-end onto one or two range thumbs.",
+        auto_import: true,
+        writes: &[],
+    },
+    ActionEntry {
         name: "recoverySurface",
         param: "void",
         summary: "Error-state element behavior; arms a retry action for the call-to-action slot.",
@@ -541,6 +548,7 @@ pub const BUILTIN_ACTION_NAMES: &[&str] = &[
     "pressed",
     "radioGroup",
     "rangeFill",
+    "rangePair",
     "recoverySurface",
     "rect",
     "spotlight",

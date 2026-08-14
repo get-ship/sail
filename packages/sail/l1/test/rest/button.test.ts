@@ -8,6 +8,9 @@ describe('l1 button rest', () => {
   it('mounts and is locatable by button name', () => {
     const v = renderRoute(SOURCE)
     expect(getByRole(v.root, 'button', { name: 'Save draft' })).toBeTruthy()
+    const loading = renderRoute(`<button loading>Saving</button>`)
+    expect(getByRole(loading.root, 'button', { name: 'Saving' })).toBeTruthy()
+    loading.unmount()
     v.unmount()
   })
 })
