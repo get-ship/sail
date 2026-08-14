@@ -2,7 +2,7 @@
 //!
 //! Every author-facing style name is one row tagged `concern | axis | plain`.
 //! Complete, clash, emit, parse, LSP, skill, and MCP walk this table.
-//! `setters.rs` is leftover plain lower helpers — not a name atlas.
+//! Plains emit lives on `plains.rs`. `setters.rs` keeps CSS lower helpers.
 //!
 //! Live author names are v3 (`bg`, `fg`, `position`, `pad`, `margin`, …).
 //! Unknown names are unknown vocabulary. `z` is a `position` slot only.
@@ -50,8 +50,7 @@ const CONCERN: VocabTag = VocabTag::Concern;
 const AXIS: VocabTag = VocabTag::Axis;
 const PLAIN: VocabTag = VocabTag::Plain;
 
-/// The one registry. Live v3 names first; alias targets and resolve-only
-/// plains follow. No `z` row — `z` rides `position`.
+/// The one registry. Live author names. No `z` row — `z` rides `position`.
 pub static VOCAB: &[VocabRow] = &[
     // ── live concerns (v3 author names) ────────────────────────────────
     row("bg", CONCERN, Some("bg"), "paint", true),
@@ -94,36 +93,36 @@ pub static VOCAB: &[VocabRow] = &[
     row("container", PLAIN, None, "paint", true),
     row("containerType", PLAIN, None, "paint", true),
     row("containerName", PLAIN, None, "paint", true),
-    // ── spec plains, resolve-only (emit still via longhand / flow) ─────
-    row("display", PLAIN, None, "box", false),
-    row("grow", PLAIN, None, "box", false),
-    row("shrink", PLAIN, None, "box", false),
-    row("self", PLAIN, None, "box", false),
-    row("dir", PLAIN, None, "box", false),
-    row("opacity", PLAIN, None, "paint", false),
-    row("rotate", PLAIN, None, "paint", false),
-    row("rotateX", PLAIN, None, "paint", false),
-    row("rotateY", PLAIN, None, "paint", false),
-    row("rotateZ", PLAIN, None, "paint", false),
-    row("scale", PLAIN, None, "paint", false),
-    row("translateX", PLAIN, None, "paint", false),
-    row("translateY", PLAIN, None, "paint", false),
-    row("transform", PLAIN, None, "paint", false),
-    row("origin", PLAIN, None, "paint", false),
-    row("animate", PLAIN, None, "paint", false),
-    row("transition", PLAIN, None, "paint", false),
-    row("duration", PLAIN, None, "paint", false),
-    row("ease", PLAIN, None, "paint", false),
-    row("blur", PLAIN, None, "paint", false),
-    row("brightness", PLAIN, None, "paint", false),
-    row("contrast", PLAIN, None, "paint", false),
-    row("grayscale", PLAIN, None, "paint", false),
-    row("hueRotate", PLAIN, None, "paint", false),
-    row("invert", PLAIN, None, "paint", false),
-    row("sepia", PLAIN, None, "paint", false),
-    row("saturate", PLAIN, None, "paint", false),
-    row("backdrop", PLAIN, None, "paint", false),
-    row("mixBlend", PLAIN, None, "paint", false),
+    // ── live spec plains ──────────────────────────────────────────────
+    row("display", PLAIN, None, "box", true),
+    row("grow", PLAIN, None, "box", true),
+    row("shrink", PLAIN, None, "box", true),
+    row("self", PLAIN, None, "box", true),
+    row("dir", PLAIN, None, "box", true),
+    row("opacity", PLAIN, None, "paint", true),
+    row("rotate", PLAIN, None, "paint", true),
+    row("rotateX", PLAIN, None, "paint", true),
+    row("rotateY", PLAIN, None, "paint", true),
+    row("rotateZ", PLAIN, None, "paint", true),
+    row("scale", PLAIN, None, "paint", true),
+    row("translateX", PLAIN, None, "paint", true),
+    row("translateY", PLAIN, None, "paint", true),
+    row("transform", PLAIN, None, "paint", true),
+    row("origin", PLAIN, None, "paint", true),
+    row("animate", PLAIN, None, "paint", true),
+    row("transition", PLAIN, None, "paint", true),
+    row("duration", PLAIN, None, "paint", true),
+    row("ease", PLAIN, None, "paint", true),
+    row("blur", PLAIN, None, "paint", true),
+    row("brightness", PLAIN, None, "paint", true),
+    row("contrast", PLAIN, None, "paint", true),
+    row("grayscale", PLAIN, None, "paint", true),
+    row("hueRotate", PLAIN, None, "paint", true),
+    row("invert", PLAIN, None, "paint", true),
+    row("sepia", PLAIN, None, "paint", true),
+    row("saturate", PLAIN, None, "paint", true),
+    row("backdrop", PLAIN, None, "paint", true),
+    row("mixBlend", PLAIN, None, "paint", true),
 ];
 
 /// The table. Complete / resolve / find walk this.
@@ -213,6 +212,13 @@ mod tests {
         assert_eq!(resolve_vocab("cursor"), Some(VocabTag::Plain));
         assert_eq!(resolve_vocab("srOnly"), Some(VocabTag::Plain));
         assert_eq!(resolve_vocab("origin"), Some(VocabTag::Plain));
+        for name in [
+            "display", "grow", "dir", "opacity", "rotate", "scale", "blur", "mixBlend",
+        ] {
+            let row = find_vocab(name).unwrap_or_else(|| panic!("{name}"));
+            assert!(row.offered, "{name} is a live spec plain");
+            assert_eq!(row.tag, VocabTag::Plain);
+        }
     }
 
     #[test]

@@ -520,8 +520,8 @@ pub fn validate_sx_setter(setter: &str, args: &[serde_json::Value]) -> Result<()
             allowed_setter_names().join(", ")
         ));
     }
-    // Optional leftover-plain scale/keyword check on first string/number arg.
-    let Some(spec) = sail_lint::style::setters::find_setter(name) else {
+    // Optional plains emit scale/keyword check on first string/number arg.
+    let Some(spec) = sail_lint::style::plains::find_plain(name) else {
         return Ok(());
     };
     if let Some(scale) = spec.scale {

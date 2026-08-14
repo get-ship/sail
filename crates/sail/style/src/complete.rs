@@ -9,8 +9,8 @@ use std::path::Path;
 use crate::channel::Channel;
 use crate::component_surfaces::color_paint_vocabulary;
 use crate::conditions::CONDITION_PREFIXES;
+use crate::plains::{self, PlainSpec};
 use crate::scales;
-use crate::setters::{self, SetterSpec};
 
 /// One completion item offered inside a Style region.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -244,11 +244,13 @@ pub fn style_complete_for_context(
             if let Some(concern) = crate::concerns::find_concern(setter) {
                 return filter_sort(concern_arg_items(concern, host.as_deref()), partial);
             }
-            if crate::vocab::find_vocab(setter).is_none() {
+            let Some(row) = crate::vocab::find_vocab(setter) else {
+                return Vec::new();
+            };
+            if row.tag != crate::vocab::VocabTag::Plain {
                 return Vec::new();
             }
-            // Leftover plain helper — name already confirmed on vocab.
-            let Some(spec) = setters::find_setter(setter) else {
+            let Some(spec) = plains::find_plain(row.name) else {
                 return Vec::new();
             };
             filter_sort(plain_arg_items(spec, host.as_deref()), partial)
@@ -346,7 +348,7 @@ fn concern_arg_items(
 }
 
 fn plain_arg_items(
-    spec: &SetterSpec,
+    spec: &PlainSpec,
     host: Option<&str>,
 ) -> impl Iterator<Item = StyleCompleteItem> {
     let mut labels: Vec<(String, StyleCompleteKind, Option<String>)> = Vec::new();
