@@ -3667,9 +3667,13 @@ export default controller(() => {
 
     #[test]
     fn stdlib_element_children_fill_default_slot_or_drop() {
-        // spinner has no default slot — children drop (shadow parity).
+        // spinner is author-void (no `<slot` in the stdlib source). A
+        // following `<b>` is a sibling, not a projected child.
         let out = preprocess("<spinner><b>x</b></spinner>").expect("preprocess");
-        assert!(!out.contains("<b>x</b>"), "slotless children drop: {out}");
+        assert!(
+            out.contains("sail-spinner") && !out.contains("<spinner"),
+            "void L1 must splice: {out}"
+        );
     }
 
     #[test]

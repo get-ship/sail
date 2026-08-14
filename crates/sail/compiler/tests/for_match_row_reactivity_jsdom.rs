@@ -19,9 +19,9 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-use sail_compiler::emit::synthetic::{emit_synthetic, AppManifest, AuthoredController};
-use sail_compiler::parse::parse;
 use sail_compiler::CompileMode;
+use sail_compiler::emit::synthetic::{AppManifest, AuthoredController, emit_synthetic};
+use sail_compiler::parse::parse;
 
 fn repo_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))

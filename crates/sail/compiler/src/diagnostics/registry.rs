@@ -1294,10 +1294,7 @@ mod tests {
     fn registry_ids_are_stable_sail_ids() {
         for spec in registry() {
             assert!(
-                spec.id.starts_with("sail-")
-                    && spec.id[5..]
-                        .bytes()
-                        .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-'),
+                crate::diag_ratchet::is_stable_rule_id(spec.id),
                 "bad id {}",
                 spec.id
             );

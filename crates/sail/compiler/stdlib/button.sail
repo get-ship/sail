@@ -38,11 +38,11 @@
   // These still exist so an explicit empty tone does not go naked.
   style vSolid = {bg(foreground).border({ color: foreground }).fg(background).elevation(xs), when: {hover: filter({ opacity: 90 }).elevation(sm)}}
   style vSolidTone = {bg(tone).border({ color: tone }).fg(tone.foreground).elevation(xs), when: {hover: filter({ opacity: 90 }).elevation(sm)}}
-  style vSoft = {bg(hover-bg).border({ color: border }).fg(button), when: {hover: filter({ opacity: 90 })}}
+  style vSoft = {bg(hover-bg).border({ color: border }).fg(foreground), when: {hover: filter({ opacity: 90 })}}
   style vSoftTone = {bg({ color: tone, mix: 15 }).border({ color: tone }).fg(tone), when: {hover: bg({ color: tone, mix: 25 })}}
-  style vOutline = {bg(transparent).border({ color: foreground }).fg(button), when: {hover: bg(hover-bg), disabled: bg(transparent)}}
+  style vOutline = {bg(transparent).border({ color: foreground }).fg(foreground), when: {hover: bg(hover-bg), disabled: bg(transparent)}}
   style vOutlineTone = {bg(transparent).border({ color: tone }).fg(tone), when: {hover: bg(hover-bg), disabled: bg(transparent)}}
-  style vGhost = {bg(transparent).border({ color: transparent }).fg(button), when: {hover: bg(hover-bg), disabled: bg(transparent)}}
+  style vGhost = {bg(transparent).border({ color: transparent }).fg(foreground), when: {hover: bg(hover-bg), disabled: bg(transparent)}}
   style vGhostTone = {bg(transparent).border({ color: transparent }).fg(tone), when: {hover: bg(hover-bg), disabled: bg(transparent)}}
 </scope>
 

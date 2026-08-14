@@ -68,12 +68,12 @@ const PINNED_RULE_IDS: &[&str] = &[
     "sail-route-inline-style",
     "sail-space-literal",
     "sail-state-set-call",
-    "spinnaker",
-    "spinnaker-value-enumeration",
     "sail-sub-min-tap-target",
     "sail-surface-not-card",
     "sail-unintended-overflow",
     "sail-virtualizer",
+    "spinnaker",
+    "spinnaker-value-enumeration",
 ];
 
 #[test]

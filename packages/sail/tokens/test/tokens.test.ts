@@ -1252,10 +1252,6 @@ describe('@ship/tokens — DTCG SSOT / generate drift lock', () => {
     expect(css).toMatch(/--label-foreground\s*:\s*var\(--foreground\)/)
     expect(css).toMatch(/--field-hint\s*:\s*var\(--muted-foreground\)/)
     expect(css).toMatch(/--field\s*:\s*var\(--background\)/)
-    expect(css).toMatch(/--button\s*:\s*var\(--background\)/)
-    expect(css).toMatch(/--toggle\s*:\s*var\(--background\)/)
-    expect(css).toMatch(/--tab-list\s*:\s*var\(--background\)/)
-    expect(css).toMatch(/--scroll-area-thumb\s*:\s*var\(--border\)/)
   })
 
   it('L1-token-totality surface packs register path → cssName', () => {

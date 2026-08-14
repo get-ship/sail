@@ -22,15 +22,15 @@
   // display(inline-flex) so freeform never leaves the label top-aligned in a block box.
   style base = {display(inline-flex).size({ min-h: control-h-md }).pad({ x: 3 }).appearance(none).radius(md).border({ color: transparent, width: control-stroke, style: solid }).select(none).cursor(pointer).type({ weight: medium, leading: none, size: base, wrap: nowrap, decoration: none })}
   // default rest = themeable button surface (not solid invert).
-  style vDefault = {bg(button).border({ color: border }).fg(button).elevation(xs), when: {hover: bg(hover-bg).border({ color: border-strong })}}
+  style vDefault = {bg(background).border({ color: border }).fg(foreground).elevation(xs), when: {hover: bg(hover-bg).border({ color: border-strong })}}
   style vDefaultTone = {bg({ color: tone, mix: 15 }).border({ color: tone }).fg(tone), when: {hover: bg({ color: tone, mix: 25 })}}
   style vSolid = {bg(foreground).border({ color: foreground }).fg(background).elevation(xs), when: {hover: filter({ opacity: 90 }).elevation(sm)}}
   style vSolidTone = {bg(tone).border({ color: tone }).fg(tone.foreground).elevation(xs), when: {hover: filter({ opacity: 90 }).elevation(sm)}}
-  style vSoft = {bg(hover-bg).border({ color: border }).fg(button), when: {hover: filter({ opacity: 90 })}}
+  style vSoft = {bg(hover-bg).border({ color: border }).fg(foreground), when: {hover: filter({ opacity: 90 })}}
   style vSoftTone = {bg({ color: tone, mix: 15 }).border({ color: tone }).fg(tone), when: {hover: bg({ color: tone, mix: 25 })}}
-  style vOutline = {bg(transparent).border({ color: foreground }).fg(button), when: {hover: bg(hover-bg), disabled: bg(transparent)}}
+  style vOutline = {bg(transparent).border({ color: foreground }).fg(foreground), when: {hover: bg(hover-bg), disabled: bg(transparent)}}
   style vOutlineTone = {bg(transparent).border({ color: tone }).fg(tone), when: {hover: bg(hover-bg), disabled: bg(transparent)}}
-  style vGhost = {bg(transparent).border({ color: transparent }).fg(button), when: {hover: bg(hover-bg), disabled: bg(transparent)}}
+  style vGhost = {bg(transparent).border({ color: transparent }).fg(foreground), when: {hover: bg(hover-bg), disabled: bg(transparent)}}
   style vGhostTone = {bg(transparent).fg(tone), when: {hover: bg(hover-bg), disabled: bg(transparent)}}
 </scope>
 

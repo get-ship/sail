@@ -45,15 +45,25 @@ pub enum SiteClass {
 /// Product pin: anonymous sites must stay exactly 0. Do not raise this.
 const ANONYMOUS_BASELINE: usize = 0;
 
-/// Return `true` when `id` is a stable sail rule id (`^sail-[a-z0-9-]+$`).
+/// Return `true` when `id` is a stable rule id:
+/// `^sail-[a-z0-9-]+$`, `spinnaker`, or `^spinnaker-[a-z0-9-]+$`.
 pub fn is_stable_rule_id(id: &str) -> bool {
-    let Some(rest) = id.strip_prefix("sail-") else {
-        return false;
-    };
-    !rest.is_empty()
-        && rest
-            .bytes()
-            .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-')
+    fn kebab_tail(rest: &str) -> bool {
+        !rest.is_empty()
+            && rest
+                .bytes()
+                .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-')
+    }
+    if id == "spinnaker" {
+        return true;
+    }
+    if let Some(rest) = id.strip_prefix("sail-") {
+        return kebab_tail(rest);
+    }
+    if let Some(rest) = id.strip_prefix("spinnaker-") {
+        return kebab_tail(rest);
+    }
+    false
 }
 
 /// Classify a throw-site source window (fixture snippet or live file slice).
@@ -777,6 +787,8 @@ mod tests {
         assert!(is_stable_rule_id("sail-foo"));
         assert!(is_stable_rule_id("sail-light-shadow-root"));
         assert!(is_stable_rule_id("sail-internal-lint-gate"));
+        assert!(is_stable_rule_id("spinnaker"));
+        assert!(is_stable_rule_id("spinnaker-bind"));
         assert!(!is_stable_rule_id("expression"));
         assert!(!is_stable_rule_id(""));
         assert!(!is_stable_rule_id("sail-"));

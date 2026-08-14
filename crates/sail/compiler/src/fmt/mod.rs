@@ -186,6 +186,9 @@ mod tests {
             .source;
         assert!(out.contains("<br>"), "void as bare tag:\n{out}");
         assert!(out.contains("<img src=\"a.png\">"), "{out}");
-        assert!(out.contains("<span></span>"), "{out}");
+        assert!(
+            out.contains("<span />"),
+            "empty span is author-void when it has no children:\n{out}"
+        );
     }
 }

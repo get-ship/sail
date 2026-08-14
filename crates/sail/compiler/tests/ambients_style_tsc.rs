@@ -83,7 +83,7 @@ const a = pad({ x: 2 }).bg(primary).radius(sm).fg('muted-foreground')
 const whenHover = { when: { hover: bg(muted) } }
 const matchVariant = { match: { variant: { solid: bg(primary), soft: bg(muted) } } }
 const compoundPill = { compound: [{ pill: true }] }
-const motionEnter = { animate: { enter: play(fade), exit: play(fade) } }
+const motionEnter = { animate: { enter: play('fade'), exit: play('fade') } }
 const padAndHover = pad(4).bg(primary)
 // T0: bound tone + static group.member + string-form paths typecheck as paint args
 const tonePaint = bg(tone).fg(tone.foreground).border(tone)
