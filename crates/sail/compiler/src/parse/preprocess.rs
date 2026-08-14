@@ -80,7 +80,7 @@ pub(crate) fn preprocess_impl_full(
     // Type-keyed color-group props so `bg(tone)` / `bg(shade)` parse as bridge paths.
     let group_props = super::scope_block::color_group_typed_prop_names(&s);
     // Scope Style consts (`const filled = style(…)`) resolve Refs in host Style.
-    let (s, style_css, hosts) = sail_lint::style::with_bound_group_props(&group_props, || {
+    let (s, style_css, hosts) = sail_style::with_bound_group_props(&group_props, || {
         let style_env = super::scope_block::style_env_from_source(&s);
         lift_tag_style(&s, &style_env)
     })?;
@@ -209,7 +209,7 @@ fn is_void_tag(tag: &str) -> bool {
 /// `class="s-…"` (+ motion attrs), stripping the call from the open tag.
 fn lift_tag_style(
     source: &str,
-    env: &sail_lint::style::StyleEnv,
+    env: &sail_style::StyleEnv,
 ) -> Result<(String, String, sail_layout::StyleHosts), CompileError> {
     struct Lift {
         gt_pos: usize,
@@ -298,8 +298,8 @@ fn lift_tag_style(
                 let (classes, motions) = lower_sx_value(expr, env, &mut css, &mut seen)
                     .map_err(|diags| style_error(diags, call_lo, call_hi))?;
                 let val = strip_outer_braces(expr.trim());
-                let (style_ir, _) = sail_lint::style::parse(val);
-                let resolved_type = sail_lint::style::resolve_type(&style_ir, env);
+                let (style_ir, _) = sail_style::parse(val);
+                let resolved_type = sail_style::resolve_type(&style_ir, env);
                 if let Some(host) = sail_layout::TypeHost::from_resolved(&classes, &resolved_type) {
                     hosts.types.push(host);
                 }
@@ -695,11 +695,7 @@ fn consume_style_expr(s: &str) -> Option<usize> {
     }
 }
 
-fn style_error(
-    diags: Vec<sail_lint::style::StyleDiagnostic>,
-    start: usize,
-    end: usize,
-) -> CompileError {
+fn style_error(diags: Vec<sail_style::StyleDiagnostic>, start: usize, end: usize) -> CompileError {
     let message = diags
         .into_iter()
         .map(|d| d.message())
@@ -711,10 +707,10 @@ fn style_error(
 }
 fn lower_sx_value(
     val: &str,
-    env: &sail_lint::style::StyleEnv,
+    env: &sail_style::StyleEnv,
     css: &mut String,
     seen: &mut std::collections::HashSet<String>,
-) -> Result<(String, Vec<(String, String)>), Vec<sail_lint::style::StyleDiagnostic>> {
+) -> Result<(String, Vec<(String, String)>), Vec<sail_style::StyleDiagnostic>> {
     // `quote_brace_attrs` rewrites `sx={…}` → `sx="{…}"` (braces preserved inside).
     let val = strip_outer_braces(val.trim());
     // Sole product path: Style value language (chain + match/when/compound/bind).
@@ -731,23 +727,21 @@ fn lower_sx_value(
 fn refuse_text_on_non_text_host(
     tag: &str,
     expr: &str,
-    _env: &sail_lint::style::StyleEnv,
+    _env: &sail_style::StyleEnv,
     abs_lo: usize,
     abs_hi: usize,
 ) -> Result<(), CompileError> {
-    if sail_lint::style::is_text_bearing(tag) {
+    if sail_style::is_text_bearing(tag) {
         return Ok(());
     }
     let val = strip_outer_braces(expr.trim());
-    let (style, _) = sail_lint::style::parse(val);
-    if !sail_lint::style::style_uses_text_channel(&style) {
+    let (style, _) = sail_style::parse(val);
+    if !sail_style::style_uses_text_channel(&style) {
         return Ok(());
     }
-    Err(
-        CompileError::new(sail_lint::style::text_channel_host_error(tag))
-            .with_span(Span::new(abs_lo, abs_hi))
-            .with_category("sail-style"),
-    )
+    Err(CompileError::new(sail_style::text_channel_host_error(tag))
+        .with_span(Span::new(abs_lo, abs_hi))
+        .with_category("sail-style"))
 }
 
 /// Inject compiler-private `_sail_m_<trigger>="{{…}}"` attrs produced by Style

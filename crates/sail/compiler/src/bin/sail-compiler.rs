@@ -493,7 +493,7 @@ fn gen_prop_registry(out: Option<PathBuf>, ts_out: Option<PathBuf>) -> Result<()
         // Element sources use parse_element_source (no stdlib expand) — structure
         // may contain private native types (type=checkbox inside <checkbox> host)
         // that freeform author markup may not use.
-        let program = sail_lint::style::with_host_surface(Some(tag), || {
+        let program = sail_style::with_host_surface(Some(tag), || {
             sail_compiler::parse::parse_element_source(source)
         })
         .map_err(|e| anyhow!("stdlib {tag} failed to parse: {e:?}"))?;
@@ -586,20 +586,20 @@ fn gen_prop_registry(out: Option<PathBuf>, ts_out: Option<PathBuf>) -> Result<()
     sf.push_str(
         "// when: keys, layout, motion, L1, directives. Not the emit-leaf utility table.\n\n",
     );
-    let style_vocab: Vec<serde_json::Value> = sail_lint::style::offered_rows()
+    let style_vocab: Vec<serde_json::Value> = sail_style::offered_rows()
         .map(|row| {
             let tag = match row.tag {
-                sail_lint::style::VocabTag::Concern => "concern",
-                sail_lint::style::VocabTag::Axis => "axis",
-                sail_lint::style::VocabTag::Plain => "plain",
+                sail_style::VocabTag::Concern => "concern",
+                sail_style::VocabTag::Axis => "axis",
+                sail_style::VocabTag::Plain => "plain",
             };
             let slots: Vec<&str> = match row.tag {
-                sail_lint::style::VocabTag::Concern | sail_lint::style::VocabTag::Axis => {
-                    sail_lint::style::find_concern(row.name)
+                sail_style::VocabTag::Concern | sail_style::VocabTag::Axis => {
+                    sail_style::find_concern(row.name)
                         .map(|c| c.slots.iter().map(|s| s.name).collect())
                         .unwrap_or_default()
                 }
-                sail_lint::style::VocabTag::Plain => Vec::new(),
+                sail_style::VocabTag::Plain => Vec::new(),
             };
             serde_json::json!({
                 "name": row.name,
@@ -616,7 +616,7 @@ fn gen_prop_registry(out: Option<PathBuf>, ts_out: Option<PathBuf>) -> Result<()
     sf.push_str(&serde_json::to_string_pretty(&style_vocab)?);
     sf.push_str("\n\n");
     // SPEC-SPINNAKER-2: concern atlas + markers are the live Style table.
-    let concern_rows: Vec<serde_json::Value> = sail_lint::style::concerns()
+    let concern_rows: Vec<serde_json::Value> = sail_style::concerns()
         .iter()
         .map(|c| {
             serde_json::json!({
@@ -633,7 +633,7 @@ fn gen_prop_registry(out: Option<PathBuf>, ts_out: Option<PathBuf>) -> Result<()
     sf.push_str(&serde_json::to_string_pretty(&concern_rows)?);
     sf.push_str("\n\n");
     sf.push_str("export const MARKERS: string[] = ");
-    sf.push_str(&serde_json::to_string_pretty(&sail_lint::style::MARKERS)?);
+    sf.push_str(&serde_json::to_string_pretty(&sail_style::MARKERS)?);
     sf.push_str("\n\n");
     // when: keys — interaction & ARIA (product: when: { hover: … }).
     let states: Vec<serde_json::Value> = sail_lint::rules::style_rule::STATE_PREFIXES
@@ -662,7 +662,7 @@ fn gen_prop_registry(out: Option<PathBuf>, ts_out: Option<PathBuf>) -> Result<()
     sf.push_str("\n\n");
     // Residual dead-form table. NOT the author language — utility-string
     // leftovers the emit leaf still names. Style vocab is STYLE_VOCAB above.
-    let refusals: Vec<serde_json::Value> = sail_lint::style_vocab::refusals()
+    let refusals: Vec<serde_json::Value> = sail_style::style_vocab::refusals()
         .into_iter()
         .map(|(atom, instead)| serde_json::json!({ "atom": atom, "instead": instead }))
         .collect();
@@ -1223,17 +1223,13 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
              (`fill`/`ink`/`place`/`space`/`flow`/`motion`). Participation\n\
              (`grow`/`shrink`/`w`) lives on `size` / `grow` / `shrink`.\n"
         );
-        for row in sail_lint::style::offered_rows()
-            .filter(|r| r.tag == sail_lint::style::VocabTag::Concern)
-        {
-            let _ = writeln!(md, "- {}", sail_lint::style::vocab_surface_line(row));
+        for row in sail_style::offered_rows().filter(|r| r.tag == sail_style::VocabTag::Concern) {
+            let _ = writeln!(md, "- {}", sail_style::vocab_surface_line(row));
         }
         let _ = writeln!(md);
         let _ = writeln!(md, "### Axis\n");
-        for row in
-            sail_lint::style::offered_rows().filter(|r| r.tag == sail_lint::style::VocabTag::Axis)
-        {
-            let _ = writeln!(md, "- {}", sail_lint::style::vocab_surface_line(row));
+        for row in sail_style::offered_rows().filter(|r| r.tag == sail_style::VocabTag::Axis) {
+            let _ = writeln!(md, "- {}", sail_style::vocab_surface_line(row));
         }
         let _ = writeln!(md);
         let _ = writeln!(md, "### Plains\n");

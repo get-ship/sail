@@ -1,10 +1,10 @@
 //! Style IR → atomic CSS (token vars, attr selectors, when pseudos).
 
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 
-use super::ir::{PaintArg, PaintOp, Style};
-use super::setters::{WhenTarget, lower_op_css, when_target};
-use super::theme_env::{ThemeStyleEnv, current_styling_policy};
+use crate::ir::{PaintArg, PaintOp, Style, StyleEnv};
+use crate::setters::{WhenTarget, lower_op_css, when_target};
+use crate::theme_env::{ThemeStyleEnv, current_styling_policy};
 
 /// One emitted CSS rule.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -14,9 +14,6 @@ pub struct CssRule {
     pub declarations: Vec<(String, String)>,
     pub media: Option<String>,
 }
-
-/// Fragment/const environment for resolving Style::Ref.
-pub type StyleEnv = HashMap<String, Style>;
 
 pub fn emit_style(style: &Style, env: &StyleEnv) -> Vec<CssRule> {
     let mut out = Vec::new();
@@ -423,18 +420,18 @@ fn op_uses_tone(op: &PaintOp) -> bool {
 fn op_has_surface_member(op: &PaintOp) -> bool {
     op.args.iter().any(|a| {
         matches!(a, PaintArg::MemberPath { root, .. }
-            if super::component_surfaces::current_surface_pack() == Some(root.as_str()))
+            if crate::component_surfaces::current_surface_pack() == Some(root.as_str()))
     })
 }
 
 fn resolve_surface_args(op: &PaintOp) -> PaintOp {
-    use super::component_surfaces::resolve_surface_author;
+    use crate::component_surfaces::resolve_surface_author;
     let args = op
         .args
         .iter()
         .map(|a| match a {
             PaintArg::MemberPath { root, path }
-                if super::component_surfaces::current_surface_pack() == Some(root.as_str()) =>
+                if crate::component_surfaces::current_surface_pack() == Some(root.as_str()) =>
             {
                 match resolve_surface_author(root, path) {
                     Ok(public) => PaintArg::Token(public.to_string()),
@@ -447,7 +444,7 @@ fn resolve_surface_args(op: &PaintOp) -> PaintOp {
                     .map(|(k, v)| {
                         let resolved = match v {
                             PaintArg::MemberPath { root, path }
-                                if super::component_surfaces::current_surface_pack()
+                                if crate::component_surfaces::current_surface_pack()
                                     == Some(root.as_str()) =>
                             {
                                 match resolve_surface_author(root, path) {
@@ -478,7 +475,7 @@ pub fn lower_style_source(
     env: &StyleEnv,
     css: &mut String,
     seen: &mut HashSet<String>,
-) -> Result<String, Vec<super::ir::StyleDiagnostic>> {
+) -> Result<String, Vec<crate::ir::StyleDiagnostic>> {
     lower_style_source_with_motion(src, env, css, seen).map(|(classes, _)| classes)
 }
 
@@ -492,28 +489,28 @@ pub fn lower_style_source_with_motion(
     env: &StyleEnv,
     css: &mut String,
     seen: &mut HashSet<String>,
-) -> Result<(String, Vec<(String, String)>), Vec<super::ir::StyleDiagnostic>> {
+) -> Result<(String, Vec<(String, String)>), Vec<crate::ir::StyleDiagnostic>> {
     // Product authoring: flat concern chain. Constructor `style.pad().bg()` is
     // retired (corpus codemod + block attachment). Migration dual is `flat_chain` only.
     // Early refuse matches product `parse` (no IR for flat chains).
     let t = src.trim_start();
     if t.starts_with("style.") {
-        return Err(vec![super::ir::StyleDiagnostic::ParseError {
+        return Err(vec![crate::ir::StyleDiagnostic::ParseError {
             message: "flat `style.method(…)` chains are retired — write concern calls: \
                       style({ size({ w: full }).pad(4).bg(surface), when: { hover: bg(muted) } })"
                 .into(),
             source: t.to_string(),
         }]);
     }
-    let (style, diags) = super::parse::parse(src);
+    let (style, diags) = crate::parse::parse(src);
     if diags
         .iter()
-        .any(|d| matches!(d, super::ir::StyleDiagnostic::ResidualProduct { .. }))
+        .any(|d| matches!(d, crate::ir::StyleDiagnostic::ResidualProduct { .. }))
     {
         return Err(diags);
     }
     // Clash
-    let clashes = super::clash::detect_clashes(&style, env);
+    let clashes = crate::clash::detect_clashes(&style, env);
     if !clashes.is_empty() {
         let mut all = diags;
         all.extend(clashes);
@@ -521,19 +518,19 @@ pub fn lower_style_source_with_motion(
     }
     if diags.iter().any(|d| {
         match d {
-            super::ir::StyleDiagnostic::BadToken { .. }
-            | super::ir::StyleDiagnostic::ThemeOwnedToken { .. }
-            | super::ir::StyleDiagnostic::UnknownSetter { .. }
-            | super::ir::StyleDiagnostic::UnknownWhenKey { .. }
-            | super::ir::StyleDiagnostic::BadArity { .. }
-            | super::ir::StyleDiagnostic::UnknownConcernSlot { .. }
-            | super::ir::StyleDiagnostic::DuplicateSlot { .. }
-            | super::ir::StyleDiagnostic::RetiredSetter { .. }
-            | super::ir::StyleDiagnostic::UnknownVocabulary { .. }
-            | super::ir::StyleDiagnostic::ThemedLocalStyle { .. }
-            | super::ir::StyleDiagnostic::NotAStyleRef { .. } => true,
+            crate::ir::StyleDiagnostic::BadToken { .. }
+            | crate::ir::StyleDiagnostic::ThemeOwnedToken { .. }
+            | crate::ir::StyleDiagnostic::UnknownSetter { .. }
+            | crate::ir::StyleDiagnostic::UnknownWhenKey { .. }
+            | crate::ir::StyleDiagnostic::BadArity { .. }
+            | crate::ir::StyleDiagnostic::UnknownConcernSlot { .. }
+            | crate::ir::StyleDiagnostic::DuplicateSlot { .. }
+            | crate::ir::StyleDiagnostic::RetiredSetter { .. }
+            | crate::ir::StyleDiagnostic::UnknownVocabulary { .. }
+            | crate::ir::StyleDiagnostic::ThemedLocalStyle { .. }
+            | crate::ir::StyleDiagnostic::NotAStyleRef { .. } => true,
             // Hard-fail lifecycle-in-when, geometry-in-interaction-when, color alias.
-            super::ir::StyleDiagnostic::ParseError { message, .. } => {
+            crate::ir::StyleDiagnostic::ParseError { message, .. } => {
                 message.contains("cannot appear inside when")
                     || message.contains("cannot appear inside interaction when")
                     || message.contains("state can't gate layout")
@@ -548,7 +545,7 @@ pub fn lower_style_source_with_motion(
     }) {
         return Err(diags);
     }
-    let ref_diags = super::parse::validate_style_refs(&style, env);
+    let ref_diags = crate::parse::validate_style_refs(&style, env);
     if !ref_diags.is_empty() {
         let mut all = diags;
         all.extend(ref_diags);
@@ -558,7 +555,7 @@ pub fn lower_style_source_with_motion(
     // (`style ambientDot = { …, animate: loop({…}) }` + `style(ambientDot)`)
     // still inject `_sail_m_*` attrs. CSS emit already expands refs; motion
     // collection must not skip them or ambient/enter/exit on named styles die.
-    let motions = super::parse::collect_motion_attaches_env(&style, env);
+    let motions = crate::parse::collect_motion_attaches_env(&style, env);
     let rules = emit_style(&style, env);
     let mut classes = Vec::new();
     for r in &rules {

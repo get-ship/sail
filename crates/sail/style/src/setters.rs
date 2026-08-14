@@ -6,7 +6,7 @@
 
 use std::borrow::Cow;
 
-use crate::prefixes as sx_rules;
+use crate::css::prefixes as sx_rules;
 use crate::scales;
 use crate::style_ir::{self, SxDecl, SxValue};
 

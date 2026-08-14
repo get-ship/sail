@@ -12,18 +12,12 @@ pub fn refusals() -> Vec<(String, String)> {
 }
 
 const REFUSALS: &[(&str, &str)] = &[
-    (
-        "flex",
-        "<row> — a layout context is a layout element",
-    ),
+    ("flex", "<row> — a layout context is a layout element"),
     (
         "inline-flex",
         "<row> — a layout context is a layout element",
     ),
-    (
-        "grid",
-        "<grid> — a layout context is a layout element",
-    ),
+    ("grid", "<grid> — a layout context is a layout element"),
     (
         "inline-grid",
         "<grid> — a layout context is a layout element",

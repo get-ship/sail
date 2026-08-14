@@ -3,7 +3,7 @@
 //! Shared by Style `when` emit and residual leaf lowerers so lint, preprocess,
 //! and emit cannot diverge on the prefix set.
 
-pub use crate::conditions::{CONDITION_PREFIXES, condition_media};
+pub use super::conditions::{CONDITION_PREFIXES, condition_media};
 
 /// The sx prefix/value forms that are grammar rather than named tables —
 /// the `group` ancestor marker, the `group-<state>:` and `state-<value>:`

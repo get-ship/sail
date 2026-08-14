@@ -278,10 +278,10 @@ fn strip_tag_emdash(trimmed: &str) -> String {
 }
 
 fn component_tokens_for_tag(tag: &str) -> Vec<L1ComponentToken> {
-    let Some(pack) = sail_lint::style::surface_pack_for_host(tag) else {
+    let Some(pack) = sail_style::surface_pack_for_host(tag) else {
         return Vec::new();
     };
-    let Some(slots) = sail_lint::style::surface_slots(pack) else {
+    let Some(slots) = sail_style::surface_slots(pack) else {
         return Vec::new();
     };
     let mut out: Vec<L1ComponentToken> = slots

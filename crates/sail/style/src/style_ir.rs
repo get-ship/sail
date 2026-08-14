@@ -10,7 +10,7 @@ use std::sync::OnceLock;
 
 use serde::Serialize;
 
-use crate::prefixes as sx_rules;
+use crate::css::prefixes as sx_rules;
 use crate::plains;
 use crate::tokens;
 

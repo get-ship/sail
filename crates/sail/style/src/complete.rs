@@ -8,7 +8,6 @@ use std::path::Path;
 
 use crate::channel::Channel;
 use crate::component_surfaces::color_paint_vocabulary;
-use crate::conditions::CONDITION_PREFIXES;
 use crate::plains::{self, PlainSpec};
 use crate::scales;
 
@@ -82,60 +81,10 @@ pub enum StyleCompleteContext {
 /// Keyed members legal at the top of `style({ … })`. Channels are dissolved.
 pub const OBJECT_KEYS: &[&str] = &["animate", "when", "match", "compound"];
 
-/// Closed product `when` keys (static arms of [`setters::when_target`]) plus
-/// media keys from [`CONDITION_PREFIXES`]. Dynamic `state-*` / `group-*`
-/// families remain open-ended and are not enumerated here.
+/// Closed product `when` keys. Dynamic `state-*` / `group-*` families
+/// remain open-ended and are not enumerated here.
 pub fn when_keys() -> Vec<&'static str> {
-    let mut keys: Vec<&'static str> = vec![
-        "hover",
-        "focus",
-        "focusWithin",
-        "active",
-        "disabled",
-        "empty",
-        "before",
-        "after",
-        "first",
-        "last",
-        "selected",
-        "expanded",
-        "checked",
-        "pressed",
-        "open",
-        "current",
-        "busy",
-        "sortable",
-        "stateLive",
-        "groupCurrent",
-        "groupRequired",
-        "groupInvalid",
-        "groupDisabled",
-        "groupHover",
-        "groupFocusWithin",
-        "groupDismissible",
-        "groupRemovable",
-        "groupOpen",
-        "groupStateHasDetails",
-        "groupStateOpen",
-        "groupCaught",
-        "groupInline",
-        "groupDrop",
-    ];
-    for (name, _) in CONDITION_PREFIXES {
-        // Prefer camelCase product spellings for multi-word media keys.
-        let camel = match *name {
-            "motion-reduce" => "motionReduce",
-            "motion-safe" => "motionSafe",
-            "forced-colors" => "forcedColors",
-            other => other,
-        };
-        if !keys.contains(&camel) {
-            keys.push(camel);
-        }
-    }
-    keys.sort_unstable();
-    keys.dedup();
-    keys
+    crate::intent::closed_when_keys()
 }
 
 /// Completions at `byte_offset` inside `source`. Prefer Style when the caret

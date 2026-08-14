@@ -2,24 +2,22 @@
 //!
 //! Sole paint architecture: style({ pad(4).bg(surface), when: { hover: bg(muted) } }).
 //!
-//! This crate owns Style parse / IR / emit / clash / setters, plus the leaf
-//! sx machinery (`sx_ir`, `sx_vocab`), token scales, and design-token registry
-//! used by Style lower and layout class resolution. Foreign CSS / Tailwind /
-//! HTML habits teach through [`foreign_idioms`].
+//! Layers: domain (`ir`, `vocab`, `intent`) → application (`parse`, `complete`,
+//! `clash`, `theme_env`) → CSS adapter (`css`). Foreign CSS / Tailwind / HTML
+//! habits teach through [`foreign_idioms`].
 
 pub mod channel;
 pub mod clash;
 pub mod complete;
 pub mod component_surfaces;
 pub mod concerns;
-pub mod conditions;
-pub mod emit;
+pub mod css;
 pub mod foreign_idioms;
 pub mod host_ctx;
+pub mod intent;
 pub mod ir;
 pub mod parse;
 pub mod plains;
-pub mod prefixes;
 pub mod scales;
 pub mod setters;
 pub mod style_ir;
@@ -29,6 +27,19 @@ pub mod token_groups;
 pub mod tokens;
 pub mod type_resolve;
 pub mod vocab;
+
+/// Historical path — CSS adapter lives in [`css`].
+pub mod conditions {
+    pub use crate::css::conditions::*;
+}
+/// Historical path — CSS adapter lives in [`css`].
+pub mod emit {
+    pub use crate::css::emit::*;
+}
+/// Historical path — CSS adapter lives in [`css`].
+pub mod prefixes {
+    pub use crate::css::prefixes::*;
+}
 
 pub use complete::{
     OBJECT_KEYS, StyleCompleteContext, StyleCompleteItem, StyleCompleteKind,
@@ -50,15 +61,18 @@ pub use concerns::{
     is_concern_form, is_marker, prepare_concern_call, primary_slot, resolve_concern_name,
     retired_replacement,
 };
-pub use conditions::{CONDITION_PREFIXES, condition_media};
-pub use emit::{
-    CssRule, StyleEnv, emit_style, lower_style, lower_style_source, lower_style_source_with_motion,
+pub use css::{
+    CONDITION_PREFIXES, CssRule, condition_media, emit_style, lower_style, lower_style_source,
+    lower_style_source_with_motion,
 };
 pub use foreign_idioms::{
     FOREIGN_IDIOMS, ForeignIdiom, IdiomKind, find_foreign_idiom, teaching_line,
 };
 pub use host_ctx::{with_bound_group_props, with_host_surface};
-pub use ir::{PaintArg, PaintOp, Style, StyleDiagnostic};
+pub use intent::{
+    Intent, IntentNode, IntentValue, intent_dump, is_known_when_key, lower_to_intent,
+};
+pub use ir::{PaintArg, PaintOp, Style, StyleDiagnostic, StyleEnv};
 pub use parse::{
     collect_motion_attaches, collect_motion_attaches_env, looks_like_utility_string_product, parse,
     parse_style_const_rhs, validate_style_refs,
@@ -81,6 +95,17 @@ mod tests {
     /// Test helper wrapping product parse.
     fn parse(src: &str) -> (Style, Vec<StyleDiagnostic>) {
         super::parse(src)
+    }
+
+    #[test]
+    fn domain_modules_do_not_name_css() {
+        let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("src");
+        for name in ["parse.rs", "ir.rs", "vocab.rs", "intent.rs"] {
+            let src = std::fs::read_to_string(root.join(name)).expect(name);
+            for needle in ["css::", "CssRule", "background-color"] {
+                assert!(!src.contains(needle), "{name} must not contain {needle}");
+            }
+        }
     }
 
     #[test]

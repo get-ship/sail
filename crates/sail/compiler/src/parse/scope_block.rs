@@ -29,7 +29,7 @@
 
 use std::collections::HashMap;
 
-use sail_lint::style::{Style, StyleDiagnostic, StyleEnv};
+use sail_style::{Style, StyleDiagnostic, StyleEnv};
 
 use crate::diagnostics::{CompileError, Span};
 use crate::ir::directive::{PropDecl, PropKind};
@@ -760,7 +760,7 @@ fn parse_named_style_binding(
         .with_span(span)
         .with_category(RULE_ID));
     }
-    let (style, diags) = sail_lint::style::parse_style_const_rhs(rhs);
+    let (style, diags) = sail_style::parse_style_const_rhs(rhs);
     if let Some(msg) = style_const_diag_message(&diags) {
         return Err(CompileError::new(format!("Style `{name}`: {msg}"))
             .with_span(span)
@@ -1878,7 +1878,7 @@ mod tests {
         assert!(b.style_env.contains_key("b"));
         // Compose is ordered List (same as style(a, {…})).
         match b.style_env.get("b") {
-            Some(sail_lint::style::Style::List(parts)) => {
+            Some(sail_style::Style::List(parts)) => {
                 assert_eq!(parts.len(), 2, "compose should be List of base + partial");
             }
             other => panic!("expected List compose, got {other:?}"),
@@ -1906,7 +1906,7 @@ mod tests {
     #[test]
     fn button_vsoft_rhs_diags() {
         let rhs = "{bg(hover-bg).border({ color: border }).fg(button), when: {hover: filter({ opacity: 90 })}}";
-        let (_, diags) = sail_lint::style::parse_style_const_rhs(rhs);
+        let (_, diags) = sail_style::parse_style_const_rhs(rhs);
         assert!(
             diags.is_empty(),
             "vSoft RHS: {:?}",
@@ -2082,13 +2082,13 @@ style({ pad(3) })
         assert!(b.style_env.contains_key("b"));
         assert!(b.style_env.contains_key("c"));
         match b.style_env.get("b") {
-            Some(sail_lint::style::Style::List(parts)) => {
+            Some(sail_style::Style::List(parts)) => {
                 assert_eq!(parts.len(), 2, "a, {{…}} compose");
             }
             other => panic!("expected List compose for b, got {other:?}"),
         }
         match b.style_env.get("c") {
-            Some(sail_lint::style::Style::List(parts)) => {
+            Some(sail_style::Style::List(parts)) => {
                 assert_eq!(parts.len(), 2, "a, style({{…}}) compose");
             }
             other => panic!("expected List compose for c, got {other:?}"),

@@ -441,7 +441,7 @@ pub fn compile_element(
     // element source may not use stdlib elements (no recursion).
     // SPEC-D1: host known by construction → surface vocabulary for this host.
     // One regime: closed `bind(name)` resolution runs on stdlib/skins too.
-    sail_lint::style::with_host_surface(Some(name), || {
+    sail_style::with_host_surface(Some(name), || {
         let program = parse::parse_element_source(&stripped)?;
         let bindings = check::binding::resolve(&stripped, &program, None)?;
         emit::element::emit_element_with_bindings(&program, &stripped, name, &bindings)

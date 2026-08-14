@@ -4,7 +4,7 @@
 //! spelling (`s-fontSizexl`) to learn what Style already decided.
 
 use crate::concerns::{find_concern, resolve_concern_name};
-use crate::emit::StyleEnv;
+use crate::ir::StyleEnv;
 use crate::ir::{PaintArg, PaintOp, Style};
 use crate::theme_env::ThemeStyleEnv;
 use crate::tokens;

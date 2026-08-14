@@ -10,7 +10,7 @@
 
 use std::collections::HashSet;
 
-use sail_lint::style::Style;
+use sail_style::Style;
 
 use crate::diagnostics::{DiagSeverity, Diagnostic, line_col};
 use crate::ir::{Instr, MatchInstr, MatchTest, Program, PropKind};
@@ -74,7 +74,7 @@ pub fn collect(program: &Program, source: &str) -> Vec<Diagnostic> {
 
     // Host `style={â¦}` / `style="…"` values.
     for (vstart, val) in crate::parse::preprocess::find_sx_attr_values(source) {
-        let (style, _diags) = sail_lint::style::parse(val);
+        let (style, _diags) = sail_style::parse(val);
         check_style(&style, &unions, source, vstart, val, &mut out);
     }
 

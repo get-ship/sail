@@ -1,6 +1,6 @@
 //! Style IR — compile-time value language (setters chain, guards wrap).
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 
 /// Argument to a paint setter.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -101,6 +101,9 @@ pub enum Style {
     /// `style={[ a, b, c ]}` composition.
     List(Vec<Style>),
 }
+
+/// Named-style environment for resolving `Style::Ref`. Domain type — not CSS.
+pub type StyleEnv = HashMap<String, Style>;
 
 impl Style {
     pub fn empty() -> Self {

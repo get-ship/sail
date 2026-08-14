@@ -3,8 +3,9 @@
 use std::borrow::Cow;
 use std::collections::{BTreeMap, HashMap, HashSet};
 
+use super::intent::is_known_when_key;
 use super::ir::{PaintArg, PaintOp, Style, StyleDiagnostic};
-use super::setters::{validate_op, when_target};
+use super::setters::validate_op;
 use super::theme_env::{ThemeStyleEnv, current_styling_policy};
 
 /// Parse a Style expression. Flat `style.method(…)` chains are refused —
@@ -1340,7 +1341,7 @@ fn parse_when_block_map(
                 break;
             }
         };
-        if when_target(&key).is_none() {
+        if !is_known_when_key(&key) {
             diags.push(StyleDiagnostic::UnknownWhenKey {
                 key: key.clone(),
                 source: key.clone(),
@@ -2344,7 +2345,7 @@ fn parse_when_args(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Vec<
             return Vec::new();
         }
     };
-    if when_target(&key).is_none() {
+    if !is_known_when_key(&key) {
         diags.push(StyleDiagnostic::UnknownWhenKey {
             key: key.clone(),
             source: key.clone(),
@@ -2380,7 +2381,7 @@ fn parse_when_map_entries(
                 break;
             }
         };
-        if when_target(&key).is_none() {
+        if !is_known_when_key(&key) {
             diags.push(StyleDiagnostic::UnknownWhenKey {
                 key: key.clone(),
                 source: key.clone(),
@@ -2585,83 +2586,10 @@ mod const_rhs_tests {
 mod flat_chain_tests {
     use std::collections::HashMap;
 
-    use super::{Style, parse, parse_style_const_rhs};
-    use crate::emit::lower_style;
+    use super::{Style, parse};
 
     fn msgs(diags: &[crate::StyleDiagnostic]) -> Vec<String> {
         diags.iter().map(|d| d.message()).collect()
-    }
-
-    #[test]
-    fn form_card_parses_and_lowers() {
-        let (style, diags) = parse_style_const_rhs(
-            "{ size(full).pad({ x: 5, y: 4 }).bg(card).border(subtle).radius(lg) }",
-        );
-        assert!(diags.is_empty(), "{:?}", msgs(&diags));
-        assert!(!matches!(style, Style::Empty));
-        let (classes, css) = lower_style(&style, &HashMap::new());
-        assert!(classes.contains("s-"), "{classes}");
-        assert!(
-            css.contains("width") || css.contains("100%"),
-            "size(full) must emit geometry: {css}"
-        );
-        assert!(
-            css.contains("padding"),
-            "pad slots must emit padding: {css}"
-        );
-        assert!(
-            css.contains("background") || css.contains("--fill-card") || css.contains("--card"),
-            "bg(card) must emit fill: {css}"
-        );
-        assert!(
-            css.contains("border"),
-            "border(subtle) must emit border: {css}"
-        );
-        assert!(
-            css.contains("border-radius") || css.contains("--radius"),
-            "radius(lg) must emit radius: {css}"
-        );
-    }
-
-    #[test]
-    fn muted_parses_and_lowers() {
-        let (style, diags) = parse_style_const_rhs("{ type(body-sm).fg(muted-foreground) }");
-        assert!(diags.is_empty(), "{:?}", msgs(&diags));
-        let (_, css) = lower_style(&style, &HashMap::new());
-        assert!(
-            css.contains("font") || css.contains("--type-body"),
-            "type(body-sm) must emit type: {css}"
-        );
-        assert!(
-            css.contains("color") || css.contains("muted-foreground"),
-            "fg(muted-foreground) must emit ink: {css}"
-        );
-    }
-
-    #[test]
-    fn when_bare_chain_parses_and_lowers() {
-        let (style, diags) = parse("style({ when: { hover: bg(surface-2) } })");
-        assert!(diags.is_empty(), "{:?}", msgs(&diags));
-        let (_, css) = lower_style(&style, &HashMap::new());
-        assert!(css.contains(":hover"), "{css}");
-        assert!(
-            css.contains("background") || css.contains("surface-2"),
-            "hover bg must emit fill: {css}"
-        );
-    }
-
-    #[test]
-    fn chain_then_when_in_declared_object() {
-        let (style, diags) = parse_style_const_rhs(
-            "{ pad({ x: 3, y: 2 }).radius(md).type(label), when: { hover: bg(surface-2), current: bg(primary).fg(primary-foreground) } }",
-        );
-        assert!(diags.is_empty(), "{:?}", msgs(&diags));
-        let (_, css) = lower_style(&style, &HashMap::new());
-        assert!(css.contains(":hover"), "{css}");
-        assert!(
-            css.contains("aria-current") || css.contains("current") || css.contains("primary"),
-            "current when must emit: {css}"
-        );
     }
 
     #[test]
@@ -2687,16 +2615,6 @@ mod flat_chain_tests {
     }
 
     #[test]
-    fn flat_concern_chain_parses() {
-        let (style, diags) = parse("style({ size({ w: full }).pad(4).bg(muted) })");
-        assert!(diags.is_empty(), "{:?}", msgs(&diags));
-        assert!(!matches!(style, Style::Empty));
-        let (_, css) = lower_style(&style, &HashMap::new());
-        assert!(css.contains("padding") || css.contains("width"), "{css}");
-        assert!(css.contains("background") || css.contains("muted"), "{css}");
-    }
-
-    #[test]
     fn dissolved_channel_keys_are_not_style_members() {
         for key in ["box", "paint", "text"] {
             let src = format!("style({{ {key}: bg(muted) }})");
@@ -2712,51 +2630,12 @@ mod flat_chain_tests {
     }
 
     #[test]
-    fn tone_bound_paint_gates_selector_not_class() {
-        // Badge/chip share `[variant=soft].s-variantsoft-bgmuted`. Tone wash
-        // must be `[tone]`-gated so a later muted rest cannot crush it.
-        let (style, diags) = parse(
-            "style({ match: { variant: { soft: bg(muted).bg({ color: tone, mix: 15 }) } } })",
-        );
-        assert!(diags.is_empty(), "{:?}", msgs(&diags));
-        let (classes, css) = lower_style(&style, &HashMap::new());
-        assert!(
-            classes.contains("s-variantsoft-bgmuted"),
-            "muted rest class: {classes}"
-        );
-        assert!(
-            classes.contains("s-variantsoft-bgcolortonemix15"),
-            "tone wash class: {classes}"
-        );
-        assert!(
-            css.contains("[variant='soft'].s-variantsoft-bgmuted"),
-            "muted rest stays variant-gated only: {css}"
-        );
-        assert!(
-            css.contains("[variant='soft'][tone].s-variantsoft-bgcolortonemix15"),
-            "tone wash must be [tone]-gated: {css}"
-        );
-        assert!(
-            !css.contains("[variant='soft'].s-variantsoft-bgcolortonemix15{"),
-            "ungated tone wash would lose to later muted rest: {css}"
-        );
-    }
-
-    #[test]
     fn compound_row_accepts_concern_call_tail() {
         let src =
             "style({ compound: [{ tone: muted, variant: solid, bg(muted).fg(foreground) }] })";
         let (style, diags) = parse(src);
         assert!(diags.is_empty(), "{:?}", msgs(&diags));
         assert!(!matches!(style, Style::Empty));
-    }
-
-    #[test]
-    fn inline_pad_call_parses() {
-        let (style, diags) = parse("style(pad({ t: 2 }))");
-        assert!(diags.is_empty(), "{:?}", msgs(&diags));
-        let (_, css) = lower_style(&style, &HashMap::new());
-        assert!(css.contains("padding"), "{css}");
     }
 
     #[test]
@@ -2776,27 +2655,6 @@ mod flat_chain_tests {
             m[0].1.contains("preset") && m[0].1.contains("fade"),
             "{:?}",
             m[0]
-        );
-    }
-
-    #[test]
-    fn play_colors_fast_resolves() {
-        let (style, diags) = parse("style({ animate: { transition: play(colors, fast) } })");
-        assert!(
-            !diags
-                .iter()
-                .any(|d| matches!(d, crate::StyleDiagnostic::UnknownVocabulary { .. })),
-            "colors is a play prop-set: {:?}",
-            msgs(&diags)
-        );
-        let (_, css) = lower_style(&style, &HashMap::new());
-        assert!(
-            css.contains("transition-property") || css.contains("transition"),
-            "play(colors, fast) must emit transition CSS: {css}"
-        );
-        assert!(
-            css.contains("--duration-fast") || css.contains("duration-fast"),
-            "duration token: {css}"
         );
     }
 

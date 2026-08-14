@@ -12,8 +12,7 @@
 
 use std::collections::{HashMap, HashSet};
 
-use super::emit::StyleEnv;
-use super::ir::{Style, StyleDiagnostic};
+use super::ir::{Style, StyleDiagnostic, StyleEnv};
 use super::setters::op_slots;
 
 /// Detect same paint slot written twice under the same guard path.

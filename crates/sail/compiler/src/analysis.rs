@@ -833,14 +833,14 @@ fn inside_style_call(source: &str, offset: usize) -> bool {
 }
 
 fn is_live_style_word(name: &str) -> bool {
-    if sail_lint::style::find_vocab(name).is_some()
-        || sail_lint::style::find_concern(name).is_some()
-        || sail_lint::style::OBJECT_KEYS.iter().any(|k| *k == name)
+    if sail_style::find_vocab(name).is_some()
+        || sail_style::find_concern(name).is_some()
+        || sail_style::OBJECT_KEYS.iter().any(|k| *k == name)
         || matches!(name, "style" | "bind")
     {
         return true;
     }
-    for spec in sail_lint::style::concerns() {
+    for spec in sail_style::concerns() {
         if spec.slots.iter().any(|s| s.name == name) {
             return true;
         }
@@ -853,12 +853,12 @@ fn is_live_style_word(name: &str) -> bool {
 /// Returns `None` in controller TS so typed tsgo hover wins. Never says
 /// "parse error" or "Pure."
 fn unknown_vocab_hover(source: &str, offset: usize) -> Option<(String, String)> {
-    use sail_lint::style::StyleCompleteContext;
+    use sail_style::StyleCompleteContext;
     let (start, end, name) = word_at(source, offset)?;
     if name.bytes().next().is_some_and(|b| b.is_ascii_digit()) {
         return None;
     }
-    let ctx = sail_lint::style::style_complete_context_at(source, offset, None);
+    let ctx = sail_style::style_complete_context_at(source, offset, None);
     let in_style =
         !matches!(ctx, StyleCompleteContext::Unknown) || inside_style_call(source, offset);
     let in_slot = matches!(
@@ -873,7 +873,7 @@ fn unknown_vocab_hover(source: &str, offset: usize) -> Option<(String, String)> 
         return None;
     }
     let live = is_live_style_word(&name);
-    let sentence = if let Some(teach) = sail_lint::style::teaching_line(&name) {
+    let sentence = if let Some(teach) = sail_style::teaching_line(&name) {
         format!("unknown vocabulary `{name}` — {teach}")
     } else if in_style && !live {
         format!("unknown vocabulary `{name}`")
@@ -968,7 +968,7 @@ pub fn completions_at_offset(
     byte_offset: usize,
     host: Option<&str>,
 ) -> Vec<Symbol> {
-    let style_items = sail_lint::style::style_complete_at(source, source_path, byte_offset, host);
+    let style_items = sail_style::style_complete_at(source, source_path, byte_offset, host);
     if !style_items.is_empty() {
         return style_items
             .into_iter()
@@ -983,8 +983,8 @@ pub fn completions_at_offset(
     }
     // Style context with empty set (e.g. StyleRef with no consts) still wins
     // over scope when the caret is classified as Style.
-    let ctx = sail_lint::style::style_complete_context_at(source, byte_offset, host);
-    if !matches!(ctx, sail_lint::style::StyleCompleteContext::Unknown) {
+    let ctx = sail_style::style_complete_context_at(source, byte_offset, host);
+    if !matches!(ctx, sail_style::StyleCompleteContext::Unknown) {
         return Vec::new();
     }
     let theme_items = crate::theme_surface::theme_complete_at(source, byte_offset, host);

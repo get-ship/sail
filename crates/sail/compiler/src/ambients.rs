@@ -6,7 +6,7 @@
 //! tables the compiler / lint already own:
 //!
 //! - [`crate::runtime_ambient::RUNTIME_AMBIENT`] — controller vocabulary
-//! - `sail_lint::style` vocab + plains emit — Style builder surface
+//! - `sail_style` vocab + plains emit — Style builder surface
 //! - token registry values — closed token unions + bare-ident ambient consts
 //!
 //! ## Two-checker contract
@@ -29,9 +29,9 @@ use anyhow::{Context, Result};
 
 use sail_lint::component_surfaces;
 use sail_lint::scales;
-use sail_lint::style::plains::{PlainSpec, find_plain};
-use sail_lint::style::{VocabRow, VocabTag, find_concern, vocab_rows};
 use sail_lint::token_groups::{self, color_group_names, color_groups, size_step_names};
+use sail_style::plains::{PlainSpec, find_plain};
+use sail_style::{VocabRow, VocabTag, find_concern, vocab_rows};
 
 /// Relative path of the ambient pack inside a sail project (SPEC-OUTPUT-1 §4).
 /// Lives under `node_modules/.sail/` so `rm -rf node_modules` clears it;
@@ -1291,7 +1291,7 @@ fn is_ambient_const_name(tok: &str) -> bool {
 // ── Style builder ──────────────────────────────────────────────────────────
 
 fn emit_style_types(out: &mut String) {
-    out.push_str("// ── Style builder (from sail_lint::style vocab) ──\n");
+    out.push_str("// ── Style builder (from sail_style vocab) ──\n");
 
     out.push_str(
         "/** Author motion config object (`enter({ opacity: 'fade' })`).\n\
