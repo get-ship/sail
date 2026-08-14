@@ -10,9 +10,26 @@
 
 <column gap="8" style(shell)>
   <column gap="2" style(measure)>
-    <small>Owned L1 matrix</small>
-    <h1>Rest state</h1>
-    <p>Not the docs site. Probe this page across THEME_META.</p>
+    <row gap="3" align="center" justify="between">
+      <column gap="2">
+        <small>Owned L1 matrix</small>
+        <h1>Rest state</h1>
+      </column>
+      <theme-picker />
+    </row>
+    <p>Not the docs site. Official themes only. Probe drives THEME_META; the picker is for eyes.</p>
+  </column>
+
+  <column gap="3">
+    <h2>Intrinsic</h2>
+    <p>No stretching parent — default measure.</p>
+    <row gap="2" align="end">
+      <button>Button</button>
+      <badge>Badge</badge>
+      <chip>Chip</chip>
+      <input placeholder="input" />
+      <kbd>⌘K</kbd>
+    </row>
   </column>
 
   <column gap="3" style(measure)>
