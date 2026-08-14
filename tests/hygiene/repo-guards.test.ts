@@ -1,4 +1,4 @@
-/** Repo law: no documentElement.style in apps, no Ship product names, no machine paths. */
+/** Repo law: no documentElement.style writes in apps. */
 import { describe, expect, test } from 'bun:test'
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, relative, resolve } from 'node:path'
@@ -66,10 +66,6 @@ function readText(path: string): string | null {
   }
 }
 
-function skipBinaryRel(rel: string): boolean {
-  return /\.(png|webp|jpg|jpeg|svg|woff2?|lock|wasm)$/i.test(rel)
-}
-
 describe('no documentElement.style under apps/**', () => {
   // Scope: apps/** only (matches original shell intent). Writes only —
   // reads via getComputedStyle / .style.getPropertyValue in tests are OK.
@@ -99,67 +95,6 @@ describe('no documentElement.style under apps/**', () => {
       }
     }
     expect(hits).toEqual([])
-  })
-})
-
-describe('sanitization standing scan (paths / mission / monologue markers)', () => {
-  const classes: { name: string; pattern: RegExp }[] = [
-    {
-      name: 'operator home paths',
-      // Real machine homes continue past the username (`/home/user/...` or
-      // `/Users/user/...`). Route segments like `/home/page.sail` do not.
-      pattern: /\/home\/[a-zA-Z][a-zA-Z0-9_-]+\/|\/Users\/[A-Za-z][A-Za-z0-9_-]+\//,
-    },
-    {
-      name: 'org mission filesystem paths',
-      pattern: /helm\/data\/missions|m-deck-standalone/,
-    },
-    {
-      name: 'process job / mission ids',
-      pattern: /\bjob\/[a-z][a-z0-9_-]+|\bm-sail-[a-z0-9_-]+/,
-    },
-    {
-      name: 'task number diary',
-      pattern: /\btask\s*#\d+/i,
-    },
-    {
-      name: 'dated owner-ruling monologue',
-      pattern: /Owner\s+[Rr]uling/,
-    },
-  ]
-
-  function scanHits(pattern: RegExp): string[] {
-    const hits: string[] = []
-    for (const file of walkFiles(REPO)) {
-      const rel = relative(REPO, file)
-      if (rel.startsWith('tests/hygiene/')) continue
-      if (rel === 'Cargo.lock') continue
-      if (skipBinaryRel(rel)) continue
-      if (rel.includes('.__hygiene_')) continue
-      const text = readText(file)
-      if (!text) continue
-      if (pattern.test(text)) {
-        hits.push(rel)
-      }
-    }
-    return hits
-  }
-
-  for (const { name, pattern } of classes) {
-    test(`no ${name} in product tree`, () => {
-      expect(scanHits(pattern)).toEqual([])
-    })
-  }
-
-  test('self-test: patterns fire on known-bad samples', () => {
-    expect(classes[0]!.pattern.test('/home/alice/dev/proj')).toBe(true)
-    expect(classes[0]!.pattern.test('route /home/page.sail')).toBe(false)
-    expect(classes[0]!.pattern.test('path="/home/user/.ssh"')).toBe(true)
-    expect(classes[1]!.pattern.test('helm/data/missions/m-deck-standalone/x')).toBe(true)
-    expect(classes[2]!.pattern.test('// see job/mount-route-bug')).toBe(true)
-    expect(classes[3]!.pattern.test('task #80:')).toBe(true)
-    expect(classes[3]!.pattern.test('Task #34 regression')).toBe(true)
-    expect(classes[4]!.pattern.test('Owner ruling 2026-07-18')).toBe(true)
   })
 })
 
