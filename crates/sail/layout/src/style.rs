@@ -92,10 +92,13 @@ pub fn resolve(elem: &Element, elements: &[Element], viewport_width: f32) -> Res
     apply_resolved_box(&mut style, &elem.box_style);
 
     // 4. Scale-driven pad/size atoms, skipped when Style already resolved them.
+    //    L1 skins still stamp compound classes (`s-sizemd-minH…`) because
+    //    Match/Compound arms are not yet BoxHost. Do not delete this scrape
+    //    without emitting BoxHost from the skin Style + host attrs.
     style_scale::apply_scale_classes(&mut style, &classes, &elem.attrs, &elem.box_style);
 
     // 5. Finite box atoms on lowered HTML that never carried Style IR
-    //    (canary / kinds vehicles). Style-set fields are not overwritten.
+    //    (canary / kinds + L1 display/grow stamps). Style-set fields win.
     apply_class_box_atoms(&mut style, &classes, &elem.box_style);
 
     // 6. Fallback `style:` width / height declarations (e.g. `style:w="full"`).

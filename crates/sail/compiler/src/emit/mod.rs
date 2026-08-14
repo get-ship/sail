@@ -18,5 +18,6 @@ pub mod static_html;
 pub mod styles;
 pub mod synthetic;
 pub mod template_emit;
+pub mod test_map;
 pub mod util;
 pub mod writer;

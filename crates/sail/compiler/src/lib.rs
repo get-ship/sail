@@ -83,6 +83,9 @@ pub use authoring_bans::{AUTHORING_BANS, AuthoringBan};
 pub use check::lint_overrides::{LintOverride, OverrideSeverity};
 pub use check::policy::Policy;
 pub use diagnostics::{CompileError, DiagSeverity, Diagnostic, DiagnosticTier, Span};
+pub use emit::test_map::{
+    TestEntry, TestMap, emit_test_map, validate_test_map, validate_test_map_value,
+};
 pub use fmt::{
     FormatError, FormatOpts, FormatResult, format_source, format_source_with, is_formatted,
 };
@@ -276,6 +279,8 @@ pub struct CompileOutput {
     /// fail `compile()`); Warning/Fix stay so a host can print them
     /// without a second `collect()`.
     pub diagnostics: Vec<Diagnostic>,
+    /// Lean queryable contract (SPEC-TEST-2). Dev artifact; never shipped.
+    pub test_map: Option<emit::test_map::TestMap>,
 }
 
 /// Check a `.sail` source string and return **every** diagnostic, not just
@@ -603,6 +608,19 @@ pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, Compile
         meta,
         used_icons: lowered.used_icons,
         diagnostics,
+        test_map: {
+            let map = emit::test_map::emit_test_map(
+                &program,
+                opts.source_path
+                    .as_ref()
+                    .and_then(|p| p.to_str())
+                    .unwrap_or("<buffer>"),
+            );
+            emit::test_map::validate_test_map(&map).map_err(|e| {
+                attach_path(CompileError::new(e).with_category("sail-test-map"), &opts)
+            })?;
+            Some(map)
+        },
     })
 }
 

@@ -14,7 +14,7 @@ use anyhow::{Context, Result, bail};
 use sail_compiler::out_layout::resolve_out_dir;
 use sail_compiler::{
     CompileMode, CompileOpts, ComponentMeta, DiagSeverity, Policy, check_all,
-    compile as compile_source,
+    compile as compile_source, emit_test_map, validate_test_map,
 };
 
 /// `sail --version` / `sail version` surface (C6).
@@ -814,6 +814,81 @@ fn check_one(path: &Path, fix: &str) -> Result<usize> {
         println!("sail check: {} ok", path.display());
     }
     Ok(fixed)
+}
+
+/// `sail test` — lean contract maps (SPEC-TEST-2). No node.
+pub fn test_contract(input: PathBuf) -> Result<()> {
+    let path = if input.is_absolute() {
+        input
+    } else {
+        std::env::current_dir()?.join(input)
+    };
+    let mut files = Vec::new();
+    if path.is_file() {
+        if path.extension().and_then(|e| e.to_str()) != Some("sail") {
+            bail!("not a .sail file: {}", path.display());
+        }
+        files.push(path.clone());
+    } else if path.is_dir() {
+        collect_sail_files(&path, &mut files)?;
+        if files.is_empty() {
+            bail!("no .sail files under {}", path.display());
+        }
+    } else {
+        bail!("not a file or directory: {}", path.display());
+    }
+    files.sort();
+    let project = find_project_root_for_hygiene(&files[0]).unwrap_or_else(|| {
+        if path.is_dir() {
+            path.clone()
+        } else {
+            path.parent()
+                .map(Path::to_path_buf)
+                .unwrap_or_else(|| path.clone())
+        }
+    });
+    let dest_root = project.join("node_modules/.sail/test-map");
+    let mut entries = 0usize;
+    let mut failed = 0usize;
+    for f in &files {
+        match emit_one_test_map(f, &project, &dest_root) {
+            Ok(n) => entries += n,
+            Err(e) => {
+                eprintln!("sail test: {}: {e:#}", f.display());
+                failed += 1;
+            }
+        }
+    }
+    if failed > 0 {
+        bail!("{failed}/{} file(s) failed test-map", files.len());
+    }
+    println!(
+        "sail test: {} file(s), {entries} queryable entries → {}",
+        files.len(),
+        dest_root.display()
+    );
+    Ok(())
+}
+
+fn emit_one_test_map(path: &Path, project: &Path, dest_root: &Path) -> Result<usize> {
+    let src = std::fs::read_to_string(path).with_context(|| format!("read {}", path.display()))?;
+    let (stripped, _) = sail_compiler::parse::preprocess::extract_controller_block(&src);
+    let program = sail_compiler::parse::parse(&stripped)
+        .map_err(|e| anyhow::anyhow!("{}", e.render(&src)))?;
+    let rel = path
+        .strip_prefix(project)
+        .unwrap_or(path)
+        .to_string_lossy()
+        .replace('\\', "/");
+    let map = emit_test_map(&program, &rel);
+    validate_test_map(&map).map_err(|e| anyhow::anyhow!("{e}"))?;
+    let dest = dest_root.join(format!("{rel}.json"));
+    if let Some(parent) = dest.parent() {
+        std::fs::create_dir_all(parent).with_context(|| format!("mkdir {}", parent.display()))?;
+    }
+    let json = serde_json::to_string_pretty(&map)? + "\n";
+    std::fs::write(&dest, json).with_context(|| format!("write {}", dest.display()))?;
+    Ok(map.entries.len())
 }
 
 fn collect_sail_files(dir: &Path, out: &mut Vec<PathBuf>) -> Result<()> {
