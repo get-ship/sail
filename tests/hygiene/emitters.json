@@ -62,6 +62,46 @@
       "path": "packages/sail/tokens/src/element-skins.css",
       "emitter": "cargo run -p sail-compiler -- framework-css",
       "gate": "stdlib-coupled — check after L1 stdlib move"
+    },
+    {
+      "path": "packages/sail/tokens/src/tokens.css",
+      "emitter": "cargo run -p sail-compiler -- tokens",
+      "gate": "packages/sail/tokens/test/tokens.test.ts"
+    },
+    {
+      "path": "packages/sail/tokens/src/themes.css",
+      "emitter": "cargo run -p sail-compiler -- tokens",
+      "gate": "packages/sail/tokens/test/tokens.test.ts"
+    },
+    {
+      "path": "packages/sail/tokens/src/products.css",
+      "emitter": "cargo run -p sail-compiler -- tokens",
+      "gate": "packages/sail/tokens/test/tokens.test.ts"
+    },
+    {
+      "path": "packages/sail/tokens/src/token-registry.json",
+      "emitter": "cargo run -p sail-compiler -- tokens",
+      "gate": "packages/sail/tokens/test/tokens.test.ts"
+    },
+    {
+      "path": "packages/sail/tokens/src/generated/unions.ts",
+      "emitter": "cargo run -p sail-compiler -- tokens",
+      "gate": "packages/sail/tokens/test/tokens.test.ts"
+    },
+    {
+      "path": "packages/sail/tokens/src/generated/themes-meta.ts",
+      "emitter": "cargo run -p sail-compiler -- tokens",
+      "gate": "packages/sail/tokens/test/tokens.test.ts"
+    },
+    {
+      "path": "crates/sail/ops/schemas/catalog.json",
+      "emitter": "sail op gen",
+      "gate": "sail-ops assert_no_drift"
+    },
+    {
+      "path": "crates/sail/ops/schemas/mcp-tools.json",
+      "emitter": "sail op gen",
+      "gate": "sail-ops assert_no_drift"
     }
   ],
   "ignoredGenerated": [
