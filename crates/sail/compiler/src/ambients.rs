@@ -6,7 +6,7 @@
 //! tables the compiler / lint already own:
 //!
 //! - [`crate::runtime_ambient::RUNTIME_AMBIENT`] — controller vocabulary
-//! - `sail_lint::style` vocab + leftover plains — Style builder surface
+//! - `sail_lint::style` vocab + plains emit — Style builder surface
 //! - token registry values — closed token unions + bare-ident ambient consts
 //!
 //! ## Two-checker contract
@@ -29,7 +29,7 @@ use anyhow::{Context, Result};
 
 use sail_lint::component_surfaces;
 use sail_lint::scales;
-use sail_lint::style::setters::{SetterSpec, find_setter};
+use sail_lint::style::plains::{PlainSpec, find_plain};
 use sail_lint::style::{VocabRow, VocabTag, find_concern, vocab_rows};
 use sail_lint::token_groups::{self, color_group_names, color_groups, size_step_names};
 
@@ -1370,7 +1370,7 @@ fn emit_style_types(out: &mut String) {
 }
 
 fn emit_vocab_method(out: &mut String, row: &VocabRow) {
-    if let Some(spec) = find_setter(row.name) {
+    if let Some(spec) = find_plain(row.name) {
         emit_setter_method(out, spec);
         return;
     }
@@ -1393,7 +1393,7 @@ fn emit_vocab_method(out: &mut String, row: &VocabRow) {
     ));
 }
 
-fn emit_setter_method(out: &mut String, spec: &SetterSpec) {
+fn emit_setter_method(out: &mut String, spec: &PlainSpec) {
     let name = spec.name;
     if ZERO_ARG_SETTERS.contains(&name) {
         out.push_str(&format!("  {name}(): SailStyleChain\n"));
@@ -1431,7 +1431,7 @@ fn emit_setter_method(out: &mut String, spec: &SetterSpec) {
     out.push_str(&format!("  {name}(token: {arg}): SailStyleChain\n"));
 }
 
-fn arg_type_for_setter(spec: &SetterSpec) -> String {
+fn arg_type_for_setter(spec: &PlainSpec) -> String {
     let mut parts: Vec<String> = Vec::new();
     if let Some(scale) = spec.scale {
         // Color paint setters accept leaf tokens + group.member + bound tone paths.
@@ -1721,7 +1721,7 @@ fn emit_globals(out: &mut String, bare_tokens: &BTreeSet<String>) {
     out.push_str("  // Style setter keyword idents (bare args).\n");
     let mut kw_seen: BTreeSet<&str> = BTreeSet::new();
     for row in vocab_rows() {
-        if let Some(spec) = find_setter(row.name) {
+        if let Some(spec) = find_plain(row.name) {
             for kw in spec.keywords {
                 if !is_ambient_const_name(kw) {
                     continue;
@@ -1760,7 +1760,7 @@ fn emit_globals(out: &mut String, bare_tokens: &BTreeSet<String>) {
     // Free setters for channel bodies: `box: pad(4).gap(2)`, `paint: bg(primary)`.
     out.push_str("  // Free Style setters (channel body chains).\n");
     for row in vocab_rows() {
-        if let Some(spec) = find_setter(row.name) {
+        if let Some(spec) = find_plain(row.name) {
             emit_free_setter(out, spec, bare_tokens);
         } else {
             emit_free_vocab(out, row, bare_tokens);
@@ -1795,7 +1795,7 @@ fn emit_globals(out: &mut String, bare_tokens: &BTreeSet<String>) {
         if !setter_names.contains(tok.as_str()) {
             continue;
         }
-        if let Some(spec) = find_setter(tok.as_str()) {
+        if let Some(spec) = find_plain(tok.as_str()) {
             emit_hybrid_token_setter(out, spec, tok);
             continue;
         }
@@ -1815,7 +1815,7 @@ fn emit_globals(out: &mut String, bare_tokens: &BTreeSet<String>) {
         if is_setter {
             // Already hybridized with token/setter above when it's a token; pure setter when-keys rare.
             if !is_token {
-                if let Some(spec) = find_setter(k) {
+                if let Some(spec) = find_plain(k) {
                     emit_hybrid_when_setter(out, spec, k, is_motion);
                 } else if vocab_rows().iter().any(|r| r.name == *k) {
                     emit_hybrid_when_vocab(out, k, is_motion);
@@ -1915,7 +1915,7 @@ fn emit_hybrid_when_vocab(out: &mut String, key: &str, is_motion: bool) {
     ));
 }
 
-fn emit_free_setter(out: &mut String, spec: &SetterSpec, bare_tokens: &BTreeSet<String>) {
+fn emit_free_setter(out: &mut String, spec: &PlainSpec, bare_tokens: &BTreeSet<String>) {
     let name = spec.name;
     // Hybrids / duals handled separately.
     if bare_tokens.contains(name) {
@@ -1988,7 +1988,7 @@ fn free_reserved_alias(name: &str) -> String {
     format!("__sail{}{}", first.to_ascii_uppercase(), chars.as_str())
 }
 
-fn emit_hybrid_token_setter(out: &mut String, spec: &SetterSpec, tok: &str) {
+fn emit_hybrid_token_setter(out: &mut String, spec: &PlainSpec, tok: &str) {
     let name = spec.name;
     let tok_ty = bare_token_type_expr(tok);
     if name.contains('-') {
@@ -2052,7 +2052,7 @@ fn emit_hybrid_token_setter(out: &mut String, spec: &SetterSpec, tok: &str) {
     ));
 }
 
-fn emit_hybrid_when_setter(out: &mut String, spec: &SetterSpec, key: &str, is_motion: bool) {
+fn emit_hybrid_when_setter(out: &mut String, spec: &PlainSpec, key: &str, is_motion: bool) {
     let arg = arg_type_for_setter(spec);
     let motion = if is_motion {
         "  (config: SailStyleMotionConfig): SailStyleChain\n"
