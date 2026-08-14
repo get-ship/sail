@@ -31,7 +31,8 @@ fi
 # --- rustfmt on staged Rust only ---
 rs=$(printf '%s\n' "$staged" | grep '\.rs$' || true)
 if [ -n "$rs" ] && command -v rustfmt >/dev/null; then
-  echo "$rs" | xargs rustfmt --edition 2024 --check
+  # skip_children: rustfmt on lib.rs/main.rs otherwise walks unstaged modules.
+  echo "$rs" | xargs rustfmt --edition 2024 --config skip_children=true --check
 fi
 
 # --- product lint on staged .sail (the floor, not a grep) ---
@@ -51,4 +52,11 @@ $sails
 EOF
     [ "$fail" -eq 0 ]
   fi
+fi
+
+# --- merge commits only: clippy + component typecheck (not every commit) ---
+if [ -f "$(git rev-parse --git-path MERGE_HEAD)" ]; then
+  echo "pre-commit: merge — clippy (compiler, lint) + bun typecheck"
+  cargo clippy -p sail-compiler -p sail-lint -- -D warnings
+  bun run typecheck
 fi

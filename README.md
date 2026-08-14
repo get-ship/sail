@@ -131,8 +131,9 @@ Installed into the **common** `.git/hooks` (every worktree). Source in `hooks/`.
 
 | hook | when | what |
 |------|------|------|
-| pre-commit | every commit | refuse `.artifacts/`; `rustfmt --check` on staged `.rs`; `sail check` on staged `.sail` |
-| pre-push | every push | `bun test tests/hygiene` (seconds) |
+| pre-commit | every commit | refuse `.artifacts/`; `rustfmt --check` on staged `.rs` only (`skip_children`); `sail check` on staged `.sail` |
+| pre-commit | **merge commit** | plus `cargo clippy -p sail-compiler -p sail-lint` and `bun run typecheck` |
+| pre-push | every push | `bun test tests/hygiene` (~2s) |
 
 No cargo test, no Playwright, no corpus build. Skip with `--no-verify`.
 
