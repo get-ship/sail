@@ -56,6 +56,10 @@ pub fn collect(
     let mut elements = sail_layout::html::parse_source(&preprocessed);
     sail_layout::apply_resolved_types(&mut elements, &hosts.types);
     sail_layout::apply_resolved_boxes(&mut elements, &hosts.boxes);
+    let ids: Vec<Fingerprint> = elements
+        .iter()
+        .map(|e| element_identity(e, &elements))
+        .collect();
 
     // Per-parent-instance rhythm data (elem_idx), merged across viewports.
     // Key by elem_idx — not fingerprint alone — so two sibling <row>s with the
@@ -95,13 +99,8 @@ pub fn collect(
                 child_layouts.push((ctx.elem_index, child_layout));
             }
 
-            let fp = element_fingerprint(&elements[elem_idx].class, &elements[elem_idx].tag)
-                .unwrap_or_else(|| Fingerprint {
-                    base_tag: Some(elements[elem_idx].tag.clone()),
-                    sx_atoms: Vec::new(),
-                });
-
-            let pre_index = count_fingerprint_before(&preprocessed, &fp, elements[elem_idx].span.0);
+            let fp = ids[elem_idx].clone();
+            let pre_index = count_identity_before(&ids, elem_idx);
 
             // Read source-level spacing values. Parent gap can never vary, so it
             // only produces a fix when it is absent and children express spacing
@@ -112,6 +111,7 @@ pub fn collect(
                 &fp,
                 pre_index,
                 &elements,
+                &ids,
                 elem_idx,
                 container_kind,
             ) else {
@@ -206,14 +206,8 @@ pub fn collect(
                     if current_token == target_token {
                         continue;
                     }
-                    let child_elem = &elements[child_pre_idx];
-                    let child_fp = element_fingerprint(&child_elem.class, &child_elem.tag)
-                        .unwrap_or_else(|| Fingerprint {
-                            base_tag: Some(child_elem.tag.clone()),
-                            sx_atoms: Vec::new(),
-                        });
-                    let child_pre_index =
-                        count_fingerprint_before(&preprocessed, &child_fp, child_elem.span.0);
+                    let child_fp = ids[child_pre_idx].clone();
+                    let child_pre_index = count_identity_before(&ids, child_pre_idx);
                     if let Some(span) =
                         find_original_span(source, &preprocessed, &child_fp, child_pre_index)
                     {
@@ -239,11 +233,18 @@ pub fn collect(
     }
 
     // Contrast + alignment + off-scale spacing gates.
-    out.extend(collect_contrast(source, &preprocessed, &elements, severity));
+    out.extend(collect_contrast(
+        source,
+        &preprocessed,
+        &elements,
+        &ids,
+        severity,
+    ));
     out.extend(collect_alignment(
         source,
         &preprocessed,
         &elements,
+        &ids,
         severity,
     ));
     out.extend(collect_off_scale_spacing(
@@ -403,6 +404,7 @@ fn spacing_pattern(
     parent_fp: &Fingerprint,
     parent_pre_index: usize,
     elements: &[sail_layout::html::Element],
+    ids: &[Fingerprint],
     parent_idx: usize,
     kind: ContainerKind,
 ) -> Option<SpacingPattern> {
@@ -428,13 +430,8 @@ fn spacing_pattern(
 
     let mut pairs = Vec::new();
     for &child_idx in &elements[parent_idx].children {
-        let child = &elements[child_idx];
-        let child_fp =
-            element_fingerprint(&child.class, &child.tag).unwrap_or_else(|| Fingerprint {
-                base_tag: Some(child.tag.clone()),
-                sx_atoms: Vec::new(),
-            });
-        let child_pre = count_fingerprint_before(preprocessed, &child_fp, child.span.0);
+        let child_fp = ids[child_idx].clone();
+        let child_pre = count_identity_before(ids, child_idx);
         let Some(span) = find_original_span(source, preprocessed, &child_fp, child_pre) else {
             continue;
         };
@@ -846,107 +843,63 @@ fn snap_to_space_token(px: f32) -> String {
 }
 
 // ---------------------------------------------------------------------------
-// Source mapping (mirrors `check::layout` fingerprint logic)
+// Source mapping — host identity / Style role / author tag (not s-* atoms)
 // ---------------------------------------------------------------------------
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct Fingerprint {
-    base_tag: Option<String>,
-    sx_atoms: Vec<String>,
+    /// Author-facing tag: `data-sail-host`, layout keyword, or Style/taffy role.
+    tag: String,
 }
 
-fn element_fingerprint(class: &str, tag: &str) -> Option<Fingerprint> {
-    let mut base_tag: Option<String> = None;
-    let mut sx_atoms = Vec::new();
-
-    for token in class.split_whitespace() {
-        if let Some(t) = layout_base_to_tag(token) {
-            base_tag = Some(t.to_string());
-        } else if let Some(atom) = token.strip_prefix("s-") {
-            sx_atoms.push(atom.to_string());
-        }
-    }
-
-    if base_tag.is_none() {
-        if let Some(t) = layout_keyword_tag(tag) {
-            base_tag = Some(t.to_string());
-        }
-    }
-
-    if base_tag.is_none() && sx_atoms.is_empty() {
-        return None;
-    }
-
-    Some(Fingerprint { base_tag, sx_atoms })
-}
-
-fn layout_base_to_tag(token: &str) -> Option<&'static str> {
-    match token {
-        "sail-col" | "sail-col-i" => Some("column"),
-        "sail-row" | "sail-row-i" => Some("row"),
-        "sail-grid" | "sail-grid-i" => Some("grid"),
-        "sail-center" | "sail-center-i" => Some("center"),
-        "sail-stackz" | "sail-stackz-i" => Some("stack"),
-        _ => None,
-    }
-}
-
-fn layout_keyword_tag(tag: &str) -> Option<&'static str> {
-    match tag {
-        "column" => Some("column"),
-        "row" => Some("row"),
-        "grid" => Some("grid"),
-        "center" => Some("center"),
-        "stack" => Some("stack"),
-        _ => None,
-    }
-}
-
-fn count_fingerprint_before(
-    preprocessed: &str,
-    fingerprint: &Fingerprint,
-    before_byte: usize,
-) -> usize {
-    let elements = sail_layout::html::parse_source(preprocessed);
-    let mut count = 0;
-    for elem in elements.iter().skip(1) {
-        if elem.span.0 >= before_byte {
-            break;
-        }
-        if element_matches_fingerprint(elem, fingerprint) {
-            count += 1;
-        }
-    }
-    count
-}
-
-fn element_matches_fingerprint(
+fn element_identity(
     elem: &sail_layout::html::Element,
-    fingerprint: &Fingerprint,
-) -> bool {
-    if let Some(base) = &fingerprint.base_tag {
-        let has_base = elem.class.split_whitespace().any(|c| {
-            layout_base_to_tag(c)
-                .map(|t| t == base.as_str())
-                .unwrap_or(false)
-        }) || layout_keyword_tag(&elem.tag)
-            .map(|t| t == base.as_str())
-            .unwrap_or(false);
-        if !has_base {
-            return false;
+    all: &[sail_layout::html::Element],
+) -> Fingerprint {
+    if let Some(host) = elem.attrs.get("data-sail-host") {
+        let h = host.trim();
+        if !h.is_empty() {
+            return Fingerprint {
+                tag: h.to_ascii_lowercase(),
+            };
         }
     }
-    if !fingerprint.sx_atoms.is_empty() {
-        let lowered: std::collections::HashSet<String> = elem
-            .class
-            .split_whitespace()
-            .filter(|c| c.starts_with("s-"))
-            .map(|c| c.strip_prefix("s-").unwrap_or(c).to_string())
-            .collect();
-        fingerprint.sx_atoms.iter().all(|a| lowered.contains(a))
-    } else {
-        true
+    let tag = elem.tag.to_ascii_lowercase();
+    if layout_keyword_tag(&tag) {
+        return Fingerprint { tag };
     }
+    let resolved = sail_layout::style::resolve(elem, all, 1440.0);
+    match container_kind(&resolved.style) {
+        ContainerKind::Column => Fingerprint {
+            tag: "column".into(),
+        },
+        ContainerKind::Row => Fingerprint { tag: "row".into() },
+        ContainerKind::None => {
+            use sail_layout::taffy::style::Display;
+            if resolved.style.display == Display::Grid {
+                Fingerprint { tag: "grid".into() }
+            } else {
+                Fingerprint { tag }
+            }
+        }
+    }
+}
+
+fn layout_keyword_tag(tag: &str) -> bool {
+    matches!(tag, "column" | "row" | "grid" | "center" | "stack")
+}
+
+fn count_identity_before(ids: &[Fingerprint], elem_idx: usize) -> usize {
+    if elem_idx <= 1 {
+        return 0;
+    }
+    let tag = &ids[elem_idx].tag;
+    ids.iter()
+        .enumerate()
+        .skip(1)
+        .take(elem_idx.saturating_sub(1))
+        .filter(|(_, id)| id.tag == *tag)
+        .count()
 }
 
 fn find_original_span(
@@ -986,53 +939,13 @@ fn find_original_span(
 }
 
 fn tag_matches_fingerprint(
-    source: &str,
-    tag_end: usize,
+    _source: &str,
+    _tag_end: usize,
     tag_name: &str,
-    attrs: &[(String, String)],
+    _attrs: &[(String, String)],
     fingerprint: &Fingerprint,
 ) -> bool {
-    if let Some(base) = &fingerprint.base_tag {
-        if tag_name != base {
-            return false;
-        }
-    }
-    if fingerprint.sx_atoms.is_empty() {
-        return true;
-    }
-    // Style product: block statement after `>` (CHANNELS) or residual style attr.
-    let sx_owned;
-    let sx_value: &str = if let Some(v) = attrs
-        .iter()
-        .find(|(n, _)| n == "style")
-        .map(|(_, v)| v.as_str())
-    {
-        v
-    } else if let Some(expr) =
-        tag_style_expr_before(source, tag_end).or_else(|| block_style_expr_after(source, tag_end))
-    {
-        sx_owned = expr;
-        sx_owned.as_str()
-    } else {
-        return false;
-    };
-    // Collapse Style source to alphanumeric tokens so `mr(4)` / `mr4` match
-    // mint atom `mr4` from fingerprint (class `s-mr4`).
-    let collapsed: String = sx_value
-        .chars()
-        .filter(|c| c.is_ascii_alphanumeric())
-        .collect();
-    let source_atoms: std::collections::HashSet<String> = sx_value
-        .split(|c: char| !c.is_ascii_alphanumeric())
-        .filter(|s| !s.is_empty())
-        .map(|s| s.to_string())
-        .collect();
-    fingerprint.sx_atoms.iter().all(|a| {
-        source_atoms
-            .iter()
-            .any(|s| s == a || s.contains(a.as_str()) || a.contains(s.as_str()))
-            || collapsed.contains(a.as_str())
-    })
+    tag_name.eq_ignore_ascii_case(&fingerprint.tag)
 }
 
 fn parse_open_tag(source: &str, pos: usize) -> Option<(usize, &str, Vec<(String, String)>)> {
@@ -1203,19 +1116,17 @@ fn nearest_passing_fg(bg: &str, current_fg: &str) -> Option<&'static str> {
 fn collect_contrast(
     source: &str,
     preprocessed: &str,
-    elements: &[sail_layout::html::Element],
+    _elements: &[sail_layout::html::Element],
+    ids: &[Fingerprint],
     severity: DiagSeverity,
 ) -> Vec<Diagnostic> {
     if severity == DiagSeverity::Error {
         // strict autofix: still report, but as Error without rewrite payload path
     }
     let mut out = Vec::new();
-    for (idx, elem) in elements.iter().enumerate().skip(1) {
-        let fp = element_fingerprint(&elem.class, &elem.tag).unwrap_or_else(|| Fingerprint {
-            base_tag: Some(elem.tag.clone()),
-            sx_atoms: Vec::new(),
-        });
-        let pre_i = count_fingerprint_before(preprocessed, &fp, elem.span.0);
+    for idx in 1..elements.len() {
+        let fp = ids[idx].clone();
+        let pre_i = count_identity_before(ids, idx);
         let Some(span) = find_original_span(source, preprocessed, &fp, pre_i) else {
             continue;
         };
@@ -1285,7 +1196,6 @@ fn collect_contrast(
                 ),
                 rule: Some(CONTRAST_RULE.into()),
             });
-            let _ = idx;
         } else {
             // No same-family confluent repair — WARN only.
             out.push(Diagnostic {
@@ -1477,6 +1387,7 @@ fn collect_alignment(
     source: &str,
     preprocessed: &str,
     elements: &[sail_layout::html::Element],
+    ids: &[Fingerprint],
     severity: DiagSeverity,
 ) -> Vec<Diagnostic> {
     if !matches!(
@@ -1521,13 +1432,8 @@ fn collect_alignment(
             for (child_idx, drift, dom_f) in
                 left_edge_drifts(&lefts, ALIGN_DRIFT_MIN, ALIGN_DRIFT_MAX)
             {
-                let child = &elements[child_idx];
-                let fp =
-                    element_fingerprint(&child.class, &child.tag).unwrap_or_else(|| Fingerprint {
-                        base_tag: Some(child.tag.clone()),
-                        sx_atoms: Vec::new(),
-                    });
-                let pre_i = count_fingerprint_before(preprocessed, &fp, child.span.0);
+                let fp = ids[child_idx].clone();
+                let pre_i = count_identity_before(ids, child_idx);
                 if let Some(span) = find_original_span(source, preprocessed, &fp, pre_i) {
                     let (line, col, end_line, end_col) = span_to_coords(source, span);
                     out.push(Diagnostic {
@@ -1560,5 +1466,25 @@ mod spacing_slot_tests {
             matches!(v, Some(SpacingValue::ScaleToken(ref t)) if t == "4"),
             "expected mb slot from margin({{ b: 4 }}), got {v:?}"
         );
+    }
+
+    #[test]
+    fn identity_uses_host_and_style_not_s_atoms() {
+        let mut host = sail_layout::html::Element {
+            tag: "div".into(),
+            class: "s-mr4 s-mb8".into(),
+            ..Default::default()
+        };
+        host.attrs.insert("data-sail-host".into(), "card".into());
+        let all = vec![sail_layout::html::Element::default(), host];
+        assert_eq!(element_identity(&all[1], &all).tag, "card");
+
+        let col = sail_layout::html::Element {
+            tag: "div".into(),
+            class: "sail-col".into(),
+            ..Default::default()
+        };
+        let all = vec![sail_layout::html::Element::default(), col];
+        assert_eq!(element_identity(&all[1], &all).tag, "column");
     }
 }

@@ -33,11 +33,25 @@ fn check_all_emits_compose_rhythm() {
             .all(|d| d.rule.as_deref() != Some("sail-style")),
         "v3 margin fixture must not be a style error: {diags:?}"
     );
-    // Rhythm is Fix-tier. Slot extraction is unit-tested in compose.rs;
-    // e2e box-join for margin({{ b }}) is STYLE-IR leftover.
-    let _ = diags
-        .iter()
-        .any(|d| d.rule.as_deref() == Some("sail-compose-rhythm"));
+    assert!(
+        diags
+            .iter()
+            .any(|d| d.rule.as_deref() == Some("sail-compose-rhythm")),
+        "v3 margin fixture must emit sail-compose-rhythm: {diags:?}"
+    );
+}
+
+#[test]
+fn compose_rhythm_sail_fixture_emits_on_check_all() {
+    let src = include_str!("fixtures/compose-rhythm.sail");
+    let diags = check_all(src, None, &[], None);
+    assert!(
+        diags
+            .iter()
+            .any(|d| d.rule.as_deref() == Some("sail-compose-rhythm")),
+        "compose-rhythm.sail must emit sail-compose-rhythm on check_all: {diags:?}"
+    );
+    compile(src, opts()).expect("Fix-only compose must not fail compile()");
 }
 
 #[test]

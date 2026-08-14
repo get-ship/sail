@@ -18,7 +18,10 @@
 //! Implementer: do not weaken these assertions to green-wash a partial land.
 //! Adversarial "must not fire" cases are part of the promotion law.
 
-use sail_layout::{CheckOptions, Diagnostic, check_preprocessed, check_preprocessed_with};
+use sail_layout::{
+    BoxHost, CheckOptions, Diagnostic, ResolvedBox, check_preprocessed, check_preprocessed_with,
+    check_preprocessed_with_hosts,
+};
 
 const VP: (f32, f32) = (400.0, 300.0);
 
@@ -60,10 +63,22 @@ const CLIPPED_TEXT_NO_TRUNCATE: &str = r#"
 <div class="s-w16 s-overflowxhidden">Supercalifragilisticexpialidocious</div>
 "#;
 
-/// Same shape with truncate opt-in — must not fire clipped-text.
+/// Same shape with Style `truncate()` opt-in — must not fire clipped-text.
 const CLIPPED_TEXT_WITH_TRUNCATE: &str = r#"
-<div class="s-w16 s-truncate">Supercalifragilisticexpialidocious</div>
+<div class="host-trunc s-w16">Supercalifragilisticexpialidocious</div>
 "#;
+
+fn truncate_hosts() -> Vec<BoxHost> {
+    vec![BoxHost {
+        classes: vec!["host-trunc".into(), "s-w16".into()],
+        resolved: ResolvedBox {
+            width: Some("16".into()),
+            overflow_x: Some("hidden".into()),
+            truncate: true,
+            ..Default::default()
+        },
+    }]
+}
 
 fn experimental() -> CheckOptions {
     CheckOptions::experimental()
@@ -156,8 +171,14 @@ fn clipped_text_fires_without_truncate_under_experimental_text_metrics() {
 
 #[test]
 fn clipped_text_suppressed_when_truncate_present() {
-    let result = check_preprocessed_with(CLIPPED_TEXT_WITH_TRUNCATE, VP, experimental())
-        .expect("layout check");
+    let result = check_preprocessed_with_hosts(
+        CLIPPED_TEXT_WITH_TRUNCATE,
+        VP,
+        experimental(),
+        &[],
+        &truncate_hosts(),
+    )
+    .expect("layout check");
     assert!(
         !has_kind(&result.diagnostics, KIND_CLIPPED_TEXT),
         "truncate() is the opt-in for ellipsis clipping — must NOT emit \

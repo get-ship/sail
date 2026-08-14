@@ -383,11 +383,8 @@ pub fn scan_with(
     })
 }
 
-fn class_has_truncate(class: &str) -> bool {
-    class.split_whitespace().any(|c| {
-        let s = c.strip_prefix("s-").unwrap_or(c).to_ascii_lowercase();
-        s == "truncate" || s.ends_with("-truncate")
-    })
+fn has_truncate(elem: &crate::html::Element) -> bool {
+    elem.box_style.truncate
 }
 
 fn scan_clipped_text(layout: &Layout, out: &mut Vec<Diagnostic>) -> anyhow::Result<()> {
@@ -399,7 +396,7 @@ fn scan_clipped_text(layout: &Layout, out: &mut Vec<Diagnostic>) -> anyhow::Resu
         if elem.text.trim().is_empty() {
             continue;
         }
-        if class_has_truncate(&elem.class) {
+        if has_truncate(elem) {
             continue;
         }
         let Some(node) = layout.nodes[i] else {

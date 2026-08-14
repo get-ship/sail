@@ -14,6 +14,8 @@ pub struct ResolvedBox {
     pub shrink: Option<f32>,
     pub overflow_x: Option<String>,
     pub overflow_y: Option<String>,
+    /// `truncate()` / `type({ wrap: truncate })` — ellipsis opt-in, not a class.
+    pub truncate: bool,
     pub position: Option<String>,
     pub pad: PadTokens,
     pub width: Option<String>,
@@ -55,6 +57,7 @@ impl ResolvedBox {
             && self.shrink.is_none()
             && self.overflow_x.is_none()
             && self.overflow_y.is_none()
+            && !self.truncate
             && self.position.is_none()
             && self.pad.is_empty()
             && self.width.is_none()
@@ -81,6 +84,9 @@ impl ResolvedBox {
         }
         if other.overflow_y.is_some() {
             self.overflow_y.clone_from(&other.overflow_y);
+        }
+        if other.truncate {
+            self.truncate = true;
         }
         if other.position.is_some() {
             self.position.clone_from(&other.position);
@@ -233,6 +239,9 @@ fn from_op(op: &PaintOp) -> ResolvedBox {
             ..Default::default()
         },
         "overflow" => overflow_from_arg(op.first_arg()),
+        "truncate" => truncate_box(),
+        "wrap" => wrap_from_arg(op.first_arg()),
+        "type" => type_wrap_from_arg(op.first_arg()),
         "overflowX" => ResolvedBox {
             overflow_x: token_arg(op.first_arg()),
             ..Default::default()
@@ -279,6 +288,29 @@ fn from_op(op: &PaintOp) -> ResolvedBox {
             max_height: token_arg(op.first_arg()),
             ..Default::default()
         },
+        _ => ResolvedBox::default(),
+    }
+}
+
+fn truncate_box() -> ResolvedBox {
+    ResolvedBox {
+        overflow_x: Some("hidden".into()),
+        overflow_y: Some("hidden".into()),
+        truncate: true,
+        ..Default::default()
+    }
+}
+
+fn wrap_from_arg(arg: &PaintArg) -> ResolvedBox {
+    match arg {
+        PaintArg::Token(name) if name.eq_ignore_ascii_case("truncate") => truncate_box(),
+        _ => ResolvedBox::default(),
+    }
+}
+
+fn type_wrap_from_arg(arg: &PaintArg) -> ResolvedBox {
+    match arg {
+        PaintArg::Slots(slots) => slots.get("wrap").map(wrap_from_arg).unwrap_or_default(),
         _ => ResolvedBox::default(),
     }
 }
@@ -473,6 +505,16 @@ mod tests {
         let elem = element_with_box(r);
         let got = resolve(&elem, &[Element::default()], 1440.0);
         assert!((got.style.flex_grow - 1.0).abs() < f32::EPSILON);
+    }
+
+    #[test]
+    fn truncate_from_style_not_class() {
+        let r = resolved("style({ type({ wrap: truncate }) })");
+        assert!(
+            r.truncate,
+            "type({{ wrap: truncate }}) is Style IR, not s-truncate"
+        );
+        assert_eq!(r.overflow_x.as_deref(), Some("hidden"));
     }
 
     #[test]

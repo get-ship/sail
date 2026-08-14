@@ -702,22 +702,26 @@ fn build_layout(
     meta: &TreeBuildMeta,
     viewport: Option<(f32, f32)>,
 ) -> Result<Vec<LayoutBox>, OpError> {
-    let (preprocessed, type_hosts) =
-        sail_compiler::parse::preprocess::preprocess_with_types(source)
-            .map_err(|e| OpError::InvalidArgument(format!("preprocess: {e}")))?;
+    let (preprocessed, hosts) = sail_compiler::parse::preprocess::preprocess_with_style(source)
+        .map_err(|e| OpError::InvalidArgument(format!("preprocess: {e}")))?;
     let viewports = if let Some(vp) = viewport {
         vec![vp]
     } else {
         sail_compiler::check::layout::layout_viewports(&preprocessed)
     };
 
+    let mut elements = sail_layout::html::parse_source(&preprocessed);
+    sail_layout::apply_resolved_types(&mut elements, &hosts.types);
+    sail_layout::apply_resolved_boxes(&mut elements, &hosts.boxes);
+
     let mut out = Vec::new();
     for vp in viewports {
-        let scan = match sail_layout::check_preprocessed_with_types(
+        let scan = match sail_layout::check_preprocessed_with_hosts(
             &preprocessed,
             vp,
             sail_layout::CheckOptions::default(),
-            &type_hosts,
+            &hosts.types,
+            &hosts.boxes,
         ) {
             Ok(s) => s,
             Err(e) => {
@@ -731,14 +735,17 @@ fn build_layout(
                 overflow_idxs.insert(d.element_index);
             }
         }
-        // Document-order tag cursors join layout boxes → tree nodes (class-aware).
+        // Document-order tag cursors join layout boxes → tree nodes (Style/IR/tag).
         let mut tag_cursors: BTreeMap<String, usize> = BTreeMap::new();
         // Last successfully joined L1/keyword host — expansion chrome (card
         // header/footer divs, ticker track spans) attaches here instead of root.
         let mut last_host_id: Option<String> = None;
         let mut last_if_id: Option<String> = None;
         for b in &scan.boxes {
-            let author_tag = author_tag_from_layout(&b.tag, &b.class);
+            let author_tag = elements
+                .get(b.index)
+                .map(|e| author_tag_from_element(e, &elements, vp.0))
+                .unwrap_or_else(|| b.tag.to_ascii_lowercase());
             let (mut id, mut unknown_join) =
                 resolve_layout_node_id(meta, &author_tag, &mut tag_cursors);
 
@@ -824,53 +831,36 @@ fn resolve_layout_node_id(
     (id, true)
 }
 
-/// Recover author-level tag from layout engine tag + class list.
+/// Recover author-level tag from host identity, Style/taffy role, or the tag.
 ///
-/// Preprocess lowers keywords to `div.sail-col` and L1 hosts to
-/// `div.sail-card` / `span.sail-badge` / `div.sail-ticker` (etc.).
-fn author_tag_from_layout(layout_tag: &str, class: &str) -> String {
-    for tok in class.split_whitespace() {
-        match tok {
-            "sail-col" | "sail-column" => return "column".into(),
-            "sail-row" => return "row".into(),
-            "sail-grid" => return "grid".into(),
-            "sail-center" => return "center".into(),
-            "sail-stack" => return "stack".into(),
-            _ => {}
+/// Preprocess lowers keywords to `<div>` and L1 hosts stamp `data-sail-host`.
+/// v3 measure does not stamp `sail-col`/`sail-row` as join IR — do not scrape
+/// those class tokens.
+fn author_tag_from_element(
+    elem: &sail_layout::html::Element,
+    all: &[sail_layout::html::Element],
+    viewport_w: f32,
+) -> String {
+    if let Some(host) = elem.attrs.get("data-sail-host") {
+        let h = host.trim();
+        if !h.is_empty() {
+            return h.to_ascii_lowercase();
         }
     }
-    // L1 host class: sail-{tag} stamped/spliced by the compiler.
-    for tok in class.split_whitespace() {
-        if let Some(name) = tok.strip_prefix("sail-") {
-            if is_sail_layout_utility(name) {
-                continue;
-            }
-            if is_known_l1_tag(name) {
-                return name.to_string();
-            }
-        }
+    let tag = elem.tag.to_ascii_lowercase();
+    if matches!(tag.as_str(), "column" | "row" | "grid" | "center" | "stack") {
+        return tag;
     }
-    layout_tag.to_ascii_lowercase()
-}
-
-fn is_sail_layout_utility(name: &str) -> bool {
-    matches!(
-        name,
-        "col" | "column" | "row" | "grid" | "center" | "stack" | "nowrap"
-    ) || name.starts_with("ai-")
-        || name.starts_with("jc-")
-        || name.starts_with("ji-")
-        || name.starts_with("as-")
-        || name.starts_with("js-")
-        || name.starts_with("gc-")
-        || name.starts_with("gf-")
-        || name.starts_with("g-")
-}
-
-fn is_known_l1_tag(name: &str) -> bool {
-    sail_compiler::l1_entries()
-        .iter()
-        .any(|e| e.tag.eq_ignore_ascii_case(name))
+    let resolved = sail_layout::style::resolve(elem, all, viewport_w);
+    use sail_layout::taffy::style::{Display, FlexDirection};
+    match resolved.style.display {
+        Display::Flex => match resolved.style.flex_direction {
+            FlexDirection::Column | FlexDirection::ColumnReverse => "column".into(),
+            FlexDirection::Row | FlexDirection::RowReverse => "row".into(),
+        },
+        Display::Grid => "grid".into(),
+        _ => tag,
+    }
 }
 
 // ── state ───────────────────────────────────────────────────────────────────

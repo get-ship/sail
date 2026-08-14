@@ -30,7 +30,7 @@ pub enum Selector {
     /// conventions (`min-width:0`, stack layering) without re-encoding the
     /// parent relationship inside every element's own class list.
     ParentBase(&'static str),
-    /// Any element carrying this class. Used sparingly for legacy/standalone
+    /// Any element carrying this class. Used sparingly for standalone
     /// class names that the parser still sees.
     Any(&'static str),
 }
@@ -379,36 +379,6 @@ pub static LAYOUT_RULES: &[LayoutRule] = &[
         },
         declarations: &[Declaration::JustifyContent(JustifyContent::SpaceEvenly)],
     },
-    // MIGRATION-DEBT: dies with CHANNELS-1 (layout-keyword migration).
-    // --- flex direction modifier (legacy alias) ------------------------------
-    LayoutRule {
-        selector: Selector::Modifier {
-            prefix: "sail-dir-",
-            value: "row",
-        },
-        declarations: &[Declaration::FlexDirection(FlexDirection::Row)],
-    },
-    LayoutRule {
-        selector: Selector::Modifier {
-            prefix: "sail-dir-",
-            value: "row-reverse",
-        },
-        declarations: &[Declaration::FlexDirection(FlexDirection::RowReverse)],
-    },
-    LayoutRule {
-        selector: Selector::Modifier {
-            prefix: "sail-dir-",
-            value: "column",
-        },
-        declarations: &[Declaration::FlexDirection(FlexDirection::Column)],
-    },
-    LayoutRule {
-        selector: Selector::Modifier {
-            prefix: "sail-dir-",
-            value: "column-reverse",
-        },
-        declarations: &[Declaration::FlexDirection(FlexDirection::ColumnReverse)],
-    },
     // --- row nowrap ----------------------------------------------------------
     LayoutRule {
         selector: Selector::Any("sail-nowrap"),
@@ -535,7 +505,7 @@ const DISPLAY_CENTER_INLINE: &[Declaration] = &[
 // Scale-driven sx prefixes resolved at runtime through `sail_lint::scales`.
 // ---------------------------------------------------------------------------
 
-/// A scale prefix that maps a sanitized sx class like `s-p4` to a layout
+/// A scale prefix that maps a product Style atom like `s-pad4` to a layout
 /// property. The value tail is fed to the scale resolver.
 #[derive(Debug, Clone, Copy)]
 pub enum SxScaleRule {
@@ -561,14 +531,13 @@ pub enum SideSet {
     L,
 }
 
-/// Every `s-*` prefix whose value lives on a closed scale. Order matters: the
-/// longest prefix must be checked first.
+/// Every product `s-*` prefix whose value lives on a closed scale. Order
+/// matters: the longest prefix must be checked first.
 ///
-/// **Product Style** mints classes from setter names + alphanumeric args:
-/// `style.pad(4)` → `s-pad4`, `style.padX(2)` → `s-padX2`,
-/// `style.minW(0)` → `s-minW0` (camelCase preserved). Residual utility-string
-/// prefixes (`s-p4`, `s-minw0`, …) stay so fixtures / any leftover emit still
-/// resolve.
+/// Style mints classes from setter names + alphanumeric args:
+/// `pad(4)` → `s-pad4`, `padX(2)` → `s-padX2`, `minW(0)` → `s-minW0`
+/// (camelCase preserved). Utility-string fossils (`s-p4`, `s-minw0`) are
+/// not a scale — fixtures use `pad()` / `size()` / hosts.
 pub static SX_SCALE_RULES: &[(&str, SxScaleRule)] = &[
     // Product pad* (longest first: padX before pad).
     ("s-padX", SxScaleRule::Padding(SideSet::X)),
@@ -585,19 +554,7 @@ pub static SX_SCALE_RULES: &[(&str, SxScaleRule)] = &[
     ("s-minH", SxScaleRule::MinHeight),
     ("s-maxW", SxScaleRule::MaxWidth),
     ("s-maxH", SxScaleRule::MaxHeight),
-    // Residual utility-string prefixes (p/px/…, minw lowercase).
-    ("s-px", SxScaleRule::Padding(SideSet::X)),
-    ("s-py", SxScaleRule::Padding(SideSet::Y)),
-    ("s-pt", SxScaleRule::Padding(SideSet::T)),
-    ("s-pr", SxScaleRule::Padding(SideSet::R)),
-    ("s-pb", SxScaleRule::Padding(SideSet::B)),
-    ("s-pl", SxScaleRule::Padding(SideSet::L)),
-    ("s-p", SxScaleRule::Padding(SideSet::All)),
-    ("s-minw", SxScaleRule::MinWidth),
-    ("s-minh", SxScaleRule::MinHeight),
-    ("s-maxw", SxScaleRule::MaxWidth),
-    ("s-maxh", SxScaleRule::MaxHeight),
-    // Product `style.size(N)` → width+height (before bare w/h).
+    // Product `size(N)` → width+height (before bare w/h).
     ("s-size", SxScaleRule::Size),
     ("s-w", SxScaleRule::Width),
     ("s-h", SxScaleRule::Height),

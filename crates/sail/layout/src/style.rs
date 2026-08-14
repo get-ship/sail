@@ -381,6 +381,14 @@ fn apply_resolved_box(style: &mut Style, box_style: &crate::box_ir::ResolvedBox)
     if let Some(y) = box_style.overflow_y.as_deref() {
         style.overflow.y = overflow_token(y);
     }
+    if box_style.truncate {
+        if matches!(style.overflow.x, Overflow::Visible) {
+            style.overflow.x = Overflow::Hidden;
+        }
+        if matches!(style.overflow.y, Overflow::Visible) {
+            style.overflow.y = Overflow::Hidden;
+        }
+    }
     if let Some(p) = box_style.position.as_deref() {
         style.position = position_token(p);
     }
@@ -706,7 +714,13 @@ mod tests {
     fn sx_padding_resolves_to_rect() {
         let elem = Element {
             tag: "div".into(),
-            class: "s-p4".into(),
+            box_style: crate::box_ir::ResolvedBox {
+                pad: crate::box_ir::PadTokens {
+                    all: Some("4".into()),
+                    ..Default::default()
+                },
+                ..Default::default()
+            },
             ..Default::default()
         };
         let resolved = resolve(&elem, &[Element::default()], 1440.0);

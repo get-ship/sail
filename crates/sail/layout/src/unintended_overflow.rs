@@ -73,7 +73,7 @@ fn has_overflow_opt_in(elem: &Element, style: &ResolvedStyle) -> bool {
     {
         return true;
     }
-    if class_has_truncate(&elem.class) {
+    if elem.box_style.truncate {
         return true;
     }
     let o = style.style.overflow;
@@ -99,7 +99,7 @@ fn scrolls_axis(elem: &Element, style: &ResolvedStyle, height_axis: bool) -> boo
     if is_ticker_host(&elem.tag, &elem.class) {
         return !height_axis;
     }
-    if class_has_truncate(&elem.class) && !height_axis {
+    if elem.box_style.truncate && !height_axis {
         return true;
     }
     let o = if height_axis {
@@ -144,13 +144,6 @@ fn is_ticker_host(tag: &str, class: &str) -> bool {
         || class
             .split_whitespace()
             .any(|c| c == "sail-ticker" || c.ends_with("-ticker"))
-}
-
-fn class_has_truncate(class: &str) -> bool {
-    class.split_whitespace().any(|c| {
-        let s = c.strip_prefix("s-").unwrap_or(c).to_ascii_lowercase();
-        s == "truncate" || s.ends_with("-truncate")
-    })
 }
 
 fn parent_has_definite_clipped_or_fixed_height(layout: &Layout, parent_index: usize) -> bool {
@@ -339,6 +332,16 @@ mod tests {
         assert!(is_ticker_host("ticker", ""));
         assert!(is_ticker_host("div", "sail-ticker"));
         assert!(!is_ticker_host("div", "sail-col"));
+        let trunc = Element {
+            tag: "div".into(),
+            box_style: crate::box_ir::ResolvedBox {
+                overflow_x: Some("hidden".into()),
+                truncate: true,
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+        assert!(has_overflow_opt_in(&trunc, &resolve(&trunc, &all, 400.0)));
     }
 
     #[test]
