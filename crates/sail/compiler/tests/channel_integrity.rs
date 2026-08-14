@@ -25,10 +25,13 @@ const TOKENS_CSS: &str = include_str!("../../../../packages/sail/tokens/src/toke
 const THEMES_CSS: &str = include_str!("../../../../packages/sail/tokens/src/themes.css");
 const CONTRACTS_CSS: &str = include_str!("../../../../packages/sail/tokens/src/sail-base.css");
 const SKINS_CSS: &str = include_str!("../../../../packages/sail/tokens/src/element-skins.css");
-const SCALES_RS: &str = include_str!("../../style/src/scales.rs");
-const PLAINS_RS: &str = include_str!("../../style/src/plains.rs");
-const CONCERNS_RS: &str = include_str!("../../style/src/concerns.rs");
-const SETTERS_RS: &str = include_str!("../../style/src/setters.rs");
+const SCALES_RS: &str = include_str!("../../spinnaker/src/scales.rs");
+const PLAINS_RS: &str = include_str!("../../spinnaker/src/plains.rs");
+const CONCERNS_RS: &str = include_str!("../../spinnaker/src/concerns.rs");
+const SETTERS_RS: &str = include_str!("../../spinnaker/src/setters.rs");
+const LOWER_RS: &str = include_str!("../../spinnaker-css/src/lower.rs");
+const CONCERN_CSS_RS: &str = include_str!("../../spinnaker-css/src/concern_css.rs");
+const PLAINS_CSS_RS: &str = include_str!("../../spinnaker-css/src/plains_css.rs");
 
 /// Every `--name:` declaration in `css`, without the `--` prefix.
 fn declarations(css: &str) -> HashSet<String> {
@@ -201,6 +204,15 @@ fn every_expression_channel_has_a_reader() {
         .cloned()
         .collect::<HashSet<_>>()
         .union(&references(SETTERS_RS))
+        .cloned()
+        .collect::<HashSet<_>>()
+        .union(&references(LOWER_RS))
+        .cloned()
+        .collect::<HashSet<_>>()
+        .union(&references(CONCERN_CSS_RS))
+        .cloned()
+        .collect::<HashSet<_>>()
+        .union(&references(PLAINS_CSS_RS))
         .cloned()
         .collect();
 

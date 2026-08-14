@@ -28,9 +28,7 @@ const RED_RHYTHM: &str = r#"<column>
 fn check_all_emits_compose_rhythm() {
     let diags = check_all(RED_RHYTHM, None, &[], None);
     assert!(
-        diags
-            .iter()
-            .all(|d| d.rule.as_deref() != Some("spinnaker")),
+        diags.iter().all(|d| d.rule.as_deref() != Some("spinnaker")),
         "v3 margin fixture must not be a style error: {diags:?}"
     );
     assert!(

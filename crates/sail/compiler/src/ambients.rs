@@ -30,8 +30,8 @@ use anyhow::{Context, Result};
 use sail_lint::scales;
 use sail_lint::token_groups::{self, color_group_names, color_groups, size_step_names};
 use spinnaker::component_surfaces;
-use spinnaker::plains::{find_plain, PlainSpec};
-use spinnaker::{find_concern, vocab_rows, VocabRow, VocabTag};
+use spinnaker::plains::{PlainSpec, find_plain};
+use spinnaker::{VocabRow, VocabTag, find_concern, vocab_rows};
 
 /// Relative path of the ambient pack inside a sail project (SPEC-OUTPUT-1 §4).
 /// Lives under `node_modules/.sail/` so `rm -rf node_modules` clears it;
@@ -2137,7 +2137,7 @@ mod tests {
             "style.foo must be the chain methods, not {{}}"
         );
         assert!(
-            dts.contains("type SailStyleObj") && dts.contains("animate?: SailStyleValue"),
+            dts.contains("type SailStyleObj") && dts.contains("animate?: SailAnimateMap"),
             "SailStyleObj missing"
         );
         assert!(
@@ -2155,7 +2155,7 @@ mod tests {
             dts.contains("function bg(") || dts.contains("const bg:"),
             "free bg"
         );
-        assert!(dts.contains("function enter("), "free enter motion");
+        assert!(dts.contains("function play("), "free play motion");
         assert!(
             dts.contains("const hover:"),
             "when-key / motion hybrid hover"
@@ -2563,12 +2563,13 @@ mod tests {
         let dts = emit_action_observation_dts();
         assert!(dts.contains("requestAnimationFrame"));
         assert!(dts.contains("ResizeObserver"));
-        assert!(!dts
-            .lines()
-            .filter(|l| !l.trim_start().starts_with("//"))
-            .any(|l| {
-                l.contains("declare var document") || l.contains("declare const document")
-            }));
+        assert!(
+            !dts.lines()
+                .filter(|l| !l.trim_start().starts_with("//"))
+                .any(|l| {
+                    l.contains("declare var document") || l.contains("declare const document")
+                })
+        );
     }
 
     #[test]
