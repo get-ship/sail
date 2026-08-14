@@ -42,9 +42,13 @@ if [ -n "$sails" ]; then
   elif [ -x "$root/target/release/sail" ]; then sail_bin="$root/target/release/sail"
   fi
   if [ -n "$sail_bin" ]; then
-    echo "$sails" | while read -r f; do
+    fail=0
+    while IFS= read -r f; do
       [ -f "$f" ] || continue
-      "$sail_bin" check "$f" || exit 1
-    done
+      "$sail_bin" check "$f" || fail=1
+    done <<EOF
+$sails
+EOF
+    [ "$fail" -eq 0 ]
   fi
 fi
