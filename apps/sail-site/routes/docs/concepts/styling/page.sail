@@ -35,8 +35,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <p style(eyebrow)>The language</p>
   <h1>Styling</h1>
   <p style(lead)>
-    Paint is the <strong>Style</strong> channel language:
-    <code>style&#40;&#123; box, paint, text, animate &#125;&#41;</code> on the host,
+    Paint is the <strong>Style</strong> language:
+    <code>style&#40;&#123; pad(4).bg(surface-1) &#125;&#41;</code> on the host,
     with optional <code>when</code>, <code>match</code>, and <code>compound</code>
     keys for conditionality, plus named Style
     (<code>style name = &#123; … &#125;</code>). Values are design tokens —
@@ -45,8 +45,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   </p>
   <p>
     Familiar spacing and color ideas still apply
-    (<code>space(&#123; pad: 4 &#125;)</code>, <code>fill(&#123; color: surface-1 &#125;)</code>, <code>radius(lg)</code>),
-    but the product form is a typed channel spine, not a utility string. Closed and
+    (<code>pad(4)</code>, <code>bg(surface-1)</code>, <code>radius(lg)</code>),
+    but the product form is a typed setter chain, not a utility string. Closed and
     token-backed is what makes the theme switch in this site’s header work —
     swap the theme and everything repaints, because nothing held a raw color.
   </p>
@@ -63,7 +63,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <code-block code={code.sxError}></code-block>
   <p>
     Prefer a named Style when the same paint repeats:
-    <code>style card = &#123; box: space(&#123; pad: 5 &#125;), paint: fill(&#123; color: surface-1 &#125;) &#125;</code> then
+    <code>style card = &#123; pad(5).bg(surface-1) &#125;</code> then
     attach <code>style&#40;card&#41;</code> or compose Style pieces
     <code>style&#40;base, emphasis&#41;</code> on the host. (That is paint
     composition — not an in-file <code>&lt;partial&gt;</code>, which reuses
@@ -76,8 +76,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     Browser and ARIA state are a map, not string prefixes. Hover these:
   </p>
   <row gap="3" style(demoPanel)>
-    <button style({ when: { hover: bg(muted) } })>hover → fill muted</button>
-    <button style({ when: { hover: fg(primary) } })>hover → ink primary</button>
+    <button style({ when: { hover: bg(muted) } })>hover → bg muted</button>
+    <button style({ when: { hover: fg(primary) } })>hover → fg primary</button>
     <button style({ when: { active: bg(primary).fg(primary-foreground) } })>active:…</button>
   </row>
   <code-block code={code.states}></code-block>
@@ -99,7 +99,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     pad more from 768px up:
   </p>
   <column gap="2" style(responsivePanel)>
-    <p style(bodySm)>space pad 3 on a phone; when tablet → space pad 6</p>
+    <p style(bodySm)>pad 3 on a phone; when tablet → pad 6</p>
   </column>
   <code-block code={code.conditions}></code-block>
   <p>
@@ -148,7 +148,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     compile errors in application code. Utility-string hosts
     (<code>sx="…"</code> / <code>style="…"</code>) are refused the same way —
     dead forms; product paint is
-    <code>style&#40;&#123; box: space(&#123; pad: 4 &#125;), paint: fill(&#123; color: muted &#125;) &#125;&#41;</code>. When the vocabulary can’t express
+    <code>style&#40;&#123; pad(4).bg(muted) &#125;&#41;</code>. When the vocabulary can’t express
     something you need, file a gap: the system grows a setter or token, not a
     hole.
   </p>

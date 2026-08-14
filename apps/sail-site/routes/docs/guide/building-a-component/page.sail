@@ -44,7 +44,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     The smallest useful file is a template and nothing else. Layout is
     elements — <code>&lt;row&gt;</code> and <code>&lt;column&gt;</code> with
     <code>gap</code>, <code>align</code> and <code>justify</code> — and
-    <code>style&#40;&#123; box, paint, text &#125;&#41;</code> carries the finish.
+    <code>style&#40;&#123; pad(4).fg(muted-foreground) &#125;&#41;</code> carries the finish.
   </p>
   <code-block code={code.markup} lang="sail"></code-block>
   <p>
@@ -100,16 +100,16 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <p>
     There is no stylesheet and no <code>&lt;style&gt;</code> block. Attach
     <strong>Style</strong> as a block statement on the host:
-    <code>style&#40;&#123; box: space(&#123; pad: 4 &#125;), paint: ink(&#123; color: muted-foreground &#125;), text: type(&#123; size: sm &#125;) &#125;&#41;</code>.
-    Channels group the setters — <code>box</code> for space and size,
-    <code>paint</code> for color and border, <code>text</code> for type.
+    <code>style&#40;&#123; pad(4).fg(muted-foreground).type(&#123; size: sm &#125;) &#125;&#41;</code>.
+    Setters chain — <code>pad</code>, <code>fg</code>, <code>type</code>,
+    <code>bg</code>, <code>size</code>, <code>border</code>.
     Values are design tokens: <code>type(&#123; size: sm &#125;)</code>,
-    <code>ink(&#123; color: muted-foreground &#125;)</code>, <code>space(&#123; pad: 4 &#125;)</code>. Prefer
+    <code>fg(muted-foreground)</code>, <code>pad(4)</code>. Prefer
     <code>style name = &#123; … &#125;</code> in scope when the same paint
     repeats, then attach <code>style&#40;name&#41;</code>.
   </p>
   <p>
-    The values are a closed set. <code>ink(&#123; color: muted-foreground &#125;)</code> compiles;
+    The values are a closed set. <code>fg(muted-foreground)</code> compiles;
     a hex code or a pixel value does not, and the error names what you may
     use instead. That is what keeps a component readable under all nine
     themes: it never names a color, only a role. Utility-string hosts

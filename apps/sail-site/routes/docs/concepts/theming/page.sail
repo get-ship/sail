@@ -96,10 +96,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       <code>--destructive</code>, <code>--info</code>, <code>--accent</code>,
       <code>--muted</code> (and their <code>-foreground</code> partners).
       Status UI spends these directly via Style
-      (<code>style&#40;&#123; paint: fill(&#123; color: destructive &#125;) &#125;&#41;</code>,
-      <code>style&#40;&#123; paint: fill(&#123; color: primary, mix: 15 &#125;) &#125;&#41;</code>).
+      (<code>style&#40;&#123; bg(destructive) &#125;&#41;</code>,
+      <code>style&#40;&#123; bg(&#123; color: primary, mix: 15 &#125;) &#125;&#41;</code>).
       A color-group typed prop (often named <code>tone</code>, type <code>Tone</code>)
-      binds in Style paint (<code>fill(&#123; color: tone &#125;)</code>, <code>ink(&#123; color: tone.foreground &#125;)</code>) —
+      binds in Style (<code>bg(tone)</code>, <code>fg(tone.foreground)</code>) —
       type-keyed, not a special channel; rest paint is omit the attribute.
     </li>
     <li>

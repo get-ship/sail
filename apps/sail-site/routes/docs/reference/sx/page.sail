@@ -1,6 +1,6 @@
 <!--
-  /docs/reference/sx — Style channels surface (URL slug is historical).
-  Product: style({ box, paint, text, animate }) + style name = / bind /
+  /docs/reference/sx — Style surface (URL slug is historical).
+  Product: style({ pad(4).bg(surface-1), animate: … }) + style name = / bind /
   match: / compound: / when:. Setter scales, when keys, refusals.
 -->
 <scope>
@@ -54,12 +54,12 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 
 <column gap="6" style(root)>
   <column gap="5" style(intro)>
-    <p token="doc-eyebrow">Reference · Style channels</p>
-    <h1>Style — block channel attach</h1>
+    <p token="doc-eyebrow">Reference · Style</p>
+    <h1>Style — block attach</h1>
     <p token="doc-lead">
       Product paint is a <strong>block statement</strong> on the host with a
-      channel spine:
-      <code>style&#40;&#123; box: space(&#123; pad-x: 2 &#125;), paint: fill(&#123; color: primary &#125;), text: type(&#123; size: sm &#125;), animate: enter(&#123;…&#125;) &#125;&#41;</code>.
+      flat chain:
+      <code>style&#40;&#123; pad(&#123; x: 2 &#125;).bg(primary).type(&#123; size: sm &#125;), animate: enter(&#123;…&#125;) &#125;&#41;</code>.
       Reuse named Style in scope with
       <code>style name = &#123; … &#125;</code>, attach as
       <code>style&#40;name&#41;</code>, and compose pieces
@@ -70,7 +70,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     <p style(mutedSm)>
       Utility-string <code>style="…"</code> / <code>sx="…"</code> is not product
       (dead form — refuse). Responsive and state paint use object keys:
-      <code>style&#40;&#123; when: &#123; tablet: &#123; text: type(&#123; size: lg &#125;) &#125;, hover: &#123; paint: fill(&#123; color: muted &#125;) &#125; &#125; &#125;&#41;</code>
+      <code>style&#40;&#123; when: &#123; tablet: type(&#123; size: lg &#125;), hover: bg(muted) &#125; &#125;&#41;</code>
       — not <code>tablet:</code> / <code>hover:</code> prefixes on atoms.
       {styleCount()} scale entries feed the setters. Region legality lives on the
       <a href="/docs/reference/regions">region matrix</a>.
@@ -82,8 +82,8 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     <p style(mutedSm)>
       Rows are named by historical atom heads (<code>bg</code>, <code>p</code>,
       <code>rounded</code>, …). In product form you call the Style setter:
-      <code>style&#40;&#123; paint: fill(&#123; color: … &#125;) &#125;&#41;</code>, <code>style&#40;&#123; box: space(&#123; pad: … &#125;) &#125;&#41;</code>,
-      <code>style&#40;&#123; paint: radius(…) &#125;&#41;</code>, <code>style&#40;&#123; paint: ink(&#123; color: … &#125;) &#125;&#41;</code>, and so on.
+      <code>style&#40;&#123; bg(…) &#125;&#41;</code>, <code>style&#40;&#123; pad(…) &#125;&#41;</code>,
+      <code>style&#40;&#123; radius(…) &#125;&#41;</code>, <code>style&#40;&#123; fg(…) &#125;&#41;</code>, and so on.
     </p>
     <grid cols="2" gap="2">
       <for {styleRows() as a} key={a.prop}>
@@ -120,7 +120,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     <h3>when keys — interaction &amp; ARIA</h3>
     <p style(mutedSm)>
       Product form:
-      <code>style&#40;&#123; when: &#123; hover: &#123; paint: fill(&#123; color: muted &#125;) &#125;, current: &#123; paint: ink(&#123; color: primary &#125;) &#125; &#125; &#125;&#41;</code>.
+      <code>style&#40;&#123; when: &#123; hover: bg(muted), current: fg(primary) &#125; &#125;&#41;</code>.
       Historical prefix names below map 1:1 to those keys.
     </p>
     <grid cols="3" gap="2">
@@ -132,7 +132,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
       </for>
     </grid>
     <p style(mutedBody)>
-      Ancestor propagation: mark the ancestor with <code>style&#40;&#123; paint: group() &#125;&#41;</code>,
+      Ancestor propagation: mark the ancestor with <code>style&#40;&#123; group() &#125;&#41;</code>,
       then <code>style&#40;&#123; when: &#123; groupHover: &#123; … &#125; &#125; &#125;&#41;</code> on the descendant.
     </p>
   </column>
@@ -142,7 +142,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     <p style(mutedSm)>
       Breakpoints are locked to design-token <code>breakpoint-*</code> lengths.
       Use
-      <code>style&#40;&#123; when: &#123; tablet: &#123; text: type(&#123; size: lg &#125;) &#125;, desktop: &#123; text: type(&#123; size: xl &#125;) &#125; &#125; &#125;&#41;</code>.
+      <code>style&#40;&#123; when: &#123; tablet: type(&#123; size: lg &#125;), desktop: type(&#123; size: xl &#125;) &#125; &#125;&#41;</code>.
     </p>
     <grid cols="3" gap="2">
       <for {conditionPrefixes() as c} key={c.prefix}>
@@ -157,7 +157,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
   <column gap="3">
     <h3>name = · match · compound · bind</h3>
     <p style(mutedBody)>
-      Prefer <code>style name = &#123; box: …, paint: … &#125;</code> in
+      Prefer <code>style name = &#123; … &#125;</code> in
       <code>&lt;scope&gt;</code> when the same paint repeats; attach with
       <code>style&#40;name&#41;</code> or compose
       <code>style&#40;base, emphasis&#41;</code>.
