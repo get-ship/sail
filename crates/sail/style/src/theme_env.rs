@@ -17,10 +17,12 @@ use std::sync::OnceLock;
 
 use serde_json::Value;
 
-use crate::concerns::{alias_concern_call, find_concern, is_marker, resolve_concern_name};
+use crate::concerns::{alias_concern_call, find_concern, resolve_concern_name};
 use crate::ir::{PaintArg, PaintOp, Style, StyleDiagnostic};
-use crate::setters::find_setter;
 use crate::tokens::CompositeToken;
+use crate::vocab;
+
+pub use crate::vocab::VocabTag;
 
 thread_local! {
     static STYLING_POLICY: RefCell<StylingPolicy> =
@@ -53,15 +55,6 @@ pub enum StylingPolicy {
     #[default]
     Open,
     Themed,
-}
-
-/// Vocabulary row tag. Stub until the v3 table lands (table absent → classify
-/// from today's concern / setter / marker registries).
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum VocabTag {
-    Concern,
-    Axis,
-    Plain,
 }
 
 /// Theme-registered named style (`$type: "sail.style"`).
@@ -148,11 +141,9 @@ impl ThemeStyleEnv {
         }
     }
 
-    /// Classify a name against the live vocabulary tables. `None` until a
-    /// later slice owns a dedicated v3 row; today's concern / setter / marker
-    /// registries stand in.
+    /// Classify a name against the one vocabulary table (concern | axis | plain).
     pub fn resolve_vocab(&self, name: &str) -> Option<VocabTag> {
-        resolve_vocab_tag(name)
+        vocab::resolve_vocab(name)
     }
 
     /// Named composite for a concern (`border` + `subtle` → `border.subtle`).
@@ -251,10 +242,7 @@ impl ThemeStyleEnv {
 }
 
 fn is_vocabulary(name: &str) -> bool {
-    find_concern(name).is_some()
-        || is_marker(name)
-        || find_setter(name).is_some()
-        || is_axis_name(name)
+    vocab::find_vocab(name).is_some()
 }
 
 /// Presence-only locals for [`ThemeStyleEnv::resolve_style_ref`]. IR lives in `env`.
@@ -379,24 +367,6 @@ fn json_animate_to_motion(trigger: &str, value: &Value) -> Style {
         trigger: trigger.to_string(),
         config,
     }
-}
-
-fn resolve_vocab_tag(name: &str) -> Option<VocabTag> {
-    if find_concern(name).is_some() {
-        return Some(VocabTag::Concern);
-    }
-    if is_axis_name(name) {
-        return Some(VocabTag::Axis);
-    }
-    if is_marker(name) || find_setter(name).is_some() {
-        return Some(VocabTag::Plain);
-    }
-    None
-}
-
-/// Axis-collapsed families (SPEC-SPINNAKER-3 §1) that are not already a concern.
-fn is_axis_name(name: &str) -> bool {
-    matches!(name, "pad" | "margin" | "gap")
 }
 
 fn object_entries(root: &Value, keys: &[&str]) -> BTreeMap<String, Value> {

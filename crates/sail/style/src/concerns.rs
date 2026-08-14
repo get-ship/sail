@@ -948,7 +948,8 @@ pub fn concerns() -> &'static [ConcernSpec] {
 }
 
 pub fn find_concern(name: &str) -> Option<&'static ConcernSpec> {
-    concerns().iter().find(|c| c.name == name)
+    let key = crate::vocab::emit_target(name).unwrap_or(name);
+    concerns().iter().find(|c| c.name == key)
 }
 
 /// Rewrite v3 authoring aliases onto the concern they emit through.

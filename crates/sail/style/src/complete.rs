@@ -6,7 +6,7 @@
 
 use std::path::Path;
 
-use crate::channel::{self, Channel};
+use crate::channel::Channel;
 use crate::component_surfaces::color_paint_vocabulary;
 use crate::conditions::CONDITION_PREFIXES;
 use crate::scales;
@@ -202,37 +202,23 @@ pub fn style_complete_for_context(
         StyleCompleteContext::SetterName { partial, channel } => {
             let ch = channel.as_deref().and_then(parse_channel);
             let mut items: Vec<StyleCompleteItem> = Vec::new();
-            if ch == Some(Channel::Animate) || channel.as_deref() == Some("animate") {
-                items.push(item(
-                    "play".into(),
-                    StyleCompleteKind::Setter,
-                    Some("animate · play preset".into()),
-                    Some("play(".into()),
-                ));
-            }
-            for spec in crate::concerns::concerns() {
-                if ch.is_some_and(|c| spec.channel != c) {
+            for row in crate::vocab::offered_rows() {
+                if row.name == "play" && ch != Some(Channel::Animate) {
                     continue;
                 }
-                items.push(item(
-                    spec.name.to_string(),
-                    StyleCompleteKind::Setter,
-                    Some(format!("concern · {}", spec.channel.key())),
-                    Some(format!("{}(", spec.name)),
-                ));
-            }
-            for s in setters::setters() {
-                if !crate::concerns::is_marker(s.name) {
+                if ch.is_some_and(|c| parse_channel(row.channel) != Some(c)) {
                     continue;
                 }
-                if ch.is_some_and(|c| channel::channel_for_setter(s.name) != Some(c)) {
-                    continue;
-                }
+                let detail = match row.tag {
+                    crate::VocabTag::Concern => format!("concern · {}", row.channel),
+                    crate::VocabTag::Axis => format!("axis · {}", row.channel),
+                    crate::VocabTag::Plain => format!("plain · {}", row.channel),
+                };
                 items.push(item(
-                    s.name.to_string(),
+                    row.name.to_string(),
                     StyleCompleteKind::Setter,
-                    Some("marker".into()),
-                    Some(format!("{}(", s.name)),
+                    Some(detail),
+                    Some(format!("{}(", row.name)),
                 ));
             }
             filter_sort(items.into_iter(), partial)
@@ -1262,15 +1248,33 @@ mod tests {
         let (src, off) = at_caret("style({ paint: ¦ })");
         let items = style_complete_at(&src, None, off, None);
         let labs = labels(&items);
-        assert!(labs.contains(&"fill"), "setters: {labs:?}");
-        assert!(labs.contains(&"ink"), "setters: {labs:?}");
+        assert!(labs.contains(&"bg"), "live author name: {labs:?}");
+        assert!(labs.contains(&"fg"), "live author name: {labs:?}");
         assert!(labs.contains(&"radius"), "setters: {labs:?}");
-        // box-only concern should be filtered when channel is paint
+        // box-only rows stay off the paint channel
         assert!(
-            !labs.contains(&"space"),
-            "space is box channel, not paint: {labs:?}"
+            !labs.contains(&"pad") && !labs.contains(&"space"),
+            "pad/space are box, not paint: {labs:?}"
         );
         assert!(labs.contains(&"elevation"), "concern setter: {labs:?}");
+        // alias targets are not a mystery dual beside the v3 name
+        assert!(
+            !labs.contains(&"fill") && !labs.contains(&"ink"),
+            "fill/ink are alias targets, not offered: {labs:?}"
+        );
+    }
+
+    #[test]
+    fn complete_offers_bg_not_fill_dual() {
+        let (src, off) = at_caret("style({ paint: ¦ })");
+        let items = style_complete_at(&src, None, off, None);
+        let labs = labels(&items);
+        assert!(labs.contains(&"bg"), "complete must offer bg: {labs:?}");
+        assert!(
+            !labs.contains(&"fill"),
+            "complete must not dual-offer fill beside bg: {labs:?}"
+        );
+        assert!(!labs.contains(&"z"), "z is a position slot, not a setter");
     }
 
     #[test]

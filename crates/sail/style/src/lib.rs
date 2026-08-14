@@ -27,6 +27,7 @@ pub mod theme_env;
 pub mod token_groups;
 pub mod tokens;
 pub mod type_resolve;
+pub mod vocab;
 
 pub use complete::{
     collect_style_const_names, style_complete_at, style_complete_context_at,
@@ -65,6 +66,7 @@ pub use theme_env::{
     current_styling_policy, with_styling_policy, NamedStyle, PlayPreset, StylingPolicy, TagDefault,
     ThemeStyleEnv, VocabTag,
 };
+pub use vocab::{find_vocab, offered_rows, resolve_vocab, vocab_rows, VocabRow};
 pub use type_resolve::{resolve_type, resolve_type_for_tag, resolve_type_role, ResolvedType};
 
 #[cfg(test)]
