@@ -4,7 +4,7 @@
 //! setter names are a compile-process fail, not a warning.
 
 use sail_compiler::compile_element;
-use sail_lint::style::{parse, retired_dual_border_sites, rewrite_concern_source, StyleDiagnostic};
+use sail_lint::style::{StyleDiagnostic, parse};
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -43,8 +43,15 @@ fn workspace_root() -> PathBuf {
 fn skip_dir(name: &str) -> bool {
     matches!(
         name,
-        "node_modules" | "dist" | "target" | ".deck" | ".git" | "test-results"
-            | "content" | "tutorial" | "docs"
+        "node_modules"
+            | "dist"
+            | "target"
+            | ".deck"
+            | ".git"
+            | "test-results"
+            | "content"
+            | "tutorial"
+            | "docs"
     )
 }
 
@@ -339,33 +346,6 @@ fn absorbed_setter_sites(src: &str) -> Vec<String> {
         i += ch_len;
     }
     sites
-}
-
-#[test]
-fn rewrite_dialog_chain_to_concern_name() {
-    let got = rewrite_concern_source("style({ paint: borderWidth(1).border(dialog.border) })");
-    assert!(
-        got.contains("border(") && !got.contains("borderWidth"),
-        "dual border chain must fold: {got}"
-    );
-}
-
-#[test]
-fn rewrite_does_not_touch_radius() {
-    let got = rewrite_concern_source("style({ paint: borderWidth(1).border(primary).radius(md) })");
-    assert_eq!(
-        got, "style({ paint: border({ color: primary, width: 1 }).radius(md) })",
-        "{got}"
-    );
-}
-
-#[test]
-fn dual_detector_hard_fails_on_retired_chain() {
-    let sites = retired_dual_border_sites("style({ paint: borderWidth(1).border(primary) })");
-    assert!(
-        !sites.is_empty(),
-        "detector must see borderWidth next to border("
-    );
 }
 
 #[test]

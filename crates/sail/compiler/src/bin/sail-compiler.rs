@@ -216,16 +216,6 @@ enum Command {
         #[arg(long)]
         out: Option<PathBuf>,
     },
-    /// Rewrite covered `borderWidth` + `border(` property chains to concern
-    /// form (`border(dialog)` / `border({ color, width })`). Dry-run unless
-    /// `--write`. Does not delete property setters.
-    RewriteConcern {
-        /// `.sail` file or directory to walk.
-        input: PathBuf,
-        /// Write rewritten source in place.
-        #[arg(long)]
-        write: bool,
-    },
     /// Emit the sail ambient TypeScript pack (`node_modules/.sail/types.d.ts`)
     /// from the same manifests that drive the compiler (runtime ambient
     /// vocabulary + Style setters + token scales). Regenerable editor helper —
@@ -302,75 +292,12 @@ fn main() -> Result<()> {
         Command::Duplicates { dir, out } => gen_duplicates_report(dir, out),
         Command::Vocabulary { out } => gen_vocabulary(out),
         Command::Tokens { model, out } => gen_tokens(model, out),
-        Command::RewriteConcern { input, write } => rewrite_concern_cmd(input, write),
         Command::Types {
             project,
             tsconfig_out,
             out,
         } => gen_types(project, tsconfig_out, out),
     }
-}
-
-fn rewrite_concern_cmd(input: PathBuf, write: bool) -> Result<()> {
-    let mut files = Vec::new();
-    collect_sail_files(&input, &mut files)?;
-    if files.is_empty() {
-        anyhow::bail!("no .sail files under {}", input.display());
-    }
-    files.sort();
-    let mut changed = 0usize;
-    for path in &files {
-        let src = fs::read_to_string(path).with_context(|| format!("read {}", path.display()))?;
-        let next = sail_lint::style::rewrite_concern_source(&src);
-        if next == src {
-            continue;
-        }
-        changed += 1;
-        println!("{}", path.display());
-        if write {
-            fs::write(path, next).with_context(|| format!("write {}", path.display()))?;
-        }
-    }
-    println!(
-        "rewrite-concern: {changed} of {} files {}",
-        files.len(),
-        if write {
-            "written"
-        } else {
-            "would change (pass --write)"
-        }
-    );
-    Ok(())
-}
-
-fn collect_sail_files(path: &Path, out: &mut Vec<PathBuf>) -> Result<()> {
-    if path.is_file() {
-        if path.extension().and_then(|e| e.to_str()) == Some("sail") {
-            out.push(path.to_path_buf());
-        }
-        return Ok(());
-    }
-    if !path.is_dir() {
-        anyhow::bail!("not a file or directory: {}", path.display());
-    }
-    for entry in fs::read_dir(path).with_context(|| format!("read_dir {}", path.display()))? {
-        let entry = entry?;
-        let p = entry.path();
-        let name = entry.file_name();
-        let name = name.to_string_lossy();
-        if p.is_dir() {
-            if matches!(
-                name.as_ref(),
-                "node_modules" | "target" | ".git" | ".deck" | "dist"
-            ) {
-                continue;
-            }
-            collect_sail_files(&p, out)?;
-        } else if p.extension().and_then(|e| e.to_str()) == Some("sail") {
-            out.push(p);
-        }
-    }
-    Ok(())
 }
 
 /// Ambient pack → `<project>/node_modules/.sail/types.d.ts` (+ per-kind
