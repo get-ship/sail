@@ -27,7 +27,7 @@ use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result};
 
-use sail_lint::component_surfaces;
+use sail_style::component_surfaces;
 use sail_lint::scales;
 use sail_lint::token_groups::{self, color_group_names, color_groups, size_step_names};
 use sail_style::plains::{PlainSpec, find_plain};
