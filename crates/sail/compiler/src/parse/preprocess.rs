@@ -22,7 +22,7 @@ const VOID_TAGS: &[&str] = &[
 const SKIP_BODY_TAGS: &[&str] = &["scope", "controller", "script", "style", "partial"];
 
 pub fn preprocess(source: &str) -> Result<String, CompileError> {
-    Ok(preprocess_with_types(source)?.0)
+    Ok(preprocess_with_style(source)?.0)
 }
 
 /// Full preprocess plus Style-resolved type tokens per lifted host.
@@ -30,6 +30,14 @@ pub fn preprocess(source: &str) -> Result<String, CompileError> {
 pub fn preprocess_with_types(
     source: &str,
 ) -> Result<(String, Vec<sail_layout::TypeHost>), CompileError> {
+    let (html, hosts) = preprocess_with_style(source)?;
+    Ok((html, hosts.types))
+}
+
+/// Full preprocess plus Style-resolved type and box tokens per lifted host.
+pub fn preprocess_with_style(
+    source: &str,
+) -> Result<(String, sail_layout::StyleHosts), CompileError> {
     preprocess_impl_full(source, true)
 }
 
@@ -58,7 +66,7 @@ pub(crate) fn preprocess_impl(source: &str, expand_elements: bool) -> Result<Str
 fn preprocess_impl_full(
     source: &str,
     expand_elements: bool,
-) -> Result<(String, Vec<sail_layout::TypeHost>), CompileError> {
+) -> Result<(String, sail_layout::StyleHosts), CompileError> {
     // SPEC-PARTIAL-1: expand in-file `<partial>` BEFORE quote_brace_attrs so
     // bare param reads inside attr values (`token={token}`) are still
     // identifiers — quoting would bury them in `"{token}"` and block
@@ -72,11 +80,10 @@ fn preprocess_impl_full(
     // Type-keyed color-group props so `bg(tone)` / `bg(shade)` parse as bridge paths.
     let group_props = super::scope_block::color_group_typed_prop_names(&s);
     // Scope Style consts (`const filled = style(…)`) resolve Refs in host Style.
-    let (s, style_css, type_hosts) =
-        sail_lint::style::with_bound_group_props(&group_props, || {
-            let style_env = super::scope_block::style_env_from_source(&s);
-            lift_tag_style(&s, &style_env)
-        })?;
+    let (s, style_css, hosts) = sail_lint::style::with_bound_group_props(&group_props, || {
+        let style_env = super::scope_block::style_env_from_source(&s);
+        lift_tag_style(&s, &style_env)
+    })?;
     refuse_body_style_statements(&s)?;
     // L1 stdlib elements: splice structure; skins live in framework sheet.
     let (s, elements_css) = if expand_elements {
@@ -100,7 +107,7 @@ fn preprocess_impl_full(
     } else {
         format!("<style>{css}</style>\n{s}")
     };
-    Ok((html, type_hosts))
+    Ok((html, hosts))
 }
 
 /// Find every tag-position Style product expression in raw `.sail` source,
@@ -203,7 +210,7 @@ fn is_void_tag(tag: &str) -> bool {
 fn lift_tag_style(
     source: &str,
     env: &sail_lint::style::StyleEnv,
-) -> Result<(String, String, Vec<sail_layout::TypeHost>), CompileError> {
+) -> Result<(String, String, sail_layout::StyleHosts), CompileError> {
     struct Lift {
         gt_pos: usize,
         call_lo: usize,
@@ -215,7 +222,7 @@ fn lift_tag_style(
     let mut lifts: Vec<Lift> = Vec::new();
     let mut css = String::new();
     let mut seen: std::collections::HashSet<String> = std::collections::HashSet::new();
-    let mut type_hosts: Vec<sail_layout::TypeHost> = Vec::new();
+    let mut hosts = sail_layout::StyleHosts::default();
     let mut i = 0;
     while i < bytes.len() {
         if source[i..].starts_with("<!--") {
@@ -292,9 +299,13 @@ fn lift_tag_style(
                     .map_err(|diags| style_error(diags, call_lo, call_hi))?;
                 let val = strip_outer_braces(expr.trim());
                 let (style_ir, _) = sail_lint::style::parse(val);
-                let resolved = sail_lint::style::resolve_type(&style_ir, env);
-                if let Some(host) = sail_layout::TypeHost::from_resolved(&classes, &resolved) {
-                    type_hosts.push(host);
+                let resolved_type = sail_lint::style::resolve_type(&style_ir, env);
+                if let Some(host) = sail_layout::TypeHost::from_resolved(&classes, &resolved_type) {
+                    hosts.types.push(host);
+                }
+                let resolved_box = sail_layout::resolve_box(&style_ir, env);
+                if let Some(host) = sail_layout::BoxHost::from_resolved(&classes, &resolved_box) {
+                    hosts.boxes.push(host);
                 }
                 lifts.push(Lift {
                     gt_pos,
@@ -315,7 +326,7 @@ fn lift_tag_style(
     }
 
     if lifts.is_empty() {
-        return Ok((source.to_string(), css, type_hosts));
+        return Ok((source.to_string(), css, hosts));
     }
 
     let mut out = source.to_string();
@@ -346,7 +357,7 @@ fn lift_tag_style(
         push_motion_attrs(&mut inject, &lift.motions);
         out.insert_str(inject_at, &inject);
     }
-    Ok((out, css, type_hosts))
+    Ok((out, css, hosts))
 }
 
 /// Body-nested Style product is not a statement — generic unknown-statement error.
@@ -4633,25 +4644,35 @@ export default controller({ setup: () => ({ d: derived(() => signal(0)()) }) })\
         let (pre_xl, hosts_xl) = preprocess_impl_full(src_xl, false).expect("xl");
         let (pre_sm, hosts_sm) = preprocess_impl_full(src_sm, false).expect("sm");
         assert!(
-            hosts_xl.iter().any(|h| h.size.as_deref() == Some("xl")),
-            "type({{ size: xl }}) must resolve xl: {hosts_xl:?}"
+            hosts_xl
+                .types
+                .iter()
+                .any(|h| h.size.as_deref() == Some("xl")),
+            "type({{ size: xl }}) must resolve xl: {:?}",
+            hosts_xl.types
         );
         assert!(
-            hosts_sm.iter().any(|h| h.size.as_deref() == Some("sm")),
-            "type({{ size: sm }}) must resolve sm: {hosts_sm:?}"
+            hosts_sm
+                .types
+                .iter()
+                .any(|h| h.size.as_deref() == Some("sm")),
+            "type({{ size: sm }}) must resolve sm: {:?}",
+            hosts_sm.types
         );
-        let xl = sail_layout::check_preprocessed_with_types(
+        let xl = sail_layout::check_preprocessed_with_hosts(
             &pre_xl,
             (1440.0, 900.0),
             sail_layout::CheckOptions::default(),
-            &hosts_xl,
+            &hosts_xl.types,
+            &hosts_xl.boxes,
         )
         .expect("xl layout");
-        let sm = sail_layout::check_preprocessed_with_types(
+        let sm = sail_layout::check_preprocessed_with_hosts(
             &pre_sm,
             (1440.0, 900.0),
             sail_layout::CheckOptions::default(),
-            &hosts_sm,
+            &hosts_sm.types,
+            &hosts_sm.boxes,
         )
         .expect("sm layout");
         let xl_h = xl
@@ -4666,9 +4687,41 @@ export default controller({ setup: () => ({ d: derived(() => signal(0)()) }) })\
             .find(|b| b.tag == "span")
             .expect("sm span")
             .height;
+        assert!(xl_h > sm_h, "xl height ({xl_h}) must exceed sm ({sm_h})");
+    }
+
+    #[test]
+    fn box_from_style_ir_threads_to_layout() {
+        let src = r#"<div style({ box: display(flex).grow(1).overflow({ all: hidden }).position({ scheme: absolute }) })>x</div>"#;
+        let (pre, hosts) = preprocess_impl_full(src, false).expect("box style");
+        let host = hosts
+            .boxes
+            .iter()
+            .find(|h| {
+                h.resolved.display.as_deref() == Some("flex")
+                    && h.resolved.grow == Some(1.0)
+                    && h.resolved.overflow_x.as_deref() == Some("hidden")
+                    && h.resolved.position.as_deref() == Some("absolute")
+            })
+            .unwrap_or_else(|| panic!("box host missing: {:?}", hosts.boxes));
+        let mut elements = sail_layout::html::parse_source(&pre);
+        sail_layout::apply_resolved_boxes(&mut elements, &hosts.boxes);
+        let elem = elements.iter().find(|e| e.tag == "div").expect("div");
+        let resolved = sail_layout::style::resolve(elem, &elements, 1440.0);
+        use sail_layout::taffy::prelude::*;
+        use sail_layout::taffy::style::Overflow;
+        assert_eq!(resolved.style.display, Display::Flex);
+        assert!((resolved.style.flex_grow - 1.0).abs() < f32::EPSILON);
+        assert_eq!(resolved.style.overflow.x, Overflow::Hidden);
+        assert_eq!(resolved.style.position, Position::Absolute);
         assert!(
-            xl_h > sm_h,
-            "xl height ({xl_h}) must exceed sm ({sm_h})"
+            !host
+                .classes
+                .iter()
+                .any(|c| c.contains("displayflex")
+                    && elem.box_style.display.as_deref() != Some("flex")),
+            "measure must come from Style IR, not class spelling"
         );
+        let _ = pre;
     }
 }

@@ -58,8 +58,7 @@ pub fn collect(source: &str) -> Vec<Diagnostic> {
 /// severity promotion and experimental-kind enablement from the nearest
 /// `sail.config`.
 pub fn collect_for(source: &str, source_path: Option<&Path>) -> Vec<Diagnostic> {
-    let Ok((preprocessed, type_hosts)) = crate::parse::preprocess::preprocess_with_types(source)
-    else {
+    let Ok((preprocessed, hosts)) = crate::parse::preprocess::preprocess_with_style(source) else {
         return Vec::new();
     };
     let viewports = layout_viewports(&preprocessed);
@@ -75,11 +74,12 @@ pub fn collect_for(source: &str, source_path: Option<&Path>) -> Vec<Diagnostic> 
     let mut any_pass_err = false;
 
     for viewport in viewports {
-        match sail_layout::check_preprocessed_with_types(
+        match sail_layout::check_preprocessed_with_hosts(
             &preprocessed,
             viewport,
             check_opts,
-            &type_hosts,
+            &hosts.types,
+            &hosts.boxes,
         ) {
             Ok(result) => {
                 any_pass_ok = true;

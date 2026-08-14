@@ -1,10 +1,9 @@
-//! Data-driven mapping from SAIL layout classes and sx atoms to `taffy::Style`
-//! fields.
+//! Data-driven mapping from SAIL layout primitives to `taffy::Style` fields.
 //!
-//! This table is the conformance pin: the compiler emits CSS from the same
-//! vocabulary, and this crate configures taffy to match that CSS. Adding a new
-//! layout atom should mean adding one row here and one row to the compiler's
-//! lowering, not chasing conditionals across `style.rs`.
+//! Style box tokens (display / grow / overflow / position / pad / size) are
+//! applied from Style IR in `style.rs`. This table is the layout-primitive
+//! pin: `sail-col` / gap / align / grid tracks. Adding a new primitive means
+//! adding one row here and one row to the compiler's lowering.
 //!
 //! The table deliberately uses its own tiny value types rather than taffy's
 //! directly, because several taffy types contain raw pointers and are not
@@ -27,10 +26,6 @@ pub enum Selector {
         prefix: &'static str,
         value: &'static str,
     },
-    /// A sanitized sx atomic class, e.g. product `s-pad4` / `s-grow1`
-    /// (residual utility names like `s-p4` / `s-grow` still match for
-    /// fixtures and any leftover emit).
-    Sx(&'static str),
     /// The element whose *parent* carries the given base class. Used for child
     /// conventions (`min-width:0`, stack layering) without re-encoding the
     /// parent relationship inside every element's own class list.
@@ -469,175 +464,6 @@ pub static LAYOUT_RULES: &[LayoutRule] = &[
             value: "dense",
         },
         declarations: &[Declaration::GridAutoFlow(GridAutoFlow::RowDense)],
-    },
-    // --- finite sx atoms -----------------------------------------------------
-    LayoutRule {
-        selector: Selector::Sx("hidden"),
-        declarations: &[Declaration::Display(Display::None)],
-    },
-    // Style product: `style.display(none)` mints `s-displaynone` (not bare `hidden`).
-    LayoutRule {
-        selector: Selector::Sx("displaynone"),
-        declarations: &[Declaration::Display(Display::None)],
-    },
-    // Product `style.display(inline-flex|flex|block|…)` → `s-display*`.
-    // Longest / more-specific tokens first (inlineflex before inline, etc.).
-    LayoutRule {
-        selector: Selector::Sx("displayinlineflex"),
-        declarations: &[Declaration::Display(Display::Flex)],
-    },
-    LayoutRule {
-        selector: Selector::Sx("displayflex"),
-        declarations: &[Declaration::Display(Display::Flex)],
-    },
-    LayoutRule {
-        selector: Selector::Sx("displayinlineblock"),
-        declarations: &[Declaration::Display(Display::Block)],
-    },
-    LayoutRule {
-        selector: Selector::Sx("displayblock"),
-        declarations: &[Declaration::Display(Display::Block)],
-    },
-    LayoutRule {
-        selector: Selector::Sx("inline"),
-        declarations: &[Declaration::Display(Display::Flex)],
-    },
-    LayoutRule {
-        selector: Selector::Sx("inlineblock"),
-        declarations: &[Declaration::Display(Display::Block)],
-    },
-    LayoutRule {
-        selector: Selector::Sx("absolute"),
-        declarations: &[Declaration::Position(Position::Absolute)],
-    },
-    LayoutRule {
-        selector: Selector::Sx("relative"),
-        declarations: &[Declaration::Position(Position::Relative)],
-    },
-    LayoutRule {
-        selector: Selector::Sx("fixed"),
-        declarations: &[Declaration::Position(Position::Absolute)],
-    },
-    LayoutRule {
-        selector: Selector::Sx("sticky"),
-        declarations: &[Declaration::Position(Position::Relative)],
-    },
-    // Product Style / participation attrs: `style.grow(1)` / `grow` → `s-grow1`.
-    // Residual bare `s-grow` kept for fixtures + any leftover emit.
-    LayoutRule {
-        selector: Selector::Sx("grow1"),
-        declarations: &[Declaration::FlexGrow(1.0)],
-    },
-    LayoutRule {
-        selector: Selector::Sx("grow"),
-        declarations: &[Declaration::FlexGrow(1.0)],
-    },
-    LayoutRule {
-        selector: Selector::Sx("grow0"),
-        declarations: &[Declaration::FlexGrow(0.0)],
-    },
-    LayoutRule {
-        selector: Selector::Sx("shrink1"),
-        declarations: &[Declaration::FlexShrink(1.0)],
-    },
-    LayoutRule {
-        selector: Selector::Sx("shrink"),
-        declarations: &[Declaration::FlexShrink(1.0)],
-    },
-    LayoutRule {
-        selector: Selector::Sx("shrink0"),
-        declarations: &[Declaration::FlexShrink(0.0)],
-    },
-    LayoutRule {
-        selector: Selector::Sx("overflowhidden"),
-        declarations: &[Declaration::Overflow {
-            x: Overflow::Hidden,
-            y: Overflow::Hidden,
-        }],
-    },
-    LayoutRule {
-        selector: Selector::Sx("overflowauto"),
-        declarations: &[Declaration::Overflow {
-            x: Overflow::Scroll,
-            y: Overflow::Scroll,
-        }],
-    },
-    LayoutRule {
-        selector: Selector::Sx("overflowscroll"),
-        declarations: &[Declaration::Overflow {
-            x: Overflow::Scroll,
-            y: Overflow::Scroll,
-        }],
-    },
-    LayoutRule {
-        selector: Selector::Sx("overflowclip"),
-        declarations: &[Declaration::Overflow {
-            x: Overflow::Clip,
-            y: Overflow::Clip,
-        }],
-    },
-    LayoutRule {
-        selector: Selector::Sx("overflowvisible"),
-        declarations: &[Declaration::Overflow {
-            x: Overflow::Visible,
-            y: Overflow::Visible,
-        }],
-    },
-    LayoutRule {
-        selector: Selector::Sx("overflowxhidden"),
-        declarations: &[Declaration::Overflow {
-            x: Overflow::Hidden,
-            y: Overflow::Visible,
-        }],
-    },
-    LayoutRule {
-        selector: Selector::Sx("overflowxauto"),
-        declarations: &[Declaration::Overflow {
-            x: Overflow::Scroll,
-            y: Overflow::Visible,
-        }],
-    },
-    LayoutRule {
-        selector: Selector::Sx("overflowxscroll"),
-        declarations: &[Declaration::Overflow {
-            x: Overflow::Scroll,
-            y: Overflow::Visible,
-        }],
-    },
-    LayoutRule {
-        selector: Selector::Sx("overflowxclip"),
-        declarations: &[Declaration::Overflow {
-            x: Overflow::Clip,
-            y: Overflow::Visible,
-        }],
-    },
-    LayoutRule {
-        selector: Selector::Sx("overflowyhidden"),
-        declarations: &[Declaration::Overflow {
-            x: Overflow::Visible,
-            y: Overflow::Hidden,
-        }],
-    },
-    LayoutRule {
-        selector: Selector::Sx("overflowyauto"),
-        declarations: &[Declaration::Overflow {
-            x: Overflow::Visible,
-            y: Overflow::Scroll,
-        }],
-    },
-    LayoutRule {
-        selector: Selector::Sx("overflowyscroll"),
-        declarations: &[Declaration::Overflow {
-            x: Overflow::Visible,
-            y: Overflow::Scroll,
-        }],
-    },
-    LayoutRule {
-        selector: Selector::Sx("overflowyclip"),
-        declarations: &[Declaration::Overflow {
-            x: Overflow::Visible,
-            y: Overflow::Clip,
-        }],
     },
     // --- child conventions ---------------------------------------------------
     LayoutRule {
