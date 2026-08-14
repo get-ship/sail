@@ -10,11 +10,11 @@
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use sail_compiler::out_layout::resolve_out_dir;
 use sail_compiler::{
-    check_all, compile as compile_source, CompileMode, CompileOpts, ComponentMeta, DiagSeverity,
-    Policy,
+    CompileMode, CompileOpts, ComponentMeta, DiagSeverity, Policy, check_all,
+    compile as compile_source,
 };
 
 /// `sail --version` / `sail version` surface (C6).
@@ -585,15 +585,31 @@ fn check_app_ts(path: &Path) -> Result<()> {
     bail!("{} error(s)", errors.len())
 }
 
+fn workspace_rel(path: &Path, ctx: &sail_ops::Ctx) -> String {
+    if let Ok(r) = path.strip_prefix(&ctx.workspace_root) {
+        return r.to_string_lossy().replace('\\', "/");
+    }
+    let canon = path.canonicalize().unwrap_or_else(|_| path.to_path_buf());
+    let root = ctx
+        .workspace_root
+        .canonicalize()
+        .unwrap_or_else(|_| ctx.workspace_root.clone());
+    match canon.strip_prefix(&root) {
+        Ok(r) => r.to_string_lossy().replace('\\', "/"),
+        Err(_) => path.display().to_string(),
+    }
+}
+
 fn check_one(path: &Path, fix: &str) -> Result<usize> {
     let _source =
         std::fs::read_to_string(path).with_context(|| format!("read {}", path.display()))?;
 
     // Use the SailAuthoring/Check handler so fixes flow through the same
     // validate-before-write op path as the MCP/Connect surface.
+    // Authoring refuses absolute paths — pass a workspace-relative one.
     let ctx = sail_ops::default_ctx();
     let args = serde_json::json!({
-        "path": path.display().to_string(),
+        "path": workspace_rel(path, &ctx),
         "fix": fix,
         "actor": "sail-check-cli",
     });
