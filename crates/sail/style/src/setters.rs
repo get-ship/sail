@@ -1,4 +1,8 @@
-//! Table-driven Style setters → sx vocab atoms / CSS scales.
+//! Leftover plain lower helpers and when-key / CSS emit.
+//!
+//! Product names live on `vocab.rs`. Concern / axis emit lives on
+//! `concerns.rs`. This module lowers plains that are vocab rows and
+//! keeps `when_target` / clash helpers. It is not a product name atlas.
 
 use std::borrow::Cow;
 
@@ -9,7 +13,7 @@ use crate::style_vocab::{self, Resolved};
 
 use super::ir::{PaintArg, PaintOp, StyleDiagnostic};
 
-/// One product setter: `style.bg(token)`.
+/// Leftover plain helper used only after vocab confirms the name.
 #[derive(Debug, Clone, Copy)]
 pub struct SetterSpec {
     pub name: &'static str,
@@ -62,600 +66,9 @@ pub fn setter_doc_line(s: &SetterSpec) -> String {
     )
 }
 
-/// Closed product setter table (re-homes full vocab coverage via vocab heads).
-pub fn setters() -> &'static [SetterSpec] {
+/// Leftover plain lower helpers. Not a product name atlas — walk `vocab.rs`.
+fn leftover_plains() -> &'static [SetterSpec] {
     &[
-        SetterSpec {
-            name: "bg",
-            vocab: "bg",
-            scale: Some("color"),
-            keywords: &["transparent", "current", "currentColor", "inherit", "none"],
-            negatable: false,
-            slots: &["background-color", "background-image"],
-        },
-        SetterSpec {
-            name: "fg",
-            vocab: "text",
-            scale: Some("color"),
-            keywords: &["transparent", "current", "currentColor", "inherit"],
-            negatable: false,
-            slots: &["color"],
-        },
-        // border disambiguates color / width / style by value via vocab.
-        SetterSpec {
-            name: "border",
-            vocab: "border",
-            scale: Some("color"),
-            keywords: &[
-                "transparent",
-                "current",
-                "currentColor",
-                "solid",
-                "dashed",
-                "dotted",
-                "none",
-                "0",
-                "1",
-                "2",
-                "3",
-                "4",
-                "8",
-            ],
-            negatable: false,
-            slots: &["border-color", "border-width", "border-style"],
-        },
-        SetterSpec {
-            name: "borderX",
-            vocab: "border-x",
-            scale: Some("color"),
-            keywords: &[
-                "transparent",
-                "current",
-                "currentColor",
-                "0",
-                "1",
-                "2",
-                "3",
-                "4",
-                "8",
-            ],
-            negatable: false,
-            slots: &[
-                "border-left-color",
-                "border-right-color",
-                "border-left-width",
-                "border-right-width",
-                "border-left-style",
-                "border-right-style",
-            ],
-        },
-        SetterSpec {
-            name: "borderY",
-            vocab: "border-y",
-            scale: Some("color"),
-            keywords: &[
-                "transparent",
-                "current",
-                "currentColor",
-                "0",
-                "1",
-                "2",
-                "3",
-                "4",
-                "8",
-            ],
-            negatable: false,
-            slots: &[
-                "border-top-color",
-                "border-bottom-color",
-                "border-top-width",
-                "border-bottom-width",
-                "border-top-style",
-                "border-bottom-style",
-            ],
-        },
-        SetterSpec {
-            name: "borderS",
-            vocab: "border-s",
-            scale: Some("color"),
-            keywords: &[
-                "transparent",
-                "current",
-                "currentColor",
-                "0",
-                "1",
-                "2",
-                "3",
-                "4",
-                "8",
-            ],
-            negatable: false,
-            slots: &[
-                "border-inline-start-color",
-                "border-inline-start-width",
-                "border-inline-start-style",
-            ],
-        },
-        SetterSpec {
-            name: "borderE",
-            vocab: "border-e",
-            scale: Some("color"),
-            keywords: &[
-                "transparent",
-                "current",
-                "currentColor",
-                "0",
-                "1",
-                "2",
-                "3",
-                "4",
-                "8",
-            ],
-            negatable: false,
-            slots: &[
-                "border-inline-end-color",
-                "border-inline-end-width",
-                "border-inline-end-style",
-            ],
-        },
-        SetterSpec {
-            name: "borderT",
-            vocab: "border-t",
-            scale: Some("color"),
-            keywords: &[
-                "transparent",
-                "current",
-                "currentColor",
-                "0",
-                "1",
-                "2",
-                "3",
-                "4",
-                "8",
-            ],
-            negatable: false,
-            slots: &["border-top-color", "border-top-width", "border-top-style"],
-        },
-        SetterSpec {
-            name: "borderB",
-            vocab: "border-b",
-            scale: Some("color"),
-            keywords: &[
-                "transparent",
-                "current",
-                "currentColor",
-                "0",
-                "1",
-                "2",
-                "3",
-                "4",
-                "8",
-            ],
-            negatable: false,
-            slots: &[
-                "border-bottom-color",
-                "border-bottom-width",
-                "border-bottom-style",
-            ],
-        },
-        SetterSpec {
-            name: "borderR",
-            vocab: "border-r",
-            scale: Some("color"),
-            keywords: &[
-                "transparent",
-                "current",
-                "currentColor",
-                "0",
-                "1",
-                "2",
-                "3",
-                "4",
-                "8",
-            ],
-            negatable: false,
-            slots: &[
-                "border-right-color",
-                "border-right-width",
-                "border-right-style",
-            ],
-        },
-        SetterSpec {
-            name: "borderL",
-            vocab: "border-l",
-            scale: Some("color"),
-            keywords: &[
-                "transparent",
-                "current",
-                "currentColor",
-                "0",
-                "1",
-                "2",
-                "3",
-                "4",
-                "8",
-            ],
-            negatable: false,
-            slots: &[
-                "border-left-color",
-                "border-left-width",
-                "border-left-style",
-            ],
-        },
-        SetterSpec {
-            name: "borderWidth",
-            vocab: "border",
-            scale: None,
-            keywords: &["0", "1", "2", "3", "4", "8", "control-stroke"],
-            negatable: false,
-            slots: &["border-width"],
-        },
-        SetterSpec {
-            name: "borderBWidth",
-            vocab: "border-b",
-            scale: None,
-            keywords: &["0", "1", "2", "3", "4", "8"],
-            negatable: false,
-            slots: &["border-bottom-width"],
-        },
-        SetterSpec {
-            name: "borderTWidth",
-            vocab: "border-t",
-            scale: None,
-            keywords: &["0", "1", "2", "3", "4", "8"],
-            negatable: false,
-            slots: &["border-top-width"],
-        },
-        SetterSpec {
-            name: "borderEWidth",
-            vocab: "border-e",
-            scale: None,
-            keywords: &["0", "1", "2", "3", "4", "8"],
-            negatable: false,
-            slots: &["border-inline-end-width"],
-        },
-        SetterSpec {
-            name: "borderSWidth",
-            vocab: "border-s",
-            scale: None,
-            keywords: &["0", "1", "2", "3", "4", "8"],
-            negatable: false,
-            slots: &["border-inline-start-width"],
-        },
-        SetterSpec {
-            name: "borderRWidth",
-            vocab: "border-r",
-            scale: None,
-            keywords: &["0", "1", "2", "3", "4", "8"],
-            negatable: false,
-            slots: &["border-right-width"],
-        },
-        SetterSpec {
-            name: "borderLWidth",
-            vocab: "border-l",
-            scale: None,
-            keywords: &["0", "1", "2", "3", "4", "8"],
-            negatable: false,
-            slots: &["border-left-width"],
-        },
-        SetterSpec {
-            name: "radius",
-            vocab: "rounded",
-            scale: Some("radius"),
-            keywords: &["none", "full"],
-            negatable: false,
-            slots: &["border-radius"],
-        },
-        SetterSpec {
-            name: "radiusT",
-            vocab: "rounded-t",
-            scale: Some("radius"),
-            keywords: &["none", "full"],
-            negatable: false,
-            slots: &["border-start-start-radius", "border-start-end-radius"],
-        },
-        SetterSpec {
-            name: "radiusB",
-            vocab: "rounded-b",
-            scale: Some("radius"),
-            keywords: &["none", "full"],
-            negatable: false,
-            slots: &["border-end-start-radius", "border-end-end-radius"],
-        },
-        SetterSpec {
-            name: "radiusL",
-            vocab: "rounded-l",
-            scale: Some("radius"),
-            keywords: &["none", "full"],
-            negatable: false,
-            slots: &["border-start-start-radius", "border-end-start-radius"],
-        },
-        SetterSpec {
-            name: "radiusR",
-            vocab: "rounded-r",
-            scale: Some("radius"),
-            keywords: &["none", "full"],
-            negatable: false,
-            slots: &["border-start-end-radius", "border-end-end-radius"],
-        },
-        SetterSpec {
-            name: "pad",
-            vocab: "p",
-            scale: Some("space"),
-            keywords: &["0"],
-            negatable: false,
-            slots: &["padding"],
-        },
-        SetterSpec {
-            name: "padX",
-            vocab: "px",
-            scale: Some("space"),
-            keywords: &["0"],
-            negatable: false,
-            slots: &["padding-inline"],
-        },
-        SetterSpec {
-            name: "padY",
-            vocab: "py",
-            scale: Some("space"),
-            keywords: &["0"],
-            negatable: false,
-            slots: &["padding-block"],
-        },
-        SetterSpec {
-            name: "padT",
-            vocab: "pt",
-            scale: Some("space"),
-            keywords: &["0"],
-            negatable: false,
-            slots: &["padding-top"],
-        },
-        SetterSpec {
-            name: "padB",
-            vocab: "pb",
-            scale: Some("space"),
-            keywords: &["0"],
-            negatable: false,
-            slots: &["padding-bottom"],
-        },
-        SetterSpec {
-            name: "padL",
-            vocab: "pl",
-            scale: Some("space"),
-            keywords: &["0"],
-            negatable: false,
-            slots: &["padding-left"],
-        },
-        SetterSpec {
-            name: "padR",
-            vocab: "pr",
-            scale: Some("space"),
-            keywords: &["0"],
-            negatable: false,
-            slots: &["padding-right"],
-        },
-        SetterSpec {
-            name: "padS",
-            vocab: "ps",
-            scale: Some("space"),
-            keywords: &["0"],
-            negatable: false,
-            slots: &["padding-inline-start"],
-        },
-        SetterSpec {
-            name: "padE",
-            vocab: "pe",
-            scale: Some("space"),
-            keywords: &["0"],
-            negatable: false,
-            slots: &["padding-inline-end"],
-        },
-        SetterSpec {
-            name: "m",
-            vocab: "m",
-            scale: Some("space"),
-            keywords: &["0", "auto"],
-            negatable: true,
-            slots: &["margin"],
-        },
-        SetterSpec {
-            name: "mx",
-            vocab: "mx",
-            scale: Some("space"),
-            keywords: &["0", "auto"],
-            negatable: true,
-            slots: &["margin-inline"],
-        },
-        SetterSpec {
-            name: "my",
-            vocab: "my",
-            scale: Some("space"),
-            keywords: &["0", "auto"],
-            negatable: true,
-            slots: &["margin-block"],
-        },
-        SetterSpec {
-            name: "mt",
-            vocab: "mt",
-            scale: Some("space"),
-            keywords: &["0", "auto"],
-            negatable: true,
-            slots: &["margin-top"],
-        },
-        SetterSpec {
-            name: "mb",
-            vocab: "mb",
-            scale: Some("space"),
-            keywords: &["0", "auto"],
-            negatable: true,
-            slots: &["margin-bottom"],
-        },
-        SetterSpec {
-            name: "ms",
-            vocab: "ms",
-            scale: Some("space"),
-            keywords: &["0", "auto"],
-            negatable: true,
-            slots: &["margin-inline-start"],
-        },
-        SetterSpec {
-            name: "me",
-            vocab: "me",
-            scale: Some("space"),
-            keywords: &["0", "auto"],
-            negatable: true,
-            slots: &["margin-inline-end"],
-        },
-        SetterSpec {
-            name: "ml",
-            vocab: "ml",
-            scale: Some("space"),
-            keywords: &["0", "auto"],
-            negatable: true,
-            slots: &["margin-left"],
-        },
-        SetterSpec {
-            name: "mr",
-            vocab: "mr",
-            scale: Some("space"),
-            keywords: &["0", "auto"],
-            negatable: true,
-            slots: &["margin-right"],
-        },
-        SetterSpec {
-            name: "minH",
-            vocab: "min-h",
-            scale: Some("size"),
-            keywords: &["0", "full", "screen"],
-            negatable: false,
-            slots: &["min-height"],
-        },
-        SetterSpec {
-            name: "minW",
-            vocab: "min-w",
-            scale: Some("size"),
-            keywords: &["0", "full", "panel-menu-min-w", "panel-rail-w"],
-            negatable: false,
-            slots: &["min-width"],
-        },
-        SetterSpec {
-            name: "maxH",
-            vocab: "max-h",
-            scale: Some("size"),
-            keywords: &["0", "full", "screen"],
-            negatable: false,
-            slots: &["max-height"],
-        },
-        SetterSpec {
-            name: "maxW",
-            vocab: "max-w",
-            scale: Some("size"),
-            keywords: &[
-                "0",
-                "full",
-                "screen",
-                "none",
-                "panel-max-w-md",
-                "panel-max-w-sm",
-                "panel-max-w-lg",
-                "panel-max-w-xs",
-                "panel-ch-w-md",
-                "panel-ch-w-lg",
-            ],
-            negatable: false,
-            slots: &["max-width"],
-        },
-        SetterSpec {
-            name: "w",
-            vocab: "w",
-            scale: Some("size"),
-            keywords: &[
-                "0",
-                "full",
-                "auto",
-                "max",
-                "border-width",
-                "panel-toast-region-width",
-                "panel-max-w-md",
-                "panel-max-w-sm",
-                "panel-max-w-lg",
-                "panel-max-w-xs",
-            ],
-            negatable: false,
-            slots: &["width"],
-        },
-        SetterSpec {
-            name: "h",
-            vocab: "h",
-            scale: Some("size"),
-            keywords: &["0", "full", "auto", "border-width"],
-            negatable: false,
-            slots: &["height"],
-        },
-        SetterSpec {
-            name: "size",
-            vocab: "size",
-            scale: Some("size"),
-            keywords: &["0", "full"],
-            negatable: false,
-            slots: &["width", "height"],
-        },
-        SetterSpec {
-            name: "list",
-            vocab: "list",
-            scale: None,
-            keywords: &["none", "disc", "decimal"],
-            negatable: false,
-            slots: &["list-style-type"],
-        },
-        SetterSpec {
-            name: "fontSize",
-            vocab: "text",
-            scale: Some("text"),
-            keywords: &[],
-            negatable: false,
-            slots: &["font-size"],
-        },
-        SetterSpec {
-            name: "fontWeight",
-            vocab: "font",
-            scale: Some("weight"),
-            keywords: &[],
-            negatable: false,
-            slots: &["font-weight"],
-        },
-        SetterSpec {
-            name: "fontFamily",
-            vocab: "font",
-            scale: Some("font"),
-            keywords: &["body", "heading", "mono", "display"],
-            negatable: false,
-            slots: &["font-family"],
-        },
-        SetterSpec {
-            name: "leading",
-            vocab: "leading",
-            scale: Some("leading"),
-            keywords: &["none"],
-            negatable: false,
-            slots: &["line-height"],
-        },
-        SetterSpec {
-            name: "tracking",
-            vocab: "tracking",
-            scale: Some("tracking"),
-            keywords: &[],
-            negatable: false,
-            slots: &["letter-spacing"],
-        },
-        SetterSpec {
-            name: "shadow",
-            vocab: "shadow",
-            scale: Some("shadow"),
-            keywords: &["none"],
-            negatable: false,
-            slots: &["box-shadow"],
-        },
         SetterSpec {
             name: "opacity",
             vocab: "opacity",
@@ -666,101 +79,6 @@ pub fn setters() -> &'static [SetterSpec] {
             ],
             negatable: false,
             slots: &["opacity"],
-        },
-        SetterSpec {
-            name: "whitespace",
-            vocab: "whitespace",
-            scale: None,
-            keywords: &[
-                "normal",
-                "nowrap",
-                "pre",
-                "pre-line",
-                "pre-wrap",
-                "break-spaces",
-            ],
-            negatable: false,
-            slots: &["white-space"],
-        },
-        SetterSpec {
-            name: "align",
-            vocab: "align",
-            scale: None,
-            keywords: &[
-                "baseline",
-                "top",
-                "middle",
-                "bottom",
-                "text-top",
-                "text-bottom",
-            ],
-            negatable: false,
-            slots: &["vertical-align"],
-        },
-        SetterSpec {
-            name: "textAlign",
-            vocab: "text",
-            scale: None,
-            keywords: &["left", "center", "right", "justify", "start", "end"],
-            negatable: false,
-            slots: &["text-align"],
-        },
-        SetterSpec {
-            name: "break",
-            vocab: "break",
-            scale: None,
-            keywords: &["normal", "words", "all", "keep"],
-            negatable: false,
-            slots: &["overflow-wrap", "word-break"],
-        },
-        SetterSpec {
-            name: "stroke",
-            vocab: "stroke",
-            scale: Some("color"),
-            keywords: &["none", "current", "currentColor"],
-            negatable: false,
-            slots: &["stroke"],
-        },
-        SetterSpec {
-            name: "svgFill",
-            vocab: "fill",
-            scale: Some("color"),
-            keywords: &["none", "current", "currentColor"],
-            negatable: false,
-            slots: &["fill"],
-        },
-        SetterSpec {
-            name: "ring",
-            vocab: "outline",
-            scale: Some("color"),
-            keywords: &["none"],
-            negatable: false,
-            slots: &["outline-color", "outline-style"],
-        },
-        SetterSpec {
-            name: "outline",
-            vocab: "outline",
-            scale: None,
-            keywords: &[
-                "none",
-                "solid",
-                "dashed",
-                "1",
-                "2",
-                "4",
-                "ring-width",
-                "ring",
-            ],
-            negatable: false,
-            slots: &["outline-color", "outline-width", "outline-style"],
-        },
-        SetterSpec {
-            name: "outlineOffset",
-            vocab: "outline-offset",
-            scale: Some("space"),
-            keywords: &["0", "ring-offset", "ring-inset"],
-            negatable: false,
-            slots: &["outline-offset"],
         },
         SetterSpec {
             name: "translateX",
@@ -777,14 +95,6 @@ pub fn setters() -> &'static [SetterSpec] {
             keywords: &["0"],
             negatable: true,
             slots: &["translate"],
-        },
-        SetterSpec {
-            name: "z",
-            vocab: "z",
-            scale: Some("z"),
-            keywords: &["0", "1", "2", "auto"],
-            negatable: false,
-            slots: &["z-index"],
         },
         SetterSpec {
             name: "cursor",
@@ -829,52 +139,12 @@ pub fn setters() -> &'static [SetterSpec] {
             slots: &["pointer-events"],
         },
         SetterSpec {
-            name: "overflow",
-            vocab: "overflow",
-            scale: None,
-            keywords: &["auto", "hidden", "clip", "visible", "scroll"],
-            negatable: false,
-            slots: &["overflow"],
-        },
-        SetterSpec {
-            name: "overflowX",
-            vocab: "overflow-x",
-            scale: None,
-            keywords: &["auto", "hidden", "clip", "visible", "scroll"],
-            negatable: false,
-            slots: &["overflow-x"],
-        },
-        SetterSpec {
-            name: "overflowY",
-            vocab: "overflow-y",
-            scale: None,
-            keywords: &["auto", "hidden", "clip", "visible", "scroll"],
-            negatable: false,
-            slots: &["overflow-y"],
-        },
-        SetterSpec {
-            name: "overscroll",
-            vocab: "overscroll",
-            scale: None,
-            keywords: &["auto", "contain", "none"],
-            negatable: false,
-            slots: &["overscroll-behavior"],
-        },
-        SetterSpec {
             name: "tab",
             vocab: "tab",
             scale: None,
             keywords: &["1", "2", "4", "8"],
             negatable: false,
             slots: &["tab-size"],
-        },
-        SetterSpec {
-            name: "underline",
-            vocab: "underline",
-            scale: None,
-            keywords: &["true", "none", "line-through"],
-            negatable: false,
-            slots: &["text-decoration-line"],
         },
         SetterSpec {
             name: "scrollbarThumb",
@@ -909,54 +179,6 @@ pub fn setters() -> &'static [SetterSpec] {
             slots: &["display"],
         },
         SetterSpec {
-            name: "position",
-            vocab: "relative",
-            scale: None,
-            keywords: &["relative", "absolute", "sticky", "fixed", "static"],
-            negatable: false,
-            slots: &["position"],
-        },
-        SetterSpec {
-            name: "top",
-            vocab: "top",
-            scale: Some("space"),
-            keywords: &["0", "auto"],
-            negatable: true,
-            slots: &["top"],
-        },
-        SetterSpec {
-            name: "bottom",
-            vocab: "bottom",
-            scale: Some("space"),
-            keywords: &["0", "auto"],
-            negatable: true,
-            slots: &["bottom"],
-        },
-        SetterSpec {
-            name: "left",
-            vocab: "left",
-            scale: Some("space"),
-            keywords: &["0", "auto"],
-            negatable: true,
-            slots: &["left"],
-        },
-        SetterSpec {
-            name: "right",
-            vocab: "right",
-            scale: Some("space"),
-            keywords: &["0", "auto"],
-            negatable: true,
-            slots: &["right"],
-        },
-        SetterSpec {
-            name: "inset",
-            vocab: "inset",
-            scale: Some("space"),
-            keywords: &["0", "auto"],
-            negatable: true,
-            slots: &["inset"],
-        },
-        SetterSpec {
             name: "appearance",
             vocab: "appearance",
             scale: None,
@@ -987,15 +209,6 @@ pub fn setters() -> &'static [SetterSpec] {
             keywords: &["0", "1"],
             negatable: false,
             slots: &["flex-grow"],
-        },
-        // flex-basis — size scale (0 / full / breakpoint-* / panel-* / space ramp).
-        SetterSpec {
-            name: "basis",
-            vocab: "basis",
-            scale: Some("size"),
-            keywords: &["0", "auto", "full"],
-            negatable: false,
-            slots: &["flex-basis"],
         },
         SetterSpec {
             name: "self",
@@ -1045,7 +258,6 @@ pub fn setters() -> &'static [SetterSpec] {
             negatable: true,
             slots: &["rotate"],
         },
-        // Transform scale (CSS `scale`) — percent steps + bind for timeline tracks.
         SetterSpec {
             name: "scale",
             vocab: "scale",
@@ -1071,43 +283,6 @@ pub fn setters() -> &'static [SetterSpec] {
             keywords: &["0", "50", "60", "65", "75", "100"],
             negatable: false,
             slots: &["filter"],
-        },
-        // Phase 3 gap keys — clip / mask / filter suite / 3D / container queries.
-        SetterSpec {
-            name: "clipPath",
-            vocab: "clip-path",
-            scale: None,
-            keywords: &[
-                "none",
-                "circle",
-                "ellipse",
-                "inset-0",
-                "border-box",
-                "padding-box",
-                "content-box",
-                "fill-box",
-                "stroke-box",
-                "view-box",
-                "margin-box",
-            ],
-            negatable: false,
-            slots: &["clip-path"],
-        },
-        SetterSpec {
-            name: "mask",
-            vocab: "mask",
-            scale: None,
-            keywords: &["none"],
-            negatable: false,
-            slots: &["mask-image"],
-        },
-        SetterSpec {
-            name: "maskImage",
-            vocab: "mask-image",
-            scale: None,
-            keywords: &["none"],
-            negatable: false,
-            slots: &["mask-image"],
         },
         SetterSpec {
             name: "blur",
@@ -1170,14 +345,6 @@ pub fn setters() -> &'static [SetterSpec] {
             slots: &["filter"],
         },
         SetterSpec {
-            name: "perspective",
-            vocab: "perspective",
-            scale: None,
-            keywords: &["none", "0", "250", "500", "750", "1000", "1500", "2000"],
-            negatable: false,
-            slots: &["perspective"],
-        },
-        SetterSpec {
             name: "rotateX",
             vocab: "rotate-x",
             scale: Some("angle"),
@@ -1225,7 +392,6 @@ pub fn setters() -> &'static [SetterSpec] {
             negatable: false,
             slots: &["container-type"],
         },
-        // Host marker for group-* descendant host Style — class `sail-grp`, no CSS decls.
         SetterSpec {
             name: "group",
             vocab: "group",
@@ -1234,7 +400,6 @@ pub fn setters() -> &'static [SetterSpec] {
             negatable: false,
             slots: &[],
         },
-        // Bare composite atoms
         SetterSpec {
             name: "animate",
             vocab: "animate",
@@ -1243,24 +408,6 @@ pub fn setters() -> &'static [SetterSpec] {
             negatable: false,
             slots: &["animation"],
         },
-        SetterSpec {
-            name: "bgImage",
-            vocab: "bg-image",
-            scale: None,
-            keywords: &["none", "primary-accent"],
-            negatable: false,
-            slots: &["background-image"],
-        },
-        // Border-image corner treatment (component.card --corner-image).
-        SetterSpec {
-            name: "borderImage",
-            vocab: "border-image",
-            scale: None,
-            keywords: &["none", "corner-image"],
-            negatable: false,
-            slots: &["border-image"],
-        },
-        // Backdrop filter (+ webkit prefix) via component tokens (card --card-backdrop-filter).
         SetterSpec {
             name: "backdrop",
             vocab: "backdrop",
@@ -1284,7 +431,6 @@ pub fn setters() -> &'static [SetterSpec] {
                 "box-sizing",
             ],
         },
-        // SVG child pack: display/block + fill host size (icon glyph box).
         SetterSpec {
             name: "glyphFill",
             vocab: "glyph-fill",
@@ -1293,7 +439,6 @@ pub fn setters() -> &'static [SetterSpec] {
             negatable: false,
             slots: &["display", "width", "height"],
         },
-        // Standard scrollbar pack (width thin + color vars); webkit thumb chrome not on Style yet.
         SetterSpec {
             name: "scrollbarThin",
             vocab: "scrollbar-thin",
@@ -1302,7 +447,6 @@ pub fn setters() -> &'static [SetterSpec] {
             negatable: false,
             slots: &["scrollbar-width", "scrollbar-color"],
         },
-        // isolation: isolate (stacking root for overlays / theme swatches).
         SetterSpec {
             name: "isolate",
             vocab: "isolate",
@@ -1337,39 +481,6 @@ pub fn setters() -> &'static [SetterSpec] {
             negatable: false,
             slots: &["flex-direction"],
         },
-        // Bare text/layout composites (utility-string product is dead; Style owns these).
-        SetterSpec {
-            name: "truncate",
-            vocab: "truncate",
-            scale: None,
-            keywords: &[],
-            negatable: false,
-            slots: &["overflow", "text-overflow", "white-space"],
-        },
-        SetterSpec {
-            name: "textCase",
-            vocab: "uppercase",
-            scale: None,
-            keywords: &["uppercase", "lowercase", "capitalize", "normal"],
-            negatable: false,
-            slots: &["text-transform"],
-        },
-        SetterSpec {
-            name: "nums",
-            vocab: "tabular-nums",
-            scale: None,
-            keywords: &[
-                "tabular",
-                "lining",
-                "oldstyle",
-                "proportional",
-                "ordinal",
-                "slashed-zero",
-                "normal",
-            ],
-            negatable: false,
-            slots: &["font-variant-numeric"],
-        },
         SetterSpec {
             name: "origin",
             vocab: "origin",
@@ -1389,28 +500,6 @@ pub fn setters() -> &'static [SetterSpec] {
             slots: &["transform-origin"],
         },
         SetterSpec {
-            name: "textGradient",
-            vocab: "text-gradient",
-            scale: None,
-            keywords: &["primary", "accent"],
-            negatable: false,
-            slots: &[
-                "background",
-                "-webkit-background-clip",
-                "background-clip",
-                "color",
-            ],
-        },
-        SetterSpec {
-            name: "bgGlow",
-            vocab: "bg-glow",
-            scale: None,
-            keywords: &["primary", "accent"],
-            negatable: false,
-            slots: &["position", "inset", "background", "pointer-events"],
-        },
-        // a11y clip pack (position absolute + 1px box + overflow clip).
-        SetterSpec {
             name: "srOnly",
             vocab: "sr-only",
             scale: None,
@@ -1428,25 +517,6 @@ pub fn setters() -> &'static [SetterSpec] {
                 "border-width",
             ],
         },
-        // visibility: hidden | visible | collapse
-        SetterSpec {
-            name: "visibility",
-            vocab: "visibility",
-            scale: None,
-            keywords: &["hidden", "visible", "collapse"],
-            negatable: false,
-            slots: &["visibility"],
-        },
-        // aspect-ratio map (square / video / auto)
-        SetterSpec {
-            name: "aspect",
-            vocab: "aspect",
-            scale: None,
-            keywords: &["square", "video", "auto"],
-            negatable: false,
-            slots: &["aspect-ratio"],
-        },
-        // object-fit
         SetterSpec {
             name: "objectFit",
             vocab: "object",
@@ -1455,7 +525,6 @@ pub fn setters() -> &'static [SetterSpec] {
             negatable: false,
             slots: &["object-fit"],
         },
-        // CSS transform full value (canvas pan/zoom via bind)
         SetterSpec {
             name: "transform",
             vocab: "transform",
@@ -1464,64 +533,6 @@ pub fn setters() -> &'static [SetterSpec] {
             negatable: false,
             slots: &["transform"],
         },
-        // font-style
-        SetterSpec {
-            name: "italic",
-            vocab: "italic",
-            scale: None,
-            keywords: &["true", "false", "on", "off"],
-            negatable: false,
-            slots: &["font-style"],
-        },
-        // Legacy-vocab long tail — longhands that had no Style setter yet.
-        SetterSpec {
-            name: "decoration",
-            vocab: "decoration",
-            scale: Some("color"),
-            keywords: &["transparent", "current", "currentColor"],
-            negatable: false,
-            slots: &["text-decoration-color"],
-        },
-        SetterSpec {
-            name: "indent",
-            vocab: "indent",
-            scale: Some("space"),
-            keywords: &["0"],
-            negatable: false,
-            slots: &["text-indent"],
-        },
-        SetterSpec {
-            name: "underlineOffset",
-            vocab: "underline-offset",
-            scale: Some("space"),
-            keywords: &["auto"],
-            negatable: false,
-            slots: &["text-underline-offset"],
-        },
-        SetterSpec {
-            name: "antialiased",
-            vocab: "antialiased",
-            scale: None,
-            keywords: &["true", "false"],
-            negatable: false,
-            slots: &["-webkit-font-smoothing"],
-        },
-        SetterSpec {
-            name: "caret",
-            vocab: "caret",
-            scale: Some("color"),
-            keywords: &["transparent", "current", "currentColor"],
-            negatable: false,
-            slots: &["caret-color"],
-        },
-        SetterSpec {
-            name: "accent",
-            vocab: "accent",
-            scale: Some("color"),
-            keywords: &["auto", "transparent", "current", "currentColor"],
-            negatable: false,
-            slots: &["accent-color"],
-        },
         SetterSpec {
             name: "objectPosition",
             vocab: "object",
@@ -1529,30 +540,6 @@ pub fn setters() -> &'static [SetterSpec] {
             keywords: &["center", "top", "right", "bottom", "left"],
             negatable: false,
             slots: &["object-position"],
-        },
-        SetterSpec {
-            name: "order",
-            vocab: "order",
-            scale: None,
-            keywords: &["first", "last", "none"],
-            negatable: false,
-            slots: &["order"],
-        },
-        SetterSpec {
-            name: "justifySelf",
-            vocab: "justify-self",
-            scale: None,
-            keywords: &["auto", "start", "center", "end", "stretch"],
-            negatable: false,
-            slots: &["justify-self"],
-        },
-        SetterSpec {
-            name: "bgClip",
-            vocab: "bg-clip",
-            scale: None,
-            keywords: &["border", "padding", "content", "text"],
-            negatable: false,
-            slots: &["background-clip"],
         },
         SetterSpec {
             name: "touch",
@@ -1569,83 +556,6 @@ pub fn setters() -> &'static [SetterSpec] {
             negatable: false,
             slots: &["touch-action"],
         },
-        SetterSpec {
-            name: "resize",
-            vocab: "resize",
-            scale: None,
-            keywords: &["none", "y", "x", "both"],
-            negatable: false,
-            slots: &["resize"],
-        },
-        SetterSpec {
-            name: "scroll",
-            vocab: "scroll",
-            scale: None,
-            keywords: &["auto", "smooth"],
-            negatable: false,
-            slots: &["scroll-behavior"],
-        },
-        SetterSpec {
-            name: "willChange",
-            vocab: "will-change",
-            scale: None,
-            keywords: &["auto", "scroll-position", "contents", "transform"],
-            negatable: false,
-            slots: &["will-change"],
-        },
-        SetterSpec {
-            name: "contain",
-            vocab: "contain",
-            scale: None,
-            keywords: &["none", "content", "strict", "size", "layout", "paint"],
-            negatable: false,
-            slots: &["contain"],
-        },
-        // Host-paint gap for flex/grid containers outside layout keywords (button base box, etc.).
-        SetterSpec {
-            name: "gap",
-            vocab: "gap",
-            scale: Some("space"),
-            keywords: &["0"],
-            negatable: false,
-            slots: &["gap"],
-        },
-        SetterSpec {
-            name: "gapX",
-            vocab: "gap-x",
-            scale: Some("space"),
-            keywords: &["0"],
-            negatable: false,
-            slots: &["column-gap"],
-        },
-        SetterSpec {
-            name: "gapY",
-            vocab: "gap-y",
-            scale: Some("space"),
-            keywords: &["0"],
-            negatable: false,
-            slots: &["row-gap"],
-        },
-        // Hover-deepen primitive: color-mix toward foreground by percent.
-        SetterSpec {
-            name: "colorDeepen",
-            vocab: "color-deepen",
-            scale: None,
-            keywords: &[],
-            negatable: false,
-            slots: &["background-color"],
-        },
-        // Soft wash primitive: color-mix hue into transparent by percent
-        // (restores the deleted tone-*-bg ramp without minting design tokens).
-        SetterSpec {
-            name: "colorMix",
-            vocab: "color-mix",
-            scale: None,
-            keywords: &[],
-            negatable: false,
-            slots: &["background-color"],
-        },
-        // Tier-2 control chrome channels.
         SetterSpec {
             name: "controlFrame",
             vocab: "control-frame",
@@ -1670,36 +580,12 @@ pub fn setters() -> &'static [SetterSpec] {
             negatable: false,
             slots: &["translate", "scale", "box-shadow"],
         },
-        SetterSpec {
-            name: "elevation",
-            vocab: "elevation",
-            scale: None,
-            keywords: &[],
-            negatable: false,
-            slots: &["box-shadow"],
-        },
-        SetterSpec {
-            name: "type",
-            vocab: "type",
-            scale: None,
-            keywords: &[],
-            negatable: false,
-            slots: &["font-size", "font-weight", "line-height", "letter-spacing"],
-        },
-        SetterSpec {
-            name: "filter",
-            vocab: "filter",
-            scale: None,
-            keywords: &[],
-            negatable: false,
-            slots: &["filter", "backdrop-filter", "opacity"],
-        },
     ]
 }
 
 pub fn find_setter(name: &str) -> Option<&'static SetterSpec> {
     let key = if name == "dir" { "flexDir" } else { name };
-    setters().iter().find(|s| s.name == key)
+    leftover_plains().iter().find(|s| s.name == key)
 }
 
 /// Unique closest product setter for typo correction (confluent only).
@@ -1713,8 +599,8 @@ pub fn closest_unique_setter(typo: &str) -> Option<&'static str> {
     // score: (distance, prefix_penalty 0|1, len_delta)
     let mut best: Option<(usize, u8, usize, &'static str)> = None;
     let mut tied = false;
-    for s in setters() {
-        let name = s.name;
+    for row in crate::vocab::vocab_rows() {
+        let name = row.name;
         let name_l = name.to_ascii_lowercase();
         let cap = std::cmp::max(2, name.len() / 2 + 1);
         let d = setter_levenshtein(&typo_l, &name_l, cap + 1);
@@ -3665,15 +2551,21 @@ mod tests {
     }
 
     #[test]
-    fn every_setter_declares_slots() {
-        for s in setters() {
+    fn leftover_plains_declare_slots() {
+        for row in crate::vocab::vocab_rows() {
+            if row.tag != crate::vocab::VocabTag::Plain {
+                continue;
+            }
+            let Some(s) = find_setter(row.name) else {
+                continue;
+            };
             if s.name == "group" {
                 assert!(
                     s.slots.is_empty(),
                     "group is a host marker — no paint slots"
                 );
             } else {
-                assert!(!s.slots.is_empty(), "setter {} has no slots", s.name);
+                assert!(!s.slots.is_empty(), "plain {} has no slots", s.name);
             }
         }
     }
@@ -3706,17 +2598,9 @@ mod tests {
                 "caret-color",
                 "var(--primary)",
             ),
-            (
-                "style({ fg({ accent: auto }) })",
-                "accent-color",
-                "auto",
-            ),
+            ("style({ fg({ accent: auto }) })", "accent-color", "auto"),
             ("style({ position({ order: first }) })", "order", "-9999"),
-            (
-                "style({ bg({ clip: text }) })",
-                "background-clip",
-                "text",
-            ),
+            ("style({ bg({ clip: text }) })", "background-clip", "text"),
             (
                 "style({ box: overflow({ scroll: smooth }) })",
                 "scroll-behavior",

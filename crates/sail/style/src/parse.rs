@@ -4,7 +4,7 @@ use std::borrow::Cow;
 use std::collections::{BTreeMap, HashMap, HashSet};
 
 use super::ir::{PaintArg, PaintOp, Style, StyleDiagnostic};
-use super::setters::{closest_unique_setter, find_setter, validate_op, when_target};
+use super::setters::{validate_op, when_target};
 use super::theme_env::{ThemeStyleEnv, current_styling_policy};
 
 /// Parse a Style expression (product / channel-only). Flat `style.method(…)`
@@ -2060,7 +2060,7 @@ fn push_paint_op(
         return;
     }
     let (method, args) = crate::concerns::prepare_concern_call(method, args);
-    if find_setter(&method).is_none() && crate::concerns::find_concern(&method).is_none() {
+    if crate::vocab::find_vocab(&method).is_none() {
         diags.push(StyleDiagnostic::UnknownVocabulary {
             name: method.to_string(),
             source: source.clone(),
@@ -2285,7 +2285,6 @@ fn normalize_paint_arg(
     PaintArg::Token(value)
 }
 
-
 /// Dual-accept when args:
 /// - map form: `({ hover: style.bg(x), … })`
 /// - cond form: `(hover, { paint: bg(x) })` or `(hover, style.bg(x))` or `(hover, bg(x))`
@@ -2398,7 +2397,6 @@ fn unquote(w: &str) -> &str {
         w
     }
 }
-
 
 fn validate_style(style: &Style, diags: &mut Vec<StyleDiagnostic>) {
     match style {
@@ -2642,9 +2640,9 @@ mod flat_chain_tests {
         ] {
             let (_, diags) = parse(src);
             assert!(
-                diags.iter().any(|d| {
-                    matches!(d, crate::StyleDiagnostic::UnknownVocabulary { .. })
-                }),
+                diags
+                    .iter()
+                    .any(|d| { matches!(d, crate::StyleDiagnostic::UnknownVocabulary { .. }) }),
                 "{src} must be unknown vocabulary: {:?}",
                 msgs(&diags)
             );
@@ -2653,8 +2651,7 @@ mod flat_chain_tests {
 
     #[test]
     fn v2_channel_form_still_parses() {
-        let (style, diags) =
-            parse("style({ box: size({ w: full }).pad(4), paint: bg(surface) })");
+        let (style, diags) = parse("style({ box: size({ w: full }).pad(4), paint: bg(surface) })");
         assert!(diags.is_empty(), "{:?}", msgs(&diags));
         assert!(!matches!(style, Style::Empty));
         let (_, css) = lower_style(&style, &HashMap::new());
@@ -2759,10 +2756,7 @@ mod flat_chain_tests {
     #[test]
     fn open_local_ref_validates() {
         let mut env = HashMap::new();
-        env.insert(
-            "foo".into(),
-            parse("style({ bg(muted) })").0,
-        );
+        env.insert("foo".into(), parse("style({ bg(muted) })").0);
         let (style, diags) = parse("foo");
         assert!(diags.is_empty(), "{:?}", msgs(&diags));
         let refs = crate::parse::validate_style_refs(&style, &env);
@@ -2772,10 +2766,7 @@ mod flat_chain_tests {
     #[test]
     fn themed_local_ref_is_studio() {
         let mut env = HashMap::new();
-        env.insert(
-            "foo".into(),
-            parse("style({ bg(muted) })").0,
-        );
+        env.insert("foo".into(), parse("style({ bg(muted) })").0);
         let (style, _) = parse("foo");
         crate::with_styling_policy(crate::StylingPolicy::Themed, || {
             let refs = crate::parse::validate_style_refs(&style, &env);

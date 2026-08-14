@@ -6,7 +6,7 @@
 //! tables the compiler / lint already own:
 //!
 //! - [`crate::runtime_ambient::RUNTIME_AMBIENT`] — controller vocabulary
-//! - `sail_lint::style::setters` + scales — Style builder surface
+//! - `sail_lint::style` vocab + leftover plains — Style builder surface
 //! - token registry values — closed token unions + bare-ident ambient consts
 //!
 //! ## Two-checker contract
@@ -29,7 +29,8 @@ use anyhow::{Context, Result};
 
 use sail_lint::component_surfaces;
 use sail_lint::scales;
-use sail_lint::style::setters::{SetterSpec, setters};
+use sail_lint::style::setters::{SetterSpec, find_setter};
+use sail_lint::style::{VocabRow, VocabTag, find_concern, vocab_rows};
 use sail_lint::token_groups::{self, color_group_names, color_groups, size_step_names};
 
 /// Relative path of the ambient pack inside a sail project (SPEC-OUTPUT-1 §4).
@@ -52,7 +53,7 @@ const HEADER: &str = "\
 //
 // Sail ambient pack. Source of truth:
 //   crates/sail/compiler/src/runtime_ambient.rs
-//   crates/sail/style/src/setters.rs (+ scales / token registry)
+//   crates/sail/style/src/vocab.rs (+ leftover plains / scales / token registry)
 //   crates/sail/style/src/token_groups.rs (color groups / Tone + Size + member paths)
 // Regenerate: cargo run -p sail-compiler -- types [--project <dir>]
 //             (or: sail types --project <dir>)
@@ -1283,7 +1284,7 @@ fn is_ambient_const_name(tok: &str) -> bool {
 // ── Style builder ──────────────────────────────────────────────────────────
 
 fn emit_style_types(out: &mut String) {
-    out.push_str("// ── Style builder (from sail_lint::style::setters) ──\n");
+    out.push_str("// ── Style builder (from sail_lint::style vocab) ──\n");
 
     out.push_str(
         "/** Author motion config object (`enter({ opacity: 'fade' })`).\n\
@@ -1335,8 +1336,8 @@ fn emit_style_types(out: &mut String) {
     );
 
     out.push_str("interface SailStyleChain {\n");
-    for spec in setters() {
-        emit_setter_method(out, spec);
+    for row in vocab_rows() {
+        emit_vocab_method(out, row);
     }
     // Motion methods on the chain
     for m in MOTION_CHAIN_METHODS {
@@ -1366,6 +1367,30 @@ fn emit_style_types(out: &mut String) {
          }\n\
          \n",
     );
+}
+
+fn emit_vocab_method(out: &mut String, row: &VocabRow) {
+    if let Some(spec) = find_setter(row.name) {
+        emit_setter_method(out, spec);
+        return;
+    }
+    if row.name == "play" {
+        out.push_str(
+            "  play(preset: TokenOrBind<string>, duration?: TokenOrBind<string>): SailStyleChain\n",
+        );
+        return;
+    }
+    if matches!(row.tag, VocabTag::Concern | VocabTag::Axis) {
+        out.push_str(&format!(
+            "  {}(arg?: TokenOrBind<string | number> | Record<string, unknown>): SailStyleChain\n",
+            row.name
+        ));
+        return;
+    }
+    out.push_str(&format!(
+        "  {}(token?: TokenOrBind<string | number>): SailStyleChain\n",
+        row.name
+    ));
 }
 
 fn emit_setter_method(out: &mut String, spec: &SetterSpec) {
@@ -1463,7 +1488,7 @@ fn emit_globals(out: &mut String, bare_tokens: &BTreeSet<String>) {
 
     // Setter / motion / when-key names that also appear as token idents need a
     // callable∩literal hybrid — cannot emit both `const border` and `function border`.
-    let setter_names: BTreeSet<&str> = setters().iter().map(|s| s.name).collect();
+    let setter_names: BTreeSet<&str> = vocab_rows().iter().map(|r| r.name).collect();
     let motion_free: BTreeSet<&str> = MOTION_CHAIN_METHODS
         .iter()
         .copied()
@@ -1695,15 +1720,31 @@ fn emit_globals(out: &mut String, bare_tokens: &BTreeSet<String>) {
     // Not always present on a token scale — still need ambient consts for tsc.
     out.push_str("  // Style setter keyword idents (bare args).\n");
     let mut kw_seen: BTreeSet<&str> = BTreeSet::new();
-    for spec in setters() {
-        for kw in spec.keywords {
-            if !is_ambient_const_name(kw) {
-                continue;
+    for row in vocab_rows() {
+        if let Some(spec) = find_setter(row.name) {
+            for kw in spec.keywords {
+                if !is_ambient_const_name(kw) {
+                    continue;
+                }
+                if bare_tokens.contains(*kw) || hybrid_names.contains(kw) || !kw_seen.insert(kw) {
+                    continue;
+                }
+                out.push_str(&format!("  const {kw}: '{kw}'\n"));
             }
-            if bare_tokens.contains(*kw) || hybrid_names.contains(kw) || !kw_seen.insert(kw) {
-                continue;
+        }
+        if let Some(concern) = find_concern(row.name) {
+            for slot in concern.slots {
+                for kw in slot.keywords {
+                    if !is_ambient_const_name(kw) {
+                        continue;
+                    }
+                    if bare_tokens.contains(*kw) || hybrid_names.contains(kw) || !kw_seen.insert(kw)
+                    {
+                        continue;
+                    }
+                    out.push_str(&format!("  const {kw}: '{kw}'\n"));
+                }
             }
-            out.push_str(&format!("  const {kw}: '{kw}'\n"));
         }
     }
     out.push('\n');
@@ -1718,8 +1759,12 @@ fn emit_globals(out: &mut String, bare_tokens: &BTreeSet<String>) {
 
     // Free setters for channel bodies: `box: pad(4).gap(2)`, `paint: bg(primary)`.
     out.push_str("  // Free Style setters (channel body chains).\n");
-    for spec in setters() {
-        emit_free_setter(out, spec, bare_tokens);
+    for row in vocab_rows() {
+        if let Some(spec) = find_setter(row.name) {
+            emit_free_setter(out, spec, bare_tokens);
+        } else {
+            emit_free_vocab(out, row, bare_tokens);
+        }
     }
 
     // Free motion triggers for animate channel: `animate: enter({…}).exit({…})`.
@@ -1750,10 +1795,13 @@ fn emit_globals(out: &mut String, bare_tokens: &BTreeSet<String>) {
         if !setter_names.contains(tok.as_str()) {
             continue;
         }
-        let Some(spec) = setters().iter().find(|s| s.name == tok.as_str()) else {
+        if let Some(spec) = find_setter(tok.as_str()) {
+            emit_hybrid_token_setter(out, spec, tok);
             continue;
-        };
-        emit_hybrid_token_setter(out, spec, tok);
+        }
+        if let Some(row) = vocab_rows().iter().find(|r| r.name == tok.as_str()) {
+            emit_hybrid_vocab(out, row, tok);
+        }
     }
     for k in WHEN_IDENT_KEYS {
         let is_motion = motion_free.contains(k);
@@ -1767,8 +1815,10 @@ fn emit_globals(out: &mut String, bare_tokens: &BTreeSet<String>) {
         if is_setter {
             // Already hybridized with token/setter above when it's a token; pure setter when-keys rare.
             if !is_token {
-                if let Some(spec) = setters().iter().find(|s| s.name == *k) {
+                if let Some(spec) = find_setter(k) {
                     emit_hybrid_when_setter(out, spec, k, is_motion);
+                } else if vocab_rows().iter().any(|r| r.name == *k) {
+                    emit_hybrid_when_vocab(out, k, is_motion);
                 }
             }
             continue;
@@ -1801,6 +1851,68 @@ fn emit_globals(out: &mut String, bare_tokens: &BTreeSet<String>) {
 
     out.push_str(&emit_framework_platform_global_body());
     out.push_str("}\n\n");
+}
+
+fn emit_free_vocab(out: &mut String, row: &VocabRow, bare_tokens: &BTreeSet<String>) {
+    let name = row.name;
+    if bare_tokens.contains(name) || WHEN_IDENT_KEYS.contains(&name) || name == "press" {
+        return;
+    }
+    if name.contains('-') || JS_RESERVED.iter().any(|r| *r == name) {
+        return;
+    }
+    if row.name == "play" {
+        out.push_str(
+            "  function play(preset: TokenOrBind<string>, duration?: TokenOrBind<string>): SailStyleChain\n",
+        );
+        return;
+    }
+    if matches!(row.tag, VocabTag::Concern | VocabTag::Axis) {
+        out.push_str(&format!(
+            "  function {name}(arg?: TokenOrBind<string | number> | Record<string, unknown>): SailStyleChain\n"
+        ));
+        return;
+    }
+    out.push_str(&format!(
+        "  function {name}(token?: TokenOrBind<string | number>): SailStyleChain\n"
+    ));
+}
+
+fn emit_hybrid_vocab(out: &mut String, row: &VocabRow, tok: &str) {
+    let tok_ty = bare_token_type_expr(tok);
+    if row.name.contains('-') {
+        out.push_str(&format!("  const {tok}: {tok_ty}\n"));
+        return;
+    }
+    if matches!(row.tag, VocabTag::Concern | VocabTag::Axis) {
+        out.push_str(&format!(
+            "  const {}: {{\n\
+             \x20\x20 (arg?: TokenOrBind<string | number> | Record<string, unknown>): SailStyleChain\n\
+             \x20 }} & {tok_ty}\n",
+            row.name
+        ));
+        return;
+    }
+    out.push_str(&format!(
+        "  const {}: {{\n\
+         \x20\x20 (token?: TokenOrBind<string | number>): SailStyleChain\n\
+         \x20 }} & {tok_ty}\n",
+        row.name
+    ));
+}
+
+fn emit_hybrid_when_vocab(out: &mut String, key: &str, is_motion: bool) {
+    let motion = if is_motion {
+        "  (config: SailStyleMotionConfig): SailStyleChain\n"
+    } else {
+        ""
+    };
+    out.push_str(&format!(
+        "  const {key}: {{\n\
+         \x20\x20 (arg?: TokenOrBind<string | number> | Record<string, unknown>): SailStyleChain\n\
+         {motion}\
+         \x20 }} & '{key}'\n"
+    ));
 }
 
 fn emit_free_setter(out: &mut String, spec: &SetterSpec, bare_tokens: &BTreeSet<String>) {
@@ -1982,19 +2094,17 @@ mod tests {
     #[test]
     fn pack_contains_every_style_setter() {
         let dts = emit_types_dts();
-        for spec in setters() {
-            // focus-visible is quoted in the interface
-            let needle = if spec.name.contains('-') {
-                format!("'{}'", spec.name)
+        for row in vocab_rows() {
+            let needle = if row.name.contains('-') {
+                format!("'{}'", row.name)
             } else {
-                format!("{}(", spec.name)
+                format!("{}(", row.name)
             };
-            // zero-arg: `group()`
-            let alt = format!("{}()", spec.name);
+            let alt = format!("{}()", row.name);
             assert!(
-                dts.contains(&needle) || dts.contains(&alt) || dts.contains(spec.name),
-                "ambient pack missing Style setter `{}`",
-                spec.name
+                dts.contains(&needle) || dts.contains(&alt) || dts.contains(row.name),
+                "ambient pack missing Style name `{}`",
+                row.name
             );
         }
     }
