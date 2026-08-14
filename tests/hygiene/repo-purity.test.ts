@@ -16,7 +16,7 @@ const tracked = (): string[] =>
 const TOP_LEVEL_ALLOWLIST = new Set([
   '.cargo', '.deck', '.github', '.gitignore', '.lsp.json', '.npmrc',
   'AGENTS.md', 'CHANGELOG.md', 'Cargo.lock', 'Cargo.toml', 'LICENSE', 'README.md',
-  'apps', 'bun.lock', 'crates', 'docs', 'hooks', 'package.json', 'packages',
+  'apps', 'bun.lock', 'crates', 'hooks', 'package.json', 'packages',
   'rust-toolchain.toml', 'scripts', 'skills', 'tests', 'third_party',
   'vitest.config.ts',
 ])

@@ -42,14 +42,6 @@
       "expires": { "never": true }
     },
     {
-      "id": "spinnaker-v3-spec",
-      "kind": "keep",
-      "verdict": "KEEP",
-      "reason": "Living style-language spec; names the cut, does not keep a dual path.",
-      "paths": ["docs/SPEC-SPINNAKER-3.md"],
-      "expires": { "never": true }
-    },
-    {
       "id": "foreign-idiom-keypress-teaching",
       "kind": "guidance",
       "verdict": "KEEP",
