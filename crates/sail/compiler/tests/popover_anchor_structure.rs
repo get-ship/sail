@@ -1,7 +1,8 @@
 #[test]
 fn popover_structure_carries_use_anchor() {
-    let out = sail_compiler::compile_element(include_str!("../stdlib/popover.sail"), "popover")
-        .expect("popover compiles");
+    let out =
+        sail_compiler::compile_element(include_str!("../stdlib/popover/popover.sail"), "popover")
+            .expect("popover compiles");
     assert!(
         out.structure_html.contains("use:anchor"),
         "popover structure must stamp use:anchor for splice → runAction; got:\n{}",

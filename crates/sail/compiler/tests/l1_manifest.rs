@@ -3,8 +3,8 @@
 use std::collections::HashSet;
 
 use sail_compiler::l1_manifest::{
-    host_pack_alias, l1_by_kind, l1_entries, l1_kind, matrix_contract, surface_pack_for_host,
-    L1JsKind, L1Kind, L1Matrix,
+    L1JsKind, L1Kind, L1Matrix, host_pack_alias, l1_by_kind, l1_entries, l1_kind, matrix_contract,
+    surface_pack_for_host,
 };
 use sail_compiler::stdlib::{self, family_of, family_tags, is_family_host};
 
@@ -49,14 +49,19 @@ fn family_dirs_are_the_composition() {
     assert_eq!(family_of("tab-panel"), "tabs");
     assert_eq!(family_of("fieldset"), "fieldset");
     assert_eq!(family_of("legend"), "fieldset");
+    assert_eq!(family_of("toast"), "toast");
+    assert_eq!(family_of("toast-region"), "toast");
     assert_eq!(family_of("button"), "button");
     assert!(is_family_host("tabs"));
     assert!(!is_family_host("tab"));
+    assert!(is_family_host("toast"));
+    assert!(!is_family_host("toast-region"));
     assert_eq!(
         family_tags("tabs"),
         vec!["tabs", "tab", "tab-list", "tab-panel"]
     );
     assert_eq!(family_tags("fieldset"), vec!["fieldset", "legend"]);
+    assert_eq!(family_tags("toast"), vec!["toast", "toast-region"]);
 }
 
 #[test]

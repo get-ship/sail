@@ -153,6 +153,12 @@ mod tests {
     fn packages_exempt() {
         let src = r#"<div button.bg="primary">x</div>"#;
         assert!(check(Path::new("packages/components/sail/x.sail"), src).is_empty());
-        assert!(check(Path::new("crates/sail/compiler/stdlib/button.sail"), src).is_empty());
+        assert!(
+            check(
+                Path::new("crates/sail/compiler/stdlib/button/button.sail"),
+                src
+            )
+            .is_empty()
+        );
     }
 }

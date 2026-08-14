@@ -12,7 +12,7 @@ use std::collections::BTreeSet;
 #[cfg(not(target_arch = "wasm32"))]
 use std::path::Path;
 
-use crate::l1_manifest::{l1_entries, L1Entry};
+use crate::l1_manifest::{L1Entry, l1_entries};
 use crate::stdlib::{self, families, family_of, family_tags, is_family_host};
 
 /// Emit `catalog.ts` for `@ship/sail-l1`.
@@ -132,10 +132,18 @@ fn tag_literal(entry: &L1Entry) -> String {
         family = ts_str(family),
         role = role,
         desc = ts_str(&entry.description),
-        kids = if entry.accepts_children { "true" } else { "false" },
+        kids = if entry.accepts_children {
+            "true"
+        } else {
+            "false"
+        },
         props = props,
         axes = axes,
-        concerns = concerns.iter().map(|c| ts_str(c)).collect::<Vec<_>>().join(", "),
+        concerns = concerns
+            .iter()
+            .map(|c| ts_str(c))
+            .collect::<Vec<_>>()
+            .join(", "),
     )
 }
 
@@ -176,7 +184,7 @@ mod tests {
 
     #[test]
     fn card_spends_surface_concerns() {
-        let src = include_str!("../stdlib/card.sail");
+        let src = include_str!("../stdlib/card/card.sail");
         let c = concerns_spent(src);
         assert!(c.iter().any(|x| x == "border"), "{c:?}");
         assert!(c.iter().any(|x| x == "fg"), "{c:?}");

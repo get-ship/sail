@@ -1916,7 +1916,7 @@ mod tests {
 
     #[test]
     fn button_stdlib_harvests_variant_styles() {
-        let src = include_str!("../../stdlib/button.sail");
+        let src = include_str!("../../stdlib/button/button.sail");
         let env = style_env_from_source(src);
         for name in [
             "base",

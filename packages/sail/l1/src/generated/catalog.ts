@@ -86,8 +86,7 @@ export const FAMILIES: readonly L1Family[] = [
   { id: 'textarea', host: 'textarea', parts: [] },
   { id: 'theme-picker', host: 'theme-picker', parts: [] },
   { id: 'ticker', host: 'ticker', parts: [] },
-  { id: 'toast', host: 'toast', parts: [] },
-  { id: 'toast-region', host: 'toast-region', parts: [] },
+  { id: 'toast', host: 'toast', parts: ['toast-region'] },
   { id: 'toggle', host: 'toggle', parts: [] },
   { id: 'toggle-group', host: 'toggle-group', parts: [] },
   { id: 'tooltip', host: 'tooltip', parts: [] },
@@ -1087,8 +1086,8 @@ export const TAGS: readonly L1Tag[] = [
   },
   {
     tag: 'toast-region',
-    family: 'toast-region',
-    role: 'host',
+    family: 'toast',
+    role: 'part',
     description: 'fixed stacking region for toasts.',
     acceptsChildren: true,
     props: [

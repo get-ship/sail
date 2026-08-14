@@ -30,7 +30,7 @@ fn is_style_product(src: &str) -> bool {
 #[test]
 fn a_healthy_boundary_does_not_participate_in_layout() {
     let el = compile_element(
-        include_str!("../stdlib/error-boundary.sail"),
+        include_str!("../stdlib/error-boundary/error-boundary.sail"),
         "error-boundary",
     )
     .expect("element compiles");
@@ -62,11 +62,11 @@ fn a_healthy_boundary_does_not_participate_in_layout() {
 #[test]
 fn the_swap_is_a_css_gate_not_a_reactive_branch() {
     let el = compile_element(
-        include_str!("../stdlib/error-boundary.sail"),
+        include_str!("../stdlib/error-boundary/error-boundary.sail"),
         "error-boundary",
     )
     .expect("element compiles");
-    let src = include_str!("../stdlib/error-boundary.sail");
+    let src = include_str!("../stdlib/error-boundary/error-boundary.sail");
 
     assert!(
         (src.contains("group-caught") || src.contains("groupCaught"))
@@ -99,7 +99,7 @@ fn the_swap_is_a_css_gate_not_a_reactive_branch() {
 #[test]
 fn the_fallback_is_a_slot_with_a_built_in_default() {
     let el = compile_element(
-        include_str!("../stdlib/error-boundary.sail"),
+        include_str!("../stdlib/error-boundary/error-boundary.sail"),
         "error-boundary",
     )
     .expect("element compiles");

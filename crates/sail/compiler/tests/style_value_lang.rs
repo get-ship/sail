@@ -199,7 +199,7 @@ fn token_fail_closed() {
 
 #[test]
 fn badge_proving_ground_no_cva_no_tone_star() {
-    let src = include_str!("../stdlib/badge.sail");
+    let src = include_str!("../stdlib/badge/badge.sail");
     assert!(
         !src.contains("soft: '")
             && !src.contains("solid: '")
@@ -222,7 +222,7 @@ fn badge_proving_ground_no_cva_no_tone_star() {
 
 #[test]
 fn badge_compiles_and_emits_token_css() {
-    let src = include_str!("../stdlib/badge.sail");
+    let src = include_str!("../stdlib/badge/badge.sail");
     let out = compile_element(src, "badge").expect("badge compiles on Style path");
     assert!(!out.structure_html.is_empty(), "structure present");
     let paint = format!("{}{}", out.structure_html, out.skin_css);
@@ -236,7 +236,7 @@ fn badge_compiles_and_emits_token_css() {
 
 #[test]
 fn card_proving_ground_no_cva() {
-    let src = include_str!("../stdlib/card.sail");
+    let src = include_str!("../stdlib/card/card.sail");
     assert!(
         !src.contains("default: '") && !src.contains("md: '") && !src.contains("compound({"),
         "card must not use CVA string maps or scope compound arrays"
@@ -254,7 +254,7 @@ fn card_proving_ground_no_cva() {
 
 #[test]
 fn card_compiles_and_emits_token_css() {
-    let src = include_str!("../stdlib/card.sail");
+    let src = include_str!("../stdlib/card/card.sail");
     let out = compile_element(src, "card").expect("card compiles on Style path");
     let paint = format!("{}{}", out.structure_html, out.skin_css);
     assert!(
@@ -367,7 +367,7 @@ fn scope_style_const_in_match_arms() {
 
 #[test]
 fn badge_uses_scope_style_decls() {
-    let src = include_str!("../stdlib/badge.sail");
+    let src = include_str!("../stdlib/badge/badge.sail");
     assert!(
         src.contains("style base =") && src.contains("style soft ="),
         "badge proving ground should declare scope Style with style name ="
@@ -383,12 +383,18 @@ fn badge_uses_scope_style_decls() {
 #[test]
 fn batch_a_chrome_compile_on_style_path() {
     for (tag, src) in [
-        ("spinner", include_str!("../stdlib/spinner.sail")),
-        ("separator", include_str!("../stdlib/separator.sail")),
-        ("avatar", include_str!("../stdlib/avatar.sail")),
-        ("tooltip", include_str!("../stdlib/tooltip.sail")),
-        ("toast", include_str!("../stdlib/toast.sail")),
-        ("toast-region", include_str!("../stdlib/toast-region.sail")),
+        ("spinner", include_str!("../stdlib/spinner/spinner.sail")),
+        (
+            "separator",
+            include_str!("../stdlib/separator/separator.sail"),
+        ),
+        ("avatar", include_str!("../stdlib/avatar/avatar.sail")),
+        ("tooltip", include_str!("../stdlib/tooltip/tooltip.sail")),
+        ("toast", include_str!("../stdlib/toast/toast.sail")),
+        (
+            "toast-region",
+            include_str!("../stdlib/toast/toast-region.sail"),
+        ),
     ] {
         assert!(
             !src.contains("md: '")
@@ -413,10 +419,10 @@ fn batch_a_chrome_compile_on_style_path() {
 #[test]
 fn batch_b_controls_compile_on_style_path() {
     for (tag, src) in [
-        ("label", include_str!("../stdlib/label.sail")),
-        ("field", include_str!("../stdlib/field.sail")),
-        ("switch", include_str!("../stdlib/switch.sail")),
-        ("toggle", include_str!("../stdlib/toggle.sail")),
+        ("label", include_str!("../stdlib/label/label.sail")),
+        ("field", include_str!("../stdlib/field/field.sail")),
+        ("switch", include_str!("../stdlib/switch/switch.sail")),
+        ("toggle", include_str!("../stdlib/toggle/toggle.sail")),
         ("tab", include_str!("../stdlib/tabs/tab.sail")),
         ("tab-list", include_str!("../stdlib/tabs/tab-list.sail")),
     ] {
@@ -441,12 +447,21 @@ fn batch_b_controls_compile_on_style_path() {
 #[test]
 fn batch_c_surfaces_compile_on_style_path() {
     for (tag, src) in [
-        ("alert", include_str!("../stdlib/alert.sail")),
-        ("chip", include_str!("../stdlib/chip.sail")),
-        ("empty-state", include_str!("../stdlib/empty-state.sail")),
-        ("error-state", include_str!("../stdlib/error-state.sail")),
-        ("hover-card", include_str!("../stdlib/hover-card.sail")),
-        ("popover", include_str!("../stdlib/popover.sail")),
+        ("alert", include_str!("../stdlib/alert/alert.sail")),
+        ("chip", include_str!("../stdlib/chip/chip.sail")),
+        (
+            "empty-state",
+            include_str!("../stdlib/empty-state/empty-state.sail"),
+        ),
+        (
+            "error-state",
+            include_str!("../stdlib/error-state/error-state.sail"),
+        ),
+        (
+            "hover-card",
+            include_str!("../stdlib/hover-card/hover-card.sail"),
+        ),
+        ("popover", include_str!("../stdlib/popover/popover.sail")),
     ] {
         assert!(
             !src.contains("md: '")
@@ -485,17 +500,32 @@ fn batch_c_surfaces_compile_on_style_path() {
 #[test]
 fn batch_d_chrome_menus_compile_on_style_path() {
     for (tag, src) in [
-        ("dropdown", include_str!("../stdlib/dropdown.sail")),
-        ("context-menu", include_str!("../stdlib/context-menu.sail")),
-        ("menu-item", include_str!("../stdlib/menu-item.sail")),
-        ("combobox", include_str!("../stdlib/combobox.sail")),
-        ("navbar", include_str!("../stdlib/navbar.sail")),
-        ("page", include_str!("../stdlib/page.sail")),
-        ("prose", include_str!("../stdlib/prose.sail")),
-        ("code-block", include_str!("../stdlib/code-block.sail")),
-        ("radio", include_str!("../stdlib/radio.sail")),
-        ("radio-group", include_str!("../stdlib/radio-group.sail")),
-        ("scroll-area", include_str!("../stdlib/scroll-area.sail")),
+        ("dropdown", include_str!("../stdlib/dropdown/dropdown.sail")),
+        (
+            "context-menu",
+            include_str!("../stdlib/context-menu/context-menu.sail"),
+        ),
+        (
+            "menu-item",
+            include_str!("../stdlib/menu-item/menu-item.sail"),
+        ),
+        ("combobox", include_str!("../stdlib/combobox/combobox.sail")),
+        ("navbar", include_str!("../stdlib/navbar/navbar.sail")),
+        ("page", include_str!("../stdlib/page/page.sail")),
+        ("prose", include_str!("../stdlib/prose/prose.sail")),
+        (
+            "code-block",
+            include_str!("../stdlib/code-block/code-block.sail"),
+        ),
+        ("radio", include_str!("../stdlib/radio/radio.sail")),
+        (
+            "radio-group",
+            include_str!("../stdlib/radio-group/radio-group.sail"),
+        ),
+        (
+            "scroll-area",
+            include_str!("../stdlib/scroll-area/scroll-area.sail"),
+        ),
     ] {
         assert!(
             !src.contains("md: '")
@@ -519,19 +549,28 @@ fn batch_d_chrome_menus_compile_on_style_path() {
 fn batch_e_residuals_compile_on_style_path() {
     // Structure-only (no host paint): pagination, slider — excluded from paint asserts.
     for (tag, src) in [
-        ("breadcrumb", include_str!("../stdlib/breadcrumb.sail")),
-        ("accordion", include_str!("../stdlib/accordion.sail")),
-        ("kbd", include_str!("../stdlib/kbd.sail")),
-        ("skeleton", include_str!("../stdlib/skeleton.sail")),
+        (
+            "breadcrumb",
+            include_str!("../stdlib/breadcrumb/breadcrumb.sail"),
+        ),
+        (
+            "accordion",
+            include_str!("../stdlib/accordion/accordion.sail"),
+        ),
+        ("kbd", include_str!("../stdlib/kbd/kbd.sail")),
+        ("skeleton", include_str!("../stdlib/skeleton/skeleton.sail")),
         (
             "error-boundary",
-            include_str!("../stdlib/error-boundary.sail"),
+            include_str!("../stdlib/error-boundary/error-boundary.sail"),
         ),
-        ("icon", include_str!("../stdlib/icon.sail")),
+        ("icon", include_str!("../stdlib/icon/icon.sail")),
         ("tab-panel", include_str!("../stdlib/tabs/tab-panel.sail")),
         ("tabs", include_str!("../stdlib/tabs/tabs.sail")),
-        ("theme-picker", include_str!("../stdlib/theme-picker.sail")),
-        ("ticker", include_str!("../stdlib/ticker.sail")),
+        (
+            "theme-picker",
+            include_str!("../stdlib/theme-picker/theme-picker.sail"),
+        ),
+        ("ticker", include_str!("../stdlib/ticker/ticker.sail")),
     ] {
         assert!(
             !src.contains("md: '")
@@ -560,8 +599,11 @@ fn batch_e_residuals_compile_on_style_path() {
     }
     // Pure structure residuals: no host Style paint required.
     for (tag, src) in [
-        ("pagination", include_str!("../stdlib/pagination.sail")),
-        ("slider", include_str!("../stdlib/slider.sail")),
+        (
+            "pagination",
+            include_str!("../stdlib/pagination/pagination.sail"),
+        ),
+        ("slider", include_str!("../stdlib/slider/slider.sail")),
     ] {
         assert!(
             !src.contains("sx=\"") && !src.contains("md: '") && !src.contains("compound({"),
@@ -574,9 +616,9 @@ fn batch_e_residuals_compile_on_style_path() {
 #[test]
 fn date_file_color_compile_on_field_surface() {
     for (tag, src, wants_fg) in [
-        ("date", include_str!("../stdlib/date.sail"), true),
-        ("file", include_str!("../stdlib/file.sail"), true),
-        ("color", include_str!("../stdlib/color.sail"), false),
+        ("date", include_str!("../stdlib/date/date.sail"), true),
+        ("file", include_str!("../stdlib/file/file.sail"), true),
+        ("color", include_str!("../stdlib/color/color.sail"), false),
     ] {
         if wants_fg {
             assert!(
