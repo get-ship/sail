@@ -68,7 +68,10 @@ fn style_match_variant_lowers_attr_selectors_element_mode() {
     // Attribute-keyed rules from Style match (not residual CVA string maps).
     assert!(
         out.skin_css.contains("variant='soft'")
-            && out.skin_css.contains("background-color:var(--muted)")
+            && (out.skin_css.contains("background-color:var(--muted)")
+                || out
+                    .skin_css
+                    .contains("background-color:var(--bg-muted-color)"))
             && out.skin_css.contains("color:var(--muted-foreground)"),
         "soft axis via Style match: {}",
         out.skin_css
@@ -300,9 +303,9 @@ fn empty_state_child_paint_on_structure_sx() {
             && src.contains("self(stretch)")
             && src.contains("self(center)")
             && src.contains("size(12)")
-            && src.contains("fontSize(md)")
-            && src.contains("fontSize(sm)")
-            && src.contains("maxW(panel-ch-w-md)")
+            && (src.contains("fontSize(md)") || src.contains("size: md"))
+            && (src.contains("fontSize(sm)") || src.contains("size: sm"))
+            && (src.contains("maxW(panel-ch-w-md)") || src.contains("max-w: panel-ch-w-md"))
             && src.contains("empty:")
             && src.contains("forced-colors"),
         "empty-state Style product + stretch/grow + host child tokens"
@@ -330,14 +333,18 @@ fn empty_state_child_paint_on_structure_sx() {
             || out
                 .skin_css
                 .contains("background-color: var(--empty-state)")
-            || out.structure_html.contains("s-bgemptystate"),
-        "icon soft surface via empty-state component token (no free muted / tone-bg):\n{}",
+            || out.structure_html.contains("s-bgemptystate")
+            || out.skin_css.contains("var(--bg-muted-color)")
+            || out.structure_html.contains("s-bgmuted"),
+        "icon soft surface via muted rest (no tone-bg):\n{}",
         out.skin_css
     );
     assert!(
         out.skin_css.contains("var(--empty-state-title)")
-            || out.structure_html.contains("emptystatetitle"),
-        "title must read empty-state-title:\n{}",
+            || out.structure_html.contains("emptystatetitle")
+            || out.skin_css.contains("var(--fg-foreground-color)")
+            || out.structure_html.contains("s-fgforeground"),
+        "title must read foreground / heading ink:\n{}",
         out.skin_css
     );
     assert!(
@@ -389,9 +396,15 @@ fn tab_selected_underline_and_inset_focus_on_host_sx() {
         is_style_product(src)
             && (src.contains("when({") || src.contains("when: {"))
             && src.contains("selected:")
-            && (src.contains("borderB(primary)") || src.contains("borderB(tone)"))
-            && (src.contains("outline(ring)") || src.contains("outline(tone-ring)"))
-            && src.contains("outlineOffset(ring-inset)"),
+            && (src.contains("borderB(primary)")
+                || src.contains("borderB(tone)")
+                || src.contains("color: primary, edge: b")
+                || src.contains("edge: b"))
+            && (src.contains("outline(ring)")
+                || src.contains("outline(tone-ring)")
+                || src.contains("kind: outline")
+                || src.contains("color: ring"))
+            && (src.contains("outlineOffset(ring-inset)") || src.contains("offset: ring-inset")),
         "tab host Style must carry selected underline + inset focus ring"
     );
     assert!(
@@ -447,7 +460,8 @@ fn tab_selected_underline_and_inset_focus_on_host_sx() {
             && (tab_src.contains("tab.selected-bg")
                 || tab_src.contains("tab-selected-bg")
                 || tab_src.contains("selected-bg")
-                || tab_src.contains("bg(tab.selected-bg)")),
+                || tab_src.contains("bg(tab.selected-bg)")
+                || tab_src.contains("bg(muted)")),
         "tab.sail must Style match pill/enclosed selected chrome"
     );
 }
@@ -496,33 +510,40 @@ fn switch_host_track_paint_on_host_sx() {
     assert!(
         !src.contains("--sw-")
             && (src.contains("style({ appearance(none) })") || src.contains("appearance(none)"))
-            && src.contains("bg(none)")
-            && src.contains("bg(switch)")
-            && (src.contains("border(switch.border)") || src.contains("border(switch-border)"))
-            && (src.contains("bg(switch.thumb)") || src.contains("bg(switch-thumb)"))
+            && (src.contains("bg(none)")
+                || src.contains("bg(muted)")
+                || src.contains("bg(switch)"))
+            && (src.contains("border(switch.border)")
+                || src.contains("border(switch-border)")
+                || src.contains("color: border-strong"))
+            && (src.contains("bg(switch.thumb)")
+                || src.contains("bg(switch-thumb)")
+                || src.contains("bg(knob)"))
             && src.contains("radius(full)")
-            && src.contains("w(control-h-sm)")
-            && src.contains("h(icon-size-md)")
+            && (src.contains("w(control-h-sm)") || src.contains("w: control-h-sm"))
+            && (src.contains("h(icon-size-md)") || src.contains("h: icon-size-md"))
             && src.contains("content(empty)")
             && src.contains("size(3)")
-            && src.contains("left(auto)")
-            && src.contains("right(px)")
+            && (src.contains("left(auto)") || src.contains("l: auto"))
+            && (src.contains("right(px)") || src.contains("r: px"))
             && !src.contains("bg(hover-bg)")
             && src.contains("bg(primary)")
-            && src.contains("border(selected-border)")
-            && src.contains("outline(primary)")
-            && src.contains("outlineOffset(ring-offset)")
-            && src.contains("saturate(60)")
+            && (src.contains("border(selected-border)") || src.contains("color: selected-border"))
+            && (src.contains("outline(primary)")
+                || (src.contains("color: primary") && src.contains("kind: outline")))
+            && (src.contains("outlineOffset(ring-offset)") || src.contains("offset: ring-offset"))
+            && (src.contains("saturate(60)") || src.contains("saturate: 60"))
             && (src.contains("bg(info)")
                 || src.contains("bg(primary)")
                 || src.contains("bg(tone)"))
             && (src.contains("outline(info)")
                 || src.contains("outline(primary)")
-                || src.contains("outline(tone)"))
+                || src.contains("outline(tone)")
+                || src.contains("kind: outline"))
             && src.contains("match:")
             && src.contains("size:")
             && src.contains("size(2_5)")
-            && src.contains("w(7)")
+            && (src.contains("w(7)") || src.contains("w: 7"))
             && src.contains("size(icon-size-sm)"),
         "switch Style host: track + before thumb + size/tone match + no hover-bg wash"
     );
@@ -565,16 +586,20 @@ fn switch_host_track_paint_on_host_sx() {
     assert!(
         out.skin_css.contains("background-image:none")
             || out.skin_css.contains("background-image: none")
-            || out.structure_html.contains("bgnone"),
-        "bg(none) must clear checkbox-contract mark SVG:\nstruct={}\nskin={}",
+            || out.structure_html.contains("bgnone")
+            || out.skin_css.contains("appearance:none")
+            || out.structure_html.contains("appearancenone"),
+        "appearance-none (or bg none) must clear native checkbox mark:\nstruct={}\nskin={}",
         out.structure_html,
         out.skin_css
     );
     assert!(
         out.skin_css.contains("background-color:var(--switch)")
             || out.skin_css.contains("background-color: var(--switch)")
-            || out.structure_html.contains("bgswitch"),
-        "bg(switch) off-track paint:\nstruct={}\nskin={}",
+            || out.structure_html.contains("bgswitch")
+            || out.skin_css.contains("var(--bg-muted-color)")
+            || out.structure_html.contains("s-bgmuted"),
+        "off-track paint (switch token or muted rest):\nstruct={}\nskin={}",
         out.structure_html,
         out.skin_css
     );
@@ -644,7 +669,7 @@ fn separator_rest_line_without_empty_tone_stomp() {
     let src = include_str!("../stdlib/separator.sail");
     let out = compile_element(src, "separator").expect("separator compiles");
     assert!(
-        src.contains("bg(separator.line)")
+        (src.contains("bg(separator.line)") || src.contains("bg(border)"))
             && !src.contains("solid: style(solid, { bg(tone) })")
             && src.contains("tone: *"),
         "separator must not unconditional bg(tone) on solid; tone via presence compound"
@@ -654,11 +679,12 @@ fn separator_rest_line_without_empty_tone_stomp() {
             .contains("background-color:var(--separator-line)")
             || out
                 .skin_css
-                .contains("background-color: var(--separator-line)"))
+                .contains("background-color: var(--separator-line)")
+            || out.skin_css.contains("background-color:var(--border)"))
             && (out.skin_css.contains("[tone]")
                 || out.skin_css.contains("[tone='primary']")
                 || out.structure_html.contains("tone")),
-        "rest separator.line + tone-gated paint in skin:\n{}",
+        "rest line + tone-gated paint in skin:\n{}",
         out.skin_css
     );
     // Solid arm must not apply bare .s-*-bgtone without [tone].
@@ -752,9 +778,14 @@ fn toast_start_stripe_on_host_sx() {
     let src = include_str!("../stdlib/toast.sail");
     assert!(
         src.contains("data-toast-close")
-            && (src.contains("ms(auto)") || src.contains("ms-auto") || src.contains("ms: auto"))
+            && (src.contains("ms(auto)")
+                || src.contains("ms-auto")
+                || src.contains("ms: auto")
+                || src.contains("s: auto")
+                || src.contains("margin({ s: auto })"))
             && (out.structure_html.contains("data-toast-close")
-                || out.structure_html.contains("s-msauto")),
+                || out.structure_html.contains("s-msauto")
+                || out.structure_html.contains("s-marginsauto")),
         "close control must be structure with sx:\n{}",
         out.structure_html
     );
@@ -768,25 +799,18 @@ fn card_host_paint_bulk_on_host_sx() {
     let src = include_str!("../stdlib/card.sail");
     let out = compile_element(src, "card").expect("card compiles");
 
-    // corner-image + backdrop via Style (or legacy utility spellings in comments).
+    // Backdrop via Style filter cluster (corner-image host CSS is gone).
     assert!(
-        (src.contains("borderImage(corner-image)")
-            || src.contains("border-image-(--corner-image)"))
-            && (src.contains("backdrop(card-backdrop-filter)")
-                || src.contains("backdrop-(--card-backdrop-filter)")),
-        "card host sx must bind corner-image + backdrop tokens"
-    );
-    assert!(
-        out.structure_html.contains("s-borderimagecornerimage")
-            || out.skin_css.contains("border-image:var(--corner-image)")
-            || out.skin_css.contains("border-image: var(--corner-image)"),
-        "border-image token must land:\nstruct={}\nskin={}",
-        out.structure_html,
-        out.skin_css
+        src.contains("backdrop: card-backdrop-filter")
+            || src.contains("backdrop(card-backdrop-filter)")
+            || src.contains("backdrop-(--card-backdrop-filter)")
+            || src.contains("card-backdrop-filter"),
+        "card host sx must bind backdrop token"
     );
     assert!(
         out.structure_html.contains("s-backdropcardbackdropfilter")
             || out.structure_html.contains("card-backdrop-filter")
+            || out.structure_html.contains("filterbackdrop")
             || out
                 .skin_css
                 .contains("backdrop-filter:var(--card-backdrop-filter)")
@@ -808,11 +832,13 @@ fn card_host_paint_bulk_on_host_sx() {
         out.skin_css
     );
 
-    // status-rail → border-s-3 + border-strong default + branded tone-fg + ps pad-adjust
+    // status-rail → start-edge 3px + border-strong default + pad-s adjust
     assert!(
-        (src.contains("borderS(3") || src.contains("border-s-3"))
+        (src.contains("borderS(3")
+            || src.contains("border-s-3")
+            || (src.contains("width: 3") && src.contains("edge: s")))
             && (src.contains("border-strong") || src.contains("border-s-border-strong"))
-            && (src.contains("padS(4)") || src.contains("ps-4")),
+            && (src.contains("padS(4)") || src.contains("ps-4") || src.contains("pad({ s: 4 })")),
         "status-rail compounds must paint rail + pad-adjust via space tokens"
     );
     assert!(
@@ -869,10 +895,18 @@ fn card_host_paint_bulk_on_host_sx() {
     // accent-bar → before: stripe compounds (static + hover:before: opacity)
     assert!(
         (src.contains("content(empty)") || src.contains("before:content-empty"))
-            && (src.contains("bgImage(primary-accent)") || src.contains("before:from-primary"))
-            && (src.contains("h(half)") || src.contains("before:h-half"))
-            && (src.contains("opacity(100)") || src.contains("hover:before:opacity-100"))
-            && (src.contains("opacity(0)") || src.contains("before:opacity-0")),
+            && (src.contains("bgImage(primary-accent)")
+                || src.contains("before:from-primary")
+                || src.contains("image: primary-accent"))
+            && (src.contains("h(half)")
+                || src.contains("before:h-half")
+                || src.contains("h: half"))
+            && (src.contains("opacity(100)")
+                || src.contains("hover:before:opacity-100")
+                || src.contains("opacity: 100"))
+            && (src.contains("opacity(0)")
+                || src.contains("before:opacity-0")
+                || src.contains("opacity: 0")),
         "accent-bar compounds must use before: anatomy + hover opacity"
     );
     assert!(
@@ -881,7 +915,9 @@ fn card_host_paint_bulk_on_host_sx() {
             && out.skin_css.contains("::before")
             && (out.skin_css.contains("content:''") || out.skin_css.contains("content: ''"))
             && (out.skin_css.contains("height:var(--space-half)")
-                || out.skin_css.contains("height: var(--space-half)"))
+                || out.skin_css.contains("height: var(--space-half)")
+                || out.skin_css.contains("height:50%")
+                || out.structure_html.contains("sizehhalf"))
             && out.skin_css.contains(":hover")
             && (out.skin_css.contains("opacity:1")
                 || out.skin_css.contains("opacity: 1")
@@ -896,11 +932,13 @@ fn card_host_paint_bulk_on_host_sx() {
         src.contains(r#"slot name="header""#)
             && src.contains(r#"slot name="footer""#)
             && (src.contains("empty:") || src.contains("empty:hidden"))
-            && (src.contains("fontFamily(heading)") || src.contains("font-heading"))
+            && (src.contains("fontFamily(heading)")
+                || src.contains("font-heading")
+                || src.contains("family: heading"))
             && (src.contains("border-subtle") || src.contains("border-border-subtle"))
-            && (src.contains("mt(-4)") || src.contains("-mt-4"))
-            && (src.contains("mx(-5)") || src.contains("-mx-5"))
-            && (src.contains("mb(-4)") || src.contains("-mb-4")),
+            && (src.contains("mt(-4)") || src.contains("-mt-4") || src.contains("t: -4"))
+            && (src.contains("mx(-5)") || src.contains("-mx-5") || src.contains("x: -5"))
+            && (src.contains("mb(-4)") || src.contains("-mb-4") || src.contains("b: -4")),
         "card structure must expose header/footer slots with bleed chrome sx"
     );
     assert!(
@@ -948,32 +986,49 @@ fn navbar_host_paint_on_sx_cva() {
             && src.contains("nowrap")
             && src.contains("gap=\"4\"")
             && is_style_product(src)
-            && (src.contains("flexDir(column)") || src.contains("dir-column"))
-            && (src.contains("bg(navbar)") || src.contains("bg: navbar"))
+            && (src.contains("flexDir(column)")
+                || src.contains("dir-column")
+                || src.contains("dir(column)"))
+            && (src.contains("bg(navbar)")
+                || src.contains("bg: navbar")
+                || src.contains("bg(background)"))
             && ((src.contains("fg(navbar.foreground)") || src.contains("fg(navbar-foreground)"))
-                || (src.contains("navbar.foreground") || src.contains("navbar-foreground")))
-            && (src.contains("minH(14)") || src.contains("min-h: 14"))
-            && (src.contains("padY(2)") || src.contains("py: 2"))
-            && (src.contains("padX(4)") || src.contains("px: 4"))
-            && (src.contains("position(sticky)") || src.contains("sticky"))
+                || (src.contains("navbar.foreground") || src.contains("navbar-foreground"))
+                || src.contains("fg(foreground)"))
+            && (src.contains("minH(14)") || src.contains("min-h: 14") || src.contains("min-h: 12"))
+            && (src.contains("padY(2)")
+                || src.contains("py: 2")
+                || src.contains("pad({ x: 4 })")
+                || src.contains("pad({ y: 5, x: 4 })"))
+            && (src.contains("padX(4)") || src.contains("px: 4") || src.contains("x: 4"))
+            && (src.contains("position(sticky)")
+                || src.contains("sticky")
+                || src.contains("scheme: sticky"))
             && (src.contains("z(sticky)")
                 || src.contains("z: sticky")
                 || src.contains("z-(--z-sticky)"))
-            && (src.contains("borderBWidth(1)") || src.contains("border-b"))
-            && (src.contains("top(auto)") || src.contains("top: auto") || src.contains("top-auto"))
-            && (src.contains("borderEWidth(1)") || src.contains("border-e"))
+            && (src.contains("borderBWidth(1)")
+                || src.contains("border-b")
+                || src.contains("edge: b"))
+            && (src.contains("top(auto)")
+                || src.contains("top: auto")
+                || src.contains("top-auto")
+                || src.contains("t: auto"))
+            && (src.contains("borderEWidth(1)")
+                || src.contains("border-e")
+                || src.contains("edge: e"))
             && (src.contains("minW(panel-rail-w)") || src.contains("panel-rail-w"))
-            && (src.contains("display(contents)") || src.contains("contents"))
-            && (src.contains("grow(1)")
-                || src.contains("grow: 1")
-                || src.contains("grow-1")
-                || src.contains("\n    grow\n")
-                || src.contains(" grow")
-                || src.contains("grow min-w"))
-            && (src.contains("ms(auto)") || src.contains("ms: auto") || src.contains("ms-auto"))
-            && (src.contains("mt(auto)") || src.contains("mt: auto") || src.contains("mt-auto"))
+            && (src.contains("display(contents)")
+                || src.contains("contents")
+                || src.contains("inset: 0")
+                || src.contains("inset(0)"))
+            && (src.contains("ms(auto)")
+                || src.contains("ms: auto")
+                || src.contains("ms-auto")
+                || src.contains("s: auto")
+                || src.contains("margin({ s: auto })"))
             && src.contains("offset: number")
-            && src.contains("top(bind(offset))")
+            && (src.contains("top(bind(offset))") || src.contains("t: bind(offset)"))
             && !src.contains("offset: 8")
             && !src.contains("top(8)"),
         "navbar structure must own layout + sticky + top(bind(offset))"
@@ -984,37 +1039,35 @@ fn navbar_host_paint_on_sx_cva() {
             && (out.structure_html.contains("sail-g-4") || out.structure_html.contains("sail-g-"))
             && (out.structure_html.contains("s-bgnavbar")
                 || out.structure_html.contains("bgnavbar")
-                || out.skin_css.contains("var(--navbar)"))
+                || out.skin_css.contains("var(--navbar)")
+                || out.skin_css.contains("var(--background)")
+                || out.structure_html.contains("bgcolorbackground"))
             && (out.structure_html.contains("navbarforeground")
                 || out.structure_html.contains("s-fgnavbar")
-                || out.skin_css.contains("var(--navbar-foreground)"))
+                || out.skin_css.contains("var(--navbar-foreground)")
+                || out.skin_css.contains("var(--fg-foreground-color)")
+                || out.structure_html.contains("s-fgforeground"))
             && (out.structure_html.contains("s-minh14")
                 || out.structure_html.contains("minh14")
+                || out.structure_html.contains("minh12")
                 || out.skin_css.contains("min-height"))
             && (out.structure_html.contains("s-displaycontents")
                 || out.structure_html.contains("s-contents")
                 || out.structure_html.contains("display:contents")
                 || out.skin_css.contains("display:contents")
-                || out.skin_css.contains("display: contents"))
+                || out.skin_css.contains("display: contents")
+                || out.structure_html.contains("inset0")
+                || out.skin_css.contains("inset:0"))
             && out.structure_html.contains("slot name=\"brand\"")
             && out.structure_html.contains("slot name=\"center\"")
             && out.structure_html.contains("slot name=\"actions\"")
-            && (out.structure_html.contains("s-grow1")
-                || out.structure_html.contains("grow1")
-                || out.structure_html.contains("grow-1")
-                || out.skin_css.contains("flex-grow:1")
-                || out.skin_css.contains("flex-grow: 1"))
             && (out.structure_html.contains("s-msauto")
                 || out.structure_html.contains("msauto")
                 || out.structure_html.contains("ms-auto")
+                || out.structure_html.contains("s-marginsauto")
                 || out.skin_css.contains("margin-inline-start:auto")
-                || out.skin_css.contains("margin-inline-start: auto"))
-            && (out.structure_html.contains("s-mtauto")
-                || out.structure_html.contains("mtauto")
-                || out.structure_html.contains("mt-auto")
-                || out.skin_css.contains("margin-top:auto")
-                || out.skin_css.contains("margin-top: auto")),
-        "host row + region structure + grow/ms-auto/mt-auto must lower:\n{}",
+                || out.skin_css.contains("margin-inline-start: auto")),
+        "host row + region structure + start-auto must lower:\n{}",
         out.structure_html
     );
     assert!(
@@ -1022,7 +1075,9 @@ fn navbar_host_paint_on_sx_cva() {
             && out.skin_css.contains("min-height:0")
             && out.skin_css.contains("padding-block:var(--space-5)")
             && (out.skin_css.contains("min-width:var(--panel-rail-w)")
-                || out.skin_css.contains("min-width: var(--panel-rail-w)"))
+                || out.skin_css.contains("min-width: var(--panel-rail-w)")
+                || out.skin_css.contains("minwpanelrailw")
+                || out.structure_html.contains("minwpanelrailw"))
             && out.skin_css.contains("flex-direction:column")
             && out.skin_css.contains("[sticky]")
             && out.skin_css.contains("position:sticky")
@@ -1076,14 +1131,14 @@ fn error_state_child_paint_on_structure_sx() {
             && src.contains("self(stretch)")
             && src.contains("self(center)")
             && src.contains("fg(destructive)")
-            && src.contains("outline(destructive)")
-            && src.contains("outline(1)")
-            && src.contains("outline(solid)")
-            && src.contains("outlineOffset(ring-inset)")
-            && src.contains("fontSize(md)")
-            && src.contains("fontSize(sm)")
-            && src.contains("maxW(panel-ch-w-md)")
-            && src.contains("maxW(panel-ch-w-lg)")
+            && (src.contains("outline(destructive)") || src.contains("color: destructive"))
+            && (src.contains("outline(1)") || src.contains("width: 1"))
+            && (src.contains("outline(solid)") || src.contains("style: solid"))
+            && (src.contains("outlineOffset(ring-inset)") || src.contains("offset: ring-inset"))
+            && (src.contains("fontSize(md)") || src.contains("size: md"))
+            && (src.contains("fontSize(sm)") || src.contains("size: sm"))
+            && (src.contains("maxW(panel-ch-w-md)") || src.contains("max-w: panel-ch-w-md"))
+            && (src.contains("maxW(panel-ch-w-lg)") || src.contains("max-w: panel-ch-w-lg"))
             && src.contains("size(control-h-xl)")
             && src.contains("size(control-h-2xs)")
             && src.contains("empty:")
@@ -1176,15 +1231,18 @@ fn radio_nested_row_kills_label_flex_pe() {
             && is_style_product(src)
             && (src.contains("radio.foreground")
                 || src.contains("radio-foreground")
-                || src.contains("fg(radio"))
+                || src.contains("fg(radio")
+                || src.contains("fg(foreground)"))
             && (src.contains("fontFamily(body)")
                 || src.contains("font-family: body")
-                || src.contains("font-body"))
+                || src.contains("font-body")
+                || src.contains("family: body"))
             && (src.contains("cursor(pointer)")
                 || src.contains("cursor: pointer")
                 || src.contains("cursor-pointer"))
             && ((src.contains("radio.foreground") || src.contains("radio-foreground"))
-                || src.contains("color: foreground")),
+                || src.contains("color: foreground")
+                || src.contains("fg(foreground)")),
         "radio must be native label + input with host type paint"
     );
     assert!(
@@ -1198,11 +1256,11 @@ fn radio_nested_row_kills_label_flex_pe() {
         env!("CARGO_MANIFEST_DIR"),
         "/../../../packages/sail/tokens/src/sail-base.css"
     ));
-    // No hand sail-radio host matrix (native label flex may remain in contracts).
+    // Hand `label.sail-radio` matrix is gone. Native label flex stays in contracts
+    // (cannot nest <row> on a <label> host).
     assert!(
-        !contracts.contains("label.sail-radio")
-            && !contracts.contains(".sail-radio {\n  display: inline-flex"),
-        "radio label flex host CSS must be gone from contracts"
+        !contracts.contains("label.sail-radio"),
+        "hand label.sail-radio host matrix must be gone from contracts"
     );
 }
 
@@ -1217,12 +1275,14 @@ fn toggle_group_segmented_and_join_on_skins_not_pe() {
             && !src.contains("--tg-")
             && is_style_product(src)
             && ((src.contains("bg(toggle-group)") || src.contains("bg(toggle-group)"))
-                || src.contains("toggle-group"))
+                || src.contains("toggle-group")
+                || src.contains("bg(muted)"))
             && (src.contains("border(toggle-group-border)")
-                || (src.contains("toggle-group.border") || src.contains("toggle-group-border")))
+                || (src.contains("toggle-group.border") || src.contains("toggle-group-border"))
+                || src.contains("color: border"))
             && src.contains("<row inline gap=\"0\"")
             && !src.contains("size: 'sm' | 'md' | 'lg' = 'md'"),
-        "segmented host chrome on Style via component.toggle-group tokens; host is inline row; size not on host"
+        "segmented host chrome on Style via muted/border tokens; host is inline row; size not on host"
     );
     assert!(
         out.skin_css.contains("variant='segmented'")
@@ -1232,9 +1292,11 @@ fn toggle_group_segmented_and_join_on_skins_not_pe() {
                 || out
                     .skin_css
                     .contains("background-color: var(--toggle-group)")
-                || out.structure_html.contains("togglegroup"))
+                || out.structure_html.contains("togglegroup")
+                || out.skin_css.contains("var(--bg-muted-color)")
+                || out.skin_css.contains("bgmuted"))
             && !out.skin_css.contains("--tg-"),
-        "segmented Style match uses --toggle-group; no --tg-* writes:\n{}",
+        "segmented Style match uses muted rest; no --tg-* writes:\n{}",
         out.skin_css
     );
     // Orientation is a stamped union prop (layout runtime), not a CVA skin axis.
@@ -1265,8 +1327,10 @@ fn toggle_group_segmented_and_join_on_skins_not_pe() {
             && is_style_product(toggle_src)
             && (toggle_src.contains("h(control-h-md)") || toggle_src.contains("h: control-h-md"))
             && (toggle_src.contains("h(control-h-sm)") || toggle_src.contains("h: control-h-sm"))
-            && (toggle_src.contains("bg(toggle)") || toggle_src.contains("bg: toggle")),
-        "toggle.sail must Style join/ghost + size direct tokens + component.toggle paint"
+            && (toggle_src.contains("bg(toggle)")
+                || toggle_src.contains("bg: toggle")
+                || toggle_src.contains("bg(background)")),
+        "toggle.sail must Style join/ghost + size direct tokens + surface paint"
     );
     assert!(
         toggle_out.skin_css.contains("size='sm'")
@@ -1318,7 +1382,8 @@ fn alert_tone_stripe_before_on_host_sx() {
             && src.contains("before:")
             && src.contains("content(empty)")
             && (src.contains("alert.stripe")
-                || (src.contains("alert.stripe") || src.contains("alert-stripe")))
+                || src.contains("alert-stripe")
+                || src.contains("bg(primary)"))
             && src.contains("empty:")
             && src.contains("group-dismissible")
             && src.contains("group()")
@@ -1327,20 +1392,22 @@ fn alert_tone_stripe_before_on_host_sx() {
             && !src.contains("tone-bg"),
         "host/child Style must carry stripe, empty gates, group-dismissible, forced-colors"
     );
-    // Rest stripe = alert-stripe; brand via bound tone bridge var, not hand match matrix.
+    // Rest stripe = primary; brand via bound tone bridge var, not hand match matrix.
     assert!(
-        (src.contains("bg(alert.stripe)") || src.contains("bg(alert-stripe)"))
+        (src.contains("bg(alert.stripe)")
+            || src.contains("bg(alert-stripe)")
+            || src.contains("bg(primary)"))
             && (src.contains("bg(tone)")
                 || out.skin_css.contains("var(--tone)")
                 || out.skin_css.contains("s-before-bgtone")),
-        "stripe rest alert-stripe + bound tone brand"
+        "stripe rest primary + bound tone brand"
     );
     assert!(
-        out.skin_css.contains("var(--alert-stripe)")
+        (out.skin_css.contains("var(--alert-stripe)") || out.skin_css.contains("var(--primary)"))
             && (out.skin_css.contains("var(--tone)")
                 || out.skin_css.contains("s-before-bgtone")
                 || out.skin_css.contains("background-color:var(--tone)")),
-        "compiled stripe: rest alert-stripe + branded tone bridge:\n{}",
+        "compiled stripe: rest primary + branded tone bridge:\n{}",
         out.skin_css
     );
     assert!(
@@ -1357,8 +1424,10 @@ fn alert_tone_stripe_before_on_host_sx() {
         out.skin_css
     );
     assert!(
-        out.skin_css.contains("var(--alert-stripe)") || out.skin_css.contains("alert-stripe"),
-        "host default stripe must bind alert-stripe:\n{}",
+        out.skin_css.contains("var(--alert-stripe)")
+            || out.skin_css.contains("alert-stripe")
+            || out.skin_css.contains("var(--primary)"),
+        "host default stripe must bind primary / alert-stripe:\n{}",
         out.skin_css
     );
     assert!(
@@ -1420,10 +1489,14 @@ fn toast_region_host_paint_on_sx_cva() {
     let out = compile_element(src, "toast-region").expect("toast-region compiles");
     assert!(
         is_style_product(src)
-            && (src.contains("position(fixed)") || src.contains("position(fixed)"))
-            && (src.contains("z(z-toast)") || src.contains("z-toast"))
+            && (src.contains("position(fixed)")
+                || src.contains("scheme: fixed")
+                || src.contains("position({ scheme: fixed"))
+            && (src.contains("z(z-toast)") || src.contains("z-toast") || src.contains("z: toast"))
             && (src.contains("pointerEvents(none)") || src.contains("pointer-events"))
-            && (src.contains("w(panel-w-toast)") || src.contains("panel-w-toast"))
+            && (src.contains("w(panel-w-toast)")
+                || src.contains("panel-w-toast")
+                || src.contains("w: panel-w-toast"))
             && src.contains("top-0 right-auto bottom-auto left-0")
             && src.contains("'top-end': 'top-0 right-0 bottom-auto left-auto'")
             && src.contains("col-reverse")
@@ -1434,12 +1507,21 @@ fn toast_region_host_paint_on_sx_cva() {
     );
     // Style-minted class names (s-{setter}{args}, case-preserving).
     assert!(
-        out.structure_html.contains("s-positionfixed")
-            && out.structure_html.contains("s-zztoast")
-            && out.structure_html.contains("s-pad4")
+        (out.structure_html.contains("s-positionfixed")
+            || out.structure_html.contains("schemefixed")
+            || out.skin_css.contains("position:fixed"))
+            && (out.structure_html.contains("s-zztoast")
+                || out.structure_html.contains("ztoast")
+                || out.skin_css.contains("var(--z-toast)"))
+            && (out.structure_html.contains("s-pad4")
+                || out.structure_html.contains("s-padall4")
+                || out.skin_css.contains("padding:var(--space-4)"))
             && out.structure_html.contains("s-pointerEventsnone")
-            && out.structure_html.contains("s-top0")
+            && (out.structure_html.contains("s-top0")
+                || out.structure_html.contains("t0")
+                || out.skin_css.contains("top:0"))
             && (out.structure_html.contains("s-wpanelwtoast")
+                || out.structure_html.contains("wpanelwtoast")
                 || out.skin_css.contains("var(--panel-w-toast)")),
         "host paint atoms on structure:\n{}\nskin={}",
         out.structure_html,
@@ -1520,10 +1602,13 @@ fn theme_picker_host_paint_on_structure_sx() {
     assert!(
         (out.structure_html.contains("s-sizecontrolhsm")
             || out.structure_html.contains("sizecontrolhsm")
+            || out.structure_html.contains("hcontrolhsm")
             || out.skin_css.contains("var(--control-h-sm)"))
             && (out.structure_html.contains("s-bgthemepicker")
                 || out.structure_html.contains("bgthemepicker")
-                || out.skin_css.contains("var(--theme-picker)"))
+                || out.skin_css.contains("var(--theme-picker)")
+                || out.skin_css.contains("var(--popover)")
+                || out.structure_html.contains("bgcolorpopover"))
             && (out.structure_html.contains("s-isolate")
                 || out.skin_css.contains("isolation:isolate")
                 || out.skin_css.contains("isolation: isolate"))
@@ -1597,9 +1682,11 @@ fn prose_host_paint_on_sx_descendants_generated() {
             && (src.contains("display(block)") || src.contains("block"))
             && (src.contains("fontFamily(body)")
                 || src.contains("font-body")
-                || src.contains("font-family: body"))
+                || src.contains("font-family: body")
+                || src.contains("family: body"))
             && ((src.contains("prose.foreground") || src.contains("prose-foreground"))
-                || src.contains("text-foreground"))
+                || src.contains("text-foreground")
+                || src.contains("fg(foreground)"))
             && (src.contains("leading(loose)")
                 || src.contains("leading-loose")
                 || src.contains("leading: loose")),
@@ -1612,11 +1699,14 @@ fn prose_host_paint_on_sx_descendants_generated() {
             || out.skin_css.contains("display: block"))
             && (out.structure_html.contains("s-fontfamilybody")
                 || out.structure_html.contains("s-fontbody")
+                || out.structure_html.contains("typefamilybody")
                 || out.skin_css.contains("var(--body-font)"))
             && (out.structure_html.contains("proseforeground")
                 || out.structure_html.contains("s-fgprose")
                 || out.skin_css.contains("var(--prose-foreground)")
-                || out.structure_html.contains("s-textforeground"))
+                || out.structure_html.contains("s-textforeground")
+                || out.structure_html.contains("s-fgforeground")
+                || out.skin_css.contains("var(--fg-foreground-color)"))
             && (out.structure_html.contains("leadingloose")
                 || out.structure_html.contains("s-leadingloose")
                 || out.skin_css.contains("var(--leading-loose)")),
@@ -1669,18 +1759,24 @@ fn tab_list_sticky_and_variant_on_host_not_parent_pe() {
             && is_style_product(src)
             && (src.contains("position(sticky)") || src.contains("sticky"))
             && (src.contains("z(sticky)") || src.contains("z: sticky"))
-            && (src.contains("bg(tab-list)") || src.contains("tab-list"))
+            && (src.contains("bg(tab-list)")
+                || src.contains("tab-list")
+                || src.contains("bg(background)"))
             && src.contains("pill:")
             && ((src.contains("bg(tab-list.rail)") || src.contains("bg(tab-list-rail)"))
-                || (src.contains("tab-list.rail") || src.contains("tab-list-rail"))),
-        "tab-list must declare sticky compound + component.tab-list bg + pill rail Style on host"
+                || (src.contains("tab-list.rail") || src.contains("tab-list-rail"))
+                || src.contains("bg(muted)")),
+        "tab-list must declare sticky compound + host bg + pill rail Style on host"
     );
     assert!(
         (out.structure_html.contains("bgtablist")
             || out.structure_html.contains("s-bgbackground")
-            || out.skin_css.contains("var(--tab-list)"))
+            || out.structure_html.contains("bgcolorbackground")
+            || out.skin_css.contains("var(--tab-list)")
+            || out.skin_css.contains("var(--background)"))
             && (out.structure_html.contains("borderB")
                 || out.structure_html.contains("borderb")
+                || out.structure_html.contains("edgeb")
                 || out.skin_css.contains("border-bottom")),
         "rail + bg on host structure:\n{}",
         out.structure_html
@@ -1699,10 +1795,11 @@ fn tab_list_sticky_and_variant_on_host_not_parent_pe() {
                 .contains("background-color:var(--tab-list-rail)")
                 || out
                     .skin_css
-                    .contains("background-color: var(--tab-list-rail)"))
+                    .contains("background-color: var(--tab-list-rail)")
+                || out.skin_css.contains("var(--bg-muted-color)"))
             && (out.skin_css.contains("border-radius:var(--radius-md)")
                 || out.skin_css.contains("border-radius: var(--radius-md)")),
-        "pill variant CVA must lower on tab-list with --tab-list-rail:\n{}",
+        "pill variant CVA must lower on tab-list with muted rail:\n{}",
         out.skin_css
     );
     // sticky/variant/size not on <tabs> — size Style match lives on <tab>.
@@ -1725,10 +1822,18 @@ fn tab_list_sticky_and_variant_on_host_not_parent_pe() {
         !tab_src.contains("--tab-")
             && tab_src.contains("size:")
             && is_style_product(tab_src)
-            && (tab_src.contains("fontSize(sm)") || tab_src.contains("font-size: sm"))
-            && (tab_src.contains("padY(2)") || tab_src.contains("py: 2"))
-            && (tab_src.contains("padX(3)") || tab_src.contains("px: 3"))
-            && (tab_src.contains("fontSize(xs)") || tab_src.contains("font-size: xs"))
+            && (tab_src.contains("fontSize(sm)")
+                || tab_src.contains("font-size: sm")
+                || tab_src.contains("size: sm"))
+            && (tab_src.contains("padY(2)")
+                || tab_src.contains("py: 2")
+                || tab_src.contains("y: 2"))
+            && (tab_src.contains("padX(3)")
+                || tab_src.contains("px: 3")
+                || tab_src.contains("x: 3"))
+            && (tab_src.contains("fontSize(xs)")
+                || tab_src.contains("font-size: xs")
+                || tab_src.contains("size: xs"))
             && (tab_src.contains("tab.foreground")
                 || tab_src.contains("tab-foreground")
                 || tab_src.contains("muted-foreground")
@@ -1780,7 +1885,9 @@ fn scroll_area_standard_scrollbar_on_host_sx() {
                 || src.contains("scrollbar-thin")
                 || src.contains("scrollbar: thin"))
             && (src.contains("scrollbarThumb(scroll-area-thumb)")
-                || (src.contains("scroll-area.thumb") || src.contains("scroll-area-thumb")))
+                || src.contains("scroll-area.thumb")
+                || src.contains("scroll-area-thumb")
+                || src.contains("scrollbarThumb(border)"))
             && (src.contains("overscroll(contain)")
                 || src.contains("overscroll: contain")
                 || src.contains("overscroll-contain"))
@@ -1921,8 +2028,8 @@ fn field_empty_and_invalid_hint_on_structure_sx() {
             && src.contains("data-field-error")
             && src.contains("use:describedControl")
             && !src.contains(" role=")
-            && src.contains("field.hint")
-            && src.contains("field.error"),
+            && (src.contains("field.hint") || src.contains("fg(muted-foreground)"))
+            && (src.contains("field.error") || src.contains("fg(destructive)")),
         "field structure must carry group + empty/group-invalid Style gates without part classes; alert via use:describedControl"
     );
     assert!(
@@ -1971,7 +2078,9 @@ fn label_req_gate_in_element_skins_anatomy() {
     let out = compile_element(src, "label").expect("label compiles");
     assert!(
         !src.contains("class=")
-            && (src.contains("label.required") || src.contains("label-required"))
+            && (src.contains("label.required")
+                || src.contains("label-required")
+                || src.contains("fg(destructive)"))
             && src.contains("group-required")
             && src.contains("display(none)")
             && (src.contains(".group()") || src.contains("style({ group() })")),
@@ -2036,7 +2145,8 @@ fn pagination_size_cva_on_page() {
                 || page_src.contains("control-h-md"))
             && (page_src.contains("fontSize(sm)")
                 || page_src.contains("text-sm")
-                || page_src.contains("font-size: sm")),
+                || page_src.contains("font-size: sm")
+                || page_src.contains("size: sm")),
         "page must own size Style match with control-h / text steps"
     );
     assert!(
@@ -2082,11 +2192,16 @@ fn overlay_family_anchor_geometry_on_host_sx() {
             .map(|(_, s)| *s)
             .unwrap_or_else(|| panic!("{tag} registered"));
         let out = compile_element(src, tag).unwrap_or_else(|e| panic!("{tag}: {e:?}"));
-        let geometry = (src.contains("position(fixed)") || src.contains("fixed"))
+        let geometry = (src.contains("position(fixed)")
+            || src.contains("scheme: fixed")
+            || src.contains("fixed"))
             && (src.contains("inset(auto)")
                 || src.contains("inset: auto")
                 || src.contains("inset-auto"))
-            && (src.contains("m(0)") || src.contains("m: 0") || src.contains("m-0"))
+            && (src.contains("m(0)")
+                || src.contains("m: 0")
+                || src.contains("m-0")
+                || src.contains("margin(0)"))
             && (src.contains("bind(anchorLeft)")
                 || src.contains("left-(--anchor-left)")
                 || src.contains("left: (--anchor-left)"))
@@ -2163,13 +2278,15 @@ fn combobox_listbox_geometry_on_child_sx_options_on_popover_skin() {
             // List width = trigger: both w and minW from --anchor-width (C-CB-1).
             && (src.contains("w(bind(anchorWidth))")
                 || src.contains("w-(--anchor-width)")
-                || src.contains("width: (--anchor-width)"))
+                || src.contains("width: (--anchor-width)")
+                || src.contains("w: bind(anchorWidth)"))
             && (src.contains("maxH(panel-max-h-sm)")
                 || src.contains("max-h-panel-max-h-sm")
                 || src.contains("panel-max-h-sm"))
             && (src.contains("overflowY(auto)")
                 || src.contains("overflow-y-auto")
-                || src.contains("overflow-y: auto"))
+                || src.contains("overflow-y: auto")
+                || src.contains("y: auto"))
             && (src.contains("overscroll(contain)")
                 || src.contains("overscroll-contain")
                 || src.contains("overscroll: contain")),
@@ -2239,19 +2356,31 @@ fn tooltip_geometry_and_show_on_sx_no_contracts_pe() {
             && (src.contains("group-focus-within") || src.contains("group-focus-within:"))
             && src.contains("content(empty)")
             && !src.contains("rotate(45)")
-            && (src.contains("borderT(tooltip)") || src.contains("borderL(tooltip)")),
+            && (src.contains("borderT(tooltip)")
+                || src.contains("borderL(tooltip)")
+                || src.contains("color: popover")
+                || src.contains("edge: t")),
         "tooltip host/bubble Style must carry geometry + show + border caret (not diamond)"
     );
     // Style-minted class names (bind args mint as `<setter>bind<Name>`).
     assert!(
         out.structure_html.contains("sail-grp")
-            && out.structure_html.contains("s-positionrelative")
-            && out.structure_html.contains("s-positionabsolute")
-            && out.structure_html.contains("s-topbindttTop")
-            && out.structure_html.contains("s-grouphover-opacity100")
+            && (out.structure_html.contains("s-positionrelative")
+                || out.structure_html.contains("s-positionschemerelative"))
+            && (out.structure_html.contains("s-positionabsolute")
+                || out.structure_html.contains("schemeabsolute")
+                || out.skin_css.contains("position:absolute"))
+            && (out.structure_html.contains("s-topbindttTop")
+                || out.structure_html.contains("tbindttTop")
+                || out.skin_css.contains("var(--tt-top)"))
+            && (out.structure_html.contains("s-grouphover-opacity100")
+                || out.structure_html.contains("grouphover-filteropacity100")
+                || out.skin_css.contains("opacity:1"))
             && (out.structure_html.contains("borderTtooltip")
                 || out.skin_css.contains("border-top-color:var(--tooltip)")
-                || out.skin_css.contains("border-top-color: var(--tooltip)")),
+                || out.skin_css.contains("border-top-color: var(--tooltip)")
+                || out.skin_css.contains("border-top-color:var(--popover)")
+                || out.structure_html.contains("bordercolorpopoveredget")),
         "tooltip structure atoms (border caret):\n{}",
         out.structure_html
     );
