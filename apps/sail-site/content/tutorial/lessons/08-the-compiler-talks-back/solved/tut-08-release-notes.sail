@@ -1,7 +1,7 @@
 <!--
   Lesson 08 solved — every rejection answered on the compiler's terms.
 
-  style({ box: space({ pad: 12px }) }) became the token space({ pad: 4 }); the motion preset is 'fade'
+  style({ pad(12px) }) became the token pad(4); the motion preset is 'fade'
   (the closed set); the date is a zero-arg derived read; the <style>
   block is gone — the row surface it hand-painted is tip Style on the note row.
   No fix fought the language.

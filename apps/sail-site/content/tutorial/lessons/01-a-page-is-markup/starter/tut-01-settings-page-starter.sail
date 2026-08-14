@@ -8,7 +8,7 @@
 -->
 <column gap="5">
   <!-- 1. A header row: a title column on the left, a primary Save button
-          on the place({ right: row + justify="between" })-->
+          on the right (row + justify="between"). -->
 
   <!-- 2. A two-column <grid cols="2"> of <card>s: Profile and Notifications. -->
 
