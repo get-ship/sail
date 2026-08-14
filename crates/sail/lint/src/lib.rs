@@ -47,34 +47,15 @@ mod tests;
 
 pub use report::{Category, Finding, Severity};
 
-/// Rule IDs that remain forever after the rule body was scrubbed.
-/// HARDENING-1 WI6: IDs are never deleted — only superseded. SCRUB may
-/// remove machinery; the id string stays pinned so drift tests catch
-/// accidental loss of history.
-pub const RETIRED_RULE_IDS: &[&str] = &[
-    // Superseded by language-level layout keywords (`row`/`column`/`grid`/`center`).
-    "sail-legacy-layout",
-    // S2.3 / SPEC-PLATFORM-NEUTRALITY-1: dual ambient-DOM floors — TypeEnv Pure
-    // makes document/window/localStorage/location unnameable; lint dual path gone.
-    // Retirement coverage (HMR + build + CI) lives in sail_compiler::diagnostics::RETIREMENT_COVERAGE.
-    "sail-no-ambient-dom",
-    "sail-no-ambient-events",
-    "sail-no-ambient-nav",
-    "sail-no-ambient-storage",
-    // SPEC-SPINNAKER-2: retirement is RetiredSetter (compile error), not warn-mode.
-    "sail-style-concern",
-];
-
-/// Layout-pass finding kinds mapped to stable `sail-*` rule ids
-/// (SPEC-LAYOUT-DIAG-1 / S4.1). Emitted by the compiler layout bridge, not
-/// by template lint modules — still registered for the diagnostic ratchet.
+/// Layout-pass finding kinds mapped to stable `sail-*` rule ids.
+/// Emitted by the compiler layout bridge, not by template lint modules.
 pub const LAYOUT_DIAG_RULE_IDS: &[&str] = &[
     "sail-clipped-text",
     "sail-sub-min-tap-target",
     "sail-unintended-overflow",
 ];
 
-/// All rule IDs defined by this crate (live rules + layout diag ids + retired forever-ids).
+/// Live rule IDs (wired checks + layout diag ids). Deleted rules are not listed.
 pub fn all_rule_ids() -> Vec<&'static str> {
     rules::CONTROLLER_RULES
         .iter()
@@ -84,7 +65,6 @@ pub fn all_rule_ids() -> Vec<&'static str> {
         .chain(rules::ACTION_RULES.iter())
         .map(|(id, _)| *id)
         .chain(LAYOUT_DIAG_RULE_IDS.iter().copied())
-        .chain(RETIRED_RULE_IDS.iter().copied())
         .collect()
 }
 

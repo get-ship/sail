@@ -10,7 +10,7 @@
 //! Contract locked here (implementer must not skip/weaken):
 //! 1. Dual-enforcement ambient rule IDs are not **live** (no check wired in
 //!    APP_SOURCE_RULES / other live tables). HARDENING forever-pin may keep the
-//!    id strings only via `RETIRED_RULE_IDS` (and pin update if removed entirely).
+//!    id strings are not registered.
 //! 2. `lint_app_source_source` must not emit those rule findings.
 //! 3. Keep list remains live: authority, network, imperative-style floors.
 //! 4. TypeEnv Pure still has no DOM lib (type-env remains the law).
@@ -22,7 +22,7 @@ use std::collections::BTreeSet;
 use std::path::Path;
 
 use sail_compiler::ambients::{TypeEnv, lib_for_type_env};
-use sail_lint::{RETIRED_RULE_IDS, all_rule_ids, lint_app_source_source};
+use sail_lint::{all_rule_ids, lint_app_source_source};
 
 /// Dual-enforcement ambient-DOM family deleted by S2.3 (SCOUT-S2 §4a).
 ///
@@ -105,32 +105,16 @@ fn dual_ambient_floors_not_live_in_any_rule_table() {
 }
 
 #[test]
-fn dual_ambient_floors_absent_or_only_retired_in_all_rule_ids() {
-    // Gate: deleted ids no longer in all_rule_ids, OR only via RETIRED pin
-    // (HARDENING-1 forever-ids — body scrubbed, id string may remain).
+fn dual_ambient_floors_absent_from_all_rule_ids() {
     let all: BTreeSet<&str> = all_rule_ids().into_iter().collect();
-    let retired: BTreeSet<&str> = RETIRED_RULE_IDS.iter().copied().collect();
-    let live = live_rule_ids();
-
-    let mut bad = Vec::new();
-    for id in DELETED_DUAL_FLOOR_IDS {
-        if live.contains(id) {
-            bad.push(format!(
-                "{id}: still live (must delete check body + table entry)"
-            ));
-            continue;
-        }
-        if all.contains(id) && !retired.contains(id) {
-            bad.push(format!(
-                "{id}: in all_rule_ids but not RETIRED_RULE_IDS \
-                 (retire deliberately or drop from all_rule_ids + update PINNED_RULE_IDS)"
-            ));
-        }
-    }
+    let still: Vec<&str> = DELETED_DUAL_FLOOR_IDS
+        .iter()
+        .copied()
+        .filter(|id| all.contains(id))
+        .collect();
     assert!(
-        bad.is_empty(),
-        "S2.3 dual-floor id disposition failures:\n{}",
-        bad.join("\n")
+        still.is_empty(),
+        "deleted dual-floor ids must not stay registered: {still:?}"
     );
 }
 

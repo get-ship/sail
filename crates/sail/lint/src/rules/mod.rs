@@ -47,7 +47,6 @@ pub mod height_chain;
 pub mod layout;
 pub mod layout_primitive;
 // S2.3: dual ambient-DOM floors retired (TypeEnv Pure is the law).
-// IDs forever-pinned via RETIRED_RULE_IDS: sail-no-ambient-{dom,events,storage,nav}.
 pub mod no_ambient_network;
 pub mod no_ambient_timers;
 pub mod no_class;

@@ -10,9 +10,7 @@ use std::path::PathBuf;
 
 pub mod registry;
 
-pub use registry::{
-    DiagSpec, Jurisdiction, RetirementCoverage, lookup, registry, retirement_coverage,
-};
+pub use registry::{DiagSpec, Jurisdiction, lookup, registry};
 
 /// A byte range into the original source. Inclusive start, exclusive end.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

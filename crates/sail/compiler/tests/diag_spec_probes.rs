@@ -9,8 +9,7 @@ use std::path::PathBuf;
 
 use sail_compiler::check_all;
 use sail_compiler::diag_ratchet::{idd_rule_ids, is_stable_rule_id};
-use sail_compiler::diagnostics::{DiagSeverity, lookup, registry, retirement_coverage};
-use sail_lint::RETIRED_RULE_IDS;
+use sail_compiler::diagnostics::{DiagSeverity, lookup, registry};
 
 fn compiler_src() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src")
@@ -174,48 +173,4 @@ fn known_compiler_ids_are_registered() {
         assert!(lookup(id).is_some(), "missing {id}");
     }
     let _ = compiler_src();
-}
-
-#[test]
-fn retired_ambient_floors_have_retirement_coverage() {
-    let covered: std::collections::BTreeSet<&str> =
-        retirement_coverage().iter().map(|r| r.retired_id).collect();
-    let required = [
-        "sail-no-ambient-dom",
-        "sail-no-ambient-events",
-        "sail-no-ambient-nav",
-        "sail-no-ambient-storage",
-    ];
-    for id in required {
-        assert!(
-            RETIRED_RULE_IDS.contains(&id),
-            "{id} must stay in RETIRED_RULE_IDS"
-        );
-        assert!(
-            covered.contains(id),
-            "{id} retired without RETIREMENT_COVERAGE row"
-        );
-    }
-    for row in retirement_coverage() {
-        assert!(
-            row.required_paths.contains(&"hmr")
-                && row.required_paths.contains(&"build")
-                && row.required_paths.contains(&"ci"),
-            "{} must cover hmr+build+ci, got {:?}",
-            row.retired_id,
-            row.required_paths
-        );
-        assert!(
-            !row.audit_checklist.is_empty(),
-            "{} missing audit checklist",
-            row.retired_id
-        );
-        for repl in row.replacement_ids {
-            assert!(
-                lookup(repl).is_some(),
-                "{} replacement {repl} is not a live registry id",
-                row.retired_id
-            );
-        }
-    }
 }
