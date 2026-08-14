@@ -57,9 +57,13 @@ fn concern_resolve_border_subtle() {
 
 #[test]
 fn concern_resolve_border_dialog_unqualified() {
-    let css = css_of("style({ paint: border(dialog) })");
-    assert!(css.contains("var(--dialog-border)"), "{css}");
-    assert!(css.contains("var(--dialog-border-width)"), "{css}");
+    // component.* packs are gone. `dialog` is not a border composite.
+    let diags = parse_diags("style({ paint: border(dialog) })");
+    assert!(
+        !diags.is_empty(),
+        "border(dialog) must not resurrect a deleted pack: {:?}",
+        diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+    );
 }
 
 #[test]
@@ -191,10 +195,10 @@ fn type_italic_nums_wrap_prewrap() {
 
 #[test]
 fn ink_gradient_and_motion_transform_bind() {
-    let css = css_of("style({ paint: ink({ gradient: primary }) })");
+    let css = css_of("style({ fg({ gradient: primary }) })");
     assert!(css.contains("--gradient-primary"), "{css}");
     assert!(css.contains("background-clip"), "{css}");
-    let css = css_of("style({ paint: motion({ transform: bind(worldTx) }) })");
+    let css = css_of("style({ transform(bind(worldTx)) })");
     assert!(
         css.contains("transform") && css.contains("--world-tx"),
         "{css}"
@@ -261,7 +265,7 @@ fn slot_merge_partial_hover() {
 
 #[test]
 fn size_and_space_do_not_clash() {
-    let (style, diags) = parse("style({ box: size({ w: full }).space({ pad-x: 3 }) })");
+    let (style, diags) = parse("style({ box: size({ w: full }).pad({ x: 3 }) })");
     assert!(diags.is_empty(), "{diags:?}");
     let clashes = clash::detect_clashes(&style, &HashMap::new());
     assert!(clashes.is_empty(), "{clashes:?}");
@@ -283,9 +287,7 @@ fn size_has_no_pad_slot() {
 }
 
 #[test]
-fn bg_fg_truncate_gap_do_not_resolve() {
-    retired_names_concern("style({ paint: bg(primary) })", "fill");
-    retired_names_concern("style({ paint: fg(foreground) })", "ink");
+fn truncate_and_gap_stay_retired() {
     retired_names_concern("style({ text: truncate() })", "type");
     let diags = parse_diags("style({ box: gap(4) })");
     assert!(
@@ -328,7 +330,7 @@ fn sx_attribute_hard_fails() {
 
 #[test]
 fn intra_channel_chain_stays() {
-    let css = css_of("style({ box: size({ w: full }).place({ position: absolute }) })");
+    let css = css_of("style({ box: size({ w: full }).position(absolute) })");
     assert!(css.contains("width"), "{css}");
     assert!(
         css.contains("position") && css.contains("absolute"),

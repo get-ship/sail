@@ -5,7 +5,7 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 
 use super::ir::{PaintArg, PaintOp, Style, StyleDiagnostic};
 use super::setters::{closest_unique_setter, find_setter, validate_op, when_target};
-use super::theme_env::{current_styling_policy, ThemeStyleEnv};
+use super::theme_env::{ThemeStyleEnv, current_styling_policy};
 
 /// Parse a Style expression (product / channel-only). Flat `style.method(…)`
 /// chains are refused — use `style({ box, paint, text, animate })`.
@@ -118,7 +118,11 @@ fn collect_motion_attaches_inner(
     match style {
         Style::Empty | Style::Set(_) => {}
         Style::MotionAttach { trigger, config } => {
-            out.push((trigger.clone(), config.clone()));
+            // `animate: { transition: play(…) }` is CSS emit, not a runtime
+            // motion trigger. Do not hand it to the motion-attach compiler.
+            if trigger != "transition" {
+                out.push((trigger.clone(), config.clone()));
+            }
         }
         Style::Ref(name) => {
             // Cycle guard mirrors emit_inner / style_uses_text_channel_env.
@@ -796,7 +800,7 @@ fn parse_style_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> St
         let preview: String = source.chars().take(80).collect();
         diags.push(StyleDiagnostic::ParseError {
             message: "flat `style.method(…)` chains are retired — use the channel spine: \
-                      style({ box: size({ w: full }).space({ pad: 4 }), paint: fill(surface), when: { hover: { paint: fill({ color: muted }) } } })"
+                      style({ box: size({ w: full }).pad(4), paint: bg(surface), when: { hover: { bg(muted) } } })"
                 .into(),
             source: if preview.is_empty() {
                 "style.".into()
@@ -895,13 +899,13 @@ fn flat_chain_style_chain_body(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnost
             }
             continue;
         }
-        // `color` retired — paint color is `ink`.
+        // `color` retired — paint color is `fg`.
         if method == "color" {
             let args = parse_paren_args(p, diags, method);
             let arg_text = format_arg_text(&args);
             diags.push(StyleDiagnostic::ParseError {
                 message:
-                    "`color(…)` was renamed to `ink(…)` — use paint channel `ink` for text color"
+                    "`color(…)` was renamed to `fg(…)` — use paint channel `fg` for text color"
                         .into(),
                 source: format!("style.color({arg_text})"),
             });
@@ -1698,7 +1702,7 @@ fn parse_channel_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> 
             let arg_text = format_arg_text(&args);
             diags.push(StyleDiagnostic::ParseError {
                 message:
-                    "`color(…)` was renamed to `ink(…)` — use paint channel `ink` for text color"
+                    "`color(…)` was renamed to `fg(…)` — use paint channel `fg` for text color"
                         .into(),
                 source: format!("color({arg_text})"),
             });
@@ -1933,10 +1937,10 @@ fn parse_animate_map_value(
 /// locals are not in scope here; [`validate_style_refs`] / emit spend
 /// [`ThemeStyleEnv::resolve_style_ref`] once an env is available.
 fn make_style_ref(name: String, diags: &mut Vec<StyleDiagnostic>) -> Style {
-    if ThemeStyleEnv::from_registry()
-        .resolve_vocab(&name)
-        .is_some()
-    {
+    if matches!(
+        ThemeStyleEnv::from_registry().resolve_vocab(&name),
+        Some(crate::VocabTag::Concern | crate::VocabTag::Axis)
+    ) {
         diags.push(StyleDiagnostic::NotAStyleRef {
             name: name.clone(),
             source: name.clone(),
@@ -2082,6 +2086,13 @@ fn push_paint_op(
     source: String,
     diags: &mut Vec<StyleDiagnostic>,
 ) {
+    if crate::vocab::is_dead_v2_author(method) {
+        diags.push(StyleDiagnostic::UnknownVocabulary {
+            name: method.to_string(),
+            source: source.clone(),
+        });
+        return;
+    }
     let (method, args) = crate::concerns::alias_concern_call(method, args);
     if find_setter(&method).is_none() {
         diags.push(StyleDiagnostic::UnknownSetter {
@@ -2712,11 +2723,11 @@ mod utility_detect_tests {
 
 #[cfg(test)]
 mod const_rhs_tests {
-    use super::{parse_style_const_rhs, Style};
+    use super::{Style, parse_style_const_rhs};
 
     #[test]
     fn bare_object_form() {
-        let (style, diags) = parse_style_const_rhs("{ paint: fill({ color: primary }) }");
+        let (style, diags) = parse_style_const_rhs("{ bg(primary) }");
         assert!(
             diags.is_empty(),
             "{:?}",
@@ -2727,14 +2738,14 @@ mod const_rhs_tests {
 
     #[test]
     fn call_form() {
-        let (style, diags) = parse_style_const_rhs("style({ box: space({ pad: 2 }) })");
+        let (style, diags) = parse_style_const_rhs("style({ pad(2) })");
         assert!(diags.is_empty(), "{diags:?}");
         assert!(!matches!(style, Style::Empty));
     }
 
     #[test]
     fn compose_form() {
-        let (style, diags) = parse_style_const_rhs("host, { box: space({ pad: 2 }) }");
+        let (style, diags) = parse_style_const_rhs("host, { pad(2) }");
         assert!(diags.is_empty(), "{diags:?}");
         match style {
             Style::List(parts) => assert_eq!(parts.len(), 2),
@@ -2747,7 +2758,7 @@ mod const_rhs_tests {
 mod flat_chain_tests {
     use std::collections::HashMap;
 
-    use super::{parse, parse_style_const_rhs, Style};
+    use super::{Style, parse, parse_style_const_rhs};
     use crate::emit::lower_style;
 
     fn msgs(diags: &[crate::StyleDiagnostic]) -> Vec<String> {
@@ -2827,9 +2838,35 @@ mod flat_chain_tests {
     }
 
     #[test]
+    fn v2_author_names_are_unknown_vocabulary() {
+        for src in [
+            "style({ fill(surface) })",
+            "style({ paint: fill({ color: muted }) })",
+            "style({ ink(foreground) })",
+            "style({ place({ z: sticky }) })",
+            "style({ space({ pad: 2 }) })",
+            "style({ flow({ display: flex }) })",
+            "style({ motion({ rotate: 90 }) })",
+        ] {
+            let (_, diags) = parse(src);
+            assert!(
+                diags.iter().any(|d| {
+                    matches!(
+                        d,
+                        crate::StyleDiagnostic::UnknownVocabulary { name, .. }
+                            if crate::vocab::is_dead_v2_author(name)
+                    )
+                }),
+                "{src} must be unknown vocabulary: {:?}",
+                msgs(&diags)
+            );
+        }
+    }
+
+    #[test]
     fn v2_channel_form_still_parses() {
         let (style, diags) =
-            parse("style({ box: size({ w: full }).space({ pad: 4 }), paint: fill(surface) })");
+            parse("style({ box: size({ w: full }).pad(4), paint: bg(surface) })");
         assert!(diags.is_empty(), "{:?}", msgs(&diags));
         assert!(!matches!(style, Style::Empty));
         let (_, css) = lower_style(&style, &HashMap::new());
@@ -2904,7 +2941,7 @@ mod flat_chain_tests {
 
     #[test]
     fn vocab_name_is_not_a_style_ref() {
-        for vocab in ["border", "pad", "srOnly", "bg", "type"] {
+        for vocab in ["border", "pad", "bg", "type"] {
             let (_, diags) = parse(&format!("style({vocab})"));
             assert!(
                 diags.iter().any(|d| matches!(
@@ -2936,7 +2973,7 @@ mod flat_chain_tests {
         let mut env = HashMap::new();
         env.insert(
             "foo".into(),
-            parse("style({ paint: fill({ color: muted }) })").0,
+            parse("style({ bg(muted) })").0,
         );
         let (style, diags) = parse("foo");
         assert!(diags.is_empty(), "{:?}", msgs(&diags));
@@ -2949,7 +2986,7 @@ mod flat_chain_tests {
         let mut env = HashMap::new();
         env.insert(
             "foo".into(),
-            parse("style({ paint: fill({ color: muted }) })").0,
+            parse("style({ bg(muted) })").0,
         );
         let (style, _) = parse("foo");
         crate::with_styling_policy(crate::StylingPolicy::Themed, || {

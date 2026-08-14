@@ -369,7 +369,7 @@ mod tests {
     fn style_uses_text_detects_channel_setters() {
         let (s, _) = parse("style({ text: type({ size: sm }) })");
         assert!(style_uses_text_channel(&s));
-        let (s, _) = parse("style({ box: space({ pad: 2 }), paint: fill({ color: primary }) })");
+        let (s, _) = parse("style({ pad(2), bg(primary) })");
         assert!(!style_uses_text_channel(&s));
     }
 
@@ -405,7 +405,7 @@ mod tests {
     #[test]
     fn geometry_in_interaction_when_refused() {
         let (_, diags) =
-            parse("style({ box: space({ pad: 2 }), when: { hover: { box: space({ pad: 4 }) } } })");
+            parse("style({ pad(2), when: { hover: { pad(4) } } })");
         assert!(
             diags
                 .iter()
@@ -414,7 +414,7 @@ mod tests {
             diags.iter().map(|d| d.message()).collect::<Vec<_>>()
         );
         let (_, diags) = parse(
-            "style({ box: space({ pad: 2 }), when: { tablet: { box: space({ pad: 4 }) } } })",
+            "style({ pad(2), when: { tablet: { pad(4) } } })",
         );
         assert!(
             !diags
@@ -424,7 +424,7 @@ mod tests {
             diags.iter().map(|d| d.message()).collect::<Vec<_>>()
         );
         let (_, diags) = parse(
-            "style({ box: space({ pad: 2 }), when: { hover: { paint: fill({ color: muted }) } } })",
+            "style({ pad(2), when: { hover: { bg(muted) } } })",
         );
         assert!(
             !diags
@@ -449,9 +449,9 @@ mod tests {
         // Dimensional geometry under interaction keys — refuse.
         for key in ["hover", "group-hover", "state-open", "focusWithin"] {
             let src = format!(
-                "style({{ box: space({{ pad: 2 }}), when: {{ {key}: {{ box: space({{ pad: 4 }}) }} }} }})"
+                "style({{ pad(2), when: {{ {key}: {{ pad(4) }} }} }})"
             );
-            assert!(gate_err(&src), "space under {key} must refuse: {src}");
+            assert!(gate_err(&src), "pad under {key} must refuse: {src}");
             let src = format!(
                 "style({{ box: size({{ w: full }}), when: {{ {key}: {{ box: size({{ h: full }}) }} }} }})"
             );
@@ -461,17 +461,17 @@ mod tests {
         // Media / preference may still gate box geometry.
         for key in ["tablet", "dark"] {
             let src = format!(
-                "style({{ box: space({{ pad: 2 }}), when: {{ {key}: {{ box: space({{ pad: 4 }}) }} }} }})"
+                "style({{ pad(2), when: {{ {key}: {{ pad(4) }} }} }})"
             );
-            assert!(!gate_err(&src), "space under media {key} must allow: {src}");
+            assert!(!gate_err(&src), "pad under media {key} must allow: {src}");
         }
 
         // Paint under interaction is legal.
         assert!(!gate_err(
-            "style({ paint: fill({ color: primary }), when: { hover: { paint: fill({ color: muted }) } } })"
+            "style({ bg(primary), when: { hover: { bg(muted) } } })"
         ));
         assert!(!gate_err(
-            "style({ box: space({ pad: 2 }), paint: fill({ color: primary }), when: { hover: { paint: fill({ color: muted }) } } })"
+            "style({ pad(2), bg(primary), when: { hover: { bg(muted) } } })"
         ));
 
         // Non-dimensional box (flow/overflow) under interaction — currently legal
@@ -481,7 +481,7 @@ mod tests {
             "flow/overflow stay non-geometry for interaction gate"
         );
         assert!(!gate_err(
-            "style({ box: flow({ display: none }), when: { hover: { box: flow({ display: block }) } } })"
+            "style({ display(none), when: { hover: { display(block) } } })"
         ));
         assert!(!gate_err(
             "style({ box: overflow({ all: hidden }), when: { group-hover: { box: overflow({ all: auto }) } } })"
@@ -489,10 +489,10 @@ mod tests {
     }
 
     #[test]
-    fn color_setter_refused_with_ink_pointer() {
+    fn color_setter_refused_with_fg_pointer() {
         let (_, diags) = parse("style({ paint: color(primary) })");
         assert!(
-            diags.iter().any(|d| d.message().contains("ink")),
+            diags.iter().any(|d| d.message().contains("fg")),
             "{:?}",
             diags.iter().map(|d| d.message()).collect::<Vec<_>>()
         );
@@ -503,7 +503,7 @@ mod tests {
         let src = "style({ \
             paint: filter({ blur: 4, brightness: 100, contrast: 100, grayscale: 0, \
                 hue: 0, invert: 0, sepia: 0, saturate: 100 }).containerType(inline-size).containerName(main), \
-            box: space({ pad: 2 }) \
+            pad(2) \
         })";
         let (style, diags) = parse(src);
         assert!(

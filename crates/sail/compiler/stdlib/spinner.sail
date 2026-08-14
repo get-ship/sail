@@ -17,7 +17,7 @@
   style sizeXs = {size(icon-size-2xs)}
   style sizeSm = {size(icon-size-sm)}
   style sizeLg = {size(icon-size-xl)}
-  style ring = {display(block).size(full).border({ color: border-subtle, width: control-stroke, style: solid, edge: b }).border({ color: border-subtle, width: control-stroke, style: solid, edge: l }).border({ color: border-subtle, width: control-stroke, style: solid, edge: t }).border({ color: currentColor, width: control-stroke, style: solid, edge: r }).radius(full).motion({ animate: spin })}
+  style ring = {display(block).size(full).border({ color: border-subtle, width: control-stroke, style: solid, edge: b }).border({ color: border-subtle, width: control-stroke, style: solid, edge: l }).border({ color: border-subtle, width: control-stroke, style: solid, edge: t }).border({ color: currentColor, width: control-stroke, style: solid, edge: r }).radius(full).animate(spin)}
 </scope>
 
 <span

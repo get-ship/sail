@@ -27,7 +27,7 @@ fn compile_err(src: &str) -> String {
 #[test]
 fn style_bg_card_is_legal_global() {
     compile(
-        r#"<div style({ paint: fill({ color: card }) })>x</div>"#,
+        r#"<div style({ bg({ color: card }) })>x</div>"#,
         app_opts(),
     )
     .expect("card is a global color");
@@ -35,8 +35,8 @@ fn style_bg_card_is_legal_global() {
 
 #[test]
 fn style_bg_primary_ok() {
-    compile(r#"<div style({ paint: fill({ color: primary }) })>x</div>"#, app_opts())
-        .expect("fill({ color: primary }) must compile");
+    compile(r#"<div style({ bg({ color: primary }) })>x</div>"#, app_opts())
+        .expect("bg({ color: primary }) must compile");
 }
 
 #[test]

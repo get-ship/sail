@@ -242,7 +242,10 @@ impl ThemeStyleEnv {
 }
 
 fn is_vocabulary(name: &str) -> bool {
-    vocab::find_vocab(name).is_some()
+    matches!(
+        vocab::resolve_vocab(name),
+        Some(VocabTag::Concern | VocabTag::Axis)
+    )
 }
 
 /// Presence-only locals for [`ThemeStyleEnv::resolve_style_ref`]. IR lives in `env`.
@@ -556,7 +559,7 @@ mod tests {
     fn vocabulary_name_is_not_a_style_ref() {
         let env = ThemeStyleEnv::from_registry();
         let empty = BTreeMap::new();
-        for vocab in ["border", "pad", "srOnly", "bg", "type"] {
+        for vocab in ["border", "pad", "bg", "type"] {
             let err = env
                 .resolve_style_ref(vocab, &empty, StylingPolicy::Open)
                 .expect_err(vocab);

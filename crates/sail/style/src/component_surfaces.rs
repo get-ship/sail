@@ -336,7 +336,7 @@ mod emit_integration {
     #[test]
     fn app_style_card_is_a_global() {
         with_host_surface(None, || {
-            let (_, diags) = parse("style({ paint: fill({ color: card }) })");
+            let (_, diags) = parse("style({ bg(card) })");
             assert!(
                 !diags
                     .iter()
@@ -344,12 +344,12 @@ mod emit_integration {
                 "card is a global color: {:?}",
                 diags.iter().map(|d| d.message()).collect::<Vec<_>>()
             );
-            let (_, diags) = parse("style({ paint: fill({ color: primary }) })");
+            let (_, diags) = parse("style({ bg(primary) })");
             assert!(
                 !diags
                     .iter()
                     .any(|d| matches!(d, crate::ir::StyleDiagnostic::ThemeOwnedToken { .. })),
-                "fill({{ color: primary }}) must stay legal: {:?}",
+                "bg(primary) must stay legal: {:?}",
                 diags.iter().map(|d| d.message()).collect::<Vec<_>>()
             );
         });
@@ -358,8 +358,9 @@ mod emit_integration {
     #[test]
     fn skins_spend_globals() {
         with_host_surface(Some("chip"), || {
-            let (style, diags) =
-                parse("style({ paint: fill({ color: muted }).ink({ color: muted-foreground }).border({ color: border }) })");
+            let (style, diags) = parse(
+                "style({ bg({ color: muted }).fg({ color: muted-foreground }).border({ color: border }) })",
+            );
             assert!(
                 diags.is_empty(),
                 "{:?}",

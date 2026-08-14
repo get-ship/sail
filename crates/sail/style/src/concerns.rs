@@ -1095,6 +1095,11 @@ pub fn find_slot(spec: &ConcernSpec, name: &str) -> Option<&'static ConcernSlot>
 
 /// Teaching string for a retired property setter. `None` if `name` is live.
 pub fn retired_replacement(name: &str) -> Option<(&'static str, String)> {
+    // Vocab table is the author SSOT. Live rows are not retired. Dead v2
+    // concern names are unknown vocabulary, not a teaching alias.
+    if crate::vocab::find_vocab(name).is_some() || crate::vocab::is_dead_v2_author(name) {
+        return None;
+    }
     if matches!(name, "gap" | "gapX" | "gapY") {
         return Some(("gap", "<row gap=\"4\"> (layout attr, not Style)".into()));
     }
@@ -1102,7 +1107,7 @@ pub fn retired_replacement(name: &str) -> Option<(&'static str, String)> {
         return Some(("type", "type({ wrap: truncate })".into()));
     }
     if name == "color" {
-        return Some(("ink", "ink({ color: … }) or ink(foreground)".into()));
+        return Some(("fg", "fg({ color: … }) or fg(foreground)".into()));
     }
     for spec in concerns() {
         if spec.covered_setters.iter().any(|s| *s == name) {
@@ -1116,8 +1121,8 @@ pub fn retired_replacement(name: &str) -> Option<(&'static str, String)> {
 
 fn concern_teaching(concern: &str) -> String {
     match concern {
-        "fill" => "fill(surface) or fill({ color: … })".into(),
-        "ink" => "ink(foreground) or ink({ color: … })".into(),
+        "fill" => "bg(surface) or bg({ color: … })".into(),
+        "ink" => "fg(foreground) or fg({ color: … })".into(),
         "border" => "border(name) or border({ color, width, style, kind, edge })".into(),
         "radius" => "radius(md) or radius({ all: md })".into(),
         "elevation" => "elevation(sm) or elevation({ shadow: sm })".into(),
@@ -1125,12 +1130,12 @@ fn concern_teaching(concern: &str) -> String {
         "size" => {
             "size(control-md) or size({ w, h, min-w, min-h, max-w, max-h, aspect, basis })".into()
         }
-        "space" => "space({ pad-x: 3, pad-y: 2 })".into(),
-        "place" => "place({ position: fixed, inset: 0 })".into(),
-        "flow" => "flow({ display: flex, dir: column })".into(),
+        "space" => "pad(3) or pad({ x: 3, y: 2 }) / margin(…)".into(),
+        "place" => "position({ scheme: fixed, inset: 0 })".into(),
+        "flow" => "display(flex).dir(column)".into(),
         "overflow" => "overflow({ all: hidden })".into(),
         "type" => "type(body-sm) or type({ family, size, weight, wrap })".into(),
-        "motion" => "motion({ rotate, scale, x, y, origin, ease, duration })".into(),
+        "motion" => "rotate(…) / scale(…) / translateX(…) / play(…)".into(),
         other => format!("{other}(name) or {other}({{ … }})"),
     }
 }
@@ -1235,6 +1240,8 @@ pub fn concern_clash_keys(op: &PaintOp) -> Option<Vec<&'static str>> {
         | PaintArg::MemberPath { .. } => {
             if spec.name == "border" {
                 Some(border_clash_keys(concern_kind(op), concern_edge(op)))
+            } else if spec.name == "space" {
+                Some(space_clash_keys(op))
             } else {
                 Some(vec![clash_key(spec.name, concern_kind(op))])
             }
@@ -1292,6 +1299,30 @@ fn border_clash_keys(kind: &str, edge: &str) -> Vec<&'static str> {
                 "border:stroke:e",
             ],
         },
+    }
+}
+
+/// pad and margin both emit through `space`. They are different axes —
+/// `pad(0).margin(auto)` is legal v3, not a clash.
+fn space_clash_keys(op: &PaintOp) -> Vec<&'static str> {
+    match op.first_arg() {
+        PaintArg::Slots(slots) => {
+            let mut keys = Vec::new();
+            if slots.keys().any(|k| k.starts_with("pad")) {
+                keys.push("space:pad");
+            }
+            if slots
+                .keys()
+                .any(|k| k == "m" || k.starts_with("m") && !k.starts_with("pad"))
+            {
+                keys.push("space:margin");
+            }
+            if keys.is_empty() {
+                keys.push("space");
+            }
+            keys
+        }
+        _ => vec!["space:pad"],
     }
 }
 
@@ -1355,9 +1386,9 @@ pub fn validate_concern_op(spec: &ConcernSpec, op: &PaintOp) -> Result<(), Style
             let teaching = if spec.name == "border" {
                 format!("border({{ color: {name} }}) or border(subtle)")
             } else if spec.name == "fill" {
-                format!("fill({{ color: {name} }}) or fill(surface)")
+                format!("bg({{ color: {name} }}) or bg(surface)")
             } else if spec.name == "ink" {
-                format!("ink({{ color: {name} }}) or ink(foreground)")
+                format!("fg({{ color: {name} }}) or fg(foreground)")
             } else {
                 concern_teaching(spec.name)
             };
@@ -2556,7 +2587,19 @@ mod tests {
 
     #[test]
     fn size_and_space_do_not_clash() {
-        let (style, diags) = parse("style({ box: size({ w: full }).space({ pad-x: 3 }) })");
+        let (style, diags) = parse("style({ box: size({ w: full }).pad({ x: 3 }) })");
+        assert!(
+            diags.is_empty(),
+            "{:?}",
+            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
+        let clashes = crate::clash::detect_clashes(&style, &HashMap::new());
+        assert!(clashes.is_empty(), "{clashes:?}");
+    }
+
+    #[test]
+    fn pad_and_margin_do_not_clash() {
+        let (style, diags) = parse("style({ pad(0).margin(auto) })");
         assert!(
             diags.is_empty(),
             "{:?}",
@@ -2590,9 +2633,13 @@ mod tests {
     }
 
     #[test]
-    fn retired_bg_names_fill() {
-        assert_eq!(retired_replacement("bg").unwrap().0, "fill");
-        assert_eq!(retired_replacement("fg").unwrap().0, "ink");
+    fn live_v3_names_are_not_retired() {
+        assert!(retired_replacement("bg").is_none());
+        assert!(retired_replacement("fg").is_none());
+        assert!(retired_replacement("pad").is_none());
+        assert!(retired_replacement("display").is_none());
+        assert!(retired_replacement("fill").is_none());
+        assert!(retired_replacement("ink").is_none());
         assert_eq!(retired_replacement("padX").unwrap().0, "space");
         assert_eq!(retired_replacement("w").unwrap().0, "size");
         assert_eq!(retired_replacement("shadow").unwrap().0, "elevation");

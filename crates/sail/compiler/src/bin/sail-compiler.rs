@@ -1028,11 +1028,11 @@ fn style_skill_demo(raw_containers: bool) -> &'static str {
     if raw_containers {
         "```
 \
-         <div style({ box: space({ pad: 4 }), paint: fill(surface).radius(lg) }).when(hover, { paint: fill(muted) })>
+         <div style({ pad(4).bg(surface).radius(lg), when: { hover: { bg(muted) } } })>
 \
          </div>
 \
-         <span style({ paint: ink(muted), text: type(body-sm) })>
+         <span style({ fg(muted).type(body-sm) })>
 \
          </span>
 \
@@ -1042,9 +1042,9 @@ fn style_skill_demo(raw_containers: bool) -> &'static str {
     } else {
         "```
 \
-         <column gap=\"3\" style({ box: space({ pad: 4 }), paint: fill(surface).radius(lg) }).when(hover, { paint: fill(muted) })>
+         <column gap=\"3\" style({ pad(4).bg(surface).radius(lg), when: { hover: { bg(muted) } } })>
 \
-           <p style({ paint: ink(muted), text: type(body-sm) })>
+           <p style({ fg(muted).type(body-sm) })>
 \
              …
 \
@@ -1172,7 +1172,7 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
         md,
         "- NO `<style>` blocks, NO product Style as an HTML attribute. NO raw values (px/hex) — spend a token.\n\
          - NO retired utility-string / `sx=` forms (`sx=\"p-4 bg-surface-2\"`). Product is a **tag** Style call:\n  \
-           `style({{ box: space({{ pad: 4 }}), paint: fill(surface) }})` / `.when(hover, {{ paint: … }})` / `match`.\n\
+           `style({{ pad(4).bg(surface) }})` / `when: {{ hover: {{ bg(muted) }} }}` / `match`.\n\
          - NO `data-*` in app markup (`sail-no-data-attr`). The compiler stamps\n  \
            `data-sail-host` on L1 as closed-widget part identity — never author it.\n  \
            App tests use role / accessible name / visible text, not that stamp.\n\
@@ -1183,12 +1183,12 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
            `<stack>` with `gap` / `align` / `justify` / `cols` attrs. Rows **wrap by\n  \
            default**; `<row nowrap>` is the single-line row. Unrecognized attrs on a\n  \
            layout keyword are a compile error.\n\
-         - **Participation on the box channel** — `style({{ box: size({{ w: full, min-w: 0 }}).flow({{ grow: 1 }}) }})`\n  \
-           (or `flow({{ shrink: 0 }})`). Bare attrs `grow` / `shrink` / `w` / `min-w` / `max-w` are a\n  \
+         - **Participation on the box channel** — `style({{ size({{ w: full, min-w: 0 }}).grow(1) }})`\n  \
+           (or `shrink(0)`). Bare attrs `grow` / `shrink` / `w` / `min-w` / `max-w` are a\n  \
            hard lint (`sail-participation-style`). Layout-keyword **axis** attrs\n  \
-           (`gap` / `align` / `justify` on row|column|grid) stay. Paint (fill, ink,\n  \
+           (`gap` / `align` / `justify` on row|column|grid) stay. Paint (`bg`, `fg`,\n  \
            chrome) stays on paint/text channels.\n\
-         - **Never `flow({{ display: … }})` on layout keywords** (`row`/`column`/`grid`/\n  \
+         - **Never `display(…)` on layout keywords** (`row`/`column`/`grid`/\n  \
            `center`/`stack`). Bases own `display:flex|grid` and beat `.s-displaynone`\n  \
            (`.sail-col` footgun). Hide a plain host and nest the layout inside\n  \
            (`sail-display-on-layout`).\n\
@@ -1232,10 +1232,11 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
         let _ = writeln!(md, "### Core Style concerns (start here)\n");
         let _ = writeln!(
             md,
-            "Object/channel form is the language (`paint: fill(surface)`), not constructor\n\
+            "Flat chain is the language (`bg(surface).pad(4)`), not constructor\n\
              `style.padX`. Named composite or slot object. **Not listed:** absorbed\n\
-             property names (`bg`/`fg`/`padX`/`fontSize`/`truncate`/`shadow`). Participation\n\
-             (`grow`/`shrink`/`w`) lives on `box:` via `flow`/`size`.\n"
+             longhands (`padX`/`fontSize`/`truncate`/`shadow`) or dead v2 names\n\
+             (`fill`/`ink`/`place`/`space`/`flow`/`motion`). Participation\n\
+             (`grow`/`shrink`/`w`) lives on `size` / `grow` / `shrink`.\n"
         );
         for spec in sail_lint::style::concerns() {
             let _ = writeln!(md, "- {}", skill_concern_line(spec));
@@ -1277,7 +1278,7 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
              A variant is a prop. Prefer `match` / scope Style consts over residual\n\
              utility maps. Token-group props (e.g. `tone: Tone`) and Size ladders are\n\
              ordinary typed props — not special language features. Color groups bind\n\
-             in Style paint (`fill({{ color: tone }})`); Size is discrete `match` conditionality.\n"
+             in Style paint (`bg({{ color: tone }})`); Size is discrete `match` conditionality.\n"
         );
     }
     if !effective.raw_containers {

@@ -747,14 +747,12 @@ mod tests {
 
     #[test]
     fn comparison_gt_on_same_tag_still_folds_style() {
-        let spaced =
-            "<div hidden={n > 0} style({ paint: borderWidth(1).border(subtle) })></div>";
+        let spaced = "<div hidden={n > 0} style({ paint: borderWidth(1).border(subtle) })></div>";
         assert_eq!(
             rw(spaced),
             "<div hidden={n > 0} style({ paint: border(subtle) })></div>"
         );
-        let tight =
-            "<div hidden={n>0} style({ paint: borderWidth(1).border(subtle) })></div>";
+        let tight = "<div hidden={n>0} style({ paint: borderWidth(1).border(subtle) })></div>";
         assert_eq!(
             rw(tight),
             "<div hidden={n>0} style({ paint: border(subtle) })></div>"
@@ -763,8 +761,7 @@ mod tests {
 
     #[test]
     fn scope_declarations_still_fold() {
-        let src =
-            "<scope>\n  style foo = { paint: borderWidth(1).border(subtle) }\n</scope>";
+        let src = "<scope>\n  style foo = { paint: borderWidth(1).border(subtle) }\n</scope>";
         assert_eq!(
             rw(src),
             "<scope>\n  style foo = { paint: border(subtle) }\n</scope>"

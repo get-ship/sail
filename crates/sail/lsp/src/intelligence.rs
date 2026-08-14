@@ -682,11 +682,11 @@ export default controller((ctx) => ({ count: signal(0) }))
 
     #[test]
     fn complete_sail_style_fill_tokens_without_tsgo() {
-        // SPEC-STYLE-COMPLETE-1: Style complete inside style({ paint: fill({ color: ¦ }) })
+        // SPEC-STYLE-COMPLETE-1: Style complete inside style({ bg({ color: ¦ }) })
         // does not require tsgo.
         let mut intel =
             Intelligence::start(Some(Path::new("/nonexistent-sail-tsgo-root-for-intel")));
-        let src = r#"<div style({ paint: fill({ color:  }) })>x</div>"#;
+        let src = r#"<div style({ bg({ color:  }) })>x</div>"#;
         let offset = src.find("color: ").expect("color") + 7;
         let (line0, col0) = offset_to_lsp_position(src, offset);
         let items = intel.complete_sail(src, Some("app.sail"), line0 + 1, col0 + 1);
@@ -721,7 +721,7 @@ export default controller((ctx) => ({ count: signal(0) }))
 import { controller, signal } from '@ship/sail-runtime'
 export default controller(() => ({ primary: signal(0) }))
 </controller>
-<div style({ paint: fill({ color:  }) })>{primary()}</div>"#;
+<div style({ bg({ color:  }) })>{primary()}</div>"#;
         let offset = src.find("color: ").expect("color") + 7;
         let (line0, col0) = offset_to_lsp_position(src, offset);
         let items = intel.complete_sail(src, None, line0 + 1, col0 + 1);

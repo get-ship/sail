@@ -90,11 +90,11 @@ Controllers never `.style` / `createElement`.\n\
             let _ = writeln!(
                 md,
                 "- No `<style>` / `style=` / raw px-hex — tokens only.\n\
-                 - Style product: `style({{ box: space({{ pad: 4 }}), paint: fill(surface) }})` — not utility strings.\n\
+                 - Style product: `style({{ pad(4).bg(surface) }})` — not utility strings.\n\
                  - Layout keywords: `<row>` `<column>` `<grid>` `<center>` `<stack>`.\n\
-                 - Participation on the box channel: `style({{ box: size({{ w: full, min-w: 0 }}).flow({{ grow: 1 }}) }})` \
+                 - Participation on the box channel: `style({{ size({{ w: full, min-w: 0 }}).grow(1) }})` \
                    (`sail-participation-style` refuses bare `grow`/`shrink`/`w`/`min-w`/`max-w`).\n\
-                 - Never `flow({{ display: … }})` on layout keywords (`sail-display-on-layout`):\n  \
+                 - Never `display(…)` on layout keywords (`sail-display-on-layout`):\n  \
                    `.sail-col` / `.sail-row` beat `.s-displaynone`. Plain host + nest layout.\n\
                  - **a11y IR (SPEC-ARIA-1):** never free `aria-*` / free ARIA `role=` \
                    (Warning now, Error next). Semantic props: `label` `description` \
@@ -138,7 +138,7 @@ Controllers never `.style` / `createElement`.\n\
             let _ = writeln!(
                 md,
                 "\n**Participation (any element, box channel):** \
-                 `style({{ box: size({{ w: full, min-w: 0 }}).flow({{ grow: 1 }}) }})` / `flow({{ shrink: 0 }})` — bare attrs refused \
+                 `style({{ size({{ w: full, min-w: 0 }}).grow(1) }})` / `shrink(0)` — bare attrs refused \
                  (`sail-participation-style`). Axis sugar `gap`/`align`/`justify` stays on layout keywords.\n\n\
                  **Refused layout-as-sx** (`style_vocab::refusals()`):\n"
             );
@@ -147,7 +147,7 @@ Controllers never `.style` / `createElement`.\n\
             }
             let _ = writeln!(
                 md,
-                "\n**Display on layout:** `flow({{ display: … }})` on layout keywords is a hard error \
+                "\n**Display on layout:** `display(…)` on layout keywords is a hard error \
                  (`sail-display-on-layout`). Hide a plain host; nest the layout keyword.\n"
             );
         }
@@ -155,22 +155,22 @@ Controllers never `.style` / `createElement`.\n\
             let _ = writeln!(md, "# Sail surface — style\n");
             let _ = writeln!(
                 md,
-                "The concern table **is** the setter table (SPEC-SPINNAKER-2). \
-                 Named composite or slot object. Object/channel form is the language — \
-                 not constructor `style.padX(3)`. Absorbed names (`bg`, `fg`, `padX`, \
+                "The vocabulary table **is** the setter table (SPEC-SPINNAKER-3). \
+                 Live names are `bg`/`fg`/`pad`/`margin`/`position`/`play`. \
+                 v2 `fill`/`ink`/`place`/`space`/`flow`/`motion` are unknown vocabulary. \
+                 Named composite or slot object. Flat chain is the language — \
+                 not constructor `style.padX(3)`. Absorbed longhands (`padX`, \
                  `fontSize`, `truncate`, `shadow`) do not resolve.\n\n\
                  ```\n\
                  style chrome = {{\n  \
-                   box:   size(control-md).space({{ pad-x: 3 }}),\n  \
-                   paint: fill(surface).ink(foreground).border(subtle).radius(lg).elevation(sm),\n  \
-                   text:  type(body-sm),\n\
+                   size(control-md).pad({{ x: 3 }}).bg(surface).fg(foreground).border(subtle).radius(lg).elevation(sm).type(body-sm)\n\
                  }}\n\
                  ```\n\n\
-                 **Participation** lives on `box:` via `size` / `flow` \
-                 (`style({{ box: size({{ w: full, min-w: 0 }}).flow({{ grow: 1 }}) }})`). \
+                 **Participation** lives on `size` / `grow` / `shrink` \
+                 (`style({{ size({{ w: full, min-w: 0 }}).grow(1) }})`). \
                  Bare attrs refused (`sail-participation-style`).\n\n\
                  `border` slots are `color`/`width`/`style`/`edge`/`kind` — radius is not a slot.\n\
-                 `size` is box geometry only — pad is not a slot (use `space`).\n"
+                 `size` is box geometry only — pad is not a slot (use `pad`).\n"
             );
             let _ = writeln!(md, "## Concerns\n");
             for spec in sail_lint::style::concerns() {
@@ -332,7 +332,7 @@ Controllers never `.style` / `createElement`.\n\
                  ```\n\
                  <scope>\n  \
                    type ListTileProps = {{ title: string; icon?: Icon }}\n  \
-                   style card = {{ box: space({{ pad: 2 }}) }}\n\
+                   style card = {{ pad(2) }}\n\
                  </scope>\n\
                  <partial list-tile props: ListTileProps>\n  \
                    <row style(card)><text>{{title}}</text><slot/></row>\n\
@@ -1442,7 +1442,7 @@ mod tests {
             assert!(elev.iter().any(|l| l == want), "{want} missing: {elev:?}");
         }
 
-        let fill = complete_labels("style({ paint: fill() })", "fill(", 5);
+        let fill = complete_labels("style({ bg() })", "bg(", 3);
         for want in ["surface", "card", "muted"] {
             assert!(fill.iter().any(|l| l == want), "{want} missing: {fill:?}");
         }
@@ -1465,7 +1465,7 @@ mod tests {
                 "elevation.sm",
                 "shadow:",
             ),
-            ("style({ paint: fill(fill.surface) })", "surface", "color:"),
+            ("style({ bg(fill.surface) })", "surface", "color:"),
         ] {
             let hover_off = src.find(token).expect(token);
             let hover = call_rpc(

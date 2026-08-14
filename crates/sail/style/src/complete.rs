@@ -247,6 +247,9 @@ pub fn style_complete_for_context(
             filter_sort(setter_arg_items(spec, host.as_deref()), partial)
         }
         StyleCompleteContext::ConcernSlotKey { setter, partial } => {
+            if crate::vocab::is_dead_v2_author(setter) {
+                return Vec::new();
+            }
             let Some(concern) = crate::concerns::find_concern(setter) else {
                 return Vec::new();
             };
@@ -268,6 +271,9 @@ pub fn style_complete_for_context(
             partial,
             host,
         } => {
+            if crate::vocab::is_dead_v2_author(setter) {
+                return Vec::new();
+            }
             let Some(concern) = crate::concerns::find_concern(setter) else {
                 return Vec::new();
             };
@@ -1101,7 +1107,7 @@ mod tests {
 
     #[test]
     fn fill_color_slot_includes_primary_and_surface_excludes_radius_and_chip_fg() {
-        let (src, off) = at_caret("style({ paint: fill({ color: ¦ }) })");
+        let (src, off) = at_caret("style({ bg({ color: ¦ }) })");
         let items = style_complete_at(&src, None, off, None);
         let labs = labels(&items);
         assert!(labs.contains(&"primary"), "primary: {labs:?}");
@@ -1168,7 +1174,7 @@ mod tests {
 
     #[test]
     fn host_chip_spends_globals() {
-        let (src, off) = at_caret("style({ paint: fill({ color: ¦ }) })");
+        let (src, off) = at_caret("style({ bg({ color: ¦ }) })");
         let items = style_complete_at(&src, None, off, Some("chip"));
         let labs = labels(&items);
         assert!(labs.contains(&"muted"), "muted: {labs:?}");
@@ -1233,7 +1239,7 @@ mod tests {
 
     #[test]
     fn when_key_position() {
-        let (src, off) = at_caret("style({ paint: fill({ color: primary }), when: { ¦ } })");
+        let (src, off) = at_caret("style({ bg(primary), when: { ¦ } })");
         let items = style_complete_at(&src, None, off, None);
         let labs = labels(&items);
         assert!(labs.contains(&"hover"), "when keys: {labs:?}");
@@ -1324,7 +1330,7 @@ mod tests {
 
     #[test]
     fn style_ref_from_const() {
-        let src = "const filled = style({ paint: fill({ color: primary }) })\nstyle(fil¦)";
+        let src = "const filled = style({ bg(primary) })\nstyle(fil¦)";
         let (src, off) = at_caret(src);
         let items = style_complete_at(&src, None, off, None);
         let labs = labels(&items);
@@ -1333,7 +1339,7 @@ mod tests {
 
     #[test]
     fn style_ref_from_style_name_decl() {
-        let src = "style filled = { paint: fill({ color: primary }) }\nstyle(fil¦)";
+        let src = "style filled = { bg(primary) }\nstyle(fil¦)";
         let (src, off) = at_caret(src);
         let items = style_complete_at(&src, None, off, None);
         let labs = labels(&items);
@@ -1342,7 +1348,7 @@ mod tests {
 
     #[test]
     fn themed_complete_omits_file_local_refs() {
-        let src = "const filled = style({ paint: fill({ color: primary }) })\nstyle(fil¦)";
+        let src = "const filled = style({ bg(primary) })\nstyle(fil¦)";
         let (src, off) = at_caret(src);
         crate::with_styling_policy(crate::StylingPolicy::Themed, || {
             let items = style_complete_at(&src, None, off, None);
@@ -1376,7 +1382,7 @@ mod tests {
 
     #[test]
     fn partial_prefix_filters() {
-        let (src, off) = at_caret("style({ paint: fill({ color: pri¦ }) })");
+        let (src, off) = at_caret("style({ bg({ color: pri¦ }) })");
         let items = style_complete_at(&src, None, off, None);
         assert!(!items.is_empty());
         for it in &items {
@@ -1391,11 +1397,11 @@ mod tests {
 
     #[test]
     fn context_detection_helpers() {
-        let src = "style({ paint: fill() })";
-        let off = offset_of(src, "fill(") + 5; // inside parens
+        let src = "style({ bg() })";
+        let off = offset_of(src, "bg(") + 3; // inside parens
         let ctx = style_complete_context_at(src, off, None);
         assert!(
-            matches!(ctx, StyleCompleteContext::SetterArg { ref setter, .. } if setter == "fill"),
+            matches!(ctx, StyleCompleteContext::SetterArg { ref setter, .. } if setter == "bg"),
             "{ctx:?}"
         );
     }

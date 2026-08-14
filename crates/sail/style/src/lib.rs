@@ -85,7 +85,7 @@ mod tests {
     #[test]
     fn chain_emits_token_vars() {
         let (style, diags) = parse(
-            "style({ box: space({ pad-x: 2 }), paint: fill({ color: primary }).radius(sm) })",
+            "style({ box: pad({ x: 2 }), bg(primary).radius(sm) })",
         );
         assert!(
             diags.is_empty(),
@@ -126,7 +126,7 @@ mod tests {
 
     #[test]
     fn when_map_emits_hover_pseudo() {
-        let (style, diags) = parse("style({ when: { hover: { paint: fill({ color: muted }) } } })");
+        let (style, diags) = parse("style({ when: { hover: { bg(muted) } } })");
         assert!(
             diags.is_empty(),
             "{:?}",
@@ -281,7 +281,7 @@ mod tests {
         // Colons / dashed words inside a comment must not trip the
         // residual-product gate or leak into the token stream.
         let (style, diags) =
-            parse("/* fixme: switch to tone-primary */ style({ paint: fill({ color: primary }) })");
+            parse("/* fixme: switch to tone-primary */ style({ bg(primary) })");
         assert!(
             diags.is_empty(),
             "{:?}",
@@ -296,7 +296,7 @@ mod tests {
     #[test]
     fn chain_when_method() {
         let (style, diags) = parse(
-            "style({ paint: fill({ color: primary }), when: { hover: { paint: fill({ color: muted }) } } })",
+            "style({ bg(primary), when: { hover: { bg(muted) } } })",
         );
         assert!(
             diags.is_empty(),
@@ -309,7 +309,7 @@ mod tests {
 
     #[test]
     fn token_fail_closed() {
-        let (_, diags) = parse("style({ paint: fill({ color: notARealTokenZzz }) })");
+        let (_, diags) = parse("style({ bg({ color: notARealTokenZzz }) })");
         assert!(
             diags
                 .iter()
@@ -339,7 +339,7 @@ mod tests {
 
     #[test]
     fn clash_on_duplicate_slot() {
-        let (style, _) = parse("style({ paint: fill({ color: primary }).fill({ color: muted }) })");
+        let (style, _) = parse("style({ bg(primary).bg(muted) })");
         let diags = clash::detect_clashes(&style, &HashMap::new());
         assert!(
             diags
@@ -378,9 +378,9 @@ mod tests {
         let mut env = HashMap::new();
         env.insert(
             "base".into(),
-            parse("style({ paint: fill({ color: primary }) })").0,
+            parse("style({ bg(primary) })").0,
         );
-        let (style, _) = parse("[ base, style({ paint: fill({ color: muted }) }) ]");
+        let (style, _) = parse("[ base, style({ bg(muted) }) ]");
         let diags = clash::detect_clashes(&style, &env);
         assert!(
             !diags
@@ -442,7 +442,7 @@ mod tests {
 
     #[test]
     fn bind_parses() {
-        let (style, diags) = parse("style({ paint: motion({ y: bind(rowY) }) })");
+        let (style, diags) = parse("style({ translateY(bind(rowY)) })");
         assert!(
             diags.is_empty(),
             "{:?}",
@@ -475,7 +475,7 @@ mod tests {
         let mut env = HashMap::new();
         env.insert(
             "filled".into(),
-            parse("style({ paint: fill({ color: primary }) })").0,
+            parse("style({ bg(primary) })").0,
         );
         let (style, diags) = parse("filled");
         assert!(diags.is_empty());
@@ -526,7 +526,7 @@ mod tests {
     #[test]
     fn negative_ms_and_first_when() {
         let (style, diags) = parse(
-            "style({  box: space({ mx: auto }), when: { first: {  box: space({ ms: 0 }), paint: radius({ l: md })  }, last: {  paint: radius({ r: md })  } } })",
+            "style({  margin({ x: auto }), when: { first: {  margin({ s: 0 }), radius({ l: md })  }, last: {  radius({ r: md })  } } })",
         );
         assert!(
             diags.is_empty(),
@@ -543,7 +543,7 @@ mod tests {
     #[test]
     fn group_required_when_emits_ancestor() {
         let (style, diags) =
-            parse("style({ when: { group-required: { box: flow({ display: inline }) } } })");
+            parse("style({ when: { group-required: { display(inline) } } })");
         assert!(
             diags.is_empty(),
             "{:?}",
@@ -556,7 +556,7 @@ mod tests {
     #[test]
     fn group_caught_and_group_inline_when_emit_ancestors() {
         let (style, diags) = parse(
-            "style({  paint: group(), when: { group-caught: {  box: flow({ display: none })  }, group-inline: {  box: flow({ display: none })  } } })",
+            "style({  paint: group(), when: { group-caught: {  display(none)  }, group-inline: {  display(none)  } } })",
         );
         assert!(
             diags.is_empty(),
@@ -588,7 +588,7 @@ mod tests {
     #[test]
     fn site_shell_setters_and_state_live() {
         let (style, diags) = parse(
-            "style({  paint: motion({ origin: bottom }).fill({ glow: accent }), text: type({ wrap: truncate, case: uppercase }), when: { stateLive: {  paint: fill({ color: primary })  }, current: {  paint: ink({ color: primary-foreground })  } } })",
+            "style({  origin(bottom).bg({ glow: accent }), type({ wrap: truncate, case: uppercase }), when: { stateLive: {  bg(primary)  }, current: {  fg(primary-foreground)  } } })",
         );
         assert!(
             diags.is_empty(),
@@ -657,7 +657,7 @@ mod tests {
     #[test]
     fn basis_and_scale_setters_lower() {
         let (style, diags) = parse(
-            "style({ box: size({ w: 0 }), paint: motion({ scale: 100, rotate: bind(tileRotate) }) })",
+            "style({ size({ w: 0 }), scale(100).rotate(bind(tileRotate)) })",
         );
         assert!(
             diags.is_empty(),
@@ -844,7 +844,7 @@ mod tests {
     #[test]
     fn channels_control_when_hover_still_green() {
         let (style, diags) = parse(
-            "style({  box: space({ pad: 4 }), paint: fill({ color: primary }), when: { hover: {  paint: fill({ color: muted })  } } })",
+            "style({  pad(4), bg(primary), when: { hover: {  bg(muted)  } } })",
         );
         assert!(
             diags.is_empty(),
@@ -888,7 +888,7 @@ mod tests {
         );
 
         // Channel key `box:` remains geometry (not the retired method).
-        let (style, diags) = parse("style({ box: space({ pad: 2 }) })");
+        let (style, diags) = parse("style({ pad(2) })");
         assert!(
             diags.is_empty(),
             "{:?}",
@@ -905,9 +905,9 @@ mod tests {
     fn channels_flatten_order_paint_after_box() {
         // Author may write paint before box; flatten order is always box then paint.
         let (s_a, d_a) =
-            parse("style({ paint: fill({ color: primary }), box: space({ pad: 4 }) })");
+            parse("style({ paint: bg({ color: primary }), box: pad(4) })");
         let (s_b, d_b) =
-            parse("style({ box: space({ pad: 4 }), paint: fill({ color: primary }) })");
+            parse("style({ box: pad(4), paint: bg({ color: primary }) })");
         assert!(
             d_a.is_empty() && d_b.is_empty(),
             "diags a={:?} b={:?}",
@@ -924,7 +924,7 @@ mod tests {
     fn parse_refuses_motion_tail_after_channel_spine() {
         // Flat motion tail after style({…}) is retired — animate: channel only.
         let (_, diags) =
-            parse("style({ paint: fill({ color: primary }) }).enter({ opacity: 'fade' })");
+            parse("style({ bg(primary) }).enter({ opacity: 'fade' })");
         let joined = diags
             .iter()
             .map(|d| d.message())
@@ -947,7 +947,7 @@ mod tests {
     #[test]
     fn channels_animate_channel_motion_attaches() {
         let (s_ch, d_ch) = parse(
-            "style({ paint: fill({ color: primary }), animate: enter({ opacity: 'fade' }) })",
+            "style({ bg(primary), animate: enter({ opacity: 'fade' }) })",
         );
         assert!(
             d_ch.is_empty(),
@@ -970,7 +970,7 @@ mod tests {
     #[test]
     fn named_style_ref_collects_motion_via_env() {
         let (named, diags) = parse(
-            "style({ box: size({ w: 4, h: 4 }), paint: radius(full).fill({ color: primary }), animate: loop({ translate-y: 'spring:gentle', stagger: '0.15s' }) })",
+            "style({ box: size({ w: 4, h: 4 }), paint: radius(full).bg(primary), animate: loop({ translate-y: 'spring:gentle', stagger: '0.15s' }) })",
         );
         assert!(
             diags.is_empty(),
@@ -1020,7 +1020,7 @@ mod tests {
 
     #[test]
     fn channels_animate_rejects_paint_setter() {
-        let (_, diags) = parse("style({ animate: fill({ color: primary }) })");
+        let (_, diags) = parse("style({ animate: bg(primary) })");
         assert!(
             diags.iter().any(|d| {
                 let m = d.message();
@@ -1033,7 +1033,7 @@ mod tests {
 
     #[test]
     fn channels_motion_in_box_channel_points_to_animate() {
-        let (_, diags) = parse("style({ box: space({ pad: 2 }).enter({ opacity: 'fade' }) })");
+        let (_, diags) = parse("style({ pad(2).enter({ opacity: 'fade' }) })");
         assert!(
             diags.iter().any(|d| d.message().contains("animate:")),
             "motion inside box: must point at animate: {:?}",
@@ -1080,7 +1080,7 @@ mod tests {
     #[test]
     fn product_path_channel_spine_lowers() {
         let (classes, css) = product_lower(
-            "style({ box: space({ pad: 4 }), paint: fill({ color: primary }).radius(md) })",
+            "style({ pad(4), bg(primary).radius(md) })",
         )
         .expect("channel spine is product form");
         assert!(classes.contains("s-"), "{classes}");
@@ -1125,7 +1125,7 @@ mod tests {
     #[test]
     fn product_path_when_hover_paint() {
         let (classes, css) =
-            product_lower("style({ paint: fill({ color: primary }), when: { hover: { paint: fill({ color: muted }) } } })")
+            product_lower("style({ bg(primary), when: { hover: { bg(muted) } } })")
                 .expect("hover paint through product path");
         assert!(classes.contains("s-"), "{classes}");
         assert!(css.contains(":hover"), "hover pseudo missing:\n{css}");
@@ -1134,7 +1134,7 @@ mod tests {
     #[test]
     fn product_path_geometry_under_interaction_fails_closed() {
         let msgs = product_err_msgs(
-            "style({ box: space({ pad: 2 }), when: { hover: { box: space({ pad: 4 }) } } })",
+            "style({ pad(2), when: { hover: { pad(4) } } })",
         );
         let joined = msgs.join("; ");
         assert!(
@@ -1148,7 +1148,7 @@ mod tests {
     fn product_path_geometry_matrix_sample() {
         // group-hover + pad refuses.
         let msgs = product_err_msgs(
-            "style({ box: space({ pad: 2 }), when: { group-hover: { box: space({ pad: 4 }) } } })",
+            "style({ pad(2), when: { group-hover: { pad(4) } } })",
         );
         let joined = msgs.join("; ");
         assert!(
@@ -1158,7 +1158,7 @@ mod tests {
 
         // focusWithin + pad refuses.
         let msgs = product_err_msgs(
-            "style({ box: space({ pad: 2 }), when: { focusWithin: { box: space({ pad: 4 }) } } })",
+            "style({ pad(2), when: { focusWithin: { pad(4) } } })",
         );
         let joined = msgs.join("; ");
         assert!(
@@ -1168,7 +1168,7 @@ mod tests {
 
         // tablet + pad allows (media may gate layout).
         let (classes, _css) = product_lower(
-            "style({ box: space({ pad: 2 }), when: { tablet: { box: space({ pad: 4 }) } } })",
+            "style({ pad(2), when: { tablet: { pad(4) } } })",
         )
         .expect("tablet may gate pad geometry on product path");
         assert!(classes.contains("s-"), "{classes}");
@@ -1179,15 +1179,15 @@ mod tests {
         let msgs = product_err_msgs("style({ paint: color(primary) })");
         let joined = msgs.join("; ");
         assert!(
-            joined.contains("ink") && (joined.contains("color") || joined.contains("renamed")),
-            "color→ink must hard-fail product path: {joined}"
+            joined.contains("fg") && (joined.contains("color") || joined.contains("renamed")),
+            "color→fg must hard-fail product path: {joined}"
         );
     }
 
     #[test]
     fn style_object_match_compound_when() {
         let (style, diags) = super::parse(
-            "style({ paint: fill({ color: primary }), when: { hover: { paint: fill({ color: muted }) } }, match: { variant: { solid: { paint: fill({ color: secondary }) } } }, compound: [ { pill: true, paint: radius(full) } ] })",
+            "style({ bg(primary), when: { hover: { bg(muted) } }, match: { variant: { solid: { paint: bg({ color: secondary }) } } }, compound: [ { pill: true, paint: radius(full) } ] })",
         );
         assert!(
             diags.is_empty(),
@@ -1203,7 +1203,7 @@ mod tests {
     #[test]
     fn style_object_tone_axis_refused() {
         let (_, diags) = super::parse(
-            "style({ match: { tone: { primary: { paint: fill({ color: primary }) } } } })",
+            "style({ match: { tone: { primary: { bg(primary) } } } })",
         );
         assert!(
             diags.iter().any(|d| {
@@ -1231,7 +1231,7 @@ mod tests {
     #[test]
     fn style_variadic_composition() {
         let (style, diags) =
-            super::parse("style({ paint: fill({ color: primary }) }, { box: space({ pad: 2 }) })");
+            super::parse("style({ bg(primary) }, { pad(2) })");
         assert!(
             diags.is_empty(),
             "{:?}",

@@ -1739,7 +1739,8 @@ pub fn setters() -> &'static [SetterSpec] {
 }
 
 pub fn find_setter(name: &str) -> Option<&'static SetterSpec> {
-    setters().iter().find(|s| s.name == name)
+    let key = if name == "dir" { "flexDir" } else { name };
+    setters().iter().find(|s| s.name == key)
 }
 
 /// Unique closest product setter for typo correction (confluent only).
@@ -3119,11 +3120,7 @@ fn lower_gap_key_css(
             } else if bare.chars().all(|c| c.is_ascii_digit()) {
                 format!("{sign}{bare}deg")
             } else if let Some(v) = scales::lower("angle", bare) {
-                if neg {
-                    format!("calc(-1 * {v})")
-                } else {
-                    v
-                }
+                if neg { format!("calc(-1 * {v})") } else { v }
             } else {
                 return Some(Err(StyleDiagnostic::BadToken {
                     setter: op.setter.clone(),
@@ -3752,18 +3749,18 @@ mod tests {
             ),
             ("style({ paint: touch(pan-x) })", "touch-action", "pan-x"),
             (
-                "style({ paint: ink({ caret: primary }) })",
+                "style({ fg({ caret: primary }) })",
                 "caret-color",
                 "var(--primary)",
             ),
             (
-                "style({ paint: ink({ accent: auto }) })",
+                "style({ fg({ accent: auto }) })",
                 "accent-color",
                 "auto",
             ),
-            ("style({ box: place({ order: first }) })", "order", "-9999"),
+            ("style({ position({ order: first }) })", "order", "-9999"),
             (
-                "style({ paint: fill({ clip: text }) })",
+                "style({ bg({ clip: text }) })",
                 "background-clip",
                 "text",
             ),
@@ -3794,7 +3791,7 @@ mod tests {
         );
         let op = only_op("style({ paint: border({ kind: ring, color: primary }) })");
         assert_eq!(op_slots(&op), vec!["border:ring"]);
-        let op = only_op("style({ paint: fill({ color: primary }) })");
+        let op = only_op("style({ bg(primary) })");
         assert_eq!(op_slots(&op), vec!["fill"]);
     }
 
@@ -3805,7 +3802,6 @@ mod tests {
             "style({ paint: ring(primary) })",
             "style({ text: truncate() })",
             "style({ paint: borderImage(none) })",
-            "style({ paint: backdrop(card-backdrop-filter) })",
             "style({ paint: contain(banana) })",
         ] {
             let (_, diags) = parse(src);

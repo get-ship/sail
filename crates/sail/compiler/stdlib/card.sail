@@ -35,13 +35,13 @@
   style footerChromeLg = {pad({ x: 6, y: 5 }).margin({ t: 4, x: -6, b: -5 })}
   style footerChromeNone = {pad({ y: 3, x: 0 }).margin({ t: 3 })}
   // Shared ::before stripe for accent-bar static/hover; opacity differs per arm.
-  style accentBar = {position({ scheme: absolute, l: 0, r: 0, t: 0 }).size({ h: half }).content(empty).bg({ image: primary-accent }).radius({ t: lg }).motion({ property: opacity, duration: medium, ease: out }).pointerEvents(none)}
+  style accentBar = {position({ scheme: absolute, l: 0, r: 0, t: 0 }).size({ h: half }).content(empty).bg({ image: primary-accent }).radius({ t: lg }).transition(opacity).duration(medium).ease(out).pointerEvents(none)}
 </scope>
 
 <div
   style(base, {match: {variant: {default: bg(card), outline: outline}, padding: { md: padMd, none: padNone, sm: padSm, lg: padLg }}, compound: [
       {tone: *, border({ color: tone })},
-      {interactive: true, cursor(pointer).tapHighlight(none), when: {hover: border({ color: border-strong }).elevation({ shadow: hover }).translateY(-px), active: elevation({ shadow: card-rest }).translateY(0).motion({ duration: instant }), motion-reduce: translateY(0), focus: border({ width: 2, kind: outline }), forced-colors: {when: {focus: border({ color: CanvasText, kind: outline })}}}},
+      {interactive: true, cursor(pointer).tapHighlight(none), when: {hover: border({ color: border-strong }).elevation({ shadow: hover }).translateY(-px), active: elevation({ shadow: card-rest }).translateY(0).duration(instant), motion-reduce: translateY(0), focus: border({ width: 2, kind: outline }), forced-colors: {when: {focus: border({ color: CanvasText, kind: outline })}}}},
       {fill: true, bg(muted).border({ color: border })},
       {tone: muted, border({ color: border })},
       {status-rail: true, pad({ s: 4 }).border({ color: border-strong, width: 3, edge: s })},

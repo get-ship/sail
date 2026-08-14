@@ -899,7 +899,9 @@ fn rewrite_space(args: &str) -> Vec<String> {
         out.push(emit_axis("margin", &margin, spaced));
     }
     if !unknown.is_empty() {
-        out.push(format!("space({})", format_slots(&unknown, spaced)));
+        for (k, v) in &unknown {
+            out.push(format!("{k}({v})"));
+        }
     }
     if out.is_empty() {
         out.push("pad()".into());
@@ -958,14 +960,13 @@ fn rewrite_flow(args: &str) -> Vec<String> {
 fn rewrite_motion(args: &str) -> (Vec<String>, Vec<String>) {
     let args = args.trim();
     let Some(slots) = parse_slots(args) else {
-        return (vec![format!("motion({args})")], Vec::new());
+        return (vec![format!("animate({args})")], Vec::new());
     };
     let mut xf = Vec::new();
     let mut rest = Vec::new();
     let mut property: Option<String> = None;
     let mut duration: Option<String> = None;
     let mut ease: Option<String> = None;
-    let mut animate: Option<String> = None;
     for (k, v) in slots {
         match k.as_str() {
             "x" => xf.push(format!("translateX({v})")),
@@ -977,14 +978,14 @@ fn rewrite_motion(args: &str) -> (Vec<String>, Vec<String>) {
             "property" => property = Some(v),
             "duration" => duration = Some(v),
             "ease" => ease = Some(v),
-            "animate" => animate = Some(v),
+            "animate" => xf.push(format!("animate({v})")),
             other => rest.push((other.to_string(), v)),
         }
     }
     let mut plays = Vec::new();
     if let Some(prop) = property {
-        // Known play prop-set: `colors`. Other property values stay as motion
-        // so we do not invent a play name the theme table does not have.
+        // Known play prop-set: `colors`. Other property values become
+        // transition/duration/ease plains — do not emit dead `motion()`.
         if prop == "colors" {
             if let Some(dur) = duration {
                 plays.push(format!("play({prop}, {dur})"));
@@ -993,30 +994,24 @@ fn rewrite_motion(args: &str) -> (Vec<String>, Vec<String>) {
             }
             let _ = ease;
         } else {
-            let mut slots = vec![("property".into(), prop)];
+            xf.push(format!("transition({prop})"));
             if let Some(d) = duration {
-                slots.push(("duration".into(), d));
+                xf.push(format!("duration({d})"));
             }
             if let Some(e) = ease {
-                slots.push(("ease".into(), e));
+                xf.push(format!("ease({e})"));
             }
-            xf.push(format!("motion({})", format_slots(&slots, true)));
         }
-    } else if duration.is_some() || ease.is_some() {
-        let mut slots = Vec::new();
+    } else {
         if let Some(d) = duration {
-            slots.push(("duration".into(), d));
+            xf.push(format!("duration({d})"));
         }
         if let Some(e) = ease {
-            slots.push(("ease".into(), e));
+            xf.push(format!("ease({e})"));
         }
-        xf.push(format!("motion({})", format_slots(&slots, true)));
     }
-    if let Some(a) = animate {
-        xf.push(format!("motion({{ animate: {a} }})"));
-    }
-    if !rest.is_empty() {
-        xf.push(format!("motion({})", format_slots(&rest, true)));
+    for (k, v) in rest {
+        xf.push(format!("{k}({v})"));
     }
     (xf, plays)
 }

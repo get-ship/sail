@@ -165,11 +165,7 @@ fn token_arg_ref(arg: &PaintArg) -> Option<String> {
 fn parse_css_var(value: &str) -> Option<&str> {
     let rest = value.trim().strip_prefix("var(--")?;
     let name = rest.split([')', ',']).next()?.trim();
-    if name.is_empty() {
-        None
-    } else {
-        Some(name)
-    }
+    if name.is_empty() { None } else { Some(name) }
 }
 
 fn size_step_from_css_value(value: &str) -> Option<String> {

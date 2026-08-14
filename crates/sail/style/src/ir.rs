@@ -266,7 +266,7 @@ impl StyleDiagnostic {
                 }
                 "size" if slot.starts_with("pad") || slot == "text" => {
                     format!(
-                        "style `size` does not take `{slot}` — padding uses `space(…)`; type size uses `type(…)`"
+                        "style `size` does not take `{slot}` — padding uses `pad(…)`; type size uses `type(…)`"
                     )
                 }
                 _ => format!(

@@ -38,7 +38,7 @@
   gap="4"
   style(base, {size({ w: full }), match: { placement: { top: placeBar, bottom: placeBar, rail: placeRail } }, compound: [
       {sticky: true, position({ scheme: sticky, t: bind(offset), z: sticky })},
-      {autohide: true, sticky: true, position({ scheme: fixed, l: 0, r: 0, t: 0, z: sticky }).size({ w: full }).motion({ property: transform, duration: fast, ease: out })},
+      {autohide: true, sticky: true, position({ scheme: fixed, l: 0, r: 0, t: 0, z: sticky }).size({ w: full }).transition(transform).duration(fast).ease(out)},
       {bordered: true, border({ color: border, edge: l }).border({ color: border, edge: r }).border({ color: border, edge: t }).border({ color: border, width: 1, edge: b })},
       {placement: bottom, sticky: true, position({ t: auto, b: 0 })},
       {bordered: true, placement: bottom, border({ color: border, edge: l }).border({ color: border, edge: r }).border({ color: border, width: 0, edge: b }).border({ color: border, width: 1, edge: t })},

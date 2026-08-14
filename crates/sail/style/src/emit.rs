@@ -3,8 +3,8 @@
 use std::collections::{HashMap, HashSet};
 
 use super::ir::{PaintArg, PaintOp, Style};
-use super::setters::{lower_op_css, when_target, WhenTarget};
-use super::theme_env::{current_styling_policy, ThemeStyleEnv};
+use super::setters::{WhenTarget, lower_op_css, when_target};
+use super::theme_env::{ThemeStyleEnv, current_styling_policy};
 
 /// One emitted CSS rule.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -477,7 +477,7 @@ pub fn lower_style_source_with_motion(
     if t.starts_with("style.") {
         return Err(vec![super::ir::StyleDiagnostic::ParseError {
             message: "flat `style.method(…)` chains are retired — use the channel spine: \
-                      style({ box: size({ w: full }).space({ pad: 4 }), paint: fill(surface), when: { hover: { paint: fill({ color: muted }) } } })"
+                      style({ box: size({ w: full }).pad(4), paint: bg(surface), when: { hover: { bg(muted) } } })"
                 .into(),
             source: t.to_string(),
         }]);

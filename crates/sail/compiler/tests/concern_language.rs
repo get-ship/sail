@@ -136,37 +136,13 @@ fn retired_border_width_names_concern() {
 }
 
 #[test]
-fn retired_bg_names_fill() {
-    let diags = must_retire("style({ paint: bg(primary) })", "fill");
-    assert!(
-        names_concern(&diags, "fill"),
-        "bg(primary) must name `fill`: {:?}",
-        diag_messages(&diags)
-    );
-    let err = compile_element(r#"<div style({ paint: bg(primary) })>x</div>"#, "card")
-        .expect_err("bg must fail compilation");
-    assert!(
-        err.message.contains("fill"),
-        "compile error must name `fill`: {}",
-        err.message
-    );
-}
-
-#[test]
-fn retired_fg_names_ink() {
-    let diags = must_retire("style({ paint: fg(foreground) })", "ink");
-    assert!(
-        names_concern(&diags, "ink"),
-        "fg(foreground) must name `ink`: {:?}",
-        diag_messages(&diags)
-    );
-    let err = compile_element(r#"<div style({ paint: fg(foreground) })>x</div>"#, "card")
-        .expect_err("fg must fail compilation");
-    assert!(
-        err.message.contains("ink"),
-        "compile error must name `ink`: {}",
-        err.message
-    );
+fn bg_and_fg_are_live_author_names() {
+    let _ = css_of("style({ bg(primary) })");
+    let _ = css_of("style({ fg(foreground) })");
+    compile_element(r#"<div style({ bg(primary) })>x</div>"#, "card")
+        .expect("bg is live v3");
+    compile_element(r#"<div style({ fg(foreground) })>x</div>"#, "card")
+        .expect("fg is live v3");
 }
 
 #[test]
@@ -263,7 +239,7 @@ fn retired_constructor_chain() {
 #[test]
 fn retired_sx_attribute() {
     let brace = compile_element(
-        r#"<div sx={style({ paint: fill({ color: primary }) })}>x</div>"#,
+        r#"<div sx={style({ bg({ color: primary }) })}>x</div>"#,
         "card",
     )
     .expect_err("sx={{…}} must fail compilation (burial)");
@@ -273,7 +249,7 @@ fn retired_sx_attribute() {
         brace.message
     );
 
-    let quoted = compile_element(r#"<div sx="fill({ color: primary })">x</div>"#, "card")
+    let quoted = compile_element(r#"<div sx="bg({ color: primary })">x</div>"#, "card")
         .expect_err("sx=\"…\" must fail compilation (burial)");
     assert!(
         quoted.message.contains("sx"),
@@ -443,7 +419,7 @@ fn slot_merge_partial_hover() {
 
 #[test]
 fn size_and_space_do_not_clash() {
-    let src = "style({ box: size({ w: full }).space({ pad-x: 3 }) })";
+    let src = "style({ box: size({ w: full }).pad({ x: 3 }) })";
     let (style, diags) = parse(src);
     assert!(
         diags.is_empty(),
@@ -464,7 +440,7 @@ fn size_and_space_do_not_clash() {
     );
     assert!(
         norm.contains("padding-inline") || norm.contains("padding"),
-        "space({{ pad-x: 3 }}) must lower: {css}"
+        "pad({{ x: 3 }}) must lower: {css}"
     );
 }
 
@@ -491,18 +467,18 @@ fn size_has_no_pad_slot() {
 
 #[test]
 fn fill_and_ink_named() {
-    let slot_src = "style({ paint: fill({ color: primary }).ink({ color: muted-foreground }) })";
+    let slot_src = "style({ bg({ color: primary }).fg({ color: muted-foreground }) })";
     let slot_css = css_of(slot_src);
     let slot_norm = slot_css.replace(' ', "");
     assert!(
         slot_norm.contains("background-color") && slot_norm.contains("var(--primary)"),
-        "fill({{ color: primary }}) must lower: {slot_css}"
+        "bg({{ color: primary }}) must lower: {slot_css}"
     );
     assert!(
         slot_norm.contains("var(--muted-foreground)")
             && (slot_norm.contains("color:var(--muted-foreground)")
                 || slot_css.contains("color: var(--muted-foreground)")),
-        "ink({{ color: muted-foreground }}) must lower: {slot_css}"
+        "fg({{ color: muted-foreground }}) must lower: {slot_css}"
     );
 
     // Named resolve only when catalog identities exist.
@@ -511,17 +487,17 @@ fn fill_and_ink_named() {
     if let (Some(fill), Some(ink)) = (fill_id, ink_id) {
         let fill_arg = concern_call_arg(fill, "fill");
         let ink_arg = concern_call_arg(ink, "ink");
-        let named = format!("style({{ paint: fill({fill_arg}).ink({ink_arg}) }})");
+        let named = format!("style({{ bg({fill_arg}).fg({ink_arg}) }})");
         let css = css_of(&named);
         assert!(
             css.contains("background")
                 || css.contains(fill_arg.as_str())
                 || css.contains("surface"),
-            "fill({fill_arg}) must lower: {css}"
+            "bg({fill_arg}) must lower: {css}"
         );
         assert!(
             css.contains("color") || css.contains(ink_arg.as_str()) || css.contains("foreground"),
-            "ink({ink_arg}) must lower: {css}"
+            "fg({ink_arg}) must lower: {css}"
         );
     }
 }
@@ -568,7 +544,7 @@ fn member_access_does_not_resolve() {
 
 #[test]
 fn intra_channel_chain_stays() {
-    let src = "style({ box: size({ w: full }).place({ position: absolute }) })";
+    let src = "style({ box: size({ w: full }).position(absolute) })";
     let (style, diags) = parse(src);
     assert!(
         diags.is_empty(),
@@ -583,6 +559,6 @@ fn intra_channel_chain_stays() {
     );
     assert!(
         norm.contains("position:absolute") || norm.contains("position: absolute"),
-        "place({{ position: absolute }}) must lower: {css}"
+        "position(absolute) must lower: {css}"
     );
 }

@@ -24,7 +24,7 @@ import type { Scope } from './page.sail'
 import { code } from '../../../../src/compositions/sail-language-styling-snippets'
 
 export default controller((_ctx: ControllerScope<Scope>) => {
-  // Range bind:value is string; number derived feeds motion({ x: bind }) as px.
+  // Range bind:value is string; number derived feeds translateX(bind(…)) as px.
   const shift = signal('0')
   const shiftPx = derived((): number => Number(shift()) || 0)
   return { code, shift, shiftPx }
