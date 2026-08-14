@@ -24,7 +24,7 @@ pub use sail_ops::{CheckDiag, SurfaceTopic, surface_markdown};
 pub use http::{mcp_http_router, parse_bind, run_http, run_http_blocking};
 pub use protocol::{
     PROTOCOL_VERSION, SUPPORTED_VERSIONS, call_tool, call_tool_with_ctx, handle_message,
-    handle_message_with_ctx, modern_meta, modern_request, tool_descriptors,
+    handle_message_with_ctx, list_tools, modern_meta, modern_request, tool_descriptors,
 };
 pub use stdio::run_stdio;
 

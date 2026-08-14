@@ -27,6 +27,21 @@ pub fn tool_descriptors() -> Value {
     mcp_tool_descriptors()
 }
 
+/// In-process `sail mcp --list-tools` — same JSON array the CLI prints.
+///
+/// Fails when the generated list is missing or empty. Does not read host
+/// MCP config and does not require a `sail` binary on PATH.
+pub fn list_tools() -> Result<Vec<Value>, String> {
+    let tools = tool_descriptors();
+    let arr = tools
+        .as_array()
+        .ok_or_else(|| "list-tools: expected a JSON array".to_string())?;
+    if arr.is_empty() {
+        return Err("list-tools: empty".into());
+    }
+    Ok(arr.clone())
+}
+
 /// Dispatch a tool call by name + JSON args → structured result.
 ///
 /// Uses default [`Ctx`] from env (`SAIL_MCP_ROOT` / cwd / workspace).
@@ -428,6 +443,12 @@ mod tests {
     }
 
     #[test]
+    fn list_tools_matches_method_contracts() {
+        let tools = list_tools().expect("in-process list-tools");
+        assert_eq!(tools.len(), METHOD_CONTRACTS.len());
+    }
+
+    #[test]
     fn mcp_tools_equiv_contract_methods() {
         // Drift: every METHOD_CONTRACT appears exactly once in generated descriptors.
         let tools = tool_descriptors();
@@ -489,5 +510,116 @@ mod tests {
             "params": { "requestId": 1 }
         });
         assert!(handle_message(&msg).is_none());
+    }
+
+    fn fixture_workspace() -> (std::path::PathBuf, Ctx) {
+        let fixtures = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../ops/tests/fixtures")
+            .canonicalize()
+            .expect("crates/sail/ops/tests/fixtures");
+        assert!(
+            fixtures.join("mcp-smoke.sail").is_file(),
+            "missing mcp-smoke.sail under {}",
+            fixtures.display()
+        );
+        let ctx = Ctx::new(&fixtures, &fixtures, &fixtures);
+        (fixtures, ctx)
+    }
+
+    fn line_col_of(src: &str, needle: &str) -> (u32, u32) {
+        let offset = src.find(needle).expect(needle);
+        let mut line = 1u32;
+        let mut col = 1u32;
+        for (i, ch) in src.char_indices() {
+            if i >= offset {
+                break;
+            }
+            if ch == '\n' {
+                line += 1;
+                col = 1;
+            } else {
+                col += 1;
+            }
+        }
+        (line, col)
+    }
+
+    fn tool_call(id: i64, name: &str, arguments: Value, ctx: &Ctx) -> Value {
+        let resp = handle_message_with_ctx(
+            &modern_request(
+                id,
+                "tools/call",
+                json!({ "name": name, "arguments": arguments }),
+            ),
+            ctx,
+        )
+        .expect("tools/call response");
+        assert!(resp.get("error").is_none(), "{name} protocol error: {resp}");
+        assert_eq!(resp["result"]["isError"], false, "{name} isError: {resp}");
+        resp["result"]["structuredContent"].clone()
+    }
+
+    /// Stdio-equivalent smoke: tools/list length == METHOD_CONTRACTS, then
+    /// sail_check / sail_hover / sail_inspect(topic=tree) on a local fixture.
+    #[test]
+    fn stdio_smoke_check_hover_inspect_on_fixture() {
+        let (fixtures, ctx) = fixture_workspace();
+        let rel = "mcp-smoke.sail";
+        let src = std::fs::read_to_string(fixtures.join(rel)).expect("read fixture");
+
+        let list =
+            handle_message_with_ctx(&modern_request(1, "tools/list", json!({})), &ctx).unwrap();
+        assert!(list.get("error").is_none(), "{list}");
+        let tools = list["result"]["tools"].as_array().expect("tools array");
+        assert_eq!(
+            tools.len(),
+            METHOD_CONTRACTS.len(),
+            "tools/list length must equal METHOD_CONTRACTS (got {} vs {})",
+            tools.len(),
+            METHOD_CONTRACTS.len()
+        );
+
+        let check = tool_call(
+            2,
+            "sail_check",
+            json!({ "path": rel, "includeTs": false }),
+            &ctx,
+        );
+        assert!(
+            check
+                .get("diagnostics")
+                .and_then(|d| d.as_array())
+                .is_some()
+        );
+        assert!(check.get("count").and_then(|c| c.as_u64()).is_some());
+
+        let (line, column) = line_col_of(&src, "h1");
+        let hover = tool_call(
+            3,
+            "sail_hover",
+            json!({
+                "path": rel,
+                "source": src,
+                "line": line,
+                "column": column,
+            }),
+            &ctx,
+        );
+        assert!(hover.get("contents").is_some(), "hover: {hover}");
+
+        let inspect = tool_call(
+            4,
+            "sail_inspect",
+            json!({ "topic": "tree", "path": rel }),
+            &ctx,
+        );
+        assert_eq!(inspect["topic"], "tree", "{inspect}");
+        let nodes = inspect["nodes"].as_array().expect("inspect nodes");
+        assert!(!nodes.is_empty(), "inspect tree empty: {inspect}");
+        let tags: Vec<&str> = nodes.iter().filter_map(|n| n["tag"].as_str()).collect();
+        assert!(
+            tags.iter().any(|t| *t == "h1" || *t == "main"),
+            "expected h1/main in tree: {tags:?}"
+        );
     }
 }

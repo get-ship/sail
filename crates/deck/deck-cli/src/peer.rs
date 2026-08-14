@@ -34,6 +34,8 @@ pub fn print_version(brand: &str) {
 ///
 /// Never prints `status: ok` on an empty probe. bun, tsc/tsgo, and
 /// `node_modules/.sail/types.d.ts` are required for a first-user typecheck.
+/// MCP is probed in-process (`sail mcp --list-tools` equivalent) so doctor
+/// does not require a different `sail` on PATH or a project MCP config.
 pub fn doctor(brand: &str) -> Result<()> {
     println!("{brand} doctor");
     println!("  binary: {brand} {}", env!("CARGO_PKG_VERSION"));
@@ -65,6 +67,16 @@ pub fn doctor(brand: &str) -> Result<()> {
     println!("  sail render: in-process (sail-render)");
 
     let mut missing = Vec::new();
+    // In-process `--list-tools` (this binary embeds sail-mcp). Do not spawn
+    // a different `sail` from PATH — doctor must pass inside the monorepo
+    // and must not require a project `.mcp.json`.
+    match probe_mcp_list_tools() {
+        Ok(n) => println!("  sail mcp --list-tools: {n} tools (ok)"),
+        Err(e) => {
+            println!("  sail mcp --list-tools: fail ({e})");
+            missing.push("sail mcp --list-tools");
+        }
+    }
     if !tool_ok(&cwd, "bun", &["--version"]) {
         missing.push("bun");
     } else {
@@ -96,6 +108,21 @@ pub fn doctor(brand: &str) -> Result<()> {
     } else {
         println!("  status: fail");
         bail!("doctor: missing {}", missing.join(", "));
+    }
+}
+
+/// Same path as `sail mcp --list-tools` / `print_list_tools`, in-process.
+fn probe_mcp_list_tools() -> Result<usize> {
+    let tools = sail_mcp::list_tools().map_err(|e| anyhow::anyhow!("{e}"))?;
+    Ok(tools.len())
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn mcp_list_tools_probe_nonempty() {
+        let n = super::probe_mcp_list_tools().expect("in-process list-tools");
+        assert!(n > 0, "list-tools returned empty");
     }
 }
 

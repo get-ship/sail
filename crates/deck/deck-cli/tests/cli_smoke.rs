@@ -785,6 +785,40 @@ fn sail_version_and_doctor_smoke() {
     assert!(doc.status.success(), "sail doctor failed: {:?}", doc);
     let d = String::from_utf8_lossy(&doc.stdout);
     assert!(d.contains("status: ok"), "doctor: {d}");
+    assert!(
+        d.contains("sail mcp --list-tools") && d.contains("tools (ok)"),
+        "doctor must probe in-process list-tools: {d}"
+    );
+}
+
+/// Empty probe dirs still fail on bun/tsc/types, but list-tools must not
+/// require a project MCP config (in-process sail-mcp).
+#[test]
+fn doctor_list_tools_does_not_require_mcp_config() {
+    let tmp = TempDir::new().expect("tempdir");
+    let doc = Command::new(sail_bin())
+        .args(["doctor"])
+        .current_dir(tmp.path())
+        .output()
+        .expect("spawn sail doctor");
+    let stdout = String::from_utf8_lossy(&doc.stdout);
+    let stderr = String::from_utf8_lossy(&doc.stderr);
+    assert!(
+        stdout.contains("sail mcp --list-tools") && stdout.contains("tools (ok)"),
+        "list-tools must pass without .mcp.json:\nstdout:{stdout}\nstderr:{stderr}"
+    );
+    assert!(
+        !doc.status.success(),
+        "empty probe must still fail (types/bun/tsc), got success:\n{stdout}"
+    );
+    assert!(
+        stdout.contains("status: fail"),
+        "empty probe must print status: fail:\n{stdout}"
+    );
+    assert!(
+        !stderr.contains("sail mcp --list-tools"),
+        "list-tools must not be the doctor failure:\n{stderr}"
+    );
 }
 
 #[test]
