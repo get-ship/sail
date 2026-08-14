@@ -33,6 +33,15 @@ export {
 
 export { snapshotSail, type SnapshotResult } from './snapshot'
 
+export {
+  contractQuery,
+  getByContract,
+  isLeanTestMap,
+  queryContract,
+  type TestEntry,
+  type TestMap,
+} from './contract'
+
 // Runtime-owned mock seam (owner-tree cache). Re-exported for one import surface.
 export {
   mockQueryState,

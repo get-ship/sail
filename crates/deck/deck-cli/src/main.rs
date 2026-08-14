@@ -175,6 +175,15 @@ enum Command {
         check: bool,
     },
 
+    /// Run the lean test-contract map (SPEC-TEST-2). Rust only — no node.
+    ///
+    /// Walks `.sail` files, emits queryable role/name/state maps under
+    /// `node_modules/.sail/test-map/`, and fails if a map is not lean.
+    Test {
+        /// File or directory of `.sail` sources.
+        input: PathBuf,
+    },
+
     /// Run compile-time checks on `.sail` files.
     Check {
         /// File or directory of `.sail` sources.
@@ -454,6 +463,7 @@ fn run() -> Result<()> {
             tsconfig_out,
             check,
         } => peer::types(project, out, tsconfig_out, check),
+        Command::Test { input } => peer::test_contract(input),
         Command::Check { input, fix } => peer::check(input, fix),
         Command::Fmt { input, check } => peer::fmt(input, check),
         Command::Inspect {
