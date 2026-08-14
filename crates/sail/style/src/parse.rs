@@ -3,7 +3,7 @@
 use std::borrow::Cow;
 use std::collections::{BTreeMap, HashMap, HashSet};
 
-use super::channel::is_animate_trigger;
+use super::capabilities::is_animate_trigger;
 use super::intent::is_known_when_key;
 use super::ir::{PaintArg, PaintOp, Style, StyleDiagnostic};
 use super::setters::validate_op;
