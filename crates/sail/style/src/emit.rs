@@ -494,7 +494,7 @@ pub fn lower_style_source_with_motion(
     seen: &mut HashSet<String>,
 ) -> Result<(String, Vec<(String, String)>), Vec<super::ir::StyleDiagnostic>> {
     // Product authoring: flat concern chain. Constructor `style.pad().bg()` is
-    // retired (corpus codemod + block attachment). Migration dual is `flat_chain` only.
+    // retired (corpus codemod + block attachment). Remaining dual is `flat_chain` only.
     // Early refuse matches product `parse` (no IR for flat chains).
     let t = src.trim_start();
     if t.starts_with("style.") {

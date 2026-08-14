@@ -10,8 +10,8 @@ use std::sync::OnceLock;
 
 use serde::Serialize;
 
-use crate::prefixes as sx_rules;
 use crate::plains;
+use crate::prefixes as sx_rules;
 use crate::tokens;
 
 // ─── IR ──────────────────────────────────────────────────────────────────────

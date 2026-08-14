@@ -648,9 +648,7 @@ fn gen_prop_registry(out: Option<PathBuf>, ts_out: Option<PathBuf>) -> Result<()
         .iter()
         .map(|(n, m)| serde_json::json!({ "prefix": n, "media": m }))
         .collect();
-    sf.push_str(
-        "export const SX_CONDITION_PREFIXES: Array<{ prefix: string; selector: string }> = ",
-    );
+    sf.push_str("export const SX_CONDITION_PREFIXES: Array<{ prefix: string; media: string }> = ");
     sf.push_str(&serde_json::to_string_pretty(&conds)?);
     sf.push_str("\n\n");
     let layout: Vec<serde_json::Value> = sail_lint::rules::layout::TAGS

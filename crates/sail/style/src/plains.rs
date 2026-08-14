@@ -630,7 +630,7 @@ pub fn lower_plain_token(
     if spec.slots.is_empty() {
         return Some(Vec::new());
     }
-    let css_val = if spec.keywords.iter().any(|k| *k == bare) {
+    let css_val = if spec.keywords.contains(&bare) {
         keyword_css(spec, bare)
     } else if let Some(scale) = spec.scale {
         let v = crate::scales::lower(scale, bare)?;

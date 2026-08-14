@@ -258,13 +258,20 @@ pub fn build_virtual_ts(sail_source: &str) -> Option<VirtualTs> {
         if !raw_body.ends_with('\n') {
             controller_text.push('\n');
         }
+        // `import type { Scope } from './page.sail'` resolves to the sibling
+        // `.sail.d.ts`, which is empty when the file has no props. compile()
+        // still injects host grants (`route` / `navigate`) onto ctx. Rewrite
+        // the self-import to the session stub so tsgo matches that grant.
+        let before = controller_text.len();
+        controller_text = rewrite_sail_scope_import(&controller_text);
+        let one_to_one = controller_text.len() == before;
         segments.push(MapSegment {
             file: VirtualFile::Controller,
             virtual_start: body_v_start,
-            virtual_end: body_v_start + raw_body.len(),
+            virtual_end: body_v_start + controller_text.len() - body_v_start,
             sail_start,
             sail_end,
-            one_to_one: true,
+            one_to_one,
             sail_to_virt_rel: None,
         });
     }
@@ -352,8 +359,9 @@ pub fn build_virtual_ts(sail_source: &str) -> Option<VirtualTs> {
             "type __AuthScope = typeof __sail_authored.__def extends (...a: never[]) => infer R \
              ? R \
              : object;\n\
-             const scope: __AuthScope = null! as __AuthScope;\n\
-             export type Scope = __AuthScope;\n\
+             type __Route = import(\"@ship/sail-runtime\").RouteSignals;\n\
+             const scope: __AuthScope & { readonly route: __Route } = null! as __AuthScope & { readonly route: __Route };\n\
+             export type Scope = __AuthScope & { readonly route: __Route };\n\
              void scope;\n\
              void __sail_authored;\n",
         );
@@ -383,6 +391,15 @@ pub fn build_virtual_ts(sail_source: &str) -> Option<VirtualTs> {
     // like `panel` are not always re-exported from the controller return.
     let for_bindings = collect_for_binding_names(sail_source);
     let mut bare_locals: Vec<String> = for_bindings;
+    if sail_source.contains("<partial") {
+        if let Some((_, _, body)) = scope.as_ref() {
+            for name in collect_type_literal_field_names(body) {
+                if !bare_locals.iter().any(|n| n == &name) {
+                    bare_locals.push(name);
+                }
+            }
+        }
+    }
     if has_controller {
         for p in &scope_props {
             if !bare_locals.iter().any(|n| n == p) {
@@ -1171,6 +1188,65 @@ fn strip_for_as_binding(src: &str) -> &str {
     src
 }
 
+/// Virtual module the tsgo session writes next to the controller (`tsgo.rs`).
+/// Host grants that compile() stamps onto route Scope (`route` / `navigate`).
+pub const HOST_SCOPE_SPEC: &str = "./__sail_host_scope__.ts";
+
+/// Rewrite `import type { Scope } from './x.sail'` to [`HOST_SCOPE_SPEC`].
+/// Sibling `.sail.d.ts` is often `export interface Scope {}` (no props) and
+/// would hide the host `route` grant that `ControllerScope<Scope>` needs.
+pub fn rewrite_sail_scope_import(text: &str) -> String {
+    let bytes = text.as_bytes();
+    let mut replacements: Vec<(usize, usize)> = Vec::new();
+    let mut i = 0;
+    while i + 4 < bytes.len() {
+        if &bytes[i..i + 4] == b"from"
+            && (i == 0 || !is_ident_byte(bytes[i - 1]))
+            && (i + 4 >= bytes.len() || !is_ident_byte(bytes[i + 4]))
+        {
+            let mut j = i + 4;
+            while j < bytes.len() && bytes[j].is_ascii_whitespace() {
+                j += 1;
+            }
+            if j < bytes.len() && (bytes[j] == b'\'' || bytes[j] == b'"') {
+                let q = bytes[j];
+                let start = j + 1;
+                if let Some(rel_end) = text[start..].find(q as char) {
+                    let end = start + rel_end;
+                    let spec = &text[start..end];
+                    if spec.ends_with(".sail")
+                        && (spec.starts_with("./") || spec.starts_with("../"))
+                    {
+                        // Only this import — do not look across a prior `import type { Scope }`.
+                        let stmt_start = text[..i].rfind("import").unwrap_or(0);
+                        let window = &text[stmt_start..i];
+                        if window.contains("Scope")
+                            && (window.contains("import type") || window.contains("type Scope"))
+                        {
+                            replacements.push((start, end));
+                        }
+                    }
+                    i = end + 1;
+                    continue;
+                }
+            }
+        }
+        i += 1;
+    }
+    if replacements.is_empty() {
+        return text.to_string();
+    }
+    let mut result = text.to_string();
+    for (start, end) in replacements.into_iter().rev() {
+        result.replace_range(start..end, HOST_SCOPE_SPEC);
+    }
+    result
+}
+
+fn is_ident_byte(b: u8) -> bool {
+    b.is_ascii_alphanumeric() || b == b'_' || b == b'$'
+}
+
 fn is_for_binding_rhs(rhs: &str) -> bool {
     let r = rhs.trim();
     if r.is_empty() {
@@ -1194,6 +1270,61 @@ fn is_for_binding_rhs(rhs: &str) -> bool {
                 .skip(1)
                 .all(|c| c.is_ascii_alphanumeric() || *c == b'_' || *c == b'$')
     })
+}
+
+/// Field names from `<scope>` `type Foo = { title: string }` — used as
+/// `<partial … props: Foo>` locals in the partial body.
+fn collect_type_literal_field_names(scope_body: &str) -> Vec<String> {
+    let mut names = Vec::new();
+    let bytes = scope_body.as_bytes();
+    let mut i = 0usize;
+    while i < bytes.len() {
+        if !scope_body.is_char_boundary(i) {
+            i += 1;
+            continue;
+        }
+        if !scope_body[i..].starts_with("type ") {
+            i += 1;
+            continue;
+        }
+        let Some(eq_rel) = scope_body[i..].find('=') else {
+            i += 5;
+            continue;
+        };
+        let mut j = i + eq_rel + 1;
+        while j < bytes.len() && bytes[j].is_ascii_whitespace() {
+            j += 1;
+        }
+        if bytes.get(j) != Some(&b'{') {
+            i += 5;
+            continue;
+        }
+        let Some(close) = find_matching_brace(scope_body, j) else {
+            i += 5;
+            continue;
+        };
+        let inner = &scope_body[j + 1..close];
+        for part in inner.split(',') {
+            let p = part.trim();
+            if p.is_empty() || p.starts_with('/') {
+                continue;
+            }
+            let name: String = p
+                .chars()
+                .take_while(|c| c.is_ascii_alphanumeric() || *c == '_' || *c == '$')
+                .collect();
+            if name
+                .chars()
+                .next()
+                .is_some_and(|c| c.is_ascii_alphabetic() || c == '_' || c == '$')
+                && !names.iter().any(|n| n == &name)
+            {
+                names.push(name);
+            }
+        }
+        i = close + 1;
+    }
+    names
 }
 
 fn collect_for_binding_names(sail_source: &str) -> Vec<String> {
@@ -1616,6 +1747,14 @@ fn scan_brace_exprs(original: &str) -> Vec<ExprEmbed> {
             i += 1;
             continue;
         }
+        // `{else-if {cond} => <row>…}` / `{if {cond} => …}` / `{for … => …}`
+        // are control-flow wrappers, not TS. Step inside so the nested
+        // `{cond}` is scanned; do not embed the markup tail (that is the
+        // sail-check "Expression expected" / `<` vs RegExp storm).
+        if is_control_flow_brace(original, i) {
+            i += 1;
+            continue;
+        }
         if let Some(end) = find_matching_brace(original, i) {
             let raw_inner = &original[i + 1..end];
             let inner = raw_inner.trim();
@@ -1625,7 +1764,13 @@ fn scan_brace_exprs(original: &str) -> Vec<ExprEmbed> {
             let in_ctrl = ctrl.is_some_and(|(s, e)| i >= s && i < e);
             let in_scope = scope.is_some_and(|(s, e)| i >= s && i < e);
             let in_style = style.is_some_and(|(s, e, _)| i >= s && i < e);
-            if !inner.is_empty() && !in_ctrl && !in_scope && !in_style {
+            if !inner.is_empty()
+                && !in_ctrl
+                && !in_scope
+                && !in_style
+                && !looks_like_markup_leak(inner)
+                && !looks_like_json_or_style_slots(inner)
+            {
                 if !(inner.contains(';') && inner.contains(':') && !inner.contains("=>")) {
                     // `<for {items() as row}>` brace-primary embeds the full
                     // `iterable as binder` text. virtual_ts only typechecks the
@@ -1651,6 +1796,44 @@ fn scan_brace_exprs(original: &str) -> Vec<ExprEmbed> {
         }
     }
     out
+}
+
+/// `{` starts a control-flow arm (`if` / `else-if` / `else` / `for` / `match`).
+fn is_control_flow_brace(src: &str, open: usize) -> bool {
+    if open + 1 >= src.len() || !src.is_char_boundary(open + 1) {
+        return false;
+    }
+    let s = src[open + 1..].trim_start();
+    let kw = |k: &str| {
+        s.starts_with(k)
+            && s[k.len()..]
+                .chars()
+                .next()
+                .is_none_or(|c| c.is_whitespace() || c == '{' || c == '(' || c == '=')
+    };
+    kw("else-if") || kw("else") || kw("if") || kw("for") || kw("match") || kw("when")
+}
+
+/// JSON attr payloads (`{"name":"a"}`) and Style slot objects
+/// (`{ w: full, h: 32 }`) are not template interpolations. Keep
+/// ternaries (`{ cond ? a : b }`).
+fn looks_like_json_or_style_slots(src: &str) -> bool {
+    let s = src.trim_start();
+    if s.starts_with('"') || s.starts_with('\'') {
+        return true;
+    }
+    src.contains(':') && !src.contains("=>") && !src.contains('?')
+}
+
+/// `<row` / `<button` inside a brace embed is leaked markup, not `a < b`.
+fn looks_like_markup_leak(src: &str) -> bool {
+    let bytes = src.as_bytes();
+    for i in 0..bytes.len() {
+        if bytes[i] == b'<' && i + 1 < bytes.len() && bytes[i + 1].is_ascii_alphabetic() {
+            return true;
+        }
+    }
+    false
 }
 
 fn find_matching_brace(src: &str, open: usize) -> Option<usize> {
@@ -2020,8 +2203,8 @@ export default controller((ctx) => ({ count: signal(0) }))
         assert!(looks_like_style_expr("{ pad(4).bg(primary) }"));
         let v3 = quote_style_dsl_for_tsc("style({ pad(4).bg(primary) })");
         assert!(
-            !v3.contains("..."),
-            "v3 concern chains must not grow spreads: {v3}"
+            v3.contains("...pad(4)") || v3.contains("...pad("),
+            "v3 concern chain must quote as a TS object spread: {v3}"
         );
         // Ordinary template arithmetic / scope calls stay out.
         assert!(!looks_like_style_expr("count() + 1"));
@@ -2261,6 +2444,138 @@ export default controller((ctx) => ({ count: signal(0) }))
         assert_eq!(file, VirtualFile::Controller);
         assert_eq!(&v.controller_text[virt..virt + 4], "nope");
         assert_eq!(v.virtual_to_sail(file, virt), Some(nope));
+    }
+
+    #[test]
+    fn else_if_arm_does_not_embed_markup_in_virtual_ts() {
+        let src = r#"
+<div>
+{else-if {e.tag === 'button'} => <row gap="2"><button>Save</button></row>}
+{count()}
+</div>
+"#;
+        let v = build_virtual_ts(src).expect("virtual");
+        assert!(
+            !v.view_text.contains("<row") && !v.view_text.contains("<button"),
+            "control-flow markup must not leak into virtual TS:\n{}",
+            v.view_text
+        );
+        assert!(
+            v.view_text.contains("e.tag") || v.view_text.contains("tag"),
+            "condition must stay a typed embed:\n{}",
+            v.view_text
+        );
+        assert!(
+            v.view_text.contains("count(") || v.view_text.contains("count"),
+            "ordinary {{count()}} still embeds:\n{}",
+            v.view_text
+        );
+    }
+
+    #[test]
+    fn json_attr_payload_is_not_a_template_embed() {
+        let src = r#"
+<div>
+<sail-bar-chart data="2,5,3" series='[{"name":"a","data":[2,4]}]'></sail-bar-chart>
+{count()}
+</div>
+"#;
+        let v = build_virtual_ts(src).expect("virtual");
+        assert!(
+            !v.view_text.contains("\"name\"") && !v.view_text.contains("\"data\""),
+            "JSON attr must not become a TS embed:\n{}",
+            v.view_text
+        );
+    }
+
+    #[test]
+    fn style_slot_object_is_not_a_template_embed() {
+        // Bare slot / JSON-shaped objects (not a `style({…})` head) must not
+        // become TS. Tag-position `style({ size({ w: full }) })` is a real
+        // style embed and is rewritten separately.
+        let src = r#"
+<div slots={ w: full, h: 32 }>
+{count()}
+</div>
+"#;
+        let v = build_virtual_ts(src).expect("virtual");
+        assert!(
+            !v.view_text.contains("w: full") && !v.view_text.contains("h: 32"),
+            "bare slot objects must not become TS embeds:\n{}",
+            v.view_text
+        );
+        assert!(
+            v.view_text.contains("count"),
+            "ordinary interpolation still embeds:\n{}",
+            v.view_text
+        );
+    }
+
+    #[test]
+    fn sail_scope_self_import_rewrites_to_host_stub() {
+        let src = "import type { Scope } from './page.sail'\nexport default controller((ctx: ControllerScope<Scope>) => ctx.route)\n";
+        let out = rewrite_sail_scope_import(src);
+        assert!(
+            out.contains("from './__sail_host_scope__.ts'")
+                || out.contains("from \"./__sail_host_scope__.ts\""),
+            "self-import must retarget host stub:\n{out}"
+        );
+        assert!(
+            !out.contains("from './page.sail'"),
+            "dts import remains:\n{out}"
+        );
+        let v = build_virtual_ts(&format!(
+            "<controller>\n{src}</controller>\n<div>{{x}}</div>\n"
+        ))
+        .expect("virtual");
+        assert!(
+            v.controller_text.contains("__sail_host_scope__"),
+            "controller virtual must rewrite Scope import:\n{}",
+            v.controller_text
+        );
+    }
+
+    #[test]
+    fn sail_scope_import_leaves_package_and_value_imports() {
+        let src =
+            "import type { Scope } from '@ship/sail-runtime'\nimport { foo } from './peer.sail'\n";
+        let out = rewrite_sail_scope_import(src);
+        assert_eq!(out, src);
+    }
+
+    #[test]
+    fn controller_scope_intersects_route_signals() {
+        let v = build_virtual_ts(COUNTER).expect("virtual");
+        assert!(
+            v.view_text
+                .contains("__AuthScope & { readonly route: __Route }"),
+            "Scope must include route:\n{}",
+            v.view_text
+        );
+        assert!(
+            v.view_text
+                .contains("import(\"@ship/sail-runtime\").RouteSignals"),
+            "route type from runtime:\n{}",
+            v.view_text
+        );
+    }
+
+    #[test]
+    fn partial_type_literal_fields_are_bare_locals() {
+        let src = r#"<scope>
+type PanelProps = { title: string, body: string }
+</scope>
+<partial name="panel" props: PanelProps>
+  <p>{title}</p>
+</partial>
+"#;
+        let v = build_virtual_ts(src).expect("virtual");
+        assert!(
+            v.view_text.contains("declare const title:")
+                && v.view_text.contains("declare const body:"),
+            "partial type fields must be locals:\n{}",
+            v.view_text
+        );
     }
 
     #[test]

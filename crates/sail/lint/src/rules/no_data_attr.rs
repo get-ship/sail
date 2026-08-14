@@ -17,8 +17,7 @@ const REMEDY: &str = "Do not use data-* in .sail markup. Prefer role, accessible
      data-sail-host is compiler-only L1 part identity — never author it.";
 
 const THEME_SUBSTRATE: &[&str] = &["data-theme", "data-product", "data-mode"];
-const THEME_SUBSTRATE_REMEDY: &str =
-    "Do not author theme substrate as data-*. Use theme= (theme id) \
+const THEME_SUBSTRATE_REMEDY: &str = "Do not author theme substrate as data-*. Use theme= (theme id) \
      and mode= (light|dark). Override tokens in the theme document, \
      not data-theme / data-product / data-mode.";
 

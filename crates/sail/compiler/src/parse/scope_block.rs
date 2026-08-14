@@ -1897,10 +1897,10 @@ mod tests {
     #[test]
     fn style_decl_and_const_style_binding() {
         let b = block(
-            "style host = { bg(primary) }\nconst legacy = style({ bg(muted) })\nprops: { label = '' }",
+            "style host = { bg(primary) }\nconst mutedFill = style({ bg(muted) })\nprops: { label = '' }",
         );
         assert!(b.style_env.contains_key("host"));
-        assert!(b.style_env.contains_key("legacy"));
+        assert!(b.style_env.contains_key("mutedFill"));
     }
 
     #[test]

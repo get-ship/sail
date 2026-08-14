@@ -833,6 +833,16 @@ fn write_tsconfig(work_dir: &Path, workspace_hint: Option<&Path>) {
         work_dir.join("sail-types.d.ts"),
         sail_compiler::ambients::emit_types_dts(),
     );
+    // Host Scope stub — `import type { Scope } from './page.sail'` is rewritten
+    // here so tsgo sees route/navigate (sibling .d.ts is often empty).
+    let _ = std::fs::write(
+        work_dir.join("__sail_host_scope__.ts"),
+        "import type { RouteSignals } from \"@ship/sail-runtime\";\n\
+         export interface Scope {\n\
+         \x20 readonly route: RouteSignals;\n\
+         \x20 readonly navigate: (path: string) => void;\n\
+         }\n",
+    );
 }
 
 /// Map `file://` / absolute path URIs to a filesystem path (for import rewrite).

@@ -835,7 +835,7 @@ fn inside_style_call(source: &str, offset: usize) -> bool {
 fn is_live_style_word(name: &str) -> bool {
     if sail_lint::style::find_vocab(name).is_some()
         || sail_lint::style::find_concern(name).is_some()
-        || sail_lint::style::OBJECT_KEYS.iter().any(|k| *k == name)
+        || sail_lint::style::OBJECT_KEYS.contains(&name)
         || matches!(name, "style" | "bind")
     {
         return true;

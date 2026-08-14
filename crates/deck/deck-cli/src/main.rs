@@ -1725,11 +1725,18 @@ fn is_project_theme_path(path: &Path) -> bool {
     // /themes (not bare catalog model paths).
     if let Some(i) = norm.rfind("/themes/") {
         let before = &norm[..i];
+        // Retired `<project>/tokens/themes` is not a project theme source.
+        if before.ends_with("/tokens") {
+            return false;
+        }
         // Reject packages/sail/tokens/model/themes (already gated above) and
         // bare "/themes/" at root-ish paths without a project parent.
         return !before.is_empty() && before != "/";
     }
     if let Some(stripped) = norm.strip_suffix("/themes") {
+        if stripped.ends_with("/tokens") {
+            return false;
+        }
         return !stripped.is_empty() && stripped != "/";
     }
     false

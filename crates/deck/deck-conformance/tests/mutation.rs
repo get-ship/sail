@@ -12,6 +12,7 @@
 //! Run: `cargo test -p deck-conformance --test mutation`
 
 use deck_conformance::data_port::{DemoStore, resolve_demo};
+use deck_conformance::default_app_dir;
 use serde_json::json;
 
 /// After a successful mutation, the store contains the new item.

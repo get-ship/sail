@@ -151,11 +151,7 @@ fn detect_overflow_axes(sx: &str) -> Option<OverflowAxes> {
         }
     }
 
-    if axes.any() {
-        Some(axes)
-    } else {
-        None
-    }
+    if axes.any() { Some(axes) } else { None }
 }
 
 fn has_scroll_overflow(sx: &str) -> bool {
