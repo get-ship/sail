@@ -4,16 +4,17 @@
 //! splices values into HTML (e.g. deck's route-host). Kept at crate
 //! level so they outlive any single emit/analysis pass.
 
-/// HTML5 void elements — cannot have a closing tag.
+/// HTML5 void elements — cannot have a closing tag in **serialized HTML**.
 /// List per <https://html.spec.whatwg.org/multipage/syntax.html#void-elements>.
-const VOID_ELEMENTS: &[&str] = &[
+/// Author-void (omitted closer in `.sail`) is [`crate::l1_manifest::is_author_void`].
+pub const HTML_VOID_ELEMENTS: &[&str] = &[
     "area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track",
     "wbr",
 ];
 
 /// Returns `true` if the lowercased tag is an HTML5 void element.
 pub fn is_void_element(tag_lower: &str) -> bool {
-    VOID_ELEMENTS.contains(&tag_lower)
+    HTML_VOID_ELEMENTS.contains(&tag_lower)
 }
 
 /// Escape an attribute value: `&`, `"`, `<`, `>` become entities.

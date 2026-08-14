@@ -13,11 +13,6 @@
 
 use crate::diagnostics::{CompileError, Span};
 
-const VOID_TAGS: &[&str] = &[
-    "area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track",
-    "wbr", "textarea",
-];
-
 /// Framework blocks that are not element hosts for Style attachment.
 const SKIP_BODY_TAGS: &[&str] = &["scope", "controller", "script", "style", "partial"];
 
@@ -202,7 +197,7 @@ fn for_each_tag_style<'a>(source: &'a str, mut f: impl FnMut(usize, &'a str)) {
 }
 
 fn is_void_tag(tag: &str) -> bool {
-    VOID_TAGS.contains(&tag)
+    crate::l1_manifest::is_author_void(tag)
 }
 
 /// Lift tag-position `style(…)` (+ `.when` chains) onto the open tag as
@@ -3221,7 +3216,7 @@ fn expand_self_close(source: &str) -> String {
         // element's children into siblings.
         let trimmed_ws = head.trim_end_matches(|c: char| c.is_whitespace());
         let is_self_close = trimmed_ws.ends_with('/');
-        if is_self_close && !VOID_TAGS.contains(&tag.as_str()) {
+        if is_self_close && !is_void_tag(&tag) {
             // Strip the slash, then any whitespace before it (`<x  />` → `<x>`).
             let trimmed_head = trimmed_ws
                 .trim_end_matches('/')

@@ -2,7 +2,7 @@
 
 use crate::diagnostics::{CompileError, Span};
 
-use super::{Attr, Comment, Element, Node, RAW_TEXT_TAGS, Text, VOID_TAGS, decode_entities};
+use super::{Attr, Comment, Element, Node, RAW_TEXT_TAGS, Text, decode_entities};
 
 const RULE_ID: &str = "sail-html-parse";
 pub(super) struct Parser<'a> {
@@ -162,7 +162,10 @@ impl<'a> Parser<'a> {
         let tag = self.src[tag_start..self.i].to_ascii_lowercase();
         let attributes = self.parse_attrs()?;
         let self_closed = self.consume_tag_end()?;
-        if self_closed || VOID_TAGS.contains(&tag.as_str()) {
+        if self_closed || crate::l1_manifest::is_author_void(&tag) {
+            if !self_closed {
+                self.consume_optional_close(&tag);
+            }
             return Ok(Element {
                 tag,
                 attributes,
@@ -359,6 +362,28 @@ impl<'a> Parser<'a> {
         }
         self.i += 1;
         Ok(self_closed)
+    }
+
+    /// Old corpus wrote `<separator></separator>`. Author-void tags do not
+    /// take children; a matching closer is ignored so those files still parse.
+    fn consume_optional_close(&mut self, tag: &str) {
+        self.skip_ws();
+        if self.peek2() != Some((b'<', b'/')) {
+            return;
+        }
+        let save = self.i;
+        self.i += 2;
+        let name_start = self.i;
+        while self.i < self.bytes.len() && is_tag_name_byte(self.bytes[self.i]) {
+            self.i += 1;
+        }
+        let name = self.src[name_start..self.i].to_ascii_lowercase();
+        self.skip_ws();
+        if name == tag && self.i < self.bytes.len() && self.bytes[self.i] == b'>' {
+            self.i += 1;
+            return;
+        }
+        self.i = save;
     }
 
     fn consume_raw_text(&mut self, tag: &str) -> Text {

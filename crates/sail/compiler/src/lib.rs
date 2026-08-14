@@ -95,7 +95,8 @@ pub use icons::{
 };
 pub use l1_manifest::{
     L1Attribute, L1ComponentToken, L1Entry, L1Js, L1JsKind, L1Kind, L1Matrix, L1MatrixAxis,
-    L1SlotType, VOID_TAGS, l1_by_kind, l1_count, l1_entries, l1_kind, matrix_contract,
+    L1SlotType, author_void_tags, is_author_void, l1_by_kind, l1_count, l1_entries, l1_kind,
+    matrix_contract,
 };
 pub use region_capability::{
     CONTROLLER_SIZE_THRESHOLD, REGION_CAPABILITY_MATRIX, RegionCapability,

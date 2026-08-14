@@ -30,6 +30,9 @@ pub struct L1Entry {
     pub js: L1Js,
     /// State × variant matrix (derived axes + residual extra cells).
     pub matrix: L1Matrix,
+    /// Author children: this stdlib source declares a `<slot`.
+    /// False → `<tag>` is enough (no closer). Empty slotted tags use `<tag />`.
+    pub accepts_children: bool,
 }
 
 /// State × variant matrix for one L1 element.
@@ -213,6 +216,10 @@ static STDLIB_ROWS: LazyLock<Vec<L1Entry>> = LazyLock::new(|| {
             let component_tokens = component_tokens_for_tag(el.tag);
             let js = js_for_element(el);
             let matrix = matrix_from_vocab(el.tag, &attributes);
+            let accepts_children = crate::stdlib::sources()
+                .iter()
+                .find(|(tag, _)| *tag == el.tag)
+                .is_some_and(|(_, src)| source_has_author_slot(src));
             L1Entry {
                 tag: el.tag.to_string(),
                 kind: L1Kind::StdlibElement,
@@ -221,6 +228,7 @@ static STDLIB_ROWS: LazyLock<Vec<L1Entry>> = LazyLock::new(|| {
                 component_tokens,
                 js,
                 matrix,
+                accepts_children,
             }
         })
         .collect();
@@ -458,11 +466,41 @@ pub fn l1_by_kind() -> (Vec<L1Entry>, Vec<L1Entry>) {
     (l1_entries(), Vec::new())
 }
 
-/// Sail void / childless tags — parser treats these as self-closing.
-/// Includes HTML5 void plus `<textarea>` (value is a prop; it does not take
-/// children). HTML emit still writes `</textarea>` because the platform
-/// element is not void. Grammar SSOT — do not fork this list.
-pub const VOID_TAGS: &[&str] = &[
-    "area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track",
-    "wbr", "textarea",
-];
+/// Author `<slot` in a stdlib source — not theme surface slots.
+fn source_has_author_slot(source: &str) -> bool {
+    source.contains("<slot")
+}
+
+/// True when an omitted closer is legal: HTML5 void, or an L1 tag whose
+/// stdlib source has no author `<slot`. Unknown / layout / slotted tags
+/// accept children — write `</tag>` or `<tag />`.
+///
+/// HTML *emit* stays [`crate::escape::is_void_element`] (WHATWG only).
+/// `textarea` is author-void (value is a prop) and still serializes with
+/// `</textarea>`.
+pub fn is_author_void(tag: &str) -> bool {
+    let lower = tag.trim().to_ascii_lowercase();
+    if lower.is_empty() {
+        return false;
+    }
+    if crate::escape::is_void_element(&lower) {
+        return true;
+    }
+    crate::stdlib::sources()
+        .iter()
+        .find(|(name, _)| *name == lower)
+        .is_some_and(|(_, src)| !source_has_author_slot(src))
+}
+
+/// Author-void names for the grammar dump (HTML void + slotless L1).
+pub fn author_void_tags() -> Vec<&'static str> {
+    let mut out: Vec<&'static str> = crate::escape::HTML_VOID_ELEMENTS.to_vec();
+    for (tag, src) in crate::stdlib::sources() {
+        if !source_has_author_slot(src) && !out.contains(tag) {
+            out.push(*tag);
+        }
+    }
+    out.sort_unstable();
+    out.dedup();
+    out
+}

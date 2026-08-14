@@ -20,11 +20,6 @@ mod parser;
 /// Brace-primary open-tag expression (`<if {expr}>`) — see `parser::PRIMARY_BRACE_ATTR`.
 pub use parser::PRIMARY_BRACE_ATTR;
 
-pub(super) const VOID_TAGS: &[&str] = &[
-    "area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track",
-    "wbr", "textarea",
-];
-
 /// Tags whose body is treated as raw text (no nested elements,
 /// closing handled by the literal `</tag>` match).
 pub(super) const RAW_TEXT_TAGS: &[&str] = &["script", "style", "controller", "scope"];
@@ -243,6 +238,43 @@ mod tests {
     fn diagnoses_mismatched_close() {
         let err = parse_fragment("<a></b>").unwrap_err();
         assert!(err.message.contains("</b>"));
+    }
+
+    #[test]
+    fn slotless_l1_omits_closer() {
+        let nodes = parse_fragment("<separator><p>x</p>").unwrap();
+        assert_eq!(nodes.len(), 2);
+        let Node::Element(sep) = &nodes[0] else {
+            panic!()
+        };
+        assert_eq!(sep.tag, "separator");
+        assert!(sep.children.is_empty());
+    }
+
+    #[test]
+    fn slotless_l1_optional_closer_still_parses() {
+        let nodes = parse_fragment("<separator></separator><p>x</p>").unwrap();
+        assert_eq!(nodes.len(), 2);
+    }
+
+    #[test]
+    fn slotted_empty_is_self_close() {
+        let nodes = parse_fragment("<button />").unwrap();
+        let Node::Element(el) = &nodes[0] else {
+            panic!()
+        };
+        assert_eq!(el.tag, "button");
+        assert!(el.children.is_empty());
+    }
+
+    #[test]
+    fn slotted_open_requires_closer() {
+        let err = parse_fragment("<button>").unwrap_err();
+        assert!(
+            err.message.contains("missing </button>")
+                || err.message.contains("unterminated <button>"),
+            "{err:?}"
+        );
     }
 
     #[test]

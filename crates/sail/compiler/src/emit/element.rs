@@ -579,25 +579,9 @@ fn element_skin_selectors(css: &str, root_selector: &str) -> String {
     out
 }
 
-/// The HTML void elements — self-closing, no end tag.
+/// HTML serialize-void (WHATWG). Not author-void.
 pub(crate) fn is_void_element(tag: &str) -> bool {
-    matches!(
-        tag,
-        "area"
-            | "base"
-            | "br"
-            | "col"
-            | "embed"
-            | "hr"
-            | "img"
-            | "input"
-            | "link"
-            | "meta"
-            | "param"
-            | "source"
-            | "track"
-            | "wbr"
-    )
+    crate::escape::is_void_element(tag)
 }
 
 fn balanced(bytes: &[u8], open: usize) -> Option<usize> {

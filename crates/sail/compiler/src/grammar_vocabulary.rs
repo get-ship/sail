@@ -13,7 +13,7 @@ use serde::Serialize;
 #[derive(Debug, Serialize)]
 pub struct GrammarVocabulary {
     pub version: u32,
-    pub void_tags: &'static [&'static str],
+    pub void_tags: Vec<&'static str>,
     pub directive_prefixes: &'static [&'static str],
     pub directive_elements: &'static [&'static str],
     pub blocks: &'static [crate::block_manifest::BlockEntry],
@@ -29,7 +29,7 @@ pub struct GrammarVocabulary {
 pub fn to_json() -> serde_json::Value {
     serde_json::to_value(GrammarVocabulary {
         version: 1,
-        void_tags: crate::l1_manifest::VOID_TAGS,
+        void_tags: crate::l1_manifest::author_void_tags(),
         directive_prefixes: crate::directive_manifest::DIRECTIVE_PREFIXES,
         directive_elements: crate::directive_manifest::DIRECTIVE_ELEMENTS,
         blocks: crate::block_manifest::BLOCKS,

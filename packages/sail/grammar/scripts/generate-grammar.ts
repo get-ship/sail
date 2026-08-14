@@ -227,7 +227,7 @@ function generateGrammar(v: Vocabulary): string {
 //
 // Source of truth for the closed vocabulary (void tags, directive prefixes,
 // directive elements, block names and clauses) is the compiler's manifests:
-//   crates/sail/compiler/src/l1_manifest.rs        (VOID_TAGS)
+//   crates/sail/compiler/src/l1_manifest.rs        (author_void_tags)
 //   crates/sail/compiler/src/directive_manifest.rs (DIRECTIVE_PREFIXES, DIRECTIVE_ELEMENTS)
 //   crates/sail/compiler/src/block_manifest.rs       (BLOCKS)
 //

@@ -318,6 +318,29 @@ fn every_l1_entry_carries_matrix() {
 }
 
 #[test]
+fn author_void_is_slotless_not_a_name_list() {
+    use sail_compiler::l1_manifest::{author_void_tags, is_author_void};
+
+    assert!(is_author_void("separator"));
+    assert!(is_author_void("spinner"));
+    assert!(is_author_void("avatar"));
+    assert!(is_author_void("input"));
+    assert!(is_author_void("hr"));
+    assert!(is_author_void("textarea"));
+    assert!(!is_author_void("button"));
+    assert!(!is_author_void("card"));
+    assert!(!is_author_void("div"));
+    assert!(!is_author_void("row"));
+    assert!(!entry("separator").accepts_children);
+    assert!(entry("button").accepts_children);
+
+    let tags = author_void_tags();
+    assert!(tags.contains(&"separator"));
+    assert!(tags.contains(&"hr"));
+    assert!(!tags.iter().any(|t| *t == "button"));
+}
+
+#[test]
 fn gutted_entry_fails_matrix_contract() {
     let live = entry("button");
     assert!(

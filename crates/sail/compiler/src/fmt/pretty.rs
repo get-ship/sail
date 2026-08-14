@@ -11,10 +11,6 @@ use super::util::{
     dedent_block, indent, inline_text_piece, looks_like_style_stmt, print_attrs, write_attr,
 };
 
-const VOID_TAGS: &[&str] = &[
-    "area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track",
-    "wbr", "textarea",
-];
 const RAW_TS_TAGS: &[&str] = &["scope", "controller"];
 const RAW_TEXT_TAGS: &[&str] = &["script", "style", "scope", "controller"];
 
@@ -92,7 +88,7 @@ fn print_element(
     out: &mut String,
 ) {
     let tag = el.tag.as_str();
-    let is_void = VOID_TAGS.contains(&tag);
+    let is_void = crate::l1_manifest::is_author_void(tag);
     let is_raw_ts = RAW_TS_TAGS.contains(&tag);
     let is_raw_text = RAW_TEXT_TAGS.contains(&tag);
 
@@ -102,18 +98,15 @@ fn print_element(
     out.push('<');
     out.push_str(tag);
     print_attrs(&el.attributes, depth, opts, out);
-    out.push('>');
-
     if is_void {
-        return;
-    }
-
-    if children.is_empty() {
-        out.push_str("</");
-        out.push_str(tag);
         out.push('>');
         return;
     }
+    if children.is_empty() {
+        out.push_str(" />");
+        return;
+    }
+    out.push('>');
 
     if is_raw_ts {
         print_raw_ts_body(tag, &children, depth, opts, oxfmt, out);
@@ -243,11 +236,16 @@ fn print_element_inline(el: &Element, out: &mut String) {
         out.push(' ');
         write_attr(a, out);
     }
-    out.push('>');
-    if VOID_TAGS.contains(&tag) {
+    if crate::l1_manifest::is_author_void(tag) {
+        out.push('>');
         return;
     }
     let children: Vec<&Node> = el.children.iter().filter(|c| !is_ignorable_ws(c)).collect();
+    if children.is_empty() {
+        out.push_str(" />");
+        return;
+    }
+    out.push('>');
     for child in children {
         match child {
             Node::Text(t) => out.push_str(&inline_text_piece(&t.data)),
