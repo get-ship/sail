@@ -4,7 +4,7 @@ use std::borrow::Cow;
 use std::collections::{BTreeMap, HashMap, HashSet};
 
 use super::ir::{PaintArg, PaintOp, Style, StyleDiagnostic};
-use super::setters::{closest_unique_setter, find_setter, validate_op, when_target};
+use super::setters::{validate_op, when_target};
 use super::theme_env::{ThemeStyleEnv, current_styling_policy};
 
 /// Parse a Style expression (product / channel-only). Flat `style.method(…)`
@@ -2058,7 +2058,7 @@ fn push_paint_op(
         return;
     }
     let (method, args) = crate::concerns::prepare_concern_call(method, args);
-    if find_setter(&method).is_none() && crate::concerns::find_concern(&method).is_none() {
+    if crate::vocab::find_vocab(&method).is_none() {
         diags.push(StyleDiagnostic::UnknownVocabulary {
             name: method.to_string(),
             source: source.clone(),

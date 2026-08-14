@@ -241,10 +241,17 @@ pub fn style_complete_for_context(
                     partial,
                 );
             }
+            if let Some(concern) = crate::concerns::find_concern(setter) {
+                return filter_sort(concern_arg_items(concern, host.as_deref()), partial);
+            }
+            if crate::vocab::find_vocab(setter).is_none() {
+                return Vec::new();
+            }
+            // Leftover plain helper — name already confirmed on vocab.
             let Some(spec) = setters::find_setter(setter) else {
                 return Vec::new();
             };
-            filter_sort(setter_arg_items(spec, host.as_deref()), partial)
+            filter_sort(plain_arg_items(spec, host.as_deref()), partial)
         }
         StyleCompleteContext::ConcernSlotKey { setter, partial } => {
             let Some(concern) = crate::concerns::find_concern(setter) else {
@@ -310,29 +317,39 @@ pub fn style_complete_for_context(
 
 // ── arg vocabulary ──────────────────────────────────────────────────────────
 
-fn setter_arg_items(
+fn concern_arg_items(
+    concern: &crate::concerns::ConcernSpec,
+    host: Option<&str>,
+) -> impl Iterator<Item = StyleCompleteItem> {
+    let mut labels: Vec<(String, StyleCompleteKind, Option<String>)> = Vec::new();
+    for composite in crate::tokens::composites_of_type(concern.name) {
+        let short = composite
+            .name
+            .strip_prefix(&format!("{}.", concern.name))
+            .or_else(|| composite.name.strip_suffix(&format!(".{}", concern.name)))
+            .unwrap_or(composite.name);
+        if !labels.iter().any(|(l, _, _)| l == short) {
+            labels.push((
+                short.to_string(),
+                StyleCompleteKind::Token,
+                Some(format!("composite `{}`", composite.name)),
+            ));
+        }
+    }
+    let primary = crate::concerns::primary_slot(concern);
+    if let Some(slot) = crate::concerns::find_slot(concern, primary) {
+        labels.extend(concern_slot_arg_tuples(slot, host));
+    }
+    labels
+        .into_iter()
+        .map(|(label, kind, detail)| item(label, kind, detail, None))
+}
+
+fn plain_arg_items(
     spec: &SetterSpec,
     host: Option<&str>,
 ) -> impl Iterator<Item = StyleCompleteItem> {
     let mut labels: Vec<(String, StyleCompleteKind, Option<String>)> = Vec::new();
-
-    if let Some(concern) = crate::concerns::find_concern(spec.name) {
-        for composite in crate::tokens::composites_of_type(concern.name) {
-            let short = composite
-                .name
-                .strip_prefix(&format!("{}.", concern.name))
-                .or_else(|| composite.name.strip_suffix(&format!(".{}", concern.name)))
-                .unwrap_or(composite.name);
-            if !labels.iter().any(|(l, _, _)| l == short) {
-                labels.push((
-                    short.to_string(),
-                    StyleCompleteKind::Token,
-                    Some(format!("composite `{}`", composite.name)),
-                ));
-            }
-        }
-    }
-
     if spec.scale == Some("color") {
         let mut v: Vec<String> = color_paint_vocabulary(host).into_iter().collect();
         v.sort();
@@ -351,7 +368,6 @@ fn setter_arg_items(
             ));
         }
     }
-
     for k in spec.keywords {
         if labels.iter().any(|(l, _, _)| l == *k) {
             continue;
@@ -362,16 +378,15 @@ fn setter_arg_items(
             Some(format!("keyword · {}", spec.name)),
         ));
     }
-
     labels
         .into_iter()
         .map(|(label, kind, detail)| item(label, kind, detail, None))
 }
 
-fn concern_slot_arg_items(
+fn concern_slot_arg_tuples(
     slot: &crate::concerns::ConcernSlot,
     host: Option<&str>,
-) -> impl Iterator<Item = StyleCompleteItem> {
+) -> Vec<(String, StyleCompleteKind, Option<String>)> {
     let mut labels: Vec<(String, StyleCompleteKind, Option<String>)> = Vec::new();
     if slot.scale == Some("color") {
         let mut v: Vec<String> = color_paint_vocabulary(host).into_iter().collect();
@@ -402,6 +417,13 @@ fn concern_slot_arg_items(
         ));
     }
     labels
+}
+
+fn concern_slot_arg_items(
+    slot: &crate::concerns::ConcernSlot,
+    host: Option<&str>,
+) -> impl Iterator<Item = StyleCompleteItem> {
+    concern_slot_arg_tuples(slot, host)
         .into_iter()
         .map(|(label, kind, detail)| item(label, kind, detail, None))
 }
@@ -1209,21 +1231,24 @@ mod tests {
                 // Host-free app context for this table.
                 with_host_surface(None, check);
             }
-            // Scale membership for non-keyword tokens
-            if let Some(spec) = setters::find_setter(setter) {
-                if let Some(scale) = spec.scale {
-                    if scale != "color" {
-                        for it in items
-                            .iter()
-                            .filter(|i| i.kind == StyleCompleteKind::Token)
-                            .take(20)
-                        {
-                            assert!(
-                                scales::contains(scale, &it.label)
-                                    || spec.keywords.contains(&it.label.as_str()),
-                                "{setter} token `{}` not on scale `{scale}`",
-                                it.label
-                            );
+            // Scale membership for non-keyword tokens — concern primary slot.
+            if let Some(concern) = crate::concerns::find_concern(setter) {
+                let primary = crate::concerns::primary_slot(concern);
+                if let Some(slot) = crate::concerns::find_slot(concern, primary) {
+                    if let Some(scale) = slot.scale {
+                        if scale != "color" {
+                            for it in items
+                                .iter()
+                                .filter(|i| i.kind == StyleCompleteKind::Token)
+                                .take(20)
+                            {
+                                assert!(
+                                    scales::contains(scale, &it.label)
+                                        || slot.keywords.contains(&it.label.as_str()),
+                                    "{setter} token `{}` not on scale `{scale}`",
+                                    it.label
+                                );
+                            }
                         }
                     }
                 }

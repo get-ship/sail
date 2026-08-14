@@ -44,7 +44,8 @@ pub use component_surfaces::{
 };
 pub use concerns::{
     ConcernSlot, ConcernSpec, MARKERS, concern_doc_line, concern_kind, concerns, find_concern,
-    is_concern_form, is_marker, prepare_concern_call, resolve_concern_name, retired_replacement,
+    is_concern_form, is_marker, prepare_concern_call, primary_slot, resolve_concern_name,
+    retired_replacement,
 };
 pub use conditions::{CONDITION_PREFIXES, condition_media};
 pub use emit::{

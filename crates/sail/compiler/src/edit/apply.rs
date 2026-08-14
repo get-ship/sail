@@ -508,14 +508,22 @@ pub fn validate_sx_setter(setter: &str, args: &[serde_json::Value]) -> Result<()
         }
     }
     // grow/shrink are box-channel participation — allowed on setSx / Style.
-    let known = sail_lint::style::setters::setters();
-    let Some(spec) = known.iter().find(|s| s.name == name) else {
+    if let Some((concern, teaching)) = sail_lint::style::retired_replacement(name) {
+        return Err(format!(
+            "setSx `{name}` is retired — use `{teaching}` (`{concern}`). Allowed setters: {}",
+            allowed_setter_names().join(", ")
+        ));
+    }
+    if sail_lint::style::find_vocab(name).is_none() {
         return Err(format!(
             "setSx `{name}` is off-vocab. Allowed setters: {}",
             allowed_setter_names().join(", ")
         ));
+    }
+    // Optional leftover-plain scale/keyword check on first string/number arg.
+    let Some(spec) = sail_lint::style::setters::find_setter(name) else {
+        return Ok(());
     };
-    // Optional scale/keyword check on first string/number arg
     if let Some(scale) = spec.scale {
         if let Some(arg0) = args.first() {
             let tok = arg_to_token(arg0);
@@ -542,9 +550,9 @@ pub fn validate_sx_setter(setter: &str, args: &[serde_json::Value]) -> Result<()
 }
 
 fn allowed_setter_names() -> Vec<&'static str> {
-    sail_lint::style::setters::setters()
+    sail_lint::style::vocab_rows()
         .iter()
-        .map(|s| s.name)
+        .map(|r| r.name)
         .collect()
 }
 

@@ -805,7 +805,7 @@ pub fn concerns() -> &'static [ConcernSpec] {
                 "list",
             ],
             channel: Channel::Text,
-        }
+        },
     ]
 }
 
@@ -836,7 +836,7 @@ pub fn prepare_concern_call(method: &str, args: Vec<PaintArg>) -> (String, Vec<P
     (method.to_string(), args)
 }
 
-fn primary_slot(spec: &ConcernSpec) -> &'static str {
+pub fn primary_slot(spec: &ConcernSpec) -> &'static str {
     match spec.name {
         "bg" | "fg" => "color",
         "pad" | "margin" | "overflow" | "radius" => "all",

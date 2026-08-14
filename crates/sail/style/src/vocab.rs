@@ -1,13 +1,11 @@
 //! One vocabulary table, three row tags (SPEC-SPINNAKER-3 §1 / §4).
 //!
 //! Every author-facing style name is one row tagged `concern | axis | plain`.
-//! Complete, clash, emit, LSP, skill, and MCP walk this table. `setters.rs`
-//! remains the longhand emit / validate layer — not a second product atlas.
+//! Complete, clash, emit, parse, LSP, skill, and MCP walk this table.
+//! `setters.rs` is leftover plain lower helpers — not a name atlas.
 //!
 //! Live author names are v3 (`bg`, `fg`, `position`, `pad`, `margin`, …).
-//! v2 concern names (`fill`, `ink`, `place`, `space`, `flow`, `motion`) are
-//! not vocabulary. Emit still lowers through those internal specs.
-//! `z` is a `position` slot only — not a row.
+//! Unknown names are unknown vocabulary. `z` is a `position` slot only.
 
 /// Vocabulary row tag. One table, three tags — not a second atlas.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
