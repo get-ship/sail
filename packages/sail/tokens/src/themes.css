@@ -6,7 +6,7 @@
  * Regenerate: cargo run -p sail-compiler -- tokens
  */
 
-/* ─── theme:ship (themes/ship.json#mode=light) ─── */
+/* ─── theme:ship (project-themes/ship.json#mode=light) ─── */
 /* SHIP theme — light/dark modes in one file (modes-in-file). */
 :root[theme='ship'][mode='light'],
 :root[theme='ship']:not([mode]),
@@ -19,7 +19,7 @@
   --border: oklch(0.147 0.004 49.25 / 25%);
   --border-strong: color-mix(in oklch, var(--foreground) 55%, transparent);
   --border-subtle: color-mix(in oklch, var(--border) 60%, transparent);
-  --accent: oklch(0.56 0.23 303);
+  --accent: oklch(0.50 0.23 303);
   --accent-foreground: oklch(0.98 0.02 301);
   --destructive: oklch(0.58 0.22 27);
   --foreground: oklch(0.147 0.004 49.25);
@@ -38,7 +38,7 @@
   --sidebar-accent-foreground: oklch(0.147 0.004 49.25);
   --sidebar-border: oklch(0.147 0.004 49.25 / 12%);
   --sidebar-foreground: oklch(0.147 0.004 49.25);
-  --sidebar-primary: oklch(0.67 0.16 var(--brand-hue, 58));
+  --sidebar-primary: oklch(0.55 0.16 var(--brand-hue, 58));
   --sidebar-primary-foreground: oklch(0.99 0.02 95);
   --sidebar-ring: oklch(0.67 0.16 58 / 40%);
   --success: oklch(0.62 0.15 150);
@@ -49,12 +49,12 @@
   --surface-overlay: none;
   --surface-overlay-blend: normal;
   --surface-overlay-opacity: 1;
-  --warning: oklch(0.72 0.15 75);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.147 0.004 49.25);
+  --warning: oklch(0.72 0.15 75);
   --body-font: var(--font-body);
-  --font-body: var(--font-body-app);
-  --heading-font: var(--font-display);
+  --font-body: var(--font-sans, system-ui, sans-serif);
+  --heading-font: var(--font-display, var(--font-body));
   --heading-tracking: var(--tracking-tight);
   --heading-weight: var(--font-weight-semibold);
   --label-font: var(--font-body);
@@ -69,14 +69,22 @@
   --shadow-md: 0 6px 18px -4px oklch(0.55 0.10 58 / 12%), 0 2px 6px oklch(0 0 0 / 6%);
   --shadow-sm: 0 2px 4px -1px oklch(0.55 0.10 58 / 9%), 0 1px 2px oklch(0 0 0 / 4%);
   --shadow-xs: 0 1px 2px 0 oklch(0.55 0.10 58 / 6%), 0 0 0 1px oklch(0 0 0 / 3%);
-  --selected-strength: 14%;
   --card-backdrop-filter: none;
   --card-texture: url("data:image/svg+xml,%3Csvg viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='c'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23c)' opacity='0.03'/%3E%3C/svg%3E");
   --card-texture-blend: overlay;
   --card-texture-opacity: 1;
+  --selected-strength: 14%;
+  --bg-surface-color: var(--surface-1);
+  --bg-muted-color: var(--muted);
+  --bg-card-color: var(--card);
+  --bg-button-color: var(--background);
+  --fg-foreground-color: var(--foreground);
+  --fg-muted-color: var(--muted-foreground);
+  --fg-card-color: var(--card-foreground);
+  --fg-button-color: var(--foreground);
 }
 
-/* ─── theme:ship (themes/ship.json#mode=dark) ─── */
+/* ─── theme:ship (project-themes/ship.json#mode=dark) ─── */
 /* SHIP theme — light/dark modes in one file (modes-in-file). */
 :root[theme='ship'][mode='dark'],
 [theme='ship'][mode='dark'],
@@ -117,12 +125,12 @@
   --surface-overlay: none;
   --surface-overlay-blend: normal;
   --surface-overlay-opacity: 1;
-  --warning: oklch(0.78 0.15 75);
   --card: oklch(0.205 0.012 250);
   --card-foreground: oklch(0.98 0.001 106);
+  --warning: oklch(0.78 0.15 75);
   --body-font: var(--font-body);
-  --font-body: var(--font-body-app);
-  --heading-font: var(--font-display);
+  --font-body: var(--font-sans, system-ui, sans-serif);
+  --heading-font: var(--font-display, var(--font-body));
   --heading-tracking: var(--tracking-tight);
   --heading-weight: var(--font-weight-semibold);
   --label-font: var(--font-body);
@@ -142,6 +150,14 @@
   --card-texture: url("data:image/svg+xml,%3Csvg viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='c'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23c)' opacity='0.03'/%3E%3C/svg%3E");
   --card-texture-blend: overlay;
   --card-texture-opacity: 1;
+  --bg-surface-color: var(--surface-1);
+  --bg-muted-color: var(--muted);
+  --bg-card-color: var(--card);
+  --bg-button-color: var(--background);
+  --fg-foreground-color: var(--foreground);
+  --fg-muted-color: var(--muted-foreground);
+  --fg-card-color: var(--card-foreground);
+  --fg-button-color: var(--foreground);
 }
 
 /* ─── theme:neutral (themes/neutral.json#mode=light) ─── */
@@ -215,6 +231,14 @@
   --shadow-xl: 0 24px 64px -12px oklch(0 0 0 / 18%), 0 8px 24px -8px oklch(0 0 0 / 10%);
   --shadow-xs: 0 1px 2px 0 oklch(0 0 0 / 5%);
   --card-backdrop-filter: none;
+  --bg-surface-color: var(--surface-1);
+  --bg-muted-color: var(--muted);
+  --bg-card-color: var(--card);
+  --bg-button-color: var(--background);
+  --fg-foreground-color: var(--foreground);
+  --fg-muted-color: var(--muted-foreground);
+  --fg-card-color: var(--card-foreground);
+  --fg-button-color: var(--foreground);
 }
 
 /* ─── theme:neutral (themes/neutral.json#mode=dark) ─── */
@@ -286,6 +310,14 @@
   --shadow-xl: 0 28px 64px -12px oklch(0.05 0.010 264 / 65%), 0 8px 24px -8px oklch(0.05 0.010 264 / 45%);
   --shadow-xs: 0 1px 2px 0 oklch(0.05 0.010 264 / 40%);
   --card-backdrop-filter: none;
+  --bg-surface-color: var(--surface-1);
+  --bg-muted-color: var(--muted);
+  --bg-card-color: var(--card);
+  --bg-button-color: var(--background);
+  --fg-foreground-color: var(--foreground);
+  --fg-muted-color: var(--muted-foreground);
+  --fg-card-color: var(--card-foreground);
+  --fg-button-color: var(--foreground);
 }
 
 /* ─── theme:paper (themes/paper.json#mode=light) ─── */
@@ -394,6 +426,14 @@
   --shadow-xs: 0 1px 2px 0 oklch(0.30 0.04 60 / 6%);
   --card-backdrop-filter: none;
   --card-texture: none;
+  --bg-surface-color: var(--surface-1);
+  --bg-muted-color: var(--muted);
+  --bg-card-color: var(--card);
+  --bg-button-color: var(--background);
+  --fg-foreground-color: var(--foreground);
+  --fg-muted-color: var(--muted-foreground);
+  --fg-card-color: var(--card-foreground);
+  --fg-button-color: var(--foreground);
 }
 
 /* ─── theme:halo (themes/halo.json#mode=light) ─── */
@@ -406,7 +446,7 @@
   --accent: oklch(0.55 0.05 var(--brand-hue, 230));
   --accent-foreground: oklch(0.99 0.005 230);
   --background: oklch(0.92 0.008 230);
-  --border: transparent;
+  --border: oklch(0.30 0.015 230 / 14%);
   --border-strong: oklch(0.30 0.015 230 / 18%);
   --border-subtle: transparent;
   --destructive: oklch(0.55 0.20 27);
@@ -500,6 +540,14 @@
   --shadow-xs: -2px -2px 5px oklch(1 0 0 / 70%), 2px 2px 5px oklch(0 0 0 / 6%);
   --card-backdrop-filter: none;
   --card-texture: none;
+  --bg-surface-color: var(--surface-1);
+  --bg-muted-color: var(--muted);
+  --bg-card-color: var(--card);
+  --bg-button-color: var(--background);
+  --fg-foreground-color: var(--foreground);
+  --fg-muted-color: var(--muted-foreground);
+  --fg-card-color: var(--card-foreground);
+  --fg-button-color: var(--foreground);
 }
 
 /* ─── theme:console (themes/console.json#mode=dark) ─── */
@@ -588,6 +636,14 @@
   --shadow-xs: 0 0 0 1px oklch(0.78 0.20 145 / 10%);
   --card-backdrop-filter: none;
   --card-texture: none;
+  --bg-surface-color: var(--surface-1);
+  --bg-muted-color: var(--muted);
+  --bg-card-color: var(--card);
+  --bg-button-color: var(--background);
+  --fg-foreground-color: var(--foreground);
+  --fg-muted-color: var(--muted-foreground);
+  --fg-card-color: var(--card-foreground);
+  --fg-button-color: var(--foreground);
 }
 
 /* ─── theme:contrast (themes/contrast.json#mode=dark) ─── */
@@ -672,6 +728,14 @@
   --shadow-xs: 0 0 0 1px oklch(1 0 0 / 60%);
   --card-backdrop-filter: none;
   --card-texture: none;
+  --bg-surface-color: var(--surface-1);
+  --bg-muted-color: var(--muted);
+  --bg-card-color: var(--card);
+  --bg-button-color: var(--background);
+  --fg-foreground-color: var(--foreground);
+  --fg-muted-color: var(--muted-foreground);
+  --fg-card-color: var(--card-foreground);
+  --fg-button-color: var(--foreground);
 }
 
 /* ─── theme:glass (themes/glass.json#mode=light) ─── */
@@ -775,6 +839,14 @@
   --shadow-xs: 0 1px 0 oklch(1 0 0 / 40%) inset, 0 2px 8px oklch(0.30 0.04 240 / 6%);
   --card-backdrop-filter: blur(24px) saturate(180%);
   --card-texture: none;
+  --bg-surface-color: var(--surface-1);
+  --bg-muted-color: var(--muted);
+  --bg-card-color: var(--card);
+  --bg-button-color: var(--background);
+  --fg-foreground-color: var(--foreground);
+  --fg-muted-color: var(--muted-foreground);
+  --fg-card-color: var(--card-foreground);
+  --fg-button-color: var(--foreground);
 }
 
 /* ─── theme:brut (themes/brut.json#mode=light) ─── */
@@ -877,6 +949,14 @@
   --shadow-xs: none;
   --card-backdrop-filter: none;
   --card-texture: none;
+  --bg-surface-color: var(--surface-1);
+  --bg-muted-color: var(--muted);
+  --bg-card-color: var(--card);
+  --bg-button-color: var(--background);
+  --fg-foreground-color: var(--foreground);
+  --fg-muted-color: var(--muted-foreground);
+  --fg-card-color: var(--card-foreground);
+  --fg-button-color: var(--foreground);
 }
 
 /* ─── theme:8bit (themes/8bit.json#mode=dark) ─── */
@@ -960,6 +1040,14 @@
   --shadow-xs: 2px 2px 0 0 oklch(0.14 0.03 265);
   --card-backdrop-filter: none;
   --card-texture: none;
+  --bg-surface-color: var(--surface-1);
+  --bg-muted-color: var(--muted);
+  --bg-card-color: var(--card);
+  --bg-button-color: var(--background);
+  --fg-foreground-color: var(--foreground);
+  --fg-muted-color: var(--muted-foreground);
+  --fg-card-color: var(--card-foreground);
+  --fg-button-color: var(--foreground);
 }
 
 /* ─── theme:synthwave (themes/synthwave.json#mode=dark) ─── */
@@ -1022,6 +1110,14 @@
   --shadow-xs: 0 1px 2px oklch(0.14 0.03 285 / 35%);
   --card-backdrop-filter: none;
   --card-texture: none;
+  --bg-surface-color: var(--surface-1);
+  --bg-muted-color: var(--muted);
+  --bg-card-color: var(--card);
+  --bg-button-color: var(--background);
+  --fg-foreground-color: var(--foreground);
+  --fg-muted-color: var(--muted-foreground);
+  --fg-card-color: var(--card-foreground);
+  --fg-button-color: var(--foreground);
 }
 
 /* ─── theme:sail (themes/sail.json#mode=light) ─── */
@@ -1092,6 +1188,14 @@
   --card-texture: url("data:image/svg+xml,%3Csvg viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='c'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23c)' opacity='0.03'/%3E%3C/svg%3E");
   --card-texture-blend: overlay;
   --card-texture-opacity: 1;
+  --bg-surface-color: var(--surface-1);
+  --bg-muted-color: var(--muted);
+  --bg-card-color: var(--card);
+  --bg-button-color: var(--background);
+  --fg-foreground-color: var(--foreground);
+  --fg-muted-color: var(--muted-foreground);
+  --fg-card-color: var(--card-foreground);
+  --fg-button-color: var(--foreground);
 }
 
 /* ─── theme:sail (themes/sail.json#mode=dark) ─── */
@@ -1160,6 +1264,14 @@
   --card-texture: url("data:image/svg+xml,%3Csvg viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='c'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23c)' opacity='0.03'/%3E%3C/svg%3E");
   --card-texture-blend: overlay;
   --card-texture-opacity: 1;
+  --bg-surface-color: var(--surface-1);
+  --bg-muted-color: var(--muted);
+  --bg-card-color: var(--card);
+  --bg-button-color: var(--background);
+  --fg-foreground-color: var(--foreground);
+  --fg-muted-color: var(--muted-foreground);
+  --fg-card-color: var(--card-foreground);
+  --fg-button-color: var(--foreground);
 }
 
 /*

@@ -214,5 +214,6 @@ export function packSlotCopy(tag: string): string {
   return ''
 }
 
-/** Same-origin demo raster for sail-media-image (static host — no CDN). */
-export const DEMO_PHOTO = '/cover-01.webp'
+/** Catalog / docs landscape raster. Album art stays on /cover-*.webp. */
+export const DEMO_PHOTO =
+  'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=640&h=400&fit=crop&auto=format&q=80'

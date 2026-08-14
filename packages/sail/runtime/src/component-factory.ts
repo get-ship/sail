@@ -175,7 +175,11 @@ const injectScopedStyles = (tag: string, css: string): void => {
   // Nested components still inject their own scoped sheets; same-specificity
   // atomic utilities match, and later sheets win when both apply. The
   // compiler rewrites :host → :scope / .sail-root for this wrapper.
-  style.textContent = `@scope ([data-component="${tag}"]) { ${css} }`
+  //
+  // Must share `@layer sail` with element-skins.css. An unlayered @scope
+  // restamp of `.s-bgmuted` beats layered `:checked` / `[tone]` fills
+  // regardless of specificity (doc-switch crushed the track).
+  style.textContent = `@layer sail { @scope ([data-component="${tag}"]) { ${css} } }`
   document.head.appendChild(style)
 }
 

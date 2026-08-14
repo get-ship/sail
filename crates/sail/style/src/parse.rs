@@ -5,7 +5,7 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 
 use super::ir::{PaintArg, PaintOp, Style, StyleDiagnostic};
 use super::setters::{validate_op, when_target};
-use super::theme_env::{ThemeStyleEnv, current_styling_policy};
+use super::theme_env::{current_styling_policy, ThemeStyleEnv};
 
 /// Parse a Style expression (product / channel-only). Flat `style.method(…)`
 /// chains are refused — use `style({ box, paint, text, animate })`.
@@ -2549,7 +2549,7 @@ mod utility_detect_tests {
 
 #[cfg(test)]
 mod const_rhs_tests {
-    use super::{Style, parse_style_const_rhs};
+    use super::{parse_style_const_rhs, Style};
 
     #[test]
     fn bare_object_form() {
@@ -2584,7 +2584,7 @@ mod const_rhs_tests {
 mod flat_chain_tests {
     use std::collections::HashMap;
 
-    use super::{Style, parse, parse_style_const_rhs};
+    use super::{parse, parse_style_const_rhs, Style};
     use crate::emit::lower_style;
 
     fn msgs(diags: &[crate::StyleDiagnostic]) -> Vec<String> {
@@ -2686,15 +2686,43 @@ mod flat_chain_tests {
     }
 
     #[test]
-    fn v2_channel_form_still_parses() {
-        let (style, diags) = parse("style({ box: size({ w: full }).pad(4), paint: bg(muted) })");
+    fn flat_concern_chain_parses() {
+        let (style, diags) = parse("style({ size({ w: full }).pad(4).bg(muted) })");
         assert!(diags.is_empty(), "{:?}", msgs(&diags));
         assert!(!matches!(style, Style::Empty));
         let (_, css) = lower_style(&style, &HashMap::new());
         assert!(css.contains("padding") || css.contains("width"), "{css}");
+        assert!(css.contains("background") || css.contains("muted"), "{css}");
+    }
+
+    #[test]
+    fn tone_bound_paint_gates_selector_not_class() {
+        // Badge/chip share `[variant=soft].s-variantsoft-bgmuted`. Tone wash
+        // must be `[tone]`-gated so a later muted rest cannot crush it.
+        let (style, diags) = parse(
+            "style({ match: { variant: { soft: bg(muted).bg({ color: tone, mix: 15 }) } } })",
+        );
+        assert!(diags.is_empty(), "{:?}", msgs(&diags));
+        let (classes, css) = lower_style(&style, &HashMap::new());
         assert!(
-            css.contains("background") || css.contains("surface"),
-            "{css}"
+            classes.contains("s-variantsoft-bgmuted"),
+            "muted rest class: {classes}"
+        );
+        assert!(
+            classes.contains("s-variantsoft-bgcolortonemix15"),
+            "tone wash class: {classes}"
+        );
+        assert!(
+            css.contains("[variant='soft'].s-variantsoft-bgmuted"),
+            "muted rest stays variant-gated only: {css}"
+        );
+        assert!(
+            css.contains("[variant='soft'][tone].s-variantsoft-bgcolortonemix15"),
+            "tone wash must be [tone]-gated: {css}"
+        );
+        assert!(
+            !css.contains("[variant='soft'].s-variantsoft-bgcolortonemix15{"),
+            "ungated tone wash would lose to later muted rest: {css}"
         );
     }
 

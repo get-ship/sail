@@ -29,7 +29,7 @@
         },
         "border": {
           "default": {
-            "$value": "transparent",
+            "$value": "oklch(0.30 0.015 230 / 14%)",
             "$type": "color"
           },
           "strong": {

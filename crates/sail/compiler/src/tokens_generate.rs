@@ -12,7 +12,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 
-use anyhow::{Context, Result, anyhow, bail};
+use anyhow::{anyhow, bail, Context, Result};
 use serde_json::{Map, Value};
 
 /// Compile-time baked catalog (`packages/sail/tokens/model/**` at build).
@@ -3402,9 +3402,32 @@ fn emit_block(
         }
         lines.push(format!("{indent}--{}: {};", t.css_name, t.css_value));
     }
+    // bg/fg composites live on :root as `var(--muted)` / `var(--foreground)`.
+    // `@property` with syntax:<color> computes them there and inherits the
+    // used color — nested `[theme][mode]` specimens (theme-picker faces)
+    // then keep the document's ink on the inverse surface. Rebind on every
+    // theme block so the alias recomputes against this scope's palette.
+    if color_scheme.is_some() {
+        for (alias, target) in THEME_COMPOSITE_REBINDS {
+            lines.push(format!("{indent}--{alias}: var(--{target});"));
+        }
+    }
     lines.push("}".into());
     lines.join("\n")
 }
+
+/// Composite color members that must re-resolve inside a theme scope.
+/// Keep in lockstep with the `:root` aliases in generated `tokens.css`.
+const THEME_COMPOSITE_REBINDS: &[(&str, &str)] = &[
+    ("bg-surface-color", "surface-1"),
+    ("bg-muted-color", "muted"),
+    ("bg-card-color", "card"),
+    ("bg-button-color", "background"),
+    ("fg-foreground-color", "foreground"),
+    ("fg-muted-color", "muted-foreground"),
+    ("fg-card-color", "card-foreground"),
+    ("fg-button-color", "foreground"),
+];
 
 fn emit_compat_aliases(selector: &str, aliases: &BTreeMap<String, String>) -> String {
     if aliases.is_empty() {
@@ -4253,34 +4276,36 @@ mod tests {
             "paper modes selectors missing: {themes_css}"
         );
         assert!(themes_css.contains("--primary:"));
+        assert!(
+            themes_css.contains("--fg-foreground-color: var(--foreground);"),
+            "theme scopes must rebind fg/bg composites: {themes_css}"
+        );
+        assert!(
+            themes_css.contains("--bg-muted-color: var(--muted);"),
+            "theme scopes must rebind bg.muted: {themes_css}"
+        );
         assert!(themes_css.contains("/* themes chrome */"));
 
         let reg: Value =
             serde_json::from_str(&fs::read_to_string(&report.registry_json).unwrap()).unwrap();
         assert_eq!(reg["version"], 2);
-        assert!(
-            reg["names"]
-                .as_array()
-                .unwrap()
-                .iter()
-                .any(|v| v.as_str() == Some("space-4"))
-        );
-        assert!(
-            reg["names"]
-                .as_array()
-                .unwrap()
-                .iter()
-                .any(|v| v.as_str() == Some("app-primary"))
-        );
+        assert!(reg["names"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|v| v.as_str() == Some("space-4")));
+        assert!(reg["names"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|v| v.as_str() == Some("app-primary")));
         assert_eq!(reg["tokens"]["app-primary"]["aliasOf"], "primary");
         assert_eq!(reg["paths"]["space.4"], "space-4");
-        assert!(
-            reg["colors"]
-                .as_array()
-                .unwrap()
-                .iter()
-                .any(|v| v.as_str() == Some("primary"))
-        );
+        assert!(reg["colors"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|v| v.as_str() == Some("primary")));
 
         let unions = fs::read_to_string(&report.unions_ts).unwrap();
         assert!(unions.contains("GENERATED FILE"));
@@ -6226,11 +6251,9 @@ mod tests {
             .unwrap();
         assert_eq!(elev.css_name, "elevation-sm-shadow");
         assert_eq!(elev.r#type, "shadow");
-        assert!(
-            tokens
-                .iter()
-                .any(|t| t.path == "elevation.none" && t.composite_identity)
-        );
+        assert!(tokens
+            .iter()
+            .any(|t| t.path == "elevation.none" && t.composite_identity));
     }
 
     #[test]
@@ -6461,16 +6484,12 @@ mod tests {
             reg["composites"]["size.control-md"]["members"]["h"],
             "size-control-md-h"
         );
-        assert!(
-            reg["composites"]["size.control-md"]["members"]
-                .get("pad")
-                .is_none()
-        );
-        assert!(
-            reg["composites"]["size.control-md"]["members"]
-                .get("pad-x")
-                .is_none()
-        );
+        assert!(reg["composites"]["size.control-md"]["members"]
+            .get("pad")
+            .is_none());
+        assert!(reg["composites"]["size.control-md"]["members"]
+            .get("pad-x")
+            .is_none());
         assert_eq!(
             reg["composites"]["type.body"]["members"]["family"],
             "type-body-family"
