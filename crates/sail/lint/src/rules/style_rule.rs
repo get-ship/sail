@@ -52,7 +52,7 @@ pub use sail_style_css::{
 /// it accepts. Surface docs, skill, and LSP walk `offered_rows()` in
 /// `vocab.rs` — not this table.
 pub fn vocabulary() -> Vec<(String, Vec<String>)> {
-    crate::style::offered_rows()
+    sail_style::offered_rows()
         .map(|r| (r.name.to_string(), Vec::new()))
         .collect()
 }
@@ -107,7 +107,7 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
         let (line, col) = offset_to_line_col(source, offset);
 
         // Residual utility-string product is a hard error — not a second language.
-        if crate::style::looks_like_utility_string_product(val) {
+        if sail_style::looks_like_utility_string_product(val) {
             findings.push(mk(
                 path,
                 line,
@@ -118,11 +118,11 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
             continue;
         }
 
-        let (style, style_diags) = crate::style::parse::parse(val);
+        let (style, style_diags) = sail_style::parse(val);
         for d in &style_diags {
             findings.push(mk(path, line, col, d.message()));
         }
-        for d in crate::style::clash::detect_clashes(&style, &std::collections::HashMap::new()) {
+        for d in sail_style::clash::detect_clashes(&style, &std::collections::HashMap::new()) {
             findings.push(mk(path, line, col, d.message()));
         }
     }
@@ -535,7 +535,7 @@ fn is_style_product_value(val: &str) -> bool {
         || t.starts_with('[')
         // Leftover `row.enter({…})` is not a utility string — parse teaches
         // the play map. Not a valid product after Phase 5.
-        || crate::style::parse::is_const_ref_motion_chain_pub(t)
+        || sail_style::parse::is_const_ref_motion_chain_pub(t)
         || {
             // bare Style const ref
             let mut chars = t.chars();

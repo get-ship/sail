@@ -837,7 +837,7 @@ pub fn lower_participation(name: &str, value: &str) -> Option<(String, String)> 
         _ => return None,
     };
     let wrapped = format!("style({{ {expr} }})");
-    let (style, diags) = crate::style::parse(&wrapped);
+    let (style, diags) = sail_style::parse(&wrapped);
     if !diags.is_empty() {
         return None;
     }

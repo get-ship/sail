@@ -16,6 +16,7 @@ path = "src/bin/sail-lsp.rs"
 [dependencies]
 sail-compiler = { path = "../compiler" }
 sail-lint = { path = "../lint" }
+sail-style = { path = "../style" }
 lsp-server = "0.7"
 lsp-types = "0.95"
 serde = { workspace = true }

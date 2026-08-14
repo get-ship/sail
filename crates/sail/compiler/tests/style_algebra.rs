@@ -12,7 +12,7 @@
 use sail_compiler::CompileMode;
 use sail_compiler::CompileOpts;
 use sail_compiler::compile;
-use sail_lint::style::parse;
+use sail_style::parse;
 
 fn compile_component(src: &str) -> Result<String, String> {
     let out = compile(
@@ -101,7 +101,7 @@ fn invalid_new_syntax_produces_parse_error() {
 #[test]
 fn clash_detection_flags_duplicate_setter() {
     let (style, _) = parse("style({ bg(primary).bg(muted) })");
-    let diags = sail_lint::style::clash::detect_clashes(&style, &std::collections::HashMap::new());
+    let diags = sail_style::clash::detect_clashes(&style, &std::collections::HashMap::new());
     assert!(
         diags.iter().any(|d| d.message().contains("clash")),
         "duplicate setters should clash"
@@ -113,7 +113,7 @@ fn list_shadows_duplicate_setter_without_clash() {
     // Chain = unordered conjunction (clash); List = ordered composition
     // (later shadows earlier, no diagnostic).
     let (style, _) = parse("style({ bg(primary) }, { bg(muted) })");
-    let diags = sail_lint::style::clash::detect_clashes(&style, &std::collections::HashMap::new());
+    let diags = sail_style::clash::detect_clashes(&style, &std::collections::HashMap::new());
     assert!(
         !diags.iter().any(|d| d.message().contains("clash")),
         "list items must shadow silently: {diags:?}"
@@ -123,7 +123,7 @@ fn list_shadows_duplicate_setter_without_clash() {
 #[test]
 fn chain_inside_list_item_still_clashes() {
     let (style, _) = parse("style({ bg(primary).bg(muted) })");
-    let diags = sail_lint::style::clash::detect_clashes(&style, &std::collections::HashMap::new());
+    let diags = sail_style::clash::detect_clashes(&style, &std::collections::HashMap::new());
     assert!(
         diags.iter().any(|d| d.message().contains("clash")),
         "chain duplicates inside a list item must clash"
@@ -136,7 +136,7 @@ fn cross_setter_chain_clash_on_shared_slot() {
     // setters touching one slot clash under Chain: `border(1)` narrows to
     // `border-width`, the same slot `borderWidth(2)` writes.
     let (style, _) = parse("style({ border({ width: 1 }).border({ width: 2 }) })");
-    let diags = sail_lint::style::clash::detect_clashes(&style, &std::collections::HashMap::new());
+    let diags = sail_style::clash::detect_clashes(&style, &std::collections::HashMap::new());
     assert!(
         diags.iter().any(|d| {
             let m = d.message();
@@ -152,7 +152,7 @@ fn cross_setter_disjoint_slots_do_not_clash() {
     // Per-call narrowing: a color-token `border` writes only border-color,
     // so it composes with `borderWidth` without a clash.
     let (style, _) = parse("style({ border({ width: 1, color: primary }) })");
-    let diags = sail_lint::style::clash::detect_clashes(&style, &std::collections::HashMap::new());
+    let diags = sail_style::clash::detect_clashes(&style, &std::collections::HashMap::new());
     assert!(
         !diags.iter().any(|d| d.message().contains("clash")),
         "disjoint per-call slots must not clash: {diags:?}"

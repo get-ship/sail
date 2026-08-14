@@ -4622,6 +4622,7 @@ dependencies = [
  "anyhow",
  "clap",
  "sail-lint",
+ "sail-style",
  "serde",
  "serde_json",
  "taffy 0.12.2",
@@ -4655,6 +4656,7 @@ dependencies = [
  "sail-compiler",
  "sail-layout",
  "sail-lint",
+ "sail-style",
  "serde",
  "serde_json",
 ]
@@ -4687,6 +4689,7 @@ dependencies = [
  "sail-lint",
  "sail-lsp",
  "sail-render",
+ "sail-style",
  "schemars",
  "serde",
  "serde_json",
@@ -6643,10 +6646,6 @@ dependencies = [
 ]
 
 [[patch.unused]]
-name = "ship-proto"
-version = "0.1.0"
-
-[[patch.unused]]
 name = "agent-driver"
 version = "0.1.0"
 
@@ -6668,6 +6667,10 @@ version = "0.1.0"
 
 [[patch.unused]]
 name = "yoke"
+version = "0.1.0"
+
+[[patch.unused]]
+name = "ship-proto"
 version = "0.1.0"
 
 [[patch.unused]]

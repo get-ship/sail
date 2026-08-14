@@ -15,29 +15,10 @@ pub mod report;
 pub mod rules;
 pub mod source;
 
-// Style pipeline lives in `sail-style`. Re-export scales/tokens/vocab so
-// compiler/layout/ops/lsp keep compiling without a fan-out import thrash.
+// Style language lives in `sail-style`. Rules that parse or complete import
+// that crate directly. Tokens/scales stay re-exported so compiler/layout/ops
+// keep `sail_lint::tokens` (etc.) compiling.
 pub use sail_style::{component_surfaces, host_ctx, scales, style_vocab, token_groups, tokens};
-
-/// Style product surface — re-export of `sail-style` (parse / IR / emit / clash).
-pub mod style {
-    pub use sail_style::{
-        ConcernSlot, ConcernSpec, MARKERS, OBJECT_KEYS, PaintArg, PaintOp, ResolvedType, Style,
-        StyleCompleteContext, StyleCompleteItem, StyleCompleteKind, StyleDiagnostic, StyleEnv,
-        VocabCaps, VocabRow, VocabTag, all_surface_packs, clash, collect_motion_attaches,
-        collect_motion_attaches_env, collect_style_const_names, color_paint_vocabulary,
-        concern_doc_line, concerns, find_concern, find_foreign_idiom, find_vocab, ir,
-        is_geometry_setter, is_interaction_when_key, is_marker, is_theme_owned_author_root,
-        is_theme_owned_token_name, looks_like_utility_string_product, offered_rows, parse,
-        parse_style_const_rhs, plains, resolve_concern_name, resolve_type, resolve_type_for_tag,
-        resolve_type_role, retired_replacement, setter_caps, setters, style_complete_at,
-        style_complete_context_at, style_complete_for_context, style_contains_geometry,
-        style_is_textish, style_is_textish_env, style_uses_text, surface_pack_for_host,
-        surface_slots, teaching_line, token_groups, vocab_rows, vocab_surface_line, when_keys,
-        with_bound_group_props, with_host_surface,
-    };
-    pub use sail_style_css::{CONDITION_PREFIXES, condition_media, conditions, prefixes};
-}
 
 #[cfg(test)]
 mod tests;

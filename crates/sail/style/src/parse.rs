@@ -87,7 +87,7 @@ fn is_motion_chain_method(name: &str) -> bool {
 ///
 /// Does not resolve `Style::Ref` — callers that have a [`StyleEnv`] must use
 /// [`collect_motion_attaches_env`]. Tag-position `style(named)` is a Ref; if
-/// collection skips the env, the named style's `animate:` channel is dropped
+/// collection skips the env, the named style's `animate:` is dropped
 /// and motion attaches never reach the runtime (dead loops / enters with full
 /// paint classes still applied — the site red that sampling `translate` catches).
 pub fn collect_motion_attaches(style: &Style) -> Vec<(String, String)> {
@@ -270,7 +270,7 @@ fn teach_html_attr_eq(p: &mut Parser<'_>, name: &str, diags: &mut Vec<StyleDiagn
 pub fn looks_like_utility_string_product(input: &str) -> bool {
     let raw = input.trim();
     // Bare Style object form (scope `style name = {…}` / style() args).
-    // Must not trip on `paint:` / `box:` colons — those are channel keys, not
+    // Must not trip on `paint:` / `box:` colons — those are dissolved keys, not
     // utility-string soup (`hover:bg-muted`).
     if raw.starts_with('{') {
         return false;
@@ -873,7 +873,7 @@ fn flat_chain_style_chain_body(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnost
             continue;
         }
         // Temporary rename pointer: box-sizing method was `box`, now `boxSizing`
-        // so the channel key `box` is free.
+        // so `box:` is not a geometry key.
         if method == "box" {
             let args = parse_paren_args(p, diags, method);
             let arg_text = format_arg_text(&args);
@@ -944,7 +944,7 @@ fn parse_style_call(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Sty
         iters += 1;
         if iters > MAX_PARSE_ITERS {
             diags.push(StyleDiagnostic::ParseError {
-                message: "style channel tail too long".into(),
+                message: "style tail too long".into(),
                 source: p.remainder(),
             });
             break;
@@ -1022,7 +1022,7 @@ fn parse_style_arg(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Styl
             let next = p.tokens.get(p.pos + 1).map(|t| &t.tok);
             if next == Some(&Tok::LParen) {
                 // Inline sugar: `style(pad({ t: 2 }))` / `style(type(body-sm).fg(…))`.
-                return parse_channel_chain(p, diags);
+                return parse_concern_chain(p, diags);
             }
             if next == Some(&Tok::Colon) {
                 if let Some(Tok::Word(w)) = p.peek() {
@@ -1067,14 +1067,15 @@ fn parse_style_arg(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Styl
 }
 
 /// Style object: concern/setter calls (`size({ w: full }).bg(card)`), plus
-/// keyed members (`when:`, `match:`, `animate:`). Channels are dissolved.
+/// keyed members (`when:`, `match:`, `animate:`). Geometry / paint / text
+/// object keys are dissolved.
 ///
 /// `allow_axes`: `match:` / `compound:` legal only at the top level of a
 /// `style(…)` argument. Nested partials (when bodies, match arms, compound
 /// row bodies) refuse axes — intersections live in compound, flat.
 ///
 /// Merge law (structure, not source key order):
-/// channels < when < match arms < compound rows (later rows win).
+/// concern chain < when < match arms < compound rows (later rows win).
 fn parse_style_object(
     p: &mut Parser<'_>,
     diags: &mut Vec<StyleDiagnostic>,
@@ -1104,7 +1105,7 @@ fn parse_style_object(
         // flat chain segment — commas separate calls the same way dots do.
         let keyed = matches!(p.peek(), Some(Tok::Word(_))) && next == Some(&Tok::Colon);
         if !keyed {
-            let segment = parse_channel_chain(p, diags);
+            let segment = parse_concern_chain(p, diags);
             if !matches!(segment, Style::Empty) {
                 chain_parts.push(segment);
             }
@@ -1131,15 +1132,15 @@ fn parse_style_object(
                     ),
                     source: format!("{key}:"),
                 });
-                let _ = parse_channel_chain(p, diags);
+                let _ = parse_concern_chain(p, diags);
             }
-            "animate" => animate_ch = parse_animate_channel_chain(p, diags),
+            "animate" => animate_ch = parse_animate_chain(p, diags),
             "motion" => {
                 diags.push(StyleDiagnostic::ParseError {
-                    message: "style channel `motion` was renamed to `animate`".into(),
+                    message: "style key `motion` was renamed to `animate:`".into(),
                     source: "motion".into(),
                 });
-                let _ = parse_animate_channel_chain(p, diags);
+                let _ = parse_animate_chain(p, diags);
             }
             "when" => {
                 let entries = parse_when_block_map(p, diags);
@@ -1240,7 +1241,7 @@ fn parse_style_object(
         }
     }
     parts.extend(compounds);
-    // Drop empty channel slots so single-channel objects stay `Set`/`Chain`.
+    // Drop empty animate / concern slots so single-part objects stay `Set`/`Chain`.
     parts.retain(|p| !matches!(p, Style::Empty));
     // Ordered List: later compounds/when/match shadow earlier (SPEC merge law).
     // Chain would conjunction-clash dual rows that intentionally override.
@@ -1385,7 +1386,7 @@ fn parse_match_arms_object(
     arms
 }
 
-/// `compound: [ { prop: val|*, channels…, when… }, … ]`
+/// `compound: [ { prop: val|*, concern calls…, when… }, … ]`
 fn parse_compound_block_array(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Vec<Style> {
     p.expect(Tok::LBrack, diags);
     let mut rows = Vec::new();
@@ -1438,7 +1439,7 @@ fn parse_compound_row(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> S
         // Concern-call tail: `{tone: muted, bg(primary).fg(foreground)}`.
         if p.peek() == Some(&Tok::LParen) {
             p.pos -= 1;
-            extra.push(parse_channel_chain(p, diags));
+            extra.push(parse_concern_chain(p, diags));
             p.eat(&Tok::Comma);
             if p.pos <= before {
                 p.force_progress();
@@ -1450,13 +1451,13 @@ fn parse_compound_row(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> S
             "box" | "paint" | "text" => {
                 diags.push(StyleDiagnostic::ParseError {
                     message: format!(
-                        "`{key}:` is not legal in a compound row — write concern calls (`bg(muted)`), not channels"
+                        "`{key}:` is not legal in a compound row — write concern calls (`bg(muted)`), not geometry / paint / text keys"
                     ),
                     source: key.clone(),
                 });
-                let _ = parse_channel_chain(p, diags);
+                let _ = parse_concern_chain(p, diags);
             }
-            "animate" => animate_ch = parse_animate_channel_chain(p, diags),
+            "animate" => animate_ch = parse_animate_chain(p, diags),
             "when" => {
                 when_entries.extend(parse_when_block_map(p, diags));
             }
@@ -1518,7 +1519,7 @@ fn parse_partial(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>, allow_axe
             let next = p.tokens.get(p.pos + 1).map(|t| &t.tok);
             if next == Some(&Tok::LParen) {
                 // Bare chain `bg(primary)` as partial (when cond-form recovery).
-                parse_channel_chain(p, diags)
+                parse_concern_chain(p, diags)
             } else if next == Some(&Tok::Dot) {
                 parse_style_expr(p, diags)
             } else {
@@ -1564,7 +1565,7 @@ fn skip_style_object_value(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>)
         }
         Some(Tok::Word(_)) => {
             // chain or bare word
-            let _ = parse_channel_chain(p, diags);
+            let _ = parse_concern_chain(p, diags);
         }
         _ => {
             p.force_progress();
@@ -1572,15 +1573,8 @@ fn skip_style_object_value(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>)
     }
 }
 
-/// Channel object — alias retained for call sites that only want channels
-/// (when bodies). Routes through the style object (axes refused).
-#[allow(dead_code)]
-fn parse_channel_object(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Style {
-    parse_style_object(p, diags, /* allow_axes */ false)
-}
-
 /// Method chain without `style.` head: `pad(4).gap(2).w(full)`.
-fn parse_channel_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Style {
+fn parse_concern_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Style {
     // Empty body (trailing comma / omitted value) — leave Empty.
     if matches!(
         p.peek(),
@@ -1596,7 +1590,7 @@ fn parse_channel_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> 
         iters += 1;
         if iters > MAX_PARSE_ITERS {
             diags.push(StyleDiagnostic::ParseError {
-                message: "channel chain too many setters".into(),
+                message: "concern chain too many setters".into(),
                 source: p.remainder(),
             });
             break;
@@ -1610,7 +1604,7 @@ fn parse_channel_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> 
             Some(Tok::Word(w)) => w,
             _ => {
                 diags.push(StyleDiagnostic::ParseError {
-                    message: "expected channel setter name".into(),
+                    message: "expected concern setter name".into(),
                     source: p.remainder(),
                 });
                 break;
@@ -1638,7 +1632,7 @@ fn parse_channel_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> 
         }
         if method == "when" {
             diags.push(StyleDiagnostic::ParseError {
-                message: "`.when` belongs on the `style({…})` head, not inside a channel chain"
+                message: "`.when` belongs on the `style({…})` head, not inside a concern chain"
                     .into(),
                 source: p.remainder(),
             });
@@ -1697,7 +1691,7 @@ fn parse_channel_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> 
 ///
 /// The retired trigger-call chain (`enter({…}).exit({…})`) is refused with a
 /// teaching diagnostic and consumed so the rest of the style object can parse.
-fn parse_animate_channel_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Style {
+fn parse_animate_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Style {
     if matches!(
         p.peek(),
         Some(Tok::Comma) | Some(Tok::RBrace) | Some(Tok::RParen) | None
@@ -2466,7 +2460,7 @@ fn parse_when_map_entries(
     entries
 }
 
-/// Partial body of cond-form when: channel object, full Style expr, or bare chain.
+/// Partial body of cond-form when: style object, full Style expr, or bare chain.
 fn parse_when_partial(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Style {
     // Cond-form when body — only used while recovering retired `.when(key, body)` tails.
     match p.peek() {
@@ -2475,14 +2469,15 @@ fn parse_when_partial(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> S
         Some(Tok::Word(_)) => {
             let next = p.tokens.get(p.pos + 1).map(|t| &t.tok);
             if next == Some(&Tok::LParen) {
-                parse_channel_chain(p, diags)
+                parse_concern_chain(p, diags)
             } else {
                 parse_partial(p, diags, false)
             }
         }
         _ => {
             diags.push(StyleDiagnostic::ParseError {
-                message: "expected when partial (`{ box|paint|text|animate: … }` or name)".into(),
+                message: "expected when partial (`{ pad(4).bg(surface) }`, `animate:`, or name)"
+                    .into(),
                 source: p.remainder(),
             });
             Style::Empty
@@ -2682,7 +2677,7 @@ mod flat_chain_tests {
     }
 
     #[test]
-    fn dissolved_channel_keys_are_not_style_members() {
+    fn dissolved_keys_are_not_style_members() {
         for key in ["box", "paint", "text"] {
             let src = format!("style({{ {key}: bg(muted) }})");
             let (_, diags) = parse(&src);

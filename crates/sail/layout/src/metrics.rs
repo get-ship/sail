@@ -68,7 +68,7 @@ pub struct TypeHost {
 }
 
 impl TypeHost {
-    pub fn from_resolved(classes: &str, resolved: &sail_lint::style::ResolvedType) -> Option<Self> {
+    pub fn from_resolved(classes: &str, resolved: &sail_style::ResolvedType) -> Option<Self> {
         if resolved.is_empty() {
             return None;
         }
@@ -94,7 +94,7 @@ pub fn apply_tag_default_types(elements: &mut [Element]) {
         if elem.tag.is_empty() {
             continue;
         }
-        let resolved = sail_lint::style::resolve_type_for_tag(&elem.tag);
+        let resolved = sail_style::resolve_type_for_tag(&elem.tag);
         if elem.type_size.is_none() {
             elem.type_size = resolved.size;
         }
@@ -275,7 +275,7 @@ mod tests {
         });
         apply_tag_default_types(&mut all);
         let (family, size) = resolve_family_size(1, &all);
-        let expected = sail_lint::style::resolve_type_for_tag("h2");
+        let expected = sail_style::resolve_type_for_tag("h2");
         assert_eq!(
             size,
             Size::from_scale_token(expected.size.as_deref().unwrap_or("base"))
@@ -307,19 +307,19 @@ mod tests {
 
     #[test]
     fn style_type_size_xl_changes_measure() {
-        let (style, diags) = sail_lint::style::parse("style({ type({ size: xl }) })");
+        let (style, diags) = sail_style::parse("style({ type({ size: xl }) })");
         assert!(
             diags.is_empty(),
             "{:?}",
             diags.iter().map(|d| d.message()).collect::<Vec<_>>()
         );
-        let resolved = sail_lint::style::resolve_type(&style, &Default::default());
+        let resolved = sail_style::resolve_type(&style, &Default::default());
         assert_eq!(resolved.size.as_deref(), Some("xl"));
 
         let xl = Size::from_scale_token(resolved.size.as_deref().unwrap());
         let sm = {
-            let (s, _) = sail_lint::style::parse("style({ type({ size: sm }) })");
-            let r = sail_lint::style::resolve_type(&s, &Default::default());
+            let (s, _) = sail_style::parse("style({ type({ size: sm }) })");
+            let r = sail_style::resolve_type(&s, &Default::default());
             Size::from_scale_token(r.size.as_deref().unwrap())
         };
         assert_ne!(xl, sm);

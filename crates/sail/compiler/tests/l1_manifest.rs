@@ -240,9 +240,7 @@ fn component_tokens_and_js_drift_pin_against_compiled_metadata() {
             }
             i += 1;
         }
-        if sail_lint::style::surface_pack_for_host(el.tag).is_some()
-            && !row.component_tokens.is_empty()
-        {
+        if sail_style::surface_pack_for_host(el.tag).is_some() && !row.component_tokens.is_empty() {
             assert!(
                 row.component_tokens.iter().any(|t| !t.name.is_empty()),
                 "L1 `{}` pack tokens missing a named slot: {:?}",

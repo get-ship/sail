@@ -5,8 +5,8 @@
 //! do not resolve. Do not encode property-setter fallback as a passing test.
 
 use sail_compiler::compile_element;
-use sail_lint::style::{Style, StyleDiagnostic, clash, parse, parse_style_const_rhs};
 use sail_lint::tokens;
+use sail_style::{Style, StyleDiagnostic, clash, parse, parse_style_const_rhs};
 use sail_style_css::{lower_style, lower_style_source};
 use std::collections::HashMap;
 

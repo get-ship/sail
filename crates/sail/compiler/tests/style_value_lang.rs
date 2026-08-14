@@ -2,7 +2,7 @@
 
 use sail_compiler::compile_element;
 use sail_compiler::parse::preprocess::preprocess;
-use sail_lint::style::{StyleDiagnostic, clash, parse};
+use sail_style::{StyleDiagnostic, clash, parse};
 use sail_style_css::lower_style;
 use std::collections::HashMap;
 

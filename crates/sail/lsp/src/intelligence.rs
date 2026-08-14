@@ -336,7 +336,7 @@ pub fn complete_with_session(
     // Infer L1 host from path stem when it matches a known surface pack
     // (stdlib `chip.sail` → host `chip`); app paths yield None.
     let host = infer_style_host(path);
-    let style_items = sail_lint::style::style_complete_at(source, path, offset, host.as_deref());
+    let style_items = sail_style::style_complete_at(source, path, offset, host.as_deref());
     if !style_items.is_empty() {
         return style_items
             .into_iter()
@@ -351,8 +351,8 @@ pub fn complete_with_session(
             })
             .collect();
     }
-    let style_ctx = sail_lint::style::style_complete_context_at(source, offset, host.as_deref());
-    if !matches!(style_ctx, sail_lint::style::StyleCompleteContext::Unknown) {
+    let style_ctx = sail_style::style_complete_context_at(source, offset, host.as_deref());
+    if !matches!(style_ctx, sail_style::StyleCompleteContext::Unknown) {
         // Classified Style position with empty set — do not fall through to
         // weak tsgo / scope noise.
         return Vec::new();
@@ -398,7 +398,7 @@ pub fn complete_with_session(
 /// Host tag for Style complete: surface pack when path stem is a known L1 pack.
 fn infer_style_host(path: Option<&Path>) -> Option<String> {
     let stem = path?.file_stem()?.to_str()?;
-    if sail_lint::style::surface_pack_for_host(stem).is_some() {
+    if sail_style::surface_pack_for_host(stem).is_some() {
         Some(stem.to_string())
     } else {
         None
