@@ -129,6 +129,7 @@ const THEME_PAINT_MODES: &[&str] = &["light", "dark"];
 /// corner geometry is not a border concern.
 const THEME_MODE_GROUP_KEYS: &[&str] = &[
     "$extensions",
+    "component",
     "color",
     "filter",
     "image",

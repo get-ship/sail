@@ -14,9 +14,10 @@
 //! bundle with the hash of the sources it was built from, and `deck dev` can
 //! recompute the current hash at startup and compare.
 
-use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 use std::path::{Path, PathBuf};
+
+use rustc_hash::FxHasher;
 
 use anyhow::{Context, Result};
 
@@ -45,13 +46,18 @@ pub struct FrameworkStamp {
 /// relative path so the result is deterministic regardless of read-dir
 /// order. `.` and `node_modules` entries are skipped — neither ever holds
 /// TypeScript sources this bundle is compiled from.
+///
+/// Uses [`FxHasher`], not [`std::hash::DefaultHasher`]. DefaultHasher is
+/// randomized per process in current rustc, so a bake in process A and
+/// `sail dev` in process B hashed the same tree to different stamps and
+/// hard-failed as "still stale after regenerate."
 pub fn hash_dir(root: &Path) -> Result<String> {
     let mut files: Vec<PathBuf> = Vec::new();
     collect_files(root, root, &mut files)
         .with_context(|| format!("walking {} for a framework source stamp", root.display()))?;
     files.sort();
 
-    let mut hasher = DefaultHasher::new();
+    let mut hasher = FxHasher::default();
     for rel in &files {
         let abs = root.join(rel);
         let bytes = std::fs::read(&abs)
@@ -124,6 +130,9 @@ mod tests {
         let h1 = hash_dir(dir.path()).unwrap();
         let h2 = hash_dir(dir.path()).unwrap();
         assert_eq!(h1, h2, "hashing the same tree twice must be deterministic");
+        // FxHasher is seedless — a second hasher on the same bytes must match.
+        // DefaultHasher failed this across process boundaries (sail dev).
+        assert_eq!(h1.len(), 16);
 
         std::fs::write(dir.path().join("sub/b.ts"), b"export const b = 3;").unwrap();
         let h3 = hash_dir(dir.path()).unwrap();

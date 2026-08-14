@@ -51,10 +51,22 @@ pub fn resolve_entry(start: &Path, spec: &str) -> Option<PathBuf> {
 
     let mut candidates: Vec<PathBuf> = Vec::new();
     if let Some(rel) = entry_rel_from_manifest(&root, &subpath) {
+        let rel = PathBuf::from(rel);
+        candidates.push(root.join(&rel));
+        // Public `default` is often unbuilt `dist/*.js`. Deck bakes from
+        // source: if that file is missing, the matching `src/*.ts` is the
+        // entry — including subpaths (`./framework` → dist/framework-bundle.js
+        // vs src/framework-bundle.ts). Without this, `sail-runtime` vanished
+        // from build-assets after exports.default moved to dist.
+        if let Some(src) = dist_js_to_src_ts(&rel) {
+            candidates.push(root.join(src));
+        }
+    }
+    for rel in export_condition_rels(&root, &subpath, &["development", "bun"]) {
         candidates.push(root.join(rel));
     }
     // Source fallbacks for the package root only — a missing subpath export has
-    // no generic stand-in.
+    // no generic stand-in beyond the dist→src rewrite above.
     if subpath == "." {
         for rel in [
             "src/index.ts",
@@ -67,6 +79,57 @@ pub fn resolve_entry(start: &Path, spec: &str) -> Option<PathBuf> {
         }
     }
     candidates.into_iter().find(|p| p.is_file())
+}
+
+/// `dist/foo.js` → `src/foo.ts` (and `.mjs`). None if `rel` is not a dist JS.
+fn dist_js_to_src_ts(rel: &Path) -> Option<PathBuf> {
+    let s = rel.to_string_lossy();
+    let s = s.trim_start_matches("./");
+    let rest = s.strip_prefix("dist/")?;
+    let stem = rest
+        .strip_suffix(".js")
+        .or_else(|| rest.strip_suffix(".mjs"))?;
+    Some(PathBuf::from(format!("src/{stem}.ts")))
+}
+
+/// Rel paths named by the given `exports` conditions for `subpath`.
+fn export_condition_rels(root: &Path, subpath: &str, conds: &[&str]) -> Vec<PathBuf> {
+    let Ok(raw) = std::fs::read_to_string(root.join("package.json")) else {
+        return Vec::new();
+    };
+    let Ok(pkg) = serde_json::from_str::<Value>(&raw) else {
+        return Vec::new();
+    };
+    let Some(exports) = pkg.get("exports") else {
+        return Vec::new();
+    };
+    let Some(target) = export_target_value(exports, subpath) else {
+        return Vec::new();
+    };
+    let mut out = Vec::new();
+    if let Value::Object(map) = target {
+        for cond in conds {
+            if let Some(Value::String(s)) = map.get(*cond) {
+                out.push(PathBuf::from(s.trim_start_matches("./")));
+            }
+        }
+    }
+    out
+}
+
+fn export_target_value<'a>(exports: &'a Value, subpath: &str) -> Option<&'a Value> {
+    match exports {
+        Value::String(_) => (subpath == ".").then_some(exports),
+        Value::Object(map) => {
+            let is_subpath_map = map.keys().all(|k| k.starts_with('.'));
+            if is_subpath_map {
+                map.get(subpath)
+            } else {
+                Some(exports)
+            }
+        }
+        _ => None,
+    }
 }
 
 /// Split `@scope/pkg/sub/path` into (`@scope/pkg`, `./sub/path`); a bare
@@ -282,6 +345,30 @@ mod tests {
         assert_eq!(
             entry,
             root.join("node_modules/@ship/deck-router/dist/index.js")
+        );
+    }
+
+    #[test]
+    fn framework_subpath_falls_back_to_src_when_dist_missing() {
+        let tmp = tempdir().unwrap();
+        let root = tmp.path();
+        write(
+            &root.join("node_modules/@ship/sail-runtime/package.json"),
+            r#"{ "name": "@ship/sail-runtime",
+                "exports": { "./framework": {
+                    "types": "./dist/framework-bundle.d.ts",
+                    "development": "./src/framework-bundle.ts",
+                    "default": "./dist/framework-bundle.js"
+                } } }"#,
+        );
+        write(
+            &root.join("node_modules/@ship/sail-runtime/src/framework-bundle.ts"),
+            "export const fw=1;\n",
+        );
+        let entry = resolve_entry(root, "@ship/sail-runtime/framework").unwrap();
+        assert_eq!(
+            entry,
+            root.join("node_modules/@ship/sail-runtime/src/framework-bundle.ts")
         );
     }
 
