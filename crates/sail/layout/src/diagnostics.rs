@@ -414,8 +414,7 @@ fn scan_clipped_text(layout: &Layout, out: &mut Vec<Diagnostic>) -> anyhow::Resu
         // Only report when the box actually clips on the inline axis —
         // visible overflow is not "clipped text".
         let overflow_x = layout.styles[i].style.overflow.x;
-        let clips_x =
-            matches!(overflow_x, Overflow::Hidden | Overflow::Clip) || class_clips_x(&elem.class);
+        let clips_x = matches!(overflow_x, Overflow::Hidden | Overflow::Clip);
         if !clips_x {
             continue;
         }
@@ -444,18 +443,6 @@ fn scan_clipped_text(layout: &Layout, out: &mut Vec<Diagnostic>) -> anyhow::Resu
         }
     }
     Ok(())
-}
-
-fn class_clips_x(class: &str) -> bool {
-    class.split_whitespace().any(|c| {
-        // Product Style mints `s-overflowXhidden` (camelCase); mapping tokens
-        // are lowercase. Fold so either form counts as an inline clip opt-in.
-        let s = c.strip_prefix("s-").unwrap_or(c).to_ascii_lowercase();
-        matches!(
-            s.as_str(),
-            "overflowhidden" | "overflowclip" | "overflowxhidden" | "overflowxclip" | "truncate"
-        )
-    })
 }
 
 #[cfg(test)]

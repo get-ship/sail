@@ -67,6 +67,8 @@ pub struct Element {
     pub type_size: Option<String>,
     /// Font family token from Style resolution (`body`, `display`, `mono`).
     pub type_family: Option<String>,
+    /// Box tokens from Style resolution (display / grow / overflow / …).
+    pub box_style: crate::box_ir::ResolvedBox,
 }
 
 impl Element {

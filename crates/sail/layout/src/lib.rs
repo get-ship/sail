@@ -13,12 +13,13 @@
 //! ```text
 //!   .sail source
 //!        │
-//!        ├── caller-supplied preprocess  (Style IR → classes + TypeHost)
+//!        ├── caller-supplied preprocess  (Style IR → classes + TypeHost + BoxHost)
 //!        ▼
 //!   lowered HTML ──► sail_layout::html::parse  ──►  Vec<Element>
 //!        │
 //!        ├── apply_resolved_types (Style tokens + theme tag defaults)
-//!        ├── sail_layout::style::resolve  (class → taffy Style)
+//!        ├── apply_resolved_boxes (Style box tokens)
+//!        ├── sail_layout::style::resolve  (Style IR + layout primitives → taffy)
 //!        ▼
 //!   taffy::TaffyTree<NodeContext> ──► compute_layout_with_measure
 //!        │                              (text leaves use the metrics table)
@@ -47,6 +48,7 @@
 //! - **`if` / `for` / dynamic content.** The static-only path catches most
 //!   real-world layout bugs.
 
+pub mod box_ir;
 pub mod canary;
 pub mod diagnostics;
 pub mod html;
@@ -58,9 +60,17 @@ pub mod taffy_tree;
 pub mod tap_targets;
 mod unintended_overflow;
 
+pub use box_ir::{BoxHost, ResolvedBox, apply_resolved_boxes, resolve_box};
 pub use diagnostics::{
     BoxExtents, BoxReport, Diagnostic, MainAxis, OverflowGeometry, ScanInput, ScanResult, Severity,
 };
+
+/// Style-resolved hosts collected at preprocess (type + box).
+#[derive(Debug, Clone, Default)]
+pub struct StyleHosts {
+    pub types: Vec<TypeHost>,
+    pub boxes: Vec<BoxHost>,
+}
 pub use html::{Element, parse_source, source_viewport};
 pub use metrics::{
     Family, Size as TextSize, TypeHost, apply_resolved_types, apply_tag_default_types,
@@ -168,8 +178,21 @@ pub fn check_preprocessed_with_types(
     options: CheckOptions,
     hosts: &[TypeHost],
 ) -> anyhow::Result<ScanResult> {
+    check_preprocessed_with_hosts(preprocessed, viewport, options, hosts, &[])
+}
+
+/// Like [`check_preprocessed_with_types`], also overlaying Style-resolved box
+/// tokens (display / grow / overflow / position / pad / size).
+pub fn check_preprocessed_with_hosts(
+    preprocessed: &str,
+    viewport: (f32, f32),
+    options: CheckOptions,
+    type_hosts: &[TypeHost],
+    box_hosts: &[BoxHost],
+) -> anyhow::Result<ScanResult> {
     let mut elements = parse_source(preprocessed);
-    apply_resolved_types(&mut elements, hosts);
+    apply_resolved_types(&mut elements, type_hosts);
+    apply_resolved_boxes(&mut elements, box_hosts);
     let tree = taffy_tree::build(elements, viewport)?;
     diagnostics::scan_with(&tree, viewport, options)
 }
