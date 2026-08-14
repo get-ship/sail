@@ -1,10 +1,11 @@
 //! Parser for the Style value language (chain + match / when / compound / bind).
 
 use std::borrow::Cow;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap, HashSet};
 
 use super::ir::{PaintArg, PaintOp, Style, StyleDiagnostic};
 use super::setters::{closest_unique_setter, find_setter, validate_op, when_target};
+use super::theme_env::{current_styling_policy, ThemeStyleEnv};
 
 /// Parse a Style expression (product / channel-only). Flat `style.method(…)`
 /// chains are refused — use `style({ box, paint, text, animate })`.
@@ -124,8 +125,10 @@ fn collect_motion_attaches_inner(
             if !resolving.insert(name.clone()) {
                 return;
             }
-            if let Some(s) = env.get(name) {
-                collect_motion_attaches_inner(s, env, out, resolving);
+            if let Ok(s) =
+                ThemeStyleEnv::from_registry().expand_style_ref(name, env, current_styling_policy())
+            {
+                collect_motion_attaches_inner(&s, env, out, resolving);
             }
             resolving.remove(name);
         }
@@ -703,7 +706,7 @@ fn parse_style_expr(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Sty
                 _ => return Style::Empty,
             };
             if p.peek() == Some(&Tok::Dot) {
-                let mut base = Style::Ref(name);
+                let mut base = make_style_ref(name, diags);
                 while p.eat(&Tok::Dot) {
                     let method = match p.bump() {
                         Some(Tok::Word(w)) => w,
@@ -740,7 +743,7 @@ fn parse_style_expr(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Sty
                 }
                 base
             } else {
-                Style::Ref(name)
+                make_style_ref(name, diags)
             }
         }
         _ => {
@@ -1055,12 +1058,29 @@ fn parse_style_arg(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Styl
                 // Inline sugar: `style(pad({ t: 2 }))` / `style(type(body-sm).fg(…))`.
                 return parse_channel_chain(p, diags);
             }
+            if next == Some(&Tok::Colon) {
+                if let Some(Tok::Word(w)) = p.peek() {
+                    if matches!(*w, "when" | "animate" | "match" | "compound") {
+                        let key = *w;
+                        diags.push(StyleDiagnostic::ParseError {
+                            message: format!(
+                                "`{key}:` needs the declared form — not a `style()` tag argument"
+                            ),
+                            source: format!("{key}:"),
+                        });
+                        p.bump();
+                        p.expect(Tok::Colon, diags);
+                        skip_style_object_value(p, diags);
+                        return Style::Empty;
+                    }
+                }
+            }
             let name = match p.bump() {
                 Some(Tok::Word(w)) => w.to_string(),
                 _ => return Style::Empty,
             };
             if p.peek() == Some(&Tok::Dot) {
-                let mut base = Style::Ref(name);
+                let mut base = make_style_ref(name, diags);
                 while p.eat(&Tok::Dot) {
                     let method = match p.bump() {
                         Some(Tok::Word(w)) => w,
@@ -1099,7 +1119,7 @@ fn parse_style_arg(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Styl
                 }
                 base
             } else {
-                Style::Ref(name)
+                make_style_ref(name, diags)
             }
         }
         _ => {
@@ -1548,7 +1568,7 @@ fn parse_partial(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>, allow_axe
                     Some(Tok::Word(w)) => w.to_string(),
                     _ => return Style::Empty,
                 };
-                Style::Ref(name)
+                make_style_ref(name, diags)
             }
         }
         _ => {
@@ -1832,8 +1852,8 @@ fn parse_animate_channel_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnost
 /// `animate: { enter: play(…), exit: play(…), transition: play(…) }`.
 ///
 /// Parses the map so a `play(…)` body does not abort the surrounding style
-/// object. Play preset resolution lives on [`crate::ThemeStyleEnv`]; unknown
-/// presets still attach (a later slice owns play emit).
+/// object. Play names resolve through [`ThemeStyleEnv::resolve_play`]; a
+/// missing preset is unknown vocabulary.
 fn parse_animate_trigger_map(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Style {
     p.expect(Tok::LBrace, diags);
     let mut ops = Vec::new();
@@ -1881,9 +1901,7 @@ fn parse_animate_map_value(
         Some(Tok::Word("play")) => {
             p.bump();
             let args = parse_paren_args(p, diags, "play");
-            if let Some(PaintArg::Token(name)) = args.first() {
-                let _ = crate::ThemeStyleEnv::from_registry().resolve_play(name);
-            }
+            resolve_play_args(&args, diags);
             Some(Style::MotionAttach {
                 trigger: trigger.to_string(),
                 config: format_play_config(&args),
@@ -1907,6 +1925,109 @@ fn parse_animate_map_value(
             // Do not block the rest of the style object.
             skip_style_object_value(p, diags);
             None
+        }
+    }
+}
+
+/// Diagnose vocabulary-as-ref at parse. Unknown names stay `Style::Ref` —
+/// locals are not in scope here; [`validate_style_refs`] / emit spend
+/// [`ThemeStyleEnv::resolve_style_ref`] once an env is available.
+fn make_style_ref(name: String, diags: &mut Vec<StyleDiagnostic>) -> Style {
+    if ThemeStyleEnv::from_registry()
+        .resolve_vocab(&name)
+        .is_some()
+    {
+        diags.push(StyleDiagnostic::NotAStyleRef {
+            name: name.clone(),
+            source: name.clone(),
+        });
+    }
+    Style::Ref(name)
+}
+
+fn play_name_from_args(args: &[PaintArg]) -> Option<&str> {
+    match args.first() {
+        Some(PaintArg::Token(name)) if !name.is_empty() => Some(name.as_str()),
+        Some(PaintArg::Slots(slots)) => match slots.get("preset").or_else(|| slots.get("play")) {
+            Some(PaintArg::Token(name)) if !name.is_empty() => Some(name.as_str()),
+            _ => None,
+        },
+        _ => None,
+    }
+}
+
+fn resolve_play_args(args: &[PaintArg], diags: &mut Vec<StyleDiagnostic>) {
+    let Some(name) = play_name_from_args(args) else {
+        diags.push(StyleDiagnostic::UnknownVocabulary {
+            name: "play".into(),
+            source: format!("play({})", format_arg_text(args)),
+        });
+        return;
+    };
+    if ThemeStyleEnv::from_registry().resolve_play(name).is_none() {
+        diags.push(StyleDiagnostic::UnknownVocabulary {
+            name: name.to_string(),
+            source: format!("play({name})"),
+        });
+    }
+}
+
+/// Resolve every `Style::Ref` through [`ThemeStyleEnv::resolve_style_ref`].
+///
+/// `env` is the file-local Style IR map. Open spends locals after theme;
+/// Themed refuses locals (`ThemedLocalStyle`).
+pub fn validate_style_refs(style: &Style, env: &HashMap<String, Style>) -> Vec<StyleDiagnostic> {
+    let mut diags = Vec::new();
+    validate_style_refs_inner(
+        style,
+        env,
+        &ThemeStyleEnv::from_registry(),
+        current_styling_policy(),
+        &mut HashSet::new(),
+        &mut diags,
+    );
+    diags
+}
+
+fn validate_style_refs_inner(
+    style: &Style,
+    env: &HashMap<String, Style>,
+    theme: &ThemeStyleEnv,
+    policy: super::theme_env::StylingPolicy,
+    resolving: &mut HashSet<String>,
+    diags: &mut Vec<StyleDiagnostic>,
+) {
+    match style {
+        Style::Empty | Style::Set(_) | Style::MotionAttach { .. } => {}
+        Style::Ref(name) => {
+            if !resolving.insert(name.clone()) {
+                return;
+            }
+            match theme.expand_style_ref(name, env, policy) {
+                Ok(expanded) => {
+                    validate_style_refs_inner(&expanded, env, theme, policy, resolving, diags)
+                }
+                Err(d) => diags.push(d),
+            }
+            resolving.remove(name);
+        }
+        Style::Chain(items) | Style::List(items) => {
+            for i in items {
+                validate_style_refs_inner(i, env, theme, policy, resolving, diags);
+            }
+        }
+        Style::Match { arms, .. } => {
+            for (_, body) in arms {
+                validate_style_refs_inner(body, env, theme, policy, resolving, diags);
+            }
+        }
+        Style::Compound { body, .. } => {
+            validate_style_refs_inner(body, env, theme, policy, resolving, diags)
+        }
+        Style::When { entries } => {
+            for (_, body) in entries {
+                validate_style_refs_inner(body, env, theme, policy, resolving, diags);
+            }
         }
     }
 }
@@ -2725,5 +2846,140 @@ mod flat_chain_tests {
         assert!(diags.is_empty(), "{:?}", msgs(&diags));
         let (_, css) = lower_style(&style, &HashMap::new());
         assert!(css.contains("padding"), "{css}");
+    }
+
+    #[test]
+    fn play_fade_resolves_and_attaches() {
+        let (style, diags) = parse("style({ animate: { enter: play(fade) } })");
+        assert!(
+            !diags
+                .iter()
+                .any(|d| matches!(d, crate::StyleDiagnostic::UnknownVocabulary { .. })),
+            "fade is a registry keyframe: {:?}",
+            msgs(&diags)
+        );
+        let m = crate::parse::collect_motion_attaches(&style);
+        assert_eq!(m.len(), 1, "{m:?}");
+        assert_eq!(m[0].0, "enter");
+        assert!(
+            m[0].1.contains("preset") && m[0].1.contains("fade"),
+            "{:?}",
+            m[0]
+        );
+    }
+
+    #[test]
+    fn play_colors_fast_resolves() {
+        let (style, diags) = parse("style({ animate: { transition: play(colors, fast) } })");
+        assert!(
+            !diags
+                .iter()
+                .any(|d| matches!(d, crate::StyleDiagnostic::UnknownVocabulary { .. })),
+            "colors is a play prop-set: {:?}",
+            msgs(&diags)
+        );
+        let (_, css) = lower_style(&style, &HashMap::new());
+        assert!(
+            css.contains("transition-property") || css.contains("transition"),
+            "play(colors, fast) must emit transition CSS: {css}"
+        );
+        assert!(
+            css.contains("--duration-fast") || css.contains("duration-fast"),
+            "duration token: {css}"
+        );
+    }
+
+    #[test]
+    fn unknown_play_name_is_unknown_vocabulary() {
+        let (_, diags) = parse("style({ animate: { enter: play(notARealPlayZzz) } })");
+        assert!(
+            diags.iter().any(|d| matches!(
+                d,
+                crate::StyleDiagnostic::UnknownVocabulary { name, .. } if name == "notARealPlayZzz"
+            )),
+            "unknown play must fail closed: {:?}",
+            msgs(&diags)
+        );
+    }
+
+    #[test]
+    fn vocab_name_is_not_a_style_ref() {
+        for vocab in ["border", "pad", "srOnly", "bg", "type"] {
+            let (_, diags) = parse(&format!("style({vocab})"));
+            assert!(
+                diags.iter().any(|d| matches!(
+                    d,
+                    crate::StyleDiagnostic::NotAStyleRef { name, .. } if name == vocab
+                )),
+                "{vocab}: {:?}",
+                msgs(&diags)
+            );
+        }
+    }
+
+    #[test]
+    fn inline_when_arg_stays_illegal() {
+        let (_, diags) = parse("style(pad({ t: 2 }), when: { hover: bg(muted) })");
+        assert!(
+            !diags.is_empty(),
+            "inline when: as a style() arg must stay illegal"
+        );
+        let joined = msgs(&diags).join("; ");
+        assert!(
+            joined.contains("declared") || joined.contains("when:"),
+            "must teach declared form: {joined}"
+        );
+    }
+
+    #[test]
+    fn open_local_ref_validates() {
+        let mut env = HashMap::new();
+        env.insert(
+            "foo".into(),
+            parse("style({ paint: fill({ color: muted }) })").0,
+        );
+        let (style, diags) = parse("foo");
+        assert!(diags.is_empty(), "{:?}", msgs(&diags));
+        let refs = crate::parse::validate_style_refs(&style, &env);
+        assert!(refs.is_empty(), "{refs:?}");
+    }
+
+    #[test]
+    fn themed_local_ref_is_studio() {
+        let mut env = HashMap::new();
+        env.insert(
+            "foo".into(),
+            parse("style({ paint: fill({ color: muted }) })").0,
+        );
+        let (style, _) = parse("foo");
+        crate::with_styling_policy(crate::StylingPolicy::Themed, || {
+            let refs = crate::parse::validate_style_refs(&style, &env);
+            assert!(
+                refs.iter().any(|d| matches!(
+                    d,
+                    crate::StyleDiagnostic::ThemedLocalStyle { name, .. } if name == "foo"
+                )),
+                "{refs:?}"
+            );
+        });
+    }
+
+    #[test]
+    fn unknown_ref_with_env_is_unknown_vocabulary() {
+        let env = HashMap::new();
+        let (style, diags) = parse("notARealStyleZzz");
+        assert!(
+            diags.is_empty(),
+            "parse keeps unknown refs: {:?}",
+            msgs(&diags)
+        );
+        let refs = crate::parse::validate_style_refs(&style, &env);
+        assert!(
+            refs.iter().any(|d| matches!(
+                d,
+                crate::StyleDiagnostic::UnknownVocabulary { name, .. } if name == "notARealStyleZzz"
+            )),
+            "{refs:?}"
+        );
     }
 }

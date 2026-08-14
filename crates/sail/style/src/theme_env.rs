@@ -11,15 +11,37 @@
 //!
 //! Does not parse v3 flat chains or lower named styles to CSS.
 
-use std::collections::BTreeMap;
+use std::cell::RefCell;
+use std::collections::{BTreeMap, HashMap};
 use std::sync::OnceLock;
 
 use serde_json::Value;
 
-use crate::concerns::{find_concern, is_marker, resolve_concern_name};
-use crate::ir::StyleDiagnostic;
+use crate::concerns::{alias_concern_call, find_concern, is_marker, resolve_concern_name};
+use crate::ir::{PaintArg, PaintOp, Style, StyleDiagnostic};
 use crate::setters::find_setter;
 use crate::tokens::CompositeToken;
+
+thread_local! {
+    static STYLING_POLICY: RefCell<StylingPolicy> =
+        const { RefCell::new(StylingPolicy::Open) };
+}
+
+/// Current `styling` policy. Default Open until a caller (compiler, or
+/// [`with_styling_policy`] in tests) installs Themed.
+pub fn current_styling_policy() -> StylingPolicy {
+    STYLING_POLICY.with(|cell| *cell.borrow())
+}
+
+/// Run `f` under `policy`. Nested calls restore the previous value.
+pub fn with_styling_policy<T>(policy: StylingPolicy, f: impl FnOnce() -> T) -> T {
+    STYLING_POLICY.with(|cell| {
+        let prev = cell.replace(policy);
+        let out = f();
+        *cell.borrow_mut() = prev;
+        out
+    })
+}
 
 /// Generated registry artifact (DTCG emit). Same file [`crate::tokens`] reads.
 const TOKEN_REGISTRY_JSON: &str =
@@ -155,6 +177,44 @@ impl ThemeStyleEnv {
         self.tag_defaults.get(tag).cloned()
     }
 
+    /// Theme-registered named style identities (complete / diagnostics).
+    pub fn named_style_names(&self) -> impl Iterator<Item = &str> {
+        self.styles.keys().map(String::as_str)
+    }
+
+    /// Theme play / keyframe identities (`fade`, `colors`).
+    pub fn play_names(&self) -> impl Iterator<Item = &str> {
+        self.plays.keys().map(String::as_str)
+    }
+
+    /// Lower a theme named style to Style IR (concern calls + when + animate).
+    pub fn named_style_to_ir(&self, style: &NamedStyle) -> Style {
+        named_style_to_ir(style)
+    }
+
+    /// Expand a `Style::Ref` name: theme first, then file-local (Open only).
+    ///
+    /// Locals are the already-parsed Style IR (`StyleEnv`). Theme hits lower
+    /// through [`Self::named_style_to_ir`]; local hits return the IR as-is.
+    pub fn expand_style_ref(
+        &self,
+        name: &str,
+        env: &HashMap<String, Style>,
+        policy: StylingPolicy,
+    ) -> Result<Style, StyleDiagnostic> {
+        let locals = locals_from_env(env);
+        let named = self.resolve_style_ref(name, &locals, policy)?;
+        if self.resolve_named_style(name).is_some() {
+            return Ok(self.named_style_to_ir(&named));
+        }
+        env.get(name)
+            .cloned()
+            .ok_or_else(|| StyleDiagnostic::UnknownVocabulary {
+                name: name.to_string(),
+                source: name.to_string(),
+            })
+    }
+
     /// Resolve a name in a style-ref position.
     ///
     /// First hit wins: vocabulary (not a style ref) → theme named style →
@@ -191,7 +251,134 @@ impl ThemeStyleEnv {
 }
 
 fn is_vocabulary(name: &str) -> bool {
-    find_concern(name).is_some() || is_marker(name) || find_setter(name).is_some()
+    find_concern(name).is_some()
+        || is_marker(name)
+        || find_setter(name).is_some()
+        || is_axis_name(name)
+}
+
+/// Presence-only locals for [`ThemeStyleEnv::resolve_style_ref`]. IR lives in `env`.
+fn locals_from_env(env: &HashMap<String, Style>) -> BTreeMap<String, NamedStyle> {
+    env.keys()
+        .map(|name| {
+            (
+                name.clone(),
+                NamedStyle {
+                    name: name.clone(),
+                    r#type: "sail.style".into(),
+                    value: BTreeMap::new(),
+                    when: BTreeMap::new(),
+                    animate: BTreeMap::new(),
+                },
+            )
+        })
+        .collect()
+}
+
+fn named_style_to_ir(style: &NamedStyle) -> Style {
+    let mut parts = Vec::new();
+    let mut ops = Vec::new();
+    for (key, value) in &style.value {
+        ops.push(json_member_to_set(key, value));
+    }
+    if !ops.is_empty() {
+        parts.push(Style::chain(ops));
+    }
+    if !style.when.is_empty() {
+        let entries = style
+            .when
+            .iter()
+            .map(|(k, v)| (k.clone(), json_value_to_style(v)))
+            .collect();
+        parts.push(Style::When { entries });
+    }
+    if !style.animate.is_empty() {
+        for (trigger, value) in &style.animate {
+            parts.push(json_animate_to_motion(trigger, value));
+        }
+    }
+    Style::chain(parts)
+}
+
+fn json_value_to_style(value: &Value) -> Style {
+    match value {
+        Value::Object(map) => {
+            let ops: Vec<Style> = map.iter().map(|(k, v)| json_member_to_set(k, v)).collect();
+            Style::chain(ops)
+        }
+        Value::String(s) => Style::Ref(s.clone()),
+        _ => Style::Empty,
+    }
+}
+
+fn json_member_to_set(setter: &str, value: &Value) -> Style {
+    let args = json_to_paint_args(value);
+    let source = format!("{setter}({})", format_paint_args(&args));
+    let (setter, args) = alias_concern_call(setter, args);
+    Style::Set(PaintOp {
+        setter,
+        args,
+        source,
+    })
+}
+
+fn json_to_paint_args(value: &Value) -> Vec<PaintArg> {
+    match value {
+        Value::Object(map) => vec![PaintArg::Slots(
+            map.iter()
+                .map(|(k, v)| (k.clone(), json_to_paint_arg(v)))
+                .collect(),
+        )],
+        other => vec![json_to_paint_arg(other)],
+    }
+}
+
+fn json_to_paint_arg(value: &Value) -> PaintArg {
+    match value {
+        Value::String(s) => PaintArg::Token(s.clone()),
+        Value::Number(n) => PaintArg::Token(n.to_string()),
+        Value::Bool(b) => PaintArg::Token(b.to_string()),
+        Value::Object(map) => PaintArg::Slots(
+            map.iter()
+                .map(|(k, v)| (k.clone(), json_to_paint_arg(v)))
+                .collect(),
+        ),
+        Value::Null => PaintArg::Token(String::new()),
+        other => PaintArg::Token(other.to_string()),
+    }
+}
+
+fn format_paint_args(args: &[PaintArg]) -> String {
+    args.iter()
+        .map(PaintArg::display)
+        .collect::<Vec<_>>()
+        .join(", ")
+}
+
+fn json_animate_to_motion(trigger: &str, value: &Value) -> Style {
+    let config = match value {
+        Value::String(name) => format!("{{ preset: {name} }}"),
+        Value::Object(map) => {
+            if let Some(preset) = map
+                .get("preset")
+                .or_else(|| map.get("play"))
+                .and_then(Value::as_str)
+            {
+                if let Some(duration) = map.get("duration").and_then(Value::as_str) {
+                    format!("{{ preset: {preset}, duration: {duration} }}")
+                } else {
+                    format!("{{ preset: {preset} }}")
+                }
+            } else {
+                value.to_string()
+            }
+        }
+        other => other.to_string(),
+    };
+    Style::MotionAttach {
+        trigger: trigger.to_string(),
+        config,
+    }
 }
 
 fn resolve_vocab_tag(name: &str) -> Option<VocabTag> {
@@ -528,6 +715,31 @@ mod tests {
     fn missing_tag_defaults_key_is_empty_not_a_parse_error() {
         let env = ThemeStyleEnv::from_json(r#"{"names":[],"colors":[],"composites":{}}"#);
         assert!(env.resolve_tag_default("h2").is_none());
+    }
+
+    #[test]
+    fn named_style_lowers_to_ir_and_emits() {
+        let json = r#"{
+            "styles": {
+                "card-chrome": {
+                    "$type": "sail.style",
+                    "$value": { "bg": "card", "border": "subtle", "radius": "lg" }
+                }
+            }
+        }"#;
+        let env = ThemeStyleEnv::from_json(json);
+        let named = env.resolve_named_style("card-chrome").expect("card-chrome");
+        let ir = env.named_style_to_ir(&named);
+        let (_, css) = crate::emit::lower_style(&ir, &std::collections::HashMap::new());
+        assert!(
+            css.contains("background") || css.contains("--card") || css.contains("fill"),
+            "theme named style must emit paint: {css}"
+        );
+        assert!(css.contains("border"), "border.subtle: {css}");
+        assert!(
+            css.contains("border-radius") || css.contains("--radius"),
+            "radius: {css}"
+        );
     }
 
     #[test]

@@ -142,9 +142,10 @@ fn style_uses_text_channel_inner(
             if !resolving.insert(name.clone()) {
                 return false;
             }
-            let hit = env
-                .get(name)
-                .is_some_and(|s| style_uses_text_channel_inner(s, env, resolving));
+            let hit = crate::ThemeStyleEnv::from_registry()
+                .expand_style_ref(name, env, crate::current_styling_policy())
+                .ok()
+                .is_some_and(|s| style_uses_text_channel_inner(&s, env, resolving));
             resolving.remove(name);
             hit
         }

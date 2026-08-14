@@ -28,15 +28,15 @@ pub mod token_groups;
 pub mod tokens;
 
 pub use complete::{
-    OBJECT_KEYS, StyleCompleteContext, StyleCompleteItem, StyleCompleteKind,
     collect_style_const_names, style_complete_at, style_complete_context_at,
-    style_complete_for_context, when_keys,
+    style_complete_for_context, when_keys, StyleCompleteContext, StyleCompleteItem,
+    StyleCompleteKind, OBJECT_KEYS,
 };
 
 pub use channel::{
-    Channel, TEXT_BEARING_ELEMENTS, channel_for_setter, is_animate_trigger, is_geometry_setter,
-    is_interaction_when_key, is_text_bearing, style_contains_geometry, style_uses_text_channel,
-    style_uses_text_channel_env, text_channel_host_error,
+    channel_for_setter, is_animate_trigger, is_geometry_setter, is_interaction_when_key,
+    is_text_bearing, style_contains_geometry, style_uses_text_channel, style_uses_text_channel_env,
+    text_channel_host_error, Channel, TEXT_BEARING_ELEMENTS,
 };
 pub use component_surfaces::{
     all_surface_packs, color_paint_vocabulary, is_component_public_name,
@@ -44,23 +44,26 @@ pub use component_surfaces::{
 };
 pub use concern_rewrite::{retired_dual_border_sites, rewrite_concern_source};
 pub use concerns::{
-    ConcernSlot, ConcernSpec, MARKERS, alias_concern_call, concern_doc_line, concern_kind, concerns,
-    find_concern, is_concern_form, is_marker, resolve_concern_name, retired_replacement,
+    alias_concern_call, concern_doc_line, concern_kind, concerns, find_concern, is_concern_form,
+    is_marker, resolve_concern_name, retired_replacement, ConcernSlot, ConcernSpec, MARKERS,
 };
-pub use conditions::{CONDITION_PREFIXES, condition_media};
+pub use conditions::{condition_media, CONDITION_PREFIXES};
 pub use emit::{
-    CssRule, StyleEnv, emit_style, lower_style, lower_style_source, lower_style_source_with_motion,
+    emit_style, lower_style, lower_style_source, lower_style_source_with_motion, CssRule, StyleEnv,
 };
 pub use host_ctx::{with_bound_group_props, with_host_surface};
 pub use ir::{PaintArg, PaintOp, Style, StyleDiagnostic};
 pub use parse::{
     collect_motion_attaches, collect_motion_attaches_env, looks_like_utility_string_product, parse,
-    parse_style_const_rhs,
+    parse_style_const_rhs, validate_style_refs,
 };
 pub use rewrite::{
     lift_style_attr_hosts, rewrite_source, rewrite_style_expr, rewrite_teaching_source,
 };
-pub use theme_env::{NamedStyle, PlayPreset, StylingPolicy, TagDefault, ThemeStyleEnv, VocabTag};
+pub use theme_env::{
+    current_styling_policy, with_styling_policy, NamedStyle, PlayPreset, StylingPolicy, TagDefault,
+    ThemeStyleEnv, VocabTag,
+};
 
 #[cfg(test)]
 mod tests {
@@ -75,7 +78,9 @@ mod tests {
 
     #[test]
     fn chain_emits_token_vars() {
-        let (style, diags) = parse("style({ box: space({ pad-x: 2 }), paint: fill({ color: primary }).radius(sm) })");
+        let (style, diags) = parse(
+            "style({ box: space({ pad-x: 2 }), paint: fill({ color: primary }).radius(sm) })",
+        );
         assert!(
             diags.is_empty(),
             "{:?}",
@@ -176,7 +181,8 @@ mod tests {
             css.contains("@media (min-width: 1280px)") || css.contains("@media(min-width: 1280px)"),
             "desktop when must emit desktop media: {css}"
         );
-        let (style2, diags2) = parse("style({ when: { motionReduce: { paint: filter({ opacity: 100 }) } } })");
+        let (style2, diags2) =
+            parse("style({ when: { motionReduce: { paint: filter({ opacity: 100 }) } } })");
         assert!(diags2.is_empty(), "{:?}", diags2);
         let (_, css2) = lower_style(&style2, &HashMap::new());
         assert!(
@@ -283,8 +289,9 @@ mod tests {
 
     #[test]
     fn chain_when_method() {
-        let (style, diags) =
-            parse("style({ paint: fill({ color: primary }), when: { hover: { paint: fill({ color: muted }) } } })");
+        let (style, diags) = parse(
+            "style({ paint: fill({ color: primary }), when: { hover: { paint: fill({ color: muted }) } } })",
+        );
         assert!(
             diags.is_empty(),
             "{:?}",
@@ -363,7 +370,10 @@ mod tests {
         // Duplicates across list items from nested Refs resolve through the
         // env walk and shadow silently.
         let mut env = HashMap::new();
-        env.insert("base".into(), parse("style({ paint: fill({ color: primary }) })").0);
+        env.insert(
+            "base".into(),
+            parse("style({ paint: fill({ color: primary }) })").0,
+        );
         let (style, _) = parse("[ base, style({ paint: fill({ color: muted }) }) ]");
         let diags = clash::detect_clashes(&style, &env);
         assert!(
@@ -457,7 +467,10 @@ mod tests {
     #[test]
     fn style_const_ref_resolves() {
         let mut env = HashMap::new();
-        env.insert("filled".into(), parse("style({ paint: fill({ color: primary }) })").0);
+        env.insert(
+            "filled".into(),
+            parse("style({ paint: fill({ color: primary }) })").0,
+        );
         let (style, diags) = parse("filled");
         assert!(diags.is_empty());
         let (_, css) = lower_style(&style, &env);
@@ -523,7 +536,8 @@ mod tests {
 
     #[test]
     fn group_required_when_emits_ancestor() {
-        let (style, diags) = parse("style({ when: { group-required: { box: flow({ display: inline }) } } })");
+        let (style, diags) =
+            parse("style({ when: { group-required: { box: flow({ display: inline }) } } })");
         assert!(
             diags.is_empty(),
             "{:?}",
@@ -636,8 +650,9 @@ mod tests {
 
     #[test]
     fn basis_and_scale_setters_lower() {
-        let (style, diags) =
-            parse("style({ box: size({ w: 0 }), paint: motion({ scale: 100, rotate: bind(tileRotate) }) })");
+        let (style, diags) = parse(
+            "style({ box: size({ w: 0 }), paint: motion({ scale: 100, rotate: bind(tileRotate) }) })",
+        );
         assert!(
             diags.is_empty(),
             "{:?}",
@@ -883,8 +898,10 @@ mod tests {
     #[test]
     fn channels_flatten_order_paint_after_box() {
         // Author may write paint before box; flatten order is always box then paint.
-        let (s_a, d_a) = parse("style({ paint: fill({ color: primary }), box: space({ pad: 4 }) })");
-        let (s_b, d_b) = parse("style({ box: space({ pad: 4 }), paint: fill({ color: primary }) })");
+        let (s_a, d_a) =
+            parse("style({ paint: fill({ color: primary }), box: space({ pad: 4 }) })");
+        let (s_b, d_b) =
+            parse("style({ box: space({ pad: 4 }), paint: fill({ color: primary }) })");
         assert!(
             d_a.is_empty() && d_b.is_empty(),
             "diags a={:?} b={:?}",
@@ -900,7 +917,8 @@ mod tests {
     #[test]
     fn parse_refuses_motion_tail_after_channel_spine() {
         // Flat motion tail after style({…}) is retired — animate: channel only.
-        let (_, diags) = parse("style({ paint: fill({ color: primary }) }).enter({ opacity: 'fade' })");
+        let (_, diags) =
+            parse("style({ paint: fill({ color: primary }) }).enter({ opacity: 'fade' })");
         let joined = diags
             .iter()
             .map(|d| d.message())
@@ -922,8 +940,9 @@ mod tests {
 
     #[test]
     fn channels_animate_channel_motion_attaches() {
-        let (s_ch, d_ch) =
-            parse("style({ paint: fill({ color: primary }), animate: enter({ opacity: 'fade' }) })");
+        let (s_ch, d_ch) = parse(
+            "style({ paint: fill({ color: primary }), animate: enter({ opacity: 'fade' }) })",
+        );
         assert!(
             d_ch.is_empty(),
             "animate: channel must parse clean: {:?}",
@@ -1054,12 +1073,16 @@ mod tests {
 
     #[test]
     fn product_path_channel_spine_lowers() {
-        let (classes, css) =
-            product_lower("style({ box: space({ pad: 4 }), paint: fill({ color: primary }).radius(md) })")
-                .expect("channel spine is product form");
+        let (classes, css) = product_lower(
+            "style({ box: space({ pad: 4 }), paint: fill({ color: primary }).radius(md) })",
+        )
+        .expect("channel spine is product form");
         assert!(classes.contains("s-"), "{classes}");
         // Property presence — no vacuous OR escapes across unrelated props.
-        assert!(css.contains("padding"), "space pad must emit padding CSS:\n{css}");
+        assert!(
+            css.contains("padding"),
+            "space pad must emit padding CSS:\n{css}"
+        );
         assert!(
             css.contains("background") || css.contains("--primary"),
             "fill CSS:\n{css}"
@@ -1104,7 +1127,9 @@ mod tests {
 
     #[test]
     fn product_path_geometry_under_interaction_fails_closed() {
-        let msgs = product_err_msgs("style({ box: space({ pad: 2 }), when: { hover: { box: space({ pad: 4 }) } } })");
+        let msgs = product_err_msgs(
+            "style({ box: space({ pad: 2 }), when: { hover: { box: space({ pad: 4 }) } } })",
+        );
         let joined = msgs.join("; ");
         assert!(
             joined.contains("state can't gate layout"),
@@ -1116,8 +1141,9 @@ mod tests {
     #[test]
     fn product_path_geometry_matrix_sample() {
         // group-hover + pad refuses.
-        let msgs =
-            product_err_msgs("style({ box: space({ pad: 2 }), when: { group-hover: { box: space({ pad: 4 }) } } })");
+        let msgs = product_err_msgs(
+            "style({ box: space({ pad: 2 }), when: { group-hover: { box: space({ pad: 4 }) } } })",
+        );
         let joined = msgs.join("; ");
         assert!(
             joined.contains("state can't gate layout"),
@@ -1125,8 +1151,9 @@ mod tests {
         );
 
         // focusWithin + pad refuses.
-        let msgs =
-            product_err_msgs("style({ box: space({ pad: 2 }), when: { focusWithin: { box: space({ pad: 4 }) } } })");
+        let msgs = product_err_msgs(
+            "style({ box: space({ pad: 2 }), when: { focusWithin: { box: space({ pad: 4 }) } } })",
+        );
         let joined = msgs.join("; ");
         assert!(
             joined.contains("state can't gate layout"),
@@ -1134,9 +1161,10 @@ mod tests {
         );
 
         // tablet + pad allows (media may gate layout).
-        let (classes, _css) =
-            product_lower("style({ box: space({ pad: 2 }), when: { tablet: { box: space({ pad: 4 }) } } })")
-                .expect("tablet may gate pad geometry on product path");
+        let (classes, _css) = product_lower(
+            "style({ box: space({ pad: 2 }), when: { tablet: { box: space({ pad: 4 }) } } })",
+        )
+        .expect("tablet may gate pad geometry on product path");
         assert!(classes.contains("s-"), "{classes}");
     }
 
@@ -1168,8 +1196,9 @@ mod tests {
 
     #[test]
     fn style_object_tone_axis_refused() {
-        let (_, diags) =
-            super::parse("style({ match: { tone: { primary: { paint: fill({ color: primary }) } } } })");
+        let (_, diags) = super::parse(
+            "style({ match: { tone: { primary: { paint: fill({ color: primary }) } } } })",
+        );
         assert!(
             diags.iter().any(|d| {
                 let m = d.message();
@@ -1195,7 +1224,8 @@ mod tests {
 
     #[test]
     fn style_variadic_composition() {
-        let (style, diags) = super::parse("style({ paint: fill({ color: primary }) }, { box: space({ pad: 2 }) })");
+        let (style, diags) =
+            super::parse("style({ paint: fill({ color: primary }) }, { box: space({ pad: 2 }) })");
         assert!(
             diags.is_empty(),
             "{:?}",

@@ -157,8 +157,12 @@ fn walk(
             if !resolving.insert(name.clone()) {
                 return;
             }
-            if let Some(s) = env.get(name) {
-                walk(s, env, path, writes, fresh, diags, resolving);
+            if let Ok(s) = crate::ThemeStyleEnv::from_registry().expand_style_ref(
+                name,
+                env,
+                crate::current_styling_policy(),
+            ) {
+                walk(&s, env, path, writes, fresh, diags, resolving);
             }
             resolving.remove(name);
         }

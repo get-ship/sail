@@ -202,6 +202,14 @@ pub fn style_complete_for_context(
         StyleCompleteContext::SetterName { partial, channel } => {
             let ch = channel.as_deref().and_then(parse_channel);
             let mut items: Vec<StyleCompleteItem> = Vec::new();
+            if ch == Some(Channel::Animate) || channel.as_deref() == Some("animate") {
+                items.push(item(
+                    "play".into(),
+                    StyleCompleteKind::Setter,
+                    Some("animate · play preset".into()),
+                    Some("play(".into()),
+                ));
+            }
             for spec in crate::concerns::concerns() {
                 if ch.is_some_and(|c| spec.channel != c) {
                     continue;
@@ -234,6 +242,19 @@ pub fn style_complete_for_context(
             partial,
             host,
         } => {
+            if setter == "play" {
+                return filter_sort(
+                    crate::ThemeStyleEnv::from_registry().play_names().map(|n| {
+                        item(
+                            n.to_string(),
+                            StyleCompleteKind::Token,
+                            Some("play preset".into()),
+                            None,
+                        )
+                    }),
+                    partial,
+                );
+            }
             let Some(spec) = setters::find_setter(setter) else {
                 return Vec::new();
             };
@@ -270,18 +291,33 @@ pub fn style_complete_for_context(
             filter_sort(concern_slot_arg_items(slot_spec, host.as_deref()), partial)
         }
         StyleCompleteContext::StyleRef { partial } => {
-            let names = collect_style_const_names(source);
-            filter_sort(
-                names.into_iter().map(|n| {
+            // Theme-first in both modes (SPEC-SPINNAKER-3 §3). Locals only in Open.
+            let theme = crate::ThemeStyleEnv::from_registry();
+            let mut items: Vec<StyleCompleteItem> = theme
+                .named_style_names()
+                .map(|n| {
                     item(
-                        n.clone(),
+                        n.to_string(),
+                        StyleCompleteKind::StyleRef,
+                        Some("theme style".into()),
+                        None,
+                    )
+                })
+                .collect();
+            if crate::current_styling_policy() == crate::StylingPolicy::Open {
+                for n in collect_style_const_names(source) {
+                    if items.iter().any(|it| it.label == n) {
+                        continue;
+                    }
+                    items.push(item(
+                        n,
                         StyleCompleteKind::StyleRef,
                         Some("style const".into()),
                         None,
-                    )
-                }),
-                partial,
-            )
+                    ));
+                }
+            }
+            filter_sort(items.into_iter(), partial)
         }
     }
 }
@@ -928,12 +964,44 @@ fn is_ident_byte(b: u8) -> bool {
 
 // ── style const env ─────────────────────────────────────────────────────────
 
-/// Collect `const name = style` names from source (scope Style env).
+/// Collect file-local style names: `const name = style` and `style name =`.
 pub fn collect_style_const_names(source: &str) -> Vec<String> {
     let mut out = Vec::new();
     let bytes = source.as_bytes();
     let mut i = 0usize;
     while i + 5 < bytes.len() {
+        if &bytes[i..i + 5] == b"style" && is_word_start(bytes, i) {
+            let after = i + 5;
+            if after < bytes.len() && is_ident_byte(bytes[after]) {
+                i += 1;
+                continue;
+            }
+            let mut j = after;
+            while j < bytes.len() && bytes[j].is_ascii_whitespace() {
+                j += 1;
+            }
+            if j < bytes.len() && is_ident_start_byte(bytes[j]) {
+                let name_start = j;
+                j += 1;
+                while j < bytes.len() && is_ident_byte(bytes[j]) {
+                    j += 1;
+                }
+                let name = std::str::from_utf8(&bytes[name_start..j])
+                    .unwrap_or("")
+                    .to_string();
+                let mut k = j;
+                while k < bytes.len() && bytes[k].is_ascii_whitespace() {
+                    k += 1;
+                }
+                if k < bytes.len() && bytes[k] == b'=' {
+                    out.push(name);
+                    i = k + 1;
+                    continue;
+                }
+            }
+            i += 1;
+            continue;
+        }
         if &bytes[i..i + 5] == b"const" && is_word_start(bytes, i) {
             let after = i + 5;
             if after < bytes.len() && is_ident_byte(bytes[after]) {
@@ -1257,6 +1325,38 @@ mod tests {
         let items = style_complete_at(&src, None, off, None);
         let labs = labels(&items);
         assert!(labs.contains(&"filled"), "style refs: {labs:?}");
+    }
+
+    #[test]
+    fn style_ref_from_style_name_decl() {
+        let src = "style filled = { paint: fill({ color: primary }) }\nstyle(fil¦)";
+        let (src, off) = at_caret(src);
+        let items = style_complete_at(&src, None, off, None);
+        let labs = labels(&items);
+        assert!(labs.contains(&"filled"), "style name = refs: {labs:?}");
+    }
+
+    #[test]
+    fn themed_complete_omits_file_local_refs() {
+        let src = "const filled = style({ paint: fill({ color: primary }) })\nstyle(fil¦)";
+        let (src, off) = at_caret(src);
+        crate::with_styling_policy(crate::StylingPolicy::Themed, || {
+            let items = style_complete_at(&src, None, off, None);
+            let labs = labels(&items);
+            assert!(
+                !labs.contains(&"filled"),
+                "themed must not offer locals: {labs:?}"
+            );
+        });
+    }
+
+    #[test]
+    fn play_arg_completes_fade_from_theme() {
+        let (src, off) = at_caret("style({ animate: { enter: play(¦) } })");
+        let items = style_complete_at(&src, None, off, None);
+        let labs = labels(&items);
+        assert!(labs.contains(&"fade"), "play presets: {labs:?}");
+        assert!(labs.contains(&"colors"), "play prop-set: {labs:?}");
     }
 
     #[test]
