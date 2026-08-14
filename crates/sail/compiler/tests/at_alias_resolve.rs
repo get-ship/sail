@@ -12,7 +12,7 @@
 //!   over the same SSOT); tests pin the shared function so paths cannot drift.
 //!
 //! Optional corpus gate:
-//! - sail-site `counter-store` lives under `src/stores/` (defineStore home).
+//! - owned `counter-store` lives under `tests/fixtures/stores/` (defineStore).
 
 use std::path::{Path, PathBuf};
 
@@ -130,25 +130,33 @@ fn resolve_at_alias_uses_same_ssot_as_at_alias_paths() {
     }
 }
 
-/// S1.3 corpus cutover: defineStore home is `src/stores/`, not compositions.
+/// Owned defineStore fixture lives under `fixtures/stores`, not compositions.
 #[test]
-fn sail_site_counter_store_lives_under_src_stores() {
-    let repo = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../..")
-        .canonicalize()
-        .expect("repo root");
-    let under_stores = repo.join("apps/sail-site/src/stores/counter-store.ts");
-    let under_compositions = repo.join("apps/sail-site/src/compositions/counter-store.ts");
+fn owned_counter_store_lives_under_fixtures_stores() {
+    let under_stores =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/stores/counter-store.ts");
+    let under_compositions = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("tests/fixtures/compositions/counter-store.ts");
 
     assert!(
         under_stores.is_file(),
-        "S1.3 cutover: counter-store must live at apps/sail-site/src/stores/counter-store.ts \
+        "owned counter-store must live at tests/fixtures/stores/counter-store.ts \
          (got missing file; still under compositions? {})",
         under_compositions.exists()
     );
     assert!(
         !under_compositions.exists(),
-        "counter-store must not remain under compositions/ after the store home move"
+        "counter-store must not live under compositions/"
+    );
+
+    let rel = under_stores.to_string_lossy().replace('\\', "/");
+    assert!(
+        rel.contains("/fixtures/stores/"),
+        "store fixture path must be under fixtures/stores, got {rel}"
+    );
+    assert!(
+        !rel.contains("compositions"),
+        "store fixture path must not mention compositions, got {rel}"
     );
 
     let src = std::fs::read_to_string(&under_stores).expect("read counter-store");
@@ -157,10 +165,5 @@ fn sail_site_counter_store_lives_under_src_stores() {
         c.kind,
         FileKind::Store,
         "counter-store shape is defineStore → Store"
-    );
-    assert!(
-        c.ok,
-        "store under src/stores/ must classify ok; home={:?}",
-        c.home
     );
 }

@@ -79,8 +79,7 @@ fn first_party_trees() -> Vec<(&'static str, PathBuf)> {
     let root = workspace_root();
     [
         ("stdlib", compiler_root().join("stdlib")),
-        // Studio is still v2 Style (component lane). Do not walk it as product.
-        ("sail-site", root.join("apps/sail-site")),
+        // Framework + pack trees only. Live apps are not a crate fixture.
         ("packages/components", root.join("packages/components")),
         ("packages/sail", root.join("packages/sail")),
     ]

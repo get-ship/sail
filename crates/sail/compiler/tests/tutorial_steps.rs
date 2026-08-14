@@ -1,91 +1,60 @@
-//! Compile-check every SAIL tutorial lesson — starter AND solved.
+//! Compile-check owned tutorial lesson fixtures as components.
 //!
-//! The tutorial is the first code a newcomer touches after the
-//! Introduction. A lesson that does not compile teaches the reader that
-//! they made the mistake, so every `.sail` under
-//! `apps/sail-site/content/tutorial/lessons/` is built here as a component,
-//! the same way the tutorial's README tells a reader to build it:
+//! Lessons the compiler test tree owns live under
+//! `tests/fixtures/tutorial/`. Each `.sail` is built the same way a
+//! reader is told to build a lesson:
 //!
 //! ```text
 //! sail-compiler build --mode component <lesson>.sail
 //! ```
 //!
-//! This test discovers lessons from disk rather than naming them, so a
-//! new lesson is covered the moment it lands.
-//!
-//! The ONE deliberate exception is
-//! `08-the-compiler-talks-back/starter/`, which fails the build by
-//! design — lesson 08 teaches the run/read/fix loop against its four
-//! planted defects. That file is asserted to FAIL, and to fail with the
-//! diagnostics the prose quotes; if the compiler's error text moves, the
-//! prose in `apps/sail-site/content/tutorial/prose/08-the-compiler-talks-back.md`
-//! must be refreshed with it.
-//!
-//! History: this file previously pointed at
-//! `packages/sail/tutorial/src/lessons` (and before that
-//! `apps/site/tutorial-examples/<step>/<variant>/template.sail`). Those
-//! trees are gone; lessons live under the site content tree. Discovery
-//! from disk plus a non-empty assertion keeps the suite from passing
-//! vacuously if the path moves again.
+//! Discovery is from disk rather than a name list, so a new fixture is
+//! covered the moment it lands. A non-empty assertion keeps the suite
+//! from passing vacuously if the path moves.
 
 use std::fs;
 use std::path::{Path, PathBuf};
 
 use sail_compiler::{CompileMode, CompileOpts, ComponentMeta, Policy, compile};
 
-/// The lesson that is supposed to fail, as `<lesson-dir>/<variant>`.
-const EXPECTED_FAILING: &str = "08-the-compiler-talks-back/starter";
-
 fn lessons_root() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR"))
-        .parent()
-        .and_then(Path::parent)
-        .and_then(Path::parent)
-        .expect("workspace root")
-        .join("apps/sail-site/content/tutorial/lessons")
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/tutorial")
 }
 
-/// Every lesson `.sail`, as (relative id, absolute path), sorted.
+/// Every owned lesson `.sail`, as (relative id, absolute path), sorted.
 fn lesson_files() -> Vec<(String, PathBuf)> {
     let root = lessons_root();
     let mut out = Vec::new();
-    let mut lessons: Vec<_> = fs::read_dir(&root)
-        .unwrap_or_else(|e| panic!("tutorial lessons dir {}: {e}", root.display()))
-        .flatten()
-        .map(|e| e.path())
-        .filter(|p| p.is_dir())
-        .collect();
-    lessons.sort();
-    for lesson in lessons {
-        for variant in ["starter", "solved"] {
-            let dir = lesson.join(variant);
-            let Ok(entries) = fs::read_dir(&dir) else {
-                continue;
-            };
-            let mut files: Vec<_> = entries
-                .flatten()
-                .map(|e| e.path())
-                .filter(|p| p.extension().is_some_and(|x| x == "sail"))
-                .collect();
-            files.sort();
-            for f in files {
-                let id = format!(
-                    "{}/{variant}",
-                    lesson.file_name().unwrap_or_default().to_string_lossy()
-                );
-                out.push((id, f));
-            }
-        }
-    }
+    collect_sail(&root, &root, &mut out);
+    out.sort_by(|a, b| a.0.cmp(&b.0));
     out
 }
 
-/// Build one lesson the way the tutorial's README tells a reader to:
+fn collect_sail(dir: &Path, root: &Path, out: &mut Vec<(String, PathBuf)>) {
+    let entries = fs::read_dir(dir)
+        .unwrap_or_else(|e| panic!("tutorial fixtures dir {}: {e}", dir.display()));
+    for entry in entries {
+        let path = entry.expect("dirent").path();
+        if path.is_dir() {
+            collect_sail(&path, root, out);
+        } else if path.extension().is_some_and(|x| x == "sail") {
+            let id = path
+                .strip_prefix(root)
+                .unwrap_or(&path)
+                .with_extension("")
+                .to_string_lossy()
+                .replace('\\', "/");
+            out.push((id, path));
+        }
+    }
+}
+
+/// Build one lesson the way the tutorial tells a reader to:
 /// `sail-compiler build --mode component <lesson>.sail`.
 ///
 /// `component_meta` is the load-bearing field — `compile()` treats a source
 /// as a component only when it is set, so passing `CompileMode::Component`
-/// alone would leave the lessons compiled as ROUTES, and the ones that
+/// alone would leave lessons compiled as ROUTES, and the ones that
 /// declare `props:` would fail on a rule that does not apply to them. The
 /// CLI derives the name from the file stem; so do we.
 fn build(path: &Path) -> Result<(), String> {
@@ -105,23 +74,18 @@ fn build(path: &Path) -> Result<(), String> {
 }
 
 #[test]
-fn every_lesson_compiles() {
+fn every_owned_lesson_compiles() {
     let files = lesson_files();
     assert!(
-        files.len() >= 18,
-        "expected at least 18 lesson templates (9 lessons x starter+solved), found {} under {} — \
-         the tutorial lessons moved or discovery broke, and this suite would otherwise pass vacuously",
-        files.len(),
+        !files.is_empty(),
+        "expected owned tutorial fixtures under {} — discovery broke, and this \
+         suite would otherwise pass vacuously",
         lessons_root().display(),
     );
 
     let mut failures = Vec::new();
     for (id, path) in &files {
-        let result = build(path);
-        if id == EXPECTED_FAILING {
-            continue; // asserted separately, below
-        }
-        if let Err(e) = result {
+        if let Err(e) = build(path) {
             failures.push(format!(
                 "  {id} ({}):\n    {e}",
                 path.file_name().unwrap_or_default().to_string_lossy()
@@ -131,34 +95,8 @@ fn every_lesson_compiles() {
 
     assert!(
         failures.is_empty(),
-        "{} tutorial lesson template(s) do not compile — a reader following the \
-         tutorial hits this error and assumes it is their fault:\n{}",
+        "{} owned tutorial fixture(s) do not compile:\n{}",
         failures.len(),
         failures.join("\n"),
-    );
-}
-
-#[test]
-fn lesson_08_starter_fails_by_design() {
-    let (_, path) = lesson_files()
-        .into_iter()
-        .find(|(id, _)| id == EXPECTED_FAILING)
-        .unwrap_or_else(|| panic!("{EXPECTED_FAILING} not found — lesson 08 is the compiler-loop lesson and its starter must exist"));
-
-    let err = build(&path).expect_err(
-        "08-the-compiler-talks-back/starter is supposed to FAIL the build — it carries four \
-         planted defects and lesson 08's prose walks the reader through fixing them. If it now \
-         compiles, the defects were fixed by mistake and the lesson has no exercise.",
-    );
-
-    // The prose quotes the first rejection verbatim. Keep them in step.
-    // Style paint errors are hard compile errors and surface before later
-    // expression/motion checks — pad(12px) is the planted first defect.
-    assert!(
-        (err.contains("pad(12px)") || err.contains("pad:all(12px)"))
-            && err.contains("not a token on this setter's scale"),
-        "lesson 08's first rejection changed shape. The prose in \
-         apps/sail-site/content/tutorial/prose/08-the-compiler-talks-back.md quotes it verbatim \
-         and must be refreshed. Got:\n{err}",
     );
 }

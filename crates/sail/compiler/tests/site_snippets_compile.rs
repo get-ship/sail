@@ -1,16 +1,17 @@
-//! Every SAIL snippet on the website must compile.
+//! Owned SAIL snippets must compile.
 //!
-//! Docs code that does not compile is worse than no docs: the reader assumes they
-//! made the mistake. Snippets live in `apps/sail-site/routes/**/snippets.ts` as
-//! backtick strings; the ones that are SAIL get compiled.
+//! Docs-shaped code that does not compile is worse than no docs: the
+//! reader assumes they made the mistake. Snippets live in
+//! `tests/fixtures/snippets/**/snippets.ts` as backtick strings; the
+//! ones that are SAIL get compiled.
 
 use std::fs;
 use std::path::{Path, PathBuf};
 
 use sail_compiler::{CompileMode, CompileOpts, compile};
 
-fn site_routes() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../apps/sail-site/routes")
+fn snippets_root() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/snippets")
 }
 
 fn snippet_files(dir: &Path, out: &mut Vec<PathBuf>) {
@@ -124,19 +125,21 @@ fn is_sail(s: &str) -> bool {
 }
 
 #[test]
-fn every_sail_snippet_on_the_site_compiles() {
-    let routes = site_routes();
-    if !routes.exists() {
-        return; // the site is not checked out beside the compiler
-    }
+fn owned_sail_snippets_compile() {
+    let root = snippets_root();
+    assert!(
+        root.is_dir(),
+        "owned snippet fixtures missing: {}",
+        root.display()
+    );
 
     let mut files = Vec::new();
-    snippet_files(&routes, &mut files);
+    snippet_files(&root, &mut files);
     assert!(
         !files.is_empty(),
         "found no snippets.ts under {} — a guard that silently checks nothing is \
          worse than no guard",
-        routes.display()
+        root.display()
     );
 
     let mut checked = 0usize;
@@ -148,7 +151,7 @@ fn every_sail_snippet_on_the_site_compiles() {
         };
         let route = f
             .parent()
-            .and_then(|p| p.strip_prefix(&routes).ok())
+            .and_then(|p| p.strip_prefix(&root).ok())
             .map(|p| p.display().to_string())
             .unwrap_or_default();
 
@@ -184,7 +187,7 @@ fn every_sail_snippet_on_the_site_compiles() {
 
     assert!(
         broken.is_empty(),
-        "{} of {checked} SAIL snippets on the website do not compile:\n\n{}",
+        "{} of {checked} owned SAIL snippets do not compile:\n\n{}",
         broken.len(),
         broken.join("\n")
     );
@@ -192,23 +195,23 @@ fn every_sail_snippet_on_the_site_compiles() {
 
 /// EVERY snippets.ts must PARSE.
 ///
-/// Twice now a backtick inside a template literal — ``…at least `min` as fit…`` —
-/// silently closed the string, turning the rest of the file into garbage. The
-/// snippet compile guard never sees it (the extractor just finds fewer
-/// literals), so it surfaces at BUNDLE time as a wall of oxc noise, minutes
-/// later, with the dev server dead.
+/// A backtick inside a template literal silently closes the string,
+/// turning the rest of the file into garbage. The snippet compile guard
+/// never sees it (the extractor just finds fewer literals).
 ///
 /// A balanced-backtick check is not enough (an escaped \` is legal), so this
 /// asks the question that actually matters: does the file's template-literal
 /// structure make sense? An odd number of unescaped backticks cannot.
 #[test]
-fn every_snippets_file_has_balanced_template_literals() {
-    let routes = site_routes();
-    if !routes.exists() {
-        return;
-    }
+fn owned_snippets_files_have_balanced_template_literals() {
+    let root = snippets_root();
+    assert!(
+        root.is_dir(),
+        "owned snippet fixtures missing: {}",
+        root.display()
+    );
     let mut files = Vec::new();
-    snippet_files(&routes, &mut files);
+    snippet_files(&root, &mut files);
 
     let mut broken = Vec::new();
     for f in &files {
@@ -236,8 +239,7 @@ fn every_snippets_file_has_balanced_template_literals() {
     }
     assert!(
         broken.is_empty(),
-        "a backtick inside a template literal closes it. The build dies at BUNDLE time \
-         with an unreadable parser error, minutes after you typed it:\n\n{}",
+        "a backtick inside a template literal closes it:\n\n{}",
         broken.join("\n")
     );
 }

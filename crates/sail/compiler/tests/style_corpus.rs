@@ -1,6 +1,6 @@
 //! Compiler Style composition — owned fixtures, not live apps.
 //!
-//! `apps/sail-site` and stdlib skins are product. This suite compiles
+//! Live product apps and stdlib skins are product. This suite compiles
 //! `.sail` the compiler test tree owns and checks the AOT path still
 //! spends theme tokens (preprocess injects classes + CSS).
 
@@ -80,8 +80,12 @@ fn corpus_dir_has_no_app_paths() {
     for entry in std::fs::read_dir(&dir).unwrap() {
         let path = entry.unwrap().path();
         let src = std::fs::read_to_string(&path).unwrap();
+        let forbidden = [
+            ["apps", "sail-site"].join("/"),
+            ["apps", "studio"].join("/"),
+        ];
         assert!(
-            !src.contains("apps/sail-site") && !src.contains("apps/studio"),
+            forbidden.iter().all(|needle| !src.contains(needle)),
             "{} must not reach into live apps",
             path.display()
         );

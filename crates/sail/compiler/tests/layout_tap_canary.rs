@@ -29,12 +29,12 @@ fn corpus_canary_sub_min_tap_target_writes_json_and_is_deterministic() {
     );
 
     assert!(
-        first.counts.files_discovered >= 150,
-        "must discover the real corpus: {:?}",
+        first.counts.files_discovered >= 80,
+        "must discover the real framework corpus: {:?}",
         first.counts
     );
     assert!(
-        first.counts.files_scanned >= 150,
+        first.counts.files_scanned >= 80,
         "must scan the real corpus: {:?}",
         first.counts
     );

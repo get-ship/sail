@@ -34,8 +34,8 @@ const SKIP_DIRS: &[&str] = &[
 const UNTRIAGED_NOTE: &str = "not triaged";
 
 /// Tree names the corpus walk must actually visit.
-/// Studio is still v2 Style — do not walk it as product.
-pub const TREE_NAMES: &[&str] = &["sail-site", "components"];
+/// Framework / pack trees only — live apps are not a crate fixture.
+pub const TREE_NAMES: &[&str] = &["stdlib", "components", "sail-packages"];
 
 #[derive(Debug, Clone, Copy)]
 struct TreeSpec {
@@ -45,16 +45,16 @@ struct TreeSpec {
 
 const TREES: &[TreeSpec] = &[
     TreeSpec {
-        name: "sail-site",
-        rel: "apps/sail-site/routes",
-    },
-    TreeSpec {
-        name: "sail-site",
-        rel: "apps/sail-site/src",
+        name: "stdlib",
+        rel: "crates/sail/compiler/stdlib",
     },
     TreeSpec {
         name: "components",
         rel: "packages/components",
+    },
+    TreeSpec {
+        name: "sail-packages",
+        rel: "packages/sail",
     },
 ];
 
@@ -114,7 +114,7 @@ pub struct Perf {
     pub total_wall_ms: u64,
     pub preprocess_ms: u64,
     pub layout_ms: u64,
-    pub sail_site_layout_ms: u64,
+    pub stdlib_layout_ms: u64,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -194,7 +194,7 @@ pub fn scan_kind(workspace: &Path, kind: &'static str) -> anyhow::Result<CorpusR
     let mut findings = Vec::new();
     let mut preprocess_ms = 0u64;
     let mut layout_ms = 0u64;
-    let mut sail_site_layout_ms = 0u64;
+    let mut stdlib_layout_ms = 0u64;
 
     for file in &files {
         let tree = trees.entry(file.tree.to_string()).or_default();
@@ -240,8 +240,8 @@ pub fn scan_kind(workspace: &Path, kind: &'static str) -> anyhow::Result<CorpusR
         );
         layout_ms += scan.layout_ms;
         tree.layout_ms += scan.layout_ms;
-        if file.tree == "sail-site" {
-            sail_site_layout_ms += scan.layout_ms;
+        if file.tree == "stdlib" {
+            stdlib_layout_ms += scan.layout_ms;
         }
 
         if scan.viewports_ok == 0 {
@@ -315,7 +315,7 @@ pub fn scan_kind(workspace: &Path, kind: &'static str) -> anyhow::Result<CorpusR
             total_wall_ms: wall.elapsed().as_millis() as u64,
             preprocess_ms,
             layout_ms,
-            sail_site_layout_ms,
+            stdlib_layout_ms,
         },
         determinism: None,
         errors,
@@ -516,7 +516,7 @@ fn discover_files(workspace: &Path) -> anyhow::Result<Vec<Discovered>> {
             continue;
         }
         let mut files = Vec::new();
-        walk_sail(&root, &mut files);
+        walk_sail(&root, spec.name, &mut files);
         for path in files {
             let rel = path
                 .strip_prefix(workspace)
@@ -538,7 +538,20 @@ fn discover_files(workspace: &Path) -> anyhow::Result<Vec<Discovered>> {
     Ok(out)
 }
 
-fn walk_sail(dir: &Path, out: &mut Vec<PathBuf>) {
+fn skip_walk_dir(name: &str, tree: &str) -> bool {
+    if !SKIP_DIRS.contains(&name) {
+        return false;
+    }
+    // Framework pack `.sail` lives under `test/` and `fixtures/`. Those
+    // names stay skipped for compiler-owned fixture trees so we do not
+    // add `tests/fixtures` as a TREE without opting in.
+    if tree == "sail-packages" && matches!(name, "fixtures" | "test") {
+        return false;
+    }
+    true
+}
+
+fn walk_sail(dir: &Path, tree: &str, out: &mut Vec<PathBuf>) {
     let entries = match fs::read_dir(dir) {
         Ok(e) => e,
         Err(_) => return,
@@ -547,11 +560,11 @@ fn walk_sail(dir: &Path, out: &mut Vec<PathBuf>) {
         let path = entry.path();
         if path.is_dir() {
             if let Some(name) = path.file_name().and_then(|s| s.to_str()) {
-                if SKIP_DIRS.contains(&name) {
+                if skip_walk_dir(name, tree) {
                     continue;
                 }
             }
-            walk_sail(&path, out);
+            walk_sail(&path, tree, out);
         } else if path
             .extension()
             .and_then(|e| e.to_str())
