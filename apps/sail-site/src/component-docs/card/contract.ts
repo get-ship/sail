@@ -2,7 +2,8 @@ import type { SurfaceContract } from '../contract-types'
 
 /**
  * Surface contract for card — axes from prop-registry only.
- * NO invent soft/elevated/ghost variants.
+ * Variants: default | outline | soft | elevated | ghost (SPEC-L1-PASS-1).
+ * fill is an alias of soft. spotlight/image still open.
  */
 export const contract = {
   slug: 'card',
@@ -23,7 +24,7 @@ export const contract = {
       control: 'swatches',
     },
     variant: {
-      values: ['default', 'outline'] as const,
+      values: ['default', 'outline', 'soft', 'elevated', 'ghost'] as const,
       default: 'default',
       control: 'select',
     },

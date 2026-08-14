@@ -8,16 +8,20 @@
 <scope>
   props: {
     tone: 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted'
-    variant: 'default' | 'outline' = 'default'
+    variant: 'default' | 'outline' | 'soft' | 'elevated' | 'ghost' = 'default'
     padding: 'md' | 'none' | 'sm' | 'lg' = 'md'
     interactive = false
     'accent-bar': 'off' | 'hover' | 'static' = 'off'
     'status-rail' = false
+    // Alias of variant=soft — kept so existing markup does not break.
     fill = false
   }
 
-  style base = {position(relative).overflow({ all: clip }).pad({ y: 4, x: 5 }).isolate().radius(lg).border({ color: border, width: 1 }).fg(card).elevation({ shadow: card-rest }).bg(card).filter({ backdrop: card-backdrop-filter }), animate: { transition: play(colors, fast) }}
+  style base = {position(relative).overflow({ all: clip }).pad({ y: 4, x: 5 }).isolate().radius(lg).border({ color: border, width: 1 }).fg(card-foreground).elevation({ shadow: card-rest }).bg(card).filter({ backdrop: card-backdrop-filter }), animate: { transition: play(colors, fast) }}
   style outline = {bg(transparent)}
+  style soft = {bg(muted).border({ color: border })}
+  style elevated = {elevation({ shadow: lg }).border({ color: border-subtle })}
+  style ghost = {bg(transparent).border({ color: transparent }).elevation({ shadow: none })}
   style padMd = {pad({ y: 4, x: 5 })}
   style padNone = {pad(0)}
   style padSm = {pad({ y: 2, x: 3 })}
@@ -39,10 +43,10 @@
 </scope>
 
 <div
-  style(base, {match: {variant: {default: bg(card), outline: outline}, padding: { md: padMd, none: padNone, sm: padSm, lg: padLg }}, compound: [
+  style(base, {match: {variant: {default: bg(card), outline: outline, soft: soft, elevated: elevated, ghost: ghost}, padding: { md: padMd, none: padNone, sm: padSm, lg: padLg }}, compound: [
       {tone: *, border({ color: tone })},
       {interactive: true, cursor(pointer).tapHighlight(none), when: {hover: border({ color: border-strong }).elevation({ shadow: hover }).translateY(-px), active: elevation({ shadow: card-rest }).translateY(0).duration(instant), motion-reduce: translateY(0), focus: border({ width: 2, kind: outline }), forced-colors: {when: {focus: border({ color: CanvasText, kind: outline })}}}},
-      {fill: true, bg(muted).border({ color: border })},
+      {fill: true, soft},
       {tone: muted, border({ color: border })},
       {status-rail: true, pad({ s: 4 }).border({ color: border-strong, width: 3, edge: s })},
       // padS tracks named padding tokens (not continuous) — keep as compounds.

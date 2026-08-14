@@ -20,7 +20,7 @@
   }
 
   // Rest: input / foreground / border (shared with input/textarea).
-  style base = {display(block).size({ min-h: control-h-md, w: full }).pad({ y: 1_5, s: 3, e: 8 }).fg(foreground).bg(input).border({ color: border, width: 1 }).radius(md).elevation(xs).cursor(pointer).type({ size: base }), when: {hover: border({ color: border-strong }), disabled: cursor(not-allowed).filter({ opacity: 50 })}}
+  style base = {display(block).size({ min-h: control-h-md }).pad({ y: 1_5, s: 3, e: 8 }).fg(foreground).bg(input).border({ color: border, width: 1 }).radius(md).elevation(xs).cursor(pointer).type({ size: base }), when: {hover: border({ color: border-strong }), disabled: cursor(not-allowed).filter({ opacity: 50 })}}
   style sizeXs = {size({ min-h: control-h-2xs }).pad({ s: 2 }).type({ size: xs })}
   style sizeSm = {size({ min-h: control-h-sm }).pad({ s: 2_5 }).type({ size: sm })}
   style sizeMd = {size({ min-h: control-h-md }).pad({ s: 3 }).type({ size: base })}

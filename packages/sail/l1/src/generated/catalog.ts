@@ -230,7 +230,7 @@ export const TAGS: readonly L1Tag[] = [
     acceptsChildren: true,
     props: [
       { name: 'tone', type: 'primary | info | success | warning | destructive | accent | muted', values: ['primary', 'info', 'success', 'warning', 'destructive', 'accent', 'muted'] },
-      { name: 'variant', type: 'default | outline', default: 'default', values: ['default', 'outline'] },
+      { name: 'variant', type: 'default | outline | soft | elevated | ghost', default: 'default', values: ['default', 'outline', 'soft', 'elevated', 'ghost'] },
       { name: 'padding', type: 'md | none | sm | lg', default: 'md', values: ['md', 'none', 'sm', 'lg'] },
       { name: 'interactive', type: 'bool', default: 'false' },
       { name: 'accent-bar', type: 'off | hover | static', default: 'off', values: ['off', 'hover', 'static'] },
@@ -244,7 +244,7 @@ export const TAGS: readonly L1Tag[] = [
       { name: 'padding', values: ['md', 'none', 'sm', 'lg'], optional: false },
       { name: 'status-rail', values: ['false', 'true'], optional: false },
       { name: 'tone', values: ['primary', 'info', 'success', 'warning', 'destructive', 'accent', 'muted'], optional: true },
-      { name: 'variant', values: ['default', 'outline'], optional: false },
+      { name: 'variant', values: ['default', 'outline', 'soft', 'elevated', 'ghost'], optional: false },
     ],
     concerns: ['bg', 'border', 'elevation', 'fg', 'filter', 'play', 'position', 'size', 'type'],
   },

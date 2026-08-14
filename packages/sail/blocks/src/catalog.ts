@@ -26,14 +26,14 @@ export const BLOCKS: readonly BlockEntry[] = [
     id: 'pricing',
     title: 'Pricing',
     intent: 'Three-tier cards, default measure, no per-card paint.',
-    status: 'planned',
+    status: 'authored',
     primitives: ['card', 'button', 'badge', 'separator'],
   },
   {
     id: 'settings',
     title: 'Settings',
     intent: 'Fieldset groups, fields, switches. Form defaults must hold.',
-    status: 'planned',
+    status: 'authored',
     primitives: ['fieldset', 'field', 'input', 'switch', 'button'],
   },
   {
