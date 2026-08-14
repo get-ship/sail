@@ -39,9 +39,9 @@ export async function loadLanguage(lang: string): Promise<Extension> {
       const { markdown } = await import('@codemirror/lang-markdown')
       return markdown()
     }
-    // SAIL is HTML-shaped (tags, attributes, {expr} + {#directives}); base the
-    // highlighting on the HTML mode so tags/attributes/text are colored,
-    // then layer the SAIL directive + interpolation overlay on top.
+    // SAIL is HTML-shaped (tags, attributes, `{expr}` interpolations);
+    // base highlighting on HTML mode, then layer the SAIL interpolation
+    // + live directive-prefix overlay on top.
     case 'sail': {
       const { html: htmlLang } = await import('@codemirror/lang-html')
       return [htmlLang(), sailHighlight]
