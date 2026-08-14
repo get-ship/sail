@@ -430,8 +430,12 @@ pub fn build_virtual_ts(sail_source: &str) -> Option<VirtualTs> {
             // Prefer a precise byte map when the only rewrite is `scope.`
             // prefix insertion — so hover on `count` in `{count()}` lands on
             // `count` in `scope.count()`, not on `scope` (segment start).
+            // Style quoting + v3 `...` spreads use their own insertion map
+            // (token/ident offsets stay on the original glyphs).
             let sail_to_virt_rel = if one_to_one {
                 None
+            } else if looks_like_style_expr(&emb.source) {
+                build_style_rewrite_map(&emb.source, &rewritten)
             } else {
                 build_prefix_insertion_map(&emb.source, &rewritten, "scope.")
             };
@@ -514,6 +518,78 @@ fn build_prefix_insertion_map(src: &str, rewritten: &str, prefix: &str) -> Optio
     Some(map)
 }
 
+/// Sail-relative → virtual-relative map for [`quote_style_dsl_for_tsc`].
+///
+/// The Style rewrite is insertion-heavy (`'…'` around tokens, `...` before
+/// v3 concern-call tails) plus two reserved-ident substitutions. A
+/// prefix-only `scope.` map cannot describe that, so hover would fall
+/// back to a proportional guess and land on the inserted `...` / quotes.
+/// This walk treats those as known insertions so `bg` / `hairline` /
+/// `muted-foreground` keep stable ident offsets.
+fn build_style_rewrite_map(src: &str, rewritten: &str) -> Option<Vec<usize>> {
+    const SUBS: &[(&str, &str)] = &[
+        ("focus-visible(", "__sailFocusVisible("),
+        ("break(", "__sailBreak("),
+    ];
+    let sb = src.as_bytes();
+    let rb = rewritten.as_bytes();
+    let mut map = Vec::with_capacity(sb.len());
+    let mut si = 0usize;
+    let mut vi = 0usize;
+    while si < sb.len() {
+        if !src.is_char_boundary(si) {
+            return None;
+        }
+        if vi < rb.len() && !rewritten.is_char_boundary(vi) {
+            return None;
+        }
+        // Spread dots inserted in front of a residual concern ident.
+        if vi + 3 <= rb.len()
+            && &rb[vi..vi + 3] == b"..."
+            && !(si + 3 <= sb.len() && &sb[si..si + 3] == b"...")
+            && rb.get(vi + 3) == Some(&sb[si])
+        {
+            vi += 3;
+            continue;
+        }
+        let mut did_sub = false;
+        for &(old, new) in SUBS {
+            if src[si..].starts_with(old) && rewritten.get(vi..).is_some_and(|r| r.starts_with(new))
+            {
+                let old_len = old.len();
+                let new_len = new.len();
+                for k in 0..old_len {
+                    let rel = if old_len <= 1 {
+                        0
+                    } else {
+                        (k * new_len) / old_len
+                    };
+                    map.push(vi + rel.min(new_len.saturating_sub(1)));
+                    si += 1;
+                }
+                vi += new_len;
+                did_sub = true;
+                break;
+            }
+        }
+        if did_sub {
+            continue;
+        }
+        // Quotes inserted around hyphen / scale / reserved-keyword tokens.
+        if vi < rb.len() && rb[vi] == b'\'' && sb[si] != b'\'' {
+            vi += 1;
+            continue;
+        }
+        if vi >= rb.len() || rb[vi] != sb[si] {
+            return None;
+        }
+        map.push(vi);
+        si += 1;
+        vi += 1;
+    }
+    Some(map)
+}
+
 // ── Style DSL → valid TS (tsc/tsgo surface) ────────────────────────────────
 
 /// Quote Style-DSL bare tokens that are not valid TypeScript identifiers, and
@@ -522,8 +598,17 @@ fn build_prefix_insertion_map(src: &str, rewritten: &str, prefix: &str) -> Optio
 /// Product authors write `fg(muted-foreground)` / `padX(2_5)` / `focus-visible({…})`.
 /// sail-compiler accepts those; pure tsc does not. virtual_ts is the bridge.
 ///
+/// v3 object tails (`{ bg(primary), border({ w: hairline }), compound: […] }`)
+/// are also not valid TypeScript (call expressions in property position).
+/// Those become spreads (`{ ...bg('primary'), ...border({…}) }`) so tsgo can
+/// parse the virtual view. Inserted `...` is mapped by
+/// [`build_style_rewrite_map`] — hover stays on the concern ident, not the
+/// dots. (A rewrite that kept byte offsets by avoiding `...` would still be
+/// a call in property position, so it would not parse.)
+///
 /// Only applied to expressions that look like Style (contain `style(` or free
-/// channel setters / motion) so ordinary template arithmetic stays untouched.
+/// channel setters / motion / v3 concern calls) so ordinary template
+/// arithmetic stays untouched.
 pub(crate) fn quote_style_dsl_for_tsc(src: &str) -> String {
     if !looks_like_style_expr(src) {
         return src.to_string();
@@ -535,7 +620,8 @@ pub(crate) fn quote_style_dsl_for_tsc(src: &str) -> String {
     s = quote_reserved_style_keyword_args(&s);
     // bind(rowY) → bind('rowY') — Style bind probe is a compile-time name.
     s = quote_bind_idents(&s);
-    quote_bare_style_tokens(&s)
+    s = quote_bare_style_tokens(&s);
+    spread_style_object_call_tails(&s)
 }
 
 /// `bind(swatchColor)` → `bind('swatchColor')` for pure tsc.
@@ -605,6 +691,24 @@ fn quote_reserved_style_keyword_args(src: &str) -> String {
     out
 }
 
+/// Live v3 concern / axis heads that appear as free calls (`bg(primary)`).
+/// Word-bounded so `debug(` / `typeof(` do not count as Style.
+const STYLE_V3_CALL_HEADS: &[&str] = &[
+    "bg",
+    "fg",
+    "border",
+    "size",
+    "type",
+    "elevation",
+    "position",
+    "play",
+    "filter",
+    "pad",
+    "margin",
+    "overflow",
+    "radius",
+];
+
 fn looks_like_style_expr(src: &str) -> bool {
     src.contains("style(")
         || src.contains("style.")
@@ -612,7 +716,164 @@ fn looks_like_style_expr(src: &str) -> bool {
         || src.contains("paint:")
         || src.contains("text:")
         || src.contains("animate:")
+        || src.contains("compound:")
         || src.contains(".when(")
+        || contains_style_concern_call(src)
+}
+
+fn contains_style_concern_call(src: &str) -> bool {
+    STYLE_V3_CALL_HEADS
+        .iter()
+        .any(|name| contains_bare_call(src, name))
+}
+
+fn contains_bare_call(src: &str, name: &str) -> bool {
+    let bytes = src.as_bytes();
+    let n = name.as_bytes();
+    if n.len() >= bytes.len() {
+        return false;
+    }
+    let mut i = 0usize;
+    while i + n.len() < bytes.len() {
+        if &bytes[i..i + n.len()] == n && bytes[i + n.len()] == b'(' {
+            let boundary = i == 0
+                || !matches!(
+                    bytes[i - 1] as char,
+                    'a'..='z' | 'A'..='Z' | '0'..='9' | '_' | '$'
+                );
+            if boundary {
+                return true;
+            }
+        }
+        i += 1;
+    }
+    false
+}
+
+/// Rewrite v3 concern-call tails in object-property position into spreads.
+///
+/// `{ bg(primary), border({ w: hairline }) }` is not valid TypeScript
+/// (`bg(…)` is a CallExpression where a property name is required).
+/// `{ ...bg(primary), ...border({ w: hairline }) }` is a valid object
+/// literal and `style(…)` already accepts `SailStyleValue` chains.
+///
+/// Value-position calls stay untouched: `when: { hover: fg(muted) }` and
+/// `compound: [when({ hover: fg(…) })]` are already legal TS syntax.
+fn spread_style_object_call_tails(src: &str) -> String {
+    #[derive(Clone, Copy, PartialEq, Eq)]
+    enum Nest {
+        Object,
+        Other,
+    }
+    let bytes = src.as_bytes();
+    let mut out = String::with_capacity(src.len() + 16);
+    let mut i = 0usize;
+    let mut stack: Vec<Nest> = Vec::new();
+    let mut expect_object_member = false;
+    while i < bytes.len() {
+        let c = bytes[i];
+        // Line comment
+        if c == b'/' && bytes.get(i + 1) == Some(&b'/') {
+            let start = i;
+            i += 2;
+            while i < bytes.len() && bytes[i] != b'\n' {
+                i += 1;
+            }
+            out.push_str(&src[start..i]);
+            continue;
+        }
+        // Block comment
+        if c == b'/' && bytes.get(i + 1) == Some(&b'*') {
+            let start = i;
+            i += 2;
+            while i + 1 < bytes.len() && !(bytes[i] == b'*' && bytes[i + 1] == b'/') {
+                i += 1;
+            }
+            i = (i + 2).min(bytes.len());
+            out.push_str(&src[start..i]);
+            continue;
+        }
+        // String / template literals — copy verbatim (quoted keys stay keys).
+        if c == b'\'' || c == b'"' || c == b'`' {
+            let quote = c;
+            let start = i;
+            i += 1;
+            while i < bytes.len() {
+                if bytes[i] == b'\\' {
+                    i = (i + 2).min(bytes.len());
+                    continue;
+                }
+                if bytes[i] == quote {
+                    i += 1;
+                    break;
+                }
+                i += 1;
+            }
+            out.push_str(&src[start..i]);
+            expect_object_member = false;
+            continue;
+        }
+        if c.is_ascii_whitespace() {
+            out.push(c as char);
+            i += 1;
+            continue;
+        }
+        match c {
+            b'{' => {
+                stack.push(Nest::Object);
+                expect_object_member = true;
+                out.push('{');
+                i += 1;
+            }
+            b'[' | b'(' => {
+                stack.push(Nest::Other);
+                expect_object_member = false;
+                out.push(c as char);
+                i += 1;
+            }
+            b'}' | b']' | b')' => {
+                stack.pop();
+                expect_object_member = false;
+                out.push(c as char);
+                i += 1;
+            }
+            b',' => {
+                expect_object_member = stack.last() == Some(&Nest::Object);
+                out.push(',');
+                i += 1;
+            }
+            b':' => {
+                expect_object_member = false;
+                out.push(':');
+                i += 1;
+            }
+            _ if expect_object_member && (c.is_ascii_alphabetic() || c == b'_' || c == b'$') => {
+                let start = i;
+                i += 1;
+                while i < bytes.len()
+                    && (bytes[i].is_ascii_alphanumeric() || bytes[i] == b'_' || bytes[i] == b'$')
+                {
+                    i += 1;
+                }
+                let ident = &src[start..i];
+                let mut j = i;
+                while j < bytes.len() && bytes[j].is_ascii_whitespace() {
+                    j += 1;
+                }
+                if bytes.get(j) == Some(&b'(') {
+                    out.push_str("...");
+                }
+                out.push_str(ident);
+                expect_object_member = false;
+            }
+            _ => {
+                expect_object_member = false;
+                out.push(c as char);
+                i += 1;
+            }
+        }
+    }
+    out
 }
 
 /// Outside strings/comments, quote:
@@ -1742,6 +2003,198 @@ export default controller((ctx) => ({ count: signal(0) }))
             "brace-only channel body leak:\n{}",
             v.view_text
         );
+    }
+
+    #[test]
+    fn looks_like_style_expr_recognizes_v3_not_only_v2_channels() {
+        assert!(looks_like_style_expr(
+            "{ bg(primary), compound: [when({ hover: fg(muted) })] }"
+        ));
+        assert!(looks_like_style_expr(
+            "{ border({ w: hairline }), compound: [] }"
+        ));
+        assert!(looks_like_style_expr("pad({ x: 2 })"));
+        assert!(looks_like_style_expr("size(full)"));
+        assert!(looks_like_style_expr("type({ size: sm })"));
+        assert!(looks_like_style_expr("fg(muted-foreground)"));
+        // v2 channel keys still count (studio mixed era).
+        assert!(looks_like_style_expr("{ box: pad(4), paint: bg(primary) }"));
+        let v2 = quote_style_dsl_for_tsc("style({ box: pad(4), paint: bg(primary) })");
+        assert!(
+            !v2.contains("..."),
+            "v2 key:value channels must not grow spreads: {v2}"
+        );
+        // Ordinary template arithmetic / scope calls stay out.
+        assert!(!looks_like_style_expr("count() + 1"));
+        assert!(!looks_like_style_expr("debug()"));
+        assert!(!looks_like_style_expr("typeof x"));
+    }
+
+    #[test]
+    fn style_v3_compound_and_nested_concern_is_valid_ts_shape() {
+        // Local fixture — do not walk studio (still mixed v2/v3) as product.
+        let src = r#"
+<div style({ bg(primary), border({ w: hairline, color: border }), compound: [when({ hover: fg(muted-foreground) })] })>x</div>
+"#;
+        let v = build_virtual_ts(src).expect("virtual");
+        assert!(
+            v.view_text.contains("style({") && v.view_text.contains("compound:"),
+            "full style spine (style({{…}}) + compound:) required, got:\n{}",
+            v.view_text
+        );
+        assert!(
+            !v.view_text.contains("void (() => ({ bg(")
+                && !v.view_text.contains("void (() => ({ border("),
+            "brace-only leak of the style({{ head:\n{}",
+            v.view_text
+        );
+        let spine = quote_style_dsl_for_tsc(
+            "style({ bg(primary), border({ w: hairline, color: border }), compound: [when({ hover: fg(muted-foreground) })] })",
+        );
+        assert!(
+            spine.contains("style({"),
+            "rewrite must keep the style({{ head: {spine}"
+        );
+        assert!(
+            spine.contains("...bg(primary)") && spine.contains("...border({"),
+            "v3 concern-call tails must spread so tsgo can parse, got: {spine}"
+        );
+        assert!(
+            spine.contains("'muted-foreground'"),
+            "hyphen tokens must be quoted for tsc, got: {spine}"
+        );
+        assert!(
+            spine.contains("hover: fg('muted-foreground')"),
+            "fg() in a when-body is a value, not a property: {spine}"
+        );
+        assert!(
+            !spine.contains("...fg("),
+            "must not spread value-position concern calls: {spine}"
+        );
+        assert!(
+            !has_bare_object_call_property(&spine),
+            "still has call-as-property (not valid TS): {spine}"
+        );
+        assert!(
+            v.view_text.contains("...bg(") && v.view_text.contains("...border("),
+            "virtual view must carry the spread rewrite, got:\n{}",
+            v.view_text
+        );
+        assert!(
+            v.view_text.contains("'muted-foreground'"),
+            "virtual view must quote hyphen tokens, got:\n{}",
+            v.view_text
+        );
+    }
+
+    #[test]
+    fn v3_style_spread_keeps_concern_ident_hover() {
+        let src = r#"<div style({ bg(primary), border({ w: hairline, color: border }) })>x</div>"#;
+        let v = build_virtual_ts(src).expect("virtual");
+        let bg_at = src.find("bg(primary)").unwrap();
+        let (file, virt) = v.sail_to_virtual(bg_at).expect("map bg");
+        assert_eq!(file, VirtualFile::View);
+        assert!(
+            v.view_text[virt..].starts_with("bg"),
+            "hover on bg must land on bg, not the inserted '...'; virtual@{}: {:?}",
+            virt,
+            &v.view_text[virt.saturating_sub(4)..(virt + 10).min(v.view_text.len())]
+        );
+        let back = v.virtual_to_sail(file, virt).expect("back");
+        assert_eq!(back, bg_at);
+        let token_at = src.find("hairline").unwrap();
+        let (_, virt2) = v.sail_to_virtual(token_at).expect("map hairline");
+        assert!(
+            v.view_text[virt2..].starts_with("hairline"),
+            "nested concern-object token must stay aligned; virtual@{}: {:?}",
+            virt2,
+            &v.view_text[virt2.saturating_sub(2)..(virt2 + 10).min(v.view_text.len())]
+        );
+    }
+
+    /// True when an object member is a bare `ident(` (invalid TS property).
+    fn has_bare_object_call_property(src: &str) -> bool {
+        #[derive(Clone, Copy, PartialEq, Eq)]
+        enum Nest {
+            Object,
+            Other,
+        }
+        let bytes = src.as_bytes();
+        let mut i = 0usize;
+        let mut stack: Vec<Nest> = Vec::new();
+        let mut expect_member = false;
+        while i < bytes.len() {
+            let c = bytes[i];
+            if c == b'\'' || c == b'"' || c == b'`' {
+                let q = c;
+                i += 1;
+                while i < bytes.len() {
+                    if bytes[i] == b'\\' {
+                        i = (i + 2).min(bytes.len());
+                        continue;
+                    }
+                    if bytes[i] == q {
+                        i += 1;
+                        break;
+                    }
+                    i += 1;
+                }
+                expect_member = false;
+                continue;
+            }
+            if c.is_ascii_whitespace() {
+                i += 1;
+                continue;
+            }
+            match c {
+                b'{' => {
+                    stack.push(Nest::Object);
+                    expect_member = true;
+                    i += 1;
+                }
+                b'[' | b'(' => {
+                    stack.push(Nest::Other);
+                    expect_member = false;
+                    i += 1;
+                }
+                b'}' | b']' | b')' => {
+                    stack.pop();
+                    expect_member = false;
+                    i += 1;
+                }
+                b',' => {
+                    expect_member = stack.last() == Some(&Nest::Object);
+                    i += 1;
+                }
+                b':' => {
+                    expect_member = false;
+                    i += 1;
+                }
+                _ if expect_member && (c.is_ascii_alphabetic() || c == b'_' || c == b'$') => {
+                    i += 1;
+                    while i < bytes.len()
+                        && (bytes[i].is_ascii_alphanumeric()
+                            || bytes[i] == b'_'
+                            || bytes[i] == b'$')
+                    {
+                        i += 1;
+                    }
+                    let mut j = i;
+                    while j < bytes.len() && bytes[j].is_ascii_whitespace() {
+                        j += 1;
+                    }
+                    if bytes.get(j) == Some(&b'(') {
+                        return true;
+                    }
+                    expect_member = false;
+                }
+                _ => {
+                    expect_member = false;
+                    i += 1;
+                }
+            }
+        }
+        false
     }
 
     #[test]
