@@ -950,11 +950,24 @@ pub fn resolve_concern_name(spec: &ConcernSpec, raw: &str) -> Option<&'static Co
         return None;
     }
     let scoped = format!("{concern}.{raw}");
-    if let Some(c) = tokens::find_composite(&scoped).filter(|c| c.r#type == concern) {
+    if let Some(c) = find_typed_composite(concern, &scoped) {
+        return Some(c);
+    }
+    // Registry keys are kebab (`fg-button`); paths are dotted (`fg.button`).
+    if let Some(css) = tokens::path_to_css_name(&scoped) {
+        if let Some(c) = find_typed_composite(concern, css) {
+            return Some(c);
+        }
+    }
+    if let Some(c) = find_typed_composite(concern, &format!("{concern}-{raw}")) {
         return Some(c);
     }
     let component = format!("{raw}.{concern}");
-    tokens::find_composite(&component).filter(|c| c.r#type == concern)
+    find_typed_composite(concern, &component)
+}
+
+fn find_typed_composite(concern: &str, name: &str) -> Option<&'static CompositeToken> {
+    tokens::find_composite(name).filter(|c| c.r#type == concern)
 }
 
 /// True when this op is the concern form (composite token, scale-step name, or slot object).
@@ -2372,6 +2385,31 @@ mod tests {
         );
         let clashes = crate::clash::detect_clashes(&style, &HashMap::new());
         assert!(clashes.is_empty(), "{clashes:?}");
+    }
+
+    #[test]
+    fn fg_button_is_the_named_composite() {
+        let (style, diags) = parse("style({ fg(button) })");
+        assert!(
+            diags.is_empty(),
+            "{:?}",
+            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
+        let (_, css) = crate::emit::lower_style(&style, &HashMap::new());
+        assert!(
+            css.contains("color") || css.contains("button"),
+            "{css}"
+        );
+    }
+
+    #[test]
+    fn bg_surface_is_the_named_composite() {
+        let (style, diags) = parse("style({ bg(surface) })");
+        assert!(
+            diags.is_empty(),
+            "{:?}",
+            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
     }
 
     #[test]

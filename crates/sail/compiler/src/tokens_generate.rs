@@ -149,6 +149,8 @@ const THEME_MODE_GROUP_KEYS: &[&str] = &[
     "size",
     "elevation",
     "type",
+    "bg",
+    "fg",
     "fill",
     "ink",
     "style",
@@ -175,6 +177,8 @@ pub const COMPOSITE_TYPES: &[&str] = &[
     "size",
     "elevation",
     "type",
+    "bg",
+    "fg",
     "fill",
     "ink",
 ];

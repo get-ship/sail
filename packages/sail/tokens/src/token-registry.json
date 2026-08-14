@@ -24,6 +24,10 @@
     "active-strength",
     "backdrop",
     "background",
+    "bg-button-color",
+    "bg-card-color",
+    "bg-muted-color",
+    "bg-surface-color",
     "body-font",
     "body-weight",
     "border",
@@ -85,10 +89,10 @@
     "elevation-sm-shadow",
     "elevation-xl-shadow",
     "elevation-xs-shadow",
-    "fill-button-color",
-    "fill-card-color",
-    "fill-muted-color",
-    "fill-surface-color",
+    "fg-button-color",
+    "fg-card-color",
+    "fg-foreground-color",
+    "fg-muted-color",
     "focus-ring",
     "focus-ring-offset",
     "font-body",
@@ -142,10 +146,6 @@
     "icon-size-xs",
     "info",
     "info-foreground",
-    "ink-button-color",
-    "ink-card-color",
-    "ink-foreground-color",
-    "ink-muted-color",
     "input",
     "knob",
     "label-font",
@@ -400,6 +400,10 @@
     "active-bg",
     "backdrop",
     "background",
+    "bg-button-color",
+    "bg-card-color",
+    "bg-muted-color",
+    "bg-surface-color",
     "border",
     "border-default-color",
     "border-strong",
@@ -411,10 +415,10 @@
     "destructive",
     "destructive-foreground",
     "divider",
-    "fill-button-color",
-    "fill-card-color",
-    "fill-muted-color",
-    "fill-surface-color",
+    "fg-button-color",
+    "fg-card-color",
+    "fg-foreground-color",
+    "fg-muted-color",
     "foreground",
     "hover-bg",
     "hue-amber",
@@ -435,10 +439,6 @@
     "hue-yellow",
     "info",
     "info-foreground",
-    "ink-button-color",
-    "ink-card-color",
-    "ink-foreground-color",
-    "ink-muted-color",
     "input",
     "knob",
     "muted",
@@ -2323,51 +2323,51 @@
       "type": "shadow",
       "value": "none"
     },
-    "fill-surface-color": {
+    "bg-surface-color": {
       "path": "bg.surface.color",
-      "cssName": "fill-surface-color",
+      "cssName": "bg-surface-color",
       "type": "color",
       "value": "var(--surface-1)"
     },
-    "fill-muted-color": {
+    "bg-muted-color": {
       "path": "bg.muted.color",
-      "cssName": "fill-muted-color",
+      "cssName": "bg-muted-color",
       "type": "color",
       "value": "var(--muted)"
     },
-    "fill-card-color": {
+    "bg-card-color": {
       "path": "bg.card.color",
-      "cssName": "fill-card-color",
+      "cssName": "bg-card-color",
       "type": "color",
       "value": "var(--card)"
     },
-    "fill-button-color": {
+    "bg-button-color": {
       "path": "bg.button.color",
-      "cssName": "fill-button-color",
+      "cssName": "bg-button-color",
       "type": "color",
       "value": "var(--background)"
     },
-    "ink-foreground-color": {
+    "fg-foreground-color": {
       "path": "fg.foreground.color",
-      "cssName": "ink-foreground-color",
+      "cssName": "fg-foreground-color",
       "type": "color",
       "value": "var(--foreground)"
     },
-    "ink-muted-color": {
+    "fg-muted-color": {
       "path": "fg.muted.color",
-      "cssName": "ink-muted-color",
+      "cssName": "fg-muted-color",
       "type": "color",
       "value": "var(--muted-foreground)"
     },
-    "ink-card-color": {
+    "fg-card-color": {
       "path": "fg.card.color",
-      "cssName": "ink-card-color",
+      "cssName": "fg-card-color",
       "type": "color",
       "value": "var(--card-foreground)"
     },
-    "ink-button-color": {
+    "fg-button-color": {
       "path": "fg.button.color",
-      "cssName": "ink-button-color",
+      "cssName": "fg-button-color",
       "type": "color",
       "value": "var(--foreground)"
     },
@@ -2766,6 +2766,10 @@
     "interaction.active.strength": "active-strength",
     "color.backdrop": "backdrop",
     "color.background": "background",
+    "bg.button.color": "bg-button-color",
+    "bg.card.color": "bg-card-color",
+    "bg.muted.color": "bg-muted-color",
+    "bg.surface.color": "bg-surface-color",
     "typography.body.font": "body-font",
     "typography.body.weight": "body-weight",
     "color.border.default": "border",
@@ -2827,10 +2831,10 @@
     "elevation.sm.shadow": "elevation-sm-shadow",
     "elevation.xl.shadow": "elevation-xl-shadow",
     "elevation.xs.shadow": "elevation-xs-shadow",
-    "fill.button.color": "fill-button-color",
-    "fill.card.color": "fill-card-color",
-    "fill.muted.color": "fill-muted-color",
-    "fill.surface.color": "fill-surface-color",
+    "fg.button.color": "fg-button-color",
+    "fg.card.color": "fg-card-color",
+    "fg.foreground.color": "fg-foreground-color",
+    "fg.muted.color": "fg-muted-color",
     "interaction.focus.ring": "focus-ring",
     "interaction.focus.ring-offset": "focus-ring-offset",
     "typography.font.body": "font-body",
@@ -2884,10 +2888,6 @@
     "icon.xs": "icon-size-xs",
     "color.info.default": "info",
     "color.info.foreground": "info-foreground",
-    "ink.button.color": "ink-button-color",
-    "ink.card.color": "ink-card-color",
-    "ink.foreground.color": "ink-foreground-color",
-    "ink.muted.color": "ink-muted-color",
     "color.input": "input",
     "color.knob": "knob",
     "typography.label.font": "label-font",
@@ -3325,7 +3325,7 @@
       "cssName": "bg.surface",
       "type": "bg",
       "members": {
-        "color": "fill-surface-color"
+        "color": "bg-surface-color"
       }
     },
     "bg.muted": {
@@ -3333,7 +3333,7 @@
       "cssName": "bg.muted",
       "type": "bg",
       "members": {
-        "color": "fill-muted-color"
+        "color": "bg-muted-color"
       }
     },
     "bg.card": {
@@ -3341,7 +3341,7 @@
       "cssName": "bg.card",
       "type": "bg",
       "members": {
-        "color": "fill-card-color"
+        "color": "bg-card-color"
       }
     },
     "bg.button": {
@@ -3349,7 +3349,7 @@
       "cssName": "bg.button",
       "type": "bg",
       "members": {
-        "color": "fill-button-color"
+        "color": "bg-button-color"
       }
     },
     "fg.foreground": {
@@ -3357,7 +3357,7 @@
       "cssName": "fg.foreground",
       "type": "fg",
       "members": {
-        "color": "ink-foreground-color"
+        "color": "fg-foreground-color"
       }
     },
     "fg.muted": {
@@ -3365,7 +3365,7 @@
       "cssName": "fg.muted",
       "type": "fg",
       "members": {
-        "color": "ink-muted-color"
+        "color": "fg-muted-color"
       }
     },
     "fg.card": {
@@ -3373,7 +3373,7 @@
       "cssName": "fg.card",
       "type": "fg",
       "members": {
-        "color": "ink-card-color"
+        "color": "fg-card-color"
       }
     },
     "fg.button": {
@@ -3381,7 +3381,7 @@
       "cssName": "fg.button",
       "type": "fg",
       "members": {
-        "color": "ink-button-color"
+        "color": "fg-button-color"
       }
     },
     "play.colors": {

@@ -1908,6 +1908,41 @@ mod tests {
     }
 
     #[test]
+    fn button_vsoft_rhs_diags() {
+        let rhs = "{bg(hover-bg).border({ color: border }).fg(button), when: {hover: filter({ opacity: 90 })}}";
+        let (_, diags) = sail_lint::style::parse_style_const_rhs(rhs);
+        assert!(
+            diags.is_empty(),
+            "vSoft RHS: {:?}",
+            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
+    }
+
+    #[test]
+    fn button_stdlib_harvests_variant_styles() {
+        let src = include_str!("../../stdlib/button.sail");
+        let env = style_env_from_source(src);
+        for name in ["base", "vSolid", "vSoft", "vOutline", "vGhost", "vGhostTone"] {
+            assert!(
+                env.contains_key(name),
+                "missing `{name}` in {:?}",
+                env.keys().collect::<Vec<_>>()
+            );
+        }
+        let expr = "style(base, {match: { variant: { ghost: style(vGhost, vGhostTone) } }})";
+        let mut css = String::new();
+        let mut seen = std::collections::HashSet::new();
+        sail_lint::style_ir::lower_sx_string(expr, &env, &mut css, &mut seen).unwrap_or_else(
+            |diags| {
+                panic!(
+                    "button attach failed: {:?}",
+                    diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+                )
+            },
+        );
+    }
+
+    #[test]
     fn style_call_as_scope_statement_is_refused() {
         let e = err("style({ paint: bg(primary) })\nprops: { label = '' }");
         assert!(
