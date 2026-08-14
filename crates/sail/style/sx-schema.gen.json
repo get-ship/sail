@@ -1,6 +1,6 @@
 {
   "version": 0,
-  "form": "string — `prop: value` (structured) or legacy `prop-value` atoms; same IR",
+  "form": "residual detect + token-value helper — not an author surface",
   "properties": [
     {
       "name": "absolute",

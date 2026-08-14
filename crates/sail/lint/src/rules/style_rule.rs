@@ -55,127 +55,6 @@ pub fn vocabulary() -> Vec<(String, Vec<String>)> {
     crate::style_vocab::vocabulary()
 }
 
-/// Split an sx pair into its prefixes and its atom. `hover:bg-surface-2` is one
-/// prefix and one atom; `bg-surface-2` is none and one.
-/// Kept for callers outside the IR path (tests / diagnostics helpers).
-#[allow(dead_code)]
-fn split_prefix(pair: &str) -> (Option<&str>, &str) {
-    match pair.rsplit_once(':') {
-        Some((prefix, atom)) => (Some(prefix), atom),
-        None => (None, pair),
-    }
-}
-
-/// The layout element an sx attribute was TRYING to be.
-///
-/// `flex items-center gap-2 p-4` is one breath of Tailwind muscle memory and three
-/// separate refusals — and the author will write it again on the next element. So it
-/// must produce ONE diagnostic showing the whole replacement, not three rejections.
-/// The boundary the prior fights hardest has to be the place the language teaches
-/// best; a refusal an author has to reassemble by hand is where "puzzle, not toolkit"
-/// comes back.
-#[derive(Default)]
-struct LayoutIntent {
-    tag: Option<&'static str>,
-    inline: bool,
-    nowrap: bool,
-    align: Option<String>,
-    justify: Option<String>,
-    gap: Option<String>,
-    cols: Option<String>,
-    rows: Option<String>,
-    saw_any: bool,
-}
-
-impl LayoutIntent {
-    /// Absorb one refused atom. Returns false if it is not a layout atom (so the
-    /// caller still reports it on its own).
-    fn absorb(&mut self, atom: &str) -> bool {
-        let mut hit = true;
-        match atom {
-            "flex" | "flex-row" => self.tag = Some("row"),
-            "inline-flex" => {
-                self.tag = Some("row");
-                self.inline = true;
-            }
-            "flex-col" => self.tag = Some("column"),
-            "grid" => self.tag = Some("grid"),
-            "inline-grid" => {
-                self.tag = Some("grid");
-                self.inline = true;
-            }
-            // A `<row>` wraps by default (it absorbed `sail-cluster`), so
-            // `flex-wrap`'s intent IS a plain row — absorb it as one.
-            "flex-wrap" => self.tag = Some("row"),
-            // `flex-nowrap` is the single-line row — `<row nowrap>`. Absorb
-            // it into the redirect so the whole Tailwind breath
-            // (`flex nowrap items-center`) becomes one buildable element.
-            "flex-nowrap" => {
-                self.tag = Some("row");
-                self.nowrap = true;
-            }
-            _ => {
-                if let Some(v) = atom.strip_prefix("items-") {
-                    self.align = Some(v.to_string());
-                } else if let Some(v) = atom.strip_prefix("justify-") {
-                    self.justify = Some(v.to_string());
-                } else if let Some(v) = atom.strip_prefix("gap-") {
-                    self.gap = Some(v.to_string());
-                } else if let Some(v) = atom.strip_prefix("grid-cols-") {
-                    self.cols = Some(v.to_string());
-                // `grid-rows-N` is an explicit row count — `<grid rows="N">`.
-                // Absorb it the same way `cols` is.
-                } else if let Some(v) = atom.strip_prefix("grid-rows-") {
-                    self.rows = Some(v.to_string());
-                } else {
-                    hit = false;
-                }
-            }
-        }
-        if hit {
-            self.saw_any = true;
-        }
-        hit
-    }
-
-    /// The element to write instead, with the surviving sx carried over so the author
-    /// can paste it whole rather than reassemble it.
-    fn render(&self, kept: &[&str]) -> String {
-        // No explicit `flex`/`grid`, but `items-`/`gap-` present: the author meant a
-        // row — that is what those props are FOR.
-        let tag = self
-            .tag
-            .unwrap_or(if self.cols.is_some() || self.rows.is_some() {
-                "grid"
-            } else {
-                "row"
-            });
-        let mut el = format!("<{tag}");
-        if self.inline {
-            el.push_str(" inline");
-        }
-        if self.nowrap {
-            el.push_str(" nowrap");
-        }
-        for (name, v) in [
-            ("cols", &self.cols),
-            ("rows", &self.rows),
-            ("gap", &self.gap),
-            ("align", &self.align),
-            ("justify", &self.justify),
-        ] {
-            if let Some(v) = v {
-                el.push_str(&format!(" {name}=\"{v}\""));
-            }
-        }
-        if !kept.is_empty() {
-            el.push_str(&format!(" sx=\"{}\"", kept.join(" ")));
-        }
-        el.push('>');
-        el
-    }
-}
-
 pub fn check(path: &Path, source: &str) -> Vec<Finding> {
     let mut findings = Vec::new();
     for hit in scan_sx(source) {
@@ -225,133 +104,24 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
         };
         let (line, col) = offset_to_line_col(source, offset);
 
-        // Sole Style product path: chain + match/when/compound/bind.
-        // Utility-string sx and other residual forms are hard errors.
-        {
-            let (style, style_diags) = crate::style::parse::parse(val);
-            for d in &style_diags {
-                findings.push(mk(path, line, col, d.message()));
-            }
-            for d in crate::style::clash::detect_clashes(&style, &std::collections::HashMap::new())
-            {
-                findings.push(mk(path, line, col, d.message()));
-            }
-            // Always Style path — do not walk legacy atoms as a second product.
+        // Residual utility-string product is a hard error — not a second language.
+        if crate::style_ir::is_residual_utility_sx(val) {
+            findings.push(mk(
+                path,
+                line,
+                col,
+                "utility-string sx is not the Style product — use style({ box, paint, text, animate, when, match, compound })"
+                    .to_string(),
+            ));
             continue;
         }
 
-        #[allow(unreachable_code)]
-        let (prog, parse_errs) = crate::style_ir::parse_lenient(val);
-        for e in &parse_errs {
-            findings.push(mk(path, line, col, e.message()));
+        let (style, style_diags) = crate::style::parse::parse(val);
+        for d in &style_diags {
+            findings.push(mk(path, line, col, d.message()));
         }
-
-        let mut layout = LayoutIntent::default();
-        let mut kept: Vec<String> = Vec::new();
-        for decl in &prog.decls {
-            let atom = crate::style_ir::decl_atom(decl);
-            if matches!(
-                crate::style_vocab::resolve(&atom),
-                crate::style_vocab::Resolved::Refused { .. }
-            ) {
-                if layout.absorb(&atom) {
-                    continue;
-                }
-            } else {
-                kept.push(decl.source.clone());
-            }
-        }
-        if layout.saw_any {
-            let kept_refs: Vec<&str> = kept.iter().map(String::as_str).collect();
-            findings.push(mk(path, line, col, format!(
-                "sx does not do layout — the parent decides how its children sit. Write:\n\n    {}\n\nA layout element names the axis and closes the vocabulary, which is what stops two \
-                 authors diverging on four flex properties.",
-                layout.render(&kept_refs)
-            )));
-        }
-
-        for decl in &prog.decls {
-            let atom = crate::style_ir::decl_atom(decl);
-            // Layout atoms already reported as one redirect.
-            if matches!(
-                crate::style_vocab::resolve(&atom),
-                crate::style_vocab::Resolved::Refused { .. }
-            ) && LayoutIntent::default().absorb(&atom)
-            {
-                continue;
-            }
-            if let Err(e) = crate::style_ir::validate_decl(decl) {
-                // Enrich BadValue with options when possible.
-                let msg = match &e {
-                    crate::style_ir::SxError::BadValue { prop, value, .. } => {
-                        let atom = crate::style_ir::decl_atom(decl);
-                        match crate::style_vocab::resolve(&atom) {
-                            crate::style_vocab::Resolved::BadValue { name, options } => {
-                                let raw = value
-                                    .chars()
-                                    .next()
-                                    .is_some_and(|c| c.is_ascii_digit() || c == '#')
-                                    || value.ends_with("px")
-                                    || value.ends_with("rem")
-                                    || value.ends_with('%');
-                                let mut m = format!("sx `{atom}` — `{value}` is not a token");
-                                if raw {
-                                    m.push_str(" (a value is a design decision; spend a token)");
-                                }
-                                m.push_str(&format!(". `{name}-` accepts: {}", options.join(", ")));
-                                let opts: Vec<&str> = options.iter().map(String::as_str).collect();
-                                if let Some(s) = nearest(value, &opts) {
-                                    m.push_str(&format!("; did you mean `{name}-{s}`?"));
-                                }
-                                m
-                            }
-                            _ => {
-                                let _ = prop;
-                                if crate::style_ir::looks_like_raw_color(value)
-                                    || crate::style_ir::looks_like_raw_length(value)
-                                {
-                                    crate::style_ir::SxError::RawWithoutEscape {
-                                        value: value.clone(),
-                                        source: decl.source.clone(),
-                                    }
-                                    .message()
-                                } else {
-                                    e.message()
-                                }
-                            }
-                        }
-                    }
-                    crate::style_ir::SxError::UnknownPrefix { prefix, .. } => {
-                        let states: Vec<String> = STATE_PREFIXES
-                            .iter()
-                            .map(|(n, _)| format!("{n}:"))
-                            .collect();
-                        let conditions: Vec<String> = CONDITION_PREFIXES
-                            .iter()
-                            .map(|(n, _)| format!("{n}:"))
-                            .collect();
-                        format!(
-                            "sx unknown prefix `{prefix}:` — the closed set: {}, a condition ({}), \
-                             `state-<value>:` for a component state, or group-<state>: to react \
-                             to an ancestor",
-                            states.join("/"),
-                            conditions.join("/")
-                        )
-                    }
-                    crate::style_ir::SxError::UnknownAtom { atom, .. } => {
-                        let mut m = format!("sx `{atom}` — not in the vocabulary");
-                        let names = crate::style_vocab::names();
-                        let opts: Vec<&str> = names.iter().map(String::as_str).collect();
-                        let head = atom.split('-').next().unwrap_or(atom);
-                        if let Some(s) = nearest(head, &opts) {
-                            m.push_str(&format!("; did you mean `{s}-`?"));
-                        }
-                        m
-                    }
-                    other => other.message(),
-                };
-                findings.push(mk(path, line, col, msg));
-            }
+        for d in crate::style::clash::detect_clashes(&style, &std::collections::HashMap::new()) {
+            findings.push(mk(path, line, col, d.message()));
         }
     }
     findings
@@ -794,34 +564,6 @@ fn offset_to_line_col(source: &str, offset: usize) -> (usize, usize) {
     (line, col)
 }
 
-fn nearest(word: &str, opts: &[&str]) -> Option<String> {
-    opts.iter()
-        .map(|o| (lev(word, o), o.to_string()))
-        .filter(|(d, _)| *d <= 3)
-        .min_by_key(|(d, _)| *d)
-        .map(|(_, o)| o)
-}
-
-fn lev(a: &str, b: &str) -> usize {
-    let a: Vec<char> = a.chars().collect();
-    let b: Vec<char> = b.chars().collect();
-    let mut d: Vec<usize> = (0..=b.len()).collect();
-    for (i, ca) in a.iter().enumerate() {
-        let mut prev = d[0];
-        d[0] = i + 1;
-        for (j, cb) in b.iter().enumerate() {
-            let tmp = d[j + 1];
-            d[j + 1] = if ca == cb {
-                prev
-            } else {
-                1 + prev.min(d[j]).min(d[j + 1])
-            };
-            prev = tmp;
-        }
-    }
-    d[b.len()]
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -849,7 +591,7 @@ mod tests {
 
     #[test]
     fn style_block_channel_product_passes() {
-        let src = r#"<div style({ paint: bg(primary), box: padX(2) })>  x
+        let src = r#"<div style({ paint: bg(primary), box: pad({ x: 2 }) })>  x
 </div>"#;
         assert!(run(src).is_empty(), "{:?}", run(src));
     }
