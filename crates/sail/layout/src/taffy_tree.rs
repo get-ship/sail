@@ -5,7 +5,7 @@
 //! diagnostic stream is full of false-positive "collapsed" warnings.
 
 use crate::html::Element;
-use crate::metrics::{Family, Size as TextSize, table as metrics_table};
+use crate::metrics::{apply_tag_default_types, resolve_family_size, table as metrics_table};
 use crate::style::{ResolvedStyle, Role, Visibility, resolve};
 use anyhow::Result;
 use std::collections::HashMap;
@@ -51,7 +51,8 @@ where
     // SPEC-TOOLING-1 §WI6: every taffy compute is a countable "layout pass".
     crate::record_layout_pass();
 
-    let elements: Vec<Element> = elements.into_iter().collect();
+    let mut elements: Vec<Element> = elements.into_iter().collect();
+    apply_tag_default_types(&mut elements);
 
     let mut taffy: TaffyTree<NodeContext> = TaffyTree::new();
     let mut styles: Vec<ResolvedStyle> = Vec::with_capacity(elements.len());
@@ -166,53 +167,6 @@ where
         viewport,
         unknown_subtree,
     })
-}
-
-/// Resolve the (family, size) for a text leaf by walking:
-///   1. The element's own `font-*` and `text-*` classes.
-///   2. The element's tag — `h1` -> 4xl, `h2` -> 2xl, etc.
-///   3. Ancestors' classes (closest wins).
-///   4. Default body / base.
-fn resolve_family_size(elem_index: usize, all: &[Element]) -> (Family, TextSize) {
-    let mut family: Option<Family> = None;
-    let mut size: Option<TextSize> = None;
-
-    let mut cursor = Some(elem_index);
-    while (family.is_none() || size.is_none()) && cursor.is_some() {
-        let i = cursor.unwrap();
-        let node = &all[i];
-        for c in node.class.split_whitespace() {
-            if family.is_none() {
-                family = crate::metrics::family_from_class(c);
-            }
-            if size.is_none() {
-                size = crate::metrics::size_from_class(c);
-            }
-        }
-        if size.is_none() {
-            size = tag_default_size(&node.tag);
-        }
-        cursor = node.parent;
-    }
-
-    (
-        family.unwrap_or(Family::Body),
-        size.unwrap_or(TextSize::Base),
-    )
-}
-
-fn tag_default_size(tag: &str) -> Option<TextSize> {
-    match tag {
-        "h1" => Some(TextSize::Xxxxl),
-        "h2" => Some(TextSize::Xxl),
-        "h3" => Some(TextSize::Xl),
-        "h4" => Some(TextSize::Lg),
-        "h5" => Some(TextSize::Md),
-        "h6" => Some(TextSize::Sm),
-        "small" => Some(TextSize::Sm),
-        "code" => Some(TextSize::Sm),
-        _ => None,
-    }
 }
 
 /// Compute the measured size of a string of text given a font metric and
@@ -437,6 +391,72 @@ mod tests {
         };
         assert_eq!(measure_text("", m, known, available), Size::ZERO);
         assert_eq!(measure_text("   ", m, known, available), Size::ZERO);
+    }
+
+    #[test]
+    fn style_type_size_token_changes_measure() {
+        let mk = |step: &str| {
+            vec![
+                Element::default(),
+                Element {
+                    tag: "span".to_string(),
+                    type_size: Some(step.to_string()),
+                    text: "Hello".to_string(),
+                    children: vec![],
+                    parent: Some(0),
+                    ..Default::default()
+                },
+            ]
+        };
+        let xl = build(mk("xl"), (1440.0, 900.0)).unwrap();
+        let sm = build(mk("sm"), (1440.0, 900.0)).unwrap();
+        let xl_h = xl.computed(1).unwrap().size.height;
+        let sm_h = sm.computed(1).unwrap().size.height;
+        assert!(
+            xl_h > sm_h,
+            "type size xl ({xl_h}) must measure taller than sm ({sm_h})"
+        );
+    }
+
+    #[test]
+    fn font_size_class_string_does_not_change_measure() {
+        let class_only = vec![
+            Element::default(),
+            Element {
+                tag: "span".to_string(),
+                class: "s-fontSize4xl".to_string(),
+                text: "Hello".to_string(),
+                children: vec![],
+                parent: Some(0),
+                ..Default::default()
+            },
+        ];
+        let base = vec![
+            Element::default(),
+            Element {
+                tag: "span".to_string(),
+                text: "Hello".to_string(),
+                children: vec![],
+                parent: Some(0),
+                ..Default::default()
+            },
+        ];
+        let class_h = build(class_only, (1440.0, 900.0))
+            .unwrap()
+            .computed(1)
+            .unwrap()
+            .size
+            .height;
+        let base_h = build(base, (1440.0, 900.0))
+            .unwrap()
+            .computed(1)
+            .unwrap()
+            .size
+            .height;
+        assert!(
+            (class_h - base_h).abs() < 0.01,
+            "s-fontSize class must not drive measure: class={class_h} base={base_h}"
+        );
     }
 
     #[test]

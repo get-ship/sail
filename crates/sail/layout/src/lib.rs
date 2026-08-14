@@ -13,10 +13,11 @@
 //! ```text
 //!   .sail source
 //!        │
-//!        ├── caller-supplied preprocess  (sx→class, layout→div+class)
+//!        ├── caller-supplied preprocess  (Style IR → classes + TypeHost)
 //!        ▼
 //!   lowered HTML ──► sail_layout::html::parse  ──►  Vec<Element>
 //!        │
+//!        ├── apply_resolved_types (Style tokens + theme tag defaults)
 //!        ├── sail_layout::style::resolve  (class → taffy Style)
 //!        ▼
 //!   taffy::TaffyTree<NodeContext> ──► compute_layout_with_measure
@@ -29,10 +30,11 @@
 //! ## What is measured and what is not
 //!
 //! - **Text leaves.** The parser captures text content onto elements; the
-//!   taffy measure function resolves `font-*` and `text-*` classes (and tag
-//!   defaults) to a baked metrics table generated from the framework's own
-//!   woff2 fonts in `packages/sail/tokens/src/fonts/`. See [`metrics`] for the
-//!   contract and the list of deliberate cuts (kerning, ligatures, BiDi).
+//!   taffy measure function reads Style-resolved type tokens
+//!   ([`Element::type_size`] / [`Element::type_family`]) and looks up the
+//!   baked metrics table generated from the framework's own woff2 fonts in
+//!   `packages/sail/tokens/src/fonts/`. See [`metrics`] for the contract
+//!   and the list of deliberate cuts (kerning, ligatures, BiDi).
 //! - **Custom / replaced elements.** Tags the layout pass cannot size (custom
 //!   elements containing a hyphen, plus replaced elements like `<iframe>` that
 //!   taffy does not model) are marked `unknown_subtree`. Any collapse or
@@ -60,7 +62,10 @@ pub use diagnostics::{
     BoxExtents, BoxReport, Diagnostic, MainAxis, OverflowGeometry, ScanInput, ScanResult, Severity,
 };
 pub use html::{Element, parse_source, source_viewport};
-pub use metrics::{Family, Size as TextSize, table as metrics_table};
+pub use metrics::{
+    Family, Size as TextSize, TypeHost, apply_resolved_types, apply_tag_default_types,
+    table as metrics_table,
+};
 pub use style::ResolvedStyle;
 pub use taffy_tree::Layout;
 
@@ -152,13 +157,20 @@ pub fn check_preprocessed_with(
     viewport: (f32, f32),
     options: CheckOptions,
 ) -> anyhow::Result<ScanResult> {
-    // 1. Parse the lowered HTML (controller-style block already extracted).
-    let elements = parse_source(preprocessed);
+    check_preprocessed_with_types(preprocessed, viewport, options, &[])
+}
 
-    // 2. Resolve every element to a taffy style and compute the tree.
+/// Like [`check_preprocessed_with`], overlaying Style-resolved type tokens
+/// collected at preprocess (not scraped from class names).
+pub fn check_preprocessed_with_types(
+    preprocessed: &str,
+    viewport: (f32, f32),
+    options: CheckOptions,
+    hosts: &[TypeHost],
+) -> anyhow::Result<ScanResult> {
+    let mut elements = parse_source(preprocessed);
+    apply_resolved_types(&mut elements, hosts);
     let tree = taffy_tree::build(elements, viewport)?;
-
-    // 3. Walk the computed tree and emit diagnostics (experimental kinds gated).
     diagnostics::scan_with(&tree, viewport, options)
 }
 

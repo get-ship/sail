@@ -63,6 +63,10 @@ pub struct Element {
     /// Source-order flow of text runs and element children. Empty only for
     /// nodes with neither text nor children.
     pub flow: Vec<FlowItem>,
+    /// Type scale step from Style resolution (`xl`, `2xl`). Not a class name.
+    pub type_size: Option<String>,
+    /// Font family token from Style resolution (`body`, `display`, `mono`).
+    pub type_family: Option<String>,
 }
 
 impl Element {

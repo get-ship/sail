@@ -47,13 +47,15 @@ pub fn collect(
         None => return Vec::new(),
     };
 
-    let Ok(preprocessed) = crate::parse::preprocess::preprocess(source) else {
+    let Ok((preprocessed, type_hosts)) = crate::parse::preprocess::preprocess_with_types(source)
+    else {
         // Style errors can prevent preprocess; still surface off-scale spacing
         // from raw author tags so starter rewrites stay available.
         return collect_off_scale_for_check(source, source_path, overrides);
     };
     let viewports = crate::check::layout::layout_viewports(&preprocessed);
-    let elements = sail_layout::html::parse_source(&preprocessed);
+    let mut elements = sail_layout::html::parse_source(&preprocessed);
+    sail_layout::apply_resolved_types(&mut elements, &type_hosts);
 
     // Per-parent-instance rhythm data (elem_idx), merged across viewports.
     // Key by elem_idx — not fingerprint alone — so two sibling <row>s with the

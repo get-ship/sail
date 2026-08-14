@@ -1152,12 +1152,18 @@ pub fn sail_layout_check(source: &str) -> Result<Value, OpError> {
         })
         .collect();
 
-    let preprocessed = sail_compiler::parse::preprocess::preprocess(source)
-        .map_err(|e| OpError::InvalidArgument(format!("preprocess: {e}")))?;
+    let (preprocessed, type_hosts) =
+        sail_compiler::parse::preprocess::preprocess_with_types(source)
+            .map_err(|e| OpError::InvalidArgument(format!("preprocess: {e}")))?;
     let viewports = sail_compiler::check::layout::layout_viewports(&preprocessed);
     let mut viewport_reports: Vec<Value> = Vec::new();
     for vp in viewports {
-        match sail_layout::check_preprocessed(&preprocessed, vp) {
+        match sail_layout::check_preprocessed_with_types(
+            &preprocessed,
+            vp,
+            sail_layout::CheckOptions::default(),
+            &type_hosts,
+        ) {
             Ok(scan) => {
                 let boxes: Vec<Value> = scan
                     .boxes

@@ -702,8 +702,9 @@ fn build_layout(
     meta: &TreeBuildMeta,
     viewport: Option<(f32, f32)>,
 ) -> Result<Vec<LayoutBox>, OpError> {
-    let preprocessed = sail_compiler::parse::preprocess::preprocess(source)
-        .map_err(|e| OpError::InvalidArgument(format!("preprocess: {e}")))?;
+    let (preprocessed, type_hosts) =
+        sail_compiler::parse::preprocess::preprocess_with_types(source)
+            .map_err(|e| OpError::InvalidArgument(format!("preprocess: {e}")))?;
     let viewports = if let Some(vp) = viewport {
         vec![vp]
     } else {
@@ -712,7 +713,12 @@ fn build_layout(
 
     let mut out = Vec::new();
     for vp in viewports {
-        let scan = match sail_layout::check_preprocessed(&preprocessed, vp) {
+        let scan = match sail_layout::check_preprocessed_with_types(
+            &preprocessed,
+            vp,
+            sail_layout::CheckOptions::default(),
+            &type_hosts,
+        ) {
             Ok(s) => s,
             Err(e) => {
                 return Err(OpError::Internal(format!("layout: {e}")));

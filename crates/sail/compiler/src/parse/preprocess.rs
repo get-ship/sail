@@ -22,7 +22,15 @@ const VOID_TAGS: &[&str] = &[
 const SKIP_BODY_TAGS: &[&str] = &["scope", "controller", "script", "style", "partial"];
 
 pub fn preprocess(source: &str) -> Result<String, CompileError> {
-    preprocess_impl(source, true)
+    Ok(preprocess_with_types(source)?.0)
+}
+
+/// Full preprocess plus Style-resolved type tokens per lifted host.
+/// Layout measure uses the tokens, not the emitted `s-fontSize*` classes.
+pub fn preprocess_with_types(
+    source: &str,
+) -> Result<(String, Vec<sail_layout::TypeHost>), CompileError> {
+    preprocess_impl_full(source, true)
 }
 
 /// Light normalize only: brace-attr quoting + self-close expansion.
@@ -44,6 +52,13 @@ pub fn prepare_fmt(source: &str) -> String {
 /// sources compile WITHOUT it (no element-in-element; no recursion when the
 /// registry compiles the stdlib with this same crate).
 pub(crate) fn preprocess_impl(source: &str, expand_elements: bool) -> Result<String, CompileError> {
+    Ok(preprocess_impl_full(source, expand_elements)?.0)
+}
+
+fn preprocess_impl_full(
+    source: &str,
+    expand_elements: bool,
+) -> Result<(String, Vec<sail_layout::TypeHost>), CompileError> {
     // SPEC-PARTIAL-1: expand in-file `<partial>` BEFORE quote_brace_attrs so
     // bare param reads inside attr values (`token={token}`) are still
     // identifiers — quoting would bury them in `"{token}"` and block
@@ -57,10 +72,11 @@ pub(crate) fn preprocess_impl(source: &str, expand_elements: bool) -> Result<Str
     // Type-keyed color-group props so `bg(tone)` / `bg(shade)` parse as bridge paths.
     let group_props = super::scope_block::color_group_typed_prop_names(&s);
     // Scope Style consts (`const filled = style(…)`) resolve Refs in host Style.
-    let (s, style_css) = sail_lint::style::with_bound_group_props(&group_props, || {
-        let style_env = super::scope_block::style_env_from_source(&s);
-        lift_tag_style(&s, &style_env)
-    })?;
+    let (s, style_css, type_hosts) =
+        sail_lint::style::with_bound_group_props(&group_props, || {
+            let style_env = super::scope_block::style_env_from_source(&s);
+            lift_tag_style(&s, &style_env)
+        })?;
     refuse_body_style_statements(&s)?;
     // L1 stdlib elements: splice structure; skins live in framework sheet.
     let (s, elements_css) = if expand_elements {
@@ -79,11 +95,12 @@ pub(crate) fn preprocess_impl(source: &str, expand_elements: bool) -> Result<Str
     let css = dedup_css_rules(&format!(
         "{elements_css}{host_display_css}{style_css}{layout_css}"
     ));
-    Ok(if css.is_empty() {
+    let html = if css.is_empty() {
         s
     } else {
         format!("<style>{css}</style>\n{s}")
-    })
+    };
+    Ok((html, type_hosts))
 }
 
 /// Find every tag-position Style product expression in raw `.sail` source,
@@ -186,7 +203,7 @@ fn is_void_tag(tag: &str) -> bool {
 fn lift_tag_style(
     source: &str,
     env: &sail_lint::style::StyleEnv,
-) -> Result<(String, String), CompileError> {
+) -> Result<(String, String, Vec<sail_layout::TypeHost>), CompileError> {
     struct Lift {
         gt_pos: usize,
         call_lo: usize,
@@ -198,6 +215,7 @@ fn lift_tag_style(
     let mut lifts: Vec<Lift> = Vec::new();
     let mut css = String::new();
     let mut seen: std::collections::HashSet<String> = std::collections::HashSet::new();
+    let mut type_hosts: Vec<sail_layout::TypeHost> = Vec::new();
     let mut i = 0;
     while i < bytes.len() {
         if source[i..].starts_with("<!--") {
@@ -272,6 +290,12 @@ fn lift_tag_style(
                 refuse_text_on_non_text_host(tag, expr, env, call_lo, call_hi)?;
                 let (classes, motions) = lower_sx_value(expr, env, &mut css, &mut seen)
                     .map_err(|diags| style_error(diags, call_lo, call_hi))?;
+                let val = strip_outer_braces(expr.trim());
+                let (style_ir, _) = sail_lint::style::parse(val);
+                let resolved = sail_lint::style::resolve_type(&style_ir, env);
+                if let Some(host) = sail_layout::TypeHost::from_resolved(&classes, &resolved) {
+                    type_hosts.push(host);
+                }
                 lifts.push(Lift {
                     gt_pos,
                     call_lo,
@@ -291,7 +315,7 @@ fn lift_tag_style(
     }
 
     if lifts.is_empty() {
-        return Ok((source.to_string(), css));
+        return Ok((source.to_string(), css, type_hosts));
     }
 
     let mut out = source.to_string();
@@ -322,7 +346,7 @@ fn lift_tag_style(
         push_motion_attrs(&mut inject, &lift.motions);
         out.insert_str(inject_at, &inject);
     }
-    Ok((out, css))
+    Ok((out, css, type_hosts))
 }
 
 /// Body-nested Style product is not a statement — generic unknown-statement error.
@@ -3414,7 +3438,6 @@ export default controller(() => {
         );
     }
 
-
     #[test]
     fn freeform_banned_input_types_error() {
         for (src, needle) in [
@@ -3434,10 +3457,15 @@ export default controller(() => {
         // Preferred tags still lower
         let ok = preprocess(r#"<slider value="40" /><checkbox /><file /><color /><date />"#)
             .expect("product tags ok");
-        assert!(ok.contains("type=\"range\"") || ok.contains("type='range'") || ok.contains("sail-slider"), "{ok}");
+        assert!(
+            ok.contains("type=\"range\"")
+                || ok.contains("type='range'")
+                || ok.contains("sail-slider"),
+            "{ok}"
+        );
     }
 
-        #[test]
+    #[test]
     fn stdlib_spinner_lowers_at_use_site() {
         let out = preprocess(
             r#"<div class="page"><spinner size="sm" aria-label="Saving"></spinner></div>"#,
@@ -4594,5 +4622,53 @@ export default controller({ setup: () => ({ d: derived(() => signal(0)()) }) })\
             "must attach: {out}"
         );
         assert!(!out.contains("style({"), "must lower off the tag: {out}");
+    }
+
+    #[test]
+    fn type_size_from_style_ir_threads_to_layout() {
+        // expand_elements=false: this branch's stdlib spinner is already
+        // uncompilable (`style(ring)`); the seam under test is Style → TypeHost.
+        let src_xl = r#"<span style({ text: type({ size: xl }) })>Hello</span>"#;
+        let src_sm = r#"<span style({ text: type({ size: sm }) })>Hello</span>"#;
+        let (pre_xl, hosts_xl) = preprocess_impl_full(src_xl, false).expect("xl");
+        let (pre_sm, hosts_sm) = preprocess_impl_full(src_sm, false).expect("sm");
+        assert!(
+            hosts_xl.iter().any(|h| h.size.as_deref() == Some("xl")),
+            "type({{ size: xl }}) must resolve xl: {hosts_xl:?}"
+        );
+        assert!(
+            hosts_sm.iter().any(|h| h.size.as_deref() == Some("sm")),
+            "type({{ size: sm }}) must resolve sm: {hosts_sm:?}"
+        );
+        let xl = sail_layout::check_preprocessed_with_types(
+            &pre_xl,
+            (1440.0, 900.0),
+            sail_layout::CheckOptions::default(),
+            &hosts_xl,
+        )
+        .expect("xl layout");
+        let sm = sail_layout::check_preprocessed_with_types(
+            &pre_sm,
+            (1440.0, 900.0),
+            sail_layout::CheckOptions::default(),
+            &hosts_sm,
+        )
+        .expect("sm layout");
+        let xl_h = xl
+            .boxes
+            .iter()
+            .find(|b| b.tag == "span")
+            .expect("xl span")
+            .height;
+        let sm_h = sm
+            .boxes
+            .iter()
+            .find(|b| b.tag == "span")
+            .expect("sm span")
+            .height;
+        assert!(
+            xl_h > sm_h,
+            "xl height ({xl_h}) must exceed sm ({sm_h})"
+        );
     }
 }
