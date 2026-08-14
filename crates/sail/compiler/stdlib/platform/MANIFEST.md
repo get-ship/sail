@@ -36,7 +36,7 @@ Reason classes:
 | select.css | select | vocab-gap | Chevron data-uri + `option` paint. `#888888` is allowlisted until a token exists | GAP-STDLIB-VOCAB-1 |
 | skeleton.css | skeleton | composite | Shimmer gradient + `background-size` + animation | GAP-STDLIB-VOCAB-1 |
 | slider.css | slider | vendor-pseudo | WebKit / Firefox range track + thumb | none |
-| table.css | table | native-anatomy | `th`/`td`/`caption` + dense/striped/hoverable/bordered/sticky compounds | none |
+| table.css | table | native-anatomy | `th`/`td`/`caption` + dense/striped/hoverable/bordered/sticky-header compounds | none |
 
 ## Ledger
 

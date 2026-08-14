@@ -7,4 +7,5 @@
 .sail-table[hoverable] > tbody > tr:hover { background:var(--surface-2); }
 .sail-table[bordered] th, .sail-table[bordered] td { border:1px solid color-mix(in srgb, var(--foreground) 9%, transparent); }
 .sail-table thead[sticky] th { position:sticky;top:0;z-index:1;background:var(--background); }
+.sail-table[sticky-header] thead th { position:sticky;top:0;z-index:1;background:var(--card); }
 .sail-table th[numeric], .sail-table td[numeric] { text-align:right;font-variant-numeric:tabular-nums; }

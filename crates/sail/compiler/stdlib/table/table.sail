@@ -1,7 +1,8 @@
 <!--
   <table> — structural data table. Style product only.
-  Variants dense / striped / hoverable / bordered are host props.
-  Cell paint (th/td/caption/sticky) via descendant map.
+  Variants dense / striped / hoverable / bordered / sticky-header are host props.
+  Cell paint (th/td/caption/sticky) via descendant map (platform/table.css).
+  Style cannot target thead — sticky-header compounds live on that map.
 -->
 
 <scope>
@@ -10,6 +11,7 @@
     striped = false
     hoverable = false
     bordered = false
+    'sticky-header' = false
   }
 
   // Host text rides foreground.

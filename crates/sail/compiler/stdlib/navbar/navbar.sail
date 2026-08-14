@@ -6,6 +6,12 @@
 
   autohide: with sticky + use:chromeOffset, bar tucks on scroll-down and returns
   on scroll-up or pointer near the top edge (space reclaim without losing nav).
+
+  floating: inset chrome — margin + radius + elevation, not edge-to-edge.
+
+  solid-on-scroll: LANGUAGE GAP — Style cannot key on scroll position.
+  chromeOffset measures/hides chrome but does not toggle solid paint.
+  A new use:solidOnScroll would only flip a host attribute; skip JS.
 -->
 
 <scope>
@@ -14,6 +20,8 @@
     sticky = false
     bordered = false
     autohide = false
+    floating = false
+    'solid-on-scroll' = false
     offset: number = 0
   }
 
@@ -44,6 +52,8 @@
       {bordered: true, placement: bottom, border({ color: border, edge: l }).border({ color: border, edge: r }).border({ color: border, width: 0, edge: b }).border({ color: border, width: 1, edge: t })},
       {bordered: true, placement: rail, border({ color: border, edge: s }).border({ color: border, edge: t }).border({ color: border, width: 0, edge: b }).border({ color: border, width: 1, edge: e })},
       {placement: rail, sticky: true, position({ scheme: sticky, t: bind(offset), b: 0, z: dropdown }).self(start).overflow({ y: auto })},
+      {floating: true, margin(3).radius(lg).elevation(md)},
+      {floating: true, autohide: true, sticky: true, position({ scheme: fixed, l: 3, r: 3, t: 3, z: sticky }).margin(0)},
     ]})
 >
   <row inline nowrap align="center" justify="start" gap="2" style(brand)>

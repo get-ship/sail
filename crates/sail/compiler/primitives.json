@@ -758,6 +758,10 @@
         "type": "bool",
         "default": "false"
       },
+      "floating": {
+        "type": "bool",
+        "default": "false"
+      },
       "offset": {
         "type": "number",
         "default": "0"
@@ -769,6 +773,10 @@
           "rail"
         ],
         "default": "top"
+      },
+      "solid-on-scroll": {
+        "type": "bool",
+        "default": "false"
       },
       "sticky": {
         "type": "bool",
@@ -791,12 +799,26 @@
       "value": {
         "type": "string",
         "default": ""
+      },
+      "variant": {
+        "values": [
+          "default",
+          "simple"
+        ],
+        "default": "default"
       }
     },
     "pagination": {
       "value": {
         "type": "string",
         "default": ""
+      },
+      "variant": {
+        "values": [
+          "default",
+          "simple"
+        ],
+        "default": "default"
       }
     },
     "popover": {
@@ -1100,6 +1122,10 @@
         "default": "false"
       },
       "hoverable": {
+        "type": "bool",
+        "default": "false"
+      },
+      "sticky-header": {
         "type": "bool",
         "default": "false"
       },
