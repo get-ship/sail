@@ -1,12 +1,11 @@
-//! Style media / environment conditions — product surface for `when({ key })`.
+//! Style media / environment conditions — CSS realization of `when({ key })`.
 //!
-//! Breakpoints and preference queries are **Style** (`when({ tablet: … })`),
-//! not a leftover string-sx feature. Values are literal media queries because
-//! `@media` cannot read custom properties; widths must match design-token
-//! `breakpoint-*` lengths (enforced by tests).
+//! Author names live on `sail_style::intent::CONDITION_KEYS`. This table maps
+//! those names to `@media` queries. Widths must match design-token
+//! `breakpoint-*` lengths (enforced by adapter tests).
 
 /// Closed condition keys → `@media` query for Style `when` (and residual
-/// lowerers until string product is deleted).
+/// string-sx lowerers until that product is deleted).
 pub const CONDITION_PREFIXES: &[(&str, &str)] = &[
     // Responsive, mobile-first (min-width). Widths ARE the breakpoint tokens.
     ("mobile", "(min-width: 390px)"),

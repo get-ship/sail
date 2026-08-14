@@ -108,38 +108,18 @@ pub fn is_interaction_when_key(key: &str) -> bool {
         // Structural / pseudo-element — not interaction thrash.
         "empty" | "before" | "after" | "first" | "first-child" | "last" | "last-child" => false,
         other => {
-            let kebab = when_key_kebab(other);
-            // Media / preference conditions are not interaction.
-            if crate::conditions::condition_media(other).is_some()
-                || crate::conditions::condition_media(&kebab).is_some()
+            let kebab = crate::intent::when_key_kebab(other);
+            // Media / preference conditions are not interaction. Names only —
+            // CSS media queries live in the adapter.
+            if crate::intent::CONDITION_KEYS.contains(&other)
+                || crate::intent::CONDITION_KEYS.contains(&kebab.as_str())
             {
                 return false;
             }
             // state-*, group-* (component / ancestor state) are interaction.
-            if kebab.starts_with("state-") || kebab.starts_with("group-") {
-                return true;
-            }
-            crate::prefixes::state_pseudo(other).is_some()
-                || crate::prefixes::state_pseudo(&kebab).is_some()
-                || crate::prefixes::state_data(other).is_some()
-                || crate::prefixes::state_data(&kebab).is_some()
+            kebab.starts_with("state-") || kebab.starts_with("group-")
         }
     }
-}
-
-fn when_key_kebab(key: &str) -> String {
-    let mut out = String::with_capacity(key.len() + 4);
-    for (i, c) in key.chars().enumerate() {
-        if c.is_ascii_uppercase() {
-            if i > 0 {
-                out.push('-');
-            }
-            out.push(c.to_ascii_lowercase());
-        } else {
-            out.push(c);
-        }
-    }
-    out
 }
 
 /// True when the setter is geometry-class for the “state can't gate geometry”

@@ -71,12 +71,10 @@ mod tests {
     #[test]
     fn when_breakpoints_match_design_tokens() {
         for name in ["mobile", "tablet", "desktop"] {
-            let query = conditions::condition_media(name).expect("Style condition table");
+            let query = crate::condition_media(name).expect("Style condition table");
             assert_eq!(
-                setters::when_target(name),
-                Some(setters::WhenTarget::Media(std::borrow::Cow::Borrowed(
-                    query
-                ))),
+                crate::when_target(name),
+                Some(crate::WhenTarget::Media(std::borrow::Cow::Borrowed(query))),
                 "when({{{name}:…}}) must resolve via Style conditions"
             );
             let value = sail_style::tokens::token_value(&format!("breakpoint-{name}"))
@@ -87,12 +85,10 @@ mod tests {
             );
         }
 
-        for (name, query) in conditions::CONDITION_PREFIXES {
+        for (name, query) in crate::CONDITION_PREFIXES {
             assert_eq!(
-                setters::when_target(name),
-                Some(setters::WhenTarget::Media(std::borrow::Cow::Borrowed(
-                    *query
-                ))),
+                crate::when_target(name),
+                Some(crate::WhenTarget::Media(std::borrow::Cow::Borrowed(*query))),
                 "missing when key for Style condition `{name}`"
             );
         }

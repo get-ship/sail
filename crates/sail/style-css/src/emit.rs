@@ -4,8 +4,10 @@ use std::collections::HashSet;
 
 use sail_style::intent::{Intent, IntentNode, IntentValue, lower_to_intent};
 use sail_style::ir::{PaintArg, PaintOp, Style, StyleEnv};
-use sail_style::setters::{WhenTarget, lower_op_css, when_target};
+use sail_style::setters::lower_op_css;
 use sail_style::theme_env::{ThemeStyleEnv, current_styling_policy};
+
+use crate::when::{WhenTarget, when_target};
 
 /// One emitted CSS rule.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -132,12 +134,7 @@ fn emit_intent_inner(
     for node in &intent.nodes {
         match node {
             IntentNode::Set { setter, args } => {
-                let op = PaintOp {
-                    setter: setter.clone(),
-                    args: args.iter().map(arg_from_intent).collect(),
-                    source: String::new(),
-                };
-                emit_op(&op, ctx, out, seen);
+                emit_set(setter, args, ctx, out, seen);
             }
             IntentNode::On { key, body } => {
                 if let Some(target) = when_target(key) {
@@ -274,6 +271,22 @@ fn extract_play_field(config: &str, field: &str) -> Option<String> {
 
 fn sanitize_ident(s: &str) -> String {
     s.chars().filter(|c| c.is_ascii_alphanumeric()).collect()
+}
+
+/// PaintOp is a private helper inside the adapter — Intent is the public input.
+fn emit_set(
+    setter: &str,
+    args: &[IntentValue],
+    ctx: &Ctx,
+    out: &mut Vec<CssRule>,
+    seen: &mut HashSet<String>,
+) {
+    let op = PaintOp {
+        setter: setter.to_string(),
+        args: args.iter().map(arg_from_intent).collect(),
+        source: String::new(),
+    };
+    emit_op(&op, ctx, out, seen);
 }
 
 fn emit_op(op: &PaintOp, ctx: &Ctx, out: &mut Vec<CssRule>, seen: &mut HashSet<String>) {

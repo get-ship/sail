@@ -41,12 +41,11 @@ use crate::report::{Finding, Severity};
 
 pub const RULE_ID: &str = "sail-style";
 
-// Residual string lowerers still call these names. SSOT is Style product:
-// `sail_style::conditions` (`when({ tablet: … })`) and `sail_style::prefixes`.
-pub use sail_style::conditions::{CONDITION_PREFIXES, condition_media};
-pub use sail_style::prefixes::{
-    STATE_PREFIXES, SX_EXTRA_FORMS, group_attr_presence, is_prefix, pseudo_element_prefix,
-    state_data, state_pseudo,
+// Residual string lowerers still call these names. SSOT is the CSS adapter:
+// `sail_style_css::conditions` (`when({ tablet: … })`) and `sail_style_css::prefixes`.
+pub use sail_style_css::{
+    CONDITION_PREFIXES, STATE_PREFIXES, SX_EXTRA_FORMS, condition_media, group_attr_presence,
+    is_prefix, pseudo_element_prefix, state_data, state_pseudo,
 };
 
 /// Internal emit/lint helper: every emit-leaf utility name with the values

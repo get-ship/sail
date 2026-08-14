@@ -11,14 +11,12 @@ pub mod clash;
 pub mod complete;
 pub mod component_surfaces;
 pub mod concerns;
-pub mod conditions;
 pub mod foreign_idioms;
 pub mod host_ctx;
 pub mod intent;
 pub mod ir;
 pub mod parse;
 pub mod plains;
-pub mod prefixes;
 pub mod scales;
 pub mod setters;
 pub mod style_vocab;
@@ -47,7 +45,6 @@ pub use concerns::{
     is_concern_form, is_marker, prepare_concern_call, primary_slot, resolve_concern_name,
     retired_replacement,
 };
-pub use conditions::{CONDITION_PREFIXES, condition_media};
 pub use foreign_idioms::{
     FOREIGN_IDIOMS, ForeignIdiom, IdiomKind, find_foreign_idiom, teaching_line,
 };

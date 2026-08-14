@@ -1,7 +1,8 @@
-//! Closed Style / leaf-sx state and structural prefixes.
+//! CSS selectors for Style `when` keys and residual string-sx prefixes.
 //!
-//! Shared by Style `when` emit and residual leaf lowerers so lint, preprocess,
-//! and emit cannot diverge on the prefix set.
+//! Author names live on `sail_style::intent` (`is_known_when_key`). This
+//! module owns the selector / media realization so lint, preprocess, and
+//! emit cannot diverge.
 
 pub use super::conditions::{CONDITION_PREFIXES, condition_media};
 
