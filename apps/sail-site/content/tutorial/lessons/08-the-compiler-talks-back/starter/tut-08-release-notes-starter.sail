@@ -39,7 +39,7 @@ export default controller(() => {
 <column gap="4" style({ pad(12px) })>
   <row align="center" justify="between">
     <h3>Release notes</h3>
-    <badge tone="primary" variant="soft" style({ animate: enter({ opacity: 'whoosh' }) })>v2.4.0</badge>
+    <badge tone="primary" variant="soft" style({ animate: { enter: play(whoosh) } })>v2.4.0</badge>
   </row>
 
   <p style({ fg(muted-foreground).type({ size: sm }) })>published {formatDate(publishedAt())}</p>

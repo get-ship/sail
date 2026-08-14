@@ -616,7 +616,7 @@ fn replace_sx_setter(open: &str, setter: &str, target: &str) -> Option<String> {
     }
     // No style call yet — inject tag-position style({ setter(target) }).
     let call = if is_animate_trigger(setter) {
-        format!("style({{ animate: {setter}({target}) }})")
+        format!("style({{ animate: {{ {setter}: play({target}) }} }})")
     } else {
         format!("style({{ {setter}({target}) }})")
     };
@@ -820,7 +820,7 @@ fn merge_setter_into_flat_style(expr: &str, setter: &str, arg: &str) -> String {
 
 fn merge_animate_into_style(expr: &str, setter: &str, arg: &str) -> String {
     let t = expr.trim();
-    let call = format!("{setter}({arg})");
+    let entry = format!("{setter}: play({arg})");
     if let Some(rest) = t.strip_prefix("style(").and_then(|r| r.strip_suffix(')')) {
         let body = rest.trim();
         if body.starts_with('{') && body.ends_with('}') {
@@ -829,12 +829,10 @@ fn merge_animate_into_style(expr: &str, setter: &str, arg: &str) -> String {
                 let after_key = idx + "animate:".len();
                 let (val_start, val_end) = channel_value_span_in(inner, after_key);
                 let val = inner[val_start..val_end].trim();
-                let new_val = if val.is_empty() {
-                    call.clone()
-                } else if val.contains(&format!("{setter}(")) {
-                    replace_method_arg(val, setter, arg).unwrap_or_else(|| format!("{val}.{call}"))
+                let new_val = if val.trim().starts_with('{') {
+                    merge_play_entry_into_map(val, setter, &entry)
                 } else {
-                    format!("{val}.{call}")
+                    format!("{{ {entry} }}")
                 };
                 let mut out = String::from("style({ ");
                 out.push_str(inner[..val_start].trim_end());
@@ -851,10 +849,26 @@ fn merge_animate_into_style(expr: &str, setter: &str, arg: &str) -> String {
                 return out;
             }
             let sep = if inner.is_empty() { "" } else { ", " };
-            return format!("style({{ {inner}{sep}animate: {call} }})");
+            return format!("style({{ {inner}{sep}animate: {{ {entry} }} }})");
         }
     }
-    format!("style({{ animate: {call} }})")
+    format!("style({{ animate: {{ {entry} }} }})")
+}
+
+fn merge_play_entry_into_map(val: &str, setter: &str, entry: &str) -> String {
+    let t = val.trim();
+    if !(t.starts_with('{') && t.ends_with('}')) {
+        return format!("{{ {entry} }}");
+    }
+    let inner = t[1..t.len() - 1].trim();
+    if inner.is_empty() {
+        return format!("{{ {entry} }}");
+    }
+    let key = format!("{setter}:");
+    if inner.contains(&key) {
+        return format!("{{ {inner} }}");
+    }
+    format!("{{ {inner}, {entry} }}")
 }
 
 fn merge_size_slot_into_style(expr: &str, slot: &str, arg: &str) -> String {

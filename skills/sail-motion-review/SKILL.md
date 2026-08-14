@@ -8,11 +8,11 @@ description: Reviews sail motion usage against a high craft bar. Default to flag
 One job: review motion in `.sail` sources against a craft bar. Not
 features, not unrelated bugs, not general code review.
 
-Sail motion is preset-driven: `enter`/`exit`/`loop`/`scroll`/`press`
-on Style, plus the closed keyframe catalog. Reviewing sail motion means
-judging **preset choice, parameters, and placement** — and catching
+Sail motion is play-driven: `animate: { enter: play(fade), transition: play(colors, fast) }`
+on Style, plus the closed theme play catalog. Reviewing sail motion means
+judging **play choice, parameters, and placement** — and catching
 raw-CSS or controller-driven motion that escaped the vocabulary (an
-immediate finding: motion outside presets bypasses every guarantee
+immediate finding: motion outside plays bypasses every guarantee
 below).
 
 ## The ten standards

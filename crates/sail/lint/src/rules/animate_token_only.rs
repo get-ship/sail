@@ -1,10 +1,8 @@
-//! `sail-animate-token-only` — Style motion configs
-//! (`style({ animate: hover({ … }) })` / `animate: enter({ … })`) accept only the
-//! closed property/preset vocabulary that maps cleanly to the design system.
+//! `sail-animate-token-only` — Style motion is `animate: { <trigger>: play(…) }`.
 //!
-//! `animate: <trigger>({ <prop>: '<preset>' })` — the property must be one of
-//! [`MOTION_PROPERTIES`] (the same closed set the parser enforces), and the
-//! preset must be a name known to `animation-presets.json`.
+//! Play names resolve through the theme registry. Leftover trigger-call
+//! objects (`hover({ scale: '…' })`) still get the closed property/preset
+//! check so a missed migration names the vocabulary rather than going silent.
 
 use std::path::Path;
 
@@ -41,9 +39,8 @@ pub const MOTION_TIMING_KEYS: &[&str] = &["duration", "delay", "easing", "iterat
 /// `translate-x: { from: 0, to: '120px' }`.
 pub const MOTION_CHANNEL_KEYS: &[&str] = &["from", "to", "preset"];
 
-/// THE trigger vocabulary — what can drive Style motion
-/// (`animate: <trigger>({…})`). One list, read by the parser, the runtime, and
-/// the generated agent skill.
+/// THE trigger vocabulary — keys of `animate: { <trigger>: play(…) }`.
+/// One list, read by the parser, the runtime, and the generated agent skill.
 ///
 /// Three kinds, and the difference matters:
 ///   INTERACTION  hover, press, focus, focus-visible — rest <-> active, event-driven
@@ -342,8 +339,7 @@ mod tests {
 
     #[test]
     fn accepts_static_hover_with_known_preset_and_prop() {
-        let f =
-            findings(r#"<button style({ animate: hover({ scale: 'spring:snappy' }) })>x</button>"#);
+        let f = findings(r#"<button style({ animate: { hover: play(fade) } })>x</button>"#);
         assert!(f.is_empty(), "expected no findings, got {f:?}");
     }
 
@@ -405,7 +401,7 @@ mod tests {
 
     #[test]
     fn animate_enter_known_preset_passes() {
-        let f = findings(r#"<button style({ animate: enter({ opacity: 'fade' }) })>x</button>"#);
+        let f = findings(r#"<button style({ animate: { enter: play(fade) } })>x</button>"#);
         assert!(f.is_empty(), "expected no findings, got {f:?}");
     }
 }

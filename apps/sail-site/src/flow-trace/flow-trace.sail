@@ -61,7 +61,7 @@ export default controller(() => {
     </row>
     <column gap="1" style(list)>
       <for {rows() as r} key={r.id}>
-        <row nowrap style({ animate: enter({ opacity: 'fade', duration: 600 }).exit({ opacity: 'fade-out', duration: 600 }) })>
+        <row nowrap style({ animate: { enter: play(fade), exit: play(fade) } })>
           <span style(city)>{r.city}</span>
         </row>
       </for>

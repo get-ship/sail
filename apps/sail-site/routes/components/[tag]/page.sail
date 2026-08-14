@@ -9,7 +9,7 @@
 
 <scope>
   style page = { size({ w: full, max-w: breakpoint-desktop }).margin({ x: auto }) }
-  style emptyEnter = { animate: enter({ opacity: 'fade', translate-y: 'spring:snappy' }) }
+  style emptyEnter = { animate: { enter: play(slide-up) } }
 </scope>
 
 <controller>

@@ -95,7 +95,7 @@ export default controller((ctx) => {
 
 <button on:click={() => open.set(!open())}>Toggle</button>
 <if {open()}>
-  <card style({ pad(4), animate: enter({ opacity: 'fade' }) })>
+  <card style({ pad(4), animate: { enter: play(fade) } })>
     Hello.</card>
 </if>`,
 }

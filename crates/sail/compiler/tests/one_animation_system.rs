@@ -1,17 +1,8 @@
 //! ONE ANIMATION SYSTEM.
 //!
-//! There used to be two. `fx:` bakes `el.animate(...)` at compile time from a
-//! validated catalog (four springs with real stiffness/damping, five tweens) and
-//! ships no runtime animation library at all. Beside it sat `transition:` / `in:` /
-//! `out:` — a second catalog (fade/slide/scale), a second registry
-//! (`registerTransition`), a second runtime. Two vocabularies to learn, two things
-//! to teach an agent, two places for a bug to live.
-//!
-//! The CAPABILITY the second system had is real and survives: holding an element in
-//! the DOM until its exit animation finishes, which CSS cannot do alone. `if.ts` /
-//! `for.ts` already await `runLeave` before removing nodes, and that seam is
-//! untouched — it is simply backed by `fx:` now. So the fold is: same mechanism,
-//! one catalog, one directive.
+//! Author form is the keyed `animate:` map. The concern inside is `play`.
+//! Lifecycle (`enter`/`exit`), interaction (`hover`/`press`/…), timeline
+//! (`reveal`/`scroll`), and ambient (`loop`) are keys — not a second syntax.
 
 use sail_compiler::{CompileMode, CompileOpts, compile};
 
@@ -31,7 +22,7 @@ fn err_for(src: &str) -> String {
 /// `transition:` used to own, now expressed in the one system.
 #[test]
 fn motion_enter_and_exit_bake_animations() {
-    let src = r#"<card style({ animate: enter({ opacity: 'fade' }).exit({ opacity: 'fade-out' }) })> x</card>"#;
+    let src = r#"<card style({ animate: { enter: play(fade), exit: play(fade) } })> x</card>"#;
     let js = compile(src, opts()).expect("compiles").js;
     assert!(
         js.contains(r#"trigger: "enter""#),
@@ -41,8 +32,6 @@ fn motion_enter_and_exit_bake_animations() {
         js.contains(r#"trigger: "exit""#),
         "exit trigger emitted:\n{js}"
     );
-    // Runtime dispatch: motion.dev creates the animation after the node
-    // is live. No AOT `el.animate(...)` lives in the emit anymore.
     assert!(
         !js.contains("el.animate("),
         "no AOT animation — runtime owns creation:\n{js}"
@@ -56,7 +45,7 @@ fn motion_enter_and_exit_bake_animations() {
 /// The interaction triggers still work — enter/exit are additions, not a rewrite.
 #[test]
 fn the_interaction_triggers_are_untouched() {
-    let src = r#"<button style({ animate: hover({ scale: 'spring:snappy' }) })> x</button>"#;
+    let src = r#"<button style({ animate: { hover: play(fade) } })> x</button>"#;
     let js = compile(src, opts()).expect("compiles").js;
     assert!(js.contains(r#"trigger: "hover""#), "{js}");
     assert!(
@@ -65,14 +54,13 @@ fn the_interaction_triggers_are_untouched() {
     );
 }
 
-/// An unknown preset is a COMPILE error, not a silent runtime fallback. This is why
-/// a single catalog is worth having: it can be checked.
+/// An unknown play is a COMPILE error, not a silent runtime fallback.
 #[test]
 fn an_unknown_preset_fails_the_build() {
-    let msg = err_for(r#"<card style({ animate: exit({ opacity: 'wobble' }) })> x</card>"#);
+    let msg = err_for(r#"<card style({ animate: { exit: play(wobble) } })> x</card>"#);
     assert!(
-        msg.contains("wobble") || msg.to_lowercase().contains("preset"),
-        "unknown preset must name itself: {msg}"
+        msg.contains("wobble") || msg.to_lowercase().contains("play"),
+        "unknown play must name itself: {msg}"
     );
 }
 
@@ -97,94 +85,35 @@ fn the_second_animation_system_is_unknown_vocabulary() {
     }
 }
 
-// ── ORCHESTRATION ───────────────────────────────────────────────────────────
-// Stagger is the difference between a list that APPEARS and a list that ARRIVES,
-// and it is the thing you cannot get from a preset catalog or from CSS. It is also
-// not a runtime engine: it is `delay = arrivalIndex * step` pushed into an
-// already-baked WAAPI animation, so the cascade runs on the compositor like
-// everything else here.
-
-/// `stagger` reaches the emitted config as a plain number of seconds.
 #[test]
-fn stagger_bakes_a_delay_step_into_the_attach_config() {
-    let src = r#"<card style({ animate: enter({ opacity: 'fade', stagger: '40ms' }) })> x</card>"#;
-    let js = compile(src, opts()).expect("compiles").js;
+fn retired_trigger_call_form_teaches_the_play_map() {
+    let msg = err_for(r#"<card style({ animate: enter({ opacity: 'fade' }) })> x</card>"#);
     assert!(
-        js.contains("stagger: 0.04"),
-        "stagger step emitted in seconds:\n{js}"
-    );
-    assert!(js.contains(r#"trigger: "enter""#), "{js}");
-}
-
-/// Seconds work too, and resolve to the same unit.
-#[test]
-fn stagger_accepts_seconds() {
-    let src = r#"<card style({ animate: enter({ opacity: 'fade', stagger: '0.04s' }) })> x</card>"#;
-    let js = compile(src, opts()).expect("compiles").js;
-    assert!(js.contains("stagger: 0.04"), "0.04s == 40ms:\n{js}");
-}
-
-/// An app that never staggers pays nothing — not even a `stagger: undefined`.
-#[test]
-fn no_stagger_emits_no_stagger() {
-    let src = r#"<card style({ animate: enter({ opacity: 'fade' }) })> x</card>"#;
-    let js = compile(src, opts()).expect("compiles").js;
-    assert!(
-        !js.contains("stagger"),
-        "unauthored stagger must not appear:\n{js}"
+        msg.contains("animate:") && msg.contains("play"),
+        "must teach the play map: {msg}"
     );
 }
 
-/// A garbled duration fails the build rather than silently becoming zero.
-#[test]
-fn a_bad_stagger_duration_fails_the_build() {
-    let msg = err_for(
-        r#"<card style({ animate: enter({ opacity: 'fade', stagger: 'soon' }) })> x</card>"#,
-    );
-    assert!(msg.contains("duration"), "must name the problem: {msg}");
-}
-
-/// THE DRIFT GUARD. The property vocabulary lived in TWO places — the compiler's
-/// parser and the `sail-animate-token-only` lint — each with its own hand-copied
-/// array, and a comment in the lint asserting they were the same set. They were not:
-/// adding `stagger` to the parser compiled fine and then failed the lint, because a
-/// comment is not a mechanism. They are one list in sail-lint now, and the preset
-/// catalog is one JSON that both read. This test fails if anyone re-copies either.
+/// THE DRIFT GUARD. Every advertised trigger must be writable as a map key
+/// with `play(fade)`. A trigger added to `MOTION_TRIGGERS` and nowhere else
+/// fails here rather than in someone's editor.
 #[test]
 fn the_animation_vocabulary_has_exactly_one_source() {
-    for prop in sail_lint::rules::animate_token_only::MOTION_PROPERTIES {
-        let src = format!(
-            r#"<card style({{ animate: hover({{ {prop}: 'spring:snappy' }}) }})> x</card>"#
-        );
+    for trigger in sail_lint::rules::animate_token_only::MOTION_TRIGGERS {
+        let src = format!(r#"<card style({{ animate: {{ {trigger}: play(fade) }} }})> x</card>"#);
         assert!(
             compile(&src, opts()).is_ok(),
-            "lint publishes `{prop}` but the parser rejects it — the lists have drifted"
+            "lint publishes `{trigger}` but the parser rejects it — the lists have drifted"
         );
     }
-    let msg = err_for(r#"<card style({ animate: hover({ blur: 'spring:snappy' }) })> x</card>"#);
-    assert!(msg.contains("not supported"), "{msg}");
-    assert!(
-        msg.contains("stagger"),
-        "the error must mention the reserved key: {msg}"
-    );
 }
 
 // ── TIMELINE TRIGGERS ───────────────────────────────────────────────────────
-// `fx:reveal` / `fx:scroll` are PROGRESS-driven, not time-driven: position is
-// a function of scroll, not of the clock. Reveal-on-scroll and parallax, at ZERO JS
-// runtime cost — no scroll listener, no rAF loop, no IntersectionObserver. The
-// platform drives them off the main thread, which is why a scroll effect built
-// this way stays smooth under load and one built on a scroll handler does not.
-//
-// And they are NOT a second emit path: the compiler emits a single
-// `__sail_motion_attach(...)` call; the runtime hands Motion a different
-// timeline. One directive, one catalog, one code path.
 
 #[test]
 fn reveal_and_scroll_are_triggers_like_any_other() {
     for trigger in ["reveal", "scroll"] {
-        let src =
-            format!(r#"<card style({{ animate: {trigger}({{ opacity: 'fade' }}) }})> x</card>"#);
+        let src = format!(r#"<card style({{ animate: {{ {trigger}: play(fade) }} }})> x</card>"#);
         let js = compile(&src, opts()).expect("compiles").js;
         assert!(js.contains(&format!(r#"trigger: "{trigger}""#)), "{js}");
         assert!(
@@ -194,33 +123,32 @@ fn reveal_and_scroll_are_triggers_like_any_other() {
     }
 }
 
-/// Parallax is `translate-y` on a reveal timeline. The point of the whole exercise:
-/// the thing people reach for GSAP to do is a directive with a preset.
+/// Parallax is `play(slide-up)` on a reveal timeline.
 #[test]
 fn parallax_is_one_directive() {
-    let src = r#"<card style({ animate: reveal({ translate-y: 'spring:gentle', opacity: 'fade' }) })> x</card>"#;
+    let src = r#"<card style({ animate: { reveal: play(slide-up) } })> x</card>"#;
     let js = compile(src, opts()).expect("compiles").js;
     assert!(js.contains(r#"trigger: "reveal""#), "{js}");
     let motion_count = js.matches("property:").count();
-    assert_eq!(motion_count, 2, "one motion per property:\n{js}");
+    assert!(
+        motion_count >= 2,
+        "slide-up expands to opacity + translate-y:\n{js}"
+    );
 }
 
-/// Every trigger the compiler advertises must be writable. Enumerating the real
-/// list is what keeps that honest: a trigger added to `MOTION_TRIGGERS` and
-/// nowhere else fails here rather than in someone's editor.
+/// Every trigger the compiler advertises must be writable.
 #[test]
 fn every_advertised_trigger_can_actually_be_written() {
     let mut unwritable = Vec::new();
     for trigger in sail_lint::rules::animate_token_only::MOTION_TRIGGERS {
-        let src =
-            format!(r#"<card style({{ animate: {trigger}({{ opacity: 'fade' }}) }})> x</card>"#);
+        let src = format!(r#"<card style({{ animate: {{ {trigger}: play(fade) }} }})> x</card>"#);
         match compile(&src, opts()) {
             Ok(out) => assert!(
                 out.js.contains(&format!(r#"trigger: "{trigger}""#)),
                 "`{trigger}` compiled but did not reach the runtime:\n{}",
                 out.js
             ),
-            Err(e) => unwritable.push(format!("  style.{trigger} -> {}", e.message)),
+            Err(e) => unwritable.push(format!("  animate.{{ {trigger} }} -> {}", e.message)),
         }
     }
     assert!(

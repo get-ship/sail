@@ -65,10 +65,10 @@ export default controller(() => {
   <row align="center" justify="between">
     <h3>Release console</h3>
     <match {phase()}>
-      {'idle' => <badge tone="muted" style({ animate: enter({ opacity: 'fade' }) })>idle</badge>}
-      {'building' => <badge tone="warning" style({ animate: enter({ translate-x: 'spring:snappy' }) })>building</badge>}
-      {'live' => <badge tone="success" style({ animate: enter({ scale: 'spring:bouncy' }) })>live</badge>}
-      {else => <badge tone="destructive" style({ animate: enter({ opacity: 'fade' }) })>failed</badge>}
+      {'idle' => <badge tone="muted" style({ animate: { enter: play(fade) } })>idle</badge>}
+      {'building' => <badge tone="warning" style({ animate: { enter: play(fade) } })>building</badge>}
+      {'live' => <badge tone="success" style({ animate: { enter: play(fade-scale-in) } })>live</badge>}
+      {else => <badge tone="destructive" style({ animate: { enter: play(fade) } })>failed</badge>}
     </match>
   </row>
 

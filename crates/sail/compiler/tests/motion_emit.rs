@@ -1,8 +1,7 @@
-//! Style motion chain methods → `__sail_motion_attach(...)` integration tests.
+//! Style `animate: { <trigger>: play(…) }` → `__sail_motion_attach(...)`.
 //!
-//! Author form: block Style statement `style.… .enter({…}) / .hover({…}) / …`.
-//! Property is one of the closed `MOTION_PROPERTIES`; preset resolves against
-//! `animation-presets.json` (e.g. `spring:snappy`, `fade`, `press`).
+//! Author form is the keyed map. Play names resolve through the theme
+//! registry (`fade`, `slide-up`, `colors`). MotionAttach is derived.
 
 use sail_compiler::{CompileMode, CompileOpts, compile};
 
@@ -25,10 +24,8 @@ fn compile_motion(source: &str) -> Result<String, String> {
 
 #[test]
 fn static_hover_scale_emits_runtime_dispatch() {
-    let js = compile_motion(
-        r#"<button style({ animate: hover({ scale: 'spring:snappy' }) })> x</button>"#,
-    )
-    .expect("compile");
+    let js = compile_motion(r#"<button style({ animate: { hover: play(fade) } })> x</button>"#)
+        .expect("compile");
     // Runtime dispatch: the per-property `MotionConfig` is embedded as
     // a literal object, then handed to `__sail_motion_attach`. No AOT
     // `el.animate(...)` is emitted — motion.dev owns the animation
@@ -39,22 +36,11 @@ fn static_hover_scale_emits_runtime_dispatch() {
     );
     assert!(js.contains("\"hover\""), "expected trigger string:\n{js}");
     assert!(
-        js.contains("property: \"scale\""),
+        js.contains("property: \"opacity\""),
         "expected property field:\n{js}"
     );
-    assert!(
-        js.contains("preset: \"spring:snappy\""),
-        "expected preset field:\n{js}"
-    );
-    assert!(
-        js.contains("kind: \"spring\""),
-        "expected kind field:\n{js}"
-    );
-    assert!(
-        js.contains("stiffness: 380"),
-        "expected stiffness field:\n{js}"
-    );
-    assert!(js.contains("damping: 30"), "expected damping field:\n{js}");
+    assert!(js.contains("from: 0"), "expected fade from:\n{js}");
+    assert!(js.contains("to: 1"), "expected fade to:\n{js}");
     // No AOT keyframe bake: the emit must not carry a baked `el.animate(...)`.
     assert!(
         !js.contains("el.animate("),
@@ -65,7 +51,7 @@ fn static_hover_scale_emits_runtime_dispatch() {
 #[test]
 fn unknown_preset_is_a_compile_error() {
     let err = compile_motion(
-        r#"<button style({ animate: hover({ scale: 'does-not-exist' }) })> x</button>"#,
+        r#"<button style({ animate: { hover: play(does-not-exist) } })> x</button>"#,
     )
     .expect_err("expected compile error");
     assert!(
@@ -73,8 +59,8 @@ fn unknown_preset_is_a_compile_error() {
         "expected error to mention the unknown preset: {err}"
     );
     assert!(
-        err.contains("is not in the closed vocabulary") || err.contains("unknown preset"),
-        "expected 'unknown preset' or lint wording in error: {err}"
+        err.contains("unknown vocabulary") || err.contains("unknown preset"),
+        "expected unknown-play diagnostic: {err}"
     );
 }
 
@@ -99,10 +85,9 @@ fn whole_config_as_one_expression_is_rejected_and_names_the_surface() {
 
 #[test]
 fn multiple_props_share_one_attach_call() {
-    let js = compile_motion(
-        r#"<button style({ animate: hover({ scale: 'spring:snappy', opacity: 'fade' }) })> x</button>"#,
-    )
-    .expect("compile");
+    let js =
+        compile_motion(r#"<button style({ animate: { hover: play(fade-scale-in) } })> x</button>"#)
+            .expect("compile");
     let attach_idx = js
         .find("__sail_motion_attach(")
         .expect("__sail_motion_attach call");
@@ -127,7 +112,7 @@ fn named_style_ref_emits_runtime_motion_attach() {
     let js = compile_motion(
         r#"
 <scope>
-  style ambientDot = { size({ w: 4, h: 4 }).radius(full).bg(primary), animate: loop({ translate-y: 'spring:gentle', stagger: '0.15s' }) }
+  style ambientDot = { size({ w: 4, h: 4 }).radius(full).bg(primary), animate: { loop: play(slide-up) } }
 </scope>
 <div style(ambientDot)></div>
 "#,
@@ -146,7 +131,7 @@ fn named_style_ref_emits_runtime_motion_attach() {
 
 #[test]
 fn loop_rotate_spin_emits_infinite_one_direction() {
-    let js = compile_motion(r#"<img style({ animate: loop({ rotate: 'spin' }) })> x</img>"#)
+    let js = compile_motion(r#"<img style({ animate: { loop: play(fade) } })> x</img>"#)
         .expect("compile");
     assert!(
         js.contains("__sail_motion_attach("),
@@ -154,59 +139,33 @@ fn loop_rotate_spin_emits_infinite_one_direction() {
     );
     assert!(js.contains("\"loop\""), "expected trigger string:\n{js}");
     assert!(
-        js.contains("property: \"rotate\""),
+        js.contains("property: \"opacity\""),
         "expected property field:\n{js}"
     );
-    assert!(
-        js.contains("preset: \"spin\""),
-        "expected preset field:\n{js}"
-    );
-    assert!(js.contains("kind: \"tween\""), "expected kind field:\n{js}");
     assert!(js.contains("from: 0"), "expected from field:\n{js}");
-    assert!(js.contains("to: 360"), "expected to field:\n{js}");
-    assert!(
-        js.contains("duration: 14"),
-        "expected a 14s duration baked from the glacial token:\n{js}"
-    );
-    assert!(
-        js.contains("easing: \"linear\""),
-        "expected linear easing:\n{js}"
-    );
+    assert!(js.contains("to: 1"), "expected to field:\n{js}");
     assert!(
         js.contains("iterations: Infinity"),
         "expected infinite iterations:\n{js}"
     );
-    // NOT alternate — a spin goes one way, it does not ping-pong.
-    assert!(
-        js.contains("direction: \"normal\""),
-        "expected one-direction spin:\n{js}"
-    );
 }
 
 #[test]
-fn unknown_property_alias_is_rejected() {
+fn trigger_call_form_is_rejected() {
     let err = compile_motion(
-        r#"<button style({ animate: hover({ foo: 'spring:snappy' }) })> x</button>"#,
+        r#"<button style({ animate: hover({ scale: 'spring:snappy' }) })> x</button>"#,
     )
     .expect_err("expected compile error");
     assert!(
-        err.contains("foo"),
-        "expected error to mention 'foo': {err}"
-    );
-    assert!(
-        err.contains("scale")
-            || err.contains("opacity")
-            || err.contains("translate-y")
-            || err.contains("translate-x")
-            || err.contains("rotate"),
-        "expected error to list supported properties: {err}"
+        err.contains("animate:") && err.contains("play"),
+        "must teach the play map: {err}"
     );
 }
 
 #[test]
 fn enter_exit_on_style_chain_with_paint() {
     let js = compile_motion(
-        r#"<card style({ pad(4), animate: enter({ opacity: 'fade' }).exit({ opacity: 'fade-out' }) })> x</card>"#,
+        r#"<card style({ pad(4), animate: { enter: play(fade), exit: play(fade) } })> x</card>"#,
     )
     .expect("compile");
     assert!(js.contains(r#"trigger: "enter""#), "{js}");
@@ -217,7 +176,7 @@ fn enter_exit_on_style_chain_with_paint() {
 #[test]
 fn enter_exit_via_animate_channel() {
     let js = compile_motion(
-        r#"<card style({ pad(4), animate: enter({ opacity: 'fade' }).exit({ opacity: 'fade-out' }) })> x</card>"#,
+        r#"<card style({ pad(4), animate: { enter: play(fade), exit: play(fade) } })> x</card>"#,
     )
     .expect("compile animate channel");
     assert!(js.contains(r#"trigger: "enter""#), "{js}");

@@ -569,8 +569,8 @@ fn compile_use(
     })
 }
 /// Compile a motion attach config from the compiler-private `_sail_m_<trigger>`
-/// handoff produced by Style `.enter` / `.exit` / `.loop` / `.reveal` /
-/// `.scroll({…})` lowering. Authors write Style methods, never this attr.
+/// handoff derived from `animate: { <trigger>: play(…) }`. Authors write
+/// the play map, never this attr.
 ///
 /// Accepts only a static object literal; dynamic expressions are rejected so
 /// the runtime never has to evaluate an animation config.
@@ -620,10 +620,9 @@ fn compile_motion(
             Ok(parsed) => parsed,
             Err(_) if !has_static_shape(value) => {
                 return Err(err(format!(
-                    "style.{trigger}({{...}}) — the value must be a config object like \
-                     `style.{trigger}({{ scale: 'pop' }})`. Fields may be inline values \
-                     (`duration: 3600`) or signals (`duration: speed()`), but the config \
-                     itself is written out, not passed in."
+                    "animate: {{ {trigger}: play(…) }} — the derived config must be a \
+                     static object. Authors write `play(fade)` / `play(slide-up)`; the \
+                     compiler expands the play."
                 )));
             }
             Err(parse_err) => return Err(parse_err),

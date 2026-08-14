@@ -1288,17 +1288,18 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
     let _ = writeln!(md, "## Motion (pointer)\n");
     let _ = writeln!(
         md,
-        "Style animate channel: `.enter` / `.exit` / `.loop` / `.reveal` / `.scroll` /\n\
-         `.hover` / `.press` / `.focus` / `.focus-visible` (public `fx:` is a compile error).\n\
+        "Style animate map: `animate: {{ enter: play(…), transition: play(colors, fast) }}`\n\
+         (keys: transition, enter, exit, reveal, loop, scroll). Hover/press paint is\n\
+         `when:` + `transition` play. Public `fx:` is a compile error.\n\
          Fire-and-forget presets vs `timeline()` scrub lane — full tables + presets:\n\
-         MCP `sail_surface` (or compile errors naming allowed presets).\n\n\
+         MCP `sail_surface` (or compile errors naming allowed plays).\n\n\
          ```\n\
          <card>\n\
-           style({{ animate: reveal({{ opacity: 'fade', translate-y: 'spring:gentle' }}) }})\n\
+           style({{ animate: {{ reveal: play(slide-up) }} }})\n\
            reveal\n\
          </card>\n\
          <button>\n\
-           style({{ animate: press({{ scale: 'press' }}) }})\n\
+           style({{ animate: {{ transition: play(colors, fast) }}, when: {{ hover: bg(muted) }} }})\n\
            tactile\n\
          </button>\n\
          ```\n"

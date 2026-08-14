@@ -811,8 +811,7 @@ mod tests {
 
     #[test]
     fn enter_motion_config_object_parses_and_collects() {
-        let (style, diags) =
-            parse("style({ animate: enter({ opacity: 'fade', stagger: '450ms' }) })");
+        let (style, diags) = parse("style({ animate: { enter: play(fade) } })");
         assert!(
             diags.is_empty(),
             "{:?}",
@@ -821,14 +820,18 @@ mod tests {
         let m = collect_motion_attaches(&style);
         assert_eq!(m.len(), 1, "style={style:?} motions={m:?}");
         assert_eq!(m[0].0, "enter");
-        assert!(m[0].1.contains("fade"), "{:?}", m[0]);
+        assert!(
+            m[0].1.contains("opacity") && m[0].1.contains("from"),
+            "{:?}",
+            m[0]
+        );
     }
 
     #[test]
     #[ignore = "deleted free form (STYLE-BINDING-1)"]
     fn enter_then_when_chain_order() {
         let (style, diags) = parse(
-            "style({  bg(primary), animate: enter({ opacity: 'fade' }), when: { hover: {  bg(muted)  } } })",
+            "style({  bg(primary), animate: { enter: play(fade) }, when: { hover: {  bg(muted)  } } })",
         );
         assert!(
             diags.is_empty(),
@@ -943,7 +946,7 @@ mod tests {
 
     #[test]
     fn channels_animate_channel_motion_attaches() {
-        let (s_ch, d_ch) = parse("style({ bg(primary), animate: enter({ opacity: 'fade' }) })");
+        let (s_ch, d_ch) = parse("style({ bg(primary), animate: { enter: play(fade) } })");
         assert!(
             d_ch.is_empty(),
             "animate: channel must parse clean: {:?}",
@@ -965,7 +968,7 @@ mod tests {
     #[test]
     fn named_style_ref_collects_motion_via_env() {
         let (named, diags) = parse(
-            "style({ size({ w: 4, h: 4 }).radius(full).bg(primary), animate: loop({ translate-y: 'spring:gentle', stagger: '0.15s' }) })",
+            "style({ size({ w: 4, h: 4 }).radius(full).bg(primary), animate: { loop: play(slide-up) } })",
         );
         assert!(
             diags.is_empty(),

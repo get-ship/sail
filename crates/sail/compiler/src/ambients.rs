@@ -76,8 +76,9 @@ const ZERO_ARG_SETTERS: &[&str] = &[
     "press",
 ];
 
-/// Motion chain methods on Style (`style.enter({…})`).
-const MOTION_CHAIN_METHODS: &[&str] = &[
+/// Keys of the `animate:` map (`animate: { enter: play(…), transition: play(…) }`).
+const ANIMATE_MAP_KEYS: &[&str] = &[
+    "transition",
     "enter",
     "exit",
     "loop",
@@ -1294,20 +1295,18 @@ fn emit_style_types(out: &mut String) {
     out.push_str("// ── Style builder (from sail_style vocab) ──\n");
 
     out.push_str(
-        "/** Author motion config object (`enter({ opacity: 'fade' })`).\n\
-         \x20*  Hyphenated property keys need quotes under pure tsc. */\n\
-         type SailStyleMotionConfig = {\n\
-         \x20 opacity?: string | number\n\
-         \x20 scale?: string | number\n\
-         \x20 'scale-x'?: string | number\n\
-         \x20 'scale-y'?: string | number\n\
-         \x20 'translate-x'?: string | number\n\
-         \x20 'translate-y'?: string | number\n\
-         \x20 rotate?: string | number\n\
-         \x20 stagger?: string | number\n\
-         \x20 duration?: string | number\n\
-         \x20 delay?: string | number\n\
-         \x20 [key: string]: string | number | undefined\n\
+        "/** `animate:` keyed map. The concern inside is `play`. */\n\
+         type SailAnimateMap = {\n\
+         \x20 transition?: SailStyleValue\n\
+         \x20 enter?: SailStyleValue\n\
+         \x20 exit?: SailStyleValue\n\
+         \x20 reveal?: SailStyleValue\n\
+         \x20 loop?: SailStyleValue\n\
+         \x20 scroll?: SailStyleValue\n\
+         \x20 hover?: SailStyleValue\n\
+         \x20 press?: SailStyleValue\n\
+         \x20 focus?: SailStyleValue\n\
+         \x20 'focus-visible'?: SailStyleValue\n\
          }\n\
          \n",
     );
@@ -1322,7 +1321,7 @@ fn emit_style_types(out: &mut String) {
     out.push_str(
         "/** Style object partial — keyed members only (SPEC-SPINNAKER-3). */\n\
          type SailStyleObj = {\n\
-         \x20 animate?: SailStyleValue\n\
+         \x20 animate?: SailAnimateMap\n\
          \x20 when?: SailWhenMap\n\
          \x20 match?: SailMatchBlock\n\
          \x20 compound?: SailCompoundRow[]\n\
@@ -1341,24 +1340,6 @@ fn emit_style_types(out: &mut String) {
     out.push_str("interface SailStyleChain {\n");
     for row in vocab_rows() {
         emit_vocab_method(out, row);
-    }
-    // Motion methods on the chain
-    for m in MOTION_CHAIN_METHODS {
-        // scroll/press dual paint — already on setters; overload with motion object.
-        if *m == "scroll" || *m == "press" {
-            out.push_str(&format!(
-                "  {m}(config: SailStyleMotionConfig): SailStyleChain\n"
-            ));
-            continue;
-        }
-        if *m == "focus-visible" {
-            // invalid bare method name in TS — quote
-            out.push_str("  'focus-visible'(config: SailStyleMotionConfig): SailStyleChain\n");
-            continue;
-        }
-        out.push_str(&format!(
-            "  {m}(config: SailStyleMotionConfig): SailStyleChain\n"
-        ));
     }
     out.push_str("}\n\n");
 
@@ -1493,10 +1474,10 @@ fn emit_globals(out: &mut String, bare_tokens: &BTreeSet<String>) {
     // Setter / motion / when-key names that also appear as token idents need a
     // callable∩literal hybrid — cannot emit both `const border` and `function border`.
     let setter_names: BTreeSet<&str> = vocab_rows().iter().map(|r| r.name).collect();
-    let motion_free: BTreeSet<&str> = MOTION_CHAIN_METHODS
+    let motion_free: BTreeSet<&str> = ANIMATE_MAP_KEYS
         .iter()
         .copied()
-        .filter(|m| *m != "focus-visible")
+        .filter(|m| *m != "focus-visible" && *m != "transition")
         .collect();
     let when_key_set: BTreeSet<&str> = WHEN_IDENT_KEYS.iter().copied().collect();
     let hybrid_names: BTreeSet<&str> = setter_names
@@ -1780,29 +1761,9 @@ fn emit_globals(out: &mut String, bare_tokens: &BTreeSet<String>) {
         }
     }
 
-    // Free motion triggers for animate channel: `animate: enter({…}).exit({…})`.
-    out.push_str("  // Free motion triggers (animate channel).\n");
-    for m in MOTION_CHAIN_METHODS {
-        if *m == "focus-visible" {
-            // Invalid bare ident — virtual_ts rewrites `focus-visible(` → this name.
-            out.push_str(
-                "  function __sailFocusVisible(config: SailStyleMotionConfig): SailStyleChain\n",
-            );
-            continue;
-        }
-        if setter_names.contains(m) {
-            // press/scroll/hover already emitted as free setter (paint) — add motion overload via hybrid below.
-            continue;
-        }
-        if when_key_set.contains(m) {
-            continue; // hybrid with when-key
-        }
-        out.push_str(&format!(
-            "  function {m}(config: SailStyleMotionConfig): SailStyleChain\n"
-        ));
-    }
+    // `play` is the only motion concern; trigger names are map keys, not calls.
 
-    // Hybrids: token∩setter, when-key∩motion, press dual paint/motion.
+    // Hybrids: token∩setter, when-key.
     out.push_str("  // Hybrid token / when-key / dual paint-motion free forms.\n");
     for tok in bare_tokens {
         if !setter_names.contains(tok.as_str()) {
@@ -1837,29 +1798,18 @@ fn emit_globals(out: &mut String, bare_tokens: &BTreeSet<String>) {
             continue;
         }
         if is_motion {
-            out.push_str(&format!(
-                "  const {k}: ((config: SailStyleMotionConfig) => SailStyleChain) & '{k}'\n"
-            ));
+            // Trigger names are `animate:` map keys, not callables.
+            out.push_str(&format!("  const {k}: '{k}'\n"));
             continue;
         }
         if is_token {
             out.push_str(&format!("  const {k}: '{k}'\n"));
         }
     }
-    // press: paint zero-arg + motion object (setter already hybrid if token; else dual free).
+    // press is paint-only as a free setter (`press()`). Hover/press motion is
+    // `animate: { hover: play(…) }` / `when: { hover: … }` + `transition`.
     if setter_names.contains("press") && !bare_tokens.contains("press") {
-        out.push_str(
-            "  const press: {\n\
-             \x20\x20 (): SailStyleChain\n\
-             \x20\x20 (config: SailStyleMotionConfig): SailStyleChain\n\
-             \x20 }\n",
-        );
-    }
-    if setter_names.contains("scroll") && !bare_tokens.contains("scroll") {
-        // scroll paint form takes a token; free setter emit covers paint — motion overload:
-        // free setter already emitted; add ambient overload via interface merge is hard.
-        // Chain method + free motion: re-emit motion-capable free scroll.
-        out.push_str("  function scroll(config: SailStyleMotionConfig): SailStyleChain\n");
+        out.push_str("  function press(): SailStyleChain\n");
     }
 
     out.push_str(&emit_framework_platform_global_body());
@@ -1914,16 +1864,10 @@ fn emit_hybrid_vocab(out: &mut String, row: &VocabRow, tok: &str) {
     ));
 }
 
-fn emit_hybrid_when_vocab(out: &mut String, key: &str, is_motion: bool) {
-    let motion = if is_motion {
-        "  (config: SailStyleMotionConfig): SailStyleChain\n"
-    } else {
-        ""
-    };
+fn emit_hybrid_when_vocab(out: &mut String, key: &str, _is_motion: bool) {
     out.push_str(&format!(
         "  const {key}: {{\n\
          \x20\x20 (arg?: TokenOrBind<string | number> | Record<string, unknown>): SailStyleChain\n\
-         {motion}\
          \x20 }} & '{key}'\n"
     ));
 }
@@ -2009,15 +1953,9 @@ fn emit_hybrid_token_setter(out: &mut String, spec: &PlainSpec, tok: &str) {
         return;
     }
     if ZERO_ARG_SETTERS.contains(&name) {
-        let motion = if name == "press" {
-            "  (config: SailStyleMotionConfig): SailStyleChain\n"
-        } else {
-            ""
-        };
         out.push_str(&format!(
             "  const {name}: {{\n\
              \x20\x20 (): SailStyleChain\n\
-             {motion}\
              \x20 }} & {tok_ty}\n"
         ));
         return;
@@ -2052,26 +1990,16 @@ fn emit_hybrid_token_setter(out: &mut String, spec: &PlainSpec, tok: &str) {
         ));
         return;
     }
-    let motion = if name == "hover" || name == "scroll" {
-        "  (config: SailStyleMotionConfig): SailStyleChain\n"
-    } else {
-        ""
-    };
     out.push_str(&format!(
         "  const {name}: {{\n\
          \x20\x20 (token: {arg}): SailStyleChain\n\
-         {motion}\
          \x20 }} & {tok_ty}\n"
     ));
 }
 
-fn emit_hybrid_when_setter(out: &mut String, spec: &PlainSpec, key: &str, is_motion: bool) {
+fn emit_hybrid_when_setter(out: &mut String, spec: &PlainSpec, key: &str, _is_motion: bool) {
     let arg = arg_type_for_setter(spec);
-    let motion = if is_motion {
-        "  (config: SailStyleMotionConfig): SailStyleChain\n"
-    } else {
-        ""
-    };
+    let motion = "";
     if ZERO_ARG_SETTERS.contains(&spec.name) {
         out.push_str(&format!(
             "  const {key}: {{\n\

@@ -601,7 +601,7 @@ fn is_animate_trigger(name: &str) -> bool {
 fn style_stmt(setter: &str, args: &[serde_json::Value]) -> String {
     let args_s = format_sx_args(args);
     if is_animate_trigger(setter) {
-        format!("style({{ animate: {setter}({args_s}) }})")
+        format!("style({{ animate: {{ {setter}: play({args_s}) }} }})")
     } else {
         format!("style({{ {setter}({args_s}) }})")
     }
@@ -654,16 +654,12 @@ fn merge_into_flat_chain(inner: &str, setter: &str, args_s: &str) -> String {
 }
 
 fn merge_into_animate(inner: &str, setter: &str, args_s: &str) -> String {
-    let call = format!("{setter}({args_s})");
+    let entry = format!("{setter}: play({args_s})");
     if let Some(idx) = find_object_key(inner, "animate") {
         let after_key = idx + "animate:".len();
         let (val_start, val_end) = object_value_span(inner, after_key);
         let val = inner[val_start..val_end].trim();
-        let new_val = if val.is_empty() {
-            call
-        } else {
-            format!("{val}.{call}")
-        };
+        let new_val = merge_play_into_animate_val(val, setter, args_s, &entry);
         let mut out = String::from("style({ ");
         out.push_str(inner[..val_start].trim_end());
         if !out.ends_with(' ') {
@@ -681,8 +677,44 @@ fn merge_into_animate(inner: &str, setter: &str, args_s: &str) -> String {
         out
     } else {
         let sep = if inner.is_empty() { "" } else { ", " };
-        format!("style({{ {inner}{sep}animate: {call} }})")
+        format!("style({{ {inner}{sep}animate: {{ {entry} }} }})")
     }
+}
+
+fn merge_play_into_animate_val(val: &str, setter: &str, _args_s: &str, entry: &str) -> String {
+    let t = val.trim();
+    if t.is_empty() {
+        return format!("{{ {entry} }}");
+    }
+    if t.starts_with('{') && t.ends_with('}') {
+        let inner = t[1..t.len() - 1].trim();
+        if inner.is_empty() {
+            return format!("{{ {entry} }}");
+        }
+        let key = format!("{setter}:");
+        if let Some(idx) = inner.find(&key) {
+            let after = idx + key.len();
+            let rest = inner[after..].trim_start();
+            if rest.starts_with("play(") {
+                let mut out = String::from("{ ");
+                out.push_str(inner[..idx].trim_end());
+                if !out.ends_with(' ') && !out.ends_with('{') {
+                    out.push(' ');
+                }
+                out.push_str(entry);
+                if let Some(comma) = rest.find(',') {
+                    out.push(',');
+                    out.push_str(&rest[comma + 1..]);
+                }
+                if !out.ends_with('}') {
+                    out.push_str(" }");
+                }
+                return out;
+            }
+        }
+        return format!("{{ {inner}, {entry} }}");
+    }
+    format!("{{ {entry} }}")
 }
 
 fn first_object_key_at(inner: &str) -> Option<usize> {

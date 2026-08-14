@@ -12,7 +12,7 @@ conformance smoke: full live surface in one document
     <ship-button tone="primary" variant="solid"
                  on:click={() => navigate('/agents/create')}
 >
-      style({ animate: enter({ opacity: 'fade' }) })
+      style({ animate: { enter: play(fade) } })
       <ship-icon slot="leading" name="plus"></ship-icon>
       New agent
     </ship-button>

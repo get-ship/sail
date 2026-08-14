@@ -5,36 +5,36 @@ import { signal, timeline } from '@ship/sail-runtime'
 export const code = {
   stagger: `<if {dealt()}>
   <row gap="3">
-    <div style({ size(9).radius(md).bg(primary), animate: enter({ translate-y: 'spring:snappy', stagger: '0.07s' }) })>
+    <div style({ size(9).radius(md).bg(primary), animate: { enter: play(slide-up) } })>
     </div>
     <!-- ×5 — each waits 0.07s after its previous sibling -->
   </row>
 </if>`,
 
   lifecycle: `<if {open()}>
-  <card style({ animate: enter({ opacity: 'fade', scale: 'spring:snappy' }).exit({ opacity: 'fade-out' }) })>
+  <card style({ animate: { enter: play(fade-scale-in), exit: play(fade) } })>
     I animate in, and I animate out.
   </card>
 </if>`,
 
-  express: `<div style({ animate: loop({ translate-x: { from: 0, to: '80px' }, duration: 500 }) })>
+  express: `<div style({ animate: { loop: play(fade) } })>
   </div>
-<div style({ animate: loop({ translate-x: { from: 0, to: '80px' }, duration: 2500 }) })>
+<div style({ animate: { loop: play(fade) } })>
 </div>`,
 
-  reveal: `<card style({ animate: reveal({ opacity: 'fade', translate-y: 'spring:gentle' }) })>
+  reveal: `<card style({ animate: { reveal: play(slide-up) } })>
   This one fades up as it enters the viewport.
 </card>`,
 
-  loop: `<div style({ animate: loop({ translate-y: 'spring:gentle', stagger: '0.15s' }) })>
+  loop: `<div style({ animate: { loop: play(slide-up) } })>
   </div>
 
-<div style({ animate: loop({ rotate: 'spin' }) })>
+<div style({ animate: { loop: play(fade) } })>
 </div>`,
 
-  gestures: `<button style({ animate: press({ scale: 'press' }) })>
+  gestures: `<button style({ animate: { press: play(fade) } })>
     press me</button>
-<button style({ animate: focus-visible({ scale: 'spring:snappy' }) })>
+<button style({ animate: { focus-visible: play(fade) } })>
   tab to me</button>`,
 
   choreography: `<controller>

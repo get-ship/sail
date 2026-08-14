@@ -60,8 +60,8 @@ That is a hard fail — not a style preference.
 - Spacing/typography/color: concern Style with token values only —
   `style({ size({ w: full }).pad(4).bg(surface), when: { hover: bg(muted) } })`.
   No raw px/hex; no flat `style.fontSize(…)` product path.
-- Motion: `animate:` keyed-member presets (`enter`/`exit`/`loop`/`scroll`/`press`) —
-  `style({ animate: enter({…}) })`. Never hand-rolled CSS animation.
+- Motion: `animate:` keyed map of `play` (`enter`/`exit`/`loop`/`scroll`/`transition`) —
+  `style({ animate: { enter: play(fade) } })`. Never hand-rolled CSS animation.
 - Components: L1 first; reach for the element before composing.
 - The compiler's rejection is the table of contents. `sail_check` after
   every edit.

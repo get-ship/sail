@@ -62,7 +62,7 @@ export default controller(() => {
     <match {phase()}>
       {'idle' => <badge tone="muted">idle</badge>}
       <!-- TODO 4: add {'building' => …} and {'live' => …} branches, each with
-           style({ animate: enter(...) }) so the swapped-in badge announces itself. -->
+           style({ animate: { enter: play(fade) } }) so the swapped-in badge announces itself. -->
       {else => <badge tone="destructive">failed</badge>}
     </match>
   </row>

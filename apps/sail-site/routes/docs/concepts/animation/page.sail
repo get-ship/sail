@@ -4,7 +4,7 @@
   paragraph; scroll/loop prose in plain English; choreography demo full-width
   with the code below it; Under the hood answers where Sail ends and the
   embedded Motion library begins. reveal is a Style animate trigger (not an
-  HTML attr): animate: reveal({…}) — progress/view timeline with IO fallback.
+  HTML attr): animate: { reveal: play(slide-up) } — progress/view timeline with IO fallback.
 -->
 
 <scope>
@@ -12,25 +12,25 @@
   style eyebrow = { margin({ b: 2 }).fg(accent).type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
   style lead = { fg(muted-foreground).type({ size: lg, leading: relaxed }) }
   style mutedSm = { fg(muted-foreground).type({ size: sm }) }
-  style pressBtn = { animate: press({ scale: 'press' }) }
+  style pressBtn = { animate: { press: play(fade) } }
   style tileRow = { size({ min-h: 9 }) }
-  style tile = { size(9).radius(md).bg(primary), animate: enter({ translate-y: 'spring:snappy', stagger: '0.07s' }) }
-  style tileDim = { size(9).radius(md).bg(primary).filter({ opacity: 75 }), animate: enter({ translate-y: 'spring:snappy', stagger: '0.07s' }) }
+  style tile = { size(9).radius(md).bg(primary), animate: { enter: play(slide-up) } }
+  style tileDim = { size(9).radius(md).bg(primary).filter({ opacity: 75 }), animate: { enter: play(slide-up) } }
   style demoPanel = { pad(6).size({ min-h: 8 }).border({ color: border, width: 1 }).radius(lg).bg(surface-1) }
   style demoPanelTall = { pad(6).size({ min-h: 11 }).border({ color: border, width: 1 }).radius(lg).bg(surface-1) }
-  style enterCard = { pad(4), animate: enter({ opacity: 'fade', scale: 'spring:snappy' }).exit({ opacity: 'fade-out' }) }
-  style loopTileFast = { size(8).radius(md).bg(primary), animate: loop({ translate-x: { from: 0, to: '80px' }, duration: 500 }) }
-  style loopTileSlow = { size(8).radius(md).bg(primary).filter({ opacity: 75 }), animate: loop({ translate-x: { from: 0, to: '80px' }, duration: 2500 }) }
-  style revealCard = { pad(6), animate: reveal({ opacity: 'fade', translate-y: 'spring:gentle' }) }
-  style revealSpring = { pad(6), animate: reveal({ scale: 'spring:bouncy', opacity: 'fade' }) }
-  style ambientDot = { size(4).radius(full).bg(primary), animate: loop({ translate-y: 'spring:gentle', stagger: '0.15s' }) }
-  style ambientDotDim = { size(4).radius(full).bg(primary).filter({ opacity: 75 }), animate: loop({ translate-y: 'spring:gentle', stagger: '0.15s' }) }
-  style spinTile = { size(8).radius(md).bg(primary), animate: loop({ rotate: 'spin' }) }
+  style enterCard = { pad(4), animate: { enter: play(fade-scale-in), exit: play(fade) } }
+  style loopTileFast = { size(8).radius(md).bg(primary), animate: { loop: play(fade) } }
+  style loopTileSlow = { size(8).radius(md).bg(primary).filter({ opacity: 75 }), animate: { loop: play(fade) } }
+  style revealCard = { pad(6), animate: { reveal: play(slide-up) } }
+  style revealSpring = { pad(6), animate: { reveal: play(fade-scale-in) } }
+  style ambientDot = { size(4).radius(full).bg(primary), animate: { loop: play(slide-up) } }
+  style ambientDotDim = { size(4).radius(full).bg(primary).filter({ opacity: 75 }), animate: { loop: play(slide-up) } }
+  style spinTile = { size(8).radius(md).bg(primary), animate: { loop: play(fade) } }
   style grow1 = { grow(1) }
   style scrub = { grow(1).size({ min-w: 0 }) }
   style scrubVal = { size({ w: 8 }).fg(muted-foreground).type({ family: mono, size: sm, align: end }) }
   style timelineTile = { shrink(0).size(9).bg(primary).radius(md) }
-  style focusBtn = { animate: focus-visible({ scale: 'spring:snappy' }) }
+  style focusBtn = { animate: { focus-visible: play(fade) } }
   style footNote = { margin({ t: 4 }).fg(muted-foreground).type({ size: sm }) }
   style footNav = { pad({ t: 4 }).margin({ t: 8 }).border({ color: border, width: 1, edge: t }) }
 </scope>
@@ -86,7 +86,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <h1>Animation</h1>
   <p style(lead)>
     Animation is declared on the element via the Style <strong>animate
-    channel</strong>. <code>style&#40;&#123; animate: enter(&#123;…&#125;) &#125;&#41;</code> /
+    channel</strong>. <code>style&#40;&#123; animate: &#123; enter: play(fade) &#125; &#125;&#41;</code> /
     <code>exit</code> / <code>loop</code> / <code>reveal</code> name a
     <strong>trigger</strong> — <code>enter</code>, <code>exit</code>,
     <code>reveal</code>, <code>press</code>, <code>loop</code> — and a
@@ -99,7 +99,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <row gap="3" align="center">
     <button on:click={replay} style(pressBtn)>Replay</button>
     <p style(mutedSm)>
-      Five tiles, one <code>style&#40;&#123; animate: enter(&#123;…&#125;) &#125;&#41;</code> each;
+      Five tiles, one <code>style&#40;&#123; animate: &#123; enter: play(slide-up) &#125; &#125;&#41;</code> each;
       <code>stagger</code> is the delay between siblings.
     </p>
   </row>

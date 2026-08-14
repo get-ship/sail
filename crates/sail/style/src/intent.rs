@@ -233,7 +233,7 @@ pub enum IntentNode {
         when: BTreeMap<String, String>,
         body: Intent,
     },
-    /// Motion attach. Config stays a play program string until one animate grammar.
+    /// Motion attach derived from `animate: { <trigger>: play(…) }`.
     Animate {
         trigger: String,
         config: String,

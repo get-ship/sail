@@ -64,7 +64,7 @@ export default controller(() => {
           <row
             gap="3"
             align="center"
-            style(messageRow, { animate: enter({ opacity: 'fade', translate-y: 'spring:gentle', stagger: '40ms' }) })
+            style(messageRow, { animate: { enter: play(slide-up) } })
           >
             <if {!m.read}><span style(unreadDot)></span></if>
             <column gap="0" style({ grow(1) })>

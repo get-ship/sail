@@ -50,12 +50,12 @@
   style wordPrimary = { fg(primary) }
   // Spring bar-loop — the MOTION bento's live proof that style.loop moves
   // translate-y (animation.spec.ts samples computed translate over time).
-  style bar40 = { size({ w: 1_5, h: 6 }).radius(sm).bg(primary).filter({ opacity: 40 }), animate: loop({ translate-y: 'spring:bouncy' }) }
-  style bar60 = { size({ w: 1_5, h: 10 }).radius(sm).bg(primary).filter({ opacity: 60 }), animate: loop({ translate-y: 'spring:gentle', stagger: '0.12s' }) }
-  style bar70 = { size({ w: 1_5, h: 8 }).radius(sm).bg(primary).filter({ opacity: 70 }), animate: loop({ translate-y: 'spring:bouncy', stagger: '0.12s' }) }
-  style barFull = { size({ w: 1_5, h: 14 }).radius(sm).bg(primary), animate: loop({ translate-y: 'spring:gentle', stagger: '0.12s' }) }
-  style bar60b = { size({ w: 1_5, h: 9 }).radius(sm).bg(primary).filter({ opacity: 60 }), animate: loop({ translate-y: 'spring:bouncy', stagger: '0.12s' }) }
-  style bar40b = { size({ w: 1_5, h: 11 }).radius(sm).bg(primary).filter({ opacity: 40 }), animate: loop({ translate-y: 'spring:gentle', stagger: '0.12s' }) }
+  style bar40 = { size({ w: 1_5, h: 6 }).radius(sm).bg(primary).filter({ opacity: 40 }), animate: { loop: play(slide-up) } }
+  style bar60 = { size({ w: 1_5, h: 10 }).radius(sm).bg(primary).filter({ opacity: 60 }), animate: { loop: play(slide-up) } }
+  style bar70 = { size({ w: 1_5, h: 8 }).radius(sm).bg(primary).filter({ opacity: 70 }), animate: { loop: play(slide-up) } }
+  style barFull = { size({ w: 1_5, h: 14 }).radius(sm).bg(primary), animate: { loop: play(slide-up) } }
+  style bar60b = { size({ w: 1_5, h: 9 }).radius(sm).bg(primary).filter({ opacity: 60 }), animate: { loop: play(slide-up) } }
+  style bar40b = { size({ w: 1_5, h: 11 }).radius(sm).bg(primary).filter({ opacity: 40 }), animate: { loop: play(slide-up) } }
   // Empty prop bags for in-file partials (no params; expand at preprocess).
   type MotionBarsProps = {}
   type BentoCardProps = {}

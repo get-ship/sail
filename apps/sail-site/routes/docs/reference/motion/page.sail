@@ -36,7 +36,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     <p style(lead)>
       Animation is declared on the element via the Style <strong>animate
       channel</strong>.
-      <code>style&#40;&#123; animate: enter(&#123;…&#125;) &#125;&#41;</code> is the tip form;
+      <code>style&#40;&#123; animate: &#123; enter: play(fade) &#125; &#125;&#41;</code> is the tip form;
       retired <code>transition:</code> / <code>in:</code> / <code>out:</code>
       attributes are not legal.
     </p>
@@ -62,7 +62,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
   <column gap="3">
     <h3>Config value grammar</h3>
     <p style(sectionLead)>
-      Inside an <code>animate: &lt;trigger&gt;(&#123;…&#125;)</code> config object, every value
+      Inside <code>animate: &#123; &lt;trigger&gt;: play(…) &#125;</code>, the play name is the vocabulary; every value
       takes one of these forms.
     </p>
     <grid cols="1" gap="2">

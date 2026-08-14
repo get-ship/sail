@@ -16,18 +16,18 @@
   style sectionLabel = { fg(muted-foreground).type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
   style listRow = { pad(2).radius(md).cursor(pointer), when: { hover: bg(muted), current: bg(muted) } }
   style mainCol = { grow(1).size({ min-w: 0, min-h: 0 }) }
-  style playlistHead = { shrink(1).pad({ all: 6, b: 4 }), animate: enter({ opacity: 'fade', translate-y: 'spring:gentle' }) }
+  style playlistHead = { shrink(1).pad({ all: 6, b: 4 }), animate: { enter: play(slide-up) } }
   style accentLabel = { fg(accent).type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
   style title = { type({ size: 3xl }) }
   style mutedSm = { fg(muted-foreground).type({ size: sm }) }
   style trackScroll = { grow(1).size({ min-h: 0 }).pad({ x: 6, b: 4 }) }
-  style trackRow = { pad({ all: 2, x: 3 }).radius(md).cursor(pointer), animate: enter({ opacity: 'fade', stagger: '0.03s' }), when: { hover: bg(muted), current: bg(muted) } }
+  style trackRow = { pad({ all: 2, x: 3 }).radius(md).cursor(pointer), animate: { enter: play(fade) }, when: { hover: bg(muted), current: bg(muted) } }
   style cover = { shrink(0).position(relative).size(10).overflow({ all: hidden }).radius(sm).bg(muted) }
   style coverImg = { display(block).size(full).objectFit(cover) }
   style playingMask = { position({ scheme: absolute, inset: 0 }).bg(background).filter({ opacity: 70 }) }
-  style eqBar = { size({ w: 1, h: 3 }).radius(full).bg(primary), animate: loop({ translate-y: 'spring:gentle', stagger: '0.08s' }) }
-  style eqBarMid = { size({ w: 1, h: 4 }).radius(full).bg(primary), animate: loop({ translate-y: 'spring:gentle', stagger: '0.08s' }) }
-  style eqBarShort = { size({ w: 1, h: 2 }).radius(full).bg(primary), animate: loop({ translate-y: 'spring:gentle', stagger: '0.08s' }) }
+  style eqBar = { size({ w: 1, h: 3 }).radius(full).bg(primary), animate: { loop: play(slide-up) } }
+  style eqBarMid = { size({ w: 1, h: 4 }).radius(full).bg(primary), animate: { loop: play(slide-up) } }
+  style eqBarShort = { size({ w: 1, h: 2 }).radius(full).bg(primary), animate: { loop: play(slide-up) } }
   style trackMeta = { grow(1).size({ min-w: 0 }) }
   style trackTitle = { when: { groupCurrent: fg(primary) } }
   style albumCol = { display(none).fg(muted-foreground).type({ size: sm }), when: { desktop: display(block) } }
@@ -39,7 +39,7 @@
   style progressShell = { grow(1).size({ min-w: 0 }) }
   style time = { shrink(1).fg(muted-foreground).type({ family: mono, size: xs }) }
   style volumeTrack = { size({ w: 20, min-w: 20 }) }
-  style pressBtn = { animate: press({ scale: 'press' }) }
+  style pressBtn = { animate: { press: play(fade) } }
 
   type PlaylistRowProps = {
     name: string

@@ -3,10 +3,11 @@
 use std::borrow::Cow;
 use std::collections::{BTreeMap, HashMap, HashSet};
 
+use super::channel::is_animate_trigger;
 use super::intent::is_known_when_key;
 use super::ir::{PaintArg, PaintOp, Style, StyleDiagnostic};
 use super::setters::validate_op;
-use super::theme_env::{ThemeStyleEnv, current_styling_policy};
+use super::theme_env::{PlayPreset, ThemeStyleEnv, current_styling_policy};
 
 /// Parse a Style expression. Flat `style.method(…)` chains are refused —
 /// use `style({ pad(4).bg(surface), when: { hover: bg(muted) } })`.
@@ -160,7 +161,7 @@ fn forbid_motion_inside_when(style: &Style) -> Result<(), StyleDiagnostic> {
                 if style_contains_motion(body) {
                     return Err(StyleDiagnostic::ParseError {
                         message: format!(
-                            "`.enter` / `.exit` / `.loop` / `.reveal` / `.scroll` cannot appear inside when({{ {key}: … }}) — lifecycle and ambient motion are not pseudo-state. Put motion in the `animate:` channel on the head: style({{ …, animate: enter({{…}}) }}).when({{…}})"
+                            "lifecycle / ambient motion cannot appear inside when({{ {key}: … }}) — put `play(…)` on the head `animate:` map: style({{ …, animate: {{ enter: play(…) }} }})"
                         ),
                         source: format!("when.{{ {key} }}"),
                     });
@@ -348,8 +349,9 @@ fn strip_one_outer_brace_layer(t: &str) -> &str {
     t
 }
 
-/// `name.enter|exit|loop|reveal|scroll|hover|press|focus…({…})` — motion attach
-/// chained off a Style const ref (not `style.`).
+/// Detect retired `name.enter({…})` tails so they are not classified as
+/// utility-string product. The parser still refuses them with a teaching
+/// diagnostic pointing at `animate: { enter: play(…) }`.
 fn is_const_ref_motion_chain(input: &str) -> bool {
     let Some((head, rest)) = input.split_once('.') else {
         return false;
@@ -361,9 +363,8 @@ fn is_const_ref_motion_chain(input: &str) -> bool {
     is_motion_chain_method(method)
 }
 
-/// Public for the s-attribute classifier (`rules::sx`): a const-ref motion
-/// chain (`row.enter({…}).exit({…})`) is a compile-time Style product, not a
-/// runtime dynamic binding.
+/// Public for the s-attribute classifier (`rules::sx`): leftover
+/// `row.enter({…})` is not a utility string — parse it and teach the play map.
 pub fn is_const_ref_motion_chain_pub(input: &str) -> bool {
     is_const_ref_motion_chain(input)
 }
@@ -720,7 +721,7 @@ fn parse_style_expr(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Sty
     match p.peek() {
         Some(Tok::Word("style")) => parse_style_chain(p, diags),
         Some(Tok::Word(_)) => {
-            // Style const ref + optional motion tails (`name.enter({…})`).
+            // Style const ref. Motion tails (`name.enter({…})`) are retired.
             let name = match p.bump() {
                 Some(Tok::Word(w)) => w.to_string(),
                 _ => return Style::Empty,
@@ -729,36 +730,8 @@ fn parse_style_expr(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Sty
                 return Style::Empty;
             }
             if p.peek() == Some(&Tok::Dot) {
-                let mut base = make_style_ref(name, diags);
-                while p.eat(&Tok::Dot) {
-                    let method = match p.bump() {
-                        Some(Tok::Word(w)) => w,
-                        _ => {
-                            diags.push(StyleDiagnostic::ParseError {
-                                message: "expected method after `.` on Style ref".into(),
-                                source: p.remainder(),
-                            });
-                            break;
-                        }
-                    };
-                    if method == "when" {
-                        diags.push(StyleDiagnostic::ParseError {
-                            message: "`.when(…)` is retired — use `style(ref, { when: {…} })` or `when:` inside a style object".into(),
-                            source: ".when".into(),
-                        });
-                        let _ = parse_when_args(p, diags);
-                    } else if is_motion_chain_method(method) {
-                        if let Some(m) = parse_motion_call(p, method, diags) {
-                            base = Style::chain(vec![base, m]);
-                        }
-                    } else {
-                        diags.push(StyleDiagnostic::ParseError {
-                            message: "only motion (`.enter` / `.exit` / `.loop` / `.reveal` / `.scroll({…})`) may follow a Style ref".into(),
-                            source: p.remainder(),
-                        });
-                        break;
-                    }
-                }
+                let base = make_style_ref(name, diags);
+                refuse_style_ref_tails(p, diags);
                 base
             } else {
                 make_style_ref(name, diags)
@@ -997,8 +970,8 @@ fn parse_style_call(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Sty
         if is_motion_chain_method(method) {
             diags.push(StyleDiagnostic::ParseError {
                 message: format!(
-                    "`.{method}({{…}})` after `style({{…}})` is retired — put motion in the \
-                     `animate:` channel: style({{ …, animate: {method}({{…}}) }})"
+                    "`.{method}({{…}})` after `style({{…}})` is retired — write \
+                     `style({{ …, animate: {{ {method}: play(…) }} }})`"
                 ),
                 source: format!(".{method}"),
             });
@@ -1076,38 +1049,8 @@ fn parse_style_arg(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Styl
                 return Style::Empty;
             }
             if p.peek() == Some(&Tok::Dot) {
-                let mut base = make_style_ref(name, diags);
-                while p.eat(&Tok::Dot) {
-                    let method = match p.bump() {
-                        Some(Tok::Word(w)) => w,
-                        _ => {
-                            diags.push(StyleDiagnostic::ParseError {
-                                message: "expected method after `.` on Style ref".into(),
-                                source: p.remainder(),
-                            });
-                            break;
-                        }
-                    };
-                    if method == "when" {
-                        diags.push(StyleDiagnostic::ParseError {
-                            message: "`.when(…)` is retired — use `style(ref, { when: {…} })`"
-                                .into(),
-                            source: ".when".into(),
-                        });
-                        let _ = parse_when_args(p, diags);
-                    } else if is_motion_chain_method(method) {
-                        if let Some(m) = parse_motion_call(p, method, diags) {
-                            base = Style::chain(vec![base, m]);
-                        }
-                    } else {
-                        diags.push(StyleDiagnostic::ParseError {
-                            message: "only motion (`.enter` / `.exit` / …) may follow a Style ref"
-                                .into(),
-                            source: p.remainder(),
-                        });
-                        break;
-                    }
-                }
+                let base = make_style_ref(name, diags);
+                refuse_style_ref_tails(p, diags);
                 base
             } else {
                 make_style_ref(name, diags)
@@ -1726,7 +1669,7 @@ fn parse_channel_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> 
         };
         if motion_object {
             diags.push(StyleDiagnostic::ParseError {
-                message: "motion methods belong in `animate:` — not in the concern chain".into(),
+                message: "motion methods belong in `animate: { enter: play(…) }` — not in the concern chain".into(),
                 source: method.to_string(),
             });
             let _ = parse_motion_call(p, method, diags);
@@ -1749,10 +1692,11 @@ fn parse_channel_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> 
     }
 }
 
-/// `animate:` body — motion trigger chain without `style.` head:
-/// `enter({…}).exit({…}).loop({…})` → same `MotionAttach` IR as flat methods.
+/// `animate:` body — product form is the trigger map only:
+/// `{ enter: play(fade), transition: play(colors, fast) }`.
 ///
-/// Also accepts the v3 trigger map: `{ enter: play(fade-up), transition: play(colors, fast) }`.
+/// The retired trigger-call chain (`enter({…}).exit({…})`) is refused with a
+/// teaching diagnostic and consumed so the rest of the style object can parse.
 fn parse_animate_channel_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Style {
     if matches!(
         p.peek(),
@@ -1763,16 +1707,23 @@ fn parse_animate_channel_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnost
     if p.peek() == Some(&Tok::LBrace) {
         return parse_animate_trigger_map(p, diags);
     }
-    let mut ops = Vec::new();
+    diags.push(StyleDiagnostic::ParseError {
+        message: "`animate:` is a keyed map of `play(…)` — write \
+                  `animate: { enter: play(…) }` (keys: transition, enter, exit, reveal, loop, scroll)"
+            .into(),
+        source: p.remainder(),
+    });
+    recover_retired_animate_chain(p, diags);
+    Style::Empty
+}
+
+/// Consume a retired `enter({…}).exit({…})` chain without producing IR.
+fn recover_retired_animate_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) {
     let mut iters = 0usize;
     let mut first = true;
     loop {
         iters += 1;
         if iters > MAX_PARSE_ITERS {
-            diags.push(StyleDiagnostic::ParseError {
-                message: "animate channel chain too many triggers".into(),
-                source: p.remainder(),
-            });
             break;
         }
         if !first && !p.eat(&Tok::Dot) {
@@ -1782,73 +1733,22 @@ fn parse_animate_channel_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnost
         let before = p.pos;
         let method = match p.bump() {
             Some(Tok::Word(w)) => w,
-            _ => {
-                diags.push(StyleDiagnostic::ParseError {
-                    message:
-                        "expected motion trigger in `animate:` (`enter` / `exit` / `loop` / …)"
-                            .into(),
-                    source: p.remainder(),
-                });
-                break;
-            }
+            _ => break,
         };
         if method == "when" {
-            diags.push(StyleDiagnostic::ParseError {
-                message: "`.when` belongs on the `style({…})` head, not inside `animate:`".into(),
-                source: p.remainder(),
-            });
             break;
         }
-        if !is_motion_chain_method(method) {
-            diags.push(StyleDiagnostic::ParseError {
-                message: format!(
-                    "`{method}` is not a motion trigger — `animate:` accepts enter/exit/loop/reveal/scroll/hover/press/focus/…"
-                ),
-                source: method.to_string(),
-            });
-            if p.peek() == Some(&Tok::LParen) {
-                let _ = parse_paren_args(p, diags, method);
-            } else if p.pos == before {
-                p.force_progress();
-            }
-            continue;
-        }
-        // Animate channel is motion-config only. Dual paint forms
-        // (`scroll(auto)`, bare `press()`) are not motion attaches here.
-        let motion_object = if p.peek() == Some(&Tok::LParen) {
+        if p.peek() == Some(&Tok::LParen) {
             let after_paren = p.tokens.get(p.pos + 1).map(|t| &t.tok);
             if after_paren == Some(&Tok::LBrace) {
-                true
+                let _ = parse_motion_call(p, method, diags);
             } else {
-                !matches!(method, "scroll" | "press")
+                let _ = parse_paren_args(p, diags, method);
             }
-        } else {
-            true
-        };
-        if !motion_object {
-            diags.push(StyleDiagnostic::ParseError {
-                message: format!(
-                    "`animate:{method}` requires a `{{…}}` motion config object — static `{method}` is a plain setter on the chain"
-                ),
-                source: method.to_string(),
-            });
-            let _ = parse_paren_args(p, diags, method);
-            if p.pos == before {
-                p.force_progress();
-            }
-            continue;
-        }
-        if let Some(m) = parse_motion_call(p, method, diags) {
-            ops.push(m);
         }
         if p.pos == before {
             p.force_progress();
         }
-    }
-    if ops.is_empty() {
-        Style::Empty
-    } else {
-        Style::chain(ops)
     }
 }
 
@@ -1895,11 +1795,26 @@ fn parse_animate_trigger_map(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic
     }
 }
 
+fn is_animate_map_key(name: &str) -> bool {
+    name == "transition" || is_animate_trigger(name)
+}
+
 fn parse_animate_map_value(
     p: &mut Parser<'_>,
     trigger: &str,
     diags: &mut Vec<StyleDiagnostic>,
 ) -> Option<Style> {
+    if !is_animate_map_key(trigger) {
+        diags.push(StyleDiagnostic::ParseError {
+            message: format!(
+                "`{trigger}` is not an `animate:` key — write `animate: {{ enter: play(…) }}` \
+                 (keys: transition, enter, exit, reveal, loop, scroll)"
+            ),
+            source: trigger.to_string(),
+        });
+        skip_style_object_value(p, diags);
+        return None;
+    }
     match p.peek() {
         Some(Tok::Word("play")) => {
             p.bump();
@@ -1907,7 +1822,7 @@ fn parse_animate_map_value(
             resolve_play_args(&args, diags);
             Some(Style::MotionAttach {
                 trigger: trigger.to_string(),
-                config: format_play_config(&args),
+                config: expand_play_to_config(trigger, &args),
             })
         }
         Some(Tok::Word(w)) if is_motion_chain_method(w) => {
@@ -1915,19 +1830,71 @@ fn parse_animate_map_value(
                 Some(Tok::Word(w)) => w,
                 _ => return None,
             };
-            parse_motion_call(p, method, diags)
+            diags.push(StyleDiagnostic::ParseError {
+                message: format!(
+                    "`animate: {{ {trigger}: {method}({{…}}) }}` is retired — the concern \
+                     inside is `play`: `animate: {{ {trigger}: play(…) }}`"
+                ),
+                source: method.to_string(),
+            });
+            let _ = parse_motion_call(p, method, diags);
+            None
         }
         Some(Tok::LBrace) => {
-            let config = p.capture_brace_object(diags)?;
-            Some(Style::MotionAttach {
-                trigger: trigger.to_string(),
-                config,
-            })
+            diags.push(StyleDiagnostic::ParseError {
+                message: format!(
+                    "`animate: {{ {trigger}: {{…}} }}` is retired — write \
+                     `animate: {{ {trigger}: play(…) }}`"
+                ),
+                source: trigger.to_string(),
+            });
+            skip_style_object_value(p, diags);
+            None
         }
         _ => {
             // Do not block the rest of the style object.
             skip_style_object_value(p, diags);
             None
+        }
+    }
+}
+
+/// Refuse `.enter({…})` / `.when(…)` tails on a Style const ref. Recovery
+/// consumes the call so the surrounding expression can continue.
+fn refuse_style_ref_tails(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) {
+    while p.eat(&Tok::Dot) {
+        let method = match p.bump() {
+            Some(Tok::Word(w)) => w,
+            _ => {
+                diags.push(StyleDiagnostic::ParseError {
+                    message: "expected method after `.` on Style ref".into(),
+                    source: p.remainder(),
+                });
+                break;
+            }
+        };
+        if method == "when" {
+            diags.push(StyleDiagnostic::ParseError {
+                message: "`.when(…)` is retired — use `style(ref, { when: {…} })` or `when:` inside a style object".into(),
+                source: ".when".into(),
+            });
+            let _ = parse_when_args(p, diags);
+        } else if is_motion_chain_method(method) {
+            diags.push(StyleDiagnostic::ParseError {
+                message: format!(
+                    "`.{method}({{…}})` tails on a Style ref are retired — write \
+                     `style(name, {{ animate: {{ {method}: play(…) }} }})`"
+                ),
+                source: format!(".{method}"),
+            });
+            let _ = parse_motion_call(p, method, diags);
+        } else {
+            diags.push(StyleDiagnostic::ParseError {
+                message: "nothing may follow a Style ref — compose with `style(name, { … })`"
+                    .into(),
+                source: p.remainder(),
+            });
+            break;
         }
     }
 }
@@ -2049,6 +2016,106 @@ fn format_play_config(args: &[PaintArg]) -> String {
         )
     } else {
         "{}".into()
+    }
+}
+
+/// Lower `play(…)` to the MotionAttach config the compiler already consumes.
+///
+/// - `transition` / CSS play prop-sets stay `{ preset, duration? }` for emit
+/// - keyframe plays expand to `{ opacity: { from, to }, … }` so `_sail_m_*`
+///   attach is derived from the same `play` path, not a second author object
+fn expand_play_to_config(trigger: &str, args: &[PaintArg]) -> String {
+    if trigger == "transition" {
+        return format_play_config(args);
+    }
+    let Some(name) = play_name_from_args(args) else {
+        return format_play_config(args);
+    };
+    let Some(play) = ThemeStyleEnv::from_registry().resolve_play(name) else {
+        return format_play_config(args);
+    };
+    if play_is_css_transition(&play) {
+        return format_play_config(args);
+    }
+    expand_keyframe_play(&play, trigger, args.get(1)).unwrap_or_else(|| format_play_config(args))
+}
+
+fn play_is_css_transition(play: &PlayPreset) -> bool {
+    play.r#type.contains("play")
+        || play.r#type.contains("transition")
+        || play.value.contains_key("property")
+        || play.value.contains_key("props")
+}
+
+fn expand_keyframe_play(
+    play: &PlayPreset,
+    trigger: &str,
+    duration: Option<&PaintArg>,
+) -> Option<String> {
+    use serde_json::Value;
+    let from = play.value.get("from")?.as_object()?;
+    let to = play.value.get("to")?.as_object()?;
+    let mut parts: Vec<String> = Vec::new();
+    if from.contains_key("opacity") || to.contains_key("opacity") {
+        if let (Some(f), Some(t)) = (
+            json_num_or_str(from.get("opacity")),
+            json_num_or_str(to.get("opacity")),
+        ) {
+            parts.push(format!("opacity: {{ from: {f}, to: {t} }}"));
+        }
+    }
+    let from_tf = from.get("transform").and_then(Value::as_str).unwrap_or("");
+    let to_tf = to.get("transform").and_then(Value::as_str).unwrap_or("");
+    if !from_tf.is_empty() || !to_tf.is_empty() {
+        for (prop, fn_name) in [
+            ("scale", "scale"),
+            ("translate-y", "translateY"),
+            ("translate-x", "translateX"),
+            ("rotate", "rotate"),
+        ] {
+            let f = css_fn_arg(from_tf, fn_name);
+            let t = css_fn_arg(to_tf, fn_name);
+            if f.is_some() || t.is_some() {
+                let f = f.unwrap_or_else(|| "0".into());
+                let t = t.unwrap_or_else(|| "0".into());
+                parts.push(format!("{prop}: {{ from: {f}, to: {t} }}"));
+            }
+        }
+    }
+    if parts.is_empty() {
+        return None;
+    }
+    if trigger == "loop" {
+        parts.push("iterations: 'infinite'".into());
+    }
+    if let Some(PaintArg::Token(tok)) = duration {
+        if !tok.is_empty() && tok.chars().all(|c| c.is_ascii_digit() || c == '.') {
+            parts.push(format!("duration: {tok}"));
+        }
+    }
+    Some(format!("{{ {} }}", parts.join(", ")))
+}
+
+fn json_num_or_str(v: Option<&serde_json::Value>) -> Option<String> {
+    match v {
+        Some(serde_json::Value::Number(n)) => Some(n.to_string()),
+        Some(serde_json::Value::String(s)) => Some(s.clone()),
+        _ => None,
+    }
+}
+
+fn css_fn_arg(transform: &str, name: &str) -> Option<String> {
+    let needle = format!("{name}(");
+    let i = transform.find(&needle)?;
+    let rest = &transform[i + needle.len()..];
+    let end = rest.find(')')?;
+    let raw = rest[..end].trim();
+    if raw.ends_with('%') {
+        Some(format!("'{raw}'"))
+    } else if let Some(stripped) = raw.strip_suffix("px").or_else(|| raw.strip_suffix("deg")) {
+        Some(stripped.to_string())
+    } else {
+        Some(raw.to_string())
     }
 }
 
@@ -2652,9 +2719,37 @@ mod flat_chain_tests {
         assert_eq!(m.len(), 1, "{m:?}");
         assert_eq!(m[0].0, "enter");
         assert!(
-            m[0].1.contains("preset") && m[0].1.contains("fade"),
-            "{:?}",
+            m[0].1.contains("opacity") && m[0].1.contains("from") && m[0].1.contains("to"),
+            "play(fade) must expand to the motion config the compiler consumes: {:?}",
             m[0]
+        );
+    }
+
+    #[test]
+    fn animate_trigger_call_form_is_refused() {
+        let (_, diags) = parse("style({ animate: enter({ opacity: 'fade' }) })");
+        let joined = msgs(&diags).join("; ");
+        assert!(
+            joined.contains("animate: { enter: play(") || joined.contains("keyed map of `play"),
+            "must teach the play map: {joined}"
+        );
+        assert!(
+            crate::parse::collect_motion_attaches(
+                &parse("style({ animate: enter({ opacity: 'fade' }) })").0
+            )
+            .is_empty()
+                || diags.iter().any(|d| d.message().contains("play")),
+            "retired trigger-call must not be a silent product: {joined}"
+        );
+    }
+
+    #[test]
+    fn style_ref_enter_tail_is_refused() {
+        let (_, diags) = parse("row.enter({ opacity: 'fade' })");
+        let joined = msgs(&diags).join("; ");
+        assert!(
+            joined.contains("animate:") && joined.contains("play"),
+            "must teach the play map: {joined}"
         );
     }
 

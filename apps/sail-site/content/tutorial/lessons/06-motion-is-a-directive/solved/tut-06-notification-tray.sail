@@ -56,18 +56,18 @@ export default controller(() => {
         variant="ghost"
         size="sm"
         on:click={() => restock()}
-        style({ animate: hover({ rotate: 'spring:bouncy' }) })
+        style({ animate: { hover: play(fade) } })
       >Restock</button>
       <button
         variant="outline"
         tone="primary"
         size="sm"
         on:click={() => toggle()}
-        style({ animate: hover({ scale: 'spring:gentle' }).press({ scale: 'press' }) })
+        style({ animate: { hover: play(fade), press: play(fade) } })
       >
         {open() ? 'Close tray' : 'Open tray'}
         <if {unread() > 0}>
-          <span style(unreadDot, { animate: loop({ scale: 'pulse' }) })></span>
+          <span style(unreadDot, { animate: { loop: play(fade) } })></span>
         </if>
       </button>
     </row>
@@ -76,13 +76,13 @@ export default controller(() => {
   <if {open()}>
     <column
       gap="2"
-      style({ animate: enter({ opacity: 'fade', translate-x: 'spring:snappy' }).exit({ opacity: 'fade-out' }) })
+      style({ animate: { enter: play(fade), exit: play(fade) } })
     >
       <for {notes() as n} key={n.id}>
         <row
           gap="3"
           align="center"
-          style(noteRow, { animate: enter({ opacity: 'fade', translate-x: 'spring:gentle', stagger: '50ms' }).exit({ opacity: 'fade-out' }) })
+          style(noteRow, { animate: { enter: play(fade), exit: play(fade) } })
         >
           <badge tone={n.tone} variant="soft" size="sm">{n.kind}</badge>
           <p style(noteText, { grow(1) })>{n.text}</p>
@@ -90,7 +90,7 @@ export default controller(() => {
         </row>
       </for>
       <if {notes().length === 0}>
-        <p style(empty, { animate: enter({ opacity: 'fade' }) })>All clear.</p>
+        <p style(empty, { animate: { enter: play(fade) } })>All clear.</p>
       </if>
     </column>
   </if>

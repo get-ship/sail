@@ -52,14 +52,14 @@ export default controller(() => {
   <row align="center" justify="between">
     <h3>Notifications</h3>
     <row gap="2" align="center">
-      <!-- TODO 1: style({ animate: hover({ rotate: 'spring:bouncy' }) }) — a playful hint. -->
+      <!-- TODO 1: style({ animate: { hover: play(fade) } }) — a playful hint. -->
       <button variant="ghost" size="sm" on:click={() => restock()}>Restock</button>
-      <!-- TODO 2: style({ animate: hover({ scale: 'spring:gentle' }).press({ scale: 'press' }) }) —
+      <!-- TODO 2: style({ animate: { hover: play(fade), press: play(fade) } }) —
            tactile feedback belongs on the trigger. -->
       <button variant="outline" tone="primary" size="sm" on:click={() => toggle()}>
         {open() ? 'Close tray' : 'Open tray'}
         <if {unread() > 0}>
-          <!-- TODO 3: style(unreadDot, { animate: loop({ scale: 'pulse' }) }) — ambient, and it
+          <!-- TODO 3: style(unreadDot, { animate: { loop: play(fade) } }) — ambient, and it
                stops under prefers-reduced-motion for free. -->
           <span style(unreadDot)></span>
         </if>
@@ -68,15 +68,13 @@ export default controller(() => {
   </row>
 
   <if {open()}>
-    <!-- TODO 4: the panel should arrive (style({
- animate: enter({ opacity: 'fade',
-         translate-x: 'spring:snappy' }),
-})) and leave (exit fade-out). Exit is the one
+    <!-- TODO 4: the panel should arrive (style({ animate: { enter: play(fade) } }))
+         and leave (`exit: play(fade)`). Exit is the one
          thing CSS can't do alone: the framework holds the node until the animation ends. -->
     <column gap="2">
       <for {notes() as n} key={n.id}>
-        <!-- TODO 5: rows should cascade in (style(noteRow, { animate: enter({…, stagger }) })
-             and fade out on dismiss (exit). Compose named paint + animate in one style(). -->
+        <!-- TODO 5: rows should cascade in (style(noteRow, { animate: { enter: play(slide-up), exit: play(fade) } }))
+             and fade out on dismiss. Compose named paint + animate in one style(). -->
         <row gap="3" align="center" style(noteRow)>
           <badge tone={n.tone} variant="soft" size="sm">{n.kind}</badge>
           <p style(noteText, { grow(1) })>{n.text}</p>

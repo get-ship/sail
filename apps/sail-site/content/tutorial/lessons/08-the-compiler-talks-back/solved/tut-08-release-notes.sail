@@ -43,7 +43,7 @@ export default controller(() => {
 <column gap="4" style(page)>
   <row align="center" justify="between">
     <h3>Release notes</h3>
-    <badge tone="primary" variant="soft" style({ animate: enter({ opacity: 'fade' }) })>v2.4.0</badge>
+    <badge tone="primary" variant="soft" style({ animate: { enter: play(fade) } })>v2.4.0</badge>
   </row>
 
   <p style(meta)>published {published()}</p>

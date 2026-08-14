@@ -515,7 +515,7 @@ pub fn lower_style_source_with_motion(
         return Err(all);
     }
     // Resolve Style::Ref through ThemeStyleEnv + env so named style decls
-    // (`style ambientDot = { …, animate: loop({…}) }` + `style(ambientDot)`)
+    // (`style ambientDot = { …, animate: { loop: play(…) } }` + `style(ambientDot)`)
     // still inject `_sail_m_*` attrs. CSS emit already expands refs; motion
     // collection must not skip them or ambient/enter/exit on named styles die.
     let motions = crate::parse::collect_motion_attaches_env(&style, env);

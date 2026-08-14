@@ -745,8 +745,8 @@ fn refuse_text_on_non_text_host(
         .with_category("sail-style"))
 }
 
-/// Inject compiler-private `_sail_m_<trigger>="{{…}}"` attrs produced by Style
-/// `.enter` / `.exit` / … . Not an author channel — authors write Style methods.
+/// Inject compiler-private `_sail_m_<trigger>="{{…}}"` attrs derived from
+/// `animate: { <trigger>: play(…) }`. Not an author channel.
 fn push_motion_attrs(out: &mut String, motions: &[(String, String)]) {
     for (trigger, config) in motions {
         // config includes braces: `{ opacity: 'fade' }`

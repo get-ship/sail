@@ -534,9 +534,8 @@ fn is_style_product_value(val: &str) -> bool {
         || t.starts_with("when(")
         || t.starts_with("compound(")
         || t.starts_with('[')
-        // Style const ref with a motion chain: `row.enter({…}).exit({…})` —
-        // the dot/parens fail the bare-word check below but the value is a
-        // compile-time Style product (the parser lowers the chain).
+        // Leftover `row.enter({…})` is not a utility string — parse teaches
+        // the play map. Not a valid product after Phase 5.
         || crate::style::parse::is_const_ref_motion_chain_pub(t)
         || {
             // bare Style const ref
@@ -602,7 +601,7 @@ mod tests {
     #[test]
     fn style_block_channel_with_when_passes() {
         // Product when: is an object key inside style({…}) — not a `.when(…)` chain.
-        let src = r#"<div style({ pad(2).bg(primary), animate: enter({ opacity: 'fade' }), when: { hover: bg(muted) } })>  x
+        let src = r#"<div style({ pad(2).bg(primary), animate: { enter: play(fade) }, when: { hover: bg(muted) } })>  x
 </div>"#;
         assert!(run(src).is_empty(), "{:?}", run(src));
     }

@@ -767,13 +767,13 @@ function classifyTrigger(trigger: string): Branch {
   return 'noop'
 }
 
-/** Attach Style motion (`style({ animate: <trigger>({…}) })`).
+/** Attach Style motion (`style({ animate: { <trigger>: play(…) } })`).
  *
  *  The compiler emits a PLAIN OBJECT when every field of the config is a
  *  literal, and a THUNK when any field holds a signal. The thunk form is
  *  the reactive lane:
  *
- *      style({ animate: loop({ translate-x: { to: dist() }, duration: speed() }) })
+ *      style({ animate: { loop: play(fade) } })
  *
  *  ## Reactive semantics (one rule, deliberately)
  *

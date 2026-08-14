@@ -16,10 +16,7 @@
   }
 
   style track = { group() }
-  style dot = { size({ w: 2, h: 2 }).radius(full).bg(muted-foreground), animate: loop({
-      translate-y: { from: 0, to: '-10px', duration: 480, easing: 'ease-in-out' },
-      stagger: '150ms',
-    }), when: { groupStateSm: scale(75), groupStateLg: scale(125), groupStatePrimary: bg(primary), groupStateInfo: bg(info), groupStateSuccess: bg(success), groupStateWarning: bg(warning), groupStateDestructive: bg(destructive), groupStateAccent: bg(accent) } }
+  style dot = { size({ w: 2, h: 2 }).radius(full).bg(muted-foreground), animate: { loop: play(slide-up) }, when: { groupStateSm: scale(75), groupStateLg: scale(125), groupStatePrimary: bg(primary), groupStateInfo: bg(info), groupStateSuccess: bg(success), groupStateWarning: bg(warning), groupStateDestructive: bg(destructive), groupStateAccent: bg(accent) } }
 </scope>
 
 <span
