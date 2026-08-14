@@ -54,7 +54,9 @@ pub use conditions::{CONDITION_PREFIXES, condition_media};
 pub use emit::{
     CssRule, StyleEnv, emit_style, lower_style, lower_style_source, lower_style_source_with_motion,
 };
-pub use foreign_idioms::{FOREIGN_IDIOMS, ForeignIdiom, IdiomKind, find_foreign_idiom};
+pub use foreign_idioms::{
+    FOREIGN_IDIOMS, ForeignIdiom, IdiomKind, find_foreign_idiom, teaching_line,
+};
 pub use host_ctx::{with_bound_group_props, with_host_surface};
 pub use ir::{PaintArg, PaintOp, Style, StyleDiagnostic};
 pub use parse::{

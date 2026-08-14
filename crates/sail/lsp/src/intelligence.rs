@@ -285,9 +285,14 @@ pub fn hover_with_session(
     let offset = line_col_to_byte_offset(source, line_1based as usize, col_1based as usize);
     let structure =
         sail_compiler::hover_at(source, path, line_1based as usize, col_1based as usize);
-    // theme_hover_at is already site-gated; prefer that payload over tsgo.
+    // Site-gated teaching (theme / layout / unknown vocab / partials) is the
+    // quality bar — prefer that payload over tsgo so we never show a raw
+    // parse error or empty `{}` type for those probes.
     if let Some(h) = &structure {
-        if h.kind == "partial" || h.kind == "theme-token" {
+        if matches!(
+            h.kind.as_str(),
+            "partial" | "theme-token" | "layout" | "unknown-vocab"
+        ) {
             return Some(HoverPayload {
                 contents: h.source.clone(),
                 range: None,
@@ -297,7 +302,9 @@ pub fn hover_with_session(
     if tsgo.is_live() {
         if let Some(raw) = tsgo.hover_mapped(uri_key, source, offset) {
             if let Some(h) = hover_payload_from_tsgo(raw) {
-                return Some(h);
+                if !tsgo_hover_is_untyped_empty_object(&h.contents) {
+                    return Some(h);
+                }
             }
         }
     }
@@ -500,6 +507,20 @@ fn range_from_lsp_json(range: &Value) -> Option<RangePayload> {
         end_line: end.get("line")?.as_u64()? as u32 + 1,
         end_col: end.get("character")?.as_u64()? as u32 + 1,
     })
+}
+
+/// True when tsgo typed `style.foo` (or similar) as a bare `{}` — missing
+/// ambients, not a real type. Fall through so we do not claim that type.
+fn tsgo_hover_is_untyped_empty_object(contents: &str) -> bool {
+    let stripped: String = contents
+        .lines()
+        .filter(|l| !l.trim().starts_with("```"))
+        .collect::<Vec<_>>()
+        .join("\n");
+    let compact: String = stripped.chars().filter(|c| !c.is_whitespace()).collect();
+    let compact = compact.replace(['`', '*'], "");
+    let tail = compact.rsplit(':').next().unwrap_or(compact.as_str());
+    tail == "{}" || (tail == "object" && compact.contains("style:{}"))
 }
 
 fn markdown_from_hover_contents(contents: &Value) -> Option<String> {
@@ -749,10 +770,10 @@ export default controller(() => ({ primary: signal(0) }))
             return;
         }
         let mut intel = Intelligence::start(Some(&repo_root()));
-        if !intel.is_tsgo_live() {
-            eprintln!("SKIP intelligence hover: session not live");
-            return;
-        }
+        assert!(
+            intel.is_tsgo_live(),
+            "tsgo is on PATH — dead session is a fail (empty hover-with-tsgo-present)"
+        );
         // line/col of `signal` in controller
         let offset = COUNTER.find("signal(0)").unwrap();
         let (line0, col0) = offset_to_lsp_position(COUNTER, offset);

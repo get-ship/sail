@@ -681,12 +681,32 @@ pub fn hover_at(
     }
     // SPEC-PARTIAL-1: file-local partial name / invocation tag hover (author
     // source — partials expand away in `parse`, so this path is pre-parse).
-    if let Some(tag) = tag_name_at(source, offset)
-        && let Some(md) = crate::parse::partials::partial_hover(source, &tag)
-    {
+    if let Some(tag) = tag_name_at(source, offset) {
+        if let Some(md) = crate::parse::partials::partial_hover(source, &tag) {
+            return Some(Hover {
+                name: tag,
+                kind: "partial".into(),
+                source: md,
+                line,
+                col,
+            });
+        }
+        if let Some(md) = layout_keyword_hover(&tag) {
+            return Some(Hover {
+                name: tag,
+                kind: "layout".into(),
+                source: md,
+                line,
+                col,
+            });
+        }
+    }
+    // Style / HTML unknown vocabulary — teaching sentence, never a raw parse
+    // error. Site-gated so controller TS keeps typed tsgo hover.
+    if let Some((name, md)) = unknown_vocab_hover(source, offset) {
         return Some(Hover {
-            name: tag,
-            kind: "partial".into(),
+            name,
+            kind: "unknown-vocab".into(),
             source: md,
             line,
             col,
@@ -706,6 +726,163 @@ pub fn hover_at(
             line: s.line,
             col: s.col,
         })
+}
+
+/// Teaching hover for a layout keyword tag (`column` / `row` / …).
+fn layout_keyword_hover(tag: &str) -> Option<String> {
+    if !sail_lint::rules::layout::is_layout_tag(tag) {
+        return None;
+    }
+    let summary = match tag {
+        "column" => "vertical stack",
+        "row" => "horizontal flow (wraps; `nowrap` for a single line)",
+        "grid" => "explicit grid",
+        "center" => "centered box",
+        "stack" => "z-axis overlay",
+        _ => "layout keyword",
+    };
+    let props = sail_lint::rules::layout::tag_props(tag);
+    let axis = if props.is_empty() {
+        String::new()
+    } else {
+        format!(
+            " Axis: {}.",
+            props
+                .iter()
+                .map(|p| format!("`{p}`"))
+                .collect::<Vec<_>>()
+                .join(", ")
+        )
+    };
+    Some(format!(
+        "**{tag}** · `layout`\n\n\
+         `<{tag}>` is a layout keyword — {summary}.{axis} \
+         Participation is `style({{ box: grow(1).minW(0) }})` (`sail-participation-style`)."
+    ))
+}
+
+/// Hyphen-aware word under `offset` (`padding`, `font-size`, `p-4`).
+fn word_at(source: &str, offset: usize) -> Option<(usize, usize, String)> {
+    let bytes = source.as_bytes();
+    if bytes.is_empty() {
+        return None;
+    }
+    let is_word = |b: u8| b.is_ascii_alphanumeric() || b == b'-' || b == b'_';
+    let mut i = offset.min(bytes.len().saturating_sub(1));
+    if !is_word(bytes[i]) {
+        if i == 0 {
+            return None;
+        }
+        i -= 1;
+    }
+    if !is_word(bytes[i]) {
+        return None;
+    }
+    let mut start = i;
+    while start > 0 && is_word(bytes[start - 1]) {
+        start -= 1;
+    }
+    let mut end = i + 1;
+    while end < bytes.len() && is_word(bytes[end]) {
+        end += 1;
+    }
+    let name = source[start..end].to_string();
+    if name.is_empty() {
+        None
+    } else {
+        Some((start, end, name))
+    }
+}
+
+fn looks_like_attr_name(source: &str, start: usize, end: usize) -> bool {
+    let after = source[end..].trim_start();
+    if !after.starts_with('=') {
+        return false;
+    }
+    let before = &source[..start];
+    let lt = before.rfind('<');
+    let gt = before.rfind('>');
+    match (lt, gt) {
+        (Some(l), Some(g)) => l > g,
+        (Some(_), None) => true,
+        _ => false,
+    }
+}
+
+/// True when `offset` sits inside an unclosed `style(` / `style({` call.
+fn inside_style_call(source: &str, offset: usize) -> bool {
+    let before = &source[..offset.min(source.len())];
+    let Some(i) = before.rfind("style(") else {
+        return false;
+    };
+    let mut depth = 1i32;
+    for b in before[i + "style(".len()..].bytes() {
+        match b {
+            b'(' => depth += 1,
+            b')' => {
+                depth -= 1;
+                if depth == 0 {
+                    return false;
+                }
+            }
+            _ => {}
+        }
+    }
+    depth > 0
+}
+
+fn is_live_style_word(name: &str) -> bool {
+    if sail_lint::style::find_vocab(name).is_some()
+        || sail_lint::style::find_concern(name).is_some()
+        || sail_lint::style::OBJECT_KEYS.iter().any(|k| *k == name)
+        || matches!(name, "style" | "bind")
+    {
+        return true;
+    }
+    for spec in sail_lint::style::concerns() {
+        if spec.slots.iter().any(|s| s.name == name) {
+            return true;
+        }
+    }
+    false
+}
+
+/// Teaching hover for unknown Style / HTML vocabulary (JOB-EDITOR-1).
+///
+/// Returns `None` in controller TS so typed tsgo hover wins. Never says
+/// "parse error" or "Pure."
+fn unknown_vocab_hover(source: &str, offset: usize) -> Option<(String, String)> {
+    use sail_lint::style::StyleCompleteContext;
+    let (start, end, name) = word_at(source, offset)?;
+    if name.bytes().next().is_some_and(|b| b.is_ascii_digit()) {
+        return None;
+    }
+    let ctx = sail_lint::style::style_complete_context_at(source, offset, None);
+    let in_style =
+        !matches!(ctx, StyleCompleteContext::Unknown) || inside_style_call(source, offset);
+    let in_slot = matches!(
+        ctx,
+        StyleCompleteContext::ConcernSlotKey { .. } | StyleCompleteContext::ConcernSlotArg { .. }
+    );
+    if in_slot {
+        return None;
+    }
+    let attr = looks_like_attr_name(source, start, end);
+    if !in_style && !attr {
+        return None;
+    }
+    let live = is_live_style_word(&name);
+    let sentence = if let Some(teach) = sail_lint::style::teaching_line(&name) {
+        format!("unknown vocabulary `{name}` — {teach}")
+    } else if in_style && !live {
+        format!("unknown vocabulary `{name}`")
+    } else {
+        return None;
+    };
+    Some((
+        name.clone(),
+        format!("**{name}** · `unknown-vocabulary`\n\n{sentence}"),
+    ))
 }
 
 /// Tag name under `offset` when the cursor sits on an element/partial tag.
@@ -1128,6 +1305,80 @@ export default controller(() => ({ count: signal(0) }))
                 .any(|s| s.source == "style" && s.kind == "token"),
             "non-style caret must not invent style tokens: {:?}",
             items
+        );
+    }
+
+    fn line_col_of(src: &str, needle: &str) -> (usize, usize) {
+        let off = src.find(needle).expect(needle);
+        let mut line = 1usize;
+        let mut col = 1usize;
+        for (i, ch) in src.char_indices() {
+            if i >= off {
+                break;
+            }
+            if ch == '\n' {
+                line += 1;
+                col = 1;
+            } else {
+                col += 1;
+            }
+        }
+        (line, col)
+    }
+
+    #[test]
+    fn hover_layout_column_is_teaching() {
+        let src = "<column gap=\"4\">x</column>";
+        let (line, col) = line_col_of(src, "column");
+        let h = hover_at(src, None, line, col).expect("layout hover");
+        assert_eq!(h.kind, "layout");
+        assert!(h.source.contains("layout keyword"), "{}", h.source);
+        assert!(h.source.contains("`gap`"), "{}", h.source);
+        assert!(
+            h.source.contains("sail-participation-style"),
+            "{}",
+            h.source
+        );
+        assert!(!h.source.contains("parse error"), "{}", h.source);
+        assert!(!h.source.contains("Pure."), "{}", h.source);
+    }
+
+    #[test]
+    fn hover_unknown_padding_is_teaching_not_parse_error() {
+        let src = "<div style({ bg(primary), padding(4) })>x</div>";
+        let (line, col) = line_col_of(src, "padding");
+        let h = hover_at(src, None, line, col).expect("unknown-vocab hover");
+        assert_eq!(h.kind, "unknown-vocab");
+        assert!(
+            h.source.contains("unknown vocabulary `padding`"),
+            "{}",
+            h.source
+        );
+        assert!(h.source.contains("pad"), "{}", h.source);
+        assert!(
+            !h.source.to_ascii_lowercase().contains("parse error"),
+            "{}",
+            h.source
+        );
+        assert!(!h.source.contains("Pure."), "{}", h.source);
+    }
+
+    #[test]
+    fn hover_unknown_class_attr_is_teaching() {
+        let src = "<div class=\"x\">x</div>";
+        let (line, col) = line_col_of(src, "class");
+        let h = hover_at(src, None, line, col).expect("class hover");
+        assert_eq!(h.kind, "unknown-vocab");
+        assert!(
+            h.source.contains("unknown vocabulary `class`"),
+            "{}",
+            h.source
+        );
+        assert!(h.source.contains("style("), "{}", h.source);
+        assert!(
+            !h.source.to_ascii_lowercase().contains("parse error"),
+            "{}",
+            h.source
         );
     }
 

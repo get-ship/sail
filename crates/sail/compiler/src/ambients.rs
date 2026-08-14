@@ -1369,7 +1369,7 @@ fn emit_style_types(out: &mut String) {
     // Callable style head — variadic partials (SPEC-STYLE-OBJECT-1).
     out.push_str(
         "/** Compile-time Style head — product: `style(partial, partial, …)`. */\n\
-         interface SailStyleBuilder {\n\
+         interface SailStyleBuilder extends SailStyleChain {\n\
          \x20 (...partials: Array<SailStyleObj | SailStyleValue>): SailStyleChain\n\
          }\n\
          \n",
@@ -2199,8 +2199,8 @@ mod tests {
             "CSS contain(style) must not shadow the Style builder"
         );
         assert!(
-            dts.contains("interface SailStyleBuilder"),
-            "style head must be callable channel form"
+            dts.contains("interface SailStyleBuilder extends SailStyleChain"),
+            "style.foo must be the chain methods, not {{}}"
         );
         assert!(
             dts.contains("type SailStyleObj") && dts.contains("paint?: SailStyleValue"),

@@ -1637,10 +1637,10 @@ export default controller((ctx) => ({ count: signal(0) }))
         // Warm session once — open before sleeping so settle can progress.
         let _ = call_rpc("SailAuthoring", "Hover", &args, &ctx);
         let live = sail_lsp::with_global_session(Some(&root), |intel| intel.is_tsgo_live());
-        if !live {
-            eprintln!("SKIP hover_signal: session not live");
-            return;
-        }
+        assert!(
+            live,
+            "tsgo is on PATH — dead session is a fail (empty hover-with-tsgo-present)"
+        );
         std::thread::sleep(std::time::Duration::from_millis(250));
         let hover_text =
             |v: &serde_json::Value| -> String { v["contents"].as_str().unwrap_or("").to_string() };
@@ -1664,6 +1664,116 @@ export default controller((ctx) => ({ count: signal(0) }))
         assert!(
             is_typed(&contents),
             "expected typed hover for signal; got {contents}"
+        );
+    }
+
+    #[test]
+    fn hover_matrix_via_authoring_rpc() {
+        use crate::call_rpc;
+        use crate::ctx::Ctx;
+        // Same local fixture as sail-lsp hover_matrix (not studio).
+        let src = r#"<controller>
+import { controller, signal } from '@ship/sail-runtime'
+
+export default controller((ctx) => ({ count: signal(0) }))
+</controller>
+<column style({ bg(primary), padding(4) })>
+  {style.bg(primary)}
+</column>
+"#;
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../..")
+            .canonicalize()
+            .expect("repo root");
+        let tsgo_present = sail_lsp::tsgo_test::discover_tsgo(Some(&root)).is_some();
+        let ctx = Ctx::new(&root, &root, &root);
+
+        let pos_of = |needle: &str| -> (u32, u32) {
+            let off = src.find(needle).expect(needle);
+            let mut line = 1u32;
+            let mut col = 1u32;
+            for (i, ch) in src.char_indices() {
+                if i >= off {
+                    break;
+                }
+                if ch == '\n' {
+                    line += 1;
+                    col = 1;
+                } else {
+                    col += 1;
+                }
+            }
+            (line, col)
+        };
+        let hover = |line: u32, column: u32| -> String {
+            let args = json!({
+                "source": src,
+                "path": "crates/sail/lsp/tests/fixtures/hover-matrix.sail",
+                "line": line,
+                "column": column,
+            });
+            let v = call_rpc("SailAuthoring", "Hover", &args, &ctx).expect("Hover rpc");
+            v["contents"].as_str().unwrap_or("").to_string()
+        };
+
+        let (theme_l, theme_c) = pos_of("primary");
+        let (col_l, col_c) = pos_of("column");
+        let (pad_l, pad_c) = pos_of("padding");
+        let theme = hover(theme_l, theme_c);
+        let layout = hover(col_l, col_c);
+        let unknown = hover(pad_l, pad_c);
+
+        assert!(
+            theme.contains("theme") && (theme.contains("oklch") || theme.contains("--")),
+            "theme hover: {theme}"
+        );
+        assert!(
+            !layout.is_empty() && !layout.to_ascii_lowercase().contains("parse error"),
+            "layout hover: {layout}"
+        );
+        assert!(
+            unknown.contains("unknown vocabulary")
+                && !unknown.to_ascii_lowercase().contains("parse error"),
+            "unknown vocab hover: {unknown}"
+        );
+        assert!(!layout.contains("Pure.") && !unknown.contains("Pure."));
+
+        if !tsgo_present {
+            eprintln!("SKIP hover_matrix rpc TS probes: tsgo not found");
+            return;
+        }
+        let live = sail_lsp::with_global_session(Some(&root), |intel| intel.is_tsgo_live());
+        assert!(
+            live,
+            "tsgo is on PATH — dead session is a fail (empty hover-with-tsgo-present)"
+        );
+
+        let (signal_l, signal_c) = pos_of("signal(0)");
+        let (ctrl_l, ctrl_c) = pos_of("controller((ctx)");
+        let (foo_l, foo_c0) = pos_of("style.bg");
+        let foo_c = foo_c0 + "style.".len() as u32;
+        let _ = hover(signal_l, signal_c);
+        std::thread::sleep(std::time::Duration::from_millis(250));
+        let signal = hover(signal_l, signal_c);
+        let controller = hover(ctrl_l, ctrl_c);
+        let style_foo = hover(foo_l, foo_c);
+        assert!(
+            !signal.is_empty(),
+            "empty hover on signal when tsgo present is a fail"
+        );
+        assert!(
+            signal.to_ascii_lowercase().contains("signal")
+                || signal.to_ascii_lowercase().contains("function"),
+            "typed signal hover: {signal}"
+        );
+        assert!(
+            !controller.is_empty(),
+            "empty hover on controller when tsgo present is a fail"
+        );
+        let compact: String = style_foo.chars().filter(|c| !c.is_whitespace()).collect();
+        assert!(
+            !style_foo.is_empty() && !compact.ends_with(":{}"),
+            "style.foo must not be typed as {{}}: {style_foo}"
         );
     }
 
