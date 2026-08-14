@@ -95,8 +95,8 @@ pub use icons::{
 };
 pub use l1_manifest::{
     L1Attribute, L1ComponentToken, L1Entry, L1Js, L1JsKind, L1Kind, L1Matrix, L1MatrixAxis,
-    L1SlotType, author_void_tags, is_author_void, l1_by_kind, l1_count, l1_entries, l1_kind,
-    matrix_contract,
+    L1SlotType, author_void_tags, host_pack_alias, is_author_void, l1_by_kind, l1_count,
+    l1_entries, l1_kind, matrix_contract, surface_pack_for_host,
 };
 pub use region_capability::{
     CONTROLLER_SIZE_THRESHOLD, REGION_CAPABILITY_MATRIX, RegionCapability,
@@ -443,8 +443,14 @@ pub fn compile_element(
     // parse_element_source: the pipeline minus the stdlib-element pass — an
     // element source may not use stdlib elements (no recursion).
     // SPEC-D1: host known by construction → surface vocabulary for this host.
+    // Pack identity lives on the L1 manifest; Style only sees the pack name
+    // the compiler installs here.
     // One regime: closed `bind(name)` resolution runs on stdlib/skins too.
-    sail_style::with_host_surface(Some(name), || {
+    let host = match crate::l1_manifest::surface_pack_for_host(name) {
+        Some(pack) => pack,
+        None => name,
+    };
+    sail_style::with_host_surface(Some(host), || {
         let program = parse::parse_element_source(&stripped)?;
         let bindings = check::binding::resolve(&stripped, &program, None)?;
         emit::element::emit_element_with_bindings(&program, &stripped, name, &bindings)

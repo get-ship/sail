@@ -1,8 +1,9 @@
 //! L1 host unit context for Style surface vocabulary + bound group props.
 //!
-//! When the compiler lowers an L1 host unit (`compile_element`), the host is
-//! known by construction. Surface author spelling (`chip`, `chip.foreground`)
-//! is legal only in that unit. App / L2 Style has no surface identities.
+//! When the compiler lowers an L1 host unit (`compile_element`), it installs
+//! the pack name it owns (L1 manifest). Surface author spelling (`chip`,
+//! `chip.foreground`) is legal only because the compiler said so. App / L2
+//! Style has no surface identities.
 //!
 //! Bound color-group props are type-keyed: the compiler installs the prop
 //! names whose type is the color-group union (`Tone`) so `bg(shade)` parses

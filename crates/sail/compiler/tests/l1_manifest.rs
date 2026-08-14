@@ -3,7 +3,8 @@
 use std::collections::HashSet;
 
 use sail_compiler::l1_manifest::{
-    L1JsKind, L1Kind, L1Matrix, l1_by_kind, l1_entries, l1_kind, matrix_contract,
+    L1JsKind, L1Kind, L1Matrix, host_pack_alias, l1_by_kind, l1_entries, l1_kind, matrix_contract,
+    surface_pack_for_host,
 };
 use sail_compiler::stdlib;
 
@@ -240,7 +241,9 @@ fn component_tokens_and_js_drift_pin_against_compiled_metadata() {
             }
             i += 1;
         }
-        if sail_style::surface_pack_for_host(el.tag).is_some() && !row.component_tokens.is_empty() {
+        if sail_compiler::surface_pack_for_host(el.tag).is_some()
+            && !row.component_tokens.is_empty()
+        {
             assert!(
                 row.component_tokens.iter().any(|t| !t.name.is_empty()),
                 "L1 `{}` pack tokens missing a named slot: {:?}",
@@ -313,6 +316,32 @@ fn every_l1_entry_carries_matrix() {
             );
         }
     }
+}
+
+#[test]
+fn surface_pack_aliases_are_stdlib_packs() {
+    assert_eq!(host_pack_alias("a"), "button");
+    assert_eq!(host_pack_alias("anchor"), "button");
+    assert_eq!(host_pack_alias("input"), "field");
+    assert_eq!(host_pack_alias("textarea"), "field");
+    assert_eq!(host_pack_alias("select"), "field");
+    assert_eq!(host_pack_alias("date"), "field");
+    assert_eq!(host_pack_alias("file"), "field");
+    assert_eq!(host_pack_alias("color"), "field");
+    assert_eq!(host_pack_alias("pagination"), "page");
+    assert_eq!(host_pack_alias("chip"), "chip");
+
+    assert_eq!(surface_pack_for_host("chip"), Some("chip"));
+    assert_eq!(surface_pack_for_host("button"), Some("button"));
+    assert_eq!(surface_pack_for_host("a"), Some("button"));
+    assert_eq!(surface_pack_for_host("anchor"), Some("button"));
+    assert_eq!(surface_pack_for_host("input"), Some("field"));
+    assert_eq!(surface_pack_for_host("date"), Some("field"));
+    assert_eq!(surface_pack_for_host("file"), Some("field"));
+    assert_eq!(surface_pack_for_host("color"), Some("field"));
+    assert_eq!(surface_pack_for_host("pagination"), Some("page"));
+    assert_eq!(surface_pack_for_host("div"), None);
+    assert_eq!(surface_pack_for_host("span"), None);
 }
 
 #[test]

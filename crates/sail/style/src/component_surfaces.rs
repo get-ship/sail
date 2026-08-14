@@ -9,7 +9,8 @@
 //! `chip` / `chip.foreground` / `chip.border` (not `chip-foreground`).
 //!
 //! Surface vocabulary is legal only while compiling that L1 host unit
-//! ([`crate::host_ctx`]). App/L2 Style cannot use surface identities.
+//! ([`crate::host_ctx`]). The compiler installs the pack name it owns
+//! (L1 manifest). App/L2 Style cannot use surface identities.
 
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::sync::OnceLock;
@@ -19,16 +20,6 @@ use super::tokens;
 
 /// Packs where storage leaf `track` is the default fill (like `.bg`).
 const TRACK_AS_PRIMARY: &[&str] = &["meter", "progress", "switch"];
-
-/// Host unit name → surface pack name when they differ (stdlib renames).
-fn host_pack_alias(host: &str) -> &str {
-    match host {
-        "a" | "anchor" => "button",
-        "input" | "textarea" | "select" | "date" | "file" | "color" => "field",
-        "pagination" => "page",
-        other => other,
-    }
-}
 
 /// One rest surface slot on a host pack.
 #[derive(Debug, Clone)]
@@ -162,10 +153,11 @@ pub fn is_rest_surface_public_name(css_name: &str) -> bool {
 }
 
 /// Surface pack in scope for the current host unit, if any.
-pub fn current_surface_pack() -> Option<&'static str> {
-    let host = host_ctx::current_host_surface()?;
-    let pack = host_pack_alias(&host);
-    index().by_pack.keys().find(|k| **k == pack).copied()
+///
+/// This is whatever pack name the compiler installed — not a table in
+/// this crate. `chip.foreground` is legal because the compiler said so.
+pub fn current_surface_pack() -> Option<String> {
+    host_ctx::current_host_surface()
 }
 
 /// Slots for a surface pack.
@@ -188,7 +180,7 @@ pub fn resolve_surface_author(root: &str, path: &[String]) -> Result<&'static st
             "component surface `{root}` is not in scope (this host surface is `{pack}`)"
         ));
     }
-    let slots = surface_slots(pack).ok_or_else(|| format!("unknown surface pack `{pack}`"))?;
+    let slots = surface_slots(&pack).ok_or_else(|| format!("unknown surface pack `{pack}`"))?;
     let member = match path {
         [] => "",
         [one] => one.as_str(),
@@ -231,8 +223,10 @@ pub fn in_scope_surface_author_forms() -> Vec<String> {
     let Some(pack) = current_surface_pack() else {
         return Vec::new();
     };
-    let Some(slots) = surface_slots(pack) else {
-        return Vec::new();
+    let Some(slots) = surface_slots(&pack) else {
+        // Compiler installed a pack; token slot table may be empty
+        // (skins spend globals). Tone-parallel author graph still holds.
+        return vec![pack.clone(), format!("{pack}.foreground")];
     };
     let mut out = Vec::new();
     for s in slots {
@@ -259,12 +253,6 @@ pub fn is_known_component_storage_path(path: &str) -> bool {
     }
     // Non-color component leaves (radius, backdrop-filter, …).
     tokens::path_to_css_name(p).is_some() && p.starts_with("component.")
-}
-
-/// Host unit name → surface pack (for compile_element).
-pub fn surface_pack_for_host(host: &str) -> Option<&'static str> {
-    let pack = host_pack_alias(host);
-    index().by_pack.keys().find(|k| **k == pack).copied()
 }
 
 /// Color-paint vocabulary for a context: globals (+ keywords) + optional host surface forms.
@@ -312,6 +300,9 @@ mod tests {
         assert!(!is_theme_owned_token_name("card"));
         assert!(all_surface_packs().is_empty());
         assert!(current_surface_pack().is_none());
+        host_ctx::with_host_surface(Some("chip"), || {
+            assert_eq!(current_surface_pack().as_deref(), Some("chip"));
+        });
     }
 
     #[test]
@@ -324,6 +315,9 @@ mod tests {
         assert!(app.contains("popover-foreground"));
         assert!(!app.contains("chip"));
         assert!(!app.contains("chip.foreground"));
+        let chip = color_paint_vocabulary(Some("chip"));
+        assert!(chip.contains("chip"));
+        assert!(chip.contains("chip.foreground"));
     }
 }
 
@@ -377,6 +371,28 @@ mod emit_integration {
                 diags.iter().map(|d| d.message()).collect::<Vec<_>>()
             );
             let _ = style;
+        });
+    }
+
+    #[test]
+    fn chip_foreground_legal_because_compiler_installed_pack() {
+        with_host_surface(Some("chip"), || {
+            let (_, diags) = parse("style({ fg(chip.foreground) })");
+            assert!(
+                diags.is_empty(),
+                "chip.foreground must be legal when the compiler installs the pack: {:?}",
+                diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+            );
+        });
+        with_host_surface(None, || {
+            let (_, diags) = parse("style({ fg(chip.foreground) })");
+            assert!(
+                diags.iter().any(|d| {
+                    matches!(d, crate::ir::StyleDiagnostic::BadToken { value, .. } if value == "chip.foreground")
+                }),
+                "app Style must reject chip.foreground: {:?}",
+                diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+            );
         });
     }
 }

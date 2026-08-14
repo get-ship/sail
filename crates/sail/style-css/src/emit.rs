@@ -422,7 +422,7 @@ fn op_uses_tone(op: &PaintOp) -> bool {
 fn op_has_surface_member(op: &PaintOp) -> bool {
     op.args.iter().any(|a| {
         matches!(a, PaintArg::MemberPath { root, .. }
-            if sail_style::component_surfaces::current_surface_pack() == Some(root.as_str()))
+            if sail_style::component_surfaces::current_surface_pack().as_deref() == Some(root.as_str()))
     })
 }
 
@@ -433,7 +433,7 @@ fn resolve_surface_args(op: &PaintOp) -> PaintOp {
         .iter()
         .map(|a| match a {
             PaintArg::MemberPath { root, path }
-                if sail_style::component_surfaces::current_surface_pack()
+                if sail_style::component_surfaces::current_surface_pack().as_deref()
                     == Some(root.as_str()) =>
             {
                 match resolve_surface_author(root, path) {
@@ -448,6 +448,7 @@ fn resolve_surface_args(op: &PaintOp) -> PaintOp {
                         let resolved = match v {
                             PaintArg::MemberPath { root, path }
                                 if sail_style::component_surfaces::current_surface_pack()
+                                    .as_deref()
                                     == Some(root.as_str()) =>
                             {
                                 match resolve_surface_author(root, path) {

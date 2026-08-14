@@ -18,8 +18,7 @@ pub mod source;
 // Style language lives in `sail-style`. Rules that parse or complete import
 // that crate directly. Tokens/scales stay re-exported so compiler/layout/ops
 // keep `sail_lint::tokens` (etc.) compiling.
-pub use sail_style::{component_surfaces, host_ctx, scales, style_vocab, token_groups, tokens};
-
+pub use sail_style::{host_ctx, scales, style_vocab, token_groups, tokens};
 #[cfg(test)]
 mod tests;
 

@@ -395,14 +395,10 @@ pub fn complete_with_session(
         .collect()
 }
 
-/// Host tag for Style complete: surface pack when path stem is a known L1 pack.
+/// Host pack for Style complete: L1 manifest pack when path stem is a known host.
 fn infer_style_host(path: Option<&Path>) -> Option<String> {
     let stem = path?.file_stem()?.to_str()?;
-    if sail_style::surface_pack_for_host(stem).is_some() {
-        Some(stem.to_string())
-    } else {
-        None
-    }
+    sail_compiler::surface_pack_for_host(stem).map(str::to_string)
 }
 
 /// Structure + mapped tsgo diagnostics at `tier` (SPEC-TOOLING-1 §WI6).

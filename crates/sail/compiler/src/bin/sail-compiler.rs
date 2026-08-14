@@ -493,7 +493,11 @@ fn gen_prop_registry(out: Option<PathBuf>, ts_out: Option<PathBuf>) -> Result<()
         // Element sources use parse_element_source (no stdlib expand) — structure
         // may contain private native types (type=checkbox inside <checkbox> host)
         // that freeform author markup may not use.
-        let program = sail_style::with_host_surface(Some(tag), || {
+        let host = match sail_compiler::surface_pack_for_host(tag) {
+            Some(pack) => pack,
+            None => tag,
+        };
+        let program = sail_style::with_host_surface(Some(host), || {
             sail_compiler::parse::parse_element_source(source)
         })
         .map_err(|e| anyhow!("stdlib {tag} failed to parse: {e:?}"))?;

@@ -38,7 +38,7 @@ pub use capabilities::{
 };
 pub use component_surfaces::{
     all_surface_packs, color_paint_vocabulary, is_component_public_name,
-    is_theme_owned_author_root, is_theme_owned_token_name, surface_pack_for_host, surface_slots,
+    is_theme_owned_author_root, is_theme_owned_token_name, surface_slots,
 };
 pub use concerns::{
     ConcernSlot, ConcernSpec, MARKERS, concern_doc_line, concern_kind, concerns, find_concern,

@@ -1177,7 +1177,12 @@ mod tests {
         let labs = labels(&items);
         assert!(labs.contains(&"muted"), "muted: {labs:?}");
         assert!(labs.contains(&"card"), "card: {labs:?}");
-        assert!(!labs.contains(&"chip"), "pack name gone: {labs:?}");
+        // Pack author spelling is legal because the compiler installed `chip`.
+        assert!(labs.contains(&"chip"), "host pack: {labs:?}");
+        assert!(
+            labs.contains(&"chip.foreground"),
+            "host pack member: {labs:?}"
+        );
         assert!(
             !labs.contains(&"chip-foreground"),
             "kebab pack label gone: {labs:?}"

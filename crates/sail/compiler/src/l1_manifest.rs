@@ -285,8 +285,34 @@ fn strip_tag_emdash(trimmed: &str) -> String {
         .unwrap_or_else(|| trimmed.to_string())
 }
 
+/// Host unit name → surface pack name when they differ (stdlib renames).
+///
+/// Pack names are stdlib tags. This table only remaps hosts that share
+/// another tag's surface (`input` → `field`). Identity hosts stay themselves.
+pub fn host_pack_alias(host: &str) -> &str {
+    match host {
+        "a" | "anchor" => "button",
+        "input" | "textarea" | "select" | "date" | "file" | "color" => "field",
+        "pagination" => "page",
+        other => other,
+    }
+}
+
+/// Host unit → surface pack, if that pack is an L1 stdlib tag.
+///
+/// Style does not own this table. The compiler installs the pack name
+/// into [`sail_style::with_host_surface`] so `chip.foreground` is legal
+/// while compiling that unit because the compiler said so.
+pub fn surface_pack_for_host(host: &str) -> Option<&'static str> {
+    let pack = host_pack_alias(host);
+    crate::stdlib::sources()
+        .iter()
+        .map(|(tag, _)| *tag)
+        .find(|tag| *tag == pack)
+}
+
 fn component_tokens_for_tag(tag: &str) -> Vec<L1ComponentToken> {
-    let Some(pack) = sail_style::surface_pack_for_host(tag) else {
+    let Some(pack) = surface_pack_for_host(tag) else {
         return Vec::new();
     };
     let Some(slots) = sail_style::surface_slots(pack) else {

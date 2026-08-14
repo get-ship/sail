@@ -637,3 +637,22 @@ fn unaliased_host_rejects_field_foreground() {
         "chip rejection must name the field surface: {msg}"
     );
 }
+
+#[test]
+fn chip_foreground_legal_because_compiler_installed_pack() {
+    let src = r#"
+<span style({ fg(chip.foreground) })>x</span>
+"#;
+    compile_element(src, "chip").expect("chip.foreground is legal on the chip host");
+}
+
+#[test]
+fn field_foreground_legal_on_aliased_hosts() {
+    let src = r#"
+<span style({ fg(field.foreground) })>x</span>
+"#;
+    for tag in ["input", "textarea", "select", "date", "file", "color"] {
+        compile_element(src, tag)
+            .unwrap_or_else(|e| panic!("{tag} must accept field.foreground: {e}"));
+    }
+}

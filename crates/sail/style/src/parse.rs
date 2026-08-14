@@ -2318,18 +2318,27 @@ fn normalize_paint_arg(
     };
 
     // L1 host surface graph — identity stays MemberPath; emit maps to public name.
-    if current_surface_pack() == Some(root.as_str()) {
-        if let Err(msg) = resolve_surface_author(&root, &path) {
+    // Pack name comes from the compiler via host_ctx, not a table here.
+    if current_surface_pack().as_deref() == Some(root.as_str()) {
+        if super::component_surfaces::surface_slots(&root).is_some() {
+            if let Err(msg) = resolve_surface_author(&root, &path) {
+                diags.push(StyleDiagnostic::BadToken {
+                    setter: String::new(),
+                    value: if path.is_empty() {
+                        root.clone()
+                    } else {
+                        format!("{root}.{}", path.join("."))
+                    },
+                    source: source.clone(),
+                });
+                let _ = msg;
+            }
+        } else if path.len() > 1 {
             diags.push(StyleDiagnostic::BadToken {
                 setter: String::new(),
-                value: if path.is_empty() {
-                    root.clone()
-                } else {
-                    format!("{root}.{}", path.join("."))
-                },
+                value: format!("{root}.{}", path.join(".")),
                 source: source.clone(),
             });
-            let _ = msg;
         }
         return PaintArg::MemberPath { root, path };
     }

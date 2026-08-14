@@ -319,7 +319,7 @@ pub fn looks_like_bound_group_root(root: &str, path: &[String]) -> bool {
     if static_token_group(root).is_some() {
         return false;
     }
-    if crate::component_surfaces::current_surface_pack() == Some(root) {
+    if crate::component_surfaces::current_surface_pack().as_deref() == Some(root) {
         return false;
     }
     // Type-keyed (or product ambient `tone`). Member validity is checked at
