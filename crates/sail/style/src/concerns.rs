@@ -812,6 +812,10 @@ pub fn find_concern(name: &str) -> Option<&'static ConcernSpec> {
 
 /// Keep the author name. Wrap a bare token onto the concern's primary slot
 /// unless it is a named composite.
+///
+/// `size(token)` is a square: both axes. `size({ w })` / `size({ h })` stay
+/// one-axis. Folding a scale step onto `w` only flattened every spinner,
+/// icon, thumb, and tone swatch.
 pub fn prepare_concern_call(method: &str, args: Vec<PaintArg>) -> (String, Vec<PaintArg>) {
     let Some(spec) = find_concern(method) else {
         return (method.to_string(), args);
@@ -820,6 +824,12 @@ pub fn prepare_concern_call(method: &str, args: Vec<PaintArg>) -> (String, Vec<P
     let args = match args_one(args) {
         Some(PaintArg::Token(name)) if resolve_concern_name(spec, &name).is_some() => {
             vec![PaintArg::Token(name)]
+        }
+        Some(PaintArg::Token(name)) if spec.name == "size" => {
+            vec![PaintArg::Slots(BTreeMap::from([
+                ("w".to_string(), PaintArg::Token(name.clone())),
+                ("h".to_string(), PaintArg::Token(name)),
+            ]))]
         }
         Some(PaintArg::Token(name)) => vec![PaintArg::Slots(BTreeMap::from([(
             primary.to_string(),
@@ -2396,10 +2406,7 @@ mod tests {
             diags.iter().map(|d| d.message()).collect::<Vec<_>>()
         );
         let (_, css) = crate::emit::lower_style(&style, &HashMap::new());
-        assert!(
-            css.contains("color") || css.contains("button"),
-            "{css}"
-        );
+        assert!(css.contains("color") || css.contains("button"), "{css}");
     }
 
     #[test]
@@ -2489,6 +2496,37 @@ mod tests {
         assert_eq!(retired_replacement("w").unwrap().0, "size");
         assert_eq!(retired_replacement("shadow").unwrap().0, "elevation");
         assert_eq!(retired_replacement("gap").unwrap().0, "gap");
+    }
+
+    #[test]
+    fn size_bare_token_is_a_square() {
+        let (name, args) =
+            prepare_concern_call("size", vec![PaintArg::Token("icon-size-md".into())]);
+        assert_eq!(name, "size");
+        match &args[0] {
+            PaintArg::Slots(slots) => {
+                assert_eq!(
+                    slots.get("w"),
+                    Some(&PaintArg::Token("icon-size-md".into()))
+                );
+                assert_eq!(
+                    slots.get("h"),
+                    Some(&PaintArg::Token("icon-size-md".into()))
+                );
+            }
+            other => panic!("expected w+h slots, got {other:?}"),
+        }
+        let css = lower_op_css(&only_op("style({ size(icon-size-md) })")).unwrap();
+        assert!(
+            css.iter()
+                .any(|(p, v)| p == "width" && v.contains("icon-size-md")),
+            "{css:?}"
+        );
+        assert!(
+            css.iter()
+                .any(|(p, v)| p == "height" && v.contains("icon-size-md")),
+            "{css:?}"
+        );
     }
 
     #[test]
