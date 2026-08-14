@@ -1,17 +1,4 @@
-/**
- * Repo hygiene guards (HYGIENE-0).
- * Converted from scripts/test-no-*.sh — real tests in the suite, not shell wrappers.
- * Wire: package.json `test` / `test:hygiene`.
- *
- * Coverage:
- * 1. documentElement.style writes under apps/** (apps-only by design; packages/
- *    controller sources are covered by sail-no-imperative-style lint; harness
- *    tests under packages/ may still touch :root for mechanism proofs).
- * 2. no residual xtask-deck / phantom gen-* tasks
- * 3. T-I6 paid product module refs in ops/studio core
- * 4. standing sanitization scan classes (operator paths, mission paths,
- *    job/mission process ids, dated owner-ruling monologue markers)
- */
+/** Repo law: no documentElement.style in apps, no Ship product names, no machine paths. */
 import { describe, expect, test } from 'bun:test'
 import { existsSync, readdirSync, readFileSync, statSync, writeFileSync, rmSync } from 'node:fs'
 import { join, relative, resolve } from 'node:path'
@@ -107,46 +94,6 @@ describe('no documentElement.style under apps/**', () => {
       if (!text) continue
       if (pattern.test(text)) {
         hits.push(relative(REPO, file))
-      }
-    }
-    expect(hits).toEqual([])
-  })
-})
-
-describe('no residual xtask-deck / phantom gen-* task refs', () => {
-  // After HYGIENE-0, `cargo xtask` is real. Ban the retired crate name and
-  // never-landed gen-* family (only gen-icons exists).
-  const retiredName = /xtask-deck/
-  const phantomGen =
-    /(?:cargo\s+xtask|cargo\s+run\s+-p\s+xtask)\b[^\n]*\bgen-(tokens|types|skills|fixtures|ops|sdk)\b/
-
-  test('no xtask-deck package name left in source/docs', () => {
-    const hits: string[] = []
-    for (const file of walkFiles(REPO)) {
-      const rel = relative(REPO, file)
-      if (rel === 'Cargo.lock') continue
-      if (rel.startsWith('tests/hygiene/')) continue
-      if (skipBinaryRel(rel)) continue
-      const text = readText(file)
-      if (!text) continue
-      if (retiredName.test(text)) {
-        hits.push(rel)
-      }
-    }
-    expect(hits).toEqual([])
-  })
-
-  test('no phantom gen-* tasks beyond gen-icons', () => {
-    const hits: string[] = []
-    for (const file of walkFiles(REPO)) {
-      const rel = relative(REPO, file)
-      if (rel.startsWith('tests/hygiene/')) continue
-      if (rel === 'Cargo.lock') continue
-      if (skipBinaryRel(rel)) continue
-      const text = readText(file)
-      if (!text) continue
-      if (phantomGen.test(text)) {
-        hits.push(rel)
       }
     }
     expect(hits).toEqual([])

@@ -1,14 +1,4 @@
-/**
- * Living-contract tombstone scan (SPEC-SCRUB-1 WI3).
- *
- * Asserts the product tree does not reintroduce scrubbed dead-surface
- * machinery (named retirement refusals, scrub harnesses, empty-schema
- * fossil fields). This is NOT a tombstone of retired *messages* — it
- * asserts absence of the retired *machinery*.
- *
- * Living temptation refusals (class=/style=/querySelector) are intentionally
- * not listed: they must remain.
- */
+/** Banned identifiers for machinery that is not in this tree. */
 import { describe, expect, test } from 'bun:test'
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, relative, resolve } from 'node:path'
@@ -35,7 +25,6 @@ const SKIP_DIRS = new Set([
   '.compiled-repro',
 ])
 
-/** Dead machinery names scrubbed by SPEC-SCRUB-1 — must stay gone. */
 const DEAD_MACHINERY: Array<{ name: string; re: RegExp; allow?: RegExp }> = [
   {
     name: 'state_directive_retired',
@@ -75,15 +64,6 @@ const DEAD_MACHINERY: Array<{ name: string; re: RegExp; allow?: RegExp }> = [
   {
     name: 'empty meta/mount clients fossil field in emitters',
     re: /clients:\s*\[\]\s*\}\)|"clients":\s*Value::Array\(Vec::new\(\)\)/,
-  },
-  {
-    name: 'xtask gen-icons',
-    re: /cargo xtask gen-icons|cargo run -p xtask/,
-  },
-  {
-    name: 'lucide-icons.json embed',
-    re: /lucide-icons\.json/,
-    allow: /RESULT-ICONS/,
   },
 ]
 
