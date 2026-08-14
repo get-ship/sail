@@ -2916,7 +2916,7 @@ export default controller((_ctx: ControllerScope<any>) => {
 
     #[test]
     fn path_escape_refused() {
-        let ctx = workspace_ctx();
+        let (_dir, ctx, _rel, _src) = card_fixture();
         let err = model(&json!({"path": "../secret.sail"}), &ctx).unwrap_err();
         assert!(matches!(err, OpError::PermissionDenied(_)));
         let abs = model(&json!({"path": "/etc/passwd.sail"}), &ctx).unwrap_err();

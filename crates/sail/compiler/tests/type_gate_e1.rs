@@ -1,7 +1,7 @@
 //! JOB-E1 type gate success gates (integration).
 //!
 //! - RED: synthetic Pure controller with `window`/`location` → sail-pure-region.
-//! - GREEN (E2a): live sail-docs-rail is Pure — no DOM globals after corpus scrub.
+//! - GREEN (E2a): owned Pure fixture reads `route.pathname` only — no DOM globals.
 //! - OnType does not run the type gate.
 //! - Clean controller compiles under check_all OnSave.
 
@@ -59,12 +59,20 @@ export default controller((ctx) => {\n\
     );
 }
 
-/// E2a: docs rail reads `route.pathname` only — green under the live gate.
+/// E2a: Pure controller reads `route.pathname` only — no window/location.
 #[test]
 fn docs_rail_green_after_e2a_scrub() {
-    let path = workspace_root().join("apps/sail-site/src/sail-docs-rail/sail-docs-rail.sail");
-    let src = std::fs::read_to_string(&path).expect("read sail-docs-rail.sail");
-    let diags = check_all(&src, Some(&path), &[], None);
+    let src = r#"
+<controller>
+export default controller((ctx) => {
+  const path = () => ctx.route.pathname()
+  return { path }
+})
+</controller>
+<p>{path()}</p>
+"#;
+    let path = workspace_root().join("apps/fake/src/widget/docs-rail.sail");
+    let diags = check_all(src, Some(&path), &[], None);
     let type_errs: Vec<_> = diags
         .iter()
         .filter(|d| {
@@ -82,7 +90,7 @@ fn docs_rail_green_after_e2a_scrub() {
         .collect();
     assert!(
         type_errs.is_empty(),
-        "E2a scrubbed docs-rail must type-gate green: {type_errs:?}"
+        "E2a Pure route.pathname fixture must type-gate green: {type_errs:?}"
     );
 }
 

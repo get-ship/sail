@@ -601,47 +601,48 @@ export default controller(() => {
         );
     }
 
-    fn repo_root() -> PathBuf {
-        let mut d = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        while !d.join("packages").is_dir() || !d.join("apps").is_dir() {
-            if !d.pop() {
-                panic!("repo root not found from CARGO_MANIFEST_DIR");
-            }
-        }
-        d
-    }
-
-    /// In-tree bare-ambient app-local CE (sail-site bill-split guide component).
+    /// Bare-ambient app-local CE: no authored runtime import; wrap injects it.
     #[test]
-    fn sail_site_bill_split_virtual_controller_gets_ambient() {
-        let path = repo_root().join("apps/sail-site/src/bill-split/bill-split.sail");
-        let source = std::fs::read_to_string(&path)
-            .unwrap_or_else(|e| panic!("read {}: {e}", path.display()));
+    fn bare_ambient_controller_gets_signal_derived() {
+        let source = r#"
+<controller>
+export default controller((ctx) => {
+  const people = signal(2)
+  const share = derived(() => ctx.total() / people())
+  return { people, share }
+})
+</controller>
+<p />
+"#;
         assert!(
-            source.contains("signal(") && source.contains("controller("),
-            "bill-split must still author bare signal/controller"
+            !source.contains("@ship/sail-runtime"),
+            "fixture must not author a sail-runtime import"
         );
-        assert!(
-            !source.contains("from '@ship/sail-runtime'")
-                && !source.contains("from \"@ship/sail-runtime\""),
-            "bill-split must not author a sail-runtime import"
-        );
-        let body = materialize_virtual_controller(&source)
-            .expect("materialize bill-split")
-            .expect("bill-split has <controller>");
+        let body = materialize_virtual_controller(source)
+            .expect("materialize")
+            .expect("has <controller>");
         assert_ambient(&body, &["controller", "signal", "derived"]);
     }
 
-    /// Peer rail CE — bare signal/derived/effect under sail-site src/.
+    /// Bare effect + signal under an app-local CE (rail-shaped).
     #[test]
-    fn sail_site_docs_rail_virtual_controller_gets_ambient() {
-        let path = repo_root().join("apps/sail-site/src/sail-docs-rail/sail-docs-rail.sail");
-        let source = std::fs::read_to_string(&path)
-            .unwrap_or_else(|e| panic!("read {}: {e}", path.display()));
-        let body = materialize_virtual_controller(&source)
-            .expect("materialize sail-docs-rail")
-            .expect("sail-docs-rail has <controller>");
-        assert_ambient(&body, &["controller", "signal", "derived", "effect"]);
+    fn bare_ambient_controller_gets_effect() {
+        let source = r#"
+<controller>
+export default controller(() => {
+  const open = signal(false)
+  effect(() => {
+    void open()
+  })
+  return { open }
+})
+</controller>
+<p />
+"#;
+        let body = materialize_virtual_controller(source)
+            .expect("materialize")
+            .expect("has <controller>");
+        assert_ambient(&body, &["controller", "signal", "effect"]);
     }
 
     /// GROUPED-DIRECTORY component: stem differs from parent dir but has a hyphen.

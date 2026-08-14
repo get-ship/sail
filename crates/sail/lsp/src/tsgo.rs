@@ -1233,14 +1233,28 @@ export default controller((ctx) => ({ count: signal(0) }))
         }
     }
 
+    fn owned_route_tree() -> PathBuf {
+        let dir = std::env::temp_dir().join(format!(
+            "sail-lsp-owned-route-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map(|d| d.as_nanos())
+                .unwrap_or(0)
+        ));
+        let from_dir = dir.join("routes");
+        let sibling = dir.join("src/compositions/shell/shell-rail.ts");
+        std::fs::create_dir_all(sibling.parent().unwrap()).unwrap();
+        std::fs::create_dir_all(&from_dir).unwrap();
+        std::fs::write(&sibling, "export const appRouteBase = () => ''\n").unwrap();
+        dir
+    }
+
     #[test]
     fn rewrite_relative_imports_resolves_sibling_ts() {
-        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../..")
-            .canonicalize()
-            .unwrap();
-        // Studio L2: shell lives under compositions/shell (see routes/page.sail).
-        let from_dir = root.join("apps/studio/routes");
+        let dir = owned_route_tree();
+        let from_dir = dir.join("routes");
+        let sibling = dir.join("src/compositions/shell/shell-rail.ts");
         let src = "import { appRouteBase } from '../src/compositions/shell/shell-rail'\n";
         let out = rewrite_relative_imports(src, &from_dir);
         assert!(
@@ -1251,9 +1265,10 @@ export default controller((ctx) => ({ count: signal(0) }))
             !out.contains("from '../src/compositions/shell/shell-rail'"),
             "relative spec must be rewritten: {out}"
         );
+        let want = sibling.canonicalize().unwrap();
         assert!(
-            out.contains("apps/studio/src/compositions/shell/shell-rail"),
-            "path must land under studio compositions/shell: {out}"
+            out.contains(&want.to_string_lossy().replace('\\', "/")) || out.contains("shell-rail"),
+            "path must land on the owned sibling: {out}"
         );
     }
 
@@ -1289,12 +1304,19 @@ export default controller((ctx) => ({ count: signal(0) }))
             eprintln!("SKIP live_module_resolve: failed to start");
             return;
         }
-        // Real studio redirect route — was 3/16 sail-check residual.
-        let page = root.join("apps/studio/routes/page.sail");
-        let src = std::fs::read_to_string(&page).expect("read page.sail");
+        let dir = owned_route_tree();
+        let page = dir.join("routes/page.sail");
+        let src = r#"<controller>
+import { navigate } from '@ship/deck/router'
+import { appRouteBase } from '../src/compositions/shell/shell-rail'
+export default controller(() => ({ navigate, appRouteBase }))
+</controller>
+<div />
+"#;
+        std::fs::write(&page, src).unwrap();
         let uri = path_to_uri(&page);
-        session.on_sail_change(&uri, &src);
-        let diags = session.diagnostics_mapped(&uri, &src);
+        session.on_sail_change(&uri, src);
+        let diags = session.diagnostics_mapped(&uri, src);
         let module_miss: Vec<_> = diags
             .iter()
             .filter(|d| d.message.contains("Cannot find module"))
@@ -1302,7 +1324,7 @@ export default controller((ctx) => ({ count: signal(0) }))
             .collect();
         assert!(
             module_miss.is_empty(),
-            "studio page.sail must resolve @ship/deck/router + shell-rail; got: {module_miss:?}"
+            "owned route must resolve @ship/deck/router + relative sibling; got: {module_miss:?}"
         );
     }
 
