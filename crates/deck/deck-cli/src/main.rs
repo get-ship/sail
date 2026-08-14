@@ -160,7 +160,7 @@ enum Command {
     /// `scripts/emit-package-dts.ts` so Pure does not fall back to Framework src.
     Types {
         /// Project directory that receives `node_modules/.sail/types.d.ts`.
-        /// Default: cwd.
+        /// Must contain sail.config.jsonc / sail.config.json. Default: cwd.
         #[arg(long)]
         project: Option<PathBuf>,
         /// Write ambient pack to this path instead of

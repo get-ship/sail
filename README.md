@@ -127,7 +127,7 @@ Repo sanitization / boundary guards live under `tests/hygiene/` (`bun run test:h
 git config core.hooksPath hooks
 ```
 
-Installed into the **common** `.git/hooks` (every worktree). Source in `hooks/`.
+Git runs `hooks/pre-commit` and `hooks/pre-push` from this tree. No copy into `.git/hooks`.
 
 | hook | when | what |
 |------|------|------|

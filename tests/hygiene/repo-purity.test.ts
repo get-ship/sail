@@ -8,6 +8,8 @@
  */
 import { describe, expect, test } from 'bun:test'
 import { execSync } from 'node:child_process'
+import { readdirSync } from 'node:fs'
+import { resolve } from 'node:path'
 
 const tracked = (): string[] =>
   execSync('git ls-files', { encoding: 'utf8' }).trim().split('\n')
@@ -20,6 +22,35 @@ const TOP_LEVEL_ALLOWLIST = new Set([
   'rust-toolchain.toml', 'scripts', 'skills', 'tests', 'third_party',
   'vitest.config.ts',
 ])
+
+/**
+ * Ignored product that may sit on disk next to tracked names.
+ * Repo-root `.deck/framework/` is the build-assets exception (same
+ * `DECK_OUT_DIRNAME` as app `.deck/` — not a fourth output home).
+ */
+const ON_DISK_GENERATED = new Set([
+  '.deck',
+  'node_modules',
+  'target',
+  '.git',
+  '.artifacts',
+  '.cache',
+])
+
+/** Gitignored leftovers — fail even when ignore rules hide them from `git ls-files`. */
+const FORBIDDEN_ON_DISK = new Set([
+  'app',
+  'routes',
+  'scratch',
+  'test-results',
+  'tsconfig.json',
+  '.sail-out',
+  '.sail',
+])
+
+const REPO = resolve(import.meta.dir, '../..')
+
+const onDiskTopLevel = (): string[] => readdirSync(REPO)
 
 /** Path patterns that are never product, at any depth. */
 const FORBIDDEN_TRACKED = [
@@ -71,6 +102,35 @@ describe('repo purity', () => {
       .filter(([size]) => Number(size) > MAX_TRACKED_BYTES)
       .map(([size, path]) => `${path} (${size})`)
     expect(offenders, `oversized tracked blobs: ${offenders.join(', ')}`).toEqual([])
+  })
+
+  test('every on-disk top-level name is allowlisted', () => {
+    const offenders = onDiskTopLevel().filter(
+      (name) => !TOP_LEVEL_ALLOWLIST.has(name) && !ON_DISK_GENERATED.has(name),
+    )
+    expect(
+      offenders,
+      `non-product top-level on disk: ${offenders.join(', ')} — add to the allowlist only after a conversation`,
+    ).toEqual([])
+  })
+
+  test('gitignored fossils and stray output homes are absent', () => {
+    const names = new Set(onDiskTopLevel())
+    const fossils = [...FORBIDDEN_ON_DISK].filter((name) => names.has(name))
+    const stages = [...names].filter((name) => name.startsWith('.deck.stage'))
+    expect(
+      [...fossils, ...stages],
+      `forbidden leftover at repo root: ${[...fossils, ...stages].join(', ')}`,
+    ).toEqual([])
+  })
+
+  test('forbidden leftover names stay off the on-disk allowlist', () => {
+    for (const name of FORBIDDEN_ON_DISK) {
+      expect(
+        TOP_LEVEL_ALLOWLIST.has(name) || ON_DISK_GENERATED.has(name),
+        `${name} must not be allowlisted`,
+      ).toBe(false)
+    }
   })
 
   test('no agent-narration comment markers in tracked sources', () => {

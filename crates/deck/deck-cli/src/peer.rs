@@ -119,10 +119,56 @@ fn probe_mcp_list_tools() -> Result<usize> {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+    use std::fs;
+
     #[test]
     fn mcp_list_tools_probe_nonempty() {
         let n = super::probe_mcp_list_tools().expect("in-process list-tools");
         assert!(n > 0, "list-tools returned empty");
+    }
+
+    #[test]
+    fn types_refuses_dir_without_sail_config() {
+        let dir = tempfile::tempdir().unwrap();
+        let err = types(Some(dir.path().to_path_buf()), None, None, false).unwrap_err();
+        let msg = format!("{err:#}");
+        assert!(
+            msg.contains("inside a project") && msg.contains("--project"),
+            "expected refuse message, got: {msg}"
+        );
+        assert!(
+            !dir.path().join("tsconfig.json").exists(),
+            "types must not write tsconfig.json outside a Sail project"
+        );
+    }
+
+    #[test]
+    fn types_refuses_explicit_project_without_sail_config() {
+        let dir = tempfile::tempdir().unwrap();
+        fs::create_dir_all(dir.path().join("not-an-app")).unwrap();
+        let target = dir.path().join("not-an-app");
+        let err = types(
+            Some(target.clone()),
+            Some(dir.path().join("out.d.ts")),
+            None,
+            false,
+        )
+        .unwrap_err();
+        let msg = format!("{err:#}");
+        assert!(
+            msg.contains("inside a project"),
+            "expected refuse even with --out, got: {msg}"
+        );
+        assert!(!target.join("tsconfig.json").exists());
+        assert!(!dir.path().join("out.d.ts").exists());
+    }
+
+    #[test]
+    fn require_sail_project_accepts_jsonc() {
+        let dir = tempfile::tempdir().unwrap();
+        fs::write(dir.path().join("sail.config.jsonc"), "{}\n").unwrap();
+        require_sail_project(dir.path()).unwrap();
     }
 }
 
@@ -164,6 +210,9 @@ fn topmost_cargo_root(start: &Path) -> Option<PathBuf> {
 /// In the monorepo workspace, also runs `scripts/emit-package-dts.ts` so dual
 /// `exports.types → dist/*.d.ts` packages resolve for Pure/IDE (no silent
 /// fallback to Framework `src/`).
+///
+/// `project_dir` must itself be a Sail project (`dir_has_config`). The
+/// monorepo root is not one — refuse so we never write a root `tsconfig.json`.
 pub fn types(
     project: Option<PathBuf>,
     out: Option<PathBuf>,
@@ -176,6 +225,7 @@ pub fn types(
         Some(p) => cwd.join(p),
         None => cwd,
     };
+    require_sail_project(&project_dir)?;
     let path = match out {
         Some(p) => {
             if let Some(parent) = p.parent() {
@@ -224,6 +274,18 @@ pub fn types(
         types_check(&project_dir)?;
     }
     Ok(())
+}
+
+/// Refuse unless `dir` itself contains `sail.config.jsonc` / `sail.config.json`.
+/// Uses [`sail_lint::config::dir_has_config`] — no second filename walk.
+fn require_sail_project(dir: &Path) -> Result<()> {
+    if sail_lint::config::dir_has_config(dir) {
+        return Ok(());
+    }
+    bail!(
+        "sail types: {} is not a Sail project (no sail.config.jsonc / sail.config.json). Run inside a project (`--project <app>`).",
+        dir.display()
+    );
 }
 
 /// Run tsc on the generated sail + action kind configs. Fail if red.
@@ -579,6 +641,8 @@ pub fn check(input: PathBuf, fix: String) -> Result<()> {
 
 /// Walk up from `start` looking for a Sail project root (`package.json` +
 /// `routes/` or sail.config). Used only for the `.deck` tracked warning.
+/// Config existence goes through [`sail_lint::config::dir_has_config`] —
+/// same filenames as `sail types`, no second walk of the name list.
 fn find_project_root_for_hygiene(start: &Path) -> Option<PathBuf> {
     let mut cur = if start.is_file() {
         start.parent()?
@@ -588,8 +652,7 @@ fn find_project_root_for_hygiene(start: &Path) -> Option<PathBuf> {
     for _ in 0..16 {
         let has_pkg = cur.join("package.json").is_file();
         let has_routes = cur.join("routes").is_dir();
-        let has_cfg =
-            cur.join("sail.config.jsonc").is_file() || cur.join("sail.config.json").is_file();
+        let has_cfg = sail_lint::config::dir_has_config(cur);
         if has_pkg && (has_routes || has_cfg) {
             return Some(cur.to_path_buf());
         }

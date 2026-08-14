@@ -202,7 +202,7 @@ enum Command {
     /// not hand-authored app source (SPEC-OUTPUT-1 §4).
     Types {
         /// Project directory that receives `node_modules/.sail/types.d.ts`.
-        /// Default: cwd.
+        /// Must contain sail.config.jsonc / sail.config.json. Default: cwd.
         #[arg(long)]
         project: Option<PathBuf>,
         /// Optional path for a committed base `tsconfig` snippet (stdout if
@@ -334,6 +334,14 @@ fn gen_types(
         Some(p) => p,
         None => std::env::current_dir().context("cwd")?,
     };
+    // Same gate as `sail types`: never write project/tsconfig.json from a
+    // non-project cwd (monorepo root is not a Sail project).
+    if !sail_lint::config::dir_has_config(&project_dir) {
+        return Err(anyhow!(
+            "sail-compiler types: {} is not a Sail project (no sail.config.jsonc / sail.config.json). Run inside a project (`--project <app>`).",
+            project_dir.display()
+        ));
+    }
     let path = match out {
         Some(p) => {
             if let Some(parent) = p.parent() {

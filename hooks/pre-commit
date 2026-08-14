@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Shared by every worktree (installed into the common .git/hooks).
+# Shared hook. Enable with: git config core.hooksPath hooks
 # Staged files only. No cargo test, no Playwright, no corpus build.
 # Skip: git commit --no-verify
 set -euo pipefail
