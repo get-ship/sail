@@ -2,6 +2,7 @@
 
 use std::collections::HashSet;
 
+use sail_style::intent::{Intent, IntentNode, IntentValue, lower_to_intent};
 use sail_style::ir::{PaintArg, PaintOp, Style, StyleEnv};
 use sail_style::setters::{WhenTarget, lower_op_css, when_target};
 use sail_style::theme_env::{ThemeStyleEnv, current_styling_policy};
@@ -15,11 +16,17 @@ pub struct CssRule {
     pub media: Option<String>,
 }
 
+/// Product emit. The adapter never walks `Style` — only Intent.
 pub fn emit_style(style: &Style, env: &StyleEnv) -> Vec<CssRule> {
+    emit_intent(&lower_to_intent(style), env)
+}
+
+/// Realize a resolved Intent tree as CSS. This is the adapter entry.
+pub fn emit_intent(intent: &Intent, env: &StyleEnv) -> Vec<CssRule> {
     let mut out = Vec::new();
     let mut seen = HashSet::new();
-    emit_inner(
-        style,
+    emit_intent_inner(
+        intent,
         env,
         &Ctx::default(),
         &mut out,
@@ -97,62 +104,80 @@ impl Ctx {
     }
 }
 
-fn emit_inner(
-    style: &Style,
+fn arg_from_intent(v: &IntentValue) -> PaintArg {
+    match v {
+        IntentValue::Token(t) => PaintArg::Token(t.clone()),
+        IntentValue::Bind(n) => PaintArg::Bind(n.clone()),
+        IntentValue::MemberPath { root, path } => PaintArg::MemberPath {
+            root: root.clone(),
+            path: path.clone(),
+        },
+        IntentValue::Slots(slots) => PaintArg::Slots(
+            slots
+                .iter()
+                .map(|(k, v)| (k.clone(), arg_from_intent(v)))
+                .collect(),
+        ),
+    }
+}
+
+fn emit_intent_inner(
+    intent: &Intent,
     env: &StyleEnv,
     ctx: &Ctx,
     out: &mut Vec<CssRule>,
     seen: &mut HashSet<String>,
     resolving: &mut HashSet<String>,
 ) {
-    match style {
-        Style::Empty => {}
-        Style::Set(op) => emit_op(op, ctx, out, seen),
-        Style::Chain(items) | Style::List(items) => {
-            for i in items {
-                emit_inner(i, env, ctx, out, seen, resolving);
+    for node in &intent.nodes {
+        match node {
+            IntentNode::Set { setter, args } => {
+                let op = PaintOp {
+                    setter: setter.clone(),
+                    args: args.iter().map(arg_from_intent).collect(),
+                    source: String::new(),
+                };
+                emit_op(&op, ctx, out, seen);
             }
-        }
-        Style::Match { scrutinee, arms } => {
-            for (key, body) in arms {
-                let next = ctx.with_attr(scrutinee, key);
-                emit_inner(body, env, &next, out, seen, resolving);
-            }
-        }
-        Style::Compound { when, body } => {
-            let mut next = ctx.clone();
-            for (k, v) in when {
-                next = next.with_attr(k, v);
-            }
-            emit_inner(body, env, &next, out, seen, resolving);
-        }
-        Style::When { entries } => {
-            for (key, body) in entries {
+            IntentNode::On { key, body } => {
                 if let Some(target) = when_target(key) {
                     let next = match target {
                         WhenTarget::Pseudo(sel) => ctx.with_pseudo(key, sel.as_ref()),
                         WhenTarget::Ancestor(anc) => ctx.with_ancestor(key, anc.as_ref()),
                         WhenTarget::Media(m) => ctx.with_media(key, m.as_ref()),
                     };
-                    emit_inner(body, env, &next, out, seen, resolving);
+                    emit_intent_inner(body, env, &next, out, seen, resolving);
                 }
             }
-        }
-        Style::Ref(name) => {
-            if !resolving.insert(name.clone()) {
-                return;
+            IntentNode::Match { scrutinee, arms } => {
+                for (key, body) in arms {
+                    let next = ctx.with_attr(scrutinee, key);
+                    emit_intent_inner(body, env, &next, out, seen, resolving);
+                }
             }
-            if let Ok(s) =
-                ThemeStyleEnv::from_registry().expand_style_ref(name, env, current_styling_policy())
-            {
-                emit_inner(&s, env, ctx, out, seen, resolving);
+            IntentNode::Compound { when, body } => {
+                let mut next = ctx.clone();
+                for (k, v) in when {
+                    next = next.with_attr(k, v);
+                }
+                emit_intent_inner(body, env, &next, out, seen, resolving);
             }
-            resolving.remove(name);
-        }
-        // Lifecycle enter/exit stay attribute-lowered. `transition: play(…)`
-        // is CSS — resolve the preset and emit transition longhands.
-        Style::MotionAttach { trigger, config } => {
-            emit_play(trigger, config, ctx, out, seen);
+            IntentNode::Animate { trigger, config } => {
+                emit_play(trigger, config, ctx, out, seen);
+            }
+            IntentNode::Ref(name) => {
+                if !resolving.insert(name.clone()) {
+                    continue;
+                }
+                if let Ok(s) = ThemeStyleEnv::from_registry().expand_style_ref(
+                    name,
+                    env,
+                    current_styling_policy(),
+                ) {
+                    emit_intent_inner(&lower_to_intent(&s), env, ctx, out, seen, resolving);
+                }
+                resolving.remove(name);
+            }
         }
     }
 }

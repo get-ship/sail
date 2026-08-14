@@ -149,3 +149,27 @@ fn play_colors_fast_resolves() {
         "duration token: {css}"
     );
 }
+
+#[test]
+fn product_emit_is_intent_then_css() {
+    use sail_style::lower_to_intent;
+
+    use super::{emit_intent, emit_style};
+
+    let (style, diags) = parse("style({ pad(4).bg(surface), when: { hover: bg(muted) } })");
+    assert!(diags.is_empty(), "{:?}", msgs(&diags));
+    let via_style = emit_style(&style, &HashMap::new());
+    let via_intent = emit_intent(&lower_to_intent(&style), &HashMap::new());
+    assert_eq!(
+        via_style, via_intent,
+        "emit_style must be emit_intent(lower_to_intent)"
+    );
+    let src = std::fs::read_to_string(
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("src/emit.rs"),
+    )
+    .expect("emit.rs");
+    assert!(
+        !src.contains("match style") && !src.contains("Style::Set"),
+        "adapter must not walk Style variants"
+    );
+}

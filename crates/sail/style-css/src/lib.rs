@@ -6,8 +6,8 @@
 pub mod emit;
 
 pub use emit::{
-    CssRule, emit_style, lower_style, lower_style_source, lower_style_source_with_motion,
-    render_rule,
+    CssRule, emit_intent, emit_style, lower_style, lower_style_source,
+    lower_style_source_with_motion, render_rule,
 };
 
 #[cfg(test)]
