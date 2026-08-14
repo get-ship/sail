@@ -13,8 +13,8 @@ import {
  * Optional `sail.lsp.path` replaces the executable; the `lsp` argument is
  * always appended. The spawned argv is exactly `[<sail>, "lsp"]`.
  *
- * Highlighting is not this package — tree-sitter queries and the Studio
- * overlay own colorization.
+ * Highlighting is not this package — the Studio overlay (compiler
+ * vocabulary) owns colorization. This client does not load tree-sitter.
  */
 
 let client: LanguageClient | undefined

@@ -5,11 +5,10 @@ Local package (not a marketplace publish). It registers language `sail` for
 diagnostics, format, and code actions come from that server — this extension
 does not invent a second protocol.
 
-Colorization is **not** here. Highlight SSOT is tree-sitter
-(`packages/sail/grammar/queries/highlights.scm`) and the Studio
-`<sail-code-editor>` overlay generated from the same compiler vocabulary.
-This client does not ship a TextMate grammar and does not teach retired
-syntax.
+Colorization is **not** here. Highlight SSOT is the Studio
+`<sail-code-editor>` overlay generated from the compiler vocabulary.
+This client does not ship a TextMate grammar, does not load tree-sitter,
+and does not teach retired syntax.
 
 ## Prerequisite
 

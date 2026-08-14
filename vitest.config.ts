@@ -23,7 +23,7 @@ const PROJECTS = [
   'packages/sail/runtime',
   'packages/sail/tokens',
   'packages/sail/test-setup',
-  'packages/sail/tutorial',
+  'packages/sail/sail-test',
   'packages/sail/studio-bridge',
   'packages/sail/studio-shell',
   'apps/studio',

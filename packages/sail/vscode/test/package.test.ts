@@ -66,11 +66,11 @@ describe('packages/sail/vscode', () => {
     expect(src).not.toMatch(/\bcargo\b/)
   })
 
-  test('no TextMate grammar — highlight stays tree-sitter / Studio', () => {
+  test('no TextMate grammar — highlight stays Studio overlay', () => {
     expect(pkg.contributes?.grammars).toBeUndefined()
     expect(existsSync(join(root, 'syntaxes'))).toBe(false)
-    expect(readme.toLowerCase()).toContain('tree-sitter')
     expect(readme.toLowerCase()).toContain('studio')
+    expect(src.toLowerCase()).not.toContain('tree-sitter-sail')
   })
 
   test('no retired prefixes in client/config (style: / {#if} / let:)', () => {
