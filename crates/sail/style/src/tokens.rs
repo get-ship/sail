@@ -31,8 +31,8 @@ const TOKEN_REGISTRY_JSON: &str =
 
 #[derive(Debug, Deserialize)]
 struct RegistryFile {
-    /// Public CSS custom-property names (no `--` prefix). Includes legacy
-    /// legacy dual-emit aliases (empty after TOKENS-1 app-accent-* scrub).
+    /// Public CSS custom-property names (no `--` prefix). Includes alias
+    /// names (empty after TOKENS-1 app-accent-* scrub).
     names: Vec<String>,
     colors: Vec<String>,
     /// Optional full map — present for value-aware tests / tooling.
@@ -87,7 +87,7 @@ struct TokenMeta {
     #[serde(default, rename = "cssName")]
     #[allow(dead_code)]
     css_name: String,
-    /// When set, this entry is a legacy alias of another cssName.
+    /// When set, this entry is an `aliasOf` of another cssName.
     #[serde(default, rename = "aliasOf")]
     #[allow(dead_code)]
     alias_of: String,

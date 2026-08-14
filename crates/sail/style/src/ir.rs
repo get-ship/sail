@@ -225,12 +225,18 @@ impl StyleDiagnostic {
             StyleDiagnostic::ParseError { message, .. } => message.clone(),
             StyleDiagnostic::UnknownSetter {
                 setter, suggestion, ..
-            } => match suggestion {
-                Some(s) => format!(
-                    "style unknown setter `{setter}` — did you mean `{s}`? [sail:fix:setter={s}]"
-                ),
-                None => format!("style unknown setter `{setter}`"),
-            },
+            } => {
+                if let Some(teach) = crate::foreign_idioms::teaching_line(setter) {
+                    format!("style unknown setter `{setter}` — {teach}")
+                } else {
+                    match suggestion {
+                        Some(s) => format!(
+                            "style unknown setter `{setter}` — did you mean `{s}`? [sail:fix:setter={s}]"
+                        ),
+                        None => format!("style unknown setter `{setter}`"),
+                    }
+                }
+            }
             StyleDiagnostic::BadToken { setter, value, .. } => {
                 format!("style `{setter}({value})` — value is not a token on this setter's scale")
             }
@@ -290,7 +296,10 @@ impl StyleDiagnostic {
                 )
             }
             StyleDiagnostic::UnknownVocabulary { name, .. } => {
-                format!("unknown vocabulary `{name}`")
+                match crate::foreign_idioms::teaching_line(name) {
+                    Some(teach) => format!("unknown vocabulary `{name}` — {teach}"),
+                    None => format!("unknown vocabulary `{name}`"),
+                }
             }
         }
     }
