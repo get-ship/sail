@@ -75,6 +75,19 @@ fn raw_css_values_do_not_preprocess() {
 }
 
 #[test]
+fn l1_matrix_fixture_compiles() {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("tests/fixtures/l1-matrix/routes/page.sail");
+    let src = std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("read matrix: {e}"));
+    assert!(
+        !src.contains("apps/sail-site"),
+        "matrix fixture must not reach the docs site"
+    );
+    sail_compiler::compile(&src, sail_compiler::CompileOpts::default())
+        .unwrap_or_else(|e| panic!("l1-matrix compile: {e:?}"));
+}
+
+#[test]
 fn file_accept_mime_and_named_style_compile() {
     let src = fixture("file-accept.sail");
     sail_compiler::compile(&src, sail_compiler::CompileOpts::default())
