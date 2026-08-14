@@ -16,6 +16,7 @@ pub mod emit;
 pub mod host_ctx;
 pub mod ir;
 pub mod parse;
+pub mod plains;
 pub mod prefixes;
 pub mod scales;
 pub mod setters;
@@ -57,6 +58,7 @@ pub use parse::{
     collect_motion_attaches, collect_motion_attaches_env, looks_like_utility_string_product, parse,
     parse_style_const_rhs, validate_style_refs,
 };
+pub use plains::{PlainSpec, find_plain, plain_doc_line};
 pub use theme_env::{
     NamedStyle, PlayPreset, StylingPolicy, TagDefault, ThemeStyleEnv, VocabTag,
     current_styling_policy, with_styling_policy,

@@ -1,8 +1,8 @@
-//! Leftover plain lower helpers and when-key / CSS emit.
+//! CSS lower helpers and when-key / clash emit.
 //!
 //! Product names live on `vocab.rs`. Concern / axis emit lives on
-//! `concerns.rs`. This module lowers plains that are vocab rows and
-//! keeps `when_target` / clash helpers. It is not a product name atlas.
+//! `concerns.rs`. Plains emit lives on `plains.rs`. This module lowers
+//! after `find_vocab` says Plain and keeps `when_target` / clash helpers.
 
 use std::borrow::Cow;
 
@@ -12,580 +12,15 @@ use crate::style_ir::{self, SxDecl, SxValue};
 use crate::style_vocab::{self, Resolved};
 
 use super::ir::{PaintArg, PaintOp, StyleDiagnostic};
+use crate::plains::{PlainSpec, find_plain};
 
-/// Leftover plain helper used only after vocab confirms the name.
-#[derive(Debug, Clone, Copy)]
-pub struct SetterSpec {
-    pub name: &'static str,
-    /// Vocab utility head used for resolve (`bg`, `px`, `rounded`, …).
-    pub vocab: &'static str,
-    /// Scale name for token check (`color`, `space`, `radius`, …), if any.
-    pub scale: Option<&'static str>,
-    /// Extra accepted keywords beyond the scale.
-    pub keywords: &'static [&'static str],
-    /// When true, token may be prefixed with `-` (negatable space/size).
-    pub negatable: bool,
-    /// Paint slots: every CSS longhand this setter can write (via scale
-    /// lowering, keyword maps, bare composites, and `bind` args). Clash
-    /// analysis keys on these, so the list must be complete.
-    pub slots: &'static [&'static str],
-}
-
-/// Skill / MCP surface line for one product setter. Concerns document slots;
-/// markers keep vocab + scale. Absorbed names do not appear on the live surface.
-pub fn setter_doc_line(s: &SetterSpec) -> String {
-    if let Some(concern) = crate::concerns::find_concern(s.name) {
-        return crate::concerns::concern_doc_line(concern);
+/// Plains emit after vocab confirms Plain. Not a name atlas.
+fn emit_plain(name: &str) -> Option<&'static PlainSpec> {
+    let row = crate::vocab::find_vocab(name)?;
+    if row.tag != crate::vocab::VocabTag::Plain {
+        return None;
     }
-    if crate::concerns::retired_replacement(s.name).is_some() {
-        if let Some((concern, teaching)) = crate::concerns::retired_replacement(s.name) {
-            return format!(
-                "`style.{}(…)` → retired — use `{teaching}` (`{concern}`)",
-                s.name
-            );
-        }
-    }
-    let scale = s.scale.unwrap_or("—");
-    let kws = if s.keywords.is_empty() {
-        String::new()
-    } else {
-        format!(" keywords: {}", s.keywords.join(", "))
-    };
-    let arity = match s.name {
-        "colorMix" => {
-            " **`(colorToken, pct)`** — soft fill: color-mix toward transparent; pct 5..95 step 5"
-        }
-        "colorDeepen" => {
-            " **`(colorToken, pct)`** — solid deepen: color-mix toward foreground; pct 5..95 step 5"
-        }
-        _ => "",
-    };
-    format!(
-        "`style.{}(…)` → vocab `{}` scale `{scale}`{kws}{arity}",
-        s.name, s.vocab
-    )
-}
-
-/// Leftover plain lower helpers. Not a product name atlas — walk `vocab.rs`.
-fn leftover_plains() -> &'static [SetterSpec] {
-    &[
-        SetterSpec {
-            name: "opacity",
-            vocab: "opacity",
-            scale: None,
-            keywords: &[
-                "0", "5", "10", "20", "25", "30", "40", "50", "60", "70", "75", "80", "90", "95",
-                "100",
-            ],
-            negatable: false,
-            slots: &["opacity"],
-        },
-        SetterSpec {
-            name: "translateX",
-            vocab: "translate-x",
-            scale: Some("space"),
-            keywords: &["0"],
-            negatable: true,
-            slots: &["translate"],
-        },
-        SetterSpec {
-            name: "translateY",
-            vocab: "translate-y",
-            scale: Some("space"),
-            keywords: &["0"],
-            negatable: true,
-            slots: &["translate"],
-        },
-        SetterSpec {
-            name: "cursor",
-            vocab: "cursor",
-            scale: None,
-            keywords: &[
-                "auto",
-                "default",
-                "pointer",
-                "not-allowed",
-                "text",
-                "crosshair",
-                "grab",
-                "grabbing",
-                "move",
-                "wait",
-                "help",
-                "none",
-                "cell",
-                "col-resize",
-                "row-resize",
-                "ew-resize",
-                "ns-resize",
-            ],
-            negatable: false,
-            slots: &["cursor"],
-        },
-        SetterSpec {
-            name: "select",
-            vocab: "select",
-            scale: None,
-            keywords: &["none", "text", "all", "auto"],
-            negatable: false,
-            slots: &["user-select"],
-        },
-        SetterSpec {
-            name: "pointerEvents",
-            vocab: "pointer-events",
-            scale: None,
-            keywords: &["none", "auto"],
-            negatable: false,
-            slots: &["pointer-events"],
-        },
-        SetterSpec {
-            name: "tab",
-            vocab: "tab",
-            scale: None,
-            keywords: &["1", "2", "4", "8"],
-            negatable: false,
-            slots: &["tab-size"],
-        },
-        SetterSpec {
-            name: "scrollbarThumb",
-            vocab: "scrollbar-thumb",
-            scale: Some("color"),
-            keywords: &["transparent"],
-            negatable: false,
-            slots: &["--sx-scrollbar-thumb"],
-        },
-        SetterSpec {
-            name: "scrollbarTrack",
-            vocab: "scrollbar-track",
-            scale: Some("color"),
-            keywords: &["transparent"],
-            negatable: false,
-            slots: &["--sx-scrollbar-track"],
-        },
-        SetterSpec {
-            name: "display",
-            vocab: "hidden",
-            scale: None,
-            keywords: &[
-                "none",
-                "block",
-                "inline",
-                "inline-block",
-                "flex",
-                "inline-flex",
-                "contents",
-            ],
-            negatable: false,
-            slots: &["display"],
-        },
-        SetterSpec {
-            name: "appearance",
-            vocab: "appearance",
-            scale: None,
-            keywords: &["none", "auto"],
-            negatable: false,
-            slots: &["appearance"],
-        },
-        SetterSpec {
-            name: "content",
-            vocab: "content",
-            scale: None,
-            keywords: &["empty"],
-            negatable: false,
-            slots: &["content"],
-        },
-        SetterSpec {
-            name: "shrink",
-            vocab: "shrink",
-            scale: None,
-            keywords: &["0", "1"],
-            negatable: false,
-            slots: &["flex-shrink"],
-        },
-        SetterSpec {
-            name: "grow",
-            vocab: "grow",
-            scale: None,
-            keywords: &["0", "1"],
-            negatable: false,
-            slots: &["flex-grow"],
-        },
-        SetterSpec {
-            name: "self",
-            vocab: "self",
-            scale: None,
-            keywords: &["auto", "start", "center", "end", "stretch", "baseline"],
-            negatable: false,
-            slots: &["align-self"],
-        },
-        SetterSpec {
-            name: "boxSizing",
-            vocab: "box",
-            scale: None,
-            keywords: &["border", "content"],
-            negatable: false,
-            slots: &["box-sizing"],
-        },
-        SetterSpec {
-            name: "transition",
-            vocab: "transition",
-            scale: None,
-            keywords: &["none", "all", "colors", "opacity", "shadow", "transform"],
-            negatable: false,
-            slots: &["transition-property"],
-        },
-        SetterSpec {
-            name: "duration",
-            vocab: "duration",
-            scale: Some("duration"),
-            keywords: &["fast", "medium", "slow", "instant", "deliberate", "glacial"],
-            negatable: false,
-            slots: &["transition-duration"],
-        },
-        SetterSpec {
-            name: "ease",
-            vocab: "ease",
-            scale: Some("ease"),
-            keywords: &["in", "out", "in-out", "out-soft", "spring"],
-            negatable: false,
-            slots: &["transition-timing-function"],
-        },
-        SetterSpec {
-            name: "rotate",
-            vocab: "rotate",
-            scale: Some("angle"),
-            keywords: &["0"],
-            negatable: true,
-            slots: &["rotate"],
-        },
-        SetterSpec {
-            name: "scale",
-            vocab: "scale",
-            scale: Some("percent"),
-            keywords: &[
-                "0", "50", "75", "90", "95", "100", "105", "110", "125", "150",
-            ],
-            negatable: false,
-            slots: &["scale"],
-        },
-        SetterSpec {
-            name: "tapHighlight",
-            vocab: "tap-highlight",
-            scale: None,
-            keywords: &["none", "auto"],
-            negatable: false,
-            slots: &["-webkit-tap-highlight-color"],
-        },
-        SetterSpec {
-            name: "saturate",
-            vocab: "saturate",
-            scale: None,
-            keywords: &["0", "50", "60", "65", "75", "100"],
-            negatable: false,
-            slots: &["filter"],
-        },
-        SetterSpec {
-            name: "blur",
-            vocab: "blur",
-            scale: None,
-            keywords: &["0", "1", "2", "4", "8", "12", "16", "24"],
-            negatable: false,
-            slots: &["filter"],
-        },
-        SetterSpec {
-            name: "brightness",
-            vocab: "brightness",
-            scale: None,
-            keywords: &[
-                "0", "50", "75", "90", "95", "100", "105", "110", "125", "150", "200",
-            ],
-            negatable: false,
-            slots: &["filter"],
-        },
-        SetterSpec {
-            name: "contrast",
-            vocab: "contrast",
-            scale: None,
-            keywords: &[
-                "0", "50", "75", "90", "95", "100", "105", "110", "125", "150", "200",
-            ],
-            negatable: false,
-            slots: &["filter"],
-        },
-        SetterSpec {
-            name: "grayscale",
-            vocab: "grayscale",
-            scale: None,
-            keywords: &["0", "50", "100"],
-            negatable: false,
-            slots: &["filter"],
-        },
-        SetterSpec {
-            name: "hueRotate",
-            vocab: "hue-rotate",
-            scale: None,
-            keywords: &["0", "15", "30", "60", "90", "180"],
-            negatable: true,
-            slots: &["filter"],
-        },
-        SetterSpec {
-            name: "invert",
-            vocab: "invert",
-            scale: None,
-            keywords: &["0", "50", "100"],
-            negatable: false,
-            slots: &["filter"],
-        },
-        SetterSpec {
-            name: "sepia",
-            vocab: "sepia",
-            scale: None,
-            keywords: &["0", "50", "100"],
-            negatable: false,
-            slots: &["filter"],
-        },
-        SetterSpec {
-            name: "rotateX",
-            vocab: "rotate-x",
-            scale: Some("angle"),
-            keywords: &["0"],
-            negatable: true,
-            slots: &["rotate"],
-        },
-        SetterSpec {
-            name: "rotateY",
-            vocab: "rotate-y",
-            scale: Some("angle"),
-            keywords: &["0"],
-            negatable: true,
-            slots: &["rotate"],
-        },
-        SetterSpec {
-            name: "rotateZ",
-            vocab: "rotate-z",
-            scale: Some("angle"),
-            keywords: &["0"],
-            negatable: true,
-            slots: &["rotate"],
-        },
-        SetterSpec {
-            name: "containerType",
-            vocab: "container-type",
-            scale: None,
-            keywords: &["normal", "size", "inline-size"],
-            negatable: false,
-            slots: &["container-type"],
-        },
-        SetterSpec {
-            name: "containerName",
-            vocab: "container-name",
-            scale: None,
-            keywords: &["none"],
-            negatable: false,
-            slots: &["container-name"],
-        },
-        SetterSpec {
-            name: "container",
-            vocab: "container",
-            scale: None,
-            keywords: &["normal", "size", "inline-size"],
-            negatable: false,
-            slots: &["container-type"],
-        },
-        SetterSpec {
-            name: "group",
-            vocab: "group",
-            scale: None,
-            keywords: &[],
-            negatable: false,
-            slots: &[],
-        },
-        SetterSpec {
-            name: "animate",
-            vocab: "animate",
-            scale: None,
-            keywords: &["spin"],
-            negatable: false,
-            slots: &["animation"],
-        },
-        SetterSpec {
-            name: "backdrop",
-            vocab: "backdrop",
-            scale: None,
-            keywords: &["none", "card-backdrop-filter"],
-            negatable: false,
-            slots: &["backdrop-filter", "-webkit-backdrop-filter"],
-        },
-        SetterSpec {
-            name: "avatarMedia",
-            vocab: "avatar-media",
-            scale: None,
-            keywords: &["true", "on"],
-            negatable: false,
-            slots: &[
-                "display",
-                "width",
-                "height",
-                "object-fit",
-                "padding",
-                "box-sizing",
-            ],
-        },
-        SetterSpec {
-            name: "glyphFill",
-            vocab: "glyph-fill",
-            scale: None,
-            keywords: &["true", "on"],
-            negatable: false,
-            slots: &["display", "width", "height"],
-        },
-        SetterSpec {
-            name: "scrollbarThin",
-            vocab: "scrollbar-thin",
-            scale: None,
-            keywords: &[],
-            negatable: false,
-            slots: &["scrollbar-width", "scrollbar-color"],
-        },
-        SetterSpec {
-            name: "isolate",
-            vocab: "isolate",
-            scale: None,
-            keywords: &[],
-            negatable: false,
-            slots: &["isolation"],
-        },
-        SetterSpec {
-            name: "mixBlend",
-            vocab: "mix-blend",
-            scale: None,
-            keywords: &[
-                "normal",
-                "multiply",
-                "screen",
-                "overlay",
-                "darken",
-                "lighten",
-                "difference",
-                "exclusion",
-                "luminosity",
-            ],
-            negatable: false,
-            slots: &["mix-blend-mode"],
-        },
-        SetterSpec {
-            name: "flexDir",
-            vocab: "flex-dir",
-            scale: None,
-            keywords: &["row", "column", "row-reverse", "column-reverse"],
-            negatable: false,
-            slots: &["flex-direction"],
-        },
-        SetterSpec {
-            name: "origin",
-            vocab: "origin",
-            scale: None,
-            keywords: &[
-                "center",
-                "top",
-                "top-right",
-                "right",
-                "bottom-right",
-                "bottom",
-                "bottom-left",
-                "left",
-                "top-left",
-            ],
-            negatable: false,
-            slots: &["transform-origin"],
-        },
-        SetterSpec {
-            name: "srOnly",
-            vocab: "sr-only",
-            scale: None,
-            keywords: &[],
-            negatable: false,
-            slots: &[
-                "position",
-                "width",
-                "height",
-                "padding",
-                "margin",
-                "overflow",
-                "clip-path",
-                "white-space",
-                "border-width",
-            ],
-        },
-        SetterSpec {
-            name: "objectFit",
-            vocab: "object",
-            scale: None,
-            keywords: &["contain", "cover", "fill", "none", "scale-down"],
-            negatable: false,
-            slots: &["object-fit"],
-        },
-        SetterSpec {
-            name: "transform",
-            vocab: "transform",
-            scale: None,
-            keywords: &["none"],
-            negatable: false,
-            slots: &["transform"],
-        },
-        SetterSpec {
-            name: "objectPosition",
-            vocab: "object",
-            scale: None,
-            keywords: &["center", "top", "right", "bottom", "left"],
-            negatable: false,
-            slots: &["object-position"],
-        },
-        SetterSpec {
-            name: "touch",
-            vocab: "touch",
-            scale: None,
-            keywords: &[
-                "auto",
-                "none",
-                "pan-x",
-                "pan-y",
-                "pinch-zoom",
-                "manipulation",
-            ],
-            negatable: false,
-            slots: &["touch-action"],
-        },
-        SetterSpec {
-            name: "controlFrame",
-            vocab: "control-frame",
-            scale: None,
-            keywords: &[],
-            negatable: false,
-            slots: &["box-shadow"],
-        },
-        SetterSpec {
-            name: "controlLift",
-            vocab: "control-lift",
-            scale: None,
-            keywords: &[],
-            negatable: false,
-            slots: &["translate"],
-        },
-        SetterSpec {
-            name: "press",
-            vocab: "press",
-            scale: None,
-            keywords: &[],
-            negatable: false,
-            slots: &["translate", "scale", "box-shadow"],
-        },
-    ]
-}
-
-pub fn find_setter(name: &str) -> Option<&'static SetterSpec> {
-    let key = if name == "dir" { "flexDir" } else { name };
-    leftover_plains().iter().find(|s| s.name == key)
+    find_plain(row.name)
 }
 
 /// Unique closest product setter for typo correction (confluent only).
@@ -670,7 +105,7 @@ pub fn op_slots(op: &PaintOp) -> Vec<&'static str> {
     if crate::concerns::find_concern(&op.setter).is_some() {
         return crate::concerns::concern_clash_keys(op).unwrap_or_default();
     }
-    let Some(spec) = find_setter(&op.setter) else {
+    let Some(spec) = emit_plain(&op.setter) else {
         return Vec::new();
     };
     // Composite border: position 0 = width slots, position 1 = color slots.
@@ -740,7 +175,7 @@ pub fn op_slots(op: &PaintOp) -> Vec<&'static str> {
 
 /// The subset of a setter's slots matching one part (`width` / `color` /
 /// `style`) — slot longhands carry the part name (`border-left-color`).
-fn slots_part(spec: &SetterSpec, part: &str) -> Vec<&'static str> {
+fn slots_part(spec: &PlainSpec, part: &str) -> Vec<&'static str> {
     spec.slots
         .iter()
         .copied()
@@ -912,7 +347,7 @@ pub fn validate_op(op: &PaintOp) -> Result<(), StyleDiagnostic> {
     if let Some(concern) = crate::concerns::find_concern(&op.setter) {
         return crate::concerns::validate_concern_op(concern, op);
     }
-    let Some(spec) = find_setter(&op.setter) else {
+    let Some(spec) = emit_plain(&op.setter) else {
         return Err(StyleDiagnostic::UnknownSetter {
             setter: op.setter.clone(),
             source: op.source.clone(),
@@ -1007,7 +442,7 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
     if let Some(concern) = crate::concerns::find_concern(&op.setter) {
         return crate::concerns::lower_concern_op(concern, op);
     }
-    let Some(spec) = find_setter(&op.setter) else {
+    let Some(spec) = emit_plain(&op.setter) else {
         return Err(StyleDiagnostic::UnknownSetter {
             setter: op.setter.clone(),
             source: op.source.clone(),
@@ -1556,7 +991,7 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
             // keyframes-catalog.ts). Style.animate(name) → CSS host Style var;
             // ambient @keyframes live in the generated contracts sheet,
             // not free CSS and not fx:loop. Keywords on the animate
-            // SetterSpec must stay in lockstep with styleAnimate:true rows.
+            // animate keywords must stay in lockstep with styleAnimate:true rows.
             ("animate", name) if matches!(name, "spin") => {
                 return Ok(vec![("animation".into(), format!("var(--animate-{name})"))]);
             }
@@ -1644,7 +1079,7 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
             ("maxW", "panel-ch-w-lg") => {
                 return Ok(vec![("max-width".into(), "var(--panel-ch-w-lg)".into())]);
             }
-            ("flexDir", dir @ ("row" | "column" | "row-reverse" | "column-reverse")) => {
+            ("dir", dir @ ("row" | "column" | "row-reverse" | "column-reverse")) => {
                 return Ok(vec![("flex-direction".into(), dir.into())]);
             }
             ("minW", "panel-menu-min-w") => {
@@ -2031,7 +1466,7 @@ fn is_border_composite(name: &str) -> bool {
 }
 
 /// Validate a composite (two-arg) paint op positionally.
-fn validate_composite_op(spec: &SetterSpec, op: &PaintOp) -> Result<(), StyleDiagnostic> {
+fn validate_composite_op(spec: &PlainSpec, op: &PaintOp) -> Result<(), StyleDiagnostic> {
     if op.args.len() != 2 {
         return Err(StyleDiagnostic::BadArity {
             setter: op.setter.clone(),
@@ -2059,7 +1494,7 @@ fn validate_composite_op(spec: &SetterSpec, op: &PaintOp) -> Result<(), StyleDia
 /// border-width ramp (or `control-stroke` on plain `border`, mirroring
 /// `borderWidth`).
 fn validate_border_width_arg(
-    spec: &SetterSpec,
+    spec: &PlainSpec,
     op: &PaintOp,
     arg: &PaintArg,
 ) -> Result<(), StyleDiagnostic> {
@@ -2091,7 +1526,7 @@ fn validate_border_width_arg(
 /// resolved declarations must all be `*-color` (a width or style token in
 /// this position is a positional error, fail closed).
 fn validate_border_color_arg(
-    spec: &SetterSpec,
+    spec: &PlainSpec,
     op: &PaintOp,
     arg: &PaintArg,
 ) -> Result<(), StyleDiagnostic> {
@@ -2148,7 +1583,7 @@ fn border_props(name: &str, part: &str) -> Vec<String> {
 
 /// Lower composite position 0 (width) to declarations.
 fn lower_border_width_arg(
-    spec: &SetterSpec,
+    spec: &PlainSpec,
     op: &PaintOp,
     arg: &PaintArg,
 ) -> Result<Vec<(String, String)>, StyleDiagnostic> {
@@ -2188,7 +1623,7 @@ fn lower_border_width_arg(
 
 /// Lower composite position 1 (color) to declarations.
 fn lower_border_color_arg(
-    spec: &SetterSpec,
+    spec: &PlainSpec,
     op: &PaintOp,
     arg: &PaintArg,
 ) -> Result<Vec<(String, String)>, StyleDiagnostic> {
@@ -2232,7 +1667,7 @@ fn lower_border_color_arg(
 }
 
 /// Validate `colorDeepen(token, pct)`: token on color scale, pct in 5..95 step 5.
-fn validate_color_deepen_args(_spec: &SetterSpec, op: &PaintOp) -> Result<(), StyleDiagnostic> {
+fn validate_color_deepen_args(_spec: &PlainSpec, op: &PaintOp) -> Result<(), StyleDiagnostic> {
     // Position 0: color token or bind.
     match &op.args[0] {
         PaintArg::Bind(_) | PaintArg::MemberPath { .. } => {}
@@ -2293,7 +1728,7 @@ fn validate_color_deepen_args(_spec: &SetterSpec, op: &PaintOp) -> Result<(), St
 
 /// Lower `colorDeepen(token, pct)` to a color-mix background-color.
 fn lower_color_deepen_arg(
-    _spec: &SetterSpec,
+    _spec: &PlainSpec,
     _op: &PaintOp,
     token_arg: &PaintArg,
     pct_arg: &PaintArg,
@@ -2337,7 +1772,7 @@ fn lower_color_deepen_arg(
 /// Emits `color-mix(in oklch, {token} {pct}%, transparent)` — the former
 /// tone-*-bg shape, without reintroducing tone-* design tokens.
 fn lower_color_mix_wash_arg(
-    _spec: &SetterSpec,
+    _spec: &PlainSpec,
     _op: &PaintOp,
     token_arg: &PaintArg,
     pct_arg: &PaintArg,
@@ -2422,7 +1857,7 @@ fn css_name_for_bind(name: &str) -> String {
     kebab
 }
 
-fn bind_css_props(spec: &SetterSpec, css_name: &str) -> Vec<(String, String)> {
+fn bind_css_props(spec: &PlainSpec, css_name: &str) -> Vec<(String, String)> {
     let var = format!("var(--{css_name})");
     match spec.name {
         "top" => return vec![("top".into(), var)],
@@ -2547,26 +1982,6 @@ mod tests {
         match style {
             Style::Set(op) => op,
             other => panic!("{src}: expected single Set, got {other:?}"),
-        }
-    }
-
-    #[test]
-    fn leftover_plains_declare_slots() {
-        for row in crate::vocab::vocab_rows() {
-            if row.tag != crate::vocab::VocabTag::Plain {
-                continue;
-            }
-            let Some(s) = find_setter(row.name) else {
-                continue;
-            };
-            if s.name == "group" {
-                assert!(
-                    s.slots.is_empty(),
-                    "group is a host marker — no paint slots"
-                );
-            } else {
-                assert!(!s.slots.is_empty(), "plain {} has no slots", s.name);
-            }
         }
     }
 
