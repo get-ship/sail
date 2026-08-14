@@ -27,7 +27,7 @@
   style console = { shrink(0).size({ h: 16, min-h: 16 }).pad({ x: 2, y: 1 }).overflow({ y: auto }).border({ color: border, width: 1, edge: t }).bg(surface-0) }
   style consoleMobile = { shrink(0).size({ h: 14, min-h: 14 }).pad({ x: 2, y: 1 }).overflow({ y: auto }).border({ color: border, width: 1, edge: t }).bg(surface-0) }
   style monoContents = { display(contents).type({ family: mono, size: xs }) }
-  style ts = { fg(muted-foreground).filter({ opacity: 50 }) }
+  style logTs = { fg(muted-foreground).filter({ opacity: 50 }) }
   style logOk = { fg(success) }
   style logWarn = { fg(warning) }
   style logErr = { fg(destructive) }
@@ -283,10 +283,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
 <partial log-line props: LogLineProps>
   <match {kind}>
-    {'success' => <row gap="2"><small style(ts)>{ts}</small><small style(logOk)>{msg}</small></row>}
-    {'warn' => <row gap="2"><small style(ts)>{ts}</small><small style(logWarn)>{msg}</small></row>}
-    {'error' => <row gap="2" style(logErrRow)><small style(ts)>{ts}</small><small style(logErr)>{msg}</small></row>}
-    {else => <row gap="2"><small style(ts)>{ts}</small><small style(logInfo)>{msg}</small></row>}
+    {'success' => <row gap="2"><small style(logTs)>{ts}</small><small style(logOk)>{msg}</small></row>}
+    {'warn' => <row gap="2"><small style(logTs)>{ts}</small><small style(logWarn)>{msg}</small></row>}
+    {'error' => <row gap="2" style(logErrRow)><small style(logTs)>{ts}</small><small style(logErr)>{msg}</small></row>}
+    {else => <row gap="2"><small style(logTs)>{ts}</small><small style(logInfo)>{msg}</small></row>}
   </match>
 </partial>
 
