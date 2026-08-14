@@ -1,8 +1,8 @@
 <!--
   Lesson 02 solved — the whole surface is the Style product.
 
-  Spacing, color, radius, border, shadow, and type are tokens via Style
-  object channels; interaction states are when({ hover, focusWithin,
+  Spacing, color, radius, border, elevation, and type are tokens via a
+  Style chain; interaction states are when({ hover, focusWithin,
   current, … }). Nothing here is a raw value — a px or a hex would not
   compile. Named scope Style (style name = { … }) is reused on tags as
   style(name).

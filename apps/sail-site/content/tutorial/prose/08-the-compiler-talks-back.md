@@ -33,12 +33,12 @@ Run 1. The compiler reports one costed rejection at a time — first, a
 Style paint value that is not on the closed scale:
 
 ```
-Error: Style error: style `space:pad(12px)` — value is not a token on this setter's scale
+Error: Style error: style `pad(12px)` — value is not a token on this setter's scale
 ```
 
 The message *is* the spacing scale rule. `12px` is not a token —
-comfortable padding on this ramp is `space({ pad: 4 })` inside a block Style
-statement (`style({ box: space({ pad: 4 }) })`). Style failures are now hard compile
+comfortable padding on this ramp is `pad(4)` inside a block Style
+statement (`style({ pad(4) })`). Style failures are now hard compile
 errors (not silently empty paint), so they surface before later expression
 and motion checks. Utility-string hosts (`sx="…"`) are refused the same
 way — retired form, not product.
@@ -87,12 +87,12 @@ Fix the colour and it objects to the block itself:
 ```
 Error: tut-08-release-notes-starter.sail: line 64 col 1: [sail-no-style-block]
 raw <style> is not the floor styling surface — the floor is one way to do CSS:
-Style as a block statement (`style({ box: pad(4), paint: bg(surface-2) })`).
+Style as a block statement (`style({ pad(4).bg(surface-2) })`).
 Motion/variants/responsive are becoming language elements, not raw CSS.
 This is the opinionated floor; primitives use it too.
   suggest: Text elements (<h1>-<h6>, <p>) are styled from the type scale
   automatically — write them plain. Everything else: Style block attach
-  (`style({ paint: bg(…) })` / when / match), <column>/<row>/<grid> for structure. A gap
+  (`style({ bg(…) })` / when / match), <column>/<row>/<grid> for structure. A gap
   here is a missing language element to add, not a reason to hand-author CSS.
 ```
 
@@ -104,7 +104,7 @@ that is a **language gap to report**, never a reason to smuggle CSS.
 Product form:
 ```
 <div>
-  style({ box: space({ pad: 4 }), paint: fill({ color: surface-2 }) })
+  style({ pad(4).bg(surface-2) })
 </div>
 ```
 
@@ -122,7 +122,7 @@ mechanically. The compiler is the review that never gets tired. What it
 
 1. Work the loop until the starter compiles. Resist fixing ahead of the
    errors — the order the compiler chooses is part of the exercise.
-2. Compare your result with the solved version. If you picked `space({ pad: 3 })` or
+2. Compare your result with the solved version. If you picked `pad(3)` or
    a spring instead of `fade`, fine: you stayed inside the vocabulary,
    which is the only thing the compiler was defending.
 3. Plant a defect of your own — an unknown tone, a `style=` attribute,
