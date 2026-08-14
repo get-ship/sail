@@ -2324,49 +2324,49 @@
       "value": "none"
     },
     "fill-surface-color": {
-      "path": "fill.surface.color",
+      "path": "bg.surface.color",
       "cssName": "fill-surface-color",
       "type": "color",
       "value": "var(--surface-1)"
     },
     "fill-muted-color": {
-      "path": "fill.muted.color",
+      "path": "bg.muted.color",
       "cssName": "fill-muted-color",
       "type": "color",
       "value": "var(--muted)"
     },
     "fill-card-color": {
-      "path": "fill.card.color",
+      "path": "bg.card.color",
       "cssName": "fill-card-color",
       "type": "color",
       "value": "var(--card)"
     },
     "fill-button-color": {
-      "path": "fill.button.color",
+      "path": "bg.button.color",
       "cssName": "fill-button-color",
       "type": "color",
       "value": "var(--background)"
     },
     "ink-foreground-color": {
-      "path": "ink.foreground.color",
+      "path": "fg.foreground.color",
       "cssName": "ink-foreground-color",
       "type": "color",
       "value": "var(--foreground)"
     },
     "ink-muted-color": {
-      "path": "ink.muted.color",
+      "path": "fg.muted.color",
       "cssName": "ink-muted-color",
       "type": "color",
       "value": "var(--muted-foreground)"
     },
     "ink-card-color": {
-      "path": "ink.card.color",
+      "path": "fg.card.color",
       "cssName": "ink-card-color",
       "type": "color",
       "value": "var(--card-foreground)"
     },
     "ink-button-color": {
-      "path": "ink.button.color",
+      "path": "fg.button.color",
       "cssName": "ink-button-color",
       "type": "color",
       "value": "var(--foreground)"
@@ -3320,66 +3320,66 @@
         "shadow": "elevation-none-shadow"
       }
     },
-    "fill.surface": {
-      "path": "fill.surface",
-      "cssName": "fill.surface",
-      "type": "fill",
+    "bg.surface": {
+      "path": "bg.surface",
+      "cssName": "bg.surface",
+      "type": "bg",
       "members": {
         "color": "fill-surface-color"
       }
     },
-    "fill.muted": {
-      "path": "fill.muted",
-      "cssName": "fill.muted",
-      "type": "fill",
+    "bg.muted": {
+      "path": "bg.muted",
+      "cssName": "bg.muted",
+      "type": "bg",
       "members": {
         "color": "fill-muted-color"
       }
     },
-    "fill.card": {
-      "path": "fill.card",
-      "cssName": "fill.card",
-      "type": "fill",
+    "bg.card": {
+      "path": "bg.card",
+      "cssName": "bg.card",
+      "type": "bg",
       "members": {
         "color": "fill-card-color"
       }
     },
-    "fill.button": {
-      "path": "fill.button",
-      "cssName": "fill.button",
-      "type": "fill",
+    "bg.button": {
+      "path": "bg.button",
+      "cssName": "bg.button",
+      "type": "bg",
       "members": {
         "color": "fill-button-color"
       }
     },
-    "ink.foreground": {
-      "path": "ink.foreground",
-      "cssName": "ink.foreground",
-      "type": "ink",
+    "fg.foreground": {
+      "path": "fg.foreground",
+      "cssName": "fg.foreground",
+      "type": "fg",
       "members": {
         "color": "ink-foreground-color"
       }
     },
-    "ink.muted": {
-      "path": "ink.muted",
-      "cssName": "ink.muted",
-      "type": "ink",
+    "fg.muted": {
+      "path": "fg.muted",
+      "cssName": "fg.muted",
+      "type": "fg",
       "members": {
         "color": "ink-muted-color"
       }
     },
-    "ink.card": {
-      "path": "ink.card",
-      "cssName": "ink.card",
-      "type": "ink",
+    "fg.card": {
+      "path": "fg.card",
+      "cssName": "fg.card",
+      "type": "fg",
       "members": {
         "color": "ink-card-color"
       }
     },
-    "ink.button": {
-      "path": "ink.button",
-      "cssName": "ink.button",
-      "type": "ink",
+    "fg.button": {
+      "path": "fg.button",
+      "cssName": "fg.button",
+      "type": "fg",
       "members": {
         "color": "ink-button-color"
       }

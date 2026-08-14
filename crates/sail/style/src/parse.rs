@@ -2055,19 +2055,15 @@ fn push_paint_op(
     source: String,
     diags: &mut Vec<StyleDiagnostic>,
 ) {
-    if crate::vocab::is_dead_v2_author(method) {
+    if let Some(d) = crate::concerns::retired_diag(method, &source) {
+        diags.push(d);
+        return;
+    }
+    let (method, args) = crate::concerns::prepare_concern_call(method, args);
+    if find_setter(&method).is_none() && crate::concerns::find_concern(&method).is_none() {
         diags.push(StyleDiagnostic::UnknownVocabulary {
             name: method.to_string(),
             source: source.clone(),
-        });
-        return;
-    }
-    let (method, args) = crate::concerns::alias_concern_call(method, args);
-    if find_setter(&method).is_none() {
-        diags.push(StyleDiagnostic::UnknownSetter {
-            setter: method.to_string(),
-            source: source.clone(),
-            suggestion: closest_unique_setter(&method).map(|s| s.to_string()),
         });
     } else {
         let op = PaintOp {
@@ -2647,11 +2643,7 @@ mod flat_chain_tests {
             let (_, diags) = parse(src);
             assert!(
                 diags.iter().any(|d| {
-                    matches!(
-                        d,
-                        crate::StyleDiagnostic::UnknownVocabulary { name, .. }
-                            if crate::vocab::is_dead_v2_author(name)
-                    )
+                    matches!(d, crate::StyleDiagnostic::UnknownVocabulary { .. })
                 }),
                 "{src} must be unknown vocabulary: {:?}",
                 msgs(&diags)

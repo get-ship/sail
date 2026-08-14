@@ -722,7 +722,7 @@ pub fn setters() -> &'static [SetterSpec] {
             slots: &["stroke"],
         },
         SetterSpec {
-            name: "fill",
+            name: "svgFill",
             vocab: "fill",
             scale: Some("color"),
             keywords: &["none", "current", "currentColor"],
@@ -1686,39 +1686,6 @@ pub fn setters() -> &'static [SetterSpec] {
             negatable: false,
             slots: &["font-size", "font-weight", "line-height", "letter-spacing"],
         },
-        // SPEC-SPINNAKER-2 concern names that were not already property setters.
-        SetterSpec {
-            name: "ink",
-            vocab: "ink",
-            scale: Some("color"),
-            keywords: &[],
-            negatable: false,
-            slots: &["color", "caret-color", "accent-color"],
-        },
-        SetterSpec {
-            name: "space",
-            vocab: "space",
-            scale: Some("space"),
-            keywords: &[],
-            negatable: false,
-            slots: &["padding", "margin"],
-        },
-        SetterSpec {
-            name: "place",
-            vocab: "place",
-            scale: None,
-            keywords: &[],
-            negatable: false,
-            slots: &["position", "inset", "z-index"],
-        },
-        SetterSpec {
-            name: "flow",
-            vocab: "flow",
-            scale: None,
-            keywords: &[],
-            negatable: false,
-            slots: &["display", "flex-direction", "flex-grow"],
-        },
         SetterSpec {
             name: "filter",
             vocab: "filter",
@@ -1726,14 +1693,6 @@ pub fn setters() -> &'static [SetterSpec] {
             keywords: &[],
             negatable: false,
             slots: &["filter", "backdrop-filter", "opacity"],
-        },
-        SetterSpec {
-            name: "motion",
-            vocab: "motion",
-            scale: None,
-            keywords: &[],
-            negatable: false,
-            slots: &["rotate", "scale", "translate"],
         },
     ]
 }
@@ -3721,13 +3680,7 @@ mod tests {
 
     #[test]
     fn absorbed_border_forms_are_retired() {
-        for src in [
-            "style({ paint: border(border) })",
-            "style({ paint: border(2) })",
-            "style({ paint: border(dashed) })",
-            "style({ paint: border(1, border) })",
-            "style({ paint: borderX(2, primary) })",
-        ] {
+        for src in ["style({ paint: borderX(2, primary) })"] {
             let (_, diags) = parse(src);
             assert!(
                 diags

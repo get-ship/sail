@@ -247,9 +247,6 @@ pub fn style_complete_for_context(
             filter_sort(setter_arg_items(spec, host.as_deref()), partial)
         }
         StyleCompleteContext::ConcernSlotKey { setter, partial } => {
-            if crate::vocab::is_dead_v2_author(setter) {
-                return Vec::new();
-            }
             let Some(concern) = crate::concerns::find_concern(setter) else {
                 return Vec::new();
             };
@@ -271,9 +268,6 @@ pub fn style_complete_for_context(
             partial,
             host,
         } => {
-            if crate::vocab::is_dead_v2_author(setter) {
-                return Vec::new();
-            }
             let Some(concern) = crate::concerns::find_concern(setter) else {
                 return Vec::new();
             };

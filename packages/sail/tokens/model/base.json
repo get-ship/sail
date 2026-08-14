@@ -1379,60 +1379,60 @@
       }
     }
   },
-  "fill": {
+  "bg": {
     "surface": {
-      "$type": "fill",
+      "$type": "bg",
       "$description": "Surface fill identity. Color member aliases color.surface.1 (--surface-1).",
       "$value": {
         "color": "{color.surface.1}"
       }
     },
     "muted": {
-      "$type": "fill",
+      "$type": "bg",
       "$description": "Muted fill identity. Color member aliases color.muted.default (--muted).",
       "$value": {
         "color": "{color.muted.default}"
       }
     },
     "card": {
-      "$type": "fill",
+      "$type": "bg",
       "$description": "Card fill face. Color member aliases color.card (--card).",
       "$value": {
         "color": "{color.card.default}"
       }
     },
     "button": {
-      "$type": "fill",
+      "$type": "bg",
       "$description": "Button fill face. Color member aliases color.background.",
       "$value": {
         "color": "{color.background}"
       }
     }
   },
-  "ink": {
+  "fg": {
     "foreground": {
-      "$type": "ink",
+      "$type": "fg",
       "$description": "Foreground ink identity. Color member aliases color.foreground (--foreground).",
       "$value": {
         "color": "{color.foreground}"
       }
     },
     "muted": {
-      "$type": "ink",
+      "$type": "fg",
       "$description": "Muted ink identity. Color member aliases color.muted.foreground (--muted-foreground).",
       "$value": {
         "color": "{color.muted.foreground}"
       }
     },
     "card": {
-      "$type": "ink",
+      "$type": "fg",
       "$description": "Card ink face. Color member aliases color.card.foreground (--card-foreground).",
       "$value": {
         "color": "{color.card.foreground}"
       }
     },
     "button": {
-      "$type": "ink",
+      "$type": "fg",
       "$description": "Button ink face. Color member aliases color.foreground.",
       "$value": {
         "color": "{color.foreground}"

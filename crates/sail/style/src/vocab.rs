@@ -66,8 +66,8 @@ pub static VOCAB: &[VocabRow] = &[
     row("play", CONCERN, None, "animate", true),
     row("filter", CONCERN, Some("filter"), "paint", true),
     // ── live axis ──────────────────────────────────────────────────────
-    row("pad", AXIS, Some("space"), "box", true),
-    row("margin", AXIS, Some("space"), "box", true),
+    row("pad", AXIS, Some("pad"), "box", true),
+    row("margin", AXIS, Some("margin"), "box", true),
     row("overflow", AXIS, Some("overflow"), "box", true),
     row("radius", AXIS, Some("radius"), "paint", true),
     // ── live plains: markers (verbs) ───────────────────────────────────
@@ -136,15 +136,6 @@ pub fn vocab_rows() -> &'static [VocabRow] {
 /// Live author rows offered by complete.
 pub fn offered_rows() -> impl Iterator<Item = &'static VocabRow> {
     VOCAB.iter().filter(|r| r.offered)
-}
-
-/// v2 concern names. Not author vocabulary. Emit internals may still
-/// use these as `ConcernSpec.name`.
-pub fn is_dead_v2_author(name: &str) -> bool {
-    matches!(
-        name,
-        "fill" | "ink" | "place" | "space" | "flow" | "motion"
-    )
 }
 
 /// Look up a name in the one table.
@@ -252,8 +243,8 @@ mod tests {
         assert_eq!(emit_target("bg"), Some("bg"));
         assert_eq!(emit_target("fg"), Some("fg"));
         assert_eq!(emit_target("position"), Some("position"));
-        assert_eq!(emit_target("pad"), Some("space"));
-        assert_eq!(emit_target("margin"), Some("space"));
+        assert_eq!(emit_target("pad"), Some("pad"));
+        assert_eq!(emit_target("margin"), Some("margin"));
     }
 
     #[test]
@@ -273,7 +264,7 @@ mod tests {
         assert_eq!(find_concern("bg").map(|c| c.name), Some("bg"));
         assert_eq!(find_concern("fg").map(|c| c.name), Some("fg"));
         assert_eq!(find_concern("position").map(|c| c.name), Some("position"));
-        assert_eq!(find_concern("pad").map(|c| c.name), Some("space"));
+        assert_eq!(find_concern("pad").map(|c| c.name), Some("pad"));
         assert!(find_concern("display").is_none());
         assert!(find_concern("z").is_none());
     }

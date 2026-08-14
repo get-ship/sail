@@ -279,9 +279,9 @@ mod tests {
     }
 
     #[test]
-    fn font_size_setter_still_resolves() {
-        // Retired in product language; IR still carries the setter for resolve.
-        let (style, _) = parse("style({ text: fontSize(2xl) })");
+    fn type_size_slot_resolves_2xl() {
+        let (style, diags) = parse("style({ text: type({ size: 2xl }) })");
+        assert!(diags.is_empty(), "{diags:?}");
         let t = resolve_type(&style, &HashMap::new());
         assert_eq!(t.size.as_deref(), Some("2xl"));
     }

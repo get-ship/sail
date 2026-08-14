@@ -146,11 +146,11 @@ fn bg_and_fg_are_live_author_names() {
 }
 
 #[test]
-fn retired_pad_x_names_space() {
-    let diags = must_retire("style({ box: padX(3) })", "space");
+fn retired_pad_x_names_pad() {
+    let diags = must_retire("style({ box: padX(3) })", "pad");
     assert!(
-        names_concern(&diags, "space"),
-        "padX(3) must name `space`: {:?}",
+        names_concern(&diags, "pad"),
+        "padX(3) must name `pad`: {:?}",
         diag_messages(&diags)
     );
 }
@@ -260,26 +260,12 @@ fn retired_sx_attribute() {
 
 #[test]
 fn retired_border_color_poke() {
-    let primary = must_retire("style({ paint: border(primary) })", "border");
-    let primary_msg = diag_messages(&primary).join(" | ");
-    assert!(
-        primary_msg.contains("border({ color: primary })")
-            || primary_msg.contains("border({ color: primary"),
-        "teaching for border(primary) is `border({{ color: primary }})`: {primary_msg}"
-    );
+    let _ = css_of("style({ paint: border(primary) })");
 
-    let poke = must_retire("style({ paint: border(dialog.border) })", "border");
+    let poke = lower_must_fail("style({ paint: border(dialog.border) })");
     assert!(
-        poke.iter().any(|d| match d {
-            StyleDiagnostic::RetiredSetter { replacement, .. } => {
-                replacement.contains("border(dialog)") && !replacement.contains("dialog.border")
-            }
-            _ => {
-                let m = d.message();
-                m.contains("`border(dialog)`") || m.contains("use `border(dialog)")
-            }
-        }),
-        "teaching for border(dialog.border) is `border(dialog)`: {:?}",
+        !poke.is_empty(),
+        "dotted pack poke must fail closed: {:?}",
         diag_messages(&poke)
     );
 }

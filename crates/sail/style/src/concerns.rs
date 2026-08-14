@@ -460,128 +460,134 @@ pub fn concerns() -> &'static [ConcernSpec] {
             channel: Channel::Box,
         },
         ConcernSpec {
-            name: "space",
+            name: "pad",
             slots: &[
                 ConcernSlot {
-                    name: "pad",
+                    name: "all",
                     css_prop: "padding",
                     scale: Some("space"),
                     keywords: &["0"],
                 },
                 ConcernSlot {
-                    name: "pad-x",
+                    name: "x",
                     css_prop: "padding-inline",
                     scale: Some("space"),
                     keywords: &["0"],
                 },
                 ConcernSlot {
-                    name: "pad-y",
+                    name: "y",
                     css_prop: "padding-block",
                     scale: Some("space"),
                     keywords: &["0"],
                 },
                 ConcernSlot {
-                    name: "pad-t",
+                    name: "t",
                     css_prop: "padding-top",
                     scale: Some("space"),
                     keywords: &["0"],
                 },
                 ConcernSlot {
-                    name: "pad-b",
+                    name: "b",
                     css_prop: "padding-bottom",
                     scale: Some("space"),
                     keywords: &["0"],
                 },
                 ConcernSlot {
-                    name: "pad-l",
+                    name: "l",
                     css_prop: "padding-left",
                     scale: Some("space"),
                     keywords: &["0"],
                 },
                 ConcernSlot {
-                    name: "pad-r",
+                    name: "r",
                     css_prop: "padding-right",
                     scale: Some("space"),
                     keywords: &["0"],
                 },
                 ConcernSlot {
-                    name: "pad-s",
+                    name: "s",
                     css_prop: "padding-inline-start",
                     scale: Some("space"),
                     keywords: &["0"],
                 },
                 ConcernSlot {
-                    name: "pad-e",
+                    name: "e",
                     css_prop: "padding-inline-end",
                     scale: Some("space"),
                     keywords: &["0"],
                 },
+            ],
+            covered_setters: &[
+                "padX", "padY", "padT", "padB", "padL", "padR", "padS", "padE",
+            ],
+            channel: Channel::Box,
+        },
+        ConcernSpec {
+            name: "margin",
+            slots: &[
                 ConcernSlot {
-                    name: "m",
+                    name: "all",
                     css_prop: "margin",
                     scale: Some("space"),
                     keywords: &["0", "auto"],
                 },
                 ConcernSlot {
-                    name: "mx",
+                    name: "x",
                     css_prop: "margin-inline",
                     scale: Some("space"),
                     keywords: &["0", "auto"],
                 },
                 ConcernSlot {
-                    name: "my",
+                    name: "y",
                     css_prop: "margin-block",
                     scale: Some("space"),
                     keywords: &["0", "auto"],
                 },
                 ConcernSlot {
-                    name: "mt",
+                    name: "t",
                     css_prop: "margin-top",
                     scale: Some("space"),
                     keywords: &["0", "auto"],
                 },
                 ConcernSlot {
-                    name: "mb",
+                    name: "b",
                     css_prop: "margin-bottom",
                     scale: Some("space"),
                     keywords: &["0", "auto"],
                 },
                 ConcernSlot {
-                    name: "ml",
+                    name: "l",
                     css_prop: "margin-left",
                     scale: Some("space"),
                     keywords: &["0", "auto"],
                 },
                 ConcernSlot {
-                    name: "mr",
+                    name: "r",
                     css_prop: "margin-right",
                     scale: Some("space"),
                     keywords: &["0", "auto"],
                 },
                 ConcernSlot {
-                    name: "ms",
+                    name: "s",
                     css_prop: "margin-inline-start",
                     scale: Some("space"),
                     keywords: &["0", "auto"],
                 },
                 ConcernSlot {
-                    name: "me",
+                    name: "e",
                     css_prop: "margin-inline-end",
                     scale: Some("space"),
                     keywords: &["0", "auto"],
                 },
             ],
-            covered_setters: &[
-                "pad", "padX", "padY", "padT", "padB", "padL", "padR", "padS", "padE", "m", "mx",
-                "my", "mt", "mb", "ml", "mr", "ms", "me",
-            ],
+            covered_setters: &["m", "mx", "my", "mt", "mb", "ml", "mr", "ms", "me"],
             channel: Channel::Box,
         },
         ConcernSpec {
             name: "position",
             slots: &[
                 ConcernSlot {
-                    name: "position",
+                    name: "scheme",
                     css_prop: "position",
                     scale: None,
                     keywords: &["relative", "absolute", "sticky", "fixed", "static"],
@@ -593,25 +599,25 @@ pub fn concerns() -> &'static [ConcernSpec] {
                     keywords: &["0", "auto"],
                 },
                 ConcernSlot {
-                    name: "top",
+                    name: "t",
                     css_prop: "top",
                     scale: Some("space"),
                     keywords: &["0", "auto"],
                 },
                 ConcernSlot {
-                    name: "bottom",
+                    name: "b",
                     css_prop: "bottom",
                     scale: Some("space"),
                     keywords: &["0", "auto"],
                 },
                 ConcernSlot {
-                    name: "left",
+                    name: "l",
                     css_prop: "left",
                     scale: Some("space"),
                     keywords: &["0", "auto"],
                 },
                 ConcernSlot {
-                    name: "right",
+                    name: "r",
                     css_prop: "right",
                     scale: Some("space"),
                     keywords: &["0", "auto"],
@@ -631,58 +637,6 @@ pub fn concerns() -> &'static [ConcernSpec] {
             ],
             covered_setters: &[
                 "position", "inset", "top", "bottom", "left", "right", "z", "order",
-            ],
-            channel: Channel::Box,
-        },
-        ConcernSpec {
-            name: "flow",
-            slots: &[
-                ConcernSlot {
-                    name: "display",
-                    css_prop: "display",
-                    scale: None,
-                    keywords: &[
-                        "none",
-                        "block",
-                        "inline",
-                        "inline-block",
-                        "flex",
-                        "inline-flex",
-                        "contents",
-                    ],
-                },
-                ConcernSlot {
-                    name: "dir",
-                    css_prop: "flex-direction",
-                    scale: None,
-                    keywords: &["row", "column", "row-reverse", "column-reverse"],
-                },
-                ConcernSlot {
-                    name: "grow",
-                    css_prop: "flex-grow",
-                    scale: None,
-                    keywords: &["0", "1"],
-                },
-                ConcernSlot {
-                    name: "shrink",
-                    css_prop: "flex-shrink",
-                    scale: None,
-                    keywords: &["0", "1"],
-                },
-                ConcernSlot {
-                    name: "self",
-                    css_prop: "align-self",
-                    scale: None,
-                    keywords: &["auto", "start", "end", "center", "stretch", "baseline"],
-                },
-            ],
-            covered_setters: &[
-                "display",
-                "flexDir",
-                "grow",
-                "shrink",
-                "self",
-                "justifySelf",
             ],
             channel: Channel::Box,
         },
@@ -851,99 +805,7 @@ pub fn concerns() -> &'static [ConcernSpec] {
                 "list",
             ],
             channel: Channel::Text,
-        },
-        ConcernSpec {
-            name: "motion",
-            slots: &[
-                ConcernSlot {
-                    name: "rotate",
-                    css_prop: "rotate",
-                    scale: None,
-                    keywords: &["0", "1", "2", "3", "6", "12", "45", "90", "180"],
-                },
-                ConcernSlot {
-                    name: "scale",
-                    css_prop: "scale",
-                    scale: None,
-                    keywords: &["0", "50", "75", "90", "95", "100", "105", "110", "125"],
-                },
-                ConcernSlot {
-                    name: "x",
-                    css_prop: "translate",
-                    scale: Some("space"),
-                    keywords: &["0"],
-                },
-                ConcernSlot {
-                    name: "y",
-                    css_prop: "translate",
-                    scale: Some("space"),
-                    keywords: &["0"],
-                },
-                ConcernSlot {
-                    name: "origin",
-                    css_prop: "transform-origin",
-                    scale: None,
-                    keywords: &[
-                        "center",
-                        "top",
-                        "bottom",
-                        "left",
-                        "right",
-                        "top-left",
-                        "top-right",
-                        "bottom-left",
-                        "bottom-right",
-                    ],
-                },
-                ConcernSlot {
-                    name: "ease",
-                    css_prop: "transition-timing-function",
-                    scale: Some("ease"),
-                    keywords: &["linear", "in", "out", "in-out"],
-                },
-                ConcernSlot {
-                    name: "duration",
-                    css_prop: "transition-duration",
-                    scale: Some("duration"),
-                    keywords: &["0", "75", "100", "150", "200", "300", "500", "700", "1000"],
-                },
-                ConcernSlot {
-                    name: "property",
-                    css_prop: "transition-property",
-                    scale: None,
-                    keywords: &["none", "all", "colors", "opacity", "shadow", "transform"],
-                },
-                ConcernSlot {
-                    name: "animate",
-                    css_prop: "animation",
-                    scale: None,
-                    keywords: &["spin", "none"],
-                },
-                ConcernSlot {
-                    name: "transform",
-                    css_prop: "transform",
-                    scale: None,
-                    keywords: &["none"],
-                },
-            ],
-            covered_setters: &[
-                "rotate",
-                "rotateX",
-                "rotateY",
-                "rotateZ",
-                "scale",
-                "translateX",
-                "translateY",
-                "transform",
-                "origin",
-                "perspective",
-                "transition",
-                "duration",
-                "ease",
-                "animate",
-            ],
-            channel: Channel::Paint,
-        },
+        }
     ]
 }
 
@@ -952,79 +814,35 @@ pub fn find_concern(name: &str) -> Option<&'static ConcernSpec> {
     concerns().iter().find(|c| c.name == key)
 }
 
-/// Rewrite v3 authoring aliases onto the concern they emit through.
-///
-/// `bg` → `fill`, `fg` → `ink`, `position` → `place`. `pad` / `margin` become
-/// `space` with those slots. Named composites stay scalar (`bg(card)` →
-/// `fill(card)`); other scalars wrap the concern's primary slot so existing
-/// emit/validate run unchanged.
-pub fn alias_concern_call(method: &str, args: Vec<PaintArg>) -> (String, Vec<PaintArg>) {
-    match method {
-        "bg" => alias_to_concern("bg", "color", args),
-        "fg" => alias_to_concern("fg", "color", args),
-        "position" => alias_place(args),
-        "pad" => alias_space_axis("pad", args),
-        "margin" => alias_space_axis("m", args),
-        other => (other.to_string(), args),
-    }
-}
-
-fn alias_to_concern(
-    concern: &'static str,
-    primary_slot: &'static str,
-    args: Vec<PaintArg>,
-) -> (String, Vec<PaintArg>) {
-    let spec = find_concern(concern);
+/// Keep the author name. Wrap a bare token onto the concern's primary slot
+/// unless it is a named composite.
+pub fn prepare_concern_call(method: &str, args: Vec<PaintArg>) -> (String, Vec<PaintArg>) {
+    let Some(spec) = find_concern(method) else {
+        return (method.to_string(), args);
+    };
+    let primary = primary_slot(spec);
     let args = match args_one(args) {
-        Some(PaintArg::Token(name))
-            if spec.is_some_and(|s| resolve_concern_name(s, &name).is_some()) =>
-        {
+        Some(PaintArg::Token(name)) if resolve_concern_name(spec, &name).is_some() => {
             vec![PaintArg::Token(name)]
         }
-        Some(PaintArg::Token(name)) => {
-            vec![PaintArg::Slots(BTreeMap::from([(
-                primary_slot.to_string(),
-                PaintArg::Token(name),
-            )]))]
-        }
+        Some(PaintArg::Token(name)) => vec![PaintArg::Slots(BTreeMap::from([(
+            primary.to_string(),
+            PaintArg::Token(name),
+        )]))],
         Some(PaintArg::Slots(slots)) => vec![PaintArg::Slots(slots)],
         Some(other) => vec![other],
         None => Vec::new(),
     };
-    (concern.to_string(), args)
+    (method.to_string(), args)
 }
 
-fn alias_place(args: Vec<PaintArg>) -> (String, Vec<PaintArg>) {
-    let args = match args_one(args) {
-        Some(PaintArg::Slots(slots)) => {
-            vec![PaintArg::Slots(remap_slots(slots, remap_place_slot))]
-        }
-        Some(PaintArg::Token(name)) => vec![PaintArg::Slots(BTreeMap::from([(
-            "position".to_string(),
-            PaintArg::Token(name),
-        )]))],
-        Some(other) => vec![other],
-        None => Vec::new(),
-    };
-    ("position".into(), args)
-}
-
-fn alias_space_axis(scalar_slot: &'static str, args: Vec<PaintArg>) -> (String, Vec<PaintArg>) {
-    let prefix = if scalar_slot == "pad" { "pad" } else { "m" };
-    let args = match args_one(args) {
-        Some(PaintArg::Slots(slots)) => {
-            vec![PaintArg::Slots(remap_slots(slots, |k| {
-                remap_space_slot(prefix, k)
-            }))]
-        }
-        Some(PaintArg::Token(name)) => vec![PaintArg::Slots(BTreeMap::from([(
-            scalar_slot.to_string(),
-            PaintArg::Token(name),
-        )]))],
-        Some(other) => vec![other],
-        None => Vec::new(),
-    };
-    ("space".into(), args)
+fn primary_slot(spec: &ConcernSpec) -> &'static str {
+    match spec.name {
+        "bg" | "fg" => "color",
+        "pad" | "margin" | "overflow" | "radius" => "all",
+        "position" => "scheme",
+        _ => spec.slots.first().map(|s| s.name).unwrap_or("all"),
+    }
 }
 
 fn args_one(args: Vec<PaintArg>) -> Option<PaintArg> {
@@ -1033,55 +851,7 @@ fn args_one(args: Vec<PaintArg>) -> Option<PaintArg> {
     } else if args.is_empty() {
         None
     } else {
-        // Positional extras are not a v3 alias form — keep the first so
-        // existing validate can fail closed on arity.
         args.into_iter().next()
-    }
-}
-
-fn remap_slots(
-    slots: BTreeMap<String, PaintArg>,
-    map_key: impl Fn(&str) -> String,
-) -> BTreeMap<String, PaintArg> {
-    let mut out = BTreeMap::new();
-    for (key, value) in slots {
-        out.insert(map_key(&key), value);
-    }
-    out
-}
-
-fn remap_place_slot(key: &str) -> String {
-    match key {
-        "scheme" => "position".into(),
-        "t" => "top".into(),
-        "b" => "bottom".into(),
-        "l" => "left".into(),
-        "r" => "right".into(),
-        other => other.to_string(),
-    }
-}
-
-fn remap_space_slot(prefix: &str, key: &str) -> String {
-    match (prefix, key) {
-        ("pad", "x") => "pad-x".into(),
-        ("pad", "y") => "pad-y".into(),
-        ("pad", "t") => "pad-t".into(),
-        ("pad", "b") => "pad-b".into(),
-        ("pad", "l") => "pad-l".into(),
-        ("pad", "r") => "pad-r".into(),
-        ("pad", "s") => "pad-s".into(),
-        ("pad", "e") => "pad-e".into(),
-        ("pad", "all") => "pad".into(),
-        ("m", "x") => "mx".into(),
-        ("m", "y") => "my".into(),
-        ("m", "t") => "mt".into(),
-        ("m", "b") => "mb".into(),
-        ("m", "l") => "ml".into(),
-        ("m", "r") => "mr".into(),
-        ("m", "s") => "ms".into(),
-        ("m", "e") => "me".into(),
-        ("m", "all") => "m".into(),
-        (_, other) => other.to_string(),
     }
 }
 
@@ -1097,7 +867,7 @@ pub fn find_slot(spec: &ConcernSpec, name: &str) -> Option<&'static ConcernSlot>
 pub fn retired_replacement(name: &str) -> Option<(&'static str, String)> {
     // Vocab table is the author SSOT. Live rows are not retired. Dead v2
     // concern names are unknown vocabulary, not a teaching alias.
-    if crate::vocab::find_vocab(name).is_some() || crate::vocab::is_dead_v2_author(name) {
+    if crate::vocab::find_vocab(name).is_some() {
         return None;
     }
     if matches!(name, "gap" | "gapX" | "gapY") {
@@ -1130,7 +900,8 @@ fn concern_teaching(concern: &str) -> String {
         "size" => {
             "size(control-md) or size({ w, h, min-w, min-h, max-w, max-h, aspect, basis })".into()
         }
-        "space" => "pad(3) or pad({ x: 3, y: 2 }) / margin(…)".into(),
+        "pad" => "pad(3) or pad({ x: 3, y: 2 })".into(),
+        "margin" => "margin(auto) or margin({ x: auto })".into(),
         "position" => "position({ scheme: fixed, inset: 0 })".into(),
         "flow" => "display(flex).dir(column)".into(),
         "overflow" => "overflow({ all: hidden })".into(),
@@ -1176,36 +947,18 @@ pub fn concern_doc_line(spec: &ConcernSpec) -> String {
 /// `border(dialog.border)` is a color poke — it does not resolve. Use `border(dialog)`.
 pub fn resolve_concern_name(spec: &ConcernSpec, raw: &str) -> Option<&'static CompositeToken> {
     let concern = spec.name;
-    let catalog = match concern {
-        "bg" => "fill",
-        "fg" => "ink",
-        "position" => "place",
-        other => other,
-    };
     if raw.contains('.') {
         if raw.starts_with(concern) && raw.as_bytes().get(concern.len()) == Some(&b'.') {
-            return tokens::find_composite(raw).filter(|c| c.r#type == catalog);
-        }
-        if catalog != concern
-            && raw.starts_with(catalog)
-            && raw.as_bytes().get(catalog.len()) == Some(&b'.')
-        {
-            return tokens::find_composite(raw).filter(|c| c.r#type == catalog);
+            return tokens::find_composite(raw).filter(|c| c.r#type == concern);
         }
         return None;
     }
     let scoped = format!("{concern}.{raw}");
-    if let Some(c) = tokens::find_composite(&scoped).filter(|c| c.r#type == catalog) {
+    if let Some(c) = tokens::find_composite(&scoped).filter(|c| c.r#type == concern) {
         return Some(c);
     }
-    if catalog != concern {
-        let legacy = format!("{catalog}.{raw}");
-        if let Some(c) = tokens::find_composite(&legacy).filter(|c| c.r#type == catalog) {
-            return Some(c);
-        }
-    }
     let component = format!("{raw}.{concern}");
-    tokens::find_composite(&component).filter(|c| c.r#type == catalog)
+    tokens::find_composite(&component).filter(|c| c.r#type == concern)
 }
 
 /// True when this op is the concern form (composite token, scale-step name, or slot object).
@@ -1258,8 +1011,6 @@ pub fn concern_clash_keys(op: &PaintOp) -> Option<Vec<&'static str>> {
         | PaintArg::MemberPath { .. } => {
             if spec.name == "border" {
                 Some(border_clash_keys(concern_kind(op), concern_edge(op)))
-            } else if spec.name == "space" {
-                Some(space_clash_keys(op))
             } else {
                 Some(vec![clash_key(spec.name, concern_kind(op))])
             }
@@ -1321,29 +1072,6 @@ fn border_clash_keys(kind: &str, edge: &str) -> Vec<&'static str> {
 }
 
 /// pad and margin both emit through `space`. They are different axes —
-/// `pad(0).margin(auto)` is legal v3, not a clash.
-fn space_clash_keys(op: &PaintOp) -> Vec<&'static str> {
-    match op.first_arg() {
-        PaintArg::Slots(slots) => {
-            let mut keys = Vec::new();
-            if slots.keys().any(|k| k.starts_with("pad")) {
-                keys.push("space:pad");
-            }
-            if slots
-                .keys()
-                .any(|k| k == "m" || k.starts_with("m") && !k.starts_with("pad"))
-            {
-                keys.push("space:margin");
-            }
-            if keys.is_empty() {
-                keys.push("space");
-            }
-            keys
-        }
-        _ => vec!["space:pad"],
-    }
-}
-
 fn clash_key(concern: &str, kind: &str) -> &'static str {
     match (concern, kind) {
         ("border", "outline") => "border:outline",
@@ -1356,12 +1084,11 @@ fn clash_key(concern: &str, kind: &str) -> &'static str {
         ("elevation", _) => "elevation",
         ("filter", _) => "filter",
         ("size", _) => "size",
-        ("space", _) => "space",
+        ("pad", _) => "pad",
+        ("margin", _) => "margin",
         ("position", _) => "position",
-        ("flow", _) => "flow",
         ("overflow", _) => "overflow",
         ("type", _) => "type",
-        ("motion", _) => "motion",
         _ => "concern",
     }
 }
@@ -2392,16 +2119,15 @@ mod tests {
             "elevation",
             "filter",
             "size",
-            "space",
+            "pad",
+            "margin",
             "position",
-            "flow",
             "overflow",
             "type",
-            "motion",
         ] {
             assert!(names.contains(&want), "missing concern {want} in {names:?}");
         }
-        assert_eq!(names.len(), 13, "{names:?}");
+        assert_eq!(names.len(), 12, "{names:?}");
         for m in MARKERS {
             assert!(!names.contains(m), "marker {m} must not be a concern");
         }
@@ -2511,15 +2237,14 @@ mod tests {
     }
 
     #[test]
-    fn color_only_border_is_retired() {
-        let (_, diags) = parse("style({ paint: border(primary) })");
+    fn border_primary_is_the_color_slot() {
+        let (style, diags) = parse("style({ paint: border(primary) })");
         assert!(
-            diags
-                .iter()
-                .any(|d| matches!(d, StyleDiagnostic::RetiredSetter { .. })),
+            diags.is_empty(),
             "{:?}",
             diags.iter().map(|d| d.message()).collect::<Vec<_>>()
         );
+        assert!(!matches!(style, crate::ir::Style::Empty));
     }
 
     #[test]
@@ -2656,7 +2381,7 @@ mod tests {
         assert!(retired_replacement("fg").is_none());
         assert!(retired_replacement("pad").is_none());
         assert!(retired_replacement("display").is_none());
-        assert_eq!(retired_replacement("padX").unwrap().0, "space");
+        assert_eq!(retired_replacement("padX").unwrap().0, "pad");
         assert_eq!(retired_replacement("w").unwrap().0, "size");
         assert_eq!(retired_replacement("shadow").unwrap().0, "elevation");
         assert_eq!(retired_replacement("gap").unwrap().0, "gap");
@@ -2664,7 +2389,7 @@ mod tests {
 
     #[test]
     fn alias_bg_card_stays_named_or_color() {
-        let (name, args) = alias_concern_call("bg", vec![PaintArg::Token("card".into())]);
+        let (name, args) = prepare_concern_call("bg", vec![PaintArg::Token("card".into())]);
         assert_eq!(name, "bg");
         assert!(
             args == vec![PaintArg::Token("card".into())]
@@ -2679,7 +2404,7 @@ mod tests {
     #[test]
     fn alias_fg_color_token_wraps_color_slot() {
         let (name, args) =
-            alias_concern_call("fg", vec![PaintArg::Token("muted-foreground".into())]);
+            prepare_concern_call("fg", vec![PaintArg::Token("muted-foreground".into())]);
         assert_eq!(name, "fg");
         match &args[0] {
             PaintArg::Slots(slots) => {
@@ -2693,19 +2418,19 @@ mod tests {
     }
 
     #[test]
-    fn alias_pad_axis_object_becomes_space_slots() {
+    fn pad_axis_object_keeps_author_slots() {
         let slots = BTreeMap::from([
             ("x".into(), PaintArg::Token("5".into())),
             ("y".into(), PaintArg::Token("4".into())),
         ]);
-        let (name, args) = alias_concern_call("pad", vec![PaintArg::Slots(slots)]);
-        assert_eq!(name, "space");
+        let (name, args) = prepare_concern_call("pad", vec![PaintArg::Slots(slots)]);
+        assert_eq!(name, "pad");
         match &args[0] {
             PaintArg::Slots(slots) => {
-                assert_eq!(slots.get("pad-x"), Some(&PaintArg::Token("5".into())));
-                assert_eq!(slots.get("pad-y"), Some(&PaintArg::Token("4".into())));
+                assert_eq!(slots.get("x"), Some(&PaintArg::Token("5".into())));
+                assert_eq!(slots.get("y"), Some(&PaintArg::Token("4".into())));
             }
-            other => panic!("expected space slots, got {other:?}"),
+            other => panic!("expected pad slots, got {other:?}"),
         }
     }
 }

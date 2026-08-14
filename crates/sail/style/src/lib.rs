@@ -47,7 +47,7 @@ pub use component_surfaces::{
 };
 pub use concern_rewrite::{retired_dual_border_sites, rewrite_concern_source};
 pub use concerns::{
-    ConcernSlot, ConcernSpec, MARKERS, alias_concern_call, concern_doc_line, concern_kind,
+    ConcernSlot, ConcernSpec, MARKERS, concern_doc_line, concern_kind, prepare_concern_call,
     concerns, find_concern, is_concern_form, is_marker, resolve_concern_name, retired_replacement,
 };
 pub use conditions::{CONDITION_PREFIXES, condition_media};

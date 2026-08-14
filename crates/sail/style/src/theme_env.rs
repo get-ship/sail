@@ -17,7 +17,7 @@ use std::sync::OnceLock;
 
 use serde_json::Value;
 
-use crate::concerns::{alias_concern_call, find_concern, resolve_concern_name};
+use crate::concerns::{find_concern, prepare_concern_call, resolve_concern_name};
 use crate::ir::{PaintArg, PaintOp, Style, StyleDiagnostic};
 use crate::tokens::CompositeToken;
 use crate::vocab;
@@ -305,7 +305,7 @@ fn json_value_to_style(value: &Value) -> Style {
 fn json_member_to_set(setter: &str, value: &Value) -> Style {
     let args = json_to_paint_args(value);
     let source = format!("{setter}({})", format_paint_args(&args));
-    let (setter, args) = alias_concern_call(setter, args);
+    let (setter, args) = prepare_concern_call(setter, args);
     Style::Set(PaintOp {
         setter,
         args,

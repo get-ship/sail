@@ -219,7 +219,7 @@ fn when_key_kebab(key: &str) -> String {
 pub fn is_geometry_setter(name: &str) -> bool {
     match name {
         "display" | "overflow" | "overflowX" | "overflowY" | "flow" => false,
-        "size" | "space" | "position" | "pad" | "margin" => true,
+        "size" | "position" | "pad" | "margin" => true,
         other => channel_for_setter(other) == Some(Channel::Box),
     }
 }
@@ -241,7 +241,7 @@ pub fn style_contains_geometry(style: &Style) -> bool {
         Style::Set(op) => {
             // `place({ z })` is stacking, not box geometry — z lived on paint
             // before SPEC-2 and must still be legal under interaction when().
-            if op.setter == "place" {
+            if op.setter == "position" {
                 place_gates_layout(op)
             } else {
                 is_geometry_setter(&op.setter)
@@ -392,7 +392,7 @@ mod tests {
 
     #[test]
     fn geometry_setters_are_dimensional_box() {
-        for s in ["size", "space", "position", "pad", "margin"] {
+        for s in ["size", "position", "pad", "margin"] {
             assert!(is_geometry_setter(s), "{s}");
         }
         assert!(!is_geometry_setter("display"));
