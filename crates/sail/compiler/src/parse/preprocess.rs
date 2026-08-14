@@ -328,8 +328,16 @@ fn lift_tag_style(
     for lift in lifts.into_iter().rev() {
         let mut lo = lift.call_lo;
         let mut hi = lift.call_hi;
+        // Keep one space when the call sits before `/>` or `>`. Stripping
+        // it glues the previous attr to the slash (`multiple/>`) and the
+        // HTML parser treats `/` as self-close mid-tag.
+        let rest = out[hi..].trim_start();
+        let keep_sep = rest.starts_with('/') || rest.starts_with('>');
         while lo > 0 && out.as_bytes()[lo - 1] == b' ' {
             lo -= 1;
+        }
+        if keep_sep && lo < lift.call_lo {
+            lo += 1;
         }
         let rest = out[hi..].trim_start();
         if rest.starts_with('>') || rest.starts_with('/') {
@@ -1874,6 +1882,7 @@ fn parse_attr_list(s: &str) -> Vec<(String, String)> {
             && !bytes[i].is_ascii_whitespace()
             && bytes[i] != b'='
             && bytes[i] != b'>'
+            && bytes[i] != b'/'
         {
             i += 1;
         }
@@ -3187,6 +3196,17 @@ fn expand_self_close(source: &str) -> String {
             i = j;
             continue;
         }
+        // HTML comments may contain `>` (`<!-- <file> … -->`). Find `-->`,
+        // not the first `>`.
+        if source[i..].starts_with("<!--") {
+            let end = source[i..]
+                .find("-->")
+                .map(|e| i + e + 3)
+                .unwrap_or(bytes.len());
+            out.push_str(&source[i..end]);
+            i = end;
+            continue;
+        }
         // Skip </…> close tags and <!…> directives whole.
         if i + 1 < bytes.len() && (bytes[i + 1] == b'/' || bytes[i + 1] == b'!') {
             if let Some(end_rel) = source[i..].find('>') {
@@ -3371,6 +3391,71 @@ export default controller(() => {
         let (s2, b2) = extract_controller_block("<p>… é — ✓</p>");
         assert!(b2.is_none());
         assert_eq!(s2, "<p>… é — ✓</p>");
+    }
+
+    #[test]
+    fn mime_slash_star_does_not_eat_controller_or_template() {
+        // `image/*` is a MIME token, not a JS block comment. Extract +
+        // preprocess must keep the real `</controller>` and the tags after it.
+        let src = r#"
+<scope>
+  style fullW = { size({ w: full }) }
+</scope>
+<controller>
+export default controller(() => {
+  const accept = signal('image/*')
+  const ex = () => `<file accept="image/*" />`
+  return { accept, ex }
+})
+</controller>
+<file accept="image/*" style(fullW) />
+<input type="text" placeholder="image/*" style(fullW) />
+"#;
+        let (stripped, body) = extract_controller_block(src);
+        let body = body.expect("controller body");
+        assert!(
+            body.contains("image/*") && body.contains("return { accept"),
+            "MIME slash-star must not cut the controller: {body}"
+        );
+        assert!(
+            stripped.contains("placeholder=\"image/*\""),
+            "template after extract must remain: {stripped}"
+        );
+        let out = preprocess(&stripped).unwrap_or_else(|e| panic!("preprocess: {e:?}"));
+        assert!(
+            out.contains("sail-file") || out.contains("<file") || out.contains("s-"),
+            "file + named style must lower:\n{out}"
+        );
+        crate::compile(src, crate::CompileOpts::default())
+            .unwrap_or_else(|e| panic!("compile: {e:?}"));
+    }
+
+    #[test]
+    fn boolean_attr_before_named_style_self_close_stays_a_tag() {
+        // `multiple style(fullW) />` must not become `multiple/>`.
+        let src = r#"
+<scope>
+  style fullW = { size({ w: full }) }
+</scope>
+<file accept="image/*" multiple style(fullW) />
+"#;
+        let out = preprocess(src).unwrap_or_else(|e| panic!("preprocess: {e:?}"));
+        assert!(
+            !out.contains("multiple/"),
+            "boolean attr must not glue to self-close slash:\n{out}"
+        );
+        crate::parse::parse(src).unwrap_or_else(|e| panic!("parse: {e:?}"));
+    }
+
+    #[test]
+    fn html_comment_may_contain_tag_gt() {
+        let src = "<!-- <file> docs host -->\n<p>ok</p>";
+        let out = expand_self_close(src);
+        assert!(
+            out.contains("<!-- <file> docs host -->"),
+            "comment must keep inner `>`:\n{out}"
+        );
+        crate::parse::parse(src).unwrap_or_else(|e| panic!("parse: {e:?}"));
     }
 
     #[test]

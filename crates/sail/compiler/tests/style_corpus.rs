@@ -75,6 +75,20 @@ fn raw_css_values_do_not_preprocess() {
 }
 
 #[test]
+fn file_accept_mime_and_named_style_compile() {
+    let src = fixture("file-accept.sail");
+    sail_compiler::compile(&src, sail_compiler::CompileOpts::default())
+        .unwrap_or_else(|e| panic!("file-accept compile: {e:?}"));
+}
+
+#[test]
+fn input_multiline_named_style_compile() {
+    let src = fixture("input-multiline.sail");
+    sail_compiler::compile(&src, sail_compiler::CompileOpts::default())
+        .unwrap_or_else(|e| panic!("input-multiline compile: {e:?}"));
+}
+
+#[test]
 fn corpus_dir_has_no_app_paths() {
     let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/style");
     for entry in std::fs::read_dir(&dir).unwrap() {
