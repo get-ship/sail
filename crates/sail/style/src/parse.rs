@@ -40,7 +40,7 @@ fn parse_with(input: &str) -> (Style, Vec<StyleDiagnostic>) {
     // Offsets are into `trimmed`; `input_base` maps them back if needed. Motion
     // config capture uses the trimmed slice so quotes/units survive.
     let tokens = tokenize(trimmed);
-    let mut p = Parser::new_full(trimmed, &tokens, false, false);
+    let mut p = Parser::new_full(trimmed, &tokens, false);
     let _ = trim_start; // kept for future span mapping into original input
     let style = parse_style_expr(&mut p, &mut diags);
     if !p.at_end() {
@@ -552,24 +552,16 @@ struct Parser<'a> {
     tokens: &'a [SpannedTok<'a>],
     pos: usize,
     /// When false, `style.method(…)` flat chains are refused (product parse).
-    allow_flat: bool, // migration dual deleted
-    /// When true, free match/when/compound/list/`.when` duals parse (codemod only).
-    allow_legacy: bool,
+    allow_flat: bool,
 }
 
 impl<'a> Parser<'a> {
-    fn new_full(
-        input: &'a str,
-        tokens: &'a [SpannedTok<'a>],
-        allow_flat: bool, // migration dual deleted
-        allow_legacy: bool,
-    ) -> Self {
+    fn new_full(input: &'a str, tokens: &'a [SpannedTok<'a>], allow_flat: bool) -> Self {
         Self {
             input,
             tokens,
             pos: 0,
             allow_flat,
-            allow_legacy,
         }
     }
     fn at_end(&self) -> bool {
@@ -698,10 +690,6 @@ fn tok_str_ref<'a>(t: &'a Tok<'a>) -> &'a str {
 
 fn parse_style_expr(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Style {
     match p.peek() {
-        Some(Tok::LBrack) if p.allow_legacy => parse_list(p, diags),
-        Some(Tok::Word("match")) if p.allow_legacy => parse_match(p, diags),
-        Some(Tok::Word("when")) if p.allow_legacy => parse_when_call(p, diags),
-        Some(Tok::Word("compound")) if p.allow_legacy => parse_compound(p, diags),
         Some(Tok::Word("style")) => parse_style_chain(p, diags),
         Some(Tok::Word(_)) => {
             // Style const ref + optional motion tails (`name.enter({…})`).
@@ -723,16 +711,11 @@ fn parse_style_expr(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Sty
                         }
                     };
                     if method == "when" {
-                        if p.allow_legacy {
-                            let entries = parse_when_args(p, diags);
-                            base = Style::chain(vec![base, Style::When { entries }]);
-                        } else {
-                            diags.push(StyleDiagnostic::ParseError {
-                                message: "`.when(…)` is retired — use `style(ref, { when: {…} })` or `when:` inside a style object".into(),
-                                source: ".when".into(),
-                            });
-                            let _ = parse_when_args(p, diags);
-                        }
+                        diags.push(StyleDiagnostic::ParseError {
+                            message: "`.when(…)` is retired — use `style(ref, { when: {…} })` or `when:` inside a style object".into(),
+                            source: ".when".into(),
+                        });
+                        let _ = parse_when_args(p, diags);
                     } else if is_motion_chain_method(method) {
                         if let Some(m) = parse_motion_call(p, method, diags) {
                             base = Style::chain(vec![base, m]);
@@ -989,16 +972,11 @@ fn parse_style_call(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Sty
             }
         };
         if method == "when" {
-            if p.allow_legacy {
-                let entries = parse_when_args(p, diags);
-                base = Style::chain(vec![base, Style::When { entries }]);
-            } else {
-                diags.push(StyleDiagnostic::ParseError {
-                    message: "`.when(…)` method chains are retired — use object key `when: { hover: {…}, … }` inside `style({…})`".into(),
-                    source: ".when".into(),
-                });
-                let _ = parse_when_args(p, diags);
-            }
+            diags.push(StyleDiagnostic::ParseError {
+                message: "`.when(…)` method chains are retired — use object key `when: { hover: {…}, … }` inside `style({…})`".into(),
+                source: ".when".into(),
+            });
+            let _ = parse_when_args(p, diags);
             continue;
         }
         if is_motion_chain_method(method) {
@@ -1029,10 +1007,6 @@ fn parse_style_arg(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Styl
     match p.peek() {
         Some(Tok::LBrace) => parse_style_object(p, diags, /* allow_axes */ true),
         Some(Tok::Word("style")) => parse_style_chain(p, diags),
-        Some(Tok::LBrack) if p.allow_legacy => parse_list(p, diags),
-        Some(Tok::Word("match")) if p.allow_legacy => parse_match(p, diags),
-        Some(Tok::Word("when")) if p.allow_legacy => parse_when_call(p, diags),
-        Some(Tok::Word("compound")) if p.allow_legacy => parse_compound(p, diags),
         Some(Tok::Word("match")) | Some(Tok::Word("when")) | Some(Tok::Word("compound")) => {
             let name = match p.peek() {
                 Some(Tok::Word(w)) => *w,
@@ -1097,17 +1071,12 @@ fn parse_style_arg(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Styl
                         }
                     };
                     if method == "when" {
-                        if p.allow_legacy {
-                            let entries = parse_when_args(p, diags);
-                            base = Style::chain(vec![base, Style::When { entries }]);
-                        } else {
-                            diags.push(StyleDiagnostic::ParseError {
-                                message: "`.when(…)` is retired — use `style(ref, { when: {…} })`"
-                                    .into(),
-                                source: ".when".into(),
-                            });
-                            let _ = parse_when_args(p, diags);
-                        }
+                        diags.push(StyleDiagnostic::ParseError {
+                            message: "`.when(…)` is retired — use `style(ref, { when: {…} })`"
+                                .into(),
+                            source: ".when".into(),
+                        });
+                        let _ = parse_when_args(p, diags);
                     } else if is_motion_chain_method(method) {
                         if let Some(m) = parse_motion_call(p, method, diags) {
                             base = Style::chain(vec![base, m]);
@@ -2320,126 +2289,6 @@ fn normalize_paint_arg(
     PaintArg::Token(value)
 }
 
-fn parse_match(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Style {
-    // match(scrutinee, { arm: Style, … })
-    p.bump();
-    p.expect(Tok::LParen, diags);
-    let scrutinee = parse_scrutinee(p, diags);
-    p.expect(Tok::Comma, diags);
-    p.expect(Tok::LBrace, diags);
-    let mut arms = Vec::new();
-    let mut iters = 0usize;
-    while !p.at_end() && p.peek() != Some(&Tok::RBrace) {
-        iters += 1;
-        if iters > MAX_PARSE_ITERS {
-            diags.push(StyleDiagnostic::ParseError {
-                message: "match arms too many entries".into(),
-                source: p.remainder(),
-            });
-            break;
-        }
-        let before = p.pos;
-        let key = match p.bump() {
-            Some(Tok::Word(w)) => unquote(w).to_string(),
-            _ => {
-                diags.push(StyleDiagnostic::ParseError {
-                    message: "expected match arm key".into(),
-                    source: p.remainder(),
-                });
-                p.force_progress();
-                break;
-            }
-        };
-        p.expect(Tok::Colon, diags);
-        let body = parse_style_expr(p, diags);
-        arms.push((key, body));
-        p.eat(&Tok::Comma);
-        if p.pos <= before {
-            p.force_progress();
-        }
-    }
-    p.expect(Tok::RBrace, diags);
-    p.expect(Tok::RParen, diags);
-    Style::Match { scrutinee, arms }
-}
-
-fn parse_scrutinee(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> String {
-    // variant | props.variant | ($) => $.variant
-    if p.peek() == Some(&Tok::LParen) {
-        // static lambda: ( $ ) => $ . path
-        p.bump();
-        let _param = match p.bump() {
-            Some(Tok::Word(w)) => w.to_string(),
-            _ => {
-                diags.push(StyleDiagnostic::BadScrutinee {
-                    message: "match lambda must be static path: ($) => $.prop".into(),
-                    source: p.remainder(),
-                });
-                return String::new();
-            }
-        };
-        p.expect(Tok::RParen, diags);
-        if !p.eat(&Tok::Arrow) {
-            diags.push(StyleDiagnostic::BadScrutinee {
-                message: "match lambda requires `=>`".into(),
-                source: p.remainder(),
-            });
-            return String::new();
-        }
-        // $.prop or $ . prop
-        let mut path = Vec::new();
-        if let Some(Tok::Word(w)) = p.bump() {
-            // might be $
-            if w != "$" && w != _param {
-                // allow bare prop after =>
-                return w.to_string();
-            }
-        }
-        while p.eat(&Tok::Dot) {
-            if let Some(Tok::Word(seg)) = p.bump() {
-                path.push(seg.to_string());
-            }
-        }
-        if path.is_empty() {
-            diags.push(StyleDiagnostic::BadScrutinee {
-                message: "match lambda must select a prop path".into(),
-                source: String::new(),
-            });
-            String::new()
-        } else {
-            path.join(".")
-        }
-    } else {
-        // variant or props.variant
-        let mut parts = Vec::new();
-        if let Some(Tok::Word(w)) = p.bump() {
-            parts.push(w.to_string());
-        } else {
-            diags.push(StyleDiagnostic::BadScrutinee {
-                message: "match scrutinee must be a prop identifier".into(),
-                source: p.remainder(),
-            });
-            return String::new();
-        }
-        while p.eat(&Tok::Dot) {
-            if let Some(Tok::Word(w)) = p.bump() {
-                parts.push(w.to_string());
-            }
-        }
-        // props.variant → variant for attr emit
-        if parts.len() > 1 && parts[0] == "props" {
-            parts[1..].join(".")
-        } else {
-            parts.join(".")
-        }
-    }
-}
-
-fn parse_when_call(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Style {
-    p.bump(); // when
-    let entries = parse_when_args(p, diags);
-    Style::When { entries }
-}
 
 /// Dual-accept when args:
 /// - map form: `({ hover: style.bg(x), … })`
@@ -2554,55 +2403,6 @@ fn unquote(w: &str) -> &str {
     }
 }
 
-fn parse_compound(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Style {
-    p.bump(); // compound
-    p.expect(Tok::LParen, diags);
-    p.expect(Tok::LBrace, diags);
-    let mut when = BTreeMap::new();
-    let mut iters = 0usize;
-    while !p.at_end() && p.peek() != Some(&Tok::RBrace) {
-        iters += 1;
-        if iters > MAX_PARSE_ITERS {
-            diags.push(StyleDiagnostic::ParseError {
-                message: "compound map too many entries".into(),
-                source: p.remainder(),
-            });
-            break;
-        }
-        let before = p.pos;
-        let k = match p.bump() {
-            Some(Tok::Word(w)) => unquote(w).to_string(),
-            _ => {
-                p.force_progress();
-                break;
-            }
-        };
-        p.expect(Tok::Colon, diags);
-        let v = match p.bump() {
-            Some(Tok::Word(w)) => unquote(w).to_string(),
-            _ => {
-                diags.push(StyleDiagnostic::ParseError {
-                    message: "compound condition value must be a literal".into(),
-                    source: p.remainder(),
-                });
-                String::new()
-            }
-        };
-        when.insert(k, v);
-        p.eat(&Tok::Comma);
-        if p.pos <= before {
-            p.force_progress();
-        }
-    }
-    p.expect(Tok::RBrace, diags);
-    p.expect(Tok::Comma, diags);
-    let body = parse_style_expr(p, diags);
-    p.expect(Tok::RParen, diags);
-    Style::Compound {
-        when,
-        body: Box::new(body),
-    }
-}
 
 fn validate_style(style: &Style, diags: &mut Vec<StyleDiagnostic>) {
     match style {
@@ -2639,16 +2439,12 @@ fn validate_style(style: &Style, diags: &mut Vec<StyleDiagnostic>) {
 /// 3. **Compose** — `name, { … }` / `name, style({ … })` (same merge as multi-arg `style`)
 /// 4. **Bare ref** — another Style const name
 pub fn parse_style_const_rhs(input: &str) -> (Style, Vec<StyleDiagnostic>) {
-    parse_const_rhs(input, false, false)
+    parse_const_rhs(input)
 }
 
 /// Like [`parse_with`], but the body is one or more style *args* (compose / bare
 /// object) rather than a single top-level `style(…)` / ref expression only.
-fn parse_const_rhs(
-    input: &str,
-    _allow_flat: bool,
-    _allow_legacy: bool,
-) -> (Style, Vec<StyleDiagnostic>) {
+fn parse_const_rhs(input: &str) -> (Style, Vec<StyleDiagnostic>) {
     let mut diags = Vec::new();
     let stripped = strip_comments(input);
     let trimmed = stripped.trim();
@@ -2664,7 +2460,7 @@ fn parse_const_rhs(
         return (Style::Empty, diags);
     }
     let tokens = tokenize(trimmed);
-    let mut p = Parser::new_full(trimmed, &tokens, false, false);
+    let mut p = Parser::new_full(trimmed, &tokens, false);
     // Declaration RHS = style-arg composition (same merge law as `style(a, b, …)`).
     let mut parts = Vec::new();
     let mut iters = 0usize;

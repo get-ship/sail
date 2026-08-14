@@ -1002,24 +1002,6 @@ fn workspace_root() -> Result<PathBuf> {
     }
 }
 
-/// One skill bullet for a concern — object/channel form, not constructor `style.padX`.
-fn skill_concern_line(spec: &sail_lint::style::ConcernSpec) -> String {
-    let slots: Vec<&str> = spec.slots.iter().map(|s| s.name).collect();
-    let mut line = format!(
-        "`{}:` `{}(…)` · slots `{}`",
-        spec.channel.key(),
-        spec.name,
-        slots.join("`/`")
-    );
-    if spec.name == "border" {
-        line.push_str(" · radius is not a slot · kind is a family key");
-    }
-    if spec.name == "size" {
-        line.push_str(" · pad is not a slot (use space)");
-    }
-    line
-}
-
 /// Fenced Style demos for `gen_skill`. Product attach is a **tag-position call**
 /// (`style({…})` on the open tag), not an HTML `style=` attribute. Plain string for `push_str`.
 ///
@@ -1238,14 +1220,23 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
              (`fill`/`ink`/`place`/`space`/`flow`/`motion`). Participation\n\
              (`grow`/`shrink`/`w`) lives on `size` / `grow` / `shrink`.\n"
         );
-        for spec in sail_lint::style::concerns() {
-            let _ = writeln!(md, "- {}", skill_concern_line(spec));
+        for row in sail_lint::style::offered_rows()
+            .filter(|r| r.tag == sail_lint::style::VocabTag::Concern)
+        {
+            let _ = writeln!(md, "- {}", sail_lint::style::vocab_surface_line(row));
         }
         let _ = writeln!(md);
-        let _ = writeln!(md, "### Markers (verbs, not concerns)\n");
+        let _ = writeln!(md, "### Axis\n");
+        for row in
+            sail_lint::style::offered_rows().filter(|r| r.tag == sail_lint::style::VocabTag::Axis)
+        {
+            let _ = writeln!(md, "- {}", sail_lint::style::vocab_surface_line(row));
+        }
+        let _ = writeln!(md);
+        let _ = writeln!(md, "### Plains\n");
         let _ = writeln!(
             md,
-            "Flags or a single switch. Full list: MCP `sail_surface` topic `style`.\n"
+            "Verbs and singles. Full list: MCP `sail_surface` topic `style`.\n"
         );
         for name in ["cursor", "group", "isolate", "srOnly", "select"] {
             let _ = writeln!(md, "- `{name}(…)`");

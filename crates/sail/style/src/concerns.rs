@@ -1166,7 +1166,7 @@ pub fn concern_doc_line(spec: &ConcernSpec) -> String {
         line.push_str(" · radius is not a slot · kind is a family key");
     }
     if spec.name == "size" {
-        line.push_str(" · pad is not a slot (use space)");
+        line.push_str(" · pad is not a slot (use pad)");
     }
     line
 }

@@ -119,8 +119,8 @@ fn skill_generator_matches_product_surface() {
     );
     for absorbed in [
         "`padX(…)`",
-        "paint: bg(",
-        "paint: fg(",
+        "`fill(…)`",
+        "`ink(…)`",
         "`fontSize(…)`",
         "text: truncate()",
     ] {
@@ -130,8 +130,8 @@ fn skill_generator_matches_product_surface() {
         );
     }
     assert!(
-        md.contains("`fill(…)`") && md.contains("`size(…)`") && md.contains("`type(…)`"),
-        "skill must teach concern form"
+        md.contains("`bg(…)`") && md.contains("`size(…)`") && md.contains("`type(…)`"),
+        "skill must teach v3 concern form"
     );
     // Participation lives on the box channel (not bare attrs).
     assert!(

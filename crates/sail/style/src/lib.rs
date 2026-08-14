@@ -69,7 +69,9 @@ pub use theme_env::{
     current_styling_policy, with_styling_policy,
 };
 pub use type_resolve::{ResolvedType, resolve_type, resolve_type_for_tag, resolve_type_role};
-pub use vocab::{VocabRow, find_vocab, offered_rows, resolve_vocab, vocab_rows};
+pub use vocab::{
+    VocabRow, find_vocab, offered_rows, resolve_vocab, vocab_rows, vocab_surface_line,
+};
 
 #[cfg(test)]
 mod tests {

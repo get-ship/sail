@@ -173,13 +173,23 @@ Controllers never `.style` / `createElement`.\n\
                  `size` is box geometry only — pad is not a slot (use `pad`).\n"
             );
             let _ = writeln!(md, "## Concerns\n");
-            for spec in sail_lint::style::concerns() {
-                let _ = writeln!(md, "- {}", concern_surface_line(spec));
+            for row in sail_lint::style::offered_rows()
+                .filter(|r| r.tag == sail_lint::style::VocabTag::Concern)
+            {
+                let _ = writeln!(md, "- {}", sail_lint::style::vocab_surface_line(row));
             }
-            let _ = writeln!(md, "\n## Markers (verbs, not concerns)\n");
-            let _ = writeln!(md, "Flags or a single switch. Not a themed bundle.\n");
-            for name in sail_lint::style::MARKERS {
-                let _ = writeln!(md, "- `{name}(…)`");
+            let _ = writeln!(md, "\n## Axis\n");
+            for row in
+                sail_lint::style::offered_rows().filter(|r| r.tag == sail_lint::style::VocabTag::Axis)
+            {
+                let _ = writeln!(md, "- {}", sail_lint::style::vocab_surface_line(row));
+            }
+            let _ = writeln!(md, "\n## Plains\n");
+            let _ = writeln!(md, "Verbs and resolve-offered singles. Not a themed bundle.\n");
+            for row in
+                sail_lint::style::offered_rows().filter(|r| r.tag == sail_lint::style::VocabTag::Plain)
+            {
+                let _ = writeln!(md, "- {}", sail_lint::style::vocab_surface_line(row));
             }
         }
         SurfaceTopic::Tokens => {
@@ -188,8 +198,9 @@ Controllers never `.style` / `createElement`.\n\
                 md,
                 "Closed value sets concern slots draw from (`sail_lint::scales`). \
                  Named composites (`size.control-md`, `type.heading`, `elevation.sm`, \
-                 `fill.surface`) are identities, not CSS names. Size members are \
-                 geometry only — pad on a size composite is a schema error.\n"
+                 `border.subtle`) are identities, not CSS names. Authors spend them \
+                 as `size(control-md)` / `type(heading)` / `bg(surface)`. Size members \
+                 are geometry only — pad on a size composite is a schema error.\n"
             );
             for scale in &[
                 "space",
@@ -221,11 +232,19 @@ Controllers never `.style` / `createElement`.\n\
                     md,
                     "Dotted identities (not CSS names). Concern setters resolve \
                      these first. Atlas: `border.*`, `size.control-*`/`size.full`, \
-                     `type.*`, `elevation.*`, `fill.*`, `ink.*`, plus component \
-                     faces (`dialog.border`, `card.border`). `border` slots \
+                     `type.*`, `elevation.*`. Authors write `bg(surface)` / \
+                     `fg(foreground)`. `border` slots \
                      color/width/style; radius is not a slot. `size` has no pad.\n"
                 );
                 for c in composites {
+                    if c.r#type == "fill"
+                        || c.r#type == "ink"
+                        || c.name.starts_with("fill.")
+                        || c.name.starts_with("ink.")
+                        || c.name.contains(".border") && c.name != "border"
+                    {
+                        continue;
+                    }
                     let members: Vec<&str> = c.members.iter().map(|(slot, _)| *slot).collect();
                     let _ = writeln!(
                         md,
@@ -348,24 +367,6 @@ Controllers never `.style` / `createElement`.\n\
         }
     }
     md
-}
-
-/// Object/channel form — not constructor `style.padX`.
-fn concern_surface_line(spec: &sail_lint::style::ConcernSpec) -> String {
-    let slots: Vec<&str> = spec.slots.iter().map(|s| s.name).collect();
-    let mut line = format!(
-        "`{}:` `{}(…)` · slots `{}`",
-        spec.channel.key(),
-        spec.name,
-        slots.join("`/`")
-    );
-    if spec.name == "border" {
-        line.push_str(" · radius is not a slot · kind is a family key");
-    }
-    if spec.name == "size" {
-        line.push_str(" · pad is not a slot (use space)");
-    }
-    line
 }
 
 /// Structured diagnostic for Check JSON output.
@@ -1251,28 +1252,35 @@ mod tests {
             "border must be documented as a concern: {style}"
         );
         assert!(
-            style.contains("`fill(…)`")
-                && style.contains("`ink(…)`")
+            style.contains("`bg(…)`")
+                && style.contains("`fg(…)`")
                 && style.contains("`size(…)`")
                 && style.contains("`type(…)`")
                 && style.contains("`elevation(…)`"),
-            "atlas must list fill/ink/size/type/elevation: {style}"
+            "atlas must list bg/fg/size/type/elevation: {style}"
         );
         assert!(
-            style.contains("pad is not a slot") && style.contains("## Markers"),
-            "size geometry + markers: {style}"
+            !style.contains("`fill(…)`") && !style.contains("`ink(…)`"),
+            "must not offer dead v2 names: {style}"
+        );
+        assert!(
+            style.contains("pad is not a slot") && style.contains("## Plains"),
+            "size geometry + plains: {style}"
         );
         let tokens = surface_markdown(SurfaceTopic::Tokens);
         assert!(
-            tokens.contains("`border.subtle`") && tokens.contains("`dialog.border`"),
+            tokens.contains("`border.subtle`"),
             "tokens topic must list border composites: {tokens}"
         );
         assert!(
             tokens.contains("`size.control-md`")
                 && tokens.contains("`type.heading`")
-                && tokens.contains("`elevation.sm`")
-                && tokens.contains("`fill.surface`"),
-            "tokens topic must list new composites: {tokens}"
+                && tokens.contains("`elevation.sm`"),
+            "tokens topic must list live composites: {tokens}"
+        );
+        assert!(
+            !tokens.contains("`fill.surface`") && !tokens.contains("`dialog.border`"),
+            "tokens topic must not teach dead packs: {tokens}"
         );
     }
 
@@ -1322,7 +1330,7 @@ mod tests {
             .iter()
             .filter_map(|i| i.get("label").and_then(|v| v.as_str()).map(str::to_string))
             .collect();
-        for want in ["subtle", "card", "dialog"] {
+        for want in ["subtle", "card"] {
             assert!(
                 labels.iter().any(|l| l == want),
                 "{want} missing: {labels:?}"
@@ -1394,24 +1402,24 @@ mod tests {
         use crate::call_rpc;
         use crate::ctx::Ctx;
         let paint = complete_labels("style({ paint:  })", "paint: ", 7);
-        for want in ["fill", "ink", "border", "elevation"] {
+        for want in ["bg", "fg", "border", "elevation"] {
             assert!(paint.iter().any(|l| l == want), "{want} missing: {paint:?}");
         }
-        for absorbed in ["bg", "fg", "shadow"] {
+        for dead in ["fill", "ink", "shadow"] {
             assert!(
-                !paint.iter().any(|l| l == absorbed),
-                "absorbed `{absorbed}` offered on paint: {paint:?}"
+                !paint.iter().any(|l| l == dead),
+                "dead `{dead}` offered on paint: {paint:?}"
             );
         }
 
         let box_ch = complete_labels("style({ box:  })", "box: ", 5);
-        for want in ["size", "space", "place", "flow"] {
+        for want in ["size", "pad", "margin", "position"] {
             assert!(
                 box_ch.iter().any(|l| l == want),
                 "{want} missing: {box_ch:?}"
             );
         }
-        for absorbed in ["padX", "w", "minW", "grow"] {
+        for absorbed in ["space", "place", "flow", "padX", "w", "minW"] {
             assert!(
                 !box_ch.iter().any(|l| l == absorbed),
                 "absorbed `{absorbed}` offered on box: {box_ch:?}"

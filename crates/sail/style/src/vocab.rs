@@ -162,6 +162,46 @@ pub fn emit_target(name: &str) -> Option<&'static str> {
     find_vocab(name).and_then(|r| r.emit)
 }
 
+/// One skill / MCP surface line. Author name, never an emit-target alias.
+pub fn vocab_surface_line(row: &VocabRow) -> String {
+    let kind = match row.tag {
+        VocabTag::Concern => "concern",
+        VocabTag::Axis => "axis",
+        VocabTag::Plain => "plain",
+    };
+    match row.tag {
+        VocabTag::Concern | VocabTag::Axis => {
+            let slots = row
+                .emit
+                .and_then(crate::concerns::find_concern)
+                .map(|c| {
+                    c.slots
+                        .iter()
+                        .map(|s| s.name)
+                        .collect::<Vec<_>>()
+                        .join("`/`")
+                })
+                .filter(|s| !s.is_empty())
+                .unwrap_or_else(|| "…".into());
+            let mut line = format!(
+                "`{}(…)` · {kind} · {} · slots `{slots}`",
+                row.name, row.channel
+            );
+            if row.name == "border" {
+                line.push_str(" · radius is not a slot · kind is a family key");
+            }
+            if row.name == "size" {
+                line.push_str(" · pad is not a slot (use `pad`)");
+            }
+            if row.name == "play" {
+                line.push_str(" · `animate:` channel only");
+            }
+            line
+        }
+        VocabTag::Plain => format!("`{}(…)` · {kind} · {}", row.name, row.channel),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -243,5 +283,17 @@ mod tests {
         assert_eq!(find_concern("pad").map(|c| c.name), Some("space"));
         assert!(find_concern("display").is_none());
         assert!(find_concern("z").is_none());
+    }
+
+    #[test]
+    fn surface_line_uses_author_names() {
+        let bg = find_vocab("bg").expect("bg");
+        let line = vocab_surface_line(bg);
+        assert!(line.contains("`bg(…)`"), "{line}");
+        assert!(!line.contains("`fill(…)`"), "{line}");
+        let pad = find_vocab("pad").expect("pad");
+        let line = vocab_surface_line(pad);
+        assert!(line.contains("`pad(…)`"), "{line}");
+        assert!(!line.contains("`space(…)`"), "{line}");
     }
 }
