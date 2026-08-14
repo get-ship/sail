@@ -182,8 +182,6 @@ pub const COMPOSITE_TYPES: &[&str] = &[
     "type",
     "bg",
     "fg",
-    "fill",
-    "ink",
 ];
 
 /// Required members of a `border` composite (DTCG + concern set).
@@ -202,8 +200,8 @@ pub const SIZE_FORBIDDEN_MEMBERS: &[&str] = &[
 /// Required member of an `elevation` composite.
 pub const ELEVATION_MEMBERS: &[&str] = &["shadow"];
 
-/// Required color slot on `fill` / `ink` named identities.
-pub const FILL_INK_MEMBERS: &[&str] = &["color"];
+/// Required color slot on `bg` / `fg` named identities.
+pub const BG_FG_MEMBERS: &[&str] = &["color"];
 
 /// Hyphenated sibling keys that are the old dual form of a `*.border` composite.
 const PSEUDO_BORDER_SIBLINGS: &[&str] = &[
@@ -1048,7 +1046,7 @@ pub fn required_composite_members(ty: &str) -> &'static [&'static str] {
     match ty {
         "border" => BORDER_MEMBERS,
         "elevation" => ELEVATION_MEMBERS,
-        "fill" | "ink" => FILL_INK_MEMBERS,
+        "bg" | "fg" => BG_FG_MEMBERS,
         _ => &[],
     }
 }
@@ -1079,9 +1077,9 @@ pub fn infer_composite_member_type(composite_ty: &str, member: &str) -> &'static
         ("type", "align" | "case" | "wrap") => "string",
         ("size", "w" | "h" | "min-w" | "min-h" | "max-w" | "max-h" | "aspect") => "dimension",
         ("elevation", "shadow") => "shadow",
-        ("fill" | "ink", "color") => "color",
-        ("fill", "image" | "clip" | "glow") => "string",
-        ("ink", "caret" | "accent") => "color",
+        ("bg" | "fg", "color") => "color",
+        ("bg", "image" | "clip" | "glow") => "string",
+        ("fg", "caret" | "accent") => "color",
         ("transition", "property") => "string",
         ("transition", "duration" | "delay") => "duration",
         ("transition", "timingFunction" | "ease") => "cubicBezier",
@@ -6097,8 +6095,8 @@ mod tests {
         assert!(!is_forbidden_size_member("h"));
         assert_eq!(infer_composite_member_type("type", "family"), "fontFamily");
         assert_eq!(infer_composite_member_type("elevation", "shadow"), "shadow");
-        assert_eq!(infer_composite_member_type("fill", "color"), "color");
-        assert_eq!(infer_composite_member_type("ink", "color"), "color");
+        assert_eq!(infer_composite_member_type("bg", "color"), "color");
+        assert_eq!(infer_composite_member_type("fg", "color"), "color");
     }
 
     #[test]
@@ -6317,11 +6315,11 @@ mod tests {
     "xl": { "$type": "elevation", "$value": { "shadow": "{shadow.xl}" } },
     "none": { "$type": "elevation", "$value": { "shadow": "none" } }
   },
-  "fill": {
-    "surface": { "$type": "fill", "$value": { "color": "{color.surface.1}" } }
+  "bg": {
+    "surface": { "$type": "bg", "$value": { "color": "{color.surface.1}" } }
   },
-  "ink": {
-    "foreground": { "$type": "ink", "$value": { "color": "{color.foreground}" } }
+  "fg": {
+    "foreground": { "$type": "fg", "$value": { "color": "{color.foreground}" } }
   }
 }
 "#,
@@ -6343,11 +6341,11 @@ mod tests {
         );
         assert!(css.contains("--elevation-none-shadow: none;"), "{css}");
         assert!(
-            css.contains("--fill-surface-color: var(--surface-1);"),
+            css.contains("--bg-surface-color: var(--surface-1);"),
             "{css}"
         );
         assert!(
-            css.contains("--ink-foreground-color: var(--foreground);"),
+            css.contains("--fg-foreground-color: var(--foreground);"),
             "{css}"
         );
         assert!(
@@ -6374,8 +6372,8 @@ mod tests {
             "elevation.lg",
             "elevation.xl",
             "elevation.none",
-            "fill.surface",
-            "ink.foreground",
+            "bg.surface",
+            "fg.foreground",
         ] {
             assert_eq!(
                 reg["composites"][ident]["type"].as_str().unwrap_or(""),
