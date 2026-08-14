@@ -1,7 +1,8 @@
 //! SPEC-SPINNAKER-2 — concern table is the setter table.
 
 use sail_compiler::compile_element;
-use sail_lint::style::{StyleDiagnostic, clash, lower_style, lower_style_source, parse};
+use sail_lint::style::{StyleDiagnostic, clash, parse};
+use sail_style_css::{lower_style, lower_style_source};
 use std::collections::HashMap;
 
 fn css_of(src: &str) -> String {

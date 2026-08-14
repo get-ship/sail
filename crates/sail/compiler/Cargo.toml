@@ -61,6 +61,9 @@ optional = true
 [dependencies.sail-style]
 path = "../style"
 
+[dependencies.sail-style-css]
+path = "../style-css"
+
 [dependencies.sail-lint]
 path = "../lint"
 

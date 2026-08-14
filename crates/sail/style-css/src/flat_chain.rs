@@ -2,11 +2,12 @@
 
 use std::collections::HashMap;
 
-use crate::parse::{parse, parse_style_const_rhs};
+use sail_style::parse::{parse, parse_style_const_rhs};
+use sail_style::{Style, StyleDiagnostic};
 
 use super::lower_style;
 
-fn msgs(diags: &[crate::StyleDiagnostic]) -> Vec<String> {
+fn msgs(diags: &[StyleDiagnostic]) -> Vec<String> {
     diags.iter().map(|d| d.message()).collect()
 }
 
@@ -16,7 +17,7 @@ fn form_card_parses_and_lowers() {
         "{ size(full).pad({ x: 5, y: 4 }).bg(card).border(subtle).radius(lg) }",
     );
     assert!(diags.is_empty(), "{:?}", msgs(&diags));
-    assert!(!matches!(style, crate::Style::Empty));
+    assert!(!matches!(style, Style::Empty));
     let (classes, css) = lower_style(&style, &HashMap::new());
     assert!(classes.contains("s-"), "{classes}");
     assert!(
@@ -86,7 +87,7 @@ fn chain_then_when_in_declared_object() {
 fn flat_concern_chain_parses() {
     let (style, diags) = parse("style({ size({ w: full }).pad(4).bg(muted) })");
     assert!(diags.is_empty(), "{:?}", msgs(&diags));
-    assert!(!matches!(style, crate::Style::Empty));
+    assert!(!matches!(style, Style::Empty));
     let (_, css) = lower_style(&style, &HashMap::new());
     assert!(css.contains("padding") || css.contains("width"), "{css}");
     assert!(css.contains("background") || css.contains("muted"), "{css}");
@@ -134,7 +135,7 @@ fn play_colors_fast_resolves() {
     assert!(
         !diags
             .iter()
-            .any(|d| matches!(d, crate::StyleDiagnostic::UnknownVocabulary { .. })),
+            .any(|d| matches!(d, StyleDiagnostic::UnknownVocabulary { .. })),
         "colors is a play prop-set: {:?}",
         msgs(&diags)
     );

@@ -2381,14 +2381,12 @@ mod tests {
 
     #[test]
     fn fg_button_is_the_named_composite() {
-        let (style, diags) = parse("style({ fg(button) })");
+        let (_style, diags) = parse("style({ fg(button) })");
         assert!(
             diags.is_empty(),
             "{:?}",
             diags.iter().map(|d| d.message()).collect::<Vec<_>>()
         );
-        let (_, css) = crate::emit::lower_style(&style, &HashMap::new());
-        assert!(css.contains("color") || css.contains("button"), "{css}");
     }
 
     #[test]

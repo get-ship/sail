@@ -22,15 +22,14 @@ pub use sail_style::{component_surfaces, host_ctx, scales, style_vocab, token_gr
 /// Style product surface — re-export of `sail-style` (parse / IR / emit / clash).
 pub mod style {
     pub use sail_style::{
-        CONDITION_PREFIXES, ConcernSlot, ConcernSpec, CssRule, MARKERS, OBJECT_KEYS, PaintArg,
-        PaintOp, ResolvedType, Style, StyleCompleteContext, StyleCompleteItem, StyleCompleteKind,
+        CONDITION_PREFIXES, ConcernSlot, ConcernSpec, MARKERS, OBJECT_KEYS, PaintArg, PaintOp,
+        ResolvedType, Style, StyleCompleteContext, StyleCompleteItem, StyleCompleteKind,
         StyleDiagnostic, StyleEnv, VocabCaps, VocabRow, VocabTag, all_surface_packs, clash,
         collect_motion_attaches, collect_motion_attaches_env, collect_style_const_names,
-        color_paint_vocabulary, concern_doc_line, concerns, condition_media, conditions, emit,
-        emit_style, find_concern, find_foreign_idiom, find_vocab, ir, is_geometry_setter,
+        color_paint_vocabulary, concern_doc_line, concerns, condition_media, conditions,
+        find_concern, find_foreign_idiom, find_vocab, ir, is_geometry_setter,
         is_interaction_when_key, is_marker, is_theme_owned_author_root, is_theme_owned_token_name,
-        looks_like_utility_string_product, lower_style, lower_style_source,
-        lower_style_source_with_motion, offered_rows, parse, parse_style_const_rhs, plains,
+        looks_like_utility_string_product, offered_rows, parse, parse_style_const_rhs, plains,
         prefixes, resolve_concern_name, resolve_type, resolve_type_for_tag, resolve_type_role,
         retired_replacement, setter_caps, setters, style_complete_at, style_complete_context_at,
         style_complete_for_context, style_contains_geometry, style_is_textish,

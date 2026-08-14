@@ -710,7 +710,7 @@ fn lower_sx_value(
     let val = strip_outer_braces(val.trim());
     // Sole product path: Style value language (chain + match/when/compound/bind).
     // Motion chain methods (`.enter` / `.exit` / …) return alongside classes.
-    sail_style::lower_style_source_with_motion(val, env, css, seen)
+    sail_style_css::lower_style_source_with_motion(val, env, css, seen)
 }
 
 /// Textish setters may only attach to text-bearing hosts.

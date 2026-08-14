@@ -1,0 +1,17 @@
+[package]
+name = "sail-style-css"
+version = "0.1.0"
+edition = "2024"
+publish = false
+description = "HTML/CSS adapter for the Style Intent port. sail-style is the language."
+
+[lib]
+name = "sail_style_css"
+path = "src/lib.rs"
+
+[dependencies]
+sail-style = { path = "../style" }
+serde_json = { workspace = true }
+
+[lints]
+workspace = true

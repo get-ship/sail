@@ -2,7 +2,8 @@
 
 use sail_compiler::compile_element;
 use sail_compiler::parse::preprocess::preprocess;
-use sail_lint::style::{StyleDiagnostic, clash, lower_style, parse};
+use sail_lint::style::{StyleDiagnostic, clash, parse};
+use sail_style_css::lower_style;
 use std::collections::HashMap;
 
 fn is_style_product(src: &str) -> bool {
@@ -44,7 +45,7 @@ fn product_style_intent_dump_has_no_css_strings() {
     assert!(dump.contains("muted"), "{dump}");
     assert!(dump.contains("enter"), "{dump}");
 
-    let (classes, css) = sail_style::lower_style(&style, &HashMap::new());
+    let (classes, css) = sail_style_css::lower_style(&style, &HashMap::new());
     assert!(classes.contains("s-"), "{classes}");
     assert!(css.contains(":hover"), "{css}");
     assert!(

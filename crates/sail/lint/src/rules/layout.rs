@@ -841,7 +841,7 @@ pub fn lower_participation(name: &str, value: &str) -> Option<(String, String)> 
     if !diags.is_empty() {
         return None;
     }
-    let (classes, css) = crate::style::lower_style(&style, &std::collections::HashMap::new());
+    let (classes, css) = sail_style_css::lower_style(&style, &std::collections::HashMap::new());
     if classes.is_empty() || css.is_empty() {
         return None;
     }
