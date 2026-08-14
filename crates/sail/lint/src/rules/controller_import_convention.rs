@@ -369,13 +369,7 @@ fn load_components_package_context(
     let text = std::fs::read_to_string(pkg_path).ok()?;
     let value: serde_json::Value = serde_json::from_str(&text).ok()?;
     // `customElements` is the components-package identity CEM generation already requires.
-    if value
-        .get("customElements")
-        .and_then(|v| v.as_str())
-        .is_none()
-    {
-        return None;
-    }
+    value.get("customElements").and_then(|v| v.as_str())?;
     let mut declared_deps = HashSet::new();
     for key in ["dependencies", "peerDependencies"] {
         if let Some(obj) = value.get(key).and_then(|v| v.as_object()) {

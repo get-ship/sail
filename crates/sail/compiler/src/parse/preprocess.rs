@@ -202,7 +202,7 @@ fn for_each_tag_style<'a>(source: &'a str, mut f: impl FnMut(usize, &'a str)) {
 }
 
 fn is_void_tag(tag: &str) -> bool {
-    VOID_TAGS.iter().any(|t| *t == tag)
+    VOID_TAGS.contains(&tag)
 }
 
 /// Lift tag-position `style(…)` (+ `.when` chains) onto the open tag as
@@ -871,6 +871,7 @@ fn lower_stdlib_elements(source: &str) -> Result<(String, String), CompileError>
 /// children are lowered recursively before they splice into the slot. `css`
 /// / `css_done` are threaded so each tag's skin still joins exactly once,
 /// no matter how deeply it nests.
+#[allow(clippy::only_used_in_recursion)]
 fn lower_into(
     source: &str,
     registry: &'static [crate::stdlib::StdlibElement],
@@ -2816,9 +2817,9 @@ fn find_outside_comments(source: &str, needle: &str) -> Option<usize> {
         // `i` stays on a char boundary: advancing by byte and then slicing panics
         // on the first non-ASCII character in the file.
         let rest = &source[i..];
-        if rest.starts_with("<!--") {
+        if let Some(after) = rest.strip_prefix("<!--") {
             // An unterminated comment is the parser's error to report, not ours.
-            match rest[4..].find("-->") {
+            match after.find("-->") {
                 Some(rel) => i += 4 + rel + 3,
                 None => return None,
             }
@@ -3748,24 +3749,31 @@ export default controller(() => {
         let out =
             preprocess(r#"<select size="sm"><option>All</option></select>"#).expect("preprocess");
         assert!(out.contains("sail-select"), "host stamp: {out}");
-        assert!(out.contains("s-padE8"), "chevron room on base: {out}");
         assert!(
-            out.contains("s-sizesm-padS25") || out.contains("padS25"),
-            "size ladder uses padS not padX: {out}"
+            out.to_ascii_lowercase().contains("pade8") || out.contains("padE8"),
+            "chevron room on base: {out}"
+        );
+        assert!(
+            out.to_ascii_lowercase().contains("pads25"),
+            "size ladder uses pads not padX: {out}"
         );
         assert!(
             !out.contains("s-sizesm-padX") && !out.contains("s-padX3"),
             "size/base must not set padX (clobbers end pad): {out}"
         );
-        assert!(out.contains("s-wfull"), "bare select keeps w(full): {out}");
+        assert!(
+            out.contains("wfull") || out.contains("w-full"),
+            "bare select keeps full width: {out}"
+        );
     }
 
     #[test]
     fn select_drops_default_wfull_when_author_sets_width_on_box_channel() {
         // Bare w/min-w attrs are retired — author width is box channel only.
-        let via_w =
-            preprocess(r#"<select size="sm" style({ box: w(28) })> <option>x</option></select>"#)
-                .expect("box w");
+        let via_w = preprocess(
+            r#"<select size="sm" style({ size({ w: 28 }) })> <option>x</option></select>"#,
+        )
+        .expect("box w");
         assert!(
             via_w.contains("s-w28") || via_w.contains("w28"),
             "author w: {via_w}"
@@ -3776,7 +3784,7 @@ export default controller(() => {
         );
 
         let via_min = preprocess(
-            r#"<select size="sm" style({ box: minW(ch-16).w(ch-20) })> <option>x</option></select>"#,
+            r#"<select size="sm" style({ size({ min-w: ch-16, w: ch-20 }) })> <option>x</option></select>"#,
         )
         .expect("box minW/w");
         assert!(
@@ -3784,9 +3792,10 @@ export default controller(() => {
             "default w(full) dropped for minW/w: {via_min}"
         );
 
-        let via_sx =
-            preprocess(r#"<select size="sm" style({ box: w(24) })> <option>x</option></select>"#)
-                .expect("sx w");
+        let via_sx = preprocess(
+            r#"<select size="sm" style({ size({ w: 24 }) })> <option>x</option></select>"#,
+        )
+        .expect("sx w");
         assert!(
             !via_sx.contains("s-wfull"),
             "default w(full) dropped for Style w: {via_sx}"
@@ -3830,7 +3839,7 @@ export default controller(() => {
         // the enum member — not rewrite to variant="outline" which parses as
         // compound value "variant" → CSS [variant='variant'].
         let src = r#"
-<button style({ compound: [ { orientation: vertical, variant: outline, box: mt(-px) } ] })>x</button>
+<button style({ compound: [ { orientation: vertical, variant: outline, margin({ t: -px }) } ] })>x</button>
 "#;
         let out = preprocess(src).expect("preprocess");
         assert!(
@@ -4022,11 +4031,17 @@ export default controller(() => {
 
     #[test]
     fn box_channel_w_full_and_shrink_zero() {
-        let out =
-            preprocess(r#"<main style({ box: w(full).shrink(0) })> x</main>"#).expect("preprocess");
-        assert!(out.contains("s-wfull"), "w full: {out}");
+        let out = preprocess(r#"<main style({ size({ w: full }).shrink(0) })> x</main>"#)
+            .expect("preprocess");
+        assert!(
+            out.contains("s-wfull") || out.contains("s-sizewfull"),
+            "w full: {out}"
+        );
         assert!(out.contains("s-shrink0"), "shrink 0: {out}");
-        assert!(out.contains(".s-wfull{width:100%}"), "w css: {out}");
+        assert!(
+            out.contains("width:100%") || out.contains("width: 100%"),
+            "w css: {out}"
+        );
         assert!(
             out.contains(".s-shrink0{flex-shrink:0}"),
             "shrink css: {out}"
@@ -4380,9 +4395,8 @@ export default controller(() => {
         // Utility-string condition prefixes are residual product (hard error /
         // empty lower). Style product uses object-key when: for browser state;
         // media-condition guards remain a follow-up on the Style path.
-        let out =
-            preprocess(r#"<div style({ when: { hover: { paint: shadow(none) } } })> x</div>"#)
-                .expect("preprocess");
+        let out = preprocess(r#"<div style({ when: { hover: elevation(none) } })> x</div>"#)
+            .expect("preprocess");
         assert!(out.contains(":hover"), "when hover emits pseudo:\n{out}");
         assert!(
             out.contains("box-shadow") || out.contains("shadow") || out.contains("s-"),
@@ -4472,8 +4486,8 @@ export default controller({ setup: () => ({ d: derived(() => signal(0)()) }) })\
 
     #[test]
     fn tag_style_statement_lowers_to_class_legacy() {
-        let out = preprocess(r#"<div style({ box: padX(2), paint: bg(primary) })>x</div>"#)
-            .expect("preprocess");
+        let out =
+            preprocess(r#"<div style({ pad({ x: 2 }).bg(primary) })>x</div>"#).expect("preprocess");
         assert!(
             out.contains("s-") || out.contains("var(--primary)"),
             "{out}"
@@ -4532,7 +4546,7 @@ export default controller({ setup: () => ({ d: derived(() => signal(0)()) }) })\
 
     #[test]
     fn text_channel_refused_on_non_text_host() {
-        let err = preprocess(r#"<div style({ text: fontSize(sm) })>x</div>"#)
+        let err = preprocess(r#"<div style({ type({ size: sm }) })>x</div>"#)
             .expect_err("text channel on div");
         let msg = &err.message;
         assert!(
@@ -4548,12 +4562,11 @@ export default controller({ setup: () => ({ d: derived(() => signal(0)()) }) })\
     #[test]
     fn text_channel_allowed_on_text_bearing_hosts() {
         let out =
-            preprocess(r#"<p style({ text: fontSize(sm) })>x</p>"#).expect("p is text-bearing");
+            preprocess(r#"<p style({ type({ size: sm }) })>x</p>"#).expect("p is text-bearing");
         assert!(out.contains("s-") || out.contains("font-size"), "{out}");
 
-        let out =
-            preprocess(r#"<button style({ text: fontSize(sm), paint: bg(primary) })>go</button>"#)
-                .expect("button is text-bearing");
+        let out = preprocess(r#"<button style({ type({ size: sm }).bg(primary) })>go</button>"#)
+            .expect("button is text-bearing");
         assert!(out.contains("s-"), "{out}");
     }
 
@@ -4567,8 +4580,8 @@ export default controller({ setup: () => ({ d: derived(() => signal(0)()) }) })\
 
     #[test]
     fn tag_style_object_lowers_to_class() {
-        let out = preprocess(r#"<div style({ box: padX(2), paint: bg(primary) })>x</div>"#)
-            .expect("preprocess");
+        let out =
+            preprocess(r#"<div style({ pad({ x: 2 }).bg(primary) })>x</div>"#).expect("preprocess");
         assert!(
             out.contains("s-") || out.contains("var(--primary)"),
             "{out}"
@@ -4581,7 +4594,7 @@ export default controller({ setup: () => ({ d: derived(() => signal(0)()) }) })\
 
     #[test]
     fn tag_style_void_host_no_lift_rule() {
-        let out = preprocess(r#"<input style({ box: w(full) })>"#).expect("void host");
+        let out = preprocess(r#"<input style({ size({ w: full }) })>"#).expect("void host");
         assert!(out.contains("s-"), "{out}");
         assert!(!out.contains("style({"), "{out}");
     }
@@ -4625,7 +4638,7 @@ export default controller({ setup: () => ({ d: derived(() => signal(0)()) }) })\
     #[test]
     fn silent_drop_canary_tag_style_attaches() {
         let out = preprocess(
-            r#"<button style({ box: pad(3).gap(2), paint: bg(primary).fg(primary-foreground) })>ok</button>"#,
+            r#"<button style({ pad(3).bg(primary).fg(primary-foreground) })>ok</button>"#,
         )
         .expect("tag style must compile");
         assert!(

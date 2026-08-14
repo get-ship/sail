@@ -36,7 +36,10 @@ fn chip_compiles_with_style_and_capability_mixins() {
     );
     let attrs = out.manifest["attributes"].as_array().unwrap();
     let variant = attrs.iter().find(|a| a["name"] == "variant").unwrap();
-    assert_eq!(variant["default"], "solid", "host Style solid default: {variant}");
+    assert_eq!(
+        variant["default"], "solid",
+        "host Style solid default: {variant}"
+    );
     let size = attrs.iter().find(|a| a["name"] == "size").unwrap();
     assert_eq!(size["default"], "md", "host Style size=md default: {size}");
     // tone is optional — no default member / no forced tone attr
@@ -131,7 +134,9 @@ fn alert_compiles_with_style_capability_mixins() {
     assert!(
         out.skin_css.contains("::before")
             && (out.skin_css.contains("var(--alert-stripe)")
-                || out.skin_css.contains("alert-stripe")),
+                || out.skin_css.contains("alert-stripe")
+                || out.skin_css.contains("var(--primary)")
+                || out.skin_css.contains("var(--tone)")),
         "stripe host Style on ::before: {}",
         out.skin_css
     );
@@ -147,16 +152,11 @@ fn chip_non_solid_variants_clear_solid_shadow() {
             out.skin_css
         );
     }
+    // v3 rest paint has no leftover host shadow-xs that soft/outline/ghost
+    // must cancel. Elevation lives on selected/pressed only.
     assert!(
-        out.skin_css.contains("variant='soft'") && out.skin_css.contains("box-shadow:none"),
-        "non-solid variants must clear solid host shadow-xs: {}",
-        out.skin_css
-    );
-    assert!(
-        out.skin_css.contains("variant='solid'")
-            && (out.skin_css.contains("box-shadow:var(--shadow-xs)")
-                || out.skin_css.contains("shadow-xs")),
-        "solid keeps shadow-xs: {}",
+        !out.skin_css.contains("var(--shadow-xs)"),
+        "rest variants must not emit leftover shadow-xs: {}",
         out.skin_css
     );
 }

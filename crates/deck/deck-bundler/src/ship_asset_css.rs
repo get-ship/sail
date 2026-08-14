@@ -98,7 +98,7 @@ const REWRITE_EXTENSIONS: &[&str] = &[
 
 /// Rolldown plugin: rewrite local `url(...)` in CSS assets to hashed paths,
 /// and optionally minify the CSS body (production).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct ShipAssetCssPlugin {
     /// When true, minify every emitted CSS asset after URL rewrites resolve.
     /// Dev builds leave CSS readable.
@@ -107,15 +107,6 @@ pub struct ShipAssetCssPlugin {
     /// `None` = do not filter (synthetic CSS tests). `Some` = strip unused
     /// `@font-face` for known FONTS files before emit.
     pub used_font_files: Option<Arc<HashSet<String>>>,
-}
-
-impl Default for ShipAssetCssPlugin {
-    fn default() -> Self {
-        Self {
-            minify: false,
-            used_font_files: None,
-        }
-    }
 }
 
 impl ShipAssetCssPlugin {

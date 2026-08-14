@@ -569,7 +569,7 @@ pub enum SideSet {
 /// `style.minW(0)` → `s-minW0` (camelCase preserved). Residual utility-string
 /// prefixes (`s-p4`, `s-minw0`, …) stay so fixtures / any leftover emit still
 /// resolve.
-pub static SX_SCALE_RULES: &[(&'static str, SxScaleRule)] = &[
+pub static SX_SCALE_RULES: &[(&str, SxScaleRule)] = &[
     // Product pad* (longest first: padX before pad).
     ("s-padX", SxScaleRule::Padding(SideSet::X)),
     ("s-padY", SxScaleRule::Padding(SideSet::Y)),

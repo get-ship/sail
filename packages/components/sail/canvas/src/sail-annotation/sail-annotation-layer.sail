@@ -15,11 +15,7 @@
 
 import type { Action, ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './sail-annotation-layer.sail'
-import {
-  type AnnotationEvent,
-  buildAnnotationEvent,
-  postAnnotationEvent,
-} from './sail-annotation.internals'
+import { type AnnotationEvent, buildAnnotationEvent, postAnnotationEvent } from './sail-annotation.internals'
 
 type Mode = 'off' | 'point' | 'region'
 
@@ -162,7 +158,6 @@ export default controller((props: ControllerScope<Scope>, _host?: HostBag) => {
 
     const overlayAction: Action<void> = (node) => {
       let _drag: Drag | null = null
-      let _raf: number | null = null
 
       const overlayPos = (e: DomEv): { x: number; y: number } => {
         const r = node.getBoundingClientRect()
@@ -183,18 +178,14 @@ export default controller((props: ControllerScope<Scope>, _host?: HostBag) => {
         const p = overlayPos(e)
         _drag = { startX: p.x, startY: p.y, curX: p.x, curY: p.y }
         drag.set(_drag)
-        ;(e.target).setPointerCapture?.(e.pointerId)
+        t.setPointerCapture?.(e.pointerId)
       }
 
       const onPointerMove = (e: DomEv): void => {
         if (!_drag) return
         const p = overlayPos(e)
         _drag = { ..._drag, curX: p.x, curY: p.y }
-        if (_raf !== null) return
-        _raf = scheduleFrame(() => {
-          _raf = null
-          if (_drag) drag.set({ ..._drag })
-        })
+        drag.set({ ..._drag })
       }
 
       const onPointerUp = (e: DomEv): void => {
@@ -229,10 +220,6 @@ export default controller((props: ControllerScope<Scope>, _host?: HostBag) => {
 
       return {
         destroy: () => {
-          if (_raf !== null) {
-            cancelAnimationFrame(_raf)
-            _raf = null
-          }
           node.removeEventListener('pointerdown', onPointerDown)
           node.removeEventListener('pointermove', onPointerMove)
           node.removeEventListener('pointerup', onPointerUp)

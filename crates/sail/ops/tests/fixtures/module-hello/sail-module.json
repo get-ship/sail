@@ -1,0 +1,34 @@
+{
+  "name": "module-hello",
+  "version": "0.1.0",
+  "api": 1,
+  "signature": "fixture-signed",
+  "provides": {
+    "ops": {
+      "namespace": "ModuleHello",
+      "methods": [
+        {
+          "name": "Ping",
+          "description": "Reference module ping",
+          "mcp_tool": "module_hello_ping"
+        }
+      ]
+    },
+    "activity": {
+      "id": "hello",
+      "label": "Hello",
+      "icon": "hand",
+      "route": "/_studio/x/hello"
+    }
+  },
+  "capabilities": {
+    "fs": [],
+    "net": []
+  },
+  "backend": {
+    "type": "static",
+    "methods": {
+      "Ping": { "ok": true, "message": "pong" }
+    }
+  }
+}

@@ -9,11 +9,11 @@
 use sail_compiler::{CompileMode, CompileOpts, ComponentMeta, compile};
 
 const REF_WITH_STATIC: &str = r#"<controller>
-import { controller, signal, type Action } from '@ship/sail-runtime'
+import type { Action } from '@ship/sail-runtime'
 export default controller((_ctx) => {
-  const rowsEl = signal<HTMLElement | null>(null)
+  const rowsEl = signal<HostBag | null>(null)
   const captureRows: Action<void> = (node) => {
-    rowsEl.set(node as HTMLElement)
+    rowsEl.set(node)
     return { destroy: () => rowsEl.set(null) }
   }
   return { captureRows }
@@ -57,11 +57,11 @@ fn static_attrs_survive_capture_action_in_component_csr() {
 fn static_attrs_survive_capture_action_with_production_component_opts() {
     let src = r#"
 <controller>
-import { controller, signal, type Action } from '@ship/sail-runtime'
+import type { Action } from '@ship/sail-runtime'
 export default controller((_ctx) => {
-  const contentEl = signal<HTMLElement | null>(null)
+  const contentEl = signal<HostBag | null>(null)
   const captureContent: Action<void> = (node) => {
-    contentEl.set(node as HTMLElement)
+    contentEl.set(node)
     return { destroy: () => contentEl.set(null) }
   }
   return { captureContent }

@@ -48,22 +48,10 @@ mod tests;
 
 pub use report::{Category, Finding, Severity};
 
-/// Rule IDs that remain forever after the rule body was scrubbed.
-/// HARDENING-1 WI6: IDs are never deleted — only superseded. SCRUB may
-/// remove machinery; the id string stays pinned so drift tests catch
-/// accidental loss of history.
-pub const RETIRED_RULE_IDS: &[&str] = &[
-    // Superseded by language-level layout keywords (`row`/`column`/`grid`/`center`).
-    "sail-legacy-layout",
-    // S2.3 / SPEC-PLATFORM-NEUTRALITY-1: dual ambient-DOM floors — TypeEnv Pure
-    // makes document/window/localStorage/location unnameable; lint dual path gone.
-    "sail-no-ambient-dom",
-    "sail-no-ambient-events",
-    "sail-no-ambient-nav",
-    "sail-no-ambient-storage",
-    // SPEC-SPINNAKER-2: retirement is RetiredSetter (compile error), not warn-mode.
-    "sail-style-concern",
-];
+/// Scrubbed rule IDs are history. They do not stay registered — git
+/// holds the record; tombstone-scan holds the machinery closed.
+/// An empty table is not a TTL tombstone; it is the absence of one.
+pub const RETIRED_RULE_IDS: &[&str] = &[];
 
 /// Layout-pass finding kinds mapped to stable `sail-*` rule ids
 /// (SPEC-LAYOUT-DIAG-1 / S4.1). Emitted by the compiler layout bridge, not
@@ -84,7 +72,6 @@ pub fn all_rule_ids() -> Vec<&'static str> {
         .chain(rules::ACTION_RULES.iter())
         .map(|(id, _)| *id)
         .chain(LAYOUT_DIAG_RULE_IDS.iter().copied())
-        .chain(RETIRED_RULE_IDS.iter().copied())
         .collect()
 }
 

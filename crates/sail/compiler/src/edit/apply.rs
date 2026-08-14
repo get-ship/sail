@@ -529,7 +529,7 @@ pub fn validate_sx_setter(setter: &str, args: &[serde_json::Value]) -> Result<()
             let tok = arg_to_token(arg0);
             if let Some(tok) = tok {
                 let allowed = sail_lint::scales::values(scale);
-                let kw_ok = spec.keywords.iter().any(|k| *k == tok.as_str());
+                let kw_ok = spec.keywords.contains(&tok.as_str());
                 let scale_ok = allowed.iter().any(|v| v == &tok)
                     || (spec.negatable
                         && tok.starts_with('-')

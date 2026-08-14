@@ -2439,6 +2439,10 @@
       "active-strength",
       "backdrop",
       "background",
+      "bg-button-color",
+      "bg-card-color",
+      "bg-muted-color",
+      "bg-surface-color",
       "body-font",
       "body-weight",
       "border",
@@ -2453,11 +2457,7 @@
       "border-subtle-color",
       "border-subtle-style",
       "border-subtle-width",
-      "border-width",
-      "breakpoint-desktop",
-      "breakpoint-mobile",
-      "breakpoint-tablet",
-      "card"
+      "border-width"
     ],
     "resolve": "path (dotted → kebab) or cssName (flat registry name); dual resolve"
   },

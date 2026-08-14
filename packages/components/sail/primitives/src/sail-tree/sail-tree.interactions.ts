@@ -20,8 +20,8 @@ import type { TreeNode } from './tree-node'
 
 type AnyTreeNode = TreeNode & Record<string, unknown>
 
-interface HostEmit extends any {
-  emit?<T = unknown>(name: string, detail?: T): void
+type HostEmit = HTMLElement & {
+  emit?(name: string, detail?: unknown): void
 }
 
 export interface TreeInteractionOpts {
@@ -156,7 +156,7 @@ export function wireTreeInteractions(
     if (!shadow) return
     const selected = new Set(tree.selectedRowIds())
     const focus = tree.nav.active().rowId ?? tree.rows()[0]?.id ?? null
-    shadow.querySelectorAll<any>('[data-node-id]').forEach((rowEl) => {
+    shadow.querySelectorAll('[data-node-id]').forEach((rowEl) => {
       const id = rowEl.getAttribute('data-node-id') ?? ''
       const row = tree.getRow(id)
       if (!row) return

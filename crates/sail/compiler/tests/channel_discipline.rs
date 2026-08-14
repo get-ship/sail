@@ -102,7 +102,13 @@ fn no_skin_hardcodes_a_channel_governed_property() {
                 let value = value.split(';').next().unwrap_or(value).trim();
                 // Reading the channel (or explicitly inheriting) is the
                 // correct form; a literal keyword is the breach.
-                if value.starts_with("var(--") || value == "inherit" || value == "initial" {
+                // `none` on text-transform is the type({ case: normal }) reset,
+                // not a heading/label casing choice.
+                if value.starts_with("var(--")
+                    || value == "inherit"
+                    || value == "initial"
+                    || (*prop == "text-transform" && value == "none")
+                {
                     continue;
                 }
                 if GOVERNED_EXEMPTIONS

@@ -140,9 +140,7 @@ pub enum AnimationError {
 /// `AnimationError::NaN` on NaN or infinity, with the field name for
 /// diagnostics.
 fn check_finite(field: &'static str, value: f64) -> Result<(), AnimationError> {
-    if value.is_nan() {
-        Err(AnimationError::NaN { field })
-    } else if !value.is_finite() {
+    if !value.is_finite() {
         Err(AnimationError::NaN { field })
     } else {
         Ok(())

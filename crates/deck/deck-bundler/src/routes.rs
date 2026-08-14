@@ -456,12 +456,11 @@ fn render_routes_gen_with(tree: &RouteTree, include_token_import: bool) -> Strin
         // as hashed assets, styled without runtime JS injection. Each CSS
         // file is a direct JS import (Rolldown bundles JS-imported CSS; it
         // does NOT inline a wrapper's `@import`).
-        format!(
-            "import '@ship/tokens/tokens.css';\n\
+        "import '@ship/tokens/tokens.css';\n\
              import '@ship/tokens/themes.css';\n\
              import '@ship/tokens/sail-base.css';\n\
              import '@ship/tokens/element-skins.css';\n"
-        )
+            .to_string()
     } else {
         String::new()
     };

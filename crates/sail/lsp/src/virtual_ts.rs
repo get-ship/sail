@@ -1721,7 +1721,10 @@ export default controller((ctx) => ({ count: signal(0) }))
 
     #[test]
     fn style_product_expr_keeps_style_head_and_quotes_hyphen_tokens() {
-        let src = include_str!("../../../../apps/studio/src/studio-list-row/studio-list-row.sail");
+        // Local fixture — do not walk studio (still mixed v2/v3) as product.
+        let src = r#"
+<div style({ bg(hover-bg), when: { hover: fg(muted-foreground) } })>x</div>
+"#;
         let v = build_virtual_ts(src).expect("virtual");
         assert!(
             v.view_text.contains("style({") && v.view_text.contains("when:"),

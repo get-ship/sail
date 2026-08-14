@@ -212,9 +212,10 @@ fn freeform_chip_stamps_prop_defaults() {
 </div>
 "#;
     let r = compile(src, route_opts()).expect("compile");
+    // Chip tone is opt-in (no default) — omitted when the author does not set it.
     assert!(
-        r.js.contains(r#"tone="default""#) || r.js.contains(r#"tone=\"default\""#),
-        "expected default tone stamped:\n{}",
+        !r.js.contains(r#"tone="default""#) && !r.js.contains(r#"tone=\"default\""#),
+        "chip must not invent a default tone:\n{}",
         r.js
     );
     assert!(

@@ -13,8 +13,8 @@ export default Object.assign(component((ctx) => {
     $scope[__k] = ctx[__k];
   }
   if (providers && typeof providers === "object") Object.assign($scope, providers);
-const __wireBoundary_b0 = (anchor) => bindFor({
-  anchor,
+const __wireBoundary_b0 = (cfAnchor) => bindFor({
+  anchor: cfAnchor,
   items: () => ($scope.rows()),
   key: (row, __i) => (row.id),
   render: (row, __i) => {
@@ -38,7 +38,7 @@ __t8.textContent = ($scope.row.label);
 const __cleanups = [];
 const __root = container.shadowRoot ?? container;
 const __e0 = document.createElement("table");
-__e0.setAttribute("class", "sail-table sx-wfull sx-fgtableforeground sx-fontFamilybody sx-fontSizesm sx-leadingnormal sx-textAlignstart");
+__e0.setAttribute("class", "sail-table s-sizewfull s-fgforeground s-typealignstartfamilybodyleadingnormalsizesm");
 __e0.setAttribute("data-sail-host", "table");
 const __forAnchor1 = document.createComment("for");
 __e0.appendChild(__forAnchor1);

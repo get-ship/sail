@@ -80,7 +80,7 @@ fn attr_name_is(expr: &CallExpression<'_>, names: &[&str]) -> bool {
             Expression::StringLiteral(s) => Some(s.value.as_str()),
             _ => None,
         })
-        .is_some_and(|v| names.iter().any(|n| *n == v))
+        .is_some_and(|v| names.contains(&v))
 }
 
 impl<'a, 'src> Visit<'a> for ActionStyleVisitor<'src> {

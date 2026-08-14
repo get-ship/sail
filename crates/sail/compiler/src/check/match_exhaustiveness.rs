@@ -309,9 +309,7 @@ fn find_const_decl(body: &str, name: &str) -> Option<usize> {
     let is_ident = |b: u8| b.is_ascii_alphanumeric() || b == b'_';
     let mut i = 0usize;
     while i + 5 + name.len() <= bytes.len() {
-        let Some(rel) = body[i..].find("const") else {
-            return None;
-        };
+        let rel = body[i..].find("const")?;
         let kw = i + rel;
         let before_ok = kw == 0 || !is_ident(bytes[kw - 1]);
         let mut j = kw + 5;

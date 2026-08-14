@@ -7,6 +7,12 @@
   rebuilding them, and the event modifiers replace handler boilerplate.
 -->
 
+<scope>
+  style envRow = { pad({ x: 3, y: 2 }).bg(surface-1).radius(md) }
+  style envName = { type({ size: sm }) }
+  style envRegion = { fg(muted-foreground) }
+</scope>
+
 <controller>
 type Phase = 'idle' | 'building' | 'live' | 'failed'
 
@@ -54,12 +60,6 @@ export default controller(() => {
     }
   })
 </controller>
-
-<scope>
-  style envRow = { pad({ x: 3, y: 2 }).bg(surface-1).radius(md) }
-  style envName = { type({ size: sm }) }
-  style envRegion = { fg(muted-foreground) }
-</scope>
 
 <column gap="4">
   <row align="center" justify="between">

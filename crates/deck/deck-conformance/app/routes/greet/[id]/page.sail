@@ -1,8 +1,8 @@
 <!-- Dynamic segment: route.params.id() in the heading. -->
 
 <scope>
-  style page = { box: pad(6).maxW(breakpoint-tablet).mx(auto) }
-  style title = { paint: fg(foreground), text: fontSize(2xl).fontWeight(bold) }
+  style page = { pad(6).size({ max-w: breakpoint-tablet }).margin({ x: auto }) }
+  style title = { fg(foreground).type({ size: 2xl, weight: bold }) }
 </scope>
 
 <column gap="2" style(page)>

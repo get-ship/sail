@@ -169,7 +169,7 @@ fn walk_component_sail_files(dir: &Path, out: &mut Vec<PathBuf>) {
         let p = entry.path();
         if p.is_dir() {
             walk_component_sail_files(&p, out);
-        } else if p.extension().map_or(false, |e| e == "sail") {
+        } else if p.extension().is_some_and(|e| e == "sail") {
             // The stem is the tag; a custom element must contain a hyphen.
             let is_component = p
                 .file_stem()

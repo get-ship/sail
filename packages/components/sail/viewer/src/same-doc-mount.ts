@@ -79,7 +79,7 @@ const RUNTIME_SPECIFIER = '@ship/sail-runtime/internal'
 function wrapControllerBody(body: string): string {
   const bound = new Set<string>()
   for (const m of body.matchAll(/\bimport\s*\{([^}]+)\}\s*from/g)) {
-    for (const part of m[1].split(',')) {
+    for (const part of (m[1] ?? '').split(',')) {
       const t = part.trim()
       if (!t) continue
       const as = /\bas\s+(\w+)\s*$/.exec(t)
@@ -472,7 +472,7 @@ export function installConsoleCapture(
 }
 
 /** Imperative surface of an upgraded <sail-code-editor> (its published API). */
-export interface CodeEditorHost extends any {
+export interface CodeEditorHost {
   value: string
   setDiagnostics?: (
     diags: Array<{

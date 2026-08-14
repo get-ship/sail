@@ -228,7 +228,7 @@ pub fn is_color_group_union(members: &[String]) -> bool {
     let names = color_group_names();
     members
         .iter()
-        .all(|m| m != "default" && names.iter().any(|n| *n == m.as_str()))
+        .all(|m| m != "default" && names.contains(&m.as_str()))
 }
 
 /// Alias — historic name; prefer [`is_color_group_union`].
@@ -243,9 +243,7 @@ pub fn is_size_union(members: &[String]) -> bool {
     if members.is_empty() {
         return false;
     }
-    let all_known = members
-        .iter()
-        .all(|m| SIZE_STEPS.iter().any(|s| *s == m.as_str()));
+    let all_known = members.iter().all(|m| SIZE_STEPS.contains(&m.as_str()));
     if !all_known {
         return false;
     }

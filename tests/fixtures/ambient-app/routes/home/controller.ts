@@ -13,12 +13,10 @@ type HomeScope = {
 export default controller((_ctx: ControllerScope<HomeScope>) => {
   const count = signal(0)
   const inc = () => count.set(count() + 1)
-  // Style builder under tsc: setters + token consts + string hyphenated tokens.
-  const pill = style
-    .bg(primary)
-    .fg('muted-foreground')
-    .padX(2)
-    .radius(sm)
-    .when({ hover: style.bg(muted) })
+  // Style builder under tsc: callable head + free setters + token consts.
+  const pill = style(
+    bg(primary).fg('muted-foreground').pad({ x: 2 }).radius(sm),
+    { when: { hover: bg(muted) } },
+  )
   return { count, inc, pill }
 })

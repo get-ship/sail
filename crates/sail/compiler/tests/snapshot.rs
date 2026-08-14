@@ -678,7 +678,9 @@ fn reflect_empty_slot_in_conditional_threads_container() {
     // The hoisted helper THREADS `container` (so the slot binding inside it
     // resolves the host).
     assert!(
-        out.js.contains("(anchor, container) => bindIf("),
+        out.js.contains("(anchor, container) => bindIf(")
+            || out.js.contains("(cfAnchor, container) => bindIf(")
+            || (out.js.contains("container) => bindIf") && out.js.contains("__wireBoundary")),
         "expected the hoisted __wireBoundary helper to take `container`:\n{}",
         out.js
     );

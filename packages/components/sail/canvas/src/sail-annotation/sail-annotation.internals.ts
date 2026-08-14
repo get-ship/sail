@@ -53,6 +53,20 @@ export function newUlid(now: number = Date.now()): string {
 
 // ─── Event builder ──────────────────────────────────────────────────────────
 
+/** HTTP POST for a staged annotation. Lives here so the controller never names `fetch`. */
+export async function postAnnotationEvent(
+  endpoint: string,
+  ev: AnnotationEvent,
+): Promise<{ ok: boolean; status: number }> {
+  const resp = await fetch(endpoint, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(ev),
+  })
+  return { ok: resp.ok, status: resp.status }
+}
+
 export function buildAnnotationEvent(input: BuildAnnotationInput): AnnotationEvent {
   const target: AnnotationTarget = {}
   if (input.viewId) target.view_id = input.viewId
@@ -78,17 +92,4 @@ export function getCSSSelector(el: any): string {
     if (classes) return `${tag}.${classes}`
   }
   return tag
-}
-
-export async function postAnnotationEvent(
-  endpoint: string,
-  ev: AnnotationEvent,
-): Promise<{ ok: boolean; status: number }> {
-  const resp = await fetch(endpoint, {
-    method: 'POST',
-    credentials: 'include',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(ev),
-  })
-  return { ok: resp.ok, status: resp.status }
 }

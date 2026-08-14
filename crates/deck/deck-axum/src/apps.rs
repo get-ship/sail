@@ -74,14 +74,14 @@ pub async fn serve_app_index(
     let path = uri.path();
     let ssr_owned: Option<String> = if path == "/_studio" {
         Some("/".to_string())
-    } else if let Some(rest) = path.strip_prefix("/_studio/") {
-        Some(if rest.is_empty() {
-            "/".to_string()
-        } else {
-            format!("/{}", rest.trim_start_matches('/'))
-        })
     } else {
-        None
+        path.strip_prefix("/_studio/").map(|rest| {
+            if rest.is_empty() {
+                "/".to_string()
+            } else {
+                format!("/{}", rest.trim_start_matches('/'))
+            }
+        })
     };
     let ssr_path = ssr_owned.as_deref().unwrap_or(path);
     into_axum(deck_core::serve_scaffold(

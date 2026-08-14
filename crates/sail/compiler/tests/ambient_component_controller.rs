@@ -17,6 +17,11 @@ use std::path::PathBuf;
 /// App-local CE shape: `src/sail-g2-probe/sail-g2-probe.sail`.
 const APP_LOCAL_COMPONENT: &str = r#"
 <!-- src/sail-g2-probe/sail-g2-probe.sail — app-local custom element -->
+<scope>
+  props: {
+    label = 'Probe'
+  }
+</scope>
 <controller>
 export default controller(() => {
   const count = signal(0)
@@ -28,11 +33,6 @@ export default controller(() => {
   }
 })
 </controller>
-<scope>
-  props: {
-    label = 'Probe'
-  }
-</scope>
 <button on:click={inc}>{label()}: {count()} / {doubled()}</button>
 "#;
 

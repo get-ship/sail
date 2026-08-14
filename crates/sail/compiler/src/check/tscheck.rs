@@ -1252,9 +1252,7 @@ fn find_project_root(start: &Path) -> Option<PathBuf> {
         {
             return Some(d.to_path_buf());
         }
-        if nested_config.is_none()
-            && (d.join("sail.config.jsonc").is_file() || d.join("sail.config.json").is_file())
-        {
+        if nested_config.is_none() && sail_lint::config::dir_has_config(d) {
             nested_config = Some(d.to_path_buf());
         }
         dir = d.parent();
@@ -1547,6 +1545,8 @@ fn runtime_ambient_dts() -> String {
 \
            onRemove?: (...a: any[]) => any;
 \
+           onStaged?: (...a: any[]) => any;
+\
            onSent?: (...a: any[]) => any;
 \
            onError?: (...a: any[]) => any;
@@ -1765,6 +1765,10 @@ declare module "@ship/sail-runtime" {
   export function debounce(...args: any[]): any;
   export function interval(...args: any[]): any;
   export function persisted(...args: any[]): any;
+  export function query<T = any>(...args: any[]): any;
+  export function mutation<T = any>(...args: any[]): any;
+  export function invalidate(...args: any[]): any;
+  export function __invalidate(...args: any[]): any;
   export const hotkeys: any;
   export const bindHtml: any;
   export const emit: any;
@@ -2535,7 +2539,10 @@ fn typecheck_project_env_reused(
         TypeEnv::Framework => return Ok(()),
     };
     let kind_abs = kind_rel.map(|r| project_root.join(r));
-    let use_kind = kind_abs.as_ref().is_some_and(|p| p.is_file());
+    let all_on_disk = files
+        .iter()
+        .all(|(p, _)| resolve_product_path(project_root, p).is_some());
+    let use_kind = kind_abs.as_ref().is_some_and(|p| p.is_file()) && all_on_disk;
 
     if use_kind {
         if let Some(kind_abs) = kind_abs.as_ref() {
@@ -2684,13 +2691,22 @@ fn env_program_ts_diags(
         let cfg = std::fs::read_to_string(project_root.join(kind_rel))?;
         let entries: Vec<(PathBuf, String, String)> = files
             .iter()
-            .filter_map(|(p, src)| {
-                let abs = resolve_product_path(project_root, p)?;
-                Some((
+            .map(|(p, src)| {
+                // Kind reuse must still overlay in-memory fixtures. Missing
+                // disk files (collect_project_type_gate tests) used to drop
+                // here, so document/window never reached tsgo.
+                let abs = resolve_product_path(project_root, p).unwrap_or_else(|| {
+                    if p.is_absolute() {
+                        (*p).to_path_buf()
+                    } else {
+                        project_root.join(p)
+                    }
+                });
+                (
                     abs.clone(),
                     (*src).to_string(),
                     abs.to_string_lossy().into_owned(),
-                ))
+                )
             })
             .collect();
         (cfg, entries, false)
@@ -4427,19 +4443,21 @@ export default controller((ctx) => {
 
     #[test]
     fn action_document_fails_raf_passes() {
-        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+        let workspace = Path::new(env!("CARGO_MANIFEST_DIR"))
             .ancestors()
             .nth(3)
             .expect("workspace root");
-        if resolve_tsgo(Some(root)).is_none() {
+        if resolve_tsgo(Some(workspace)).is_none() {
             panic!("tsgo required");
         }
+        let tmp = tempfile::tempdir().expect("temp project");
+        let root = tmp.path();
         let bad = (
-            root.join("apps/x/src/actions/bad.ts"),
+            root.join("src/actions/bad.ts"),
             "export function bad(node: Element) { document.body.append(node) }\n".to_string(),
         );
         let ok = (
-            root.join("apps/x/src/actions/ok.ts"),
+            root.join("src/actions/ok.ts"),
             "export function ok(node: Element) {\n  requestAnimationFrame(() => {})\n  new IntersectionObserver(() => {}).observe(node)\n}\n"
                 .to_string(),
         );
@@ -4463,15 +4481,17 @@ export default controller((ctx) => {
 
     #[test]
     fn composition_window_fails() {
-        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+        let workspace = Path::new(env!("CARGO_MANIFEST_DIR"))
             .ancestors()
             .nth(3)
             .expect("workspace root");
-        if resolve_tsgo(Some(root)).is_none() {
+        if resolve_tsgo(Some(workspace)).is_none() {
             panic!("tsgo required");
         }
+        let tmp = tempfile::tempdir().expect("temp project");
+        let root = tmp.path();
         let file = (
-            root.join("apps/x/src/compositions/use-win.ts"),
+            root.join("src/compositions/use-win.ts"),
             "export function useWin() { return window.innerWidth }\n".to_string(),
         );
         let diags = collect_project_type_gate(root, &[file]);

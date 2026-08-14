@@ -4,14 +4,10 @@
     "props": [
       {
         "name": "tone",
-        "default": "default",
-        "reflect": true,
+        "default": null,
+        "reflect": false,
         "bindable": false,
-        "type": "union",
-        "values": [
-          "default",
-          "primary"
-        ]
+        "type": "property"
       },
       {
         "name": "disabled",

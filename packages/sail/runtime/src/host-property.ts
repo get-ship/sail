@@ -26,16 +26,18 @@ export function defineHostProperty(
 ): () => void {
   const el = unwrapSailHost(host) as unknown as Record<string, unknown>
   const existing = Object.getOwnPropertyDescriptor(el, name)
-  Object.defineProperty(el, name, {
+  const descriptor: PropertyDescriptor = {
     configurable: true,
     enumerable: true,
     get: desc.get,
-    set: desc.set
-      ? (v: unknown) => {
-          desc.set!(v)
-        }
-      : undefined,
-  })
+  }
+  if (desc.set) {
+    const set = desc.set
+    descriptor.set = (v: unknown) => {
+      set(v)
+    }
+  }
+  Object.defineProperty(el, name, descriptor)
   return () => {
     if (existing) {
       Object.defineProperty(el, name, existing)

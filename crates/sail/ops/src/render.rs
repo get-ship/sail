@@ -161,7 +161,7 @@ pub fn screenshot(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
 
 fn base64_encode(bytes: &[u8]) -> String {
     const T: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-    let mut out = String::with_capacity((bytes.len() + 2) / 3 * 4);
+    let mut out = String::with_capacity(bytes.len().div_ceil(3) * 4);
     for chunk in bytes.chunks(3) {
         let b0 = chunk[0] as u32;
         let b1 = chunk.get(1).copied().unwrap_or(0) as u32;
@@ -205,7 +205,7 @@ mod tests {
     fn screenshot_inline_painted_no_leak() {
         let ctx = workspace_ctx();
         let args = json!({
-            "source": r#"<div style={style.bg(primary).pad(2)}>Hi {ticks()}</div>"#,
+            "source": r#"<div style({bg(primary).pad(2)})>Hi {ticks()}</div>"#,
             "viewport": "200x100",
             "theme": "ship",
             "mode": "light"

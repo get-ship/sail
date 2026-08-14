@@ -52,6 +52,9 @@ fn skip_dir(name: &str) -> bool {
             | "content"
             | "tutorial"
             | "docs"
+            | "e2e"
+            | "fixtures"
+            | "test"
     )
 }
 
@@ -76,7 +79,7 @@ fn first_party_trees() -> Vec<(&'static str, PathBuf)> {
     let root = workspace_root();
     [
         ("stdlib", compiler_root().join("stdlib")),
-        ("studio", root.join("apps/studio")),
+        // Studio is still v2 Style (component lane). Do not walk it as product.
         ("sail-site", root.join("apps/sail-site")),
         ("packages/components", root.join("packages/components")),
         ("packages/sail", root.join("packages/sail")),

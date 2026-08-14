@@ -1082,7 +1082,7 @@ fn emit_token_unions(out: &mut String) -> BTreeSet<String> {
                 all_bare.insert(kw.to_string());
             }
         }
-        out.push_str("\n");
+        out.push('\n');
     }
 
     // Bind placeholder — Style `bind(name)` is compile-time; type-level brand.
@@ -1282,7 +1282,7 @@ fn is_ambient_const_name(tok: &str) -> bool {
     if !chars.all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '$') {
         return false;
     }
-    if JS_RESERVED.iter().any(|r| *r == tok) {
+    if JS_RESERVED.contains(&tok) {
         return false;
     }
     true
@@ -1490,6 +1490,7 @@ fn emit_globals(out: &mut String, bare_tokens: &BTreeSet<String>) {
          \x20 type ControllerScope<S> = import('@ship/sail-runtime').ControllerScope<S>\n\
          \x20 /** Opaque mount host — Pure-safe; pass to actions/runtime (JOB-E2 SailHost). */\n\
          \x20 type SailHost = import('@ship/sail-runtime').SailHost\n\
+         \x20 type HostPropertyDesc = import('@ship/sail-runtime').HostPropertyDesc\n\
          \x20 type Host = import('@ship/sail-runtime').Host\n",
     );
 
@@ -1725,12 +1726,18 @@ fn emit_globals(out: &mut String, bare_tokens: &BTreeSet<String>) {
 
     // Setter keyword idents used as bare args: `cursor(pointer)`, `overflow(hidden)`.
     // Not always present on a token scale — still need ambient consts for tsc.
+    // `style` / `bind` are the builder + bind heads — CSS `contain(style)` uses
+    // the string form (`contain('style')`), never a colliding const.
+    const RESERVED_HEADS: &[&str] = &["style", "bind"];
     out.push_str("  // Style setter keyword idents (bare args).\n");
     let mut kw_seen: BTreeSet<&str> = BTreeSet::new();
     for row in vocab_rows() {
         if let Some(spec) = find_plain(row.name) {
             for kw in spec.keywords {
                 if !is_ambient_const_name(kw) {
+                    continue;
+                }
+                if RESERVED_HEADS.contains(kw) {
                     continue;
                 }
                 if bare_tokens.contains(*kw) || hybrid_names.contains(kw) || !kw_seen.insert(kw) {
@@ -1743,6 +1750,9 @@ fn emit_globals(out: &mut String, bare_tokens: &BTreeSet<String>) {
             for slot in concern.slots {
                 for kw in slot.keywords {
                     if !is_ambient_const_name(kw) {
+                        continue;
+                    }
+                    if RESERVED_HEADS.contains(kw) {
                         continue;
                     }
                     if bare_tokens.contains(*kw) || hybrid_names.contains(kw) || !kw_seen.insert(kw)
@@ -1865,7 +1875,7 @@ fn emit_free_vocab(out: &mut String, row: &VocabRow, bare_tokens: &BTreeSet<Stri
     if bare_tokens.contains(name) || WHEN_IDENT_KEYS.contains(&name) || name == "press" {
         return;
     }
-    if name.contains('-') || JS_RESERVED.iter().any(|r| *r == name) {
+    if name.contains('-') || JS_RESERVED.contains(&name) {
         return;
     }
     if row.name == "play" {
@@ -1939,7 +1949,7 @@ fn emit_free_setter(out: &mut String, spec: &PlainSpec, bare_tokens: &BTreeSet<S
     }
     // JS reserved words cannot be free function names. Emit a renamable
     // `__sailX` form; virtual_ts rewrites product `break(` → `__sailBreak(`.
-    if JS_RESERVED.iter().any(|r| *r == name) {
+    if JS_RESERVED.contains(&name) {
         let arg = arg_type_for_setter(spec);
         let alias = free_reserved_alias(name);
         if ZERO_ARG_SETTERS.contains(&name) {
@@ -2184,6 +2194,10 @@ mod tests {
     fn pack_types_style_head_and_free_forms() {
         let dts = emit_types_dts();
         assert!(dts.contains("const style: SailStyleBuilder"));
+        assert!(
+            !dts.contains("const style: 'style'"),
+            "CSS contain(style) must not shadow the Style builder"
+        );
         assert!(
             dts.contains("interface SailStyleBuilder"),
             "style head must be callable channel form"

@@ -91,9 +91,7 @@ pub fn banned_input_type(ty: &str) -> Option<&'static str> {
         "range" => Some("<slider>"),
         "file" => Some("<file>"),
         "color" => Some("<color>"),
-        "date" | "time" | "datetime-local" | "month" | "week" => {
-            Some(r#"<date type="…">"#)
-        }
+        "date" | "time" | "datetime-local" | "month" | "week" => Some(r#"<date type="…">"#),
         "submit" | "image" | "reset" | "button" => Some(r#"<button type="…">"#),
         _ => None,
     }

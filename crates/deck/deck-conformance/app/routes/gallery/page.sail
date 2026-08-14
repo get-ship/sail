@@ -1,11 +1,20 @@
 <!-- Component gallery hub — theme switcher + links into pack proof routes. -->
 
+<scope>
+  style page = { pad(6).size({ max-w: breakpoint-tablet }).margin({ x: auto }) }
+  style title = { fg(foreground).type({ size: 2xl, weight: bold }) }
+  style lead = { margin({ t: 2 }).fg(muted-foreground).type({ size: sm, leading: relaxed }) }
+  style strong = { fg(foreground) }
+  style section = { pad(5).border({ color: border, width: 1 }).radius(lg).bg(surface-1) }
+  style sectionTitle = { fg(foreground).type({ size: lg, weight: semibold }) }
+  style muted = { fg(muted-foreground).type({ size: sm }) }
+  style monoMuted = { fg(muted-foreground).type({ size: sm, family: mono }) }
+  style themeBtn = { pad({ x: 3, y: 1 }).radius(md), when: { pressed: bg(foreground).fg(background) } }
+  style packList = { pad(0).margin(0).type({ list: none }) }
+</scope>
+
 <controller>
-import { controller, signal, effect } from '@ship/sail-runtime'
-
 // Themes that pair with data-mode=dark on <html> (deck shell mode-of-theme).
-const DARK_THEMES = new Set(['console', 'contrast', '8bit', 'synthwave'])
-
 const THEME_OPTIONS = [
   { id: 'ship', label: 'SHIP' },
   { id: 'paper', label: 'Paper' },
@@ -18,33 +27,12 @@ export default controller(() => {
   const activeTheme = signal<string>('ship')
   const themes = THEME_OPTIONS
 
-  mount(() => {
-    effect(() => {
-      const theme = activeTheme()
-      document.documentElement.setAttribute('theme', theme)
-      document.documentElement.setAttribute('data-mode', DARK_THEMES.has(theme) ? 'dark' : 'light')
-    })
-  })
-
   return {
     activeTheme,
     themes,
   }
 })
 </controller>
-
-<scope>
-  style page = { box: pad(6).maxW(breakpoint-tablet).mx(auto) }
-  style title = { paint: fg(foreground), text: fontSize(2xl).fontWeight(bold) }
-  style lead = { box: mt(2), paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed) }
-  style strong = { paint: fg(foreground) }
-  style section = { box: pad(5), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) }
-  style sectionTitle = { paint: fg(foreground), text: fontSize(lg).fontWeight(semibold) }
-  style muted = { paint: fg(muted-foreground), text: fontSize(sm) }
-  style monoMuted = { paint: fg(muted-foreground), text: fontSize(sm).fontFamily(mono) }
-  style themeBtn = { box: padX(3).padY(1), paint: radius(md), when: { pressed: { paint: bg(foreground).fg(background) } } }
-  style packList = { box: pad(0).m(0), paint: list(none) }
-</scope>
 
 <column gap="6" style(page)>
   <header>

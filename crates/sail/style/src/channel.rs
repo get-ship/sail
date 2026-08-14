@@ -290,7 +290,7 @@ pub fn channel_for_setter(name: &str) -> Option<Channel> {
         return Some(c.channel);
     }
     for spec in crate::concerns::concerns() {
-        if spec.covered_setters.iter().any(|s| *s == name) {
+        if spec.covered_setters.contains(&name) {
             return Some(spec.channel);
         }
     }

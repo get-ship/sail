@@ -14,12 +14,7 @@ use std::sync::Mutex;
 static REGISTRY_LOCK: Mutex<()> = Mutex::new(());
 
 fn repo_hello() -> PathBuf {
-    let mut dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    // crates/sail/ops → repo root
-    dir.pop();
-    dir.pop();
-    dir.pop();
-    dir.join("examples/module-hello")
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/module-hello")
 }
 
 fn with_registry<T>(f: impl FnOnce() -> T) -> T {

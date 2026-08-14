@@ -53,7 +53,7 @@ describe('<sail-calendar> — month-grid range selection (range-mode=date)', () 
     const { v, calendar } = mountWith([], { rangeMode: 'date' })
     live.push(v)
     let evt: CustomEvent | null = null
-    v.el.addEventListener('sail-range-change', (e) => { evt = e as CustomEvent })
+    v.el.addEventListener('sail-range-change', (e: Event) => { evt = e as CustomEvent })
     await v.flush()
     const from = shadow(v.el).querySelector('[role=gridcell][data-iso="2026-06-15"]')!
     const to = shadow(v.el).querySelector('[role=gridcell][data-iso="2026-06-18"]')!
@@ -90,7 +90,7 @@ describe('<sail-calendar> — month-grid range selection (range-mode=date)', () 
     const { v, calendar } = mountWith([], { rangeMode: 'date' })
     live.push(v)
     let detail: { start: string; end: string } | null = null
-    v.el.addEventListener('sail-range-change', (e) => {
+    v.el.addEventListener('sail-range-change', (e: Event) => {
       detail = (e as CustomEvent).detail
     })
     await v.flush()
@@ -114,7 +114,7 @@ describe('<sail-calendar> — drag-to-create (timed, day view)', () => {
     const { v } = mountWith([], { initialView: 'day', slotMinutes: 60, dayStartHour: 8, dayEndHour: 18 })
     live.push(v)
     let evt: CustomEvent | null = null
-    v.el.addEventListener('sail-event-create-intent', (e) => { evt = e as CustomEvent })
+    v.el.addEventListener('sail-event-create-intent', (e: Event) => { evt = e as CustomEvent })
     await v.flush()
     // The day column carries a background slot grid: data-iso + data-minutes per slot.
     const slots = shadow(v.el).querySelectorAll('[data-iso][data-minutes]')
@@ -136,7 +136,7 @@ describe('<sail-calendar> — drag-to-create (timed, day view)', () => {
     const { v } = mountWith([], { initialView: 'day', slotMinutes: 60, dayStartHour: 8, dayEndHour: 18 })
     live.push(v)
     let intent: { start: string; end: string } | null = null
-    v.el.addEventListener('sail-event-create-intent', (e) => {
+    v.el.addEventListener('sail-event-create-intent', (e: Event) => {
       intent = (e as CustomEvent).detail
     })
     await v.flush()
@@ -158,7 +158,7 @@ describe('<sail-calendar> — drag-to-move (timed, day view)', () => {
     })
     live.push(v)
     let evt: CustomEvent | null = null
-    v.el.addEventListener('sail-event-move', (e) => { evt = e as CustomEvent })
+    v.el.addEventListener('sail-event-move', (e: Event) => { evt = e as CustomEvent })
     await v.flush()
     const chip = shadow(v.el).querySelector('[data-event-id="a"]')!
     const target = shadow(v.el).querySelector('[data-iso][data-minutes="660"]')! // 11:00

@@ -18,9 +18,8 @@ import type { SortState } from '../engine/types'
 type SortDir = 'ascending' | 'descending' | 'none'
 type Emit = <T>(name: string, detail?: T) => void
 
-interface DataHost extends any {
+type DataHost = HTMLElement & {
   emit?: Emit
-  shadowRoot: ShadowRoot | null
 }
 
 /** Toggle a reflected boolean attribute. */
@@ -143,7 +142,7 @@ export function wireDataVariant(
     if (!tab || !shadow) return
     const selected = new Set(tab.selectedRowIds())
     const focus = tab.nav.active().rowId ?? tab.centerRows()[0]?.id ?? null
-    shadow.querySelectorAll<any>('[data-row-id]').forEach((rowEl) => {
+    shadow.querySelectorAll('[data-row-id]').forEach((rowEl) => {
       const id = rowEl.getAttribute('data-row-id') ?? ''
       const isSel = selected.has(id)
       toggleAttr(rowEl, 'data-selected', isSel)

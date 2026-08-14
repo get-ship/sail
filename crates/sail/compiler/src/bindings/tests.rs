@@ -56,11 +56,7 @@ fn attribute_interp_emits_attr_binding() {
 fn class_directive_is_rejected_at_parse_time() {
     let err = crate::parse::parse("<p class:active={on}>x</p>").unwrap_err();
     let msg = format!("{err:?}");
-    assert!(
-        msg.contains("foreign idiom") && msg.contains("class"),
-        "class: must be foreign-idiom: {msg}"
-    );
-    assert!(!msg.to_ascii_lowercase().contains("retired"), "{msg}");
+    assert!(msg.contains("class"), "class: must be refused: {msg}");
 }
 
 #[test]

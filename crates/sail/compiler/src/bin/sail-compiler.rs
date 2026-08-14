@@ -571,7 +571,7 @@ fn gen_prop_registry(out: Option<PathBuf>, ts_out: Option<PathBuf>) -> Result<()
     ts.push_str("export interface GenProp {\n  name: string\n  /** Rendered type: unions as `a · b · c`, identity props verbatim TS. */\n  type: string\n  default?: string\n  /** JSDoc from the stdlib declaration, when the prop is documented. */\n  desc?: string\n}\n\n");
     ts.push_str("export const PROP_REGISTRY: Record<string, GenProp[]> = ");
     ts.push_str(&serde_json::to_string_pretty(&ts_tags)?);
-    ts.push_str("\n");
+    ts.push('\n');
     std::fs::write(&ts_path, ts)?;
     println!("wrote {} ({} elements)", ts_path.display(), ts_tags.len());
 
@@ -810,7 +810,7 @@ fn gen_prop_registry(out: Option<PathBuf>, ts_out: Option<PathBuf>) -> Result<()
     sf.push_str("export interface BlockDoc {\n  open: string\n  clauses: string[]\n  summary: string\n}\n\n");
     sf.push_str("export const BLOCKS: BlockDoc[] = ");
     sf.push_str(&serde_json::to_string_pretty(&blocks)?);
-    sf.push_str("\n");
+    sf.push('\n');
 
     // DIRECTIVES — every attribute-position directive, straight from
     // directive_manifest::DIRECTIVES.
@@ -1764,9 +1764,7 @@ fn build(
             let _ = sail_compiler::ambients::write_project_type_configs(project);
             let is_app = project.join("routes").is_dir();
             if is_app {
-                if let Err(e) = project_ts_type_gate(project) {
-                    return Err(e);
-                }
+                project_ts_type_gate(project)?
             }
         }
     } else if let Some(project) = nearest_project_root(&targets[0]) {
@@ -1995,9 +1993,7 @@ fn nearest_project_root(from: &Path) -> Option<PathBuf> {
         {
             return Some(d);
         }
-        if nested_config.is_none()
-            && (d.join("sail.config.json").is_file() || d.join("sail.config.jsonc").is_file())
-        {
+        if nested_config.is_none() && sail_lint::config::dir_has_config(&d) {
             nested_config = Some(d.to_path_buf());
         }
         // Stop at workspace root markers so monorepo apps keep their own root.

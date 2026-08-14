@@ -5,6 +5,11 @@
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use std::sync::Mutex;
+
+/// One live tsgo program at a time — parallel parity tests otherwise
+/// flake with `project session missing`.
+static LIVE_PROGRAM: Mutex<()> = Mutex::new(());
 
 use sail_compiler::DiagSeverity;
 use sail_compiler::ambients::{
@@ -94,6 +99,7 @@ fn cli_walk_files(workspace: &Path, files: &[(PathBuf, String)]) -> Vec<(PathBuf
 }
 
 fn assert_parity(label: &str, project: &Path, tsc: &Path) {
+    let _live = LIVE_PROGRAM.lock().expect("live program lock");
     write_project_type_configs(project).expect("kind configs");
     let files = collect_project_gate_files(project);
     assert!(
@@ -174,6 +180,7 @@ fn relative_cli_walk_paths_match_tsc_p() {
             );
         }
         let product = product_rels(&project, &files);
+        let _live = LIVE_PROGRAM.lock().expect("live program lock");
         reset_type_gate_servers();
         let gate = collect_project_ts_diags(&project, &walked).expect("live program");
         assert!(

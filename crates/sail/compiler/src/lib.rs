@@ -516,11 +516,11 @@ pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, Compile
     })
     .map_err(|e| attach_path(e, &opts))?;
     // One contract per boundary (#255): the Error-severity lint + layout +
-    // type-gate stream gates `compile()` itself, so the daemon + napi harness
-    // reject exactly what the CLI does. Compose is Fix by default and stays
-    // on `check_all` / LSP OnSave / `sail_edit` — `gate` does not run it.
-    compile_span("gate", || {
-        check::gate(
+    // type-gate stream gates `compile()` itself. Collect once (tsgo is
+    // cached per source) so warnings also ride `CompileOutput` — do not
+    // call `gate` then `collect` (double type-gate).
+    let diagnostics = compile_span("gate", || {
+        check::collect(
             &program,
             effective_source,
             source, // author source — type gate (JOB-E1) maps controller spans here
@@ -528,9 +528,22 @@ pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, Compile
             controller.as_ref(),
             &effective_overrides,
             opts.route_params.as_deref(),
+            DiagnosticTier::OnSave,
         )
-    })
-    .map_err(|e| attach_path(e, &opts))?;
+    });
+    if let Some(d) = diagnostics
+        .iter()
+        .find(|d| d.severity == DiagSeverity::Error)
+    {
+        let offset = offset_for_line_col(source, d.line, d.col);
+        let mut err = CompileError::new(d.message.clone())
+            .with_span(crate::diagnostics::Span::point(offset))
+            .with_category("sail-internal-check-gate");
+        if let Some(rule) = &d.rule {
+            err = err.with_category(rule.clone());
+        }
+        return Err(attach_path(err, &opts));
+    }
     // `run`/`gate` above already validated the `(--x)` resolution law
     // (fail-fast); re-resolving here is cheap (pure text scan) and gets us
     // the matched prop/signal bindings the emitter wires `@property` +
@@ -578,8 +591,25 @@ pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, Compile
         dts,
         meta,
         used_icons: lowered.used_icons,
-        diagnostics: Vec::new(),
+        diagnostics,
     })
+}
+
+fn offset_for_line_col(source: &str, line: usize, col: usize) -> usize {
+    let mut cur_line = 1usize;
+    let mut cur_col = 1usize;
+    for (i, ch) in source.char_indices() {
+        if cur_line == line && cur_col == col {
+            return i;
+        }
+        if ch == '\n' {
+            cur_line += 1;
+            cur_col = 1;
+        } else {
+            cur_col += 1;
+        }
+    }
+    source.len()
 }
 
 fn attach_path(err: CompileError, opts: &CompileOpts) -> CompileError {

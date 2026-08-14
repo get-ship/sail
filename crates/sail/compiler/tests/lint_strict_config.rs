@@ -34,7 +34,7 @@ use sail_lint::config::{RECOGNIZED_KEYS, SailConfig};
 const WARN_RULE: &str = "sail-no-free-aria";
 
 /// Source that fires `sail-no-free-aria` and nothing else hard.
-const WARN_SRC: &str = r#"<button type="button" aria-label="Go">x</button>"#;
+const WARN_SRC: &str = r#"<button type="button" aria-label="Go" style({ size({ min-h: control-h-md, min-w: control-h-md }) })>Go</button>"#;
 
 /// Source that is a pure compiler error (parse) — never a severity-configurable lint.
 const PARSE_ERR_SRC: &str = r#"<button type="button">unterminated"#;

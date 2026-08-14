@@ -7,6 +7,13 @@
   No fix fought the language.
 -->
 
+<scope>
+  style page = { pad(4) }
+  style meta = { fg(muted-foreground).type({ size: sm }) }
+  style noteRow = { pad({ x: 3, y: 2 }).bg(surface-1).radius(md) }
+  style noteText = { type({ size: sm }) }
+</scope>
+
 <controller>
 interface Note {
   id: number
@@ -32,13 +39,6 @@ export default controller(() => {
   return { notes, published }
 })
 </controller>
-
-<scope>
-  style page = { pad(4) }
-  style meta = { fg(muted-foreground).type({ size: sm }) }
-  style noteRow = { pad({ x: 3, y: 2 }).bg(surface-1).radius(md) }
-  style noteText = { type({ size: sm }) }
-</scope>
 
 <column gap="4" style(page)>
   <row align="center" justify="between">

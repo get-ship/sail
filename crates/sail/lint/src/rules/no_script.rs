@@ -35,7 +35,7 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
             }
         }
         if source[i + 1..].starts_with("script") {
-            let after = source[i + 1..].as_bytes().get("script".len()).copied();
+            let after = source.as_bytes()[i + 1..].get("script".len()).copied();
             if matches!(after, Some(b) if b == b'>' || b == b'/' || b.is_ascii_whitespace()) {
                 let (line, col) = offset_to_line_col(source, i);
                 findings.push(Finding {

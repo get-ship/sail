@@ -229,7 +229,7 @@ fn lsp_and_compiler_hover_size_type_elevation_fill() {
             "elevation.sm",
             "shadow:",
         ),
-        ("style({ bg(fill.sur¦face) })", "fill.surface", "color:"),
+        ("style({ bg(surface-¦1) })", "surface-1", "oklch"),
     ] {
         let (src, _off, line, col) = at_caret(src);
         let via_resolve = resolve_theme_token(resolve_name, "ship", "light")

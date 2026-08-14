@@ -127,7 +127,7 @@ fn named_style_ref_emits_runtime_motion_attach() {
     let js = compile_motion(
         r#"
 <scope>
-  style ambientDot = { box: w(4).h(4), paint: radius(full).bg(primary), animate: loop({ translate-y: 'spring:gentle', stagger: '0.15s' }) }
+  style ambientDot = { size({ w: 4, h: 4 }).radius(full).bg(primary), animate: loop({ translate-y: 'spring:gentle', stagger: '0.15s' }) }
 </scope>
 <div style(ambientDot)></div>
 "#,
@@ -206,7 +206,7 @@ fn unknown_property_alias_is_rejected() {
 #[test]
 fn enter_exit_on_style_chain_with_paint() {
     let js = compile_motion(
-        r#"<card style({ box: pad(4), animate: enter({ opacity: 'fade' }).exit({ opacity: 'fade-out' }) })> x</card>"#,
+        r#"<card style({ pad(4), animate: enter({ opacity: 'fade' }).exit({ opacity: 'fade-out' }) })> x</card>"#,
     )
     .expect("compile");
     assert!(js.contains(r#"trigger: "enter""#), "{js}");
@@ -217,7 +217,7 @@ fn enter_exit_on_style_chain_with_paint() {
 #[test]
 fn enter_exit_via_animate_channel() {
     let js = compile_motion(
-        r#"<card style({ box: pad(4), animate: enter({ opacity: 'fade' }).exit({ opacity: 'fade-out' }) })> x</card>"#,
+        r#"<card style({ pad(4), animate: enter({ opacity: 'fade' }).exit({ opacity: 'fade-out' }) })> x</card>"#,
     )
     .expect("compile animate channel");
     assert!(js.contains(r#"trigger: "enter""#), "{js}");

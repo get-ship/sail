@@ -768,12 +768,12 @@ fn consume_style_call_len(src: &str, start: usize) -> Option<usize> {
 
 fn inject_tag_style_call(open: &str, style_call: &str) -> String {
     let trimmed = open.trim_end();
-    if trimmed.ends_with("/>") {
-        let head = &trimmed[..trimmed.len() - 2].trim_end();
+    if let Some(stripped) = trimmed.strip_suffix("/>") {
+        let head = stripped.trim_end();
         let trail = &open[trimmed.len()..];
         format!("{head} {style_call} />{trail}")
-    } else if trimmed.ends_with('>') {
-        let head = &trimmed[..trimmed.len() - 1].trim_end();
+    } else if let Some(stripped) = trimmed.strip_suffix('>') {
+        let head = stripped.trim_end();
         let trail = &open[trimmed.len()..];
         format!("{head} {style_call}>{trail}")
     } else {
@@ -904,7 +904,7 @@ fn replace_method_arg(chain: &str, setter: &str, arg: &str) -> Option<String> {
 /// counts patches with out-of-range or inverted spans that were not applied.
 pub fn apply_text_patches(source: &str, patches: &[(usize, usize, String)]) -> (String, usize) {
     let mut ordered: Vec<_> = patches.to_vec();
-    ordered.sort_by(|a, b| b.0.cmp(&a.0));
+    ordered.sort_by_key(|b| std::cmp::Reverse(b.0));
     let mut out = source.to_string();
     let mut skipped = 0usize;
     for (start, end, rep) in ordered {
@@ -934,10 +934,7 @@ fn line_col_to_offset(source: &str, line: usize, col: usize) -> usize {
     source.len()
 }
 
-fn find_host_for_offset<'a>(
-    index: &'a BTreeMap<String, EditNode>,
-    offset: usize,
-) -> Option<&'a EditNode> {
+fn find_host_for_offset(index: &BTreeMap<String, EditNode>, offset: usize) -> Option<&EditNode> {
     // Prefer the tightest open-tag that covers offset, else full_span.
     index
         .values()

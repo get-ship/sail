@@ -18,8 +18,8 @@ import type { TreeNode } from '../sail-tree/tree-node'
 
 type AnyTreeNode = TreeNode & Record<string, unknown>
 
-interface HostEmit extends any {
-  emit?<T = unknown>(name: string, detail?: T): void
+type HostEmit = HTMLElement & {
+  emit?(name: string, detail?: unknown): void
 }
 
 /** Map the engine's sort direction to the `sail-sort` event token. */
@@ -85,7 +85,7 @@ export function wireGridColumns(host: HostEmit, getTree: () => Table<AnyTreeNode
     // The resize handle never sorts.
     if (target.closest('[data-action="resize"]')) return
     // A sortable header click cycles its sort none→asc→desc→none.
-    const head = target.closest<any>('[role="columnheader"][data-sortable]')
+    const head = target.closest('[role="columnheader"][data-sortable]')
     if (head) {
       const id = head.getAttribute('data-col-id')
       if (id) {

@@ -15,6 +15,7 @@ pub mod css_token;
 pub mod expr_subset;
 pub mod for_iterable;
 pub mod handler_complexity;
+pub mod icons;
 pub(crate) mod js_scan;
 pub mod key_identity;
 pub mod layout;
@@ -96,6 +97,7 @@ pub fn run(
     // Bare names are the language's namespace — reject unknown bare tags
     // (typos / not-yet-language elements) so L1 growth is safe.
     pass!("reserved-names", reserved_names::check(program))?;
+    pass!("icons", icons::check(program, source_path))?;
     pass!(
         "handler-complexity",
         handler_complexity::check(program, controller.is_some())
@@ -291,6 +293,7 @@ pub fn collect(
     // `controller` is resolved by the caller from the inline `<controller>`
     // block (SFC) — the one source, no paired-file fallback.
     push(check_mutations(program), source, &mut diags);
+    push_all(icons::collect(program, source_path), source, &mut diags);
     diags.extend(partials::collect(source, controller, source_path));
     push(
         paired_controller::check(source, source_path),

@@ -8,6 +8,13 @@
   framework keeps the row in the tree until its animation finishes.
 -->
 
+<scope>
+  style unreadDot = { display(inline-block).size(1_5).radius(full).bg(destructive) }
+  style noteRow = { pad(3).bg(surface-1).border({ color: border-subtle, width: 1 }).radius(md) }
+  style noteText = { type({ size: sm }) }
+  style empty = { pad(3).fg(muted-foreground).type({ size: sm }) }
+</scope>
+
 <controller>
 interface Note {
   id: number
@@ -40,13 +47,6 @@ export default controller(() => {
     }
   })
 </controller>
-
-<scope>
-  style unreadDot = { display(inline-block).size(1_5).radius(full).bg(destructive) }
-  style noteRow = { pad(3).bg(surface-1).border({ color: border-subtle, width: 1 }).radius(md) }
-  style noteText = { type({ size: sm }) }
-  style empty = { pad(3).fg(muted-foreground).type({ size: sm }) }
-</scope>
 
 <column gap="4">
   <row align="center" justify="between">

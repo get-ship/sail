@@ -18,8 +18,8 @@ const __default = Object.assign(component((ctx) => {
   $scope.disabled = __props.disabled;
   $scope.loading = __props.loading;
   $scope.label = __props.label;
-const __wireBoundary_b4 = (anchor) => bindIf({
-  anchor,
+const __wireBoundary_b4 = (cfAnchor) => bindIf({
+  anchor: cfAnchor,
   test: () => {
     if ($scope.loading()) return 0;
     return -1;
@@ -39,14 +39,16 @@ const __wireBoundary_b4 = (anchor) => bindIf({
 const __cleanups = [];
 const __root = container.shadowRoot ?? container;
 const __e0 = document.createElement("button");
-__e0.setAttribute("class", "sail-button sx-displayinlineflex sx-positionrelative sx-appearancenone sx-radiusmd sx-borderWidthcontrolstroke sx-bordersolid sx-bordertransparent sx-borderImagecornerimage sx-isolate sx-controlFrame sx-selectnone sx-cursorpointer sx-fontWeightmedium sx-leadingnone sx-whitespacenowrap sx-hover-controlLift sx-active-press sx-disabled-cursornotallowed sx-disabled-opacity50 sx-variantdefault-bgbutton sx-variantdefault-borderbuttonborder sx-variantdefault-fgbuttonforeground sx-variantdefault-shadowxs sx-sizemd-minHcontrolhmd sx-sizemd-padX3 sx-sizemd-fontSizebase");
+__e0.setAttribute("class", "sail-button s-displayinlineflex s-positionschemerelative s-appearancenone s-radiusallmd s-borderstylesolidwidthcontrolstroke s-isolate s-controlFrame s-selectnone s-typeleadingnoneweightmediumwrapnowrap s-hover-controlLift s-active-press s-disabledfalse-cursorpointer s-disabledtrue-cursornotallowed s-disabledtrue-filteropacity50 s-variantdefault-bgcolorforeground s-variantdefault-bordercolorforeground s-variantdefault-fgcolorbackground s-variantdefault-elevationxs s-variantdefaulthover-filteropacity90 s-variantdefaulthover-elevationsm s-variantdefault-bgtone s-variantdefault-bordercolortone s-variantdefault-fgtoneforeground s-variantghost-bgcolortransparent s-variantghost-bordercolortransparent s-variantghost-fgbutton s-variantghosthover-bgcolorhoverbg s-variantghostdisabled-bgcolortransparent s-variantghost-fgtone s-variantoutline-bgcolortransparent s-variantoutline-bordercolorforeground s-variantoutline-fgbutton s-variantoutlinehover-bgcolorhoverbg s-variantoutlinedisabled-bgcolortransparent s-variantoutline-bordercolortone s-variantoutline-fgtone s-variantsoft-bgcolorhoverbg s-variantsoft-bordercolorborder s-variantsoft-fgbutton s-variantsofthover-filteropacity90 s-variantsoft-bgcolortonemix15 s-variantsoft-bordercolortone s-variantsoft-fgtone s-variantsofthover-bgcolortonemix25 s-variantsolid-bgcolorforeground s-variantsolid-bordercolorforeground s-variantsolid-fgcolorbackground s-variantsolid-elevationxs s-variantsolidhover-filteropacity90 s-variantsolidhover-elevationsm s-variantsolid-bgtone s-variantsolid-bordercolortone s-variantsolid-fgtoneforeground s-sizeicon-sizehcontrolhmdwcontrolhmd s-sizeicon-padall0x0 s-sizeicon-typesizebase s-sizeiconLg-sizehcontrolhlgwcontrolhlg s-sizeiconLg-padall0x0 s-sizeiconLg-typesizemd s-sizeiconSm-sizehcontrolhsmwcontrolhsm s-sizeiconSm-padall0x0 s-sizeiconSm-typesizesm s-sizelg-sizeminhcontrolhlg s-sizelg-padx4 s-sizelg-typesizemd s-sizemd-sizeminhcontrolhmd s-sizemd-padx3 s-sizemd-typesizebase s-sizesm-sizeminhcontrolhsm s-sizesm-padx25 s-sizesm-typesizesm s-sizexs-sizeminhcontrolh2xs s-sizexs-padx2 s-sizexs-typesizexs s-tonemutedvariantdefault-bgcolormutedforeground s-tonemutedvariantdefault-bordercolormutedforeground s-tonemutedvariantdefault-fgcolorbackground s-tonemutedvariantsolid-bgcolormutedforeground s-tonemutedvariantsolid-bordercolormutedforeground s-tonemutedvariantsolid-fgcolorbackground s-tonemutedvariantsoft-bgmuted s-tonemutedvariantsoft-bordercolorborderstrong s-tonemutedvariantsoft-fgforeground s-tonemutedvariantoutline-bordercolormutedforeground s-tonemutedvariantoutline-fgcolormutedforeground s-tonemutedvariantghost-fgcolormutedforeground");
 __e0.setAttribute("data-sail-host", "button");
+__e0.setAttribute("data-sail-bridge", "tone");
 __e0.setAttribute("data-test", "root");
 __cleanups.push(bindProp(__e0, "disabled", () => ($scope.disabled() || $scope.loading())));
 __cleanups.push((() => { const __read = () => { const __av1 = ($scope.loading() ? 'true' : 'false'); return __av1 == null || __av1 === false || __av1 === "" ? null : (__av1 === true ? "true" : String(__av1)); }; return bindAttr(__e0, "aria-busy", __read); })());
 __cleanups.push(bindAttr(__e0, "aria-label", () => ($scope.label())));
-__e0.setAttribute("variant", "default");
-__e0.setAttribute("tone", "default");
+__e0.setAttribute("style", "--tone: var(--primary); --tone-foreground: var(--primary-foreground); --tone-hover: var(--primary-hover);");
+__e0.setAttribute("variant", "solid");
+__e0.setAttribute("tone", "primary");
 __e0.setAttribute("size", "md");
 __e0.classList.add("sail-root");
 const __e2 = __tpl0();
@@ -81,7 +83,7 @@ if (__m["b4"]) {
 });
 component("ship-button-test", {
   props: {
-    "tone": prop.union(["default", "primary"], { default: "default", reflect: true }),
+    "tone": prop.property(),
     "disabled": prop.bool({ default: false, reflect: true }),
     "loading": prop.bool({ default: false, reflect: true }),
     "label": prop.string({ default: "" }),

@@ -97,6 +97,7 @@ impl SemanticLocator {
     }
 
     /// Match key for unique resolve (tag + name preferred; role+name next).
+    #[allow(dead_code)] // exercised by unit tests; clippy lib-only does not see them
     fn match_key(&self) -> String {
         let name = self.name.as_deref().unwrap_or("");
         if !name.is_empty() {

@@ -7,6 +7,14 @@
   query's call args.
 -->
 
+<scope>
+  style muteLabel = { fg(muted-foreground).type({ size: sm }) }
+  style loadingRow = { pad(4).bg(surface-1).radius(md) }
+  style muted = { fg(muted-foreground) }
+  style memberRow = { pad({ x: 3, y: 2 }).bg(surface-1).radius(md) }
+  style memberName = { type({ size: sm }) }
+</scope>
+
 <controller>
 import { directory } from '@/compositions/tut-05-directory-client'
 
@@ -43,14 +51,6 @@ export default controller(() => {
     }
   })
 </controller>
-
-<scope>
-  style muteLabel = { fg(muted-foreground).type({ size: sm }) }
-  style loadingRow = { pad(4).bg(surface-1).radius(md) }
-  style muted = { fg(muted-foreground) }
-  style memberRow = { pad({ x: 3, y: 2 }).bg(surface-1).radius(md) }
-  style memberName = { type({ size: sm }) }
-</scope>
 
 <column gap="4">
   <row align="center" justify="between">

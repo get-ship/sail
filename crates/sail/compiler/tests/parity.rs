@@ -13,7 +13,7 @@ use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
 
-use sail_compiler::{compile, CompileMode, CompileOpts, ComponentMeta};
+use sail_compiler::{CompileMode, CompileOpts, ComponentMeta, compile};
 
 fn fixtures_dir() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures")

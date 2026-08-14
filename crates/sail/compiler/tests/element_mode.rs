@@ -229,7 +229,7 @@ fn stdlib_elements_can_self_nest() {
     // the first </card>. Regression — after card was promoted to L1 the old
     // `find("</card>")` paired the inner close with the outer card and broke
     // the /components showcase (a card of cards is an essential pattern).
-    use sail_compiler::{compile, CompileMode, CompileOpts};
+    use sail_compiler::{CompileMode, CompileOpts, compile};
     let opts = CompileOpts {
         route_params: None,
         setup_url: None,

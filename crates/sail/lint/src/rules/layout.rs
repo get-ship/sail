@@ -851,13 +851,21 @@ pub fn lower_participation(name: &str, value: &str) -> Option<(String, String)> 
         let _ = participation_token(name, value).ok()?;
         return None;
     }
-    let setter = participation_setter(name)?;
     let token = participation_token(name, value).ok()?;
-    let style = crate::style::Style::Set(crate::style::PaintOp {
-        setter: setter.into(),
-        args: vec![crate::style::PaintArg::Token(token)],
-        source: format!("{name}"),
-    });
+    let expr = match name {
+        "grow" => format!("grow({token})"),
+        "shrink" => format!("shrink({token})"),
+        // v3: width participation is the size concern, not retired w/minW/maxW.
+        "w" => format!("size({{ w: {token} }})"),
+        "min-w" => format!("size({{ min-w: {token} }})"),
+        "max-w" => format!("size({{ max-w: {token} }})"),
+        _ => return None,
+    };
+    let wrapped = format!("style({{ {expr} }})");
+    let (style, diags) = crate::style::parse(&wrapped);
+    if !diags.is_empty() {
+        return None;
+    }
     let (classes, css) = crate::style::lower_style(&style, &std::collections::HashMap::new());
     if classes.is_empty() || css.is_empty() {
         return None;
@@ -2110,12 +2118,26 @@ mod tests {
         assert!(css.contains("flex-shrink:0"), "{css}");
 
         let (classes, css) = lower_participation("w", "full").unwrap();
-        assert!(classes.contains("s-wfull"), "{classes}");
-        assert!(css.contains("width:100%"), "{css}");
+        assert!(
+            classes.contains("s-wfull") || classes.contains("s-sizewfull"),
+            "{classes}"
+        );
+        assert!(
+            css.contains("width:100%") || css.contains("width: 100%"),
+            "{css}"
+        );
 
         let (classes, css) = lower_participation("min-w", "0").unwrap();
-        assert!(classes.contains("s-minW0"), "{classes}");
-        assert!(css.contains("min-width:0"), "{css}");
+        assert!(
+            classes.contains("s-minW0")
+                || classes.contains("s-sizemin-w0")
+                || classes.contains("s-sizeminw0"),
+            "{classes}"
+        );
+        assert!(
+            css.contains("min-width:0") || css.contains("min-width: 0"),
+            "{css}"
+        );
     }
 
     #[test]

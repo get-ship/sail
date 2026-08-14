@@ -81,7 +81,6 @@ pub fn into_axum(resp: DeckResponse) -> Response {
 /// registered here — they need host-supplied extensions or router state.
 /// `/_deck/meta` is registered here; hosts that need to inject a
 /// `DaemonBuildInfo` extension (shipd) simply layer it before mounting.
-
 // Route paths for the framework's CSS / theme / catalog surface. axum's
 // `Router::route` requires a `&'static str`, so we can't pass the
 // `deck_core::routes::DECK_API_ASSETS` const directly; instead, mirror the

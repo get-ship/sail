@@ -161,14 +161,9 @@ impl TsgoClient {
             .name("tsgo-lsp-reader".into())
             .spawn(move || {
                 let mut reader = BufReader::new(stdout);
-                loop {
-                    match read_message(&mut reader) {
-                        Ok(msg) => {
-                            if tx.send(msg).is_err() {
-                                break;
-                            }
-                        }
-                        Err(_) => break,
+                while let Ok(msg) = read_message(&mut reader) {
+                    if tx.send(msg).is_err() {
+                        break;
                     }
                 }
             })

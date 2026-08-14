@@ -17,17 +17,6 @@
           },
           "attributes": [
             {
-              "name": "tone",
-              "type": {
-                "text": "'default' | 'primary'"
-              },
-              "default": "default",
-              "values": [
-                "default",
-                "primary"
-              ]
-            },
-            {
               "name": "disabled",
               "type": {
                 "text": "boolean"
@@ -54,11 +43,8 @@
               "kind": "field",
               "name": "tone",
               "type": {
-                "text": "'default' | 'primary'"
-              },
-              "attribute": "tone",
-              "default": "default",
-              "reflects": true
+                "text": "'primary'"
+              }
             },
             {
               "kind": "field",

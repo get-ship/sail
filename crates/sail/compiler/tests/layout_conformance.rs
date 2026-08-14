@@ -11,6 +11,15 @@ fn preprocess(src: &str) -> String {
     sail_compiler::parse::preprocess::preprocess(src).expect("preprocess")
 }
 
+fn preprocess_with_hosts(src: &str) -> (String, sail_layout::StyleHosts) {
+    sail_compiler::parse::preprocess::preprocess_with_style(src).expect("preprocess")
+}
+
+fn apply_hosts(elements: &mut [sail_layout::html::Element], hosts: &sail_layout::StyleHosts) {
+    sail_layout::apply_resolved_types(elements, &hosts.types);
+    sail_layout::apply_resolved_boxes(elements, &hosts.boxes);
+}
+
 fn split_html_css(preprocessed: &str) -> (&str, &str) {
     let Some(start) = preprocessed.find("<style>") else {
         return (preprocessed, "");
@@ -106,7 +115,22 @@ fn resolve_element_with_class(
     class: &str,
     viewport_width: f32,
 ) -> sail_layout::ResolvedStyle {
-    let elements = sail_layout::html::parse_source(preprocessed);
+    resolve_element_with_class_hosts(
+        preprocessed,
+        &sail_layout::StyleHosts::default(),
+        class,
+        viewport_width,
+    )
+}
+
+fn resolve_element_with_class_hosts(
+    preprocessed: &str,
+    hosts: &sail_layout::StyleHosts,
+    class: &str,
+    viewport_width: f32,
+) -> sail_layout::ResolvedStyle {
+    let mut elements = sail_layout::html::parse_source(preprocessed);
+    apply_hosts(&mut elements, hosts);
     let idx = elements
         .iter()
         .position(|e| e.class.split_whitespace().any(|c| c == class))
@@ -271,16 +295,16 @@ fn flex_child_gets_min_width_zero() {
 
 #[test]
 fn sx_width_full_matches_css() {
-    let src = r#"<div style({ box: w(full) })> x</div>"#;
-    let preprocessed = preprocess(src);
+    let src = r#"<div style({ size({ w: full }) })> x</div>"#;
+    let (preprocessed, hosts) = preprocess_with_hosts(src);
     let (_, css) = split_html_css(&preprocessed);
     let rules = parse_css(css);
-    // Style emit mints atomic class names from paint ops (not fixed s-wfull).
+    // Style emit mints atomic class names from size() (not retired s-wfull).
     let class = extract_first_sx_class(&preprocessed).expect("sx class present");
     let rule = rule_for_class(&rules, &class).expect("width rule present");
     assert_eq!(rule["width"], "100%");
 
-    let style = resolve_element_with_class(&preprocessed, &class, 1440.0);
+    let style = resolve_element_with_class_hosts(&preprocessed, &hosts, &class, 1440.0);
     use sail_layout::taffy::prelude::*;
     assert_eq!(style.style.size.width, Dimension::percent(1.0));
 }
@@ -302,30 +326,24 @@ fn grow_box_channel_maps_to_taffy_flex_grow() {
     );
 }
 
-/// Product `style({ box: minW(0) })` → `s-minW0` (camelCase, not `s-minw0`).
+/// Product `style({ size({ min-w: 0 }) })` measures min-width from Style IR.
 #[test]
 fn min_w_box_channel_maps_to_taffy_min_width() {
-    let src = r#"<div style({ box: minW(0) })> x</div>"#;
-    let preprocessed = preprocess(src);
-    assert!(
-        preprocessed.contains("s-minW0"),
-        "product minW class missing: {preprocessed}"
-    );
-    let style = resolve_element_with_class(&preprocessed, "s-minW0", 1440.0);
+    let src = r#"<div style({ size({ min-w: 0 }) })> x</div>"#;
+    let (preprocessed, hosts) = preprocess_with_hosts(src);
+    let class = extract_first_sx_class(&preprocessed).expect("sx class present");
+    let style = resolve_element_with_class_hosts(&preprocessed, &hosts, &class, 1440.0);
     use sail_layout::taffy::prelude::*;
     assert_eq!(style.style.min_size.width, Dimension::length(0.0));
 }
 
-/// Product `style({ box: pad(4) })` → `s-pad4` (not residual `s-p4`).
+/// Product `style({ pad(4) })` measures padding from Style IR, not class scrape.
 #[test]
 fn style_pad_maps_to_taffy_padding() {
-    let src = r#"<div style({ box: pad(4) })> x</div>"#;
-    let preprocessed = preprocess(src);
-    assert!(
-        preprocessed.contains("s-pad4"),
-        "product pad class missing: {preprocessed}"
-    );
-    let style = resolve_element_with_class(&preprocessed, "s-pad4", 1440.0);
+    let src = r#"<div style({ pad(4) })> x</div>"#;
+    let (preprocessed, hosts) = preprocess_with_hosts(src);
+    let class = extract_first_sx_class(&preprocessed).expect("sx class present");
+    let style = resolve_element_with_class_hosts(&preprocessed, &hosts, &class, 1440.0);
     use sail_layout::taffy::prelude::*;
     assert_eq!(style.style.padding.top, LengthPercentage::length(16.0));
     assert_eq!(style.style.padding.left, LengthPercentage::length(16.0));
@@ -390,7 +408,7 @@ fn check_all_emits_layout_warning_with_original_span() {
     // Collapsed parent + sized child: the zero-main-axis contract (an empty
     // child set totaling 0 is suppressed as analyzer noise by the layout
     // crate's gate — see check::layout tests).
-    let src = "\n\n<column>\n  style({ box: h(0) })\n  <div>\n    style({ box: h(20) })\n    x\n  </div>\n</column>";
+    let src = "\n\n<column style({ size({ h: 0 }) })>\n  <div style({ size({ h: 20 }) })>\n    x\n  </div>\n</column>";
     let diags = sail_compiler::check_all(src, None, &[], None);
     let layout = diags
         .iter()

@@ -23,9 +23,7 @@ fn corpus_canary_unintended_overflow_writes_json_and_is_deterministic() {
     for rel in [
         "apps/sail-site/routes",
         "apps/sail-site/src",
-        "apps/studio/src",
         "packages/components",
-        "packages/deck/docs",
     ] {
         assert!(
             root.join(rel).is_dir(),

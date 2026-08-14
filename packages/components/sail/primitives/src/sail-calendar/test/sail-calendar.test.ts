@@ -129,7 +129,7 @@ describe('<sail-calendar> — view switching + navigation (#2/#3)', () => {
     const { v } = mountWith(EV)
     live.push(v)
     let evt: CustomEvent | null = null
-    v.el.addEventListener('sail-view-change', (e) => { evt = e as CustomEvent })
+    v.el.addEventListener('sail-view-change', (e: Event) => { evt = e as CustomEvent })
     await v.flush()
     clickShadow(v.el, '[data-view="week"]')
     await v.flush()
@@ -143,7 +143,7 @@ describe('<sail-calendar> — view switching + navigation (#2/#3)', () => {
     const { v } = mountWith(EV)
     live.push(v)
     let evt: CustomEvent | null = null
-    v.el.addEventListener('sail-date-change', (e) => { evt = e as CustomEvent })
+    v.el.addEventListener('sail-date-change', (e: Event) => { evt = e as CustomEvent })
     await v.flush()
     clickShadow(v.el, '[data-nav="next"]')
     await v.flush()
@@ -184,8 +184,8 @@ describe('<sail-calendar> — event selection (#8)', () => {
     live.push(v)
     let selectEvt: CustomEvent | null = null
     let clickEvt: CustomEvent | null = null
-    v.el.addEventListener('sail-event-select', (e) => { selectEvt = e as CustomEvent })
-    v.el.addEventListener('sail-event-click', (e) => { clickEvt = e as CustomEvent })
+    v.el.addEventListener('sail-event-select', (e: Event) => { selectEvt = e as CustomEvent })
+    v.el.addEventListener('sail-event-click', (e: Event) => { clickEvt = e as CustomEvent })
     await v.flush()
     clickShadow(v.el, '[data-event-id="a"]')
     await v.flush()
@@ -262,7 +262,7 @@ describe('<sail-calendar> — month grid keyboard operability (a11y #259)', () =
     const { v } = mountWith(EV)
     live.push(v)
     let date: string | null = null
-    v.el.addEventListener('sail-date-change', (e) => {
+    v.el.addEventListener('sail-date-change', (e: Event) => {
       date = (e as CustomEvent).detail.date
     })
     await v.flush()

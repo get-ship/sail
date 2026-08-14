@@ -93,6 +93,12 @@ fn synth_into(repo: &Path, manifest: &AppManifest, gendir: &Path, s: &Surface) {
             specifier: a.to_string(),
         })
     } else if let Some(body) = inline_controller {
+        // Materialized next to generated emit — retarget the conformance
+        // app-relative client import so tsc can resolve it from this dir.
+        let body = body.replace(
+            "../../src/compositions/demo-clients",
+            "@app/src/compositions/demo-clients",
+        );
         fs::write(dir.join("controller.ts"), body).unwrap();
         Some(AuthoredController {
             specifier: "./controller.ts".to_string(),

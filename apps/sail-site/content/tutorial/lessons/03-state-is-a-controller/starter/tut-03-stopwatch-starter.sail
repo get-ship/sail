@@ -5,6 +5,11 @@
   The template binds only what that controller function returns.
 -->
 
+<scope>
+  style face = { pad(6).bg(surface-1).border({ color: border, width: 1 }).radius(lg) }
+  style clockFace = { type({ size: 4xl, tracking: tight }) }
+</scope>
+
 <controller>
 // The controller owns ALL state. The template can bind only what this
 // function returns — nothing else exists on the other side of the boundary.
@@ -42,11 +47,6 @@ export default controller(() => {
   }
 })
 </controller>
-
-<scope>
-  style face = { pad(6).bg(surface-1).border({ color: border, width: 1 }).radius(lg) }
-  style clockFace = { type({ size: 4xl, tracking: tight }) }
-</scope>
 
 <column gap="4">
   <center style(face)>

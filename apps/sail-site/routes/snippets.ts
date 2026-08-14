@@ -6,6 +6,15 @@
 import { signal, filteredList } from '@ship/sail-runtime'
 export const code = {
   team: `<controller>
+  const ada = { id: 'ada', name: 'Ada Lovelace', team: 'Math', status: 'active' }
+  const grace = { id: 'grace', name: 'Grace Hopper', team: 'Navy', status: 'active' }
+  const alan = { id: 'alan', name: 'Alan Turing', team: 'Bletchley', status: 'away' }
+  const next = (l: { id: string; name: string; team: string; status: string }[]) => ({
+    id: \`p\${l.length}\`,
+    name: 'New hire',
+    team: 'Team',
+    status: 'active',
+  })
   const people = signal([ada, grace, alan])
   const { query, filtered } = filteredList(() => people())
   const invite = () => people.set((l) => [...l, next(l)])

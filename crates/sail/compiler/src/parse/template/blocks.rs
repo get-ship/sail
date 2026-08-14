@@ -140,10 +140,8 @@ fn strip_else_if(head: &str) -> Option<&str> {
     let h = head.trim();
     let rest = if let Some(r) = h.strip_prefix("else-if") {
         r
-    } else if let Some(r) = h.strip_prefix("else if") {
-        r
     } else {
-        return None;
+        h.strip_prefix("else if")?
     };
     let rest = rest.trim();
     if rest.starts_with('{') && rest.ends_with('}') && rest.len() >= 2 {

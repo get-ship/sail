@@ -87,15 +87,6 @@
       "expires": { "never": true }
     },
     {
-      "id": "token-description-alias-prose",
-      "kind": "keep",
-      "verdict": "KEEP",
-      "reason": "Token description English (`alias foreground`), not a dual CSS name.",
-      "paths": ["packages/sail/tokens/model/components/avatar.json"],
-      "markers": ["alias for"],
-      "expires": { "never": true }
-    },
-    {
       "id": "import-rewrite-alias-prose",
       "kind": "keep",
       "verdict": "KEEP",

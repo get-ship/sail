@@ -10,7 +10,18 @@ const RULE_ID: &str = "sail-template-attr";
 pub fn compile_attrs(el: &html::Element, loc_prefix: &str) -> Result<Vec<AttrInstr>, CompileError> {
     let mut out = Vec::new();
     let is_slot = el.tag.eq_ignore_ascii_case("slot");
+    let is_partial = el.tag.eq_ignore_ascii_case("partial");
     for a in &el.attributes {
+        // SPEC-PARTIAL-1: `<partial name props: Type>` is a declaration, not a
+        // template directive. parse_author keeps the tag; accept the type slot.
+        if is_partial && (a.name == "props" || a.name == "props:") {
+            out.push(AttrInstr::Static {
+                name: "props".into(),
+                value: a.value.clone(),
+                span: a.value_span,
+            });
+            continue;
+        }
         out.push(compile_attr(
             &a.name,
             &a.value,
@@ -914,16 +925,15 @@ fn assign_timing(
             }
             _ => {}
         },
-        "easing" => match &val {
-            MotionValue::Num(_) => {
+        "easing" => {
+            if let MotionValue::Num(_) = &val {
                 return Err(err(
                     "`easing` is a keyword (`'in-out'`, `'linear'`) or an inline bezier \
-                     (`[0.6, 0, 0.2, 1]`), not a number"
+                 (`[0.6, 0, 0.2, 1]`), not a number"
                         .into(),
                 ));
             }
-            _ => {}
-        },
+        }
         _ => {}
     }
     let slot = match key {
@@ -1357,7 +1367,7 @@ mod tests {
         // Tag-position object Style with when: lowers to classes before author
         // HTML parse — scale tokens must survive product Style parse.
         let src = r#"
-            <h1 style({ box: padX(2_5), paint: fg(sidebar-foreground), text: fontSize(2xl), when: { hover: { paint: fg(foreground) } } })>              T
+            <h1 style({ pad({ x: 2_5 }).fg(sidebar-foreground).type({ size: 2xl }), when: { hover: fg(foreground) } })>              T
             </h1>
         "#;
         let pre = crate::parse::preprocess::preprocess(src).expect("preprocess tag Style");

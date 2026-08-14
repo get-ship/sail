@@ -34,6 +34,18 @@ fn reports_floor_error(src: &str, rule: &str, overrides: &[LintOverride]) -> boo
         .any(|d| d.severity == DiagSeverity::Error && d.rule.as_deref() == Some(rule))
 }
 
+/// `style="…"` is refused by floor `sail-style` (residual) and/or
+/// `sail-no-inline-style`. Harvest may surface the former first.
+fn reports_style_eq_floor(src: &str, overrides: &[LintOverride]) -> bool {
+    check_all(src, None, overrides, None).iter().any(|d| {
+        d.severity == DiagSeverity::Error
+            && matches!(
+                d.rule.as_deref(),
+                Some("sail-no-inline-style") | Some("sail-style")
+            )
+    })
+}
+
 // ---------------------------------------------------------------------------
 // 1. The floor bites with ZERO host wiring (`lint_overrides: Vec::new()`).
 // ---------------------------------------------------------------------------
@@ -61,8 +73,8 @@ fn inline_style_refuses_with_empty_overrides() {
         "inline style= must refuse the build with no host overrides"
     );
     assert!(
-        reports_floor_error(src, "sail-no-inline-style", &[]),
-        "sail-no-inline-style must be an Error with empty overrides"
+        reports_style_eq_floor(src, &[]),
+        "style= must be a floor Error (sail-no-inline-style or sail-style)"
     );
 }
 
@@ -115,8 +127,13 @@ fn no_override_can_soften_a_floor_rule() {
                 rule: rule.to_string(),
                 severity: sev,
             }];
+            let still_floor = if *rule == "sail-no-inline-style" {
+                reports_style_eq_floor(src, &overrides)
+            } else {
+                reports_floor_error(src, rule, &overrides)
+            };
             assert!(
-                reports_floor_error(src, rule, &overrides),
+                still_floor,
                 "override {sev:?} on floor rule {rule} must not drop/downgrade its Error"
             );
         }

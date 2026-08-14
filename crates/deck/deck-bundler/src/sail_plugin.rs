@@ -632,19 +632,16 @@ export default controller(() => {
         assert_ambient(&body, &["controller", "signal", "derived"]);
     }
 
-    /// Peer rail CE — bare signal/derived/mount/effect under sail-site src/.
+    /// Peer rail CE — bare signal/derived/effect under sail-site src/.
     #[test]
-    fn sail_site_ai_rail_virtual_controller_gets_ambient() {
-        let path = repo_root().join("apps/sail-site/src/sail-ai-rail/sail-ai-rail.sail");
+    fn sail_site_docs_rail_virtual_controller_gets_ambient() {
+        let path = repo_root().join("apps/sail-site/src/sail-docs-rail/sail-docs-rail.sail");
         let source = std::fs::read_to_string(&path)
             .unwrap_or_else(|e| panic!("read {}: {e}", path.display()));
         let body = materialize_virtual_controller(&source)
-            .expect("materialize sail-ai-rail")
-            .expect("sail-ai-rail has <controller>");
-        assert_ambient(
-            &body,
-            &["controller", "signal", "derived", "mount", "effect"],
-        );
+            .expect("materialize sail-docs-rail")
+            .expect("sail-docs-rail has <controller>");
+        assert_ambient(&body, &["controller", "signal", "derived", "effect"]);
     }
 
     /// GROUPED-DIRECTORY component: stem differs from parent dir but has a hyphen.

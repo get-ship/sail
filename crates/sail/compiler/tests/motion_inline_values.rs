@@ -336,7 +336,7 @@ fn a_signal_valued_magnitude_emits_a_reactive_thunk() {
 import { controller, signal } from '@ship/sail-runtime'
 export default controller(() => { const dist = signal(120); return { dist } })
 </controller>
-<card style({ animate: loop({ translate-x: { to: dist() }) } })> x</card>"#);
+<card style({ animate: loop({ translate-x: { to: dist() } }) })> x</card>"#);
     assert!(
         js.contains("() => ({"),
         "expected a reactive config thunk:\n{js}"

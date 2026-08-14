@@ -282,17 +282,12 @@ fn resolve_severity(
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 enum ContainerKind {
+    #[default]
     None,
     Row,
     Column,
-}
-
-impl Default for ContainerKind {
-    fn default() -> Self {
-        ContainerKind::None
-    }
 }
 
 fn container_kind(style: &sail_layout::taffy::style::Style) -> ContainerKind {
@@ -379,7 +374,7 @@ fn find_mode(gaps: &[f32]) -> Option<(f32, usize)> {
             .iter()
             .filter(|h| (g - *h).abs() <= GAP_EPSILON)
             .count();
-        if best.map_or(true, |(_, c)| count > c) {
+        if best.is_none_or(|(_, c)| count > c) {
             best = Some((*g, count));
         }
         // Don't let very close duplicate centres both win; advance past this
@@ -388,9 +383,7 @@ fn find_mode(gaps: &[f32]) -> Option<(f32, usize)> {
             continue;
         }
     }
-    let Some((mode_px, count)) = best else {
-        return None;
-    };
+    let (mode_px, count) = best?;
     if (count as f64) < (gaps.len() as f64) * MODE_THRESHOLD {
         return None;
     }
@@ -475,15 +468,43 @@ fn spacing_from_sx_expr(sx_raw: &str, setter: &str) -> Option<SpacingValue> {
     if expr.is_empty() {
         return None;
     }
-    let (style, _diags) = sail_lint::style::parse(expr);
+    let wrapped = if expr.starts_with("style(") {
+        expr.to_string()
+    } else {
+        format!("style({{ {expr} }})")
+    };
+    let (style, _diags) = sail_lint::style::parse(&wrapped);
     let mut ops = Vec::new();
     collect_paint_ops(&style, &mut ops);
     for op in ops.into_iter().rev() {
         if op.setter == setter {
             return paint_arg_to_spacing(op.first_arg());
         }
+        // v3 concern form: margin({ b: 4 }) is the retired `mb(4)` slot.
+        if let Some((concern, slot)) = retired_spacing_slot(setter) {
+            if op.setter == concern {
+                if let sail_lint::style::PaintArg::Slots(slots) = op.first_arg() {
+                    if let Some(arg) = slots.get(slot) {
+                        return paint_arg_to_spacing(arg);
+                    }
+                }
+            }
+        }
     }
     None
+}
+
+fn retired_spacing_slot(setter: &str) -> Option<(&'static str, &'static str)> {
+    match setter {
+        "mb" => Some(("margin", "b")),
+        "mt" => Some(("margin", "t")),
+        "ml" | "ms" => Some(("margin", "s")),
+        "mr" | "me" => Some(("margin", "e")),
+        "mx" => Some(("margin", "x")),
+        "my" => Some(("margin", "y")),
+        "gap" => Some(("pad", "gap")),
+        _ => None,
+    }
 }
 
 fn strip_sx_braces(raw: &str) -> &str {
@@ -1252,11 +1273,7 @@ fn collect_contrast(
         }
         let (line, col, end_line, end_col) = span_to_coords(source, span);
         if let Some(next_fg) = nearest_passing_fg(&bg_t, &fg_t) {
-            let sev = match severity {
-                DiagSeverity::Error => DiagSeverity::Error,
-                DiagSeverity::Warning => DiagSeverity::Warning,
-                DiagSeverity::Fix => DiagSeverity::Fix,
-            };
+            let sev = severity;
             out.push(Diagnostic {
                 line,
                 col,
@@ -1386,11 +1403,7 @@ fn collect_off_scale_from_source(source: &str, severity: DiagSeverity) -> Vec<Di
                 continue;
             }
             let (line, col, end_line, end_col) = span_to_coords(source, span);
-            let sev = match severity {
-                DiagSeverity::Error => DiagSeverity::Error,
-                DiagSeverity::Warning => DiagSeverity::Warning,
-                DiagSeverity::Fix => DiagSeverity::Fix,
-            };
+            let sev = severity;
             let setter = op.setter.as_str();
             out.push(Diagnostic {
                 line,
@@ -1534,4 +1547,18 @@ fn collect_alignment(
         break;
     }
     out
+}
+
+#[cfg(test)]
+mod spacing_slot_tests {
+    use super::*;
+
+    #[test]
+    fn margin_b_slot_is_mb() {
+        let v = spacing_from_sx_expr("margin({ b: 4 })", "mb");
+        assert!(
+            matches!(v, Some(SpacingValue::ScaleToken(ref t)) if t == "4"),
+            "expected mb slot from margin({{ b: 4 }}), got {v:?}"
+        );
+    }
 }

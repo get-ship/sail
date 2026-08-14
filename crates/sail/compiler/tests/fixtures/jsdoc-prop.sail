@@ -1,7 +1,7 @@
 <scope>
   props: {
     /** Picks the active tone */
-    tone: 'primary'
+    tone: 'default' | 'primary' = 'default'
     label = ''
   }
 </scope>

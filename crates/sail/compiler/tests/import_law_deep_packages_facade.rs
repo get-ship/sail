@@ -20,10 +20,10 @@ fn is_deep_package_teaching(msg: &str) -> bool {
         && (lower.contains("@ship") || lower.contains("package export"))
 }
 
-fn deep_package_error(findings: &[Finding]) -> bool {
-    findings.iter().any(|f| {
-        f.severity == Severity::Error && f.rule == RULE_ID && is_deep_package_teaching(&f.message)
-    })
+/// G2b: deep `packages/**` is monorepo hygiene (`tests/hygiene`), not
+/// this product rule. These tests pin that the rule stays out.
+fn no_framework_teaching(findings: &[Finding]) -> bool {
+    !findings.iter().any(|f| f.rule == RULE_ID)
 }
 
 #[test]
@@ -35,8 +35,8 @@ export const n = signal(0)
 "#;
     let findings = lint_app_source_source(&path, source);
     assert!(
-        deep_package_error(&findings),
-        "deep packages/** import in app src must teaching Error; got: {findings:?}"
+        no_framework_teaching(&findings),
+        "G2b: deep packages/** is hygiene, not this rule; got: {findings:?}"
     );
 }
 
@@ -49,8 +49,8 @@ export default controller(() => ({}))
 "#;
     let findings = lint_controller_source(&path, source);
     assert!(
-        deep_package_error(&findings),
-        "deep packages/** import in app controller must teaching Error; got: {findings:?}"
+        !findings.iter().any(|f| f.rule == RULE_ID),
+        "G2b: deep packages/** is hygiene, not framework-import teaching; got: {findings:?}"
     );
 }
 
@@ -63,8 +63,8 @@ export type T = Signal<number>
 "#;
     let findings = lint_app_source_source(&path, source);
     assert!(
-        deep_package_error(&findings),
-        "type-only deep packages still dual path; got: {findings:?}"
+        no_framework_teaching(&findings),
+        "G2b: type-only deep packages is hygiene, not this rule; got: {findings:?}"
     );
 }
 
@@ -76,8 +76,8 @@ export * from '../../../../../packages/sail/runtime/src/index.ts'
 "#;
     let findings = lint_app_source_source(&path, source);
     assert!(
-        deep_package_error(&findings),
-        "nested vendor path must still Error; got: {findings:?}"
+        no_framework_teaching(&findings),
+        "G2b: nested vendor deep packages is hygiene, not this rule; got: {findings:?}"
     );
 }
 
@@ -89,8 +89,8 @@ export { signal } from '../../../../packages/sail/runtime/src/index.ts'
 "#;
     let findings = lint_app_source_source(&path, source);
     assert!(
-        deep_package_error(&findings),
-        "export {{ x }} from deep packages must Error; got: {findings:?}"
+        no_framework_teaching(&findings),
+        "G2b: export from deep packages is hygiene, not this rule; got: {findings:?}"
     );
 }
 
@@ -103,8 +103,8 @@ export * from '../../../../packages/sail/runtime/src/index.ts'
 "#;
     let findings = lint_app_source_source(&path, source);
     assert!(
-        deep_package_error(&findings),
-        "apps/*/src/vendor/** is not exempt (G2b); got: {findings:?}"
+        no_framework_teaching(&findings),
+        "G2b: vendor facade deep packages is hygiene, not this rule; got: {findings:?}"
     );
 }
 

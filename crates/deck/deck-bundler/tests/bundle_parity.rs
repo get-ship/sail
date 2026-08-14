@@ -112,7 +112,7 @@ use std::time::Duration;
 use deck_bundler::rolldown_bundle::bundle_target;
 use deck_bundler::targets::BundleLayout;
 use deck_config::DeckConfig;
-use sail_compiler::{compile, CompileMode, CompileOpts, ComponentMeta};
+use sail_compiler::{CompileMode, CompileOpts, ComponentMeta, compile};
 use serde_json::json;
 
 // ── Safety constants (the founder OOM'd this box twice; a runaway here is

@@ -102,7 +102,7 @@ fn type_gate_errors(rel: &str) -> Vec<sail_compiler::Diagnostic> {
 }
 
 /// HostBag leftovers: canvas assignability, host callbacks, DomEv-as-value.
-/// `fetch` under Pure on annotation-layer stays red on purpose.
+/// Annotation-layer HTTP lives in internals (not Pure `fetch`).
 #[test]
 fn hostbag_region_leftovers() {
     let media =
@@ -138,8 +138,11 @@ fn hostbag_region_leftovers() {
         "packages/components/sail/canvas/src/sail-annotation/sail-annotation-layer.sail",
     );
     assert!(
-        layer.iter().any(|d| d.message.contains("fetch")),
-        "annotation-layer fetch-in-Pure must stay red: {layer:?}"
+        !layer.iter().any(|d| d.message.contains("fetch")
+            || d.message.contains("onStaged")
+            || d.message.contains("onSent")
+            || d.message.contains("onError")),
+        "annotation-layer must typecheck: HTTP outside Pure, host callbacks on HostBag: {layer:?}"
     );
 }
 

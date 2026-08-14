@@ -26,15 +26,14 @@ export default controller(() => {
 </controller>
 
 <scope>
-  style page = { box: pad(6).maxW(breakpoint-tablet).mx(auto) }
-  style title = { paint: fg(foreground), text: fontSize(2xl).fontWeight(bold) }
-  style list = { box: pad(0).m(0), paint: list(none) }
+  style page = { pad(6).size({ max-w: breakpoint-tablet }).margin({ x: auto }) }
+  style title = { fg(foreground).type({ size: 2xl, weight: bold }) }
+  style list = { pad(0).margin(0).type({ list: none }) }
   style row = {
-    box: pad(2),
-    paint: radius(md).borderWidth(1).border(transparent),
-    when: { pressed: { paint: bg(hover-bg).border(warning) } },
+    pad(2).radius(md).border({ color: transparent, width: 1 }),
+    when: { pressed: bg(hover-bg).border({ color: warning }) },
   }
-  style empty = { paint: fg(muted-foreground), text: fontSize(sm).italic(true) }
+  style empty = { fg(muted-foreground).type({ size: sm, italic: true }) }
 </scope>
 
 <column gap="3" style(page)>

@@ -394,7 +394,7 @@ pub fn validate_op(op: &PaintOp) -> Result<(), StyleDiagnostic> {
                     source: op.source.clone(),
                 });
             }
-            if spec.keywords.iter().any(|k| *k == bare) {
+            if spec.keywords.contains(&bare) {
                 return Ok(());
             }
             if let Some(scale) = spec.scale {
@@ -553,7 +553,7 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
     if spec.name == "align" {
         if let PaintArg::Token(t) = arg {
             let bare_t = strip_neg(t).1;
-            if !spec.keywords.iter().any(|k| *k == bare_t) {
+            if !spec.keywords.contains(&bare_t) {
                 return Err(StyleDiagnostic::BadToken {
                     setter: op.setter.clone(),
                     value: bare_t.into(),
@@ -590,7 +590,7 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
     if spec.name == "objectFit" {
         if let PaintArg::Token(t) = arg {
             let bare_t = strip_neg(t).1;
-            if !spec.keywords.iter().any(|k| *k == bare_t) {
+            if !spec.keywords.contains(&bare_t) {
                 return Err(StyleDiagnostic::BadToken {
                     setter: op.setter.clone(),
                     value: bare_t.into(),
@@ -717,7 +717,7 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
                 return Ok(pairs);
             }
             let css_val = bare_t.replace('-', " ");
-            return Ok(vec![("transform-origin".into(), css_val.into())]);
+            return Ok(vec![("transform-origin".into(), css_val)]);
         }
     }
     // text-gradient-* composite
@@ -842,7 +842,7 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
     ) {
         if let PaintArg::Token(t) = arg {
             let bare_t = strip_neg(t).1;
-            if !spec.keywords.iter().any(|k| *k == bare_t) {
+            if !spec.keywords.contains(&bare_t) {
                 return Err(StyleDiagnostic::BadToken {
                     setter: op.setter.clone(),
                     value: bare_t.into(),
@@ -1733,7 +1733,7 @@ fn validate_color_deepen_args(_spec: &PlainSpec, op: &PaintOp) -> Result<(), Sty
             }
             let ok = bare
                 .parse::<i32>()
-                .map_or(false, |n| n >= 5 && n <= 95 && n % 5 == 0);
+                .is_ok_and(|n| (5..=95).contains(&n) && n % 5 == 0);
             if !ok {
                 return Err(StyleDiagnostic::BadToken {
                     setter: op.setter.clone(),

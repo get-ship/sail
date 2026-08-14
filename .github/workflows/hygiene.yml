@@ -39,7 +39,7 @@ jobs:
   type-gate:
     name: type-gate suites
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
 
@@ -62,6 +62,12 @@ jobs:
       - name: Install JS deps
         run: bun install --frozen-lockfile || bun install
 
+      - name: Clippy
+        run: cargo clippy -p sail-compiler -p sail-lint -p sail-layout -p sail-lsp -p sail-mcp -p deck-cli -- -D warnings
+
+      - name: Cargo test (default-members)
+        run: cargo test
+
       - name: Type-gate suites
         run: |
           cargo test -p sail-compiler --test type_gate_e1 --test type_env_per_kind \
@@ -76,3 +82,6 @@ jobs:
 
       - name: Sail typecheck
         run: bun run typecheck:sail
+
+      - name: Component pack typecheck
+        run: bun run typecheck

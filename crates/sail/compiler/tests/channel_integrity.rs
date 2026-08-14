@@ -140,8 +140,15 @@ fn no_emitted_var_is_undeclared() {
             "tt-arrow-right",
             "tt-arrow-ml",
             "tt-arrow-mt",
-            // use:anchor width measurement (paired with anchor-left/top in CONVENTION)
+            // use:anchor geometry (paired with --anchor-width)
+            "anchor-left",
+            "anchor-top",
             "anchor-width",
+            // use:anchor / popover offset measurement
+            "offset",
+            // Host-reflected Tone bind: bg(tone) / fg(tone.foreground)
+            "tone",
+            "tone-foreground",
         ])
         .collect();
 

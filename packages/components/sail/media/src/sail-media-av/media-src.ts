@@ -1,5 +1,6 @@
 /** Pure source helpers for sail-media-av (url mint, content-type sniff, bytes). */
 
+import { objectUrlFromBytes } from '@ship/sail-runtime'
 import type { ViewerSource } from '../engine/types'
 
 export type MediaSrc = ViewerSource | string | null

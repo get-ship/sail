@@ -13,8 +13,8 @@ export default Object.assign(component((ctx) => {
     $scope[__k] = ctx[__k];
   }
   if (providers && typeof providers === "object") Object.assign($scope, providers);
-const __wireBoundary_b0 = (anchor) => bindFor({
-  anchor,
+const __wireBoundary_b0 = (cfAnchor) => bindFor({
+  anchor: cfAnchor,
   items: () => ($scope.rows()),
   key: (row, __i) => (row.id),
   render: (row, __i) => {

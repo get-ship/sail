@@ -107,15 +107,15 @@ pub const SCOPE_GRAMMAR: &[ScopeEntry] = &[
     },
     ScopeEntry {
         form: "Style declaration",
-        syntax: "style filled = { paint: bg(primary), box: padX(2) }",
+        syntax: "style filled = { bg(primary).pad({ x: 2 }) }",
         summary: "first-class compile-time Style (object / compose / call form); attach with tag-position style(name) on the host",
-        example: "<scope>\n  style filled = { paint: bg(primary), box: padX(2) }\n  props: { label = '' }\n</scope>\n<span style(filled)>\n  {label}\n</span>",
+        example: "<scope>\n  style filled = { bg(primary).pad({ x: 2 }) }\n  props: { label = '' }\n</scope>\n<span style(filled)>\n  {label}\n</span>",
     },
     ScopeEntry {
         form: "Style const (legacy dual path)",
-        syntax: "const filled = style({ paint: bg(primary), box: padX(2) })",
-        summary: "legacy Style binding — still accepted this cycle; prefer `style name = {…}`",
-        example: "<scope>\n  const filled = style({ paint: bg(primary), box: padX(2) })\n  props: { label = '' }\n</scope>\n<span style(filled)>\n  {label}\n</span>",
+        syntax: "const filled = style({ bg(primary).pad({ x: 2 }) })",
+        summary: "const Style binding — prefer `style name = {…}`",
+        example: "<scope>\n  const filled = style({ bg(primary).pad({ x: 2 }) })\n  props: { label = '' }\n</scope>\n<span style(filled)>\n  {label}\n</span>",
     },
     ScopeEntry {
         form: "Identity type annotation",

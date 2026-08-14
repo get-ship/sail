@@ -18,10 +18,10 @@
 //! to `runAction` at the use site); an inline `<controller>` block is an
 //! L2-component facility and is REJECTED here (see `compile_element`).
 
+use crate::CompileError;
 use crate::diagnostics::Span;
 use crate::ir::*;
-use crate::CompileError;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
 const RULE_ID: &str = "sail-element-mode";
 /// Spans on `Program`/`Instr` are byte offsets into the PREPROCESSED source

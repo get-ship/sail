@@ -400,7 +400,7 @@ fn find_substr_from(open: &OpenTag, name: &str) -> Option<usize> {
         // attrs_raw is not absolute — recover by finding open tag text.
         // We don't have source here; name_span is best-effort for errors.
         // Use open.start + offset of name inside reconstructed open.
-        let tag_head = format!("<partial");
+        let tag_head = "<partial".to_string();
         let _ = tag_head;
         // Caller only uses this for diagnostics; point at open tag if unsure.
         Some(open.start + 1 + "partial".len() + 1 + rel)
@@ -751,7 +751,7 @@ fn harvest_type_aliases(body: &str, out: &mut HashMap<String, Vec<TypeField>>) {
 fn parse_object_type_fields(inner: &str) -> Vec<TypeField> {
     let mut fields = Vec::new();
     // Split on `;` and newlines, crude but good enough for plain object types.
-    for part in inner.split(|c| c == ';' || c == '\n') {
+    for part in inner.split([';', '\n']) {
         let part = part.trim();
         if part.is_empty() || part.starts_with("//") || part.starts_with('*') {
             continue;

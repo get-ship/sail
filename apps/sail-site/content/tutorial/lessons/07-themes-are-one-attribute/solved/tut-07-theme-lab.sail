@@ -7,6 +7,14 @@
   a theme without applying it.
 -->
 
+<scope>
+  style muted = { fg(muted-foreground) }
+  style preview = { pad(4).radius(lg).border({ color: border, width: 1 }).bg(background).fg(foreground) }
+  style title = { type({ size: sm }) }
+  style body = { fg(muted-foreground).type({ size: sm }) }
+  type PinnedPreviewProps = { pin: string }
+</scope>
+
 <controller>
 import { type Theme, type ThemeId, THEMES } from '@/compositions/theme-catalog'
 
@@ -27,14 +35,6 @@ export default controller(() => {
     }
   })
 </controller>
-
-<scope>
-  style muted = { fg(muted-foreground) }
-  style preview = { pad(4).radius(lg).border({ color: border, width: 1 }).bg(background).fg(foreground) }
-  style title = { type({ size: sm }) }
-  style body = { fg(muted-foreground).type({ size: sm }) }
-  type PinnedPreviewProps = { pin: string }
-</scope>
 
 <partial pinned-preview props: PinnedPreviewProps>
   <column theme={pin} gap="2" style(preview)>

@@ -939,42 +939,39 @@ impl super::TemplateEmitter {
             classes.push("sail-root".into());
         }
         for a in &el.attrs {
-            match a {
-                AttrInstr::Static { name, value, .. } => {
-                    if name.eq_ignore_ascii_case("class") {
-                        classes.push(value.clone());
+            // Everything else is applied at runtime after the clone.
+            if let AttrInstr::Static { name, value, .. } = a {
+                if name.eq_ignore_ascii_case("class") {
+                    classes.push(value.clone());
+                } else {
+                    let emit_name = crate::semantic_props::lower_attr_name_str_valued(
+                        &el.tag,
+                        name,
+                        Some(value),
+                    );
+                    let emit_value = if crate::semantic_props::is_aria_bool_attr(emit_name) {
+                        crate::semantic_props::coerce_aria_bool_static(value)
                     } else {
-                        let emit_name = crate::semantic_props::lower_attr_name_str_valued(
-                            &el.tag,
-                            name,
-                            Some(value),
-                        );
-                        let emit_value = if crate::semantic_props::is_aria_bool_attr(emit_name) {
+                        value.as_str()
+                    };
+                    out.push(' ');
+                    out.push_str(emit_name);
+                    out.push_str("=\"");
+                    out.push_str(&escape_attr(emit_value));
+                    out.push('"');
+                    if let Some(extra) = crate::semantic_props::dual_stamp_aria(&el.tag, name) {
+                        let extra_val = if crate::semantic_props::is_aria_bool_attr(extra) {
                             crate::semantic_props::coerce_aria_bool_static(value)
                         } else {
-                            value.as_str()
+                            emit_value
                         };
                         out.push(' ');
-                        out.push_str(emit_name);
+                        out.push_str(extra);
                         out.push_str("=\"");
-                        out.push_str(&escape_attr(emit_value));
+                        out.push_str(&escape_attr(extra_val));
                         out.push('"');
-                        if let Some(extra) = crate::semantic_props::dual_stamp_aria(&el.tag, name) {
-                            let extra_val = if crate::semantic_props::is_aria_bool_attr(extra) {
-                                crate::semantic_props::coerce_aria_bool_static(value)
-                            } else {
-                                emit_value
-                            };
-                            out.push(' ');
-                            out.push_str(extra);
-                            out.push_str("=\"");
-                            out.push_str(&escape_attr(extra_val));
-                            out.push('"');
-                        }
                     }
                 }
-                // Everything else is applied at runtime after the clone.
-                _ => {}
             }
         }
         if !classes.is_empty() {

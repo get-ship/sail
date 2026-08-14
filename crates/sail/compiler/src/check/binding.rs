@@ -528,7 +528,7 @@ fn find_group_path_sites(source: &str) -> Vec<GroupPathSite> {
             if sail_lint::token_groups::static_token_group(root).is_some() {
                 continue;
             }
-            if sail_lint::tokens::color_values().iter().any(|c| *c == root) {
+            if sail_lint::tokens::color_values().contains(&root) {
                 continue;
             }
             // Member segment?

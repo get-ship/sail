@@ -11,8 +11,8 @@ export default controller(() => {
 </controller>
 
 <scope>
-  style host = { box: pad(1), paint: radius(full).bg(surface-2).fg(foreground) }
-  style mono = { box: display(contents), text: fontSize(sm).fontFamily(mono) }
+  style host = { pad(1).radius(full).bg(surface-2).fg(foreground) }
+  style mono = { display(contents).type({ size: sm, family: mono }) }
 </scope>
 
 <row gap="1" align="center" justify="center" style(host)>

@@ -444,9 +444,9 @@ pub fn diagnostics_with_session(
                 severity: sev.into(),
                 message: d.message,
                 source: Some("tsgo".into()),
-                rule: d.code.and_then(|c| match c {
-                    lsp_types::NumberOrString::String(s) => Some(s),
-                    lsp_types::NumberOrString::Number(n) => Some(n.to_string()),
+                rule: d.code.map(|c| match c {
+                    lsp_types::NumberOrString::String(s) => s,
+                    lsp_types::NumberOrString::Number(n) => n.to_string(),
                 }),
             });
         }

@@ -375,8 +375,6 @@ export function component<Bindings>(
       navigate: typeof navigate
       route?: RouteSignals
       internals?: ElementInternals
-      route?: RouteSignals
-      navigate?: (path: string) => void
     } = {
       props: propSignals,
       host,

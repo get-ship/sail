@@ -3,7 +3,8 @@
 //! path-independent — no `views/` substring, no `/components/` exemption.
 //! Fixtures below live OUTSIDE any `views/` tree (a `packages/components/`-
 //! shaped path) specifically to prove the old path heuristic is gone: the
-//! rule must still fire (or be grantable) there.
+//! lint must still fire there. `unconfined` / `network` grant the lint
+//! only — `fetch` stays unnameable under the sail typecheck (no DOM).
 
 use std::fs;
 use std::path::PathBuf;
@@ -61,19 +62,35 @@ fn bare_fetch_refuses_regardless_of_path_with_no_config() {
 }
 
 #[test]
-fn unconfined_true_allows_ambient_authority_regardless_of_path() {
+fn unconfined_true_does_not_name_fetch_in_the_sail_typecheck() {
+    // `unconfined` softens the lint. Controllers still typecheck as Sail
+    // (ESNext + sail ambients, no DOM) — `fetch` is unnameable there.
+    // Network/unconfined drive CSP / lint, not a second TypeEnv.
     let (_tmp, sail) = write_fixture(Some(r#"{"unconfined": true}"#));
     let src = fs::read_to_string(&sail).unwrap();
-    compile(&src, opts_for(&sail)).expect("unconfined: true must grant the whole-hog escape");
+    let err = compile(&src, opts_for(&sail))
+        .expect_err("unconfined must not make fetch nameable in a controller");
+    assert_eq!(err.category.as_deref(), Some("sail-pure-region"));
+    assert!(
+        err.message.contains("fetch"),
+        "refusal must name fetch: {}",
+        err.message
+    );
 }
 
 #[test]
-fn network_origin_grant_allows_only_that_origin() {
-    // The surgical grant: `network` allows a fetch inside the allowlist even
-    // while the controller stays confined for everything else.
+fn network_origin_grant_does_not_name_fetch_in_the_sail_typecheck() {
+    // `network` is CSP / origin allowlist. It is not a controller fetch API.
     let (_tmp, sail) = write_fixture(Some(r#"{"network": ["self"]}"#));
     let src = fs::read_to_string(&sail).unwrap();
-    compile(&src, opts_for(&sail)).expect("network: [\"self\"] must allow a same-origin fetch");
+    let err = compile(&src, opts_for(&sail))
+        .expect_err("network: [\"self\"] must not make fetch nameable in a controller");
+    assert_eq!(err.category.as_deref(), Some("sail-pure-region"));
+    assert!(
+        err.message.contains("fetch"),
+        "refusal must name fetch: {}",
+        err.message
+    );
 }
 
 #[test]

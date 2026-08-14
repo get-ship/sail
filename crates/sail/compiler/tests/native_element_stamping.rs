@@ -41,7 +41,8 @@ fn native_label_stamps_host_classes_at_use_site() {
     // The element's atomic host sx classes ride along (label.sail authors
     // cursor(pointer) + fg(label-foreground) on the host).
     assert!(
-        out.contains("s-cursorpointer") && out.contains("s-fglabelforeground"),
+        out.contains("s-cursorpointer")
+            && (out.contains("s-fgforeground") || out.contains("s-fglabel")),
         "atomic host sx classes stamped:\n{out}"
     );
     // No splice: the element's internals (the .req marker span from

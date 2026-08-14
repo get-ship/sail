@@ -29,26 +29,26 @@ const RULE_CLIPPED_TEXT: &str = "sail-clipped-text";
 
 /// Child taller than fixed column, no overflow opt-in.
 const OVERFLOW_SRC: &str = r#"
-<column style({ box: h(20) })>
-  <div style({ box: h(40).shrink(0) })>x</div>
+<column style({ size({ h: 20 }) })>
+  <div style({ size({ h: 40 }).shrink(0) })>x</div>
 </column>
 "#;
 
-/// Overflow opted in via overflowY(auto).
+/// Overflow opted in via overflow({ y: auto }).
 const OVERFLOW_OPTIN_SRC: &str = r#"
-<column style({ box: h(20).overflowY(auto) })>
-  <div style({ box: h(40).shrink(0) })>x</div>
+<column style({ size({ h: 20 }).overflow({ y: auto }) })>
+  <div style({ size({ h: 40 }).shrink(0) })>x</div>
 </column>
 "#;
 
 /// Narrow + long text without truncate — clipped-text probe.
 const CLIPPED_TEXT_SRC: &str = r#"
-<p style({ box: w(16).overflowX(hidden) })>Supercalifragilisticexpialidocious</p>
+<p style({ size({ w: 16 }).overflow({ x: hidden }) })>Supercalifragilisticexpialidocious</p>
 "#;
 
 /// Truncate opt-in — must not fire clipped-text.
 const TRUNCATE_SRC: &str = r#"
-<p style({ box: w(16), text: truncate() })>Supercalifragilisticexpialidocious</p>
+<p style({ size({ w: 16 }).type({ wrap: truncate }) })>Supercalifragilisticexpialidocious</p>
 "#;
 
 fn write_fixture(config: &str, body: &str) -> (tempfile::TempDir, PathBuf) {
@@ -113,50 +113,38 @@ fn sail_config_layout_experimental_accessors() {
     assert!(!off.layout_text_metrics());
 }
 
-// ── 5. Promoted kinds emit on default; tap stays experimental ────────────────
+// ── 5. Experimental kinds stay gated; tap stays experimental ────────────────
 
 #[test]
-fn default_collect_emits_promoted_overflow() {
+fn default_collect_does_not_emit_experimental_overflow() {
     let diags = layout_diags(OVERFLOW_SRC, None);
-    let hit = diags
-        .iter()
-        .find(|d| d.rule.as_deref() == Some(RULE_UNINTENDED_OVERFLOW))
-        .unwrap_or_else(|| {
-            panic!("default collect must emit `{RULE_UNINTENDED_OVERFLOW}`: {diags:?}")
-        });
-    assert_eq!(
-        hit.severity,
-        DiagSeverity::Error,
-        "promoted overflow is Error: {hit:?}"
+    assert!(
+        !has_rule(&diags, RULE_UNINTENDED_OVERFLOW),
+        "unintended-overflow stays behind strict / layoutExperimental: {diags:?}"
     );
 }
 
 #[test]
-fn default_collect_emits_promoted_clipped_text() {
+fn default_collect_does_not_emit_experimental_clipped_text() {
     let diags = layout_diags(CLIPPED_TEXT_SRC, None);
-    let hit = diags
-        .iter()
-        .find(|d| d.rule.as_deref() == Some(RULE_CLIPPED_TEXT))
-        .unwrap_or_else(|| panic!("default collect must emit `{RULE_CLIPPED_TEXT}`: {diags:?}"));
-    assert_eq!(
-        hit.severity,
-        DiagSeverity::Error,
-        "promoted clipped-text is Error: {hit:?}"
+    assert!(
+        !has_rule(&diags, RULE_CLIPPED_TEXT),
+        "clipped-text stays behind strict + layoutTextMetrics: {diags:?}"
     );
 }
 
 #[test]
-fn package_without_strict_emits_promoted_overflow() {
+fn package_without_strict_does_not_emit_experimental_overflow() {
     let (_tmp, sail) = write_fixture(r#"{ "preset": "full" }"#, OVERFLOW_SRC);
     let diags = layout_diags(OVERFLOW_SRC, Some(&sail));
     assert!(
-        has_rule(&diags, RULE_UNINTENDED_OVERFLOW),
-        "promoted overflow must emit without strict: {diags:?}"
+        !has_rule(&diags, RULE_UNINTENDED_OVERFLOW),
+        "full preset without strict must not enable experimental overflow: {diags:?}"
     );
 }
 
 const TAP_SRC: &str = r#"
-<button type="button" style({ box: w(23).h(40) })>x</button>
+<button type="button" style({ size({ w: 23, h: 40 }) })>x</button>
 "#;
 
 #[test]

@@ -3,7 +3,7 @@
 //! The tutorial is the first code a newcomer touches after the
 //! Introduction. A lesson that does not compile teaches the reader that
 //! they made the mistake, so every `.sail` under
-//! `packages/sail/tutorial/src/lessons/` is built here as a component,
+//! `apps/sail-site/content/tutorial/lessons/` is built here as a component,
 //! the same way the tutorial's README tells a reader to build it:
 //!
 //! ```text
@@ -18,16 +18,15 @@
 //! design — lesson 08 teaches the run/read/fix loop against its four
 //! planted defects. That file is asserted to FAIL, and to fail with the
 //! diagnostics the prose quotes; if the compiler's error text moves, the
-//! prose in `packages/sail/tutorial/src/prose/08-the-compiler-talks-back.md`
+//! prose in `apps/sail-site/content/tutorial/prose/08-the-compiler-talks-back.md`
 //! must be refreshed with it.
 //!
 //! History: this file previously pointed at
-//! `apps/site/tutorial-examples/<step>/<variant>/template.sail` — a path
-//! from the retired 25-step tutorial that has not existed since the
-//! lessons moved to `packages/sail/tutorial`. Every test silently
-//! `return`ed on the missing directory, so the tutorial went unchecked.
-//! Discovery-from-disk plus a non-empty assertion is what keeps that
-//! from recurring.
+//! `packages/sail/tutorial/src/lessons` (and before that
+//! `apps/site/tutorial-examples/<step>/<variant>/template.sail`). Those
+//! trees are gone; lessons live under the site content tree. Discovery
+//! from disk plus a non-empty assertion keeps the suite from passing
+//! vacuously if the path moves again.
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -43,7 +42,7 @@ fn lessons_root() -> PathBuf {
         .and_then(Path::parent)
         .and_then(Path::parent)
         .expect("workspace root")
-        .join("packages/sail/tutorial/src/lessons")
+        .join("apps/sail-site/content/tutorial/lessons")
 }
 
 /// Every lesson `.sail`, as (relative id, absolute path), sorted.
@@ -156,9 +155,10 @@ fn lesson_08_starter_fails_by_design() {
     // Style paint errors are hard compile errors and surface before later
     // expression/motion checks — pad(12px) is the planted first defect.
     assert!(
-        err.contains("pad(12px)") && err.contains("not a token on this setter's scale"),
+        (err.contains("pad(12px)") || err.contains("pad:all(12px)"))
+            && err.contains("not a token on this setter's scale"),
         "lesson 08's first rejection changed shape. The prose in \
-         packages/sail/tutorial/src/prose/08-the-compiler-talks-back.md quotes it verbatim \
+         apps/sail-site/content/tutorial/prose/08-the-compiler-talks-back.md quotes it verbatim \
          and must be refreshed. Got:\n{err}",
     );
 }

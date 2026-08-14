@@ -508,7 +508,7 @@ mod tests {
         // its target to appear — install a stub `@ship/sail-runtime`.
         write(
             &root.join("node_modules/@ship/sail-runtime/package.json"),
-            r#"{ "name": "@ship/sail-runtime", "exports": { ".": "./src/index.ts" } }"#,
+            r#"{ "name": "@ship/sail-runtime", "exports": { ".": "./src/index.ts", "./framework": "./src/index.ts" } }"#,
         );
         write(
             &root.join("node_modules/@ship/sail-runtime/src/index.ts"),

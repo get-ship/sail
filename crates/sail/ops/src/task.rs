@@ -15,9 +15,7 @@ use ulid::Ulid;
 
 use crate::ctx::Ctx;
 use crate::error::OpError;
-use crate::identity::{
-    Anchor, ElementIdentity, ResolveStatus, ResolvedIdentity, parse_identity, resolve_identity,
-};
+use crate::identity::{Anchor, ResolveStatus, ResolvedIdentity, parse_identity, resolve_identity};
 use crate::inspect;
 use crate::project_store;
 
@@ -1356,6 +1354,7 @@ pub fn inject_mcp_actor_default(args: &Value) -> Value {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::ElementIdentity;
     use tempfile::tempdir;
 
     fn demo_ctx(ws: &Path) -> Ctx {

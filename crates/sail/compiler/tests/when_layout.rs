@@ -9,11 +9,11 @@ fn layout_enumerates_when_wide_branch_overflow() {
     // would still be checked because layout walks the source tree, not the
     // runtime-selected branch. Mobile else is tiny; wide has overflow.
     let src = r#"
-<div data-viewport="400x200" class="sail-col" style="width:200px;overflow:hidden;height:100px">
+<div data-viewport="400x200" style({ size({ w: 20, h: 24 }).overflow({ all: hidden }) })>
   <when {tablet}>
-    <div class="sail-row" style="width:900px;height:40px">wide-only-overflow</div>
-    {else => 
-      <div class="sail-row" style="width:100px;height:20px">narrow-ok</div>
+    <div style({ size({ w: 40, h: 10 }) })>wide-only-overflow</div>
+    {else =>
+      <div style({ size({ w: 16, h: 4 }) })>narrow-ok</div>
     }
   </when>
 </div>

@@ -36,6 +36,13 @@ pub fn owning_dir(from: &Path) -> Option<PathBuf> {
 /// (see [`layout_is_error_for`]).
 pub const CONFIG_FILES: &[&str] = &["sail.config.jsonc", "sail.config.json"];
 
+/// True if `dir` itself contains a sail config file. Existence only —
+/// does not read or parse. Project-root walkers use this so they do
+/// not construct the filename (inv-sail-one-policy-resolver).
+pub fn dir_has_config(dir: &Path) -> bool {
+    CONFIG_FILES.iter().any(|name| dir.join(name).is_file())
+}
+
 /// The top-level `sail.config.json` keys the parser recognizes. Anything else
 /// present is a typo/unknown key — the compiler must refuse loudly rather
 /// than silently ignore it (config-loud-strict: a `{"polcy":"strict"}` typo

@@ -31,6 +31,7 @@ export {
   isSignal,
   debounce,
   type Signal,
+  type Derived,
 } from './signal'
 export {
   query,

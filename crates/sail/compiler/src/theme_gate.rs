@@ -4,7 +4,7 @@
 //! slots exist in every declared mode, aliases resolve, modes are complete,
 //! and named fg/bg pairs meet the WCAG 4.5:1 floor (pair named in the error).
 
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use serde_json::Value;
 
 use crate::tokens_generate::{

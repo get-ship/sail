@@ -1922,7 +1922,14 @@ mod tests {
     fn button_stdlib_harvests_variant_styles() {
         let src = include_str!("../../stdlib/button.sail");
         let env = style_env_from_source(src);
-        for name in ["base", "vSolid", "vSoft", "vOutline", "vGhost", "vGhostTone"] {
+        for name in [
+            "base",
+            "vSolid",
+            "vSoft",
+            "vOutline",
+            "vGhost",
+            "vGhostTone",
+        ] {
             assert!(
                 env.contains_key(name),
                 "missing `{name}` in {:?}",

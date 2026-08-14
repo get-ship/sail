@@ -262,22 +262,12 @@ async fn serve_sse_inner(
     let Some(root) = root else {
         return sse_error(StatusCode::NOT_FOUND, "no project root");
     };
-    let source = match deck_core::render_helpers::render_route_source(&root, &name) {
-        Some(s) => s,
-        None => return sse_error(StatusCode::NOT_FOUND, "view not found"),
-    };
-
-    // A route may carry its controller INLINE (`<controller>…</controller>`) —
-    // strip it before the template-only parser sees it (the route is only
-    // parsed here to validate it exists / is well-formed; see below).
-    let (stripped, _inline_controller) =
-        sail_compiler::parse::preprocess::extract_controller_block(&source);
-    if let Err(e) = sail_compiler::parse::parse(&stripped) {
-        let msg = e.render(&stripped);
-        tracing::warn!(view = %name, error = %msg, "data_port: parse error");
-        return sse_error(StatusCode::INTERNAL_SERVER_ERROR, "view parse error");
+    if deck_core::render_helpers::render_route_source(&root, &name).is_none() {
+        return sse_error(StatusCode::NOT_FOUND, "view not found");
     }
 
+    // Existence is enough. Full `parse()` is compile's job — leftover
+    // channel-form Style in this app must not 500 a keepalive SSE.
     // Live-data discovery: the retired <data live> directive used to be
     // parsed straight out of the `.sail` to find sources to stream. That
     // authoring surface is gone (compiler-side) and its replacement — how a

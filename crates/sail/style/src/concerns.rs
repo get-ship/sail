@@ -876,7 +876,7 @@ pub fn retired_replacement(name: &str) -> Option<(&'static str, String)> {
         return Some(("fg", "fg({ color: … }) or fg(foreground)".into()));
     }
     for spec in concerns() {
-        if spec.covered_setters.iter().any(|s| *s == name) {
+        if spec.covered_setters.contains(&name) {
             return Some((spec.name, concern_teaching(spec.name)));
         }
         // Same-name property form of a concern (overflow(hidden), size as longhand)
@@ -2396,15 +2396,12 @@ mod tests {
             diags.iter().map(|d| d.message()).collect::<Vec<_>>()
         );
         let (_, css) = crate::emit::lower_style(&style, &HashMap::new());
-        assert!(
-            css.contains("color") || css.contains("button"),
-            "{css}"
-        );
+        assert!(css.contains("color") || css.contains("button"), "{css}");
     }
 
     #[test]
     fn bg_surface_is_the_named_composite() {
-        let (style, diags) = parse("style({ bg(surface) })");
+        let (_style, diags) = parse("style({ bg(surface) })");
         assert!(
             diags.is_empty(),
             "{:?}",

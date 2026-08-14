@@ -12,18 +12,30 @@ use serde::Serialize;
 
 use crate::check::layout;
 use crate::diagnostics::line_col;
-use crate::parse::preprocess::{preprocess, preprocess_impl};
+use crate::parse::preprocess::{preprocess, preprocess_impl, preprocess_with_style};
 use sail_layout::canary::{self, KindFinding};
-use sail_layout::{CheckOptions, OverflowGeometry};
+use sail_layout::{BoxHost, CheckOptions, OverflowGeometry, StyleHosts, TypeHost};
 
 const KIND: &str = "unintended-overflow";
 
-const SKIP_DIRS: &[&str] = &["target", "node_modules", ".git", "dist", "build", ".deck"];
+const SKIP_DIRS: &[&str] = &[
+    "target",
+    "node_modules",
+    ".git",
+    "dist",
+    "build",
+    ".deck",
+    "e2e",
+    "fixtures",
+    "test",
+    "test-results",
+];
 
 const UNTRIAGED_NOTE: &str = "not triaged";
 
 /// Tree names the corpus walk must actually visit.
-pub const TREE_NAMES: &[&str] = &["sail-site", "studio", "components", "docs"];
+/// Studio is still v2 Style — do not walk it as product.
+pub const TREE_NAMES: &[&str] = &["sail-site", "components"];
 
 #[derive(Debug, Clone, Copy)]
 struct TreeSpec {
@@ -41,16 +53,8 @@ const TREES: &[TreeSpec] = &[
         rel: "apps/sail-site/src",
     },
     TreeSpec {
-        name: "studio",
-        rel: "apps/studio/src",
-    },
-    TreeSpec {
         name: "components",
         rel: "packages/components",
-    },
-    TreeSpec {
-        name: "docs",
-        rel: "packages/deck/docs",
     },
 ];
 
@@ -210,7 +214,7 @@ pub fn scan_kind(workspace: &Path, kind: &'static str) -> anyhow::Result<CorpusR
         };
 
         let pre_t = Instant::now();
-        let preprocessed = match preprocess_corpus(&source) {
+        let (preprocessed, hosts) = match preprocess_corpus(&source) {
             Ok(p) => p,
             Err(err) => {
                 counts.files_preprocess_error += 1;
@@ -226,7 +230,14 @@ pub fn scan_kind(workspace: &Path, kind: &'static str) -> anyhow::Result<CorpusR
         preprocess_ms += pre_t.elapsed().as_millis() as u64;
 
         let viewports = layout::layout_viewports(&preprocessed);
-        let scan = canary::scan_preprocessed(&preprocessed, &viewports, kind, opts);
+        let scan = scan_preprocessed_hosts(
+            &preprocessed,
+            &hosts.types,
+            &hosts.boxes,
+            &viewports,
+            kind,
+            opts,
+        );
         layout_ms += scan.layout_ms;
         tree.layout_ms += scan.layout_ms;
         if file.tree == "sail-site" {
@@ -370,12 +381,119 @@ fn stdlib_probe() -> (bool, Option<String>) {
         .clone()
 }
 
-fn preprocess_corpus(source: &str) -> Result<String, String> {
+fn preprocess_corpus(source: &str) -> Result<(String, StyleHosts), String> {
     if stdlib_probe().0 {
-        preprocess(source).map_err(|e| e.to_string())
+        preprocess_with_style(source).map_err(|e| e.to_string())
     } else {
-        preprocess_impl(source, false).map_err(|e| e.to_string())
+        preprocess_impl(source, false)
+            .map(|p| (p, StyleHosts::default()))
+            .map_err(|e| e.to_string())
     }
+}
+
+/// Same contract as [`canary::scan_preprocessed`], overlaying Style IR hosts
+/// so `size()` / `overflow()` / `pad()` measure from Style, not `s-*` scrape.
+fn scan_preprocessed_hosts(
+    preprocessed: &str,
+    type_hosts: &[TypeHost],
+    box_hosts: &[BoxHost],
+    viewports: &[(f32, f32)],
+    kind: &str,
+    opts: CheckOptions,
+) -> canary::PreprocessedScan {
+    let started = Instant::now();
+    let mut findings = Vec::new();
+    let mut viewport_errors = Vec::new();
+    let mut viewports_ok = 0usize;
+
+    for &viewport in viewports {
+        match sail_layout::check_preprocessed_with_hosts(
+            preprocessed,
+            viewport,
+            opts,
+            type_hosts,
+            box_hosts,
+        ) {
+            Ok(result) => {
+                viewports_ok += 1;
+                for d in result.diagnostics {
+                    if d.kind != kind {
+                        continue;
+                    }
+                    findings.push(KindFinding {
+                        kind: d.kind.to_string(),
+                        span: d.span,
+                        viewport: [viewport.0.round() as u32, viewport.1.round() as u32],
+                        element_tag: d.element_tag,
+                        element_class: d.element_class,
+                        element_index: d.element_index,
+                        geometry: d.geometry.map(snap_geometry),
+                    });
+                }
+            }
+            Err(err) => {
+                viewport_errors.push(format!(
+                    "{}x{}: {err}",
+                    viewport.0.round() as u32,
+                    viewport.1.round() as u32
+                ));
+            }
+        }
+    }
+
+    findings.sort_by(|a, b| {
+        (
+            a.span,
+            a.viewport,
+            a.element_index,
+            a.element_tag.as_str(),
+            a.element_class.as_str(),
+        )
+            .cmp(&(
+                b.span,
+                b.viewport,
+                b.element_index,
+                b.element_tag.as_str(),
+                b.element_class.as_str(),
+            ))
+    });
+
+    canary::PreprocessedScan {
+        findings,
+        viewport_errors,
+        layout_ms: started.elapsed().as_millis() as u64,
+        viewports_ok,
+    }
+}
+
+fn snap_geometry(g: OverflowGeometry) -> OverflowGeometry {
+    OverflowGeometry {
+        axis: g.axis,
+        child_main: snap_px(g.child_main),
+        parent_main: snap_px(g.parent_main),
+        child_index: g.child_index,
+        parent_index: g.parent_index,
+        child: sail_layout::BoxExtents {
+            x: snap_px(g.child.x),
+            y: snap_px(g.child.y),
+            width: snap_px(g.child.width),
+            height: snap_px(g.child.height),
+        },
+        parent: sail_layout::BoxExtents {
+            x: snap_px(g.parent.x),
+            y: snap_px(g.parent.y),
+            width: snap_px(g.parent.width),
+            height: snap_px(g.parent.height),
+        },
+    }
+}
+
+fn snap_px(v: f32) -> f32 {
+    if !v.is_finite() {
+        return 0.0;
+    }
+    let snapped = (v * 100.0).round() / 100.0;
+    if snapped.abs() < 0.005 { 0.0 } else { snapped }
 }
 
 fn panic_message(payload: Box<dyn std::any::Any + Send>) -> String {

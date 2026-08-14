@@ -155,17 +155,19 @@ pub async fn spa_fallback(
     let host_owns = host_backend_prefixes
         .as_ref()
         .is_some_and(|hp| hp.0.iter().any(|p| path.starts_with(p.as_str())));
-    if method == Method::GET && !deck_owns && !host_owns {
-        if let Some(app) = primary_app(&apps) {
-            return into_axum(deck_core::serve_scaffold(
-                mode_from_ext(mode),
-                app.as_ref(),
-                &[],
-                Some(path),
-                resolution.as_ref().map(|e| e.0.as_ref()),
-                renderer.as_ref().map(|e| e.0.as_ref()),
-            ));
-        }
+    if method == Method::GET
+        && !deck_owns
+        && !host_owns
+        && let Some(app) = primary_app(&apps)
+    {
+        return into_axum(deck_core::serve_scaffold(
+            mode_from_ext(mode),
+            app.as_ref(),
+            &[],
+            Some(path),
+            resolution.as_ref().map(|e| e.0.as_ref()),
+            renderer.as_ref().map(|e| e.0.as_ref()),
+        ));
     }
     (StatusCode::NOT_FOUND, "not found").into_response()
 }

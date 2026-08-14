@@ -1696,13 +1696,17 @@ export default controller(() => ({ id: signal('demo') }))\n\
         write(
             &r.join("routes/page.sail"),
             "<controller>\n\
-import './styles.css';\n\
-export default controller(() => ({ ok: true }))\n\
+import { probe } from '../src/compositions/css-probe'\n\
+export default controller(() => ({ ok: probe }))\n\
 </controller>\n\
 <div>css</div>\n",
         );
         write(
-            &r.join("routes/styles.css"),
+            &r.join("src/compositions/css-probe.ts"),
+            "import '../styles.css'\nexport const probe = true\n",
+        );
+        write(
+            &r.join("src/styles.css"),
             ".css-probe { color: rebeccapurple; }\n",
         );
 
@@ -2076,7 +2080,13 @@ export default controller(() => ({ ok: true }))\n\
         ] {
             write(
                 &r.join(format!("node_modules/{pkg}/package.json")),
-                &format!(r#"{{ "name": "{pkg}", "exports": {{ ".": "./{file}" }} }}"#),
+                &if pkg == "@ship/sail-runtime" {
+                    format!(
+                        r#"{{ "name": "{pkg}", "exports": {{ ".": "./{file}", "./framework": "./{file}" }} }}"#
+                    )
+                } else {
+                    format!(r#"{{ "name": "{pkg}", "exports": {{ ".": "./{file}" }} }}"#)
+                },
             );
             write(
                 &r.join(format!("node_modules/{pkg}/{file}")),

@@ -188,7 +188,7 @@ fn attr_path_segments() -> &'static [(String, &'static str, &'static str)] {
             seg.extend(b.chars().filter(|c| c.is_ascii_alphanumeric()));
             out.push((seg, b, "true"));
         }
-        out.sort_by(|a, b| b.0.len().cmp(&a.0.len()));
+        out.sort_by_key(|b| std::cmp::Reverse(b.0.len()));
         out
     })
 }
@@ -214,7 +214,7 @@ fn host_attr_matches(attrs: &HashMap<String, String>, attr: &str, want: &str) ->
     match got {
         Some(v) if want == "true" => {
             // Bare boolean: present (empty or "true")
-            v.is_empty() || v.eq_ignore_ascii_case("true") || v == ""
+            v.is_empty() || v.eq_ignore_ascii_case("true")
         }
         Some(v) => v.eq_ignore_ascii_case(want),
         None => {

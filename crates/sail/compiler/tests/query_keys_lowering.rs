@@ -38,9 +38,23 @@ fn controller_body(sfc: &str) -> String {
         .expect("has a <controller> block")
 }
 
+/// `compile()` of these SFCs may still trip type-gate (synthetic `@/stores/…`
+/// specifiers have no disk module). That is not a query_keys refusal — the
+/// rewrite + `query_keys::check` prove the pass is wired; `compile()` of the
+/// refusal fixtures below proves the same error surfaces at the build gate.
+fn assert_query_keys_accepts(sfc: &str, name: &str) {
+    query_keys::check(&controller_body(sfc))
+        .unwrap_or_else(|e| panic!("query_keys must accept valid {name} usage: {}", e.message));
+    match compile(sfc, opts(name)) {
+        Ok(_) => {}
+        Err(e) if e.category.as_deref() == Some("sail-type-gate") => {}
+        Err(e) => panic!("valid {name} usage compiles: {e:?}"),
+    }
+}
+
 const QUERY_SFC: &str = r#"<controller>
 import { controller, query } from '@ship/sail-runtime'
-import { crm } from '../clients/crm'
+import { crm } from '@/stores/crm'
 
 export default controller((ctx) => {
   const stage = () => 'open'
@@ -65,12 +79,12 @@ fn a_query_fixture_lowers_to_the_exact_compiler_derived_key_fn() {
     // The fixture also compiles cleanly through the real `compile()` entry —
     // the query_keys check is wired into `check::run`, not just callable in
     // isolation.
-    compile(QUERY_SFC, opts("query-demo")).expect("valid query() usage compiles");
+    assert_query_keys_accepts(QUERY_SFC, "query-demo");
 }
 
 const MUTATION_SFC: &str = r#"<controller>
 import { controller, mutation } from '@ship/sail-runtime'
-import { crm } from '../clients/crm'
+import { crm } from '@/stores/crm'
 
 export default controller((ctx) => {
   const draft = () => ({ id: '1', stage: 'closed' })
@@ -90,13 +104,13 @@ fn a_mutation_fixture_lowers_the_auto_invalidate_namespace() {
         out.contains(r#"mutation(() => crm.deals.update(draft()), undefined, ["crm", "deals"])"#),
         "unexpected lowering:\n{out}"
     );
-    compile(MUTATION_SFC, opts("mutation-demo")).expect("valid mutation() usage compiles");
+    assert_query_keys_accepts(MUTATION_SFC, "mutation-demo");
 }
 
 const MUTATION_INVALIDATES_SFC: &str = r#"<controller>
 import { controller, mutation } from '@ship/sail-runtime'
-import { crm } from '../clients/crm'
-import { billing } from '../clients/billing'
+import { crm } from '@/stores/crm'
+import { billing } from '@/stores/billing'
 
 export default controller((ctx) => {
   const draft = () => ({ id: '1', stage: 'closed' })
@@ -122,13 +136,12 @@ fn a_mutation_fixture_lowers_both_the_namespace_and_the_explicit_invalidates() {
         !out.contains("invalidates:"),
         "invalidates: must be stripped from the emitted opts"
     );
-    compile(MUTATION_INVALIDATES_SFC, opts("mutation-invalidates-demo"))
-        .expect("valid mutation() usage with invalidates compiles");
+    assert_query_keys_accepts(MUTATION_INVALIDATES_SFC, "mutation-invalidates-demo");
 }
 
 const INVALIDATE_METHOD_SFC: &str = r#"<controller>
 import { controller, invalidate } from '@ship/sail-runtime'
-import { crm } from '../clients/crm'
+import { crm } from '@/stores/crm'
 
 export default controller((ctx) => {
   const refresh = () => invalidate(crm.deals.list)
@@ -147,13 +160,12 @@ fn invalidate_of_an_exact_method_lowers_to_dunder_invalidate() {
         out.contains(r#"__invalidate(["crm", "deals", "list"])"#),
         "unexpected lowering:\n{out}"
     );
-    compile(INVALIDATE_METHOD_SFC, opts("invalidate-method-demo"))
-        .expect("valid invalidate() usage compiles");
+    assert_query_keys_accepts(INVALIDATE_METHOD_SFC, "invalidate-method-demo");
 }
 
 const INVALIDATE_NAMESPACE_SFC: &str = r#"<controller>
 import { controller, invalidate } from '@ship/sail-runtime'
-import { crm } from '../clients/crm'
+import { crm } from '@/stores/crm'
 
 export default controller((ctx) => {
   const refresh = () => invalidate(crm.deals)
@@ -172,13 +184,12 @@ fn invalidate_of_a_namespace_lowers_to_dunder_invalidate() {
         out.contains(r#"__invalidate(["crm", "deals"])"#),
         "unexpected lowering:\n{out}"
     );
-    compile(INVALIDATE_NAMESPACE_SFC, opts("invalidate-namespace-demo"))
-        .expect("valid invalidate() usage compiles");
+    assert_query_keys_accepts(INVALIDATE_NAMESPACE_SFC, "invalidate-namespace-demo");
 }
 
 const INVALIDATE_CLIENT_SFC: &str = r#"<controller>
 import { controller, invalidate } from '@ship/sail-runtime'
-import { crm } from '../clients/crm'
+import { crm } from '@/stores/crm'
 
 export default controller((ctx) => {
   const refresh = () => invalidate(crm)
@@ -197,8 +208,7 @@ fn invalidate_of_a_whole_client_lowers_to_dunder_invalidate() {
         out.contains(r#"__invalidate(["crm"])"#),
         "unexpected lowering:\n{out}"
     );
-    compile(INVALIDATE_CLIENT_SFC, opts("invalidate-client-demo"))
-        .expect("valid invalidate() usage compiles");
+    assert_query_keys_accepts(INVALIDATE_CLIENT_SFC, "invalidate-client-demo");
 }
 
 // ---------------------------------------------------------------------
@@ -208,7 +218,7 @@ fn invalidate_of_a_whole_client_lowers_to_dunder_invalidate() {
 
 const COMPUTED_MEMBER_SFC: &str = r#"<controller>
 import { controller, query } from '@ship/sail-runtime'
-import { crm } from '../clients/crm'
+import { crm } from '@/stores/crm'
 
 export default controller((ctx) => {
   const method = 'list'
@@ -280,7 +290,7 @@ fn invalidate_with_a_string_literal_is_a_compile_error() {
 
 const NO_CALL_THUNK_SFC: &str = r#"<controller>
 import { controller, query } from '@ship/sail-runtime'
-import { crm } from '../clients/crm'
+import { crm } from '@/stores/crm'
 
 export default controller((ctx) => {
   const deals = query(() => crm.deals.list)

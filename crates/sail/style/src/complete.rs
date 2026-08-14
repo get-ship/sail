@@ -910,8 +910,8 @@ fn classify_style_ref_head(before: &str, partial: &str) -> Option<StyleCompleteC
                 // `style(base` with caret after e → before empty if partial is "base".
                 return None;
             }
-            if after.starts_with(',') {
-                let after_comma = after[1..].trim_start();
+            if let Some(stripped) = after.strip_prefix(',') {
+                let after_comma = stripped.trim_start();
                 if after_comma.is_empty() || !after_comma.starts_with('{') {
                     return Some(StyleCompleteContext::StyleRef {
                         partial: partial.to_string(),

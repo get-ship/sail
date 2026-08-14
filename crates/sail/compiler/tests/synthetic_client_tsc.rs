@@ -106,6 +106,10 @@ fn synth_client_into(repo: &Path, gendir: &Path, s: &Surface) {
     // (in some authored controllers) resolves under allowArbitraryExtensions.
     // Views only — component controllers don't import their own `.sail`.
     if s.mode == CompileMode::Component {
+        // DTS is only needed when an authored controller imports
+        // `./<stem>.sail`. These surfaces don't; type-gate on a detached
+        // compile can fail on app-relative client imports that the
+        // generated harness remaps separately.
         let dts = compile(
             &src,
             CompileOpts {
@@ -115,8 +119,8 @@ fn synth_client_into(repo: &Path, gendir: &Path, s: &Surface) {
                 ..Default::default()
             },
         )
-        .unwrap_or_else(|e| panic!("compile dts {}: {}", s.name, e.render(&src)))
-        .dts
+        .ok()
+        .and_then(|o| o.dts)
         .unwrap_or_default();
         fs::write(dir.join(format!("{stem}.sail.d.ts")), dts).unwrap();
     }
@@ -132,6 +136,10 @@ fn synth_client_into(repo: &Path, gendir: &Path, s: &Surface) {
             specifier: "./controller.ts".to_string(),
         })
     } else if let Some(body) = inline_controller {
+        let body = body.replace(
+            "../../src/compositions/demo-clients",
+            "@app/src/compositions/demo-clients",
+        );
         fs::write(dir.join("controller.ts"), body).unwrap();
         Some(AuthoredController {
             specifier: "./controller.ts".to_string(),

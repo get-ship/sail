@@ -1,7 +1,7 @@
 //! Style algebra integration tests.
 //!
-//! Exercises the new compile-time Style path through the preprocessor:
-//! - setter chains (style.*)
+//! Exercises the compile-time Style path through the preprocessor:
+//! - setter chains
 //! - match guards
 //! - when guards
 //! - compound guards
@@ -35,17 +35,17 @@ fn compile_component(src: &str) -> Result<String, String> {
 
 #[test]
 fn setter_chain_lowers_through_style_ir() {
-    let src = r#"<div style({ paint: bg(primary).fg(primary-foreground).radius(md) })> </div>"#;
+    let src = r#"<div style({ bg(primary).fg(primary-foreground).radius(md) })> </div>"#;
     let js = compile_component(src).expect("compiles");
     assert!(
-        js.contains("s-bgprimary") || js.contains("bgprimary"),
+        js.contains("s-bg") || js.contains("bgcolor") || js.contains("bgprimary"),
         "setter chain should emit classes: {js}"
     );
 }
 
 #[test]
 fn match_guard_emits_attribute_selector() {
-    let src = r#"<div style({ match: { variant: { filled: { paint: bg(primary) }, tonal: { paint: bg(secondary) } } } })> </div>"#;
+    let src = r#"<div style({ match: { variant: { filled: bg(primary), tonal: bg(secondary) } } })> </div>"#;
     let js = compile_component(src).expect("compiles");
     assert!(
         js.contains("[variant='filled']") || js.contains("variant"),
@@ -55,7 +55,7 @@ fn match_guard_emits_attribute_selector() {
 
 #[test]
 fn when_guard_emits_pseudo_selector() {
-    let src = r#"<div style({ when: { hover: { paint: bg(muted) } } })> </div>"#;
+    let src = r#"<div style({ when: { hover: bg(muted) } })> </div>"#;
     let js = compile_component(src).expect("compiles");
     assert!(
         js.contains(":hover") || js.contains("hover"),
@@ -65,7 +65,7 @@ fn when_guard_emits_pseudo_selector() {
 
 #[test]
 fn compound_guard_emits_combined_attribute_selector() {
-    let src = r#"<div style({ compound: [ { interactive: true, size: lg, paint: shadow(hover) } ] })> </div>"#;
+    let src = r#"<div style({ compound: [ { interactive: true, size: lg, elevation(hover) } ] })> </div>"#;
     let js = compile_component(src).expect("compiles");
     assert!(
         js.contains("[interactive='true']") || js.contains("interactive"),
@@ -75,7 +75,7 @@ fn compound_guard_emits_combined_attribute_selector() {
 
 #[test]
 fn bind_reactive_paint_emits_var() {
-    let src = r#"<div style({ paint: translateY(bind(rowY)) })> </div>"#;
+    let src = r#"<div use:virtualRow={0} style({ translateY(bind(rowY)) })> </div>"#;
     let js = compile_component(src).expect("compiles");
     assert!(
         js.contains("bind") || js.contains("--row"),
@@ -85,13 +85,13 @@ fn bind_reactive_paint_emits_var() {
 
 #[test]
 fn raw_color_without_escape_produces_diagnostic() {
-    let (_, diags) = parse("style({ paint: bg(#ff00ff) })");
+    let (_, diags) = parse("style({ bg(#ff00ff) })");
     assert!(!diags.is_empty(), "raw color should fail closed");
 }
 
 #[test]
 fn invalid_new_syntax_produces_parse_error() {
-    let (_, diags) = parse("style({ match: { variant: { filled: { paint: bg(ff00ff) } } } })");
+    let (_, diags) = parse("style({ match: { variant: { filled: bg(ff00ff) } } })");
     assert!(
         !diags.is_empty(),
         "invalid token inside new syntax should produce diagnostics"
@@ -100,7 +100,7 @@ fn invalid_new_syntax_produces_parse_error() {
 
 #[test]
 fn clash_detection_flags_duplicate_setter() {
-    let (style, _) = parse("style({ paint: bg(primary).bg(muted) })");
+    let (style, _) = parse("style({ bg(primary).bg(muted) })");
     let diags = sail_lint::style::clash::detect_clashes(&style, &std::collections::HashMap::new());
     assert!(
         diags.iter().any(|d| d.message().contains("clash")),
@@ -112,7 +112,7 @@ fn clash_detection_flags_duplicate_setter() {
 fn list_shadows_duplicate_setter_without_clash() {
     // Chain = unordered conjunction (clash); List = ordered composition
     // (later shadows earlier, no diagnostic).
-    let (style, _) = parse("style({ paint: bg(primary) }, { paint: bg(muted) })");
+    let (style, _) = parse("style({ bg(primary) }, { bg(muted) })");
     let diags = sail_lint::style::clash::detect_clashes(&style, &std::collections::HashMap::new());
     assert!(
         !diags.iter().any(|d| d.message().contains("clash")),
@@ -122,7 +122,7 @@ fn list_shadows_duplicate_setter_without_clash() {
 
 #[test]
 fn chain_inside_list_item_still_clashes() {
-    let (style, _) = parse("style({ paint: bg(primary).bg(muted) })");
+    let (style, _) = parse("style({ bg(primary).bg(muted) })");
     let diags = sail_lint::style::clash::detect_clashes(&style, &std::collections::HashMap::new());
     assert!(
         diags.iter().any(|d| d.message().contains("clash")),
@@ -133,21 +133,23 @@ fn chain_inside_list_item_still_clashes() {
 #[test]
 fn cross_setter_chain_clash_on_shared_slot() {
     // Clash detection keys on per-call paint slots (op_slots), so different
-    // setters touching one slot clash under Chain: `border(1)` narrows to
-    // `border-width`, the same slot `borderWidth(2)` writes.
-    let (style, _) = parse("style({ paint: border(1).borderWidth(2) })");
+    // setters touching one slot clash under Chain: `border({ width: 1 })`
+    // writes `border-width`, the same slot `border({ width: 2 })` writes.
+    let (style, _) = parse("style({ border({ width: 1 }).border({ width: 2 }) })");
     let diags = sail_lint::style::clash::detect_clashes(&style, &std::collections::HashMap::new());
     assert!(
-        diags.iter().any(|d| d.message().contains("border-width")),
-        "border(1) vs borderWidth must clash on the shared border-width slot: {diags:?}"
+        diags
+            .iter()
+            .any(|d| d.message().contains("border") || d.message().contains("clash")),
+        "border width 1 vs 2 must clash on the shared border stroke slot: {diags:?}"
     );
 }
 
 #[test]
 fn cross_setter_disjoint_slots_do_not_clash() {
-    // Per-call narrowing: a color-token `border` writes only border-color,
-    // so it composes with `borderWidth` without a clash.
-    let (style, _) = parse("style({ paint: borderWidth(1).border(primary) })");
+    // Distinct concerns write distinct slots and compose without a clash.
+    // (v3 `border` is one stroke concern — width + color share a slot.)
+    let (style, _) = parse("style({ pad(4).bg(primary) })");
     let diags = sail_lint::style::clash::detect_clashes(&style, &std::collections::HashMap::new());
     assert!(
         !diags.iter().any(|d| d.message().contains("clash")),
@@ -157,7 +159,7 @@ fn cross_setter_disjoint_slots_do_not_clash() {
 
 #[test]
 fn style_list_lowers_through_ir() {
-    let src = r#"<div style({ paint: bg(primary), match: { variant: { filled: { paint: bg(primary) } } } })> </div>"#;
+    let src = r#"<div style({ bg(primary), match: { variant: { filled: bg(primary) } } })> </div>"#;
     let js = compile_component(src).expect("compiles");
     assert!(
         js.contains("s-") || js.contains("class"),

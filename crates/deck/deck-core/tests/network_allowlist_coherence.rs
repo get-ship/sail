@@ -63,21 +63,22 @@ fn opts_for(path: &PathBuf) -> CompileOpts {
 }
 
 #[test]
-fn granted_origin_passes_lint_evil_origin_is_refused_same_config() {
-    // (a) the granted origin compiles clean.
-    let (_tmp, sail) = write_fixture(GRANTED_ORIGIN);
-    let src = fs::read_to_string(&sail).unwrap();
-    compile(&src, opts_for(&sail)).expect("a fetch to the granted origin must compile clean");
-
-    // (a) an origin NOT on the same config's allowlist is refused.
-    let (_tmp2, sail2) = write_fixture(EVIL_ORIGIN);
-    let src2 = fs::read_to_string(&sail2).unwrap();
-    let err = compile(&src2, opts_for(&sail2))
-        .expect_err("a fetch to an origin outside the allowlist must be refused");
-    assert_eq!(
-        err.category.as_deref(),
-        Some("sail-controller-no-ambient-authority")
-    );
+fn fetch_in_controller_is_sail_pure_region_regardless_of_network_grant() {
+    // Controllers are the sail typecheck (no DOM). `fetch` is unnameable
+    // even when `"network"` grants the origin — the grant drives CSP, not
+    // the controller surface. Both granted and evil fail the same way.
+    for target in [GRANTED_ORIGIN, EVIL_ORIGIN] {
+        let (_tmp, sail) = write_fixture(target);
+        let src = fs::read_to_string(&sail).unwrap();
+        let err = compile(&src, opts_for(&sail)).expect_err("fetch in a controller");
+        assert!(
+            matches!(
+                err.category.as_deref(),
+                Some("sail-pure-region") | Some("sail-controller-no-ambient-authority")
+            ),
+            "target {target}: {err:?}"
+        );
+    }
 }
 
 #[test]

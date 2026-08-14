@@ -960,7 +960,7 @@ fn parse_style_call(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Sty
     // Residual product tails: `.when(…)` method chains — deleted product surface.
     // Variadic composition is ordered List (later args shadow), not Chain
     // (Chain = conjunction, duplicate slots clash). SPEC merge law: args L→R.
-    let mut base = match parts.len() {
+    let base = match parts.len() {
         0 => Style::Empty,
         1 => parts.swap_remove(0),
         _ => Style::List(parts),
@@ -1815,10 +1815,8 @@ fn parse_animate_channel_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnost
             let after_paren = p.tokens.get(p.pos + 1).map(|t| &t.tok);
             if after_paren == Some(&Tok::LBrace) {
                 true
-            } else if matches!(method, "scroll" | "press") {
-                false
             } else {
-                true
+                !matches!(method, "scroll" | "press")
             }
         } else {
             true

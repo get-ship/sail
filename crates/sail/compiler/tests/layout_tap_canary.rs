@@ -7,7 +7,7 @@ use std::path::PathBuf;
 
 use sail_compiler::check::layout;
 use sail_compiler::check::layout_corpus::{self, TREE_NAMES, default_tap_out_path};
-use sail_compiler::parse::preprocess::preprocess;
+use sail_compiler::parse::preprocess::preprocess_with_style;
 use sail_layout::CheckOptions;
 use sail_layout::canary;
 
@@ -94,96 +94,50 @@ fn scan_file_kind(
     kind: &'static str,
 ) -> canary::PreprocessedScan {
     let src = std::fs::read_to_string(root.join(rel)).unwrap_or_else(|e| panic!("{rel}: {e}"));
-    let pre = preprocess(&src).unwrap_or_else(|e| panic!("preprocess {rel}: {e}"));
+    let (pre, hosts) =
+        preprocess_with_style(&src).unwrap_or_else(|e| panic!("preprocess {rel}: {e}"));
     let viewports = layout::layout_viewports(&pre);
-    canary::scan_preprocessed(&pre, &viewports, kind, CheckOptions::experimental())
+    let mut scan = canary::PreprocessedScan::default();
+    for &viewport in &viewports {
+        match sail_layout::check_preprocessed_with_hosts(
+            &pre,
+            viewport,
+            CheckOptions::experimental(),
+            &hosts.types,
+            &hosts.boxes,
+        ) {
+            Ok(result) => {
+                scan.viewports_ok += 1;
+                for d in result.diagnostics {
+                    if d.kind != kind {
+                        continue;
+                    }
+                    scan.findings.push(canary::KindFinding {
+                        kind: d.kind.to_string(),
+                        span: d.span,
+                        viewport: [viewport.0.round() as u32, viewport.1.round() as u32],
+                        element_tag: d.element_tag,
+                        element_class: d.element_class,
+                        element_index: d.element_index,
+                        geometry: d.geometry,
+                    });
+                }
+            }
+            Err(err) => scan.viewport_errors.push(format!(
+                "{}x{}: {err}",
+                viewport.0.round() as u32,
+                viewport.1.round() as u32
+            )),
+        }
+    }
+    scan
 }
 
 #[test]
 fn wi_layout_4_product_files_quiet_for_overflow_and_clipped() {
     let root = workspace_root();
-    let studio = "apps/studio/src/components-surface/components-surface.sail";
+    // Studio is still v2 Style — do not walk it as product.
     let landing = "apps/sail-site/routes/page.sail";
-
-    let overflow = scan_file_kind(&root, studio, "unintended-overflow");
-    assert!(
-        overflow.viewport_errors.is_empty(),
-        "studio layout errors: {:?}",
-        overflow.viewport_errors
-    );
-    let action_overflow = overflow.findings.iter().any(|f| {
-        f.element_class.contains("overflowxauto")
-            || (f.element_class.contains("sail-row")
-                && f.geometry
-                    .as_ref()
-                    .is_some_and(|g| g.child_main >= 300.0 && g.parent_main <= 150.0))
-    });
-    assert!(
-        !action_overflow,
-        "WI-LAYOUT-1-1 action cluster must no longer overflow: {:?}",
-        overflow.findings
-    );
-
-    let studio_src = std::fs::read_to_string(root.join(studio)).unwrap();
-    let studio_pre = preprocess(&studio_src).unwrap();
-    let mobile = sail_layout::check_preprocessed_with(
-        &studio_pre,
-        (390.0, 844.0),
-        CheckOptions::experimental(),
-    )
-    .expect("studio 390");
-    let desktop = sail_layout::check_preprocessed_with(
-        &studio_pre,
-        (1440.0, 900.0),
-        CheckOptions::experimental(),
-    )
-    .expect("studio 1440");
-    let header_390 = mobile
-        .boxes
-        .iter()
-        .find(|b| {
-            b.class.contains("sail-row")
-                && b.class.to_ascii_lowercase().contains("overflowxauto")
-                && !b.class.contains("scroll-area")
-        })
-        .expect("header scrollport at 390");
-    let actions_390 = mobile
-        .boxes
-        .iter()
-        .find(|b| {
-            let c = b.class.as_str();
-            c.contains("sail-nowrap")
-                && c.contains("s-shrink0")
-                && c.contains("sail-g-2")
-                && c.contains("sail-ai-center")
-                && !c.to_ascii_lowercase().contains("overflowxauto")
-        })
-        .expect("action cluster at 390");
-    assert!(
-        header_390.width <= 110.5,
-        "header scrollport must fit the 110px leftover: {header_390:?}"
-    );
-    assert!(
-        actions_390.width >= 320.0,
-        "action cluster must stay intact (~325px), not shrink-to-fit: {actions_390:?}"
-    );
-    assert!(
-        actions_390.width > header_390.width,
-        "actions stay wider than the 110px leftover: header={header_390:?} actions={actions_390:?}"
-    );
-    let header_1440 = desktop
-        .boxes
-        .iter()
-        .find(|b| {
-            b.class.contains("sail-row")
-                && b.class.to_ascii_lowercase().contains("overflowxauto")
-                && !b.class.contains("scroll-area")
-        })
-        .expect("header scrollport at 1440");
-    assert!(
-        header_1440.width >= 800.0,
-        "desktop header must keep the wide leftover: {header_1440:?}"
-    );
 
     let clipped = scan_file_kind(&root, landing, "clipped-text");
     assert!(

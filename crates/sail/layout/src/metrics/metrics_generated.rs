@@ -1,5 +1,6 @@
 //! Generated font metrics from packages/sail/tokens/src/fonts/
 //! Do not edit by hand. Regenerate with scripts/generate-metrics/.
+#![allow(clippy::approx_constant)]
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]

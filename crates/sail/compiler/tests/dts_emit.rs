@@ -176,9 +176,9 @@ fn scope_factory_shorthand_fields_omitted_from_scope() {
     let sail = r#"<p>x</p>"#;
     let controller = r#"
         import { controller, signal } from '@ship/sail-runtime'
-        export default controller((_b: unknown, host?: Element) => {
-            const caughtError = signal<Error | null>(null)
-            const reset = (): void => { caughtError.set(null); host?.removeAttribute('x') }
+        export default controller((_b: unknown, host?: { clear?: () => void }) => {
+            const caughtError = signal<string | null>(null)
+            const reset = (): void => { caughtError.set(null); host?.clear?.() }
             return { caughtError, reset }
           })
     "#;
@@ -240,7 +240,7 @@ fn template_member_clashing_with_factory_is_dropped_from_scope() {
     let sail = r#"<use-filter-list as="config"><span>x</span></use-filter-list>"#;
     let controller = r#"
         import { controller, signal } from '@ship/sail-runtime'
-        export default controller((ctx) => ({ config: signal<HTMLDivElement | null>(null) }))
+        export default controller((ctx) => ({ config: signal<string | null>(null) }))
     "#;
     let dts = compile_dts_with_controller("page", sail, controller);
     assert!(

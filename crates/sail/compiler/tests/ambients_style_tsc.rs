@@ -76,22 +76,23 @@ fn style_misuse_is_tsc_error_and_good_chain_is_green() {
     fs::write(work.join("tsconfig.json"), cfg).unwrap();
 
     // Green: known setters + token ambient consts + string form for hyphenated.
+    // Do not bind locals named `b`/`e` — those are border-edge keyword consts.
     fs::write(
         work.join("good.ts"),
         r#"
-const a = style({ box: padX(2), paint: bg(primary).radius(sm).fg('muted-foreground') })
-const b = style({ when: { hover: { paint: bg(muted) } } })
-const c = style({ match: { variant: { solid: { paint: bg(primary) }, soft: { paint: bg(muted) } } } })
-const d = style({ compound: [ { pill: true, paint: radius(full) } ] })
-const e = style({ animate: enter({ opacity: 'fade' }).exit({ opacity: 'fade-out' }) })
-const f = style({ box: pad(4).gap(2), paint: bg(primary), when: { hover: { paint: bg(muted) } } })
+const a = style(pad({ x: 2 }).bg(primary).radius(sm).fg('muted-foreground'))
+const whenHover = style({ when: { hover: bg(muted) } })
+const matchVar = style({ match: { variant: { solid: bg(primary), soft: bg(muted) } } })
+const compound = style({ compound: [ { pill: true } ] })
+const motion = style({ animate: enter({ opacity: 'fade' }).exit({ opacity: 'fade-out' }) })
+const stacked = style(pad(4).bg(primary), { when: { hover: bg(muted) } })
 // T0: bound tone + static group.member + string-form paths typecheck as paint args
-const tonePaint = style({ paint: bg(tone).fg(tone.foreground).border(tone) })
-const staticMember = style({ paint: fg(primary.foreground) })
-const stringPaths = style({ paint: bg('tone' as const).fg('primary.foreground') })
-const softWash = style({ paint: colorMix(tone, 15) })
-const g = [a, b, c, d, e, f, tonePaint, staticMember, stringPaths, softWash]
-void g
+const tonePaint = style(bg(tone).fg(tone.foreground).border(tone))
+const staticMember = style(fg(primary.foreground))
+const stringPaths = style(bg('tone' as const).fg('primary.foreground'))
+const softWash = style(bg({ color: tone, mix: 15 }))
+const collected = [a, whenHover, matchVar, compound, motion, stacked, tonePaint, staticMember, stringPaths, softWash]
+void collected
 void signal(0)
 void controller(() => ({ n: signal(1) }))
 "#,
@@ -154,7 +155,7 @@ void controller(() => ({ n: signal(1) }))
     // Bad token type (number where color token required)
     fs::write(
         work.join("bad-token.ts"),
-        "const x = style({ paint: bg(12345 as 12345) })\nvoid x\n",
+        "const x = style(bg(12345 as 12345))\nvoid x\n",
     )
     .unwrap();
     fs::write(

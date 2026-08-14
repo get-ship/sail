@@ -165,8 +165,8 @@ export function mountBySource(
           /* cleanup is best-effort */
         }
         disposeCss()
-        for (const n of Array.from(stageEl.childNodes)) {
-          if (!before.has(n)) n.parentNode?.removeChild(n)
+        for (const n of Array.from(stageEl.childNodes as NodeListOf<ChildNode>)) {
+          if (!before.has(n) && n.parentNode) n.parentNode.removeChild(n)
         }
       },
     },

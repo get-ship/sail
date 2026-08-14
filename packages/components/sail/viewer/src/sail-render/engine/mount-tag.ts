@@ -82,9 +82,11 @@ function ensureDefined(compile: CompileFn, baseTag: string, source: string, vers
  *  `Range.createContextualFragment` (the legitimate render-engine DOM seam —
  *  an engine `*.ts` module, NOT a `.controller.ts`; outside the
  *  `sail-controller-purity` rule's scope). */
-function injectSlots(el: any, html: string | null): void {
+function injectSlots(el: Element, html: string | null): void {
   // Remove engine-injected slot content from a prior set (marked nodes only).
-  for (const prev of Array.from(el.querySelectorAll(':scope > [data-sail-render-slot]'))) {
+  for (const prev of Array.from(
+    el.querySelectorAll(':scope > [data-sail-render-slot]'),
+  )) {
     prev.remove()
   }
   if (!html) return

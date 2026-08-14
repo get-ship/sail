@@ -271,6 +271,7 @@ const CLIENT_MARKERS: &[&str] = &[
     "sessionStorage",
     "setTimeout",
     "setInterval",
+    "interval(",
     "requestAnimationFrame",
     "matchMedia",
     "navigator",
@@ -447,6 +448,7 @@ fn binding_updated_with_client_marker(src: &str, name: &str) -> bool {
     for marker in [
         "setInterval",
         "setTimeout",
+        "interval",
         "requestAnimationFrame",
         "matchMedia",
     ] {
@@ -724,7 +726,7 @@ fn tag_name_at(source: &str, offset: usize) -> Option<String> {
         i += 1;
     } else if bytes[i] == b'<' {
         i += 1;
-    } else if i + 1 <= offset && (bytes[i].is_ascii_alphanumeric() || bytes[i] == b'-') {
+    } else if i < offset && (bytes[i].is_ascii_alphanumeric() || bytes[i] == b'-') {
         // land mid-name without finding `<` in this walk — scan further left
         while i > 0 && (bytes[i - 1].is_ascii_alphanumeric() || bytes[i - 1] == b'-') {
             i -= 1;
