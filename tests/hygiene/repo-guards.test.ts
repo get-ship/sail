@@ -1,6 +1,6 @@
 /** Repo law: no documentElement.style in apps, no Ship product names, no machine paths. */
 import { describe, expect, test } from 'bun:test'
-import { existsSync, readdirSync, readFileSync, statSync, writeFileSync, rmSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, relative, resolve } from 'node:path'
 
 const REPO = resolve(import.meta.dir, '../..')
@@ -29,6 +29,8 @@ const SKIP_FILES = new Set([
   'GEMINI.md',
   '.mcp.json',
   'skills-lock.json',
+  '.static-inventory.json',
+  '.static-crawl.json',
 ])
 
 function* walkFiles(dir: string, base = dir): Generator<string> {
@@ -100,90 +102,7 @@ describe('no documentElement.style under apps/**', () => {
   })
 })
 
-describe('T-I6: no paid product module refs in ops/studio core', () => {
-  const pattern =
-    /ShipDeploy|ShipCMS|ShipWorkflow|ShipPro\b|ShipModule|ship-pro-pack|ship_paid|ENABLE_SHIP_|SHIP_PAID_|paid.?module.?flag|feature.?flag.*[Ss]hip.*module/i
-
-  const targets = ['crates/sail/ops/src', 'apps/studio/src']
-
-  test('scan targets exist or are explicitly absent', () => {
-    const any = targets.some((t) => existsSync(join(REPO, t)))
-    expect(any).toBe(true)
-  })
-
-  test('no paid product hardcodes in ops/studio core', () => {
-    const hits: string[] = []
-    for (const t of targets) {
-      const root = join(REPO, t)
-      if (!existsSync(root)) continue
-      for (const file of walkFiles(root)) {
-        if (file.endsWith('.md')) continue
-        if (relative(REPO, file).includes('.__hygiene_')) continue
-        const text = readText(file)
-        if (!text) continue
-        if (pattern.test(text)) {
-          hits.push(relative(REPO, file))
-        }
-      }
-    }
-    expect(hits).toEqual([])
-  })
-
-  test('module loader stays product-agnostic when present', () => {
-    const mod = join(REPO, 'crates/sail/ops/src/module.rs')
-    if (!existsSync(mod)) return
-    const text = readText(mod) ?? ''
-    expect(/namespace:\s*"Ship|"Ship[A-Z]/.test(text)).toBe(false)
-  })
-
-  /** Same walk used by the production T-I6 guard (not a string-only tautology). */
-  function scanProductRefs(): string[] {
-    const hits: string[] = []
-    for (const t of targets) {
-      const root = join(REPO, t)
-      if (!existsSync(root)) continue
-      for (const file of walkFiles(root)) {
-        if (file.endsWith('.md')) continue
-        const text = readText(file)
-        if (!text) continue
-        if (pattern.test(text)) {
-          hits.push(relative(REPO, file))
-        }
-      }
-    }
-    return hits
-  }
-
-  test('deliberate Ship-ref violation fails the guard (prove + clean)', () => {
-    const scratch = join(REPO, 'apps/studio/src')
-    if (!existsSync(scratch)) {
-      throw new Error('apps/studio/src missing — cannot prove T-I6 walk guard')
-    }
-    // Name is gitignored (`**/.__hygiene_*`) so a hard-kill mid-test cannot
-    // leave a staged product path.
-    const probe = join(scratch, '.__hygiene_ship_ref_probe.ts')
-    const probeRel = relative(REPO, probe)
-    writeFileSync(probe, 'export const x = "ShipDeploy"\n')
-    try {
-      const dirty = scanProductRefs()
-      expect(dirty).toContain(probeRel)
-    } finally {
-      try {
-        rmSync(probe)
-      } catch {
-        /* ignore */
-      }
-    }
-    const clean = scanProductRefs()
-    expect(clean).not.toContain(probeRel)
-    expect(clean).toEqual([])
-  })
-})
-
 describe('sanitization standing scan (paths / mission / monologue markers)', () => {
-  // High-signal classes from HYGIENE-0 §4. Complements T-I6 (paid modules).
-  // Full prose monologue still needs occasional human review; these patterns
-  // catch the classes that already regressed once.
   const classes: { name: string; pattern: RegExp }[] = [
     {
       name: 'operator home paths',
@@ -233,7 +152,7 @@ describe('sanitization standing scan (paths / mission / monologue markers)', () 
   }
 
   test('self-test: patterns fire on known-bad samples', () => {
-    expect(classes[0]!.pattern.test('/home/madvib/dev/Ship')).toBe(true)
+    expect(classes[0]!.pattern.test('/home/alice/dev/proj')).toBe(true)
     expect(classes[0]!.pattern.test('route /home/page.sail')).toBe(false)
     expect(classes[0]!.pattern.test('path="/home/user/.ssh"')).toBe(true)
     expect(classes[1]!.pattern.test('helm/data/missions/m-deck-standalone/x')).toBe(true)

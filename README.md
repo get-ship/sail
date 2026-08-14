@@ -127,10 +127,12 @@ Repo sanitization / boundary guards live under `tests/hygiene/` (`bun run test:h
 git config core.hooksPath hooks
 ```
 
+Installed into the **common** `.git/hooks` (every worktree). Source in `hooks/`.
+
 | hook | when | what |
 |------|------|------|
-| `hooks/pre-commit` | every commit | `rustfmt --check` on **staged** `.rs` only |
-| `hooks/pre-push` | every push | `bun test tests/hygiene` (seconds) |
+| pre-commit | every commit | refuse `.artifacts/`; `rustfmt --check` on staged `.rs`; `sail check` on staged `.sail` |
+| pre-push | every push | `bun test tests/hygiene` (seconds) |
 
 No cargo test, no Playwright, no corpus build. Skip with `--no-verify`.
 

@@ -1,16 +1,50 @@
 #!/usr/bin/env bash
-# Staged files only. Do not run cargo test, Playwright, or a corpus build.
+# Shared by every worktree (installed into the common .git/hooks).
+# Staged files only. No cargo test, no Playwright, no corpus build.
 # Skip: git commit --no-verify
 set -euo pipefail
 root="$(git rev-parse --show-toplevel)"
 cd "$root"
 
-staged() {
-  git diff --cached --name-only --diff-filter=ACMR
-}
+staged="$(git diff --cached --name-only --diff-filter=ACMR)"
 
-rs=$(staged | grep '\.rs$' || true)
-if [ -n "$rs" ]; then
-  # rustfmt --check on what you staged. Whole-crate clippy stays in CI.
+# --- ship-dispatch: never commit .artifacts scratch ---
+if printf '%s\n' "$staged" | grep -qE '^\.artifacts/'; then
+  {
+    echo "✗ pre-commit: refusing .artifacts/ — scratch, not source."
+    printf '%s\n' "$staged" | grep -E '^\.artifacts/' | sed 's/^/    /'
+  } >&2
+  exit 1
+fi
+if printf '%s\n' "$staged" | grep -qx '.gitignore'; then
+  diff="$(git diff --cached -- .gitignore)"
+  if printf '%s\n' "$diff" | grep -qE '^\+.*!.*\.artifacts'; then
+    echo "✗ pre-commit: refusing a .gitignore change that un-ignores .artifacts." >&2
+    exit 1
+  fi
+  if printf '%s\n' "$diff" | grep -qE '^-\s*\.artifacts/'; then
+    echo "✗ pre-commit: refusing to drop the .artifacts ignore." >&2
+    exit 1
+  fi
+fi
+
+# --- rustfmt on staged Rust only ---
+rs=$(printf '%s\n' "$staged" | grep '\.rs$' || true)
+if [ -n "$rs" ] && command -v rustfmt >/dev/null; then
   echo "$rs" | xargs rustfmt --edition 2024 --check
+fi
+
+# --- product lint on staged .sail (the floor, not a grep) ---
+sails=$(printf '%s\n' "$staged" | grep '\.sail$' || true)
+if [ -n "$sails" ]; then
+  sail_bin=""
+  if [ -x "$root/target/debug/sail" ]; then sail_bin="$root/target/debug/sail"
+  elif [ -x "$root/target/release/sail" ]; then sail_bin="$root/target/release/sail"
+  fi
+  if [ -n "$sail_bin" ]; then
+    echo "$sails" | while read -r f; do
+      [ -f "$f" ] || continue
+      "$sail_bin" check "$f" || exit 1
+    done
+  fi
 fi

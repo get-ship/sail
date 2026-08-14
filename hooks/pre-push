@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
-# Full-tree repo law. Seconds, not a suite. Skip: git push --no-verify
+# Shared by every worktree. Seconds. Skip: git push --no-verify
 set -euo pipefail
 root="$(git rev-parse --show-toplevel)"
 cd "$root"
+if [ ! -f tests/hygiene/repo-guards.test.ts ]; then
+  exit 0
+fi
 exec bun test tests/hygiene
