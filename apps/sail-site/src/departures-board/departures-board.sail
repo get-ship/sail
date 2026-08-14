@@ -14,12 +14,12 @@
     seed: Flight[] = []
   }
 
-  style card = { box: space({ pad: 4 }).size({ w: full }) }
-  style titleText = { text: type({ size: sm, tracking: wide, case: uppercase }) }
-  style meta = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs }) }
-  style list = { box: space({ mt: 3 }), text: type({ family: mono, size: sm }) }
-  style city = { text: type({ wrap: truncate }) }
-  style gate = { paint: ink({ color: muted-foreground }) }
+  style card = { pad(4).size({ w: full }) }
+  style titleText = { type({ size: sm, tracking: wide, case: uppercase }) }
+  style meta = { fg(muted-foreground).type({ family: mono, size: xs }) }
+  style list = { margin({ t: 3 }).type({ family: mono, size: sm }) }
+  style city = { type({ wrap: truncate }) }
+  style gate = { fg(muted-foreground) }
 </scope>
 
 <controller>
@@ -79,7 +79,7 @@ export default controller((ctx) => {
   <column gap="1" style(list)>
     <for {flights() as f} key={f.id}>
       <row align="center" gap="3" nowrap style({ animate: enter({ opacity: 'fade' }) })>
-        <span style(city, { box: flow({ grow: 1 }).size({ min-w: 0 }) })>{f.city}</span>
+        <span style(city, { grow(1).size({ min-w: 0 }) })>{f.city}</span>
         <span style(gate)>{f.gate}</span>
         <match {f.status}>
           {'boarding' => <badge tone="success">Boarding</badge>}

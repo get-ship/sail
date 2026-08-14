@@ -3,13 +3,13 @@
 -->
 
 <scope>
-  style page = { box: size({ max-w: breakpoint-tablet }).space({ mx: auto }) }
-  style eyebrow = { box: space({ mb: 2 }), paint: ink({ color: accent }), text: type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
-  style lead = { paint: ink({ color: muted-foreground }), text: type({ size: lg, leading: relaxed }) }
-  style monoLabel = { box: space({ mb: 2 }), paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
-  style livePanel = { box: space({ pad: 6 }).size({ min-h: 8 }), paint: border({ color: border, width: 1 }).radius(lg).fill({ color: surface-1 }) }
-  style callout = { box: space({ pad: 3, pad-x: 4 }), paint: border({ edge: t, color: border, width: 1 }).border({ edge: r, color: border, width: 1 }).border({ edge: b, color: border, width: 1 }).border({ edge: l, color: primary, width: 3 }).radius(md).ink({ color: muted-foreground }), text: type({ size: sm }) }
-  style footNav = { box: space({ pad-t: 4, mt: 8 }), paint: border({ color: border, width: 1, edge: t }) }
+  style page = { size({ max-w: breakpoint-tablet }).margin({ x: auto }) }
+  style eyebrow = { margin({ b: 2 }).fg(accent).type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
+  style lead = { fg(muted-foreground).type({ size: lg, leading: relaxed }) }
+  style monoLabel = { margin({ b: 2 }).fg(muted-foreground).type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
+  style livePanel = { pad(6).size({ min-h: 8 }).border({ color: border, width: 1 }).radius(lg).bg(surface-1) }
+  style callout = { pad({ all: 3, x: 4 }).border({ edge: t, color: border, width: 1 }).border({ edge: r, color: border, width: 1 }).border({ edge: b, color: border, width: 1 }).border({ edge: l, color: primary, width: 3 }).radius(md).fg(muted-foreground).type({ size: sm }) }
+  style footNav = { pad({ t: 4 }).margin({ t: 8 }).border({ color: border, width: 1, edge: t }) }
 </scope>
 
 <controller>

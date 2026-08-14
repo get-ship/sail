@@ -12,11 +12,11 @@
     onSelect: (detail: { value: string; label: string }) => void
   }
 
-  style host = {box: flow({ display: block }).place({ position: relative }).size({ w: full }), text: type({ family: body })}
+  style host = {display(block).position(relative).size({ w: full }).type({ family: body })}
   // Field chrome matches bare text input so combobox survives theme swaps.
-  style input = {box: flow({ display: block }).size({ w: full, min-h: control-h-md }).space({ pad-y: 1_5, pad-x: 3 }), paint: ink(foreground).fill({ color: background }).border({ color: border, width: 1 }).radius(md).elevation(xs), text: type({ size: base }), when: {hover: {paint: border({ color: border-strong })}, focus: {paint: border({ style: solid, kind: outline, width: 2, color: ring, offset: 2 })}, disabled: {paint: cursor(not-allowed).filter({ opacity: 50 })}}}
+  style input = {display(block).size({ w: full, min-h: control-h-md }).pad({ y: 1_5, x: 3 }).fg(foreground).bg(background).border({ color: border, width: 1 }).radius(md).elevation(xs).type({ size: base }), when: {hover: border({ color: border-strong }), focus: border({ style: solid, kind: outline, width: 2, color: ring, offset: 2 }), disabled: cursor(not-allowed).filter({ opacity: 50 })}}
   // w + minW both from --anchor-width so the list matches the field (min alone hugs content when options are short).
-  style listbox = {box: place({ position: fixed, inset: auto, left: bind(anchorLeft), top: bind(anchorTop), z: popover }).space({ m: 0, pad: 1 }).size({ w: bind(anchorWidth), min-w: bind(anchorWidth), max-h: panel-max-h-sm }).overflow({ y: auto, overscroll: contain }), paint: ink({ color: combobox.foreground }).fill({ color: combobox }).border({ color: border, width: 1 }).radius(md).elevation(lg)}
+  style listbox = {position({ scheme: fixed, inset: auto, l: bind(anchorLeft), t: bind(anchorTop), z: popover }).pad(1).margin(0).size({ w: bind(anchorWidth), min-w: bind(anchorWidth), max-h: panel-max-h-sm }).overflow({ y: auto, overscroll: contain }).fg(popover-foreground).bg(popover).border({ color: border, width: 1 }).radius(md).elevation(lg)}
 </scope>
 
 <div use:combobox style(host)>

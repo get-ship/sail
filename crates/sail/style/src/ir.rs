@@ -225,23 +225,20 @@ impl StyleDiagnostic {
             StyleDiagnostic::ParseError { message, .. } => message.clone(),
             StyleDiagnostic::UnknownSetter {
                 setter, suggestion, ..
-            } => match suggestion {
-                Some(s) => format!(
-                    "style unknown setter `{setter}` — did you mean `{s}`? [sail:fix:setter={s}]"
-                ),
-                None => format!("style unknown setter `{setter}`"),
-            },
-            StyleDiagnostic::BadToken { setter, value, .. } => {
-                if setter == "fontFamily" {
-                    format!(
-                        "style `fontFamily({value})` — fontFamily accepts role tokens only \
-                         (body, heading, mono, display), not family strings or URLs"
-                    )
+            } => {
+                if let Some(teach) = crate::foreign_idioms::teaching_line(setter) {
+                    format!("style unknown setter `{setter}` — {teach}")
                 } else {
-                    format!(
-                        "style `{setter}({value})` — value is not a token on this setter's scale"
-                    )
+                    match suggestion {
+                        Some(s) => format!(
+                            "style unknown setter `{setter}` — did you mean `{s}`? [sail:fix:setter={s}]"
+                        ),
+                        None => format!("style unknown setter `{setter}`"),
+                    }
                 }
+            }
+            StyleDiagnostic::BadToken { setter, value, .. } => {
+                format!("style `{setter}({value})` — value is not a token on this setter's scale")
             }
             StyleDiagnostic::ThemeOwnedToken { name, .. } => {
                 format!(
@@ -275,7 +272,7 @@ impl StyleDiagnostic {
                 }
                 "size" if slot.starts_with("pad") || slot == "text" => {
                     format!(
-                        "style `size` does not take `{slot}` — padding uses `space(…)`; type size uses `type(…)`"
+                        "style `size` does not take `{slot}` — padding uses `pad(…)`; type size uses `type(…)`"
                     )
                 }
                 _ => format!(
@@ -299,7 +296,10 @@ impl StyleDiagnostic {
                 )
             }
             StyleDiagnostic::UnknownVocabulary { name, .. } => {
-                format!("unknown vocabulary `{name}`")
+                match crate::foreign_idioms::teaching_line(name) {
+                    Some(teach) => format!("unknown vocabulary `{name}` — {teach}"),
+                    None => format!("unknown vocabulary `{name}`"),
+                }
             }
         }
     }

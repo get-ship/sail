@@ -8,7 +8,7 @@ use std::path::{Path, PathBuf};
 
 use serde::Serialize;
 
-use crate::{CheckOptions, Forest, check_preprocessed_with, check_tree};
+use crate::{CheckOptions, check_preprocessed_with};
 
 /// Default viewport for canary scans (matches gate vehicles).
 const DEFAULT_VIEWPORT: (f32, f32) = (400.0, 300.0);
@@ -82,16 +82,17 @@ pub struct CanaryReport {
     pub promotion: PromotionStatus,
 }
 
-/// Promotion criteria prose for RESULT.
+/// Promotion criteria prose for RESULT / future promote decision.
 ///
-/// LAYOUT-5: overflow + clipped-text promoted (corpus FP ≈ 0). Tap stays
-/// experimental with remaining classes named in RESULT-LAYOUT-5.
+/// Kinds stay experimental-only until a corpus canary shows ≈0 false
+/// positives on known vehicles and a broader sample review. Do not flip
+/// default severity from this spike.
 const PROMOTION_CRITERIA: &str = "\
-unintended-overflow and clipped-text promoted to default Error after LAYOUT-5 \
-corpus canary FP≈0. Seeded no-opt-in / no-truncate fixtures stay red. \
-sub-min-tap-target stays experimental: remaining classes named in \
-RESULT-LAYOUT-5 (control-h-2xs 22px token, doc-button size exhibit, \
-field measure drift, swatch labels, canvas ports).";
+Promote unintended-overflow / clipped-text to default Error only when a \
+corpus canary under experimental shows FP rate ≈ 0 on intentional true-positive \
+vehicles and a reviewed sample of real corpus findings has no material false \
+positives. Until then keep experimental_only = true (strict / layoutExperimental \
+gate). S4.2 records counts + FP verdicts; it does not promote.";
 
 /// Run experimental layout kinds against labeled preprocessed fixtures and
 /// optional on-disk corpus roots.
@@ -103,7 +104,7 @@ field measure drift, swatch labels, canvas ports).";
 /// - `corpus_roots` may be empty; when non-empty, walks `*.html` files
 ///   (treated as preprocessed HTML) as a best-effort extension of the canary.
 /// - Report populates [`CanaryCounts`], samples, per-sample FP verdicts,
-///   and promotion criteria (overflow + clipped-text promoted).
+///   and promotion criteria with `experimental_only: true`.
 pub fn run(
     fixture_sources: &[(&str, &str)],
     corpus_roots: &[&Path],
@@ -150,7 +151,7 @@ pub fn run(
         samples,
         fp_verdicts,
         promotion: PromotionStatus {
-            experimental_only: false,
+            experimental_only: true,
             criteria: PROMOTION_CRITERIA.to_string(),
         },
     })
@@ -230,12 +231,15 @@ fn judge_finding(path: &str, kind: &str) -> (FpJudgment, String) {
         }
         KIND_UNINTENDED_OVERFLOW => (
             FpJudgment::Unclear,
-            "unintended-overflow on non-vehicle path; corpus review lives in RESULT-LAYOUT-5"
+            "unintended-overflow on non-vehicle path; needs human FP review \
+             before promote (experimental_only remains true)"
                 .into(),
         ),
         KIND_CLIPPED_TEXT => (
             FpJudgment::Unclear,
-            "clipped-text on non-vehicle path; corpus review lives in RESULT-LAYOUT-5".into(),
+            "clipped-text on non-vehicle path; needs human FP review before \
+             promote (experimental_only remains true)"
+                .into(),
         ),
         _ => (
             FpJudgment::Unclear,
@@ -323,16 +327,12 @@ pub fn scan_preprocessed(
     opts: CheckOptions,
 ) -> PreprocessedScan {
     let started = std::time::Instant::now();
-    let forest = Forest::parse(preprocessed);
     let mut findings = Vec::new();
     let mut viewport_errors = Vec::new();
     let mut viewports_ok = 0usize;
 
     for &viewport in viewports {
-        match forest
-            .layout(viewport)
-            .and_then(|tree| check_tree(&tree, opts))
-        {
+        match check_preprocessed_with(preprocessed, viewport, opts) {
             Ok(result) => {
                 viewports_ok += 1;
                 for d in result.diagnostics {

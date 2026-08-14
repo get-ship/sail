@@ -94,11 +94,11 @@ Controllers never `.style` / `createElement`.\n\
             let _ = writeln!(
                 md,
                 "- No `<style>` / `style=` / raw px-hex — tokens only.\n\
-                 - Style product: `style({{ box: space({{ pad: 4 }}), paint: fill(surface) }})` — not utility strings.\n\
+                 - Style product: `style({{ pad(4).bg(surface) }})` — not utility strings.\n\
                  - Layout keywords: `<row>` `<column>` `<grid>` `<center>` `<stack>`.\n\
-                 - Participation on the box channel: `style({{ box: size({{ w: full, min-w: 0 }}).flow({{ grow: 1 }}) }})` \
+                 - Participation on the box channel: `style({{ size({{ w: full, min-w: 0 }}).grow(1) }})` \
                    (`sail-participation-style` refuses bare `grow`/`shrink`/`w`/`min-w`/`max-w`).\n\
-                 - Never `flow({{ display: … }})` on layout keywords (`sail-display-on-layout`):\n  \
+                 - Never `display(…)` on layout keywords (`sail-display-on-layout`):\n  \
                    `.sail-col` / `.sail-row` beat `.s-displaynone`. Plain host + nest layout.\n\
                  - **a11y IR (SPEC-ARIA-1):** never free `aria-*` / free ARIA `role=` \
                    (Warning now, Error next). Semantic props: `label` `description` \
@@ -142,7 +142,7 @@ Controllers never `.style` / `createElement`.\n\
             let _ = writeln!(
                 md,
                 "\n**Participation (any element, box channel):** \
-                 `style({{ box: size({{ w: full, min-w: 0 }}).flow({{ grow: 1 }}) }})` / `flow({{ shrink: 0 }})` — bare attrs refused \
+                 `style({{ size({{ w: full, min-w: 0 }}).grow(1) }})` / `shrink(0)` — bare attrs refused \
                  (`sail-participation-style`). Axis sugar `gap`/`align`/`justify` stays on layout keywords.\n\n\
                  **Refused layout-as-sx** (`style_vocab::refusals()`):\n"
             );
@@ -151,7 +151,7 @@ Controllers never `.style` / `createElement`.\n\
             }
             let _ = writeln!(
                 md,
-                "\n**Display on layout:** `flow({{ display: … }})` on layout keywords is a hard error \
+                "\n**Display on layout:** `display(…)` on layout keywords is a hard error \
                  (`sail-display-on-layout`). Hide a plain host; nest the layout keyword.\n"
             );
         }
@@ -159,31 +159,44 @@ Controllers never `.style` / `createElement`.\n\
             let _ = writeln!(md, "# Sail surface — style\n");
             let _ = writeln!(
                 md,
-                "The concern table **is** the setter table (SPEC-SPINNAKER-2). \
-                 Named composite or slot object. Object/channel form is the language — \
-                 not constructor `style.padX(3)`. Absorbed names (`bg`, `fg`, `padX`, \
+                "The vocabulary table **is** the setter table (SPEC-SPINNAKER-3). \
+                 Live names are `bg`/`fg`/`pad`/`margin`/`position`/`play`. \
+                 v2 `fill`/`ink`/`place`/`space`/`flow`/`motion` are unknown vocabulary. \
+                 Named composite or slot object. Flat chain is the language — \
+                 not constructor `style.padX(3)`. Absorbed longhands (`padX`, \
                  `fontSize`, `truncate`, `shadow`) do not resolve.\n\n\
                  ```\n\
                  style chrome = {{\n  \
-                   box:   size(control-md).space({{ pad-x: 3 }}),\n  \
-                   paint: fill(surface).ink(foreground).border(subtle).radius(lg).elevation(sm),\n  \
-                   text:  type(body-sm),\n\
+                   size(control-md).pad({{ x: 3 }}).bg(surface).fg(foreground).border(subtle).radius(lg).elevation(sm).type(body-sm)\n\
                  }}\n\
                  ```\n\n\
-                 **Participation** lives on `box:` via `size` / `flow` \
-                 (`style({{ box: size({{ w: full, min-w: 0 }}).flow({{ grow: 1 }}) }})`). \
+                 **Participation** lives on `size` / `grow` / `shrink` \
+                 (`style({{ size({{ w: full, min-w: 0 }}).grow(1) }})`). \
                  Bare attrs refused (`sail-participation-style`).\n\n\
                  `border` slots are `color`/`width`/`style`/`edge`/`kind` — radius is not a slot.\n\
-                 `size` is box geometry only — pad is not a slot (use `space`).\n"
+                 `size` is box geometry only — pad is not a slot (use `pad`).\n"
             );
             let _ = writeln!(md, "## Concerns\n");
-            for spec in sail_lint::style::concerns() {
-                let _ = writeln!(md, "- {}", concern_surface_line(spec));
+            for row in sail_lint::style::offered_rows()
+                .filter(|r| r.tag == sail_lint::style::VocabTag::Concern)
+            {
+                let _ = writeln!(md, "- {}", sail_lint::style::vocab_surface_line(row));
             }
-            let _ = writeln!(md, "\n## Markers (verbs, not concerns)\n");
-            let _ = writeln!(md, "Flags or a single switch. Not a themed bundle.\n");
-            for name in sail_lint::style::MARKERS {
-                let _ = writeln!(md, "- `{name}(…)`");
+            let _ = writeln!(md, "\n## Axis\n");
+            for row in sail_lint::style::offered_rows()
+                .filter(|r| r.tag == sail_lint::style::VocabTag::Axis)
+            {
+                let _ = writeln!(md, "- {}", sail_lint::style::vocab_surface_line(row));
+            }
+            let _ = writeln!(md, "\n## Plains\n");
+            let _ = writeln!(
+                md,
+                "Verbs and resolve-offered singles. Not a themed bundle.\n"
+            );
+            for row in sail_lint::style::offered_rows()
+                .filter(|r| r.tag == sail_lint::style::VocabTag::Plain)
+            {
+                let _ = writeln!(md, "- {}", sail_lint::style::vocab_surface_line(row));
             }
         }
         SurfaceTopic::Tokens => {
@@ -192,8 +205,9 @@ Controllers never `.style` / `createElement`.\n\
                 md,
                 "Closed value sets concern slots draw from (`sail_lint::scales`). \
                  Named composites (`size.control-md`, `type.heading`, `elevation.sm`, \
-                 `fill.surface`) are identities, not CSS names. Size members are \
-                 geometry only — pad on a size composite is a schema error.\n"
+                 `border.subtle`) are identities, not CSS names. Authors spend them \
+                 as `size(control-md)` / `type(heading)` / `bg(surface)`. Size members \
+                 are geometry only — pad on a size composite is a schema error.\n"
             );
             for scale in &[
                 "space",
@@ -225,11 +239,19 @@ Controllers never `.style` / `createElement`.\n\
                     md,
                     "Dotted identities (not CSS names). Concern setters resolve \
                      these first. Atlas: `border.*`, `size.control-*`/`size.full`, \
-                     `type.*`, `elevation.*`, `fill.*`, `ink.*`, plus component \
-                     faces (`dialog.border`, `card.border`). `border` slots \
+                     `type.*`, `elevation.*`. Authors write `bg(surface)` / \
+                     `fg(foreground)`. `border` slots \
                      color/width/style; radius is not a slot. `size` has no pad.\n"
                 );
                 for c in composites {
+                    if c.r#type == "fill"
+                        || c.r#type == "ink"
+                        || c.name.starts_with("fill.")
+                        || c.name.starts_with("ink.")
+                        || c.name.contains(".border") && c.name != "border"
+                    {
+                        continue;
+                    }
                     let members: Vec<&str> = c.members.iter().map(|(slot, _)| *slot).collect();
                     let _ = writeln!(
                         md,
@@ -336,7 +358,7 @@ Controllers never `.style` / `createElement`.\n\
                  ```\n\
                  <scope>\n  \
                    type ListTileProps = {{ title: string; icon?: Icon }}\n  \
-                   style card = {{ box: space({{ pad: 2 }}) }}\n\
+                   style card = {{ pad(2) }}\n\
                  </scope>\n\
                  <partial list-tile props: ListTileProps>\n  \
                    <row style(card)><text>{{title}}</text><slot/></row>\n\
@@ -386,24 +408,6 @@ Controllers never `.style` / `createElement`.\n\
         }
     }
     md
-}
-
-/// Object/channel form — not constructor `style.padX`.
-fn concern_surface_line(spec: &sail_lint::style::ConcernSpec) -> String {
-    let slots: Vec<&str> = spec.slots.iter().map(|s| s.name).collect();
-    let mut line = format!(
-        "`{}:` `{}(…)` · slots `{}`",
-        spec.channel.key(),
-        spec.name,
-        slots.join("`/`")
-    );
-    if spec.name == "border" {
-        line.push_str(" · radius is not a slot · kind is a family key");
-    }
-    if spec.name == "size" {
-        line.push_str(" · pad is not a slot (use space)");
-    }
-    line
 }
 
 /// Structured diagnostic for Check JSON output.
@@ -1204,12 +1208,18 @@ pub fn sail_layout_check(source: &str) -> Result<Value, OpError> {
         })
         .collect();
 
-    let preprocessed = sail_compiler::parse::preprocess::preprocess(source)
-        .map_err(|e| OpError::InvalidArgument(format!("preprocess: {e}")))?;
+    let (preprocessed, type_hosts) =
+        sail_compiler::parse::preprocess::preprocess_with_types(source)
+            .map_err(|e| OpError::InvalidArgument(format!("preprocess: {e}")))?;
     let viewports = sail_compiler::check::layout::layout_viewports(&preprocessed);
     let mut viewport_reports: Vec<Value> = Vec::new();
     for vp in viewports {
-        match sail_layout::check_preprocessed(&preprocessed, vp) {
+        match sail_layout::check_preprocessed_with_types(
+            &preprocessed,
+            vp,
+            sail_layout::CheckOptions::default(),
+            &type_hosts,
+        ) {
             Ok(scan) => {
                 let boxes: Vec<Value> = scan
                     .boxes
@@ -1297,28 +1307,35 @@ mod tests {
             "border must be documented as a concern: {style}"
         );
         assert!(
-            style.contains("`fill(…)`")
-                && style.contains("`ink(…)`")
+            style.contains("`bg(…)`")
+                && style.contains("`fg(…)`")
                 && style.contains("`size(…)`")
                 && style.contains("`type(…)`")
                 && style.contains("`elevation(…)`"),
-            "atlas must list fill/ink/size/type/elevation: {style}"
+            "atlas must list bg/fg/size/type/elevation: {style}"
         );
         assert!(
-            style.contains("pad is not a slot") && style.contains("## Markers"),
-            "size geometry + markers: {style}"
+            !style.contains("`fill(…)`") && !style.contains("`ink(…)`"),
+            "must not offer dead v2 names: {style}"
+        );
+        assert!(
+            style.contains("pad is not a slot") && style.contains("## Plains"),
+            "size geometry + plains: {style}"
         );
         let tokens = surface_markdown(SurfaceTopic::Tokens);
         assert!(
-            tokens.contains("`border.subtle`") && tokens.contains("`dialog.border`"),
+            tokens.contains("`border.subtle`"),
             "tokens topic must list border composites: {tokens}"
         );
         assert!(
             tokens.contains("`size.control-md`")
                 && tokens.contains("`type.heading`")
-                && tokens.contains("`elevation.sm`")
-                && tokens.contains("`fill.surface`"),
-            "tokens topic must list new composites: {tokens}"
+                && tokens.contains("`elevation.sm`"),
+            "tokens topic must list live composites: {tokens}"
+        );
+        assert!(
+            !tokens.contains("`fill.surface`") && !tokens.contains("`dialog.border`"),
+            "tokens topic must not teach dead packs: {tokens}"
         );
     }
 
@@ -1402,7 +1419,7 @@ mod tests {
             .iter()
             .filter_map(|i| i.get("label").and_then(|v| v.as_str()).map(str::to_string))
             .collect();
-        for want in ["subtle", "card", "dialog"] {
+        for want in ["subtle", "card"] {
             assert!(
                 labels.iter().any(|l| l == want),
                 "{want} missing: {labels:?}"
@@ -1474,24 +1491,24 @@ mod tests {
         use crate::call_rpc;
         use crate::ctx::Ctx;
         let paint = complete_labels("style({ paint:  })", "paint: ", 7);
-        for want in ["fill", "ink", "border", "elevation"] {
+        for want in ["bg", "fg", "border", "elevation"] {
             assert!(paint.iter().any(|l| l == want), "{want} missing: {paint:?}");
         }
-        for absorbed in ["bg", "fg", "shadow"] {
+        for dead in ["fill", "ink", "shadow"] {
             assert!(
-                !paint.iter().any(|l| l == absorbed),
-                "absorbed `{absorbed}` offered on paint: {paint:?}"
+                !paint.iter().any(|l| l == dead),
+                "dead `{dead}` offered on paint: {paint:?}"
             );
         }
 
         let box_ch = complete_labels("style({ box:  })", "box: ", 5);
-        for want in ["size", "space", "place", "flow"] {
+        for want in ["size", "pad", "margin", "position"] {
             assert!(
                 box_ch.iter().any(|l| l == want),
                 "{want} missing: {box_ch:?}"
             );
         }
-        for absorbed in ["padX", "w", "minW", "grow"] {
+        for absorbed in ["space", "place", "flow", "padX", "w", "minW"] {
             assert!(
                 !box_ch.iter().any(|l| l == absorbed),
                 "absorbed `{absorbed}` offered on box: {box_ch:?}"
@@ -1522,7 +1539,7 @@ mod tests {
             assert!(elev.iter().any(|l| l == want), "{want} missing: {elev:?}");
         }
 
-        let fill = complete_labels("style({ paint: fill() })", "fill(", 5);
+        let fill = complete_labels("style({ bg() })", "bg(", 3);
         for want in ["surface", "card", "muted"] {
             assert!(fill.iter().any(|l| l == want), "{want} missing: {fill:?}");
         }
@@ -1545,7 +1562,7 @@ mod tests {
                 "elevation.sm",
                 "shadow:",
             ),
-            ("style({ paint: fill(fill.surface) })", "surface", "color:"),
+            ("style({ bg(fill.surface) })", "surface", "color:"),
         ] {
             let hover_off = src.find(token).expect(token);
             let hover = call_rpc(

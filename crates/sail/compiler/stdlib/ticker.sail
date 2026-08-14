@@ -14,16 +14,16 @@
     reverse = false
   }
 
-  style host = {box: overflow({ all: hidden }).size({ w: full, min-w: 0 })}
+  style host = {overflow({ all: hidden }).size({ w: full, min-w: 0 })}
   // Track must size to dual content (max-content). Row default min-w:0 on
   // children would collapse both copies into the host width and kill the loop.
-  style track = {box: size({ w: max })}
-  style cell = {box: size({ min-w: max }), text: type({ wrap: nowrap })}
+  style track = {size({ w: max })}
+  style cell = {size({ min-w: max }).type({ wrap: nowrap })}
 </scope>
 
 <div style(host)>
   <row nowrap use:marquee style(track)>
-    <span style(cell, {box: flow({ shrink: 0 })})><slot></slot></span>
-    <span hidden="true" style(cell, {box: flow({ shrink: 0 })})><slot></slot></span>
+    <span style(cell, {shrink(0)})><slot></slot></span>
+    <span hidden="true" style(cell, {shrink(0)})><slot></slot></span>
   </row>
 </div>

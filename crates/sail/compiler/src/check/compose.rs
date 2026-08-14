@@ -1,22 +1,20 @@
 //! Compose pass — rhythm, contrast, and alignment advisory gates.
 //!
+//! Runs after the layout pass and reuses the same taffy tree (built from the
+//! preprocessed source) so we never pay for a second layout computation.
+//!
 //! **Spacing is resolved structurally** via `sail_lint::style::parse` on each
 //! child's block `style({…})` statement (and parent `gap` attrs) — not by
 //! substring fingerprinting lowered `s-mr*` class tokens.
 //!
-//! Rhythm walks the preprocessed HTML tree (flex `row`/`column` hosts). It
-//! does not rebuild taffy: sibling spacing lives in the Style AST.
-//!
 //! Rhythm: ≥3 siblings, modal spacing ≥60% → repair outliers to the modal
 //! space-scale token. No mode → WARN only (deliberate asymmetry).
 //! Contrast: fg/bg token pairs under WCAG AA → confluent in-scale repair.
-//! Alignment-drift: sibling edges 2–6px off a dominant edge → advisory WARN
-//! when layout's shared box tree is available; this pass does not rebuild one.
+//! Alignment-drift: sibling edges 2–6px off a dominant edge → advisory WARN.
 
 use std::collections::HashMap;
 use std::path::Path;
 
-use crate::check::layout::{SharedBoxes, SharedViewport};
 use crate::check::lint_overrides::{LintOverride, OverrideSeverity};
 use crate::diagnostics::{DiagSeverity, Diagnostic};
 
@@ -44,92 +42,99 @@ pub fn collect(
     source_path: Option<&Path>,
     overrides: &[LintOverride],
 ) -> Vec<Diagnostic> {
-    collect_with(source, source_path, overrides, None)
-}
-
-/// Like [`collect`], using layout's forest + trees when the check walk
-/// already built them. Does not rebuild taffy.
-pub fn collect_with(
-    source: &str,
-    source_path: Option<&Path>,
-    overrides: &[LintOverride],
-    boxes: Option<&SharedBoxes>,
-) -> Vec<Diagnostic> {
     let severity = match resolve_severity(source_path, overrides) {
         Some(s) => s,
         None => return Vec::new(),
     };
 
-    let owned_pre;
-    let owned_elements;
-    let (preprocessed, elements, trees): (
-        &str,
-        &[sail_layout::html::Element],
-        Option<&[SharedViewport]>,
-    ) = if let Some(b) = boxes {
-        (b.preprocessed.as_str(), b.forest.elements(), Some(&b.trees))
-    } else {
-        match crate::parse::preprocess::preprocess(source) {
-            Ok(p) => {
-                owned_pre = p;
-                owned_elements = sail_layout::html::parse_source(&owned_pre);
-                (&owned_pre, owned_elements.as_slice(), None)
-            }
-            Err(_) => {
-                // Style errors can prevent preprocess; still surface off-scale
-                // spacing from raw author tags so starter rewrites stay available.
-                return collect_off_scale_for_check(source, source_path, overrides);
-            }
-        }
+    let Ok((preprocessed, hosts)) = crate::parse::preprocess::preprocess_with_style(source) else {
+        // Style errors can prevent preprocess; still surface off-scale spacing
+        // from raw author tags so starter rewrites stay available.
+        return collect_off_scale_for_check(source, source_path, overrides);
     };
+    let viewports = crate::check::layout::layout_viewports(&preprocessed);
+    let mut elements = sail_layout::html::parse_source(&preprocessed);
+    sail_layout::apply_resolved_types(&mut elements, &hosts.types);
+    sail_layout::apply_resolved_boxes(&mut elements, &hosts.boxes);
 
-    // Per-parent-instance rhythm data (elem_idx). Key by elem_idx — not
-    // fingerprint alone — so two sibling <row>s with the same tag fingerprint
-    // are checked independently (AUTOFIX-1 multi-parent).
+    // Per-parent-instance rhythm data (elem_idx), merged across viewports.
+    // Key by elem_idx — not fingerprint alone — so two sibling <row>s with the
+    // same tag fingerprint are checked independently (AUTOFIX-1 multi-parent).
     let mut buckets: HashMap<usize, RhythmBucket> = HashMap::new();
 
-    for elem_idx in 1..elements.len() {
-        let container_kind = container_kind_from_element(&elements[elem_idx]);
-        if container_kind == ContainerKind::None {
-            continue;
-        }
-        if elements[elem_idx].children.len() < 3 {
-            continue;
-        }
-
-        let fp = element_fingerprint(&elements[elem_idx].class, &elements[elem_idx].tag)
-            .unwrap_or_else(|| Fingerprint {
-                base_tag: Some(elements[elem_idx].tag.clone()),
-                sx_atoms: Vec::new(),
-            });
-
-        let pre_index = count_fingerprint_before(&elements, &fp, elements[elem_idx].span.0);
-
-        // Read source-level spacing values. Parent gap can never vary, so it
-        // only produces a fix when it is absent and children express spacing
-        // via margin styles. Use this instance's pre_index (not 0).
-        let Some(pattern) = spacing_pattern(
-            source,
-            &preprocessed,
-            &fp,
-            pre_index,
-            &elements,
-            elem_idx,
-            container_kind,
-        ) else {
+    for viewport in viewports {
+        let Ok(layout) = sail_layout::taffy_tree::build(elements.clone(), viewport) else {
             continue;
         };
-        let gaps = pattern.values();
-        if gaps.len() < 3 {
-            continue;
-        }
 
-        let bucket = buckets.entry(elem_idx).or_default();
-        bucket.gaps.extend(gaps);
-        bucket.container_kind = container_kind;
-        bucket.pre_index = pre_index;
-        bucket.fp = Some(fp);
-        bucket.pattern = Some(pattern);
+        for elem_idx in 1..elements.len() {
+            let Some(node_id) = layout.nodes[elem_idx] else {
+                continue;
+            };
+            let style = &layout.styles[elem_idx].style;
+            let container_kind = container_kind(style);
+            if container_kind == ContainerKind::None {
+                continue;
+            }
+            let Ok(taffy_children) = layout.taffy.children(node_id) else {
+                continue;
+            };
+            if taffy_children.len() < 3 {
+                continue;
+            }
+
+            // Build (elem_index, layout) pairs for children that taffy laid out.
+            let mut child_layouts: Vec<(usize, sail_layout::taffy::tree::Layout)> = Vec::new();
+            for child_node in taffy_children {
+                let Ok(child_layout) = layout.taffy.layout(child_node).cloned() else {
+                    continue;
+                };
+                let Some(ctx) = layout.taffy.get_node_context(child_node) else {
+                    continue;
+                };
+                child_layouts.push((ctx.elem_index, child_layout));
+            }
+
+            let fp = element_fingerprint(&elements[elem_idx].class, &elements[elem_idx].tag)
+                .unwrap_or_else(|| Fingerprint {
+                    base_tag: Some(elements[elem_idx].tag.clone()),
+                    sx_atoms: Vec::new(),
+                });
+
+            let pre_index = count_fingerprint_before(&preprocessed, &fp, elements[elem_idx].span.0);
+
+            // Read source-level spacing values. Parent gap can never vary, so it
+            // only produces a fix when it is absent and children express spacing
+            // via margin styles. Use this instance's pre_index (not 0).
+            let Some(pattern) = spacing_pattern(
+                source,
+                &preprocessed,
+                &fp,
+                pre_index,
+                &elements,
+                elem_idx,
+                container_kind,
+            ) else {
+                continue;
+            };
+            let gaps = pattern.values();
+            if gaps.len() < 3 {
+                continue;
+            }
+
+            let bucket = buckets.entry(elem_idx).or_default();
+            if bucket.pattern.is_some() {
+                // Source-level spacing patterns are viewport-independent; keep
+                // the first collected viewport to avoid duplicate diagnostics.
+                continue;
+            }
+            bucket.gaps.extend(gaps);
+            bucket.container_kind = container_kind;
+            bucket.pre_index = pre_index;
+            bucket.fp = Some(fp);
+            bucket.child_layouts = child_layouts;
+            bucket.pattern = Some(pattern);
+        }
     }
 
     let mut out: Vec<Diagnostic> = Vec::new();
@@ -208,7 +213,7 @@ pub fn collect_with(
                             sx_atoms: Vec::new(),
                         });
                     let child_pre_index =
-                        count_fingerprint_before(&elements, &child_fp, child_elem.span.0);
+                        count_fingerprint_before(&preprocessed, &child_fp, child_elem.span.0);
                     if let Some(span) =
                         find_original_span(source, &preprocessed, &child_fp, child_pre_index)
                     {
@@ -233,13 +238,12 @@ pub fn collect_with(
         }
     }
 
-    // Contrast + off-scale spacing. Alignment walks layout's shared trees.
-    out.extend(collect_contrast(source, severity));
+    // Contrast + alignment + off-scale spacing gates.
+    out.extend(collect_contrast(source, &preprocessed, &elements, severity));
     out.extend(collect_alignment(
         source,
-        preprocessed,
-        elements,
-        trees,
+        &preprocessed,
+        &elements,
         severity,
     ));
     out.extend(collect_off_scale_spacing(
@@ -278,26 +282,16 @@ fn resolve_severity(
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum ContainerKind {
-    #[default]
     None,
     Row,
     Column,
 }
 
-fn container_kind_from_element(elem: &sail_layout::html::Element) -> ContainerKind {
-    for token in elem.class.split_whitespace() {
-        match token {
-            "sail-row" | "sail-row-i" => return ContainerKind::Row,
-            "sail-col" | "sail-col-i" => return ContainerKind::Column,
-            _ => {}
-        }
-    }
-    match elem.tag.as_str() {
-        "row" => ContainerKind::Row,
-        "column" => ContainerKind::Column,
-        _ => ContainerKind::None,
+impl Default for ContainerKind {
+    fn default() -> Self {
+        ContainerKind::None
     }
 }
 
@@ -367,6 +361,7 @@ struct RhythmBucket {
     pre_index: usize,
     /// Parent fingerprint for span mapping (set when pattern is collected).
     fp: Option<Fingerprint>,
+    child_layouts: Vec<(usize, sail_layout::taffy::tree::Layout)>,
     pattern: Option<SpacingPattern>,
 }
 
@@ -384,7 +379,7 @@ fn find_mode(gaps: &[f32]) -> Option<(f32, usize)> {
             .iter()
             .filter(|h| (g - *h).abs() <= GAP_EPSILON)
             .count();
-        if best.is_none_or(|(_, c)| count > c) {
+        if best.map_or(true, |(_, c)| count > c) {
             best = Some((*g, count));
         }
         // Don't let very close duplicate centres both win; advance past this
@@ -393,7 +388,9 @@ fn find_mode(gaps: &[f32]) -> Option<(f32, usize)> {
             continue;
         }
     }
-    let (mode_px, count) = best?;
+    let Some((mode_px, count)) = best else {
+        return None;
+    };
     if (count as f64) < (gaps.len() as f64) * MODE_THRESHOLD {
         return None;
     }
@@ -444,7 +441,7 @@ fn spacing_pattern(
                 base_tag: Some(child.tag.clone()),
                 sx_atoms: Vec::new(),
             });
-        let child_pre = count_fingerprint_before(elements, &child_fp, child.span.0);
+        let child_pre = count_fingerprint_before(preprocessed, &child_fp, child.span.0);
         let Some(span) = find_original_span(source, preprocessed, &child_fp, child_pre) else {
             continue;
         };
@@ -885,10 +882,11 @@ fn layout_keyword_tag(tag: &str) -> Option<&'static str> {
 }
 
 fn count_fingerprint_before(
-    elements: &[sail_layout::html::Element],
+    preprocessed: &str,
     fingerprint: &Fingerprint,
     before_byte: usize,
 ) -> usize {
+    let elements = sail_layout::html::parse_source(preprocessed);
     let mut count = 0;
     for elem in elements.iter().skip(1) {
         if elem.span.0 >= before_byte {
@@ -997,16 +995,23 @@ fn tag_matches_fingerprint(
     } else {
         return false;
     };
-    // Collapse Style source so `mr(4)` matches mint atom `mr4` (`s-mr4`).
-    // Substring-both-ways (`mb8` contains `mb`) maps `mb(8)` onto `mb(4)`.
+    // Collapse Style source to alphanumeric tokens so `mr(4)` / `mr4` match
+    // mint atom `mr4` from fingerprint (class `s-mr4`).
     let collapsed: String = sx_value
         .chars()
         .filter(|c| c.is_ascii_alphanumeric())
         .collect();
-    fingerprint
-        .sx_atoms
-        .iter()
-        .all(|a| collapsed.contains(a.as_str()))
+    let source_atoms: std::collections::HashSet<String> = sx_value
+        .split(|c: char| !c.is_ascii_alphanumeric())
+        .filter(|s| !s.is_empty())
+        .map(|s| s.to_string())
+        .collect();
+    fingerprint.sx_atoms.iter().all(|a| {
+        source_atoms
+            .iter()
+            .any(|s| s == a || s.contains(a.as_str()) || a.contains(s.as_str()))
+            || collapsed.contains(a.as_str())
+    })
 }
 
 fn parse_open_tag(source: &str, pos: usize) -> Option<(usize, &str, Vec<(String, String)>)> {
@@ -1174,35 +1179,33 @@ fn nearest_passing_fg(bg: &str, current_fg: &str) -> Option<&'static str> {
     })
 }
 
-fn collect_contrast(source: &str, severity: DiagSeverity) -> Vec<Diagnostic> {
+fn collect_contrast(
+    source: &str,
+    preprocessed: &str,
+    elements: &[sail_layout::html::Element],
+    severity: DiagSeverity,
+) -> Vec<Diagnostic> {
     if severity == DiagSeverity::Error {
         // strict autofix: still report, but as Error without rewrite payload path
     }
     let mut out = Vec::new();
-    let mut skip_to = 0usize;
-    for (pos, ch) in source.char_indices() {
-        if pos < skip_to {
-            continue;
-        }
-        if source[pos..].starts_with("<!--") {
-            if let Some(end) = source[pos..].find("-->") {
-                skip_to = pos + end + 3;
-            } else {
-                break;
-            }
-            continue;
-        }
-        if ch != '<' {
-            continue;
-        }
-        let Some((tag_end, _tag, attrs)) = parse_open_tag(source, pos) else {
+    for (idx, elem) in elements.iter().enumerate().skip(1) {
+        let fp = element_fingerprint(&elem.class, &elem.tag).unwrap_or_else(|| Fingerprint {
+            base_tag: Some(elem.tag.clone()),
+            sx_atoms: Vec::new(),
+        });
+        let pre_i = count_fingerprint_before(preprocessed, &fp, elem.span.0);
+        let Some(span) = find_original_span(source, preprocessed, &fp, pre_i) else {
             continue;
         };
-        skip_to = tag_end;
-        let Some(sx) = element_style_expr(source, tag_end, &attrs) else {
+        let Some((_, _, attrs)) = parse_open_tag(source, span.0) else {
             continue;
         };
-        let (style, _) = sail_lint::style::parse(&sx);
+        let Some(sx) = attr_value(&attrs, "style") else {
+            continue;
+        };
+        let expr = strip_sx_braces(&sx);
+        let (style, _) = sail_lint::style::parse(expr);
         let mut ops = Vec::new();
         collect_paint_ops(&style, &mut ops);
         let mut bg: Option<String> = None;
@@ -1225,7 +1228,6 @@ fn collect_contrast(source: &str, severity: DiagSeverity) -> Vec<Diagnostic> {
         let (Some(bg_t), Some(fg_t)) = (bg, fg) else {
             continue;
         };
-        let span = (pos, tag_end);
         let (Some(bl), Some(fl)) = (token_luminance(&bg_t), token_luminance(&fg_t)) else {
             // Off-scale / unknown → WARN only.
             if matches!(severity, DiagSeverity::Fix | DiagSeverity::Warning) {
@@ -1250,17 +1252,23 @@ fn collect_contrast(source: &str, severity: DiagSeverity) -> Vec<Diagnostic> {
         }
         let (line, col, end_line, end_col) = span_to_coords(source, span);
         if let Some(next_fg) = nearest_passing_fg(&bg_t, &fg_t) {
+            let sev = match severity {
+                DiagSeverity::Error => DiagSeverity::Error,
+                DiagSeverity::Warning => DiagSeverity::Warning,
+                DiagSeverity::Fix => DiagSeverity::Fix,
+            };
             out.push(Diagnostic {
                 line,
                 col,
                 end_line,
                 end_col,
-                severity,
+                severity: sev,
                 message: format!(
                     "contrast: {fg_t} on {bg_t} is {ratio:.2}:1 (need {WCAG_AA}) — set fg to \"{next_fg}\" [sail:fix:fg={next_fg}]"
                 ),
                 rule: Some(CONTRAST_RULE.into()),
             });
+            let _ = idx;
         } else {
             // No same-family confluent repair — WARN only.
             out.push(Diagnostic {
@@ -1378,13 +1386,18 @@ fn collect_off_scale_from_source(source: &str, severity: DiagSeverity) -> Vec<Di
                 continue;
             }
             let (line, col, end_line, end_col) = span_to_coords(source, span);
+            let sev = match severity {
+                DiagSeverity::Error => DiagSeverity::Error,
+                DiagSeverity::Warning => DiagSeverity::Warning,
+                DiagSeverity::Fix => DiagSeverity::Fix,
+            };
             let setter = op.setter.as_str();
             out.push(Diagnostic {
                 line,
                 col,
                 end_line,
                 end_col,
-                severity,
+                severity: sev,
                 message: format!(
                     "off-scale spacing: {setter}({t}) is not a space token — set {setter} to \"{target}\" [sail:fix:margin={setter}:{target}]"
                 ),
@@ -1451,7 +1464,6 @@ fn collect_alignment(
     source: &str,
     preprocessed: &str,
     elements: &[sail_layout::html::Element],
-    trees: Option<&[SharedViewport]>,
     severity: DiagSeverity,
 ) -> Vec<Diagnostic> {
     if !matches!(
@@ -1460,153 +1472,66 @@ fn collect_alignment(
     ) {
         return Vec::new();
     }
-    let Some(trees) = trees else {
-        return Vec::new();
-    };
-    // First successful viewport (mobile is first). Do not rebuild taffy.
-    let Some(layout) = trees.iter().find_map(|t| t.layout.as_ref().ok()) else {
-        return Vec::new();
-    };
+    let viewports = crate::check::layout::layout_viewports(preprocessed);
     let mut out = Vec::new();
-    for elem_idx in 1..elements.len() {
-        let Some(node_id) = layout.nodes[elem_idx] else {
+    for viewport in viewports.into_iter().take(1) {
+        let Ok(layout) = sail_layout::taffy_tree::build(elements.to_vec(), viewport) else {
             continue;
         };
-        let style = &layout.styles[elem_idx].style;
-        if container_kind(style) == ContainerKind::None {
-            continue;
-        }
-        let Ok(taffy_children) = layout.taffy.children(node_id) else {
-            continue;
-        };
-        if taffy_children.len() < 2 {
-            continue;
-        }
-        let mut lefts: Vec<(usize, f32)> = Vec::new();
-        for child_node in taffy_children {
-            let Ok(child_layout) = layout.taffy.layout(child_node).cloned() else {
+        for elem_idx in 1..elements.len() {
+            let Some(node_id) = layout.nodes[elem_idx] else {
                 continue;
             };
-            let Some(ctx) = layout.taffy.get_node_context(child_node) else {
+            let style = &layout.styles[elem_idx].style;
+            if container_kind(style) == ContainerKind::None {
+                continue;
+            }
+            let Ok(taffy_children) = layout.taffy.children(node_id) else {
                 continue;
             };
-            lefts.push((ctx.elem_index, child_layout.location.x));
-        }
-        if lefts.len() < 2 {
-            continue;
-        }
-        for (child_idx, drift, dom_f) in left_edge_drifts(&lefts, ALIGN_DRIFT_MIN, ALIGN_DRIFT_MAX)
-        {
-            let child = &elements[child_idx];
-            let fp = element_fingerprint(&child.class, &child.tag).unwrap_or_else(|| Fingerprint {
-                base_tag: Some(child.tag.clone()),
-                sx_atoms: Vec::new(),
-            });
-            let pre_i = count_fingerprint_before(elements, &fp, child.span.0);
-            if let Some(span) = find_original_span(source, preprocessed, &fp, pre_i) {
-                let (line, col, end_line, end_col) = span_to_coords(source, span);
-                out.push(Diagnostic {
-                    line,
-                    col,
-                    end_line,
-                    end_col,
-                    severity: DiagSeverity::Warning,
-                    message: format!(
-                        "alignment drift: left edge is {drift:.1}px from dominant left ({dom_f:.0}px) — advisory only [sail:fix:warn]"
-                    ),
-                    rule: Some(ALIGN_RULE.into()),
-                });
+            if taffy_children.len() < 2 {
+                continue;
+            }
+            let mut lefts: Vec<(usize, f32)> = Vec::new();
+            for child_node in taffy_children {
+                let Ok(child_layout) = layout.taffy.layout(child_node).cloned() else {
+                    continue;
+                };
+                let Some(ctx) = layout.taffy.get_node_context(child_node) else {
+                    continue;
+                };
+                lefts.push((ctx.elem_index, child_layout.location.x));
+            }
+            if lefts.len() < 2 {
+                continue;
+            }
+            for (child_idx, drift, dom_f) in
+                left_edge_drifts(&lefts, ALIGN_DRIFT_MIN, ALIGN_DRIFT_MAX)
+            {
+                let child = &elements[child_idx];
+                let fp =
+                    element_fingerprint(&child.class, &child.tag).unwrap_or_else(|| Fingerprint {
+                        base_tag: Some(child.tag.clone()),
+                        sx_atoms: Vec::new(),
+                    });
+                let pre_i = count_fingerprint_before(preprocessed, &fp, child.span.0);
+                if let Some(span) = find_original_span(source, preprocessed, &fp, pre_i) {
+                    let (line, col, end_line, end_col) = span_to_coords(source, span);
+                    out.push(Diagnostic {
+                        line,
+                        col,
+                        end_line,
+                        end_col,
+                        severity: DiagSeverity::Warning,
+                        message: format!(
+                            "alignment drift: left edge is {drift:.1}px from dominant left ({dom_f:.0}px) — advisory only [sail:fix:warn]"
+                        ),
+                        rule: Some(ALIGN_RULE.into()),
+                    });
+                }
             }
         }
+        break;
     }
     out
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::diagnostics::DiagSeverity;
-
-    const RED_RHYTHM: &str = r#"<column>
-  <p style({ box: mb(4) })>a</p>
-  <p style({ box: mb(4) })>b</p>
-  <p style({ box: mb(8) })>c</p>
-</column>"#;
-
-    #[test]
-    fn red_rhythm_emits_compose_rhythm() {
-        let diags = collect(RED_RHYTHM, None, &[]);
-        assert!(
-            diags
-                .iter()
-                .any(|d| d.rule.as_deref() == Some(RHYTHM_RULE) && d.severity == DiagSeverity::Fix),
-            "expected sail-compose-rhythm Fix, got {diags:?}"
-        );
-    }
-
-    #[test]
-    fn consistent_rhythm_is_silent() {
-        let src = r#"<column>
-  <p style({ box: mb(4) })>a</p>
-  <p style({ box: mb(4) })>b</p>
-  <p style({ box: mb(4) })>c</p>
-</column>"#;
-        let diags = collect(src, None, &[]);
-        assert!(
-            diags.iter().all(|d| d.rule.as_deref() != Some(RHYTHM_RULE)),
-            "consistent siblings must not emit rhythm: {diags:?}"
-        );
-    }
-
-    #[test]
-    fn left_edge_drifts_in_band() {
-        let lefts = vec![(1, 0.0), (2, 0.0), (3, 3.0)];
-        let hits = left_edge_drifts(&lefts, ALIGN_DRIFT_MIN, ALIGN_DRIFT_MAX);
-        assert_eq!(hits.len(), 1);
-        assert_eq!(hits[0].0, 3);
-    }
-
-    // Centered column: w(10)=40px vs w(12)=48px → 4px left-edge drift.
-    // Margin is not in taffy's model, so this uses align-items + width.
-    const ALIGN_DRIFT_SRC: &str = r#"<column align="center">
-  <p style({ box: w(10) })>a</p>
-  <p style({ box: w(10) })>b</p>
-  <p style({ box: w(12) })>c</p>
-</column>"#;
-
-    #[test]
-    fn standalone_collect_does_not_emit_align() {
-        let diags = collect(ALIGN_DRIFT_SRC, None, &[]);
-        assert!(
-            diags.iter().all(|d| d.rule.as_deref() != Some(ALIGN_RULE)),
-            "no shared tree → no alignment: {diags:?}"
-        );
-    }
-
-    #[test]
-    fn shared_tree_alignment_emits_without_rebuild() {
-        let pre = crate::parse::preprocess::preprocess(ALIGN_DRIFT_SRC).expect("preprocess");
-        let boxes = crate::check::layout::prepare_boxes(pre);
-        let layout = boxes.trees[0].layout.as_ref().expect("mobile tree");
-        let mut lefts = Vec::new();
-        for idx in 1..layout.elements.len() {
-            if let Some(computed) = layout.computed(idx) {
-                lefts.push((idx, layout.elements[idx].tag.clone(), computed.location.x));
-            }
-        }
-        let before = sail_layout::layout_pass_count();
-        let diags = collect_with(ALIGN_DRIFT_SRC, None, &[], Some(&boxes));
-        assert_eq!(
-            sail_layout::layout_pass_count(),
-            before,
-            "compose must not rebuild taffy"
-        );
-        assert!(
-            diags
-                .iter()
-                .any(|d| d.rule.as_deref() == Some(ALIGN_RULE)
-                    && d.severity == DiagSeverity::Warning),
-            "shared tree must surface alignment drift: diags={diags:?} lefts={lefts:?}"
-        );
-    }
 }

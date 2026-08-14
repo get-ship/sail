@@ -20,7 +20,7 @@ export const THEME_PAINT_MODES = ['light', 'dark'] as const
 export type ThemePaintMode = (typeof THEME_PAINT_MODES)[number]
 
 /** Allowed top-level groups inside a mode body (scale + component overrides). */
-export const THEME_MODE_GROUP_KEYS = ['$extensions', 'color', 'component', 'control', 'interaction', 'motion', 'radius', 'scrollbar', 'shadow', 'typography', 'space', 'icon', 'density', 'panel', 'z', 'breakpoint', 'border', 'size', 'elevation', 'type', 'fill', 'ink', 'style', 'keyframes', 'play'] as const
+export const THEME_MODE_GROUP_KEYS = ['$extensions', 'color', 'filter', 'image', 'control', 'interaction', 'motion', 'radius', 'scrollbar', 'shadow', 'typography', 'space', 'icon', 'density', 'panel', 'z', 'breakpoint', 'border', 'size', 'elevation', 'type', 'fill', 'ink', 'style', 'keyframes', 'play', 'tagDefaults', 'tags'] as const
 export type ThemeModeGroupKey = (typeof THEME_MODE_GROUP_KEYS)[number]
 
 /**

@@ -4,41 +4,31 @@
 -->
 
 <scope>
-  style page = { box: size({ w: full, max-w: breakpoint-desktop }).space({ mx: auto }) }
-  style monoXs = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs }) }
-  style knobLabel = {
-    paint: ink({ color: muted-foreground }),
-    text: type({ size: xs, weight: medium, tracking: wide, case: uppercase }),
-}
-  style sizeValue = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs }) }
+  style page = { size({ w: full, max-w: breakpoint-desktop }).margin({ x: auto }) }
+  style monoXs = { fg(muted-foreground).type({ family: mono, size: xs }) }
+  style knobLabel = { fg(muted-foreground).type({ size: xs, weight: medium, tracking: wide, case: uppercase }) }
+  style sizeValue = { fg(muted-foreground).type({ family: mono, size: xs }) }
   /**
    * Discrete steps: padX ≈ half thumb so ends sit under the thumb center;
    * justify-between places labels at 0%…100% (not column midpoints).
    */
-  style tickRow = { box: size({ w: full }).space({ pad-x: 1_5, pad-t: 1 }) }
-  style tick = {
-    paint: ink({ color: muted-foreground }),
-    text: type({ family: mono, size: xs }),
-}
+  style tickRow = { size({ w: full }).pad({ x: 1_5, t: 1 }) }
+  style tick = { fg(muted-foreground).type({ family: mono, size: xs }) }
   /** Tone dots — plain divs (never <button>). size() sets w+h together. */
-  style swatch = {
-    box: size(7).flow({ shrink: 0 }),
-    paint: radius(full).cursor(pointer).border({ color: transparent, width: 2 }).elevation(xs),
-    when: { selected: { paint: border({ color: foreground }).elevation(sm) }, hover: { paint: filter({ opacity: 90 }) } },
-}
-  style swatchPrimary = { paint: fill({ color: primary }) }
-  style swatchSuccess = { paint: fill({ color: success }) }
-  style swatchWarning = { paint: fill({ color: warning }) }
-  style swatchDestructive = { paint: fill({ color: destructive }) }
-  style swatchAccent = { paint: fill({ color: accent }) }
-  style swatchMuted = { paint: fill({ color: muted }).border({ color: border }) }
-  style swatchInfo = { paint: fill({ color: info }) }
-  style exampleBlock = { box: size({ w: full }).space({ pad-t: 2, pad-b: 4 }) }
-  style exampleSection = { box: size({ w: full }).space({ pad-y: 4 }) }
-  style exampleH = { text: type({ size: md, weight: semibold }) }
-  style exampleLead = { paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
-  style sectionLabel = { paint: ink({ color: muted-foreground }), text: type({ size: xs, tracking: wide, case: uppercase }) }
-  style demoRow = { box: size({ w: full }).space({ pad-y: 2 }) }
+  style swatch = { size(7).shrink(0).radius(full).cursor(pointer).border({ color: transparent, width: 2 }).elevation(xs), when: { selected: border({ color: foreground }).elevation(sm), hover: filter({ opacity: 90 }) } }
+  style swatchPrimary = { bg(primary) }
+  style swatchSuccess = { bg(success) }
+  style swatchWarning = { bg(warning) }
+  style swatchDestructive = { bg(destructive) }
+  style swatchAccent = { bg(accent) }
+  style swatchMuted = { bg(muted).border({ color: border }) }
+  style swatchInfo = { bg(info) }
+  style exampleBlock = { size({ w: full }).pad({ t: 2, b: 4 }) }
+  style exampleSection = { size({ w: full }).pad({ y: 4 }) }
+  style exampleH = { type({ size: md, weight: semibold }) }
+  style exampleLead = { fg(muted-foreground).type({ size: sm }) }
+  style sectionLabel = { fg(muted-foreground).type({ size: xs, tracking: wide, case: uppercase }) }
+  style demoRow = { size({ w: full }).pad({ y: 2 }) }
 </scope>
 
 <controller>
@@ -242,14 +232,14 @@ export default controller((_ctx: Scope) => {
         <slider bind:value={sizeIdx} min="0" max="6" step="1" size="sm" label="Size" ticks="xs,sm,md,lg,icon,iSm,iLg"></slider>
       </column>
       <row gap="5" align="start">
-        <column gap="2" style({ box: flow({ grow: 1 }).size({ min-w: 0 }) })>
+        <column gap="2" style({ grow(1).size({ min-w: 0 }) })>
           <label style(knobLabel)>Icon</label>
           <if {isIconSize()}>
             <p style(sizeValue)>Required for icon sizes</p>
           {else =>
             <switch bind:checked={withIcon} size="sm" label="Show icon"></switch>}</if>
         </column>
-        <column gap="2" style({ box: flow({ grow: 1 }).size({ min-w: 0 }) })>
+        <column gap="2" style({ grow(1).size({ min-w: 0 }) })>
           <label style(knobLabel)>Disabled</label>
           <switch bind:checked={disabled} size="sm" label="Disabled"></switch>
         </column>

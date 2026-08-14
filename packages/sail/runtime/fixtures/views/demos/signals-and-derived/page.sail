@@ -31,9 +31,9 @@ export default controller(() => {
 </controller>
 
 <scope>
-  style page = { box: space({ pad: 6, mx: auto }).size({ max-w: breakpoint-tablet }) }
-  style muted = { paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
-  style mono = { text: type({ family: mono, size: sm }) }
+  style page = { pad(6).margin({ x: auto }).size({ max-w: breakpoint-tablet }) }
+  style muted = { fg(muted-foreground).type({ size: sm }) }
+  style mono = { type({ family: mono, size: sm }) }
 </scope>
 
 <column gap="4" style(page)>

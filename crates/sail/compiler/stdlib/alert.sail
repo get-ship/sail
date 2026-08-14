@@ -12,16 +12,16 @@
     onDismiss: () => void
   }
 
-  style base = {box: place({ position: relative }).overflow({ all: hidden }).space({ pad: 3 }), paint: group().border({ color: alert.border, width: 1 }).radius(md).fill({ color: alert }).ink({ color: alert.foreground }).elevation(xs), text: type({ family: body, size: base, leading: normal })}
-  // ::before stripe geometry (rest fill alert.stripe; host attaches tone via when.before).
-  style stripe = {box: place({ position: absolute, left: 0, top: 0, bottom: 0 }).size({ w: 1 }), paint: content(empty).fill({ color: alert.stripe })}
-  style ico = {box: size(control-h-xs), paint: radius(md).fill({ color: alert }).ink({ color: alert.stripe })}
-  style title = {text: type({ weight: semibold })}
-  style body = {paint: ink({ color: alert.stripe })}
-  style actions = {box: space({ mt: 2 })}
-  style close = {box: flow({ display: none, self: start }).size(control-h-xs).space({ pad: 0 }), paint: border({ width: 0 }).radius(sm).fill({ color: transparent }).ink({ color: alert.stripe }).motion({ property: colors, duration: fast, ease: out }).cursor(pointer)}
-  style xmark = {box: flow({ display: block }).size(icon-size-sm)}
-  style growCol = {box: flow({ grow: 1 }).size({ min-w: 0 })}
+  style base = {position(relative).overflow({ all: hidden }).pad(3).group().border({ color: border, width: 1 }).radius(md).bg(muted).fg(foreground).elevation(xs).type({ family: body, size: base, leading: normal })}
+  // ::before stripe geometry (rest fill primary; host attaches tone via when.before).
+  style stripe = {position({ scheme: absolute, l: 0, t: 0, b: 0 }).size({ w: 1 }).content(empty).bg(primary)}
+  style ico = {size(control-h-xs).radius(md).bg(muted).fg(primary)}
+  style title = {type({ weight: semibold })}
+  style body = {fg(primary)}
+  style actions = {margin({ t: 2 })}
+  style close = {display(none).self(start).size(control-h-xs).pad(0).border({ width: 0 }).radius(sm).bg(transparent).fg(primary).cursor(pointer), animate: { transition: play(colors, fast) }}
+  style xmark = {display(block).size(icon-size-sm)}
+  style growCol = {grow(1).size({ min-w: 0 })}
 </scope>
 
 <row
@@ -30,8 +30,8 @@
   gap="3"
   use:liveRegion
   use:dismissControl
-  style(base, {when: {before: style(stripe, {paint: fill({ color: tone })}), forced-colors: {paint: border({ color: CanvasText }), when: {before: {paint: fill({ color: CanvasText })}}}}, compound: [
-      {tone: muted, when: {before: {paint: fill({ color: alert.stripe })}}},
+  style(base, {when: {before: style(stripe, {bg(tone)}), forced-colors: {border({ color: CanvasText }), when: {before: bg(CanvasText)}}}, compound: [
+      {tone: muted, when: {before: bg(primary)}},
     ]})
 >
   <row
@@ -39,18 +39,18 @@
     nowrap
     align="center"
     justify="center"
-    style(ico, {box: flow({ shrink: 1 }), paint: ink({ color: tone }), when: {empty: {box: flow({ display: none })}}, compound: [{tone: muted, paint: fill({ color: alert }).ink({ color: alert.stripe })}]})
+    style(ico, {shrink(1).fg(tone), when: {empty: display(none)}, compound: [{tone: muted, bg(muted).fg(primary)}]})
   >
     <slot name="icon"></slot>
   </row>
   <column gap="1" style(growCol)>
-    <div style(title, {when: {empty: {box: flow({ display: none })}}})>
+    <div style(title, {when: {empty: display(none)}})>
       <slot name="title"></slot>
     </div>
     <div style(body)>
       <slot></slot>
     </div>
-    <row align="center" gap="2" style(actions, {when: {empty: {box: flow({ display: none })}}})>
+    <row align="center" gap="2" style(actions, {when: {empty: display(none)}})>
       <slot name="actions"></slot>
     </row>
   </column>
@@ -59,7 +59,7 @@
     type="button"
     anatomy
     label="Dismiss"
-    style(close, {box: flow({ shrink: 1 }), when: {group-dismissible: {box: flow({ display: inline-block })}, hover: {paint: fill({ color: alert }).ink({ color: alert.foreground })}, focus: {paint: border({ style: solid, kind: outline, width: 2, color: ring, offset: 2 })}}})
+    style(close, {shrink(1), when: {group-dismissible: display(inline-block), hover: bg(muted).fg(foreground), focus: border({ style: solid, kind: outline, width: 2, color: ring, offset: 2 })}})
   >
     <svg viewBox="0 0 10 10" hidden="true" stroke-width="1.75" stroke-linecap="round" stroke="currentColor" fill="none" style(xmark)>
       <path d="M2 2 L8 8 M8 2 L2 8"></path>

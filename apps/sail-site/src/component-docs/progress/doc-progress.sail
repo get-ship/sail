@@ -4,22 +4,16 @@
 -->
 
 <scope>
-  style page = { box: size({ w: full, max-w: breakpoint-desktop }).space({ mx: auto }).overflow({ all: visible }) }
-  style specimen = { box: size({ w: 64, max-w: full }).space({ pad: 2 }).overflow({ all: visible }) }
-  style controlW = { box: size({ w: full }) }
-  style mutedSm = { paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
-  style knobLabel = {
-    paint: ink({ color: muted-foreground }),
-    text: type({ size: xs, weight: medium, tracking: wide, case: uppercase }),
-}
-  style sizeValue = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs }) }
-  style tickRow = { box: size({ w: full }).space({ pad-x: 1_5, pad-t: 1 }) }
-  style tick = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs }) }
-  style exampleBlock = { box: size({ w: full }).space({ pad-t: 2, pad-b: 4 }).overflow({ all: visible }) }
-  style sectionLabel = {
-    paint: ink({ color: muted-foreground }),
-    text: type({ size: xs, tracking: wide, case: uppercase }),
-}
+  style page = { size({ w: full, max-w: breakpoint-desktop }).margin({ x: auto }).overflow({ all: visible }) }
+  style specimen = { size({ w: 64, max-w: full }).pad(2).overflow({ all: visible }) }
+  style controlW = { size({ w: full }) }
+  style mutedSm = { fg(muted-foreground).type({ size: sm }) }
+  style knobLabel = { fg(muted-foreground).type({ size: xs, weight: medium, tracking: wide, case: uppercase }) }
+  style sizeValue = { fg(muted-foreground).type({ family: mono, size: xs }) }
+  style tickRow = { size({ w: full }).pad({ x: 1_5, t: 1 }) }
+  style tick = { fg(muted-foreground).type({ family: mono, size: xs }) }
+  style exampleBlock = { size({ w: full }).pad({ t: 2, b: 4 }).overflow({ all: visible }) }
+  style sectionLabel = { fg(muted-foreground).type({ size: xs, tracking: wide, case: uppercase }) }
 </scope>
 
 <controller>

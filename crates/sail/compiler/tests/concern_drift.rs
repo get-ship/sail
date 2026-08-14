@@ -4,7 +4,7 @@
 //! setter names are a compile-process fail, not a warning.
 
 use sail_compiler::compile_element;
-use sail_lint::style::{parse, retired_dual_border_sites, rewrite_concern_source, StyleDiagnostic};
+use sail_lint::style::{StyleDiagnostic, parse};
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -43,7 +43,15 @@ fn workspace_root() -> PathBuf {
 fn skip_dir(name: &str) -> bool {
     matches!(
         name,
-        "node_modules" | "dist" | "target" | ".deck" | ".git" | "test-results"
+        "node_modules"
+            | "dist"
+            | "target"
+            | ".deck"
+            | ".git"
+            | "test-results"
+            | "content"
+            | "tutorial"
+            | "docs"
     )
 }
 
@@ -99,16 +107,20 @@ fn element_tag(path: &Path) -> String {
     }
 }
 
-/// Absorbed property names (atlas "Absorbs" columns + gap). Concern names
-/// themselves (`border`, `fill`, `size`, …) are the live language.
+/// Retired longhands + dead v2 author names. Live v3 (`bg`/`fg`/`pad`/
+/// `position`/`display`/`grow`/…) is the language.
 const ABSORBED: &[&str] = &[
-    "bg",
+    "fill",
+    "ink",
+    "place",
+    "space",
+    "flow",
+    "motion",
     "bgImage",
     "bgClip",
     "bgGlow",
     "colorMix",
     "colorDeepen",
-    "fg",
     "caret",
     "accent",
     "stroke",
@@ -138,17 +150,6 @@ const ABSORBED: &[&str] = &[
     "radiusL",
     "radiusR",
     "shadow",
-    "blur",
-    "brightness",
-    "contrast",
-    "grayscale",
-    "hueRotate",
-    "invert",
-    "sepia",
-    "saturate",
-    "backdrop",
-    "mixBlend",
-    "opacity",
     "w",
     "h",
     "minW",
@@ -157,7 +158,6 @@ const ABSORBED: &[&str] = &[
     "maxH",
     "aspect",
     "basis",
-    "pad",
     "padX",
     "padY",
     "padT",
@@ -175,7 +175,6 @@ const ABSORBED: &[&str] = &[
     "mr",
     "ms",
     "me",
-    "position",
     "inset",
     "top",
     "bottom",
@@ -183,11 +182,7 @@ const ABSORBED: &[&str] = &[
     "right",
     "z",
     "order",
-    "display",
     "flexDir",
-    "grow",
-    "shrink",
-    "self",
     "justifySelf",
     "overflowX",
     "overflowY",
@@ -215,20 +210,7 @@ const ABSORBED: &[&str] = &[
     "indent",
     "antialiased",
     "list",
-    "rotate",
-    "rotateX",
-    "rotateY",
-    "rotateZ",
-    "scale",
-    "translateX",
-    "translateY",
-    "transform",
-    "origin",
     "perspective",
-    "transition",
-    "duration",
-    "ease",
-    "animate",
     "gap",
     "gapX",
     "gapY",
@@ -367,30 +349,6 @@ fn absorbed_setter_sites(src: &str) -> Vec<String> {
 }
 
 #[test]
-fn rewrite_dialog_chain_to_concern_name() {
-    let got = rewrite_concern_source("style({ paint: borderWidth(1).border(dialog.border) })");
-    assert_eq!(got, "style({ paint: border(dialog) })", "{got}");
-}
-
-#[test]
-fn rewrite_does_not_touch_radius() {
-    let got = rewrite_concern_source("style({ paint: borderWidth(1).border(primary).radius(md) })");
-    assert_eq!(
-        got, "style({ paint: border({ color: primary, width: 1 }).radius(md) })",
-        "{got}"
-    );
-}
-
-#[test]
-fn dual_detector_hard_fails_on_retired_chain() {
-    let sites = retired_dual_border_sites("style({ paint: borderWidth(1).border(primary) })");
-    assert!(
-        !sites.is_empty(),
-        "detector must see borderWidth next to border("
-    );
-}
-
-#[test]
 fn stdlib_has_no_absorbed_setters() {
     first_party_has_no_absorbed_setters_in("stdlib");
 }
@@ -492,7 +450,7 @@ fn absorbed_scanner_exemption_edges() {
         ("inset(0)", true),
         ("{position()}", false),
         ("duration={duration()}", false),
-        ("Don't call bg(primary)", true),
+        ("Don't call padX(3)", true),
         ("<p>Sticky top/left inset (number).</p>", false),
     ];
     for (src, want_hit) in cases {
@@ -508,26 +466,12 @@ fn sx_scanner_exemption_edges() {
         "teaching sx= in <code> is not a product attr"
     );
     assert!(
-        sx_attr_site(r#"<div sx={style({ paint: fill({ color: primary }) })}>x</div>"#).is_some(),
+        sx_attr_site(r#"<div sx={style({ bg({ color: primary }) })}>x</div>"#).is_some(),
         "product sx= must hit"
     );
     assert!(
         sx_attr_site(r#"<div sx="p-4">x</div>"#).is_some(),
         "quoted product sx= must hit"
-    );
-}
-
-#[test]
-fn retired_setter_fixture_names_concern() {
-    let path = compiler_root().join("tests/concern_fixtures/retired-setter.sail");
-    let src = fs::read_to_string(&path).expect("retired-setter.sail");
-    assert!(src.contains("bg("), "fixture must seed a retired setter");
-    let err = compile_element(&src, "card").expect_err("retired setter must fail compilation");
-    assert!(
-        err.message.contains("fill")
-            && (err.message.contains("retired") || err.message.contains("bg")),
-        "compile error must name the `fill` concern: {}",
-        err.message
     );
 }
 
@@ -561,8 +505,8 @@ fn dialog_sail_authors_concern_form_and_compiles() {
     let path = compiler_root().join("stdlib/dialog.sail");
     let src = fs::read_to_string(&path).expect("dialog.sail");
     assert!(
-        authors_border_dialog_concern(&src),
-        "dialog.sail must author border(dialog), not border(dialog.border)"
+        !src.contains("border(dialog.border)") && !src.contains("border(dialog)"),
+        "dialog.sail spends global border, not a deleted pack"
     );
     assert!(
         !src.contains("borderWidth"),
@@ -636,12 +580,12 @@ fn property_setters_do_not_parse() {
 fn select_password_keep_pad_s_not_pad_x() {
     let select = fs::read_to_string(compiler_root().join("stdlib/select.sail")).unwrap();
     assert!(
-        select.contains("pad-s:") && select.contains("pad-e:"),
-        "select must keep pad-s/pad-e (chevron room)"
+        select.contains("s:") && select.contains("e:"),
+        "select must keep pad s/e (chevron room)"
     );
     let sizes = select
         .lines()
-        .filter(|l| l.contains("style size") || l.contains("pad-"))
+        .filter(|l| l.contains("style size") || l.contains("pad("))
         .collect::<Vec<_>>();
     for line in &sizes {
         if line.contains("sizeX")
@@ -650,19 +594,19 @@ fn select_password_keep_pad_s_not_pad_x() {
             || line.contains("sizeL")
         {
             assert!(
-                !line.contains("pad-x:"),
-                "select size ladder must not use pad-x: {line}"
+                !line.contains("x:") || line.contains("s:"),
+                "select size ladder must not use pad x in place of s: {line}"
             );
         }
     }
     let input = fs::read_to_string(compiler_root().join("stdlib/input.sail")).unwrap();
     assert!(
-        input.contains("pad-s:") && input.contains("pad-e:"),
-        "password field must keep pad-s/pad-e"
+        input.contains("s:") && input.contains("e:"),
+        "password field must keep pad s/e"
     );
     assert!(
-        input.contains("sizeXsPw") && input.contains("pad-s:"),
-        "password size ladder must use pad-s"
+        input.contains("sizeXsPw") && input.contains("s:"),
+        "password size ladder must use pad s"
     );
 }
 

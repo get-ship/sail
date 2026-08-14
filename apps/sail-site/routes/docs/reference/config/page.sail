@@ -2,14 +2,14 @@
   /docs/reference/config — every sail.config.json key from lint CONFIG_KEY_DOCS.
 -->
 <scope>
-  style root = { box: size({ min-w: 0 }) }
-  style intro = { box: size({ max-w: breakpoint-tablet }) }
-  style eyebrow = { paint: ink({ color: accent }), text: type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
-  style lead = { paint: ink({ color: muted-foreground }), text: type({ size: lg, leading: relaxed }) }
-  style cardMin = { box: size({ min-w: 0 }) }
-  style keyType = { paint: ink({ color: muted-foreground }), text: type({ family: mono }) }
-  style cardDoc = { box: size({ max-w: breakpoint-tablet }), paint: ink({ color: muted-foreground }) }
-  style defaultVal = { paint: ink({ color: muted-foreground }) }
+  style root = { size({ min-w: 0 }) }
+  style intro = { size({ max-w: breakpoint-tablet }) }
+  style eyebrow = { fg(accent).type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
+  style lead = { fg(muted-foreground).type({ size: lg, leading: relaxed }) }
+  style cardMin = { size({ min-w: 0 }) }
+  style keyType = { fg(muted-foreground).type({ family: mono }) }
+  style cardDoc = { size({ max-w: breakpoint-tablet }).fg(muted-foreground) }
+  style defaultVal = { fg(muted-foreground) }
 </scope>
 
 <controller>

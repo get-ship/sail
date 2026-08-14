@@ -205,7 +205,7 @@ export default controller(({ value, sketchy, readonly }: Scope) => {
 
 <!-- `.toolbar` was a flex container; compose a primitive instead — flex
      layout is the floor's boundary, and `<row>` IS the row container. -->
-<row role="toolbar" aria-label="Drawing tools" gap="1" align="center" style({ box: space({ pad-x: 2, pad-y: 1 }), paint: border({ edge: b, color: border, width: 1 }).fill({ color: surface-1 }) })>
+<row role="toolbar" aria-label="Drawing tools" gap="1" align="center" style({ pad({ x: 2, y: 1 }).border({ edge: b, color: border, width: 1 }).bg(surface-1) })>
   <slot name="toolbar"></slot>
 </row>
 
@@ -214,8 +214,8 @@ export default controller(({ value, sketchy, readonly }: Scope) => {
   aria-label={label()}
   canvas={canvas}
   readonly={readonly()}
-  on:pointerdown={surfaceDown} style({ box: flow({ display: block }).place({ position: relative }).size({ w: full, h: full }), paint: ink({ color: foreground }) })>
-  <svg role="group" aria-label={statusLabel()} style({ box: place({ position: absolute, top: 0, left: 0 }).overflow({ all: visible }), paint: pointerEvents(none) })>
+  on:pointerdown={surfaceDown} style({ display(block).position(relative).size({ w: full, h: full }).fg(foreground) })>
+  <svg role="group" aria-label={statusLabel()} style({ position({ scheme: absolute, t: 0, l: 0 }).overflow({ all: visible }).pointerEvents(none) })>
     <for {rendered() as el} key={el.id}>
       <if {el.kind === 'text'}>
         <text
@@ -226,7 +226,7 @@ export default controller(({ value, sketchy, readonly }: Scope) => {
           data-el-id={el.id}
           aria-selected={selectedSet().has(el.id) ? 'true' : 'false'}
           on:pointerdown={elementDown}
-          pointer-events="fill" style({ text: type({ family: body, size: base }) })>{el.text}</text>
+          pointer-events="fill" style({ type({ family: body, size: base }) })>{el.text}</text>
       {else => <path
           d={el.path}
           data-el-id={el.id}
@@ -238,7 +238,7 @@ export default controller(({ value, sketchy, readonly }: Scope) => {
           pointer-events={el.kind === 'pen' ? 'fill' : 'stroke'}
           fill={el.kind === 'pen' ? 'currentColor' : 'none'}
           stroke={el.kind === 'pen' ? 'none' : selectedSet().has(el.id) ? 'var(--primary)' : null}
-          stroke-width="2" style({ paint: cursor(pointer) })></path>}</if>
+          stroke-width="2" style({ cursor(pointer) })></path>}</if>
     </for>
     <if {draftPath()}>
       <path
@@ -247,7 +247,7 @@ export default controller(({ value, sketchy, readonly }: Scope) => {
         vector-effect="non-scaling-stroke"
         pointer-events="none"
         fill="none"
-        stroke-width="2" style({ paint: filter({ opacity: 85 }) })></path>
+        stroke-width="2" style({ filter({ opacity: 85 }) })></path>
     </if>
 
     <if {selectionRect()}>
@@ -260,11 +260,11 @@ export default controller(({ value, sketchy, readonly }: Scope) => {
         fill="none"
         stroke="currentColor"
         stroke-width="1"
-        stroke-dasharray="4 3" style({ paint: ink({ color: primary }).pointerEvents(none) })></rect>
+        stroke-dasharray="4 3" style({ fg(primary).pointerEvents(none) })></rect>
     </if>
   </svg>
 </sail-canvas>
 
-<div role="status" aria-live="polite" style({ box: place({ position: absolute, bottom: 1, left: 2 }), paint: ink({ color: muted-foreground }).pointerEvents(none) })>  <span style({ box: flow({ display: contents }), text: type({ size: xs }) })>    {statusLabel()}
+<div role="status" aria-live="polite" style({ position({ scheme: absolute, b: 1, l: 2 }).fg(muted-foreground).pointerEvents(none) })>  <span style({ display(contents).type({ size: xs }) })>    {statusLabel()}
   </span>
 </div>

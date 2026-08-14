@@ -2,14 +2,14 @@
   /docs/reference/scope — every &lt;scope&gt; grammar construct with a compiling example.
 -->
 <scope>
-  style root = { box: size({ min-w: 0 }) }
-  style intro = { box: size({ max-w: breakpoint-tablet }) }
-  style eyebrow = { paint: ink({ color: accent }), text: type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
-  style lead = { paint: ink({ color: muted-foreground }), text: type({ size: lg, leading: relaxed }) }
-  style monoMuted = { paint: ink({ color: muted-foreground }) }
-  style formSummary = { box: size({ max-w: breakpoint-tablet }) }
-  style refuseSyntax = { paint: ink({ color: destructive }) }
-  style refuseAlt = { paint: ink({ color: muted-foreground }) }
+  style root = { size({ min-w: 0 }) }
+  style intro = { size({ max-w: breakpoint-tablet }) }
+  style eyebrow = { fg(accent).type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
+  style lead = { fg(muted-foreground).type({ size: lg, leading: relaxed }) }
+  style monoMuted = { fg(muted-foreground) }
+  style formSummary = { size({ max-w: breakpoint-tablet }) }
+  style refuseSyntax = { fg(destructive) }
+  style refuseAlt = { fg(muted-foreground) }
 </scope>
 
 <controller>

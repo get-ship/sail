@@ -29,12 +29,9 @@ export default controller(() => {
 </controller>
 
 <scope>
-  style page = { box: space({ pad: 6, mx: auto }).size({ max-w: breakpoint-tablet }) }
-  style muted = { paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
-  style todoRow = {
-    box: space({ pad-x: 3, pad-y: 2 }),
-    paint: border({ color: border, width: 1 }).radius(md).fill({ color: surface-1 }),
-  }
+  style page = { pad(6).margin({ x: auto }).size({ max-w: breakpoint-tablet }) }
+  style muted = { fg(muted-foreground).type({ size: sm }) }
+  style todoRow = { pad({ x: 3, y: 2 }).border({ color: border, width: 1 }).radius(md).bg(surface-1) }
 </scope>
 
 <column gap="4" style(page)>

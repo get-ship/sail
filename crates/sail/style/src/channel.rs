@@ -22,6 +22,16 @@ impl Channel {
             Channel::Animate => "animate",
         }
     }
+
+    pub fn from_key(key: &str) -> Option<Self> {
+        match key {
+            "box" => Some(Channel::Box),
+            "paint" => Some(Channel::Paint),
+            "text" => Some(Channel::Text),
+            "animate" => Some(Channel::Animate),
+            _ => None,
+        }
+    }
 }
 
 /// Motion triggers that live under `animate:` (brace-config form).
@@ -142,9 +152,10 @@ fn style_uses_text_channel_inner(
             if !resolving.insert(name.clone()) {
                 return false;
             }
-            let hit = env
-                .get(name)
-                .is_some_and(|s| style_uses_text_channel_inner(s, env, resolving));
+            let hit = crate::ThemeStyleEnv::from_registry()
+                .expand_style_ref(name, env, crate::current_styling_policy())
+                .ok()
+                .is_some_and(|s| style_uses_text_channel_inner(&s, env, resolving));
             resolving.remove(name);
             hit
         }
@@ -210,15 +221,16 @@ fn when_key_kebab(key: &str) -> String {
 }
 
 /// True when the setter is geometry-class for the “state can't gate geometry”
-/// law: dimensional box ops (pad/gap/w/h/grow/position axes/…).
+/// law: dimensional box ops (size / pad / margin / position / grow / shrink /
+/// dir / self / resize / basis).
 ///
-/// `display` / `overflow*` stay box-channel for taffy but may appear under
-/// interaction when for show/hide (empty slots, group-caught swap) without
-/// pointer thrash. Dimensional geometry under hover/group-state still fails.
+/// Not `Channel::Box`. `display` and `overflow` stay box-channel for taffy
+/// but may appear under interaction when for show/hide without pointer thrash.
 pub fn is_geometry_setter(name: &str) -> bool {
     match name {
         "display" | "overflow" | "overflowX" | "overflowY" | "flow" => false,
-        "size" | "space" | "place" => true,
+        "size" | "position" | "pad" | "margin" | "grow" | "shrink" | "dir" | "self" | "resize"
+        | "basis" => true,
         other => channel_for_setter(other) == Some(Channel::Box),
     }
 }
@@ -240,7 +252,7 @@ pub fn style_contains_geometry(style: &Style) -> bool {
         Style::Set(op) => {
             // `place({ z })` is stacking, not box geometry — z lived on paint
             // before SPEC-2 and must still be legal under interaction when().
-            if op.setter == "place" {
+            if op.setter == "position" {
                 place_gates_layout(op)
             } else {
                 is_geometry_setter(&op.setter)
@@ -268,72 +280,24 @@ fn is_structural_when_key(key: &str) -> bool {
 
 /// Channel for a product setter name. `None` when unknown / not a product setter.
 ///
-/// Assignment follows job-spec CHANNELS spine + inventory table. OPEN items
-/// home only when the job-spec lists them (objectFit/Position → paint;
-/// vertical-align `align` → paint as presentation).
+/// Walks `vocab.rs` (`row.channel`) then `find_concern` / `covered_setters`.
+/// Gap keys are layout attrs, not Style — still boxed so retirement checks.
 pub fn channel_for_setter(name: &str) -> Option<Channel> {
+    if let Some(row) = crate::vocab::find_vocab(name) {
+        return Channel::from_key(row.channel);
+    }
     if let Some(c) = crate::concerns::find_concern(name) {
         return Some(c.channel);
     }
-    Some(match name {
-        // box (absorbed names kept so retirement still channel-checks)
-        "pad" | "padX" | "padY" | "padT" | "padB" | "padL" | "padR" | "padS" | "padE" => {
-            Channel::Box
+    for spec in crate::concerns::concerns() {
+        if spec.covered_setters.iter().any(|s| *s == name) {
+            return Some(spec.channel);
         }
-        "m" | "mx" | "my" | "mt" | "mb" | "ms" | "me" | "ml" | "mr" => Channel::Box,
-        "minH" | "minW" | "maxH" | "maxW" | "w" | "h" => Channel::Box,
-        "overflowX" | "overflowY" => Channel::Box,
-        "display" | "position" | "top" | "bottom" | "left" | "right" | "inset" => Channel::Box,
-        "basis" | "self" | "flexDir" | "aspect" | "order" | "justifySelf" | "resize" => {
-            Channel::Box
-        }
-        "gap" | "gapX" | "gapY" => Channel::Box,
-        "grow" | "shrink" => Channel::Box,
-
-        // text
-        "fontSize" | "fontWeight" | "fontFamily" | "leading" | "tracking" | "type" => Channel::Text,
-        "whitespace" | "textAlign" | "break" | "tab" | "underline" | "truncate" => Channel::Text,
-        "textCase" | "nums" | "italic" | "decoration" | "indent" | "underlineOffset"
-        | "antialiased" => Channel::Text,
-
-        // paint (includes gap keys: clip/filter/3D/cq + presentation)
-        "bg" | "fg" | "list" | "shadow" | "opacity" => Channel::Paint,
-        "border" | "borderX" | "borderY" | "borderS" | "borderE" | "borderT" | "borderB"
-        | "borderR" | "borderL" => Channel::Paint,
-        "borderWidth" | "borderBWidth" | "borderTWidth" | "borderEWidth" | "borderSWidth"
-        | "borderRWidth" | "borderLWidth" => Channel::Paint,
-        "radius" | "radiusT" | "radiusB" | "radiusL" | "radiusR" => Channel::Paint,
-        "stroke" | "fill" | "ring" | "outline" | "outlineOffset" => Channel::Paint,
-        "translateX" | "translateY" | "z" | "cursor" | "select" | "pointerEvents" => Channel::Paint,
-        "overscroll" | "appearance" | "content" | "transition" | "duration" | "ease" => {
-            Channel::Paint
-        }
-        "rotate" | "scale" | "tapHighlight" | "saturate" | "group" | "bgImage" | "borderImage"
-        | "backdrop" => Channel::Paint,
-        "avatarMedia" | "glyphFill" | "scrollbarThumb" | "scrollbarTrack" | "scrollbarThin" => {
-            Channel::Paint
-        }
-        "isolate" | "mixBlend" | "origin" | "textGradient" | "bgGlow" | "srOnly" | "visibility" => {
-            Channel::Paint
-        }
-        "objectFit" | "objectPosition" | "transform" | "caret" | "accent" | "touch" | "scroll" => {
-            Channel::Paint
-        }
-        "willChange" | "contain" | "colorMix" | "colorDeepen" | "controlFrame" | "controlLift"
-        | "press" | "boxSizing" | "bgClip" | "animate" | "align" | "elevation" => Channel::Paint,
-        // Phase 3 gap keys
-        "clipPath" | "mask" | "maskImage" => Channel::Paint,
-        "blur" | "brightness" | "contrast" | "grayscale" | "hueRotate" | "invert" | "sepia" => {
-            Channel::Paint
-        }
-        "perspective" | "rotateX" | "rotateY" | "rotateZ" => Channel::Paint,
-        "containerType" | "containerName" | "container" => Channel::Paint,
-
-        // Retired product alias — still recognized so parse can emit a pointer.
-        "color" => Channel::Paint,
-
-        _ => return None,
-    })
+    }
+    match name {
+        "gap" | "gapX" | "gapY" => Some(Channel::Box),
+        _ => None,
+    }
 }
 
 #[cfg(test)]
@@ -368,7 +332,7 @@ mod tests {
     fn style_uses_text_detects_channel_setters() {
         let (s, _) = parse("style({ text: type({ size: sm }) })");
         assert!(style_uses_text_channel(&s));
-        let (s, _) = parse("style({ box: space({ pad: 2 }), paint: fill({ color: primary }) })");
+        let (s, _) = parse("style({ pad(2), bg(primary) })");
         assert!(!style_uses_text_channel(&s));
     }
 
@@ -391,20 +355,23 @@ mod tests {
 
     #[test]
     fn geometry_setters_are_dimensional_box() {
-        for s in ["size", "space", "place"] {
+        for s in [
+            "size", "position", "pad", "margin", "grow", "shrink", "dir", "self", "resize", "basis",
+        ] {
             assert!(is_geometry_setter(s), "{s}");
         }
+        assert_eq!(channel_for_setter("dir"), Some(Channel::Box));
+        assert_eq!(channel_for_setter("display"), Some(Channel::Box));
         assert!(!is_geometry_setter("display"));
         assert!(!is_geometry_setter("overflow"));
-        assert!(!is_geometry_setter("flow"));
-        assert!(!is_geometry_setter("fill"));
         assert!(!is_geometry_setter("type"));
+        assert_eq!(channel_for_setter("align"), Some(Channel::Paint));
+        assert_eq!(channel_for_setter("resize"), Some(Channel::Box));
     }
 
     #[test]
     fn geometry_in_interaction_when_refused() {
-        let (_, diags) =
-            parse("style({ box: space({ pad: 2 }), when: { hover: { box: space({ pad: 4 }) } } })");
+        let (_, diags) = parse("style({ pad(2), when: { hover: { pad(4) } } })");
         assert!(
             diags
                 .iter()
@@ -412,9 +379,7 @@ mod tests {
             "{:?}",
             diags.iter().map(|d| d.message()).collect::<Vec<_>>()
         );
-        let (_, diags) = parse(
-            "style({ box: space({ pad: 2 }), when: { tablet: { box: space({ pad: 4 }) } } })",
-        );
+        let (_, diags) = parse("style({ pad(2), when: { tablet: { pad(4) } } })");
         assert!(
             !diags
                 .iter()
@@ -422,9 +387,7 @@ mod tests {
             "media may gate box: {:?}",
             diags.iter().map(|d| d.message()).collect::<Vec<_>>()
         );
-        let (_, diags) = parse(
-            "style({ box: space({ pad: 2 }), when: { hover: { paint: fill({ color: muted }) } } })",
-        );
+        let (_, diags) = parse("style({ pad(2), when: { hover: { bg(muted) } } })");
         assert!(
             !diags
                 .iter()
@@ -447,10 +410,8 @@ mod tests {
 
         // Dimensional geometry under interaction keys — refuse.
         for key in ["hover", "group-hover", "state-open", "focusWithin"] {
-            let src = format!(
-                "style({{ box: space({{ pad: 2 }}), when: {{ {key}: {{ box: space({{ pad: 4 }}) }} }} }})"
-            );
-            assert!(gate_err(&src), "space under {key} must refuse: {src}");
+            let src = format!("style({{ pad(2), when: {{ {key}: {{ pad(4) }} }} }})");
+            assert!(gate_err(&src), "pad under {key} must refuse: {src}");
             let src = format!(
                 "style({{ box: size({{ w: full }}), when: {{ {key}: {{ box: size({{ h: full }}) }} }} }})"
             );
@@ -459,18 +420,16 @@ mod tests {
 
         // Media / preference may still gate box geometry.
         for key in ["tablet", "dark"] {
-            let src = format!(
-                "style({{ box: space({{ pad: 2 }}), when: {{ {key}: {{ box: space({{ pad: 4 }}) }} }} }})"
-            );
-            assert!(!gate_err(&src), "space under media {key} must allow: {src}");
+            let src = format!("style({{ pad(2), when: {{ {key}: {{ pad(4) }} }} }})");
+            assert!(!gate_err(&src), "pad under media {key} must allow: {src}");
         }
 
         // Paint under interaction is legal.
         assert!(!gate_err(
-            "style({ paint: fill({ color: primary }), when: { hover: { paint: fill({ color: muted }) } } })"
+            "style({ bg(primary), when: { hover: { bg(muted) } } })"
         ));
         assert!(!gate_err(
-            "style({ box: space({ pad: 2 }), paint: fill({ color: primary }), when: { hover: { paint: fill({ color: muted }) } } })"
+            "style({ pad(2), bg(primary), when: { hover: { bg(muted) } } })"
         ));
 
         // Non-dimensional box (flow/overflow) under interaction — currently legal
@@ -480,7 +439,7 @@ mod tests {
             "flow/overflow stay non-geometry for interaction gate"
         );
         assert!(!gate_err(
-            "style({ box: flow({ display: none }), when: { hover: { box: flow({ display: block }) } } })"
+            "style({ display(none), when: { hover: { display(block) } } })"
         ));
         assert!(!gate_err(
             "style({ box: overflow({ all: hidden }), when: { group-hover: { box: overflow({ all: auto }) } } })"
@@ -488,10 +447,10 @@ mod tests {
     }
 
     #[test]
-    fn color_setter_refused_with_ink_pointer() {
+    fn color_setter_refused_with_fg_pointer() {
         let (_, diags) = parse("style({ paint: color(primary) })");
         assert!(
-            diags.iter().any(|d| d.message().contains("ink")),
+            diags.iter().any(|d| d.message().contains("fg")),
             "{:?}",
             diags.iter().map(|d| d.message()).collect::<Vec<_>>()
         );
@@ -502,7 +461,7 @@ mod tests {
         let src = "style({ \
             paint: filter({ blur: 4, brightness: 100, contrast: 100, grayscale: 0, \
                 hue: 0, invert: 0, sepia: 0, saturate: 100 }).containerType(inline-size).containerName(main), \
-            box: space({ pad: 2 }) \
+            pad(2) \
         })";
         let (style, diags) = parse(src);
         assert!(

@@ -36,10 +36,7 @@ pub const SX_EXTRA_FORMS: &[(&str, &str)] = &[
 /// `current` keys off aria-current (the author stamps it for assistive tech
 /// anyway; the style reads the same source of truth).
 pub const STATE_PREFIXES: &[(&str, &str)] = &[
-    (
-        "hover",
-        ":hover:not(:disabled):not([aria-disabled='true'])",
-    ),
+    ("hover", ":hover:not(:disabled):not([aria-disabled='true'])"),
     (
         "focus",
         ":focus-visible:not(:disabled):not([aria-disabled='true'])",

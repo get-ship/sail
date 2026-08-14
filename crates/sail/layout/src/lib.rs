@@ -13,11 +13,13 @@
 //! ```text
 //!   .sail source
 //!        │
-//!        ├── caller-supplied preprocess  (sx→class, layout→div+class)
+//!        ├── caller-supplied preprocess  (Style IR → classes + TypeHost + BoxHost)
 //!        ▼
 //!   lowered HTML ──► sail_layout::html::parse  ──►  Vec<Element>
 //!        │
-//!        ├── sail_layout::style::resolve  (class → taffy Style)
+//!        ├── apply_resolved_types (Style tokens + theme tag defaults)
+//!        ├── apply_resolved_boxes (Style box tokens)
+//!        ├── sail_layout::style::resolve  (Style IR + layout primitives → taffy)
 //!        ▼
 //!   taffy::TaffyTree<NodeContext> ──► compute_layout_with_measure
 //!        │                              (text leaves use the metrics table)
@@ -29,10 +31,11 @@
 //! ## What is measured and what is not
 //!
 //! - **Text leaves.** The parser captures text content onto elements; the
-//!   taffy measure function resolves `font-*` and `text-*` classes (and tag
-//!   defaults) to a baked metrics table generated from the framework's own
-//!   woff2 fonts in `packages/sail/tokens/src/fonts/`. See [`metrics`] for the
-//!   contract and the list of deliberate cuts (kerning, ligatures, BiDi).
+//!   taffy measure function reads Style-resolved type tokens
+//!   ([`Element::type_size`] / [`Element::type_family`]) and looks up the
+//!   baked metrics table generated from the framework's own woff2 fonts in
+//!   `packages/sail/tokens/src/fonts/`. See [`metrics`] for the contract
+//!   and the list of deliberate cuts (kerning, ligatures, BiDi).
 //! - **Custom / replaced elements.** Tags the layout pass cannot size (custom
 //!   elements containing a hyphen, plus replaced elements like `<iframe>` that
 //!   taffy does not model) are marked `unknown_subtree`. Any collapse or
@@ -45,6 +48,7 @@
 //! - **`if` / `for` / dynamic content.** The static-only path catches most
 //!   real-world layout bugs.
 
+pub mod box_ir;
 pub mod canary;
 pub mod diagnostics;
 pub mod html;
@@ -56,39 +60,24 @@ pub mod taffy_tree;
 pub mod tap_targets;
 mod unintended_overflow;
 
+pub use box_ir::{BoxHost, ResolvedBox, apply_resolved_boxes, resolve_box};
 pub use diagnostics::{
     BoxExtents, BoxReport, Diagnostic, MainAxis, OverflowGeometry, ScanInput, ScanResult, Severity,
 };
+
+/// Style-resolved hosts collected at preprocess (type + box).
+#[derive(Debug, Clone, Default)]
+pub struct StyleHosts {
+    pub types: Vec<TypeHost>,
+    pub boxes: Vec<BoxHost>,
+}
 pub use html::{Element, parse_source, source_viewport};
-pub use metrics::{Family, Size as TextSize, table as metrics_table};
+pub use metrics::{
+    Family, Size as TextSize, TypeHost, apply_resolved_types, apply_tag_default_types,
+    table as metrics_table,
+};
 pub use style::ResolvedStyle;
 pub use taffy_tree::Layout;
-
-use std::sync::Arc;
-
-/// Parsed HTML forest. One parse, many viewport layouts.
-#[derive(Debug, Clone)]
-pub struct Forest {
-    elements: Arc<[Element]>,
-}
-
-impl Forest {
-    /// Parse already-preprocessed HTML once.
-    pub fn parse(preprocessed: &str) -> Self {
-        Self {
-            elements: Arc::from(parse_source(preprocessed)),
-        }
-    }
-
-    pub fn elements(&self) -> &[Element] {
-        &self.elements
-    }
-
-    /// Compute a box tree at `viewport`. Shares this forest's elements.
-    pub fn layout(&self, viewport: (f32, f32)) -> anyhow::Result<Layout> {
-        taffy_tree::build_arc(Arc::clone(&self.elements), viewport)
-    }
-}
 
 /// Re-export the engine we wrap. External callers (the bin, future LSP/seam
 /// hooks) build trees and call compute_layout through this alias.
@@ -130,31 +119,23 @@ mod layout_pass_counter_tests {
     }
 }
 
-/// Options for layout finding kinds (SPEC-LAYOUT-DIAG-1 / LAYOUT-5).
+/// Options for experimental layout finding kinds (SPEC-LAYOUT-DIAG-1 / S4.1).
 ///
-/// `unintended-overflow` always emits. `clipped-text` follows
-/// [`Self::text_metrics_enabled`] (on unless explicitly disabled).
-/// `sub-min-tap-target` stays behind [`Self::experimental`].
-#[derive(Debug, Clone, Copy)]
+/// Default is **off** — `unintended-overflow` and `clipped-text` ship under
+/// strict / experimental only (rollout protocol). Implementer wires these
+/// flags into [`diagnostics::scan`]; this struct is the product surface.
+#[derive(Debug, Clone, Copy, Default)]
 pub struct CheckOptions {
-    /// Emit still-experimental kinds (`sub-min-tap-target`).
+    /// Emit experimental kinds (`unintended-overflow`, `clipped-text`).
     pub experimental: bool,
-    /// Text-metrics-dependent kinds (`clipped-text`). `None` means on
-    /// (promoted default). Set `Some(false)` to disable.
+    /// Text-metrics-dependent kinds (`clipped-text`). `None` follows
+    /// [`Self::experimental`]. SPEC may also gate behind `layout.textMetrics`.
     pub text_metrics: Option<bool>,
 }
 
-impl Default for CheckOptions {
-    fn default() -> Self {
-        Self {
-            experimental: false,
-            text_metrics: Some(true),
-        }
-    }
-}
-
 impl CheckOptions {
-    /// Calibration / canary: experimental kinds on, including text-metrics.
+    /// Strict / experimental rollout defaults: both experimental kinds on,
+    /// including text-metrics path.
     pub fn experimental() -> Self {
         Self {
             experimental: true,
@@ -162,9 +143,9 @@ impl CheckOptions {
         }
     }
 
-    /// Whether text-metrics kinds should run. Promoted default is on.
+    /// Whether text-metrics kinds should run.
     pub fn text_metrics_enabled(self) -> bool {
-        self.text_metrics.unwrap_or(true)
+        self.text_metrics.unwrap_or(self.experimental)
     }
 }
 
@@ -172,30 +153,48 @@ impl CheckOptions {
 /// px and emit diagnostics. This is the primary entry point for callers that
 /// already have a preprocessor (e.g. `sail-compiler`).
 ///
-/// Promoted kinds emit (`unintended-overflow`, `clipped-text`). Tap stays
-/// experimental (see [`check_preprocessed_with`]).
+/// Experimental kinds are **not** enabled (see [`check_preprocessed_with`]).
 pub fn check_preprocessed(preprocessed: &str, viewport: (f32, f32)) -> anyhow::Result<ScanResult> {
     check_preprocessed_with(preprocessed, viewport, CheckOptions::default())
 }
 
 /// Like [`check_preprocessed`], with explicit experimental-kind options.
 ///
-/// `unintended-overflow` always emits. `clipped-text` requires
-/// [`CheckOptions::text_metrics_enabled`]. `sub-min-tap-target` requires
-/// [`CheckOptions::experimental`].
+/// `unintended-overflow` emits when [`CheckOptions::experimental`] is true;
+/// `clipped-text` also requires [`CheckOptions::text_metrics_enabled`].
 pub fn check_preprocessed_with(
     preprocessed: &str,
     viewport: (f32, f32),
     options: CheckOptions,
 ) -> anyhow::Result<ScanResult> {
-    let forest = Forest::parse(preprocessed);
-    check_tree(&forest.layout(viewport)?, options)
+    check_preprocessed_with_types(preprocessed, viewport, options, &[])
 }
 
-/// Scan an already-computed box tree. Callers that share a [`Forest`] across
-/// viewports use this so they do not re-parse HTML.
-pub fn check_tree(layout: &Layout, options: CheckOptions) -> anyhow::Result<ScanResult> {
-    diagnostics::scan_with(layout, layout.viewport, options)
+/// Like [`check_preprocessed_with`], overlaying Style-resolved type tokens
+/// collected at preprocess (not scraped from class names).
+pub fn check_preprocessed_with_types(
+    preprocessed: &str,
+    viewport: (f32, f32),
+    options: CheckOptions,
+    hosts: &[TypeHost],
+) -> anyhow::Result<ScanResult> {
+    check_preprocessed_with_hosts(preprocessed, viewport, options, hosts, &[])
+}
+
+/// Like [`check_preprocessed_with_types`], also overlaying Style-resolved box
+/// tokens (display / grow / overflow / position / pad / size).
+pub fn check_preprocessed_with_hosts(
+    preprocessed: &str,
+    viewport: (f32, f32),
+    options: CheckOptions,
+    type_hosts: &[TypeHost],
+    box_hosts: &[BoxHost],
+) -> anyhow::Result<ScanResult> {
+    let mut elements = parse_source(preprocessed);
+    apply_resolved_types(&mut elements, type_hosts);
+    apply_resolved_boxes(&mut elements, box_hosts);
+    let tree = taffy_tree::build(elements, viewport)?;
+    diagnostics::scan_with(&tree, viewport, options)
 }
 
 /// Convenience for standalone callers that have their own preprocessor.

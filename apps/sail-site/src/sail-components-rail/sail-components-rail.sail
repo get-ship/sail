@@ -4,18 +4,18 @@
 -->
 
 <scope>
-  style shell = { box: size({ h: full, min-w: 0, min-h: 0 }).overflow({ all: hidden }) }
+  style shell = { size({ h: full, min-w: 0, min-h: 0 }).overflow({ all: hidden }) }
   // Same rail geometry as sail-docs-rail (14rem / space-56).
-  style rail = { box: flow({ display: none, dir: column }).size({ w: 56, h: full, min-h: 0 }).space({ pad-x: 3, pad-y: 4 }).overflow({ x: hidden, y: auto }), paint: border({ color: border, width: 1, edge: e }).fill({ color: background }).ink({ color: foreground }), when: { tablet: { box: flow({ display: flex }) } } }
-  style railLabel = { box: space({ mt: 4, mb: 1 }), paint: ink({ color: muted-foreground }), text: type({ size: xs, weight: semibold, tracking: wide, case: uppercase }) }
-  style railLink = { box: flow({ display: block }).space({ pad-x: 2, pad-y: 1 }), paint: radius(md).ink({ color: muted-foreground }), text: type({ family: mono, size: sm }), when: { hover: { paint: ink({ color: foreground }).fill({ color: hover-bg }) }, current: { paint: ink({ color: primary }).fill({ color: muted }), text: type({ weight: semibold }) } } }
-  style railHub = { box: flow({ display: block }).space({ pad-x: 2, pad-y: 1, mb: 2 }), paint: radius(md).ink({ color: muted-foreground }), text: type({ size: sm, weight: medium }), when: { hover: { paint: ink({ color: foreground }).fill({ color: hover-bg }) }, current: { paint: ink({ color: primary }).fill({ color: muted }), text: type({ weight: semibold }) } } }
-  style mainPane = { box: space({ pad: 4 }).size({min-h: 0, basis: 0}).overflow({ x: hidden, y: auto }), when: { tablet: { box: space({ pad: 6 }) } } }
-  style mobileBar = { box: flow({ display: flex }).space({ pad-x: 3, pad-y: 2 }), paint: border({ color: border, width: 1, edge: b }).fill({ color: background }), when: { tablet: { box: flow({ display: none }) } } }
-  style contentCol = { box: size({ min-w: 0, min-h: 0 }) }
-  style mobileLabel = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs }) }
-  style drawerTitle = { text: type({ size: sm }) }
-  style fullW = { box: size({ w: full }) }
+  style rail = { display(none).dir(column).size({ w: 56, h: full, min-h: 0 }).pad({ x: 3, y: 4 }).overflow({ x: hidden, y: auto }).border({ color: border, width: 1, edge: e }).bg(background).fg(foreground), when: { tablet: display(flex) } }
+  style railLabel = { margin({ t: 4, b: 1 }).fg(muted-foreground).type({ size: xs, weight: semibold, tracking: wide, case: uppercase }) }
+  style railLink = { display(block).pad({ x: 2, y: 1 }).radius(md).fg(muted-foreground).type({ family: mono, size: sm }), when: { hover: fg(foreground).bg(hover-bg), current: fg(primary).bg(muted).type({ weight: semibold }) } }
+  style railHub = { display(block).pad({ x: 2, y: 1 }).margin({ b: 2 }).radius(md).fg(muted-foreground).type({ size: sm, weight: medium }), when: { hover: fg(foreground).bg(hover-bg), current: fg(primary).bg(muted).type({ weight: semibold }) } }
+  style mainPane = { pad(4).size({min-h: 0, basis: 0}).overflow({ x: hidden, y: auto }), when: { tablet: pad(6) } }
+  style mobileBar = { display(flex).pad({ x: 3, y: 2 }).border({ color: border, width: 1, edge: b }).bg(background), when: { tablet: display(none) } }
+  style contentCol = { size({ min-w: 0, min-h: 0 }) }
+  style mobileLabel = { fg(muted-foreground).type({ family: mono, size: xs }) }
+  style drawerTitle = { type({ size: sm }) }
+  style fullW = { size({ w: full }) }
 
   type ComponentsNavProps = {
     path: any
@@ -102,19 +102,19 @@ export default controller((ctx) => {
   </for>
 </partial>
 
-<row nowrap align="stretch" gap="0" style(shell, { box: size({ w: full, min-w: 0 }).flow({ grow: 1 }) })>
-  <nav label="Components" testid="components-rail" style(rail, { box: flow({ shrink: 0 }) })>
+<row nowrap align="stretch" gap="0" style(shell, { size({ w: full, min-w: 0 }).grow(1) })>
+  <nav label="Components" testid="components-rail" style(rail, { shrink(0) })>
     <components-nav path={path} currentSlug={currentSlug} sections={sections} onNav={noopNav}></components-nav>
   </nav>
 
-  <column gap="0" style(contentCol, { box: flow({ grow: 1 }).size({ min-w: 0 }) })>
+  <column gap="0" style(contentCol, { grow(1).size({ min-w: 0 }) })>
     <div style(mobileBar)>
       <row gap="2" align="center">
         <button type="button" variant="outline" size="sm" on:click={openNav} expanded={navOpen() ? 'true' : 'false'}>Menu</button>
         <small style(mobileLabel)>Components</small>
       </row>
     </div>
-    <main style(mainPane, { box: flow({ grow: 1 }).size({ min-w: 0 }) })>
+    <main style(mainPane, { grow(1).size({ min-w: 0 }) })>
       <slot name="route"></slot>
     </main>
   </column>

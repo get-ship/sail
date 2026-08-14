@@ -294,13 +294,13 @@ export default controller((ctx: ControllerScope<Scope>) => {
   })
 
 </controller>
-<div style({ box: flow({ display: block }).overflow({ all: hidden }), paint: fill({ color: background }).ink({ color: foreground }).border({ color: border, width: 1 }).radius(lg).elevation(xs) })>  <span style({ box: flow({ display: contents }), text: type({ family: body, size: density }) })>    <row align="center" gap="density" style({ box: space({ pad-x: density-row-px, pad-y: density-row-py }), paint: border({ edge: b, color: border, width: 1 }) })>
+<div style({ display(block).overflow({ all: hidden }).bg(background).fg(foreground).border({ color: border, width: 1 }).radius(lg).elevation(xs) })>  <span style({ display(contents).type({ family: body, size: density }) })>    <row align="center" gap="density" style({ pad({ x: density-row-px, y: density-row-py }).border({ edge: b, color: border, width: 1 }) })>
     <row gap="1" align="center">
       <button type="button" variant="outline" size="sm" data-nav="prev" aria-label="Previous">‹</button>
       <button type="button" variant="outline" size="sm" data-nav="today">Today</button>
       <button type="button" variant="outline" size="sm" data-nav="next" aria-label="Next">›</button>
     </row>
-    <h2 style({ box: flow({ grow: 1 }), text: type({ size: base, weight: semibold }) })>{title()}</h2>
+    <h2 style({ grow(1).type({ size: base, weight: semibold }) })>{title()}</h2>
     <row role="group" aria-label="Calendar view" gap="1" align="center">
       <button type="button" variant="outline" size="sm" data-view="month" aria-pressed={isMonth() ? 'true' : 'false'}>Month</button>
       <button type="button" variant="outline" size="sm" data-view="week" aria-pressed={isWeek() ? 'true' : 'false'}>Week</button>
@@ -309,7 +309,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
   </row>
 
   <if {isEmpty()}>
-    <div role="status" style({ box: space({ pad-x: density-row-px, pad-y: 6 }), paint: ink({ color: muted-foreground }) })>      <span style({ box: flow({ display: contents }), text: type({ align: center }) })>        <slot name="empty">No events</slot>
+    <div role="status" style({ pad({ x: density-row-px, y: 6 }).fg(muted-foreground) })>      <span style({ display(contents).type({ align: center }) })>        <slot name="empty">No events</slot>
       </span>
 </div>
   </if>
@@ -318,7 +318,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
   <div role="grid" aria-label={label() || 'Calendar month'}>
     <grid cols="7" gap="0" role="presentation">
       <for {weekdays() as d} key={d.key}>
-        <span role="columnheader" style({ box: space({ pad-y: density-row-py }), paint: ink({ color: muted-foreground }).border({ edge: b, color: border, width: 1 }), text: type({ size: density, weight: medium, align: center }) })>{d.label}</span>
+        <span role="columnheader" style({ pad({ y: density-row-py }).fg(muted-foreground).border({ edge: b, color: border, width: 1 }).type({ size: density, weight: medium, align: center }) })>{d.label}</span>
       </for>
     </grid>
     <for {weekRows() as wk} key={wk.key}>
@@ -331,8 +331,8 @@ export default controller((ctx: ControllerScope<Scope>) => {
             data-state={cr.state}
             aria-current={cr.cell.today ? 'date' : null}
             aria-label={cr.cell.iso}
-            gap="1" style({ box: space({ pad-x: density-row-px, pad-y: density-row-py }).size({ min-h: panel-min-h-cell }), paint: group().border({ edge: r, color: border, width: 1 }).border({ edge: b, color: border, width: 1 }), when: { stateOut: { paint: ink({ color: muted-foreground }).fill({ color: muted }) }, stateWeekend: { paint: fill({ color: muted }) }, stateRange: { paint: fill({ color: selected-bg }) } } })>
-            <row align="center" justify="center" gap="0" style({ box: size({ h: control-h-2xs, min-w: control-h-2xs }), paint: radius(full), when: { groupStateToday: { paint: ink({ color: primary }).border({ kind: outline, color: primary }) } } })>              <span style({ box: flow({ display: contents }), text: type({ size: density }), when: { groupStateToday: { text: type({ weight: semibold }) } } })>                {cr.cell.day}
+            gap="1" style({ pad({ x: density-row-px, y: density-row-py }).size({ min-h: panel-min-h-cell }).group().border({ edge: r, color: border, width: 1 }).border({ edge: b, color: border, width: 1 }), when: { stateOut: fg(muted-foreground).bg(muted), stateWeekend: bg(muted), stateRange: bg(selected-bg) } })>
+            <row align="center" justify="center" gap="0" style({ size({ h: control-h-2xs, min-w: control-h-2xs }).radius(full), when: { groupStateToday: fg(primary).border({ kind: outline, color: primary }) } })>              <span style({ display(contents).type({ size: density }), when: { groupStateToday: type({ weight: semibold }) } })>                {cr.cell.day}
               </span>
 </row>
             <for {cr.cell.events as ev} key={ev.id}>
@@ -341,13 +341,13 @@ export default controller((ctx: ControllerScope<Scope>) => {
                 data-event-id={ev.id}
                 data-state={ev.allDay ? 'allday' : ''}
                 aria-selected={selectedIds().includes(ev.id) ? 'true' : 'false'}
-                title={ev.title} style({ box: place({ position: relative }).space({ pad-x: 1_5, pad-y: half, pad-l: 3 }), paint: cursor(pointer).ink({ color: foreground }).fill({ color: hover-bg }).radius(sm), text: type({ size: density, align: start, wrap: truncate }), when: { stateAllday: { paint: fill({ color: hover-bg }) }, selected: { paint: border({ kind: outline, color: ring }) } } })>
-                <span aria-hidden="true" style({ box: place({ position: absolute, top: 1, bottom: 1, left: half }).size({ w: half }), paint: radius(sm).fill({ color: primary }), when: { groupStateAllday: { paint: fill({ color: accent }) } } })></span>
+                title={ev.title} style({ position(relative).pad({ x: 1_5, y: half, l: 3 }).cursor(pointer).fg(foreground).bg(hover-bg).radius(sm).type({ size: density, align: start, wrap: truncate }), when: { stateAllday: bg(hover-bg), selected: border({ kind: outline, color: ring }) } })>
+                <span aria-hidden="true" style({ position({ scheme: absolute, t: 1, b: 1, l: half }).size({ w: half }).radius(sm).bg(primary), when: { groupStateAllday: bg(accent) } })></span>
                 {ev.title}
               </button>
             </for>
             <if {cr.cell.overflowCount > 0}>
-              <span style({ box: space({ pad-x: 1 }), paint: ink({ color: muted-foreground }), text: type({ size: xs, weight: semibold }) })>+{cr.cell.overflowCount} more</span>
+              <span style({ pad({ x: 1 }).fg(muted-foreground).type({ size: xs, weight: semibold }) })>+{cr.cell.overflowCount} more</span>
             </if>
           </column>
         </for>
@@ -358,29 +358,29 @@ export default controller((ctx: ControllerScope<Scope>) => {
 
 <if {isWeek() || isDay()}>
   <grid use:gridTracks={timeGridTracks()} tracks="--cal-time-tracks" gap="0" role="grid" aria-label={label() || 'Calendar time grid'}>
-    <column role="rowgroup" gap="0" style({ paint: border({ edge: r, color: border, width: 1 }) })>
+    <column role="rowgroup" gap="0" style({ border({ edge: r, color: border, width: 1 }) })>
       <for {timeSlots() as slot} key={slot.key}>
-        <div data-slot={slot.minutes} role="rowheader" style({ box: size({ h: control-h-md }).space({ pad-x: density-row-px }), paint: ink({ color: muted-foreground }).border({ edge: b, color: border, width: 1 }) })>          <span style({ box: flow({ display: contents }), text: type({ size: density }) })>            {slot.label}
+        <div data-slot={slot.minutes} role="rowheader" style({ size({ h: control-h-md }).pad({ x: density-row-px }).fg(muted-foreground).border({ edge: b, color: border, width: 1 }) })>          <span style({ display(contents).type({ size: density }) })>            {slot.label}
           </span>
 </div>
       </for>
     </column>
-    <row gap="0" style({ box: flow({ grow: 1 }) })>
+    <row gap="0" style({ grow(1) })>
       <for {dayColumns() as dc} key={dc.key}>
-        <div data-state={dc.col.today ? 'today' : ''} data-iso={dc.col.iso} style({ box: flow({ grow: 1 }).place({ position: relative }).size({ min-h: panel-min-h-daycol }), paint: border({ edge: r, color: border, width: 1 }), when: { stateToday: { paint: fill({ color: selected-bg }) } } })>
-          <column gap="0" style({ box: place({ position: absolute, top: 0, bottom: 0, left: 0, right: 0 }) })>
+        <div data-state={dc.col.today ? 'today' : ''} data-iso={dc.col.iso} style({ grow(1).position(relative).size({ min-h: panel-min-h-daycol }).border({ edge: r, color: border, width: 1 }), when: { stateToday: bg(selected-bg) } })>
+          <column gap="0" style({ position({ scheme: absolute, t: 0, b: 0, l: 0, r: 0 }) })>
             <for {timeSlots() as slot} key={slot.key}>
-              <div data-iso={dc.col.iso} data-minutes={slot.minutes} style({ box: flow({ grow: 1 }).size({ min-h: control-h-md }), paint: cursor(cell).border({ edge: b, color: border, width: 1 }), when: { hover: { paint: fill({ color: hover-bg }) } } })></div>
+              <div data-iso={dc.col.iso} data-minutes={slot.minutes} style({ grow(1).size({ min-h: control-h-md }).cursor(cell).border({ edge: b, color: border, width: 1 }), when: { hover: bg(hover-bg) } })></div>
             </for>
           </column>
-          <column gap="1" style({ box: place({ position: relative }).space({ pad: half }), paint: place({ z: elevated }) })>
+          <column gap="1" style({ position(relative).pad(half).position({ z: elevated }) })>
             <for {dc.col.allDayEvents as ev} key={ev.id}>
               <button
                 type="button"
                 data-event-id={ev.id}
                 data-state="allday"
                 aria-selected={selectedIds().includes(ev.id) ? 'true' : 'false'}
-                title={ev.title} style({ box: place({ position: relative }).space({ pad-x: 1_5, pad-y: half }), paint: cursor(pointer).ink({ color: foreground }).fill({ color: hover-bg }).radius(sm), text: type({ size: density, align: start, wrap: truncate }), when: { selected: { paint: border({ kind: outline, color: ring }) } } })>{ev.title}</button>
+                title={ev.title} style({ position(relative).pad({ x: 1_5, y: half }).cursor(pointer).fg(foreground).bg(hover-bg).radius(sm).type({ size: density, align: start, wrap: truncate }), when: { selected: border({ kind: outline, color: ring }) } })>{ev.title}</button>
             </for>
           </column>
           <for {dc.col.laidOut as pe} key={pe.event.id}>
@@ -389,7 +389,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
               data-event-id={pe.event.id}
               aria-selected={selectedIds().includes(pe.event.id) ? 'true' : 'false'}
               use:eventSpan={eventRect(pe)}
-              title={pe.event.title} style({ box: place({ position: absolute, top: bind(evtTop), left: bind(evtLeft) }).size({ w: bind(evtW), h: bind(evtH) }).space({ pad-x: 1, pad-y: half }).overflow({ all: hidden }), paint: cursor(pointer).ink({ color: primary }).fill({ color: hover-bg }).radius(sm), text: type({ size: density, align: start }), when: { selected: { paint: border({ kind: outline, color: ring }) } } })>{pe.event.title}</button>
+              title={pe.event.title} style({ position({ scheme: absolute, t: bind(evtTop), l: bind(evtLeft) }).size({ w: bind(evtW), h: bind(evtH) }).pad({ x: 1, y: half }).overflow({ all: hidden }).cursor(pointer).fg(primary).bg(hover-bg).radius(sm).type({ size: density, align: start }), when: { selected: border({ kind: outline, color: ring }) } })>{pe.event.title}</button>
           </for>
         </div>
       </for>

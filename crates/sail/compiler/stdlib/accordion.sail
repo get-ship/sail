@@ -13,18 +13,18 @@
     onToggle: (detail: { open: boolean }) => void
   }
 
-  // Shell + trigger from component.accordion tokens.
-  style host = {box: flow({ display: block }), paint: border({ color: accordion.border, width: 1 }).radius(lg).fill({ color: accordion }), text: type({ family: body })}
+  // Shell + trigger from background / foreground / border.
+  style host = {display(block).border({ color: border, width: 1 }).radius(lg).bg(background).type({ family: body })}
   // list(none) + after chevron: kill UA marker; single themed caret.
-  style summary = {box: flow({ display: flex }).space({ pad-y: 3, pad-x: 4 }), paint: ink({ color: accordion.foreground }).radius(lg).motion({ property: colors, duration: fast, ease: out }).cursor(pointer).select(none), text: type({ size: sm, weight: semibold, list: none }), when: {hover: {paint: fill({ color: hover-bg })}, after: {box: space({ ms: auto }).size(4), paint: content(empty).fill({ color: accordion.chevron })}}}
-  style content = {box: space({ pad-x: 4, pad-y: 3 })}
+  style summary = {display(flex).pad({ y: 3, x: 4 }).fg(foreground).radius(lg).cursor(pointer).select(none).type({ size: sm, weight: semibold, list: none }), when: {hover: bg(hover-bg), after: margin({ s: auto }).size(4).content(empty).bg(muted-foreground)}, animate: { transition: play(colors, fast) }}
+  style content = {pad({ x: 4, y: 3 })}
 </scope>
 
 <details
   use:detailsToggle
   use:detailsDisabled
   style(host, {compound: [
-      {disabled: true, paint: filter({ opacity: 50 }).cursor(not-allowed)},
+      {disabled: true, filter({ opacity: 50 }).cursor(not-allowed)},
     ]})
 >
   <summary style(summary)><slot name="trigger"></slot></summary>

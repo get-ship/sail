@@ -1,9 +1,9 @@
 //! **INTERNAL leaf IR** for Style paint-op emit — not an author surface.
 //!
-//! Product paint is Style (`style.…` chains, `match` / `when` / `compound`).
-//! Utility-string sx is a hard residual error at parse + lint. This module
-//! remains so Style setters can lower atoms → CSS via the closed property
-//! table + token registry.
+//! Product paint is Style (`style({ box, paint, text, animate })`).
+//! Utility-string sx is a hard residual error (`is_residual_utility_sx`).
+//! This module is residual detect plus a token-value helper so Style setters
+//! can lower a closed property + token to CSS.
 
 use std::collections::BTreeMap;
 use std::sync::OnceLock;
@@ -38,20 +38,12 @@ pub struct SxDecl {
     pub prop: String,
     /// Value; `None` only for bare atoms (`hidden`, `truncate`, `italic`).
     pub value: Option<SxValue>,
-    /// Negation (`-m: 4` / legacy `-m-4`).
+    /// Negation (`-m: 4`).
     pub negative: bool,
     /// True when this was a bare atom with no value.
     pub bare: bool,
     /// Source fragment (for diagnostics).
     pub source: String,
-}
-
-/// Parsed sx attribute body.
-#[derive(Debug, Clone, PartialEq, Eq, Default)]
-pub struct SxProgram {
-    pub decls: Vec<SxDecl>,
-    /// Bare `group` ancestor marker present.
-    pub group: bool,
 }
 
 // ─── Errors ──────────────────────────────────────────────────────────────────
@@ -167,13 +159,6 @@ pub fn is_property(name: &str) -> bool {
     }
     let names = style_vocab::names();
     names.iter().any(|k| k == n)
-}
-
-/// Refused heads (`gap`, `flex`, …) so structured `gap: 2` parses into IR and
-/// surfaces the same "use layout element" diagnostic as legacy `gap-2`.
-fn is_refused_head(name: &str) -> bool {
-    let n = name.strip_prefix('-').unwrap_or(name);
-    style_vocab::refusals().iter().any(|(k, _)| k == n)
 }
 
 /// Documented closed property table (canonical props + aliases).
@@ -317,335 +302,9 @@ pub fn value_candidates(value: &str) -> Vec<String> {
     out
 }
 
-fn parse_value_token(raw: &str) -> Result<SxValue, SxError> {
-    let raw = raw.trim();
-    if raw.is_empty() {
-        return Err(SxError::EmptyValue {
-            prop: String::new(),
-            source: raw.to_string(),
-        });
-    }
-    // raw: escape
-    if let Some(rest) = raw.strip_prefix("raw:") {
-        if rest.is_empty() {
-            return Err(SxError::EmptyValue {
-                prop: "raw".into(),
-                source: raw.to_string(),
-            });
-        }
-        return Ok(SxValue::Raw(rest.to_string()));
-    }
-    // (--name) var ref
-    if let Some(inner) = strip_var_ref(raw) {
-        return Ok(SxValue::VarRef(inner.to_string()));
-    }
-    // Naked raw color → error (must use raw:)
-    if looks_like_raw_color(raw) {
-        return Err(SxError::RawWithoutEscape {
-            value: raw.to_string(),
-            source: raw.to_string(),
-        });
-    }
-    // Naked raw length → error
-    if looks_like_raw_length(raw) {
-        return Err(SxError::RawWithoutEscape {
-            value: raw.to_string(),
-            source: raw.to_string(),
-        });
-    }
-    Ok(SxValue::Token(raw.to_string()))
-}
-
-fn strip_var_ref(value: &str) -> Option<&str> {
-    if !value.starts_with("(--") || !value.ends_with(')') {
-        return None;
-    }
-    let inner = &value[3..value.len() - 1];
-    if inner.is_empty()
-        || !inner
-            .chars()
-            .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
-    {
-        return None;
-    }
-    Some(inner)
-}
-
-// ─── Parser (dual: structured + legacy) ──────────────────────────────────────
-
-/// Parse an sx attribute body into IR. Accepts both structured (`bg: primary`)
-/// and legacy atom (`bg-primary`) forms in the same string.
-///
-/// On hard token errors (raw color without `raw:`, empty value), valid decls
-/// still appear in the program; errors are returned alongside so lower can
-/// emit the good half and lint can report the bad half.
-pub fn parse(input: &str) -> Result<SxProgram, Vec<SxError>> {
-    let (prog, errors) = parse_lenient(input);
-    if errors.is_empty() {
-        Ok(prog)
-    } else {
-        Err(errors)
-    }
-}
-
-/// Always returns a program plus any per-token errors.
-pub fn parse_lenient(input: &str) -> (SxProgram, Vec<SxError>) {
-    let mut prog = SxProgram::default();
-    let mut errors: Vec<SxError> = Vec::new();
-    let tokens: Vec<&str> = input.split_whitespace().collect();
-    let mut i = 0usize;
-
-    while i < tokens.len() {
-        let t = tokens[i];
-        if t == "group" {
-            prog.group = true;
-            i += 1;
-            continue;
-        }
-
-        match try_structured(&tokens, i) {
-            StructuredTry::Ok { decl, next } => {
-                prog.decls.push(decl);
-                i = next;
-            }
-            StructuredTry::Err { err, next } => {
-                errors.push(err);
-                i = next;
-            }
-            StructuredTry::NotStructured => {
-                // Legacy atom form (incl. prefix:atom).
-                match parse_utility_atom(t) {
-                    Ok(decl) => prog.decls.push(decl),
-                    Err(e) => errors.push(e),
-                }
-                i += 1;
-            }
-        }
-    }
-
-    (prog, errors)
-}
-
-enum StructuredTry {
-    Ok { decl: SxDecl, next: usize },
-    Err { err: SxError, next: usize },
-    NotStructured,
-}
-
-/// Attempt to read a structured `prop: value` (with optional prefixes) starting
-/// at `tokens[i]`.
-fn try_structured(tokens: &[&str], i: usize) -> StructuredTry {
-    let t = tokens[i];
-    // Need a colon somewhere after optional prefixes for structured form.
-    if !t.contains(':') {
-        return StructuredTry::NotStructured;
-    }
-
-    let parts: Vec<&str> = t.split(':').collect();
-    if parts.len() < 2 {
-        return StructuredTry::NotStructured;
-    }
-
-    // Consume leading closed prefixes.
-    let mut pi = 0usize;
-    let mut prefixes: Vec<String> = Vec::new();
-    while pi + 1 < parts.len() && sx_rules::is_prefix(parts[pi]) {
-        // Guard: a property name that is also somehow a prefix must not be
-        // swallowed. None of our props are prefixes today.
-        prefixes.push(parts[pi].to_string());
-        pi += 1;
-    }
-
-    let rest = &parts[pi..];
-    // Structured requires prop:…  (at least two segments after prefixes).
-    // Legacy `hover:bg-primary` leaves rest = ["bg-primary"] → not structured.
-    if rest.len() < 2 {
-        return StructuredTry::NotStructured;
-    }
-
-    let mut prop = rest[0];
-    if prop.is_empty() {
-        return StructuredTry::NotStructured;
-    }
-
-    let mut negative = false;
-    if let Some(p) = prop.strip_prefix('-') {
-        negative = true;
-        prop = p;
-    }
-
-    // Property must be closed (or a known refusal head). Otherwise fall through
-    // to legacy so `hover:bg-primary` stays an atom, not a failed structure.
-    if !is_property(prop) && !is_refused_head(prop) {
-        return StructuredTry::NotStructured;
-    }
-
-    // Value: remaining colon segments joined, or next whitespace token if empty.
-    let mut value_raw = rest[1..].join(":");
-    let mut next = i + 1;
-    if value_raw.is_empty() {
-        if i + 1 >= tokens.len() {
-            return StructuredTry::Err {
-                err: SxError::EmptyValue {
-                    prop: prop.to_string(),
-                    source: t.to_string(),
-                },
-                next: i + 1,
-            };
-        }
-        // Next token is the value (and must not look like another prop: start
-        // unless it's raw: / a plain token).
-        value_raw = tokens[i + 1].to_string();
-        next = i + 2;
-    }
-
-    let source = if next == i + 2 {
-        format!("{t} {value_raw}")
-    } else {
-        t.to_string()
-    };
-
-    // Unknown prefix already filtered by is_prefix walk; any non-prefix junk
-    // before prop would have stopped the walk and left a non-property head.
-    let value = match parse_value_token(&value_raw) {
-        Ok(v) => v,
-        Err(mut e) => {
-            // Fill prop into empty-value errors.
-            if let SxError::EmptyValue {
-                prop: ref mut p,
-                source: ref mut s,
-            } = e
-            {
-                if p.is_empty() {
-                    *p = prop.to_string();
-                }
-                *s = source.clone();
-            } else if let SxError::RawWithoutEscape {
-                source: ref mut s, ..
-            } = e
-            {
-                *s = source.clone();
-            }
-            return StructuredTry::Err { err: e, next };
-        }
-    };
-
-    StructuredTry::Ok {
-        decl: SxDecl {
-            prefixes,
-            prop: prop.to_string(),
-            value: Some(value),
-            negative,
-            bare: false,
-            source,
-        },
-        next,
-    }
-}
-
-fn parse_utility_atom(pair: &str) -> Result<SxDecl, SxError> {
-    // Split closed prefix chain, remainder is atom (may contain `:` only if
-    // value was something weird — legacy atoms use `-`).
-    let parts: Vec<&str> = pair.split(':').collect();
-    let mut i = 0usize;
-    while i < parts.len().saturating_sub(1) && sx_rules::is_prefix(parts[i]) {
-        i += 1;
-    }
-    if i > 0 && i >= parts.len() {
-        return Err(SxError::UnknownAtom {
-            atom: pair.to_string(),
-            source: pair.to_string(),
-        });
-    }
-    // If we stopped mid-chain on an unknown prefix, flag it.
-    if i < parts.len().saturating_sub(1) && parts[i].contains('-') == false {
-        // e.g. print:bg-primary — print is not a prefix and not consumed.
-        // Fall through: whole remainder is atom (will fail resolve).
-    }
-    let prefixes: Vec<String> = parts[..i].iter().map(|s| (*s).to_string()).collect();
-    // Reject unknown prefix: if something before the atom is not a known
-    // prefix and we didn't consume it… actually we only consume known ones.
-    // `print:bg-primary` → prefixes=[], atom=`print:bg-primary` via join?
-    // Wait: i=0 because print is not prefix; atom = full pair with colons.
-    let atom = if i == 0 {
-        pair.to_string()
-    } else {
-        parts[i..].join(":")
-    };
-
-    if atom.is_empty() {
-        return Err(SxError::UnknownAtom {
-            atom: pair.to_string(),
-            source: pair.to_string(),
-        });
-    }
-
-    // Unknown prefix detection: pair has `:` but first segment isn't prefix
-    // and result looks like `unknown:atom`.
-    if i == 0 && pair.contains(':') {
-        if let Some((head, _)) = pair.split_once(':') {
-            if !head.is_empty() && !sx_rules::is_prefix(head) && !head.starts_with("state-") {
-                // Could be structured that failed property check — report unknown prefix
-                // only when the head isn't a property either.
-                if !is_property(head) {
-                    return Err(SxError::UnknownPrefix {
-                        prefix: head.to_string(),
-                        source: pair.to_string(),
-                    });
-                }
-            }
-        }
-    }
-
-    let (negative, body) = match atom.strip_prefix('-') {
-        Some(rest) if !rest.is_empty() => (true, rest),
-        _ => (false, atom.as_str()),
-    };
-
-    // Bare atom (no value dash) or name-value.
-    // We don't fully re-parse name/value here — lower uses the atom string.
-    let (prop, value) = split_legacy_name_value(body);
-    let bare = value.is_none();
-
-    Ok(SxDecl {
-        prefixes,
-        prop,
-        value,
-        negative,
-        bare,
-        source: pair.to_string(),
-    })
-}
-
-/// Best-effort split of a legacy body into prop + value for IR display.
-fn split_legacy_name_value(body: &str) -> (String, Option<SxValue>) {
-    // Longest vocab name match (same as style_vocab::resolve).
-    let names = style_vocab::names();
-    let mut best: Option<(&str, &str)> = None;
-    for name in names.iter() {
-        if let Some(rest) = body.strip_prefix(name.as_str()) {
-            if let Some(value) = rest.strip_prefix('-') {
-                if best.map(|(b, _)| name.len() > b.len()).unwrap_or(true) {
-                    best = Some((name.as_str(), value));
-                }
-            }
-        }
-    }
-    if let Some((name, value)) = best {
-        let v = if let Some(inner) = strip_var_ref(value) {
-            SxValue::VarRef(inner.to_string())
-        } else {
-            SxValue::Token(value.to_string())
-        };
-        return (name.to_string(), Some(v));
-    }
-    // Bare atom
-    (body.to_string(), None)
-}
-
 // ─── Lower ───────────────────────────────────────────────────────────────────
 
-/// Build the legacy atom string for a structured/legacy decl (without prefixes).
+/// Vocab atom key for a decl (without prefixes) — token-value helper for emit.
 pub fn decl_atom(decl: &SxDecl) -> String {
     if decl.bare || decl.value.is_none() {
         let mut a = String::new();
@@ -821,8 +480,7 @@ fn prop_css_properties(prop: &str) -> Option<Vec<String>> {
         .map(|(_, ps)| ps.iter().map(|s| (*s).to_string()).collect())
 }
 
-/// Validate one decl against vocab / raw rules. Returns Ok(()) or a soft error
-/// list (unknown prop already caught at parse for structured; legacy resolves here).
+/// Validate one decl against vocab / raw rules.
 pub fn validate_decl(decl: &SxDecl) -> Result<(), SxError> {
     // Prefix check
     for p in &decl.prefixes {
@@ -904,31 +562,9 @@ pub fn validate_decl(decl: &SxDecl) -> Result<(), SxError> {
     }
 }
 
-/// Validate a whole program (parse must have succeeded).
-pub fn validate_program(prog: &SxProgram) -> Vec<SxError> {
-    let mut errs = Vec::new();
-    for d in &prog.decls {
-        if let Err(e) = validate_decl(d) {
-            errs.push(e);
-        }
-    }
-    errs
-}
-
-/// Parse + validate in one shot. Used by lint.
-pub fn check_sx_string(input: &str) -> Vec<SxError> {
-    match parse(input) {
-        Ok(prog) => validate_program(&prog),
-        Err(errs) => {
-            // Also try to validate any partial… parse returns only errors.
-            errs
-        }
-    }
-}
-
 // ─── Emit helpers (class name + rule body for preprocess) ────────────────────
 
-/// Sanitized atomic class name for a decl (matches legacy lower_sx_value shape).
+/// Sanitized atomic class name for a decl.
 pub fn class_name(decl: &SxDecl) -> String {
     let atom = decl_atom(decl);
     let sanitized: String = atom.chars().filter(|c| c.is_ascii_alphanumeric()).collect();
@@ -945,7 +581,7 @@ pub fn class_name(decl: &SxDecl) -> String {
     }
 }
 
-/// Prefix/media wiring for one decl — same model as legacy preprocess.
+/// Prefix/media wiring for one decl.
 pub struct EmitSelector {
     pub media: String,
     pub ancestor: String,
@@ -1053,7 +689,7 @@ pub fn agent_schema() -> AgentSchema {
 
     AgentSchema {
         version: 0,
-        form: "string — `prop: value` (structured) or legacy `prop-value` atoms; same IR",
+        form: "residual detect + token-value helper — not an author surface",
         properties: props,
         aliases: PROP_ALIASES.iter().copied().collect(),
         prefixes: PrefixSchema {
@@ -1102,109 +738,48 @@ pub fn agent_schema_json_cached() -> &'static str {
 mod tests {
     use super::*;
 
-    #[test]
-    fn parse_structured_basic() {
-        let p = parse("bg: primary px: 2").unwrap();
-        assert_eq!(p.decls.len(), 2);
-        assert_eq!(p.decls[0].prop, "bg");
-        assert_eq!(p.decls[0].value, Some(SxValue::Token("primary".into())));
-        assert_eq!(p.decls[1].prop, "px");
-        assert_eq!(p.decls[1].value, Some(SxValue::Token("2".into())));
+    fn tok(prop: &str, value: &str) -> SxDecl {
+        SxDecl {
+            prefixes: Vec::new(),
+            prop: prop.to_string(),
+            value: Some(SxValue::Token(value.to_string())),
+            negative: false,
+            bare: false,
+            source: format!("{prop} {value}"),
+        }
+    }
+
+    fn raw(prop: &str, css: &str) -> SxDecl {
+        SxDecl {
+            prefixes: Vec::new(),
+            prop: prop.to_string(),
+            value: Some(SxValue::Raw(css.to_string())),
+            negative: false,
+            bare: false,
+            source: format!("{prop} raw:{css}"),
+        }
     }
 
     #[test]
-    fn parse_structured_attached_value() {
-        let p = parse("bg:primary px:2").unwrap();
-        assert_eq!(p.decls.len(), 2);
-        assert_eq!(p.decls[0].value, Some(SxValue::Token("primary".into())));
+    fn color_alias_atom() {
+        assert_eq!(decl_atom(&tok("color", "primary")), "text-primary");
     }
 
     #[test]
-    fn parse_structured_with_prefix() {
-        let p = parse("hover:bg: muted focus:bg: primary").unwrap();
-        assert_eq!(p.decls[0].prefixes, vec!["hover"]);
-        assert_eq!(p.decls[0].prop, "bg");
-        assert_eq!(p.decls[0].value, Some(SxValue::Token("muted".into())));
-        assert_eq!(p.decls[1].prefixes, vec!["focus"]);
-    }
-
-    #[test]
-    fn parse_dotted_token_paths() {
-        let p = parse("px: space.2 rounded: radius.sm bg: primary").unwrap();
-        assert_eq!(p.decls[0].value, Some(SxValue::Token("space.2".into())));
-        assert_eq!(p.decls[1].value, Some(SxValue::Token("radius.sm".into())));
-    }
-
-    #[test]
-    fn parse_utility_atoms() {
-        let p = parse("bg-primary px-2 hover:bg-muted").unwrap();
-        assert_eq!(p.decls.len(), 3);
-        assert_eq!(p.decls[0].prop, "bg");
-        assert_eq!(p.decls[2].prefixes, vec!["hover"]);
-    }
-
-    #[test]
-    fn dual_parse_mixed() {
-        let p = parse("bg: primary px-2 rounded: sm").unwrap();
-        assert_eq!(p.decls.len(), 3);
-        assert_eq!(p.decls[0].prop, "bg");
-        assert_eq!(p.decls[1].prop, "px");
-        assert_eq!(p.decls[2].prop, "rounded");
-    }
-
-    #[test]
-    fn parse_color_alias() {
-        let p = parse("color: primary").unwrap();
-        assert_eq!(p.decls[0].prop, "color");
-        let atom = decl_atom(&p.decls[0]);
-        assert_eq!(atom, "text-primary");
-    }
-
-    #[test]
-    fn parse_raw_escape() {
-        let p = parse("bg: raw:#3366ff").unwrap();
-        assert_eq!(p.decls[0].value, Some(SxValue::Raw("#3366ff".into())));
-    }
-
-    #[test]
-    fn reject_raw_color_without_escape() {
-        let err = parse("bg: #3366ff").unwrap_err();
-        assert!(matches!(err[0], SxError::RawWithoutEscape { .. }));
-        assert!(err[0].message().contains("raw:"));
-    }
-
-    #[test]
-    fn reject_raw_length_without_escape() {
-        let err = parse("p: 16px").unwrap_err();
-        assert!(matches!(err[0], SxError::RawWithoutEscape { .. }));
-    }
-
-    #[test]
-    fn reject_unknown_prop() {
-        // Structured with unknown prop falls through; `foo: bar` has head `foo`
-        // which is not a prefix → unknown prefix error from legacy path.
-        let err = parse("notaprop: primary").unwrap_err();
-        assert!(!err.is_empty());
-    }
-
-    #[test]
-    fn lower_structured_px_space() {
-        let p = parse("px: 2").unwrap();
-        let d = lower_decl(&p.decls[0]).expect("lower");
+    fn lower_px_space() {
+        let d = lower_decl(&tok("px", "2")).expect("lower");
         assert_eq!(d, vec![("padding-inline".into(), "var(--space-2)".into())]);
     }
 
     #[test]
-    fn lower_structured_path_space_dot() {
-        let p = parse("px: space.2").unwrap();
-        let d = lower_decl(&p.decls[0]).expect("lower space.2");
+    fn lower_path_space_dot() {
+        let d = lower_decl(&tok("px", "space.2")).expect("lower space.2");
         assert_eq!(d, vec![("padding-inline".into(), "var(--space-2)".into())]);
     }
 
     #[test]
-    fn lower_structured_bg() {
-        let p = parse("bg: primary").unwrap();
-        let d = lower_decl(&p.decls[0]).expect("lower bg");
+    fn lower_bg() {
+        let d = lower_decl(&tok("bg", "primary")).expect("lower bg");
         assert_eq!(
             d,
             vec![("background-color".into(), "var(--primary)".into())]
@@ -1212,55 +787,49 @@ mod tests {
     }
 
     #[test]
-    fn lower_legacy_still_works() {
-        let p = parse("bg-primary p-4").unwrap();
-        assert!(lower_decl(&p.decls[0]).is_some());
-        assert!(lower_decl(&p.decls[1]).is_some());
-    }
-
-    #[test]
     fn lower_rounded_path() {
-        let p = parse("rounded: radius.sm").unwrap();
-        let d = lower_decl(&p.decls[0]).expect("rounded");
+        let d = lower_decl(&tok("rounded", "radius.sm")).expect("rounded");
         assert_eq!(d[0].0, "border-radius");
         assert_eq!(d[0].1, "var(--radius-sm)");
     }
 
     #[test]
     fn lower_raw_emits_css_literal() {
-        let p = parse("bg: raw:#3366ff").unwrap();
-        let d = lower_decl(&p.decls[0]).expect("raw");
+        let d = lower_decl(&raw("bg", "#3366ff")).expect("raw");
         assert_eq!(d, vec![("background-color".into(), "#3366ff".into())]);
     }
 
     #[test]
     fn validate_rejects_bad_token() {
-        let p = parse("bg: not-a-real-token-zz").unwrap();
-        let errs = validate_program(&p);
-        assert!(!errs.is_empty());
+        assert!(validate_decl(&tok("bg", "not-a-real-token-zz")).is_err());
     }
 
     #[test]
-    fn bare_hidden_legacy() {
-        let p = parse("hidden").unwrap();
-        assert!(p.decls[0].bare);
-        let d = lower_decl(&p.decls[0]).unwrap();
+    fn lower_bare_hidden() {
+        let decl = SxDecl {
+            prefixes: Vec::new(),
+            prop: "hidden".into(),
+            value: None,
+            negative: false,
+            bare: true,
+            source: "hidden".into(),
+        };
+        let d = lower_decl(&decl).unwrap();
         assert_eq!(d, vec![("display".into(), "none".into())]);
     }
 
     #[test]
-    fn group_marker() {
-        let p = parse("group hover:bg: muted").unwrap();
-        assert!(p.group);
-        assert_eq!(p.decls[0].prefixes, vec!["hover"]);
-    }
-
-    #[test]
     fn class_name_stable() {
-        let p = parse("px: 2").unwrap();
-        assert_eq!(class_name(&p.decls[0]), "s-px2");
-        let p = parse("hover:bg: primary").unwrap();
-        assert_eq!(class_name(&p.decls[0]), "s-hover-bgprimary");
+        assert_eq!(class_name(&tok("px", "2")), "s-px2");
+        let hover = SxDecl {
+            prefixes: vec!["hover".into()],
+            prop: "bg".into(),
+            value: Some(SxValue::Token("primary".into())),
+            negative: false,
+            bare: false,
+            source: "hover bg primary".into(),
+        };
+        assert_eq!(class_name(&hover), "s-hover-bgprimary");
     }
 
     #[test]
@@ -1270,7 +839,7 @@ mod tests {
         let mut seen = std::collections::HashSet::new();
         let env = std::collections::HashMap::new();
         let classes = lower_sx_string(
-            "style({ paint: fill({ color: primary }), box: space({ pad-x: 2 }) })",
+            "style({ bg(primary), box: pad({ x: 2 }) })",
             &env,
             &mut css,
             &mut seen,
@@ -1289,7 +858,6 @@ mod tests {
 
     #[test]
     fn lower_sx_string_rejects_utility_string_product() {
-        // Residual product forms must not emit dual-path CSS.
         let mut css = String::new();
         let mut seen = std::collections::HashSet::new();
         let env = std::collections::HashMap::new();
@@ -1305,10 +873,7 @@ mod tests {
     #[test]
     fn lower_sx_string_resolves_style_const_env() {
         let mut env = std::collections::HashMap::new();
-        env.insert(
-            "filled".into(),
-            crate::parse("style({ paint: fill({ color: primary }) })").0,
-        );
+        env.insert("filled".into(), crate::parse("style({ bg(primary) })").0);
         let mut css = String::new();
         let mut seen = std::collections::HashSet::new();
         let classes =
@@ -1349,27 +914,24 @@ mod tests {
     }
 
     #[test]
-    fn check_sx_string_reject_raw() {
-        let errs = check_sx_string("bg: #fff p: 4");
-        assert!(
-            errs.iter()
-                .any(|e| matches!(e, SxError::RawWithoutEscape { .. }))
-        );
-    }
-
-    #[test]
     fn font_size_alias() {
-        let p = parse("font-size: xs").unwrap();
-        let d = lower_decl(&p.decls[0]).expect("font-size");
+        let d = lower_decl(&tok("font-size", "xs")).expect("font-size");
         assert_eq!(d[0].0, "font-size");
         assert!(d[0].1.contains("--text-xs"), "{}", d[0].1);
     }
 
     #[test]
-    fn var_ref_structured() {
-        let p = parse("w: (--box-w)").unwrap();
-        assert_eq!(p.decls[0].value, Some(SxValue::VarRef("box-w".into())));
-        let d = lower_decl(&p.decls[0]).expect("var ref");
+    fn var_ref_lowers() {
+        let decl = SxDecl {
+            prefixes: Vec::new(),
+            prop: "w".into(),
+            value: Some(SxValue::VarRef("box-w".into())),
+            negative: false,
+            bare: false,
+            source: "w (--box-w)".into(),
+        };
+        assert_eq!(decl.value, Some(SxValue::VarRef("box-w".into())));
+        let d = lower_decl(&decl).expect("var ref");
         assert_eq!(d[0].1, "var(--box-w)");
     }
 }

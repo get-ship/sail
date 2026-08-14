@@ -15,25 +15,11 @@
     tone: 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted'
   }
 
-  style track = { paint: group() }
-  style dot = {
-    box: size({ w: 2, h: 2 }),
-    paint: radius(full).fill({ color: muted-foreground }),
-    animate: loop({
+  style track = { group() }
+  style dot = { size({ w: 2, h: 2 }).radius(full).bg(muted-foreground), animate: loop({
       translate-y: { from: 0, to: '-10px', duration: 480, easing: 'ease-in-out' },
       stagger: '150ms',
-    }),
-    when: {
-      groupStateSm: { paint: motion({ scale: 75 }) },
-      groupStateLg: { paint: motion({ scale: 125 }) },
-      groupStatePrimary: { paint: fill({ color: primary }) },
-      groupStateInfo: { paint: fill({ color: info }) },
-      groupStateSuccess: { paint: fill({ color: success }) },
-      groupStateWarning: { paint: fill({ color: warning }) },
-      groupStateDestructive: { paint: fill({ color: destructive }) },
-      groupStateAccent: { paint: fill({ color: accent }) },
-    },
-  }
+    }), when: { groupStateSm: scale(75), groupStateLg: scale(125), groupStatePrimary: bg(primary), groupStateInfo: bg(info), groupStateSuccess: bg(success), groupStateWarning: bg(warning), groupStateDestructive: bg(destructive), groupStateAccent: bg(accent) } }
 </scope>
 
 <span

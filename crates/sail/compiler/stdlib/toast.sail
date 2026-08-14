@@ -1,6 +1,6 @@
 <!--
   <toast> — auto-dismiss + close. Style value language only.
-  Start stripe rest = toast.stripe when tone is omitted.
+  Start stripe rest = primary when tone is omitted.
   Semantic paint = bound tone group paths.
 -->
 
@@ -11,8 +11,8 @@
     onDismiss: () => void
   }
 
-  style base = {box: space({ pad-y: 3, pad-x: 4 }), paint: ink({ color: toast.foreground }).fill({ color: toast }).radius(md).elevation(md).border({ color: toast.border, width: 1, edge: b }).border({ color: toast.border, width: 1, edge: e }).border({ color: toast.border, width: 1, edge: t }).border({ color: toast.stripe, width: 3, edge: s }).pointerEvents(auto), text: type({ family: body, size: sm })}
-  style close = {box: space({ ms: auto }).size({ min-w: control-h-xs, min-h: control-h-xs, w: control-h-xs, h: control-h-xs }), paint: ink({ color: toast.foreground }).fill({ color: transparent }).border({ width: 0 }).radius(sm).filter({ opacity: 70 }).cursor(pointer)}
+  style base = {pad({ y: 3, x: 4 }).fg(foreground).bg(card).radius(md).elevation(md).border({ color: border, width: 1, edge: b }).border({ color: border, width: 1, edge: e }).border({ color: border, width: 1, edge: t }).border({ color: primary, width: 3, edge: s }).pointerEvents(auto).type({ family: body, size: sm })}
+  style close = {margin({ s: auto }).fg(foreground).bg(transparent).border({ width: 0 }).radius(sm).filter({ opacity: 70 }).cursor(pointer)}
 </scope>
 
 <row
@@ -20,8 +20,8 @@
   gap="3"
   use:autoDismiss
   use:dismissControl
-  style(base, {paint: border({ color: tone, edge: s }), compound: [
-      {tone: muted, paint: border({ color: muted-foreground, edge: s })},
+  style(base, {border({ color: tone, edge: s }), compound: [
+      {tone: muted, border({ color: muted-foreground, edge: s })},
     ]})
 >
   <slot></slot>
@@ -30,6 +30,6 @@
     type="button"
     anatomy
     label="Dismiss"
-    style(close, {box: flow({ shrink: 0, grow: 0 }), when: {hover: {paint: ink({ color: toast.foreground }).fill({ color: toast }).filter({ opacity: 100 })}}})
+    style(close, {shrink(0).grow(0), when: {hover: fg(foreground).bg(card).filter({ opacity: 100 })}})
   >✕</button>
 </row>

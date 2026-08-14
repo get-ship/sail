@@ -11,8 +11,6 @@
 //!  4. Lower the layout keywords (`<column>`/`<row>`/…) → `<div>` + atomic classes.
 //! Steps 3–4 emit deduped CSS that `preprocess` injects as one `<style>`.
 
-use std::collections::BTreeSet;
-
 use crate::diagnostics::{CompileError, Span};
 
 const VOID_TAGS: &[&str] = &[
@@ -24,7 +22,23 @@ const VOID_TAGS: &[&str] = &[
 const SKIP_BODY_TAGS: &[&str] = &["scope", "controller", "script", "style", "partial"];
 
 pub fn preprocess(source: &str) -> Result<String, CompileError> {
-    preprocess_impl(source, true)
+    Ok(preprocess_with_style(source)?.0)
+}
+
+/// Full preprocess plus Style-resolved type tokens per lifted host.
+/// Layout measure uses the tokens, not the emitted `s-fontSize*` classes.
+pub fn preprocess_with_types(
+    source: &str,
+) -> Result<(String, Vec<sail_layout::TypeHost>), CompileError> {
+    let (html, hosts) = preprocess_with_style(source)?;
+    Ok((html, hosts.types))
+}
+
+/// Full preprocess plus Style-resolved type and box tokens per lifted host.
+pub fn preprocess_with_style(
+    source: &str,
+) -> Result<(String, sail_layout::StyleHosts), CompileError> {
+    preprocess_impl_full(source, true)
 }
 
 /// Light normalize only: brace-attr quoting + self-close expansion.
@@ -46,6 +60,13 @@ pub fn prepare_fmt(source: &str) -> String {
 /// sources compile WITHOUT it (no element-in-element; no recursion when the
 /// registry compiles the stdlib with this same crate).
 pub(crate) fn preprocess_impl(source: &str, expand_elements: bool) -> Result<String, CompileError> {
+    Ok(preprocess_impl_full(source, expand_elements)?.0)
+}
+
+fn preprocess_impl_full(
+    source: &str,
+    expand_elements: bool,
+) -> Result<(String, sail_layout::StyleHosts), CompileError> {
     // SPEC-PARTIAL-1: expand in-file `<partial>` BEFORE quote_brace_attrs so
     // bare param reads inside attr values (`token={token}`) are still
     // identifiers — quoting would bury them in `"{token}"` and block
@@ -59,7 +80,7 @@ pub(crate) fn preprocess_impl(source: &str, expand_elements: bool) -> Result<Str
     // Type-keyed color-group props so `bg(tone)` / `bg(shade)` parse as bridge paths.
     let group_props = super::scope_block::color_group_typed_prop_names(&s);
     // Scope Style consts (`const filled = style(…)`) resolve Refs in host Style.
-    let (s, style_css) = sail_lint::style::with_bound_group_props(&group_props, || {
+    let (s, style_css, hosts) = sail_lint::style::with_bound_group_props(&group_props, || {
         let style_env = super::scope_block::style_env_from_source(&s);
         lift_tag_style(&s, &style_env)
     })?;
@@ -81,11 +102,12 @@ pub(crate) fn preprocess_impl(source: &str, expand_elements: bool) -> Result<Str
     let css = dedup_css_rules(&format!(
         "{elements_css}{host_display_css}{style_css}{layout_css}"
     ));
-    Ok(if css.is_empty() {
+    let html = if css.is_empty() {
         s
     } else {
         format!("<style>{css}</style>\n{s}")
-    })
+    };
+    Ok((html, hosts))
 }
 
 /// Find every tag-position Style product expression in raw `.sail` source,
@@ -188,7 +210,7 @@ fn is_void_tag(tag: &str) -> bool {
 fn lift_tag_style(
     source: &str,
     env: &sail_lint::style::StyleEnv,
-) -> Result<(String, String), CompileError> {
+) -> Result<(String, String, sail_layout::StyleHosts), CompileError> {
     struct Lift {
         gt_pos: usize,
         call_lo: usize,
@@ -200,6 +222,7 @@ fn lift_tag_style(
     let mut lifts: Vec<Lift> = Vec::new();
     let mut css = String::new();
     let mut seen: std::collections::HashSet<String> = std::collections::HashSet::new();
+    let mut hosts = sail_layout::StyleHosts::default();
     let mut i = 0;
     while i < bytes.len() {
         if source[i..].starts_with("<!--") {
@@ -274,6 +297,16 @@ fn lift_tag_style(
                 refuse_text_on_non_text_host(tag, expr, env, call_lo, call_hi)?;
                 let (classes, motions) = lower_sx_value(expr, env, &mut css, &mut seen)
                     .map_err(|diags| style_error(diags, call_lo, call_hi))?;
+                let val = strip_outer_braces(expr.trim());
+                let (style_ir, _) = sail_lint::style::parse(val);
+                let resolved_type = sail_lint::style::resolve_type(&style_ir, env);
+                if let Some(host) = sail_layout::TypeHost::from_resolved(&classes, &resolved_type) {
+                    hosts.types.push(host);
+                }
+                let resolved_box = sail_layout::resolve_box(&style_ir, env);
+                if let Some(host) = sail_layout::BoxHost::from_resolved(&classes, &resolved_box) {
+                    hosts.boxes.push(host);
+                }
                 lifts.push(Lift {
                     gt_pos,
                     call_lo,
@@ -293,7 +326,7 @@ fn lift_tag_style(
     }
 
     if lifts.is_empty() {
-        return Ok((source.to_string(), css));
+        return Ok((source.to_string(), css, hosts));
     }
 
     let mut out = source.to_string();
@@ -324,7 +357,7 @@ fn lift_tag_style(
         push_motion_attrs(&mut inject, &lift.motions);
         out.insert_str(inject_at, &inject);
     }
-    Ok((out, css))
+    Ok((out, css, hosts))
 }
 
 /// Body-nested Style product is not a statement — generic unknown-statement error.
@@ -796,55 +829,6 @@ fn split_sx_prefixes(pair: &str) -> (Vec<String>, String) {
 }
 
 /// After the `sx` name: optional ws, `=`, optional ws, then a `"`.
-/// L1 tags that appear as open tags in `source` (post-partial, pre-splice).
-/// Comments and `<style>` bodies are skipped — same skip rules as [`lower_into`].
-/// Used-tag set change always re-expands: this scan is the expand key, not a cache.
-pub(crate) fn collect_used_l1_tags(source: &str) -> BTreeSet<&'static str> {
-    let registry = crate::stdlib::elements();
-    let mut used = BTreeSet::new();
-    if registry.is_empty() {
-        return used;
-    }
-    let bytes = source.as_bytes();
-    let mut i = 0;
-    while i < bytes.len() {
-        if bytes[i..].starts_with(b"<!--") {
-            i = bytes[i..]
-                .windows(3)
-                .position(|w| w == b"-->")
-                .map(|e| i + e + 3)
-                .unwrap_or(bytes.len());
-            continue;
-        }
-        if bytes[i..].starts_with(b"<style") {
-            i = bytes[i..]
-                .windows(8)
-                .position(|w| w == b"</style>")
-                .map(|e| i + e + 8)
-                .unwrap_or(bytes.len());
-            continue;
-        }
-        if bytes[i] == b'<' && i + 1 < bytes.len() && bytes[i + 1].is_ascii_alphabetic() {
-            for el in registry {
-                let tag = el.tag;
-                if !bytes[i + 1..].starts_with(tag.as_bytes()) {
-                    continue;
-                }
-                let after = i + 1 + tag.len();
-                let boundary = bytes
-                    .get(after)
-                    .is_some_and(|&b| b.is_ascii_whitespace() || b == b'>' || b == b'/');
-                if boundary {
-                    used.insert(tag);
-                    break;
-                }
-            }
-        }
-        i += 1;
-    }
-    used
-}
-
 /// L1 STDLIB ELEMENT LOWERING — splice each `<tag …>children</tag>` use of a
 /// registry element into its compiled structure snippet:
 ///   - use-site attributes merge onto the snippet root (use-site wins on a
@@ -853,20 +837,11 @@ pub(crate) fn collect_used_l1_tags(source: &str) -> BTreeSet<&'static str> {
 ///     compile-time projection is slice 3; today's stdlib elements use at
 ///     most the default slot),
 ///   - the element's skin CSS joins the injected style ONCE per tag.
-///
-/// Only tags present in the file are walked. Unused registry entries never
-/// splice. Adding/removing a used L1 changes the set and therefore the expand.
 fn lower_stdlib_elements(source: &str) -> Result<(String, String), CompileError> {
     let registry = crate::stdlib::elements();
     if registry.is_empty() {
         return Ok((source.to_string(), String::new()));
     }
-    let used = collect_used_l1_tags(source);
-    if used.is_empty() {
-        return Ok((source.to_string(), String::new()));
-    }
-    let used_els: Vec<&crate::stdlib::StdlibElement> =
-        registry.iter().filter(|el| used.contains(el.tag)).collect();
     let mut out = String::with_capacity(source.len());
     let mut css = String::new();
     let mut css_done: std::collections::HashSet<&str> = std::collections::HashSet::new();
@@ -884,7 +859,7 @@ fn lower_stdlib_elements(source: &str) -> Result<(String, String), CompileError>
     // same one link (`sail.css`) delivers both. LAYOUT css is different and stays
     // inline: the preprocessor generates only the rules a file actually uses, so it is
     // not in the framework sheet and has nothing to be deduplicated against.
-    lower_into(source, &used_els, &mut out, &mut css, &mut css_done)?;
+    lower_into(source, registry, &mut out, &mut css, &mut css_done)?;
     Ok((out, css))
 }
 
@@ -898,7 +873,7 @@ fn lower_stdlib_elements(source: &str) -> Result<(String, String), CompileError>
 /// no matter how deeply it nests.
 fn lower_into(
     source: &str,
-    registry: &[&crate::stdlib::StdlibElement],
+    registry: &'static [crate::stdlib::StdlibElement],
     out: &mut String,
     css: &mut String,
     css_done: &mut std::collections::HashSet<&'static str>,
@@ -1560,27 +1535,6 @@ fn splice_element(
         } else {
             snippet_attrs.push((n.clone(), format!("\"{v}\"")));
         }
-    }
-    // Same match-arm thinning as native stamp: structure_html carries every
-    // variant/tone/size arm. Unused arms are not used structure.
-    let mut active: std::collections::HashMap<String, String> = std::collections::HashMap::new();
-    for (name, value) in &snippet_attrs {
-        let v = value.trim_matches(['"', '\'']);
-        if v.starts_with('{') {
-            active.insert(name.clone(), FREEFORM_DYNAMIC.to_string());
-        } else if !v.is_empty() {
-            active.insert(name.clone(), v.to_string());
-        } else if value.is_empty() {
-            active.insert(name.clone(), "true".to_string());
-        }
-    }
-    if let Some(slot) = snippet_attrs.iter_mut().find(|(n, _)| n == "class") {
-        let raw = slot.1.trim_matches(['"', '\'']);
-        let thinned: Vec<&str> = raw
-            .split_whitespace()
-            .filter(|c| freeform_class_active(c, &active))
-            .collect();
-        slot.1 = format!("\"{}\"", thinned.join(" "));
     }
     let tag_name: String = root_open[1..]
         .chars()
@@ -3495,17 +3449,6 @@ export default controller(() => {
         );
     }
 
-
-    #[test]
-    fn stdlib_dropdown_splice_is_popover_overlay() {
-        let out = preprocess(r#"<dropdown placement="bottom-end"><p>menu</p></dropdown>"#)
-            .expect("preprocess");
-        assert!(
-            out.contains("popover") || out.contains("positionfixed") || out.contains("s-fixed"),
-            "dropdown splice must stay out-of-flow for overlay IR: {out}"
-        );
-    }
-
     #[test]
     fn freeform_banned_input_types_error() {
         for (src, needle) in [
@@ -3525,11 +3468,15 @@ export default controller(() => {
         // Preferred tags still lower
         let ok = preprocess(r#"<slider value="40" /><checkbox /><file /><color /><date />"#)
             .expect("product tags ok");
-        assert!(ok.contains("type=\"range\"") || ok.contains("type='range'") || ok.contains("sail-slider"), "{ok}");
+        assert!(
+            ok.contains("type=\"range\"")
+                || ok.contains("type='range'")
+                || ok.contains("sail-slider"),
+            "{ok}"
+        );
     }
 
     #[test]
-
     fn stdlib_spinner_lowers_at_use_site() {
         let out = preprocess(
             r#"<div class="page"><spinner size="sm" aria-label="Saving"></spinner></div>"#,
@@ -4689,270 +4636,92 @@ export default controller({ setup: () => ({ d: derived(() => signal(0)()) }) })\
     }
 
     #[test]
-    fn used_l1_set_change_re_expands() {
-        let button_only = "<column><button type=\"button\">Go</button></column>";
-        let with_card =
-            "<column><button type=\"button\">Go</button><card padding=\"sm\">x</card></column>";
-        let a = preprocess(button_only).expect("button-only");
-        let b = preprocess(with_card).expect("button+card");
-        let used_a = collect_used_l1_tags(button_only);
-        let used_b = collect_used_l1_tags(with_card);
-        assert!(used_a.contains("button"), "button is used: {used_a:?}");
+    fn type_size_from_style_ir_threads_to_layout() {
+        // expand_elements=false: this branch's stdlib spinner is already
+        // uncompilable (`style(ring)`); the seam under test is Style → TypeHost.
+        let src_xl = r#"<span style({ text: type({ size: xl }) })>Hello</span>"#;
+        let src_sm = r#"<span style({ text: type({ size: sm }) })>Hello</span>"#;
+        let (pre_xl, hosts_xl) = preprocess_impl_full(src_xl, false).expect("xl");
+        let (pre_sm, hosts_sm) = preprocess_impl_full(src_sm, false).expect("sm");
         assert!(
-            !used_a.contains("card"),
-            "card must not be in used set: {used_a:?}"
+            hosts_xl
+                .types
+                .iter()
+                .any(|h| h.size.as_deref() == Some("xl")),
+            "type({{ size: xl }}) must resolve xl: {:?}",
+            hosts_xl.types
         );
         assert!(
-            used_b.contains("button") && used_b.contains("card"),
-            "{used_b:?}"
+            hosts_sm
+                .types
+                .iter()
+                .any(|h| h.size.as_deref() == Some("sm")),
+            "type({{ size: sm }}) must resolve sm: {:?}",
+            hosts_sm.types
         );
-        assert!(!a.contains("sail-card"), "unused card must not splice: {a}");
-        assert!(
-            b.contains("sail-card"),
-            "adding card to the used-tag set must re-expand: {b}"
-        );
-        assert_ne!(a, b, "used-tag set change must change expand output");
-        // Deterministic: same used set → same expand.
-        let a2 = preprocess(button_only).expect("button-only again");
-        assert_eq!(a, a2, "same source re-expands identically");
+        let xl = sail_layout::check_preprocessed_with_hosts(
+            &pre_xl,
+            (1440.0, 900.0),
+            sail_layout::CheckOptions::default(),
+            &hosts_xl.types,
+            &hosts_xl.boxes,
+        )
+        .expect("xl layout");
+        let sm = sail_layout::check_preprocessed_with_hosts(
+            &pre_sm,
+            (1440.0, 900.0),
+            sail_layout::CheckOptions::default(),
+            &hosts_sm.types,
+            &hosts_sm.boxes,
+        )
+        .expect("sm layout");
+        let xl_h = xl
+            .boxes
+            .iter()
+            .find(|b| b.tag == "span")
+            .expect("xl span")
+            .height;
+        let sm_h = sm
+            .boxes
+            .iter()
+            .find(|b| b.tag == "span")
+            .expect("sm span")
+            .height;
+        assert!(xl_h > sm_h, "xl height ({xl_h}) must exceed sm ({sm_h})");
     }
 
     #[test]
-    fn unused_registry_tags_do_not_splice() {
-        // A file that only uses button must not carry any other L1 structure.
-        let src = r#"<row gap="2"><button type="button" size="sm">A</button></row>"#;
-        let out = preprocess(src).expect("preprocess");
-        let used = collect_used_l1_tags(src);
-        assert_eq!(used.iter().copied().collect::<Vec<_>>(), vec!["button"]);
-        for el in crate::stdlib::elements() {
-            if el.tag == "button" || el.out.native {
-                continue;
-            }
-            let root = format!("sail-{}", el.tag);
-            assert!(
-                !out.contains(&root),
-                "unused {} must not splice ({root}): {out}",
-                el.tag
-            );
-        }
-    }
-
-    #[test]
-    fn studio_megapage_expand_anatomy() {
-        let dir = workspace_theme_components_surface()
-            .parent()
-            .expect("dir")
-            .to_path_buf();
-        let mut files: Vec<std::path::PathBuf> = std::fs::read_dir(&dir)
-            .expect("read dir")
-            .filter_map(|e| e.ok())
-            .map(|e| e.path())
-            .filter(|p| p.extension().and_then(|e| e.to_str()) == Some("sail"))
-            .collect();
-        files.sort();
+    fn box_from_style_ir_threads_to_layout() {
+        let src = r#"<div style({ box: display(flex).grow(1).overflow({ all: hidden }).position({ scheme: absolute }) })>x</div>"#;
+        let (pre, hosts) = preprocess_impl_full(src, false).expect("box style");
+        let host = hosts
+            .boxes
+            .iter()
+            .find(|h| {
+                h.resolved.display.as_deref() == Some("flex")
+                    && h.resolved.grow == Some(1.0)
+                    && h.resolved.overflow_x.as_deref() == Some("hidden")
+                    && h.resolved.position.as_deref() == Some("absolute")
+            })
+            .unwrap_or_else(|| panic!("box host missing: {:?}", hosts.boxes));
+        let mut elements = sail_layout::html::parse_source(&pre);
+        sail_layout::apply_resolved_boxes(&mut elements, &hosts.boxes);
+        let elem = elements.iter().find(|e| e.tag == "div").expect("div");
+        let resolved = sail_layout::style::resolve(elem, &elements, 1440.0);
+        use sail_layout::taffy::prelude::*;
+        use sail_layout::taffy::style::Overflow;
+        assert_eq!(resolved.style.display, Display::Flex);
+        assert!((resolved.style.flex_grow - 1.0).abs() < f32::EPSILON);
+        assert_eq!(resolved.style.overflow.x, Overflow::Hidden);
+        assert_eq!(resolved.style.position, Position::Absolute);
         assert!(
-            files.len() >= 5,
-            "catalog split must yield shell + pieces, got {files:?}"
+            !host
+                .classes
+                .iter()
+                .any(|c| c.contains("displayflex")
+                    && elem.box_style.display.as_deref() != Some("flex")),
+            "measure must come from Style IR, not class spelling"
         );
-
-        let mut union: BTreeSet<&'static str> = BTreeSet::new();
-        let mut dump =
-            String::from("{\n  \"viewports\": [ [390, 844], [1440, 900] ],\n  \"files\": [\n");
-
-        eprintln!("PERF-3 catalog anatomy");
-        for (i, path) in files.iter().enumerate() {
-            let src = std::fs::read_to_string(path).expect("read");
-            let author = src.len();
-            let no_l1 = super::preprocess_impl(&src, false).expect("no-l1");
-            let full = preprocess(&src).expect("full");
-            let used = collect_used_l1_tags(&src);
-            union.extend(used.iter().copied());
-            let (css_bytes, html_bytes) = split_injected_css(&full);
-            let full_nodes = sail_layout::Forest::parse(&full).elements().len();
-            let name = path.file_name().and_then(|s| s.to_str()).unwrap_or("?");
-            let t0 = std::time::Instant::now();
-            let compiled = crate::compile(
-                &src,
-                crate::CompileOpts {
-                    route_params: None,
-                    setup_url: None,
-                    mode: crate::CompileMode::Component,
-                    source_path: Some(path.clone()),
-                    component_meta: Some(crate::ComponentMeta {
-                        name: name.trim_end_matches(".sail").to_string(),
-                    }),
-                    emit_dts: false,
-                    scope_capabilities: Vec::new(),
-                    emit_component_imports: false,
-                    lint_overrides: crate::Policy::overrides_for(path),
-                },
-            );
-            let compile_ms = t0.elapsed().as_secs_f64() * 1000.0;
-            match &compiled {
-                Ok(_) => eprintln!(
-                    "  {name} author={author} full={} ratio={:.2}× l1_delta={} css={css_bytes} html={html_bytes} nodes={full_nodes} used_l1={} compile_ms={compile_ms:.0} used={used:?}",
-                    full.len(),
-                    full.len() as f64 / author.max(1) as f64,
-                    full.len().saturating_sub(no_l1.len()),
-                    used.len()
-                ),
-                Err(e) => panic!(
-                    "{name} compile() failed in {compile_ms:.0}ms: {}",
-                    e.render(&src)
-                ),
-            }
-            assert!(
-                compile_ms < 2000.0,
-                "{name} compile() must be < 2s, got {compile_ms:.0}ms"
-            );
-            let boxes = crate::check::layout::prepare_boxes(full);
-            dump.push_str(&format!(
-                "    {}{{\"file\":{name:?},\"author_bytes\":{author},\"used_l1\":[",
-                if i == 0 { "" } else { ",\n    " }
-            ));
-            for (j, tag) in used.iter().enumerate() {
-                if j > 0 {
-                    dump.push(',');
-                }
-                dump.push_str(&format!("{tag:?}"));
-            }
-            dump.push_str("],\"viewports\":[");
-            for (vi, tree) in boxes.trees.iter().enumerate() {
-                if vi > 0 {
-                    dump.push(',');
-                }
-                dump.push_str(&format!(
-                    "{{\"viewport\":[{},{}],\"hosts\":[",
-                    tree.viewport.0, tree.viewport.1
-                ));
-                if let Ok(layout) = &tree.layout {
-                    let mut first = true;
-                    for (idx, el) in layout.elements.iter().enumerate() {
-                        let is_l1 = crate::stdlib::element(&el.tag).is_some()
-                            || el.class.split_whitespace().any(|c| c.starts_with("sail-"));
-                        if !is_l1 {
-                            continue;
-                        }
-                        let Some(c) = layout.computed(idx) else {
-                            continue;
-                        };
-                        if !first {
-                            dump.push(',');
-                        }
-                        first = false;
-                        dump.push_str(&format!(
-                            "{{\"tag\":{:?},\"x\":{},\"y\":{},\"w\":{},\"h\":{}}}",
-                            el.tag, c.location.x, c.location.y, c.size.width, c.size.height
-                        ));
-                    }
-                }
-                dump.push_str("]}");
-            }
-            dump.push_str("]}");
-        }
-        dump.push_str("\n  ]\n}\n");
-        let dump_path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../../tests/perf/baselines/2026-08-13-perf3-catalog-boxes.json");
-        if let Some(parent) = dump_path.parent() {
-            let _ = std::fs::create_dir_all(parent);
-        }
-        std::fs::write(&dump_path, &dump).expect("write box dump");
-        eprintln!("  wrote box dump {}", dump_path.display());
-
-        let inputs = dir.join("theme-l1-inputs.sail");
-        let src = std::fs::read_to_string(&inputs).expect("inputs");
-        let author = src.len();
-        let no_l1 = super::preprocess_impl(&src, false).expect("no-l1");
-        let full = preprocess(&src).expect("full");
-        let used = collect_used_l1_tags(&src);
-        let registry_n = crate::stdlib::elements().len();
-        let unused_n = registry_n - used.len();
-
-        eprintln!("PERF-3 inputs author-tree proof");
-        // Author-tree vs expanded diagnostics: do they match?
-        let diags_full = crate::check::layout::collect(&src);
-        let diags_no_l1 = {
-            let boxes = crate::check::layout::prepare_boxes(no_l1.clone());
-            crate::check::layout::collect_from(&src, None, &boxes)
-        };
-        let key = |d: &crate::diagnostics::Diagnostic| {
-            (
-                d.line,
-                d.col,
-                d.end_line,
-                d.end_col,
-                d.rule.clone(),
-                d.message.clone(),
-            )
-        };
-        let full_keys: std::collections::BTreeSet<_> = diags_full.iter().map(key).collect();
-        let no_keys: std::collections::BTreeSet<_> = diags_no_l1.iter().map(key).collect();
-        let only_full: Vec<_> = full_keys.difference(&no_keys).collect();
-        let only_no: Vec<_> = no_keys.difference(&full_keys).collect();
-        eprintln!(
-            "  layout diags full={} no_l1={} only_full={} only_no_l1={}",
-            diags_full.len(),
-            diags_no_l1.len(),
-            only_full.len(),
-            only_no.len()
-        );
-        for d in only_full.iter().take(8) {
-            eprintln!("    only-expanded: {d:?}");
-        }
-        for d in only_no.iter().take(8) {
-            eprintln!("    only-author-skins: {d:?}");
-        }
-
-        assert!(full.len() >= author, "expand must not shrink author source");
-        assert!(
-            unused_n + used.len() == registry_n,
-            "used+unused must cover registry"
-        );
-        assert!(
-            only_full.len() + only_no.len() > 0,
-            "author-tree layout must not match expanded diagnostics"
-        );
-        assert!(
-            union.len() >= 50,
-            "split catalog must still cover the L1 surface, union={}",
-            union.len()
-        );
-    }
-
-    fn workspace_theme_components_surface() -> std::path::PathBuf {
-        let here = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        here.join("../../../apps/studio/src/theme-components-surface/theme-components-surface.sail")
-            .canonicalize()
-            .expect("megapage path")
-    }
-
-    fn split_injected_css(preprocessed: &str) -> (usize, usize) {
-        if let Some(start) = preprocessed.find("<style>") {
-            if let Some(rel) = preprocessed[start..].find("</style>") {
-                let css = rel.saturating_sub("<style>".len());
-                let html = preprocessed.len() - (rel + "</style>".len());
-                return (css, html);
-            }
-        }
-        (0, preprocessed.len())
-    }
-
-    #[test]
-    fn button_overflow_on_used_l1_still_reports() {
-        // Native L1 internals (host classes + children) stay visible to layout
-        // when the file uses that tag. Clipped long label inside a fixed button.
-        let src = r#"
-<button type="button" style({ box: w(16).overflow(hidden) })>Supercalifragilisticexpialidocious</button>
-"#;
-        let diags = crate::check::layout::collect(src);
-        assert!(
-            diags.iter().any(|d| {
-                d.rule.as_deref() == Some("sail-clipped-text")
-                    || d.rule.as_deref() == Some("sail-unintended-overflow")
-                    || d.message.to_ascii_lowercase().contains("overflow")
-                    || d.message.to_ascii_lowercase().contains("clip")
-            }),
-            "used button must still report overflow/clip: {diags:?}"
-        );
+        let _ = pre;
     }
 }

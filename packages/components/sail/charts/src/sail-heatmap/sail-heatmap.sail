@@ -81,14 +81,14 @@ export default controller(({ data, values, rows, cols, tone, cellSize, gap, labe
     role="img"
     aria-label={ariaLabel()}
     aria-describedby="chart-data"
-    style({ box: flow({ display: inline-block }).overflow({ all: visible }) })
+    style({ display(inline-block).overflow({ all: visible }) })
   >
     <for {cells() as cell} key={cell.id}>
       <rect x={cell.x} y={cell.y} width={cell.w} height={cell.h} rx="2" fill={cell.color} fill-opacity={cell.intensity}>
       </rect>
     </for>
 </svg>
-  <column id="chart-data" style({ paint: srOnly() })>
+  <column id="chart-data" style({ srOnly() })>
     <slot name="description">
       <table>
         <for {chart.ariaTable() as row} key={row[0].id}>

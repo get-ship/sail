@@ -156,7 +156,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
 </controller>
 <if {error() !== ''}>
-<div role="alert" style({ box: flow({ display: block }).size({ w: full }), paint: ink({ color: foreground }) })>
+<div role="alert" style({ display(block).size({ w: full }).fg(foreground) })>
   <error-state>{error()}</error-state>
 </div>
 {else-if {isEmptyInitial()} => <div role="status">
@@ -167,40 +167,40 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       <button slot="action" type="button" data-action="clear-filters">Clear filters</button>
     </empty-state>
   </slot>
-</div>}{else => <column role="treegrid" gap="0" use:gridTracks={gridTemplate()} aria-label={label() || null} aria-rowcount={rowCount()} aria-multiselectable={selectable() === 'multi' ? 'true' : null} style({ box: size({ w: full }).overflow({ all: hidden }), paint: fill({ color: surface-1 }).border({ color: border, width: 1 }).radius(lg) })>  <span style({ box: flow({ display: contents }), text: type({ family: body, size: density }) })>    <grid tracks="--sail-grid-template" gap="0" role="row" style({ box: place({ position: sticky, top: 0 }), paint: place({ z: sticky }).fill({ color: surface-2 }).border({ edge: b, color: border, width: 1 }) })>
+</div>}{else => <column role="treegrid" gap="0" use:gridTracks={gridTemplate()} aria-label={label() || null} aria-rowcount={rowCount()} aria-multiselectable={selectable() === 'multi' ? 'true' : null} style({ size({ w: full }).overflow({ all: hidden }).bg(surface-1).border({ color: border, width: 1 }).radius(lg) })>  <span style({ display(contents).type({ family: body, size: density }) })>    <grid tracks="--sail-grid-template" gap="0" role="row" style({ position({ scheme: sticky, t: 0 }).position({ z: sticky }).bg(surface-2).border({ edge: b, color: border, width: 1 }) })>
     <for {headers() as h} key={h.id}>
-      <row gap="1" align="center" role="columnheader" data-col-id={h.id} data-sortable={h.canSort ? 'true' : null} data-sorted={h.sorted || null} aria-sort={h.canSort ? h.ariaSort : null} style({ box: place({ position: relative }).space({ pad-x: density-row-px, pad-y: density-row-py }), paint: ink({ color: foreground }).border({ edge: b, color: border-subtle, width: 1 }), when: { sortable: { paint: cursor(pointer) } } })>        <span style({ box: flow({ display: contents }), text: type({ size: xs, weight: semibold, tracking: wide, case: uppercase, wrap: nowrap }) })>          <span style({ box: flow({ grow: 1 }).size({ min-w: 0 }), text: type({ wrap: truncate }) })>{h.label}</span>
+      <row gap="1" align="center" role="columnheader" data-col-id={h.id} data-sortable={h.canSort ? 'true' : null} data-sorted={h.sorted || null} aria-sort={h.canSort ? h.ariaSort : null} style({ position(relative).pad({ x: density-row-px, y: density-row-py }).fg(foreground).border({ edge: b, color: border-subtle, width: 1 }), when: { sortable: cursor(pointer) } })>        <span style({ display(contents).type({ size: xs, weight: semibold, tracking: wide, case: uppercase, wrap: nowrap }) })>          <span style({ grow(1).size({ min-w: 0 }).type({ wrap: truncate }) })>{h.label}</span>
         <if {h.sorted === 'asc'}>
-          <span aria-hidden="true" style({ paint: ink({ color: primary }) })><icon name="chevron-up" size="xs"></icon></span>
-        {else-if {h.sorted === 'desc'} => <span aria-hidden="true" style({ paint: ink({ color: primary }) })><icon name="chevron-down" size="xs"></icon></span>}</if>
+          <span aria-hidden="true" style({ fg(primary) })><icon name="chevron-up" size="xs"></icon></span>
+        {else-if {h.sorted === 'desc'} => <span aria-hidden="true" style({ fg(primary) })><icon name="chevron-down" size="xs"></icon></span>}</if>
         <if {h.canHide}>
-          <button variant="ghost" size="xs" type="button" data-action="column-menu" data-col-id={h.id} aria-label="Column options" style({ box: size({ w: density-icon, h: density-icon }).space({ pad: 0 }), paint: radius(sm) })>
+          <button variant="ghost" size="xs" type="button" data-action="column-menu" data-col-id={h.id} aria-label="Column options" style({ size({ w: density-icon, h: density-icon }).pad(0).radius(sm) })>
             <icon name="more-vertical" size="xs"></icon>
           </button>
         </if>
         <if {h.canResize}>
-          <span data-action="resize" data-col-id={h.id} aria-hidden="true" style({ box: place({ position: absolute, top: 0, bottom: 0, right: 0 }).size({ w: 1 }), paint: cursor(col-resize), when: { hover: { paint: fill({ color: primary }) } } })></span>
+          <span data-action="resize" data-col-id={h.id} aria-hidden="true" style({ position({ scheme: absolute, t: 0, b: 0, r: 0 }).size({ w: 1 }).cursor(col-resize), when: { hover: bg(primary) } })></span>
         </if>
         </span>
 </row>
     </for>
   </grid>
-  <div use:captureViewport style({ box: place({ position: relative }).size({ w: full, h: full, min-h: 0 }).overflow({ y: auto }) })>
+  <div use:captureViewport style({ position(relative).size({ w: full, h: full, min-h: 0 }).overflow({ y: auto }) })>
       <for {windowItems() as w} key={`${w.key}|${w.cellsKey}`}>
-        <grid tracks="--sail-grid-template" gap="0" role="row" data-node-id={w.id} aria-level={w.level} aria-posinset={w.posInSet} aria-setsize={w.setSize} aria-rowindex={w.index + 1} aria-expanded={w.canExpand ? (w.expanded ? 'true' : 'false') : null} aria-selected={selectable() !== 'none' ? (w.selected ? 'true' : 'false') : null} data-can-expand={w.canExpand ? 'true' : null} data-expanded={w.expanded ? 'true' : null} data-selected={w.selected ? 'true' : null} tabindex={w.id === activeRowId() ? '0' : '-1'} use:virtualRow={w.start} style({ box: place({ position: absolute, left: 0 }).size({ w: full }), paint: group().motion({ y: bind(rowY) }).cursor(pointer), when: { hover: { paint: fill({ color: hover-bg }) }, selected: { paint: fill({ color: selected-bg }) }, focus: { paint: border({ kind: outline, color: ring }) } } })>
-          <span aria-hidden="true" style({ box: place({ position: absolute, top: 1, bottom: 1, left: 0 }).size({ w: half }), paint: radius(full).fill({ color: primary }).filter({ opacity: 0 }), when: { groupSelected: { paint: filter({ opacity: 100 }) } } })></span>
+        <grid tracks="--sail-grid-template" gap="0" role="row" data-node-id={w.id} aria-level={w.level} aria-posinset={w.posInSet} aria-setsize={w.setSize} aria-rowindex={w.index + 1} aria-expanded={w.canExpand ? (w.expanded ? 'true' : 'false') : null} aria-selected={selectable() !== 'none' ? (w.selected ? 'true' : 'false') : null} data-can-expand={w.canExpand ? 'true' : null} data-expanded={w.expanded ? 'true' : null} data-selected={w.selected ? 'true' : null} tabindex={w.id === activeRowId() ? '0' : '-1'} use:virtualRow={w.start} style({ position({ scheme: absolute, l: 0 }).size({ w: full }).group().translateY(bind(rowY)).cursor(pointer), when: { hover: bg(hover-bg), selected: bg(selected-bg), focus: border({ kind: outline, color: ring }) } })>
+          <span aria-hidden="true" style({ position({ scheme: absolute, t: 1, b: 1, l: 0 }).size({ w: half }).radius(full).bg(primary).filter({ opacity: 0 }), when: { groupSelected: filter({ opacity: 100 }) } })></span>
           <for {w.cells as c} key={c.columnId}>
             <if {c.first}>
-              <row role="gridcell" use:cellPad={w.indent} style({ box: space({ pad-x: density-row-px, pad-y: density-row-py, pad-l: bind(cellPs) }).size({ min-w: 0 }), paint: border({ edge: b, color: border-subtle, width: 1 }).ink({ color: foreground }) })>
+              <row role="gridcell" use:cellPad={w.indent} style({ pad({ x: density-row-px, y: density-row-py, l: bind(cellPs) }).size({ min-w: 0 }).border({ edge: b, color: border-subtle, width: 1 }).fg(foreground) })>
                 <if {w.canExpand}>
-                  <span aria-hidden="true" data-tree-caret style({ box: size({ w: density-icon, h: density-icon, min-w: density-icon }), paint: ink({ color: muted-foreground }), when: { groupExpanded: { paint: motion({ rotate: 90 }) } } })>
+                  <span aria-hidden="true" data-tree-caret style({ size({ w: density-icon, h: density-icon, min-w: density-icon }).fg(muted-foreground), when: { groupExpanded: rotate(90) } })>
                     <icon name="chevron-right" size="xs"></icon>
                   </span>
                 </if>
-                <span style({ box: flow({ grow: 1 }).size({ min-w: 0 }), text: type({ wrap: truncate }) })>{c.value}</span>
+                <span style({ grow(1).size({ min-w: 0 }).type({ wrap: truncate }) })>{c.value}</span>
               </row>
-            {else => <row role="gridcell" style({ box: space({ pad-x: density-row-px, pad-y: density-row-py }).size({ min-w: 0 }), paint: border({ edge: b, color: border-subtle, width: 1 }).ink({ color: foreground }) })>
-                <span style({ box: flow({ grow: 1 }).size({ min-w: 0 }), text: type({ wrap: truncate }) })>{c.value}</span>
+            {else => <row role="gridcell" style({ pad({ x: density-row-px, y: density-row-py }).size({ min-w: 0 }).border({ edge: b, color: border-subtle, width: 1 }).fg(foreground) })>
+                <span style({ grow(1).size({ min-w: 0 }).type({ wrap: truncate }) })>{c.value}</span>
               </row>}</if>
           </for>
         </grid>

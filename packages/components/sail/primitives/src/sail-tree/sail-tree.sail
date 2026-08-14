@@ -130,11 +130,11 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   role="tree"
   aria-label={label() || null}
   aria-multiselectable={selectable() === 'multi' ? 'true' : null}
-  style({ box: size({ w: full, h: full, min-h: 0 }).overflow({ all: hidden }), paint: ink({ color: foreground }) })
+  style({ size({ w: full, h: full, min-h: 0 }).overflow({ all: hidden }).fg(foreground) })
 >
   <!-- display(contents) text wrap: no box so scroll child % height resolves on host. -->
-  <span style({ box: flow({ display: contents }), text: type({ family: body, size: density }) })>
-  <div style({ box: size({ w: full, h: full, min-h: 0 }).overflow({ y: auto }) })>
+  <span style({ display(contents).type({ family: body, size: density }) })>
+  <div style({ size({ w: full, h: full, min-h: 0 }).overflow({ y: auto }) })>
     <for {flowItems() as w} key={w.key}>
       <row
         align="center"
@@ -155,18 +155,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         aria-busy={w.pending ? 'true' : null}
         tabindex={w.id === activeRowId() ? '0' : '-1'}
         use:cellPad={w.indent}
-        style({
-          box: size({ w: full }).space({ pad-y: density-row-py, pad-l: bind(cellPs), pad-r: density-row-px }),
-          paint: group().radius(sm).cursor(pointer).ink({ color: foreground }),
-          when: {
-            hover: { paint: fill({ color: hover-bg }) },
-            selected: { paint: fill({ color: selected-bg }) },
-            busy: { paint: ink({ color: muted-foreground }).cursor(default) },
-            focus: { paint: border({ kind: outline, color: ring }) },
-          },
-        })
+        style({ size({ w: full }).pad({ y: density-row-py, l: bind(cellPs), r: density-row-px }).group().radius(sm).cursor(pointer).fg(foreground), when: { hover: bg(hover-bg), selected: bg(selected-bg), busy: fg(muted-foreground).cursor(default), focus: border({ kind: outline, color: ring }) } })
       >
-        <span style({ box: flow({ display: contents }), when: { selected: { text: type({ weight: medium }) }, busy: { text: type({ italic: true }) } } })>
+        <span style({ display(contents), when: { selected: type({ weight: medium }), busy: type({ italic: true }) } })>
         <!-- Chevron paint only; expand is the row (aria-expanded / data-expanded). -->
         <if {w.canExpand}>
           <row
@@ -174,15 +165,11 @@ export default controller((_ctx: ControllerScope<Scope>) => {
             aria-hidden="true"
             align="center"
             justify="center"
-            style({
-              box: size({ w: 8, h: 8, min-w: 8 }),
-              paint: ink({ color: muted-foreground }),
-              when: { groupExpanded: { paint: motion({ rotate: 90 }) } },
-            })
+            style({ size({ w: 8, h: 8, min-w: 8 }).fg(muted-foreground), when: { groupExpanded: rotate(90) } })
           >
             <icon name="chevron-right" size="sm"></icon>
           </row>
-        {else => <span aria-hidden="true" style({ box: size({ w: density-icon, min-w: density-icon }) })></span>}</if>
+        {else => <span aria-hidden="true" style({ size({ w: density-icon, min-w: density-icon }) })></span>}</if>
 
         <if {selectable() === 'multi'}>
           <span>
@@ -199,17 +186,17 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           <icon
             name={w.icon}
             size="sm"
-            style({ paint: ink({ color: muted-foreground }), when: { groupSelected: { paint: ink({ color: foreground }) } } })
+            style({ fg(muted-foreground), when: { groupSelected: fg(foreground) } })
           ></icon>
         {else => <slot name="node-icon"></slot>}</if>
-        <span style({ box: flow({ grow: 1 }).size({ min-w: 0 }), text: type({ wrap: truncate }) })>{w.label}</span>
-        <span style({ box: space({ ml: auto }), text: type({ size: xs }) })>
+        <span style({ grow(1).size({ min-w: 0 }).type({ wrap: truncate }) })>{w.label}</span>
+        <span style({ margin({ l: auto }).type({ size: xs }) })>
           <if {w.trailing !== ''}>
             <if {w.trailing === '●'}>
-              <span aria-label="Unsaved" style({ paint: ink({ color: warning }) })>●</span>
-            {else => <span aria-label={`Meta ${w.trailing}`} style({ paint: ink({ color: muted-foreground }) })>{w.trailing}</span>}</if>
+              <span aria-label="Unsaved" style({ fg(warning) })>●</span>
+            {else => <span aria-label={`Meta ${w.trailing}`} style({ fg(muted-foreground) })>{w.trailing}</span>}</if>
           </if>
-          <span style({ paint: ink({ color: muted-foreground }) })><slot name="node-trailing"></slot></span>
+          <span style({ fg(muted-foreground) })><slot name="node-trailing"></slot></span>
         </span>
         </span>
       </row>

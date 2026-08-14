@@ -67,8 +67,9 @@ pub fn render(source: &str, opts: &PipelineOptions) -> Result<PipelineOutput> {
     let projected = ssr_project::project(source);
 
     // 2. Preprocess → lowered static HTML+CSS (sx → class, layout primitives).
-    let preprocessed = sail_compiler::parse::preprocess::preprocess(&projected.source)
-        .context("preprocessing sail source")?;
+    let (preprocessed, hosts) =
+        sail_compiler::parse::preprocess::preprocess_with_style(&projected.source)
+            .context("preprocessing sail source")?;
     let (html_raw, css) = split_html_css(&preprocessed);
 
     // 3. Strip residual template expression leaks; collect dynamics (joined after).
@@ -110,7 +111,9 @@ pub fn render(source: &str, opts: &PipelineOptions) -> Result<PipelineOutput> {
     css_all.push('\n');
     css_all.push_str(css);
     let sheet = StyleSheet::parse(&css_all);
-    let elements = sail_layout::html::parse_source(&html);
+    let mut elements = sail_layout::html::parse_source(&html);
+    sail_layout::apply_resolved_types(&mut elements, &hosts.types);
+    sail_layout::apply_resolved_boxes(&mut elements, &hosts.boxes);
     if elements.len() <= 1 {
         anyhow::bail!("preprocessed source produced no renderable elements");
     }
@@ -378,7 +381,7 @@ fn build_node(
                     }
                     // Host text runs inherit the element's text paint; always
                     // inline so they share a line box with sibling spans.
-                    child_nodes.push(text_node_for(t, elem, &paint, palette));
+                    child_nodes.push(text_node_for(t, elements, idx, &paint, palette));
                 }
                 FlowItem::Child(ci) => {
                     if let Some(child) = child_by_idx.remove(ci) {
@@ -398,7 +401,7 @@ fn build_node(
             }
         }
         if !elem.text.is_empty() {
-            child_nodes.push(text_node_for(&elem.text, elem, &paint, palette));
+            child_nodes.push(text_node_for(&elem.text, elements, idx, &paint, palette));
         }
     }
 
@@ -412,14 +415,16 @@ fn build_node(
         && !elem.text.is_empty()
         && child_nodes.len() == 1
         && !box_paint
-        && !has_explicit_block_display(&elem.class)
+        && !has_explicit_block_display(elem)
     {
-        return Ok(Some(text_node_for(&elem.text, elem, &paint, palette)));
+        return Ok(Some(text_node_for(
+            &elem.text, elements, idx, &paint, palette,
+        )));
     }
 
     let node = Node::container(child_nodes);
     let mut style = convert::style(&resolved.style);
-    if phrasing && !has_explicit_block_display(&elem.class) {
+    if phrasing && !has_explicit_block_display(elem) {
         // Taffy has no true inline; force takumi Inline so spans inside h1/p
         // participate in the parent line box instead of full-width blocks.
         style = style
@@ -466,24 +471,34 @@ fn is_phrasing_tag(tag: &str) -> bool {
     )
 }
 
-fn has_explicit_block_display(class_attr: &str) -> bool {
-    class_attr.split_whitespace().any(|c| {
+fn has_explicit_block_display(elem: &Element) -> bool {
+    if let Some(d) = elem.box_style.display.as_deref() {
+        return matches!(
+            d,
+            "block"
+                | "flex"
+                | "grid"
+                | "inline-block"
+                | "inlineblock"
+                | "inline-flex"
+                | "inlineflex"
+        );
+    }
+    elem.class.split_whitespace().any(|c| {
         matches!(
             c,
-            "s-displayblock"
-                | "s-displayflex"
-                | "s-displayinlineflex"
-                | "s-displaygrid"
-                | "sail-col"
-                | "sail-row"
-                | "sail-grid"
-        ) || c.starts_with("s-displayblock")
-            || c == "s-block"
+            "sail-col" | "sail-row" | "sail-grid" | "sail-col-i" | "sail-row-i" | "sail-grid-i"
+        )
     })
 }
 
-fn text_style_for(elem: &Element, paint: &Paint, palette: &ThemePalette) -> Style {
-    let (family, size) = resolve_family_size(elem);
+fn text_style_for(
+    elements: &[Element],
+    idx: usize,
+    paint: &Paint,
+    palette: &ThemePalette,
+) -> Style {
+    let (family, size) = sail_layout::metrics::resolve_family_size(idx, elements);
     let font_size_px = paint.font_size_px.unwrap_or_else(|| size.px());
     let color = paint
         .color
@@ -510,47 +525,14 @@ fn text_style_for(elem: &Element, paint: &Paint, palette: &ThemePalette) -> Styl
     paint.apply_text(style)
 }
 
-fn text_node_for(text: &str, elem: &Element, paint: &Paint, palette: &ThemePalette) -> Node {
-    Node::text(text.to_string()).with_style(text_style_for(elem, paint, palette))
-}
-
-fn resolve_family_size(
-    elem: &Element,
-) -> (sail_layout::metrics::Family, sail_layout::metrics::Size) {
-    use sail_layout::metrics::{Family, Size};
-
-    let mut family = None;
-    let mut size = None;
-
-    for c in elem.class.split_whitespace() {
-        if family.is_none() {
-            family = sail_layout::metrics::family_from_class(c);
-        }
-        if size.is_none() {
-            size = sail_layout::metrics::size_from_class(c);
-        }
-    }
-
-    if size.is_none() {
-        size = tag_default_size(&elem.tag);
-    }
-
-    (family.unwrap_or(Family::Body), size.unwrap_or(Size::Base))
-}
-
-fn tag_default_size(tag: &str) -> Option<sail_layout::metrics::Size> {
-    use sail_layout::metrics::Size;
-    match tag {
-        "h1" => Some(Size::Xxxxl),
-        "h2" => Some(Size::Xxl),
-        "h3" => Some(Size::Xl),
-        "h4" => Some(Size::Lg),
-        "h5" => Some(Size::Md),
-        "h6" => Some(Size::Sm),
-        "small" => Some(Size::Sm),
-        "code" => Some(Size::Sm),
-        _ => None,
-    }
+fn text_node_for(
+    text: &str,
+    elements: &[Element],
+    idx: usize,
+    paint: &Paint,
+    palette: &ThemePalette,
+) -> Node {
+    Node::text(text.to_string()).with_style(text_style_for(elements, idx, paint, palette))
 }
 
 fn family_name(f: sail_layout::metrics::Family) -> String {

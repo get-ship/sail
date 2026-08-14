@@ -4,50 +4,50 @@
   Live geometry via freeform px/shadow bind (not CSS-var product state).
 -->
 <scope>
-  style sectionTitle = { text: type({ size: sm, weight: semibold }) }
-  style fieldHint = { paint: ink({ color: muted-foreground }), text: type({ size: xs }) }
-  style pathMeta = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs }) }
-  style monoMeta = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs }) }
-  style doorTitle = { text: type({ weight: semibold }) }
-  style eyebrow = { paint: ink({ color: muted-foreground }), text: type({ size: xs, weight: semibold, tracking: wide, case: uppercase }) }
-  style controlsCol = { box: space({ pad-x: 4, pad-t: 4, pad-b: 8 }).size({ min-w: 0 }) }
-  style bandStatus = { box: space({ pad-x: 4, pad-y: 2 }) }
-  style bandError = { box: space({ pad-x: 4, pad-y: 2 }), paint: border({ edge: b, color: border, width: 1 }) }
-  style fullBtn = { box: size({ w: full }) }
-  style chipCol = { box: size({ min-w: 0 }) }
-  style sliderRow = { box: size({ min-w: 0 }) }
-  style sectionPanel = { box: space({ pad: 3 }), paint: radius(lg).border({ color: border-subtle, width: 1 }).fill({ color: surface-1 }) }
-  style tokenStrip = { box: space({ pad-x: 2, pad-y: 1 }), paint: ink({ color: muted-foreground }).radius(sm).fill({ color: surface-0 }), text: type({ family: mono, size: xs }) }
+  style sectionTitle = { type({ size: sm, weight: semibold }) }
+  style fieldHint = { fg(muted-foreground).type({ size: xs }) }
+  style pathMeta = { fg(muted-foreground).type({ family: mono, size: xs }) }
+  style monoMeta = { fg(muted-foreground).type({ family: mono, size: xs }) }
+  style doorTitle = { type({ weight: semibold }) }
+  style eyebrow = { fg(muted-foreground).type({ size: xs, weight: semibold, tracking: wide, case: uppercase }) }
+  style controlsCol = { pad({ x: 4, t: 4, b: 8 }).size({ min-w: 0 }) }
+  style bandStatus = { pad({ x: 4, y: 2 }) }
+  style bandError = { pad({ x: 4, y: 2 }).border({ edge: b, color: border, width: 1 }) }
+  style fullBtn = { size({ w: full }) }
+  style chipCol = { size({ min-w: 0 }) }
+  style sliderRow = { size({ min-w: 0 }) }
+  style sectionPanel = { pad(3).radius(lg).border({ color: border-subtle, width: 1 }).bg(surface-1) }
+  style tokenStrip = { pad({ x: 2, y: 1 }).fg(muted-foreground).radius(sm).bg(surface-0).type({ family: mono, size: xs }) }
   // Outline chip shells — continuous radius via use:liveBox (token radius cannot drag continuously).
-  style ladderChip = { box: size({ w: 9, h: 7, min-w: 9, min-h: 7 }), paint: border({ color: border, width: 1 }).fill({ color: transparent }) }
-  style ladderChipXl = { box: size({ w: 10, h: 8, min-w: 10, min-h: 8 }), paint: border({ color: border, width: 1 }).fill({ color: transparent }) }
-  style cornerChip = { box: size({ w: 8, h: 6, min-w: 8, min-h: 6 }), paint: border({ color: border, width: 1 }).fill({ color: transparent }) }
+  style ladderChip = { size({ w: 9, h: 7, min-w: 9, min-h: 7 }).border({ color: border, width: 1 }).bg(transparent) }
+  style ladderChipXl = { size({ w: 10, h: 8, min-w: 10, min-h: 8 }).border({ color: border, width: 1 }).bg(transparent) }
+  style cornerChip = { size({ w: 8, h: 6, min-w: 8, min-h: 6 }).border({ color: border, width: 1 }).bg(transparent) }
   // Elev chip marks — stepped vocabulary (none dashed → xl deep lift).
-  style elevMarkNone = { box: size({ w: 5, h: 4, min-w: 5, min-h: 4 }), paint: radius(sm).border({ color: border-subtle, width: 1, style: dashed }).fill({ color: background }) }
-  style elevMarkXs = { box: size({ w: 5, h: 4, min-w: 5, min-h: 4 }), paint: radius(sm).border({ color: border-subtle, width: 1 }).fill({ color: background }).elevation(xs) }
-  style elevMarkSm = { box: size({ w: 5, h: 4, min-w: 5, min-h: 4 }), paint: radius(sm).border({ color: border-subtle, width: 1 }).fill({ color: background }).elevation(sm) }
-  style elevMarkMd = { box: size({ w: 5, h: 4, min-w: 5, min-h: 4 }), paint: radius(sm).border({ color: border-subtle, width: 1 }).fill({ color: background }).elevation(md) }
-  style elevMarkLg = { box: size({ w: 5, h: 4, min-w: 5, min-h: 4 }), paint: radius(sm).border({ color: border-subtle, width: 1 }).fill({ color: background }).elevation(lg) }
-  style elevMarkXl = { box: size({ w: 5, h: 4, min-w: 5, min-h: 4 }), paint: radius(sm).border({ color: border-subtle, width: 1 }).fill({ color: background }).elevation(xl) }
-  style statCell = { box: space({ pad: 2_5 }).size({ min-w: 0 }), paint: radius(sm).border({ color: border-subtle, width: 1 }) }
-  style stageSolid = { box: size({ h: full, min-h: 0 }), paint: fill({ color: background }) }
+  style elevMarkNone = { size({ w: 5, h: 4, min-w: 5, min-h: 4 }).radius(sm).border({ color: border-subtle, width: 1, style: dashed }).bg(background) }
+  style elevMarkXs = { size({ w: 5, h: 4, min-w: 5, min-h: 4 }).radius(sm).border({ color: border-subtle, width: 1 }).bg(background).elevation(xs) }
+  style elevMarkSm = { size({ w: 5, h: 4, min-w: 5, min-h: 4 }).radius(sm).border({ color: border-subtle, width: 1 }).bg(background).elevation(sm) }
+  style elevMarkMd = { size({ w: 5, h: 4, min-w: 5, min-h: 4 }).radius(sm).border({ color: border-subtle, width: 1 }).bg(background).elevation(md) }
+  style elevMarkLg = { size({ w: 5, h: 4, min-w: 5, min-h: 4 }).radius(sm).border({ color: border-subtle, width: 1 }).bg(background).elevation(lg) }
+  style elevMarkXl = { size({ w: 5, h: 4, min-w: 5, min-h: 4 }).radius(sm).border({ color: border-subtle, width: 1 }).bg(background).elevation(xl) }
+  style statCell = { pad(2_5).size({ min-w: 0 }).radius(sm).border({ color: border-subtle, width: 1 }) }
+  style stageSolid = { size({ h: full, min-h: 0 }).bg(background) }
   // Primary specimen card: radius.lg + elev + border + freeform fill (frost α live).
-  style liveCard = { box: space({ pad: 5 }), paint: border({ color: border }) }
-  style glassMini = { box: size({ w: full, max-w: panel-max-w-sm }).space({ pad: 4 }), paint: border({ color: border }) }
-  style surfaceRoot = { box: flow({ grow: 1 }).size({ h: full, min-w: 0, min-h: 0 }).overflow({ all: hidden }), paint: fill({ color: background }) }
-  style workbench = { box: flow({ grow: 1 }).size({h: full, min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }), paint: fill({ color: background }) }
-  style panelRail = { box: flow({ shrink: 0 }).size({ w: panel-max-w-sm, h: full, min-w: panel-min-w-sm, min-h: 0, max-w: panel-max-w-sm }), paint: border({ edge: r, color: border-subtle, width: 1 }).fill({ color: background }) }
-  style specimenDock = { box: flow({ grow: 1 }).size({h: full, min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }), paint: fill({ color: background }) }
-  style specimenPad = { box: flow({ grow: 1 }).size({ h: full, min-h: 0 }).space({ pad: 4 }) }
-  style specimenFrame = { box: size({ h: full, min-w: 0, min-h: 0 }).overflow({ all: hidden }), paint: elevation(lg) }
-  style specimenChrome = { box: flow({ shrink: 0 }).space({ pad-x: 3 }).size({ h: 8, min-w: 0, min-h: 8 }), paint: border({ edge: b, color: border-subtle, width: 1 }).fill({ color: surface-1 }) }
-  style trafficDots = { box: flow({ shrink: 0 }).size({ min-w: 12 }) }
-  style trafficDot = { box: flow({ shrink: 0 }).size({ w: 2, h: 2, min-w: 2, min-h: 2 }), paint: radius(full) }
-  style chromeTitle = { box: flow({ grow: 1 }).size({ min-w: 0 }), paint: ink({ color: muted-foreground }), text: type({ size: xs, wrap: truncate }) }
-  style errorText = { box: flow({ grow: 1 }).size({ min-w: 0 }), paint: ink({ color: destructive }), text: type({ size: sm, wrap: truncate }) }
-  style pageTitle = { text: type({ family: heading, size: 2xl, weight: semibold, tracking: tight }) }
-  style growMin = { box: flow({ grow: 1 }).size({ min-w: 0 }) }
-  style elevHintCol = { box: size({ min-w: 0 }) }
+  style liveCard = { pad(5).border({ color: border }) }
+  style glassMini = { size({ w: full, max-w: panel-max-w-sm }).pad(4).border({ color: border }) }
+  style surfaceRoot = { grow(1).size({ h: full, min-w: 0, min-h: 0 }).overflow({ all: hidden }).bg(background) }
+  style workbench = { grow(1).size({h: full, min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }).bg(background) }
+  style panelRail = { shrink(0).size({ w: panel-max-w-sm, h: full, min-w: panel-min-w-sm, min-h: 0, max-w: panel-max-w-sm }).border({ edge: r, color: border-subtle, width: 1 }).bg(background) }
+  style specimenDock = { grow(1).size({h: full, min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }).bg(background) }
+  style specimenPad = { grow(1).size({ h: full, min-h: 0 }).pad(4) }
+  style specimenFrame = { size({ h: full, min-w: 0, min-h: 0 }).overflow({ all: hidden }).elevation(lg) }
+  style specimenChrome = { shrink(0).pad({ x: 3 }).size({ h: 8, min-w: 0, min-h: 8 }).border({ edge: b, color: border-subtle, width: 1 }).bg(surface-1) }
+  style trafficDots = { shrink(0).size({ min-w: 12 }) }
+  style trafficDot = { shrink(0).size({ w: 2, h: 2, min-w: 2, min-h: 2 }).radius(full) }
+  style chromeTitle = { grow(1).size({ min-w: 0 }).fg(muted-foreground).type({ size: xs, wrap: truncate }) }
+  style errorText = { grow(1).size({ min-w: 0 }).fg(destructive).type({ size: sm, wrap: truncate }) }
+  style pageTitle = { type({ family: heading, size: 2xl, weight: semibold, tracking: tight }) }
+  style growMin = { grow(1).size({ min-w: 0 }) }
+  style elevHintCol = { size({ min-w: 0 }) }
   type ElevChipProps = {
     elev: string
     label: string
@@ -117,7 +117,7 @@ export default controller(() => {
   <theme-facet-chrome session={session}></theme-facet-chrome>
 
   <if {session.hasError()}>
-    <row shape-error align="center" gap="2" style(bandError, { box: flow({ shrink: 0 }) })>
+    <row shape-error align="center" gap="2" style(bandError, { shrink(0) })>
       <p style(errorText)>{session.errorText()}</p>
       <button type="button" size="sm" variant="ghost" shape-retry on:click={session.onRetry}>
         Retry
@@ -126,7 +126,7 @@ export default controller(() => {
   </if>
 
   <if {session.loading()}>
-    <row shape-loading align="center" gap="2" style(bandStatus, { box: flow({ shrink: 0 }) })>
+    <row shape-loading align="center" gap="2" style(bandStatus, { shrink(0) })>
       <spinner size="sm"></spinner>
       <p style(fieldHint)>Loading…</p>
     </row>
@@ -378,39 +378,39 @@ export default controller(() => {
           shape-specimen
           preview-specimen
           padding="none" style(specimenFrame)>
-          <column gap="0" style({  box: flow({ grow: 1 }).size({ h: full, min-h: 0 })  })>
+          <column gap="0" style({ grow(1).size({ h: full, min-h: 0 }) })>
             <row preview-chrome align="center" gap="2" nowrap style(specimenChrome)>
               <row gap="2" align="center" nowrap hidden="true" style(trafficDots)>
-                <stack style(trafficDot, { paint: fill({ color: destructive }) })></stack>
-                <stack style(trafficDot, { paint: fill({ color: warning }) })></stack>
-                <stack style(trafficDot, { paint: fill({ color: success }) })></stack>
+                <stack style(trafficDot, { bg(destructive) })></stack>
+                <stack style(trafficDot, { bg(warning) })></stack>
+                <stack style(trafficDot, { bg(success) })></stack>
               </row>
               <p style(chromeTitle)>
                 Preview · {session.nameEdit()} · Shape
               </p>
-              <p style(pathMeta, { box: flow({ shrink: 0 }) })>{session.paintMode()}</p>
+              <p style(pathMeta, { shrink(0) })>{session.paintMode()}</p>
             </row>
 
-            <scroll-area style(stageSolid, { box: flow({ grow: 1 }) })>
+            <scroll-area style(stageSolid, { grow(1) })>
               <column
                 specimen-body
                 gap="5"
-                align="center" style({ box: space({ pad: 6 }).size({ w: full, min-w: 0 }) })>
-                <column gap="1" style({ box: size({ w: full, max-w: panel-max-w-sm }) })>
-                  <p style({ text: type({ family: heading, size: md, weight: semibold }) })>Studio surface</p>
-                  <p style({ paint: ink({ color: muted-foreground }), text: type({ family: body, size: sm, leading: relaxed }) })>
+                align="center" style({ pad(6).size({ w: full, min-w: 0 }) })>
+                <column gap="1" style({ size({ w: full, max-w: panel-max-w-sm }) })>
+                  <p style({ type({ family: heading, size: md, weight: semibold }) })>Studio surface</p>
+                  <p style({ fg(muted-foreground).type({ family: body, size: sm, leading: relaxed }) })>
                     Radius + elevation + border as character. Dial left — this card follows.
                   </p>
                 </column>
 
                 <!-- Single character card: freeform fill (frost α live), not solid nested plate. -->
                 <stack spec-card use:liveBox={liveCardBox()} style(liveCard)>
-                  <column gap="4" style({ box: size({ w: full, max-w: panel-max-w-sm }) })>
+                  <column gap="4" style({ size({ w: full, max-w: panel-max-w-sm }) })>
                     <row gap="3" align="center" nowrap>
                       <avatar size="sm" initials="S" tone="primary"></avatar>
-                      <column gap="0" style({ box: flow({ grow: 1 }).size({ min-w: 0 }) })>
-                        <p style({ text: type({ family: heading, size: md, weight: semibold }) })>{session.nameEdit()}</p>
-                        <p style({ paint: ink({ color: muted-foreground }), text: type({ size: xs }) })>Radius + elevation + border as character</p>
+                      <column gap="0" style({ grow(1).size({ min-w: 0 }) })>
+                        <p style({ type({ family: heading, size: md, weight: semibold }) })>{session.nameEdit()}</p>
+                        <p style({ fg(muted-foreground).type({ size: xs }) })>Radius + elevation + border as character</p>
                       </column>
                       <badge tone="primary" size="sm" variant="soft" pill>shape</badge>
                     </row>
@@ -424,17 +424,17 @@ export default controller(() => {
                       <button type="button" size="sm" variant="outline" tone="primary">Outline</button>
                     </row>
                     <row gap="2" align="stretch">
-                      <column gap="0" style(statCell, { box: flow({ grow: 1 }).size({ min-w: 0 }) })>
+                      <column gap="0" style(statCell, { grow(1).size({ min-w: 0 }) })>
                         <p style(pathMeta)>radius.md</p>
-                        <p style({ text: type({ family: mono, size: sm, weight: semibold }) })>{shape.statRadius()}</p>
+                        <p style({ type({ family: mono, size: sm, weight: semibold }) })>{shape.statRadius()}</p>
                       </column>
-                      <column gap="0" style(statCell, { box: flow({ grow: 1 }).size({ min-w: 0 }) })>
+                      <column gap="0" style(statCell, { grow(1).size({ min-w: 0 }) })>
                         <p style(pathMeta)>shadow</p>
-                        <p style({ text: type({ family: mono, size: sm, weight: semibold }) })>{shape.statShadow()}</p>
+                        <p style({ type({ family: mono, size: sm, weight: semibold }) })>{shape.statShadow()}</p>
                       </column>
-                      <column gap="0" style(statCell, { box: flow({ grow: 1 }).size({ min-w: 0 }) })>
+                      <column gap="0" style(statCell, { grow(1).size({ min-w: 0 }) })>
                         <p style(pathMeta)>border</p>
-                        <p style({ text: type({ family: mono, size: sm, weight: semibold }) })>{shape.statBorder()}</p>
+                        <p style({ type({ family: mono, size: sm, weight: semibold }) })>{shape.statBorder()}</p>
                       </column>
                     </row>
                     <row align="center" justify="between" gap="2" nowrap>
@@ -447,8 +447,8 @@ export default controller(() => {
                 <if {shape.showGlass()}>
                   <column glass-mini gap="2" use:liveBox={liveGlassBox()} style(glassMini)>
                     <p style(pathMeta)>Glass material</p>
-                    <p style({ text: type({ family: heading, size: sm, weight: semibold }) })>Frosted pane</p>
-                    <p style({ paint: ink({ color: muted-foreground }), text: type({ size: xs, leading: relaxed }) })>
+                    <p style({ type({ family: heading, size: sm, weight: semibold }) })>Frosted pane</p>
+                    <p style({ fg(muted-foreground).type({ size: xs, leading: relaxed }) })>
                       Translucent fill freeform live. Backdrop blur writes to theme; shows after Save.
                     </p>
                     <row gap="3" align="center" nowrap>
@@ -480,7 +480,7 @@ export default controller(() => {
                   </row>
                 </column>
 
-                <row align="center" justify="between" gap="2" nowrap style({ box: size({ w: full, max-w: panel-max-w-md }) })>
+                <row align="center" justify="between" gap="2" nowrap style({ size({ w: full, max-w: panel-max-w-md }) })>
                   <p style(fieldHint)>Globals only — dial once, surfaces follow.</p>
                   <p style(pathMeta)>{shape.liveCssLine()}</p>
                 </row>

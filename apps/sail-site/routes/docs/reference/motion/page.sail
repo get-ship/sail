@@ -2,17 +2,17 @@
   /docs/reference/motion — Style animate channel: triggers, properties, presets, value grammar.
 -->
 <scope>
-  style root = { box: size({ min-w: 0 }) }
-  style intro = { box: size({ max-w: breakpoint-tablet }) }
-  style eyebrow = { paint: ink({ color: accent }), text: type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
-  style lead = { paint: ink({ color: muted-foreground }), text: type({ size: lg, leading: relaxed }) }
-  style kvRow = { box: space({ pad-x: 3, pad-y: 2 }), paint: fill({ color: surface-1 }).radius(md) }
-  style kvKey = { box: size({ min-w: 9 }) }
-  style kvVal = { box: size({ max-w: panel-max-w-sm }), paint: ink({ color: muted-foreground }) }
-  style cardMin = { box: size({ min-w: 0 }) }
-  style cardDoc = { box: size({ max-w: panel-max-w-sm }), paint: ink({ color: muted-foreground }) }
-  style muted = { paint: ink({ color: muted-foreground }) }
-  style sectionLead = { box: size({ max-w: breakpoint-tablet }) }
+  style root = { size({ min-w: 0 }) }
+  style intro = { size({ max-w: breakpoint-tablet }) }
+  style eyebrow = { fg(accent).type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
+  style lead = { fg(muted-foreground).type({ size: lg, leading: relaxed }) }
+  style kvRow = { pad({ x: 3, y: 2 }).bg(surface-1).radius(md) }
+  style kvKey = { size({ min-w: 9 }) }
+  style kvVal = { size({ max-w: panel-max-w-sm }).fg(muted-foreground) }
+  style cardMin = { size({ min-w: 0 }) }
+  style cardDoc = { size({ max-w: panel-max-w-sm }).fg(muted-foreground) }
+  style muted = { fg(muted-foreground) }
+  style sectionLead = { size({ max-w: breakpoint-tablet }) }
 </scope>
 
 <controller>

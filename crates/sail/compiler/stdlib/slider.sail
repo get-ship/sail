@@ -16,16 +16,14 @@
     ticks = ''
   }
 
-  style base = {box: size({ w: full, h: 5 }), paint: appearance(none).fill({ color: transparent }).cursor(pointer), when: {disabled: {paint: cursor(not-allowed).filter({ opacity: 50 })}}}
-  style sizeSm = {box: size({ h: 4 })}
-  style sizeMd = {box: size({ h: 5 })}
-  style sizeLg = {box: size({ h: 6 })}
+  style base = {size({ w: full, h: 5 }).appearance(none).bg(transparent).cursor(pointer), when: {disabled: cursor(not-allowed).filter({ opacity: 50 })}}
+  style sizeSm = {size({ h: 4 })}
+  style sizeMd = {size({ h: 5 })}
+  style sizeLg = {size({ h: 6 })}
 </scope>
 
 <input
   type="range"
   use:rangeFill
-  style(base, {
-    match: { size: { sm: sizeSm, md: sizeMd, lg: sizeLg } },
-  })
+  style(base, { match: { size: { sm: sizeSm, md: sizeMd, lg: sizeLg } } })
 >

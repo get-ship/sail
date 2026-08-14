@@ -3,7 +3,7 @@
   type: text | email | password | search | tel | url | number | hidden.
   Other controls are own tags: checkbox, radio, slider, date, file, color, switch.
   Actions use <button> — type=submit is not an input type.
-  Shared component.field surface with select/textarea.
+  Shared input / foreground / border with select/textarea.
   reveal (default true): password peek chrome (padE + use:passwordReveal).
 -->
 
@@ -29,22 +29,22 @@
     reveal = true
   }
 
-  // Text-like fields share component.field surface with select/textarea.
-  style field = {box: flow({ display: block }).size({ min-h: control-h-md, w: full }).space({ pad-y: 1_5, pad-x: 3 }), paint: ink({ color: field.foreground }).fill({ color: field }).border({ color: field.border, width: 1 }).radius(md).elevation(xs), text: type({ size: base }), when: {hover: {paint: border({ color: border-strong })}, disabled: {paint: cursor(not-allowed).filter({ opacity: 50 })}}}
+  // Text-like fields share input / foreground / border with select/textarea.
+  style field = {display(block).size({ min-h: control-h-md, w: full }).pad({ y: 1_5, x: 3 }).fg(foreground).bg(input).border({ color: border, width: 1 }).radius(md).elevation(xs).type({ size: base }), when: {hover: border({ color: border-strong }), disabled: cursor(not-allowed).filter({ opacity: 50 })}}
   // Password: reserve end chrome for reveal (select chevron model — padE, not padX).
-  style fieldPassword = {box: flow({ display: block }).size({ min-h: control-h-md, w: full }).space({ pad-y: 1_5, pad-s: 3, pad-e: 8 }), paint: ink({ color: field.foreground }).fill({ color: field }).border({ color: field.border, width: 1 }).radius(md).elevation(xs), text: type({ size: base }), when: {hover: {paint: border({ color: border-strong })}, disabled: {paint: cursor(not-allowed).filter({ opacity: 50 })}}}
-  style sizeXs = {box: size({ min-h: control-h-2xs }).space({ pad-x: 2 }), text: type({ size: xs })}
-  style sizeSm = {box: size({ min-h: control-h-sm }).space({ pad-x: 2_5 }), text: type({ size: sm })}
-  style sizeMd = {box: size({ min-h: control-h-md }).space({ pad-x: 3 }), text: type({ size: base })}
-  style sizeLg = {box: size({ min-h: control-h-lg }).space({ pad-x: 4 }), text: type({ size: md })}
+  style fieldPassword = {display(block).size({ min-h: control-h-md, w: full }).pad({ y: 1_5, s: 3, e: 8 }).fg(foreground).bg(input).border({ color: border, width: 1 }).radius(md).elevation(xs).type({ size: base }), when: {hover: border({ color: border-strong }), disabled: cursor(not-allowed).filter({ opacity: 50 })}}
+  style sizeXs = {size({ min-h: control-h-2xs }).pad({ x: 2 }).type({ size: xs })}
+  style sizeSm = {size({ min-h: control-h-sm }).pad({ x: 2_5 }).type({ size: sm })}
+  style sizeMd = {size({ min-h: control-h-md }).pad({ x: 3 }).type({ size: base })}
+  style sizeLg = {size({ min-h: control-h-lg }).pad({ x: 4 }).type({ size: md })}
   // Password size ladder: padS only so padE(8) room is not clobbered.
-  style sizeXsPw = {box: size({ min-h: control-h-2xs }).space({ pad-s: 2 }), text: type({ size: xs })}
-  style sizeSmPw = {box: size({ min-h: control-h-sm }).space({ pad-s: 2_5 }), text: type({ size: sm })}
-  style sizeMdPw = {box: size({ min-h: control-h-md }).space({ pad-s: 3 }), text: type({ size: base })}
-  style sizeLgPw = {box: size({ min-h: control-h-lg }).space({ pad-s: 4 }), text: type({ size: md })}
+  style sizeXsPw = {size({ min-h: control-h-2xs }).pad({ s: 2 }).type({ size: xs })}
+  style sizeSmPw = {size({ min-h: control-h-sm }).pad({ s: 2_5 }).type({ size: sm })}
+  style sizeMdPw = {size({ min-h: control-h-md }).pad({ s: 3 }).type({ size: base })}
+  style sizeLgPw = {size({ min-h: control-h-lg }).pad({ s: 4 }).type({ size: md })}
   style fieldSized = style(field, { match: { size: { xs: sizeXs, sm: sizeSm, md: sizeMd, lg: sizeLg } } })
   style passwordSized = style(fieldPassword, { match: { size: { xs: sizeXsPw, sm: sizeSmPw, md: sizeMdPw, lg: sizeLgPw } } })
-  style hidden = {box: flow({ display: none })}
+  style hidden = {display(none)}
 </scope>
 
-<input style({match: {type: {text: fieldSized, email: fieldSized, password: passwordSized, number: fieldSized, search: fieldSized, tel: fieldSized, url: fieldSized, hidden: style(hidden, {box: size({ min-h: 0 })})}}, compound: [{invalid: true, paint: border({ color: destructive })}]})>
+<input style({match: {type: {text: fieldSized, email: fieldSized, password: passwordSized, number: fieldSized, search: fieldSized, tel: fieldSized, url: fieldSized, hidden: style(hidden, {size({ min-h: 0 })})}}, compound: [{invalid: true, border({ color: destructive })}]})>

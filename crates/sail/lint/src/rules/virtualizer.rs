@@ -6,7 +6,7 @@
 //!
 //! | Action              | Required Style bridge                                   |
 //! |---------------------|---------------------------------------------------------|
-//! | `use:virtualRow`    | `motion({ y: bind(rowY) })` or `translate-y-(--row-y)` |
+//! | `use:virtualRow`    | `translateY(bind(rowY))` or `translate-y-(--row-y)` |
 //! | `use:virtualSpacer` | `size({ h: bind(rowsH) })` / `height-(--rows-h)` |
 //!
 //! Reference: `packages/sail/runtime/src/actions/virtual-row.ts`,
@@ -57,14 +57,14 @@ fn check_tag(path: &Path, source: &str, t: &OpenTag) -> Option<Finding> {
             rule: RULE_ID,
             severity: Severity::Error,
             message: format!(
-                "<{}> has use:virtualRow but no motion({{ y: bind(rowY) }}) (or \
+                "<{}> has use:virtualRow but no translateY(bind(rowY)) (or \
                  translate-y-(--row-y)) on the same node — virtualRow writes \
                  --row-y; without the Style bridge every absolute row stacks at y=0.",
                 t.tag
             ),
             suggest: Some(
-                "Add tag-position Style with motion y for the row offset, e.g. \
-                 `<el use:virtualRow style({ box: place({ position: absolute, left: 0 }).size({ w: full }), paint: motion({ y: bind(rowY) }) })>` \
+                "Add tag-position Style with translateY for the row offset, e.g. \
+                 `<el use:virtualRow style({ position({ scheme: absolute, l: 0 }).size({ w: full }).translateY(bind(rowY)) })>` \
                  (see sail-tree / virtual-row.ts)."
                     .to_string(),
             ),
@@ -86,7 +86,7 @@ fn check_tag(path: &Path, source: &str, t: &OpenTag) -> Option<Finding> {
             ),
             suggest: Some(
                 "Add tag-position Style with height from the spacer var, e.g. \
-                 `<el use:virtualSpacer style({ box: place({ position: relative }).size({ w: full, h: bind(rowsH) }) })>` \
+                 `<el use:virtualSpacer style({ position(relative).size({ w: full, h: bind(rowsH) }) })>` \
                  (see sail-tree / virtual-row.ts)."
                     .to_string(),
             ),
@@ -184,7 +184,7 @@ mod tests {
     #[test]
     fn virtual_row_without_translate_fails() {
         let src = r#"
-            <div use:virtualRow={w.start} style({ box: place({ position: absolute, left: 0 }).size({ w: full }) })>              row
+            <div use:virtualRow={w.start} style({ position({ scheme: absolute, l: 0 }).size({ w: full }) })>              row
             </div>
         "#;
         let f = lint(src);
@@ -197,7 +197,7 @@ mod tests {
     #[test]
     fn virtual_row_with_translate_passes() {
         let src = r#"
-            <row use:virtualRow={w.start} style({ box: place({ position: absolute, left: 0 }).size({ w: full }), paint: motion({ y: bind(rowY) }) })>              row
+            <row use:virtualRow={w.start} style({ position({ scheme: absolute, l: 0 }).size({ w: full }).translateY(bind(rowY)) })>              row
             </row>
         "#;
         assert!(lint(src).is_empty(), "{:?}", lint(src));
@@ -206,7 +206,7 @@ mod tests {
     #[test]
     fn virtual_spacer_without_height_fails() {
         let src = r#"
-            <div use:virtualSpacer={totalSize()} style({ box: place({ position: relative }).size({ w: full }) })>            </div>
+            <div use:virtualSpacer={totalSize()} style({ position(relative).size({ w: full }) })>            </div>
         "#;
         let f = lint(src);
         assert_eq!(f.len(), 1, "{f:?}");
@@ -216,7 +216,7 @@ mod tests {
     #[test]
     fn virtual_spacer_with_rows_h_passes() {
         let src = r#"
-            <div use:virtualSpacer={totalSize()} style({ box: place({ position: relative }).size({ w: full, h: bind(rowsH) }) })>            </div>
+            <div use:virtualSpacer={totalSize()} style({ position(relative).size({ w: full, h: bind(rowsH) }) })>            </div>
         "#;
         assert!(lint(src).is_empty(), "{:?}", lint(src));
     }
@@ -224,17 +224,16 @@ mod tests {
     #[test]
     fn virtual_row_concern_motion_y_passes() {
         let src = r#"
-            <column use:virtualRow={w.start} style({ box: place({ position: absolute }), paint: motion({ y: bind(rowY) }) })>row</column>
+            <column use:virtualRow={w.start} style({ position(absolute).translateY(bind(rowY)) })>row</column>
         "#;
         assert!(lint(src).is_empty(), "{:?}", lint(src));
     }
 
-    /// Loose matcher still greens retired `translateY` so old snippets do not
-    /// flip the rule while the corpus finishes the fold. Compile still RetiredSetter.
+    /// Live v3 plain `translateY` is the author form after motion died.
     #[test]
-    fn retired_translate_y_still_accepted_compat() {
+    fn translate_y_plain_is_the_author_form() {
         let src = r#"
-            <grid use:virtualRow={w.start} style({ box: place({ position: absolute, left: 0 }).size({ w: full }), paint: translateY(bind(rowY)) })>            </grid>
+            <grid use:virtualRow={w.start} style({ position({ scheme: absolute, l: 0 }).size({ w: full }).translateY(bind(rowY)) })>            </grid>
         "#;
         assert!(lint(src).is_empty(), "{:?}", lint(src));
     }

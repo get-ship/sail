@@ -8,15 +8,15 @@
 -->
 
 <scope>
-  style brand = { text: type({ size: lg, tracking: tight, wrap: nowrap }) }
-  style brandMark = { paint: ink({ color: primary }) }
-  style productSwitch = { box: space({ pad: half }).size({ min-w: 0, max-w: full }).overflow({ x: auto }), paint: fill({ color: muted }).border({ color: border, width: 1, style: solid }).radius(full) }
-  style productLink = { box: flow({ display: inline-flex }).space({ pad-x: 1_5 }).size({ h: control-h-sm }), paint: radius(full).ink({ color: muted-foreground }), text: type({size: xs, weight: medium, leading: none, wrap: nowrap, decoration: none}), when: { hover: { paint: ink({ color: foreground }).fill({ color: hover-bg }) }, current: { paint: fill({ color: primary }).ink({ color: primary-foreground }) }, tablet: { box: space({ pad-x: 2_5 }), text: type({ size: sm }) } } }
-  style brandWord = { box: flow({ display: none }), text: type({ wrap: nowrap }), when: { tablet: { box: flow({ display: inline }) } } }
-  style shell = { box: size({ h: screen, min-h: screen }) }
-  style landingMain = { box: size({basis: 0, min-w: 0, min-h: 0, max-w: full}).overflow({ x: hidden, y: auto }) }
-  style appMain = { box: flow({ display: flex, dir: column }).size({min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }) }
-  style githubLink = { box: flow({ display: inline-flex }).space({ pad: 1 }).size({ min-w: control-h-xs, min-h: control-h-xs }), paint: radius(md).ink({ color: muted-foreground }), when: { hover: { paint: ink({ color: foreground }).fill({ color: hover-bg }) } } }
+  style brand = { type({ size: lg, tracking: tight, wrap: nowrap }) }
+  style brandMark = { fg(primary) }
+  style productSwitch = { pad(half).size({ min-w: 0, max-w: full }).overflow({ x: auto }).bg(muted).border({ color: border, width: 1, style: solid }).radius(full) }
+  style productLink = { display(inline-flex).pad({ x: 1_5 }).size({ h: control-h-sm }).radius(full).fg(muted-foreground).type({size: xs, weight: medium, leading: none, wrap: nowrap, decoration: none}), when: { hover: fg(foreground).bg(hover-bg), current: bg(primary).fg(primary-foreground), tablet: pad({ x: 2_5 }).type({ size: sm }) } }
+  style brandWord = { display(none).type({ wrap: nowrap }), when: { tablet: display(inline) } }
+  style shell = { size({ h: screen, min-h: screen }) }
+  style landingMain = { size({basis: 0, min-w: 0, min-h: 0, max-w: full}).overflow({ x: hidden, y: auto }) }
+  style appMain = { display(flex).dir(column).size({min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }) }
+  style githubLink = { display(inline-flex).pad(1).radius(md).fg(muted-foreground), when: { hover: fg(foreground).bg(hover-bg) } }
 </scope>
 
 <controller>
@@ -57,10 +57,10 @@ export default controller((ctx) => {
 })
 </controller>
 
-<column gap="0" style(shell, { box: size({ w: full }) })>
+<column gap="0" style(shell, { size({ w: full }) })>
   <if {!workbench()}>
     <navbar sticky bordered autohide={autohide() ? true : null} use:chromeOffset>
-      <a slot="brand" href="/" label="SHIP UI home" style({ box: flow({ shrink: 0 }) })>
+      <a slot="brand" href="/" label="SHIP UI home" style({ shrink(0) })>
         <row gap="2" align="center" nowrap>
           <svg width="22" height="22" viewBox="0 0 26 26" fill="none" hidden="true">
             <circle cx="6" cy="6" r="3.4" fill="var(--primary)" />
@@ -73,10 +73,10 @@ export default controller((ctx) => {
         </row>
       </a>
 
-      <row slot="center" gap="1" align="center" nowrap testid="site-nav" label="Site" style(productSwitch, { box: size({ min-w: 0 }) })>
-        <a href="/docs" current={section() === 'docs' ? 'page' : null} style(productLink, { box: flow({ shrink: 0 }) })>Docs</a>
-        <a href="/components" current={section() === 'components' ? 'page' : null} style(productLink, { box: flow({ shrink: 0 }) })>Components</a>
-        <a href="/playground" current={section() === 'playground' ? 'page' : null} style(productLink, { box: flow({ shrink: 0 }) })>Playground</a>
+      <row slot="center" gap="1" align="center" nowrap testid="site-nav" label="Site" style(productSwitch, { size({ min-w: 0 }) })>
+        <a href="/docs" current={section() === 'docs' ? 'page' : null} style(productLink, { shrink(0) })>Docs</a>
+        <a href="/components" current={section() === 'components' ? 'page' : null} style(productLink, { shrink(0) })>Components</a>
+        <a href="/playground" current={section() === 'playground' ? 'page' : null} style(productLink, { shrink(0) })>Playground</a>
       </row>
 
       <row slot="actions" gap="2" align="center" nowrap>
@@ -97,10 +97,10 @@ export default controller((ctx) => {
   </if>
 
   <if {landing()}>
-    <main style(landingMain, { box: flow({ grow: 1 }).size({ w: full, min-w: 0 }) })>
+    <main style(landingMain, { grow(1).size({ w: full, min-w: 0 }) })>
       <slot name="route"></slot>
     </main>
-  {else => <main style(appMain, { box: flow({ grow: 1 }).size({ w: full, min-w: 0 }) })>
+  {else => <main style(appMain, { grow(1).size({ w: full, min-w: 0 }) })>
       <slot name="route"></slot>
     </main>}</if>
 </column>

@@ -210,6 +210,26 @@
             "$value": "oklch(0.99 0 0)",
             "$type": "color"
           }
+        },
+        "card": {
+          "default": {
+            "$value": "oklch(0.15 0 0)",
+            "$type": "color"
+          },
+          "foreground": {
+            "$value": "oklch(0.99 0 0)",
+            "$type": "color"
+          }
+        },
+        "popover": {
+          "default": {
+            "$value": "oklch(0.15 0 0)",
+            "$type": "color"
+          },
+          "foreground": {
+            "$value": "oklch(0.99 0 0)",
+            "$type": "color"
+          }
         }
       },
       "interaction": {
@@ -340,39 +360,21 @@
           "$type": "shadow"
         }
       },
-      "component": {
-        "card": {
-          "backdrop-filter": {
-            "$value": "none",
-            "$type": "string"
-          },
-          "texture": {
-            "$value": "none",
-            "$type": "string"
-          },
-          "fg": {
-            "$value": "oklch(0.99 0 0)",
-            "$type": "color"
-          },
-          "bg": {
-            "$value": "oklch(0.15 0 0)",
-            "$type": "color"
-          }
-        },
-        "popover": {
-          "bg": {
-            "$value": "oklch(0.15 0 0)",
-            "$type": "color"
-          },
-          "fg": {
-            "$value": "oklch(0.99 0 0)",
-            "$type": "color"
-          }
-        }
-      },
       "$extensions": {
         "sail": {
           "dark": true
+        }
+      },
+      "filter": {
+        "card-backdrop": {
+          "$value": "none",
+          "$type": "string"
+        }
+      },
+      "image": {
+        "card-texture": {
+          "$value": "none",
+          "$type": "string"
         }
       }
     }

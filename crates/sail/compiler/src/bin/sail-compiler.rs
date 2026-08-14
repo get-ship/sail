@@ -198,16 +198,6 @@ enum Command {
         #[arg(long)]
         out: Option<PathBuf>,
     },
-    /// Rewrite covered `borderWidth` + `border(` property chains to concern
-    /// form (`border(dialog)` / `border({ color, width })`). Dry-run unless
-    /// `--write`. Does not delete property setters.
-    RewriteConcern {
-        /// `.sail` file or directory to walk.
-        input: PathBuf,
-        /// Write rewritten source in place.
-        #[arg(long)]
-        write: bool,
-    },
     /// Emit the sail ambient TypeScript pack (`node_modules/.sail/types.d.ts`)
     /// from the same manifests that drive the compiler (runtime ambient
     /// vocabulary + Style setters + token scales). Regenerable editor helper —
@@ -301,7 +291,6 @@ fn main() -> Result<()> {
         Command::Duplicates { dir, out } => gen_duplicates_report(dir, out),
         Command::Vocabulary { out } => gen_vocabulary(out),
         Command::Tokens { model, out } => gen_tokens(model, out),
-        Command::RewriteConcern { input, write } => rewrite_concern_cmd(input, write),
         Command::Types {
             project,
             tsconfig_out,
@@ -332,68 +321,6 @@ fn run_profile(workspace: Option<PathBuf>, out: PathBuf, skip_dev_rss: bool) -> 
             "  {name}: {} files, {:.0}ms wall, {} ok, {} err",
             tree.files, tree.wall_ms, tree.ok, tree.err
         );
-    }
-    Ok(())
-}
-
-fn rewrite_concern_cmd(input: PathBuf, write: bool) -> Result<()> {
-    let mut files = Vec::new();
-    collect_sail_files(&input, &mut files)?;
-    if files.is_empty() {
-        anyhow::bail!("no .sail files under {}", input.display());
-    }
-    files.sort();
-    let mut changed = 0usize;
-    for path in &files {
-        let src = fs::read_to_string(path).with_context(|| format!("read {}", path.display()))?;
-        let next = sail_lint::style::rewrite_concern_source(&src);
-        if next == src {
-            continue;
-        }
-        changed += 1;
-        println!("{}", path.display());
-        if write {
-            fs::write(path, next).with_context(|| format!("write {}", path.display()))?;
-        }
-    }
-    println!(
-        "rewrite-concern: {changed} of {} files {}",
-        files.len(),
-        if write {
-            "written"
-        } else {
-            "would change (pass --write)"
-        }
-    );
-    Ok(())
-}
-
-fn collect_sail_files(path: &Path, out: &mut Vec<PathBuf>) -> Result<()> {
-    if path.is_file() {
-        if path.extension().and_then(|e| e.to_str()) == Some("sail") {
-            out.push(path.to_path_buf());
-        }
-        return Ok(());
-    }
-    if !path.is_dir() {
-        anyhow::bail!("not a file or directory: {}", path.display());
-    }
-    for entry in fs::read_dir(path).with_context(|| format!("read_dir {}", path.display()))? {
-        let entry = entry?;
-        let p = entry.path();
-        let name = entry.file_name();
-        let name = name.to_string_lossy();
-        if p.is_dir() {
-            if matches!(
-                name.as_ref(),
-                "node_modules" | "target" | ".git" | ".deck" | "dist"
-            ) {
-                continue;
-            }
-            collect_sail_files(&p, out)?;
-        } else if p.extension().and_then(|e| e.to_str()) == Some("sail") {
-            out.push(p);
-        }
     }
     Ok(())
 }
@@ -1061,24 +988,6 @@ fn workspace_root() -> Result<PathBuf> {
     }
 }
 
-/// One skill bullet for a concern — object/channel form, not constructor `style.padX`.
-fn skill_concern_line(spec: &sail_lint::style::ConcernSpec) -> String {
-    let slots: Vec<&str> = spec.slots.iter().map(|s| s.name).collect();
-    let mut line = format!(
-        "`{}:` `{}(…)` · slots `{}`",
-        spec.channel.key(),
-        spec.name,
-        slots.join("`/`")
-    );
-    if spec.name == "border" {
-        line.push_str(" · radius is not a slot · kind is a family key");
-    }
-    if spec.name == "size" {
-        line.push_str(" · pad is not a slot (use space)");
-    }
-    line
-}
-
 /// Fenced Style demos for `gen_skill`. Product attach is a **tag-position call**
 /// (`style({…})` on the open tag), not an HTML `style=` attribute. Plain string for `push_str`.
 ///
@@ -1087,11 +996,11 @@ fn style_skill_demo(raw_containers: bool) -> &'static str {
     if raw_containers {
         "```
 \
-         <div style({ box: space({ pad: 4 }), paint: fill(surface).radius(lg) }).when(hover, { paint: fill(muted) })>
+         <div style({ pad(4).bg(surface).radius(lg), when: { hover: { bg(muted) } } })>
 \
          </div>
 \
-         <span style({ paint: ink(muted), text: type(body-sm) })>
+         <span style({ fg(muted).type(body-sm) })>
 \
          </span>
 \
@@ -1101,9 +1010,9 @@ fn style_skill_demo(raw_containers: bool) -> &'static str {
     } else {
         "```
 \
-         <column gap=\"3\" style({ box: space({ pad: 4 }), paint: fill(surface).radius(lg) }).when(hover, { paint: fill(muted) })>
+         <column gap=\"3\" style({ pad(4).bg(surface).radius(lg), when: { hover: { bg(muted) } } })>
 \
-           <p style({ paint: ink(muted), text: type(body-sm) })>
+           <p style({ fg(muted).type(body-sm) })>
 \
              …
 \
@@ -1231,7 +1140,7 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
         md,
         "- NO `<style>` blocks, NO product Style as an HTML attribute. NO raw values (px/hex) — spend a token.\n\
          - NO retired utility-string / `sx=` forms (`sx=\"p-4 bg-surface-2\"`). Product is a **tag** Style call:\n  \
-           `style({{ box: space({{ pad: 4 }}), paint: fill(surface) }})` / `.when(hover, {{ paint: … }})` / `match`.\n\
+           `style({{ pad(4).bg(surface) }})` / `when: {{ hover: {{ bg(muted) }} }}` / `match`.\n\
          - NO `data-*` in app markup (`sail-no-data-attr`). The compiler stamps\n  \
            `data-sail-host` on L1 as closed-widget part identity — never author it.\n  \
            App tests use role / accessible name / visible text, not that stamp.\n\
@@ -1242,12 +1151,12 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
            `<stack>` with `gap` / `align` / `justify` / `cols` attrs. Rows **wrap by\n  \
            default**; `<row nowrap>` is the single-line row. Unrecognized attrs on a\n  \
            layout keyword are a compile error.\n\
-         - **Participation on the box channel** — `style({{ box: size({{ w: full, min-w: 0 }}).flow({{ grow: 1 }}) }})`\n  \
-           (or `flow({{ shrink: 0 }})`). Bare attrs `grow` / `shrink` / `w` / `min-w` / `max-w` are a\n  \
+         - **Participation on the box channel** — `style({{ size({{ w: full, min-w: 0 }}).grow(1) }})`\n  \
+           (or `shrink(0)`). Bare attrs `grow` / `shrink` / `w` / `min-w` / `max-w` are a\n  \
            hard lint (`sail-participation-style`). Layout-keyword **axis** attrs\n  \
-           (`gap` / `align` / `justify` on row|column|grid) stay. Paint (fill, ink,\n  \
+           (`gap` / `align` / `justify` on row|column|grid) stay. Paint (`bg`, `fg`,\n  \
            chrome) stays on paint/text channels.\n\
-         - **Never `flow({{ display: … }})` on layout keywords** (`row`/`column`/`grid`/\n  \
+         - **Never `display(…)` on layout keywords** (`row`/`column`/`grid`/\n  \
            `center`/`stack`). Bases own `display:flex|grid` and beat `.s-displaynone`\n  \
            (`.sail-col` footgun). Hide a plain host and nest the layout inside\n  \
            (`sail-display-on-layout`).\n\
@@ -1291,19 +1200,29 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
         let _ = writeln!(md, "### Core Style concerns (start here)\n");
         let _ = writeln!(
             md,
-            "Object/channel form is the language (`paint: fill(surface)`), not constructor\n\
+            "Flat chain is the language (`bg(surface).pad(4)`), not constructor\n\
              `style.padX`. Named composite or slot object. **Not listed:** absorbed\n\
-             property names (`bg`/`fg`/`padX`/`fontSize`/`truncate`/`shadow`). Participation\n\
-             (`grow`/`shrink`/`w`) lives on `box:` via `flow`/`size`.\n"
+             longhands (`padX`/`fontSize`/`truncate`/`shadow`) or dead v2 names\n\
+             (`fill`/`ink`/`place`/`space`/`flow`/`motion`). Participation\n\
+             (`grow`/`shrink`/`w`) lives on `size` / `grow` / `shrink`.\n"
         );
-        for spec in sail_lint::style::concerns() {
-            let _ = writeln!(md, "- {}", skill_concern_line(spec));
+        for row in sail_lint::style::offered_rows()
+            .filter(|r| r.tag == sail_lint::style::VocabTag::Concern)
+        {
+            let _ = writeln!(md, "- {}", sail_lint::style::vocab_surface_line(row));
         }
         let _ = writeln!(md);
-        let _ = writeln!(md, "### Markers (verbs, not concerns)\n");
+        let _ = writeln!(md, "### Axis\n");
+        for row in
+            sail_lint::style::offered_rows().filter(|r| r.tag == sail_lint::style::VocabTag::Axis)
+        {
+            let _ = writeln!(md, "- {}", sail_lint::style::vocab_surface_line(row));
+        }
+        let _ = writeln!(md);
+        let _ = writeln!(md, "### Plains\n");
         let _ = writeln!(
             md,
-            "Flags or a single switch. Full list: MCP `sail_surface` topic `style`.\n"
+            "Verbs and singles. Full list: MCP `sail_surface` topic `style`.\n"
         );
         for name in ["cursor", "group", "isolate", "srOnly", "select"] {
             let _ = writeln!(md, "- `{name}(…)`");
@@ -1336,7 +1255,7 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
              A variant is a prop. Prefer `match` / scope Style consts over residual\n\
              utility maps. Token-group props (e.g. `tone: Tone`) and Size ladders are\n\
              ordinary typed props — not special language features. Color groups bind\n\
-             in Style paint (`fill({{ color: tone }})`); Size is discrete `match` conditionality.\n"
+             in Style paint (`bg({{ color: tone }})`); Size is discrete `match` conditionality.\n"
         );
     }
     if !effective.raw_containers {

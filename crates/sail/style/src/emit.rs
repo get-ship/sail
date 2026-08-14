@@ -4,6 +4,7 @@ use std::collections::{HashMap, HashSet};
 
 use super::ir::{PaintArg, PaintOp, Style};
 use super::setters::{WhenTarget, lower_op_css, when_target};
+use super::theme_env::{ThemeStyleEnv, current_styling_policy};
 
 /// One emitted CSS rule.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -144,14 +145,113 @@ fn emit_inner(
             if !resolving.insert(name.clone()) {
                 return;
             }
-            if let Some(s) = env.get(name) {
-                emit_inner(s, env, ctx, out, seen, resolving);
+            if let Ok(s) =
+                ThemeStyleEnv::from_registry().expand_style_ref(name, env, current_styling_policy())
+            {
+                emit_inner(&s, env, ctx, out, seen, resolving);
             }
             resolving.remove(name);
         }
-        // Lifecycle motion is attribute-lowered; CSS paint emit ignores these nodes.
-        Style::MotionAttach { .. } => {}
+        // Lifecycle enter/exit stay attribute-lowered. `transition: play(…)`
+        // is CSS — resolve the preset and emit transition longhands.
+        Style::MotionAttach { trigger, config } => {
+            emit_play(trigger, config, ctx, out, seen);
+        }
     }
+}
+
+/// Play emit shape:
+///
+/// - keyframe preset (`play(fade)` on enter/exit/…): MotionAttach only
+///   (`{ preset: fade }`) — runtime motion, no CSS atoms
+/// - transition prop-set (`play(colors, fast)`): CSS
+///   `transition-property` + `transition-duration: var(--duration-*)`
+fn emit_play(
+    trigger: &str,
+    config: &str,
+    ctx: &Ctx,
+    out: &mut Vec<CssRule>,
+    seen: &mut HashSet<String>,
+) {
+    if trigger != "transition" {
+        return;
+    }
+    let Some(preset) = extract_play_field(config, "preset") else {
+        return;
+    };
+    let Some(play) = ThemeStyleEnv::from_registry().resolve_play(&preset) else {
+        return;
+    };
+    let is_transition = play.r#type.contains("play")
+        || play.r#type.contains("transition")
+        || play.value.contains_key("property")
+        || play.value.contains_key("props");
+    if !is_transition {
+        return;
+    }
+    let property = play
+        .value
+        .get("property")
+        .and_then(|v| v.as_str())
+        .or_else(|| {
+            play.value.get("props").and_then(|v| match v {
+                serde_json::Value::String(s) => Some(s.as_str()),
+                _ => None,
+            })
+        })
+        .map(|s| s.to_string())
+        .or_else(|| {
+            play.value
+                .get("props")
+                .and_then(|v| v.as_array())
+                .map(|items| {
+                    items
+                        .iter()
+                        .filter_map(|i| i.as_str())
+                        .collect::<Vec<_>>()
+                        .join(", ")
+                })
+        })
+        .unwrap_or_else(|| "all".into());
+    let duration_tok = extract_play_field(config, "duration").unwrap_or_else(|| "medium".into());
+    let duration = if duration_tok.starts_with("var(") {
+        duration_tok.clone()
+    } else {
+        format!("var(--duration-{duration_tok})")
+    };
+    let class = format!(
+        "s-play{}{}",
+        sanitize_ident(&preset),
+        sanitize_ident(&duration_tok)
+    );
+    let selector = build_selector(&class, ctx, "");
+    let decls = vec![
+        ("transition-property".into(), property),
+        ("transition-duration".into(), duration),
+    ];
+    let key = format!("{selector}|{decls:?}|{:?}", ctx.media);
+    if seen.insert(key) {
+        out.push(CssRule {
+            class,
+            selector,
+            declarations: decls,
+            media: ctx.media.clone(),
+        });
+    }
+}
+
+fn extract_play_field(config: &str, field: &str) -> Option<String> {
+    let needle = format!("{field}:");
+    let rest = config.split(&needle).nth(1)?;
+    let token = rest
+        .trim_start()
+        .split(|c: char| c == ',' || c == '}' || c.is_whitespace())
+        .find(|s| !s.is_empty())?;
+    Some(token.to_string())
+}
+
+fn sanitize_ident(s: &str) -> String {
+    s.chars().filter(|c| c.is_ascii_alphanumeric()).collect()
 }
 
 fn emit_op(op: &PaintOp, ctx: &Ctx, out: &mut Vec<CssRule>, seen: &mut HashSet<String>) {
@@ -377,7 +477,7 @@ pub fn lower_style_source_with_motion(
     if t.starts_with("style.") {
         return Err(vec![super::ir::StyleDiagnostic::ParseError {
             message: "flat `style.method(…)` chains are retired — use the channel spine: \
-                      style({ box: size({ w: full }).space({ pad: 4 }), paint: fill(surface), when: { hover: { paint: fill({ color: muted }) } } })"
+                      style({ box: size({ w: full }).pad(4), paint: bg(surface), when: { hover: { bg(muted) } } })"
                 .into(),
             source: t.to_string(),
         }]);
@@ -405,7 +505,10 @@ pub fn lower_style_source_with_motion(
             | super::ir::StyleDiagnostic::BadArity { .. }
             | super::ir::StyleDiagnostic::UnknownConcernSlot { .. }
             | super::ir::StyleDiagnostic::DuplicateSlot { .. }
-            | super::ir::StyleDiagnostic::RetiredSetter { .. } => true,
+            | super::ir::StyleDiagnostic::RetiredSetter { .. }
+            | super::ir::StyleDiagnostic::UnknownVocabulary { .. }
+            | super::ir::StyleDiagnostic::ThemedLocalStyle { .. }
+            | super::ir::StyleDiagnostic::NotAStyleRef { .. } => true,
             // Hard-fail lifecycle-in-when, geometry-in-interaction-when, color alias.
             super::ir::StyleDiagnostic::ParseError { message, .. } => {
                 message.contains("cannot appear inside when")
@@ -422,7 +525,13 @@ pub fn lower_style_source_with_motion(
     }) {
         return Err(diags);
     }
-    // Resolve Style::Ref through env so named style decls
+    let ref_diags = super::parse::validate_style_refs(&style, env);
+    if !ref_diags.is_empty() {
+        let mut all = diags;
+        all.extend(ref_diags);
+        return Err(all);
+    }
+    // Resolve Style::Ref through ThemeStyleEnv + env so named style decls
     // (`style ambientDot = { …, animate: loop({…}) }` + `style(ambientDot)`)
     // still inject `_sail_m_*` attrs. CSS emit already expands refs; motion
     // collection must not skip them or ambient/enter/exit on named styles die.

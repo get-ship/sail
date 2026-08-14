@@ -8,7 +8,7 @@
     variant: 'default' | 'inline' | 'placeholder' | 'connecting' = 'placeholder'
     size: 'md' | 'sm' | 'lg' = 'sm'
   }
-  style emptyRoot = { box: size({ w: full }).space({ pad: 3 }), paint: border({ color: border-subtle, width: 1 }).radius(md) }
+  style emptyRoot = { size({ w: full }).pad(3).border({ color: border-subtle, width: 1 }).radius(md) }
 </scope>
 
 <empty-state studio-empty variant={variant()} size={size()} style(emptyRoot)>

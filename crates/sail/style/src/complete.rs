@@ -6,11 +6,11 @@
 
 use std::path::Path;
 
-use crate::channel::{self, Channel};
+use crate::channel::Channel;
 use crate::component_surfaces::color_paint_vocabulary;
 use crate::conditions::CONDITION_PREFIXES;
+use crate::plains::{self, PlainSpec};
 use crate::scales;
-use crate::setters::{self, SetterSpec};
 
 /// One completion item offered inside a Style region.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -202,29 +202,23 @@ pub fn style_complete_for_context(
         StyleCompleteContext::SetterName { partial, channel } => {
             let ch = channel.as_deref().and_then(parse_channel);
             let mut items: Vec<StyleCompleteItem> = Vec::new();
-            for spec in crate::concerns::concerns() {
-                if ch.is_some_and(|c| spec.channel != c) {
+            for row in crate::vocab::offered_rows() {
+                if row.name == "play" && ch != Some(Channel::Animate) {
                     continue;
                 }
+                if ch.is_some_and(|c| parse_channel(row.channel) != Some(c)) {
+                    continue;
+                }
+                let detail = match row.tag {
+                    crate::VocabTag::Concern => format!("concern · {}", row.channel),
+                    crate::VocabTag::Axis => format!("axis · {}", row.channel),
+                    crate::VocabTag::Plain => format!("plain · {}", row.channel),
+                };
                 items.push(item(
-                    spec.name.to_string(),
+                    row.name.to_string(),
                     StyleCompleteKind::Setter,
-                    Some(format!("concern · {}", spec.channel.key())),
-                    Some(format!("{}(", spec.name)),
-                ));
-            }
-            for s in setters::setters() {
-                if !crate::concerns::is_marker(s.name) {
-                    continue;
-                }
-                if ch.is_some_and(|c| channel::channel_for_setter(s.name) != Some(c)) {
-                    continue;
-                }
-                items.push(item(
-                    s.name.to_string(),
-                    StyleCompleteKind::Setter,
-                    Some("marker".into()),
-                    Some(format!("{}(", s.name)),
+                    Some(detail),
+                    Some(format!("{}(", row.name)),
                 ));
             }
             filter_sort(items.into_iter(), partial)
@@ -234,10 +228,32 @@ pub fn style_complete_for_context(
             partial,
             host,
         } => {
-            let Some(spec) = setters::find_setter(setter) else {
+            if setter == "play" {
+                return filter_sort(
+                    crate::ThemeStyleEnv::from_registry().play_names().map(|n| {
+                        item(
+                            n.to_string(),
+                            StyleCompleteKind::Token,
+                            Some("play preset".into()),
+                            None,
+                        )
+                    }),
+                    partial,
+                );
+            }
+            if let Some(concern) = crate::concerns::find_concern(setter) {
+                return filter_sort(concern_arg_items(concern, host.as_deref()), partial);
+            }
+            let Some(row) = crate::vocab::find_vocab(setter) else {
                 return Vec::new();
             };
-            filter_sort(setter_arg_items(spec, host.as_deref()), partial)
+            if row.tag != crate::vocab::VocabTag::Plain {
+                return Vec::new();
+            }
+            let Some(spec) = plains::find_plain(row.name) else {
+                return Vec::new();
+            };
+            filter_sort(plain_arg_items(spec, host.as_deref()), partial)
         }
         StyleCompleteContext::ConcernSlotKey { setter, partial } => {
             let Some(concern) = crate::concerns::find_concern(setter) else {
@@ -270,47 +286,72 @@ pub fn style_complete_for_context(
             filter_sort(concern_slot_arg_items(slot_spec, host.as_deref()), partial)
         }
         StyleCompleteContext::StyleRef { partial } => {
-            let names = collect_style_const_names(source);
-            filter_sort(
-                names.into_iter().map(|n| {
+            // Theme-first in both modes (SPEC-SPINNAKER-3 §3). Locals only in Open.
+            let theme = crate::ThemeStyleEnv::from_registry();
+            let mut items: Vec<StyleCompleteItem> = theme
+                .named_style_names()
+                .map(|n| {
                     item(
-                        n.clone(),
+                        n.to_string(),
+                        StyleCompleteKind::StyleRef,
+                        Some("theme style".into()),
+                        None,
+                    )
+                })
+                .collect();
+            if crate::current_styling_policy() == crate::StylingPolicy::Open {
+                for n in collect_style_const_names(source) {
+                    if items.iter().any(|it| it.label == n) {
+                        continue;
+                    }
+                    items.push(item(
+                        n,
                         StyleCompleteKind::StyleRef,
                         Some("style const".into()),
                         None,
-                    )
-                }),
-                partial,
-            )
+                    ));
+                }
+            }
+            filter_sort(items.into_iter(), partial)
         }
     }
 }
 
 // ── arg vocabulary ──────────────────────────────────────────────────────────
 
-fn setter_arg_items(
-    spec: &SetterSpec,
+fn concern_arg_items(
+    concern: &crate::concerns::ConcernSpec,
     host: Option<&str>,
 ) -> impl Iterator<Item = StyleCompleteItem> {
     let mut labels: Vec<(String, StyleCompleteKind, Option<String>)> = Vec::new();
-
-    if let Some(concern) = crate::concerns::find_concern(spec.name) {
-        for composite in crate::tokens::composites_of_type(concern.name) {
-            let short = composite
-                .name
-                .strip_prefix(&format!("{}.", concern.name))
-                .or_else(|| composite.name.strip_suffix(&format!(".{}", concern.name)))
-                .unwrap_or(composite.name);
-            if !labels.iter().any(|(l, _, _)| l == short) {
-                labels.push((
-                    short.to_string(),
-                    StyleCompleteKind::Token,
-                    Some(format!("composite `{}`", composite.name)),
-                ));
-            }
+    for composite in crate::tokens::composites_of_type(concern.name) {
+        let short = composite
+            .name
+            .strip_prefix(&format!("{}.", concern.name))
+            .or_else(|| composite.name.strip_suffix(&format!(".{}", concern.name)))
+            .unwrap_or(composite.name);
+        if !labels.iter().any(|(l, _, _)| l == short) {
+            labels.push((
+                short.to_string(),
+                StyleCompleteKind::Token,
+                Some(format!("composite `{}`", composite.name)),
+            ));
         }
     }
+    let primary = crate::concerns::primary_slot(concern);
+    if let Some(slot) = crate::concerns::find_slot(concern, primary) {
+        labels.extend(concern_slot_arg_tuples(slot, host));
+    }
+    labels
+        .into_iter()
+        .map(|(label, kind, detail)| item(label, kind, detail, None))
+}
 
+fn plain_arg_items(
+    spec: &PlainSpec,
+    host: Option<&str>,
+) -> impl Iterator<Item = StyleCompleteItem> {
+    let mut labels: Vec<(String, StyleCompleteKind, Option<String>)> = Vec::new();
     if spec.scale == Some("color") {
         let mut v: Vec<String> = color_paint_vocabulary(host).into_iter().collect();
         v.sort();
@@ -329,7 +370,6 @@ fn setter_arg_items(
             ));
         }
     }
-
     for k in spec.keywords {
         if labels.iter().any(|(l, _, _)| l == *k) {
             continue;
@@ -340,16 +380,15 @@ fn setter_arg_items(
             Some(format!("keyword · {}", spec.name)),
         ));
     }
-
     labels
         .into_iter()
         .map(|(label, kind, detail)| item(label, kind, detail, None))
 }
 
-fn concern_slot_arg_items(
+fn concern_slot_arg_tuples(
     slot: &crate::concerns::ConcernSlot,
     host: Option<&str>,
-) -> impl Iterator<Item = StyleCompleteItem> {
+) -> Vec<(String, StyleCompleteKind, Option<String>)> {
     let mut labels: Vec<(String, StyleCompleteKind, Option<String>)> = Vec::new();
     if slot.scale == Some("color") {
         let mut v: Vec<String> = color_paint_vocabulary(host).into_iter().collect();
@@ -380,6 +419,13 @@ fn concern_slot_arg_items(
         ));
     }
     labels
+}
+
+fn concern_slot_arg_items(
+    slot: &crate::concerns::ConcernSlot,
+    host: Option<&str>,
+) -> impl Iterator<Item = StyleCompleteItem> {
+    concern_slot_arg_tuples(slot, host)
         .into_iter()
         .map(|(label, kind, detail)| item(label, kind, detail, None))
 }
@@ -928,12 +974,44 @@ fn is_ident_byte(b: u8) -> bool {
 
 // ── style const env ─────────────────────────────────────────────────────────
 
-/// Collect `const name = style` names from source (scope Style env).
+/// Collect file-local style names: `const name = style` and `style name =`.
 pub fn collect_style_const_names(source: &str) -> Vec<String> {
     let mut out = Vec::new();
     let bytes = source.as_bytes();
     let mut i = 0usize;
     while i + 5 < bytes.len() {
+        if &bytes[i..i + 5] == b"style" && is_word_start(bytes, i) {
+            let after = i + 5;
+            if after < bytes.len() && is_ident_byte(bytes[after]) {
+                i += 1;
+                continue;
+            }
+            let mut j = after;
+            while j < bytes.len() && bytes[j].is_ascii_whitespace() {
+                j += 1;
+            }
+            if j < bytes.len() && is_ident_start_byte(bytes[j]) {
+                let name_start = j;
+                j += 1;
+                while j < bytes.len() && is_ident_byte(bytes[j]) {
+                    j += 1;
+                }
+                let name = std::str::from_utf8(&bytes[name_start..j])
+                    .unwrap_or("")
+                    .to_string();
+                let mut k = j;
+                while k < bytes.len() && bytes[k].is_ascii_whitespace() {
+                    k += 1;
+                }
+                if k < bytes.len() && bytes[k] == b'=' {
+                    out.push(name);
+                    i = k + 1;
+                    continue;
+                }
+            }
+            i += 1;
+            continue;
+        }
         if &bytes[i..i + 5] == b"const" && is_word_start(bytes, i) {
             let after = i + 5;
             if after < bytes.len() && is_ident_byte(bytes[after]) {
@@ -1047,7 +1125,7 @@ mod tests {
 
     #[test]
     fn fill_color_slot_includes_primary_and_surface_excludes_radius_and_chip_fg() {
-        let (src, off) = at_caret("style({ paint: fill({ color: ¦ }) })");
+        let (src, off) = at_caret("style({ bg({ color: ¦ }) })");
         let items = style_complete_at(&src, None, off, None);
         let labs = labels(&items);
         assert!(labs.contains(&"primary"), "primary: {labs:?}");
@@ -1064,12 +1142,13 @@ mod tests {
                     .iter()
                     .any(|i| i.label == "full" && i.detail.as_deref() == Some("scale `radius`"))
         }));
-        // D1: app complete excludes component public names
+        // Pack names are gone — complete spends globals.
         assert!(
             !labs.contains(&"chip-foreground"),
             "chip-foreground: {labs:?}"
         );
         assert!(!labs.contains(&"chip"), "bare chip: {labs:?}");
+        assert!(labs.contains(&"card"), "card is a global: {labs:?}");
     }
 
     #[test]
@@ -1112,18 +1191,16 @@ mod tests {
     }
 
     #[test]
-    fn host_chip_includes_surface_author_forms() {
-        let (src, off) = at_caret("style({ paint: fill({ color: ¦ }) })");
+    fn host_chip_spends_globals() {
+        let (src, off) = at_caret("style({ bg({ color: ¦ }) })");
         let items = style_complete_at(&src, None, off, Some("chip"));
         let labs = labels(&items);
-        assert!(labs.contains(&"chip"), "chip form: {labs:?}");
-        assert!(
-            labs.contains(&"chip.foreground") || labs.iter().any(|l| l.starts_with("chip.")),
-            "chip surface dotted forms: {labs:?}"
-        );
+        assert!(labs.contains(&"muted"), "muted: {labs:?}");
+        assert!(labs.contains(&"card"), "card: {labs:?}");
+        assert!(!labs.contains(&"chip"), "pack name gone: {labs:?}");
         assert!(
             !labs.contains(&"chip-foreground"),
-            "kebab emit label forbidden: {labs:?}"
+            "kebab pack label gone: {labs:?}"
         );
     }
 
@@ -1156,21 +1233,24 @@ mod tests {
                 // Host-free app context for this table.
                 with_host_surface(None, check);
             }
-            // Scale membership for non-keyword tokens
-            if let Some(spec) = setters::find_setter(setter) {
-                if let Some(scale) = spec.scale {
-                    if scale != "color" {
-                        for it in items
-                            .iter()
-                            .filter(|i| i.kind == StyleCompleteKind::Token)
-                            .take(20)
-                        {
-                            assert!(
-                                scales::contains(scale, &it.label)
-                                    || spec.keywords.contains(&it.label.as_str()),
-                                "{setter} token `{}` not on scale `{scale}`",
-                                it.label
-                            );
+            // Scale membership for non-keyword tokens — concern primary slot.
+            if let Some(concern) = crate::concerns::find_concern(setter) {
+                let primary = crate::concerns::primary_slot(concern);
+                if let Some(slot) = crate::concerns::find_slot(concern, primary) {
+                    if let Some(scale) = slot.scale {
+                        if scale != "color" {
+                            for it in items
+                                .iter()
+                                .filter(|i| i.kind == StyleCompleteKind::Token)
+                                .take(20)
+                            {
+                                assert!(
+                                    scales::contains(scale, &it.label)
+                                        || slot.keywords.contains(&it.label.as_str()),
+                                    "{setter} token `{}` not on scale `{scale}`",
+                                    it.label
+                                );
+                            }
                         }
                     }
                 }
@@ -1180,7 +1260,7 @@ mod tests {
 
     #[test]
     fn when_key_position() {
-        let (src, off) = at_caret("style({ paint: fill({ color: primary }), when: { ¦ } })");
+        let (src, off) = at_caret("style({ bg(primary), when: { ¦ } })");
         let items = style_complete_at(&src, None, off, None);
         let labs = labels(&items);
         assert!(labs.contains(&"hover"), "when keys: {labs:?}");
@@ -1195,15 +1275,33 @@ mod tests {
         let (src, off) = at_caret("style({ paint: ¦ })");
         let items = style_complete_at(&src, None, off, None);
         let labs = labels(&items);
-        assert!(labs.contains(&"fill"), "setters: {labs:?}");
-        assert!(labs.contains(&"ink"), "setters: {labs:?}");
+        assert!(labs.contains(&"bg"), "live author name: {labs:?}");
+        assert!(labs.contains(&"fg"), "live author name: {labs:?}");
         assert!(labs.contains(&"radius"), "setters: {labs:?}");
-        // box-only concern should be filtered when channel is paint
+        // box-only rows stay off the paint channel
         assert!(
-            !labs.contains(&"space"),
-            "space is box channel, not paint: {labs:?}"
+            !labs.contains(&"pad") && !labs.contains(&"space"),
+            "pad/space are box, not paint: {labs:?}"
         );
         assert!(labs.contains(&"elevation"), "concern setter: {labs:?}");
+        // alias targets are not a mystery dual beside the v3 name
+        assert!(
+            !labs.contains(&"fill") && !labs.contains(&"ink"),
+            "fill/ink are alias targets, not offered: {labs:?}"
+        );
+    }
+
+    #[test]
+    fn complete_offers_bg_not_fill_dual() {
+        let (src, off) = at_caret("style({ paint: ¦ })");
+        let items = style_complete_at(&src, None, off, None);
+        let labs = labels(&items);
+        assert!(labs.contains(&"bg"), "complete must offer bg: {labs:?}");
+        assert!(
+            !labs.contains(&"fill"),
+            "complete must not dual-offer fill beside bg: {labs:?}"
+        );
+        assert!(!labs.contains(&"z"), "z is a position slot, not a setter");
     }
 
     #[test]
@@ -1212,8 +1310,9 @@ mod tests {
         let items = style_complete_at(&src, None, off, None);
         let labs = labels(&items);
         assert!(labs.contains(&"subtle"), "border.subtle: {labs:?}");
-        assert!(labs.contains(&"card"), "card.border: {labs:?}");
-        assert!(labs.contains(&"dialog"), "dialog.border: {labs:?}");
+        assert!(labs.contains(&"default"), "border.default: {labs:?}");
+        assert!(labs.contains(&"strong"), "border.strong: {labs:?}");
+        assert!(!labs.contains(&"dialog"), "dialog.border is gone: {labs:?}");
     }
 
     #[test]
@@ -1252,11 +1351,43 @@ mod tests {
 
     #[test]
     fn style_ref_from_const() {
-        let src = "const filled = style({ paint: fill({ color: primary }) })\nstyle(fil¦)";
+        let src = "const filled = style({ bg(primary) })\nstyle(fil¦)";
         let (src, off) = at_caret(src);
         let items = style_complete_at(&src, None, off, None);
         let labs = labels(&items);
         assert!(labs.contains(&"filled"), "style refs: {labs:?}");
+    }
+
+    #[test]
+    fn style_ref_from_style_name_decl() {
+        let src = "style filled = { bg(primary) }\nstyle(fil¦)";
+        let (src, off) = at_caret(src);
+        let items = style_complete_at(&src, None, off, None);
+        let labs = labels(&items);
+        assert!(labs.contains(&"filled"), "style name = refs: {labs:?}");
+    }
+
+    #[test]
+    fn themed_complete_omits_file_local_refs() {
+        let src = "const filled = style({ bg(primary) })\nstyle(fil¦)";
+        let (src, off) = at_caret(src);
+        crate::with_styling_policy(crate::StylingPolicy::Themed, || {
+            let items = style_complete_at(&src, None, off, None);
+            let labs = labels(&items);
+            assert!(
+                !labs.contains(&"filled"),
+                "themed must not offer locals: {labs:?}"
+            );
+        });
+    }
+
+    #[test]
+    fn play_arg_completes_fade_from_theme() {
+        let (src, off) = at_caret("style({ animate: { enter: play(¦) } })");
+        let items = style_complete_at(&src, None, off, None);
+        let labs = labels(&items);
+        assert!(labs.contains(&"fade"), "play presets: {labs:?}");
+        assert!(labs.contains(&"colors"), "play prop-set: {labs:?}");
     }
 
     #[test]
@@ -1272,7 +1403,7 @@ mod tests {
 
     #[test]
     fn partial_prefix_filters() {
-        let (src, off) = at_caret("style({ paint: fill({ color: pri¦ }) })");
+        let (src, off) = at_caret("style({ bg({ color: pri¦ }) })");
         let items = style_complete_at(&src, None, off, None);
         assert!(!items.is_empty());
         for it in &items {
@@ -1287,11 +1418,11 @@ mod tests {
 
     #[test]
     fn context_detection_helpers() {
-        let src = "style({ paint: fill() })";
-        let off = offset_of(src, "fill(") + 5; // inside parens
+        let src = "style({ bg() })";
+        let off = offset_of(src, "bg(") + 3; // inside parens
         let ctx = style_complete_context_at(src, off, None);
         assert!(
-            matches!(ctx, StyleCompleteContext::SetterArg { ref setter, .. } if setter == "fill"),
+            matches!(ctx, StyleCompleteContext::SetterArg { ref setter, .. } if setter == "bg"),
             "{ctx:?}"
         );
     }

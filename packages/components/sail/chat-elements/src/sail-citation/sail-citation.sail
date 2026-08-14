@@ -9,23 +9,10 @@
     index = 0
   }
 
-  style pill = {
-    box: size({ min-h: control-h-xs }).space({ pad-y: half, pad-l: 0_75, pad-r: 2 }),
-    paint: radius(full).ink({ color: foreground }).fill({ color: muted }).border({ color: border, width: 1 }).elevation(none).cursor(pointer),
-    text: type({ size: xs, weight: normal, leading: snug }),
-    when: {
-      hover: { paint: fill({ color: selected-bg }).border({ color: primary, width: 1 }) },
-    },
-  }
-  style badge = {
-    box: size({ h: 4, min-w: 4 }).space({ pad-x: 1 }),
-    paint: ink({ color: primary-foreground }).fill({ color: primary }).radius(full),
-  }
-  style badgeNum = {
-    box: flow({ display: contents }),
-    text: type({ weight: semibold }),
-  }
-  style label = { text: type({ wrap: truncate }) }
+  style pill = { size({ min-h: 0 }).pad({ y: half, l: 0_75, r: 2 }).radius(full).fg(foreground).bg(muted).border({ color: border, width: 1 }).elevation(none).cursor(pointer).type({ size: xs, weight: normal, leading: snug }), when: { hover: bg(selected-bg).border({ color: primary, width: 1 }) } }
+  style badge = { size({ h: 4, min-w: 4 }).pad({ x: 1 }).fg(primary-foreground).bg(primary).radius(full) }
+  style badgeNum = { display(contents).type({ weight: semibold }) }
+  style label = { type({ wrap: truncate }) }
 </scope>
 
 <controller>

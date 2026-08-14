@@ -1,5 +1,5 @@
 {
-  "$description": "Neo-brutalist. Light-only (dark locked — broken dual-mode).",
+  "$description": "Neo-brutalist. Light-only (dark locked \u2014 broken dual-mode).",
   "$extensions": {
     "sail": {
       "layer": "theme",
@@ -248,6 +248,26 @@
             "$value": "oklch(0.95 0.02 302)",
             "$type": "color"
           }
+        },
+        "card": {
+          "default": {
+            "$value": "oklch(1 0 0)",
+            "$type": "color"
+          },
+          "foreground": {
+            "$value": "oklch(0.14 0 0)",
+            "$type": "color"
+          }
+        },
+        "popover": {
+          "default": {
+            "$value": "oklch(1 0 0)",
+            "$type": "color"
+          },
+          "foreground": {
+            "$value": "oklch(0.14 0 0)",
+            "$type": "color"
+          }
         }
       },
       "interaction": {
@@ -418,39 +438,21 @@
           "$type": "shadow"
         }
       },
-      "component": {
-        "card": {
-          "backdrop-filter": {
-            "$value": "none",
-            "$type": "string"
-          },
-          "texture": {
-            "$value": "none",
-            "$type": "string"
-          },
-          "fg": {
-            "$value": "oklch(0.14 0 0)",
-            "$type": "color"
-          },
-          "bg": {
-            "$value": "oklch(1 0 0)",
-            "$type": "color"
-          }
-        },
-        "popover": {
-          "bg": {
-            "$value": "oklch(1 0 0)",
-            "$type": "color"
-          },
-          "fg": {
-            "$value": "oklch(0.14 0 0)",
-            "$type": "color"
-          }
-        }
-      },
       "$extensions": {
         "sail": {
           "dark": false
+        }
+      },
+      "filter": {
+        "card-backdrop": {
+          "$value": "none",
+          "$type": "string"
+        }
+      },
+      "image": {
+        "card-texture": {
+          "$value": "none",
+          "$type": "string"
         }
       }
     }

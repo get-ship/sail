@@ -336,7 +336,6 @@ pub fn check_all_with_tier(
             overrides,
             route_params,
             tier,
-            Some(parsed.preprocessed),
         ),
         Err(e) => {
             // Fatal parse/preprocess error — still surface confluent off-scale
@@ -520,7 +519,7 @@ pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, Compile
     // type-gate stream gates `compile()` itself, so the daemon + napi harness
     // reject exactly what the CLI does. Compose is Fix by default and stays
     // on `check_all` / LSP OnSave / `sail_edit` — `gate` does not run it.
-    let diagnostics = compile_span("gate", || {
+    compile_span("gate", || {
         check::gate(
             &program,
             effective_source,
@@ -529,7 +528,6 @@ pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, Compile
             controller.as_ref(),
             &effective_overrides,
             opts.route_params.as_deref(),
-            Some(parsed.preprocessed),
         )
     })
     .map_err(|e| attach_path(e, &opts))?;
@@ -580,7 +578,7 @@ pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, Compile
         dts,
         meta,
         used_icons: lowered.used_icons,
-        diagnostics,
+        diagnostics: Vec::new(),
     })
 }
 

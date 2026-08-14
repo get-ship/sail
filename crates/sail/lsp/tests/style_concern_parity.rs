@@ -47,7 +47,7 @@ fn lsp_and_compiler_complete_border_concern() {
         via_style, via_lsp,
         "LSP must serve the same border(¦) registry as compiler"
     );
-    for want in ["subtle", "card", "dialog"] {
+    for want in ["subtle", "card"] {
         assert!(
             via_lsp.iter().any(|l| l == want),
             "{want} missing: {via_lsp:?}"
@@ -133,16 +133,16 @@ fn labels_at(src_caret: &str) -> (Vec<String>, Vec<String>, Vec<String>) {
 #[test]
 fn lsp_and_compiler_complete_paint_channel_concerns() {
     let (_, _, via_lsp) = labels_at("style({ paint: ¦ })");
-    for want in ["fill", "ink", "border", "radius", "elevation"] {
+    for want in ["bg", "fg", "border", "radius", "elevation"] {
         assert!(
             via_lsp.iter().any(|l| l == want),
             "{want} missing: {via_lsp:?}"
         );
     }
-    for absorbed in ["bg", "fg", "shadow", "opacity"] {
+    for dead in ["fill", "ink", "shadow"] {
         assert!(
-            !via_lsp.iter().any(|l| l == absorbed),
-            "absorbed `{absorbed}` offered: {via_lsp:?}"
+            !via_lsp.iter().any(|l| l == dead),
+            "dead `{dead}` offered: {via_lsp:?}"
         );
     }
 }
@@ -150,16 +150,16 @@ fn lsp_and_compiler_complete_paint_channel_concerns() {
 #[test]
 fn lsp_and_compiler_complete_box_and_text_channels() {
     let (_, _, box_labs) = labels_at("style({ box: ¦ })");
-    for want in ["size", "space", "place", "flow", "overflow"] {
+    for want in ["size", "pad", "margin", "position", "overflow"] {
         assert!(
             box_labs.iter().any(|l| l == want),
             "{want} missing: {box_labs:?}"
         );
     }
-    for absorbed in ["padX", "w", "minW", "grow", "display"] {
+    for dead in ["space", "place", "flow", "padX", "w", "minW"] {
         assert!(
-            !box_labs.iter().any(|l| l == absorbed),
-            "absorbed `{absorbed}` offered: {box_labs:?}"
+            !box_labs.iter().any(|l| l == dead),
+            "dead `{dead}` offered: {box_labs:?}"
         );
     }
 
@@ -193,7 +193,7 @@ fn lsp_and_compiler_complete_size_type_elevation_fill_names() {
         assert!(elev.iter().any(|l| l == want), "{want} missing: {elev:?}");
     }
 
-    let (_, _, fill) = labels_at("style({ paint: fill(¦) })");
+    let (_, _, fill) = labels_at("style({ bg(¦) })");
     for want in ["surface", "card", "muted"] {
         assert!(fill.iter().any(|l| l == want), "{want} missing: {fill:?}");
     }
@@ -229,11 +229,7 @@ fn lsp_and_compiler_hover_size_type_elevation_fill() {
             "elevation.sm",
             "shadow:",
         ),
-        (
-            "style({ paint: fill(fill.sur¦face) })",
-            "fill.surface",
-            "color:",
-        ),
+        ("style({ bg(fill.sur¦face) })", "fill.surface", "color:"),
     ] {
         let (src, _off, line, col) = at_caret(src);
         let via_resolve = resolve_theme_token(resolve_name, "ship", "light")
@@ -264,13 +260,13 @@ fn lsp_and_compiler_hover_size_type_elevation_fill() {
 }
 
 #[test]
-fn lsp_and_compiler_hover_dialog_border() {
-    let (src, _off, line, col) = at_caret("style({ paint: border(dialog.bo¦rder) })");
-    let via_resolve = resolve_theme_token("dialog.border", "ship", "light").expect("resolve");
+fn lsp_and_compiler_hover_card_global() {
+    let (src, _off, line, col) = at_caret("style({ bg(ca¦rd) })");
+    let via_resolve = resolve_theme_token("card", "ship", "light").expect("resolve");
     let via_lsp = hover_sail(&src, Some("apps/demo/src/home.sail"), line, col).expect("lsp hover");
     assert!(
         via_lsp.contents.contains(&via_resolve.value),
-        "dialog.border hover {}\n{}",
+        "card hover {}\n{}",
         via_resolve.value,
         via_lsp.contents
     );

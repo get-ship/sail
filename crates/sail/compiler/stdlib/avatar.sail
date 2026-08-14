@@ -15,12 +15,12 @@
     shape: 'round' | 'square' = 'round'
   }
 
-  style base = {box: place({ position: relative }).overflow({ all: hidden }).size(7), paint: ink({ color: avatar.foreground }).fill({ color: avatar }).radius(full).elevation({ shadow: inset-ring }).select(none).align(middle).avatarMedia(true), text: type({ family: body, weight: bold, leading: none, tracking: wide, size: base })}
-  style sizeMd = {box: size(7), text: type({ size: base })}
-  style sizeXs = {box: size(5), text: type({ size: xs })}
-  style sizeSm = {box: size(control-h-sm), text: type({ size: xs })}
-  style sizeLg = {box: size(control-h-lg), text: type({ size: lg })}
-  style sizeXl = {box: size(control-h-xl), text: type({ size: 2xl })}
+  style base = {position(relative).overflow({ all: hidden }).size(7).fg(foreground).bg(muted).radius(full).elevation({ shadow: inset-ring }).select(none).align(middle).avatarMedia(true).type({ family: body, weight: bold, leading: none, tracking: wide, size: base })}
+  style sizeMd = {size(7).type({ size: base })}
+  style sizeXs = {size(5).type({ size: xs })}
+  style sizeSm = {size(control-h-sm).type({ size: xs })}
+  style sizeLg = {size(control-h-lg).type({ size: lg })}
+  style sizeXl = {size(control-h-xl).type({ size: 2xl })}
 </scope>
 
 <row
@@ -29,14 +29,8 @@
   align="center"
   justify="center"
   use:mediaFallback
-  style(base, {box: flow({ shrink: 0 }), match: {size: {
-        md: sizeMd,
-        xs: sizeXs,
-        sm: sizeSm,
-        lg: sizeLg,
-        xl: sizeXl,
-      }, shape: {round: {paint: radius(full)}, square: {paint: radius(sm)}}}, compound: [
-      {tone: *, paint: fill({ color: tone }).ink({ color: tone.foreground })},
-      {tone: muted, paint: fill({ color: avatar }).ink({ color: avatar.foreground })},
+  style(base, {shrink(0), match: {size: { md: sizeMd, xs: sizeXs, sm: sizeSm, lg: sizeLg, xl: sizeXl }, shape: {round: radius(full), square: radius(sm)}}, compound: [
+      {tone: *, bg(tone).fg(tone.foreground)},
+      {tone: muted, bg(muted).fg(foreground)},
     ]})
 ></row>

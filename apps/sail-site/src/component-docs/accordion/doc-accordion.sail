@@ -4,18 +4,15 @@
 -->
 
 <scope>
-  style page = { box: size({ w: full, max-w: breakpoint-desktop }).space({ mx: auto }) }
-  style specimen = { box: size({ w: panel-max-w-md, max-w: full }) }
-  style fullW = { box: size({ w: full }) }
-  style mutedSm = { paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
-  style mutedXs = { paint: ink({ color: muted-foreground }), text: type({ size: xs }) }
-  style knobLabel = {
-    paint: ink({ color: muted-foreground }),
-    text: type({ size: xs, weight: medium, tracking: wide, case: uppercase }),
-}
-  style sizeValue = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs }) }
-  style exampleBlock = { box: size({ w: full }).space({ pad-t: 2, pad-b: 4 }) }
-  style sectionLabel = { paint: ink({ color: muted-foreground }), text: type({ size: xs, tracking: wide, case: uppercase }) }
+  style page = { size({ w: full, max-w: breakpoint-desktop }).margin({ x: auto }) }
+  style specimen = { size({ w: panel-max-w-md, max-w: full }) }
+  style fullW = { size({ w: full }) }
+  style mutedSm = { fg(muted-foreground).type({ size: sm }) }
+  style mutedXs = { fg(muted-foreground).type({ size: xs }) }
+  style knobLabel = { fg(muted-foreground).type({ size: xs, weight: medium, tracking: wide, case: uppercase }) }
+  style sizeValue = { fg(muted-foreground).type({ family: mono, size: xs }) }
+  style exampleBlock = { size({ w: full }).pad({ t: 2, b: 4 }) }
+  style sectionLabel = { fg(muted-foreground).type({ size: xs, tracking: wide, case: uppercase }) }
 </scope>
 
 <controller>

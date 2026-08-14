@@ -1,6 +1,6 @@
 <!--
   <badge> — L1 language element. Style value language only.
-  Rest paint = component.badge tokens when tone is omitted.
+  Rest paint = muted when tone is omitted.
   Semantic paint = bound tone.
 -->
 
@@ -12,35 +12,27 @@
     pill = false
   }
 
-  style base = {box: flow({ display: inline-flex }).size({ min-h: control-h-2xs }).space({ pad-x: 2, pad-y: px }), paint: border({ width: 1 }).radius(sm), text: type({ family: body, weight: semibold, leading: none, wrap: nowrap, size: xs })}
+  style base = {display(inline-flex).size({ min-h: control-h-2xs }).pad({ x: 2, y: px }).border({ width: 1 }).radius(sm).type({ family: body, weight: semibold, leading: none, wrap: nowrap, size: xs })}
 
-  style soft = {paint: fill({ color: badge }).ink({ color: badge.foreground }).border({ color: badge.border })}
-  style solid = {paint: fill({ color: badge }).ink({ color: badge.foreground }).border({ color: badge.border }).elevation(xs)}
-  style outline = {paint: fill({ color: transparent }).ink({ color: badge.foreground }).border({ color: badge.border })}
+  style soft = {bg(muted).fg(muted-foreground).border({ color: border })}
+  style solid = {bg(muted).fg(muted-foreground).border({ color: border }).elevation(xs)}
+  style outline = {bg(transparent).fg(muted-foreground).border({ color: border })}
 
-  style sizeMd = {box: size({ min-h: control-h-2xs }).space({ pad-x: 2 }), text: type({ size: xs })}
-  style sizeSm = {box: size({ min-h: 4 }).space({ pad-x: 1_5 }), text: type({ size: xs })}
-  style sizeLg = {box: size({ min-h: control-h-xs }).space({ pad-x: 2_5 }), text: type({ size: xs })}
+  style sizeMd = {size({ min-h: control-h-2xs }).pad({ x: 2 }).type({ size: xs })}
+  style sizeSm = {size({ min-h: 4 }).pad({ x: 1_5 }).type({ size: xs })}
+  style sizeLg = {size({ min-h: control-h-xs }).pad({ x: 2_5 }).type({ size: xs })}
 
-  style solidTone = {paint: fill({ color: tone }).ink({ color: tone.foreground }).border({ color: tone }).elevation(xs)}
-  style softTone = {paint: fill({ color: tone, mix: 15 }).border({ color: tone }).ink({ color: tone })}
-  style outlineTone = {paint: fill({ color: transparent }).ink({ color: tone }).border({ color: tone })}
+  style solidTone = {bg(tone).fg(tone.foreground).border({ color: tone }).elevation(xs)}
+  style softTone = {bg({ color: tone, mix: 15 }).border({ color: tone }).fg(tone)}
+  style outlineTone = {bg(transparent).fg(tone).border({ color: tone })}
 </scope>
 
 <span
-  style(base, {when: {hover: {paint: filter({ opacity: 90 })}, focus: {paint: border({ width: 2, kind: outline })}}, match: {variant: {
-        soft: style(soft, softTone),
-        solid: style(solid, solidTone),
-        outline: style(outline, outlineTone),
-      }, size: {
-        md: sizeMd,
-        sm: sizeSm,
-        lg: sizeLg,
-      }, pill: {true: {paint: radius(full)}, false: {paint: radius(sm)}}}, compound: [
-      {tone: muted, variant: solid, paint: fill(muted).ink({ color: muted-foreground }).border({ color: border })},
-      {tone: muted, variant: soft, paint: fill(muted).ink({ color: muted-foreground }).border({ color: border })},
-      {tone: muted, variant: outline, paint: ink({ color: muted-foreground }).border({ color: border })},
-      {pill: true, box: space({ pad-x: 2_5 }), paint: radius(full)},
+  style(base, {when: {hover: filter({ opacity: 90 }), focus: border({ width: 2, kind: outline })}, match: {variant: { soft: style(soft, softTone), solid: style(solid, solidTone), outline: style(outline, outlineTone) }, size: { md: sizeMd, sm: sizeSm, lg: sizeLg }, pill: {true: radius(full), false: radius(sm)}}, compound: [
+      {tone: muted, variant: solid, bg(muted).fg(muted-foreground).border({ color: border })},
+      {tone: muted, variant: soft, bg(muted).fg(muted-foreground).border({ color: border })},
+      {tone: muted, variant: outline, fg(muted-foreground).border({ color: border })},
+      {pill: true, pad({ x: 2_5 }).radius(full)},
     ]})
 >
   <slot></slot>

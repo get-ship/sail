@@ -5,15 +5,12 @@
 -->
 
 <scope>
-  style page = { box: size({ w: full, max-w: breakpoint-desktop }).space({ mx: auto }).overflow({ all: visible }) }
-  style specimen = { box: size({ w: 64, max-w: full }).space({ pad: 2 }).overflow({ all: visible }) }
-  style controlW = { box: size({ w: 64, max-w: full }) }
-  style exampleBlock = { box: size({ w: full }).space({ pad-t: 2, pad-b: 4 }).overflow({ all: visible }) }
-  style exampleLead = { paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
-  style sectionLabel = {
-    paint: ink({ color: muted-foreground }),
-    text: type({ size: xs, tracking: wide, case: uppercase }),
-}
+  style page = { size({ w: full, max-w: breakpoint-desktop }).margin({ x: auto }).overflow({ all: visible }) }
+  style specimen = { size({ w: 64, max-w: full }).pad(2).overflow({ all: visible }) }
+  style controlW = { size({ w: 64, max-w: full }) }
+  style exampleBlock = { size({ w: full }).pad({ t: 2, b: 4 }).overflow({ all: visible }) }
+  style exampleLead = { fg(muted-foreground).type({ size: sm }) }
+  style sectionLabel = { fg(muted-foreground).type({ size: xs, tracking: wide, case: uppercase }) }
 </scope>
 
 <controller>

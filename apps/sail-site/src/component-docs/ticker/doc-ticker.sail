@@ -4,28 +4,15 @@
 -->
 
 <scope>
-  style page = { box: size({ w: full, max-w: breakpoint-desktop }).space({ mx: auto }).overflow({ all: visible }) }
-  style specimen = { box: size({ w: full, max-w: panel-max-w-md }).space({ pad: 2 }).overflow({ all: visible }) }
-  style knobLabel = {
-    paint: ink({ color: muted-foreground }),
-    text: type({ size: xs, weight: medium, tracking: wide, case: uppercase }),
-}
-  style sizeValue = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs }) }
-  style mutedXs = { paint: ink({ color: muted-foreground }), text: type({ size: xs }) }
-  style exampleBlock = { box: size({ w: full }).space({ pad-t: 2, pad-b: 4 }).overflow({ all: visible }) }
-  style sectionLabel = {
-    paint: ink({ color: muted-foreground }),
-    text: type({ size: xs, tracking: wide, case: uppercase }),
-}
-  style ticker = {
-    box: size({ w: full, max-w: panel-max-w-md }).overflow({ all: hidden }).space({ pad-y: 3 }),
-    paint: fill({ color: muted }).radius(md),
-}
-  style tickerText = {
-    box: space({ pad-x: 4 }),
-    paint: ink({ color: muted-foreground }),
-    text: type({ family: mono, size: sm, wrap: nowrap }),
-}
+  style page = { size({ w: full, max-w: breakpoint-desktop }).margin({ x: auto }).overflow({ all: visible }) }
+  style specimen = { size({ w: full, max-w: panel-max-w-md }).pad(2).overflow({ all: visible }) }
+  style knobLabel = { fg(muted-foreground).type({ size: xs, weight: medium, tracking: wide, case: uppercase }) }
+  style sizeValue = { fg(muted-foreground).type({ family: mono, size: xs }) }
+  style mutedXs = { fg(muted-foreground).type({ size: xs }) }
+  style exampleBlock = { size({ w: full }).pad({ t: 2, b: 4 }).overflow({ all: visible }) }
+  style sectionLabel = { fg(muted-foreground).type({ size: xs, tracking: wide, case: uppercase }) }
+  style ticker = { size({ w: full, max-w: panel-max-w-md }).overflow({ all: hidden }).pad({ y: 3 }).bg(muted).radius(md) }
+  style tickerText = { pad({ x: 4 }).fg(muted-foreground).type({ family: mono, size: sm, wrap: nowrap }) }
 </scope>
 
 <controller>
@@ -45,13 +32,13 @@ export default controller((_ctx: Scope) => {
   const specimenCode = derived(() => {
     const a: string[] = [`duration="${duration()}"`]
     if (reverse()) a.push('reverse')
-    return `<ticker ${a.join(' ')} style({ box: size({ w: full }).overflow({ all: hidden }).space({ pad-y: 2 }), paint: fill({ color: muted }).radius(md) })>
+    return `<ticker ${a.join(' ')} style({ size({ w: full }).overflow({ all: hidden }).pad({ y: 2 }).bg(muted).radius(md) })>
   <p>tokens · signals · a11y · hot reload · SSR ·&nbsp;</p>
 </ticker>`
   })
 
   const tkExNormal = () =>
-    `<ticker duration="normal" style({ box: size({ w: full }).overflow({ all: hidden }).space({ pad-y: 2 }), paint: fill({ color: muted }).radius(md) })>
+    `<ticker duration="normal" style({ size({ w: full }).overflow({ all: hidden }).pad({ y: 2 }).bg(muted).radius(md) })>
   <p>tokens · signals · a11y · hot reload · SSR ·&nbsp;</p>
 </ticker>`
   const tkExReverse = () =>

@@ -6,15 +6,15 @@
 -->
 
 <scope>
-  style page = { box: size({ max-w: breakpoint-tablet }).space({ mx: auto }) }
-  style eyebrow = { box: space({ mb: 2 }), paint: ink({ color: accent }), text: type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
-  style lead = { paint: ink({ color: muted-foreground }), text: type({ size: lg, leading: relaxed }) }
-  style cardPad = { box: space({ pad: 4 }) }
-  style grow1 = { box: flow({ grow: 1 }) }
-  style mutedSm = { paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
-  style accordionBody = { box: space({ pad-t: 2 }) }
-  style combobox = { box: size({ max-w: panel-max-w-sm }) }
-  style footNav = { box: space({ pad-t: 4, mt: 8 }), paint: border({ color: border, width: 1, edge: t }) }
+  style page = { size({ max-w: breakpoint-tablet }).margin({ x: auto }) }
+  style eyebrow = { margin({ b: 2 }).fg(accent).type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
+  style lead = { fg(muted-foreground).type({ size: lg, leading: relaxed }) }
+  style cardPad = { pad(4) }
+  style grow1 = { grow(1) }
+  style mutedSm = { fg(muted-foreground).type({ size: sm }) }
+  style accordionBody = { pad({ t: 2 }) }
+  style combobox = { size({ max-w: panel-max-w-sm }) }
+  style footNav = { pad({ t: 4 }).margin({ t: 8 }).border({ color: border, width: 1, edge: t }) }
 
   type CatLabelProps = {
     label: string

@@ -4,53 +4,53 @@
   Membership = project file on disk. Catalog: Add to project (confirm).
 -->
 <scope>
-  style pageHeader = { box: flow({ shrink: 0 }).space({ pad-x: 6, pad-y: 4 }), paint: border({ edge: b, color: border-subtle, width: 1 }).fill({ color: surface-1 }) }
-  style errorBand = { box: flow({ shrink: 0 }).space({ pad-x: 6, pad-y: 2 }), paint: border({ edge: b, color: border, width: 1 }) }
-  style loadBand = { box: flow({ shrink: 0 }).space({ pad-x: 6, pad-y: 2 }) }
-  style workbench = { box: flow({ grow: 1 }).size({h: full, min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }) }
-  style listPane = { box: flow({ grow: 1 }).size({min-w: panel-min-w-md, min-h: 0, max-w: panel-max-w-md, basis: 0}), paint: border({ edge: r, color: border-subtle, width: 1 }).fill({ color: surface-1 }) }
-  style listHead = { box: flow({ shrink: 0 }).space({ pad-x: 4, pad-t: 4, pad-b: 3 }), paint: border({ edge: b, color: border-subtle, width: 1 }) }
-  style groupLabel = { box: space({ pad-x: 2, pad-t: 1, pad-b: 1 }), paint: ink({ color: muted-foreground }), text: type({ size: xs, weight: semibold, tracking: wide, case: uppercase }) }
-  style groupLabelCatalog = { box: space({ pad-x: 2, pad-t: 4, pad-b: 1 }), paint: ink({ color: muted-foreground }), text: type({ size: xs, weight: semibold, tracking: wide, case: uppercase }) }
-  style themeRow = { box: space({ pad: 2 }), paint: radius(md).cursor(pointer).border({ color: transparent, width: 1 }), when: { hover: { paint: fill({ color: hover-bg }) }, current: { paint: fill({ color: selected-bg }).border({ color: selected-border }) } } }
-  style swatchStrip = { box: flow({ shrink: 0 }).size({ w: 14, h: 7, min-w: 14 }).overflow({ all: hidden }), paint: radius(sm).border({ color: border-subtle, width: 1 }) }
-  style swatchCell = { box: flow({ grow: 1 }).size({ h: full, min-w: 0 }) }
-  style growMin = { box: flow({ grow: 1 }).size({ min-w: 0 }) }
-  style shrink0 = { box: flow({ shrink: 0 }) }
-  style titleSm = { text: type({ size: sm, weight: semibold, wrap: truncate }) }
-  style mutedXs = { paint: ink({ color: muted-foreground }), text: type({ size: xs, wrap: truncate }) }
-  style mutedSm = { paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
-  style mutedSmLead = { paint: ink({ color: muted-foreground }), text: type({ size: sm, leading: snug }) }
-  style mutedXsPlain = { paint: ink({ color: muted-foreground }), text: type({ size: xs }) }
-  style pageTitle = { paint: ink({ color: foreground }), text: type({ size: lg, weight: semibold, tracking: tight }) }
-  style libraryEyebrow = { paint: ink({ color: muted-foreground }), text: type({ size: xs, weight: bold, tracking: wide, case: uppercase }) }
-  style sectionEyebrow = { paint: ink({ color: muted-foreground }), text: type({ size: xs, weight: semibold, tracking: wide, case: uppercase }) }
-  style errorText = { box: flow({ grow: 1 }).size({ min-w: 0 }), paint: ink({ color: destructive }), text: type({ size: sm, wrap: truncate }) }
-  style surfaceRoot = { box: flow({ grow: 1 }).size({ h: full, min-w: 0, min-h: 0 }).overflow({ all: hidden }), paint: fill({ color: background }) }
-  style scrollGrow = { box: flow({ grow: 1 }).size({h: full, min-h: 0, basis: 0}) }
-  style listPad = { box: space({ pad: 3 }) }
-  style previewScroll = { box: flow({ grow: 1 }).size({h: full, min-w: 0, min-h: 0, basis: 0}), paint: fill({ color: background }) }
-  style previewCol = { box: space({ pad-x: 8, pad-t: 6, pad-b: 10 }).size({ max-w: panel-max-w-lg }) }
-  style previewTitle = { text: type({ family: display, size: 2xl, weight: medium, tracking: tight }) }
-  style previewDesc = { paint: ink({ color: muted-foreground }), text: type({ size: sm, leading: relaxed }) }
-  style modeLabel = { paint: ink({ color: muted-foreground }), text: type({ size: xs, weight: semibold }) }
-  style modeIcon = { box: flow({ shrink: 0 }), paint: ink({ color: muted-foreground }) }
-  style storySwatch = { box: size({ h: 16 }), paint: radius(md).border({ color: border-subtle, width: 1 }) }
-  style storyLabel = { text: type({ size: xs, weight: medium }) }
-  style typeStory = { box: space({ pad: 4 }), paint: radius(lg).border({ color: border-subtle, width: 1 }).fill({ color: surface-1 }).ink({ color: foreground }) }
-  style typeDisplay = { text: type({ family: display, size: xl, weight: semibold, tracking: tight }) }
-  style typeBody = { text: type({ family: body, size: sm, leading: relaxed }) }
-  style typeMono = { text: type({ family: mono, size: xs }) }
-  style radiusChip = { box: size({ w: 8, h: 8 }), paint: fill({ color: transparent }).border({ color: primary, width: 2 }) }
-  style specimen = { box: overflow({ all: hidden }).size({ min-w: 0 }), paint: radius(lg).border({ color: border, width: 1 }).elevation(md).fill({ color: background }).ink({ color: foreground }) }
-  style specimenHead = { box: space({ pad-x: 4 }).size({ h: 9 }), paint: fill({ color: surface-1 }).border({ edge: b, color: border-subtle, width: 1 }) }
-  style specimenBody = { box: space({ pad: 5 }), paint: fill({ color: background }) }
-  style specimenCard = { box: space({ pad: 4 }) }
-  style cardTitle = { text: type({ family: heading, size: md, weight: semibold }) }
-  style cardBody = { paint: ink({ color: muted-foreground }), text: type({ family: body, size: sm, leading: relaxed }) }
-  style fullW = { box: size({ w: full }) }
-  style tapFloor = { box: flow({ shrink: 0 }).size({ min-w: control-h-sm, min-h: control-h-sm }) }
-  style iconBtn = { box: flow({ shrink: 0 }).size({ w: control-h-sm, h: control-h-sm, min-w: control-h-sm, min-h: control-h-sm }) }
+  style pageHeader = { shrink(0).pad({ x: 6, y: 4 }).border({ edge: b, color: border-subtle, width: 1 }).bg(surface-1) }
+  style errorBand = { shrink(0).pad({ x: 6, y: 2 }).border({ edge: b, color: border, width: 1 }) }
+  style loadBand = { shrink(0).pad({ x: 6, y: 2 }) }
+  style workbench = { grow(1).size({h: full, min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }) }
+  style listPane = { grow(1).size({min-w: panel-min-w-md, min-h: 0, max-w: panel-max-w-md, basis: 0}).border({ edge: r, color: border-subtle, width: 1 }).bg(surface-1) }
+  style listHead = { shrink(0).pad({ x: 4, t: 4, b: 3 }).border({ edge: b, color: border-subtle, width: 1 }) }
+  style groupLabel = { pad({ x: 2, t: 1, b: 1 }).fg(muted-foreground).type({ size: xs, weight: semibold, tracking: wide, case: uppercase }) }
+  style groupLabelCatalog = { pad({ x: 2, t: 4, b: 1 }).fg(muted-foreground).type({ size: xs, weight: semibold, tracking: wide, case: uppercase }) }
+  style themeRow = { pad(2).radius(md).cursor(pointer).border({ color: transparent, width: 1 }), when: { hover: bg(hover-bg), current: bg(selected-bg).border({ color: selected-border }) } }
+  style swatchStrip = { shrink(0).size({ w: 14, h: 7, min-w: 14 }).overflow({ all: hidden }).radius(sm).border({ color: border-subtle, width: 1 }) }
+  style swatchCell = { grow(1).size({ h: full, min-w: 0 }) }
+  style growMin = { grow(1).size({ min-w: 0 }) }
+  style shrink0 = { shrink(0) }
+  style titleSm = { type({ size: sm, weight: semibold, wrap: truncate }) }
+  style mutedXs = { fg(muted-foreground).type({ size: xs, wrap: truncate }) }
+  style mutedSm = { fg(muted-foreground).type({ size: sm }) }
+  style mutedSmLead = { fg(muted-foreground).type({ size: sm, leading: snug }) }
+  style mutedXsPlain = { fg(muted-foreground).type({ size: xs }) }
+  style pageTitle = { fg(foreground).type({ size: lg, weight: semibold, tracking: tight }) }
+  style libraryEyebrow = { fg(muted-foreground).type({ size: xs, weight: bold, tracking: wide, case: uppercase }) }
+  style sectionEyebrow = { fg(muted-foreground).type({ size: xs, weight: semibold, tracking: wide, case: uppercase }) }
+  style errorText = { grow(1).size({ min-w: 0 }).fg(destructive).type({ size: sm, wrap: truncate }) }
+  style surfaceRoot = { grow(1).size({ h: full, min-w: 0, min-h: 0 }).overflow({ all: hidden }).bg(background) }
+  style scrollGrow = { grow(1).size({h: full, min-h: 0, basis: 0}) }
+  style listPad = { pad(3) }
+  style previewScroll = { grow(1).size({h: full, min-w: 0, min-h: 0, basis: 0}).bg(background) }
+  style previewCol = { pad({ x: 8, t: 6, b: 10 }).size({ max-w: panel-max-w-lg }) }
+  style previewTitle = { type({ family: display, size: 2xl, weight: medium, tracking: tight }) }
+  style previewDesc = { fg(muted-foreground).type({ size: sm, leading: relaxed }) }
+  style modeLabel = { fg(muted-foreground).type({ size: xs, weight: semibold }) }
+  style modeIcon = { shrink(0).fg(muted-foreground) }
+  style storySwatch = { size({ h: 16 }).radius(md).border({ color: border-subtle, width: 1 }) }
+  style storyLabel = { type({ size: xs, weight: medium }) }
+  style typeStory = { pad(4).radius(lg).border({ color: border-subtle, width: 1 }).bg(surface-1).fg(foreground) }
+  style typeDisplay = { type({ family: display, size: xl, weight: semibold, tracking: tight }) }
+  style typeBody = { type({ family: body, size: sm, leading: relaxed }) }
+  style typeMono = { type({ family: mono, size: xs }) }
+  style radiusChip = { size({ w: 8, h: 8 }).bg(transparent).border({ color: primary, width: 2 }) }
+  style specimen = { overflow({ all: hidden }).size({ min-w: 0 }).radius(lg).border({ color: border, width: 1 }).elevation(md).bg(background).fg(foreground) }
+  style specimenHead = { pad({ x: 4 }).size({ h: 9 }).bg(surface-1).border({ edge: b, color: border-subtle, width: 1 }) }
+  style specimenBody = { pad(5).bg(background) }
+  style specimenCard = { pad(4) }
+  style cardTitle = { type({ family: heading, size: md, weight: semibold }) }
+  style cardBody = { fg(muted-foreground).type({ family: body, size: sm, leading: relaxed }) }
+  style fullW = { size({ w: full }) }
+  style tapFloor = { shrink(0).size({ min-w: control-h-sm, min-h: control-h-sm }) }
+  style iconBtn = { shrink(0).size({ w: control-h-sm, h: control-h-sm, min-w: control-h-sm, min-h: control-h-sm }) }
 
   type ThemeSwatchProps = {
     previewId: string
@@ -83,10 +83,10 @@
     hidden="true"
     style(swatchStrip)
   >
-    <center style(swatchCell, { paint: fill({ color: background }) })></center>
-    <center style(swatchCell, { paint: fill({ color: surface-2 }) })></center>
-    <center style(swatchCell, { paint: fill({ color: primary }) })></center>
-    <center style(swatchCell, { paint: fill({ color: accent }) })></center>
+    <center style(swatchCell, { bg(background) })></center>
+    <center style(swatchCell, { bg(surface-2) })></center>
+    <center style(swatchCell, { bg(primary) })></center>
+    <center style(swatchCell, { bg(accent) })></center>
   </row>
 </partial>
 
@@ -398,23 +398,23 @@ export default controller(() => {
             <p style(sectionEyebrow)>Color story</p>
             <row theme={previewPaintId()} use:paintMode={previewModeId()} gap="2" color-story-grid>
               <column gap="1" style(growMin)>
-                <center style(storySwatch, { paint: fill({ color: primary }) })></center>
+                <center style(storySwatch, { bg(primary) })></center>
                 <p style(storyLabel)>Primary</p>
               </column>
               <column gap="1" style(growMin)>
-                <center style(storySwatch, { paint: fill({ color: secondary }) })></center>
+                <center style(storySwatch, { bg(secondary) })></center>
                 <p style(storyLabel)>Secondary</p>
               </column>
               <column gap="1" style(growMin)>
-                <center style(storySwatch, { paint: fill({ color: accent }) })></center>
+                <center style(storySwatch, { bg(accent) })></center>
                 <p style(storyLabel)>Accent</p>
               </column>
               <column gap="1" style(growMin)>
-                <center style(storySwatch, { paint: fill({ color: background }) })></center>
+                <center style(storySwatch, { bg(background) })></center>
                 <p style(storyLabel)>Background</p>
               </column>
               <column gap="1" style(growMin)>
-                <center style(storySwatch, { paint: fill({ color: surface-1 }) })></center>
+                <center style(storySwatch, { bg(surface-1) })></center>
                 <p style(storyLabel)>Surface</p>
               </column>
             </row>
@@ -435,19 +435,19 @@ export default controller(() => {
             <p style(typeMono)>mono — const theme = "preview"</p>
             <row gap="2" align="end" radius-chips>
               <column gap="1" align="center">
-                <center hidden="true" style(radiusChip, { paint: radius(sm) })></center>
+                <center hidden="true" style(radiusChip, { radius(sm) })></center>
                 <p style(mutedXsPlain)>sm</p>
               </column>
               <column gap="1" align="center">
-                <center hidden="true" style(radiusChip, { paint: radius(md) })></center>
+                <center hidden="true" style(radiusChip, { radius(md) })></center>
                 <p style(mutedXsPlain)>md</p>
               </column>
               <column gap="1" align="center">
-                <center hidden="true" style(radiusChip, { paint: radius(lg) })></center>
+                <center hidden="true" style(radiusChip, { radius(lg) })></center>
                 <p style(mutedXsPlain)>lg</p>
               </column>
               <column gap="1" align="center">
-                <center hidden="true" style(radiusChip, { paint: radius(xl) })></center>
+                <center hidden="true" style(radiusChip, { radius(xl) })></center>
                 <p style(mutedXsPlain)>xl</p>
               </column>
             </row>

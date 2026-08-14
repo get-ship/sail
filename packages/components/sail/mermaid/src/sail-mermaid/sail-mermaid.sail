@@ -104,32 +104,25 @@ export default controller((ctx) => {
   });
 </controller>
 
-<center use:paintDiagram hidden={hasError()} style({ box: size({ w: full, min-h: 8 }) })></center>
+<center use:paintDiagram hidden={hasError()} style({ size({ w: full, min-h: 8 }) })></center>
 
 <if {error()}>
   <column
     gap="2"
-    style({
-      box: size({ w: full }).space({ pad: 3, pad-x: 4 }),
-      paint: border({ color: destructive, width: 1 }).radius(md).fill({ color: muted }),
-    })
+    style({ size({ w: full }).pad({ all: 3, x: 4 }).border({ color: destructive, width: 1 }).radius(md).bg(muted) })
   >
-    <span style({ box: flow({ display: contents }), text: type({ size: sm }) })>
-      <row gap="2" align="center" style({ paint: ink({ color: destructive }) })>
-        <span style({ box: flow({ display: contents }), text: type({ weight: semibold }) })>
+    <span style({ display(contents).type({ size: sm }) })>
+      <row gap="2" align="center" style({ fg(destructive) })>
+        <span style({ display(contents).type({ weight: semibold }) })>
           <icon name="alert-triangle" label="" size="sm"></icon>
           Diagram failed to render
         </span>
       </row>
-      <pre style({ paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs, wrap: pre-wrap }) })>{error()}</pre>
+      <pre style({ fg(muted-foreground).type({ family: mono, size: xs, wrap: pre-wrap }) })>{error()}</pre>
       <details>
-        <summary style({ paint: cursor(pointer).ink({ color: muted-foreground }), text: type({ size: xs }) })>mermaid source</summary>
+        <summary style({ cursor(pointer).fg(muted-foreground).type({ size: xs }) })>mermaid source</summary>
         <pre
-          style({
-            box: space({ pad: 2, pad-x: 3, mt: 2 }).overflow({ x: auto }),
-            paint: fill({ color: surface-2 }).border({ color: border-subtle, width: 1 }).radius(sm),
-            text: type({ family: mono, size: xs, wrap: pre-wrap }),
-          })
+          style({ pad({ all: 2, x: 3 }).margin({ t: 2 }).overflow({ x: auto }).bg(surface-2).border({ color: border-subtle, width: 1 }).radius(sm).type({ family: mono, size: xs, wrap: pre-wrap }) })
         >{value()}</pre>
       </details>
     </span>

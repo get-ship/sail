@@ -1,12 +1,9 @@
 //! Paint-slot clash detection (fail closed).
 //!
-//! Detection keys on SEMANTIC PAINT SLOTS — the per-call slots
-//! [`super::setters::op_slots`] narrows from each setter's declared
-//! `SetterSpec::slots` union — never on lowered CSS declarations. Two
-//! setters that touch the same slot (`border(1)` and `borderWidth` both
-//! write `border-width`) clash under Chain even though their lowered decls
-//! are produced by different code paths; slots are declared data, so
-//! detection needs no lowering and cannot be blinded by lowering failures.
+//! Detection keys on SEMANTIC PAINT SLOTS — concern clash keys from the
+//! vocab / concern table, and leftover plain helper slots for vocab plains.
+//! Never on lowered CSS declarations. Two writes to the same slot clash
+//! under Chain; slots are declared data, so detection needs no lowering.
 //!
 //! Chain = unordered conjunction (duplicate slot = bug); List = ordered
 //! composition (later shadows earlier, explicit precedence). `emit.rs`
@@ -157,8 +154,12 @@ fn walk(
             if !resolving.insert(name.clone()) {
                 return;
             }
-            if let Some(s) = env.get(name) {
-                walk(s, env, path, writes, fresh, diags, resolving);
+            if let Ok(s) = crate::ThemeStyleEnv::from_registry().expand_style_ref(
+                name,
+                env,
+                crate::current_styling_policy(),
+            ) {
+                walk(&s, env, path, writes, fresh, diags, resolving);
             }
             resolving.remove(name);
         }

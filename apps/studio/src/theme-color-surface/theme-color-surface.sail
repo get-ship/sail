@@ -3,33 +3,33 @@
   Controller composition: session + color domain.
 -->
 <scope>
-  style sectionTitle = { text: type({ size: sm, weight: semibold }) }
-  style fieldHint = { paint: ink({ color: muted-foreground }), text: type({ size: xs }) }
-  style monoMeta = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs }) }
-  style pathMeta = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs }) }
-  style doorTitle = { text: type({ weight: semibold }) }
-  style editorCol = { box: space({ pad-x: 6, pad-t: 6, pad-b: 10 }).size({ max-w: panel-max-w-lg }) }
-  style brandCard = { box: overflow({ all: hidden }).size({ min-w: 0 }), paint: radius(lg).border({ color: border-subtle, width: 1 }).fill({ color: surface-1 }) }
+  style sectionTitle = { type({ size: sm, weight: semibold }) }
+  style fieldHint = { fg(muted-foreground).type({ size: xs }) }
+  style monoMeta = { fg(muted-foreground).type({ family: mono, size: xs }) }
+  style pathMeta = { fg(muted-foreground).type({ family: mono, size: xs }) }
+  style doorTitle = { type({ weight: semibold }) }
+  style editorCol = { pad({ x: 6, t: 6, b: 10 }).size({ max-w: panel-max-w-lg }) }
+  style brandCard = { overflow({ all: hidden }).size({ min-w: 0 }).radius(lg).border({ color: border-subtle, width: 1 }).bg(surface-1) }
   // position:relative sized box — sail-color-picker host is display:contents; swatch fills this box.
-  style brandSwatch = { box: place({ position: relative }).size({ w: full, h: 28, min-h: 28 }).overflow({ all: hidden }), when: { stateEdit: { paint: cursor(pointer) }, stateLocked: { paint: cursor(default) } } }
+  style brandSwatch = { position(relative).size({ w: full, h: 28, min-h: 28 }).overflow({ all: hidden }), when: { stateEdit: cursor(pointer), stateLocked: cursor(default) } }
   // Token-row chip: explicit size + relative so absolute-fill swatch has a real hit target.
-  style tokenChip = { box: place({ position: relative }).size({ w: 9, h: 9, min-w: 9, min-h: 9 }).overflow({ all: hidden }), paint: radius(md).border({ color: border-subtle, width: 1 }) }
-  style heroMeta = { box: space({ pad-x: 3, pad-y: 2 }) }
-  style tokenRow = { box: space({ pad-y: 2 }).size({ min-w: 0 }) }
-  style seedDot = { box: size({ w: 4, h: 4, min-w: 4, min-h: 4 }), paint: radius(full).border({ color: border-subtle, width: 1 }).fill({ color: bind(swatchColor) }) }
-  style surfaceChip = { box: space({ pad-x: 2, pad-y: 1 }), paint: radius(md).border({ color: border-subtle, width: 1 }).fill({ color: surface-0 }) }
-  style surfaceDot = { box: size({ w: 3, h: 3, min-w: 3, min-h: 3 }), paint: radius(full).border({ color: border-subtle, width: 1 }).fill({ color: bind(swatchColor) }) }
-  style bandStatus = { box: space({ pad-x: 4, pad-y: 2 }) }
-  style bandError = { box: space({ pad-x: 4, pad-y: 2 }), paint: border({ edge: b, color: border, width: 1 }) }
-  style surfaceRoot = { box: flow({ grow: 1 }).size({ h: full, min-w: 0, min-h: 0 }).overflow({ all: hidden }), paint: fill({ color: background }) }
-  style workbench = { box: flow({ grow: 1 }).size({h: full, min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }), paint: fill({ color: background }) }
-  style editorScroll = { box: flow({ grow: 1 }).size({h: full, min-w: 0, min-h: 0, basis: 0}), paint: fill({ color: background }) }
-  style pageTitle = { text: type({ size: xl, weight: semibold, tracking: tight }) }
-  style seedStrip = { box: space({ pad: 3 }).size({ min-w: 0 }), paint: radius(lg).border({ color: border-subtle, width: 1 }).fill({ color: surface-0 }) }
-  style growMin = { box: flow({ grow: 1 }).size({ min-w: 0 }) }
-  style errorText = { box: flow({ grow: 1 }).size({ min-w: 0 }), paint: ink({ color: destructive }), text: type({ size: sm, wrap: truncate }) }
-  style pickerFill = { box: size({ w: full, h: full, min-h: full }) }
-  style footerRule = { box: space({ pad-t: 2 }), paint: border({ edge: t, color: border-subtle, width: 1 }) }
+  style tokenChip = { position(relative).size({ w: 9, h: 9, min-w: 9, min-h: 9 }).overflow({ all: hidden }).radius(md).border({ color: border-subtle, width: 1 }) }
+  style heroMeta = { pad({ x: 3, y: 2 }) }
+  style tokenRow = { pad({ y: 2 }).size({ min-w: 0 }) }
+  style seedDot = { size({ w: 4, h: 4, min-w: 4, min-h: 4 }).radius(full).border({ color: border-subtle, width: 1 }).bg(bind(swatchColor)) }
+  style surfaceChip = { pad({ x: 2, y: 1 }).radius(md).border({ color: border-subtle, width: 1 }).bg(surface-0) }
+  style surfaceDot = { size({ w: 3, h: 3, min-w: 3, min-h: 3 }).radius(full).border({ color: border-subtle, width: 1 }).bg(bind(swatchColor)) }
+  style bandStatus = { pad({ x: 4, y: 2 }) }
+  style bandError = { pad({ x: 4, y: 2 }).border({ edge: b, color: border, width: 1 }) }
+  style surfaceRoot = { grow(1).size({ h: full, min-w: 0, min-h: 0 }).overflow({ all: hidden }).bg(background) }
+  style workbench = { grow(1).size({h: full, min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }).bg(background) }
+  style editorScroll = { grow(1).size({h: full, min-w: 0, min-h: 0, basis: 0}).bg(background) }
+  style pageTitle = { type({ size: xl, weight: semibold, tracking: tight }) }
+  style seedStrip = { pad(3).size({ min-w: 0 }).radius(lg).border({ color: border-subtle, width: 1 }).bg(surface-0) }
+  style growMin = { grow(1).size({ min-w: 0 }) }
+  style errorText = { grow(1).size({ min-w: 0 }).fg(destructive).type({ size: sm, wrap: truncate }) }
+  style pickerFill = { size({ w: full, h: full, min-h: full }) }
+  style footerRule = { pad({ t: 2 }).border({ edge: t, color: border-subtle, width: 1 }) }
   type ColorTokenRowProps = {
     token: string
     value: string
@@ -50,7 +50,7 @@
 
 <partial color-token-row props: ColorTokenRowProps>
   <row token-row token={token} sem={token} align="center" gap="3" nowrap style(tokenRow)>
-    <stack token-chip style(tokenChip, { box: flow({ shrink: 0 }) })>
+    <stack token-chip style(tokenChip, { shrink(0) })>
       <sail-color-picker
         token={token}
         value={value}
@@ -65,12 +65,12 @@
       <p style(doorTitle)>{label}</p>
       <p style(pathMeta)>{path}</p>
     </column>
-    <p style(monoMeta, { box: flow({ shrink: 0 }) })>{value}</p>
+    <p style(monoMeta, { shrink(0) })>{value}</p>
   </row>
 </partial>
 
 <partial brand-role-card props: BrandRoleCardProps>
-  <column brand-card token={token} gap="0" style(brandCard, { box: flow({ grow: 1 }).size({ min-w: 0 }) })>
+  <column brand-card token={token} gap="0" style(brandCard, { grow(1).size({ min-w: 0 }) })>
     <stack token={token} style(brandSwatch)>
       <sail-color-picker
         token={token}
@@ -84,7 +84,7 @@
       ></sail-color-picker>
     </stack>
     <row align="center" justify="between" style(heroMeta)>
-      <column gap="0" style({ box: size({ min-w: 0 }) })>
+      <column gap="0" style({ size({ min-w: 0 }) })>
         <p style(doorTitle)>{label}</p>
         <p style(pathMeta)>{path}</p>
       </column>
@@ -129,7 +129,7 @@ export default controller(() => {
   <theme-facet-chrome session={session}></theme-facet-chrome>
 
   <if {session.hasError()}>
-    <row color-error align="center" gap="2" style(bandError, { box: flow({ shrink: 0 }) })>
+    <row color-error align="center" gap="2" style(bandError, { shrink(0) })>
       <p style(errorText)>{session.errorText()}</p>
       <button type="button" size="sm" variant="ghost" color-retry on:click={session.onRetry}>
         Retry
@@ -138,7 +138,7 @@ export default controller(() => {
   </if>
 
   <if {session.loading()}>
-    <row color-loading align="center" gap="2" style(bandStatus, { box: flow({ shrink: 0 }) })>
+    <row color-loading align="center" gap="2" style(bandStatus, { shrink(0) })>
       <spinner size="sm"></spinner>
       <p style(fieldHint)>Loading…</p>
     </row>
@@ -153,7 +153,7 @@ export default controller(() => {
         </column>
 
         <row seed-strip align="center" gap="3" nowrap style(seedStrip)>
-          <p style(fieldHint, { box: flow({ shrink: 0 }) })>Seed</p>
+          <p style(fieldHint, { shrink(0) })>Seed</p>
           <row gap="1" align="center" nowrap hidden="true" style(growMin)>
             <stack use:swatch={primaryHex()} style(seedDot)></stack>
             <stack use:swatch={secondaryHex()} style(seedDot)></stack>

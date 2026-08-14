@@ -1,10 +1,9 @@
 // FILE_CAP_OVERRIDE: layout resolve + mapping application + structural unit tests; scale atoms live in style_scale.rs.
-//! Resolve a parsed element's `class=` + `style:` to a `taffy::Style`.
+//! Resolve a parsed element's Style IR + layout primitives to a `taffy::Style`.
 //!
-//! The closed vocabulary is the *whole reason this works without a browser*.
-//! `mapping.rs` owns the declarative table; this module walks the table, then
-//! applies the scale-driven sx prefixes (`p-4`, `w-full`, …) through the same
-//! `sail_lint::scales` resolver the compiler uses.
+//! Box and type measure come from Style tokens on the element. `mapping.rs`
+//! owns layout primitives (`sail-col`, gap, align). Scale atoms fill pad/size
+//! only when Style has not already resolved those tokens.
 
 use crate::html::Element;
 use crate::mapping::{
@@ -65,13 +64,13 @@ pub fn resolve(elem: &Element, elements: &[Element], viewport_width: f32) -> Res
     // default flex-row. Without this, L1 hosts (card/dialog/field chrome) that
     // don't stamp a flex/grid class flow their children side-by-side — diverging
     // from the browser and the skin CSS. Layout primitives (sail-col/row/grid)
-    // and sx display atoms overwrite this below.
+    // and Style display tokens overwrite this below.
     let mut style = Style {
         display: Display::Block,
         ..Default::default()
     };
 
-    // 1. Static layout rules.
+    // 1. Static layout rules (primitives + modifiers, not Style atoms).
     for rule in LAYOUT_RULES {
         if rule_matches(rule.selector, &classes, &parent_classes) {
             apply_declarations(&mut style, rule.declarations, elem, viewport_width);
@@ -89,10 +88,17 @@ pub fn resolve(elem: &Element, elements: &[Element], viewport_width: f32) -> Res
         }
     }
 
-    // 3. Scale-driven sx prefixes: padding and sizing (attr-gated compounds).
-    style_scale::apply_scale_classes(&mut style, &classes, &elem.attrs);
+    // 3. Style-resolved box tokens (display / grow / overflow / position / pad / size).
+    apply_resolved_box(&mut style, &elem.box_style);
 
-    // 4. Fallback `style:` width / height declarations (e.g. `style:w="full"`).
+    // 4. Scale-driven pad/size atoms, skipped when Style already resolved them.
+    style_scale::apply_scale_classes(&mut style, &classes, &elem.attrs, &elem.box_style);
+
+    // 5. Finite box atoms on lowered HTML that never carried Style IR
+    //    (canary / kinds vehicles). Style-set fields are not overwritten.
+    apply_class_box_atoms(&mut style, &classes, &elem.box_style);
+
+    // 6. Fallback `style:` width / height declarations (e.g. `style:w="full"`).
     apply_style_size(&mut style, &elem.style);
 
     // Taffy defaults that the SAIL vocabulary never leaves unset.
@@ -114,7 +120,6 @@ fn rule_matches(selector: Selector, classes: &[&str], parent_classes: &[&str]) -
             let rest = c.strip_prefix(prefix);
             matches!(rest, Some(r) if r == value)
         }),
-        Selector::Sx(s) => classes.iter().any(|c| c.strip_prefix("s-") == Some(s)),
         Selector::ParentBase(s) => parent_classes.contains(&s),
         Selector::Any(s) => classes.contains(&s),
     }
@@ -356,6 +361,214 @@ fn grid_count_from_class(c: &str) -> Option<(bool, GridTemplate)> {
     }
     if let Some((_, value)) = c.split_once("sail-gr-") {
         return grid_count_template("sail-gr-", value).map(|(_, t)| (false, t));
+    }
+    None
+}
+
+fn apply_resolved_box(style: &mut Style, box_style: &crate::box_ir::ResolvedBox) {
+    if let Some(d) = box_style.display.as_deref() {
+        style.display = display_token(d);
+    }
+    if let Some(g) = box_style.grow {
+        style.flex_grow = g;
+    }
+    if let Some(s) = box_style.shrink {
+        style.flex_shrink = s;
+    }
+    if let Some(x) = box_style.overflow_x.as_deref() {
+        style.overflow.x = overflow_token(x);
+    }
+    if let Some(y) = box_style.overflow_y.as_deref() {
+        style.overflow.y = overflow_token(y);
+    }
+    if let Some(p) = box_style.position.as_deref() {
+        style.position = position_token(p);
+    }
+    apply_pad_tokens(style, &box_style.pad);
+    if let Some(w) = box_style.width.as_deref() {
+        style.size.width = style_scale::size_token_to_dimension(w);
+    }
+    if let Some(h) = box_style.height.as_deref() {
+        style.size.height = style_scale::size_token_to_dimension(h);
+    }
+    if let Some(w) = box_style.min_width.as_deref() {
+        style.min_size.width = style_scale::size_token_to_dimension(w);
+    }
+    if let Some(h) = box_style.min_height.as_deref() {
+        style.min_size.height = style_scale::size_token_to_dimension(h);
+    }
+    if let Some(w) = box_style.max_width.as_deref() {
+        style.max_size.width = style_scale::size_token_to_dimension(w);
+    }
+    if let Some(h) = box_style.max_height.as_deref() {
+        style.max_size.height = style_scale::size_token_to_dimension(h);
+    }
+}
+
+fn apply_pad_tokens(style: &mut Style, pad: &crate::box_ir::PadTokens) {
+    if let Some(v) = pad.all.as_deref() {
+        apply_padding(style, PaddingSide::All, style_scale::padding_token_to_px(v));
+    }
+    if let Some(v) = pad.x.as_deref() {
+        apply_padding(style, PaddingSide::X, style_scale::padding_token_to_px(v));
+    }
+    if let Some(v) = pad.y.as_deref() {
+        apply_padding(style, PaddingSide::Y, style_scale::padding_token_to_px(v));
+    }
+    if let Some(v) = pad.t.as_deref() {
+        apply_padding(style, PaddingSide::T, style_scale::padding_token_to_px(v));
+    }
+    if let Some(v) = pad.r.as_deref() {
+        apply_padding(style, PaddingSide::R, style_scale::padding_token_to_px(v));
+    }
+    if let Some(v) = pad.b.as_deref() {
+        apply_padding(style, PaddingSide::B, style_scale::padding_token_to_px(v));
+    }
+    if let Some(v) = pad.l.as_deref() {
+        apply_padding(style, PaddingSide::L, style_scale::padding_token_to_px(v));
+    }
+}
+
+fn display_token(tok: &str) -> Display {
+    match tok {
+        "none" | "contents" => Display::None,
+        "flex" | "inline-flex" | "inlineflex" | "inline" => Display::Flex,
+        "grid" | "inline-grid" | "inlinegrid" => Display::Grid,
+        _ => Display::Block,
+    }
+}
+
+fn overflow_token(tok: &str) -> Overflow {
+    match tok {
+        "hidden" => Overflow::Hidden,
+        "clip" => Overflow::Clip,
+        "scroll" | "auto" => Overflow::Scroll,
+        _ => Overflow::Visible,
+    }
+}
+
+fn position_token(tok: &str) -> Position {
+    match tok {
+        "absolute" | "fixed" => Position::Absolute,
+        _ => Position::Relative,
+    }
+}
+
+/// Fill unset Style-IR box fields from finite lowered atoms on the class list.
+/// Used by already-lowered HTML (canary / kinds). Style-set fields win.
+fn apply_class_box_atoms(
+    style: &mut Style,
+    classes: &[&str],
+    resolved: &crate::box_ir::ResolvedBox,
+) {
+    for c in classes {
+        let Some(atom) = c.strip_prefix("s-") else {
+            continue;
+        };
+        let atom = atom.to_ascii_lowercase();
+        if resolved.display.is_none() {
+            if let Some(d) = class_display_atom(&atom) {
+                style.display = d;
+            }
+        }
+        if resolved.grow.is_none() {
+            if let Some(g) = class_grow_atom(&atom) {
+                style.flex_grow = g;
+            }
+        }
+        if resolved.shrink.is_none() {
+            if let Some(s) = class_shrink_atom(&atom) {
+                style.flex_shrink = s;
+            }
+        }
+        if let Some((x, y)) = class_overflow_atom(&atom) {
+            if resolved.overflow_x.is_none() {
+                if let Some(v) = x {
+                    style.overflow.x = v;
+                }
+            }
+            if resolved.overflow_y.is_none() {
+                if let Some(v) = y {
+                    style.overflow.y = v;
+                }
+            }
+        }
+        if resolved.position.is_none() {
+            if let Some(p) = class_position_atom(&atom) {
+                style.position = p;
+            }
+        }
+    }
+}
+
+fn class_display_atom(atom: &str) -> Option<Display> {
+    match atom {
+        "hidden" | "displaynone" | "displaycontents" | "contents" => Some(Display::None),
+        "displayinlineflex" | "displayflex" | "inline" => Some(Display::Flex),
+        "displaygrid" | "displayinlinegrid" => Some(Display::Grid),
+        "displayinlineblock" | "displayblock" | "inlineblock" | "block" => Some(Display::Block),
+        _ => None,
+    }
+}
+
+fn class_grow_atom(atom: &str) -> Option<f32> {
+    match atom {
+        "grow1" | "grow" => Some(1.0),
+        "grow0" => Some(0.0),
+        _ => None,
+    }
+}
+
+fn class_shrink_atom(atom: &str) -> Option<f32> {
+    match atom {
+        "shrink1" | "shrink" => Some(1.0),
+        "shrink0" => Some(0.0),
+        _ => None,
+    }
+}
+
+fn class_overflow_atom(atom: &str) -> Option<(Option<Overflow>, Option<Overflow>)> {
+    let idx = atom.find("overflow")?;
+    let rest = &atom[idx + "overflow".len()..];
+    let value = if rest.ends_with("hidden") {
+        Overflow::Hidden
+    } else if rest.ends_with("clip") {
+        Overflow::Clip
+    } else if rest.ends_with("scroll") || rest.ends_with("auto") {
+        Overflow::Scroll
+    } else if rest.ends_with("visible") {
+        Overflow::Visible
+    } else {
+        return None;
+    };
+    let axis = rest
+        .strip_suffix("hidden")
+        .or_else(|| rest.strip_suffix("clip"))
+        .or_else(|| rest.strip_suffix("scroll"))
+        .or_else(|| rest.strip_suffix("auto"))
+        .or_else(|| rest.strip_suffix("visible"))
+        .unwrap_or("");
+    match axis {
+        "x" => Some((Some(value), None)),
+        "y" => Some((None, Some(value))),
+        _ => Some((Some(value), Some(value))),
+    }
+}
+
+fn class_position_atom(atom: &str) -> Option<Position> {
+    if atom == "absolute"
+        || atom == "fixed"
+        || atom.contains("positionabsolute")
+        || atom.contains("positionfixed")
+    {
+        return Some(Position::Absolute);
+    }
+    if atom == "relative"
+        || atom == "sticky"
+        || atom.contains("positionrelative")
+        || atom.contains("positionsticky")
+    {
+        return Some(Position::Relative);
     }
     None
 }

@@ -1,15 +1,14 @@
 //! Parser for the Style value language (chain + match / when / compound / bind).
 
 use std::borrow::Cow;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap, HashSet};
 
 use super::ir::{PaintArg, PaintOp, Style, StyleDiagnostic};
-use super::setters::{closest_unique_setter, find_setter, validate_op, when_target};
+use super::setters::{validate_op, when_target};
+use super::theme_env::{ThemeStyleEnv, current_styling_policy};
 
 /// Parse a Style expression (product / channel-only). Flat `style.method(…)`
 /// chains are refused — use `style({ box, paint, text, animate })`.
-///
-/// Codemod emit-identity and rewrite duals use [`flat_chain`].
 pub fn parse(input: &str) -> (Style, Vec<StyleDiagnostic>) {
     parse_with(input)
 }
@@ -30,8 +29,7 @@ fn parse_with(input: &str) -> (Style, Vec<StyleDiagnostic>) {
     // Residual utility-string product → hard error (not architecture).
     if looks_like_utility_string_product(trimmed) {
         diags.push(StyleDiagnostic::ResidualProduct {
-            message: "utility-string sx is not the Style product — use style({ box, paint, text, animate, when, match, compound })"
-                .into(),
+            message: residual_product_message(trimmed),
             source: trimmed.chars().take(80).collect(),
         });
         return (Style::Empty, diags);
@@ -39,7 +37,7 @@ fn parse_with(input: &str) -> (Style, Vec<StyleDiagnostic>) {
     // Offsets are into `trimmed`; `input_base` maps them back if needed. Motion
     // config capture uses the trimmed slice so quotes/units survive.
     let tokens = tokenize(trimmed);
-    let mut p = Parser::new_full(trimmed, &tokens, false, false);
+    let mut p = Parser::new_full(trimmed, &tokens, false);
     let _ = trim_start; // kept for future span mapping into original input
     let style = parse_style_expr(&mut p, &mut diags);
     if !p.at_end() {
@@ -117,15 +115,21 @@ fn collect_motion_attaches_inner(
     match style {
         Style::Empty | Style::Set(_) => {}
         Style::MotionAttach { trigger, config } => {
-            out.push((trigger.clone(), config.clone()));
+            // `animate: { transition: play(…) }` is CSS emit, not a runtime
+            // motion trigger. Do not hand it to the motion-attach compiler.
+            if trigger != "transition" {
+                out.push((trigger.clone(), config.clone()));
+            }
         }
         Style::Ref(name) => {
             // Cycle guard mirrors emit_inner / style_uses_text_channel_env.
             if !resolving.insert(name.clone()) {
                 return;
             }
-            if let Some(s) = env.get(name) {
-                collect_motion_attaches_inner(s, env, out, resolving);
+            if let Ok(s) =
+                ThemeStyleEnv::from_registry().expand_style_ref(name, env, current_styling_policy())
+            {
+                collect_motion_attaches_inner(&s, env, out, resolving);
             }
             resolving.remove(name);
         }
@@ -230,6 +234,36 @@ fn forbid_geometry_inside_interaction_when(style: &Style) -> Result<(), StyleDia
     }
 }
 
+fn residual_product_message(src: &str) -> String {
+    let base = "utility-string sx is not the Style product — use style({ box, paint, text, animate, when, match, compound })";
+    let taught = crate::foreign_idioms::idioms_in_source(src);
+    if taught.is_empty() {
+        return base.into();
+    }
+    let pointers: Vec<String> = taught.iter().map(|i| i.teaching_line()).collect();
+    format!("{base} — {}", pointers.join("; "))
+}
+
+fn teach_html_attr_eq(p: &mut Parser<'_>, name: &str, diags: &mut Vec<StyleDiagnostic>) -> bool {
+    if p.peek() != Some(&Tok::Eq) {
+        return false;
+    }
+    let habit = match name {
+        "class" | "className" => format!("{name}="),
+        "style" => "style=".into(),
+        _ => return false,
+    };
+    p.bump(); // =
+    if matches!(p.peek(), Some(Tok::Word(_))) {
+        p.bump();
+    }
+    diags.push(StyleDiagnostic::UnknownVocabulary {
+        name: habit.clone(),
+        source: habit,
+    });
+    true
+}
+
 /// True if input is the killed utility-string product (atoms / prop: value soup without style./match/when).
 pub fn looks_like_utility_string_product(input: &str) -> bool {
     let raw = input.trim();
@@ -265,7 +299,7 @@ pub fn looks_like_utility_string_product(input: &str) -> bool {
     if is_const_ref_motion_chain(t) {
         return false;
     }
-    // Space-separated utility soup or legacy atoms
+    // Space-separated utility soup or dashed atoms
     t.contains(':')
         || t.split_whitespace()
             .any(|w| w.contains('-') && !w.starts_with("style"))
@@ -545,24 +579,16 @@ struct Parser<'a> {
     tokens: &'a [SpannedTok<'a>],
     pos: usize,
     /// When false, `style.method(…)` flat chains are refused (product parse).
-    allow_flat: bool, // migration dual deleted
-    /// When true, free match/when/compound/list/`.when` duals parse (codemod only).
-    allow_legacy: bool,
+    allow_flat: bool,
 }
 
 impl<'a> Parser<'a> {
-    fn new_full(
-        input: &'a str,
-        tokens: &'a [SpannedTok<'a>],
-        allow_flat: bool, // migration dual deleted
-        allow_legacy: bool,
-    ) -> Self {
+    fn new_full(input: &'a str, tokens: &'a [SpannedTok<'a>], allow_flat: bool) -> Self {
         Self {
             input,
             tokens,
             pos: 0,
             allow_flat,
-            allow_legacy,
         }
     }
     fn at_end(&self) -> bool {
@@ -691,10 +717,6 @@ fn tok_str_ref<'a>(t: &'a Tok<'a>) -> &'a str {
 
 fn parse_style_expr(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Style {
     match p.peek() {
-        Some(Tok::LBrack) if p.allow_legacy => parse_list(p, diags),
-        Some(Tok::Word("match")) if p.allow_legacy => parse_match(p, diags),
-        Some(Tok::Word("when")) if p.allow_legacy => parse_when_call(p, diags),
-        Some(Tok::Word("compound")) if p.allow_legacy => parse_compound(p, diags),
         Some(Tok::Word("style")) => parse_style_chain(p, diags),
         Some(Tok::Word(_)) => {
             // Style const ref + optional motion tails (`name.enter({…})`).
@@ -702,8 +724,11 @@ fn parse_style_expr(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Sty
                 Some(Tok::Word(w)) => w.to_string(),
                 _ => return Style::Empty,
             };
+            if teach_html_attr_eq(p, &name, diags) {
+                return Style::Empty;
+            }
             if p.peek() == Some(&Tok::Dot) {
-                let mut base = Style::Ref(name);
+                let mut base = make_style_ref(name, diags);
                 while p.eat(&Tok::Dot) {
                     let method = match p.bump() {
                         Some(Tok::Word(w)) => w,
@@ -716,16 +741,11 @@ fn parse_style_expr(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Sty
                         }
                     };
                     if method == "when" {
-                        if p.allow_legacy {
-                            let entries = parse_when_args(p, diags);
-                            base = Style::chain(vec![base, Style::When { entries }]);
-                        } else {
-                            diags.push(StyleDiagnostic::ParseError {
-                                message: "`.when(…)` is retired — use `style(ref, { when: {…} })` or `when:` inside a style object".into(),
-                                source: ".when".into(),
-                            });
-                            let _ = parse_when_args(p, diags);
-                        }
+                        diags.push(StyleDiagnostic::ParseError {
+                            message: "`.when(…)` is retired — use `style(ref, { when: {…} })` or `when:` inside a style object".into(),
+                            source: ".when".into(),
+                        });
+                        let _ = parse_when_args(p, diags);
                     } else if is_motion_chain_method(method) {
                         if let Some(m) = parse_motion_call(p, method, diags) {
                             base = Style::chain(vec![base, m]);
@@ -740,7 +760,7 @@ fn parse_style_expr(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Sty
                 }
                 base
             } else {
-                Style::Ref(name)
+                make_style_ref(name, diags)
             }
         }
         _ => {
@@ -787,13 +807,13 @@ fn parse_style_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> St
     if p.peek() == Some(&Tok::LParen) {
         return parse_style_call(p, diags);
     }
-    // Flat `style.method(…)` — product parse refuses; migration dual via flat_chain.
+    // Flat `style.method(…)` — product parse refuses; recovery consumes the chain.
     if !p.allow_flat {
         let source = p.remainder();
         let preview: String = source.chars().take(80).collect();
         diags.push(StyleDiagnostic::ParseError {
             message: "flat `style.method(…)` chains are retired — use the channel spine: \
-                      style({ box: size({ w: full }).space({ pad: 4 }), paint: fill(surface), when: { hover: { paint: fill({ color: muted }) } } })"
+                      style({ box: size({ w: full }).pad(4), paint: bg(surface), when: { hover: { bg(muted) } } })"
                 .into(),
             source: if preview.is_empty() {
                 "style.".into()
@@ -892,21 +912,6 @@ fn flat_chain_style_chain_body(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnost
             }
             continue;
         }
-        // `color` retired — paint color is `ink`.
-        if method == "color" {
-            let args = parse_paren_args(p, diags, method);
-            let arg_text = format_arg_text(&args);
-            diags.push(StyleDiagnostic::ParseError {
-                message:
-                    "`color(…)` was renamed to `ink(…)` — use paint channel `ink` for text color"
-                        .into(),
-                source: format!("style.color({arg_text})"),
-            });
-            if p.pos == before {
-                p.force_progress();
-            }
-            continue;
-        }
         let args = parse_paren_args(p, diags, method);
         if p.pos == before {
             p.force_progress();
@@ -953,7 +958,6 @@ fn parse_style_call(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Sty
     p.expect(Tok::RParen, diags);
 
     // Residual product tails: `.when(…)` method chains — deleted product surface.
-    // Accept only during migration dual if ALLOW_OLD_STYLE_TAILS; hard-cut refuses.
     // Variadic composition is ordered List (later args shadow), not Chain
     // (Chain = conjunction, duplicate slots clash). SPEC merge law: args L→R.
     let mut base = match parts.len() {
@@ -982,16 +986,11 @@ fn parse_style_call(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Sty
             }
         };
         if method == "when" {
-            if p.allow_legacy {
-                let entries = parse_when_args(p, diags);
-                base = Style::chain(vec![base, Style::When { entries }]);
-            } else {
-                diags.push(StyleDiagnostic::ParseError {
-                    message: "`.when(…)` method chains are retired — use object key `when: { hover: {…}, … }` inside `style({…})`".into(),
-                    source: ".when".into(),
-                });
-                let _ = parse_when_args(p, diags);
-            }
+            diags.push(StyleDiagnostic::ParseError {
+                message: "`.when(…)` method chains are retired — use object key `when: { hover: {…}, … }` inside `style({…})`".into(),
+                source: ".when".into(),
+            });
+            let _ = parse_when_args(p, diags);
             continue;
         }
         if is_motion_chain_method(method) {
@@ -1017,15 +1016,11 @@ fn parse_style_call(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Sty
 }
 
 /// One `style(…)` argument: StyleObj (top-level axes OK), StyleRef, or
-/// residual free match/when/compound/list (migration dual — deleted at hard cut).
+/// residual free match/when/compound/list (refused).
 fn parse_style_arg(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Style {
     match p.peek() {
         Some(Tok::LBrace) => parse_style_object(p, diags, /* allow_axes */ true),
         Some(Tok::Word("style")) => parse_style_chain(p, diags),
-        Some(Tok::LBrack) if p.allow_legacy => parse_list(p, diags),
-        Some(Tok::Word("match")) if p.allow_legacy => parse_match(p, diags),
-        Some(Tok::Word("when")) if p.allow_legacy => parse_when_call(p, diags),
-        Some(Tok::Word("compound")) if p.allow_legacy => parse_compound(p, diags),
         Some(Tok::Word("match")) | Some(Tok::Word("when")) | Some(Tok::Word("compound")) => {
             let name = match p.peek() {
                 Some(Tok::Word(w)) => *w,
@@ -1050,12 +1045,37 @@ fn parse_style_arg(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Styl
             Style::Empty
         }
         Some(Tok::Word(_)) => {
+            let next = p.tokens.get(p.pos + 1).map(|t| &t.tok);
+            if next == Some(&Tok::LParen) {
+                // Inline sugar: `style(pad({ t: 2 }))` / `style(type(body-sm).fg(…))`.
+                return parse_channel_chain(p, diags);
+            }
+            if next == Some(&Tok::Colon) {
+                if let Some(Tok::Word(w)) = p.peek() {
+                    if matches!(*w, "when" | "animate" | "match" | "compound") {
+                        let key = *w;
+                        diags.push(StyleDiagnostic::ParseError {
+                            message: format!(
+                                "`{key}:` needs the declared form — not a `style()` tag argument"
+                            ),
+                            source: format!("{key}:"),
+                        });
+                        p.bump();
+                        p.expect(Tok::Colon, diags);
+                        skip_style_object_value(p, diags);
+                        return Style::Empty;
+                    }
+                }
+            }
             let name = match p.bump() {
                 Some(Tok::Word(w)) => w.to_string(),
                 _ => return Style::Empty,
             };
+            if teach_html_attr_eq(p, &name, diags) {
+                return Style::Empty;
+            }
             if p.peek() == Some(&Tok::Dot) {
-                let mut base = Style::Ref(name);
+                let mut base = make_style_ref(name, diags);
                 while p.eat(&Tok::Dot) {
                     let method = match p.bump() {
                         Some(Tok::Word(w)) => w,
@@ -1068,17 +1088,12 @@ fn parse_style_arg(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Styl
                         }
                     };
                     if method == "when" {
-                        if p.allow_legacy {
-                            let entries = parse_when_args(p, diags);
-                            base = Style::chain(vec![base, Style::When { entries }]);
-                        } else {
-                            diags.push(StyleDiagnostic::ParseError {
-                                message: "`.when(…)` is retired — use `style(ref, { when: {…} })`"
-                                    .into(),
-                                source: ".when".into(),
-                            });
-                            let _ = parse_when_args(p, diags);
-                        }
+                        diags.push(StyleDiagnostic::ParseError {
+                            message: "`.when(…)` is retired — use `style(ref, { when: {…} })`"
+                                .into(),
+                            source: ".when".into(),
+                        });
+                        let _ = parse_when_args(p, diags);
                     } else if is_motion_chain_method(method) {
                         if let Some(m) = parse_motion_call(p, method, diags) {
                             base = Style::chain(vec![base, m]);
@@ -1094,7 +1109,7 @@ fn parse_style_arg(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Styl
                 }
                 base
             } else {
-                Style::Ref(name)
+                make_style_ref(name, diags)
             }
         }
         _ => {
@@ -1107,7 +1122,9 @@ fn parse_style_arg(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Styl
     }
 }
 
-/// Style object `{ box/paint/text/animate, when, match, compound }`.
+/// Style object: concern/setter calls (`size(full).bg(card)`), plus keyed
+/// members (`when:`, `match:`, `animate:`) and channel keys (`box:`,
+/// `paint:`, `text:`).
 ///
 /// `allow_axes`: `match:` / `compound:` legal only at the top level of a
 /// `style(…)` argument. Nested partials (when bodies, match arms, compound
@@ -1125,6 +1142,7 @@ fn parse_style_object(
     let mut paint_ch = Style::Empty;
     let mut text_ch = Style::Empty;
     let mut animate_ch = Style::Empty;
+    let mut chain_parts: Vec<Style> = Vec::new();
     let mut when_entries: Vec<(String, Style)> = Vec::new();
     // prop → arms (later match tables for same prop merge arms; same-key arms chain)
     let mut match_tables: BTreeMap<String, BTreeMap<String, Style>> = BTreeMap::new();
@@ -1141,6 +1159,21 @@ fn parse_style_object(
             break;
         }
         let before = p.pos;
+        let next = p.tokens.get(p.pos + 1).map(|t| &t.tok);
+        // Word + `:` is a keyed member. Word + `(` (or a dotted call) is a
+        // flat chain segment — commas separate calls the same way dots do.
+        let keyed = matches!(p.peek(), Some(Tok::Word(_))) && next == Some(&Tok::Colon);
+        if !keyed {
+            let segment = parse_channel_chain(p, diags);
+            if !matches!(segment, Style::Empty) {
+                chain_parts.push(segment);
+            }
+            p.eat(&Tok::Comma);
+            if p.pos <= before {
+                p.force_progress();
+            }
+            continue;
+        }
         let key = match p.bump() {
             Some(Tok::Word(w)) => w,
             _ => {
@@ -1215,12 +1248,19 @@ fn parse_style_object(
                 }
             }
             other => {
-                diags.push(StyleDiagnostic::ParseError {
-                    message: format!(
-                        "unknown style object key `{other}` — expected `box`, `paint`, `text`, `animate`, `when`, `match`, or `compound`"
-                    ),
-                    source: other.to_string(),
-                });
+                if crate::foreign_idioms::find_foreign_idiom(other).is_some() {
+                    diags.push(StyleDiagnostic::UnknownVocabulary {
+                        name: other.to_string(),
+                        source: other.to_string(),
+                    });
+                } else {
+                    diags.push(StyleDiagnostic::ParseError {
+                        message: format!(
+                            "unknown style object key `{other}` — expected a concern call (`bg(…)`) or `box`/`paint`/`text`/`animate`/`when`/`match`/`compound`"
+                        ),
+                        source: other.to_string(),
+                    });
+                }
                 // Recovery: try to skip a value.
                 skip_style_object_value(p, diags);
             }
@@ -1232,8 +1272,13 @@ fn parse_style_object(
     }
     p.expect(Tok::RBrace, diags);
 
-    // Fixed structural precedence (SPEC merge law).
-    let mut parts = vec![box_ch, paint_ch, text_ch, animate_ch];
+    // Fixed structural precedence (SPEC merge law). Flat chain sits with
+    // the dissolved channels (before when/match/compound).
+    let mut parts = Vec::new();
+    if !chain_parts.is_empty() {
+        parts.push(Style::chain(chain_parts));
+    }
+    parts.extend([box_ch, paint_ch, text_ch, animate_ch]);
     if !when_entries.is_empty() {
         parts.push(Style::When {
             entries: when_entries,
@@ -1520,7 +1565,7 @@ fn parse_partial(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>, allow_axe
                     Some(Tok::Word(w)) => w.to_string(),
                     _ => return Style::Empty,
                 };
-                Style::Ref(name)
+                make_style_ref(name, diags)
             }
         }
         _ => {
@@ -1567,7 +1612,7 @@ fn skip_style_object_value(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>)
 }
 
 /// Channel object — alias retained for call sites that only want channels
-/// (when partial dual). Now routes through full style object (axes refused).
+/// (when bodies). Routes through the style object (axes refused).
 #[allow(dead_code)]
 fn parse_channel_object(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Style {
     parse_style_object(p, diags, /* allow_axes */ false)
@@ -1610,6 +1655,12 @@ fn parse_channel_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> 
                 break;
             }
         };
+        if teach_html_attr_eq(p, method, diags) {
+            if p.pos == before {
+                p.force_progress();
+            }
+            continue;
+        }
         // Member access at the use site does not resolve (`size(control-md).h`).
         if p.peek() != Some(&Tok::LParen) {
             if let Some(prev) = prev_setter.as_deref() {
@@ -1639,20 +1690,6 @@ fn parse_channel_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> 
                 message: "`box(…)` as a setter was renamed to `boxSizing(…)` — use channel key `box:` for geometry"
                     .into(),
                 source: format!("box({arg_text})"),
-            });
-            if p.pos == before {
-                p.force_progress();
-            }
-            continue;
-        }
-        if method == "color" {
-            let args = parse_paren_args(p, diags, method);
-            let arg_text = format_arg_text(&args);
-            diags.push(StyleDiagnostic::ParseError {
-                message:
-                    "`color(…)` was renamed to `ink(…)` — use paint channel `ink` for text color"
-                        .into(),
-                source: format!("color({arg_text})"),
             });
             if p.pos == before {
                 p.force_progress();
@@ -1698,12 +1735,17 @@ fn parse_channel_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> 
 
 /// `animate:` body — motion trigger chain without `style.` head:
 /// `enter({…}).exit({…}).loop({…})` → same `MotionAttach` IR as flat methods.
+///
+/// Also accepts the v3 trigger map: `{ enter: play(fade-up), transition: play(colors, fast) }`.
 fn parse_animate_channel_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Style {
     if matches!(
         p.peek(),
         Some(Tok::Comma) | Some(Tok::RBrace) | Some(Tok::RParen) | None
     ) {
         return Style::Empty;
+    }
+    if p.peek() == Some(&Tok::LBrace) {
+        return parse_animate_trigger_map(p, diags);
     }
     let mut ops = Vec::new();
     let mut iters = 0usize;
@@ -1796,6 +1838,206 @@ fn parse_animate_channel_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnost
     }
 }
 
+/// `animate: { enter: play(…), exit: play(…), transition: play(…) }`.
+///
+/// Parses the map so a `play(…)` body does not abort the surrounding style
+/// object. Play names resolve through [`ThemeStyleEnv::resolve_play`]; a
+/// missing preset is unknown vocabulary.
+fn parse_animate_trigger_map(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Style {
+    p.expect(Tok::LBrace, diags);
+    let mut ops = Vec::new();
+    let mut iters = 0usize;
+    while !p.at_end() && p.peek() != Some(&Tok::RBrace) {
+        iters += 1;
+        if iters > MAX_PARSE_ITERS {
+            diags.push(StyleDiagnostic::ParseError {
+                message: "animate map too many triggers".into(),
+                source: p.remainder(),
+            });
+            break;
+        }
+        let before = p.pos;
+        let trigger = match p.bump() {
+            Some(Tok::Word(w)) => w.to_string(),
+            _ => {
+                p.force_progress();
+                break;
+            }
+        };
+        p.expect(Tok::Colon, diags);
+        if let Some(attach) = parse_animate_map_value(p, &trigger, diags) {
+            ops.push(attach);
+        }
+        p.eat(&Tok::Comma);
+        if p.pos <= before {
+            p.force_progress();
+        }
+    }
+    p.expect(Tok::RBrace, diags);
+    if ops.is_empty() {
+        Style::Empty
+    } else {
+        Style::chain(ops)
+    }
+}
+
+fn parse_animate_map_value(
+    p: &mut Parser<'_>,
+    trigger: &str,
+    diags: &mut Vec<StyleDiagnostic>,
+) -> Option<Style> {
+    match p.peek() {
+        Some(Tok::Word("play")) => {
+            p.bump();
+            let args = parse_paren_args(p, diags, "play");
+            resolve_play_args(&args, diags);
+            Some(Style::MotionAttach {
+                trigger: trigger.to_string(),
+                config: format_play_config(&args),
+            })
+        }
+        Some(Tok::Word(w)) if is_motion_chain_method(w) => {
+            let method = match p.bump() {
+                Some(Tok::Word(w)) => w,
+                _ => return None,
+            };
+            parse_motion_call(p, method, diags)
+        }
+        Some(Tok::LBrace) => {
+            let config = p.capture_brace_object(diags)?;
+            Some(Style::MotionAttach {
+                trigger: trigger.to_string(),
+                config,
+            })
+        }
+        _ => {
+            // Do not block the rest of the style object.
+            skip_style_object_value(p, diags);
+            None
+        }
+    }
+}
+
+/// Diagnose vocabulary-as-ref at parse. Unknown names stay `Style::Ref` —
+/// locals are not in scope here; [`validate_style_refs`] / emit spend
+/// [`ThemeStyleEnv::resolve_style_ref`] once an env is available.
+fn make_style_ref(name: String, diags: &mut Vec<StyleDiagnostic>) -> Style {
+    if matches!(
+        ThemeStyleEnv::from_registry().resolve_vocab(&name),
+        Some(crate::VocabTag::Concern | crate::VocabTag::Axis)
+    ) {
+        diags.push(StyleDiagnostic::NotAStyleRef {
+            name: name.clone(),
+            source: name.clone(),
+        });
+    }
+    Style::Ref(name)
+}
+
+fn play_name_from_args(args: &[PaintArg]) -> Option<&str> {
+    match args.first() {
+        Some(PaintArg::Token(name)) if !name.is_empty() => Some(name.as_str()),
+        Some(PaintArg::Slots(slots)) => match slots.get("preset").or_else(|| slots.get("play")) {
+            Some(PaintArg::Token(name)) if !name.is_empty() => Some(name.as_str()),
+            _ => None,
+        },
+        _ => None,
+    }
+}
+
+fn resolve_play_args(args: &[PaintArg], diags: &mut Vec<StyleDiagnostic>) {
+    let Some(name) = play_name_from_args(args) else {
+        diags.push(StyleDiagnostic::UnknownVocabulary {
+            name: "play".into(),
+            source: format!("play({})", format_arg_text(args)),
+        });
+        return;
+    };
+    if ThemeStyleEnv::from_registry().resolve_play(name).is_none() {
+        diags.push(StyleDiagnostic::UnknownVocabulary {
+            name: name.to_string(),
+            source: format!("play({name})"),
+        });
+    }
+}
+
+/// Resolve every `Style::Ref` through [`ThemeStyleEnv::resolve_style_ref`].
+///
+/// `env` is the file-local Style IR map. Open spends locals after theme;
+/// Themed refuses locals (`ThemedLocalStyle`).
+pub fn validate_style_refs(style: &Style, env: &HashMap<String, Style>) -> Vec<StyleDiagnostic> {
+    let mut diags = Vec::new();
+    validate_style_refs_inner(
+        style,
+        env,
+        &ThemeStyleEnv::from_registry(),
+        current_styling_policy(),
+        &mut HashSet::new(),
+        &mut diags,
+    );
+    diags
+}
+
+fn validate_style_refs_inner(
+    style: &Style,
+    env: &HashMap<String, Style>,
+    theme: &ThemeStyleEnv,
+    policy: super::theme_env::StylingPolicy,
+    resolving: &mut HashSet<String>,
+    diags: &mut Vec<StyleDiagnostic>,
+) {
+    match style {
+        Style::Empty | Style::Set(_) | Style::MotionAttach { .. } => {}
+        Style::Ref(name) => {
+            if !resolving.insert(name.clone()) {
+                return;
+            }
+            match theme.expand_style_ref(name, env, policy) {
+                Ok(expanded) => {
+                    validate_style_refs_inner(&expanded, env, theme, policy, resolving, diags)
+                }
+                Err(d) => diags.push(d),
+            }
+            resolving.remove(name);
+        }
+        Style::Chain(items) | Style::List(items) => {
+            for i in items {
+                validate_style_refs_inner(i, env, theme, policy, resolving, diags);
+            }
+        }
+        Style::Match { arms, .. } => {
+            for (_, body) in arms {
+                validate_style_refs_inner(body, env, theme, policy, resolving, diags);
+            }
+        }
+        Style::Compound { body, .. } => {
+            validate_style_refs_inner(body, env, theme, policy, resolving, diags)
+        }
+        Style::When { entries } => {
+            for (_, body) in entries {
+                validate_style_refs_inner(body, env, theme, policy, resolving, diags);
+            }
+        }
+    }
+}
+
+fn format_play_config(args: &[PaintArg]) -> String {
+    if args.len() == 1 {
+        match &args[0] {
+            PaintArg::Slots(_) => args[0].display(),
+            other => format!("{{ preset: {} }}", other.display()),
+        }
+    } else if args.len() >= 2 {
+        format!(
+            "{{ preset: {}, duration: {} }}",
+            args[0].display(),
+            args[1].display()
+        )
+    } else {
+        "{}".into()
+    }
+}
+
 fn parse_paren_args(
     p: &mut Parser<'_>,
     diags: &mut Vec<StyleDiagnostic>,
@@ -1829,15 +2071,28 @@ fn push_paint_op(
     source: String,
     diags: &mut Vec<StyleDiagnostic>,
 ) {
-    if find_setter(method).is_none() {
-        diags.push(StyleDiagnostic::UnknownSetter {
-            setter: method.to_string(),
+    if crate::vocab::find_vocab(method).is_none()
+        && crate::foreign_idioms::find_foreign_idiom(method).is_some()
+    {
+        diags.push(StyleDiagnostic::UnknownVocabulary {
+            name: method.to_string(),
             source: source.clone(),
-            suggestion: closest_unique_setter(method).map(|s| s.to_string()),
+        });
+        return;
+    }
+    if let Some(d) = crate::concerns::retired_diag(method, &source) {
+        diags.push(d);
+        return;
+    }
+    let (method, args) = crate::concerns::prepare_concern_call(method, args);
+    if crate::vocab::find_vocab(&method).is_none() {
+        diags.push(StyleDiagnostic::UnknownVocabulary {
+            name: method.to_string(),
+            source: source.clone(),
         });
     } else {
         let op = PaintOp {
-            setter: method.to_string(),
+            setter: method.clone(),
             args: args.clone(),
             source: source.clone(),
         };
@@ -1846,7 +2101,7 @@ fn push_paint_op(
         }
     }
     ops.push(Style::Set(PaintOp {
-        setter: method.to_string(),
+        setter: method,
         args,
         source,
     }));
@@ -1974,7 +2229,7 @@ fn parse_slot_object(
 /// - bound group prop (`tone`, `tone.foreground`, `shade` with Tone type) → MemberPath
 /// - L1 host surface (`chip`, `chip.foreground`) → MemberPath (host context only)
 /// - static group path (`primary.foreground`) → Token(public name)
-/// - bare non-group word → Token (legacy / global)
+/// - bare non-group word → Token (global / scale name)
 fn normalize_paint_arg(
     root: String,
     path: Vec<String>,
@@ -2002,18 +2257,6 @@ fn normalize_paint_arg(
             let _ = msg;
         }
         return PaintArg::MemberPath { root, path };
-    }
-
-    // App / foreign host: dotted L1 component paths (`button.bg`, `chip.foreground`)
-    // do not resolve (THEMES-1-ENFORCE). Bare pack stems (`button`, `popover`)
-    // stay Tokens so non-color scales can still spell `z(popover)`.
-    if super::component_surfaces::is_theme_owned_author_root(&root) && !path.is_empty() {
-        let name = format!("{root}.{}", path.join("."));
-        diags.push(StyleDiagnostic::ThemeOwnedToken {
-            name: name.clone(),
-            source: source.clone(),
-        });
-        return PaintArg::Token(name);
     }
 
     // Static group stem first (`primary`, `primary.foreground`) → public Token.
@@ -2052,9 +2295,8 @@ fn normalize_paint_arg(
         return PaintArg::MemberPath { root, path };
     }
 
-    // Bare tokens: color scale excludes component surface public names
-    // (SPEC-D1). Non-color scales may still use short names that collide with
-    // emit labels (e.g. `z(popover)` → z-popover). No early reject here.
+    // Bare tokens. Non-color scales may still use short names that collide
+    // with emit labels (e.g. `z(popover)` → z-popover). No early reject here.
     if path.is_empty() {
         return PaintArg::Token(root);
     }
@@ -2066,127 +2308,6 @@ fn normalize_paint_arg(
         source,
     });
     PaintArg::Token(value)
-}
-
-fn parse_match(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Style {
-    // match(scrutinee, { arm: Style, … })
-    p.bump();
-    p.expect(Tok::LParen, diags);
-    let scrutinee = parse_scrutinee(p, diags);
-    p.expect(Tok::Comma, diags);
-    p.expect(Tok::LBrace, diags);
-    let mut arms = Vec::new();
-    let mut iters = 0usize;
-    while !p.at_end() && p.peek() != Some(&Tok::RBrace) {
-        iters += 1;
-        if iters > MAX_PARSE_ITERS {
-            diags.push(StyleDiagnostic::ParseError {
-                message: "match arms too many entries".into(),
-                source: p.remainder(),
-            });
-            break;
-        }
-        let before = p.pos;
-        let key = match p.bump() {
-            Some(Tok::Word(w)) => unquote(w).to_string(),
-            _ => {
-                diags.push(StyleDiagnostic::ParseError {
-                    message: "expected match arm key".into(),
-                    source: p.remainder(),
-                });
-                p.force_progress();
-                break;
-            }
-        };
-        p.expect(Tok::Colon, diags);
-        let body = parse_style_expr(p, diags);
-        arms.push((key, body));
-        p.eat(&Tok::Comma);
-        if p.pos <= before {
-            p.force_progress();
-        }
-    }
-    p.expect(Tok::RBrace, diags);
-    p.expect(Tok::RParen, diags);
-    Style::Match { scrutinee, arms }
-}
-
-fn parse_scrutinee(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> String {
-    // variant | props.variant | ($) => $.variant
-    if p.peek() == Some(&Tok::LParen) {
-        // static lambda: ( $ ) => $ . path
-        p.bump();
-        let _param = match p.bump() {
-            Some(Tok::Word(w)) => w.to_string(),
-            _ => {
-                diags.push(StyleDiagnostic::BadScrutinee {
-                    message: "match lambda must be static path: ($) => $.prop".into(),
-                    source: p.remainder(),
-                });
-                return String::new();
-            }
-        };
-        p.expect(Tok::RParen, diags);
-        if !p.eat(&Tok::Arrow) {
-            diags.push(StyleDiagnostic::BadScrutinee {
-                message: "match lambda requires `=>`".into(),
-                source: p.remainder(),
-            });
-            return String::new();
-        }
-        // $.prop or $ . prop
-        let mut path = Vec::new();
-        if let Some(Tok::Word(w)) = p.bump() {
-            // might be $
-            if w != "$" && w != _param {
-                // allow bare prop after =>
-                return w.to_string();
-            }
-        }
-        while p.eat(&Tok::Dot) {
-            if let Some(Tok::Word(seg)) = p.bump() {
-                path.push(seg.to_string());
-            }
-        }
-        if path.is_empty() {
-            diags.push(StyleDiagnostic::BadScrutinee {
-                message: "match lambda must select a prop path".into(),
-                source: String::new(),
-            });
-            String::new()
-        } else {
-            path.join(".")
-        }
-    } else {
-        // variant or props.variant
-        let mut parts = Vec::new();
-        if let Some(Tok::Word(w)) = p.bump() {
-            parts.push(w.to_string());
-        } else {
-            diags.push(StyleDiagnostic::BadScrutinee {
-                message: "match scrutinee must be a prop identifier".into(),
-                source: p.remainder(),
-            });
-            return String::new();
-        }
-        while p.eat(&Tok::Dot) {
-            if let Some(Tok::Word(w)) = p.bump() {
-                parts.push(w.to_string());
-            }
-        }
-        // props.variant → variant for attr emit
-        if parts.len() > 1 && parts[0] == "props" {
-            parts[1..].join(".")
-        } else {
-            parts.join(".")
-        }
-    }
-}
-
-fn parse_when_call(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Style {
-    p.bump(); // when
-    let entries = parse_when_args(p, diags);
-    Style::When { entries }
 }
 
 /// Dual-accept when args:
@@ -2302,56 +2423,6 @@ fn unquote(w: &str) -> &str {
     }
 }
 
-fn parse_compound(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Style {
-    p.bump(); // compound
-    p.expect(Tok::LParen, diags);
-    p.expect(Tok::LBrace, diags);
-    let mut when = BTreeMap::new();
-    let mut iters = 0usize;
-    while !p.at_end() && p.peek() != Some(&Tok::RBrace) {
-        iters += 1;
-        if iters > MAX_PARSE_ITERS {
-            diags.push(StyleDiagnostic::ParseError {
-                message: "compound map too many entries".into(),
-                source: p.remainder(),
-            });
-            break;
-        }
-        let before = p.pos;
-        let k = match p.bump() {
-            Some(Tok::Word(w)) => unquote(w).to_string(),
-            _ => {
-                p.force_progress();
-                break;
-            }
-        };
-        p.expect(Tok::Colon, diags);
-        let v = match p.bump() {
-            Some(Tok::Word(w)) => unquote(w).to_string(),
-            _ => {
-                diags.push(StyleDiagnostic::ParseError {
-                    message: "compound condition value must be a literal".into(),
-                    source: p.remainder(),
-                });
-                String::new()
-            }
-        };
-        when.insert(k, v);
-        p.eat(&Tok::Comma);
-        if p.pos <= before {
-            p.force_progress();
-        }
-    }
-    p.expect(Tok::RBrace, diags);
-    p.expect(Tok::Comma, diags);
-    let body = parse_style_expr(p, diags);
-    p.expect(Tok::RParen, diags);
-    Style::Compound {
-        when,
-        body: Box::new(body),
-    }
-}
-
 fn validate_style(style: &Style, diags: &mut Vec<StyleDiagnostic>) {
     match style {
         Style::Empty | Style::Ref(_) | Style::MotionAttach { .. } => {}
@@ -2387,16 +2458,12 @@ fn validate_style(style: &Style, diags: &mut Vec<StyleDiagnostic>) {
 /// 3. **Compose** — `name, { … }` / `name, style({ … })` (same merge as multi-arg `style`)
 /// 4. **Bare ref** — another Style const name
 pub fn parse_style_const_rhs(input: &str) -> (Style, Vec<StyleDiagnostic>) {
-    parse_const_rhs(input, false, false)
+    parse_const_rhs(input)
 }
 
 /// Like [`parse_with`], but the body is one or more style *args* (compose / bare
 /// object) rather than a single top-level `style(…)` / ref expression only.
-fn parse_const_rhs(
-    input: &str,
-    _allow_flat: bool,
-    _allow_legacy: bool,
-) -> (Style, Vec<StyleDiagnostic>) {
+fn parse_const_rhs(input: &str) -> (Style, Vec<StyleDiagnostic>) {
     let mut diags = Vec::new();
     let stripped = strip_comments(input);
     let trimmed = stripped.trim();
@@ -2405,14 +2472,13 @@ fn parse_const_rhs(
     }
     if looks_like_utility_string_product(trimmed) {
         diags.push(StyleDiagnostic::ResidualProduct {
-            message: "utility-string sx is not the Style product — use style({ box, paint, text, animate, when, match, compound })"
-                .into(),
+            message: residual_product_message(trimmed),
             source: trimmed.chars().take(80).collect(),
         });
         return (Style::Empty, diags);
     }
     let tokens = tokenize(trimmed);
-    let mut p = Parser::new_full(trimmed, &tokens, false, false);
+    let mut p = Parser::new_full(trimmed, &tokens, false);
     // Declaration RHS = style-arg composition (same merge law as `style(a, b, …)`).
     let mut parts = Vec::new();
     let mut iters = 0usize;
@@ -2475,7 +2541,7 @@ mod const_rhs_tests {
 
     #[test]
     fn bare_object_form() {
-        let (style, diags) = parse_style_const_rhs("{ paint: fill({ color: primary }) }");
+        let (style, diags) = parse_style_const_rhs("{ bg(primary) }");
         assert!(
             diags.is_empty(),
             "{:?}",
@@ -2486,18 +2552,353 @@ mod const_rhs_tests {
 
     #[test]
     fn call_form() {
-        let (style, diags) = parse_style_const_rhs("style({ box: space({ pad: 2 }) })");
+        let (style, diags) = parse_style_const_rhs("style({ pad(2) })");
         assert!(diags.is_empty(), "{diags:?}");
         assert!(!matches!(style, Style::Empty));
     }
 
     #[test]
     fn compose_form() {
-        let (style, diags) = parse_style_const_rhs("host, { box: space({ pad: 2 }) }");
+        let (style, diags) = parse_style_const_rhs("host, { pad(2) }");
         assert!(diags.is_empty(), "{diags:?}");
         match style {
             Style::List(parts) => assert_eq!(parts.len(), 2),
             other => panic!("expected List, got {other:?}"),
         }
+    }
+}
+
+#[cfg(test)]
+mod flat_chain_tests {
+    use std::collections::HashMap;
+
+    use super::{Style, parse, parse_style_const_rhs};
+    use crate::emit::lower_style;
+
+    fn msgs(diags: &[crate::StyleDiagnostic]) -> Vec<String> {
+        diags.iter().map(|d| d.message()).collect()
+    }
+
+    #[test]
+    fn form_card_parses_and_lowers() {
+        let (style, diags) = parse_style_const_rhs(
+            "{ size(full).pad({ x: 5, y: 4 }).bg(card).border(subtle).radius(lg) }",
+        );
+        assert!(diags.is_empty(), "{:?}", msgs(&diags));
+        assert!(!matches!(style, Style::Empty));
+        let (classes, css) = lower_style(&style, &HashMap::new());
+        assert!(classes.contains("s-"), "{classes}");
+        assert!(
+            css.contains("width") || css.contains("100%"),
+            "size(full) must emit geometry: {css}"
+        );
+        assert!(
+            css.contains("padding"),
+            "pad slots must emit padding: {css}"
+        );
+        assert!(
+            css.contains("background") || css.contains("--fill-card") || css.contains("--card"),
+            "bg(card) must emit fill: {css}"
+        );
+        assert!(
+            css.contains("border"),
+            "border(subtle) must emit border: {css}"
+        );
+        assert!(
+            css.contains("border-radius") || css.contains("--radius"),
+            "radius(lg) must emit radius: {css}"
+        );
+    }
+
+    #[test]
+    fn muted_parses_and_lowers() {
+        let (style, diags) = parse_style_const_rhs("{ type(body-sm).fg(muted-foreground) }");
+        assert!(diags.is_empty(), "{:?}", msgs(&diags));
+        let (_, css) = lower_style(&style, &HashMap::new());
+        assert!(
+            css.contains("font") || css.contains("--type-body"),
+            "type(body-sm) must emit type: {css}"
+        );
+        assert!(
+            css.contains("color") || css.contains("muted-foreground"),
+            "fg(muted-foreground) must emit ink: {css}"
+        );
+    }
+
+    #[test]
+    fn when_bare_chain_parses_and_lowers() {
+        let (style, diags) = parse("style({ when: { hover: bg(surface-2) } })");
+        assert!(diags.is_empty(), "{:?}", msgs(&diags));
+        let (_, css) = lower_style(&style, &HashMap::new());
+        assert!(css.contains(":hover"), "{css}");
+        assert!(
+            css.contains("background") || css.contains("surface-2"),
+            "hover bg must emit fill: {css}"
+        );
+    }
+
+    #[test]
+    fn chain_then_when_in_declared_object() {
+        let (style, diags) = parse_style_const_rhs(
+            "{ pad({ x: 3, y: 2 }).radius(md).type(label), when: { hover: bg(surface-2), current: bg(primary).fg(primary-foreground) } }",
+        );
+        assert!(diags.is_empty(), "{:?}", msgs(&diags));
+        let (_, css) = lower_style(&style, &HashMap::new());
+        assert!(css.contains(":hover"), "{css}");
+        assert!(
+            css.contains("aria-current") || css.contains("current") || css.contains("primary"),
+            "current when must emit: {css}"
+        );
+    }
+
+    #[test]
+    fn v2_author_names_are_unknown_vocabulary() {
+        for src in [
+            "style({ fill(surface) })",
+            "style({ paint: fill({ color: muted }) })",
+            "style({ ink(foreground) })",
+            "style({ place({ z: sticky }) })",
+            "style({ space({ pad: 2 }) })",
+            "style({ flow({ display: flex }) })",
+            "style({ motion({ rotate: 90 }) })",
+        ] {
+            let (_, diags) = parse(src);
+            assert!(
+                diags
+                    .iter()
+                    .any(|d| { matches!(d, crate::StyleDiagnostic::UnknownVocabulary { .. }) }),
+                "{src} must be unknown vocabulary: {:?}",
+                msgs(&diags)
+            );
+        }
+    }
+
+    #[test]
+    fn v2_channel_form_still_parses() {
+        let (style, diags) = parse("style({ box: size({ w: full }).pad(4), paint: bg(surface) })");
+        assert!(diags.is_empty(), "{:?}", msgs(&diags));
+        assert!(!matches!(style, Style::Empty));
+        let (_, css) = lower_style(&style, &HashMap::new());
+        assert!(css.contains("padding") || css.contains("width"), "{css}");
+        assert!(
+            css.contains("background") || css.contains("surface"),
+            "{css}"
+        );
+    }
+
+    #[test]
+    fn inline_pad_call_parses() {
+        let (style, diags) = parse("style(pad({ t: 2 }))");
+        assert!(diags.is_empty(), "{:?}", msgs(&diags));
+        let (_, css) = lower_style(&style, &HashMap::new());
+        assert!(css.contains("padding"), "{css}");
+    }
+
+    #[test]
+    fn play_fade_resolves_and_attaches() {
+        let (style, diags) = parse("style({ animate: { enter: play(fade) } })");
+        assert!(
+            !diags
+                .iter()
+                .any(|d| matches!(d, crate::StyleDiagnostic::UnknownVocabulary { .. })),
+            "fade is a registry keyframe: {:?}",
+            msgs(&diags)
+        );
+        let m = crate::parse::collect_motion_attaches(&style);
+        assert_eq!(m.len(), 1, "{m:?}");
+        assert_eq!(m[0].0, "enter");
+        assert!(
+            m[0].1.contains("preset") && m[0].1.contains("fade"),
+            "{:?}",
+            m[0]
+        );
+    }
+
+    #[test]
+    fn play_colors_fast_resolves() {
+        let (style, diags) = parse("style({ animate: { transition: play(colors, fast) } })");
+        assert!(
+            !diags
+                .iter()
+                .any(|d| matches!(d, crate::StyleDiagnostic::UnknownVocabulary { .. })),
+            "colors is a play prop-set: {:?}",
+            msgs(&diags)
+        );
+        let (_, css) = lower_style(&style, &HashMap::new());
+        assert!(
+            css.contains("transition-property") || css.contains("transition"),
+            "play(colors, fast) must emit transition CSS: {css}"
+        );
+        assert!(
+            css.contains("--duration-fast") || css.contains("duration-fast"),
+            "duration token: {css}"
+        );
+    }
+
+    #[test]
+    fn unknown_play_name_is_unknown_vocabulary() {
+        let (_, diags) = parse("style({ animate: { enter: play(notARealPlayZzz) } })");
+        assert!(
+            diags.iter().any(|d| matches!(
+                d,
+                crate::StyleDiagnostic::UnknownVocabulary { name, .. } if name == "notARealPlayZzz"
+            )),
+            "unknown play must fail closed: {:?}",
+            msgs(&diags)
+        );
+    }
+
+    #[test]
+    fn vocab_name_is_not_a_style_ref() {
+        for vocab in ["border", "pad", "bg", "type"] {
+            let (_, diags) = parse(&format!("style({vocab})"));
+            assert!(
+                diags.iter().any(|d| matches!(
+                    d,
+                    crate::StyleDiagnostic::NotAStyleRef { name, .. } if name == vocab
+                )),
+                "{vocab}: {:?}",
+                msgs(&diags)
+            );
+        }
+    }
+
+    #[test]
+    fn inline_when_arg_stays_illegal() {
+        let (_, diags) = parse("style(pad({ t: 2 }), when: { hover: bg(muted) })");
+        assert!(
+            !diags.is_empty(),
+            "inline when: as a style() arg must stay illegal"
+        );
+        let joined = msgs(&diags).join("; ");
+        assert!(
+            joined.contains("declared") || joined.contains("when:"),
+            "must teach declared form: {joined}"
+        );
+    }
+
+    #[test]
+    fn open_local_ref_validates() {
+        let mut env = HashMap::new();
+        env.insert("foo".into(), parse("style({ bg(muted) })").0);
+        let (style, diags) = parse("foo");
+        assert!(diags.is_empty(), "{:?}", msgs(&diags));
+        let refs = crate::parse::validate_style_refs(&style, &env);
+        assert!(refs.is_empty(), "{refs:?}");
+    }
+
+    #[test]
+    fn themed_local_ref_is_studio() {
+        let mut env = HashMap::new();
+        env.insert("foo".into(), parse("style({ bg(muted) })").0);
+        let (style, _) = parse("foo");
+        crate::with_styling_policy(crate::StylingPolicy::Themed, || {
+            let refs = crate::parse::validate_style_refs(&style, &env);
+            assert!(
+                refs.iter().any(|d| matches!(
+                    d,
+                    crate::StyleDiagnostic::ThemedLocalStyle { name, .. } if name == "foo"
+                )),
+                "{refs:?}"
+            );
+        });
+    }
+
+    #[test]
+    fn unknown_ref_with_env_is_unknown_vocabulary() {
+        let env = HashMap::new();
+        let (style, diags) = parse("notARealStyleZzz");
+        assert!(
+            diags.is_empty(),
+            "parse keeps unknown refs: {:?}",
+            msgs(&diags)
+        );
+        let refs = crate::parse::validate_style_refs(&style, &env);
+        assert!(
+            refs.iter().any(|d| matches!(
+                d,
+                crate::StyleDiagnostic::UnknownVocabulary { name, .. } if name == "notARealStyleZzz"
+            )),
+            "{refs:?}"
+        );
+    }
+
+    #[test]
+    fn padding_points_at_pad() {
+        let (_, diags) = parse("style({ padding(4) })");
+        let joined = msgs(&diags).join("; ");
+        assert!(
+            diags
+                .iter()
+                .any(|d| matches!(d, crate::StyleDiagnostic::UnknownVocabulary { .. })),
+            "padding must be unknown vocabulary: {joined}"
+        );
+        assert!(
+            joined.contains("pad"),
+            "padding must point at pad: {joined}"
+        );
+    }
+
+    #[test]
+    fn font_size_points_at_type() {
+        let (_, diags) = parse("style({ font-size(sm) })");
+        let joined = msgs(&diags).join("; ");
+        assert!(
+            diags
+                .iter()
+                .any(|d| matches!(d, crate::StyleDiagnostic::UnknownVocabulary { .. })),
+            "font-size must be unknown vocabulary: {joined}"
+        );
+        assert!(
+            joined.contains("type"),
+            "font-size must point at type: {joined}"
+        );
+    }
+
+    #[test]
+    fn class_eq_teaches_style() {
+        let (_, diags) = parse(r#"style({ class="hero" })"#);
+        let joined = msgs(&diags).join("; ");
+        assert!(
+            diags
+                .iter()
+                .any(|d| matches!(d, crate::StyleDiagnostic::UnknownVocabulary { .. })),
+            "class= must be unknown vocabulary: {joined}"
+        );
+        assert!(
+            joined.contains("style("),
+            "class= must point at style(…): {joined}"
+        );
+    }
+
+    #[test]
+    fn tailwind_p4_points_at_pad() {
+        let (_, diags) = parse("style({ p-4() })");
+        let joined = msgs(&diags).join("; ");
+        assert!(
+            diags
+                .iter()
+                .any(|d| matches!(d, crate::StyleDiagnostic::UnknownVocabulary { .. })),
+            "p-4 must be unknown vocabulary: {joined}"
+        );
+        assert!(joined.contains("pad"), "p-4 must point at pad: {joined}");
+    }
+
+    #[test]
+    fn unknown_without_row_stays_generic() {
+        let (_, diags) = parse("style({ notARealSetterZzz() })");
+        let joined = msgs(&diags).join("; ");
+        assert!(
+            diags.iter().any(|d| matches!(
+                d,
+                crate::StyleDiagnostic::UnknownVocabulary { name, .. }
+                    if name == "notARealSetterZzz"
+            )),
+            "made-up name must stay unknown vocabulary: {joined}"
+        );
+        assert!(
+            !joined.contains("CSS") && !joined.contains("Tailwind") && !joined.contains("HTML"),
+            "generic unknown must not invent a pointer: {joined}"
+        );
     }
 }

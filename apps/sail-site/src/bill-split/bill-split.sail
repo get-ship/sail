@@ -8,11 +8,11 @@
     total = 96
   }
 
-  style card = { box: space({ pad: 4 }).size({ w: full, max-w: panel-max-w-sm }) }
-  style title = { text: type({ size: sm, tracking: wide, case: uppercase }) }
-  style totalText = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: sm }) }
-  style peopleCount = { box: size({ w: 8 }), text: type({family: mono, size: sm, align: center, nums: tabular}) }
-  style shareText = { text: type({family: mono, size: 2xl, nums: tabular}) }
+  style card = { pad(4).size({ w: full, max-w: panel-max-w-sm }) }
+  style title = { type({ size: sm, tracking: wide, case: uppercase }) }
+  style totalText = { fg(muted-foreground).type({ family: mono, size: sm }) }
+  style peopleCount = { size({ w: 8 }).type({family: mono, size: sm, align: center, nums: tabular}) }
+  style shareText = { type({family: mono, size: 2xl, nums: tabular}) }
 </scope>
 
 <controller>

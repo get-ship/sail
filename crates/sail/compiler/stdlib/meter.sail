@@ -14,13 +14,11 @@
     size: 'sm' | 'md' | 'lg' = 'md'
   }
 
-  // Track rides component.meter tokens (global fallbacks in the pack).
-  style base = {box: flow({ display: inline-block }).size({ w: full, h: 2 }).overflow({ all: hidden }), paint: appearance(none).align(middle).border({ width: 0 }).radius(full).fill({ color: meter })}
-  style sizeSm = {box: size({ h: 1_5 })}
-  style sizeMd = {box: size({ h: 2 })}
-  style sizeLg = {box: size({ h: 3 })}
+  // Track rides muted.
+  style base = {display(inline-block).size({ w: full, h: 2 }).overflow({ all: hidden }).appearance(none).align(middle).border({ width: 0 }).radius(full).bg(muted)}
+  style sizeSm = {size({ h: 1_5 })}
+  style sizeMd = {size({ h: 2 })}
+  style sizeLg = {size({ h: 3 })}
 </scope>
 
-<meter style(base, {
-  match: { size: { sm: sizeSm, md: sizeMd, lg: sizeLg } },
-})></meter>
+<meter style(base, { match: { size: { sm: sizeSm, md: sizeMd, lg: sizeLg } } })></meter>

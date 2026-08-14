@@ -9,7 +9,7 @@
 //! | [`CanaryCounts`](sail_layout::canary::CanaryCounts) | `files_scanned`, `unintended_overflow`, `clipped_text` |
 //! | [`CanarySample`](sail_layout::canary::CanarySample) | path + kind + message |
 //! | [`FpVerdict`](sail_layout::canary::FpVerdict) | path + kind + judgment + note |
-//! | [`PromotionStatus`](sail_layout::canary::PromotionStatus) | `experimental_only` (false after LAYOUT-5 promote) + criteria prose |
+//! | [`PromotionStatus`](sail_layout::canary::PromotionStatus) | `experimental_only` + criteria prose |
 //! | [`CanaryReport`](sail_layout::canary::CanaryReport) | counts + samples + fp_verdicts + promotion |
 //! | [`run`](sail_layout::canary::run) | experimental scan over fixtures (+ optional corpus roots) |
 //! | [`report_to_json`](sail_layout::canary::report_to_json) | machine-readable RESULT JSON |
@@ -273,12 +273,12 @@ fn canary_report_json_is_machine_readable_result_shape() {
 // ── 3. Promotion criteria documented; default severity still off ────────────
 
 #[test]
-fn canary_documents_promotion_criteria_after_layout_5() {
+fn canary_documents_promotion_criteria_and_keeps_experimental_only() {
     let report = run_canary();
     assert!(
-        !report.promotion.experimental_only,
-        "LAYOUT-5 promoted overflow + clipped-text — \
-         promotion.experimental_only must be false: {:?}",
+        report.promotion.experimental_only,
+        "S4.2 must NOT promote experimental kinds to default — \
+         promotion.experimental_only must be true: {:?}",
         report.promotion
     );
     let criteria = report.promotion.criteria.trim();
@@ -299,33 +299,28 @@ fn canary_documents_promotion_criteria_after_layout_5() {
 }
 
 #[test]
-fn promoted_kinds_emit_on_default_check() {
+fn no_silent_promote_default_check_still_skips_experimental_kinds() {
+    // Regression guard: landing the canary must not flip default severity on.
     let overflow = check_preprocessed(OVERFLOW_NO_OPTIN, VP).expect("default check");
     let clipped = check_preprocessed(CLIPPED_TEXT_NO_TRUNCATE, VP).expect("default check");
-    assert!(
-        overflow
-            .diagnostics
-            .iter()
-            .any(|d| d.kind == KIND_UNINTENDED_OVERFLOW),
-        "promoted overflow must fail the seeded DEFECT fixture: {:?}",
-        overflow.diagnostics
-    );
-    assert!(
-        clipped
-            .diagnostics
-            .iter()
-            .any(|d| d.kind == KIND_CLIPPED_TEXT),
-        "promoted clipped-text must fail the seeded DEFECT fixture: {:?}",
-        clipped.diagnostics
-    );
+    for (label, result) in [("overflow", &overflow), ("clipped", &clipped)] {
+        assert!(
+            !result
+                .diagnostics
+                .iter()
+                .any(|d| d.kind == KIND_UNINTENDED_OVERFLOW || d.kind == KIND_CLIPPED_TEXT),
+            "{label}: default check must not emit experimental kinds (no silent promote): {:?}",
+            result.diagnostics
+        );
+    }
     let explicit = check_preprocessed_with(OVERFLOW_NO_OPTIN, VP, CheckOptions::default())
-        .expect("explicit default");
+        .expect("explicit off");
     assert!(
-        explicit
+        !explicit
             .diagnostics
             .iter()
             .any(|d| d.kind == KIND_UNINTENDED_OVERFLOW),
-        "CheckOptions::default must emit promoted overflow: {:?}",
+        "CheckOptions::default must keep experimental kinds off: {:?}",
         explicit.diagnostics
     );
 }
@@ -347,7 +342,7 @@ fn canary_public_types_are_constructible_for_implementer_guidance() {
         note: "no overflow opt-in on fixed-height column".into(),
     };
     let _promo = PromotionStatus {
-        experimental_only: false,
+        experimental_only: true,
         criteria: "promote only when corpus canary FP rate ≈ 0".into(),
     };
     let _ = CanaryReport {

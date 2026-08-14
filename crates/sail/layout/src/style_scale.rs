@@ -14,15 +14,49 @@ use taffy::prelude::*;
 use taffy::style::Style;
 
 /// Apply every scale atom on `classes` that is valid for host `attrs`.
+/// Tokens Style already resolved are not re-inferred from class spelling.
 pub(crate) fn apply_scale_classes(
     style: &mut Style,
     classes: &[&str],
     attrs: &HashMap<String, String>,
+    resolved: &crate::box_ir::ResolvedBox,
 ) {
     for c in classes {
         if let Some((tail, rule)) = match_sx_scale_rule(c, attrs) {
+            if scale_rule_already_resolved(rule, resolved) {
+                continue;
+            }
             apply_sx_scale(style, rule, &tail);
         }
+    }
+}
+
+fn scale_rule_already_resolved(rule: SxScaleRule, resolved: &crate::box_ir::ResolvedBox) -> bool {
+    match rule {
+        SxScaleRule::Padding(side) => match side {
+            SideSet::All => resolved.pad.all.is_some(),
+            SideSet::X => resolved.pad.all.is_some() || resolved.pad.x.is_some(),
+            SideSet::Y => resolved.pad.all.is_some() || resolved.pad.y.is_some(),
+            SideSet::T => {
+                resolved.pad.all.is_some() || resolved.pad.y.is_some() || resolved.pad.t.is_some()
+            }
+            SideSet::B => {
+                resolved.pad.all.is_some() || resolved.pad.y.is_some() || resolved.pad.b.is_some()
+            }
+            SideSet::L => {
+                resolved.pad.all.is_some() || resolved.pad.x.is_some() || resolved.pad.l.is_some()
+            }
+            SideSet::R => {
+                resolved.pad.all.is_some() || resolved.pad.x.is_some() || resolved.pad.r.is_some()
+            }
+        },
+        SxScaleRule::Size => resolved.width.is_some() || resolved.height.is_some(),
+        SxScaleRule::Width => resolved.width.is_some(),
+        SxScaleRule::Height => resolved.height.is_some(),
+        SxScaleRule::MinWidth => resolved.min_width.is_some(),
+        SxScaleRule::MinHeight => resolved.min_height.is_some(),
+        SxScaleRule::MaxWidth => resolved.max_width.is_some(),
+        SxScaleRule::MaxHeight => resolved.max_height.is_some(),
     }
 }
 
@@ -357,7 +391,7 @@ fn token_px_for_space(step: u32) -> f32 {
     }
 }
 
-fn padding_token_to_px(value: &str) -> f32 {
+pub(crate) fn padding_token_to_px(value: &str) -> f32 {
     if value == "0" {
         return 0.0;
     }
@@ -401,7 +435,7 @@ fn length_px(d: Dimension) -> Option<f32> {
     }
 }
 
-fn size_token_to_dimension(value: &str) -> Dimension {
+pub(crate) fn size_token_to_dimension(value: &str) -> Dimension {
     match value {
         "0" => Dimension::length(0.0),
         "auto" => Dimension::auto(),

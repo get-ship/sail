@@ -178,29 +178,25 @@ export default controller(() => {
 </controller>
 
 <scope>
-  style page = { box: space({ pad: 6, mx: auto }).size({ max-w: breakpoint-tablet }) }
-  style header = { box: space({ pad-b: 4, mb: 6 }), paint: border({ edge: b, color: border, width: 1 }) }
-  style muted = { paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
-  style section = { box: space({ my: 6 }) }
-  style sectionTitle = { box: space({ mb: 2 }), paint: ink({ color: muted-foreground }), text: type({ size: xs, weight: semibold, tracking: wide, case: uppercase }) }
-  style stat = { box: space({ pad-x: 3, pad-y: 2 }), paint: fill({ color: surface-1 }).border({ color: border, width: 1 }).radius(md), text: type({ family: mono, size: sm }) }
-  style tickLog = { box: space({ pad: 3 }).size({ max-h: panel-max-h-sm }).overflow({ y: auto }), paint: fill({ color: surface-1 }).border({ color: border, width: 1 }).radius(md), text: type({ family: mono, size: xs }) }
-  style tickFresh = { paint: ink({ color: success }) }
-  style tickWarn = { paint: ink({ color: warning }) }
-  style tickMuted = { paint: ink({ color: muted-foreground }) }
-  style col = { box: space({ pad: 3 }).size({ min-h: panel-min-h-daycol }), paint: fill({ color: surface-1 }).border({ color: border, width: 1 }).radius(lg) }
-  style colHead = { box: space({ mb: 2 }), text: type({ size: sm, weight: semibold }) }
-  style swatch = { box: size({ w: 2, h: 2 }), paint: radius(full) }
-  style card = {
-    box: space({ pad: 3 }),
-    paint: fill({ color: background }).border({ color: border, width: 1 }).radius(md).cursor(grab),
-    animate: enter({ scale: 'spring:snappy', opacity: 'fade' }).exit({ opacity: 'fade-out' }),
-  }
-  style cardTitle = { box: space({ mb: 1 }), text: type({ size: sm, weight: semibold }) }
-  style cardMeta = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs }) }
-  style pillHigh = { box: space({ pad-x: 1, ml: 1 }), paint: radius(full).fill({ color: destructive }).ink({ color: primary-foreground }), text: type({ family: mono, size: xs }) }
-  style pillLow = { box: space({ pad-x: 1, ml: 1 }), paint: radius(full).fill({ color: muted }).ink({ color: muted-foreground }), text: type({ family: mono, size: xs }) }
-  style dropZone = { box: space({ pad: 3 }), paint: border({ color: border, width: 1 }).cursor(default).ink({ color: muted-foreground }), text: type({ size: sm, align: center }) }
+  style page = { pad(6).margin({ x: auto }).size({ max-w: breakpoint-tablet }) }
+  style header = { pad({ b: 4 }).margin({ b: 6 }).border({ edge: b, color: border, width: 1 }) }
+  style muted = { fg(muted-foreground).type({ size: sm }) }
+  style section = { margin({ y: 6 }) }
+  style sectionTitle = { margin({ b: 2 }).fg(muted-foreground).type({ size: xs, weight: semibold, tracking: wide, case: uppercase }) }
+  style stat = { pad({ x: 3, y: 2 }).bg(surface-1).border({ color: border, width: 1 }).radius(md).type({ family: mono, size: sm }) }
+  style tickLog = { pad(3).size({ max-h: panel-max-h-sm }).overflow({ y: auto }).bg(surface-1).border({ color: border, width: 1 }).radius(md).type({ family: mono, size: xs }) }
+  style tickFresh = { fg(success) }
+  style tickWarn = { fg(warning) }
+  style tickMuted = { fg(muted-foreground) }
+  style col = { pad(3).size({ min-h: panel-min-h-daycol }).bg(surface-1).border({ color: border, width: 1 }).radius(lg) }
+  style colHead = { margin({ b: 2 }).type({ size: sm, weight: semibold }) }
+  style swatch = { size({ w: 2, h: 2 }).radius(full) }
+  style card = { pad(3).bg(background).border({ color: border, width: 1 }).radius(md).cursor(grab), animate: enter({ scale: 'spring:snappy', opacity: 'fade' }).exit({ opacity: 'fade-out' }) }
+  style cardTitle = { margin({ b: 1 }).type({ size: sm, weight: semibold }) }
+  style cardMeta = { fg(muted-foreground).type({ family: mono, size: xs }) }
+  style pillHigh = { pad({ x: 1 }).margin({ l: 1 }).radius(full).bg(destructive).fg(primary-foreground).type({ family: mono, size: xs }) }
+  style pillLow = { pad({ x: 1 }).margin({ l: 1 }).radius(full).bg(muted).fg(muted-foreground).type({ family: mono, size: xs }) }
+  style dropZone = { pad(3).border({ color: border, width: 1 }).cursor(default).fg(muted-foreground).type({ size: sm, align: center }) }
 </scope>
 
 <column style(page)>
@@ -245,7 +241,7 @@ export default controller(() => {
 
   <column style(section) gap="3">
     <h2 style(sectionTitle)>Kanban — keyed for + DnD + transitions</h2>
-    <row gap="2" align="center" style({ box: space({ mb: 1 }) })>
+    <row gap="2" align="center" style({ margin({ b: 1 }) })>
       <div style(muted)>{totalCards()} cards</div>
       <button on:click={() => addRandom()}>+ add</button>
       <button on:click={() => chaos()}>chaos × 20</button>
@@ -255,7 +251,7 @@ export default controller(() => {
       <for {columns() as col} key={col.id}>
         <column style(col) gap="2">
           <row align="center" gap="2" style(colHead)>
-            <span use:swatch={col.tone} style(swatch, { paint: fill({ color: bind(swatchColor) }) })></span>
+            <span use:swatch={col.tone} style(swatch, { bg(bind(swatchColor)) })></span>
             <span>{col.title}</span>
             <span style(muted)>({col.cards.length})</span>
           </row>

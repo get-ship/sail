@@ -361,11 +361,11 @@ describe('@ship/tokens — theme catalog (THEMES export)', () => {
       ),
     )
 
-    // Component override chain: paper component.card.bg → --card
-    const cardBg = paper.modes.light.component?.card?.bg?.$value
+    // Theme remaps color.card → --card
+    const cardBg = paper.modes.light.color?.card?.default?.$value
     if (cardBg) {
-      expect(reg.paths?.['component.card.bg']).toBe('card')
-      expect(reg.tokens?.card?.path).toBe('component.card.bg')
+      expect(reg.paths?.['color.card.default']).toBe('card')
+      expect(reg.tokens?.card?.path).toBe('color.card.default')
       expect(themesCss).toMatch(
         new RegExp(
           `theme=['"]paper['"]\\][\\s\\S]*?--card\\s*:\\s*${cardBg.replace(

@@ -8,14 +8,14 @@
     playing = true
   }
 
-  style card = { box: space({ pad: 3 }).size({ w: full }) }
-  style title = { text: type({ size: sm, wrap: truncate }) }
-  style artist = { paint: ink({ color: muted-foreground }), text: type({ size: xs, wrap: truncate }) }
-  style eq = { box: size({ min-h: 6 }) }
-  style bar = { box: size({ w: 1 }), paint: radius(sm).fill({ color: primary }).motion({ origin: bottom }) }
-  style barDim = { box: size({ w: 1 }), paint: radius(sm).fill({ color: primary }).filter({ opacity: 75 }).motion({ origin: bottom }) }
-  style rest = { box: size({ w: 1, h: 2 }), paint: radius(full).fill({ color: muted-foreground }).filter({ opacity: 50 }) }
-  style meta = { box: flow({ grow: 1 }).size({ min-w: 0 }) }
+  style card = { pad(3).size({ w: full }) }
+  style title = { type({ size: sm, wrap: truncate }) }
+  style artist = { fg(muted-foreground).type({ size: xs, wrap: truncate }) }
+  style eq = { size({ min-h: 6 }) }
+  style bar = { size({ w: 1 }).radius(sm).bg(primary).origin(bottom) }
+  style barDim = { size({ w: 1 }).radius(sm).bg(primary).filter({ opacity: 75 }).origin(bottom) }
+  style rest = { size({ w: 1, h: 2 }).radius(full).bg(muted-foreground).filter({ opacity: 50 }) }
+  style meta = { grow(1).size({ min-w: 0 }) }
 </scope>
 
 <controller>
@@ -40,10 +40,10 @@ export default controller((ctx: Scope) => {
     </column>
     <if {playing()}>
       <row gap="1" align="end" style(eq)>
-        <div style(bar, { box: size({ h: 4 }), animate: loop({ scale-y: 'spring:gentle', stagger: '0.1s' }) })></div>
-        <div style(barDim, { box: size({ h: 6 }), animate: loop({ scale-y: 'spring:gentle', stagger: '0.1s' }) })></div>
-        <div style(bar, { box: size({ h: 3 }), animate: loop({ scale-y: 'spring:gentle', stagger: '0.1s' }) })></div>
-        <div style(barDim, { box: size({ h: 5 }), animate: loop({ scale-y: 'spring:gentle', stagger: '0.1s' }) })></div>
+        <div style(bar, { size({ h: 4 }), animate: loop({ scale-y: 'spring:gentle', stagger: '0.1s' }) })></div>
+        <div style(barDim, { size({ h: 6 }), animate: loop({ scale-y: 'spring:gentle', stagger: '0.1s' }) })></div>
+        <div style(bar, { size({ h: 3 }), animate: loop({ scale-y: 'spring:gentle', stagger: '0.1s' }) })></div>
+        <div style(barDim, { size({ h: 5 }), animate: loop({ scale-y: 'spring:gentle', stagger: '0.1s' }) })></div>
       </row>
     {else =>
       <row gap="1" align="center" style(eq)>

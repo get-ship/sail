@@ -1,6 +1,6 @@
 {
   "version": 0,
-  "form": "string — `prop: value` (structured) or legacy `prop-value` atoms; same IR",
+  "form": "residual detect + token-value helper — not an author surface",
   "properties": [
     {
       "name": "absolute",
@@ -32,7 +32,7 @@
         "accent-skills",
         "accent-specs",
         "accent-theme",
-        "accordion"
+        "active-bg"
       ]
     },
     {
@@ -133,7 +133,7 @@
         "accent-skills",
         "accent-specs",
         "accent-theme",
-        "accordion"
+        "active-bg"
       ]
     },
     {
@@ -172,7 +172,7 @@
         "accent-skills",
         "accent-specs",
         "accent-theme",
-        "accordion"
+        "active-bg"
       ]
     },
     {
@@ -310,7 +310,7 @@
         "accent-skills",
         "accent-specs",
         "accent-theme",
-        "accordion"
+        "active-bg"
       ]
     },
     {
@@ -423,7 +423,7 @@
         "accent-skills",
         "accent-specs",
         "accent-theme",
-        "accordion"
+        "active-bg"
       ]
     },
     {
@@ -488,7 +488,7 @@
         "accent-skills",
         "accent-specs",
         "accent-theme",
-        "accordion"
+        "active-bg"
       ]
     },
     {
@@ -1757,7 +1757,7 @@
         "accent-skills",
         "accent-specs",
         "accent-theme",
-        "accordion"
+        "active-bg"
       ]
     },
     {
@@ -1908,7 +1908,7 @@
         "accent-skills",
         "accent-specs",
         "accent-theme",
-        "accordion"
+        "active-bg"
       ]
     },
     {
@@ -1937,7 +1937,7 @@
         "accent-skills",
         "accent-specs",
         "accent-theme",
-        "accordion"
+        "active-bg"
       ]
     },
     {
@@ -2056,7 +2056,7 @@
         "accent-skills",
         "accent-specs",
         "accent-theme",
-        "accordion"
+        "active-bg"
       ]
     },
     {
@@ -2415,8 +2415,8 @@
     "var-ref"
   ],
   "tokens": {
-    "count": 452,
-    "colors_count": 235,
+    "count": 392,
+    "colors_count": 120,
     "sample_names": [
       "accent",
       "accent-agents",
@@ -2435,29 +2435,29 @@
       "accent-skills",
       "accent-specs",
       "accent-theme",
-      "accordion",
-      "accordion-border",
-      "accordion-chevron",
-      "accordion-foreground",
-      "accordion-hover-bg",
       "active-bg",
       "active-strength",
-      "alert",
-      "alert-border",
-      "alert-foreground",
-      "alert-stripe",
-      "avatar",
-      "avatar-foreground",
       "backdrop",
       "background",
-      "badge",
-      "badge-border",
-      "badge-foreground",
       "body-font",
       "body-weight",
       "border",
+      "border-default-color",
+      "border-default-style",
+      "border-default-width",
       "border-strong",
-      "border-subtle"
+      "border-strong-color",
+      "border-strong-style",
+      "border-strong-width",
+      "border-subtle",
+      "border-subtle-color",
+      "border-subtle-style",
+      "border-subtle-width",
+      "border-width",
+      "breakpoint-desktop",
+      "breakpoint-mobile",
+      "breakpoint-tablet",
+      "card"
     ],
     "resolve": "path (dotted → kebab) or cssName (flat registry name); dual resolve"
   },

@@ -8,7 +8,7 @@ export default controller((_ctx: ControllerScope<any>) => {
 </controller>
 
 <scope>
-  style sampleCard = { box: space({ pad: 6 }), paint: radius(lg) }
+  style sampleCard = { pad(6).radius(lg) }
 </scope>
 
 <column gap="4">

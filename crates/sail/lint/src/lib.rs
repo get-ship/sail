@@ -26,19 +26,20 @@ pub use sail_style::{
 pub mod style {
     pub use sail_style::{
         CONDITION_PREFIXES, Channel, ConcernSlot, ConcernSpec, CssRule, MARKERS, OBJECT_KEYS,
-        PaintArg, PaintOp, Style, StyleCompleteContext, StyleCompleteItem, StyleCompleteKind,
-        StyleDiagnostic, StyleEnv, TEXT_BEARING_ELEMENTS, all_surface_packs, channel_for_setter,
-        clash, collect_font_roles, collect_motion_attaches, collect_motion_attaches_env,
-        collect_style_const_names, color_paint_vocabulary, concern_doc_line, concerns,
-        condition_media, conditions, emit, emit_style, find_concern, ir, is_geometry_setter,
-        is_interaction_when_key, is_marker, is_text_bearing, is_theme_owned_author_root,
-        is_theme_owned_token_name, looks_like_utility_string_product, lower_style,
-        lower_style_source, lower_style_source_with_motion, parse, parse_style_const_rhs, prefixes,
-        resolve_concern_name, retired_dual_border_sites, retired_replacement,
-        rewrite_concern_source, setters, style_complete_at, style_complete_context_at,
-        style_complete_for_context, style_contains_geometry, style_uses_text_channel,
-        style_uses_text_channel_env, surface_pack_for_host, surface_slots, text_channel_host_error,
-        token_groups, when_keys, with_bound_group_props, with_host_surface,
+        PaintArg, PaintOp, ResolvedType, Style, StyleCompleteContext, StyleCompleteItem,
+        StyleCompleteKind, StyleDiagnostic, StyleEnv, TEXT_BEARING_ELEMENTS, VocabRow, VocabTag,
+        all_surface_packs, channel_for_setter, clash, collect_motion_attaches,
+        collect_motion_attaches_env, collect_style_const_names, color_paint_vocabulary,
+        concern_doc_line, concerns, condition_media, conditions, emit, emit_style, find_concern,
+        find_vocab, ir, is_geometry_setter, is_interaction_when_key, is_marker, is_text_bearing,
+        is_theme_owned_author_root, is_theme_owned_token_name, looks_like_utility_string_product,
+        lower_style, lower_style_source, lower_style_source_with_motion, offered_rows, parse,
+        parse_style_const_rhs, plains, prefixes, resolve_concern_name, resolve_type,
+        resolve_type_for_tag, resolve_type_role, retired_replacement, setters, style_complete_at,
+        style_complete_context_at, style_complete_for_context, style_contains_geometry,
+        style_uses_text_channel, style_uses_text_channel_env, surface_pack_for_host, surface_slots,
+        text_channel_host_error, token_groups, vocab_rows, vocab_surface_line, when_keys,
+        with_bound_group_props, with_host_surface,
     };
 }
 
@@ -47,15 +48,33 @@ mod tests;
 
 pub use report::{Category, Finding, Severity};
 
-/// Layout-pass finding kinds mapped to stable `sail-*` rule ids.
-/// Emitted by the compiler layout bridge, not by template lint modules.
+/// Rule IDs that remain forever after the rule body was scrubbed.
+/// HARDENING-1 WI6: IDs are never deleted — only superseded. SCRUB may
+/// remove machinery; the id string stays pinned so drift tests catch
+/// accidental loss of history.
+pub const RETIRED_RULE_IDS: &[&str] = &[
+    // Superseded by language-level layout keywords (`row`/`column`/`grid`/`center`).
+    "sail-legacy-layout",
+    // S2.3 / SPEC-PLATFORM-NEUTRALITY-1: dual ambient-DOM floors — TypeEnv Pure
+    // makes document/window/localStorage/location unnameable; lint dual path gone.
+    "sail-no-ambient-dom",
+    "sail-no-ambient-events",
+    "sail-no-ambient-nav",
+    "sail-no-ambient-storage",
+    // SPEC-SPINNAKER-2: retirement is RetiredSetter (compile error), not warn-mode.
+    "sail-style-concern",
+];
+
+/// Layout-pass finding kinds mapped to stable `sail-*` rule ids
+/// (SPEC-LAYOUT-DIAG-1 / S4.1). Emitted by the compiler layout bridge, not
+/// by template lint modules — still registered for the diagnostic ratchet.
 pub const LAYOUT_DIAG_RULE_IDS: &[&str] = &[
     "sail-clipped-text",
     "sail-sub-min-tap-target",
     "sail-unintended-overflow",
 ];
 
-/// Live rule IDs (wired checks + layout diag ids). Deleted rules are not listed.
+/// All rule IDs defined by this crate (live rules + layout diag ids + retired forever-ids).
 pub fn all_rule_ids() -> Vec<&'static str> {
     rules::CONTROLLER_RULES
         .iter()
@@ -65,6 +84,7 @@ pub fn all_rule_ids() -> Vec<&'static str> {
         .chain(rules::ACTION_RULES.iter())
         .map(|(id, _)| *id)
         .chain(LAYOUT_DIAG_RULE_IDS.iter().copied())
+        .chain(RETIRED_RULE_IDS.iter().copied())
         .collect()
 }
 
@@ -253,7 +273,7 @@ pub fn lint_pack_source_source(path: &std::path::Path, source: &str) -> Vec<Find
 /// Runs the floor (`sail-no-imperative-style`) plus residual ambient floors
 /// (timers, network) so a side module cannot reintroduce CSSOM host mutation
 /// or ambient network by living outside `.controller.ts`. Ambient DOM
-/// globals are owned by TypeEnv::Sail (S2.1) — dual lint floors deleted S2.3.
+/// globals are owned by TypeEnv Pure (S2.1) — dual lint floors deleted S2.3.
 pub fn lint_app_source_source(path: &std::path::Path, source: &str) -> Vec<Finding> {
     let mut findings = Vec::new();
     for (_id, check) in rules::APP_SOURCE_RULES {
