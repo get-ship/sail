@@ -134,5 +134,3 @@ function lazyProxy(
     },
   })
 }
-
-export type { RouteSignals } from '../route-signals'

@@ -22,7 +22,6 @@ import type { RouteSignals } from './route-signals'
 import { projectSlots } from './slot-project'
 import { ensureLightContracts } from './styles/contracts-seam'
 import { hostRoute } from './host-route'
-import type { RouteSignals } from './route-signals'
 
 /** Declarative description of a component prop. */
 export interface PropDef<T> {
