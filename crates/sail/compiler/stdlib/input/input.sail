@@ -11,6 +11,7 @@
   props: {
     type: 'text' | 'email' | 'password' | 'number' | 'search' | 'tel' | 'url' | 'hidden' = 'text'
     size: 'xs' | 'sm' | 'md' | 'lg' = 'md'
+    surface: 'default' | 'filled' | 'flushed' = 'default'
     invalid = false
     disabled = false
     placeholder = ''
@@ -45,6 +46,11 @@
   style fieldSized = style(field, { match: { size: { xs: sizeXs, sm: sizeSm, md: sizeMd, lg: sizeLg } } })
   style passwordSized = style(fieldPassword, { match: { size: { xs: sizeXsPw, sm: sizeSmPw, md: sizeMdPw, lg: sizeLgPw } } })
   style hidden = {display(none)}
+  // default = current field (bg input, border). filled = muted well, no outer border.
+  // flushed = no fill, underline only (border edge b).
+  style surfaceDefault = {bg(input).border({ color: border, width: 1 })}
+  style surfaceFilled = {bg(muted).border({ color: transparent }).elevation(none), when: {hover: border({ color: transparent })}}
+  style surfaceFlushed = {bg(transparent).elevation(none).radius(none).border({ width: 0, edge: l }).border({ width: 0, edge: r }).border({ width: 0, edge: t }).border({ width: 1, edge: b, color: border }), when: {hover: border({ color: border-strong, edge: b })}}
 </scope>
 
-<input style({match: {type: {text: fieldSized, email: fieldSized, password: passwordSized, number: fieldSized, search: fieldSized, tel: fieldSized, url: fieldSized, hidden: style(hidden, {size({ min-h: 0 })})}}, compound: [{invalid: true, border({ color: destructive })}]})>
+<input style({match: {type: {text: fieldSized, email: fieldSized, password: passwordSized, number: fieldSized, search: fieldSized, tel: fieldSized, url: fieldSized, hidden: style(hidden, {size({ min-h: 0 })})}, surface: { default: surfaceDefault, filled: surfaceFilled, flushed: surfaceFlushed }}, compound: [{invalid: true, border({ color: destructive })}]})>

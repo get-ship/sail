@@ -14,6 +14,11 @@ export const contract = {
       default: 'md',
       control: 'slider',
     },
+    surface: {
+      values: ['default', 'filled', 'flushed'] as const,
+      default: 'default',
+      control: 'select',
+    },
     invalid: { default: false, control: 'switch' },
     disabled: { default: false, control: 'switch' },
     placeholder: { default: '', control: 'text' },
@@ -29,7 +34,7 @@ export const contract = {
   ],
   visual: {
     defaultRow: true,
-    cross: ['size', 'invalid', 'disabled'],
+    cross: ['size', 'surface', 'invalid', 'disabled'],
   },
   examples: true,
 } as const satisfies SurfaceContract
