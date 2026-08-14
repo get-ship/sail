@@ -37,7 +37,7 @@ pub const AUTHORING_BANS: &[AuthoringBan] = &[
     AuthoringBan {
         syntax: "raw <style>",
         rule: "sail-no-style-block",
-        instead: "Style product block style({ box: …, paint: … }) and design tokens (floor)",
+        instead: "Style product block style({ … }) and design tokens (floor)",
     },
     AuthoringBan {
         syntax: "raw <script>",

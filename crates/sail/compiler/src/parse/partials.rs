@@ -1566,7 +1566,7 @@ type B = { y: string }
 type T = { title: string }
 </scope>
 <partial list-tile props: T><text>{title}</text></partial>
-<list-tile title={"x"} style({ paint: bg(primary) })/>
+<list-tile title={"x"} style({ bg(primary) })/>
 "#;
         let err = expand_partials(src).expect_err("style ban");
         assert!(
@@ -1594,7 +1594,7 @@ type T = { title: string }
         let src = r#"
 <scope>
 type T = { title: string }
-style card = { box: pad(2) }
+style card = { pad(2) }
 </scope>
 <partial list-tile props: T>
   <row style(card)><text>{title}</text></row>

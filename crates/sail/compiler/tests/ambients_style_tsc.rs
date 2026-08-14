@@ -79,18 +79,18 @@ fn style_misuse_is_tsc_error_and_good_chain_is_green() {
     fs::write(
         work.join("good.ts"),
         r#"
-const a = style({ box: padX(2), paint: bg(primary).radius(sm).fg('muted-foreground') })
-const b = style({ when: { hover: { paint: bg(muted) } } })
-const c = style({ match: { variant: { solid: { paint: bg(primary) }, soft: { paint: bg(muted) } } } })
-const d = style({ compound: [ { pill: true, paint: radius(full) } ] })
-const e = style({ animate: enter({ opacity: 'fade' }).exit({ opacity: 'fade-out' }) })
-const f = style({ box: pad(4).gap(2), paint: bg(primary), when: { hover: { paint: bg(muted) } } })
+const a = pad({ x: 2 }).bg(primary).radius(sm).fg('muted-foreground')
+const whenHover = { when: { hover: bg(muted) } }
+const matchVariant = { match: { variant: { solid: bg(primary), soft: bg(muted) } } }
+const compoundPill = { compound: [{ pill: true }] }
+const motionEnter = { animate: enter({ opacity: 'fade' }).exit({ opacity: 'fade-out' }) }
+const padAndHover = pad(4).bg(primary)
 // T0: bound tone + static group.member + string-form paths typecheck as paint args
-const tonePaint = style({ paint: bg(tone).fg(tone.foreground).border(tone) })
-const staticMember = style({ paint: fg(primary.foreground) })
-const stringPaths = style({ paint: bg('tone' as const).fg('primary.foreground') })
-const softWash = style({ paint: colorMix(tone, 15) })
-const g = [a, b, c, d, e, f, tonePaint, staticMember, stringPaths, softWash]
+const tonePaint = bg(tone).fg(tone.foreground).border(tone)
+const staticMember = fg(primary.foreground)
+const stringPaths = bg('tone' as const).fg('primary.foreground')
+const softWash = bg({ color: tone, mix: 15 })
+const g = [a, whenHover, matchVariant, compoundPill, motionEnter, padAndHover, tonePaint, staticMember, stringPaths, softWash]
 void g
 void signal(0)
 void controller(() => ({ n: signal(1) }))
@@ -154,7 +154,7 @@ void controller(() => ({ n: signal(1) }))
     // Bad token type (number where color token required)
     fs::write(
         work.join("bad-token.ts"),
-        "const x = style({ paint: bg(12345 as 12345) })\nvoid x\n",
+        "const x = bg(12345 as 12345)\nvoid x\n",
     )
     .unwrap();
     fs::write(

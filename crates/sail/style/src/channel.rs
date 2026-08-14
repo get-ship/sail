@@ -330,7 +330,7 @@ mod tests {
 
     #[test]
     fn style_uses_text_detects_channel_setters() {
-        let (s, _) = parse("style({ text: type({ size: sm }) })");
+        let (s, _) = parse("style({ type({ size: sm }) })");
         assert!(style_uses_text_channel(&s));
         let (s, _) = parse("style({ pad(2), bg(primary) })");
         assert!(!style_uses_text_channel(&s));
@@ -413,7 +413,7 @@ mod tests {
             let src = format!("style({{ pad(2), when: {{ {key}: {{ pad(4) }} }} }})");
             assert!(gate_err(&src), "pad under {key} must refuse: {src}");
             let src = format!(
-                "style({{ box: size({{ w: full }}), when: {{ {key}: {{ box: size({{ h: full }}) }} }} }})"
+                "style({{ size({{ w: full }}), when: {{ {key}: {{ size({{ h: full }}) }} }} }})"
             );
             assert!(gate_err(&src), "size under {key} must refuse: {src}");
         }
@@ -442,13 +442,13 @@ mod tests {
             "style({ display(none), when: { hover: { display(block) } } })"
         ));
         assert!(!gate_err(
-            "style({ box: overflow({ all: hidden }), when: { group-hover: { box: overflow({ all: auto }) } } })"
+            "style({ overflow({ all: hidden }), when: { group-hover: { overflow({ all: auto }) } } })"
         ));
     }
 
     #[test]
     fn color_setter_refused_with_fg_pointer() {
-        let (_, diags) = parse("style({ paint: color(primary) })");
+        let (_, diags) = parse("style({ color(primary) })");
         assert!(
             diags.iter().any(|d| d.message().contains("fg")),
             "{:?}",
@@ -459,7 +459,7 @@ mod tests {
     #[test]
     fn filter_and_markers_compile_and_lower() {
         let src = "style({ \
-            paint: filter({ blur: 4, brightness: 100, contrast: 100, grayscale: 0, \
+            filter({ blur: 4, brightness: 100, contrast: 100, grayscale: 0, \
                 hue: 0, invert: 0, sepia: 0, saturate: 100 }).containerType(inline-size).containerName(main), \
             pad(2) \
         })";

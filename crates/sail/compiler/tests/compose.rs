@@ -19,9 +19,9 @@ fn opts() -> CompileOpts {
 }
 
 const RED_RHYTHM: &str = r#"<column>
-  <p style({ box: mb(4) })>a</p>
-  <p style({ box: mb(4) })>b</p>
-  <p style({ box: mb(8) })>c</p>
+  <p style({ margin({ b: 4 }) })>a</p>
+  <p style({ margin({ b: 4 }) })>b</p>
+  <p style({ margin({ b: 8 }) })>c</p>
 </column>"#;
 
 #[test]

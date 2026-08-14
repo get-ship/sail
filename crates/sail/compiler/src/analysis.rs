@@ -1086,7 +1086,7 @@ mod tests {
     #[test]
     fn completions_at_offset_style_bg_tokens() {
         // SPEC-STYLE-COMPLETE-1: caret inside `bg(¦)` returns Style tokens.
-        let src = r#"<div style({ paint: bg() })>x</div>"#;
+        let src = r#"<div style({ bg() })>x</div>"#;
         let off = src.find("bg(").expect("bg(") + 3; // inside parens
         let items = completions_at_offset(src, None, off, None);
         assert!(

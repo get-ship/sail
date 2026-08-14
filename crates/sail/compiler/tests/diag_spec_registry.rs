@@ -38,8 +38,8 @@ const KNOWN_IDS: &[&str] = &["sail-layout", "sail-unintended-overflow"];
 
 /// Child taller than fixed column — fires experimental layout under strict.
 const OVERFLOW_SRC: &str = r#"
-<column style({ box: h(20) })>
-  <div style({ box: h(40).shrink(0) })>x</div>
+<column style({ size({ h: 20 }) })>
+  <div style({ size({ h: 40 }).shrink(0) })>x</div>
 </column>
 "#;
 

@@ -5769,10 +5769,6 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
       "description": "L1 anchored menu (element mode)."
     },
     {
-      "tag": "dropzone",
-      "description": "dashed drop surface that accepts files."
-    },
-    {
       "tag": "empty-state",
       "description": "L1 centered empty placeholder."
     },

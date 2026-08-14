@@ -1569,11 +1569,11 @@ export default controller(() => {
         // Regression: substitute_text_exprs gutted `style({…})` payloads as
         // "unresolved expressions", leaving `style()` → empty class → paint
         // silently dropped (golden paint fixtures caught it).
-        let src = "<div>\n  style({ box: pad(3), paint: bg(primary).fg(primary-foreground) })\nhello</div>";
+        let src = "<div>\n  style({ pad(3).bg(primary).fg(primary-foreground) })\nhello</div>";
         let p = project(src);
         assert!(
             p.source
-                .contains("style({ box: pad(3), paint: bg(primary).fg(primary-foreground) })"),
+                .contains("style({ pad(3).bg(primary).fg(primary-foreground) })"),
             "style payload must survive verbatim: {}",
             p.source
         );
@@ -1586,17 +1586,17 @@ export default controller(() => {
 
     #[test]
     fn when_and_const_ref_calls_survive_projection() {
-        let src = "<div>\n  style({ box: pad(2) }).when(hover, { paint: bg(accent) })\nx</div>";
+        let src = "<div>\n  style({ pad(2) }).when(hover, { bg(accent) })\nx</div>";
         let p = project(src);
         assert!(
-            p.source.contains(".when(hover, { paint: bg(accent) })"),
+            p.source.contains(".when(hover, { bg(accent) })"),
             "{}",
             p.source
         );
-        let src2 = "<div>\n  cta.press({ paint: bg(primary) })\ny</div>";
+        let src2 = "<div>\n  cta.press({ bg(primary) })\ny</div>";
         let p2 = project(src2);
         assert!(
-            p2.source.contains("cta.press({ paint: bg(primary) })"),
+            p2.source.contains("cta.press({ bg(primary) })"),
             "{}",
             p2.source
         );

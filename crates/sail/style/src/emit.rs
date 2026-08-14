@@ -493,14 +493,14 @@ pub fn lower_style_source_with_motion(
     css: &mut String,
     seen: &mut HashSet<String>,
 ) -> Result<(String, Vec<(String, String)>), Vec<super::ir::StyleDiagnostic>> {
-    // Product authoring: channel spine only. Flat `style.pad().bg()` is retired
-    // (corpus codemod + block attachment). Migration dual is `flat_chain` only.
+    // Product authoring: flat concern chain. Constructor `style.pad().bg()` is
+    // retired (corpus codemod + block attachment). Migration dual is `flat_chain` only.
     // Early refuse matches product `parse` (no IR for flat chains).
     let t = src.trim_start();
     if t.starts_with("style.") {
         return Err(vec![super::ir::StyleDiagnostic::ParseError {
-            message: "flat `style.method(…)` chains are retired — use the channel spine: \
-                      style({ box: size({ w: full }).pad(4), paint: bg(surface), when: { hover: { bg(muted) } } })"
+            message: "flat `style.method(…)` chains are retired — write concern calls: \
+                      style({ size({ w: full }).pad(4).bg(surface), when: { hover: bg(muted) } })"
                 .into(),
             source: t.to_string(),
         }]);

@@ -124,7 +124,7 @@ fn d2_every_declarator_in_a_multi_declarator_const_registers() {
     // `(--b)` is the sx reflection of the SECOND declarator. Before the fix it
     // failed `sail-style-bind` with a did-you-mean pointing at its sibling `a`.
     let src = format!(
-        "{CTRL_COMMA}<div>\n  style({{ paint: opacity(bind(a)) }})\n  <span>\n    style({{ paint: opacity(bind(b)) }})\n  </span>\n</div>"
+        "{CTRL_COMMA}<div style({{ opacity(bind(a)) }})>\n  <span style({{ opacity(bind(b)) }})></span>\n</div>"
     );
     compile(&src, opts()).expect("both `a` and `b` are signals — both must reflect");
 }
@@ -147,7 +147,7 @@ fn d3_analyze_agrees_with_compile_on_an_unconfigured_source() {
     // No `sail.config.json` in reach → no capability policy is declared, so the
     // capability-gated rules must stay quiet. Editor squiggles that name a
     // policy nobody opted into are squiggles that lie about what builds.
-    let src = r#"<div style({ box: pad(4) })> hi</div>"#;
+    let src = r#"<div style({ pad(4) })> hi</div>"#;
     compile(src, opts()).expect("sx compiles with no policy declared");
     let a = sail_compiler::analyze(src, None, &[]);
     let noise: Vec<_> = a

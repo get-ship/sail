@@ -1,8 +1,8 @@
 //! `sail-participation-style` — flex/grid **participation** is spelled on the
-//! **box channel** (`style({ box: grow(1).minW(0) })`), not bare attrs.
+//! Style (`style({ grow(1).size({ min-w: 0 }) })`), not bare attrs.
 //!
 //! Bare `grow` / `shrink` / `w` / `min-w` / `max-w` on open tags are refused
-//! with a pointer to the box channel. Layout-keyword **axis** attrs
+//! with a pointer to Style. Layout-keyword **axis** attrs
 //! (`gap` / `align` / `justify` on row|column|grid|…) stay structural sugar
 //! (Phase 4–5 — not this rule).
 //!
@@ -180,16 +180,16 @@ fn scan_attrs(
             let abs = region_abs + name_start;
             let (line, col) = offset_to_line_col(source, abs);
             let example = match (attr, value) {
-                ("grow", "") | ("grow", "1") | ("grow", "true") => "style({ box: grow(1) })".into(),
-                ("grow", v) => format!("style({{ box: grow({v}) }})"),
+                ("grow", "") | ("grow", "1") | ("grow", "true") => "style({ grow(1) })".into(),
+                ("grow", v) => format!("style({{ grow({v}) }})"),
                 ("shrink", "") | ("shrink", "1") | ("shrink", "true") => {
-                    "style({ box: shrink(1) })".into()
+                    "style({ shrink(1) })".into()
                 }
-                ("shrink", v) => format!("style({{ box: shrink({v}) }})"),
-                ("w", v) if !v.is_empty() => format!("style({{ box: w({v}) }})"),
-                ("min-w", v) if !v.is_empty() => format!("style({{ box: minW({v}) }})"),
-                ("max-w", v) if !v.is_empty() => format!("style({{ box: maxW({v}) }})"),
-                _ => format!("style({{ box: {setter}(…) }})"),
+                ("shrink", v) => format!("style({{ shrink({v}) }})"),
+                ("w", v) if !v.is_empty() => format!("style({{ size({{ w: {v} }}) }})"),
+                ("min-w", v) if !v.is_empty() => format!("style({{ size({{ min-w: {v} }}) }})"),
+                ("max-w", v) if !v.is_empty() => format!("style({{ size({{ max-w: {v} }}) }})"),
+                _ => format!("style({{ {setter}(…) }})"),
             };
             findings.push(Finding {
                 file: path.to_path_buf(),
@@ -198,11 +198,11 @@ fn scan_attrs(
                 rule: RULE_ID,
                 severity: Severity::Error,
                 message: format!(
-                    "bare `{attr}` is layout participation — use the box channel: {example}"
+                    "bare `{attr}` is layout participation — use Style: {example}"
                 ),
                 suggest: Some(format!(
                     "Move participation onto Style: attach `{example}` as a tag call on the open \
-                     tag (merge into an existing `style({{ box: … }})` when present). Layout-keyword \
+                     tag (merge into an existing `style({{ … }})` when present). Layout-keyword \
                      axis attrs `gap` / `align` / `justify` stay on row|column|grid."
                 )),
             });
@@ -254,13 +254,13 @@ mod tests {
     #[test]
     fn allows_box_channel_grow_and_paint() {
         assert!(
-            run(r#"<div style({ box: grow(1).minW(0), paint: bg(card) })>  x
+            run(r#"<div style({ grow(1).size({ min-w: 0 }).bg(card) })>  x
 </div>"#)
             .is_empty()
         );
         assert!(
             run(
-                r#"<row gap="2" align="center" style({ box: grow(1).w(full) })>  x
+                r#"<row gap="2" align="center" style({ grow(1).size({ w: full }) })>  x
 </row>"#
             )
             .is_empty()

@@ -2238,7 +2238,7 @@ mod tests {
 
     #[test]
     fn border_subtle_emits_member_vars() {
-        let op = only_op("style({ paint: border(subtle) })");
+        let op = only_op("style({ border(subtle) })");
         let css = lower_op_css(&op).unwrap();
         assert!(
             css.contains(&("border-color".into(), "var(--border-subtle-color)".into())),
@@ -2256,7 +2256,7 @@ mod tests {
 
     #[test]
     fn border_default_emits_member_vars() {
-        let op = only_op("style({ paint: border(default) })");
+        let op = only_op("style({ border(default) })");
         let css = lower_op_css(&op).unwrap();
         assert!(
             css.contains(&("border-color".into(), "var(--border-default-color)".into()))
@@ -2267,7 +2267,7 @@ mod tests {
 
     #[test]
     fn border_slot_object_emits_only_named_slots() {
-        let op = only_op("style({ paint: border({ color: muted, width: hairline }) })");
+        let op = only_op("style({ border({ color: muted, width: hairline }) })");
         let css = lower_op_css(&op).unwrap();
         assert!(
             css.contains(&("border-color".into(), "var(--muted)".into())),
@@ -2282,7 +2282,7 @@ mod tests {
 
     #[test]
     fn radius_is_not_a_border_slot() {
-        let (_, diags) = parse("style({ paint: border({ radius: md }) })");
+        let (_, diags) = parse("style({ border({ radius: md }) })");
         assert!(
             diags.iter().any(|d| {
                 matches!(d, StyleDiagnostic::UnknownConcernSlot { slot, .. } if slot == "radius")
@@ -2295,7 +2295,7 @@ mod tests {
 
     #[test]
     fn border_primary_is_the_color_slot() {
-        let (style, diags) = parse("style({ paint: border(primary) })");
+        let (style, diags) = parse("style({ border(primary) })");
         assert!(
             diags.is_empty(),
             "{:?}",
@@ -2306,7 +2306,7 @@ mod tests {
 
     #[test]
     fn duplicate_slot_in_object_names_the_slot() {
-        let (_, diags) = parse("style({ paint: border({ color: muted, color: primary }) })");
+        let (_, diags) = parse("style({ border({ color: muted, color: primary }) })");
         let msg = diags
             .iter()
             .find(|d| matches!(d, StyleDiagnostic::DuplicateSlot { slot, .. } if slot == "color"))
@@ -2325,7 +2325,7 @@ mod tests {
 
     #[test]
     fn slot_color_unknown_pack_name_is_bad_token() {
-        let (_, diags) = parse("style({ paint: border({ color: dialog-border }) })");
+        let (_, diags) = parse("style({ border({ color: dialog-border }) })");
         assert!(
             diags
                 .iter()
@@ -2339,7 +2339,7 @@ mod tests {
     #[test]
     fn same_kind_twice_clashes() {
         let (style, parse_diags) =
-            parse("style({ paint: border(subtle).border({ color: primary }) })");
+            parse("style({ border(subtle).border({ color: primary }) })");
         assert!(
             parse_diags.is_empty(),
             "{:?}",
@@ -2361,7 +2361,7 @@ mod tests {
     #[test]
     fn stroke_plus_ring_do_not_clash() {
         let (style, diags) =
-            parse("style({ paint: border(subtle).border({ kind: ring, color: primary }) })");
+            parse("style({ border(subtle).border({ kind: ring, color: primary }) })");
         assert!(
             diags.is_empty(),
             "{:?}",
@@ -2374,7 +2374,7 @@ mod tests {
     #[test]
     fn when_override_does_not_clash() {
         let (style, diags) = parse(
-            "style({ paint: border(subtle), when: { hover: { paint: border({ color: primary }) } } })",
+            "style({ border(subtle), when: { hover: { border({ color: primary }) } } })",
         );
         assert!(
             diags.is_empty(),
@@ -2387,7 +2387,7 @@ mod tests {
 
     #[test]
     fn size_and_space_do_not_clash() {
-        let (style, diags) = parse("style({ box: size({ w: full }).pad({ x: 3 }) })");
+        let (style, diags) = parse("style({ size({ w: full }).pad({ x: 3 }) })");
         assert!(
             diags.is_empty(),
             "{:?}",
@@ -2474,7 +2474,7 @@ mod tests {
 
     #[test]
     fn size_slot_object_lowers() {
-        let op = only_op("style({ box: size({ w: full, h: full }) })");
+        let op = only_op("style({ size({ w: full, h: full }) })");
         let css = lower_op_css(&op).unwrap();
         assert!(
             css.iter().any(|(p, v)| p == "width" && v.contains("100%")),

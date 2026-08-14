@@ -43,13 +43,13 @@ fn style_match_variant_lowers_attr_selectors_element_mode() {
     variant: 'soft' | 'solid' | 'outline' = 'soft'
     size: 'sm' | 'md' = 'md'
   }
-  const soft = style({ paint: bg(muted).fg(muted-foreground).borderWidth(1).border(border) })
-  const solid = style({ paint: bg(primary).fg(primary-foreground).borderWidth(1).border(primary), when: { hover: { paint: opacity(90) } } })
-  const outline = style({ paint: bg(transparent).fg(foreground).borderWidth(1).border(border) })
-  const sizeSm = style({ box: padX(2), text: fontSize(xs) })
-  const sizeMd = style({ box: padX(2_5), text: fontSize(sm) })
+  const soft = style({ bg(muted).fg(muted-foreground).border({ width: 1, color: border }) })
+  const solid = style({ bg(primary).fg(primary-foreground).border({ width: 1, color: primary }), when: { hover: opacity(90) } })
+  const outline = style({ bg(transparent).fg(foreground).border({ width: 1, color: border }) })
+  const sizeSm = style({ pad({ x: 2 }).type({ size: xs }) })
+  const sizeMd = style({ pad({ x: 2_5 }).type({ size: sm }) })
 </scope>
-<span style({ paint: radius(full).borderWidth(1), text: fontWeight(medium), match: { variant: { soft: soft, solid: solid, outline: outline }, size: { sm: sizeSm, md: sizeMd } } })> 
+<span style({ radius(full).border({ width: 1 }).type({ weight: medium }), match: { variant: { soft: soft, solid: solid, outline: outline }, size: { sm: sizeSm, md: sizeMd } } })> 
   <slot></slot>
 </span>
 "#;
@@ -489,7 +489,7 @@ fn switch_host_track_paint_on_host_sx() {
     let out = compile_element(src, "switch").expect("switch compiles");
     assert!(
         !src.contains("--sw-")
-            && (src.contains("style({ paint: appearance(none) })")
+            && (src.contains("style({ appearance(none) })")
                 || src.contains("appearance(none)"))
             && src.contains("bg(none)")
             && src.contains("bg(switch)")
@@ -640,7 +640,7 @@ fn separator_rest_line_without_empty_tone_stomp() {
     let out = compile_element(src, "separator").expect("separator compiles");
     assert!(
         src.contains("bg(separator.line)")
-            && !src.contains("solid: style(solid, { paint: bg(tone) })")
+            && !src.contains("solid: style(solid, { bg(tone) })")
             && src.contains("tone: *"),
         "separator must not unconditional bg(tone) on solid; tone via presence compound"
     );
@@ -1910,7 +1910,7 @@ fn field_empty_and_invalid_hint_on_structure_sx() {
     let out = compile_element(src, "field").expect("field compiles");
     assert!(
         (src.contains(".group()")
-            || src.contains("style({ paint: group() })")
+            || src.contains("style({ group() })")
             || src.contains("group()"))
             && src.contains("empty:")
             && src.contains("group-invalid:")
@@ -1971,7 +1971,7 @@ fn label_req_gate_in_element_skins_anatomy() {
             && (src.contains("label.required") || src.contains("label-required"))
             && src.contains("group-required")
             && src.contains("display(none)")
-            && (src.contains(".group()") || src.contains("style({ paint: group() })")),
+            && (src.contains(".group()") || src.contains("style({ group() })")),
         "structure documents required marker via Style (no part class)"
     );
     assert!(out.native, "label is native-kind");

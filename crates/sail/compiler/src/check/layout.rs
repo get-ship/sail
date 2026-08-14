@@ -234,8 +234,8 @@ mod severity_tests {
         // Column with overflow hidden and a child that wants height while parent
         // collapses — classic silent-clip shape (simplified).
         let src = r#"
-            <column style({ box: overflow(hidden).h(0) })>
-              <div style({ box: h(20) })>tall</div>
+            <column style({ overflow({ all: hidden }).size({ h: 0 }) })>
+              <div style({ size({ h: 20 }) })>tall</div>
             </column>
         "#;
         let diags = collect(src);
@@ -257,7 +257,7 @@ mod severity_tests {
     /// from Warning → Error so studio check fails closed.
     #[test]
     fn layout_error_profile_promotes_zero_main_axis() {
-        let src = r#"<column style({ box: h(0) })><div style({ box: h(20) })>x</div></column>"#;
+        let src = r#"<column style({ size({ h: 0 }) })><div style({ size({ h: 20 }) })>x</div></column>"#;
         let dir = tempfile::tempdir().expect("tempdir");
         std::fs::write(
             dir.path().join("sail.config.json"),
@@ -817,7 +817,7 @@ mod tests {
     /// (the div — the column's only child totals 0 after flex shrink, so the
     /// parent case is suppressed by the layout crate's noise gate).
     const ZERO_MAIN_SRC: &str =
-        r#"<column style({ box: h(0) })><div style({ box: h(20) })>x</div></column>"#;
+        r#"<column style({ size({ h: 0 }) })><div style({ size({ h: 20 }) })>x</div></column>"#;
 
     #[test]
     fn maps_zero_main_axis_back_to_collapsed_box() {
@@ -867,7 +867,7 @@ mod tests {
 
     #[test]
     fn duplicate_columns_map_by_index() {
-        let src = "<column>A</column>\n<column style({ box: h(0) })><div style({ box: h(20) })>x</div></column>";
+        let src = "<column>A</column>\n<column style({ size({ h: 0 }) })><div style({ size({ h: 20 }) })>x</div></column>";
         let diags = collect(src);
         let zero = diags
             .iter()
@@ -891,9 +891,24 @@ mod tests {
     fn multi_viewport_dedups_identical_findings() {
         // zero-main-axis fires at both mobile and desktop; collect must emit once.
         let src = ZERO_MAIN_SRC;
-        let pre = crate::parse::preprocess::preprocess(src).expect("preprocess");
-        let mobile = sail_layout::check_preprocessed(&pre, MOBILE_VIEWPORT).expect("mobile");
-        let desktop = sail_layout::check_preprocessed(&pre, DEFAULT_VIEWPORT).expect("desktop");
+        let (pre, hosts) = crate::parse::preprocess::preprocess_with_style(src).expect("preprocess");
+        let opts = sail_layout::CheckOptions::default();
+        let mobile = sail_layout::check_preprocessed_with_hosts(
+            &pre,
+            MOBILE_VIEWPORT,
+            opts,
+            &hosts.types,
+            &hosts.boxes,
+        )
+        .expect("mobile");
+        let desktop = sail_layout::check_preprocessed_with_hosts(
+            &pre,
+            DEFAULT_VIEWPORT,
+            opts,
+            &hosts.types,
+            &hosts.boxes,
+        )
+        .expect("desktop");
         assert!(
             mobile
                 .diagnostics

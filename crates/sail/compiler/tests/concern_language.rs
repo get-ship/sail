@@ -116,7 +116,7 @@ fn is_constructor_product(style: &Style) -> bool {
 
 #[test]
 fn retired_border_width_names_concern() {
-    let diags = must_retire("style({ paint: borderWidth(1) })", "border");
+    let diags = must_retire("style({ borderWidth(1) })", "border");
     assert!(
         diags
             .iter()
@@ -126,7 +126,7 @@ fn retired_border_width_names_concern() {
         "{:?}",
         diag_messages(&diags)
     );
-    let err = compile_element(r#"<div style({ paint: borderWidth(1) })>x</div>"#, "card")
+    let err = compile_element(r#"<div style({ borderWidth(1) })>x</div>"#, "card")
         .expect_err("borderWidth must fail compilation");
     assert!(
         err.message.contains("border"),
@@ -145,7 +145,7 @@ fn bg_and_fg_are_live_author_names() {
 
 #[test]
 fn retired_pad_x_names_pad() {
-    let diags = must_retire("style({ box: padX(3) })", "pad");
+    let diags = must_retire("style({ padX(3) })", "pad");
     assert!(
         names_concern(&diags, "pad"),
         "padX(3) must name `pad`: {:?}",
@@ -155,7 +155,7 @@ fn retired_pad_x_names_pad() {
 
 #[test]
 fn retired_font_size_names_type() {
-    let diags = must_retire("style({ text: fontSize(sm) })", "type");
+    let diags = must_retire("style({ fontSize(sm) })", "type");
     assert!(
         names_concern(&diags, "type"),
         "fontSize(sm) must name `type`: {:?}",
@@ -165,7 +165,7 @@ fn retired_font_size_names_type() {
 
 #[test]
 fn retired_w_names_size() {
-    let diags = must_retire("style({ box: w(full) })", "size");
+    let diags = must_retire("style({ w(full) })", "size");
     assert!(
         names_concern(&diags, "size"),
         "w(full) must name `size`: {:?}",
@@ -175,7 +175,7 @@ fn retired_w_names_size() {
 
 #[test]
 fn retired_shadow_names_elevation() {
-    let diags = must_retire("style({ paint: shadow(sm) })", "elevation");
+    let diags = must_retire("style({ shadow(sm) })", "elevation");
     assert!(
         names_concern(&diags, "elevation"),
         "shadow(sm) must name `elevation`: {:?}",
@@ -185,7 +185,7 @@ fn retired_shadow_names_elevation() {
 
 #[test]
 fn retired_gap_is_not_style() {
-    let diags = lower_must_fail("style({ box: gap(4) })");
+    let diags = lower_must_fail("style({ gap(4) })");
     let joined = diag_messages(&diags).join(" | ");
     assert!(joined.contains("gap"), "gap error must name gap: {joined}");
     assert!(
@@ -200,7 +200,7 @@ fn retired_gap_is_not_style() {
             || joined.to_ascii_lowercase().contains("not a style"),
         "message must say gap is not Style: {joined}"
     );
-    let err = compile_element(r#"<div style({ box: gap(4) })>x</div>"#, "card")
+    let err = compile_element(r#"<div style({ gap(4) })>x</div>"#, "card")
         .expect_err("gap must fail compilation");
     assert!(
         err.message.contains("gap")
@@ -258,9 +258,9 @@ fn retired_sx_attribute() {
 
 #[test]
 fn retired_border_color_poke() {
-    let _ = css_of("style({ paint: border(primary) })");
+    let _ = css_of("style({ border(primary) })");
 
-    let poke = lower_must_fail("style({ paint: border(dialog.border) })");
+    let poke = lower_must_fail("style({ border(dialog.border) })");
     assert!(
         !poke.is_empty(),
         "dotted pack poke must fail closed: {:?}",
@@ -274,7 +274,7 @@ fn retired_border_color_poke() {
 
 #[test]
 fn kind_stroke_plus_ring_coexist() {
-    let src = "style({ paint: border(subtle).border({ kind: ring, color: primary }) })";
+    let src = "style({ border(subtle).border({ kind: ring, color: primary }) })";
     let (style, diags) = parse(src);
     assert!(
         diags.is_empty(),
@@ -303,7 +303,7 @@ fn kind_stroke_plus_ring_coexist() {
         "ring kind must live in CSS: {css}"
     );
 
-    let hover_src = "style({ paint: border(subtle), when: { hover: { paint: border({ kind: ring, color: primary }) } } })";
+    let hover_src = "style({ border(subtle), when: { hover: border({ kind: ring, color: primary }) } })";
     let (hover_style, hover_diags) = parse(hover_src);
     assert!(
         hover_diags.is_empty(),
@@ -323,7 +323,7 @@ fn kind_stroke_plus_ring_coexist() {
 
 #[test]
 fn kind_same_twice_clashes() {
-    let src = "style({ paint: border(subtle).border({ color: primary }) })";
+    let src = "style({ border(subtle).border({ color: primary }) })";
     let (style, parse_diags) = parse(src);
     assert!(
         parse_diags.is_empty(),
@@ -362,7 +362,7 @@ fn kind_same_twice_clashes() {
 #[test]
 fn slot_merge_partial_hover() {
     let src =
-        "style({ paint: border(subtle), when: { hover: { paint: border({ color: primary }) } } })";
+        "style({ border(subtle), when: { hover: border({ color: primary }) } })";
     let (style, diags) = parse(src);
     assert!(diags.is_empty(), "{:?}", diag_messages(&diags));
     assert!(
@@ -403,7 +403,7 @@ fn slot_merge_partial_hover() {
 
 #[test]
 fn size_and_space_do_not_clash() {
-    let src = "style({ box: size({ w: full }).pad({ x: 3 }) })";
+    let src = "style({ size({ w: full }).pad({ x: 3 }) })";
     let (style, diags) = parse(src);
     assert!(
         diags.is_empty(),
@@ -431,8 +431,8 @@ fn size_and_space_do_not_clash() {
 #[test]
 fn size_has_no_pad_slot() {
     for src in [
-        "style({ box: size({ pad: 3 }) })",
-        "style({ box: size({ pad-x: 3 }) })",
+        "style({ size({ pad: 3 }) })",
+        "style({ size({ pad-x: 3 }) })",
     ] {
         let diags = lower_must_fail(src);
         assert!(
@@ -488,7 +488,7 @@ fn fill_and_ink_named() {
 
 #[test]
 fn type_wrap_not_truncate_marker() {
-    let diags = lower_must_fail("style({ text: truncate() })");
+    let diags = lower_must_fail("style({ truncate() })");
     let joined = diag_messages(&diags).join(" | ");
     assert!(
         joined.contains("type") || joined.contains("wrap") || joined.contains("truncate"),
@@ -503,7 +503,7 @@ fn type_wrap_not_truncate_marker() {
         "truncate marker is deleted in favor of type.wrap: {joined}"
     );
 
-    let css = css_of("style({ text: type({ wrap: truncate }) })");
+    let css = css_of("style({ type({ wrap: truncate }) })");
     let norm = css.replace(' ', "");
     assert!(
         norm.contains("ellipsis") || norm.contains("text-overflow") || norm.contains("nowrap"),
@@ -513,7 +513,7 @@ fn type_wrap_not_truncate_marker() {
 
 #[test]
 fn member_access_does_not_resolve() {
-    let src = "style({ box: size(control-md).h })";
+    let src = "style({ size(control-md).h })";
     let diags = lower_must_fail(src);
     let joined = diag_messages(&diags).join(" | ");
     let lower = joined.to_ascii_lowercase();
@@ -528,7 +528,7 @@ fn member_access_does_not_resolve() {
 
 #[test]
 fn intra_channel_chain_stays() {
-    let src = "style({ box: size({ w: full }).position(absolute) })";
+    let src = "style({ size({ w: full }).position(absolute) })";
     let (style, diags) = parse(src);
     assert!(
         diags.is_empty(),

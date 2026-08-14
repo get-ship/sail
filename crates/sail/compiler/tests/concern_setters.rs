@@ -40,7 +40,7 @@ fn retired_names_concern(src: &str, concern: &str) {
 
 #[test]
 fn concern_resolve_border_subtle() {
-    let css = css_of("style({ paint: border(subtle) })");
+    let css = css_of("style({ border(subtle) })");
     assert!(
         css.contains("var(--border-subtle-color)"),
         "color member: {css}"
@@ -58,7 +58,7 @@ fn concern_resolve_border_subtle() {
 #[test]
 fn concern_resolve_border_dialog_unqualified() {
     // component.* packs are gone. `dialog` is not a border composite.
-    let diags = parse_diags("style({ paint: border(dialog) })");
+    let diags = parse_diags("style({ border(dialog) })");
     assert!(
         !diags.is_empty(),
         "border(dialog) must not resurrect a deleted pack: {:?}",
@@ -68,7 +68,7 @@ fn concern_resolve_border_dialog_unqualified() {
 
 #[test]
 fn slot_object_border() {
-    let css = css_of("style({ paint: border({ color: muted, width: hairline, style: solid }) })");
+    let css = css_of("style({ border({ color: muted, width: hairline, style: solid }) })");
     assert!(css.contains("var(--muted)"), "{css}");
     assert!(css.contains("var(--border-width)"), "{css}");
     assert!(
@@ -79,7 +79,7 @@ fn slot_object_border() {
 
 #[test]
 fn scoped_name_shadows_global() {
-    let (style, diags) = parse("style({ paint: border(subtle) })");
+    let (style, diags) = parse("style({ border(subtle) })");
     assert!(diags.is_empty(), "{diags:?}");
     let css = lower_style(&style, &HashMap::new()).1;
     assert!(
@@ -90,13 +90,13 @@ fn scoped_name_shadows_global() {
 
 #[test]
 fn old_property_setters_are_retired() {
-    retired_names_concern("style({ paint: borderWidth(1).border(primary) })", "border");
+    retired_names_concern("style({ borderWidth(1).border(primary) })", "border");
 }
 
 #[test]
 fn when_override_allowed() {
     let (style, diags) = parse(
-        "style({ paint: border(subtle), when: { hover: { paint: border({ color: primary }) } } })",
+        "style({ border(subtle), when: { hover: border({ color: primary }) } })",
     );
     assert!(diags.is_empty(), "{diags:?}");
     let clashes = clash::detect_clashes(&style, &HashMap::new());
@@ -107,7 +107,7 @@ fn when_override_allowed() {
 
 #[test]
 fn radius_stays_out_of_border() {
-    let diags = lower_must_fail("style({ paint: border({ radius: md }) })");
+    let diags = lower_must_fail("style({ border({ radius: md }) })");
     assert!(
         diags.iter().any(|d| {
             matches!(d, StyleDiagnostic::UnknownConcernSlot { slot, .. } if slot == "radius")
@@ -117,7 +117,7 @@ fn radius_stays_out_of_border() {
         diags.iter().map(|d| d.message()).collect::<Vec<_>>()
     );
     let err = compile_element(
-        r#"<div style({ paint: border({ radius: md }) })>x</div>"#,
+        r#"<div style({ border({ radius: md }) })>x</div>"#,
         "card",
     )
     .expect_err("radius on border must fail compilation");
@@ -130,7 +130,7 @@ fn radius_stays_out_of_border() {
 
 #[test]
 fn duplicate_slot_fails_compilation() {
-    let diags = lower_must_fail("style({ paint: border({ color: muted, color: primary }) })");
+    let diags = lower_must_fail("style({ border({ color: muted, color: primary }) })");
     let msg = diags
         .iter()
         .find(|d| matches!(d, StyleDiagnostic::DuplicateSlot { .. }))
@@ -149,7 +149,7 @@ fn duplicate_slot_fails_compilation() {
 
 #[test]
 fn slot_color_unknown_pack_name_is_bad_token() {
-    let diags = lower_must_fail("style({ paint: border({ color: dialog-border }) })");
+    let diags = lower_must_fail("style({ border({ color: dialog-border }) })");
     assert!(
         diags.iter().any(|d| match d {
             StyleDiagnostic::BadToken { value, .. } if value == "dialog-border" => true,
@@ -163,22 +163,22 @@ fn slot_color_unknown_pack_name_is_bad_token() {
 
 #[test]
 fn size_slot_object_and_named_full() {
-    let css = css_of("style({ box: size({ w: full, h: full }) })");
+    let css = css_of("style({ size({ w: full, h: full }) })");
     assert!(css.contains("width") && css.contains("100%"), "{css}");
-    let css = css_of("style({ box: size(full) })");
+    let css = css_of("style({ size(full) })");
     assert!(css.contains("width") || css.contains("100%"), "{css}");
 }
 
 #[test]
 fn size_basis_slot_lowers() {
-    let css = css_of("style({ box: size({ basis: 0, min-w: 0 }) })");
+    let css = css_of("style({ size({ basis: 0, min-w: 0 }) })");
     assert!(css.contains("flex-basis") && css.contains("0"), "{css}");
-    retired_names_concern("style({ box: basis(0) })", "size");
+    retired_names_concern("style({ basis(0) })", "size");
 }
 
 #[test]
 fn type_italic_nums_wrap_prewrap() {
-    let css = css_of("style({ text: type({ italic: true, nums: tabular, wrap: pre-wrap }) })");
+    let css = css_of("style({ type({ italic: true, nums: tabular, wrap: pre-wrap }) })");
     assert!(
         css.contains("font-style") && css.contains("italic"),
         "{css}"
@@ -208,7 +208,7 @@ fn ink_gradient_and_motion_transform_bind() {
 #[test]
 fn kind_stroke_plus_ring_coexist() {
     let (style, diags) =
-        parse("style({ paint: border(subtle).border({ kind: ring, color: primary }) })");
+        parse("style({ border(subtle).border({ kind: ring, color: primary }) })");
     assert!(diags.is_empty(), "{diags:?}");
     let clashes = clash::detect_clashes(&style, &HashMap::new());
     assert!(
@@ -228,7 +228,7 @@ fn kind_stroke_plus_ring_coexist() {
 
 #[test]
 fn kind_same_twice_clashes() {
-    let (style, diags) = parse("style({ paint: border(subtle).border({ color: primary }) })");
+    let (style, diags) = parse("style({ border(subtle).border({ color: primary }) })");
     assert!(diags.is_empty(), "{diags:?}");
     let clashes = clash::detect_clashes(&style, &HashMap::new());
     let clash = clashes
@@ -243,7 +243,7 @@ fn kind_same_twice_clashes() {
 #[test]
 fn slot_merge_partial_hover() {
     let css = css_of(
-        "style({ paint: border(subtle), when: { hover: { paint: border({ color: primary }) } } })",
+        "style({ border(subtle), when: { hover: border({ color: primary }) } })",
     );
     assert!(css.contains(":hover"), "{css}");
     // Hover rule emits only the named slot — not a whole-concern rewrite.
@@ -265,7 +265,7 @@ fn slot_merge_partial_hover() {
 
 #[test]
 fn size_and_space_do_not_clash() {
-    let (style, diags) = parse("style({ box: size({ w: full }).pad({ x: 3 }) })");
+    let (style, diags) = parse("style({ size({ w: full }).pad({ x: 3 }) })");
     assert!(diags.is_empty(), "{diags:?}");
     let clashes = clash::detect_clashes(&style, &HashMap::new());
     assert!(clashes.is_empty(), "{clashes:?}");
@@ -276,7 +276,7 @@ fn size_and_space_do_not_clash() {
 
 #[test]
 fn size_has_no_pad_slot() {
-    let diags = parse_diags("style({ box: size({ pad-x: 3 }) })");
+    let diags = parse_diags("style({ size({ pad-x: 3 }) })");
     assert!(
         diags.iter().any(|d| {
             matches!(d, StyleDiagnostic::UnknownConcernSlot { slot, .. } if slot == "pad-x")
@@ -288,8 +288,8 @@ fn size_has_no_pad_slot() {
 
 #[test]
 fn truncate_and_gap_stay_retired() {
-    retired_names_concern("style({ text: truncate() })", "type");
-    let diags = parse_diags("style({ box: gap(4) })");
+    retired_names_concern("style({ truncate() })", "type");
+    let diags = parse_diags("style({ gap(4) })");
     assert!(
         diags.iter().any(|d| {
             let m = d.message();
@@ -306,7 +306,7 @@ fn constructor_chain_hard_fails() {
     assert!(
         diags.iter().any(|d| {
             let m = d.message();
-            m.contains("retired") || m.contains("channel spine")
+            m.contains("retired") || m.contains("concern")
         }),
         "{:?}",
         diags.iter().map(|d| d.message()).collect::<Vec<_>>()
@@ -330,7 +330,7 @@ fn sx_attribute_hard_fails() {
 
 #[test]
 fn intra_channel_chain_stays() {
-    let css = css_of("style({ box: size({ w: full }).position(absolute) })");
+    let css = css_of("style({ size({ w: full }).position(absolute) })");
     assert!(css.contains("width"), "{css}");
     assert!(
         css.contains("position") && css.contains("absolute"),

@@ -77,7 +77,6 @@ const DOC_CE_SLUGS = new Set([
   'accordion',
   'combobox',
   'theme-picker',
-  'dropzone',
 ])
 
 export default controller((ctx: ControllerScope<Scope>) => {
@@ -145,7 +144,6 @@ export default controller((ctx: ControllerScope<Scope>) => {
   const useAccordion = derived(() => tag() === 'accordion' && useDocHost())
   const useCombobox = derived(() => tag() === 'combobox' && useDocHost())
   const useThemePicker = derived(() => tag() === 'theme-picker' && useDocHost())
-  const useDropzone = derived(() => tag() === 'dropzone' && useDocHost())
 
   const heading = () => meta()?.heading ?? entry()?.heading ?? tag()
   const blurb = () => meta()?.blurb ?? entry()?.blurb ?? packBlurbFor(tag())
@@ -212,7 +210,6 @@ export default controller((ctx: ControllerScope<Scope>) => {
     useAccordion,
     useCombobox,
     useThemePicker,
-    useDropzone,
 
     heading,
     blurb,
@@ -375,9 +372,6 @@ export default controller((ctx: ControllerScope<Scope>) => {
   </if>
   <if {useThemePicker()}>
     <doc-theme-picker></doc-theme-picker>
-  </if>
-  <if {useDropzone()}>
-    <doc-dropzone></doc-dropzone>
   </if>
   <if {missingDocHost()}>
     <breadcrumb>

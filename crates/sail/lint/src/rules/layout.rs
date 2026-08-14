@@ -7,12 +7,12 @@
 //! `<style>` — the same "class + injected stylesheet" mechanism Style uses. No
 //! shadow DOM, no custom-element upgrade: layout disappears into the language.
 //!
-//! **Product participation** is the **box channel**
-//! (`style({ box: grow(1).minW(0) })`), not bare attrs. Bare `grow` / `shrink` /
+//! **Product participation** is the concern chain
+//! (`style({ grow(1).size({ min-w: 0 }) })`), not bare attrs. Bare `grow` / `shrink` /
 //! `w` / `min-w` / `max-w` are refused by `sail-participation-style` with a
-//! pointer to the box form. Layout-keyword **axis** attrs (`gap` / `align` /
+//! pointer to the style form. Layout-keyword **axis** attrs (`gap` / `align` /
 //! `justify` / `cols` / …) stay structural sugar on the keyword. Paint (pad,
-//! color, type, chrome) stays on paint/text channels.
+//! color, type, chrome) lives on the same concern chain (`pad`, `bg`, `type`).
 //!
 //! Faithful successor to the `<sail-stack>` / `<sail-cluster>` / `<sail-grid>` /
 //! `<sail-center>` primitives — the hard-won opinions ride along in the lowering:
@@ -769,15 +769,13 @@ pub fn is_participation_attr(name: &str) -> bool {
     PARTICIPATION_ATTRS.contains(&name)
 }
 
-/// Map a participation attr name to the Style setter that owns the same CSS
-/// (`min-w` → `minW`). Grid spans have no Style setter — they stay as attrs.
+/// Map a participation attr name to the live Style setter that owns the same CSS.
+/// Width attrs lower through `size` slots, not retired `w`/`minW` longhands.
 fn participation_setter(name: &str) -> Option<&'static str> {
     Some(match name {
         "grow" => "grow",
         "shrink" => "shrink",
-        "w" => "w",
-        "min-w" => "minW",
-        "max-w" => "maxW",
+        "w" | "min-w" | "max-w" => "size",
         "col-span" | "row-span" => return None,
         _ => return None,
     })
@@ -853,9 +851,23 @@ pub fn lower_participation(name: &str, value: &str) -> Option<(String, String)> 
     }
     let setter = participation_setter(name)?;
     let token = participation_token(name, value).ok()?;
+    let args = match name {
+        "w" | "min-w" | "max-w" => {
+            let slot = match name {
+                "w" => "w",
+                "min-w" => "min-w",
+                "max-w" => "max-w",
+                _ => return None,
+            };
+            let mut slots = std::collections::BTreeMap::new();
+            slots.insert(slot.into(), crate::style::PaintArg::Token(token));
+            vec![crate::style::PaintArg::Slots(slots)]
+        }
+        _ => vec![crate::style::PaintArg::Token(token)],
+    };
     let style = crate::style::Style::Set(crate::style::PaintOp {
         setter: setter.into(),
-        args: vec![crate::style::PaintArg::Token(token)],
+        args,
         source: format!("{name}"),
     });
     let (classes, css) = crate::style::lower_style(&style, &std::collections::HashMap::new());
@@ -1016,13 +1028,13 @@ fn unknown_attr_hint(tag: &str) -> String {
     let axes = tag_props(tag);
     if axes.is_empty() {
         format!(
-            "<{tag}> takes no axis props; participation is box channel \
-             (`style({{ box: grow(1).minW(0) }})`); HTML/global pass-throughs are allowed."
+            "<{tag}> takes no axis props; participation is the concern chain \
+             (`style({{ grow(1).minW(0) }})`); HTML/global pass-throughs are allowed."
         )
     } else {
         format!(
-            "<{tag}> takes these axis props: {} — participation is box channel \
-             (`style({{ box: grow(1).minW(0) }})`); HTML/global pass-throughs \
+            "<{tag}> takes these axis props: {} — participation is the concern chain \
+             (`style({{ grow(1).minW(0) }})`); HTML/global pass-throughs \
              (id, theme, surface, hyphenated markers, data-*, aria-*, on:*, bind:*, use:*) allowed.",
             axes.join(", ")
         )
@@ -1455,14 +1467,14 @@ mod tests {
     fn passes_through_tag_style_call() {
         // Product Style attaches as `style({…})` on the open tag — not axis
         // attrs. Scanner must consume the balanced call (and chains), else
-        // `{`/`box:`/`grow(1)` fragment as fake unknown attrs.
+        // `{`/`grow(1)` fragment as fake unknown attrs.
         assert!(
-            run(r#"<column gap="2" style({ box: grow(1) })>x</column>"#).is_empty(),
+            run(r#"<column gap="2" style({ grow(1) })>x</column>"#).is_empty(),
             "tag-position style() must be passthrough on layout keywords"
         );
         assert!(
             run(
-                r#"<column gap="2" style({ box: pad(2), when: { hover: { paint: bg(accent) } } })>x</column>"#
+                r#"<column gap="2" style({ pad(2), when: { hover: bg(accent) } })>x</column>"#
             )
             .is_empty(),
             "style({{…, when: {{…}}}}) must not split into unknown attrs"
@@ -2110,12 +2122,18 @@ mod tests {
         assert!(css.contains("flex-shrink:0"), "{css}");
 
         let (classes, css) = lower_participation("w", "full").unwrap();
-        assert!(classes.contains("s-wfull"), "{classes}");
-        assert!(css.contains("width:100%"), "{css}");
+        assert!(
+            classes.contains("s-sizewfull") || classes.contains("s-wfull"),
+            "{classes}"
+        );
+        assert!(css.contains("width:100%") || css.contains("width: 100%"), "{css}");
 
         let (classes, css) = lower_participation("min-w", "0").unwrap();
-        assert!(classes.contains("s-minW0"), "{classes}");
-        assert!(css.contains("min-width:0"), "{css}");
+        assert!(
+            classes.contains("s-sizeminw0") || classes.contains("s-minW0"),
+            "{classes}"
+        );
+        assert!(css.contains("min-width:0") || css.contains("min-width: 0"), "{css}");
     }
 
     #[test]

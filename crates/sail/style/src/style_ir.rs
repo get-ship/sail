@@ -839,7 +839,7 @@ mod tests {
         let mut seen = std::collections::HashSet::new();
         let env = std::collections::HashMap::new();
         let classes = lower_sx_string(
-            "style({ bg(primary), box: pad({ x: 2 }) })",
+            "style({ bg(primary).pad({ x: 2 }) })",
             &env,
             &mut css,
             &mut seen,

@@ -1,7 +1,7 @@
 <!--
   <file> — system file picker.
   variant=picker: native control (default).
-  variant=drop: same dashed surface as <dropzone> — drag or click.
+  variant=drop: dashed drop surface — drag or click.
 -->
 
 <scope>
@@ -17,7 +17,7 @@
   }
 
   style pickerHost = {display(contents).group()}
-  // Keep in lockstep with dropzone.sail host — same surface.
+  // Dashed drop surface for variant=drop.
   style dropHost = {display(flex).size({ w: full, min-h: 32 }).pad(6).group().fg(muted-foreground).bg(muted).border({ color: border, width: 1, style: dashed }).radius(lg).cursor(pointer).type({ align: center, family: body, size: sm, weight: medium }), when: {hover: border({ color: primary }).bg({ color: primary, mix: 10 }).fg(foreground), stateOver: border({ color: primary }).bg({ color: primary, mix: 10 }).fg(foreground), disabled: cursor(not-allowed).filter({ opacity: 50 })}}
   style file = {display(flex).size({ min-h: control-h-md, w: full }).pad({ y: 1, x: 3 }).fg(foreground).bg(input).border({ color: border, width: 1 }).radius(md).elevation(xs).cursor(pointer).type({ size: base }), when: {hover: border({ color: border-strong }), disabled: cursor(not-allowed).filter({ opacity: 50 })}}
   style sizeXs = {size({ min-h: control-h-2xs }).pad({ x: 2 }).type({ size: xs })}

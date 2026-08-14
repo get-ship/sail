@@ -459,7 +459,7 @@ mod tests {
 
     #[test]
     fn display_flex_from_style_not_class() {
-        let r = resolved("style({ box: display(flex) })");
+        let r = resolved("style({ display(flex) })");
         assert_eq!(r.display.as_deref(), Some("flex"));
         let elem = element_with_box(r);
         let got = resolve(&elem, &[Element::default()], 1440.0);
@@ -468,7 +468,7 @@ mod tests {
 
     #[test]
     fn grow_one_from_style_not_class() {
-        let r = resolved("style({ box: grow(1) })");
+        let r = resolved("style({ grow(1) })");
         assert_eq!(r.grow, Some(1.0));
         let elem = element_with_box(r);
         let got = resolve(&elem, &[Element::default()], 1440.0);
@@ -477,7 +477,7 @@ mod tests {
 
     #[test]
     fn overflow_hidden_from_style_slots() {
-        let r = resolved("style({ box: overflow({ all: hidden }) })");
+        let r = resolved("style({ overflow({ all: hidden }) })");
         assert_eq!(r.overflow_x.as_deref(), Some("hidden"));
         assert_eq!(r.overflow_y.as_deref(), Some("hidden"));
         let elem = element_with_box(r);
@@ -488,7 +488,7 @@ mod tests {
 
     #[test]
     fn position_absolute_from_style_scheme() {
-        let r = resolved("style({ box: position({ scheme: absolute }) })");
+        let r = resolved("style({ position({ scheme: absolute }) })");
         assert_eq!(r.position.as_deref(), Some("absolute"));
         let elem = element_with_box(r);
         let got = resolve(&elem, &[Element::default()], 1440.0);
@@ -498,7 +498,7 @@ mod tests {
     #[test]
     fn style_box_does_not_need_emitted_class_spelling() {
         let r = resolved(
-            "style({ box: display(flex).grow(1).overflow({ all: hidden }).position({ scheme: absolute }) })",
+            "style({ display(flex).grow(1).overflow({ all: hidden }).position({ scheme: absolute }) })",
         );
         let elem = Element {
             tag: "div".into(),
@@ -516,7 +516,7 @@ mod tests {
 
     #[test]
     fn style_box_wins_over_class_spelling() {
-        let r = resolved("style({ box: display(flex).grow(1) })");
+        let r = resolved("style({ display(flex).grow(1) })");
         let elem = Element {
             tag: "div".into(),
             class: "s-displaynone s-grow0".into(),
@@ -530,7 +530,7 @@ mod tests {
 
     #[test]
     fn pad_token_from_style_not_class() {
-        let r = resolved("style({ box: pad(4) })");
+        let r = resolved("style({ pad(4) })");
         assert_eq!(r.pad.all.as_deref(), Some("4"));
         let elem = Element {
             tag: "div".into(),
@@ -545,13 +545,13 @@ mod tests {
 
     #[test]
     fn when_hover_does_not_replace_resting_box() {
-        let r = resolved("style({ box: display(flex), when: { hover: { box: display(none) } } })");
+        let r = resolved("style({ display(flex), when: { hover: { display(none) } } })");
         assert_eq!(r.display.as_deref(), Some("flex"));
     }
 
     #[test]
     fn apply_resolved_boxes_matches_class_identity() {
-        let r = resolved("style({ box: grow(1) })");
+        let r = resolved("style({ grow(1) })");
         let host = BoxHost::from_resolved("s-grow1 host-id", &r).expect("host");
         let mut elements = vec![
             Element::default(),

@@ -43,10 +43,10 @@ export default controller(() => {
 
 <input placeholder="Filter people" bind:value={query} />
 <for {filtered() as p} key={p.id}>
-  <card style({ box: space({ pad: 4 }), animate: enter({ opacity: 'fade', translate-y: 'spring:snappy' }) })>
+  <card style({ pad(4), animate: enter({ opacity: 'fade', translate-y: 'spring:snappy' }) })>
     <row gap="3" align="center">
       <avatar></avatar>
-      <strong style({ box: flow({ grow: 1 }) })>
+      <strong style({ grow(1) })>
         {p.name}
       </strong>
       <badge tone={p.status === 'active' ? 'success' : 'muted'}>{p.status}</badge>
@@ -64,8 +64,8 @@ export default controller(() => {
 <badge tone="success">Active</badge>
 <alert tone="info">Saved.</alert>`,
 
-  styling: `<card style({ box: space({ pad: 5 }), paint: fill({ color: surface-1 }).radius(lg).elevation(sm), when: { hover: { paint: elevation(md) } } })>
-  <p style({ paint: ink({ color: muted-foreground }), text: type({ size: sm }) })>
+  styling: `<card style({ pad(5).bg(surface-1).radius(lg).elevation(sm), when: { hover: elevation(md) } })>
+  <p style({ fg(muted-foreground).type({ size: sm }) })>
     On the system, or it does not compile.</p>
 </card>`,
 

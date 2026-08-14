@@ -40,7 +40,7 @@ fn lsp_and_compiler_complete_theme_eq_same_ids() {
 
 #[test]
 fn lsp_and_compiler_hover_primary_same_resolved_value() {
-    let src = r#"<div theme="ship" style({ paint: bg(primary) })>x</div>"#;
+    let src = r#"<div theme="ship" style({ bg(primary) })>x</div>"#;
     let off = src.find("primary").expect("primary");
     let (line, col) = {
         let mut l = 1usize;

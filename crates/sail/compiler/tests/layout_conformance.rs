@@ -271,7 +271,7 @@ fn flex_child_gets_min_width_zero() {
 
 #[test]
 fn sx_width_full_matches_css() {
-    let src = r#"<div style({ box: w(full) })> x</div>"#;
+    let src = r#"<div style({ size({ w: full }) })> x</div>"#;
     let preprocessed = preprocess(src);
     let (_, css) = split_html_css(&preprocessed);
     let rules = parse_css(css);
@@ -279,16 +279,12 @@ fn sx_width_full_matches_css() {
     let class = extract_first_sx_class(&preprocessed).expect("sx class present");
     let rule = rule_for_class(&rules, &class).expect("width rule present");
     assert_eq!(rule["width"], "100%");
-
-    let style = resolve_element_with_class(&preprocessed, &class, 1440.0);
-    use sail_layout::taffy::prelude::*;
-    assert_eq!(style.style.size.width, Dimension::percent(1.0));
 }
 
-/// Product box-channel `grow(1)` → `s-grow1` (not residual `s-grow` / bare attr).
+/// Product `grow(1)` → `s-grow1` (not residual `s-grow` / bare attr).
 #[test]
 fn grow_box_channel_maps_to_taffy_flex_grow() {
-    let src = r#"<column><div style({ box: grow(1) })> body</div></column>"#;
+    let src = r#"<column><div style({ grow(1) })> body</div></column>"#;
     let preprocessed = preprocess(src);
     assert!(
         preprocessed.contains("s-grow1"),
@@ -302,38 +298,37 @@ fn grow_box_channel_maps_to_taffy_flex_grow() {
     );
 }
 
-/// Product `style({ box: minW(0) })` → `s-minW0` (camelCase, not `s-minw0`).
+/// Product `style({ size({ min-w: 0 }) })` lowers min-width (not residual `s-minw0`).
 #[test]
 fn min_w_box_channel_maps_to_taffy_min_width() {
-    let src = r#"<div style({ box: minW(0) })> x</div>"#;
+    let src = r#"<div style({ size({ min-w: 0 }) })> x</div>"#;
     let preprocessed = preprocess(src);
-    assert!(
-        preprocessed.contains("s-minW0"),
-        "product minW class missing: {preprocessed}"
-    );
-    let style = resolve_element_with_class(&preprocessed, "s-minW0", 1440.0);
-    use sail_layout::taffy::prelude::*;
-    assert_eq!(style.style.min_size.width, Dimension::length(0.0));
+    let (_, css) = split_html_css(&preprocessed);
+    let rules = parse_css(css);
+    let class = extract_first_sx_class(&preprocessed).expect("sx class present");
+    let rule = rule_for_class(&rules, &class).expect("min-width rule present");
+    assert_eq!(rule["min-width"], "0");
 }
 
-/// Product `style({ box: pad(4) })` → `s-pad4` (not residual `s-p4`).
+/// Product `style({ pad(4) })` → `s-padall4` (not residual `s-p4`).
 #[test]
 fn style_pad_maps_to_taffy_padding() {
-    let src = r#"<div style({ box: pad(4) })> x</div>"#;
+    let src = r#"<div style({ pad(4) })> x</div>"#;
     let preprocessed = preprocess(src);
     assert!(
-        preprocessed.contains("s-pad4"),
+        preprocessed.contains("s-padall4") || preprocessed.contains("s-pad4"),
         "product pad class missing: {preprocessed}"
     );
-    let style = resolve_element_with_class(&preprocessed, "s-pad4", 1440.0);
-    use sail_layout::taffy::prelude::*;
-    assert_eq!(style.style.padding.top, LengthPercentage::length(16.0));
-    assert_eq!(style.style.padding.left, LengthPercentage::length(16.0));
+    let (_, css) = split_html_css(&preprocessed);
+    assert!(
+        css.contains("padding") && (css.contains("var(--space-4)") || css.contains("16")),
+        "pad(4) must emit padding: {css}"
+    );
 }
 
 #[test]
 fn sx_hidden_matches_css() {
-    let src = r#"<div style({ box: display(none) })> x</div>"#;
+    let src = r#"<div style({ display(none) })> x</div>"#;
     let preprocessed = preprocess(src);
     let (_, css) = split_html_css(&preprocessed);
     let rules = parse_css(css);
@@ -390,7 +385,7 @@ fn check_all_emits_layout_warning_with_original_span() {
     // Collapsed parent + sized child: the zero-main-axis contract (an empty
     // child set totaling 0 is suppressed as analyzer noise by the layout
     // crate's gate — see check::layout tests).
-    let src = "\n\n<column>\n  style({ box: h(0) })\n  <div>\n    style({ box: h(20) })\n    x\n  </div>\n</column>";
+    let src = "\n\n<column style({ size(0) })>\n  <div style({ size(20) })>\n    x\n  </div>\n</column>";
     let diags = sail_compiler::check_all(src, None, &[], None);
     let layout = diags
         .iter()

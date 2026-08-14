@@ -379,11 +379,11 @@ fn builtin_actions_emit_bare_not_scope_qualified() {
         // Pairing checks require the sx bridge on the same node for some actions.
         let src = match *a {
             "virtualRow" => {
-                r#"<div use:virtualRow style({ paint: translateY(bind(rowY)) })> </div>"#
+                r#"<div use:virtualRow style({ translateY(bind(rowY)) })> </div>"#
                     .to_string()
             }
             "virtualSpacer" => {
-                r#"<div use:virtualSpacer style({ box: h(bind(rowsH)) })> </div>"#.to_string()
+                r#"<div use:virtualSpacer style({ size({ h: bind(rowsH) }) })> </div>"#.to_string()
             }
             _ => format!(r#"<div use:{a}></div>"#),
         };

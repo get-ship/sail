@@ -57,10 +57,10 @@ That is a hard fail — not a style preference.
 ### Surface mechanics
 
 - Layout: `column`/`row`/`stack`/`grid`/`center`. Never raw containers.
-- Spacing/typography/color: channel Style with token values only —
-  `style({ text: fontSize(display).tracking(tighter), paint: fg(muted-foreground) })`.
+- Spacing/typography/color: concern Style with token values only —
+  `style({ size({ w: full }).pad(4).bg(surface), when: { hover: bg(muted) } })`.
   No raw px/hex; no flat `style.fontSize(…)` product path.
-- Motion: animate channel presets (`enter`/`exit`/`loop`/`scroll`/`press`) —
+- Motion: `animate:` keyed-member presets (`enter`/`exit`/`loop`/`scroll`/`press`) —
   `style({ animate: enter({…}) })`. Never hand-rolled CSS animation.
 - Components: L1 first; reach for the element before composing.
 - The compiler's rejection is the table of contents. `sail_check` after

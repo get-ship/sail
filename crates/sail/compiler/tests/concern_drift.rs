@@ -480,8 +480,8 @@ fn stdlib_all_files_compile() {
     let files = stdlib_sail_files();
     assert_eq!(
         files.len(),
-        60,
-        "expected 60 stdlib .sail files, got {}",
+        59,
+        "expected 59 stdlib .sail files, got {}",
         files.len()
     );
     let mut failed = Vec::new();
@@ -518,10 +518,10 @@ fn dialog_sail_authors_concern_form_and_compiles() {
 #[test]
 fn dialog_concern_pin_rejects_dotted_color_slot() {
     assert!(authors_border_dialog_concern(
-        "style({ paint: border(dialog).radius(xl) })"
+        "style({ border(dialog).radius(xl) })"
     ));
     assert!(!authors_border_dialog_concern(
-        "style({ paint: border(dialog.border).radius(xl) })"
+        "style({ border(dialog.border).radius(xl) })"
     ));
 }
 
@@ -543,7 +543,7 @@ fn authors_border_dialog_concern(src: &str) -> bool {
 fn dialog_border_dotted_form_is_retired() {
     // Host is not dialog, so `dialog.border` is the retired color poke (not a
     // host-surface MemberPath).
-    let src = r#"<div style({ paint: border(dialog.border) })>x</div>"#;
+    let src = r#"<div style({ border(dialog.border) })>x</div>"#;
     let err = compile_element(src, "card")
         .expect_err("border(dialog.border) is the retired color poke — use border(dialog)");
     assert!(
@@ -566,7 +566,7 @@ fn card_sail_compiles_after_two_arg_fold() {
 
 #[test]
 fn property_setters_do_not_parse() {
-    let src = "style({ paint: borderWidth(1).border(primary) })";
+    let src = "style({ borderWidth(1).border(primary) })";
     let (_style, diags) = parse(src);
     assert!(
         diags

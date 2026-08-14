@@ -356,17 +356,6 @@ const DETAILS_MAP = {
     ],
   }),
   // legend is NOT a top-level DETAILS/catalog topic — documented inside fieldset.
-  dropzone: lang('dropzone', 'dropzone', {
-    blurb:
-      'Dashed drop surface. Drag files onto it, or click to browse. accept and multiple are the same as file.',
-    variants: [],
-    variantAttr: '',
-    props: [
-      { name: 'accept', desc: 'MIME / extension filter', type: 'string' },
-      { name: 'multiple', desc: 'Allow multiple files', type: 'bool' },
-      { name: 'invalid · disabled · name · required', desc: 'State + form', type: 'mixed' },
-    ],
-  }),
   'theme-picker': lang('theme-picker', 'themePicker', {
     blurb:
       'Pick a theme. The trigger opens a catalog of live specimens. value is the selected theme id; mode-only cycles light / dark / system; inline keeps the catalog in the page.',

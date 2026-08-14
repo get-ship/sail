@@ -83,7 +83,7 @@ mod tests {
 
     #[test]
     fn chain_emits_token_vars() {
-        let (style, diags) = parse("style({ box: pad({ x: 2 }), bg(primary).radius(sm) })");
+        let (style, diags) = parse("style({ pad({ x: 2 }).bg(primary).radius(sm) })");
         assert!(
             diags.is_empty(),
             "{:?}",
@@ -109,7 +109,7 @@ mod tests {
     #[ignore = "free form fixture (STYLE-BINDING-1)"]
     fn match_emits_attr_selectors() {
         let (style, diags) = parse(
-            "match(variant, { solid: style({ paint: bg(primary) }), soft: style({ paint: bg(muted) }) })",
+            "match(variant, { solid: style({ bg(primary) }), soft: style({ bg(muted) }) })",
         );
         assert!(
             diags.is_empty(),
@@ -168,7 +168,7 @@ mod tests {
         }
 
         let (style, diags) = parse(
-            "style({ text: type({ size: sm }), when: { tablet: { text: type({ size: lg }) }, desktop: { text: type({ size: xl }) } } })",
+            "style({ type({ size: sm }), when: { tablet: { type({ size: lg }) }, desktop: { type({ size: xl }) } } })",
         );
         assert!(
             diags.is_empty(),
@@ -185,7 +185,7 @@ mod tests {
             "desktop when must emit desktop media: {css}"
         );
         let (style2, diags2) =
-            parse("style({ when: { motionReduce: { paint: filter({ opacity: 100 }) } } })");
+            parse("style({ when: { motionReduce: { filter({ opacity: 100 }) } } })");
         assert!(diags2.is_empty(), "{:?}", diags2);
         let (_, css2) = lower_style(&style2, &HashMap::new());
         assert!(
@@ -197,7 +197,7 @@ mod tests {
     #[test]
     #[ignore = "deleted free form (STYLE-BINDING-1)"]
     fn compound_emits_multi_attr() {
-        let (style, diags) = parse("compound({ pill: true }, style({ paint: radius(full) }))");
+        let (style, diags) = parse("compound({ pill: true }, style({ radius(full) }))");
         assert!(
             diags.is_empty(),
             "{:?}",
@@ -213,7 +213,7 @@ mod tests {
     #[ignore = "deleted free form (STYLE-BINDING-1)"]
     fn line_comment_between_list_items_keeps_entries() {
         let (style, diags) = parse(
-            "[ style({ paint: bg(primary) }), // soften the surface\n style({ box: padX(2) }) ]",
+            "[ style({ bg(primary) }), // soften the surface\n style({ pad({ x: 2 }) }) ]",
         );
         assert!(
             diags.is_empty(),
@@ -234,7 +234,7 @@ mod tests {
     #[ignore = "deleted free form (STYLE-BINDING-1)"]
     fn block_comment_and_trailing_comment_before_bracket_keep_entries() {
         let (style, diags) = parse(
-            "[ style({ paint: bg(primary) }) /* block */, style({ box: padX(2) }) // trailing note\n ]",
+            "[ style({ bg(primary) }) /* block */, style({ pad({ x: 2 }) }) // trailing note\n ]",
         );
         assert!(
             diags.is_empty(),
@@ -255,7 +255,7 @@ mod tests {
     #[ignore = "deleted free form (STYLE-BINDING-1)"]
     fn comment_inside_compound_arg_map_keeps_conditions() {
         let (style, diags) = parse(
-            "compound({ pill: true, // emphasis keys\n tone: primary }, style({ paint: radius(full) }))",
+            "compound({ pill: true, // emphasis keys\n tone: primary }, style({ radius(full) }))",
         );
         assert!(
             diags.is_empty(),
@@ -349,7 +349,7 @@ mod tests {
     fn list_shadows_duplicate_slot_silently() {
         // Ordered composition: later items shadow earlier ones — no Clash.
         let (style, diags) =
-            parse("[ style({ paint: bg(primary) }), style({ paint: bg(muted) }) ]");
+            parse("[ style({ bg(primary) }), style({ bg(muted) }) ]");
         assert!(
             diags.is_empty(),
             "{:?}",
@@ -384,7 +384,7 @@ mod tests {
 
     #[test]
     fn absorbed_border_width_is_retired() {
-        let (_, diags) = parse("style({ paint: borderWidth(2) })");
+        let (_, diags) = parse("style({ borderWidth(2) })");
         assert!(
             diags
                 .iter()
@@ -399,7 +399,7 @@ mod tests {
     #[ignore = "deleted free form (STYLE-BINDING-1)"]
     fn chain_inside_list_still_clashes() {
         // A Chain inside a List keeps unordered conjunction semantics.
-        let (style, _) = parse("[ style({ paint: bg(primary).bg(muted) }) ]");
+        let (style, _) = parse("[ style({ bg(primary).bg(muted) }) ]");
         let diags = clash::detect_clashes(&style, &HashMap::new());
         assert!(
             diags
@@ -416,7 +416,7 @@ mod tests {
         // Stylesheet-order precedence: emit walks items in source order, so
         // the shadowing (later) rule lands after the shadowed one in the CSS.
         let (style, diags) =
-            parse("[ style({ paint: bg(primary) }), style({ paint: bg(muted) }) ]");
+            parse("[ style({ bg(primary) }), style({ bg(muted) }) ]");
         assert!(
             diags.is_empty(),
             "{:?}",
@@ -450,7 +450,7 @@ mod tests {
     #[ignore = "deleted free form (STYLE-BINDING-1)"]
     fn list_composition() {
         let (style, diags) = parse(
-            "[ style({ paint: bg(primary) }), style({ when: { hover: { paint: bg(muted) } } }) ]",
+            "[ style({ bg(primary) }), style({ when: { hover: { bg(muted) } } }) ]",
         );
         assert!(
             diags.is_empty(),
@@ -485,7 +485,7 @@ mod tests {
     #[test]
     fn malformed_list_finishes_quickly() {
         let start = std::time::Instant::now();
-        let (_style, diags) = parse("[ ( , style({ paint: bg(primary) }) ]");
+        let (_style, diags) = parse("[ ( , style({ bg(primary) }) ]");
         assert!(start.elapsed().as_millis() < 200);
         let _ = diags;
     }
@@ -493,7 +493,7 @@ mod tests {
     #[test]
     fn malformed_chain_finishes_quickly() {
         let start = std::time::Instant::now();
-        let (_style, diags) = parse("style({ paint: bg(primary) }).(");
+        let (_style, diags) = parse("style({ bg(primary) }).(");
         assert!(start.elapsed().as_millis() < 200);
         let _ = diags;
     }
@@ -504,7 +504,7 @@ mod tests {
         let input = format!(
             "{}{}",
             "[[[[",
-            "match(x, {".repeat(40) + "style({ paint: bg(primary) })"
+            "match(x, {".repeat(40) + "style({ bg(primary) })"
         );
         let (_style, diags) = parse(&input);
         assert!(start.elapsed().as_millis() < 500);
@@ -543,7 +543,7 @@ mod tests {
     #[test]
     fn group_caught_and_group_inline_when_emit_ancestors() {
         let (style, diags) = parse(
-            "style({  paint: group(), when: { group-caught: {  display(none)  }, group-inline: {  display(none)  } } })",
+            "style({  group(), when: { group-caught: {  display(none)  }, group-inline: {  display(none)  } } })",
         );
         assert!(
             diags.is_empty(),
@@ -558,7 +558,7 @@ mod tests {
 
     #[test]
     fn glyph_fill_and_list_setters_lower() {
-        let (style, diags) = parse("style({ paint: glyphFill(true).isolate() })");
+        let (style, diags) = parse("style({ glyphFill(true).isolate() })");
         assert!(
             diags.is_empty(),
             "{:?}",
@@ -606,30 +606,30 @@ mod tests {
     #[ignore = "free form fixture (STYLE-BINDING-1)"]
     fn site_shell_wave_exprs_parse() {
         let exprs = [
-            "style({ box: w(full).minW(0).overflowX(hidden), paint: bg(surface-0) })",
-            "style({ box: left(0).right(0).top(0).h(64), paint: bgGlow(accent).pointerEvents(none).z(base) })",
-            "style({ paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })",
-            "style({ paint: fg(foreground), text: fontSize(display).fontFamily(display).fontWeight(bold).tracking(tighter).leading(none).textAlign(center) })",
-            "style({ box: position(absolute).left(-10).right(-10).top(12), paint: rotate(-2).z(popover) })",
-            "style({ box: padY(3), paint: borderTWidth(1).borderBWidth(1).borderT(border).borderB(border).bg(surface-2) })",
-            "style({ box: h(full).overflow(hidden), paint: bg(muted).borderWidth(1).border(primary) })",
-            "style({ box: mb(-8), paint: textGradient(primary).select(none), text: fontSize(display).fontFamily(display).fontWeight(bold).tracking(tighter).leading(none).textAlign(center) })",
-            "style({ box: padX(3).padY(1), paint: radius(full).fg(muted-foreground), text: fontSize(sm).fontWeight(semibold), when: { hover: { paint: fg(foreground) }, current: { paint: bg(primary).fg(primary-foreground) } } })",
-            "style({  box: pad(3), paint: borderWidth(1).border(border).opacity(50), when: { stateLive: {  paint: opacity(100).border(primary).bg(muted)  } } })",
-            "style({ box: w(1), paint: radius(sm).bg(primary).origin(bottom) })",
-            "style({ box: w(8), text: fontFamily(mono).fontSize(sm).nums(tabular).textAlign(center) })",
-            "style({ text: fontFamily(mono).fontSize(2xl).nums(tabular) })",
-            "style({ box: pad(4).w(full).maxW(panel-max-w-sm) })",
-            "style({ box: w(full).maxW(breakpoint-desktop).mx(auto) })",
-            "style({ box: maxW(breakpoint-mobile), paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed).textAlign(center) })",
-            "style({ box: display(block).minW(0), text: underline(none) })",
-            "style({  paint: fg(muted-foreground), when: { hover: {  paint: fg(primary)  } } })",
-            "style({ box: grow(1).minW(0), text: truncate() })",
-            "style({ box: pad(6).grow(1).minW(0) })",
-            "style({ box: grow(1).basis(0).minW(0) })",
-            "style({ box: grow(1).basis(breakpoint-mobile).minW(0) })",
-            "style({ paint: translateX(bind(tileX)).rotate(bind(tileRotate)).scale(bind(tileScale)) })",
-            "style({ , when: { groupCurrent: {  paint: fg(primary)  }, desktop: {  box: display(block)  } } })",
+            "style({ size({ w: full, min-w: 0 }).overflow({ x: hidden }).bg(surface-0) })",
+            "style({ position({ l: 0, r: 0, t: 0, z: base }).size({ h: 64 }).bg({ glow: accent }).pointerEvents(none) })",
+            "style({ fg(accent).type({ family: mono, size: xs, case: uppercase, tracking: wide }) })",
+            "style({ fg(foreground).type({ size: display, family: display, weight: bold, tracking: tighter, leading: none, align: center }) })",
+            "style({ position({ scheme: absolute, l: -10, r: -10, t: 12, z: popover }).rotate(-2) })",
+            "style({ pad({ y: 3 }).border({ edge: t, width: 1, color: border }).border({ edge: b, width: 1, color: border }).bg(surface-2) })",
+            "style({ size({ h: full }).overflow(hidden).bg(muted).border({ width: 1, color: primary }) })",
+            "style({ margin({ b: -8 }).fg({ gradient: primary }).select(none).type({ size: display, family: display, weight: bold, tracking: tighter, leading: none, align: center }) })",
+            "style({ pad({ x: 3, y: 1 }).radius(full).fg(muted-foreground).type({ size: sm, weight: semibold }), when: { hover: { fg(foreground) }, current: { bg(primary).fg(primary-foreground) } } })",
+            "style({  pad(3).border({ width: 1, color: border }).opacity(50), when: { stateLive: {  opacity(100).border(primary).bg(muted)  } } })",
+            "style({ size({ w: 1 }).radius(sm).bg(primary).origin(bottom) })",
+            "style({ size({ w: 8 }).type({ family: mono, size: sm, nums: tabular, align: center }) })",
+            "style({ type({ family: mono, size: 2xl, nums: tabular }) })",
+            "style({ pad(4).size({ w: full, max-w: panel-max-w-sm }) })",
+            "style({ size({ w: full, max-w: breakpoint-desktop }).margin({ x: auto }) })",
+            "style({ size({ max-w: breakpoint-mobile }).fg(muted-foreground).type({ size: lg, leading: relaxed, align: center }) })",
+            "style({ display(block).size({ min-w: 0 }).type({ decoration: none }) })",
+            "style({  fg(muted-foreground), when: { hover: {  fg(primary)  } } })",
+            "style({ grow(1).size({ min-w: 0 }).type({ wrap: truncate }) })",
+            "style({ pad(6).grow(1).size({ min-w: 0 }) })",
+            "style({ grow(1).size({ basis: 0, min-w: 0 }) })",
+            "style({ grow(1).size({ basis: breakpoint-mobile, min-w: 0 }) })",
+            "style({ translateX(bind(tileX)).rotate(bind(tileRotate)).scale(bind(tileScale)) })",
+            "style({ when: { groupCurrent: {  fg(primary)  }, desktop: {  display(block)  } } })",
         ];
         for e in exprs {
             let (_, diags) = parse(e);
@@ -669,7 +669,7 @@ mod tests {
     #[ignore = "free form fixture (STYLE-BINDING-1)"]
     fn packages_wave_setters_and_dynamic_when() {
         let (style, diags) = parse(
-            "style({ box: aspect(square).ml(auto), paint: srOnly().visibility(hidden).objectFit(cover).cursor(crosshair).transform(bind(worldTx)), text: italic(true) })",
+            "style({ size({ aspect: square }).margin({ l: auto }).srOnly().visibility(hidden).objectFit(cover).cursor(crosshair).transform(bind(worldTx)).type({ italic: true }) })",
         );
         assert!(
             diags.is_empty(),
@@ -719,7 +719,7 @@ mod tests {
             ("busy", "aria-busy"),
             ("sortable", "aria-sort"),
         ] {
-            let expr = format!("when({{ {key}: style({{ paint: bg(muted) }}) }})");
+            let expr = format!("when({{ {key}: style({{ bg(muted) }}) }})");
             let (st, diags) = parse(&expr);
             assert!(
                 diags.is_empty(),
@@ -735,18 +735,18 @@ mod tests {
 
         // Representative host-component paint from the packages Style conversion wave.
         let packages_exprs = [
-            "style({ box: maxW(full), paint: group().fg(foreground), text: fontFamily(body) })",
-            "style({  box: padY(2).padX(3), paint: radius(lg).bg(surface-1).borderWidth(1).border(border).fg(foreground), text: fontSize(base).leading(normal), when: { groupStateUser: {  paint: bg(hover-bg).borderWidth(1).border(primary)  }, groupStateSystem: {  paint: bg(muted).fg(muted-foreground)  }, groupStateError: {  paint: borderWidth(1).border(destructive)  }, groupStateSending: {  paint: opacity(75)  } } })",
-            "style({  box: padY(density-row-py).padX(density-row-px).minH(panel-min-h-cell), paint: group().borderRWidth(1).borderR(border).borderBWidth(1).borderB(border), when: { stateOut: {  paint: fg(muted-foreground).bg(muted)  }, stateWeekend: {  paint: bg(muted)  }, stateRange: {  paint: bg(selected-bg)  } } })",
-            "style({  box: position(absolute).top(bind(evtTop)).h(bind(evtH)).left(bind(evtLeft)).w(bind(evtW)).padY(half).padX(1).overflow(hidden), paint: cursor(pointer).fg(primary).bg(hover-bg).radius(sm), text: textAlign(start).fontSize(density), when: { selected: {  paint: outline(ring)  } } })",
-            "style({  box: padY(6).padX(4), paint: group().borderWidth(1).border(border).border(dashed).radius(lg).cursor(pointer).fg(muted-foreground).select(none), text: textAlign(center), when: { focus: {  paint: outline(ring)  }, stateOver: {  paint: borderWidth(1).border(ring).bg(muted)  } } })",
-            "style({ box: position(absolute).left(bind(boxLeft)).top(bind(boxTop)).w(bind(boxW)).h(bind(boxH)), paint: bg(hover-bg).borderWidth(1).border(primary).border(dashed).radius(sm).cursor(pointer).pointerEvents(auto) })",
-            "style({  box: w(bind(boxW)).padY(2).padX(3), paint: bg(surface-1).fg(foreground).borderWidth(1).border(border).radius(md).shadow(xs).cursor(pointer), text: fontFamily(body).fontSize(sm), when: { hover: {  paint: shadow(sm)  }, focus: {  paint: outline(ring)  }, current: {  paint: borderWidth(1).border(ring).shadow(sm)  }, stateAgent: {  paint: borderLWidth(1).borderL(primary)  } } })",
-            "style({ box: padY(4).padX(5), paint: borderWidth(1).border(destructive).radius(md).bg(muted).fg(foreground).shadow(xs), text: fontFamily(body).fontSize(sm) })",
-            "style({  box: h(control-h-sm), paint: radius(sm).cursor(pointer).fg(foreground), text: textAlign(center), when: { hover: {  paint: bg(hover-bg)  }, selected: {  paint: bg(primary).fg(primary-foreground)  }, disabled: {  paint: fg(muted-foreground).opacity(50).cursor(not-allowed)  }, stateEmpty: {  paint: visibility(hidden)  }, stateToday: {  paint: outline(border-strong)  }, focus: {  paint: outline(ring)  } } })",
-            "style({ paint: cursor(cell) })",
-            "style({  box: pad(0).aspect(square), paint: borderWidth(1).border(border-subtle).radius(sm).cursor(pointer).bg(bind(swatchColor)), when: { selected: {  paint: outline(primary)  } } })",
-            "style({  box: position(absolute).left(0).w(full), paint: translateY(bind(rowY)).cursor(pointer), when: { hover: {  paint: bg(hover-bg)  }, selected: {  paint: bg(selected-bg)  }, focus: {  paint: outline(ring)  } } })",
+            "style({ size({ max-w: full }).group().fg(foreground).type({ family: body }) })",
+            "style({  pad({ y: 2, x: 3 }).radius(lg).bg(surface-1).border({ width: 1, color: border }).fg(foreground).type({ size: base, leading: normal }), when: { groupStateUser: {  bg(hover-bg).border({ width: 1, color: primary })  }, groupStateSystem: {  bg(muted).fg(muted-foreground)  }, groupStateError: {  border({ width: 1, color: destructive })  }, groupStateSending: {  opacity(75)  } } })",
+            "style({  pad({ y: density-row-py, x: density-row-px }).size({ min-h: panel-min-h-cell }).group().border({ edge: r, width: 1, color: border }).border({ edge: b, width: 1, color: border }), when: { stateOut: {  fg(muted-foreground).bg(muted)  }, stateWeekend: {  bg(muted)  }, stateRange: {  bg(selected-bg)  } } })",
+            "style({  position({ scheme: absolute, t: bind(evtTop), l: bind(evtLeft) }).size({ h: bind(evtH), w: bind(evtW) }).pad({ y: half, x: 1 }).overflow(hidden).cursor(pointer).fg(primary).bg(hover-bg).radius(sm).type({ align: start, size: density }), when: { selected: {  border({ kind: outline, color: ring })  } } })",
+            "style({  pad({ y: 6, x: 4 }).group().border({ width: 1, color: border, style: dashed }).radius(lg).cursor(pointer).fg(muted-foreground).select(none).type({ align: center }), when: { focus: {  border({ kind: outline, color: ring })  }, stateOver: {  border({ width: 1, color: ring }).bg(muted)  } } })",
+            "style({ position({ scheme: absolute, l: bind(boxLeft), t: bind(boxTop) }).size({ w: bind(boxW), h: bind(boxH) }).bg(hover-bg).border({ width: 1, color: primary, style: dashed }).radius(sm).cursor(pointer).pointerEvents(auto) })",
+            "style({  size({ w: bind(boxW) }).pad({ y: 2, x: 3 }).bg(surface-1).fg(foreground).border({ width: 1, color: border }).radius(md).elevation(xs).cursor(pointer).type({ family: body, size: sm }), when: { hover: {  elevation(sm)  }, focus: {  border({ kind: outline, color: ring })  }, current: {  border({ width: 1, color: ring }).elevation(sm)  }, stateAgent: {  border({ edge: l, width: 1, color: primary })  } } })",
+            "style({ pad({ y: 4, x: 5 }).border({ width: 1, color: destructive }).radius(md).bg(muted).fg(foreground).elevation(xs).type({ family: body, size: sm }) })",
+            "style({  size({ h: control-h-sm }).radius(sm).cursor(pointer).fg(foreground).type({ align: center }), when: { hover: {  bg(hover-bg)  }, selected: {  bg(primary).fg(primary-foreground)  }, disabled: {  fg(muted-foreground).opacity(50).cursor(not-allowed)  }, stateEmpty: {  visibility(hidden)  }, stateToday: {  border({ kind: outline, color: border-strong })  }, focus: {  border({ kind: outline, color: ring })  } } })",
+            "style({ cursor(cell) })",
+            "style({  pad(0).size({ aspect: square }).border({ width: 1, color: border-subtle }).radius(sm).cursor(pointer).bg(bind(swatchColor)), when: { selected: {  border({ kind: outline, color: primary })  } } })",
+            "style({  position({ scheme: absolute, l: 0 }).size({ w: full }).translateY(bind(rowY)).cursor(pointer), when: { hover: {  bg(hover-bg)  }, selected: {  bg(selected-bg)  }, focus: {  border({ kind: outline, color: ring })  } } })",
         ];
         for e in packages_exprs {
             let (_, diags) = parse(e);
@@ -762,9 +762,9 @@ mod tests {
     fn setter_wave_control_and_gap_and_bg_mix() {
         // colorDeepen / colorMix / gap are absorbed — RetiredSetter, not a dual path.
         for (src, concern) in [
-            ("style({ paint: colorDeepen(primary, 15) })", "bg"),
-            ("style({ paint: colorMix(primary, 15) })", "bg"),
-            ("style({ box: gap(2) })", "gap"),
+            ("style({ colorDeepen(primary, 15) })", "bg"),
+            ("style({ colorMix(primary, 15) })", "bg"),
+            ("style({ gap(2) })", "gap"),
         ] {
             let (_, diags) = parse(src);
             assert!(
@@ -775,7 +775,7 @@ mod tests {
         }
 
         // Tier-2 control chrome / press marker setters.
-        let (style, diags) = parse("style({ paint: controlFrame().controlLift().press() })");
+        let (style, diags) = parse("style({ controlFrame().controlLift().press() })");
         assert!(
             diags.is_empty(),
             "{:?}",
@@ -809,7 +809,7 @@ mod tests {
     #[ignore = "deleted free form (STYLE-BINDING-1)"]
     fn enter_then_when_chain_order() {
         let (style, diags) = parse(
-            "style({  paint: bg(primary), animate: enter({ opacity: 'fade' }), when: { hover: {  paint: bg(muted)  } } })",
+            "style({  bg(primary), animate: enter({ opacity: 'fade' }), when: { hover: {  bg(muted)  } } })",
         );
         assert!(
             diags.is_empty(),
@@ -841,7 +841,7 @@ mod tests {
     #[test]
     #[ignore = "deleted free form (STYLE-BINDING-1)"]
     fn box_sizing_rename_and_alias_error() {
-        let (style, diags) = parse("style({ paint: boxSizing(border) })");
+        let (style, diags) = parse("style({ boxSizing(border) })");
         assert!(
             diags.is_empty(),
             "{:?}",
@@ -885,8 +885,8 @@ mod tests {
     #[test]
     fn channels_flatten_order_paint_after_box() {
         // Author may write paint before box; flatten order is always box then paint.
-        let (s_a, d_a) = parse("style({ paint: bg({ color: primary }), box: pad(4) })");
-        let (s_b, d_b) = parse("style({ box: pad(4), paint: bg({ color: primary }) })");
+        let (s_a, d_a) = parse("style({ pad(4).bg({ color: primary }) })");
+        let (s_b, d_b) = parse("style({ pad(4).bg({ color: primary }) })");
         assert!(
             d_a.is_empty() && d_b.is_empty(),
             "diags a={:?} b={:?}",
@@ -900,7 +900,7 @@ mod tests {
     }
 
     #[test]
-    fn parse_refuses_motion_tail_after_channel_spine() {
+    fn parse_refuses_motion_tail_after_concern_chain() {
         // Flat motion tail after style({…}) is retired — animate: channel only.
         let (_, diags) = parse("style({ bg(primary) }).enter({ opacity: 'fade' })");
         let joined = diags
@@ -946,7 +946,7 @@ mod tests {
     #[test]
     fn named_style_ref_collects_motion_via_env() {
         let (named, diags) = parse(
-            "style({ box: size({ w: 4, h: 4 }), paint: radius(full).bg(primary), animate: loop({ translate-y: 'spring:gentle', stagger: '0.15s' }) })",
+            "style({ size({ w: 4, h: 4 }).radius(full).bg(primary), animate: loop({ translate-y: 'spring:gentle', stagger: '0.15s' }) })",
         );
         assert!(
             diags.is_empty(),
@@ -1029,12 +1029,12 @@ mod tests {
             .collect::<Vec<_>>()
             .join("; ");
         assert!(
-            joined.contains("retired") || joined.contains("channel spine"),
+            joined.contains("retired") || joined.contains("concern calls"),
             "product parse must refuse flat: {joined}"
         );
         assert!(
             joined.contains("style({"),
-            "must teach channel spine: {joined}"
+            "must teach concern-call form: {joined}"
         );
     }
 
@@ -1053,9 +1053,9 @@ mod tests {
     }
 
     #[test]
-    fn product_path_channel_spine_lowers() {
+    fn product_path_concern_chain_lowers() {
         let (classes, css) = product_lower("style({ pad(4), bg(primary).radius(md) })")
-            .expect("channel spine is product form");
+            .expect("flat concern chain is product form");
         assert!(classes.contains("s-"), "{classes}");
         // Property presence — no vacuous OR escapes across unrelated props.
         assert!(
@@ -1077,12 +1077,12 @@ mod tests {
         let msgs = product_err_msgs("style.pad(4)");
         let joined = msgs.join("; ");
         assert!(
-            joined.contains("retired") || joined.contains("channel spine"),
+            joined.contains("retired") || joined.contains("concern calls"),
             "flat product must refuse: {joined}"
         );
         assert!(
             joined.contains("style({"),
-            "must teach channel spine form: {joined}"
+            "must teach concern-call form: {joined}"
         );
         // Must not teach flat style.method as the fix destination.
         assert!(
@@ -1141,7 +1141,7 @@ mod tests {
 
     #[test]
     fn product_path_color_alias_fails_closed() {
-        let msgs = product_err_msgs("style({ paint: color(primary) })");
+        let msgs = product_err_msgs("style({ color(primary) })");
         let joined = msgs.join("; ");
         assert!(
             joined.contains("fg") && (joined.contains("color") || joined.contains("renamed")),
@@ -1152,7 +1152,7 @@ mod tests {
     #[test]
     fn style_object_match_compound_when() {
         let (style, diags) = super::parse(
-            "style({ bg(primary), when: { hover: { bg(muted) } }, match: { variant: { solid: { paint: bg({ color: secondary }) } } }, compound: [ { pill: true, paint: radius(full) } ] })",
+            "style({ bg(primary), when: { hover: { bg(muted) } }, match: { variant: { solid: { bg({ color: secondary }) } } }, compound: [ { pill: true, radius(full) } ] })",
         );
         assert!(
             diags.is_empty(),
@@ -1181,7 +1181,7 @@ mod tests {
     #[test]
     fn style_object_wildcard_compound() {
         let (style, diags) =
-            super::parse("style({ compound: [ { tone: *, paint: filter({ opacity: 90 }) } ] })");
+            super::parse("style({ compound: [ { tone: *, filter({ opacity: 90 }) } ] })");
         assert!(
             diags.is_empty(),
             "{:?}",
@@ -1205,7 +1205,7 @@ mod tests {
 
     #[test]
     fn free_match_call_refused() {
-        let (_, diags) = super::parse("match(variant, { solid: style({ paint: bg(primary) }) })");
+        let (_, diags) = super::parse("match(variant, { solid: style({ bg(primary) }) })");
         assert!(!diags.is_empty(), "free match() must fail product parse");
     }
 
@@ -1213,20 +1213,20 @@ mod tests {
     fn spec8_restored_plains_compile_and_lower() {
         let cases = [
             (
-                "style({ paint: align(middle) })",
+                "style({ align(middle) })",
                 "vertical-align",
                 "middle",
             ),
-            ("style({ paint: list(none) })", "list-style-type", "none"),
-            ("style({ box: resize(both) })", "resize", "both"),
-            ("style({ paint: contain(strict) })", "contain", "strict"),
+            ("style({ list(none) })", "list-style-type", "none"),
+            ("style({ resize(both) })", "resize", "both"),
+            ("style({ contain(strict) })", "contain", "strict"),
             (
-                "style({ paint: willChange(transform) })",
+                "style({ willChange(transform) })",
                 "will-change",
                 "transform",
             ),
             (
-                "style({ paint: visibility(hidden) })",
+                "style({ visibility(hidden) })",
                 "visibility",
                 "hidden",
             ),
@@ -1245,7 +1245,7 @@ mod tests {
             );
         }
 
-        let (style, diags) = parse("style({ box: overflow({ x: auto, snap: x }) })");
+        let (style, diags) = parse("style({ overflow({ x: auto, snap: x }) })");
         assert!(
             diags.is_empty(),
             "{:?}",
@@ -1261,7 +1261,7 @@ mod tests {
             "overflow snap: {css}"
         );
 
-        let (style, diags) = parse("style({ text: type({ align: center }) })");
+        let (style, diags) = parse("style({ type({ align: center }) })");
         assert!(
             diags.is_empty(),
             "{:?}",
@@ -1286,7 +1286,7 @@ mod avatar_media_emit_tests {
 
     #[test]
     fn avatar_media_emits_cover_and_icon_slug_contain() {
-        let (style, diags) = parse("style({ paint: avatarMedia(true) })");
+        let (style, diags) = parse("style({ avatarMedia(true) })");
         assert!(diags.is_empty(), "{:?}", diags);
         let (_, css) = lower_style(&style, &HashMap::new());
         assert!(

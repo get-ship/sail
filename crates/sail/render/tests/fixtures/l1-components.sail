@@ -1,5 +1,5 @@
 <!-- Ten load-bearing L1 surfaces for paint goldens (RENDER-1). -->
-<column gap="4" style({ box: w(full).pad(4), paint: bg(background).fg(foreground) })>
+<column gap="4" style({ size({ w: full }).pad(4).bg(background).fg(foreground) })>
   <row gap="3" align="center">
     <button variant="solid" tone="primary">Primary</button>
     <button>Default</button>
@@ -7,25 +7,25 @@
     <switch />
   </row>
 
-  <field style({ box: w(full) })>
+  <field style({ size({ w: full }) })>
     <label slot="label">Name</label>
-    <input type="text" placeholder="Type here" style({ box: w(full) })>
+    <input type="text" placeholder="Type here" style({ size({ w: full }) })>
   </field>
 
-  <card style({ box: w(full) })>
-    <span slot="header" style({ text: fontWeight(semibold) })>Card header</span>
-    <span style({ paint: fg(muted-foreground) })>Card body with chrome.</span>
+  <card style({ size({ w: full }) })>
+    <span slot="header" style({ type({ weight: semibold }) })>Card header</span>
+    <span style({ fg(muted-foreground) })>Card body with chrome.</span>
   </card>
 
   <navbar placement="top" bordered>
-    <span slot="brand" style({ paint: fg(foreground), text: fontWeight(semibold) })>Nav</span>
+    <span slot="brand" style({ fg(foreground).type({ weight: semibold }) })>Nav</span>
   </navbar>
 
-  <row nowrap align="stretch" style({ box: grow(1).w(full) })>
-    <column gap="1" style({ box: shrink(0).w(40).pad(3), paint: bg(sidebar).fg(sidebar-foreground).borderE(sidebar-border) })>
+  <row nowrap align="stretch" style({ grow(1).size({ w: full }) })>
+    <column gap="1" style({ shrink(0).size({ w: 40 }).pad(3).bg(sidebar).fg(sidebar-foreground).border({ color: sidebar-border, edge: e }) })>
       <span>Side</span>
     </column>
-    <column gap="2" style({ box: grow(1).minW(0).pad(3) })>
+    <column gap="2" style({ grow(1).size({ min-w: 0 }).pad(3) })>
       <span>Main</span>
     </column>
   </row>

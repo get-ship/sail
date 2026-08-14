@@ -1357,7 +1357,7 @@ mod tests {
         // Tag-position object Style with when: lowers to classes before author
         // HTML parse — scale tokens must survive product Style parse.
         let src = r#"
-            <h1 style({ box: padX(2_5), paint: fg(sidebar-foreground), text: fontSize(2xl), when: { hover: { paint: fg(foreground) } } })>              T
+            <h1 style({ pad({ x: 2_5 }).fg(sidebar-foreground).type({ size: 2xl }), when: { hover: fg(foreground) } })>              T
             </h1>
         "#;
         let pre = crate::parse::preprocess::preprocess(src).expect("preprocess tag Style");

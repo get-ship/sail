@@ -29,26 +29,26 @@ const RULE_CLIPPED_TEXT: &str = "sail-clipped-text";
 
 /// Child taller than fixed column, no overflow opt-in.
 const OVERFLOW_SRC: &str = r#"
-<column style({ box: h(20) })>
-  <div style({ box: h(40).shrink(0) })>x</div>
+<column style({ size(20) })>
+  <div style({ size(40).shrink(0) })>x</div>
 </column>
 "#;
 
 /// Overflow opted in via overflowY(auto).
 const OVERFLOW_OPTIN_SRC: &str = r#"
-<column style({ box: h(20).overflowY(auto) })>
-  <div style({ box: h(40).shrink(0) })>x</div>
+<column style({ size(20).overflow({ y: auto }) })>
+  <div style({ size(40).shrink(0) })>x</div>
 </column>
 "#;
 
 /// Narrow + long text without truncate — clipped-text probe.
 const CLIPPED_TEXT_SRC: &str = r#"
-<p style({ box: w(16).overflowX(hidden) })>Supercalifragilisticexpialidocious</p>
+<p style({ size(16).overflow({ x: hidden }) })>Supercalifragilisticexpialidocious</p>
 "#;
 
 /// Truncate opt-in — must not fire clipped-text.
 const TRUNCATE_SRC: &str = r#"
-<p style({ box: w(16), text: truncate() })>Supercalifragilisticexpialidocious</p>
+<p style({ size(16).type({ wrap: truncate }) })>Supercalifragilisticexpialidocious</p>
 "#;
 
 fn write_fixture(config: &str, body: &str) -> (tempfile::TempDir, PathBuf) {
@@ -156,7 +156,7 @@ fn package_without_strict_emits_promoted_overflow() {
 }
 
 const TAP_SRC: &str = r#"
-<button type="button" style({ box: w(23).h(40) })>x</button>
+<button type="button" style({ size({ w: 23, h: 40 }) })>x</button>
 "#;
 
 #[test]

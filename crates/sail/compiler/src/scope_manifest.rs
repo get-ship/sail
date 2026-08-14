@@ -113,9 +113,9 @@ pub const SCOPE_GRAMMAR: &[ScopeEntry] = &[
     },
     ScopeEntry {
         form: "Style const (legacy dual path)",
-        syntax: "const filled = style({ paint: bg(primary), box: padX(2) })",
+        syntax: "const filled = style({ bg(primary).pad({ x: 2 }) })",
         summary: "legacy Style binding — still accepted this cycle; prefer `style name = {…}`",
-        example: "<scope>\n  const filled = style({ paint: bg(primary), box: padX(2) })\n  props: { label = '' }\n</scope>\n<span style(filled)>\n  {label}\n</span>",
+        example: "<scope>\n  const filled = style({ bg(primary).pad({ x: 2 }) })\n  props: { label = '' }\n</scope>\n<span style(filled)>\n  {label}\n</span>",
     },
     ScopeEntry {
         form: "Identity type annotation",

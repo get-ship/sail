@@ -727,7 +727,7 @@ mod tests {
 
     #[test]
     fn hover_unqualified_control_md_inside_size_setter() {
-        let src = "style({ box: size(control-md) })";
+        let src = "style({ size(control-md) })";
         let off = src.find("control-md").expect("control-md");
         let h = theme_hover_at(src, off, "ship", "light").expect("hover");
         assert_eq!(h.name, "size.control-md");
@@ -736,7 +736,7 @@ mod tests {
 
     #[test]
     fn hover_unqualified_subtle_inside_border_setter() {
-        let src = "style({ paint: border(subtle) })";
+        let src = "style({ border(subtle) })";
         let off = src.find("subtle").expect("subtle");
         let h = theme_hover_at(src, off, "ship", "light").expect("hover");
         assert_eq!(h.name, "border.subtle");
@@ -749,7 +749,7 @@ mod tests {
 
     #[test]
     fn hover_setter_arg_primary_still_resolves() {
-        let src = "style({ paint: bg(primary) })";
+        let src = "style({ bg(primary) })";
         let off = src.find("primary").expect("primary");
         let h = theme_hover_at(src, off, "ship", "light").expect("primary arg");
         assert_eq!(h.name, "primary");
@@ -758,7 +758,7 @@ mod tests {
 
     #[test]
     fn hover_slot_color_arg_resolves() {
-        let src = "style({ paint: border({ color: muted }) })";
+        let src = "style({ border({ color: muted }) })";
         let off = src.find("muted").expect("muted");
         let h = theme_hover_at(src, off, "ship", "light").expect("slot arg");
         assert_eq!(h.name, "muted");
@@ -766,7 +766,7 @@ mod tests {
 
     #[test]
     fn hover_setter_name_is_not_theme_token() {
-        let src = "style({ paint: border(subtle) })";
+        let src = "style({ border(subtle) })";
         let off = src.find("border").expect("setter");
         assert!(
             theme_hover_at(src, off, "ship", "light").is_none(),
@@ -776,7 +776,7 @@ mod tests {
 
     #[test]
     fn hover_style_ref_is_not_theme_token() {
-        let src = "const primary = style({ paint: bg(muted) })\nstyle(primary)";
+        let src = "const primary = style({ bg(muted) })\nstyle(primary)";
         let off = src.rfind("primary").expect("style ref");
         assert!(
             theme_hover_at(src, off, "ship", "light").is_none(),
@@ -786,7 +786,7 @@ mod tests {
 
     #[test]
     fn hover_after_closed_style_does_not_steal_tag_or_interp() {
-        let src = "<div style({ paint: bg(primary) })><card>{primary()}</card></div>";
+        let src = "<div style({ bg(primary) })><card>{primary()}</card></div>";
         let card = src.find("<card>").expect("card") + 1;
         assert!(
             theme_hover_at(src, card, "ship", "light").is_none(),
