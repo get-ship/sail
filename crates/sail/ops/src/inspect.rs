@@ -2706,10 +2706,44 @@ mod tests {
         Ctx::new(&root, root.join("apps/sail-site"), &root)
     }
 
+    /// Isolated page fixture: layout keyword + L1 element + interval-driven ticks.
+    /// Owns a tempdir so inspect tests do not parse live app routes.
+    fn card_fixture() -> (tempfile::TempDir, Ctx, String, String) {
+        let dir = tempfile::tempdir().unwrap();
+        let root = dir.path();
+        let rel = "apps/demo/routes/card.sail".to_string();
+        let sail_path = root.join(&rel);
+        std::fs::create_dir_all(sail_path.parent().unwrap()).unwrap();
+        let src = r#"
+<controller>
+import type { ControllerScope } from '@ship/sail-runtime'
+export default controller((_ctx: ControllerScope<any>) => {
+  const pure = signal(0)
+  const ticks = signal(0)
+  effect(() => {
+    const t = setInterval(() => ticks.set((n) => n + 1), 1000)
+    return () => clearInterval(t)
+  })
+  return { pure, ticks }
+})
+</controller>
+<column gap="4">
+  <ticker>hello</ticker>
+  <my-widget primary>x</my-widget>
+  <span>{ticks()}</span>
+  <span>{pure()}</span>
+</column>
+"#
+        .to_string();
+        std::fs::write(&sail_path, &src).unwrap();
+        let ctx = Ctx::new(root, root.join("apps/demo"), root);
+        (dir, ctx, rel, src)
+    }
+
     #[test]
     fn model_page_has_sections_and_node_ids() {
-        let ctx = workspace_ctx();
-        let out = model(&json!({"path": "apps/sail-site/routes/page.sail"}), &ctx).expect("model");
+        let (_dir, ctx, rel, src) = card_fixture();
+        let out = model(&json!({"path": rel}), &ctx).expect("model");
         assert_eq!(out["modelVersion"], MODEL_VERSION);
         assert!(!out["tree"]["nodes"].as_array().unwrap().is_empty());
         assert!(out["layout"]["boxes"].as_array().is_some());
@@ -2718,9 +2752,6 @@ mod tests {
         assert!(out["data"]["keys"].as_array().is_some());
         assert!(out.get("theme").is_some());
         let mut layers = BTreeSet::new();
-        let src =
-            std::fs::read_to_string(ctx.workspace_root.join("apps/sail-site/routes/page.sail"))
-                .unwrap();
         let mut open_ok = 0usize;
         for n in out["tree"]["nodes"].as_array().unwrap() {
             assert!(n.get("id").and_then(|v| v.as_str()).is_some());
@@ -2774,33 +2805,8 @@ mod tests {
 
     #[test]
     fn model_fixture_snapshot_stable_ids_and_spans() {
-        let dir = tempfile::tempdir().unwrap();
-        let root = dir.path();
-        let sail_path = root.join("apps/demo/routes/card.sail");
-        std::fs::create_dir_all(sail_path.parent().unwrap()).unwrap();
-        let src = r#"
-<controller>
-import type { ControllerScope } from '@ship/sail-runtime'
-export default controller((_ctx: ControllerScope<any>) => {
-  const pure = signal(0)
-  const ticks = signal(0)
-  effect(() => {
-    const t = setInterval(() => ticks.set((n) => n + 1), 1000)
-    return () => clearInterval(t)
-  })
-  return { pure, ticks }
-})
-</controller>
-<column gap="4">
-  <ticker>hello</ticker>
-  <my-widget primary>x</my-widget>
-  <span>{ticks()}</span>
-  <span>{pure()}</span>
-</column>
-"#;
-        std::fs::write(&sail_path, src).unwrap();
-        let ctx = Ctx::new(root, root.join("apps/demo"), root);
-        let out = model(&json!({"path": "apps/demo/routes/card.sail"}), &ctx).expect("model");
+        let (_dir, ctx, rel, src) = card_fixture();
+        let out = model(&json!({"path": rel}), &ctx).expect("model");
         // Snapshot-ish: stable tree shape
         let nodes = out["tree"]["nodes"].as_array().unwrap();
         let tags: Vec<&str> = nodes.iter().filter_map(|n| n["tag"].as_str()).collect();
@@ -2821,7 +2827,7 @@ export default controller((_ctx: ControllerScope<any>) => {
         assert!(we > ws);
         assert!(src[ws..we].to_ascii_lowercase().contains("my-widget"));
         // Golden id stability across runs
-        let again = model(&json!({"path": "apps/demo/routes/card.sail"}), &ctx).unwrap();
+        let again = model(&json!({"path": rel}), &ctx).unwrap();
         assert_eq!(out["tree"]["nodes"], again["tree"]["nodes"]);
         // State tiers: pure S, ticks C; readers point at template sites
         let bindings = out["state"]["bindings"].as_array().unwrap();
@@ -2843,9 +2849,9 @@ export default controller((_ctx: ControllerScope<any>) => {
 
     #[test]
     fn layout_box_ids_resolve_to_tree_nodes() {
-        let ctx = workspace_ctx();
+        let (_dir, ctx, rel, _src) = card_fixture();
         let out = model(
-            &json!({"path": "apps/sail-site/routes/page.sail", "viewport": {"width": 1440, "height": 900}}),
+            &json!({"path": rel, "viewport": {"width": 1440, "height": 900}}),
             &ctx,
         )
         .expect("model");
@@ -2883,8 +2889,8 @@ export default controller((_ctx: ControllerScope<any>) => {
 
     #[test]
     fn state_lists_ticks_with_readers_and_ssr_tier() {
-        let ctx = workspace_ctx();
-        let out = state(&json!({"path": "apps/sail-site/routes/page.sail"}), &ctx).expect("state");
+        let (_dir, ctx, rel, _src) = card_fixture();
+        let out = state(&json!({"path": rel}), &ctx).expect("state");
         let bindings = out["bindings"].as_array().unwrap();
         let ticks = bindings
             .iter()
@@ -2921,9 +2927,9 @@ export default controller((_ctx: ControllerScope<any>) => {
 
     #[test]
     fn tree_deterministic_ids() {
-        let ctx = workspace_ctx();
-        let a = tree(&json!({"path": "apps/sail-site/routes/page.sail"}), &ctx).unwrap();
-        let b = tree(&json!({"path": "apps/sail-site/routes/page.sail"}), &ctx).unwrap();
+        let (_dir, ctx, rel, _src) = card_fixture();
+        let a = tree(&json!({"path": rel}), &ctx).unwrap();
+        let b = tree(&json!({"path": rel}), &ctx).unwrap();
         assert_eq!(a["nodes"], b["nodes"]);
     }
 

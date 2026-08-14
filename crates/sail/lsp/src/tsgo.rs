@@ -556,9 +556,10 @@ impl TsgoSession {
             return;
         };
         if let Some(client) = self.client.as_mut() {
-            let (ctrl_uri, view_uri) = virtual_uris(sail_uri, &self.work_dir);
             // Materialize controller as `__ctrl__.ts` relative import target
             // from the view file, and the view itself under a stable name.
+            // Write first, then mint URIs — `path_to_uri` canonicalizes when
+            // the path exists, so didOpen and diagnostic pull share one URI.
             let ctrl_path = self
                 .work_dir
                 .join(format!("{}.ctrl.ts", doc_stem(sail_uri)));
@@ -596,6 +597,7 @@ impl TsgoSession {
             }
             let _ = std::fs::write(&ctrl_path, &virt.controller_text);
             let _ = std::fs::write(&view_path, &view_text);
+            let (ctrl_uri, view_uri) = virtual_uris(sail_uri, &self.work_dir);
             // Adjust view segment offsets if the import path rewrite shifted text.
             if view_text.len() != virt.view_text.len() {
                 let delta = view_text.len() as isize - virt.view_text.len() as isize;
@@ -1301,6 +1303,63 @@ export default controller((ctx) => ({ count: signal(0) }))
         assert!(
             module_miss.is_empty(),
             "studio page.sail must resolve @ship/deck/router + shell-rail; got: {module_miss:?}"
+        );
+    }
+
+    #[test]
+    fn live_tsgo_named_style_ref_is_in_scope() {
+        reset_discovery_state_for_tests();
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../..")
+            .canonicalize()
+            .unwrap();
+        let found = discover_tsgo(Some(&root));
+        let Some(_) = found else {
+            eprintln!("SKIP live_tsgo_named_style_ref_is_in_scope: no tsgo");
+            return;
+        };
+        let mut session = TsgoSession::start(Some(&root));
+        assert!(
+            session.is_live(),
+            "discover found tsgo but TsgoSession failed to start"
+        );
+        // Tiny SFC: first-class `style name =` + tag-position `style(name)`.
+        // Controller is present so the view is a module with an import —
+        // the declare must remain visible to `void (() => (style(host)))`.
+        let src = r#"<scope>
+  style host = { pad(4) }
+</scope>
+<controller>
+import { controller } from '@ship/sail-runtime'
+export default controller(() => ({}))
+</controller>
+<div style(host)>x</div>
+"#;
+        let uri = "file:///tmp/named-style-host.sail";
+        session.on_sail_change(uri, src);
+        std::thread::sleep(std::time::Duration::from_millis(200));
+        let view_text = session
+            .virtual_for(uri)
+            .expect("virtual ts built for named style SFC")
+            .view_text
+            .clone();
+        assert!(
+            view_text.contains("declare const host: any"),
+            "collector must declare host:\n{view_text}"
+        );
+        assert!(
+            view_text.contains("style(host)"),
+            "style(host) must embed:\n{view_text}"
+        );
+        let diags = session.diagnostics_mapped(uri, src);
+        let hits: Vec<_> = diags
+            .iter()
+            .filter(|d| d.message.contains("Cannot find name 'host'"))
+            .map(|d| d.message.clone())
+            .collect();
+        assert!(
+            hits.is_empty(),
+            "named style host must be in scope for style(host); view:\n{view_text}\ndiags: {diags:?}"
         );
     }
 }

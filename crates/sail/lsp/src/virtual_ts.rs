@@ -276,66 +276,22 @@ pub fn build_virtual_ts(sail_source: &str) -> Option<VirtualTs> {
         });
     }
 
-    // ── View: scope types ──────────────────────────────────────────────────
+    // ── View: collect <scope> (emit AFTER the import so tsgo sees binds) ──
+    // `import` after a `declare const` makes some tsgo/module parses treat
+    // the preamble as a script fragment; `style(name)` then cannot see the
+    // named-style declare. Hoist scope recovery (the import) first.
     let scope = find_scope_raw(sail_source);
     let mut scope_sail_span = None;
-    if let Some((sail_start, sail_end, raw_body)) = scope {
+    if let Some((sail_start, sail_end, _)) = scope {
         scope_sail_span = Some(Span::new(sail_start, sail_end));
         regions.push(TsRegion {
             start: sail_start,
             end: sail_end,
             kind: RegionKind::Scope,
         });
-        view_text.push_str("\n// ── <scope> type aliases ───────────────────────────────────\n");
-        for (line_start_in_body, line) in iter_lines_with_offsets(raw_body) {
-            let trimmed = line.trim_start();
-            if trimmed.starts_with("type ")
-                || trimmed.starts_with("export type ")
-                || (trimmed.starts_with("export ") && trimmed.contains(" type "))
-            {
-                let v_start = view_text.len();
-                view_text.push_str(line);
-                if !line.ends_with('\n') {
-                    view_text.push('\n');
-                }
-                let content_len = line.trim_end_matches(['\r', '\n']).len();
-                let sail_line_start = sail_start + line_start_in_body;
-                segments.push(MapSegment {
-                    file: VirtualFile::View,
-                    virtual_start: v_start,
-                    virtual_end: v_start + content_len,
-                    sail_start: sail_line_start,
-                    sail_end: sail_line_start + content_len,
-                    one_to_one: true,
-                    sail_to_virt_rel: None,
-                });
-            }
-        }
-        // Style values from `<scope>` so template attachments that reference
-        // them typecheck under tsgo.
-        // `const name = style(…)` is quoted as-authored.
-        // First-class `style name = …` stays Style — do not invent a TS
-        // `const name = style(…)` rewrite; only declare the binding name.
-        let mut style_const_block = String::new();
-        for style_src in collect_scope_style_consts(raw_body) {
-            style_const_block.push_str(&quote_style_dsl_for_tsc(&style_src));
-            if !style_const_block.ends_with('\n') {
-                style_const_block.push('\n');
-            }
-        }
-        for name in collect_scope_style_decl_names(raw_body) {
-            style_const_block.push_str("declare const ");
-            style_const_block.push_str(&name);
-            style_const_block.push_str(": any;\n");
-        }
-        if !style_const_block.is_empty() {
-            view_text
-                .push_str("\n// ── <scope> Style values (channel form) ────────────────────\n");
-            view_text.push_str(&style_const_block);
-        }
     }
 
-    // ── View: scope recovery ───────────────────────────────────────────────
+    // ── View: scope recovery (import first — module parse) ─────────────────
     // Import the controller module under a relative name the session rewrites
     // to the real controller virtual file when materializing on disk.
     view_text.push_str("\n// ── typed scope recovery ────────────────────────────────────\n");
@@ -383,6 +339,59 @@ pub fn build_virtual_ts(sail_source: &str) -> Option<VirtualTs> {
             "const scope: Record<string, never> = {};\n\
              export type Scope = typeof scope;\n",
         );
+    }
+
+    // ── View: scope types + Style names (after import — same module) ──────
+    if let Some((sail_start, _, raw_body)) = scope {
+        view_text.push_str("\n// ── <scope> type aliases ───────────────────────────────────\n");
+        for (line_start_in_body, line) in iter_lines_with_offsets(raw_body) {
+            let trimmed = line.trim_start();
+            if trimmed.starts_with("type ")
+                || trimmed.starts_with("export type ")
+                || (trimmed.starts_with("export ") && trimmed.contains(" type "))
+            {
+                let v_start = view_text.len();
+                view_text.push_str(line);
+                if !line.ends_with('\n') {
+                    view_text.push('\n');
+                }
+                let content_len = line.trim_end_matches(['\r', '\n']).len();
+                let sail_line_start = sail_start + line_start_in_body;
+                segments.push(MapSegment {
+                    file: VirtualFile::View,
+                    virtual_start: v_start,
+                    virtual_end: v_start + content_len,
+                    sail_start: sail_line_start,
+                    sail_end: sail_line_start + content_len,
+                    one_to_one: true,
+                    sail_to_virt_rel: None,
+                });
+            }
+        }
+        // Style values from `<scope>` so template attachments that reference
+        // them typecheck under tsgo.
+        // `const name = style(…)` is quoted as-authored.
+        // First-class `style name = …` stays Style — do not invent a TS
+        // `const name = style(…)` rewrite; only declare the binding name.
+        // Emitted after the `import` so the binding is module-local (not a
+        // preamble script fragment that `style(name)` cannot see).
+        let mut style_const_block = String::new();
+        for style_src in collect_scope_style_consts(raw_body) {
+            style_const_block.push_str(&quote_style_dsl_for_tsc(&style_src));
+            if !style_const_block.ends_with('\n') {
+                style_const_block.push('\n');
+            }
+        }
+        for name in collect_scope_style_decl_names(raw_body) {
+            style_const_block.push_str("declare const ");
+            style_const_block.push_str(&name);
+            style_const_block.push_str(": any;\n");
+        }
+        if !style_const_block.is_empty() {
+            view_text
+                .push_str("\n// ── <scope> Style values (channel form) ────────────────────\n");
+            view_text.push_str(&style_const_block);
+        }
     }
 
     // `{#for}` / `<for … as="row">` binders are not controller members —
@@ -2377,6 +2386,47 @@ export default controller((ctx) => ({ count: signal(0) }))
             }
         }
         false
+    }
+
+    #[test]
+    fn named_style_ref_is_declared_and_not_scope_prefixed() {
+        let src = r#"
+<scope>
+  style cardCol = { pad(4) }
+  style cardLink = { display(block) }
+</scope>
+<controller>
+export default controller(() => ({}))
+</controller>
+<a style(cardLink)><div style(cardCol)>x</div></a>
+"#;
+        let v = build_virtual_ts(src).expect("virtual");
+        assert!(
+            v.view_text.contains("declare const cardCol: any")
+                && v.view_text.contains("declare const cardLink: any"),
+            "named styles must be declared:\n{}",
+            v.view_text
+        );
+        assert!(
+            !v.view_text.contains("scope.cardCol") && !v.view_text.contains("scope.cardLink"),
+            "style(name) must stay bare:\n{}",
+            v.view_text
+        );
+        assert!(
+            v.view_text.contains("style(cardCol)") || v.view_text.contains("style(cardLink)"),
+            "style(name) must embed:\n{}",
+            v.view_text
+        );
+        let import_at = v
+            .view_text
+            .find("import __sail_authored")
+            .expect("controller import");
+        let decl_at = v.view_text.find("declare const cardCol").expect("declare");
+        assert!(
+            decl_at > import_at,
+            "declare const must follow import (module parse):\n{}",
+            v.view_text
+        );
     }
 
     #[test]
