@@ -155,10 +155,10 @@ describe('composite component knobs (SPIN-3)', () => {
     expect(componentKnobLabel('type.heading.size', 'size')).toBe('type.heading · size')
     expect(compositeForPath('elevation.sm.shadow')?.name).toBe('elevation.sm')
     expect(componentKnobLabel('elevation.sm.shadow', 'shadow')).toBe('elevation.sm · shadow')
-    expect(compositeForPath('fill.surface.color')?.name).toBe('fill.surface')
+    expect(compositeForPath('bg.surface.color')?.name).toBe('bg.surface')
 
     const groups = listTokenGroups()
-    for (const id of ['size', 'type', 'elevation', 'fill', 'ink']) {
+    for (const id of ['size', 'type', 'elevation', 'bg', 'fg']) {
       expect(groups.some((g) => g.id === id)).toBe(true)
     }
     const sizeGroup = groups.find((g) => g.id === 'size')

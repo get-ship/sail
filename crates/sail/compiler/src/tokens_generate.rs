@@ -127,6 +127,9 @@ const THEME_PAINT_MODES: &[&str] = &["light", "dark"];
 /// SPIN-1: `border` / `size` / `elevation` / `type` hold DTCG composites
 /// (`border.subtle`, `size.control-md`, …). Radius stays its own group —
 /// corner geometry is not a border concern.
+///
+/// `l1` is the empty-capable slot for L1 skin SSOT. Theme owns L1 skins;
+/// framework-css / element-skins.css read this group — they are not the SSOT.
 const THEME_MODE_GROUP_KEYS: &[&str] = &[
     "$extensions",
     "component",
@@ -152,8 +155,7 @@ const THEME_MODE_GROUP_KEYS: &[&str] = &[
     "type",
     "bg",
     "fg",
-    "fill",
-    "ink",
+    "l1",
     "style",
     "keyframes",
     "play",
@@ -5702,6 +5704,18 @@ mod tests {
         assert_eq!(mode_capability(&["dark".into()]), "dark");
         assert_eq!(mode_capability(&["light".into()]), "light");
         assert_eq!(mode_capability(&["light".into(), "dark".into()]), "both");
+    }
+
+    #[test]
+    fn accept_empty_l1_mode_group() {
+        let doc: Value = serde_json::from_str(
+            r#"{
+  "$extensions": { "sail": { "themeId": "x", "defaultMode": "light", "layer": "theme" } },
+  "modes": { "light": { "l1": {} } }
+}"#,
+        )
+        .unwrap();
+        validate_theme_doc_schema(&doc, "x.json").expect("empty l1 group is a legal theme slot");
     }
 
     #[test]

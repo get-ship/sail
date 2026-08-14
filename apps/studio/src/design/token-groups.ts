@@ -57,8 +57,8 @@ export type CompositeRef = {
 
 const GROUP_ORDER = [
   'color',
-  'fill',
-  'ink',
+  'bg',
+  'fg',
   'border',
   'space',
   'size',
@@ -81,8 +81,8 @@ const GROUP_ORDER = [
 
 const GROUP_LABELS: Record<string, string> = {
   color: 'Color',
-  fill: 'Fill',
-  ink: 'Ink',
+  bg: 'Bg',
+  fg: 'Fg',
   border: 'Border',
   space: 'Space',
   size: 'Size',
