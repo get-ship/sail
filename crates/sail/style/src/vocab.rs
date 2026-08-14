@@ -6,6 +6,9 @@
 //!
 //! Live author names are v3 (`bg`, `fg`, `position`, `pad`, `margin`, …).
 //! Unknown names are unknown vocabulary. `z` is a `position` slot only.
+//!
+//! Capability flags (`geometry` / `textish` / `motion`) are the laws the
+//! code already enforces. They are not author keys and not a Channel enum.
 
 /// Vocabulary row tag. One table, three tags — not a second atlas.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -13,6 +16,54 @@ pub enum VocabTag {
     Concern,
     Axis,
     Plain,
+}
+
+/// Laws a vocab row participates in. Not author keys (`box:` / `paint:` /
+/// `text:` are dissolved). Complete filters `motion` for `animate:`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub struct VocabCaps {
+    /// Size / pad / margin / position / grow / shrink / dir / self / resize.
+    pub geometry: bool,
+    /// Type / typography setters. Host law lives in the compiler.
+    pub textish: bool,
+    /// Play / animate triggers.
+    pub motion: bool,
+}
+
+impl VocabCaps {
+    pub const NONE: Self = Self {
+        geometry: false,
+        textish: false,
+        motion: false,
+    };
+    pub const GEOMETRY: Self = Self {
+        geometry: true,
+        textish: false,
+        motion: false,
+    };
+    pub const TEXTISH: Self = Self {
+        geometry: false,
+        textish: true,
+        motion: false,
+    };
+    pub const MOTION: Self = Self {
+        geometry: false,
+        textish: false,
+        motion: true,
+    };
+
+    /// One-word label for complete / skill surfaces. Empty when unflagged.
+    pub fn label(self) -> &'static str {
+        if self.motion {
+            "motion"
+        } else if self.textish {
+            "textish"
+        } else if self.geometry {
+            "geometry"
+        } else {
+            ""
+        }
+    }
 }
 
 /// One vocabulary row.
@@ -24,8 +75,8 @@ pub struct VocabRow {
     /// Emit-side concern name when this row lowers through a concern.
     /// `None` for plains. Alias targets point at themselves.
     pub emit: Option<&'static str>,
-    /// Channel key (`box` / `paint` / `text` / `animate`) for complete filter.
-    pub channel: &'static str,
+    /// Capability flags the code already enforces.
+    pub caps: VocabCaps,
     /// Offered by complete. Alias targets and retired longhands are false.
     pub offered: bool,
 }
@@ -34,14 +85,14 @@ const fn row(
     name: &'static str,
     tag: VocabTag,
     emit: Option<&'static str>,
-    channel: &'static str,
+    caps: VocabCaps,
     offered: bool,
 ) -> VocabRow {
     VocabRow {
         name,
         tag,
         emit,
-        channel,
+        caps,
         offered,
     }
 }
@@ -49,85 +100,89 @@ const fn row(
 const CONCERN: VocabTag = VocabTag::Concern;
 const AXIS: VocabTag = VocabTag::Axis;
 const PLAIN: VocabTag = VocabTag::Plain;
+const NONE: VocabCaps = VocabCaps::NONE;
+const GEO: VocabCaps = VocabCaps::GEOMETRY;
+const TEXT: VocabCaps = VocabCaps::TEXTISH;
+const MOTION: VocabCaps = VocabCaps::MOTION;
 
 /// The one registry. Live author names. No `z` row — `z` rides `position`.
 pub static VOCAB: &[VocabRow] = &[
     // ── live concerns (v3 author names) ────────────────────────────────
-    row("bg", CONCERN, Some("bg"), "paint", true),
-    row("fg", CONCERN, Some("fg"), "paint", true),
-    row("border", CONCERN, Some("border"), "paint", true),
-    row("size", CONCERN, Some("size"), "box", true),
-    row("type", CONCERN, Some("type"), "text", true),
-    row("elevation", CONCERN, Some("elevation"), "paint", true),
-    row("position", CONCERN, Some("position"), "box", true),
-    row("play", CONCERN, None, "animate", true),
-    row("filter", CONCERN, Some("filter"), "paint", true),
+    row("bg", CONCERN, Some("bg"), NONE, true),
+    row("fg", CONCERN, Some("fg"), NONE, true),
+    row("border", CONCERN, Some("border"), NONE, true),
+    row("size", CONCERN, Some("size"), GEO, true),
+    row("type", CONCERN, Some("type"), TEXT, true),
+    row("elevation", CONCERN, Some("elevation"), NONE, true),
+    row("position", CONCERN, Some("position"), GEO, true),
+    row("play", CONCERN, None, MOTION, true),
+    row("filter", CONCERN, Some("filter"), NONE, true),
     // ── live axis ──────────────────────────────────────────────────────
-    row("pad", AXIS, Some("pad"), "box", true),
-    row("margin", AXIS, Some("margin"), "box", true),
-    row("overflow", AXIS, Some("overflow"), "box", true),
-    row("radius", AXIS, Some("radius"), "paint", true),
+    row("pad", AXIS, Some("pad"), GEO, true),
+    row("margin", AXIS, Some("margin"), GEO, true),
+    row("overflow", AXIS, Some("overflow"), NONE, true),
+    row("radius", AXIS, Some("radius"), NONE, true),
     // ── live plains: markers (verbs) ───────────────────────────────────
-    row("group", PLAIN, None, "paint", true),
-    row("isolate", PLAIN, None, "paint", true),
-    row("srOnly", PLAIN, None, "paint", true),
-    row("press", PLAIN, None, "paint", true),
-    row("controlFrame", PLAIN, None, "paint", true),
-    row("controlLift", PLAIN, None, "paint", true),
-    row("cursor", PLAIN, None, "paint", true),
-    row("select", PLAIN, None, "paint", true),
-    row("pointerEvents", PLAIN, None, "paint", true),
-    row("tapHighlight", PLAIN, None, "paint", true),
-    row("touch", PLAIN, None, "paint", true),
-    row("appearance", PLAIN, None, "paint", true),
-    row("tab", PLAIN, None, "text", true),
-    row("content", PLAIN, None, "paint", true),
-    row("boxSizing", PLAIN, None, "paint", true),
-    row("objectFit", PLAIN, None, "paint", true),
-    row("objectPosition", PLAIN, None, "paint", true),
-    row("scrollbarThumb", PLAIN, None, "paint", true),
-    row("scrollbarTrack", PLAIN, None, "paint", true),
-    row("scrollbarThin", PLAIN, None, "paint", true),
-    row("container", PLAIN, None, "paint", true),
-    row("containerType", PLAIN, None, "paint", true),
-    row("containerName", PLAIN, None, "paint", true),
+    row("group", PLAIN, None, NONE, true),
+    row("isolate", PLAIN, None, NONE, true),
+    row("srOnly", PLAIN, None, NONE, true),
+    row("press", PLAIN, None, NONE, true),
+    row("controlFrame", PLAIN, None, NONE, true),
+    row("controlLift", PLAIN, None, NONE, true),
+    row("cursor", PLAIN, None, NONE, true),
+    row("select", PLAIN, None, NONE, true),
+    row("pointerEvents", PLAIN, None, NONE, true),
+    row("tapHighlight", PLAIN, None, NONE, true),
+    row("touch", PLAIN, None, NONE, true),
+    row("appearance", PLAIN, None, NONE, true),
+    row("tab", PLAIN, None, TEXT, true),
+    row("content", PLAIN, None, NONE, true),
+    row("boxSizing", PLAIN, None, NONE, true),
+    row("objectFit", PLAIN, None, NONE, true),
+    row("objectPosition", PLAIN, None, NONE, true),
+    row("scrollbarThumb", PLAIN, None, NONE, true),
+    row("scrollbarTrack", PLAIN, None, NONE, true),
+    row("scrollbarThin", PLAIN, None, NONE, true),
+    row("container", PLAIN, None, NONE, true),
+    row("containerType", PLAIN, None, NONE, true),
+    row("containerName", PLAIN, None, NONE, true),
     // ── live spec plains ──────────────────────────────────────────────
-    row("display", PLAIN, None, "box", true),
-    row("grow", PLAIN, None, "box", true),
-    row("shrink", PLAIN, None, "box", true),
-    row("self", PLAIN, None, "box", true),
-    row("dir", PLAIN, None, "box", true),
-    row("opacity", PLAIN, None, "paint", true),
-    row("rotate", PLAIN, None, "paint", true),
-    row("rotateX", PLAIN, None, "paint", true),
-    row("rotateY", PLAIN, None, "paint", true),
-    row("rotateZ", PLAIN, None, "paint", true),
-    row("scale", PLAIN, None, "paint", true),
-    row("translateX", PLAIN, None, "paint", true),
-    row("translateY", PLAIN, None, "paint", true),
-    row("transform", PLAIN, None, "paint", true),
-    row("origin", PLAIN, None, "paint", true),
-    row("animate", PLAIN, None, "paint", true),
-    row("transition", PLAIN, None, "paint", true),
-    row("duration", PLAIN, None, "paint", true),
-    row("ease", PLAIN, None, "paint", true),
-    row("blur", PLAIN, None, "paint", true),
-    row("brightness", PLAIN, None, "paint", true),
-    row("contrast", PLAIN, None, "paint", true),
-    row("grayscale", PLAIN, None, "paint", true),
-    row("hueRotate", PLAIN, None, "paint", true),
-    row("invert", PLAIN, None, "paint", true),
-    row("sepia", PLAIN, None, "paint", true),
-    row("saturate", PLAIN, None, "paint", true),
-    row("backdrop", PLAIN, None, "paint", true),
-    row("mixBlend", PLAIN, None, "paint", true),
+    row("display", PLAIN, None, NONE, true),
+    row("grow", PLAIN, None, GEO, true),
+    row("shrink", PLAIN, None, GEO, true),
+    row("self", PLAIN, None, GEO, true),
+    row("dir", PLAIN, None, GEO, true),
+    row("opacity", PLAIN, None, NONE, true),
+    row("rotate", PLAIN, None, NONE, true),
+    row("rotateX", PLAIN, None, NONE, true),
+    row("rotateY", PLAIN, None, NONE, true),
+    row("rotateZ", PLAIN, None, NONE, true),
+    row("scale", PLAIN, None, NONE, true),
+    row("translateX", PLAIN, None, NONE, true),
+    row("translateY", PLAIN, None, NONE, true),
+    row("transform", PLAIN, None, NONE, true),
+    row("origin", PLAIN, None, NONE, true),
+    row("animate", PLAIN, None, NONE, true),
+    row("transition", PLAIN, None, NONE, true),
+    row("duration", PLAIN, None, NONE, true),
+    row("ease", PLAIN, None, NONE, true),
+    row("blur", PLAIN, None, NONE, true),
+    row("brightness", PLAIN, None, NONE, true),
+    row("contrast", PLAIN, None, NONE, true),
+    row("grayscale", PLAIN, None, NONE, true),
+    row("hueRotate", PLAIN, None, NONE, true),
+    row("invert", PLAIN, None, NONE, true),
+    row("sepia", PLAIN, None, NONE, true),
+    row("saturate", PLAIN, None, NONE, true),
+    row("backdrop", PLAIN, None, NONE, true),
+    row("mixBlend", PLAIN, None, NONE, true),
     // ── SPEC §8 restored plains ───────────────────────────────────────
-    row("align", PLAIN, None, "paint", true),
-    row("list", PLAIN, None, "paint", true),
-    row("resize", PLAIN, None, "box", true),
-    row("contain", PLAIN, None, "paint", true),
-    row("willChange", PLAIN, None, "paint", true),
-    row("visibility", PLAIN, None, "paint", true),
+    row("align", PLAIN, None, NONE, true),
+    row("list", PLAIN, None, NONE, true),
+    row("resize", PLAIN, None, GEO, true),
+    row("contain", PLAIN, None, NONE, true),
+    row("willChange", PLAIN, None, NONE, true),
+    row("visibility", PLAIN, None, NONE, true),
 ];
 
 /// The table. Complete / resolve / find walk this.
@@ -162,6 +217,12 @@ pub fn vocab_surface_line(row: &VocabRow) -> String {
         VocabTag::Axis => "axis",
         VocabTag::Plain => "plain",
     };
+    let cap = row.caps.label();
+    let cap_bit = if cap.is_empty() {
+        String::new()
+    } else {
+        format!(" · {cap}")
+    };
     match row.tag {
         VocabTag::Concern | VocabTag::Axis => {
             let slots = row
@@ -176,10 +237,7 @@ pub fn vocab_surface_line(row: &VocabRow) -> String {
                 })
                 .filter(|s| !s.is_empty())
                 .unwrap_or_else(|| "…".into());
-            let mut line = format!(
-                "`{}(…)` · {kind} · {} · slots `{slots}`",
-                row.name, row.channel
-            );
+            let mut line = format!("`{}(…)` · {kind}{cap_bit} · slots `{slots}`", row.name);
             if row.name == "border" {
                 line.push_str(" · radius is not a slot · kind is a family key");
             }
@@ -187,11 +245,11 @@ pub fn vocab_surface_line(row: &VocabRow) -> String {
                 line.push_str(" · pad is not a slot (use `pad`)");
             }
             if row.name == "play" {
-                line.push_str(" · `animate:` channel only");
+                line.push_str(" · `animate:` only");
             }
             line
         }
-        VocabTag::Plain => format!("`{}(…)` · {kind} · {}", row.name, row.channel),
+        VocabTag::Plain => format!("`{}(…)` · {kind}{cap_bit}", row.name),
     }
 }
 
@@ -237,6 +295,23 @@ mod tests {
             assert!(row.offered, "{name} is a live spec plain");
             assert_eq!(row.tag, VocabTag::Plain);
         }
+    }
+
+    #[test]
+    fn capability_flags_match_laws() {
+        assert!(find_vocab("size").unwrap().caps.geometry);
+        assert!(find_vocab("pad").unwrap().caps.geometry);
+        assert!(find_vocab("grow").unwrap().caps.geometry);
+        assert!(find_vocab("resize").unwrap().caps.geometry);
+        assert!(!find_vocab("display").unwrap().caps.geometry);
+        assert!(!find_vocab("overflow").unwrap().caps.geometry);
+        assert!(find_vocab("type").unwrap().caps.textish);
+        assert!(find_vocab("tab").unwrap().caps.textish);
+        assert!(!find_vocab("bg").unwrap().caps.textish);
+        assert!(find_vocab("play").unwrap().caps.motion);
+        assert!(!find_vocab("animate").unwrap().caps.motion);
+        assert!(!find_vocab("align").unwrap().caps.geometry);
+        assert!(!find_vocab("align").unwrap().caps.textish);
     }
 
     #[test]
@@ -296,8 +371,17 @@ mod tests {
         let bg = find_vocab("bg").expect("bg");
         let line = vocab_surface_line(bg);
         assert!(line.contains("`bg(…)`"), "{line}");
+        assert!(!line.contains("paint"), "{line}");
         let pad = find_vocab("pad").expect("pad");
         let line = vocab_surface_line(pad);
         assert!(line.contains("`pad(…)`"), "{line}");
+        assert!(line.contains("geometry"), "{line}");
+        let ty = find_vocab("type").expect("type");
+        let line = vocab_surface_line(ty);
+        assert!(line.contains("textish"), "{line}");
+        let play = find_vocab("play").expect("play");
+        let line = vocab_surface_line(play);
+        assert!(line.contains("animate:"), "{line}");
+        assert!(!line.contains("channel"), "{line}");
     }
 }

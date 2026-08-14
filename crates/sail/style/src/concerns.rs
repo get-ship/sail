@@ -6,7 +6,6 @@
 
 use std::collections::BTreeMap;
 
-use crate::channel::Channel;
 use crate::ir::{PaintArg, PaintOp, StyleDiagnostic};
 use crate::scales;
 use crate::tokens::{self, CompositeToken};
@@ -28,7 +27,6 @@ pub struct ConcernSpec {
     pub slots: &'static [ConcernSlot],
     /// Property setters this concern replaces — compile error, not a warning.
     pub covered_setters: &'static [&'static str],
-    pub channel: Channel,
 }
 
 /// Markers stay verbs (SPEC-SPINNAKER-2 §4). Not concerns.
@@ -114,7 +112,6 @@ pub fn concerns() -> &'static [ConcernSpec] {
                 "colorMix",
                 "colorDeepen",
             ],
-            channel: Channel::Paint,
         },
         ConcernSpec {
             name: "fg",
@@ -152,7 +149,6 @@ pub fn concerns() -> &'static [ConcernSpec] {
                 },
             ],
             covered_setters: &["fg", "caret", "accent", "stroke", "textGradient", "color"],
-            channel: Channel::Paint,
         },
         ConcernSpec {
             name: "border",
@@ -232,7 +228,6 @@ pub fn concerns() -> &'static [ConcernSpec] {
                 "ring",
                 "borderImage",
             ],
-            channel: Channel::Paint,
         },
         ConcernSpec {
             name: "radius",
@@ -269,7 +264,6 @@ pub fn concerns() -> &'static [ConcernSpec] {
                 },
             ],
             covered_setters: &["radiusT", "radiusB", "radiusL", "radiusR"],
-            channel: Channel::Paint,
         },
         ConcernSpec {
             name: "elevation",
@@ -280,7 +274,6 @@ pub fn concerns() -> &'static [ConcernSpec] {
                 keywords: &["none", "xs", "sm", "md", "lg", "xl"],
             }],
             covered_setters: &["shadow"],
-            channel: Channel::Paint,
         },
         ConcernSpec {
             name: "filter",
@@ -380,7 +373,6 @@ pub fn concerns() -> &'static [ConcernSpec] {
                 "mixBlend",
                 "opacity",
             ],
-            channel: Channel::Paint,
         },
         ConcernSpec {
             name: "size",
@@ -455,7 +447,6 @@ pub fn concerns() -> &'static [ConcernSpec] {
                 },
             ],
             covered_setters: &["w", "h", "minW", "minH", "maxW", "maxH", "aspect", "basis"],
-            channel: Channel::Box,
         },
         ConcernSpec {
             name: "pad",
@@ -518,7 +509,6 @@ pub fn concerns() -> &'static [ConcernSpec] {
             covered_setters: &[
                 "padX", "padY", "padT", "padB", "padL", "padR", "padS", "padE",
             ],
-            channel: Channel::Box,
         },
         ConcernSpec {
             name: "margin",
@@ -579,7 +569,6 @@ pub fn concerns() -> &'static [ConcernSpec] {
                 },
             ],
             covered_setters: &["m", "mx", "my", "mt", "mb", "ml", "mr", "ms", "me"],
-            channel: Channel::Box,
         },
         ConcernSpec {
             name: "position",
@@ -636,7 +625,6 @@ pub fn concerns() -> &'static [ConcernSpec] {
             covered_setters: &[
                 "position", "inset", "top", "bottom", "left", "right", "z", "order",
             ],
-            channel: Channel::Box,
         },
         ConcernSpec {
             name: "overflow",
@@ -679,7 +667,6 @@ pub fn concerns() -> &'static [ConcernSpec] {
                 },
             ],
             covered_setters: &["overflowX", "overflowY", "overscroll", "scroll"],
-            channel: Channel::Box,
         },
         ConcernSpec {
             name: "type",
@@ -798,7 +785,6 @@ pub fn concerns() -> &'static [ConcernSpec] {
                 "indent",
                 "antialiased",
             ],
-            channel: Channel::Text,
         },
     ]
 }

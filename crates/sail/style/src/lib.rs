@@ -6,7 +6,7 @@
 //! `clash`, `theme_env`) → CSS adapter (`css`). Foreign CSS / Tailwind / HTML
 //! habits teach through [`foreign_idioms`].
 
-pub mod channel;
+pub mod capabilities;
 pub mod clash;
 pub mod complete;
 pub mod component_surfaces;
@@ -46,10 +46,9 @@ pub use complete::{
     style_complete_for_context, when_keys,
 };
 
-pub use channel::{
-    Channel, TEXT_BEARING_ELEMENTS, channel_for_setter, is_animate_trigger, is_geometry_setter,
-    is_interaction_when_key, is_text_bearing, style_contains_geometry, style_uses_text_channel,
-    style_uses_text_channel_env, text_channel_host_error,
+pub use capabilities::{
+    is_animate_trigger, is_geometry_setter, is_interaction_when_key, setter_caps,
+    style_contains_geometry, style_is_textish, style_is_textish_env, style_uses_text,
 };
 pub use component_surfaces::{
     all_surface_packs, color_paint_vocabulary, is_component_public_name,
@@ -83,7 +82,7 @@ pub use theme_env::{
 };
 pub use type_resolve::{ResolvedType, resolve_type, resolve_type_for_tag, resolve_type_role};
 pub use vocab::{
-    VocabRow, find_vocab, offered_rows, resolve_vocab, vocab_rows, vocab_surface_line,
+    VocabCaps, VocabRow, find_vocab, offered_rows, resolve_vocab, vocab_rows, vocab_surface_line,
 };
 
 #[cfg(test)]

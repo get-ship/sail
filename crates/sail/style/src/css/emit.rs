@@ -500,7 +500,6 @@ pub fn lower_style_source_with_motion(
                     || message.contains("state can't gate layout")
                     || message.contains("was renamed to `ink")
                     || message.contains("was renamed to `fg")
-                    || message.contains("text channel is only legal")
                     || message.contains("member access")
                     || message.contains("does not resolve at the use site")
             }

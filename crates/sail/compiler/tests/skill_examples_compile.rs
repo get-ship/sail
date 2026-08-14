@@ -133,10 +133,10 @@ fn skill_generator_matches_product_surface() {
         md.contains("`bg(…)`") && md.contains("`size(…)`") && md.contains("`type(…)`"),
         "skill must teach v3 concern form"
     );
-    // Participation lives on the box channel (not bare attrs).
+    // Participation lives on geometry setters (not bare attrs).
     assert!(
-        md.contains("box: grow") || md.contains("grow(1)") || md.contains("box channel"),
-        "skill must teach box-channel participation: {}",
+        md.contains("grow(1)") || md.contains("geometry"),
+        "skill must teach geometry participation: {}",
         &md[md.find("Participation").unwrap_or(0)
             ..md.find("Participation")
                 .unwrap_or(0)
@@ -144,8 +144,8 @@ fn skill_generator_matches_product_surface() {
                 .min(md.len())]
     );
     assert!(
-        md.contains("sail-participation-style") || (md.contains("grow") && md.contains("box")),
-        "skill hard rules must mention participation → box channel"
+        md.contains("sail-participation-style") && md.contains("grow"),
+        "skill hard rules must mention participation → grow/size"
     );
     assert!(
         md.contains("sail-display-on-layout") || md.contains("display") && md.contains("layout"),

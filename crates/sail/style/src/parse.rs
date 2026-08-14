@@ -53,7 +53,7 @@ fn parse_with(input: &str) -> (Style, Vec<StyleDiagnostic>) {
     if let Err(d) = forbid_motion_inside_when(&style) {
         diags.push(d);
     }
-    // Interaction state cannot gate geometry (box channel).
+    // Interaction state cannot gate geometry.
     if let Err(d) = forbid_geometry_inside_interaction_when(&style) {
         diags.push(d);
     }
@@ -123,7 +123,7 @@ fn collect_motion_attaches_inner(
             }
         }
         Style::Ref(name) => {
-            // Cycle guard mirrors emit_inner / style_uses_text_channel_env.
+            // Cycle guard mirrors emit_inner / style_is_textish_env.
             if !resolving.insert(name.clone()) {
                 return;
             }
@@ -196,18 +196,18 @@ fn style_contains_motion(style: &Style) -> bool {
     }
 }
 
-/// Interaction / pseudo `when` keys must not gate geometry (box-channel) ops.
-/// Media/viewport `when(tablet|desktop|…)` may still gate box.
+/// Interaction / pseudo `when` keys must not gate geometry ops.
+/// Media/viewport `when(tablet|desktop|…)` may still gate geometry.
 fn forbid_geometry_inside_interaction_when(style: &Style) -> Result<(), StyleDiagnostic> {
     match style {
         Style::When { entries } => {
             for (key, body) in entries {
-                if super::channel::is_interaction_when_key(key)
-                    && super::channel::style_contains_geometry(body)
+                if super::capabilities::is_interaction_when_key(key)
+                    && super::capabilities::style_contains_geometry(body)
                 {
                     return Err(StyleDiagnostic::ParseError {
                         message: format!(
-                            "geometry (box channel: pad/gap/w/h/grow/…) cannot appear inside \
+                            "geometry (pad/size/margin/grow/…) cannot appear inside \
                              interaction when({key}) — state can't gate layout. Put geometry on \
                              the rest chain or under media/viewport when(tablet|desktop|…)."
                         ),

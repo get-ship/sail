@@ -22,22 +22,21 @@ pub use sail_style::{component_surfaces, host_ctx, scales, style_vocab, token_gr
 /// Style product surface — re-export of `sail-style` (parse / IR / emit / clash).
 pub mod style {
     pub use sail_style::{
-        CONDITION_PREFIXES, Channel, ConcernSlot, ConcernSpec, CssRule, MARKERS, OBJECT_KEYS,
-        PaintArg, PaintOp, ResolvedType, Style, StyleCompleteContext, StyleCompleteItem,
-        StyleCompleteKind, StyleDiagnostic, StyleEnv, TEXT_BEARING_ELEMENTS, VocabRow, VocabTag,
-        all_surface_packs, channel_for_setter, clash, collect_motion_attaches,
-        collect_motion_attaches_env, collect_style_const_names, color_paint_vocabulary,
-        concern_doc_line, concerns, condition_media, conditions, emit, emit_style, find_concern,
-        find_foreign_idiom, find_vocab, ir, is_geometry_setter, is_interaction_when_key, is_marker,
-        is_text_bearing, is_theme_owned_author_root, is_theme_owned_token_name,
+        CONDITION_PREFIXES, ConcernSlot, ConcernSpec, CssRule, MARKERS, OBJECT_KEYS, PaintArg,
+        PaintOp, ResolvedType, Style, StyleCompleteContext, StyleCompleteItem, StyleCompleteKind,
+        StyleDiagnostic, StyleEnv, VocabCaps, VocabRow, VocabTag, all_surface_packs, clash,
+        collect_motion_attaches, collect_motion_attaches_env, collect_style_const_names,
+        color_paint_vocabulary, concern_doc_line, concerns, condition_media, conditions, emit,
+        emit_style, find_concern, find_foreign_idiom, find_vocab, ir, is_geometry_setter,
+        is_interaction_when_key, is_marker, is_theme_owned_author_root, is_theme_owned_token_name,
         looks_like_utility_string_product, lower_style, lower_style_source,
         lower_style_source_with_motion, offered_rows, parse, parse_style_const_rhs, plains,
         prefixes, resolve_concern_name, resolve_type, resolve_type_for_tag, resolve_type_role,
-        retired_replacement, setters, style_complete_at, style_complete_context_at,
-        style_complete_for_context, style_contains_geometry, style_uses_text_channel,
-        style_uses_text_channel_env, surface_pack_for_host, surface_slots, teaching_line,
-        text_channel_host_error, token_groups, vocab_rows, vocab_surface_line, when_keys,
-        with_bound_group_props, with_host_surface,
+        retired_replacement, setter_caps, setters, style_complete_at, style_complete_context_at,
+        style_complete_for_context, style_contains_geometry, style_is_textish,
+        style_is_textish_env, style_uses_text, surface_pack_for_host, surface_slots, teaching_line,
+        token_groups, vocab_rows, vocab_surface_line, when_keys, with_bound_group_props,
+        with_host_surface,
     };
 }
 

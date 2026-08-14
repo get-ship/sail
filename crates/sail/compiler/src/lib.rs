@@ -65,6 +65,7 @@ pub(crate) mod scan;
 pub mod scope_manifest;
 pub mod semantic_props;
 pub mod stdlib;
+pub mod text_host;
 pub mod theme_gate;
 pub mod theme_surface;
 pub mod tokens_generate;
@@ -103,6 +104,7 @@ pub use semantic_props::{
     HOST_ANATOMY, HostAnatomy, SEMANTIC_PROPS, SemanticKind, SemanticProp, host_anatomy,
     is_free_aria_attr, lookup as lookup_semantic_prop, lower_attr_name_str,
 };
+pub use text_host::{is_text_host, text_host_error};
 pub use theme_surface::{
     ThemeTokenHover, ThemeTokenKind, ThemeTokenRef, catalog_theme_ids, infer_active_theme_mode,
     resolve_theme_token, theme_attr_completions, theme_attr_partial, theme_complete_at,

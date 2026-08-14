@@ -6,7 +6,6 @@
 
 use std::path::Path;
 
-use crate::channel::Channel;
 use crate::component_surfaces::color_paint_vocabulary;
 use crate::plains::{self, PlainSpec};
 use crate::scales;
@@ -47,11 +46,11 @@ impl StyleCompleteKind {
 /// Classified caret position inside a Style expression.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum StyleCompleteContext {
-    /// After a channel colon / chain head / `.` — product setter names.
+    /// After `animate:` / chain head / `.` — product setter names.
     SetterName {
         partial: String,
-        /// Channel key when known (`box` / `paint` / `text` / `animate`).
-        channel: Option<String>,
+        /// True when completing inside `animate:` (motion-capable rows only).
+        motion: bool,
     },
     /// Inside `setter(¦partial)` — tokens/keywords legal for that setter.
     SetterArg {
@@ -166,20 +165,25 @@ pub fn style_complete_for_context(
             }),
             partial,
         ),
-        StyleCompleteContext::SetterName { partial, channel } => {
-            let ch = channel.as_deref().and_then(parse_channel);
+        StyleCompleteContext::SetterName { partial, motion } => {
             let mut items: Vec<StyleCompleteItem> = Vec::new();
             for row in crate::vocab::offered_rows() {
-                if row.name == "play" && ch != Some(Channel::Animate) {
+                if row.caps.motion && !*motion {
                     continue;
                 }
-                if ch.is_some_and(|c| parse_channel(row.channel) != Some(c)) {
+                if *motion && !row.caps.motion {
                     continue;
                 }
-                let detail = match row.tag {
-                    crate::VocabTag::Concern => format!("concern · {}", row.channel),
-                    crate::VocabTag::Axis => format!("axis · {}", row.channel),
-                    crate::VocabTag::Plain => format!("plain · {}", row.channel),
+                let kind = match row.tag {
+                    crate::VocabTag::Concern => "concern",
+                    crate::VocabTag::Axis => "axis",
+                    crate::VocabTag::Plain => "plain",
+                };
+                let cap = row.caps.label();
+                let detail = if cap.is_empty() {
+                    kind.to_string()
+                } else {
+                    format!("{kind} · {cap}")
                 };
                 items.push(item(
                     row.name.to_string(),
@@ -507,7 +511,7 @@ fn classify_in_style(
     let bytes = before.as_bytes();
     let mut i = 0usize;
     let mut last_word: Option<(usize, usize)> = None; // start..end in `before`
-    let mut channel: Option<String> = None;
+    let mut motion = false;
     let mut after_colon = false;
     let mut after_dot = false;
     let mut after_comma_or_open = true; // object key-ish at `{`
@@ -622,12 +626,11 @@ fn classify_in_style(
                 if let Some((s, e)) = last_word {
                     let key = &before[s..e];
                     match key {
-                        "box" | "paint" | "text" | "animate" => {
-                            channel = Some(key.to_string());
+                        "animate" => {
+                            motion = true;
                             after_colon = true;
                             after_dot = false;
                             after_comma_or_open = false;
-                            // Channel body starts — not a when map.
                         }
                         "when" => {
                             stack.push(Frame::WhenValue);
@@ -664,9 +667,9 @@ fn classify_in_style(
                 after_colon = false;
                 after_dot = false;
                 last_word = None;
-                // Leaving a channel value: reset channel when at object level.
+                // Leaving an animate: value: reset motion filter at object level.
                 if matches!(stack.last(), Some(Frame::Object) | Some(Frame::Partial)) {
-                    channel = None;
+                    motion = false;
                 }
                 i += 1;
             }
@@ -757,29 +760,23 @@ fn classify_in_style(
         }
     }
 
-    // Setter name: after channel colon, after `.` chain, or mid-channel body.
+    // Setter name: after `animate:` colon, after `.` chain, or mid-animate body.
     if after_dot || after_colon {
-        return StyleCompleteContext::SetterName {
-            partial,
-            channel: channel.clone(),
-        };
+        return StyleCompleteContext::SetterName { partial, motion };
     }
 
-    // Mid-channel: after a finished `setter(...)` the next token is a `.` or
-    // another setter only if object form uses `.` chains — after `bg(primary)`
-    // before `.` we don't complete. After whitespace following a call in
-    // channel body, authors type `.radius` — require after_dot.
+    // After a finished `setter(...)` the next token is a `.` or another setter
+    // only if object form uses `.` chains — after `bg(primary)` before `.` we
+    // don't complete. After whitespace following a call in an `animate:` body,
+    // authors type `.enter` — require after_dot.
     //
-    // If we're inside a channel body (channel known, stack has Object) and the
+    // If we're inside `animate:` (motion known, stack has Object) and the
     // partial is non-empty with no open setter, treat as SetterName.
-    if channel.is_some()
+    if motion
         && matches!(stack.last(), Some(Frame::Object) | Some(Frame::Partial))
         && !partial.is_empty()
     {
-        return StyleCompleteContext::SetterName {
-            partial,
-            channel: channel.clone(),
-        };
+        return StyleCompleteContext::SetterName { partial, motion };
     }
 
     // Nested when map key mid-word without trailing comma flag.
@@ -792,19 +789,16 @@ fn classify_in_style(
         && !after_colon
         && !after_dot
     {
-        // Could be mid object key (`pa¦int`) or mid setter after channel —
-        // if last structural was colon (channel value), last_word path may
-        // have left after_colon false once we consumed partial into partial.
+        // Could be mid object key or mid setter after `animate:` —
+        // if last structural was colon, last_word path may have left
+        // after_colon false once we consumed partial into partial.
         // When partial is being typed at object level without a prior colon
         // on this entry, it's an object key.
         if looks_like_object_key_position(before) {
             return StyleCompleteContext::ObjectKey { partial };
         }
-        if channel.is_some() {
-            return StyleCompleteContext::SetterName {
-                partial,
-                channel: channel.clone(),
-            };
+        if motion {
+            return StyleCompleteContext::SetterName { partial, motion };
         }
     }
 
@@ -893,16 +887,6 @@ fn classify_style_ref_head(before: &str, partial: &str) -> Option<StyleCompleteC
 fn looks_like_object_key_position(before: &str) -> bool {
     let t = before.trim_end();
     t.ends_with('{') || t.ends_with(',')
-}
-
-fn parse_channel(s: &str) -> Option<Channel> {
-    match s {
-        "box" => Some(Channel::Box),
-        "paint" => Some(Channel::Paint),
-        "text" => Some(Channel::Text),
-        "animate" => Some(Channel::Animate),
-        _ => None,
-    }
 }
 
 /// Word (ident + optional dotted path) immediately left of `offset`.
@@ -1159,6 +1143,31 @@ mod tests {
                 "dissolved channel key `{k}` must not be offered: {labs:?}"
             );
         }
+    }
+
+    #[test]
+    fn animate_colon_filters_to_motion() {
+        let (src, off) = at_caret("style({ animate: ¦ })");
+        let items = style_complete_at(&src, None, off, None);
+        let labs = labels(&items);
+        assert!(labs.contains(&"play"), "animate: offers play: {labs:?}");
+        for dead in ["pad", "bg", "type", "size"] {
+            assert!(
+                !labs.contains(&dead),
+                "animate: must not offer `{dead}`: {labs:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn chain_dot_offers_geometry_and_textish_not_play() {
+        let (src, off) = at_caret("style({ bg(primary).¦ })");
+        let items = style_complete_at(&src, None, off, None);
+        let labs = labels(&items);
+        for want in ["pad", "size", "type", "bg"] {
+            assert!(labs.contains(&want), "{want} missing: {labs:?}");
+        }
+        assert!(!labs.contains(&"play"), "play only under animate: {labs:?}");
     }
 
     #[test]

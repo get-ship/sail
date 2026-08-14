@@ -5,7 +5,9 @@
 export interface StyleVocabRow {
   name: string
   tag: "concern" | "axis" | "plain"
-  channel: string
+  geometry: boolean
+  textish: boolean
+  motion: boolean
   slots: string[]
 }
 
@@ -13,7 +15,9 @@ export const STYLE_VOCAB: StyleVocabRow[] = [
   {
     "name": "bg",
     "tag": "concern",
-    "channel": "paint",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": [
       "color",
       "mix",
@@ -25,7 +29,9 @@ export const STYLE_VOCAB: StyleVocabRow[] = [
   {
     "name": "fg",
     "tag": "concern",
-    "channel": "paint",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": [
       "color",
       "caret",
@@ -36,7 +42,9 @@ export const STYLE_VOCAB: StyleVocabRow[] = [
   {
     "name": "border",
     "tag": "concern",
-    "channel": "paint",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": [
       "color",
       "width",
@@ -49,7 +57,9 @@ export const STYLE_VOCAB: StyleVocabRow[] = [
   {
     "name": "size",
     "tag": "concern",
-    "channel": "box",
+    "geometry": true,
+    "textish": false,
+    "motion": false,
     "slots": [
       "w",
       "h",
@@ -64,7 +74,9 @@ export const STYLE_VOCAB: StyleVocabRow[] = [
   {
     "name": "type",
     "tag": "concern",
-    "channel": "text",
+    "geometry": false,
+    "textish": true,
+    "motion": false,
     "slots": [
       "family",
       "size",
@@ -84,7 +96,9 @@ export const STYLE_VOCAB: StyleVocabRow[] = [
   {
     "name": "elevation",
     "tag": "concern",
-    "channel": "paint",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": [
       "shadow"
     ]
@@ -92,7 +106,9 @@ export const STYLE_VOCAB: StyleVocabRow[] = [
   {
     "name": "position",
     "tag": "concern",
-    "channel": "box",
+    "geometry": true,
+    "textish": false,
+    "motion": false,
     "slots": [
       "scheme",
       "inset",
@@ -107,13 +123,17 @@ export const STYLE_VOCAB: StyleVocabRow[] = [
   {
     "name": "play",
     "tag": "concern",
-    "channel": "animate",
+    "geometry": false,
+    "textish": false,
+    "motion": true,
     "slots": []
   },
   {
     "name": "filter",
     "tag": "concern",
-    "channel": "paint",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": [
       "blur",
       "brightness",
@@ -131,7 +151,9 @@ export const STYLE_VOCAB: StyleVocabRow[] = [
   {
     "name": "pad",
     "tag": "axis",
-    "channel": "box",
+    "geometry": true,
+    "textish": false,
+    "motion": false,
     "slots": [
       "all",
       "x",
@@ -147,7 +169,9 @@ export const STYLE_VOCAB: StyleVocabRow[] = [
   {
     "name": "margin",
     "tag": "axis",
-    "channel": "box",
+    "geometry": true,
+    "textish": false,
+    "motion": false,
     "slots": [
       "all",
       "x",
@@ -163,7 +187,9 @@ export const STYLE_VOCAB: StyleVocabRow[] = [
   {
     "name": "overflow",
     "tag": "axis",
-    "channel": "box",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": [
       "all",
       "x",
@@ -176,7 +202,9 @@ export const STYLE_VOCAB: StyleVocabRow[] = [
   {
     "name": "radius",
     "tag": "axis",
-    "channel": "paint",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": [
       "all",
       "t",
@@ -188,375 +216,499 @@ export const STYLE_VOCAB: StyleVocabRow[] = [
   {
     "name": "group",
     "tag": "plain",
-    "channel": "paint",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": []
   },
   {
     "name": "isolate",
     "tag": "plain",
-    "channel": "paint",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": []
   },
   {
     "name": "srOnly",
     "tag": "plain",
-    "channel": "paint",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": []
   },
   {
     "name": "press",
     "tag": "plain",
-    "channel": "paint",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": []
   },
   {
     "name": "controlFrame",
     "tag": "plain",
-    "channel": "paint",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": []
   },
   {
     "name": "controlLift",
     "tag": "plain",
-    "channel": "paint",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": []
   },
   {
     "name": "cursor",
     "tag": "plain",
-    "channel": "paint",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": []
   },
   {
     "name": "select",
     "tag": "plain",
-    "channel": "paint",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": []
   },
   {
     "name": "pointerEvents",
     "tag": "plain",
-    "channel": "paint",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": []
   },
   {
     "name": "tapHighlight",
     "tag": "plain",
-    "channel": "paint",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": []
   },
   {
     "name": "touch",
     "tag": "plain",
-    "channel": "paint",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": []
   },
   {
     "name": "appearance",
     "tag": "plain",
-    "channel": "paint",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": []
   },
   {
     "name": "tab",
     "tag": "plain",
-    "channel": "text",
+    "geometry": false,
+    "textish": true,
+    "motion": false,
     "slots": []
   },
   {
     "name": "content",
     "tag": "plain",
-    "channel": "paint",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": []
   },
   {
     "name": "boxSizing",
     "tag": "plain",
-    "channel": "paint",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": []
   },
   {
     "name": "objectFit",
     "tag": "plain",
-    "channel": "paint",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": []
   },
   {
     "name": "objectPosition",
     "tag": "plain",
-    "channel": "paint",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": []
   },
   {
     "name": "scrollbarThumb",
     "tag": "plain",
-    "channel": "paint",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": []
   },
   {
     "name": "scrollbarTrack",
     "tag": "plain",
-    "channel": "paint",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": []
   },
   {
     "name": "scrollbarThin",
     "tag": "plain",
-    "channel": "paint",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": []
   },
   {
     "name": "avatarMedia",
     "tag": "plain",
-    "channel": "paint",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": []
   },
   {
     "name": "glyphFill",
     "tag": "plain",
-    "channel": "paint",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": []
   },
   {
     "name": "container",
     "tag": "plain",
-    "channel": "paint",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": []
   },
   {
     "name": "containerType",
     "tag": "plain",
-    "channel": "paint",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": []
   },
   {
     "name": "containerName",
     "tag": "plain",
-    "channel": "paint",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": []
   },
   {
     "name": "display",
     "tag": "plain",
-    "channel": "box",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": []
   },
   {
     "name": "grow",
     "tag": "plain",
-    "channel": "box",
+    "geometry": true,
+    "textish": false,
+    "motion": false,
     "slots": []
   },
   {
     "name": "shrink",
     "tag": "plain",
-    "channel": "box",
+    "geometry": true,
+    "textish": false,
+    "motion": false,
     "slots": []
   },
   {
     "name": "self",
     "tag": "plain",
-    "channel": "box",
+    "geometry": true,
+    "textish": false,
+    "motion": false,
     "slots": []
   },
   {
     "name": "dir",
     "tag": "plain",
-    "channel": "box",
+    "geometry": true,
+    "textish": false,
+    "motion": false,
     "slots": []
   },
   {
     "name": "opacity",
     "tag": "plain",
-    "channel": "paint",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": []
   },
   {
     "name": "rotate",
     "tag": "plain",
-    "channel": "paint",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": []
   },
   {
     "name": "rotateX",
     "tag": "plain",
-    "channel": "paint",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": []
   },
   {
     "name": "rotateY",
     "tag": "plain",
-    "channel": "paint",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": []
   },
   {
     "name": "rotateZ",
     "tag": "plain",
-    "channel": "paint",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": []
   },
   {
     "name": "scale",
     "tag": "plain",
-    "channel": "paint",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": []
   },
   {
     "name": "translateX",
     "tag": "plain",
-    "channel": "paint",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": []
   },
   {
     "name": "translateY",
     "tag": "plain",
-    "channel": "paint",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": []
   },
   {
     "name": "transform",
     "tag": "plain",
-    "channel": "paint",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": []
   },
   {
     "name": "origin",
     "tag": "plain",
-    "channel": "paint",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": []
   },
   {
     "name": "animate",
     "tag": "plain",
-    "channel": "paint",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": []
   },
   {
     "name": "transition",
     "tag": "plain",
-    "channel": "paint",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": []
   },
   {
     "name": "duration",
     "tag": "plain",
-    "channel": "paint",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": []
   },
   {
     "name": "ease",
     "tag": "plain",
-    "channel": "paint",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": []
   },
   {
     "name": "blur",
     "tag": "plain",
-    "channel": "paint",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": []
   },
   {
     "name": "brightness",
     "tag": "plain",
-    "channel": "paint",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": []
   },
   {
     "name": "contrast",
     "tag": "plain",
-    "channel": "paint",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": []
   },
   {
     "name": "grayscale",
     "tag": "plain",
-    "channel": "paint",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": []
   },
   {
     "name": "hueRotate",
     "tag": "plain",
-    "channel": "paint",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": []
   },
   {
     "name": "invert",
     "tag": "plain",
-    "channel": "paint",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": []
   },
   {
     "name": "sepia",
     "tag": "plain",
-    "channel": "paint",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": []
   },
   {
     "name": "saturate",
     "tag": "plain",
-    "channel": "paint",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": []
   },
   {
     "name": "backdrop",
     "tag": "plain",
-    "channel": "paint",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": []
   },
   {
     "name": "mixBlend",
     "tag": "plain",
-    "channel": "paint",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": []
   },
   {
     "name": "align",
     "tag": "plain",
-    "channel": "paint",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": []
   },
   {
     "name": "list",
     "tag": "plain",
-    "channel": "paint",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": []
   },
   {
     "name": "resize",
     "tag": "plain",
-    "channel": "box",
+    "geometry": true,
+    "textish": false,
+    "motion": false,
     "slots": []
   },
   {
     "name": "contain",
     "tag": "plain",
-    "channel": "paint",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": []
   },
   {
     "name": "willChange",
     "tag": "plain",
-    "channel": "paint",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": []
   },
   {
     "name": "visibility",
     "tag": "plain",
-    "channel": "paint",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": []
   }
 ]
 
 export interface ConcernDoc {
   name: string
-  channel: string
+  geometry: boolean
+  textish: boolean
+  motion: boolean
   slots: string[]
 }
 
 export const CONCERNS: ConcernDoc[] = [
   {
     "name": "bg",
-    "channel": "paint",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": [
       "color",
       "mix",
@@ -567,7 +719,9 @@ export const CONCERNS: ConcernDoc[] = [
   },
   {
     "name": "fg",
-    "channel": "paint",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": [
       "color",
       "caret",
@@ -577,7 +731,9 @@ export const CONCERNS: ConcernDoc[] = [
   },
   {
     "name": "border",
-    "channel": "paint",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": [
       "color",
       "width",
@@ -589,7 +745,9 @@ export const CONCERNS: ConcernDoc[] = [
   },
   {
     "name": "radius",
-    "channel": "paint",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": [
       "all",
       "t",
@@ -600,14 +758,18 @@ export const CONCERNS: ConcernDoc[] = [
   },
   {
     "name": "elevation",
-    "channel": "paint",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": [
       "shadow"
     ]
   },
   {
     "name": "filter",
-    "channel": "paint",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": [
       "blur",
       "brightness",
@@ -624,7 +786,9 @@ export const CONCERNS: ConcernDoc[] = [
   },
   {
     "name": "size",
-    "channel": "box",
+    "geometry": true,
+    "textish": false,
+    "motion": false,
     "slots": [
       "w",
       "h",
@@ -638,7 +802,9 @@ export const CONCERNS: ConcernDoc[] = [
   },
   {
     "name": "pad",
-    "channel": "box",
+    "geometry": true,
+    "textish": false,
+    "motion": false,
     "slots": [
       "all",
       "x",
@@ -653,7 +819,9 @@ export const CONCERNS: ConcernDoc[] = [
   },
   {
     "name": "margin",
-    "channel": "box",
+    "geometry": true,
+    "textish": false,
+    "motion": false,
     "slots": [
       "all",
       "x",
@@ -668,7 +836,9 @@ export const CONCERNS: ConcernDoc[] = [
   },
   {
     "name": "position",
-    "channel": "box",
+    "geometry": true,
+    "textish": false,
+    "motion": false,
     "slots": [
       "scheme",
       "inset",
@@ -682,7 +852,9 @@ export const CONCERNS: ConcernDoc[] = [
   },
   {
     "name": "overflow",
-    "channel": "box",
+    "geometry": false,
+    "textish": false,
+    "motion": false,
     "slots": [
       "all",
       "x",
@@ -694,7 +866,9 @@ export const CONCERNS: ConcernDoc[] = [
   },
   {
     "name": "type",
-    "channel": "text",
+    "geometry": false,
+    "textish": true,
+    "motion": false,
     "slots": [
       "family",
       "size",

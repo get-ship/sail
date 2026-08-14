@@ -1,38 +1,11 @@
-//! Setter → channel assignment (INVENTORY-CHANNELS-1 §3 / job-spec spine).
+//! Setter capability flags (geometry / textish / motion).
 //!
-//! Phase 3 also owns text-bearing host law and geometry-class interaction gating.
+//! Flags live on [`crate::vocab::VocabRow`]. This module walks the Style
+//! tree and answers the laws those flags encode. Tag / host allowlists
+//! do not live here — the compiler owns text-host law.
 
 use crate::ir::{PaintArg, PaintOp, Style};
-
-/// Author channel for a Style setter or motion trigger.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Channel {
-    Box,
-    Paint,
-    Text,
-    Animate,
-}
-
-impl Channel {
-    pub fn key(self) -> &'static str {
-        match self {
-            Channel::Box => "box",
-            Channel::Paint => "paint",
-            Channel::Text => "text",
-            Channel::Animate => "animate",
-        }
-    }
-
-    pub fn from_key(key: &str) -> Option<Self> {
-        match key {
-            "box" => Some(Channel::Box),
-            "paint" => Some(Channel::Paint),
-            "text" => Some(Channel::Text),
-            "animate" => Some(Channel::Animate),
-            _ => None,
-        }
-    }
-}
+use crate::vocab::{VocabCaps, find_vocab};
 
 /// Motion triggers that live under `animate:` (brace-config form).
 pub fn is_animate_trigger(name: &str) -> bool {
@@ -50,104 +23,64 @@ pub fn is_animate_trigger(name: &str) -> bool {
     )
 }
 
-/// Elements that may host the `text:` channel (typography overrides).
+/// Capability flags for a product setter name.
 ///
-/// SPEC list (p, h1–h6, span, a, label, code, summary, legend) plus interactive
-/// and prose hosts used by the corpus. Layout keywords, pure structure (`div`,
-/// `svg`, `scroll-area`), and non-text chrome are **not** text-bearing.
-///
-/// Scope Style consts are **not** host-checked at definition (no tag); the
-/// host check runs when a Style expression attaches to an element.
-pub const TEXT_BEARING_ELEMENTS: &[&str] = &[
-    // SPEC core
-    "p",
-    "h1",
-    "h2",
-    "h3",
-    "h4",
-    "h5",
-    "h6",
-    "span",
-    "a",
-    "label",
-    "code",
-    "summary",
-    "legend",
-    // Interactive text hosts
-    "button",
-    "input",
-    "textarea",
-    "option",
-    // Prose / inline / table text
-    "pre",
-    "small",
-    "strong",
-    "em",
-    "b",
-    "i",
-    "li",
-    "th",
-    "td",
-    "dt",
-    "dd",
-    "figcaption",
-    "caption",
-    "cite",
-    "time",
-    "mark",
-    "abbr",
-    "sub",
-    "sup",
-    "blockquote",
-    // Optional custom text host
-    "text",
-];
-
-/// True when `tag` may carry the text channel.
-pub fn is_text_bearing(tag: &str) -> bool {
-    let t = tag.trim();
-    if t.is_empty() {
-        return false;
+/// Walks `vocab.rs` then `find_concern` / `covered_setters`. Gap keys are
+/// layout attrs, not Style — still geometry so retirement checks hold.
+pub fn setter_caps(name: &str) -> Option<VocabCaps> {
+    if let Some(row) = find_vocab(name) {
+        return Some(row.caps);
     }
-    // Case-insensitive HTML tags; custom elements stay lowercase in corpus.
-    let lower = t.to_ascii_lowercase();
-    TEXT_BEARING_ELEMENTS.iter().any(|e| *e == lower)
+    if let Some(c) = crate::concerns::find_concern(name) {
+        return find_vocab(c.name).map(|r| r.caps);
+    }
+    for spec in crate::concerns::concerns() {
+        if spec.covered_setters.contains(&name) {
+            return find_vocab(spec.name).map(|r| r.caps);
+        }
+    }
+    match name {
+        "gap" | "gapX" | "gapY" | "basis" => Some(VocabCaps::GEOMETRY),
+        _ => None,
+    }
 }
 
-/// True when `style` uses any text-channel setter (typography).
+/// True when `style` spends any textish setter (typography).
 ///
-/// Does not resolve `Style::Ref` — callers that have a [`StyleEnv`] should
-/// expand refs first, or use [`style_uses_text_channel_env`].
-pub fn style_uses_text_channel(style: &Style) -> bool {
-    style_uses_text_channel_env(style, &std::collections::HashMap::new())
+/// Does not resolve `Style::Ref` — callers that have a [`crate::StyleEnv`]
+/// should expand refs first, or use [`style_is_textish_env`].
+pub fn style_is_textish(style: &Style) -> bool {
+    style_is_textish_env(style, &std::collections::HashMap::new())
 }
 
-/// Like [`style_uses_text_channel`], resolving scope refs via `env`.
-pub fn style_uses_text_channel_env(
-    style: &Style,
-    env: &std::collections::HashMap<String, Style>,
-) -> bool {
-    style_uses_text_channel_inner(style, env, &mut std::collections::HashSet::new())
+/// Alias of [`style_is_textish`].
+pub fn style_uses_text(style: &Style) -> bool {
+    style_is_textish(style)
 }
 
-fn style_uses_text_channel_inner(
+/// Like [`style_is_textish`], resolving scope refs via `env`.
+pub fn style_is_textish_env(style: &Style, env: &std::collections::HashMap<String, Style>) -> bool {
+    style_is_textish_inner(style, env, &mut std::collections::HashSet::new())
+}
+
+fn style_is_textish_inner(
     style: &Style,
     env: &std::collections::HashMap<String, Style>,
     resolving: &mut std::collections::HashSet<String>,
 ) -> bool {
     match style {
         Style::Empty | Style::MotionAttach { .. } => false,
-        Style::Set(op) => channel_for_setter(&op.setter) == Some(Channel::Text),
+        Style::Set(op) => setter_caps(&op.setter).is_some_and(|c| c.textish),
         Style::Chain(items) | Style::List(items) => items
             .iter()
-            .any(|i| style_uses_text_channel_inner(i, env, resolving)),
+            .any(|i| style_is_textish_inner(i, env, resolving)),
         Style::Match { arms, .. } => arms
             .iter()
-            .any(|(_, b)| style_uses_text_channel_inner(b, env, resolving)),
-        Style::Compound { body, .. } => style_uses_text_channel_inner(body, env, resolving),
+            .any(|(_, b)| style_is_textish_inner(b, env, resolving)),
+        Style::Compound { body, .. } => style_is_textish_inner(body, env, resolving),
         Style::When { entries } => entries
             .iter()
-            .any(|(_, b)| style_uses_text_channel_inner(b, env, resolving)),
+            .any(|(_, b)| style_is_textish_inner(b, env, resolving)),
         Style::Ref(name) => {
             if !resolving.insert(name.clone()) {
                 return false;
@@ -155,27 +88,16 @@ fn style_uses_text_channel_inner(
             let hit = crate::ThemeStyleEnv::from_registry()
                 .expand_style_ref(name, env, crate::current_styling_policy())
                 .ok()
-                .is_some_and(|s| style_uses_text_channel_inner(&s, env, resolving));
+                .is_some_and(|s| style_is_textish_inner(&s, env, resolving));
             resolving.remove(name);
             hit
         }
     }
 }
 
-/// Diagnostic when text channel attaches to a non-text-bearing host.
-pub fn text_channel_host_error(tag: &str) -> String {
-    format!(
-        "text channel is only legal on text-bearing elements (got `<{tag}>`) — \
-         hosts: p, h1–h6, span, a, label, code, summary, legend, button, input, \
-         textarea, option, pre, small, strong, em, b, i, li, th, td, and related \
-         prose tags. Move typography onto a child text host (span/p/…), not layout \
-         keywords or pure structure (row/column/div/svg/…)."
-    )
-}
-
 /// True when a `when` key is interaction / component-state (not media/viewport).
 ///
-/// Used for “state can't gate geometry”. Media keys may still gate box.
+/// Used for “state can't gate geometry”. Media keys may still gate geometry.
 /// Structural pseudo-elements (`before`/`after`) and structural slot keys
 /// (`empty`, `first`/`last`) are not interaction — they define pseudo boxes
 /// and slot chrome, not pointer/ARIA thrash.
@@ -221,17 +143,15 @@ fn when_key_kebab(key: &str) -> String {
 }
 
 /// True when the setter is geometry-class for the “state can't gate geometry”
-/// law: dimensional box ops (size / pad / margin / position / grow / shrink /
+/// law: dimensional ops (size / pad / margin / position / grow / shrink /
 /// dir / self / resize / basis).
 ///
-/// Not `Channel::Box`. `display` and `overflow` stay box-channel for taffy
-/// but may appear under interaction when for show/hide without pointer thrash.
+/// Keys off the vocab `geometry` flag. `display` and `overflow` stay
+/// unflagged so show/hide under interaction when does not trip pad law.
 pub fn is_geometry_setter(name: &str) -> bool {
     match name {
         "display" | "overflow" | "overflowX" | "overflowY" | "flow" => false,
-        "size" | "position" | "pad" | "margin" | "grow" | "shrink" | "dir" | "self" | "resize"
-        | "basis" => true,
-        other => channel_for_setter(other) == Some(Channel::Box),
+        other => setter_caps(other).is_some_and(|c| c.geometry),
     }
 }
 
@@ -250,8 +170,8 @@ pub fn style_contains_geometry(style: &Style) -> bool {
     match style {
         Style::Empty | Style::MotionAttach { .. } | Style::Ref(_) => false,
         Style::Set(op) => {
-            // `place({ z })` is stacking, not box geometry — z lived on paint
-            // before SPEC-2 and must still be legal under interaction when().
+            // `position({ z })` is stacking, not box geometry — z lived on
+            // paint before SPEC-2 and must still be legal under interaction when().
             if op.setter == "position" {
                 place_gates_layout(op)
             } else {
@@ -278,62 +198,18 @@ fn is_structural_when_key(key: &str) -> bool {
     )
 }
 
-/// Channel for a product setter name. `None` when unknown / not a product setter.
-///
-/// Walks `vocab.rs` (`row.channel`) then `find_concern` / `covered_setters`.
-/// Gap keys are layout attrs, not Style — still boxed so retirement checks.
-pub fn channel_for_setter(name: &str) -> Option<Channel> {
-    if let Some(row) = crate::vocab::find_vocab(name) {
-        return Channel::from_key(row.channel);
-    }
-    if let Some(c) = crate::concerns::find_concern(name) {
-        return Some(c.channel);
-    }
-    for spec in crate::concerns::concerns() {
-        if spec.covered_setters.contains(&name) {
-            return Some(spec.channel);
-        }
-    }
-    match name {
-        "gap" | "gapX" | "gapY" => Some(Channel::Box),
-        _ => None,
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::parse::parse;
 
     #[test]
-    fn text_bearing_list_covers_spec_and_prose() {
-        for t in [
-            "p", "h1", "span", "a", "button", "input", "li", "th", "pre", "text",
-        ] {
-            assert!(is_text_bearing(t), "{t}");
-        }
-        for t in [
-            "row",
-            "column",
-            "grid",
-            "center",
-            "stack",
-            "div",
-            "svg",
-            "scroll-area",
-            "main",
-        ] {
-            assert!(!is_text_bearing(t), "{t}");
-        }
-        assert!(is_text_bearing("BUTTON"));
-    }
-
-    #[test]
-    fn style_uses_text_detects_channel_setters() {
+    fn style_is_textish_detects_type_not_pad() {
         let (s, _) = parse("style({ type({ size: sm }) })");
-        assert!(style_uses_text_channel(&s));
+        assert!(style_is_textish(&s));
+        assert!(style_uses_text(&s));
         let (s, _) = parse("style({ pad(2), bg(primary) })");
-        assert!(!style_uses_text_channel(&s));
+        assert!(!style_is_textish(&s));
     }
 
     #[test]
@@ -354,19 +230,19 @@ mod tests {
     }
 
     #[test]
-    fn geometry_setters_are_dimensional_box() {
+    fn geometry_setters_are_dimensional() {
         for s in [
             "size", "position", "pad", "margin", "grow", "shrink", "dir", "self", "resize", "basis",
         ] {
             assert!(is_geometry_setter(s), "{s}");
         }
-        assert_eq!(channel_for_setter("dir"), Some(Channel::Box));
-        assert_eq!(channel_for_setter("display"), Some(Channel::Box));
+        assert!(setter_caps("dir").unwrap().geometry);
+        assert!(!setter_caps("display").unwrap().geometry);
         assert!(!is_geometry_setter("display"));
         assert!(!is_geometry_setter("overflow"));
         assert!(!is_geometry_setter("type"));
-        assert_eq!(channel_for_setter("align"), Some(Channel::Paint));
-        assert_eq!(channel_for_setter("resize"), Some(Channel::Box));
+        assert!(!setter_caps("align").unwrap().geometry);
+        assert!(setter_caps("resize").unwrap().geometry);
     }
 
     #[test]
@@ -384,7 +260,7 @@ mod tests {
             !diags
                 .iter()
                 .any(|d| d.message().contains("state can't gate layout")),
-            "media may gate box: {:?}",
+            "media may gate geometry: {:?}",
             diags.iter().map(|d| d.message()).collect::<Vec<_>>()
         );
         let (_, diags) = parse("style({ pad(2), when: { hover: { bg(muted) } } })");
@@ -398,7 +274,7 @@ mod tests {
     }
 
     /// Geometry-class × interaction matrix (SPEC: state can't gate dimensional box).
-    /// Asserts only current product law — display/overflow are non-dimensional box.
+    /// Asserts only current product law — display/overflow are non-geometry.
     #[test]
     fn geometry_interaction_matrix() {
         fn gate_err(src: &str) -> bool {
@@ -418,7 +294,7 @@ mod tests {
             assert!(gate_err(&src), "size under {key} must refuse: {src}");
         }
 
-        // Media / preference may still gate box geometry.
+        // Media / preference may still gate geometry.
         for key in ["tablet", "dark"] {
             let src = format!("style({{ pad(2), when: {{ {key}: {{ pad(4) }} }} }})");
             assert!(!gate_err(&src), "pad under media {key} must allow: {src}");
@@ -432,7 +308,7 @@ mod tests {
             "style({ pad(2), bg(primary), when: { hover: { bg(muted) } } })"
         ));
 
-        // Non-dimensional box (flow/overflow) under interaction — currently legal
+        // Non-geometry flow/overflow under interaction — currently legal
         // (is_geometry_setter excludes them so show/hide slots don't thrash pad law).
         assert!(
             !is_geometry_setter("flow") && !is_geometry_setter("overflow"),

@@ -718,12 +718,13 @@ fn lower_sx_value(
     sail_style::lower_style_source_with_motion(val, env, css, seen)
 }
 
-/// Text channel may only attach to text-bearing hosts (SPEC + Phase 3).
+/// Textish setters may only attach to text-bearing hosts.
 ///
 /// Scope consts are not host-checked at definition (no tag). Attach-time check
 /// inspects the **inline** Style IR only — `style(constRef)` is not expanded
 /// here (const-split / ref host-check is a follow-up rewrite). Direct
-/// `style({ type({ … }) })` / when bodies with text setters on non-text hosts fail.
+/// `style({ type({ … }) })` / when bodies with textish setters on non-text
+/// hosts fail. Host law is compiler-owned (HTML + L1 registry).
 fn refuse_text_on_non_text_host(
     tag: &str,
     expr: &str,
@@ -731,15 +732,15 @@ fn refuse_text_on_non_text_host(
     abs_lo: usize,
     abs_hi: usize,
 ) -> Result<(), CompileError> {
-    if sail_style::is_text_bearing(tag) {
+    if crate::text_host::is_text_host(tag) {
         return Ok(());
     }
     let val = strip_outer_braces(expr.trim());
     let (style, _) = sail_style::parse(val);
-    if !sail_style::style_uses_text_channel(&style) {
+    if !sail_style::style_is_textish(&style) {
         return Ok(());
     }
-    Err(CompileError::new(sail_style::text_channel_host_error(tag))
+    Err(CompileError::new(crate::text_host::text_host_error(tag))
         .with_span(Span::new(abs_lo, abs_hi))
         .with_category("sail-style"))
 }
@@ -4528,13 +4529,13 @@ export default controller({ setup: () => ({ d: derived(() => signal(0)()) }) })\
     }
 
     #[test]
-    fn text_channel_refused_on_non_text_host() {
+    fn textish_refused_on_non_text_host() {
         let err = preprocess(r#"<div style({ type({ size: sm }) })>x</div>"#)
-            .expect_err("text channel on div");
+            .expect_err("textish setters on div");
         let msg = &err.message;
         assert!(
-            msg.contains("text channel") || msg.contains("text-bearing"),
-            "must name text channel / text-bearing law: {msg}"
+            msg.contains("text-bearing") || msg.contains("typography"),
+            "must name text-host law: {msg}"
         );
         assert!(
             msg.contains("<div>") || msg.contains("div"),
@@ -4543,13 +4544,13 @@ export default controller({ setup: () => ({ d: derived(() => signal(0)()) }) })\
     }
 
     #[test]
-    fn text_channel_allowed_on_text_bearing_hosts() {
+    fn textish_allowed_on_text_bearing_hosts() {
         let out =
             preprocess(r#"<p style({ type({ size: sm }) })>x</p>"#).expect("p is text-bearing");
         assert!(out.contains("s-") || out.contains("font-size"), "{out}");
 
         let out = preprocess(r#"<button style({ type({ size: sm }).bg(primary) })>go</button>"#)
-            .expect("button is text-bearing");
+            .expect("button is text-bearing via registry");
         assert!(out.contains("s-"), "{out}");
     }
 

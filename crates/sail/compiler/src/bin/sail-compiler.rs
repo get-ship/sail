@@ -604,13 +604,15 @@ fn gen_prop_registry(out: Option<PathBuf>, ts_out: Option<PathBuf>) -> Result<()
             serde_json::json!({
                 "name": row.name,
                 "tag": tag,
-                "channel": row.channel,
+                "geometry": row.caps.geometry,
+                "textish": row.caps.textish,
+                "motion": row.caps.motion,
                 "slots": slots,
             })
         })
         .collect();
     sf.push_str(
-        "export interface StyleVocabRow {\n  name: string\n  tag: \"concern\" | \"axis\" | \"plain\"\n  channel: string\n  slots: string[]\n}\n\n",
+        "export interface StyleVocabRow {\n  name: string\n  tag: \"concern\" | \"axis\" | \"plain\"\n  geometry: boolean\n  textish: boolean\n  motion: boolean\n  slots: string[]\n}\n\n",
     );
     sf.push_str("export const STYLE_VOCAB: StyleVocabRow[] = ");
     sf.push_str(&serde_json::to_string_pretty(&style_vocab)?);
@@ -619,15 +621,20 @@ fn gen_prop_registry(out: Option<PathBuf>, ts_out: Option<PathBuf>) -> Result<()
     let concern_rows: Vec<serde_json::Value> = sail_style::concerns()
         .iter()
         .map(|c| {
+            let caps = sail_style::find_vocab(c.name)
+                .map(|r| r.caps)
+                .unwrap_or_default();
             serde_json::json!({
                 "name": c.name,
-                "channel": c.channel.key(),
+                "geometry": caps.geometry,
+                "textish": caps.textish,
+                "motion": caps.motion,
                 "slots": c.slots.iter().map(|s| s.name).collect::<Vec<_>>(),
             })
         })
         .collect();
     sf.push_str(
-        "export interface ConcernDoc {\n  name: string\n  channel: string\n  slots: string[]\n}\n\n",
+        "export interface ConcernDoc {\n  name: string\n  geometry: boolean\n  textish: boolean\n  motion: boolean\n  slots: string[]\n}\n\n",
     );
     sf.push_str("export const CONCERNS: ConcernDoc[] = ");
     sf.push_str(&serde_json::to_string_pretty(&concern_rows)?);
@@ -1168,11 +1175,11 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
            `<stack>` with `gap` / `align` / `justify` / `cols` attrs. Rows **wrap by\n  \
            default**; `<row nowrap>` is the single-line row. Unrecognized attrs on a\n  \
            layout keyword are a compile error.\n\
-         - **Participation on the box channel** — `style({{ size({{ w: full, min-w: 0 }}).grow(1) }})`\n  \
+         - **Participation is geometry** — `style({{ size({{ w: full, min-w: 0 }}).grow(1) }})`\n  \
            (or `shrink(0)`). Bare attrs `grow` / `shrink` / `w` / `min-w` / `max-w` are a\n  \
            hard lint (`sail-participation-style`). Layout-keyword **axis** attrs\n  \
            (`gap` / `align` / `justify` on row|column|grid) stay. Paint (`bg`, `fg`,\n  \
-           chrome) stays on paint/text channels.\n\
+           chrome) is unflagged; `type(…)` is textish and only on text-bearing hosts.\n\
          - **Never `display(…)` on layout keywords** (`row`/`column`/`grid`/\n  \
            `center`/`stack`). Bases own `display:flex|grid` and beat `.s-displaynone`\n  \
            (`.sail-col` footgun). Hide a plain host and nest the layout inside\n  \
