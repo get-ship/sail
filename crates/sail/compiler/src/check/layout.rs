@@ -234,7 +234,7 @@ pub(crate) fn layout_check_options_for(
 
 /// Map a layout diagnostic's preprocessed span back to original `.sail` bytes.
 ///
-/// Tries class fingerprint, then the nth opening tag of `element_tag`.
+/// Tries host / layout-tag identity, then the nth opening tag of `element_tag`.
 /// Returns `None` on a miss — never invents an EOF-clamped author span.
 pub fn original_byte_span(
     original: &str,
@@ -384,21 +384,34 @@ mod severity_tests {
     }
 }
 
-/// Try to locate the flagged element in the original `.sail` source using its
-/// class fingerprint. Returns `(start_byte, end_byte)` of the opening tag.
+/// Locate the flagged element in the original `.sail` via host / layout-tag
+/// identity — not `s-*` class atoms. Returns `(start_byte, end_byte)`.
 fn find_original_span(
     original: &str,
     elements: &[sail_layout::html::Element],
     diag: &sail_layout::Diagnostic,
 ) -> Option<(usize, usize)> {
-    let fingerprint = element_fingerprint(&diag.element_class, diag.element_tag.as_str())?;
+    let elem = element_for_diag(elements, diag)?;
+    let identity = element_identity(elem)?;
+    let pre_index = count_identity_before(elements, &identity, diag.span.0);
+    find_nth_identity(original, &identity, pre_index)
+}
 
-    // Count how many times this fingerprint appears in the preprocessed source
-    // before the diagnostic's span. That index lets us disambiguate duplicates.
-    let pre_index = count_fingerprint_before(elements, &fingerprint, diag.span.0);
-
-    // Find the same-index occurrence in the original source.
-    find_nth_fingerprint(original, &fingerprint, pre_index)
+fn element_for_diag<'a>(
+    elements: &'a [sail_layout::html::Element],
+    diag: &sail_layout::Diagnostic,
+) -> Option<&'a sail_layout::html::Element> {
+    elements
+        .iter()
+        .skip(1)
+        .find(|e| e.span.0 == diag.span.0)
+        .or_else(|| {
+            elements.iter().skip(1).find(|e| {
+                e.span.0 <= diag.span.0
+                    && e.span.1 >= diag.span.1
+                    && e.tag.eq_ignore_ascii_case(&diag.element_tag)
+            })
+        })
 }
 
 /// Nth opening tag of `diag.element_tag` — used when the class fingerprint
@@ -476,40 +489,25 @@ fn walk_open_tags(source: &str, mut visit: impl FnMut(usize, usize, &str) -> boo
     }
 }
 
-#[derive(Debug, Clone)]
-struct Fingerprint {
-    /// The layout primitive tag in the original source, e.g. `column`.
-    base_tag: Option<String>,
-    /// Sanitized sx atomic tokens from the lowered class list.
-    sx_atoms: Vec<String>,
-}
-
-fn element_fingerprint(class: &str, tag: &str) -> Option<Fingerprint> {
-    let mut base_tag: Option<String> = None;
-    let mut sx_atoms = Vec::new();
-
-    for token in class.split_whitespace() {
+/// Author-facing layout identity: `data-sail-host`, then a layout keyword,
+/// then a `sail-col` / `sail-row` primitive. Never Style `s-*` atoms.
+fn element_identity(elem: &sail_layout::html::Element) -> Option<String> {
+    if let Some(host) = elem.attrs.get("data-sail-host") {
+        let h = host.trim();
+        if !h.is_empty() {
+            return Some(h.to_ascii_lowercase());
+        }
+    }
+    let tag = elem.tag.to_ascii_lowercase();
+    if layout_keyword_tag(&tag).is_some() {
+        return Some(tag);
+    }
+    for token in elem.class.split_whitespace() {
         if let Some(t) = layout_base_to_tag(token) {
-            base_tag = Some(t.to_string());
-        } else if let Some(atom) = token.strip_prefix("s-") {
-            sx_atoms.push(atom.to_string());
+            return Some(t.to_string());
         }
     }
-
-    // If the class fingerprint has no layout base, fall back to the tag name
-    // itself when it is one of the layout keywords (rare, but possible when a
-    // diagnostic points at a raw layout element before lowering).
-    if base_tag.is_none() {
-        if let Some(t) = layout_keyword_tag(tag) {
-            base_tag = Some(t.to_string());
-        }
-    }
-
-    if base_tag.is_none() && sx_atoms.is_empty() {
-        return None;
-    }
-
-    Some(Fingerprint { base_tag, sx_atoms })
+    None
 }
 
 fn layout_base_to_tag(token: &str) -> Option<&'static str> {
@@ -530,282 +528,35 @@ fn layout_keyword_tag(tag: &str) -> Option<&str> {
     }
 }
 
-/// Count how many elements match `fingerprint` with an open tag starting
-/// strictly before `before_byte`.
-fn count_fingerprint_before(
+fn count_identity_before(
     elements: &[sail_layout::html::Element],
-    fingerprint: &Fingerprint,
+    identity: &str,
     before_byte: usize,
 ) -> usize {
-    let mut count = 0;
-    for elem in elements.iter().skip(1) {
-        if elem.span.0 >= before_byte {
-            break;
-        }
-        if element_matches_fingerprint(elem, fingerprint) {
-            count += 1;
-        }
-    }
-    count
-}
-
-fn element_matches_fingerprint(
-    elem: &sail_layout::html::Element,
-    fingerprint: &Fingerprint,
-) -> bool {
-    if let Some(base) = &fingerprint.base_tag {
-        let has_base = elem.class.split_whitespace().any(|c| {
-            layout_base_to_tag(c)
-                .map(|t| t == base.as_str())
-                .unwrap_or(false)
-        }) || layout_keyword_tag(&elem.tag)
-            .map(|t| t == base.as_str())
-            .unwrap_or(false);
-        if !has_base {
-            return false;
-        }
-    }
-
-    if !fingerprint.sx_atoms.is_empty() {
-        let lowered: std::collections::HashSet<String> = elem
-            .class
-            .split_whitespace()
-            .filter(|c| c.starts_with("s-"))
-            .map(|c| c.strip_prefix("s-").unwrap_or(c).to_string())
-            .collect();
-        fingerprint.sx_atoms.iter().all(|a| lowered.contains(a))
-    } else {
-        true
-    }
-}
-
-/// Find the `n`th (0-based) opening tag in `source` that matches `fingerprint`.
-fn find_nth_fingerprint(
-    source: &str,
-    fingerprint: &Fingerprint,
-    n: usize,
-) -> Option<(usize, usize)> {
-    let mut seen = 0;
-    let mut skip_to = 0usize;
-
-    for (pos, ch) in source.char_indices() {
-        if pos < skip_to {
-            continue;
-        }
-
-        // Skip comments.
-        if source[pos..].starts_with("<!--") {
-            if let Some(end) = source[pos..].find("-->") {
-                skip_to = pos + end + 3;
-            } else {
-                break;
-            }
-            continue;
-        }
-
-        if ch == '<' {
-            // Try to parse an opening tag.
-            if let Some((tag_end, tag_name, attrs)) = parse_open_tag(source, pos) {
-                if tag_matches_fingerprint(source, tag_end, tag_name, &attrs, fingerprint) {
-                    if seen == n {
-                        return Some((pos, tag_end));
-                    }
-                    seen += 1;
-                }
-                skip_to = tag_end;
-                continue;
-            }
-        }
-    }
-
-    None
-}
-
-fn tag_matches_fingerprint(
-    source: &str,
-    tag_end: usize,
-    tag_name: &str,
-    attrs: &[(String, String)],
-    fingerprint: &Fingerprint,
-) -> bool {
-    if let Some(base) = &fingerprint.base_tag {
-        if tag_name != base {
-            return false;
-        }
-    }
-
-    if fingerprint.sx_atoms.is_empty() {
-        return true;
-    }
-
-    let sx_owned;
-    let sx_value: &str = if let Some(v) = attrs
+    elements
         .iter()
-        .find(|(n, _)| n == "style")
-        .map(|(_, v)| v.as_str())
-    {
-        v
-    } else if let Some(expr) =
-        tag_style_expr_before(source, tag_end).or_else(|| block_style_expr_after(source, tag_end))
-    {
-        sx_owned = expr;
-        sx_owned.as_str()
-    } else {
-        return false;
-    };
-
-    let collapsed: String = sx_value
-        .chars()
-        .filter(|c| c.is_ascii_alphanumeric())
-        .collect();
-    let source_atoms: std::collections::HashSet<String> = sx_value
-        .split(|c: char| !c.is_ascii_alphanumeric())
-        .filter(|s| !s.is_empty())
-        .map(|s| s.to_string())
-        .collect();
-
-    fingerprint.sx_atoms.iter().all(|a| {
-        source_atoms.contains(a)
-            || source_atoms
-                .iter()
-                .any(|s| s.contains(a.as_str()) || a.contains(s.as_str()))
-            || collapsed.contains(a.as_str())
-    })
+        .skip(1)
+        .take_while(|e| e.span.0 < before_byte)
+        .filter(|e| element_identity(e).as_deref() == Some(identity))
+        .count()
 }
 
-/// First block Style statement immediately after an open tag (`>`).
-
-/// Tag-position `style(…)` call ending at open tag `>` (`gt_pos`).
-fn tag_style_expr_before(source: &str, gt_pos: usize) -> Option<String> {
-    if gt_pos == 0 || gt_pos > source.len() {
-        return None;
-    }
-    let bytes = source.as_bytes();
-    let mut open = gt_pos;
-    while open > 0 {
-        if bytes[open - 1] == b'<' {
-            open -= 1;
-            break;
+/// Find the `n`th (0-based) opening tag in `source` whose author tag matches.
+fn find_nth_identity(source: &str, identity: &str, n: usize) -> Option<(usize, usize)> {
+    let mut seen = 0;
+    let mut hit = None;
+    walk_open_tags(source, |pos, tag_end, name| {
+        if !name.eq_ignore_ascii_case(identity) {
+            return true;
         }
-        open -= 1;
-    }
-    let mut tag_end = open + 1;
-    while tag_end < gt_pos
-        && (bytes[tag_end].is_ascii_alphanumeric()
-            || bytes[tag_end] == b'-'
-            || bytes[tag_end] == b'_'
-            || bytes[tag_end] == b':')
-    {
-        tag_end += 1;
-    }
-    let mut j = tag_end;
-    let mut quote: Option<u8> = None;
-    while j < gt_pos {
-        match (quote, bytes[j]) {
-            (Some(q), b) if b == q => {
-                quote = None;
-                j += 1;
-            }
-            (None, b'"') | (None, b'\'') => {
-                quote = Some(bytes[j]);
-                j += 1;
-            }
-            (Some(_), _) => j += 1,
-            (None, _) => {
-                if j + 5 <= gt_pos
-                    && &bytes[j..j + 5] == b"style"
-                    && (j == 0
-                        || (!bytes[j - 1].is_ascii_alphanumeric()
-                            && bytes[j - 1] != b'_'
-                            && bytes[j - 1] != b'$'))
-                    && (j + 5 >= gt_pos
-                        || (!bytes[j + 5].is_ascii_alphanumeric()
-                            && bytes[j + 5] != b'_'
-                            && bytes[j + 5] != b':'))
-                {
-                    let mut k = j + 5;
-                    while k < gt_pos && bytes[k].is_ascii_whitespace() {
-                        k += 1;
-                    }
-                    if k < gt_pos && bytes[k] == b'(' {
-                        let rest = &source[j..gt_pos];
-                        let end = rest.find('>').unwrap_or(rest.len());
-                        let expr = rest[..end].trim_end();
-                        if expr.starts_with("style(") {
-                            return Some(expr.to_string());
-                        }
-                    }
-                }
-                j += 1;
-            }
+        if seen == n {
+            hit = Some((pos, tag_end));
+            return false;
         }
-    }
-    None
-}
-
-fn block_style_expr_after(source: &str, tag_end: usize) -> Option<String> {
-    if tag_end >= source.len() {
-        return None;
-    }
-    let body = &source[tag_end..];
-    let bytes = body.as_bytes();
-    let mut start = 0;
-    while start < bytes.len() && bytes[start].is_ascii_whitespace() {
-        start += 1;
-    }
-    if start >= bytes.len() || bytes[start] == b'<' || bytes[start] == b'{' {
-        return None;
-    }
-    let rest = &body[start..];
-    let t = rest.trim_start();
-    if !(t.starts_with("style(")
-        || t.starts_with("style.")
-        || t.starts_with("match(")
-        || t.starts_with("when(")
-        || t.starts_with("compound(")
-        || t.starts_with('['))
-    {
-        return None;
-    }
-    let mut i = 0;
-    let mut paren = 0i32;
-    let mut brace = 0i32;
-    let mut bracket = 0i32;
-    let mut saw_group = false;
-    let b = rest.as_bytes();
-    while i < b.len() {
-        match b[i] {
-            b'(' => {
-                paren += 1;
-                saw_group = true;
-            }
-            b')' => paren -= 1,
-            b'{' => {
-                brace += 1;
-                saw_group = true;
-            }
-            b'}' => brace -= 1,
-            b'[' => {
-                bracket += 1;
-                saw_group = true;
-            }
-            b']' => bracket -= 1,
-            _ => {}
-        }
-        i += 1;
-        if saw_group && paren == 0 && brace == 0 && bracket == 0 {
-            let mut j = i;
-            while j < b.len() && b[j].is_ascii_whitespace() {
-                j += 1;
-            }
-            if j < b.len() && b[j] == b'.' {
-                i = j;
-                continue;
-            }
-            return Some(rest[..i].trim_end().to_string());
-        }
-    }
-    None
+        seen += 1;
+        true
+    });
+    hit
 }
 
 /// Parse an opening tag at `pos`, returning `(end_byte, tag_name, attrs)`.
@@ -952,6 +703,26 @@ mod tests {
             !diags
                 .iter()
                 .any(|d| d.message.contains("0px on its main axis"))
+        );
+    }
+
+    #[test]
+    fn identity_uses_host_and_layout_tag_not_s_atoms() {
+        let host = sail_layout::html::parse_source(
+            r#"<span class="s-displayinlineflex s-grow1" data-sail-host="spinner"></span>"#,
+        );
+        assert_eq!(
+            element_identity(&host[1]).as_deref(),
+            Some("spinner"),
+            "host stamp wins over s-* class soup"
+        );
+        let col = sail_layout::html::parse_source(
+            r#"<div class="sail-col s-grow1 s-pad4 s-overflowhidden">x</div>"#,
+        );
+        assert_eq!(
+            element_identity(&col[1]).as_deref(),
+            Some("column"),
+            "sail-col primitive is identity; s-* atoms are not"
         );
     }
 
