@@ -87,17 +87,6 @@
         "@ship/sail-lsp-browser",
       ],
     },
-    "packages/deck/docs": {
-      "name": "@ship/deck-docs",
-      "dependencies": {
-        "@ship/sail-dom": "workspace:*",
-        "@ship/sail-runtime": "workspace:*",
-        "@ship/tokens": "workspace:*",
-      },
-      "devDependencies": {
-        "@playwright/test": "^1.58.2",
-      },
-    },
     "packages/deck/e2e": {
       "name": "@ship/deck-e2e",
       "devDependencies": {
@@ -406,8 +395,6 @@
     "@rolldown/binding-win32-x64-msvc": ["@rolldown/binding-win32-x64-msvc@1.2.1", "", { "os": "win32", "cpu": "x64" }, "sha512-Z4eCmn5QJ/5+azF9knpLWKfVd9aidn0mAe9TpJgvBLId9Ax3t0+JVxBmT25Bv7NBbVW1TZyKjQjQReouMeH5UQ=="],
 
     "@rolldown/pluginutils": ["@rolldown/pluginutils@1.0.1", "", {}, "sha512-2j9bGt5Jh8hj+vPtgzPtl72j0yRxHAyumoo6TNfAjsLB04UtpSvPbPcDcBMxz7n+9CYB0c1GxQFxYRg2jimqGw=="],
-
-    "@ship/deck-docs": ["@ship/deck-docs@workspace:packages/deck/docs"],
 
     "@ship/deck-e2e": ["@ship/deck-e2e@workspace:packages/deck/e2e"],
 
