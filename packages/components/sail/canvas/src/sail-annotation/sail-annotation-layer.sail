@@ -15,7 +15,11 @@
 
 import type { Action, ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './sail-annotation-layer.sail'
-import { type AnnotationEvent, buildAnnotationEvent } from './sail-annotation.internals'
+import {
+  type AnnotationEvent,
+  buildAnnotationEvent,
+  postAnnotationEvent,
+} from './sail-annotation.internals'
 
 type Mode = 'off' | 'point' | 'region'
 
@@ -98,12 +102,7 @@ export default controller((props: ControllerScope<Scope>, _host?: HostBag) => {
     async function sendOne(ev: AnnotationEvent): Promise<void> {
       const ep = endpointProp() || DEFAULT_ENDPOINT
       try {
-        const resp = await fetch(ep, {
-          method: 'POST',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(ev),
-        })
+        const resp = await postAnnotationEvent(ep, ev)
         if (!resp.ok) {
           ;(hostEl() as HostBag)?.onError?.({ code: `http_${resp.status}`, id: ev.id })
           return

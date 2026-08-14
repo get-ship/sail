@@ -79,3 +79,16 @@ export function getCSSSelector(el: any): string {
   }
   return tag
 }
+
+export async function postAnnotationEvent(
+  endpoint: string,
+  ev: AnnotationEvent,
+): Promise<{ ok: boolean; status: number }> {
+  const resp = await fetch(endpoint, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(ev),
+  })
+  return { ok: resp.ok, status: resp.status }
+}
