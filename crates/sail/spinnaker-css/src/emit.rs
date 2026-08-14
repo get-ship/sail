@@ -3,11 +3,11 @@
 use std::collections::HashSet;
 
 use crate::lower::lower_op_css;
-use spinnaker::intent::{lower_to_intent, Intent, IntentNode, IntentValue};
+use spinnaker::intent::{Intent, IntentNode, IntentValue, lower_to_intent};
 use spinnaker::ir::{PaintArg, PaintOp, Style, StyleEnv};
-use spinnaker::theme_env::{current_styling_policy, ThemeStyleEnv};
+use spinnaker::theme_env::{ThemeStyleEnv, current_styling_policy};
 
-use crate::when::{when_target, WhenTarget};
+use crate::when::{WhenTarget, when_target};
 
 /// One emitted CSS rule.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -495,7 +495,7 @@ pub fn lower_style_source_with_motion(
     seen: &mut HashSet<String>,
 ) -> Result<(String, Vec<(String, String)>), Vec<spinnaker::ir::StyleDiagnostic>> {
     // Product authoring: flat concern chain. Constructor `style.pad().bg()` is
-    // retired (corpus codemod + block attachment). Migration dual is `flat_chain` only.
+    // retired (corpus codemod + block attachment). Remaining dual is `flat_chain` only.
     // Early refuse matches product `parse` (no IR for flat chains).
     let t = src.trim_start();
     if t.starts_with("style.") {

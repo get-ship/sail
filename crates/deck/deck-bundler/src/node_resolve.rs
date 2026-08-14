@@ -51,7 +51,6 @@ pub fn resolve_entry(start: &Path, spec: &str) -> Option<PathBuf> {
 
     let mut candidates: Vec<PathBuf> = Vec::new();
     if let Some(rel) = entry_rel_from_manifest(&root, &subpath) {
-        let rel = PathBuf::from(rel);
         candidates.push(root.join(&rel));
         // Public `default` is often unbuilt `dist/*.js`. Deck bakes from
         // source: if that file is missing, the matching `src/*.ts` is the

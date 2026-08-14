@@ -84,7 +84,7 @@ pub fn is_text_host(tag: &str) -> bool {
 }
 
 fn is_html_text_tag(tag: &str) -> bool {
-    HTML_TEXT_TAGS.iter().any(|e| *e == tag)
+    HTML_TEXT_TAGS.contains(&tag)
 }
 
 /// Template root tag of a registered L1 element, parsed from the raw

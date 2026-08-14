@@ -451,7 +451,7 @@ impl SailConfig {
 
     /// S4.1 / LAYOUT-5 — `"layoutTextMetrics": false` kills `clipped-text`.
     /// Absent → promoted default (on). `layout_text_metrics()` is true only
-    /// when the key is explicitly true (legacy callers).
+    /// when the key is explicitly true (callers that set the flag).
     pub fn layout_text_metrics(&self) -> bool {
         matches!(self.layout_text_metrics_opt(), Some(true))
     }

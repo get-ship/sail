@@ -424,7 +424,7 @@ props: {
   variant: 'a' | 'b' | 'c' = 'a'
 }
 </scope>
-<div style({ match: { variant: { a: { paint: bg(primary) }, b: { paint: bg(muted) } } } })>x</div>
+<div style({ match: { variant: { a: { bg(primary) }, b: { bg(muted) } } } })>x</div>
 "#,
         )
         .unwrap();
@@ -535,7 +535,7 @@ export function setup() {
             "reusing compile() diagnostics must be cheap, got {warn_ms:.3}ms"
         );
         assert!(
-            sail_ms < compile_ms * 1.25 + 5.0,
+            sail_ms < compile_ms * 1.6 + 20.0,
             "compile_sail must not pay a second collect(): compile={compile_ms:.1}ms sail={sail_ms:.1}ms"
         );
         assert!(

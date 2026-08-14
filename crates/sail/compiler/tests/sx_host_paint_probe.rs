@@ -1846,11 +1846,11 @@ fn tab_list_sticky_and_variant_on_host_not_parent_pe() {
             && (tab_out.skin_css.contains("font-size:var(--text-sm)")
                 || tab_out.skin_css.contains("font-size: var(--text-sm)")
                 || tab_out.structure_html.contains("s-textsm"))
-            // Banned: legacy size channels --tab-py / --tab-h. Allowed: component
+            // Banned: retired size channels --tab-py / --tab-h. Allowed: component
             // token reads --tab-foreground / --tab-selected*.
             && !tab_out.skin_css.contains("--tab-py")
             && !tab_out.skin_css.contains("--tab-h"),
-        "tab size CVA must land; no legacy --tab-py/--tab-h channels:\n{}",
+        "tab size CVA must land; no retired --tab-py/--tab-h channels:\n{}",
         tab_out.skin_css
     );
     // Orientation is a stamped union prop (layout runtime), not a CVA skin axis.

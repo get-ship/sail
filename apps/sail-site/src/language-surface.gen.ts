@@ -374,22 +374,6 @@ export const STYLE_VOCAB: StyleVocabRow[] = [
     "slots": []
   },
   {
-    "name": "avatarMedia",
-    "tag": "plain",
-    "geometry": false,
-    "textish": false,
-    "motion": false,
-    "slots": []
-  },
-  {
-    "name": "glyphFill",
-    "tag": "plain",
-    "geometry": false,
-    "textish": false,
-    "motion": false,
-    "slots": []
-  },
-  {
     "name": "container",
     "tag": "plain",
     "geometry": false,
@@ -908,8 +892,6 @@ export const MARKERS: string[] = [
   "scrollbarThumb",
   "scrollbarTrack",
   "scrollbarThin",
-  "avatarMedia",
-  "glyphFill",
   "container",
   "containerType",
   "containerName"
@@ -970,7 +952,7 @@ export const SX_STATE_PREFIXES: Array<{ prefix: string; selector: string }> = [
   }
 ]
 
-export const SX_CONDITION_PREFIXES: Array<{ prefix: string; selector: string }> = [
+export const SX_CONDITION_PREFIXES: Array<{ prefix: string; media: string }> = [
   {
     "prefix": "mobile",
     "media": "(min-width: 390px)"
@@ -1058,28 +1040,72 @@ export const LAYOUT_KEYWORDS: Array<{ tag: string; props: string[] }> = [
 // Do not teach this table as Style vocab — that is STYLE_VOCAB (offered_rows).
 export const SX_REFUSALS: Array<{ atom: string; instead: string }> = [
   {
-    "atom": "animate",
-    "instead": "style({ animate: { loop: play(…), enter: play(…) } })"
-  },
-  {
     "atom": "flex",
     "instead": "<row> — a layout context is a layout element"
   },
   {
-    "atom": "flex-col",
-    "instead": "<column>"
+    "atom": "inline-flex",
+    "instead": "<row> — a layout context is a layout element"
   },
   {
-    "atom": "flex-nowrap",
-    "instead": "<row nowrap> — the single-line row"
+    "atom": "grid",
+    "instead": "<grid> — a layout context is a layout element"
+  },
+  {
+    "atom": "inline-grid",
+    "instead": "<grid> — a layout context is a layout element"
   },
   {
     "atom": "flex-row",
     "instead": "<row>"
   },
   {
+    "atom": "flex-col",
+    "instead": "<column>"
+  },
+  {
     "atom": "flex-wrap",
     "instead": "<row> — a row wraps by default"
+  },
+  {
+    "atom": "flex-nowrap",
+    "instead": "<row nowrap> — the single-line row"
+  },
+  {
+    "atom": "items-center",
+    "instead": "<row align=\"center\"> — the parent decides arrangement"
+  },
+  {
+    "atom": "items-start",
+    "instead": "<row align=\"start\">"
+  },
+  {
+    "atom": "items-end",
+    "instead": "<row align=\"end\">"
+  },
+  {
+    "atom": "items-stretch",
+    "instead": "<row align=\"stretch\">"
+  },
+  {
+    "atom": "justify-center",
+    "instead": "<row justify=\"center\">"
+  },
+  {
+    "atom": "justify-between",
+    "instead": "<row justify=\"between\">"
+  },
+  {
+    "atom": "justify-start",
+    "instead": "<row justify=\"start\">"
+  },
+  {
+    "atom": "justify-end",
+    "instead": "<row justify=\"end\">"
+  },
+  {
+    "atom": "justify-around",
+    "instead": "<row justify=\"around\">"
   },
   {
     "atom": "gap",
@@ -1094,10 +1120,6 @@ export const SX_REFUSALS: Array<{ atom: string; instead: string }> = [
     "instead": "layout element gap prop: <column gap=\"2\"> — or host style({ gapY(2) })"
   },
   {
-    "atom": "grid",
-    "instead": "<grid> — a layout context is a layout element"
-  },
-  {
     "atom": "grid-cols",
     "instead": "<grid cols=\"3\">"
   },
@@ -1106,48 +1128,8 @@ export const SX_REFUSALS: Array<{ atom: string; instead: string }> = [
     "instead": "<grid rows=\"3\"> — an explicit row count"
   },
   {
-    "atom": "inline-flex",
-    "instead": "<row> — a layout context is a layout element"
-  },
-  {
-    "atom": "inline-grid",
-    "instead": "<grid> — a layout context is a layout element"
-  },
-  {
-    "atom": "items-center",
-    "instead": "<row align=\"center\"> — the parent decides arrangement"
-  },
-  {
-    "atom": "items-end",
-    "instead": "<row align=\"end\">"
-  },
-  {
-    "atom": "items-start",
-    "instead": "<row align=\"start\">"
-  },
-  {
-    "atom": "items-stretch",
-    "instead": "<row align=\"stretch\">"
-  },
-  {
-    "atom": "justify-around",
-    "instead": "<row justify=\"around\">"
-  },
-  {
-    "atom": "justify-between",
-    "instead": "<row justify=\"between\">"
-  },
-  {
-    "atom": "justify-center",
-    "instead": "<row justify=\"center\">"
-  },
-  {
-    "atom": "justify-end",
-    "instead": "<row justify=\"end\">"
-  },
-  {
-    "atom": "justify-start",
-    "instead": "<row justify=\"start\">"
+    "atom": "animate",
+    "instead": "style({ animate: { loop: play(…), enter: play(…) } })"
   },
   {
     "atom": "sr-only-focusable",
@@ -1357,7 +1339,7 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
     },
     {
       "tag": "icon",
-      "description": "glyph box + size match. use:icon owns spin. glyphFill packs child svg."
+      "description": "glyph box + size match. use:icon owns spin."
     },
     {
       "tag": "input",

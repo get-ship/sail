@@ -190,7 +190,7 @@ fn push_family_finding(path: &Path, source: &str, findings: &mut Vec<Finding>, k
     let inner = trimmed.trim_matches(|c| c == '"' || c == '\'');
     let quoted = (trimmed.starts_with('"') && trimmed.ends_with('"'))
         || (trimmed.starts_with('\'') && trimmed.ends_with('\''));
-    let is_role = FONT_FAMILY_ROLES.iter().any(|r| *r == inner);
+    let is_role = FONT_FAMILY_ROLES.contains(&inner);
     if quoted || !is_role {
         let (line, col) = byte_offset_to_line_col(source, arg_start);
         findings.push(Finding {
@@ -273,7 +273,7 @@ fn scan_palette_hits(value: &str) -> Vec<(usize, &'static str, &'static str)> {
         // Left anchor: start of buffer, or preceded by a non-identifier
         // byte. This keeps `Inter` from matching inside `Internal` or
         // any other identifier.
-        if !(i == 0 || !is_ident_byte(bytes[i - 1])) {
+        if i != 0 && is_ident_byte(bytes[i - 1]) {
             i += 1;
             continue;
         }
@@ -312,7 +312,7 @@ fn palette_sorted() -> &'static [(&'static str, &'static str)] {
     use std::sync::OnceLock;
     static CACHE: OnceLock<Vec<(&'static str, &'static str)>> = OnceLock::new();
     CACHE.get_or_init(|| {
-        let mut v: Vec<_> = PALETTE.iter().copied().collect();
+        let mut v = PALETTE.to_vec();
         v.sort_by(|a, b| b.0.len().cmp(&a.0.len()).then_with(|| a.0.cmp(b.0)));
         v
     })

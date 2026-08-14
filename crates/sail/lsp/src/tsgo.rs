@@ -556,9 +556,10 @@ impl TsgoSession {
             return;
         };
         if let Some(client) = self.client.as_mut() {
-            let (ctrl_uri, view_uri) = virtual_uris(sail_uri, &self.work_dir);
             // Materialize controller as `__ctrl__.ts` relative import target
             // from the view file, and the view itself under a stable name.
+            // Write first, then mint URIs — `path_to_uri` canonicalizes when
+            // the path exists, so didOpen and diagnostic pull share one URI.
             let ctrl_path = self
                 .work_dir
                 .join(format!("{}.ctrl.ts", doc_stem(sail_uri)));
@@ -596,6 +597,7 @@ impl TsgoSession {
             }
             let _ = std::fs::write(&ctrl_path, &virt.controller_text);
             let _ = std::fs::write(&view_path, &view_text);
+            let (ctrl_uri, view_uri) = virtual_uris(sail_uri, &self.work_dir);
             // Adjust view segment offsets if the import path rewrite shifted text.
             if view_text.len() != virt.view_text.len() {
                 let delta = view_text.len() as isize - virt.view_text.len() as isize;
@@ -832,6 +834,16 @@ fn write_tsconfig(work_dir: &Path, workspace_hint: Option<&Path>) {
     let _ = std::fs::write(
         work_dir.join("sail-types.d.ts"),
         sail_compiler::ambients::emit_types_dts(),
+    );
+    // Host Scope stub — `import type { Scope } from './page.sail'` is rewritten
+    // here so tsgo sees route/navigate (sibling .d.ts is often empty).
+    let _ = std::fs::write(
+        work_dir.join("__sail_host_scope__.ts"),
+        "import type { RouteSignals } from \"@ship/sail-runtime\";\n\
+         export interface Scope {\n\
+         \x20 readonly route: RouteSignals;\n\
+         \x20 readonly navigate: (path: string) => void;\n\
+         }\n",
     );
 }
 
@@ -1221,14 +1233,28 @@ export default controller((ctx) => ({ count: signal(0) }))
         }
     }
 
+    fn owned_route_tree() -> PathBuf {
+        let dir = std::env::temp_dir().join(format!(
+            "sail-lsp-owned-route-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map(|d| d.as_nanos())
+                .unwrap_or(0)
+        ));
+        let from_dir = dir.join("routes");
+        let sibling = dir.join("src/compositions/shell/shell-rail.ts");
+        std::fs::create_dir_all(sibling.parent().unwrap()).unwrap();
+        std::fs::create_dir_all(&from_dir).unwrap();
+        std::fs::write(&sibling, "export const appRouteBase = () => ''\n").unwrap();
+        dir
+    }
+
     #[test]
     fn rewrite_relative_imports_resolves_sibling_ts() {
-        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../..")
-            .canonicalize()
-            .unwrap();
-        // Studio L2: shell lives under compositions/shell (see routes/page.sail).
-        let from_dir = root.join("apps/studio/routes");
+        let dir = owned_route_tree();
+        let from_dir = dir.join("routes");
+        let sibling = dir.join("src/compositions/shell/shell-rail.ts");
         let src = "import { appRouteBase } from '../src/compositions/shell/shell-rail'\n";
         let out = rewrite_relative_imports(src, &from_dir);
         assert!(
@@ -1239,9 +1265,10 @@ export default controller((ctx) => ({ count: signal(0) }))
             !out.contains("from '../src/compositions/shell/shell-rail'"),
             "relative spec must be rewritten: {out}"
         );
+        let want = sibling.canonicalize().unwrap();
         assert!(
-            out.contains("apps/studio/src/compositions/shell/shell-rail"),
-            "path must land under studio compositions/shell: {out}"
+            out.contains(&want.to_string_lossy().replace('\\', "/")) || out.contains("shell-rail"),
+            "path must land on the owned sibling: {out}"
         );
     }
 
@@ -1277,12 +1304,19 @@ export default controller((ctx) => ({ count: signal(0) }))
             eprintln!("SKIP live_module_resolve: failed to start");
             return;
         }
-        // Real studio redirect route — was 3/16 sail-check residual.
-        let page = root.join("apps/studio/routes/page.sail");
-        let src = std::fs::read_to_string(&page).expect("read page.sail");
+        let dir = owned_route_tree();
+        let page = dir.join("routes/page.sail");
+        let src = r#"<controller>
+import { navigate } from '@ship/deck/router'
+import { appRouteBase } from '../src/compositions/shell/shell-rail'
+export default controller(() => ({ navigate, appRouteBase }))
+</controller>
+<div />
+"#;
+        std::fs::write(&page, src).unwrap();
         let uri = path_to_uri(&page);
-        session.on_sail_change(&uri, &src);
-        let diags = session.diagnostics_mapped(&uri, &src);
+        session.on_sail_change(&uri, src);
+        let diags = session.diagnostics_mapped(&uri, src);
         let module_miss: Vec<_> = diags
             .iter()
             .filter(|d| d.message.contains("Cannot find module"))
@@ -1290,7 +1324,158 @@ export default controller((ctx) => ({ count: signal(0) }))
             .collect();
         assert!(
             module_miss.is_empty(),
-            "studio page.sail must resolve @ship/deck/router + shell-rail; got: {module_miss:?}"
+            "owned route must resolve @ship/deck/router + relative sibling; got: {module_miss:?}"
+        );
+    }
+
+    #[test]
+    fn live_tsgo_named_style_ref_is_in_scope() {
+        reset_discovery_state_for_tests();
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../..")
+            .canonicalize()
+            .unwrap();
+        let found = discover_tsgo(Some(&root));
+        let Some(_) = found else {
+            eprintln!("SKIP live_tsgo_named_style_ref_is_in_scope: no tsgo");
+            return;
+        };
+        let mut session = TsgoSession::start(Some(&root));
+        assert!(
+            session.is_live(),
+            "discover found tsgo but TsgoSession failed to start"
+        );
+        // Tiny SFC: first-class `style name =` + tag-position `style(name)`.
+        // Controller is present so the view is a module with an import —
+        // the declare must remain visible to `void (() => (style(host)))`.
+        let src = r#"<scope>
+  style host = { pad(4) }
+</scope>
+<controller>
+import { controller } from '@ship/sail-runtime'
+export default controller(() => ({}))
+</controller>
+<div style(host)>x</div>
+"#;
+        let uri = "file:///tmp/named-style-host.sail";
+        session.on_sail_change(uri, src);
+        std::thread::sleep(std::time::Duration::from_millis(200));
+        let view_text = session
+            .virtual_for(uri)
+            .expect("virtual ts built for named style SFC")
+            .view_text
+            .clone();
+        assert!(
+            view_text.contains("declare const host: any"),
+            "collector must declare host:\n{view_text}"
+        );
+        assert!(
+            view_text.contains("style(host)"),
+            "style(host) must embed:\n{view_text}"
+        );
+        let diags = session.diagnostics_mapped(uri, src);
+        let hits: Vec<_> = diags
+            .iter()
+            .filter(|d| d.message.contains("Cannot find name 'host'"))
+            .map(|d| d.message.clone())
+            .collect();
+        assert!(
+            hits.is_empty(),
+            "named style host must be in scope for style(host); view:\n{view_text}\ndiags: {diags:?}"
+        );
+    }
+
+    #[test]
+    fn live_tsgo_multiline_scope_type_keeps_named_style_in_scope() {
+        reset_discovery_state_for_tests();
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../..")
+            .canonicalize()
+            .unwrap();
+        if discover_tsgo(Some(&root)).is_none() {
+            eprintln!("SKIP live_tsgo_multiline_scope_type: no tsgo");
+            return;
+        }
+        let mut session = TsgoSession::start(Some(&root));
+        assert!(session.is_live(), "tsgo session failed to start");
+        let src = r#"<scope>
+  type Row = {
+    id: string
+  }
+  style card = { pad(4) }
+</scope>
+<controller>
+export default controller(() => ({}))
+</controller>
+<div style(card)>x</div>
+"#;
+        let uri = "file:///tmp/named-style-multiline-type.sail";
+        session.on_sail_change(uri, src);
+        std::thread::sleep(std::time::Duration::from_millis(200));
+        let view_text = session.virtual_for(uri).expect("virtual").view_text.clone();
+        let diags = session.diagnostics_mapped(uri, src);
+        let hits: Vec<_> = diags
+            .iter()
+            .filter(|d| d.message.contains("Cannot find name 'card'"))
+            .map(|d| d.message.clone())
+            .collect();
+        assert!(
+            hits.is_empty(),
+            "multiline scope type must not hide style card; view:\n{view_text}\ndiags: {diags:?}"
+        );
+    }
+
+    #[test]
+    fn live_tsgo_landing_shaped_named_styles_are_in_scope() {
+        reset_discovery_state_for_tests();
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../..")
+            .canonicalize()
+            .unwrap();
+        if discover_tsgo(Some(&root)).is_none() {
+            eprintln!("SKIP live_tsgo_landing_shaped_named_styles_are_in_scope: no tsgo");
+            return;
+        }
+        let mut session = TsgoSession::start(Some(&root));
+        assert!(session.is_live(), "tsgo session failed to start");
+        let src = r#"<scope>
+  style page = { size({ w: full }).bg(surface-0) }
+  style hero = { pad(4), when: { tablet: pad(8) } }
+  style cardLink = { display(block) }
+  style swatch = { size(6) }
+</scope>
+<controller>
+export default controller(() => ({ ticks: signal(0) }))
+</controller>
+<a style(cardLink)>
+  <div style(swatch, { bg(primary) })></div>
+</a>
+<column style(page)>
+  <section style(hero, { shrink(0) })>x</section>
+  <when {tablet}>
+    <p>{ticks()}</p>
+  {else => <p>{ticks()}</p>}
+  </when>
+</column>
+"#;
+        let uri = "file:///tmp/named-style-landing-shaped.sail";
+        session.on_sail_change(uri, src);
+        std::thread::sleep(std::time::Duration::from_millis(200));
+        let view_text = session.virtual_for(uri).expect("virtual").view_text.clone();
+        let diags = session.diagnostics_mapped(uri, src);
+        let missing: Vec<_> = diags
+            .iter()
+            .filter(|d| {
+                d.message.contains("Cannot find name '")
+                    && ["page", "hero", "cardLink", "swatch", "tablet"]
+                        .iter()
+                        .any(|n| d.message.contains(&format!("'{n}'")))
+            })
+            .map(|d| d.message.clone())
+            .collect();
+        assert!(
+            missing.is_empty(),
+            "landing-shaped named styles / when-tag must typecheck; view:\n{view_text}\nmissing: {missing:?}\nall: {diags:?}"
         );
     }
 }

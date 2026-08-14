@@ -4810,7 +4810,7 @@ mod tests {
 "#,
         );
         write_file(
-            &project.join("tokens/themes/custom.json"),
+            &project.join("themes/custom.json"),
             r#"{
   "$extensions": { "sail": { "layer": "theme", "themeId": "custom", "defaultMode": "light" } },
   "modes": { "light": { "color": {
@@ -5081,7 +5081,7 @@ mod tests {
         );
         // Project overrides paper + adds a custom theme.
         write_file(
-            &project.join("tokens/themes/paper.json"),
+            &project.join("themes/paper.json"),
             r#"{
   "$extensions": {
     "sail": {
@@ -5133,7 +5133,7 @@ mod tests {
 "#,
         );
         write_file(
-            &project.join("tokens/themes/custom.json"),
+            &project.join("themes/custom.json"),
             r#"{
   "$extensions": {
     "sail": {
@@ -5444,7 +5444,7 @@ mod tests {
             "default ship allowlist should cold-start generate"
         );
         write_file(
-            &dir.path().join("tokens/themes/x.json"),
+            &dir.path().join("themes/x.json"),
             r#"{ "$extensions": { "sail": { "themeId": "x", "defaultMode": "light" } }, "modes": { "light": {}, "dark": {} } }"#,
         );
         assert!(project_wants_theme_generate(dir.path()));

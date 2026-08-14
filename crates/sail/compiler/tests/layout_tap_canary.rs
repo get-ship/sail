@@ -88,14 +88,11 @@ fn corpus_canary_sub_min_tap_target_writes_json_and_is_deterministic() {
     }
 }
 
-fn scan_file_kind(
-    root: &std::path::Path,
-    rel: &str,
-    kind: &'static str,
-) -> canary::PreprocessedScan {
-    let src = std::fs::read_to_string(root.join(rel)).unwrap_or_else(|e| panic!("{rel}: {e}"));
+fn scan_file_kind(path: &std::path::Path, kind: &'static str) -> canary::PreprocessedScan {
+    let label = path.display();
+    let src = std::fs::read_to_string(path).unwrap_or_else(|e| panic!("{label}: {e}"));
     let (pre, hosts) =
-        preprocess_with_style(&src).unwrap_or_else(|e| panic!("preprocess {rel}: {e}"));
+        preprocess_with_style(&src).unwrap_or_else(|e| panic!("preprocess {label}: {e}"));
     let viewports = layout::layout_viewports(&pre);
     let mut scan = canary::PreprocessedScan::default();
     for &viewport in &viewports {
@@ -133,16 +130,26 @@ fn scan_file_kind(
     scan
 }
 
+/// Owned quiet-clip page: short wrapping copy plus truncate opt-in.
+/// Must stay silent for `clipped-text` at every collect viewport.
+const QUIET_CLIP_SRC: &str = r#"
+<column style({ pad(4).size({ w: full, min-w: 0 }) })>
+  <h1>Quiet clip</h1>
+  <p>Short copy that fits every viewport.</p>
+  <p style({ size({ w: 16, min-w: 0 }).type({ wrap: truncate }) })>Supercalifragilisticexpialidocious</p>
+</column>
+"#;
+
 #[test]
 fn wi_layout_4_product_files_quiet_for_overflow_and_clipped() {
-    let root = workspace_root();
-    // Studio is still v2 Style — do not walk it as product.
-    let landing = "apps/sail-site/routes/page.sail";
+    let tmp = tempfile::tempdir().expect("tempdir");
+    let path = tmp.path().join("quiet-clip.sail");
+    std::fs::write(&path, QUIET_CLIP_SRC).expect("write quiet-clip.sail");
 
-    let clipped = scan_file_kind(&root, landing, "clipped-text");
+    let clipped = scan_file_kind(&path, "clipped-text");
     assert!(
         clipped.viewport_errors.is_empty(),
-        "landing layout errors: {:?}",
+        "fixture layout errors: {:?}",
         clipped.viewport_errors
     );
     assert!(

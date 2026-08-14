@@ -4,8 +4,8 @@
 //! adapter's longhand map.
 
 use spinnaker::concerns::{
-    concern_teaching, find_concern, find_slot, is_named_scale_step, reject_size_pad_members,
-    resolve_concern_name, ConcernSlot, ConcernSpec,
+    ConcernSlot, ConcernSpec, concern_teaching, find_concern, find_slot, is_named_scale_step,
+    reject_size_pad_members, resolve_concern_name,
 };
 use spinnaker::ir::{PaintArg, PaintOp, StyleDiagnostic};
 use spinnaker::scales;
@@ -157,7 +157,7 @@ fn primary_decls(spec: &ConcernSpec, css: String) -> Vec<(String, String)> {
         _ => spec
             .slots
             .iter()
-            .find(|s| !slot_css(spec, s).is_none())
+            .find(|s| slot_css(spec, s).is_some())
             .map(|s| vec![(slot_css(spec, s).unwrap_or("").to_string(), css)])
             .unwrap_or_default(),
     }

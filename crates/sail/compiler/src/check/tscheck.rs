@@ -4261,7 +4261,9 @@ export default controller(() => {
         );
     }
 
-    /// Live flow-trace fixture: was the verified G2a false positive (TS2304 Row).
+    /// Same G2a law as `harness_scope_type_referenced_from_controller`
+    /// (was a live flow-trace pin). Keep a second call site so the name stays
+    /// findable; body is owned, not `apps/**`.
     #[test]
     fn flow_trace_type_gate_green() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -4271,13 +4273,25 @@ export default controller(() => {
         if resolve_tsgo(Some(root)).is_none() {
             panic!("tsgo required");
         }
-        let path = root.join("apps/sail-site/src/flow-trace/flow-trace.sail");
-        let src = std::fs::read_to_string(&path).expect("flow-trace.sail");
-        let diags = collect_sail_type_gate(&src, Some(&path));
+        let src = r#"
+<scope>
+  type Row = { id: string; city: string }
+</scope>
+<controller>
+export default controller(() => {
+  const mk = (): Row => ({ id: '1', city: 'Osaka' })
+  const rows = signal<Row[]>([mk()])
+  return { rows }
+})
+</controller>
+<div />
+"#;
+        let path = root.join("apps/fake/src/widget/flow-trace.sail");
+        let diags = collect_sail_type_gate(src, Some(&path));
         let errs = type_gate_errs(&diags);
         assert!(
             errs.is_empty(),
-            "flow-trace.sail must type-gate green after G2a: {errs:?}"
+            "scope type Row must be visible in controller (no TS2304): {errs:?}"
         );
     }
 
@@ -4291,6 +4305,20 @@ export default controller(() => {
         if resolve_tsgo(Some(root)).is_none() {
             panic!("tsgo required");
         }
+        let tmp = tempfile::tempdir().unwrap();
+        let project = tmp.path();
+        std::fs::create_dir_all(project.join("src/stores")).unwrap();
+        std::fs::write(
+            project.join("package.json"),
+            r#"{"name":"@ship/owned-at-alias-green"}"#,
+        )
+        .unwrap();
+        std::fs::write(
+            project.join("src/stores/counter-store.ts"),
+            "export const tally = { clicks: 0 }\n",
+        )
+        .unwrap();
+        reset_type_gate_servers();
         let src = r#"
 <controller>
 import { tally } from '@/stores/counter-store'
@@ -4302,8 +4330,7 @@ export default controller(() => {
 </controller>
 <div />
 "#;
-        // Path under sail-site so project root + @/stores/* resolve.
-        let path = root.join("apps/sail-site/src/widget/widget.sail");
+        let path = project.join("src/widget/widget.sail");
         let diags = collect_sail_type_gate(src, Some(&path));
         let errs = type_gate_errs(&diags);
         assert!(
@@ -4616,6 +4643,15 @@ export default controller((ctx) => {
         if resolve_tsgo(Some(root)).is_none() {
             panic!("tsgo required");
         }
+        let tmp = tempfile::tempdir().unwrap();
+        let project = tmp.path();
+        std::fs::create_dir_all(project.join("src")).unwrap();
+        std::fs::write(
+            project.join("package.json"),
+            r#"{"name":"@ship/owned-at-alias-missing"}"#,
+        )
+        .unwrap();
+        reset_type_gate_servers();
         let src = r#"
 <controller>
 import { directory } from '@/compositions/definitely-missing-foo-xyz'
@@ -4627,7 +4663,7 @@ export default controller((ctx) => {
 </controller>
 <div />
 "#;
-        let path = root.join("apps/sail-site/src/widget/widget.sail");
+        let path = project.join("src/widget/widget.sail");
         let diags = collect_sail_type_gate(src, Some(&path));
         assert!(
             diags.iter().any(|d| {

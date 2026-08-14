@@ -1558,7 +1558,7 @@ mod tests {
         next.push_str(&te.new_text);
         next.push_str(&src[end_off..]);
         assert!(
-            next.contains("box:") && next.contains("grow(1)") && !next.contains("<div grow"),
+            next.contains("style({") && next.contains("grow(1)") && !next.contains("<div grow"),
             "fixed source: {next}"
         );
     }

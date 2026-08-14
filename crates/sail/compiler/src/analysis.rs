@@ -835,7 +835,7 @@ fn inside_style_call(source: &str, offset: usize) -> bool {
 fn is_live_style_word(name: &str) -> bool {
     if spinnaker::find_vocab(name).is_some()
         || spinnaker::find_concern(name).is_some()
-        || spinnaker::OBJECT_KEYS.iter().any(|k| *k == name)
+        || spinnaker::OBJECT_KEYS.contains(&name)
         || matches!(name, "style" | "bind")
     {
         return true;
