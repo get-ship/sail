@@ -63,7 +63,7 @@ pub(crate) fn preprocess_impl(source: &str, expand_elements: bool) -> Result<Str
     Ok(preprocess_impl_full(source, expand_elements)?.0)
 }
 
-fn preprocess_impl_full(
+pub(crate) fn preprocess_impl_full(
     source: &str,
     expand_elements: bool,
 ) -> Result<(String, sail_layout::StyleHosts), CompileError> {

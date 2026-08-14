@@ -336,6 +336,7 @@ pub fn check_all_with_tier(
             overrides,
             route_params,
             tier,
+            Some((&parsed.preprocessed, &parsed.style_hosts)),
         ),
         Err(e) => {
             // Fatal parse/preprocess error — still surface confluent off-scale
@@ -529,6 +530,7 @@ pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, Compile
             &effective_overrides,
             opts.route_params.as_deref(),
             DiagnosticTier::OnSave,
+            Some((&parsed.preprocessed, &parsed.style_hosts)),
         )
     });
     if let Some(d) = diagnostics

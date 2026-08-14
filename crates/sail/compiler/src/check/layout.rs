@@ -16,9 +16,12 @@ const MOBILE_VIEWPORT: (f32, f32) = (390.0, 844.0);
 /// Soft taffy findings elevated to Error under `"layout": "error"` (studio).
 const PROMOTE_KINDS: &[&str] = &["child-overflows-parent", "zero-main-axis"];
 
-/// Experimental layout kinds (SPEC-LAYOUT-DIAG-1 / S4.1). Under top-level
-/// `strict: true` these promote to Error at the gate.
-const EXPERIMENTAL_KINDS: &[&str] = &["unintended-overflow", "clipped-text", "sub-min-tap-target"];
+/// Remaining experimental layout kinds (SPEC-LAYOUT-DIAG-1 / S4.1). Under
+/// top-level `strict: true` these promote to Error at the gate.
+const EXPERIMENTAL_KINDS: &[&str] = &["sub-min-tap-target"];
+
+/// LAYOUT-5 promoted kinds — default Error on every collect path.
+const DEFAULT_ERROR_KINDS: &[&str] = &["unintended-overflow", "clipped-text"];
 
 /// Viewports used by [`collect`]: mobile reference + source/desktop default.
 /// Dedups when the source already pins a mobile-sized viewport.
@@ -30,6 +33,77 @@ pub fn layout_viewports(preprocessed: &str) -> Vec<(f32, f32)> {
     viewports
 }
 
+/// One HTML forest + one taffy tree per viewport. Layout diagnostics and
+/// compose share this so neither re-preprocesses or rebuilds.
+pub struct SharedBoxes {
+    pub preprocessed: String,
+    pub elements: Vec<sail_layout::html::Element>,
+    pub trees: Vec<SharedViewport>,
+}
+
+/// A computed box tree at one viewport, or the taffy error for that pass.
+pub struct SharedViewport {
+    pub viewport: (f32, f32),
+    pub layout: Result<sail_layout::Layout, String>,
+    pub scan: Result<sail_layout::ScanResult, String>,
+}
+
+/// Parse HTML once and compute one taffy tree per viewport.
+pub fn prepare_boxes(
+    preprocessed: String,
+    hosts: &sail_layout::StyleHosts,
+    check_opts: sail_layout::CheckOptions,
+) -> SharedBoxes {
+    let mut elements = sail_layout::html::parse_source(&preprocessed);
+    sail_layout::apply_resolved_types(&mut elements, &hosts.types);
+    sail_layout::apply_resolved_boxes(&mut elements, &hosts.boxes);
+    let viewports = layout_viewports(&preprocessed);
+    let mut trees = Vec::with_capacity(viewports.len());
+    for viewport in viewports {
+        let phase = format!(
+            "layout-viewport.{}x{}",
+            viewport.0 as u32, viewport.1 as u32
+        );
+        trees.push(layout_span(&phase, || {
+            compute_viewport(elements.clone(), viewport, check_opts)
+        }));
+    }
+    SharedBoxes {
+        preprocessed,
+        elements,
+        trees,
+    }
+}
+
+fn compute_viewport(
+    elements: Vec<sail_layout::html::Element>,
+    viewport: (f32, f32),
+    check_opts: sail_layout::CheckOptions,
+) -> SharedViewport {
+    let layout = sail_layout::taffy_tree::build(elements, viewport).map_err(|e| e.to_string());
+    let scan = match &layout {
+        Ok(tree) => sail_layout::check_tree(tree, check_opts).map_err(|e| e.to_string()),
+        Err(e) => Err(e.clone()),
+    };
+    SharedViewport {
+        viewport,
+        layout,
+        scan,
+    }
+}
+
+fn layout_span<R>(phase: &str, f: impl FnOnce() -> R) -> R {
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        crate::profile::span(phase, f)
+    }
+    #[cfg(target_arch = "wasm32")]
+    {
+        let _ = phase;
+        f()
+    }
+}
+
 /// Collect layout diagnostics as compiler `Diagnostic`s.
 ///
 /// **Severity is preserved from taffy by default:** silent-clip /
@@ -39,11 +113,11 @@ pub fn layout_viewports(preprocessed: &str) -> Vec<(f32, f32)> {
 /// profile), which promotes those gate-gap kinds so `sail check` / `compile`
 /// exit non-zero.
 ///
-/// Experimental kinds (`unintended-overflow`, `clipped-text`) emit only when
-/// the nearest config has `"strict": true` or `"layoutExperimental": true`.
-/// `clipped-text` additionally requires `"layoutTextMetrics": true`. Under
-/// `strict`, experimental findings are Error at the gate. LAYOUT-5 (tap
-/// promote) is not this job.
+/// LAYOUT-5: `unintended-overflow` and `clipped-text` emit as Error on the
+/// default collect path. `clipped-text` still honors
+/// `"layoutTextMetrics": false` as a kill switch. `sub-min-tap-target` emits
+/// only when `"strict": true` or `"layoutExperimental": true`; under
+/// `strict` it is Error at the gate.
 ///
 /// Runs the taffy pass at **at least two viewports** (mobile ~390 and the
 /// source/`data-viewport` desktop default). Identical findings (same mapped
@@ -62,11 +136,26 @@ pub fn collect_for(source: &str, source_path: Option<&Path>) -> Vec<Diagnostic> 
     let Ok((preprocessed, hosts)) = crate::parse::preprocess::preprocess_with_style(source) else {
         return Vec::new();
     };
-    let viewports = layout_viewports(&preprocessed);
+    let (_, check_opts) = layout_check_options_for(source_path);
+    collect_from(
+        source,
+        source_path,
+        &prepare_boxes(preprocessed, &hosts, check_opts),
+    )
+}
+
+/// Scan already-computed viewport trees. `compile` / `check_all` pass the
+/// shared artifact so compose can reuse the same boxes.
+pub fn collect_from(
+    source: &str,
+    source_path: Option<&Path>,
+    boxes: &SharedBoxes,
+) -> Vec<Diagnostic> {
     let promote = source_path
         .map(sail_lint::config::layout_is_error_for)
         .unwrap_or(false);
-    let (strict, check_opts) = layout_check_options_for(source_path);
+    let (strict, _) = layout_check_options_for(source_path);
+    let elements = &boxes.elements;
 
     let mut out: Vec<Diagnostic> = Vec::new();
     let mut seen: std::collections::HashSet<(usize, usize, usize, usize, String)> =
@@ -74,18 +163,12 @@ pub fn collect_for(source: &str, source_path: Option<&Path>) -> Vec<Diagnostic> 
     let mut any_pass_ok = false;
     let mut any_pass_err = false;
 
-    for viewport in viewports {
-        match sail_layout::check_preprocessed_with_hosts(
-            &preprocessed,
-            viewport,
-            check_opts,
-            &hosts.types,
-            &hosts.boxes,
-        ) {
+    for tree in &boxes.trees {
+        match &tree.scan {
             Ok(result) => {
                 any_pass_ok = true;
-                for d in result.diagnostics {
-                    let mapped = map_diagnostic(source, &preprocessed, d, promote, strict);
+                for d in result.diagnostics.clone() {
+                    let mapped = map_diagnostic(source, elements, d, promote, strict);
                     let key = (
                         mapped.line,
                         mapped.col,
@@ -121,11 +204,13 @@ pub fn collect_for(source: &str, source_path: Option<&Path>) -> Vec<Diagnostic> 
     out
 }
 
-/// Resolve experimental layout check options from the nearest package config.
+/// Resolve layout check options from the nearest package config.
 ///
-/// - `experimental` ← `strict` **or** `layoutExperimental`
-/// - `text_metrics` ← `layoutTextMetrics` only (explicit; noisy path stays opt-in)
-fn layout_check_options_for(source_path: Option<&Path>) -> (bool, sail_layout::CheckOptions) {
+/// - `experimental` ← `strict` **or** `layoutExperimental` (tap only)
+/// - `text_metrics` ← explicit `layoutTextMetrics`, else promoted default on
+pub(crate) fn layout_check_options_for(
+    source_path: Option<&Path>,
+) -> (bool, sail_layout::CheckOptions) {
     let Some(path) = source_path else {
         return (false, sail_layout::CheckOptions::default());
     };
@@ -137,7 +222,7 @@ fn layout_check_options_for(source_path: Option<&Path>) -> (bool, sail_layout::C
     };
     let strict = cfg.strict();
     let experimental = strict || cfg.layout_experimental();
-    let text_metrics = cfg.layout_text_metrics();
+    let text_metrics = cfg.layout_text_metrics_opt().unwrap_or(true);
     (
         strict,
         sail_layout::CheckOptions {
@@ -156,7 +241,8 @@ pub fn original_byte_span(
     preprocessed: &str,
     diag: &sail_layout::Diagnostic,
 ) -> Option<(usize, usize)> {
-    if let Some(span) = find_original_span(original, preprocessed, diag) {
+    let elements = sail_layout::html::parse_source(preprocessed);
+    if let Some(span) = find_original_span(original, &elements, diag) {
         return Some(span);
     }
     find_nth_tag(original, preprocessed, diag)
@@ -176,12 +262,12 @@ fn rule_id_for_kind(kind: &str) -> &'static str {
 
 fn map_diagnostic(
     original: &str,
-    preprocessed: &str,
+    elements: &[sail_layout::html::Element],
     diag: sail_layout::Diagnostic,
     promote_soft: bool,
     strict: bool,
 ) -> Diagnostic {
-    let (line, col, end_line, end_col) = match find_original_span(original, preprocessed, &diag) {
+    let (line, col, end_line, end_col) = match find_original_span(original, elements, &diag) {
         Some((start, end)) => {
             let (l, c) = crate::diagnostics::line_col(original, start);
             let (el, ec) = crate::diagnostics::line_col(original, end);
@@ -206,7 +292,10 @@ fn map_diagnostic(
     if promote_soft && severity == DiagSeverity::Warning && PROMOTE_KINDS.contains(&diag.kind) {
         severity = DiagSeverity::Error;
     }
-    // S3.2 / S4.1: under top-level strict, experimental layout findings are
+    if DEFAULT_ERROR_KINDS.contains(&diag.kind) {
+        severity = DiagSeverity::Error;
+    }
+    // S3.2 / S4.1: under top-level strict, remaining experimental kinds are
     // Error at the gate (not merely soft warnings).
     if strict && EXPERIMENTAL_KINDS.contains(&diag.kind) {
         severity = DiagSeverity::Error;
@@ -298,14 +387,14 @@ mod severity_tests {
 /// class fingerprint. Returns `(start_byte, end_byte)` of the opening tag.
 fn find_original_span(
     original: &str,
-    preprocessed: &str,
+    elements: &[sail_layout::html::Element],
     diag: &sail_layout::Diagnostic,
 ) -> Option<(usize, usize)> {
     let fingerprint = element_fingerprint(&diag.element_class, diag.element_tag.as_str())?;
 
     // Count how many times this fingerprint appears in the preprocessed source
     // before the diagnostic's span. That index lets us disambiguate duplicates.
-    let pre_index = count_fingerprint_before(preprocessed, &fingerprint, diag.span.0);
+    let pre_index = count_fingerprint_before(elements, &fingerprint, diag.span.0);
 
     // Find the same-index occurrence in the original source.
     find_nth_fingerprint(original, &fingerprint, pre_index)
@@ -440,14 +529,13 @@ fn layout_keyword_tag(tag: &str) -> Option<&str> {
     }
 }
 
-/// Count how many elements in `preprocessed` match `fingerprint` with an open
-/// tag starting strictly before `before_byte`.
+/// Count how many elements match `fingerprint` with an open tag starting
+/// strictly before `before_byte`.
 fn count_fingerprint_before(
-    preprocessed: &str,
+    elements: &[sail_layout::html::Element],
     fingerprint: &Fingerprint,
     before_byte: usize,
 ) -> usize {
-    let elements = sail_layout::html::parse_source(preprocessed);
     let mut count = 0;
     for elem in elements.iter().skip(1) {
         if elem.span.0 >= before_byte {
@@ -885,6 +973,51 @@ mod tests {
         assert_eq!(v.len(), 2, "mobile + desktop: {v:?}");
         assert!((v[0].0 - MOBILE_VIEWPORT.0).abs() < 0.5);
         assert!((v[1].0 - DEFAULT_VIEWPORT.0).abs() < 0.5);
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    #[test]
+    fn compile_records_one_preprocess_and_two_viewport_spans() {
+        let src = "<column><p>hi</p></column>";
+        // Stdlib element compile is a once-per-process preprocess of each
+        // registry source — not a re-entry on this file's bytes.
+        let _ = crate::compile(src, crate::CompileOpts::default());
+        crate::profile::begin();
+        let _ = crate::compile(src, crate::CompileOpts::default());
+        let samples = crate::profile::take();
+        crate::profile::end();
+        let phases: Vec<&str> = samples.iter().map(|s| s.phase.as_str()).collect();
+        let pre = samples.iter().filter(|s| s.phase == "preprocess").count();
+        assert_eq!(pre, 1, "one preprocess on compile(); phases={phases:?}");
+        let vps: Vec<&str> = samples
+            .iter()
+            .filter(|s| s.phase.starts_with("layout-viewport."))
+            .map(|s| s.phase.as_str())
+            .collect();
+        assert_eq!(vps.len(), 2, "two viewports; got {vps:?} phases={phases:?}");
+        assert!(
+            samples.iter().any(|s| s.phase == "layout"),
+            "missing layout span: {phases:?}"
+        );
+        assert!(
+            samples.iter().any(|s| s.phase == "compose"),
+            "missing compose span: {phases:?}"
+        );
+    }
+
+    #[test]
+    fn prepare_boxes_is_two_viewports_and_scan_does_not_rebuild() {
+        let src = "<column><p>hi</p></column>";
+        let (pre, hosts) =
+            crate::parse::preprocess::preprocess_with_style(src).expect("preprocess");
+        let boxes = prepare_boxes(pre, &hosts, sail_layout::CheckOptions::default());
+        assert_eq!(boxes.trees.len(), 2, "viewports: {:?}", boxes.trees.len());
+        assert!(
+            boxes.trees.iter().all(|t| t.layout.is_ok()),
+            "both viewports must layout"
+        );
+        // check_tree / collect_from must not call taffy_tree::build.
+        let _ = collect_from(src, None, &boxes);
     }
 
     #[test]

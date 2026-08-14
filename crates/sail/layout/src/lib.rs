@@ -119,23 +119,31 @@ mod layout_pass_counter_tests {
     }
 }
 
-/// Options for experimental layout finding kinds (SPEC-LAYOUT-DIAG-1 / S4.1).
+/// Options for layout finding kinds (SPEC-LAYOUT-DIAG-1 / LAYOUT-5).
 ///
-/// Default is **off** — `unintended-overflow` and `clipped-text` ship under
-/// strict / experimental only (rollout protocol). Implementer wires these
-/// flags into [`diagnostics::scan`]; this struct is the product surface.
-#[derive(Debug, Clone, Copy, Default)]
+/// `unintended-overflow` always emits. `clipped-text` follows
+/// [`Self::text_metrics_enabled`] (default on). `sub-min-tap-target` stays
+/// behind [`Self::experimental`].
+#[derive(Debug, Clone, Copy)]
 pub struct CheckOptions {
-    /// Emit experimental kinds (`unintended-overflow`, `clipped-text`).
+    /// Emit remaining experimental kinds (`sub-min-tap-target`).
     pub experimental: bool,
-    /// Text-metrics-dependent kinds (`clipped-text`). `None` follows
-    /// [`Self::experimental`]. SPEC may also gate behind `layout.textMetrics`.
+    /// Text-metrics-dependent `clipped-text`. `None` means the promoted
+    /// default (on). `Some(false)` is the kill switch.
     pub text_metrics: Option<bool>,
 }
 
+impl Default for CheckOptions {
+    fn default() -> Self {
+        Self {
+            experimental: false,
+            text_metrics: Some(true),
+        }
+    }
+}
+
 impl CheckOptions {
-    /// Strict / experimental rollout defaults: both experimental kinds on,
-    /// including text-metrics path.
+    /// Strict / experimental rollout: tap + text-metrics on.
     pub fn experimental() -> Self {
         Self {
             experimental: true,
@@ -145,7 +153,7 @@ impl CheckOptions {
 
     /// Whether text-metrics kinds should run.
     pub fn text_metrics_enabled(self) -> bool {
-        self.text_metrics.unwrap_or(self.experimental)
+        self.text_metrics.unwrap_or(true)
     }
 }
 
@@ -153,15 +161,16 @@ impl CheckOptions {
 /// px and emit diagnostics. This is the primary entry point for callers that
 /// already have a preprocessor (e.g. `sail-compiler`).
 ///
-/// Experimental kinds are **not** enabled (see [`check_preprocessed_with`]).
+/// Promoted kinds emit; tap stays off (see [`check_preprocessed_with`]).
 pub fn check_preprocessed(preprocessed: &str, viewport: (f32, f32)) -> anyhow::Result<ScanResult> {
     check_preprocessed_with(preprocessed, viewport, CheckOptions::default())
 }
 
 /// Like [`check_preprocessed`], with explicit experimental-kind options.
 ///
-/// `unintended-overflow` emits when [`CheckOptions::experimental`] is true;
-/// `clipped-text` also requires [`CheckOptions::text_metrics_enabled`].
+/// `unintended-overflow` always emits. `clipped-text` follows
+/// [`CheckOptions::text_metrics_enabled`]. `sub-min-tap-target` needs
+/// [`CheckOptions::experimental`].
 pub fn check_preprocessed_with(
     preprocessed: &str,
     viewport: (f32, f32),
@@ -194,7 +203,13 @@ pub fn check_preprocessed_with_hosts(
     apply_resolved_types(&mut elements, type_hosts);
     apply_resolved_boxes(&mut elements, box_hosts);
     let tree = taffy_tree::build(elements, viewport)?;
-    diagnostics::scan_with(&tree, viewport, options)
+    check_tree(&tree, options)
+}
+
+/// Scan an already-computed box tree. Callers that share one HTML forest
+/// across viewports use this so they do not re-parse or rebuild taffy.
+pub fn check_tree(layout: &Layout, options: CheckOptions) -> anyhow::Result<ScanResult> {
+    diagnostics::scan_with(layout, layout.viewport, options)
 }
 
 /// Convenience for standalone callers that have their own preprocessor.

@@ -29,11 +29,13 @@ pub fn parse(source: &str) -> Result<Program, CompileError> {
     Ok(parse_full(source)?.program)
 }
 
-/// IR plus the lowered HTML `parse` already produced. Layout and compose
-/// consume this so they do not re-enter preprocess on the same bytes.
+/// IR plus the lowered HTML and Style hosts `parse` already produced.
+/// Layout and compose consume this so they do not re-enter preprocess
+/// on the same bytes.
 pub struct Parsed {
     pub program: Program,
     pub preprocessed: String,
+    pub style_hosts: sail_layout::StyleHosts,
 }
 
 /// Like [`parse`], retaining the preprocessed HTML.
@@ -63,13 +65,14 @@ fn parse_inner(source: &str, expand_elements: bool) -> Result<Program, CompileEr
 }
 
 fn parse_inner_full(source: &str, expand_elements: bool) -> Result<Parsed, CompileError> {
-    let prepared = profile_span("preprocess", || {
-        preprocess::preprocess_impl(source, expand_elements)
+    let (prepared, style_hosts) = profile_span("preprocess", || {
+        preprocess::preprocess_impl_full(source, expand_elements)
     })?;
     let program = profile_span("parse", || parse_prepared(source, &prepared))?;
     Ok(Parsed {
         program,
         preprocessed: prepared,
+        style_hosts,
     })
 }
 

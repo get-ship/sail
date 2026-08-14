@@ -201,6 +201,7 @@ pub fn gate(
         overrides,
         route_params,
         DiagnosticTier::OnSave,
+        None,
     )
     .into_iter()
     .find(|d| d.severity == DiagSeverity::Error);
@@ -253,6 +254,9 @@ fn offset_for_line_col(source: &str, line: usize, col: usize) -> usize {
 /// - [`DiagnosticTier::OnSave`] — full stream including layout + compose +
 ///   type gate (JOB-E1)
 ///
+/// `prepared` is the HTML + Style hosts `parse_full` already produced.
+/// When present, layout/compose must not re-enter `preprocess_impl`.
+///
 /// `author_source` is the original `.sail` text (inline `<controller>` still
 /// present). Structural passes use `source` (controller blanked); the type
 /// gate re-extracts the controller region from `author_source` so spans land
@@ -274,6 +278,7 @@ pub fn collect(
     overrides: &[crate::check::lint_overrides::LintOverride],
     route_params: Option<&[String]>,
     tier: DiagnosticTier,
+    prepared: Option<(&str, &sail_layout::StyleHosts)>,
 ) -> Vec<Diagnostic> {
     let mut diags: Vec<Diagnostic> = Vec::new();
 
@@ -425,22 +430,32 @@ pub fn collect(
 
     // Layout + compose (taffy) — SPEC-TOOLING-1 §WI6: OnSave only.
     // On-type must never compute a box tree; typing a 500-line buffer must
-    // not pay for multi-viewport layout. Compose rebuilds taffy today, so
-    // it rides the same gate (not a separate "reuse" of layout's tree).
+    // not pay for multi-viewport layout. One HTML forest + one taffy tree
+    // per viewport is shared: compose must not re-preprocess or rebuild.
     if tier.includes_layout() {
-        // Layout diagnostics — build the same box tree the runtime will build
-        // and report collapsed / overflow findings. Soft findings stay
-        // warnings unless the package sets `"layout": "error"` (studio
-        // profile) — then gate-gap kinds promote to Error and fail
-        // `compile` / `sail check`. Must run on the preprocessed source so
-        // class tokens line up with the CSS the compiler emits; spans map
-        // back to the author's original source.
-        diags.extend(layout::collect_for(source, source_path));
+        let (layout_diags, boxes) = check_span("layout", || {
+            let check_opts = layout::layout_check_options_for(source_path).1;
+            let boxes = if let Some((pre, hosts)) = prepared {
+                layout::prepare_boxes(pre.to_string(), hosts, check_opts)
+            } else {
+                match crate::parse::preprocess::preprocess_with_style(source) {
+                    Ok((pre, hosts)) => layout::prepare_boxes(pre, &hosts, check_opts),
+                    Err(_) => return (Vec::new(), None),
+                }
+            };
+            let diags = layout::collect_from(source, source_path, &boxes);
+            (diags, Some(boxes))
+        });
+        diags.extend(layout_diags);
 
         // Compose auto-fix — sibling rhythm (spacing) consistency. Emits
         // `Fix` severity diagnostics that the `sail_edit` path turns into
-        // source rewrites.
-        diags.extend(compose::collect(source, source_path, overrides));
+        // source rewrites. Reuses `boxes` so alignment does not rebuild taffy.
+        if tier.includes_compose() {
+            diags.extend(check_span("compose", || {
+                compose::collect_with(source, source_path, overrides, boxes.as_ref())
+            }));
+        }
     }
 
     // Type gate (JOB-E1) — OnSave only. Never OnType: tsgo is too heavy for
@@ -458,6 +473,18 @@ pub fn collect(
     diags.sort_by(|a, b| a.line.cmp(&b.line).then(a.col.cmp(&b.col)));
     diags.dedup_by(|a, b| a.line == b.line && a.col == b.col && a.message == b.message);
     diags
+}
+
+fn check_span<R>(phase: &'static str, f: impl FnOnce() -> R) -> R {
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        crate::profile::span(phase, f)
+    }
+    #[cfg(target_arch = "wasm32")]
+    {
+        let _ = phase;
+        f()
+    }
 }
 
 /// Push a check pass's `Err` (if any) onto `diags` as a [`Diagnostic`].
