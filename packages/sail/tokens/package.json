@@ -4,27 +4,44 @@
   "description": "Ship design tokens \u2014 the OKLCH palette, semantic surfaces, tone ramps, role tokens, motion/density channels, and the theme catalog. The design substrate every view and <sail-*> component consumes. Depends on nothing downstream.",
   "type": "module",
   "license": "MIT",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "default": "./src/index.ts"
+      "bun": "./src/index.ts",
+      "development": "./src/index.ts",
+      "default": "./dist/index.js"
     },
     "./themes": {
       "types": "./dist/themes.d.ts",
-      "default": "./src/themes.ts"
+      "bun": "./src/themes.ts",
+      "development": "./src/themes.ts",
+      "default": "./dist/themes.js"
     },
-    "./qa-themes": "./src/qa-themes.ts",
+    "./qa-themes": {
+      "types": "./dist/qa-themes.d.ts",
+      "bun": "./src/qa-themes.ts",
+      "development": "./src/qa-themes.ts",
+      "default": "./dist/qa-themes.js"
+    },
     "./unions": {
       "types": "./dist/generated/unions.d.ts",
-      "default": "./src/generated/unions.ts"
+      "bun": "./src/generated/unions.ts",
+      "development": "./src/generated/unions.ts",
+      "default": "./dist/generated/unions.js"
     },
     "./themes-meta": {
       "types": "./dist/generated/themes-meta.d.ts",
-      "default": "./src/generated/themes-meta.ts"
+      "bun": "./src/generated/themes-meta.ts",
+      "development": "./src/generated/themes-meta.ts",
+      "default": "./dist/generated/themes-meta.js"
     },
     "./theme-schema": {
       "types": "./dist/theme-schema.d.ts",
-      "default": "./src/theme-schema.ts"
+      "bun": "./src/theme-schema.ts",
+      "development": "./src/theme-schema.ts",
+      "default": "./dist/theme-schema.js"
     },
     "./themes.css": "./src/themes.css",
     "./tokens.css": "./src/tokens.css",
@@ -34,8 +51,13 @@
     "./products.css": "./src/products.css"
   },
   "files": [
-    "src",
-    "model"
+    "dist",
+    "model",
+    "src/*.css",
+    "src/*.js",
+    "src/token-registry.json",
+    "src/fonts",
+    "src/fonts-manifest.json"
   ],
   "scripts": {
     "generate": "cargo run -p sail-compiler -- tokens",

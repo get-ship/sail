@@ -68,6 +68,14 @@ const PACKAGES = [
     },
   },
   {
+    dir: 'packages/sail/dom',
+    tempConfig: {
+      compilerOptions: { ...FRAMEWORK_EMIT },
+      include: ['src/**/*.ts'],
+      exclude: ['dist', 'src/**/*.test.ts'],
+    },
+  },
+  {
     dir: 'packages/sail/studio-client',
     tempConfig: {
       compilerOptions: { ...FRAMEWORK_EMIT },

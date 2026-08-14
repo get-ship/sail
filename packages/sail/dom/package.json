@@ -4,14 +4,18 @@
   "description": "SAIL DOM interpreter \u2014 parses .sail files and hydrates them against @ship/sail-runtime.",
   "type": "module",
   "license": "MIT",
-  "main": "src/index.ts",
-  "types": "src/index.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "exports": {
-    ".": "./src/index.ts",
+    ".": {
+      "types": "./dist/index.d.ts",
+      "bun": "./src/index.ts",
+      "development": "./src/index.ts",
+      "default": "./dist/index.js"
+    },
     "./test-utils": "./test/compile-sail.ts"
   },
   "files": [
-    "src",
     "dist"
   ],
   "scripts": {

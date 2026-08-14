@@ -4,56 +4,77 @@
   "description": "SAIL runtime \u2014 fine-grained signals, custom-element wrapper, patch protocol applicator. The reactive engine that templates and components share.",
   "type": "module",
   "license": "MIT",
-  "main": "src/index.ts",
+  "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "default": "./src/index.ts"
+      "bun": "./src/index.ts",
+      "development": "./src/index.ts",
+      "default": "./dist/index.js"
     },
     "./server": {
       "types": "./dist/server.d.ts",
-      "default": "./src/server.ts"
+      "bun": "./src/server.ts",
+      "development": "./src/server.ts",
+      "default": "./dist/server.js"
     },
     "./template-hooks": {
       "types": "./dist/template-hooks/index.d.ts",
-      "default": "./src/template-hooks/index.ts"
+      "bun": "./src/template-hooks/index.ts",
+      "development": "./src/template-hooks/index.ts",
+      "default": "./dist/template-hooks/index.js"
     },
     "./dev": {
       "types": "./dist/dev.d.ts",
-      "default": "./src/dev.ts"
+      "bun": "./src/dev.ts",
+      "development": "./src/dev.ts",
+      "default": "./dist/dev.js"
     },
     "./route": {
       "types": "./dist/route/index.d.ts",
-      "default": "./src/route/index.ts"
+      "bun": "./src/route/index.ts",
+      "development": "./src/route/index.ts",
+      "default": "./dist/route/index.js"
     },
     "./patch": {
       "types": "./dist/patch.d.ts",
-      "default": "./src/patch.ts"
+      "bun": "./src/patch.ts",
+      "development": "./src/patch.ts",
+      "default": "./dist/patch.js"
     },
     "./virtual": {
       "types": "./dist/virtual.d.ts",
-      "default": "./src/virtual.ts"
+      "bun": "./src/virtual.ts",
+      "development": "./src/virtual.ts",
+      "default": "./dist/virtual.js"
     },
     "./internal": {
       "types": "./dist/internal.d.ts",
-      "default": "./src/internal.ts"
+      "bun": "./src/internal.ts",
+      "development": "./src/internal.ts",
+      "default": "./dist/internal.js"
     },
     "./contracts": {
       "types": "./dist/contracts.d.ts",
-      "default": "./src/contracts.ts"
+      "bun": "./src/contracts.ts",
+      "development": "./src/contracts.ts",
+      "default": "./dist/contracts.js"
     },
     "./actions": {
       "types": "./dist/actions/index.d.ts",
-      "default": "./src/actions/index.ts"
+      "bun": "./src/actions/index.ts",
+      "development": "./src/actions/index.ts",
+      "default": "./dist/actions/index.js"
     },
     "./framework": {
       "types": "./dist/framework-bundle.d.ts",
-      "default": "./src/framework-bundle.ts"
+      "bun": "./src/framework-bundle.ts",
+      "development": "./src/framework-bundle.ts",
+      "default": "./dist/framework-bundle.js"
     }
   },
   "files": [
-    "src",
     "dist"
   ],
   "scripts": {
@@ -80,6 +101,6 @@
     "vitest": "^4.1.5"
   },
   "sideEffects": [
-    "./src/boundary-elements.ts"
+    "./dist/boundary-elements.js"
   ]
 }
