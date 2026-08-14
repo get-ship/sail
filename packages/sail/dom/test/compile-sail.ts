@@ -40,7 +40,7 @@ const HERE = dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = resolve(HERE, '../../../..')
 const COMPILER_SRC = resolve(REPO_ROOT, 'crates/sail/compiler/src')
 const LINT_SRC = resolve(REPO_ROOT, 'crates/sail/lint/src')
-const STYLE_SRC = resolve(REPO_ROOT, 'crates/sail/style/src')
+const STYLE_SRC = resolve(REPO_ROOT, 'crates/sail/spinnaker/src')
 
 // Platform cdylib name `cargo build` produces for crates/sail/compiler-napi.
 // Node loads a napi cdylib directly via `process.dlopen` (it exports the
