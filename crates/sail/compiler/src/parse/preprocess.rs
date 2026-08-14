@@ -995,7 +995,30 @@ fn lower_into(
                     if k >= bytes.len() {
                         break;
                     }
-                    let use_attrs = source[after..k].trim().to_string();
+                    let use_attrs = source[after..k]
+                        .trim()
+                        .trim_end_matches('/')
+                        .trim()
+                        .to_string();
+                    let self_closed = source[i..k].trim_end().ends_with('/');
+                    // Author-void L1 (`<avatar />`, `<separator>`) has no
+                    // children. expand_self_close leaves those tags unpaired,
+                    // so splice must not wait for `</tag>`.
+                    if self_closed || crate::l1_manifest::is_author_void(tag) {
+                        let mut end = k + 1;
+                        if !self_closed {
+                            let rest = source[end..].trim_start();
+                            let closer = format!("</{tag}>");
+                            if rest.starts_with(&closer) {
+                                let ws = source[end..].len() - rest.len();
+                                end += ws + closer.len();
+                            }
+                        }
+                        css_done.insert(tag);
+                        out.push_str(&splice_element(&el.out, &use_attrs, ""));
+                        i = end;
+                        continue 'outer;
+                    }
                     // Matching close, DEPTH-AWARE: skip the closes of nested
                     // same-tag opens (expand_self_close already paired the
                     // self-closing forms, so only `<tag …>` opens count).
@@ -3470,6 +3493,34 @@ export default controller(() => {
                 || ok.contains("sail-slider"),
             "{ok}"
         );
+    }
+
+    #[test]
+    fn author_void_l1_self_close_splices() {
+        let out =
+            preprocess(r#"<card><avatar name="Ada" tone="primary" /></card>"#).expect("preprocess");
+        assert!(
+            out.contains("sail-avatar"),
+            "void self-close must splice L1 structure:\n{out}"
+        );
+        assert!(
+            !out.contains("<avatar"),
+            "bare <avatar> must not remain after splice:\n{out}"
+        );
+    }
+
+    #[test]
+    fn author_void_l1_omitted_closer_splices() {
+        let out = preprocess(r#"<column><separator><p>after</p></column>"#).expect("preprocess");
+        assert!(
+            out.contains("sail-separator") || out.contains("<hr"),
+            "omitted closer must splice:\n{out}"
+        );
+        assert!(
+            !out.contains("<separator"),
+            "bare <separator> must not remain:\n{out}"
+        );
+        assert!(out.contains("<p>") || out.contains("after"), "{out}");
     }
 
     #[test]
