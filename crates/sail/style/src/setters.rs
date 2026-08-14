@@ -549,6 +549,20 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
             return Ok(vec![("visibility".into(), css.into())]);
         }
     }
+    // align() is vertical-align. type({ align }) is text-align.
+    if spec.name == "align" {
+        if let PaintArg::Token(t) = arg {
+            let bare_t = strip_neg(t).1;
+            if !spec.keywords.iter().any(|k| *k == bare_t) {
+                return Err(StyleDiagnostic::BadToken {
+                    setter: op.setter.clone(),
+                    value: bare_t.into(),
+                    source: op.source.clone(),
+                });
+            }
+            return Ok(vec![("vertical-align".into(), bare_t.into())]);
+        }
+    }
     // aspect-ratio map.
     if spec.name == "aspect" {
         if let PaintArg::Token(t) = arg {
@@ -822,6 +836,9 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
             | "underline"
             | "list"
             | "mixBlend"
+            | "resize"
+            | "contain"
+            | "willChange"
     ) {
         if let PaintArg::Token(t) = arg {
             let bare_t = strip_neg(t).1;
@@ -856,6 +873,9 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
                 "underline" => "text-decoration-line",
                 "list" => "list-style-type",
                 "mixBlend" => "mix-blend-mode",
+                "resize" => "resize",
+                "contain" => "contain",
+                "willChange" => "will-change",
                 _ => spec.vocab,
             };
             let css_val = match (spec.name, bare_t) {
@@ -2054,7 +2074,6 @@ mod tests {
             "style({ paint: ring(primary) })",
             "style({ text: truncate() })",
             "style({ paint: borderImage(none) })",
-            "style({ paint: contain(banana) })",
         ] {
             let (_, diags) = parse(src);
             assert!(

@@ -123,6 +123,13 @@ pub static VOCAB: &[VocabRow] = &[
     row("saturate", PLAIN, None, "paint", true),
     row("backdrop", PLAIN, None, "paint", true),
     row("mixBlend", PLAIN, None, "paint", true),
+    // ── SPEC §8 restored plains ───────────────────────────────────────
+    row("align", PLAIN, None, "paint", true),
+    row("list", PLAIN, None, "paint", true),
+    row("resize", PLAIN, None, "box", true),
+    row("contain", PLAIN, None, "paint", true),
+    row("willChange", PLAIN, None, "paint", true),
+    row("visibility", PLAIN, None, "paint", true),
 ];
 
 /// The table. Complete / resolve / find walk this.
@@ -213,7 +220,20 @@ mod tests {
         assert_eq!(resolve_vocab("srOnly"), Some(VocabTag::Plain));
         assert_eq!(resolve_vocab("origin"), Some(VocabTag::Plain));
         for name in [
-            "display", "grow", "dir", "opacity", "rotate", "scale", "blur", "mixBlend",
+            "display",
+            "grow",
+            "dir",
+            "opacity",
+            "rotate",
+            "scale",
+            "blur",
+            "mixBlend",
+            "align",
+            "list",
+            "resize",
+            "contain",
+            "willChange",
+            "visibility",
         ] {
             let row = find_vocab(name).unwrap_or_else(|| panic!("{name}"));
             assert!(row.offered, "{name} is a live spec plain");

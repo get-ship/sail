@@ -1208,6 +1208,75 @@ mod tests {
         let (_, diags) = super::parse("match(variant, { solid: style({ paint: bg(primary) }) })");
         assert!(!diags.is_empty(), "free match() must fail product parse");
     }
+
+    #[test]
+    fn spec8_restored_plains_compile_and_lower() {
+        let cases = [
+            (
+                "style({ paint: align(middle) })",
+                "vertical-align",
+                "middle",
+            ),
+            ("style({ paint: list(none) })", "list-style-type", "none"),
+            ("style({ box: resize(both) })", "resize", "both"),
+            ("style({ paint: contain(strict) })", "contain", "strict"),
+            (
+                "style({ paint: willChange(transform) })",
+                "will-change",
+                "transform",
+            ),
+            (
+                "style({ paint: visibility(hidden) })",
+                "visibility",
+                "hidden",
+            ),
+        ];
+        for (src, prop, val) in cases {
+            let (style, diags) = parse(src);
+            assert!(
+                diags.is_empty(),
+                "{src}: {:?}",
+                diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+            );
+            let (_, css) = lower_style(&style, &HashMap::new());
+            assert!(
+                css.contains(prop) && css.contains(val),
+                "{src}: expected {prop}: {val} in {css}"
+            );
+        }
+
+        let (style, diags) = parse("style({ box: overflow({ x: auto, snap: x }) })");
+        assert!(
+            diags.is_empty(),
+            "{:?}",
+            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
+        let (_, css) = lower_style(&style, &HashMap::new());
+        assert!(
+            css.contains("overflow-x") && css.contains("auto"),
+            "overflow x: {css}"
+        );
+        assert!(
+            css.contains("scroll-snap-type") && css.contains("x"),
+            "overflow snap: {css}"
+        );
+
+        let (style, diags) = parse("style({ text: type({ align: center }) })");
+        assert!(
+            diags.is_empty(),
+            "{:?}",
+            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
+        let (_, css) = lower_style(&style, &HashMap::new());
+        assert!(
+            css.contains("text-align") && css.contains("center"),
+            "type align is text-align: {css}"
+        );
+        assert!(
+            !css.contains("vertical-align"),
+            "type align must not emit vertical-align: {css}"
+        );
+    }
 }
 
 #[cfg(test)]

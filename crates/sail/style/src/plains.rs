@@ -544,6 +544,71 @@ const PLAINS: &[PlainSpec] = &[
         negatable: false,
         slots: &["mix-blend-mode"],
     },
+    PlainSpec {
+        name: "align",
+        vocab: "align",
+        scale: None,
+        keywords: &[
+            "baseline",
+            "middle",
+            "top",
+            "bottom",
+            "text-top",
+            "text-bottom",
+            "sub",
+            "super",
+        ],
+        negatable: false,
+        slots: &["vertical-align"],
+    },
+    PlainSpec {
+        name: "list",
+        vocab: "list",
+        scale: None,
+        keywords: &["none", "disc", "decimal", "circle", "square"],
+        negatable: false,
+        slots: &["list-style-type"],
+    },
+    PlainSpec {
+        name: "resize",
+        vocab: "resize",
+        scale: None,
+        keywords: &["none", "both", "horizontal", "vertical"],
+        negatable: false,
+        slots: &["resize"],
+    },
+    PlainSpec {
+        name: "contain",
+        vocab: "contain",
+        scale: None,
+        keywords: &[
+            "none", "strict", "content", "size", "layout", "style", "paint",
+        ],
+        negatable: false,
+        slots: &["contain"],
+    },
+    PlainSpec {
+        name: "willChange",
+        vocab: "will-change",
+        scale: None,
+        keywords: &[
+            "auto",
+            "scroll-position",
+            "contents",
+            "transform",
+            "opacity",
+        ],
+        negatable: false,
+        slots: &["will-change"],
+    },
+    PlainSpec {
+        name: "visibility",
+        vocab: "visibility",
+        scale: None,
+        keywords: &["visible", "hidden", "collapse"],
+        negatable: false,
+        slots: &["visibility"],
+    },
 ];
 
 /// Emit data for a vocab Plain. Call after `find_vocab` says Plain.
@@ -589,5 +654,12 @@ mod tests {
         let p = find_plain("dir").expect("dir");
         assert_eq!(p.slots, &["flex-direction"]);
         assert!(p.keywords.contains(&"column"));
+    }
+
+    #[test]
+    fn align_is_vertical_align_not_text_align() {
+        let p = find_plain("align").expect("align");
+        assert_eq!(p.slots, &["vertical-align"]);
+        assert!(p.keywords.contains(&"middle"));
     }
 }
