@@ -145,18 +145,18 @@ fn fix_participation_style(
     };
     let stripped = strip_attr_from_open(open, &attr)?;
     // Product Style attaches as a tag-position call on the open tag (not body).
-    let box_call = format!("style({{ box: {setter}({arg}) }})");
+    let style_call = participation_style_call(setter, &arg);
     let replacement_open = if let Some((lo, hi, expr)) = find_tag_style_call(&stripped) {
-        let merged = merge_box_setter_into_style(&expr, setter, &arg);
+        let merged = merge_participation_into_style(&expr, setter, &arg);
         format!("{}{}{}", &stripped[..lo], merged, &stripped[hi..])
     } else {
-        inject_tag_style_call(&stripped, &box_call)
+        inject_tag_style_call(&stripped, &style_call)
     };
     Some(FixPlan {
         rule: "sail-participation-style".into(),
         line: d.line,
         col: d.col,
-        message: format!("move `{attr}` attr to box channel `{box_call}`"),
+        message: format!("move `{attr}` attr to Style `{style_call}`"),
         ops: vec![],
         text_patch: Some(TextPatch {
             start: node.open_span.start,
@@ -323,7 +323,7 @@ fn fix_display_on_layout(
     // Pull display(…) expression from style if present; otherwise wrap with display(none).
     let (inner_without_display, display_call) = split_display_from_element(&full, &node.tag)?;
     // Tag-position product form only — never emit style={…}.
-    // `display_call` is a full `style({ box: display(…) })` call.
+    // `display_call` is a full `style({ display(…) })` call.
     let wrap = format!("<div {display_call}>{inner_without_display}</div>");
     Some(FixPlan {
         rule: "sail-display-on-layout".into(),
@@ -607,29 +607,20 @@ fn replace_sx_setter(open: &str, setter: &str, target: &str) -> Option<String> {
                 return None;
             }
             format!("{}{target}{}", &expr[..arg_start], &expr[k..])
-        } else if let Some(ch) = channel_key_for_setter_name(setter) {
-            // Append into matching channel, or add a channel entry.
-            merge_setter_into_channel_style(&expr, ch, setter, target)
+        } else if is_animate_trigger(setter) {
+            merge_animate_into_style(&expr, setter, target)
         } else {
-            // Unknown channel — append flat chain residual is not product; inject channel.
-            format!("style({{ paint: {setter}({target}) }})")
+            merge_setter_into_flat_style(&expr, setter, target)
         };
         return Some(format!("{}{}{}", &open[..lo], new_expr, &open[hi..]));
     }
-    // No style call yet — inject tag-position style({ channel: setter(target) }).
-    let ch = channel_key_for_setter_name(setter).unwrap_or("paint");
-    let call = format!("style({{ {ch}: {setter}({target}) }})");
+    // No style call yet — inject tag-position style({ setter(target) }).
+    let call = if is_animate_trigger(setter) {
+        format!("style({{ animate: {setter}({target}) }})")
+    } else {
+        format!("style({{ {setter}({target}) }})")
+    };
     Some(inject_tag_style_call(open, &call))
-}
-
-fn channel_key_for_setter_name(setter: &str) -> Option<&'static str> {
-    match sail_lint::style::channel_for_setter(setter) {
-        Some(sail_lint::style::Channel::Box) => Some("box"),
-        Some(sail_lint::style::Channel::Text) => Some("text"),
-        Some(sail_lint::style::Channel::Animate) => Some("animate"),
-        Some(sail_lint::style::Channel::Paint) => Some("paint"),
-        None => None,
-    }
 }
 
 /// Locate tag-position `style(…)` (+ `.when`/chain tails) inside an open tag.
@@ -781,27 +772,66 @@ fn inject_tag_style_call(open: &str, style_call: &str) -> String {
     }
 }
 
-fn merge_box_setter_into_style(expr: &str, setter: &str, arg: &str) -> String {
-    merge_setter_into_channel_style(expr, "box", setter, arg)
+fn is_animate_trigger(name: &str) -> bool {
+    matches!(
+        name,
+        "enter"
+            | "exit"
+            | "loop"
+            | "reveal"
+            | "scroll"
+            | "hover"
+            | "press"
+            | "focus"
+            | "focus-visible"
+    )
 }
 
-fn merge_setter_into_channel_style(expr: &str, ch: &str, setter: &str, arg: &str) -> String {
+fn participation_style_call(setter: &str, arg: &str) -> String {
+    match setter {
+        "w" => format!("style({{ size({{ w: {arg} }}) }})"),
+        "minW" => format!("style({{ size({{ min-w: {arg} }}) }})"),
+        "maxW" => format!("style({{ size({{ max-w: {arg} }}) }})"),
+        other => format!("style({{ {other}({arg}) }})"),
+    }
+}
+
+fn merge_participation_into_style(expr: &str, setter: &str, arg: &str) -> String {
+    match setter {
+        "w" => merge_size_slot_into_style(expr, "w", arg),
+        "minW" => merge_size_slot_into_style(expr, "min-w", arg),
+        "maxW" => merge_size_slot_into_style(expr, "max-w", arg),
+        _ => merge_setter_into_flat_style(expr, setter, arg),
+    }
+}
+
+fn merge_setter_into_flat_style(expr: &str, setter: &str, arg: &str) -> String {
     let t = expr.trim();
     let call = format!("{setter}({arg})");
     if let Some(rest) = t.strip_prefix("style(").and_then(|r| r.strip_suffix(')')) {
-        // Only simple style({…}) without chain tails handled here; chains keep full expr prefix.
         let body = rest.trim();
         if body.starts_with('{') && body.ends_with('}') {
             let inner = body[1..body.len() - 1].trim();
-            let key = format!("{ch}:");
-            if let Some(idx) = find_channel_key_in(inner, ch) {
-                let after_key = idx + key.len();
+            return merge_call_into_inner(inner, setter, arg, &call);
+        }
+    }
+    format!("style({{ {call} }})")
+}
+
+fn merge_animate_into_style(expr: &str, setter: &str, arg: &str) -> String {
+    let t = expr.trim();
+    let call = format!("{setter}({arg})");
+    if let Some(rest) = t.strip_prefix("style(").and_then(|r| r.strip_suffix(')')) {
+        let body = rest.trim();
+        if body.starts_with('{') && body.ends_with('}') {
+            let inner = body[1..body.len() - 1].trim();
+            if let Some(idx) = find_channel_key_in(inner, "animate") {
+                let after_key = idx + "animate:".len();
                 let (val_start, val_end) = channel_value_span_in(inner, after_key);
                 let val = inner[val_start..val_end].trim();
                 let new_val = if val.is_empty() {
                     call.clone()
                 } else if val.contains(&format!("{setter}(")) {
-                    // Replace existing setter arg if present.
                     replace_method_arg(val, setter, arg).unwrap_or_else(|| format!("{val}.{call}"))
                 } else {
                     format!("{val}.{call}")
@@ -821,13 +851,109 @@ fn merge_setter_into_channel_style(expr: &str, ch: &str, setter: &str, arg: &str
                 return out;
             }
             let sep = if inner.is_empty() { "" } else { ", " };
-            return format!("style({{ {inner}{sep}{ch}: {call} }})");
+            return format!("style({{ {inner}{sep}animate: {call} }})");
         }
     }
-    // Non-object form (const ref / list) — leave existing and don't invent dual style.
-    // Caller prefers inject only when no style present; here append is wrong.
-    // Replace whole call with a channel spine that at least carries the fix.
-    format!("style({{ {ch}: {call} }})")
+    format!("style({{ animate: {call} }})")
+}
+
+fn merge_size_slot_into_style(expr: &str, slot: &str, arg: &str) -> String {
+    let t = expr.trim();
+    if let Some(rest) = t.strip_prefix("style(").and_then(|r| r.strip_suffix(')')) {
+        let body = rest.trim();
+        if body.starts_with('{') && body.ends_with('}') {
+            let inner = body[1..body.len() - 1].trim();
+            let key_at = first_style_object_key_at(inner);
+            let (chain, keys) = split_chain_and_keys(inner, key_at);
+            let new_chain = merge_size_slot_into_chain(chain, slot, arg);
+            return reassemble_style(&new_chain, keys);
+        }
+    }
+    format!("style({{ size({{ {slot}: {arg} }}) }})")
+}
+
+fn merge_call_into_inner(inner: &str, setter: &str, arg: &str, call: &str) -> String {
+    let key_at = first_style_object_key_at(inner);
+    let (chain, keys) = split_chain_and_keys(inner, key_at);
+    let new_chain = if chain.is_empty() {
+        call.to_string()
+    } else if chain.contains(&format!("{setter}(")) {
+        replace_method_arg(chain, setter, arg).unwrap_or_else(|| format!("{chain}.{call}"))
+    } else {
+        format!("{chain}.{call}")
+    };
+    reassemble_style(&new_chain, keys)
+}
+
+fn split_chain_and_keys(inner: &str, key_at: Option<usize>) -> (&str, &str) {
+    if let Some(idx) = key_at {
+        (
+            inner[..idx].trim().trim_end_matches(',').trim(),
+            inner[idx..].trim(),
+        )
+    } else {
+        (inner.trim(), "")
+    }
+}
+
+fn reassemble_style(chain: &str, keys: &str) -> String {
+    if keys.is_empty() {
+        format!("style({{ {chain} }})")
+    } else if chain.is_empty() {
+        format!("style({{ {keys} }})")
+    } else {
+        format!("style({{ {chain}, {keys} }})")
+    }
+}
+
+fn first_style_object_key_at(inner: &str) -> Option<usize> {
+    ["when", "match", "compound", "animate"]
+        .iter()
+        .filter_map(|k| find_channel_key_in(inner, k))
+        .min()
+}
+
+fn merge_size_slot_into_chain(chain: &str, slot: &str, arg: &str) -> String {
+    if let Some(rel) = chain.find("size(") {
+        let arg_start = rel + "size(".len();
+        let mut d = 1i32;
+        let mut k = arg_start;
+        let bytes = chain.as_bytes();
+        while k < bytes.len() {
+            match bytes[k] {
+                b'(' => d += 1,
+                b')' => {
+                    d -= 1;
+                    if d == 0 {
+                        break;
+                    }
+                }
+                _ => {}
+            }
+            k += 1;
+        }
+        if d == 0 {
+            let size_arg = chain[arg_start..k].trim();
+            if size_arg.starts_with('{') && size_arg.ends_with('}') {
+                let obj = size_arg[1..size_arg.len() - 1].trim();
+                let new_obj = if let Some(idx) = find_channel_key_in(obj, slot) {
+                    let after = idx + slot.len() + 1;
+                    let (vs, ve) = channel_value_span_in(obj, after);
+                    format!("{}{}{}", &obj[..vs], arg, &obj[ve..])
+                } else {
+                    let sep = if obj.is_empty() { "" } else { ", " };
+                    format!("{obj}{sep}{slot}: {arg}")
+                };
+                return format!("{}size({{ {new_obj} }}){}", &chain[..rel], &chain[k + 1..]);
+            }
+        }
+    }
+    let call = format!("size({{ {slot}: {arg} }})");
+    if chain.is_empty() {
+        call
+    } else {
+        format!("{chain}.{call}")
+    }
 }
 
 fn find_channel_key_in(inner: &str, ch: &str) -> Option<usize> {
@@ -981,7 +1107,7 @@ fn split_display_from_element(full: &str, tag: &str) -> Option<(String, String)>
 }
 
 fn peel_display(expr: &str) -> Option<(String, String)> {
-    // style({ box: display(none).pad(2) }) → peel display into outer wrap expr
+    // style({ display(none).pad(2) }) → peel display into outer wrap expr
     // Also residual flat: style.display(none).pad(2)
     let disp = expr.find("display(")?;
     let arg_start = disp + "display(".len();
@@ -1006,8 +1132,8 @@ fn peel_display(expr: &str) -> Option<(String, String)> {
     }
     let call_end = j + 1; // after ')'
     let display_arg = expr[arg_start..j].trim();
-    // Product wrap form always uses channel spine for the outer host.
-    let display_expr = format!("style({{ box: display({display_arg}) }})");
+    // Product wrap form uses a concern-chain style for the outer host.
+    let display_expr = format!("style({{ display({display_arg}) }})");
 
     // Remove `display(…)` / `.display(…)` from the original chain.
     let call_start = if disp > 0 && bytes[disp - 1] == b'.' {
@@ -1024,7 +1150,7 @@ fn peel_display(expr: &str) -> Option<(String, String)> {
     if new_expr.starts_with('.') {
         new_expr = format!("style{new_expr}");
     }
-    // Clean empty channel shells: style({ box:  }) / style({  })
+    // Clean empty Style shells (including leftover channel empties).
     let trimmed = new_expr.trim();
     if trimmed.is_empty()
         || trimmed == "style({})"
@@ -1101,7 +1227,7 @@ mod tests {
             apply_text_patches(src, &[(patch.start, patch.end, patch.replacement.clone())]);
         assert_eq!(skipped, 0);
         assert!(
-            out.contains("style({ box: grow(1) })"),
+            out.contains("style({ grow(1) })"),
             "expected tag style call: {out}"
         );
         assert!(
@@ -1115,9 +1241,9 @@ mod tests {
 
     #[test]
     fn replace_sx_setter_targets_tag_style() {
-        let open = r#"<div style({ box: pad(2) })>"#;
+        let open = r#"<div style({ pad(2) })>"#;
         let next = replace_sx_setter(open, "pad", "4").unwrap();
-        assert_eq!(next, r#"<div style({ box: pad(4) })>"#);
+        assert_eq!(next, r#"<div style({ pad(4) })>"#);
         assert!(!next.contains("style={"), "{next}");
     }
 }

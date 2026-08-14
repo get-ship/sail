@@ -358,6 +358,16 @@ const LENGTH_SETTERS: &[&str] = &[
     "minH",
     "maxW",
     "maxH",
+    "min-w",
+    "min-h",
+    "max-w",
+    "max-h",
+    "t",
+    "l",
+    "r",
+    "b",
+    "position",
+    "margin",
     "gap",
     "gapX",
     "gapY",
@@ -704,10 +714,13 @@ fn find_bind_sites(source: &str) -> Vec<BindSite> {
     out
 }
 
-/// Recover `setter` from `…setter(bind(…` immediately before `bind_at`.
+/// Recover `setter` from `…setter(bind(…` or `concern({ slot: bind(…` before `bind_at`.
 fn find_setter_before(source: &str, bind_at: usize) -> Option<String> {
     let before = &source[..bind_at];
     let trimmed = before.trim_end();
+    if let Some(from_slot) = setter_from_concern_slot(trimmed) {
+        return Some(from_slot);
+    }
     if !trimmed.ends_with('(') {
         return None;
     }
@@ -731,6 +744,57 @@ fn find_setter_before(source: &str, bind_at: usize) -> Option<String> {
         return None;
     }
     Some(word.to_string())
+}
+
+/// `size({ w: bind(` / `position({ t: bind(` → concern name (`size`, `position`).
+fn setter_from_concern_slot(trimmed: &str) -> Option<String> {
+    let s = trimmed.trim_end();
+    if !s.ends_with(':') {
+        return None;
+    }
+    let before_colon = s[..s.len() - 1].trim_end();
+    let bytes = before_colon.as_bytes();
+    let mut slot_start = before_colon.len();
+    while slot_start > 0 {
+        let c = bytes[slot_start - 1];
+        if c.is_ascii_alphanumeric() || c == b'_' || c == b'-' {
+            slot_start -= 1;
+        } else {
+            break;
+        }
+    }
+    if slot_start == before_colon.len() {
+        return None;
+    }
+    let slot = &before_colon[slot_start..];
+    let before_slot = before_colon[..slot_start].trim_end();
+    if !before_slot.ends_with('{') {
+        return Some(slot.to_string());
+    }
+    let before_brace = before_slot[..before_slot.len() - 1].trim_end();
+    if !before_brace.ends_with('(') {
+        return Some(slot.to_string());
+    }
+    let without_paren = &before_brace[..before_brace.len() - 1];
+    let end = without_paren.len();
+    let mut start = end;
+    let b = without_paren.as_bytes();
+    while start > 0 {
+        let c = b[start - 1];
+        if c.is_ascii_alphanumeric() || c == b'_' {
+            start -= 1;
+        } else {
+            break;
+        }
+    }
+    if start == end {
+        return Some(slot.to_string());
+    }
+    let concern = &without_paren[start..end];
+    if concern.is_empty() || !concern.chars().next()?.is_ascii_alphabetic() {
+        return Some(slot.to_string());
+    }
+    Some(concern.to_string())
 }
 
 /// Collect bare `use:action` names present in the source.
@@ -963,7 +1027,7 @@ mod tests {
     #[test]
     fn a_prop_match_returns_a_binding() {
         let program = program_with_props(vec![prop("glowRadius", PropKind::Number)]);
-        let source = r#"<div style({ box: w(bind(glowRadius)) })></div>"#;
+        let source = r#"<div style({ size({ w: bind(glowRadius) }) })></div>"#;
         let out = resolve(source, &program, None).unwrap();
         assert_eq!(out.len(), 1);
         assert_eq!(out[0].scope_name, "glowRadius");
@@ -980,7 +1044,7 @@ mod tests {
         )
         .unwrap();
         // hue is number but bg is color → error
-        let source = r#"<div style({ paint: opacity(bind(hue)) })></div>"#;
+        let source = r#"<div style({ opacity(bind(hue)) })></div>"#;
         let out = resolve(source, &program, Some(&controller)).unwrap();
         assert_eq!(out.len(), 1);
         assert_eq!(out[0].scope_name, "hue");
@@ -991,7 +1055,7 @@ mod tests {
     #[test]
     fn number_to_color_refuses() {
         let program = program_with_props(vec![prop("n", PropKind::Number)]);
-        let source = r#"<div style({ paint: bg(bind(n)) })></div>"#;
+        let source = r#"<div style({ bg(bind(n)) })></div>"#;
         let err = resolve(source, &program, None).unwrap_err();
         assert!(err.message.contains("number"), "{}", err.message);
         assert!(
@@ -1010,7 +1074,7 @@ mod tests {
                 .to_string(),
         )
         .unwrap();
-        let source = r#"<div style({ box: top(bind(doubled)) })></div>"#;
+        let source = r#"<div style({ position({ t: bind(doubled) }) })></div>"#;
         let out = resolve(source, &program, Some(&controller)).unwrap();
         assert_eq!(out.len(), 1);
         assert_eq!(out[0].source, StyleBindingSource::Derived);
@@ -1026,7 +1090,7 @@ mod tests {
                 .to_string(),
         )
         .unwrap();
-        let source = r#"<div style({ box: top(bind(doubled)) })></div>"#;
+        let source = r#"<div style({ position({ t: bind(doubled) }) })></div>"#;
         let err = resolve(source, &program, Some(&controller)).unwrap_err();
         assert!(err.message.contains("annotate"), "{}", err.message);
         assert!(err.message.contains("doubled"), "{}", err.message);
@@ -1035,7 +1099,7 @@ mod tests {
     #[test]
     fn action_write_resolves_without_reflection() {
         let program = program_with_props(vec![]);
-        let source = r#"<div use:anchor style({ box: left(bind(anchorLeft)) })></div>"#;
+        let source = r#"<div use:anchor style({ position({ l: bind(anchorLeft) }) })></div>"#;
         let out = resolve(source, &program, None).unwrap();
         assert!(out.is_empty(), "action writes need no component wiring");
     }
@@ -1043,7 +1107,7 @@ mod tests {
     #[test]
     fn action_write_without_use_refuses() {
         let program = program_with_props(vec![]);
-        let source = r#"<div style({ box: left(bind(anchorLeft)) })></div>"#;
+        let source = r#"<div style({ position({ l: bind(anchorLeft) }) })></div>"#;
         let err = resolve(source, &program, None).unwrap_err();
         assert!(err.message.contains("bind(anchorLeft)"), "{}", err.message);
     }
@@ -1055,7 +1119,7 @@ mod tests {
             .map(|s| (*s).to_string())
             .collect();
         let program = program_with_props(vec![prop("tone", PropKind::Union(members.clone()))]);
-        let source = r#"<div style({ paint: bg(tone).fg(tone.foreground) })></div>"#;
+        let source = r#"<div style({ bg(tone).fg(tone.foreground) })></div>"#;
         let out = resolve(source, &program, None).unwrap();
         assert_eq!(out.len(), 1);
         assert_eq!(out[0].scope_name, "tone");
@@ -1069,7 +1133,7 @@ mod tests {
             .map(|s| (*s).to_string())
             .collect();
         let program = program_with_props(vec![prop("shade", PropKind::Union(members))]);
-        let source = r#"<div style({ paint: bg(shade) })></div>"#;
+        let source = r#"<div style({ bg(shade) })></div>"#;
         let out = resolve(source, &program, None).unwrap();
         assert_eq!(out.len(), 1);
         assert_eq!(out[0].scope_name, "shade");
@@ -1083,7 +1147,7 @@ mod tests {
             .map(|s| (*s).to_string())
             .collect();
         let program = program_with_props(vec![prop("tone", PropKind::Union(members))]);
-        let source = r#"<div style({ paint: bg(tone.hover) })></div>"#;
+        let source = r#"<div style({ bg(tone.hover) })></div>"#;
         let err = resolve(source, &program, None).unwrap_err();
         assert!(
             err.message.contains("hover") || err.message.contains("member"),
@@ -1115,7 +1179,7 @@ mod tests {
             PropKind::Union(vec!["sm".into(), "md".into(), "lg".into()]),
         )]);
         // Size is match conditionality, not color-group paint bind.
-        let source = r#"<div style({ paint: bg(size) })></div>"#;
+        let source = r#"<div style({ bg(size) })></div>"#;
         let out = resolve(source, &program, None).unwrap();
         assert!(
             out.iter().all(|b| b.unit != StyleBindingUnit::TokenGroup),
@@ -1131,7 +1195,7 @@ mod tests {
             "controller((ctx) => { const tileX = signal('0px'); return { tileX }; })".to_string(),
         )
         .unwrap();
-        let source = r#"<div style({ paint: translateX(bind(tileX)) })></div>"#;
+        let source = r#"<div style({ translateX(bind(tileX)) })></div>"#;
         let out = resolve(source, &program, Some(&controller)).unwrap();
         assert_eq!(out.len(), 1);
         assert_eq!(out[0].css_name, "tile-x");
@@ -1142,7 +1206,7 @@ mod tests {
     #[test]
     fn a_token_var_is_unaffected_and_wires_nothing() {
         let program = program_with_props(vec![]);
-        let source = r#"<div style({ paint: bg(surface-2) })></div>"#;
+        let source = r#"<div style({ bg(surface-2) })></div>"#;
         let out = resolve(source, &program, None).unwrap();
         assert!(out.is_empty());
     }
@@ -1150,7 +1214,7 @@ mod tests {
     #[test]
     fn an_unmatched_name_refuses_with_did_you_mean() {
         let program = program_with_props(vec![prop("rowY", PropKind::Number)]);
-        let source = r#"<div style({ box: top(bind(rowX)) })></div>"#;
+        let source = r#"<div style({ position({ t: bind(rowX) }) })></div>"#;
         let err = resolve(source, &program, None).unwrap_err();
         assert!(err.message.contains("does not match"), "{}", err.message);
         assert!(
@@ -1168,7 +1232,7 @@ mod tests {
             "controller((ctx) => { const hue = signal(220); return {}; })".to_string(),
         )
         .unwrap();
-        let source = r#"<div style({ paint: opacity(bind(hue)) })></div>"#;
+        let source = r#"<div style({ opacity(bind(hue)) })></div>"#;
         let err = resolve(source, &program, Some(&controller)).unwrap_err();
         assert!(
             err.message.contains("does not match") || err.message.contains("hue"),

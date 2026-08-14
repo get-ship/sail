@@ -79,10 +79,8 @@ pub enum StyleCompleteContext {
     Unknown,
 }
 
-/// Object channel + condition keys legal at the top of `style({ … })`.
-pub const OBJECT_KEYS: &[&str] = &[
-    "box", "paint", "text", "animate", "when", "match", "compound",
-];
+/// Keyed members legal at the top of `style({ … })`. Channels are dissolved.
+pub const OBJECT_KEYS: &[&str] = &["animate", "when", "match", "compound"];
 
 /// Closed product `when` keys (static arms of [`setters::when_target`]) plus
 /// media keys from [`CONDITION_PREFIXES`]. Dynamic `state-*` / `group-*`
@@ -177,17 +175,37 @@ pub fn style_complete_for_context(
 ) -> Vec<StyleCompleteItem> {
     match ctx {
         StyleCompleteContext::Unknown => Vec::new(),
-        StyleCompleteContext::ObjectKey { partial } => filter_sort(
-            OBJECT_KEYS.iter().map(|k| {
-                item(
-                    (*k).to_string(),
-                    StyleCompleteKind::ObjectKey,
-                    Some("style object key".into()),
-                    Some(format!("{k}: ")),
-                )
-            }),
-            partial,
-        ),
+        StyleCompleteContext::ObjectKey { partial } => {
+            let mut items: Vec<StyleCompleteItem> = OBJECT_KEYS
+                .iter()
+                .map(|k| {
+                    item(
+                        (*k).to_string(),
+                        StyleCompleteKind::ObjectKey,
+                        Some("style object key".into()),
+                        Some(format!("{k}: ")),
+                    )
+                })
+                .collect();
+            // Dissolved channels: concern/axis/plain calls start here too.
+            for row in crate::vocab::offered_rows() {
+                if row.name == "play" {
+                    continue;
+                }
+                let detail = match row.tag {
+                    crate::VocabTag::Concern => "concern",
+                    crate::VocabTag::Axis => "axis",
+                    crate::VocabTag::Plain => "plain",
+                };
+                items.push(item(
+                    row.name.to_string(),
+                    StyleCompleteKind::Setter,
+                    Some(detail.into()),
+                    Some(format!("{}(", row.name)),
+                ));
+            }
+            filter_sort(items.into_iter(), partial)
+        }
         StyleCompleteContext::WhenKey { partial } => filter_sort(
             when_keys().into_iter().map(|k| {
                 item(
@@ -1153,7 +1171,7 @@ mod tests {
 
     #[test]
     fn radius_arg_includes_md_sm_full_not_color_primaries_as_primary_set() {
-        let (src, off) = at_caret("style({ paint: radius(¦) })");
+        let (src, off) = at_caret("style({ radius(¦) })");
         let items = style_complete_at(&src, None, off, None);
         let labs = labels(&items);
         assert!(
@@ -1183,10 +1201,14 @@ mod tests {
         let (src, off) = at_caret("style({ ¦ })");
         let items = style_complete_at(&src, None, off, None);
         let labs = labels(&items);
-        for k in [
-            "box", "paint", "when", "text", "animate", "match", "compound",
-        ] {
+        for k in ["when", "animate", "match", "compound"] {
             assert!(labs.contains(&k), "missing object key `{k}` in {labs:?}");
+        }
+        for k in ["box", "paint", "text"] {
+            assert!(
+                !labs.contains(&k),
+                "dissolved channel key `{k}` must not be offered: {labs:?}"
+            );
         }
     }
 
@@ -1207,12 +1229,12 @@ mod tests {
     #[test]
     fn complete_tokens_subset_of_validate_for_common_setters() {
         for setter in ["radius"] {
-            let (src, off) = at_caret(&format!("style({{ paint: {setter}(¦) }})"));
+            let (src, off) = at_caret(&format!("style({{ {setter}(¦) }})"));
             let items = style_complete_at(&src, None, off, None);
             assert!(!items.is_empty(), "{setter} must complete something");
             // Sample up to 40 labels (stable sort) and prove validate accepts.
             for it in items.iter().take(40) {
-                let expr = format!("style({{ paint: {setter}({}) }})", it.label);
+                let expr = format!("style({{ {setter}({}) }})", it.label);
                 let check = || {
                     let (_, diags) = parse::parse(&expr);
                     let bad = diags.iter().any(|d| {
@@ -1271,20 +1293,15 @@ mod tests {
     }
 
     #[test]
-    fn setter_names_after_paint_colon() {
-        let (src, off) = at_caret("style({ paint: ¦ })");
+    fn setter_names_at_style_object_start() {
+        let (src, off) = at_caret("style({ ¦ })");
         let items = style_complete_at(&src, None, off, None);
         let labs = labels(&items);
         assert!(labs.contains(&"bg"), "live author name: {labs:?}");
         assert!(labs.contains(&"fg"), "live author name: {labs:?}");
+        assert!(labs.contains(&"pad"), "axis at object start: {labs:?}");
         assert!(labs.contains(&"radius"), "setters: {labs:?}");
-        // box-only rows stay off the paint channel
-        assert!(
-            !labs.contains(&"pad") && !labs.contains(&"space"),
-            "pad/space are box, not paint: {labs:?}"
-        );
         assert!(labs.contains(&"elevation"), "concern setter: {labs:?}");
-        // alias targets are not a mystery dual beside the v3 name
         assert!(
             !labs.contains(&"fill") && !labs.contains(&"ink"),
             "fill/ink are alias targets, not offered: {labs:?}"
@@ -1293,7 +1310,7 @@ mod tests {
 
     #[test]
     fn complete_offers_bg_not_fill_dual() {
-        let (src, off) = at_caret("style({ paint: ¦ })");
+        let (src, off) = at_caret("style({ ¦ })");
         let items = style_complete_at(&src, None, off, None);
         let labs = labels(&items);
         assert!(labs.contains(&"bg"), "complete must offer bg: {labs:?}");
@@ -1306,7 +1323,7 @@ mod tests {
 
     #[test]
     fn border_arg_completes_concern_names() {
-        let (src, off) = at_caret("style({ paint: border(¦) })");
+        let (src, off) = at_caret("style({ border(¦) })");
         let items = style_complete_at(&src, None, off, None);
         let labs = labels(&items);
         assert!(labs.contains(&"subtle"), "border.subtle: {labs:?}");
@@ -1317,7 +1334,7 @@ mod tests {
 
     #[test]
     fn border_slot_object_keys() {
-        let (src, off) = at_caret("style({ paint: border({ ¦ }) })");
+        let (src, off) = at_caret("style({ border({ ¦ }) })");
         let items = style_complete_at(&src, None, off, None);
         let labs = labels(&items);
         assert!(labs.contains(&"color"), "{labs:?}");
@@ -1328,7 +1345,7 @@ mod tests {
 
     #[test]
     fn border_color_slot_completes_color_roles() {
-        let (src, off) = at_caret("style({ paint: border({ color: ¦ }) })");
+        let (src, off) = at_caret("style({ border({ color: ¦ }) })");
         let items = style_complete_at(&src, None, off, None);
         let labs = labels(&items);
         assert!(

@@ -13,19 +13,19 @@ export const code = {
 
 <card>{title()}</card>`,
 
-  template: `<card style({ box: space({ pad: 4 }).size({ w: full }) })>
+  template: `<card style({ pad(4).size({ w: full }) })>
   <row align="center" justify="between" nowrap>
-    <strong style({ text: type({ size: sm, tracking: wide, case: uppercase }) })>
+    <strong style({ type({ size: sm, tracking: wide, case: uppercase }) })>
       {title()}</strong>
-    <span style({ paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs }) })>
+    <span style({ fg(muted-foreground).type({ family: mono, size: xs }) })>
       {departed()} departed</span>
   </row>
-  <column gap="1" style({ box: space({ mt: 3 }) })>
+  <column gap="1" style({ margin({ t: 3 }) })>
     <for {flights() as f} key={f.id}>
       <row align="center" gap="3" nowrap>
-        <span style({ box: flow({ grow: 1 }).size({ min-w: 0 }), text: type({ wrap: truncate, family: mono, size: sm }) })>
+        <span style({ grow(1).size({ min-w: 0 }).type({ wrap: truncate, family: mono, size: sm }) })>
           {f.city}</span>
-        <span style({ paint: ink({ color: muted-foreground }), text: type({ family: mono, size: sm }) })>
+        <span style({ fg(muted-foreground).type({ family: mono, size: sm }) })>
           {f.gate}</span>
         <match {f.status}>
           {'boarding' => <badge tone="success">Boarding</badge>}{'delayed' => <badge tone="destructive">Delayed</badge>}{else => <badge tone="muted">On time</badge>}</match>
@@ -70,13 +70,13 @@ export default controller((ctx) => {
 
   usage: `<departures-board title="Departures — SFO"></departures-board>`,
 
-  slotDef: `<card style({ box: space({ pad: 4 }).size({ w: full }) })>
+  slotDef: `<card style({ pad(4).size({ w: full }) })>
   ...the board...
   <slot name="footer"></slot>
 </card>`,
 
   slotUse: `<departures-board title="Departures — SFO">
-  <p slot="footer" style({ box: space({ mt: 3 }), paint: ink({ color: muted-foreground }), text: type({ size: xs }) })>
+  <p slot="footer" style({ margin({ t: 3 }).fg(muted-foreground).type({ size: xs }) })>
     Gate changes are announced. Allegedly.
   </p>
 </departures-board>`,

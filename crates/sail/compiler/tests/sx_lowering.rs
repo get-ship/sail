@@ -2,8 +2,8 @@
 //! on every element tag Style statement (`style({…})`) before emit.
 //!
 //! Utility-string `style="…"` is residual product and must not emit classes.
-//! The shared Style setters re-home vocab heads from
-//! `crates/sail/style/sx-vocabulary.json` (style + emit SSOT).
+//! The shared Style setters re-home emit heads from
+//! `crates/sail/style/sx-vocabulary.json` (emit leaf only).
 
 use sail_compiler::parse::preprocess::preprocess as preprocess_src;
 
@@ -81,7 +81,7 @@ fn style_when_hover_emits_pseudo() {
 
 #[test]
 fn style_position_relative() {
-    let out = pp(r#"<div style({ position({ scheme: relative, z: 1 }) })> x</div>"#);
+    let out = pp(r#"<div style({ position(relative) })> x</div>"#);
     assert!(
         out.contains("relative") || out.contains("position"),
         "position(relative):\n{out}"

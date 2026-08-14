@@ -19,10 +19,10 @@ export function specimenSource(opts: SpecimenOpts): string {
   const mono = opts.typeRoles?.mono ?? 'JetBrains Mono'
   const note = opts.note ?? 'Sample card'
   return `<!-- design specimen -->
-<div${density} style({ box: pad(6), paint: bg(background).fg(foreground) })>
+<div${density} style({ pad(6).bg(background).fg(foreground) })>
   <column gap="5">
     <column gap="2">
-      <span style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold) })>Buttons</span>
+      <span style({ fg(muted-foreground).type({ size: xs, weight: semibold }) })>Buttons</span>
       <row gap="2" align="center">
         <button type="button" tone="primary">Primary</button>
         <button type="button" variant="outline">Outline</button>
@@ -30,14 +30,14 @@ export function specimenSource(opts: SpecimenOpts): string {
       </row>
     </column>
     <column gap="2">
-      <span style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold) })>Card</span>
-      <card style({ box: pad(4), paint: radius(lg).borderWidth(1).border(border-subtle).bg(surface-1) })>
-        <p style({ text: fontWeight(medium) })>${escapeText(note)}</p>
-        <p style({ box: padT(1), paint: fg(muted-foreground), text: fontSize(sm) })>Density: ${opts.density}</p>
+      <span style({ fg(muted-foreground).type({ size: xs, weight: semibold }) })>Card</span>
+      <card style({ pad(4).radius(lg).border({ width: 1, color: border-subtle }).bg(surface-1) })>
+        <p style({ type({ weight: medium }) })>${escapeText(note)}</p>
+        <p style({ pad({ t: 1 }).fg(muted-foreground).type({ size: sm }) })>Density: ${opts.density}</p>
       </card>
     </column>
     <column gap="2">
-      <span style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold) })>Badge · alert · field</span>
+      <span style({ fg(muted-foreground).type({ size: xs, weight: semibold }) })>Badge · alert · field</span>
       <row gap="2" align="center">
         <badge tone="primary" size="sm">primary</badge>
         <badge tone="success" size="sm">success</badge>
@@ -46,12 +46,12 @@ export function specimenSource(opts: SpecimenOpts): string {
       <alert tone="info">Alert · status copy</alert>
       <input type="search" placeholder="Search…" />
     </column>
-    <column gap="2" style({ box: pad(4), paint: radius(md).bg(surface-0).fg(foreground) })>
-      <span style({ paint: fg(muted-foreground), text: fontSize(xs) })>Type</span>
-      <p style({ text: fontSize(xl).fontWeight(bold).fontFamily(display) })>Display / ${escapeText(display)}</p>
-      <p style({ text: fontSize(lg).fontWeight(semibold).fontFamily(body) })>Heading / ${escapeText(body)}</p>
-      <p style({ text: fontSize(sm).fontFamily(body) })>Body — quick brown fox</p>
-      <p style({ text: fontSize(xs).fontFamily(mono) })>code / ${escapeText(mono)}</p>
+    <column gap="2" style({ pad(4).radius(md).bg(surface-0).fg(foreground) })>
+      <span style({ fg(muted-foreground).type({ size: xs }) })>Type</span>
+      <p style({ type({ size: xl, weight: bold, family: display }) })>Display / ${escapeText(display)}</p>
+      <p style({ type({ size: lg, weight: semibold, family: body }) })>Heading / ${escapeText(body)}</p>
+      <p style({ type({ size: sm, family: body }) })>Body — quick brown fox</p>
+      <p style({ type({ size: xs, family: mono }) })>code / ${escapeText(mono)}</p>
     </column>
   </column>
 </div>

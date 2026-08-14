@@ -79,9 +79,9 @@ fn check_tag(path: &Path, source: &str, t: &OpenTag, severity: Severity) -> Opti
             t.tag
         ),
         suggest: Some(format!(
-            "Add {need} on the same box channel, e.g. \
-             `style({{ box: overflowY(auto).minH(0).grow(1) }})` (Y axis) or \
-             `style({{ box: overflow(auto).minW(0) }})` (row / bare overflow)."
+            "Add {need} on the same concern chain, e.g. \
+             `style({{ overflowY(auto).minH(0).grow(1) }})` (Y axis) or \
+             `style({{ overflow(auto).minW(0) }})` (row / bare overflow)."
         )),
     })
 }

@@ -133,8 +133,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       "const greet = (name) => {\n  return `hello, ${name}`\n}\n\ngreet('sail')\n"
     const toolArgs = () => '{ "env": "prod", "limit": 5 }'
     const toolResult = () => '[{ "id": "d-1842", "status": "healthy" }]'
-    // Same-origin demo raster (public/cover-01.webp) — no CDN on a static host.
-    const DEMO_PHOTO = '/cover-01.webp'
+    // Landscape demo raster — album covers stay on /cover-*.webp for shanty.
+    const DEMO_PHOTO =
+      'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=640&h=400&fit=crop&auto=format&q=80'
 
     return {
       query, packSel, catSel, pickPack, pickCat,
@@ -272,10 +273,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                       <label style({ type({ size: sm }) })><checkbox checked /> Include trials</label>
                       <label style({ type({ size: sm }) })><checkbox /> Annual discount</label>
                     </column>
-                  </fieldset>}{else-if {e.tag === 'dropzone'} => <div dropzone style({ size({ w: full, min-h: 14 }).pad(3) })>
-                    <p style({ type({ size: sm, weight: medium }) })>Drop manifests here</p>
-                    <p style(mutedXs)>or click to browse · .json, .yaml</p>
-                  </div>}{else-if {e.tag === 'theme-picker'} => <theme-picker></theme-picker>}{else-if {e.tag === 'ticker'} => <ticker duration="normal" style({ size({ w: full }).overflow({ all: hidden }).pad({ y: 2 }).bg(muted).radius(md) })>
+                  </fieldset>}{else-if {e.tag === 'theme-picker'} => <theme-picker></theme-picker>}{else-if {e.tag === 'ticker'} => <ticker duration="normal" style({ size({ w: full }).overflow({ all: hidden }).pad({ y: 2 }).bg(muted).radius(md) })>
                     <p style({ pad({ x: 3 }).fg(muted-foreground).type({ family: mono, size: xs, wrap: nowrap }) })>tokens · signals · a11y · hot reload · SSR ·&nbsp;</p>
                   </ticker>}{else-if {e.tag === 'alert'} => <alert tone="success"><strong>Deployed.</strong> v0.4.2 is live on production.</alert>}{else-if {e.tag === 'progress'} => <column gap="1" style({ size({ w: full }) })>
                     <span style(mutedXs)>Uploading assets… 62%</span>
@@ -316,8 +314,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                     <strong>Harbor Signals</strong>
                     <p style(mutedXs)>4 tracks · last played today</p>
                   </card>}{else-if {e.tag === 'avatar'} => <row gap="2" align="center">
-                    <avatar name="Ada Lovelace"></avatar>
-                    <avatar name="Grace Hopper" tone="accent"></avatar>
+                    <avatar name="Ada Lovelace" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=128&h=128&fit=crop&auto=format&q=80"></avatar>
+                    <avatar name="Grace Hopper" src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=128&h=128&fit=crop&auto=format&q=80" tone="accent"></avatar>
                     <avatar initials="SK" size="sm"></avatar>
                   </row>}{else-if {e.tag === 'icon'} => <row gap="3" align="center">
                     <icon name="check"></icon>
@@ -346,7 +344,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                     <a href="#" popovertarget="grid-hc" style({ fg(primary).type({ size: sm }) })>@ada</a>
                     <hover-card id="grid-hc">
                       <row gap="2" align="center">
-                        <avatar name="Ada Lovelace" size="sm"></avatar>
+                        <avatar name="Ada Lovelace" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=64&h=64&fit=crop&auto=format&q=80" size="sm"></avatar>
                         <column gap="0">
                           <strong>Ada Lovelace</strong>
                           <p style(mutedXs)>Mathematician · first programmer</p>

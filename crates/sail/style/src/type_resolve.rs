@@ -225,15 +225,15 @@ mod tests {
 
     #[test]
     fn type_size_slot_is_the_scale_step() {
-        let t = resolved("style({ text: type({ size: xl }) })");
+        let t = resolved("style({ type({ size: xl }) })");
         assert_eq!(t.size.as_deref(), Some("xl"));
         assert!(t.family.is_none());
     }
 
     #[test]
     fn type_size_step_change_is_visible() {
-        let xl = resolved("style({ text: type({ size: xl }) })");
-        let xxl = resolved("style({ text: type({ size: 2xl }) })");
+        let xl = resolved("style({ type({ size: xl }) })");
+        let xxl = resolved("style({ type({ size: 2xl }) })");
         assert_eq!(xl.size.as_deref(), Some("xl"));
         assert_eq!(xxl.size.as_deref(), Some("2xl"));
         assert_ne!(xl.size, xxl.size);
@@ -273,14 +273,14 @@ mod tests {
 
     #[test]
     fn type_family_and_size_slots() {
-        let t = resolved("style({ text: type({ family: mono, size: sm }) })");
+        let t = resolved("style({ type({ family: mono, size: sm }) })");
         assert_eq!(t.family.as_deref(), Some("mono"));
         assert_eq!(t.size.as_deref(), Some("sm"));
     }
 
     #[test]
     fn type_size_slot_resolves_2xl() {
-        let (style, diags) = parse("style({ text: type({ size: 2xl }) })");
+        let (style, diags) = parse("style({ type({ size: 2xl }) })");
         assert!(diags.is_empty(), "{diags:?}");
         let t = resolve_type(&style, &HashMap::new());
         assert_eq!(t.size.as_deref(), Some("2xl"));
@@ -288,15 +288,13 @@ mod tests {
 
     #[test]
     fn when_hover_does_not_replace_resting_type() {
-        let t = resolved(
-            "style({ text: type({ size: sm }), when: { hover: { text: type({ size: xl }) } } })",
-        );
+        let t = resolved("style({ type({ size: sm }), when: { hover: { type({ size: xl }) } } })");
         assert_eq!(t.size.as_deref(), Some("sm"));
     }
 
     #[test]
     fn ref_follows_env() {
-        let (named, _) = parse("style({ text: type({ size: xl }) })");
+        let (named, _) = parse("style({ type({ size: xl }) })");
         let mut env = HashMap::new();
         env.insert("title".into(), named);
         let (style, diags) = parse("style(title)");

@@ -2,7 +2,7 @@
 //!
 //! Product form is a **tag-position** `style(…)` call on the open tag:
 //! ```text
-//! <div style({ box: pad(4), paint: bg(surface-2).radius(lg), when: { hover: { paint: bg(muted) } } })>
+//! <div style({ pad(4).bg(surface-2).radius(lg), when: { hover: bg(muted) } })>
 //!   children
 //! </div>
 //! ```
@@ -17,10 +17,13 @@
 //! number, never a colour, never a unit. There is no bracket escape (cf.
 //! Tailwind's `p-[13px]`).
 //!
-//! The vocabulary is a TABLE (`sx-vocabulary.json`, read by `crate::style_vocab`),
-//! not code. Style setters re-home the same closed heads (`bg`, `pad`, …) inside
-//! channels. A scale-valued setter spends a token and nothing else; a
-//! keyword-valued one takes its CSS keywords. The value discipline is the point.
+//! The author vocabulary is `sail_style::vocab` (`offered_rows()` —
+//! concern | axis | plain). Product attach is tag-position
+//! `style({ pad(4).bg(surface), when: { hover: bg(muted) } })`.
+//! `sx-vocabulary.json` / `style_vocab` is the emit leaf Style setters
+//! re-home through — not the docs / LSP / SKILL surface. A scale-valued
+//! setter spends a token and nothing else; a keyword-valued one takes its
+//! CSS keywords. The value discipline is the point.
 //!
 //! SCOPE — Style paints ONE box. How its children sit is a layout element
 //! (`<row>`, `<column>`, `<grid>`), which carries the semantics, the a11y and
@@ -47,10 +50,9 @@ pub use sail_style::prefixes::{
     state_data, state_pseudo,
 };
 
-/// The complete sx vocabulary — every name with everything it accepts. THE single
-/// source for surface documentation (the agent-skill generator, the /reference
-/// page and the LSP all render this), so what an agent is told is what the lint
-/// enforces, by construction.
+/// Internal emit/lint helper: every emit-leaf utility name with the values
+/// it accepts. Surface docs, skill, and LSP walk `offered_rows()` in
+/// `vocab.rs` — not this table.
 pub fn vocabulary() -> Vec<(String, Vec<String>)> {
     crate::style_vocab::vocabulary()
 }
@@ -73,7 +75,7 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                     rule: RULE_ID,
                     severity: Severity::Error,
                     message: "style={…} / sx= is not Style attachment — use a tag call: \
-                              style({ box: …, paint: …, when: { hover: { paint: … } }, match: { … } })"
+                              style({ pad(4).bg(surface), when: { hover: bg(muted) }, match: { … } })"
                         .to_string(),
                     suggest: Some(
                         "Attach Style as style({…}) on the open tag (no `=`)."
@@ -94,7 +96,7 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                               not as a body statement"
                         .to_string(),
                     suggest: Some(
-                        "Move Style onto the open tag: <div style({ box: …, paint: … })>…</div>"
+                        "Move Style onto the open tag: <div style({ pad(4).bg(surface) })>…</div>"
                             .to_string(),
                     ),
                 });
@@ -110,7 +112,7 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                 path,
                 line,
                 col,
-                "utility-string sx is not the Style product — use style({ box, paint, text, animate, when, match, compound })"
+                "utility-string sx is not the Style product — use style({ pad(4).bg(surface), when:, match:, compound: })"
                     .to_string(),
             ));
             continue;
@@ -159,7 +161,7 @@ fn mk_dynamic(path: &Path, line: usize, col: usize) -> Finding {
             .to_string(),
         suggest: Some(
             "Drive a primitive prop instead (e.g. `tone={ok() ? 'success' : 'destructive'}`), \
-             attach Style as a tag call (`style({ box: …, paint: … })` on the open tag), or \
+             attach Style as a tag call (`style({ pad(4).bg(surface) })` on the open tag), or \
              branch with when / match / an `{#if}` between static Style values."
                 .to_string(),
         ),
@@ -581,7 +583,7 @@ mod tests {
         // walk full UTF-8 chars so `source[k..]` never slices mid-codepoint.
         let src = "\
 <if {w.trailing === '\u{25cf}'}>\n\
-  <span aria-label=\"Unsaved\" style({ paint: fg(warning) })>\u{25cf}</span>\n\
+  <span aria-label=\"Unsaved\" style({ fg(warning) })>\u{25cf}</span>\n\
 </if>\n";
         let _ = run(src); // must not panic
         // Tag-position style on the span is valid product — no findings required,
@@ -591,7 +593,7 @@ mod tests {
 
     #[test]
     fn style_block_channel_product_passes() {
-        let src = r#"<div style({ paint: bg(primary), box: pad({ x: 2 }) })>  x
+        let src = r#"<div style({ bg(primary).pad({ x: 2 }) })>  x
 </div>"#;
         assert!(run(src).is_empty(), "{:?}", run(src));
     }
@@ -599,14 +601,14 @@ mod tests {
     #[test]
     fn style_block_channel_with_when_passes() {
         // Product when: is an object key inside style({…}) — not a `.when(…)` chain.
-        let src = r#"<div style({ box: pad(2), paint: bg(primary), animate: enter({ opacity: 'fade' }), when: { hover: { paint: bg(muted) } } })>  x
+        let src = r#"<div style({ pad(2).bg(primary), animate: enter({ opacity: 'fade' }), when: { hover: bg(muted) } })>  x
 </div>"#;
         assert!(run(src).is_empty(), "{:?}", run(src));
     }
 
     #[test]
     fn style_block_list_match_when_product_passes() {
-        let src = r#"<div style({ match: { variant: { solid: { paint: bg(primary) } } }, when: { hover: { paint: opacity(90) } } })>  x
+        let src = r#"<div style({ match: { variant: { solid: bg(primary) } }, when: { hover: opacity(90) } })>  x
 </div>"#;
         assert!(run(src).is_empty(), "{:?}", run(src));
     }
@@ -621,7 +623,7 @@ mod tests {
     #[test]
     fn style_attr_host_is_not_product_happy_path() {
         // `style={…}` is NOT the tag call form — must refuse with tag-call teaching.
-        let ms = run(r#"<div style={style({ paint: bg(primary) })}>x</div>"#);
+        let ms = run(r#"<div style={style({ bg(primary) })}>x</div>"#);
         assert!(
             ms.iter().any(|m| m.contains("style={")
                 || m.contains("tag call")
@@ -649,7 +651,7 @@ mod tests {
 
     #[test]
     fn bad_token_fail_closed() {
-        let ms = run(r#"<div style({ paint: bg(notARealTokenZzz999) })>  x
+        let ms = run(r#"<div style({ bg(notARealTokenZzz999) })>  x
 </div>"#);
         assert!(!ms.is_empty(), "{ms:?}");
         assert!(
@@ -661,7 +663,7 @@ mod tests {
 
     #[test]
     fn unknown_setter_fail_closed() {
-        let ms = run(r#"<div style({ paint: notASetter(primary) })>  x
+        let ms = run(r#"<div style({ notASetter(primary) })>  x
 </div>"#);
         assert!(!ms.is_empty(), "{ms:?}");
     }

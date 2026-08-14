@@ -26,7 +26,7 @@ fn at_caret(src: &str) -> (String, usize, u32, u32) {
 
 #[test]
 fn lsp_and_compiler_complete_border_concern() {
-    let (src, off, line, col) = at_caret("style({ paint: border(¦) })");
+    let (src, off, line, col) = at_caret("style({ border(¦) })");
     let via_style: Vec<String> = sail_lint::style::style_complete_at(&src, None, off, None)
         .into_iter()
         .map(|i| i.label)
@@ -57,7 +57,7 @@ fn lsp_and_compiler_complete_border_concern() {
 
 #[test]
 fn lsp_and_compiler_complete_border_color_slot() {
-    let (src, off, line, col) = at_caret("style({ paint: border({ color: ¦ }) })");
+    let (src, off, line, col) = at_caret("style({ border({ color: ¦ }) })");
     let via_style: Vec<String> = sail_lint::style::style_complete_at(&src, None, off, None)
         .into_iter()
         .map(|i| i.label)
@@ -81,7 +81,7 @@ fn lsp_and_compiler_complete_border_color_slot() {
 
 #[test]
 fn lsp_and_compiler_hover_border_subtle() {
-    let (src, _off, line, col) = at_caret("style({ paint: border(border.su¦btle) })");
+    let (src, _off, line, col) = at_caret("style({ border(border.su¦btle) })");
     let via_resolve = resolve_theme_token("border.subtle", "ship", "light").expect("resolve");
     let via_hover = hover_at(&src, None, line as usize, col as usize).expect("hover");
     assert_eq!(via_hover.kind, "theme-token");
@@ -132,7 +132,7 @@ fn labels_at(src_caret: &str) -> (Vec<String>, Vec<String>, Vec<String>) {
 
 #[test]
 fn lsp_and_compiler_complete_paint_channel_concerns() {
-    let (_, _, via_lsp) = labels_at("style({ paint: ¦ })");
+    let (_, _, via_lsp) = labels_at("style({ bg(primary).¦ })");
     for want in ["bg", "fg", "border", "radius", "elevation"] {
         assert!(
             via_lsp.iter().any(|l| l == want),
@@ -149,7 +149,7 @@ fn lsp_and_compiler_complete_paint_channel_concerns() {
 
 #[test]
 fn lsp_and_compiler_complete_box_and_text_channels() {
-    let (_, _, box_labs) = labels_at("style({ box: ¦ })");
+    let (_, _, box_labs) = labels_at("style({ bg(primary).¦ })");
     for want in ["size", "pad", "margin", "position", "overflow"] {
         assert!(
             box_labs.iter().any(|l| l == want),
@@ -163,7 +163,7 @@ fn lsp_and_compiler_complete_box_and_text_channels() {
         );
     }
 
-    let (_, _, text_labs) = labels_at("style({ text: ¦ })");
+    let (_, _, text_labs) = labels_at("style({ bg(primary).¦ })");
     assert!(
         text_labs.iter().any(|l| l == "type"),
         "type missing: {text_labs:?}"
@@ -178,17 +178,17 @@ fn lsp_and_compiler_complete_box_and_text_channels() {
 
 #[test]
 fn lsp_and_compiler_complete_size_type_elevation_fill_names() {
-    let (_, _, size) = labels_at("style({ box: size(¦) })");
+    let (_, _, size) = labels_at("style({ size(¦) })");
     for want in ["control-sm", "control-md", "control-lg", "full"] {
         assert!(size.iter().any(|l| l == want), "{want} missing: {size:?}");
     }
 
-    let (_, _, typ) = labels_at("style({ text: type(¦) })");
+    let (_, _, typ) = labels_at("style({ type(¦) })");
     for want in ["body", "body-sm", "label", "heading", "mono"] {
         assert!(typ.iter().any(|l| l == want), "{want} missing: {typ:?}");
     }
 
-    let (_, _, elev) = labels_at("style({ paint: elevation(¦) })");
+    let (_, _, elev) = labels_at("style({ elevation(¦) })");
     for want in ["xs", "sm", "md", "lg", "xl", "none"] {
         assert!(elev.iter().any(|l| l == want), "{want} missing: {elev:?}");
     }
@@ -201,7 +201,7 @@ fn lsp_and_compiler_complete_size_type_elevation_fill_names() {
 
 #[test]
 fn lsp_and_compiler_complete_border_slots_include_kind_not_radius() {
-    let (_, _, labs) = labels_at("style({ paint: border({ ¦ }) })");
+    let (_, _, labs) = labels_at("style({ border({ ¦ }) })");
     for want in ["color", "width", "style", "edge", "kind"] {
         assert!(labs.iter().any(|l| l == want), "{want} missing: {labs:?}");
     }
@@ -214,18 +214,10 @@ fn lsp_and_compiler_complete_border_slots_include_kind_not_radius() {
 #[test]
 fn lsp_and_compiler_hover_size_type_elevation_fill() {
     for (src, resolve_name, member) in [
+        ("style({ size(size.control-¦md) })", "size.control-md", "h:"),
+        ("style({ type(type.head¦ing) })", "type.heading", "family:"),
         (
-            "style({ box: size(size.control-¦md) })",
-            "size.control-md",
-            "h:",
-        ),
-        (
-            "style({ text: type(type.head¦ing) })",
-            "type.heading",
-            "family:",
-        ),
-        (
-            "style({ paint: elevation(elevation.s¦m) })",
+            "style({ elevation(elevation.s¦m) })",
             "elevation.sm",
             "shadow:",
         ),

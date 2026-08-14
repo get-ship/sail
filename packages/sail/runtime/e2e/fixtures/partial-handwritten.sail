@@ -1,5 +1,5 @@
 <scope>
-style card = { box: space({ pad: 4 }), paint: fill({ color: primary }).radius(md) }
+style card = { pad(4).bg(primary).radius(md) }
 </scope>
 <controller>
 import { controller } from '@ship/sail-runtime'

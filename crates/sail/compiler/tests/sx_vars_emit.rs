@@ -61,7 +61,7 @@ fn a_prop_bound_var_ref_emits_length_property_and_host_reflection() {
     );
     assert!(
         js.contains("__v + \"px\"") || js.contains("+ \"px\"") || js.contains("String(__v)"),
-        "number bind reflects onto the host custom property:\n{js}"
+        "prop bind must reflect onto the host custom property:\n{js}"
     );
     assert!(js.contains("effect("), "{js}");
 }

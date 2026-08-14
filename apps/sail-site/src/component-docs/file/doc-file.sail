@@ -132,6 +132,5 @@ export default controller((_ctx: Scope) => {
 
   <row gap="2">
     <a variant="default" href="/components">← All components</a>
-    <a variant="solid" tone="primary" href="/components/dropzone">Dropzone</a>
   </row>
 </column>

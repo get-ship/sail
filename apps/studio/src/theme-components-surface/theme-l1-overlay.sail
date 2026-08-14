@@ -3,12 +3,12 @@
   Host bind: components={components}. One face visible via stage gates.
 -->
 <scope>
-  style fieldHint = { paint: fg(muted-foreground), text: fontSize(xs) }
-  style doorTitle = { text: fontWeight(semibold) }
-  style iconBtn = { box: shrink(0).w(control-h-sm).h(control-h-sm).minW(control-h-sm).minH(control-h-sm) }
-  style tapFloor = { box: shrink(0).minW(control-h-sm).minH(control-h-sm) }
-  style stageHost = { box: w(full) }
-  style sampleMax = { box: w(full).maxW(panel-max-w-sm) }
+  style fieldHint = { fg(muted-foreground).type({ size: xs }) }
+  style doorTitle = { type({ weight: semibold }) }
+  style iconBtn = { shrink(0).size({ w: control-h-sm, h: control-h-sm, min-w: control-h-sm, min-h: control-h-sm }) }
+  style tapFloor = { shrink(0).size({ min-w: control-h-sm, min-h: control-h-sm }) }
+  style stageHost = { size({ w: full }) }
+  style sampleMax = { size({ w: full, max-w: panel-max-w-sm }) }
 </scope>
 
 <controller>
@@ -67,7 +67,7 @@ export default controller(() => {
   <column gap="2" align="center">
     <button type="button" size="sm" variant="ghost" popovertarget="theme-l1-hc">@ada</button>
     <hover-card id="theme-l1-hc">
-      <column gap="1" style({ box: pad(3) })>
+      <column gap="1" style({ pad(3) })>
         <p style(doorTitle)>Ada Lovelace</p>
         <p style(fieldHint)>Hover card body.</p>
       </column>
@@ -78,7 +78,7 @@ export default controller(() => {
   <column gap="2" align="center">
     <button type="button" size="sm" popovertarget="theme-l1-pop">Open popover</button>
     <popover id="theme-l1-pop">
-      <p style({ box: pad(3) })>Popover panel under theme paint.</p>
+      <p style({ pad(3) })>Popover panel under theme paint.</p>
     </popover>
   </column>
 </if>
@@ -93,7 +93,7 @@ export default controller(() => {
   </column>
 </if>
 <if {components.stage.menuItem()}>
-  <column gap="1" style({  box: w(full).maxW(panel-max-w-sm).pad(1), paint: borderWidth(1).border(border).radius(md).bg(surface-1)  })>
+  <column gap="1" style({ size({ w: full, max-w: panel-max-w-sm }).pad(1).border({ color: border, width: 1 }).radius(md).bg(surface-1) })>
     <menu-item>Edit theme</menu-item>
     <menu-item>Duplicate</menu-item>
     <menu-item>Export</menu-item>
@@ -101,7 +101,7 @@ export default controller(() => {
 </if>
 <if {components.stage.contextMenu()}>
   <column gap="2" align="center" style(sampleMax)>
-    <column id="theme-l1-ctx" gap="1" style({  box: w(full).pad(3), paint: borderWidth(1).border(border).radius(md)  })>
+    <column id="theme-l1-ctx" gap="1" style({ size({ w: full }).pad(3).border({ color: border, width: 1 }).radius(md) })>
       <p style(fieldHint)>Right-click this area</p>
     </column>
     <context-menu for="theme-l1-ctx">
@@ -200,7 +200,7 @@ export default controller(() => {
   <column gap="3" style(sampleMax)>
     <column gap="2">
       <p style(fieldHint)>Vertical · rest thumb component.scroll-area.thumb · hover border-strong</p>
-      <scroll-area orientation="vertical" style({ box: maxH(32).w(full).maxW(panel-max-w-sm).pad(3), paint: borderWidth(1).border(border-subtle).radius(md) })>
+      <scroll-area orientation="vertical" style({ size({ w: full, max-w: panel-max-w-sm, max-h: 32 }).pad(3).border({ color: border-subtle, width: 1 }).radius(md) })>
         <column gap="2">
           <p style(fieldHint)>Scroll me — themed thin scrollbar.</p>
           <p style(fieldHint)>Line 2</p>
@@ -215,8 +215,8 @@ export default controller(() => {
     </column>
     <column gap="2">
       <p style(fieldHint)>Horizontal · orientation="horizontal"</p>
-      <scroll-area orientation="horizontal" style({ box: w(full).maxW(panel-max-w-sm).pad(3), paint: borderWidth(1).border(border-subtle).radius(md) })>
-        <p style({ box: padY(1), text: whitespace(nowrap) })>
+      <scroll-area orientation="horizontal" style({ size({ w: full, max-w: panel-max-w-sm }).pad(3).border({ color: border-subtle, width: 1 }).radius(md) })>
+        <p style({ pad({ y: 1 }).type({ wrap: nowrap }) })>
           Wide band that overflows on the x axis → scroll with thin themed thumb · component.scroll-area.*
         </p>
       </scroll-area>
@@ -228,13 +228,13 @@ export default controller(() => {
     <p style(fieldHint)>
       Geometry host + use:marquee · no component.ticker.* · author paint
     </p>
-    <ticker duration="normal" style(sampleMax, { box: overflow(hidden).padY(2), paint: bg(muted).radius(md) })>
-      <span style({ box: padX(3), paint: fg(muted-foreground), text: fontSize(sm).fontFamily(mono).whitespace(nowrap) })>
+    <ticker duration="normal" style(sampleMax, { overflow({ all: hidden }).pad({ y: 2 }).bg(muted).radius(md) })>
+      <span style({ pad({ x: 3 }).fg(muted-foreground).type({ family: mono, size: sm, wrap: nowrap }) })>
         Live ticker · muted band · normal ·&nbsp;
       </span>
     </ticker>
-    <ticker duration="slow" reverse style(sampleMax, { box: overflow(hidden).padY(2), paint: bg(primary).radius(md) })>
-      <span style({ box: padX(3), paint: fg(primary-foreground), text: fontSize(sm).fontWeight(bold).whitespace(nowrap) })>
+    <ticker duration="slow" reverse style(sampleMax, { overflow({ all: hidden }).pad({ y: 2 }).bg(primary).radius(md) })>
+      <span style({ pad({ x: 3 }).fg(primary-foreground).type({ size: sm, weight: bold, wrap: nowrap }) })>
         Reverse · slow · brand paint ·&nbsp;
       </span>
     </ticker>

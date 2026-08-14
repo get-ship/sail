@@ -1,21 +1,19 @@
-//! **INTERNAL leaf machinery** behind Style paint-op emit — not an author surface.
+//! **INTERNAL emit leaf** — Style paint-ops lower through `resolve`.
 //!
-//! Product paint is Style (`style.…` chains, `match` / `when` / `compound`).
-//! Utility-string sx is a hard error at lint + parse. This vocabulary table
-//! remains so Style setters can lower to CSS declarations via `sx_ir`.
+//! Not the author language. Not the docs / LSP / SKILL SSOT.
+//! Author vocabulary is `vocab.rs` (`offered_rows()` — concern | axis | plain).
+//! Product attach is tag-position
+//! `style({ pad(4).bg(surface), when: { hover: bg(muted) } })`.
 //!
-//! The lint validates against it and the lowering emits from it. Adding a
-//! property is one row of data, not a code change in four places (which is why
-//! the old hand-written `Kind` enum made forty gaps feel like forty projects).
+//! Utility-string sx is a hard error at lint + parse. This table remains so
+//! Style setters can emit CSS declarations via `sx_ir`.
 //!
-//! An atom is `[prefix:]…name-value`, or a bare keyword (`hidden`, `truncate`,
-//! `italic`). Several utilities SHARE a name and disambiguate by value, exactly
-//! as Tailwind does: `text-sm` is a font size, `text-foreground` is a colour,
-//! `text-center` is an alignment. The engine picks the entry whose value-set
-//! contains the value — so a name is a namespace, not a property.
+//! An atom is `[prefix:]…name-value`, or a bare keyword — emit-side names, not
+//! author setters. Several utilities SHARE a name and disambiguate by value.
+//! The engine picks the entry whose value-set contains the value.
 //!
-//! Scales live in `scales.rs`, not here: they are few, stable, and carry the
-//! `var()` templates. Utilities live here because they are many and they grow.
+//! Scales live in `scales.rs`. Utilities live here because they are many
+//! and they grow.
 
 use std::collections::HashMap;
 use std::sync::OnceLock;
@@ -179,7 +177,7 @@ fn vocab() -> &'static Vocab {
     static V: OnceLock<Vocab> = OnceLock::new();
     V.get_or_init(|| {
         let raw: RawVocab = serde_json::from_str(VOCAB_JSON)
-            .expect("sx-vocabulary.json is malformed — the vocabulary is the language");
+            .expect("sx-vocabulary.json is malformed — internal emit table");
         let mut by_name: HashMap<String, Vec<Utility>> = HashMap::new();
         let mut bare: HashMap<String, Utility> = HashMap::new();
         for r in raw.utilities {
@@ -444,9 +442,8 @@ pub fn names() -> &'static [String] {
     &vocab().names
 }
 
-/// Every name with everything it accepts. The agent-skill generator, the
-/// /reference page and the LSP all render THIS — so what an author is told is
-/// what the lint enforces, by construction, and the docs can never drift.
+/// Every emit-leaf name with everything it accepts. Internal helper for
+/// setters / style_ir. Surface docs, skill, and LSP walk `vocab::offered_rows()`.
 pub fn vocabulary() -> Vec<(String, Vec<String>)> {
     let v = vocab();
     let mut out: Vec<(String, Vec<String>)> = v
@@ -462,8 +459,8 @@ pub fn vocabulary() -> Vec<(String, Vec<String>)> {
     out
 }
 
-/// A refused atom and what to use instead — so a caller can render the whole
-/// "not sx, use this" table rather than discovering it one error at a time.
+/// Residual utility-string leftovers the emit leaf still names.
+/// Not the author language — do not render this as Style vocab.
 pub fn refusals() -> Vec<(String, String)> {
     let mut r: Vec<(String, String)> = vocab()
         .refused

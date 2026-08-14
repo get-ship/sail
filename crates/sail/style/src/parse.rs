@@ -812,8 +812,8 @@ fn parse_style_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> St
         let source = p.remainder();
         let preview: String = source.chars().take(80).collect();
         diags.push(StyleDiagnostic::ParseError {
-            message: "flat `style.method(…)` chains are retired — use the channel spine: \
-                      style({ box: size({ w: full }).pad(4), paint: bg(surface), when: { hover: { bg(muted) } } })"
+            message: "flat `style.method(…)` chains are retired — write concern calls: \
+                      style({ size({ w: full }).pad(4).bg(surface), when: { hover: bg(muted) } })"
                 .into(),
             source: if preview.is_empty() {
                 "style.".into()
@@ -1122,9 +1122,8 @@ fn parse_style_arg(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Styl
     }
 }
 
-/// Style object: concern/setter calls (`size(full).bg(card)`), plus keyed
-/// members (`when:`, `match:`, `animate:`) and channel keys (`box:`,
-/// `paint:`, `text:`).
+/// Style object: concern/setter calls (`size({ w: full }).bg(card)`), plus
+/// keyed members (`when:`, `match:`, `animate:`). Channels are dissolved.
 ///
 /// `allow_axes`: `match:` / `compound:` legal only at the top level of a
 /// `style(…)` argument. Nested partials (when bodies, match arms, compound
@@ -1138,9 +1137,6 @@ fn parse_style_object(
     allow_axes: bool,
 ) -> Style {
     p.expect(Tok::LBrace, diags);
-    let mut box_ch = Style::Empty;
-    let mut paint_ch = Style::Empty;
-    let mut text_ch = Style::Empty;
     let mut animate_ch = Style::Empty;
     let mut chain_parts: Vec<Style> = Vec::new();
     let mut when_entries: Vec<(String, Style)> = Vec::new();
@@ -1183,9 +1179,16 @@ fn parse_style_object(
         };
         p.expect(Tok::Colon, diags);
         match key {
-            "box" => box_ch = parse_channel_chain(p, diags),
-            "paint" => paint_ch = parse_channel_chain(p, diags),
-            "text" => text_ch = parse_channel_chain(p, diags),
+            "box" | "paint" | "text" => {
+                diags.push(StyleDiagnostic::ParseError {
+                    message: format!(
+                        "`{key}:` is not a style member — write concern calls: \
+                         style({{ size({{ w: full }}).pad(4).bg(surface), when: {{ hover: bg(muted) }} }})"
+                    ),
+                    source: format!("{key}:"),
+                });
+                let _ = parse_channel_chain(p, diags);
+            }
             "animate" => animate_ch = parse_animate_channel_chain(p, diags),
             "motion" => {
                 diags.push(StyleDiagnostic::ParseError {
@@ -1272,13 +1275,12 @@ fn parse_style_object(
     }
     p.expect(Tok::RBrace, diags);
 
-    // Fixed structural precedence (SPEC merge law). Flat chain sits with
-    // the dissolved channels (before when/match/compound).
+    // Flat concern chain, then animate:/when:/match:/compound (SPEC merge law).
     let mut parts = Vec::new();
     if !chain_parts.is_empty() {
         parts.push(Style::chain(chain_parts));
     }
-    parts.extend([box_ch, paint_ch, text_ch, animate_ch]);
+    parts.push(animate_ch);
     if !when_entries.is_empty() {
         parts.push(Style::When {
             entries: when_entries,
@@ -1468,9 +1470,6 @@ fn parse_compound_block_array(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnosti
 fn parse_compound_row(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Style {
     p.expect(Tok::LBrace, diags);
     let mut when = BTreeMap::new();
-    let mut box_ch = Style::Empty;
-    let mut paint_ch = Style::Empty;
-    let mut text_ch = Style::Empty;
     let mut animate_ch = Style::Empty;
     let mut when_entries: Vec<(String, Style)> = Vec::new();
     let mut extra: Vec<Style> = Vec::new();
@@ -1504,9 +1503,15 @@ fn parse_compound_row(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> S
         }
         p.expect(Tok::Colon, diags);
         match key.as_str() {
-            "box" => box_ch = parse_channel_chain(p, diags),
-            "paint" => paint_ch = parse_channel_chain(p, diags),
-            "text" => text_ch = parse_channel_chain(p, diags),
+            "box" | "paint" | "text" => {
+                diags.push(StyleDiagnostic::ParseError {
+                    message: format!(
+                        "`{key}:` is not legal in a compound row — write concern calls (`bg(muted)`), not channels"
+                    ),
+                    source: key.clone(),
+                });
+                let _ = parse_channel_chain(p, diags);
+            }
             "animate" => animate_ch = parse_animate_channel_chain(p, diags),
             "when" => {
                 when_entries.extend(parse_when_block_map(p, diags));
@@ -1514,7 +1519,7 @@ fn parse_compound_row(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> S
             "match" | "compound" | "motion" => {
                 diags.push(StyleDiagnostic::ParseError {
                     message: format!(
-                        "`{key}:` is not legal inside a compound row — only prop predicates, channels, and `when:`"
+                        "`{key}:` is not legal inside a compound row — only prop predicates, concern calls, and `when:`"
                     ),
                     source: key.clone(),
                 });
@@ -1547,7 +1552,7 @@ fn parse_compound_row(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> S
             source: "compound".into(),
         });
     }
-    let mut body_parts = vec![box_ch, paint_ch, text_ch, animate_ch];
+    let mut body_parts = vec![animate_ch];
     body_parts.extend(extra);
     if !when_entries.is_empty() {
         body_parts.push(Style::When {
@@ -1699,7 +1704,7 @@ fn parse_channel_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> 
             let args = parse_paren_args(p, diags, method);
             let arg_text = format_arg_text(&args);
             diags.push(StyleDiagnostic::ParseError {
-                message: "`box(…)` as a setter was renamed to `boxSizing(…)` — use channel key `box:` for geometry"
+                message: "`box(…)` as a setter was renamed to `boxSizing(…)` — geometry is `size` / `pad` / `position`"
                     .into(),
                 source: format!("box({arg_text})"),
             });
@@ -1720,9 +1725,7 @@ fn parse_channel_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> 
         };
         if motion_object {
             diags.push(StyleDiagnostic::ParseError {
-                message:
-                    "motion methods belong in the `animate:` channel — not inside box/paint/text"
-                        .into(),
+                message: "motion methods belong in `animate:` — not in the concern chain".into(),
                 source: method.to_string(),
             });
             let _ = parse_motion_call(p, method, diags);
@@ -2665,7 +2668,7 @@ mod flat_chain_tests {
     fn v2_author_names_are_unknown_vocabulary() {
         for src in [
             "style({ fill(surface) })",
-            "style({ paint: fill({ color: muted }) })",
+            "style({ fill({ color: muted }) })",
             "style({ ink(foreground) })",
             "style({ place({ z: sticky }) })",
             "style({ space({ pad: 2 }) })",
@@ -2684,15 +2687,58 @@ mod flat_chain_tests {
     }
 
     #[test]
-    fn v2_channel_form_still_parses() {
-        let (style, diags) = parse("style({ box: size({ w: full }).pad(4), paint: bg(muted) })");
+    fn flat_concern_chain_parses() {
+        let (style, diags) = parse("style({ size({ w: full }).pad(4).bg(muted) })");
         assert!(diags.is_empty(), "{:?}", msgs(&diags));
         assert!(!matches!(style, Style::Empty));
         let (_, css) = lower_style(&style, &HashMap::new());
         assert!(css.contains("padding") || css.contains("width"), "{css}");
+        assert!(css.contains("background") || css.contains("muted"), "{css}");
+    }
+
+    #[test]
+    fn dissolved_channel_keys_are_not_style_members() {
+        for key in ["box", "paint", "text"] {
+            let src = format!("style({{ {key}: bg(muted) }})");
+            let (_, diags) = parse(&src);
+            assert!(
+                diags
+                    .iter()
+                    .any(|d| d.message().contains("not a style member")),
+                "{key}: {:?}",
+                msgs(&diags)
+            );
+        }
+    }
+
+    #[test]
+    fn tone_bound_paint_gates_selector_not_class() {
+        // Badge/chip share `[variant=soft].s-variantsoft-bgmuted`. Tone wash
+        // must be `[tone]`-gated so a later muted rest cannot crush it.
+        let (style, diags) = parse(
+            "style({ match: { variant: { soft: bg(muted).bg({ color: tone, mix: 15 }) } } })",
+        );
+        assert!(diags.is_empty(), "{:?}", msgs(&diags));
+        let (classes, css) = lower_style(&style, &HashMap::new());
         assert!(
-            css.contains("background") || css.contains("surface"),
-            "{css}"
+            classes.contains("s-variantsoft-bgmuted"),
+            "muted rest class: {classes}"
+        );
+        assert!(
+            classes.contains("s-variantsoft-bgcolortonemix15"),
+            "tone wash class: {classes}"
+        );
+        assert!(
+            css.contains("[variant='soft'].s-variantsoft-bgmuted"),
+            "muted rest stays variant-gated only: {css}"
+        );
+        assert!(
+            css.contains("[variant='soft'][tone].s-variantsoft-bgcolortonemix15"),
+            "tone wash must be [tone]-gated: {css}"
+        );
+        assert!(
+            !css.contains("[variant='soft'].s-variantsoft-bgcolortonemix15{"),
+            "ungated tone wash would lose to later muted rest: {css}"
         );
     }
 

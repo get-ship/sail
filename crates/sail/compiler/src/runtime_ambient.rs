@@ -9,7 +9,7 @@
 //! `inv-sail-one-module-emit`: no emitted module carries a free variable, and no
 //! consumer (deck) generates one by slicing text.
 //!
-//! This is the fifth declared table, alongside the sx vocabulary, the L1
+//! This is the fifth declared table, alongside Style vocab (`offered_rows()`), the L1
 //! manifest, and the action manifest: the closed vocabulary is data, not
 //! scattered string literals.
 

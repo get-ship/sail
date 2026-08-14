@@ -94,7 +94,7 @@ pub(crate) fn preprocess_impl_full(
     // Host display override before lower_layout rewrites row/column.
     let host_display_css = derive_host_display(&s);
     let s = merge_duplicate_class_attrs(&s);
-    // Participation is box-channel only (`style({ box: grow(1).w(full) })`).
+    // Participation is Style only (`style({ grow(1).size({ w: full }) })`).
     // Residual bare attr lower deleted (CHANNELS Phase V DEEMBALM) — lint
     // `sail-participation-style` refuses bare grow/shrink/w/min-w/max-w.
     let (s, layout_css) = lower_layout(&s);
@@ -287,7 +287,7 @@ fn lift_tag_style(
             }
             if let Some(bad) = find_bad_tag_style_token(source, tag_end, gt_pos) {
                 return Err(CompileError::new(
-                    "style in tag position must be a call: style({ box: …, paint: … })  \
+                    "style in tag position must be a call: style({ … })  \
                      or  style(name) / style(partial, …)  — not bare `style`, `style=`, or `style={…}`",
                 )
                 .with_span(Span::new(bad, bad + 5))
@@ -727,7 +727,7 @@ fn lower_sx_value(
 /// Scope consts are not host-checked at definition (no tag). Attach-time check
 /// inspects the **inline** Style IR only — `style(constRef)` is not expanded
 /// here (const-split / ref host-check is a follow-up rewrite). Direct
-/// `style({ text: … })` / when bodies with text setters on non-text hosts fail.
+/// `style({ type({ … }) })` / when bodies with text setters on non-text hosts fail.
 fn refuse_text_on_non_text_host(
     tag: &str,
     expr: &str,
@@ -1127,7 +1127,7 @@ fn freeform_axis_value_matches(head: &str, want: &str) -> bool {
 }
 
 /// Author already names a width channel on `<select>` — participation
-/// `w` / `min-w` / `max-w`, or Style `.w(` / `.minW(` / `.maxW(`.
+/// `w` / `min-w` / `max-w`, or Style `size({ w / min-w / max-w })`.
 fn author_sets_select_width(attrs: &[(String, String)]) -> bool {
     for (name, value) in attrs {
         match name.as_str() {
@@ -1136,7 +1136,12 @@ fn author_sets_select_width(attrs: &[(String, String)]) -> bool {
                 let v = value.trim_matches(['"', '\'']);
                 for c in v.split_whitespace() {
                     let cl = c.to_ascii_lowercase();
-                    if cl.starts_with("s-w") || cl.starts_with("s-minw") || cl.starts_with("s-maxw")
+                    if cl.starts_with("s-w")
+                        || cl.starts_with("s-minw")
+                        || cl.starts_with("s-maxw")
+                        || cl.starts_with("s-sizew")
+                        || cl.starts_with("s-sizeminw")
+                        || cl.starts_with("s-sizemaxw")
                     {
                         return true;
                     }
@@ -3403,8 +3408,8 @@ export default controller(() => {
     fn sx_merges_into_existing_class_attr() {
         // Regression: `<span class="badge" sx={…}>` must merge author class +
         // Style classes into one attribute (not two setAttribute("class") writes).
-        let out = preprocess(r#"<span class="badge" style({ box: pad(4) })> x</span>"#)
-            .expect("preprocess");
+        let out =
+            preprocess(r#"<span class="badge" style({ pad(4) })> x</span>"#).expect("preprocess");
         assert!(
             out.contains(r#"class="badge "#) && out.contains("s-"),
             "author class + Style classes must merge into one attribute, got:\n{out}"
@@ -3418,8 +3423,8 @@ export default controller(() => {
 
     #[test]
     fn sx_before_class_also_merges() {
-        let out = preprocess(r#"<span class="badge" style({ box: pad(4) })> x</span>"#)
-            .expect("preprocess");
+        let out =
+            preprocess(r#"<span class="badge" style({ pad(4) })> x</span>"#).expect("preprocess");
         assert!(
             out.contains("s-") && out.contains("badge"),
             "merge must work regardless of attribute order, got:\n{out}"
@@ -3431,8 +3436,8 @@ export default controller(() => {
     fn dynamic_class_with_sx_is_left_alone() {
         // A `{…}` class binding is the emitter's business — the merge pass
         // must not fold static Style classes into an expression it can't evaluate.
-        let out = preprocess(r#"<span class={cls()} style({ box: pad(4) })> x</span>"#)
-            .expect("preprocess");
+        let out =
+            preprocess(r#"<span class={cls()} style({ pad(4) })> x</span>"#).expect("preprocess");
         assert_eq!(
             out.matches("class=").count(),
             2,
@@ -3442,7 +3447,7 @@ export default controller(() => {
 
     #[test]
     fn quoted_gt_inside_attr_does_not_break_class_merge() {
-        let out = preprocess(r#"<span title="a > b" class="x" style({ box: pad(4) })> y</span>"#)
+        let out = preprocess(r#"<span title="a > b" class="x" style({ pad(4) })> y</span>"#)
             .expect("preprocess");
         assert!(
             out.contains(r#"class="x "#) && out.contains("s-"),
@@ -3912,7 +3917,8 @@ export default controller(() => {
     fn multibyte_chars_do_not_panic_class_merge() {
         // Regression: the merge pass sliced `source[i + 1..]` while `i` sat on
         // a multi-byte char (sail-date-picker's `‹`/`›` in a comment) — panic.
-        let src = "<!-- ‹prev / next› —— déjà-vu … -->\n<span class=\"x\" style({ box: pad(4) })> é…‹›</span>";
+        let src =
+            "<!-- ‹prev / next› —— déjà-vu … -->\n<span class=\"x\" style({ pad(4) })> é…‹›</span>";
         let out = preprocess(src).expect("preprocess");
         assert!(
             out.contains(r#"class="x "#) && out.contains("s-"),
@@ -3975,7 +3981,7 @@ export default controller(() => {
         // Regression: `lower_sx` byte-walked with `i += 1` and sliced
         // `source[i..]`, panicking mid-codepoint on any multi-byte char — the
         // crash the async golden fixtures hit (an em-dash / ellipsis in copy).
-        let src = "<p>Failed — retry…</p>\n<sail-card style({ box: pad(4) })> café ☕</sail-card>";
+        let src = "<p>Failed — retry…</p>\n<sail-card style({ pad(4) })> café ☕</sail-card>";
         let out = preprocess(src).expect("preprocess");
         assert!(
             out.contains("café ☕"),
@@ -4008,8 +4014,8 @@ export default controller(() => {
 
     #[test]
     fn box_channel_grow_on_any_host_mints_style_class() {
-        // Participation is box channel only (`style({ box: grow(1) })` → `s-grow1`).
-        let out = preprocess(r#"<div style({ box: grow(1) })>x</div>"#).expect("preprocess");
+        // Participation is Style only (`style({ grow(1) })` → `s-grow1`).
+        let out = preprocess(r#"<div style({ grow(1) })>x</div>"#).expect("preprocess");
         assert!(out.contains("s-grow1"), "grow class: {out}");
         assert!(out.contains(".s-grow1{flex-grow:1}"), "grow css: {out}");
         assert!(
@@ -4020,8 +4026,8 @@ export default controller(() => {
 
     #[test]
     fn box_channel_grow_on_layout_keyword_merges_into_div() {
-        let out = preprocess(r#"<column gap="2" style({ box: grow(1) })> x</column>"#)
-            .expect("preprocess");
+        let out =
+            preprocess(r#"<column gap="2" style({ grow(1) })> x</column>"#).expect("preprocess");
         assert!(out.contains("sail-col"), "layout base: {out}");
         assert!(out.contains("s-grow1"), "grow class folded: {out}");
         assert!(out.contains(".s-grow1{flex-grow:1}"), "grow css: {out}");
@@ -4065,8 +4071,8 @@ export default controller(() => {
     #[test]
     fn layout_element_sx_merges_into_one_class() {
         // Style lowers first (→ class), then layout folds it into the div's classes.
-        let out = preprocess(r#"<column gap="2" style({ box: pad(4) })> x</column>"#)
-            .expect("preprocess");
+        let out =
+            preprocess(r#"<column gap="2" style({ pad(4) })> x</column>"#).expect("preprocess");
         assert!(
             out.contains("sail-col") && out.contains("sail-g-2") && out.contains("s-"),
             "merged: {out}"
@@ -4450,9 +4456,9 @@ export default controller({ setup: () => ({ d: derived(() => signal(0)()) }) })\
 
     #[test]
     fn lower_sx_var_ref_binds_an_atomic_class() {
-        // Product form: `style({ paint: translateY(bind(rowY)) })` — reactive paint via
+        // Product form: `style({ translateY(bind(rowY)) })` — reactive paint via
         // CSS custom property. JS writes `--row-y`; Style declares the read.
-        let out = preprocess(r#"<grid style({ paint: translateY(bind(rowY)) })>row</grid>"#)
+        let out = preprocess(r#"<grid style({ translateY(bind(rowY)) })>row</grid>"#)
             .expect("preprocess");
         assert!(
             out.contains("var(--row-y)") || out.contains("translate"),
@@ -4476,14 +4482,14 @@ export default controller({ setup: () => ({ d: derived(() => signal(0)()) }) })\
             out.contains("s-") || out.contains("var(--primary)"),
             "{out}"
         );
-        assert!(!out.contains("style({ paint: bg(primary) })"), "{out}");
+        assert!(!out.contains("style({ bg(primary) })"), "{out}");
     }
     #[test]
     fn block_style_const_ref() {
         let out = preprocess(
             r#"
 <scope>
-  const base = style({ box: pad(2) })
+  const base = style({ pad(2) })
 </scope>
 <div style(base)>x</div>"#,
         )
@@ -4509,8 +4515,7 @@ export default controller({ setup: () => ({ d: derived(() => signal(0)()) }) })\
 
     #[test]
     fn style_attr_product_is_refused() {
-        let err = preprocess(r#"<div style={style({ paint: bg(primary) })}>x</div>"#)
-            .expect_err("style=");
+        let err = preprocess(r#"<div style={style({ bg(primary) })}>x</div>"#).expect_err("style=");
         assert!(
             err.message.contains("style(") || err.message.contains("call"),
             "must teach call form: {}",
@@ -4556,7 +4561,7 @@ export default controller({ setup: () => ({ d: derived(() => signal(0)()) }) })\
 
     #[test]
     fn non_text_host_box_paint_only_is_ok() {
-        let out = preprocess(r#"<div style({ box: pad(4), paint: bg(primary) })>x</div>"#)
+        let out = preprocess(r#"<div style({ pad(4).bg(primary) })>x</div>"#)
             .expect("box+paint on div is legal");
         assert!(out.contains("s-"), "{out}");
         assert!(!out.contains("style({"), "block Style must lift: {out}");
@@ -4587,7 +4592,7 @@ export default controller({ setup: () => ({ d: derived(() => signal(0)()) }) })\
     fn body_style_statement_is_unknown_statement() {
         let err = preprocess(
             "<div>
-  style({ box: pad(2) })
+  style({ pad(2) })
   x
 </div>",
         )
@@ -4636,8 +4641,8 @@ export default controller({ setup: () => ({ d: derived(() => signal(0)()) }) })\
     fn type_size_from_style_ir_threads_to_layout() {
         // expand_elements=false: this branch's stdlib spinner is already
         // uncompilable (`style(ring)`); the seam under test is Style → TypeHost.
-        let src_xl = r#"<span style({ text: type({ size: xl }) })>Hello</span>"#;
-        let src_sm = r#"<span style({ text: type({ size: sm }) })>Hello</span>"#;
+        let src_xl = r#"<span style({ type({ size: xl }) })>Hello</span>"#;
+        let src_sm = r#"<span style({ type({ size: sm }) })>Hello</span>"#;
         let (pre_xl, hosts_xl) = preprocess_impl_full(src_xl, false).expect("xl");
         let (pre_sm, hosts_sm) = preprocess_impl_full(src_sm, false).expect("sm");
         assert!(
@@ -4689,7 +4694,7 @@ export default controller({ setup: () => ({ d: derived(() => signal(0)()) }) })\
 
     #[test]
     fn box_from_style_ir_threads_to_layout() {
-        let src = r#"<div style({ box: display(flex).grow(1).overflow({ all: hidden }).position({ scheme: absolute }) })>x</div>"#;
+        let src = r#"<div style({ display(flex).grow(1).overflow({ all: hidden }).position({ scheme: absolute }) })>x</div>"#;
         let (pre, hosts) = preprocess_impl_full(src, false).expect("box style");
         let host = hosts
             .boxes

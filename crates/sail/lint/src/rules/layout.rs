@@ -7,12 +7,12 @@
 //! `<style>` — the same "class + injected stylesheet" mechanism Style uses. No
 //! shadow DOM, no custom-element upgrade: layout disappears into the language.
 //!
-//! **Product participation** is the **box channel**
-//! (`style({ box: grow(1).minW(0) })`), not bare attrs. Bare `grow` / `shrink` /
+//! **Product participation** is the concern chain
+//! (`style({ grow(1).size({ min-w: 0 }) })`), not bare attrs. Bare `grow` / `shrink` /
 //! `w` / `min-w` / `max-w` are refused by `sail-participation-style` with a
-//! pointer to the box form. Layout-keyword **axis** attrs (`gap` / `align` /
+//! pointer to the style form. Layout-keyword **axis** attrs (`gap` / `align` /
 //! `justify` / `cols` / …) stay structural sugar on the keyword. Paint (pad,
-//! color, type, chrome) stays on paint/text channels.
+//! color, type, chrome) lives on the same concern chain (`pad`, `bg`, `type`).
 //!
 //! Faithful successor to the `<sail-stack>` / `<sail-cluster>` / `<sail-grid>` /
 //! `<sail-center>` primitives — the hard-won opinions ride along in the lowering:
@@ -746,15 +746,13 @@ pub fn is_participation_attr(name: &str) -> bool {
     PARTICIPATION_ATTRS.contains(&name)
 }
 
-/// Map a participation attr name to the Style setter that owns the same CSS
-/// (`min-w` → `minW`). Grid spans have no Style setter — they stay as attrs.
+/// Map a participation attr name to the live Style setter that owns the same CSS.
+/// Width attrs lower through `size` slots, not retired `w`/`minW` longhands.
 fn participation_setter(name: &str) -> Option<&'static str> {
     Some(match name {
         "grow" => "grow",
         "shrink" => "shrink",
-        "w" => "w",
-        "min-w" => "minW",
-        "max-w" => "maxW",
+        "w" | "min-w" | "max-w" => "size",
         "col-span" | "row-span" => return None,
         _ => return None,
     })
@@ -1001,13 +999,13 @@ fn unknown_attr_hint(tag: &str) -> String {
     let axes = tag_props(tag);
     if axes.is_empty() {
         format!(
-            "<{tag}> takes no axis props; participation is box channel \
-             (`style({{ box: grow(1).minW(0) }})`); HTML/global pass-throughs are allowed."
+            "<{tag}> takes no axis props; participation is the concern chain \
+             (`style({{ grow(1).minW(0) }})`); HTML/global pass-throughs are allowed."
         )
     } else {
         format!(
-            "<{tag}> takes these axis props: {} — participation is box channel \
-             (`style({{ box: grow(1).minW(0) }})`); HTML/global pass-throughs \
+            "<{tag}> takes these axis props: {} — participation is the concern chain \
+             (`style({{ grow(1).minW(0) }})`); HTML/global pass-throughs \
              (id, theme, surface, hyphenated markers, data-*, aria-*, on:*, bind:*, use:*) allowed.",
             axes.join(", ")
         )
@@ -1440,16 +1438,14 @@ mod tests {
     fn passes_through_tag_style_call() {
         // Product Style attaches as `style({…})` on the open tag — not axis
         // attrs. Scanner must consume the balanced call (and chains), else
-        // `{`/`box:`/`grow(1)` fragment as fake unknown attrs.
+        // `{`/`grow(1)` fragment as fake unknown attrs.
         assert!(
-            run(r#"<column gap="2" style({ box: grow(1) })>x</column>"#).is_empty(),
+            run(r#"<column gap="2" style({ grow(1) })>x</column>"#).is_empty(),
             "tag-position style() must be passthrough on layout keywords"
         );
         assert!(
-            run(
-                r#"<column gap="2" style({ box: pad(2), when: { hover: { paint: bg(accent) } } })>x</column>"#
-            )
-            .is_empty(),
+            run(r#"<column gap="2" style({ pad(2), when: { hover: bg(accent) } })>x</column>"#)
+                .is_empty(),
             "style({{…, when: {{…}}}}) must not split into unknown attrs"
         );
     }

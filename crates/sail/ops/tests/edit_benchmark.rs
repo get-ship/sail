@@ -189,23 +189,17 @@ fn tasks() -> Vec<Task> {
                 let n = idx
                     .values()
                     .find(|n| {
-                        n.tag == "div" && src[n.full_span.start..n.full_span.end].contains(">fill<")
+                        n.tag == "div"
+                            && n.static_attrs.get("min-w").map(|v| v.as_str()) == Some("0")
                     })
                     .unwrap();
                 vec![json!({
-                    "op": "setSx",
+                    "op": "setAttr",
                     "nodeId": n.id,
-                    "setter": "grow",
-                    "args": [1]
+                    "name": "grow"
                 })]
             },
-            text_rewrite: |src| {
-                src.replacen(
-                    r#"style({ size({ min-w: 0 }) })"#,
-                    r#"style({ size({ min-w: 0 }).grow(1) })"#,
-                    1,
-                )
-            },
+            text_rewrite: |src| src.replacen(r#"min-w="0""#, r#"min-w="0" grow"#, 1),
         },
         Task {
             name: "batch_attr_and_sx",
@@ -301,7 +295,7 @@ fn task_sources() -> Vec<&'static str> {
         Box::leak(wrap_chrome(r#"<column><div>old</div></column>"#).into_boxed_str()),
         Box::leak(wrap_chrome(r#"<column><div>a</div></column>"#).into_boxed_str()),
         Box::leak(wrap_chrome(r#"<column gap="8"><div>x</div></column>"#).into_boxed_str()),
-        Box::leak(wrap_chrome(r#"<div style({ size({ min-w: 0 }) })>fill</div>"#).into_boxed_str()),
+        Box::leak(wrap_chrome(r#"<div min-w="0">fill</div>"#).into_boxed_str()),
         Box::leak(wrap_chrome(r#"<row><div>c</div></row>"#).into_boxed_str()),
         Box::leak(wrap_chrome(r#"<column gap="2"><div>hero</div></column>"#).into_boxed_str()),
         Box::leak(wrap_chrome(r#"<div>before</div>"#).into_boxed_str()),

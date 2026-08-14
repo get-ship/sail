@@ -32,7 +32,6 @@ const SOURCES: &[(&str, &str)] = &[
     ("checkbox", include_str!("../stdlib/checkbox.sail")),
     ("date", include_str!("../stdlib/date.sail")),
     ("file", include_str!("../stdlib/file.sail")),
-    ("dropzone", include_str!("../stdlib/dropzone.sail")),
     ("color", include_str!("../stdlib/color.sail")),
     ("textarea", include_str!("../stdlib/textarea.sail")),
     ("select", include_str!("../stdlib/select.sail")),

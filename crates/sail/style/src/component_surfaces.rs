@@ -352,10 +352,14 @@ mod emit_integration {
                 "bg(primary) must stay legal: {:?}",
                 diags.iter().map(|d| d.message()).collect::<Vec<_>>()
             );
-            // `page` is not a color token (and theme-owned surface names are gone).
-            let (_, diags) = parse("style({ border({ color: page }) })");
+            let (_, diags) = parse("style({ border(page) })");
             assert!(
-                diags.iter().any(|d| d.message().contains("not a token")),
+                diags.iter().any(|d| {
+                    matches!(d, crate::ir::StyleDiagnostic::BadToken { value, .. } if value == "page")
+                        || (matches!(d, crate::ir::StyleDiagnostic::ThemeOwnedToken { name, .. } if name == "page")
+                            && d.message().contains("theme-owned")
+                            && d.message().contains("theme="))
+                }),
                 "{:?}",
                 diags.iter().map(|d| d.message()).collect::<Vec<_>>()
             );

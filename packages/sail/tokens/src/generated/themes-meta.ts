@@ -20,7 +20,7 @@ export const THEME_PAINT_MODES = ['light', 'dark'] as const
 export type ThemePaintMode = (typeof THEME_PAINT_MODES)[number]
 
 /** Allowed top-level groups inside a mode body (scale + component overrides). */
-export const THEME_MODE_GROUP_KEYS = ['$extensions', 'color', 'filter', 'image', 'control', 'interaction', 'motion', 'radius', 'scrollbar', 'shadow', 'typography', 'space', 'icon', 'density', 'panel', 'z', 'breakpoint', 'border', 'size', 'elevation', 'type', 'bg', 'fg', 'fill', 'ink', 'style', 'keyframes', 'play', 'tagDefaults', 'tags'] as const
+export const THEME_MODE_GROUP_KEYS = ['$extensions', 'component', 'color', 'filter', 'image', 'control', 'interaction', 'motion', 'radius', 'scrollbar', 'shadow', 'typography', 'space', 'icon', 'density', 'panel', 'z', 'breakpoint', 'border', 'size', 'elevation', 'type', 'bg', 'fg', 'fill', 'ink', 'style', 'keyframes', 'play', 'tagDefaults', 'tags'] as const
 export type ThemeModeGroupKey = (typeof THEME_MODE_GROUP_KEYS)[number]
 
 /**
@@ -56,6 +56,7 @@ export const THEME_META: readonly ThemeMeta[] = [
   { id: 'paper', dark: false, modes: ['light'], defaultMode: 'light', capability: 'light' },
   { id: 'sail', dark: false, modes: ['light', 'dark'], defaultMode: 'light', capability: 'both' },
   { id: 'ship', dark: false, modes: ['light', 'dark'], defaultMode: 'light', capability: 'both' },
+  { id: 'studio', dark: true, modes: ['light', 'dark'], defaultMode: 'dark', capability: 'both' },
   { id: 'synthwave', dark: true, modes: ['dark'], defaultMode: 'dark', capability: 'dark' },
 ] as const
 

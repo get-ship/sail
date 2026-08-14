@@ -293,7 +293,18 @@ fn emit_op(op: &PaintOp, ctx: &Ctx, out: &mut Vec<CssRule>, seen: &mut HashSet<S
     } else if op.setter == "glyphFill" {
         child = " svg";
     }
-    let selector = build_selector(&class, ctx, child);
+    // Tone-bound paint (`bg(tone)`, `fg(tone.foreground)`, mix on --tone)
+    // must be `[tone]`-gated. Rest fills in the same match arm share
+    // `[variant=soft].s-variantsoft-bgmuted`; later elements re-emit that
+    // selector and crush the tone wash (badge/chip/avatar all go muted).
+    let tone_ctx;
+    let sel_ctx = if op_uses_tone(op_ref) && !ctx.attrs.iter().any(|(k, _)| k == "tone") {
+        tone_ctx = ctx.with_attr("tone", "*");
+        &tone_ctx
+    } else {
+        ctx
+    };
+    let selector = build_selector(&class, sel_ctx, child);
     let key = format!("{selector}|{decls:?}|{:?}", ctx.media);
     if seen.insert(key) {
         out.push(CssRule {
@@ -397,6 +408,18 @@ fn build_selector(class: &str, ctx: &Ctx, child: &str) -> String {
     )
 }
 
+fn op_uses_tone(op: &PaintOp) -> bool {
+    fn arg_uses_tone(a: &PaintArg) -> bool {
+        match a {
+            PaintArg::Token(t) => t == "tone" || t.starts_with("tone."),
+            PaintArg::MemberPath { root, .. } => root == "tone",
+            PaintArg::Slots(slots) => slots.values().any(arg_uses_tone),
+            PaintArg::Bind(_) => false,
+        }
+    }
+    op.args.iter().any(arg_uses_tone)
+}
+
 fn op_has_surface_member(op: &PaintOp) -> bool {
     op.args.iter().any(|a| {
         matches!(a, PaintArg::MemberPath { root, .. }
@@ -470,14 +493,14 @@ pub fn lower_style_source_with_motion(
     css: &mut String,
     seen: &mut HashSet<String>,
 ) -> Result<(String, Vec<(String, String)>), Vec<super::ir::StyleDiagnostic>> {
-    // Product authoring: channel spine only. Flat `style.pad().bg()` is retired
-    // (corpus codemod + block attachment). Emit walks `flat_chain` only.
+    // Product authoring: flat concern chain. Constructor `style.pad().bg()` is
+    // retired (corpus codemod + block attachment). Migration dual is `flat_chain` only.
     // Early refuse matches product `parse` (no IR for flat chains).
     let t = src.trim_start();
     if t.starts_with("style.") {
         return Err(vec![super::ir::StyleDiagnostic::ParseError {
-            message: "flat `style.method(…)` chains are retired — use the channel spine: \
-                      style({ box: size({ w: full }).pad(4), paint: bg(surface), when: { hover: { bg(muted) } } })"
+            message: "flat `style.method(…)` chains are retired — write concern calls: \
+                      style({ size({ w: full }).pad(4).bg(surface), when: { hover: bg(muted) } })"
                 .into(),
             source: t.to_string(),
         }]);

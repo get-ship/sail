@@ -271,7 +271,7 @@ const CLIENT_MARKERS: &[&str] = &[
     "sessionStorage",
     "setTimeout",
     "setInterval",
-    "interval(",
+    "interval",
     "requestAnimationFrame",
     "matchMedia",
     "navigator",
@@ -447,6 +447,7 @@ fn binding_updated_with_client_marker(src: &str, name: &str) -> bool {
     // Fallback: effect/mount body that both mentions client marker and name.set
     for marker in [
         "setInterval",
+        "interval",
         "setTimeout",
         "interval",
         "requestAnimationFrame",
@@ -1265,7 +1266,7 @@ mod tests {
     #[test]
     fn completions_at_offset_style_bg_tokens() {
         // SPEC-STYLE-COMPLETE-1: caret inside `bg(¦)` returns Style tokens.
-        let src = r#"<div style({ paint: bg() })>x</div>"#;
+        let src = r#"<div style({ bg() })>x</div>"#;
         let off = src.find("bg(").expect("bg(") + 3; // inside parens
         let items = completions_at_offset(src, None, off, None);
         assert!(
@@ -1424,5 +1425,17 @@ export default controller((_ctx) => {
         assert_eq!(classify_ssr_tier("signal(0)"), SsrTier::S);
         assert!(binding_updated_with_client_marker(ctrl, "ticks"));
         assert!(!binding_updated_with_client_marker(ctrl, "pure"));
+    }
+
+    #[test]
+    fn ssr_tier_product_interval_is_c() {
+        let ctrl = r#"
+export default controller((_ctx) => {
+  const ticks = signal(0)
+  interval(() => ticks.set((n) => n + 1), 1000)
+  return { ticks }
+})
+"#;
+        assert!(binding_updated_with_client_marker(ctrl, "ticks"));
     }
 }

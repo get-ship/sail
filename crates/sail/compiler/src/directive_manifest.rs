@@ -786,7 +786,7 @@ pub const FOREIGN_IDIOMS: &[ForeignIdiomEntry] = &[
     },
     ForeignIdiomEntry {
         syntax: "<div> / <span> for layout structure",
-        instead: "layout keywords <column>, <row>, <grid>, <stack>, <center> with axis attrs (gap, align, justify); participation is box channel style({ box: grow(1).minW(0) })",
+        instead: "layout keywords <column>, <row>, <grid>, <stack>, <center> with axis attrs (gap, align, justify); participation is style({ grow(1).size({ min-w: 0 }) })",
     },
     ForeignIdiomEntry {
         syntax: "document.querySelector / getElementById in a controller",

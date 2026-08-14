@@ -18,7 +18,6 @@ import { meta as toggleGroupMeta } from './toggle-group/meta'
 import { meta as fieldMeta } from './field/meta'
 import { meta as labelMeta } from './label/meta'
 import { meta as fieldsetMeta } from './fieldset/meta'
-import { meta as dropzoneMeta } from './dropzone/meta'
 import { meta as themePickerMeta } from './theme-picker/meta'
 import { meta as alertMeta } from './alert/meta'
 import { meta as progressBarMeta } from './progress/meta'
@@ -74,7 +73,6 @@ export const DOC_PACKAGES: readonly DocMeta[] = [
   fieldMeta,
   labelMeta,
   fieldsetMeta,
-  dropzoneMeta,
   themePickerMeta,
   alertMeta,
   progressBarMeta,

@@ -81,7 +81,6 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         <badge size="sm" variant="soft" tone="muted">field</badge>
         <badge size="sm" variant="soft" tone="muted">label</badge>
         <badge size="sm" variant="soft" tone="muted">fieldset</badge>
-        <badge size="sm" variant="soft" tone="muted">dropzone</badge>
         <badge size="sm" variant="soft" tone="muted">theme-picker</badge>
       </row>
     </column>

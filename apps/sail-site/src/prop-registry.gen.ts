@@ -416,38 +416,6 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "type": "(detail: { value: string }) => void"
     }
   ],
-  "dropzone": [
-    {
-      "name": "accept",
-      "type": "string",
-      "default": ""
-    },
-    {
-      "name": "multiple",
-      "type": "bool",
-      "default": "false"
-    },
-    {
-      "name": "disabled",
-      "type": "bool",
-      "default": "false"
-    },
-    {
-      "name": "invalid",
-      "type": "bool",
-      "default": "false"
-    },
-    {
-      "name": "name",
-      "type": "string",
-      "default": ""
-    },
-    {
-      "name": "required",
-      "type": "bool",
-      "default": "false"
-    }
-  ],
   "empty-state": [
     {
       "name": "variant",

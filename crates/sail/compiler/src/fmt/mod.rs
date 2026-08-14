@@ -150,12 +150,12 @@ mod tests {
 
     #[test]
     fn comment_and_style_statement_preserved() {
-        let src = "<!-- head -->\n<div>\nstyle({ box: pad(4) })\n<p>x</p>\n</div>\n";
+        let src = "<!-- head -->\n<div>\nstyle({ pad(4) })\n<p>x</p>\n</div>\n";
         let out = format_source_with(src, &opts_no_oxfmt())
             .expect("fmt")
             .source;
         assert!(out.contains("<!-- head -->"), "{out}");
-        assert!(out.contains("style({ box: pad(4) })"), "{out}");
+        assert!(out.contains("style({ pad(4) })"), "{out}");
         let twice = format_source_with(&out, &opts_no_oxfmt())
             .expect("fmt2")
             .source;

@@ -114,7 +114,7 @@ fn studio_edit_to_screenshot_paints_registry() {
     );
 
     // 4. Static screenshot (sail_render) — painted primary matches registry.
-    let src = r#"<div style({ size({ w: full, h: full }), bg(primary) })>probe</div>"#;
+    let src = r#"<div style({ size({ w: full, h: full }).bg(primary) })>probe</div>"#;
     let Some(fonts) = fonts_dir() else {
         eprintln!("skip screenshot sample — token fonts not found");
         return;

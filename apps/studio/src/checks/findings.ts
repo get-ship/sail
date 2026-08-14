@@ -290,7 +290,7 @@ export function autoFixOnSave(
 }
 
 /** Client-side participation-style rewrite: bare `grow` / `grow="N"` attrs →
- *  block `style({ box: grow(N) })` (product is the box channel, not attrs). */
+ *  block `style({ grow(N) })` (product is the concern chain, not attrs). */
 export function applyParticipationStyleFix(source: string): string {
   return source
     .replace(
@@ -298,7 +298,7 @@ export function applyParticipationStyleFix(source: string): string {
       (_m, tag, pre, nQuoted, nBrace, post) => {
         const n = nQuoted ?? nBrace ?? '1'
         const indent = '  '
-        return `<${tag}${pre}${post}>\n${indent}style({ box: grow(${n}) })\n`
+        return `<${tag}${pre}${post}>\n${indent}style({ grow(${n}) })\n`
       },
     )
     .replace(
@@ -306,7 +306,7 @@ export function applyParticipationStyleFix(source: string): string {
       (_m, tag, pre, nQuoted, nBrace, post) => {
         const n = nQuoted ?? nBrace ?? '1'
         const indent = '  '
-        return `<${tag}${pre}${post}>\n${indent}style({ box: shrink(${n}) })\n`
+        return `<${tag}${pre}${post}>\n${indent}style({ shrink(${n}) })\n`
       },
     )
 }

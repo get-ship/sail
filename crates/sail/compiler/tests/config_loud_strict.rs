@@ -187,7 +187,7 @@ fn stylesheets_only_config_is_announced_not_silently_rejected() {
 fn granted_full_preset_compiles_clean_with_one_recognized_announcement() {
     let (_tmp, sail) = write_fixture(
         r#"{"preset":"full"}"#,
-        r#"<sail-card style({ box: pad(4) })> hi</sail-card>"#,
+        r#"<sail-card style({ pad(4) })> hi</sail-card>"#,
     );
     let (_config_path, resolution) = Policy::resolve_outcome(&sail).expect("config resolves");
     assert_eq!(resolution.tier, Policy::FULL);
@@ -207,11 +207,7 @@ fn granted_full_preset_compiles_clean_with_one_recognized_announcement() {
 fn no_config_leaves_default_semantics_unchanged() {
     let tmp = tempfile::tempdir().unwrap();
     let sail = tmp.path().join("w.sail");
-    fs::write(
-        &sail,
-        r#"<sail-card style({ box: pad(4) })> hi</sail-card>"#,
-    )
-    .unwrap();
+    fs::write(&sail, r#"<sail-card style({ pad(4) })> hi</sail-card>"#).unwrap();
     assert!(
         Policy::resolve_outcome(&sail).is_none(),
         "no config anywhere on the walk"

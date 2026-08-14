@@ -1,7 +1,8 @@
 <!--
   /docs/reference/sx — Style surface (URL slug is historical).
-  Product: style({ pad(4).bg(surface-1), animate: … }) + style name = / bind /
-  match: / compound: / when:. Setter scales, when keys, refusals.
+  Product: style({ pad(4).bg(surface), when: { hover: bg(muted) } }) +
+  style name = / bind / match: / compound: / when:.
+  Atlas is STYLE_VOCAB (offered_rows — concern | axis | plain).
 -->
 <scope>
   style root = { size({ min-w: 0 }) }
@@ -10,7 +11,6 @@
   style mutedBody = { size({ max-w: breakpoint-tablet }) }
   style cardShell = { size({ min-w: 0 }) }
   style valueText = { size({ max-w: panel-max-w-sm }).fg(muted-foreground) }
-  style banCode = { fg(destructive) }
   style prefixRow = { pad({ x: 3, y: 1 }).radius(md) }
   style prefixCode = { size({ min-w: 9 }) }
   style mediaLine = { size({ max-w: ch-24 }).fg(muted-foreground).type({ family: mono }) }
@@ -20,77 +20,65 @@
 import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 import {
-  SX_ATOMS,
+  STYLE_VOCAB,
+  CONCERNS,
   SX_STATE_PREFIXES,
   SX_CONDITION_PREFIXES,
-  SX_REFUSALS,
 } from '../../../../src/compositions/language-surface'
 
-// Some atoms share a prop name across tables (e.g. spacing and color senses
-// both named `border`) — merge value lists under one card.
-const STYLE_BY_PROP = new Map<string, string[]>()
-for (const a of SX_ATOMS) {
-  const existing = STYLE_BY_PROP.get(a.prop)
-  if (existing) {
-    existing.push(...a.values)
-  } else {
-    STYLE_BY_PROP.set(a.prop, [...a.values])
-  }
+function vocabRows(tag: 'concern' | 'axis' | 'plain') {
+  return STYLE_VOCAB.filter((r) => r.tag === tag).map((r) => ({
+    name: r.name,
+    channel: r.channel,
+    slots: r.slots.length ? r.slots.join(' · ') : '—',
+  }))
 }
-const STYLE_ROWS = [...STYLE_BY_PROP.entries()].map(([prop, values]) => ({
-  prop,
-  values: values.join(' · '),
-}))
 
 export default controller((_ctx: ControllerScope<Scope>) => ({
-  styleRows: () => STYLE_ROWS,
-  styleCount: () => SX_ATOMS.length,
+  concerns: () => vocabRows('concern'),
+  axes: () => vocabRows('axis'),
+  plains: () => vocabRows('plain'),
+  styleCount: () => STYLE_VOCAB.length,
+  concernCount: () => CONCERNS.length,
   statePrefixes: () => SX_STATE_PREFIXES,
   conditionPrefixes: () => SX_CONDITION_PREFIXES,
-  refusals: () => SX_REFUSALS,
-  refusalCount: () => SX_REFUSALS.length,
 }))
 </controller>
 
 <column gap="6" style(root)>
   <column gap="5" style(intro)>
     <p token="doc-eyebrow">Reference · Style</p>
-    <h1>Style — block attach</h1>
+    <h1>Style — tag attach</h1>
     <p token="doc-lead">
-      Product paint is a <strong>block statement</strong> on the host with a
-      flat chain:
-      <code>style&#40;&#123; pad(&#123; x: 2 &#125;).bg(primary).type(&#123; size: sm &#125;), animate: enter(&#123;…&#125;) &#125;&#41;</code>.
+      Product paint is a <strong>tag-position call</strong> on the open tag:
+      <code>style&#40;&#123; pad(4).bg(surface), when: &#123; hover: bg(muted) &#125; &#125;&#41;</code>.
       Reuse named Style in scope with
       <code>style name = &#123; … &#125;</code>, attach as
       <code>style&#40;name&#41;</code>, and compose pieces
-      <code>style&#40;base, emphasis&#41;</code>. Every setter argument is a
-      design token from a closed scale — the rows below list those values. An
-      off-list token is a compile error that names the same list.
+      <code>style&#40;base, emphasis&#41;</code>. The rows below are the one
+      Style vocab table — concern · axis · plain.
     </p>
     <p style(mutedSm)>
       Utility-string <code>style="…"</code> / <code>sx="…"</code> is not product
       (dead form — refuse). Responsive and state paint use object keys:
-      <code>style&#40;&#123; when: &#123; tablet: type(&#123; size: lg &#125;), hover: bg(muted) &#125; &#125;&#41;</code>
-      — not <code>tablet:</code> / <code>hover:</code> prefixes on atoms.
-      {styleCount()} scale entries feed the setters. Region legality lives on the
+      <code>style&#40;&#123; when: &#123; tablet: type(&#123; size: lg &#125;), hover: bg(muted) &#125; &#125;&#41;</code>.
+      {styleCount()} offered rows · {concernCount()} concerns. Region legality lives on the
       <a href="/docs/reference/regions">region matrix</a>.
     </p>
   </column>
 
   <column gap="3">
-    <h3>Setter value scales</h3>
+    <h3>Concerns</h3>
     <p style(mutedSm)>
-      Rows are named by historical atom heads (<code>bg</code>, <code>p</code>,
-      <code>rounded</code>, …). In product form you call the Style setter:
-      <code>style&#40;&#123; bg(…) &#125;&#41;</code>, <code>style&#40;&#123; pad(…) &#125;&#41;</code>,
-      <code>style&#40;&#123; radius(…) &#125;&#41;</code>, <code>style&#40;&#123; fg(…) &#125;&#41;</code>, and so on.
+      Named composite or slot object. Flat chain is the language:
+      <code>style&#40;&#123; bg(surface).pad(4) &#125;&#41;</code>.
     </p>
     <grid cols="2" gap="2">
-      <for {styleRows() as a} key={a.prop}>
+      <for {concerns() as a} key={a.name}>
         <card padding="sm" style(cardShell)>
           <column gap="1">
-            <code>{a.prop}</code>
-            <small style(valueText)>{a.values}</small>
+            <code>{a.name}</code>
+            <small style(valueText)>{a.channel} · {a.slots}</small>
           </column>
         </card>
       </for>
@@ -98,18 +86,33 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
   </column>
 
   <column gap="3">
-    <h3>Not Style — use this ({refusalCount()})</h3>
-    <p style(mutedBody)>
-      The refused table is the other half of the vocabulary. Every entry below
-      is something a Tailwind prior will reach for and Sail refuses by name;
-      each names the element or attribute to use instead.
+    <h3>Axis</h3>
+    <p style(mutedSm)>
+      Directional families — not slots of <code>size</code> or <code>border</code>.
     </p>
     <grid cols="2" gap="2">
-      <for {refusals() as r} key={r.atom}>
+      <for {axes() as a} key={a.name}>
         <card padding="sm" style(cardShell)>
           <column gap="1">
-            <code style(banCode)>{r.atom}</code>
-            <small style(valueText)>→ {r.instead}</small>
+            <code>{a.name}</code>
+            <small style(valueText)>{a.channel} · {a.slots}</small>
+          </column>
+        </card>
+      </for>
+    </grid>
+  </column>
+
+  <column gap="3">
+    <h3>Plains</h3>
+    <p style(mutedSm)>
+      Verbs and singles. One name, one call.
+    </p>
+    <grid cols="2" gap="2">
+      <for {plains() as a} key={a.name}>
+        <card padding="sm" style(cardShell)>
+          <column gap="1">
+            <code>{a.name}</code>
+            <small style(valueText)>{a.channel}</small>
           </column>
         </card>
       </for>
@@ -121,7 +124,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     <p style(mutedSm)>
       Product form:
       <code>style&#40;&#123; when: &#123; hover: bg(muted), current: fg(primary) &#125; &#125;&#41;</code>.
-      Historical prefix names below map 1:1 to those keys.
+      Keys below map 1:1 to those entries.
     </p>
     <grid cols="3" gap="2">
       <for {statePrefixes() as s} key={s.prefix}>

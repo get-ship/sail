@@ -3348,9 +3348,32 @@ fn emit_block(
         }
         lines.push(format!("{indent}--{}: {};", t.css_name, t.css_value));
     }
+    // bg/fg composites live on :root as `var(--muted)` / `var(--foreground)`.
+    // `@property` with syntax:<color> computes them there and inherits the
+    // used color — nested `[theme][mode]` specimens (theme-picker faces)
+    // then keep the document's ink on the inverse surface. Rebind on every
+    // theme block so the alias recomputes against this scope's palette.
+    if color_scheme.is_some() {
+        for (alias, target) in THEME_COMPOSITE_REBINDS {
+            lines.push(format!("{indent}--{alias}: var(--{target});"));
+        }
+    }
     lines.push("}".into());
     lines.join("\n")
 }
+
+/// Composite color members that must re-resolve inside a theme scope.
+/// Keep in lockstep with the `:root` aliases in generated `tokens.css`.
+const THEME_COMPOSITE_REBINDS: &[(&str, &str)] = &[
+    ("bg-surface-color", "surface-1"),
+    ("bg-muted-color", "muted"),
+    ("bg-card-color", "card"),
+    ("bg-button-color", "background"),
+    ("fg-foreground-color", "foreground"),
+    ("fg-muted-color", "muted-foreground"),
+    ("fg-card-color", "card-foreground"),
+    ("fg-button-color", "foreground"),
+];
 
 /// Banner for the Tier-2 expression-channel block. The tests in
 /// `tests/channel_integrity.rs` locate this block BY THIS BANNER STRING and
@@ -4144,6 +4167,14 @@ mod tests {
             "paper modes selectors missing: {themes_css}"
         );
         assert!(themes_css.contains("--primary:"));
+        assert!(
+            themes_css.contains("--fg-foreground-color: var(--foreground);"),
+            "theme scopes must rebind fg/bg composites: {themes_css}"
+        );
+        assert!(
+            themes_css.contains("--bg-muted-color: var(--muted);"),
+            "theme scopes must rebind bg.muted: {themes_css}"
+        );
         assert!(themes_css.contains("/* themes chrome */"));
 
         let reg: Value =

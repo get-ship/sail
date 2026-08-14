@@ -678,8 +678,8 @@ fn parse_named_style_binding(
     let i = skip_trivia(s, after_kw, None);
     let (name, after_name) = read_word(s, i);
     let form_hint = match kw {
-        StyleBindingKw::Const => "const filled = style({ paint: bg(primary) })",
-        StyleBindingKw::Style => "style filled = { paint: bg(primary) }",
+        StyleBindingKw::Const => "const filled = style({ bg(primary) })",
+        StyleBindingKw::Style => "style filled = { bg(primary) }",
     };
     if name.is_empty() {
         let msg = match kw {
@@ -1844,7 +1844,7 @@ mod tests {
     #[test]
     fn style_const_is_a_scope_member() {
         let b = block(
-            "const filled = style({ paint: bg(primary).fg(primary-foreground) })\nprops: {\n  label = ''\n}",
+            "const filled = style({ bg(primary).fg(primary-foreground) })\nprops: {\n  label = ''\n}",
         );
         assert!(
             b.style_env.contains_key("filled"),
@@ -1856,7 +1856,7 @@ mod tests {
     #[test]
     fn style_decl_is_a_scope_member() {
         let b = block(
-            "style filled = { paint: bg(primary).fg(primary-foreground) }\nprops: {\n  label = ''\n}",
+            "style filled = { bg(primary).fg(primary-foreground) }\nprops: {\n  label = ''\n}",
         );
         assert!(
             b.style_env.contains_key("filled"),
@@ -1867,14 +1867,13 @@ mod tests {
 
     #[test]
     fn style_decl_call_form_is_accepted() {
-        let b = block("style host = style({ paint: bg(primary) })\nprops: { label = '' }");
+        let b = block("style host = style({ bg(primary) })\nprops: { label = '' }");
         assert!(b.style_env.contains_key("host"));
     }
 
     #[test]
     fn style_decl_compose_merges() {
-        let b =
-            block("style a = { box: pad(1) }\nstyle b = a, { box: pad(2) }\nprops: { label = '' }");
+        let b = block("style a = { pad(1) }\nstyle b = a, { pad(2) }\nprops: { label = '' }");
         assert!(b.style_env.contains_key("a"));
         assert!(b.style_env.contains_key("b"));
         // Compose is ordered List (same as style(a, {…})).
@@ -1889,7 +1888,7 @@ mod tests {
     #[test]
     fn style_const_match_rhs_is_accepted() {
         let b = block(
-            "const soft = style({ paint: bg(muted) })\nconst paint = style({ match: { variant: { soft: soft, solid: style({ paint: bg(primary) }) } } })",
+            "const soft = style({ bg(muted) })\nconst paint = style({ match: { variant: { soft: soft, solid: style({ bg(primary) }) } } })",
         );
         assert!(b.style_env.contains_key("soft"));
         assert!(b.style_env.contains_key("paint"));
@@ -1898,10 +1897,10 @@ mod tests {
     #[test]
     fn style_decl_and_const_style_binding() {
         let b = block(
-            "style host = { paint: bg(primary) }\nconst muted = style({ paint: bg(muted) })\nprops: { label = '' }",
+            "style host = { bg(primary) }\nconst legacy = style({ bg(muted) })\nprops: { label = '' }",
         );
         assert!(b.style_env.contains_key("host"));
-        assert!(b.style_env.contains_key("muted"));
+        assert!(b.style_env.contains_key("legacy"));
     }
 
     #[test]
@@ -1948,7 +1947,7 @@ mod tests {
 
     #[test]
     fn style_call_as_scope_statement_is_refused() {
-        let e = err("style({ paint: bg(primary) })\nprops: { label = '' }");
+        let e = err("style({ bg(primary) })\nprops: { label = '' }");
         assert!(
             e.message.contains("tag-position") || e.message.contains("declaration"),
             "{}",
@@ -2009,15 +2008,13 @@ mod tests {
         let b = block(
             r#"
 style host = {
-  box: pad(2),
+  pad(2),
   when: {
-    hover: {
-      paint: bg(primary)
-    }
+    hover: bg(primary)
   }
 }
 style next = {
-  paint: bg(muted)
+  bg(muted)
 }
 props: { label = '' }
 "#,
@@ -2043,11 +2040,11 @@ props: { label = '' }
 style a = {
   match: {
     kind: {
-      "has } brace": { box: pad(1) }
+      "has } brace": { pad(1) }
     }
   }
 }
-style b = { box: pad(1) }
+style b = { pad(1) }
 "#,
         );
         assert!(b.style_env.contains_key("a"));
@@ -2061,9 +2058,9 @@ style b = { box: pad(1) }
 style a = {
   // closing } here is comment
   /* } { */
-  paint: bg(primary)
+  bg(primary)
 }
-style b = { box: pad(1) }
+style b = { pad(1) }
 "#,
         );
         assert!(b.style_env.contains_key("a"));
@@ -2074,11 +2071,11 @@ style b = { box: pad(1) }
     fn style_decl_compose_multiline_after_comma() {
         let b = block(
             r#"
-style a = { box: pad(1) }
+style a = { pad(1) }
 style b = a,
-{ box: pad(2) }
+{ pad(2) }
 style c = a,
-style({ box: pad(3) })
+style({ pad(3) })
 "#,
         );
         assert!(b.style_env.contains_key("a"));
@@ -2102,9 +2099,9 @@ style({ box: pad(3) })
     fn style_decl_back_to_back_objects() {
         let b = block(
             r#"
-style a = { box: pad(1) }
-style b = { box: pad(2) }
-style c = { when: { hover: { paint: bg(primary) } } }
+style a = { pad(1) }
+style b = { pad(2) }
+style c = { when: { hover: bg(primary) } }
 "#,
         );
         assert_eq!(b.style_env.len(), 3);
@@ -2117,8 +2114,8 @@ style c = { when: { hover: { paint: bg(primary) } } }
     fn style_decl_trailing_comment_before_next() {
         let b = block(
             r#"
-style a = { box: pad(1) } // keep
-style b = { box: pad(2) }
+style a = { pad(1) } // keep
+style b = { pad(2) }
 "#,
         );
         assert!(b.style_env.contains_key("a"));
@@ -2127,7 +2124,7 @@ style b = { box: pad(2) }
 
     #[test]
     fn unknown_word_still_refused() {
-        let e = err("filled = { box: pad(1) }");
+        let e = err("filled = { pad(1) }");
         assert!(
             e.message.contains("`filled` is not a `<scope>` member"),
             "{}",
@@ -2142,28 +2139,26 @@ style b = { box: pad(2) }
         let src = r#"
 <scope>
   style host = {
-    box: pad(2),
+    pad(2),
     when: {
-      hover: {
-        paint: bg(primary)
-      }
+      hover: bg(primary)
     }
   }
   style quiet = host,
   {
-    box: pad(1)
+    pad(1)
   }
   style labeled = {
     match: {
       kind: {
-        "has } brace": { box: pad(1) }
+        "has } brace": { pad(1) }
       }
     }
   }
   // } in comment
   style noted = {
     /* } { */
-    paint: bg(muted)
+    bg(muted)
   }
 </scope>
 <div style(host)></div>

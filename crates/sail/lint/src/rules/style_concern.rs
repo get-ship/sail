@@ -20,7 +20,7 @@ mod tests {
 
     #[test]
     fn warn_mode_is_gone() {
-        let src = r#"<div style({ paint: borderWidth(1).border(primary) })>x</div>"#;
+        let src = r#"<div style({ border({ width: 1, color: primary }) })>x</div>"#;
         let findings = check(&PathBuf::from("t.sail"), src);
         assert!(
             findings.is_empty(),

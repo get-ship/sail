@@ -812,6 +812,10 @@ pub fn find_concern(name: &str) -> Option<&'static ConcernSpec> {
 
 /// Keep the author name. Wrap a bare token onto the concern's primary slot
 /// unless it is a named composite.
+///
+/// `size(token)` is a square: both axes. `size({ w })` / `size({ h })` stay
+/// one-axis. Folding a scale step onto `w` only flattened every spinner,
+/// icon, thumb, and tone swatch.
 pub fn prepare_concern_call(method: &str, args: Vec<PaintArg>) -> (String, Vec<PaintArg>) {
     let Some(spec) = find_concern(method) else {
         return (method.to_string(), args);
@@ -820,6 +824,12 @@ pub fn prepare_concern_call(method: &str, args: Vec<PaintArg>) -> (String, Vec<P
     let args = match args_one(args) {
         Some(PaintArg::Token(name)) if resolve_concern_name(spec, &name).is_some() => {
             vec![PaintArg::Token(name)]
+        }
+        Some(PaintArg::Token(name)) if spec.name == "size" => {
+            vec![PaintArg::Slots(BTreeMap::from([
+                ("w".to_string(), PaintArg::Token(name.clone())),
+                ("h".to_string(), PaintArg::Token(name)),
+            ]))]
         }
         Some(PaintArg::Token(name)) => vec![PaintArg::Slots(BTreeMap::from([(
             primary.to_string(),
@@ -2228,7 +2238,7 @@ mod tests {
 
     #[test]
     fn border_subtle_emits_member_vars() {
-        let op = only_op("style({ paint: border(subtle) })");
+        let op = only_op("style({ border(subtle) })");
         let css = lower_op_css(&op).unwrap();
         assert!(
             css.contains(&("border-color".into(), "var(--border-subtle-color)".into())),
@@ -2246,7 +2256,7 @@ mod tests {
 
     #[test]
     fn border_default_emits_member_vars() {
-        let op = only_op("style({ paint: border(default) })");
+        let op = only_op("style({ border(default) })");
         let css = lower_op_css(&op).unwrap();
         assert!(
             css.contains(&("border-color".into(), "var(--border-default-color)".into()))
@@ -2257,7 +2267,7 @@ mod tests {
 
     #[test]
     fn border_slot_object_emits_only_named_slots() {
-        let op = only_op("style({ paint: border({ color: muted, width: hairline }) })");
+        let op = only_op("style({ border({ color: muted, width: hairline }) })");
         let css = lower_op_css(&op).unwrap();
         assert!(
             css.contains(&("border-color".into(), "var(--muted)".into())),
@@ -2272,7 +2282,7 @@ mod tests {
 
     #[test]
     fn radius_is_not_a_border_slot() {
-        let (_, diags) = parse("style({ paint: border({ radius: md }) })");
+        let (_, diags) = parse("style({ border({ radius: md }) })");
         assert!(
             diags.iter().any(|d| {
                 matches!(d, StyleDiagnostic::UnknownConcernSlot { slot, .. } if slot == "radius")
@@ -2285,7 +2295,7 @@ mod tests {
 
     #[test]
     fn border_primary_is_the_color_slot() {
-        let (style, diags) = parse("style({ paint: border(primary) })");
+        let (style, diags) = parse("style({ border(primary) })");
         assert!(
             diags.is_empty(),
             "{:?}",
@@ -2296,7 +2306,7 @@ mod tests {
 
     #[test]
     fn duplicate_slot_in_object_names_the_slot() {
-        let (_, diags) = parse("style({ paint: border({ color: muted, color: primary }) })");
+        let (_, diags) = parse("style({ border({ color: muted, color: primary }) })");
         let msg = diags
             .iter()
             .find(|d| matches!(d, StyleDiagnostic::DuplicateSlot { slot, .. } if slot == "color"))
@@ -2315,7 +2325,7 @@ mod tests {
 
     #[test]
     fn slot_color_unknown_pack_name_is_bad_token() {
-        let (_, diags) = parse("style({ paint: border({ color: dialog-border }) })");
+        let (_, diags) = parse("style({ border({ color: dialog-border }) })");
         assert!(
             diags
                 .iter()
@@ -2328,8 +2338,7 @@ mod tests {
 
     #[test]
     fn same_kind_twice_clashes() {
-        let (style, parse_diags) =
-            parse("style({ paint: border(subtle).border({ color: primary }) })");
+        let (style, parse_diags) = parse("style({ border(subtle).border({ color: primary }) })");
         assert!(
             parse_diags.is_empty(),
             "{:?}",
@@ -2351,7 +2360,7 @@ mod tests {
     #[test]
     fn stroke_plus_ring_do_not_clash() {
         let (style, diags) =
-            parse("style({ paint: border(subtle).border({ kind: ring, color: primary }) })");
+            parse("style({ border(subtle).border({ kind: ring, color: primary }) })");
         assert!(
             diags.is_empty(),
             "{:?}",
@@ -2363,9 +2372,8 @@ mod tests {
 
     #[test]
     fn when_override_does_not_clash() {
-        let (style, diags) = parse(
-            "style({ paint: border(subtle), when: { hover: { paint: border({ color: primary }) } } })",
-        );
+        let (style, diags) =
+            parse("style({ border(subtle), when: { hover: { border({ color: primary }) } } })");
         assert!(
             diags.is_empty(),
             "{:?}",
@@ -2377,7 +2385,7 @@ mod tests {
 
     #[test]
     fn size_and_space_do_not_clash() {
-        let (style, diags) = parse("style({ box: size({ w: full }).pad({ x: 3 }) })");
+        let (style, diags) = parse("style({ size({ w: full }).pad({ x: 3 }) })");
         assert!(
             diags.is_empty(),
             "{:?}",
@@ -2464,7 +2472,7 @@ mod tests {
 
     #[test]
     fn size_slot_object_lowers() {
-        let op = only_op("style({ box: size({ w: full, h: full }) })");
+        let op = only_op("style({ size({ w: full, h: full }) })");
         let css = lower_op_css(&op).unwrap();
         assert!(
             css.iter().any(|(p, v)| p == "width" && v.contains("100%")),
@@ -2486,6 +2494,37 @@ mod tests {
         assert_eq!(retired_replacement("w").unwrap().0, "size");
         assert_eq!(retired_replacement("shadow").unwrap().0, "elevation");
         assert_eq!(retired_replacement("gap").unwrap().0, "gap");
+    }
+
+    #[test]
+    fn size_bare_token_is_a_square() {
+        let (name, args) =
+            prepare_concern_call("size", vec![PaintArg::Token("icon-size-md".into())]);
+        assert_eq!(name, "size");
+        match &args[0] {
+            PaintArg::Slots(slots) => {
+                assert_eq!(
+                    slots.get("w"),
+                    Some(&PaintArg::Token("icon-size-md".into()))
+                );
+                assert_eq!(
+                    slots.get("h"),
+                    Some(&PaintArg::Token("icon-size-md".into()))
+                );
+            }
+            other => panic!("expected w+h slots, got {other:?}"),
+        }
+        let css = lower_op_css(&only_op("style({ size(icon-size-md) })")).unwrap();
+        assert!(
+            css.iter()
+                .any(|(p, v)| p == "width" && v.contains("icon-size-md")),
+            "{css:?}"
+        );
+        assert!(
+            css.iter()
+                .any(|(p, v)| p == "height" && v.contains("icon-size-md")),
+            "{css:?}"
+        );
     }
 
     #[test]

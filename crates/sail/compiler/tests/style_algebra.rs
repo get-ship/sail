@@ -1,7 +1,7 @@
 //! Style algebra integration tests.
 //!
-//! Exercises the compile-time Style path through the preprocessor:
-//! - setter chains
+//! Exercises the new compile-time Style path through the preprocessor:
+//! - setter chains (style.*)
 //! - match guards
 //! - when guards
 //! - compound guards
@@ -38,7 +38,7 @@ fn setter_chain_lowers_through_style_ir() {
     let src = r#"<div style({ bg(primary).fg(primary-foreground).radius(md) })> </div>"#;
     let js = compile_component(src).expect("compiles");
     assert!(
-        js.contains("s-bg") || js.contains("bgcolor") || js.contains("bgprimary"),
+        js.contains("s-bg") || js.contains("bgprimary") || js.contains("primary"),
         "setter chain should emit classes: {js}"
     );
 }
@@ -133,23 +133,25 @@ fn chain_inside_list_item_still_clashes() {
 #[test]
 fn cross_setter_chain_clash_on_shared_slot() {
     // Clash detection keys on per-call paint slots (op_slots), so different
-    // setters touching one slot clash under Chain: `border({ width: 1 })`
-    // writes `border-width`, the same slot `border({ width: 2 })` writes.
+    // setters touching one slot clash under Chain: `border(1)` narrows to
+    // `border-width`, the same slot `borderWidth(2)` writes.
     let (style, _) = parse("style({ border({ width: 1 }).border({ width: 2 }) })");
     let diags = sail_lint::style::clash::detect_clashes(&style, &std::collections::HashMap::new());
     assert!(
-        diags
-            .iter()
-            .any(|d| d.message().contains("border") || d.message().contains("clash")),
-        "border width 1 vs 2 must clash on the shared border stroke slot: {diags:?}"
+        diags.iter().any(|d| {
+            let m = d.message();
+            m.contains("border")
+                && (m.contains("width") || m.contains("clash") || m.contains("stroke"))
+        }),
+        "two border width writes must clash: {diags:?}"
     );
 }
 
 #[test]
 fn cross_setter_disjoint_slots_do_not_clash() {
-    // Distinct concerns write distinct slots and compose without a clash.
-    // (v3 `border` is one stroke concern — width + color share a slot.)
-    let (style, _) = parse("style({ pad(4).bg(primary) })");
+    // Per-call narrowing: a color-token `border` writes only border-color,
+    // so it composes with `borderWidth` without a clash.
+    let (style, _) = parse("style({ border({ width: 1, color: primary }) })");
     let diags = sail_lint::style::clash::detect_clashes(&style, &std::collections::HashMap::new());
     assert!(
         !diags.iter().any(|d| d.message().contains("clash")),

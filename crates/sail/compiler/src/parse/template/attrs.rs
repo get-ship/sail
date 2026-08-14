@@ -12,8 +12,8 @@ pub fn compile_attrs(el: &html::Element, loc_prefix: &str) -> Result<Vec<AttrIns
     let is_slot = el.tag.eq_ignore_ascii_case("slot");
     let is_partial = el.tag.eq_ignore_ascii_case("partial");
     for a in &el.attributes {
-        // SPEC-PARTIAL-1: `<partial name props: Type>` is a declaration, not a
-        // template directive. parse_author keeps the tag; accept the type slot.
+        // Product header: `<partial kebab-name props: TypeName>`.
+        // Author parse keeps the declaration; full preprocess expands it away.
         if is_partial && (a.name == "props" || a.name == "props:") {
             out.push(AttrInstr::Static {
                 name: "props".into(),
@@ -458,7 +458,7 @@ fn unknown_directive_error(name: &str, value_span: Span, _loc: &str) -> CompileE
     let known = crate::directive_manifest::DIRECTIVE_PREFIXES.join(":, ");
     CompileError::new(format!(
         "unknown directive `{name}` — attribute directives use the prefixes: {known}:… \
-         (plus sx=, mutation=, slot=). Motion is Style: sx={{style.<trigger>({{…}})}}."
+         (plus mutation=, slot=). Motion is Style: style({{ animate: {{ enter: play(…) }} }})."
     ))
     .with_span(value_span)
     .with_category(RULE_ID)
@@ -1360,6 +1360,20 @@ mod tests {
             "tombstone teaching deleted, got: {}",
             err.message
         );
+    }
+
+    #[test]
+    fn parse_author_keeps_partial_props_type_header() {
+        let src = r#"
+<scope>
+  type TileProps = { title: string }
+</scope>
+<partial list-tile props: TileProps>
+  <text>{title}</text>
+</partial>
+"#;
+        crate::parse::parse_author(src)
+            .expect("parse_author must accept <partial name props: Type>");
     }
 
     #[test]

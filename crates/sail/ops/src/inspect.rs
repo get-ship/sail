@@ -738,8 +738,10 @@ fn build_layout(
         // Document-order tag cursors join layout boxes → tree nodes (Style/IR/tag).
         let mut tag_cursors: BTreeMap<String, usize> = BTreeMap::new();
         // Last successfully joined L1/keyword host — expansion chrome (card
-        // header/footer divs, ticker track spans) attaches here instead of root.
-        let mut last_host_id: Option<String> = None;
+        // header/footer divs, ticker track spans, in-file partial bodies)
+        // attaches here. Seed with the author root so a leading viewport
+        // wrapper is page chrome, not an unknown root dump.
+        let mut last_host_id: Option<String> = meta.root_ids.first().cloned();
         let mut last_if_id: Option<String> = None;
         for b in &scan.boxes {
             let author_tag = elements
@@ -1096,6 +1098,18 @@ fn collect_state_edges(
                 collect_state_edges(
                     source, file, &f.body, meta, readers, writers, expr_occ, &path, &mut o,
                 );
+            }
+            Instr::When(w) => {
+                let mut o = 0;
+                collect_state_edges(
+                    source, file, &w.body, meta, readers, writers, expr_occ, &path, &mut o,
+                );
+                if let Some(e) = &w.else_body {
+                    let mut o = 0;
+                    collect_state_edges(
+                        source, file, e, meta, readers, writers, expr_occ, &path, &mut o,
+                    );
+                }
             }
             Instr::Match(m) => {
                 for name in sail_compiler::parse::expr::idents::collect_idents(

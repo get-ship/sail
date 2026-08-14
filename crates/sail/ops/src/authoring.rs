@@ -87,7 +87,7 @@ Author actions: `src/actions/` under floor ERROR (no style, no state primitives,
 Controllers never `.style` / `createElement`.\n\
                  3. Compositions / L1–L2 first (tabs, tooltip, sail-tree, …).\n\
                  4. `prop:tree={{table}}` identity bind for sail-tree — never querySelector+assign host.\n\
-                 5. sx + tokens only — `cssText` / `.style` / raw CSS is a compile error.\n\
+                 5. Style + tokens only — `cssText` / `.style` / raw CSS is a compile error.\n\
                  6. Missing primitive → report gap; do not escape to DOM.\n\n\
                  **Hard fails in `apps/`:** `createElement` / `cssText` / `querySelector` assign.\n"
             );
@@ -96,7 +96,7 @@ Controllers never `.style` / `createElement`.\n\
                 "- No `<style>` / `style=` / raw px-hex — tokens only.\n\
                  - Style product: `style({{ pad(4).bg(surface) }})` — not utility strings.\n\
                  - Layout keywords: `<row>` `<column>` `<grid>` `<center>` `<stack>`.\n\
-                 - Participation on the box channel: `style({{ size({{ w: full, min-w: 0 }}).grow(1) }})` \
+                 - Participation via `size` / `grow` / `shrink`: `style({{ size({{ w: full, min-w: 0 }}).grow(1) }})` \
                    (`sail-participation-style` refuses bare `grow`/`shrink`/`w`/`min-w`/`max-w`).\n\
                  - Never `display(…)` on layout keywords (`sail-display-on-layout`):\n  \
                    `.sail-col` / `.sail-row` beat `.s-displaynone`. Plain host + nest layout.\n\
@@ -141,17 +141,12 @@ Controllers never `.style` / `createElement`.\n\
             }
             let _ = writeln!(
                 md,
-                "\n**Participation (any element, box channel):** \
+                "\n**Participation (any element):** \
                  `style({{ size({{ w: full, min-w: 0 }}).grow(1) }})` / `shrink(0)` — bare attrs refused \
                  (`sail-participation-style`). Axis sugar `gap`/`align`/`justify` stays on layout keywords.\n\n\
-                 **Refused layout-as-sx** (`style_vocab::refusals()`):\n"
-            );
-            for (atom, instead) in sail_lint::style_vocab::refusals() {
-                let _ = writeln!(md, "- `{atom}` — {instead}");
-            }
-            let _ = writeln!(
-                md,
-                "\n**Display on layout:** `display(…)` on layout keywords is a hard error \
+                 **Layout is elements, not Style atoms.** `flex`/`grid`/`gap-*`/`items-*` \
+                 are not vocabulary — use `<row>` / `<column>` / `<grid>` and their attrs.\n\n\
+                 **Display on layout:** `display(…)` on layout keywords is a hard error \
                  (`sail-display-on-layout`). Hide a plain host; nest the layout keyword.\n"
             );
         }
@@ -1403,7 +1398,7 @@ mod tests {
         use crate::call_rpc;
         use crate::ctx::Ctx;
         let ctx = Ctx::from_env();
-        let src = "style({ paint: border() })";
+        let src = "style({ border() })";
         let off = src.find("border(").expect("border(") + 7;
         let complete = call_rpc(
             "SailAuthoring",
@@ -1425,7 +1420,7 @@ mod tests {
             );
         }
 
-        let color_src = "style({ paint: border({ color:  }) })";
+        let color_src = "style({ border({ color:  }) })";
         let color_off = color_src.find("color: ").expect("color") + 7;
         let color = call_rpc(
             "SailAuthoring",
@@ -1449,7 +1444,7 @@ mod tests {
             "width in color slot: {color_labels:?}"
         );
 
-        let hover_src = "style({ paint: border(border.subtle) })";
+        let hover_src = "style({ border(border.subtle) })";
         let hover_off = hover_src.find("subtle").expect("token");
         let hover = call_rpc(
             "SailAuthoring",
@@ -1489,51 +1484,62 @@ mod tests {
     fn complete_and_hover_size_type_elevation_fill_match_registry() {
         use crate::call_rpc;
         use crate::ctx::Ctx;
-        let paint = complete_labels("style({ paint:  })", "paint: ", 7);
-        for want in ["bg", "fg", "border", "elevation"] {
-            assert!(paint.iter().any(|l| l == want), "{want} missing: {paint:?}");
-        }
-        for dead in ["fill", "ink", "shadow"] {
+        // ObjectKey now also offers setters — channels are dissolved.
+        let object = complete_labels("style({  })", "{ ", 2);
+        for want in [
+            "when",
+            "match",
+            "animate",
+            "compound",
+            "bg",
+            "fg",
+            "border",
+            "elevation",
+            "size",
+            "pad",
+            "margin",
+            "position",
+            "type",
+        ] {
             assert!(
-                !paint.iter().any(|l| l == dead),
-                "dead `{dead}` offered on paint: {paint:?}"
+                object.iter().any(|l| l == want),
+                "{want} missing: {object:?}"
+            );
+        }
+        for dead in [
+            "box",
+            "paint",
+            "text",
+            "fill",
+            "ink",
+            "shadow",
+            "space",
+            "place",
+            "flow",
+            "padX",
+            "w",
+            "minW",
+            "fontSize",
+            "truncate",
+            "fontWeight",
+        ] {
+            assert!(
+                !object.iter().any(|l| l == dead),
+                "`{dead}` offered: {object:?}"
             );
         }
 
-        let box_ch = complete_labels("style({ box:  })", "box: ", 5);
-        for want in ["size", "pad", "margin", "position"] {
-            assert!(
-                box_ch.iter().any(|l| l == want),
-                "{want} missing: {box_ch:?}"
-            );
-        }
-        for absorbed in ["space", "place", "flow", "padX", "w", "minW"] {
-            assert!(
-                !box_ch.iter().any(|l| l == absorbed),
-                "absorbed `{absorbed}` offered on box: {box_ch:?}"
-            );
-        }
-
-        let text = complete_labels("style({ text:  })", "text: ", 6);
-        assert!(text.iter().any(|l| l == "type"), "type missing: {text:?}");
-        for absorbed in ["fontSize", "truncate", "fontWeight"] {
-            assert!(
-                !text.iter().any(|l| l == absorbed),
-                "absorbed `{absorbed}` offered on text: {text:?}"
-            );
-        }
-
-        let size = complete_labels("style({ box: size() })", "size(", 5);
+        let size = complete_labels("style({ size() })", "size(", 5);
         for want in ["control-sm", "control-md", "control-lg", "full"] {
             assert!(size.iter().any(|l| l == want), "{want} missing: {size:?}");
         }
 
-        let typ = complete_labels("style({ text: type() })", "type(", 5);
+        let typ = complete_labels("style({ type() })", "type(", 5);
         for want in ["body", "body-sm", "label", "heading", "mono"] {
             assert!(typ.iter().any(|l| l == want), "{want} missing: {typ:?}");
         }
 
-        let elev = complete_labels("style({ paint: elevation() })", "elevation(", 10);
+        let elev = complete_labels("style({ elevation() })", "elevation(", 10);
         for want in ["xs", "sm", "md", "lg", "xl", "none"] {
             assert!(elev.iter().any(|l| l == want), "{want} missing: {elev:?}");
         }
@@ -1543,7 +1549,7 @@ mod tests {
             assert!(fill.iter().any(|l| l == want), "{want} missing: {fill:?}");
         }
 
-        let slots = complete_labels("style({ paint: border({  }) })", "border({ ", 9);
+        let slots = complete_labels("style({ border({  }) })", "border({ ", 9);
         for want in ["color", "width", "style", "edge", "kind"] {
             assert!(slots.iter().any(|l| l == want), "{want} missing: {slots:?}");
         }
@@ -1554,14 +1560,14 @@ mod tests {
 
         let ctx = Ctx::from_env();
         for (src, token, member) in [
-            ("style({ box: size(size.control-md) })", "control-md", "h:"),
-            ("style({ text: type(type.heading) })", "heading", "family:"),
+            ("style({ size(size.control-md) })", "control-md", "h:"),
+            ("style({ type(type.heading) })", "heading", "family:"),
             (
-                "style({ paint: elevation(elevation.sm) })",
+                "style({ elevation(elevation.sm) })",
                 "elevation.sm",
                 "shadow:",
             ),
-            ("style({ bg(surface-1) })", "surface-1", "oklch"),
+            ("style({ bg(bg.surface) })", "bg.surface", "color:"),
         ] {
             let hover_off = src.find(token).expect(token);
             let hover = call_rpc(
@@ -1581,7 +1587,7 @@ mod tests {
 
     #[test]
     fn check_flags_display_on_layout() {
-        let src = r#"<column style({display(none)})>x</column>"#;
+        let src = r#"<column style({ display(none) })>x</column>"#;
         let diags = run_check(None, Some(src)).unwrap();
         assert!(
             diags
@@ -2117,8 +2123,10 @@ export default controller((ctx) => ({ count: signal(0) }))
     }
 
     #[test]
-    fn layout_check_returns_ok_and_box_report() {
-        let src = "\n\n<button>x</button>";
+    fn layout_check_uses_author_source_line_col() {
+        // Collapsed parent + sized child. An empty child totaling 0 is
+        // suppressed as analyzer noise — same contract as layout_conformance.
+        let src = "\n\n<column style({ size(0) })>\n  <div style({ size(20) })>\n    x\n  </div>\n</column>";
         let out = sail_layout_check(src).unwrap();
         assert_eq!(out["ok"], true);
         assert!(out["diagnostics"].as_array().is_some());

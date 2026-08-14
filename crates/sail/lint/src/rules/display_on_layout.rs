@@ -1,4 +1,4 @@
-//! `sail-display-on-layout` — do not put `style.display(…)` on layout keywords.
+//! `sail-display-on-layout` — do not put `display(…)` on layout keywords.
 //!
 //! Layout bases (`.sail-col` / `.sail-row` / `.sail-grid` / …) own
 //! `display:flex|grid`. A sibling atomic class like `s-displaynone` loses the
@@ -8,9 +8,9 @@
 //! layout keyword inside.
 //!
 //! Flags:
-//! - direct `style={style.display(…)}` and mid-chain `.display(` / `when({…})`
-//! - **simple Style const refs** whose defining expression includes `display(`:
-//!   `const hide = style.display(none)` then `<column style={hide}>`
+//! - tag-position `style({ display(…) })` (and residual `style={…}` / mid-chain)
+//! - **simple Style name refs** whose defining expression includes `display(`:
+//!   `style hide = { display(none) }` then `<column style(hide)>`
 //!
 //! **Known gaps (not yet flagged):** multi-hop refs (`const a = hide`), list
 //! spreads, `match`/`compound` wrappers that only nest a display-bearing const,
@@ -28,7 +28,7 @@ use crate::rules::layout::{self};
 pub const RULE_ID: &str = "sail-display-on-layout";
 
 pub fn check(path: &Path, source: &str) -> Vec<Finding> {
-    // Scope consts with display(…) — used when style={name} is a bare ref.
+    // Scope Style names with display(…) — used when style(name) is a bare ref.
     let display_consts = display_bearing_const_names(source);
 
     // Tag scanning is SHARED with the layout rule (`layout::scan_open_tags`):
@@ -60,16 +60,16 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
             rule: RULE_ID,
             severity: Severity::Error,
             message: format!(
-                "`style.display(…)` on <{tag}> is rejected — layout bases \
+                "`display(…)` on <{tag}> is rejected — layout bases \
                  (.{base}) own `display:flex|grid` and beat \
                  `.s-displaynone` / other display atoms. Use a plain host \
                  element for show/hide and nest <{tag}> inside.",
                 base = layout_base_class(tag),
             ),
             suggest: Some(format!(
-                "Replace `<{tag} style({{ box: display(none).… }})>` (or a Style \
+                "Replace `<{tag} style({{ display(none).… }})>` (or a Style \
                  const that sets display) with \
-                 `<div style({{ box: display(none) }})><{tag} …>…</{tag}></div>` \
+                 `<div style({{ display(none) }})><{tag} …>…</{tag}></div>` \
                  (or hide the host with when/match)."
             )),
         });
@@ -98,7 +98,8 @@ fn excluded_spans(source: &str) -> Vec<(usize, usize)> {
     out
 }
 
-/// Names of `const name = …` whose initializer text includes `display(`.
+/// Names of `style name = { … }` / residual `const name = …` whose
+/// initializer text includes `display(`.
 fn display_bearing_const_names(source: &str) -> HashSet<String> {
     let mut out = HashSet::new();
     let bytes = source.as_bytes();
@@ -124,7 +125,45 @@ fn display_bearing_const_names(source: &str) -> HashSet<String> {
                 continue;
             }
         }
-        // `const name =`
+        // Product: `style name = { … }` (not `style({…})` / `style(name)`).
+        if source[i..].starts_with("style") && (i == 0 || !bytes[i - 1].is_ascii_alphanumeric()) {
+            let after = i + "style".len();
+            if after < bytes.len() && bytes[after].is_ascii_whitespace() {
+                let mut j = after;
+                while j < bytes.len() && bytes[j].is_ascii_whitespace() {
+                    j += 1;
+                }
+                let name_start = j;
+                while j < bytes.len()
+                    && (bytes[j].is_ascii_alphanumeric() || bytes[j] == b'_' || bytes[j] == b'$')
+                {
+                    j += 1;
+                }
+                if j > name_start {
+                    let name = &source[name_start..j];
+                    while j < bytes.len() && bytes[j].is_ascii_whitespace() {
+                        j += 1;
+                    }
+                    if bytes.get(j) == Some(&b'=') {
+                        j += 1;
+                        let init_start = j;
+                        while j < bytes.len() && bytes[j] != b'\n' {
+                            if (bytes[j] & 0xC0) != 0x80 && source[j..].starts_with("</scope>") {
+                                break;
+                            }
+                            j += 1;
+                        }
+                        let init = &source[init_start..j];
+                        if sx_contains_display(init) {
+                            out.insert(name.to_string());
+                        }
+                        i = j;
+                        continue;
+                    }
+                }
+            }
+        }
+        // Residual: `const name =`
         if source[i..].starts_with("const ") && (i == 0 || !bytes[i - 1].is_ascii_alphanumeric()) {
             let after = i + "const ".len();
             let rest = &source[after..];
@@ -162,10 +201,17 @@ fn display_bearing_const_names(source: &str) -> HashSet<String> {
     out
 }
 
-/// `style={hide}` / `style={ hide }` → `Some("hide")`. Chains/calls → None.
+/// `style(hide)` / residual `style={hide}` → `Some("hide")`. Chains/calls → None.
 fn sx_bare_const_ref(sx: &str) -> Option<String> {
     let mut s = sx.trim();
-    if let Some(inner) = s.strip_prefix('{').and_then(|t| t.strip_suffix('}')) {
+    if let Some(rest) = s.strip_prefix("style") {
+        let rest = rest.trim_start();
+        if let Some(inner) = rest.strip_prefix('(').and_then(|t| t.strip_suffix(')')) {
+            s = inner.trim();
+        } else {
+            return None;
+        }
+    } else if let Some(inner) = s.strip_prefix('{').and_then(|t| t.strip_suffix('}')) {
         s = inner.trim();
     }
     if s.is_empty() {
@@ -232,7 +278,7 @@ mod tests {
 
     #[test]
     fn flags_display_none_on_column() {
-        let f = run(r#"<column style={style.display(none).pad(4)}>x</column>"#);
+        let f = run(r#"<column style({ display(none).pad(4) })>x</column>"#);
         assert_eq!(f.len(), 1, "{f:?}");
         assert_eq!(f[0].rule, RULE_ID);
         assert!(f[0].message.contains("sail-col"), "{}", f[0].message);
@@ -241,7 +287,7 @@ mod tests {
 
     #[test]
     fn flags_when_display_on_row() {
-        let f = run(r#"<row style={style.pad(2).when({ tablet: style.display(none) })}>x</row>"#);
+        let f = run(r#"<row style({ pad(2), when: { tablet: display(none) } })>x</row>"#);
         assert_eq!(f.len(), 1, "{f:?}");
         assert!(
             f[0].message.contains("<row>") || f[0].message.contains("row"),
@@ -252,13 +298,13 @@ mod tests {
 
     #[test]
     fn allows_display_on_plain_div() {
-        let f = run(r#"<div style={style.display(none)}><column>x</column></div>"#);
+        let f = run(r#"<div style({ display(none) })><column>x</column></div>"#);
         assert!(f.is_empty(), "{f:?}");
     }
 
     #[test]
     fn allows_layout_without_display() {
-        let f = run(r#"<column style={style.pad(4).bg(surface-2)}>x</column>"#);
+        let f = run(r#"<column style({ pad(4).bg(surface-2) })>x</column>"#);
         assert!(f.is_empty(), "{f:?}");
     }
 
@@ -267,9 +313,9 @@ mod tests {
         // Const may set display; footgun is the layout host class only.
         let f = run(r#"
             <scope>
-              const rail = style.display(none).pad(4)
+              style rail = { display(none).pad(4) }
             </scope>
-            <div style={rail}>x</div>
+            <div style(rail)>x</div>
             "#);
         assert!(f.is_empty(), "{f:?}");
     }
@@ -278,9 +324,9 @@ mod tests {
     fn flags_display_const_ref_on_column() {
         let f = run(r#"
             <scope>
-              const hide = style.display(none)
+              style hide = { display(none) }
             </scope>
-            <column style={hide}>x</column>
+            <column style(hide)>x</column>
             "#);
         assert_eq!(f.len(), 1, "{f:?}");
         assert_eq!(f[0].rule, RULE_ID);
@@ -290,9 +336,9 @@ mod tests {
     fn allows_non_display_const_on_column() {
         let f = run(r#"
             <scope>
-              const paint = style.pad(4).bg(surface-2)
+              style paint = { pad(4).bg(surface-2) }
             </scope>
-            <column style={paint}>x</column>
+            <column style(paint)>x</column>
             "#);
         assert!(f.is_empty(), "{f:?}");
     }
@@ -303,9 +349,9 @@ mod tests {
     fn utf8_ellipsis_in_const_initializer_does_not_panic() {
         let f = run(r#"
             <scope>
-              const paint = style.pad(4) // …
+              style paint = { pad(4) } // …
             </scope>
-            <column style={paint}>x</column>
+            <column style(paint)>x</column>
             "#);
         assert!(f.is_empty(), "{f:?}");
     }
@@ -313,14 +359,14 @@ mod tests {
     #[test]
     fn utf8_ellipsis_in_sx_attr_does_not_panic() {
         // Comment-like multi-byte in an sx expression without display(.
-        let f = run(r#"<column style={style.pad(4) /* … */}>x</column>"#);
+        let f = run(r#"<column style({ pad(4) /* … */ })>x</column>"#);
         assert!(f.is_empty(), "{f:?}");
     }
 
     #[test]
     fn flags_all_layout_keywords() {
         for tag in TAGS {
-            let src = format!(r#"<{tag} style={{style.display(flex)}}>x</{tag}>"#);
+            let src = format!(r#"<{tag} style({{ display(flex) }})>x</{tag}>"#);
             let f = run(&src);
             assert_eq!(f.len(), 1, "expected flag for <{tag}>: {f:?}");
         }
@@ -332,10 +378,10 @@ mod tests {
     #[test]
     fn self_closing_layout_tag_does_not_hang() {
         for tag in TAGS {
-            let f = run(&format!("<{tag} style={{style.pad(2)}} />"));
+            let f = run(&format!("<{tag} style({{ pad(2) }}) />"));
             assert!(f.is_empty(), "<{tag}/>: {f:?}");
         }
-        let f = run(r#"<column style={style.display(none)} />"#);
+        let f = run(r#"<column style({ display(none) }) />"#);
         assert_eq!(
             f.len(),
             1,

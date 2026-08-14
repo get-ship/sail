@@ -300,12 +300,12 @@ fn apply_one(source: &str, file: &str, op: &EditOp) -> Result<String, String> {
                 .ok_or_else(|| "open span out of range".to_string())?;
             // Product Style is a tag-position call on the open tag.
             if let Some((rel_lo, rel_hi, expr)) = try_tag_style_in_open(open) {
-                let merged = merge_channel_setter(&expr, setter, args)?;
+                let merged = merge_style_setter(&expr, setter, args)?;
                 let abs_lo = node.open_span.start + rel_lo;
                 let abs_hi = node.open_span.start + rel_hi;
                 Ok(replace_range(source, abs_lo, abs_hi, &merged))
             } else {
-                let insert = format!(" {}", channel_style_stmt(setter, args));
+                let insert = format!(" {}", style_stmt(setter, args));
                 let open_inner = open.trim_end();
                 let cut = if open_inner.ends_with("/>") {
                     open.len() - (open.len() - open_inner.len()) - 2
@@ -492,13 +492,14 @@ fn attrs_to_open_suffix(attrs: Option<&serde_json::Value>) -> String {
     s
 }
 
-/// Closed-vocab check for setSx.
+/// Closed-vocab check for setSx against Style `offered_rows()`.
+/// Residual utility refusals are emit-leaf leftovers, not the author language.
 pub fn validate_sx_setter(setter: &str, args: &[serde_json::Value]) -> Result<(), String> {
     let name = setter.trim();
     if name.is_empty() {
         return Err("setSx requires non-empty `setter`".into());
     }
-    // Refusals (layout-as-sx)
+    // Residual utility-string names (not Style vocab).
     for (atom, instead) in sail_lint::style_vocab::refusals() {
         if name == atom || name.replace('_', "-") == atom {
             return Err(format!(
@@ -507,7 +508,7 @@ pub fn validate_sx_setter(setter: &str, args: &[serde_json::Value]) -> Result<()
             ));
         }
     }
-    // grow/shrink are box-channel participation — allowed on setSx / Style.
+    // grow/shrink are Style participation — allowed on setSx / Style.
     if let Some((concern, teaching)) = sail_lint::style::retired_replacement(name) {
         return Err(format!(
             "setSx `{name}` is retired — use `{teaching}` (`{concern}`). Allowed setters: {}",
@@ -585,74 +586,116 @@ fn format_sx_args(args: &[serde_json::Value]) -> String {
         .join(", ")
 }
 
-fn channel_key_for_setter(setter: &str) -> &'static str {
-    match sail_lint::style::channel_for_setter(setter) {
-        Some(sail_lint::style::Channel::Box) => "box",
-        Some(sail_lint::style::Channel::Text) => "text",
-        Some(sail_lint::style::Channel::Animate) => "animate",
-        Some(sail_lint::style::Channel::Paint) | None => "paint",
+fn is_animate_trigger(name: &str) -> bool {
+    matches!(
+        name,
+        "enter"
+            | "exit"
+            | "loop"
+            | "reveal"
+            | "scroll"
+            | "hover"
+            | "press"
+            | "focus"
+            | "focus-visible"
+    )
+}
+
+fn style_stmt(setter: &str, args: &[serde_json::Value]) -> String {
+    let args_s = format_sx_args(args);
+    if is_animate_trigger(setter) {
+        format!("style({{ animate: {setter}({args_s}) }})")
+    } else {
+        format!("style({{ {setter}({args_s}) }})")
     }
 }
 
-fn channel_style_stmt(setter: &str, args: &[serde_json::Value]) -> String {
-    let ch = channel_key_for_setter(setter);
-    let args_s = format_sx_args(args);
-    format!("style({{ {ch}: {setter}({args_s}) }})")
-}
-
-/// Merge a setter into an existing `style({…})` expression (channel spine).
-fn merge_channel_setter(
+/// Merge a setter into an existing `style({…})` expression (flat concern chain).
+fn merge_style_setter(
     expr: &str,
     setter: &str,
     args: &[serde_json::Value],
 ) -> Result<String, String> {
     let t = expr.trim();
     let args_s = format_sx_args(args);
-    let call = format!("{setter}({args_s})");
-    let ch = channel_key_for_setter(setter);
-    // style({ box: pad(2), paint: bg(x) }) — inject into matching channel key.
     if let Some(rest) = t.strip_prefix("style(").and_then(|r| r.strip_suffix(')')) {
         let body = rest.trim();
         if body.starts_with('{') && body.ends_with('}') {
             let inner = body[1..body.len() - 1].trim();
-            let key = format!("{ch}:");
-            if let Some(idx) = find_channel_key(inner, ch) {
-                // Append `.setter(…)` after the channel's chain value.
-                let after_key = idx + key.len();
-                let (val_start, val_end) = channel_value_span(inner, after_key);
-                let val = inner[val_start..val_end].trim();
-                let new_val = if val.is_empty() {
-                    call
-                } else {
-                    format!("{val}.{call}")
-                };
-                let mut out = String::new();
-                out.push_str("style({ ");
-                out.push_str(inner[..val_start].trim_end());
-                if !out.ends_with(' ') {
-                    out.push(' ');
-                }
-                out.push_str(&new_val);
-                let tail = inner[val_end..].trim_start();
-                if !tail.is_empty() {
-                    if !new_val.is_empty() {
-                        out.push(' ');
-                    }
-                    out.push_str(tail);
-                }
-                out.push_str(" })");
-                return Ok(out);
+            if is_animate_trigger(setter) {
+                return Ok(merge_into_animate(inner, setter, &args_s));
             }
-            // No matching channel — add `, box: call`
-            let sep = if inner.is_empty() { "" } else { ", " };
-            return Ok(format!("style({{ {inner}{sep}{ch}: {call} }})"));
+            return Ok(merge_into_flat_chain(inner, setter, &args_s));
         }
     }
-    // Flat residual or other forms: replace with channel spine stmt.
-    Ok(channel_style_stmt(setter, args))
+    Ok(style_stmt(setter, args))
 }
 
-fn find_channel_key(inner: &str, ch: &str) -> Option<usize> {
+const STYLE_OBJECT_KEYS: &[&str] = &["when", "match", "compound", "animate"];
+
+fn merge_into_flat_chain(inner: &str, setter: &str, args_s: &str) -> String {
+    let call = format!("{setter}({args_s})");
+    let key_at = first_object_key_at(inner);
+    let (chain, keys) = if let Some(idx) = key_at {
+        (
+            inner[..idx].trim().trim_end_matches(',').trim(),
+            inner[idx..].trim(),
+        )
+    } else {
+        (inner.trim(), "")
+    };
+    let new_chain = if chain.is_empty() {
+        call
+    } else {
+        format!("{chain}.{call}")
+    };
+    if keys.is_empty() {
+        format!("style({{ {new_chain} }})")
+    } else {
+        format!("style({{ {new_chain}, {keys} }})")
+    }
+}
+
+fn merge_into_animate(inner: &str, setter: &str, args_s: &str) -> String {
+    let call = format!("{setter}({args_s})");
+    if let Some(idx) = find_object_key(inner, "animate") {
+        let after_key = idx + "animate:".len();
+        let (val_start, val_end) = object_value_span(inner, after_key);
+        let val = inner[val_start..val_end].trim();
+        let new_val = if val.is_empty() {
+            call
+        } else {
+            format!("{val}.{call}")
+        };
+        let mut out = String::from("style({ ");
+        out.push_str(inner[..val_start].trim_end());
+        if !out.ends_with(' ') {
+            out.push(' ');
+        }
+        out.push_str(&new_val);
+        let tail = inner[val_end..].trim_start();
+        if !tail.is_empty() {
+            if !new_val.is_empty() {
+                out.push(' ');
+            }
+            out.push_str(tail);
+        }
+        out.push_str(" })");
+        out
+    } else {
+        let sep = if inner.is_empty() { "" } else { ", " };
+        format!("style({{ {inner}{sep}animate: {call} }})")
+    }
+}
+
+fn first_object_key_at(inner: &str) -> Option<usize> {
+    STYLE_OBJECT_KEYS
+        .iter()
+        .filter_map(|k| find_object_key(inner, k))
+        .min()
+}
+
+fn find_object_key(inner: &str, ch: &str) -> Option<usize> {
     let key = format!("{ch}:");
     let bytes = inner.as_bytes();
     let mut i = 0;
@@ -674,7 +717,7 @@ fn find_channel_key(inner: &str, ch: &str) -> Option<usize> {
     None
 }
 
-fn channel_value_span(inner: &str, after_key: usize) -> (usize, usize) {
+fn object_value_span(inner: &str, after_key: usize) -> (usize, usize) {
     let bytes = inner.as_bytes();
     let mut i = after_key;
     while i < bytes.len() && bytes[i].is_ascii_whitespace() {
@@ -917,7 +960,7 @@ mod tests {
 
     #[test]
     fn set_attr_and_set_sx() {
-        // Participation is box channel (not bare attr). SetSx grows + pads.
+        // Participation is Style (not bare attr). SetSx grows + pads.
         let src = r#"<column gap="2"><div>x</div></column>"#;
         let id = root_id(src);
         let r = apply_ops_to_source(
@@ -935,7 +978,7 @@ mod tests {
         assert!(r.applied, "{:?}", r.message);
         assert!(
             r.source.contains("style({") && r.source.contains("grow(1)"),
-            "expected box grow block: {}",
+            "expected grow Style: {}",
             r.source
         );
 
@@ -954,7 +997,7 @@ mod tests {
         assert!(r2.applied, "{:?}", r2.message);
         assert!(
             r2.source.contains("pad(2)") && r2.source.contains("style({"),
-            "expected channel pad merge: {}",
+            "expected pad merge: {}",
             r2.source
         );
     }

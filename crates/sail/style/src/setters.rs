@@ -2007,7 +2007,7 @@ mod tests {
 
     #[test]
     fn absorbed_border_forms_are_retired() {
-        for src in ["style({ paint: borderX(2, primary) })"] {
+        for src in ["style({ borderX(2, primary) })"] {
             let (_, diags) = parse(src);
             assert!(
                 diags
@@ -2022,12 +2022,8 @@ mod tests {
     #[test]
     fn markers_and_concerns_lower() {
         let cases: &[(&str, &str, &str)] = &[
-            (
-                "style({ paint: objectPosition(top) })",
-                "object-position",
-                "top",
-            ),
-            ("style({ paint: touch(pan-x) })", "touch-action", "pan-x"),
+            ("style({ objectPosition(top) })", "object-position", "top"),
+            ("style({ touch(pan-x) })", "touch-action", "pan-x"),
             (
                 "style({ fg({ caret: primary }) })",
                 "caret-color",
@@ -2037,7 +2033,7 @@ mod tests {
             ("style({ position({ order: first }) })", "order", "-9999"),
             ("style({ bg({ clip: text }) })", "background-clip", "text"),
             (
-                "style({ box: overflow({ scroll: smooth }) })",
+                "style({ overflow({ scroll: smooth }) })",
                 "scroll-behavior",
                 "smooth",
             ),
@@ -2054,14 +2050,14 @@ mod tests {
 
     #[test]
     fn concern_clash_keys_are_kind_aware() {
-        let op = only_op("style({ paint: border(subtle) })");
+        let op = only_op("style({ border(subtle) })");
         let slots = op_slots(&op);
         assert!(
             slots.contains(&"border:stroke:all")
                 || (slots.contains(&"border:stroke:t") && slots.contains(&"border:stroke:b")),
             "{slots:?}"
         );
-        let op = only_op("style({ paint: border({ kind: ring, color: primary }) })");
+        let op = only_op("style({ border({ kind: ring, color: primary }) })");
         assert_eq!(op_slots(&op), vec!["border:ring"]);
         let op = only_op("style({ bg(primary) })");
         assert_eq!(op_slots(&op), vec!["bg"]);
@@ -2070,10 +2066,10 @@ mod tests {
     #[test]
     fn outline_and_ring_setters_are_retired() {
         for src in [
-            "style({ paint: outline(solid) })",
-            "style({ paint: ring(primary) })",
-            "style({ text: truncate() })",
-            "style({ paint: borderImage(none) })",
+            "style({ outline(solid) })",
+            "style({ ring(primary) })",
+            "style({ truncate() })",
+            "style({ borderImage(none) })",
         ] {
             let (_, diags) = parse(src);
             assert!(

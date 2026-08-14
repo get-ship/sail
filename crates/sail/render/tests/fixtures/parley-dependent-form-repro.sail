@@ -147,11 +147,11 @@ export default controller(() => {
 })
 </controller>
 
-<center style({ pad(6).size({ min-h: screen }), bg(background) })>
+<center style({ pad(6).size({ min-h: screen }).bg(background) })>
   <column gap="4" style({ size({ w: full, max-w: panel-max-w-md }) })>
     <column gap="1">
-      <h1 style({ fg(foreground), type({ size: 2xl, weight: semibold }) })>Shipping address</h1>
-      <p style({ fg(muted-foreground), type({ size: sm }) })>
+      <h1 style({ fg(foreground).type({ size: 2xl, weight: semibold }) })>Shipping address</h1>
+      <p style({ fg(muted-foreground).type({ size: sm }) })>
         Enter where we should send your order. State options depend on country.
       </p>
     </column>
@@ -268,7 +268,7 @@ export default controller(() => {
           </row>
 
           <if {attempted() && !valid() && !pending()}>
-            <p role="alert" style({ fg(destructive), type({ size: sm }) })>
+            <p role="alert" style({ fg(destructive).type({ size: sm }) })>
               Fix the highlighted fields before saving.
             </p>
           </if>

@@ -25,7 +25,7 @@ fn compile_js(src: &str) -> String {
 const BASE_SCOPE: &str = r#"
 <scope>
 type TileProps = { title: string; icon?: string }
-style card = { box: pad(2) }
+style card = { pad(2) }
 </scope>
 "#;
 
@@ -221,7 +221,7 @@ fn style_on_invocation_teaching_error() {
 <partial list-tile props: TileProps>
   <p>{{title}}</p>
 </partial>
-<div><list-tile title={{"x"}} style({{ paint: bg(primary) }})/></div>
+<div><list-tile title={{"x"}} style({{ bg(primary) }})/></div>
 "#
     );
     let err = compile(&src, opts()).expect_err("style ban");

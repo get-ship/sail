@@ -447,32 +447,6 @@
         "default": ""
       }
     },
-    "dropzone": {
-      "accept": {
-        "type": "string",
-        "default": ""
-      },
-      "disabled": {
-        "type": "bool",
-        "default": "false"
-      },
-      "invalid": {
-        "type": "bool",
-        "default": "false"
-      },
-      "multiple": {
-        "type": "bool",
-        "default": "false"
-      },
-      "name": {
-        "type": "string",
-        "default": ""
-      },
-      "required": {
-        "type": "bool",
-        "default": "false"
-      }
-    },
     "empty-state": {
       "size": {
         "values": [

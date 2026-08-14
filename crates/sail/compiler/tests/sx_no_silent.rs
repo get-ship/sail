@@ -14,7 +14,7 @@ const TYPO_SRC: &str = r#"<scope>
     title = ''
   }
 </scope>
-<div style({ paint: bg(surfce-2) })> {title()}</div>"#;
+<div style({ bg(surfce-2) })> {title()}</div>"#;
 
 // Residual utility-string product is `style="…"` (HTML style host) — refuse
 // with Style teaching. Bare `sx=` is scrubbed to generic unknown-attribute.

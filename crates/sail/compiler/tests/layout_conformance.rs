@@ -309,10 +309,10 @@ fn sx_width_full_matches_css() {
     assert_eq!(style.style.size.width, Dimension::percent(1.0));
 }
 
-/// Product box-channel `grow(1)` → `s-grow1` (not residual `s-grow` / bare attr).
+/// Product `grow(1)` → `s-grow1` (not residual `s-grow` / bare attr).
 #[test]
 fn grow_box_channel_maps_to_taffy_flex_grow() {
-    let src = r#"<column><div style({ box: grow(1) })> body</div></column>"#;
+    let src = r#"<column><div style({ grow(1) })> body</div></column>"#;
     let preprocessed = preprocess(src);
     assert!(
         preprocessed.contains("s-grow1"),
@@ -351,7 +351,7 @@ fn style_pad_maps_to_taffy_padding() {
 
 #[test]
 fn sx_hidden_matches_css() {
-    let src = r#"<div style({ box: display(none) })> x</div>"#;
+    let src = r#"<div style({ display(none) })> x</div>"#;
     let preprocessed = preprocess(src);
     let (_, css) = split_html_css(&preprocessed);
     let rules = parse_css(css);
@@ -408,7 +408,8 @@ fn check_all_emits_layout_warning_with_original_span() {
     // Collapsed parent + sized child: the zero-main-axis contract (an empty
     // child set totaling 0 is suppressed as analyzer noise by the layout
     // crate's gate — see check::layout tests).
-    let src = "\n\n<column style({ size({ h: 0 }) })>\n  <div style({ size({ h: 20 }) })>\n    x\n  </div>\n</column>";
+    let src =
+        "\n\n<column style({ size(0) })>\n  <div style({ size(20) })>\n    x\n  </div>\n</column>";
     let diags = sail_compiler::check_all(src, None, &[], None);
     let layout = diags
         .iter()

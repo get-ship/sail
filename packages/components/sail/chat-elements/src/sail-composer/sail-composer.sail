@@ -61,13 +61,13 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     }
 
     const fieldKeys: Action<void> = (node) => {
-      node.add('keydown', onKeydown)
-      return { destroy: () => node.remove('keydown', onKeydown) }
+      node.addEventListener('keydown', onKeydown)
+      return { destroy: () => node.removeEventListener('keydown', onKeydown) }
     }
 
     const sendClick: Action<void> = (node) => {
-      node.add('click', submit)
-      return { destroy: () => node.remove('click', submit) }
+      node.addEventListener('click', submit)
+      return { destroy: () => node.removeEventListener('click', submit) }
     }
 
     return { text, attachments, fieldKeys, sendClick }
