@@ -1,0 +1,29 @@
+{
+  "name": "@ship/sail-blocks",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "description": "Sail composition blocks — dashboard, pricing, settings, auth. Organized as a product; not shipping a marketplace. Defaults-only recipes that test L1 atoms as composable, not isolated.",
+  "main": "src/catalog.ts",
+  "types": "src/catalog.ts",
+  "exports": {
+    ".": "./src/catalog.ts"
+  },
+  "scripts": {
+    "dev": "sail dev",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@ship/sail-runtime": "workspace:*",
+    "@ship/sail-dom": "workspace:*",
+    "@ship/tokens": "workspace:*"
+  },
+  "devDependencies": {
+    "@ship/sail-test": "workspace:*",
+    "@ship/test-setup": "workspace:*",
+    "happy-dom": "^20.9.0",
+    "typescript": "~5.8.3",
+    "vitest": "^4.1.5"
+  }
+}

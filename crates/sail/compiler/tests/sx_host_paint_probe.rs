@@ -390,7 +390,7 @@ fn empty_state_child_paint_on_structure_sx() {
 #[test]
 fn tab_selected_underline_and_inset_focus_on_host_sx() {
     // Style product: when(selected/focus) + match(variant) for pill/enclosed chrome.
-    let src = include_str!("../stdlib/tab.sail");
+    let src = include_str!("../stdlib/tabs/tab.sail");
     let out = compile_element(src, "tab").expect("tab compiles");
     assert!(
         is_style_product(src)
@@ -453,7 +453,7 @@ fn tab_selected_underline_and_inset_focus_on_host_sx() {
         !contracts.contains(".sail-tab:focus-visible"),
         "tab focus-visible host CSS must be gone from contracts"
     );
-    let tab_src = include_str!("../stdlib/tab.sail");
+    let tab_src = include_str!("../stdlib/tabs/tab.sail");
     assert!(
         tab_src.contains("pill:")
             && tab_src.contains("enclosed:")
@@ -1752,7 +1752,7 @@ fn tab_list_sticky_and_variant_on_host_not_parent_pe() {
     // Sticky + variant on <tab-list> host. Pill track CVA. Child tab matrices
     // are stamped variant CVA on tab.sail (not parent host CSS). Vertical host axis
     // is layout-owned; list/panel orientation stamped by use:tabs.
-    let src = include_str!("../stdlib/tab-list.sail");
+    let src = include_str!("../stdlib/tabs/tab-list.sail");
     let out = compile_element(src, "tab-list").expect("tab-list compiles");
     assert!(
         src.contains("sticky = false")
@@ -1803,7 +1803,7 @@ fn tab_list_sticky_and_variant_on_host_not_parent_pe() {
         out.skin_css
     );
     // sticky/variant/size not on <tabs> — size Style match lives on <tab>.
-    let tabs_src = include_str!("../stdlib/tabs.sail");
+    let tabs_src = include_str!("../stdlib/tabs/tabs.sail");
     let _tabs_out = compile_element(tabs_src, "tabs").expect("tabs compiles");
     assert!(
         !tabs_src.contains("'tab-py'")
@@ -1816,7 +1816,7 @@ fn tab_list_sticky_and_variant_on_host_not_parent_pe() {
         "sticky/variant/size/tone not on <tabs> (no --tab-*):\n{tabs_src}"
     );
     // Size CVA lives on <tab> (text-sm py-2 px-3 …), not --tab-* custom props.
-    let tab_src = include_str!("../stdlib/tab.sail");
+    let tab_src = include_str!("../stdlib/tabs/tab.sail");
     let tab_out = compile_element(tab_src, "tab").expect("tab compiles");
     assert!(
         !tab_src.contains("--tab-")

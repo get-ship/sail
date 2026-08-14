@@ -9,6 +9,8 @@
       "packages/sail/tokens",
       "packages/sail/test-setup",
       "packages/sail/sail-test",
+      "packages/sail/l1",
+      "packages/sail/blocks",
       "packages/sail/studio-bridge",
       "packages/sail/studio-shell",
       "packages/sail/studio-client",

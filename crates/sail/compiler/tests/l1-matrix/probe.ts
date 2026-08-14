@@ -14,6 +14,7 @@
 import { chromium } from 'playwright'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { getByContract } from '../../../../../packages/sail/sail-test/src/contract.ts'
 import { THEME_META } from '../../../../../packages/sail/tokens/src/generated/themes-meta.ts'
 
 const BASE = process.env.SAIL_PROBE_BASE ?? 'http://127.0.0.1:7892'
@@ -182,6 +183,25 @@ if (import.meta.main) {
   const evidence: unknown[] = []
   const flagged: { cell: string; tag: string; defects: string[] }[] = []
   let hostsSeen = 0
+
+  // Behavioral slice — role / name via @ship/sail-test. Inventory still
+  // uses [data-sail-host] (compiler identity, not the app-test API).
+  const save = getByContract(page, { role: 'button', name: 'Save' })
+  if ((await save.count()) !== 1) {
+    flagged.push({
+      cell: 'boot',
+      tag: 'button',
+      defects: [`CONTRACT-MISS role=button name=Save count=${await save.count()}`],
+    })
+  }
+  const tabOne = getByContract(page, { role: 'tab', name: 'One' })
+  if ((await tabOne.count()) !== 1) {
+    flagged.push({
+      cell: 'boot',
+      tag: 'tab',
+      defects: [`CONTRACT-MISS role=tab name=One count=${await tabOne.count()}`],
+    })
+  }
 
   for (const cell of CELLS) {
     const key = `${cell.theme}-${cell.mode}`

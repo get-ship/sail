@@ -1,0 +1,21 @@
+{
+  "name": "@ship/sail-l1",
+  "version": "0.1.0",
+  "private": false,
+  "type": "module",
+  "license": "MIT",
+  "description": "Generated L1 consumer catalog — tags, families, props, axes, spent Style concerns. Not the .sail definitions (those live in the compiler stdlib) and not a test package (@ship/sail-test + the l1-matrix fixture are).",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "generate": "cargo run -q -p sail-compiler -- l1-surface",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "typescript": "~5.8.3",
+    "vitest": "^4.1.5"
+  }
+}

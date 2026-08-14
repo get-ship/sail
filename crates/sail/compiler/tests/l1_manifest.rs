@@ -3,10 +3,10 @@
 use std::collections::HashSet;
 
 use sail_compiler::l1_manifest::{
-    L1JsKind, L1Kind, L1Matrix, host_pack_alias, l1_by_kind, l1_entries, l1_kind, matrix_contract,
-    surface_pack_for_host,
+    host_pack_alias, l1_by_kind, l1_entries, l1_kind, matrix_contract, surface_pack_for_host,
+    L1JsKind, L1Kind, L1Matrix,
 };
-use sail_compiler::stdlib;
+use sail_compiler::stdlib::{self, family_of, family_tags, is_family_host};
 
 #[test]
 fn every_manifest_entry_has_a_built_artifact() {
@@ -39,6 +39,24 @@ fn stdlib_tags_match_manifest() {
         "stdlib manifest tags disagree with stdlib registry — check \
          crates/sail/compiler/src/stdlib.rs::SOURCES"
     );
+}
+
+#[test]
+fn family_dirs_are_the_composition() {
+    assert_eq!(family_of("tabs"), "tabs");
+    assert_eq!(family_of("tab"), "tabs");
+    assert_eq!(family_of("tab-list"), "tabs");
+    assert_eq!(family_of("tab-panel"), "tabs");
+    assert_eq!(family_of("fieldset"), "fieldset");
+    assert_eq!(family_of("legend"), "fieldset");
+    assert_eq!(family_of("button"), "button");
+    assert!(is_family_host("tabs"));
+    assert!(!is_family_host("tab"));
+    assert_eq!(
+        family_tags("tabs"),
+        vec!["tabs", "tab", "tab-list", "tab-panel"]
+    );
+    assert_eq!(family_tags("fieldset"), vec!["fieldset", "legend"]);
 }
 
 #[test]

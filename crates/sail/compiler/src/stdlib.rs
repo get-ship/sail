@@ -38,8 +38,8 @@ const SOURCES: &[(&str, &str)] = &[
     ("dialog", include_str!("../stdlib/dialog.sail")),
     ("accordion", include_str!("../stdlib/accordion.sail")),
     ("table", include_str!("../stdlib/table.sail")),
-    ("fieldset", include_str!("../stdlib/fieldset.sail")),
-    ("legend", include_str!("../stdlib/legend.sail")),
+    ("fieldset", include_str!("../stdlib/fieldset/fieldset.sail")),
+    ("legend", include_str!("../stdlib/fieldset/legend.sail")),
     ("progress", include_str!("../stdlib/progress.sail")),
     ("meter", include_str!("../stdlib/meter.sail")),
     ("a", include_str!("../stdlib/anchor.sail")),
@@ -65,10 +65,10 @@ const SOURCES: &[(&str, &str)] = &[
     ("slider", include_str!("../stdlib/slider.sail")),
     ("radio", include_str!("../stdlib/radio.sail")),
     ("radio-group", include_str!("../stdlib/radio-group.sail")),
-    ("tabs", include_str!("../stdlib/tabs.sail")),
-    ("tab-list", include_str!("../stdlib/tab-list.sail")),
-    ("tab", include_str!("../stdlib/tab.sail")),
-    ("tab-panel", include_str!("../stdlib/tab-panel.sail")),
+    ("tabs", include_str!("../stdlib/tabs/tabs.sail")),
+    ("tab-list", include_str!("../stdlib/tabs/tab-list.sail")),
+    ("tab", include_str!("../stdlib/tabs/tab.sail")),
+    ("tab-panel", include_str!("../stdlib/tabs/tab-panel.sail")),
     ("toggle-group", include_str!("../stdlib/toggle-group.sail")),
     ("toggle", include_str!("../stdlib/toggle.sail")),
     ("scroll-area", include_str!("../stdlib/scroll-area.sail")),
@@ -96,6 +96,49 @@ const SOURCES: &[(&str, &str)] = &[
 /// to emit the typed-props registry the lint validates against.
 pub fn sources() -> &'static [(&'static str, &'static str)] {
     SOURCES
+}
+
+/// Family id for a stdlib tag. A directory **is** the family and the docs
+/// hub host. Flat peers are singleton families until they move. Parts
+/// (`tab` in `tabs/`) map to the host directory, not their file stem.
+pub fn family_of(tag: &str) -> &'static str {
+    match tag {
+        "tab" | "tab-list" | "tab-panel" => "tabs",
+        "legend" => "fieldset",
+        other => SOURCES
+            .iter()
+            .map(|(t, _)| *t)
+            .find(|t| *t == other)
+            .unwrap_or("unknown"),
+    }
+}
+
+/// True when `tag` is the family host (directory name / hub tile).
+pub fn is_family_host(tag: &str) -> bool {
+    family_of(tag) == tag
+}
+
+/// Tags in `family`, host first, then parts by name.
+pub fn family_tags(family: &str) -> Vec<&'static str> {
+    let mut tags: Vec<&'static str> = SOURCES
+        .iter()
+        .map(|(t, _)| *t)
+        .filter(|t| family_of(t) == family)
+        .collect();
+    tags.sort_by(|a, b| {
+        let ha = u8::from(*a == family);
+        let hb = u8::from(*b == family);
+        hb.cmp(&ha).then_with(|| a.cmp(b))
+    });
+    tags
+}
+
+/// Distinct family ids, sorted.
+pub fn families() -> Vec<&'static str> {
+    let mut out: Vec<&'static str> = SOURCES.iter().map(|(t, _)| family_of(t)).collect();
+    out.sort_unstable();
+    out.dedup();
+    out
 }
 
 pub fn elements() -> &'static [StdlibElement] {

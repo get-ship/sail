@@ -417,8 +417,8 @@ fn batch_b_controls_compile_on_style_path() {
         ("field", include_str!("../stdlib/field.sail")),
         ("switch", include_str!("../stdlib/switch.sail")),
         ("toggle", include_str!("../stdlib/toggle.sail")),
-        ("tab", include_str!("../stdlib/tab.sail")),
-        ("tab-list", include_str!("../stdlib/tab-list.sail")),
+        ("tab", include_str!("../stdlib/tabs/tab.sail")),
+        ("tab-list", include_str!("../stdlib/tabs/tab-list.sail")),
     ] {
         assert!(
             !src.contains("md: '")
@@ -528,8 +528,8 @@ fn batch_e_residuals_compile_on_style_path() {
             include_str!("../stdlib/error-boundary.sail"),
         ),
         ("icon", include_str!("../stdlib/icon.sail")),
-        ("tab-panel", include_str!("../stdlib/tab-panel.sail")),
-        ("tabs", include_str!("../stdlib/tabs.sail")),
+        ("tab-panel", include_str!("../stdlib/tabs/tab-panel.sail")),
+        ("tabs", include_str!("../stdlib/tabs/tabs.sail")),
         ("theme-picker", include_str!("../stdlib/theme-picker.sail")),
         ("ticker", include_str!("../stdlib/ticker.sail")),
     ] {

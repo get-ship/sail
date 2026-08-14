@@ -77,6 +77,26 @@
     Theme tokens, not a painted div.
   </alert>
 
+  <column gap="3" style(measure)>
+    <h2>Families</h2>
+    <p>Parts render inside the host recipe — not as peers.</p>
+    <tabs active="one">
+      <tab-list>
+        <tab name="one">One</tab>
+        <tab name="two">Two</tab>
+      </tab-list>
+      <tab-panel name="one">Panel one</tab-panel>
+      <tab-panel name="two">Panel two</tab-panel>
+    </tabs>
+    <fieldset>
+      <legend>Account</legend>
+      <field>
+        <label slot="label">Email</label>
+        <input placeholder="you@ship.dev" />
+      </field>
+    </fieldset>
+  </column>
+
   <row gap="3" align="center" style(measure)>
     <avatar />
     <spinner />
