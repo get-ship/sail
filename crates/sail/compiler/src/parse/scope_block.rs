@@ -29,7 +29,7 @@
 
 use std::collections::HashMap;
 
-use sail_style::{Style, StyleDiagnostic, StyleEnv};
+use spinnaker::{Style, StyleDiagnostic, StyleEnv};
 
 use crate::diagnostics::{CompileError, Span};
 use crate::ir::directive::{PropDecl, PropKind};
@@ -760,7 +760,7 @@ fn parse_named_style_binding(
         .with_span(span)
         .with_category(RULE_ID));
     }
-    let (style, diags) = sail_style::parse_style_const_rhs(rhs);
+    let (style, diags) = spinnaker::parse_style_const_rhs(rhs);
     if let Some(msg) = style_const_diag_message(&diags) {
         return Err(CompileError::new(format!("Style `{name}`: {msg}"))
             .with_span(span)
@@ -1878,7 +1878,7 @@ mod tests {
         assert!(b.style_env.contains_key("b"));
         // Compose is ordered List (same as style(a, {…})).
         match b.style_env.get("b") {
-            Some(sail_style::Style::List(parts)) => {
+            Some(spinnaker::Style::List(parts)) => {
                 assert_eq!(parts.len(), 2, "compose should be List of base + partial");
             }
             other => panic!("expected List compose, got {other:?}"),
@@ -1906,7 +1906,7 @@ mod tests {
     #[test]
     fn button_vsoft_rhs_diags() {
         let rhs = "{bg(hover-bg).border({ color: border }).fg(button), when: {hover: filter({ opacity: 90 })}}";
-        let (_, diags) = sail_style::parse_style_const_rhs(rhs);
+        let (_, diags) = spinnaker::parse_style_const_rhs(rhs);
         assert!(
             diags.is_empty(),
             "vSoft RHS: {:?}",
@@ -1935,7 +1935,7 @@ mod tests {
         let expr = "style(base, {match: { variant: { ghost: style(vGhost, vGhostTone) } }})";
         let mut css = String::new();
         let mut seen = std::collections::HashSet::new();
-        sail_style_css::lower_style_source(expr, &env, &mut css, &mut seen).unwrap_or_else(
+        spinnaker_css::lower_style_source(expr, &env, &mut css, &mut seen).unwrap_or_else(
             |diags| {
                 panic!(
                     "button attach failed: {:?}",
@@ -2082,13 +2082,13 @@ style({ pad(3) })
         assert!(b.style_env.contains_key("b"));
         assert!(b.style_env.contains_key("c"));
         match b.style_env.get("b") {
-            Some(sail_style::Style::List(parts)) => {
+            Some(spinnaker::Style::List(parts)) => {
                 assert_eq!(parts.len(), 2, "a, {{…}} compose");
             }
             other => panic!("expected List compose for b, got {other:?}"),
         }
         match b.style_env.get("c") {
-            Some(sail_style::Style::List(parts)) => {
+            Some(spinnaker::Style::List(parts)) => {
                 assert_eq!(parts.len(), 2, "a, style({{…}}) compose");
             }
             other => panic!("expected List compose for c, got {other:?}"),

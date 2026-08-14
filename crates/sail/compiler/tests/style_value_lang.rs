@@ -2,8 +2,8 @@
 
 use sail_compiler::compile_element;
 use sail_compiler::parse::preprocess::preprocess;
-use sail_style::{StyleDiagnostic, clash, parse};
-use sail_style_css::lower_style;
+use spinnaker::{StyleDiagnostic, clash, parse};
+use spinnaker_css::lower_style;
 use std::collections::HashMap;
 
 fn is_style_product(src: &str) -> bool {
@@ -16,14 +16,14 @@ fn is_style_product(src: &str) -> bool {
 fn product_style_intent_dump_has_no_css_strings() {
     let src =
         "style({ pad(4).bg(surface), when: { hover: bg(muted) }, animate: { enter: play(fade) } })";
-    let (style, diags) = sail_style::parse(src);
+    let (style, diags) = spinnaker::parse(src);
     assert!(
         diags.is_empty(),
         "{:?}",
         diags.iter().map(|d| d.message()).collect::<Vec<_>>()
     );
-    let dump = sail_style::intent_dump(&style);
-    // Concatenate so this lock names the same CSS fragments as sail-style.
+    let dump = spinnaker::intent_dump(&style);
+    // Concatenate so this lock names the same CSS fragments as spinnaker.
     let forbidden = [
         format!("{}-{}", "background", "color"),
         format!(":{}", "hover"),
@@ -45,7 +45,7 @@ fn product_style_intent_dump_has_no_css_strings() {
     assert!(dump.contains("muted"), "{dump}");
     assert!(dump.contains("enter"), "{dump}");
 
-    let (classes, css) = sail_style_css::lower_style(&style, &HashMap::new());
+    let (classes, css) = spinnaker_css::lower_style(&style, &HashMap::new());
     assert!(classes.contains("s-"), "{classes}");
     assert!(css.contains(":hover"), "{css}");
     assert!(

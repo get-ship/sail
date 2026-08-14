@@ -2,8 +2,8 @@
 
 use std::collections::HashMap;
 
-use sail_style::parse::{parse, parse_style_const_rhs};
-use sail_style::{Style, StyleDiagnostic};
+use spinnaker::parse::{parse, parse_style_const_rhs};
+use spinnaker::{Style, StyleDiagnostic};
 
 use super::lower_style;
 
@@ -152,7 +152,7 @@ fn play_colors_fast_resolves() {
 
 #[test]
 fn product_emit_is_intent_then_css() {
-    use sail_style::lower_to_intent;
+    use spinnaker::lower_to_intent;
 
     use super::{emit_intent, emit_style};
 

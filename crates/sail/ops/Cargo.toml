@@ -14,7 +14,7 @@ path = "src/lib.rs"
 sail-compiler = { path = "../compiler" }
 sail-layout = { path = "../layout" }
 sail-lint = { path = "../lint" }
-sail-style = { path = "../style" }
+spinnaker = { path = "../spinnaker" }
 sail-lsp = { path = "../lsp" }
 sail-render = { path = "../render" }
 serde = { workspace = true, features = ["derive"] }

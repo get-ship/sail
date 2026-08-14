@@ -1,10 +1,10 @@
-//! Emit locks moved out of sail-style so the domain crate has no CSS types.
+//! Emit locks moved out of spinnaker so the domain crate has no CSS types.
 
 #[cfg(test)]
 mod tests {
     use crate::{lower_style, lower_style_source, lower_style_source_with_motion};
-    use sail_style::parse as parse_style;
-    use sail_style::*;
+    use spinnaker::parse as parse_style;
+    use spinnaker::*;
     use std::collections::HashMap;
 
     /// Test helper wrapping product parse.
@@ -77,7 +77,7 @@ mod tests {
                 Some(crate::WhenTarget::Media(std::borrow::Cow::Borrowed(query))),
                 "when({{{name}:…}}) must resolve via Style conditions"
             );
-            let value = sail_style::tokens::token_value(&format!("breakpoint-{name}"))
+            let value = spinnaker::tokens::token_value(&format!("breakpoint-{name}"))
                 .unwrap_or_else(|| panic!("breakpoint-{name} token missing from registry"));
             assert!(
                 query.contains(value.trim()),

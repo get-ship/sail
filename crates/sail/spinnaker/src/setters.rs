@@ -2,7 +2,7 @@
 //!
 //! Product names live on `vocab.rs`. Concern / axis emit lives on
 //! `concerns.rs`. Plains emit lives on `plains.rs`. This module lowers
-//! after `find_vocab` says Plain. CSS `when` targets live in `sail-style-css`.
+//! after `find_vocab` says Plain. CSS `when` targets live in `spinnaker-css`.
 
 use crate::scales;
 

@@ -450,7 +450,7 @@ pub fn compile_element(
         Some(pack) => pack,
         None => name,
     };
-    sail_style::with_host_surface(Some(host), || {
+    spinnaker::with_host_surface(Some(host), || {
         let program = parse::parse_element_source(&stripped)?;
         let bindings = check::binding::resolve(&stripped, &program, None)?;
         emit::element::emit_element_with_bindings(&program, &stripped, name, &bindings)

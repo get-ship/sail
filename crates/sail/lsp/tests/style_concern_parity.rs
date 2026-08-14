@@ -27,7 +27,7 @@ fn at_caret(src: &str) -> (String, usize, u32, u32) {
 #[test]
 fn lsp_and_compiler_complete_border_concern() {
     let (src, off, line, col) = at_caret("style({ border(¦) })");
-    let via_style: Vec<String> = sail_style::style_complete_at(&src, None, off, None)
+    let via_style: Vec<String> = spinnaker::style_complete_at(&src, None, off, None)
         .into_iter()
         .map(|i| i.label)
         .collect();
@@ -58,7 +58,7 @@ fn lsp_and_compiler_complete_border_concern() {
 #[test]
 fn lsp_and_compiler_complete_border_color_slot() {
     let (src, off, line, col) = at_caret("style({ border({ color: ¦ }) })");
-    let via_style: Vec<String> = sail_style::style_complete_at(&src, None, off, None)
+    let via_style: Vec<String> = spinnaker::style_complete_at(&src, None, off, None)
         .into_iter()
         .map(|i| i.label)
         .collect();
@@ -107,7 +107,7 @@ fn lsp_and_compiler_hover_border_subtle() {
 
 fn labels_at(src_caret: &str) -> (Vec<String>, Vec<String>, Vec<String>) {
     let (src, off, line, col) = at_caret(src_caret);
-    let via_style: Vec<String> = sail_style::style_complete_at(&src, None, off, None)
+    let via_style: Vec<String> = spinnaker::style_complete_at(&src, None, off, None)
         .into_iter()
         .map(|i| i.label)
         .collect();

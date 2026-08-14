@@ -2,10 +2,10 @@
 
 use std::collections::HashSet;
 
-use sail_style::intent::{Intent, IntentNode, IntentValue, lower_to_intent};
-use sail_style::ir::{PaintArg, PaintOp, Style, StyleEnv};
-use sail_style::setters::lower_op_css;
-use sail_style::theme_env::{ThemeStyleEnv, current_styling_policy};
+use spinnaker::intent::{Intent, IntentNode, IntentValue, lower_to_intent};
+use spinnaker::ir::{PaintArg, PaintOp, Style, StyleEnv};
+use spinnaker::setters::lower_op_css;
+use spinnaker::theme_env::{ThemeStyleEnv, current_styling_policy};
 
 use crate::when::{WhenTarget, when_target};
 
@@ -422,18 +422,18 @@ fn op_uses_tone(op: &PaintOp) -> bool {
 fn op_has_surface_member(op: &PaintOp) -> bool {
     op.args.iter().any(|a| {
         matches!(a, PaintArg::MemberPath { root, .. }
-            if sail_style::component_surfaces::current_surface_pack().as_deref() == Some(root.as_str()))
+            if spinnaker::component_surfaces::current_surface_pack().as_deref() == Some(root.as_str()))
     })
 }
 
 fn resolve_surface_args(op: &PaintOp) -> PaintOp {
-    use sail_style::component_surfaces::resolve_surface_author;
+    use spinnaker::component_surfaces::resolve_surface_author;
     let args = op
         .args
         .iter()
         .map(|a| match a {
             PaintArg::MemberPath { root, path }
-                if sail_style::component_surfaces::current_surface_pack().as_deref()
+                if spinnaker::component_surfaces::current_surface_pack().as_deref()
                     == Some(root.as_str()) =>
             {
                 match resolve_surface_author(root, path) {
@@ -447,7 +447,7 @@ fn resolve_surface_args(op: &PaintOp) -> PaintOp {
                     .map(|(k, v)| {
                         let resolved = match v {
                             PaintArg::MemberPath { root, path }
-                                if sail_style::component_surfaces::current_surface_pack()
+                                if spinnaker::component_surfaces::current_surface_pack()
                                     .as_deref()
                                     == Some(root.as_str()) =>
                             {
@@ -479,7 +479,7 @@ pub fn lower_style_source(
     env: &StyleEnv,
     css: &mut String,
     seen: &mut HashSet<String>,
-) -> Result<String, Vec<sail_style::ir::StyleDiagnostic>> {
+) -> Result<String, Vec<spinnaker::ir::StyleDiagnostic>> {
     lower_style_source_with_motion(src, env, css, seen).map(|(classes, _)| classes)
 }
 
@@ -493,28 +493,28 @@ pub fn lower_style_source_with_motion(
     env: &StyleEnv,
     css: &mut String,
     seen: &mut HashSet<String>,
-) -> Result<(String, Vec<(String, String)>), Vec<sail_style::ir::StyleDiagnostic>> {
+) -> Result<(String, Vec<(String, String)>), Vec<spinnaker::ir::StyleDiagnostic>> {
     // Product authoring: flat concern chain. Constructor `style.pad().bg()` is
     // retired (corpus codemod + block attachment). Migration dual is `flat_chain` only.
     // Early refuse matches product `parse` (no IR for flat chains).
     let t = src.trim_start();
     if t.starts_with("style.") {
-        return Err(vec![sail_style::ir::StyleDiagnostic::ParseError {
+        return Err(vec![spinnaker::ir::StyleDiagnostic::ParseError {
             message: "flat `style.method(…)` chains are retired — write concern calls: \
                       style({ size({ w: full }).pad(4).bg(surface), when: { hover: bg(muted) } })"
                 .into(),
             source: t.to_string(),
         }]);
     }
-    let (style, diags) = sail_style::parse::parse(src);
+    let (style, diags) = spinnaker::parse::parse(src);
     if diags
         .iter()
-        .any(|d| matches!(d, sail_style::ir::StyleDiagnostic::ResidualProduct { .. }))
+        .any(|d| matches!(d, spinnaker::ir::StyleDiagnostic::ResidualProduct { .. }))
     {
         return Err(diags);
     }
     // Clash
-    let clashes = sail_style::clash::detect_clashes(&style, env);
+    let clashes = spinnaker::clash::detect_clashes(&style, env);
     if !clashes.is_empty() {
         let mut all = diags;
         all.extend(clashes);
@@ -522,19 +522,19 @@ pub fn lower_style_source_with_motion(
     }
     if diags.iter().any(|d| {
         match d {
-            sail_style::ir::StyleDiagnostic::BadToken { .. }
-            | sail_style::ir::StyleDiagnostic::ThemeOwnedToken { .. }
-            | sail_style::ir::StyleDiagnostic::UnknownSetter { .. }
-            | sail_style::ir::StyleDiagnostic::UnknownWhenKey { .. }
-            | sail_style::ir::StyleDiagnostic::BadArity { .. }
-            | sail_style::ir::StyleDiagnostic::UnknownConcernSlot { .. }
-            | sail_style::ir::StyleDiagnostic::DuplicateSlot { .. }
-            | sail_style::ir::StyleDiagnostic::RetiredSetter { .. }
-            | sail_style::ir::StyleDiagnostic::UnknownVocabulary { .. }
-            | sail_style::ir::StyleDiagnostic::ThemedLocalStyle { .. }
-            | sail_style::ir::StyleDiagnostic::NotAStyleRef { .. } => true,
+            spinnaker::ir::StyleDiagnostic::BadToken { .. }
+            | spinnaker::ir::StyleDiagnostic::ThemeOwnedToken { .. }
+            | spinnaker::ir::StyleDiagnostic::UnknownSetter { .. }
+            | spinnaker::ir::StyleDiagnostic::UnknownWhenKey { .. }
+            | spinnaker::ir::StyleDiagnostic::BadArity { .. }
+            | spinnaker::ir::StyleDiagnostic::UnknownConcernSlot { .. }
+            | spinnaker::ir::StyleDiagnostic::DuplicateSlot { .. }
+            | spinnaker::ir::StyleDiagnostic::RetiredSetter { .. }
+            | spinnaker::ir::StyleDiagnostic::UnknownVocabulary { .. }
+            | spinnaker::ir::StyleDiagnostic::ThemedLocalStyle { .. }
+            | spinnaker::ir::StyleDiagnostic::NotAStyleRef { .. } => true,
             // Hard-fail lifecycle-in-when, geometry-in-interaction-when, color alias.
-            sail_style::ir::StyleDiagnostic::ParseError { message, .. } => {
+            spinnaker::ir::StyleDiagnostic::ParseError { message, .. } => {
                 message.contains("cannot appear inside when")
                     || message.contains("cannot appear inside interaction when")
                     || message.contains("state can't gate layout")
@@ -548,7 +548,7 @@ pub fn lower_style_source_with_motion(
     }) {
         return Err(diags);
     }
-    let ref_diags = sail_style::parse::validate_style_refs(&style, env);
+    let ref_diags = spinnaker::parse::validate_style_refs(&style, env);
     if !ref_diags.is_empty() {
         let mut all = diags;
         all.extend(ref_diags);
@@ -558,7 +558,7 @@ pub fn lower_style_source_with_motion(
     // (`style ambientDot = { …, animate: { loop: play(…) } }` + `style(ambientDot)`)
     // still inject `_sail_m_*` attrs. CSS emit already expands refs; motion
     // collection must not skip them or ambient/enter/exit on named styles die.
-    let motions = sail_style::parse::collect_motion_attaches_env(&style, env);
+    let motions = spinnaker::parse::collect_motion_attaches_env(&style, env);
     let rules = emit_style(&style, env);
     let mut classes = Vec::new();
     for r in &rules {

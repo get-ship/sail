@@ -336,7 +336,7 @@ pub fn complete_with_session(
     // Infer L1 host from path stem when it matches a known surface pack
     // (stdlib `chip.sail` → host `chip`); app paths yield None.
     let host = infer_style_host(path);
-    let style_items = sail_style::style_complete_at(source, path, offset, host.as_deref());
+    let style_items = spinnaker::style_complete_at(source, path, offset, host.as_deref());
     if !style_items.is_empty() {
         return style_items
             .into_iter()
@@ -351,8 +351,8 @@ pub fn complete_with_session(
             })
             .collect();
     }
-    let style_ctx = sail_style::style_complete_context_at(source, offset, host.as_deref());
-    if !matches!(style_ctx, sail_style::StyleCompleteContext::Unknown) {
+    let style_ctx = spinnaker::style_complete_context_at(source, offset, host.as_deref());
+    if !matches!(style_ctx, spinnaker::StyleCompleteContext::Unknown) {
         // Classified Style position with empty set — do not fall through to
         // weak tsgo / scope noise.
         return Vec::new();
@@ -698,7 +698,7 @@ export default controller((ctx) => ({ count: signal(0) }))
     }
 
     #[test]
-    fn complete_sail_style_fill_tokens_without_tsgo() {
+    fn complete_spinnaker_fill_tokens_without_tsgo() {
         // SPEC-STYLE-COMPLETE-1: Style complete inside style({ bg({ color: ¦ }) })
         // does not require tsgo.
         let mut intel =
@@ -731,7 +731,7 @@ export default controller((ctx) => ({ count: signal(0) }))
     }
 
     #[test]
-    fn complete_sail_style_prefers_style_over_scope() {
+    fn complete_spinnaker_prefers_style_over_scope() {
         let mut intel =
             Intelligence::start(Some(Path::new("/nonexistent-sail-tsgo-root-for-intel")));
         let src = r#"<controller>

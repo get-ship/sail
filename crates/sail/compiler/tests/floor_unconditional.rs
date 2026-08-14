@@ -34,14 +34,14 @@ fn reports_floor_error(src: &str, rule: &str, overrides: &[LintOverride]) -> boo
         .any(|d| d.severity == DiagSeverity::Error && d.rule.as_deref() == Some(rule))
 }
 
-/// `style="…"` is refused by floor `sail-style` (residual) and/or
+/// `style="…"` is refused by floor `spinnaker` (residual) and/or
 /// `sail-no-inline-style`. Harvest may surface the former first.
 fn reports_style_eq_floor(src: &str, overrides: &[LintOverride]) -> bool {
     check_all(src, None, overrides, None).iter().any(|d| {
         d.severity == DiagSeverity::Error
             && matches!(
                 d.rule.as_deref(),
-                Some("sail-no-inline-style") | Some("sail-style")
+                Some("sail-no-inline-style") | Some("spinnaker")
             )
     })
 }
@@ -74,7 +74,7 @@ fn inline_style_refuses_with_empty_overrides() {
     );
     assert!(
         reports_style_eq_floor(src, &[]),
-        "style= must be a floor Error (sail-no-inline-style or sail-style)"
+        "style= must be a floor Error (sail-no-inline-style or spinnaker)"
     );
 }
 

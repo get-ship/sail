@@ -69,7 +69,7 @@ style({ size({ w: bind(doubled) }) })
 `name` is an identifier only — no `bind(derived(…))`, no `bind(a + b)`.
 Number→length means px; number→color is a compile error. Enumerating a
 prop as three-plus compound rows that only vary a setter arg is a lint
-(`sail-style-value-enumeration`); collapse it to `bind`.
+(`spinnaker-value-enumeration`); collapse it to `bind`.
 
 ## The compiler holds the line
 
@@ -83,7 +83,7 @@ This is not a convention — it is enforced. Write an off-system value:
 and the build stops with:
 
 ```
-Error: line 1 col 21: [sail-style] Style error: style `pad(12px)` — value is not a token on this
+Error: line 1 col 21: [spinnaker] Style error: style `pad(12px)` — value is not a token on this
 setter's scale
 ```
 

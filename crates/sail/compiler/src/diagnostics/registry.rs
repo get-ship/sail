@@ -1075,7 +1075,7 @@ const DIAG_SPECS: &[DiagSpec] = &[
         docs_anchor: None,
     },
     DiagSpec {
-        id: "sail-style",
+        id: "spinnaker",
         jurisdiction: Jurisdiction::CompilerError,
         default_severity: DiagSeverity::Error,
         message_template: "style",
@@ -1084,7 +1084,7 @@ const DIAG_SPECS: &[DiagSpec] = &[
         docs_anchor: None,
     },
     DiagSpec {
-        id: "sail-style-bind",
+        id: "spinnaker-bind",
         jurisdiction: Jurisdiction::CompilerError,
         default_severity: DiagSeverity::Error,
         message_template: "style bind",
@@ -1093,18 +1093,18 @@ const DIAG_SPECS: &[DiagSpec] = &[
         docs_anchor: None,
     },
     DiagSpec {
-        id: "sail-style-concern",
+        id: "spinnaker-concern",
         jurisdiction: Jurisdiction::Lint,
         default_severity: DiagSeverity::Warning,
         message_template: "retired — absorbed Style setters are RetiredSetter compile errors",
-        allowed_list_source: Some("sail_style::concerns::concerns"),
+        allowed_list_source: Some("spinnaker::concerns::concerns"),
         fix_text: Some(
             "Use the concern setter (named composite or slot object). Retirement is a compile error, not a lint.",
         ),
         docs_anchor: Some("SPEC-SPINNAKER-2#what-is-deleted"),
     },
     DiagSpec {
-        id: "sail-style-match-exhaustive",
+        id: "spinnaker-match-exhaustive",
         jurisdiction: Jurisdiction::Lint,
         default_severity: DiagSeverity::Warning,
         message_template: "style match exhaustive",
@@ -1113,7 +1113,7 @@ const DIAG_SPECS: &[DiagSpec] = &[
         docs_anchor: None,
     },
     DiagSpec {
-        id: "sail-style-token-group",
+        id: "spinnaker-token-group",
         jurisdiction: Jurisdiction::CompilerError,
         default_severity: DiagSeverity::Error,
         message_template: "paint path is not a color-group (Tone) member",
@@ -1124,7 +1124,7 @@ const DIAG_SPECS: &[DiagSpec] = &[
         docs_anchor: None,
     },
     DiagSpec {
-        id: "sail-style-value-enumeration",
+        id: "spinnaker-value-enumeration",
         jurisdiction: Jurisdiction::CompilerError,
         default_severity: DiagSeverity::Error,
         message_template: "style value enumeration",

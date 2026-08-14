@@ -1,4 +1,4 @@
-//! `sail-style-value-enumeration` — prop value enumeration smell in Style.
+//! `spinnaker-value-enumeration` — prop value enumeration smell in Style.
 //!
 //! Fires when ≥3 compound rows in one style object differ **only** in a value
 //! fed to a setter (same condition keys family, same setter, varying arg)
@@ -9,7 +9,7 @@ use std::path::Path;
 
 use crate::report::{Finding, Severity};
 
-pub const RULE_ID: &str = "sail-style-value-enumeration";
+pub const RULE_ID: &str = "spinnaker-value-enumeration";
 
 pub fn check(path: &Path, source: &str) -> Vec<Finding> {
     let mut findings = Vec::new();

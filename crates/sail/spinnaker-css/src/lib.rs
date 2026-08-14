@@ -1,6 +1,6 @@
 //! HTML/CSS realization of a Style program.
 //!
-//! Depends on `sail-style` (parse / IR / Intent). The domain crate must not
+//! Depends on `spinnaker` (parse / IR / Intent). The domain crate must not
 //! depend on this crate — not even as a `[dev-dependency]`.
 
 pub mod conditions;

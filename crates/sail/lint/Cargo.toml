@@ -12,8 +12,8 @@ path = "src/lib.rs"
 serde = { workspace = true, features = ["derive"] }
 
 # Style parse/IR/emit + scales/tokens (CHANNELS-1 extract).
-sail-style = { path = "../style" }
-sail-style-css = { path = "../style-css" }
+spinnaker = { path = "../spinnaker" }
+spinnaker-css = { path = "../spinnaker-css" }
 
 # Rust-native TS/JS parsing — Solid-shaped fine-grained AST. Walks via
 # the Visit trait. No tsc dependency.

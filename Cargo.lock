@@ -4593,11 +4593,11 @@ dependencies = [
  "sail-build-info",
  "sail-layout",
  "sail-lint",
- "sail-style",
- "sail-style-css",
  "serde",
  "serde-wasm-bindgen",
  "serde_json",
+ "spinnaker",
+ "spinnaker-css",
  "tempfile",
  "thiserror 2.0.20",
  "wasm-bindgen",
@@ -4622,9 +4622,9 @@ dependencies = [
  "anyhow",
  "clap",
  "sail-lint",
- "sail-style",
  "serde",
  "serde_json",
+ "spinnaker",
  "taffy 0.12.2",
  "thiserror 2.0.20",
 ]
@@ -4639,10 +4639,10 @@ dependencies = [
  "oxc_parser 0.128.0",
  "oxc_span 0.128.0",
  "oxc_syntax 0.128.0",
- "sail-style",
- "sail-style-css",
  "serde",
  "serde_json",
+ "spinnaker",
+ "spinnaker-css",
  "tempfile",
 ]
 
@@ -4656,9 +4656,9 @@ dependencies = [
  "sail-compiler",
  "sail-layout",
  "sail-lint",
- "sail-style",
  "serde",
  "serde_json",
+ "spinnaker",
 ]
 
 [[package]]
@@ -4689,10 +4689,10 @@ dependencies = [
  "sail-lint",
  "sail-lsp",
  "sail-render",
- "sail-style",
  "schemars",
  "serde",
  "serde_json",
+ "spinnaker",
  "tempfile",
  "thiserror 2.0.20",
  "tokio",
@@ -4716,22 +4716,6 @@ dependencies = [
  "takumi-raster",
  "tempfile",
  "thiserror 2.0.20",
-]
-
-[[package]]
-name = "sail-style"
-version = "0.1.0"
-dependencies = [
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "sail-style-css"
-version = "0.1.0"
-dependencies = [
- "sail-style",
- "serde_json",
 ]
 
 [[package]]
@@ -5126,6 +5110,22 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.119",
+]
+
+[[package]]
+name = "spinnaker"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "spinnaker-css"
+version = "0.1.0"
+dependencies = [
+ "serde_json",
+ "spinnaker",
 ]
 
 [[package]]
@@ -6646,6 +6646,26 @@ dependencies = [
 ]
 
 [[patch.unused]]
+name = "ship-proto"
+version = "0.1.0"
+
+[[patch.unused]]
+name = "deck"
+version = "0.1.0"
+
+[[patch.unused]]
+name = "deck-core"
+version = "0.1.0"
+
+[[patch.unused]]
+name = "deck-ssr"
+version = "0.1.0"
+
+[[patch.unused]]
+name = "sail-compiler"
+version = "0.1.0"
+
+[[patch.unused]]
 name = "agent-driver"
 version = "0.1.0"
 
@@ -6667,24 +6687,4 @@ version = "0.1.0"
 
 [[patch.unused]]
 name = "yoke"
-version = "0.1.0"
-
-[[patch.unused]]
-name = "ship-proto"
-version = "0.1.0"
-
-[[patch.unused]]
-name = "deck"
-version = "0.1.0"
-
-[[patch.unused]]
-name = "deck-core"
-version = "0.1.0"
-
-[[patch.unused]]
-name = "deck-ssr"
-version = "0.1.0"
-
-[[patch.unused]]
-name = "sail-compiler"
 version = "0.1.0"

@@ -301,7 +301,7 @@ pub fn host_pack_alias(host: &str) -> &str {
 /// Host unit → surface pack, if that pack is an L1 stdlib tag.
 ///
 /// Style does not own this table. The compiler installs the pack name
-/// into [`sail_style::with_host_surface`] so `chip.foreground` is legal
+/// into [`spinnaker::with_host_surface`] so `chip.foreground` is legal
 /// while compiling that unit because the compiler said so.
 pub fn surface_pack_for_host(host: &str) -> Option<&'static str> {
     let pack = host_pack_alias(host);
@@ -315,7 +315,7 @@ fn component_tokens_for_tag(tag: &str) -> Vec<L1ComponentToken> {
     let Some(pack) = surface_pack_for_host(tag) else {
         return Vec::new();
     };
-    let Some(slots) = sail_style::surface_slots(pack) else {
+    let Some(slots) = spinnaker::surface_slots(pack) else {
         return Vec::new();
     };
     let mut out: Vec<L1ComponentToken> = slots

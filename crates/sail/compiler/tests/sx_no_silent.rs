@@ -1,6 +1,6 @@
 //! A typo'd/unknown Style token must NEVER become a silent-nothing.
 //!
-//! `sail-style` is a floor rule (`check::policy::FLOOR_RULES`) — `Error` under
+//! `spinnaker` is a floor rule (`check::policy::FLOOR_RULES`) — `Error` under
 //! every policy, un-softenable by any `lint_override`. So `compile()` refuses
 //! the build before a dead class reaches emitted output.
 //!
@@ -49,10 +49,10 @@ fn typo_style_token_is_still_rejected_under_a_softened_policy() {
     for severity in [OverrideSeverity::Off, OverrideSeverity::Warn] {
         let err = compile(
             TYPO_SRC,
-            opts("s-typo-softened").with_lint_override("sail-style", severity),
+            opts("s-typo-softened").with_lint_override("spinnaker", severity),
         )
         .expect_err(&format!(
-            "a `sail-style` override of {severity:?} must NOT let a typo'd token compile \
+            "a `spinnaker` override of {severity:?} must NOT let a typo'd token compile \
              silently — it is a floor rule and cannot be softened"
         ));
         let msg = err.message.to_lowercase();
@@ -87,7 +87,7 @@ fn no_dead_class_reaches_emitted_output_under_any_policy() {
     for severity in [OverrideSeverity::Off, OverrideSeverity::Warn] {
         let result = compile(
             TYPO_SRC,
-            opts("s-typo-no-dead-class").with_lint_override("sail-style", severity),
+            opts("s-typo-no-dead-class").with_lint_override("spinnaker", severity),
         );
         assert!(
             result.is_err(),

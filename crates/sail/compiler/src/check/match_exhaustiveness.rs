@@ -10,13 +10,13 @@
 
 use std::collections::HashSet;
 
-use sail_style::Style;
+use spinnaker::Style;
 
 use crate::diagnostics::{DiagSeverity, Diagnostic, line_col};
 use crate::ir::{Instr, MatchInstr, MatchTest, Program, PropKind};
 
 /// Style-match rule id (warnings).
-pub const RULE: &str = "sail-style-match-exhaustive";
+pub const RULE: &str = "spinnaker-match-exhaustive";
 
 /// Template match exhaustiveness rule id (errors).
 pub const TEMPLATE_RULE: &str = "sail-match-exhaustive";
@@ -74,7 +74,7 @@ pub fn collect(program: &Program, source: &str) -> Vec<Diagnostic> {
 
     // Host `style={â¦}` / `style="…"` values.
     for (vstart, val) in crate::parse::preprocess::find_sx_attr_values(source) {
-        let (style, _diags) = sail_style::parse(val);
+        let (style, _diags) = spinnaker::parse(val);
         check_style(&style, &unions, source, vstart, val, &mut out);
     }
 

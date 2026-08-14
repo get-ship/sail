@@ -3,7 +3,7 @@
 //! Sole paint architecture: style({ pad(4).bg(surface), when: { hover: bg(muted) } }).
 //!
 //! Layers: domain (`ir`, `vocab`, `intent`) → application (`parse`, `complete`,
-//! `clash`, `theme_env`). HTML/CSS realization is `sail-style-css`.
+//! `clash`, `theme_env`). HTML/CSS realization is `spinnaker-css`.
 //! Foreign CSS / Tailwind / HTML habits teach through [`foreign_idioms`].
 
 pub mod capabilities;

@@ -457,7 +457,7 @@ props: {
         assert!(
             lines
                 .iter()
-                .any(|l| l.contains("sail-style-match-exhaustive")),
+                .any(|l| l.contains("spinnaker-match-exhaustive")),
             "warning-severity lint must still print: {lines:?}"
         );
     }

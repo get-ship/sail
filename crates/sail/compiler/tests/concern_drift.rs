@@ -4,7 +4,7 @@
 //! setter names are a compile-process fail, not a warning.
 
 use sail_compiler::compile_element;
-use sail_style::{StyleDiagnostic, parse};
+use spinnaker::{StyleDiagnostic, parse};
 use std::fs;
 use std::path::{Path, PathBuf};
 

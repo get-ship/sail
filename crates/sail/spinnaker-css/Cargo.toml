@@ -1,0 +1,17 @@
+[package]
+name = "spinnaker-css"
+version = "0.1.0"
+edition = "2024"
+publish = false
+description = "HTML/CSS adapter for the Style Intent port. spinnaker is the language."
+
+[lib]
+name = "spinnaker_css"
+path = "src/lib.rs"
+
+[dependencies]
+spinnaker = { path = "../spinnaker" }
+serde_json = { workspace = true }
+
+[lints]
+workspace = true

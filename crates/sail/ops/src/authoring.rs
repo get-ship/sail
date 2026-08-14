@@ -172,21 +172,21 @@ Controllers never `.style` / `createElement`.\n\
                  `size` is box geometry only — pad is not a slot (use `pad`).\n"
             );
             let _ = writeln!(md, "## Concerns\n");
-            for row in sail_style::offered_rows().filter(|r| r.tag == sail_style::VocabTag::Concern)
+            for row in spinnaker::offered_rows().filter(|r| r.tag == spinnaker::VocabTag::Concern)
             {
-                let _ = writeln!(md, "- {}", sail_style::vocab_surface_line(row));
+                let _ = writeln!(md, "- {}", spinnaker::vocab_surface_line(row));
             }
             let _ = writeln!(md, "\n## Axis\n");
-            for row in sail_style::offered_rows().filter(|r| r.tag == sail_style::VocabTag::Axis) {
-                let _ = writeln!(md, "- {}", sail_style::vocab_surface_line(row));
+            for row in spinnaker::offered_rows().filter(|r| r.tag == spinnaker::VocabTag::Axis) {
+                let _ = writeln!(md, "- {}", spinnaker::vocab_surface_line(row));
             }
             let _ = writeln!(md, "\n## Plains\n");
             let _ = writeln!(
                 md,
                 "Verbs and resolve-offered singles. Not a themed bundle.\n"
             );
-            for row in sail_style::offered_rows().filter(|r| r.tag == sail_style::VocabTag::Plain) {
-                let _ = writeln!(md, "- {}", sail_style::vocab_surface_line(row));
+            for row in spinnaker::offered_rows().filter(|r| r.tag == spinnaker::VocabTag::Plain) {
+                let _ = writeln!(md, "- {}", spinnaker::vocab_surface_line(row));
             }
         }
         SurfaceTopic::Tokens => {

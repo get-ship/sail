@@ -24,7 +24,7 @@ use crate::diagnostics::{CompileError, Span};
 use crate::emit::util::camel_of;
 use crate::ir::{Program, PropKind};
 
-const RULE_TOKEN_GROUP: &str = "sail-style-token-group";
+const RULE_TOKEN_GROUP: &str = "spinnaker-token-group";
 /// Which returned-scope shapes a `bind(name)` may resolve to.
 ///
 /// `signal(...)` and stock progress drivers are plain signals. A
@@ -916,7 +916,7 @@ fn number_to_color_error(name: &str, setter: Option<&str>, span: Span) -> Compil
          setter."
     ))
     .with_span(span)
-    .with_category("sail-style-bind")
+    .with_category("spinnaker-bind")
 }
 
 fn unannotated_derived_length_error(name: &str, span: Span) -> CompileError {
@@ -926,7 +926,7 @@ fn unannotated_derived_length_error(name: &str, span: Span) -> CompileError {
          Unannotated deriveds bind freely to color/string contexts only."
     ))
     .with_span(span)
-    .with_category("sail-style-bind")
+    .with_category("spinnaker-bind")
 }
 
 fn refusal(
@@ -967,7 +967,7 @@ fn refusal(
     }
     CompileError::new(msg)
         .with_span(span)
-        .with_category("sail-style-bind")
+        .with_category("spinnaker-bind")
 }
 
 fn closest(name: &str, candidates: &[String]) -> Option<String> {

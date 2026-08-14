@@ -6,7 +6,7 @@
 //! tables the compiler / lint already own:
 //!
 //! - [`crate::runtime_ambient::RUNTIME_AMBIENT`] — controller vocabulary
-//! - `sail_style` vocab + plains emit — Style builder surface
+//! - `spinnaker` vocab + plains emit — Style builder surface
 //! - token registry values — closed token unions + bare-ident ambient consts
 //!
 //! ## Two-checker contract
@@ -27,11 +27,11 @@ use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result};
 
-use sail_style::component_surfaces;
+use spinnaker::component_surfaces;
 use sail_lint::scales;
 use sail_lint::token_groups::{self, color_group_names, color_groups, size_step_names};
-use sail_style::plains::{PlainSpec, find_plain};
-use sail_style::{VocabRow, VocabTag, find_concern, vocab_rows};
+use spinnaker::plains::{PlainSpec, find_plain};
+use spinnaker::{VocabRow, VocabTag, find_concern, vocab_rows};
 
 /// Relative path of the ambient pack inside a sail project (SPEC-OUTPUT-1 §4).
 /// Lives under `node_modules/.sail/` so `rm -rf node_modules` clears it;
@@ -53,8 +53,8 @@ const HEADER: &str = "\
 //
 // Sail ambient pack. Source of truth:
 //   crates/sail/compiler/src/runtime_ambient.rs
-//   crates/sail/style/src/vocab.rs (+ leftover plains / scales / token registry)
-//   crates/sail/style/src/token_groups.rs (color groups / Tone + Size + member paths)
+//   crates/sail/spinnaker/src/vocab.rs (+ leftover plains / scales / token registry)
+//   crates/sail/spinnaker/src/token_groups.rs (color groups / Tone + Size + member paths)
 // Regenerate: cargo run -p sail-compiler -- types [--project <dir>]
 //             (or: sail types --project <dir>)
 //
@@ -1292,7 +1292,7 @@ fn is_ambient_const_name(tok: &str) -> bool {
 // ── Style builder ──────────────────────────────────────────────────────────
 
 fn emit_style_types(out: &mut String) {
-    out.push_str("// ── Style builder (from sail_style vocab) ──\n");
+    out.push_str("// ── Style builder (from spinnaker vocab) ──\n");
 
     out.push_str(
         "/** `animate:` keyed map. The concern inside is `play`. */\n\

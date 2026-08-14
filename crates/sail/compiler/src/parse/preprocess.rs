@@ -75,7 +75,7 @@ pub(crate) fn preprocess_impl_full(
     // Type-keyed color-group props so `bg(tone)` / `bg(shade)` parse as bridge paths.
     let group_props = super::scope_block::color_group_typed_prop_names(&s);
     // Scope Style consts (`const filled = style(…)`) resolve Refs in host Style.
-    let (s, style_css, hosts) = sail_style::with_bound_group_props(&group_props, || {
+    let (s, style_css, hosts) = spinnaker::with_bound_group_props(&group_props, || {
         let style_env = super::scope_block::style_env_from_source(&s);
         lift_tag_style(&s, &style_env)
     })?;
@@ -204,7 +204,7 @@ fn is_void_tag(tag: &str) -> bool {
 /// `class="s-…"` (+ motion attrs), stripping the call from the open tag.
 fn lift_tag_style(
     source: &str,
-    env: &sail_style::StyleEnv,
+    env: &spinnaker::StyleEnv,
 ) -> Result<(String, String, sail_layout::StyleHosts), CompileError> {
     struct Lift {
         gt_pos: usize,
@@ -286,15 +286,15 @@ fn lift_tag_style(
                      or  style(name) / style(partial, …)  — not bare `style`, `style=`, or `style={…}`",
                 )
                 .with_span(Span::new(bad, bad + 5))
-                .with_category("sail-style"));
+                .with_category("spinnaker"));
             }
             if let Some((call_lo, call_hi, expr)) = find_tag_style_call(source, tag_end, gt_pos) {
                 refuse_text_on_non_text_host(tag, expr, env, call_lo, call_hi)?;
                 let (classes, motions) = lower_sx_value(expr, env, &mut css, &mut seen)
                     .map_err(|diags| style_error(diags, call_lo, call_hi))?;
                 let val = strip_outer_braces(expr.trim());
-                let (style_ir, _) = sail_style::parse(val);
-                let resolved_type = sail_style::resolve_type(&style_ir, env);
+                let (style_ir, _) = spinnaker::parse(val);
+                let resolved_type = spinnaker::resolve_type(&style_ir, env);
                 if let Some(host) = sail_layout::TypeHost::from_resolved(&classes, &resolved_type) {
                     hosts.types.push(host);
                 }
@@ -424,7 +424,7 @@ fn refuse_body_style_statements(source: &str) -> Result<(), CompileError> {
                      not as a body statement",
                 )
                 .with_span(Span::new(abs_lo, abs_hi))
-                .with_category("sail-style"));
+                .with_category("spinnaker"));
             }
             i = body_start;
             continue;
@@ -690,7 +690,7 @@ fn consume_style_expr(s: &str) -> Option<usize> {
     }
 }
 
-fn style_error(diags: Vec<sail_style::StyleDiagnostic>, start: usize, end: usize) -> CompileError {
+fn style_error(diags: Vec<spinnaker::StyleDiagnostic>, start: usize, end: usize) -> CompileError {
     let message = diags
         .into_iter()
         .map(|d| d.message())
@@ -698,19 +698,19 @@ fn style_error(diags: Vec<sail_style::StyleDiagnostic>, start: usize, end: usize
         .join("; ");
     CompileError::new(format!("Style error: {message}"))
         .with_span(Span::new(start, end))
-        .with_category("sail-style")
+        .with_category("spinnaker")
 }
 fn lower_sx_value(
     val: &str,
-    env: &sail_style::StyleEnv,
+    env: &spinnaker::StyleEnv,
     css: &mut String,
     seen: &mut std::collections::HashSet<String>,
-) -> Result<(String, Vec<(String, String)>), Vec<sail_style::StyleDiagnostic>> {
+) -> Result<(String, Vec<(String, String)>), Vec<spinnaker::StyleDiagnostic>> {
     // `quote_brace_attrs` rewrites `sx={…}` → `sx="{…}"` (braces preserved inside).
     let val = strip_outer_braces(val.trim());
     // Sole product path: Style value language (chain + match/when/compound/bind).
     // Motion chain methods (`.enter` / `.exit` / …) return alongside classes.
-    sail_style_css::lower_style_source_with_motion(val, env, css, seen)
+    spinnaker_css::lower_style_source_with_motion(val, env, css, seen)
 }
 
 /// Textish setters may only attach to text-bearing hosts.
@@ -723,7 +723,7 @@ fn lower_sx_value(
 fn refuse_text_on_non_text_host(
     tag: &str,
     expr: &str,
-    _env: &sail_style::StyleEnv,
+    _env: &spinnaker::StyleEnv,
     abs_lo: usize,
     abs_hi: usize,
 ) -> Result<(), CompileError> {
@@ -731,13 +731,13 @@ fn refuse_text_on_non_text_host(
         return Ok(());
     }
     let val = strip_outer_braces(expr.trim());
-    let (style, _) = sail_style::parse(val);
-    if !sail_style::style_is_textish(&style) {
+    let (style, _) = spinnaker::parse(val);
+    if !spinnaker::style_is_textish(&style) {
         return Ok(());
     }
     Err(CompileError::new(crate::text_host::text_host_error(tag))
         .with_span(Span::new(abs_lo, abs_hi))
-        .with_category("sail-style"))
+        .with_category("spinnaker"))
 }
 
 /// Inject compiler-private `_sail_m_<trigger>="{{…}}"` attrs derived from

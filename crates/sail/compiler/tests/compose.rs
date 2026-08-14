@@ -30,7 +30,7 @@ fn check_all_emits_compose_rhythm() {
     assert!(
         diags
             .iter()
-            .all(|d| d.rule.as_deref() != Some("sail-style")),
+            .all(|d| d.rule.as_deref() != Some("spinnaker")),
         "v3 margin fixture must not be a style error: {diags:?}"
     );
     assert!(

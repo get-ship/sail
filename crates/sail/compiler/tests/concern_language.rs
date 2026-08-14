@@ -6,8 +6,8 @@
 
 use sail_compiler::compile_element;
 use sail_lint::tokens;
-use sail_style::{Style, StyleDiagnostic, clash, parse, parse_style_const_rhs};
-use sail_style_css::{lower_style, lower_style_source};
+use spinnaker::{Style, StyleDiagnostic, clash, parse, parse_style_const_rhs};
+use spinnaker_css::{lower_style, lower_style_source};
 use std::collections::HashMap;
 
 fn css_of(src: &str) -> String {

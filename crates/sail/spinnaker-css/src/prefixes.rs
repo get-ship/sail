@@ -1,6 +1,6 @@
 //! CSS selectors for Style `when` keys and residual string-sx prefixes.
 //!
-//! Author names live on `sail_style::intent` (`is_known_when_key`). This
+//! Author names live on `spinnaker::intent` (`is_known_when_key`). This
 //! module owns the selector / media realization so lint, preprocess, and
 //! emit cannot diverge.
 

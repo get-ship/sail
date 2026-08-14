@@ -208,13 +208,13 @@ pub fn theme_hover_at(
     if theme_override_object_at(source, byte_offset) {
         return resolve_theme_token(&name, theme, mode);
     }
-    let ctx = sail_style::style_complete_context_at(source, byte_offset, None);
+    let ctx = spinnaker::style_complete_context_at(source, byte_offset, None);
     match ctx {
-        sail_style::StyleCompleteContext::SetterArg { setter, .. } => {
+        spinnaker::StyleCompleteContext::SetterArg { setter, .. } => {
             let resolved = concern_arg_name(&setter, &name);
             resolve_theme_token(&resolved, theme, mode)
         }
-        sail_style::StyleCompleteContext::ConcernSlotArg { .. } => {
+        spinnaker::StyleCompleteContext::ConcernSlotArg { .. } => {
             resolve_theme_token(&name, theme, mode)
         }
         _ => None,
@@ -223,8 +223,8 @@ pub fn theme_hover_at(
 
 /// Concern-scoped identity (`subtle` inside `border(…)` → `border.subtle`).
 fn concern_arg_name(setter: &str, name: &str) -> String {
-    sail_style::find_concern(setter)
-        .and_then(|c| sail_style::resolve_concern_name(c, name))
+    spinnaker::find_concern(setter)
+        .and_then(|c| spinnaker::resolve_concern_name(c, name))
         .map(|c| c.name.to_string())
         .unwrap_or_else(|| name.to_string())
 }
@@ -357,7 +357,7 @@ fn css_name_for_author(name: &str) -> Option<String> {
             return Some(public_name(&path));
         }
     }
-    if sail_style::is_theme_owned_author_root(n) {
+    if spinnaker::is_theme_owned_author_root(n) {
         return Some(public_name(&format!("component.{n}.bg")));
     }
     if sail_lint::tokens::registry().contains(n) {

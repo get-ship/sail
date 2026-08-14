@@ -60,7 +60,7 @@ pub const REGION_CAPABILITY_MATRIX: &[RegionCapability] = &[
         capability: "Style declarations (style name = {…})",
         legal: "yes",
         status: "enforced",
-        enforcement: "parse::scope_block (StyleEnv) + sail-style lower",
+        enforcement: "parse::scope_block (StyleEnv) + spinnaker lower",
         notes: "Channel values as compile-time Style only; prefer style name =",
     },
     RegionCapability {
@@ -151,7 +151,7 @@ pub const REGION_CAPABILITY_MATRIX: &[RegionCapability] = &[
         capability: "closed Style grammar style({ pad(4).bg(surface), when:, animate: })",
         legal: "yes",
         status: "enforced",
-        enforcement: "sail-style parse/lower + sail-no-sx / sail-no-inline-style floors",
+        enforcement: "spinnaker parse/lower + sail-no-sx / sail-no-inline-style floors",
         notes: "One styling form; sx= and raw style= refused",
     },
     RegionCapability {
@@ -159,7 +159,7 @@ pub const REGION_CAPABILITY_MATRIX: &[RegionCapability] = &[
         capability: "brace splices for genuine expressions",
         legal: "yes",
         status: "enforced",
-        enforcement: "sail-style parse (brace splice) + channel scale checks",
+        enforcement: "spinnaker parse (brace splice) + channel scale checks",
         notes: "box.w({ pct() }) and token-scale values; off-scale is error",
     },
     RegionCapability {
@@ -167,7 +167,7 @@ pub const REGION_CAPABILITY_MATRIX: &[RegionCapability] = &[
         capability: "open CSS / arbitrary property bags",
         legal: "no",
         status: "enforced",
-        enforcement: "sail-style clash/scale + sail-css-token / css_literals",
+        enforcement: "spinnaker clash/scale + sail-css-token / css_literals",
         notes: "Closed vocabulary from Style IR; not a CSS escape hatch",
     },
 ];

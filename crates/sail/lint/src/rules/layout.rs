@@ -837,11 +837,11 @@ pub fn lower_participation(name: &str, value: &str) -> Option<(String, String)> 
         _ => return None,
     };
     let wrapped = format!("style({{ {expr} }})");
-    let (style, diags) = sail_style::parse(&wrapped);
+    let (style, diags) = spinnaker::parse(&wrapped);
     if !diags.is_empty() {
         return None;
     }
-    let (classes, css) = sail_style_css::lower_style(&style, &std::collections::HashMap::new());
+    let (classes, css) = spinnaker_css::lower_style(&style, &std::collections::HashMap::new());
     if classes.is_empty() || css.is_empty() {
         return None;
     }

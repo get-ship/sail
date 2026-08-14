@@ -4,7 +4,7 @@
 //! Host identity comes from HTML tags + the L1 registry, not a Channel enum.
 
 use sail_compiler::{is_text_host, text_host_error};
-use sail_style::{is_geometry_setter, parse, setter_caps, style_is_textish};
+use spinnaker::{is_geometry_setter, parse, setter_caps, style_is_textish};
 
 #[test]
 fn button_is_text_host_via_registry() {

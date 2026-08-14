@@ -19,7 +19,7 @@ use std::path::{Path, PathBuf};
 use sail_compiler::check::policy::{Policy, ResolutionKind};
 use sail_compiler::{CompileError, CompileMode, CompileOpts, compile};
 
-/// `style="…"` is refused by the floor (`sail-style`) and by the sx
+/// `style="…"` is refused by the floor (`spinnaker`) and by the sx
 /// capability (`sail-no-sx`). `compile()` returns the first Error — both
 /// categories are a loud refusal of the stripped host. Do not accept a
 /// silent compile, and do not pin one id that fail-first may skip.
@@ -27,9 +27,9 @@ fn assert_style_eq_refused(err: &CompileError) {
     assert!(
         matches!(
             err.category.as_deref(),
-            Some("sail-style") | Some("sail-no-sx")
+            Some("spinnaker") | Some("sail-no-sx")
         ),
-        "style= must be refused (sail-style floor or sail-no-sx), got {:?}",
+        "style= must be refused (spinnaker floor or sail-no-sx), got {:?}",
         err.category
     );
 }
@@ -94,7 +94,7 @@ fn unknown_key_fails_closed_and_the_refusal_names_file_key_and_tier() {
 
     // A component that actually uses a stripped capability now fails the
     // build gate — sx is off under the fail-closed strict tier.
-    // `style="p-4"` is refused twice: floor `sail-style` (utility-string
+    // `style="p-4"` is refused twice: floor `spinnaker` (utility-string
     // residual is not Style) and capability `sail-no-sx` (`style=` host).
     // `compile()` fails on the first Error; either category is a loud
     // refusal. Product attach is the tag call `style({…})` (no `=`).
@@ -160,7 +160,7 @@ fn stylesheets_only_config_is_announced_not_silently_rejected() {
     // The build-time reproduction of the original bug report: a package with
     // only `stylesheets` declared, and an s-using component. The compile
     // must refuse and not silently drop the sx. `style="p-4"` is a floor
-    // `sail-style` residual plus a `sail-no-sx` capability hit; fail-first
+    // `spinnaker` residual plus a `sail-no-sx` capability hit; fail-first
     // may surface either. The walk already named the config file above.
     let (_tmp2, sail_sx) = write_fixture(
         r#"{"stylesheets": []}"#,

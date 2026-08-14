@@ -1,11 +1,11 @@
 //! CSS realization of `when({ key })` — selectors, ancestor prefixes, media.
 //!
-//! Author names are validated in `sail_style::intent::is_known_when_key`.
+//! Author names are validated in `spinnaker::intent::is_known_when_key`.
 //! This module maps those names onto CSS.
 
 use std::borrow::Cow;
 
-use sail_style::intent::when_key_kebab;
+use spinnaker::intent::when_key_kebab;
 
 use crate::prefixes as sx_rules;
 

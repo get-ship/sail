@@ -46,11 +46,11 @@ fn theme_eq_id_ok() {
 
 #[test]
 fn component_storage_paths_are_gone() {
-    assert!(!sail_style::component_surfaces::is_known_component_storage_path("component.button.bg"));
-    assert!(!sail_style::component_surfaces::is_theme_owned_token_name(
+    assert!(!spinnaker::component_surfaces::is_known_component_storage_path("component.button.bg"));
+    assert!(!spinnaker::component_surfaces::is_theme_owned_token_name(
         "button"
     ));
-    assert!(!sail_style::component_surfaces::is_theme_owned_token_name(
+    assert!(!spinnaker::component_surfaces::is_theme_owned_token_name(
         "card"
     ));
 }

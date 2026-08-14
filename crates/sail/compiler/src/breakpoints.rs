@@ -1,7 +1,7 @@
 //! Theme viewport breakpoints for the structural `<when {token}>` block.
 //!
 //! Names and media queries match Style condition keys
-//! (`sail_style_css::conditions`) so paint-level `.when({ tablet: … })`
+//! (`spinnaker_css::conditions`) so paint-level `.when({ tablet: … })`
 //! and tree-level `<when {tablet}>` share one scale. Widths are the
 //! design-token `breakpoint-*` lengths.
 
@@ -16,7 +16,7 @@ pub fn breakpoint_media(token: &str) -> Option<&'static str> {
     if !BREAKPOINT_TOKENS.contains(&t) {
         return None;
     }
-    sail_style_css::condition_media(t)
+    spinnaker_css::condition_media(t)
 }
 
 /// Human-readable list for diagnostics: `mobile, tablet, desktop`.
@@ -53,7 +53,7 @@ mod tests {
         for name in BREAKPOINT_TOKENS {
             assert_eq!(
                 breakpoint_media(name),
-                sail_style_css::condition_media(name),
+                spinnaker_css::condition_media(name),
                 "{name} must equal Style condition media"
             );
         }

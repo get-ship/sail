@@ -3,7 +3,7 @@
 //! Runs after the layout pass and reuses the same taffy tree (built from the
 //! preprocessed source) so we never pay for a second layout computation.
 //!
-//! **Spacing is resolved structurally** via `sail_style::parse` on each
+//! **Spacing is resolved structurally** via `spinnaker::parse` on each
 //! child's block `style({…})` statement (and parent `gap` attrs) — not by
 //! substring fingerprinting lowered `s-mr*` class tokens.
 //!
@@ -504,7 +504,7 @@ fn spacing_from_sx_expr(sx_raw: &str, setter: &str) -> Option<SpacingValue> {
     } else {
         format!("style({{ {expr} }})")
     };
-    let (style, _diags) = sail_style::parse(&wrapped);
+    let (style, _diags) = spinnaker::parse(&wrapped);
     let mut ops = Vec::new();
     collect_paint_ops(&style, &mut ops);
     for op in ops.into_iter().rev() {
@@ -514,7 +514,7 @@ fn spacing_from_sx_expr(sx_raw: &str, setter: &str) -> Option<SpacingValue> {
         // v3 concern form: margin({ b: 4 }) is the retired `mb(4)` slot.
         if let Some((concern, slot)) = retired_spacing_slot(setter) {
             if op.setter == concern {
-                if let sail_style::PaintArg::Slots(slots) = op.first_arg() {
+                if let spinnaker::PaintArg::Slots(slots) = op.first_arg() {
                     if let Some(arg) = slots.get(slot) {
                         return paint_arg_to_spacing(arg);
                     }
@@ -747,8 +747,8 @@ fn consume_balanced_style_expr(s: &str) -> Option<usize> {
     }
 }
 
-fn collect_paint_ops<'a>(style: &'a sail_style::Style, out: &mut Vec<&'a sail_style::PaintOp>) {
-    use sail_style::Style;
+fn collect_paint_ops<'a>(style: &'a spinnaker::Style, out: &mut Vec<&'a spinnaker::PaintOp>) {
+    use spinnaker::Style;
     match style {
         Style::Empty | Style::Ref(_) | Style::MotionAttach { .. } => {}
         Style::Set(op) => out.push(op),
@@ -771,8 +771,8 @@ fn collect_paint_ops<'a>(style: &'a sail_style::Style, out: &mut Vec<&'a sail_st
     }
 }
 
-fn paint_arg_to_spacing(arg: &sail_style::PaintArg) -> Option<SpacingValue> {
-    use sail_style::PaintArg;
+fn paint_arg_to_spacing(arg: &spinnaker::PaintArg) -> Option<SpacingValue> {
+    use spinnaker::PaintArg;
     match arg {
         PaintArg::Bind(_) | PaintArg::MemberPath { .. } => Some(SpacingValue::Expression),
         PaintArg::Token(t) => {
@@ -1168,7 +1168,7 @@ fn collect_contrast(
             continue;
         };
         let expr = strip_sx_braces(&sx);
-        let (style, _) = sail_style::parse(expr);
+        let (style, _) = spinnaker::parse(expr);
         let mut ops = Vec::new();
         collect_paint_ops(&style, &mut ops);
         let mut bg: Option<String> = None;
@@ -1176,12 +1176,12 @@ fn collect_contrast(
         for op in &ops {
             match op.setter.as_str() {
                 "bg" => {
-                    if let sail_style::PaintArg::Token(t) = op.first_arg() {
+                    if let spinnaker::PaintArg::Token(t) = op.first_arg() {
                         bg = Some(t.clone());
                     }
                 }
                 "fg" | "color" => {
-                    if let sail_style::PaintArg::Token(t) = op.first_arg() {
+                    if let spinnaker::PaintArg::Token(t) = op.first_arg() {
                         fg = Some(t.clone());
                     }
                 }
@@ -1304,14 +1304,14 @@ fn collect_off_scale_from_source(source: &str, severity: DiagSeverity) -> Vec<Di
         let Some(sx) = element_style_expr(source, tag_end, &attrs) else {
             continue;
         };
-        let (style, _) = sail_style::parse(&sx);
+        let (style, _) = spinnaker::parse(&sx);
         let mut ops = Vec::new();
         collect_paint_ops(&style, &mut ops);
         for op in ops {
             if !SPACING_SETTERS.contains(&op.setter.as_str()) {
                 continue;
             }
-            let sail_style::PaintArg::Token(t) = op.first_arg() else {
+            let spinnaker::PaintArg::Token(t) = op.first_arg() else {
                 continue;
             };
             let t = t.trim();

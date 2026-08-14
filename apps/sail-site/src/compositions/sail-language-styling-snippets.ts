@@ -8,7 +8,7 @@ export const code = {
     On the system, or it does not compile.</p>
 </card>`,
 
-  sxError: `error: [sail-style] Style error: style \`radius(huge)\` is retired — use \`radius(md) or radius({ all: md })\``,
+  sxError: `error: [spinnaker] Style error: style \`radius(huge)\` is retired — use \`radius(md) or radius({ all: md })\``,
 
   current: `<row gap="1" align="center" style({ pad(1).bg(surface-2).border({ color: border, width: 1 }).radius(full) })>
   <a href="/docs" current={onDocs() ? 'page' : null} style({ pad({ x: 3, y: 1 }).radius(full).type({ size: sm }), when: { current: bg(primary).fg(primary-foreground) } })>

@@ -500,7 +500,7 @@ pub fn validate_sx_setter(setter: &str, args: &[serde_json::Value]) -> Result<()
         return Err("setSx requires non-empty `setter`".into());
     }
     // Residual utility-string names (not Style vocab).
-    for (atom, instead) in sail_style::style_vocab::refusals() {
+    for (atom, instead) in spinnaker::style_vocab::refusals() {
         if name == atom || name.replace('_', "-") == atom {
             return Err(format!(
                 "setSx `{name}` is off-vocab (refused): {instead}. Allowed setters: {}",
@@ -509,20 +509,20 @@ pub fn validate_sx_setter(setter: &str, args: &[serde_json::Value]) -> Result<()
         }
     }
     // grow/shrink are Style participation — allowed on setSx / Style.
-    if let Some((concern, teaching)) = sail_style::retired_replacement(name) {
+    if let Some((concern, teaching)) = spinnaker::retired_replacement(name) {
         return Err(format!(
             "setSx `{name}` is retired — use `{teaching}` (`{concern}`). Allowed setters: {}",
             allowed_setter_names().join(", ")
         ));
     }
-    if sail_style::find_vocab(name).is_none() {
+    if spinnaker::find_vocab(name).is_none() {
         return Err(format!(
             "setSx `{name}` is off-vocab. Allowed setters: {}",
             allowed_setter_names().join(", ")
         ));
     }
     // Optional plains emit scale/keyword check on first string/number arg.
-    let Some(spec) = sail_style::plains::find_plain(name) else {
+    let Some(spec) = spinnaker::plains::find_plain(name) else {
         return Ok(());
     };
     if let Some(scale) = spec.scale {
@@ -551,7 +551,7 @@ pub fn validate_sx_setter(setter: &str, args: &[serde_json::Value]) -> Result<()
 }
 
 fn allowed_setter_names() -> Vec<&'static str> {
-    sail_style::vocab_rows().iter().map(|r| r.name).collect()
+    spinnaker::vocab_rows().iter().map(|r| r.name).collect()
 }
 
 fn arg_to_token(v: &serde_json::Value) -> Option<String> {

@@ -4,7 +4,7 @@
 //! Layout consumes this resolution. Class spelling is output — measure does
 //! not parse `s-displayflex` / `s-grow1` to learn what Style already decided.
 
-use sail_style::{PaintArg, PaintOp, Style, StyleEnv};
+use spinnaker::{PaintArg, PaintOp, Style, StyleEnv};
 
 /// Tokens Style spent on the box channel (resting layer, not when/hover).
 #[derive(Debug, Clone, Default, PartialEq)]
@@ -471,7 +471,7 @@ mod tests {
     use taffy::style::Overflow;
 
     fn resolved(src: &str) -> ResolvedBox {
-        let (style, diags) = sail_style::parse(src);
+        let (style, diags) = spinnaker::parse(src);
         assert!(
             diags.is_empty(),
             "{src}: {:?}",

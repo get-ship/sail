@@ -497,7 +497,7 @@ fn gen_prop_registry(out: Option<PathBuf>, ts_out: Option<PathBuf>) -> Result<()
             Some(pack) => pack,
             None => tag,
         };
-        let program = sail_style::with_host_surface(Some(host), || {
+        let program = spinnaker::with_host_surface(Some(host), || {
             sail_compiler::parse::parse_element_source(source)
         })
         .map_err(|e| anyhow!("stdlib {tag} failed to parse: {e:?}"))?;
@@ -590,20 +590,20 @@ fn gen_prop_registry(out: Option<PathBuf>, ts_out: Option<PathBuf>) -> Result<()
     sf.push_str(
         "// when: keys, layout, motion, L1, directives. Not the emit-leaf utility table.\n\n",
     );
-    let style_vocab: Vec<serde_json::Value> = sail_style::offered_rows()
+    let style_vocab: Vec<serde_json::Value> = spinnaker::offered_rows()
         .map(|row| {
             let tag = match row.tag {
-                sail_style::VocabTag::Concern => "concern",
-                sail_style::VocabTag::Axis => "axis",
-                sail_style::VocabTag::Plain => "plain",
+                spinnaker::VocabTag::Concern => "concern",
+                spinnaker::VocabTag::Axis => "axis",
+                spinnaker::VocabTag::Plain => "plain",
             };
             let slots: Vec<&str> = match row.tag {
-                sail_style::VocabTag::Concern | sail_style::VocabTag::Axis => {
-                    sail_style::find_concern(row.name)
+                spinnaker::VocabTag::Concern | spinnaker::VocabTag::Axis => {
+                    spinnaker::find_concern(row.name)
                         .map(|c| c.slots.iter().map(|s| s.name).collect())
                         .unwrap_or_default()
                 }
-                sail_style::VocabTag::Plain => Vec::new(),
+                spinnaker::VocabTag::Plain => Vec::new(),
             };
             serde_json::json!({
                 "name": row.name,
@@ -622,10 +622,10 @@ fn gen_prop_registry(out: Option<PathBuf>, ts_out: Option<PathBuf>) -> Result<()
     sf.push_str(&serde_json::to_string_pretty(&style_vocab)?);
     sf.push_str("\n\n");
     // SPEC-SPINNAKER-2: concern atlas + markers are the live Style table.
-    let concern_rows: Vec<serde_json::Value> = sail_style::concerns()
+    let concern_rows: Vec<serde_json::Value> = spinnaker::concerns()
         .iter()
         .map(|c| {
-            let caps = sail_style::find_vocab(c.name)
+            let caps = spinnaker::find_vocab(c.name)
                 .map(|r| r.caps)
                 .unwrap_or_default();
             serde_json::json!({
@@ -644,7 +644,7 @@ fn gen_prop_registry(out: Option<PathBuf>, ts_out: Option<PathBuf>) -> Result<()
     sf.push_str(&serde_json::to_string_pretty(&concern_rows)?);
     sf.push_str("\n\n");
     sf.push_str("export const MARKERS: string[] = ");
-    sf.push_str(&serde_json::to_string_pretty(&sail_style::MARKERS)?);
+    sf.push_str(&serde_json::to_string_pretty(&spinnaker::MARKERS)?);
     sf.push_str("\n\n");
     // when: keys — interaction & ARIA (product: when: { hover: … }).
     let states: Vec<serde_json::Value> = sail_lint::rules::style_rule::STATE_PREFIXES
@@ -673,7 +673,7 @@ fn gen_prop_registry(out: Option<PathBuf>, ts_out: Option<PathBuf>) -> Result<()
     sf.push_str("\n\n");
     // Residual dead-form table. NOT the author language — utility-string
     // leftovers the emit leaf still names. Style vocab is STYLE_VOCAB above.
-    let refusals: Vec<serde_json::Value> = sail_style::style_vocab::refusals()
+    let refusals: Vec<serde_json::Value> = spinnaker::style_vocab::refusals()
         .into_iter()
         .map(|(atom, instead)| serde_json::json!({ "atom": atom, "instead": instead }))
         .collect();
@@ -1221,7 +1221,7 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
              | action write (`use:anchor` → `anchorLeft`) | via action manifest `writes` |\n\
              \n\
              Do not enumerate a prop as ≥3 compound rows that only vary a setter arg —\n\
-             that is `sail-style-value-enumeration`; use `bind(name)` instead.\n"
+             that is `spinnaker-value-enumeration`; use `bind(name)` instead.\n"
         );
 
         // Concern atlas only — absorbed property names are not offered.
@@ -1234,13 +1234,13 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
              (`fill`/`ink`/`place`/`space`/`flow`/`motion`). Participation\n\
              (`grow`/`shrink`/`w`) lives on `size` / `grow` / `shrink`.\n"
         );
-        for row in sail_style::offered_rows().filter(|r| r.tag == sail_style::VocabTag::Concern) {
-            let _ = writeln!(md, "- {}", sail_style::vocab_surface_line(row));
+        for row in spinnaker::offered_rows().filter(|r| r.tag == spinnaker::VocabTag::Concern) {
+            let _ = writeln!(md, "- {}", spinnaker::vocab_surface_line(row));
         }
         let _ = writeln!(md);
         let _ = writeln!(md, "### Axis\n");
-        for row in sail_style::offered_rows().filter(|r| r.tag == sail_style::VocabTag::Axis) {
-            let _ = writeln!(md, "- {}", sail_style::vocab_surface_line(row));
+        for row in spinnaker::offered_rows().filter(|r| r.tag == spinnaker::VocabTag::Axis) {
+            let _ = writeln!(md, "- {}", spinnaker::vocab_surface_line(row));
         }
         let _ = writeln!(md);
         let _ = writeln!(md, "### Plains\n");

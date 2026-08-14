@@ -1,4 +1,4 @@
-//! `sail-style` — the Style paint surface.
+//! `spinnaker` — the Style paint surface.
 //!
 //! Product form is a **tag-position** `style(…)` call on the open tag:
 //! ```text
@@ -17,7 +17,7 @@
 //! number, never a colour, never a unit. There is no bracket escape (cf.
 //! Tailwind's `p-[13px]`).
 //!
-//! The author vocabulary is `sail_style::vocab` (`offered_rows()` —
+//! The author vocabulary is `spinnaker::vocab` (`offered_rows()` —
 //! concern | axis | plain). Product attach is tag-position
 //! `style({ pad(4).bg(surface), when: { hover: bg(muted) } })`.
 //! Emit is `vocab.rs` + `plains.rs` / `concerns.rs` + `scales.rs`.
@@ -39,11 +39,11 @@ use std::path::Path;
 
 use crate::report::{Finding, Severity};
 
-pub const RULE_ID: &str = "sail-style";
+pub const RULE_ID: &str = "spinnaker";
 
 // Residual string lowerers still call these names. SSOT is the CSS adapter:
-// `sail_style_css::conditions` (`when({ tablet: … })`) and `sail_style_css::prefixes`.
-pub use sail_style_css::{
+// `spinnaker_css::conditions` (`when({ tablet: … })`) and `spinnaker_css::prefixes`.
+pub use spinnaker_css::{
     CONDITION_PREFIXES, STATE_PREFIXES, SX_EXTRA_FORMS, condition_media, group_attr_presence,
     is_prefix, pseudo_element_prefix, state_data, state_pseudo,
 };
@@ -52,7 +52,7 @@ pub use sail_style_css::{
 /// it accepts. Surface docs, skill, and LSP walk `offered_rows()` in
 /// `vocab.rs` — not this table.
 pub fn vocabulary() -> Vec<(String, Vec<String>)> {
-    sail_style::offered_rows()
+    spinnaker::offered_rows()
         .map(|r| (r.name.to_string(), Vec::new()))
         .collect()
 }
@@ -107,7 +107,7 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
         let (line, col) = offset_to_line_col(source, offset);
 
         // Residual utility-string product is a hard error — not a second language.
-        if sail_style::looks_like_utility_string_product(val) {
+        if spinnaker::looks_like_utility_string_product(val) {
             findings.push(mk(
                 path,
                 line,
@@ -118,11 +118,11 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
             continue;
         }
 
-        let (style, style_diags) = sail_style::parse(val);
+        let (style, style_diags) = spinnaker::parse(val);
         for d in &style_diags {
             findings.push(mk(path, line, col, d.message()));
         }
-        for d in sail_style::clash::detect_clashes(&style, &std::collections::HashMap::new()) {
+        for d in spinnaker::clash::detect_clashes(&style, &std::collections::HashMap::new()) {
             findings.push(mk(path, line, col, d.message()));
         }
     }
@@ -535,7 +535,7 @@ fn is_style_product_value(val: &str) -> bool {
         || t.starts_with('[')
         // Leftover `row.enter({…})` is not a utility string — parse teaches
         // the play map. Not a valid product after Phase 5.
-        || sail_style::parse::is_const_ref_motion_chain_pub(t)
+        || spinnaker::parse::is_const_ref_motion_chain_pub(t)
         || {
             // bare Style const ref
             let mut chars = t.chars();

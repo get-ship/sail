@@ -4,7 +4,7 @@
 
 use sail_compiler::{DiagSeverity, Diagnostic, check_all};
 
-const RULE: &str = "sail-style-match-exhaustive";
+const RULE: &str = "spinnaker-match-exhaustive";
 
 fn warnings(src: &str) -> Vec<Diagnostic> {
     check_all(src, None, &[], None)

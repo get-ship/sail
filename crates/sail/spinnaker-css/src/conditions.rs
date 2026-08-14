@@ -1,6 +1,6 @@
 //! Style media / environment conditions — CSS realization of `when({ key })`.
 //!
-//! Author names live on `sail_style::intent::CONDITION_KEYS`. This table maps
+//! Author names live on `spinnaker::intent::CONDITION_KEYS`. This table maps
 //! those names to `@media` queries. Widths must match design-token
 //! `breakpoint-*` lengths (enforced by adapter tests).
 

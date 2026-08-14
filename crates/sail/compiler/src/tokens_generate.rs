@@ -6647,7 +6647,7 @@ mod tests {
     }
 
     #[test]
-    fn flatten_skips_sail_style_and_keyframes() {
+    fn flatten_skips_spinnaker_and_keyframes() {
         let doc: Value = serde_json::json!({
             "style": {
                 "sample": {

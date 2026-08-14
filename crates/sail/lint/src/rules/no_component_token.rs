@@ -71,7 +71,7 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                     && is_attr
                     && name.contains('.')
                     && name != "theme"
-                    && sail_style::is_theme_owned_token_name(name)
+                    && spinnaker::is_theme_owned_token_name(name)
                 {
                     let msg = format!(
                         "component token `{name}` is theme-owned; override via theme= or the theme document"

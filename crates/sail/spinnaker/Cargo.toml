@@ -1,12 +1,12 @@
 [package]
-name = "sail-style"
+name = "spinnaker"
 version = "0.1.0"
 edition = "2024"
 publish = false
 description = "Compile-time Style value language: parse, IR, Intent port, clash. CSS realization is the css adapter."
 
 [lib]
-name = "sail_style"
+name = "spinnaker"
 path = "src/lib.rs"
 
 [dependencies]

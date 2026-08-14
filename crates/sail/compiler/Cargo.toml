@@ -58,11 +58,11 @@ optional = true
 # authoring-discipline rules. Compile-time hard wall: any finding
 # becomes a CompileError. Same rule definition consumed by crates/lsp
 # at edit-time.
-[dependencies.sail-style]
-path = "../style"
+[dependencies.spinnaker]
+path = "../spinnaker"
 
-[dependencies.sail-style-css]
-path = "../style-css"
+[dependencies.spinnaker-css]
+path = "../spinnaker-css"
 
 [dependencies.sail-lint]
 path = "../lint"
