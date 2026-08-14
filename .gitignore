@@ -50,6 +50,11 @@ packages/components/**/*.schema.json
 # Keep committed app-root tsconfigs (apps/sail-site/tsconfig.json, etc.).
 apps/**/src/tsconfig.json
 apps/**/routes/tsconfig.json
+# Leftover `sail types` shells when the command is run from monorepo root,
+# the components umbrella, or the conformance fixture (not product apps).
+/tsconfig.json
+/packages/components/sail/tsconfig.json
+/crates/deck/deck-conformance/app/tsconfig.json
 # Studio/test scratch
 **/_tmp-*.sail
 **/_tmp-save.sail

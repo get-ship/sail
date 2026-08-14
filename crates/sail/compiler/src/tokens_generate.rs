@@ -665,8 +665,6 @@ pub fn generate_with_options(
     if layers.is_empty() {
         bail!("No model/*.json files found in {}", model_dir.display());
     }
-    // MIGRATION-DEBT: dies with CHANNELS-1 / TOKENS-1 (token-alias migration).
-    let aliases = load_compat_aliases(model_dir)?;
     let products = load_products(model_dir)?;
     let themes = load_emit_themes(model_dir, &name_index, opts)?;
 
@@ -715,11 +713,6 @@ pub fn generate_with_options(
         } else {
             css_parts.push(emit_layer(l));
         }
-        css_parts.push(String::new());
-    }
-    if !aliases.is_empty() {
-        css_parts.push("/* ─── compat aliases (legacy CSS names) ─── */".into());
-        css_parts.push(emit_compat_aliases(":root", &aliases));
         css_parts.push(String::new());
     }
     if !chrome.is_empty() {
@@ -820,14 +813,7 @@ pub fn generate_with_options(
         write_with_trailing_newline(&products_css, &emit_products_css(axis))?;
     }
 
-    let mut registry = build_registry(
-        &base_tokens,
-        &aliases,
-        &styles,
-        &keyframes,
-        &plays,
-        &tag_defaults,
-    );
+    let mut registry = build_registry(&base_tokens, &styles, &keyframes, &plays, &tag_defaults);
     if let Some(ref axis) = products {
         if let Some(obj) = registry.as_object_mut() {
             obj.insert("products".into(), products_registry_meta(axis));
@@ -1911,7 +1897,7 @@ fn load_base_layers(
         .filter_map(|e| e.ok())
         .filter(|e| e.path().is_file())
         .filter_map(|e| e.file_name().into_string().ok())
-        .filter(|f| f.ends_with(".json") && f != "compat-aliases.json" && f != "products.json")
+        .filter(|f| f.ends_with(".json") && f != "products.json")
         .collect();
     files.sort();
 
@@ -3247,27 +3233,6 @@ pub fn project_wants_theme_generate(project_dir: &Path) -> bool {
     }
 }
 
-fn load_compat_aliases(model_dir: &Path) -> Result<BTreeMap<String, String>> {
-    let p = model_dir.join("compat-aliases.json");
-    if !p.is_file() {
-        return Ok(BTreeMap::new());
-    }
-    let doc = match load_json(&p) {
-        Ok(d) => d,
-        Err(_) => return Ok(BTreeMap::new()),
-    };
-    let Some(aliases) = doc.get("aliases").and_then(|v| v.as_object()) else {
-        return Ok(BTreeMap::new());
-    };
-    let mut out = BTreeMap::new();
-    for (k, v) in aliases {
-        if let Some(s) = v.as_str() {
-            out.insert(k.clone(), s.to_string());
-        }
-    }
-    Ok(out)
-}
-
 /// Load product brand-hue system channels from `model/products.json`.
 fn load_products(model_dir: &Path) -> Result<Option<ProductsAxis>> {
     let p = model_dir.join("products.json");
@@ -3406,22 +3371,6 @@ fn emit_block(
     lines.join("\n")
 }
 
-fn emit_compat_aliases(selector: &str, aliases: &BTreeMap<String, String>) -> String {
-    if aliases.is_empty() {
-        return String::new();
-    }
-    let mut lines = vec![
-        format!("{selector} {{"),
-        "  /* Legacy aliases (host Style compat) */".into(),
-    ];
-    // BTreeMap iterates sorted — matches localeCompare for ASCII names.
-    for (old_name, new_name) in aliases {
-        lines.push(format!("  --{old_name}: var(--{new_name});"));
-    }
-    lines.push("}".into());
-    lines.join("\n")
-}
-
 /// Banner for the Tier-2 expression-channel block. The tests in
 /// `tests/channel_integrity.rs` locate this block BY THIS BANNER STRING and
 /// then require every declaration inside it to have a generated reader —
@@ -3531,13 +3480,11 @@ fn emit_layer(layer: &Layer) -> String {
 
 fn build_registry(
     base_tokens: &[Token],
-    aliases: &BTreeMap<String, String>,
     styles: &Map<String, Value>,
     keyframes: &Map<String, Value>,
     plays: &Map<String, Value>,
     tag_defaults: &Map<String, Value>,
 ) -> Value {
-    // Preserve insertion order of base tokens then aliases (like JS object).
     let mut tokens: Map<String, Value> = Map::new();
     let mut composites: Map<String, Value> = Map::new();
     for t in base_tokens {
@@ -3597,42 +3544,11 @@ fn build_registry(
         }
     }
 
-    let mut alias_entries = Map::new();
-    for (old_name, new_name) in aliases {
-        alias_entries.insert(old_name.clone(), Value::String(new_name.clone()));
-        if colors.contains(new_name) {
-            colors.insert(old_name.clone());
-        }
-        if tokens.contains_key(new_name) && !tokens.contains_key(old_name) {
-            let src = tokens.get(new_name).cloned().unwrap();
-            let path = src
-                .get("path")
-                .and_then(|v| v.as_str())
-                .unwrap_or("")
-                .to_string();
-            let ty = src
-                .get("type")
-                .and_then(|v| v.as_str())
-                .unwrap_or("string")
-                .to_string();
-            let mut meta = Map::new();
-            meta.insert("path".into(), Value::String(path));
-            meta.insert("cssName".into(), Value::String(old_name.clone()));
-            meta.insert("type".into(), Value::String(ty));
-            meta.insert("value".into(), Value::String(format!("var(--{new_name})")));
-            meta.insert("aliasOf".into(), Value::String(new_name.clone()));
-            tokens.insert(old_name.clone(), Value::Object(meta));
-        }
-    }
-
     let mut names: Vec<String> = tokens.keys().cloned().collect();
     names.sort();
     let mut paths = Map::new();
     for n in &names {
         let meta = &tokens[n];
-        if meta.get("aliasOf").is_some() {
-            continue;
-        }
         if let Some(path) = meta.get("path").and_then(|v| v.as_str()) {
             paths.insert(path.to_string(), Value::String(n.clone()));
         }
@@ -3657,7 +3573,7 @@ fn build_registry(
     );
     out.insert("tokens".into(), Value::Object(tokens));
     out.insert("paths".into(), Value::Object(paths));
-    out.insert("aliases".into(), Value::Object(alias_entries));
+    out.insert("aliases".into(), Value::Object(Map::new()));
     out.insert("composites".into(), Value::Object(composites));
     out.insert("styles".into(), Value::Object(styles.clone()));
     out.insert("keyframes".into(), Value::Object(keyframes.clone()));
@@ -4164,10 +4080,6 @@ mod tests {
 "#,
         );
         write_file(
-            &model.join("compat-aliases.json"),
-            r#"{ "aliases": { "app-primary": "primary" } }"#,
-        );
-        write_file(
             &model.join("themes/paper.json"),
             r#"{
   "$description": "paper theme",
@@ -4239,7 +4151,6 @@ mod tests {
         let tokens_css = fs::read_to_string(&report.tokens_css).unwrap();
         assert!(tokens_css.contains("GENERATED FILE"));
         assert!(tokens_css.contains("--space-4: 16px;"));
-        assert!(tokens_css.contains("--app-primary: var(--primary);"));
         assert!(
             !tokens_css.contains(".dark {"),
             "dark.json dual layer must not emit"
@@ -4266,13 +4177,11 @@ mod tests {
                 .any(|v| v.as_str() == Some("space-4"))
         );
         assert!(
-            reg["names"]
-                .as_array()
-                .unwrap()
-                .iter()
-                .any(|v| v.as_str() == Some("app-primary"))
+            reg["aliases"]
+                .as_object()
+                .map(|o| o.is_empty())
+                .unwrap_or(false)
         );
-        assert_eq!(reg["tokens"]["app-primary"]["aliasOf"], "primary");
         assert_eq!(reg["paths"]["space.4"], "space-4");
         assert!(
             reg["colors"]

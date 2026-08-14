@@ -1,4 +1,0 @@
-{
-  "$description": "Legacy CSS names → current cssName (dual-emit aliases for PE stability). Empty after TOKENS-1 scrub of app-accent-* compat aliases.",
-  "aliases": {}
-}

@@ -1,12 +1,12 @@
 #!/usr/bin/env bun
 // Compiles every .sail under src/ via the sail-compiler binary so main.ts can
 // side-effect-import the emitted ESM (which registers the custom element).
-// Adapted from packages/sail/runtime/example/sail-app/scripts/precompile.ts.
 //
 // OWNERSHIP: the canonical copy of this file (and the rest of the keyed/sail
 // bench app) lives in this repo at tests/perf/frameworks/keyed/sail/ and is
 // synced into the external js-framework-benchmark checkout by
 // tests/perf/scripts/sync-keyed-sail.ts. Edit it here, not in the checkout.
+// Product apps use `sail create`, not this harness.
 //
 // This app lives OUTSIDE the sail checkout, so in-tree compiler discovery doesn't
 // apply. Rather than hardcode an absolute path (a cutover landmine — the sail

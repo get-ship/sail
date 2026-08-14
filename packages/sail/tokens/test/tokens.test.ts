@@ -19,7 +19,7 @@
 // same files). This catches a dropped var, a typo'd name, and a
 // reskin-by-token that left a tier out.
 import { dirname, join, resolve } from 'node:path'
-import { readdirSync, readFileSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 
@@ -1100,15 +1100,16 @@ describe('@ship/tokens — DTCG SSOT / generate drift lock', () => {
     }
   })
 
-  it('compat aliases scrubbed (TOKENS-1 — app-accent-* cut, no dual-emit tombstones)', () => {
+  it('no dual-emit token aliases (compat-aliases.json gone, app-accent-* stays gone)', () => {
+    const modelAliases = resolve(
+      dirname(fileURLToPath(import.meta.url)),
+      '../model/compat-aliases.json',
+    )
+    expect(existsSync(modelAliases)).toBe(false)
+    expect(loadSrc('../src/tokens.css')).not.toMatch(/compat aliases/)
     const reg = loadRegistry()
-    const compat = JSON.parse(loadSrc('../model/compat-aliases.json')) as {
-      aliases: Record<string, string>
-    }
-    expect(Object.keys(compat.aliases).length).toBe(0)
     expect(Object.keys(reg.aliases ?? {}).length).toBe(0)
-    const names = reg.names as string[]
-    expect(names.some((n) => n.startsWith('app-accent-'))).toBe(false)
+    expect(reg.names.some((n) => n.startsWith('app-accent-'))).toBe(false)
   })
 
   it('products.css is generated from model/products.json (system brand-hue axis)', () => {
