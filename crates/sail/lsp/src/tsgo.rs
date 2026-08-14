@@ -1384,4 +1384,98 @@ export default controller(() => ({}))
             "named style host must be in scope for style(host); view:\n{view_text}\ndiags: {diags:?}"
         );
     }
+
+    #[test]
+    fn live_tsgo_multiline_scope_type_keeps_named_style_in_scope() {
+        reset_discovery_state_for_tests();
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../..")
+            .canonicalize()
+            .unwrap();
+        if discover_tsgo(Some(&root)).is_none() {
+            eprintln!("SKIP live_tsgo_multiline_scope_type: no tsgo");
+            return;
+        }
+        let mut session = TsgoSession::start(Some(&root));
+        assert!(session.is_live(), "tsgo session failed to start");
+        let src = r#"<scope>
+  type Row = {
+    id: string
+  }
+  style card = { pad(4) }
+</scope>
+<controller>
+export default controller(() => ({}))
+</controller>
+<div style(card)>x</div>
+"#;
+        let uri = "file:///tmp/named-style-multiline-type.sail";
+        session.on_sail_change(uri, src);
+        std::thread::sleep(std::time::Duration::from_millis(200));
+        let view_text = session.virtual_for(uri).expect("virtual").view_text.clone();
+        let diags = session.diagnostics_mapped(uri, src);
+        let hits: Vec<_> = diags
+            .iter()
+            .filter(|d| d.message.contains("Cannot find name 'card'"))
+            .map(|d| d.message.clone())
+            .collect();
+        assert!(
+            hits.is_empty(),
+            "multiline scope type must not hide style card; view:\n{view_text}\ndiags: {diags:?}"
+        );
+    }
+
+    #[test]
+    fn live_tsgo_landing_shaped_named_styles_are_in_scope() {
+        reset_discovery_state_for_tests();
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../..")
+            .canonicalize()
+            .unwrap();
+        if discover_tsgo(Some(&root)).is_none() {
+            eprintln!("SKIP live_tsgo_landing_shaped_named_styles_are_in_scope: no tsgo");
+            return;
+        }
+        let mut session = TsgoSession::start(Some(&root));
+        assert!(session.is_live(), "tsgo session failed to start");
+        let src = r#"<scope>
+  style page = { size({ w: full }).bg(surface-0) }
+  style hero = { pad(4), when: { tablet: pad(8) } }
+  style cardLink = { display(block) }
+  style swatch = { size(6) }
+</scope>
+<controller>
+export default controller(() => ({ ticks: signal(0) }))
+</controller>
+<a style(cardLink)>
+  <div style(swatch, { bg(primary) })></div>
+</a>
+<column style(page)>
+  <section style(hero, { shrink(0) })>x</section>
+  <when {tablet}>
+    <p>{ticks()}</p>
+  {else => <p>{ticks()}</p>}
+  </when>
+</column>
+"#;
+        let uri = "file:///tmp/named-style-landing-shaped.sail";
+        session.on_sail_change(uri, src);
+        std::thread::sleep(std::time::Duration::from_millis(200));
+        let view_text = session.virtual_for(uri).expect("virtual").view_text.clone();
+        let diags = session.diagnostics_mapped(uri, src);
+        let missing: Vec<_> = diags
+            .iter()
+            .filter(|d| {
+                d.message.contains("Cannot find name '")
+                    && ["page", "hero", "cardLink", "swatch", "tablet"]
+                        .iter()
+                        .any(|n| d.message.contains(&format!("'{n}'")))
+            })
+            .map(|d| d.message.clone())
+            .collect();
+        assert!(
+            missing.is_empty(),
+            "landing-shaped named styles / when-tag must typecheck; view:\n{view_text}\nmissing: {missing:?}\nall: {diags:?}"
+        );
+    }
 }

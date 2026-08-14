@@ -344,29 +344,25 @@ pub fn build_virtual_ts(sail_source: &str) -> Option<VirtualTs> {
     // ── View: scope types + Style names (after import — same module) ──────
     if let Some((sail_start, _, raw_body)) = scope {
         view_text.push_str("\n// ── <scope> type aliases ───────────────────────────────────\n");
-        for (line_start_in_body, line) in iter_lines_with_offsets(raw_body) {
-            let trimmed = line.trim_start();
-            if trimmed.starts_with("type ")
-                || trimmed.starts_with("export type ")
-                || (trimmed.starts_with("export ") && trimmed.contains(" type "))
-            {
-                let v_start = view_text.len();
-                view_text.push_str(line);
-                if !line.ends_with('\n') {
-                    view_text.push('\n');
-                }
-                let content_len = line.trim_end_matches(['\r', '\n']).len();
-                let sail_line_start = sail_start + line_start_in_body;
-                segments.push(MapSegment {
-                    file: VirtualFile::View,
-                    virtual_start: v_start,
-                    virtual_end: v_start + content_len,
-                    sail_start: sail_line_start,
-                    sail_end: sail_line_start + content_len,
-                    one_to_one: true,
-                    sail_to_virt_rel: None,
-                });
+        // Whole declarations, not `starts_with("type ")` lines. A multiline
+        // `type Foo = { … }` copied as only the opener leaves `{` unclosed and
+        // every later `declare const` is parsed as type-body junk.
+        for (rel, decl) in collect_scope_type_decls(raw_body) {
+            let v_start = view_text.len();
+            view_text.push_str(decl);
+            if !decl.ends_with('\n') {
+                view_text.push('\n');
             }
+            let content_len = decl.trim_end_matches(['\r', '\n']).len();
+            segments.push(MapSegment {
+                file: VirtualFile::View,
+                virtual_start: v_start,
+                virtual_end: v_start + content_len,
+                sail_start: sail_start + rel,
+                sail_end: sail_start + rel + content_len,
+                one_to_one: true,
+                sail_to_virt_rel: None,
+            });
         }
         // Style values from `<scope>` so template attachments that reference
         // them typecheck under tsgo.
@@ -1498,6 +1494,79 @@ fn collect_scope_style_consts(scope_body: &str) -> Vec<String> {
     out
 }
 
+/// `<scope>` type / export-type declarations, including multiline `{ … }`.
+/// Returns `(byte offset in scope body, declaration text)`.
+fn collect_scope_type_decls(scope_body: &str) -> Vec<(usize, &str)> {
+    let mut out = Vec::new();
+    let bytes = scope_body.as_bytes();
+    let mut i = 0usize;
+    while i < bytes.len() {
+        if !scope_body.is_char_boundary(i) {
+            i += 1;
+            continue;
+        }
+        if scope_body[i..].starts_with("//") {
+            i = match scope_body[i..].find('\n') {
+                Some(n) => i + n + 1,
+                None => bytes.len(),
+            };
+            continue;
+        }
+        let rest = &scope_body[i..];
+        let t = rest.trim_start();
+        let lead = rest.len() - t.len();
+        let decl_at = i + lead;
+        let is_type = t.starts_with("type ")
+            || t.starts_with("export type ")
+            || (t.starts_with("export ") && t[7..].trim_start().starts_with("type "));
+        if is_type {
+            let end = scan_type_decl_end(scope_body, decl_at);
+            if end > decl_at {
+                out.push((decl_at, scope_body[decl_at..end].trim_end()));
+                i = end;
+                continue;
+            }
+        }
+        if let Some(n) = scope_body[i..].find('\n') {
+            i += n + 1;
+        } else {
+            break;
+        }
+    }
+    out
+}
+
+/// End of a `type` / `export type` declaration starting at `start`.
+fn scan_type_decl_end(s: &str, start: usize) -> usize {
+    let bytes = s.as_bytes();
+    let mut i = start;
+    let mut depth = 0i32;
+    let mut seen_eq = false;
+    while i < bytes.len() {
+        match bytes[i] {
+            b'{' | b'(' | b'[' => depth += 1,
+            b'}' | b')' | b']' => depth -= 1,
+            b'=' if depth == 0 => seen_eq = true,
+            b';' if depth == 0 => return i + 1,
+            b'\n' if depth <= 0 && seen_eq => return i + 1,
+            b'"' | b'\'' => {
+                let q = bytes[i];
+                i += 1;
+                while i < bytes.len() && bytes[i] != q {
+                    if bytes[i] == b'\\' {
+                        i += 2;
+                        continue;
+                    }
+                    i += 1;
+                }
+            }
+            _ => {}
+        }
+        i += 1;
+    }
+    bytes.len()
+}
+
 /// Collect names from first-class `style name = …` declarations in `<scope>`.
 ///
 /// Does **not** invent a TS `const name = style(…)` form — callers declare the
@@ -1764,6 +1833,15 @@ fn scan_brace_exprs(original: &str) -> Vec<ExprEmbed> {
             i += 1;
             continue;
         }
+        // `<when {tablet}>` — breakpoint/media condition, not `scope.tablet`.
+        if is_when_tag_condition(original, i) {
+            if let Some(end) = find_matching_brace(original, i) {
+                i = end + 1;
+                continue;
+            }
+            i += 1;
+            continue;
+        }
         if let Some(end) = find_matching_brace(original, i) {
             let raw_inner = &original[i + 1..end];
             let inner = raw_inner.trim();
@@ -1821,6 +1899,23 @@ fn is_control_flow_brace(src: &str, open: usize) -> bool {
                 .is_none_or(|c| c.is_whitespace() || c == '{' || c == '(' || c == '=')
     };
     kw("else-if") || kw("else") || kw("if") || kw("for") || kw("match") || kw("when")
+}
+
+/// `<when {tablet}>` / `<when {tablet and desktop}>` — still inside the
+/// open tag. The brace is a media query, not a template interpolation.
+fn is_when_tag_condition(src: &str, open: usize) -> bool {
+    let before = src[..open].trim_end();
+    let Some(lt) = before.rfind('<') else {
+        return false;
+    };
+    if before[lt + 1..].contains('>') {
+        return false;
+    }
+    let tag = before[lt + 1..].trim_start();
+    tag == "when"
+        || tag.starts_with("when ")
+        || tag.starts_with("when\n")
+        || tag.starts_with("when\t")
 }
 
 /// JSON attr payloads (`{"name":"a"}`) and Style slot objects
@@ -1956,15 +2051,6 @@ fn find_outside_comments(source: &str, needle: &str) -> Option<usize> {
         i = j;
     }
     None
-}
-
-fn iter_lines_with_offsets(body: &str) -> impl Iterator<Item = (usize, &str)> {
-    let mut offset = 0usize;
-    body.split_inclusive('\n').map(move |line| {
-        let start = offset;
-        offset += line.len();
-        (start, line)
-    })
 }
 
 pub fn offset_to_lsp_position(text: &str, offset: usize) -> (u32, u32) {
@@ -2386,6 +2472,123 @@ export default controller((ctx) => ({ count: signal(0) }))
             }
         }
         false
+    }
+
+    const LANDING_SHAPED: &str = r#"
+<scope>
+  style page = { size({ w: full, min-w: 0 }).bg(surface-0) }
+  style hero = { pad(4), when: { tablet: pad(8) } }
+  style display = { fg(foreground) }
+  style cardLink = { display(block) }
+  style swatch = { size(6) }
+  type CardProps = {}
+</scope>
+<controller>
+export default controller(() => ({ ticks: signal(0) }))
+</controller>
+<partial card props: CardProps>
+  <a style(cardLink)>
+    <div style(swatch, { bg(primary) })></div>
+  </a>
+</partial>
+<column style(page)>
+  <section style(hero, { shrink(0) })>
+    <h1 style(display)>x</h1>
+  </section>
+  <when {tablet}>
+    <card></card>
+  {else => <card></card>}
+  </when>
+</column>
+"#;
+
+    #[test]
+    fn multiline_scope_type_does_not_swallow_style_declares() {
+        let src = r#"
+<scope>
+  type Row = {
+    id: string
+    city: string
+  }
+  style card = { pad(4) }
+</scope>
+<controller>
+export default controller(() => ({}))
+</controller>
+<div style(card)>x</div>
+"#;
+        let v = build_virtual_ts(src).expect("virtual");
+        assert!(
+            v.view_text.contains("type Row = {")
+                && v.view_text.contains("id: string")
+                && v.view_text.contains("city: string"),
+            "multiline type must be copied whole:\n{}",
+            v.view_text
+        );
+        let type_at = v.view_text.find("type Row").expect("type");
+        let close_at = v.view_text[type_at..]
+            .find('}')
+            .map(|i| type_at + i)
+            .expect("type close");
+        let decl_at = v
+            .view_text
+            .find("declare const card: any")
+            .expect("declare");
+        assert!(
+            decl_at > close_at,
+            "declare const must follow the closed type:\n{}",
+            v.view_text
+        );
+    }
+
+    #[test]
+    fn landing_shaped_named_styles_are_declared() {
+        let v = build_virtual_ts(LANDING_SHAPED).expect("virtual");
+        for name in ["page", "hero", "display", "cardLink", "swatch"] {
+            let want = format!("declare const {name}: any");
+            assert!(
+                v.view_text.contains(&want),
+                "missing {want}:\n{}",
+                v.view_text
+            );
+        }
+        assert!(
+            !v.view_text.contains("scope.tablet") && !v.view_text.contains("scope.page"),
+            "when/media + style names must stay bare:\n{}",
+            v.view_text
+        );
+        assert!(
+            v.view_text.contains("style(cardLink)") || v.view_text.contains("style(page)"),
+            "style(name) must embed:\n{}",
+            v.view_text
+        );
+    }
+
+    #[test]
+    fn when_tag_breakpoint_is_not_a_scope_member() {
+        let src = r#"
+<scope>
+  style grid = { size({ w: full }) }
+</scope>
+<controller>
+export default controller(() => ({ ticks: signal(0) }))
+</controller>
+<when {tablet}>
+  <div style(grid)>{ticks()}</div>
+{else => <div style(grid)>{ticks()}</div>}
+</when>
+"#;
+        let v = build_virtual_ts(src).expect("virtual");
+        assert!(
+            !v.view_text.contains("scope.tablet") && !v.view_text.contains("(tablet)"),
+            "when-tag breakpoint must not become a TS ident:\n{}",
+            v.view_text
+        );
+        assert!(
+            v.view_text.contains("ticks") && v.view_text.contains("style(grid)"),
+            "body embeds must remain:\n{}",
+            v.view_text
+        );
     }
 
     #[test]
