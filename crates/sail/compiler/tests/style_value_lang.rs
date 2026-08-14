@@ -9,6 +9,54 @@ fn is_style_product(src: &str) -> bool {
     src.contains("style.") || src.contains("style(")
 }
 
+/// Compiler-level port proof: Intent dump of a product style is CSS-free,
+/// while the CSS adapter still realizes the same input.
+#[test]
+fn product_style_intent_dump_has_no_css_strings() {
+    let src =
+        "style({ pad(4).bg(surface), when: { hover: bg(muted) }, animate: { enter: play(fade) } })";
+    let (style, diags) = sail_style::parse(src);
+    assert!(
+        diags.is_empty(),
+        "{:?}",
+        diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+    );
+    let dump = sail_style::intent_dump(&style);
+    // Concatenate so this lock names the same CSS fragments as sail-style.
+    let forbidden = [
+        format!("{}-{}", "background", "color"),
+        format!(":{}", "hover"),
+        format!("@{}", "media"),
+        format!(".{}-", "s"),
+        format!("{}-{}", "padding", "left"),
+        format!("{}(--", "var"),
+    ];
+    for needle in &forbidden {
+        assert!(
+            !dump.contains(needle),
+            "Intent must not contain {needle:?}:\n{dump}"
+        );
+    }
+    assert!(dump.contains("pad"), "{dump}");
+    assert!(dump.contains("bg"), "{dump}");
+    assert!(dump.contains("hover"), "{dump}");
+    assert!(dump.contains("surface"), "{dump}");
+    assert!(dump.contains("muted"), "{dump}");
+    assert!(dump.contains("enter"), "{dump}");
+
+    let (classes, css) = sail_style::lower_style(&style, &HashMap::new());
+    assert!(classes.contains("s-"), "{classes}");
+    assert!(css.contains(":hover"), "{css}");
+    assert!(
+        css.contains("var(--surface)") || css.contains("background"),
+        "{css}"
+    );
+    assert!(
+        css.contains("padding") || css.contains("var(--space-4)") || classes.contains("pad"),
+        "adapter must still emit pad: classes={classes}\ncss={css}"
+    );
+}
+
 #[test]
 fn chain_emits_token_vars_on_product_path() {
     let out =

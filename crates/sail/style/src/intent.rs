@@ -345,30 +345,56 @@ mod tests {
         assert!(!is_known_when_key("not-a-when-key"));
     }
 
-    #[test]
-    fn intent_dump_has_no_css_strings() {
-        let (style, diags) = parse("style({ pad(4).bg(surface), when: { hover: bg(muted) } })");
-        assert!(diags.is_empty(), "{diags:?}");
-        let dump = intent_dump(&style);
-        // Concatenate so this file never contains CSS property spellings.
-        let forbidden = [
+    /// Concatenate so this file never contains CSS property spellings
+    /// (`domain_modules_do_not_name_css` / Phase 1 gate).
+    fn forbidden_css_needles() -> [String; 6] {
+        [
             format!("{}-{}", "background", "color"),
             format!(":{}", "hover"),
             format!("@{}", "media"),
             format!(".{}-", "s"),
             format!("{}-{}", "padding", "left"),
             format!("{}(--", "var"),
-        ];
-        for needle in &forbidden {
+        ]
+    }
+
+    fn assert_dump_has_no_css(dump: &str) {
+        for needle in &forbidden_css_needles() {
             assert!(
                 !dump.contains(needle),
                 "Intent must not contain {needle:?}:\n{dump}"
             );
         }
+    }
+
+    #[test]
+    fn intent_dump_has_no_css_strings() {
+        let product = "style({ pad(4).bg(surface), when: { hover: bg(muted) } })";
+        let (style, diags) = parse(product);
+        assert!(diags.is_empty(), "{diags:?}");
+        let dump = intent_dump(&style);
+        assert_dump_has_no_css(&dump);
         assert!(dump.contains("pad"), "{dump}");
         assert!(dump.contains("bg"), "{dump}");
         assert!(dump.contains("hover"), "{dump}");
         assert!(dump.contains("surface"), "{dump}");
         assert!(dump.contains("muted"), "{dump}");
+
+        // Same product plus `animate:` — parses today; dump still has no CSS.
+        let with_motion = "style({ pad(4).bg(surface), when: { hover: bg(muted) }, animate: { enter: play(fade) } })";
+        let (motion_style, motion_diags) = parse(with_motion);
+        assert!(motion_diags.is_empty(), "{motion_diags:?}");
+        let motion_dump = intent_dump(&motion_style);
+        assert_dump_has_no_css(&motion_dump);
+        assert!(motion_dump.contains("pad"), "{motion_dump}");
+        assert!(motion_dump.contains("bg"), "{motion_dump}");
+        assert!(motion_dump.contains("hover"), "{motion_dump}");
+        assert!(motion_dump.contains("surface"), "{motion_dump}");
+        assert!(motion_dump.contains("muted"), "{motion_dump}");
+        assert!(motion_dump.contains("enter"), "{motion_dump}");
+        assert!(
+            motion_dump.contains("Animate") || motion_dump.contains("opacity"),
+            "{motion_dump}"
+        );
     }
 }
