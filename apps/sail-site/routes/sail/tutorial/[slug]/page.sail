@@ -490,8 +490,8 @@ export default controller((ctx: ControllerScope<Scope>) => {
       <!-- size({ h: 16 }) ≈ 4rem ≈ 5 mono lines; was size({ max-h: 7 })=28px under a gap-4 column. -->
       <column live="polite" label="Preview console" gap="0" style(console)>
         <span style(monoContents)>
-          <for {logs() as line} key={line.id}>
-            <log-line ts={line.ts} kind={line.kind} msg={line.msg}></log-line>
+          <for {logs() as entry} key={entry.id}>
+            <log-line ts={entry.ts} kind={entry.kind} msg={entry.msg}></log-line>
           </for>
         </span>
       </column>
@@ -559,8 +559,8 @@ export default controller((ctx: ControllerScope<Scope>) => {
       </column>
       <column live="polite" label="Preview console" gap="0" style(consoleMobile)>
         <span style(monoContents)>
-          <for {logs() as line} key={line.id}>
-            <log-line ts={line.ts} kind={line.kind} msg={line.msg}></log-line>
+          <for {logs() as entry} key={entry.id}>
+            <log-line ts={entry.ts} kind={entry.kind} msg={entry.msg}></log-line>
           </for>
         </span>
       </column>

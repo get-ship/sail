@@ -88,7 +88,7 @@ export default controller(({ data, tone, width, height, label, loading }: Scope)
     style({ display(inline-block).overflow({ all: visible }) })
   >
     <for {seriesPaths() as s} key={s.name}>
-      <if {bg()}>
+      <if {fill()}>
         <path d={s.fillD} fill={s.color} fill-opacity="0.18" stroke="none"></path>
       </if>
       <path

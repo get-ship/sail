@@ -350,8 +350,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       </column>
       <column live="polite" label="Playground console" gap="0" style(console)>
         <span style(monoContents)>
-          <for {logs() as line} key={line.id}>
-            <log-line ts={line.ts} kind={line.kind} msg={line.msg}></log-line>
+          <for {logs() as entry} key={entry.id}>
+            <log-line ts={entry.ts} kind={entry.kind} msg={entry.msg}></log-line>
           </for>
         </span>
       </column>
@@ -404,8 +404,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     </column>
     <column live="polite" label="Playground console" gap="0" style(consoleMobile)>
       <span style(monoContents)>
-        <for {logs() as line} key={line.id}>
-          <log-line ts={line.ts} kind={line.kind} msg={line.msg}></log-line>
+        <for {logs() as entry} key={entry.id}>
+          <log-line ts={entry.ts} kind={entry.kind} msg={entry.msg}></log-line>
         </for>
       </span>
     </column>

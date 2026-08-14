@@ -1473,6 +1473,7 @@ fn parse_compound_row(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> S
     let mut text_ch = Style::Empty;
     let mut animate_ch = Style::Empty;
     let mut when_entries: Vec<(String, Style)> = Vec::new();
+    let mut extra: Vec<Style> = Vec::new();
     let mut iters = 0usize;
     while !p.at_end() && p.peek() != Some(&Tok::RBrace) {
         iters += 1;
@@ -1491,6 +1492,16 @@ fn parse_compound_row(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> S
                 break;
             }
         };
+        // Concern-call tail: `{tone: muted, bg(primary).fg(foreground)}`.
+        if p.peek() == Some(&Tok::LParen) {
+            p.pos -= 1;
+            extra.push(parse_channel_chain(p, diags));
+            p.eat(&Tok::Comma);
+            if p.pos <= before {
+                p.force_progress();
+            }
+            continue;
+        }
         p.expect(Tok::Colon, diags);
         match key.as_str() {
             "box" => box_ch = parse_channel_chain(p, diags),
@@ -1537,6 +1548,7 @@ fn parse_compound_row(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> S
         });
     }
     let mut body_parts = vec![box_ch, paint_ch, text_ch, animate_ch];
+    body_parts.extend(extra);
     if !when_entries.is_empty() {
         body_parts.push(Style::When {
             entries: when_entries,
@@ -2675,7 +2687,7 @@ mod flat_chain_tests {
 
     #[test]
     fn v2_channel_form_still_parses() {
-        let (style, diags) = parse("style({ box: size({ w: full }).pad(4), paint: bg(surface) })");
+        let (style, diags) = parse("style({ box: size({ w: full }).pad(4), paint: bg(muted) })");
         assert!(diags.is_empty(), "{:?}", msgs(&diags));
         assert!(!matches!(style, Style::Empty));
         let (_, css) = lower_style(&style, &HashMap::new());
@@ -2684,6 +2696,15 @@ mod flat_chain_tests {
             css.contains("background") || css.contains("surface"),
             "{css}"
         );
+    }
+
+    #[test]
+    fn compound_row_accepts_concern_call_tail() {
+        let src =
+            "style({ compound: [{ tone: muted, variant: solid, bg(muted).fg(foreground) }] })";
+        let (style, diags) = parse(src);
+        assert!(diags.is_empty(), "{:?}", msgs(&diags));
+        assert!(!matches!(style, Style::Empty));
     }
 
     #[test]
