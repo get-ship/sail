@@ -17,7 +17,8 @@ const REMEDY: &str = "Do not use data-* in .sail markup. Prefer role, accessible
      data-sail-host is compiler-only L1 part identity — never author it.";
 
 const THEME_SUBSTRATE: &[&str] = &["data-theme", "data-product", "data-mode"];
-const THEME_SUBSTRATE_REMEDY: &str = "Do not author theme substrate as data-*. Use theme= (theme id) \
+const THEME_SUBSTRATE_REMEDY: &str =
+    "Do not author theme substrate as data-*. Use theme= (theme id) \
      and mode= (light|dark). Override tokens in the theme document, \
      not data-theme / data-product / data-mode.";
 
@@ -212,7 +213,7 @@ mod tests {
     fn allows_component_tags_without_data_attrs() {
         let f = check(
             Path::new("apps/studio/src/x.sail"),
-            r#"<edit-surface grow style={style.h(full)} />"#,
+            r#"<edit-surface grow style({ size({ h: full }) }) />"#,
         );
         assert!(f.is_empty(), "{f:?}");
     }

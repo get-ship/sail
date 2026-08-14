@@ -33,7 +33,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       Sail is a compiled language that includes everything you need to build
       beautiful, consistent, and performant websites. It is optimized for AI
       agents: the language provides the APIs an interface needs — signals for
-      state, <code>style&#40;&#123; box, paint, text, animate &#125;&#41;</code> for styling,
+      state, <code>style&#40;&#123; pad(4).bg(surface), when: &#123; hover: bg(muted) &#125; &#125;&#41;</code> for styling,
       <code>query</code> for data, a component library that already behaves —
       and a strict compiler enforces how they are used. That is how best
       practices and consistency hold across an entire application, not just

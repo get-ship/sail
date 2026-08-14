@@ -148,7 +148,7 @@ pub const REGION_CAPABILITY_MATRIX: &[RegionCapability] = &[
     // ── chain (Style product) ──────────────────────────────────────────
     RegionCapability {
         region: "chain",
-        capability: "closed channel grammar style({ box, paint, text, animate })",
+        capability: "closed Style grammar style({ pad(4).bg(surface), when:, animate: })",
         legal: "yes",
         status: "enforced",
         enforcement: "sail-style parse/lower + sail-no-sx / sail-no-inline-style floors",

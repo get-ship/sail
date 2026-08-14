@@ -1,10 +1,10 @@
 <!-- Static links into the dynamic greet/[id] segment. -->
 
 <scope>
-  style page = { box: pad(6).maxW(breakpoint-tablet).mx(auto) }
-  style title = { paint: fg(foreground), text: fontSize(2xl).fontWeight(bold) }
-  style muted = { paint: fg(muted-foreground), text: fontSize(sm) }
-  style list = { box: pad(0).m(0), paint: list(none) }
+  style page = { pad(6).size({ max-w: breakpoint-tablet }).margin({ x: auto }) }
+  style title = { fg(foreground).type({ size: 2xl, weight: bold }) }
+  style muted = { fg(muted-foreground).type({ size: sm }) }
+  style list = { pad(0).margin(0).list(none) }
 </scope>
 
 <column gap="2" style(page)>

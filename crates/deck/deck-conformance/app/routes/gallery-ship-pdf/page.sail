@@ -1,19 +1,19 @@
 <!-- ship/pdf domain stubs — static mock attrs; empty src paints idle shell. -->
 
 <scope>
-  style page = { box: pad(6).maxW(breakpoint-tablet).mx(auto) }
-  style header = { box: padB(4), paint: borderBWidth(1).borderB(border) }
-  style title = { box: mb(2), paint: fg(foreground), text: fontSize(2xl).fontWeight(bold) }
-  style lead = { paint: fg(muted-foreground), text: fontSize(sm) }
-  style card = { box: pad(5), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) }
-  style cardTitle = { paint: fg(foreground), text: fontSize(lg).fontWeight(semibold).fontFamily(mono) }
-  style body = { paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed) }
-  style arm = { box: pad(3), paint: borderWidth(1).border(divider).radius(md).bg(surface-2) }
-  style caption = { paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(lowercase).tracking(wide).fontFamily(mono) }
-  style toolbar = { box: pad(2), paint: bg(surface-1).radius(sm).borderWidth(1).border(border) }
-  style toolBtn = { box: padX(2).padY(1), paint: borderWidth(1).border(border).radius(sm).bg(surface-2).fg(muted-foreground).cursor(default), text: fontSize(sm) }
-  style pageLabel = { paint: fg(foreground), text: fontSize(sm).fontFamily(mono) }
-  style toolHint = { box: ml(auto), paint: fg(muted-foreground), text: fontSize(xs).italic(true) }
+  style page = { pad(6).size({ max-w: breakpoint-tablet }).margin({ x: auto }) }
+  style header = { pad({ b: 4 }).border({ width: 1, color: border, edge: b }) }
+  style title = { margin({ b: 2 }).fg(foreground).type({ size: 2xl, weight: bold }) }
+  style lead = { fg(muted-foreground).type({ size: sm }) }
+  style card = { pad(5).border({ width: 1, color: border }).radius(lg).bg(surface-1) }
+  style cardTitle = { fg(foreground).type({ size: lg, weight: semibold, family: mono }) }
+  style body = { fg(muted-foreground).type({ size: sm, leading: relaxed }) }
+  style arm = { pad(3).border({ width: 1, color: divider }).radius(md).bg(surface-2) }
+  style caption = { fg(muted-foreground).type({ size: xs, weight: medium, case: lowercase, tracking: wide, family: mono }) }
+  style toolbar = { pad(2).bg(surface-1).radius(sm).border({ width: 1, color: border }) }
+  style toolBtn = { pad({ x: 2, y: 1 }).border({ width: 1, color: border }).radius(sm).bg(surface-2).fg(muted-foreground).cursor(default).type({ size: sm }) }
+  style pageLabel = { fg(foreground).type({ size: sm, family: mono }) }
+  style toolHint = { margin({ l: auto }).fg(muted-foreground).type({ size: xs, italic: true }) }
 </scope>
 
 <column gap="8" style(page)>

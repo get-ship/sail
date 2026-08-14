@@ -1,6 +1,6 @@
-//! Compile-time Style value language: style object (channels + when/match/compound).
+//! Compile-time Style value language: flat concern chain + when/match/compound/animate.
 //!
-//! Sole paint architecture: style({ box, paint, text, animate, when, match, compound }).
+//! Sole paint architecture: style({ pad(4).bg(surface), when: { hover: bg(muted) } }).
 //!
 //! This crate owns Style parse / IR / emit / clash / setters, plus the leaf
 //! sx machinery (`sx_ir`, `sx_vocab`), token scales, and design-token registry

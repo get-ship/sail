@@ -838,7 +838,6 @@ export const LAYOUT_KEYWORDS: Array<{ tag: string; props: string[] }> = [
       "gap",
       "align",
       "justify",
-      "direction",
       "inline",
       "nowrap"
     ]
@@ -849,7 +848,6 @@ export const LAYOUT_KEYWORDS: Array<{ tag: string; props: string[] }> = [
       "gap",
       "align",
       "justify",
-      "direction",
       "inline"
     ]
   },
@@ -887,7 +885,7 @@ export const LAYOUT_KEYWORDS: Array<{ tag: string; props: string[] }> = [
 export const SX_REFUSALS: Array<{ atom: string; instead: string }> = [
   {
     "atom": "animate",
-    "instead": "style({ animate: loop|press|enter|exit|reveal|scroll({ … }) }) — animate channel"
+    "instead": "style({ animate: { loop: play(…), enter: play(…) } })"
   },
   {
     "atom": "flex",
@@ -911,15 +909,15 @@ export const SX_REFUSALS: Array<{ atom: string; instead: string }> = [
   },
   {
     "atom": "gap",
-    "instead": "layout element gap prop: <row gap=\"2\"> — or host box channel style({ box: gap(2) })"
+    "instead": "layout element gap prop: <row gap=\"2\"> — or host style({ gap(2) })"
   },
   {
     "atom": "gap-x",
-    "instead": "layout element gap prop: <row gap=\"2\"> — or host box channel style({ box: gapX(2) })"
+    "instead": "layout element gap prop: <row gap=\"2\"> — or host style({ gapX(2) })"
   },
   {
     "atom": "gap-y",
-    "instead": "layout element gap prop: <column gap=\"2\"> — or host box channel style({ box: gapY(2) })"
+    "instead": "layout element gap prop: <column gap=\"2\"> — or host style({ gapY(2) })"
   },
   {
     "atom": "grid",
@@ -2538,7 +2536,7 @@ export const EVENT_NAMES: EventDoc[] = [
   },
   {
     "name": "keypress",
-    "summary": "character key pressed (deprecated; prefer keydown)"
+    "summary": "character key pressed; prefer keydown"
   },
   {
     "name": "focus",
@@ -3062,15 +3060,9 @@ export const SCOPE_GRAMMAR: ScopeGrammarDoc[] = [
   },
   {
     "form": "Style declaration",
-    "syntax": "style filled = { paint: bg(primary), box: padX(2) }",
+    "syntax": "style filled = { bg(primary).pad({ x: 2 }) }",
     "summary": "first-class compile-time Style (object / compose / call form); attach with tag-position style(name) on the host",
-    "example": "<scope>\n  style filled = { paint: bg(primary), box: padX(2) }\n  props: { label = '' }\n</scope>\n<span style(filled)>\n  {label}\n</span>"
-  },
-  {
-    "form": "Style const (legacy dual path)",
-    "syntax": "const filled = style({ bg(primary).pad({ x: 2 }) })",
-    "summary": "legacy Style binding — still accepted this cycle; prefer `style name = {…}`",
-    "example": "<scope>\n  const filled = style({ bg(primary).pad({ x: 2 }) })\n  props: { label = '' }\n</scope>\n<span style(filled)>\n  {label}\n</span>"
+    "example": "<scope>\n  style filled = { bg(primary).pad({ x: 2 }) }\n  props: { label = '' }\n</scope>\n<span style(filled)>\n  {label}\n</span>"
   },
   {
     "form": "Identity type annotation",
@@ -3209,14 +3201,14 @@ export const CONFIG_KEYS: ConfigKeyDoc[] = [
     "key": "layoutExperimental",
     "type": "boolean",
     "default": "false",
-    "doc": "enable experimental layout kinds (unintended-overflow, clipped-text) without full lint strict (SPEC-LAYOUT-DIAG-1 / S4.1)",
+    "doc": "enable experimental layout kinds (sub-min-tap-target) without full lint strict (SPEC-LAYOUT-DIAG-1 / S4.1)",
     "layer": "POLICY"
   },
   {
     "key": "layoutTextMetrics",
     "type": "boolean",
     "default": "false",
-    "doc": "enable text-metrics-dependent layout kind clipped-text (noisy until takumi-grade metrics; S4.1)",
+    "doc": "kill switch for text-metrics layout kind clipped-text (LAYOUT-5 default on; false disables)",
     "layer": "POLICY"
   },
   {
@@ -3704,7 +3696,7 @@ export const REGION_CAPABILITY_MATRIX: RegionCapabilityDoc[] = [
   },
   {
     "region": "scope",
-    "capability": "Style declarations (style name = {…}; legacy const name = style.…)",
+    "capability": "Style declarations (style name = {…})",
     "legal": "yes",
     "status": "enforced",
     "enforcement": "parse::scope_block (StyleEnv) + sail-style lower",
@@ -3792,7 +3784,7 @@ export const REGION_CAPABILITY_MATRIX: RegionCapabilityDoc[] = [
   },
   {
     "region": "chain",
-    "capability": "closed channel grammar style({ box, paint, text, animate })",
+    "capability": "closed Style grammar style({ pad(4).bg(surface), when:, animate: })",
     "legal": "yes",
     "status": "enforced",
     "enforcement": "sail-style parse/lower + sail-no-sx / sail-no-inline-style floors",

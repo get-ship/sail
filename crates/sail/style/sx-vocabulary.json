@@ -1777,12 +1777,12 @@
     "justify-start": "<row justify=\"start\">",
     "justify-end": "<row justify=\"end\">",
     "justify-around": "<row justify=\"around\">",
-    "gap": "layout element gap prop: <row gap=\"2\"> — or host box channel style({ box: gap(2) })",
-    "gap-x": "layout element gap prop: <row gap=\"2\"> — or host box channel style({ box: gapX(2) })",
-    "gap-y": "layout element gap prop: <column gap=\"2\"> — or host box channel style({ box: gapY(2) })",
+    "gap": "layout element gap prop: <row gap=\"2\"> — or host style({ gap(2) })",
+    "gap-x": "layout element gap prop: <row gap=\"2\"> — or host style({ gapX(2) })",
+    "gap-y": "layout element gap prop: <column gap=\"2\"> — or host style({ gapY(2) })",
     "grid-cols": "<grid cols=\"3\">",
     "grid-rows": "<grid rows=\"3\"> \u2014 an explicit row count",
-    "animate": "style({ animate: loop|press|enter|exit|reveal|scroll({ \u2026 }) }) \u2014 animate channel",
+    "animate": "style({ animate: { loop: play(\u2026), enter: play(\u2026) } })",
     "sr-only-focusable": "sr-only"
   }
 }

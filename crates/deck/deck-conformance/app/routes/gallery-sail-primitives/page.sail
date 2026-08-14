@@ -28,35 +28,35 @@ export default controller(() => ({
 
 
 <scope>
-  style page = { box: pad(6).maxW(breakpoint-tablet).mx(auto) }
-  style title = { box: mb(2), text: fontSize(2xl).fontWeight(bold) }
-  style lede = { paint: fg(muted-foreground) }
-  style sectionH = { box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) }
-  style hint = { paint: fg(muted-foreground), text: fontSize(xs).leading(normal) }
-  style miniCard = { box: pad(4).minW(48), paint: borderWidth(1).border(border).radius(md).bg(surface-1) }
-  style panelSm = { box: maxW(panel-max-w-sm) }
-  style w48 = { box: w(48) }
-  style smText = { box: display(contents), text: fontSize(sm) }
-  style hintRelaxed = { paint: fg(muted-foreground), text: fontSize(xs).leading(relaxed) }
-  style hintXs = { paint: fg(muted-foreground), text: fontSize(xs) }
-  style dangerBox = { box: pad(4), paint: radius(md).borderWidth(1).border(destructive).bg(hover-bg) }
-  style mutedBox = { box: pad(4), paint: fg(muted-foreground).bg(surface-2).radius(md) }
-  style hide = { box: display(none) }
-  style padY2 = { box: padY(2) }
-  style pad2 = { box: pad(2) }
-  style textSm = { text: fontSize(sm) }
-  style textSmSemibold = { text: fontWeight(semibold).fontSize(sm) }
-  style hintItalic = { paint: fg(muted-foreground), text: fontSize(xs).italic(true) }
-  style panelMd = { box: maxW(panel-max-w-md) }
-  style centerSm = { box: display(contents), text: textAlign(center).fontSize(sm) }
-  style ctxHost = { box: padY(4).padX(6), paint: borderWidth(1).border(border).radius(md).fg(muted-foreground).select(none).cursor(context-menu) }
-  style successBox = { box: pad(4), paint: bg(surface-2).radius(md).fg(success-foreground) }
-  style miniCardMd = { box: pad(4).minW(48).maxW(panel-max-w-sm), paint: borderWidth(1).border(border).radius(md).bg(surface-1) }
-  style miniCard64 = { box: pad(4).minW(48).maxW(64), paint: borderWidth(1).border(border).radius(md).bg(surface-1) }
-  style miniCardMinMd = { box: pad(4).minW(panel-min-w-md), paint: borderWidth(1).border(border).radius(md).bg(surface-1) }
-  style scrollDemo = { box: h(32).w(panel-max-w-sm), paint: borderWidth(1).border(border).radius(md) }
-  style h56 = { box: h(56) }
-  style pad3max56 = { box: pad(3).maxW(56) }
+  style page = { pad(6).size({ max-w: breakpoint-tablet }).margin({ x: auto }) }
+  style title = { margin({ b: 2 }).type({ size: 2xl, weight: bold }) }
+  style lede = { fg(muted-foreground) }
+  style sectionH = { margin({ b: 3 }).pad({ b: 2 }).fg(muted-foreground).border({ width: 1, color: border, edge: b }).type({ size: sm, weight: semibold, case: uppercase, tracking: wide }) }
+  style hint = { fg(muted-foreground).type({ size: xs, leading: normal }) }
+  style miniCard = { pad(4).size({ min-w: 48 }).border({ width: 1, color: border }).radius(md).bg(surface-1) }
+  style panelSm = { size({ max-w: panel-max-w-sm }) }
+  style w48 = { size({ w: 48 }) }
+  style smText = { display(contents).type({ size: sm }) }
+  style hintRelaxed = { fg(muted-foreground).type({ size: xs, leading: relaxed }) }
+  style hintXs = { fg(muted-foreground).type({ size: xs }) }
+  style dangerBox = { pad(4).radius(md).border({ width: 1, color: destructive }).bg(hover-bg) }
+  style mutedBox = { pad(4).fg(muted-foreground).bg(surface-2).radius(md) }
+  style hide = { display(none) }
+  style padY2 = { pad({ y: 2 }) }
+  style pad2 = { pad(2) }
+  style textSm = { type({ size: sm }) }
+  style textSmSemibold = { type({ weight: semibold, size: sm }) }
+  style hintItalic = { fg(muted-foreground).type({ size: xs, italic: true }) }
+  style panelMd = { size({ max-w: panel-max-w-md }) }
+  style centerSm = { display(contents).type({ align: center, size: sm }) }
+  style ctxHost = { pad({ y: 4, x: 6 }).border({ width: 1, color: border }).radius(md).fg(muted-foreground).select(none).cursor(context-menu) }
+  style successBox = { pad(4).bg(surface-2).radius(md).fg(success-foreground) }
+  style miniCardMd = { pad(4).size({ min-w: 48, max-w: panel-max-w-sm }).border({ width: 1, color: border }).radius(md).bg(surface-1) }
+  style miniCard64 = { pad(4).size({ min-w: 48, max-w: 64 }).border({ width: 1, color: border }).radius(md).bg(surface-1) }
+  style miniCardMinMd = { pad(4).size({ min-w: panel-min-w-md }).border({ width: 1, color: border }).radius(md).bg(surface-1) }
+  style scrollDemo = { size({ h: 32, w: panel-max-w-sm }).border({ width: 1, color: border }).radius(md) }
+  style h56 = { size({ h: 56 }) }
+  style pad3max56 = { pad(3).size({ max-w: 56 }) }
 </scope>
 
 <!-- FILE_CAP_OVERRIDE: gallery instantiates all 50+ sail/primitives — one card each; cannot be split without losing the gallery contract -->

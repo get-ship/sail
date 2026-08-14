@@ -1,15 +1,15 @@
 <!-- ship/agents domain stubs — static tags for shell registration, no live data. -->
 
 <scope>
-  style page = { box: pad(6).maxW(breakpoint-tablet).mx(auto) }
-  style header = { box: padB(4), paint: borderBWidth(1).borderB(border) }
-  style title = { box: mb(2), paint: fg(foreground), text: fontSize(2xl).fontWeight(bold) }
-  style lead = { paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed) }
-  style card = { box: pad(5), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) }
-  style cardTitle = { paint: fg(foreground), text: fontSize(lg).fontWeight(semibold).fontFamily(mono) }
-  style body = { paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed) }
-  style rowLabel = { box: minW(20), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) }
-  style slotBtn = { box: padY(1).padX(3), paint: borderWidth(1).border(border).radius(sm).bg(surface-2).fg(foreground).cursor(default), text: fontSize(sm) }
+  style page = { pad(6).size({ max-w: breakpoint-tablet }).margin({ x: auto }) }
+  style header = { pad({ b: 4 }).border({ width: 1, color: border, edge: b }) }
+  style title = { margin({ b: 2 }).fg(foreground).type({ size: 2xl, weight: bold }) }
+  style lead = { fg(muted-foreground).type({ size: sm, leading: relaxed }) }
+  style card = { pad(5).border({ width: 1, color: border }).radius(lg).bg(surface-1) }
+  style cardTitle = { fg(foreground).type({ size: lg, weight: semibold, family: mono }) }
+  style body = { fg(muted-foreground).type({ size: sm, leading: relaxed }) }
+  style rowLabel = { size({ min-w: 20 }).fg(muted-foreground).type({ family: mono, size: xs }) }
+  style slotBtn = { pad({ y: 1, x: 3 }).border({ width: 1, color: border }).radius(sm).bg(surface-2).fg(foreground).cursor(default).type({ size: sm }) }
   type HarnessRowProps = {
     label: string
     size: string

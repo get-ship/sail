@@ -135,7 +135,7 @@ mod tests {
     fn allows_style_ident_named_page() {
         let f = check(
             Path::new("apps/demo/routes/page.sail"),
-            "<scope>\n  style page = { box: maxW(breakpoint-tablet) }\n</scope>\n",
+            "<scope>\n  style page = { size({ max-w: breakpoint-tablet }) }\n</scope>\n",
         );
         assert!(f.is_empty(), "{f:?}");
     }

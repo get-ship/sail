@@ -1320,18 +1320,14 @@ fn emit_style_types(out: &mut String) {
     out.push_str("  | (string & {})\n\n");
 
     out.push_str(
-        "/** Style object partial — channels + condition keys (SPEC-STYLE-OBJECT-1). */\n\
+        "/** Style object partial — keyed members only (SPEC-SPINNAKER-3). */\n\
          type SailStyleObj = {\n\
-         \x20 box?: SailStyleValue\n\
-         \x20 paint?: SailStyleValue\n\
-         \x20 text?: SailStyleValue\n\
          \x20 animate?: SailStyleValue\n\
          \x20 when?: SailWhenMap\n\
          \x20 match?: SailMatchBlock\n\
          \x20 compound?: SailCompoundRow[]\n\
          }\n\
          \n\
-         type SailStyleChannels = SailStyleObj\n\
          type SailWhenMap = { [K in SailWhenKey]?: SailStyleObj | SailStyleValue }\n\
          type SailMatchArms = { [arm: string]: SailStyleObj | SailStyleValue }\n\
          type SailMatchBlock = { [prop: string]: SailMatchArms }\n\
@@ -1774,8 +1770,8 @@ fn emit_globals(out: &mut String, bare_tokens: &BTreeSet<String>) {
          \n",
     );
 
-    // Free setters for channel bodies: `box: pad(4).gap(2)`, `paint: bg(primary)`.
-    out.push_str("  // Free Style setters (channel body chains).\n");
+    // Free setters for flat concern/plain chains: `pad(4).bg(primary)`.
+    out.push_str("  // Free Style setters (concern / axis / plain).\n");
     for row in vocab_rows() {
         if let Some(spec) = find_plain(row.name) {
             emit_free_setter(out, spec, bare_tokens);
@@ -2203,10 +2199,16 @@ mod tests {
             "style.foo must be the chain methods, not {{}}"
         );
         assert!(
-            dts.contains("type SailStyleObj") && dts.contains("paint?: SailStyleValue"),
+            dts.contains("type SailStyleObj") && dts.contains("animate?: SailStyleValue"),
             "SailStyleObj missing"
         );
-        // Free channel-body setters
+        assert!(
+            !dts.contains("box?: SailStyleValue")
+                && !dts.contains("paint?: SailStyleValue")
+                && !dts.contains("text?: SailStyleValue"),
+            "SailStyleObj must not teach dissolved channel keys"
+        );
+        // Free concern/plain setters
         assert!(
             dts.contains("function pad(") || dts.contains("function padX("),
             "{dts}"

@@ -182,7 +182,7 @@ pub fn run_component(tag: String, want_controller: bool) -> Result<()> {
         );
     }
     sail.push_str(
-        "<row align=\"center\" gap=\"1\" style={style.fg(foreground)}>\n  <slot></slot>\n</row>\n",
+        "<row align=\"center\" gap=\"1\" style({ fg(foreground) })>\n  <slot></slot>\n</row>\n",
     );
     fs::write(base.join(format!("{tag}.sail")), sail)?;
 

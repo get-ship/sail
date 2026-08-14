@@ -1465,7 +1465,7 @@ mod tests {
 
     #[test]
     fn code_action_offers_participation_fix() {
-        // Product form: bare participation attr → box channel (not retired style={style.grow}).
+        // Product form: bare participation attr → size/grow (not retired style={style.grow}).
         let src = r#"<div grow>x</div>"#;
         let mut docs = Docs::new();
         let uri = Url::parse("file:///t.sail").unwrap();

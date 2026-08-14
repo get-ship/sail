@@ -1251,7 +1251,7 @@ fn collect_for_binding_names(sail_source: &str) -> Vec<String> {
 
 fn collect_template_exprs(original: &str, stripped: &str) -> Vec<ExprEmbed> {
     // Full product Style spines first (`style({…}).when(…)`). Brace-scan alone
-    // only captures the inner `{ box: … }` object and drops the `style` call head.
+    // only captures the inner `{ pad(…) }` object and drops the `style` call head.
     let style_exprs = collect_style_product_exprs(original);
     let style_spans: Vec<(usize, usize)> = style_exprs
         .iter()
@@ -2017,12 +2017,11 @@ export default controller((ctx) => ({ count: signal(0) }))
         assert!(looks_like_style_expr("size(full)"));
         assert!(looks_like_style_expr("type({ size: sm })"));
         assert!(looks_like_style_expr("fg(muted-foreground)"));
-        // v2 channel keys still count (studio mixed era).
-        assert!(looks_like_style_expr("{ box: pad(4), paint: bg(primary) }"));
-        let v2 = quote_style_dsl_for_tsc("style({ box: pad(4), paint: bg(primary) })");
+        assert!(looks_like_style_expr("{ pad(4).bg(primary) }"));
+        let v3 = quote_style_dsl_for_tsc("style({ pad(4).bg(primary) })");
         assert!(
-            !v2.contains("..."),
-            "v2 key:value channels must not grow spreads: {v2}"
+            !v3.contains("..."),
+            "v3 concern chains must not grow spreads: {v3}"
         );
         // Ordinary template arithmetic / scope calls stay out.
         assert!(!looks_like_style_expr("count() + 1"));
@@ -2201,7 +2200,7 @@ export default controller((ctx) => ({ count: signal(0) }))
     fn style_decl_names_are_declared_without_inventing_const() {
         let src = r#"
 <scope>
-  style host = { paint: bg(primary) }
+  style host = { bg(primary) }
   props: { label = '' }
 </scope>
 <div style(host)>{label()}</div>

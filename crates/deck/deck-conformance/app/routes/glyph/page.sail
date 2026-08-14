@@ -1,9 +1,9 @@
 <!-- Inline SVG paint via currentColor + Style fg. -->
 
 <scope>
-  style page = { box: pad(6).maxW(breakpoint-tablet).mx(auto) }
-  style title = { paint: fg(foreground), text: fontSize(2xl).fontWeight(bold) }
-  style icon = { paint: fg(foreground) }
+  style page = { pad(6).size({ max-w: breakpoint-tablet }).margin({ x: auto }) }
+  style title = { fg(foreground).type({ size: 2xl, weight: bold }) }
+  style icon = { fg(foreground) }
 </scope>
 
 <column gap="2" style(page)>

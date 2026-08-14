@@ -1,14 +1,14 @@
 <scope>
-  style page = { box: pad(6).maxW(breakpoint-tablet).mx(auto) }
-  style pageHead = { box: padB(4), paint: borderBWidth(1).borderB(border) }
-  style title = { box: mb(2), paint: fg(foreground), text: fontSize(2xl).fontWeight(bold) }
-  style lede = { paint: fg(muted-foreground), text: fontSize(sm) }
-  style card = { box: pad(5), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) }
-  style cardTitle = { paint: fg(foreground), text: fontSize(lg).fontWeight(semibold).fontFamily(mono) }
-  style badge = { box: padX(2).padY(1).ms(3), paint: fg(warning-foreground).bg(warning).radius(sm), text: fontSize(xs).fontWeight(medium).fontFamily(body).tracking(wide) }
-  style body = { paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed) }
-  style stage = { box: pad(3), paint: borderWidth(1).border(divider).radius(md).bg(surface-2) }
-  style caption = { paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(lowercase).tracking(wide).fontFamily(mono) }
+  style page = { pad(6).size({ max-w: breakpoint-tablet }).margin({ x: auto }) }
+  style pageHead = { pad({ b: 4 }).border({ width: 1, color: border, edge: b }) }
+  style title = { margin({ b: 2 }).fg(foreground).type({ size: 2xl, weight: bold }) }
+  style lede = { fg(muted-foreground).type({ size: sm }) }
+  style card = { pad(5).border({ width: 1, color: border }).radius(lg).bg(surface-1) }
+  style cardTitle = { fg(foreground).type({ size: lg, weight: semibold, family: mono }) }
+  style badge = { pad({ x: 2, y: 1 }).margin({ s: 3 }).fg(warning-foreground).bg(warning).radius(sm).type({ size: xs, weight: medium, family: body, tracking: wide }) }
+  style body = { fg(muted-foreground).type({ size: sm, leading: relaxed }) }
+  style stage = { pad(3).border({ width: 1, color: divider }).radius(md).bg(surface-2) }
+  style caption = { fg(muted-foreground).type({ size: xs, weight: medium, case: lowercase, tracking: wide, family: mono }) }
 </scope>
 
 <column gap="8" style(page)>

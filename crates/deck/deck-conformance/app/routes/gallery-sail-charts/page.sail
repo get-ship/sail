@@ -1,14 +1,14 @@
 <scope>
-  style page = { box: pad(6).maxW(breakpoint-tablet).mx(auto) }
-  style pageHead = { box: padB(4), paint: borderBWidth(1).borderB(border) }
-  style title = { box: mb(2), paint: fg(foreground), text: fontSize(2xl).fontWeight(bold) }
-  style lede = { paint: fg(muted-foreground), text: fontSize(sm) }
-  style sectionH = { box: mb(4), paint: fg(foreground), text: fontSize(lg).fontWeight(semibold).fontFamily(mono) }
-  style card = { box: pad(4), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) }
-  style cardLabel = { paint: fg(muted-foreground), text: fontSize(sm).fontWeight(medium) }
-  style legendPrimary = { paint: fg(primary) }
-  style textSm = { text: fontSize(sm) }
-  style textXs = { text: fontSize(xs) }
+  style page = { pad(6).size({ max-w: breakpoint-tablet }).margin({ x: auto }) }
+  style pageHead = { pad({ b: 4 }).border({ width: 1, color: border, edge: b }) }
+  style title = { margin({ b: 2 }).fg(foreground).type({ size: 2xl, weight: bold }) }
+  style lede = { fg(muted-foreground).type({ size: sm }) }
+  style sectionH = { margin({ b: 4 }).fg(foreground).type({ size: lg, weight: semibold, family: mono }) }
+  style card = { pad(4).border({ width: 1, color: border }).radius(lg).bg(surface-1) }
+  style cardLabel = { fg(muted-foreground).type({ size: sm, weight: medium }) }
+  style legendPrimary = { fg(primary) }
+  style textSm = { type({ size: sm }) }
+  style textXs = { type({ size: xs }) }
 </scope>
 
 <column gap="8" style(page)>

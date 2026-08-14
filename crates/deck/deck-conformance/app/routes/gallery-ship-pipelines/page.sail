@@ -1,10 +1,10 @@
 <scope>
-  style page = { box: padY(6).padX(8).maxW(breakpoint-tablet) }
-  style title = { box: mb(2), paint: fg(foreground), text: fontSize(xl).fontWeight(bold) }
-  style lede = { paint: fg(muted-foreground), text: fontSize(sm) }
-  style sectionH = { paint: fg(foreground), text: fontSize(base).fontWeight(semibold) }
-  style body = { paint: fg(muted-foreground), text: fontSize(sm) }
-  style caption = { box: padT(2), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) }
+  style page = { pad({ y: 6, x: 8 }).size({ max-w: breakpoint-tablet }) }
+  style title = { margin({ b: 2 }).fg(foreground).type({ size: xl, weight: bold }) }
+  style lede = { fg(muted-foreground).type({ size: sm }) }
+  style sectionH = { fg(foreground).type({ size: base, weight: semibold }) }
+  style body = { fg(muted-foreground).type({ size: sm }) }
+  style caption = { pad({ t: 2 }).fg(muted-foreground).type({ family: mono, size: xs }) }
 </scope>
 
 <column gap="8" style(page)>

@@ -80,8 +80,8 @@ fn check_tag(path: &Path, source: &str, t: &OpenTag, severity: Severity) -> Opti
         ),
         suggest: Some(format!(
             "Add {need} on the same concern chain, e.g. \
-             `style({{ overflowY(auto).minH(0).grow(1) }})` (Y axis) or \
-             `style({{ overflow(auto).minW(0) }})` (row / bare overflow)."
+             `style({{ overflow({{ y: auto }}).size({{ min-h: 0 }}).grow(1) }})` (Y axis) or \
+             `style({{ overflow(auto).size({{ min-w: 0 }}) }})` (row / bare overflow)."
         )),
     })
 }
@@ -115,14 +115,21 @@ fn detect_overflow_axes(sx: &str) -> Option<OverflowAxes> {
     let mut axes = OverflowAxes::default();
 
     // Style API: overflowY(auto), overflowX(hidden), overflow(scroll), …
+    // Product object: overflow({ y: auto }) / overflow({ x: hidden }) / overflow({ all: clip }).
     for mode in CLIP_MODES {
-        if style_call(sx, "overflowY", mode) || style_call(sx, "overflowy", mode) {
+        if style_call(sx, "overflowY", mode)
+            || style_call(sx, "overflowy", mode)
+            || overflow_slot(sx, "y", mode)
+        {
             axes.y = true;
         }
-        if style_call(sx, "overflowX", mode) || style_call(sx, "overflowx", mode) {
+        if style_call(sx, "overflowX", mode)
+            || style_call(sx, "overflowx", mode)
+            || overflow_slot(sx, "x", mode)
+        {
             axes.x = true;
         }
-        if style_call(sx, "overflow", mode) {
+        if style_call(sx, "overflow", mode) || overflow_slot(sx, "all", mode) {
             axes.bare = true;
         }
     }
@@ -144,7 +151,11 @@ fn detect_overflow_axes(sx: &str) -> Option<OverflowAxes> {
         }
     }
 
-    if axes.any() { Some(axes) } else { None }
+    if axes.any() {
+        Some(axes)
+    } else {
+        None
+    }
 }
 
 fn has_scroll_overflow(sx: &str) -> bool {
@@ -154,6 +165,9 @@ fn has_scroll_overflow(sx: &str) -> bool {
             || style_call(sx, "overflowy", mode)
             || style_call(sx, "overflowX", mode)
             || style_call(sx, "overflowx", mode)
+            || overflow_slot(sx, "y", mode)
+            || overflow_slot(sx, "x", mode)
+            || overflow_slot(sx, "all", mode)
             || token_atom(sx, &format!("overflow-{mode}"))
             || token_atom(sx, &format!("overflow-y-{mode}"))
             || token_atom(sx, &format!("overflow-x-{mode}"))
@@ -173,8 +187,11 @@ fn is_viewport_clip_root(sx: &str, axes: &OverflowAxes) -> bool {
     has_style_arg(sx, "h", "screen")
         || has_style_arg(sx, "minH", "screen")
         || has_style_arg(sx, "minh", "screen")
+        || size_slot(sx, "h", "screen")
+        || size_slot(sx, "min-h", "screen")
         || (has_style_arg(sx, "h", "full")
             && (has_style_arg(sx, "minH", "screen") || has_style_arg(sx, "minh", "screen")))
+        || (size_slot(sx, "h", "full") && size_slot(sx, "min-h", "screen"))
         || token_atom(sx, "h-screen")
         || token_atom(sx, "min-h-screen")
 }
@@ -208,22 +225,26 @@ fn has_zero_min_h(sx: &str) -> bool {
     style_call(sx, "minH", "0")
         || style_call(sx, "minh", "0")
         || style_call(sx, "minHeight", "0")
+        || size_slot(sx, "min-h", "0")
         || token_atom(sx, "min-h-0")
         || token_atom(sx, "minh0")
         || sx.contains("s-minh0")
         || contains_ci(sx, "minH(bind")
         || contains_ci(sx, "minh(bind")
+        || size_slot(sx, "min-h", "bind")
 }
 
 fn has_zero_min_w(sx: &str) -> bool {
     style_call(sx, "minW", "0")
         || style_call(sx, "minw", "0")
         || style_call(sx, "minWidth", "0")
+        || size_slot(sx, "min-w", "0")
         || token_atom(sx, "min-w-0")
         || token_atom(sx, "minw0")
         || sx.contains("s-minw0")
         || contains_ci(sx, "minW(bind")
         || contains_ci(sx, "minw(bind")
+        || size_slot(sx, "min-w", "bind")
 }
 
 /// `name(arg)` Style-API call (case-insensitive name/arg).
@@ -234,6 +255,89 @@ fn style_call(sx: &str, name: &str, arg: &str) -> bool {
 
 fn has_style_arg(sx: &str, name: &str, arg: &str) -> bool {
     style_call(sx, name, arg)
+}
+
+/// Product `overflow({ y: auto })` / `overflow({ x: hidden })` / `overflow({ all: clip })`.
+fn overflow_slot(sx: &str, slot: &str, mode: &str) -> bool {
+    for body in overflow_object_bodies(sx) {
+        if object_slot_eq(body, slot, mode) {
+            return true;
+        }
+    }
+    false
+}
+
+/// Product `size({ min-h: 0 })` / `size({ h: screen })` slot match.
+/// `min-h: screen` must not count as `h: screen`.
+fn size_slot(sx: &str, slot: &str, val: &str) -> bool {
+    object_slot_eq(sx, slot, val)
+}
+
+fn overflow_object_bodies(sx: &str) -> Vec<&str> {
+    let lower = sx.to_ascii_lowercase();
+    let bytes = sx.as_bytes();
+    let mut out = Vec::new();
+    let mut search = 0usize;
+    while let Some(rel) = lower[search..].find("overflow({") {
+        let open = search + rel + "overflow(".len();
+        if open >= bytes.len() || bytes[open] != b'{' {
+            search += rel + 1;
+            continue;
+        }
+        let mut depth = 0i32;
+        let mut i = open;
+        let mut end = None;
+        while i < bytes.len() {
+            match bytes[i] {
+                b'{' => depth += 1,
+                b'}' => {
+                    depth -= 1;
+                    if depth == 0 {
+                        end = Some(i);
+                        break;
+                    }
+                }
+                _ => {}
+            }
+            i += 1;
+        }
+        if let Some(close) = end {
+            out.push(&sx[open..=close]);
+            search = close + 1;
+        } else {
+            break;
+        }
+    }
+    out
+}
+
+/// `{ slot: val }` / `slot: val` with a key boundary so `min-h` ≠ `h`.
+fn object_slot_eq(hay: &str, slot: &str, val: &str) -> bool {
+    let hay_l = hay.to_ascii_lowercase();
+    let slot_l = slot.to_ascii_lowercase();
+    let val_l = val.to_ascii_lowercase();
+    let spaced = format!("{slot_l}: {val_l}");
+    let tight = format!("{slot_l}:{val_l}");
+    for pat in [spaced.as_str(), tight.as_str()] {
+        let mut from = 0usize;
+        while let Some(rel) = hay_l[from..].find(pat) {
+            let i = from + rel;
+            let before_ok = i == 0 || {
+                let b = hay_l.as_bytes()[i - 1];
+                b == b'{' || b == b',' || b.is_ascii_whitespace()
+            };
+            let after = i + pat.len();
+            let after_ok = after >= hay_l.len() || {
+                let b = hay_l.as_bytes()[after];
+                b == b'}' || b == b',' || b == b'(' || b.is_ascii_whitespace()
+            };
+            if before_ok && after_ok {
+                return true;
+            }
+            from = i + 1;
+        }
+    }
+    false
 }
 
 /// Token atom match: `atom` must not be a substring of a longer identifier-like run.
@@ -282,7 +386,7 @@ mod tests {
 
     #[test]
     fn overflow_auto_without_min_warns() {
-        let src = r#"<column style={style.overflow(auto).grow(true)}></column>"#;
+        let src = r#"<column style({ overflow(auto).grow(1) })></column>"#;
         let f = lint(src);
         assert_eq!(f.len(), 1, "{f:?}");
         assert_eq!(f[0].rule, RULE_ID);
@@ -291,19 +395,20 @@ mod tests {
 
     #[test]
     fn overflow_with_minh0_passes() {
-        let src = r#"<column style={style.overflowY(auto).minH(0).grow(true)}></column>"#;
+        let src =
+            r#"<column style({ overflow({ y: auto }).size({ min-h: 0 }).grow(1) })></column>"#;
         assert!(lint(src).is_empty(), "{:?}", lint(src));
     }
 
     #[test]
     fn no_overflow_passes() {
-        let src = r#"<column style={style.grow(true).bg(surface)}></column>"#;
+        let src = r#"<column style({ grow(1).bg(surface) })></column>"#;
         assert!(lint(src).is_empty());
     }
 
     #[test]
     fn overflow_y_requires_min_h_not_only_min_w() {
-        let src = r#"<column style={style.overflowY(auto).minW(0)}></column>"#;
+        let src = r#"<column style({ overflow({ y: auto }).size({ min-w: 0 }) })></column>"#;
         let f = lint(src);
         assert_eq!(f.len(), 1, "minW alone must not satisfy overflowY: {f:?}");
         assert!(f[0].message.contains("minH(0)"), "{}", f[0].message);
@@ -311,7 +416,7 @@ mod tests {
 
     #[test]
     fn overflow_x_requires_min_w_not_only_min_h() {
-        let src = r#"<row style={style.overflowX(auto).minH(0)}></row>"#;
+        let src = r#"<row style({ overflow({ x: auto }).size({ min-h: 0 }) })></row>"#;
         let f = lint(src);
         assert_eq!(f.len(), 1, "minH alone must not satisfy overflowX: {f:?}");
         assert!(f[0].message.contains("minW(0)"), "{}", f[0].message);
@@ -319,8 +424,8 @@ mod tests {
 
     #[test]
     fn bare_overflow_accepts_either_min() {
-        let a = r#"<div style={style.overflow(auto).minW(0)}></div>"#;
-        let b = r#"<div style={style.overflow(hidden).minH(0)}></div>"#;
+        let a = r#"<div style({ overflow(auto).size({ min-w: 0 }) })></div>"#;
+        let b = r#"<div style({ overflow(hidden).size({ min-h: 0 }) })></div>"#;
         assert!(lint(a).is_empty(), "{:?}", lint(a));
         assert!(lint(b).is_empty(), "{:?}", lint(b));
     }
@@ -328,7 +433,7 @@ mod tests {
     #[test]
     fn viewport_clip_root_with_screen_height_skipped() {
         // Studio chrome shell: definite viewport size + outer clip only.
-        let src = r#"<row style={style.minH(screen).h(screen).w(full).overflow(hidden)}></row>"#;
+        let src = r#"<row style({ size({ min-h: screen, h: screen, w: full }).overflow(hidden) })></row>"#;
         assert!(
             lint(src).is_empty(),
             "viewport clip root must not fire: {:?}",
@@ -338,8 +443,8 @@ mod tests {
 
     #[test]
     fn viewport_sized_but_scroll_still_flagged() {
-        // Scroll owners always need min-size even if h(screen).
-        let src = r#"<column style={style.h(screen).overflowY(auto)}></column>"#;
+        // Scroll owners always need min-size even if size({ h: screen }).
+        let src = r#"<column style({ size({ h: screen }).overflow({ y: auto }) })></column>"#;
         let f = lint(src);
         assert_eq!(f.len(), 1, "scroll owner must still flag: {f:?}");
     }
@@ -374,7 +479,7 @@ mod tests {
             let mut f = std::fs::File::create(&sail).expect("create");
             write!(
                 f,
-                r#"<column style={{style.overflow(auto).grow(true)}}></column>"#
+                r#"<column style({{ overflow(auto).grow(1) }})></column>"#
             )
             .expect("write");
         }

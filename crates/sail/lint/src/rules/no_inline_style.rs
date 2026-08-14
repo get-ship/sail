@@ -82,7 +82,7 @@ mod tests {
     fn flags_raw_css_style_string_only() {
         assert_eq!(run(r#"<p style="color: red">x</p>"#), 1);
         assert_eq!(run(r#"<p style = "x">y</p>"#), 1);
-        assert_eq!(run(r#"<p style={style.fg(primary)}>x</p>"#), 0);
+        assert_eq!(run(r#"<p style({ fg(primary) })>x</p>"#), 0);
         assert_eq!(run(r#"<p style={dyn}>x</p>"#), 0);
     }
     #[test]

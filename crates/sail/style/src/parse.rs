@@ -7,8 +7,8 @@ use super::ir::{PaintArg, PaintOp, Style, StyleDiagnostic};
 use super::setters::{validate_op, when_target};
 use super::theme_env::{ThemeStyleEnv, current_styling_policy};
 
-/// Parse a Style expression (product / channel-only). Flat `style.method(…)`
-/// chains are refused — use `style({ box, paint, text, animate })`.
+/// Parse a Style expression. Flat `style.method(…)` chains are refused —
+/// use `style({ pad(4).bg(surface), when: { hover: bg(muted) } })`.
 pub fn parse(input: &str) -> (Style, Vec<StyleDiagnostic>) {
     parse_with(input)
 }
@@ -235,7 +235,7 @@ fn forbid_geometry_inside_interaction_when(style: &Style) -> Result<(), StyleDia
 }
 
 fn residual_product_message(src: &str) -> String {
-    let base = "utility-string sx is not the Style product — use style({ box, paint, text, animate, when, match, compound })";
+    let base = "utility-string sx is not the Style product — use style({ pad(4).bg(surface), when:, match:, compound: })";
     let taught = crate::foreign_idioms::idioms_in_source(src);
     if taught.is_empty() {
         return base.into();
@@ -1259,7 +1259,7 @@ fn parse_style_object(
                 } else {
                     diags.push(StyleDiagnostic::ParseError {
                         message: format!(
-                            "unknown style object key `{other}` — expected a concern call (`bg(…)`) or `box`/`paint`/`text`/`animate`/`when`/`match`/`compound`"
+                            "unknown style object key `{other}` — expected a concern call (`bg(…)`) or `animate`/`when`/`match`/`compound`"
                         ),
                         source: other.to_string(),
                     });
@@ -1827,7 +1827,7 @@ fn parse_animate_channel_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnost
         if !motion_object {
             diags.push(StyleDiagnostic::ParseError {
                 message: format!(
-                    "`animate:{method}` requires a `{{…}}` motion config object — paint forms of `{method}` belong in `paint:`"
+                    "`animate:{method}` requires a `{{…}}` motion config object — static `{method}` is a plain setter on the chain"
                 ),
                 source: method.to_string(),
             });
@@ -2324,8 +2324,8 @@ fn normalize_paint_arg(
 }
 
 /// Dual-accept when args:
-/// - map form: `({ hover: style.bg(x), … })`
-/// - cond form: `(hover, { paint: bg(x) })` or `(hover, style.bg(x))` or `(hover, bg(x))`
+/// - map form: `({ hover: bg(x), … })`
+/// - cond form: `(hover, { bg(x) })` or `(hover, bg(x))`
 fn parse_when_args(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Vec<(String, Style)> {
     p.expect(Tok::LParen, diags);
     if p.peek() == Some(&Tok::LBrace) {
@@ -2466,7 +2466,7 @@ fn validate_style(style: &Style, diags: &mut Vec<StyleDiagnostic>) {
 /// Parse a scope Style declaration RHS (`const name = <rhs>` or `style name = <rhs>`).
 ///
 /// Accepts (SPEC-STYLE-DECL-1):
-/// 1. **Object form** — bare `{ box: …, paint: …, when: … }` (no outer `style(`)
+/// 1. **Object form** — bare `{ pad(4).bg(surface), when: … }` (no outer `style(`)
 /// 2. **Call form** — `style({ … })` / `style(base, { … })`
 /// 3. **Compose** — `name, { … }` / `name, style({ … })` (same merge as multi-arg `style`)
 /// 4. **Bare ref** — another Style const name

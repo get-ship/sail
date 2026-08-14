@@ -61,18 +61,18 @@ export default controller(() => ({
 </controller>
 
 <scope>
-  style page = { box: maxW(breakpoint-tablet).mx(auto).pad(6) }
-  style title = { box: mb(2), text: fontSize(3xl).fontWeight(bold) }
-  style lede = { paint: fg(muted-foreground), text: fontSize(md) }
-  style sectionH = { box: mb(1), paint: fg(primary), text: fontSize(lg).fontWeight(semibold).fontFamily(mono) }
-  style sectionBody = { box: mb(4), paint: fg(muted-foreground), text: fontSize(base) }
-  style card = { box: pad(4), paint: bg(surface-1).borderWidth(1).border(border).radius(md) }
-  style cardLabel = { paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide) }
-  style listTall = { box: h(64), paint: borderWidth(1).border(border).radius(md) }
-  style listShort = { box: h(48), paint: borderWidth(1).border(border).radius(md) }
-  style mutedBase = { paint: fg(muted-foreground), text: fontSize(base) }
-  style mutedXs = { paint: fg(muted-foreground), text: fontSize(xs) }
-  style chip = { box: padX(2).padY(1), text: fontSize(xs) }
+  style page = { pad(6).size({ max-w: breakpoint-tablet }).margin({ x: auto }) }
+  style title = { margin({ b: 2 }).type({ size: 3xl, weight: bold }) }
+  style lede = { fg(muted-foreground).type({ size: md }) }
+  style sectionH = { margin({ b: 1 }).fg(primary).type({ size: lg, weight: semibold, family: mono }) }
+  style sectionBody = { margin({ b: 4 }).fg(muted-foreground).type({ size: base }) }
+  style card = { pad(4).bg(surface-1).border({ width: 1, color: border }).radius(md) }
+  style cardLabel = { fg(muted-foreground).type({ size: xs, weight: medium, case: uppercase, tracking: wide }) }
+  style listTall = { size({ h: 64 }).border({ width: 1, color: border }).radius(md) }
+  style listShort = { size({ h: 48 }).border({ width: 1, color: border }).radius(md) }
+  style mutedBase = { fg(muted-foreground).type({ size: base }) }
+  style mutedXs = { fg(muted-foreground).type({ size: xs }) }
+  style chip = { pad({ x: 2, y: 1 }).type({ size: xs }) }
 </scope>
 
 <column gap="8" style(page)>

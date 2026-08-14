@@ -1,8 +1,8 @@
 //! `sail-animate-token-only` — Style motion configs
-//! (`style.<trigger>({ … })` / `.enter({ … })` chain methods) accept only the
+//! (`style({ animate: hover({ … }) })` / `animate: enter({ … })`) accept only the
 //! closed property/preset vocabulary that maps cleanly to the design system.
 //!
-//! `style.<trigger>({ <prop>: '<preset>' })` — the property must be one of
+//! `animate: <trigger>({ <prop>: '<preset>' })` — the property must be one of
 //! [`MOTION_PROPERTIES`] (the same closed set the parser enforces), and the
 //! preset must be a name known to `animation-presets.json`.
 
@@ -42,7 +42,7 @@ pub const MOTION_TIMING_KEYS: &[&str] = &["duration", "delay", "easing", "iterat
 pub const MOTION_CHANNEL_KEYS: &[&str] = &["from", "to", "preset"];
 
 /// THE trigger vocabulary — what can drive Style motion
-/// (`style.<trigger>({…})`). One list, read by the parser, the runtime, and
+/// (`animate: <trigger>({…})`). One list, read by the parser, the runtime, and
 /// the generated agent skill.
 ///
 /// Three kinds, and the difference matters:
@@ -87,19 +87,18 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
         let bytes = line.as_bytes();
         let mut i = 0;
         while i < bytes.len() {
-            let rest = &line[i..];
-            let Some(dot_rel) = rest.find('.') else {
+            let Some(method_start) = next_ident_start(line, i) else {
                 break;
             };
-            let method_start = i + dot_rel + 1;
-            if method_start > i && is_attr_name_continuation(bytes[method_start - 1]) {
-                // `.` after ident char is fine; we still scan the method name.
-            }
             let Some(method_len) = scan_ident(&line[method_start..]) else {
-                i = method_start;
+                i = method_start + 1;
                 continue;
             };
             let method = &line[method_start..method_start + method_len];
+            if method_start > 0 && is_attr_name_continuation(bytes[method_start - 1]) {
+                i = method_start + method_len;
+                continue;
+            }
             if !MOTION_TRIGGERS.contains(&method) {
                 i = method_start + method_len;
                 continue;
@@ -164,6 +163,19 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
 
 fn is_attr_name_continuation(c: u8) -> bool {
     c.is_ascii_alphanumeric() || c == b':' || c == b'-' || c == b'_'
+}
+
+fn next_ident_start(line: &str, from: usize) -> Option<usize> {
+    let bytes = line.as_bytes();
+    let mut i = from;
+    while i < bytes.len() {
+        let c = bytes[i];
+        if c.is_ascii_alphabetic() || c == b'_' {
+            return Some(i);
+        }
+        i += 1;
+    }
+    None
 }
 
 fn scan_ident(rest: &str) -> Option<usize> {
@@ -330,13 +342,15 @@ mod tests {
 
     #[test]
     fn accepts_static_hover_with_known_preset_and_prop() {
-        let f = findings(r#"<button style={style.hover({ scale: 'spring:snappy' })}>x</button>"#);
+        let f =
+            findings(r#"<button style({ animate: hover({ scale: 'spring:snappy' }) })>x</button>"#);
         assert!(f.is_empty(), "expected no findings, got {f:?}");
     }
 
     #[test]
     fn flags_unknown_property() {
-        let f = findings(r#"<button style={style.hover({ foo: 'spring:snappy' })}>x</button>"#);
+        let f =
+            findings(r#"<button style({ animate: hover({ foo: 'spring:snappy' }) })>x</button>"#);
         assert_eq!(f.len(), 1, "expected 1 finding, got {f:?}");
         assert!(f[0].message.contains("foo"));
         assert!(f[0].message.contains("scale"));
@@ -344,7 +358,7 @@ mod tests {
 
     #[test]
     fn flags_unknown_preset() {
-        let f = findings(r#"<button style={style.hover({ scale: 'mystery' })}>x</button>"#);
+        let f = findings(r#"<button style({ animate: hover({ scale: 'mystery' }) })>x</button>"#);
         assert_eq!(f.len(), 1, "expected 1 finding, got {f:?}");
         assert!(f[0].message.contains("mystery"));
         assert!(f[0].message.contains("spring:snappy"));
@@ -353,14 +367,14 @@ mod tests {
     #[test]
     fn flags_multiple_in_one_config() {
         let f = findings(
-            r#"<button style={style.hover({ scale: 'mystery', opacity: 'also-bad' })}>x</button>"#,
+            r#"<button style({ animate: hover({ scale: 'mystery', opacity: 'also-bad' }) })>x</button>"#,
         );
         assert_eq!(f.len(), 2, "expected 2 findings, got {f:?}");
     }
 
     #[test]
     fn ignores_paint_press_without_config_object() {
-        let f = findings(r#"<button style={style.press().bg(primary)}>x</button>"#);
+        let f = findings(r#"<button style({ press().bg(primary) })>x</button>"#);
         assert!(
             f.is_empty(),
             "expected no findings for paint press(), got {f:?}"
@@ -375,22 +389,23 @@ mod tests {
 
     #[test]
     fn skips_lines_that_are_pure_comment() {
-        let f = findings("<!-- style.hover({ foo: 'mystery' }) -->\n<button>x</button>");
+        let f =
+            findings("<!-- style({ animate: hover({ foo: 'mystery' }) }) -->\n<button>x</button>");
         assert!(f.is_empty(), "expected no findings, got {f:?}");
     }
 
     #[test]
     fn handles_utf8_source() {
         let f = findings(
-            "<!-- Loading… -->\n<button style={style.hover({ foo: 'mystery' })}>x</button>",
+            "<!-- Loading… -->\n<button style({ animate: hover({ foo: 'mystery' }) })>x</button>",
         );
         assert_eq!(f.len(), 1, "expected 1 finding, got {f:?}");
         assert!(f[0].message.contains("`foo` is not supported"), "got {f:?}");
     }
 
     #[test]
-    fn chain_method_form_without_style_prefix() {
-        let f = findings(r#"style={cta.enter({ opacity: 'fade' })}"#);
+    fn animate_enter_known_preset_passes() {
+        let f = findings(r#"<button style({ animate: enter({ opacity: 'fade' }) })>x</button>"#);
         assert!(f.is_empty(), "expected no findings, got {f:?}");
     }
 }

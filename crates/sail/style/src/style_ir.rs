@@ -1,6 +1,6 @@
 //! **INTERNAL leaf IR** for Style paint-op emit — not an author surface.
 //!
-//! Product paint is Style (`style({ box, paint, text, animate })`).
+//! Product paint is Style (`style({ pad(4).bg(surface), when:, animate: })`).
 //! Utility-string sx is a hard residual error (`is_residual_utility_sx`).
 //! This module is residual detect plus a token-value helper so Style setters
 //! can lower a closed property + token to CSS.

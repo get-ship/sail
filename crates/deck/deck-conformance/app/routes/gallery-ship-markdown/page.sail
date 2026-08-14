@@ -1,11 +1,11 @@
 <scope>
-  style page = { box: pad(6).maxW(breakpoint-tablet).mx(auto) }
-  style title = { box: mb(2), text: fontSize(2xl).fontWeight(bold) }
-  style lede = { paint: fg(muted-foreground) }
-  style sectionH = { box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) }
-  style badge = { box: padX(2).padY(half).ms(3), paint: fg(warning-foreground).bg(warning).borderWidth(1).border(warning).radius(sm), text: fontSize(xs).fontWeight(medium).whitespace(nowrap).textCase(normal).tracking(normal) }
-  style body = { box: mb(4), paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed) }
-  style card = { box: pad(5), paint: bg(surface-1).borderWidth(1).border(border).radius(lg) }
+  style page = { pad(6).size({ max-w: breakpoint-tablet }).margin({ x: auto }) }
+  style title = { margin({ b: 2 }).type({ size: 2xl, weight: bold }) }
+  style lede = { fg(muted-foreground) }
+  style sectionH = { margin({ b: 3 }).pad({ b: 2 }).fg(muted-foreground).border({ width: 1, color: border, edge: b }).type({ size: sm, weight: semibold, case: uppercase, tracking: wide }) }
+  style badge = { pad({ x: 2, y: half }).margin({ s: 3 }).fg(warning-foreground).bg(warning).border({ width: 1, color: warning }).radius(sm).type({ size: xs, weight: medium, wrap: nowrap, case: normal, tracking: normal }) }
+  style body = { margin({ b: 4 }).fg(muted-foreground).type({ size: sm, leading: relaxed }) }
+  style card = { pad(5).bg(surface-1).border({ width: 1, color: border }).radius(lg) }
 </scope>
 
 <column gap="8" style(page)>

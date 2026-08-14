@@ -758,7 +758,7 @@ fn layout_keyword_hover(tag: &str) -> Option<String> {
     Some(format!(
         "**{tag}** · `layout`\n\n\
          `<{tag}>` is a layout keyword — {summary}.{axis} \
-         Participation is `style({{ box: grow(1).minW(0) }})` (`sail-participation-style`)."
+         Participation is `style({{ grow(1).size({{ min-w: 0 }}) }})` (`sail-participation-style`)."
     ))
 }
 

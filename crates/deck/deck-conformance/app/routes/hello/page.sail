@@ -1,14 +1,10 @@
 <!-- SSR constant-fold: {1 + 1} evaluated at render time (no controller). -->
 
 <scope>
-  style page = { box: pad(6).maxW(breakpoint-tablet).mx(auto) }
-  style title = { paint: fg(foreground), text: fontSize(2xl).fontWeight(bold) }
-  style lead = { paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed) }
-  style code = {
-    box: padX(1),
-    paint: bg(surface-2).radius(md),
-    text: fontFamily(mono),
-  }
+  style page = { pad(6).size({ max-w: breakpoint-tablet }).margin({ x: auto }) }
+  style title = { fg(foreground).type({ size: 2xl, weight: bold }) }
+  style lead = { fg(muted-foreground).type({ size: sm, leading: relaxed }) }
+  style code = { pad({ x: 1 }).bg(surface-2).radius(md).type({ family: mono }) }
 </scope>
 
 <column gap="2" style(page)>

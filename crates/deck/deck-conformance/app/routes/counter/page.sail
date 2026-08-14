@@ -7,10 +7,10 @@ export default controller(() => ({ count: signal(0) }))
 </controller>
 
 <scope>
-  style page = { box: pad(6).maxW(breakpoint-tablet).mx(auto) }
-  style title = { paint: fg(foreground), text: fontSize(2xl).fontWeight(bold) }
-  style muted = { paint: fg(muted-foreground), text: fontSize(sm) }
-  style mono = { paint: fg(foreground), text: fontFamily(mono) }
+  style page = { pad(6).size({ max-w: breakpoint-tablet }).margin({ x: auto }) }
+  style title = { fg(foreground).type({ size: 2xl, weight: bold }) }
+  style muted = { fg(muted-foreground).type({ size: sm }) }
+  style mono = { fg(foreground).type({ family: mono }) }
 </scope>
 
 <column gap="3" style(page)>

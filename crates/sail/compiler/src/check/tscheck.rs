@@ -4241,7 +4241,7 @@ export default controller(() => {
         let src = r#"
 <scope>
   type Row = { id: string; city: string }
-  style board = { box: pad(4) }
+  style board = { pad(4) }
 </scope>
 <controller>
 export default controller(() => {
