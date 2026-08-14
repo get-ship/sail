@@ -27,9 +27,16 @@ const categoryDocs = authorSurface.categories ?? {}
 const categoryOrder = Object.keys(categoryDocs)
 
 const pkg = JSON.parse(readFileSync(resolve(runtimeDir, 'package.json'), 'utf8'))
-const rootRel = pkg.exports?.['.']
+const rootExport = pkg.exports?.['.']
+const rootRel =
+  typeof rootExport === 'string'
+    ? rootExport
+    : rootExport?.bun ||
+      rootExport?.development ||
+      rootExport?.default ||
+      rootExport?.types
 if (typeof rootRel !== 'string') {
-  throw new Error('@ship/sail-runtime package.json exports["."] must be a string path')
+  throw new Error('@ship/sail-runtime package.json exports["."] must name a source path')
 }
 const rootFile = resolve(runtimeDir, rootRel)
 
@@ -212,7 +219,27 @@ out += JSON.stringify(entries, null, 2)
 out += '\n'
 
 const dest = resolve(here, '../src/runtime-surface.gen.ts')
-writeFileSync(dest, out)
-console.log(
-  `wrote ${dest} (${entries.length} tier-B exports across ${categories.length} categories; root has ${rootNames.size} total names)`,
-)
+const args = process.argv.slice(2)
+const check = args.includes('--check')
+const outFlag = args.indexOf('--out')
+const destWrite =
+  outFlag >= 0 && args[outFlag + 1]
+    ? resolve(args[outFlag + 1]!)
+    : dest
+
+if (check) {
+  const committed = readFileSync(dest, 'utf8')
+  if (committed !== out) {
+    console.error(
+      'gen-runtime-surface --check: apps/sail-site/src/runtime-surface.gen.ts drifted\n' +
+        '  regenerate: bun apps/sail-site/scripts/gen-runtime-surface.ts',
+    )
+    process.exit(1)
+  }
+  console.log(`ok: runtime-surface.gen.ts (${entries.length} exports)`)
+} else {
+  writeFileSync(destWrite, out)
+  console.log(
+    `wrote ${destWrite} (${entries.length} tier-B exports across ${categories.length} categories; root has ${rootNames.size} total names)`,
+  )
+}

@@ -1,0 +1,89 @@
+{
+  "productOut": ".deck",
+  "typesOut": "node_modules/.sail",
+  "forbiddenOut": [".sail-out", ".sail", "test-results"],
+  "trackedGenerated": [
+    {
+      "path": "apps/sail-site/src/language-surface.gen.ts",
+      "emitter": "cargo run -p sail-compiler -- prop-registry",
+      "gate": "stdlib-coupled — check after L1 stdlib move"
+    },
+    {
+      "path": "apps/sail-site/src/prop-registry.gen.ts",
+      "emitter": "cargo run -p sail-compiler -- prop-registry",
+      "gate": "stdlib-coupled — check after L1 stdlib move"
+    },
+    {
+      "path": "crates/sail/compiler/primitives.json",
+      "emitter": "cargo run -p sail-compiler -- prop-registry",
+      "gate": "stdlib-coupled — check after L1 stdlib move"
+    },
+    {
+      "path": "apps/sail-site/src/runtime-surface.gen.ts",
+      "emitter": "apps/sail-site/scripts/gen-runtime-surface.ts",
+      "gate": "bun apps/sail-site/scripts/gen-runtime-surface.ts --check"
+    },
+    {
+      "path": "apps/sail-site/src/compositions/tutorial-data.ts",
+      "emitter": "apps/sail-site/scripts/gen-tutorial.ts",
+      "gate": "bun apps/sail-site/scripts/gen-tutorial.ts --check"
+    },
+    {
+      "path": "crates/sail/lint/schemas/sail.config.schema.json",
+      "emitter": "sail_lint::emit_sail_config_schema",
+      "gate": "cargo test -p sail-lint --lib committed_schema"
+    },
+    {
+      "path": "packages/sail/grammar/grammar.js",
+      "emitter": "packages/sail/grammar bun run generate",
+      "gate": "packages/sail/grammar/tests/grammar_generated.rs"
+    },
+    {
+      "path": "packages/sail/grammar/queries/highlights.scm",
+      "emitter": "packages/sail/grammar bun run generate",
+      "gate": "packages/sail/grammar/tests/grammar_generated.rs"
+    },
+    {
+      "path": "packages/sail/grammar/queries/injections.scm",
+      "emitter": "packages/sail/grammar bun run generate",
+      "gate": "packages/sail/grammar/tests/injections.rs"
+    },
+    {
+      "path": "packages/components/sail/code-editor/src/sail-code-editor/sail-highlight-vocab.ts",
+      "emitter": "packages/sail/grammar bun run generate",
+      "gate": "packages/sail/grammar/scripts/generate-check.ts"
+    },
+    {
+      "path": "packages/sail/studio-client/src/generated/client.ts",
+      "emitter": "sail-ops codegen",
+      "gate": "packages/sail/studio-client/test/contract-drift.test.ts"
+    },
+    {
+      "path": "packages/sail/tokens/src/element-skins.css",
+      "emitter": "cargo run -p sail-compiler -- framework-css",
+      "gate": "stdlib-coupled — check after L1 stdlib move"
+    }
+  ],
+  "ignoredGenerated": [
+    "apps/*/routes.gen.ts",
+    "apps/*/entry.gen.ts",
+    "apps/*/components.gen.ts"
+  ],
+  "loadBearingScripts": [
+    {
+      "path": "apps/sail-site/scripts/gen-runtime-surface.ts",
+      "must": "--check",
+      "foldInto": "packages/sail/runtime (author-surface owner)"
+    },
+    {
+      "path": "apps/sail-site/scripts/gen-tutorial.ts",
+      "must": "--check",
+      "foldInto": "sail-compiler / docs content pipeline"
+    },
+    {
+      "path": "scripts/emit-package-dts.ts",
+      "must": "invoked by sail types",
+      "foldInto": "already sail types"
+    }
+  ]
+}

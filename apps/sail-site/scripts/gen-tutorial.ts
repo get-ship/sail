@@ -308,5 +308,23 @@ export function lessonBySlug(slug: string): TutorialLesson | null {
 }
 `
 
-writeFileSync(OUT, file)
-console.log(`gen-tutorial: ${lessons.length} lessons → ${OUT}`)
+const args = process.argv.slice(2)
+const check = args.includes('--check')
+const outFlag = args.indexOf('--out')
+const destWrite =
+  outFlag >= 0 && args[outFlag + 1] ? resolve(args[outFlag + 1]!) : OUT
+
+if (check) {
+  const committed = readFileSync(OUT, 'utf8')
+  if (committed !== file) {
+    console.error(
+      'gen-tutorial --check: src/compositions/tutorial-data.ts drifted\n' +
+        '  regenerate: node apps/sail-site/scripts/gen-tutorial.ts',
+    )
+    process.exit(1)
+  }
+  console.log(`ok: tutorial-data.ts (${lessons.length} lessons)`)
+} else {
+  writeFileSync(destWrite, file)
+  console.log(`gen-tutorial: ${lessons.length} lessons → ${destWrite}`)
+}

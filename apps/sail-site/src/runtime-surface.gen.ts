@@ -20,7 +20,7 @@ export interface RuntimeCategoryDoc {
 }
 
 /** Documented tier-B allowlist size (author-surface.json). */
-export const AUTHOR_RUNTIME_COUNT = 128
+export const AUTHOR_RUNTIME_COUNT = 147
 
 export const RUNTIME_CATEGORIES: RuntimeCategoryDoc[] = [
   {
@@ -76,7 +76,7 @@ export const RUNTIME_CATEGORIES: RuntimeCategoryDoc[] = [
   {
     "id": "host",
     "summary": "Host capability types on generated Scope (capabilities language page)",
-    "count": 2
+    "count": 21
   }
 ]
 
@@ -410,7 +410,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "category": "compositions",
     "name": "form",
     "kind": "function",
-    "signature": "<T extends Record<string, unknown>>(opts: FormOptions<T>): { fields: { [K in keyof T]: Signal<T[K]>; }; values: () => T; errors: () => Partial<Record<keyof T, string | null>>; valid: () => boolean; dirty: () => boolean; pending: () => boolean; lastError: () => Error | null; reset: () => void; submit: (e?: Event) => Promise<void>; }",
+    "signature": "<T extends Record<string, unknown>>(opts: FormOptions<T>): { fields: { [K in keyof T]: Signal<T[K]>; }; values: () => T; errors: () => Partial<Record<keyof T, string | null>>; valid: () => boolean; dirty: () => boolean; pending: () => boolean; lastError: () => Error | null; reset: () => void; submit: (e?: { preventDefault(): void; }) => Promise<void>; }",
     "doc": "`form({ initial, validate, submit })` — field signals, validation, submit state.",
     "loc": "src/compositions/form.ts:35"
   },
@@ -583,16 +583,16 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(): void",
     "doc": "Wipe ALL runtime theme overrides — both this session's previews and the committed overrides held in memory — and remove them from `:root`. Does NOT touch localStorage or the host backend (a full \"forget the persisted theme\" is `theme.commit({})` semantics plus a storage clear the host owns). Useful for a host tearing down / switching workspaces, and for test isolation.",
-    "loc": "src/theme.ts:215"
+    "loc": "src/theme.ts:217"
   },
   {
     "subpath": ".",
     "category": "theme",
     "name": "clearThemeScope",
     "kind": "function",
-    "signature": "(host: HTMLElement): void",
-    "doc": "Teardown a prior {@link theme.applyScope} on `host` — removes written custom properties and the theme/mode attrs this API set. Safe if never applied.",
-    "loc": "src/theme.ts:618"
+    "signature": "(host: SailHost): void",
+    "doc": "Teardown a prior {@link theme.applyScope} on `host` — removes written custom properties and the theme/mode attrs this API set. Safe if never applied. Author surface: pass a {@link SailHost} (opaque); framework unwraps to DOM.",
+    "loc": "src/theme.ts:624"
   },
   {
     "subpath": ".",
@@ -601,7 +601,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(): void",
     "doc": "Rehydrate committed overrides from localStorage and apply them to `:root`. The live-persistence boot step: a host's pre-paint script calls this so a committed live-preview survives a reload (the dev path needs no boot — the theme data file IS the source, and HMR re-themes). Safe to call server-side (no-op) and idempotent.",
-    "loc": "src/theme.ts:232"
+    "loc": "src/theme.ts:234"
   },
   {
     "subpath": ".",
@@ -610,7 +610,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "interface",
     "signature": "export interface LoweredThemeToken { path: string cssName: string value: string cssValue: string type: string }",
     "doc": "Leaf from the DTCG walk (mirrors compiler Token before css_value resolve).",
-    "loc": "src/theme.ts:286"
+    "loc": "src/theme.ts:288"
   },
   {
     "subpath": ".",
@@ -619,7 +619,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(doc: ThemeDoc, mode?: string | null): LowerThemeResult",
     "doc": "Lower a DTCG theme document for one mode into CSS custom-property writes.",
-    "loc": "src/theme.ts:435"
+    "loc": "src/theme.ts:437"
   },
   {
     "subpath": ".",
@@ -628,7 +628,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "interface",
     "signature": "export interface LowerThemeResult { mode: string themeId: string tokens: LoweredThemeToken[] patch: ThemeScopePatch }",
     "doc": "",
-    "loc": "src/theme.ts:294"
+    "loc": "src/theme.ts:296"
   },
   {
     "subpath": ".",
@@ -637,16 +637,16 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(hook: ThemePersist | null): void",
     "doc": "Register (or clear) the host persistence hook. Call once at host startup. Same seam shape as `@ship/tokens`' `setThemeTransport` — the runtime names no daemon URL; the host plugs one in.",
-    "loc": "src/theme.ts:56"
+    "loc": "src/theme.ts:58"
   },
   {
     "subpath": ".",
     "category": "theme",
     "name": "theme",
     "kind": "const",
-    "signature": "{ readonly preview: (patch: ThemePatch) => void; readonly commit: (patch: ThemePatch) => void; readonly reset: () => void; readonly current: () => ThemeState; readonly applyScope: (host: HTMLElement, options: ThemeApplyScopeOptions) => () => void; readonly clearScope: (host: HTMLElement) => void; }",
+    "signature": "{ readonly preview: (patch: ThemePatch) => void; readonly commit: (patch: ThemePatch) => void; readonly reset: () => void; readonly current: () => ThemeState; readonly applyScope: (host: SailHost, options: ThemeApplyScopeOptions) => () => void; readonly clearScope: (host: SailHost) => void; }",
     "doc": "`theme` — the sanctioned runtime theme-write hatch.",
-    "loc": "src/theme.ts:641"
+    "loc": "src/theme.ts:649"
   },
   {
     "subpath": ".",
@@ -655,7 +655,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "type",
     "signature": "export type Theme = typeof theme",
     "doc": "",
-    "loc": "src/theme.ts:651"
+    "loc": "src/theme.ts:659"
   },
   {
     "subpath": ".",
@@ -664,7 +664,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "interface",
     "signature": "export interface ThemeApplyScopeOptions { doc: ThemeDoc mode?: string | null }",
     "doc": "Options for {@link theme.applyScope}.",
-    "loc": "src/theme.ts:272"
+    "loc": "src/theme.ts:274"
   },
   {
     "subpath": ".",
@@ -673,7 +673,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "type",
     "signature": "export type ThemeDoc = Record<string, unknown>",
     "doc": "Loose DTCG theme document (modes-in-file or flat).",
-    "loc": "src/theme.ts:269"
+    "loc": "src/theme.ts:271"
   },
   {
     "subpath": ".",
@@ -682,7 +682,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "type",
     "signature": "export type ThemePatch = Record<ThemeTokenName, string>",
     "doc": "",
-    "loc": "src/theme.ts:29"
+    "loc": "src/theme.ts:31"
   },
   {
     "subpath": ".",
@@ -691,7 +691,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "type",
     "signature": "export type ThemePersist = (patch: ThemePatch) => void | Promise<void>",
     "doc": "Host persistence hook. Registered once at host startup via `setThemePersist`. - dev: serialize the patch into the app's theme data file (the `themes.ts` fork) so HMR re-themes and it round-trips in source. - live: write-through to a host-configured backend. Omitted ⇒ persistence is localStorage-only (the default, owner-recommended). Fire-and-forget; a rejected promise is swallowed (the local cache is still correct).",
-    "loc": "src/theme.ts:49"
+    "loc": "src/theme.ts:51"
   },
   {
     "subpath": ".",
@@ -700,7 +700,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "type",
     "signature": "export type ThemeScopePatch = Record<string, string>",
     "doc": "One lowered token: css custom-property name (`--x`) → CSS value.",
-    "loc": "src/theme.ts:283"
+    "loc": "src/theme.ts:285"
   },
   {
     "subpath": ".",
@@ -709,7 +709,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "interface",
     "signature": "export interface ThemeState { id: string tokens: Record<string, string> }",
     "doc": "What `theme.current()` reports.",
-    "loc": "src/theme.ts:32"
+    "loc": "src/theme.ts:34"
   },
   {
     "subpath": ".",
@@ -718,7 +718,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "type",
     "signature": "export type ThemeTokenName = string",
     "doc": "A patch maps token names (`--foo`) to CSS values. TokenName is validated at write time against the registered `@property` tokens (or a declared `:root` var); a non-token key is refused.",
-    "loc": "src/theme.ts:28"
+    "loc": "src/theme.ts:30"
   },
   {
     "subpath": ".",
@@ -943,7 +943,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(node: Element, param: ClipboardParam): void | ActionResult<ClipboardParam>",
     "doc": "Copy param text (or host text content) to the clipboard on click.",
-    "loc": "src/actions/clipboard.ts:47"
+    "loc": "src/actions/clipboard.ts:67"
   },
   {
     "subpath": ".",
@@ -979,7 +979,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(node: Element, param: undefined): void | ActionResult<undefined>",
     "doc": "Wire click-to-browse + drag-and-drop onto a container holding an `<input type=\"file\">`.",
-    "loc": "src/actions/dropzone.ts:24"
+    "loc": "src/actions/dropzone.ts:20"
   },
   {
     "subpath": ".",
@@ -1150,7 +1150,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "<Bindings>(setup: MountSetup<Bindings>): MountModule<Bindings> | <Bindings>(tag: string, def: ComponentDef<Bindings>, module: MountModule<Bindings>): void",
     "doc": "`component(...)` — the one factory a compiled `.sail` exports. Two shapes, disjoint on the first argument so the compiler (and the rare direct caller) can never confuse them:",
-    "loc": "src/component-factory.ts:244"
+    "loc": "src/component-factory.ts:258"
   },
   {
     "subpath": ".",
@@ -1159,7 +1159,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "interface",
     "signature": "export interface ComponentDef<Bindings = unknown> { styles?: string shadow?: boolean formAssociated?: boolean formValue?: string formDisabled?: string props: Record<string, PropDef<unknown>> setup?: (",
     "doc": "Declarative shape passed to `component()`.",
-    "loc": "src/component-factory.ts:106"
+    "loc": "src/component-factory.ts:109"
   },
   {
     "subpath": ".",
@@ -1186,7 +1186,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "interface",
     "signature": "export interface ComponentSetupContext { props: Record<string, Signal<unknown>> host: HTMLElement cleanups: Array<() => void> internals?: ElementInternals }",
     "doc": "The setup callback's context. Mirrors `ComponentFactory` in shape.",
-    "loc": "src/component-factory.ts:91"
+    "loc": "src/component-factory.ts:94"
   },
   {
     "subpath": ".",
@@ -1204,7 +1204,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "const",
     "signature": "{ string(opts?: PropOpts<string>): PropDef<string>; bool(opts?: PropOpts<boolean>): PropDef<boolean>; number(opts?: PropOpts<number>): PropDef<number>; union<V extends readonly string[]>(values: V, opts?: PropOpts<V[number]>): PropDef<V[number]>; property<T>(opts?: PropOpts<T>): PropDef<T>; }",
     "doc": "Builders for declarative `PropDef` entries used by `component()`.",
-    "loc": "src/component-factory.ts:56"
+    "loc": "src/component-factory.ts:59"
   },
   {
     "subpath": ".",
@@ -1213,7 +1213,25 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "interface",
     "signature": "export interface PropDef<T> { type: 'string' | 'bool' | 'number' | 'union' | 'property' default?: T reflect?: boolean bindable?: boolean values?: readonly string[] }",
     "doc": "Declarative description of a component prop.",
-    "loc": "src/component-factory.ts:24"
+    "loc": "src/component-factory.ts:27"
+  },
+  {
+    "subpath": ".",
+    "category": "host",
+    "name": "asSailHost",
+    "kind": "function",
+    "signature": "(node: unknown): SailHost",
+    "doc": "Coerce a handed action `node` (or other host value) to SailHost (identity on web).",
+    "loc": "src/sail-host.ts:34"
+  },
+  {
+    "subpath": ".",
+    "category": "host",
+    "name": "defineHostProperty",
+    "kind": "function",
+    "signature": "(host: SailHost, name: string, desc: HostPropertyDesc): () => void",
+    "doc": "Install an identity property on `host`. Returns a disposer that removes the property (or restores the prior descriptor).",
+    "loc": "src/host-property.ts:22"
   },
   {
     "subpath": ".",
@@ -1227,10 +1245,163 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
   {
     "subpath": ".",
     "category": "host",
+    "name": "hostCreateElement",
+    "kind": "function",
+    "signature": "(tag: string): HTMLElement",
+    "doc": "Create an element (boundary template promote, etc.).",
+    "loc": "src/host-property.ts:185"
+  },
+  {
+    "subpath": ".",
+    "category": "host",
+    "name": "hostCssVar",
+    "kind": "function",
+    "signature": "(name: string): string",
+    "doc": "Read a CSS custom property from the document element.",
+    "loc": "src/host-property.ts:172"
+  },
+  {
+    "subpath": ".",
+    "category": "host",
+    "name": "hostDispatch",
+    "kind": "function",
+    "signature": "(node: unknown, type: string, opts?: { bubbles?: boolean; composed?: boolean; cancelable?: boolean; detail?: unknown; }): boolean",
+    "doc": "Dispatch a named event on a handed node (Pure-safe — no Event constructor in authors).",
+    "loc": "src/host-property.ts:91"
+  },
+  {
+    "subpath": ".",
+    "category": "host",
+    "name": "hostFindById",
+    "kind": "function",
+    "signature": "(id: string): HTMLElement | null",
+    "doc": "`document.getElementById` without naming document.",
+    "loc": "src/host-property.ts:180"
+  },
+  {
+    "subpath": ".",
+    "category": "host",
+    "name": "hostGetAttr",
+    "kind": "function",
+    "signature": "(host: SailHost | null | undefined, name: string): string | null",
+    "doc": "Read a host attribute (Pure-safe — no HTMLElement methods on authors).",
+    "loc": "src/host-property.ts:55"
+  },
+  {
+    "subpath": ".",
+    "category": "host",
+    "name": "hostHasAttr",
+    "kind": "function",
+    "signature": "(host: SailHost | null | undefined, name: string): boolean",
+    "doc": "Presence check for a host attribute.",
+    "loc": "src/host-property.ts:62"
+  },
+  {
+    "subpath": ".",
+    "category": "host",
+    "name": "hostIsDarkMode",
+    "kind": "function",
+    "signature": "(): boolean",
+    "doc": "True when `<html mode=\"dark\">` (or equivalent theme dark).",
+    "loc": "src/host-property.ts:166"
+  },
+  {
+    "subpath": ".",
+    "category": "host",
+    "name": "hostListenDocument",
+    "kind": "function",
+    "signature": "(event: string, handler: () => void): () => void",
+    "doc": "Listen on document for a named event; returns disposer.",
+    "loc": "src/host-property.ts:208"
+  },
+  {
+    "subpath": ".",
+    "category": "host",
+    "name": "hostObserveRootAttrs",
+    "kind": "function",
+    "signature": "(attrs: string[], cb: () => void): () => void",
+    "doc": "Observe attribute changes on the document element; returns disposer.",
+    "loc": "src/host-property.ts:192"
+  },
+  {
+    "subpath": ".",
+    "category": "host",
+    "name": "HostPropertyDesc",
+    "kind": "type",
+    "signature": "export type HostPropertyDesc = { get: () => unknown set?: (value: unknown) => void }",
+    "doc": "",
+    "loc": "src/host-property.ts:13"
+  },
+  {
+    "subpath": ".",
+    "category": "host",
+    "name": "hostSetAttr",
+    "kind": "function",
+    "signature": "(host: SailHost | null | undefined, name: string, value: string | boolean | null | undefined): void",
+    "doc": "Write/remove a host attribute (`null`/`false` removes; `true` = presence).",
+    "loc": "src/host-property.ts:69"
+  },
+  {
+    "subpath": ".",
+    "category": "host",
+    "name": "objectUrlFromBytes",
+    "kind": "function",
+    "signature": "(data: Bytes, type?: string): string",
+    "doc": "Mint a blob: object URL from bytes. Caller must `revokeObjectUrl` when done. Optional MIME `type` is forwarded to the underlying Blob.",
+    "loc": "src/object-url.ts:26"
+  },
+  {
+    "subpath": ".",
+    "category": "host",
+    "name": "observeContentBox",
+    "kind": "function",
+    "signature": "(node: unknown, onBox: (width: number, height: number) => void): () => void",
+    "doc": "Observe content-box size of a handed action `node` (or SailHost). Pure-safe stand-in for naming `ResizeObserver` in product modules.",
+    "loc": "src/host-property.ts:116"
+  },
+  {
+    "subpath": ".",
+    "category": "host",
+    "name": "observeHostAttrs",
+    "kind": "function",
+    "signature": "(node: unknown, attrs: string[], cb: () => void): () => void",
+    "doc": "Observe attribute changes on a handed host/node; returns disposer.",
+    "loc": "src/host-property.ts:216"
+  },
+  {
+    "subpath": ".",
+    "category": "host",
+    "name": "revokeObjectUrl",
+    "kind": "function",
+    "signature": "(url: string): void",
+    "doc": "Revoke a URL previously returned by {@link objectUrlFromBytes}.",
+    "loc": "src/object-url.ts:40"
+  },
+  {
+    "subpath": ".",
+    "category": "host",
     "name": "RouteSignals",
     "kind": "interface",
     "signature": "export interface RouteSignals { params: Record<string, Signal<string | undefined>> query: Record<string, Signal<string | undefined>> pathname: Signal<string> hash: Signal<string> }",
     "doc": "The reactive URL handle exposed to route scope as `route`. SAIL's structural view of the deck-side `RouteSignals` — every property is a `Signal` (already a SAIL primitive) so the route's typed scope can read `scope.route.params.<name>()` and subscribe to changes.",
     "loc": "src/route-signals.ts:26"
+  },
+  {
+    "subpath": ".",
+    "category": "host",
+    "name": "SailHost",
+    "kind": "type",
+    "signature": "export type SailHost = { readonly [__sailHostBrand]: typeof __sailHostBrand }",
+    "doc": "Opaque branded host identity — no callables, no readable props for authors.",
+    "loc": "src/sail-host.ts:17"
+  },
+  {
+    "subpath": ".",
+    "category": "host",
+    "name": "scheduleFrame",
+    "kind": "function",
+    "signature": "(fn: () => void): void",
+    "doc": "Schedule work on the next animation frame (microtask fallback). Pure product code must not name `requestAnimationFrame` — use this. Implemented via structural `globalThis` check (no DOM lib name required).",
+    "loc": "src/sail-host.ts:24"
   }
 ]
