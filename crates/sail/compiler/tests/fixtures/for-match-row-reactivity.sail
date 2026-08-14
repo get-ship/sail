@@ -1,15 +1,18 @@
+<scope>
+  export type Task = {
+    id: string
+    label: string
+    status: 'todo' | 'done'
+  }
+</scope>
+
 <controller>
 // Keyed <for> + nested <match> fixture. `toggle(id)` replaces the row object
 // (same `id` key, so bindFor's keyed-reuse path fires — no remount) but flips
 // `status`, which should re-select the <match> arm WITHOUT changing which
 // row is mounted.
+// Task lives in <scope> — types are the static surface, not controller code.
 import { controller, signal } from '@ship/sail-runtime'
-
-export interface Task {
-  id: string
-  label: string
-  status: 'todo' | 'done'
-}
 
 export default controller(() => {
   const tasks = signal<Task[]>([

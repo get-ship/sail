@@ -19,9 +19,9 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-use sail_compiler::CompileMode;
-use sail_compiler::emit::synthetic::{AppManifest, AuthoredController, emit_synthetic};
+use sail_compiler::emit::synthetic::{emit_synthetic, AppManifest, AuthoredController};
 use sail_compiler::parse::parse;
+use sail_compiler::CompileMode;
 
 fn repo_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -54,11 +54,16 @@ fn keyed_for_row_reuse_reselects_nested_match_branch() {
     let _ = fs::remove_dir_all(&work);
     fs::create_dir_all(&work).unwrap();
     let authored_path = work.join("fm.authored.ts");
-    fs::write(
-        &authored_path,
-        inline.expect("fixture declares a <controller> block"),
-    )
-    .unwrap();
+    let controller = inline.expect("fixture declares a <controller> block");
+    // Scope types are the static surface — thread them into the authored
+    // controller the way the SFC compiler does.
+    let authored_src = match (raw.find("<scope>"), raw.find("</scope>")) {
+        (Some(a), Some(b)) if a < b => {
+            format!("{}\n{controller}", raw[a + "<scope>".len()..b].trim())
+        }
+        _ => controller,
+    };
+    fs::write(&authored_path, authored_src).unwrap();
     let authored = AuthoredController {
         specifier: authored_path.to_string_lossy().into_owned(),
     };

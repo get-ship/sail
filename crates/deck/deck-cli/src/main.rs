@@ -1266,6 +1266,7 @@ fn dev(project: PathBuf, addr: String) -> Result<()> {
             let cat_edit = Arc::clone(&catalog_model_edit);
             let gate_unknown = Arc::clone(&hmr_gate_unknown);
             let project_for_cb = project_dir.clone();
+            let project_tsconfig = project_dir.join("tsconfig.json");
             let workspace_for_watch = workspace_root.clone();
             // Attach commands: callback must not call `watch` re-entrantly on
             // some backends; a dedicated thread owns re-attach under the mutex.
@@ -1321,6 +1322,10 @@ fn dev(project: PathBuf, addr: String) -> Result<()> {
                                 .and_then(|n| n.to_str())
                                 .is_some_and(|n| n.starts_with(".deck.stage"))
                             || is_tokens_generated_delivery(&s)
+                            // HMR rebuild re-emits the generated solution
+                            // tsconfig at the project root. Even a same-bytes
+                            // write used to bump mtime and loop; ignore it.
+                            || p == project_tsconfig.as_path()
                     });
                 if all_generated {
                     return;

@@ -27,11 +27,11 @@ use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result};
 
-use spinnaker::component_surfaces;
 use sail_lint::scales;
 use sail_lint::token_groups::{self, color_group_names, color_groups, size_step_names};
-use spinnaker::plains::{PlainSpec, find_plain};
-use spinnaker::{VocabRow, VocabTag, find_concern, vocab_rows};
+use spinnaker::component_surfaces;
+use spinnaker::plains::{find_plain, PlainSpec};
+use spinnaker::{find_concern, vocab_rows, VocabRow, VocabTag};
 
 /// Relative path of the ambient pack inside a sail project (SPEC-OUTPUT-1 §4).
 /// Lives under `node_modules/.sail/` so `rm -rf node_modules` clears it;
@@ -987,6 +987,22 @@ fn sweep_stale_sail_kind_tsconfigs(project: &Path) {
     }
 }
 
+/// Write `contents` only when the file is missing or the bytes differ.
+/// Same-bytes writes still bump mtime and will self-trigger `sail dev` HMR
+/// when the project root is watched.
+fn write_if_changed(path: &Path, contents: &str) -> Result<bool> {
+    if let Ok(existing) = fs::read_to_string(path) {
+        if existing == contents {
+            return Ok(false);
+        }
+    }
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent).with_context(|| format!("mkdir {}", parent.display()))?;
+    }
+    fs::write(path, contents).with_context(|| format!("write {}", path.display()))?;
+    Ok(true)
+}
+
 /// Write ambient packs + pure/action kind tsconfigs under
 /// [`PROJECT_SAIL_DIR_REL`], plus a solution-style root `tsconfig.json`.
 ///
@@ -999,19 +1015,14 @@ pub fn write_project_type_configs(project: &Path) -> Result<(PathBuf, PathBuf, P
     let types = write_project_types(project)?;
     let pure_path = project.join(PROJECT_TSCONFIG_SAIL_REL);
     let action_path = project.join(PROJECT_TSCONFIG_ACTION_REL);
-    if let Some(parent) = pure_path.parent() {
-        fs::create_dir_all(parent).with_context(|| format!("mkdir {}", parent.display()))?;
-    }
-    fs::write(
+    write_if_changed(
         &pure_path,
-        emit_project_tsconfig_json_for(TypeEnv::Sail, PROJECT_SAIL_INCLUDE),
-    )
-    .with_context(|| format!("write {}", pure_path.display()))?;
-    fs::write(
+        &emit_project_tsconfig_json_for(TypeEnv::Sail, PROJECT_SAIL_INCLUDE),
+    )?;
+    write_if_changed(
         &action_path,
-        emit_project_tsconfig_json_for(TypeEnv::Action, PROJECT_ACTION_INCLUDE),
-    )
-    .with_context(|| format!("write {}", action_path.display()))?;
+        &emit_project_tsconfig_json_for(TypeEnv::Action, PROJECT_ACTION_INCLUDE),
+    )?;
     // Root tsconfig.json is a solution that references pure + action children.
     let default_path = project.join("tsconfig.json");
     // Only overwrite when the file carries our GENERATED marker or is absent —
@@ -1022,8 +1033,7 @@ pub fn write_project_type_configs(project: &Path) -> Result<(PathBuf, PathBuf, P
         Err(_) => true,
     };
     if should_write_default {
-        fs::write(&default_path, emit_project_solution_tsconfig_json())
-            .with_context(|| format!("write {}", default_path.display()))?;
+        write_if_changed(&default_path, &emit_project_solution_tsconfig_json())?;
     }
     // Pre-G2c root kind files are dead; drop when sail-owned.
     remove_legacy_root_kind_tsconfigs(project);
@@ -2492,6 +2502,22 @@ mod tests {
     }
 
     #[test]
+    fn generated_tsconfig_rewrite_does_not_bump_mtime() {
+        let dir = tempfile::tempdir().unwrap();
+        let root = dir.path();
+        write_project_type_configs(root).unwrap();
+        let ts = root.join("tsconfig.json");
+        let mtime = fs::metadata(&ts).unwrap().modified().unwrap();
+        std::thread::sleep(std::time::Duration::from_millis(20));
+        write_project_type_configs(root).unwrap();
+        let again = fs::metadata(&ts).unwrap().modified().unwrap();
+        assert_eq!(
+            mtime, again,
+            "same-bytes tsconfig.json rewrite must not bump mtime (HMR loop)"
+        );
+    }
+
+    #[test]
     fn pure_and_action_tsconfig_emit_esnext_only_lib() {
         for env in [TypeEnv::Sail, TypeEnv::Action] {
             let opts = sail_tsconfig_compiler_options_json_for(env);
@@ -2537,13 +2563,12 @@ mod tests {
         let dts = emit_action_observation_dts();
         assert!(dts.contains("requestAnimationFrame"));
         assert!(dts.contains("ResizeObserver"));
-        assert!(
-            !dts.lines()
-                .filter(|l| !l.trim_start().starts_with("//"))
-                .any(|l| {
-                    l.contains("declare var document") || l.contains("declare const document")
-                })
-        );
+        assert!(!dts
+            .lines()
+            .filter(|l| !l.trim_start().starts_with("//"))
+            .any(|l| {
+                l.contains("declare var document") || l.contains("declare const document")
+            }));
     }
 
     #[test]
