@@ -198,9 +198,6 @@ export const L1_CATALOG = [
 
 export type L1Id = (typeof L1_CATALOG)[number]
 
-/** @deprecated Prefer L1_CATALOG — radius C2 applies to every L1 via component.{id}.radius. */
-export const RADIUS_OVERRIDE_L1S = L1_CATALOG
-
 /** Display label for an L1 tag (`a` → Anchor, `menu-item` → Menu Item). */
 export function l1Label(id: string): string {
   if (id === 'a') return 'Anchor'
@@ -342,7 +339,6 @@ export function setPathValue(
   value: string,
   type = 'dimension',
   modeId: 'light' | 'dark' = 'light',
-  /** @deprecated Ignored — public names are generator-owned. */
   _cssName?: string,
 ): Record<string, unknown> {
   const target = resolveWritePath(doc, path, modeId)
@@ -777,8 +773,7 @@ export function themeFilesFromList(
 
 export function projectThemesDir(projectRoot: string): string {
   // projectRoot may be apps/studio or absolute; keep workspace-relative when possible.
-  // Modern layout: <project>/themes (EXT-1 E4). Dual-read of legacy
-  // tokens/themes is compiler/ops-side; studio write/list path is modern.
+  // Project theme JSON lives at <project>/themes (EXT-1 E4).
   const norm = projectRoot.replace(/\\/g, '/').replace(/\/$/, '')
   if (norm.startsWith('apps/')) return `${norm}/themes`
   const m = norm.match(/\/(apps\/[^/]+(?:\/[^/]+)*)$/)

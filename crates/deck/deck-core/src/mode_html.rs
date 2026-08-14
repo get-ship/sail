@@ -119,8 +119,6 @@ pub fn sail_project_rel_from_root(project_root: &std::path::Path) -> Option<Stri
 /// portable design studio lists/saves the correct project themes dir.
 ///
 /// Values are workspace-relative (`apps/<name>` / `apps/<name>/themes`).
-/// Prefer modern `<project>/themes`; dual-read legacy `<project>/tokens/themes`
-/// only when that is the only existing dir (transition).
 pub fn inject_project_themes_meta(html: &str, project_root: &std::path::Path) -> String {
     let Some(project) = sail_project_rel_from_root(project_root) else {
         return html.to_string();
@@ -130,16 +128,9 @@ pub fn inject_project_themes_meta(html: &str, project_root: &std::path::Path) ->
     inject_named_meta(&html, "sail-project-themes", &themes)
 }
 
-/// Workspace-relative themes dir for meta stamp: modern `…/themes`, else legacy
-/// `…/tokens/themes` when that alone exists.
-fn project_themes_rel_path(project_rel: &str, project_root: &std::path::Path) -> String {
-    let modern = project_root.join("themes");
-    let legacy = project_root.join("tokens").join("themes");
-    if modern.is_dir() || !legacy.is_dir() {
-        format!("{project_rel}/themes")
-    } else {
-        format!("{project_rel}/tokens/themes")
-    }
+/// Workspace-relative themes dir for meta stamp: `…/themes`.
+fn project_themes_rel_path(project_rel: &str, _project_root: &std::path::Path) -> String {
+    format!("{project_rel}/themes")
 }
 
 /// Inject `<meta name="sail-effective-themes" content="id1,id2,…">` so the
@@ -148,7 +139,7 @@ fn project_themes_rel_path(project_rel: &str, project_root: &std::path::Path) ->
 ///
 /// Catalog membership comes from the **baked** DTCG model — no monorepo
 /// ancestor walk for `packages/sail/tokens`. Project themes are read from
-/// `<project>/themes` and legacy `<project>/tokens/themes`.
+/// `<project>/themes`.
 ///
 /// When effective ids fail, HTML is unchanged (client falls back to full
 /// `THEMES` or ops fetch).
@@ -292,20 +283,7 @@ mod tests {
     }
 
     #[test]
-    fn inject_project_themes_meta_dual_read_legacy_only() {
-        let dir = tempfile::tempdir().unwrap();
-        let app = dir.path().join("apps").join("legacy-app");
-        std::fs::create_dir_all(app.join("tokens/themes")).unwrap();
-        let html = "<head>\n<title>X</title>\n</head>";
-        let out = inject_project_themes_meta(html, &app);
-        assert!(
-            out.contains("name=\"sail-project-themes\" content=\"apps/legacy-app/tokens/themes\""),
-            "legacy-only app should stamp tokens/themes: {out}"
-        );
-    }
-
-    #[test]
-    fn inject_project_themes_meta_prefers_modern_when_both() {
+    fn inject_project_themes_meta_stamps_themes_even_if_tokens_themes_exists() {
         let dir = tempfile::tempdir().unwrap();
         let app = dir.path().join("apps").join("dual-app");
         std::fs::create_dir_all(app.join("themes")).unwrap();
@@ -318,7 +296,7 @@ mod tests {
         );
         assert!(
             !out.contains("apps/dual-app/tokens/themes"),
-            "must not stamp legacy when modern exists: {out}"
+            "must stamp themes/ only: {out}"
         );
     }
 

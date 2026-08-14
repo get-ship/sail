@@ -119,7 +119,7 @@ export function attachHostApi(host: HTMLElement): void {
  *
  * Replaces the manual `addEventListener` / `removeEventListener`
  * pair that controllers were balancing by hand — 140 add / 129
- * remove call sites pre-migration; the gap was the leak surface.
+ * remove call sites before the cutover; the gap was the leak surface.
  *
  * @example
  * ```ts

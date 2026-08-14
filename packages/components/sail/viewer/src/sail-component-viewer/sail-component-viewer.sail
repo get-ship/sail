@@ -7,7 +7,7 @@
              optional snippet prop → live markup + copy under specimen
       right fixed knobs column · start-aligned → slot name=knobs
 
-  layout="stage" (legacy / host-owned row):
+  layout="stage" (host-owned row):
     full-bleed → slot name=stage
 
   Usage: code (default) · live (slot usage-preview) · split (side by side).

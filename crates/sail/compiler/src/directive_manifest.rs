@@ -282,7 +282,7 @@ pub const EVENT_NAMES: &[EventEntry] = &[
     },
     EventEntry {
         name: "keypress",
-        summary: "character key pressed (deprecated; prefer keydown)",
+        summary: "character key pressed; prefer keydown",
     },
     // ── focus ────────────────────────────────────────────────────────
     EventEntry {

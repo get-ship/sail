@@ -22,7 +22,7 @@
 //!
 //! # Out of scope (do not weaken gates into these)
 //!
-//! - Mass migration of anonymous sites
+//! - Mass rewrite of anonymous sites
 //! - Text golden of full message catalogs
 //! - Completeness of every lint / compiler throw site
 

@@ -348,7 +348,7 @@ export async function saveThemeOn(ctx: ThemeIoCtx): Promise<boolean> {
       statusNote: 'Theme saved',
     })
     ctx.emit()
-    // Registered CSS tables for cold path / non-apply consumers.
+    // Registered CSS tables for attr-only / non-apply consumers.
     await generateAppThemes(ctx, true)
     await ctx.repaintSpecimen()
     return true

@@ -910,7 +910,7 @@ pub const PROJECT_TSCONFIG_SAIL_REL: &str = "node_modules/.sail/tsconfig.sail.js
 /// Relative path of the generated Action-env project tsconfig (G2c — under `.sail/`).
 pub const PROJECT_TSCONFIG_ACTION_REL: &str = "node_modules/.sail/tsconfig.action.json";
 
-/// Legacy root-level kind configs (pre-G2c). Removed on regenerate when marked GENERATED.
+/// Pre-G2c root-level kind configs. Removed on regenerate when marked GENERATED.
 const LEGACY_ROOT_TSCONFIG_PURE: &str = "tsconfig.pure.json";
 const LEGACY_ROOT_TSCONFIG_ACTION: &str = "tsconfig.action.json";
 
@@ -1168,7 +1168,7 @@ fn emit_token_group_types(out: &mut String) {
         out.push_str(&format!("  | 'tone.{m}'\n"));
     }
     out.push('\n');
-    // Historic alias for generated docs that still name SailBoundTonePath.
+    // Historic name used by generated docs that still name SailBoundTonePath.
     out.push_str("type SailBoundTonePath = SailBoundGroupPath\n\n");
 
     out.push_str(
@@ -2487,15 +2487,15 @@ mod tests {
             r#"{ "$comment": "scratch" }"#,
         )
         .unwrap();
-        // Pre-G2c legacy root kind files — must be removed when sail-owned.
+        // Pre-G2c root kind files — must be removed when sail-owned.
         fs::write(
             project.join(LEGACY_ROOT_TSCONFIG_PURE),
-            r#"{ "$comment": "GENERATED legacy pure" }"#,
+            r#"{ "$comment": "GENERATED pre-G2c pure" }"#,
         )
         .unwrap();
         fs::write(
             project.join(LEGACY_ROOT_TSCONFIG_ACTION),
-            r#"{ "$comment": "GENERATED legacy action" }"#,
+            r#"{ "$comment": "GENERATED pre-G2c action" }"#,
         )
         .unwrap();
 
@@ -2518,7 +2518,7 @@ mod tests {
         assert!(
             !project.join(LEGACY_ROOT_TSCONFIG_PURE).exists()
                 && !project.join(LEGACY_ROOT_TSCONFIG_ACTION).exists(),
-            "legacy root kind tsconfigs must be deleted"
+            "pre-G2c root kind tsconfigs must be deleted"
         );
         assert!(
             !sail_dir.join("tsconfig.pure.g2d.json").exists()

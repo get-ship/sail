@@ -10,7 +10,7 @@
 // playground (viewer/wasm-bootstrap.ts + lsp-browser) keeps the wasm surface;
 // this path is the Node test harness only.
 //
-// The legacy `@ship/sail-dom/legacy` path is gone — every directive must
+// The `@ship/sail-dom` retired import is gone — every directive must
 // round-trip through Rust now. This helper is the only test-time bridge
 // between `.sail` source and a mounted DOM tree.
 
@@ -316,7 +316,7 @@ export interface MountHandle {
   dispose: () => void
 }
 
-/** Compile + eval + mount in one call. Mirrors the legacy `hydrate(template, setup, opts)` shape. */
+/** Compile + eval + mount in one call. Mirrors the `hydrate(template, setup, opts)` shape. */
 export function compileAndMount(source: string, setup: UserSetup, opts: MountOpts): MountHandle {
   const usesSetup = setup != null
   const compileOpts: CompileOpts = usesSetup ? { setupMarker: SETUP_MARKER } : {}
@@ -349,7 +349,7 @@ export function compileAndMount(source: string, setup: UserSetup, opts: MountOpt
   return {
     dispose: () => {
       try { cleanup() } catch {}
-      // Mirror legacy hydrate: remove every node mount appended so
+      // Mirror hydrate: remove every node mount appended so
       // `container.children` is empty after dispose.
       for (const n of Array.from(opts.container.childNodes)) {
         if (!before.has(n)) n.parentNode?.removeChild(n)

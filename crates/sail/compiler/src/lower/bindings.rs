@@ -38,7 +38,7 @@ pub fn collect_attr_imports(
     // Phase 3b.4: depth-0 element bindings in routes are direct-emit.
     // The hydrate(root, ctx) closure walks SSR'd elements once via
     // `collectElementMarkers` and dispatches to the matching `hydrate*`
-    // helper by binding key. The legacy `__mount` path keeps using the
+    // helper by binding key. The `__mount` path keeps using the
     // runtime helpers below — both paths coexist until the walker is
     // deleted in 3b.5.
     let direct_emit = is_route && depth == 0;

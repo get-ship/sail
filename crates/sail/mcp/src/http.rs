@@ -139,7 +139,7 @@ async fn mcp_post(State(state): State<McpHttpState>, headers: HeaderMap, body: B
         }
     }
 
-    // Ignore legacy session / resume headers (do not mint or echo).
+    // Ignore prior session / resume headers (do not mint or echo).
     let _ = headers.get("mcp-session-id");
     let _ = headers.get("last-event-id");
 

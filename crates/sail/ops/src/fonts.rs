@@ -579,7 +579,7 @@ fn write_type_role_tokens(
     project: &Path,
     family: &str,
 ) -> Result<Option<String>, OpError> {
-    // Modern `themes/` then legacy `tokens/themes/` (EXT-1 E4 dual layout).
+    // Project `themes/` (EXT-1 E4).
     let theme_dirs = sail_compiler::tokens_generate::project_theme_dirs(project);
     let mut theme_file: Option<PathBuf> = None;
     for themes_dir in &theme_dirs {

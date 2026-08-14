@@ -986,7 +986,7 @@ fn dev(project: PathBuf, addr: String) -> Result<()> {
         let cfg = deck_config::DeckConfig::defaults();
 
         // Cold-start tokens generate when the project has theme SSOT on disk
-        // (themes/*.json, legacy tokens/themes, or sail.config theme section).
+        // (themes/*.json or sail.config theme section).
         // Without this,
         // project DTCG only re-enters the emit set after a watch event — first
         // paint after restart would stay catalog-only package CSS.
@@ -1218,10 +1218,10 @@ fn dev(project: PathBuf, addr: String) -> Result<()> {
         // document reload. (Module-granular reload is the next layer.)
         //
         // Watch roots:
-        // - project `routes/` + `src/` + `public/` + `themes/` (+ legacy
-        //   `tokens/`) — never project root / `.deck/` (regenerated
+        // - project `routes/` + `src/` + `public/` + `themes/`
+        //   — never project root / `.deck/` (regenerated
         //   `routes.gen.ts` / out dir must not self-trigger). Project theme
-        //   SSOT is `themes/**` (legacy dual-read: `tokens/themes/**`).
+        //   SSOT is `themes/**`.
         // - workspace components package `src/` trees (and package root if no `src/`)
         //   so edits under `packages/components/...` HMR like local rails —
         //   previously only the app tree was watched and components-package edits needed a
@@ -1231,8 +1231,8 @@ fn dev(project: PathBuf, addr: String) -> Result<()> {
         //   are outputs of `sail-compiler tokens`).
         //
         // Live theme edit path (only supported path):
-        //   save DTCG under themes/ (or legacy tokens/themes) or model/themes
-        //   (or project sail.config theme section) → dual tokens generate:
+        //   save DTCG under themes/ or model/themes
+        //   (or project sail.config theme section) → tokens generate:
         //     package: full catalog + project → packages/sail/tokens/src
         //     app:     T0 effective set → <project>/.deck/themes/themes.css (B1)
         //   → HMR swaps CSS. No client IR / :root setProperty.
@@ -1586,7 +1586,7 @@ fn dev(project: PathBuf, addr: String) -> Result<()> {
         // NOT merged here — standalone deck has no live query() source (#32).
         use axum::routing::get;
         // Connect unary: sail.ops.v1.* — same handlers as MCP + `sail op`.
-        // Theme list/read/write/fork/generate replace legacy `/_deck/dev/*` FS.
+        // Theme list/read/write/fork/generate replace the old `/_deck/dev/*` FS.
         let ops_ctx = sail_ops::Ctx::for_dev(workspace_root.clone(), project_dir.clone());
         let mut app = deck_axum::router()
             // `/` → the primary app's index.html.
@@ -1712,8 +1712,8 @@ fn is_structural_change(kind: &notify::EventKind) -> bool {
     )
 }
 
-/// Project theme SSOT: `**/themes/**` and legacy `**/tokens/themes/**`
-/// (and the parent `tokens` / `themes` dirs so Create events from mid-session
+/// Project theme SSOT: `**/themes/**`
+/// (and the parent `themes` dir so Create events from mid-session
 /// scaffold fire generate).
 fn is_project_theme_path(path: &Path) -> bool {
     let norm = format!("/{}", path.to_string_lossy().replace('\\', "/"));
@@ -1721,14 +1721,7 @@ fn is_project_theme_path(path: &Path) -> bool {
     if norm.contains("/packages/sail/tokens/model/") {
         return false;
     }
-    // Legacy layout: <project>/tokens/themes/**
-    if norm.contains("/tokens/themes/")
-        || norm.ends_with("/tokens/themes")
-        || norm.ends_with("/tokens")
-    {
-        return true;
-    }
-    // Modern layout: <project>/themes/** — require a project segment before
+    // Project layout: <project>/themes/** — require a project segment before
     // /themes (not bare catalog model paths).
     if let Some(i) = norm.rfind("/themes/") {
         let before = &norm[..i];
@@ -1778,32 +1771,25 @@ fn attach_project_theme_watches(w: &mut impl notify::Watcher, project_dir: &Path
 }
 
 /// True when an event path means we should (re)attach theme watches — mid-session
-/// `deck scaffold theme` creates `tokens/` and/or `sail.config` after startup.
+/// `deck scaffold theme` creates `themes/` and/or `sail.config` after startup.
 ///
 /// Only **tree roots / config files**, not routine leaf edits under
-/// `tokens/themes/*.json` (#15). Callers should also gate on Create/Rename.
+/// `themes/*.json`. Callers should also gate on Create/Rename.
 fn path_suggests_new_theme_watch(path: &Path, project_dir: &Path) -> bool {
     if is_project_sail_config_path(path) {
         return true;
     }
     // Theme tree roots only — not themes/<id>.json leaves.
     let norm = format!("/{}", path.to_string_lossy().replace('\\', "/"));
-    let is_theme_root =
-        norm.ends_with("/tokens") || norm.ends_with("/tokens/themes") || norm.ends_with("/themes");
-    if !is_theme_root {
+    if !norm.ends_with("/themes") {
         return false;
     }
     // Prefer paths under this project when we can resolve parents.
     let Some(parent) = path.parent() else {
         return false;
     };
-    // `…/tokens` or `…/themes` → parent is project; `…/tokens/themes` →
-    // grandparent is project.
-    let project_candidate = if norm.ends_with("/tokens/themes") {
-        parent.parent()
-    } else {
-        Some(parent)
-    };
+    // `…/themes` → parent is project.
+    let project_candidate = Some(parent);
     let Some(project_candidate) = project_candidate else {
         return false;
     };
@@ -1823,7 +1809,7 @@ fn is_catalog_model_path(path: &Path) -> bool {
 /// before rebuild.
 ///
 /// Live theme edit = save DTCG + HMR only:
-/// - project: `**/themes/**` (+ legacy `**/tokens/themes/**`)
+/// - project: `**/themes/**`
 /// - project theme config: `sail.config.json(c)`
 /// - catalog: `packages/sail/tokens/model/**` (themes + base/dark/density/…)
 fn is_theme_source_path(path: &Path) -> bool {
@@ -1945,12 +1931,12 @@ mod tests {
         assert!(is_project_theme_path(Path::new("apps/sail-site/themes")));
         assert!(is_project_theme_path(Path::new("my-app/themes/ship.json")));
         assert!(is_project_theme_path(Path::new("my-app/themes")));
-        // Legacy dual-read still watched during transition.
-        assert!(is_theme_source_path(Path::new(
+        // Retired tokens/themes layout is not a project theme source.
+        assert!(!is_theme_source_path(Path::new(
             "apps/sail-site/tokens/themes/custom.json"
         )));
-        assert!(is_project_theme_path(Path::new("apps/sail-site/tokens")));
-        assert!(is_project_theme_path(Path::new(
+        assert!(!is_project_theme_path(Path::new("apps/sail-site/tokens")));
+        assert!(!is_project_theme_path(Path::new(
             "apps/sail-site/tokens/themes"
         )));
         assert!(is_theme_source_path(Path::new(
@@ -1967,11 +1953,11 @@ mod tests {
             Path::new("apps/demo/sail.config.jsonc"),
             Path::new("apps/demo")
         ));
-        assert!(path_suggests_new_theme_watch(
+        assert!(!path_suggests_new_theme_watch(
             Path::new("apps/demo/tokens"),
             Path::new("apps/demo")
         ));
-        assert!(path_suggests_new_theme_watch(
+        assert!(!path_suggests_new_theme_watch(
             Path::new("apps/demo/tokens/themes"),
             Path::new("apps/demo")
         ));
@@ -2032,16 +2018,16 @@ mod tests {
     #[test]
     fn theme_write_policy_lives_in_sail_ops() {
         use sail_ops::theme::{is_list_theme_dir, is_read_theme_path, is_write_theme_path};
-        // Modern E4 + legacy tokens/themes (project-relative; no apps/ required).
+        // E4 themes/ (project-relative; no apps/ required).
         assert!(is_write_theme_path("themes/custom.json"));
-        assert!(is_write_theme_path("tokens/themes/custom.json"));
-        assert!(is_write_theme_path(
+        assert!(!is_write_theme_path("tokens/themes/custom.json"));
+        assert!(!is_write_theme_path(
             "apps/sail-site/tokens/themes/custom.json"
         ));
         assert!(is_list_theme_dir("themes"));
-        assert!(is_list_theme_dir("tokens/themes"));
-        assert!(is_list_theme_dir("apps/sail-site/tokens/themes"));
-        assert!(is_list_theme_dir("apps/sail-site/tokens/themes/"));
+        assert!(!is_list_theme_dir("tokens/themes"));
+        assert!(!is_list_theme_dir("apps/sail-site/tokens/themes"));
+        assert!(!is_list_theme_dir("apps/sail-site/tokens/themes/"));
         assert!(!is_write_theme_path("apps/sail-site/tokens/base.json"));
         assert!(!is_write_theme_path(
             "packages/sail/tokens/model/themes/paper.json"
@@ -2055,13 +2041,12 @@ mod tests {
         assert!(!is_write_theme_path(
             "apps/sail-site/tokens/themes/notes.txt"
         ));
-        // Structural allowlist: tokens/themes shape is writable anywhere under workspace.
-        assert!(is_write_theme_path("tmp/tokens/themes/x.json"));
+        assert!(!is_write_theme_path("tmp/tokens/themes/x.json"));
     }
 
     #[test]
     fn project_vs_catalog_theme_paths() {
-        assert!(is_project_theme_path(Path::new(
+        assert!(!is_project_theme_path(Path::new(
             "apps/sail-site/tokens/themes/x.json"
         )));
         assert!(!is_catalog_model_path(Path::new(

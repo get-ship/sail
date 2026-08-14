@@ -79,7 +79,7 @@ export function buildTreeNav<T>(ctx: TreeNavCtx<T>): TreeNav {
   /**
    * Row-mode Home/End. In a TREE grid (the active row participates in a tree)
    * they jump to the first / last VISIBLE row. In a FLAT grid they return false
-   * so the dispatcher falls back to the column ends (legacy behavior).
+   * so the dispatcher falls back to the column ends (previous behavior).
    */
   function rowEnd(dir: 'home' | 'end'): boolean {
     if (!isTreeRow(ctx.activeRow())) return false

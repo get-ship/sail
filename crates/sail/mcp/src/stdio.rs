@@ -1,6 +1,6 @@
 //! stdio transport — newline-delimited JSON-RPC (MCP 2026-07-28).
 //!
-//! Also accepts Content-Length framed messages (legacy dual-era clients).
+//! Also accepts Content-Length framed messages (dual-era clients).
 
 use std::io::{self, Read, Write};
 

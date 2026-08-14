@@ -3,7 +3,7 @@
 //
 // The other v1 hooks (`<use-click-outside>`, `<use-focus-trap>`,
 // `<use-clipboard>`, `<use-title>`, `<use-scroll-anchor>`,
-// `<use-intersection>`) had wide compiler support in legacy hydrate
+// `<use-intersection>`) had wide compiler support in the old hydrate
 // but have no production callers yet.
 // Their generic attr/bind/`as=` shape requires per-hook emit work
 // in the Rust compiler that's out of scope for this gate-fail —

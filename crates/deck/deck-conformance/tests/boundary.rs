@@ -430,7 +430,7 @@ fn deck_core_and_deck_config_have_no_ship_substrate_dep() {
 }
 
 /// Belt-and-suspenders: also assert the production source itself has no
-/// references to the deleted resolver helpers, the legacy project-root
+/// references to the deleted resolver helpers, the retired project-root
 /// env vars, or the `deck_substrate::*` paths. The Cargo.toml check above
 /// catches the dep, this catches a residual dead-code reference that the
 /// compiler might not warn about. Scans `deck-core` only (deck-config
@@ -462,7 +462,7 @@ fn deck_core_source_has_no_deleted_resolver_helpers_or_project_dir_env() {
     }
     assert!(
         violations.is_empty(),
-        "deck-core production source must not name the legacy project-root \
+        "deck-core production source must not name the retired project-root \
          envs or the deleted resolver helpers:\n{}",
         violations.join("\n"),
     );

@@ -43,7 +43,7 @@
 //! }
 //! ```
 //!
-//! Legacy top-level `"raw_containers"` still feeds the same knob (no behavior
+//! Top-level `"raw_containers"` still feeds the same knob (no behavior
 //! change for existing projects). Unknown keys under `"policy"` are a hard
 //! error that names the closest valid key. Compiler/parse errors are never
 //! severity-configurable through this surface.
@@ -195,7 +195,7 @@ pub struct ResolvedPolicy {
     /// (defaults to the registry default `false` when unset).
     pub raw_containers: bool,
     /// Whether `layout.raw_containers` was **explicitly** set by the `"policy"`
-    /// object (not merely defaulted). Callers that layer presets / legacy
+    /// object (not merely defaulted). Callers that layer presets / prior
     /// top-level keys consult this so a policy-only lint.severity tree does
     /// not clobber `preset: full`.
     pub raw_containers_explicit: bool,
@@ -438,7 +438,7 @@ pub fn resolve_policy_object(raw: &Value) -> Result<Option<ResolvedPolicy>, Poli
 }
 
 /// Resolve policy for a source file: registry defaults, then the nearest
-/// `sail.config.json(c)`'s `"policy"` object, then legacy top-level
+/// `sail.config.json(c)`'s `"policy"` object, then top-level
 /// `"raw_containers"` when the nested key is absent.
 ///
 /// Does **not** apply styling presets (`full`/`strict`) — those stay in
@@ -469,7 +469,7 @@ pub fn resolve_for_source(source_file: &Path) -> Result<ResolvedPolicy, PolicyEr
     }
 }
 
-/// Merge a nested `"policy"` object (and legacy top-level `raw_containers`)
+/// Merge a nested `"policy"` object (and top-level `raw_containers`)
 /// plus SPEC-LINTS-1 top-level `"strict"` / `"lint"` into a [`ResolvedPolicy`].
 ///
 /// Used by `check::policy::classify` so capability tier + registry share one
@@ -477,7 +477,7 @@ pub fn resolve_for_source(source_file: &Path) -> Result<ResolvedPolicy, PolicyEr
 ///
 /// Precedence for `layout.raw_containers`:
 /// 1. Explicit `policy.layout.raw_containers` (`raw_containers_explicit = true`)
-/// 2. Legacy top-level `"raw_containers"` (explicit flag stays false — the
+/// 2. Top-level `"raw_containers"` (explicit flag stays false — the
 ///    capability-tier loop still owns the signal line)
 /// 3. Registry default (`false`)
 ///
@@ -754,7 +754,7 @@ mod tests {
     }
 
     #[test]
-    fn legacy_top_level_raw_containers_still_reads() {
+    fn top_level_raw_containers_still_reads() {
         let cfg = sail_lint::config::SailConfig::from_json(r#"{"raw_containers": true}"#);
         let resolved = apply_config_to_resolved(&cfg).expect("resolve");
         assert!(resolved.raw_containers);
@@ -762,7 +762,7 @@ mod tests {
     }
 
     #[test]
-    fn nested_policy_wins_over_legacy_top_level() {
+    fn nested_policy_wins_over_top_level() {
         let cfg = sail_lint::config::SailConfig::from_json(
             r#"{"raw_containers": true, "policy": {"layout": {"raw_containers": false}}}"#,
         );

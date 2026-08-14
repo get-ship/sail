@@ -35,7 +35,7 @@
 //!
 //! Severity is `Error`: `sail-compiler::check::css_token` promotes
 //! every error-severity finding to a build failure. The rule was
-//! introduced alongside a one-shot migration that cleared the prior
+//! introduced alongside a one-shot sweep that cleared the prior
 //! drift (80 violations across 14 primitives — `var(--card, #fff)`
 //! fallback patterns and a handful of raw color-mix sources). After
 //! the cleanup, Error became safe to enable without breaking compile.

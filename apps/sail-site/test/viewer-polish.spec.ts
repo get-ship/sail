@@ -10,8 +10,8 @@
 // The helpers below walk into `el.shadowRoot` explicitly.
 //
 // Known-benign: `<sail-theme-picker>` (catalog-previewed on /components)
-// requests the legacy `/view-tokens.css` seam; the browser logs a MIME
-// error on the resulting 404. Same shape flagged known-benign in
+// may request `/view-tokens.css`; the browser logs a MIME error on the
+// resulting 404. Same shape flagged known-benign in
 // ship-marketing's conformance run and in apps/sail-site/test/smoke.spec.ts.
 //
 // Not wired into `bun run test` — it's a manual artifact for the
@@ -32,8 +32,8 @@ interface Failure { url: string; type: string; text: string }
 const failures: Failure[] = []
 
 const KNOWN_BENIGN: ReadonlyArray<string> = [
-  // <sail-theme-picker> (catalog-previewed on /components) requests the legacy
-  // `/view-tokens.css` seam; the canonical route is `/api/assets/...`.
+  // <sail-theme-picker> (catalog-previewed on /components) may request
+  // `/view-tokens.css`; the canonical route is `/api/assets/...`.
   // The browser logs a MIME error on the resulting 404. Same shape flagged
   // known-benign in ship-marketing's conformance run.
   'view-tokens.css',

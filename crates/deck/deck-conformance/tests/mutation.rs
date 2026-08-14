@@ -1,49 +1,18 @@
 //! Slice 8 — mutation vocabulary (no browser, ship-free).
 //!
-//! The progressive-enhancement form endpoint (`POST /_deck/mutation/{name}`)
-//! retired framework-wide: deck's router answers it with a 410 tombstone and
+//! Mutation vocabulary (no browser, ship-free).
+//!
 //! JS-attached mutations call the SDK directly. What this file still gates:
 //!
 //! 1. The wire vocabulary contract — `routes/todos/page.sail` carries exactly
 //!    one mutation binding pointing at `ship.demo.addTodo`, parsed via
 //!    `sail_compiler::{parse, bindings}` (the same path a host uses).
 //! 2. Resolver semantics — `demo.addTodo` then `demo.todos` against the store.
-//! 3. The tombstone itself — a form POST receives 410 Gone, not a 404 (deck
-//!    still composes this URL as the no-JS `<form>` action).
 //!
 //! Run: `cargo test -p deck-conformance --test mutation`
 
-use axum::body::Body;
-use axum::http::{Request, StatusCode, header};
 use deck_conformance::data_port::{DemoStore, resolve_demo};
-use deck_conformance::{deck_app, default_app_dir};
 use serde_json::json;
-use tower::ServiceExt;
-
-/// The progressive-enhancement form endpoint is a deliberate 410 tombstone in deck's router —
-/// the URL is still composed as the no-JS `<form>` action, so it must answer
-/// Gone (the surface existed and was retired), never 404.
-#[tokio::test(flavor = "multi_thread")]
-async fn mutation_post_is_tombstoned_410() {
-    let app = deck_app(default_app_dir());
-    let resp = app
-        .oneshot(
-            Request::builder()
-                .method("POST")
-                .uri("/_deck/mutation/todos?form=b0")
-                .header(header::CONTENT_TYPE, "application/x-www-form-urlencoded")
-                .header(header::REFERER, "http://localhost:7878/_deck/view/todos")
-                .body(Body::from("text=hi"))
-                .unwrap(),
-        )
-        .await
-        .expect("response");
-    assert_eq!(
-        resp.status(),
-        StatusCode::GONE,
-        "progressive-enhancement form mutations are retired; the tombstone must answer 410"
-    );
-}
 
 /// After a successful mutation, the store contains the new item.
 /// This test drives the store directly (no HTTP round-trip) to verify

@@ -22,7 +22,7 @@ fn read_asset(rel: &str) -> Option<String> {
 /// App + user build output, read from the host-supplied output tree. deck
 /// bakes none of this — route + chrome bundles are the project's content,
 /// served from the path the host passes in via `scaffold.source` (per-app)
-/// or the asset graph (workspace-level). The legacy `<root>/.deck/<rel>`
+/// or the asset graph (workspace-level). The retired `<root>/.deck/<rel>`
 /// read was the framework's hardcoded `.deck/` reach — PURGED
 /// (deck-purge-root). The framework no longer reads a monorepo-root
 /// `.deck/`; the host owns the output location.
@@ -997,7 +997,7 @@ mod tests {
         let resolution = crate::resolver::Resolution::new().with_root(dir.path());
 
         // Per-app build output: <project_root>/<source>/index.html
-        // (post-cutover; the legacy `<root>/.deck/<source>/index.html`
+        // (post-cutover; the retired `<root>/.deck/<source>/index.html`
         // was purged with the framework's `.deck/` runtime read).
         let scaffold_dir = dir.path().join("my-scaffold");
         std::fs::create_dir_all(&scaffold_dir).unwrap();
@@ -1274,7 +1274,7 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let resolution = crate::resolver::Resolution::new().with_root(dir.path());
         // Per-app build output: <project_root>/safe-scaffold/index.html
-        // (the legacy `<root>/.deck/safe-scaffold/` was purged).
+        // (the retired `<root>/.deck/safe-scaffold/` was purged).
         let safe_scaffold = dir.path().join("safe-scaffold");
         std::fs::create_dir_all(&safe_scaffold).unwrap();
         let html = r#"<!doctype html><html><head></head><body></body></html>"#;

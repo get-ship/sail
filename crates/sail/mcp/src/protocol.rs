@@ -13,7 +13,7 @@ pub const PROTOCOL_VERSION: &str = "2026-07-28";
 /// Versions this server accepts on modern (per-request `_meta`) requests.
 pub const SUPPORTED_VERSIONS: &[&str] = &[PROTOCOL_VERSION];
 
-/// Legacy handshake revisions answered by dual-era `initialize` (no session mint).
+/// Prior handshake revisions answered by dual-era `initialize` (no session mint).
 const LEGACY_INITIALIZE_VERSIONS: &[&str] =
     &["2025-11-25", "2025-06-18", "2025-03-26", "2024-11-05"];
 
@@ -120,8 +120,8 @@ fn unsupported_version_error(id: Value, requested: &str) -> Value {
 
 /// Validate modern per-request `_meta` (protocol version + client capabilities).
 ///
-/// Soft-compat: if `_meta` is entirely absent, treat as [`PROTOCOL_VERSION`] so
-/// transitional hosts and unit harnesses still complete a tools round-trip.
+/// If `_meta` is entirely absent, treat as [`PROTOCOL_VERSION`] so
+/// older hosts and unit harnesses still complete a tools round-trip.
 /// When a version *is* declared, it must be in [`SUPPORTED_VERSIONS`].
 fn negotiate_modern_version(msg: &Value, id: &Value) -> Result<String, Value> {
     let meta = params_meta(msg);
@@ -130,7 +130,7 @@ fn negotiate_modern_version(msg: &Value, id: &Value) -> Result<String, Value> {
         Some(v) if SUPPORTED_VERSIONS.contains(&v) => Ok(v.to_string()),
         Some(v) => Err(unsupported_version_error(id.clone(), v)),
         None => {
-            // Soft-compat: no _meta → modern default (session-less path still works).
+            // No _meta → modern default (session-less path still works).
             Ok(PROTOCOL_VERSION.to_string())
         }
     }
@@ -167,7 +167,7 @@ pub fn handle_message_with_ctx(msg: &Value, ctx: &Ctx) -> Option<Value> {
         "tools/call" => Some(handle_tools_call(msg, id, ctx)),
         "ping" => Some(handle_ping(msg, id)),
 
-        // ── Dual-era legacy handshake (no session; optional for old hosts) ──
+        // ── Dual-era handshake (no session; optional for old hosts) ──
         "initialize" => Some(handle_initialize(msg, id)),
         "shutdown" => Some(json!({
             "jsonrpc": "2.0",
@@ -285,10 +285,10 @@ fn handle_tools_call(msg: &Value, id: Value, ctx: &Ctx) -> Value {
     }
 }
 
-/// Dual-era: answer legacy `initialize` without minting a session.
+/// Dual-era: answer prior `initialize` without minting a session.
 ///
-/// Modern clients should use `server/discover` instead. When a legacy client
-/// opens with `initialize`, we echo a mutually supported legacy version when
+/// Modern clients should use `server/discover` instead. When an older client
+/// opens with `initialize`, we echo a mutually supported prior version when
 /// possible; otherwise advertise modern support in the error payload.
 fn handle_initialize(msg: &Value, id: Value) -> Value {
     let client_proto = msg
@@ -311,7 +311,7 @@ fn handle_initialize(msg: &Value, id: Value) -> Value {
     let protocol_version = if LEGACY_INITIALIZE_VERSIONS.contains(&client_proto) {
         client_proto
     } else if client_proto.is_empty() {
-        // Old clients sometimes omit; pick a widely supported legacy default.
+        // Old clients sometimes omit; pick a widely supported prior default.
         "2025-06-18"
     } else if client_proto == PROTOCOL_VERSION {
         // Client asked for modern via initialize field — accept modern capabilities
@@ -491,7 +491,7 @@ mod tests {
             "params": {
                 "protocolVersion": "2025-06-18",
                 "capabilities": {},
-                "clientInfo": { "name": "legacy", "version": "0" }
+                "clientInfo": { "name": "old-host", "version": "0" }
             }
         });
         let resp = handle_message(&msg).unwrap();

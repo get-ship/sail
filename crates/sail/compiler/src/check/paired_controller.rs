@@ -1,7 +1,6 @@
 //! `sail-paired-controller` — a `.sail` file's controller is its `<controller>`
 //! block. A sibling `<stem>.controller.ts` is a compile error.
 //!
-//! MIGRATION-DEBT: dies with BLOCKS-1 / SFC migration (paired-controller window).
 //!
 //! One spelling. A template whose meaning depends on whether a sibling file
 //! exists on disk cannot be read (by a human or an agent) without stat'ing the

@@ -511,9 +511,8 @@ fn classify(cfg: &sail_lint::config::SailConfig) -> PolicyResolution {
     // earlier preset/top-level value (layout.raw_containers is the SSOT name).
     // A policy object that only carries lint.severity.* does NOT clobber
     // preset/top-level raw_containers.
-    // MIGRATION-DEBT: dies with BLOCKS-1 (config-key migration — flat raw_containers).
     if registry.raw_containers_explicit {
-        // Drop a prior signal line for the legacy key if present — the nested
+        // Drop a prior signal line for the old key if present — the nested
         // name is authoritative.
         signal.retain(|s| !s.starts_with("raw_containers:"));
         p.raw_containers = registry.raw_containers;
@@ -832,7 +831,7 @@ mod tests {
                 "must name offending key and allowed list: {r}"
             );
             // Allowed set includes nested `deck` + SPEC-LINTS-1 strict/lint,
-            // not the three legacy top-level serve keys.
+            // not the three retired top-level serve keys.
             assert!(
                 r.contains("policy, strict, lint, deck, editor"),
                 "allowed list should end …policy, strict, lint, deck, editor: {r}"

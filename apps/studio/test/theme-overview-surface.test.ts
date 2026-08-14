@@ -84,7 +84,7 @@ describe('theme-overview-surface', () => {
     expect(actions).toMatch(/requestSaveTheme|saveTheme/)
     expect(actions).toMatch(/previewInApp/)
     expect(session).toMatch(/toastItems|onToastDismiss/)
-    expect(session).toMatch(/paintIdFor|modesForPaintId|resolvePaintId/)
+    expect(session).toMatch(/modesForPaintId|resolvePaintId/)
     expect(edit).toMatch(/setBrandColor/)
     expect(edit).toMatch(/setTokenValue/)
     expect(edit).toMatch(/setTypeRole/)

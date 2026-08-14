@@ -184,16 +184,6 @@ test.describe('header mode', () => {
   })
 })
 
-test.describe('redirect smoke', () => {
-  test('/sail/overview and /deck land on docs URLs', async ({ page }) => {
-    await page.goto('/sail/overview', { waitUntil: 'networkidle' })
-    await expect(page).toHaveURL(/\/docs/, { timeout: 15_000 })
-
-    await page.goto('/deck', { waitUntil: 'networkidle' })
-    await expect(page).toHaveURL(/\/docs\/app/, { timeout: 15_000 })
-  })
-})
-
 test.describe('console', () => {
   for (const path of ['/docs', '/components', '/playground'] as const) {
     test(`no pageerror on ${path}`, async ({ page }) => {

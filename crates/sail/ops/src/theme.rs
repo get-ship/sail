@@ -1,7 +1,6 @@
 //! `SailTheme` RPCs — List, Read, Write, Fork, Generate, Graph.
 //!
-//! Writes confined to project themes: `themes/**/*.json` (E4 modern) or
-//! legacy `tokens/themes/**/*.json`. Paths are workspace-relative and work
+//! Writes confined to project themes: `themes/**/*.json`. Paths are workspace-relative and work
 //! for external apps (project root = workspace) and monorepo apps
 //! (`apps/<app>/…`) alike — never hard-coded to a named monorepo app.
 
@@ -28,13 +27,11 @@ fn sanitize_rel(rel: &str) -> Option<String> {
     Some(norm)
 }
 
-/// Project theme JSON under modern `themes/**` or legacy `tokens/themes/**`.
+/// Project theme JSON under `themes/**`.
 ///
 /// Accepts workspace-relative forms used by external apps and monorepo apps:
 /// - `themes/custom.json`
-/// - `tokens/themes/custom.json`
 /// - `apps/<app>/themes/custom.json`
-/// - `apps/<app>/tokens/themes/custom.json`
 ///
 /// Catalog model under `packages/sail/tokens/model/**` is never a project write.
 fn is_project_theme_json_path(norm: &str) -> bool {
@@ -44,9 +41,8 @@ fn is_project_theme_json_path(norm: &str) -> bool {
     if norm.contains("packages/sail/tokens/model") {
         return false;
     }
-    // Legacy first (more specific than bare `/themes/`).
-    if norm.starts_with("tokens/themes/") || norm.contains("/tokens/themes/") {
-        return true;
+    if norm.contains("/tokens/themes/") || norm.starts_with("tokens/themes/") {
+        return false;
     }
     if norm.starts_with("themes/") || norm.contains("/themes/") {
         return true;
@@ -54,16 +50,16 @@ fn is_project_theme_json_path(norm: &str) -> bool {
     false
 }
 
-/// Project theme directory (listable) under modern or legacy layout.
+/// Project theme directory (listable) under `themes/`.
 fn is_project_theme_dir_path(norm: &str) -> bool {
     let n = norm.trim_end_matches('/');
     if n.is_empty() || n.contains("packages/sail/tokens/model") {
         return false;
     }
-    if n == "themes" || n == "tokens/themes" {
-        return true;
+    if n.contains("tokens/themes") {
+        return false;
     }
-    if n.ends_with("/tokens/themes") || n.contains("/tokens/themes/") {
+    if n == "themes" {
         return true;
     }
     if n.ends_with("/themes") || n.starts_with("themes/") || n.contains("/themes/") {
@@ -72,7 +68,7 @@ fn is_project_theme_dir_path(norm: &str) -> bool {
     false
 }
 
-/// Writable project themes: `themes/**/*.json` or legacy `tokens/themes/**/*.json`.
+/// Writable project themes: `themes/**/*.json`.
 pub fn is_write_theme_path(rel: &str) -> bool {
     let Some(norm) = sanitize_rel(rel) else {
         return false;
@@ -81,7 +77,7 @@ pub fn is_write_theme_path(rel: &str) -> bool {
 }
 
 /// Readable: project themes, catalog themes, or package model schema JSON
-/// (`base.json` + `components/*.json`). Never density/compat/theme CSS.
+/// (`base.json` + `components/*.json`). Never density or theme CSS.
 pub fn is_read_theme_path(rel: &str) -> bool {
     let Some(norm) = sanitize_rel(rel) else {
         return false;
@@ -172,7 +168,7 @@ pub fn list(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
 
     if !is_list_theme_dir(rel) {
         return Err(OpError::PermissionDenied(format!(
-            "path not listable (themes/**, tokens/themes/**, {CATALOG_THEMES}, or {MODEL_COMPONENTS}): {rel}"
+            "path not listable (themes/**, {CATALOG_THEMES}, or {MODEL_COMPONENTS}): {rel}"
         )));
     }
 
@@ -245,7 +241,7 @@ pub fn write(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
 
     if !is_write_theme_path(rel) {
         return Err(OpError::PermissionDenied(format!(
-            "path not writable (themes/**/*.json or tokens/themes/**/*.json only): {rel}"
+            "path not writable (themes/**/*.json only): {rel}"
         )));
     }
 
@@ -406,7 +402,7 @@ pub fn delete(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
 
     if !is_write_theme_path(rel) {
         return Err(OpError::PermissionDenied(format!(
-            "path not deletable (themes/**/*.json or tokens/themes/**/*.json only): {rel}"
+            "path not deletable (themes/**/*.json only): {rel}"
         )));
     }
 
@@ -449,7 +445,7 @@ pub fn fork(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
     }
     if !is_write_theme_path(dest_path) {
         return Err(OpError::PermissionDenied(format!(
-            "dest not writable (themes/**/*.json or tokens/themes/**/*.json only): {dest_path}"
+            "dest not writable (themes/**/*.json only): {dest_path}"
         )));
     }
 
@@ -706,35 +702,28 @@ pub fn graph_internal(theme_id: Option<&str>, ctx: &Ctx) -> Result<Value, OpErro
     }))
 }
 
-/// Locate a project theme JSON by id: modern `themes/`, legacy `tokens/themes/`,
+/// Locate a project theme JSON by id under `themes/`,
 /// at workspace root (external app) then under each `apps/*` (monorepo).
 fn find_project_theme(workspace: &Path, theme_id: &str) -> Option<String> {
     let file = format!("{theme_id}.json");
-    let candidates = [
-        workspace.join("themes").join(&file),
-        workspace.join("tokens/themes").join(&file),
-    ];
-    for path in candidates {
-        if path.is_file() {
-            return path
-                .strip_prefix(workspace)
-                .ok()
-                .map(|p| p.to_string_lossy().replace('\\', "/"));
-        }
+    let path = workspace.join("themes").join(&file);
+    if path.is_file() {
+        return path
+            .strip_prefix(workspace)
+            .ok()
+            .map(|p| p.to_string_lossy().replace('\\', "/"));
     }
     let apps = workspace.join("apps");
     let rd = std::fs::read_dir(apps).ok()?;
     let mut apps: Vec<_> = rd.flatten().map(|e| e.path()).collect();
     apps.sort();
     for app in apps {
-        for sub in ["themes", "tokens/themes"] {
-            let path = app.join(sub).join(&file);
-            if path.is_file() {
-                return path
-                    .strip_prefix(workspace)
-                    .ok()
-                    .map(|p| p.to_string_lossy().replace('\\', "/"));
-            }
+        let path = app.join("themes").join(&file);
+        if path.is_file() {
+            return path
+                .strip_prefix(workspace)
+                .ok()
+                .map(|p| p.to_string_lossy().replace('\\', "/"));
         }
     }
     None
@@ -987,7 +976,7 @@ mod tests {
     fn write_refuses_non_monotonic_radius_scale() {
         let dir = tempdir().unwrap();
         let ws = dir.path();
-        std::fs::create_dir_all(ws.join("apps/demo/tokens/themes")).unwrap();
+        std::fs::create_dir_all(ws.join("apps/demo/themes")).unwrap();
         let ctx = Ctx::new(ws, ws.join("apps/demo"), ws);
 
         // THEMES-1: radius lives under modes.*; envelope must be schema-valid.
@@ -1010,7 +999,7 @@ mod tests {
         );
         let err = write(
             &json!({
-                "path": "apps/demo/tokens/themes/bad-radius.json",
+                "path": "apps/demo/themes/bad-radius.json",
                 "content": bad
             }),
             &ctx,
@@ -1021,7 +1010,7 @@ mod tests {
             msg.contains("NonMonotonicScale"),
             "expected NonMonotonicScale, got {msg}"
         );
-        assert!(!ws.join("apps/demo/tokens/themes/bad-radius.json").exists());
+        assert!(!ws.join("apps/demo/themes/bad-radius.json").exists());
 
         let good = format!(
             r#"{{
@@ -1042,7 +1031,7 @@ mod tests {
         );
         let ok = write(
             &json!({
-                "path": "apps/demo/tokens/themes/good-radius.json",
+                "path": "apps/demo/themes/good-radius.json",
                 "content": good
             }),
             &ctx,
@@ -1065,13 +1054,13 @@ mod tests {
     }
 
     #[test]
-    fn write_policy_project_themes_modern_and_legacy() {
-        // Modern E4 layout (project-relative, external or monorepo).
+    fn write_policy_project_themes_only() {
+        // E4 layout (project-relative, external or monorepo).
         assert!(is_write_theme_path("themes/custom.json"));
         assert!(is_write_theme_path("apps/demo/themes/custom.json"));
-        // Legacy tokens/themes during transition.
-        assert!(is_write_theme_path("tokens/themes/custom.json"));
-        assert!(is_write_theme_path(
+        // Retired tokens/themes layout is not writable.
+        assert!(!is_write_theme_path("tokens/themes/custom.json"));
+        assert!(!is_write_theme_path(
             "apps/sail-site/tokens/themes/custom.json"
         ));
         // Refusals.
@@ -1097,8 +1086,8 @@ mod tests {
         ));
         // Listable dirs.
         assert!(is_list_theme_dir("themes"));
-        assert!(is_list_theme_dir("tokens/themes"));
-        assert!(is_list_theme_dir("apps/sail-site/tokens/themes"));
+        assert!(!is_list_theme_dir("tokens/themes"));
+        assert!(!is_list_theme_dir("apps/sail-site/tokens/themes"));
         assert!(is_list_theme_dir("apps/demo/themes"));
         assert!(is_list_theme_dir(CATALOG_THEMES));
         assert!(is_list_theme_dir(MODEL_COMPONENTS));
@@ -1110,7 +1099,7 @@ mod tests {
     fn write_refuses_catalog_and_escape() {
         let dir = tempdir().unwrap();
         let ws = dir.path();
-        std::fs::create_dir_all(ws.join("apps/demo/tokens/themes")).unwrap();
+        std::fs::create_dir_all(ws.join("apps/demo/themes")).unwrap();
         std::fs::create_dir_all(ws.join("packages/sail/tokens/model/themes")).unwrap();
         std::fs::write(
             ws.join("packages/sail/tokens/model/themes/ship.json"),
@@ -1132,7 +1121,7 @@ mod tests {
         let body = r#"{"$extensions":{"sail":{"themeId":"custom","defaultMode":"light","layer":"theme"}},"modes":{"light":{"color":{"background":{"$value":"oklch(0.98 0 0)","$type":"color"},"foreground":{"$value":"oklch(0.20 0 0)","$type":"color"},"primary":{"default":{"$value":"oklch(0.45 0.12 250)","$type":"color"},"foreground":{"$value":"oklch(0.98 0 0)","$type":"color"}},"muted":{"default":{"$value":"oklch(0.92 0 0)","$type":"color"},"foreground":{"$value":"oklch(0.35 0 0)","$type":"color"}},"brandAccent":{"default":{"$value":"oklch(0.45 0.16 300)","$type":"color"},"foreground":{"$value":"oklch(0.98 0 0)","$type":"color"}}}}}}"#;
         let ok = write(
             &json!({
-                "path": "apps/demo/tokens/themes/custom.json",
+                "path": "apps/demo/themes/custom.json",
                 "content": body
             }),
             &ctx,
@@ -1140,14 +1129,14 @@ mod tests {
         .unwrap();
         assert_eq!(ok["ok"], true);
         assert_eq!(
-            std::fs::read_to_string(ws.join("apps/demo/tokens/themes/custom.json")).unwrap(),
+            std::fs::read_to_string(ws.join("apps/demo/themes/custom.json")).unwrap(),
             body
         );
 
         // THEMES-1: out-of-schema root keys refused (naming valid ones).
         let schema_err = write(
             &json!({
-                "path": "apps/demo/tokens/themes/bad-schema.json",
+                "path": "apps/demo/themes/bad-schema.json",
                 "content": r#"{"ok":true}"#
             }),
             &ctx,
@@ -1256,18 +1245,18 @@ mod tests {
     fn list_read_roundtrip() {
         let dir = tempdir().unwrap();
         let ws = dir.path();
-        let themes = ws.join("apps/demo/tokens/themes");
+        let themes = ws.join("apps/demo/themes");
         std::fs::create_dir_all(&themes).unwrap();
         std::fs::write(themes.join("a.json"), r#"{"a":1}"#).unwrap();
         std::fs::write(themes.join("b.json"), r#"{"b":2}"#).unwrap();
 
         let ctx = Ctx::new(ws, ws.join("apps/demo"), ws);
-        let listed = list(&json!({"path": "apps/demo/tokens/themes"}), &ctx).unwrap();
+        let listed = list(&json!({"path": "apps/demo/themes"}), &ctx).unwrap();
         assert_eq!(listed["ok"], true);
         let files = listed["files"].as_array().unwrap();
         assert_eq!(files.len(), 2);
 
-        let r = read(&json!({"path": "apps/demo/tokens/themes/a.json"}), &ctx).unwrap();
+        let r = read(&json!({"path": "apps/demo/themes/a.json"}), &ctx).unwrap();
         assert_eq!(r["content"], r#"{"a":1}"#);
     }
 
@@ -1312,34 +1301,11 @@ mod tests {
         assert_eq!(found.as_deref(), Some("themes/custom.json"));
     }
 
-    /// EXT-1 E7: external app still accepts legacy `tokens/themes/**`.
-    #[test]
-    fn external_app_legacy_tokens_themes_write() {
-        let dir = tempdir().unwrap();
-        let project = dir.path();
-        std::fs::create_dir_all(project.join("tokens/themes")).unwrap();
-        let ctx = Ctx::new(project, project, project);
-
-        let ok = write(
-            &json!({
-                "path": "tokens/themes/legacy.json",
-                "content": gate_theme("legacy", false)
-            }),
-            &ctx,
-        )
-        .unwrap();
-        assert_eq!(ok["ok"], true);
-        assert!(project.join("tokens/themes/legacy.json").is_file());
-
-        let listed = list(&json!({"path": "tokens/themes"}), &ctx).unwrap();
-        assert_eq!(listed["files"].as_array().unwrap().len(), 1);
-    }
-
     #[test]
     fn fork_validates_new_id_and_fails_loud_on_bad_json() {
         let dir = tempdir().unwrap();
         let ws = dir.path();
-        std::fs::create_dir_all(ws.join("apps/demo/tokens/themes")).unwrap();
+        std::fs::create_dir_all(ws.join("apps/demo/themes")).unwrap();
         std::fs::create_dir_all(ws.join("packages/sail/tokens/model/themes")).unwrap();
         std::fs::write(
             ws.join("packages/sail/tokens/model/themes/ship.json"),
@@ -1351,7 +1317,7 @@ mod tests {
         let bad_id = fork(
             &json!({
                 "source_path": "packages/sail/tokens/model/themes/ship.json",
-                "dest_path": "apps/demo/tokens/themes/bad.json",
+                "dest_path": "apps/demo/themes/bad.json",
                 "new_id": "Not-Valid"
             }),
             &ctx,
@@ -1361,7 +1327,7 @@ mod tests {
         let bad_json = fork(
             &json!({
                 "source_path": "packages/sail/tokens/model/themes/ship.json",
-                "dest_path": "apps/demo/tokens/themes/x.json",
+                "dest_path": "apps/demo/themes/x.json",
                 "new_id": "ok-id",
                 "content": "not-json"
             }),
@@ -1372,15 +1338,14 @@ mod tests {
         let ok = fork(
             &json!({
                 "source_path": "packages/sail/tokens/model/themes/ship.json",
-                "dest_path": "apps/demo/tokens/themes/my-fork.json",
+                "dest_path": "apps/demo/themes/my-fork.json",
                 "new_id": "my-fork"
             }),
             &ctx,
         )
         .unwrap();
         assert_eq!(ok["ok"], true);
-        let body =
-            std::fs::read_to_string(ws.join("apps/demo/tokens/themes/my-fork.json")).unwrap();
+        let body = std::fs::read_to_string(ws.join("apps/demo/themes/my-fork.json")).unwrap();
         assert!(
             body.contains("\"themeId\": \"my-fork\"") || body.contains("\"themeId\":\"my-fork\"")
         );

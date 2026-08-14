@@ -110,7 +110,7 @@ describe('Studio routes + chrome', () => {
     expect(config.find((r) => r.id === 'config')?.active).toBe(true)
     expect(config.find((r) => r.id === 'edit')?.active).toBe(false)
 
-    // Legacy /design path highlights Themes (cutover)
+    // /design still highlights Themes (route id cutover)
     const design = railRowsForPath('/design')
     expect(design.find((r) => r.id === 'themes')?.active).toBe(true)
     expect(design.find((r) => r.id === 'design')).toBeUndefined()

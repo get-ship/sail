@@ -31,7 +31,7 @@ export function parseJsonRows(raw: string): DecodedRow[] {
 }
 
 /** Parse the `columns` string prop into accessor column defs. Accepts the
- *  legacy `{ field, label }` floor and maps it to `{ id, accessorKey, header }`,
+ *  older `{ field, label }` floor and maps it to `{ id, accessorKey, header }`,
  *  or a full `{ id, accessorKey, header }` object. */
 export function parseJsonColumns(raw: string): ColumnDef<DecodedRow>[] {
   if (!raw) return []

@@ -15,7 +15,7 @@
 //!   proxy (`state.x` / `state.x = v`),
 //! - factory functions / non-signal members via `state.x`.
 //!
-//! Casting to `Scope` re-introduces the lying type the migration (#121)
+//! Casting to `Scope` re-introduces the lying type the rewrite (#121)
 //! removed. Use the typed surface instead.
 
 use std::path::{Path, PathBuf};

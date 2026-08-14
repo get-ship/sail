@@ -34,7 +34,7 @@ pub struct StyleSheet {
     by_class: HashMap<String, Vec<PaintRule>>,
     /// Tag / attribute-only rules (no class).
     no_class: Vec<PaintRule>,
-    /// Flat class → decls for the legacy class-only lookup (tests / sx without attrs).
+    /// Flat class → decls for the class-only lookup (tests / sx without attrs).
     class_flat: HashMap<String, Vec<(String, String)>>,
 }
 

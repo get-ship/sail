@@ -100,11 +100,6 @@ export function resolvePaintId(
   }
 }
 
-/** @deprecated Prefer resolvePaintId — returns paint id only (drops warning). */
-export function paintIdFor(id: string, forkedFrom?: string | null): string {
-  return resolvePaintId(id, forkedFrom).paintId
-}
-
 export function themeDisplayName(id: string): string {
   const reg = THEMES.find((t) => t.id === id)
   return reg?.label ?? titleCase(id)

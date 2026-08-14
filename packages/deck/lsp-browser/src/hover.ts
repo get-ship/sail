@@ -47,7 +47,7 @@ function ensureInit(): Promise<void> {
 const TAG_ATTR_RE = /([\w:-]+)(?=\s*=|\s|$)/g
 
 function blockName(open: string): string {
-  // Element form: `<if {…}>` / legacy brace form: `{#if}`
+  // Element form: `<if {…}>` / brace form: `{#if}`
   const s = open.replace(/^\{#/, '').replace(/^</, '')
   return s.split(/[\s{>/]/)[0] ?? s
 }
@@ -122,7 +122,7 @@ export function hoverAt(source: string, offset: number): SailHoverInfo | null {
     }
   }
 
-  // 3. Block keyword — element open `<match`, legacy `{#if}`, arm `{else`.
+  // 3. Block keyword — element open `<match`, brace `{#if}`, arm `{else`.
   if (start >= 1 && source[start - 1] === '<') {
     for (const b of vocab.blocks) {
       if (blockName(b.open) === token) {

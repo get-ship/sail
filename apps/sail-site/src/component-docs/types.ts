@@ -16,7 +16,7 @@ export interface DocMeta {
   slug: string
   /** Element tag when kind=host; may match slug. */
   tag?: string
-  /** Scope key used by legacy stages / show.<key>(). */
+  /** Scope key used by stage hosts / show.<key>(). */
   key: string
   category: DocCategory
   kind: DocKind

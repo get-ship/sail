@@ -2,8 +2,7 @@
 //! them, writing the emitted JS (and CEM/schema/meta/dts/ssr.html sidecars)
 //! into a project-level mirror tree at `<repo-root>/.deck/<source-
 //! relative-path>/` (SPEC-OUTPUT-1 product out). Pass `--out <dir>` to
-//! override and emit every file to a single directory (legacy behaviour).
-//! MIGRATION-DEBT: dies with CLI-legacy cleanup (`--out` single-dir mode).
+//! override and emit every file to a single directory (flat `--out` behaviour).
 //! Errors render with file path, line, and column.
 //
 // FILE_CAP_OVERRIDE: single cohesive CLI driver — arg parsing (clap), the
@@ -59,8 +58,7 @@ enum Command {
         /// project mirror tree at `<repo-root>/.deck/<source-rel>/`
         /// and the JS module is named `<stem>.compiled.js`. When supplied,
         /// every file is emitted into this single directory and the JS
-        /// module is named `<stem>.js` (legacy behaviour).
-        /// MIGRATION-DEBT: dies with CLI-legacy cleanup (`--out` single-dir mode).
+        /// module is named `<stem>.js` (flat `--out` behaviour).
         #[arg(long)]
         out: Option<PathBuf>,
         /// Remove each source file's mirror directory (or `--out` directory)
@@ -2211,7 +2209,7 @@ fn compile_one(
     let mode = mode.map(|m| m.into()).unwrap_or(CompileMode::Auto);
     // Resolve the emit dir for this file. Without --out, outputs land in
     // the project mirror tree at `<repo-root>/.deck/<src-rel>/`;
-    // with --out, all files share that directory (legacy single-dir mode).
+    // with --out, all files share that directory (flat single-dir mode).
     let mirror_mode = out_override.is_none();
     let out_dir: PathBuf = match out_override {
         Some(p) => p.to_path_buf(),
@@ -2279,7 +2277,7 @@ fn compile_one(
     let stem_no_ext = stem.strip_suffix(".sail").unwrap_or(stem);
     // In mirror mode the emitted JS is named `<stem>.compiled.js` so
     // imports can name it directly without a separate rename step in
-    // the build pipeline. With --out we keep the legacy `<stem>.js`
+    // the build pipeline. With --out we keep the `<stem>.js`
     // for callers that expect that name.
     let js_name = if mirror_mode {
         format!("{stem_no_ext}.compiled.js")

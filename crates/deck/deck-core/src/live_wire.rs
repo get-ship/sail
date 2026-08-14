@@ -21,7 +21,7 @@
 //!
 //! `patch-signals` updates a named LiveSignal in the runtime scope.
 //! `patch-elements` is an out-of-band surgical DOM patch.
-//! `patch` (op: set) is the legacy `/_deck/data` single-expression channel.
+//! `patch` (op: set) is the `/_deck/data` single-expression channel.
 //! The keepalive comment prevents idle proxies from closing SSE connections.
 
 use serde::{Deserialize, Serialize};

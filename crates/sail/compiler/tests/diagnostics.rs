@@ -152,7 +152,7 @@ fn the_retired_prop_tag_is_rejected() {
     // forcing everything into a closed primitive enum. So the invariant worth
     // holding is the retirement, and that its error TEACHES rather than just refuses.
     // NOTE: this literal must stay a `<prop>` tag. It is the specimen, not an
-    // authoring example — a migration sweep that "fixes" it silently guts the guard.
+    // authoring example — a rewrite sweep that "fixes" it silently guts the guard.
     let src = r#"<prop name="x" type="custom" default="" />"#;
     let err = compile_route(src);
     assert!(

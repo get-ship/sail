@@ -532,8 +532,6 @@ export function createThemesSurface() {
     previewStatusLabel,
     previewStatusTone,
     previewInProject,
-    /** @deprecated alias — project membership, not an enable flag */
-    previewEnabled: previewInProject,
     previewIsCatalog,
     previewThemeId,
     previewPaintId,
@@ -557,8 +555,6 @@ export function createThemesSurface() {
     onAddToProject,
     onPreviewOpen,
     onPreviewAddToProject,
-    /** @deprecated alias for template migration */
-    onPreviewEnable: onPreviewAddToProject,
     onPreviewModeSwitch,
     onNewTheme,
     onRowMenu,

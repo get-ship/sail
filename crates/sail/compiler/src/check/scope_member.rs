@@ -62,7 +62,7 @@ fn check_one(
         parse_expression(&expr.source, expr.span.start)
     };
     let Ok(ast) = parsed else {
-        // Parser couldn't model this shape (legacy permissive expr) —
+        // Parser couldn't model this shape (older permissive expr) —
         // skip; the lenient validators still police it.
         return Ok(());
     };

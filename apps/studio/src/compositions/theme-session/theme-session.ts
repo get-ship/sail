@@ -27,7 +27,6 @@ import {
 } from './theme-nav'
 import {
   modesForPaintId,
-  paintIdFor,
   resolvePaintId,
   themeDisplayName,
   themeIdFromLocation,
@@ -36,7 +35,7 @@ import {
 import { makeSessionShellActions } from './theme-session-actions'
 
 export type { ThemeFacet, ModeInfo }
-export { modesForPaintId, paintIdFor, resolvePaintId, themeDisplayName, themeIdFromLocation }
+export { modesForPaintId, resolvePaintId, themeDisplayName, themeIdFromLocation }
 export {
   bindPreviewHost,
   unbindPreviewHost,

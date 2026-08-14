@@ -112,12 +112,6 @@ pub const SCOPE_GRAMMAR: &[ScopeEntry] = &[
         example: "<scope>\n  style filled = { bg(primary).pad({ x: 2 }) }\n  props: { label = '' }\n</scope>\n<span style(filled)>\n  {label}\n</span>",
     },
     ScopeEntry {
-        form: "Style const (legacy dual path)",
-        syntax: "const filled = style({ bg(primary).pad({ x: 2 }) })",
-        summary: "const Style binding — prefer `style name = {…}`",
-        example: "<scope>\n  const filled = style({ bg(primary).pad({ x: 2 }) })\n  props: { label = '' }\n</scope>\n<span style(filled)>\n  {label}\n</span>",
-    },
-    ScopeEntry {
         form: "Identity type annotation",
         syntax: "name: { /* arbitrary TypeScript type */ }",
         summary: "object type annotations are passed through verbatim as Identity; CVA key→sx maps are no longer special-cased — declare a string union and paint with host match / Style",

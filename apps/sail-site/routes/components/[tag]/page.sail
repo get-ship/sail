@@ -88,7 +88,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
   const knownPack = derived(() => PACK_TAGS.has(tag()))
   const showViewer = derived(() => knownDoc() || knownPack())
 
-  // FIRST_CLASS_HOSTS is SSOT from meta.host !== 'legacy'.
+  // FIRST_CLASS_HOSTS is SSOT — every docs package slug.
   const firstClass = derived(() => FIRST_CLASS_HOSTS.has(tag()))
   const hasDocCe = derived(() => DOC_CE_SLUGS.has(tag()))
   const useDocHost = derived(() => firstClass() && hasDocCe())
@@ -387,7 +387,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
     <empty-state style(emptyEnter)>
       <strong slot="title">Docs host not wired for “{tag()}”</strong>
       Package meta is first-class (<code>doc-{tag()}</code>) but this shell has no
-      mount for that CE yet. Do not fall back to legacy residual after peel.
+      mount for that CE yet.
     </empty-state>
     <row gap="2">
       <a variant="solid" tone="primary" href="/components">← All components</a>

@@ -413,7 +413,7 @@ export function readModePreference(): ModePreference {
   const stored = readStoredMode()
   if (stored === 'light' || stored === 'dark' || stored === 'system') return stored
   if (stored) {
-    // Legacy / unknown paint strings → treat as explicit light|dark preference.
+    // Unknown paint strings → treat as explicit light|dark preference.
     return paintMode(stored)
   }
   return readConfigDefaultMode()
@@ -505,7 +505,7 @@ export function applyTheme(
   root.removeAttribute('data-theme')
   root.removeAttribute('data-theme-preview')
   writePaintMode(root, resolvedMode)
-  // Explicitly clear legacy .dark if present (no dual mechanism).
+  // Explicitly clear leftover .dark if present (no dual mechanism).
   root.classList.remove('dark')
   const dark = resolvedMode === 'dark'
   if (typeof document !== 'undefined' && typeof CustomEvent !== 'undefined') {
@@ -520,7 +520,7 @@ export function applyTheme(
 
 /**
  * Modes declared for a theme (from generated meta). Empty ⇒ treat as light|dark
- * for legacy; single-mode themes return one entry.
+ * for older files; single-mode themes return one entry.
  */
 export function modesForTheme(id: string): readonly string[] {
   const meta = lookupThemeMeta(id)

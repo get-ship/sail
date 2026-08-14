@@ -288,7 +288,7 @@ struct LayerMeta {
     theme_id: Option<String>,
     dark: bool,
     /// Mode name when this layer is a modes-in-file emit (Phase D). `None` =
-    /// legacy single-block theme (twin light/dark ids).
+    /// single-block theme (twin light/dark ids).
     mode: Option<String>,
     /// Default mode for the theme id (from `$extensions.sail.defaultMode`).
     default_mode: Option<String>,
@@ -424,7 +424,7 @@ impl ThemeConfig {
 /// Resolved emit-set membership for studio / tests / validation (T1).
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct EffectiveThemeIds {
-    /// Stems of project `themes/*.json` (and legacy `tokens/themes/*.json`).
+    /// Stems of project `themes/*.json`.
     pub project: Vec<String>,
     /// Catalog ids that participate (allowlist ∩ existing catalog files).
     pub catalog: Vec<String>,
@@ -451,8 +451,8 @@ impl EffectiveThemeIds {
 ///   (`Some([])` when thin/omit — never silent full catalog).
 #[derive(Debug, Clone, Default)]
 pub struct GenerateOptions {
-    /// Project DTCG theme directories (`<project>/themes`, legacy
-    /// `tokens/themes`). Every `*.json` here is always in the emit set; same
+    /// Project DTCG theme directories (`<project>/themes`). Every `*.json` here
+    /// is always in the emit set; same
     /// `themeId` overrides catalog.
     pub project_theme_dirs: Vec<PathBuf>,
     /// When `Some`, only these **catalog** theme ids are emitted (project themes
@@ -595,35 +595,21 @@ pub fn should_generate_package_delivery(workspace_root: &Path) -> bool {
     }
 }
 
-/// Project theme directories: `<project>/themes` then legacy `tokens/themes`.
+/// Project theme directories: `<project>/themes`.
 ///
-/// Only existing directories are returned. Modern layout is `themes/`;
-/// legacy `tokens/themes` remains dual-read for external apps mid-transition.
+/// Only existing directories are returned.
 pub fn project_theme_dirs(project_dir: &Path) -> Vec<PathBuf> {
     let mut dirs = Vec::new();
     let modern = project_dir.join("themes");
-    let legacy = project_dir.join("tokens").join("themes");
     if modern.is_dir() {
         dirs.push(modern);
-    }
-    if legacy.is_dir() {
-        dirs.push(legacy);
     }
     dirs
 }
 
-/// Prefer `<project>/themes` for new writes; fall back to legacy dir if that is
-/// where themes already live and `themes/` does not.
+/// Project theme writes go under `<project>/themes`.
 pub fn project_themes_write_dir(project_dir: &Path) -> PathBuf {
-    let modern = project_dir.join("themes");
-    let legacy = project_dir.join("tokens").join("themes");
-    if modern.is_dir() {
-        return modern;
-    }
-    if legacy.is_dir() && !modern.exists() {
-        return legacy;
-    }
-    modern
+    project_dir.join("themes")
 }
 
 /// Union of theme ids across all project theme dirs (sorted, unique).
@@ -637,15 +623,9 @@ pub fn list_project_theme_ids(project_dir: &Path) -> Vec<String> {
     set.into_iter().collect()
 }
 
-/// Absolute path candidates for a project theme id (modern then legacy).
-fn project_theme_file_candidates(project_dir: &Path, theme_id: &str) -> [PathBuf; 2] {
-    [
-        project_dir.join("themes").join(format!("{theme_id}.json")),
-        project_dir
-            .join("tokens")
-            .join("themes")
-            .join(format!("{theme_id}.json")),
-    ]
+/// Absolute path candidates for a project theme id.
+fn project_theme_file_candidates(project_dir: &Path, theme_id: &str) -> [PathBuf; 1] {
+    [project_dir.join("themes").join(format!("{theme_id}.json"))]
 }
 
 /// Read DTCG under `model_dir` and write the three artifacts into `out_dir`.
@@ -964,7 +944,7 @@ fn build_themes_meta_ts(layers: &[&Layer]) -> String {
     out.push_str("  id: string\n");
     out.push_str("  /** Whether the default mode is a dark surface (`mode=dark`). */\n");
     out.push_str("  dark: boolean\n");
-    out.push_str("  /** Mode names when modes-in-file; empty = legacy single-block theme. */\n");
+    out.push_str("  /** Mode names when modes-in-file; empty = single-block theme. */\n");
     out.push_str("  modes: readonly string[]\n");
     out.push_str("  defaultMode: string | null\n");
     out.push_str("  /** Declared capability derived from modes: light | dark | both. */\n");
@@ -2839,8 +2819,8 @@ fn strip_jsonc_comments(input: &str) -> String {
 ///
 /// Uses `theme_id` (default [`DEFAULT_PROJECT_THEME_ID`]). When
 /// `catalog_themes_dir` is `None`, sources the baked catalog (no monorepo
-/// tree required). Does not overwrite an existing project file (modern or
-/// legacy path). Returns the destination path.
+/// tree required). Does not overwrite an existing project file.
+/// Returns the destination path.
 pub fn scaffold_default_project_theme(
     project_dir: &Path,
     catalog_themes_dir: Option<&Path>,
@@ -2851,7 +2831,7 @@ pub fn scaffold_default_project_theme(
         .unwrap_or(DEFAULT_PROJECT_THEME_ID);
     validate_theme_id(id)?;
 
-    // Already present under modern or legacy project themes — leave alone.
+    // Already present under project themes — leave alone.
     for existing in project_theme_file_candidates(project_dir, id) {
         if existing.is_file() {
             return Ok(existing);
@@ -2975,7 +2955,7 @@ pub fn list_theme_ids_in_dir(dir: &Path) -> Vec<String> {
 /// Effective theme set for a project (T0/T1 algorithm).
 ///
 /// ```text
-/// project_ids = stems of project themes/*.json (+ legacy tokens/themes)
+/// project_ids = stems of project themes/*.json
 /// catalog_allow = all | list | default [ship] | explicit []
 /// effective_catalog = catalog_allow ∩ catalog (disk model or baked)
 /// emit_set = project ∪ effective_catalog (project wins on id at emit)
@@ -3081,7 +3061,7 @@ fn load_theme_mode_names(
     theme_id: &str,
 ) -> Result<Vec<String>> {
     validate_theme_id(theme_id)?;
-    // Project files first (modern then legacy).
+    // Project files first.
     for path in project_theme_file_candidates(project_dir, theme_id) {
         if let Some(modes) = read_theme_mode_keys(&path)? {
             return Ok(modes);
@@ -3204,7 +3184,7 @@ pub fn generate_package_delivery(
 }
 
 /// True when the project has theme SSOT that should drive a cold-start generate
-/// (`themes/*.json`, legacy `tokens/themes/*.json`, or sail.config `theme`).
+/// (`themes/*.json` or sail.config `theme`).
 pub fn project_wants_theme_generate(project_dir: &Path) -> bool {
     for dir in project_theme_dirs(project_dir) {
         if let Ok(rd) = fs::read_dir(&dir) {
@@ -3852,7 +3832,6 @@ fn build_unions_ts(base_tokens: &[Token], registry: &Value, theme_ids: &[String]
         &tone_names,
         "Semantic paint tone groups (Style bound `tone` / host prop). No `'default'`.",
     );
-    out.push_str("/** @deprecated Use {@link Tone}. */\n");
     out.push_str("export type ToneName = Tone\n\n");
     // TONE table: group → members → publicName
     let tone_table = tone_group_table(base_tokens);

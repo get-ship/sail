@@ -111,7 +111,7 @@ export function makeStoreUi(access: StoreUiAccess) {
           mono: Boolean(h.mono),
         }))
         .filter((h) => h.family)
-      // Back-compat: if server only returns families, synthesize hits.
+      // If the server only returns families, synthesize hits.
       const resolvedHits =
         hits.length > 0
           ? hits

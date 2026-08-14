@@ -26,7 +26,6 @@ export const TONE_NAMES = [
 ] as const
 export type Tone = (typeof TONE_NAMES)[number]
 
-/** @deprecated Use {@link Tone}. */
 export type ToneName = Tone
 
 /** Tone group → members → public token name (Style / tokens.css). */

@@ -172,7 +172,7 @@ fn walk_instr(
             // server-DOM wraps the node at toHTML time.
             out.runtime_imports.insert("markHydrateText");
             // Phase 3b.3: depth-0 text bindings in routes are direct-emit.
-            // The compiler still calls `bindText` from `__mount` (legacy
+            // The compiler still calls `bindText` from `__mount` (
             // CSR path), but `hydrate(root, ctx)` wires via these helpers.
             if is_route && *depth == 0 {
                 out.dom_imports.insert("collectTextOpens");

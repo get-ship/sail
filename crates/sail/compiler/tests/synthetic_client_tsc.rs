@@ -177,7 +177,7 @@ fn write_runtime_shim(repo: &Path, work: &Path) {
          // Types the @ship/sail-dom hydrate helpers import from the runtime but\n\
          // that the SSR server entry does not surface.\n\
          export type {{ Modifier, OnOptions }} from \"{r}/packages/sail/runtime/src/on.ts\";\n\
-         // `ControllerScope` lives on controller.ts (the legacy export authors still\n\
+         // `ControllerScope` lives on controller.ts (the export authors still\n\
          // reach for). Re-export so a controller declaring\n\
          // `controller<ControllerScope>(...)` doesn't break under the shim.\n\
          export type {{ ControllerScope }} from \"{r}/packages/sail/runtime/src/controller.ts\";\n"
@@ -274,7 +274,7 @@ fn client_contract_typechecks_green_across_real_surfaces() {
     // `greet` is CONTROLLER-FREE (its scope is template/route declared). `feed`
     // carries its controller INLINE (`<controller>…</controller>`, composed
     // automatically — see `synth_client_into`). Pre-`controller-collapse`, a
-    // zero-arg `controller(() => …)` (no `ctx` param) resolved to a legacy
+    // zero-arg `controller(() => …)` (no `ctx` param) resolved to a prior
     // `__def`-less overload, so the synthetic scope-factory recovery yielded
     // `{}` (`ef696e5`) — `feed`'s controller took a `(_ctx)` param to dodge
     // it. `controller(fn)` is now the ONE overload (always carries `__def`;
@@ -369,7 +369,7 @@ fn client_render_typo_is_caught_by_tsgo() {
 }
 
 /// Slice 2 G4 — `board`'s authored controller declares `controller(() => …)`
-/// while the view declares NO `<state>` (the empty view `Scope`), so the legacy
+/// while the view declares NO `<state>` (the empty view `Scope`), so the
 /// `ControllerExport<infer S>` recovery would erase the controller-added
 /// `items`/`add`/`remove` from the recovered type — `items()` would be a TS2339.
 /// The slice 2 G4 fix: recover the setup function's ACTUAL return type instead
@@ -380,7 +380,7 @@ fn client_render_typo_is_caught_by_tsgo() {
 /// The `controller-collapse` job (function-form `controller(fn)`, one
 /// overload) removed the two-overload split that caused the original
 /// `ef696e5` regression this test tracked (a zero-`ctx`-param factory
-/// couldn't infer `Ctx`, so the call fell through to a legacy overload with
+/// couldn't infer `Ctx`, so the call fell through to a prior overload with
 /// no `__def`, and recovery found nothing to recover from). There is now
 /// only one overload — it always carries `__def` — and the recovery pattern
 /// (`typeof __authored.__def extends (...a: never[]) => infer R`) matches

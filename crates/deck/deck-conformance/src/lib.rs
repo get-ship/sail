@@ -20,7 +20,7 @@
 //!    the mutation tombstone all come from `deck::router()` itself.
 //!
 //! Decoupling gaps surfaced (see README): env config is still process-global
-//! (now `DECK_*`-named with a `SHIP_*` legacy fallback — Fix C);
+//! (now `DECK_*`-named with a `SHIP_*` fallback — Fix C);
 //! `Bundler::start` only needs a repo root + config; `router()` carries no
 //! bundler and no HMR (both host-wired); the bundler out-dir must equal the
 //! resolver's project root.

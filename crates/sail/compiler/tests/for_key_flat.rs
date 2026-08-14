@@ -3,7 +3,7 @@
 //! When the `key={…}` expression is scope-free — every free identifier
 //! is the loop binding, the index binding, an expression-local, or a
 //! JS/browser builtin — the compiler emits a flat `(row, i) => expr`
-//! closure. The legacy form allocated `Object.create($scope)` per call,
+//! closure. The previous form allocated `Object.create($scope)` per call,
 //! and the runtime's keyed reconciler (`bindFor`) calls the key fn for
 //! every row on every render — one dead allocation per row per swap.
 //!

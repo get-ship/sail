@@ -890,7 +890,7 @@
       "service": "SailTheme",
       "method": "List",
       "mcp_tool": "sail_theme_list",
-      "description": "List theme JSON files under a directory. Path must be themes/**, tokens/themes/** (legacy), or packages/sail/tokens/model/themes.",
+      "description": "List theme JSON files under a directory. Path must be themes/** or packages/sail/tokens/model/themes.",
       "path": "/sail.ops.v1.SailTheme/List",
       "inputSchema": {
         "type": "object",
@@ -971,7 +971,7 @@
       "service": "SailTheme",
       "method": "Write",
       "mcp_tool": "sail_theme_write",
-      "description": "Write a project theme JSON. Allowlist: themes/**/*.json or legacy tokens/themes/**/*.json.",
+      "description": "Write a project theme JSON. Allowlist: themes/**/*.json.",
       "path": "/sail.ops.v1.SailTheme/Write",
       "inputSchema": {
         "type": "object",
@@ -1016,7 +1016,7 @@
       "service": "SailTheme",
       "method": "Delete",
       "mcp_tool": "sail_theme_delete",
-      "description": "Delete a project theme JSON. Allowlist: themes/**/*.json or legacy tokens/themes/**/*.json (catalog refused).",
+      "description": "Delete a project theme JSON. Allowlist: themes/**/*.json (catalog refused).",
       "path": "/sail.ops.v1.SailTheme/Delete",
       "inputSchema": {
         "type": "object",
@@ -1051,7 +1051,7 @@
       "service": "SailTheme",
       "method": "Fork",
       "mcp_tool": "sail_theme_fork",
-      "description": "Fork a catalog or project theme into themes/ (or legacy tokens/themes/). Optional new_id rewrites $extensions.ship.themeId.",
+      "description": "Fork a catalog or project theme into themes/. Optional new_id rewrites $extensions.ship.themeId.",
       "path": "/sail.ops.v1.SailTheme/Fork",
       "inputSchema": {
         "type": "object",

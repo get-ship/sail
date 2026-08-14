@@ -1,4 +1,4 @@
-// sail-line-chart — FOUNDATIONAL migration specs (TESTS-FIRST, RED).
+// sail-line-chart — FOUNDATIONAL cutover specs (TESTS-FIRST, RED).
 //
 // The line chart is migrated onto the createChartData engine + createChartViewport
 // adapter: geometry becomes a pure `derived` (present at first paint, no flush),
@@ -27,7 +27,7 @@ const TWO_SERIES = JSON.stringify([
   { name: 'b', data: [4, 3, 2, 1] },
 ])
 
-describe('<sail-line-chart> migration — geometry at first paint', () => {
+describe('<sail-line-chart> cutover — geometry at first paint', () => {
   it('renders series paths synchronously at mount (no flush needed)', () => {
     const { el } = mount(reg, 'sail-line-chart', { series: TWO_SERIES })
     // The derived geometry is available at render time — the effect-into-signal
@@ -36,7 +36,7 @@ describe('<sail-line-chart> migration — geometry at first paint', () => {
   })
 })
 
-describe('<sail-line-chart> migration — the mark is the seam', () => {
+describe('<sail-line-chart> cutover — the mark is the seam', () => {
   it('one stroke path per series, painted from the tone token', async () => {
     const { el } = mount(reg, 'sail-line-chart', { series: TWO_SERIES })
     await flush()
@@ -56,7 +56,7 @@ describe('<sail-line-chart> migration — the mark is the seam', () => {
   })
 })
 
-describe('<sail-line-chart> migration — engine-driven states', () => {
+describe('<sail-line-chart> cutover — engine-driven states', () => {
   it('loading attribute composes a sail-skeleton', async () => {
     const { el } = mount(reg, 'sail-line-chart', { series: TWO_SERIES, loading: true })
     await flush()
@@ -95,7 +95,7 @@ describe('<sail-line-chart> migration — engine-driven states', () => {
   })
 })
 
-describe('<sail-line-chart> migration — accessible summary', () => {
+describe('<sail-line-chart> cutover — accessible summary', () => {
   it('aria-label is "kind: summary", not the bare kind', async () => {
     const { el } = mount(reg, 'sail-line-chart', { series: TWO_SERIES, label: 'Activity line chart' })
     await flush()
@@ -106,7 +106,7 @@ describe('<sail-line-chart> migration — accessible summary', () => {
   })
 })
 
-describe('<sail-line-chart> migration — responsive viewBox', () => {
+describe('<sail-line-chart> cutover — responsive viewBox', () => {
   it('does not stretch with preserveAspectRatio="none"', async () => {
     const { el } = mount(reg, 'sail-line-chart', { series: TWO_SERIES })
     await flush()

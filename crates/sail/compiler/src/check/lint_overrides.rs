@@ -18,7 +18,7 @@
 //! Overrides mostly *soften* (Error → Warn or Off) so an external consumer can
 //! opt out of a rule without editing it. They can also *promote* (→ Error):
 //! the styling policy (`check::policy::Policy`) uses that direction to turn a
-//! migration-Warn capability rule (`sail-no-raw-container`) into a hard wall for
+//! Warn-then-Error capability rule (`sail-no-raw-container`) into a hard wall for
 //! the `full`/`strict` presets. Promotion is reserved for those policy rules —
 //! arbitrary Warn rules are tightened by editing the rule.
 //!
@@ -75,7 +75,7 @@ pub enum OverrideSeverity {
     Off,
     /// PROMOTE the rule's findings to Error at the build gate. Unlike
     /// `Warn`/`Off` (which soften), this *tightens*. It is how the styling
-    /// policy (`check::policy::Policy`) turns a migration-Warn rule
+    /// policy (`check::policy::Policy`) turns a Warn-then-Error rule
     /// (`sail-no-style-block`, `sail-no-raw-container`) into a hard wall for
     /// the `full`/`strict` presets — without editing the rule. The rule's natural
     /// Warn still stands for an unconfigured package.
@@ -89,7 +89,7 @@ pub enum OverrideSeverity {
 pub struct LintOverride {
     /// Rule ID — e.g. `"sail-css-token"`. The set of valid IDs is
     /// `sail_lint::all_rule_ids()`. The compiler does NOT validate
-    /// (forward-compat — a typo simply has no effect, which is the
+    /// (unknown keys are ignored — a typo simply has no effect, which is the
     /// safe failure mode).
     pub rule: String,
     pub severity: OverrideSeverity,

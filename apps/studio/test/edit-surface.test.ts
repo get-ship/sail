@@ -12,7 +12,6 @@ import {
   activeDoc,
   applyModelUpdate,
   applySourceEditorScroll,
-  applySourceScroll,
   bindEditSelection,
   elementRows,
   elementSailTreeNodes,

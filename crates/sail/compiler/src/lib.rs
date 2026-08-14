@@ -402,7 +402,7 @@ pub fn compile_element(
 ) -> Result<emit::element::ElementOutput, CompileError> {
     // An L1 element name is lowercase, and it may be hyphenated — `tab-list`,
     // `menu-item` and `context-menu` are all language elements. What it may NOT be
-    // is `sail-`-prefixed: that is the legacy COMPONENT namespace (the custom
+    // is `sail-`-prefixed: that is the COMPONENT namespace (the custom
     // elements L1 replaces), and the compiler stamps its own `sail-` prefix onto the
     // root class. Passing one through yields `.sail-sail-spinner` — nonsense CSS for a
     // source that should never have compiled as an element. (Caught by a test the

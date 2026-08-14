@@ -145,9 +145,8 @@ a[variant] {
   text-align: center;
 }
 /* Pill / toolbar links that set display:inline-flex via Style without [variant].
- * Class stamp is `s-display*` (Style atom prefix); keep `sx-*` as a legacy alias. */
-a.sail-a.s-displayinlineflex,
-a.sail-a.sx-displayinlineflex {
+ * Class stamp is `s-display*` (Style atom prefix). */
+a.sail-a.s-displayinlineflex {
   align-items: center;
   justify-content: center;
   line-height: 1;
@@ -156,7 +155,7 @@ a.sail-a.sx-displayinlineflex {
   text-decoration: none;
 }
 /* Bare text links — inline, not a flex control. */
-a.sail-a:not([variant]):not(.s-displayinlineflex):not(.sx-displayinlineflex):not(.s-displayblock):not(.sx-displayblock) {
+a.sail-a:not([variant]):not(.s-displayinlineflex):not(.s-displayblock) {
   display: inline;
   line-height: inherit;
   vertical-align: baseline;

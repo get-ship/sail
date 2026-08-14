@@ -1,4 +1,0 @@
-<!--
-  Legacy /deck/* redirects — fill shell (no product rail).
--->
-<sail-fill-shell></sail-fill-shell>

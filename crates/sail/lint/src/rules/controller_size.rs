@@ -5,7 +5,7 @@
 //! effects, data calls, action wiring — they do not host implementation.
 //! Crossing the threshold is a **policy-layer Warning** (default on). It never
 //! hard-fails the build; silence via `policy.lint.severity.sail-controller-size
-//! = "off"` if a host truly needs a thick controller during migration.
+//! = "off"` if a host truly needs a thick controller during a cutover.
 //!
 //! ## Measurement
 //!

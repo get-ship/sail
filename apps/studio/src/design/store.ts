@@ -1,7 +1,7 @@
 import type { SailHost } from '@ship/sail-runtime'
 /**
  * Theme domain store — product UI is Themes only.
- * (Legacy path name `design`; writers shared by theme-session facets.)
+ * Module path remains `design`; writers shared by theme-session facets.
  *
  * Draft model: one themeDoc in RAM; dirty ⇔ doc ≠ baseline (savedDoc);
  * Save = JSON write + SailTheme Generate mode=app. Live preview via
@@ -197,7 +197,7 @@ function editCtx(): EditCtx {
   }
 }
 
-// API stability shim; live draft paint is scheduleDraftPaint / applyScope.
+// No-op leftover from CSSOM writes; live draft paint is scheduleDraftPaint / applyScope.
 function reflectCss(_cssName: string, _value: string | null): void {
   /* no-op — paint via scheduleDraftPaint / applyScope */
 }
@@ -407,17 +407,12 @@ export async function openTheme(themeId: string): Promise<void> {
 
 /**
  * Add catalog/source theme into the project (UI: "Add to project").
- * `forkTheme` kept as alias for existing call sites.
  */
 export async function addThemeToProject(
   newId: string,
   sourceId?: string,
 ): Promise<boolean> {
   return forkThemeOn(themeCtx(), newId, sourceId)
-}
-
-export async function forkTheme(newId: string, sourceId?: string): Promise<boolean> {
-  return addThemeToProject(newId, sourceId)
 }
 
 export async function saveTheme(): Promise<boolean> {

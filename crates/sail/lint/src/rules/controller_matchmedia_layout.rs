@@ -18,7 +18,7 @@
 //!
 //! Natural severity: **Warn** (surfaces in LSP / `sail-lint`; does not hard-fail
 //! compile). Under `strict` profiles a host may promote via lint overrides —
-//! same channel as other migration-Warn rules.
+//! same channel as other Warn-then-Error rules.
 //!
 //! Fix: Style `when({ tablet: … })` / `when({ mobile: … })` for sx; attr-level
 //! responsive work lands under RESPONSIVE-1 (breakpoint-aware layout attrs).

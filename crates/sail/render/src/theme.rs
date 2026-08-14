@@ -245,9 +245,9 @@ fn find_theme_file(theme_id: &str, workspace: Option<&Path>) -> Option<PathBuf> 
         v
     });
     for root in roots {
-        // Project themes: modern `<root>/themes` then legacy `tokens/themes`.
-        for sub in ["themes", "tokens/themes"] {
-            let p = root.join(sub).join(format!("{theme_id}.json"));
+        // Project themes: `<root>/themes`.
+        {
+            let p = root.join("themes").join(format!("{theme_id}.json"));
             if p.is_file() {
                 return Some(p);
             }
@@ -262,16 +262,14 @@ fn find_theme_file(theme_id: &str, workspace: Option<&Path>) -> Option<PathBuf> 
                 return Some(c);
             }
         }
-        // Monorepo apps: apps/*/{themes,tokens/themes}/{id}.json
+        // Monorepo apps: apps/*/themes/{id}.json
         let apps = root.join("apps");
         if let Ok(entries) = std::fs::read_dir(&apps) {
             for e in entries.flatten() {
                 let app = e.path();
-                for sub in ["themes", "tokens/themes"] {
-                    let p = app.join(sub).join(format!("{theme_id}.json"));
-                    if p.is_file() {
-                        return Some(p);
-                    }
+                let p = app.join("themes").join(format!("{theme_id}.json"));
+                if p.is_file() {
+                    return Some(p);
                 }
             }
         }

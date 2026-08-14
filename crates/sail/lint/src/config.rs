@@ -824,8 +824,9 @@ mod config_doc_tests {
         assert!(ok.unknown_keys().is_empty(), "nested deck is recognized");
         assert!(ok.has_key("deck"));
 
-        let legacy = SailConfig::from_json(r#"{ "render": "ssr", "deck": { "render": "csr" } }"#);
-        assert_eq!(legacy.unknown_keys(), vec!["render".to_string()]);
+        let unknown_top =
+            SailConfig::from_json(r#"{ "render": "ssr", "deck": { "render": "csr" } }"#);
+        assert_eq!(unknown_top.unknown_keys(), vec!["render".to_string()]);
     }
 
     #[test]

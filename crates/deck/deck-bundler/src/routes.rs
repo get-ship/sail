@@ -321,7 +321,7 @@ pub(crate) struct RouteTree {
 // tests below; the `#[cfg(test)]` usages make the function unreachable in
 // non-test builds, hence the allow. Removing the wrapper would force the
 // tests to call `render_routes_gen_with(tree, true)` with the magic `true`
-// — the wrapper's only contract is "legacy `include_token_import=true` shape".
+// — the wrapper's only contract is "historical `include_token_import=true` shape".
 #[allow(dead_code)]
 fn render_routes_gen(tree: &RouteTree) -> String {
     render_routes_gen_with(tree, true)
@@ -329,9 +329,9 @@ fn render_routes_gen(tree: &RouteTree) -> String {
 
 /// Render `routes.gen.ts`. `include_token_import` controls whether the
 /// `@ship/tokens/tokens.css` side-effect import lives in this file
-/// (the legacy shape — `routes.gen.ts` is the SPA entry) or in
+/// (the combined shape — `routes.gen.ts` is the SPA entry) or in
 /// `entry.gen.ts` (the split shape — data + bootstrap are separate).
-/// The split shape is the spec's preferred form; the legacy shape is
+/// The split shape is the spec's preferred form; the combined shape is
 /// retained for builds that don't declare an `entry` bootstrap in
 /// `deck.jsonc` so the token import keeps shipping with every per-app
 /// build (the design tokens MUST ride the bundle for `var(--token)`
@@ -445,7 +445,7 @@ fn render_routes_gen_with(tree: &RouteTree, include_token_import: bool) -> Strin
     // The token import (design tokens — OKLCH palette, semantic surfaces,
     // tone ramps, role tokens, motion/density channels) is conditionally
     // emitted by THIS file: when `include_token_import` is true (the
-    // legacy shape — `routes.gen.ts` is the SPA entry, no host bootstrap),
+    // combined shape — `routes.gen.ts` is the SPA entry, no host bootstrap),
     // the import rides here. When false (the split shape — the host
     // declared an `entry` bootstrap), the import moves to `entry.gen.ts`
     // (the host-owned bootstrap). Either way the tokens ship with the
@@ -760,7 +760,7 @@ mod tests {
             dir: root.join("routes"),
             out: root.join("routes.gen.ts"),
             label: label.to_string(),
-            // Tests run the legacy shape: routes.gen.ts IS the entry,
+            // Tests run the combined shape: routes.gen.ts IS the entry,
             // the token import rides there. The split-shape path has its
             // own dedicated tests below.
             entry_bootstrap: None,

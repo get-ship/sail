@@ -115,7 +115,7 @@ fn wired_serve_renders_ship_js_first_paint() {
     // ── board (a REAL controller({...}) DSL route) ─────────────────────────
     // ship-js runs the controller, so first paint carries the controller-signal
     // rows: the `{#if}` branch renders and the per-row `aria-pressed:`
-    // directive fires (post-floor migration; the prior `class:flagged`
+    // directive fires (post-floor rewrite; the prior `class:flagged`
     // global hook is banned by `sail-no-class`).
     let on_raw = payload_html(&root, engine, "board", None);
     let on = strip_markers(&on_raw);

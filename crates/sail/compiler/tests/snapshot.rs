@@ -484,8 +484,8 @@ fn for_render_closure_emits_update_field() {
     );
     // After per-field __v split, fixture's `{row.label.toUpperCase()}`
     // body reads only `row.label` reactively — so the closure subscribes
-    // to `__v_label` (per-field) instead of the legacy whole-row `__v`.
-    // Accept either form for forward-compat; both shapes preserve the
+    // to `__v_label` (per-field) instead of the whole-row `__v`.
+    // Accept either form; both shapes preserve the
     // reactive-on-row-update contract.
     assert!(
         out.js.contains("void $scope.__v(") || out.js.contains("void $scope.__v_label("),

@@ -6,7 +6,6 @@
  *   slot=knobs     → right fixed knobs column, start-aligned
  *
  * Prefer those slots over re-authoring a stage row in each host.
- * Hosts that still put a full row in slot=stage are legacy until migrated.
  *
  * Geometry atoms (for hosts still inlining the row). Width is space scale
  * (size({ w: 64 }) → --space-64), never panel-max-w-* — those are panel-family tokens.

@@ -10,7 +10,7 @@
 //! Phase 3b.5 (gate H): control-flow boundaries are direct-emit through
 //! the unified `hydrate(root, ctx)` function on the route's setup return.
 //! Each `<if>` / `<for>` / `<match>` / `<when>` boundary still hoists a
-//! `__wireBoundary_b<N>` const inside `setup(ctx)` so the legacy
+//! `__wireBoundary_b<N>` const inside `setup(ctx)` so the
 //! `__mount` path can call it inline; the hydrate function looks up the
 //! SSR'd `<sail-{kind} key="b<N>">` element via `collectElementMarkers`,
 //! swaps it for a Comment anchor, and invokes the same hoisted helper.
@@ -345,7 +345,7 @@ impl TemplateEmitter {
         h.line(&format!("{child_scope}.{idx_name} = {idx_name};"));
         // Per-row version signals are emitted AFTER the body walk —
         // we need to know which fields reactive bindings touched before
-        // we can decide whether to allocate `__v` (legacy whole-row),
+        // we can decide whether to allocate `__v` (whole-row),
         // per-field `__v_<f>`, or no signal at all.
         // Wrap the body in an IIFE that takes `$scope` as a parameter so
         // the iteration's child scope shadows the outer `$scope` without
@@ -430,7 +430,7 @@ impl TemplateEmitter {
         //   - RowUse::Whole   — at least one reactive binding can't be
         //                       decomposed into a field set (bare `row`,
         //                       computed access, index read, etc.). Fall
-        //                       back to the legacy `__v` whole-row
+        //                       back to the `__v` whole-row
         //                       signal, bumped unconditionally on update.
         //   - RowUse::FieldsOnly(fs) — every reactive binding reads
         //                       only `row.<field>` patterns. Allocate
@@ -783,7 +783,7 @@ impl TemplateEmitter {
     /// `when` boundary. The compiled `hydrate(root, ctx)` body looks up
     /// the SSR'd `<sail-{kind} key="b<N>">` element via `__m`, swaps it
     /// for a Comment anchor, and invokes the hoisted `__wireBoundary_b<N>`
-    /// helper — same shape the legacy `__bN_attach` named property used
+    /// helper — same shape the `__bN_attach` named property used
     /// to expose, just inlined into the unified hydrate function.
     fn emit_boundary_hydrate(&mut self, key: &str, kind: &str, needs_host: bool) {
         let k = js_string(key);

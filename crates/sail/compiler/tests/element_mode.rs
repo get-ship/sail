@@ -96,7 +96,7 @@ fn element_rejects_dynamic_attributes() {
 #[test]
 fn element_rejects_the_sail_component_namespace() {
     // Hyphens are FINE — `tab-list`, `menu-item` and `context-menu` are all L1
-    // elements. What is not fine is the `sail-` prefix: that is the legacy component
+    // elements. What is not fine is the `sail-` prefix: that is the retired component
     // namespace L1 replaces, and the compiler stamps its own `sail-` onto the root
     // class, so letting one through produced `.sail-sail-spinner`.
     let err = compile_element("<span class=\"x\">y</span>", "sail-spinner").unwrap_err();

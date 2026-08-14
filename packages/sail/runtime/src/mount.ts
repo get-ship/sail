@@ -1,6 +1,6 @@
 // mount() — F1 unified entry point.
 //
-// Replaces attach() (legacy, in @ship/sail-dom) with a payload-driven
+// Replaces attach() (in @ship/sail-dom) with a payload-driven
 // flow. Hosts (shell, view-host static, embed surfaces, tests) pass
 // either a fetched RoutePayload or a name string; mount injects the
 // SSR HTML, builds signals from payload.scope, imports the compiled
@@ -263,7 +263,7 @@ export async function mount<Scope = Record<string, unknown>>(
   // the DOM. The compiled route's `__mount` is the CSR equivalent
   // of the SSR template — it builds the elements and wires the
   // text-open / attr-marker hooks that `hydrate` then activates.
-  // (The legacy `attach()` path in @ship/sail-dom followed this same
+  // (The `attach()` path in @ship/sail-dom followed this same
   // shape; the new mount keeps it for the bundled-per-app world.)
   const clientMount = setupRet?.['__mount']
   if (
@@ -514,7 +514,7 @@ function awaitChannelOpen(es: EventSource, timeoutMs: number): Promise<void> {
  * each declared live key. Prefers the signal the compiled route's setup
  * exposed (the one the template's hydrate bindings actually read), and
  * falls back to the SSR-built seed when setup did not surface one — keeps
- * legacy / hand-rolled route modules that don't flatten `$scope` working.
+ * hand-rolled route modules that don't flatten `$scope` working.
  */
 function pickLiveSignals(
   setupRet: Record<string, unknown> | undefined,

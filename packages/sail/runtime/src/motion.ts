@@ -629,7 +629,7 @@ function createAnimationsWhenConnected(
 //
 // HISTORY, because this has now been broken twice: the pre-motion.dev
 // runtime carried exactly this wiring (`a.timeline = new ViewTimeline(...)`
-// + the IO fallback). The motion.dev migration (8bb03de9) rewrote the
+// + the IO fallback). The motion.dev rewrite (8bb03de9) rewrote the
 // branch as a bare `createAnimations()` — identical to `enter` — so every
 // `style.reveal` element played its reveal ONCE at mount, below the fold,
 // invisibly, and sat at its final pose forever. No error surfaces because

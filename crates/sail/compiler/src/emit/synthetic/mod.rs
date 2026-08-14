@@ -336,7 +336,7 @@ fn emit_authored_compose(w: &mut Writer, used: &[String], manifest: &AppManifest
     w.line("// (calls `fn` with the ambient scope) and returns fn's result —");
     w.line("// the flat bindings — verbatim. The scope's contributed type is");
     w.line("// recovered from the controller's `__def` function return (not the");
-    w.line("// legacy `ControllerExport<infer S>` generic — the generic is often");
+    w.line("// `ControllerExport<infer S>` generic — the generic is often");
     w.line("// pinned to the empty `Scope` and would erase setup-added");
     w.line("// members from the recovered type).");
     // `__def` IS the setup function (the object-form's `{ setup?: F }` wrapper

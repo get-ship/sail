@@ -77,7 +77,7 @@ pub enum ArrowBody {
     /// Expression body: `(e) => x()`.
     Expr(Box<Ast>),
     /// Block body — list of statement expressions: `(e) => { x.set(1); y.set(2) }`.
-    /// The block is opaque past parse — tests still go through the legacy
+    /// The block is opaque past parse — tests still go through the
     /// validator + handler-complexity check for now.
     Block(String),
 }

@@ -25,14 +25,6 @@ export function machineFixableFindings(
   })
 }
 
-/** @deprecated use machineFixableFindings — kept name for call-site clarity */
-export function fixableFindings(
-  findings: Finding[],
-  sourceByPath: Map<string, string>,
-): Finding[] {
-  return machineFixableFindings(findings, sourceByPath)
-}
-
 export function buildFixReviewItems(
   findings: Finding[],
   sourceByPath: Map<string, string>,

@@ -58,7 +58,7 @@ pub fn check(
     // (e.g. `sail-for-key`, `sail-event-name`) surface in LSP but don't
     // block the build — they catch silent-bug classes that the team
     // wants to fix but that existing routes are allowed to have during
-    // migration.
+    // rewrite.
     let Some(first) = findings
         .iter()
         .find(|f| matches!(f.severity, sail_lint::Severity::Error))

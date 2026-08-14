@@ -1,4 +1,4 @@
-// Slice — regression coverage for the scope→mount(host) migration on
+// Slice — regression coverage for the scope→mount(host) cutover on
 // <sail-annotation-layer> and <sail-annotation-list>.
 //
 // Background: the post-convergence "SAIL names no host" compile stops passing

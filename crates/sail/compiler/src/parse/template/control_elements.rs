@@ -54,7 +54,7 @@ fn expand_for(el: &Element, out: &mut Vec<Token>) {
     // Header form understood by parse_for_header:
     //   `item of items()` / `(item, i) of items() key={…}`
     // Author form is brace-primary `items as item` (+ optional `, i`) with
-    // optional `key=` attr. Legacy `as=` is rejected at blocks parse.
+    // optional `key=` attr. Retired `as=` is rejected at blocks parse.
     let primary = brace_primary(el).unwrap_or_default();
     let key = attr_expr(el, "key");
     let header = build_for_header(&primary, key.as_deref());
@@ -71,7 +71,7 @@ fn expand_for(el: &Element, out: &mut Vec<Token>) {
 }
 
 /// Convert author `{iterable as item[, idx]}` (+ optional key attr) into the
-/// legacy `item of iterable key={…}` header string.
+/// `item of iterable key={…}` header string.
 fn build_for_header(primary: &str, key: Option<&str>) -> String {
     let primary = primary.trim();
     let (iterable, binding) = split_as_binding(primary).unwrap_or((primary, "item"));
@@ -315,7 +315,7 @@ mod tests {
             TokenKind::OpenFor { src } => {
                 assert_eq!(
                     src, "m of markers() key={m.id}",
-                    "for-as must convert to legacy header, got {src}"
+                    "for-as must convert to header, got {src}"
                 );
             }
             other => panic!("expected OpenFor, got {other:?}"),

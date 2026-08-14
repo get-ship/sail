@@ -32,7 +32,7 @@ import { findNearestBoundary } from './error-boundary'
 import { dispatchSailError } from './error-overlay'
 import { currentScope, onCleanup, withScope, type EffectScope } from './effect-scope'
 
-/** Legacy alias retained for the public `Signal.__subs` field shape. */
+/** Public `Signal.__subs` field shape. */
 type Subscriber = () => void
 type Cleanup = () => void
 

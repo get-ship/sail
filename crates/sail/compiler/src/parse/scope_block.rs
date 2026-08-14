@@ -1,7 +1,7 @@
 //! `<scope>` — the component's static surface. A fenced subset of TypeScript:
 //! `type` / `export type` aliases, field declarations (`name: Type = value`)
-//! with literal values, **Style declarations** (`style name = {…}` preferred;
-//! legacy `const name = style(…)` dual path), and **static imports** of types
+//! with literal values, **Style declarations** (`style name = {…}`), and
+//! **static imports** of types
 //! + Style values only.
 //! Nothing in the block executes — no runtime `const` computation, no
 //! behavior imports. If it computes, it belongs in `<controller>`.
@@ -17,8 +17,7 @@
 //!     Residual CVA key→sx string maps type as the key union (no paint).
 //!     Product paint is host `match` / Style.
 //!   - `style name = <Style>` — first-class compile-time Style declaration
-//!     (object / call / compose / ref). Preferred product form.
-//!   - `const name = <Style>` — legacy dual-path Style const (same env).
+//!     (object / call / compose / ref).
 //!   - Residual `compound: [ { when, sx } ]` is skipped (no paint).
 //!
 //! Bare `tone` / `size` defaults type as the shared stdlib unions and reflect
@@ -45,8 +44,7 @@ pub(crate) struct ScopeBlock {
     /// Raw `type` / `export type` alias text, appended to the controller
     /// module (aliases hoist, so appending preserves controller spans).
     pub types: String,
-    /// Scope Style values (`style name = …` / legacy `const name = style.…`
-    /// → env for product `style(name)` Ref).
+    /// Scope Style values (`style name = …` → env for product `style(name)` Ref).
     pub style_env: StyleEnv,
 }
 
@@ -54,8 +52,7 @@ const TONE_VOCAB: &str = "primary|info|success|warning|destructive|accent|muted"
 const SIZE_VOCAB: &str = "xs|sm|md|lg";
 
 const ALLOWED_HINT: &str = "`<scope>` holds `type` declarations, type/Style-value \
-     `import`s, `props:`, Style `style name = {…}` (preferred) or legacy \
-     `const name = style(…)`, optional residual `compound:` — types, literals, \
+     `import`s, `props:`, Style `style name = {…}`, optional residual `compound:` — types, literals, \
      and Style only; logic goes in `<controller>`";
 
 pub(crate) fn parse_scope_block(body: &str, span: Span) -> Result<ScopeBlock, CompileError> {
@@ -648,7 +645,7 @@ pub(crate) fn style_env_from_source(source: &str) -> StyleEnv {
     env
 }
 
-/// `const name = <Style expr>` — legacy dual path (no runtime computation).
+/// `const name = <Style expr>` — Style const binding (no runtime computation).
 fn parse_style_const(
     s: &str,
     after_const: usize,
@@ -1899,12 +1896,12 @@ mod tests {
     }
 
     #[test]
-    fn style_decl_and_legacy_const_dual_path() {
+    fn style_decl_and_const_style_binding() {
         let b = block(
-            "style host = { paint: bg(primary) }\nconst legacy = style({ paint: bg(muted) })\nprops: { label = '' }",
+            "style host = { paint: bg(primary) }\nconst muted = style({ paint: bg(muted) })\nprops: { label = '' }",
         );
         assert!(b.style_env.contains_key("host"));
-        assert!(b.style_env.contains_key("legacy"));
+        assert!(b.style_env.contains_key("muted"));
     }
 
     #[test]

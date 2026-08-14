@@ -331,18 +331,3 @@ export function applyFixToSource(
   }
   return { ok: false, text: source, message: 'no machine fix for this finding' }
 }
-
-/** @deprecated stub retained for tests that import the name */
-export function applyFixStub(finding: Finding): {
-  ok: false
-  status: 'deferred'
-  message: string
-  findingId: string
-} {
-  return {
-    ok: false,
-    status: 'deferred',
-    message: 'apply fix unavailable',
-    findingId: finding.id,
-  }
-}

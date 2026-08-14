@@ -331,7 +331,7 @@ pub fn when_target(key: &str) -> Option<WhenTarget> {
     }
 }
 
-/// Back-compat helper used by emit for simple pseudo append.
+/// Helper used by emit for simple pseudo append.
 pub fn when_selector(key: &str) -> Option<String> {
     match when_target(key)? {
         WhenTarget::Pseudo(s) => Some(s.into_owned()),

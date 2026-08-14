@@ -922,7 +922,7 @@ pub async fn bundle_app_with_base(
     // 0. sail.config nested `deck` serve keys (render / injectGlobals / entry).
     // OPTIONAL — an app without sail.config (or without `deck`) is fully
     // conventional (csr, no inject, no entry). Presence of deck.jsonc is a
-    // hard migration error. No dual-read of top-level serve keys.
+    // hard config error. No dual-read of top-level serve keys.
     let app_cfg = match deck_config::AppServeConfig::load_from_project(project) {
         Ok(cfg) => {
             // Treat pure-default as "absent" so callers that key on Option keep
@@ -1794,7 +1794,7 @@ export default controller(() => ({ ok: probe }))\n\
             "<link rel=stylesheet> must precede <script type=module>; got link@{link_pos} script@{script_pos}"
         );
 
-        // Gate 4: document-floor CSS (`sail-base` / legacy `contracts`) must
+        // Gate 4: document-floor CSS (`sail-base` / `contracts`) must
         // carry `data-sail-contracts` so the runtime does not warn. Other
         // links must not — the marker means "contracts satisfied," not
         // "any framework sheet."

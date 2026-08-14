@@ -187,7 +187,7 @@ mod tests {
             &dest.join("themes/themes.css"),
             "/* thin app themes */ :root[theme='ship']{}",
         );
-        // Bare top-level themes.css would be pruned (regression guard for old path).
+        // Bare top-level themes.css would be pruned (regression guard for a bare top-level file).
         write(&dest.join("themes.css"), "/* doomed top-level */");
         // Staged new build.
         let stage = stage_path_for(&dest);

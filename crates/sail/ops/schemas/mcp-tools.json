@@ -446,7 +446,7 @@
   },
   {
     "name": "sail_theme_list",
-    "description": "List theme JSON files under a directory. Path must be themes/**, tokens/themes/** (legacy), or packages/sail/tokens/model/themes.",
+    "description": "List theme JSON files under a directory. Path must be themes/** or packages/sail/tokens/model/themes.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -476,7 +476,7 @@
   },
   {
     "name": "sail_theme_write",
-    "description": "Write a project theme JSON. Allowlist: themes/**/*.json or legacy tokens/themes/**/*.json.",
+    "description": "Write a project theme JSON. Allowlist: themes/**/*.json.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -495,7 +495,7 @@
   },
   {
     "name": "sail_theme_delete",
-    "description": "Delete a project theme JSON. Allowlist: themes/**/*.json or legacy tokens/themes/**/*.json (catalog refused).",
+    "description": "Delete a project theme JSON. Allowlist: themes/**/*.json (catalog refused).",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -510,7 +510,7 @@
   },
   {
     "name": "sail_theme_fork",
-    "description": "Fork a catalog or project theme into themes/ (or legacy tokens/themes/). Optional new_id rewrites $extensions.ship.themeId.",
+    "description": "Fork a catalog or project theme into themes/. Optional new_id rewrites $extensions.ship.themeId.",
     "inputSchema": {
       "type": "object",
       "properties": {

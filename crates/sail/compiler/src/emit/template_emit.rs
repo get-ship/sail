@@ -134,7 +134,7 @@ pub struct TemplateEmitter {
     /// prefixes). emit_for reads this to decide which per-field `__v_<f>`
     /// signals to allocate and which to bump in `update()`. Defaults
     /// to `RowUse::None`; a single Whole-row binding escalates the
-    /// whole loop to the legacy `__v` whole-row signal so we never
+    /// whole loop to the `__v` whole-row signal so we never
     /// silently miss a reactive update. Save/restored per for-loop.
     pub(super) reactive_row_use: crate::lower::row_field_uses::RowUse,
     /// Depth into an `<svg>` subtree. Bumped by `emit_element` around
@@ -298,7 +298,7 @@ impl TemplateEmitter {
     /// emits a `void $scope.__v_<field>()` per field — narrowing the
     /// effect's per-row dep so an `update()` that only changes a
     /// different field doesn't re-fire it. Whole-row reads escalate
-    /// to the legacy `void $scope.__v()` whole-row signal.
+    /// to the `void $scope.__v()` whole-row signal.
     ///
     /// Side effect: unions the source's row-use into
     /// `self.reactive_row_use` so `emit_for` knows which per-field
@@ -330,7 +330,7 @@ impl TemplateEmitter {
                 String::new()
             }
             RowUse::Whole => {
-                // Escalates the whole loop to the legacy __v signal.
+                // Escalates the whole loop to the __v signal.
                 self.reactive_row_use =
                     std::mem::replace(&mut self.reactive_row_use, RowUse::None).union(use_);
                 format!("void $scope.__v(){sep}")

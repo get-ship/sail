@@ -10,7 +10,7 @@ export {
 } from '../theme-session/theme-nav'
 export {
   createThemeSession,
-  paintIdFor,
+  resolvePaintId,
   modesForPaintId,
   themeIdFromLocation,
   themeDisplayName,
@@ -20,7 +20,6 @@ export { createOverviewEdit } from './theme-overview-edit'
 import { createThemeSession } from '../theme-session/theme-session'
 import { createOverviewEdit } from './theme-overview-edit'
 
-/** Back-compat factory name used by older tests / imports. */
 export function createThemeOverviewSurface() {
   const session = createThemeSession({
     facet: 'overview',

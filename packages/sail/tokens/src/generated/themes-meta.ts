@@ -38,7 +38,7 @@ export interface ThemeMeta {
   id: string
   /** Whether the default mode is a dark surface (`mode=dark`). */
   dark: boolean
-  /** Mode names when modes-in-file; empty = legacy single-block theme. */
+  /** Mode names when modes-in-file; empty = single-block theme. */
   modes: readonly string[]
   defaultMode: string | null
   /** Declared capability derived from modes: light | dark | both. */

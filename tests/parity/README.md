@@ -116,7 +116,7 @@ Paint still uses `tests/parity/chrome.ts` for the Chromium binary:
 1. `CHROME_PATH` if set and exists  
 2. `playwright` / `playwright-core` `chromium.executablePath()`  
 3. Newest chrome under `~/.cache/ms-playwright`  
-4. Pinned `chromium-1228` path (legacy local fallback)
+4. Pinned `chromium-1228` path (local fallback)
 
 ### Umbrella (`run.mjs`)
 

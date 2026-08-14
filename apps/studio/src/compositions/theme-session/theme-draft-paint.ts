@@ -7,7 +7,7 @@
  *
  * Default applier is framework `theme.applyScope` (T1). Tests may inject
  * via setDraftPaintApplier. Without a doc, falls back to theme/mode attrs
- * for registered-table cold path only (never theme).
+ * for registered-table paint only (never theme).
  *
  * Wire:
  *   bindPreviewHost(el) once per specimen; store emit → scheduleDraftPaint.
@@ -53,7 +53,7 @@ let lastPaintKey = ''
 
 function defaultApplyScope(host: SailHost, opts: DraftPaintOpts): () => void {
   if (!opts.doc) {
-    // Cold path — attrs only (no draft tokens).
+    // Attr-only — no draft tokens.
     applyRegisteredAttrs(host, opts)
     return () => {
       /* attrs may stay for template dual-bind */

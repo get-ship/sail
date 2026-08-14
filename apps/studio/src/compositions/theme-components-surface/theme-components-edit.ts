@@ -676,7 +676,6 @@ export function createComponentsEdit(session: ThemeSession) {
     faceCount,
     registryNote,
     l1Count: faceCount,
-    // legacy template bindings removed: radiusPath, free-text radius
     radiusPath: () => '',
     overrideCount: () =>
       componentRows().reduce((n, r) => n + (r.hasOverride ? 1 : 0), 0),

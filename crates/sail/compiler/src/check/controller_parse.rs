@@ -129,7 +129,7 @@ impl ParsedController {
 ///
 /// Naming follows the source file's stem:
 ///   - `page.sail`  → `controller.ts` (new route-directory convention)
-///   - `<stem>.sail` → `<stem>.controller.ts` (legacy + components)
+///   - `<stem>.sail` → `<stem>.controller.ts` (components)
 pub fn read_paired_controller(source_path: Option<&Path>) -> Option<ParsedController> {
     let p = source_path?;
     let stem = p.file_stem()?.to_str()?;

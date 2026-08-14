@@ -15,7 +15,6 @@ import {
   __resetChecksForTests,
   applyFix,
   applyFixReview,
-  applyFixStub,
   applyRuleFixes,
   autoFixOnSave,
   bothViewportsRan,
@@ -322,23 +321,8 @@ describe('auto-fix off leaves disk untouched', () => {
 })
 
 describe('apply fix ready', () => {
-  it('APPLY_FIX_READY is true and applyFixStub retained for compatibility', () => {
+  it('APPLY_FIX_READY is true', () => {
     expect(APPLY_FIX_READY).toBe(true)
-    const f = parseCheckFindings(
-      [
-        {
-          severity: 'error',
-          rule: 'sail-participation-style',
-          message: 'x\n  suggest: y',
-          line: 1,
-          col: 1,
-        },
-      ],
-      { defaultPath: 't.sail' },
-    )[0]!
-    const stub = applyFixStub(f)
-    expect(stub.ok).toBe(false)
-    expect(stub.status).toBe('deferred')
   })
 
   it('applyFix on store applies participation-style rewrite', async () => {

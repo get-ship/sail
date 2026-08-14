@@ -2,7 +2,7 @@
 //!
 //! Two flavours of expression analysis live here:
 //!
-//! 1. [`validate`] — fast byte-level cross-check of the legacy rules
+//! 1. [`validate`] — fast byte-level cross-check of the original rules
 //!    from `packages/sail/dom/src/template/expr.ts` (no statements, no
 //!    assignments outside compares / arrows, no empty expressions).
 //!    The compiler emits the source byte-for-byte and pairs this

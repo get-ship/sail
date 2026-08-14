@@ -289,7 +289,7 @@ fn per_rule_off_still_silences_under_strict() {
 #[test]
 fn policy_lint_severity_off_still_silences_under_strict() {
     // Dual-read: existing `policy.lint.severity.*` remains a valid kill switch
-    // under top-level strict (no forced migration break).
+    // under top-level strict (no forced cutover break).
     let (_tmp, sail) = write_fixture(
         r#"{
             "preset": "full",

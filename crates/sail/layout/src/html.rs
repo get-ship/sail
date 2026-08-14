@@ -40,9 +40,9 @@ pub struct Element {
     /// Other HTML attributes (tone, variant, type, …) used by L1 skin paint
     /// matching (`[tone='primary'].s-…`). Not consumed by the layout pass.
     pub attrs: HashMap<String, String>,
-    /// Explicit grid-column span from language `col-span` (or legacy `data-col-span`).
+    /// Explicit grid-column span from language `col-span`.
     pub col_span: Option<u16>,
-    /// Explicit grid-row span from language `row-span` (or legacy `data-row-span`).
+    /// Explicit grid-row span from language `row-span`.
     pub row_span: Option<u16>,
     /// Span into the ORIGINAL (un-preprocessed) source. We keep both: the
     /// preprocessed span for in-file precision, plus the parent source's
@@ -418,9 +418,9 @@ fn set_attr(elem: &mut Element, name: &str, value: String) {
                     .insert(k.trim().to_string(), v.trim().to_string());
             }
         }
-    } else if name == "col-span" || name == "data-col-span" {
+    } else if name == "col-span" {
         elem.col_span = value.parse().ok();
-    } else if name == "row-span" || name == "data-row-span" {
+    } else if name == "row-span" {
         elem.row_span = value.parse().ok();
     } else {
         // Retain for L1 skin attribute selectors (tone/variant/type/…).

@@ -166,21 +166,11 @@ pub fn router() -> Router {
         .route("/_deck/meta", get(serve_meta))
         // Compiler policy registry (SPEC-POLICY-1) — same JSON as CLI/MCP.
         .route("/_deck/policy", get(serve_policy))
-        // The named-route endpoints (`/_deck/views/{name}/view.js`,
-        // `/_deck/views/{name}[/{*sub}]`, `/_deck/view/{name}[/{*sub}]`) moved to
-        // `ship_views::router()`. A host that serves routes merges that router
-        // alongside this one; deck itself no longer carries the feature
-        // (deck ⊥ ship-views).
-        // `POST /_deck/mutation/{name}` — 410 tombstone. The progressive-
-        // enhancement form endpoint is gone; JS-attached mutations call the SDK
-        // directly. deck still composes this URL as the `<form mutation>`
-        // `action` (`deck_core::routes::mutation_action`) for the no-JS fallback,
-        // so the route answers 410 Gone rather than 404. A `/_deck/*` serving
-        // concern — lives here, not in the host's RPC surface.
-        .route(
-            "/_deck/mutation/{name}",
-            axum::routing::post(|| async { StatusCode::GONE }),
-        )
+    // The named-route endpoints (`/_deck/views/{name}/view.js`,
+    // `/_deck/views/{name}[/{*sub}]`, `/_deck/view/{name}[/{*sub}]`) moved to
+    // `ship_views::router()`. A host that serves routes merges that router
+    // alongside this one; deck itself no longer carries the feature
+    // (deck ⊥ ship-views).
     // The SPA / public-asset dispatch (`/{file}`) is host-driven; the
     // per-app `serve_apps` mounts it for the primary app. The host's
     // other routes (the connect fallback, `/api/*`, the per-app routes)

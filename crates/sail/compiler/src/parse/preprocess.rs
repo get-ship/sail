@@ -1,5 +1,5 @@
 //! Source preprocessor — the single, Rust-only path. (There is no JS twin:
-//! the legacy `@ship/sail-dom` preprocess was removed when every directive was
+//! the `@ship/sail-dom` preprocess was removed when every directive was
 //! made to round-trip through this crate; deck's bundler and the Node test
 //! harness both compile in-process through `sail_compiler`.)
 //!
@@ -726,7 +726,7 @@ fn lower_sx_value(
 ///
 /// Scope consts are not host-checked at definition (no tag). Attach-time check
 /// inspects the **inline** Style IR only — `style(constRef)` is not expanded
-/// here (const-split / ref host-check is a follow-up migration). Direct
+/// here (const-split / ref host-check is a follow-up rewrite). Direct
 /// `style({ text: … })` / when bodies with text setters on non-text hosts fail.
 fn refuse_text_on_non_text_host(
     tag: &str,
@@ -1935,13 +1935,13 @@ fn lower_prop_shorthand(source: &str) -> String {
                 j += 1;
             }
             let tag_name = &source[i + 1..j];
-            // Framework (L1 control) tags only. The legacy `sail-`-prefixed
+            // Framework (L1 control) tags only. The retired `sail-`-prefixed
             // spelling — the old component namespace the L1 set absorbed —
             // no longer participates in prop shorthand: there is no
             // `<sail-button>` to desugar TO (the L1 element is `<button>`),
             // and live `sail-*` custom elements are not the compiler's
             // responsibility (they carry their own prop contract). The
-            // pre-L1 source files that used the legacy spelling were
+            // pre-L1 source files that used the retired spelling were
             // codemodded to the bare L1 names.
             let is_framework = L1_TAGS.contains(&tag_name);
             // Find tag end honoring quotes.
@@ -3856,7 +3856,7 @@ export default controller(() => {
     fn bare_enum_shorthand_skips_legacy_sail_prefixed_tags() {
         // The `sail-` prefix is no longer a "framework tag" marker for the
         // prop shorthand. The L1 element is the BARE name (`<button>`,
-        // `<chip>`); the legacy `sail-`-prefixed spelling was the old
+        // `<chip>`); the retired `sail-`-prefixed spelling was the old
         // component namespace, and a tag carrying it now passes through
         // untouched (and likely a compile error downstream if there is no
         // matching custom element). This test is the boundary: the bare
@@ -4348,25 +4348,9 @@ export default controller(() => {
     }
 
     #[test]
-    fn column_direction_row_lowers_to_flex_direction_row_override() {
-        // Backward-compat: `<column direction="row">` was the old
-        // `<sail-stack direction="row">` idiom — the keyword lowering
-        // needs to honor it as an explicit flex-direction override so
-        // legacy components keep their visual layout.
-        let out = preprocess(r#"<column gap="2" direction="row">x</column>"#).expect("preprocess");
-        assert!(
-            out.contains("sail-dir-row"),
-            "direction class emitted: {out}"
-        );
-        assert!(
-            out.contains(".sail-dir-row{flex-direction:row}"),
-            "direction rule emitted: {out}"
-        );
-        // No `sail-dir-column` because there's no default.
-        assert!(
-            !out.contains("sail-dir-column"),
-            "no implicit direction: {out}"
-        );
+    fn column_does_not_emit_sail_dir_override() {
+        let out = preprocess(r#"<column gap="2">x</column>"#).expect("preprocess");
+        assert!(!out.contains("sail-dir-"), "no sail-dir modifier: {out}");
     }
 
     #[test]

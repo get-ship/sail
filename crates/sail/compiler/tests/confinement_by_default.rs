@@ -2,7 +2,7 @@
 //! is governed by `sail-controller-no-ambient-authority` unconditionally,
 //! path-independent — no `views/` substring, no `/components/` exemption.
 //! Fixtures below live OUTSIDE any `views/` tree (a `packages/components/`-
-//! shaped path) specifically to prove the old path heuristic is gone: the
+//! shaped path) specifically to prove the previous heuristic is gone: the
 //! lint must still fire there. `unconfined` / `network` grant the lint
 //! only — `fetch` stays unnameable under the sail typecheck (no DOM).
 

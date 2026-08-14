@@ -13,7 +13,7 @@
 //! ## Per-app serve config (`sail.config.jsonc` / `sail.config.json`)
 //!
 //! Bundler/serve settings live under the top-level **`deck`** object
-//! (SPEC-SAIL-CONFIG-1 — no dual-read of legacy top-level keys):
+//! (SPEC-SAIL-CONFIG-1 — no dual-read of retired top-level keys):
 //!
 //! - `deck.render` (`csr` default | `ssr`)
 //! - `deck.injectGlobals` — URL-capture → `window.<k>` injections
@@ -24,7 +24,7 @@
 //! Sail's recognized-key table refuses leftover top-level `render` /
 //! `entry` / `injectGlobals`). Absence of a sail config or of `deck`
 //! means fully conventional defaults. A leftover `deck.jsonc` is a hard
-//! migration error.
+//! config error.
 //!
 //! Host-set only (never from the file): `name`, `route`, `source`,
 //! `ops_project`. Framework singletons are provider-declared via
@@ -218,9 +218,7 @@ pub struct EntryBootstrap {
     /// Names the bundler reads off the factory's exports and spreads into
     /// the `clients` map. Each name becomes a key on the `clients` object
     /// `mountRouter({ providers })` receives; routes read each as a bare `ctx.<name>`
-    /// (and the legacy `ctx.<name>` alias, so pre-migration route code still
-    /// resolves during the cutover).
-    /// MIGRATION-DEBT: dies with CALLBACKS-1 / route-controller migration (ctx alias).
+    /// (each name is a `ctx.<name>` binding).
     #[serde(rename = "exposeNames")]
     pub expose_names: Vec<String>,
 }
@@ -239,7 +237,7 @@ impl AppServeConfig {
 
     /// Load app serve config from the project root.
     ///
-    /// - Presence of `deck.jsonc` is a hard migration error (move serve
+    /// - Presence of `deck.jsonc` is a hard error (move serve
     ///   keys under `deck` in `sail.config.jsonc` / `sail.config.json`,
     ///   then delete `deck.jsonc`).
     /// - Prefer `sail.config.jsonc` over `sail.config.json` when both exist.
@@ -473,11 +471,11 @@ mod tests {
   }
 }"#;
 
-    /// The legacy hub (deck-jsonc-simplify BEFORE) carries `name`/
+    /// The old hub (deck-jsonc-simplify BEFORE) carries `name`/
     /// `route`/`source`/`render`. The cutover makes every one of those
     /// fields discoverable from elsewhere — they are UNKNOWN to the new
     /// schema. serde drops unknown fields silently (no error), so a
-    /// legacy file parses to a config identical to the empty default.
+    /// old file parses to a config identical to the empty default.
     const HUB_DECK_LEGACY: &str = r#"{
   "name": "hub",
   "route": "/",
@@ -495,13 +493,13 @@ mod tests {
     /// The new-shape parse: an app with only the `entry` bootstrap (the
     /// hub's whole reason to keep a `deck.jsonc`) lands a valid config.
     /// No `name`/`route`/`source`/`viewOutput`/`frameworkClients` fields —
-    /// Legacy fields (`route`/`source`/`render`) are unknown to the new
+    /// Retired fields (`route`/`source`/`render`) are unknown to the new
     /// schema and serde drops them silently — the parse produces a
-    /// `Default::default()` config PLUS any legacy `name` field that
+    /// `Default::default()` config PLUS any leftover `name` field that
     /// happens to match the directory basename (the host ignores the
     /// value; the spec says the directory basename is authoritative).
-    /// Legacy fields (`route`/`source`/`render`) are unknown to the new
-    /// schema and serde drops them silently — including the legacy
+    /// Retired fields (`route`/`source`/`render`) are unknown to the new
+    /// schema and serde drops them silently — including the leftover
     /// `name` field, which is `#[serde(skip)]` (the directory basename
     /// is authoritative; a stale or wrong `name` in the file must not
     /// ship assets under the wrong namespace). The parse produces a
@@ -510,12 +508,12 @@ mod tests {
     #[test]
     fn parse_app_deck_legacy_fields_dropped_silently() {
         let cfg = AppServeConfig::parse_deck_jsonc(HUB_DECK_LEGACY)
-            .expect("legacy fields are dropped, not errors");
+            .expect("retired fields are dropped, not errors");
         // Everything is dropped — host fills name/source.
         assert_eq!(
             cfg,
             AppServeConfig::default(),
-            "legacy fields parse to default"
+            "retired fields parse to default"
         );
     }
 
@@ -578,7 +576,7 @@ mod tests {
     }
 
     /// An absent `entry` parses to `None` — the bundler falls back to
-    /// the legacy `routes.gen.ts`-as-entry shape (no client wiring,
+    /// the combined `routes.gen.ts`-as-entry shape (no client wiring,
     /// token import rides the data file).
     #[test]
     fn parse_app_deck_no_entry_is_none() {

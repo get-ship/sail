@@ -89,7 +89,7 @@ pub struct TsDiag {
 pub struct TsgoTool {
     /// Native binary path, OR `node` when using the JS entry.
     pub program: PathBuf,
-    /// When `Some`, invoke as `node <js_entry> …` (legacy script entry).
+    /// When `Some`, invoke as `node <js_entry> …` (script entry).
     pub js_entry: Option<PathBuf>,
 }
 
@@ -3739,7 +3739,7 @@ fn find_globalthis_string_index(code: &str) -> Option<usize> {
     None
 }
 
-// ── legacy bridge (props/variants + synthetic controller) ──────────────────
+// ── test props bridge (props/variants + synthetic controller) ──────────────────
 //
 // These helpers are **not** wired into `collect` / `collect_sail_type_gate` /
 // `collect_project_type_gate`. Production OnSave type law is the region/project
@@ -3751,7 +3751,7 @@ fn find_globalthis_string_index(code: &str) -> Option<usize> {
 /// empty means clean. `node`/`tsgo_js` locate the shipped compiler; production
 /// resolves them from the toolchain, the spike passes them in.
 ///
-/// **Not** part of the E1 type gate (`collect_*`); test/legacy props bridge only.
+/// **Not** part of the E1 type gate (`collect_*`); test props bridge only.
 pub fn typecheck_block(
     harness: &str,
     block: &str,

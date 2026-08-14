@@ -429,7 +429,7 @@ describe('@ship/tokens — theme catalog (THEMES export)', () => {
     const root = document.documentElement
     root.removeAttribute('theme')
     root.removeAttribute('mode')
-    root.setAttribute('data-theme', 'legacy')
+    root.setAttribute('data-theme', 'unknown')
     root.classList.add('dark')
 
     const result = bootTheme(root)
@@ -1100,13 +1100,11 @@ describe('@ship/tokens — DTCG SSOT / generate drift lock', () => {
     }
   })
 
-  it('no dual-emit token aliases (compat-aliases.json gone, app-accent-* stays gone)', () => {
-    const modelAliases = resolve(
-      dirname(fileURLToPath(import.meta.url)),
-      '../model/compat-aliases.json',
-    )
-    expect(existsSync(modelAliases)).toBe(false)
-    expect(loadSrc('../src/tokens.css')).not.toMatch(/compat aliases/)
+  it('no dual-emit token aliases (alias file gone, app-accent-* stays gone)', () => {
+    const modelDir = resolve(dirname(fileURLToPath(import.meta.url)), '../model')
+    const leftoverAliasFiles = readdirSync(modelDir).filter((f) => f.endsWith('-aliases.json'))
+    expect(leftoverAliasFiles).toEqual([])
+    expect(loadSrc('../src/tokens.css')).not.toMatch(/alias block/)
     const reg = loadRegistry()
     expect(Object.keys(reg.aliases ?? {}).length).toBe(0)
     expect(reg.names.some((n) => n.startsWith('app-accent-'))).toBe(false)

@@ -47,9 +47,9 @@
 //! `.sail` compile that touches those primitives.
 //!
 //! **This rule FLIPS TO `Error` once Tier B clears the existing
-//! violations** (the tone-ramp migration + fallback strip described in
+//! violations** (the tone-ramp sweep + fallback strip described in
 //! the audit's "Top priorities"). The pattern mirrors `sail-css-literal`,
-//! which started at `Warn` during its own migration window and is now
+//! which started at `Warn` during its own Warn window and is now
 //! `Error`. To flip: change every `Severity::Warn` below to
 //! `Severity::Error` and delete this paragraph.
 
@@ -60,7 +60,7 @@ use crate::report::{Finding, Severity};
 pub const RULE_ID: &str = "sail-css-literals";
 
 /// Severity for every finding this rule emits. `Warn` during the
-/// migration window; flip to `Error` once Tier B clears the ~28
+/// Warn window; flip to `Error` once Tier B clears the ~28
 /// existing violations (see the module header).
 const SEVERITY: Severity = Severity::Warn;
 

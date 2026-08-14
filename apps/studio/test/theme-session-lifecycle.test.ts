@@ -311,11 +311,11 @@ describe('theme-draft-paint adapter', () => {
     expect(__draftPaintHostCountForTests()).toBe(0)
   })
 
-  it('registered cold path paints theme + mode (themes.css cascade)', () => {
+  it('registered attr paint sets theme + mode (themes.css cascade)', () => {
     // No draft doc → applyRegisteredAttrs. mode= is the cascade bit.
     setDraftPaintApplier(null)
     const host = document.createElement('div')
-    host.setAttribute('data-theme', 'legacy')
+    host.setAttribute('data-theme', 'ship')
     bindPreviewHost(host)
     flushDraftPaint({
       doc: null,

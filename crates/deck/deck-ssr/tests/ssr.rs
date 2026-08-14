@@ -123,7 +123,7 @@ fn board_control_flow_first_paint_via_ship_js() {
     //
     // Pre-floor, the per-row state assertion was `class="flagged"` — the
     // `class:` directive emitted a global CSS hook the floor banned. The
-    // migration converted `class:flagged={item.flagged}` to the closed
+    // rewrite converted `class:flagged={item.flagged}` to the closed
     // `aria-pressed={item.flagged}` semantics; the assertion keys on the
     // SAME ARIA contract the framework's toggleable primitives use.
     let repo = repo_root().expect("repo root");

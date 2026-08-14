@@ -800,7 +800,7 @@ fn expand_for(
     let body = &src[open_end..close];
     let end = close + "</for>".len();
 
-    // BLOCKS-1 author form: `<for {items as item} key={…}>`. Legacy
+    // BLOCKS-1 author form: `<for {items as item} key={…}>`. Older
     // `of=` / `as=` attributes still accepted when present.
     let primary = attrs
         .get("__primary")
@@ -902,7 +902,7 @@ fn split_for_primary(src: &str) -> Option<(&str, &str)> {
 
 fn split_if_branches(body: &str) -> (&str, &str) {
     // BLOCKS-1: `{else => …}` arm (and optional `{else-if {c} => …}`).
-    // Legacy sibling `<else>` / `<else-if>` still recognized.
+    // Sibling `<else>` / `<else-if>` still recognized.
     if let Some((then, else_body)) = split_brace_else_arm(body) {
         return (then, else_body);
     }

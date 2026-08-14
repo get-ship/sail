@@ -3,7 +3,7 @@ import {
   autoFixOnSave, bothViewportsRan, countSeverities, enrichNodeIds,
   filterFindings, fileOptions, nodeMapFromModelDiagnostics,
   parseCheckFindings, ruleOptions, sourceSnippet, statusNoteFor,
-  toFindingRows, applyFixStub, applyFixToSource,
+  toFindingRows, applyFixToSource,
 } from './findings'
 import { flattenRuleGroups, groupByRule, groupBySeverity } from './groups'
 import {
@@ -359,7 +359,6 @@ export function selectInApp(finding?: Finding | null): void {
 }
 
 export function applyFix(findingId?: string):
-  | ReturnType<typeof applyFixStub>
   | { ok: true; message: string; text?: string }
   | { ok: false; status: string; message: string; findingId: string } {
   const id = findingId ?? state.selectedId
@@ -367,7 +366,14 @@ export function applyFix(findingId?: string):
   if (!f) {
     return { ok: false, status: 'deferred', message: 'no finding selected', findingId: id ?? '' }
   }
-  if (!APPLY_FIX_READY) return applyFixStub(f)
+  if (!APPLY_FIX_READY) {
+    return {
+      ok: false,
+      status: 'deferred',
+      message: 'apply fix unavailable',
+      findingId: f.id,
+    }
+  }
   const src = state.sourceByPath.get(f.path) ?? ''
   const result = applyFixToSource(src, f)
   if (!result.ok || result.text === src) {

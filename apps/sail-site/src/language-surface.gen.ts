@@ -7151,7 +7151,7 @@ export const EVENT_NAMES: EventDoc[] = [
   },
   {
     "name": "keypress",
-    "summary": "character key pressed (deprecated; prefer keydown)"
+    "summary": "character key pressed; prefer keydown"
   },
   {
     "name": "focus",
@@ -7662,12 +7662,6 @@ export const SCOPE_GRAMMAR: ScopeGrammarDoc[] = [
     "syntax": "style filled = { paint: bg(primary), box: padX(2) }",
     "summary": "first-class compile-time Style (object / compose / call form); attach with tag-position style(name) on the host",
     "example": "<scope>\n  style filled = { paint: bg(primary), box: padX(2) }\n  props: { label = '' }\n</scope>\n<span style(filled)>\n  {label}\n</span>"
-  },
-  {
-    "form": "Style const (legacy dual path)",
-    "syntax": "const filled = style({ paint: bg(primary), box: padX(2) })",
-    "summary": "legacy Style binding — still accepted this cycle; prefer `style name = {…}`",
-    "example": "<scope>\n  const filled = style({ paint: bg(primary), box: padX(2) })\n  props: { label = '' }\n</scope>\n<span style(filled)>\n  {label}\n</span>"
   },
   {
     "form": "Identity type annotation",
@@ -8301,7 +8295,7 @@ export const REGION_CAPABILITY_MATRIX: RegionCapabilityDoc[] = [
   },
   {
     "region": "scope",
-    "capability": "Style declarations (style name = {…}; legacy const name = style.…)",
+    "capability": "Style declarations (style name = {…})",
     "legal": "yes",
     "status": "enforced",
     "enforcement": "parse::scope_block (StyleEnv) + sail-style lower",

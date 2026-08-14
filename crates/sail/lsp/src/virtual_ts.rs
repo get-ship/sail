@@ -306,7 +306,7 @@ pub fn build_virtual_ts(sail_source: &str) -> Option<VirtualTs> {
         }
         // Style values from `<scope>` so template attachments that reference
         // them typecheck under tsgo.
-        // Legacy `const name = style(…)` is quoted as-authored.
+        // `const name = style(…)` is quoted as-authored.
         // First-class `style name = …` stays Style — do not invent a TS
         // `const name = style(…)` rewrite; only declare the binding name.
         let mut style_const_block = String::new();
@@ -1294,7 +1294,7 @@ fn collect_template_exprs(original: &str, stripped: &str) -> Vec<ExprEmbed> {
     out
 }
 
-/// Collect full legacy `const name = style(…)` declarations from a `<scope>` body.
+/// Collect full `const name = style(…)` declarations from a `<scope>` body.
 fn collect_scope_style_consts(scope_body: &str) -> Vec<String> {
     let mut out = Vec::new();
     let bytes = scope_body.as_bytes();
@@ -1901,7 +1901,7 @@ export default controller((ctx) => ({ count: signal(0) }))
         assert!(
             !v.view_text
                 .contains("typeof __sail_authored extends { __def: infer D }"),
-            "legacy weak recovery pattern must not remain:\n{}",
+            "weak recovery pattern must not remain:\n{}",
             v.view_text
         );
     }

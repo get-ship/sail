@@ -1,4 +1,4 @@
-// sail-bar-chart — FOUNDATIONAL migration specs (TESTS-FIRST, RED).
+// sail-bar-chart — FOUNDATIONAL cutover specs (TESTS-FIRST, RED).
 //
 // The bar chart is migrated onto the createChartData engine + createChartViewport
 // adapter: the comma-string `data` decodes through `normalizeSeries`, bars become
@@ -23,14 +23,14 @@ afterEach(() => reg.cleanup())
 // queries below are the components. real semantics: tags, ARIA, SVG paint.
 const root = (el: HTMLElement): HTMLElement => el
 
-describe('<sail-bar-chart> migration — geometry at first paint', () => {
+describe('<sail-bar-chart> cutover — geometry at first paint', () => {
   it('renders a rect per datum synchronously at mount (no flush needed)', () => {
     const { el } = mount(reg, 'sail-bar-chart', { data: '1,2,3,4' })
     expect(root(el).querySelectorAll('rect').length).toBe(4)
   })
 })
 
-describe('<sail-bar-chart> migration — the bar is the seam', () => {
+describe('<sail-bar-chart> cutover — the bar is the seam', () => {
   it('every datum is one <rect> carrying its own <title>', async () => {
     const { el } = mount(reg, 'sail-bar-chart', { data: '1,2,3', labels: 'a,b,c' })
     await flush()
@@ -44,7 +44,7 @@ describe('<sail-bar-chart> migration — the bar is the seam', () => {
   })
 })
 
-describe('<sail-bar-chart> migration — engine-driven states', () => {
+describe('<sail-bar-chart> cutover — engine-driven states', () => {
   it('loading attribute composes a sail-skeleton', async () => {
     const { el } = mount(reg, 'sail-bar-chart', { data: '1,2,3', loading: true })
     await flush()
@@ -75,7 +75,7 @@ describe('<sail-bar-chart> migration — engine-driven states', () => {
   })
 })
 
-describe('<sail-bar-chart> migration — domain semantics preserved', () => {
+describe('<sail-bar-chart> cutover — domain semantics preserved', () => {
   it('max=0 means auto-domain (bars still render, scaled to data max)', async () => {
     const { el } = mount(reg, 'sail-bar-chart', { data: '10,20,30', max: '0' })
     await flush()
@@ -92,7 +92,7 @@ describe('<sail-bar-chart> migration — domain semantics preserved', () => {
   })
 })
 
-describe('<sail-bar-chart> migration — accessible summary', () => {
+describe('<sail-bar-chart> cutover — accessible summary', () => {
   it('aria-label is "kind: summary", not the bare kind', async () => {
     const { el } = mount(reg, 'sail-bar-chart', { data: '1,2,3', label: 'Sales bar chart' })
     await flush()
@@ -102,7 +102,7 @@ describe('<sail-bar-chart> migration — accessible summary', () => {
   })
 })
 
-describe('<sail-bar-chart> migration — responsive viewBox', () => {
+describe('<sail-bar-chart> cutover — responsive viewBox', () => {
   it('does not stretch with preserveAspectRatio="none"', async () => {
     const { el } = mount(reg, 'sail-bar-chart', { data: '1,2,3' })
     await flush()

@@ -28,7 +28,6 @@ import {
   structuredEditOps,
   childrenOfSelected,
   tokensOfSelected,
-  applySourceScroll,
   applySourceEditorScroll,
 } from './views'
 import type {
@@ -46,7 +45,7 @@ import type {
 } from './types'
 import { DOC_VIEWS } from './types'
 
-export { groupHeaders, DOC_VIEWS, applySourceScroll, applySourceEditorScroll }
+export { groupHeaders, DOC_VIEWS, applySourceEditorScroll }
 export { fileRows as buildFileRows } from './explorer'
 
 type Listener = (s: EditSurfaceState) => void

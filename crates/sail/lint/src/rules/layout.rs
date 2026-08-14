@@ -61,18 +61,14 @@ pub fn tag_props(tag: &str) -> &'static [&'static str] {
         // `<column>` keeps `justify-content`'s CSS initial (flex-start), so the
         // axis only fires when the author asks — no output churn on existing
         // columns.
-        "column" => &["gap", "align", "justify", "direction", "inline"],
-        // MIGRATION-DEBT: dies with CHANNELS-1 (layout-keyword migration).
-        // `direction` is a backward-compat alias for the old `<sail-stack
-        // direction="row">` escape hatch (horizontal stack). Accepted on
-        // row/column so legacy code keeps compiling through the keyword
-        // migration. Modern authors use the keyword itself (`<row>`).
+        "column" => &["gap", "align", "justify", "inline"],
+        // Authors pick the keyword itself (`<row>` / `<column>`).
         // `nowrap` is a boolean axis: a `<row>` wraps by default (it absorbed
         // `sail-cluster`), and `<row nowrap>` is the single-line variant —
         // toolbars, split panes, anything that must NOT reflow onto a second
         // line. Presence is the whole vocabulary (like `inline`); it layers a
         // `flex-wrap:nowrap` override on the base and composes with `inline`.
-        "row" => &["gap", "align", "justify", "direction", "inline", "nowrap"],
+        "row" => &["gap", "align", "justify", "inline", "nowrap"],
         // `cols` is a fixed column count (1..=12); it conflicts with `min`
         // (the responsive `auto-fill minmax` axis) — `cols` wins if both
         // are present. `rows` is the orthogonal explicit ROW count
@@ -141,15 +137,14 @@ fn base_css(tag: &str) -> Vec<String> {
             ".sail-grid[popover]:not(:popover-open){display:none!important}".into(),
             ".sail-grid[popover]:popover-open{display:grid;min-width:0}".into(),
             ".sail-grid>*{grid-column:span 1;grid-row:span 1;min-width:0}".into(),
-            // Language attrs `col-span` / `row-span` (not data-*). data-* kept as
-            // emit-compat only if something still stamps them.
-            ".sail-grid>*[col-span='2'],.sail-grid>*[data-col-span='2']{grid-column:span 2}".into(),
-            ".sail-grid>*[col-span='3'],.sail-grid>*[data-col-span='3']{grid-column:span 3}".into(),
-            ".sail-grid>*[col-span='4'],.sail-grid>*[data-col-span='4']{grid-column:span 4}".into(),
-            ".sail-grid>*[row-span='2'],.sail-grid>*[data-row-span='2']{grid-row:span 2}".into(),
-            ".sail-grid>*[row-span='3'],.sail-grid>*[data-row-span='3']{grid-row:span 3}".into(),
-            ".sail-grid>*[row-span='4'],.sail-grid>*[data-row-span='4']{grid-row:span 4}".into(),
-            "@media(max-width:720px){.sail-grid>*[col-span],.sail-grid>*[data-col-span]{grid-column:span 1}.sail-grid>*[row-span],.sail-grid>*[data-row-span]{grid-row:span 1}}".into(),
+            // Language attrs `col-span` / `row-span`.
+            ".sail-grid>*[col-span='2']{grid-column:span 2}".into(),
+            ".sail-grid>*[col-span='3']{grid-column:span 3}".into(),
+            ".sail-grid>*[col-span='4']{grid-column:span 4}".into(),
+            ".sail-grid>*[row-span='2']{grid-row:span 2}".into(),
+            ".sail-grid>*[row-span='3']{grid-row:span 3}".into(),
+            ".sail-grid>*[row-span='4']{grid-row:span 4}".into(),
+            "@media(max-width:720px){.sail-grid>*[col-span]{grid-column:span 1}.sail-grid>*[row-span]{grid-row:span 1}}".into(),
         ],
         "center" => vec![
             ".sail-center{display:grid;place-items:center;place-content:center;width:100%}".into(),
@@ -254,10 +249,6 @@ fn allowed(prop: &str) -> &'static [&'static str] {
         // `rows` shares the closed 1..=12 set with `cols`: an explicit
         // grid-template-rows track count.
         "rows" => COLS_VALUES,
-        // `direction` is a flex-direction suffix on row/column. Same shape
-        // as the underlying CSS property: `row` ↔ `flex-direction:row`,
-        // `column` ↔ `flex-direction:column`.
-        "direction" => &["row", "column"],
         _ => &[],
     }
 }
@@ -362,16 +353,6 @@ fn modifier(prop: &str, value: &str) -> Option<(String, String)> {
             format!("sail-gr-{value}"),
             format!(".sail-gr-{value}{{grid-template-rows:repeat({value},minmax(0,1fr))}}"),
         ),
-        // `direction` overrides the underlying flex-direction — used when an
-        // author reaches for `<column direction="row">` (the old sail-stack
-        // idiom) and we want the markup to keep its visual meaning. The base
-        // class already declares the default direction, so the modifier only
-        // applies on a value mismatch (and any explicit direction ends up on
-        // the same `.sail-{col,row}-{direction}` for predictable overrides).
-        "direction" => (
-            format!("sail-dir-{value}"),
-            format!(".sail-dir-{value}{{flex-direction:{value}}}"),
-        ),
         _ => return None,
     })
 }
@@ -412,7 +393,6 @@ fn axis_prefix(prop: &str) -> Option<&'static str> {
         "flow" => "sail-gf-",
         "cols" => "sail-gc-",
         "rows" => "sail-gr-",
-        "direction" => "sail-dir-",
         _ => return None,
     })
 }
@@ -703,8 +683,7 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
 /// the tag-specific allow-list and the per-prop enum.
 ///
 /// `cols` lives only on `<grid>`, but listing it here lets the unknown-attr
-/// error name every axis prop the user might have meant. `direction` is the
-/// legacy `<sail-stack direction="row">` alias kept for migration. `inline`
+/// error name every axis prop the user might have meant. `inline`
 /// is a boolean axis (no value) — present on row/column/grid/center/stack —
 /// that swaps the base layout box from `display:flex|grid` to
 /// `inline-flex|inline-grid`. The boolean axes — presence-only flags with no
@@ -742,7 +721,6 @@ fn is_known_axis_prop(name: &str) -> bool {
             | "flow"
             | "cols"
             | "rows"
-            | "direction"
             | "tracks"
             | "inline"
             | "nowrap"
@@ -760,7 +738,6 @@ fn is_known_axis_prop(name: &str) -> bool {
 ///
 /// **Grid spans are language attrs**, not `data-*`. Author `col-span="2"`;
 /// the compiler leaves the attr on the host and layout CSS targets it.
-/// `data-col-span` is legacy emit-compat only — do not teach it.
 pub const PARTICIPATION_ATTRS: &[&str] = &[
     "grow", "shrink", "w", "min-w", "max-w", "col-span", "row-span",
 ];
@@ -1542,42 +1519,10 @@ mod tests {
         assert!(m[0].contains("cols"), "names the bad attr: {}", m[0]);
     }
 
-    // --- `direction` backward-compat (regression: was unknown-attr) ---------
-
     #[test]
-    fn accepts_legacy_direction_idiom() {
-        // `<column direction="row">` was the `<sail-stack direction="row">`
-        // idiom; kept compiling through the keyword migration so existing
-        // components don't break. The lint should accept it.
-        assert!(run(r#"<column gap="2" direction="row">x</column>"#).is_empty());
-        assert!(run(r#"<row gap="2" direction="column">x</row>"#).is_empty());
-    }
-
-    #[test]
-    fn lowers_direction_to_flex_direction() {
-        // Explicit override emits the `sail-dir-*` modifier.
-        let (classes, css) = lower("column", &[("direction".into(), "row".into())]).unwrap();
-        assert!(
-            classes.contains(&"sail-dir-row".to_string()),
-            "direction override class: {classes:?}"
-        );
-        assert!(
-            css.iter().any(|r| r.contains("flex-direction:row")),
-            "direction override rule: {css:?}"
-        );
-        // No default — no `sail-dir-column` on a plain `<column>`.
-        let (classes, _) = lower("column", &[]).unwrap();
-        assert!(
-            !classes.iter().any(|c| c.starts_with("sail-dir-")),
-            "no implicit direction class: {classes:?}"
-        );
-    }
-
-    #[test]
-    fn rejects_off_enum_direction() {
-        let m = run(r#"<column direction="diagonal">x</column>"#);
-        assert_eq!(m.len(), 1);
-        assert!(m[0].contains("diagonal"), "names the bad value: {}", m[0]);
+    fn rejects_direction_attr() {
+        let m = run(r#"<column gap="2" direction="row">x</column>"#);
+        assert!(!m.is_empty(), "direction attr is refused");
     }
 
     // --- no silent drop ---------------------------------------------------

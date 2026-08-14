@@ -14,13 +14,12 @@ export {
   type RadiusKey,
   type RecipeId,
 } from './theme-shape-edit'
-export { createThemeSession, paintIdFor, modesForPaintId } from '../theme-session/theme-session'
+export { createThemeSession, resolvePaintId, modesForPaintId } from '../theme-session/theme-session'
 export { PATH_NAV } from '../theme-session/theme-nav'
 
 import { createThemeSession } from '../theme-session/theme-session'
 import { createShapeEdit } from './theme-shape-edit'
 
-/** Back-compat factory for tests / imports. */
 export function createThemeShapeSurface() {
   const session = createThemeSession({
     facet: 'shape',

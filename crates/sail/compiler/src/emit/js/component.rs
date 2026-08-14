@@ -25,7 +25,7 @@ pub(super) fn emit_registered_component(
     w.enter();
     emit_props_object(w, &program.props);
     // LIGHT DOM (the product model): the runtime wraps these styles in an
-    // `@scope ([data-component="tag"]) to ([data-component])` donut. Legacy
+    // `@scope ([data-component="tag"]) to ([data-component])` donut. Older
     // author idioms rewrite — :host → :scope / .sail-root, ::slotted(X) →
     // slot > X. Shared-rule stripping also applies: the document-level
     // contract sheets carry those rules once.

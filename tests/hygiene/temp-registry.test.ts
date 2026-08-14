@@ -470,10 +470,27 @@ describe('TEMP registry: red/green fixtures', () => {
       productVersion: reg.productVersion,
       conditions: { ...reg.conditions, 'after-spinnaker-cut': true },
     }
+    // After the Spinnaker funeral, after-spinnaker-cut rows are gone — flipping
+    // the flag must not find leftover DELETE-later entries.
     const expired = expiredEntries(reg, flipped)
-    expect(expired.length).toBeGreaterThan(0)
-    expect(expired.every((e) => e.verdict !== 'KEEP')).toBe(true)
+    expect(expired.map((e) => e.id)).toEqual([])
     expect(expiredEntries(reg, clockFrom(reg)).length).toBe(0)
+
+    const stillListed: Registry = {
+      ...reg,
+      entries: [
+        ...reg.entries,
+        {
+          id: 'condition-probe',
+          kind: 'tombstone',
+          verdict: 'DELETE-later',
+          reason: 'expires when after-spinnaker-cut is true',
+          paths: ['src/old.ts'],
+          expires: { condition: 'after-spinnaker-cut' },
+        },
+      ],
+    }
+    expect(expiredEntries(stillListed, flipped).map((e) => e.id)).toContain('condition-probe')
   })
 
   test('red/green filesystem prove+clean (unregistered marker)', () => {

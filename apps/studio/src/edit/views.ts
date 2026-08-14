@@ -447,28 +447,3 @@ export {
   applySourceEditorScroll,
   type SourceEditorHost,
 } from '@ship/sail-studio-shell'
-
-/** @deprecated Use applySourceEditorScroll — kept for tests that call caret path. */
-export function applySourceScroll(
-  ta: { value?: string; focus?: () => void; setSelectionRange?: (a: number, b: number) => void; scrollTop: number; scrollHeight: number; clientHeight: number },
-  line: number,
-  col = 1,
-): void {
-  if (!ta || line < 1) return
-  const text = String(ta.value ?? '')
-  const lines = text.split('\n')
-  const target = Math.min(line, lines.length)
-  let pos = 0
-  for (let i = 0; i < target - 1; i++) pos += (lines[i]?.length ?? 0) + 1
-  const lineLen = lines[target - 1]?.length ?? 0
-  const colOff = Math.max(0, Math.min(lineLen, Math.max(0, col - 1)))
-  const caret = pos + colOff
-  try {
-    ta.focus?.()
-    ta.setSelectionRange?.(caret, caret)
-  } catch {
-    /* happy-dom / readonly */
-  }
-  const ratio = (target - 1) / Math.max(1, lines.length)
-  ta.scrollTop = ratio * Math.max(0, ta.scrollHeight - ta.clientHeight)
-}
