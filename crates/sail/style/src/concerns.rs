@@ -1007,6 +1007,8 @@ pub fn concern_clash_keys(op: &PaintOp) -> Option<Vec<&'static str>> {
         | PaintArg::MemberPath { .. } => {
             if spec.name == "border" {
                 Some(border_clash_keys(concern_kind(op), concern_edge(op)))
+            } else if spec.name == "position" {
+                Some(position_clash_keys(op))
             } else {
                 Some(vec![clash_key(spec.name, concern_kind(op))])
             }
@@ -1031,6 +1033,42 @@ fn concern_edge(op: &PaintOp) -> &'static str {
             _ => "all",
         },
         _ => "all",
+    }
+}
+
+/// Complementary position slots coexist (`scheme`+`z`). Same slot twice clashes.
+fn position_clash_keys(op: &PaintOp) -> Vec<&'static str> {
+    match op.first_arg() {
+        PaintArg::Slots(slots) => {
+            let mut keys = Vec::new();
+            for name in slots.keys() {
+                match name.as_str() {
+                    "scheme" => keys.push("position:scheme"),
+                    "z" => keys.push("position:z"),
+                    "order" => keys.push("position:order"),
+                    "inset" => {
+                        keys.push("position:t");
+                        keys.push("position:b");
+                        keys.push("position:l");
+                        keys.push("position:r");
+                    }
+                    "t" => keys.push("position:t"),
+                    "b" => keys.push("position:b"),
+                    "l" => keys.push("position:l"),
+                    "r" => keys.push("position:r"),
+                    _ => keys.push("position"),
+                }
+            }
+            if keys.is_empty() {
+                vec!["position"]
+            } else {
+                keys
+            }
+        }
+        // Scalar `position(relative)` is the scheme slot.
+        PaintArg::Token(_) | PaintArg::Bind(_) | PaintArg::MemberPath { .. } => {
+            vec!["position:scheme"]
+        }
     }
 }
 
@@ -2334,6 +2372,38 @@ mod tests {
         );
         let clashes = crate::clash::detect_clashes(&style, &HashMap::new());
         assert!(clashes.is_empty(), "{clashes:?}");
+    }
+
+    #[test]
+    fn position_scheme_and_z_do_not_clash() {
+        let (style, diags) = parse(
+            "style({ position({ scheme: absolute, t: 0, b: 0, l: 0, r: 0 }).position({ z: dropdown }) })",
+        );
+        assert!(
+            diags.is_empty(),
+            "{:?}",
+            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
+        let clashes = crate::clash::detect_clashes(&style, &HashMap::new());
+        assert!(clashes.is_empty(), "{clashes:?}");
+    }
+
+    #[test]
+    fn position_same_slot_twice_clashes() {
+        let (style, parse_diags) =
+            parse("style({ position({ z: dropdown }).position({ z: sticky }) })");
+        assert!(
+            parse_diags.is_empty(),
+            "{:?}",
+            parse_diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
+        let clashes = crate::clash::detect_clashes(&style, &HashMap::new());
+        assert!(
+            clashes
+                .iter()
+                .any(|d| matches!(d, StyleDiagnostic::Clash { .. })),
+            "{clashes:?}"
+        );
     }
 
     #[test]
