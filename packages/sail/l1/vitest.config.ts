@@ -1,7 +1,6 @@
-import { defineConfig } from 'vitest/config'
+import { sailComponentVitestConfig } from '@ship/test-setup/vitest'
 
-export default defineConfig({
-  test: {
-    include: ['test/**/*.test.ts'],
-  },
+export default sailComponentVitestConfig({
+  environment: 'happy-dom',
+  include: ['test/**/*.test.ts'],
 })
