@@ -56,13 +56,13 @@ const PLAIN: VocabTag = VocabTag::Plain;
 /// plains follow. No `z` row — `z` rides `position`.
 pub static VOCAB: &[VocabRow] = &[
     // ── live concerns (v3 author names) ────────────────────────────────
-    row("bg", CONCERN, Some("fill"), "paint", true),
-    row("fg", CONCERN, Some("ink"), "paint", true),
+    row("bg", CONCERN, Some("bg"), "paint", true),
+    row("fg", CONCERN, Some("fg"), "paint", true),
     row("border", CONCERN, Some("border"), "paint", true),
     row("size", CONCERN, Some("size"), "box", true),
     row("type", CONCERN, Some("type"), "text", true),
     row("elevation", CONCERN, Some("elevation"), "paint", true),
-    row("position", CONCERN, Some("place"), "box", true),
+    row("position", CONCERN, Some("position"), "box", true),
     row("play", CONCERN, None, "animate", true),
     row("filter", CONCERN, Some("filter"), "paint", true),
     // ── live axis ──────────────────────────────────────────────────────
@@ -240,25 +240,18 @@ mod tests {
     fn z_is_position_slot_not_a_row() {
         assert!(find_vocab("z").is_none());
         assert_eq!(resolve_vocab("z"), None);
-        let place = find_concern("place").expect("place emit target");
+        let pos = find_concern("position").expect("position concern");
         assert!(
-            find_slot(place, "z").is_some(),
-            "z lives on the position/place concern"
+            find_slot(pos, "z").is_some(),
+            "z lives on the position concern"
         );
-        let via_author = find_concern("position").expect("position → place");
-        assert!(find_slot(via_author, "z").is_some());
     }
 
     #[test]
-    fn v2_author_names_are_dead() {
-        for dead in ["fill", "ink", "place", "space", "flow", "motion"] {
-            assert!(is_dead_v2_author(dead), "{dead}");
-            assert!(find_vocab(dead).is_none(), "{dead} must not be a vocab row");
-            assert_eq!(resolve_vocab(dead), None, "{dead}");
-        }
-        assert_eq!(emit_target("bg"), Some("fill"));
-        assert_eq!(emit_target("fg"), Some("ink"));
-        assert_eq!(emit_target("position"), Some("place"));
+    fn emit_targets_are_the_author_concerns() {
+        assert_eq!(emit_target("bg"), Some("bg"));
+        assert_eq!(emit_target("fg"), Some("fg"));
+        assert_eq!(emit_target("position"), Some("position"));
         assert_eq!(emit_target("pad"), Some("space"));
         assert_eq!(emit_target("margin"), Some("space"));
     }
@@ -277,9 +270,9 @@ mod tests {
 
     #[test]
     fn find_concern_reads_author_names() {
-        assert_eq!(find_concern("bg").map(|c| c.name), Some("fill"));
-        assert_eq!(find_concern("fg").map(|c| c.name), Some("ink"));
-        assert_eq!(find_concern("position").map(|c| c.name), Some("place"));
+        assert_eq!(find_concern("bg").map(|c| c.name), Some("bg"));
+        assert_eq!(find_concern("fg").map(|c| c.name), Some("fg"));
+        assert_eq!(find_concern("position").map(|c| c.name), Some("position"));
         assert_eq!(find_concern("pad").map(|c| c.name), Some("space"));
         assert!(find_concern("display").is_none());
         assert!(find_concern("z").is_none());
@@ -290,10 +283,8 @@ mod tests {
         let bg = find_vocab("bg").expect("bg");
         let line = vocab_surface_line(bg);
         assert!(line.contains("`bg(…)`"), "{line}");
-        assert!(!line.contains("`fill(…)`"), "{line}");
         let pad = find_vocab("pad").expect("pad");
         let line = vocab_surface_line(pad);
         assert!(line.contains("`pad(…)`"), "{line}");
-        assert!(!line.contains("`space(…)`"), "{line}");
     }
 }

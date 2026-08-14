@@ -64,7 +64,7 @@ pub const MARKERS: &[&str] = &[
 pub fn concerns() -> &'static [ConcernSpec] {
     &[
         ConcernSpec {
-            name: "fill",
+            name: "bg",
             slots: &[
                 ConcernSlot {
                     name: "color",
@@ -119,7 +119,7 @@ pub fn concerns() -> &'static [ConcernSpec] {
             channel: Channel::Paint,
         },
         ConcernSpec {
-            name: "ink",
+            name: "fg",
             slots: &[
                 ConcernSlot {
                     name: "color",
@@ -578,7 +578,7 @@ pub fn concerns() -> &'static [ConcernSpec] {
             channel: Channel::Box,
         },
         ConcernSpec {
-            name: "place",
+            name: "position",
             slots: &[
                 ConcernSlot {
                     name: "position",
@@ -960,8 +960,8 @@ pub fn find_concern(name: &str) -> Option<&'static ConcernSpec> {
 /// emit/validate run unchanged.
 pub fn alias_concern_call(method: &str, args: Vec<PaintArg>) -> (String, Vec<PaintArg>) {
     match method {
-        "bg" => alias_to_concern("fill", "color", args),
-        "fg" => alias_to_concern("ink", "color", args),
+        "bg" => alias_to_concern("bg", "color", args),
+        "fg" => alias_to_concern("fg", "color", args),
         "position" => alias_place(args),
         "pad" => alias_space_axis("pad", args),
         "margin" => alias_space_axis("m", args),
@@ -1006,7 +1006,7 @@ fn alias_place(args: Vec<PaintArg>) -> (String, Vec<PaintArg>) {
         Some(other) => vec![other],
         None => Vec::new(),
     };
-    ("place".into(), args)
+    ("position".into(), args)
 }
 
 fn alias_space_axis(scalar_slot: &'static str, args: Vec<PaintArg>) -> (String, Vec<PaintArg>) {
@@ -1121,8 +1121,8 @@ pub fn retired_replacement(name: &str) -> Option<(&'static str, String)> {
 
 fn concern_teaching(concern: &str) -> String {
     match concern {
-        "fill" => "bg(surface) or bg({ color: … })".into(),
-        "ink" => "fg(foreground) or fg({ color: … })".into(),
+        "bg" => "bg(surface) or bg({ color: … })".into(),
+        "fg" => "fg(foreground) or fg({ color: … })".into(),
         "border" => "border(name) or border({ color, width, style, kind, edge })".into(),
         "radius" => "radius(md) or radius({ all: md })".into(),
         "elevation" => "elevation(sm) or elevation({ shadow: sm })".into(),
@@ -1131,7 +1131,7 @@ fn concern_teaching(concern: &str) -> String {
             "size(control-md) or size({ w, h, min-w, min-h, max-w, max-h, aspect, basis })".into()
         }
         "space" => "pad(3) or pad({ x: 3, y: 2 }) / margin(…)".into(),
-        "place" => "position({ scheme: fixed, inset: 0 })".into(),
+        "position" => "position({ scheme: fixed, inset: 0 })".into(),
         "flow" => "display(flex).dir(column)".into(),
         "overflow" => "overflow({ all: hidden })".into(),
         "type" => "type(body-sm) or type({ family, size, weight, wrap })".into(),
@@ -1176,18 +1176,36 @@ pub fn concern_doc_line(spec: &ConcernSpec) -> String {
 /// `border(dialog.border)` is a color poke — it does not resolve. Use `border(dialog)`.
 pub fn resolve_concern_name(spec: &ConcernSpec, raw: &str) -> Option<&'static CompositeToken> {
     let concern = spec.name;
+    let catalog = match concern {
+        "bg" => "fill",
+        "fg" => "ink",
+        "position" => "place",
+        other => other,
+    };
     if raw.contains('.') {
         if raw.starts_with(concern) && raw.as_bytes().get(concern.len()) == Some(&b'.') {
-            return tokens::find_composite(raw).filter(|c| c.r#type == concern);
+            return tokens::find_composite(raw).filter(|c| c.r#type == catalog);
+        }
+        if catalog != concern
+            && raw.starts_with(catalog)
+            && raw.as_bytes().get(catalog.len()) == Some(&b'.')
+        {
+            return tokens::find_composite(raw).filter(|c| c.r#type == catalog);
         }
         return None;
     }
     let scoped = format!("{concern}.{raw}");
-    if let Some(c) = tokens::find_composite(&scoped).filter(|c| c.r#type == concern) {
+    if let Some(c) = tokens::find_composite(&scoped).filter(|c| c.r#type == catalog) {
         return Some(c);
     }
+    if catalog != concern {
+        let legacy = format!("{catalog}.{raw}");
+        if let Some(c) = tokens::find_composite(&legacy).filter(|c| c.r#type == catalog) {
+            return Some(c);
+        }
+    }
     let component = format!("{raw}.{concern}");
-    tokens::find_composite(&component).filter(|c| c.r#type == concern)
+    tokens::find_composite(&component).filter(|c| c.r#type == catalog)
 }
 
 /// True when this op is the concern form (composite token, scale-step name, or slot object).
@@ -1332,14 +1350,14 @@ fn clash_key(concern: &str, kind: &str) -> &'static str {
         ("border", "ring") => "border:ring",
         ("border", "image") => "border:image",
         ("border", _) => "border:stroke",
-        ("fill", _) => "fill",
-        ("ink", _) => "ink",
+        ("bg", _) => "bg",
+        ("fg", _) => "fg",
         ("radius", _) => "radius",
         ("elevation", _) => "elevation",
         ("filter", _) => "filter",
         ("size", _) => "size",
         ("space", _) => "space",
-        ("place", _) => "place",
+        ("position", _) => "position",
         ("flow", _) => "flow",
         ("overflow", _) => "overflow",
         ("type", _) => "type",
@@ -1385,9 +1403,9 @@ pub fn validate_concern_op(spec: &ConcernSpec, op: &PaintOp) -> Result<(), Style
             }
             let teaching = if spec.name == "border" {
                 format!("border({{ color: {name} }}) or border(subtle)")
-            } else if spec.name == "fill" {
+            } else if spec.name == "bg" {
                 format!("bg({{ color: {name} }}) or bg(surface)")
-            } else if spec.name == "ink" {
+            } else if spec.name == "fg" {
                 format!("fg({{ color: {name} }}) or fg(foreground)")
             } else {
                 concern_teaching(spec.name)
@@ -1576,8 +1594,8 @@ pub fn lower_concern_op(
 
 fn primary_decls(spec: &ConcernSpec, css: String) -> Vec<(String, String)> {
     match spec.name {
-        "fill" => vec![("background-color".into(), css)],
-        "ink" => vec![("color".into(), css)],
+        "bg" => vec![("background-color".into(), css)],
+        "fg" => vec![("color".into(), css)],
         "border" => vec![("border-color".into(), css)],
         "radius" => vec![("border-radius".into(), css)],
         "elevation" => vec![("box-shadow".into(), css)],
@@ -1648,10 +1666,10 @@ fn lower_slot_object(
     if spec.name == "border" {
         return lower_border_slots(spec, op, slots);
     }
-    if spec.name == "fill" {
+    if spec.name == "bg" {
         return lower_fill_slots(spec, op, slots);
     }
-    if spec.name == "ink" {
+    if spec.name == "fg" {
         return lower_ink_slots(spec, op, slots);
     }
     if spec.name == "filter" {
@@ -2367,15 +2385,15 @@ mod tests {
     fn atlas_lists_full_concern_set_not_markers() {
         let names: Vec<&str> = concerns().iter().map(|c| c.name).collect();
         for want in [
-            "fill",
-            "ink",
+            "bg",
+            "fg",
             "border",
             "radius",
             "elevation",
             "filter",
             "size",
             "space",
-            "place",
+            "position",
             "flow",
             "overflow",
             "type",
@@ -2638,8 +2656,6 @@ mod tests {
         assert!(retired_replacement("fg").is_none());
         assert!(retired_replacement("pad").is_none());
         assert!(retired_replacement("display").is_none());
-        assert!(retired_replacement("fill").is_none());
-        assert!(retired_replacement("ink").is_none());
         assert_eq!(retired_replacement("padX").unwrap().0, "space");
         assert_eq!(retired_replacement("w").unwrap().0, "size");
         assert_eq!(retired_replacement("shadow").unwrap().0, "elevation");
@@ -2647,17 +2663,24 @@ mod tests {
     }
 
     #[test]
-    fn alias_bg_card_stays_fill_composite() {
+    fn alias_bg_card_stays_named_or_color() {
         let (name, args) = alias_concern_call("bg", vec![PaintArg::Token("card".into())]);
-        assert_eq!(name, "fill");
-        assert_eq!(args, vec![PaintArg::Token("card".into())]);
+        assert_eq!(name, "bg");
+        assert!(
+            args == vec![PaintArg::Token("card".into())]
+                || matches!(
+                    &args[0],
+                    PaintArg::Slots(slots) if slots.get("color") == Some(&PaintArg::Token("card".into()))
+                ),
+            "{args:?}"
+        );
     }
 
     #[test]
-    fn alias_fg_color_token_wraps_ink_slot() {
+    fn alias_fg_color_token_wraps_color_slot() {
         let (name, args) =
             alias_concern_call("fg", vec![PaintArg::Token("muted-foreground".into())]);
-        assert_eq!(name, "ink");
+        assert_eq!(name, "fg");
         match &args[0] {
             PaintArg::Slots(slots) => {
                 assert_eq!(

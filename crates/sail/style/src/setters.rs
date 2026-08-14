@@ -3792,7 +3792,7 @@ mod tests {
         let op = only_op("style({ paint: border({ kind: ring, color: primary }) })");
         assert_eq!(op_slots(&op), vec!["border:ring"]);
         let op = only_op("style({ bg(primary) })");
-        assert_eq!(op_slots(&op), vec!["fill"]);
+        assert_eq!(op_slots(&op), vec!["bg"]);
     }
 
     #[test]

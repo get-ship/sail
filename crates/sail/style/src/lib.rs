@@ -778,8 +778,8 @@ mod tests {
     fn setter_wave_control_and_gap_and_bg_mix() {
         // colorDeepen / colorMix / gap are absorbed — RetiredSetter, not a dual path.
         for (src, concern) in [
-            ("style({ paint: colorDeepen(primary, 15) })", "fill"),
-            ("style({ paint: colorMix(primary, 15) })", "fill"),
+            ("style({ paint: colorDeepen(primary, 15) })", "bg"),
+            ("style({ paint: colorMix(primary, 15) })", "bg"),
             ("style({ box: gap(2) })", "gap"),
         ] {
             let (_, diags) = parse(src);

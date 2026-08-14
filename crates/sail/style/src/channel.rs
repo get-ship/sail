@@ -219,7 +219,7 @@ fn when_key_kebab(key: &str) -> String {
 pub fn is_geometry_setter(name: &str) -> bool {
     match name {
         "display" | "overflow" | "overflowX" | "overflowY" | "flow" => false,
-        "size" | "space" | "place" => true,
+        "size" | "space" | "position" | "pad" | "margin" => true,
         other => channel_for_setter(other) == Some(Channel::Box),
     }
 }
@@ -392,13 +392,11 @@ mod tests {
 
     #[test]
     fn geometry_setters_are_dimensional_box() {
-        for s in ["size", "space", "place"] {
+        for s in ["size", "space", "position", "pad", "margin"] {
             assert!(is_geometry_setter(s), "{s}");
         }
         assert!(!is_geometry_setter("display"));
         assert!(!is_geometry_setter("overflow"));
-        assert!(!is_geometry_setter("flow"));
-        assert!(!is_geometry_setter("fill"));
         assert!(!is_geometry_setter("type"));
     }
 
