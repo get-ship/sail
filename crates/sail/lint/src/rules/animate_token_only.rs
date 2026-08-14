@@ -2,7 +2,7 @@
 //!
 //! Play names resolve through the theme registry. Leftover trigger-call
 //! objects (`hover({ scale: '…' })`) still get the closed property/preset
-//! check so a missed migration names the vocabulary rather than going silent.
+//! check so a leftover form names the vocabulary rather than going silent.
 
 use std::path::Path;
 

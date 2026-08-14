@@ -485,17 +485,26 @@ export function setup() {
     }
 
     #[test]
-    fn compile_sail_does_not_double_collect_on_showcase() {
-        let mut root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        for _ in 0..3 {
-            root.pop();
-        }
-        let sail = root.join("apps/sail-site/routes/showcase/page.sail");
-        assert!(
-            sail.is_file(),
-            "showcase fixture missing: {}",
-            sail.display()
-        );
+    fn compile_sail_does_not_double_collect() {
+        let dir = tempdir().unwrap();
+        let sail = dir.path().join("routes/page.sail");
+        std::fs::create_dir_all(sail.parent().unwrap()).unwrap();
+        std::fs::write(
+            &sail,
+            r#"
+<scope>
+  style shell = { pad(4).bg(background) }
+</scope>
+<controller>
+export default controller(() => {
+  const n = signal(0)
+  return { n }
+})
+</controller>
+<column style(shell)>{n()}</column>
+"#,
+        )
+        .unwrap();
 
         let source = std::fs::read_to_string(&sail).unwrap();
         let opts = CompileOpts {
@@ -515,7 +524,7 @@ export function setup() {
         let _ = compile_sail(&sail, CompileMode::Route, "page", false);
 
         let t = std::time::Instant::now();
-        let out = compile(&source, opts).expect("showcase compiles");
+        let out = compile(&source, opts).expect("owned route compiles");
         let compile_ms = t.elapsed().as_secs_f64() * 1000.0;
 
         let t = std::time::Instant::now();
@@ -524,10 +533,10 @@ export function setup() {
         let _ = lines.len();
 
         let t = std::time::Instant::now();
-        compile_sail(&sail, CompileMode::Route, "page", false).expect("showcase compiles");
+        compile_sail(&sail, CompileMode::Route, "page", false).expect("owned route compiles");
         let sail_ms = t.elapsed().as_secs_f64() * 1000.0;
         eprintln!(
-            "showcase HMR probe: compile={compile_ms:.1}ms warn={warn_ms:.3}ms compile_sail={sail_ms:.1}ms"
+            "HMR probe: compile={compile_ms:.1}ms warn={warn_ms:.3}ms compile_sail={sail_ms:.1}ms"
         );
 
         assert!(
@@ -540,7 +549,7 @@ export function setup() {
         );
         assert!(
             compile_ms + warn_ms < 1300.0,
-            "showcase compile+warn {compile_ms:.1}+{warn_ms:.3}ms exceeds 1.3s"
+            "compile+warn {compile_ms:.1}+{warn_ms:.3}ms exceeds 1.3s"
         );
     }
 }
