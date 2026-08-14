@@ -115,7 +115,7 @@ export default controller((_ctx: Scope) => {
           interactive={interactive() ? 'true' : null}
           accent-bar={accentBar()}
           status-rail={statusRail() ? 'true' : null}
-          fill={bg() ? 'true' : null}
+          fill={fill() ? 'true' : null}
           style(specimen)
         >
           <strong>Harbor Signals</strong>
@@ -128,7 +128,7 @@ export default controller((_ctx: Scope) => {
           interactive={interactive() ? 'true' : null}
           accent-bar={accentBar()}
           status-rail={statusRail() ? 'true' : null}
-          fill={bg() ? 'true' : null}
+          fill={fill() ? 'true' : null}
           style(specimen)
         >
           <strong>Harbor Signals</strong>
