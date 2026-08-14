@@ -3,12 +3,12 @@
   Host bind: components={components}. One face visible via stage gates.
 -->
 <scope>
-  style fieldHint = { paint: fg(muted-foreground), text: fontSize(xs) }
-  style doorTitle = { text: fontWeight(semibold) }
-  style iconBtn = { box: shrink(0).w(control-h-sm).h(control-h-sm).minW(control-h-sm).minH(control-h-sm) }
-  style tapFloor = { box: shrink(0).minW(control-h-sm).minH(control-h-sm) }
-  style stageHost = { box: w(full) }
-  style sampleMax = { box: w(full).maxW(panel-max-w-sm) }
+  style fieldHint = { fg(muted-foreground).type({ size: xs }) }
+  style doorTitle = { type({ weight: semibold }) }
+  style iconBtn = { shrink(0).size({ w: control-h-sm, h: control-h-sm, min-w: control-h-sm, min-h: control-h-sm }) }
+  style tapFloor = { shrink(0).size({ min-w: control-h-sm, min-h: control-h-sm }) }
+  style stageHost = { size({ w: full }) }
+  style sampleMax = { size({ w: full, max-w: panel-max-w-sm }) }
 </scope>
 
 <controller>
@@ -161,7 +161,7 @@ export default controller(() => {
       <row gap="3" align="center">
         <skeleton shape="circle" size="md"></skeleton>
         <skeleton shape="circle" size="sm"></skeleton>
-        <skeleton shape="block" style({ box: w(24).minH(16) })></skeleton>
+        <skeleton shape="block" style({ size({ w: 24, min-h: 16 }) })></skeleton>
       </row>
     </column>
   </column>
@@ -234,7 +234,7 @@ export default controller(() => {
   </toast>
 </if>
 <if {components.stage.toastRegion()}>
-  <column gap="2" style({  box: w(full).maxW(panel-max-w-sm).position(relative).minH(24)  })>
+  <column gap="2" style({ size({ w: full, min-h: 24, max-w: panel-max-w-sm }).position(relative) })>
     <p style(fieldHint)>Toast region hosts stacked toasts (fixed in product).</p>
     <toast tone="info" duration="0">Region child toast</toast>
   </column>

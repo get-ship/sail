@@ -307,7 +307,7 @@ mod tests {
 
     #[test]
     fn style_type_size_xl_changes_measure() {
-        let (style, diags) = sail_lint::style::parse("style({ text: type({ size: xl }) })");
+        let (style, diags) = sail_lint::style::parse("style({ type({ size: xl }) })");
         assert!(
             diags.is_empty(),
             "{:?}",
@@ -318,7 +318,7 @@ mod tests {
 
         let xl = Size::from_scale_token(resolved.size.as_deref().unwrap());
         let sm = {
-            let (s, _) = sail_lint::style::parse("style({ text: type({ size: sm }) })");
+            let (s, _) = sail_lint::style::parse("style({ type({ size: sm }) })");
             let r = sail_lint::style::resolve_type(&s, &Default::default());
             Size::from_scale_token(r.size.as_deref().unwrap())
         };

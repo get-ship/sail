@@ -158,7 +158,7 @@ describe('both viewports badge', () => {
 
   it('layout finding gets both-viewports only when LayoutCheck ran both', async () => {
     const layoutSrc = `<column gap="3">
-      style({ box: h(0) })
+      style({ size({ h: 0 }) })
   <span>a</span>
   <div>b</div>
 </column>
@@ -249,7 +249,7 @@ describe('editor deep-link', () => {
           {
             severity: 'error',
             rule: 'sail-participation-style',
-            message: 'style({ box: grow }) — use grow attr\n  suggest: use grow',
+            message: 'style({ grow(1) }) — use grow attr\n  suggest: use grow',
             line: 34,
             col: 5,
             path: 'apps/studio/routes/page.sail',
@@ -276,7 +276,7 @@ describe('auto-fix off leaves disk untouched', () => {
         {
           severity: 'error',
           rule: 'sail-participation-style',
-          message: 'bare `grow` is layout participation — use the box channel: style({ box: grow(1) })',
+          message: 'bare `grow` is layout participation — use Style: style({ grow(1) })',
           line: 1,
           col: 1,
         },
@@ -296,7 +296,7 @@ describe('auto-fix off leaves disk untouched', () => {
     const applied = autoFixOnSave(src, findings, 'apply')
     expect(applied.changed).toBe(true)
     expect(applied.text).toContain('grow')
-    expect(applied.text).toContain('style({ box: grow(1) })')
+    expect(applied.text).toContain('style({ grow(1) })')
     expect(applied.text).not.toMatch(/<div\s+grow[\s>]/)
   })
 
@@ -474,7 +474,7 @@ describe('severity groups + expandable suggest', () => {
           {
             severity: 'error',
             rule: 'sail-participation-style',
-            message: 'style({ box: grow }) — use grow attr\n  suggest: use grow attribute',
+            message: 'style({ grow(1) }) — use grow attr\n  suggest: use grow attribute',
             line: 2,
             col: 3,
             path: 'apps/demo/page.sail',
@@ -551,24 +551,24 @@ describe('Review fixes dialog flow', () => {
     expect(applied).toBe(1)
     s = getChecksState()
     expect(s.reviewOpen).toBe(false)
-    expect(s.sourceByPath.get(path)).toContain('style({ box: grow(1) })')
+    expect(s.sourceByPath.get(path)).toContain('style({ grow(1) })')
     expect(s.sourceByPath.get(path)).not.toMatch(/<\w+\s+grow[\s>]/)
     expect(s.findings.length).toBe(0)
     expect(s.reviewNote).toMatch(/Applied 1 fix/)
     // Durable: edit document buffer updated + dirty
     const doc = getEditState().docs.get(path)
     expect(doc?.source.text).toBeDefined()
-    expect(doc!.source.text).toContain('style({ box: grow(1) })')
+    expect(doc!.source.text).toContain('style({ grow(1) })')
     expect(doc!.source.dirty).toBe(true)
     // sourceForSave prefers applied text even when autoFixMode is off
     setAutoFixMode('off')
     const saved = sourceForSave(path, src)
     expect(saved.changed).toBe(true)
-    expect(saved.text).toContain('style({ box: grow(1) })')
+    expect(saved.text).toContain('style({ grow(1) })')
     // writeSource fired (async fire-and-forget — wait a tick)
     await new Promise((r) => setTimeout(r, 10))
     expect(written?.text).toBeDefined()
-    expect(written!.text).toContain('style({ box: grow(1) })')
+    expect(written!.text).toContain('style({ grow(1) })')
   })
 
   it('skip all → applied 0 and findings retained', async () => {
@@ -657,7 +657,7 @@ describe('Review fixes dialog flow', () => {
     expect(ret.ok).toBe(true)
     expect(getChecksState().findings).toHaveLength(0)
     expect(getChecksState().reviewNote).toMatch(/Applied 1 fix/)
-    expect(getEditState().docs.get(path)?.source.text).toContain('style({ box: grow(1) })')
+    expect(getEditState().docs.get(path)?.source.text).toContain('style({ grow(1) })')
     // Attribution recorded (rule + before/after + timestamp)
     expect(getChecksState().attributions.length).toBeGreaterThan(0)
     expect(getChecksState().attributions[0]!.rule).toBe('sail-participation-style')
@@ -725,7 +725,7 @@ describe('rule groups + autofix + re-check + empty', () => {
 
   it('why is verbatim compiler message (never paraphrased)', async () => {
     const why =
-      'style({ box: grow }) — use grow attr\n  suggest: use grow attribute on the host'
+      'style({ grow(1) }) — use grow attr\n  suggest: use grow attribute on the host'
     setChecksOpsClient({
       sailAuthoringCheck: async () => ({
         ok: true,
@@ -747,7 +747,7 @@ describe('rule groups + autofix + re-check + empty', () => {
     })
     const f = getChecksState().findings[0]!
     expect(f.why).toBe(why)
-    expect(f.message).toBe('style({ box: grow }) — use grow attr')
+    expect(f.message).toBe('style({ grow(1) }) — use grow attr')
     expect(f.suggest).toMatch(/grow attribute/)
   })
 

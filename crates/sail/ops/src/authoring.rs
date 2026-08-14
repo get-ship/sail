@@ -1404,7 +1404,7 @@ mod tests {
         use crate::call_rpc;
         use crate::ctx::Ctx;
         let ctx = Ctx::from_env();
-        let src = "style({ paint: border() })";
+        let src = "style({ border() })";
         let off = src.find("border(").expect("border(") + 7;
         let complete = call_rpc(
             "SailAuthoring",
@@ -1426,7 +1426,7 @@ mod tests {
             );
         }
 
-        let color_src = "style({ paint: border({ color:  }) })";
+        let color_src = "style({ border({ color:  }) })";
         let color_off = color_src.find("color: ").expect("color") + 7;
         let color = call_rpc(
             "SailAuthoring",
@@ -1450,7 +1450,7 @@ mod tests {
             "width in color slot: {color_labels:?}"
         );
 
-        let hover_src = "style({ paint: border(border.subtle) })";
+        let hover_src = "style({ border(border.subtle) })";
         let hover_off = hover_src.find("subtle").expect("token");
         let hover = call_rpc(
             "SailAuthoring",
@@ -1490,51 +1490,62 @@ mod tests {
     fn complete_and_hover_size_type_elevation_fill_match_registry() {
         use crate::call_rpc;
         use crate::ctx::Ctx;
-        let paint = complete_labels("style({ paint:  })", "paint: ", 7);
-        for want in ["bg", "fg", "border", "elevation"] {
-            assert!(paint.iter().any(|l| l == want), "{want} missing: {paint:?}");
-        }
-        for dead in ["fill", "ink", "shadow"] {
+        // ObjectKey now also offers setters — channels are dissolved.
+        let object = complete_labels("style({  })", "{ ", 2);
+        for want in [
+            "when",
+            "match",
+            "animate",
+            "compound",
+            "bg",
+            "fg",
+            "border",
+            "elevation",
+            "size",
+            "pad",
+            "margin",
+            "position",
+            "type",
+        ] {
             assert!(
-                !paint.iter().any(|l| l == dead),
-                "dead `{dead}` offered on paint: {paint:?}"
+                object.iter().any(|l| l == want),
+                "{want} missing: {object:?}"
+            );
+        }
+        for dead in [
+            "box",
+            "paint",
+            "text",
+            "fill",
+            "ink",
+            "shadow",
+            "space",
+            "place",
+            "flow",
+            "padX",
+            "w",
+            "minW",
+            "fontSize",
+            "truncate",
+            "fontWeight",
+        ] {
+            assert!(
+                !object.iter().any(|l| l == dead),
+                "`{dead}` offered: {object:?}"
             );
         }
 
-        let box_ch = complete_labels("style({ box:  })", "box: ", 5);
-        for want in ["size", "pad", "margin", "position"] {
-            assert!(
-                box_ch.iter().any(|l| l == want),
-                "{want} missing: {box_ch:?}"
-            );
-        }
-        for absorbed in ["space", "place", "flow", "padX", "w", "minW"] {
-            assert!(
-                !box_ch.iter().any(|l| l == absorbed),
-                "absorbed `{absorbed}` offered on box: {box_ch:?}"
-            );
-        }
-
-        let text = complete_labels("style({ text:  })", "text: ", 6);
-        assert!(text.iter().any(|l| l == "type"), "type missing: {text:?}");
-        for absorbed in ["fontSize", "truncate", "fontWeight"] {
-            assert!(
-                !text.iter().any(|l| l == absorbed),
-                "absorbed `{absorbed}` offered on text: {text:?}"
-            );
-        }
-
-        let size = complete_labels("style({ box: size() })", "size(", 5);
+        let size = complete_labels("style({ size() })", "size(", 5);
         for want in ["control-sm", "control-md", "control-lg", "full"] {
             assert!(size.iter().any(|l| l == want), "{want} missing: {size:?}");
         }
 
-        let typ = complete_labels("style({ text: type() })", "type(", 5);
+        let typ = complete_labels("style({ type() })", "type(", 5);
         for want in ["body", "body-sm", "label", "heading", "mono"] {
             assert!(typ.iter().any(|l| l == want), "{want} missing: {typ:?}");
         }
 
-        let elev = complete_labels("style({ paint: elevation() })", "elevation(", 10);
+        let elev = complete_labels("style({ elevation() })", "elevation(", 10);
         for want in ["xs", "sm", "md", "lg", "xl", "none"] {
             assert!(elev.iter().any(|l| l == want), "{want} missing: {elev:?}");
         }
@@ -1544,7 +1555,7 @@ mod tests {
             assert!(fill.iter().any(|l| l == want), "{want} missing: {fill:?}");
         }
 
-        let slots = complete_labels("style({ paint: border({  }) })", "border({ ", 9);
+        let slots = complete_labels("style({ border({  }) })", "border({ ", 9);
         for want in ["color", "width", "style", "edge", "kind"] {
             assert!(slots.iter().any(|l| l == want), "{want} missing: {slots:?}");
         }
@@ -1555,14 +1566,14 @@ mod tests {
 
         let ctx = Ctx::from_env();
         for (src, token, member) in [
-            ("style({ box: size(size.control-md) })", "control-md", "h:"),
-            ("style({ text: type(type.heading) })", "heading", "family:"),
+            ("style({ size(size.control-md) })", "control-md", "h:"),
+            ("style({ type(type.heading) })", "heading", "family:"),
             (
-                "style({ paint: elevation(elevation.sm) })",
+                "style({ elevation(elevation.sm) })",
                 "elevation.sm",
                 "shadow:",
             ),
-            ("style({ bg(fill.surface) })", "surface", "color:"),
+            ("style({ bg(bg.surface) })", "bg.surface", "color:"),
         ] {
             let hover_off = src.find(token).expect(token);
             let hover = call_rpc(

@@ -3,12 +3,12 @@
   Host bind: components={components}. One face visible via stage gates.
 -->
 <scope>
-  style fieldHint = { paint: fg(muted-foreground), text: fontSize(xs) }
-  style doorTitle = { text: fontWeight(semibold) }
-  style iconBtn = { box: shrink(0).w(control-h-sm).h(control-h-sm).minW(control-h-sm).minH(control-h-sm) }
-  style tapFloor = { box: shrink(0).minW(control-h-sm).minH(control-h-sm) }
-  style stageHost = { box: w(full) }
-  style sampleMax = { box: w(full).maxW(panel-max-w-sm) }
+  style fieldHint = { fg(muted-foreground).type({ size: xs }) }
+  style doorTitle = { type({ weight: semibold }) }
+  style iconBtn = { shrink(0).size({ w: control-h-sm, h: control-h-sm, min-w: control-h-sm, min-h: control-h-sm }) }
+  style tapFloor = { shrink(0).size({ min-w: control-h-sm, min-h: control-h-sm }) }
+  style stageHost = { size({ w: full }) }
+  style sampleMax = { size({ w: full, max-w: panel-max-w-sm }) }
 </scope>
 
 <controller>
@@ -133,10 +133,10 @@ export default controller(() => {
       <p style(fieldHint)>Spin · use:icon motion · currentColor ink</p>
       <row gap="4" align="center" nowrap>
         <icon name="refresh-cw" spin label="Refreshing"></icon>
-        <span style({ paint: fg(primary) })>
+        <span style({ fg(primary) })>
           <icon name="heart" size="lg" label="primary ink"></icon>
         </span>
-        <span style({ paint: fg(destructive) })>
+        <span style({ fg(destructive) })>
           <icon name="heart" size="lg" label="destructive ink"></icon>
         </span>
       </row>
@@ -152,7 +152,7 @@ export default controller(() => {
     </column>
     <column gap="2">
       <p style(fieldHint)>Vertical · same face between labels</p>
-      <row gap="3" align="center" style({ box: h(10) })>
+      <row gap="3" align="center" style({ size({ h: 10 }) })>
         <span style(fieldHint)>A</span>
         <separator orientation="vertical"></separator>
         <span style(fieldHint)>B</span>

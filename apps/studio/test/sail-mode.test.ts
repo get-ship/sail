@@ -42,17 +42,21 @@ describe('CodeMirror sail mode tokenizer', () => {
     )
     expect(interesting).toMatchInlineSnapshot(`
       [
-        "comment:<!-- fixture for CM tokenizer + explo…",
+        "comment:<!-- Fixture for CM tokenizer + explo…",
         "directive:controller",
         "expr:{ ControllerScope }",
         "tagName:any",
         "expr:{ const ticks = signal(0) return { ti…",
         "directive:controller",
+        "directive:scope",
+        "expr:{ pad(6).radius(lg) }",
+        "directive:scope",
         "tagName:column",
         "attrName:gap",
         "tagName:card",
         "attrName:tone",
-        "expr:{ box: pad(6), paint: radius(lg) }",
+        "attrName:style",
+        "attrName:sampleCard",
         "tagName:h3",
         "tagName:h3",
         "tagName:p",
@@ -76,7 +80,7 @@ describe('CodeMirror sail mode tokenizer', () => {
   })
 
   it('skipBrace respects nested braces and quotes', () => {
-    const s = '{style({ box: pad(6), when: { focus: { paint: bg("a}") } } })}'
+    const s = '{style({ pad(6), when: { focus: bg("a}") } })}'
     expect(skipBrace(s, 0)).toBe(s.length)
   })
 })
