@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Full-tree repo law. Seconds, not a suite. Skip: git push --no-verify
+set -euo pipefail
+root="$(git rev-parse --show-toplevel)"
+cd "$root"
+exec bun test tests/hygiene

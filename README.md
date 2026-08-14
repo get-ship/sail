@@ -121,6 +121,19 @@ monologue, or process ids (`job/…`, `task #N`, mission paths). Enforced by
 
 Repo sanitization / boundary guards live under `tests/hygiene/` (`bun run test:hygiene`).
 
+### Hooks (local)
+
+```
+git config core.hooksPath hooks
+```
+
+| hook | when | what |
+|------|------|------|
+| `hooks/pre-commit` | every commit | `rustfmt --check` on **staged** `.rs` only |
+| `hooks/pre-push` | every push | `bun test tests/hygiene` (seconds) |
+
+No cargo test, no Playwright, no corpus build. Skip with `--no-verify`.
+
 ### `apps/sail-site/scripts/`
 
 | Path | Class | Notes |

@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# Staged files only. Do not run cargo test, Playwright, or a corpus build.
+# Skip: git commit --no-verify
+set -euo pipefail
+root="$(git rev-parse --show-toplevel)"
+cd "$root"
+
+staged() {
+  git diff --cached --name-only --diff-filter=ACMR
+}
+
+rs=$(staged | grep '\.rs$' || true)
+if [ -n "$rs" ]; then
+  # rustfmt --check on what you staged. Whole-crate clippy stays in CI.
+  echo "$rs" | xargs rustfmt --edition 2024 --check
+fi
