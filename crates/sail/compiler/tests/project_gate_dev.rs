@@ -1,4 +1,4 @@
-//! Project Pure gate on HMR, build, and `tsc -p tsconfig.pure.json`.
+//! Sail typecheck on HMR, build, and `tsc -p tsconfig.sail.json`.
 //!
 //! Confession replay: DOM in a compositions sidecar must fail all three
 //! paths with the same teaching.
@@ -231,11 +231,11 @@ fn overflow_force_runs_gate_on_sail_only_tick() {
         diags
             .iter()
             .any(|d| d.rule.as_deref() == Some("sail-pure-region")),
-        "force (lossy path list) must still run the Pure gate: {diags:?}"
+        "force (lossy path list) must still run the sail typecheck: {diags:?}"
     );
 }
 
-/// CI path: `tsc -p node_modules/.sail/tsconfig.pure.json` fails the sidecar.
+/// CI path: `tsc -p node_modules/.sail/tsconfig.sail.json` fails the sidecar.
 #[test]
 fn confession_sidecar_fails_tsc_pure_config() {
     let root = workspace_root();
@@ -250,13 +250,13 @@ fn confession_sidecar_fails_tsc_pure_config() {
     write_project_type_configs(project).expect("kind configs");
     // Point tsc at the workspace typescript so the generated config resolves.
     let output = Command::new(&tsc)
-        .args(["--noEmit", "-p", "node_modules/.sail/tsconfig.pure.json"])
+        .args(["--noEmit", "-p", "node_modules/.sail/tsconfig.sail.json"])
         .current_dir(project)
         .output()
         .expect("run tsc");
     assert!(
         !output.status.success(),
-        "tsc -p tsconfig.pure.json must fail a compositions location sidecar"
+        "tsc -p tsconfig.sail.json must fail a compositions location sidecar"
     );
     let text = format!(
         "{}{}",

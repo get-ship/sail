@@ -8,7 +8,7 @@ use std::process::Command;
 
 use sail_compiler::DiagSeverity;
 use sail_compiler::ambients::{
-    PROJECT_TSCONFIG_ACTION_REL, PROJECT_TSCONFIG_PURE_REL, write_project_type_configs,
+    PROJECT_TSCONFIG_ACTION_REL, PROJECT_TSCONFIG_SAIL_REL, write_project_type_configs,
 };
 use sail_compiler::check::tscheck::{
     TsDiag, TsDiagKey, check_project_type_gate, collect_project_gate_files,
@@ -111,7 +111,7 @@ fn assert_parity(label: &str, project: &Path, tsc: &Path) {
     );
     let gate_ms = t0.elapsed().as_secs_f64() * 1000.0;
     let t1 = std::time::Instant::now();
-    let mut tsc_diags = run_tsc_p(project, tsc, PROJECT_TSCONFIG_PURE_REL);
+    let mut tsc_diags = run_tsc_p(project, tsc, PROJECT_TSCONFIG_SAIL_REL);
     tsc_diags.extend(run_tsc_p(project, tsc, PROJECT_TSCONFIG_ACTION_REL));
     let gate_keys = keys_for_product(project, &product, &gate);
     let tsc_keys = keys_for_product(project, &product, &tsc_diags);
@@ -180,7 +180,7 @@ fn relative_cli_walk_paths_match_tsc_p() {
             !lsp_is_disabled(),
             "{label}: parity must use the long-lived program, not CLI tsgo -p"
         );
-        let mut tsc_diags = run_tsc_p(&project, &tsc, PROJECT_TSCONFIG_PURE_REL);
+        let mut tsc_diags = run_tsc_p(&project, &tsc, PROJECT_TSCONFIG_SAIL_REL);
         tsc_diags.extend(run_tsc_p(&project, &tsc, PROJECT_TSCONFIG_ACTION_REL));
         let gate_keys = keys_for_product(&project, &product, &gate);
         let tsc_keys = keys_for_product(&project, &product, &tsc_diags);
@@ -260,7 +260,7 @@ fn parity_fixture_red_when_css_ambient_dropped() {
         ),
     ];
     let product = product_rels(project, &files);
-    let tsc_diags = run_tsc_p(project, &tsc, PROJECT_TSCONFIG_PURE_REL);
+    let tsc_diags = run_tsc_p(project, &tsc, PROJECT_TSCONFIG_SAIL_REL);
     let tsc_keys = keys_for_product(project, &product, &tsc_diags);
 
     reset_type_gate_servers();
@@ -314,7 +314,7 @@ fn pure_project_cannot_name_resize_observer() {
     .unwrap();
     write_project_type_configs(project).expect("kind configs");
 
-    let tsc_diags = run_tsc_p(project, &tsc, PROJECT_TSCONFIG_PURE_REL);
+    let tsc_diags = run_tsc_p(project, &tsc, PROJECT_TSCONFIG_SAIL_REL);
     assert!(
         tsc_diags
             .iter()
@@ -449,7 +449,7 @@ fn sail_region_relative_export_kinds_match_tsc_p() {
     .unwrap();
     write_project_type_configs(project).expect("kind configs");
 
-    let tsc_diags = run_tsc_p(project, &tsc, PROJECT_TSCONFIG_PURE_REL);
+    let tsc_diags = run_tsc_p(project, &tsc, PROJECT_TSCONFIG_SAIL_REL);
     let tsc_export_errs: Vec<_> = tsc_diags
         .iter()
         .filter(|d| d.code == "TS2305" || d.code == "TS2614" || d.code == "TS2724")
@@ -513,7 +513,7 @@ fn sail_region_missing_export_is_red_like_tsc_p() {
     .unwrap();
     write_project_type_configs(project).expect("kind configs");
 
-    let tsc_diags = run_tsc_p(project, &tsc, PROJECT_TSCONFIG_PURE_REL);
+    let tsc_diags = run_tsc_p(project, &tsc, PROJECT_TSCONFIG_SAIL_REL);
     assert!(
         tsc_diags
             .iter()

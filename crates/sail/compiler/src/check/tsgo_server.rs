@@ -714,7 +714,7 @@ pub fn project_work_dir(project_root: &Path, env: TypeEnv, in_place: bool) -> Pa
 
 fn env_tag(env: TypeEnv) -> &'static str {
     match env {
-        TypeEnv::Pure => "pure",
+        TypeEnv::Sail => "sail",
         TypeEnv::Action => "action",
         TypeEnv::Framework => "framework",
     }
@@ -777,7 +777,7 @@ pub fn diagnose_project_files(
                 let _ = c.notify_file_changed(&tsconfig_path);
             } else {
                 let rel = match env {
-                    TypeEnv::Pure => crate::ambients::PROJECT_TSCONFIG_PURE_REL,
+                    TypeEnv::Sail => crate::ambients::PROJECT_TSCONFIG_SAIL_REL,
                     TypeEnv::Action => crate::ambients::PROJECT_TSCONFIG_ACTION_REL,
                     TypeEnv::Framework => "tsconfig.json",
                 };

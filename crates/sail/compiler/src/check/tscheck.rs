@@ -391,7 +391,7 @@ fn collect_sail_type_gate_native(
 
     let env = source_path
         .map(|p| type_env_for_path(p, Some(author_source)))
-        .unwrap_or(TypeEnv::Pure);
+        .unwrap_or(TypeEnv::Sail);
     // Framework packages keep DOM — type gate does not ban window there.
     if env == TypeEnv::Framework {
         return diags;
@@ -531,13 +531,13 @@ fn collect_project_type_gate_native(
     let mut action: Vec<(&Path, &str)> = Vec::new();
     for (path, src) in ts_files {
         match type_env_for_path(path, Some(src)) {
-            TypeEnv::Pure => pure.push((path.as_path(), src.as_str())),
+            TypeEnv::Sail => pure.push((path.as_path(), src.as_str())),
             TypeEnv::Action => action.push((path.as_path(), src.as_str())),
             TypeEnv::Framework => {}
         }
     }
 
-    if let Err(e) = typecheck_project_env(project_root, TypeEnv::Pure, &pure, &tool, &mut diags) {
+    if let Err(e) = typecheck_project_env(project_root, TypeEnv::Sail, &pure, &tool, &mut diags) {
         diags.push(io_fail_diag(&e));
     }
     if let Err(e) = typecheck_project_env(project_root, TypeEnv::Action, &action, &tool, &mut diags)
@@ -562,7 +562,7 @@ fn io_fail_diag(e: &std::io::Error) -> Diagnostic {
     }
 }
 
-/// True when `path` is a product `.ts` file the project Pure/Action gate owns.
+/// True when `path` is a product `.ts` file the sail/action typecheck owns.
 pub fn is_project_gate_ts(path: &Path) -> bool {
     let s = path.to_string_lossy().replace('\\', "/");
     if !s.ends_with(".ts")
@@ -683,18 +683,18 @@ pub fn collect_project_ts_diags(
         let mut action: Vec<(&Path, &str)> = Vec::new();
         for (path, src) in ts_files {
             match type_env_for_path(path, Some(src)) {
-                TypeEnv::Pure => pure.push((path.as_path(), src.as_str())),
+                TypeEnv::Sail => pure.push((path.as_path(), src.as_str())),
                 TypeEnv::Action => action.push((path.as_path(), src.as_str())),
                 TypeEnv::Framework => {}
             }
         }
         let mut out = Vec::new();
-        for (env, files) in [(TypeEnv::Pure, &pure), (TypeEnv::Action, &action)] {
+        for (env, files) in [(TypeEnv::Sail, &pure), (TypeEnv::Action, &action)] {
             if files.is_empty() {
                 continue;
             }
             let kind_rel = match env {
-                TypeEnv::Pure => Some(crate::ambients::PROJECT_TSCONFIG_PURE_REL),
+                TypeEnv::Sail => Some(crate::ambients::PROJECT_TSCONFIG_SAIL_REL),
                 TypeEnv::Action => Some(crate::ambients::PROJECT_TSCONFIG_ACTION_REL),
                 TypeEnv::Framework => continue,
             };
@@ -718,7 +718,7 @@ pub fn collect_project_ts_diags(
 
 /// Overlay body for a failed project gate (HMR compile-error event).
 pub fn format_project_gate_overlay(diags: &[Diagnostic]) -> String {
-    let mut out = String::from("Project Pure gate failed.\n");
+    let mut out = String::from("Sail typecheck failed.\n");
     out.push_str(sail_lint::rules::directory_jurisdiction::LAW);
     out.push('\n');
     for d in diags.iter().filter(|d| d.severity == DiagSeverity::Error) {
@@ -2530,7 +2530,7 @@ fn typecheck_project_env_reused(
     diags: &mut Vec<Diagnostic>,
 ) -> std::io::Result<()> {
     let kind_rel = match env {
-        TypeEnv::Pure => Some(crate::ambients::PROJECT_TSCONFIG_PURE_REL),
+        TypeEnv::Sail => Some(crate::ambients::PROJECT_TSCONFIG_SAIL_REL),
         TypeEnv::Action => Some(crate::ambients::PROJECT_TSCONFIG_ACTION_REL),
         TypeEnv::Framework => return Ok(()),
     };
@@ -2584,7 +2584,7 @@ fn typecheck_project_env_reused(
             .any(|rel| f.ends_with(rel.as_str()) || f.contains(&format!("/{rel}")));
         if !in_product
             && (f.ends_with("tsconfig.json")
-                || f.ends_with("tsconfig.pure.json")
+                || f.ends_with("tsconfig.sail.json")
                 || f.ends_with("tsconfig.action.json")
                 || f.contains("node_modules/.sail/")
                 || f.contains("/node_modules/")
@@ -2675,7 +2675,7 @@ fn env_program_ts_diags(
     let work_dir = tsgo_server::project_work_dir(project_root, env, use_kind);
     let (tsconfig, entries, persist_tsconfig) = if use_kind {
         let kind_rel = match env {
-            TypeEnv::Pure => crate::ambients::PROJECT_TSCONFIG_PURE_REL,
+            TypeEnv::Sail => crate::ambients::PROJECT_TSCONFIG_SAIL_REL,
             TypeEnv::Action => crate::ambients::PROJECT_TSCONFIG_ACTION_REL,
             TypeEnv::Framework => {
                 return Ok(Vec::new());
@@ -2814,7 +2814,7 @@ fn typecheck_project_env_via_kind_config(
     diags: &mut Vec<Diagnostic>,
 ) -> std::io::Result<bool> {
     let kind_rel = match env {
-        TypeEnv::Pure => crate::ambients::PROJECT_TSCONFIG_PURE_REL,
+        TypeEnv::Sail => crate::ambients::PROJECT_TSCONFIG_SAIL_REL,
         TypeEnv::Action => crate::ambients::PROJECT_TSCONFIG_ACTION_REL,
         TypeEnv::Framework => return Ok(true),
     };
@@ -2874,7 +2874,7 @@ fn typecheck_project_env_via_kind_config(
             .any(|rel| f.ends_with(rel.as_str()) || f.contains(&format!("/{rel}")));
         if !in_product
             && (f.ends_with("tsconfig.json")
-                || f.ends_with("tsconfig.pure.json")
+                || f.ends_with("tsconfig.sail.json")
                 || f.ends_with("tsconfig.action.json")
                 || f.contains("node_modules/.sail/")
                 || f.contains("/node_modules/")
@@ -3072,7 +3072,7 @@ fn typecheck_project_env_mirror(
 
 fn env_label(env: TypeEnv) -> &'static str {
     match env {
-        TypeEnv::Pure => "pure",
+        TypeEnv::Sail => "sail",
         TypeEnv::Action => "action",
         TypeEnv::Framework => "framework",
     }
@@ -3121,11 +3121,11 @@ fn map_region_diag(d: &TsDiag, env: TypeEnv) -> Option<Diagnostic> {
                     return None;
                 }
                 let (rule, message) = match env {
-                    TypeEnv::Pure | TypeEnv::Framework => (
+                    TypeEnv::Sail | TypeEnv::Framework => (
                         RULE_PURE_REGION,
                         format!(
-                            "`{name}` is not nameable here — controllers/compositions/stores are Pure \
-                             (ESNext only; no DOM lib). Move DOM work to a `use:` action."
+                            "`{name}` is not nameable here — controllers/compositions/stores are under \
+                             the sail typecheck (ESNext only, sail ambients; no DOM lib). Move DOM work to a `use:` action."
                         ),
                     ),
                     TypeEnv::Action => (
@@ -5286,7 +5286,7 @@ export function props<T extends Record<string, Prop<unknown> | readonly string[]
         .unwrap();
         // Emit kind configs (no baseUrl; paths relative to .sail/).
         crate::ambients::write_project_type_configs(project).expect("write kind configs");
-        let body = std::fs::read_to_string(project.join("node_modules/.sail/tsconfig.pure.json"))
+        let body = std::fs::read_to_string(project.join("node_modules/.sail/tsconfig.sail.json"))
             .expect("pure kind");
         assert!(
             !body.contains("\"baseUrl\""),

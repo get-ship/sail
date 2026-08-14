@@ -113,8 +113,8 @@ describe('sail typecheck stays wired and required', () => {
     for (const name of requiredScripts) {
       expect(scripts[name], `missing script ${name}`).toBeDefined()
     }
-    expect(scripts['typecheck:sail:studio']).toContain('tsconfig.pure.json')
-    expect(scripts['typecheck:sail:site']).toContain('tsconfig.pure.json')
+    expect(scripts['typecheck:sail:studio']).toContain('tsconfig.sail.json')
+    expect(scripts['typecheck:sail:site']).toContain('tsconfig.sail.json')
     expect(scripts['typecheck:sail']).toContain('typecheck:sail:studio')
     expect(scripts['typecheck:sail']).toContain('typecheck:sail:site')
     expect(scripts['typecheck:sail'] ?? '').not.toContain('components-pure')

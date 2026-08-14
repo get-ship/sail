@@ -1241,7 +1241,7 @@ fn dev(project: PathBuf, addr: String) -> Result<()> {
         let catalog_model_edit = Arc::new(AtomicBool::new(false));
         // Notify overflow used to be safe (next tick always rebuilt). Skip now
         // keys off the path list — a dropped `.ts` + later `.sail` would skip
-        // the Pure gate. Sticky unknown forces the gate on the next tick.
+        // the sail typecheck. Sticky unknown forces the gate on the next tick.
         let hmr_gate_unknown = Arc::new(AtomicBool::new(false));
         // Keep the notify watcher alive for the whole `sail dev` session.
         // Ownership for mid-session theme attach (#13/#14):
@@ -1364,7 +1364,7 @@ fn dev(project: PathBuf, addr: String) -> Result<()> {
                 // Coalesce a save's event burst into one rebuild via the debounce
                 // below. Overflow is no longer safe to drop silently: skip keys
                 // off this path list, so a lost `.ts` + later `.sail` would skip
-                // the Pure gate. Mark unknown and still try to enqueue a tick.
+                // the sail typecheck. Mark unknown and still try to enqueue a tick.
                 if tx.try_send(ev.paths.clone()).is_err() {
                     gate_unknown.store(true, Ordering::Release);
                 }
@@ -1519,7 +1519,7 @@ fn dev(project: PathBuf, addr: String) -> Result<()> {
                     if !gate_errs.is_empty() {
                         let message =
                             sail_compiler::check::tscheck::format_project_gate_overlay(&gate_errs);
-                        eprintln!("sail dev: project Pure gate failed");
+                        eprintln!("sail dev: sail typecheck failed");
                         let file = gate_errs.first().and_then(|d| {
                             d.message
                                 .rsplit_once('[')

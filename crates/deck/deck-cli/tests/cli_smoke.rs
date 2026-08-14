@@ -639,16 +639,16 @@ fn create_writes_four_entry_tree_and_check_is_green() {
     let tsconfig = std::fs::read_to_string(app.join("tsconfig.json")).expect("tsconfig.json");
     assert!(
         tsconfig.contains("references")
-            && tsconfig.contains("node_modules/.sail/tsconfig.pure.json")
+            && tsconfig.contains("node_modules/.sail/tsconfig.sail.json")
             && tsconfig.contains("node_modules/.sail/tsconfig.action.json"),
         "create root tsconfig must be a solution referencing pure+action under .sail/:\n{tsconfig}"
     );
     assert!(
-        !app.join("tsconfig.pure.json").exists() && !app.join("tsconfig.action.json").exists(),
+        !app.join("tsconfig.sail.json").exists() && !app.join("tsconfig.action.json").exists(),
         "create must not emit root-level tsconfig.pure/action.json (G2c)"
     );
-    let pure = std::fs::read_to_string(app.join("node_modules/.sail/tsconfig.pure.json"))
-        .expect("node_modules/.sail/tsconfig.pure.json");
+    let pure = std::fs::read_to_string(app.join("node_modules/.sail/tsconfig.sail.json"))
+        .expect("node_modules/.sail/tsconfig.sail.json");
     for flag in [
         "\"strict\": true",
         "\"noUncheckedIndexedAccess\": true",

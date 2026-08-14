@@ -24,7 +24,7 @@ use crate::report::{Finding, Severity};
 
 pub const RULE_ID: &str = "sail-directory-jurisdiction";
 
-/// LAW named by this lint. Project Pure gate is the teeth; this is the lesson.
+/// LAW named by this lint. The sail typecheck is the teeth; this is the lesson.
 pub const LAW: &str = "compositions wire state; the DOM floor lives in src/actions/";
 
 const REMEDY: &str = "Move the Action to `src/actions/` (handed `node`, observation pack). \

@@ -1,6 +1,6 @@
 //! SPEC-PLATFORM-NEUTRALITY-1 acceptance / SPIKE S2.3 — delete dual ambient-DOM floors.
 //!
-//! TypeEnv Pure (S2.1) + corpus scrub (S2.2) make ambient `document`/`window`/
+//! TypeEnv::Sail (S2.1) + corpus scrub (S2.2) make ambient `document`/`window`/
 //! `localStorage` unnameable in app product code. The old regex lint floors that
 //! dual-enforced the same law must be deleted (no dual path).
 //!
@@ -13,7 +13,7 @@
 //!    id strings are not registered.
 //! 2. `lint_app_source_source` must not emit those rule findings.
 //! 3. Keep list remains live: authority, network, imperative-style floors.
-//! 4. TypeEnv Pure still has no DOM lib (type-env remains the law).
+//! 4. TypeEnv::Sail still has no DOM lib (type-env remains the law).
 //!
 //! Hygiene corpus (S2.2) stays green separately:
 //! `bun test tests/hygiene/platform-neutrality-corpus.test.ts`
@@ -26,7 +26,7 @@ use sail_lint::{all_rule_ids, lint_app_source_source};
 
 /// Dual-enforcement ambient-DOM family deleted by S2.3 (SCOUT-S2 §4a).
 ///
-/// Replaced by TypeEnv Pure / Action observation set. Not security floors.
+/// Replaced by TypeEnv::Sail / Action observation set. Not security floors.
 ///
 /// **Out of this delete set (intentionally):**
 /// - `sail-no-ambient-network` / `sail-controller-no-ambient-authority` — keep
@@ -83,7 +83,7 @@ fn dual_ambient_floors_not_in_app_source_rules() {
     assert!(
         still.is_empty(),
         "S2.3: dual ambient-DOM floors must leave APP_SOURCE_RULES \
-         (TypeEnv Pure is the law). Still live: {still:?}\n\
+         (TypeEnv::Sail is the law). Still live: {still:?}\n\
          APP_SOURCE_RULES = {:?}",
         live.iter().copied().collect::<Vec<_>>()
     );
@@ -192,11 +192,11 @@ fn kept_security_and_style_floors_remain_live() {
     }
 }
 
-// ── 4. TypeEnv Pure still the law (must stay green while floors delete) ────
+// ── 4. TypeEnv::Sail still the law (must stay green while floors delete) ────
 
 #[test]
 fn type_env_pure_still_excludes_dom_lib() {
-    let lib = lib_for_type_env(TypeEnv::Pure);
+    let lib = lib_for_type_env(TypeEnv::Sail);
     assert!(
         !has_dom_lib(lib),
         "Pure type env must keep document unnameable (no DOM lib). got {lib:?}"

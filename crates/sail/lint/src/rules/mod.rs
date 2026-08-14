@@ -46,7 +46,7 @@ pub mod framework_import_teaching;
 pub mod height_chain;
 pub mod layout;
 pub mod layout_primitive;
-// S2.3: dual ambient-DOM floors retired (TypeEnv Pure is the law).
+// S2.3: dual ambient-DOM floors retired (TypeEnv::Sail is the law).
 pub mod no_ambient_network;
 pub mod no_ambient_timers;
 pub mod no_class;
@@ -195,7 +195,7 @@ pub const PACK_SOURCE_RULES: &[(&str, RuleFn)] = &[
 /// Closes the escape hatch where studio (and sibling apps) put CSSOM in a
 /// side module that was never a `.controller.ts` and therefore never saw the
 /// floor. Ambient `document`/`window`/`localStorage`/`location` are unnameable
-/// under TypeEnv Pure (S2.1) — dual-floor regex rules for those were retired
+/// under TypeEnv::Sail (S2.1) — dual-floor regex rules for those were retired
 /// in S2.3. Kept: imperative-style, timers, network, prefer-query.
 /// Not the full controller purity suite (those rules assume controller shape).
 pub const APP_SOURCE_RULES: &[(&str, RuleFn)] = &[

@@ -325,8 +325,9 @@ pub fn write_project_action_observation(project: &Path) -> Result<PathBuf> {
 /// Per-kind TypeScript type environment (SPEC-PLATFORM-NEUTRALITY-1 §1).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum TypeEnv {
-    /// controller / scope / composition / store — ESNext only; DOM globals unnameable.
-    Pure,
+    /// Product files (routes, components, compositions, stores) — the sail
+    /// typecheck: ESNext only, sail ambients, DOM globals unnameable.
+    Sail,
     /// author action — observation set only (no `document` / `window`).
     Action,
     /// framework runtime packages — full DOM lib allowed.
@@ -337,10 +338,10 @@ pub enum TypeEnv {
 ///
 /// | Kind | Env |
 /// |------|-----|
-/// | Route / Component (controllers + scopes) | Pure |
-/// | Composition / Store | Pure |
+/// | Route / Component (controllers + scopes) | Sail |
+/// | Composition / Store | Sail |
 /// | Action | Action |
-/// | Theme / Other | Pure (apps never gain free DOM via kind alone) |
+/// | Theme / Other | Sail (apps never gain free DOM via kind alone) |
 ///
 /// Framework packages are selected via [`type_env_for_path`], not this table.
 pub fn type_env_for_kind(kind: crate::project_map::FileKind) -> TypeEnv {
@@ -352,7 +353,7 @@ pub fn type_env_for_kind(kind: crate::project_map::FileKind) -> TypeEnv {
         | FileKind::Composition
         | FileKind::Store
         | FileKind::Theme
-        | FileKind::Other => TypeEnv::Pure,
+        | FileKind::Other => TypeEnv::Sail,
     }
 }
 
@@ -389,14 +390,14 @@ fn is_framework_package_path(path: &Path) -> bool {
 
 /// `compilerOptions.lib` entries for `env`.
 ///
-/// - [`TypeEnv::Pure`] / [`TypeEnv::Action`]: ESNext only — no `DOM` / `DOM.Iterable`
+/// - [`TypeEnv::Sail`] / [`TypeEnv::Action`]: ESNext only — no `DOM` / `DOM.Iterable`
 /// - [`TypeEnv::Framework`]: `ESNext` + `DOM` + `DOM.Iterable`
 ///
 /// Action observation names (rAF, observers, `getComputedStyle`) come from
 /// [`emit_action_observation_dts`], not from the DOM lib.
 pub fn lib_for_type_env(env: TypeEnv) -> &'static [&'static str] {
     match env {
-        TypeEnv::Pure | TypeEnv::Action => &["ESNext"],
+        TypeEnv::Sail | TypeEnv::Action => &["ESNext"],
         TypeEnv::Framework => &["ESNext", "DOM", "DOM.Iterable"],
     }
 }
@@ -687,7 +688,7 @@ pub const SAIL_TSCONFIG_REQUIRED_FLAGS: &[&str] = &[
 
 /// Default sail project `compilerOptions` (Pure / product typecheck).
 ///
-/// Product FileKinds (Route/Component/Composition/Store) are Pure — ESNext
+/// Product FileKinds (Route/Component/Composition/Store) are Sail — ESNext
 /// only, no DOM. Framework packages that need DOM use
 /// [`sail_tsconfig_compiler_options_json_for`]([`TypeEnv::Framework`]) or
 /// `packages/sail/tsconfig/tsconfig.base.json` (TOOLING-1 WI2).
@@ -698,7 +699,7 @@ pub const SAIL_TSCONFIG_REQUIRED_FLAGS: &[&str] = &[
 /// at [`PROJECT_TYPES_REL`] and is wired via `files` in
 /// [`emit_project_tsconfig_json`] so globals resolve under tsc.
 pub fn sail_tsconfig_compiler_options_json() -> String {
-    sail_tsconfig_compiler_options_json_for(TypeEnv::Pure)
+    sail_tsconfig_compiler_options_json_for(TypeEnv::Sail)
 }
 
 /// `compilerOptions` JSON object body for a specific [`TypeEnv`].
@@ -785,7 +786,7 @@ const SAIL_DIR_TO_PROJECT_ROOT: &str = "../..";
 
 /// Build a Pure-env child tsconfig body (written under [`PROJECT_SAIL_DIR_REL`]).
 ///
-/// Default uses [`TypeEnv::Pure`] (ESNext only — no DOM) so product projects
+/// Default uses [`TypeEnv::Sail`] (ESNext only — no DOM) so product projects
 /// enforce unnameable `document`/`window` (SPEC-PLATFORM-NEUTRALITY-1).
 /// Framework packages that need the DOM lib use
 /// [`emit_project_tsconfig_json_for`]([`TypeEnv::Framework`]) or path-aware
@@ -801,7 +802,7 @@ const SAIL_DIR_TO_PROJECT_ROOT: &str = "../..";
 /// (`../../src/…`) — **no `baseUrl`**: tsgo removes it (TS5102) and the gate
 /// must use the same config as `tsc -p` / `tsgo -p`.
 pub fn emit_project_tsconfig_json(include_globs: &[&str]) -> String {
-    emit_project_tsconfig_json_for(TypeEnv::Pure, include_globs)
+    emit_project_tsconfig_json_for(TypeEnv::Sail, include_globs)
 }
 
 /// Pure/action child tsconfig body for a specific [`TypeEnv`].
@@ -846,16 +847,18 @@ pub fn emit_project_tsconfig_json_for(env: TypeEnv, include_globs: &[&str]) -> S
         files.push("\"./action-observation.d.ts\"".to_string());
     }
     let env_note = match env {
-        TypeEnv::Pure => "TypeEnv::Pure — ESNext only; document unnameable.",
+        TypeEnv::Sail => {
+            "TypeEnv::Sail — sail typecheck: ESNext only, sail ambients; document unnameable."
+        }
         TypeEnv::Action => {
             "TypeEnv::Action — ESNext + action-observation.d.ts; no document/window."
         }
         TypeEnv::Framework => "TypeEnv::Framework — ESNext + DOM (framework packages).",
     };
-    // Pure product config must not typecheck actions under the Pure env
+    // Sail product config must not typecheck actions under the sail typecheck
     // (no observation pack). Action files live solely under tsconfig.action.json.
     let exclude = match env {
-        TypeEnv::Pure => format!(
+        TypeEnv::Sail => format!(
             "\"{root}/node_modules\", \"{root}/dist\", \"{root}/.deck\", \
              \"{root}/src/actions\", \"{root}/src/actions/**\""
         ),
@@ -875,20 +878,20 @@ pub fn emit_project_tsconfig_json_for(env: TypeEnv, include_globs: &[&str]) -> S
         inc = includes.join(", "),
         tsbuild = match env {
             TypeEnv::Action => "tsconfig.action.tsbuildinfo",
-            _ => "tsconfig.pure.tsbuildinfo",
+            _ => "tsconfig.sail.tsbuildinfo",
         },
     )
 }
 
 /// Root project `tsconfig.json` — solution entry only (G2c).
 ///
-/// IDEs open this file and resolve pure + action children under
+/// IDEs open this file and resolve sail + action children under
 /// [`PROJECT_SAIL_DIR_REL`] via `references`. No compilerOptions here; the
 /// type gate never loads this file.
 pub fn emit_project_solution_tsconfig_json() -> String {
     format!(
         "{{\n  \
-         \"$comment\": \"Sail project solution tsconfig (G2c / TOOLING-1). GENERATED — hand edits are overwritten on build/dev. IDE entry only: references pure + action configs under {sail_dir}/. Users never edit this file. The type gate never reads it.\",\n  \
+         \"$comment\": \"Sail project solution tsconfig (G2c / TOOLING-1). GENERATED — hand edits are overwritten on build/dev. IDE entry only: references sail + action configs under {sail_dir}/. Users never edit this file. The type gate never reads it.\",\n  \
          \"files\": [],\n  \
          \"references\": [\n    \
          {{ \"path\": \"./{pure}\" }},\n    \
@@ -896,13 +899,13 @@ pub fn emit_project_solution_tsconfig_json() -> String {
          ]\n\
          }}\n",
         sail_dir = PROJECT_SAIL_DIR_REL,
-        pure = PROJECT_TSCONFIG_PURE_REL,
+        pure = PROJECT_TSCONFIG_SAIL_REL,
         action = PROJECT_TSCONFIG_ACTION_REL,
     )
 }
 
-/// Relative path of the generated Pure-env project tsconfig (G2c — under `.sail/`).
-pub const PROJECT_TSCONFIG_PURE_REL: &str = "node_modules/.sail/tsconfig.pure.json";
+/// Relative path of the generated sail-typecheck project tsconfig (G2c — under `.sail/`).
+pub const PROJECT_TSCONFIG_SAIL_REL: &str = "node_modules/.sail/tsconfig.sail.json";
 /// Relative path of the generated Action-env project tsconfig (G2c — under `.sail/`).
 pub const PROJECT_TSCONFIG_ACTION_REL: &str = "node_modules/.sail/tsconfig.action.json";
 
@@ -910,13 +913,13 @@ pub const PROJECT_TSCONFIG_ACTION_REL: &str = "node_modules/.sail/tsconfig.actio
 const LEGACY_ROOT_TSCONFIG_PURE: &str = "tsconfig.pure.json";
 const LEGACY_ROOT_TSCONFIG_ACTION: &str = "tsconfig.action.json";
 
-/// Default include globs for Pure product typecheck (controllers synthesized
+/// Default include globs for the sail typecheck (controllers synthesized
 /// at the gate, compositions, stores, and general `src/**/*.ts`).
 /// Actions are **excluded** via `exclude` in [`emit_project_tsconfig_json_for`]
-/// so IDE/`tsgo -p node_modules/.sail/tsconfig.pure.json` never typechecks
-/// `src/actions/**` under Pure (no observation pack). Actions ride
+/// so IDE/`tsgo -p node_modules/.sail/tsconfig.sail.json` never typechecks
+/// `src/actions/**` under the sail typecheck (no observation pack). Actions ride
 /// [`PROJECT_TSCONFIG_ACTION_REL`].
-pub const PROJECT_PURE_INCLUDE: &[&str] = &[
+pub const PROJECT_SAIL_INCLUDE: &[&str] = &[
     "src/**/*.ts",
     "routes/**/*.ts",
     "src/compositions/**/*.ts",
@@ -956,7 +959,7 @@ fn sweep_stale_sail_kind_tsconfigs(project: &Path) {
         return;
     };
     const KEEP: &[&str] = &[
-        "tsconfig.pure.json",
+        "tsconfig.sail.json",
         "tsconfig.action.json",
         "types.d.ts",
         "action-observation.d.ts",
@@ -974,7 +977,7 @@ fn sweep_stale_sail_kind_tsconfigs(project: &Path) {
         // tsbuildinfo for removed scratch configs
         if name_s.starts_with("tsconfig")
             && name_s.ends_with(".tsbuildinfo")
-            && name_s != "tsconfig.pure.tsbuildinfo"
+            && name_s != "tsconfig.sail.tsbuildinfo"
             && name_s != "tsconfig.action.tsbuildinfo"
         {
             let _ = fs::remove_file(entry.path());
@@ -992,14 +995,14 @@ fn sweep_stale_sail_kind_tsconfigs(project: &Path) {
 /// pure tsconfig, action tsconfig.
 pub fn write_project_type_configs(project: &Path) -> Result<(PathBuf, PathBuf, PathBuf)> {
     let types = write_project_types(project)?;
-    let pure_path = project.join(PROJECT_TSCONFIG_PURE_REL);
+    let pure_path = project.join(PROJECT_TSCONFIG_SAIL_REL);
     let action_path = project.join(PROJECT_TSCONFIG_ACTION_REL);
     if let Some(parent) = pure_path.parent() {
         fs::create_dir_all(parent).with_context(|| format!("mkdir {}", parent.display()))?;
     }
     fs::write(
         &pure_path,
-        emit_project_tsconfig_json_for(TypeEnv::Pure, PROJECT_PURE_INCLUDE),
+        emit_project_tsconfig_json_for(TypeEnv::Sail, PROJECT_SAIL_INCLUDE),
     )
     .with_context(|| format!("write {}", pure_path.display()))?;
     fs::write(
@@ -2269,7 +2272,7 @@ mod tests {
             );
         }
         // Default product emit is Pure — lib comes from lib_for_type_env SSOT.
-        for entry in lib_for_type_env(TypeEnv::Pure) {
+        for entry in lib_for_type_env(TypeEnv::Sail) {
             assert!(
                 opts.contains(&format!("\"{entry}\"")),
                 "default opts must include Pure lib entry {entry}:\n{opts}"
@@ -2329,7 +2332,7 @@ mod tests {
             "solution must be GENERATED with references:\n{body}"
         );
         assert!(
-            body.contains(PROJECT_TSCONFIG_PURE_REL) && body.contains(PROJECT_TSCONFIG_ACTION_REL),
+            body.contains(PROJECT_TSCONFIG_SAIL_REL) && body.contains(PROJECT_TSCONFIG_ACTION_REL),
             "solution must reference pure + action under .sail/:\n{body}"
         );
         assert!(
@@ -2337,7 +2340,7 @@ mod tests {
             "solution must not carry compilerOptions (children own env):\n{body}"
         );
         assert!(
-            PROJECT_TSCONFIG_PURE_REL.starts_with(PROJECT_SAIL_DIR_REL)
+            PROJECT_TSCONFIG_SAIL_REL.starts_with(PROJECT_SAIL_DIR_REL)
                 && PROJECT_TSCONFIG_ACTION_REL.starts_with(PROJECT_SAIL_DIR_REL),
             "kind configs must live under {PROJECT_SAIL_DIR_REL}"
         );
@@ -2374,7 +2377,7 @@ mod tests {
 
         let (types, pure, action) = write_project_type_configs(project).unwrap();
         assert!(types.ends_with(std::path::Path::new(PROJECT_TYPES_REL)) || types.exists());
-        assert!(pure.exists() && pure.ends_with("tsconfig.pure.json"));
+        assert!(pure.exists() && pure.ends_with("tsconfig.sail.json"));
         assert!(action.exists() && action.ends_with("tsconfig.action.json"));
         let pure_s = pure.to_string_lossy();
         assert!(
@@ -2385,7 +2388,7 @@ mod tests {
 
         let solution = fs::read_to_string(project.join("tsconfig.json")).unwrap();
         assert!(
-            solution.contains("references") && solution.contains(PROJECT_TSCONFIG_PURE_REL),
+            solution.contains("references") && solution.contains(PROJECT_TSCONFIG_SAIL_REL),
             "root must be solution:\n{solution}"
         );
         assert!(
@@ -2431,12 +2434,12 @@ mod tests {
             kept.contains("\"strict\": true") && !kept.contains("references"),
             "hand-authored root must not be clobbered:\n{kept}"
         );
-        assert!(hand.join(PROJECT_TSCONFIG_PURE_REL).exists());
+        assert!(hand.join(PROJECT_TSCONFIG_SAIL_REL).exists());
     }
 
     #[test]
     fn pure_and_action_tsconfig_emit_esnext_only_lib() {
-        for env in [TypeEnv::Pure, TypeEnv::Action] {
+        for env in [TypeEnv::Sail, TypeEnv::Action] {
             let opts = sail_tsconfig_compiler_options_json_for(env);
             assert!(
                 opts.contains("\"ESNext\""),
@@ -2457,7 +2460,7 @@ mod tests {
             "Action tsconfig must list CSS script ambient:\n{action_body}"
         );
         let pure_body =
-            emit_project_tsconfig_json_for(TypeEnv::Pure, &["src/compositions/**/*.ts"]);
+            emit_project_tsconfig_json_for(TypeEnv::Sail, &["src/compositions/**/*.ts"]);
         assert!(
             !pure_body.contains("action-observation.d.ts"),
             "Pure tsconfig must not list action observation pack:\n{pure_body}"
@@ -2471,7 +2474,7 @@ mod tests {
     #[test]
     fn type_env_selection_and_observation_pack_smoke() {
         use crate::project_map::FileKind;
-        assert_eq!(type_env_for_kind(FileKind::Composition), TypeEnv::Pure);
+        assert_eq!(type_env_for_kind(FileKind::Composition), TypeEnv::Sail);
         assert_eq!(type_env_for_kind(FileKind::Action), TypeEnv::Action);
         assert_eq!(
             type_env_for_path(Path::new("packages/sail/runtime/src/index.ts"), None),

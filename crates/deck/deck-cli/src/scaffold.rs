@@ -393,7 +393,7 @@ pub fn run_create(name: PathBuf) -> Result<()> {
          \"dev\": \"sail dev\",\n    \
          \"build\": \"sail build\",\n    \
          \"check\": \"sail check .\",\n    \
-         \"typecheck\": \"sail types && tsc --noEmit -p node_modules/.sail/tsconfig.pure.json && tsc --noEmit -p node_modules/.sail/tsconfig.action.json\",\n    \
+         \"typecheck\": \"sail types && tsc --noEmit -p node_modules/.sail/tsconfig.sail.json && tsc --noEmit -p node_modules/.sail/tsconfig.action.json\",\n    \
          \"lint\": \"oxlint .\"\n  \
          }},\n  \
          \"dependencies\": {{\n    \

@@ -354,7 +354,7 @@ fn app_source_path_recognises_apps_src() {
 #[test]
 fn app_source_lints_csstext_floor() {
     // The hole this job closed: plain studio modules were never dispatched.
-    // CSSOM still dual-linted; ambient document.* is TypeEnv Pure (S2.3).
+    // CSSOM still dual-linted; ambient document.* is TypeEnv::Sail (S2.3).
     let path = Path::new("/repo/apps/studio/src/edit/region-overlay.ts");
     let findings = lint_app_source_source(
         path,

@@ -426,7 +426,7 @@ fn gen_types(
         None => {
             let (types, pure, action) =
                 sail_compiler::ambients::write_project_type_configs(&project_dir)?;
-            println!("tsconfig.pure: {}", pure.display());
+            println!("tsconfig.sail: {}", pure.display());
             println!("tsconfig.action: {}", action.display());
             types
         }
@@ -434,11 +434,11 @@ fn gen_types(
     println!("types: {}", path.display());
 
     if let Some(ts_out) = tsconfig_out {
-        // Product default is Pure (E1c) — never Framework.
-        // Explicit dump: pure kind body (child under .sail/). Solution root is
+        // Product default is the sail typecheck (E1c) — never Framework.
+        // Explicit dump: sail kind body (child under .sail/). Solution root is
         // always written as project/tsconfig.json by write_project_type_configs.
         let body = sail_compiler::ambients::emit_project_tsconfig_json(
-            sail_compiler::ambients::PROJECT_PURE_INCLUDE,
+            sail_compiler::ambients::PROJECT_SAIL_INCLUDE,
         );
         if ts_out.as_os_str() == "-" {
             print!("{body}");

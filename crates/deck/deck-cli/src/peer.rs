@@ -112,17 +112,17 @@ pub fn types(
         None => {
             let (types, pure, action) =
                 sail_compiler::ambients::write_project_type_configs(&project_dir)?;
-            println!("sail types: tsconfig.pure → {}", pure.display());
+            println!("sail types: tsconfig.sail → {}", pure.display());
             println!("sail types: tsconfig.action → {}", action.display());
             types
         }
     };
     println!("sail types: {}", path.display());
     if let Some(ts_out) = tsconfig_out {
-        // Explicit dump path: pure kind body (IDE child under .sail/), not the
+        // Explicit dump path: sail kind body (IDE child under .sail/), not the
         // solution root — solution is always written as project/tsconfig.json.
         let body = sail_compiler::ambients::emit_project_tsconfig_json(
-            sail_compiler::ambients::PROJECT_PURE_INCLUDE,
+            sail_compiler::ambients::PROJECT_SAIL_INCLUDE,
         );
         if ts_out.as_os_str() == "-" {
             print!("{body}");

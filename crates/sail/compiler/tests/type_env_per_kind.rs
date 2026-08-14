@@ -133,7 +133,7 @@ fn pure_kinds_map_to_pure_env() {
     ] {
         assert_eq!(
             type_env_for_kind(kind),
-            TypeEnv::Pure,
+            TypeEnv::Sail,
             "{kind:?} must be Pure (ESNext only — document unnameable)"
         );
     }
@@ -151,8 +151,8 @@ fn action_kind_maps_to_action_env() {
 #[test]
 fn theme_and_other_do_not_grant_dom() {
     // Apps never gain free DOM merely by being Theme/Other.
-    assert_eq!(type_env_for_kind(FileKind::Theme), TypeEnv::Pure);
-    assert_eq!(type_env_for_kind(FileKind::Other), TypeEnv::Pure);
+    assert_eq!(type_env_for_kind(FileKind::Theme), TypeEnv::Sail);
+    assert_eq!(type_env_for_kind(FileKind::Other), TypeEnv::Sail);
 }
 
 #[test]
@@ -163,10 +163,10 @@ fn classify_feeds_composition_path_to_pure() {
     assert_eq!(c.kind, FileKind::Composition);
     assert_eq!(
         type_env_for_path(path, Some(src)),
-        TypeEnv::Pure,
+        TypeEnv::Sail,
         "composition path must select Pure via classify"
     );
-    assert_eq!(type_env_for_kind(c.kind), TypeEnv::Pure);
+    assert_eq!(type_env_for_kind(c.kind), TypeEnv::Sail);
 }
 
 #[test]
@@ -175,8 +175,8 @@ fn classify_feeds_store_path_to_pure() {
     let src = "export const tally = defineStore('tally', () => ({}))\n";
     let c = classify(path, Some(src));
     assert_eq!(c.kind, FileKind::Store);
-    assert_eq!(type_env_for_path(path, Some(src)), TypeEnv::Pure);
-    assert_eq!(type_env_for_kind(c.kind), TypeEnv::Pure);
+    assert_eq!(type_env_for_path(path, Some(src)), TypeEnv::Sail);
+    assert_eq!(type_env_for_kind(c.kind), TypeEnv::Sail);
 }
 
 #[test]
@@ -199,17 +199,17 @@ fn controller_region_paths_are_pure() {
     let route_ctrl = Path::new("apps/x/routes/home/controller.ts");
     assert_eq!(
         type_env_for_path(route_ctrl, Some("export default controller(() => ({}))\n")),
-        TypeEnv::Pure,
+        TypeEnv::Sail,
         "route controller module must be Pure"
     );
     let comp_sail = Path::new("apps/x/src/widget/widget.sail");
     assert_eq!(
         type_env_for_path(comp_sail, None),
-        TypeEnv::Pure,
+        TypeEnv::Sail,
         "component .sail (controller host) must be Pure"
     );
-    assert_eq!(type_env_for_kind(FileKind::Component), TypeEnv::Pure);
-    assert_eq!(type_env_for_kind(FileKind::Route), TypeEnv::Pure);
+    assert_eq!(type_env_for_kind(FileKind::Component), TypeEnv::Sail);
+    assert_eq!(type_env_for_kind(FileKind::Route), TypeEnv::Sail);
 }
 
 #[test]
@@ -250,7 +250,7 @@ fn framework_wins_over_actions_path_shape() {
 
 #[test]
 fn pure_lib_is_esnext_only_without_dom() {
-    let lib = lib_for_type_env(TypeEnv::Pure);
+    let lib = lib_for_type_env(TypeEnv::Sail);
     assert!(
         has_esnext_lib(lib),
         "Pure env must include an ES* lib, got {lib:?}"
@@ -344,7 +344,7 @@ fn action_observation_ambient_does_not_declare_god_globals() {
 #[test]
 fn pure_composition_snippet_document_fails_typecheck() {
     let Some((ok, out)) = tsc_snippet(
-        TypeEnv::Pure,
+        TypeEnv::Sail,
         r#"
 // composition / store / controller shape — must not see document
 export function useTitle(n: number): void {
@@ -355,7 +355,7 @@ export function useTitle(n: number): void {
         eprintln!("SKIP pure_composition_snippet_document_fails_typecheck: tsc not found");
         // Still fail the *product* contract when tsc is absent: Pure lib must
         // exclude DOM so document is unnameable by construction.
-        let lib = lib_for_type_env(TypeEnv::Pure);
+        let lib = lib_for_type_env(TypeEnv::Sail);
         assert!(
             !has_dom_lib(lib),
             "without tsc, Pure lib must still exclude DOM (got {lib:?})"
@@ -378,7 +378,7 @@ export function useTitle(n: number): void {
 #[test]
 fn pure_store_snippet_window_fails_typecheck() {
     let Some((ok, out)) = tsc_snippet(
-        TypeEnv::Pure,
+        TypeEnv::Sail,
         r#"
 export function openBlank(url: string): void {
   window.open(url, '_blank')
@@ -386,7 +386,7 @@ export function openBlank(url: string): void {
 "#,
     ) else {
         eprintln!("SKIP pure_store_snippet_window_fails_typecheck: tsc not found");
-        let lib = lib_for_type_env(TypeEnv::Pure);
+        let lib = lib_for_type_env(TypeEnv::Sail);
         assert!(!has_dom_lib(lib), "Pure lib must exclude DOM, got {lib:?}");
         return;
     };
@@ -493,7 +493,7 @@ export function inject(styleText: string): void {
 }
 
 /// Product type-gate layout: `write_project_type_configs` then `tsgo -p`
-/// `node_modules/.sail/tsconfig.pure.json` (module pack + script CSS sibling).
+/// `node_modules/.sail/tsconfig.sail.json` (module pack + script CSS sibling).
 fn tsgo_kind_pure(source: &str) -> Option<(bool, String)> {
     let repo = repo_root();
     let tool = resolve_tsgo(Some(&repo))?;
@@ -514,7 +514,7 @@ fn tsgo_kind_pure(source: &str) -> Option<(bool, String)> {
         cmd.arg(js);
     }
     let out = cmd
-        .args(["-p", "node_modules/.sail/tsconfig.pure.json", "--noEmit"])
+        .args(["-p", "node_modules/.sail/tsconfig.sail.json", "--noEmit"])
         .current_dir(project)
         .output()
         .expect("run tsgo kind pure");
@@ -587,7 +587,7 @@ fn css_side_effect_import_fails_without_script_sibling() {
         cmd.arg(js);
     }
     let out = cmd
-        .args(["-p", "node_modules/.sail/tsconfig.pure.json", "--noEmit"])
+        .args(["-p", "node_modules/.sail/tsconfig.sail.json", "--noEmit"])
         .current_dir(project)
         .output()
         .expect("tsgo");
@@ -630,7 +630,7 @@ export function retitle(n: number): void {
 "#;
     let Some((ok, out)) = tsgo_kind_pure(src) else {
         eprintln!("SKIP pure_document_still_fails_with_platform_ambient: tsgo not found");
-        let lib = lib_for_type_env(TypeEnv::Pure);
+        let lib = lib_for_type_env(TypeEnv::Sail);
         assert!(!has_dom_lib(lib), "Pure lib must exclude DOM, got {lib:?}");
         return;
     };

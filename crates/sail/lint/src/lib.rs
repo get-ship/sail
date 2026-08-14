@@ -253,7 +253,7 @@ pub fn lint_pack_source_source(path: &std::path::Path, source: &str) -> Vec<Find
 /// Runs the floor (`sail-no-imperative-style`) plus residual ambient floors
 /// (timers, network) so a side module cannot reintroduce CSSOM host mutation
 /// or ambient network by living outside `.controller.ts`. Ambient DOM
-/// globals are owned by TypeEnv Pure (S2.1) — dual lint floors deleted S2.3.
+/// globals are owned by TypeEnv::Sail (S2.1) — dual lint floors deleted S2.3.
 pub fn lint_app_source_source(path: &std::path::Path, source: &str) -> Vec<Finding> {
     let mut findings = Vec::new();
     for (_id, check) in rules::APP_SOURCE_RULES {

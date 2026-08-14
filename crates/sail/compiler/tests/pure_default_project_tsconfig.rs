@@ -1,6 +1,6 @@
 //! SPIKE S5.3 — product typecheck must default to Pure (SPEC-PLATFORM-NEUTRALITY-1).
 //!
-//! Law: FileKind Route/Component/Composition/Store → TypeEnv::Pure → lib ESNext only.
+//! Law: FileKind Route/Component/Composition/Store → TypeEnv::Sail → lib ESNext only.
 //! Default `emit_project_tsconfig_json` is what projects actually run — it must not
 //! ship DOM lib (that is the Framework escape hatch).
 //!
@@ -22,7 +22,7 @@ fn product_file_kinds_map_to_pure() {
     ] {
         assert_eq!(
             type_env_for_kind(kind),
-            TypeEnv::Pure,
+            TypeEnv::Sail,
             "{kind:?} must be Pure"
         );
     }
@@ -30,7 +30,7 @@ fn product_file_kinds_map_to_pure() {
 
 #[test]
 fn pure_lib_excludes_dom() {
-    let lib = lib_for_type_env(TypeEnv::Pure);
+    let lib = lib_for_type_env(TypeEnv::Sail);
     assert!(lib.contains(&"ESNext"));
     assert!(
         !lib.iter().any(|e| e.contains("DOM")),
