@@ -4,7 +4,8 @@
 //!
 //! This crate owns Style parse / IR / emit / clash / setters, plus the leaf
 //! sx machinery (`sx_ir`, `sx_vocab`), token scales, and design-token registry
-//! used by Style lower and layout class resolution.
+//! used by Style lower and layout class resolution. Foreign CSS / Tailwind /
+//! HTML habits teach through [`foreign_idioms`].
 
 pub mod channel;
 pub mod clash;
@@ -13,6 +14,7 @@ pub mod component_surfaces;
 pub mod concerns;
 pub mod conditions;
 pub mod emit;
+pub mod foreign_idioms;
 pub mod host_ctx;
 pub mod ir;
 pub mod parse;
@@ -51,6 +53,7 @@ pub use conditions::{CONDITION_PREFIXES, condition_media};
 pub use emit::{
     CssRule, StyleEnv, emit_style, lower_style, lower_style_source, lower_style_source_with_motion,
 };
+pub use foreign_idioms::{FOREIGN_IDIOMS, ForeignIdiom, IdiomKind, find_foreign_idiom};
 pub use host_ctx::{with_bound_group_props, with_host_surface};
 pub use ir::{PaintArg, PaintOp, Style, StyleDiagnostic};
 pub use parse::{
@@ -71,8 +74,7 @@ mod tests {
     use super::*;
     use std::collections::HashMap;
 
-    /// Test helper: legacy dual for emit/IR fixtures still written in old form.
-    /// Product surface is `super::parse` (object form only).
+    /// Test helper wrapping product parse.
     fn parse(src: &str) -> (Style, Vec<StyleDiagnostic>) {
         super::parse(src)
     }
@@ -133,7 +135,7 @@ mod tests {
         );
     }
 
-    /// Style `when` breakpoints are design-token locked (not a legacy string path).
+    /// Style `when` breakpoints are design-token locked (not a string path).
     #[test]
     fn when_breakpoints_match_design_tokens() {
         for name in ["mobile", "tablet", "desktop"] {
@@ -853,8 +855,7 @@ mod tests {
             "{css}"
         );
 
-        // Rename pointer lives on migration dual (`parse`); product parse
-        // refuses any flat `style.*` chain before the box→boxSizing pointer.
+        // Flat `style.box(…)` is refused; the error names `boxSizing`.
         let (_, diags) = parse("style.box(border)");
         assert!(
             diags.iter().any(|d| {

@@ -21,7 +21,7 @@ pub struct ConcernSlot {
     pub keywords: &'static [&'static str],
 }
 
-/// One concern setter (`border`, `size`, `space`, `fill`, …).
+/// One concern setter (`border`, `size`, `bg`, `pad`, …).
 #[derive(Debug, Clone, Copy)]
 pub struct ConcernSpec {
     pub name: &'static str,
@@ -865,8 +865,8 @@ pub fn find_slot(spec: &ConcernSpec, name: &str) -> Option<&'static ConcernSlot>
 
 /// Teaching string for a retired property setter. `None` if `name` is live.
 pub fn retired_replacement(name: &str) -> Option<(&'static str, String)> {
-    // Vocab table is the author SSOT. Live rows are not retired. Dead v2
-    // concern names are unknown vocabulary, not a teaching alias.
+    // Vocab table is the author SSOT. Live rows are not retired. Unknown
+    // names are unknown vocabulary, not a teaching alias.
     if crate::vocab::find_vocab(name).is_some() {
         return None;
     }
@@ -1093,7 +1093,7 @@ fn clash_key(concern: &str, kind: &str) -> &'static str {
     }
 }
 
-/// CSS longhands this concern op writes (legacy helper; clash uses [`concern_clash_keys`]).
+/// CSS longhands this concern op writes (clash uses [`concern_clash_keys`]).
 pub fn concern_op_slots(op: &PaintOp) -> Option<Vec<&'static str>> {
     concern_clash_keys(op)
 }
