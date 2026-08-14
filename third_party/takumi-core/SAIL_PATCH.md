@@ -50,13 +50,19 @@ regression fixture (`parley-unclamped-tall-text.sail` + golden test) pins that
 measure completes without panic and yields a non-zero text height; it does not
 assert pixel parity with upstream’s viewport-capped measure.
 
-## Upstream status (checked 2026-08-09)
+## Upstream status (checked 2026-08-14)
 
 | Package | Version | Has SAIL_PATCH semantics? |
 |---------|---------|---------------------------|
-| `takumi` | 2.5.11 (workspace pin) | no (via core 0.16.0) |
-| `takumi` | 2.6.0 (crates.io latest) | no (via core 0.17.0) |
-| `takumi-core` | 0.16.0 / 0.17.0 | **no** — both still apply viewport-as-max_height |
+| `takumi` | 2.5.11 (workspace pin) | no (via core 0.16.0 fork) |
+| `takumi` | 2.9.0 (crates.io latest) | **no** — via core 0.23.0 |
+| `takumi-core` | 0.16.0 / 0.23.0 | **no** — both still apply viewport-as-max_height |
+
+Empirical (2026-08-14): unvendored `takumi = 2.9.0` + `takumi-raster = 0.4.20` + crates.io `takumi-core 0.23.0`.
+`sail-render` compiled with no adapter. Three parley fixtures panicked at
+`parley 0.11.0` `line_break.rs:453` (`layout_max_advance` / `line_max_advance`).
+Repro: `<div style({ size({ w: 0 }).pad(3) })>hello</div>` at (320, 200).
+Vendor restored; no 0.23.0 fork. See `RESULT-TAKUMI-UNVENDOR.md`.
 
 ## Remove when
 
