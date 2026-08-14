@@ -1309,25 +1309,86 @@ fn collect_type_literal_field_names(scope_body: &str) -> Vec<String> {
             continue;
         };
         let inner = &scope_body[j + 1..close];
-        for part in inner.split(',') {
-            let p = part.trim();
-            if p.is_empty() || p.starts_with('/') {
-                continue;
-            }
-            let name: String = p
-                .chars()
-                .take_while(|c| c.is_ascii_alphanumeric() || *c == '_' || *c == '$')
-                .collect();
-            if name
-                .chars()
-                .next()
-                .is_some_and(|c| c.is_ascii_alphabetic() || c == '_' || c == '$')
-                && !names.iter().any(|n| n == &name)
-            {
+        for name in type_literal_field_names(inner) {
+            if !names.iter().any(|n| n == &name) {
                 names.push(name);
             }
         }
         i = close + 1;
+    }
+    names
+}
+
+/// Field names in a type-literal body. Depth-aware so
+/// `onLike: (e: UiEvent, id: number) => void` is one field, and so
+/// newline-separated members (not just comma-separated) count.
+fn type_literal_field_names(inner: &str) -> Vec<String> {
+    let bytes = inner.as_bytes();
+    let mut names = Vec::new();
+    let mut i = 0usize;
+    let mut depth = 0i32;
+    while i < bytes.len() {
+        if !inner.is_char_boundary(i) {
+            i += 1;
+            continue;
+        }
+        if inner[i..].starts_with("//") {
+            i = match inner[i..].find('\n') {
+                Some(n) => i + n + 1,
+                None => bytes.len(),
+            };
+            continue;
+        }
+        match bytes[i] {
+            b'{' | b'(' | b'[' => {
+                depth += 1;
+                i += 1;
+                continue;
+            }
+            b'}' | b')' | b']' => {
+                depth -= 1;
+                i += 1;
+                continue;
+            }
+            b'"' | b'\'' => {
+                let q = bytes[i];
+                i += 1;
+                while i < bytes.len() && bytes[i] != q {
+                    if bytes[i] == b'\\' {
+                        i += 2;
+                        continue;
+                    }
+                    i += 1;
+                }
+                i += 1;
+                continue;
+            }
+            _ => {}
+        }
+        if depth == 0 && (bytes[i].is_ascii_alphabetic() || bytes[i] == b'_' || bytes[i] == b'$') {
+            let start = i;
+            i += 1;
+            while i < bytes.len()
+                && (bytes[i].is_ascii_alphanumeric() || bytes[i] == b'_' || bytes[i] == b'$')
+            {
+                i += 1;
+            }
+            let mut k = i;
+            while k < bytes.len() && bytes[k].is_ascii_whitespace() {
+                k += 1;
+            }
+            if bytes.get(k) == Some(&b'?') {
+                k += 1;
+                while k < bytes.len() && bytes[k].is_ascii_whitespace() {
+                    k += 1;
+                }
+            }
+            if bytes.get(k) == Some(&b':') {
+                names.push(inner[start..i].to_string());
+            }
+            continue;
+        }
+        i += 1;
     }
     names
 }
@@ -2827,6 +2888,40 @@ type PanelProps = { title: string, body: string }
             v.view_text.contains("declare const title:")
                 && v.view_text.contains("declare const body:"),
             "partial type fields must be locals:\n{}",
+            v.view_text
+        );
+    }
+
+    #[test]
+    fn multiline_partial_type_fields_are_bare_locals() {
+        let src = r#"<scope>
+  type RowProps = {
+    title: string
+    artist: string
+    onLike: (e: unknown, id: number) => void
+  }
+</scope>
+<controller>
+export default controller(() => ({}))
+</controller>
+<partial row props: RowProps>
+  <p>{title}</p>
+  <p>{artist}</p>
+  <button on:click={(e) => onLike(e, 1)}>x</button>
+</partial>
+"#;
+        let v = build_virtual_ts(src).expect("virtual");
+        for name in ["title", "artist", "onLike"] {
+            let want = format!("declare const {name}:");
+            assert!(
+                v.view_text.contains(&want),
+                "missing {want}:\n{}",
+                v.view_text
+            );
+        }
+        assert!(
+            !v.view_text.contains("scope.title") && !v.view_text.contains("scope.onLike"),
+            "partial props must stay bare:\n{}",
             v.view_text
         );
     }
