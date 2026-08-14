@@ -27,9 +27,9 @@ pub mod type_resolve;
 pub mod vocab;
 
 pub use complete::{
-    OBJECT_KEYS, StyleCompleteContext, StyleCompleteItem, StyleCompleteKind,
     collect_style_const_names, style_complete_at, style_complete_context_at,
-    style_complete_for_context, when_keys,
+    style_complete_for_context, when_keys, StyleCompleteContext, StyleCompleteItem,
+    StyleCompleteKind, OBJECT_KEYS,
 };
 
 pub use capabilities::{
@@ -41,30 +41,30 @@ pub use component_surfaces::{
     is_theme_owned_author_root, is_theme_owned_token_name, surface_slots,
 };
 pub use concerns::{
-    ConcernSlot, ConcernSpec, MARKERS, concern_doc_line, concern_kind, concerns, find_concern,
-    is_concern_form, is_marker, prepare_concern_call, primary_slot, resolve_concern_name,
-    retired_replacement,
+    concern_doc_line, concern_kind, concerns, find_concern, is_concern_form, is_marker,
+    prepare_concern_call, primary_slot, resolve_concern_name, retired_replacement, ConcernSlot,
+    ConcernSpec, MARKERS,
 };
 pub use foreign_idioms::{
-    FOREIGN_IDIOMS, ForeignIdiom, IdiomKind, find_foreign_idiom, teaching_line,
+    find_foreign_idiom, teaching_line, ForeignIdiom, IdiomKind, FOREIGN_IDIOMS,
 };
 pub use host_ctx::{with_bound_group_props, with_host_surface};
 pub use intent::{
-    Intent, IntentNode, IntentValue, intent_dump, is_known_when_key, lower_to_intent,
+    intent_dump, is_known_when_key, lower_to_intent, Intent, IntentNode, IntentValue,
 };
 pub use ir::{PaintArg, PaintOp, Style, StyleDiagnostic, StyleEnv};
 pub use parse::{
     collect_motion_attaches, collect_motion_attaches_env, looks_like_utility_string_product, parse,
     parse_style_const_rhs, validate_style_refs,
 };
-pub use plains::{PlainSpec, find_plain, plain_doc_line};
+pub use plains::{find_plain, plain_doc_line, PlainSpec};
 pub use theme_env::{
-    NamedStyle, PlayPreset, StylingPolicy, TagDefault, ThemeStyleEnv, VocabTag,
-    current_styling_policy, with_styling_policy,
+    current_styling_policy, with_styling_policy, NamedStyle, PlayPreset, StylingPolicy, TagDefault,
+    ThemeStyleEnv, VocabTag,
 };
-pub use type_resolve::{ResolvedType, resolve_type, resolve_type_for_tag, resolve_type_role};
+pub use type_resolve::{resolve_type, resolve_type_for_tag, resolve_type_role, ResolvedType};
 pub use vocab::{
-    VocabCaps, VocabRow, find_vocab, offered_rows, resolve_vocab, vocab_rows, vocab_surface_line,
+    find_vocab, offered_rows, resolve_vocab, vocab_rows, vocab_surface_line, VocabCaps, VocabRow,
 };
 
 #[cfg(test)]
@@ -72,9 +72,16 @@ mod tests {
     #[test]
     fn domain_modules_do_not_name_css() {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("src");
-        for name in ["parse.rs", "ir.rs", "vocab.rs", "intent.rs"] {
+        for name in [
+            "parse.rs",
+            "ir.rs",
+            "vocab.rs",
+            "intent.rs",
+            "concerns.rs",
+            "setters.rs",
+        ] {
             let src = std::fs::read_to_string(root.join(name)).expect(name);
-            for needle in ["css::", "CssRule", "background-color"] {
+            for needle in ["css::", "CssRule", "background-color", "css_prop"] {
                 assert!(!src.contains(needle), "{name} must not contain {needle}");
             }
         }

@@ -2,7 +2,7 @@
 //!
 //! Every author-facing style name is one row tagged `concern | axis | plain`.
 //! Complete, clash, emit, parse, LSP, skill, and MCP walk this table.
-//! Plains emit lives on `plains.rs`. `setters.rs` keeps CSS lower helpers.
+//! Plains emit data lives on `plains.rs`. CSS lowering lives in `spinnaker-css`.
 //!
 //! Live author names are v3 (`bg`, `fg`, `position`, `pad`, `margin`, …).
 //! Unknown names are unknown vocabulary. `z` is a `position` slot only.

@@ -2,12 +2,12 @@
 
 use std::collections::HashSet;
 
-use spinnaker::intent::{Intent, IntentNode, IntentValue, lower_to_intent};
+use crate::lower::lower_op_css;
+use spinnaker::intent::{lower_to_intent, Intent, IntentNode, IntentValue};
 use spinnaker::ir::{PaintArg, PaintOp, Style, StyleEnv};
-use spinnaker::setters::lower_op_css;
-use spinnaker::theme_env::{ThemeStyleEnv, current_styling_policy};
+use spinnaker::theme_env::{current_styling_policy, ThemeStyleEnv};
 
-use crate::when::{WhenTarget, when_target};
+use crate::when::{when_target, WhenTarget};
 
 /// One emitted CSS rule.
 #[derive(Debug, Clone, PartialEq, Eq)]

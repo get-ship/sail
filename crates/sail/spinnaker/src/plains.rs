@@ -440,7 +440,7 @@ const PLAINS: &[PlainSpec] = &[
         vocab: "brightness",
         scale: None,
         keywords: &[
-            "0", "50", "75", "90", "95", "100", "105", "110", "125", "150", "200",
+            "0", "50", "60", "65", "75", "90", "95", "100", "105", "110", "125", "150", "200",
         ],
         negatable: false,
         slots: &["filter"],
@@ -450,7 +450,7 @@ const PLAINS: &[PlainSpec] = &[
         vocab: "contrast",
         scale: None,
         keywords: &[
-            "0", "50", "75", "90", "95", "100", "105", "110", "125", "150", "200",
+            "0", "50", "60", "65", "75", "90", "95", "100", "105", "110", "125", "150", "200",
         ],
         negatable: false,
         slots: &["filter"],
@@ -491,7 +491,9 @@ const PLAINS: &[PlainSpec] = &[
         name: "saturate",
         vocab: "saturate",
         scale: None,
-        keywords: &["0", "50", "60", "65", "75", "100"],
+        keywords: &[
+            "0", "50", "60", "65", "75", "90", "95", "100", "105", "110", "125", "150", "200",
+        ],
         negatable: false,
         slots: &["filter"],
     },
@@ -597,54 +599,10 @@ pub fn find_plain_by_vocab(head: &str) -> Option<&'static PlainSpec> {
     PLAINS.iter().find(|p| p.vocab == head || p.name == head)
 }
 
-/// Lower one token/keyword on a plain to CSS longhands.
-/// Concerns / composites with mixed decls stay in `setters.rs`.
-pub fn lower_plain_token(
-    spec: &PlainSpec,
-    bare: &str,
-    negative: bool,
-) -> Option<Vec<(String, String)>> {
-    if spec.slots.is_empty() {
-        return Some(Vec::new());
-    }
-    let css_val = if spec.keywords.iter().any(|k| *k == bare) {
-        keyword_css(spec, bare)
-    } else if let Some(scale) = spec.scale {
-        let v = crate::scales::lower(scale, bare)?;
-        if negative {
-            format!("calc(-1 * {v})")
-        } else {
-            v
-        }
-    } else {
-        return None;
-    };
-    Some(
-        spec.slots
-            .iter()
-            .map(|p| ((*p).to_string(), css_val.clone()))
-            .collect(),
-    )
-}
-
-fn keyword_css(spec: &PlainSpec, bare: &str) -> String {
-    match (spec.name, bare) {
-        ("boxSizing", "border") => "border-box".into(),
-        ("boxSizing", "content") => "content-box".into(),
-        ("content", "empty") => "''".into(),
-        ("tapHighlight", "none") => "transparent".into(),
-        ("underline", "true") => "underline".into(),
-        ("underline", "none") => "none".into(),
-        ("underline", "line-through") => "line-through".into(),
-        ("objectPosition", k) | ("origin", k) => k.replace('-', " "),
-        _ => bare.to_string(),
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::vocab::{VocabTag, vocab_rows};
+    use crate::vocab::{vocab_rows, VocabTag};
 
     #[test]
     fn vocab_plains_have_emit_slots() {
@@ -686,24 +644,5 @@ mod tests {
         let p = find_plain("align").expect("align");
         assert_eq!(p.slots, &["vertical-align"]);
         assert!(p.keywords.contains(&"middle"));
-    }
-
-    #[test]
-    fn lower_plain_token_opacity_cursor_display() {
-        let opacity = find_plain("opacity").expect("opacity");
-        let d = lower_plain_token(opacity, "50", false).expect("opacity 50");
-        assert_eq!(d[0].0, "opacity");
-
-        let cursor = find_plain("cursor").expect("cursor");
-        assert_eq!(
-            lower_plain_token(cursor, "pointer", false).expect("cursor"),
-            vec![("cursor".into(), "pointer".into())]
-        );
-
-        let display = find_plain("display").expect("display");
-        assert_eq!(
-            lower_plain_token(display, "none", false).expect("display"),
-            vec![("display".into(), "none".into())]
-        );
     }
 }

@@ -1192,4 +1192,172 @@ mod tests {
             "type align must not emit vertical-align: {css}"
         );
     }
+
+    fn only_op(src: &str) -> PaintOp {
+        let (style, diags) = parse(src);
+        assert!(
+            diags.is_empty(),
+            "{src}: {:?}",
+            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
+        match style {
+            Style::Set(op) => op,
+            other => panic!("{src}: expected single Set, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn border_subtle_emits_member_vars() {
+        let op = only_op("style({ border(subtle) })");
+        let css = crate::lower_op_css(&op).unwrap();
+        assert!(
+            css.contains(&("border-color".into(), "var(--border-subtle-color)".into())),
+            "{css:?}"
+        );
+        assert!(
+            css.contains(&("border-width".into(), "var(--border-subtle-width)".into())),
+            "{css:?}"
+        );
+        assert!(
+            css.contains(&("border-style".into(), "var(--border-subtle-style)".into())),
+            "{css:?}"
+        );
+    }
+
+    #[test]
+    fn border_default_emits_member_vars() {
+        let op = only_op("style({ border(default) })");
+        let css = crate::lower_op_css(&op).unwrap();
+        assert!(
+            css.contains(&("border-color".into(), "var(--border-default-color)".into()))
+                || css.contains(&("border-color".into(), "var(--border)".into())),
+            "{css:?}"
+        );
+    }
+
+    #[test]
+    fn border_slot_object_emits_only_named_slots() {
+        let op = only_op("style({ border({ color: muted, width: hairline }) })");
+        let css = crate::lower_op_css(&op).unwrap();
+        assert!(
+            css.contains(&("border-color".into(), "var(--muted)".into())),
+            "{css:?}"
+        );
+        assert!(
+            css.contains(&("border-width".into(), "var(--border-width)".into())),
+            "{css:?}"
+        );
+        assert_eq!(css.len(), 2, "only named slots: {css:?}");
+    }
+
+    #[test]
+    fn size_slot_object_lowers() {
+        let op = only_op("style({ size({ w: full, h: full }) })");
+        let css = crate::lower_op_css(&op).unwrap();
+        assert!(
+            css.iter().any(|(p, v)| p == "width" && v.contains("100%")),
+            "{css:?}"
+        );
+        assert!(
+            css.iter().any(|(p, v)| p == "height" && v.contains("100%")),
+            "{css:?}"
+        );
+    }
+
+    #[test]
+    fn size_bare_token_emits_both_axes() {
+        let css = crate::lower_op_css(&only_op("style({ size(icon-size-md) })")).unwrap();
+        assert!(
+            css.iter()
+                .any(|(p, v)| p == "width" && v.contains("icon-size-md")),
+            "{css:?}"
+        );
+        assert!(
+            css.iter()
+                .any(|(p, v)| p == "height" && v.contains("icon-size-md")),
+            "{css:?}"
+        );
+    }
+
+    #[test]
+    fn markers_and_concerns_lower() {
+        let cases: &[(&str, &str, &str)] = &[
+            ("style({ objectPosition(top) })", "object-position", "top"),
+            ("style({ touch(pan-x) })", "touch-action", "pan-x"),
+            (
+                "style({ fg({ caret: primary }) })",
+                "caret-color",
+                "var(--primary)",
+            ),
+            ("style({ fg({ accent: auto }) })", "accent-color", "auto"),
+            ("style({ position({ order: first }) })", "order", "-9999"),
+            ("style({ bg({ clip: text }) })", "background-clip", "text"),
+            (
+                "style({ overflow({ scroll: smooth }) })",
+                "scroll-behavior",
+                "smooth",
+            ),
+        ];
+        for (src, prop, val) in cases {
+            let op = only_op(src);
+            let css = crate::lower_op_css(&op).unwrap();
+            assert!(
+                css.contains(&(prop.to_string(), val.to_string())),
+                "{src}: expected {prop}: {val} in {css:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn every_concern_slot_has_a_longhand_row() {
+        for spec in concerns() {
+            for slot in spec.slots {
+                let _ = crate::concern_css::concern_css_prop(spec.name, slot.name);
+            }
+            let named: Vec<_> = spec.slots.iter().map(|s| s.name).collect();
+            for slot in spec.slots {
+                assert!(
+                    crate::concern_css::concern_css_prop(spec.name, slot.name).is_some()
+                        || matches!(slot.name, "gradient" | "edge" | "kind"),
+                    "missing longhand for {}.{} (slots {named:?})",
+                    spec.name,
+                    slot.name
+                );
+            }
+        }
+        assert_eq!(
+            crate::concern_css::concern_css_prop("elevation", "shadow"),
+            Some("box-shadow")
+        );
+    }
+
+    #[test]
+    fn elevation_inset_ring_emits_box_shadow() {
+        let op = only_op("style({ elevation({ shadow: inset-ring }) })");
+        let css = crate::lower_op_css(&op).unwrap();
+        assert!(
+            css.iter()
+                .any(|(p, v)| p == "box-shadow" && v.contains("shadow-inset-ring")),
+            "{css:?}"
+        );
+    }
+
+    #[test]
+    fn lower_plain_token_opacity_cursor_display() {
+        let opacity = find_plain("opacity").expect("opacity");
+        let d = crate::plains_css::lower_plain_token(opacity, "50", false).expect("opacity 50");
+        assert_eq!(d[0].0, "opacity");
+
+        let cursor = find_plain("cursor").expect("cursor");
+        assert_eq!(
+            crate::plains_css::lower_plain_token(cursor, "pointer", false).expect("cursor"),
+            vec![("cursor".into(), "pointer".into())]
+        );
+
+        let display = find_plain("display").expect("display");
+        assert_eq!(
+            crate::plains_css::lower_plain_token(display, "none", false).expect("display"),
+            vec![("display".into(), "none".into())]
+        );
+    }
 }
