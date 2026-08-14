@@ -108,7 +108,7 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
         let (line, col) = offset_to_line_col(source, offset);
 
         // Residual utility-string product is a hard error — not a second language.
-        if crate::style_ir::is_residual_utility_sx(val) {
+        if crate::style::looks_like_utility_string_product(val) {
             findings.push(mk(
                 path,
                 line,

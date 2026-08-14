@@ -15,12 +15,9 @@ pub mod report;
 pub mod rules;
 pub mod source;
 
-// CHANNELS-1: Style pipeline lives in `sail-style`. Re-export under the
-// historical `sail_lint::{style,sx_ir,sx_vocab,scales,tokens}` paths so
+// Style pipeline lives in `sail-style`. Re-export scales/tokens/vocab so
 // compiler/layout/ops/lsp keep compiling without a fan-out import thrash.
-pub use sail_style::{
-    component_surfaces, host_ctx, scales, style_ir, style_vocab, token_groups, tokens,
-};
+pub use sail_style::{component_surfaces, host_ctx, scales, style_vocab, token_groups, tokens};
 
 /// Style product surface — re-export of `sail-style` (parse / IR / emit / clash).
 pub mod style {

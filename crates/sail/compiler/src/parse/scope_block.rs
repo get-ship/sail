@@ -1935,14 +1935,12 @@ mod tests {
         let expr = "style(base, {match: { variant: { ghost: style(vGhost, vGhostTone) } }})";
         let mut css = String::new();
         let mut seen = std::collections::HashSet::new();
-        sail_lint::style_ir::lower_sx_string(expr, &env, &mut css, &mut seen).unwrap_or_else(
-            |diags| {
-                panic!(
-                    "button attach failed: {:?}",
-                    diags.iter().map(|d| d.message()).collect::<Vec<_>>()
-                )
-            },
-        );
+        sail_style::lower_style_source(expr, &env, &mut css, &mut seen).unwrap_or_else(|diags| {
+            panic!(
+                "button attach failed: {:?}",
+                diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+            )
+        });
     }
 
     #[test]

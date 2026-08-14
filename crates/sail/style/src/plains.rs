@@ -710,4 +710,23 @@ mod tests {
         assert_eq!(p.slots, &["vertical-align"]);
         assert!(p.keywords.contains(&"middle"));
     }
+
+    #[test]
+    fn lower_plain_token_opacity_cursor_display() {
+        let opacity = find_plain("opacity").expect("opacity");
+        let d = lower_plain_token(opacity, "50", false).expect("opacity 50");
+        assert_eq!(d[0].0, "opacity");
+
+        let cursor = find_plain("cursor").expect("cursor");
+        assert_eq!(
+            lower_plain_token(cursor, "pointer", false).expect("cursor"),
+            vec![("cursor".into(), "pointer".into())]
+        );
+
+        let display = find_plain("display").expect("display");
+        assert_eq!(
+            lower_plain_token(display, "none", false).expect("display"),
+            vec![("display".into(), "none".into())]
+        );
+    }
 }

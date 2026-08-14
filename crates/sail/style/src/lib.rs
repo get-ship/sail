@@ -20,7 +20,6 @@ pub mod parse;
 pub mod plains;
 pub mod scales;
 pub mod setters;
-pub mod style_ir;
 pub mod style_vocab;
 pub mod theme_env;
 pub mod token_groups;

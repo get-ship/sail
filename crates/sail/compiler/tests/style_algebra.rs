@@ -34,7 +34,7 @@ fn compile_component(src: &str) -> Result<String, String> {
 }
 
 #[test]
-fn setter_chain_lowers_through_style_ir() {
+fn setter_chain_lowers_through_style_to_css() {
     let src = r#"<div style({ bg(primary).fg(primary-foreground).radius(md) })> </div>"#;
     let js = compile_component(src).expect("compiles");
     assert!(

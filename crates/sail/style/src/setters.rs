@@ -8,7 +8,6 @@ use std::borrow::Cow;
 
 use crate::css::prefixes as sx_rules;
 use crate::scales;
-use crate::style_ir::{self, SxDecl, SxValue};
 
 use super::ir::{PaintArg, PaintOp, StyleDiagnostic};
 use crate::plains::{PlainSpec, find_plain};
@@ -763,10 +762,10 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
             ("box-shadow".into(), "var(--press-shadow)".into()),
         ]);
     }
-    let (value, bare, negative) = match arg {
+    let (token, bare, negative) = match arg {
         PaintArg::Token(t) => {
             let (neg, bare) = strip_neg(t);
-            (Some(SxValue::Token(bare.to_string())), bare.is_empty(), neg)
+            (Some(bare.to_string()), bare.is_empty(), neg)
         }
         PaintArg::Bind(name) => {
             let css = css_name_for_bind(name);
@@ -1103,7 +1102,7 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
             }
         }
     }
-    if let Some(SxValue::Token(ref t)) = value {
+    if let Some(ref t) = token {
         for cand in token_candidates(t) {
             if let Some(pairs) = crate::plains::lower_plain_token(spec, &cand, negative) {
                 return Ok(pairs);
@@ -1864,16 +1863,12 @@ fn bind_css_props(spec: &PlainSpec, css_name: &str) -> Vec<(String, String)> {
         }
         _ => {}
     }
-    let probe = SxDecl {
-        prefixes: Vec::new(),
-        prop: spec.vocab.to_string(),
-        value: Some(SxValue::Token("primary".into())),
-        negative: false,
-        bare: false,
-        source: String::new(),
-    };
-    if let Some(pairs) = style_ir::lower_decl(&probe) {
-        return pairs.into_iter().map(|(p, _)| (p, var.clone())).collect();
+    if !spec.slots.is_empty() {
+        return spec
+            .slots
+            .iter()
+            .map(|p| ((*p).to_string(), var.clone()))
+            .collect();
     }
     let prop = match spec.name {
         "bg" => "background-color",
