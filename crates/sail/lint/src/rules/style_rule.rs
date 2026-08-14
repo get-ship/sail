@@ -17,10 +17,13 @@
 //! number, never a colour, never a unit. There is no bracket escape (cf.
 //! Tailwind's `p-[13px]`).
 //!
-//! The vocabulary is a TABLE (`sx-vocabulary.json`, read by `crate::style_vocab`),
-//! not code. Style setters re-home the same closed heads (`bg`, `pad`, …) inside
-//! channels. A scale-valued setter spends a token and nothing else; a
-//! keyword-valued one takes its CSS keywords. The value discipline is the point.
+//! The author vocabulary is `sail_style::vocab` (`offered_rows()` —
+//! concern | axis | plain). Product attach is tag-position
+//! `style({ pad(4).bg(surface), when: { hover: bg(muted) } })`.
+//! `sx-vocabulary.json` / `style_vocab` is the emit leaf Style setters
+//! re-home through — not the docs / LSP / SKILL surface. A scale-valued
+//! setter spends a token and nothing else; a keyword-valued one takes its
+//! CSS keywords. The value discipline is the point.
 //!
 //! SCOPE — Style paints ONE box. How its children sit is a layout element
 //! (`<row>`, `<column>`, `<grid>`), which carries the semantics, the a11y and
@@ -41,16 +44,15 @@ pub const RULE_ID: &str = "sail-style";
 
 // Residual string lowerers still call these names. SSOT is Style product:
 // `sail_style::conditions` (`when({ tablet: … })`) and `sail_style::prefixes`.
-pub use sail_style::conditions::{CONDITION_PREFIXES, condition_media};
+pub use sail_style::conditions::{condition_media, CONDITION_PREFIXES};
 pub use sail_style::prefixes::{
-    STATE_PREFIXES, SX_EXTRA_FORMS, group_attr_presence, is_prefix, pseudo_element_prefix,
-    state_data, state_pseudo,
+    group_attr_presence, is_prefix, pseudo_element_prefix, state_data, state_pseudo,
+    STATE_PREFIXES, SX_EXTRA_FORMS,
 };
 
-/// The complete sx vocabulary — every name with everything it accepts. THE single
-/// source for surface documentation (the agent-skill generator, the /reference
-/// page and the LSP all render this), so what an agent is told is what the lint
-/// enforces, by construction.
+/// Internal emit/lint helper: every emit-leaf utility name with the values
+/// it accepts. Surface docs, skill, and LSP walk `offered_rows()` in
+/// `vocab.rs` — not this table.
 pub fn vocabulary() -> Vec<(String, Vec<String>)> {
     crate::style_vocab::vocabulary()
 }
@@ -584,8 +586,8 @@ mod tests {
   <span aria-label=\"Unsaved\" style({ fg(warning) })>\u{25cf}</span>\n\
 </if>\n";
         let _ = run(src); // must not panic
-        // Tag-position style on the span is valid product — no findings required,
-        // but the scan must complete.
+                          // Tag-position style on the span is valid product — no findings required,
+                          // but the scan must complete.
         assert!(run(src).is_empty(), "{:?}", run(src));
     }
 

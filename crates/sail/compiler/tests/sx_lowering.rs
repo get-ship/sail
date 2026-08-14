@@ -2,8 +2,8 @@
 //! on every element tag Style statement (`style({…})`) before emit.
 //!
 //! Utility-string `style="…"` is residual product and must not emit classes.
-//! The shared Style setters re-home vocab heads from
-//! `crates/sail/style/sx-vocabulary.json` (style + emit SSOT).
+//! The shared Style setters re-home emit heads from
+//! `crates/sail/style/sx-vocabulary.json` (emit leaf only).
 
 use sail_compiler::parse::preprocess::preprocess as preprocess_src;
 
@@ -53,8 +53,7 @@ fn style_radius_lowers() {
 
 #[test]
 fn style_chain_multi_setters() {
-    let out =
-        pp(r#"<div style({ pad(4).bg(surface-1).fg(muted-foreground) })> x</div>"#);
+    let out = pp(r#"<div style({ pad(4).bg(surface-1).fg(muted-foreground) })> x</div>"#);
     assert!(out.contains("s-"), "chain must emit classes:\n{out}");
     assert!(
         out.contains("var(--space-4)") || out.contains("padding"),

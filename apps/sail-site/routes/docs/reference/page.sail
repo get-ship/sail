@@ -14,7 +14,7 @@ import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 import { PROP_REGISTRY } from '../../../src/compositions/prop-registry'
 import {
-  SX_ATOMS,
+  STYLE_VOCAB,
   LAYOUT_KEYWORDS,
   MOTION,
   ELEMENTS,
@@ -48,7 +48,7 @@ const SECTIONS: SectionCard[] = [
     href: '/docs/reference/template',
     title: 'Template',
     count: `${DIRECTIVES.length} directives`,
-    description: 'Tier A — every attribute-position directive: on:, bind:, use:, Style motion (.enter/.exit/…), slots, and the block vocabulary.',
+    description: 'Tier A — every attribute-position directive: on:, bind:, use:, Style animate:/play, slots, and the block vocabulary.',
     tier: 'A',
   },
   {
@@ -61,8 +61,8 @@ const SECTIONS: SectionCard[] = [
   {
     href: '/docs/reference/sx',
     title: 'Style',
-    count: `${SX_ATOMS.length} scale entries`,
-    description: 'Tier A — style({ box, paint, text, animate }), style name =, when/match/compound/bind; setter scales and refusals.',
+    count: `${STYLE_VOCAB.length} vocab rows`,
+    description: 'Tier A — style({ pad(4).bg(surface), when: { hover: bg(muted) } }), style name =, when/match/compound/bind; Style vocab (concern · axis · plain).',
     tier: 'A',
   },
   {

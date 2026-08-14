@@ -87,7 +87,7 @@ Author actions: `src/actions/` under floor ERROR (no style, no state primitives,
 Controllers never `.style` / `createElement`.\n\
                  3. Compositions / L1–L2 first (tabs, tooltip, sail-tree, …).\n\
                  4. `prop:tree={{table}}` identity bind for sail-tree — never querySelector+assign host.\n\
-                 5. sx + tokens only — `cssText` / `.style` / raw CSS is a compile error.\n\
+                 5. Style + tokens only — `cssText` / `.style` / raw CSS is a compile error.\n\
                  6. Missing primitive → report gap; do not escape to DOM.\n\n\
                  **Hard fails in `apps/`:** `createElement` / `cssText` / `querySelector` assign.\n"
             );
@@ -96,7 +96,7 @@ Controllers never `.style` / `createElement`.\n\
                 "- No `<style>` / `style=` / raw px-hex — tokens only.\n\
                  - Style product: `style({{ pad(4).bg(surface) }})` — not utility strings.\n\
                  - Layout keywords: `<row>` `<column>` `<grid>` `<center>` `<stack>`.\n\
-                 - Participation on the box channel: `style({{ size({{ w: full, min-w: 0 }}).grow(1) }})` \
+                 - Participation via `size` / `grow` / `shrink`: `style({{ size({{ w: full, min-w: 0 }}).grow(1) }})` \
                    (`sail-participation-style` refuses bare `grow`/`shrink`/`w`/`min-w`/`max-w`).\n\
                  - Never `display(…)` on layout keywords (`sail-display-on-layout`):\n  \
                    `.sail-col` / `.sail-row` beat `.s-displaynone`. Plain host + nest layout.\n\
@@ -141,17 +141,12 @@ Controllers never `.style` / `createElement`.\n\
             }
             let _ = writeln!(
                 md,
-                "\n**Participation (any element, box channel):** \
+                "\n**Participation (any element):** \
                  `style({{ size({{ w: full, min-w: 0 }}).grow(1) }})` / `shrink(0)` — bare attrs refused \
                  (`sail-participation-style`). Axis sugar `gap`/`align`/`justify` stays on layout keywords.\n\n\
-                 **Refused layout-as-sx** (`style_vocab::refusals()`):\n"
-            );
-            for (atom, instead) in sail_lint::style_vocab::refusals() {
-                let _ = writeln!(md, "- `{atom}` — {instead}");
-            }
-            let _ = writeln!(
-                md,
-                "\n**Display on layout:** `display(…)` on layout keywords is a hard error \
+                 **Layout is elements, not Style atoms.** `flex`/`grid`/`gap-*`/`items-*` \
+                 are not vocabulary — use `<row>` / `<column>` / `<grid>` and their attrs.\n\n\
+                 **Display on layout:** `display(…)` on layout keywords is a hard error \
                  (`sail-display-on-layout`). Hide a plain host; nest the layout keyword.\n"
             );
         }
@@ -1593,7 +1588,7 @@ mod tests {
 
     #[test]
     fn check_flags_display_on_layout() {
-        let src = r#"<column style={style.display(none)}>x</column>"#;
+        let src = r#"<column style({ display(none) })>x</column>"#;
         let diags = run_check(None, Some(src)).unwrap();
         assert!(
             diags
@@ -2020,7 +2015,9 @@ export default controller((ctx) => ({ count: signal(0) }))
 
     #[test]
     fn layout_check_uses_author_source_line_col() {
-        let src = "\n\n<column gap=\"0\"><div></div></column>";
+        // Collapsed parent + sized child. An empty child totaling 0 is
+        // suppressed as analyzer noise — same contract as layout_conformance.
+        let src = "\n\n<column style({ size(0) })>\n  <div style({ size(20) })>\n    x\n  </div>\n</column>";
         let out = sail_layout_check(src).unwrap();
         assert_eq!(out["ok"], true);
         let diags = out["diagnostics"].as_array().expect("diagnostics array");

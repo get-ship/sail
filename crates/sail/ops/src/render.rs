@@ -205,7 +205,7 @@ mod tests {
     fn screenshot_inline_painted_no_leak() {
         let ctx = workspace_ctx();
         let args = json!({
-            "source": r#"<div style={style.bg(primary).pad(2)}>Hi {ticks()}</div>"#,
+            "source": r#"<div style({ bg(primary).pad(2) })>Hi {ticks()}</div>"#,
             "viewport": "200x100",
             "theme": "ship",
             "mode": "light"

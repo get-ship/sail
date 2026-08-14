@@ -734,8 +734,10 @@ fn build_layout(
         // Document-order tag cursors join layout boxes → tree nodes (class-aware).
         let mut tag_cursors: BTreeMap<String, usize> = BTreeMap::new();
         // Last successfully joined L1/keyword host — expansion chrome (card
-        // header/footer divs, ticker track spans) attaches here instead of root.
-        let mut last_host_id: Option<String> = None;
+        // header/footer divs, ticker track spans, in-file partial bodies)
+        // attaches here. Seed with the author root so a leading viewport
+        // wrapper is page chrome, not an unknown root dump.
+        let mut last_host_id: Option<String> = meta.root_ids.first().cloned();
         let mut last_if_id: Option<String> = None;
         for b in &scan.boxes {
             let author_tag = author_tag_from_layout(&b.tag, &b.class);
@@ -756,12 +758,12 @@ fn build_layout(
                         id = if_id.clone();
                         unknown_join = false;
                     }
-                } else if is_anonymous_expansion_box(&b.tag, &author_tag) {
-                    // Spliced L1 chrome (e.g. card header/footer) shares host id.
-                    if let Some(ref host) = last_host_id {
-                        id = host.clone();
-                        unknown_join = false;
-                    }
+                } else if let Some(ref host) = last_host_id {
+                    // Spliced L1 chrome and in-file `<partial>` bodies.
+                    // Author tree keeps the invocation tag (`bento-animation`);
+                    // layout sees the expanded markup (`card` / `p` / `a`).
+                    id = host.clone();
+                    unknown_join = false;
                 }
             }
 
@@ -871,13 +873,6 @@ fn is_known_l1_tag(name: &str) -> bool {
 fn is_layout_host_tag(author_tag: &str) -> bool {
     matches!(author_tag, "column" | "row" | "grid" | "center" | "stack")
         || is_known_l1_tag(author_tag)
-}
-
-/// Bare div/span with no recovered host tag — expansion chrome, not author host.
-fn is_anonymous_expansion_box(layout_tag: &str, author_tag: &str) -> bool {
-    let t = layout_tag.to_ascii_lowercase();
-    let a = author_tag.to_ascii_lowercase();
-    matches!(t.as_str(), "div" | "span") && a == t
 }
 
 // ── state ───────────────────────────────────────────────────────────────────
@@ -1113,6 +1108,18 @@ fn collect_state_edges(
                 collect_state_edges(
                     source, file, &f.body, meta, readers, writers, expr_occ, &path, &mut o,
                 );
+            }
+            Instr::When(w) => {
+                let mut o = 0;
+                collect_state_edges(
+                    source, file, &w.body, meta, readers, writers, expr_occ, &path, &mut o,
+                );
+                if let Some(e) = &w.else_body {
+                    let mut o = 0;
+                    collect_state_edges(
+                        source, file, e, meta, readers, writers, expr_occ, &path, &mut o,
+                    );
+                }
             }
             Instr::Match(m) => {
                 for name in sail_compiler::parse::expr::idents::collect_idents(
@@ -2894,7 +2901,7 @@ export default controller((_ctx: ControllerScope<any>) => {
             .find(|b| b["name"] == "ticks")
             .expect("ticks binding");
         assert_eq!(ticks["kind"], "signal");
-        assert_eq!(ticks["ssr_tier"], "C", "ticks uses setInterval → C");
+        assert_eq!(ticks["ssr_tier"], "C", "ticks uses interval() → C");
         let readers = ticks["readers"].as_array().unwrap();
         assert!(readers.len() >= 2, "two template readers expected: {ticks}");
         // Distinct author sites for ticks()

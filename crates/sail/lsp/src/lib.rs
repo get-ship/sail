@@ -33,23 +33,23 @@ mod virtual_ts;
 /// SPEC-LSP-1 names (`hover_at_sail`, `completions_at_sail`, `diagnostics_for_sail`)
 /// are thin aliases of `hover_sail` / `complete_sail` / `diagnostics_sail`.
 pub use intelligence::{
-    CompletionItemPayload, DiagPayload, HoverPayload, Intelligence, RangePayload, complete_sail,
-    complete_with_session, completion_payloads_from_tsgo, completions_at_sail,
+    complete_sail, complete_with_session, completion_payloads_from_tsgo, completions_at_sail,
     diagnostics_for_sail, diagnostics_sail, diagnostics_sail_tier, diagnostics_with_session,
     doc_key, hover_at_sail, hover_payload_from_tsgo, hover_sail, hover_with_session,
-    with_global_session,
+    with_global_session, CompletionItemPayload, DiagPayload, HoverPayload, Intelligence,
+    RangePayload,
 };
 
 // Integration tests (`tests/tsgo_proxy.rs`) exercise the public surface of the
 // virtual-doc builder and tsgo session without going through stdio.
 #[doc(hidden)]
 pub mod tsgo_test {
-    pub use super::tsgo::{TsgoSession, discover_tsgo};
+    pub use super::tsgo::{discover_tsgo, TsgoSession};
 }
 #[doc(hidden)]
 pub mod virtual_ts_test {
     pub use super::virtual_ts::{
-        RegionKind, VirtualFile, VirtualTs, build_virtual_ts, offset_to_lsp_position,
+        build_virtual_ts, offset_to_lsp_position, RegionKind, VirtualFile, VirtualTs,
     };
 }
 
@@ -362,8 +362,9 @@ fn on_completion(
     if let Some(prefix) = icon_name_prefix(&text, pos.line as usize, col) {
         return Some(icon_completion_items(&prefix, path.as_deref()));
     }
-    if let Some(prefix) = sx_attr_prefix(&text, pos.line as usize, col) {
-        return Some(sx_completion_items(prefix));
+    if sx_attr_prefix(&text, pos.line as usize, col).is_some() {
+        // sx="…" is a refused form — do not complete Tailwind atoms as legal.
+        return Some(Vec::new());
     }
     // L1 element surface — when the user is typing a tag open (`<partial`
     // or `<>`), offer the language's first-class elements. The list is
@@ -850,7 +851,7 @@ fn parse_tokens(src: &str) -> TokenTable {
             }
             _ if !root_depths.is_empty() && c == '-' && chars.peek() == Some(&'-') => {
                 chars.next(); // consume second '-'
-                // Name
+                              // Name
                 let mut name = String::new();
                 for c in chars.by_ref() {
                     match c {
@@ -987,10 +988,9 @@ fn is_css_token_context(text: &str, line_idx: usize, col: usize) -> bool {
     false
 }
 
-/// Detect whether `pos` is inside an `style="…"` attribute value. Returns
-/// the prefix (the partial atom the user is currently typing) so the
-/// completion can scope to it. Mirrors `in_style_attr_value`'s scan but
-/// also returns the prefix on the same line, up to the cursor.
+/// Detect whether `pos` is inside a refused `sx="…"` attribute value.
+/// Returns the typed prefix so the handler can refuse completion rather
+/// than offering Tailwind atoms as if they were legal.
 fn sx_attr_prefix(text: &str, line_idx: usize, col: usize) -> Option<String> {
     let mut in_sx = false;
     let mut value_start: Option<usize> = None;
@@ -1033,66 +1033,6 @@ fn sx_attr_prefix(text: &str, line_idx: usize, col: usize) -> Option<String> {
         }
     }
     None
-}
-
-/// sx completion items, sourced from `sail_lint::style_vocab` — the same
-/// tables the lint validates and the docs teach. So what an agent is
-/// offered is what the lint will accept, by construction.
-///
-/// Suggests:
-///   - bare atom names (`hidden`, `truncate`, `italic`)
-///   - one item per (name, value) pair from `vocabulary()`
-///   - refused atoms (with detail naming the replacement)
-fn sx_completion_items(prefix: String) -> Vec<CompletionItem> {
-    let mut out: Vec<CompletionItem> = Vec::new();
-    let lower = prefix.to_ascii_lowercase();
-
-    // Bare atoms: the atom itself is the value. Surfaced as `hidden`,
-    // `truncate`, `italic`, etc. so the user can see the keyword shape.
-    for name in sail_lint::style_vocab::names() {
-        if name.starts_with(&lower) && !name.contains('-') {
-            out.push(CompletionItem {
-                label: name.clone(),
-                kind: Some(CompletionItemKind::KEYWORD),
-                detail: Some("bare atom".into()),
-                ..Default::default()
-            });
-        }
-    }
-
-    // (name, values) — one completion per legal (name-value) pair. The
-    // label is the full atom (`p-4`, `bg-surface-1`); the detail is the
-    // CSS shape it lowers to.
-    for (name, values) in sail_lint::style_vocab::vocabulary() {
-        let hyphen = format!("{name}-");
-        if !lower.is_empty() && !name.starts_with(&lower) && !hyphen.starts_with(&lower) {
-            continue;
-        }
-        for value in values {
-            let label = format!("{name}-{value}");
-            out.push(CompletionItem {
-                label,
-                kind: Some(CompletionItemKind::VALUE),
-                detail: Some(format!("{name} = {value}")),
-                ..Default::default()
-            });
-        }
-    }
-
-    // Refusals — atoms the lint rejects, with the thing to use instead.
-    // Surfaced so the agent sees WHY a Tailwind-prior favourite fails.
-    for (atom, instead) in sail_lint::style_vocab::refusals() {
-        if !lower.is_empty() && !atom.starts_with(&lower) {
-            continue;
-        }
-        out.push(CompletionItem {
-            label: atom.clone(),
-            kind: Some(CompletionItemKind::REFERENCE),
-            detail: Some(format!("REFUSED — {instead}")),
-            ..Default::default()
-        });
-    }
-    out
 }
 
 /// True if line `line_idx` falls inside an open `<style>` block. A
@@ -1633,7 +1573,7 @@ mod tests {
         assert_eq!(utf16_col_to_byte(src, 0, 12), 14); // after both
         assert_eq!(utf16_col_to_byte(src, 0, 99), src.len()); // clamped
         assert_eq!(utf16_col_to_byte(src, 5, 0), 0); // line out of range
-        // The completion helpers must not panic mid-char anymore.
+                                                     // The completion helpers must not panic mid-char anymore.
         assert!(!line_prefix_ends_with_dd(
             src,
             0,
@@ -1655,56 +1595,6 @@ mod tests {
         // Cursor inside `<div class="x">` — should not detect sx.
         let src = r#"<div class="x">y</div>"#;
         assert!(sx_attr_prefix(src, 0, 13).is_none());
-    }
-
-    #[test]
-    fn sx_completion_items_emits_atoms_refusals_and_values() {
-        // Empty prefix — every legal atom, every value, every refusal.
-        let items = sx_completion_items(String::new());
-        // Some legal atom must appear.
-        assert!(
-            items.iter().any(|i| i.label == "p-4"),
-            "expected `p-4` (canonical p-name-value) in completions"
-        );
-        assert!(
-            items.iter().any(|i| i.label == "bg-surface-1"),
-            "expected `bg-surface-1` in completions"
-        );
-        // A refused atom (Tailwind-prior) must appear, with the replacement.
-        let flex = items
-            .iter()
-            .find(|i| i.label == "flex")
-            .expect("`flex` refusal should be surfaced");
-        let detail = flex.detail.as_deref().unwrap_or("");
-        assert!(
-            detail.contains("REFUSED"),
-            "refusal detail must mark REFUSED: {detail}"
-        );
-        assert!(
-            detail.contains("<row>"),
-            "refusal must name the replacement: {detail}"
-        );
-    }
-
-    #[test]
-    fn sx_completion_items_scopes_to_typed_prefix() {
-        // Typing `bg-` should narrow to bg-prefixed completions only.
-        let items = sx_completion_items("bg-".to_string());
-        assert!(!items.is_empty(), "bg- prefix should produce items");
-        // Every non-refusal label should start with `bg-`.
-        for item in &items {
-            let is_refusal = item
-                .detail
-                .as_deref()
-                .map(|d| d.contains("REFUSED"))
-                .unwrap_or(false);
-            if !is_refusal {
-                assert!(
-                    item.label.starts_with("bg-") || item.label == "bg",
-                    "non-refusal item under `bg-` prefix should start with `bg-`: {item:?}"
-                );
-            }
-        }
     }
 
     #[test]

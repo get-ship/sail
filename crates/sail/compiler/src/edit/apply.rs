@@ -6,11 +6,11 @@ use std::path::Path;
 use serde::Serialize;
 
 use super::fix::{self, FixPlan};
-use super::node::{EditNode, build_node_index, model_revision};
+use super::node::{build_node_index, model_revision, EditNode};
 use super::ops::EditOp;
-use super::validate::{ValidateOutcome, validate_source};
-use crate::LintOverride;
+use super::validate::{validate_source, ValidateOutcome};
 use crate::diagnostics::Diagnostic;
+use crate::LintOverride;
 
 /// Result of applying an edit batch (in memory; write is caller's job).
 #[derive(Debug, Clone, Serialize)]
@@ -492,13 +492,14 @@ fn attrs_to_open_suffix(attrs: Option<&serde_json::Value>) -> String {
     s
 }
 
-/// Closed-vocab check for setSx.
+/// Closed-vocab check for setSx against Style `offered_rows()`.
+/// Residual utility refusals are emit-leaf leftovers, not the author language.
 pub fn validate_sx_setter(setter: &str, args: &[serde_json::Value]) -> Result<(), String> {
     let name = setter.trim();
     if name.is_empty() {
         return Err("setSx requires non-empty `setter`".into());
     }
-    // Refusals (layout-as-sx)
+    // Residual utility-string names (not Style vocab).
     for (atom, instead) in sail_lint::style_vocab::refusals() {
         if name == atom || name.replace('_', "-") == atom {
             return Err(format!(
