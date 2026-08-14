@@ -1,6 +1,6 @@
 <!--
-  <card> — L1 surface with header/body/footer slots, tone border, status rail,
-  interactive lift, and optional accent bar.
+  <card> — L1 surface with header/body/footer/image slots, tone border, status rail,
+  interactive lift, optional accent bar, and spotlight (accent-bar=static alias).
   Rest border = border token when tone is omitted.
   Semantic border = bound tone.
 -->
@@ -15,6 +15,8 @@
     'status-rail' = false
     // Alias of variant=soft — kept so existing markup does not break.
     fill = false
+    // Alias of accent-bar=static — same ::before stripe, no second rail.
+    spotlight = false
   }
 
   style base = {position(relative).overflow({ all: clip }).pad({ y: 4, x: 5 }).isolate().radius(lg).border({ color: border, width: 1 }).fg(card-foreground).elevation({ shadow: card-rest }).bg(card).filter({ backdrop: card-backdrop-filter }), animate: { transition: play(surface, fast) }}
@@ -40,6 +42,13 @@
   style footerChromeNone = {pad({ y: 3, x: 0 }).margin({ t: 3 })}
   // Shared ::before stripe for accent-bar static/hover; opacity differs per arm.
   style accentBar = {position({ scheme: absolute, l: 0, r: 0, t: 0 }).size({ h: half }).content(empty).bg({ image: primary-accent }).radius({ t: lg }).transition(opacity).duration(medium).ease(out).pointerEvents(none)}
+  // Image slot: full-bleed top crop box. object-cover lives on the author's
+  // <img> — Style cannot paint a slotted descendant.
+  style imageWrap = {overflow({ all: hidden }).size({ w: full, h: 36, min-h: 36 }).bg(muted)}
+  style imageMd = {margin({ t: -4, x: -5, b: 4 })}
+  style imageSm = {margin({ t: -2, x: -3, b: 3 })}
+  style imageLg = {margin({ t: -5, x: -6, b: 5 })}
+  style imageNone = {margin({ b: 0 })}
 </scope>
 
 <div
@@ -56,8 +65,14 @@
       {padding: none, status-rail: true, pad({ s: 0 })},
       {accent-bar: static, when: {before: style(accentBar, {filter({ opacity: 100 })})}},
       {accent-bar: hover, when: {before: style(accentBar, {filter({ opacity: 0 })}), hover: {when: {before: filter({ opacity: 100 })}}}},
+      {spotlight: true, when: {before: style(accentBar, {filter({ opacity: 100 })})}},
     ]})
 >
+  <div
+    style(imageWrap, {match: { padding: { md: imageMd, sm: imageSm, lg: imageLg, none: imageNone } }, when: {empty: display(none)}})
+  >
+    <slot name="image"></slot>
+  </div>
   <div
     style(headerChromeBase, {match: { padding: { md: headerChromeMd, sm: headerChromeSm, lg: headerChromeLg, none: headerChromeNone } }, when: {empty: display(none)}})
   >

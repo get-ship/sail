@@ -13,6 +13,11 @@ export const contract = {
     value: { default: '', control: 'text' },
     inline: { default: false, control: 'switch' },
     modeOnly: { default: false, control: 'switch' },
+    variant: {
+      values: ['icon', 'menu-row', 'segmented'] as const,
+      default: 'icon',
+      control: 'select',
+    },
     onThemeChange: { control: 'none', event: true },
   },
   faces: [
@@ -24,7 +29,7 @@ export const contract = {
   ],
   visual: {
     defaultRow: true,
-    cross: ['value', 'inline', 'modeOnly'],
+    cross: ['value', 'inline', 'modeOnly', 'variant'],
   },
   examples: true,
 } as const satisfies SurfaceContract

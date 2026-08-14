@@ -3,7 +3,8 @@ import type { SurfaceContract } from '../contract-types'
 /**
  * Surface contract for card — axes from prop-registry only.
  * Variants: default | outline | soft | elevated | ghost (SPEC-L1-PASS-1).
- * fill is an alias of soft. spotlight/image still open.
+ * fill is an alias of soft. spotlight is an alias of accent-bar=static.
+ * image is a named slot (no URL prop).
  */
 export const contract = {
   slug: 'card',
@@ -41,6 +42,7 @@ export const contract = {
     },
     'status-rail': { default: false, control: 'switch' },
     fill: { default: false, control: 'switch' },
+    spotlight: { default: false, control: 'switch' },
   },
   faces: [
     { path: 'component.card.bg', label: 'Fill' },
@@ -60,6 +62,7 @@ export const contract = {
       'accent-bar',
       'status-rail',
       'fill',
+      'spotlight',
     ],
   },
   examples: true,
