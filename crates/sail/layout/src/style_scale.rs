@@ -131,7 +131,10 @@ fn attr_path_segments() -> &'static [(String, &'static str, &'static str)] {
             ),
             (
                 "size",
-                &["3xs", "2xs", "2xl", "3xl", "xs", "sm", "md", "lg", "xl"],
+                &[
+                    "3xs", "2xs", "2xl", "3xl", "iconLg", "iconSm", "icon", "xs", "sm", "md", "lg",
+                    "xl",
+                ],
             ),
             (
                 "variant",
@@ -613,6 +616,29 @@ mod tests {
     }
 
     #[test]
+    fn button_sizeicon_square_compounds_resolve() {
+        let elem = Element {
+            tag: "button".into(),
+            class: "sail-button s-sizeicon-wcontrolhmd s-sizeicon-hcontrolhmd \
+                    s-sizeiconsm-wcontrolhsm s-sizeiconsm-hcontrolhsm \
+                    s-sizemd-minHcontrolhmd"
+                .into(),
+            attrs: {
+                let mut m = HashMap::new();
+                m.insert("size".into(), "icon".into());
+                m
+            },
+            ..Default::default()
+        };
+        let resolved = resolve(&elem, &[Element::default()], 480.0);
+        assert_eq!(
+            resolved.style.size.width,
+            Dimension::length(34.0),
+            "size=icon must apply control-h-md square, not fall through to content"
+        );
+        assert_eq!(resolved.style.size.height, Dimension::length(34.0));
+    }
+
     fn button_sizemd_minh_compound_resolves() {
         let elem = Element {
             tag: "button".into(),

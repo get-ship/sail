@@ -5,15 +5,16 @@
 //!   opt-in (no scroll-area, no overflow setter, no truncate)
 //! - `clipped-text` — measured text run cut without a truncate marker
 //!
-//! Both are **strict/experimental only**. Product entry:
+//! LAYOUT-5: `unintended-overflow` and `clipped-text` are default Error.
+//! `sub-min-tap-target` stays experimental. Product entry:
 //! [`sail_layout::check_preprocessed_with`] + [`sail_layout::CheckOptions`].
 //!
-//! Gate cases (job-spec-spike-s4-1-layout-kinds):
+//! Gate cases (job-spec-spike-s4-1-layout-kinds + LAYOUT-5):
 //! 1. Overflow without opt-in → finding with kind id
 //! 2. Overflow with scroll-area / overflow setter → no finding
-//! 3. Clipped text without truncate → finding (experimental/text_metrics path)
+//! 3. Clipped text without truncate → finding (text_metrics path)
 //! 4. Truncate present → no clipped-text
-//! 5. Experimental off → kinds not emitted
+//! 5. Default check emits overflow + clipped; tap stays experimental-only
 //!
 //! Implementer: do not weaken these assertions to green-wash a partial land.
 //! Adversarial "must not fire" cases are part of the promotion law.
@@ -187,36 +188,31 @@ fn clipped_text_suppressed_when_truncate_present() {
     );
 }
 
-// ── 5. Experimental off → kinds not emitted ─────────────────────────────────
+// ── 5. Default check emits promoted kinds; tap stays experimental ───────────
 
 #[test]
-fn experimental_off_does_not_emit_new_kinds_on_overflow_fixture() {
-    // Default entry and explicit experimental:false share the same contract.
+fn default_check_emits_promoted_overflow() {
     let defaulted = check_preprocessed(OVERFLOW_NO_OPTIN, VP).expect("default check");
-    let explicit = check_preprocessed_with(OVERFLOW_NO_OPTIN, VP, CheckOptions::default())
-        .expect("explicit off");
-    for (label, result) in [("default", &defaulted), ("explicit-off", &explicit)] {
-        assert!(
-            !has_kind(&result.diagnostics, KIND_UNINTENDED_OVERFLOW),
-            "{label}: `{KIND_UNINTENDED_OVERFLOW}` must not emit when experimental is off \
-             (rollout protocol): {:?}",
-            result.diagnostics
-        );
-        assert!(
-            !has_kind(&result.diagnostics, KIND_CLIPPED_TEXT),
-            "{label}: `{KIND_CLIPPED_TEXT}` must not emit when experimental is off: {:?}",
-            result.diagnostics
-        );
-    }
+    assert!(
+        has_kind(&defaulted.diagnostics, KIND_UNINTENDED_OVERFLOW),
+        "LAYOUT-5: default check must emit `{KIND_UNINTENDED_OVERFLOW}`: {:?}",
+        defaulted.diagnostics
+    );
+    let hit = defaulted
+        .diagnostics
+        .iter()
+        .find(|d| d.kind == KIND_UNINTENDED_OVERFLOW)
+        .unwrap();
+    assert_eq!(hit.severity, sail_layout::Severity::Error);
 }
 
 #[test]
-fn experimental_off_does_not_emit_clipped_text() {
+fn default_check_emits_promoted_clipped_text() {
     let result = check_preprocessed_with(CLIPPED_TEXT_NO_TRUNCATE, VP, CheckOptions::default())
         .expect("layout check");
     assert!(
-        !has_kind(&result.diagnostics, KIND_CLIPPED_TEXT),
-        "`{KIND_CLIPPED_TEXT}` is experimental/text_metrics only: {:?}",
+        has_kind(&result.diagnostics, KIND_CLIPPED_TEXT),
+        "LAYOUT-5: default check must emit `{KIND_CLIPPED_TEXT}`: {:?}",
         result.diagnostics
     );
 }
@@ -616,6 +612,39 @@ fn unintended_overflow_fires_when_tablet_at_desktop_viewport() {
     );
 }
 
+const OVERFLOW_UNBOUND_EXPR: &str = r#"
+<div class="sail-row sail-nowrap s-w20">
+  <span class="s-shrink0">{session.paintMode()}</span>
+</div>
+"#;
+
+const OVERFLOW_STATIC_WIDE: &str = r#"
+<div class="sail-row sail-nowrap s-w20">
+  <span class="s-shrink0">Supercalifragilisticexpialidocious</span>
+</div>
+"#;
+
+#[test]
+fn unintended_overflow_suppresses_unbound_expr_width() {
+    let result =
+        check_preprocessed_with(OVERFLOW_UNBOUND_EXPR, VP, experimental()).expect("layout");
+    assert!(
+        !has_kind(&result.diagnostics, KIND_UNINTENDED_OVERFLOW),
+        "unbound {{expr}} source text is measured-as-unknown: {:?}",
+        result.diagnostics
+    );
+}
+
+#[test]
+fn unintended_overflow_still_fires_for_static_wide_text() {
+    let result = check_preprocessed_with(OVERFLOW_STATIC_WIDE, VP, experimental()).expect("layout");
+    assert!(
+        has_kind(&result.diagnostics, KIND_UNINTENDED_OVERFLOW),
+        "static wide text in a nowrap leftover must stay red: {:?}",
+        result.diagnostics
+    );
+}
+
 const KIND_TAP: &str = "sub-min-tap-target";
 
 const TAP_AT_FLOOR: &str = r#"<button style:w="24px" style:h="24px">ok</button>"#;
@@ -748,6 +777,53 @@ fn tap_target_known_host_with_unknown_child_stays_red() {
     assert!(
         has_kind(&result.diagnostics, KIND_TAP),
         "known 23px button must stay red even when a descendant is unknown: {:?}",
+        result.diagnostics
+    );
+}
+
+const TAP_PHRASING_IN_PROSE: &str = r#"<p>See the <a href="/docs">Forms guide</a> next.</p>"#;
+const TAP_CHECKBOX_IN_LABEL: &str = r#"
+<label>
+  <input type="checkbox" style:w="16px" style:h="16px">
+  Healthy
+</label>
+"#;
+
+#[test]
+fn tap_target_skips_phrasing_link_in_prose() {
+    let result =
+        check_preprocessed_with(TAP_PHRASING_IN_PROSE, VP, experimental()).expect("layout");
+    assert!(
+        !has_kind(&result.diagnostics, KIND_TAP),
+        "inline phrasing <a> is not a standalone target: {:?}",
+        result.diagnostics
+    );
+}
+
+const TAP_TOAST_CLOSE: &str = r#"
+<button class="s-wcontrolhxs s-hcontrolhxs s-shrink0" type="button">x</button>
+"#;
+
+#[test]
+fn toast_close_control_h_xs_meets_tap_floor() {
+    let result = check_preprocessed_with(TAP_TOAST_CLOSE, VP, experimental()).expect("layout");
+    assert!(
+        !has_kind(&result.diagnostics, KIND_TAP),
+        "24px control-h-xs close face must meet the tap floor: {:?}",
+        result.diagnostics
+    );
+}
+
+#[test]
+fn tap_target_skips_checkbox_inside_label() {
+    let result =
+        check_preprocessed_with(TAP_CHECKBOX_IN_LABEL, VP, experimental()).expect("layout");
+    assert!(
+        !result
+            .diagnostics
+            .iter()
+            .any(|d| d.kind == KIND_TAP && d.element_tag == "input"),
+        "checkbox face is a control internal; label owns the hit: {:?}",
         result.diagnostics
     );
 }

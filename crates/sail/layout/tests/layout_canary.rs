@@ -299,29 +299,33 @@ fn canary_documents_promotion_criteria_and_keeps_experimental_only() {
 }
 
 #[test]
-fn no_silent_promote_default_check_still_skips_experimental_kinds() {
-    // Regression guard: landing the canary must not flip default severity on.
+fn default_check_emits_promoted_kinds_and_keeps_tap_experimental() {
     let overflow = check_preprocessed(OVERFLOW_NO_OPTIN, VP).expect("default check");
     let clipped = check_preprocessed(CLIPPED_TEXT_NO_TRUNCATE, VP).expect("default check");
-    for (label, result) in [("overflow", &overflow), ("clipped", &clipped)] {
-        assert!(
-            !result
-                .diagnostics
-                .iter()
-                .any(|d| d.kind == KIND_UNINTENDED_OVERFLOW || d.kind == KIND_CLIPPED_TEXT),
-            "{label}: default check must not emit experimental kinds (no silent promote): {:?}",
-            result.diagnostics
-        );
-    }
-    let explicit = check_preprocessed_with(OVERFLOW_NO_OPTIN, VP, CheckOptions::default())
-        .expect("explicit off");
     assert!(
-        !explicit
+        overflow
             .diagnostics
             .iter()
             .any(|d| d.kind == KIND_UNINTENDED_OVERFLOW),
-        "CheckOptions::default must keep experimental kinds off: {:?}",
-        explicit.diagnostics
+        "LAYOUT-5: default check emits overflow: {:?}",
+        overflow.diagnostics
+    );
+    assert!(
+        clipped
+            .diagnostics
+            .iter()
+            .any(|d| d.kind == KIND_CLIPPED_TEXT),
+        "LAYOUT-5: default check emits clipped-text: {:?}",
+        clipped.diagnostics
+    );
+    let tap = check_preprocessed(r#"<button style:w="23px" style:h="40px">x</button>"#, VP)
+        .expect("default tap");
+    assert!(
+        !tap.diagnostics
+            .iter()
+            .any(|d| d.kind == "sub-min-tap-target"),
+        "tap stays experimental: {:?}",
+        tap.diagnostics
     );
 }
 

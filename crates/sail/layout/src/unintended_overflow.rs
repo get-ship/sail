@@ -56,7 +56,83 @@ pub(crate) fn should_emit(
     ) {
         return false;
     }
+    // Host splice / replaced subtree: taffy cannot see the runtime box.
+    if layout
+        .unknown_subtree
+        .get(parent_index)
+        .copied()
+        .unwrap_or(false)
+        || layout
+            .unknown_subtree
+            .get(child_index)
+            .copied()
+            .unwrap_or(false)
+    {
+        return false;
+    }
+    // Unbound `{expr}` text is measured as source, not runtime — unknown width.
+    if measure_unknown(layout, parent_index) || subtree_measure_unknown(layout, child_index) {
+        return false;
+    }
+    if is_display_contents(&layout.styles[parent_index]) {
+        return false;
+    }
     true
+}
+
+fn subtree_measure_unknown(layout: &Layout, index: usize) -> bool {
+    if measure_unknown(layout, index) {
+        return true;
+    }
+    layout.elements[index]
+        .children
+        .iter()
+        .any(|&c| subtree_measure_unknown(layout, c))
+}
+
+/// Source interpolation / bind size: the solved box is a measurement lie.
+pub(crate) fn measure_unknown(layout: &Layout, index: usize) -> bool {
+    let elem = &layout.elements[index];
+    if text_is_unbound_expr(&elem.text) {
+        return true;
+    }
+    if attr_is_unbound(elem, "size")
+        || attr_is_unbound(elem, "width")
+        || attr_is_unbound(elem, "height")
+    {
+        return true;
+    }
+    for key in [
+        "w", "h", "width", "height", "min-w", "min-h", "max-w", "max-h",
+    ] {
+        if elem.style.get(key).is_some_and(|v| value_is_unbound(v)) {
+            return true;
+        }
+    }
+    false
+}
+
+pub(crate) fn text_is_unbound_expr(text: &str) -> bool {
+    let t = text.trim();
+    if t.is_empty() {
+        return false;
+    }
+    t.contains('{') && t.contains('}')
+}
+
+fn attr_is_unbound(elem: &Element, name: &str) -> bool {
+    elem.attrs.get(name).is_some_and(|v| value_is_unbound(v))
+}
+
+fn value_is_unbound(v: &str) -> bool {
+    let v = v.trim();
+    v.contains('{') && v.contains('}')
+}
+
+fn is_display_contents(style: &ResolvedStyle) -> bool {
+    // taffy 0.12 Display is Block/Flex/Grid/None — no Contents variant.
+    let _ = style;
+    false
 }
 
 fn is_control_flow_tag(tag: &str) -> bool {

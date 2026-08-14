@@ -27,7 +27,7 @@
   style rail = { display(none).dir(column).size({ w: 56, h: full, min-h: 0 }).pad({ x: 3, y: 4 }).overflow({ x: hidden, y: auto }).border({ color: border, width: 1, edge: e }).bg(background).fg(foreground), when: { tablet: display(flex) } }
   style railLabel = { margin({ t: 4, b: 1 }).fg(muted-foreground).type({ size: xs, weight: semibold, tracking: wide, case: uppercase }) }
   // Current must paint over the base muted ink — filled pill for active page.
-  style railLink = { display(block).pad({ x: 2, y: 1 }).radius(md).fg(muted-foreground).type({ size: sm }), when: { hover: fg(foreground).bg(hover-bg), current: fg(primary).bg(muted).type({ weight: semibold }) } }
+  style railLink = { display(block).pad({ x: 2, y: 1 }).size({ min-h: control-h-xs }).radius(md).fg(muted-foreground).type({ size: sm }), when: { hover: fg(foreground).bg(hover-bg), current: fg(primary).bg(muted).type({ weight: semibold }) } }
   style mainDocs = { pad(4).size({min-h: 0, basis: 0}).overflow({ x: hidden, y: auto }), when: { tablet: pad(6) } }
   // Mobile-only chrome — plain div so display:none wins at tablet+.
   style mobileBar = { display(flex).pad({ x: 3, y: 2 }).border({ color: border, width: 1, edge: b }).bg(background), when: { tablet: display(none) } }

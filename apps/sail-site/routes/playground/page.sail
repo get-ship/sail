@@ -18,7 +18,7 @@
   style pgLabel = { fg(primary).type({ family: mono, size: xs, weight: medium, tracking: wide }) }
   style backLink = { display(inline-flex).pad({ x: 1_5 }).size({ h: control-h-sm }).radius(md).fg(muted-foreground).type({size: sm, weight: medium, wrap: nowrap, decoration: none}), when: { hover: fg(foreground).bg(hover-bg) } }
   style recipeSelect = { size({ min-w: 48, max-w: 64 }) }
-  style descClamp = { size({ min-w: 0, max-w: 64 }).overflow({ all: hidden }).fg(muted-foreground).type({ size: sm, wrap: nowrap }) }
+  style descClamp = { size({ min-w: 0, max-w: 64 }).fg(muted-foreground).type({ size: sm, wrap: truncate }) }
   // Side-by-side pane: fill height of the split; console stays a fixed foot.
   style previewBand = { grow(1).size({min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }).border({ color: border, width: 1 }).radius(md).bg(surface-1) }
   style previewBandMobile = { shrink(0).size({ h: 40, min-h: 32 }).overflow({ all: hidden }).border({ color: border, width: 1 }).radius(md).bg(surface-1) }

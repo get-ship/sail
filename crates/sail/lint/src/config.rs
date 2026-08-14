@@ -191,14 +191,14 @@ pub const CONFIG_KEY_DOCS: &[(&str, &str, &str, &str, &str)] = &[
         "layoutExperimental",
         "boolean",
         "false",
-        "enable experimental layout kinds (unintended-overflow, clipped-text) without full lint strict (SPEC-LAYOUT-DIAG-1 / S4.1)",
+        "enable experimental layout kinds (sub-min-tap-target) without full lint strict (SPEC-LAYOUT-DIAG-1 / S4.1)",
         "POLICY",
     ),
     (
         "layoutTextMetrics",
         "boolean",
         "false",
-        "enable text-metrics-dependent layout kind clipped-text (noisy until takumi-grade metrics; S4.1)",
+        "kill switch for text-metrics layout kind clipped-text (LAYOUT-5 default on; false disables)",
         "POLICY",
     ),
     (
@@ -440,8 +440,8 @@ impl SailConfig {
     }
 
     /// S4.1 / SPEC-LAYOUT-DIAG-1 — top-level `"layoutExperimental": true`
-    /// enables experimental layout kinds (`unintended-overflow`,
-    /// `clipped-text`) without full lint `strict`. Absent / wrong-typed → false.
+    /// enables remaining experimental layout kinds (`sub-min-tap-target`)
+    /// without full lint `strict`. Absent / wrong-typed → false.
     pub fn layout_experimental(&self) -> bool {
         matches!(
             self.raw.get("layoutExperimental").and_then(|v| v.as_bool()),
@@ -449,8 +449,9 @@ impl SailConfig {
         )
     }
 
-    /// S4.1 — top-level `"layoutTextMetrics": true` enables text-metrics
-    /// kinds (`clipped-text`). Absent / wrong-typed → false.
+    /// S4.1 / LAYOUT-5 — `"layoutTextMetrics": false` kills `clipped-text`.
+    /// Absent → promoted default (on). `layout_text_metrics()` is true only
+    /// when the key is explicitly true (legacy callers).
     pub fn layout_text_metrics(&self) -> bool {
         matches!(self.layout_text_metrics_opt(), Some(true))
     }

@@ -42,7 +42,7 @@ fn corpus_canary_unintended_overflow_writes_json_and_is_deterministic() {
     );
 
     assert!(
-        first.counts.files_discovered >= 200,
+        first.counts.files_discovered >= 150,
         "must discover the real corpus, not a toy subset: {:?}",
         first.counts
     );

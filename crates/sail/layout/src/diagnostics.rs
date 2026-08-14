@@ -10,11 +10,14 @@
 //! 3. **zero-main-axis** — the parent has 0 main axis + non-zero child sum
 //!    regardless of overflow.
 //!
-//! Experimental kinds (SPEC-LAYOUT-DIAG-1 / S4.1, gated by [`crate::CheckOptions`]):
+//! LAYOUT-5 promoted kinds (default Error):
 //! 4. **unintended-overflow** — child extents exceed the container and the
 //!    author did not opt in (no scroll-area, overflow setter, or truncate).
 //! 5. **clipped-text** — measured text run exceeds its box without a truncate
-//!    marker (text-metrics path).
+//!    marker (text-metrics path; kill switch `text_metrics: false`).
+//!
+//! Experimental (gated by [`crate::CheckOptions::experimental`]):
+//! 6. **sub-min-tap-target** — interactive host shorter axis below 24px.
 //!
 //! Each span is into the **preprocessed** source.
 
@@ -279,29 +282,31 @@ pub fn scan_with(
                 geometry: None,
             });
 
-            // Case 4 (experimental): same geometry, no author opt-in for
-            // overflow/scroll/truncate → unintended-overflow.
-            if options.experimental
-                && crate::unintended_overflow::should_emit(
-                    layout,
-                    i,
-                    cidx,
-                    main_axis_is_height,
-                    viewport,
-                    child_main,
-                    main_size,
-                )
-            {
+            // Case 4 (LAYOUT-5 default Error): same geometry, no author opt-in.
+            if crate::unintended_overflow::should_emit(
+                layout,
+                i,
+                cidx,
+                main_axis_is_height,
+                viewport,
+                child_main,
+                main_size,
+            ) {
+                let axis = if main_axis_is_height {
+                    "height"
+                } else {
+                    "width"
+                };
                 out.push(Diagnostic {
                     kind: "unintended-overflow",
-                    severity: Severity::Warning,
+                    severity: Severity::Error,
                     element_index: cidx,
                     element_tag: layout.elements[cidx].tag.clone(),
                     element_class: layout.elements[cidx].class.clone(),
                     message: format!(
-                        "<{}> ({:.0}px main) overflows <{}> ({:.0}px main) without an overflow \
-                         opt-in — add `overflowY(auto)` / `overflow(scroll)`, a `<scroll-area>`, \
-                         or `truncate()` if the overflow is intentional.",
+                        "<{}> is {:.0}px on the {axis} inside <{}> ({:.0}px) with no overflow \
+                         opt-in — grow the parent, wrap or truncate the child, or declare \
+                         overflowY(auto) / <scroll-area> if scrolling is intended.",
                         layout.elements[cidx].tag, child_main, elem.tag, main_size,
                     ),
                     span: layout.elements[cidx].span,
@@ -366,9 +371,10 @@ pub fn scan_with(
         }
     }
 
-    // Case 5 (experimental + text_metrics): text run wider than its box
-    // without a truncate marker while overflow clips on the inline axis.
-    if options.experimental && options.text_metrics_enabled() {
+    // Case 5 (LAYOUT-5 default Error, still killable via text_metrics: false):
+    // text run wider than its box without a truncate marker while overflow
+    // clips on the inline axis.
+    if options.text_metrics_enabled() {
         scan_clipped_text(layout, &mut out)?;
     }
 
@@ -421,17 +427,20 @@ fn scan_clipped_text(layout: &Layout, out: &mut Vec<Diagnostic>) -> anyhow::Resu
             continue;
         };
         let text_w: f32 = elem.text.chars().map(|c| metrics::char_width(m, c)).sum();
+        if crate::unintended_overflow::text_is_unbound_expr(&elem.text) {
+            continue;
+        }
         if text_w > box_w + EPSILON {
             out.push(Diagnostic {
                 kind: "clipped-text",
-                severity: Severity::Warning,
+                severity: Severity::Error,
                 element_index: i,
                 element_tag: elem.tag.clone(),
                 element_class: elem.class.clone(),
                 message: format!(
-                    "<{}> text measures ~{:.0}px but its box is {:.0}px wide — glyphs are \
-                     clipped without `truncate()`. Add `text: truncate()` if ellipsis is \
-                     intentional, or widen the box / allow wrapping.",
+                    "<{}> text measures ~{:.0}px but its box is {:.0}px wide — glyphs clip \
+                     without truncate(). Add type({{ wrap: truncate }}) if ellipsis is \
+                     intended, widen the box, or allow wrapping.",
                     elem.tag, text_w, box_w,
                 ),
                 span: elem.span,

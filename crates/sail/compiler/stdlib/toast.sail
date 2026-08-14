@@ -12,7 +12,7 @@
   }
 
   style base = {pad({ y: 3, x: 4 }).fg(foreground).bg(card).radius(md).elevation(md).border({ color: border, width: 1, edge: b }).border({ color: border, width: 1, edge: e }).border({ color: border, width: 1, edge: t }).border({ color: primary, width: 3, edge: s }).pointerEvents(auto).type({ family: body, size: sm })}
-  style close = {margin({ s: auto }).fg(foreground).bg(transparent).border({ width: 0 }).radius(sm).filter({ opacity: 70 }).cursor(pointer)}
+  style close = {margin({ s: auto }).size({ w: control-h-xs, h: control-h-xs }).fg(foreground).bg(transparent).border({ width: 0 }).radius(sm).filter({ opacity: 70 }).cursor(pointer)}
 </scope>
 
 <row

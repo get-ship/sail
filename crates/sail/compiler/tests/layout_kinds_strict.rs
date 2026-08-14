@@ -3,7 +3,7 @@
 //! Product contract:
 //! - Layout kinds `unintended-overflow` / `clipped-text` map to stable rule ids
 //!   `sail-unintended-overflow` / `sail-clipped-text` (register for diagnostic ratchet).
-//! - LAYOUT-5: `unintended-overflow` / `clipped-text` are default Error.
+//! - LAYOUT-5: `unintended-overflow` / `clipped-text` are default Error on collect.
 //! - `sub-min-tap-target` stays under `strict: true` **or** `layoutExperimental`.
 //!
 //! Config surface locked here (implementer lands recognition + bridge wiring):
@@ -113,33 +113,62 @@ fn sail_config_layout_experimental_accessors() {
     assert!(!off.layout_text_metrics());
 }
 
-// ── 5. Experimental kinds stay gated; tap stays experimental ────────────────
+// ── 5. Promoted kinds emit Error on default collect; tap stays experimental ─
 
 #[test]
-fn default_collect_does_not_emit_experimental_overflow() {
+fn default_collect_emits_overflow_as_error() {
     let diags = layout_diags(OVERFLOW_SRC, None);
-    assert!(
-        !has_rule(&diags, RULE_UNINTENDED_OVERFLOW),
-        "unintended-overflow stays behind strict / layoutExperimental: {diags:?}"
+    let hit = diags
+        .iter()
+        .find(|d| d.rule.as_deref() == Some(RULE_UNINTENDED_OVERFLOW))
+        .unwrap_or_else(|| {
+            panic!("default collect must emit `{RULE_UNINTENDED_OVERFLOW}`: {diags:?}")
+        });
+    assert_eq!(
+        hit.severity,
+        DiagSeverity::Error,
+        "promoted overflow is default Error: {hit:?}"
     );
 }
 
 #[test]
-fn default_collect_does_not_emit_experimental_clipped_text() {
+fn default_collect_emits_clipped_text_as_error() {
     let diags = layout_diags(CLIPPED_TEXT_SRC, None);
-    assert!(
-        !has_rule(&diags, RULE_CLIPPED_TEXT),
-        "clipped-text stays behind strict + layoutTextMetrics: {diags:?}"
+    let hit = diags
+        .iter()
+        .find(|d| d.rule.as_deref() == Some(RULE_CLIPPED_TEXT))
+        .unwrap_or_else(|| panic!("default collect must emit `{RULE_CLIPPED_TEXT}`: {diags:?}"));
+    assert_eq!(
+        hit.severity,
+        DiagSeverity::Error,
+        "promoted clipped-text is default Error: {hit:?}"
     );
 }
 
 #[test]
-fn package_without_strict_does_not_emit_experimental_overflow() {
+fn package_without_strict_still_emits_overflow_error() {
     let (_tmp, sail) = write_fixture(r#"{ "preset": "full" }"#, OVERFLOW_SRC);
     let diags = layout_diags(OVERFLOW_SRC, Some(&sail));
+    let hit = diags
+        .iter()
+        .find(|d| d.rule.as_deref() == Some(RULE_UNINTENDED_OVERFLOW))
+        .unwrap_or_else(|| {
+            panic!("full preset must emit promoted `{RULE_UNINTENDED_OVERFLOW}`: {diags:?}")
+        });
+    assert_eq!(hit.severity, DiagSeverity::Error, "{hit:?}");
+}
+
+#[test]
+fn clean_opt_in_stays_silent_on_default_collect() {
+    let diags = layout_diags(OVERFLOW_OPTIN_SRC, None);
     assert!(
         !has_rule(&diags, RULE_UNINTENDED_OVERFLOW),
-        "full preset without strict must not enable experimental overflow: {diags:?}"
+        "overflowY(auto) must stay silent on default collect: {diags:?}"
+    );
+    let clipped = layout_diags(TRUNCATE_SRC, None);
+    assert!(
+        !has_rule(&clipped, RULE_CLIPPED_TEXT),
+        "truncate() must stay silent on default collect: {clipped:?}"
     );
 }
 
