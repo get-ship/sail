@@ -1,7 +1,7 @@
 <!--
-  Owned L1 rest-state strip. Theme paints tags. L1 owns skins.
-  Probe finds [data-sail-host]. Add a tag here to fan the matrix out.
-  Overlays (dialog, popover, tooltip) stay off this page — they need a press.
+  Owned L1 rest-state strip. Theme paints tags. L1 owns host Style.
+  Probe inventory comes from FAMILIES, not a hand list.
+  Overlays that need a press stay off this page.
 -->
 <scope>
   style shell = { size({ min-h: fill }).pad(6).bg(background) }
@@ -28,6 +28,7 @@
       <badge>Badge</badge>
       <chip>Chip</chip>
       <input placeholder="input" />
+      <a href="#">Link</a>
       <kbd>⌘K</kbd>
     </row>
   </column>
@@ -46,6 +47,11 @@
       <badge tone="primary">primary</badge>
       <chip>chip</chip>
     </row>
+    <toggle-group value="day">
+      <toggle value="day">Day</toggle>
+      <toggle value="week">Week</toggle>
+    </toggle-group>
+    <menu-item value="edit">Edit</menu-item>
   </column>
 
   <column gap="3" style(measure)>
@@ -57,10 +63,22 @@
     </field>
     <file accept="image/*" />
     <textarea placeholder="notes"></textarea>
+    <select>
+      <option>One</option>
+      <option>Two</option>
+    </select>
+    <date />
+    <color />
+    <slider value="40" />
+    <meter value="0.4" />
     <row gap="4" align="center">
       <checkbox />
       <switch />
     </row>
+    <radio-group name="plan" value="a">
+      <radio value="a">A</radio>
+      <radio value="b">B</radio>
+    </radio-group>
   </column>
 
   <card>
@@ -80,6 +98,14 @@
   <column gap="3" style(measure)>
     <h2>Families</h2>
     <p>Parts render inside the host recipe — not as peers.</p>
+    <navbar bordered>
+      <span slot="brand">Nav</span>
+    </navbar>
+    <breadcrumb>
+      <a href="#">Home</a>
+      <a href="#">Rest</a>
+      <small>Here</small>
+    </breadcrumb>
     <tabs active="one">
       <tab-list>
         <tab name="one">One</tab>
@@ -95,10 +121,59 @@
         <input placeholder="you@ship.dev" />
       </field>
     </fieldset>
+    <accordion>
+      <span slot="trigger">Details</span>
+      One disclosure.
+    </accordion>
+    <pagination value="1">
+      <page value="1">1</page>
+      <page value="2">2</page>
+    </pagination>
+    <table>
+      <thead>
+        <tr>
+          <th>Col</th>
+          <th>Val</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>A</td>
+          <td>1</td>
+        </tr>
+      </tbody>
+    </table>
+  </column>
+
+  <column gap="3" style(measure)>
+    <h2>Copy</h2>
+    <code-block code="const x = 1" lang="ts"></code-block>
+    <prose>
+      <p>Body with <strong>emphasis</strong>.</p>
+    </prose>
+    <ticker>
+      <span>tokens · signals · rest</span>
+    </ticker>
+    <scroll-area>
+      <p>Line one</p>
+      <p>Line two</p>
+    </scroll-area>
+    <empty-state variant="inline">
+      <span slot="title">Empty</span>
+      No items.
+    </empty-state>
+    <error-state variant="inline">
+      <span slot="title">Error</span>
+      Try again.
+    </error-state>
+    <error-boundary>
+      <p>Isolated.</p>
+    </error-boundary>
   </column>
 
   <row gap="3" align="center" style(measure)>
     <avatar />
+    <icon name="check" />
     <spinner />
     <skeleton />
     <progress value="40" />

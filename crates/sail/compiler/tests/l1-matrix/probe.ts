@@ -4,6 +4,7 @@
  *
  * Owned fixture: crates/sail/compiler/tests/fixtures/l1-matrix
  * Theme cells: generated THEME_META (id × supported modes).
+ * Inventory: FAMILIES hosts minus OVERLAY_OFF_PAGE — not a hand list.
  * Not the docs site. Site `/components` is a product gauge, not this SSOT.
  *
  *   bun crates/sail/compiler/tests/l1-matrix/probe.ts
@@ -14,6 +15,7 @@
 import { chromium } from 'playwright'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { FAMILIES, hosts } from '../../../../../packages/sail/l1/src/index.ts'
 import { getByContract } from '../../../../../packages/sail/sail-test/src/contract.ts'
 import { THEME_META } from '../../../../../packages/sail/tokens/src/generated/themes-meta.ts'
 
@@ -51,9 +53,30 @@ const SKIP = new Set([
 ])
 
 /** Hosts that are allowed to have a 0×0 box (anatomy is descendants). */
-const CONTENTS_OK = new Set(['file'])
+const CONTENTS_OK = new Set(['file', 'error-boundary'])
 /** Hairline parts — 1px on one axis is a painted separator, not empty. */
 const HAIRLINE_OK = new Set(['separator'])
+
+/**
+ * Overlays that need a press — not rest-state. Theme-picker is already on the page.
+ * toast-region is the toast mount; both stay off.
+ */
+const OVERLAY_OFF_PAGE = new Set([
+  'dialog',
+  'popover',
+  'tooltip',
+  'dropdown',
+  'context-menu',
+  'hover-card',
+  'combobox',
+  'toast',
+  'toast-region',
+])
+
+/** Expected rest hosts come from FAMILIES (`hosts()`), not a hand list. */
+const EXPECTED_REST_HOSTS = FAMILIES.map((f) => f.host).filter(
+  (h) => !OVERLAY_OFF_PAGE.has(h),
+)
 
 type HostHit = {
   tag: string
@@ -165,8 +188,8 @@ if (import.meta.main) {
 
 - **Surface:** owned fixture \`tests/fixtures/l1-matrix\` (not sail-site)
 - **Theme cells:** ${CELLS.length} — ${CELLS.map((c) => `${c.theme}/${c.mode}`).join(', ')}
-- **Inventory:** every \`[data-sail-host]\` the compiler stamps on the rest-state strip
-- **Signals:** EMPTY-RENDER, HIDDEN, OPACITY-0, LOW-CONTRAST
+- **Inventory:** FAMILIES hosts (${hosts().length}) minus OVERLAY_OFF_PAGE → ${EXPECTED_REST_HOSTS.length} rest hosts. Not a hand list.
+- **Signals:** EMPTY-RENDER, HIDDEN, OPACITY-0, LOW-CONTRAST, HOST-MISS, CONTRACT-MISS
 - **Base:** ${BASE}
 `
   writeFileSync(join(DIR, 'plan.md'), plan)
@@ -226,11 +249,23 @@ if (import.meta.main) {
     await page.screenshot({ path: shot, fullPage: true })
     const hits = await measure(page)
     hostsSeen = Math.max(hostsSeen, hits.length)
+    const stamped = new Set(hits.map((h) => h.tag))
+    let hostMiss = false
+    for (const host of EXPECTED_REST_HOSTS) {
+      if (!stamped.has(host)) {
+        hostMiss = true
+        flagged.push({
+          cell: key,
+          tag: host,
+          defects: [`HOST-MISS no [data-sail-host]=${host}`],
+        })
+      }
+    }
     for (const h of hits) {
       evidence.push({ cell: key, ...h, shot })
       if (h.defects.length) flagged.push({ cell: key, tag: h.tag, defects: h.defects })
     }
-    process.stdout.write(hits.some((h) => h.defects.length) ? '✗' : '·')
+    process.stdout.write(hits.some((h) => h.defects.length) || hostMiss ? '✗' : '·')
   }
 
   await browser.close()
@@ -240,6 +275,7 @@ if (import.meta.main) {
     base: BASE,
     cells: CELLS,
     hosts: hostsSeen,
+    expected_rest_hosts: EXPECTED_REST_HOSTS,
     console_errors: consoleErrs,
     flagged,
   }
