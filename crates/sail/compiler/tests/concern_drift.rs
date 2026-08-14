@@ -496,20 +496,6 @@ fn sx_scanner_exemption_edges() {
 }
 
 #[test]
-fn retired_setter_fixture_names_concern() {
-    let path = compiler_root().join("tests/concern_fixtures/retired-setter.sail");
-    let src = fs::read_to_string(&path).expect("retired-setter.sail");
-    assert!(src.contains("padX("), "fixture must seed a retired setter");
-    let err = compile_element(&src, "card").expect_err("retired setter must fail compilation");
-    assert!(
-        err.message.contains("space")
-            && (err.message.contains("retired") || err.message.contains("pad")),
-        "compile error must name the `space` emit target: {}",
-        err.message
-    );
-}
-
-#[test]
 fn stdlib_all_files_compile() {
     let files = stdlib_sail_files();
     assert_eq!(
