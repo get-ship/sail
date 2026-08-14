@@ -1,12 +1,10 @@
 <!--
-  FOREIGN js-framework-benchmark chrome — not a Sail product exemplar.
-  Owned at tests/perf/frameworks/keyed/sail; $BENCH_HOME keyed/sail is sync output only.
-  Bootstrap class strings match the benchmark shared CSS sheet (driver layout).
-  Row highlight: Action benchDanger toggles classList danger for tr.danger
-  (webdriver-ts select contract). Do not copy this pattern into product Sail.
+  js-framework-benchmark keyed implementation.
+  Driver class names (Bootstrap + tr.danger) are applied AFTER emit by a
+  script that lives only in the benchmark checkout.
 -->
 <controller>
-import { controller, signal, type Action } from '@ship/sail-runtime'
+import { controller, signal } from '@ship/sail-runtime'
 
 interface Row {
   id: number
@@ -39,37 +37,16 @@ function buildData(count: number): Row[] {
   return data
 }
 
-// FOREIGN: webdriver-ts scores select via tbody>tr.danger. classList toggle is
-// harness-only — not a product Sail pattern.
-const benchDanger: Action<boolean> = (node, on) => {
-  const apply = (v: boolean) => {
-    if (v) node.classList.add('danger')
-    else node.classList.remove('danger')
-  }
-  apply(!!on)
-  return {
-    update: (next: boolean) => apply(!!next),
-  }
-}
-
 export default controller(() => {
   const rows = signal<Row[]>([])
-  // -1 = nothing selected (no row carries id -1).
   const selected = signal<number>(-1)
 
   return {
     rows,
     selected,
-    benchDanger,
-
-    // 01_run1k / runlots: replace the whole list.
     run: (): void => rows.set(buildData(1000)),
     runlots: (): void => rows.set(buildData(10000)),
-
-    // 08_create1k-after1k: append without disturbing existing rows.
     add: (): void => rows.set(rows().concat(buildData(1000))),
-
-    // 03_update10th: new object for every 10th row (same id → keyed reuse).
     update: (): void => {
       const next = rows().slice()
       for (let i = 0; i < next.length; i += 10) {
@@ -77,11 +54,7 @@ export default controller(() => {
       }
       rows.set(next)
     },
-
-    // 09_clear.
     clear: (): void => rows.set([]),
-
-    // 05_swap: swap rows 1 and 998 (benchmark fixed indices).
     swaprows: (): void => {
       const r = rows()
       if (r.length > 998) {
@@ -92,57 +65,50 @@ export default controller(() => {
         rows.set(next)
       }
     },
-
-    // 04_select: highlight the clicked row.
     select: (id: number): void => selected.set(id),
-
-    // 06_remove: drop the clicked row.
     remove: (id: number): void => rows.set(rows().filter((r) => r.id !== id)),
   }
 })
 </controller>
 
-<div class="container">
-  <div class="jumbotron">
-    <div class="row">
-      <div class="col-md-6">
-        <h1>SAIL-"keyed"</h1>
-      </div>
-      <div class="col-md-6">
-        <div class="row">
-          <div class="col-sm-6 smallpad">
-            <button type="button" class="btn btn-primary btn-block" id="run" on:click={() => run()}>Create 1,000 rows</button>
-          </div>
-          <div class="col-sm-6 smallpad">
-            <button type="button" class="btn btn-primary btn-block" id="runlots" on:click={() => runlots()}>Create 10,000 rows</button>
-          </div>
-          <div class="col-sm-6 smallpad">
-            <button type="button" class="btn btn-primary btn-block" id="add" on:click={() => add()}>Append 1,000 rows</button>
-          </div>
-          <div class="col-sm-6 smallpad">
-            <button type="button" class="btn btn-primary btn-block" id="update" on:click={() => update()}>Update every 10th row</button>
-          </div>
-          <div class="col-sm-6 smallpad">
-            <button type="button" class="btn btn-primary btn-block" id="clear" on:click={() => clear()}>Clear</button>
-          </div>
-          <div class="col-sm-6 smallpad">
-            <button type="button" class="btn btn-primary btn-block" id="swaprows" on:click={() => swaprows()}>Swap Rows</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-  <table class="table table-hover table-striped test-data">
+<column>
+  <row>
+    <column>
+      <h1>SAIL-"keyed"</h1>
+    </column>
+    <column>
+      <row>
+        <column>
+          <button type="button" id="run" on:click={() => run()}>Create 1,000 rows</button>
+        </column>
+        <column>
+          <button type="button" id="runlots" on:click={() => runlots()}>Create 10,000 rows</button>
+        </column>
+        <column>
+          <button type="button" id="add" on:click={() => add()}>Append 1,000 rows</button>
+        </column>
+        <column>
+          <button type="button" id="update" on:click={() => update()}>Update every 10th row</button>
+        </column>
+        <column>
+          <button type="button" id="clear" on:click={() => clear()}>Clear</button>
+        </column>
+        <column>
+          <button type="button" id="swaprows" on:click={() => swaprows()}>Swap Rows</button>
+        </column>
+      </row>
+    </column>
+  </row>
+  <table>
     <tbody>
       <for {rows() as row} key={row.id}>
-        <tr use:benchDanger={row.id === selected()}>
-          <td class="col-md-1">{row.id}</td>
-          <td class="col-md-4"><a on:click={() => select(row.id)}>{row.label}</a></td>
-          <td class="col-md-1"><a on:click={() => remove(row.id)}><span class="glyphicon glyphicon-remove" aria-hidden="true"></span></a></td>
-          <td class="col-md-6"></td>
+        <tr aria-selected={row.id === selected()}>
+          <td>{row.id}</td>
+          <td><a on:click={() => select(row.id)}>{row.label}</a></td>
+          <td><a on:click={() => remove(row.id)}>×</a></td>
+          <td></td>
         </tr>
       </for>
     </tbody>
   </table>
-  <span class="preloadicon glyphicon glyphicon-remove" aria-hidden="true"></span>
-</div>
+</column>

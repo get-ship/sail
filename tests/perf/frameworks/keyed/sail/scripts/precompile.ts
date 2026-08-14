@@ -4,10 +4,9 @@
 // Adapted from packages/sail/runtime/example/sail-app/scripts/precompile.ts.
 //
 // OWNERSHIP: the canonical copy of this file (and the rest of the keyed/sail
-// bench app) lives in the Ship repo at tests/perf/frameworks/keyed/sail/ and is
-// synced into the external js-framework-benchmark checkout by the bench harness
-// (scripts/dev/bench-lib.mjs) before each build. Edit it there, not in the
-// checkout — the checkout copy is overwritten on the next run.
+// bench app) lives in this repo at tests/perf/frameworks/keyed/sail/ and is
+// synced into the external js-framework-benchmark checkout by
+// tests/perf/scripts/sync-keyed-sail.ts. Edit it here, not in the checkout.
 //
 // This app lives OUTSIDE the sail checkout, so in-tree compiler discovery doesn't
 // apply. Rather than hardcode an absolute path (a cutover landmine — the sail
@@ -114,6 +113,16 @@ if (targets.length === 0) {
   process.exit(1)
 }
 
+// Type gate needs tsgo. The bench checkout is not the monorepo — put the
+// Sail repo's node_modules/.bin on PATH so the gate still runs.
+const sailBin = SAIL_REPO ? resolve(SAIL_REPO, 'node_modules/.bin') : null
+const compileEnv = {
+  ...process.env,
+  ...(sailBin && existsSync(sailBin)
+    ? { PATH: `${sailBin}${process.platform === 'win32' ? ';' : ':'}${process.env.PATH ?? ''}` }
+    : {}),
+}
+
 for (const target of targets) {
   const stem = basename(target, '.sail')
   const outDir = resolve(dirname(target), 'dist')
@@ -121,29 +130,29 @@ for (const target of targets) {
   console.log(`compiling ${target.replace(root + '/', '')}`)
   execFileSync(compiler, ['build', target, '--component-name', stem, '--out', outDir], {
     stdio: 'inherit',
+    env: compileEnv,
   })
 }
 
-// Render into LIGHT DOM so the benchmark runner's selectors (#run, tbody tr,
-// td.col-md-1, …) resolve — the compiler hardcodes shadow:true. Also rewrite
-// the sibling-relative controller import to `../` since --out moves the output
-// out of src/. Both patches mirror the example app + the original harness.
+// `--out` writes JS that imports a VIRTUAL `./<file>.sail.controller.ts`
+// (deck's bundler extracts the inline <controller>). esbuild cannot. Materialize
+// the block next to the JS so the specifier resolves. Driver chrome (classes,
+// tr.danger, delete span) is NOT applied here — that lives in the benchmark
+// checkout's sail-driver.
 for (const target of targets) {
   const stem = basename(target, '.sail')
-  const compiledPath = resolve(dirname(target), 'dist', stem + '.js')
+  const fileName = basename(target)
+  const outDir = resolve(dirname(target), 'dist')
+  const compiledPath = resolve(outDir, stem + '.js')
+  const sailSrc = readFileSync(target, 'utf8')
+  const ctrl = sailSrc.match(/<controller>\s*([\s\S]*?)<\/controller>/)
+  if (ctrl) {
+    writeFileSync(resolve(outDir, `${fileName}.controller.ts`), ctrl[1]!.trimStart(), 'utf8')
+  }
   let src = readFileSync(compiledPath, 'utf8')
-  let changed = false
   if (src.includes('shadow: true')) {
-    src = src.replace(/shadow: true,/g, 'shadow: false,')
-    changed = true
+    writeFileSync(compiledPath, src.replace(/shadow: true,/g, 'shadow: false,'), 'utf8')
   }
-  const wrongImport = `from "./${stem}.controller.ts"`
-  const rightImport = `from "../${stem}.controller.ts"`
-  if (src.includes(wrongImport)) {
-    src = src.replace(wrongImport, rightImport)
-    changed = true
-  }
-  if (changed) writeFileSync(compiledPath, src, 'utf8')
 }
 
 console.log(`compiled ${targets.length} .sail file(s)`)
