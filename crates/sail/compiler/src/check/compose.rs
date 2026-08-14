@@ -1116,7 +1116,7 @@ fn nearest_passing_fg(bg: &str, current_fg: &str) -> Option<&'static str> {
 fn collect_contrast(
     source: &str,
     preprocessed: &str,
-    _elements: &[sail_layout::html::Element],
+    elements: &[sail_layout::html::Element],
     ids: &[Fingerprint],
     severity: DiagSeverity,
 ) -> Vec<Diagnostic> {
