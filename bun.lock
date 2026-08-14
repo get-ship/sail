@@ -19,6 +19,7 @@
         "@ship/sail-compiler-wasm": "workspace:*",
         "@ship/sail-components": "workspace:*",
         "@ship/sail-dom": "workspace:*",
+        "@ship/sail-l1": "workspace:*",
         "@ship/sail-lsp-browser": "workspace:*",
         "@ship/sail-runtime": "workspace:*",
         "@ship/tokens": "workspace:*",
@@ -32,6 +33,7 @@
       "dependencies": {
         "@ship/sail-components": "workspace:*",
         "@ship/sail-dom": "workspace:*",
+        "@ship/sail-l1": "workspace:*",
         "@ship/sail-runtime": "workspace:*",
         "@ship/sail-studio-bridge": "workspace:*",
         "@ship/sail-studio-client": "workspace:*",

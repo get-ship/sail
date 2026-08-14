@@ -4,6 +4,7 @@ import { closestAttr, inputValue, type UiEvent } from '../ui-event'
  * component.* packs are gone. Faces edit globals (card/popover promoted;
  * everything else is muted/input/surface/border). Override is style().
  */
+import { familyOf } from '@ship/sail-l1'
 import { signal } from '@ship/sail-runtime'
 import { L1_CATALOG, allKnobs, clearTokenValue, getDesignState, getPathValue, isParkedComponentStateLeaf, l1Label, setTokenValue, type L1Id, type TokenKnob } from '../../design/index.ts'
 import type { ThemeSession } from '../theme-session/theme-session'
@@ -16,17 +17,6 @@ import {
   viewerMetaFor,
   type ViewerPropRow,
 } from './theme-l1-viewer-meta'
-
-/** Registry tag → face id (collapse subcomponents). */
-const FACE_MERGE: Record<string, string> = {
-  tab: 'tabs',
-  'tab-list': 'tabs',
-  'tab-panel': 'tabs',
-  toast: 'toast',
-  'toast-region': 'toast',
-  // radio keeps its own face (component.radio.fg). radio-group is layout +
-  // closed action composition — audited separately; no component.radio-group.* yet.
-}
 
 /** Globals useful when customizing a face (override global or set component leaf). */
 const FACE_GLOBALS: Record<string, { path: string; label: string }[]> = {
@@ -248,7 +238,7 @@ function buildFaces(): FaceDef[] {
 
   const byFace = new Map<string, Set<string>>()
   for (const tag of tags) {
-    const face = FACE_MERGE[tag] ?? tag
+    const face = familyOf(tag) ?? tag
     if (!byFace.has(face)) byFace.set(face, new Set())
     byFace.get(face)!.add(tag)
   }
@@ -261,7 +251,7 @@ function buildFaces(): FaceDef[] {
       id,
       label: id === 'tabs' ? 'Tabs' : l1Label(id),
       tags: tagsArr,
-      stageTag: (L1_CATALOG as readonly string[]).includes(stageTag) ? stageTag : tagsArr[0]!,
+      stageTag: L1_CATALOG.includes(stageTag) ? stageTag : tagsArr[0]!,
     })
   }
   return faces
@@ -562,7 +552,7 @@ export function createComponentsEdit(session: ThemeSession) {
   const stageTag = (): L1Id => {
     const f = face()
     const t = f?.stageTag ?? 'button'
-    return ((L1_CATALOG as readonly string[]).includes(t) ? t : 'button') as L1Id
+    return (L1_CATALOG.includes(t) ? t : 'button') as L1Id
   }
 
   const meta = () => viewerMetaFor(stageTag())

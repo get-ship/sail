@@ -1,4 +1,5 @@
 
+import { allTags } from '@ship/sail-l1'
 import {
   applyRadiusToDoc,
   applyScaleToDoc,
@@ -130,73 +131,12 @@ export function patchIconScale(
 }
 
 /**
- * Inheritance chain for radius: base catalog → theme scale → component override.
- * Components: button, card, input (specimen-relevant).
+ * Full Sail L1 catalog (Themes Components rail SSOT).
+ * Sourced from @ship/sail-l1 — hosts + parts. Not a hand list.
  */
-/**
- * Full Sail L1 stdlib catalog (Themes Components rail SSOT).
- * Keep in sync with `crates/sail/compiler/src/stdlib.rs` `SOURCES` tags.
- * Tag `a` is the anchor element (file: anchor.sail).
- */
-export const L1_CATALOG = [
-  'spinner',
-  'skeleton',
-  'button',
-  'input',
-  'textarea',
-  'select',
-  'dialog',
-  'accordion',
-  'table',
-  'fieldset',
-  'legend',
-  'progress',
-  'meter',
-  'a',
-  'separator',
-  'kbd',
-  'icon',
-  'label',
-  'card',
-  'switch',
-  'badge',
-  'avatar',
-  'tooltip',
-  'alert',
-  'empty-state',
-  'error-state',
-  'error-boundary',
-  'code-block',
-  'chip',
-  'field',
-  'slider',
-  'radio',
-  'radio-group',
-  'tabs',
-  'tab-list',
-  'tab',
-  'tab-panel',
-  'toggle-group',
-  'toggle',
-  'scroll-area',
-  'ticker',
-  'theme-picker',
-  'navbar',
-  'pagination',
-  'page',
-  'breadcrumb',
-  'popover',
-  'prose',
-  'combobox',
-  'dropdown',
-  'menu-item',
-  'context-menu',
-  'hover-card',
-  'toast-region',
-  'toast',
-] as const
+export const L1_CATALOG: readonly string[] = allTags()
 
-export type L1Id = (typeof L1_CATALOG)[number]
+export type L1Id = string
 
 /** Display label for an L1 tag (`a` → Anchor, `menu-item` → Menu Item). */
 export function l1Label(id: string): string {
@@ -209,7 +149,8 @@ export function l1Label(id: string): string {
 
 /**
  * Inheritance chain for radius: base catalog → theme scale → per-L1 override.
- * One node per L1 in {@link L1_CATALOG} so Themes Components + Design stay aligned.
+ * One node per tag from @ship/sail-l1 so Themes Components + Design stay aligned.
+ * Walks existing `component.${tag}.radius` leaves only — does not add tokens.
  */
 export function radiusInheritance(
   doc: Record<string, unknown> | null,

@@ -21,6 +21,8 @@ describe('@ship/sail-l1 catalog', () => {
   it('copy is sidecar only', () => {
     expect(copyOf('tabs')?.category).toBe('navigation')
     expect(copyOf('tab')?.category).toBe('navigation')
+    expect(copyOf('button')?.category).toBe('inputs')
+    expect(copyOf('dialog')?.category).toBe('overlay')
     expect(hosts().length).toBeGreaterThan(1)
   })
 })

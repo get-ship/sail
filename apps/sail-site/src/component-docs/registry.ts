@@ -1,5 +1,5 @@
-// Static import map of component-docs/*/meta.ts.
-// Hub tile exists iff a package meta is listed here (and the meta.ts file exists).
+// Static import map of component-docs/*/meta.ts for detail routes.
+// L1 hub tiles come from @ship/sail-l1 hosts() — this map is not the hub SSOT.
 import { meta as buttonMeta } from './button/meta'
 import { meta as aMeta } from './a/meta'
 import { meta as inputMeta } from './input/meta'

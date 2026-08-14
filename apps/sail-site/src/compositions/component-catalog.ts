@@ -1,10 +1,12 @@
 // /components — the catalog the browser filters over.
 //
-// Lang hub tiles are SSOT'd from filesystem docs packages
-// (`src/component-docs/*/meta.ts` via registry). Pack rows stay hand-listed
-// until packs grow their own packages. No hand "parts list" for L1 cells.
+// L1 hub tiles are family hosts from @ship/sail-l1 (`hosts()` / FAMILIES).
+// Parts (tab, tab-list, tab-panel, legend, …) are not tiles.
+// `layout` is keywords, not an L1 family — kept as a sidecar tile.
+// Pack rows stay hand-listed. Detail routes still read component-docs/*/meta.ts.
 
-import { DOC_PACKAGES } from '../component-docs/registry'
+import { copyOf, hosts } from '@ship/sail-l1'
+import { docMeta } from '../component-docs/registry'
 
 export type PackId =
   | 'lang'
@@ -86,14 +88,26 @@ const P = (
   cat,
 })
 
-/** Lang rows: one hub tile per docs package (no legend package ⇒ no tile). */
-const LANG_CATALOG: CatalogEntry[] = DOC_PACKAGES.map((m) =>
-  L(m.tag ?? m.slug, m.key, m.category),
-)
+function kebabToCamel(tag: string): string {
+  if (tag === 'a') return 'a'
+  return tag.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase())
+}
+
+/** Lang rows: one hub tile per L1 family host. Copy is optional. */
+const LANG_CATALOG: CatalogEntry[] = hosts().map((family) => {
+  const tag = family.host
+  const meta = docMeta(tag)
+  const copy = copyOf(tag)
+  return L(tag, meta?.key ?? kebabToCamel(tag), copy?.category ?? meta?.category ?? 'display')
+})
+
+/** Keywords tile — not an L1 family. */
+const LAYOUT_TILE: CatalogEntry = L('layout', 'layout', 'layout')
 
 export const CATALOG: CatalogEntry[] = [
-  // ── Component primitives — SSOT: component-docs/*/meta.ts ───────────
+  // ── Component primitives — SSOT: @ship/sail-l1 hosts() ───────────
   ...LANG_CATALOG,
+  LAYOUT_TILE,
   // Actions (`spotlight`, `targetCursor`, etc.) are stdlib and live in
   // the action table. They are not elements; this catalog is
   // elements only. Legend is documented only inside the fieldset package.

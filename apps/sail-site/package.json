@@ -19,6 +19,7 @@
     "@ship/sail-runtime": "workspace:*",
     "@ship/sail-dom": "workspace:*",
     "@ship/sail-compiler-wasm": "workspace:*",
+    "@ship/sail-l1": "workspace:*",
     "@ship/tokens": "workspace:*",
     "@ship/sail-lsp-browser": "workspace:*",
     "@ship/sail-components": "workspace:*"
