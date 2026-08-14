@@ -20,10 +20,9 @@
 //! The author vocabulary is `sail_style::vocab` (`offered_rows()` —
 //! concern | axis | plain). Product attach is tag-position
 //! `style({ pad(4).bg(surface), when: { hover: bg(muted) } })`.
-//! `sx-vocabulary.json` / `style_vocab` is the emit leaf Style setters
-//! re-home through — not the docs / LSP / SKILL surface. A scale-valued
-//! setter spends a token and nothing else; a keyword-valued one takes its
-//! CSS keywords. The value discipline is the point.
+//! Emit is `vocab.rs` + `plains.rs` / `concerns.rs` + `scales.rs`.
+//! A scale-valued setter spends a token and nothing else; a keyword-valued
+//! one takes its CSS keywords. The value discipline is the point.
 //!
 //! SCOPE — Style paints ONE box. How its children sit is a layout element
 //! (`<row>`, `<column>`, `<grid>`), which carries the semantics, the a11y and
@@ -54,7 +53,9 @@ pub use sail_style::prefixes::{
 /// it accepts. Surface docs, skill, and LSP walk `offered_rows()` in
 /// `vocab.rs` — not this table.
 pub fn vocabulary() -> Vec<(String, Vec<String>)> {
-    crate::style_vocab::vocabulary()
+    crate::style::offered_rows()
+        .map(|r| (r.name.to_string(), Vec::new()))
+        .collect()
 }
 
 pub fn check(path: &Path, source: &str) -> Vec<Finding> {

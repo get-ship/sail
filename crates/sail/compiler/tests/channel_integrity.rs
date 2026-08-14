@@ -25,8 +25,10 @@ const TOKENS_CSS: &str = include_str!("../../../../packages/sail/tokens/src/toke
 const THEMES_CSS: &str = include_str!("../../../../packages/sail/tokens/src/themes.css");
 const CONTRACTS_CSS: &str = include_str!("../../../../packages/sail/tokens/src/sail-base.css");
 const SKINS_CSS: &str = include_str!("../../../../packages/sail/tokens/src/element-skins.css");
-const SX_VOCAB: &str = include_str!("../../style/sx-vocabulary.json");
 const SCALES_RS: &str = include_str!("../../style/src/scales.rs");
+const PLAINS_RS: &str = include_str!("../../style/src/plains.rs");
+const CONCERNS_RS: &str = include_str!("../../style/src/concerns.rs");
+const SETTERS_RS: &str = include_str!("../../style/src/setters.rs");
 
 /// Every `--name:` declaration in `css`, without the `--` prefix.
 fn declarations(css: &str) -> HashSet<String> {
@@ -184,10 +186,9 @@ fn every_expression_channel_has_a_reader() {
         "expected the landed channel set to be parsed, got {channels:?}"
     );
 
-    // A channel is "read" if emitted CSS references it, OR the sx vocabulary
-    // lowers an atom to it, OR a scale in `scales.rs` interpolates it. The
-    // last case is why `--display-font` went unnoticed: its only reader is
-    // `format!("var(--{token}-font)")`, invisible to a grep for the name.
+    // A channel is "read" if emitted CSS references it, OR plains/concerns/scales
+    // interpolate it. The last case is why `--display-font` went unnoticed:
+    // its only reader is `format!("var(--{token}-font)")`.
     let static_reads: HashSet<String> = references(CONTRACTS_CSS)
         .union(&references(SKINS_CSS))
         .cloned()
@@ -195,12 +196,18 @@ fn every_expression_channel_has_a_reader() {
         .union(&references(TOKENS_CSS))
         .cloned()
         .collect();
-    let sx_reads = references(SX_VOCAB);
+    let emit_reads: HashSet<String> = references(PLAINS_RS)
+        .union(&references(CONCERNS_RS))
+        .cloned()
+        .collect::<HashSet<_>>()
+        .union(&references(SETTERS_RS))
+        .cloned()
+        .collect();
 
     let mut unread: Vec<&String> = Vec::new();
     for ch in &channels {
         let read_statically = static_reads.contains(ch);
-        let read_by_sx = sx_reads.contains(ch);
+        let read_by_sx = emit_reads.contains(ch);
         // `--display-font` / `--heading-font` / … are produced by the `font`
         // scale's interpolation. Recognise the pattern rather than the name.
         let read_by_scale = ch
@@ -216,7 +223,7 @@ fn every_expression_channel_has_a_reader() {
         "these expression channels are declared but nothing reads them:\n  {}\n\n\
          A channel with no reader is a variable in a costume — a theme can set \
          it and nothing happens. Either wire a reader into a generator \
-         (stdlib skin, sail-base.css, or the sx vocabulary) or drop the \
+         (stdlib skin, sail-base.css, plains/concerns, or scales) or drop the \
          declaration.",
         unread
             .iter()

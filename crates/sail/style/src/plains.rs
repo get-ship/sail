@@ -616,6 +616,54 @@ pub fn find_plain(name: &str) -> Option<&'static PlainSpec> {
     PLAINS.iter().find(|p| p.name == name)
 }
 
+pub fn find_plain_by_vocab(head: &str) -> Option<&'static PlainSpec> {
+    PLAINS.iter().find(|p| p.vocab == head || p.name == head)
+}
+
+/// Lower one token/keyword on a plain to CSS longhands.
+/// Concerns / composites with mixed decls stay in `setters.rs`.
+pub fn lower_plain_token(
+    spec: &PlainSpec,
+    bare: &str,
+    negative: bool,
+) -> Option<Vec<(String, String)>> {
+    if spec.slots.is_empty() {
+        return Some(Vec::new());
+    }
+    let css_val = if spec.keywords.iter().any(|k| *k == bare) {
+        keyword_css(spec, bare)
+    } else if let Some(scale) = spec.scale {
+        let v = crate::scales::lower(scale, bare)?;
+        if negative {
+            format!("calc(-1 * {v})")
+        } else {
+            v
+        }
+    } else {
+        return None;
+    };
+    Some(
+        spec.slots
+            .iter()
+            .map(|p| ((*p).to_string(), css_val.clone()))
+            .collect(),
+    )
+}
+
+fn keyword_css(spec: &PlainSpec, bare: &str) -> String {
+    match (spec.name, bare) {
+        ("boxSizing", "border") => "border-box".into(),
+        ("boxSizing", "content") => "content-box".into(),
+        ("content", "empty") => "''".into(),
+        ("tapHighlight", "none") => "transparent".into(),
+        ("underline", "true") => "underline".into(),
+        ("underline", "none") => "none".into(),
+        ("underline", "line-through") => "line-through".into(),
+        ("objectPosition", k) | ("origin", k) => k.replace('-', " "),
+        _ => bare.to_string(),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

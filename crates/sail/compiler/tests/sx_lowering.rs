@@ -3,7 +3,7 @@
 //!
 //! Utility-string `style="…"` is residual product and must not emit classes.
 //! The shared Style setters re-home emit heads from
-//! `crates/sail/style/sx-vocabulary.json` (emit leaf only).
+//! Style setters emit from `vocab.rs` / `plains.rs` / `concerns.rs`.
 
 use sail_compiler::parse::preprocess::preprocess as preprocess_src;
 

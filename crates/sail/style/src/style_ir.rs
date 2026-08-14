@@ -11,7 +11,7 @@ use std::sync::OnceLock;
 use serde::Serialize;
 
 use crate::prefixes as sx_rules;
-use crate::style_vocab::{self, Resolved};
+use crate::plains;
 use crate::tokens;
 
 // ─── IR ──────────────────────────────────────────────────────────────────────
@@ -131,15 +131,13 @@ impl SxError {
 
 // ─── Property aliases (lead-B names → vocab utility names) ───────────────────
 
-/// Author-facing property names that map onto an existing vocab head.
-/// Value disambiguation (shared heads like `text` / `font` / `border`) still
-/// runs through `style_vocab::resolve` after the atom is built.
+/// Residual property aliases (not author vocab).
 const PROP_ALIASES: &[(&str, &str)] = &[
-    ("color", "text"),       // text color (color-scale values)
-    ("font-size", "text"),   // type scale
-    ("font-weight", "font"), // weight scale
-    ("font-family", "font"), // font scale
-    ("radius", "rounded"),
+    ("color", "fg"),
+    ("font-size", "type"),
+    ("font-weight", "type"),
+    ("font-family", "type"),
+    ("radius", "radius"),
     ("bg-color", "bg"),
 ];
 
@@ -157,14 +155,15 @@ pub fn is_property(name: &str) -> bool {
     if PROP_ALIASES.iter().any(|(a, _)| *a == n) {
         return true;
     }
-    let names = style_vocab::names();
-    names.iter().any(|k| k == n)
+    crate::vocab::find_vocab(n).is_some() || plains::find_plain_by_vocab(n).is_some()
 }
 
 /// Documented closed property table (canonical props + aliases).
 pub fn property_table() -> Vec<PropertyMeta> {
     let mut out: BTreeMap<String, PropertyMeta> = BTreeMap::new();
-    for (name, values) in style_vocab::vocabulary() {
+    for row in crate::vocab::offered_rows() {
+        let name = row.name.to_string();
+        let values: Vec<String> = Vec::new();
         out.insert(
             name.clone(),
             PropertyMeta {
@@ -337,20 +336,6 @@ pub fn decl_atom(decl: &SxDecl) -> String {
         }
         SxValue::Token(v) | SxValue::Keyword(v) => {
             let prop = alias_prop(&decl.prop);
-            // Try candidates until one resolves.
-            for cand in value_candidates(v) {
-                let mut a = String::new();
-                if decl.negative {
-                    a.push('-');
-                }
-                a.push_str(prop);
-                a.push('-');
-                a.push_str(&cand);
-                if matches!(style_vocab::resolve(&a), Resolved::Ok(_)) {
-                    return a;
-                }
-            }
-            // Fallback: first kebab candidate (for class naming / errors).
             let mut a = String::new();
             if decl.negative {
                 a.push('-');
@@ -366,15 +351,23 @@ pub fn decl_atom(decl: &SxDecl) -> String {
 /// CSS declarations for one IR decl. `None` if it cannot lower (unknown / bad).
 pub fn lower_decl(decl: &SxDecl) -> Option<Vec<(String, String)>> {
     if let Some(SxValue::Raw(css_val)) = &decl.value {
-        // Map property → CSS props via resolving a dummy accepted atom if possible,
-        // else known alias css list from vocab by probing.
         return lower_raw(decl, css_val);
     }
-    let atom = decl_atom(decl);
-    match style_vocab::resolve(&atom) {
-        Resolved::Ok(decls) => Some(decls),
-        _ => None,
-    }
+    let spec = plains::find_plain_by_vocab(alias_prop(&decl.prop))?;
+    let bare = match &decl.value {
+        Some(SxValue::Token(v) | SxValue::Keyword(v)) => v.as_str(),
+        Some(SxValue::VarRef(v)) => {
+            let var = format!("var(--{v})");
+            return Some(
+                spec.slots
+                    .iter()
+                    .map(|p| ((*p).to_string(), var.clone()))
+                    .collect(),
+            );
+        }
+        _ => return None,
+    };
+    plains::lower_plain_token(spec, bare, decl.negative)
 }
 
 fn lower_raw(decl: &SxDecl, css_val: &str) -> Option<Vec<(String, String)>> {
@@ -391,88 +384,22 @@ fn lower_raw(decl: &SxDecl, css_val: &str) -> Option<Vec<(String, String)>> {
 }
 
 fn prop_css_properties(prop: &str) -> Option<Vec<String>> {
-    // From vocab table: pick first utility with this name that has css list.
-    for (name, _) in style_vocab::vocabulary() {
-        if name != prop {
-            continue;
-        }
-        // Resolve any sample to get css — use a well-known probe per prop.
-        break;
-    }
-    // Probe common *scale* values first so we learn CSS props for the utility head.
-    // Put color/size tokens before keywords like `none` — bare composites
-    // (`bg-none` → background-image) must not win over `bg-primary` (background-color)
-    // when resolving raw: paint for `bg`.
-    let probes = [
-        "primary",
-        "foreground",
-        "muted",
-        "0",
-        "1",
-        "2",
-        "4",
-        "sm",
-        "md",
-        "lg",
-        "full",
-        "auto",
-        "solid",
-        "hidden",
-        "transparent",
-        "currentColor",
-        "center",
-        "body",
-        "semibold",
-        "pointer",
-        "none",
-    ];
-    for p in probes {
-        let atom = format!("{prop}-{p}");
-        // Skip bare exact atoms that are not `{prop}-{value}` utilities (e.g. bg-none bare).
-        if matches!(style_vocab::resolve(p), Resolved::Ok(_)) && p == "none" && prop == "bg" {
-            continue;
-        }
-        if let Resolved::Ok(decls) = style_vocab::resolve(&atom) {
-            // Prefer color/background-color over background-image for `bg` raw paint.
-            if prop == "bg"
-                && decls.iter().any(|(k, _)| k == "background-image")
-                && !decls
-                    .iter()
-                    .any(|(k, _)| k == "background-color" || k == "background")
-            {
-                continue;
-            }
-            return Some(decls.into_iter().map(|(k, _)| k).collect());
+    if let Some(spec) = plains::find_plain_by_vocab(prop) {
+        if !spec.slots.is_empty() {
+            return Some(spec.slots.iter().map(|s| (*s).to_string()).collect());
         }
     }
-    // Bare?
-    if let Resolved::Ok(decls) = style_vocab::resolve(prop) {
-        return Some(decls.into_iter().map(|(k, _)| k).collect());
-    }
-    // Hardcoded fallbacks for aliases / common props.
     let fallback: &[(&str, &[&str])] = &[
         ("bg", &["background-color"]),
+        ("fg", &["color"]),
         ("text", &["color"]),
         ("color", &["color"]),
-        ("p", &["padding"]),
-        ("px", &["padding-inline"]),
-        ("py", &["padding-block"]),
-        ("m", &["margin"]),
-        ("mx", &["margin-inline"]),
-        ("my", &["margin-block"]),
-        ("w", &["width"]),
-        ("h", &["height"]),
-        ("min-h", &["min-height"]),
-        ("min-w", &["min-width"]),
-        ("max-h", &["max-height"]),
-        ("max-w", &["max-width"]),
-        ("rounded", &["border-radius"]),
-        ("shadow", &["box-shadow"]),
+        ("pad", &["padding"]),
+        ("margin", &["margin"]),
+        ("size", &["width", "height"]),
+        ("radius", &["border-radius"]),
         ("opacity", &["opacity"]),
         ("border", &["border-color"]),
-        ("leading", &["line-height"]),
-        ("tracking", &["letter-spacing"]),
-        ("font", &["font-family"]),
     ];
     fallback
         .iter()
@@ -509,57 +436,49 @@ pub fn validate_decl(decl: &SxDecl) -> Result<(), SxError> {
         return Ok(());
     }
 
+    if let Some(SxValue::Token(v) | SxValue::Keyword(v)) = &decl.value {
+        if looks_like_raw_color(v) || looks_like_raw_length(v) {
+            return Err(SxError::RawWithoutEscape {
+                value: v.clone(),
+                source: decl.source.clone(),
+            });
+        }
+    }
+    if lower_decl(decl).is_some() {
+        return Ok(());
+    }
     let atom = decl_atom(decl);
-    match style_vocab::resolve(&atom) {
-        Resolved::Ok(_) => Ok(()),
-        Resolved::Refused { instead } => Err(SxError::Refused {
+    if let Some((_, instead)) = crate::style_vocab::refusals()
+        .into_iter()
+        .find(|(a, _)| a == &atom || atom.starts_with(&format!("{a}-")))
+    {
+        return Err(SxError::Refused {
             atom,
             instead,
             source: decl.source.clone(),
-        }),
-        Resolved::BadValue { name, .. } => {
-            let value = match &decl.value {
-                Some(SxValue::Token(v) | SxValue::Keyword(v)) => v.clone(),
-                Some(SxValue::VarRef(v)) => format!("(--{v})"),
-                _ => String::new(),
-            };
-            // If it looks raw, prefer the raw diagnostic.
-            if looks_like_raw_color(&value) || looks_like_raw_length(&value) {
-                return Err(SxError::RawWithoutEscape {
-                    value: value.clone(),
-                    source: decl.source.clone(),
-                });
-            }
-            Err(SxError::BadValue {
-                prop: name,
-                value,
-                source: decl.source.clone(),
-            })
-        }
-        Resolved::Unknown => {
-            if decl.bare {
-                Err(SxError::UnknownAtom {
-                    atom,
-                    source: decl.source.clone(),
-                })
-            } else if !is_property(&decl.prop) {
-                Err(SxError::UnknownProp {
-                    prop: decl.prop.clone(),
-                    source: decl.source.clone(),
-                })
-            } else {
-                let value = match &decl.value {
-                    Some(SxValue::Token(v) | SxValue::Keyword(v)) => v.clone(),
-                    _ => String::new(),
-                };
-                Err(SxError::BadValue {
-                    prop: decl.prop.clone(),
-                    value,
-                    source: decl.source.clone(),
-                })
-            }
-        }
+        });
     }
+    if decl.bare {
+        return Err(SxError::UnknownAtom {
+            atom,
+            source: decl.source.clone(),
+        });
+    }
+    if !is_property(&decl.prop) {
+        return Err(SxError::UnknownProp {
+            prop: decl.prop.clone(),
+            source: decl.source.clone(),
+        });
+    }
+    let value = match &decl.value {
+        Some(SxValue::Token(v) | SxValue::Keyword(v)) => v.clone(),
+        _ => String::new(),
+    };
+    Err(SxError::BadValue {
+        prop: decl.prop.clone(),
+        value,
+        source: decl.source.clone(),
+    })
 }
 
 // ─── Emit helpers (class name + rule body for preprocess) ────────────────────
@@ -762,35 +681,19 @@ mod tests {
 
     #[test]
     fn color_alias_atom() {
-        assert_eq!(decl_atom(&tok("color", "primary")), "text-primary");
+        assert_eq!(decl_atom(&tok("color", "primary")), "fg-primary");
     }
 
     #[test]
-    fn lower_px_space() {
-        let d = lower_decl(&tok("px", "2")).expect("lower");
-        assert_eq!(d, vec![("padding-inline".into(), "var(--space-2)".into())]);
+    fn lower_opacity_plain() {
+        let d = lower_decl(&tok("opacity", "50")).expect("lower");
+        assert_eq!(d[0].0, "opacity");
     }
 
     #[test]
-    fn lower_path_space_dot() {
-        let d = lower_decl(&tok("px", "space.2")).expect("lower space.2");
-        assert_eq!(d, vec![("padding-inline".into(), "var(--space-2)".into())]);
-    }
-
-    #[test]
-    fn lower_bg() {
-        let d = lower_decl(&tok("bg", "primary")).expect("lower bg");
-        assert_eq!(
-            d,
-            vec![("background-color".into(), "var(--primary)".into())]
-        );
-    }
-
-    #[test]
-    fn lower_rounded_path() {
-        let d = lower_decl(&tok("rounded", "radius.sm")).expect("rounded");
-        assert_eq!(d[0].0, "border-radius");
-        assert_eq!(d[0].1, "var(--radius-sm)");
+    fn lower_cursor_plain() {
+        let d = lower_decl(&tok("cursor", "pointer")).expect("cursor");
+        assert_eq!(d, vec![("cursor".into(), "pointer".into())]);
     }
 
     #[test]
@@ -805,16 +708,8 @@ mod tests {
     }
 
     #[test]
-    fn lower_bare_hidden() {
-        let decl = SxDecl {
-            prefixes: Vec::new(),
-            prop: "hidden".into(),
-            value: None,
-            negative: false,
-            bare: true,
-            source: "hidden".into(),
-        };
-        let d = lower_decl(&decl).unwrap();
+    fn lower_display_none() {
+        let d = lower_decl(&tok("display", "none")).expect("display");
         assert_eq!(d, vec![("display".into(), "none".into())]);
     }
 
@@ -909,30 +804,22 @@ mod tests {
     fn property_table_documents_closed_set() {
         let t = property_table();
         assert!(t.iter().any(|m| m.name == "bg"));
-        assert!(t.iter().any(|m| m.name == "px"));
+        assert!(t.iter().any(|m| m.name == "pad"));
         assert!(t.iter().any(|m| m.name == "color"));
     }
 
     #[test]
-    fn font_size_alias() {
-        let d = lower_decl(&tok("font-size", "xs")).expect("font-size");
-        assert_eq!(d[0].0, "font-size");
-        assert!(d[0].1.contains("--text-xs"), "{}", d[0].1);
-    }
-
-    #[test]
-    fn var_ref_lowers() {
+    fn var_ref_lowers_on_plain() {
         let decl = SxDecl {
             prefixes: Vec::new(),
-            prop: "w".into(),
-            value: Some(SxValue::VarRef("box-w".into())),
+            prop: "opacity".into(),
+            value: Some(SxValue::VarRef("fade".into())),
             negative: false,
             bare: false,
-            source: "w (--box-w)".into(),
+            source: "opacity (--fade)".into(),
         };
-        assert_eq!(decl.value, Some(SxValue::VarRef("box-w".into())));
         let d = lower_decl(&decl).expect("var ref");
-        assert_eq!(d[0].1, "var(--box-w)");
+        assert_eq!(d, vec![("opacity".into(), "var(--fade)".into())]);
     }
 }
 

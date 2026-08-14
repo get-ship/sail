@@ -3,200 +3,36 @@
   "form": "residual detect + token-value helper — not an author surface",
   "properties": [
     {
-      "name": "absolute",
-      "values_sample": []
-    },
-    {
-      "name": "accent",
-      "values_sample": [
-        "ButtonFace",
-        "ButtonText",
-        "Canvas",
-        "CanvasText",
-        "Highlight",
-        "HighlightText",
-        "accent",
-        "accent-agents",
-        "accent-canvas",
-        "accent-chat",
-        "accent-collections",
-        "accent-dashboard",
-        "accent-events",
-        "accent-foreground",
-        "accent-git",
-        "accent-mesh",
-        "accent-overview",
-        "accent-pipelines",
-        "accent-settings",
-        "accent-setup",
-        "accent-skills",
-        "accent-specs",
-        "accent-theme",
-        "active-bg"
-      ]
-    },
-    {
       "name": "align",
-      "values_sample": [
-        "baseline",
-        "bottom",
-        "middle",
-        "sub",
-        "super",
-        "text-bottom",
-        "text-top",
-        "top"
-      ]
-    },
-    {
-      "name": "animate-spin",
       "values_sample": []
     },
     {
-      "name": "antialiased",
-      "values_sample": [
-        "false",
-        "true"
-      ]
+      "name": "animate",
+      "values_sample": []
     },
     {
       "name": "appearance",
-      "values_sample": [
-        "auto",
-        "none"
-      ]
-    },
-    {
-      "name": "aspect",
-      "values_sample": [
-        "auto",
-        "square",
-        "video"
-      ]
-    },
-    {
-      "name": "avatar-media",
       "values_sample": []
     },
     {
-      "name": "basis",
-      "values_sample": [
-        "0",
-        "0_75",
-        "1",
-        "10",
-        "11",
-        "12",
-        "14",
-        "16",
-        "1_25",
-        "1_5",
-        "2",
-        "20",
-        "24",
-        "28",
-        "2_5",
-        "3",
-        "32",
-        "36",
-        "3_5",
-        "4",
-        "40",
-        "44",
-        "48",
-        "4_5"
-      ]
+      "name": "avatarMedia",
+      "values_sample": []
+    },
+    {
+      "name": "backdrop",
+      "values_sample": []
     },
     {
       "name": "bg",
-      "values_sample": [
-        "ButtonFace",
-        "ButtonText",
-        "Canvas",
-        "CanvasText",
-        "Highlight",
-        "HighlightText",
-        "accent",
-        "accent-agents",
-        "accent-canvas",
-        "accent-chat",
-        "accent-collections",
-        "accent-dashboard",
-        "accent-events",
-        "accent-foreground",
-        "accent-git",
-        "accent-mesh",
-        "accent-overview",
-        "accent-pipelines",
-        "accent-settings",
-        "accent-setup",
-        "accent-skills",
-        "accent-specs",
-        "accent-theme",
-        "active-bg"
-      ]
-    },
-    {
-      "name": "bg-clip",
-      "values_sample": [
-        "border",
-        "content",
-        "padding",
-        "text"
-      ]
+      "values_sample": []
     },
     {
       "name": "bg-color",
       "alias_of": "bg",
-      "values_sample": [
-        "ButtonFace",
-        "ButtonText",
-        "Canvas",
-        "CanvasText",
-        "Highlight",
-        "HighlightText",
-        "accent",
-        "accent-agents",
-        "accent-canvas",
-        "accent-chat",
-        "accent-collections",
-        "accent-dashboard",
-        "accent-events",
-        "accent-foreground",
-        "accent-git",
-        "accent-mesh",
-        "accent-overview",
-        "accent-pipelines",
-        "accent-settings",
-        "accent-setup",
-        "accent-skills",
-        "accent-specs",
-        "accent-theme",
-        "active-bg"
-      ]
-    },
-    {
-      "name": "bg-glow",
       "values_sample": []
     },
     {
-      "name": "bg-glow-accent",
-      "values_sample": []
-    },
-    {
-      "name": "bg-glow-primary",
-      "values_sample": []
-    },
-    {
-      "name": "bg-gradient-primary-accent",
-      "values_sample": []
-    },
-    {
-      "name": "bg-none",
-      "values_sample": []
-    },
-    {
-      "name": "block",
+      "name": "blur",
       "values_sample": []
     },
     {
@@ -204,542 +40,119 @@
       "values_sample": []
     },
     {
-      "name": "border-b",
+      "name": "boxSizing",
       "values_sample": []
     },
     {
-      "name": "border-e",
-      "values_sample": []
-    },
-    {
-      "name": "border-l",
-      "values_sample": []
-    },
-    {
-      "name": "border-r",
-      "values_sample": []
-    },
-    {
-      "name": "border-s",
-      "values_sample": []
-    },
-    {
-      "name": "border-t",
-      "values_sample": []
-    },
-    {
-      "name": "border-x",
-      "values_sample": []
-    },
-    {
-      "name": "border-y",
-      "values_sample": []
-    },
-    {
-      "name": "bottom",
-      "values_sample": [
-        "0",
-        "0_75",
-        "1",
-        "10",
-        "11",
-        "12",
-        "14",
-        "16",
-        "1_25",
-        "1_5",
-        "2",
-        "20",
-        "24",
-        "28",
-        "2_5",
-        "3",
-        "32",
-        "36",
-        "3_5",
-        "4",
-        "40",
-        "44",
-        "48",
-        "4_5"
-      ]
-    },
-    {
-      "name": "box",
-      "values_sample": [
-        "border",
-        "content"
-      ]
-    },
-    {
-      "name": "break",
-      "values_sample": [
-        "all",
-        "keep",
-        "normal",
-        "words"
-      ]
-    },
-    {
-      "name": "capitalize",
-      "values_sample": []
-    },
-    {
-      "name": "caret",
-      "values_sample": [
-        "ButtonFace",
-        "ButtonText",
-        "Canvas",
-        "CanvasText",
-        "Highlight",
-        "HighlightText",
-        "accent",
-        "accent-agents",
-        "accent-canvas",
-        "accent-chat",
-        "accent-collections",
-        "accent-dashboard",
-        "accent-events",
-        "accent-foreground",
-        "accent-git",
-        "accent-mesh",
-        "accent-overview",
-        "accent-pipelines",
-        "accent-settings",
-        "accent-setup",
-        "accent-skills",
-        "accent-specs",
-        "accent-theme",
-        "active-bg"
-      ]
-    },
-    {
-      "name": "collapse",
+      "name": "brightness",
       "values_sample": []
     },
     {
       "name": "color",
-      "alias_of": "text",
-      "values_sample": [
-        "2xl",
-        "3xl",
-        "4xl",
-        "ButtonFace",
-        "ButtonText",
-        "Canvas",
-        "CanvasText",
-        "Highlight",
-        "HighlightText",
-        "accent",
-        "accent-agents",
-        "accent-canvas",
-        "accent-chat",
-        "accent-collections",
-        "accent-dashboard",
-        "accent-events",
-        "accent-foreground",
-        "accent-git",
-        "accent-mesh",
-        "accent-overview",
-        "accent-pipelines",
-        "accent-settings",
-        "accent-setup",
-        "accent-skills"
-      ]
+      "alias_of": "fg",
+      "values_sample": []
     },
     {
       "name": "contain",
-      "values_sample": [
-        "content",
-        "layout",
-        "none",
-        "paint",
-        "size",
-        "strict"
-      ]
+      "values_sample": []
+    },
+    {
+      "name": "container",
+      "values_sample": []
+    },
+    {
+      "name": "containerName",
+      "values_sample": []
+    },
+    {
+      "name": "containerType",
+      "values_sample": []
     },
     {
       "name": "content",
-      "values_sample": [
-        "empty"
-      ]
+      "values_sample": []
     },
     {
-      "name": "contents",
+      "name": "contrast",
+      "values_sample": []
+    },
+    {
+      "name": "controlFrame",
+      "values_sample": []
+    },
+    {
+      "name": "controlLift",
       "values_sample": []
     },
     {
       "name": "cursor",
-      "values_sample": [
-        "alias",
-        "all-scroll",
-        "auto",
-        "cell",
-        "col-resize",
-        "context-menu",
-        "copy",
-        "crosshair",
-        "default",
-        "e-resize",
-        "ew-resize",
-        "grab",
-        "grabbing",
-        "help",
-        "move",
-        "n-resize",
-        "no-drop",
-        "none",
-        "not-allowed",
-        "ns-resize",
-        "pointer",
-        "progress",
-        "row-resize",
-        "s-resize"
-      ]
+      "values_sample": []
     },
     {
-      "name": "decoration",
-      "values_sample": [
-        "ButtonFace",
-        "ButtonText",
-        "Canvas",
-        "CanvasText",
-        "Highlight",
-        "HighlightText",
-        "accent",
-        "accent-agents",
-        "accent-canvas",
-        "accent-chat",
-        "accent-collections",
-        "accent-dashboard",
-        "accent-events",
-        "accent-foreground",
-        "accent-git",
-        "accent-mesh",
-        "accent-overview",
-        "accent-pipelines",
-        "accent-settings",
-        "accent-setup",
-        "accent-skills",
-        "accent-specs",
-        "accent-theme",
-        "active-bg"
-      ]
+      "name": "dir",
+      "values_sample": []
     },
     {
-      "name": "delay",
-      "values_sample": [
-        "deliberate",
-        "fast",
-        "glacial",
-        "instant",
-        "medium",
-        "slow"
-      ]
-    },
-    {
-      "name": "dir-column",
+      "name": "display",
       "values_sample": []
     },
     {
       "name": "duration",
-      "values_sample": [
-        "deliberate",
-        "fast",
-        "glacial",
-        "instant",
-        "medium",
-        "slow"
-      ]
+      "values_sample": []
     },
     {
       "name": "ease",
-      "values_sample": [
-        "in",
-        "in-out",
-        "out",
-        "out-soft",
-        "spring"
-      ]
-    },
-    {
-      "name": "fill",
-      "values_sample": [
-        "ButtonFace",
-        "ButtonText",
-        "Canvas",
-        "CanvasText",
-        "Highlight",
-        "HighlightText",
-        "accent",
-        "accent-agents",
-        "accent-canvas",
-        "accent-chat",
-        "accent-collections",
-        "accent-dashboard",
-        "accent-events",
-        "accent-foreground",
-        "accent-git",
-        "accent-mesh",
-        "accent-overview",
-        "accent-pipelines",
-        "accent-settings",
-        "accent-setup",
-        "accent-skills",
-        "accent-specs",
-        "accent-theme",
-        "active-bg"
-      ]
-    },
-    {
-      "name": "fixed",
       "values_sample": []
     },
     {
-      "name": "flow-root",
+      "name": "elevation",
       "values_sample": []
     },
     {
-      "name": "font",
-      "values_sample": [
-        "body",
-        "bold",
-        "display",
-        "heading",
-        "medium",
-        "mono",
-        "normal",
-        "semibold"
-      ]
+      "name": "fg",
+      "values_sample": []
+    },
+    {
+      "name": "filter",
+      "values_sample": []
     },
     {
       "name": "font-family",
-      "alias_of": "font",
-      "values_sample": [
-        "body",
-        "bold",
-        "display",
-        "heading",
-        "medium",
-        "mono",
-        "normal",
-        "semibold"
-      ]
+      "alias_of": "type",
+      "values_sample": []
     },
     {
       "name": "font-size",
-      "alias_of": "text",
-      "values_sample": [
-        "2xl",
-        "3xl",
-        "4xl",
-        "ButtonFace",
-        "ButtonText",
-        "Canvas",
-        "CanvasText",
-        "Highlight",
-        "HighlightText",
-        "accent",
-        "accent-agents",
-        "accent-canvas",
-        "accent-chat",
-        "accent-collections",
-        "accent-dashboard",
-        "accent-events",
-        "accent-foreground",
-        "accent-git",
-        "accent-mesh",
-        "accent-overview",
-        "accent-pipelines",
-        "accent-settings",
-        "accent-setup",
-        "accent-skills"
-      ]
+      "alias_of": "type",
+      "values_sample": []
     },
     {
       "name": "font-weight",
-      "alias_of": "font",
-      "values_sample": [
-        "body",
-        "bold",
-        "display",
-        "heading",
-        "medium",
-        "mono",
-        "normal",
-        "semibold"
-      ]
+      "alias_of": "type",
+      "values_sample": []
     },
     {
-      "name": "glyph-fill",
+      "name": "glyphFill",
+      "values_sample": []
+    },
+    {
+      "name": "grayscale",
+      "values_sample": []
+    },
+    {
+      "name": "group",
       "values_sample": []
     },
     {
       "name": "grow",
-      "values_sample": [
-        "0",
-        "1"
-      ]
-    },
-    {
-      "name": "h",
-      "values_sample": [
-        "0",
-        "0_75",
-        "1",
-        "10",
-        "11",
-        "12",
-        "14",
-        "16",
-        "1_25",
-        "1_5",
-        "2",
-        "20",
-        "24",
-        "28",
-        "2_5",
-        "3",
-        "32",
-        "36",
-        "3_5",
-        "4",
-        "40",
-        "44",
-        "48",
-        "4_5"
-      ]
-    },
-    {
-      "name": "hidden",
       "values_sample": []
     },
     {
-      "name": "indent",
-      "values_sample": [
-        "0",
-        "0_75",
-        "1",
-        "10",
-        "11",
-        "12",
-        "14",
-        "16",
-        "1_25",
-        "1_5",
-        "2",
-        "20",
-        "24",
-        "28",
-        "2_5",
-        "3",
-        "32",
-        "36",
-        "3_5",
-        "4",
-        "40",
-        "44",
-        "48",
-        "4_5"
-      ]
-    },
-    {
-      "name": "inline",
+      "name": "hueRotate",
       "values_sample": []
     },
     {
-      "name": "inline-block",
-      "values_sample": []
-    },
-    {
-      "name": "inset",
-      "values_sample": [
-        "0",
-        "0_75",
-        "1",
-        "10",
-        "11",
-        "12",
-        "14",
-        "16",
-        "1_25",
-        "1_5",
-        "2",
-        "20",
-        "24",
-        "28",
-        "2_5",
-        "3",
-        "32",
-        "36",
-        "3_5",
-        "4",
-        "40",
-        "44",
-        "48",
-        "4_5"
-      ]
-    },
-    {
-      "name": "inset-x",
-      "values_sample": [
-        "0",
-        "0_75",
-        "1",
-        "10",
-        "11",
-        "12",
-        "14",
-        "16",
-        "1_25",
-        "1_5",
-        "2",
-        "20",
-        "24",
-        "28",
-        "2_5",
-        "3",
-        "32",
-        "36",
-        "3_5",
-        "4",
-        "40",
-        "44",
-        "48",
-        "4_5"
-      ]
-    },
-    {
-      "name": "inset-y",
-      "values_sample": [
-        "0",
-        "0_75",
-        "1",
-        "10",
-        "11",
-        "12",
-        "14",
-        "16",
-        "1_25",
-        "1_5",
-        "2",
-        "20",
-        "24",
-        "28",
-        "2_5",
-        "3",
-        "32",
-        "36",
-        "3_5",
-        "4",
-        "40",
-        "44",
-        "48",
-        "4_5"
-      ]
-    },
-    {
-      "name": "invisible",
+      "name": "invert",
       "values_sample": []
     },
     {
@@ -747,1629 +160,173 @@
       "values_sample": []
     },
     {
-      "name": "isolation-auto",
-      "values_sample": []
-    },
-    {
-      "name": "italic",
-      "values_sample": []
-    },
-    {
-      "name": "justify-self",
-      "values_sample": [
-        "auto",
-        "center",
-        "end",
-        "start",
-        "stretch"
-      ]
-    },
-    {
-      "name": "leading",
-      "values_sample": [
-        "code",
-        "loose",
-        "none",
-        "normal",
-        "relaxed",
-        "snug",
-        "tight"
-      ]
-    },
-    {
-      "name": "left",
-      "values_sample": [
-        "0",
-        "0_75",
-        "1",
-        "10",
-        "11",
-        "12",
-        "14",
-        "16",
-        "1_25",
-        "1_5",
-        "2",
-        "20",
-        "24",
-        "28",
-        "2_5",
-        "3",
-        "32",
-        "36",
-        "3_5",
-        "4",
-        "40",
-        "44",
-        "48",
-        "4_5"
-      ]
-    },
-    {
-      "name": "line-through",
-      "values_sample": []
-    },
-    {
-      "name": "lining-nums",
-      "values_sample": []
-    },
-    {
       "name": "list",
-      "values_sample": [
-        "decimal",
-        "disc",
-        "none"
-      ]
-    },
-    {
-      "name": "list-item",
       "values_sample": []
     },
     {
-      "name": "lowercase",
+      "name": "margin",
       "values_sample": []
     },
     {
-      "name": "m",
-      "values_sample": [
-        "0",
-        "0_75",
-        "1",
-        "10",
-        "11",
-        "12",
-        "14",
-        "16",
-        "1_25",
-        "1_5",
-        "2",
-        "20",
-        "24",
-        "28",
-        "2_5",
-        "3",
-        "32",
-        "36",
-        "3_5",
-        "4",
-        "40",
-        "44",
-        "48",
-        "4_5"
-      ]
-    },
-    {
-      "name": "max-h",
-      "values_sample": [
-        "0",
-        "0_75",
-        "1",
-        "10",
-        "11",
-        "12",
-        "14",
-        "16",
-        "1_25",
-        "1_5",
-        "2",
-        "20",
-        "24",
-        "28",
-        "2_5",
-        "3",
-        "32",
-        "36",
-        "3_5",
-        "4",
-        "40",
-        "44",
-        "48",
-        "4_5"
-      ]
-    },
-    {
-      "name": "max-w",
-      "values_sample": [
-        "0",
-        "0_75",
-        "1",
-        "10",
-        "11",
-        "12",
-        "14",
-        "16",
-        "1_25",
-        "1_5",
-        "2",
-        "20",
-        "24",
-        "28",
-        "2_5",
-        "3",
-        "32",
-        "36",
-        "3_5",
-        "4",
-        "40",
-        "44",
-        "48",
-        "4_5"
-      ]
-    },
-    {
-      "name": "mb",
-      "values_sample": [
-        "0",
-        "0_75",
-        "1",
-        "10",
-        "11",
-        "12",
-        "14",
-        "16",
-        "1_25",
-        "1_5",
-        "2",
-        "20",
-        "24",
-        "28",
-        "2_5",
-        "3",
-        "32",
-        "36",
-        "3_5",
-        "4",
-        "40",
-        "44",
-        "48",
-        "4_5"
-      ]
-    },
-    {
-      "name": "me",
-      "values_sample": [
-        "0",
-        "0_75",
-        "1",
-        "10",
-        "11",
-        "12",
-        "14",
-        "16",
-        "1_25",
-        "1_5",
-        "2",
-        "20",
-        "24",
-        "28",
-        "2_5",
-        "3",
-        "32",
-        "36",
-        "3_5",
-        "4",
-        "40",
-        "44",
-        "48",
-        "4_5"
-      ]
-    },
-    {
-      "name": "min-h",
-      "values_sample": [
-        "0",
-        "0_75",
-        "1",
-        "10",
-        "11",
-        "12",
-        "14",
-        "16",
-        "1_25",
-        "1_5",
-        "2",
-        "20",
-        "24",
-        "28",
-        "2_5",
-        "3",
-        "32",
-        "36",
-        "3_5",
-        "4",
-        "40",
-        "44",
-        "48",
-        "4_5"
-      ]
-    },
-    {
-      "name": "min-w",
-      "values_sample": [
-        "0",
-        "0_75",
-        "1",
-        "10",
-        "11",
-        "12",
-        "14",
-        "16",
-        "1_25",
-        "1_5",
-        "2",
-        "20",
-        "24",
-        "28",
-        "2_5",
-        "3",
-        "32",
-        "36",
-        "3_5",
-        "4",
-        "40",
-        "44",
-        "48",
-        "4_5"
-      ]
-    },
-    {
-      "name": "mix-blend",
-      "values_sample": [
-        "darken",
-        "difference",
-        "exclusion",
-        "lighten",
-        "luminosity",
-        "multiply",
-        "normal",
-        "overlay",
-        "screen"
-      ]
-    },
-    {
-      "name": "ml",
-      "values_sample": [
-        "0",
-        "0_75",
-        "1",
-        "10",
-        "11",
-        "12",
-        "14",
-        "16",
-        "1_25",
-        "1_5",
-        "2",
-        "20",
-        "24",
-        "28",
-        "2_5",
-        "3",
-        "32",
-        "36",
-        "3_5",
-        "4",
-        "40",
-        "44",
-        "48",
-        "4_5"
-      ]
-    },
-    {
-      "name": "mr",
-      "values_sample": [
-        "0",
-        "0_75",
-        "1",
-        "10",
-        "11",
-        "12",
-        "14",
-        "16",
-        "1_25",
-        "1_5",
-        "2",
-        "20",
-        "24",
-        "28",
-        "2_5",
-        "3",
-        "32",
-        "36",
-        "3_5",
-        "4",
-        "40",
-        "44",
-        "48",
-        "4_5"
-      ]
-    },
-    {
-      "name": "ms",
-      "values_sample": [
-        "0",
-        "0_75",
-        "1",
-        "10",
-        "11",
-        "12",
-        "14",
-        "16",
-        "1_25",
-        "1_5",
-        "2",
-        "20",
-        "24",
-        "28",
-        "2_5",
-        "3",
-        "32",
-        "36",
-        "3_5",
-        "4",
-        "40",
-        "44",
-        "48",
-        "4_5"
-      ]
-    },
-    {
-      "name": "mt",
-      "values_sample": [
-        "0",
-        "0_75",
-        "1",
-        "10",
-        "11",
-        "12",
-        "14",
-        "16",
-        "1_25",
-        "1_5",
-        "2",
-        "20",
-        "24",
-        "28",
-        "2_5",
-        "3",
-        "32",
-        "36",
-        "3_5",
-        "4",
-        "40",
-        "44",
-        "48",
-        "4_5"
-      ]
-    },
-    {
-      "name": "mx",
-      "values_sample": [
-        "0",
-        "0_75",
-        "1",
-        "10",
-        "11",
-        "12",
-        "14",
-        "16",
-        "1_25",
-        "1_5",
-        "2",
-        "20",
-        "24",
-        "28",
-        "2_5",
-        "3",
-        "32",
-        "36",
-        "3_5",
-        "4",
-        "40",
-        "44",
-        "48",
-        "4_5"
-      ]
-    },
-    {
-      "name": "my",
-      "values_sample": [
-        "0",
-        "0_75",
-        "1",
-        "10",
-        "11",
-        "12",
-        "14",
-        "16",
-        "1_25",
-        "1_5",
-        "2",
-        "20",
-        "24",
-        "28",
-        "2_5",
-        "3",
-        "32",
-        "36",
-        "3_5",
-        "4",
-        "40",
-        "44",
-        "48",
-        "4_5"
-      ]
-    },
-    {
-      "name": "no-underline",
+      "name": "mixBlend",
       "values_sample": []
     },
     {
-      "name": "normal-case",
+      "name": "objectFit",
       "values_sample": []
     },
     {
-      "name": "normal-nums",
-      "values_sample": []
-    },
-    {
-      "name": "not-italic",
-      "values_sample": []
-    },
-    {
-      "name": "object",
-      "values_sample": [
-        "bottom",
-        "center",
-        "contain",
-        "cover",
-        "fill",
-        "left",
-        "none",
-        "right",
-        "scale-down",
-        "top"
-      ]
-    },
-    {
-      "name": "oldstyle-nums",
+      "name": "objectPosition",
       "values_sample": []
     },
     {
       "name": "opacity",
-      "values_sample": [
-        "0",
-        "10",
-        "100",
-        "105",
-        "110",
-        "15",
-        "20",
-        "25",
-        "30",
-        "40",
-        "5",
-        "50",
-        "60",
-        "70",
-        "75",
-        "80",
-        "85",
-        "90",
-        "95"
-      ]
-    },
-    {
-      "name": "order",
-      "values_sample": [
-        "first",
-        "last",
-        "none"
-      ]
-    },
-    {
-      "name": "ordinal",
       "values_sample": []
     },
     {
       "name": "origin",
-      "values_sample": [
-        "bottom",
-        "bottom-left",
-        "bottom-right",
-        "center",
-        "left",
-        "right",
-        "top",
-        "top-left",
-        "top-right"
-      ]
-    },
-    {
-      "name": "outline",
-      "values_sample": [
-        "0",
-        "1",
-        "2",
-        "3",
-        "4",
-        "8",
-        "ButtonFace",
-        "ButtonText",
-        "Canvas",
-        "CanvasText",
-        "Highlight",
-        "HighlightText",
-        "accent",
-        "accent-agents",
-        "accent-canvas",
-        "accent-chat",
-        "accent-collections",
-        "accent-dashboard",
-        "accent-events",
-        "accent-foreground",
-        "accent-git",
-        "accent-mesh",
-        "accent-overview",
-        "accent-pipelines"
-      ]
-    },
-    {
-      "name": "outline-offset",
-      "values_sample": [
-        "0",
-        "0_75",
-        "1",
-        "10",
-        "11",
-        "12",
-        "14",
-        "16",
-        "1_25",
-        "1_5",
-        "2",
-        "20",
-        "24",
-        "28",
-        "2_5",
-        "3",
-        "32",
-        "36",
-        "3_5",
-        "4",
-        "40",
-        "44",
-        "48",
-        "4_5"
-      ]
+      "values_sample": []
     },
     {
       "name": "overflow",
-      "values_sample": [
-        "auto",
-        "clip",
-        "hidden",
-        "scroll",
-        "visible"
-      ]
-    },
-    {
-      "name": "overflow-x",
-      "values_sample": [
-        "auto",
-        "clip",
-        "hidden",
-        "scroll",
-        "visible"
-      ]
-    },
-    {
-      "name": "overflow-y",
-      "values_sample": [
-        "auto",
-        "clip",
-        "hidden",
-        "scroll",
-        "visible"
-      ]
-    },
-    {
-      "name": "overline",
       "values_sample": []
     },
     {
-      "name": "overscroll",
-      "values_sample": [
-        "auto",
-        "contain",
-        "none"
-      ]
-    },
-    {
-      "name": "p",
-      "values_sample": [
-        "0",
-        "0_75",
-        "1",
-        "10",
-        "11",
-        "12",
-        "14",
-        "16",
-        "1_25",
-        "1_5",
-        "2",
-        "20",
-        "24",
-        "28",
-        "2_5",
-        "3",
-        "32",
-        "36",
-        "3_5",
-        "4",
-        "40",
-        "44",
-        "48",
-        "4_5"
-      ]
-    },
-    {
-      "name": "pb",
-      "values_sample": [
-        "0",
-        "0_75",
-        "1",
-        "10",
-        "11",
-        "12",
-        "14",
-        "16",
-        "1_25",
-        "1_5",
-        "2",
-        "20",
-        "24",
-        "28",
-        "2_5",
-        "3",
-        "32",
-        "36",
-        "3_5",
-        "4",
-        "40",
-        "44",
-        "48",
-        "4_5"
-      ]
-    },
-    {
-      "name": "pe",
-      "values_sample": [
-        "0",
-        "0_75",
-        "1",
-        "10",
-        "11",
-        "12",
-        "14",
-        "16",
-        "1_25",
-        "1_5",
-        "2",
-        "20",
-        "24",
-        "28",
-        "2_5",
-        "3",
-        "32",
-        "36",
-        "3_5",
-        "4",
-        "40",
-        "44",
-        "48",
-        "4_5"
-      ]
-    },
-    {
-      "name": "pl",
-      "values_sample": [
-        "0",
-        "0_75",
-        "1",
-        "10",
-        "11",
-        "12",
-        "14",
-        "16",
-        "1_25",
-        "1_5",
-        "2",
-        "20",
-        "24",
-        "28",
-        "2_5",
-        "3",
-        "32",
-        "36",
-        "3_5",
-        "4",
-        "40",
-        "44",
-        "48",
-        "4_5"
-      ]
-    },
-    {
-      "name": "pointer-events",
-      "values_sample": [
-        "auto",
-        "none"
-      ]
-    },
-    {
-      "name": "pr",
-      "values_sample": [
-        "0",
-        "0_75",
-        "1",
-        "10",
-        "11",
-        "12",
-        "14",
-        "16",
-        "1_25",
-        "1_5",
-        "2",
-        "20",
-        "24",
-        "28",
-        "2_5",
-        "3",
-        "32",
-        "36",
-        "3_5",
-        "4",
-        "40",
-        "44",
-        "48",
-        "4_5"
-      ]
-    },
-    {
-      "name": "proportional-nums",
+      "name": "pad",
       "values_sample": []
     },
     {
-      "name": "ps",
-      "values_sample": [
-        "0",
-        "0_75",
-        "1",
-        "10",
-        "11",
-        "12",
-        "14",
-        "16",
-        "1_25",
-        "1_5",
-        "2",
-        "20",
-        "24",
-        "28",
-        "2_5",
-        "3",
-        "32",
-        "36",
-        "3_5",
-        "4",
-        "40",
-        "44",
-        "48",
-        "4_5"
-      ]
+      "name": "play",
+      "values_sample": []
     },
     {
-      "name": "pt",
-      "values_sample": [
-        "0",
-        "0_75",
-        "1",
-        "10",
-        "11",
-        "12",
-        "14",
-        "16",
-        "1_25",
-        "1_5",
-        "2",
-        "20",
-        "24",
-        "28",
-        "2_5",
-        "3",
-        "32",
-        "36",
-        "3_5",
-        "4",
-        "40",
-        "44",
-        "48",
-        "4_5"
-      ]
+      "name": "pointerEvents",
+      "values_sample": []
     },
     {
-      "name": "px",
-      "values_sample": [
-        "0",
-        "0_75",
-        "1",
-        "10",
-        "11",
-        "12",
-        "14",
-        "16",
-        "1_25",
-        "1_5",
-        "2",
-        "20",
-        "24",
-        "28",
-        "2_5",
-        "3",
-        "32",
-        "36",
-        "3_5",
-        "4",
-        "40",
-        "44",
-        "48",
-        "4_5"
-      ]
+      "name": "position",
+      "values_sample": []
     },
     {
-      "name": "py",
-      "values_sample": [
-        "0",
-        "0_75",
-        "1",
-        "10",
-        "11",
-        "12",
-        "14",
-        "16",
-        "1_25",
-        "1_5",
-        "2",
-        "20",
-        "24",
-        "28",
-        "2_5",
-        "3",
-        "32",
-        "36",
-        "3_5",
-        "4",
-        "40",
-        "44",
-        "48",
-        "4_5"
-      ]
+      "name": "press",
+      "values_sample": []
     },
     {
       "name": "radius",
-      "alias_of": "rounded",
-      "values_sample": [
-        "full",
-        "lg",
-        "md",
-        "none",
-        "sm",
-        "xl"
-      ]
-    },
-    {
-      "name": "relative",
       "values_sample": []
     },
     {
       "name": "resize",
-      "values_sample": [
-        "both",
-        "none",
-        "x",
-        "y"
-      ]
-    },
-    {
-      "name": "right",
-      "values_sample": [
-        "0",
-        "0_75",
-        "1",
-        "10",
-        "11",
-        "12",
-        "14",
-        "16",
-        "1_25",
-        "1_5",
-        "2",
-        "20",
-        "24",
-        "28",
-        "2_5",
-        "3",
-        "32",
-        "36",
-        "3_5",
-        "4",
-        "40",
-        "44",
-        "48",
-        "4_5"
-      ]
-    },
-    {
-      "name": "ring",
-      "values_sample": [
-        "ButtonFace",
-        "ButtonText",
-        "Canvas",
-        "CanvasText",
-        "Highlight",
-        "HighlightText",
-        "accent",
-        "accent-agents",
-        "accent-canvas",
-        "accent-chat",
-        "accent-collections",
-        "accent-dashboard",
-        "accent-events",
-        "accent-foreground",
-        "accent-git",
-        "accent-mesh",
-        "accent-overview",
-        "accent-pipelines",
-        "accent-settings",
-        "accent-setup",
-        "accent-skills",
-        "accent-specs",
-        "accent-theme",
-        "active-bg"
-      ]
+      "values_sample": []
     },
     {
       "name": "rotate",
-      "values_sample": [
-        "0",
-        "1",
-        "12",
-        "180",
-        "2",
-        "270",
-        "3",
-        "45",
-        "6",
-        "90"
-      ]
+      "values_sample": []
     },
     {
-      "name": "rounded",
-      "values_sample": [
-        "full",
-        "lg",
-        "md",
-        "none",
-        "sm",
-        "xl"
-      ]
+      "name": "rotateX",
+      "values_sample": []
     },
     {
-      "name": "rounded-b",
-      "values_sample": [
-        "full",
-        "lg",
-        "md",
-        "none",
-        "sm",
-        "xl"
-      ]
+      "name": "rotateY",
+      "values_sample": []
     },
     {
-      "name": "rounded-l",
-      "values_sample": [
-        "full",
-        "lg",
-        "md",
-        "none",
-        "sm",
-        "xl"
-      ]
-    },
-    {
-      "name": "rounded-r",
-      "values_sample": [
-        "full",
-        "lg",
-        "md",
-        "none",
-        "sm",
-        "xl"
-      ]
-    },
-    {
-      "name": "rounded-t",
-      "values_sample": [
-        "full",
-        "lg",
-        "md",
-        "none",
-        "sm",
-        "xl"
-      ]
+      "name": "rotateZ",
+      "values_sample": []
     },
     {
       "name": "saturate",
-      "values_sample": [
-        "0",
-        "100",
-        "50",
-        "65",
-        "75"
-      ]
+      "values_sample": []
     },
     {
       "name": "scale",
-      "values_sample": [
-        "0",
-        "10",
-        "100",
-        "105",
-        "110",
-        "15",
-        "20",
-        "25",
-        "30",
-        "40",
-        "5",
-        "50",
-        "60",
-        "70",
-        "75",
-        "80",
-        "85",
-        "90",
-        "95"
-      ]
-    },
-    {
-      "name": "scroll",
-      "values_sample": [
-        "auto",
-        "smooth"
-      ]
-    },
-    {
-      "name": "scrollbar",
-      "values_sample": [
-        "auto",
-        "none"
-      ]
-    },
-    {
-      "name": "scrollbar-thin",
       "values_sample": []
     },
     {
-      "name": "scrollbar-thumb",
-      "values_sample": [
-        "ButtonFace",
-        "ButtonText",
-        "Canvas",
-        "CanvasText",
-        "Highlight",
-        "HighlightText",
-        "accent",
-        "accent-agents",
-        "accent-canvas",
-        "accent-chat",
-        "accent-collections",
-        "accent-dashboard",
-        "accent-events",
-        "accent-foreground",
-        "accent-git",
-        "accent-mesh",
-        "accent-overview",
-        "accent-pipelines",
-        "accent-settings",
-        "accent-setup",
-        "accent-skills",
-        "accent-specs",
-        "accent-theme",
-        "active-bg"
-      ]
+      "name": "scrollbarThin",
+      "values_sample": []
     },
     {
-      "name": "scrollbar-track",
-      "values_sample": [
-        "ButtonFace",
-        "ButtonText",
-        "Canvas",
-        "CanvasText",
-        "Highlight",
-        "HighlightText",
-        "accent",
-        "accent-agents",
-        "accent-canvas",
-        "accent-chat",
-        "accent-collections",
-        "accent-dashboard",
-        "accent-events",
-        "accent-foreground",
-        "accent-git",
-        "accent-mesh",
-        "accent-overview",
-        "accent-pipelines",
-        "accent-settings",
-        "accent-setup",
-        "accent-skills",
-        "accent-specs",
-        "accent-theme",
-        "active-bg"
-      ]
+      "name": "scrollbarThumb",
+      "values_sample": []
+    },
+    {
+      "name": "scrollbarTrack",
+      "values_sample": []
     },
     {
       "name": "select",
-      "values_sample": [
-        "all",
-        "auto",
-        "none",
-        "text"
-      ]
+      "values_sample": []
     },
     {
       "name": "self",
-      "values_sample": [
-        "auto",
-        "baseline",
-        "center",
-        "end",
-        "start",
-        "stretch"
-      ]
+      "values_sample": []
     },
     {
-      "name": "shadow",
-      "values_sample": [
-        "accent",
-        "card-rest",
-        "edge-top",
-        "hover",
-        "inset-ring",
-        "inset-soft",
-        "lg",
-        "md",
-        "none",
-        "sm",
-        "sticky",
-        "xl",
-        "xs"
-      ]
+      "name": "sepia",
+      "values_sample": []
     },
     {
       "name": "shrink",
-      "values_sample": [
-        "0",
-        "1"
-      ]
+      "values_sample": []
     },
     {
       "name": "size",
-      "values_sample": [
-        "0",
-        "0_75",
-        "1",
-        "10",
-        "11",
-        "12",
-        "14",
-        "16",
-        "1_25",
-        "1_5",
-        "2",
-        "20",
-        "24",
-        "28",
-        "2_5",
-        "3",
-        "32",
-        "36",
-        "3_5",
-        "4",
-        "40",
-        "44",
-        "48",
-        "4_5"
-      ]
-    },
-    {
-      "name": "slashed-zero",
       "values_sample": []
     },
     {
-      "name": "sr-only",
+      "name": "srOnly",
       "values_sample": []
-    },
-    {
-      "name": "static",
-      "values_sample": []
-    },
-    {
-      "name": "sticky",
-      "values_sample": []
-    },
-    {
-      "name": "stroke",
-      "values_sample": [
-        "ButtonFace",
-        "ButtonText",
-        "Canvas",
-        "CanvasText",
-        "Highlight",
-        "HighlightText",
-        "accent",
-        "accent-agents",
-        "accent-canvas",
-        "accent-chat",
-        "accent-collections",
-        "accent-dashboard",
-        "accent-events",
-        "accent-foreground",
-        "accent-git",
-        "accent-mesh",
-        "accent-overview",
-        "accent-pipelines",
-        "accent-settings",
-        "accent-setup",
-        "accent-skills",
-        "accent-specs",
-        "accent-theme",
-        "active-bg"
-      ]
     },
     {
       "name": "tab",
-      "values_sample": [
-        "1",
-        "2",
-        "4",
-        "8"
-      ]
-    },
-    {
-      "name": "tabular-nums",
       "values_sample": []
     },
     {
-      "name": "tap-highlight",
-      "values_sample": [
-        "auto",
-        "none"
-      ]
-    },
-    {
-      "name": "text",
-      "values_sample": [
-        "2xl",
-        "3xl",
-        "4xl",
-        "ButtonFace",
-        "ButtonText",
-        "Canvas",
-        "CanvasText",
-        "Highlight",
-        "HighlightText",
-        "accent",
-        "accent-agents",
-        "accent-canvas",
-        "accent-chat",
-        "accent-collections",
-        "accent-dashboard",
-        "accent-events",
-        "accent-foreground",
-        "accent-git",
-        "accent-mesh",
-        "accent-overview",
-        "accent-pipelines",
-        "accent-settings",
-        "accent-setup",
-        "accent-skills"
-      ]
-    },
-    {
-      "name": "text-gradient-accent",
+      "name": "tapHighlight",
       "values_sample": []
-    },
-    {
-      "name": "text-gradient-primary",
-      "values_sample": []
-    },
-    {
-      "name": "top",
-      "values_sample": [
-        "0",
-        "0_75",
-        "1",
-        "10",
-        "11",
-        "12",
-        "14",
-        "16",
-        "1_25",
-        "1_5",
-        "2",
-        "20",
-        "24",
-        "28",
-        "2_5",
-        "3",
-        "32",
-        "36",
-        "3_5",
-        "4",
-        "40",
-        "44",
-        "48",
-        "4_5"
-      ]
     },
     {
       "name": "touch",
-      "values_sample": [
-        "auto",
-        "manipulation",
-        "none",
-        "pan-x",
-        "pan-y",
-        "pinch-zoom"
-      ]
-    },
-    {
-      "name": "tracking",
-      "values_sample": [
-        "normal",
-        "tight",
-        "tighter",
-        "wide",
-        "wider"
-      ]
+      "values_sample": []
     },
     {
       "name": "transform",
-      "values_sample": [
-        "none"
-      ]
+      "values_sample": []
     },
     {
       "name": "transition",
-      "values_sample": [
-        "all",
-        "colors",
-        "none",
-        "opacity",
-        "shadow",
-        "transform"
-      ]
-    },
-    {
-      "name": "translate-x",
-      "values_sample": [
-        "0",
-        "0_75",
-        "1",
-        "10",
-        "11",
-        "12",
-        "14",
-        "16",
-        "1_25",
-        "1_5",
-        "2",
-        "20",
-        "24",
-        "28",
-        "2_5",
-        "3",
-        "32",
-        "36",
-        "3_5",
-        "4",
-        "40",
-        "44",
-        "48",
-        "4_5"
-      ]
-    },
-    {
-      "name": "translate-y",
-      "values_sample": [
-        "0",
-        "0_75",
-        "1",
-        "10",
-        "11",
-        "12",
-        "14",
-        "16",
-        "1_25",
-        "1_5",
-        "2",
-        "20",
-        "24",
-        "28",
-        "2_5",
-        "3",
-        "32",
-        "36",
-        "3_5",
-        "4",
-        "40",
-        "44",
-        "48",
-        "4_5"
-      ]
-    },
-    {
-      "name": "truncate",
       "values_sample": []
     },
     {
-      "name": "underline",
+      "name": "translateX",
       "values_sample": []
     },
     {
-      "name": "underline-offset",
-      "values_sample": [
-        "0",
-        "0_75",
-        "1",
-        "10",
-        "11",
-        "12",
-        "14",
-        "16",
-        "1_25",
-        "1_5",
-        "2",
-        "20",
-        "24",
-        "28",
-        "2_5",
-        "3",
-        "32",
-        "36",
-        "3_5",
-        "4",
-        "40",
-        "44",
-        "48",
-        "4_5"
-      ]
-    },
-    {
-      "name": "uppercase",
+      "name": "translateY",
       "values_sample": []
     },
     {
-      "name": "visible",
+      "name": "type",
       "values_sample": []
     },
     {
-      "name": "w",
-      "values_sample": [
-        "0",
-        "0_75",
-        "1",
-        "10",
-        "11",
-        "12",
-        "14",
-        "16",
-        "1_25",
-        "1_5",
-        "2",
-        "20",
-        "24",
-        "28",
-        "2_5",
-        "3",
-        "32",
-        "36",
-        "3_5",
-        "4",
-        "40",
-        "44",
-        "48",
-        "4_5"
-      ]
+      "name": "visibility",
+      "values_sample": []
     },
     {
-      "name": "whitespace",
-      "values_sample": [
-        "break-spaces",
-        "normal",
-        "nowrap",
-        "pre",
-        "pre-line",
-        "pre-wrap"
-      ]
-    },
-    {
-      "name": "will-change",
-      "values_sample": [
-        "auto",
-        "contents",
-        "scroll-position",
-        "transform"
-      ]
-    },
-    {
-      "name": "z",
-      "values_sample": [
-        "0",
-        "1",
-        "10",
-        "2",
-        "20",
-        "3",
-        "30",
-        "4",
-        "40",
-        "5",
-        "50",
-        "auto",
-        "base",
-        "dialog",
-        "dropdown",
-        "elevated",
-        "max",
-        "overlay",
-        "popover",
-        "sticky",
-        "toast",
-        "toast-region"
-      ]
+      "name": "willChange",
+      "values_sample": []
     }
   ],
   "aliases": {
     "bg-color": "bg",
-    "color": "text",
-    "font-family": "font",
-    "font-size": "text",
-    "font-weight": "font",
-    "radius": "rounded"
+    "color": "fg",
+    "font-family": "type",
+    "font-size": "type",
+    "font-weight": "type",
+    "radius": "radius"
   },
   "prefixes": {
     "states": [

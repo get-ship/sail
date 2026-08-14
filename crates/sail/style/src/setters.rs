@@ -9,7 +9,6 @@ use std::borrow::Cow;
 use crate::prefixes as sx_rules;
 use crate::scales;
 use crate::style_ir::{self, SxDecl, SxValue};
-use crate::style_vocab::{self, Resolved};
 
 use super::ir::{PaintArg, PaintOp, StyleDiagnostic};
 use crate::plains::{PlainSpec, find_plain};
@@ -463,9 +462,6 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
     }
     // scrollbar-thin bare composite (width + color vars).
     if spec.name == "scrollbarThin" {
-        if let Resolved::Ok(pairs) = style_vocab::resolve("scrollbar-thin") {
-            return Ok(pairs);
-        }
         return Ok(vec![
             ("scrollbar-width".into(), "thin".into()),
             (
@@ -477,9 +473,6 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
     }
     // truncate bare composite.
     if spec.name == "truncate" {
-        if let Resolved::Ok(pairs) = style_vocab::resolve("truncate") {
-            return Ok(pairs);
-        }
         return Ok(vec![
             ("overflow".into(), "hidden".into()),
             ("text-overflow".into(), "ellipsis".into()),
@@ -488,9 +481,6 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
     }
     // sr-only a11y clip pack.
     if spec.name == "srOnly" {
-        if let Resolved::Ok(pairs) = style_vocab::resolve("sr-only") {
-            return Ok(pairs);
-        }
         return Ok(vec![
             ("position".into(), "absolute".into()),
             ("width".into(), "1px".into()),
@@ -567,10 +557,6 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
     if spec.name == "aspect" {
         if let PaintArg::Token(t) = arg {
             let bare_t = strip_neg(t).1;
-            let atom = format!("aspect-{bare_t}");
-            if let Resolved::Ok(pairs) = style_vocab::resolve(&atom) {
-                return Ok(pairs);
-            }
             let css = match bare_t {
                 "square" => "1 / 1",
                 "video" => "16 / 9",
@@ -596,10 +582,6 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
                     value: bare_t.into(),
                     source: op.source.clone(),
                 });
-            }
-            let atom = format!("object-{bare_t}");
-            if let Resolved::Ok(pairs) = style_vocab::resolve(&atom) {
-                return Ok(pairs);
             }
             return Ok(vec![("object-fit".into(), bare_t.into())]);
         }
@@ -676,25 +658,6 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
     if spec.name == "nums" {
         if let PaintArg::Token(t) = arg {
             let bare_t = strip_neg(t).1;
-            let atom = match bare_t {
-                "tabular" => "tabular-nums",
-                "lining" => "lining-nums",
-                "oldstyle" => "oldstyle-nums",
-                "proportional" => "proportional-nums",
-                "ordinal" => "ordinal",
-                "slashed-zero" => "slashed-zero",
-                "normal" => "normal-nums",
-                _ => {
-                    return Err(StyleDiagnostic::BadToken {
-                        setter: op.setter.clone(),
-                        value: bare_t.into(),
-                        source: op.source.clone(),
-                    });
-                }
-            };
-            if let Resolved::Ok(pairs) = style_vocab::resolve(atom) {
-                return Ok(pairs);
-            }
             let css_val = match bare_t {
                 "tabular" => "tabular-nums",
                 "lining" => "lining-nums",
@@ -712,10 +675,6 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
     if spec.name == "origin" {
         if let PaintArg::Token(t) = arg {
             let bare_t = strip_neg(t).1;
-            let atom = format!("origin-{bare_t}");
-            if let Resolved::Ok(pairs) = style_vocab::resolve(&atom) {
-                return Ok(pairs);
-            }
             let css_val = bare_t.replace('-', " ");
             return Ok(vec![("transform-origin".into(), css_val)]);
         }
@@ -724,13 +683,14 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
     if spec.name == "textGradient" {
         if let PaintArg::Token(t) = arg {
             let bare_t = strip_neg(t).1;
-            let atom = format!("text-gradient-{bare_t}");
-            if let Resolved::Ok(pairs) = style_vocab::resolve(&atom) {
-                return Ok(pairs);
-            }
             if matches!(bare_t, "primary" | "accent") {
+                let bg = match bare_t {
+                    "primary" => "var(--gradient-primary)",
+                    "accent" => "var(--gradient-accent)",
+                    _ => unreachable!(),
+                };
                 return Ok(vec![
-                    ("background".into(), format!("var(--gradient-{bare_t})")),
+                    ("background".into(), bg.into()),
                     ("-webkit-background-clip".into(), "text".into()),
                     ("background-clip".into(), "text".into()),
                     ("color".into(), "transparent".into()),
@@ -742,15 +702,16 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
     if spec.name == "bgGlow" {
         if let PaintArg::Token(t) = arg {
             let bare_t = strip_neg(t).1;
-            let atom = format!("bg-glow-{bare_t}");
-            if let Resolved::Ok(pairs) = style_vocab::resolve(&atom) {
-                return Ok(pairs);
-            }
             if matches!(bare_t, "primary" | "accent") {
+                let bg = match bare_t {
+                    "primary" => "var(--glow-primary)",
+                    "accent" => "var(--glow-accent)",
+                    _ => unreachable!(),
+                };
                 return Ok(vec![
                     ("position".into(), "absolute".into()),
                     ("inset".into(), "-4rem 0 0".into()),
-                    ("background".into(), format!("var(--glow-{bare_t})")),
+                    ("background".into(), bg.into()),
                     ("pointer-events".into(), "none".into()),
                 ]);
             }
@@ -848,21 +809,6 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
                     value: bare_t.into(),
                     source: op.source.clone(),
                 });
-            }
-            let atom = format!("{}-{}", spec.vocab, bare_t);
-            if let Resolved::Ok(pairs) = style_vocab::resolve(&atom) {
-                return Ok(pairs);
-            }
-            // tab map is numeric; underline map may use bare prop+value.
-            if let Some(pairs) = style_ir::lower_decl(&SxDecl {
-                prefixes: Vec::new(),
-                prop: spec.vocab.to_string(),
-                value: Some(SxValue::Token(bare_t.into())),
-                negative: false,
-                bare: false,
-                source: op.source.clone(),
-            }) {
-                return Ok(pairs);
             }
             let css_prop = match spec.name {
                 "overflowX" => "overflow-x",
@@ -963,20 +909,9 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
                 bare_t,
                 "none" | "solid" | "dashed" | "1" | "2" | "4" | "0" | "3" | "8"
             ) {
-                // Treat as outline-color via outline-<token>
-                let mut d = SxDecl {
-                    prefixes: Vec::new(),
-                    prop: "outline".into(),
-                    value: Some(SxValue::Token(bare_t.into())),
-                    negative: false,
-                    bare: false,
-                    source: op.source.clone(),
-                };
                 for cand in token_candidates(bare_t) {
-                    d.value = Some(SxValue::Token(cand.clone()));
-                    let atom = style_ir::decl_atom(&d);
-                    if let Resolved::Ok(pairs) = style_vocab::resolve(&atom) {
-                        return Ok(pairs);
+                    if let Some(v) = scales::lower("color", &cand) {
+                        return Ok(vec![("outline-color".into(), v)]);
                     }
                 }
             }
@@ -1150,7 +1085,6 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
             _ => {}
         }
     }
-    // Bare border width atoms (border, border-b, … without value → 1px solid)
     if matches!(
         spec.name,
         "borderWidth"
@@ -1164,67 +1098,27 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
         if let PaintArg::Token(t) = arg {
             let bare_t = strip_neg(t).1;
             if bare_t == "1" || bare_t.is_empty() {
-                // Prefer bare border atom when width is default 1.
-                if bare_t == "1" || bare_t.is_empty() {
-                    let bare_atom = match spec.name {
-                        "borderWidth" => "border",
-                        "borderBWidth" => "border-b",
-                        "borderTWidth" => "border-t",
-                        "borderEWidth" => "border-e",
-                        "borderSWidth" => "border-s",
-                        "borderRWidth" => "border-r",
-                        "borderLWidth" => "border-l",
-                        _ => "border",
-                    };
-                    if bare_t == "1" {
-                        // Also try name-1 first for explicit width token
-                        let atom = format!("{bare_atom}-1");
-                        if let Resolved::Ok(pairs) = style_vocab::resolve(&atom) {
-                            return Ok(pairs);
-                        }
-                    }
-                    if let Resolved::Ok(pairs) = style_vocab::resolve(bare_atom) {
-                        return Ok(pairs);
-                    }
-                }
+                let props = border_props(spec.name, "width");
+                return Ok(props.into_iter().map(|p| (p, "1px".into())).collect());
             }
         }
     }
-    let decl = SxDecl {
-        prefixes: Vec::new(),
-        prop: spec.vocab.to_string(),
-        value,
-        negative,
-        bare,
-        source: op.source.clone(),
-    };
-    // Try candidates for color tokens (onPrimary → on-primary, etc.)
-    if let Some(SxValue::Token(ref t)) = decl.value {
+    if let Some(SxValue::Token(ref t)) = value {
         for cand in token_candidates(t) {
-            let mut d = decl.clone();
-            d.value = Some(SxValue::Token(cand.clone()));
-            let atom = style_ir::decl_atom(&d);
-            if let Resolved::Ok(pairs) = style_vocab::resolve(&atom) {
-                return Ok(pairs);
-            }
-            let atom2 = if negative {
-                format!("-{}-{}", spec.vocab, cand)
-            } else {
-                format!("{}-{}", spec.vocab, cand)
-            };
-            if let Resolved::Ok(pairs) = style_vocab::resolve(&atom2) {
+            if let Some(pairs) = crate::plains::lower_plain_token(spec, &cand, negative) {
                 return Ok(pairs);
             }
         }
+    } else if bare {
+        if let Some(pairs) = crate::plains::lower_plain_token(spec, "", negative) {
+            return Ok(pairs);
+        }
     }
-    match style_ir::lower_decl(&decl) {
-        Some(pairs) => Ok(pairs),
-        None => Err(StyleDiagnostic::BadToken {
-            setter: op.setter.clone(),
-            value: arg.display(),
-            source: op.source.clone(),
-        }),
-    }
+    Err(StyleDiagnostic::BadToken {
+        setter: op.setter.clone(),
+        value: arg.display(),
+        source: op.source.clone(),
+    })
 }
 
 /// Clip / filter / 3D / container-query product setters → real CSS.
@@ -1546,7 +1440,7 @@ fn validate_border_width_arg(
 /// resolved declarations must all be `*-color` (a width or style token in
 /// this position is a positional error, fail closed).
 fn validate_border_color_arg(
-    spec: &PlainSpec,
+    _spec: &PlainSpec,
     op: &PaintOp,
     arg: &PaintArg,
 ) -> Result<(), StyleDiagnostic> {
@@ -1567,11 +1461,8 @@ fn validate_border_color_arg(
             }
             if !neg {
                 for cand in token_candidates(bare) {
-                    let atom = format!("{}-{}", spec.vocab, cand);
-                    if let Resolved::Ok(pairs) = style_vocab::resolve(&atom) {
-                        if pairs.iter().all(|(p, _)| p.contains("color")) {
-                            return Ok(());
-                        }
+                    if scales::contains("color", &cand) {
+                        return Ok(());
                     }
                 }
             }
@@ -1628,15 +1519,23 @@ fn lower_border_width_arg(
                     "var(--control-stroke)".into(),
                 )]);
             }
-            let atom = format!("{}-{}", spec.vocab, bare);
-            if let Resolved::Ok(pairs) = style_vocab::resolve(&atom) {
-                return Ok(pairs);
-            }
-            Err(StyleDiagnostic::BadToken {
-                setter: op.setter.clone(),
-                value: tok.clone(),
-                source: op.source.clone(),
-            })
+            let css = if bare == "1" || bare.is_empty() {
+                "1px".to_string()
+            } else if let Some(v) = scales::lower("border-width", bare) {
+                v
+            } else if let Some(v) = scales::lower("space", bare) {
+                v
+            } else {
+                return Err(StyleDiagnostic::BadToken {
+                    setter: op.setter.clone(),
+                    value: tok.clone(),
+                    source: op.source.clone(),
+                });
+            };
+            Ok(border_props(spec.name, "width")
+                .into_iter()
+                .map(|p| (p, css.clone()))
+                .collect())
         }
     }
 }
@@ -1669,13 +1568,20 @@ fn lower_border_color_arg(
         }),
         PaintArg::Token(tok) => {
             let bare = strip_neg(tok).1;
-            for cand in token_candidates(bare) {
-                let atom = format!("{}-{}", spec.vocab, cand);
-                if let Resolved::Ok(pairs) = style_vocab::resolve(&atom) {
-                    if pairs.iter().all(|(p, _)| p.contains("color")) {
-                        return Ok(pairs);
-                    }
-                }
+            let css = if matches!(bare, "transparent" | "currentColor") {
+                Some(bare.to_string())
+            } else if bare == "current" {
+                Some("currentColor".into())
+            } else {
+                token_candidates(bare)
+                    .into_iter()
+                    .find_map(|cand| scales::lower("color", &cand))
+            };
+            if let Some(css) = css {
+                return Ok(border_props(spec.name, "color")
+                    .into_iter()
+                    .map(|p| (p, css.clone()))
+                    .collect());
             }
             Err(StyleDiagnostic::BadToken {
                 setter: op.setter.clone(),
