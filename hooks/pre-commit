@@ -56,7 +56,8 @@ fi
 
 # --- merge commits only: clippy + component typecheck (not every commit) ---
 if [ -f "$(git rev-parse --git-path MERGE_HEAD)" ]; then
-  echo "pre-commit: merge — clippy (compiler, lint) + bun typecheck"
+  echo "pre-commit: merge — clippy (compiler, lint) + bun typecheck + sail typecheck"
   cargo clippy -p sail-compiler -p sail-lint -- -D warnings
   bun run typecheck
+  bun run typecheck:sail
 fi

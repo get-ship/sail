@@ -1,15 +1,16 @@
 #!/usr/bin/env bun
 /**
- * Emit declaration-only `dist/` for monorepo packages that app Pure typecheck
+ * Emit declaration-only `dist/` for monorepo packages that the sail typecheck
  * follows via `@ship/*` (G2d / types→src residual).
  *
- * Pure (`lib: ESNext`, no DOM) cannot typecheck Framework package SOURCE.
- * `skipLibCheck` only applies to `.d.ts` — so package `types`/`exports.types`
- * must point at emitted declarations, not `src/*.ts`.
+ * The sail typecheck (`lib: ESNext`, no DOM, sail ambients) cannot typecheck
+ * Framework package SOURCE. `skipLibCheck` only applies to `.d.ts` — so
+ * package `types`/`exports.types` must point at emitted declarations, not
+ * `src/*.ts`.
  *
  * Usage: `node scripts/emit-package-dts.ts`
  * Wire: root `prepare` / `emit:package-dts` / `sail types` (monorepo) /
- *        before pure typecheck scripts.
+ *        before typecheck:sail.
  *
  * Exits non-zero if any declared dual `types` path under `dist/` is missing
  * after emit (root `types` + every `exports.*.types` / nested condition that
@@ -43,9 +44,10 @@ const FRAMEWORK_EMIT = {
 }
 
 /**
- * Packages Pure apps resolve into (studio listFiles / @ship imports).
+ * Packages the sail typecheck resolves into (studio listFiles / @ship imports).
  * Dual `exports.types → dist/*.d.ts`. Missing dist → TypeScript falls back to
- * Framework `src/` (pure regression) — emit must run before pure/IDE typecheck.
+ * Framework `src/` (sail-typecheck regression) — emit must run before the
+ * sail typecheck / IDE.
  *
  * Hard-fail requires **all** package.json `types` / `exports.*.types` paths under
  * `dist/` (not only `dist/index.d.ts`), so multi-entry dual packages

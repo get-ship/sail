@@ -12,6 +12,7 @@
     "chat-elements/src/**",
     "chat-elements/dist/**",
     "code-editor/src/**",
+    "code-editor/types/**",
     "media/src/**",
     "mermaid/src/**",
     "primitives/src/**",
@@ -31,7 +32,10 @@
       "default": "./primitives/src/index.ts"
     },
     "./charts": "./charts/src/index.ts",
-    "./code": "./code-editor/src/index.ts",
+    "./code": {
+      "types": "./code-editor/types/index.d.ts",
+      "default": "./code-editor/src/index.ts"
+    },
     "./viewers": {
       "types": "./viewer/dist/index.d.ts",
       "default": "./src/viewers.ts"

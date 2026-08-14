@@ -1,5 +1,5 @@
 {
-  "$comment": "Node-capable config for studio test helpers (ops-adapter-cli, vitest). Pure gate never loads this file — only src/** + routes/** ride node_modules/.sail/tsconfig.pure.json.",
+  "$comment": "Node-capable config for studio test helpers (ops-adapter-cli, vitest). The sail typecheck never loads this file — only src/** + routes/** ride node_modules/.sail/tsconfig.pure.json (no DOM, sail ambients).",
   "compilerOptions": {
     "target": "ESNext",
     "module": "ESNext",

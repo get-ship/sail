@@ -98,13 +98,14 @@ describe('no documentElement.style under apps/**', () => {
   })
 })
 
-describe('project Pure gate scripts stay wired', () => {
-  // Scripts exist so un-wiring is loud. Do not invoke live `typecheck:pure`
-  // from required `test` / type-gate until studio + site corpora are green.
-  // L2 `packages/components/sail` is not an app Pure surface.
-  const requiredScripts = ['typecheck:studio-pure', 'typecheck:site-pure', 'typecheck:pure']
+describe('sail typecheck stays wired and required', () => {
+  // tsc against the generated Sail kind config: lib ESNext only (no DOM),
+  // sail ambients from node_modules/.sail/types.d.ts. If it is red, the
+  // gate fails — we do not skip it because the corpus is red.
+  // `bun test` stays the fast local suite; CI type-gate is where this runs.
+  const requiredScripts = ['typecheck:sail:studio', 'typecheck:sail:site', 'typecheck:sail']
 
-  test('root package.json exposes app Pure typecheck scripts', () => {
+  test('root package.json exposes the sail typecheck scripts', () => {
     const pkg = JSON.parse(readText(join(REPO, 'package.json')) ?? '{}') as {
       scripts?: Record<string, string>
     }
@@ -112,22 +113,22 @@ describe('project Pure gate scripts stay wired', () => {
     for (const name of requiredScripts) {
       expect(scripts[name], `missing script ${name}`).toBeDefined()
     }
-    expect(scripts['typecheck:studio-pure']).toContain('tsconfig.pure.json')
-    expect(scripts['typecheck:site-pure']).toContain('tsconfig.pure.json')
-    expect(scripts['typecheck:pure']).toContain('typecheck:studio-pure')
-    expect(scripts['typecheck:pure']).toContain('typecheck:site-pure')
-    expect(scripts['typecheck:pure'] ?? '').not.toContain('components-pure')
-    expect(scripts.test ?? '', 'required test must not invoke live typecheck:pure').not.toContain(
-      'typecheck:pure',
+    expect(scripts['typecheck:sail:studio']).toContain('tsconfig.pure.json')
+    expect(scripts['typecheck:sail:site']).toContain('tsconfig.pure.json')
+    expect(scripts['typecheck:sail']).toContain('typecheck:sail:studio')
+    expect(scripts['typecheck:sail']).toContain('typecheck:sail:site')
+    expect(scripts['typecheck:sail'] ?? '').not.toContain('components-pure')
+    expect(scripts.test ?? '', 'fast local test must not swallow the sail typecheck').not.toContain(
+      'typecheck:sail',
     )
   })
 
-  test('CI type-gate keeps corpus builds and does not invoke live typecheck:pure', () => {
+  test('CI type-gate keeps corpus builds and runs the sail typecheck', () => {
     const yml = readText(join(REPO, '.github/workflows/hygiene.yml')) ?? ''
     expect(yml).toContain('App corpus builds')
     expect(yml).toContain('build apps/sail-site/src')
     expect(yml).toContain('build apps/studio/src')
-    expect(yml).not.toContain('typecheck:pure')
+    expect(yml).toContain('typecheck:sail')
     expect(yml).not.toContain('typecheck:components-pure')
   })
 })

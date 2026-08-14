@@ -1,9 +1,8 @@
 # Hygiene + type-gate suites.
 # Parity (taffy/takumi vs browser) stays in parity.yml — do not merge the two.
 # App corpus builds (`sail-compiler build apps/studio|sail-site`) are in
-# type-gate. The Pure-law leftovers that used to keep them out (studio
-# globalThis.fetch, sail-site _legacy rAF) are gone. Do not
-# continue-on-error a red corpus step.
+# type-gate, plus the sail typecheck (generated kind config: no DOM,
+# sail ambients). Do not continue-on-error a red corpus or typecheck step.
 
 name: hygiene
 
@@ -74,3 +73,6 @@ jobs:
         run: |
           cargo run -p sail-compiler --quiet -- build apps/sail-site/src
           cargo run -p sail-compiler --quiet -- build apps/studio/src
+
+      - name: Sail typecheck
+        run: bun run typecheck:sail

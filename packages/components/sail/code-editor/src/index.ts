@@ -15,7 +15,7 @@ export type {
   SailDiagnostic,
   SailCompletionSource,
   SailCodeEditorApi,
-} from './sail-code-editor/sail-code-editor.controller'
+} from '../types/index'
 
 // Thin ops client (testable without mounting CodeMirror).
 export {

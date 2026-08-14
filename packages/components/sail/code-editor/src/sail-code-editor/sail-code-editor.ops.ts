@@ -151,7 +151,10 @@ export function parseOpsDiagnostics(raw: unknown): OpsDiagnostic[] {
     }
     if (colRaw != null && colRaw !== '') item.column = Number(colRaw) || 1
     if (endLineRaw != null && endLineRaw !== '') item.endLine = Number(endLineRaw) || line
-    if (endColRaw != null && endColRaw !== '') item.endColumn = Number(endColRaw) || undefined
+    if (endColRaw != null && endColRaw !== '') {
+      const n = Number(endColRaw)
+      if (n) item.endColumn = n
+    }
     out.push(item)
   }
   return out
@@ -179,17 +182,15 @@ function parseHoverBody(json: unknown): OpsHoverResult | null {
   const result: OpsHoverResult = { contents }
   if (range && typeof range === 'object') {
     const r = range as Record<string, unknown>
-    result.range = {
-      line: r.line != null ? Number(r.line) : undefined,
-      column: r.column != null ? Number(r.column) : r.col != null ? Number(r.col) : undefined,
-      endLine: r.endLine != null ? Number(r.endLine) : r.end_line != null ? Number(r.end_line) : undefined,
-      endColumn:
-        r.endColumn != null
-          ? Number(r.endColumn)
-          : r.end_col != null
-            ? Number(r.end_col)
-            : undefined,
-    }
+    const next: NonNullable<OpsHoverResult['range']> = {}
+    if (r.line != null) next.line = Number(r.line)
+    if (r.column != null) next.column = Number(r.column)
+    else if (r.col != null) next.column = Number(r.col)
+    if (r.endLine != null) next.endLine = Number(r.endLine)
+    else if (r.end_line != null) next.endLine = Number(r.end_line)
+    if (r.endColumn != null) next.endColumn = Number(r.endColumn)
+    else if (r.end_col != null) next.endColumn = Number(r.end_col)
+    result.range = next
   }
   return result
 }
