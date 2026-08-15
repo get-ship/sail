@@ -8,6 +8,7 @@
 <scope>
   props: {
     tone: 'muted' | 'info' | 'success' | 'warning' | 'destructive'
+    variant: 'default' | 'banner' = 'default'
     dismissible = false
     onDismiss: () => void
   }
@@ -15,6 +16,9 @@
   style base = {position(relative).overflow({ all: hidden }).pad(3).group().border({ color: border, width: 1 }).radius(md).bg(muted).fg(foreground).elevation(xs).type({ family: body, size: base, leading: normal })}
   // ::before stripe geometry (rest fill primary; host attaches tone via when.before).
   style stripe = {position({ scheme: absolute, l: 0, t: 0, b: 0 }).size({ w: 1 }).content(empty).bg(primary)}
+  style variantDefault = {radius(md).elevation(xs)}
+  // Full-bleed: flush radius, no lift, stretch width, thicker start stripe.
+  style variantBanner = {radius(none).elevation(none).size({ w: full }).self(stretch)}
   style ico = {size(control-h-xs).radius(md).bg(muted).fg(primary)}
   style title = {type({ weight: semibold })}
   style body = {fg(primary)}
@@ -30,8 +34,9 @@
   gap="3"
   use:liveRegion
   use:dismissControl
-  style(base, {when: {before: style(stripe, {bg(tone)}), forced-colors: {border({ color: CanvasText }), when: {before: bg(CanvasText)}}}, compound: [
+  style(base, {when: {before: style(stripe, {bg(tone)}), forced-colors: {border({ color: CanvasText }), when: {before: bg(CanvasText)}}}, match: { variant: { default: variantDefault, banner: variantBanner } }, compound: [
       {tone: muted, when: {before: bg(primary)}},
+      {variant: banner, when: {before: size({ w: 2 })}},
     ]})
 >
   <row

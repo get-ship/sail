@@ -21,6 +21,8 @@ export const contract = {
       optional: true,
       control: 'swatches',
     },
+    // Accessible name only — visible labeled chrome is a language gap on void <hr>.
+    label: { default: '', control: 'text' },
   },
   faces: [{ path: 'component.separator.line', label: 'Line' }],
   visual: {

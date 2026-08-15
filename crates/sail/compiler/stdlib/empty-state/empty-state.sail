@@ -10,6 +10,7 @@
     variant: 'default' | 'inline' | 'placeholder' | 'connecting' = 'default'
     size: 'md' | 'sm' | 'lg' = 'md'
     tone: 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted'
+    compact = false
   }
 
   style base = {pad({ y: 16, x: 4 }).fg(muted-foreground).border({ color: border, width: 1 }).radius(lg).bg(muted).elevation(xs).type({ family: body, align: center })}
@@ -20,6 +21,8 @@
   style variantInline = {pad({ y: 3, x: 4 }).border({ color: border, width: 1, style: dashed }).radius(md).bg(muted).elevation(none).type({ align: start })}
   // placeholder + connecting share bare (borderless/transparent) chrome.
   style variantBare = {pad({ y: 6 }).border({ width: 0 }).bg(transparent).radius(none).elevation(none).type({ align: center })}
+  // Style cannot set gap (layout attr only) — compact is pad + icon.
+  style compactOn = {pad({ y: 4, x: 3 })}
   style icon = {self(center).size(12).radius(lg).bg(muted).fg(muted-foreground)}
   style copy = {self(stretch)}
   style title = {fg(foreground).type({ family: heading, weight: semibold, leading: tight, size: md })}
@@ -32,7 +35,7 @@
   justify="center"
   gap="3"
   use:variantLive
-  style(base, {when: {forced-colors: border({ color: CanvasText })}, match: { size: { md: sizeMd, sm: sizeSm, lg: sizeLg }, variant: { default: variantDefault, inline: variantInline, placeholder: variantBare, connecting: variantBare } }})
+  style(base, {when: {forced-colors: border({ color: CanvasText })}, match: { size: { md: sizeMd, sm: sizeSm, lg: sizeLg }, variant: { default: variantDefault, inline: variantInline, placeholder: variantBare, connecting: variantBare }, compact: { true: compactOn } }})
 >
   <row
     inline
@@ -40,7 +43,7 @@
     align="center"
     justify="center"
     hidden="true"
-    style(icon, {shrink(1).bg(muted).fg(tone), when: {empty: display(none), forced-colors: bg(Canvas).fg(CanvasText)}, compound: [{tone: muted, bg(muted).fg(muted-foreground)}]})
+    style(icon, {shrink(1).bg(muted).fg(tone), when: {empty: display(none), forced-colors: bg(Canvas).fg(CanvasText)}, compound: [{tone: muted, bg(muted).fg(muted-foreground)}, {compact: true, size(8)}]})
   >
     <slot name="icon"></slot>
   </row>

@@ -21,6 +21,7 @@ export const contract = {
       optional: true,
       control: 'swatches',
     },
+    compact: { default: false, control: 'switch' },
   },
   faces: [
     { path: 'component.empty-state.bg', label: 'Fill' },
@@ -30,7 +31,7 @@ export const contract = {
   ],
   visual: {
     defaultRow: true,
-    cross: ['variant', 'size', 'tone'],
+    cross: ['variant', 'size', 'tone', 'compact'],
   },
   examples: true,
 } as const satisfies SurfaceContract

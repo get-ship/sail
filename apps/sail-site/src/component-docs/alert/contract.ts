@@ -1,6 +1,9 @@
 import type { SurfaceContract } from '../contract-types'
 
-/** Surface contract for alert — axes from prop-registry only. */
+/**
+ * Surface contract for alert — axes from prop-registry only.
+ * Variants: default | banner (SPEC-L1-PASS-1).
+ */
 export const contract = {
   slug: 'alert',
   tag: 'alert',
@@ -10,6 +13,11 @@ export const contract = {
       values: ['muted', 'info', 'success', 'warning', 'destructive'] as const,
       optional: true,
       control: 'swatches',
+    },
+    variant: {
+      values: ['default', 'banner'] as const,
+      default: 'default',
+      control: 'select',
     },
     dismissible: { default: false, control: 'switch' },
     onDismiss: { control: 'none', event: true },
@@ -22,7 +30,7 @@ export const contract = {
   ],
   visual: {
     defaultRow: true,
-    cross: ['tone', 'dismissible'],
+    cross: ['tone', 'variant', 'dismissible'],
   },
   examples: true,
 } as const satisfies SurfaceContract

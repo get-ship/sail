@@ -22,6 +22,7 @@ export const contract = {
       control: 'slider',
     },
     pill: { default: false, control: 'switch' },
+    dot: { default: false, control: 'switch' },
   },
   faces: [
     { path: 'component.badge.bg', label: 'Fill' },
@@ -30,7 +31,7 @@ export const contract = {
   ],
   visual: {
     defaultRow: true,
-    cross: ['variant', 'tone', 'size', 'pill'],
+    cross: ['variant', 'tone', 'size', 'pill', 'dot'],
   },
   examples: true,
 } as const satisfies SurfaceContract

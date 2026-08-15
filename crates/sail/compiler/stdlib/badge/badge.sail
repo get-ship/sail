@@ -10,6 +10,7 @@
     variant: 'soft' | 'solid' | 'outline' = 'soft'
     size: 'md' | 'sm' | 'lg' = 'md'
     pill = false
+    dot = false
   }
 
   style base = {display(inline-flex).size({ min-h: control-h-2xs }).pad({ x: 2, y: px }).border({ width: 1 }).radius(sm).type({ family: body, weight: semibold, leading: none, wrap: nowrap, size: xs })}
@@ -21,6 +22,8 @@
   style sizeMd = {size({ min-h: control-h-2xs }).pad({ x: 2 }).type({ size: xs })}
   style sizeSm = {size({ min-h: 4 }).pad({ x: 1_5 }).type({ size: xs })}
   style sizeLg = {size({ min-h: control-h-xs }).pad({ x: 2_5 }).type({ size: xs })}
+  // Status disc — pad/text unused; tone still paints via variant match.
+  style dotOn = {size({ w: 2, h: 2, min-h: 0 }).pad({ all: 0, x: 0 }).overflow({ all: hidden }).radius(full)}
 
   style solidTone = {bg(tone).fg(tone.foreground).border({ color: tone }).elevation(xs)}
   style softTone = {bg({ color: tone, mix: 15 }).border({ color: tone }).fg(tone)}
@@ -28,7 +31,7 @@
 </scope>
 
 <span
-  style(base, {when: {hover: filter({ opacity: 90 }), focus: border({ width: 2, kind: outline })}, match: {variant: { soft: style(soft, softTone), solid: style(solid, solidTone), outline: style(outline, outlineTone) }, size: { md: sizeMd, sm: sizeSm, lg: sizeLg }, pill: {true: radius(full), false: radius(sm)}}, compound: [
+  style(base, {when: {hover: filter({ opacity: 90 }), focus: border({ width: 2, kind: outline })}, match: {variant: { soft: style(soft, softTone), solid: style(solid, solidTone), outline: style(outline, outlineTone) }, size: { md: sizeMd, sm: sizeSm, lg: sizeLg }, pill: {true: radius(full), false: radius(sm)}, dot: {true: dotOn}}, compound: [
       {tone: muted, variant: solid, bg(muted).fg(muted-foreground).border({ color: border })},
       {tone: muted, variant: soft, bg(muted).fg(muted-foreground).border({ color: border })},
       {tone: muted, variant: outline, fg(muted-foreground).border({ color: border })},

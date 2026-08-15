@@ -5,6 +5,8 @@
   bg(tone) — empty --tone would stomp the rest line).
   Host subset: muted | primary | destructive (not full Tone).
   Orientation × dashed compounds remain (not pure group-member paint).
+  label = accessible name (aria-label). Visible labeled chrome (two lines +
+  text) is a language gap: native hr is void, a slot would drop author-void.
 -->
 
 <scope>
@@ -12,6 +14,7 @@
     orientation: 'horizontal' | 'vertical' = 'horizontal'
     tone: 'muted' | 'primary' | 'destructive'
     variant: 'solid' | 'dashed' = 'solid'
+    label = ''
   }
 
   style base = {display(block).size({ w: full, h: border-width }).pad(0).margin({ y: 2 }).border({ width: 0 }).bg(border)}
