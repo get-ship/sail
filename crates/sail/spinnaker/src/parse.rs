@@ -2081,6 +2081,11 @@ fn expand_keyframe_play(
     }
     if trigger == "loop" {
         parts.push("iterations: 'infinite'".into());
+        // Runtime loop defaults direction to alternate. A 360° spin must
+        // keep turning, not wind back — the catalog name is the mapping.
+        if play.name == "spin" {
+            parts.push("direction: 'normal'".into());
+        }
     }
     if let Some(PaintArg::Token(tok)) = duration {
         if !tok.is_empty() && tok.chars().all(|c| c.is_ascii_digit() || c == '.') {

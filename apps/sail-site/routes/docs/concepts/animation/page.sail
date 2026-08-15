@@ -12,25 +12,25 @@
   style eyebrow = { margin({ b: 2 }).fg(accent).type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
   style lead = { fg(muted-foreground).type({ size: lg, leading: relaxed }) }
   style mutedSm = { fg(muted-foreground).type({ size: sm }) }
-  style pressBtn = { animate: { press: play(fade) } }
+  style pressBtn = { animate: { press: play(press) } }
   style tileRow = { size({ min-h: 9 }) }
-  style tile = { size(9).radius(md).bg(primary), animate: { enter: play(slide-up) } }
-  style tileDim = { size(9).radius(md).bg(primary).filter({ opacity: 75 }), animate: { enter: play(slide-up) } }
+  style tile = { size(9).radius(md).bg(primary), animate: { enter: play(rise) } }
+  style tileDim = { size(9).radius(md).bg(primary).filter({ opacity: 75 }), animate: { enter: play(rise) } }
   style demoPanel = { pad(6).size({ min-h: 8 }).border({ color: border, width: 1 }).radius(lg).bg(surface-1) }
   style demoPanelTall = { pad(6).size({ min-h: 11 }).border({ color: border, width: 1 }).radius(lg).bg(surface-1) }
   style enterCard = { pad(4), animate: { enter: play(fade-scale-in), exit: play(fade) } }
-  style loopTileFast = { size(8).radius(md).bg(primary), animate: { loop: play(fade) } }
-  style loopTileSlow = { size(8).radius(md).bg(primary).filter({ opacity: 75 }), animate: { loop: play(fade) } }
+  style loopTileFast = { size(8).radius(md).bg(primary), animate: { loop: play(pulse) } }
+  style loopTileSlow = { size(8).radius(md).bg(primary).filter({ opacity: 75 }), animate: { loop: play(pulse) } }
   style revealCard = { pad(6), animate: { reveal: play(slide-up) } }
   style revealSpring = { pad(6), animate: { reveal: play(fade-scale-in) } }
-  style ambientDot = { size(4).radius(full).bg(primary), animate: { loop: play(slide-up) } }
-  style ambientDotDim = { size(4).radius(full).bg(primary).filter({ opacity: 75 }), animate: { loop: play(slide-up) } }
-  style spinTile = { size(8).radius(md).bg(primary), animate: { loop: play(fade) } }
+  style ambientDot = { size(4).radius(full).bg(primary), animate: { loop: play(pulse) } }
+  style ambientDotDim = { size(4).radius(full).bg(primary).filter({ opacity: 75 }), animate: { loop: play(pulse) } }
+  style spinTile = { size(8).radius(md).bg(primary), animate: { loop: play(spin) } }
   style grow1 = { grow(1) }
   style scrub = { grow(1).size({ min-w: 0 }) }
   style scrubVal = { size({ w: 8 }).fg(muted-foreground).type({ family: mono, size: sm, align: end }) }
   style timelineTile = { shrink(0).size(9).bg(primary).radius(md) }
-  style focusBtn = { animate: { focus-visible: play(fade) } }
+  style focusBtn = { animate: { focus-visible: play(pulse) } }
   style footNote = { margin({ t: 4 }).fg(muted-foreground).type({ size: sm }) }
   style footNav = { pad({ t: 4 }).margin({ t: 8 }).border({ color: border, width: 1, edge: t }) }
 </scope>
@@ -99,7 +99,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <row gap="3" align="center">
     <button on:click={replay} style(pressBtn)>Replay</button>
     <p style(mutedSm)>
-      Five tiles, one <code>style&#40;&#123; animate: &#123; enter: play(slide-up) &#125; &#125;&#41;</code> each;
+      Five tiles, one <code>style&#40;&#123; animate: &#123; enter: play(rise) &#125; &#125;&#41;</code> each;
       <code>stagger</code> is the delay between siblings.
     </p>
   </row>
@@ -267,7 +267,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     </column>
     <column gap="1">
       <label>Tweens</label>
-      <p style(mutedSm)>fade · fade-out · press · release · pulse · spin</p>
+      <p style(mutedSm)>fade · fade-out · fade-scale-in · slide-up · rise · press · release · pulse · spin</p>
     </column>
   </grid>
   <p style(mutedSm)>

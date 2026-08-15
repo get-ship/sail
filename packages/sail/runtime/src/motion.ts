@@ -157,17 +157,33 @@ function isHTMLElement(el: Element): el is HTMLElement {
 
 function applyRestStyle(el: Element, cfg: MotionConfig): void {
   if (!isHTMLElement(el)) return
-  const value = REST_VALUE[cfg.property]
+  // Honor authored `from`. Pulse/press start at 1 — pinning them to the
+  // fade rest (opacity 0) flashes a visible loop/button out of existence
+  // for the detached-mount rAF, then the real keyframes pop it back.
   switch (cfg.property) {
-    case 'opacity': el.style.opacity = String(value); return
-    case 'scale': el.style.scale = String(value); return
+    case 'opacity':
+      el.style.opacity = String(withoutUnit(cfg.from, REST_VALUE.opacity))
+      return
+    case 'scale':
+      el.style.scale = String(withoutUnit(cfg.from, REST_VALUE.scale))
+      return
     // Single-axis: the OTHER axis is pinned at identity (1), so `scale-x`
     // stretches horizontally only and `scale-y` vertically only.
-    case 'scale-x': el.style.scale = `${value} 1`; return
-    case 'scale-y': el.style.scale = `1 ${value}`; return
-    case 'translate-y': el.style.translate = `0 ${value}px`; return
-    case 'translate-x': el.style.translate = `${value}px 0`; return
-    case 'rotate': el.style.rotate = `${value}deg`; return
+    case 'scale-x':
+      el.style.scale = `${withoutUnit(cfg.from, REST_VALUE['scale-x'])} 1`
+      return
+    case 'scale-y':
+      el.style.scale = `1 ${withoutUnit(cfg.from, REST_VALUE['scale-y'])}`
+      return
+    case 'translate-y':
+      el.style.translate = `0 ${withUnit(cfg.from, 'px', REST_VALUE['translate-y'])}`
+      return
+    case 'translate-x':
+      el.style.translate = `${withUnit(cfg.from, 'px', REST_VALUE['translate-x'])} 0`
+      return
+    case 'rotate':
+      el.style.rotate = withUnit(cfg.from, 'deg', REST_VALUE.rotate)
+      return
   }
 }
 

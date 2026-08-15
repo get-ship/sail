@@ -79,6 +79,24 @@ describe('motion runtime — a detached attach defers until the element is conne
     dispose()
   })
 
+  it('pins a pulse loop to authored from (1), not the fade rest of 0', () => {
+    const el = document.createElement('div')
+    const dispose = __sail_motion_attach(el, {
+      trigger: 'loop',
+      motions: [{
+        property: 'opacity',
+        preset: 'pulse',
+        kind: 'tween',
+        from: 1,
+        to: 0.72,
+        duration: 0.5,
+      }],
+    })
+    expect(animateCalls.length).toBe(0)
+    expect(el.style.opacity).toBe('1')
+    dispose()
+  })
+
   it('creates the animation once the element joins the document', async () => {
     const el = document.createElement('div')
     const dispose = __sail_motion_attach(el, fade)

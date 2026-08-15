@@ -5,7 +5,7 @@ import { signal, timeline } from '@ship/sail-runtime'
 export const code = {
   stagger: `<if {dealt()}>
   <row gap="3">
-    <div style({ size(9).radius(md).bg(primary), animate: { enter: play(slide-up) } })>
+    <div style({ size(9).radius(md).bg(primary), animate: { enter: play(rise) } })>
     </div>
     <!-- ×5 — each waits 0.07s after its previous sibling -->
   </row>
@@ -17,24 +17,24 @@ export const code = {
   </card>
 </if>`,
 
-  express: `<div style({ animate: { loop: play(fade) } })>
+  express: `<div style({ animate: { loop: play(pulse) } })>
   </div>
-<div style({ animate: { loop: play(fade) } })>
+<div style({ animate: { loop: play(pulse) } })>
 </div>`,
 
   reveal: `<card style({ animate: { reveal: play(slide-up) } })>
   This one fades up as it enters the viewport.
 </card>`,
 
-  loop: `<div style({ animate: { loop: play(slide-up) } })>
+  loop: `<div style({ animate: { loop: play(pulse) } })>
   </div>
 
-<div style({ animate: { loop: play(fade) } })>
+<div style({ animate: { loop: play(spin) } })>
 </div>`,
 
-  gestures: `<button style({ animate: { press: play(fade) } })>
+  gestures: `<button style({ animate: { press: play(press) } })>
     press me</button>
-<button style({ animate: { focus-visible: play(fade) } })>
+<button style({ animate: { focus-visible: play(pulse) } })>
   tab to me</button>`,
 
   choreography: `<controller>

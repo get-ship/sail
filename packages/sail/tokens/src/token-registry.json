@@ -3467,6 +3467,30 @@
         }
       }
     },
+    "rise": {
+      "path": "keyframes.rise",
+      "type": "sail.keyframes",
+      "value": {
+        "from": {
+          "transform": "translateY(8px)"
+        },
+        "to": {
+          "transform": "translateY(0)"
+        }
+      }
+    },
+    "press": {
+      "path": "keyframes.press",
+      "type": "sail.keyframes",
+      "value": {
+        "from": {
+          "transform": "scale(1)"
+        },
+        "to": {
+          "transform": "scale(0.96)"
+        }
+      }
+    },
     "spin": {
       "path": "keyframes.spin",
       "type": "sail.keyframes",
@@ -3476,6 +3500,18 @@
         },
         "to": {
           "transform": "rotate(360deg)"
+        }
+      }
+    },
+    "pulse": {
+      "path": "keyframes.pulse",
+      "type": "sail.keyframes",
+      "value": {
+        "from": {
+          "opacity": 1
+        },
+        "to": {
+          "opacity": 0.72
         }
       }
     }
