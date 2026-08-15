@@ -10,7 +10,6 @@ import { meta as checkboxMeta } from './checkbox/meta'
 import { meta as dateMeta } from './date/meta'
 import { meta as fileMeta } from './file/meta'
 import { meta as colorMeta } from './color/meta'
-import { meta as radioMeta } from './radio/meta'
 import { meta as radioGroupMeta } from './radio-group/meta'
 import { meta as switchToggleMeta } from './switch/meta'
 import { meta as sliderMeta } from './slider/meta'
@@ -67,7 +66,6 @@ export const DOC_PACKAGES: readonly DocMeta[] = [
   dateMeta,
   fileMeta,
   colorMeta,
-  radioMeta,
   radioGroupMeta,
   switchToggleMeta,
   sliderMeta,

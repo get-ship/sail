@@ -8,6 +8,8 @@ import { fileURLToPath } from 'node:url'
 import { test, expect, type Locator, type Page } from '@playwright/test'
 import { CONTRACTS, CONTRACT_BY_SLUG } from '../src/component-docs/contracts'
 import { DOC_PACKAGES } from '../src/component-docs/registry'
+import { CATALOG } from '../src/compositions/component-catalog'
+import { hosts } from '@ship/sail-l1'
 import type { AxisDef } from '../src/component-docs/contract-types'
 
 test.setTimeout(60_000)
@@ -158,7 +160,22 @@ async function paintedBox(root: Locator) {
       const r = el.getBoundingClientRect()
       return r.width > 0 && r.height > 0 ? { w: r.width, h: r.height } : null
     }
-    return consider(node) ?? Array.from(node.querySelectorAll('*')).map(consider).find(Boolean) ?? null
+    const walk = (el: Element): { w: number; h: number } | null => {
+      const hit = consider(el)
+      if (hit) return hit
+      for (const child of Array.from(el.children)) {
+        const nested = walk(child)
+        if (nested) return nested
+      }
+      if (typeof (el as HTMLSlotElement).assignedElements === 'function') {
+        for (const assigned of (el as HTMLSlotElement).assignedElements({ flatten: true })) {
+          const nested = walk(assigned)
+          if (nested) return nested
+        }
+      }
+      return null
+    }
+    return walk(node)
   })
 }
 
@@ -260,10 +277,28 @@ test('contracts must not list tone.optional (empty swatch banned)', () => {
 
 test('walker inventory: every DOC_PACKAGES slug with a doc-*.sail is listed', () => {
   expect(HOSTS.length, 'expected registered doc hosts').toBeGreaterThan(10)
-  // page / toggle / layout are not L1 doc hosts (cells / not-an-element).
+  // page / toggle / radio / layout are not L1 doc hosts (parts / not-an-element).
   expect(HOSTS.some((m) => m.slug === 'page')).toBe(false)
   expect(HOSTS.some((m) => m.slug === 'toggle')).toBe(false)
+  expect(HOSTS.some((m) => m.slug === 'radio')).toBe(false)
+  expect(HOSTS.some((m) => m.slug === 'menu-item')).toBe(false)
   expect(hasDocSail('layout')).toBe(false)
+  expect(hasDocSail('radio')).toBe(false)
+  expect(CONTRACTS.some((c) => c.slug === 'radio')).toBe(false)
+})
+
+test('hub tiles skip menu-item and L1 parts', () => {
+  const lang = CATALOG.filter((e) => e.pack === 'lang').map((e) => e.tag)
+  expect(lang).not.toContain('menu-item')
+  expect(lang).not.toContain('radio')
+  expect(lang).not.toContain('page')
+  expect(lang).not.toContain('toggle')
+  const hubHosts = hosts()
+    .map((f) => f.host)
+    .filter((h) => h !== 'menu-item')
+  for (const host of hubHosts) {
+    expect(lang, `missing hub tile for ${host}`).toContain(host)
+  }
 })
 
 for (const meta of HOSTS) {

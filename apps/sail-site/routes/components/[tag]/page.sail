@@ -39,7 +39,6 @@ const DOC_CE_SLUGS = new Set([
   'meter',
   'label',
   'field',
-  'radio',
   'radio-group',
   'switch',
   'slider',
@@ -82,7 +81,11 @@ const DOC_CE_SLUGS = new Set([
 ])
 
 export default controller((ctx: ControllerScope<Scope>) => {
-  const tag = derived(() => ctx.route.params.tag?.() ?? '')
+  // radio is a radio-group part — leftover /components/radio folds onto the host.
+  const tag = derived(() => {
+    const raw = ctx.route.params.tag?.() ?? ''
+    return raw === 'radio' ? 'radio-group' : raw
+  })
   const meta = derived(() => docMeta(tag()))
   const entry = derived<DetailEntry | null>(() => detailFor(tag()) ?? null)
   const knownDoc = derived(() => meta() !== null)
@@ -108,7 +111,6 @@ export default controller((ctx: ControllerScope<Scope>) => {
   const useMeter = derived(() => tag() === 'meter' && useDocHost())
   const useLabel = derived(() => tag() === 'label' && useDocHost())
   const useField = derived(() => tag() === 'field' && useDocHost())
-  const useRadio = derived(() => tag() === 'radio' && useDocHost())
   const useRadioGroup = derived(() => tag() === 'radio-group' && useDocHost())
   const useSwitch = derived(() => tag() === 'switch' && useDocHost())
   const useSlider = derived(() => tag() === 'slider' && useDocHost())
@@ -176,7 +178,6 @@ export default controller((ctx: ControllerScope<Scope>) => {
     useMeter,
     useLabel,
     useField,
-    useRadio,
     useRadioGroup,
     useSwitch,
     useSlider,
@@ -264,9 +265,6 @@ export default controller((ctx: ControllerScope<Scope>) => {
   </if>
   <if {useField()}>
     <doc-field></doc-field>
-  </if>
-  <if {useRadio()}>
-    <doc-radio></doc-radio>
   </if>
   <if {useRadioGroup()}>
     <doc-radio-group></doc-radio-group>

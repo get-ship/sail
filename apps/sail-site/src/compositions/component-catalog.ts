@@ -93,13 +93,18 @@ function kebabToCamel(tag: string): string {
   return tag.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase())
 }
 
+/** Shared menu cell — family host, not a hub tile (lives on dropdown / context-menu). */
+const HUB_SKIP = new Set(['menu-item'])
+
 /** Lang rows: one hub tile per L1 family host. Copy is optional. */
-const LANG_CATALOG: CatalogEntry[] = hosts().map((family) => {
-  const tag = family.host
-  const meta = docMeta(tag)
-  const copy = copyOf(tag)
-  return L(tag, meta?.key ?? kebabToCamel(tag), copy?.category ?? meta?.category ?? 'display')
-})
+const LANG_CATALOG: CatalogEntry[] = hosts()
+  .filter((family) => !HUB_SKIP.has(family.host))
+  .map((family) => {
+    const tag = family.host
+    const meta = docMeta(tag)
+    const copy = copyOf(tag)
+    return L(tag, meta?.key ?? kebabToCamel(tag), copy?.category ?? meta?.category ?? 'display')
+  })
 
 /** Keywords tile — not an L1 family. */
 const LAYOUT_TILE: CatalogEntry = L('layout', 'layout', 'layout')

@@ -1,7 +1,7 @@
 <!--
   <theme-picker> — catalog + optional mode-only.
   Full popover: Light|Dark|System filter tabs (never paint the site); one
-  live [theme=…] specimen per row. modeOnly: sun/moon/system cycle.
+  live [theme=…] specimen per row. modeOnly: segmented Light/Dark/System.
   variant: icon (compact trigger) · menu-row (full-width option rows) ·
   segmented (mode bar as a connected pill). Swatches deferred.
   Behavior: use:themeSelect.
@@ -25,7 +25,8 @@
   style glyph = {fg(foreground).type({ size: sm, leading: none })}
 
   style panel = {position({ scheme: fixed, inset: auto, l: bind(anchorLeft), t: bind(anchorTop), z: popover }).pad(0).margin(0).size({ w: panel-max-w-sm, max-w: panel-w-toast, min-w: 0, max-h: panel-vh-md }).overflow({ x: hidden, y: auto, overscroll: contain }).fg(popover-foreground).bg(popover).border({ color: border, width: hairline }).radius(lg).elevation(lg)}
-  style panelInline = {position({ scheme: static, inset: auto }).pad(0).margin(0).size({ w: full, max-w: none, min-w: 0 }).overflow({ x: hidden }).elevation(none).bg(transparent).border({ width: 0 })}
+  style panelInline = {position({ scheme: static, inset: auto }).pad(0).margin(0).size({ w: full, max-w: panel-max-w-sm, min-w: 0, max-h: panel-vh-md }).overflow({ x: hidden, y: auto }).fg(popover-foreground).bg(popover).border({ color: border, width: 1 }).radius(lg).elevation(sm)}
+  style panelModeOnly = {position({ scheme: static, inset: auto }).pad(0).margin(0).size({ w: auto, max-w: none, min-w: 0, max-h: none }).overflow({ all: hidden }).elevation(none).bg(transparent).border({ width: 0 })}
   style panelMenuRow = {size({ w: full, max-w: none, min-w: 0 })}
 
   style header = {size({ w: full, min-w: 0 }).pad({ x: 3, t: 3, b: 0 })}
@@ -105,7 +106,7 @@
     placement="bottom-end"
     label="Theme"
     data-theme-listbox
-    style(panel, {match: { inline: { true: panelInline }, variant: { 'menu-row': panelMenuRow } }})
+    style(panel, {match: { inline: { true: panelInline }, modeOnly: { true: panelModeOnly }, variant: { 'menu-row': panelMenuRow } }})
   >
     <column gap="2" data-picker-header style(header)>
       <column gap="1" style({size({ min-w: 0 })})>
@@ -123,15 +124,15 @@
         data-mode-bar
         data-mode-segment
         nowrap
-        style(modeSeg, {size({ min-w: 0 }), match: { variant: { segmented: modeSegRail } }})
+        style(modeSeg, {size({ min-w: 0 }), match: { variant: { segmented: modeSegRail }, modeOnly: { true: modeSegRail } }})
       >
-        <button type="button" mode="light" selected="true" data-active="true" title="Show light themes" style(modeSegBtn, {match: { variant: { segmented: modeSegBtnPill } }})>
+        <button type="button" mode="light" selected="true" data-active="true" title="Light" style(modeSegBtn, {match: { variant: { segmented: modeSegBtnPill }, modeOnly: { true: modeSegBtnPill } }})>
           Light
         </button>
-        <button type="button" mode="dark" selected="false" title="Show dark themes" style(modeSegBtn, {match: { variant: { segmented: modeSegBtnPill } }})>
+        <button type="button" mode="dark" selected="false" title="Dark" style(modeSegBtn, {match: { variant: { segmented: modeSegBtnPill }, modeOnly: { true: modeSegBtnPill } }})>
           Dark
         </button>
-        <button type="button" mode="system" selected="false" title="Show dual-mode themes" style(modeSegBtn, {match: { variant: { segmented: modeSegBtnPill } }})>
+        <button type="button" mode="system" selected="false" title="System" style(modeSegBtn, {match: { variant: { segmented: modeSegBtnPill }, modeOnly: { true: modeSegBtnPill } }})>
           System
         </button>
       </row>

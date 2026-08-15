@@ -12,9 +12,12 @@
     onToggleChange: (detail: { value: string }) => void
   }
 
+  style host = {display(inline-flex)}
+  style horiz = {dir(row)}
+  style vert = {dir(column)}
   style segmented = {pad(1).bg(muted).border({ color: border, width: 1 }).radius(md)}
 </scope>
 
-<row inline gap="0" use:toggleGroup style({match: {variant: {outline: bg(transparent), ghost: bg(transparent), segmented: segmented}}})>
+<row inline gap="0" use:toggleGroup style(host, {match: { orientation: { horizontal: horiz, vertical: vert }, variant: {outline: bg(transparent), ghost: bg(transparent), segmented: segmented}}})>
   <slot></slot>
 </row>

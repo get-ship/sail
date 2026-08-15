@@ -11,8 +11,8 @@ export const contract = {
   kind: 'host',
   axes: {
     variant: {
-      values: ['default', 'solid', 'soft', 'outline', 'ghost'] as const,
-      default: 'default',
+      values: ['text', 'default', 'solid', 'soft', 'outline', 'ghost'] as const,
+      default: 'text',
       control: 'select',
     },
     tone: {

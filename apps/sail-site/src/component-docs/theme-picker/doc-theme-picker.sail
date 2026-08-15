@@ -135,7 +135,7 @@ export default controller((_ctx: Scope) => {
       </doc-example>
       <doc-example
         title="Mode only"
-        lead="mode-only cycles light / dark / system. No catalog."
+        lead="mode-only is a segmented Light / Dark / System control. No catalog."
         code={exMode()}
       >
         <theme-picker mode-only></theme-picker>

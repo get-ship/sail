@@ -103,15 +103,16 @@ const DETAILS_MAP = {
     ],
   }),
   a: lang('a', 'a', {
+    heading: 'anchor',
     blurb:
-      'Links. Bare stays a text link. With variant set it looks like a button. Use button for sized CTAs.',
-    variants: ['default', 'solid', 'soft', 'outline', 'ghost'],
+      'Anchor — native <a>. Bare or variant=text wraps anything as a link. Button chrome is default|solid|soft|outline|ghost.',
+    variants: ['text', 'default', 'solid', 'soft', 'outline', 'ghost'],
     variantAttr: 'variant',
     props: [
       {
         name: 'variant',
-        desc: 'Omit for text link; set for button-style link',
-        type: 'default · solid · soft · outline · ghost',
+        desc: 'text (or omit) = no chrome, wrap a card/span. Button family: default · solid · soft · outline · ghost',
+        type: 'text · default · solid · soft · outline · ghost',
       },
       {
         name: 'tone',
@@ -235,7 +236,8 @@ const DETAILS_MAP = {
     ],
   }),
   file: lang('file', 'file', {
-    blurb: 'Opens the system file picker. variant="drop" is the dashed drop surface — same control.',
+    blurb:
+      'File drop surface. Native Browse chrome is hidden. variant="drop" (default) is the dashed well; variant="picker" is the same skin, compact.',
     variants: ['picker', 'drop'],
     variantAttr: 'variant',
     props: [
@@ -257,18 +259,9 @@ const DETAILS_MAP = {
       { name: 'bind:value', desc: 'Two-way binding', type: 'signal' },
     ],
   }),
-  radio: lang('radio', 'radio', {
-    blurb: 'One option in a group. Place radios inside radio-group.',
-    variants: [],
-    variantAttr: '',
-    props: [
-      { name: 'value', desc: 'This option’s value', type: 'string' },
-      { name: 'disabled', desc: 'Non-interactive', type: 'bool' },
-      { name: '(children)', desc: 'Option label', type: 'children' },
-    ],
-  }),
   'radio-group': lang('radio-group', 'radioGroup', {
-    blurb: 'A set of radios with one shared value and accessible name.',
+    blurb:
+      'A set of radios with one shared value and accessible name. <radio> is the option part — not a hub tile.',
     variants: [],
     variantAttr: '',
     props: [
@@ -276,6 +269,7 @@ const DETAILS_MAP = {
       { name: 'label', desc: 'Group name', type: 'string' },
       { name: 'name', desc: 'Form name for the radios', type: 'string' },
       { name: 'disabled / required', desc: 'Group state', type: 'bool' },
+      { name: '<radio value>', desc: 'Each option — value + label children; disabled per cell', type: 'children' },
     ],
   }),
   switch: lang('switch', 'switchToggle', {
@@ -358,13 +352,13 @@ const DETAILS_MAP = {
   // legend is NOT a top-level DETAILS/catalog topic — documented inside fieldset.
   'theme-picker': lang('theme-picker', 'themePicker', {
     blurb:
-      'Pick a theme. The trigger opens a catalog of live specimens. value is the selected theme id; mode-only cycles light / dark / system; inline keeps the catalog in the page.',
+      'Pick a theme. The trigger opens a catalog of live specimens. value is the selected theme id; mode-only is a segmented Light / Dark / System control; inline keeps the catalog in the page.',
     variants: [],
     variantAttr: '',
     props: [
       { name: 'value', desc: 'Selected theme id (applies that theme)', type: 'string' },
       { name: 'inline', desc: 'Show the catalog in-flow instead of a popover', type: 'bool' },
-      { name: 'mode-only', desc: 'Cycle light / dark / system — no catalog', type: 'bool' },
+      { name: 'mode-only', desc: 'Segmented Light / Dark / System — no catalog', type: 'bool' },
       { name: 'onThemeChange', desc: 'Fires with { theme, mode, preference }', type: 'callback' },
     ],
   }),

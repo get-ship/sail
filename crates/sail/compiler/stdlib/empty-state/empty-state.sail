@@ -24,14 +24,14 @@
   // Style cannot set gap (layout attr only) — compact is pad + icon.
   style compactOn = {pad({ y: 4, x: 3 })}
   style icon = {self(center).size(12).radius(lg).bg(muted).fg(muted-foreground)}
-  style copy = {self(stretch)}
-  style title = {fg(foreground).type({ family: heading, weight: semibold, leading: tight, size: md })}
-  style desc = {size({ max-w: panel-ch-w-md }).fg(muted-foreground).type({ leading: loose, size: sm })}
+  style copy = {self(center).size({ max-w: panel-ch-w-md, w: full })}
+  style title = {fg(foreground).type({ family: heading, weight: semibold, leading: tight, size: md, align: center })}
+  style desc = {size({ max-w: panel-ch-w-md }).fg(muted-foreground).type({ leading: loose, size: sm, align: center })}
   style actions = {self(center)}
 </scope>
 
 <column
-  align="stretch"
+  align="center"
   justify="center"
   gap="3"
   use:variantLive
@@ -47,7 +47,7 @@
   >
     <slot name="icon"></slot>
   </row>
-  <column align="stretch" gap="1" style(copy, {grow(1).size({ min-w: 0 })})>
+  <column align="center" gap="1" style(copy, {size({ min-w: 0 })})>
     <div style(title, {when: {empty: display(none)}})>
       <slot name="title"></slot>
     </div>

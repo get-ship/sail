@@ -21,10 +21,10 @@
   // Icon face: brand-destructive on muted wash (intentional, not pack rest).
   style icon = {self(center).size(control-h-xl).radius(lg).bg(muted).fg(destructive).border({ width: 1, kind: outline, style: solid, color: destructive, offset: ring-inset })}
   style glyph = {size(control-h-2xs)}
-  style copy = {self(stretch)}
+  style copy = {self(center).size({ max-w: panel-ch-w-md, w: full })}
   // Strong title ink — free foreground (same path as empty-state title weight).
-  style title = {fg(foreground).type({ family: heading, weight: semibold, leading: tight, size: md })}
-  style desc = {size({ max-w: panel-ch-w-md }).fg(destructive).type({ leading: loose, size: sm })}
+  style title = {fg(foreground).type({ family: heading, weight: semibold, leading: tight, size: md, align: center })}
+  style desc = {size({ max-w: panel-ch-w-md }).fg(destructive).type({ leading: loose, size: sm, align: center })}
   style codeBox = {pad({ y: 1, x: 2 }).margin({ t: 1 }).fg(destructive).bg(muted).border({ color: destructive, width: 1 }).radius(sm).type({ family: mono, size: xs })}
   style detailsToggle = {display(none).pad({ y: 1, x: 2 }).margin({ t: 1 }).border({ width: 0 }).bg(transparent).fg(destructive).radius(sm).cursor(pointer).type({ family: body, size: xs })}
   style details = {display(none).pad({ y: 2, x: 3 }).margin({ t: 2 }).size({ max-w: panel-ch-w-lg }).bg(muted).radius(sm).fg(destructive).type({ family: mono, size: xs, wrap: words, align: start })}
@@ -32,7 +32,7 @@
 </scope>
 
 <column
-  align="stretch"
+  align="center"
   justify="center"
   gap="3"
   use:recoverySurface
@@ -52,7 +52,7 @@
       <path d="M12 16h.01"></path>
     </svg>
   </row>
-  <column align="stretch" gap="1" style(copy, {grow(1).size({ min-w: 0 })})>
+  <column align="center" gap="1" style(copy, {size({ min-w: 0 })})>
     <div style(title)>
       <slot name="title">Something went wrong</slot>
     </div>

@@ -12,7 +12,6 @@ import { contract as icon } from './icon/contract'
 import { contract as label } from './label/contract'
 import { contract as meter } from './meter/contract'
 import { contract as progress } from './progress/contract'
-import { contract as radio } from './radio/contract'
 import { contract as radioGroup } from './radio-group/contract'
 import { contract as separator } from './separator/contract'
 import { contract as skeleton } from './skeleton/contract'
@@ -71,7 +70,6 @@ export const CONTRACTS: readonly SurfaceContract[] = [
   meter,
   label,
   field,
-  radio,
   radioGroup,
   switchToggle,
   slider,

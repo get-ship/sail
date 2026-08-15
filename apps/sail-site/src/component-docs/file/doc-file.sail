@@ -22,7 +22,7 @@ export default controller((_ctx: Scope) => {
   const SIZES = ['xs', 'sm', 'md', 'lg'] as const
   const sizeIdx = signal(2)
   const accept = signal('image/*')
-  const variant = signal('picker')
+  const variant = signal('drop')
   const multiple = signal(false)
   const disabled = signal(false)
   const invalid = signal(false)
@@ -40,7 +40,7 @@ export default controller((_ctx: Scope) => {
 
   const specimenCode = derived(() => {
     const a: string[] = []
-    if (variant() !== 'picker') a.push(`variant="${variant()}"`)
+    if (variant() !== 'drop') a.push(`variant="${variant()}"`)
     if (accept()) a.push(`accept="${accept()}"`)
     if (multiple()) a.push('multiple')
     if (size() !== 'md') a.push(`size="${size()}"`)

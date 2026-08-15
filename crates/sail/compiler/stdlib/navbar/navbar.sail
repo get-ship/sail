@@ -25,8 +25,10 @@
     offset: number = 0
   }
 
-  style base = {bg(background).fg(foreground).type({ decoration: none })}
-  style placeBar = {position(relative).size({ w: full, min-h: 12 }).pad({ x: 4 })}
+  // Default chrome is the top/bottom bar. Rail match arms override.
+  // Baking bar geometry here means omitted placement=top still centers.
+  style base = {position(relative).size({ w: full, min-h: 12 }).pad({ x: 4 }).bg(background).fg(foreground).type({ decoration: none })}
+  style placeBar = {position(relative).size({ w: full, min-h: 12 }).pad({ x: 4 }).dir(row)}
   // Rail is a column sidebar, not a full-width bar. w(full) here wraps the
   // parent app row and dumps the page under the nav.
   style placeRail = {shrink(0).size({ w: auto, min-w: panel-rail-w, min-h: fill }).pad({ y: 5, x: 4 }).dir(column)}
@@ -65,13 +67,13 @@
   <row inline nowrap align="center" justify="start" gap="2" style(brand)>
     <slot name="brand"></slot>
   </row>
-  <row nowrap align="center" justify="center" style({match: { placement: { top: centerTrack, bottom: centerTrack, rail: centerTrackRail } }})>
-    <row nowrap align="center" justify="center" gap="2" style({match: { placement: { top: centerInner, bottom: centerInner, rail: centerInnerRail } }})>
+  <row nowrap align="center" justify="center" style(centerTrack, {match: { placement: { rail: centerTrackRail } }})>
+    <row nowrap align="center" justify="center" gap="2" style(centerInner, {match: { placement: { rail: centerInnerRail } }})>
       <slot name="center"></slot>
       <slot></slot>
     </row>
   </row>
-  <row inline nowrap align="center" justify="end" gap="2" style({match: { placement: { top: actions, bottom: actions, rail: actionsRail } }})>
+  <row inline nowrap align="center" justify="end" gap="2" style(actions, {match: { placement: { rail: actionsRail } }})>
     <slot name="actions"></slot>
   </row>
 </row>

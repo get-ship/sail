@@ -42,6 +42,8 @@ export default controller((_ctx: Scope) => {
 
   const exBasic = () =>
     `<radio-group label="Plan" name="plan" value="pro">\n  <radio value="free">Free</radio>\n  <radio value="pro">Pro</radio>\n  <radio value="enterprise">Enterprise</radio>\n</radio-group>`
+  const exPart = () =>
+    `<!-- radio is the option part — not a hub tile -->\n<radio-group label="Billing" name="billing" value="monthly">\n  <radio value="monthly">Monthly</radio>\n  <radio value="yearly" disabled>Yearly (locked)</radio>\n</radio-group>`
 
   return {
     plan,
@@ -55,6 +57,7 @@ export default controller((_ctx: Scope) => {
     usageCode,
     specimenCode,
     exBasic,
+    exPart,
   }
 })
 </controller>
@@ -117,11 +120,21 @@ export default controller((_ctx: Scope) => {
           <radio value="enterprise">Enterprise</radio>
         </radio-group>
       </doc-example>
+      <doc-example
+        title="Radio is a part"
+        lead="radio is not a hub tile. Author value and disabled on each option."
+        code={exPart()}
+      >
+        <radio-group label="Billing" name="ex-rg-part" value="monthly">
+          <radio value="monthly">Monthly</radio>
+          <radio value="yearly" disabled>Yearly (locked)</radio>
+        </radio-group>
+      </doc-example>
     </column>
   </sail-component-viewer>
 
   <row gap="2">
     <a variant="default" href="/components">← All components</a>
-    <a variant="solid" tone="primary" href="/components/radio">Radio</a>
+    <a variant="solid" tone="primary" href="/docs/reference">API reference</a>
   </row>
 </column>
