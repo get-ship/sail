@@ -61,6 +61,7 @@ Docs composition and takumi consume `src/catalog.ts`. Do not fork a second list 
 | auth | template | planned | — |
 | empty | template | planned | — |
 | InputWithButton | block | authored | yes |
+| AuthenticationTitle, CardWithStats, FaqSimple, FeaturesCards, FooterLinks, GetInTouchSimple, HeaderSimple, HeroText, HeroTitle, NavbarMinimal, StatsGroup, UserButton | block | authored | yes |
 | *(remaining first-20 names)* | block | planned | — |
 
 The full first-20 list, with `mantineUrl`, is in `src/catalog.ts`.

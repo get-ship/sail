@@ -1,0 +1,7 @@
+{
+  "id": "FeaturesCards",
+  "kind": "block",
+  "status": "authored",
+  "mantineUrl": "https://ui.mantine.dev/component/features-cards/",
+  "primitives": ["badge", "card", "icon"]
+}
