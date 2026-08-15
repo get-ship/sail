@@ -22,8 +22,9 @@ export const contract = {
       control: 'slider',
     },
     disabled: { default: false, control: 'switch' },
-    loading: { default: false, control: 'switch' },
-    pill: { default: false, control: 'switch' },
+    // Docs configurator does not yet expose these (visual.cross is variant/tone/size/disabled).
+    loading: { default: false, control: 'switch', docsSkip: true },
+    pill: { default: false, control: 'switch', docsSkip: true },
   },
   faces: [
     { path: 'component.button.bg', label: 'Fill' },

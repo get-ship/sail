@@ -13,7 +13,7 @@ export const contract = {
   axes: {
     code: { default: '', control: 'text' },
     lang: { default: 'sail', control: 'select' },
-    terminal: { default: false, control: 'switch' },
+    terminal: { default: false, control: 'switch', docsSkip: true },
   },
   faces: [
     { path: 'component.code-block.bg', label: 'Fill' },

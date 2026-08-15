@@ -53,6 +53,7 @@ import { meta as tableMeta } from './table/meta'
 import { meta as layoutMeta } from './layout/meta'
 import { meta as scrollAreaMeta } from './scroll-area/meta'
 import { meta as tickerMeta } from './ticker/meta'
+import { meta as resizableMeta } from './resizable/meta'
 import type { DocMeta } from './types'
 
 export const DOC_PACKAGES: readonly DocMeta[] = [
@@ -109,6 +110,7 @@ export const DOC_PACKAGES: readonly DocMeta[] = [
   layoutMeta,
   scrollAreaMeta,
   tickerMeta,
+  resizableMeta,
 ]
 
 export const DOC_BY_SLUG: Record<string, DocMeta> = Object.fromEntries(

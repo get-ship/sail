@@ -18,8 +18,9 @@ export const contract = {
     sticky: { default: false, control: 'switch' },
     bordered: { default: false, control: 'switch' },
     autohide: { default: false, control: 'switch' },
-    floating: { default: false, control: 'switch' },
-    'solid-on-scroll': { default: false, control: 'switch' },
+    floating: { default: false, control: 'switch', docsSkip: true },
+    // Style cannot key on scroll — language gap (SPEC-L1-BASE-PASS out of scope).
+    'solid-on-scroll': { default: false, control: 'switch', docsSkip: true },
     offset: { default: 0, control: 'number' },
   },
   faces: [

@@ -9,7 +9,8 @@ export const contract = {
   tag: 'radio-group',
   kind: 'host',
   axes: {
-    value: { default: '', control: 'select' },
+    // Value is the live radios in the specimen — no separate value knob.
+    value: { default: '', control: 'select', docsSkip: true },
     disabled: { default: false, control: 'switch' },
     name: { default: '', control: 'text', docsSkip: true },
     label: { default: '', control: 'text' },

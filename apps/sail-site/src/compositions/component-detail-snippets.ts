@@ -425,6 +425,22 @@ export default controller(() => {
   </footer>
 </dialog>`,
 
+  drawer: `<button command="show" commandfor="filters">Filters</button>
+
+<drawer id="filters" side="end" size="md">
+  <header>Filters</header>
+  <section>Narrow the catalog.</section>
+  <footer>
+    <button command="close" commandfor="filters" variant="ghost">Cancel</button>
+    <button command="close" commandfor="filters" tone="primary">Apply</button>
+  </footer>
+</drawer>`,
+
+  resizable: `<resizable>
+  <div slot="start">Start pane</div>
+  <div slot="end">End pane</div>
+</resizable>`,
+
   tabs: `<tabs>
   <tab-list variant="pill">
     <tab>Overview</tab>

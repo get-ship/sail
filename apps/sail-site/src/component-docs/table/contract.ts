@@ -13,7 +13,7 @@ export const contract = {
     striped: { default: false, control: 'switch' },
     hoverable: { default: false, control: 'switch' },
     bordered: { default: false, control: 'switch' },
-    'sticky-header': { default: false, control: 'switch' },
+    'sticky-header': { default: false, control: 'switch', docsSkip: true },
   },
   faces: [
     { path: 'component.table.fg', label: 'Ink' },

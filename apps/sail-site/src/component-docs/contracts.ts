@@ -50,6 +50,11 @@ import { contract as toast } from './toast/contract'
 import { contract as accordion } from './accordion/contract'
 import { contract as combobox } from './combobox/contract'
 import { contract as themePicker } from './theme-picker/contract'
+import { contract as checkbox } from './checkbox/contract'
+import { contract as color } from './color/contract'
+import { contract as date } from './date/contract'
+import { contract as file } from './file/contract'
+import { contract as resizable } from './resizable/contract'
 import type { SurfaceContract } from './contract-types'
 
 export const CONTRACTS: readonly SurfaceContract[] = [
@@ -101,6 +106,11 @@ export const CONTRACTS: readonly SurfaceContract[] = [
   accordion,
   combobox,
   themePicker,
+  checkbox,
+  color,
+  date,
+  file,
+  resizable,
 ]
 
 export const CONTRACT_BY_SLUG: Record<string, SurfaceContract> = Object.fromEntries(

@@ -19,6 +19,7 @@ export const contract = {
       values: ['default', 'filled', 'flushed'] as const,
       default: 'default',
       control: 'select',
+      docsSkip: true,
     },
     invalid: { default: false, control: 'switch' },
     disabled: { default: false, control: 'switch' },

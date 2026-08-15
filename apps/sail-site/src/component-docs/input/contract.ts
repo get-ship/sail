@@ -32,11 +32,13 @@ export const contract = {
       values: ['default', 'filled', 'flushed'] as const,
       default: 'default',
       control: 'select',
+      docsSkip: true,
     },
     invalid: { default: false, control: 'switch' },
     disabled: { default: false, control: 'switch' },
     placeholder: { default: '', control: 'text' },
-    reveal: { default: true, control: 'switch' },
+    // Password-reveal is type=password only; docs knob deferred.
+    reveal: { default: true, control: 'switch', docsSkip: true },
   },
   faces: [
     { path: 'component.field.bg', label: 'Fill' },

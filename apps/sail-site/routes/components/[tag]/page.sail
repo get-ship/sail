@@ -24,7 +24,7 @@ import {
   packLabelFor,
 } from '../../../src/compositions/component-pack-meta'
 
-/** Slugs with a compiled doc-<slug> CE mounted below. Keep in sync when peeling. Residual: accordion · combobox · theme-picker. */
+/** Slugs with a compiled doc-<slug> CE mounted below. Keep in sync when peeling. */
 const DOC_CE_SLUGS = new Set([
   'button',
   'badge',
@@ -68,6 +68,7 @@ const DOC_CE_SLUGS = new Set([
   'avatar',
   'breadcrumb',
   'dialog',
+  'drawer',
   'popover',
   'tooltip',
   'dropdown',
@@ -77,6 +78,7 @@ const DOC_CE_SLUGS = new Set([
   'accordion',
   'combobox',
   'theme-picker',
+  'resizable',
 ])
 
 export default controller((ctx: ControllerScope<Scope>) => {
@@ -135,6 +137,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
   const useAvatar = derived(() => tag() === 'avatar' && useDocHost())
   const useBreadcrumb = derived(() => tag() === 'breadcrumb' && useDocHost())
   const useDialog = derived(() => tag() === 'dialog' && useDocHost())
+  const useDrawer = derived(() => tag() === 'drawer' && useDocHost())
   const usePopover = derived(() => tag() === 'popover' && useDocHost())
   const useTooltip = derived(() => tag() === 'tooltip' && useDocHost())
   const useDropdown = derived(() => tag() === 'dropdown' && useDocHost())
@@ -144,6 +147,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
   const useAccordion = derived(() => tag() === 'accordion' && useDocHost())
   const useCombobox = derived(() => tag() === 'combobox' && useDocHost())
   const useThemePicker = derived(() => tag() === 'theme-picker' && useDocHost())
+  const useResizable = derived(() => tag() === 'resizable' && useDocHost())
 
   const heading = () => meta()?.heading ?? entry()?.heading ?? tag()
   const blurb = () => meta()?.blurb ?? entry()?.blurb ?? packBlurbFor(tag())
@@ -201,6 +205,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
     useAvatar,
     useBreadcrumb,
     useDialog,
+    useDrawer,
     usePopover,
     useTooltip,
     useDropdown,
@@ -210,6 +215,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
     useAccordion,
     useCombobox,
     useThemePicker,
+    useResizable,
 
     heading,
     blurb,
@@ -346,6 +352,9 @@ export default controller((ctx: ControllerScope<Scope>) => {
   <if {useDialog()}>
     <doc-dialog></doc-dialog>
   </if>
+  <if {useDrawer()}>
+    <doc-drawer></doc-drawer>
+  </if>
   <if {usePopover()}>
     <doc-popover></doc-popover>
   </if>
@@ -372,6 +381,9 @@ export default controller((ctx: ControllerScope<Scope>) => {
   </if>
   <if {useThemePicker()}>
     <doc-theme-picker></doc-theme-picker>
+  </if>
+  <if {useResizable()}>
+    <doc-resizable></doc-resizable>
   </if>
   <if {missingDocHost()}>
     <breadcrumb>

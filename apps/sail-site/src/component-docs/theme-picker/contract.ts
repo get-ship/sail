@@ -17,6 +17,7 @@ export const contract = {
       values: ['icon', 'menu-row', 'segmented'] as const,
       default: 'icon',
       control: 'select',
+      docsSkip: true,
     },
     onThemeChange: { control: 'none', event: true },
   },

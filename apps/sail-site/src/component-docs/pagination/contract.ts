@@ -15,6 +15,7 @@ export const contract = {
       values: ['default', 'simple'] as const,
       default: 'default',
       control: 'select',
+      docsSkip: true,
     },
     onPageChange: { control: 'none', event: true },
   },
