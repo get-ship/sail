@@ -18,10 +18,7 @@ export const contract = {
     },
     centered: { default: false, control: 'switch' },
   },
-  faces: [
-    { path: 'component.spinner.fg', label: 'Arc' },
-    { path: 'component.spinner.track', label: 'Track' },
-  ],
+  faces: [],
   visual: {
     defaultRow: true,
     cross: ['size', 'tone', 'centered'],

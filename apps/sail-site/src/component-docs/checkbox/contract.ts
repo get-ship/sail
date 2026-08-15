@@ -2,7 +2,7 @@ import type { SurfaceContract } from '../contract-types'
 
 /**
  * Surface contract for checkbox — axes from stdlib props only.
- * bind:checked is a directive, not a host prop. No component.checkbox.* pack
+ * bind:checked is a directive, not a host prop. No checkbox-specific roles pack
  * (face tokens align with radio / field hairline).
  */
 export const contract = {

@@ -26,12 +26,7 @@ export const contract = {
     loading: { default: false, control: 'switch', docsSkip: true },
     pill: { default: false, control: 'switch', docsSkip: true },
   },
-  faces: [
-    { path: 'component.button.bg', label: 'Fill' },
-    { path: 'component.button.fg', label: 'Ink' },
-    { path: 'component.button.border', label: 'Border' },
-    { path: 'component.button.hover-bg', label: 'Hover fill' },
-  ],
+  faces: [],
   visual: {
     defaultRow: true,
     cross: ['variant', 'tone', 'size', 'disabled'],

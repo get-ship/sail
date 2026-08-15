@@ -12,10 +12,7 @@ export const contract = {
       control: 'select',
     },
   },
-  faces: [
-    { path: 'component.scroll-area.thumb', label: 'Thumb' },
-    { path: 'component.scroll-area.thumb-hover', label: 'Thumb hover' },
-  ],
+  faces: [],
   visual: {
     defaultRow: true,
     cross: ['orientation'],

@@ -19,11 +19,7 @@ export const contract = {
       control: 'slider',
     },
   },
-  faces: [
-    { path: 'component.switch.track', label: 'Track' },
-    { path: 'component.switch.border', label: 'Border' },
-    { path: 'component.switch.thumb', label: 'Thumb' },
-  ],
+  faces: [],
   visual: {
     defaultRow: true,
     cross: ['checked', 'disabled', 'tone', 'size'],

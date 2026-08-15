@@ -8,7 +8,7 @@ export const meta = {
   category: 'overlay',
   kind: 'host',
   blurb:
-    'Rich panel on hover/focus of the trigger whose popovertarget names it. placement string. Paint component.hover-card.*.',
+    'Rich panel on hover/focus of the trigger whose popovertarget names it. placement string. Paints the popover role.',
   heading: 'hover-card',
   host: 'doc-hover-card',
   stageOwnsKnobs: true,

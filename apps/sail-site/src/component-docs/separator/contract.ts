@@ -24,7 +24,7 @@ export const contract = {
     // Accessible name only — visible labeled chrome is a language gap on void <hr>.
     label: { default: '', control: 'text', docsSkip: true },
   },
-  faces: [{ path: 'component.separator.line', label: 'Line' }],
+  faces: [{ path: 'border', label: 'Line' }],
   visual: {
     defaultRow: true,
     cross: ['orientation', 'variant', 'tone'],

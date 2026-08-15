@@ -17,10 +17,7 @@ export const contract = {
       control: 'slider',
     },
   },
-  faces: [
-    { path: 'component.skeleton.bg', label: 'Band' },
-    { path: 'component.skeleton.highlight', label: 'Highlight' },
-  ],
+  faces: [],
   visual: {
     defaultRow: true,
     cross: ['shape', 'size'],

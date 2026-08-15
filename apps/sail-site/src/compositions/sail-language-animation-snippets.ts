@@ -55,7 +55,7 @@ export default controller(() => {
 </controller>
 
 <slider min="0" max="100" bind:value={scrubText} />
-<card style({ motion({ x: bind(tileX), rotate: bind(tileRotate), scale: bind(tileScale) }) })>
+<card style({ translateX(bind(tileX)).rotate(bind(tileRotate)).scale(bind(tileScale)) })>
 </card>`,
 
   drivers: `const p = () => Number(scrubText()) / 100  // the slider above

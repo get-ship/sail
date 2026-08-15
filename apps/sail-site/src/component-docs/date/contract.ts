@@ -2,7 +2,7 @@ import type { SurfaceContract } from '../contract-types'
 
 /**
  * Surface contract for date — axes from stdlib props only.
- * Shared paint: component.field.* (same surface as input).
+ * Shared paint: input role (same surface as input).
  */
 export const contract = {
   slug: 'date',
@@ -31,11 +31,9 @@ export const contract = {
     step: { default: '', control: 'text', docsSkip: true },
   },
   faces: [
-    { path: 'component.field.bg', label: 'Fill' },
-    { path: 'component.field.border', label: 'Border' },
-    { path: 'component.field.border-hover', label: 'Border hover' },
-    { path: 'component.field.error', label: 'Error' },
-    { path: 'component.field.fg', label: 'Ink' },
+    { path: 'input', label: 'Background' },
+    { path: 'border', label: 'Border' },
+    { path: 'foreground', label: 'Foreground' },
   ],
   visual: {
     defaultRow: true,

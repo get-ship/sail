@@ -3,7 +3,7 @@ import type { SurfaceContract } from '../contract-types'
 /**
  * Surface contract for theme-picker — axes from prop-registry only.
  * Product catalog depth stays operator; scaffold knobs for registry props.
- * Faces: component.theme-picker.* leaves only.
+ * Faces: popover role leaves only.
  */
 export const contract = {
   slug: 'theme-picker',
@@ -22,11 +22,9 @@ export const contract = {
     onThemeChange: { control: 'none', event: true },
   },
   faces: [
-    { path: 'component.theme-picker.bg', label: 'Panel fill' },
-    { path: 'component.theme-picker.fg', label: 'Panel ink' },
-    { path: 'component.theme-picker.trigger-fg', label: 'Trigger ink' },
-    { path: 'component.theme-picker.option-fg', label: 'Option ink' },
-    { path: 'component.theme-picker.option-hover-bg', label: 'Option hover' },
+    { path: 'popover', label: 'Background' },
+    { path: 'foreground', label: 'Foreground' },
+    { path: 'border', label: 'Border' },
   ],
   visual: {
     defaultRow: true,

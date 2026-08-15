@@ -45,12 +45,9 @@ export const contract = {
     spotlight: { default: false, control: 'switch', docsSkip: true },
   },
   faces: [
-    { path: 'component.card.bg', label: 'Fill' },
-    { path: 'component.card.fg', label: 'Ink' },
-    { path: 'component.card.texture', label: 'Texture' },
-    { path: 'component.card.texture-blend', label: 'Texture blend' },
-    { path: 'component.card.texture-opacity', label: 'Texture opacity' },
-    { path: 'component.card.backdrop-filter', label: 'Backdrop filter' },
+    { path: 'card', label: 'Background' },
+    { path: 'card-foreground', label: 'Foreground' },
+    { path: 'border', label: 'Border' },
   ],
   visual: {
     defaultRow: true,

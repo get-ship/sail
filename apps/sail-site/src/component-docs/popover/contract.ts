@@ -9,9 +9,9 @@ export const contract = {
     placement: { default: '', control: 'text' },
   },
   faces: [
-    { path: 'component.popover.bg', label: 'Fill' },
-    { path: 'component.popover.fg', label: 'Ink' },
-    { path: 'component.popover.border', label: 'Border' },
+    { path: 'popover', label: 'Background' },
+    { path: 'foreground', label: 'Foreground' },
+    { path: 'border', label: 'Border' },
   ],
   visual: {
     defaultRow: true,

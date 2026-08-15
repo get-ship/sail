@@ -23,12 +23,7 @@ export const contract = {
     dismissible: { default: false, control: 'switch' },
     onDismiss: { control: 'none', event: true },
   },
-  faces: [
-    { path: 'component.alert.bg', label: 'Fill' },
-    { path: 'component.alert.fg', label: 'Ink' },
-    { path: 'component.alert.border', label: 'Border' },
-    { path: 'component.alert.stripe', label: 'Stripe' },
-  ],
+  faces: [],
   visual: {
     defaultRow: true,
     cross: ['tone', 'variant', 'dismissible'],

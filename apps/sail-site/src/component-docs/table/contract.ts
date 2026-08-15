@@ -15,12 +15,7 @@ export const contract = {
     bordered: { default: false, control: 'switch' },
     'sticky-header': { default: false, control: 'switch', docsSkip: true },
   },
-  faces: [
-    { path: 'component.table.fg', label: 'Ink' },
-    { path: 'component.table.muted-fg', label: 'Muted ink' },
-    { path: 'component.table.sticky-bg', label: 'Sticky fill' },
-    { path: 'component.table.stripe', label: 'Stripe' },
-  ],
+  faces: [],
   visual: {
     defaultRow: true,
     cross: ['dense', 'striped', 'hoverable', 'bordered', 'sticky-header'],

@@ -24,10 +24,9 @@ export const contract = {
     compact: { default: false, control: 'switch', docsSkip: true },
   },
   faces: [
-    { path: 'component.empty-state.bg', label: 'Fill' },
-    { path: 'component.empty-state.border', label: 'Border' },
-    { path: 'component.empty-state.fg', label: 'Ink' },
-    { path: 'component.empty-state.title', label: 'Title' },
+    { path: 'card', label: 'Background' },
+    { path: 'card-foreground', label: 'Foreground' },
+    { path: 'border', label: 'Border' },
   ],
   visual: {
     defaultRow: true,

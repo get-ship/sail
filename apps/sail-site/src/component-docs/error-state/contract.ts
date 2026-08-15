@@ -19,9 +19,9 @@ export const contract = {
     code: { default: '', control: 'text' },
   },
   faces: [
-    { path: 'component.error-state.bg', label: 'Fill' },
-    { path: 'component.error-state.border', label: 'Border' },
-    { path: 'component.error-state.fg', label: 'Ink' },
+    { path: 'card', label: 'Background' },
+    { path: 'card-foreground', label: 'Foreground' },
+    { path: 'border', label: 'Border' },
   ],
   visual: {
     defaultRow: true,

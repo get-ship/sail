@@ -19,7 +19,7 @@ export const code = {
 
   conditions: `<column gap="2" style({ pad(3).bg(surface-1).border({ color: border, width: 1 }).radius(lg), when: { tablet: pad(6) } })>
   <p style({ type({ size: sm }) })>
-    pad(3) on a phone; when: { tablet: pad(6) } from 768px up.</p>
+    pad(3) on a phone; when tablet → pad(6) from 768px up.</p>
 </column>`,
 
   states: `<button style({ when: { hover: bg(muted) } })>
@@ -63,7 +63,7 @@ export default controller(() => {
 </controller>
 
 <slider min="0" max="200" bind:value={shift} />
-<card style({ size(9).bg(primary).radius(md).motion({ x: bind(shiftPx) }) })>
+<card style({ size(9).bg(primary).radius(md).translateX(bind(shiftPx)) })>
 </card>`,
 
   layout: `<row gap="3" align="center">...</row>

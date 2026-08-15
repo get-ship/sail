@@ -23,10 +23,9 @@ export const contract = {
     onDismiss: { control: 'none', event: true },
   },
   faces: [
-    { path: 'component.toast.bg', label: 'Fill' },
-    { path: 'component.toast.fg', label: 'Ink' },
-    { path: 'component.toast.border', label: 'Border' },
-    { path: 'component.toast.stripe', label: 'Stripe' },
+    { path: 'popover', label: 'Background' },
+    { path: 'foreground', label: 'Foreground' },
+    { path: 'border', label: 'Border' },
   ],
   visual: {
     defaultRow: true,

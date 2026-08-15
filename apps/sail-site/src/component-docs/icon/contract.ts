@@ -2,7 +2,7 @@ import type { SurfaceContract } from '../contract-types'
 
 /**
  * Surface contract for icon — size/spin/name/label from prop-registry.
- * No component.icon.* leaves (ink is currentColor).
+ * No icon-specific pack (foreground is currentColor).
  */
 export const contract = {
   slug: 'icon',

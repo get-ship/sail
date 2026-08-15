@@ -14,8 +14,9 @@ export const contract = {
     content: { default: '', control: 'text' },
   },
   faces: [
-    { path: 'component.tooltip.bg', label: 'Bubble fill' },
-    { path: 'component.tooltip.fg', label: 'Bubble ink' },
+    { path: 'popover', label: 'Background' },
+    { path: 'foreground', label: 'Foreground' },
+    { path: 'border', label: 'Border' },
   ],
   visual: {
     defaultRow: true,

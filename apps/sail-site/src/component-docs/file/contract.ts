@@ -2,7 +2,7 @@ import type { SurfaceContract } from '../contract-types'
 
 /**
  * Surface contract for file — axes from stdlib props only.
- * variant picker (default) or drop. No component.file.* pack.
+ * variant picker (default) or drop. No file-specific roles pack.
  */
 export const contract = {
   slug: 'file',

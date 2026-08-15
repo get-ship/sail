@@ -2,7 +2,7 @@ import type { SurfaceContract } from '../contract-types'
 
 /**
  * Surface contract for pagination — axes from prop-registry only.
- * No component.pagination.* leaves; page chrome uses free tokens.
+ * No pagination-specific pack; page chrome uses free tokens.
  * variant default | simple (SPEC-L1-PASS-1): simple is denser Style.
  */
 export const contract = {

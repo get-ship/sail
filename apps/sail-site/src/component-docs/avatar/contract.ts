@@ -45,10 +45,7 @@ export const contract = {
     },
     stack: { default: false, control: 'switch', docsSkip: true },
   },
-  faces: [
-    { path: 'component.avatar.bg', label: 'Fill' },
-    { path: 'component.avatar.fg', label: 'Ink' },
-  ],
+  faces: [],
   visual: {
     defaultRow: true,
     cross: ['tone', 'size', 'shape', 'ring', 'presence', 'stack'],

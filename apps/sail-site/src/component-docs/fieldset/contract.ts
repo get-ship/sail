@@ -8,7 +8,7 @@ export const contract = {
   axes: {
     disabled: { default: false, control: 'switch' },
   },
-  faces: [{ path: 'component.fieldset.border', label: 'Border' }],
+  faces: [{ path: 'border', label: 'Border' }],
   visual: {
     defaultRow: true,
     cross: ['disabled'],

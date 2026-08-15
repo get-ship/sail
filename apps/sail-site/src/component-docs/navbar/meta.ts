@@ -8,7 +8,7 @@ export const meta = {
   category: 'navigation',
   kind: 'host',
   blurb:
-    'One element, three placements — top bar, side rail, bottom bar. sticky · bordered · autohide · offset. Regions: brand, center/links, actions. Paint from component.navbar.*.',
+    'One element, three placements — top bar, side rail, bottom bar. sticky · bordered · autohide · offset. Regions: brand, center/links, actions. Paints background / border / foreground.',
   heading: 'navbar',
   host: 'doc-navbar',
   stageOwnsKnobs: true,

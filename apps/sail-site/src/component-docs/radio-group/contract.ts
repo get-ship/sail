@@ -2,7 +2,7 @@ import type { SurfaceContract } from '../contract-types'
 
 /**
  * Surface contract for radio-group — axes from prop-registry only.
- * Host is layout + typeface; option paint is child <radio> (no component.radio-group.* leaves).
+ * Host is layout + typeface; option paint is child <radio> (no radio-group pack).
  */
 export const contract = {
   slug: 'radio-group',

@@ -3,7 +3,7 @@ import type { SurfaceContract } from '../contract-types'
 /**
  * Surface contract for toggle-group — segmented control host.
  * Keep as host; no top-level toggle/ package. Faces: host rail only
- * (component.toggle-group.bg / border). Toggle cell leaves stay on <toggle>.
+ * (muted / border). Toggle cell leaves stay on <toggle>.
  */
 export const contract = {
   slug: 'toggle-group',
@@ -29,8 +29,8 @@ export const contract = {
     onToggleChange: { control: 'none', event: true },
   },
   faces: [
-    { path: 'component.toggle-group.bg', label: 'Rail fill' },
-    { path: 'component.toggle-group.border', label: 'Rail border' },
+    { path: 'muted', label: 'Background' },
+    { path: 'border', label: 'Border' },
   ],
   visual: {
     defaultRow: true,

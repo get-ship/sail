@@ -19,10 +19,7 @@ export const contract = {
   },
   /** Docs configurator switch: omit value for native indeterminate sweep. */
   demoOnly: ['indeterminate'] as const,
-  faces: [
-    { path: 'component.progress.track', label: 'Track' },
-    { path: 'component.progress.fill', label: 'Fill' },
-  ],
+  faces: [],
   visual: {
     defaultRow: true,
     cross: ['value', 'size'],

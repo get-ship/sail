@@ -2,7 +2,7 @@ import type { SurfaceContract } from '../contract-types'
 
 /**
  * Surface contract for drawer — axes from stdlib props only.
- * No component.drawer.* pack; host paints card / card-foreground.
+ * No drawer-specific roles pack; host paints card / card-foreground.
  */
 export const contract = {
   slug: 'drawer',
@@ -23,7 +23,11 @@ export const contract = {
     onClose: { control: 'none', event: true },
     onDismiss: { control: 'none', event: true },
   },
-  faces: [],
+  faces: [
+    { path: 'card', label: 'Background' },
+    { path: 'card-foreground', label: 'Foreground' },
+    { path: 'border', label: 'Border' },
+  ],
   visual: {
     defaultRow: true,
     cross: ['size', 'side', 'dismissible'],

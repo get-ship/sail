@@ -2,7 +2,7 @@ import type { SurfaceContract } from '../contract-types'
 
 /**
  * Surface contract for color — axes from stdlib props only.
- * System swatch (native type=color). No component.color.* pack.
+ * System swatch (native type=color). No color-specific roles pack.
  */
 export const contract = {
   slug: 'color',

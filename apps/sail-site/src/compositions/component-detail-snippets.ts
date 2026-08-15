@@ -141,15 +141,13 @@ export default controller(() => ({ volume: signal(48) }))
   <slider bind:value={volume} min="0" max="100" size="md"></slider>
 </column>`,
 
-  'toggle-group': `<toggle-group variant="segmented">
-    style({ animate: { enter: play(fade) } })
+  'toggle-group': `<toggle-group variant="segmented" style({ animate: { enter: play(fade) } })>
   <toggle value="left">Left</toggle>
   <toggle value="center">Center</toggle>
   <toggle value="right">Right</toggle>
 </toggle-group>`,
 
-  field: `<field>
-    style({ animate: { enter: play(fade) } })
+  field: `<field style({ animate: { enter: play(fade) } })>
   <label for="name">Name</label>
   <input id="name" placeholder="Ada Lovelace" />
 </field>
@@ -181,8 +179,7 @@ export default controller(() => ({ volume: signal(48) }))
 </fieldset>`,
 
   'theme-picker': `<!-- the whole switcher: trigger, panel, live previews -->
-<theme-picker>
-  style({ animate: { enter: play(fade) } })
+<theme-picker style({ animate: { enter: play(fade) } })>
 </theme-picker>`,
 
   ticker: `<ticker duration="normal" style({ size({ w: full }).overflow({ all: hidden }).pad({ y: 2 }).bg(muted).radius(md) })>
@@ -199,8 +196,7 @@ export default controller(() => {
 </controller>
 
 <if {visible()}>
-  <alert tone="warning">
-    style({ animate: { exit: play(fade) } })
+  <alert tone="warning" style({ animate: { exit: play(fade) } })>
     <strong>Careful.</strong> This cannot be undone.
   </alert>
 </if>
@@ -252,8 +248,7 @@ export default controller(() => ({ loading: signal(true) }))
 </error-state>`,
 
   'error-boundary': `<error-boundary message="This panel could not load.">
-  <card>
-    style({ pad(4), animate: { enter: play(fade) } })
+  <card style({ pad(4), animate: { enter: play(fade) } })>
     <p>A risky subtree. If a render throw happens inside,
        the fallback takes this card's place — Retry resets it.</p>
   </card>
@@ -272,16 +267,14 @@ export default controller(() => {
 <button type="button" on:click={push}>Show toast</button>
 <toast-region position="bottom-end">
   <for {items() as t} key={t.key}>
-    <toast tone="success" duration="0" on-dismiss={onDismiss}>
-      style({ animate: { enter: play(fade) } })
+    <toast tone="success" duration="0" on-dismiss={onDismiss} style({ animate: { enter: play(fade) } })>
       <strong>Saved.</strong> Your changes are live.
     </toast>
   </for>
 </toast-region>`,
 
   badge: `<row gap="2" align="center">
-  <badge tone="success">
-    style({ animate: { enter: play(fade) } })
+  <badge tone="success" style({ animate: { enter: play(fade) } })>
     Active</badge>
   <badge tone="warning">Pending</badge>
   <badge tone="destructive" variant="outline">Failed</badge>
@@ -302,17 +295,14 @@ export default controller(() => {
   <button variant="ghost" on:click={() => kept.set(true)}>bring it back</button>
 </if>`,
 
-  card: `<card interactive>
-    style({ pad(5) })
+  card: `<card interactive style({ pad(5) })>
   <strong>A surface</strong>
-  <p>
-    style({ fg(muted-foreground).type({ size: sm }) })
+  <p style({ fg(muted-foreground).type({ size: sm }) })>
     Tone, padding and the hover lift are attributes.
   </p>
 </card>`,
 
-  avatar: `<row gap="2" align="center">
-    style({ animate: { enter: play(fade) } })
+  avatar: `<row gap="2" align="center" style({ animate: { enter: play(fade) } })>
   <avatar name="Ada Lovelace"></avatar>
   <avatar initials="GH" tone="primary"></avatar>
   <avatar name="Alan Turing" size="lg" shape="square"></avatar>
@@ -335,8 +325,7 @@ export default controller(() => {
   </row>
 </column>`,
 
-  accordion: `<accordion>
-    style({ animate: { enter: play(fade) } })
+  accordion: `<accordion style({ animate: { enter: play(fade) } })>
   <strong slot="trigger">Show the details</strong>
   <p>Animated open and close — and it remembers its state.</p>
 </accordion>`,
@@ -357,44 +346,36 @@ export default controller(() => {
 </prose>`,
 
   tooltip: `<tooltip content="Deletes the branch — cannot be undone"
- placement="top">
-    style({ animate: { enter: play(fade) } })
+ placement="top" style({ animate: { enter: play(fade) } })>
   <button tone="destructive" variant="outline">Delete branch</button>
 </tooltip>`,
 
   'hover-card': `<button variant="ghost" popovertarget="profile">@ada</button>
 
-<hover-card id="profile">
-  style({ animate: { enter: play(fade) } })
-  <card>
-    style({ pad(4) })
+<hover-card id="profile" style({ animate: { enter: play(fade) } })>
+  <card style({ pad(4) })>
     <strong>Ada Lovelace</strong>
-    <p>
-      style({ fg(muted-foreground).type({ size: sm }) })
+    <p style({ fg(muted-foreground).type({ size: sm }) })>
       wrote the first program.</p>
   </card>
 </hover-card>`,
 
   popover: `<button popovertarget="pop">Open popover</button>
 
-<popover id="pop" placement="bottom">
-  style({ animate: { enter: play(fade) } })
-  <card>
-    style({ pad(4) })
+<popover id="pop" placement="bottom" style({ animate: { enter: play(fade) } })>
+  <card style({ pad(4) })>
     Rides the platform top layer — no z-index war.</card>
 </popover>`,
 
   dropdown: `<button popovertarget="menu">Actions ▾</button>
 
-<dropdown id="menu">
-  style({ animate: { enter: play(fade) } })
+<dropdown id="menu" style({ animate: { enter: play(fade) } })>
   <menu-item>Edit</menu-item>
   <menu-item>Duplicate</menu-item>
   <menu-item tone="destructive">Delete</menu-item>
 </dropdown>`,
 
-  'context-menu': `<card id="canvas">
-    style({ pad(6), animate: { enter: play(fade) } })
+  'context-menu': `<card id="canvas" style({ pad(6), animate: { enter: play(fade) } })>
   right-click target
 </card>
 
@@ -411,8 +392,7 @@ export default controller(() => {
 })
 </controller>
 
-<button command="show-modal" commandfor="confirm">
-  style({ animate: { press: play(fade) } })
+<button command="show-modal" commandfor="confirm" style({ animate: { press: play(fade) } })>
   Delete project…</button>
 
 <dialog id="confirm">
@@ -447,16 +427,14 @@ export default controller(() => {
     <tab>Activity</tab>
     <tab>Settings</tab>
   </tab-list>
-  <tab-panel>
-    style({ animate: { enter: play(fade) } })
+  <tab-panel style({ animate: { enter: play(fade) } })>
     <p>Keyboard-complete: arrows rove, Home/End jump.</p>
   </tab-panel>
   <tab-panel><p>Activity feed.</p></tab-panel>
   <tab-panel><p>Settings.</p></tab-panel>
 </tabs>`,
 
-  breadcrumb: `<breadcrumb>
-    style({ animate: { enter: play(fade) } })
+  breadcrumb: `<breadcrumb style({ animate: { enter: play(fade) } })>
   <a href="/">Home</a>
   <a href="/components">Components</a>
   <small>breadcrumb</small>
@@ -476,8 +454,7 @@ export default controller(() => {
 </pagination>
 <p>on page {page()}</p>`,
 
-  navbar: `<navbar bordered>
-    style({ animate: { enter: play(fade) } })
+  navbar: `<navbar bordered style({ animate: { enter: play(fade) } })>
   <strong slot="brand">SHIP</strong>
   <a href="/docs">Docs</a>
   <a href="/components">Components</a>
@@ -508,25 +485,20 @@ export default controller(() => ({
   </tbody>
 </table>`,
 
-  layout: `<column gap="3">
-    style({ animate: { enter: play(fade) } })
+  layout: `<column gap="3" style({ animate: { enter: play(fade) } })>
   <row gap="2" align="center" justify="between">
     <strong>row — the x axis</strong>
     <badge tone="primary">end</badge>
   </row>
   <grid cols="3" gap="2">
-    <card>
-      style({ pad(3) })
+    <card style({ pad(3) })>
       1</card>
-    <card>
-      style({ pad(3) })
+    <card style({ pad(3) })>
       2</card>
-    <card>
-      style({ pad(3) })
+    <card style({ pad(3) })>
       3</card>
   </grid>
-  <center>
-    style({ pad(4).border({ color: border-subtle, width: 1 }).radius(md) })
+  <center style({ pad(4).border({ color: border-subtle, width: 1 }).radius(md) })>
     <p>center — both axes</p>
   </center>
 </column>`,

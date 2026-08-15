@@ -17,7 +17,7 @@ export const code = {
 
   partial: `<scope>
   type ListTileProps = { title: string; icon?: string }
-  style card = { box: pad(2) }
+  style card = { pad(2) }
 </scope>
 
 <partial list-tile props: ListTileProps>

@@ -16,8 +16,9 @@ export const contract = {
     terminal: { default: false, control: 'switch', docsSkip: true },
   },
   faces: [
-    { path: 'component.code-block.bg', label: 'Fill' },
-    { path: 'component.code-block.fg', label: 'Ink' },
+    { path: 'card', label: 'Background' },
+    { path: 'card-foreground', label: 'Foreground' },
+    { path: 'border', label: 'Border' },
   ],
   visual: {
     defaultRow: true,

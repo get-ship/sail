@@ -21,11 +21,7 @@ export const contract = {
     },
     name: { default: '', control: 'text', docsSkip: true },
   },
-  faces: [
-    { path: 'component.slider.fill', label: 'Fill' },
-    { path: 'component.slider.track', label: 'Track' },
-    { path: 'component.slider.track-border', label: 'Track border' },
-  ],
+  faces: [],
   visual: {
     defaultRow: true,
     cross: ['value', 'size', 'disabled'],

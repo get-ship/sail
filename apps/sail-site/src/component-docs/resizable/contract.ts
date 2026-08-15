@@ -2,7 +2,7 @@ import type { SurfaceContract } from '../contract-types'
 
 /**
  * Surface contract for resizable — axes from stdlib props only.
- * orientation horizontal (default) or vertical. No component.resizable.* pack.
+ * orientation horizontal (default) or vertical. No resizable-specific roles pack.
  */
 export const contract = {
   slug: 'resizable',

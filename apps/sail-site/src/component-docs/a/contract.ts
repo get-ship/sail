@@ -3,7 +3,7 @@ import type { SurfaceContract } from '../contract-types'
 /**
  * Surface contract for a — axes from prop-registry only.
  * Dual mode: bare (no variant attr) = text link; variant set = button-link.
- * Paint uses component.button.* when button-link (no component.a.* leaves).
+ * Paint uses tone roles when button-link (no anchor-specific pack).
  */
 export const contract = {
   slug: 'a',
@@ -22,7 +22,7 @@ export const contract = {
     },
     disabled: { default: false, control: 'switch' },
   },
-  // Freeform bare link + match arms paint button tokens — no component.a.* invent.
+  // Freeform bare link + match arms paint button tokens — no invented pack.
   faces: [],
   visual: {
     defaultRow: true,

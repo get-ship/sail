@@ -8,7 +8,7 @@ export const meta = {
   category: 'feedback',
   kind: 'host',
   blurb:
-    'Transient announcement. Auto-dismiss after duration ms (0 sticky), pauses while hovered/focused. tone defaults to info; onDismiss. Lives in a toast-region stack. Faces component.toast.*.',
+    'Transient announcement. Auto-dismiss after duration ms (0 sticky), pauses while hovered/focused. tone defaults to info; onDismiss. Lives in a toast-region stack. Paints the popover role.',
   heading: 'toast',
   host: 'doc-toast',
   stageOwnsKnobs: true,

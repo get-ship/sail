@@ -7,7 +7,7 @@ export const meta = {
   key: 'label',
   category: 'inputs',
   kind: 'host',
-  blurb: "Native <label> — for= focuses the control. size sm|md|lg matches the control type ladder. required shows the * marker from component.label.required; host ink from component.label.fg and weight from typography.label.weight. No tone prop.",
+  blurb: "Native <label> — for= focuses the control. size sm|md|lg matches the control type ladder. required shows the * marker; host foreground and weight follow the label type role. No tone prop.",
   heading: "prose",
   host: 'doc-label',
   stageOwnsKnobs: true,

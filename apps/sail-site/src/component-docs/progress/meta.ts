@@ -7,7 +7,7 @@ export const meta = {
   key: 'progressBar',
   category: 'feedback',
   kind: 'host',
-  blurb: "Native progress bar, themed. value/max are the platform model; omit value for the indeterminate sweep (no separate prop). size is sm|md|lg track height. Paint always from component.progress.track + fill — no tone axis.",
+  blurb: "Native progress bar, themed. value/max are the platform model; omit value for the indeterminate sweep (no separate prop). size is sm|md|lg track height. Track and fill come from the theme — no tone axis.",
   heading: "prose",
   host: 'doc-progress',
   stageOwnsKnobs: true,

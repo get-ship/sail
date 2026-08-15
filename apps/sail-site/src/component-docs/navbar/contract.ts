@@ -23,11 +23,7 @@ export const contract = {
     'solid-on-scroll': { default: false, control: 'switch', docsSkip: true },
     offset: { default: 0, control: 'number' },
   },
-  faces: [
-    { path: 'component.navbar.bg', label: 'Fill' },
-    { path: 'component.navbar.fg', label: 'Ink' },
-    { path: 'component.navbar.border', label: 'Border' },
-  ],
+  faces: [],
   visual: {
     defaultRow: true,
     cross: ['placement', 'sticky', 'bordered', 'autohide', 'floating', 'offset'],

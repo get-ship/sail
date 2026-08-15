@@ -8,7 +8,7 @@ export const meta = {
   category: 'overlay',
   kind: 'host',
   blurb:
-    'Popover with menu semantics: role=menu, roving arrows, type-ahead, <menu-item> children. placement string; onSelect event. Paint component.dropdown.*.',
+    'Popover with menu semantics: role=menu, roving arrows, type-ahead, <menu-item> children. placement string; onSelect event. Paints the popover role.',
   heading: 'dropdown',
   host: 'doc-dropdown',
   stageOwnsKnobs: true,
