@@ -9,19 +9,20 @@ export const contract = {
     size: {
       values: ['xs', 'sm', 'md', 'lg'] as const,
       default: 'md',
-      control: 'slider',
+      control: 'select',
     },
     tone: {
       values: ['primary', 'info', 'success', 'warning', 'destructive', 'accent'] as const,
       default: 'info',
       control: 'swatches',
     },
-    centered: { default: false, control: 'switch' },
+    // Centering is the parent's job. Keep the host prop but do not knob it.
+    centered: { default: false, control: 'switch', docsSkip: true },
   },
   faces: [],
   visual: {
     defaultRow: true,
-    cross: ['size', 'tone', 'centered'],
+    cross: ['size', 'tone'],
   },
   examples: true,
 } as const satisfies SurfaceContract

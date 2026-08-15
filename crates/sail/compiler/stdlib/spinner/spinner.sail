@@ -12,11 +12,13 @@
     centered = false
   }
 
-  style base = {display(inline-block).size(icon-size-md).align(middle).fg(muted-foreground)}
-  style sizeMd = {size(icon-size-md)}
-  style sizeXs = {size(icon-size-2xs)}
-  style sizeSm = {size(icon-size-sm)}
-  style sizeLg = {size(icon-size-xl)}
+  // Icon-size steps (10/14/16/20) were too tight to read as a size attr.
+  // 16 / 24 / 32 / 48 is a visible glyph ladder; default md stays a mark.
+  style base = {display(inline-block).size(8).align(middle).fg(muted-foreground)}
+  style sizeMd = {size(8)}
+  style sizeXs = {size(icon-size-md)}
+  style sizeSm = {size(6)}
+  style sizeLg = {size(12)}
   style ring = {display(block).size(full).border({ color: border-subtle, width: control-stroke, style: solid, edge: b }).border({ color: border-subtle, width: control-stroke, style: solid, edge: l }).border({ color: border-subtle, width: control-stroke, style: solid, edge: t }).border({ color: currentColor, width: control-stroke, style: solid, edge: r }).radius(full).animate(spin)}
 </scope>
 

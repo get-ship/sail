@@ -8,9 +8,6 @@
   style specimen = { size({ w: full }).pad(2).overflow({ all: visible }) }
   style mutedSm = { fg(muted-foreground).type({ size: sm }) }
   style knobLabel = { fg(muted-foreground).type({ size: xs, weight: medium, tracking: wide, case: uppercase }) }
-  style sizeValue = { fg(muted-foreground).type({ family: mono, size: xs }) }
-  style tickRow = { size({ w: full }).pad({ x: 1_5, t: 1 }) }
-  style tick = { fg(muted-foreground).type({ family: mono, size: xs }) }
   style swatch = { size(7).shrink(0).radius(full).cursor(pointer).border({ color: transparent, width: 2 }).elevation(xs), when: { selected: border({ color: foreground }).elevation(sm), hover: filter({ opacity: 90 }) } }
   style swatchPrimary = { bg(primary) }
   style swatchSuccess = { bg(success) }
@@ -18,7 +15,6 @@
   style swatchDestructive = { bg(destructive) }
   style swatchAccent = { bg(accent) }
   style swatchInfo = { bg(info) }
-  style centerBox = { pad(4).border({ color: border-subtle, width: 1 }).radius(md) }
   style exampleBlock = { size({ w: full }).pad({ t: 2, b: 4 }).overflow({ all: visible }) }
   style sectionLabel = { fg(muted-foreground).type({ size: xs, tracking: wide, case: uppercase }) }
   style demoRow = { size({ w: full }).pad({ y: 2 }) }
@@ -29,17 +25,10 @@ import type { Scope } from './doc-spinner.sail'
 import { DETAILS } from '../../compositions/component-details'
 
 export default controller((_ctx: Scope) => {
-  const SPN_SIZES = ['xs', 'sm', 'md', 'lg'] as const
-  const sizeIdx = signal(2)
   const spinnerTone = signal('info')
-  const spinnerCentered = signal(false)
+  const spinnerSize = signal('md')
 
   const pickSpinnerTone = (t: string): void => spinnerTone.set(t)
-
-  const spinnerSize = derived(() => {
-    const i = Math.min(Math.max(0, Math.round(Number(sizeIdx()) || 0)), SPN_SIZES.length - 1)
-    return SPN_SIZES[i] ?? 'md'
-  })
 
   const entry = DETAILS.spinner
   const heading = () => entry.heading
@@ -51,7 +40,6 @@ export default controller((_ctx: Scope) => {
     const a: string[] = []
     if (spinnerSize() !== 'md') a.push(`size="${spinnerSize()}"`)
     a.push(`tone="${spinnerTone()}"`)
-    if (spinnerCentered()) a.push('centered')
     return `<spinner ${a.join(' ')}></spinner>`
   })
 
@@ -60,12 +48,9 @@ export default controller((_ctx: Scope) => {
   const spnExSizes = () =>
     `<spinner size="xs" tone="info"></spinner>\n<spinner size="sm" tone="info"></spinner>\n<spinner tone="info"></spinner>\n<spinner size="lg" tone="info"></spinner>`
   const spnExDefault = () => `<spinner tone="info"></spinner>`
-  const spnExCentered = () => `<spinner centered tone="info"></spinner>`
 
   return {
-    sizeIdx,
     spinnerTone,
-    spinnerCentered,
     spinnerSize,
     pickSpinnerTone,
     heading,
@@ -76,7 +61,6 @@ export default controller((_ctx: Scope) => {
     spnExInline,
     spnExSizes,
     spnExDefault,
-    spnExCentered,
   }
 })
 </controller>
@@ -93,20 +77,23 @@ export default controller((_ctx: Scope) => {
     rows={props()}
   >
     <column slot="specimen" gap="3" align="center" style(specimen)>
-      <spinner
-        size={spinnerSize()}
-        tone={spinnerTone()}
-        centered={spinnerCentered() ? 'true' : null}
-      ></spinner>
+      <row gap="2" align="center">
+        <spinner
+          size={spinnerSize()}
+          tone={spinnerTone()}
+        ></spinner>
+      </row>
     </column>
 
     <column slot="knobs" gap="4" align="stretch">
       <column gap="2">
-        <row gap="2" align="center" justify="between">
-          <label style(knobLabel)>Size</label>
-          <span style(sizeValue)>{spinnerSize()}</span>
-        </row>
-        <slider bind:value={sizeIdx} min="0" max="3" step="1" size="sm" label="Size" ticks="xs,sm,md,lg"></slider>
+        <label style(knobLabel)>Size</label>
+        <select size="sm" bind:value={spinnerSize} label="Size">
+          <option value="xs">xs</option>
+          <option value="sm">sm</option>
+          <option value="md">md</option>
+          <option value="lg">lg</option>
+        </select>
       </column>
       <column gap="2">
         <label style(knobLabel)>Tone</label>
@@ -149,13 +136,6 @@ export default controller((_ctx: Scope) => {
           ></div>
         </row>
       </column>
-      <column gap="2">
-        <label style(knobLabel)>Centered</label>
-        <row gap="2" align="center">
-          <switch bind:checked={spinnerCentered} size="sm" tone="primary"></switch>
-          <span style(sizeValue)>{spinnerCentered() ? 'block + mx auto' : 'inline'}</span>
-        </row>
-      </column>
     </column>
 
     <column slot="usage-preview" gap="3" align="center" style(specimen)>
@@ -194,15 +174,6 @@ export default controller((_ctx: Scope) => {
           <spinner tone="info"></spinner>
           <spinner size="lg" tone="info"></spinner>
         </row>
-      </doc-example>
-      <doc-example
-        title="Centered"
-        lead="centered makes the host a block with auto horizontal margins."
-        code={spnExCentered()}
-      >
-        <column gap="2" style(centerBox)>
-          <spinner centered tone="info"></spinner>
-        </column>
       </doc-example>
     </column>
   </sail-component-viewer>
