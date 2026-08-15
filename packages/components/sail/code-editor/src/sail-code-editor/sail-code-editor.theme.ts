@@ -18,7 +18,12 @@ export const sailEditorTheme = EditorView.theme({
     // The editor fills its mount box; the box's chrome (border/radius/size)
     // is the component template's sx. CodeMirror internals are styled HERE —
     // the FFI library's own theme system, not authored CSS.
+    // Width + flex-grow: the mount is a sail flex row; without these the
+    // .cm-editor shrinks to line-content (~half the pane).
     height: '100%',
+    width: '100%',
+    minWidth: 0,
+    flex: '1 1 auto',
   },
   '.cm-content': {
     caretColor: 'var(--foreground)',

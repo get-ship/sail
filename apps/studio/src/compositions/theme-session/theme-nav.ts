@@ -12,18 +12,18 @@ export type ThemeFacet =
 
 /** Path / facet nav — crumb menu + doors. */
 export const PATH_NAV = [
-  { key: 'overview', value: 'overview', icon: 'layout-dashboard', label: 'Overview' },
-  { key: 'color', value: 'color', icon: 'palette', label: 'Color' },
-  { key: 'shape', value: 'shape', icon: 'shapes', label: 'Shape' },
+  { key: 'overview', value: 'overview', icon: 'home', label: 'Overview' },
+  { key: 'color', value: 'color', icon: 'image', label: 'Color' },
+  { key: 'shape', value: 'shape', icon: 'circle', label: 'Shape' },
   { key: 'assets', value: 'assets', icon: 'sparkles', label: 'Assets' },
-  { key: 'components', value: 'components', icon: 'component', label: 'Components' },
+  { key: 'components', value: 'components', icon: 'star', label: 'Components' },
 ] as const
 
 export const FACET_DOORS = [
-  { key: 'color', facet: 'color', icon: 'palette', label: 'Color', hint: 'Brand, surfaces, semantic' },
-  { key: 'shape', facet: 'shape', icon: 'shapes', label: 'Shape', hint: 'Radius, elevation, material' },
+  { key: 'color', facet: 'color', icon: 'image', label: 'Color', hint: 'Brand, surfaces, semantic' },
+  { key: 'shape', facet: 'shape', icon: 'circle', label: 'Shape', hint: 'Radius, elevation, material' },
   { key: 'assets', facet: 'assets', icon: 'sparkles', label: 'Assets', hint: 'Type and icons' },
-  { key: 'components', facet: 'components', icon: 'component', label: 'Components', hint: 'Component overrides and preview' },
+  { key: 'components', facet: 'components', icon: 'star', label: 'Components', hint: 'Component overrides and preview' },
 ] as const
 
 const FACET_CRUMB: Record<ThemeFacet, string> = {

@@ -41,7 +41,7 @@
   style typeDisplay = { type({ family: display, size: xl, weight: semibold, tracking: tight }) }
   style typeBody = { type({ family: body, size: sm, leading: relaxed }) }
   style typeMono = { type({ family: mono, size: xs }) }
-  style radiusChip = { size({ w: 8, h: 8 }).bg(transparent).border({ color: primary, width: 2 }) }
+  style radiusChip = { shrink(0).size({ w: 8, h: 8, min-w: 8, min-h: 8 }).bg(transparent).border({ color: primary, width: 2 }) }
   style specimen = { overflow({ all: hidden }).size({ min-w: 0 }).radius(lg).border({ color: border, width: 1 }).elevation(md).bg(background).fg(foreground) }
   style specimenHead = { pad({ x: 4 }).size({ h: 9 }).bg(surface-1).border({ edge: b, color: border-subtle, width: 1 }) }
   style specimenBody = { pad(5).bg(background) }

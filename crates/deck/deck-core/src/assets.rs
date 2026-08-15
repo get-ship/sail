@@ -587,7 +587,30 @@ pub fn serve_sail_icon_from(
             svg,
         );
     }
+    // Known Sail roles (core ∪ project sail.config) resolve even when the
+    // bake missed them — dynamic `name={expr}` and app-local `src/` icons
+    // are not always in the used-glyph set. Unknown lucide ids stay 404.
+    if let Some(svg) = resolve_role_glyph(resolution, name) {
+        return DeckResponse::new(
+            200,
+            "image/svg+xml; charset=utf-8",
+            crate::response::CachePolicy::Asset,
+            mode,
+            svg,
+        );
+    }
     DeckResponse::not_found(format!("icon not in app output: {name}"), mode)
+}
+
+fn resolve_role_glyph(
+    resolution: Option<&crate::resolver::Resolution>,
+    name: &str,
+) -> Option<Vec<u8>> {
+    let root = resolution?.project_root()?;
+    let registry = sail_compiler::RoleRegistry::load_from_project(root);
+    let binding = registry.resolve(name)?;
+    let svg = sail_compiler::load_glyph_svg(&binding.pack, &binding.glyph, &[root])?;
+    Some(svg.into_bytes())
 }
 
 fn read_baked_icon(
@@ -792,6 +815,27 @@ mod tests {
     fn icon_unbaked_returns_404() {
         let resp = serve_sail_icon(DaemonMode::Development, "search");
         assert_eq!(resp.status, 404, "no embed, no bake");
+    }
+
+    #[test]
+    fn icon_unbaked_core_role_resolves_from_project_pack() {
+        let tmp = tempfile::tempdir().unwrap();
+        let pack = tmp
+            .path()
+            .join("node_modules/@iconify-json/lucide");
+        std::fs::create_dir_all(&pack).unwrap();
+        std::fs::write(
+            pack.join("icons.json"),
+            r#"{"prefix":"lucide","width":24,"height":24,"icons":{"search":{"body":"<circle cx=\"11\" cy=\"11\" r=\"8\"/>"}}}"#,
+        )
+        .unwrap();
+        let resolution = crate::resolver::Resolution::new().with_root(tmp.path());
+        let resp = serve_sail_icon_from(DaemonMode::Development, "search", Some(&resolution));
+        assert_eq!(resp.status, 200, "core role search from pack");
+        let body = std::str::from_utf8(&resp.body).unwrap();
+        assert!(body.contains("circle"), "{body}");
+        let unknown = serve_sail_icon_from(DaemonMode::Development, "files", Some(&resolution));
+        assert_eq!(unknown.status, 404, "non-role lucide id stays 404");
     }
 
     #[test]
