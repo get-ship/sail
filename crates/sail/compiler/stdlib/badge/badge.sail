@@ -23,8 +23,7 @@
   style sizeSm = {size({ min-h: 4 }).pad({ x: 4 }).type({ size: xs })}
   style sizeLg = {size({ min-h: control-h-xs }).pad({ x: 4 }).type({ size: xs })}
   // Status disc — pad/text unused; tone still paints via variant match.
-  // No overflow(hidden) here: match-arm classes sit on the host always,
-  // and hug labels must not inherit a clip box.
+  // Match-arm classes stamp the host — do not put overflow there.
   style dotOn = {size({ w: 2, h: 2, min-h: 0 }).pad({ all: 0, x: 0 }).radius(full)}
 
   style solidTone = {bg(tone).fg(tone.foreground).border({ color: tone }).elevation(xs)}

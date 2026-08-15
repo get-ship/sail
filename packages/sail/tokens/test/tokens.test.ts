@@ -1273,7 +1273,7 @@ describe('@ship/tokens — DTCG SSOT / generate drift lock', () => {
   })
 })
 
-describe('@ship/tokens — whole-value alias audit (Wave 4)', () => {
+describe('@ship/tokens — whole-value alias audit', () => {
   // Pins RESULT-TOKEN-AUDIT.md. Recount: extractWholeValueAliases.
   const PIN = {
     tokensSites: 98,

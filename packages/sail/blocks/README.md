@@ -25,7 +25,7 @@ routes/<id>/                       templates only
 
 A `.sail` stem without a hyphen compiles as a view fragment (`renderRoute`), not a custom element. Do not rename the file to invent a tag. Do not `sail-compiler build` the block file as a CE — the path looks like `<tag>/<tag>.sail` but `InputWithButton` is not a custom-element name.
 
-## Add the next block (Wave 5b)
+## Add the next block
 
 1. Open the Mantine URL. Record headings, buttons, links, fields (role / name). That list is the test.
 2. Copy `src/blocks/InputWithButton/`. Rename the folder and both files to `<Name>`.
