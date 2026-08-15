@@ -6,7 +6,8 @@ export const contract = {
   tag: 'switch',
   kind: 'host',
   axes: {
-    checked: { default: false, control: 'switch' },
+    // Specimen switch is the checked control — no duplicate On knob.
+    checked: { default: false, control: 'switch', docsSkip: true },
     disabled: { default: false, control: 'switch' },
     tone: {
       values: ['primary', 'info', 'success', 'warning', 'destructive', 'accent', 'muted'] as const,
@@ -16,7 +17,7 @@ export const contract = {
     size: {
       values: ['sm', 'md', 'lg'] as const,
       default: 'md',
-      control: 'slider',
+      control: 'select',
     },
   },
   faces: [],

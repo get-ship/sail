@@ -7,8 +7,6 @@
   style fieldShell = { size({ w: full, max-w: 64 }).pad(2).overflow({ all: visible }) }
   style knobLabel = { fg(muted-foreground).type({ size: xs, weight: medium, tracking: wide, case: uppercase }) }
   style sizeValue = { fg(muted-foreground).type({ family: mono, size: xs }) }
-  style tickRow = { size({ w: full }).pad({ x: 1_5, t: 1 }) }
-  style tick = { fg(muted-foreground).type({ family: mono, size: xs }) }
   style swatch = { size(7).shrink(0).radius(full).cursor(pointer).border({ color: transparent, width: 2 }).elevation(xs), when: { selected: border({ color: foreground }).elevation(sm), hover: filter({ opacity: 90 }) } }
   style swatchPrimary = { bg(primary) }
   style swatchSuccess = { bg(success) }
@@ -27,17 +25,12 @@ import type { Scope } from './doc-switch.sail'
 import { DETAILS } from '../../compositions/component-details'
 
 export default controller((_ctx: Scope) => {
-  const SIZES = ['sm', 'md', 'lg'] as const
-  const sizeIdx = signal(1)
   const notify = signal(true)
   const switchTone = signal('primary')
   const switchDisabled = signal(false)
+  const switchSize = signal('md')
 
   const pickTone = (t: string): void => switchTone.set(t)
-  const switchSize = derived(() => {
-    const i = Math.min(Math.max(0, Math.round(Number(sizeIdx()) || 0)), SIZES.length - 1)
-    return SIZES[i] ?? 'md'
-  })
 
   const entry = DETAILS.switch
   const heading = () => entry.heading
@@ -46,7 +39,7 @@ export default controller((_ctx: Scope) => {
   const usageCode = () => entry.usage
 
   const specimenCode = derived(() => {
-    const a: string[] = ['bind:checked={on}']
+    const a: string[] = ['bind:checked={notify}']
     if (switchSize() !== 'md') a.push(`size="${switchSize()}"`)
     a.push(`tone="${switchTone()}"`)
     if (switchDisabled()) a.push('disabled')
@@ -59,7 +52,6 @@ export default controller((_ctx: Scope) => {
     `<switch tone="success" checked />\n<switch tone="warning" checked />\n<switch tone="destructive" checked />`
 
   return {
-    sizeIdx,
     notify,
     switchTone,
     switchDisabled,
@@ -113,16 +105,16 @@ export default controller((_ctx: Scope) => {
         </row>
       </column>
       <column gap="2">
-        <row gap="2" align="center" justify="between">
-          <label style(knobLabel)>Size</label>
-          <span style(sizeValue)>{switchSize()}</span>
-        </row>
-        <slider bind:value={sizeIdx} min="0" max="2" step="1" size="sm" label="Size" ticks="sm,md,lg"></slider>
+        <label style(knobLabel)>Size</label>
+        <select size="sm" bind:value={switchSize} label="Size">
+          <option value="sm">sm</option>
+          <option value="md">md</option>
+          <option value="lg">lg</option>
+        </select>
       </column>
-      <row gap="4" align="center">
-        <label><checkbox bind:checked={notify} size="sm" /> On</label>
+      <column gap="2">
         <label><checkbox bind:checked={switchDisabled} size="sm" /> Disabled</label>
-      </row>
+      </column>
     </column>
 
     <column slot="usage-preview" gap="3" align="center" style(fieldShell)>

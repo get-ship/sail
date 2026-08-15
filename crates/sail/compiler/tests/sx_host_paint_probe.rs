@@ -520,10 +520,10 @@ fn switch_host_track_paint_on_host_sx() {
                 || src.contains("bg(switch-thumb)")
                 || src.contains("bg(knob)"))
             && src.contains("radius(full)")
-            && (src.contains("w(control-h-sm)") || src.contains("w: control-h-sm"))
-            && (src.contains("h(icon-size-md)") || src.contains("h: icon-size-md"))
+            && (src.contains("w(9)") || src.contains("w: 9"))
+            && (src.contains("h(5)") || src.contains("h: 5"))
             && src.contains("content(empty)")
-            && src.contains("size(3)")
+            && src.contains("size(4)")
             && (src.contains("left(auto)") || src.contains("l: auto"))
             && (src.contains("right(px)") || src.contains("r: px"))
             && !src.contains("bg(hover-bg)")
@@ -542,9 +542,9 @@ fn switch_host_track_paint_on_host_sx() {
                 || src.contains("kind: outline"))
             && src.contains("match:")
             && src.contains("size:")
-            && src.contains("size(2_5)")
+            && src.contains("size(3)")
             && (src.contains("w(7)") || src.contains("w: 7"))
-            && src.contains("size(icon-size-sm)"),
+            && src.contains("size(5)"),
         "switch Style host: track + before thumb + size/tone match + no hover-bg wash"
     );
     // boxSizing class mint + live skin + committed element-skins.css lockstep.
@@ -604,9 +604,9 @@ fn switch_host_track_paint_on_host_sx() {
         out.skin_css
     );
     assert!(
-        out.skin_css.contains("width:var(--control-h-sm)")
-            || out.skin_css.contains("width: var(--control-h-sm)")
-            || out.structure_html.contains("controlhsm"),
+        out.skin_css.contains("width:var(--space-9)")
+            || out.skin_css.contains("width: var(--space-9)")
+            || out.structure_html.contains("w9"),
         "md size track width:\n{}",
         out.skin_css
     );
