@@ -1,7 +1,7 @@
 <!--
   <empty-state> — L1 centered empty placeholder.
   Style value language only. size/variant ordinary props.
-  Icon rest = muted when tone is omitted.
+  tone defaults to muted — paints the icon slot (empty icon + tone is a no-op).
   Semantic paint = bound tone (icon fg).
 -->
 
@@ -9,7 +9,7 @@
   props: {
     variant: 'default' | 'inline' | 'placeholder' | 'connecting' = 'default'
     size: 'md' | 'sm' | 'lg' = 'md'
-    tone: 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted'
+    tone: 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted' = 'muted'
     compact = false
   }
 

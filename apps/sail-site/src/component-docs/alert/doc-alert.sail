@@ -16,7 +16,6 @@
   style swatchDestructive = { bg(destructive) }
   style swatchMuted = { bg(muted).border({ color: border }) }
   style swatchInfo = { bg(info) }
-  style swatchRest = { bg(background).border({ color: border }) }
   style exampleBlock = { size({ w: full }).pad({ t: 2, b: 4 }).overflow({ all: visible }) }
   style sectionLabel = { fg(muted-foreground).type({ size: xs, tracking: wide, case: uppercase }) }
 </scope>
@@ -32,10 +31,6 @@ export default controller((_ctx: Scope) => {
 
   const pickAlertTone = (t: string): void => {
     alertTone.set(t)
-    alertVisible.set(true)
-  }
-  const clearAlertTone = (): void => {
-    alertTone.set('')
     alertVisible.set(true)
   }
   const onAlertDismiss = (): void => alertVisible.set(false)
@@ -54,7 +49,7 @@ export default controller((_ctx: Scope) => {
       case 'info':
         return 'Heads up'
       default:
-        return 'Notice'
+        return 'Heads up'
     }
   })
   const alertBody = derived(() => {
@@ -66,11 +61,11 @@ export default controller((_ctx: Scope) => {
       case 'destructive':
         return 'We could not reach the server. Try again.'
       case 'muted':
-        return 'A neutral callout with default theme colors.'
+        return 'A neutral callout with muted tone.'
       case 'info':
         return 'A new version is available. Refresh when you get a chance.'
       default:
-        return 'Inline status with default theme colors — no tone set.'
+        return 'A new version is available. Refresh when you get a chance.'
     }
   })
 
@@ -81,12 +76,10 @@ export default controller((_ctx: Scope) => {
   const usageCode = () => entry.usage
 
   const specimenCode = derived(() => {
-    const a: string[] = []
-    if (alertTone()) a.push(`tone="${alertTone()}"`)
+    const a: string[] = [`tone="${alertTone()}"`]
     if (alertDismissible()) a.push('dismissible')
     if (alertDismissible()) a.push('onDismiss={onDismiss}')
-    const open = a.length ? `<alert ${a.join(' ')}>` : `<alert>`
-    return `${open}\n  <strong slot="title">${alertTitle()}</strong>\n  ${alertBody()}\n</alert>`
+    return `<alert ${a.join(' ')}>\n  <strong slot="title">${alertTitle()}</strong>\n  ${alertBody()}\n</alert>`
   })
 
   const alrtExTones = () =>
@@ -94,7 +87,7 @@ export default controller((_ctx: Scope) => {
   const alrtExDismiss = () =>
     `<alert tone="warning" dismissible onDismiss={onDismiss}>\n  <strong slot="title">Check your input</strong>\n  Two fields need attention.\n</alert>`
   const alrtExDefault = () =>
-    `<alert>\n  <strong slot="title">Notice</strong>\n  Default theme colors when tone is omitted.\n</alert>`
+    `<alert tone="info">\n  <strong slot="title">Heads up</strong>\n  tone defaults to info.\n</alert>`
 
   return {
     alertTone,
@@ -103,7 +96,6 @@ export default controller((_ctx: Scope) => {
     alertTitle,
     alertBody,
     pickAlertTone,
-    clearAlertTone,
     onAlertDismiss,
     restoreAlert,
     heading,
@@ -131,21 +123,15 @@ export default controller((_ctx: Scope) => {
   >
     <column slot="specimen" gap="3" align="stretch" style(specimen)>
       <if {alertVisible()}>
-        <if {alertTone()}>
-          <alert
-            tone={alertTone()}
-            dismissible={alertDismissible()}
-            on-dismiss={onAlertDismiss}
-            style(fullW)
-          >
-            <strong slot="title">{alertTitle()}</strong>
-            {alertBody()}
-          </alert>
-        {else =>
-          <alert dismissible={alertDismissible()} on-dismiss={onAlertDismiss} style(fullW)>
-            <strong slot="title">{alertTitle()}</strong>
-            {alertBody()}
-          </alert>}</if>
+        <alert
+          tone={alertTone()}
+          dismissible={alertDismissible()}
+          on-dismiss={onAlertDismiss}
+          style(fullW)
+        >
+          <strong slot="title">{alertTitle()}</strong>
+          {alertBody()}
+        </alert>
       {else =>
         <column gap="3" align="center">
           <p style(mutedSm)>Dismissed — restore to try the knobs again.</p>
@@ -159,12 +145,6 @@ export default controller((_ctx: Scope) => {
       <column gap="2">
         <label style(knobLabel)>Tone</label>
         <row gap="2" align="center">
-          <div
-            title="default"
-            selected={!alertTone() ? 'true' : null}
-            on:click={clearAlertTone}
-            style(swatch, swatchRest)
-          ></div>
           <div
             title="info"
             selected={alertTone() === 'info' ? 'true' : null}
@@ -242,13 +222,13 @@ export default controller((_ctx: Scope) => {
         </alert>
       </doc-example>
       <doc-example
-        title="Default theme colors"
-        lead="Omit tone for default theme colors."
+        title="Default tone"
+        lead="tone defaults to info — a bare alert is a finished status banner."
         code={alrtExDefault()}
       >
-        <alert style(fullW)>
-          <strong slot="title">Notice</strong>
-          Default theme colors when tone is omitted.
+        <alert tone="info" style(fullW)>
+          <strong slot="title">Heads up</strong>
+          tone defaults to info.
         </alert>
       </doc-example>
     </column>

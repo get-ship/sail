@@ -13,7 +13,6 @@
   style tickRow = { size({ w: full }).pad({ x: 1_5, t: 1 }) }
   style tick = { fg(muted-foreground).type({ family: mono, size: xs }) }
   style swatch = { size(7).shrink(0).radius(full).cursor(pointer).border({ color: transparent, width: 2 }).elevation(xs), when: { selected: border({ color: foreground }).elevation(sm), hover: filter({ opacity: 90 }) } }
-  style swatchRest = { bg(surface-1).border({ color: border }) }
   style swatchPrimary = { bg(primary) }
   style swatchInfo = { bg(info) }
   style swatchSuccess = { bg(success) }
@@ -33,13 +32,12 @@ export default controller((_ctx: Scope) => {
   const PAD_SIZES = ['none', 'sm', 'md', 'lg'] as const
   const variant = signal('default')
   const padIdx = signal(2)
-  const cardTone = signal('')
+  const cardTone = signal('muted')
   const interactive = signal(false)
   const accentBar = signal('off')
   const statusRail = signal(false)
   const fill = signal(false)
   const pickTone = (t: string): void => cardTone.set(t)
-  const clearTone = (): void => cardTone.set('')
 
   const padding = derived(() => {
     const i = Math.min(Math.max(0, Math.round(Number(padIdx()) || 0)), PAD_SIZES.length - 1)
@@ -56,7 +54,7 @@ export default controller((_ctx: Scope) => {
     const a: string[] = []
     if (variant() !== 'default') a.push(`variant="${variant()}"`)
     if (padding() !== 'md') a.push(`padding="${padding()}"`)
-    if (cardTone()) a.push(`tone="${cardTone()}"`)
+    a.push(`tone="${cardTone()}"`)
     if (interactive()) a.push('interactive')
     if (accentBar() !== 'off') a.push(`accent-bar="${accentBar()}"`)
     if (statusRail()) a.push('status-rail')
@@ -68,7 +66,7 @@ export default controller((_ctx: Scope) => {
   const cardExDefault = () =>
     `<card>\n  <strong slot="header">Harbor Signals</strong>\n  <p>4 tracks · last played today</p>\n  <row slot="footer" gap="2">\n    <button size="sm" variant="ghost">Skip</button>\n    <button size="sm" variant="solid" tone="primary">Play</button>\n  </row>\n</card>`
   const cardExInteractive = () =>
-    `<card interactive>\n  <strong>Open project</strong>\n  <p>Hover lifts the surface. No tone required.</p>\n</card>`
+    `<card interactive tone="muted">\n  <strong>Open project</strong>\n  <p>Hover lifts the surface.</p>\n</card>`
   const cardExOutline = () =>
     `<card variant="outline" status-rail>\n  <strong slot="header">Deploy</strong>\n  <p>Pipeline passed on main.</p>\n</card>`
 
@@ -82,7 +80,6 @@ export default controller((_ctx: Scope) => {
     statusRail,
     fill,
     pickTone,
-    clearTone,
     specimenCode,
     heading,
     blurb,
@@ -107,33 +104,19 @@ export default controller((_ctx: Scope) => {
     rows={props()}
   >
     <column slot="specimen" gap="3" align="center" style(specimen)>
-      <if {cardTone()}>
-        <card
-          variant={variant()}
-          padding={padding()}
-          tone={cardTone()}
-          interactive={interactive() ? 'true' : null}
-          accent-bar={accentBar()}
-          status-rail={statusRail() ? 'true' : null}
-          fill={fill() ? 'true' : null}
-          style(specimen)
-        >
-          <strong>Harbor Signals</strong>
-          <p style(mutedXs)>4 tracks · last played today</p>
-        </card>
-      {else =>
-        <card
-          variant={variant()}
-          padding={padding()}
-          interactive={interactive() ? 'true' : null}
-          accent-bar={accentBar()}
-          status-rail={statusRail() ? 'true' : null}
-          fill={fill() ? 'true' : null}
-          style(specimen)
-        >
-          <strong>Harbor Signals</strong>
-          <p style(mutedXs)>4 tracks · last played today</p>
-        </card>}</if>
+      <card
+        variant={variant()}
+        padding={padding()}
+        tone={cardTone()}
+        interactive={interactive() ? 'true' : null}
+        accent-bar={accentBar()}
+        status-rail={statusRail() ? 'true' : null}
+        fill={fill() ? 'true' : null}
+        style(specimen)
+      >
+        <strong>Harbor Signals</strong>
+        <p style(mutedXs)>4 tracks · last played today</p>
+      </card>
     </column>
 
     <column slot="knobs" gap="5" align="stretch">
@@ -154,12 +137,6 @@ export default controller((_ctx: Scope) => {
       <column gap="2">
         <label style(knobLabel)>Tone</label>
         <row gap="2" align="center">
-          <div
-            title="default (theme)"
-            selected={!cardTone() ? 'true' : null}
-            on:click={clearTone}
-            style(swatch, swatchRest)
-          ></div>
           <div
             title="primary"
             selected={cardTone() === 'primary' ? 'true' : null}
@@ -231,7 +208,7 @@ export default controller((_ctx: Scope) => {
 
       <doc-example
         title="Header, body, footer"
-        lead="Slots give a real card. Default surface is the theme card — no extra tone."
+        lead="Slots give a real card. tone defaults to muted."
         code={cardExDefault()}
       >
         <card style(specimen)>
@@ -246,12 +223,12 @@ export default controller((_ctx: Scope) => {
 
       <doc-example
         title="Interactive"
-        lead="interactive adds hover lift. Leave tone off unless you want a tinted border."
+        lead="interactive adds hover lift. tone defaults to muted."
         code={cardExInteractive()}
       >
-        <card interactive style(specimen)>
+        <card interactive tone="muted" style(specimen)>
           <strong>Open project</strong>
-          <p style(mutedXs)>Hover lifts the surface. No tone required.</p>
+          <p style(mutedXs)>Hover lifts the surface.</p>
         </card>
       </doc-example>
 

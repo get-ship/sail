@@ -18,11 +18,11 @@ export const contract = {
     },
     tone: {
       values: ['muted', 'primary', 'destructive'] as const,
-      optional: true,
+      default: 'muted',
       control: 'swatches',
     },
     // Accessible name only — visible labeled chrome is a language gap on void <hr>.
-    label: { default: '', control: 'text' },
+    label: { default: '', control: 'text', docsSkip: true },
   },
   faces: [{ path: 'component.separator.line', label: 'Line' }],
   visual: {

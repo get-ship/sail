@@ -9,7 +9,7 @@
                                   collapse into the track when those resolve dark
                                   or when --tone is unset)
 
-  Checked track = primary (rest brand). Tone present → track uses bound tone
+  Checked track = primary (default tone). Tone paints the checked track
   via compound { tone: * } only (same presence gate as separator/avatar —
   Style product contract, not a CSS escape hatch). Thumb stays knob
   in every state so track vs knob contrast is owned by the token model.
@@ -19,7 +19,7 @@
   props: {
     checked = false
     disabled = false
-    tone: 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted'
+    tone: 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted' = 'primary'
     size: 'md' | 'sm' | 'lg' = 'md'
   }
 

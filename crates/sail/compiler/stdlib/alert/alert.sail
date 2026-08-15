@@ -1,13 +1,13 @@
 <!--
   <alert> — L1 inline status banner. Style value language only.
-  Stripe / icon rest = alert tokens when tone is omitted.
+  tone defaults to info — a bare <alert> is a finished status banner.
   Semantic paint = bound tone group paths.
   Host subset: muted | info | success | warning | destructive (no primary/accent product use).
 -->
 
 <scope>
   props: {
-    tone: 'muted' | 'info' | 'success' | 'warning' | 'destructive'
+    tone: 'muted' | 'info' | 'success' | 'warning' | 'destructive' = 'info'
     variant: 'default' | 'banner' = 'default'
     dismissible = false
     onDismiss: () => void

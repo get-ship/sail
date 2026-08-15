@@ -34,17 +34,17 @@ export const L1_COPY: Record<string, L1Copy> = {
   alert: {
     category: 'feedback',
     blurb:
-      'Inline status banner. Omit tone for component.alert tokens (themeable rest); set tone and the left stripe + icon brand paint. warning/destructive flip liveRegion to assertive role=alert; dismissible shows the close control (onDismiss then remove).',
+      'Inline status banner. tone defaults to info and paints the left stripe + icon. warning/destructive flip liveRegion to assertive role=alert; dismissible shows the close control (onDismiss then remove).',
   },
   avatar: {
     category: 'display',
     blurb:
-      'Identity frame: image, icon-slug, or initials — broken-image falls back to initials. size xs–xl, shape round|square, optional tone. Faces component.avatar.bg / fg.',
+      'Identity frame: image, icon-slug, or initials — broken-image falls back to initials. size xs–xl, shape round|square, tone defaults to muted. Faces component.avatar.bg / fg.',
   },
   badge: {
     category: 'display',
     blurb:
-      'A small statement of state. Soft by default; solid or outline when it must shout or whisper. Omit tone to use component.badge tokens (themeable rest); set tone and the semantic colour always paints.',
+      'A small statement of state. Soft by default; solid or outline when it must shout or whisper. tone defaults to muted.',
   },
   breadcrumb: {
     category: 'navigation',
@@ -67,7 +67,7 @@ export const L1_COPY: Record<string, L1Copy> = {
   chip: {
     category: 'display',
     blurb:
-      'An interactive filter pill — the host is the control (role, keyboard, aria-pressed). Omit tone for component.chip rest tokens; set tone and the semantic colour always paints. removable adds the ×; Backspace/Delete fires on-remove.',
+      'An interactive filter pill — the host is the control (role, keyboard, aria-pressed). tone defaults to primary. removable adds the ×; Backspace/Delete fires on-remove.',
   },
   'code-block': {
     category: 'display',
@@ -109,7 +109,7 @@ export const L1_COPY: Record<string, L1Copy> = {
   'empty-state': {
     category: 'feedback',
     blurb:
-      'Nothing-here surface: icon + title + body + action slots. Chrome via variant (bordered default, dashed inline, bare placeholder/connecting). Omit tone for component.empty-state.* (themeable rest); set tone to brand the icon only. connecting upgrades to role=status / aria-live=polite via use:variantLive.',
+      'Nothing-here surface: icon + title + body + action slots. Chrome via variant (bordered default, dashed inline, bare placeholder/connecting). tone defaults to muted and paints the icon slot. connecting upgrades to role=status / aria-live=polite via use:variantLive.',
   },
   'error-boundary': {
     category: 'feedback',
@@ -212,7 +212,7 @@ export const L1_COPY: Record<string, L1Copy> = {
   separator: {
     category: 'display',
     blurb:
-      'Themed divider — lowers to a native <hr>. Horizontal by default, vertical between inline things; solid or dashed. Omit tone for themeable component.separator.line; set muted · primary · destructive only when the line must speak. No separate `hr` catalog entry.',
+      'Themed divider — lowers to a native <hr>. Horizontal by default, vertical between inline things; solid or dashed. tone defaults to muted. No separate `hr` catalog entry.',
   },
   skeleton: {
     category: 'feedback',
@@ -226,7 +226,7 @@ export const L1_COPY: Record<string, L1Copy> = {
   spinner: {
     category: 'feedback',
     blurb:
-      'Indeterminate wait ring. Size scales the host; omit tone for themeable spinner.foreground / spinner.track; centered parks it in the middle of its container.',
+      'Indeterminate wait ring. Size scales the host; tone defaults to info; centered parks it in the middle of its container.',
   },
   switch: {
     category: 'inputs',
@@ -259,7 +259,7 @@ export const L1_COPY: Record<string, L1Copy> = {
   toast: {
     category: 'feedback',
     blurb:
-      'Transient announcement. Auto-dismiss after duration ms (0 sticky), pauses while hovered/focused. Optional tone; onDismiss. Lives in a toast-region stack. Faces component.toast.*.',
+      'Transient announcement. Auto-dismiss after duration ms (0 sticky), pauses while hovered/focused. tone defaults to info; onDismiss. Lives in a toast-region stack. Faces component.toast.*.',
   },
   'toggle-group': {
     category: 'inputs',

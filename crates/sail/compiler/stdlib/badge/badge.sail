@@ -1,12 +1,12 @@
 <!--
   <badge> — L1 language element. Style value language only.
-  Rest paint = muted when tone is omitted.
+  tone defaults to muted — a bare <badge> is a finished label.
   Semantic paint = bound tone.
 -->
 
 <scope>
   props: {
-    tone: 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted'
+    tone: 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted' = 'muted'
     variant: 'soft' | 'solid' | 'outline' = 'soft'
     size: 'md' | 'sm' | 'lg' = 'md'
     pill = false

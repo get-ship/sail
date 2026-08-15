@@ -7,7 +7,7 @@ export const meta = {
   key: 'separator',
   category: 'display',
   kind: 'host',
-  blurb: "Themed divider — lowers to a native <hr>. Horizontal by default, vertical between inline things; solid or dashed. Omit tone for themeable component.separator.line; set muted · primary · destructive only when the line must speak. No separate `hr` catalog entry.",
+  blurb: "Themed divider — lowers to a native <hr>. Horizontal by default, vertical between inline things; solid or dashed. tone defaults to muted. No separate `hr` catalog entry.",
   heading: "prose",
   host: 'doc-separator',
   stageOwnsKnobs: true,

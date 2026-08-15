@@ -10,7 +10,6 @@
   style mutedSm = { fg(muted-foreground).type({ size: sm }) }
   style knobLabel = { fg(muted-foreground).type({ size: xs, weight: medium, tracking: wide, case: uppercase }) }
   style swatch = { size(7).shrink(0).radius(full).cursor(pointer).border({ color: transparent, width: 2 }).elevation(xs), when: { selected: border({ color: foreground }).elevation(sm), hover: filter({ opacity: 90 }) } }
-  style swatchRest = { bg(background).border({ color: border }) }
   style swatchPrimary = { bg(primary) }
   style swatchInfo = { bg(info) }
   style swatchSuccess = { bg(success) }
@@ -27,7 +26,7 @@ import type { Scope } from './doc-toast.sail'
 import { DETAILS } from '../../compositions/component-details'
 
 export default controller((_ctx: Scope) => {
-  const toastTone = signal('success')
+  const toastTone = signal('info')
   const duration = signal('0')
   let toastSeq = 0
   const toastItems = signal<{ key: string }[]>([{ key: 'toast-0' }])
@@ -43,10 +42,6 @@ export default controller((_ctx: Scope) => {
     toastTone.set(t)
     pushToast()
   }
-  const clearTone = (): void => {
-    toastTone.set('')
-    pushToast()
-  }
 
   const entry = DETAILS.toast
   const heading = () => entry.heading
@@ -55,14 +50,10 @@ export default controller((_ctx: Scope) => {
   const usageCode = () => entry.usage
 
   const specimenCode = derived(() => {
-    const a: string[] = []
-    if (toastTone()) a.push(`tone="${toastTone()}"`)
+    const a: string[] = [`tone="${toastTone()}"`]
     if (duration()) a.push(`duration="${duration()}"`)
     a.push('on-dismiss={onDismiss}')
-    const body = toastTone()
-      ? '<strong>Saved.</strong> Sticky when duration is 0.'
-      : '<strong>Notice.</strong> Default theme colors when tone is omitted.'
-    return `<toast ${a.join(' ')}>\n  ${body}\n</toast>`
+    return `<toast ${a.join(' ')}>\n  <strong>Notice.</strong> Sticky when duration is 0.\n</toast>`
   })
 
   const toastExSuccess = () =>
@@ -79,7 +70,6 @@ export default controller((_ctx: Scope) => {
     pushToast,
     onDismiss,
     pickTone,
-    clearTone,
     heading,
     blurb,
     props,
@@ -106,14 +96,9 @@ export default controller((_ctx: Scope) => {
     <column slot="specimen" gap="3" align="center" style(specimen)>
       <button type="button" variant="outline" size="sm" on:click={pushToast}>Show toast</button>
       <for {toastItems() as t} key={t.key}>
-        <if {toastTone()}>
-          <toast tone={toastTone()} duration={duration()} on-dismiss={onDismiss} style(stageCol)>
-            <strong>Saved.</strong> Sticky when duration is 0.
-          </toast>
-        {else =>
-          <toast duration={duration()} on-dismiss={onDismiss} style(stageCol)>
-            <strong>Notice.</strong> Default theme colors when tone is omitted.
-          </toast>}</if>
+        <toast tone={toastTone()} duration={duration()} on-dismiss={onDismiss} style(stageCol)>
+          <strong>Notice.</strong> Sticky when duration is 0.
+        </toast>
       </for>
     </column>
 
@@ -121,12 +106,6 @@ export default controller((_ctx: Scope) => {
       <column gap="2">
         <label style(knobLabel)>Tone</label>
         <row gap="2" align="center">
-          <div
-            title="default"
-            selected={!toastTone() ? 'true' : null}
-            on:click={clearTone}
-            style(swatch, swatchRest)
-          ></div>
           <div
             title="primary"
             selected={toastTone() === 'primary' ? 'true' : null}

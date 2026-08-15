@@ -18,10 +18,10 @@ export const contract = {
     },
     tone: {
       values: ['primary', 'info', 'success', 'warning', 'destructive', 'accent', 'muted'] as const,
-      optional: true,
+      default: 'muted',
       control: 'swatches',
     },
-    compact: { default: false, control: 'switch' },
+    compact: { default: false, control: 'switch', docsSkip: true },
   },
   faces: [
     { path: 'component.empty-state.bg', label: 'Fill' },

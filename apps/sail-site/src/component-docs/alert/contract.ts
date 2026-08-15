@@ -11,13 +11,14 @@ export const contract = {
   axes: {
     tone: {
       values: ['muted', 'info', 'success', 'warning', 'destructive'] as const,
-      optional: true,
+      default: 'info',
       control: 'swatches',
     },
     variant: {
       values: ['default', 'banner'] as const,
       default: 'default',
       control: 'select',
+      docsSkip: true,
     },
     dismissible: { default: false, control: 'switch' },
     onDismiss: { control: 'none', event: true },

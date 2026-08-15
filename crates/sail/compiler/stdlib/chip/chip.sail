@@ -1,7 +1,7 @@
 <!--
   <chip> — filter/selection pill.
-  Rest paint = muted when tone is omitted.
-  Semantic paint = bound tone group paths.
+  tone defaults to primary — a bare <chip> is a finished control.
+  Explicit tone always paints.
 
   Host is a text-bearing <span> (text channel + Style match). Size/variant/
   selected attrs and paint classes must share one node or match CSS never
@@ -10,7 +10,7 @@
 
 <scope>
   props: {
-    tone: 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted'
+    tone: 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted' = 'primary'
     variant: 'solid' | 'soft' | 'outline' | 'ghost' = 'solid'
     size: 'md' | 'sm' | 'lg' = 'md'
     selected = false
@@ -19,7 +19,7 @@
     onRemove: () => void
   }
 
-  // Default solid rides muted. Brand tones only when tone= is set.
+  // Rest fill is muted; tone×variant compounds paint the bound member.
   style base = {display(inline-flex).size({ min-h: control-h-2xs }).pad({ x: 2, y: px }).group().appearance(none).cursor(pointer).select(none).tapHighlight(none).radius(full).border({ color: border, width: 1, style: solid }).bg(muted).fg(muted-foreground).type({ family: body, weight: medium, leading: none, wrap: nowrap, size: xs }), animate: { transition: play(colors, fast) }}
   style sizeMd = {size({ min-h: control-h-2xs }).pad({ x: 2_5 }).type({ size: sm })}
   style sizeSm = {size({ min-h: control-h-2xs }).pad({ x: 2 }).type({ size: xs })}

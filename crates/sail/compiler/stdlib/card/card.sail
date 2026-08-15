@@ -1,13 +1,13 @@
 <!--
   <card> — L1 surface with header/body/footer/image slots, tone border, status rail,
   interactive lift, optional accent bar, and spotlight (accent-bar=static alias).
-  Rest border = border token when tone is omitted.
+  tone defaults to muted — muted rides the border token; other tones tint the frame.
   Semantic border = bound tone.
 -->
 
 <scope>
   props: {
-    tone: 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted'
+    tone: 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted' = 'muted'
     variant: 'default' | 'outline' | 'soft' | 'elevated' | 'ghost' = 'default'
     padding: 'md' | 'none' | 'sm' | 'lg' = 'md'
     interactive = false

@@ -21,7 +21,7 @@ export const contract = {
         'accent',
         'muted',
       ] as const,
-      optional: true,
+      default: 'muted',
       control: 'swatches',
     },
     variant: {
@@ -42,7 +42,7 @@ export const contract = {
     },
     'status-rail': { default: false, control: 'switch' },
     fill: { default: false, control: 'switch' },
-    spotlight: { default: false, control: 'switch' },
+    spotlight: { default: false, control: 'switch', docsSkip: true },
   },
   faces: [
     { path: 'component.card.bg', label: 'Fill' },

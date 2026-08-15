@@ -372,14 +372,14 @@ const DETAILS_MAP = {
   // ── Feedback ─────────────────────────────────────────────────────────
   alert: lang('alert', 'alert', {
     blurb:
-      'Inline status banner. Omit tone for the default look from the theme; set tone to colour the left stripe and icon. warning/destructive announce assertively (role=alert); dismissible shows the close control (onDismiss then remove).',
+      'Inline status banner. tone defaults to info and colours the left stripe and icon. warning/destructive announce assertively (role=alert); dismissible shows the close control (onDismiss then remove).',
     // No variant axis — stage owns tone/dismiss knobs (viewer chips hidden).
     variants: [],
     variantAttr: '',
     props: [
       {
         name: 'tone',
-        desc: 'stripe + icon colour when set; omit for theme default colors',
+        desc: 'stripe + icon colour (default info)',
         type: 'muted · info · success · warning · destructive',
       },
       { name: 'dismissible', desc: 'shows the close control ([data-dismiss])', type: 'bool' },
@@ -425,14 +425,14 @@ const DETAILS_MAP = {
   }),
   spinner: lang('spinner', 'spinner', {
     blurb:
-      'Indeterminate wait ring. Size scales the host; omit tone for the theme default arc and track colours; centered parks it in the middle of its container.',
+      'Indeterminate wait ring. Size scales the host; tone defaults to info; centered parks it in the middle of its container.',
     variants: [],
     variantAttr: '',
     props: [
       { name: 'size', desc: 'ring scale (icon-size ladder)', type: 'xs · sm · md · lg' },
       {
         name: 'tone',
-        desc: 'active arc colour. Omit for the theme default; track always uses the theme track colour',
+        desc: 'active arc colour (default info); track always uses the theme track colour',
         type: 'primary · info · success · warning · destructive · accent',
       },
       { name: 'centered', desc: 'block + auto horizontal margin in the parent', type: 'bool' },
@@ -458,7 +458,7 @@ const DETAILS_MAP = {
   }),
   'empty-state': lang('empty-state', 'emptyState', {
     blurb:
-      'Nothing-here surface: icon + title + body + action slots. Chrome via variant (bordered default, dashed inline, bare placeholder/connecting). Omit tone for theme default colors; set tone to brand the icon only. connecting upgrades to role=status / aria-live=polite.',
+      'Nothing-here surface: icon + title + body + action slots. Chrome via variant (bordered default, dashed inline, bare placeholder/connecting). tone defaults to muted and paints the icon slot. connecting upgrades to role=status / aria-live=polite.',
     // Stage owns variant/size/tone knobs — hide generic viewer chips.
     variants: [],
     variantAttr: '',
@@ -471,7 +471,7 @@ const DETAILS_MAP = {
       { name: 'size', desc: 'padding scale (sm · md · lg)', type: 'sm · md · lg' },
       {
         name: 'tone',
-        desc: 'icon colour when set; omit for the default look; muted keeps the default icon colour',
+        desc: 'icon colour (default muted)',
         type: TONES,
       },
       { name: 'slot="icon"', desc: 'optional leading glyph (hidden when empty)', type: 'slot' },
@@ -522,7 +522,7 @@ const DETAILS_MAP = {
     props: [
       {
         name: 'tone',
-        desc: 'optional semantic colour; omit for theme default colors',
+        desc: 'semantic colour (default info)',
         type: TONES,
       },
       { name: 'duration', desc: 'ms until dismiss as string — 0 is sticky', type: 'string' },
@@ -542,7 +542,7 @@ const DETAILS_MAP = {
       { name: 'variant', desc: 'fill strength — soft default', type: 'soft · solid · outline' },
       {
         name: 'tone',
-        desc: 'semantic colour when set; omit for the default look',
+        desc: 'semantic colour (default muted)',
         type: TONES,
       },
       { name: 'size', desc: 'badge scale for table cells and chrome', type: 'sm · md · lg' },
@@ -552,14 +552,14 @@ const DETAILS_MAP = {
   }),
   chip: lang('chip', 'chip', {
     blurb:
-      'An interactive filter pill — the host is the control (role, keyboard, aria-pressed). Omit tone for theme default colors; set tone and the semantic colour always paints. removable adds the ×; Backspace/Delete fires on-remove.',
+      'An interactive filter pill — the host is the control (role, keyboard, aria-pressed). tone defaults to primary. removable adds the ×; Backspace/Delete fires on-remove.',
     variants: ['solid', 'soft', 'outline', 'ghost'],
     variantAttr: 'variant',
     props: [
       { name: 'variant', desc: 'fill strength — solid default', type: 'solid · soft · outline · ghost' },
       {
         name: 'tone',
-        desc: 'semantic colour when set; omit for the default look',
+        desc: 'semantic colour (default primary)',
         type: TONES,
       },
       { name: 'size', desc: 'chip scale for filters and dense chrome', type: 'sm · md · lg' },
@@ -573,11 +573,11 @@ const DETAILS_MAP = {
   }),
   card: lang('card', 'card', {
     blurb:
-      'The surface everything else sits on. variant default|outline, padding, optional tone, interactive, accent-bar, status-rail, fill — no soft/elevated/ghost invent.',
+      'The surface everything else sits on. variant default|outline, padding, tone (default muted), interactive, accent-bar, status-rail, fill — no soft/elevated/ghost invent.',
     variants: [],
     variantAttr: '',
     props: [
-      { name: 'tone', desc: 'optional border tint; omit for the default look', type: TONES },
+      { name: 'tone', desc: 'border tint (default muted)', type: TONES },
       { name: 'variant', desc: 'filled or transparent — default · outline only', type: 'default · outline' },
       { name: 'padding', desc: 'inset scale', type: 'none · sm · md · lg' },
       { name: 'interactive', desc: 'pointer cursor + CSS hover lift', type: 'bool' },
@@ -596,7 +596,7 @@ const DETAILS_MAP = {
       { name: 'icon-slug', desc: 'pack glyph id when no photo', type: 'string' },
       { name: 'name', desc: 'identity label for fallback initials', type: 'string' },
       { name: 'initials', desc: 'explicit fallback glyphs', type: 'string' },
-      { name: 'tone', desc: 'optional frame colour; omit for the default gradient', type: TONES },
+      { name: 'tone', desc: 'frame colour (default muted)', type: TONES },
       { name: 'size', desc: 'frame scale', type: 'xs · sm · md · lg · xl' },
       { name: 'shape', desc: 'circle or rounded square', type: 'round · square' },
     ],
@@ -617,12 +617,12 @@ const DETAILS_MAP = {
   }),
   separator: lang('separator', 'separator', {
     blurb:
-      'Themed divider — lowers to a native <hr>. Horizontal by default, vertical between inline things; solid or dashed. Omit tone for the theme default line colour; set muted · primary · destructive only when the line must speak. No separate `hr` catalog entry.',
+      'Themed divider — lowers to a native <hr>. Horizontal by default, vertical between inline things; solid or dashed. tone defaults to muted. No separate `hr` catalog entry.',
     variants: ['solid', 'dashed'],
     variantAttr: 'variant',
     props: [
       { name: 'orientation', desc: 'which axis it divides', type: 'horizontal · vertical' },
-      { name: 'tone', desc: 'optional line colour — omit for the theme default', type: 'muted · primary · destructive' },
+      { name: 'tone', desc: 'line colour (default muted)', type: 'muted · primary · destructive' },
       { name: 'variant', desc: 'line style', type: 'solid · dashed' },
     ],
   }),
@@ -743,6 +743,21 @@ const DETAILS_MAP = {
       { name: '<header> <section> <footer>', desc: 'title / scrollable body / actions', type: 'children' },
     ],
   }),
+  drawer: lang('drawer', 'drawer', {
+    blurb:
+      'Edge-anchored non-modal sheet. side start|end|top|bottom (default end); size sm|md|lg. Native <dialog> via command="show" (not showModal). Header/section/footer as light-dom children. Swipe toward the edge closes. Paint card / card-foreground.',
+    variants: [],
+    variantAttr: '',
+    props: [
+      { name: 'size', desc: 'clamp the surface width / height', type: 'sm · md · lg' },
+      { name: 'side', desc: 'edge the sheet docks to', type: 'start · end · top · bottom' },
+      { name: 'dismissible', desc: 'ESC + swipe + outside pointer can close', type: 'bool' },
+      { name: 'onClose', desc: 'close callback', type: 'callback' },
+      { name: 'onDismiss', desc: 'dismiss callback', type: 'callback' },
+      { name: 'command / commandfor', desc: 'invoker buttons open and close it', type: 'show · close' },
+      { name: '<header> <section> <footer>', desc: 'title / scrollable body / actions', type: 'children' },
+    ],
+  }),
 
   // ── Navigation ───────────────────────────────────────────────────────
   tabs: lang('tabs', 'tabs', {
@@ -848,6 +863,20 @@ const DETAILS_MAP = {
         desc: 'content that overflows the constrained host',
         type: 'slot',
       },
+    ],
+  }),
+  resizable: lang('resizable', 'resizable', {
+    blurb:
+      'Two-pane split: start and end slots with a drag handle between. orientation horizontal (default) or vertical. Drag — or arrow-nudge — the separator to size the start pane. Handle is a focusable role=separator.',
+    variants: [],
+    variantAttr: '',
+    props: [
+      {
+        name: 'orientation',
+        desc: 'split axis: horizontal (default) or vertical',
+        type: 'horizontal · vertical',
+      },
+      { name: 'slot="start" / "end"', desc: 'the two panes', type: 'slots' },
     ],
   }),
 

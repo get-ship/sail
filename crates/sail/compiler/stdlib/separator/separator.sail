@@ -1,6 +1,6 @@
 <!--
   <separator> — native <hr>. Style value language only.
-  Rest paint = border when tone is omitted.
+  tone defaults to muted — a bare <separator> is a finished divider.
   Semantic paint = bound tone via presence compound only (never unconditional
   bg(tone) — empty --tone would stomp the rest line).
   Host subset: muted | primary | destructive (not full Tone).
@@ -12,7 +12,7 @@
 <scope>
   props: {
     orientation: 'horizontal' | 'vertical' = 'horizontal'
-    tone: 'muted' | 'primary' | 'destructive'
+    tone: 'muted' | 'primary' | 'destructive' = 'muted'
     variant: 'solid' | 'dashed' = 'solid'
     label = ''
   }

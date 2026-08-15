@@ -1,12 +1,12 @@
 <!--
   <toast> — auto-dismiss + close. Style value language only.
-  Start stripe rest = primary when tone is omitted.
+  tone defaults to info — a bare <toast> is a finished notice.
   Semantic paint = bound tone group paths.
 -->
 
 <scope>
   props: {
-    tone: 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted'
+    tone: 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted' = 'info'
     duration = ''
     onDismiss: () => void
   }

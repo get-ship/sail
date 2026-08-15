@@ -1,8 +1,8 @@
 <!--
   <avatar> — L1 language element. Style value language only.
   Child img pack lives in platform/avatar.css: cover for photo src;
-  contain+pad when icon-slug. Default = avatar surface tokens (muted disc).
-  Tone is opt-in brand fill.
+  contain+pad when icon-slug. tone defaults to muted (surface disc).
+  Explicit tone always paints.
   ring: outer border (border-strong, or tone when set).
   presence: status pip via host ::after — mediaFallback wipes light-DOM
   children, so a matched child span is not viable.
@@ -15,7 +15,7 @@
     'icon-slug' = ''
     name = ''
     initials = ''
-    tone: 'primary' | 'accent' | 'info' | 'success' | 'warning' | 'destructive' | 'muted'
+    tone: 'primary' | 'accent' | 'info' | 'success' | 'warning' | 'destructive' | 'muted' = 'muted'
     size: 'md' | 'xs' | 'sm' | 'lg' | 'xl' = 'md'
     shape: 'round' | 'square' = 'round'
     ring = false

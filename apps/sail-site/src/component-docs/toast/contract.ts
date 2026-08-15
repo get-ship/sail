@@ -16,7 +16,7 @@ export const contract = {
         'accent',
         'muted',
       ] as const,
-      optional: true,
+      default: 'info',
       control: 'swatches',
     },
     duration: { default: '', control: 'text' },

@@ -48,7 +48,7 @@ export default controller((_ctx: Scope) => {
   const specimenCode = derived(() => {
     const a: string[] = ['bind:checked={on}']
     if (switchSize() !== 'md') a.push(`size="${switchSize()}"`)
-    if (switchTone()) a.push(`tone="${switchTone()}"`)
+    a.push(`tone="${switchTone()}"`)
     if (switchDisabled()) a.push('disabled')
     return `<switch ${a.join(' ')} />`
   })

@@ -19,7 +19,6 @@
   style swatchAccent = { bg(accent) }
   style swatchMuted = { bg(muted).border({ color: border }) }
   style swatchInfo = { bg(info) }
-  style swatchRest = { bg(background).border({ color: border }) }
   style exampleBlock = { size({ w: full }).pad({ t: 2, b: 4 }).overflow({ all: visible }) }
   style sectionLabel = { fg(muted-foreground).type({ size: xs, tracking: wide, case: uppercase }) }
 </scope>
@@ -32,10 +31,9 @@ export default controller((_ctx: Scope) => {
   const ES_SIZES = ['sm', 'md', 'lg'] as const
   const sizeIdx = signal(1)
   const variant = signal('default')
-  const esTone = signal('')
+  const esTone = signal('muted')
 
   const pickEsTone = (t: string): void => esTone.set(t)
-  const clearEsTone = (): void => esTone.set('')
 
   const esSize = derived(() => {
     const i = Math.min(Math.max(0, Math.round(Number(sizeIdx()) || 0)), ES_SIZES.length - 1)
@@ -77,8 +75,8 @@ export default controller((_ctx: Scope) => {
     const a: string[] = []
     if (variant() !== 'default') a.push(`variant="${variant()}"`)
     if (esSize() !== 'md') a.push(`size="${esSize()}"`)
-    if (esTone()) a.push(`tone="${esTone()}"`)
-    const open = a.length ? `<empty-state ${a.join(' ')}>` : `<empty-state>`
+    a.push(`tone="${esTone()}"`)
+    const open = `<empty-state ${a.join(' ')}>`
     const iconSpin = variant() === 'connecting' ? ' spin' : ''
     const action =
       variant() === 'connecting'
@@ -92,14 +90,13 @@ export default controller((_ctx: Scope) => {
   const esExConnecting = () =>
     `<empty-state variant="connecting">\n  <icon slot="icon" name="refresh-cw" spin></icon>\n  <strong slot="title">Connecting…</strong>\n  Establishing a secure session.\n</empty-state>`
   const esExDefaultColors = () =>
-    `<empty-state>\n  <strong slot="title">Empty</strong>\n  Omit tone for default icon colors.\n</empty-state>`
+    `<empty-state tone="muted">\n  <icon slot="icon" name="inbox"></icon>\n  <strong slot="title">Empty</strong>\n  tone defaults to muted and paints the icon.\n</empty-state>`
 
   return {
     sizeIdx,
     variant,
     esTone,
     pickEsTone,
-    clearEsTone,
     esSize,
     esTitle,
     esBody,
@@ -128,32 +125,18 @@ export default controller((_ctx: Scope) => {
     rows={props()}
   >
     <column slot="specimen" gap="3" align="stretch" style(specimen)>
-      <if {esTone()}>
-        <empty-state variant={variant()} size={esSize()} tone={esTone()} style(fullW)>
-          <icon
-            slot="icon"
-            name={esIcon()}
-            spin={variant() === 'connecting' ? 'true' : null}
-          ></icon>
-          <strong slot="title">{esTitle()}</strong>
-          {esBody()}
-          <if {variant() !== 'connecting'}>
-            <button slot="action" variant="outline" size="sm">Clear filters</button>
-          </if>
-        </empty-state>
-      {else =>
-        <empty-state variant={variant()} size={esSize()} style(fullW)>
-          <icon
-            slot="icon"
-            name={esIcon()}
-            spin={variant() === 'connecting' ? 'true' : null}
-          ></icon>
-          <strong slot="title">{esTitle()}</strong>
-          {esBody()}
-          <if {variant() !== 'connecting'}>
-            <button slot="action" variant="outline" size="sm">Clear filters</button>
-          </if>
-        </empty-state>}</if>
+      <empty-state variant={variant()} size={esSize()} tone={esTone()} style(fullW)>
+        <icon
+          slot="icon"
+          name={esIcon()}
+          spin={variant() === 'connecting' ? 'true' : null}
+        ></icon>
+        <strong slot="title">{esTitle()}</strong>
+        {esBody()}
+        <if {variant() !== 'connecting'}>
+          <button slot="action" variant="outline" size="sm">Clear filters</button>
+        </if>
+      </empty-state>
     </column>
 
     <column slot="knobs" gap="4" align="stretch">
@@ -176,12 +159,6 @@ export default controller((_ctx: Scope) => {
       <column gap="2">
         <label style(knobLabel)>Tone</label>
         <row gap="2" align="center">
-          <div
-            title="default"
-            selected={!esTone() ? 'true' : null}
-            on:click={clearEsTone}
-            style(swatch, swatchRest)
-          ></div>
           <div
             title="primary"
             selected={esTone() === 'primary' ? 'true' : null}
@@ -263,13 +240,14 @@ export default controller((_ctx: Scope) => {
         </empty-state>
       </doc-example>
       <doc-example
-        title="Default theme colors"
-        lead="Omit tone for default icon colors."
+        title="Default tone"
+        lead="tone defaults to muted and paints the icon slot."
         code={esExDefaultColors()}
       >
-        <empty-state style(specimen)>
+        <empty-state tone="muted" style(specimen)>
+          <icon slot="icon" name="inbox"></icon>
           <strong slot="title">Empty</strong>
-          Omit tone for default icon colors.
+          tone defaults to muted and paints the icon.
         </empty-state>
       </doc-example>
     </column>

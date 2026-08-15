@@ -13,7 +13,7 @@ export const contract = {
     },
     tone: {
       values: ['primary', 'info', 'success', 'warning', 'destructive', 'accent'] as const,
-      optional: true,
+      default: 'info',
       control: 'swatches',
     },
     centered: { default: false, control: 'switch' },

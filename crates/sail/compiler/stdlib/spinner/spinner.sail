@@ -1,6 +1,6 @@
 <!--
   <spinner> — L1 language element. Style value language only.
-  Rest paint = muted-foreground when tone is omitted.
+  tone defaults to info — a bare <spinner> is a finished wait ring.
   Semantic paint = bound tone (fg-only).
   Host subset omits muted (no product muted rest path).
 -->
@@ -8,7 +8,7 @@
 <scope>
   props: {
     size: 'md' | 'xs' | 'sm' | 'lg' = 'md'
-    tone: 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent'
+    tone: 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' = 'info'
     centered = false
   }
 

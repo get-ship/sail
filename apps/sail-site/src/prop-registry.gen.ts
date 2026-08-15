@@ -57,7 +57,8 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
   "alert": [
     {
       "name": "tone",
-      "type": "muted · info · success · warning · destructive"
+      "type": "muted · info · success · warning · destructive",
+      "default": "info"
     },
     {
       "name": "variant",
@@ -97,7 +98,8 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
     },
     {
       "name": "tone",
-      "type": "primary · accent · info · success · warning · destructive · muted"
+      "type": "primary · accent · info · success · warning · destructive · muted",
+      "default": "muted"
     },
     {
       "name": "size",
@@ -128,7 +130,8 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
   "badge": [
     {
       "name": "tone",
-      "type": "primary · info · success · warning · destructive · accent · muted"
+      "type": "primary · info · success · warning · destructive · accent · muted",
+      "default": "muted"
     },
     {
       "name": "variant",
@@ -193,7 +196,8 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
   "card": [
     {
       "name": "tone",
-      "type": "primary · info · success · warning · destructive · accent · muted"
+      "type": "primary · info · success · warning · destructive · accent · muted",
+      "default": "muted"
     },
     {
       "name": "variant",
@@ -266,7 +270,8 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
   "chip": [
     {
       "name": "tone",
-      "type": "primary · info · success · warning · destructive · accent · muted"
+      "type": "primary · info · success · warning · destructive · accent · muted",
+      "default": "primary"
     },
     {
       "name": "variant",
@@ -507,7 +512,8 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
     },
     {
       "name": "tone",
-      "type": "primary · info · success · warning · destructive · accent · muted"
+      "type": "primary · info · success · warning · destructive · accent · muted",
+      "default": "muted"
     },
     {
       "name": "compact",
@@ -986,7 +992,8 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
     },
     {
       "name": "tone",
-      "type": "muted · primary · destructive"
+      "type": "muted · primary · destructive",
+      "default": "muted"
     },
     {
       "name": "variant",
@@ -1071,7 +1078,8 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
     },
     {
       "name": "tone",
-      "type": "primary · info · success · warning · destructive · accent"
+      "type": "primary · info · success · warning · destructive · accent",
+      "default": "info"
     },
     {
       "name": "centered",
@@ -1092,7 +1100,8 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
     },
     {
       "name": "tone",
-      "type": "primary · info · success · warning · destructive · accent · muted"
+      "type": "primary · info · success · warning · destructive · accent · muted",
+      "default": "primary"
     },
     {
       "name": "size",
@@ -1267,7 +1276,8 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
   "toast": [
     {
       "name": "tone",
-      "type": "primary · info · success · warning · destructive · accent · muted"
+      "type": "primary · info · success · warning · destructive · accent · muted",
+      "default": "info"
     },
     {
       "name": "duration",

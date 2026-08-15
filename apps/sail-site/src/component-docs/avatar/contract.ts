@@ -23,7 +23,7 @@ export const contract = {
         'destructive',
         'muted',
       ] as const,
-      optional: true,
+      default: 'muted',
       control: 'swatches',
     },
     size: {
@@ -36,13 +36,14 @@ export const contract = {
       default: 'round',
       control: 'select',
     },
-    ring: { default: false, control: 'switch' },
+    ring: { default: false, control: 'switch', docsSkip: true },
     presence: {
       values: ['off', 'online', 'busy', 'offline'] as const,
       default: 'off',
       control: 'select',
+      docsSkip: true,
     },
-    stack: { default: false, control: 'switch' },
+    stack: { default: false, control: 'switch', docsSkip: true },
   },
   faces: [
     { path: 'component.avatar.bg', label: 'Fill' },

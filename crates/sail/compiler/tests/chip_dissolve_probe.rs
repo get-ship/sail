@@ -42,16 +42,11 @@ fn chip_compiles_with_style_and_capability_mixins() {
     );
     let size = attrs.iter().find(|a| a["name"] == "size").unwrap();
     assert_eq!(size["default"], "md", "host Style size=md default: {size}");
-    // tone is optional — no default member / no forced tone attr
-    let tone = attrs.iter().find(|a| a["name"] == "tone");
-    if let Some(tone) = tone {
-        assert!(
-            tone.get("default").is_none()
-                || tone["default"].is_null()
-                || tone["default"] == serde_json::Value::Null,
-            "tone must not default to a fake member: {tone}"
-        );
-    }
+    let tone = attrs.iter().find(|a| a["name"] == "tone").unwrap();
+    assert_eq!(
+        tone["default"], "primary",
+        "chip tone defaults to primary: {tone}"
+    );
     assert!(
         out.structure_html.contains("s-")
             && (out.structure_html.contains("s-minhcontrolhxs")

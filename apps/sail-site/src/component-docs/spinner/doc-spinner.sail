@@ -18,7 +18,6 @@
   style swatchDestructive = { bg(destructive) }
   style swatchAccent = { bg(accent) }
   style swatchInfo = { bg(info) }
-  style swatchRest = { bg(background).border({ color: border }) }
   style centerBox = { pad(4).border({ color: border-subtle, width: 1 }).radius(md) }
   style exampleBlock = { size({ w: full }).pad({ t: 2, b: 4 }).overflow({ all: visible }) }
   style sectionLabel = { fg(muted-foreground).type({ size: xs, tracking: wide, case: uppercase }) }
@@ -32,11 +31,10 @@ import { DETAILS } from '../../compositions/component-details'
 export default controller((_ctx: Scope) => {
   const SPN_SIZES = ['xs', 'sm', 'md', 'lg'] as const
   const sizeIdx = signal(2)
-  const spinnerTone = signal('primary')
+  const spinnerTone = signal('info')
   const spinnerCentered = signal(false)
 
   const pickSpinnerTone = (t: string): void => spinnerTone.set(t)
-  const clearSpinnerTone = (): void => spinnerTone.set('')
 
   const spinnerSize = derived(() => {
     const i = Math.min(Math.max(0, Math.round(Number(sizeIdx()) || 0)), SPN_SIZES.length - 1)
@@ -52,17 +50,17 @@ export default controller((_ctx: Scope) => {
   const specimenCode = derived(() => {
     const a: string[] = []
     if (spinnerSize() !== 'md') a.push(`size="${spinnerSize()}"`)
-    if (spinnerTone()) a.push(`tone="${spinnerTone()}"`)
+    a.push(`tone="${spinnerTone()}"`)
     if (spinnerCentered()) a.push('centered')
-    return a.length ? `<spinner ${a.join(' ')}></spinner>` : `<spinner></spinner>`
+    return `<spinner ${a.join(' ')}></spinner>`
   })
 
   const spnExInline = () =>
-    `<row gap="2" align="center">\n  <spinner size="sm" tone="primary"></spinner>\n  <p>fetching…</p>\n</row>`
+    `<row gap="2" align="center">\n  <spinner size="sm" tone="info"></spinner>\n  <p>fetching…</p>\n</row>`
   const spnExSizes = () =>
-    `<spinner size="xs" tone="primary"></spinner>\n<spinner size="sm" tone="primary"></spinner>\n<spinner tone="primary"></spinner>\n<spinner size="lg" tone="primary"></spinner>`
-  const spnExDefault = () => `<spinner></spinner>`
-  const spnExCentered = () => `<spinner centered tone="primary"></spinner>`
+    `<spinner size="xs" tone="info"></spinner>\n<spinner size="sm" tone="info"></spinner>\n<spinner tone="info"></spinner>\n<spinner size="lg" tone="info"></spinner>`
+  const spnExDefault = () => `<spinner tone="info"></spinner>`
+  const spnExCentered = () => `<spinner centered tone="info"></spinner>`
 
   return {
     sizeIdx,
@@ -70,7 +68,6 @@ export default controller((_ctx: Scope) => {
     spinnerCentered,
     spinnerSize,
     pickSpinnerTone,
-    clearSpinnerTone,
     heading,
     blurb,
     props,
@@ -96,14 +93,11 @@ export default controller((_ctx: Scope) => {
     rows={props()}
   >
     <column slot="specimen" gap="3" align="center" style(specimen)>
-      <if {spinnerTone()}>
-        <spinner
-          size={spinnerSize()}
-          tone={spinnerTone()}
-          centered={spinnerCentered() ? 'true' : null}
-        ></spinner>
-      {else =>
-        <spinner size={spinnerSize()} centered={spinnerCentered() ? 'true' : null}></spinner>}</if>
+      <spinner
+        size={spinnerSize()}
+        tone={spinnerTone()}
+        centered={spinnerCentered() ? 'true' : null}
+      ></spinner>
     </column>
 
     <column slot="knobs" gap="4" align="stretch">
@@ -117,12 +111,6 @@ export default controller((_ctx: Scope) => {
       <column gap="2">
         <label style(knobLabel)>Tone</label>
         <row gap="2" align="center">
-          <div
-            title="default"
-            selected={!spinnerTone() ? 'true' : null}
-            on:click={clearSpinnerTone}
-            style(swatch, swatchRest)
-          ></div>
           <div
             title="primary"
             selected={spinnerTone() === 'primary' ? 'true' : null}
@@ -172,7 +160,7 @@ export default controller((_ctx: Scope) => {
 
     <column slot="usage-preview" gap="3" align="center" style(specimen)>
       <row gap="2" align="center">
-        <spinner size="sm" tone="primary"></spinner>
+        <spinner size="sm" tone="info"></spinner>
         <p style(mutedSm)>fetching…</p>
       </row>
     </column>
@@ -185,26 +173,26 @@ export default controller((_ctx: Scope) => {
         code={spnExInline()}
       >
         <row gap="2" align="center" style(demoRow)>
-          <spinner size="sm" tone="primary"></spinner>
+          <spinner size="sm" tone="info"></spinner>
           <p style(mutedSm)>fetching…</p>
         </row>
       </doc-example>
       <doc-example title="Sizes" lead="Default is md." code={spnExSizes()}>
         <row gap="4" align="center" style(demoRow)>
-          <spinner size="xs" tone="primary"></spinner>
-          <spinner size="sm" tone="primary"></spinner>
-          <spinner tone="primary"></spinner>
-          <spinner size="lg" tone="primary"></spinner>
+          <spinner size="xs" tone="info"></spinner>
+          <spinner size="sm" tone="info"></spinner>
+          <spinner tone="info"></spinner>
+          <spinner size="lg" tone="info"></spinner>
         </row>
       </doc-example>
       <doc-example
-        title="Default theme colors"
-        lead="Omit tone for default theme colors."
+        title="Default tone"
+        lead="tone defaults to info — a bare spinner is a finished wait ring."
         code={spnExDefault()}
       >
         <row gap="4" align="center" style(demoRow)>
-          <spinner></spinner>
-          <spinner size="lg"></spinner>
+          <spinner tone="info"></spinner>
+          <spinner size="lg" tone="info"></spinner>
         </row>
       </doc-example>
       <doc-example
@@ -213,7 +201,7 @@ export default controller((_ctx: Scope) => {
         code={spnExCentered()}
       >
         <column gap="2" style(centerBox)>
-          <spinner centered tone="primary"></spinner>
+          <spinner centered tone="info"></spinner>
         </column>
       </doc-example>
     </column>

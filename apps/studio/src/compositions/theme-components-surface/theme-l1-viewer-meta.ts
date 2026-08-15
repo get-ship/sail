@@ -145,7 +145,7 @@ const VARIANT_META: Partial<
   separator: {
     variants: ['solid', 'dashed'],
     variantAttr: 'variant',
-    blurb: 'Divider · rest uses component.separator.line; tone optional.',
+    blurb: 'Divider · tone defaults to muted.',
   },
   kbd: {
     variants: [],

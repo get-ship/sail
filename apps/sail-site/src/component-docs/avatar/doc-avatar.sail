@@ -10,7 +10,6 @@
   style tickRow = { size({ w: full }).pad({ x: 1_5, t: 1 }) }
   style tick = { fg(muted-foreground).type({ family: mono, size: xs }) }
   style swatch = { size(7).shrink(0).radius(full).cursor(pointer).border({ color: transparent, width: 2 }).elevation(xs), when: { selected: border({ color: foreground }).elevation(sm), hover: filter({ opacity: 90 }) } }
-  style swatchRest = { bg(surface-1).border({ color: border }) }
   style swatchPrimary = { bg(primary) }
   style swatchInfo = { bg(info) }
   style swatchSuccess = { bg(success) }
@@ -32,11 +31,10 @@ export default controller((_ctx: Scope) => {
   const AV_SIZES = ['xs', 'sm', 'md', 'lg', 'xl'] as const
   const sizeIdx = signal(2)
   const shape = signal('round')
-  const avTone = signal('')
+  const avTone = signal('muted')
   const name = signal('Ada Lovelace')
   const initials = signal('')
   const pickTone = (t: string): void => avTone.set(t)
-  const clearTone = (): void => avTone.set('')
 
   const size = derived(() => {
     const i = Math.min(Math.max(0, Math.round(Number(sizeIdx()) || 0)), AV_SIZES.length - 1)
@@ -53,7 +51,7 @@ export default controller((_ctx: Scope) => {
     const a: string[] = []
     if (size() !== 'md') a.push(`size="${size()}"`)
     if (shape() !== 'round') a.push(`shape="${shape()}"`)
-    if (avTone()) a.push(`tone="${avTone()}"`)
+    a.push(`tone="${avTone()}"`)
     if (initials()) {
       a.push(`initials="${initials()}"`)
     } else {
@@ -77,7 +75,6 @@ export default controller((_ctx: Scope) => {
     name,
     initials,
     pickTone,
-    clearTone,
     specimenCode,
     heading,
     blurb,
@@ -102,16 +99,10 @@ export default controller((_ctx: Scope) => {
     rows={props()}
   >
     <column slot="specimen" gap="4" align="center">
-      <if {avTone()}>
-        <if {initials()}>
-          <avatar size={size()} shape={shape()} tone={avTone()} initials={initials()}></avatar>
-        {else =>
-          <avatar size={size()} shape={shape()} tone={avTone()} name={name()}></avatar>}</if>
+      <if {initials()}>
+        <avatar size={size()} shape={shape()} tone={avTone()} initials={initials()}></avatar>
       {else =>
-        <if {initials()}>
-          <avatar size={size()} shape={shape()} initials={initials()}></avatar>
-        {else =>
-          <avatar size={size()} shape={shape()} name={name()}></avatar>}</if>}</if>
+        <avatar size={size()} shape={shape()} tone={avTone()} name={name()}></avatar>}</if>
     </column>
 
     <column slot="knobs" gap="5" align="stretch">
@@ -132,12 +123,6 @@ export default controller((_ctx: Scope) => {
       <column gap="2">
         <label style(knobLabel)>Tone</label>
         <row gap="2" align="center">
-          <div
-            title="default (theme)"
-            selected={!avTone() ? 'true' : null}
-            on:click={clearTone}
-            style(swatch, swatchRest)
-          ></div>
           <div
             title="primary"
             selected={avTone() === 'primary' ? 'true' : null}

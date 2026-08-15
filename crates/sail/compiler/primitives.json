@@ -58,7 +58,8 @@
           "success",
           "warning",
           "destructive"
-        ]
+        ],
+        "default": "info"
       },
       "variant": {
         "values": [
@@ -128,7 +129,8 @@
           "warning",
           "destructive",
           "muted"
-        ]
+        ],
+        "default": "muted"
       }
     },
     "badge": {
@@ -157,7 +159,8 @@
           "destructive",
           "accent",
           "muted"
-        ]
+        ],
+        "default": "muted"
       },
       "variant": {
         "values": [
@@ -269,7 +272,8 @@
           "destructive",
           "accent",
           "muted"
-        ]
+        ],
+        "default": "muted"
       },
       "variant": {
         "values": [
@@ -343,7 +347,8 @@
           "destructive",
           "accent",
           "muted"
-        ]
+        ],
+        "default": "primary"
       },
       "variant": {
         "values": [
@@ -550,7 +555,8 @@
           "destructive",
           "accent",
           "muted"
-        ]
+        ],
+        "default": "muted"
       },
       "variant": {
         "values": [
@@ -1026,7 +1032,8 @@
           "muted",
           "primary",
           "destructive"
-        ]
+        ],
+        "default": "muted"
       },
       "variant": {
         "values": [
@@ -1123,7 +1130,8 @@
           "warning",
           "destructive",
           "accent"
-        ]
+        ],
+        "default": "info"
       }
     },
     "switch": {
@@ -1152,7 +1160,8 @@
           "destructive",
           "accent",
           "muted"
-        ]
+        ],
+        "default": "primary"
       }
     },
     "tab": {
@@ -1335,7 +1344,8 @@
           "destructive",
           "accent",
           "muted"
-        ]
+        ],
+        "default": "info"
       }
     },
     "toggle": {

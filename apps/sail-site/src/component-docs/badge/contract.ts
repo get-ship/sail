@@ -13,7 +13,7 @@ export const contract = {
     },
     tone: {
       values: ['primary', 'info', 'success', 'warning', 'destructive', 'accent', 'muted'] as const,
-      optional: true,
+      default: 'muted',
       control: 'swatches',
     },
     size: {
@@ -22,7 +22,7 @@ export const contract = {
       control: 'slider',
     },
     pill: { default: false, control: 'switch' },
-    dot: { default: false, control: 'switch' },
+    dot: { default: false, control: 'switch', docsSkip: true },
   },
   faces: [
     { path: 'component.badge.bg', label: 'Fill' },

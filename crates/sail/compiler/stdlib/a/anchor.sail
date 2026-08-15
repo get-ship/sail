@@ -14,6 +14,7 @@
   props: {
     // Type surface defaults; freeform stamping skips variant/tone (bare link).
     variant: 'default' | 'solid' | 'soft' | 'outline' | 'ghost' = 'default'
+    // Exception: do not default tone — freeform <a href> must stay a text link.
     tone: 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted'
     disabled = false
   }
