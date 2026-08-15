@@ -148,9 +148,8 @@ export function l1Label(id: string): string {
 }
 
 /**
- * Inheritance chain for radius: base catalog → theme scale → per-L1 override.
- * One node per tag from @ship/sail-l1 so Themes Components + Design stay aligned.
- * Walks existing `component.${tag}.radius` leaves only — does not add tokens.
+ * Inheritance chain for radius: catalog default → theme scale.
+ * Per-tag radius leaves are gone; corners live on the radius role.
  */
 export function radiusInheritance(
   doc: Record<string, unknown> | null,
@@ -159,7 +158,7 @@ export function radiusInheritance(
   const family = extractRadius(doc, modeId)
   const lg = family.steps.find((s) => s.key === 'lg')
   const globalVal = lg?.raw ?? '10px'
-  const nodes: InheritNode[] = [
+  return [
     {
       id: 'base',
       label: 'Base · catalog',
@@ -177,23 +176,6 @@ export function radiusInheritance(
       canReset: false,
     },
   ]
-  for (const comp of L1_CATALOG) {
-    const path = `component.${comp}.radius`
-    const raw = getPathValue(doc, path, modeId)
-    const isOverride = raw != null
-    const name = l1Label(comp)
-    nodes.push({
-      id: comp,
-      label: isOverride
-        ? `Override · ${name} · ${raw}`
-        : `Override · ${name} · inherits theme`,
-      value: raw,
-      isOverride,
-      path,
-      canReset: isOverride,
-    })
-  }
-  return nodes
 }
 
 function walkPath(doc: Record<string, unknown> | null, path: string): unknown {

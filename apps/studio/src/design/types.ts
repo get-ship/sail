@@ -31,7 +31,7 @@ export type InheritNode = {
   /** Display value when override, else null (inherits). */
   value: string | null
   isOverride: boolean
-  /** DTCG path for write (component.button.radius …). */
+  /** DTCG path for write (radius.lg, color.card.default …). */
   path: string
   canReset: boolean
 }

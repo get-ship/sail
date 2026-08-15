@@ -194,10 +194,10 @@ export const THEME_EDITOR_CONTROLS: readonly ThemeEditorControl[] = [
   {
     id: 'components.token',
     facet: 'components',
-    label: 'Component token override',
-    kind: 'component',
-    schemaPath: 'modes.{mode}.component.{tag}.*',
-    modeGroup: 'component',
+    label: 'Face theme role',
+    kind: 'scale',
+    schemaPath: 'modes.{mode}.color.*|modes.{mode}.typography.*|modes.{mode}.radius.*',
+    modeGroup: 'color',
   },
   {
     id: 'components.globalFallback',

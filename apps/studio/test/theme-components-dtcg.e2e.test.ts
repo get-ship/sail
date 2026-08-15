@@ -117,17 +117,17 @@ describe('components DTCG e2e (live studio)', () => {
       expect(selected.clicked, `select Alert: ${JSON.stringify(selected)}`).toBe(true)
       await page.waitForTimeout(1000)
 
-      // Inspector must show component.alert.* color rows, then wait for DTCG hex resolve
+      // Inspector must show alert tone role rows, then wait for DTCG hex resolve
       // (themeDoc loads async; docEpoch re-renders knobs once openTheme completes).
       await page.waitForSelector(
-        '[token-path="component.alert.bg"], [component-knob-list] [token-path]',
+        '[token-path="color.info.default"], [component-knob-list] [token-path]',
         { timeout: 15_000 },
       )
 
       await page.waitForFunction(
         () => {
           const row = document.querySelector(
-            '[token-path="component.alert.bg"]',
+            '[token-path="color.info.default"]',
           ) as HTMLElement | null
           if (!row || row.tagName === 'SAIL-COLOR-PICKER') return false
           const texts = [...row.querySelectorAll('p')].map((p) => (p.textContent || '').trim())
@@ -153,10 +153,12 @@ describe('components DTCG e2e (live studio)', () => {
             { hexLabel: string; hex: string; hasClear: boolean; path: string }
           > = {}
           for (const row of [
-            ...document.querySelectorAll('[token-path^="component.alert"]'),
+            ...document.querySelectorAll(
+              '[token-path="color.info.default"], [token-path="color.foreground"], [token-path="color.success.default"], [component-knob-list] [token-path]',
+            ),
           ] as HTMLElement[]) {
             const path = row.getAttribute('token-path') || ''
-            if (!path.startsWith('component.alert')) continue
+            if (!path.startsWith('color.')) continue
             if (row.tagName === 'SAIL-COLOR-PICKER') continue
             if (byPath[path]) continue
             const picker = row.querySelector(
@@ -182,9 +184,9 @@ describe('components DTCG e2e (live studio)', () => {
           const inspectorText = (inspector?.innerText || '').replace(/\s+/g, ' ')
           return {
             paths: Object.keys(byPath).sort(),
-            alertBg: byPath['component.alert.bg'],
-            alertFg: byPath['component.alert.fg'],
-            alertStripe: byPath['component.alert.stripe'],
+            alertBg: byPath['color.info.default'],
+            alertFg: byPath['color.foreground'],
+            alertStripe: byPath['color.success.default'],
             visibleHasVar: /var\s*\(\s*--/i.test(visible),
             inspectorHasVar: /var\s*\(\s*--/i.test(inspectorText),
             visibleHasL1Word: /\bL1\b/.test(visible),
@@ -208,9 +210,9 @@ describe('components DTCG e2e (live studio)', () => {
         `user-visible L1 forbidden: ${JSON.stringify(baseline.l1Snippets)}`,
       ).toBe(false)
 
-      expect(baseline.alertBg, `component.alert.bg row present; paths=${baseline.paths.join(',')}`).toBeTruthy()
-      expect(baseline.alertFg, 'component.alert.fg row present').toBeTruthy()
-      expect(baseline.alertStripe, 'component.alert.stripe row present').toBeTruthy()
+      expect(baseline.alertBg, `color.info.default row present; paths=${baseline.paths.join(',')}`).toBeTruthy()
+      expect(baseline.alertFg, 'color.foreground row present').toBeTruthy()
+      expect(baseline.alertStripe, 'color.success.default row present').toBeTruthy()
 
       // Defaults: Default · #hex (or override hex) — not empty gray lie, not var()
       for (const [name, row] of [
@@ -235,7 +237,7 @@ describe('components DTCG e2e (live studio)', () => {
       if (baseline.alertBg!.hasClear) {
         await page.evaluate(() => {
           const row = document.querySelector(
-            '[token-path="component.alert.bg"]',
+            '[token-path="color.info.default"]',
           ) as HTMLElement | null
           const btn = [...(row?.querySelectorAll('button') ?? [])].find((b) =>
             /clear/i.test(b.textContent || ''),
@@ -247,7 +249,7 @@ describe('components DTCG e2e (live studio)', () => {
 
       const beforePick = await page.evaluate(() => {
         const row = document.querySelector(
-          '[token-path="component.alert.bg"]',
+          '[token-path="color.info.default"]',
         ) as HTMLElement | null
         const picker = row?.querySelector(
           'sail-color-picker',
@@ -273,7 +275,7 @@ describe('components DTCG e2e (live studio)', () => {
 
       // Open Bg color picker and pick a different palette swatch.
       const bgBox = await page.evaluate(() => {
-        const row = document.querySelector('[token-path="component.alert.bg"]')
+        const row = document.querySelector('[token-path="color.info.default"]')
         const chip =
           row?.querySelector('[token-chip]') ||
           row?.querySelector('sail-color-picker') ||
@@ -289,7 +291,7 @@ describe('components DTCG e2e (live studio)', () => {
       const picked = await page.evaluate((current) => {
         const pickers = [
           ...document.querySelectorAll(
-            'sail-color-picker[token-path="component.alert.bg"]',
+            'sail-color-picker[token-path="color.info.default"]',
           ),
         ]
         const el =
@@ -325,7 +327,7 @@ describe('components DTCG e2e (live studio)', () => {
       const afterPick = await page.waitForFunction(
         (pickedHex) => {
           const row = document.querySelector(
-            '[token-path="component.alert.bg"]',
+            '[token-path="color.info.default"]',
           ) as HTMLElement | null
           const picker = row?.querySelector(
             'sail-color-picker',
@@ -371,7 +373,7 @@ describe('components DTCG e2e (live studio)', () => {
 
       expect(
         overrideState.hasClear || !/^Default/i.test(overrideState.hexLabel),
-        `pick must write component.alert.bg override: ${JSON.stringify(overrideState)}`,
+        `pick must write color.info.default override: ${JSON.stringify(overrideState)}`,
       ).toBe(true)
       expect(overrideState.hexLabel, 'override label must not be var()').not.toMatch(
         /var\s*\(/i,
@@ -383,7 +385,7 @@ describe('components DTCG e2e (live studio)', () => {
       // Clear restores Default · #hex
       await page.evaluate(() => {
         const row = document.querySelector(
-          '[token-path="component.alert.bg"]',
+          '[token-path="color.info.default"]',
         ) as HTMLElement | null
         const btn = [...(row?.querySelectorAll('button') ?? [])].find((b) =>
           /clear/i.test(b.textContent || ''),
@@ -395,7 +397,7 @@ describe('components DTCG e2e (live studio)', () => {
       const afterClear = await page.waitForFunction(
         () => {
           const row = document.querySelector(
-            '[token-path="component.alert.bg"]',
+            '[token-path="color.info.default"]',
           ) as HTMLElement | null
           const picker = row?.querySelector(
             'sail-color-picker',

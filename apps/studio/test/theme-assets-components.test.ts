@@ -89,56 +89,71 @@ describe('font discoverer behavior', () => {
 })
 
 describe('component token write behavior', () => {
-  it('schema-missing component path write is a hard error', async () => {
+  it('component.* path write is a hard error', async () => {
     const { setTokenValue } = await import('../src/design')
     __setWorkingDocForTests({
       $extensions: { ship: { themeId: 'comp-toy' } },
-      modes: { light: { component: {} } },
+      modes: { light: { color: {} } },
     })
     await setTokenValue('component.button.not-a-real-slot', '#22c55e')
     const err = getDesignState().lastWriteError
     expect(err).toBeTruthy()
-    expect(String(err)).toMatch(/Unknown component surface path|not in the host surface schema/i)
+    expect(String(err)).toMatch(/Unknown theme path|write a color, type, or radius role/i)
     expect(getDesignState().dirty).toBe(false)
   })
 
-  it('setTokenValue can write a component-scoped color hex to oklch', async () => {
+  it('setTokenValue writes a live color role hex to oklch', async () => {
     const { setTokenValue, getPathValue } = await import('../src/design')
     __setWorkingDocForTests({
       $extensions: { ship: { themeId: 'comp-toy' } },
       modes: {
         light: {
-          component: {
-            button: {
-              bg: { $value: 'oklch(0.5 0.1 40)', $type: 'color' },
+          color: {
+            card: {
+              default: { $value: 'oklch(0.5 0.1 40)', $type: 'color' },
             },
           },
         },
       },
     })
-    await setTokenValue('component.button.bg', '#22c55e')
-    const v = getPathValue(getDesignState().themeDoc, 'component.button.bg', 'light')
+    await setTokenValue('color.card.default', '#22c55e')
+    const v = getPathValue(getDesignState().themeDoc, 'color.card.default', 'light')
     expect(v).toMatch(/^oklch\(/)
     expect(getDesignState().dirty).toBe(true)
+    expect(getDesignState().lastWriteError).toBeNull()
+  })
+
+  it('setTokenValue refuses a retired component.button.bg path', async () => {
+    const { setTokenValue, getPathValue } = await import('../src/design')
+    __setWorkingDocForTests({
+      $extensions: { ship: { themeId: 'comp-toy' } },
+      modes: {
+        light: {
+          color: {
+            primary: { default: { $value: 'oklch(0.5 0.1 40)', $type: 'color' } },
+          },
+        },
+      },
+    })
+    await setTokenValue('component.button.bg', '#22c55e')
+    expect(getDesignState().lastWriteError).toMatch(/Unknown theme path|write a color/i)
+    expect(getPathValue(getDesignState().themeDoc, 'component.button.bg', 'light')).toBeNull()
+    expect(getDesignState().dirty).toBe(false)
   })
 })
 
 describe('composite component knobs (SPIN-3)', () => {
-  it('dialog.border / card.border members label as one face', async () => {
+  it('bg.card / bg.button members label as one face', async () => {
     const { compositeForPath, componentKnobLabel } = await import('../src/design')
-    const color = compositeForPath('component.dialog.border.color')
-    expect(color?.name).toBe('dialog.border')
+    const color = compositeForPath('bg.card.color')
+    expect(color?.name).toBe('bg.card')
     expect(color?.member).toBe('color')
-    const width = compositeForPath('component.card.border.width')
-    expect(width?.name).toBe('card.border')
-    expect(width?.member).toBe('width')
-    expect(componentKnobLabel('component.dialog.border.color', 'border')).toBe(
-      'dialog.border · color',
-    )
-    expect(componentKnobLabel('component.card.border.style', 'border')).toBe(
-      'card.border · style',
-    )
-    expect(compositeForPath('component.dialog.bg')).toBeNull()
+    const button = compositeForPath('bg.button.color')
+    expect(button?.name).toBe('bg.button')
+    expect(button?.member).toBe('color')
+    expect(componentKnobLabel('bg.card.color', 'color')).toBe('bg.card · color')
+    expect(componentKnobLabel('bg.button.color', 'color')).toBe('bg.button · color')
+    expect(compositeForPath('color.card.default')).toBeNull()
   })
 
   it('size / type / elevation composites fold as faces, not pad-on-size', async () => {
@@ -172,13 +187,34 @@ describe('component state leaf parking (SPEC-D1 rest-only)', () => {
     const { setTokenValue } = await import('../src/design')
     __setWorkingDocForTests({
       $extensions: { ship: { themeId: 'comp-toy' } },
-      modes: { light: { component: { button: {} } } },
+      modes: { light: { color: {} } },
     })
     await setTokenValue('component.button.hover-bg', '#22c55e')
     const err = getDesignState().lastWriteError
     expect(err).toBeTruthy()
-    expect(String(err)).toMatch(/Parked component state path|not an editable rest surface/i)
+    expect(String(err)).toMatch(
+      /Unknown theme path|Parked component state path|write a color|not an editable rest surface/i,
+    )
     expect(getDesignState().dirty).toBe(false)
+  })
+
+  it('Themes Components face roles never write component.* paths', async () => {
+    const { FACE_ROLES } = await import(
+      '../src/compositions/theme-components-surface/theme-components-edit'
+    )
+    const paths = Object.values(FACE_ROLES).flatMap((rows) => rows.map((r) => r.path))
+    expect(paths.length).toBeGreaterThan(0)
+    expect(paths.every((p) => !p.startsWith('component.'))).toBe(true)
+    expect(paths).toContain('color.input')
+    expect(paths).toContain('color.card.default')
+    expect(paths).toContain('color.popover.default')
+    expect(paths).toContain('color.primary.default')
+    expect(paths).toContain('color.foreground')
+    expect(paths).toContain('typography.label.weight')
+    expect(FACE_ROLES.checkbox?.some((r) => r.path === 'color.input')).toBe(true)
+    expect(FACE_ROLES.field?.some((r) => r.path === 'color.input')).toBe(true)
+    expect(FACE_ROLES.button?.some((r) => r.path === 'color.primary.default')).toBe(true)
+    expect(FACE_ROLES.label?.some((r) => r.path === 'typography.label.weight')).toBe(true)
   })
 
   it('isParkedComponentStateLeaf covers hover leaves but not hover-card pack rest', async () => {

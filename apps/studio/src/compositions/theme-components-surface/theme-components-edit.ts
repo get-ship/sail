@@ -1,220 +1,220 @@
 import { closestAttr, inputValue, type UiEvent } from '../ui-event'
 /**
- * Themes → Components facet — L1 specimen + global knobs.
- * component.* packs are gone. Faces edit globals (card/popover promoted;
- * everything else is muted/input/surface/border). Override is style().
+ * Themes → Components facet — L1 specimen + live theme roles.
+ * Faces edit color / type / radius roles. Per-tag leaves are gone.
  */
-import { familyOf } from '@ship/sail-l1'
 import { signal } from '@ship/sail-runtime'
-import { L1_CATALOG, allKnobs, clearTokenValue, getDesignState, getPathValue, isParkedComponentStateLeaf, l1Label, setTokenValue, type L1Id, type TokenKnob } from '../../design/index.ts'
+import { L1_CATALOG, clearTokenValue, getDesignState, getPathValue, l1Label, setTokenValue, type L1Id } from '../../design/index.ts'
 import type { ThemeSession } from '../theme-session/theme-session'
-import {
-  effectiveComponentColor,
-  effectiveGlobalColor,
-} from './theme-component-colors'
+import { effectiveGlobalColor } from './theme-component-colors'
 import {
   buildStageGates,
   viewerMetaFor,
   type ViewerPropRow,
 } from './theme-l1-viewer-meta'
 
-/** Globals useful when customizing a face (override global or set component leaf). */
-const FACE_GLOBALS: Record<string, { path: string; label: string }[]> = {
+/** Shared control fill — input / select / textarea / field. */
+const FIELD_ROLES: { path: string; label: string }[] = [
+  { path: 'color.input', label: 'Input' },
+  { path: 'color.foreground', label: 'Foreground' },
+  { path: 'color.border.default', label: 'Border' },
+  { path: 'color.destructive.default', label: 'Invalid' },
+  { path: 'radius.md', label: 'Radius' },
+]
+
+/** Overlay fill — popover / dropdown / dialog / hover-card / tooltip. */
+const OVERLAY_ROLES: { path: string; label: string }[] = [
+  { path: 'color.popover.default', label: 'Popover' },
+  { path: 'color.popover.foreground', label: 'Popover foreground' },
+]
+
+/** Live roles a face spends. Empty = this face has nothing dedicated to edit. */
+export const FACE_ROLES: Record<string, { path: string; label: string }[]> = {
   alert: [
-    { path: 'color.success.default', label: 'Success (global)' },
-    { path: 'color.warning.default', label: 'Warning (global)' },
-    { path: 'color.destructive.default', label: 'Danger (global)' },
-    { path: 'color.info.default', label: 'Info (global)' },
-    { path: 'color.muted.foreground', label: 'Muted (global)' },
-    { path: 'color.surface.1', label: 'Surface 1 (global)' },
-    { path: 'color.foreground', label: 'Foreground (global)' },
+    { path: 'color.info.default', label: 'Info' },
+    { path: 'color.success.default', label: 'Success' },
+    { path: 'color.warning.default', label: 'Warning' },
+    { path: 'color.destructive.default', label: 'Danger' },
+    { path: 'color.muted.foreground', label: 'Muted' },
+    { path: 'color.surface.1', label: 'Surface' },
+    { path: 'color.foreground', label: 'Foreground' },
   ],
   badge: [
-    { path: 'color.primary.default', label: 'Primary (global)' },
-    { path: 'color.muted.foreground', label: 'Muted (global)' },
+    { path: 'color.primary.default', label: 'Primary' },
+    { path: 'color.muted.foreground', label: 'Muted' },
   ],
   chip: [
-    { path: 'color.primary.default', label: 'Primary (global)' },
-    { path: 'color.muted.foreground', label: 'Muted (global)' },
-    { path: 'color.border.default', label: 'Border (global)' },
+    { path: 'color.primary.default', label: 'Primary' },
+    { path: 'color.muted.foreground', label: 'Muted' },
+    { path: 'color.border.default', label: 'Border' },
   ],
   kbd: [
-    { path: 'color.muted.default', label: 'Muted (global)' },
-    { path: 'color.foreground', label: 'Foreground (global)' },
-    { path: 'color.border.default', label: 'Border (global)' },
+    { path: 'color.muted.default', label: 'Muted' },
+    { path: 'color.foreground', label: 'Foreground' },
+    { path: 'color.border.default', label: 'Border' },
   ],
   'code-block': [
-    { path: 'color.surface.1', label: 'Surface 1 (global · rest bg)' },
-    { path: 'color.foreground', label: 'Foreground (global · rest ink)' },
-    { path: 'color.border.default', label: 'Border (global · frame)' },
+    { path: 'color.surface.1', label: 'Surface' },
+    { path: 'color.foreground', label: 'Foreground' },
+    { path: 'color.border.default', label: 'Border' },
   ],
-  legend: [
-    { path: 'color.foreground', label: 'Foreground (global · rest caption ink)' },
-  ],
+  legend: [{ path: 'color.foreground', label: 'Foreground' }],
   prose: [
-    { path: 'color.foreground', label: 'Foreground (global · rest host ink)' },
-    { path: 'color.primary.default', label: 'Primary (global · links / quote rule)' },
-    { path: 'color.muted.foreground', label: 'Muted fg (global · quote / markers)' },
+    { path: 'color.foreground', label: 'Foreground' },
+    { path: 'color.primary.default', label: 'Primary' },
+    { path: 'color.muted.foreground', label: 'Muted' },
   ],
   spinner: [
-    { path: 'color.muted.foreground', label: 'Muted fg (global · rest arc)' },
-    { path: 'color.border.subtle', label: 'Border subtle (global · track)' },
-    { path: 'color.primary.default', label: 'Primary (global · toned)' },
+    { path: 'color.muted.foreground', label: 'Muted' },
+    { path: 'color.border.subtle', label: 'Track' },
+    { path: 'color.primary.default', label: 'Primary' },
   ],
   'empty-state': [
-    { path: 'color.muted.default', label: 'Muted (global · rest bg)' },
-    { path: 'color.muted.foreground', label: 'Muted fg (global · rest ink)' },
-    { path: 'color.border.default', label: 'Border (global · rest frame)' },
-    { path: 'color.foreground', label: 'Foreground (global · title)' },
-    { path: 'color.primary.default', label: 'Primary (global · toned icon)' },
+    { path: 'color.muted.default', label: 'Muted' },
+    { path: 'color.muted.foreground', label: 'Muted ink' },
+    { path: 'color.border.default', label: 'Border' },
+    { path: 'color.foreground', label: 'Foreground' },
+    { path: 'color.primary.default', label: 'Primary' },
   ],
   meter: [
-    { path: 'color.muted.default', label: 'Muted (global · track)' },
-    { path: 'color.success.default', label: 'Success (global · optimum)' },
-    { path: 'color.warning.default', label: 'Warning (global · suboptimum)' },
-    { path: 'color.destructive.default', label: 'Danger (global · even-less-good)' },
+    { path: 'color.muted.default', label: 'Track' },
+    { path: 'color.success.default', label: 'Success' },
+    { path: 'color.warning.default', label: 'Warning' },
+    { path: 'color.destructive.default', label: 'Danger' },
   ],
   label: [
-    { path: 'color.foreground', label: 'Foreground (global · rest ink)' },
-    { path: 'color.destructive.default', label: 'Danger (global · required marker)' },
+    { path: 'color.foreground', label: 'Foreground' },
+    { path: 'color.destructive.default', label: 'Required' },
+    { path: 'typography.label.weight', label: 'Label weight' },
+    { path: 'typography.label.font', label: 'Label font' },
   ],
   progress: [
-    { path: 'color.muted.default', label: 'Muted (global · track)' },
-    { path: 'color.primary.default', label: 'Primary (global · fill)' },
+    { path: 'color.muted.default', label: 'Track' },
+    { path: 'color.primary.default', label: 'Fill' },
   ],
   'scroll-area': [
-    { path: 'color.border.default', label: 'Border (global · rest thumb alias)' },
-    { path: 'color.border.strong', label: 'Border strong (global · hover thumb)' },
+    { path: 'color.border.default', label: 'Thumb' },
+    { path: 'color.border.strong', label: 'Hover thumb' },
   ],
   'error-state': [
-    { path: 'color.muted.default', label: 'Muted (global · rest bg alias)' },
-    { path: 'color.muted.foreground', label: 'Muted fg (global · rest ink)' },
-    { path: 'color.border.default', label: 'Border (global · rest edge)' },
-    { path: 'color.destructive.default', label: 'Danger (global · icon / inline)' },
-    { path: 'color.foreground', label: 'Foreground (global · title)' },
+    { path: 'color.muted.default', label: 'Muted' },
+    { path: 'color.muted.foreground', label: 'Muted ink' },
+    { path: 'color.border.default', label: 'Border' },
+    { path: 'color.destructive.default', label: 'Danger' },
+    { path: 'color.foreground', label: 'Foreground' },
   ],
   icon: [
-    { path: 'color.foreground', label: 'Foreground (global · currentColor ink)' },
-    { path: 'color.primary.default', label: 'Primary (global · parent fg)' },
-    { path: 'icon.md', label: 'Icon md (global size scale)' },
-    { path: 'icon.xl', label: 'Icon xl (global size scale)' },
+    { path: 'color.foreground', label: 'Foreground' },
+    { path: 'color.primary.default', label: 'Primary' },
+    { path: 'icon.md', label: 'Icon md' },
+    { path: 'icon.xl', label: 'Icon xl' },
   ],
   button: [
-    { path: 'color.primary.default', label: 'Primary (global)' },
-    { path: 'color.secondary.default', label: 'Secondary (global)' },
-    { path: 'color.destructive.default', label: 'Danger (global)' },
-    { path: 'color.success.default', label: 'Success (global)' },
-    { path: 'radius.lg', label: 'Radius lg (global)' },
+    { path: 'color.primary.default', label: 'Primary' },
+    { path: 'color.background', label: 'Background' },
+    { path: 'color.foreground', label: 'Foreground' },
+    { path: 'color.destructive.default', label: 'Danger' },
+    { path: 'radius.lg', label: 'Radius' },
   ],
   a: [
-    { path: 'color.primary.default', label: 'Primary (global · toned links)' },
-    { path: 'color.foreground', label: 'Foreground (global · solid invert)' },
-    { path: 'color.muted.foreground', label: 'Muted fg (global · rest ink alias)' },
-    { path: 'color.border.default', label: 'Border (global · rest button.border)' },
-    { path: 'radius.md', label: 'Radius md (global · button-link)' },
+    { path: 'color.primary.default', label: 'Primary' },
+    { path: 'color.foreground', label: 'Foreground' },
+    { path: 'color.background', label: 'Background' },
+    { path: 'color.muted.foreground', label: 'Muted' },
+    { path: 'radius.md', label: 'Radius' },
   ],
   card: [
     { path: 'color.card.default', label: 'Card' },
     { path: 'color.card.foreground', label: 'Card foreground' },
     { path: 'filter.card-backdrop', label: 'Card backdrop' },
     { path: 'image.card-texture', label: 'Card texture' },
-    { path: 'color.surface.3', label: 'Surface 3 (global)' },
-    { path: 'color.foreground', label: 'Foreground (global)' },
-    { path: 'radius.lg', label: 'Radius lg (global)' },
+    { path: 'radius.lg', label: 'Radius' },
   ],
-  popover: [
-    { path: 'color.popover.default', label: 'Popover' },
-    { path: 'color.popover.foreground', label: 'Popover foreground' },
-  ],
+  popover: OVERLAY_ROLES,
+  dropdown: OVERLAY_ROLES,
+  dialog: OVERLAY_ROLES,
+  'hover-card': OVERLAY_ROLES,
+  tooltip: OVERLAY_ROLES,
   switch: [
-    { path: 'color.muted.default', label: 'Muted (global · rest track alias)' },
-    { path: 'color.border.strong', label: 'Border strong (global · rest border alias)' },
-    { path: 'color.primary.default', label: 'Primary (global · checked track default)' },
+    { path: 'color.muted.default', label: 'Track' },
+    { path: 'color.border.strong', label: 'Border' },
+    { path: 'color.primary.default', label: 'Checked' },
   ],
   slider: [
-    { path: 'color.muted.default', label: 'Muted (global · track alias)' },
-    { path: 'color.primary.default', label: 'Primary (global · fill alias)' },
-    { path: 'color.border.default', label: 'Border (global · track-border alias)' },
-    { path: 'color.background', label: 'Background (global · field/thumb face alias)' },
+    { path: 'color.muted.default', label: 'Track' },
+    { path: 'color.primary.default', label: 'Fill' },
+    { path: 'color.border.default', label: 'Track border' },
+    { path: 'color.input', label: 'Thumb' },
   ],
   tabs: [
-    { path: 'color.primary.default', label: 'Primary (global)' },
-    { path: 'color.muted.foreground', label: 'Muted (global)' },
-    { path: 'color.surface.1', label: 'Surface 1 (global)' },
+    { path: 'color.primary.default', label: 'Primary' },
+    { path: 'color.muted.foreground', label: 'Muted' },
+    { path: 'color.surface.1', label: 'Surface' },
   ],
-  input: [
-    { path: 'color.background', label: 'Background (global · field.bg alias)' },
-    { path: 'color.foreground', label: 'Foreground (global · field.fg alias)' },
-    { path: 'color.border.default', label: 'Border (global · field.border alias)' },
-    { path: 'color.destructive.default', label: 'Destructive (global · invalid border)' },
-    { path: 'radius.md', label: 'Radius md (global · text fields)' },
-  ],
-  textarea: [
-    { path: 'color.background', label: 'Background (global · field.bg alias)' },
-    { path: 'color.foreground', label: 'Foreground (global · field.fg alias)' },
-    { path: 'color.border.default', label: 'Border (global · field.border alias)' },
-    { path: 'color.destructive.default', label: 'Destructive (global · invalid border)' },
-    { path: 'radius.md', label: 'Radius md (global · text fields)' },
-  ],
-  select: [
-    { path: 'color.background', label: 'Background (global · rest field.bg)' },
-    { path: 'color.foreground', label: 'Foreground (global · rest field.fg)' },
-    { path: 'color.border.default', label: 'Border (global · rest field.border)' },
-    { path: 'color.border.strong', label: 'Border strong (global · hover)' },
-    { path: 'color.destructive.default', label: 'Danger (global · invalid border)' },
-    { path: 'radius.md', label: 'Radius md (global · control)' },
-  ],
+  input: FIELD_ROLES,
+  textarea: FIELD_ROLES,
+  select: FIELD_ROLES,
+  field: FIELD_ROLES,
+  combobox: FIELD_ROLES,
   fieldset: [
-    { path: 'color.border.default', label: 'Border (global · rest fieldset.border)' },
-    { path: 'radius.md', label: 'Radius md (global · group chrome)' },
+    { path: 'color.border.default', label: 'Border' },
+    { path: 'radius.md', label: 'Radius' },
   ],
   radio: [
-    { path: 'color.foreground', label: 'Foreground (global · rest radio.fg)' },
-    { path: 'color.primary.default', label: 'Primary (global · checked face)' },
-    { path: 'color.background', label: 'Background (global · control face)' },
+    { path: 'color.foreground', label: 'Foreground' },
+    { path: 'color.primary.default', label: 'Checked' },
+    { path: 'color.input', label: 'Face' },
   ],
-  // Ticker has no component.ticker.* — specimen uses free global paint (muted / primary / radius).
+  checkbox: [
+    { path: 'color.foreground', label: 'Foreground' },
+    { path: 'color.primary.default', label: 'Checked' },
+    { path: 'color.input', label: 'Face' },
+  ],
   ticker: [
-    { path: 'color.muted.default', label: 'Muted (global · demo band fill)' },
-    { path: 'color.muted.foreground', label: 'Muted fg (global · demo ink)' },
-    { path: 'color.primary.default', label: 'Primary (global · brand band)' },
-    { path: 'color.primary.foreground', label: 'Primary fg (global · brand ink)' },
-    { path: 'radius.md', label: 'Radius md (global · demo clip)' },
+    { path: 'color.muted.default', label: 'Muted' },
+    { path: 'color.muted.foreground', label: 'Muted ink' },
+    { path: 'color.primary.default', label: 'Primary' },
+    { path: 'color.primary.foreground', label: 'Primary ink' },
+    { path: 'radius.md', label: 'Radius' },
   ],
 }
 
 const FACE_HINTS: Record<string, string> = {
-  alert: 'Callouts · tone maps to globals + component leaves',
+  alert: 'Callouts · tone maps to info / success / warning / danger',
   badge: 'Status chips',
-  button: 'Actions · default is solid primary · every variant is finished without extra attrs',
-  a: 'Links · bare text or button-link chrome · component.button.* rest',
-  card: 'Surfaces · glass leaves',
+  button: 'Actions · default is solid primary',
+  a: 'Links · bare text or button-link chrome',
+  card: 'Surfaces · card fill and ink',
   tabs: 'Tabs (list + tab + panel as one face)',
   toast: 'Toasts + region',
   'radio-group': 'Radio set',
-  switch: 'Binary toggles · component.switch.track + border + thumb',
-  radio: 'Radio option · component.radio.fg leaf',
-  ticker: 'Marquee host · duration/reverse · author paint (no component leaves)',
+  switch: 'Binary toggles · muted track + primary checked',
+  radio: 'Radio option · foreground ink',
+  checkbox: 'Boolean check · input face + primary checked',
+  ticker: 'Marquee host · duration/reverse · author paint',
   chip: 'Filters and tags',
-  kbd: 'Keycaps · component.kbd.* faces',
-  'code-block': 'Source block · component.code-block bg/fg · .tok-* via --syntax-*',
-  legend: 'Fieldset caption · component.legend.fg leaf',
-  prose: 'Typography scope · component.prose.fg host leaf',
-  spinner: 'Indeterminate wait · fg + track leaves',
-  'empty-state': 'Nothing-here · bg/fg/border/title leaves · tone on icon',
-  meter: 'Gauge · track + optimum band leaves',
-  label: 'Form labels · component.label.fg + required leaves',
-  progress: 'Bar · track + fill leaves',
-  'scroll-area': 'Overflow · component.scroll-area.thumb; hover border-strong',
-  slider: 'Range · track + fill + track-border leaves · single thumb',
-  'error-state': 'Recovery · component.error-state leaves + brand destructive',
-  icon: 'Glyph host · icon scale sizes · currentColor ink',
+  kbd: 'Keycaps · muted fill + border',
+  'code-block': 'Source block · surface fill + foreground',
+  legend: 'Fieldset caption · foreground ink',
+  prose: 'Typography scope · foreground + primary links',
+  spinner: 'Indeterminate wait · muted arc + primary tone',
+  'empty-state': 'Nothing-here · muted surface · tone on icon',
+  meter: 'Gauge · muted track + semantic bands',
+  label: 'Form labels · foreground + label type role',
+  progress: 'Bar · muted track + primary fill',
+  'scroll-area': 'Overflow · border thumb',
+  slider: 'Range · muted track + primary fill',
+  'error-state': 'Recovery · muted surface + destructive',
+  icon: 'Glyph host · icon scale · currentColor ink',
   avatar: 'Face / initials',
-  input: 'Native input · type-gated skins · component.field.* (shared select/textarea)',
-  textarea: 'Multiline · component.field.* shared with input/select',
-  select:
-    'Native closed picker · component.field surface (shared) · size + invalid + disabled + multiple',
-  fieldset: 'Form group · component.fieldset.border leaf',
+  input: 'Native input · input fill + foreground + border',
+  textarea: 'Multiline · shared input fill',
+  select: 'Native closed picker · shared input fill',
+  field: 'Field wrapper · shared input fill',
+  fieldset: 'Form group · border',
+  popover: 'Overlay · popover fill',
+  dropdown: 'Overlay · popover fill',
+  dialog: 'Overlay · popover fill',
 }
 
 type FaceDef = {
@@ -227,51 +227,78 @@ type FaceDef = {
 }
 
 function buildFaces(): FaceDef[] {
-  const knobs = allKnobs().filter((k) => k.path.startsWith('component.'))
-  const tags = new Set<string>()
-  for (const k of knobs) {
-    const parts = k.path.split('.')
-    if (parts.length >= 3) tags.add(parts[1]!)
-  }
-  // Faces that only have global hooks (e.g. button) still appear.
-  for (const id of Object.keys(FACE_GLOBALS)) tags.add(id)
-
-  const byFace = new Map<string, Set<string>>()
-  for (const tag of tags) {
-    const face = familyOf(tag) ?? tag
-    if (!byFace.has(face)) byFace.set(face, new Set())
-    byFace.get(face)!.add(tag)
-  }
-
-  const faces: FaceDef[] = []
-  for (const [id, set] of [...byFace.entries()].sort((a, b) => a[0].localeCompare(b[0]))) {
-    const tagsArr = [...set]
-    const stageTag = id === 'tabs' ? 'tabs' : id === 'toast' ? 'toast' : tagsArr[0]!
-    faces.push({
-      id,
-      label: id === 'tabs' ? 'Tabs' : l1Label(id),
-      tags: tagsArr,
-      stageTag: L1_CATALOG.includes(stageTag) ? stageTag : tagsArr[0]!,
-    })
-  }
-  return faces
+  return L1_CATALOG.map((id) => ({
+    id,
+    label: id === 'tabs' ? 'Tabs' : l1Label(id),
+    tags: [id],
+    stageTag: id,
+  }))
 }
 
 const FACES = buildFaces()
 
-function knobsForFace(face: FaceDef): TokenKnob[] {
-  const set = new Set(face.tags)
-  return allKnobs().filter((k) => {
-    if (!k.path.startsWith('component.')) return false
-    // SPEC-D1: parked hover/focus storage leaves are not editable rest slots.
-    if (isParkedComponentStateLeaf(k.path)) return false
-    const tag = k.path.split('.')[1]
-    return tag != null && set.has(tag)
-  })
-}
+/** Tags that have a live stage template. Others show an honest empty. */
+const STAGE_SPECIMENS = new Set([
+  'a',
+  'accordion',
+  'alert',
+  'avatar',
+  'badge',
+  'breadcrumb',
+  'button',
+  'card',
+  'checkbox',
+  'chip',
+  'code-block',
+  'combobox',
+  'context-menu',
+  'dialog',
+  'dropdown',
+  'empty-state',
+  'error-boundary',
+  'error-state',
+  'field',
+  'fieldset',
+  'hover-card',
+  'icon',
+  'input',
+  'kbd',
+  'label',
+  'legend',
+  'menu-item',
+  'meter',
+  'navbar',
+  'page',
+  'pagination',
+  'popover',
+  'progress',
+  'prose',
+  'radio',
+  'radio-group',
+  'scroll-area',
+  'select',
+  'separator',
+  'skeleton',
+  'slider',
+  'spinner',
+  'switch',
+  'tab',
+  'tab-list',
+  'tab-panel',
+  'table',
+  'tabs',
+  'textarea',
+  'theme-picker',
+  'ticker',
+  'toast',
+  'toast-region',
+  'toggle',
+  'toggle-group',
+  'tooltip',
+])
 
-function isColorKnob(k: TokenKnob): boolean {
-  return k.kind === 'color'
+function rolesForFace(faceId: string): { path: string; label: string }[] {
+  return FACE_ROLES[faceId] ?? []
 }
 
 type ComponentKnobRow = {
@@ -313,8 +340,9 @@ function knobRenderKey(path: string, hexLabel: string, hex: string, overridden: 
 }
 
 export function createComponentsEdit(session: ThemeSession) {
-  const selectedId = signal(FACES[0]?.id ?? 'alert')
-  const selectedLabel = signal(FACES[0]?.label ?? 'Alert')
+  const seedId = L1_CATALOG.includes('button') ? 'button' : (FACES[0]?.id ?? 'alert')
+  const selectedId = signal(seedId)
+  const selectedLabel = signal(l1Label(seedId))
   const filter = signal('')
   const variant = signal('')
   const size = signal('')
@@ -353,53 +381,8 @@ export function createComponentsEdit(session: ThemeSession) {
     if (!f) {
       componentKnobList.set([])
     } else {
-      const next = knobsForFace(f).map((k) => {
-        const isColor = isColorKnob(k)
-        if (isColor) {
-          const eff = effectiveComponentColor(ds.themeDoc, k, mode)
-          return {
-            key: knobRenderKey(k.path, eff.hexLabel, eff.hex, eff.isOverridden),
-            path: k.path,
-            label: k.label || k.path.split('.').slice(2).join('.'),
-            kind: k.kind,
-            // Resolved hex only — never invent #888 / #fff when default is unresolvable.
-            hex: eff.hex,
-            canPickColor: true,
-            hexLabel: eff.hexLabel,
-            raw: eff.raw,
-            isColor: true,
-            isOverridden: eff.isOverridden,
-            layer: eff.layer,
-            scope: 'component',
-          }
-        }
-        const raw = getPathValue(ds.themeDoc, k.path, mode)
-        const hexLabel = ''
-        const isOverridden = raw != null
-        const display = raw != null ? String(raw) : 'Default'
-        return {
-          key: knobRenderKey(k.path, display, '', isOverridden),
-          path: k.path,
-          label: k.label || k.path.split('.').slice(2).join('.'),
-          kind: k.kind,
-          hex: '',
-          canPickColor: false,
-          hexLabel,
-          raw: display,
-          isColor: false,
-          isOverridden,
-          layer: isOverridden ? 'component' : 'baked',
-          scope: 'component',
-        }
-      })
-      componentKnobList.set(next)
-    }
-
-    const globals = FACE_GLOBALS[selectedId()] ?? []
-    globalKnobList.set(
-      globals.map((g) => {
+      const next = rolesForFace(f.id).map((g) => {
         const isColor = g.path.includes('color.') || g.path.startsWith('color.')
-        const isRadius = g.path.startsWith('radius.')
         if (isColor) {
           const eff = effectiveGlobalColor(ds.themeDoc, g.path, mode)
           return {
@@ -412,36 +395,38 @@ export function createComponentsEdit(session: ThemeSession) {
             hexLabel: eff.hexLabel,
             raw: eff.raw,
             isColor: true,
-            isRadius: false,
             isOverridden: eff.isOverridden,
             layer: eff.layer,
-            scope: 'global',
+            scope: 'role',
           }
         }
         const raw = getPathValue(ds.themeDoc, g.path, mode)
         const display = raw != null ? String(raw) : 'Default'
+        const isOverridden = raw != null
         return {
-          key: knobRenderKey(g.path, display, '', false),
+          key: knobRenderKey(g.path, display, '', isOverridden),
           path: g.path,
           label: g.label,
-          kind: isRadius ? 'dimension' : 'other',
+          kind: g.path.startsWith('radius.') ? 'dimension' : 'other',
           hex: '',
           canPickColor: false,
-          hexLabel: '',
+          hexLabel: display,
           raw: display,
           isColor: false,
-          isRadius,
-          isOverridden: raw != null,
-          layer: raw != null ? 'global' : 'baked',
-          scope: 'global',
+          isOverridden,
+          layer: isOverridden ? 'global' : 'baked',
+          scope: 'role',
         }
-      }),
-    )
+      })
+      componentKnobList.set(next)
+    }
+
+    globalKnobList.set([])
 
     const bits: Record<string, number> = {}
     for (const faceDef of FACES) {
       let overrides = 0
-      for (const k of knobsForFace(faceDef)) {
+      for (const k of rolesForFace(faceDef.id)) {
         if (getPathValue(ds.themeDoc, k.path, ds.modeId) != null) overrides += 1
       }
       bits[faceDef.id] = overrides
@@ -470,16 +455,16 @@ export function createComponentsEdit(session: ThemeSession) {
         (FACE_HINTS[f.id] ?? '').toLowerCase().includes(q)
       )
     }).map((f) => {
-      const knobs = knobsForFace(f)
+      const roles = rolesForFace(f.id)
       const overrides = bits[f.id] ?? 0
       return {
         key: f.id,
         id: f.id,
         label: f.label,
-        hint: FACE_HINTS[f.id] ?? `${knobs.length} component tokens`,
+        hint: FACE_HINTS[f.id] ?? (roles.length > 0 ? `${roles.length} theme roles` : 'Inherits the theme'),
         selected: selectedId() === f.id,
         hasOverride: overrides > 0,
-        tokenCount: knobs.length,
+        tokenCount: roles.length,
         overrideCount: overrides,
       }
     })
@@ -612,12 +597,13 @@ export function createComponentsEdit(session: ThemeSession) {
 
   const hasComponentKnobs = () => componentKnobList().length > 0
   const hasGlobalKnobs = () => globalKnobList().length > 0
+  const hasSpecimen = () => STAGE_SPECIMENS.has(selectedId())
   const faceCount = () => FACES.length
   const registryNote = () => {
     const n = componentKnobList().length
     return n > 0
-      ? `${n} component token${n === 1 ? '' : 's'} in registry`
-      : 'No component-scoped tokens in registry — edit related globals below'
+      ? `${n} theme role${n === 1 ? '' : 's'}`
+      : 'No dedicated theme roles — this face inherits the theme'
   }
 
   const pageNo = signal('1')
@@ -626,7 +612,7 @@ export function createComponentsEdit(session: ThemeSession) {
   }
 
   return {
-    filter,
+    filterQuery: filter,
     selectedId,
     selectedLabel,
     componentRows,
@@ -636,6 +622,7 @@ export function createComponentsEdit(session: ThemeSession) {
     globalKnobs,
     hasComponentKnobs,
     hasGlobalKnobs,
+    hasSpecimen,
     onComponentColor,
     onGlobalColor,
     onClearComponent,
