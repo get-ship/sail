@@ -44,6 +44,7 @@ import { meta as popoverMeta } from './popover/meta'
 import { meta as dropdownMeta } from './dropdown/meta'
 import { meta as contextMenuMeta } from './context-menu/meta'
 import { meta as dialogMeta } from './dialog/meta'
+import { meta as drawerMeta } from './drawer/meta'
 import { meta as tabsMeta } from './tabs/meta'
 import { meta as breadcrumbMeta } from './breadcrumb/meta'
 import { meta as paginationMeta } from './pagination/meta'
@@ -99,6 +100,7 @@ export const DOC_PACKAGES: readonly DocMeta[] = [
   dropdownMeta,
   contextMenuMeta,
   dialogMeta,
+  drawerMeta,
   tabsMeta,
   breadcrumbMeta,
   paginationMeta,

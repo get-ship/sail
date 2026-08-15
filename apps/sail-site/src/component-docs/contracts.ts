@@ -40,6 +40,7 @@ import { contract as card } from './card/contract'
 import { contract as avatar } from './avatar/contract'
 import { contract as breadcrumb } from './breadcrumb/contract'
 import { contract as dialog } from './dialog/contract'
+import { contract as drawer } from './drawer/contract'
 import { contract as popover } from './popover/contract'
 import { contract as tooltip } from './tooltip/contract'
 import { contract as dropdown } from './dropdown/contract'
@@ -90,6 +91,7 @@ export const CONTRACTS: readonly SurfaceContract[] = [
   avatar,
   breadcrumb,
   dialog,
+  drawer,
   popover,
   tooltip,
   dropdown,
