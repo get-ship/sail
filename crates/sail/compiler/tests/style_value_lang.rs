@@ -422,7 +422,7 @@ fn batch_b_controls_compile_on_style_path() {
         ("label", include_str!("../stdlib/label/label.sail")),
         ("field", include_str!("../stdlib/field/field.sail")),
         ("switch", include_str!("../stdlib/switch/switch.sail")),
-        ("toggle", include_str!("../stdlib/toggle/toggle.sail")),
+        ("toggle", include_str!("../stdlib/toggle-group/toggle.sail")),
         ("tab", include_str!("../stdlib/tabs/tab.sail")),
         ("tab-list", include_str!("../stdlib/tabs/tab-list.sail")),
     ] {
@@ -511,13 +511,13 @@ fn batch_d_chrome_menus_compile_on_style_path() {
         ),
         ("combobox", include_str!("../stdlib/combobox/combobox.sail")),
         ("navbar", include_str!("../stdlib/navbar/navbar.sail")),
-        ("page", include_str!("../stdlib/page/page.sail")),
+        ("page", include_str!("../stdlib/pagination/page.sail")),
         ("prose", include_str!("../stdlib/prose/prose.sail")),
         (
             "code-block",
             include_str!("../stdlib/code-block/code-block.sail"),
         ),
-        ("radio", include_str!("../stdlib/radio/radio.sail")),
+        ("radio", include_str!("../stdlib/radio-group/radio.sail")),
         (
             "radio-group",
             include_str!("../stdlib/radio-group/radio-group.sail"),

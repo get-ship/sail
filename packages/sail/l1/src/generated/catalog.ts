@@ -68,13 +68,11 @@ export const FAMILIES: readonly L1Family[] = [
   { id: 'menu-item', host: 'menu-item', parts: [] },
   { id: 'meter', host: 'meter', parts: [] },
   { id: 'navbar', host: 'navbar', parts: [] },
-  { id: 'page', host: 'page', parts: [] },
-  { id: 'pagination', host: 'pagination', parts: [] },
+  { id: 'pagination', host: 'pagination', parts: ['page'] },
   { id: 'popover', host: 'popover', parts: [] },
   { id: 'progress', host: 'progress', parts: [] },
   { id: 'prose', host: 'prose', parts: [] },
-  { id: 'radio', host: 'radio', parts: [] },
-  { id: 'radio-group', host: 'radio-group', parts: [] },
+  { id: 'radio-group', host: 'radio-group', parts: ['radio'] },
   { id: 'resizable', host: 'resizable', parts: [] },
   { id: 'scroll-area', host: 'scroll-area', parts: [] },
   { id: 'select', host: 'select', parts: [] },
@@ -89,8 +87,7 @@ export const FAMILIES: readonly L1Family[] = [
   { id: 'theme-picker', host: 'theme-picker', parts: [] },
   { id: 'ticker', host: 'ticker', parts: [] },
   { id: 'toast', host: 'toast', parts: ['toast-region'] },
-  { id: 'toggle', host: 'toggle', parts: [] },
-  { id: 'toggle-group', host: 'toggle-group', parts: [] },
+  { id: 'toggle-group', host: 'toggle-group', parts: ['toggle'] },
   { id: 'tooltip', host: 'tooltip', parts: [] },
 ]
 
@@ -99,17 +96,17 @@ export const TAGS: readonly L1Tag[] = [
     tag: 'a',
     family: 'a',
     role: 'host',
-    description: 'native <a>. Dual mode:',
+    description: 'native <a> (docs name: anchor). Dual mode:',
     acceptsChildren: true,
     props: [
-      { name: 'variant', type: 'default | solid | soft | outline | ghost', default: 'default', values: ['default', 'solid', 'soft', 'outline', 'ghost'] },
+      { name: 'variant', type: 'text | default | solid | soft | outline | ghost', default: 'text', values: ['text', 'default', 'solid', 'soft', 'outline', 'ghost'] },
       { name: 'tone', type: 'primary | info | success | warning | destructive | accent | muted', values: ['primary', 'info', 'success', 'warning', 'destructive', 'accent', 'muted'] },
       { name: 'disabled', type: 'bool', default: 'false' },
     ],
     axes: [
       { name: 'disabled', values: ['false', 'true'], optional: false },
       { name: 'tone', values: ['primary', 'info', 'success', 'warning', 'destructive', 'accent', 'muted'], optional: true },
-      { name: 'variant', values: ['default', 'solid', 'soft', 'outline', 'ghost'], optional: false },
+      { name: 'variant', values: ['text', 'default', 'solid', 'soft', 'outline', 'ghost'], optional: false },
     ],
     concerns: ['bg', 'border', 'elevation', 'fg', 'filter', 'play', 'size', 'type'],
   },
@@ -560,7 +557,7 @@ export const TAGS: readonly L1Tag[] = [
     tag: 'file',
     family: 'file',
     role: 'host',
-    description: 'system file picker.',
+    description: 'system file picker. Native Browse chrome is hidden.',
     acceptsChildren: false,
     props: [
       { name: 'size', type: 'xs | sm | md | lg', default: 'md', values: ['xs', 'sm', 'md', 'lg'] },
@@ -570,7 +567,7 @@ export const TAGS: readonly L1Tag[] = [
       { name: 'required', type: 'bool', default: 'false' },
       { name: 'accept', type: 'string' },
       { name: 'multiple', type: 'bool', default: 'false' },
-      { name: 'variant', type: 'picker | drop', default: 'picker', values: ['picker', 'drop'] },
+      { name: 'variant', type: 'picker | drop', default: 'drop', values: ['picker', 'drop'] },
     ],
     axes: [
       { name: 'disabled', values: ['false', 'true'], optional: false },
@@ -580,7 +577,7 @@ export const TAGS: readonly L1Tag[] = [
       { name: 'size', values: ['xs', 'sm', 'md', 'lg'], optional: false },
       { name: 'variant', values: ['picker', 'drop'], optional: false },
     ],
-    concerns: ['bg', 'border', 'elevation', 'fg', 'filter', 'play', 'size', 'type'],
+    concerns: ['bg', 'border', 'fg', 'filter', 'play', 'size', 'type'],
   },
   {
     tag: 'hover-card',
@@ -755,8 +752,8 @@ export const TAGS: readonly L1Tag[] = [
   },
   {
     tag: 'page',
-    family: 'page',
-    role: 'host',
+    family: 'pagination',
+    role: 'part',
     description: 'size match owns cell geometry (author size on each page).',
     acceptsChildren: true,
     props: [
@@ -831,8 +828,8 @@ export const TAGS: readonly L1Tag[] = [
   },
   {
     tag: 'radio',
-    family: 'radio',
-    role: 'host',
+    family: 'radio-group',
+    role: 'part',
     description: 'label + native radio. Root stays <label> for native semantics.',
     acceptsChildren: true,
     props: [
@@ -1219,8 +1216,8 @@ export const TAGS: readonly L1Tag[] = [
   },
   {
     tag: 'toggle',
-    family: 'toggle',
-    role: 'host',
+    family: 'toggle-group',
+    role: 'part',
     description: 'pressed-button cell for <toggle-group> only (standalone died).',
     acceptsChildren: true,
     props: [
@@ -1256,7 +1253,7 @@ export const TAGS: readonly L1Tag[] = [
       { name: 'type', values: ['single', 'multiple'], optional: false },
       { name: 'variant', values: ['outline', 'ghost', 'segmented'], optional: false },
     ],
-    concerns: ['bg', 'border'],
+    concerns: ['bg', 'border', 'play'],
   },
   {
     tag: 'tooltip',

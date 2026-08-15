@@ -82,7 +82,7 @@ const SOURCES: &[(&str, &str)] = &[
     ("chip", include_str!("../stdlib/chip/chip.sail")),
     ("field", include_str!("../stdlib/field/field.sail")),
     ("slider", include_str!("../stdlib/slider/slider.sail")),
-    ("radio", include_str!("../stdlib/radio/radio.sail")),
+    ("radio", include_str!("../stdlib/radio-group/radio.sail")),
     (
         "radio-group",
         include_str!("../stdlib/radio-group/radio-group.sail"),
@@ -95,7 +95,7 @@ const SOURCES: &[(&str, &str)] = &[
         "toggle-group",
         include_str!("../stdlib/toggle-group/toggle-group.sail"),
     ),
-    ("toggle", include_str!("../stdlib/toggle/toggle.sail")),
+    ("toggle", include_str!("../stdlib/toggle-group/toggle.sail")),
     (
         "scroll-area",
         include_str!("../stdlib/scroll-area/scroll-area.sail"),
@@ -114,7 +114,7 @@ const SOURCES: &[(&str, &str)] = &[
         "pagination",
         include_str!("../stdlib/pagination/pagination.sail"),
     ),
-    ("page", include_str!("../stdlib/page/page.sail")),
+    ("page", include_str!("../stdlib/pagination/page.sail")),
     (
         "breadcrumb",
         include_str!("../stdlib/breadcrumb/breadcrumb.sail"),
@@ -159,6 +159,9 @@ pub fn family_of(tag: &str) -> &'static str {
         "tab" | "tab-list" | "tab-panel" => "tabs",
         "legend" => "fieldset",
         "toast-region" => "toast",
+        "page" => "pagination",
+        "toggle" => "toggle-group",
+        "radio" => "radio-group",
         "th" | "td" | "caption" => "table",
         other => SOURCES
             .iter()

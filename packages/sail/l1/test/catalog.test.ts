@@ -25,4 +25,21 @@ describe('@ship/sail-l1 catalog', () => {
     expect(copyOf('dialog')?.category).toBe('overlay')
     expect(hosts().length).toBeGreaterThan(1)
   })
+
+  it('page / radio / toggle are parts; table has caption/td/th', () => {
+    expect(FAMILIES.find((f) => f.id === 'page')).toBeUndefined()
+    expect(FAMILIES.find((f) => f.id === 'radio')).toBeUndefined()
+    expect(FAMILIES.find((f) => f.id === 'toggle')).toBeUndefined()
+    expect(familyOf('page')).toBe('pagination')
+    expect(familyOf('radio')).toBe('radio-group')
+    expect(familyOf('toggle')).toBe('toggle-group')
+    expect(TAG_BY_ID.page?.role).toBe('part')
+    expect(TAG_BY_ID.radio?.role).toBe('part')
+    expect(TAG_BY_ID.toggle?.role).toBe('part')
+    expect(FAMILIES.find((f) => f.id === 'table')?.parts).toEqual([
+      'caption',
+      'td',
+      'th',
+    ])
+  })
 })

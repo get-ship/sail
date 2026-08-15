@@ -1,6 +1,7 @@
 //! L1 manifest consistency vs stdlib (no native-reskin surface).
 
 use std::collections::HashSet;
+use std::path::PathBuf;
 
 use sail_compiler::l1_manifest::{
     L1JsKind, L1Kind, L1Matrix, host_pack_alias, l1_by_kind, l1_entries, l1_kind, matrix_contract,
@@ -52,6 +53,12 @@ fn family_dirs_are_the_composition() {
     assert_eq!(family_of("toast"), "toast");
     assert_eq!(family_of("toast-region"), "toast");
     assert_eq!(family_of("button"), "button");
+    assert_eq!(family_of("pagination"), "pagination");
+    assert_eq!(family_of("page"), "pagination");
+    assert_eq!(family_of("toggle-group"), "toggle-group");
+    assert_eq!(family_of("toggle"), "toggle-group");
+    assert_eq!(family_of("radio-group"), "radio-group");
+    assert_eq!(family_of("radio"), "radio-group");
     assert_eq!(family_of("table"), "table");
     assert_eq!(family_of("th"), "table");
     assert_eq!(family_of("td"), "table");
@@ -60,6 +67,12 @@ fn family_dirs_are_the_composition() {
     assert!(!is_family_host("tab"));
     assert!(is_family_host("toast"));
     assert!(!is_family_host("toast-region"));
+    assert!(is_family_host("pagination"));
+    assert!(!is_family_host("page"));
+    assert!(is_family_host("toggle-group"));
+    assert!(!is_family_host("toggle"));
+    assert!(is_family_host("radio-group"));
+    assert!(!is_family_host("radio"));
     assert!(is_family_host("table"));
     assert!(!is_family_host("th"));
     assert!(!is_family_host("td"));
@@ -70,9 +83,25 @@ fn family_dirs_are_the_composition() {
     );
     assert_eq!(family_tags("fieldset"), vec!["fieldset", "legend"]);
     assert_eq!(family_tags("toast"), vec!["toast", "toast-region"]);
+    assert_eq!(family_tags("pagination"), vec!["pagination", "page"]);
+    assert_eq!(family_tags("toggle-group"), vec!["toggle-group", "toggle"]);
+    assert_eq!(family_tags("radio-group"), vec!["radio-group", "radio"]);
+    assert_eq!(family_tags("table"), vec!["table", "caption", "td", "th"]);
+}
+
+/// Published `@ship/sail-l1` catalog must match rust `catalog_ts()`.
+/// Hub tiles / l1-knobs import the file, not the in-process string.
+#[test]
+fn published_catalog_matches_catalog_ts() {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../../packages/sail/l1/src/generated/catalog.ts");
+    let on_disk =
+        std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("read {}: {e}", path.display()));
     assert_eq!(
-        family_tags("table"),
-        vec!["table", "caption", "td", "th"]
+        on_disk,
+        sail_compiler::l1_surface::catalog_ts(),
+        "packages/sail/l1/src/generated/catalog.ts is stale — run \
+         `cargo run -p sail-compiler -- l1-surface`"
     );
 }
 

@@ -215,4 +215,30 @@ mod tests {
         assert!(ts.contains("tag: 'td'"));
         assert!(ts.contains("tag: 'caption'"));
     }
+
+    #[test]
+    fn catalog_names_page_radio_toggle_as_parts() {
+        let ts = catalog_ts();
+        assert!(ts.contains("id: 'pagination'"));
+        assert!(ts.contains("parts: ['page']"));
+        assert!(ts.contains("family: 'pagination'"));
+        assert!(ts.contains("id: 'radio-group'"));
+        assert!(ts.contains("parts: ['radio']"));
+        assert!(ts.contains("family: 'radio-group'"));
+        assert!(ts.contains("id: 'toggle-group'"));
+        assert!(ts.contains("parts: ['toggle']"));
+        assert!(ts.contains("family: 'toggle-group'"));
+        assert!(
+            !ts.contains("id: 'page'"),
+            "page is a pagination part, not a family host"
+        );
+        assert!(
+            !ts.contains("id: 'radio'"),
+            "radio is a radio-group part, not a family host"
+        );
+        assert!(
+            !ts.contains("id: 'toggle'"),
+            "toggle is a toggle-group part, not a family host"
+        );
+    }
 }
