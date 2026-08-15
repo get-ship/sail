@@ -5,7 +5,7 @@
   "kind": "block",
   "status": "authored",
   "mantineUrl": "https://ui.mantine.dev/component/footer-links/",
-  "primitives": ["a", "button", "separator"],
+  "primitives": ["a", "separator"],
   "roles": {
     "headings": ["About", "Project", "Community"],
     "links": [
@@ -20,9 +20,12 @@
       "Join Discord",
       "Follow on Twitter",
       "Email newsletter",
-      "GitHub discussions"
+      "GitHub discussions",
+      "Twitter",
+      "Youtube",
+      "Instagram"
     ],
-    "buttons": ["Twitter", "Youtube", "Instagram"],
+    "buttons": [],
     "text": [
       "Build fully functional accessible web applications faster than ever",
       "© 2020 mantine.dev. All rights reserved."

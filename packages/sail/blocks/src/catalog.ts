@@ -203,7 +203,7 @@ export const BLOCKS: readonly BlockEntry[] = [
     kind: 'block',
     status: 'authored',
     mantineUrl: 'https://ui.mantine.dev/component/footer-links/',
-    primitives: ['a', 'button', 'separator'],
+    primitives: ['a', 'separator'],
   },
   {
     id: 'StatsGroup',

@@ -33,10 +33,10 @@
   <separator />
   <row align="center" justify="between">
     <small>© 2020 mantine.dev. All rights reserved.</small>
-    <row nowrap gap="1">
-      <button variant="ghost" size="icon" tone="muted" label="Twitter"></button>
-      <button variant="ghost" size="icon" tone="muted" label="Youtube"></button>
-      <button variant="ghost" size="icon" tone="muted" label="Instagram"></button>
+    <row nowrap gap="3">
+      <a href="#">Twitter</a>
+      <a href="#">Youtube</a>
+      <a href="#">Instagram</a>
     </row>
   </row>
 </column>

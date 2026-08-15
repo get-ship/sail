@@ -27,7 +27,7 @@
     </card>
     <card padding="lg">
       <column gap="2">
-        <icon name="check-circle" size="xl"></icon>
+        <icon name="success" size="xl"></icon>
         <strong>No third parties</strong>
         <p>They’re popular, but they’re rare. Trainers who show them off recklessly may be targeted by thieves</p>
       </column>

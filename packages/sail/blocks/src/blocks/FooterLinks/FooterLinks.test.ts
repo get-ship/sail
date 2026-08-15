@@ -2,7 +2,8 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { renderRoute } from '@ship/test-setup'
-import { getByRole, getByText } from '@ship/sail-test'
+import { getByRole, getByText, queryByRole } from '@ship/sail-test'
+import { BLOCKS } from '../../catalog'
 
 const DIR = resolve(process.cwd(), 'src/blocks/FooterLinks')
 const SOURCE_PATH = resolve(DIR, 'FooterLinks.sail')
@@ -23,12 +24,16 @@ const META = JSON.parse(readFileSync(META_PATH, 'utf8')) as {
 }
 
 describe('block: FooterLinks', () => {
-  it('records an authored block in colocated meta (catalog stays planned)', () => {
+  it('records an authored block in colocated meta', () => {
     expect(META.id).toBe('FooterLinks')
     expect(META.kind).toBe('block')
     expect(META.status).toBe('authored')
     expect(META.mantineUrl).toBe('https://ui.mantine.dev/component/footer-links/')
-    expect(META.primitives).toEqual(expect.arrayContaining(['a', 'button', 'separator']))
+    expect(META.primitives).toEqual(expect.arrayContaining(['a', 'separator']))
+    expect(META.primitives).not.toContain('button')
+    const row = BLOCKS.find((b) => b.id === 'FooterLinks')
+    expect(row?.primitives).toEqual(expect.arrayContaining(['a', 'separator']))
+    expect(row?.primitives).not.toContain('button')
   })
 
   it('composes the Mantine headings, links, and socials, locatable by role / name only', () => {
@@ -39,9 +44,8 @@ describe('block: FooterLinks', () => {
     for (const name of META.roles.links) {
       expect(getByRole(v.root, 'link', { name }), name).toBeTruthy()
     }
-    for (const name of META.roles.buttons) {
-      expect(getByRole(v.root, 'button', { name }), name).toBeTruthy()
-    }
+    expect(META.roles.buttons).toEqual([])
+    expect(queryByRole(v.root, 'button')).toBeNull()
     for (const text of META.roles.text) {
       expect(getByText(v.root, text), text).toBeTruthy()
     }
