@@ -8,9 +8,10 @@ import { BLOCKS } from '../src/catalog'
 const SOURCE_PATH = resolve(process.cwd(), 'routes/dashboard/page.sail')
 const SOURCE = readFileSync(SOURCE_PATH, 'utf8')
 
-describe('block: dashboard', () => {
-  it('is in the product catalog as authored', () => {
+describe('template: dashboard', () => {
+  it('is in the product catalog as an authored template', () => {
     const row = BLOCKS.find((b) => b.id === 'dashboard')
+    expect(row?.kind).toBe('template')
     expect(row?.status).toBe('authored')
     expect(row?.primitives).toEqual(
       expect.arrayContaining(['navbar', 'dialog', 'card', 'table', 'field', 'button']),

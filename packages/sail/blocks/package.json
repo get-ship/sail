@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "license": "MIT",
-  "description": "Sail composition blocks — dashboard, pricing, settings, auth. Organized as a product; not shipping a marketplace. Defaults-only recipes that test L1 atoms as composable, not isolated.",
+  "description": "Sail compositions: blocks (named Mantine-style recipes) and templates (pages that use them). Defaults-only. Not a marketplace.",
   "main": "src/catalog.ts",
   "types": "src/catalog.ts",
   "exports": {

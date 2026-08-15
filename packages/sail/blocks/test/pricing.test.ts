@@ -8,9 +8,11 @@ import { BLOCKS } from '../src/catalog'
 const SOURCE_PATH = resolve(process.cwd(), 'routes/pricing/page.sail')
 const SOURCE = readFileSync(SOURCE_PATH, 'utf8')
 
-describe('block: pricing', () => {
-  it('is authored', () => {
-    expect(BLOCKS.find((b) => b.id === 'pricing')?.status).toBe('authored')
+describe('template: pricing', () => {
+  it('is an authored template', () => {
+    const row = BLOCKS.find((b) => b.id === 'pricing')
+    expect(row?.kind).toBe('template')
+    expect(row?.status).toBe('authored')
   })
 
   it('has three named plans, a featured CTA, and a comparison table', () => {

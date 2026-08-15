@@ -8,9 +8,11 @@ import { BLOCKS } from '../src/catalog'
 const SOURCE_PATH = resolve(process.cwd(), 'routes/settings/page.sail')
 const SOURCE = readFileSync(SOURCE_PATH, 'utf8')
 
-describe('block: settings', () => {
-  it('is authored', () => {
-    expect(BLOCKS.find((b) => b.id === 'settings')?.status).toBe('authored')
+describe('template: settings', () => {
+  it('is an authored template', () => {
+    const row = BLOCKS.find((b) => b.id === 'settings')
+    expect(row?.kind).toBe('template')
+    expect(row?.status).toBe('authored')
   })
 
   it('is locatable by role / name', async () => {
