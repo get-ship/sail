@@ -270,17 +270,15 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                       <label style({ type({ size: sm }) })><checkbox checked /> Include trials</label>
                       <label style({ type({ size: sm }) })><checkbox /> Annual discount</label>
                     </column>
-                  </fieldset>}{else-if {e.tag === 'theme-picker'} => <theme-picker></theme-picker>}{else-if {e.tag === 'ticker'} => <ticker duration="normal" style({ size({ w: full }).overflow({ all: hidden }).pad({ y: 2 }).bg(muted).radius(md) })>
-                    <row nowrap align="center" gap="3" style({ pad({ x: 3 }) })>
-                      <badge size="sm" tone="success" variant="soft">live</badge>
-                      <span style({ fg(foreground).type({ family: mono, size: xs, wrap: nowrap }) })>api  14ms</span>
-                      <span style({ fg(muted-foreground).type({ family: mono, size: xs, wrap: nowrap }) })>·</span>
-                      <span style({ fg(foreground).type({ family: mono, size: xs, wrap: nowrap }) })>worker  41ms</span>
-                      <span style({ fg(muted-foreground).type({ family: mono, size: xs, wrap: nowrap }) })>·</span>
-                      <span style({ fg(foreground).type({ family: mono, size: xs, wrap: nowrap }) })>edge  9ms</span>
-                      <span style({ fg(muted-foreground).type({ family: mono, size: xs, wrap: nowrap }) })>·</span>
-                      <badge size="sm" tone="warning" variant="soft">degraded</badge>
-                      <span style({ fg(foreground).type({ family: mono, size: xs, wrap: nowrap }) })>·&nbsp;</span>
+                  </fieldset>}{else-if {e.tag === 'theme-picker'} => <theme-picker></theme-picker>}{else-if {e.tag === 'ticker'} => <ticker>
+                    <row nowrap align="center" gap="3">
+                      <icon name="zap" size="sm"></icon>
+                      <span>api 14ms</span>
+                      <span>·</span>
+                      <span>worker 41ms</span>
+                      <span>·</span>
+                      <icon name="rocket" size="sm"></icon>
+                      <span>edge 9ms</span>
                     </row>
                   </ticker>}{else-if {e.tag === 'alert'} => <alert tone="success"><strong>Deployed.</strong> v0.4.2 is live on production.</alert>}{else-if {e.tag === 'progress'} => <column gap="1" style({ size({ w: full }) })>
                     <span style(mutedXs)>Uploading assets… 62%</span>

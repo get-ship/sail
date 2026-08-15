@@ -8,7 +8,7 @@ export const meta = {
   category: 'effects',
   kind: 'host',
   blurb:
-    'Infinite linear marquee. Host is geometry only (overflow clip); use:marquee dual-copies the slot and loops translate-x. duration · reverse on host. Author Style paints the host. Reduced motion settles via motion runtime.',
+    'A looping band of text or icons. duration and reverse set the motion. Reduced motion settles automatically.',
   host: 'doc-ticker',
   stageOwnsKnobs: true,
 } as const satisfies DocMeta

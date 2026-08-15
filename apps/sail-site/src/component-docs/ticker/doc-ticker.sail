@@ -11,8 +11,6 @@
   style mutedXs = { fg(muted-foreground).type({ size: xs }) }
   style exampleBlock = { size({ w: full }).pad({ t: 2, b: 4 }).overflow({ all: visible }) }
   style sectionLabel = { fg(muted-foreground).type({ size: xs, tracking: wide, case: uppercase }) }
-  style ticker = { size({ w: full, max-w: panel-max-w-md }).overflow({ all: hidden }).pad({ y: 3 }).bg(muted).radius(md) }
-  style tickerText = { pad({ x: 4 }).fg(muted-foreground).type({ family: mono, size: sm, wrap: nowrap }) }
 </scope>
 
 <controller>
@@ -30,24 +28,39 @@ export default controller((_ctx: Scope) => {
   const usageCode = () => entry.usage
 
   const specimenCode = derived(() => {
-    const a: string[] = [`duration="${duration()}"`]
+    const a: string[] = []
+    if (duration() !== 'normal') a.push(`duration="${duration()}"`)
     if (reverse()) a.push('reverse')
-    return `<ticker ${a.join(' ')} style({ size({ w: full }).overflow({ all: hidden }).pad({ y: 2 }).bg(muted).radius(md) })>
-  <p>tokens · signals · a11y · hot reload · SSR ·&nbsp;</p>
+    const open = a.length ? `<ticker ${a.join(' ')}>` : '<ticker>'
+    return `${open}
+  <p>tokens · signals · a11y · hot reload · SSR</p>
 </ticker>`
   })
 
   const tkExNormal = () =>
-    `<ticker duration="normal" style({ size({ w: full }).overflow({ all: hidden }).pad({ y: 2 }).bg(muted).radius(md) })>
-  <p>tokens · signals · a11y · hot reload · SSR ·&nbsp;</p>
+    `<ticker>
+  <p>tokens · signals · a11y · hot reload · SSR</p>
 </ticker>`
   const tkExReverse = () =>
     `<ticker duration="slow" reverse>
-  <p>rightward marquee…&nbsp;</p>
+  <p>rightward marquee</p>
 </ticker>`
   const tkExFast = () =>
     `<ticker duration="fast">
-  <p>fast 16s loop…&nbsp;</p>
+  <p>fast 16s loop</p>
+</ticker>`
+  const tkExIcons = () =>
+    `<ticker>
+  <row nowrap gap="3" align="center">
+    <icon name="rocket" size="sm"></icon>
+    <span>ship it</span>
+    <icon name="zap" size="sm"></icon>
+    <span>hot reload</span>
+    <icon name="check" size="sm"></icon>
+    <span>a11y</span>
+    <icon name="sparkles" size="sm"></icon>
+    <span>tokens</span>
+  </row>
 </ticker>`
 
   return {
@@ -61,6 +74,7 @@ export default controller((_ctx: Scope) => {
     tkExNormal,
     tkExReverse,
     tkExFast,
+    tkExIcons,
   }
 })
 </controller>
@@ -78,12 +92,12 @@ export default controller((_ctx: Scope) => {
   >
     <column slot="specimen" gap="3" align="stretch" style(specimen)>
       <if {reverse()}>
-        <ticker duration={duration()} reverse style(ticker)>
-          <p style(tickerText)>tokens · signals · a11y · hot reload · SSR ·&nbsp;</p>
+        <ticker duration={duration()} reverse>
+          <p>api 14ms · worker 41ms · edge 9ms · registry 220ms · queue 3</p>
         </ticker>
       {else =>
-        <ticker duration={duration()} style(ticker)>
-          <p style(tickerText)>tokens · signals · a11y · hot reload · SSR ·&nbsp;</p>
+        <ticker duration={duration()}>
+          <p>api 14ms · worker 41ms · edge 9ms · registry 220ms · queue 3</p>
         </ticker>}</if>
     </column>
 
@@ -108,38 +122,56 @@ export default controller((_ctx: Scope) => {
     </column>
 
     <column slot="usage-preview" gap="3" align="stretch" style(specimen)>
-      <ticker duration="normal" style(ticker)>
-        <p style(tickerText)>tokens · signals · a11y · hot reload · SSR ·&nbsp;</p>
+      <ticker>
+        <p>tokens · signals · a11y · hot reload · SSR</p>
       </ticker>
     </column>
 
     <column gap="2" style(exampleBlock)>
       <p style(sectionLabel)>Examples</p>
       <doc-example
-        title="Default marquee"
-        lead="Host clips the band; content loops horizontally."
+        title="Default band"
+        lead="A quiet strip that loops. Put text in — no extra paint required."
         code={tkExNormal()}
       >
-        <ticker duration="normal" style(ticker)>
-          <p style(tickerText)>tokens · signals · a11y · hot reload · SSR ·&nbsp;</p>
+        <ticker>
+          <p>api 14ms · worker 41ms · edge 9ms · registry 220ms · queue 3</p>
+        </ticker>
+      </doc-example>
+      <doc-example
+        title="Icons in the loop"
+        lead="Icons ride along with the words. Stick to the named set — rocket, zap, check, sparkles…"
+        code={tkExIcons()}
+      >
+        <ticker>
+          <row nowrap gap="3" align="center">
+            <icon name="rocket" size="sm"></icon>
+            <span>ship it</span>
+            <icon name="zap" size="sm"></icon>
+            <span>hot reload</span>
+            <icon name="check" size="sm"></icon>
+            <span>a11y</span>
+            <icon name="sparkles" size="sm"></icon>
+            <span>tokens</span>
+          </row>
         </ticker>
       </doc-example>
       <doc-example
         title="Reverse + slow"
-        lead='reverse walks the band the other way; duration="slow" lengthens the loop.'
+        lead="reverse walks the other way; duration=&quot;slow&quot; lengthens the loop."
         code={tkExReverse()}
       >
-        <ticker duration="slow" reverse style(ticker)>
-          <p style(tickerText)>rightward marquee · reduced motion settles ·&nbsp;</p>
+        <ticker duration="slow" reverse>
+          <p>rightward marquee · reduced motion settles</p>
         </ticker>
       </doc-example>
       <doc-example
         title="Fast"
-        lead='duration="fast" — 16s loop. Colors come from your own styles.'
+        lead="duration=&quot;fast&quot; — a 16s loop."
         code={tkExFast()}
       >
-        <ticker duration="fast" style(ticker)>
-          <p style(tickerText)>fast loop · paint is yours ·&nbsp;</p>
+        <ticker duration="fast">
+          <p>fast loop · paint is yours if you want it</p>
         </ticker>
       </doc-example>
     </column>
