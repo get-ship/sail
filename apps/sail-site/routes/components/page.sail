@@ -121,6 +121,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     // Catalog toast tile: dismiss removes the instance; re-push remounts.
     let catalogToastSeq = 0
     const catalogToastItems = signal<{ key: string }[]>([{ key: 'catalog-toast-0' }])
+    const catalogToastEmpty = derived(() => catalogToastItems().length === 0)
     const pushCatalogToast = (): void => {
       catalogToastSeq += 1
       catalogToastItems.set([{ key: `catalog-toast-${catalogToastSeq}` }])
@@ -141,7 +142,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       query, packSel, catSel, pickPack, pickCat,
       packs, cats, visibleList, countLabel, none,
       email, agreed, notify, volume, team, plan, kept, dropChip,
-      catalogToastItems, pushCatalogToast, onCatalogToastDismiss,
+      catalogToastItems, catalogToastEmpty, pushCatalogToast, onCatalogToastDismiss,
       editorSample, toolArgs, toolResult,
       DEMO_PHOTO,
     }
@@ -302,7 +303,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                   </error-state>}{else-if {e.tag === 'error-boundary'} => <error-boundary>
                     <p style(mutedXs)>Child tree isolated from render faults.</p>
                   </error-boundary>}{else-if {e.tag === 'toast'} => <column gap="2" style({ size({ w: full, min-w: 0 }) })>
-                    <button type="button" size="sm" variant="ghost" on:click={pushCatalogToast} toast-show>Show toast</button>
+                    <if {catalogToastEmpty()}>
+                      <button type="button" size="sm" variant="ghost" on:click={pushCatalogToast} toast-show>Show toast</button>
+                    </if>
                     <for {catalogToastItems() as t} key={t.key}>
                       <toast tone="primary" duration="0" on-dismiss={onCatalogToastDismiss}>Invite sent to ada@ship.dev</toast>
                     </for>
