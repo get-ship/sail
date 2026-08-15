@@ -118,4 +118,22 @@ describe('use:drawerSwipe', () => {
     expect(onDismiss).toHaveBeenCalledTimes(1)
     handle.destroy()
   })
+
+  it('command=show on a matching invoker opens a closed drawer', () => {
+    const el = makeDialog('end')
+    el.close()
+    el.id = 'order-filters'
+    const btn = document.createElement('button')
+    btn.setAttribute('command', 'show')
+    btn.setAttribute('commandfor', 'order-filters')
+    btn.textContent = 'Filters'
+    document.body.appendChild(btn)
+    const handle = drawerSwipe(el) as { destroy: () => void }
+    const show = vi.spyOn(el, 'show')
+
+    btn.click()
+
+    expect(show).toHaveBeenCalled()
+    handle.destroy()
+  })
 })

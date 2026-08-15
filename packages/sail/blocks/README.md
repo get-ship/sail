@@ -10,6 +10,13 @@ A **block** is a page-shaped composition of L1 atoms (dashboard, pricing, settin
 routes/<id>/page.sail     the block (defaults only)
 src/catalog.ts            inventory + intended primitives
 test/<id>.test.ts         @ship/sail-test (role / name / state)
+e2e/blocks.spec.ts        Playwright against :7893
+e2e/probe.ts              screenshots + console + theme × viewport
+```
+
+```
+bunx playwright test          # from this package; reuses :7893
+bun e2e/probe.ts              # visual evidence under web-qa/blocks/
 ```
 
 Docs composition page and takumi consume these same files. Do not fork a second dashboard into sail-site.

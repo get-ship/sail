@@ -29,7 +29,6 @@
 </scope>
 
 <controller>
-  import { controller, signal, derived } from '@ship/sail-runtime'
   export default controller(() => {
     const period = signal('monthly')
     const annual = derived(() => period() === 'annual')

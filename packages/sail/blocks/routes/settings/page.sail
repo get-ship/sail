@@ -3,13 +3,13 @@
 -->
 <scope>
   style shell = { size({ min-h: fill }).bg(background) }
-  style main = { size({ min-w: 0 }).pad(6) }
+  style main = { grow(1).size({ min-w: 0 }).pad(6) }
   style form = { size({ max-w: panel-max-w-md }) }
   style kicker = { fg(muted-foreground).type({ size: sm }) }
   style danger = { fg(destructive).type({ size: sm }) }
 </scope>
 
-<row gap="0" align="stretch" style(shell)>
+<row nowrap gap="0" align="stretch" style(shell)>
   <navbar placement="rail" bordered sticky>
     <strong slot="brand">Northwind</strong>
     <column slot="center" gap="1">

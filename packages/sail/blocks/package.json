@@ -12,7 +12,9 @@
   },
   "scripts": {
     "dev": "sail dev",
-    "test": "vitest run"
+    "test": "vitest run",
+    "probe": "bun e2e/probe.ts",
+    "e2e": "playwright test"
   },
   "dependencies": {
     "@ship/sail-runtime": "workspace:*",

@@ -177,11 +177,39 @@ export const drawerSwipe: Action<void> = (node) => {
     invokeCallback(el, 'onDismiss')
   }
 
+  // LANGUAGE GAP: native invoker commands have show-modal, not show.
+  // command="show" is the non-modal open we document; the action is the
+  // polyfill. Prefer the CommandEvent, fall back to the click invoker.
+  const openDrawer = (): void => {
+    if (el instanceof HTMLDialogElement) {
+      if (!el.open) el.show()
+      return
+    }
+    el.setAttribute('open', '')
+  }
+
+  const onCommand = (e: Event): void => {
+    const cmd = (e as Event & { command?: string }).command
+    if (cmd === 'show' || cmd === '--show') openDrawer()
+  }
+
+  const onInvokerClick = (e: Event): void => {
+    const t = e.target
+    if (!(t instanceof Element)) return
+    const btn = t.closest('[command][commandfor]')
+    if (!btn) return
+    if (btn.getAttribute('commandfor') !== el.id) return
+    if (btn.getAttribute('command') !== 'show') return
+    openDrawer()
+  }
+
   el.addEventListener('pointerdown', onPointerDown)
   el.addEventListener('pointermove', onPointerMove)
   el.addEventListener('pointerup', onPointerUp)
   el.addEventListener('pointercancel', resetDrag)
   el.addEventListener('close', onClose)
+  el.addEventListener('command', onCommand)
+  document.addEventListener('click', onInvokerClick)
   document.addEventListener('keydown', onKeydown)
   // Arm outside-dismiss after this frame so the opening click cannot close.
   const raf = requestAnimationFrame(() => {
@@ -197,6 +225,8 @@ export const drawerSwipe: Action<void> = (node) => {
       el.removeEventListener('pointerup', onPointerUp)
       el.removeEventListener('pointercancel', resetDrag)
       el.removeEventListener('close', onClose)
+      el.removeEventListener('command', onCommand)
+      document.removeEventListener('click', onInvokerClick)
       document.removeEventListener('keydown', onKeydown)
       document.removeEventListener('pointerdown', onDocPointerDown, true)
     },
