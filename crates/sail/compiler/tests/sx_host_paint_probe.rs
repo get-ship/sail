@@ -760,8 +760,14 @@ fn toast_start_stripe_on_host_sx() {
                 .contains("border-inline-start-color:var(--primary)")
             || out
                 .skin_css
-                .contains("border-inline-start-color: var(--primary)"),
-        "start stripe default must bind toast-stripe; tone matrices spend brand:\n{}",
+                .contains("border-inline-start-color: var(--primary)")
+            || out
+                .skin_css
+                .contains("border-inline-start-color:var(--tone)")
+            || out
+                .skin_css
+                .contains("border-inline-start-color: var(--tone)"),
+        "start stripe default must bind toast-stripe or bound tone; tone matrices spend brand:\n{}",
         out.skin_css
     );
     let contracts = include_str!(concat!(

@@ -12,7 +12,10 @@
     content = ''
   }
 
-  style host = {position(relative).group()}
+  // inline-flex + self(start): hug the trigger. As a column flex child the
+  // host otherwise stretches full-width, so a long bubble centers on the
+  // column instead of the button chrome.
+  style host = {position(relative).display(inline-flex).self(start).group()}
   // No opacity transition — linger after leave was a real product bug.
   style bubble = {position({ scheme: absolute, t: bind(ttTop), b: bind(ttBottom), l: bind(ttLeft), r: bind(ttRight), z: popover }).pad({ y: 1, x: 2 }).translateX(bind(ttTx)).filter({ opacity: 0 }).bg(popover).fg(popover-foreground).radius(md).elevation(md).border({ width: 0 }).pointerEvents(none).type({ family: body, size: xs, weight: medium, wrap: nowrap })}
   // Zero-box border triangle; match placement points the filled edge outward.
