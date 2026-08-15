@@ -1280,9 +1280,18 @@ fn toggle_group_segmented_and_join_on_skins_not_pe() {
             && (src.contains("border(toggle-group-border)")
                 || (src.contains("toggle-group.border") || src.contains("toggle-group-border"))
                 || src.contains("color: border"))
-            && src.contains("<row inline gap=\"0\"")
+            && src.contains("<row inline align=\"stretch\" gap=\"0\"")
             && !src.contains("size: 'sm' | 'md' | 'lg' = 'md'"),
         "segmented host chrome on Style via muted/border tokens; host is inline row; size not on host"
+    );
+    assert!(
+        out.structure_html.contains("sail-ai-stretch")
+            || out.structure_html.contains("ai-stretch")
+            || out.skin_css.contains("align-items:stretch")
+            || out.skin_css.contains("align-items: stretch"),
+        "vertical column must stretch the cross axis so cells share one width:\nstruct={}\nskin={}",
+        out.structure_html,
+        out.skin_css
     );
     assert!(
         out.skin_css.contains("variant='segmented'")
@@ -1327,6 +1336,7 @@ fn toggle_group_segmented_and_join_on_skins_not_pe() {
             && is_style_product(toggle_src)
             && (toggle_src.contains("h(control-h-md)") || toggle_src.contains("h: control-h-md"))
             && (toggle_src.contains("h(control-h-sm)") || toggle_src.contains("h: control-h-sm"))
+            && (toggle_src.contains("w(full)") || toggle_src.contains("w: full"))
             && (toggle_src.contains("bg(toggle)")
                 || toggle_src.contains("bg: toggle")
                 || toggle_src.contains("bg(background)")),
@@ -1338,6 +1348,9 @@ fn toggle_group_segmented_and_join_on_skins_not_pe() {
             && (toggle_out.skin_css.contains("var(--control-h-md)")
                 || toggle_out.structure_html.contains("controlhmd")
                 || toggle_out.structure_html.contains("control-h-md"))
+            && (toggle_out.skin_css.contains("width:100%")
+                || toggle_out.skin_css.contains("width: 100%")
+                || toggle_out.structure_html.contains("wfull"))
             && !toggle_out.skin_css.contains("--tg-"),
         "toggle size CVA direct control-h tokens; no --tg-*:\n{}",
         toggle_out.skin_css

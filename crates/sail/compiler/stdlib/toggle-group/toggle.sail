@@ -28,7 +28,7 @@
 <button
   type="button"
   style(base, {when: {hover: bg(hover-bg).fg(foreground), pressed: {bg(primary).fg(primary-foreground).border({ color: primary }), when: {hover: bg(primary).fg(primary-foreground).border({ color: primary }).filter({ opacity: 90 })}, position({ z: 1 })}, disabled: filter({ opacity: 50 }).cursor(not-allowed), focus: border({ style: solid, kind: outline, width: 2, color: ring }).position({ z: 2 })}, match: { size: { md: sizeMd, sm: sizeSm, lg: sizeLg }, variant: { outline: outline, ghost: ghost, segmented: segmented } }, compound: [
-      {orientation: vertical, variant: outline, margin({ t: -px, s: 0, e: 0 }).radius(none)},
+      {orientation: vertical, variant: outline, margin({ t: -px, s: 0, e: 0 }).radius(none).size({ w: full })},
       {variant: ghost, margin({ s: 0, t: 0, e: 1 }).border({ color: transparent }).radius(md)},
       {variant: segmented, margin({ s: 0, t: 0, e: 1 }).border({ color: transparent }).radius(sm)},
       {orientation: vertical, variant: ghost, margin({ s: 0, t: 0, e: 0, b: 1 }).border({ color: transparent }).radius(md)},

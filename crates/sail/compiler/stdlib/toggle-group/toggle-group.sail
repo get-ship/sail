@@ -1,6 +1,7 @@
 <!--
   <toggle-group> — segmented Style match; structural orientation stamp on cells.
   Size/variant paint is authored on each toggle.
+  Vertical: <row> dir(column) + align=stretch so cells share one column width.
 -->
 
 <scope>
@@ -18,6 +19,6 @@
   style segmented = {pad(1).bg(muted).border({ color: border, width: 1 }).radius(md)}
 </scope>
 
-<row inline gap="0" use:toggleGroup style(host, {match: { orientation: { horizontal: horiz, vertical: vert }, variant: {outline: bg(transparent), ghost: bg(transparent), segmented: segmented}}})>
+<row inline align="stretch" gap="0" use:toggleGroup style(host, {match: { orientation: { horizontal: horiz, vertical: vert }, variant: {outline: bg(transparent), ghost: bg(transparent), segmented: segmented}}})>
   <slot></slot>
 </row>
