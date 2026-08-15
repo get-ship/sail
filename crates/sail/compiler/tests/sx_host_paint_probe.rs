@@ -1815,7 +1815,7 @@ fn table_cells_are_family_parts_not_descendant_paint() {
             && skins.contains(".sail-table[striped]")
             && skins.contains(".sail-table[hoverable]")
             && skins.contains(".sail-table[bordered]")
-            && skins.contains("tr:last-child"),
+            && skins.contains("border-collapse:collapse"),
         "host compounds that Style cannot see stay in platform/table.css"
     );
 }

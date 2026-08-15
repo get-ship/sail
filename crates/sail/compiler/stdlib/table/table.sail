@@ -15,8 +15,9 @@
     'sticky-header' = false
   }
 
-  // Host text rides foreground.
-  style base = {size({ w: full }).fg(foreground).type({ family: body, size: sm, leading: normal, align: start })}
+  // Host text rides foreground. Outer hairline is the rest default —
+  // no-border tables vanish on several themes. `bordered` still boxes cells.
+  style base = {size({ w: full }).fg(foreground).border({ color: border, width: 1 }).type({ family: body, size: sm, leading: normal, align: start })}
 </scope>
 
 <table style(base)>
