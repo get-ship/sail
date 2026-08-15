@@ -191,6 +191,13 @@ pub const ACTIONS: &[ActionEntry] = &[
         writes: &[],
     },
     ActionEntry {
+        name: "drawerSwipe",
+        param: "void",
+        summary: "Internal: L1 <drawer> dismiss — swipe toward the docked edge, Escape, and light-dismiss close a dismissible non-modal dialog.",
+        auto_import: true,
+        writes: &[],
+    },
+    ActionEntry {
         name: "dropzone",
         param: "undefined",
         summary: "Drag-and-drop file receiver; reads files into a controller-side handler.",
@@ -366,6 +373,13 @@ pub const ACTIONS: &[ActionEntry] = &[
         writes: &["boxTop", "boxLeft", "boxW", "boxH"],
     },
     ActionEntry {
+        name: "resizable",
+        param: "void",
+        summary: "Internal: L1 <resizable> handle — pointer-drag / arrow-nudge sets flex-basis % on the start pane; stamps role=separator + aria-orientation.",
+        auto_import: true,
+        writes: &[],
+    },
+    ActionEntry {
         name: "spotlight",
         param: "void",
         summary: "Soft spotlight following the pointer; visual highlight for surfaces under it.",
@@ -474,7 +488,7 @@ pub const ACTIONS: &[ActionEntry] = &[
 /// auto-imported for stdlib but are not the taught package API.
 ///
 /// ACTIONS-1 diet: widget-private behaviors (`tabs`, `radioGroup`, `menu`,
-/// `pagination`, `combobox`, `icon`) are closed impl inside L1 widgets — not public.
+/// `pagination`, `combobox`, `icon`, `resizable`) are closed impl inside L1 widgets — not public.
 /// An action is node-lifetime imperative behavior the language has no syntax
 /// for — never content, state, or data (icon fails that test; the element owns it).
 pub const PUBLIC_ACTION_COUNT: usize = 13;
@@ -526,6 +540,7 @@ pub const BUILTIN_ACTION_NAMES: &[&str] = &[
     "detailsToggle",
     "dismissControl",
     "dismissible",
+    "drawerSwipe",
     "dropzone",
     "eventSpan",
     "focus",
@@ -551,6 +566,7 @@ pub const BUILTIN_ACTION_NAMES: &[&str] = &[
     "rangePair",
     "recoverySurface",
     "rect",
+    "resizable",
     "spotlight",
     "swatch",
     "syntaxHighlight",
@@ -732,6 +748,8 @@ mod tests {
             "pagination",
             "combobox",
             "icon",
+            "resizable",
+            "drawerSwipe",
         ] {
             assert!(
                 !is_public_action(name),

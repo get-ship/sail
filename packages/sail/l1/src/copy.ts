@@ -96,6 +96,11 @@ export const L1_COPY: Record<string, L1Copy> = {
     blurb:
       'Platform dialog — top layer, focus trap, Escape, backdrop. size · backdrop · side · dismissible; onClose / onDismiss. Scaffold shows open anatomy; invoker open/close is native.',
   },
+  drawer: {
+    category: 'overlay',
+    blurb:
+      'Edge-anchored non-modal sheet. side start|end|top|bottom (default end); size sm|md|lg. Native <dialog> via command="show" (not showModal). Header/section/footer as light-dom children. Swipe toward the edge closes. Paint card / card-foreground.',
+  },
   dropdown: {
     category: 'overlay',
     blurb:
@@ -189,6 +194,11 @@ export const L1_COPY: Record<string, L1Copy> = {
   'radio-group': {
     category: 'inputs',
     blurb: 'A set of radios with one shared value and accessible name.',
+  },
+  resizable: {
+    category: 'layout',
+    blurb:
+      'Two-pane split: start and end slots with a drag handle between. orientation horizontal (default) or vertical. Drag — or arrow-nudge — the separator to size the start pane. Handle is a focusable role=separator.',
   },
   'scroll-area': {
     category: 'layout',
