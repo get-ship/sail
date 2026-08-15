@@ -1,6 +1,7 @@
 <!--
   <tabs> — tab strip + panels. use:tabs owns behavior + stamps orientation
-  onto <tab-list>/<tab-panel>. Size Style match lives on <tab> (author there).
+  onto <tab-list>/<tab>/<tab-panel>. Size Style match lives on <tab>.
+  Horizontal = list above panels (column). Vertical = list beside panels (row).
 -->
 <scope>
   props: {
@@ -10,7 +11,9 @@
   }
 
   style host = {size({ min-w: 0 })}
+  style horiz = {dir(column)}
+  style vert = {dir(row)}
 </scope>
-<column gap="3" use:tabs style(host)>
+<column gap="3" use:tabs style(host, {match: { orientation: { horizontal: horiz, vertical: vert } }})>
   <slot></slot>
 </column>

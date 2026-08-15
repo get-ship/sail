@@ -211,13 +211,13 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     configuration objects. A tab strip is written as the structure it is:
   </p>
   <code-block code={code.tabs}></code-block>
-  <tabs active="overview">
+  <tabs>
     <tab-list>
-      <tab name="overview">Overview</tab>
-      <tab name="activity">Activity</tab>
+      <tab>Overview</tab>
+      <tab>Activity</tab>
     </tab-list>
-    <tab-panel name="overview">The overview panel.</tab-panel>
-    <tab-panel name="activity">The activity panel.</tab-panel>
+    <tab-panel>The overview panel.</tab-panel>
+    <tab-panel>The activity panel.</tab-panel>
   </tabs>
 
   <h2>The behavior is already wired</h2>

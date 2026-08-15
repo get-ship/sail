@@ -25,8 +25,8 @@ export const autofocus: Action<void> = (node) => {
 <combobox placeholder="Search">
   <option value="a">Apple</option>
 </combobox>
-<tabs active="a">
-  <tab-list><tab name="a">A</tab></tab-list>
-  <tab-panel name="a">…</tab-panel>
+<tabs>
+  <tab-list><tab>A</tab></tab-list>
+  <tab-panel>…</tab-panel>
 </tabs>`,
 }

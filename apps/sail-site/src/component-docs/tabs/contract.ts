@@ -10,7 +10,7 @@ export const contract = {
   tag: 'tabs',
   kind: 'host',
   axes: {
-    active: { default: '', control: 'text' },
+    active: { default: '', control: 'text', docsSkip: true },
     orientation: {
       values: ['horizontal', 'vertical'] as const,
       default: 'horizontal',
@@ -21,7 +21,7 @@ export const contract = {
   faces: [],
   visual: {
     defaultRow: true,
-    cross: ['orientation', 'active'],
+    cross: ['orientation'],
   },
   examples: true,
 } as const satisfies SurfaceContract

@@ -36,14 +36,14 @@ export const code = {
 </accordion>`,
 
   tabs: `<!-- composite components are small vocabularies: a <tabs> is a
-     <tab-list> of <tab>s plus a <tab-panel> per tab, matched by name. -->
-<tabs active="overview">
+     <tab-list> of <tab>s plus a <tab-panel> per tab, paired by position. -->
+<tabs>
   <tab-list>
-    <tab name="overview">Overview</tab>
-    <tab name="activity">Activity</tab>
+    <tab>Overview</tab>
+    <tab>Activity</tab>
   </tab-list>
-  <tab-panel name="overview">The overview panel.</tab-panel>
-  <tab-panel name="activity">The activity panel.</tab-panel>
+  <tab-panel>The overview panel.</tab-panel>
+  <tab-panel>The activity panel.</tab-panel>
 </tabs>`,
 
   behavior: `<!-- the behavior is already wired: this combobox filters as you
