@@ -36,6 +36,7 @@ const SOURCES: &[(&str, &str)] = &[
     ("textarea", include_str!("../stdlib/textarea/textarea.sail")),
     ("select", include_str!("../stdlib/select/select.sail")),
     ("dialog", include_str!("../stdlib/dialog/dialog.sail")),
+    ("drawer", include_str!("../stdlib/drawer/drawer.sail")),
     (
         "accordion",
         include_str!("../stdlib/accordion/accordion.sail"),
@@ -95,6 +96,10 @@ const SOURCES: &[(&str, &str)] = &[
     (
         "scroll-area",
         include_str!("../stdlib/scroll-area/scroll-area.sail"),
+    ),
+    (
+        "resizable",
+        include_str!("../stdlib/resizable/resizable.sail"),
     ),
     ("ticker", include_str!("../stdlib/ticker/ticker.sail")),
     (

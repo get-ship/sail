@@ -61,9 +61,36 @@
             <avatar initials="AL" stack ring></avatar>
             <avatar initials="NP" stack></avatar>
           </row>
+          <button variant="outline" command="show" commandfor="order-filters">Filters</button>
           <button command="show-modal" commandfor="new-order">New order</button>
         </row>
       </row>
+
+      <drawer id="order-filters" side="end" size="sm">
+        <header>Filters</header>
+        <section>
+          <column gap="4">
+            <field>
+              <label slot="label">Customer</label>
+              <input placeholder="Harbor Co" />
+            </field>
+            <field>
+              <label slot="label">Needed by</label>
+              <date />
+            </field>
+            <column gap="2">
+              <label>Status</label>
+              <label><checkbox /> Open</label>
+              <label><checkbox /> Fulfilled</label>
+              <label><checkbox /> Held</label>
+            </column>
+          </column>
+        </section>
+        <footer>
+          <button command="close" commandfor="order-filters" variant="ghost">Clear</button>
+          <button command="close" commandfor="order-filters">Apply</button>
+        </footer>
+      </drawer>
 
       <dialog id="new-order">
         <header>New order</header>

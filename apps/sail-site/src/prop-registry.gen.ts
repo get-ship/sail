@@ -60,6 +60,11 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "type": "muted · info · success · warning · destructive"
     },
     {
+      "name": "variant",
+      "type": "default · banner",
+      "default": "default"
+    },
+    {
       "name": "dismissible",
       "type": "bool",
       "default": "false"
@@ -103,6 +108,21 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "name": "shape",
       "type": "round · square",
       "default": "round"
+    },
+    {
+      "name": "ring",
+      "type": "bool",
+      "default": "false"
+    },
+    {
+      "name": "presence",
+      "type": "off · online · busy · offline",
+      "default": "off"
+    },
+    {
+      "name": "stack",
+      "type": "bool",
+      "default": "false"
     }
   ],
   "badge": [
@@ -124,6 +144,18 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "name": "pill",
       "type": "bool",
       "default": "false"
+    },
+    {
+      "name": "dot",
+      "type": "bool",
+      "default": "false"
+    }
+  ],
+  "breadcrumb": [
+    {
+      "name": "size",
+      "type": "sm · md · lg",
+      "default": "md"
     }
   ],
   "button": [
@@ -190,6 +222,11 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
     },
     {
       "name": "fill",
+      "type": "bool",
+      "default": "false"
+    },
+    {
+      "name": "spotlight",
       "type": "bool",
       "default": "false"
     }
@@ -271,6 +308,11 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "name": "lang",
       "type": "string",
       "default": "sail"
+    },
+    {
+      "name": "terminal",
+      "type": "bool",
+      "default": "false"
     }
   ],
   "color": [
@@ -415,6 +457,32 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "type": "() => void"
     }
   ],
+  "drawer": [
+    {
+      "name": "size",
+      "type": "sm · md · lg",
+      "default": "md"
+    },
+    {
+      "name": "side",
+      "type": "start · end · top · bottom",
+      "default": "end"
+    },
+    {
+      "name": "dismissible",
+      "type": "bool",
+      "default": "true",
+      "desc": "Escape, outside pointer, and swipe-toward-edge can close."
+    },
+    {
+      "name": "onClose",
+      "type": "() => void"
+    },
+    {
+      "name": "onDismiss",
+      "type": "() => void"
+    }
+  ],
   "dropdown": [
     {
       "name": "placement",
@@ -440,6 +508,11 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
     {
       "name": "tone",
       "type": "primary · info · success · warning · destructive · accent · muted"
+    },
+    {
+      "name": "compact",
+      "type": "bool",
+      "default": "false"
     }
   ],
   "error-boundary": [
@@ -574,6 +647,11 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "name": "size",
       "type": "xs · sm · md · lg",
       "default": "md"
+    },
+    {
+      "name": "surface",
+      "type": "default · filled · flushed",
+      "default": "default"
     },
     {
       "name": "invalid",
@@ -739,6 +817,16 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "default": "false"
     },
     {
+      "name": "floating",
+      "type": "bool",
+      "default": "false"
+    },
+    {
+      "name": "solid-on-scroll",
+      "type": "bool",
+      "default": "false"
+    },
+    {
       "name": "offset",
       "type": "number",
       "default": "0"
@@ -759,6 +847,11 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "name": "size",
       "type": "md · sm · lg",
       "default": "md"
+    },
+    {
+      "name": "variant",
+      "type": "default · simple",
+      "default": "default"
     }
   ],
   "pagination": [
@@ -766,6 +859,11 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "name": "value",
       "type": "string",
       "default": ""
+    },
+    {
+      "name": "variant",
+      "type": "default · simple",
+      "default": "default"
     },
     {
       "name": "onPageChange",
@@ -839,6 +937,13 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "type": "(detail: { value: string }) => void"
     }
   ],
+  "resizable": [
+    {
+      "name": "orientation",
+      "type": "horizontal · vertical",
+      "default": "horizontal"
+    }
+  ],
   "scroll-area": [
     {
       "name": "orientation",
@@ -851,6 +956,11 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "name": "size",
       "type": "xs · sm · md · lg",
       "default": "md"
+    },
+    {
+      "name": "surface",
+      "type": "default · filled · flushed",
+      "default": "default"
     },
     {
       "name": "invalid",
@@ -882,6 +992,11 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "name": "variant",
       "type": "solid · dashed",
       "default": "solid"
+    },
+    {
+      "name": "label",
+      "type": "string",
+      "default": ""
     }
   ],
   "skeleton": [
@@ -1056,6 +1171,11 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "name": "bordered",
       "type": "bool",
       "default": "false"
+    },
+    {
+      "name": "sticky-header",
+      "type": "bool",
+      "default": "false"
     }
   ],
   "tabs": [
@@ -1079,6 +1199,11 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "name": "size",
       "type": "xs · sm · md · lg",
       "default": "md"
+    },
+    {
+      "name": "surface",
+      "type": "default · filled · flushed",
+      "default": "default"
     },
     {
       "name": "invalid",
@@ -1116,6 +1241,11 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "name": "modeOnly",
       "type": "bool",
       "default": "false"
+    },
+    {
+      "name": "variant",
+      "type": "icon · menu-row · segmented",
+      "default": "icon"
     },
     {
       "name": "onThemeChange",

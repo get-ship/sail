@@ -27,7 +27,7 @@ describe('block: dashboard', () => {
 
   it('does not paint every L1 with a local style() — defaults must hold', () => {
     const l1 =
-      /<(navbar|card|dialog|table|field|input|select|date|textarea|button|alert|label|badge|pagination|breadcrumb|avatar|tabs|combobox|chip|dropdown|hover-card|kbd|meter|empty-state|toast)\b[^>]*\bstyle\(/
+      /<(navbar|card|dialog|drawer|table|field|input|select|date|textarea|button|alert|label|badge|pagination|breadcrumb|avatar|tabs|combobox|chip|dropdown|hover-card|kbd|meter|empty-state|toast)\b[^>]*\bstyle\(/
     expect(SOURCE).not.toMatch(l1)
   })
 })

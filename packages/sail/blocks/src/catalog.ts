@@ -46,6 +46,7 @@ export const BLOCKS: readonly BlockEntry[] = [
       'meter',
       'empty-state',
       'toast',
+      'drawer',
     ],
   },
   {

@@ -67,9 +67,9 @@ fn family_dirs_are_the_composition() {
 #[test]
 fn l1_surface_count_is_documented() {
     let (stdlib, reskins) = l1_by_kind();
-    assert_eq!(stdlib.len(), 59, "stdlib L1 count");
+    assert_eq!(stdlib.len(), 61, "stdlib L1 count");
     assert_eq!(reskins.len(), 0, "reskins empty");
-    assert_eq!(l1_entries().len(), 59);
+    assert_eq!(l1_entries().len(), 61);
 }
 
 #[test]
@@ -183,7 +183,7 @@ fn skeleton_description_names_loading_placeholder() {
 #[test]
 fn every_l1_entry_declares_component_tokens_and_js() {
     let entries = l1_entries();
-    assert_eq!(entries.len(), 59, "stdlib L1 count");
+    assert_eq!(entries.len(), 61, "stdlib L1 count");
     for e in &entries {
         // Fields must be present (empty vec / None-kind is valid).
         let _ = &e.component_tokens;
@@ -410,7 +410,10 @@ fn gutted_entry_fails_matrix_contract() {
 fn button_matrix_axes_match_vocabulary() {
     let button = entry("button");
     let names: Vec<&str> = button.matrix.axes.iter().map(|a| a.name.as_str()).collect();
-    assert_eq!(names, ["disabled", "size", "tone", "variant"]);
+    assert_eq!(
+        names,
+        ["disabled", "loading", "pill", "size", "tone", "variant"]
+    );
     let variant = button
         .matrix
         .axes

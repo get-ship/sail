@@ -483,8 +483,8 @@ fn stdlib_all_files_compile() {
     let files = stdlib_sail_files();
     assert_eq!(
         files.len(),
-        59,
-        "expected 59 stdlib .sail files, got {}",
+        61,
+        "expected 61 stdlib .sail files, got {}",
         files.len()
     );
     let mut failed = Vec::new();

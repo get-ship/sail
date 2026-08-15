@@ -59,6 +59,13 @@
           "warning",
           "destructive"
         ]
+      },
+      "variant": {
+        "values": [
+          "default",
+          "banner"
+        ],
+        "default": "default"
       }
     },
     "avatar": {
@@ -73,6 +80,19 @@
       "name": {
         "type": "string",
         "default": ""
+      },
+      "presence": {
+        "values": [
+          "off",
+          "online",
+          "busy",
+          "offline"
+        ],
+        "default": "off"
+      },
+      "ring": {
+        "type": "bool",
+        "default": "false"
       },
       "shape": {
         "values": [
@@ -95,6 +115,10 @@
         "type": "string",
         "default": ""
       },
+      "stack": {
+        "type": "bool",
+        "default": "false"
+      },
       "tone": {
         "values": [
           "primary",
@@ -108,6 +132,10 @@
       }
     },
     "badge": {
+      "dot": {
+        "type": "bool",
+        "default": "false"
+      },
       "pill": {
         "type": "bool",
         "default": "false"
@@ -138,6 +166,16 @@
           "outline"
         ],
         "default": "soft"
+      }
+    },
+    "breadcrumb": {
+      "size": {
+        "values": [
+          "sm",
+          "md",
+          "lg"
+        ],
+        "default": "md"
       }
     },
     "button": {
@@ -213,6 +251,10 @@
           "lg"
         ],
         "default": "md"
+      },
+      "spotlight": {
+        "type": "bool",
+        "default": "false"
       },
       "status-rail": {
         "type": "bool",
@@ -321,6 +363,10 @@
       "lang": {
         "type": "string",
         "default": "sail"
+      },
+      "terminal": {
+        "type": "bool",
+        "default": "false"
       }
     },
     "color": {
@@ -452,6 +498,30 @@
         "default": "md"
       }
     },
+    "drawer": {
+      "dismissible": {
+        "type": "bool",
+        "default": "true",
+        "description": "Escape, outside pointer, and swipe-toward-edge can close."
+      },
+      "side": {
+        "values": [
+          "start",
+          "end",
+          "top",
+          "bottom"
+        ],
+        "default": "end"
+      },
+      "size": {
+        "values": [
+          "sm",
+          "md",
+          "lg"
+        ],
+        "default": "md"
+      }
+    },
     "dropdown": {
       "placement": {
         "type": "string",
@@ -459,6 +529,10 @@
       }
     },
     "empty-state": {
+      "compact": {
+        "type": "bool",
+        "default": "false"
+      },
       "size": {
         "values": [
           "md",
@@ -673,6 +747,14 @@
         "type": "string",
         "default": ""
       },
+      "surface": {
+        "values": [
+          "default",
+          "filled",
+          "flushed"
+        ],
+        "default": "default"
+      },
       "type": {
         "values": [
           "text",
@@ -877,6 +959,15 @@
         "default": ""
       }
     },
+    "resizable": {
+      "orientation": {
+        "values": [
+          "horizontal",
+          "vertical"
+        ],
+        "default": "horizontal"
+      }
+    },
     "scroll-area": {
       "orientation": {
         "values": [
@@ -908,9 +999,21 @@
           "lg"
         ],
         "default": "md"
+      },
+      "surface": {
+        "values": [
+          "default",
+          "filled",
+          "flushed"
+        ],
+        "default": "default"
       }
     },
     "separator": {
+      "label": {
+        "type": "string",
+        "default": ""
+      },
       "orientation": {
         "values": [
           "horizontal",
@@ -1172,6 +1275,14 @@
           "lg"
         ],
         "default": "md"
+      },
+      "surface": {
+        "values": [
+          "default",
+          "filled",
+          "flushed"
+        ],
+        "default": "default"
       }
     },
     "theme-picker": {
@@ -1186,6 +1297,14 @@
       "value": {
         "type": "string",
         "default": ""
+      },
+      "variant": {
+        "values": [
+          "icon",
+          "menu-row",
+          "segmented"
+        ],
+        "default": "icon"
       }
     },
     "ticker": {

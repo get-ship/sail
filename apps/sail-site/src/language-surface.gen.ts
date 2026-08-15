@@ -1271,7 +1271,7 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
     },
     {
       "tag": "card",
-      "description": "L1 surface with header/body/footer slots, tone border, status rail,"
+      "description": "L1 surface with header/body/footer/image slots, tone border, status rail,"
     },
     {
       "tag": "checkbox",
@@ -1304,6 +1304,10 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
     {
       "tag": "dialog",
       "description": "native modal / sheet. Style product only."
+    },
+    {
+      "tag": "drawer",
+      "description": "edge-anchored non-modal sheet. Style product only."
     },
     {
       "tag": "dropdown",
@@ -1396,6 +1400,10 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
     {
       "tag": "radio-group",
       "description": "vertical group of <radio> options. use:radioGroup wires shared"
+    },
+    {
+      "tag": "resizable",
+      "description": "two-pane split. Start + end slots with a drag handle between."
     },
     {
       "tag": "scroll-area",
@@ -1859,6 +1867,13 @@ export const ACTIONS: ActionDoc[] = [
     "writes": []
   },
   {
+    "name": "drawerSwipe",
+    "param": "void",
+    "summary": "Internal: L1 <drawer> dismiss — swipe toward the docked edge, Escape, and light-dismiss close a dismissible non-modal dialog.",
+    "public": false,
+    "writes": []
+  },
+  {
     "name": "dropzone",
     "param": "undefined",
     "summary": "Drag-and-drop file receiver; reads files into a controller-side handler.",
@@ -2056,6 +2071,13 @@ export const ACTIONS: ActionDoc[] = [
       "boxW",
       "boxH"
     ]
+  },
+  {
+    "name": "resizable",
+    "param": "void",
+    "summary": "Internal: L1 <resizable> handle — pointer-drag / arrow-nudge sets flex-basis % on the start pane; stamps role=separator + aria-orientation.",
+    "public": false,
+    "writes": []
   },
   {
     "name": "spotlight",
