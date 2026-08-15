@@ -1,8 +1,10 @@
 <!--
   <skeleton> — loading placeholder sheen. Style product for geometry;
-  SKELETON_MAP owns the shimmer gradient / background-size / animation
-  (Style cannot express that composite) via muted.
-  shape + size ordinary props.
+  platform/skeleton.css owns the shimmer gradient / background-size /
+  animation (Style cannot express that composite). Paint is muted mixed
+  with muted-foreground so the bar reads on light and dark surfaces.
+  shape + size ordinary props. No host-level skeleton prop on other
+  elements — compose circle + lines.
 -->
 
 <scope>
@@ -15,7 +17,7 @@
   // text + line share the full-width bar geometry.
   style shapeBar = {size({ w: full, h: 3, min-h: 0 })}
   style shapeBlock = {display(block).size({ w: full, min-h: 20 })}
-  style shapeCircle = {size({ min-w: 7, min-h: 7, aspect: square }).radius(full)}
+  style shapeCircle = {size(8).radius(full)}
 </scope>
 
 <span
@@ -26,8 +28,8 @@
       {shape: line, size: sm, size({ h: 2 })},
       {shape: line, size: md, size({ h: 3 })},
       {shape: line, size: lg, size({ h: 4 })},
-      {shape: circle, size: sm, size({ min-w: 0, min-h: 0 })},
-      {shape: circle, size: md, size({ min-w: 0, min-h: 0 })},
-      {shape: circle, size: lg, size({ min-w: 0, min-h: 0 })},
+      {shape: circle, size: sm, size(6)},
+      {shape: circle, size: md, size(8)},
+      {shape: circle, size: lg, size(10)},
     ]})
 ></span>

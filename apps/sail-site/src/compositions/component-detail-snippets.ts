@@ -178,14 +178,10 @@ export default controller(() => ({ volume: signal(48) }))
   </column>
 </fieldset>`,
 
-  'theme-picker': `<!-- the whole switcher: trigger, panel, live previews -->
-<theme-picker style({ animate: { enter: play(fade) } })>
-</theme-picker>`,
+  'theme-picker': `<theme-picker></theme-picker>`,
 
-  ticker: `<ticker duration="normal" style({ size({ w: full }).overflow({ all: hidden }).pad({ y: 2 }).bg(muted).radius(md) })>
-  <p style({ pad({ x: 3 }).fg(muted-foreground).type({ size: sm, family: mono, wrap: nowrap }) })>
-    tokens · signals · a11y · hot reload ·&nbsp;
-  </p>
+  ticker: `<ticker>
+  <p>tokens · signals · a11y · hot reload · SSR</p>
 </ticker>`,
 
   alert: `<controller>
@@ -227,9 +223,9 @@ export default controller(() => ({ loading: signal(true) }))
 </if>`,
 
   skeleton: `<row gap="3" align="center">
-  <skeleton shape="circle" size="md"></skeleton>
+  <skeleton shape="circle" size="lg"></skeleton>
   <column gap="2" style({ grow(1) })>
-    <skeleton shape="text" size="sm"></skeleton>
+    <skeleton shape="text" size="md"></skeleton>
     <skeleton shape="text" size="sm"></skeleton>
   </column>
 </row>`,

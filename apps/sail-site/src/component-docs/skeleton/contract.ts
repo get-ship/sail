@@ -14,7 +14,7 @@ export const contract = {
     size: {
       values: ['sm', 'md', 'lg'] as const,
       default: 'md',
-      control: 'slider',
+      control: 'select',
     },
   },
   faces: [],

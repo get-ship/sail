@@ -217,7 +217,7 @@ export const L1_COPY: Record<string, L1Copy> = {
   skeleton: {
     category: 'feedback',
     blurb:
-      'Loading placeholder sheen. Shape + size draw the geometry; paint is always the shimmer from component.skeleton.bg / highlight (themeable). No tone axis — compose width with layout Style.',
+      'Loading placeholder sheen. Shape + size draw the geometry; the shimmer mixes muted with muted-foreground so it reads on light and dark. No tone axis — compose width with layout Style.',
   },
   slider: {
     category: 'inputs',
@@ -226,7 +226,7 @@ export const L1_COPY: Record<string, L1Copy> = {
   spinner: {
     category: 'feedback',
     blurb:
-      'Indeterminate wait ring. Size scales the host; tone defaults to info; centered parks it in the middle of its container.',
+      'Indeterminate wait ring. Size scales the glyph; tone defaults to info. Center it with the parent layout.',
   },
   switch: {
     category: 'inputs',
@@ -249,12 +249,12 @@ export const L1_COPY: Record<string, L1Copy> = {
   'theme-picker': {
     category: 'inputs',
     blurb:
-      'Theme switcher: trigger opens a native [popover] of theme cards previewing real stylesheets. Host props: value · inline · modeOnly · onThemeChange. Paint component.theme-picker.* (panel · trigger · option).',
+      'A control for picking a theme. Click to browse live previews, or keep the list on the page with inline. mode-only is just Light / Dark / System.',
   },
   ticker: {
     category: 'effects',
     blurb:
-      'Infinite linear marquee. Host is geometry only (overflow clip); use:marquee dual-copies the slot and loops translate-x. duration · reverse on host. No component.ticker.* — author paint. Reduced motion settles via motion runtime.',
+      'A looping band of text or icons. Drop content in — the host clips, nowraps, and paints a quiet strip. duration and reverse set the motion. Reduced motion settles automatically.',
   },
   toast: {
     category: 'feedback',

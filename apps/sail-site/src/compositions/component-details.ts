@@ -284,7 +284,7 @@ const DETAILS_MAP = {
         desc: 'Colour when on (default primary)',
         type: TONES,
       },
-      { name: 'size', desc: 'Track size (default md)', type: 'sm · md · lg' },
+      { name: 'size', desc: 'Track + thumb (28 · 36 · 48 wide)', type: 'sm · md · lg' },
       { name: 'disabled', desc: 'Non-interactive', type: 'bool' },
     ],
   }),
@@ -352,13 +352,13 @@ const DETAILS_MAP = {
   // legend is NOT a top-level DETAILS/catalog topic — documented inside fieldset.
   'theme-picker': lang('theme-picker', 'themePicker', {
     blurb:
-      'Pick a theme. The trigger opens a catalog of live specimens. value is the selected theme id; mode-only is a segmented Light / Dark / System control; inline keeps the catalog in the page.',
+      'Pick a theme. Click the control to browse live previews. value selects a theme; mode-only is just Light / Dark / System; inline keeps the list on the page.',
     variants: [],
     variantAttr: '',
     props: [
       { name: 'value', desc: 'Selected theme id (applies that theme)', type: 'string' },
-      { name: 'inline', desc: 'Show the catalog in-flow instead of a popover', type: 'bool' },
-      { name: 'mode-only', desc: 'Segmented Light / Dark / System — no catalog', type: 'bool' },
+      { name: 'inline', desc: 'Keep the theme list on the page', type: 'bool' },
+      { name: 'mode-only', desc: 'Just Light / Dark / System — no theme list', type: 'bool' },
       { name: 'onThemeChange', desc: 'Fires with { theme, mode, preference }', type: 'callback' },
     ],
   }),
@@ -419,22 +419,21 @@ const DETAILS_MAP = {
   }),
   spinner: lang('spinner', 'spinner', {
     blurb:
-      'Indeterminate wait ring. Size scales the host; tone defaults to info; centered parks it in the middle of its container.',
+      'Indeterminate wait ring. Size scales the glyph; tone defaults to info. Center it with the parent row or column — the mark does not own the page.',
     variants: [],
     variantAttr: '',
     props: [
-      { name: 'size', desc: 'ring scale (icon-size ladder)', type: 'xs · sm · md · lg' },
+      { name: 'size', desc: 'ring scale (16 · 24 · 32 · 48)', type: 'xs · sm · md · lg' },
       {
         name: 'tone',
         desc: 'active arc colour (default info); track always uses the theme track colour',
         type: 'primary · info · success · warning · destructive · accent',
       },
-      { name: 'centered', desc: 'block + auto horizontal margin in the parent', type: 'bool' },
     ],
   }),
   skeleton: lang('skeleton', 'skeleton', {
     blurb:
-      'Loading placeholder sheen. Shape + size draw the geometry; the shimmer always comes from the theme. No tone axis — compose width with layout Style.',
+      'Loading placeholder sheen. Shape + size draw the geometry; the shimmer is muted mixed with muted-foreground so it reads on light and dark surfaces. No tone axis — compose width with layout Style. No skeleton prop on other hosts: compose circle + lines.',
     variants: ['text', 'line', 'block', 'circle'],
     variantAttr: 'shape',
     props: [
@@ -756,21 +755,20 @@ const DETAILS_MAP = {
   // ── Navigation ───────────────────────────────────────────────────────
   tabs: lang('tabs', 'tabs', {
     blurb:
-      'Tabs with the full keyboard suite — arrows rove, Home/End jump, panels wire their ARIA automatically. Host props: active · orientation · onTabChange. Three looks via variant on <tab-list>; size on each <tab>.',
+      'Tabs with the full keyboard suite — arrows rove, Home/End jump, panels wire their ARIA automatically. The tabs are the control: click one to show its panel. orientation=vertical puts the list beside the panels. Three looks via variant on <tab-list>; size on each <tab>.',
     variants: [],
     variantAttr: '',
     props: [
-      { name: 'active', desc: 'selected tab name', type: 'string' },
-      { name: 'orientation', desc: 'horizontal or vertical list', type: 'horizontal · vertical' },
-      { name: 'onTabChange', desc: 'fires with { name } when selection changes', type: 'callback' },
+      { name: 'orientation', desc: 'horizontal (list above) or vertical (list beside)', type: 'horizontal · vertical' },
+      { name: 'onTabChange', desc: 'fires with { name } when the user picks a tab', type: 'callback' },
       {
         name: '<tab-list variant>',
         desc: 'strip look — line · pill · enclosed (on the strip, not <tabs>)',
         type: 'line · pill · enclosed',
       },
       {
-        name: '<tab name size>',
-        desc: 'each tab — name matches panel; size Style match here',
+        name: '<tab>',
+        desc: 'label is the tab children; pairs with the matching <tab-panel> by position',
         type: 'children',
       },
     ],
@@ -814,7 +812,7 @@ const DETAILS_MAP = {
   // ── Data ─────────────────────────────────────────────────────────────
   table: lang('table', 'table', {
     blurb:
-      "The platform's table model — thead, tbody, tr — skinned by the theme. dense · striped · hoverable · bordered presence attrs. No grid component to learn: markup in, a designed table out.",
+      "The platform's table model — thead, tbody, tr — skinned by the theme. Hairline borders on by default. dense · striped · hoverable · bordered presence attrs. No grid component to learn: markup in, a designed table out.",
     variants: [],
     variantAttr: '',
     props: [
@@ -877,7 +875,7 @@ const DETAILS_MAP = {
   // ── Effects ──────────────────────────────────────────────────────────
   ticker: lang('ticker', 'ticker', {
     blurb:
-      'Infinite linear marquee. Host is geometry only (overflow clip); content is dual-copied and loops horizontally. duration · reverse on host. Colours are yours to style — no built-in palette. Reduced motion settles automatically.',
+      'A looping band of text or icons. Drop content in — the host already clips, nowraps, and paints a quiet strip. duration and reverse set the motion. Reduced motion settles automatically.',
     variants: [],
     variantAttr: '',
     props: [

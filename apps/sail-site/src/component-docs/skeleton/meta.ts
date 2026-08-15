@@ -7,7 +7,7 @@ export const meta = {
   key: 'skeleton',
   category: 'feedback',
   kind: 'host',
-  blurb: "Loading placeholder sheen. Shape + size draw the geometry; the shimmer comes from the muted role (themeable). No tone axis — compose width with layout Style.",
+  blurb: "Loading placeholder sheen. Shape + size draw the geometry; the shimmer mixes muted with muted-foreground so it reads on light and dark. No tone axis — compose width with layout Style.",
   heading: "prose",
   host: 'doc-skeleton',
   stageOwnsKnobs: true,
