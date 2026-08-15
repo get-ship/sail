@@ -24,7 +24,7 @@ export const L1_COPY: Record<string, L1Copy> = {
   a: {
     category: 'navigation',
     blurb:
-      'Native <a>. Bare (no variant attr) stays a text link — freeform never stamps variant/tone. With variant set it becomes a button-link: default rest uses component.button.*; solid / soft / outline / ghost match the button family (default ≠ solid). tone always paints when set. No size axis — use <button> for sized CTAs. disabled paint needs aria-disabled on anchors.',
+      'Anchor — native <a>. Bare or variant=text has no chrome: wrap a card, span, or label. variant default|solid|soft|outline|ghost is a button-link. Freeform never stamps variant/tone so a plain href stays a text link. No size axis — use <button> for sized CTAs.',
   },
   accordion: {
     category: 'display',

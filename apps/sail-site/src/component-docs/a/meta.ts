@@ -8,8 +8,8 @@ export const meta = {
   category: 'navigation',
   kind: 'host',
   blurb:
-    'Native <a>. Bare (no variant attr) stays a text link — freeform never stamps variant/tone. With variant set it becomes a button-link: default rest uses component.button.*; solid / soft / outline / ghost match the button family (default ≠ solid). tone always paints when set. No size axis — use <button> for sized CTAs. disabled paint needs aria-disabled on anchors.',
-  heading: 'prose',
+    'Anchor — native <a>. Bare or variant=text has no chrome: wrap a card, span, or label. Button variants are default|solid|soft|outline|ghost.',
+  heading: 'anchor',
   host: 'doc-a',
   stageOwnsKnobs: true,
 } as const satisfies DocMeta
