@@ -13,8 +13,10 @@
 //! LAYOUT-5 promoted kinds (default Error):
 //! 4. **unintended-overflow** — child extents exceed the container and the
 //!    author did not opt in (no scroll-area, overflow setter, or truncate).
-//! 5. **clipped-text** — measured text run exceeds its box without a truncate
-//!    marker (text-metrics path; kill switch `text_metrics: false`).
+//! 5. **clipped-text** — measured text run exceeds its box (text-metrics
+//!    path; kill switch `text_metrics: false`). Truncate is an opt-in only
+//!    on a constrained width (`max-w` / explicit `w`); hug-content +
+//!    truncate is a clip mask and still errors.
 //!
 //! Experimental (gated by [`crate::CheckOptions::experimental`]):
 //! 6. **sub-min-tap-target** — interactive host shorter axis below 24px.
@@ -372,8 +374,8 @@ pub fn scan_with(
     }
 
     // Case 5 (LAYOUT-5 default Error, still killable via text_metrics: false):
-    // text run wider than its box without a truncate marker while overflow
-    // clips on the inline axis.
+    // text run wider than its box while overflow clips on the inline axis.
+    // Truncate suppresses only on a constrained width — not hug-content.
     if options.text_metrics_enabled() {
         scan_clipped_text(layout, &mut out)?;
     }
@@ -393,6 +395,28 @@ fn has_truncate(elem: &crate::html::Element) -> bool {
     elem.box_style.truncate
 }
 
+/// Used width is content-sized: no authored max-width and no authored width.
+/// Truncate / overflow-hidden on this shape is a mask, not an opt-in.
+fn is_hug_content_width(elem: &crate::html::Element) -> bool {
+    elem.box_style.width.is_none() && elem.box_style.max_width.is_none()
+}
+
+fn clipped_text_message(tag: &str, text_w: f32, box_w: f32, hug: bool) -> String {
+    if hug {
+        format!(
+            "<{tag}> text measures ~{text_w:.0}px but its box is {box_w:.0}px wide — glyphs clip. \
+             Widen the box or allow wrapping — type({{ wrap: truncate }}) is not a fix on a \
+             hug-content control."
+        )
+    } else {
+        format!(
+            "<{tag}> text measures ~{text_w:.0}px but its box is {box_w:.0}px wide — glyphs clip \
+             without truncate(). Add type({{ wrap: truncate }}) if ellipsis is \
+             intended, widen the box, or allow wrapping."
+        )
+    }
+}
+
 fn scan_clipped_text(layout: &Layout, out: &mut Vec<Diagnostic>) -> anyhow::Result<()> {
     let metrics = metrics_table();
     for (i, elem) in layout.elements.iter().enumerate() {
@@ -402,7 +426,9 @@ fn scan_clipped_text(layout: &Layout, out: &mut Vec<Diagnostic>) -> anyhow::Resu
         if elem.text.trim().is_empty() {
             continue;
         }
-        if has_truncate(elem) {
+        let hug = is_hug_content_width(elem);
+        // Constrained width + truncate is the legal ellipsis opt-in.
+        if has_truncate(elem) && !hug {
             continue;
         }
         let Some(node) = layout.nodes[i] else {
@@ -437,12 +463,7 @@ fn scan_clipped_text(layout: &Layout, out: &mut Vec<Diagnostic>) -> anyhow::Resu
                 element_index: i,
                 element_tag: elem.tag.clone(),
                 element_class: elem.class.clone(),
-                message: format!(
-                    "<{}> text measures ~{:.0}px but its box is {:.0}px wide — glyphs clip \
-                     without truncate(). Add type({{ wrap: truncate }}) if ellipsis is \
-                     intended, widen the box, or allow wrapping.",
-                    elem.tag, text_w, box_w,
-                ),
+                message: clipped_text_message(&elem.tag, text_w, box_w, hug),
                 span: elem.span,
                 geometry: None,
             });
@@ -616,6 +637,56 @@ mod tests {
                 .any(|d| d.kind == "zero-main-axis"),
             "unknown child should suppress zero-main-axis: {:?}",
             result.diagnostics
+        );
+    }
+
+    #[test]
+    fn hug_content_width_is_authored_size_not_class_soup() {
+        let hug = Element {
+            box_style: crate::box_ir::ResolvedBox {
+                overflow_x: None,
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+        assert!(is_hug_content_width(&hug));
+        let max_w = Element {
+            box_style: crate::box_ir::ResolvedBox {
+                max_width: Some("24".into()),
+                truncate: true,
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+        assert!(!is_hug_content_width(&max_w));
+        let explicit_w = Element {
+            box_style: crate::box_ir::ResolvedBox {
+                width: Some("16".into()),
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+        assert!(!is_hug_content_width(&explicit_w));
+    }
+
+    #[test]
+    fn hug_clip_message_does_not_suggest_truncate() {
+        let hug = clipped_text_message("span", 37.0, 36.0, true);
+        assert!(hug.contains("37"));
+        assert!(hug.contains("36"));
+        assert!(
+            !hug.to_ascii_lowercase()
+                .contains("add type({ wrap: truncate })"),
+            "hug clip must not suggest truncate: {hug}"
+        );
+        assert!(
+            hug.contains("hug-content"),
+            "hug clip must name the mask: {hug}"
+        );
+        let constrained = clipped_text_message("p", 197.0, 64.0, false);
+        assert!(
+            constrained.contains("Add type({ wrap: truncate })"),
+            "constrained clip may suggest truncate: {constrained}"
         );
     }
 }

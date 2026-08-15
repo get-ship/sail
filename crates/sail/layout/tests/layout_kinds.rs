@@ -13,7 +13,8 @@
 //! 1. Overflow without opt-in → finding with kind id
 //! 2. Overflow with scroll-area / overflow setter → no finding
 //! 3. Clipped text without truncate → finding (text_metrics path)
-//! 4. Truncate present → no clipped-text
+//! 4. Truncate present on a constrained width → no clipped-text.
+//!    Truncate on hug-content that still clips → clipped-text (mask).
 //! 5. Default check emits overflow + clipped; tap stays experimental-only
 //!
 //! Implementer: do not weaken these assertions to green-wash a partial land.
@@ -185,6 +186,54 @@ fn clipped_text_suppressed_when_truncate_present() {
         "truncate() is the opt-in for ellipsis clipping — must NOT emit \
          `{KIND_CLIPPED_TEXT}`: {:?}",
         result.diagnostics
+    );
+}
+
+/// Hug-content host (no authored w / max-w) plus truncate, squeezed by a
+/// nowrap parent. Truncate is a mask — must stay red.
+const HUG_TRUNCATE_SQUEEZE: &str = r#"
+<div class="sail-row sail-nowrap s-w20">
+  <div class="host-hug-trunc">Supercalifragilisticexpialidocious</div>
+</div>
+"#;
+
+fn hug_truncate_hosts() -> Vec<BoxHost> {
+    vec![BoxHost {
+        classes: vec!["host-hug-trunc".into()],
+        resolved: ResolvedBox {
+            overflow_x: Some("hidden".into()),
+            truncate: true,
+            ..Default::default()
+        },
+    }]
+}
+
+#[test]
+fn clipped_text_fires_when_hug_truncate_still_clips() {
+    let result = check_preprocessed_with_hosts(
+        HUG_TRUNCATE_SQUEEZE,
+        VP,
+        experimental(),
+        &[],
+        &hug_truncate_hosts(),
+    )
+    .expect("layout check");
+    assert!(
+        has_kind(&result.diagnostics, KIND_CLIPPED_TEXT),
+        "hug-content + truncate that still clips must emit `{KIND_CLIPPED_TEXT}`: {:?}",
+        result.diagnostics
+    );
+    let hit = result
+        .diagnostics
+        .iter()
+        .find(|d| d.kind == KIND_CLIPPED_TEXT)
+        .unwrap();
+    assert!(
+        !hit.message
+            .to_ascii_lowercase()
+            .contains("add type({ wrap: truncate })"),
+        "hug clip must not suggest truncate: {}",
+        hit.message
     );
 }
 

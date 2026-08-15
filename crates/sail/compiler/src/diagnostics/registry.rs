@@ -150,10 +150,10 @@ const DIAG_SPECS: &[DiagSpec] = &[
         id: "sail-clipped-text",
         jurisdiction: Jurisdiction::Lint,
         default_severity: DiagSeverity::Error,
-        message_template: "<{tag}> text measures ~{text}px but its box is {box}px wide — glyphs clip without truncate()",
+        message_template: "<{tag}> text measures ~{text}px but its box is {box}px wide — glyphs clip",
         allowed_list_source: None,
         fix_text: Some(
-            "add `text: truncate()` if ellipsis is intended, widen the box, or allow wrapping",
+            "widen the box or allow wrapping; type({ wrap: truncate }) only when a max-width is already authored",
         ),
         docs_anchor: Some("SPEC-LAYOUT-DIAG-1#clipped-text"),
     },
