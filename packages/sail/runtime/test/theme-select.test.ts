@@ -615,33 +615,45 @@ describe('themeSelect — catalog filter + theme apply', () => {
     expect(['light', 'dark']).toContain(document.documentElement.getAttribute('mode'))
   })
 
-  it('modeOnly hides theme grid and cycles mode on trigger', () => {
-    const { root, grid, modeTrigger } = harness({ modeOnly: true })
+  it('modeOnly shows the Light/Dark/System bar and hides the catalog', () => {
+    const { root, grid, modeTrigger, panel, modeBar } = harness({ modeOnly: true })
     document.documentElement.setAttribute('theme', 'ship')
     document.documentElement.setAttribute('mode', 'light')
     persistMode('light')
     const action = themeSelect(root)
     destroy = action?.destroy
     expect(grid.hidden).toBe(true)
-    expect(modeTrigger.hidden).toBe(false)
+    expect(modeTrigger.hidden).toBe(true)
+    expect(modeBar.hidden).toBe(false)
+    expect(panel.hasAttribute('popover')).toBe(false)
+    expect(panel.hidden).toBe(false)
     expect(root.getAttribute('data-mode-only')).toBe('1')
 
-    // Cycle light → dark
-    modeTrigger.click()
+    // Segmented bar sets the preference directly.
+    root.querySelector<HTMLButtonElement>('button[mode="dark"]')!.click()
     expect(document.documentElement.getAttribute('mode')).toBe('dark')
     expect(readModePreference()).toBe('dark')
-    expect(modeTrigger.getAttribute('aria-label')).toMatch(/Dark/i)
 
-    // Cycle dark → system
-    modeTrigger.click()
+    root.querySelector<HTMLButtonElement>('button[mode="system"]')!.click()
     expect(readModePreference()).toBe('system')
     expect(document.documentElement.getAttribute('mode')).not.toBe('system')
-    expect(modeTrigger.getAttribute('aria-label')).toMatch(/System/i)
 
-    // Cycle system → light
-    modeTrigger.click()
+    root.querySelector<HTMLButtonElement>('button[mode="light"]')!.click()
     expect(readModePreference()).toBe('light')
     expect(document.documentElement.getAttribute('mode')).toBe('light')
+  })
+
+  it('inline keeps the catalog in flow with no trigger', () => {
+    const { root, trigger, panel, grid } = harness()
+    root.setAttribute('inline', '')
+    const action = themeSelect(root)
+    destroy = action?.destroy
+    expect(trigger.hidden).toBe(true)
+    expect(panel.hasAttribute('popover')).toBe(false)
+    expect(panel.hidden).toBe(false)
+    expect(panel.getAttribute('inline')).toBe('')
+    expect(grid.hidden).toBe(false)
+    expect(root.getAttribute('data-inline')).toBe('1')
   })
 
   it('unique popover id links trigger for anchor', () => {

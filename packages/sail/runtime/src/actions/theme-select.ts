@@ -203,11 +203,22 @@ const isInlineHost = (root: HTMLElement): boolean => {
   return v !== 'false' && v !== '0'
 }
 
+/** Authoring host that carries value / inline / mode-only. */
+function pickerHost(node: HTMLElement): HTMLElement {
+  const ce = node.closest('theme-picker')
+  if (ce instanceof HTMLElement) return ce
+  if (node.getAttribute('data-sail-host') === 'theme-picker') return node
+  const stamped = node.closest('[data-sail-host="theme-picker"]')
+  if (stamped instanceof HTMLElement) return stamped
+  return node
+}
+
 const isModePreference = (raw: string): raw is ModePreference =>
   raw === 'light' || raw === 'dark' || raw === 'system'
 
 export const themeSelect: Action<void> = (node) => {
   const root = node as HTMLElement
+  const host = pickerHost(root)
 
   const fullTrigger = root.querySelector<HTMLButtonElement>(
     '[data-picker-trigger="full"], button[popovertarget]:not([data-mode-only-trigger])',
@@ -228,8 +239,8 @@ export const themeSelect: Action<void> = (node) => {
   // Closed multi-part anatomy: stamp listbox on the panel (not free author role=).
   if (panel && !panel.hasAttribute('role')) panel.setAttribute('role', 'listbox')
 
-  let modeOnly = isModeOnlyHost(root)
-  let inline = isInlineHost(root)
+  let modeOnly = isModeOnlyHost(host) || isModeOnlyHost(root)
+  let inline = isInlineHost(host) || isInlineHost(root)
 
   const themeGrid = root.querySelector<HTMLElement>('[data-theme-grid]')
   const modeBar = root.querySelector<HTMLElement>('[data-mode-bar]')
@@ -245,6 +256,7 @@ export const themeSelect: Action<void> = (node) => {
   const selectedTier = root.querySelector<HTMLElement>('[data-selected-tier]')
   const catalogLabel = root.querySelector<HTMLElement>('[data-catalog-label]')
   const pickerHeader = root.querySelector<HTMLElement>('[data-picker-header]')
+  const pickerTitle = root.querySelector<HTMLElement>('[data-picker-title]')
 
   const valueOf = (el: Element): string => el.getAttribute('value') ?? ''
   const modeOf = (el: Element): string => el.getAttribute('mode') ?? ''
@@ -270,7 +282,9 @@ export const themeSelect: Action<void> = (node) => {
 
   const currentTheme = (): ThemeId => {
     const attr =
-      root.getAttribute('value') || document.documentElement.getAttribute('theme')
+      host.getAttribute('value') ||
+      root.getAttribute('value') ||
+      document.documentElement.getAttribute('theme')
     return isValidTheme(attr) ? attr : 'sail'
   }
 
@@ -298,39 +312,52 @@ export const themeSelect: Action<void> = (node) => {
   let optionTemplate: HTMLElement | null = null
 
   let trigger: HTMLButtonElement | null = null
+  const flowPanel = (el: HTMLElement): void => {
+    el.removeAttribute('popover')
+    el.hidden = false
+    el.removeAttribute('inert')
+    el.style.position = 'static'
+    el.style.inset = 'auto'
+    el.style.left = 'auto'
+    el.style.top = 'auto'
+  }
+
   const applyModeChrome = (): void => {
   if (modeOnly) {
-    if (modeTrigger && fullTrigger && modeTrigger !== fullTrigger) {
+    if (fullTrigger) {
       fullTrigger.setAttribute('hidden', '')
       fullTrigger.style.display = 'none'
       fullTrigger.removeAttribute('popovertarget')
       fullTrigger.setAttribute('aria-hidden', 'true')
       fullTrigger.tabIndex = -1
-      modeTrigger.removeAttribute('hidden')
-      modeTrigger.removeAttribute('aria-hidden')
-      modeTrigger.style.display = ''
-      modeTrigger.removeAttribute('popovertarget')
-      modeTrigger.tabIndex = 0
-      trigger = modeTrigger
-    } else {
-      const t = modeTrigger ?? fullTrigger ?? legacyTrigger
-      t?.removeAttribute('popovertarget')
-      t?.removeAttribute('hidden')
-      t?.removeAttribute('aria-hidden')
-      if (t) {
-        t.style.display = ''
-        t.tabIndex = 0
-      }
-      trigger = t
     }
+    if (modeTrigger) {
+      modeTrigger.setAttribute('hidden', '')
+      modeTrigger.style.display = 'none'
+      modeTrigger.setAttribute('aria-hidden', 'true')
+      modeTrigger.tabIndex = -1
+    }
+    // Panel stays mounted as a static segmented bar (not a popover).
+    // Keep the header (it owns the mode bar); hide only the title block.
     if (panel) {
-      panel.hidden = true
-      panel.setAttribute('inert', '')
+      flowPanel(panel)
+      panel.setAttribute('modeOnly', '')
+      panel.removeAttribute('inline')
     }
     if (themeGrid) themeGrid.hidden = true
-    if (pickerHeader) pickerHeader.hidden = true
-    if (modeBar) modeBar.hidden = true
+    if (pickerTitle) pickerTitle.hidden = true
+    if (pickerHeader) {
+      pickerHeader.hidden = false
+      pickerHeader.removeAttribute('hidden')
+    }
     if (catalogLabel) catalogLabel.hidden = true
+    if (modeBar) {
+      modeBar.hidden = false
+      modeBar.style.display = ''
+      modeBar.setAttribute('aria-label', 'Color mode')
+      modeBar.removeAttribute('hidden')
+    }
+    trigger = null
     root.setAttribute('data-mode-only', '1')
   } else {
     // Site chrome: only the full catalog trigger. Mode-only is for demos.
@@ -348,8 +375,14 @@ export const themeSelect: Action<void> = (node) => {
       panel.id = id
       panel.removeAttribute('inert')
       panel.hidden = false
+      panel.removeAttribute('modeOnly')
+      panel.style.removeProperty('position')
+      panel.style.removeProperty('inset')
+      panel.style.removeProperty('left')
+      panel.style.removeProperty('top')
       ;(fullTrigger ?? legacyTrigger)?.setAttribute('popovertarget', id)
     }
+    if (pickerTitle) pickerTitle.hidden = false
     trigger = fullTrigger ?? legacyTrigger
     root.removeAttribute('data-mode-only')
   }
@@ -358,6 +391,7 @@ export const themeSelect: Action<void> = (node) => {
   const applyInlineChrome = (): void => {
     if (modeOnly) {
       root.removeAttribute('data-inline')
+      panel?.removeAttribute('inline')
       return
     }
     if (inline) {
@@ -365,22 +399,31 @@ export const themeSelect: Action<void> = (node) => {
       if (fullTrigger) {
         fullTrigger.style.display = 'none'
         fullTrigger.setAttribute('aria-hidden', 'true')
+        fullTrigger.tabIndex = -1
       }
       if (panel) {
-        panel.removeAttribute('popover')
-        panel.hidden = false
-        panel.removeAttribute('inert')
+        flowPanel(panel)
+        // Stamp [inline] so host Style match { inline: true } lands on the panel.
+        panel.setAttribute('inline', '')
       }
       root.setAttribute('data-inline', '1')
     } else {
       fullTrigger?.removeAttribute('hidden')
       fullTrigger?.removeAttribute('aria-hidden')
       fullTrigger?.style.removeProperty('display')
-      if (panel && !panel.hasAttribute('popover')) {
-        panel.setAttribute('popover', '')
-        const id = panel.id || `sail-theme-panel-${++uid}`
-        panel.id = id
-        ;(fullTrigger ?? legacyTrigger)?.setAttribute('popovertarget', id)
+      if (fullTrigger) fullTrigger.tabIndex = 0
+      if (panel) {
+        panel.removeAttribute('inline')
+        panel.style.removeProperty('position')
+        panel.style.removeProperty('inset')
+        panel.style.removeProperty('left')
+        panel.style.removeProperty('top')
+        if (!panel.hasAttribute('popover')) {
+          panel.setAttribute('popover', '')
+          const id = panel.id || `sail-theme-panel-${++uid}`
+          panel.id = id
+          ;(fullTrigger ?? legacyTrigger)?.setAttribute('popovertarget', id)
+        }
       }
       root.removeAttribute('data-inline')
     }
@@ -566,12 +609,8 @@ export const themeSelect: Action<void> = (node) => {
 
     if (trigger) {
       if (modeOnly) {
-        const label = preferenceLabel(pref, paint)
-        trigger.setAttribute('aria-label', `Color mode: ${label}`)
-        trigger.title = `Color mode: ${label} — click to cycle`
-        trigger.setAttribute('data-mode-preference', pref)
-        trigger.setAttribute('data-mode-paint', paint)
-        syncModeOnlyIcons(pref)
+        trigger.setAttribute('hidden', '')
+        trigger.style.display = 'none'
       } else {
         trigger.setAttribute(
           'aria-label',
@@ -623,8 +662,13 @@ export const themeSelect: Action<void> = (node) => {
     for (const b of modeButtons()) {
       const m = modeOf(b)
       if (modeOnly) {
-        b.hidden = true
-        b.style.display = 'none'
+        b.hidden = false
+        b.style.display = ''
+        const on = pref === m
+        b.setAttribute('aria-pressed', on ? 'true' : 'false')
+        b.setAttribute('aria-selected', on ? 'true' : 'false')
+        b.toggleAttribute('data-active', on)
+        b.toggleAttribute('selected', on)
         continue
       }
       if (m === 'system' || PAINT_MODES.has(m as PaintMode)) {
@@ -706,6 +750,18 @@ export const themeSelect: Action<void> = (node) => {
     sync()
   }
 
+  const setModeOnly = (raw: string): void => {
+    if (studioPreviewActive()) return
+    if (!isModePreference(raw)) return
+    const paint = applyMode(raw)
+    sync()
+    invokeCallback(root, 'onThemeChange', {
+      theme: currentTheme(),
+      mode: paint,
+      preference: readModePreference(),
+    })
+  }
+
   const cycleModeOnly = (): void => {
     if (studioPreviewActive()) return
     const theme = currentTheme()
@@ -723,13 +779,7 @@ export const themeSelect: Action<void> = (node) => {
     } else {
       next = 'light'
     }
-    const paint = applyMode(next)
-    sync()
-    invokeCallback(root, 'onThemeChange', {
-      theme: currentTheme(),
-      mode: paint,
-      preference: readModePreference(),
-    })
+    setModeOnly(next)
   }
 
   const optionFrom = (e: Event): HTMLElement | null => {
@@ -754,13 +804,13 @@ export const themeSelect: Action<void> = (node) => {
   }
 
   const onClick = (e: MouseEvent): void => {
-    // mode-only: cycle on any click of the mode trigger (even if nested span)
+    // mode-only: the segmented bar sets the preference directly.
     if (modeOnly) {
-      if (isTriggerClick(e) || (modeTrigger && modeTrigger.contains(e.target as Node))) {
+      const modeBtn = modeFrom(e)
+      if (modeBtn) {
         e.preventDefault()
         e.stopPropagation()
-        cycleModeOnly()
-        return
+        setModeOnly(modeOf(modeBtn))
       }
       return
     }
@@ -892,8 +942,8 @@ export const themeSelect: Action<void> = (node) => {
   sync()
 
   const hostObs = new MutationObserver(() => {
-    const nextMode = isModeOnlyHost(root)
-    const nextInline = isInlineHost(root)
+    const nextMode = isModeOnlyHost(host) || isModeOnlyHost(root)
+    const nextInline = isInlineHost(host) || isInlineHost(root)
     const chromeChanged = nextMode !== modeOnly || nextInline !== inline
     modeOnly = nextMode
     inline = nextInline
@@ -901,7 +951,7 @@ export const themeSelect: Action<void> = (node) => {
       applyModeChrome()
       applyInlineChrome()
     }
-    const v = root.getAttribute('value')
+    const v = host.getAttribute('value') || root.getAttribute('value')
     if (v && isValidTheme(v) && !studioPreviewActive()) {
       applyTheme(v, document.documentElement, modeIntentForSelect(v, catalogFilter))
     }
@@ -911,6 +961,12 @@ export const themeSelect: Action<void> = (node) => {
     attributes: true,
     attributeFilter: ['value', 'inline', 'mode-only', 'modeOnly', 'modeonly'],
   })
+  if (host !== root) {
+    hostObs.observe(host, {
+      attributes: true,
+      attributeFilter: ['value', 'inline', 'mode-only', 'modeOnly', 'modeonly'],
+    })
+  }
 
   return {
     destroy: () => {

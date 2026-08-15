@@ -120,29 +120,29 @@ export default controller((_ctx: Scope) => {
     <column gap="2" style(exampleBlock)>
       <p style(sectionLabel)>Examples</p>
       <doc-example
-        title="Default popover"
-        lead="Trigger opens a panel of live theme specimens."
+        title="Menu"
+        lead="A compact control. Click it to browse themes and see how each one looks."
         code={exDefault()}
       >
         <theme-picker></theme-picker>
       </doc-example>
       <doc-example
-        title="Selected theme"
-        lead="value is the selected theme id — it applies that theme."
+        title="Start on a theme"
+        lead="value picks the theme that is already on."
         code={exValue()}
       >
         <theme-picker value="console" on-theme-change={onThemeChange}></theme-picker>
       </doc-example>
       <doc-example
-        title="Mode only"
-        lead="mode-only is a segmented Light / Dark / System control. No catalog."
+        title="Light, dark, or system"
+        lead="Just the three mode buttons — for when the theme is already chosen."
         code={exMode()}
       >
         <theme-picker mode-only></theme-picker>
       </doc-example>
       <doc-example
-        title="Inline"
-        lead="Catalog stays in the page — no popover, no hidden trigger."
+        title="Always on the page"
+        lead="Puts the theme list in the layout. Use this on a settings screen."
         code={exInline()}
       >
         <theme-picker inline></theme-picker>

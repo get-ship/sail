@@ -1,7 +1,8 @@
 <!--
   <theme-picker> — catalog + optional mode-only.
-  Full popover: Light|Dark|System filter tabs (never paint the site); one
-  live [theme=…] specimen per row. modeOnly: segmented Light/Dark/System.
+  Default: compact trigger, panel below (placement=bottom).
+  inline: theme list stays in the page (horizontal catalog, no trigger).
+  modeOnly: Light/Dark/System bar only.
   variant: icon (compact trigger) · menu-row (full-width option rows) ·
   segmented (mode bar as a connected pill). Swatches deferred.
   Behavior: use:themeSelect.
@@ -25,8 +26,9 @@
   style glyph = {fg(foreground).type({ size: sm, leading: none })}
 
   style panel = {position({ scheme: fixed, inset: auto, l: bind(anchorLeft), t: bind(anchorTop), z: popover }).pad(0).margin(0).size({ w: panel-max-w-sm, max-w: panel-w-toast, min-w: 0, max-h: panel-vh-md }).overflow({ x: hidden, y: auto, overscroll: contain }).fg(popover-foreground).bg(popover).border({ color: border, width: hairline }).radius(lg).elevation(lg)}
-  style panelInline = {position({ scheme: static, inset: auto }).pad(0).margin(0).size({ w: full, max-w: panel-max-w-sm, min-w: 0, max-h: panel-vh-md }).overflow({ x: hidden, y: auto }).fg(popover-foreground).bg(popover).border({ color: border, width: 1 }).radius(lg).elevation(sm)}
-  style panelModeOnly = {position({ scheme: static, inset: auto }).pad(0).margin(0).size({ w: auto, max-w: none, min-w: 0, max-h: none }).overflow({ all: hidden }).elevation(none).bg(transparent).border({ width: 0 })}
+  // Inline = in-flow horizontal catalog. group-inline also hides the trigger.
+  style panelInline = {position({ scheme: static, inset: auto, l: auto, t: auto }).pad(0).margin(0).size({ w: full, max-w: none, min-w: 0, max-h: none }).overflow({ x: auto, y: hidden }).fg(popover-foreground).bg(popover).border({ color: border, width: 1 }).radius(lg).elevation(sm)}
+  style panelModeOnly = {position({ scheme: static, inset: auto, l: auto, t: auto }).pad(0).margin(0).size({ w: auto, max-w: none, min-w: 0, max-h: none }).overflow({ all: hidden }).elevation(none).bg(transparent).border({ width: 0 })}
   style panelMenuRow = {size({ w: full, max-w: none, min-w: 0 })}
 
   style header = {size({ w: full, min-w: 0 }).pad({ x: 3, t: 3, b: 0 })}
@@ -44,7 +46,9 @@
   style catalogHead = {size({ w: full, min-w: 0 }).pad({ x: 3, t: 2, b: 1 }).fg(muted-foreground).type({ size: xs, weight: semibold, tracking: wide, case: label-transform })}
 
   style panelList = {size({ w: full, min-w: 0 }).pad(1_5)}
+  style panelListInline = {dir(row)}
   style option = {size({ w: full, min-w: 0 }).pad(0).overflow({ all: hidden }).bg(transparent).border({ color: transparent, width: hairline }).radius(md).cursor(pointer).type({ align: start })}
+  style optionInline = {size({ w: auto, min-w: 36, max-w: 48 })}
   style optionRow = {size({ w: full, min-w: 0 }).radius(sm)}
   style optionCol = {size({ w: full, min-w: 0 })}
 
@@ -103,13 +107,13 @@
     id="sail-theme-panel"
     popover
     use:anchor
-    placement="bottom-end"
+    placement="bottom"
     label="Theme"
     data-theme-listbox
     style(panel, {match: { inline: { true: panelInline }, modeOnly: { true: panelModeOnly }, variant: { 'menu-row': panelMenuRow } }})
   >
     <column gap="2" data-picker-header style(header)>
-      <column gap="1" style({size({ min-w: 0 })})>
+      <column gap="1" data-picker-title style({size({ min-w: 0 })})>
         <span style(headerEyebrow)>Active</span>
         <row align="center" gap="2" nowrap style({size({ min-w: 0 })})>
           <span data-selected-label style(headerTitle, {grow(1).size({ min-w: 0 })})>—</span>
@@ -140,11 +144,11 @@
 
     <span data-catalog-label style(catalogHead)>Light themes</span>
 
-    <column gap="2" data-theme-grid style(panelList, {size({ min-w: 0 })})>
+    <column gap="2" data-theme-grid style(panelList, {size({ min-w: 0 }), when: {group-inline: panelListInline}})>
       <button
         type="button"
         value="sail"
-        style(option, {when: {hover: border({ color: border }), focus: border({ style: solid, kind: outline, width: 2, color: ring, offset: ring-offset }), selected: border({ color: primary }), forced-colors: {when: {selected: border({ color: CanvasText })}}}, match: { variant: { 'menu-row': optionRow } }})
+        style(option, {when: {hover: border({ color: border }), focus: border({ style: solid, kind: outline, width: 2, color: ring, offset: ring-offset }), selected: border({ color: primary }), forced-colors: {when: {selected: border({ color: CanvasText })}}, group-inline: optionInline}, match: { variant: { 'menu-row': optionRow } }})
       >
         <column gap="0" style(optionCol, {size({ min-w: 0 })})>
           <column theme="sail" mode="light" hidden="true" style(swatch, {match: { variant: { 'menu-row': swatchRow } }})>
