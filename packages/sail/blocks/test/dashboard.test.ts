@@ -26,9 +26,8 @@ describe('block: dashboard', () => {
   })
 
   it('does not paint every L1 with a local style() — defaults must hold', () => {
-    // Page chrome (shell / page) is allowed. Tag-position style() on L1 is not.
     const l1 =
-      /<(navbar|card|dialog|table|field|input|select|date|textarea|button|alert|label|badge|pagination)\b[^>]*\bstyle\(/
+      /<(navbar|card|dialog|table|field|input|select|date|textarea|button|alert|label|badge|pagination|breadcrumb|avatar|tabs|combobox|chip|dropdown|hover-card|kbd|meter|empty-state|toast)\b[^>]*\bstyle\(/
     expect(SOURCE).not.toMatch(l1)
   })
 })

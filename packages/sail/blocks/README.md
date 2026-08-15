@@ -26,7 +26,7 @@ Docs composition page and takumi consume these same files. Do not fork a second 
 | id | Status | Tests |
 |---|---|---|
 | dashboard | authored | yes |
-| pricing | planned | — |
-| settings | planned | — |
+| pricing | authored | yes |
+| settings | authored | yes |
 | auth | planned | — |
 | empty | planned | — |

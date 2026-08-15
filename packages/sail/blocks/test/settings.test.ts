@@ -22,7 +22,7 @@ describe('block: settings', () => {
 
   it('does not paint L1 with local style()', () => {
     const l1 =
-      /<(navbar|fieldset|legend|field|input|label|switch|button)\b[^>]*\bstyle\(/
+      /<(navbar|fieldset|legend|field|input|label|switch|button|tabs|breadcrumb|avatar|file|checkbox|chip|table|badge|separator|theme-picker)\b[^>]*\bstyle\(/
     expect(SOURCE).not.toMatch(l1)
   })
 })
