@@ -488,5 +488,58 @@ mod tests {
         let msg = format!("{err:#}");
         assert!(msg.contains("search"), "{msg}");
         assert!(msg.contains("offline"), "{msg}");
+        assert!(msg.contains("no CDN"), "{msg}");
+        assert!(!msg.to_lowercase().contains("unpkg"), "{msg}");
+        assert!(!msg.to_lowercase().contains("jsdelivr"), "{msg}");
+    }
+
+    #[test]
+    fn emit_recovers_icons_from_unparseable_source() {
+        let tmp = tempfile::tempdir().unwrap();
+        let project = tmp.path().join("app");
+        let src = project.join("src/docs");
+        fs::create_dir_all(project.join("routes")).unwrap();
+        fs::create_dir_all(&src).unwrap();
+        write_iconify_pack(
+            tmp.path(),
+            "lucide",
+            &[("sparkles", "<path d=\"M12 3v1\"/>")],
+        );
+        fs::write(
+            src.join("doc-icon.sail"),
+            r#"<controller>not valid sail</controller>
+            <icon name="sparkles"></icon>"#,
+        )
+        .unwrap();
+        fs::write(project.join("routes/page.sail"), r#"<main></main>"#).unwrap();
+        let out = tmp.path().join("out");
+        fs::create_dir_all(&out).unwrap();
+        let written = collect_and_emit_project_icons(&project, &out, tmp.path()).unwrap();
+        assert!(written.contains("sparkles"), "{written:?}");
+        assert!(icon_asset_path(&out, "sparkles").is_file());
+    }
+
+    #[test]
+    fn emit_writes_role_filename_not_lucide_id() {
+        let tmp = tempfile::tempdir().unwrap();
+        let project = tmp.path().join("app");
+        let routes = project.join("routes");
+        fs::create_dir_all(&routes).unwrap();
+        write_iconify_pack(
+            tmp.path(),
+            "lucide",
+            &[("refresh-cw", "<path d=\"M3 12a9 9 0 0 1 9-9\"/>")],
+        );
+        fs::write(
+            routes.join("page.sail"),
+            r#"<main><icon name="refresh"></icon></main>"#,
+        )
+        .unwrap();
+        let out = tmp.path().join("out");
+        fs::create_dir_all(&out).unwrap();
+        let written = collect_and_emit_project_icons(&project, &out, tmp.path()).unwrap();
+        assert_eq!(written, BTreeSet::from(["refresh".into()]));
+        assert!(icon_asset_path(&out, "refresh").is_file());
+        assert!(!icon_asset_path(&out, "refresh-cw").exists());
     }
 }

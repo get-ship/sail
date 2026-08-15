@@ -76,7 +76,7 @@ export default controller(() => {
             nowrap
             style(docTab)
           >
-            <icon name="file-code-2" size="sm"></icon>
+            <icon name="file-code" size="sm"></icon>
             <p style(tabLabel)>{tab.label}</p>
             <if {tab.dirtyDot}>
               <p dirty-dot label="Unsaved" style(dirtyDot)>

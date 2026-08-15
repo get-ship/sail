@@ -116,10 +116,12 @@ const CORE_ROLES: &[CoreRole] = &[
     CoreRole::new("heart", "heart", "favorite"),
     CoreRole::new("inbox", "inbox", "empty / inbox"),
     CoreRole::new("log-out", "log-out", "sign out"),
+    CoreRole::new("mail", "mail", "mail"),
     CoreRole::new("moon", "moon", "dark mode"),
     CoreRole::new("more-vertical", "more-vertical", "overflow menu"),
     CoreRole::new("radio", "radio", "live / broadcast"),
-    CoreRole::new("redo-2", "redo-2", "redo"),
+    CoreRole::new("redo", "redo-2", "redo"),
+    CoreRole::new("redo-2", "redo-2", "redo (lucide id)"),
     CoreRole::new("refresh", "refresh-cw", "refresh"),
     CoreRole::new("refresh-cw", "refresh-cw", "refresh (lucide id)"),
     CoreRole::new("rocket", "rocket", "launch"),
@@ -129,7 +131,10 @@ const CORE_ROLES: &[CoreRole] = &[
     CoreRole::new("stop", "stop-circle", "stop"),
     CoreRole::new("sun", "sun", "light mode"),
     CoreRole::new("trash-2", "trash-2", "delete (lucide id)"),
-    CoreRole::new("undo-2", "undo-2", "undo"),
+    CoreRole::new("undo", "undo-2", "undo"),
+    CoreRole::new("undo-2", "undo-2", "undo (lucide id)"),
+    CoreRole::new("user", "user", "user / account"),
+    CoreRole::new("bell", "bell", "notifications"),
     CoreRole::new("x", "x", "close (lucide id)"),
     CoreRole::new("x-circle", "x-circle", "error (lucide id)"),
     CoreRole::new("zap", "zap", "power / instant"),
@@ -868,6 +873,70 @@ mod tests {
     }
 
     #[test]
+    fn catalog_and_studio_roles_resolve() {
+        let r = RoleRegistry::core();
+        for name in [
+            "sparkles",
+            "heart",
+            "inbox",
+            "plus",
+            "download",
+            "user",
+            "bell",
+            "mail",
+            "close",
+            "refresh",
+            "trash",
+            "file-code",
+            "undo",
+            "redo",
+            "ellipsis",
+            "file",
+            "compass",
+            "image",
+            "circle",
+            "star",
+            "home",
+            "check",
+            "edit",
+        ] {
+            assert!(r.contains(name), "missing catalog/studio role {name}");
+        }
+    }
+
+    #[test]
+    fn lucide_id_aliases_resolve_to_same_glyph() {
+        let r = RoleRegistry::core();
+        for (role, alias, glyph) in [
+            ("refresh", "refresh-cw", "refresh-cw"),
+            ("trash", "trash-2", "trash-2"),
+            ("close", "x", "x"),
+            ("file-code", "file-code-2", "file-code-2"),
+            ("git", "git-branch", "git-branch"),
+            ("undo", "undo-2", "undo-2"),
+            ("redo", "redo-2", "redo-2"),
+        ] {
+            let a = r.resolve(role).unwrap_or_else(|| panic!("role {role}"));
+            let b = r.resolve(alias).unwrap_or_else(|| panic!("alias {alias}"));
+            assert_eq!(a.glyph, glyph, "role {role}");
+            assert_eq!(b.glyph, glyph, "alias {alias}");
+            assert_eq!(a.pack, b.pack);
+        }
+    }
+
+    #[test]
+    fn resolve_is_offline_pack_and_glyph_not_a_url() {
+        let r = RoleRegistry::core();
+        for role in r.role_ids() {
+            let b = r.resolve(&role).expect(role.as_str());
+            assert!(
+                !b.pack.contains("://") && !b.glyph.contains("://"),
+                "role {role} must not resolve to a URL (no CDN): {b:?}"
+            );
+        }
+    }
+
+    #[test]
     fn app_override_and_custom_role() {
         let cfg = parse_icon_config(Some(&serde_json::json!({
             "pack": "lucide",
@@ -937,5 +1006,18 @@ mod tests {
         let svg = svg.unwrap();
         assert!(svg.contains("<svg"), "{svg}");
         assert!(svg.contains("viewBox=\"0 0 24 24\""), "{svg}");
+    }
+
+    #[test]
+    fn load_glyph_svg_is_offline_only() {
+        let missing = Path::new("/tmp/sail-icons-no-pack");
+        assert!(
+            load_glyph_svg("lucide", "search", &[missing]).is_none(),
+            "missing local pack must not invent a glyph (no CDN fallback)"
+        );
+        assert!(
+            load_glyph_svg("https://cdn.example/lucide", "search", &[missing]).is_none(),
+            "URL-shaped pack id must not load"
+        );
     }
 }

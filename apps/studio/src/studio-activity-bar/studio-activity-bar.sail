@@ -13,6 +13,24 @@
 </scope>
 
 <nav label="Studio activities" style(railRoot)>
+  <if {false}>
+    <icon name="file"></icon>
+    <icon name="compass"></icon>
+    <icon name="image"></icon>
+    <icon name="home"></icon>
+    <icon name="circle"></icon>
+    <icon name="star"></icon>
+    <icon name="user"></icon>
+    <icon name="bell"></icon>
+    <icon name="mail"></icon>
+    <icon name="check"></icon>
+    <icon name="close"></icon>
+    <icon name="chevron-right"></icon>
+    <icon name="trash"></icon>
+    <icon name="edit"></icon>
+    <icon name="download"></icon>
+    <icon name="file-code"></icon>
+  </if>
   <slot name="brand">
     <center hidden="true" style(brandSlot)>
       <center studio-brand-mark style(brandMark)>

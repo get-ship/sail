@@ -63,7 +63,7 @@ export default controller((_ctx: Scope) => {
         return 'Try a different search, or clear a filter.'
     }
   })
-  const esIcon = derived(() => (variant() === 'connecting' ? 'refresh-cw' : 'inbox'))
+  const esIcon = derived(() => (variant() === 'connecting' ? 'refresh' : 'inbox'))
 
   const entry = DETAILS['empty-state']
   const heading = () => entry.heading
@@ -88,7 +88,7 @@ export default controller((_ctx: Scope) => {
   const esExDefault = () =>
     `<empty-state>\n  <icon slot="icon" name="inbox"></icon>\n  <strong slot="title">No results</strong>\n  Try a different search.\n  <button slot="action" variant="outline" size="sm">Clear filters</button>\n</empty-state>`
   const esExConnecting = () =>
-    `<empty-state variant="connecting">\n  <icon slot="icon" name="refresh-cw" spin></icon>\n  <strong slot="title">Connecting…</strong>\n  Establishing a secure session.\n</empty-state>`
+    `<empty-state variant="connecting">\n  <icon slot="icon" name="refresh" spin></icon>\n  <strong slot="title">Connecting…</strong>\n  Establishing a secure session.\n</empty-state>`
   const esExDefaultColors = () =>
     `<empty-state tone="muted">\n  <icon slot="icon" name="inbox"></icon>\n  <strong slot="title">Empty</strong>\n  tone defaults to muted and paints the icon.\n</empty-state>`
 
@@ -234,7 +234,7 @@ export default controller((_ctx: Scope) => {
         code={esExConnecting()}
       >
         <empty-state variant="connecting" style(specimen)>
-          <icon slot="icon" name="refresh-cw" spin></icon>
+          <icon slot="icon" name="refresh" spin></icon>
           <strong slot="title">Connecting…</strong>
           Establishing a secure session.
         </empty-state>

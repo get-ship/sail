@@ -744,7 +744,7 @@ export default controller(() => {
                       <column gap="2">
                         <p style(fieldHint)>Spin · use:icon motion · currentColor ink</p>
                         <row gap="4" align="center" nowrap>
-                          <icon name="refresh-cw" spin label="Refreshing"></icon>
+                          <icon name="refresh" spin label="Refreshing"></icon>
                           <span style({ fg(primary) })>
                             <icon name="heart" size="lg" label="primary ink"></icon>
                           </span>

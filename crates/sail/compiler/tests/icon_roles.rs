@@ -36,3 +36,24 @@ fn pack_prefix_is_compile_error() {
         err.message
     );
 }
+
+#[test]
+fn lucide_id_alias_still_compiles() {
+    let src = r#"<column><icon name="refresh-cw"></icon><icon name="trash-2"></icon></column>"#;
+    compile(src, CompileOpts::default()).expect("resolve aliases must compile");
+}
+
+#[test]
+fn catalog_roles_compile() {
+    let src = r#"<column>
+      <icon name="sparkles"></icon>
+      <icon name="heart"></icon>
+      <icon name="inbox"></icon>
+      <icon name="plus"></icon>
+      <icon name="download"></icon>
+      <icon name="user"></icon>
+      <icon name="bell"></icon>
+      <icon name="mail"></icon>
+    </column>"#;
+    compile(src, CompileOpts::default()).expect("catalog roles must compile");
+}

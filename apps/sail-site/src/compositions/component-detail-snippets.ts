@@ -321,7 +321,7 @@ export default controller(() => {
   icon: `<row gap="3" align="center">
   <icon name="check" size="sm"></icon>
   <icon name="search"></icon>
-  <icon name="refresh-cw" spin label="Refreshing"></icon>
+  <icon name="refresh" spin label="Refreshing"></icon>
 </row>`,
 
   separator: `<column gap="2">

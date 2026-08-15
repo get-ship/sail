@@ -270,7 +270,7 @@ function insertFileSeg(root: FileSegNode, relPath: string, filePath: string): vo
 }
 
 function fileIconForName(name: string): string {
-  if (name.endsWith('.sail')) return 'file-code-2'
+  if (name.endsWith('.sail')) return 'file-code'
   if (/\.(ts|tsx|js|jsx|mjs|cjs)$/.test(name)) return 'file-code'
   return 'file'
 }
@@ -465,7 +465,7 @@ function routeSegToSailTree(
   return {
     id,
     label,
-    icon: node.filePath ? 'file-code-2' : 'folder',
+    icon: node.filePath ? 'file-code' : 'folder',
     children: kids.length ? kids : undefined,
   }
 }
@@ -519,7 +519,7 @@ export function routeSailTreeNodes(
     out.push({
       id: root.filePath,
       label: dirty?.has(root.filePath) ? '● /' : '/',
-      icon: 'file-code-2',
+      icon: 'file-code',
     })
   }
   for (const child of [...root.children.values()].sort((a, b) =>
