@@ -395,7 +395,8 @@ fn has_truncate(elem: &crate::html::Element) -> bool {
     elem.box_style.truncate
 }
 
-/// Used width is content-sized: no authored max-width and no authored width.
+/// Authored `width` / `max-width` only. Flex `grow` + `min-w: 0` is not a
+/// width — treating allocation as a constraint is a language change.
 /// Truncate / overflow-hidden on this shape is a mask, not an opt-in.
 fn is_hug_content_width(elem: &crate::html::Element) -> bool {
     elem.box_style.width.is_none() && elem.box_style.max_width.is_none()

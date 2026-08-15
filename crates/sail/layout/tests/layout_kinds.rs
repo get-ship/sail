@@ -237,6 +237,58 @@ fn clipped_text_fires_when_hug_truncate_still_clips() {
     );
 }
 
+/// grow + min-w:0 + truncate is the flex ellipsis pattern. Current policy:
+/// still hug (authored width / max-width only). Documents today's
+/// classification — not a grow exemption.
+const FLEX_GROW_TRUNCATE: &str = r#"
+<div class="sail-row sail-nowrap s-w20">
+  <div class="host-grow-trunc">Supercalifragilisticexpialidocious</div>
+</div>
+"#;
+
+fn grow_truncate_hosts() -> Vec<BoxHost> {
+    vec![BoxHost {
+        classes: vec!["host-grow-trunc".into()],
+        resolved: ResolvedBox {
+            grow: Some(1.0),
+            min_width: Some("0".into()),
+            overflow_x: Some("hidden".into()),
+            truncate: true,
+            ..Default::default()
+        },
+    }]
+}
+
+#[test]
+fn flex_grow_minw0_truncate_is_still_hug_when_it_clips() {
+    let result = check_preprocessed_with_hosts(
+        FLEX_GROW_TRUNCATE,
+        VP,
+        experimental(),
+        &[],
+        &grow_truncate_hosts(),
+    )
+    .expect("layout check");
+    assert!(
+        has_kind(&result.diagnostics, KIND_CLIPPED_TEXT),
+        "grow + min-w:0 + truncate is still hug — clip must emit \
+         `{KIND_CLIPPED_TEXT}`: {:?}",
+        result.diagnostics
+    );
+    let hit = result
+        .diagnostics
+        .iter()
+        .find(|d| d.kind == KIND_CLIPPED_TEXT)
+        .unwrap();
+    assert!(
+        !hit.message
+            .to_ascii_lowercase()
+            .contains("add type({ wrap: truncate })"),
+        "hug flex-ellipsis must not suggest truncate: {}",
+        hit.message
+    );
+}
+
 // ── 5. Default check emits promoted kinds; tap stays experimental ───────────
 
 #[test]

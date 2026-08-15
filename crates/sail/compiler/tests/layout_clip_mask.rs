@@ -10,41 +10,32 @@ use sail_compiler::{DiagSeverity, check_all};
 
 const RULE_CLIPPED_TEXT: &str = "sail-clipped-text";
 
-/// Five size-sm `select` badges in a 24-step column — one or more measure 1px short.
-const HUG_BADGE_SELECT: &str = r#"
-<column style({ size({ max-w: 24 }) })>
-  <row gap="1">
-    <badge size="sm">select</badge>
-    <badge size="sm">select</badge>
-    <badge size="sm">select</badge>
-    <badge size="sm">select</badge>
-    <badge size="sm">select</badge>
-  </row>
-</column>
+/// Hug clip vehicle: explicit Style on a stdlib-independent host.
+/// A nowrap row of fixed width squeezes a hug child that clips on overflow-x.
+const HUG_CLIP: &str = r#"
+<row nowrap style({ size({ w: 16 }) })>
+  <span style({ overflow({ x: hidden }).type({ wrap: nowrap }) })>Supercalifragilisticexpialidocious</span>
+</row>
 "#;
 
-const HUG_BADGE_SELECT_TRUNCATE: &str = r#"
-<column style({ size({ max-w: 24 }) })>
-  <row gap="1">
-    <badge size="sm" style({ type({ wrap: truncate }) })>select</badge>
-    <badge size="sm" style({ type({ wrap: truncate }) })>select</badge>
-    <badge size="sm" style({ type({ wrap: truncate }) })>select</badge>
-    <badge size="sm" style({ type({ wrap: truncate }) })>select</badge>
-    <badge size="sm" style({ type({ wrap: truncate }) })>select</badge>
-  </row>
-</column>
+const HUG_CLIP_TRUNCATE: &str = r#"
+<row nowrap style({ size({ w: 16 }) })>
+  <span style({ overflow({ x: hidden }).type({ wrap: truncate }) })>Supercalifragilisticexpialidocious</span>
+</row>
 "#;
 
-const HUG_BADGE_SELECT_OVERFLOW: &str = r#"
-<column style({ size({ max-w: 24 }) })>
-  <row gap="1">
-    <badge size="sm" style({ overflow({ x: hidden }) })>select</badge>
-    <badge size="sm" style({ overflow({ x: hidden }) })>select</badge>
-    <badge size="sm" style({ overflow({ x: hidden }) })>select</badge>
-    <badge size="sm" style({ overflow({ x: hidden }) })>select</badge>
-    <badge size="sm" style({ overflow({ x: hidden }) })>select</badge>
-  </row>
-</column>
+const HUG_CLIP_OVERFLOW: &str = r#"
+<row nowrap style({ size({ w: 16 }) })>
+  <span style({ overflow({ x: hidden }) })>Supercalifragilisticexpialidocious</span>
+</row>
+"#;
+
+/// Flex ellipsis pattern. Current policy: still hug (no authored width /
+/// max-width). Documents today's classification — not a grow exemption.
+const FLEX_GROW_TRUNCATE: &str = r#"
+<row nowrap style({ size({ w: 16 }) })>
+  <span style({ grow(1).size({ min-w: 0 }).type({ wrap: truncate }) })>Supercalifragilisticexpialidocious</span>
+</row>
 "#;
 
 const MAX_W_TRUNCATE: &str = r#"
@@ -83,10 +74,10 @@ fn workspace_root() -> PathBuf {
 
 #[test]
 fn hug_badge_select_one_px_short_errors_without_truncate_suggest() {
-    let hits = clipped(HUG_BADGE_SELECT);
+    let hits = clipped(HUG_CLIP);
     assert!(
         !hits.is_empty(),
-        "hug <badge>select</badge> 1px short must emit `{RULE_CLIPPED_TEXT}`: {hits:?}"
+        "hug clip must emit `{RULE_CLIPPED_TEXT}`: {hits:?}"
     );
     assert!(
         hits.iter().all(|d| d.severity == DiagSeverity::Error),
@@ -103,7 +94,7 @@ fn hug_badge_select_one_px_short_errors_without_truncate_suggest() {
 
 #[test]
 fn hug_badge_truncate_mask_still_errors() {
-    let hits = clipped(HUG_BADGE_SELECT_TRUNCATE);
+    let hits = clipped(HUG_CLIP_TRUNCATE);
     assert!(
         !hits.is_empty(),
         "hug + type({{ wrap: truncate }}) must still emit `{RULE_CLIPPED_TEXT}`: {hits:?}"
@@ -119,7 +110,7 @@ fn hug_badge_truncate_mask_still_errors() {
 
 #[test]
 fn hug_badge_overflow_hidden_mask_still_errors() {
-    let hits = clipped(HUG_BADGE_SELECT_OVERFLOW);
+    let hits = clipped(HUG_CLIP_OVERFLOW);
     assert!(
         !hits.is_empty(),
         "hug + overflow hidden must still emit `{RULE_CLIPPED_TEXT}`: {hits:?}"
@@ -144,11 +135,28 @@ fn max_w_truncate_is_legal() {
 
 #[test]
 fn isolated_hug_badge_that_fits_is_silent() {
-    let hits = clipped("<badge>select</badge>");
+    let hits = clipped("<span>select</span>");
     assert!(
         hits.is_empty(),
-        "unconstrained hug badge must not fire: {hits:?}"
+        "unconstrained hug that fits must not fire: {hits:?}"
     );
+}
+
+#[test]
+fn flex_grow_minw0_truncate_is_still_hug_when_it_clips() {
+    let hits = clipped(FLEX_GROW_TRUNCATE);
+    assert!(
+        !hits.is_empty(),
+        "grow + min-w:0 + truncate is still hug (authored width only) — \
+         clip must emit `{RULE_CLIPPED_TEXT}`: {hits:?}"
+    );
+    for d in &hits {
+        assert!(
+            !suggests_truncate(&d.message),
+            "hug flex-ellipsis must not suggest truncate: {}",
+            d.message
+        );
+    }
 }
 
 #[test]

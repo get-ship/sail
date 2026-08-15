@@ -343,6 +343,7 @@ fn refine_clipped_text_message(
 }
 
 fn is_hug_content_width(elem: &sail_layout::html::Element) -> bool {
+    // Authored width / max-width only. grow + min-w:0 is not a width.
     elem.box_style.width.is_none() && elem.box_style.max_width.is_none()
 }
 
