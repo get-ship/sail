@@ -13,15 +13,15 @@
     dot = false
   }
 
-  style base = {display(inline-flex).size({ min-h: control-h-2xs }).pad({ x: 2, y: px }).border({ width: 1 }).radius(sm).type({ family: body, weight: semibold, leading: none, wrap: nowrap, size: xs })}
+  style base = {display(inline-flex).shrink(0).size({ min-h: control-h-2xs }).pad({ x: 2_5, y: px }).border({ width: 1 }).radius(sm).type({ family: body, weight: semibold, leading: none, wrap: nowrap, size: xs })}
 
   style soft = {bg(muted).fg(muted-foreground).border({ color: border })}
   style solid = {bg(muted).fg(muted-foreground).border({ color: border }).elevation(xs)}
   style outline = {bg(transparent).fg(muted-foreground).border({ color: border })}
 
-  style sizeMd = {size({ min-h: control-h-2xs }).pad({ x: 2 }).type({ size: xs })}
-  style sizeSm = {size({ min-h: 4 }).pad({ x: 1_5 }).type({ size: xs })}
-  style sizeLg = {size({ min-h: control-h-xs }).pad({ x: 2_5 }).type({ size: xs })}
+  style sizeMd = {size({ min-h: control-h-2xs }).pad({ x: 2_5 }).type({ size: xs })}
+  style sizeSm = {size({ min-h: 4 }).pad({ x: 2_5 }).type({ size: xs })}
+  style sizeLg = {size({ min-h: control-h-xs }).pad({ x: 3 }).type({ size: xs })}
   // Status disc — pad/text unused; tone still paints via variant match.
   style dotOn = {size({ w: 2, h: 2, min-h: 0 }).pad({ all: 0, x: 0 }).overflow({ all: hidden }).radius(full)}
 
