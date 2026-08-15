@@ -1,3 +1,6 @@
+/**
+ * @vitest-environment happy-dom
+ */
 import { afterEach, beforeAll, describe, expect, it } from 'vitest'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -153,24 +156,49 @@ describe('specimen source', () => {
   })
 })
 
+const GATE_COLOR = {
+  background: { $value: 'oklch(0.98 0 0)', $type: 'color' },
+  foreground: { $value: 'oklch(0.20 0 0)', $type: 'color' },
+  primary: {
+    default: { $value: 'oklch(0.45 0.12 250)', $type: 'color' },
+    foreground: { $value: 'oklch(0.98 0 0)', $type: 'color' },
+  },
+  muted: {
+    default: { $value: 'oklch(0.92 0 0)', $type: 'color' },
+    foreground: { $value: 'oklch(0.35 0 0)', $type: 'color' },
+  },
+  brandAccent: {
+    default: { $value: 'oklch(0.45 0.16 300)', $type: 'color' },
+    foreground: { $value: 'oklch(0.98 0 0)', $type: 'color' },
+  },
+}
+
+function radiusWriteDoc(
+  themeId: string,
+  radius: Record<string, unknown>,
+): Record<string, unknown> {
+  return {
+    $extensions: { sail: { themeId, defaultMode: 'light', layer: 'theme' } },
+    modes: {
+      light: {
+        color: GATE_COLOR,
+        radius,
+      },
+    },
+  }
+}
+
 describe('ops SailTheme write + monotonicity parity', () => {
   it('ops refuses non-monotonic scale (named NonMonotonicScale)', async () => {
     const themesDir = 'apps/studio/themes'
     const path = `${themesDir}/__tool7-bad-radius.json`
-    const bad = {
-      $extensions: { sail: { themeId: 'tool7-bad-radius' } },
-      modes: {
-        light: {
-          radius: {
-            sm: { $value: '12px', $type: 'dimension' },
-            md: { $value: '4px', $type: 'dimension' },
-            lg: { $value: '10px', $type: 'dimension' },
-            xl: { $value: '14px', $type: 'dimension' },
-            $extensions: { ordered: ['sm', 'md', 'lg', 'xl'] },
-          },
-        },
-      },
-    }
+    const bad = radiusWriteDoc('tool7-bad-radius', {
+      sm: { $value: '12px', $type: 'dimension' },
+      md: { $value: '4px', $type: 'dimension' },
+      lg: { $value: '10px', $type: 'dimension' },
+      xl: { $value: '14px', $type: 'dimension' },
+      $extensions: { ordered: ['sm', 'md', 'lg', 'xl'] },
+    })
     await expect(
       cli.sailThemeWrite!({
         path,
@@ -181,20 +209,13 @@ describe('ops SailTheme write + monotonicity parity', () => {
 
   it('ops accepts monotonic radius write then read roundtrip', async () => {
     const path = 'apps/studio/themes/__tool7-good-radius.json'
-    const good = {
-      $extensions: { sail: { themeId: 'tool7-good-radius' } },
-      modes: {
-        light: {
-          radius: {
-            sm: { $value: '4px', $type: 'dimension' },
-            md: { $value: '6px', $type: 'dimension' },
-            lg: { $value: '10px', $type: 'dimension' },
-            xl: { $value: '16px', $type: 'dimension' },
-            $extensions: { ordered: ['sm', 'md', 'lg', 'xl'] },
-          },
-        },
-      },
-    }
+    const good = radiusWriteDoc('tool7-good-radius', {
+      sm: { $value: '4px', $type: 'dimension' },
+      md: { $value: '6px', $type: 'dimension' },
+      lg: { $value: '10px', $type: 'dimension' },
+      xl: { $value: '16px', $type: 'dimension' },
+      $extensions: { ordered: ['sm', 'md', 'lg', 'xl'] },
+    })
     try {
       const w = await cli.sailThemeWrite!({
         path,
@@ -689,7 +710,7 @@ describe('brand color + mode-aware paths + decisions', () => {
 describe('preview in app + token filters', () => {
   it('previewInApp posts theme-preview and emits status (no documentElement CSSOM)', () => {
     const base = {
-      $extensions: { ship: { themeId: 'ship', density: 'compact' } },
+      $extensions: { sail: { themeId: 'ship', density: 'compact' } },
       radius: {
         sm: { $value: '4px', $type: 'dimension' },
         md: { $value: '6px', $type: 'dimension' },

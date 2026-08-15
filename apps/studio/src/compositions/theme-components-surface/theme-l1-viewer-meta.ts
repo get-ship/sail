@@ -102,7 +102,7 @@ const VARIANT_META: Partial<
   icon: {
     variants: ['xs', 'sm', 'md', 'lg', 'xl'],
     variantAttr: 'size',
-    blurb: 'Glyph host · size from theme icon scale; ink currentColor.',
+    blurb: 'Glyph host · size from theme icon scale; currentColor.',
   },
   spinner: {
     variants: ['xs', 'sm', 'md', 'lg'],
@@ -128,7 +128,7 @@ const VARIANT_META: Partial<
   skeleton: {
     variants: ['text', 'line', 'block', 'circle'],
     variantAttr: 'shape',
-    blurb: 'Loading sheen · muted fill.',
+    blurb: 'Loading sheen · muted background.',
   },
   'empty-state': {
     variants: ['default', 'inline', 'placeholder', 'connecting'],
@@ -150,18 +150,18 @@ const VARIANT_META: Partial<
   kbd: {
     variants: [],
     variantAttr: '',
-    blurb: 'Keycap · muted fill + foreground + border; no size/variant props.',
+    blurb: 'Keycap · muted background + foreground + border; no size/variant props.',
   },
   'code-block': {
     variants: [],
     variantAttr: '',
     blurb:
-      'Syntax-highlighted pre · surface fill + foreground; code + lang props; use:syntaxHighlight; no line numbers / copy chrome.',
+      'Syntax-highlighted pre · surface background + foreground; code + lang props; use:syntaxHighlight; no line numbers / copy chrome.',
   },
   legend: {
     variants: [],
     variantAttr: '',
-    blurb: 'Fieldset caption · foreground ink; nest in fieldset; no size/variant props.',
+    blurb: 'Fieldset caption · foreground; nest in fieldset; no size/variant props.',
   },
   fieldset: {
     variants: [],
@@ -173,25 +173,25 @@ const VARIANT_META: Partial<
     variants: ['xs', 'sm', 'md', 'lg'],
     variantAttr: 'size',
     blurb:
-      'Native multi-line · input fill + foreground + border (shared with input/select); size xs–lg · rows · invalid · disabled; no tone.',
+      'Native multi-line · input background + foreground + border (shared with input/select); size xs–lg · rows · invalid · disabled; no tone.',
   },
   radio: {
     variants: [],
     variantAttr: '',
     blurb:
-      'One option · foreground label ink; value + disabled only; exclusivity via radio-group.',
+      'One option · foreground label; value + disabled only; exclusivity via radio-group.',
   },
   select: {
     variants: ['xs', 'sm', 'md', 'lg'],
     variantAttr: 'size',
     blurb:
-      'Native closed picker · input fill + foreground + border; size xs–lg; invalid + disabled + multiple; not combobox.',
+      'Native closed picker · input background + foreground + border; size xs–lg; invalid + disabled + multiple; not combobox.',
   },
   input: {
     variants: ['xs', 'sm', 'md', 'lg'],
     variantAttr: 'size',
     blurb:
-      'Native input · type-gated skins; input fill + foreground + border; size + invalid + disabled; no filled/unstyled variant.',
+      'Native input · type-gated skins; input background + foreground + border; size + invalid + disabled; no filled/unstyled variant.',
   },
   checkbox: {
     variants: ['xs', 'sm', 'md', 'lg'],
@@ -201,7 +201,7 @@ const VARIANT_META: Partial<
   prose: {
     variants: [],
     variantAttr: '',
-    blurb: 'Typography scope · foreground ink; nested tags via type map; no size/variant props.',
+    blurb: 'Typography scope · foreground; nested tags via type map; no size/variant props.',
   },
   ticker: {
     variants: ['fast', 'normal', 'slow'],

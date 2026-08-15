@@ -816,7 +816,7 @@ export default controller(() => {
                   </if>
                   <if {components.stage.prose()}>
                     <column gap="3" style(sampleMax)>
-                      <p style(fieldHint)>Rest · foreground ink</p>
+                      <p style(fieldHint)>Rest · foreground</p>
                       <prose>
                         <h2>Typography scope</h2>
                         <p>

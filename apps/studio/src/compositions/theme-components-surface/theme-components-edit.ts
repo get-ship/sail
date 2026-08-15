@@ -13,7 +13,7 @@ import {
   type ViewerPropRow,
 } from './theme-l1-viewer-meta'
 
-/** Shared control fill — input / select / textarea / field. */
+/** Shared control background — input / select / textarea / field. */
 const FIELD_ROLES: { path: string; label: string }[] = [
   { path: 'color.input', label: 'Input' },
   { path: 'color.foreground', label: 'Foreground' },
@@ -22,7 +22,7 @@ const FIELD_ROLES: { path: string; label: string }[] = [
   { path: 'radius.md', label: 'Radius' },
 ]
 
-/** Overlay fill — popover / dropdown / dialog / hover-card / tooltip. */
+/** Overlay background — popover / dropdown / dialog / hover-card / tooltip. */
 const OVERLAY_ROLES: { path: string; label: string }[] = [
   { path: 'color.popover.default', label: 'Popover' },
   { path: 'color.popover.foreground', label: 'Popover foreground' },
@@ -71,7 +71,7 @@ export const FACE_ROLES: Record<string, { path: string; label: string }[]> = {
   ],
   'empty-state': [
     { path: 'color.muted.default', label: 'Muted' },
-    { path: 'color.muted.foreground', label: 'Muted ink' },
+    { path: 'color.muted.foreground', label: 'Muted foreground' },
     { path: 'color.border.default', label: 'Border' },
     { path: 'color.foreground', label: 'Foreground' },
     { path: 'color.primary.default', label: 'Primary' },
@@ -98,7 +98,7 @@ export const FACE_ROLES: Record<string, { path: string; label: string }[]> = {
   ],
   'error-state': [
     { path: 'color.muted.default', label: 'Muted' },
-    { path: 'color.muted.foreground', label: 'Muted ink' },
+    { path: 'color.muted.foreground', label: 'Muted foreground' },
     { path: 'color.border.default', label: 'Border' },
     { path: 'color.destructive.default', label: 'Danger' },
     { path: 'color.foreground', label: 'Foreground' },
@@ -172,9 +172,9 @@ export const FACE_ROLES: Record<string, { path: string; label: string }[]> = {
   ],
   ticker: [
     { path: 'color.muted.default', label: 'Muted' },
-    { path: 'color.muted.foreground', label: 'Muted ink' },
+    { path: 'color.muted.foreground', label: 'Muted foreground' },
     { path: 'color.primary.default', label: 'Primary' },
-    { path: 'color.primary.foreground', label: 'Primary ink' },
+    { path: 'color.primary.foreground', label: 'Primary foreground' },
     { path: 'radius.md', label: 'Radius' },
   ],
 }
@@ -184,18 +184,18 @@ const FACE_HINTS: Record<string, string> = {
   badge: 'Status chips',
   button: 'Actions · default is solid primary',
   a: 'Links · bare text or button-link chrome',
-  card: 'Surfaces · card fill and ink',
+  card: 'Surfaces · card background and foreground',
   tabs: 'Tabs (list + tab + panel as one face)',
   toast: 'Toasts + region',
   'radio-group': 'Radio set',
   switch: 'Binary toggles · muted track + primary checked',
-  radio: 'Radio option · foreground ink',
+  radio: 'Radio option · foreground',
   checkbox: 'Boolean check · input face + primary checked',
   ticker: 'Marquee host · duration/reverse · author paint',
   chip: 'Filters and tags',
-  kbd: 'Keycaps · muted fill + border',
-  'code-block': 'Source block · surface fill + foreground',
-  legend: 'Fieldset caption · foreground ink',
+  kbd: 'Keycaps · muted background + border',
+  'code-block': 'Source block · surface background + foreground',
+  legend: 'Fieldset caption · foreground',
   prose: 'Typography scope · foreground + primary links',
   spinner: 'Indeterminate wait · muted arc + primary tone',
   'empty-state': 'Nothing-here · muted surface · tone on icon',
@@ -205,16 +205,16 @@ const FACE_HINTS: Record<string, string> = {
   'scroll-area': 'Overflow · border thumb',
   slider: 'Range · muted track + primary fill',
   'error-state': 'Recovery · muted surface + destructive',
-  icon: 'Glyph host · icon scale · currentColor ink',
+  icon: 'Glyph host · icon scale · currentColor',
   avatar: 'Face / initials',
-  input: 'Native input · input fill + foreground + border',
-  textarea: 'Multiline · shared input fill',
-  select: 'Native closed picker · shared input fill',
-  field: 'Field wrapper · shared input fill',
+  input: 'Native input · input background + foreground + border',
+  textarea: 'Multiline · shared input background',
+  select: 'Native closed picker · shared input background',
+  field: 'Field wrapper · shared input background',
   fieldset: 'Form group · border',
-  popover: 'Overlay · popover fill',
-  dropdown: 'Overlay · popover fill',
-  dialog: 'Overlay · popover fill',
+  popover: 'Overlay · popover background',
+  dropdown: 'Overlay · popover background',
+  dialog: 'Overlay · popover background',
 }
 
 type FaceDef = {
