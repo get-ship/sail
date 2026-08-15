@@ -83,7 +83,7 @@ export const FAMILIES: readonly L1Family[] = [
   { id: 'slider', host: 'slider', parts: [] },
   { id: 'spinner', host: 'spinner', parts: [] },
   { id: 'switch', host: 'switch', parts: [] },
-  { id: 'table', host: 'table', parts: [] },
+  { id: 'table', host: 'table', parts: ['caption', 'td', 'th'] },
   { id: 'tabs', host: 'tabs', parts: ['tab', 'tab-list', 'tab-panel'] },
   { id: 'textarea', host: 'textarea', parts: [] },
   { id: 'theme-picker', host: 'theme-picker', parts: [] },
@@ -239,6 +239,18 @@ export const TAGS: readonly L1Tag[] = [
       { name: 'variant', values: ['default', 'solid', 'soft', 'outline', 'ghost'], optional: false },
     ],
     concerns: ['bg', 'border', 'elevation', 'fg', 'filter', 'play', 'position', 'size', 'type'],
+  },
+  {
+    tag: 'caption',
+    family: 'table',
+    role: 'part',
+    description: 'table caption. Style product only.',
+    acceptsChildren: true,
+    props: [
+    ],
+    axes: [
+    ],
+    concerns: ['fg', 'type'],
   },
   {
     tag: 'card',
@@ -1091,6 +1103,20 @@ export const TAGS: readonly L1Tag[] = [
     concerns: ['size'],
   },
   {
+    tag: 'td',
+    family: 'table',
+    role: 'part',
+    description: 'table data cell. Style product only.',
+    acceptsChildren: true,
+    props: [
+      { name: 'numeric', type: 'bool', default: 'false' },
+    ],
+    axes: [
+      { name: 'numeric', values: ['false', 'true'], optional: false },
+    ],
+    concerns: ['border', 'type'],
+  },
+  {
     tag: 'textarea',
     family: 'textarea',
     role: 'host',
@@ -1111,6 +1137,20 @@ export const TAGS: readonly L1Tag[] = [
       { name: 'surface', values: ['default', 'filled', 'flushed'], optional: false },
     ],
     concerns: ['bg', 'border', 'elevation', 'fg', 'filter', 'play', 'size', 'type'],
+  },
+  {
+    tag: 'th',
+    family: 'table',
+    role: 'part',
+    description: 'table header cell. Style product only.',
+    acceptsChildren: true,
+    props: [
+      { name: 'numeric', type: 'bool', default: 'false' },
+    ],
+    axes: [
+      { name: 'numeric', values: ['false', 'true'], optional: false },
+    ],
+    concerns: ['border', 'fg', 'type'],
   },
   {
     tag: 'theme-picker',

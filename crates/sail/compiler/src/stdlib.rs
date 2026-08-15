@@ -42,6 +42,9 @@ const SOURCES: &[(&str, &str)] = &[
         include_str!("../stdlib/accordion/accordion.sail"),
     ),
     ("table", include_str!("../stdlib/table/table.sail")),
+    ("th", include_str!("../stdlib/table/th.sail")),
+    ("td", include_str!("../stdlib/table/td.sail")),
+    ("caption", include_str!("../stdlib/table/caption.sail")),
     ("fieldset", include_str!("../stdlib/fieldset/fieldset.sail")),
     ("legend", include_str!("../stdlib/fieldset/legend.sail")),
     ("progress", include_str!("../stdlib/progress/progress.sail")),
@@ -156,6 +159,7 @@ pub fn family_of(tag: &str) -> &'static str {
         "tab" | "tab-list" | "tab-panel" => "tabs",
         "legend" => "fieldset",
         "toast-region" => "toast",
+        "th" | "td" | "caption" => "table",
         other => SOURCES
             .iter()
             .map(|(t, _)| *t)

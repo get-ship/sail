@@ -1,8 +1,9 @@
 <!--
   <table> — structural data table. Style product only.
   Variants dense / striped / hoverable / bordered / sticky-header are host props.
-  Cell paint (th/td/caption/sticky) via descendant map (platform/table.css).
-  Style cannot target thead — sticky-header compounds live on that map.
+  Cell rest paint is family parts (th.sail / td.sail / caption.sail).
+  Host compounds stay on platform/table.css — parts cannot see host attrs,
+  and thead/tbody/tr stay HTML.
 -->
 
 <scope>

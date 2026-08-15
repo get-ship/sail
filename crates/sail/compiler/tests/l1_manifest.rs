@@ -52,24 +52,36 @@ fn family_dirs_are_the_composition() {
     assert_eq!(family_of("toast"), "toast");
     assert_eq!(family_of("toast-region"), "toast");
     assert_eq!(family_of("button"), "button");
+    assert_eq!(family_of("table"), "table");
+    assert_eq!(family_of("th"), "table");
+    assert_eq!(family_of("td"), "table");
+    assert_eq!(family_of("caption"), "table");
     assert!(is_family_host("tabs"));
     assert!(!is_family_host("tab"));
     assert!(is_family_host("toast"));
     assert!(!is_family_host("toast-region"));
+    assert!(is_family_host("table"));
+    assert!(!is_family_host("th"));
+    assert!(!is_family_host("td"));
+    assert!(!is_family_host("caption"));
     assert_eq!(
         family_tags("tabs"),
         vec!["tabs", "tab", "tab-list", "tab-panel"]
     );
     assert_eq!(family_tags("fieldset"), vec!["fieldset", "legend"]);
     assert_eq!(family_tags("toast"), vec!["toast", "toast-region"]);
+    assert_eq!(
+        family_tags("table"),
+        vec!["table", "caption", "td", "th"]
+    );
 }
 
 #[test]
 fn l1_surface_count_is_documented() {
     let (stdlib, reskins) = l1_by_kind();
-    assert_eq!(stdlib.len(), 61, "stdlib L1 count");
+    assert_eq!(stdlib.len(), 64, "stdlib L1 count");
     assert_eq!(reskins.len(), 0, "reskins empty");
-    assert_eq!(l1_entries().len(), 61);
+    assert_eq!(l1_entries().len(), 64);
 }
 
 #[test]
@@ -183,7 +195,7 @@ fn skeleton_description_names_loading_placeholder() {
 #[test]
 fn every_l1_entry_declares_component_tokens_and_js() {
     let entries = l1_entries();
-    assert_eq!(entries.len(), 61, "stdlib L1 count");
+    assert_eq!(entries.len(), 64, "stdlib L1 count");
     for e in &entries {
         // Fields must be present (empty vec / None-kind is valid).
         let _ = &e.component_tokens;

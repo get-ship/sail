@@ -469,7 +469,7 @@ fn tab_selected_underline_and_inset_focus_on_host_sx() {
 #[test]
 fn toggle_pressed_focus_stack_on_host_sx() {
     // Style product: position(relative) + when(pressed/focus) z stack + outline.
-    let src = include_str!("../stdlib/toggle/toggle.sail");
+    let src = include_str!("../stdlib/toggle-group/toggle.sail");
     let out = compile_element(src, "toggle").expect("toggle");
     assert!(
         (out.structure_html.contains("positionrelative")
@@ -704,7 +704,7 @@ fn separator_rest_line_without_empty_tone_stomp() {
 #[test]
 fn toggle_pressed_uses_primary_not_invert() {
     // C-TG-1: selected = primary tokens; pressed+hover keeps identity.
-    let src = include_str!("../stdlib/toggle/toggle.sail");
+    let src = include_str!("../stdlib/toggle-group/toggle.sail");
     let out = compile_element(src, "toggle").expect("toggle compiles");
     assert!(
         src.contains("bg(primary)")
@@ -1223,7 +1223,7 @@ fn error_state_child_paint_on_structure_sx() {
 fn radio_nested_row_kills_label_flex_pe() {
     // Root stays <label> for native semantics; type paint on host Style.
     // Flex/gap for label+control is contracts host CSS (cannot nest <row> on label).
-    let src = include_str!("../stdlib/radio/radio.sail");
+    let src = include_str!("../stdlib/radio-group/radio.sail");
     let out = compile_element(src, "radio").expect("radio compiles");
     assert!(
         src.contains("<label")
@@ -1315,7 +1315,7 @@ fn toggle_group_segmented_and_join_on_skins_not_pe() {
             && !contracts.contains(".sail-toggle-group[variant='ghost']"),
         "toggle-group hand host CSS must be gone from contracts"
     );
-    let toggle_src = include_str!("../stdlib/toggle/toggle.sail");
+    let toggle_src = include_str!("../stdlib/toggle-group/toggle.sail");
     let toggle_out = compile_element(toggle_src, "toggle").expect("toggle compiles");
     assert!(
         !toggle_src.contains("--tg-")
@@ -1748,6 +1748,60 @@ fn prose_host_paint_on_sx_descendants_generated() {
 }
 
 #[test]
+fn table_cells_are_family_parts_not_descendant_paint() {
+    // Rest cell paint is Style on native parts. Host compounds stay platform
+    // because a part cannot see table attrs and tr stays HTML.
+    let th = compile_element(include_str!("../stdlib/table/th.sail"), "th").expect("th compiles");
+    let td = compile_element(include_str!("../stdlib/table/td.sail"), "td").expect("td compiles");
+    let caption = compile_element(include_str!("../stdlib/table/caption.sail"), "caption")
+        .expect("caption compiles");
+    assert!(
+        th.native && td.native && caption.native,
+        "table parts are native tags"
+    );
+    assert!(
+        (th.skin_css.contains("padding-block:var(--space-2_5)")
+            || th.skin_css.contains("padding-block: var(--space-2_5)")
+            || th.skin_css.contains("--space-2_5"))
+            && (th.skin_css.contains("muted-foreground")
+                || th.structure_html.contains("muted-foreground")
+                || th.structure_html.contains("mutedforeground"))
+            && (th.skin_css.contains("nowrap") || th.structure_html.contains("nowrap")),
+        "th rest paint is Style:\nskin={}\nstruct={}",
+        th.skin_css,
+        th.structure_html
+    );
+    assert!(
+        th.skin_css.contains("[numeric]") || th.skin_css.contains("numeric="),
+        "th numeric is a cell match, not a table descendant:\n{}",
+        th.skin_css
+    );
+    let skins = sail_compiler::stdlib::skins_css();
+    assert!(
+        skins.contains("/* @element th */")
+            && skins.contains("/* @element td */")
+            && skins.contains("/* @element caption */"),
+        "table parts must emit their own skins"
+    );
+    assert!(
+        !skins.contains(".sail-table th { padding")
+            && !skins.contains(".sail-table td { padding")
+            && !skins.contains(".sail-table caption {")
+            && !skins.contains("th[numeric]"),
+        "cell rest paint must not be a table descendant sheet:\n{skins}"
+    );
+    assert!(
+        skins.contains("/* @provenance platform/table.css */")
+            && skins.contains(".sail-table[dense]")
+            && skins.contains(".sail-table[striped]")
+            && skins.contains(".sail-table[hoverable]")
+            && skins.contains(".sail-table[bordered]")
+            && skins.contains("tr:last-child"),
+        "host compounds that Style cannot see stay in platform/table.css"
+    );
+}
+
+#[test]
 fn tab_list_sticky_and_variant_on_host_not_parent_pe() {
     // Sticky + variant on <tab-list> host. Pill track CVA. Child tab matrices
     // are stamped variant CVA on tab.sail (not parent host CSS). Vertical host axis
@@ -2125,7 +2179,7 @@ fn label_req_gate_in_element_skins_anatomy() {
 fn pagination_size_cva_on_page() {
     // Size Style match lives on each <page>; <pagination> is layout-only (no size prop).
     // No --pg-* host Style in contracts.
-    let page_src = include_str!("../stdlib/page/page.sail");
+    let page_src = include_str!("../stdlib/pagination/page.sail");
     let pag_src = include_str!("../stdlib/pagination/pagination.sail");
     let page = compile_element(page_src, "page").expect("page compiles");
     let _pag = compile_element(pag_src, "pagination").expect("pagination compiles");

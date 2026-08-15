@@ -1,6 +1,4 @@
-.sail-table caption { padding:var(--space-2) var(--space-3);color:var(--muted-foreground);text-align:left; }
-.sail-table th { padding:var(--space-2_5) var(--space-3);font-weight:var(--font-weight-semibold);color:var(--muted-foreground);border-bottom:1px solid color-mix(in srgb, var(--foreground) 16%, transparent);white-space:nowrap;text-align:left; }
-.sail-table td { padding:var(--space-2_5) var(--space-3);border-bottom:1px solid color-mix(in srgb, var(--foreground) 9%, transparent); }
+/* Host-gated leftover. Parts cannot see table attrs; tr stays HTML. */
 .sail-table tbody > tr:last-child > td { border-bottom:0; }
 .sail-table[dense] th, .sail-table[dense] td { padding:var(--space-1_5) var(--space-2); }
 .sail-table[striped] > tbody > tr:nth-child(even) { background:var(--surface-2); }
@@ -8,4 +6,3 @@
 .sail-table[bordered] th, .sail-table[bordered] td { border:1px solid color-mix(in srgb, var(--foreground) 9%, transparent); }
 .sail-table thead[sticky] th { position:sticky;top:0;z-index:1;background:var(--background); }
 .sail-table[sticky-header] thead th { position:sticky;top:0;z-index:1;background:var(--card); }
-.sail-table th[numeric], .sail-table td[numeric] { text-align:right;font-variant-numeric:tabular-nums; }

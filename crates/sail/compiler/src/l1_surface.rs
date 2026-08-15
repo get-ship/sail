@@ -204,4 +204,15 @@ mod tests {
         assert!(ts.contains("family: 'tabs'"));
         assert!(ts.contains("role: 'part'"));
     }
+
+    #[test]
+    fn catalog_names_table_parts() {
+        let ts = catalog_ts();
+        assert!(ts.contains("id: 'table'"));
+        assert!(ts.contains("parts: ['caption', 'td', 'th']"));
+        assert!(ts.contains("family: 'table'"));
+        assert!(ts.contains("tag: 'th'"));
+        assert!(ts.contains("tag: 'td'"));
+        assert!(ts.contains("tag: 'caption'"));
+    }
 }

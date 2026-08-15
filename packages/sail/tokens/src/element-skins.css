@@ -99,9 +99,7 @@ select { display: inline-flex; }.s-displayblock{display:block}.s-sizeminhcontrol
 /* @element table */
 .s-sizewfull{width:100%}.s-fgforeground{color:var(--fg-foreground-color)}.s-typealignstartfamilybodyleadingnormalsizesm{text-align:start;font-family:var(--body-font);line-height:var(--leading-normal);font-size:var(--text-sm)}
 /* @provenance platform/table.css */
-.sail-table caption { padding:var(--space-2) var(--space-3);color:var(--muted-foreground);text-align:left; }
-.sail-table th { padding:var(--space-2_5) var(--space-3);font-weight:var(--font-weight-semibold);color:var(--muted-foreground);border-bottom:1px solid color-mix(in srgb, var(--foreground) 16%, transparent);white-space:nowrap;text-align:left; }
-.sail-table td { padding:var(--space-2_5) var(--space-3);border-bottom:1px solid color-mix(in srgb, var(--foreground) 9%, transparent); }
+/* Host-gated leftover. Parts cannot see table attrs; tr stays HTML. */
 .sail-table tbody > tr:last-child > td { border-bottom:0; }
 .sail-table[dense] th, .sail-table[dense] td { padding:var(--space-1_5) var(--space-2); }
 .sail-table[striped] > tbody > tr:nth-child(even) { background:var(--surface-2); }
@@ -109,7 +107,15 @@ select { display: inline-flex; }.s-displayblock{display:block}.s-sizeminhcontrol
 .sail-table[bordered] th, .sail-table[bordered] td { border:1px solid color-mix(in srgb, var(--foreground) 9%, transparent); }
 .sail-table thead[sticky] th { position:sticky;top:0;z-index:1;background:var(--background); }
 .sail-table[sticky-header] thead th { position:sticky;top:0;z-index:1;background:var(--card); }
-.sail-table th[numeric], .sail-table td[numeric] { text-align:right;font-variant-numeric:tabular-nums; }
+
+/* @element th */
+.s-padx3y25{padding-inline:var(--space-3);padding-block:var(--space-2_5)}.s-fgcolormutedforeground{color:var(--muted-foreground)}.s-bordercolorborderedgebwidth1{border-bottom-color:var(--border);border-bottom-width:1px}.s-typealignstartweightsemiboldwrapnowrap{text-align:start;font-weight:var(--font-weight-semibold);white-space:nowrap}[numeric].s-numerictrue-typealignendnumstabular{text-align:end;font-variant-numeric:tabular-nums}
+
+/* @element td */
+.s-padx3y25{padding-inline:var(--space-3);padding-block:var(--space-2_5)}.s-bordercolorbordersubtleedgebwidth1{border-bottom-color:var(--border-subtle);border-bottom-width:1px}[numeric].s-numerictrue-typealignendnumstabular{text-align:end;font-variant-numeric:tabular-nums}
+
+/* @element caption */
+.s-padx3y2{padding-inline:var(--space-3);padding-block:var(--space-2)}.s-fgcolormutedforeground{color:var(--muted-foreground)}.s-typealignstart{text-align:start}
 
 /* @element fieldset */
 .s-padall4{padding:var(--space-4)}.s-marginall0{margin:0}.s-bordercolorborderwidth1{border-color:var(--border);border-width:1px}.s-radiusallmd{border-radius:var(--radius-md)}.s-bgcolortransparent{background-color:transparent}.s-disabled-filteropacity50:is(:disabled,[aria-disabled='true']){opacity:0.5}.s-disabled-cursornotallowed:is(:disabled,[aria-disabled='true']){cursor:not-allowed}
