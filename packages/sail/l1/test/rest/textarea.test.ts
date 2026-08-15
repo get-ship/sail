@@ -13,4 +13,21 @@ describe('l1 textarea rest', () => {
     expect(getByRole(v.root, 'textbox', { name: 'Bio' })).toBeTruthy()
     v.unmount()
   })
+
+  it('stamps native rows from the host prop', () => {
+    const v = renderRoute(`<label>Notes<textarea rows="5"></textarea></label>`)
+    const el = getByRole(v.root, 'textbox', { name: 'Notes' }) as HTMLTextAreaElement
+    expect(el.tagName).toBe('TEXTAREA')
+    expect(el.getAttribute('rows')).toBe('5')
+    expect(Number(el.rows)).toBe(5)
+    v.unmount()
+  })
+
+  it('defaults to 3 native rows when omitted', () => {
+    const v = renderRoute(`<label>Notes<textarea></textarea></label>`)
+    const el = getByRole(v.root, 'textbox', { name: 'Notes' }) as HTMLTextAreaElement
+    expect(el.getAttribute('rows')).toBe('3')
+    expect(Number(el.rows)).toBe(3)
+    v.unmount()
+  })
 })

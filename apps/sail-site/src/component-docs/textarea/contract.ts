@@ -12,7 +12,7 @@ export const contract = {
     size: {
       values: ['xs', 'sm', 'md', 'lg'] as const,
       default: 'md',
-      control: 'slider',
+      control: 'select',
     },
     surface: {
       values: ['default', 'filled', 'flushed'] as const,

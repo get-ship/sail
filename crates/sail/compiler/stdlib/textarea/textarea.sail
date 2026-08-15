@@ -1,6 +1,7 @@
 <!--
   <textarea> — native multi-line field. Style product only.
-  Shares the field surface with <input>; residual no longer carries field paint.
+  Shares the field surface with <input>: bg(input) / fg(foreground) / border.
+  `rows` is the native HTML rows attr (default 3). size is pad/type scale.
 -->
 
 <scope>
@@ -13,8 +14,8 @@
     rows = 3
   }
 
-  // Shares input / foreground / border.
-  style base = {display(block).size({ min-h: control-h-md }).pad({ y: 1_5, x: 3 }).fg(foreground).bg(input).border({ color: border, width: 1 }).radius(md).elevation(xs).type({ size: base }), when: {hover: border({ color: border-strong }), disabled: cursor(not-allowed).filter({ opacity: 50 })}}
+  // Same input / foreground / border spend as <input> — no special well.
+  style base = {display(block).size({ min-h: control-h-md }).pad({ y: 1_5, x: 3 }).fg(foreground).bg(input).border({ color: border, width: 1 }).radius(md).elevation(xs).type({ size: base }).boxSizing(border), when: {hover: border({ color: border-strong }), disabled: cursor(not-allowed).filter({ opacity: 50 })}}
   style sizeXs = {size({ min-h: control-h-2xs }).pad({ x: 2 }).type({ size: xs })}
   style sizeSm = {size({ min-h: control-h-sm }).pad({ x: 2_5 }).type({ size: sm })}
   style sizeMd = {size({ min-h: control-h-md }).pad({ x: 3 }).type({ size: base })}
