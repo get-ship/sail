@@ -265,6 +265,46 @@ describe('bindValue', () => {
     expect(el.value).toBe('c')
     expect(seen).toEqual([])
   })
+
+  it('wrapper host: signal writes the inner range and the value attribute', () => {
+    const host = document.createElement('div')
+    const inner = document.createElement('input')
+    inner.type = 'range'
+    inner.min = '0'
+    inner.max = '100'
+    host.append(inner)
+    const $v = signal('30')
+    bindValue(host, $v)
+    expect(inner.value).toBe('30')
+    expect(host.getAttribute('value')).toBe('30')
+    $v.set('90')
+    expect(inner.value).toBe('90')
+    expect(host.getAttribute('value')).toBe('90')
+  })
+
+  it('wrapper host: inner input writes back to the signal', () => {
+    const host = document.createElement('div')
+    const inner = document.createElement('input')
+    inner.type = 'range'
+    inner.min = '0'
+    inner.max = '100'
+    host.append(inner)
+    const $v = signal('0')
+    bindValue(host, $v)
+    inner.value = '44'
+    inner.dispatchEvent(new Event('input', { bubbles: true }))
+    expect($v()).toBe('44')
+  })
+
+  it('coerces a number signal so el.value compares equal', () => {
+    const el = document.createElement('input')
+    el.type = 'range'
+    const $v = signal(1)
+    bindValue(el, $v as unknown as ReturnType<typeof signal<string>>)
+    expect(el.value).toBe('1')
+    $v.set(2)
+    expect(el.value).toBe('2')
+  })
 })
 
 describe('bindChecked', () => {

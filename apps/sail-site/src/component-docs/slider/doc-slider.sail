@@ -76,8 +76,8 @@ export default controller((_ctx: Scope) => {
   >
     <column slot="specimen" gap="3" align="stretch" style(specimen)>
       <row justify="between" align="center">
-        <span style(sizeValue)>Value</span>
-        <span style(sizeValue)>{load()}</span>
+        <span style(sizeValue)>Volume</span>
+        <span style(sizeValue)>{load()}%</span>
       </row>
       <if {disabled()}>
         <slider value={load()} min="0" max="100" step="1" size={size()} disabled style(controlW)></slider>
@@ -92,13 +92,6 @@ export default controller((_ctx: Scope) => {
           <span style(sizeValue)>{size()}</span>
         </row>
         <slider bind:value={sizeIdx} min="0" max="2" step="1" size="sm" label="Size" ticks="sm,md,lg"></slider>
-      </column>
-      <column gap="2">
-        <row gap="2" align="center" justify="between">
-          <label style(knobLabel)>Value</label>
-          <span style(sizeValue)>{load()}</span>
-        </row>
-        <slider bind:value={load} min="0" max="100" size="sm" label="Value"></slider>
       </column>
       <row gap="4" align="center">
         <label><checkbox bind:checked={disabled} size="sm" /> Disabled</label>

@@ -238,12 +238,57 @@ export function bindDynamic(el: Element, name: string, get: () => unknown): Disp
   return asProp ? bindProp(el, camel, get) : bindAttr(el, name, get)
 }
 
+function isValueControl(
+  el: EventTarget | null,
+): el is HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement {
+  return (
+    el instanceof HTMLInputElement ||
+    el instanceof HTMLTextAreaElement ||
+    el instanceof HTMLSelectElement
+  )
+}
+
+function firstValueControl(
+  el: Element,
+): HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null {
+  if (isValueControl(el)) return el
+  return el.querySelector<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(
+    'input:not([hidden]), textarea, select',
+  )
+}
+
+function readBoundValue(el: Element, ev?: Event): string {
+  if (isValueControl(ev?.target ?? null)) return (ev!.target as HTMLInputElement).value
+  const inner = firstValueControl(el)
+  if (inner) return inner.value
+  const host = el as HTMLInputElement
+  if (typeof host.value === 'string') return host.value
+  return el.getAttribute('value') ?? ''
+}
+
+function writeBoundValue(el: Element, v: string): void {
+  if (isValueControl(el)) {
+    if (el.value !== v) el.value = v
+    return
+  }
+  // Wrapper hosts (<slider> splices to a div): attribute is what rangePair
+  // observes; `.value` hits the accessor rangePair installs; the inner
+  // range is the last-resort write if children exist and no accessor did.
+  if (el.getAttribute('value') !== v) el.setAttribute('value', v)
+  const host = el as HTMLInputElement
+  if (host.value !== v) host.value = v
+  const inner = firstValueControl(el)
+  if (inner && inner.value !== v) inner.value = v
+}
+
 /**
  * Two-way bind a string signal to an `<input>` / `<textarea>` /
- * `<select>` element. Initial render and signal-driven updates flow
+ * `<select>` element — or a wrapper host (L1 `<slider>`) whose native
+ * control is a descendant. Initial render and signal-driven updates flow
  * signal → element; user edits flow element → signal via the `input`
  * event. Setting the same value re-checks identity to avoid moving the
- * caret.
+ * caret. Non-string signal reads are coerced so number knobs (`signal(1)`)
+ * compare equal to the DOM string.
  *
  * The optional `onWrite` callback fires after each user-driven signal
  * write — use it for dispatching public events or syncing form state
@@ -254,7 +299,7 @@ export function bindDynamic(el: Element, name: string, get: () => unknown): Disp
  * Compiler target: `bind:value={state}` (no callback) or
  * `bind:value={state} on:bind={fn}` (with callback) template syntax.
  *
- * @param el Form control whose `.value` is two-way bound.
+ * @param el Form control or wrapper host whose value is two-way bound.
  * @param sig String signal that owns the value.
  * @param onWrite Optional callback invoked with the new value after
  *   each user-input-driven signal write.
@@ -269,16 +314,17 @@ export function bindDynamic(el: Element, name: string, get: () => unknown): Disp
  * @see bindChecked for boolean controls; bindProp for one-way prop binding.
  */
 export function bindValue(
-  el: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement,
+  el: Element,
   sig: Signal<string>,
   onWrite?: (value: string) => void,
 ): Disposer {
   const dispose = effect(() => {
-    const v = sig()
-    if (el.value !== v) el.value = v
+    const raw = sig()
+    const v = raw == null ? '' : String(raw)
+    writeBoundValue(el, v)
   })
-  const onInput = () => {
-    const v = el.value
+  const onInput = (ev: Event) => {
+    const v = readBoundValue(el, ev)
     sig.set(v)
     if (onWrite) onWrite(v)
   }

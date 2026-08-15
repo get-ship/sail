@@ -18,8 +18,8 @@
     ticks = ''
   }
 
-  style host = {position(relative).display(block).size({ w: full })}
-  style base = {size({ w: full, h: 5 }).appearance(none).bg(transparent).cursor(pointer), when: {disabled: cursor(not-allowed).filter({ opacity: 50 })}}
+  style host = {position(relative).display(block).size({ w: full, h: 5 })}
+  style base = {size({ w: full, h: full }).appearance(none).bg(transparent).cursor(pointer), when: {disabled: cursor(not-allowed).filter({ opacity: 50 })}}
   style sizeSm = {size({ h: 4 })}
   style sizeMd = {size({ h: 5 })}
   style sizeLg = {size({ h: 6 })}
@@ -27,15 +27,15 @@
   style thumbOff = {display(none)}
 </scope>
 
-<div use:rangePair style(host)>
+<div use:rangePair style(host, { match: { size: { sm: sizeSm, md: sizeMd, lg: sizeLg } } })>
   <input
     type="range"
     use:rangeFill
-    style(base, { match: { size: { sm: sizeSm, md: sizeMd, lg: sizeLg } } })
+    style(base)
   >
   <input
     type="range"
     use:rangeFill
-    style(base, { match: { range: { true: thumbOn, false: thumbOff }, size: { sm: sizeSm, md: sizeMd, lg: sizeLg } } })
+    style(base, { match: { range: { true: thumbOn, false: thumbOff } } })
   >
 </div>

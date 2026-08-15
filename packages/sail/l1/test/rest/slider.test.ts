@@ -16,4 +16,13 @@ describe('rest: slider', () => {
     expect(getAllByRole(v.root, 'slider')).toHaveLength(2)
     v.unmount()
   })
+
+  it('size lands on the sail-slider host so platform thumb vars apply', async () => {
+    const v = renderRoute(`<slider value="50" size="sm" />`)
+    await v.flush()
+    const host = v.root.querySelector('.sail-slider')
+    expect(host).not.toBeNull()
+    expect(host!.getAttribute('size')).toBe('sm')
+    v.unmount()
+  })
 })
