@@ -43,6 +43,7 @@
   style stageBlurb = { fg(muted-foreground).type({ family: body, size: sm, leading: relaxed }) }
   style inspectorTitle = { type({ family: heading, size: xl, weight: semibold, tracking: tight }) }
   style tokenChip = { shrink(0).position(relative).size({ w: 9, h: 9, min-w: 9, min-h: 9 }).overflow({ all: hidden }).radius(md).border({ color: border-subtle, width: 1 }).bg(surface-0) }
+  style chipLabel = { type({ wrap: truncate }) }
   type ComponentRailRowProps = {
     id: string
     label: string
@@ -1074,13 +1075,13 @@ export default controller(() => {
                     <p style(pathMeta)>{tok.hexLabel}{tok.isOverridden ? '' : ' · theme default'}</p>
                   </column>
                   <if {tok.isOverridden}>
-                    <badge tone="primary" size="sm" variant="soft" pill token-layer={tok.layer} style(shrink0)>set</badge>
+                    <badge tone="primary" size="sm" variant="soft" pill token-layer={tok.layer} style(shrink0, chipLabel)>set</badge>
                     <button type="button" size="xs" variant="ghost" tone="muted" token-path={tok.path} on:click={components.onClearComponent} disabled={!session.canEdit()} style(shrink0)>
                       Clear
                     </button>
                   </if>
                   <if {!tok.isOverridden}>
-                    <badge tone="muted" size="sm" variant="outline" pill token-layer={tok.layer} style(shrink0)>default</badge>
+                    <badge tone="muted" size="sm" variant="outline" pill token-layer={tok.layer} style(shrink0, chipLabel)>default</badge>
                   </if>
                 </row>
               </for>

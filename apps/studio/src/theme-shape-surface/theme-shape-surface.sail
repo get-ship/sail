@@ -48,6 +48,7 @@
   style pageTitle = { type({ family: heading, size: 2xl, weight: semibold, tracking: tight }) }
   style growMin = { grow(1).size({ min-w: 0 }) }
   style elevHintCol = { size({ min-w: 0 }) }
+  style chipLabel = { type({ wrap: truncate }) }
   type ElevChipProps = {
     elev: string
     label: string
@@ -412,7 +413,7 @@ export default controller(() => {
                         <p style({ type({ family: heading, size: md, weight: semibold }) })>{session.nameEdit()}</p>
                         <p style({ fg(muted-foreground).type({ size: xs }) })>Radius + elevation + border as character</p>
                       </column>
-                      <badge tone="primary" size="sm" variant="soft" pill>shape</badge>
+                      <badge tone="primary" size="sm" variant="soft" pill style(chipLabel)>shape</badge>
                     </row>
                     <column gap="1">
                       <p style(fieldHint)>Project name</p>

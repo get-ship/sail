@@ -44,7 +44,7 @@
     onChange: any
   }
   type FontHitProps = {
-    family: string
+    fontFamily: string
     category: string
     sample: string
     canEdit: boolean
@@ -65,23 +65,23 @@
 </partial>
 
 <partial font-hit-row props: FontHitProps>
-  <column gap="2" font-hit font-family={family} style(fontHit)>
+  <column gap="2" font-hit font-family={fontFamily} style(fontHit)>
     <row align="baseline" justify="between" gap="2" nowrap>
-      <p style(doorTitle, { grow(1).size({ min-w: 0 }) })>{family}</p>
+      <p style(doorTitle, { grow(1).size({ min-w: 0 }) })>{fontFamily}</p>
       <p style(pathMeta, { shrink(0) })>{category}</p>
     </row>
-    <p font-sample face={family} style(fontSample)>{sample}</p>
+    <p font-sample face={fontFamily} style(fontSample)>{sample}</p>
     <row gap="1" align="center">
-      <button type="button" size="xs" variant="outline" tone="muted" font-family={family} font-token="display" on:click={onUseRole} disabled={!canEdit}>
+      <button type="button" size="xs" variant="outline" tone="muted" font-family={fontFamily} font-token="display" on:click={onUseRole} disabled={!canEdit}>
         Display
       </button>
-      <button type="button" size="xs" variant="outline" tone="muted" font-family={family} font-token="body" on:click={onUseRole} disabled={!canEdit}>
+      <button type="button" size="xs" variant="outline" tone="muted" font-family={fontFamily} font-token="body" on:click={onUseRole} disabled={!canEdit}>
         Body
       </button>
-      <button type="button" size="xs" variant="outline" tone="muted" font-family={family} font-token="mono" on:click={onUseRole} disabled={!canEdit}>
+      <button type="button" size="xs" variant="outline" tone="muted" font-family={fontFamily} font-token="mono" on:click={onUseRole} disabled={!canEdit}>
         Mono
       </button>
-      <button type="button" size="xs" variant="soft" tone="primary" font-family={family} font-token="body" on:click={onInstall} disabled={!canEdit} style(shrink0)>
+      <button type="button" size="xs" variant="soft" tone="primary" font-family={fontFamily} font-token="body" on:click={onInstall} disabled={!canEdit} style(shrink0)>
         Install
       </button>
     </row>
@@ -199,7 +199,7 @@ export default controller(() => {
               <column gap="2" font-hits>
                 <for {assets.fontSearchHits() as f} key={f.key}>
                   <font-hit-row
-                    family={f.family}
+                    fontFamily={f.family}
                     category={f.category}
                     sample={f.sample}
                     canEdit={session.canEdit()}

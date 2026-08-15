@@ -36,6 +36,7 @@
   style reviewSheet = { shrink(0).pad(3).size({ min-w: 0, max-h: 56 }).overflow({ all: auto }).border({ edge: t, color: border, width: 1 }).bg(surface-1) }
   style titleSm = { type({ size: sm, weight: semibold }) }
   style fullW = { size({ w: full }) }
+  style chipLabel = { type({ wrap: truncate }) }
 </scope>
 
 <controller>
@@ -350,7 +351,7 @@ export default controller(() => {
                           Select element
                         </button>
                         <if {f.showBothViewports}>
-                          <badge both-viewports tone="muted" size="sm" variant="outline">
+                          <badge both-viewports tone="muted" size="sm" variant="outline" style(chipLabel)>
                             Mobile + desktop
                           </badge>
                         </if>
