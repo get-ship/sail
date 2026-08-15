@@ -278,7 +278,7 @@ export default controller(({ variants, rows, usage, snippet, usageLive, variantA
           <code-block code={usage()} lang="sail"></code-block>
         </div>
       {else =>
-        <row gap="4" align="start" style({ size({ w: full, min-w: 0 }).overflow({ all: visible }) })>
+        <row nowrap gap="4" align="start" style({ size({ w: full, min-w: 0 }).overflow({ all: visible }) })>
           <if {usageIsSplit()}>
             <div style(snippetShell, { grow(1).size({ min-w: 0 }) })>
               <button

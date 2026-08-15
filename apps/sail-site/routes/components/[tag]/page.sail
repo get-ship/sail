@@ -86,6 +86,9 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const raw = ctx.route.params.tag?.() ?? ''
     return raw === 'radio' ? 'radio-group' : raw
   })
+  // Hub is /components. This [tag] shell stays blank until a real slug exists
+  // (router leaves tag='' while leaving the param route).
+  const hasTag = derived(() => tag().trim() !== '')
   const meta = derived(() => docMeta(tag()))
   const entry = derived<DetailEntry | null>(() => detailFor(tag()) ?? null)
   const knownDoc = derived(() => meta() !== null)
@@ -96,7 +99,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
   const firstClass = derived(() => FIRST_CLASS_HOSTS.has(tag()))
   const hasDocCe = derived(() => DOC_CE_SLUGS.has(tag()))
   const useDocHost = derived(() => firstClass() && hasDocCe())
-  const missingDocHost = derived(() => showViewer() && !useDocHost())
+  const missingDocHost = derived(() => hasTag() && showViewer() && !useDocHost())
 
   const useButton = derived(() => tag() === 'button' && useDocHost())
   const useBadge = derived(() => tag() === 'badge' && useDocHost())
@@ -158,6 +161,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
 
   return {
     tag,
+    hasTag,
     meta,
     entry,
     knownDoc,
@@ -397,7 +401,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
       <a variant="solid" tone="primary" href="/components">← All components</a>
     </row>
   </if>
-  <if {!showViewer()}>
+  <if {hasTag() && !showViewer()}>
     <breadcrumb>
       <a href="/components">components</a>
       <small>{tag()}</small>
