@@ -4,7 +4,7 @@
 //! CHANNELS-1 WI10 / SAIL-SYNTAX-FREEZE §1: controllers orchestrate — signals,
 //! effects, data calls, action wiring — they do not host implementation.
 //! Crossing the threshold is a **policy-layer Warning** (default on). It never
-//! hard-fails the build; silence via `policy.lint.severity.sail-controller-size
+//! hard-fails the build; silence via `lint.rules.sail-controller-size`
 //! = "off"` if a host truly needs a thick controller during a cutover.
 //!
 //! ## Measurement

@@ -42,7 +42,7 @@ fn collect_css_files(src_dir: &Path) -> Vec<PathBuf> {
         } else if ft.is_dir() {
             if matches!(
                 p.file_name().and_then(|n| n.to_str()),
-                Some("node_modules" | "dist" | "target" | ".git" | ".deck" | ".sail-out")
+                Some("node_modules" | "dist" | "target" | ".git" | ".sail" | ".deck" | ".sail-out")
             ) {
                 continue;
             }

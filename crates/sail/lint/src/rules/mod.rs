@@ -59,9 +59,7 @@ pub mod no_node_import;
 pub mod no_raw_container;
 pub mod no_script;
 pub mod no_style_block;
-pub mod no_sx;
 pub mod no_undeclared_stylesheet;
-pub mod no_variants;
 pub mod participation_style;
 pub mod prefer_primitive;
 pub mod prefer_query;
@@ -160,8 +158,6 @@ pub const SUI_TEMPLATE_RULES: &[(&str, RuleFn)] = &[
     (no_raw_container::RULE_ID, no_raw_container::check),
     (no_script::RULE_ID, no_script::check),
     (no_style_block::RULE_ID, no_style_block::check),
-    (no_sx::RULE_ID, no_sx::check),
-    (no_variants::RULE_ID, no_variants::check),
     (no_class::RULE_ID, no_class::check),
     (no_component_token::RULE_ID, no_component_token::check),
     (no_inline_style::RULE_ID, no_inline_style::check),

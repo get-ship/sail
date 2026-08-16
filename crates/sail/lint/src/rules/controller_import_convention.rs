@@ -1,13 +1,13 @@
 //! `sail-controller-import-convention` — controller value imports are
 //! restricted to allowed surfaces.
 //!
-//! Allowed (apps) — S1 fixed homes:
+//! Allowed (apps) — table homes:
 //! - `@ship/*`
-//! - `@/` project aliases (`@/components|compositions|stores|actions|themes/…`)
+//! - table `@/` aliases (`@/components|compositions|stores|actions|themes/…`)
 //! - relative `.sail`
-//! - relative under `src/actions|compositions|components|serverfns/` or `themes/`
+//! - relative under `src/actions|compositions|components` or `themes/`
 //!
-//! **Stores** live under `src/stores/` (S1). Controllers must import them via
+//! **Stores** live under `src/stores/`. Controllers must import them via
 //! `@/stores/…`, not cross-dir relatives (`../stores/…`). Relative store hops
 //! still Error — the lesson is the `@/` form, not “move under compositions.”
 //!
@@ -26,18 +26,21 @@ use oxc_ast_visit::Visit;
 use oxc_parser::Parser;
 use oxc_span::{SourceType, Span};
 
+use crate::project_map::{
+    is_legal_at_alias, path_is_under_home, path_is_under_store_home, relative_value_import_homes,
+};
 use crate::report::{Finding, Severity};
 
 pub const RULE_ID: &str = "sail-controller-import-convention";
 
 // Product-facing: name the law, name the path. No process jargon, no strategy essay.
 const MESSAGE: &str = "disallowed controller import — value imports must be \
-     `@ship/*`, `@/…` (S1 homes: components/compositions/stores/actions/themes), \
-     a relative `.sail` module, or relative under `src/actions|compositions|components|serverfns/` \
+     `@ship/*`, a table `@/` alias (`@/components|compositions|stores|actions|themes/…`), \
+     a relative `.sail` module, or relative under `src/actions|compositions|components` \
      or `themes/`";
 
 const SUGGEST: &str = "Prefer `@/stores|compositions|actions|components|themes/…` for \
-     S1 app homes; relative under `src/actions|compositions|components|serverfns` or `themes/`; \
+     table homes; relative under `src/actions|compositions|components` or `themes/`; \
      `@ship/*` for packages; `import type` when only types are needed.";
 
 const STORE_RELATIVE_MESSAGE: &str =
@@ -99,7 +102,7 @@ fn teaching_for_disallowed(module: &str, controller_path: &Path) -> (String, Str
     (format!("{MESSAGE} (got `{module}`)"), SUGGEST.to_string())
 }
 
-/// When `module` is a relative path that resolves under `src/stores/`, return
+/// When `module` is a relative path that resolves under the store home, return
 /// the preferred `@/stores/…` form (no extension).
 fn store_relative_to_at_alias(module: &str, controller_path: &Path) -> Option<String> {
     let m = module.trim();
@@ -112,17 +115,15 @@ fn store_relative_to_at_alias(module: &str, controller_path: &Path) -> Option<St
         PathBuf::from(m)
     };
     let s = resolved.to_string_lossy().replace('\\', "/");
-    let idx = s.find("/src/stores/").or_else(|| {
-        if s.starts_with("src/stores/") {
-            Some(0)
-        } else {
-            None
-        }
-    })?;
-    let after = if s[idx..].starts_with("/src/stores/") {
-        &s[idx + "/src/stores/".len()..]
+    if !path_is_under_store_home(&s) {
+        return None;
+    }
+    let home = crate::project_map::alias_home_fragments().find(|h| path_is_under_store_home(h))?;
+    let marker = format!("/{home}/");
+    let after = if let Some(idx) = s.find(&marker) {
+        &s[idx + marker.len()..]
     } else {
-        &s[idx + "src/stores/".len()..]
+        s.strip_prefix(&format!("{home}/"))?
     };
     if after.is_empty() {
         return None;
@@ -205,8 +206,8 @@ fn is_allowed_value_module(
         return true;
     }
 
-    // App `@/` alias (stores, compositions, actions, …) — legal product form.
-    if m.starts_with("@/") {
+    // Closed table, not a `@/` prefix.
+    if is_legal_at_alias(m) {
         return true;
     }
 
@@ -229,14 +230,11 @@ fn is_allowed_value_module(
         };
         let resolved_str = resolved.to_string_lossy().replace('\\', "/");
         // Stores: relative form is illegal (teach `@/stores/…` via report).
-        if is_stores_dir(&resolved_str) || is_stores_dir(m) {
+        // Normalized path only — the raw specifier can contain `/src/actions/../`.
+        if path_is_under_store_home(&resolved_str) {
             return false;
         }
-        if is_conventional_dir(&resolved_str) {
-            return true;
-        }
-        // Also accept the bare specifier form (tests pass synthetic paths).
-        if is_conventional_dir(m) {
+        if relative_value_import_homes().any(|home| path_is_under_home(&resolved_str, home)) {
             return true;
         }
 
@@ -258,34 +256,6 @@ fn is_allowed_value_module(
         }
     }
     false
-}
-
-fn is_conventional_dir(p: &str) -> bool {
-    // S1 fixed homes (except stores — relative form teaches `@/stores/…`).
-    p.contains("/src/actions/")
-        || p.contains("/src/compositions/")
-        || p.contains("/src/components/")
-        || p.contains("/src/serverfns/")
-        || p.contains("/themes/")
-        || p.starts_with("src/actions/")
-        || p.starts_with("src/compositions/")
-        || p.starts_with("src/components/")
-        || p.starts_with("src/serverfns/")
-        || p.starts_with("themes/")
-        || (p.contains("/actions/") && p.contains("/src/"))
-        // path segment exact: …/src/actions
-        || p.ends_with("/src/actions")
-        || p.ends_with("/src/compositions")
-        || p.ends_with("/src/components")
-        || p.ends_with("/src/serverfns")
-        || p.ends_with("/themes")
-}
-
-fn is_stores_dir(p: &str) -> bool {
-    p.contains("/src/stores/")
-        || p.starts_with("src/stores/")
-        || p.ends_with("/src/stores")
-        || p == "src/stores"
 }
 
 fn normalize_join(base: &Path, rel: &str) -> PathBuf {
@@ -525,6 +495,147 @@ mod tests {
     }
 
     #[test]
+    fn allows_every_table_at_alias_home() {
+        let f = lint_at(
+            "apps/demo/src/page.controller.ts",
+            "import { tally } from '@/stores/tally'\n\
+             import { Widget } from '@/components/widget'\n\
+             import { double } from '@/compositions/double'\n\
+             import { save } from '@/actions/save'\n\
+             import { ship } from '@/themes/ship'\n\
+             export default controller(() => ({ tally, Widget, double, save, ship }))\n",
+        );
+        assert!(f.is_empty(), "every table @/ home must be allowed: {f:?}");
+    }
+
+    #[test]
+    fn allows_relative_under_table_value_homes() {
+        let f = lint_at(
+            "apps/demo/src/page.controller.ts",
+            "import { listModel } from './compositions/list-model'\n\
+             import { Widget } from './components/widget'\n\
+             import { save } from './actions/save'\n\
+             import { ship } from '../themes/ship'\n\
+             export default controller(() => ({ listModel, Widget, save, ship }))\n",
+        );
+        assert!(
+            f.is_empty(),
+            "relative under compositions/components/actions/themes must be allowed: {f:?}"
+        );
+    }
+
+    #[test]
+    fn allows_type_only_of_non_home() {
+        let f = lint_at(
+            "apps/demo/src/page.controller.ts",
+            "import type { helpers } from '@/lib/helpers'\n\
+             import type { run } from '@/serverfns/run'\n\
+             import type { escaped } from '@/stores/../lib/helpers'\n\
+             import { type orphan } from '../src/serverfns/run'\n\
+             export default controller(() => ({}))\n",
+        );
+        assert!(
+            f.is_empty(),
+            "import type of a non-home must stay free: {f:?}"
+        );
+    }
+
+    #[test]
+    fn mixed_type_and_value_from_non_home_is_red() {
+        let f = lint_at(
+            "apps/demo/src/page.controller.ts",
+            "import { type helpers, run } from '@/lib/helpers'\n\
+             export default controller(() => ({ run }))\n",
+        );
+        assert_eq!(
+            f.len(),
+            1,
+            "a value binding on a non-home must not ride a type specifier: {f:?}"
+        );
+        assert!(f[0].message.contains("@/lib/helpers"), "{}", f[0].message);
+    }
+
+    #[test]
+    fn refuses_at_lib_helpers() {
+        let f = lint_at(
+            "apps/demo/src/page.controller.ts",
+            "import { helpers } from '@/lib/helpers'\n\
+             export default controller(() => ({ helpers }))\n",
+        );
+        assert_eq!(f.len(), 1, "@/lib is not a table home: {f:?}");
+        assert_eq!(f[0].rule, RULE_ID);
+        assert!(f[0].message.contains("@/lib/helpers"), "{}", f[0].message);
+    }
+
+    #[test]
+    fn refuses_at_stores_x() {
+        let f = lint_at(
+            "apps/demo/src/page.controller.ts",
+            "import { tally } from '@/storesX/tally'\n\
+             export default controller(() => ({ tally }))\n",
+        );
+        assert_eq!(f.len(), 1, "@/storesX is not @/stores: {f:?}");
+        assert_eq!(f[0].rule, RULE_ID);
+        assert!(f[0].message.contains("@/storesX/tally"), "{}", f[0].message);
+    }
+
+    #[test]
+    fn refuses_relative_dotdot_through_home() {
+        let f = lint_at(
+            "apps/demo/routes/page.controller.ts",
+            "import { run } from '../src/actions/../serverfns/run'\n\
+             export default controller(() => ({ run }))\n",
+        );
+        assert_eq!(
+            f.len(),
+            1,
+            "resolved path must decide, not a raw /src/actions/ substring: {f:?}"
+        );
+        assert_eq!(f[0].rule, RULE_ID);
+        assert!(f[0].message.contains("serverfns/run"), "{}", f[0].message);
+    }
+
+    #[test]
+    fn refuses_at_alias_dotdot_escape() {
+        let f = lint_at(
+            "apps/demo/src/page.controller.ts",
+            "import { helpers } from '@/stores/../lib/helpers'\n\
+             export default controller(() => ({ helpers }))\n",
+        );
+        assert_eq!(f.len(), 1, "@/stores/../lib must not be a table hit: {f:?}");
+        assert_eq!(f[0].rule, RULE_ID);
+        assert!(
+            f[0].message.contains("@/stores/../lib/helpers"),
+            "{}",
+            f[0].message
+        );
+    }
+
+    #[test]
+    fn refuses_at_serverfns() {
+        let f = lint_at(
+            "apps/demo/src/page.controller.ts",
+            "import { run } from '@/serverfns/run'\n\
+             export default controller(() => ({ run }))\n",
+        );
+        assert_eq!(f.len(), 1, "@/serverfns is not a table home: {f:?}");
+        assert_eq!(f[0].rule, RULE_ID);
+        assert!(f[0].message.contains("@/serverfns/run"), "{}", f[0].message);
+    }
+
+    #[test]
+    fn refuses_relative_serverfns() {
+        let f = lint_at(
+            "apps/demo/routes/page.controller.ts",
+            "import { run } from '../src/serverfns/run'\n\
+             export default controller(() => ({ run }))\n",
+        );
+        assert_eq!(f.len(), 1, "src/serverfns is not a relative home: {f:?}");
+        assert_eq!(f[0].rule, RULE_ID);
+        assert!(f[0].message.contains("serverfns/run"), "{}", f[0].message);
+    }
+
+    #[test]
     fn allows_relative_components_dir() {
         let f = lint_at(
             "apps/demo/src/page.controller.ts",
@@ -576,10 +687,19 @@ mod tests {
         for home in ["components", "compositions", "stores", "actions", "themes"] {
             assert!(
                 msg.contains(home) || f[0].suggest.as_deref().is_some_and(|s| s.contains(home)),
-                "disallowed message must name S1 home `{home}`: message={msg:?} suggest={:?}",
+                "disallowed message must name table home `{home}`: message={msg:?} suggest={:?}",
                 f[0].suggest
             );
         }
+        assert!(
+            !msg.contains("serverfns")
+                && !f[0]
+                    .suggest
+                    .as_deref()
+                    .is_some_and(|s| s.contains("serverfns")),
+            "teaching copy must not name serverfns: message={msg:?} suggest={:?}",
+            f[0].suggest
+        );
     }
 
     #[test]

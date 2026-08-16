@@ -106,11 +106,11 @@ pub const REGION_CAPABILITY_MATRIX: &[RegionCapability] = &[
     },
     RegionCapability {
         region: "controller",
-        capability: "imports only from conventional dirs + runtime/stdlib",
+        capability: "imports only from table homes + `@ship/*`",
         legal: "subset",
         status: "enforced",
         enforcement: "sail-controller-import-convention (Error) + ACTIONS-1 floor on src/actions/**",
-        notes: "L3 value imports: @ship/*, relative .sail, src/actions|compositions|serverfns. Pack envelope (package.json customElements): relative modules under pack root + declared dependencies/peerDependencies. Type-only free",
+        notes: "L3 value imports: @ship/*, table @/ aliases (components/compositions/stores/actions/themes), relative .sail, relative under src/actions|compositions|components or themes/. Pack envelope (package.json customElements): relative modules under pack root + declared dependencies/peerDependencies. Type-only free",
     },
     RegionCapability {
         region: "controller",

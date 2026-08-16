@@ -1,39 +1,38 @@
 //! The single reader of `sail.config.json`.
 //!
-//! One walk-up, one parse. Every consumer — the compiler's `Policy` tier and
-//! the floor's undeclared-stylesheet check — derives from this resolved value;
-//! none re-walks the tree or re-parses the file. That is `inv-sail-one-policy-resolver`:
-//! the effective config for a source is computed in exactly one place, enforced
-//! by a uniqueness test (`sail-compiler/tests/config_single_reader.rs`).
+//! [`SailConfig`] is the typed document (serde + schemars). Schema, unknown-key
+//! refusal, and wrong-type refusal all fall out of that type. Adding a key means
+//! adding a field with an owner — not a row in a string table.
 //!
-//! Extraction is lenient (field-by-field off a parsed `Value`), matching the
-//! historical behavior: a wrong-typed or missing key is ignored, never a hard
-//! failure — a config typo must not break a build.
+//! One walk-up, one parse. Every consumer — the compiler's `Policy` tier, theme
+//! generate, Deck serve, and the floor's undeclared-stylesheet check — derives
+//! from this resolved value. That is `inv-sail-one-policy-resolver`.
 
-use std::collections::HashSet;
+use std::collections::{BTreeMap, HashSet};
 use std::path::{Path, PathBuf};
+
+use schemars::JsonSchema;
+use schemars::schema::{
+    InstanceType, Metadata, ObjectValidation, Schema, SchemaObject, SingleOrVec,
+    SubschemaValidation,
+};
+use serde::de::{self, Deserializer};
+use serde::{Deserialize, Serialize};
+use serde_json::{Value, json};
 
 pub const CONFIG_FILE: &str = "sail.config.json";
 
-/// Walk up from `from` (inclusive) and return the first directory that contains
-/// a `sail.config.json` — the package root that owns a source. The one place that
-/// knows the config's filename; callers that need the owning dir (not its
-/// contents) use this instead of re-hardcoding the name.
+/// Directory of the [`crate::project::Project`] that owns `from`.
+///
+/// Same walk as [`Project::discover`](crate::project::Project::discover):
+/// nearest `sail.config.jsonc` / `.json` (jsonc wins in-dir). `routes/` is
+/// not a tie-break.
 pub fn owning_dir(from: &Path) -> Option<PathBuf> {
-    let mut cur = Some(from);
-    while let Some(d) = cur {
-        if d.join(CONFIG_FILE).is_file() {
-            return Some(d.to_path_buf());
-        }
-        cur = d.parent();
-    }
-    None
+    crate::project::Project::discover(from).map(|p| p.root().to_path_buf())
 }
 
-/// Config filenames the walk-up accepts. `jsonc` wins when both exist in the
-/// same directory (app-level studio/sail-site convention). Capability Policy
-/// still keys off the first config found; layout severity may walk further
-/// (see [`layout_is_error_for`]).
+/// Config filenames [`crate::project::Project::discover`] accepts. `jsonc`
+/// wins when both exist in the same directory.
 pub const CONFIG_FILES: &[&str] = &["sail.config.jsonc", "sail.config.json"];
 
 /// True if `dir` itself contains a sail config file. Existence only —
@@ -43,262 +42,482 @@ pub fn dir_has_config(dir: &Path) -> bool {
     CONFIG_FILES.iter().any(|name| dir.join(name).is_file())
 }
 
-/// The top-level `sail.config.json` keys the parser recognizes. Anything else
-/// present is a typo/unknown key — the compiler must refuse loudly rather
-/// than silently ignore it (config-loud-strict: a `{"polcy":"strict"}` typo
-/// used to fail closed with zero signal).
-///
-/// Layer discipline (SPEC-HARDENING-1 WI5 / SPEC-SAIL-CONFIG-1): every key is
-/// POLICY (capability / serve / safety), TASTE (product preference), or
-/// PRODUCT (design-system resources — icons, fonts). No behavior knobs that
-/// change language semantics under the author's feet.
-/// See [`CONFIG_KEY_DOCS`] column "layer" via the 5th field on each row.
-///
-/// Bundler/serve settings live under the top-level **`deck`** object only
-/// (`deck.render`, `deck.entry`, `deck.injectGlobals`). Top-level `render` /
-/// `entry` / `injectGlobals` are unknown keys and refuse loudly — no dual-read.
-///
-/// Lint severity floor + top-level `strict` (SPEC-LINTS-1 §3 / S3.2):
-/// - `"strict": true` — every lint finding is Error at the build gate
-/// - `"lint": { "severity", "rules" }` — global floor + per-rule tree (dual-read
-///   with nested `policy.lint.severity.*`)
-pub const RECOGNIZED_KEYS: [&str; 20] = [
-    "preset",
-    "sx",
-    "variants",
-    "raw_containers",
-    "compose_rhythm",
-    "autofix",
-    "stylesheets",
-    "network",
-    "unconfined",
-    "theme",
-    // SPEC-ICONS-1 / SPEC-SAIL-CONFIG-1 C2 — product icon packs + roles.
-    "icons",
-    // SPEC-FONTS-1 — role→face pins (Fontsource / vendored). Sibling of icons.
-    "fonts",
-    "layout",
-    // SPEC-LAYOUT-DIAG-1 / S4.1 — experimental layout finding kinds.
-    "layoutExperimental",
-    "layoutTextMetrics",
-    "policy",
-    // SPEC-LINTS-1 §3 — global lint severity floor + strict gate (S3.2).
-    "strict",
-    "lint",
-    // Deck bundler/serve object (AppServeConfig) — POLICY layer.
-    "deck",
-    // Studio product preference (deep-link scheme) — TASTE layer.
-    "editor",
-];
+pub use crate::schema::{
+    ConfigKeyDoc, ConfigLayer, config_key_docs, emit_sail_config_schema, recognized_keys,
+};
 
-/// Documentation rows for [`RECOGNIZED_KEYS`] — key, value type, default
-/// when absent, one line of semantics, and layer (`POLICY` | `TASTE` | `PRODUCT`).
-/// The reference generator / RESULT audit renders this table; the test
-/// below keeps it in lockstep with the recognized set.
-pub const CONFIG_KEY_DOCS: &[(&str, &str, &str, &str, &str)] = &[
-    (
-        "preset",
-        "\"strict\" | \"full\" | \"repair\" | \"off\"",
-        "no tier — capabilities opt in individually",
-        "select a capability tier above the floor in one word",
-        "POLICY",
-    ),
-    (
-        "sx",
-        "boolean",
-        "off",
-        "capability override: allow the sx surface beyond the floor allowance",
-        "POLICY",
-    ),
-    (
-        "variants",
-        "boolean",
-        "off",
-        "capability override: allow CVA-in-props variance matrices (key→sx maps on props) and compound:",
-        "POLICY",
-    ),
-    (
-        "raw_containers",
-        "boolean",
-        "off",
-        "capability override: allow raw container elements instead of the layout keywords",
-        "POLICY",
-    ),
-    (
-        "compose_rhythm",
-        "boolean",
-        "true",
-        "auto-fix sibling rhythm violations; false warns only",
-        "POLICY",
-    ),
-    (
-        "autofix",
-        "\"repair\" | \"strict\" | \"off\"",
-        "repair",
-        "compose autofix preset: confluent fixes on / all error / pass silent",
-        "POLICY",
-    ),
-    (
-        "stylesheets",
-        "string[]",
-        "none",
-        "the CSS files this package may ship; an undeclared stylesheet fails the floor check",
-        "POLICY",
-    ),
-    (
-        "network",
-        "string[] of origins",
-        "absent = full refusal",
-        "fetch/WebSocket/EventSource allowlist; [] grants nothing explicitly; a wrong-typed value fails closed",
-        "POLICY",
-    ),
-    (
-        "unconfined",
-        "boolean",
-        "confined",
-        "opt out of controller ambient-authority confinement entirely; a wrong-typed value stays confined",
-        "POLICY",
-    ),
-    (
-        "theme",
-        "{ default, defaultMode?, enabled: \"all\" | string[] }",
-        "no theme section — thin app emit (no catalog); package generate still full catalog",
-        "app theme emit set: default id, optional mode, catalog allowlist (omit/[] thin; \"all\" full; list filter). Project themes/ always emit",
-        "POLICY",
-    ),
-    (
-        "icons",
-        "{ pack?: string | { id, version? }, version?, packs?: { [id]: { version } }, roles?: { [role]: glyph | \"pack:glyph\" | { pack, glyph } } }",
-        "framework default pack lucide + core role table (no app overrides)",
-        "icon pack pin + role→glyph map (SPEC-ICONS-1). Author markup uses roles, never pack prefixes",
-        "PRODUCT",
-    ),
-    (
-        "fonts",
-        "{ roles: { <role>: { source, id, version? } } }",
-        "omitted — vendored @ship/tokens FONTS + theme --font-*-app (no regression)",
-        "pin font roles (body, heading, mono, display, app-custom) to Fontsource package ids or local faces; unused families do not ship",
-        "PRODUCT",
-    ),
-    (
-        "layout",
-        "\"warn\" | \"error\"",
-        "warn — taffy soft findings stay warnings; silent-clip stays Error",
-        "promote gate-gap layout findings (main-axis overflow, collapsed box, height-chain) to Error so check/dev exit non-zero (studio strict profile)",
-        "POLICY",
-    ),
-    (
-        "layoutExperimental",
-        "boolean",
-        "false",
-        "enable experimental layout kinds (sub-min-tap-target) without full lint strict (SPEC-LAYOUT-DIAG-1 / S4.1)",
-        "POLICY",
-    ),
-    (
-        "layoutTextMetrics",
-        "boolean",
-        "false",
-        "kill switch for text-metrics layout kind clipped-text (LAYOUT-5 default on; false disables)",
-        "POLICY",
-    ),
-    (
-        "policy",
-        "{ layout.raw_containers?, lint.severity.<rule-id>? }",
-        "registry defaults (see `sail-compiler policy`)",
-        "typed compiler policy registry object; unknown keys are a hard error naming the closest valid key",
-        "POLICY",
-    ),
-    (
-        "strict",
-        "boolean",
-        "false",
-        "every lint finding is Error at the build gate (Warn→Error); per-rule off still silences; never downgrades compiler errors",
-        "POLICY",
-    ),
-    (
-        "lint",
-        "{ severity?: \"off\"|\"warn\"|\"error\", rules?: { <rule-id>: \"off\"|\"warn\"|\"error\" } }",
-        "natural rule severities (no global floor, no per-rule tree)",
-        "global lint severity floor + per-rule overrides (SPEC-LINTS-1 §3); dual-read with policy.lint.severity.*",
-        "POLICY",
-    ),
-    (
-        "deck",
-        "{ render?: \"csr\"|\"ssr\", entry?: { clientsModule, exposeNames[] }, injectGlobals?: { [k]: template } }",
-        "absent — fully conventional serve defaults (csr, no entry, no inject)",
-        "Deck bundler/serve settings (SPEC-SAIL-CONFIG-1); nested only — top-level render/entry/injectGlobals refuse as unknown",
-        "POLICY",
-    ),
-    (
-        "editor",
-        "string | { scheme, pathTemplate? }",
-        "vscode (studio default when unset)",
-        "studio deep-link preference for open-in-editor — product taste, not language behavior",
-        "TASTE",
-    ),
-];
+// ── Leaf enums ──────────────────────────────────────────────────────────────
 
-/// JSON Schema view of [`CONFIG_KEY_DOCS`]. Loaders stay lenient until
-/// the operator rules wrong-type refuse. This file is the drift pin.
-pub fn emit_sail_config_schema() -> String {
-    let mut properties = serde_json::Map::new();
-    for (key, ty, default, summary, layer) in CONFIG_KEY_DOCS {
-        properties.insert(
-            (*key).to_string(),
-            serde_json::json!({
-                "description": format!("{summary} (default: {default}; layer: {layer})"),
-                "x-sail-type": ty,
-                "x-sail-layer": layer,
-            }),
-        );
+/// Capability tier above the floor.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "lowercase")]
+pub enum CapabilityPreset {
+    Strict,
+    Full,
+    Repair,
+    Off,
+}
+
+impl CapabilityPreset {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Strict => "strict",
+            Self::Full => "full",
+            Self::Repair => "repair",
+            Self::Off => "off",
+        }
     }
-    let schema = serde_json::json!({
-        "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "$id": "https://ship.dev/schemas/sail.config.schema.json",
-        "title": "SailConfig",
-        "type": "object",
-        "additionalProperties": false,
-        "properties": properties,
-    });
-    let mut out = serde_json::to_string_pretty(&schema).expect("schema json");
-    out.push('\n');
-    out
 }
 
-/// One `fonts.roles.<role>` pin (SPEC-FONTS-1).
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct FontRoleBinding {
-    pub role: String,
-    pub source: String,
-    pub id: String,
-    pub version: Option<String>,
+/// Compose autofix preset.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "lowercase")]
+pub enum AutofixSetting {
+    #[serde(alias = "fix", alias = "on")]
+    Repair,
+    #[serde(alias = "error")]
+    Strict,
+    #[serde(alias = "false", alias = "0")]
+    Off,
 }
 
-/// The parsed contents of the nearest `sail.config.json` on the walk up. Holds
-/// the raw JSON; typed accessors read individual fields leniently.
-#[derive(Debug, Clone)]
+impl AutofixSetting {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Repair => "repair",
+            Self::Strict => "strict",
+            Self::Off => "off",
+        }
+    }
+}
+
+/// Layout finding severity profile.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "lowercase")]
+pub enum LayoutSetting {
+    Warn,
+    Error,
+}
+
+impl LayoutSetting {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Warn => "warn",
+            Self::Error => "error",
+        }
+    }
+}
+
+/// Lint severity token (`error` | `warn` | `off`, plus historical aliases).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, JsonSchema)]
+#[serde(rename_all = "lowercase")]
+pub enum LintSeverity {
+    Error,
+    Warn,
+    Off,
+}
+
+impl LintSeverity {
+    pub fn parse(s: &str) -> Option<Self> {
+        match s.trim().to_ascii_lowercase().as_str() {
+            "error" => Some(Self::Error),
+            "warn" | "warning" => Some(Self::Warn),
+            "off" | "false" | "0" => Some(Self::Off),
+            _ => None,
+        }
+    }
+
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Error => "error",
+            Self::Warn => "warn",
+            Self::Off => "off",
+        }
+    }
+}
+
+impl<'de> Deserialize<'de> for LintSeverity {
+    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
+        let s = String::deserialize(d)?;
+        Self::parse(&s).ok_or_else(|| {
+            de::Error::custom(format!(
+                "unrecognized severity \"{s}\" (expected error|warn|off)"
+            ))
+        })
+    }
+}
+
+/// Catalog allowlist: `"all"` or an array of theme ids.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub enum ThemeEnabled {
+    All,
+    Ids(Vec<String>),
+}
+
+impl<'de> Deserialize<'de> for ThemeEnabled {
+    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
+        let v = Value::deserialize(d)?;
+        match v {
+            Value::String(s) if s == "all" => Ok(Self::All),
+            Value::String(s) => Err(de::Error::custom(format!(
+                "theme config: \"enabled\" string must be the literal \"all\" \
+                 (got {s:?}); use an array of catalog ids for a thin allowlist"
+            ))),
+            Value::Array(arr) => {
+                let mut ids = Vec::with_capacity(arr.len());
+                for item in arr {
+                    let Some(s) = item.as_str() else {
+                        return Err(de::Error::custom(
+                            "theme config: \"enabled\" array elements must all be strings \
+                             (catalog theme ids)",
+                        ));
+                    };
+                    if !s.is_empty() {
+                        ids.push(s.to_string());
+                    }
+                }
+                Ok(Self::Ids(ids))
+            }
+            other => Err(de::Error::custom(format!(
+                "theme config: \"enabled\" must be an array of catalog ids or the \
+                 string \"all\" (got {other})"
+            ))),
+        }
+    }
+}
+
+impl JsonSchema for ThemeEnabled {
+    fn schema_name() -> String {
+        "ThemeEnabled".into()
+    }
+
+    fn json_schema(_gen: &mut schemars::r#gen::SchemaGenerator) -> Schema {
+        Schema::Object(SchemaObject {
+            metadata: Some(Box::new(Metadata {
+                description: Some(
+                    "catalog allowlist: omit/[] thin; \"all\" full; list filter".into(),
+                ),
+                ..Default::default()
+            })),
+            subschemas: Some(Box::new(SubschemaValidation {
+                one_of: Some(vec![
+                    Schema::Object(SchemaObject {
+                        instance_type: Some(InstanceType::String.into()),
+                        const_value: Some(json!("all")),
+                        ..Default::default()
+                    }),
+                    Schema::Object(SchemaObject {
+                        instance_type: Some(InstanceType::Array.into()),
+                        array: Some(Box::new(schemars::schema::ArrayValidation {
+                            items: Some(SingleOrVec::Single(Box::new(Schema::Object(
+                                SchemaObject {
+                                    instance_type: Some(InstanceType::String.into()),
+                                    ..Default::default()
+                                },
+                            )))),
+                            ..Default::default()
+                        })),
+                        ..Default::default()
+                    }),
+                ]),
+                ..Default::default()
+            })),
+            ..Default::default()
+        })
+    }
+}
+
+// ── Nested objects ──────────────────────────────────────────────────────────
+
+/// POLICY. App theme emit set. Owner: tokens generate.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ThemeConfig {
+    /// Preferred default theme id (scaffold / host paint).
+    #[serde(default)]
+    pub default: Option<String>,
+    /// Initial `mode` (prefer `light` when omitted at host).
+    #[serde(default)]
+    pub default_mode: Option<String>,
+    /// Catalog theme allowlist. Omit → default ship; `[]` → none; `"all"` → full.
+    #[serde(default)]
+    pub enabled: Option<ThemeEnabled>,
+}
+
+/// POLICY. Global lint floor + per-rule tree. Owner: compiler / lint.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct LintConfig {
+    /// Global lint severity floor (`off` | `warn` | `error`).
+    #[serde(default)]
+    pub severity: Option<LintSeverity>,
+    /// Per-rule overrides. Owner: compiler `ResolvedPolicy`.
+    #[serde(default)]
+    pub rules: Option<BTreeMap<String, LintSeverity>>,
+}
+
+/// PRODUCT. Document defaults for SPA index.html. Owner: Deck / `SiteDocument`.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct AppConfig {
+    /// `index.html` `<title>`. Absent → `package.json#name`.
+    #[serde(default)]
+    pub title: Option<String>,
+    /// `<meta name="description">`. Absent → omitted.
+    #[serde(default)]
+    pub description: Option<String>,
+    /// `<html lang>`. Absent → `en`.
+    #[serde(default)]
+    pub lang: Option<String>,
+}
+
+/// POLICY. Deck bundler/serve (`AppServeConfig`). Owner: Deck. Nested only.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct DeckConfig {
+    /// First-paint mode. Absent → `csr`.
+    #[serde(default)]
+    pub render: Option<DeckRender>,
+    /// Host entry bootstrap (`entry.gen.ts`).
+    #[serde(default)]
+    pub entry: Option<DeckEntry>,
+    /// URL-capture → `window.<k>` injections.
+    #[serde(default)]
+    pub inject_globals: Option<BTreeMap<String, String>>,
+}
+
+/// Deck `render` token.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "lowercase")]
+pub enum DeckRender {
+    Csr,
+    Ssr,
+}
+
+impl DeckRender {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Csr => "csr",
+            Self::Ssr => "ssr",
+        }
+    }
+}
+
+/// Host-owned entry bootstrap under `deck.entry`.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct DeckEntry {
+    /// Module-relative specifier of the host's client factory.
+    pub clients_module: String,
+    /// Names spread into the `clients` map.
+    pub expose_names: Vec<String>,
+}
+
+/// PRODUCT. Icon pack pin + role→glyph map. Nested unions stay in the compiler.
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct IconsConfig {
+    pub fields: serde_json::Map<String, Value>,
+}
+
+impl JsonSchema for IconsConfig {
+    fn schema_name() -> String {
+        "IconsConfig".into()
+    }
+
+    fn json_schema(_gen: &mut schemars::r#gen::SchemaGenerator) -> Schema {
+        Schema::Object(SchemaObject {
+            instance_type: Some(InstanceType::Object.into()),
+            object: Some(Box::new(ObjectValidation {
+                additional_properties: Some(Box::new(Schema::Bool(true))),
+                ..Default::default()
+            })),
+            metadata: Some(Box::new(Metadata {
+                description: Some(
+                    "icon pack pin + role→glyph map (SPEC-ICONS-1). Author markup uses roles, never pack prefixes"
+                        .into(),
+                ),
+                ..Default::default()
+            })),
+            ..Default::default()
+        })
+    }
+}
+
+// ── Document ────────────────────────────────────────────────────────────────
+
+/// Typed `sail.config.json(c)` document. Schema is generated from this type.
+///
+/// Parse metadata (`parse_ok`, unknown keys, type errors) is skipped by serde
+/// and schemars — it is filled by [`SailConfig::from_json`].
+#[derive(Debug, Clone, Default, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
 pub struct SailConfig {
-    raw: serde_json::Value,
+    #[serde(default, skip)]
+    #[schemars(skip)]
     parse_ok: bool,
+    #[serde(default, skip)]
+    #[schemars(skip)]
+    unknown_keys: Vec<String>,
+    #[serde(default, skip)]
+    #[schemars(skip)]
+    type_error: Option<String>,
+    #[serde(default, skip)]
+    #[schemars(skip)]
+    present_keys: Vec<String>,
+
+    /// POLICY. Select a capability tier above the floor in one word (`full` grants raw_containers; Style is ungated).
+    ///
+    /// Default: no tier — capabilities opt in individually.
+    #[serde(default)]
+    pub preset: Option<CapabilityPreset>,
+
+    /// POLICY. Capability override: allow raw container elements instead of the layout keywords.
+    ///
+    /// Default: off.
+    #[serde(default)]
+    pub raw_containers: Option<bool>,
+
+    /// POLICY. Auto-fix sibling rhythm violations; false warns only.
+    ///
+    /// Default: true.
+    #[serde(default)]
+    pub compose_rhythm: Option<bool>,
+
+    /// POLICY. Compose autofix preset: confluent fixes on / all error / pass silent.
+    ///
+    /// Default: repair.
+    #[serde(default)]
+    pub autofix: Option<AutofixSetting>,
+
+    /// POLICY. The CSS files this package may ship; an undeclared stylesheet fails the floor check.
+    ///
+    /// Default: none.
+    #[serde(default)]
+    pub stylesheets: Option<Vec<String>>,
+
+    /// POLICY. fetch/WebSocket/EventSource allowlist; `[]` grants nothing explicitly.
+    ///
+    /// Default: absent = full refusal.
+    #[serde(default)]
+    pub network: Option<Vec<String>>,
+
+    /// POLICY. Opt out of controller ambient-authority confinement entirely.
+    ///
+    /// Default: confined.
+    #[serde(default)]
+    pub unconfined: Option<bool>,
+
+    /// POLICY. App theme emit set: default id, optional mode, catalog allowlist. Owner: tokens generate.
+    ///
+    /// Default: no theme section — thin app emit (no catalog); package generate still full catalog.
+    #[serde(default)]
+    pub theme: Option<ThemeConfig>,
+
+    /// PRODUCT. Icon pack pin + role→glyph map. Owner: tokens / compiler.
+    ///
+    /// Default: framework default pack lucide + core role table (no app overrides).
+    #[serde(default)]
+    pub icons: Option<IconsConfig>,
+
+    /// POLICY. Promote gate-gap layout findings to Error so check/dev exit non-zero.
+    ///
+    /// Default: warn — taffy soft findings stay warnings; silent-clip stays Error.
+    #[serde(default)]
+    pub layout: Option<LayoutSetting>,
+
+    /// POLICY. Enable experimental layout kinds (sub-min-tap-target) without full lint strict.
+    ///
+    /// Default: false.
+    #[serde(default, rename = "layoutExperimental")]
+    pub layout_experimental: Option<bool>,
+
+    /// POLICY. Kill switch for text-metrics layout kind clipped-text (LAYOUT-5 default on; false disables).
+    ///
+    /// Default: absent → promoted default (on).
+    #[serde(default, rename = "layoutTextMetrics")]
+    pub layout_text_metrics: Option<bool>,
+
+    /// POLICY. Every lint finding is Error at the build gate (Warn→Error); per-rule off still silences.
+    ///
+    /// Default: false.
+    #[serde(default)]
+    pub strict: Option<bool>,
+
+    /// POLICY. Global lint severity floor + per-rule overrides. Owner: compiler `ResolvedPolicy`.
+    ///
+    /// Default: natural rule severities (no global floor, no per-rule tree).
+    #[serde(default)]
+    pub lint: Option<LintConfig>,
+
+    /// POLICY. Deck bundler/serve settings. Nested only — top-level render/entry/injectGlobals refuse as unknown.
+    ///
+    /// Default: absent — fully conventional serve defaults (csr, no entry, no inject).
+    #[serde(default)]
+    pub deck: Option<DeckConfig>,
+
+    /// PRODUCT. Application identity (title, description, lang). Owner: Deck `SiteDocument`.
+    ///
+    /// Default: absent — index.html title is package.json#name, lang=en, no description.
+    #[serde(default)]
+    pub app: Option<AppConfig>,
 }
 
 impl SailConfig {
-    /// Parse config JSON text. Unparseable text yields an empty config — its
-    /// presence on disk is the package's declared intent, and a broken body must
-    /// not hard-fail a build (the accessors read fields leniently). `parse_ok`
-    /// tracks whether the body actually parsed, so a caller that wants to
-    /// REFUSE LOUDLY on an unparseable config (vs. one that parsed but carries
-    /// no recognized signal) can tell the two apart.
+    /// Parse config JSON text. Unparseable text yields an empty config
+    /// (`parse_ok() == false`). Unknown top-level keys and wrong types are
+    /// recorded on the value; [`crate`] callers refuse them loudly.
     pub fn from_json(text: &str) -> SailConfig {
-        match serde_json::from_str(text) {
-            Ok(raw) => SailConfig {
-                raw,
+        match serde_json::from_str::<Value>(text) {
+            Ok(Value::Object(map)) => Self::from_object(map),
+            Ok(_) => SailConfig {
                 parse_ok: true,
+                type_error: Some("sail.config must be an object".into()),
+                ..SailConfig::default()
             },
             Err(_) => SailConfig {
-                raw: serde_json::Value::Null,
                 parse_ok: false,
+                ..SailConfig::default()
             },
+        }
+    }
+
+    /// Parse JSON or JSONC body (`//` and `/* */` comments + trailing commas).
+    pub fn from_jsonc(text: &str) -> SailConfig {
+        SailConfig::from_json(&strip_jsonc_comments(text))
+    }
+
+    fn from_object(map: serde_json::Map<String, Value>) -> SailConfig {
+        let recognized = crate::schema::recognized_key_set();
+        let present_keys: Vec<String> = map.keys().cloned().collect();
+        let unknown_keys: Vec<String> = present_keys
+            .iter()
+            .filter(|k| !recognized.contains(k.as_str()))
+            .cloned()
+            .collect();
+
+        let mut cleaned = map.clone();
+        for k in &unknown_keys {
+            cleaned.remove(k);
+        }
+
+        match serde_json::from_value::<SailConfig>(Value::Object(cleaned)) {
+            Ok(mut cfg) => {
+                cfg.parse_ok = true;
+                cfg.unknown_keys = unknown_keys;
+                cfg.present_keys = present_keys;
+                cfg
+            }
+            Err(e) => {
+                let type_error = first_type_error(&map).unwrap_or_else(|| e.to_string());
+                SailConfig {
+                    parse_ok: true,
+                    unknown_keys,
+                    type_error: Some(type_error),
+                    present_keys,
+                    ..SailConfig::default()
+                }
+            }
         }
     }
 
@@ -308,250 +527,159 @@ impl SailConfig {
         self.parse_ok
     }
 
-    /// The raw parsed JSON body — the single value every typed accessor reads.
-    /// Callers that need a nested object (e.g. the compiler policy registry's
-    /// `"policy"` target) use this rather than re-parsing the file.
-    pub fn raw(&self) -> &serde_json::Value {
-        &self.raw
+    /// Wrong-type refusal for a recognized key (like `"network": "https://…"`).
+    pub fn type_error(&self) -> Option<&str> {
+        self.type_error.as_deref()
     }
 
-    /// The `"preset"` string, if present and a string.
+    /// The `"preset"` token, if present.
     pub fn preset(&self) -> Option<&str> {
-        self.raw.get("preset").and_then(|v| v.as_str())
+        self.preset.map(CapabilityPreset::as_str)
     }
 
     /// Whether the config names `key` at all (any value/type).
     pub fn has_key(&self, key: &str) -> bool {
-        self.raw.get(key).is_some()
+        self.present_keys.iter().any(|k| k == key)
     }
 
-    /// A boolean capability override (`"sx"`, `"variants"`, `"raw_containers"`),
-    /// if present and a bool.
-    pub fn bool_key(&self, key: &str) -> Option<bool> {
-        self.raw.get(key).and_then(|v| v.as_bool())
-    }
-
-    /// A string key (`"autofix"`, …), if present and a string.
-    pub fn string_key(&self, key: &str) -> Option<String> {
-        self.raw
-            .get(key)
-            .and_then(|v| v.as_str())
-            .map(|s| s.to_string())
-    }
-
-    /// Top-level keys present in the config that are NOT in [`RECOGNIZED_KEYS`]
-    /// — typos (`"polcy"`) or made-up keys. A parse failure yields no keys
-    /// (there's no object to inspect); callers check [`Self::parse_ok`] first.
+    /// Top-level keys present in the config that are not fields of [`SailConfig`].
     pub fn unknown_keys(&self) -> Vec<String> {
-        self.raw
-            .as_object()
-            .map(|obj| {
-                obj.keys()
-                    .filter(|k| !RECOGNIZED_KEYS.contains(&k.as_str()))
-                    .cloned()
-                    .collect()
-            })
-            .unwrap_or_default()
+        self.unknown_keys.clone()
     }
 
-    /// The declared `"network"` per-origin allowlist — the fetch/WebSocket/
-    /// EventSource capability grant. `None` when the key is absent entirely
-    /// (today's default: full refusal). `Some(Err(()))` when the key is
-    /// present but wrong-typed (not an array, or an array with a non-string
-    /// element) — a type error the caller must fail closed on, never silently
-    /// treat as granting. `Some(Ok(origins))` when present and well-typed;
-    /// an empty array is a valid, explicit "grant nothing" declaration, not a
-    /// type error.
+    /// Declared `"network"` allowlist. `None` when the key is absent.
+    /// Wrong-typed values are [`Self::type_error`] — never silently granted.
+    pub fn network(&self) -> Option<&[String]> {
+        self.network.as_deref()
+    }
+
+    /// Historical `network_key` shape used by `classify`.
+    ///
+    /// `None` = absent. `Some(Ok(_))` = well-typed. Wrong types surface as
+    /// [`Self::type_error`] instead of `Some(Err(()))`.
     pub fn network_key(&self) -> Option<Result<Vec<String>, ()>> {
-        let v = self.raw.get("network")?;
-        match v.as_array() {
-            Some(arr) => {
-                let mut out = Vec::with_capacity(arr.len());
-                for item in arr {
-                    match item.as_str() {
-                        Some(s) => out.push(s.to_string()),
-                        None => return Some(Err(())),
-                    }
-                }
-                Some(Ok(out))
-            }
-            None => Some(Err(())),
-        }
+        self.network.as_ref().map(|v| Ok(v.clone()))
     }
 
-    /// The declared `"unconfined"` capability — the whole-hog opt-out of the
-    /// confined-by-default `sail-controller-no-ambient-authority` gate. `None`
-    /// when the key is absent (today's default: confined). `Some(Err(()))`
-    /// when present but not a bool — a type error the caller must fail closed
-    /// on (stays confined), never silently grant. `Some(Ok(bool))` when
-    /// present and well-typed.
+    /// Declared `"unconfined"` capability. `None` when absent.
+    pub fn unconfined(&self) -> Option<bool> {
+        self.unconfined
+    }
+
+    /// Historical `unconfined_key` shape used by `classify`.
     pub fn unconfined_key(&self) -> Option<Result<bool, ()>> {
-        let v = self.raw.get("unconfined")?;
-        match v.as_bool() {
-            Some(b) => Some(Ok(b)),
-            None => Some(Err(())),
-        }
+        self.unconfined.map(Ok)
     }
 
-    /// The declared `"stylesheets"` set — the CSS files the components package is allowed to
-    /// ship. Absent/wrong-typed → empty.
+    /// The declared `"stylesheets"` set. Absent → empty.
     pub fn declared_stylesheets(&self) -> HashSet<String> {
-        self.raw
-            .get("stylesheets")
-            .and_then(|v| v.as_array())
-            .map(|arr| {
-                arr.iter()
-                    .filter_map(|x| x.as_str().map(str::to_string))
-                    .collect()
-            })
+        self.stylesheets
+            .as_ref()
+            .map(|v| v.iter().cloned().collect())
             .unwrap_or_default()
     }
 
-    /// Raw `"icons"` object when present (SPEC-ICONS-1). Typed parse lives in
-    /// `sail_compiler::icons` — this crate only exposes the value so there is
-    /// still one disk reader.
-    pub fn icons_value(&self) -> Option<&serde_json::Value> {
-        self.raw.get("icons")
+    /// Raw `"icons"` object when present (SPEC-ICONS-1). Typed role parse lives
+    /// in `sail_compiler::icons`.
+    pub fn icons_value(&self) -> Option<Value> {
+        self.icons.as_ref().map(|m| Value::Object(m.fields.clone()))
     }
 
-    /// Raw `"fonts"` object when present (SPEC-FONTS-1).
-    pub fn fonts_value(&self) -> Option<&serde_json::Value> {
-        self.raw.get("fonts")
-    }
-
-    /// Role→face bindings from `"fonts".roles`. Absent / wrong-typed → empty.
-    /// Each binding is `(role, source, id, version)`.
-    pub fn fonts_roles(&self) -> Vec<FontRoleBinding> {
-        let Some(roles) = self
-            .raw
-            .get("fonts")
-            .and_then(|v| v.get("roles"))
-            .and_then(|v| v.as_object())
-        else {
-            return Vec::new();
-        };
-        let mut out = Vec::new();
-        for (role, spec) in roles {
-            let Some(obj) = spec.as_object() else {
-                continue;
-            };
-            let source = obj
-                .get("source")
-                .and_then(|v| v.as_str())
-                .unwrap_or("fontsource")
-                .to_string();
-            let Some(id) = obj.get("id").and_then(|v| v.as_str()) else {
-                continue;
-            };
-            let version = obj
-                .get("version")
-                .and_then(|v| v.as_str())
-                .map(str::to_string);
-            out.push(FontRoleBinding {
-                role: role.clone(),
-                source,
-                id: id.to_string(),
-                version,
-            });
-        }
-        out
-    }
-
-    /// `"layout": "error"` → strict layout gate. Absent / `"warn"` / other → soft.
-    /// Wrong-typed values are treated as soft (lenient extract).
+    /// `"layout": "error"` → strict layout gate. Absent / `"warn"` → soft.
     pub fn layout_is_error(&self) -> bool {
-        matches!(
-            self.raw.get("layout").and_then(|v| v.as_str()),
-            Some(s) if s.eq_ignore_ascii_case("error")
-        )
+        matches!(self.layout, Some(LayoutSetting::Error))
     }
 
-    /// S4.1 / SPEC-LAYOUT-DIAG-1 — top-level `"layoutExperimental": true`
-    /// enables remaining experimental layout kinds (`sub-min-tap-target`)
-    /// without full lint `strict`. Absent / wrong-typed → false.
+    /// S4.1 — `"layoutExperimental": true`.
     pub fn layout_experimental(&self) -> bool {
-        matches!(
-            self.raw.get("layoutExperimental").and_then(|v| v.as_bool()),
-            Some(true)
-        )
+        matches!(self.layout_experimental, Some(true))
     }
 
-    /// S4.1 / LAYOUT-5 — `"layoutTextMetrics": false` kills `clipped-text`.
-    /// Absent → promoted default (on). `layout_text_metrics()` is true only
-    /// when the key is explicitly true (callers that set the flag).
+    /// LAYOUT-5 — `"layoutTextMetrics": true` only when explicitly set.
     pub fn layout_text_metrics(&self) -> bool {
-        matches!(self.layout_text_metrics_opt(), Some(true))
+        matches!(self.layout_text_metrics, Some(true))
     }
 
-    /// LAYOUT-5 — explicit `layoutTextMetrics` when set. `None` means the
-    /// promoted default (on) should apply.
+    /// LAYOUT-5 — explicit `layoutTextMetrics` when set. `None` = promoted default (on).
     pub fn layout_text_metrics_opt(&self) -> Option<bool> {
-        self.raw.get("layoutTextMetrics").and_then(|v| v.as_bool())
+        self.layout_text_metrics
     }
 
-    /// Top-level `"strict": true` — every lint finding is Error at the build
-    /// gate (SPEC-LINTS-1 §3). Absent / wrong-typed / `false` → `false`.
-    /// Does **not** downgrade compiler/parse errors; per-rule `off` still
-    /// silences individual lints (kill switch).
+    /// Top-level `"strict": true`.
     pub fn strict(&self) -> bool {
-        matches!(self.raw.get("strict").and_then(|v| v.as_bool()), Some(true))
+        matches!(self.strict, Some(true))
     }
 
-    /// Global lint severity floor from top-level `"lint": { "severity": … }`.
-    ///
-    /// Returns a canonical token `"error"` | `"warn"` | `"off"` when the key is
-    /// present and a recognized severity string; `None` when absent or
-    /// wrong-typed / unrecognized (lenient extract — never hard-fails a build
-    /// for a lint floor typo; unknown top-level keys are the loud path).
-    ///
-    /// Lives on [`SailConfig`] (lint crate) so consumers do not depend on
-    /// compiler severity enums. The compiler maps the token onto
-    /// `LintSeverityValue` in `apply_config_to_resolved`.
+    /// Global lint severity floor from `"lint": { "severity": … }`.
     pub fn lint_severity_floor(&self) -> Option<&str> {
-        let s = self
-            .raw
-            .get("lint")
-            .and_then(|lint| lint.get("severity"))
-            .and_then(|v| v.as_str())?;
-        match s.trim().to_ascii_lowercase().as_str() {
-            "error" => Some("error"),
-            "warn" | "warning" => Some("warn"),
-            "off" | "false" | "0" => Some("off"),
-            _ => None,
-        }
+        self.lint
+            .as_ref()
+            .and_then(|l| l.severity)
+            .map(LintSeverity::as_str)
     }
 
-    /// Per-rule severity map from top-level `"lint": { "rules": { … } }`.
-    /// Empty when absent or wrong-typed. Values are the raw severity strings
-    /// as authored; the compiler parses them into `LintSeverityValue`.
+    /// Per-rule severity map from `"lint": { "rules": { … } }`.
     pub fn lint_rules(&self) -> Vec<(String, String)> {
-        let Some(rules) = self
-            .raw
-            .get("lint")
-            .and_then(|lint| lint.get("rules"))
-            .and_then(|v| v.as_object())
-        else {
+        let Some(rules) = self.lint.as_ref().and_then(|l| l.rules.as_ref()) else {
             return Vec::new();
         };
         rules
             .iter()
-            .filter_map(|(k, v)| v.as_str().map(|s| (k.clone(), s.to_string())))
+            .map(|(k, v)| (k.clone(), v.as_str().to_string()))
             .collect()
     }
 
-    /// Parse JSON or JSONC body (// and /* */ comments + trailing commas).
-    pub fn from_jsonc(text: &str) -> SailConfig {
-        SailConfig::from_json(&strip_jsonc_comments(text))
+    /// Recognized top-level keys currently present (for NoSignal hints).
+    pub fn present_recognized_keys(&self) -> Vec<String> {
+        let recognized = crate::schema::recognized_key_set();
+        self.present_keys
+            .iter()
+            .filter(|k| recognized.contains(k.as_str()))
+            .cloned()
+            .collect()
     }
 }
 
+fn first_type_error(map: &serde_json::Map<String, Value>) -> Option<String> {
+    let bool_keys = [
+        "raw_containers",
+        "compose_rhythm",
+        "unconfined",
+        "strict",
+        "layoutExperimental",
+        "layoutTextMetrics",
+    ];
+    for key in bool_keys {
+        if let Some(v) = map.get(key) {
+            if !v.is_boolean() {
+                return Some(format!("\"{key}\" must be a boolean"));
+            }
+        }
+    }
+    if let Some(v) = map.get("network") {
+        if !matches!(v, Value::Array(a) if a.iter().all(Value::is_string)) {
+            return Some("\"network\" must be an array of origin strings".into());
+        }
+    }
+    if let Some(v) = map.get("stylesheets") {
+        if !matches!(v, Value::Array(a) if a.iter().all(Value::is_string)) {
+            return Some("\"stylesheets\" must be an array of strings".into());
+        }
+    }
+    for key in ["theme", "lint", "deck", "app", "icons"] {
+        if let Some(v) = map.get(key) {
+            if !v.is_null() && !v.is_object() {
+                return Some(format!("\"{key}\" must be an object"));
+            }
+        }
+    }
+    None
+}
+
+// ── Walk-up ─────────────────────────────────────────────────────────────────
+
 /// A trailing clause naming the `sail.config.json` that could grant capability
-/// `key` for a source at `path` — appended to a strict-tier rule's `suggest`
-/// text so the refusal names WHERE to grant it, not just that it's refused
-/// (config-loud-strict rule #3). Empty string when no config exists on the
-/// walk (a synthetic/unrooted source, or a real gap — either way there is no
-/// path to name). Does not read the file — `owning_dir` only checks
-/// existence, so this is not a second `sail.config.json` reader.
+/// `key` for a source at `path`. Does not read the file.
 pub fn grant_hint(path: &Path, key: &str) -> String {
     match path.parent().and_then(owning_dir) {
         Some(dir) => format!(
@@ -562,106 +690,44 @@ pub fn grant_hint(path: &Path, key: &str) -> String {
     }
 }
 
-/// Walk up from `dir` (inclusive) and return the path to the first
-/// `sail.config.json` / `sail.config.jsonc` found plus its parsed contents, or
-/// `None` if none exists on the walk. A present-but-unparseable config
-/// resolves to an empty `SailConfig` (`parse_ok() == false`) and stops the
-/// walk — its presence is the package's declared intent, even if its body is
-/// broken. The returned path is what a caller names in a loud
-/// refusal/announcement message.
-///
-/// **Note:** Capability Policy still prefers pure `.json` package configs
-/// (primitives packs, routes). App-level `.jsonc` may carry `theme`, `icons`,
-/// `deck`, and `editor` which are recognized ([`RECOGNIZED_KEYS`]) as
-/// POLICY / TASTE / PRODUCT. Serve keys nest under `deck` only. Layout
-/// severity still uses [`layout_is_error_for`], which may walk past a
-/// capability config that has no `"layout"` key up to an app-level profile.
-pub fn resolve(dir: &Path) -> Option<(PathBuf, SailConfig)> {
-    let mut cur = Some(dir);
-    while let Some(d) = cur {
-        // Capability Policy historically reads `.json` only. Prefer it so
-        // routes/package packs keep winning over a co-located theme-only jsonc.
-        let json = d.join(CONFIG_FILE);
-        if let Ok(text) = std::fs::read_to_string(&json) {
-            return Some((json, SailConfig::from_json(&text)));
-        }
-        cur = d.parent();
-    }
-    None
-}
-
-/// Nearest app-level config for product keys (`icons`, `theme`).
-///
-/// Prefers `sail.config.jsonc` then `.json` at each directory. A capability-only
-/// package config (no `icons`) does not stop the walk — app jsonc further up
-/// still wins. Broken bodies are skipped.
-pub fn resolve_product(from: &Path) -> Option<(PathBuf, SailConfig)> {
-    let mut cur = if from.is_file() {
-        from.parent()
+/// Load the sail config in `dir` itself (no walk-up). `jsonc` wins when both
+/// exist. A present-but-unreadable file yields `None`.
+pub fn load_in(dir: &Path) -> Option<(PathBuf, SailConfig)> {
+    let path = crate::project::config_file_in(dir)?;
+    let text = std::fs::read_to_string(&path).ok()?;
+    let cfg = if path.extension().and_then(|e| e.to_str()) == Some("jsonc") {
+        SailConfig::from_jsonc(&text)
     } else {
-        Some(from)
+        SailConfig::from_json(&text)
     };
-    let mut first_ok: Option<(PathBuf, SailConfig)> = None;
-    while let Some(d) = cur {
-        for name in CONFIG_FILES {
-            let path = d.join(name);
-            let Ok(text) = std::fs::read_to_string(&path) else {
-                continue;
-            };
-            let cfg = if name.ends_with('c') {
-                SailConfig::from_jsonc(&text)
-            } else {
-                SailConfig::from_json(&text)
-            };
-            if !cfg.parse_ok() {
-                continue;
-            }
-            if cfg.has_key("icons") {
-                return Some((path, cfg));
-            }
-            if first_ok.is_none() {
-                first_ok = Some((path, cfg));
-            }
-        }
-        cur = d.parent();
-    }
-    first_ok
+    Some((path, cfg))
 }
 
-/// True when the nearest config that declares `"layout"` sets it to `"error"`.
+/// Load the [`crate::project::Project`] root that owns `dir`.
 ///
-/// Walks up from `source_file`'s parent, dual-reading `sail.config.jsonc` then
-/// `sail.config.json` at each level. A config that omits `"layout"` does not
-/// stop the walk — so `apps/studio/routes/sail.config.json` (capability keys
-/// only) still inherits `apps/studio/sail.config.jsonc` `"layout": "error"`.
+/// One discover + one [`load_in`] — not a second walk with different stop
+/// rules. A present-but-unparseable config resolves to an empty `SailConfig`
+/// (`parse_ok() == false`); its presence is the package's declared intent.
+pub fn resolve(dir: &Path) -> Option<(PathBuf, SailConfig)> {
+    let project = crate::project::Project::discover(dir)?;
+    load_in(project.root())
+}
+
+/// Product keys (`icons`, `theme`) on the same stack as [`resolve`].
 ///
-/// Lives in the single config reader module (not a second walk-up of policy
-/// keys). Pure layout severity — never mutates capability Policy.
+/// Not a second walker — overlays fields on the one Project load.
+pub fn resolve_product(from: &Path) -> Option<(PathBuf, SailConfig)> {
+    resolve(from)
+}
+
+/// True when the Project config for `source_file` sets `"layout": "error"`.
+///
+/// Reads that field on the [`resolve`] stack. A missing key is not an
+/// ancestor walk.
 pub fn layout_is_error_for(source_file: &Path) -> bool {
-    let mut cur = source_file.parent();
-    while let Some(d) = cur {
-        for name in CONFIG_FILES {
-            let candidate = d.join(name);
-            let Ok(text) = std::fs::read_to_string(&candidate) else {
-                continue;
-            };
-            let cfg = if name.ends_with('c') {
-                SailConfig::from_jsonc(&text)
-            } else {
-                SailConfig::from_json(&text)
-            };
-            if !cfg.parse_ok() {
-                // Broken body at this path — keep walking; don't fail closed
-                // into strict layout for a comment-only parse glitch.
-                continue;
-            }
-            if cfg.has_key("layout") {
-                return cfg.layout_is_error();
-            }
-        }
-        cur = d.parent();
-    }
-    false
+    resolve(source_file)
+        .map(|(_, cfg)| cfg.layout_is_error())
+        .unwrap_or(false)
 }
 
 /// Std-only JSONC stripper (// + /* */ comments, trailing commas). Mirrors
@@ -764,77 +830,26 @@ mod config_doc_tests {
     use super::*;
 
     #[test]
-    fn committed_schema_matches_emit() {
-        let path = concat!(
-            env!("CARGO_MANIFEST_DIR"),
-            "/schemas/sail.config.schema.json"
-        );
-        if std::env::var("SAIL_WRITE_SCHEMA").is_ok() {
-            std::fs::create_dir_all(concat!(env!("CARGO_MANIFEST_DIR"), "/schemas")).unwrap();
-            std::fs::write(path, emit_sail_config_schema()).unwrap();
-        }
-        let committed = std::fs::read_to_string(path).expect("committed schema");
-        assert_eq!(
-            committed,
-            emit_sail_config_schema(),
-            "sail.config.schema.json drifted — SAIL_WRITE_SCHEMA=1 cargo test -p sail-lint --lib committed_schema"
+    fn wrong_type_strict_refuses() {
+        let cfg = SailConfig::from_json(r#"{ "strict": 1 }"#);
+        assert!(cfg.parse_ok());
+        assert!(
+            cfg.type_error()
+                .is_some_and(|e| e.contains("strict") && e.contains("boolean")),
+            "{:?}",
+            cfg.type_error()
         );
     }
 
     #[test]
-    fn every_recognized_key_has_a_doc_row_and_no_extras() {
-        let doc_keys: Vec<&str> = CONFIG_KEY_DOCS.iter().map(|(k, _, _, _, _)| *k).collect();
-        assert_eq!(
-            doc_keys, RECOGNIZED_KEYS,
-            "CONFIG_KEY_DOCS must document exactly RECOGNIZED_KEYS, in the same order"
+    fn unknown_sx_refuses() {
+        let cfg = SailConfig::from_json(r#"{ "sx": true }"#);
+        assert!(cfg.parse_ok());
+        assert!(
+            cfg.unknown_keys().iter().any(|k| k == "sx"),
+            "{:?}",
+            cfg.unknown_keys()
         );
-    }
-
-    #[test]
-    fn every_key_is_policy_taste_or_product() {
-        for (key, _, _, _, layer) in CONFIG_KEY_DOCS {
-            assert!(
-                *layer == "POLICY" || *layer == "TASTE" || *layer == "PRODUCT",
-                "key `{key}` layer must be POLICY, TASTE, or PRODUCT, got `{layer}`"
-            );
-        }
-    }
-
-    #[test]
-    fn icons_key_is_recognized_product() {
-        let cfg = SailConfig::from_json(r#"{ "icons": { "pack": "lucide" } }"#);
-        assert!(cfg.unknown_keys().is_empty(), "{:?}", cfg.unknown_keys());
-        assert!(cfg.has_key("icons"));
-        assert_eq!(
-            cfg.icons_value()
-                .and_then(|v| v.get("pack"))
-                .and_then(|v| v.as_str()),
-            Some("lucide")
-        );
-        let layer = CONFIG_KEY_DOCS
-            .iter()
-            .find(|(k, _, _, _, _)| *k == "icons")
-            .map(|r| r.4);
-        assert_eq!(layer, Some("PRODUCT"));
-    }
-
-    #[test]
-    fn fonts_key_is_recognized_product() {
-        let cfg = SailConfig::from_json(
-            r#"{ "fonts": { "roles": { "body": { "source": "fontsource", "id": "@fontsource-variable/dm-sans", "version": "5.3.0" } } } }"#,
-        );
-        assert!(cfg.unknown_keys().is_empty(), "{:?}", cfg.unknown_keys());
-        assert!(cfg.has_key("fonts"));
-        let roles = cfg.fonts_roles();
-        assert_eq!(roles.len(), 1);
-        assert_eq!(roles[0].role, "body");
-        assert_eq!(roles[0].id, "@fontsource-variable/dm-sans");
-        assert_eq!(roles[0].version.as_deref(), Some("5.3.0"));
-        let layer = CONFIG_KEY_DOCS
-            .iter()
-            .find(|(k, _, _, _, _)| *k == "fonts")
-            .map(|r| r.4);
-        assert_eq!(layer, Some("PRODUCT"));
     }
 
     #[test]
@@ -843,7 +858,7 @@ mod config_doc_tests {
         assert!(cfg.layout_is_error());
         let soft = SailConfig::from_json(r#"{ "layout": "warn" }"#);
         assert!(!soft.layout_is_error());
-        let absent = SailConfig::from_json(r#"{ "sx": true }"#);
+        let absent = SailConfig::from_json(r#"{ "raw_containers": true }"#);
         assert!(!absent.layout_is_error());
     }
 
@@ -867,12 +882,21 @@ mod config_doc_tests {
         let ok = SailConfig::from_json(
             r#"{ "deck": { "render": "ssr" }, "theme": { "default": "ship" } }"#,
         );
+        assert!(ok.type_error().is_none(), "{:?}", ok.type_error());
         assert!(ok.unknown_keys().is_empty(), "nested deck is recognized");
         assert!(ok.has_key("deck"));
+        assert_eq!(
+            ok.deck.as_ref().and_then(|d| d.render),
+            Some(DeckRender::Ssr)
+        );
 
         let unknown_top =
             SailConfig::from_json(r#"{ "render": "ssr", "deck": { "render": "csr" } }"#);
         assert_eq!(unknown_top.unknown_keys(), vec!["render".to_string()]);
+        assert_eq!(
+            unknown_top.deck.as_ref().and_then(|d| d.render),
+            Some(DeckRender::Csr)
+        );
     }
 
     #[test]
@@ -888,15 +912,13 @@ mod config_doc_tests {
     }
 
     #[test]
-    fn layout_is_error_walks_past_capability_json_to_app_jsonc() {
-        // routes/sail.config.json (no layout) + app sail.config.jsonc (layout:error)
-        // must still resolve strict — studio shape.
+    fn layout_is_error_reads_the_project_config_not_an_ancestor() {
         let dir = tempfile::tempdir().expect("tempdir");
         let routes = dir.path().join("routes");
         std::fs::create_dir_all(&routes).expect("mkdir");
         std::fs::write(
             routes.join("sail.config.json"),
-            r#"{ "sx": true, "raw_containers": false }"#,
+            r#"{ "raw_containers": false }"#,
         )
         .expect("write routes config");
         std::fs::write(
@@ -907,8 +929,52 @@ mod config_doc_tests {
         let page = routes.join("page.sail");
         std::fs::write(&page, "<column></column>").expect("write page");
         assert!(
-            layout_is_error_for(&page),
-            "must inherit layout:error from parent jsonc"
+            !layout_is_error_for(&page),
+            "layout is a field on the Project load, not a second walk"
+        );
+        let owned = owning_dir(&page).expect("owning dir");
+        let (resolved, _) = resolve(&page).expect("resolve");
+        assert_eq!(owned, routes);
+        assert_eq!(resolved.parent().unwrap(), routes.as_path());
+    }
+
+    #[test]
+    fn layout_is_error_uses_nearest_project_config() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::create_dir_all(dir.path().join("routes")).unwrap();
+        std::fs::write(
+            dir.path().join("sail.config.jsonc"),
+            r#"{ "layout": "error" }"#,
+        )
+        .unwrap();
+        let page = dir.path().join("routes/page.sail");
+        std::fs::write(&page, "<column></column>").unwrap();
+        assert!(layout_is_error_for(&page));
+    }
+
+    #[test]
+    fn owning_dir_and_resolve_agree_on_nested_package_config() {
+        let tmp = tempfile::tempdir().unwrap();
+        let app = tmp.path().join("hello");
+        std::fs::create_dir_all(app.join("routes")).unwrap();
+        std::fs::write(app.join("sail.config.jsonc"), "{}\n").unwrap();
+        let foo = app.join("packages/foo");
+        std::fs::create_dir_all(foo.join("src")).unwrap();
+        std::fs::write(foo.join("sail.config.json"), "{}\n").unwrap();
+        let src = foo.join("src/x.sail");
+        std::fs::write(&src, "<p></p>\n").unwrap();
+
+        let owned = owning_dir(&src).expect("owning");
+        let (resolved_path, _) = resolve(&src).expect("resolve");
+        assert_eq!(owned, foo, "owning_dir is the nested package");
+        assert_eq!(
+            resolved_path.parent().unwrap(),
+            foo.as_path(),
+            "resolve loads that same Project root"
+        );
+        assert_eq!(
+            crate::project::Project::discover(&src).unwrap().root(),
+            foo.as_path()
         );
     }
 }

@@ -58,7 +58,7 @@ pub mod parse;
 pub mod policy;
 #[cfg(not(target_arch = "wasm32"))]
 pub mod profile;
-pub mod project_map;
+pub use sail_lint::project_map;
 pub mod region_capability;
 pub mod runtime_ambient;
 pub(crate) mod scan;

@@ -1,14 +1,13 @@
-//! Project-map file-kind classification (SPEC-PROJECT-STRUCTURE-1 §2).
+//! Project-map file-kind classification + `@/` alias table
+//! (SPEC-PROJECT-STRUCTURE-1 §2–§3).
 //!
 //! Single SSOT: path + shape signals → [`FileKind`] + fixed home.
-//! Misplacement diagnostics name the right home.
+//! Misplacement diagnostics name the right home. The alias table is the
+//! import matrix — lint, compiler, and deck resolve must not invent a
+//! second map.
 //!
-//! # Retirement plan (dual-path detectors)
-//!
-//! Deck `detect_mode` (hyphen heuristics) and host `route_params_for`
-//! grants should eventually call [`classify`] for Route/Component.
-//! This module does **not** change those call sites in S1.1 — pure
-//! library API + unit tests only.
+//! Lives in `sail-lint` so the lint crate can consume the matrix without
+//! a compiler ↔ lint cycle. Compiler re-exports this module.
 
 use std::path::{Component, Path, PathBuf};
 
@@ -237,6 +236,9 @@ fn apply_alias_mapping(
             let with_slash = format!("{pat_prefix}/");
             specifier.strip_prefix(&with_slash)?
         };
+        if !alias_rest_stays_under_home(rest) {
+            return None;
+        }
         let tgt_base = target
             .strip_suffix("/*")
             .unwrap_or(target)
@@ -257,6 +259,9 @@ fn apply_alias_mapping(
     if pattern == "@/" || pattern == "@/*" {
         // Catch-all: `@/` + remainder → target base + remainder.
         let rest = specifier.strip_prefix("@/")?;
+        if !alias_rest_stays_under_home(rest) {
+            return None;
+        }
         let tgt_base = target
             .strip_suffix("/*")
             .unwrap_or(target)
@@ -270,6 +275,71 @@ fn apply_alias_mapping(
     }
 
     None
+}
+
+/// Rest after a table prefix must stay inside that home.
+///
+/// `..` would walk out (`@/stores/../lib/helpers`). Extra slashes are not a
+/// second spelling of a table row.
+fn alias_rest_stays_under_home(rest: &str) -> bool {
+    if rest.is_empty() {
+        return true;
+    }
+    let rest = rest.replace('\\', "/");
+    let rest = rest.trim_end_matches('/');
+    if rest.is_empty() {
+        return true;
+    }
+    rest.split('/').all(|part| !part.is_empty() && part != "..")
+}
+
+/// True when `specifier` is a `@/` import that matches [`at_alias_paths`].
+///
+/// `@/lib/…` is not a home. The table is the allowlist — there is no
+/// catch-all `@/*`.
+pub fn is_legal_at_alias(specifier: &str) -> bool {
+    resolve_at_alias(Path::new(""), specifier).is_some()
+}
+
+/// Project-relative home fragments from the alias table (`src/stores`, `themes`, …).
+pub fn alias_home_fragments() -> impl Iterator<Item = &'static str> {
+    at_alias_paths()
+        .iter()
+        .map(|m| m.target.trim_start_matches("./").trim_end_matches("/*"))
+}
+
+/// Homes a controller may value-import via a relative path.
+///
+/// Stores are excluded: the legal form is `@/stores/…`, not `../stores/…`.
+pub fn relative_value_import_homes() -> impl Iterator<Item = &'static str> {
+    alias_home_fragments().filter(|h| *h != store_home_fragment())
+}
+
+/// Table target for `@/stores/*` (`src/stores`).
+fn store_home_fragment() -> &'static str {
+    at_alias_paths()
+        .iter()
+        .find(|m| m.pattern == "@/stores/*")
+        .map(|m| m.target.trim_start_matches("./").trim_end_matches("/*"))
+        .unwrap_or("src/stores")
+}
+
+/// True when `path` sits under a table home fragment (`src/stores`, `themes`, …).
+pub fn path_is_under_home(path: &str, home: &str) -> bool {
+    let p = path.replace('\\', "/");
+    let home = home.trim_matches('/');
+    if home.is_empty() {
+        return false;
+    }
+    p.contains(&format!("/{home}/"))
+        || p.starts_with(&format!("{home}/"))
+        || p.ends_with(&format!("/{home}"))
+        || p == home
+}
+
+/// True when `path` sits under the store home (`src/stores`).
+pub fn path_is_under_store_home(path: &str) -> bool {
+    path_is_under_home(path, store_home_fragment())
 }
 
 fn home_for(kind: FileKind) -> &'static str {
@@ -508,5 +578,69 @@ mod tests {
     fn real_define_store_call_still_detected() {
         let src = "export const x = defineStore('x', () => ({}))\n";
         assert!(source_has_define_store(src));
+    }
+
+    #[test]
+    fn alias_table_is_the_legal_at_prefix_set() {
+        for m in at_alias_paths() {
+            let spec = format!("{}/x", m.pattern.trim_end_matches("/*"));
+            assert!(is_legal_at_alias(&spec), "table row {spec} must resolve");
+        }
+        assert!(!is_legal_at_alias("@/lib/foo"), "@/lib is not a home");
+        assert!(!is_legal_at_alias("@/serverfns/x"));
+        assert!(!is_legal_at_alias("@/storesX"), "@/storesX is not @/stores");
+        assert!(
+            !is_legal_at_alias("@/storesX/tally"),
+            "@/storesX/… is not @/stores/…"
+        );
+        assert!(
+            !is_legal_at_alias("@/stores/../lib/helpers"),
+            ".. must not walk out of a table home"
+        );
+    }
+
+    #[test]
+    fn relative_value_homes_exclude_stores_and_cover_table() {
+        let homes: Vec<_> = relative_value_import_homes().collect();
+        assert!(
+            !homes.contains(&"src/stores"),
+            "stores are alias-only: {homes:?}"
+        );
+        for expected in [
+            "src/components",
+            "src/compositions",
+            "src/actions",
+            "themes",
+        ] {
+            assert!(
+                homes.contains(&expected),
+                "relative homes must include {expected}: {homes:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn path_under_home_matches_fragments_not_serverfns() {
+        assert!(path_is_under_home(
+            "apps/x/src/actions/save.ts",
+            "src/actions"
+        ));
+        assert!(path_is_under_home("apps/x/themes/ship.json", "themes"));
+        assert!(path_is_under_store_home("apps/x/src/stores/tally.ts"));
+        assert!(!path_is_under_store_home(
+            "apps/x/src/compositions/tally.ts"
+        ));
+        assert!(!path_is_under_home(
+            "apps/x/src/serverfns/run.ts",
+            "src/actions"
+        ));
+        assert!(!path_is_under_home(
+            "apps/x/src/serverfns/run.ts",
+            "src/stores"
+        ));
+        assert!(
+            !path_is_under_home("apps/x/src/storesX/tally.ts", "src/stores"),
+            "src/storesX is not src/stores"
+        );
     }
 }

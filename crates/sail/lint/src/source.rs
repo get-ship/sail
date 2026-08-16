@@ -50,7 +50,7 @@ fn walk(dir: &Path, out: &mut Vec<PathBuf>) {
 fn is_ignored_dir(p: &Path) -> bool {
     matches!(
         p.file_name().and_then(|n| n.to_str()),
-        Some("node_modules" | "dist" | "target" | ".git" | ".deck" | ".sail-out")
+        Some("node_modules" | "dist" | "target" | ".git" | ".sail" | ".deck" | ".sail-out")
     )
 }
 
@@ -96,6 +96,28 @@ mod tests {
                 .iter()
                 .all(|p| !p.components().any(|c| c.as_os_str() == "node_modules")),
             "no node_modules path is collected: {found:?}"
+        );
+    }
+
+    #[test]
+    fn walk_skips_sail_generate_dir() {
+        let root = tempfile::tempdir().unwrap();
+        let base = root.path();
+        fs::create_dir_all(base.join("routes")).unwrap();
+        fs::write(base.join("routes/page.sail"), "<column></column>").unwrap();
+        fs::create_dir_all(base.join(".sail")).unwrap();
+        fs::write(base.join(".sail/generated.sail"), "<column></column>").unwrap();
+
+        let found = collect(base);
+        assert!(
+            found.iter().any(|p| p.ends_with("page.sail")),
+            "authored source is collected: {found:?}"
+        );
+        assert!(
+            found
+                .iter()
+                .all(|p| !p.components().any(|c| c.as_os_str() == ".sail")),
+            "generate .sail/ must not be collected: {found:?}"
         );
     }
 }

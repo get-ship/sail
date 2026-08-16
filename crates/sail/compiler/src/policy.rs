@@ -12,41 +12,27 @@
 //!
 //! - top-level `"strict": true` — every lint finding → Error at the build gate
 //! - top-level `"lint": { "severity": "error"|"warn"|"off", "rules": { … } }`
-//!   — global floor + per-rule tree (merged with nested `policy.lint.severity.*`)
+//!   — global floor + per-rule tree
 //!
 //! No `platforms` field — one platform today. Scope is always `project`.
 //!
 //! ## Config surface
 //!
-//! Registry knobs live under the top-level `"policy"` object of
-//! `sail.config.json(c)`:
-//!
-//! ```json
-//! {
-//!   "policy": {
-//!     "layout": { "raw_containers": true },
-//!     "lint": { "severity": { "sail-for-key": "warn" } }
-//!   }
-//! }
-//! ```
-//!
-//! SPEC-LINTS-1 §3 also accepts the product shape at the top level (dual-read
-//! with the nested tree — both land in [`ResolvedPolicy::lint_severities`]):
+//! Registry knobs are top-level on `sail.config.json(c)` (`raw_containers`,
+//! `lint.rules`, `strict`). There is no `"policy"` nest.
 //!
 //! ```jsonc
 //! {
+//!   "raw_containers": true,
 //!   "strict": true,
 //!   "lint": {
 //!     "severity": "error",
-//!     "rules": { "sail-no-free-aria": "off" }
+//!     "rules": { "sail-for-key": "warn" }
 //!   }
 //! }
 //! ```
 //!
-//! Top-level `"raw_containers"` still feeds the same knob (no behavior
-//! change for existing projects). Unknown keys under `"policy"` are a hard
-//! error that names the closest valid key. Compiler/parse errors are never
-//! severity-configurable through this surface.
+//! Compiler/parse errors are never severity-configurable through this surface.
 
 use std::collections::BTreeMap;
 use std::path::Path;
@@ -194,13 +180,11 @@ pub struct ResolvedPolicy {
     /// Effective `layout.raw_containers`. Always populated after full resolve
     /// (defaults to the registry default `false` when unset).
     pub raw_containers: bool,
-    /// Whether `layout.raw_containers` was **explicitly** set by the `"policy"`
-    /// object (not merely defaulted). Callers that layer presets / prior
-    /// top-level keys consult this so a policy-only lint.severity tree does
-    /// not clobber `preset: full`.
+    /// Whether `layout.raw_containers` was **explicitly** set by a nested
+    /// registry object. Always `false` now — the `"policy"` nest is gone;
+    /// top-level `"raw_containers"` is owned by the capability-tier loop.
     pub raw_containers_explicit: bool,
-    /// Explicit per-rule severity overrides from `policy.lint.severity.*` and
-    /// top-level `lint.rules.*` (dual-read; one merged tree).
+    /// Explicit per-rule severity overrides from top-level `lint.rules.*`.
     pub lint_severities: BTreeMap<String, LintSeverityValue>,
     /// Top-level `"strict": true` — promote every remaining lint finding to
     /// Error at the build gate. Per-rule `off` still silences.
@@ -459,6 +443,21 @@ pub fn resolve_for_source(source_file: &Path) -> Result<ResolvedPolicy, PolicyEr
             return Ok(resolved);
         };
         resolved.config_path = Some(config_path);
+        if !cfg.parse_ok() {
+            return Err(PolicyError {
+                message: "the file is not valid JSON".into(),
+            });
+        }
+        if !cfg.unknown_keys().is_empty() {
+            return Err(PolicyError {
+                message: format!("unrecognized key(s): {}", cfg.unknown_keys().join(", ")),
+            });
+        }
+        if let Some(err) = cfg.type_error() {
+            return Err(PolicyError {
+                message: err.to_string(),
+            });
+        }
         let applied = apply_config_to_resolved(&cfg)?;
         resolved.raw_containers = applied.raw_containers;
         resolved.raw_containers_explicit = applied.raw_containers_explicit;
@@ -469,41 +468,21 @@ pub fn resolve_for_source(source_file: &Path) -> Result<ResolvedPolicy, PolicyEr
     }
 }
 
-/// Merge a nested `"policy"` object (and top-level `raw_containers`)
-/// plus SPEC-LINTS-1 top-level `"strict"` / `"lint"` into a [`ResolvedPolicy`].
+/// Merge top-level `raw_containers` plus SPEC-LINTS-1 `"strict"` / `"lint"`
+/// into a [`ResolvedPolicy`].
 ///
 /// Used by `check::policy::classify` so capability tier + registry share one
-/// parse of the config body.
-///
-/// Precedence for `layout.raw_containers`:
-/// 1. Explicit `policy.layout.raw_containers` (`raw_containers_explicit = true`)
-/// 2. Top-level `"raw_containers"` (explicit flag stays false — the
-///    capability-tier loop still owns the signal line)
-/// 3. Registry default (`false`)
-///
-/// Precedence for per-rule severities (dual-read):
-/// 1. Nested `policy.lint.severity.<rule>` (seeded first)
-/// 2. Top-level `lint.rules.<rule>` overlays (SPEC product shape wins on clash)
+/// parse of the config body. There is no `"policy"` nest.
 pub fn apply_config_to_resolved(
     cfg: &sail_lint::config::SailConfig,
 ) -> Result<ResolvedPolicy, PolicyError> {
     let mut resolved = ResolvedPolicy::defaults();
-    if let Some(from_obj) = resolve_policy_object(cfg.raw())? {
-        resolved.lint_severities = from_obj.lint_severities;
-        if from_obj.raw_containers_explicit {
-            resolved.raw_containers = from_obj.raw_containers;
-            resolved.raw_containers_explicit = true;
-        } else if let Some(b) = cfg.bool_key("raw_containers") {
-            resolved.raw_containers = b;
-        }
-    } else if let Some(b) = cfg.bool_key("raw_containers") {
+    if let Some(b) = cfg.raw_containers {
         resolved.raw_containers = b;
     }
 
-    // SPEC-LINTS-1 §3 — top-level strict + lint floor/rules.
     resolved.strict = cfg.strict();
     if let Some(floor) = cfg.lint_severity_floor() {
-        // Token already canonicalized by SailConfig; parse is infallible here.
         resolved.lint_severity_floor = LintSeverityValue::parse(floor);
     }
     for (rule, sev_str) in cfg.lint_rules() {
@@ -514,7 +493,6 @@ pub fn apply_config_to_resolved(
                 ),
             });
         };
-        // Top-level lint.rules overlays nested policy.lint.severity (SPEC path).
         resolved.lint_severities.insert(rule, sev);
     }
 
@@ -726,21 +704,20 @@ mod tests {
     }
 
     #[test]
-    fn jsonc_policy_object_round_trip_via_sail_config() {
+    fn jsonc_lint_rules_round_trip_via_sail_config() {
         let text = r#"{
             // proof knobs
-            "policy": {
-                "layout": { "raw_containers": false },
-                "lint": {
-                    "severity": {
-                        "sail-for-key": "error",
-                        "sail-no-sx": "off"
-                    }
+            "raw_containers": false,
+            "lint": {
+                "rules": {
+                    "sail-for-key": "error",
+                    "sail-no-raw-container": "off"
                 }
             }
         }"#;
         let cfg = sail_lint::config::SailConfig::from_jsonc(text);
         assert!(cfg.parse_ok());
+        assert!(cfg.type_error().is_none());
         let resolved = apply_config_to_resolved(&cfg).expect("resolve");
         assert!(!resolved.raw_containers);
         assert_eq!(
@@ -748,7 +725,7 @@ mod tests {
             Some(&LintSeverityValue::Error)
         );
         assert_eq!(
-            resolved.lint_severities.get("sail-no-sx"),
+            resolved.lint_severities.get("sail-no-raw-container"),
             Some(&LintSeverityValue::Off)
         );
     }
@@ -762,13 +739,18 @@ mod tests {
     }
 
     #[test]
-    fn nested_policy_wins_over_top_level() {
+    fn policy_nest_is_an_unknown_top_level_key() {
         let cfg = sail_lint::config::SailConfig::from_json(
             r#"{"raw_containers": true, "policy": {"layout": {"raw_containers": false}}}"#,
         );
+        assert!(
+            cfg.unknown_keys().iter().any(|k| k == "policy"),
+            "{:?}",
+            cfg.unknown_keys()
+        );
         let resolved = apply_config_to_resolved(&cfg).expect("resolve");
-        // Nested object present → it is the authority for registry knobs.
-        assert!(!resolved.raw_containers);
+        // Only the top-level key is read — the nest is unknown, not a second door.
+        assert!(resolved.raw_containers);
     }
 
     #[test]

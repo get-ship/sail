@@ -10,6 +10,7 @@ path = "src/lib.rs"
 
 [dependencies]
 serde = { workspace = true, features = ["derive"] }
+schemars = { version = "0.8", features = ["derive"] }
 
 # Style parse/IR/emit + scales/tokens (CHANNELS-1 extract).
 spinnaker = { path = "../spinnaker" }

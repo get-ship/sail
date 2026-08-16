@@ -2,106 +2,415 @@
   "$id": "https://ship.dev/schemas/sail.config.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
+  "definitions": {
+    "AppConfig": {
+      "additionalProperties": false,
+      "description": "PRODUCT. Document defaults for SPA index.html. Owner: Deck / `SiteDocument`.",
+      "properties": {
+        "description": {
+          "default": null,
+          "description": "`<meta name=\"description\">`. Absent → omitted.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "lang": {
+          "default": null,
+          "description": "`<html lang>`. Absent → `en`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "title": {
+          "default": null,
+          "description": "`index.html` `<title>`. Absent → `package.json#name`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "AutofixSetting": {
+      "description": "Compose autofix preset.",
+      "enum": [
+        "repair",
+        "strict",
+        "off"
+      ],
+      "type": "string"
+    },
+    "CapabilityPreset": {
+      "description": "Capability tier above the floor.",
+      "enum": [
+        "strict",
+        "full",
+        "repair",
+        "off"
+      ],
+      "type": "string"
+    },
+    "DeckConfig": {
+      "additionalProperties": false,
+      "description": "POLICY. Deck bundler/serve (`AppServeConfig`). Owner: Deck. Nested only.",
+      "properties": {
+        "entry": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/DeckEntry"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Host entry bootstrap (`entry.gen.ts`)."
+        },
+        "injectGlobals": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": null,
+          "description": "URL-capture → `window.<k>` injections.",
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "render": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/DeckRender"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "First-paint mode. Absent → `csr`."
+        }
+      },
+      "type": "object"
+    },
+    "DeckEntry": {
+      "additionalProperties": false,
+      "description": "Host-owned entry bootstrap under `deck.entry`.",
+      "properties": {
+        "clientsModule": {
+          "description": "Module-relative specifier of the host's client factory.",
+          "type": "string"
+        },
+        "exposeNames": {
+          "description": "Names spread into the `clients` map.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "clientsModule",
+        "exposeNames"
+      ],
+      "type": "object"
+    },
+    "DeckRender": {
+      "description": "Deck `render` token.",
+      "enum": [
+        "csr",
+        "ssr"
+      ],
+      "type": "string"
+    },
+    "IconsConfig": {
+      "additionalProperties": true,
+      "description": "icon pack pin + role→glyph map (SPEC-ICONS-1). Author markup uses roles, never pack prefixes",
+      "type": "object"
+    },
+    "LayoutSetting": {
+      "description": "Layout finding severity profile.",
+      "enum": [
+        "warn",
+        "error"
+      ],
+      "type": "string"
+    },
+    "LintConfig": {
+      "additionalProperties": false,
+      "description": "POLICY. Global lint floor + per-rule tree. Owner: compiler / lint.",
+      "properties": {
+        "rules": {
+          "additionalProperties": {
+            "$ref": "#/definitions/LintSeverity"
+          },
+          "default": null,
+          "description": "Per-rule overrides. Owner: compiler `ResolvedPolicy`.",
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "severity": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/LintSeverity"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Global lint severity floor (`off` | `warn` | `error`)."
+        }
+      },
+      "type": "object"
+    },
+    "LintSeverity": {
+      "description": "Lint severity token (`error` | `warn` | `off`, plus historical aliases).",
+      "enum": [
+        "error",
+        "warn",
+        "off"
+      ],
+      "type": "string"
+    },
+    "ThemeConfig": {
+      "additionalProperties": false,
+      "description": "POLICY. App theme emit set. Owner: tokens generate.",
+      "properties": {
+        "default": {
+          "default": null,
+          "description": "Preferred default theme id (scaffold / host paint).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "defaultMode": {
+          "default": null,
+          "description": "Initial `mode` (prefer `light` when omitted at host).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "enabled": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ThemeEnabled"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Catalog theme allowlist. Omit → default ship; `[]` → none; `\"all\"` → full."
+        }
+      },
+      "type": "object"
+    },
+    "ThemeEnabled": {
+      "description": "catalog allowlist: omit/[] thin; \"all\" full; list filter",
+      "oneOf": [
+        {
+          "const": "all",
+          "type": "string"
+        },
+        {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      ]
+    }
+  },
+  "description": "Typed `sail.config.json(c)` document. Schema is generated from this type.\n\nParse metadata (`parse_ok`, unknown keys, type errors) is skipped by serde and schemars — it is filled by [`SailConfig::from_json`].",
   "properties": {
+    "app": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/AppConfig"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "PRODUCT. Application identity (title, description, lang). Owner: Deck `SiteDocument`.\n\nDefault: absent — index.html title is package.json#name, lang=en, no description.",
+      "x-sail-layer": "PRODUCT"
+    },
     "autofix": {
-      "description": "compose autofix preset: confluent fixes on / all error / pass silent (default: repair; layer: POLICY)",
-      "x-sail-layer": "POLICY",
-      "x-sail-type": "\"repair\" | \"strict\" | \"off\""
+      "anyOf": [
+        {
+          "$ref": "#/definitions/AutofixSetting"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "POLICY. Compose autofix preset: confluent fixes on / all error / pass silent.\n\nDefault: repair.",
+      "x-sail-layer": "POLICY"
     },
     "compose_rhythm": {
-      "description": "auto-fix sibling rhythm violations; false warns only (default: true; layer: POLICY)",
-      "x-sail-layer": "POLICY",
-      "x-sail-type": "boolean"
+      "default": null,
+      "description": "POLICY. Auto-fix sibling rhythm violations; false warns only.\n\nDefault: true.",
+      "type": [
+        "boolean",
+        "null"
+      ],
+      "x-sail-layer": "POLICY"
     },
     "deck": {
-      "description": "Deck bundler/serve settings (SPEC-SAIL-CONFIG-1); nested only — top-level render/entry/injectGlobals refuse as unknown (default: absent — fully conventional serve defaults (csr, no entry, no inject); layer: POLICY)",
-      "x-sail-layer": "POLICY",
-      "x-sail-type": "{ render?: \"csr\"|\"ssr\", entry?: { clientsModule, exposeNames[] }, injectGlobals?: { [k]: template } }"
-    },
-    "editor": {
-      "description": "studio deep-link preference for open-in-editor — product taste, not language behavior (default: vscode (studio default when unset); layer: TASTE)",
-      "x-sail-layer": "TASTE",
-      "x-sail-type": "string | { scheme, pathTemplate? }"
-    },
-    "fonts": {
-      "description": "pin font roles (body, heading, mono, display, app-custom) to Fontsource package ids or local faces; unused families do not ship (default: omitted — vendored @ship/tokens FONTS + theme --font-*-app (no regression); layer: PRODUCT)",
-      "x-sail-layer": "PRODUCT",
-      "x-sail-type": "{ roles: { <role>: { source, id, version? } } }"
+      "anyOf": [
+        {
+          "$ref": "#/definitions/DeckConfig"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "POLICY. Deck bundler/serve settings. Nested only — top-level render/entry/injectGlobals refuse as unknown.\n\nDefault: absent — fully conventional serve defaults (csr, no entry, no inject).",
+      "x-sail-layer": "POLICY"
     },
     "icons": {
-      "description": "icon pack pin + role→glyph map (SPEC-ICONS-1). Author markup uses roles, never pack prefixes (default: framework default pack lucide + core role table (no app overrides); layer: PRODUCT)",
-      "x-sail-layer": "PRODUCT",
-      "x-sail-type": "{ pack?: string | { id, version? }, version?, packs?: { [id]: { version } }, roles?: { [role]: glyph | \"pack:glyph\" | { pack, glyph } } }"
+      "anyOf": [
+        {
+          "$ref": "#/definitions/IconsConfig"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "PRODUCT. Icon pack pin + role→glyph map. Owner: tokens / compiler.\n\nDefault: framework default pack lucide + core role table (no app overrides).",
+      "x-sail-layer": "PRODUCT"
     },
     "layout": {
-      "description": "promote gate-gap layout findings (main-axis overflow, collapsed box, height-chain) to Error so check/dev exit non-zero (studio strict profile) (default: warn — taffy soft findings stay warnings; silent-clip stays Error; layer: POLICY)",
-      "x-sail-layer": "POLICY",
-      "x-sail-type": "\"warn\" | \"error\""
+      "anyOf": [
+        {
+          "$ref": "#/definitions/LayoutSetting"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "POLICY. Promote gate-gap layout findings to Error so check/dev exit non-zero.\n\nDefault: warn — taffy soft findings stay warnings; silent-clip stays Error.",
+      "x-sail-layer": "POLICY"
     },
     "layoutExperimental": {
-      "description": "enable experimental layout kinds (sub-min-tap-target) without full lint strict (SPEC-LAYOUT-DIAG-1 / S4.1) (default: false; layer: POLICY)",
-      "x-sail-layer": "POLICY",
-      "x-sail-type": "boolean"
+      "default": null,
+      "description": "POLICY. Enable experimental layout kinds (sub-min-tap-target) without full lint strict.\n\nDefault: false.",
+      "type": [
+        "boolean",
+        "null"
+      ],
+      "x-sail-layer": "POLICY"
     },
     "layoutTextMetrics": {
-      "description": "kill switch for text-metrics layout kind clipped-text (LAYOUT-5 default on; false disables) (default: false; layer: POLICY)",
-      "x-sail-layer": "POLICY",
-      "x-sail-type": "boolean"
+      "default": null,
+      "description": "POLICY. Kill switch for text-metrics layout kind clipped-text (LAYOUT-5 default on; false disables).\n\nDefault: absent → promoted default (on).",
+      "type": [
+        "boolean",
+        "null"
+      ],
+      "x-sail-layer": "POLICY"
     },
     "lint": {
-      "description": "global lint severity floor + per-rule overrides (SPEC-LINTS-1 §3); dual-read with policy.lint.severity.* (default: natural rule severities (no global floor, no per-rule tree); layer: POLICY)",
-      "x-sail-layer": "POLICY",
-      "x-sail-type": "{ severity?: \"off\"|\"warn\"|\"error\", rules?: { <rule-id>: \"off\"|\"warn\"|\"error\" } }"
+      "anyOf": [
+        {
+          "$ref": "#/definitions/LintConfig"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "POLICY. Global lint severity floor + per-rule overrides. Owner: compiler `ResolvedPolicy`.\n\nDefault: natural rule severities (no global floor, no per-rule tree).",
+      "x-sail-layer": "POLICY"
     },
     "network": {
-      "description": "fetch/WebSocket/EventSource allowlist; [] grants nothing explicitly; a wrong-typed value fails closed (default: absent = full refusal; layer: POLICY)",
-      "x-sail-layer": "POLICY",
-      "x-sail-type": "string[] of origins"
-    },
-    "policy": {
-      "description": "typed compiler policy registry object; unknown keys are a hard error naming the closest valid key (default: registry defaults (see `sail-compiler policy`); layer: POLICY)",
-      "x-sail-layer": "POLICY",
-      "x-sail-type": "{ layout.raw_containers?, lint.severity.<rule-id>? }"
+      "default": null,
+      "description": "POLICY. fetch/WebSocket/EventSource allowlist; `[]` grants nothing explicitly.\n\nDefault: absent = full refusal.",
+      "items": {
+        "type": "string"
+      },
+      "type": [
+        "array",
+        "null"
+      ],
+      "x-sail-layer": "POLICY"
     },
     "preset": {
-      "description": "select a capability tier above the floor in one word (default: no tier — capabilities opt in individually; layer: POLICY)",
-      "x-sail-layer": "POLICY",
-      "x-sail-type": "\"strict\" | \"full\" | \"repair\" | \"off\""
+      "anyOf": [
+        {
+          "$ref": "#/definitions/CapabilityPreset"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "POLICY. Select a capability tier above the floor in one word (`full` grants raw_containers; Style is ungated).\n\nDefault: no tier — capabilities opt in individually.",
+      "x-sail-layer": "POLICY"
     },
     "raw_containers": {
-      "description": "capability override: allow raw container elements instead of the layout keywords (default: off; layer: POLICY)",
-      "x-sail-layer": "POLICY",
-      "x-sail-type": "boolean"
+      "default": null,
+      "description": "POLICY. Capability override: allow raw container elements instead of the layout keywords.\n\nDefault: off.",
+      "type": [
+        "boolean",
+        "null"
+      ],
+      "x-sail-layer": "POLICY"
     },
     "strict": {
-      "description": "every lint finding is Error at the build gate (Warn→Error); per-rule off still silences; never downgrades compiler errors (default: false; layer: POLICY)",
-      "x-sail-layer": "POLICY",
-      "x-sail-type": "boolean"
+      "default": null,
+      "description": "POLICY. Every lint finding is Error at the build gate (Warn→Error); per-rule off still silences.\n\nDefault: false.",
+      "type": [
+        "boolean",
+        "null"
+      ],
+      "x-sail-layer": "POLICY"
     },
     "stylesheets": {
-      "description": "the CSS files this package may ship; an undeclared stylesheet fails the floor check (default: none; layer: POLICY)",
-      "x-sail-layer": "POLICY",
-      "x-sail-type": "string[]"
-    },
-    "sx": {
-      "description": "capability override: allow the sx surface beyond the floor allowance (default: off; layer: POLICY)",
-      "x-sail-layer": "POLICY",
-      "x-sail-type": "boolean"
+      "default": null,
+      "description": "POLICY. The CSS files this package may ship; an undeclared stylesheet fails the floor check.\n\nDefault: none.",
+      "items": {
+        "type": "string"
+      },
+      "type": [
+        "array",
+        "null"
+      ],
+      "x-sail-layer": "POLICY"
     },
     "theme": {
-      "description": "app theme emit set: default id, optional mode, catalog allowlist (omit/[] thin; \"all\" full; list filter). Project themes/ always emit (default: no theme section — thin app emit (no catalog); package generate still full catalog; layer: POLICY)",
-      "x-sail-layer": "POLICY",
-      "x-sail-type": "{ default, defaultMode?, enabled: \"all\" | string[] }"
+      "anyOf": [
+        {
+          "$ref": "#/definitions/ThemeConfig"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "POLICY. App theme emit set: default id, optional mode, catalog allowlist. Owner: tokens generate.\n\nDefault: no theme section — thin app emit (no catalog); package generate still full catalog.",
+      "x-sail-layer": "POLICY"
     },
     "unconfined": {
-      "description": "opt out of controller ambient-authority confinement entirely; a wrong-typed value stays confined (default: confined; layer: POLICY)",
-      "x-sail-layer": "POLICY",
-      "x-sail-type": "boolean"
-    },
-    "variants": {
-      "description": "capability override: allow CVA-in-props variance matrices (key→sx maps on props) and compound: (default: off; layer: POLICY)",
-      "x-sail-layer": "POLICY",
-      "x-sail-type": "boolean"
+      "default": null,
+      "description": "POLICY. Opt out of controller ambient-authority confinement entirely.\n\nDefault: confined.",
+      "type": [
+        "boolean",
+        "null"
+      ],
+      "x-sail-layer": "POLICY"
     }
   },
   "title": "SailConfig",

@@ -10,9 +10,12 @@
 //! is not floor-linted this cycle.
 
 pub mod config;
+pub mod project;
+pub mod project_map;
 pub mod prop_registry;
 pub mod report;
 pub mod rules;
+pub mod schema;
 pub mod source;
 
 // Style language lives in `spinnaker`. Rules that parse or complete import
@@ -22,13 +25,14 @@ pub use spinnaker::{host_ctx, scales, style_vocab, token_groups, tokens};
 #[cfg(test)]
 mod tests;
 
-pub use config::{SailConfig, emit_sail_config_schema};
+pub use config::SailConfig;
+pub use project::Project;
 pub use report::{Category, Finding, Severity};
+pub use schema::{config_key_docs, emit_sail_config_schema};
 
-/// Scrubbed rule IDs are history. They do not stay registered — git
-/// holds the record; tombstone-scan holds the machinery closed.
-/// An empty table is not a TTL tombstone; it is the absence of one.
-pub const RETIRED_RULE_IDS: &[&str] = &[];
+/// Forever-ids whose implementations are gone. Still in [`all_rule_ids`]
+/// so the diagnostic pin cannot silently drop a shipped id.
+pub const RETIRED_RULE_IDS: &[&str] = &["sail-no-sx", "sail-no-variants"];
 
 /// Layout-pass finding kinds mapped to stable `sail-*` rule ids
 /// (SPEC-LAYOUT-DIAG-1 / S4.1). Emitted by the compiler layout bridge, not
@@ -49,6 +53,7 @@ pub fn all_rule_ids() -> Vec<&'static str> {
         .chain(rules::ACTION_RULES.iter())
         .map(|(id, _)| *id)
         .chain(LAYOUT_DIAG_RULE_IDS.iter().copied())
+        .chain(RETIRED_RULE_IDS.iter().copied())
         .collect()
 }
 

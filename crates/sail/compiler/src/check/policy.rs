@@ -12,17 +12,16 @@
 //! policy, and there
 //! is no config key to relax them. This is what "floor" means: the thing not
 //! even the compiler's configuration allows. (The compiler's own `--styles`
-//! injection is internal, not authored source, so `sx`'s generated block is
-//! never mistaken for author CSS.)
+//! injection is internal, not authored source.) Product Style is the tag call
+//! `style({…})` — ungated. Retired `sx=` is a compile error. Residual
+//! utility-string `style=` is floor (`spinnaker` / `sail-no-inline-style`).
 //!
 //! ## The capability keys — the dial
 //!
-//! Three keys, each on/off, gate the styling surface *above* the floor:
-//! - `sx` — the `style="…"` token utility surface (`sail-no-sx`)
-//! - `variants` — the `<variants>` prop→style table (`sail-no-variants`)
+//! One key gates structure *above* the floor:
 //! - `raw_containers` — raw `<div>`/`<span>` (`sail-no-raw-container`)
 //!
-//! A fourth key controls the compose auto-fix tier:
+//! A second key controls the compose auto-fix tier:
 //! - `compose_rhythm` — when `true` (default), `sail-compose-rhythm` findings
 //!   are emitted at `fix` severity and may be auto-repaired; when `false`, the
 //!   rule downgrades to a warning and the compiler never rewrites spacing.
@@ -34,12 +33,11 @@
 //!
 //! ## The presets
 //!
-//! - [`Policy::FULL`] — primitive-authoring: every capability on. Where the SAIL
-//!   primitives are built. The floor still holds; a dissolved primitive expresses
-//!   itself in `sx` + `<variants>` + layout keywords, never raw CSS.
-//! - [`Policy::STRICT`] — app-authoring: every capability off. Compose primitives,
-//!   drive them with props, use the layout keywords — no styling escape at all.
-//!   Tests whether the primitive vocabulary is rich enough to need zero surface.
+//! - [`Policy::FULL`] — primitive-authoring: `raw_containers` on. Where the SAIL
+//!   primitives are built. The floor still holds; Style (`style({…})`, including
+//!   `match` / `when` / `compound`) is product, not a grant.
+//! - [`Policy::STRICT`] — app-authoring: `raw_containers` off. Compose primitives,
+//!   drive them with props, use the layout keywords — no raw boxes.
 //!
 //! A `sail.config.json` may name a preset (`{ "preset": "strict" }`) and/or set
 //! individual keys (`{ "preset": "full", "raw_containers": false }`) — keys
@@ -70,17 +68,11 @@ use super::lint_overrides::{LintOverride, OverrideSeverity};
 /// (`check::lint_overrides::enforce_floor`) all read this one list, so a floor
 /// rule added here is enforced everywhere with no second place to update.
 ///
-/// `spinnaker` (the typo/unknown-atom catcher, distinct from the `sx` capability
-/// key's `sail-no-sx` gate) joined the floor for compiler-stability-audit #100
-/// item 1: an unknown atom must NEVER become a silent-nothing. Before this,
-/// `spinnaker` rode the ordinary override channel, so a host that softened it to
-/// `Warn`/`Off` turned a typo'd atom (`style="bg-surfce-2"`) into a dead class —
-/// pushed into the DOM by `parse::preprocess::lower_sx_value` with no matching
-/// CSS rule, and (at `Off`) no diagnostic anywhere. `lower_sx_value` has no
-/// severity awareness at all (it runs in the parse pass, ahead of the lint
-/// gate) and always pushes the class regardless of whether the atom resolved
-/// — so the ONLY place this could be stopped is the gate, by making the rule
-/// un-softenable. As a floor rule, `spinnaker` is `Error` under every policy and
+/// `spinnaker` (the typo/unknown-atom catcher) joined the floor for
+/// compiler-stability-audit #100 item 1: an unknown atom must NEVER become a
+/// silent-nothing. Before this, `spinnaker` rode the ordinary override channel,
+/// so a host that softened it to `Warn`/`Off` turned a typo'd atom into a dead
+/// class. As a floor rule, `spinnaker` is `Error` under every policy and
 /// `check::gate` refuses the build before the dead class ever reaches emitted
 /// output.
 pub const FLOOR_RULES: [&str; 5] = [
@@ -94,9 +86,8 @@ pub const FLOOR_RULES: [&str; 5] = [
 /// The CAPABILITY rule ids — the dial ABOVE the floor, one per key on
 /// [`Policy`]. Unlike the floor these are opt-in: they gate a surface a package
 /// declares it wants closed. [`Policy::capabilities`] and
-/// [`Policy::capability_defaults_for`] both derive from this one list, so a
-/// fourth key is added in exactly one place.
-pub const CAPABILITY_RULES: [&str; 3] = ["sail-no-sx", "sail-no-variants", "sail-no-raw-container"];
+/// [`Policy::capability_defaults_for`] both derive from this one list.
+pub const CAPABILITY_RULES: [&str; 1] = ["sail-no-raw-container"];
 
 /// True iff `rule` is a floor rule — one the compiler promotes to `Error`
 /// unconditionally and that no `lint_override` can soften. See [`FLOOR_RULES`].
@@ -128,13 +119,10 @@ impl AutofixPreset {
 }
 
 /// A package's styling policy: the (implicit, non-overridable) floor plus the
-/// three capability keys and the compose auto-fix key. See the module docs.
+/// remaining capability key (`raw_containers`) and the compose auto-fix key.
+/// See the module docs. Product Style is not a field — it is ungated.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Policy {
-    /// The `style="…"` token styling surface.
-    pub sx: bool,
-    /// The `<variants>` prop→style table.
-    pub variants: bool,
     /// Raw `<div>`/`<span>` containers.
     pub raw_containers: bool,
     /// Auto-fix sibling rhythm violations (`sail-compose-rhythm`).
@@ -144,21 +132,17 @@ pub struct Policy {
 }
 
 impl Policy {
-    /// `full` — primitive-authoring: every capability unlocked (the floor still
-    /// holds). Where the primitives are built and dissolved.
+    /// `full` — primitive-authoring: `raw_containers` unlocked (the floor still
+    /// holds). Where the primitives are built and dissolved. Style is product.
     pub const FULL: Policy = Policy {
-        sx: true,
-        variants: true,
         raw_containers: true,
         compose_rhythm: true,
         autofix: AutofixPreset::Repair,
     };
 
-    /// `strict` — app-authoring: every capability off. Compose primitives and use
-    /// their props; no `sx`, no `<variants>`, no raw boxes.
+    /// `strict` — app-authoring: `raw_containers` off. Compose primitives and
+    /// use their props; no raw boxes. Style (`style({…})`) stays legal.
     pub const STRICT: Policy = Policy {
-        sx: false,
-        variants: false,
         raw_containers: false,
         compose_rhythm: true,
         autofix: AutofixPreset::Repair,
@@ -252,8 +236,6 @@ impl Policy {
     /// rule ids are not capabilities and are never granted here.
     fn grants(self, rule: &str) -> bool {
         match rule {
-            "sail-no-sx" => self.sx,
-            "sail-no-variants" => self.variants,
             "sail-no-raw-container" => self.raw_containers,
             _ => false,
         }
@@ -280,15 +262,11 @@ impl Policy {
     /// about what `compile()` will do.
     ///
     /// The capability rules carry a natural `Warn` so an unconfigured package
-    /// keeps compiling. But `Warn` is not silence: `analyze()` surfaced
-    /// "sx= is not allowed under the strict policy" for source that
-    /// `compile()` accepted, on a package that had never opted into `strict`
-    /// — so the editor squiggled a tier nobody had declared, and the squiggle
-    /// disagreed with the build. A capability is a thing a package DECLARES;
-    /// with no `sail.config.json` in reach there is no policy to violate, so
-    /// the rule is `Off` rather than `Warn`. Where a config does exist, its
-    /// resolved tier decides (`Off` granted / `Error` withheld) — the same
-    /// answer [`Policy::overrides_for`] hands the build host, so both surfaces
+    /// keeps compiling. A capability is a thing a package DECLARES; with no
+    /// `sail.config.json` in reach there is no policy to violate, so the rule
+    /// is `Off` rather than `Warn`. Where a config does exist, its resolved
+    /// tier decides (`Off` granted / `Error` withheld) — the same answer
+    /// [`Policy::overrides_for`] hands the build host, so both surfaces
     /// read one resolver.
     ///
     /// Host-supplied overrides still win: anything already named in
@@ -314,10 +292,11 @@ impl Policy {
 
     /// The full `LintOverride` bundle this policy implies: the **floor**
     /// (`Error` for every [`FLOOR_RULES`] id, via [`Policy::floor`]) plus the
-    /// three capability keys toggled between `Off` (allowed) and `Error`
-    /// (forbidden). The floor is derived from the one [`FLOOR_RULES`] list, not
-    /// re-hardcoded here. Used by tests + tooling that want the whole picture;
-    /// the compiler enforces the floor half unconditionally regardless.
+    /// remaining capability key (`raw_containers`) toggled between `Off`
+    /// (allowed) and `Error` (forbidden). The floor is derived from the one
+    /// [`FLOOR_RULES`] list, not re-hardcoded here. Used by tests + tooling
+    /// that want the whole picture; the compiler enforces the floor half
+    /// unconditionally regardless.
     pub fn overrides(self) -> Vec<LintOverride> {
         let mut out = Policy::floor();
         out.extend(self.capabilities());
@@ -433,14 +412,14 @@ fn rejected(reason: String) -> PolicyResolution {
 pub enum ResolutionKind {
     /// A recognized signal (preset and/or capability keys) produced the tier.
     /// The joined `key: value` pairs that set it, e.g. `"preset: full"` or
-    /// `"sx: true, raw_containers: false"`.
+    /// `"raw_containers: false"`.
     Recognized(String),
     /// The config is well-formed and every key it names is recognized, but
     /// none of them carry tier signal (e.g. `{"stylesheets": []}` alone, or
     /// `{}`). Fails closed to STRICT — this is the original config-loud-strict
-    /// bug: a config with no capability signal used to silently strip sx.
-    /// `String` names which recognized-but-signal-free keys are present (or
-    /// "no keys at all" for `{}`).
+    /// bug: a config with no capability signal used to silently lock the
+    /// surface. `String` names which recognized-but-signal-free keys are
+    /// present (or "no keys at all" for `{}`).
     NoSignal(String),
     /// The config is unparseable, OR names a key/value the parser does not
     /// recognize (a typo'd key, or a preset name that isn't `full`/`strict`).
@@ -457,7 +436,7 @@ fn classify(cfg: &sail_lint::config::SailConfig) -> PolicyResolution {
     let unknown = cfg.unknown_keys();
     if !unknown.is_empty() {
         // SPEC-HARDENING-1 WI5: validation errors name the allowed keys.
-        let allowed = sail_lint::config::RECOGNIZED_KEYS.join(", ");
+        let allowed = sail_lint::config::recognized_keys().join(", ");
         return rejected(format!(
             "unrecognized key{} {} (allowed keys: {allowed})",
             if unknown.len() == 1 { "" } else { "s" },
@@ -468,16 +447,15 @@ fn classify(cfg: &sail_lint::config::SailConfig) -> PolicyResolution {
                 .join(", ")
         ));
     }
+    if let Some(err) = cfg.type_error() {
+        return rejected(err.to_string());
+    }
 
-    // Registry `"policy"` object — unknown keys hard-fail naming the closest
-    // valid key (SPEC-POLICY-1). Parse once here so capability tier + registry
-    // share the body.
     let registry = match crate::policy::apply_config_to_resolved(cfg) {
         Ok(r) => r,
         Err(e) => return rejected(e.message),
     };
     let lint_severity_overrides = registry.lint_overrides();
-    let policy_object_present = cfg.has_key("policy");
 
     let mut p = Policy::STRICT;
     let mut signal = Vec::new();
@@ -494,51 +472,19 @@ fn classify(cfg: &sail_lint::config::SailConfig) -> PolicyResolution {
             }
         }
     }
-    for key in ["sx", "variants", "raw_containers", "compose_rhythm"] {
-        if let Some(b) = cfg.bool_key(key) {
-            match key {
-                "sx" => p.sx = b,
-                "variants" => p.variants = b,
-                "raw_containers" => p.raw_containers = b,
-                "compose_rhythm" => p.compose_rhythm = b,
-                // Loop list above is exhaustive; stay total without panicking.
-                _ => {}
-            }
-            signal.push(format!("{key}: {b}"));
-        }
+    if let Some(b) = cfg.raw_containers {
+        p.raw_containers = b;
+        signal.push(format!("raw_containers: {b}"));
     }
-    // Registry knobs: explicit `policy.layout.raw_containers` overrides any
-    // earlier preset/top-level value (layout.raw_containers is the SSOT name).
-    // A policy object that only carries lint.severity.* does NOT clobber
-    // preset/top-level raw_containers.
-    if registry.raw_containers_explicit {
-        // Drop a prior signal line for the old key if present — the nested
-        // name is authoritative.
-        signal.retain(|s| !s.starts_with("raw_containers:"));
-        p.raw_containers = registry.raw_containers;
-        signal.push(format!(
-            "policy.layout.raw_containers: {}",
-            registry.raw_containers
-        ));
+    if let Some(b) = cfg.compose_rhythm {
+        p.compose_rhythm = b;
+        signal.push(format!("compose_rhythm: {b}"));
     }
     if !registry.lint_severities.is_empty() {
-        // Dual-read: nested policy.lint.severity.* and top-level lint.rules.*
-        // both land in the same tree via apply_config_to_resolved.
-        let source = if policy_object_present && cfg.has_key("lint") {
-            "lint.severity"
-        } else if policy_object_present {
-            "policy.lint.severity"
-        } else {
-            "lint.rules"
-        };
         signal.push(format!(
-            "{source}: {} override(s)",
+            "lint.rules: {} override(s)",
             registry.lint_severities.len()
         ));
-    } else if policy_object_present && !registry.raw_containers_explicit {
-        // Empty or lint-only policy object still counts as tier signal so a
-        // policy-only config is not classified as NoSignal.
-        signal.push("policy: registry".to_string());
     }
 
     // SPEC-LINTS-1 §3 — top-level strict + lint severity floor are operator
@@ -554,83 +500,48 @@ fn classify(cfg: &sail_lint::config::SailConfig) -> PolicyResolution {
         // a typo'd nested shape is not silent NoSignal after recognition.
         signal.push("lint: present".to_string());
     }
-    if let Some(af) = cfg.string_key("autofix") {
-        match AutofixPreset::parse(&af) {
-            Some(preset) => {
-                p.autofix = preset;
-                if preset == AutofixPreset::Off {
-                    p.compose_rhythm = false;
-                }
-                signal.push(format!("autofix: {af}"));
-            }
-            None => {
-                return rejected(format!(
-                    "unrecognized autofix \"{af}\" (expected \"repair\", \"strict\", or \"off\")"
-                ));
-            }
+    if let Some(af) = cfg.autofix {
+        let preset = match af {
+            sail_lint::config::AutofixSetting::Repair => AutofixPreset::Repair,
+            sail_lint::config::AutofixSetting::Strict => AutofixPreset::Strict,
+            sail_lint::config::AutofixSetting::Off => AutofixPreset::Off,
+        };
+        p.autofix = preset;
+        if preset == AutofixPreset::Off {
+            p.compose_rhythm = false;
         }
+        signal.push(format!("autofix: {}", af.as_str()));
     }
 
     // `"network"` — the fetch/WebSocket/EventSource per-origin allowlist.
     // Orthogonal to the styling tier: it never touches `p`, only `network`.
-    // A wrong-typed value (not an array, or a non-string element) is a type
-    // error — fail closed LOUDLY (Rejected), never silently granted. An
-    // explicit empty array is well-typed and contributes signal like any
-    // other explicit capability key (e.g. `"sx": false`) — it's a declared
-    // "grant nothing", not a config with no signal at all.
+    // Wrong-typed values are refused above via `type_error`. An explicit
+    // empty array is well-typed and contributes signal like any other
+    // explicit capability key.
     let mut network = Vec::new();
-    if let Some(net) = cfg.network_key() {
-        match net {
-            Ok(origins) => {
-                signal.push(format!("network: [{}]", origins.join(", ")));
-                network = origins;
-            }
-            Err(()) => {
-                return rejected("\"network\" must be an array of origin strings".to_string());
-            }
-        }
+    if let Some(origins) = cfg.network() {
+        signal.push(format!("network: [{}]", origins.join(", ")));
+        network = origins.to_vec();
     }
 
     // `"unconfined"` — the whole-hog opt-out of the confined-by-default
-    // `sail-controller-no-ambient-authority` gate. Orthogonal to the styling
-    // tier and to `network`: it never touches `p` or `network`. A wrong-typed
-    // value (not a bool) is a type error — fail closed LOUDLY (Rejected),
-    // never silently granted. An explicit `"unconfined": false` is well-typed
-    // and contributes signal like any other explicit capability key — a
-    // declared "stay confined", not a config with no signal at all.
+    // `sail-controller-no-ambient-authority` gate. Wrong-typed values are
+    // refused above via `type_error`.
     let mut unconfined = false;
-    if let Some(uc) = cfg.unconfined_key() {
-        match uc {
-            Ok(b) => {
-                signal.push(format!("unconfined: {b}"));
-                unconfined = b;
-            }
-            Err(()) => {
-                return rejected("\"unconfined\" must be a boolean".to_string());
-            }
-        }
+    if let Some(b) = cfg.unconfined() {
+        signal.push(format!("unconfined: {b}"));
+        unconfined = b;
     }
 
     // `"layout"` — severity profile for taffy / height-chain findings. Does not
     // change capability keys; counts as signal so a layout-only config is not
     // classified as NoSignal. Actual promotion is `layout_is_error_for`.
-    if let Some(layout) = cfg.string_key("layout") {
-        match layout.to_ascii_lowercase().as_str() {
-            "error" | "warn" => signal.push(format!("layout: {layout}")),
-            other => {
-                return rejected(format!(
-                    "unrecognized layout \"{other}\" (expected \"warn\" or \"error\")"
-                ));
-            }
-        }
+    if let Some(layout) = cfg.layout {
+        signal.push(format!("layout: {}", layout.as_str()));
     }
 
     if signal.is_empty() {
-        let recognized_present: Vec<&str> = sail_lint::config::RECOGNIZED_KEYS
-            .iter()
-            .copied()
-            .filter(|k| cfg.has_key(k))
-            .collect();
+        let recognized_present = cfg.present_recognized_keys();
         let hint = if recognized_present.is_empty() {
             "no keys at all".to_string()
         } else {
@@ -741,15 +652,13 @@ mod tests {
             assert_eq!(sev(p, "sail-no-style-block"), OverrideSeverity::Error);
             assert_eq!(sev(p, "sail-no-inline-style"), OverrideSeverity::Error);
         }
-        // No config key can turn the floor off — only capability keys exist.
-        let p = tier(r#"{"preset":"full","sx":false}"#);
+        // No config key can turn the floor off — only remaining capability keys exist.
+        let p = tier(r#"{"preset":"full","raw_containers":false}"#);
         assert_eq!(sev(p, "sail-no-style-block"), OverrideSeverity::Error);
     }
 
     #[test]
-    fn full_unlocks_every_capability() {
-        assert_eq!(sev(Policy::FULL, "sail-no-sx"), OverrideSeverity::Off);
-        assert_eq!(sev(Policy::FULL, "sail-no-variants"), OverrideSeverity::Off);
+    fn full_unlocks_raw_containers() {
         assert_eq!(
             sev(Policy::FULL, "sail-no-raw-container"),
             OverrideSeverity::Off
@@ -757,12 +666,7 @@ mod tests {
     }
 
     #[test]
-    fn strict_forbids_every_capability() {
-        assert_eq!(sev(Policy::STRICT, "sail-no-sx"), OverrideSeverity::Error);
-        assert_eq!(
-            sev(Policy::STRICT, "sail-no-variants"),
-            OverrideSeverity::Error
-        );
+    fn strict_forbids_raw_containers() {
         assert_eq!(
             sev(Policy::STRICT, "sail-no-raw-container"),
             OverrideSeverity::Error
@@ -780,13 +684,28 @@ mod tests {
     fn granular_keys_override_the_preset() {
         // full, but raw containers banned
         let p = tier(r#"{"preset":"full","raw_containers":false}"#);
-        assert!(p.sx && p.variants && !p.raw_containers);
-        // strict, but sx re-enabled — the in-between tier
-        let p = tier(r#"{"preset":"strict","sx":true}"#);
-        assert!(p.sx && !p.variants && !p.raw_containers);
+        assert!(!p.raw_containers);
         // keys only, no preset → base STRICT, dial up
-        let p = tier(r#"{"sx":true}"#);
-        assert!(p.sx && !p.variants && !p.raw_containers);
+        let p = tier(r#"{"raw_containers":true}"#);
+        assert!(p.raw_containers);
+    }
+
+    #[test]
+    fn leftover_sx_and_variants_keys_are_unknown_and_refuse() {
+        // Product Style / variance are ungated. Leftover grant keys must not
+        // silently pass — they are unknown top-level keys.
+        for key in ["sx", "variants"] {
+            let body = format!(r#"{{"{key}":true}}"#);
+            assert_eq!(tier(&body), Policy::STRICT, "key={key}");
+            let k = kind(&body);
+            let ResolutionKind::Rejected(r) = k else {
+                panic!("leftover `{key}` must Rejected; got {k:?}");
+            };
+            assert!(
+                r.contains(key) && r.contains("allowed keys:"),
+                "must name leftover key `{key}`: {r}"
+            );
+        }
     }
 
     // ----------------------------------------------------------------------
@@ -831,10 +750,14 @@ mod tests {
                 "must name offending key and allowed list: {r}"
             );
             // Allowed set includes nested `deck` + SPEC-LINTS-1 strict/lint,
-            // not the three retired top-level serve keys.
+            // not the retired top-level serve keys or deleted policy/editor/fonts.
             assert!(
-                r.contains("policy, strict, lint, deck, editor"),
-                "allowed list should end …policy, strict, lint, deck, editor: {r}"
+                r.contains("deck") && r.contains("strict") && r.contains("lint"),
+                "allowed list should name deck/strict/lint: {r}"
+            );
+            assert!(
+                !r.contains("editor") && !r.contains("policy") && !r.contains("fonts"),
+                "deleted keys must not be allowed: {r}"
             );
         }
         // Nested deck alone is well-formed (no capability signal) — NoSignal, not Rejected.
@@ -874,8 +797,8 @@ mod tests {
             ResolutionKind::Recognized(s) if s == "preset: full"
         ));
         assert!(matches!(
-            kind(r#"{"preset":"strict","sx":true}"#),
-            ResolutionKind::Recognized(s) if s.contains("preset: strict") && s.contains("sx: true")
+            kind(r#"{"preset":"strict","raw_containers":true}"#),
+            ResolutionKind::Recognized(s) if s.contains("preset: strict") && s.contains("raw_containers: true")
         ));
     }
 
@@ -993,7 +916,7 @@ mod tests {
     #[test]
     fn empty_network_array_is_a_well_typed_no_grant_declaration() {
         // Explicit `[]` is not a type error — it's a declared "grant nothing",
-        // same bucket as `"sx": false`: Recognized, not Rejected.
+        // same bucket as `"raw_containers": false`: Recognized, not Rejected.
         let r = classify(&sail_lint::config::SailConfig::from_json(
             r#"{"network":[]}"#,
         ));
