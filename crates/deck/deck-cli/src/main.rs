@@ -243,8 +243,8 @@ enum Command {
     Render {
         /// Path to a `.sail` source file.
         input: PathBuf,
-        /// Theme id (e.g. `ship`). Default `ship`.
-        #[arg(long, default_value = "ship")]
+        /// Theme id (e.g. `sail`). Default is the product brand theme.
+        #[arg(long, default_value = sail_compiler::tokens_generate::DEFAULT_PROJECT_THEME_ID)]
         theme: String,
         /// Mode `light` or `dark` (data-mode). Default `light`.
         #[arg(long, default_value = "light")]

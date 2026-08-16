@@ -51,12 +51,20 @@ pub fn doctor(brand: &str) -> Result<()> {
 
     let model = cargo_root
         .as_ref()
-        .map(|r| r.join("packages/sail/tokens/model"))
-        .unwrap_or_else(|| cwd.join("packages/sail/tokens/model"));
-    if model.is_dir() {
-        println!("  tokens model: {} (ok)", model.display());
-    } else {
-        println!("  tokens model: missing at {}", model.display());
+        .map(|r| r.join("packages/sail/tokens/model"));
+    match model {
+        Some(path) if path.is_dir() => {
+            println!("  tokens model: {} (ok)", path.display());
+        }
+        Some(path) => {
+            println!(
+                "  tokens model: baked catalog (monorepo disk model missing at {})",
+                path.display()
+            );
+        }
+        None => {
+            println!("  tokens model: baked catalog (ok)");
+        }
     }
 
     // Peer libraries linked into this binary — not PATH probes.

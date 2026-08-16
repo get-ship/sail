@@ -239,7 +239,7 @@ pub struct ThemeConfig {
     /// Initial `mode` (prefer `light` when omitted at host).
     #[serde(default)]
     pub default_mode: Option<String>,
-    /// Catalog theme allowlist. Omit → default ship; `[]` → none; `"all"` → full.
+    /// Catalog theme allowlist. Omit → default sail; `[]` → none; `"all"` → full.
     #[serde(default)]
     pub enabled: Option<ThemeEnabled>,
 }

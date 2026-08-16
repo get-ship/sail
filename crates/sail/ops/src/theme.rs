@@ -639,7 +639,7 @@ pub fn graph(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
 
 /// Build alias graph from catalog (and optional project) theme JSON only.
 pub fn graph_internal(theme_id: Option<&str>, ctx: &Ctx) -> Result<Value, OpError> {
-    let id = theme_id.unwrap_or("ship");
+    let id = theme_id.unwrap_or(sail_compiler::tokens_generate::DEFAULT_PROJECT_THEME_ID);
     // Refuse path-like / traversal theme ids.
     if id.contains("..")
         || id.contains('/')

@@ -189,7 +189,7 @@ pub fn inject_effective_themes_meta(html: &str, project_root: &std::path::Path) 
 /// - `<meta name="sail-default-theme" content="{theme.default}">`
 /// - `<meta name="sail-default-mode" content="{theme.defaultMode}">`
 ///
-/// Missing config → compiler defaults (`ship` / `light`). Unparseable config
+/// Missing config → compiler defaults (`sail` / `light`). Unparseable config
 /// leaves HTML unchanged (config-loud elsewhere).
 pub fn inject_theme_defaults_meta(html: &str, project_root: &std::path::Path) -> String {
     let Ok(cfg) = sail_compiler::tokens_generate::load_theme_config(project_root) else {
@@ -382,9 +382,9 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let html = "<head>\n<title>X</title>\n</head>";
         let out = inject_theme_defaults_meta(html, dir.path());
-        // DEFAULT_PROJECT_THEME_ID = ship; omitted defaultMode → light.
+        // DEFAULT_PROJECT_THEME_ID = sail; omitted defaultMode → light.
         assert!(
-            out.contains("name=\"sail-default-theme\" content=\"ship\""),
+            out.contains("name=\"sail-default-theme\" content=\"sail\""),
             "{out}"
         );
         assert!(

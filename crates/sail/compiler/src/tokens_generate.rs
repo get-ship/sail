@@ -87,6 +87,8 @@ const PRODUCTS_HEADER: &str = "\
 ";
 
 /// Stable theme catalog order. One id per file; light/dark live under `modes`.
+/// Product default is [`DEFAULT_PROJECT_THEME_ID`] (`sail`), not this list's
+/// first entry — `ship` stays a catalog id.
 const THEME_ORDER: &[&str] = &[
     "ship",
     "neutral",
@@ -341,7 +343,8 @@ struct ProductsAxis {
 }
 
 /// Default project theme id scaffolded into `<project>/themes/` (modes-in-file).
-pub const DEFAULT_PROJECT_THEME_ID: &str = "ship";
+/// Sail brand — same as `@ship/tokens` `DEFAULT_THEME`. `ship` is catalog.
+pub const DEFAULT_PROJECT_THEME_ID: &str = "sail";
 
 /// Relative monorepo path to the on-disk DTCG model (catalog development).
 pub const MONOREPO_MODEL_REL: &str = "packages/sail/tokens/model";
@@ -355,11 +358,11 @@ pub const MONOREPO_TOKENS_SRC_REL: &str = "packages/sail/tokens/src";
 /// |------|---------|
 /// | omit key / no config | Default Sail theme [`DEFAULT_PROJECT_THEME_ID`] |
 /// | `[]` | Explicit opt-out: no catalog themes |
-/// | `["ship", …]` | Only those catalog ids |
+/// | `["sail", …]` | Only those catalog ids |
 /// | `"all"` | Explicit full catalog |
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub enum CatalogAllowlist {
-    /// Key omitted / missing config — ship default styling (not full catalog).
+    /// Key omitted / missing config — Sail brand default (not full catalog).
     #[default]
     Default,
     /// Explicit `"enabled": []` — no catalog themes in app emit.
@@ -375,11 +378,11 @@ pub enum CatalogAllowlist {
 /// ```jsonc
 /// {
 ///   "theme": {
-///     "default": "ship",
+///     "default": "sail",
 ///     "defaultMode": "light",
-///     // omit enabled → default Sail theme (ship) ships.
+///     // omit enabled → default Sail theme (sail).
 ///     // "enabled": [] → explicit no catalog
-///     // "enabled": ["ship", "paper"] | "all"
+///     // "enabled": ["sail", "paper"] | "all"
 ///   }
 /// }
 /// ```
@@ -2858,7 +2861,7 @@ pub fn scaffold_theme_config(project_dir: &Path, theme_id: &str) -> Result<Optio
          \x20\x20// Sail app config — theme (product) + deck (bundler/serve).\n\
          \x20\x20// `default` / `defaultMode` drive first paint (theme / mode).\n\
          \x20\x20// `enabled` is the catalog allowlist for app CSS emit:\n\
-         \x20\x20//   omit → default theme ship; [] → no catalog; [\"id\"] → those; \"all\" → full.\n\
+         \x20\x20//   omit → default theme sail; [] → no catalog; [\"id\"] → those; \"all\" → full.\n\
          \x20\x20// Project themes under themes/ always emit. Package generate\n\
          \x20\x20// (shared @ship/tokens, monorepo only) emits full catalog + overrides.\n\
          \x20\x20// Serve keys nest under `deck` only (SPEC-SAIL-CONFIG-1) — never top-level.\n\
@@ -2866,6 +2869,7 @@ pub fn scaffold_theme_config(project_dir: &Path, theme_id: &str) -> Result<Optio
          \x20\x20\x20\x20\"title\": \"{title}\",\n\
          \x20\x20\x20\x20\"lang\": \"en\"\n\
          \x20\x20}},\n\
+         \x20\x20\"preset\": \"strict\",\n\
          \x20\x20\"theme\": {{\n\
          \x20\x20\x20\x20\"default\": \"{theme_id}\",\n\
          \x20\x20\x20\x20\"defaultMode\": \"light\",\n\
@@ -4608,6 +4612,11 @@ mod tests {
     }
 
     #[test]
+    fn default_project_theme_is_sail_brand_not_ship() {
+        assert_eq!(DEFAULT_PROJECT_THEME_ID, "sail");
+    }
+
+    #[test]
     fn parse_theme_config_jsonc_and_defaults() {
         let cfg = parse_theme_config(
             r#"{
@@ -4638,7 +4647,7 @@ mod tests {
         assert_eq!(empty.default_theme_id(), DEFAULT_PROJECT_THEME_ID);
         assert_eq!(empty.enabled, CatalogAllowlist::Default);
         assert!(!empty.enabled_key_present);
-        // Omit enabled → default Sail theme (ship), not full catalog and not empty.
+        // Omit enabled → default Sail theme (sail), not full catalog and not empty.
         assert_eq!(
             empty.enabled_catalog_for_app().as_deref(),
             Some([DEFAULT_PROJECT_THEME_ID.to_string()].as_slice())
@@ -4843,13 +4852,13 @@ mod tests {
         let full = generate_with_options(&model, &dir.path().join("src3"), &shared).unwrap();
         assert_eq!(full.theme_count, 2, "paper + custom");
 
-        // Omit enabled → default ship from catalog (when present); not full catalog.
+        // Omit enabled → default sail from catalog (when present); not full catalog.
         let bare = dir.path().join("bare");
         fs::create_dir_all(&bare).unwrap();
         write_file(
-            &model.join("themes/ship.json"),
+            &model.join("themes/sail.json"),
             r#"{
-  "$extensions": { "sail": { "layer": "theme", "themeId": "ship", "defaultMode": "light" } },
+  "$extensions": { "sail": { "layer": "theme", "themeId": "sail", "defaultMode": "light" } },
   "modes": { "light": { "color": {
         "primary": {
           "default": { "$value": "oklch(0.5 0.1 250)", "$type": "color" },
@@ -4894,10 +4903,10 @@ mod tests {
             generate_with_options(&model, &dir.path().join("src4"), &bare_opts).unwrap();
         assert_eq!(
             bare_report.theme_count, 1,
-            "omit enabled ships default ship"
+            "omit enabled ships default sail"
         );
         let bare_css = fs::read_to_string(&bare_report.themes_css).unwrap();
-        assert!(bare_css.contains("theme='ship'"));
+        assert!(bare_css.contains("theme='sail'"));
         assert!(!bare_css.contains("theme='paper'"));
 
         // Explicit "all" → full catalog on app path.
@@ -4911,7 +4920,7 @@ mod tests {
             generate_with_options(&model, &dir.path().join("src5"), &all_opts).unwrap();
         assert_eq!(
             all_report.theme_count, 2,
-            "paper + ship from catalog under enabled=all"
+            "paper + sail from catalog under enabled=all"
         );
     }
 
@@ -5205,24 +5214,24 @@ mod tests {
         let catalog = dir.path().join("catalog");
         let project = dir.path().join("app");
         write_file(
-            &catalog.join("ship.json"),
-            r#"{ "$extensions": { "sail": { "themeId": "ship", "defaultMode": "light" } }, "modes": { "light": {}, "dark": {} } }"#,
+            &catalog.join("sail.json"),
+            r#"{ "$extensions": { "sail": { "themeId": "sail", "defaultMode": "light" } }, "modes": { "light": {}, "dark": {} } }"#,
         );
         let dest = scaffold_default_project_theme(&project, Some(&catalog), None).unwrap();
         assert!(dest.is_file());
-        assert_eq!(dest.file_name().and_then(|n| n.to_str()), Some("ship.json"));
+        assert_eq!(dest.file_name().and_then(|n| n.to_str()), Some("sail.json"));
         // Modern external layout: <project>/themes/<id>.json
         assert!(
-            dest.ends_with("themes/ship.json") || dest.ends_with("themes\\ship.json"),
+            dest.ends_with("themes/sail.json") || dest.ends_with("themes\\sail.json"),
             "dest={}",
             dest.display()
         );
         // Second call does not overwrite (even if source changes).
-        write_file(&catalog.join("ship.json"), r#"{ "changed": true }"#);
+        write_file(&catalog.join("sail.json"), r#"{ "changed": true }"#);
         let again = scaffold_default_project_theme(&project, Some(&catalog), None).unwrap();
         assert_eq!(again, dest);
         let body = fs::read_to_string(&dest).unwrap();
-        assert!(body.contains("ship"));
+        assert!(body.contains("sail"));
         assert!(!body.contains("changed"));
 
         let cfg_path = scaffold_theme_config(&project, DEFAULT_PROJECT_THEME_ID)
@@ -5303,7 +5312,10 @@ mod tests {
             .nth(3)
             .expect("repo root above crates/sail/compiler");
         let model = root.join("packages/sail/tokens/model");
-        if !model.join("themes/ship.json").is_file() {
+        if !model
+            .join(format!("themes/{DEFAULT_PROJECT_THEME_ID}.json"))
+            .is_file()
+        {
             // Worktree without tokens package — skip rather than fail CI layouts.
             return;
         }
@@ -5319,7 +5331,7 @@ mod tests {
         )
         .unwrap();
         let mut doc: Value = serde_json::from_str(&fs::read_to_string(&dest).unwrap()).unwrap();
-        // Modes-in-file (`ship`) nests tokens under modes.<default>; twins use root.
+        // Modes-in-file nests tokens under modes.<default>; twins use root.
         let mode_ptr = "/modes/light/color/primary/default/$value";
         if doc.pointer(mode_ptr).is_some() {
             *doc.pointer_mut(mode_ptr).unwrap() = Value::String(marker.to_string());
@@ -5348,7 +5360,8 @@ mod tests {
             "project DTCG leaf must appear in generated themes.css: marker missing"
         );
         assert!(
-            css.contains("theme='ship'") || css.contains("theme=\"ship\""),
+            css.contains(&format!("theme='{DEFAULT_PROJECT_THEME_ID}'"))
+                || css.contains(&format!("theme=\"{DEFAULT_PROJECT_THEME_ID}\"")),
             "default theme selector must emit"
         );
         assert!(
@@ -5406,11 +5419,11 @@ mod tests {
     #[test]
     fn project_wants_theme_generate_detects_ssot() {
         let dir = tempfile::tempdir().unwrap();
-        // No config → CatalogAllowlist::Default (ship) still wants generate so
+        // No config → CatalogAllowlist::Default still wants generate so
         // bare apps get default Sail styling without opt-in.
         assert!(
             project_wants_theme_generate(dir.path()),
-            "default ship allowlist should cold-start generate"
+            "default sail allowlist should cold-start generate"
         );
         write_file(
             &dir.path().join("themes/x.json"),

@@ -58,7 +58,7 @@ fn validate_app_name(name: &str) -> Result<()> {
 ///   package.json         # registry-style @ship/* deps (no file:/workspace:*)
 ///   sail.config.jsonc    # theme + deck.render (nested serve)
 ///   routes/page.sail     # hello-world source
-///   themes/ship.json     # modern project theme SSOT (baked catalog)
+///   themes/sail.json     # Sail brand default (baked catalog; ship is catalog)
 ///   .gitignore           # includes dist/ + .sail/ (deploy + generate — never commit)
 /// ```
 ///
@@ -102,7 +102,7 @@ pub fn run_create(name: PathBuf) -> Result<()> {
          \"description\": \"Sail app scaffolded by `sail create`. Run `bun run typecheck` (chains `sail types`); re-run after install or package-type changes.\",\n  \
          \"scripts\": {{\n    \
          \"dev\": \"sail dev\",\n    \
-         \"build\": \"sail build\",\n    \
+         \"build\": \"sail build --bundle-framework\",\n    \
          \"check\": \"sail check .\",\n    \
          \"typecheck\": \"sail types --check\",\n    \
          \"lint\": \"oxlint .\"\n  \

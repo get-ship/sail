@@ -1527,7 +1527,7 @@ fn topic_cascade(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
 
     Ok(json!({
         "token": token,
-        "themeId": graph.get("themeId").cloned().unwrap_or(json!(theme_id.unwrap_or("ship"))),
+        "themeId": graph.get("themeId").cloned().unwrap_or(json!(theme_id.unwrap_or(sail_compiler::tokens_generate::DEFAULT_PROJECT_THEME_ID))),
         "chain": chain,
         "resolved": chain.last().cloned().unwrap_or(json!(null)),
         "sites": sites,

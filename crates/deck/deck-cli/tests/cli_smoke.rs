@@ -184,7 +184,7 @@ fn scaffold_theme_copies_default_and_writes_config() {
     assert!(status.success(), "deck scaffold theme exited {status:?}");
 
     // Modern external layout: <project>/themes/<id>.json (EXT-1 E4).
-    let theme = project.join("themes/ship.json");
+    let theme = project.join("themes/sail.json");
     assert!(
         theme.is_file(),
         "missing {} after scaffold theme",
@@ -205,13 +205,13 @@ fn scaffold_theme_copies_default_and_writes_config() {
     );
     let body = std::fs::read_to_string(&cfg).expect("read config");
     assert!(
-        body.contains("\"default\": \"ship\""),
+        body.contains("\"default\": \"sail\""),
         "config missing default theme: {body}"
     );
     // Thin single-id allowlist (C5) — not a full catalog list / null.
     assert!(
-        body.contains("\"enabled\": [\"ship\"]"),
-        "config must thin-enable only ship: {body}"
+        body.contains("\"enabled\": [\"sail\"]"),
+        "config must thin-enable only sail: {body}"
     );
     assert!(
         body.contains("\"deck\"") && body.contains("\"render\": \"csr\""),
@@ -363,7 +363,7 @@ fn create_writes_four_entry_tree_and_check_is_green() {
         "package.json",
         "sail.config.jsonc",
         "routes/page.sail",
-        "themes/ship.json",
+        "themes/sail.json",
     ] {
         let p = app.join(rel);
         assert!(
@@ -403,6 +403,10 @@ fn create_writes_four_entry_tree_and_check_is_green() {
     assert!(
         pkg.contains("typescript") && pkg.contains("oxlint"),
         "create package.json missing typescript/oxlint devDeps:\n{pkg}"
+    );
+    assert!(
+        pkg.contains("sail build --bundle-framework"),
+        "create build script must emit a self-contained bundle:\n{pkg}"
     );
 
     // G2c / TOOLING-1 WI2: solution root + kind configs under .sail/
@@ -451,6 +455,11 @@ fn create_writes_four_entry_tree_and_check_is_green() {
         oxlint.contains("typescript") && oxlint.contains("correctness"),
         "create .oxlintrc.json must enable typescript + correctness:\n{oxlint}"
     );
+    let cfg = std::fs::read_to_string(app.join("sail.config.jsonc")).expect("sail.config.jsonc");
+    assert!(
+        cfg.contains("\"default\": \"sail\"") && cfg.contains("\"preset\": \"strict\""),
+        "create config must default to sail + explicit strict preset:\n{cfg}"
+    );
 
     // create → check path green
     let check = Command::new(sail_bin())
@@ -469,6 +478,10 @@ fn create_writes_four_entry_tree_and_check_is_green() {
     assert!(
         !stderr.contains("dist/ is tracked"),
         "fresh create must not warn about tracked dist/:\n{stderr}"
+    );
+    assert!(
+        !stderr.contains("carries no capability signal"),
+        "fresh create must not dump a NoSignal policy warning:\n{stderr}"
     );
 }
 
@@ -584,6 +597,10 @@ fn doctor_list_tools_does_not_require_mcp_config() {
     assert!(
         stdout.contains("status: fail"),
         "empty probe must print status: fail:\n{stdout}"
+    );
+    assert!(
+        stdout.contains("tokens model: baked catalog (ok)"),
+        "standalone doctor must not demand a monorepo tokens tree:\n{stdout}"
     );
     assert!(
         !stderr.contains("sail mcp --list-tools"),

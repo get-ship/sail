@@ -13,7 +13,7 @@ use serde_json::Value;
 /// Color / mode selection for a render.
 #[derive(Debug, Clone)]
 pub struct ThemeSelect {
-    /// Theme id (e.g. `ship`). Empty → registry base values only.
+    /// Theme id (e.g. `sail`). Empty → registry base values only.
     pub id: String,
     /// `light` or `dark` (data-mode). Default `light`.
     pub mode: String,
@@ -53,7 +53,11 @@ impl ThemeSelect {
 
     /// `theme` attribute value (theme id only).
     pub fn data_theme(&self) -> &str {
-        if self.id.is_empty() { "ship" } else { &self.id }
+        if self.id.is_empty() {
+            sail_compiler::tokens_generate::DEFAULT_PROJECT_THEME_ID
+        } else {
+            &self.id
+        }
     }
 
     /// `data-mode` attribute value.
