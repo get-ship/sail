@@ -122,7 +122,8 @@ export const L1_COPY: Record<string, L1Copy> = {
   },
   field: {
     category: 'inputs',
-    blurb: 'Label plus control. Wires spacing and invalid state so the message and border agree.',
+    blurb:
+      'Label plus control — stack+gap; hint/error gates via structure. fill (default true) makes the field a group host so the slotted control stretches; a naked input still hugs. fill=false keeps the compact search-in-a-row case. invalid wires the message and border.',
   },
   fieldset: {
     category: 'inputs',
@@ -131,6 +132,11 @@ export const L1_COPY: Record<string, L1Copy> = {
   file: {
     category: 'inputs',
     blurb: 'System file picker. variant="drop" is the drag-and-drop surface.',
+  },
+  form: {
+    category: 'inputs',
+    blurb:
+      'Native form. The tag is the host; children stay the author\'s. Column integrity is the author\'s <column>; fields stay L1 <field>. layout=measure (default) is the reading column; layout=fill takes leftover width, no center. Not a pane.',
   },
   'hover-card': {
     category: 'overlay',
@@ -169,7 +175,7 @@ export const L1_COPY: Record<string, L1Copy> = {
   page: {
     category: 'layout',
     blurb:
-      'Document shell. Children stack. The page never kisses the viewport — measure column, horizontal inset, vertical gap. Not a rail or app chrome.',
+      'The document — inset, not a measure column. Not chrome. Not a max-width box. Children stack. Theme inset so the document never kisses the glass. Width is the viewport; measure belongs to the pieces (prose, form, a card). Layouts name this host. A rail opts out.',
   },
   pagination: {
     category: 'navigation',
