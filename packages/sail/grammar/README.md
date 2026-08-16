@@ -13,7 +13,15 @@ editor at this directory (or a clone of it) and start `sail lsp`.
 
 ### Helix
 
-`~/.config/helix/languages.toml` — `sail` must be on PATH:
+```sh
+sail editor setup helix
+```
+
+Writes `~/.config/helix/languages.toml` (`sail lsp` on PATH), extracts the
+grammar under `~/.local/share/sail/grammar`, and compiles `sail.so` into
+the existing Helix runtime. Does **not** run `hx --grammar build`.
+
+Or by hand — `sail` must be on PATH:
 
 ```toml
 [language-server.sail]

@@ -778,7 +778,7 @@ fn sail_help_lists_mvp_subcommands() {
     let help = String::from_utf8_lossy(&out.stdout);
     for cmd in [
         "create", "dev", "build", "scaffold", "tokens", "compile", "check", "fmt", "lsp", "mcp",
-        "op", "layout", "doctor", "version", "types",
+        "editor", "op", "layout", "doctor", "version", "types",
     ] {
         assert!(
             help_has_subcommand(&help, cmd),

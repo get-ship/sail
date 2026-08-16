@@ -5,6 +5,7 @@
 //! the product path is **Sail**. Workspace bake (`build-assets`, `emit`) lives
 //! on the sibling `deck-bake` bin — not this product surface.
 
+mod editor;
 mod peer;
 mod scaffold;
 mod typecheck;
@@ -23,6 +24,12 @@ fn binary_brand() -> &'static str {
     "sail"
 }
 
+fn dirs_home() -> Option<PathBuf> {
+    std::env::var_os("HOME")
+        .or_else(|| std::env::var_os("USERPROFILE"))
+        .map(PathBuf::from)
+}
+
 fn parse_render_viewport(s: &str) -> Result<(u32, u32), String> {
     let (w, h) = s
         .split_once('x')
@@ -35,7 +42,7 @@ fn parse_render_viewport(s: &str) -> Result<(u32, u32), String> {
 #[derive(Parser)]
 #[command(
     name = "sail",
-    about = "Sail — the UI framework CLI (create, dev, build, check, types, scaffold theme, compile, tokens, fmt, inspect, lsp, mcp, op, layout, render, doctor, version)",
+    about = "Sail — the UI framework CLI (create, dev, build, check, types, scaffold theme, compile, tokens, fmt, inspect, lsp, mcp, editor, op, layout, render, doctor, version)",
     version,
     propagate_version = true
 )]
@@ -199,6 +206,12 @@ enum Command {
     /// Language server (stdio) — same protocol as the `sail-lsp` package binary.
     Lsp,
 
+    /// Write editor config so `*.sail` uses `sail lsp` and the tree-sitter grammar.
+    Editor {
+        #[command(subcommand)]
+        cmd: EditorCmd,
+    },
+
     /// MCP server (stdio / Streamable HTTP) or install into agent hosts.
     ///
     /// Default (no subcommand): run MCP (stdio; pass `--http [ADDR]` through
@@ -268,6 +281,18 @@ enum Command {
 
     /// Print version + install hints (also available as `--version`).
     Version,
+}
+
+#[derive(Subcommand)]
+enum EditorCmd {
+    /// Write Helix / Neovim config. Default command is `sail` on PATH.
+    Setup {
+        /// `helix` or `nvim`.
+        editor: String,
+        /// Override the `sail` executable (developers). Never implied.
+        #[arg(long)]
+        bin: Option<PathBuf>,
+    },
 }
 
 #[derive(Subcommand)]
@@ -360,6 +385,15 @@ fn run() -> Result<()> {
             node_id,
         } => peer::inspect(topic, path, viewport, token, theme_id, node_id),
         Command::Lsp => peer::lsp(),
+        Command::Editor { cmd } => match cmd {
+            EditorCmd::Setup { editor, bin } => {
+                let kind = editor::EditorKind::parse(&editor)?;
+                let home = dirs_home().context("HOME / USERPROFILE required for editor setup")?;
+                let report = editor::setup(kind, bin.as_deref(), &home)?;
+                editor::print_report(&report);
+                Ok(())
+            }
+        },
         Command::Mcp { cmd, list_tools } => match cmd {
             Some(McpCmd::Install { project, bin }) => peer::mcp_install(project, bin),
             None if list_tools => {
