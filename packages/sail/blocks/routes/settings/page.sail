@@ -27,7 +27,7 @@
                 <avatar initials="AL" size="lg" ring></avatar>
                 <field>
                   <label slot="label">Photo</label>
-                  <file accept="image/*" />
+                  <file accept="image/*" variant="picker" />
                   <small slot="hint">Square, at least 256px.</small>
                 </field>
               </row>

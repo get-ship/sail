@@ -1,8 +1,8 @@
 <!--
   dashboard — Catalyst-shaped app chrome: rail, breadcrumb, KPIs, tabs,
   filters, sticky table, new-order dialog, toast. Measure is contained.
+  Orders toolbar is a hugging row — grid min=sm leaves empty 1fr tracks.
 -->
-
 
 <controller>
   export default controller(() => {
@@ -143,7 +143,7 @@
               <badge tone="info">Live</badge>
             </row>
             <column gap="4">
-              <grid min="sm" gap="3">
+              <row gap="3" align="end">
                 <field>
                   <label slot="label">Search</label>
                   <combobox placeholder="Order or customer">
@@ -153,23 +153,21 @@
                     <option value="1039">#1039 Ada Labs</option>
                   </combobox>
                 </field>
-                <row gap="3" align="end">
-                  <field>
-                    <label slot="label">Status</label>
-                    <select>
-                      <option>All</option>
-                      <option>Open</option>
-                      <option>Fulfilled</option>
-                      <option>Held</option>
-                    </select>
-                  </field>
-                  <row gap="1" align="center">
-                    <small>or</small>
-                    <kbd>⌘</kbd>
-                    <kbd>K</kbd>
-                  </row>
+                <field>
+                  <label slot="label">Status</label>
+                  <select>
+                    <option>All</option>
+                    <option>Open</option>
+                    <option>Fulfilled</option>
+                    <option>Held</option>
+                  </select>
+                </field>
+                <row gap="1" align="center">
+                  <small>or</small>
+                  <kbd>⌘</kbd>
+                  <kbd>K</kbd>
                 </row>
-              </grid>
+              </row>
 
               <row gap="2">
                 <chip selected>All</chip>
