@@ -15,19 +15,7 @@
 </controller>
 
 <row nowrap gap="0" align="stretch">
-  <navbar placement="rail" bordered sticky>
-    <strong slot="brand">Northwind</strong>
-    <column slot="center" gap="1">
-      <button variant="ghost" size="sm">Overview</button>
-      <button variant="ghost" size="sm">Orders</button>
-      <button variant="ghost" size="sm">Customers</button>
-      <a href="/settings">Settings</a>
-    </column>
-    <column slot="actions" gap="3" align="center">
-      <theme-picker></theme-picker>
-      <avatar initials="NW" tone="primary" presence="online"></avatar>
-    </column>
-  </navbar>
+  <app-rail current="overview"></app-rail>
 
   <app-main>
       <alert dismissible tone="warning">
@@ -37,10 +25,6 @@
 
       <row justify="between" align="center">
         <column gap="2">
-          <breadcrumb>
-            <a href="/dashboard">Northwind</a>
-            <small>Overview</small>
-          </breadcrumb>
           <h1>Overview</h1>
           <p>Orders this week. Defaults only — if this looks wrong, the atoms are wrong.</p>
         </column>

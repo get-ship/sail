@@ -2,26 +2,10 @@
   settings — rail + tabbed form. Stretch is the leftover, not a 38ch island.
 -->
 <row nowrap gap="0" align="stretch">
-  <navbar placement="rail" bordered sticky>
-    <strong slot="brand">Northwind</strong>
-    <column slot="center" gap="1">
-      <a href="/dashboard">Overview</a>
-      <button variant="ghost" size="sm">Profile</button>
-      <button variant="ghost" size="sm">Team</button>
-      <button variant="ghost" size="sm">Billing</button>
-    </column>
-    <column slot="actions" gap="3" align="center">
-      <theme-picker></theme-picker>
-      <avatar initials="AL" presence="online"></avatar>
-    </column>
-  </navbar>
+  <app-rail current="settings"></app-rail>
 
   <app-main>
     <column gap="2">
-      <breadcrumb>
-        <a href="/dashboard">Northwind</a>
-        <small>Settings</small>
-      </breadcrumb>
       <h1>Settings</h1>
       <p>Account and preferences. Stretch is the leftover, not a postcard form.</p>
     </column>

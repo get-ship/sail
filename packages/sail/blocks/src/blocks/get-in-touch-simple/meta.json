@@ -1,0 +1,48 @@
+{
+  "id": "GetInTouchSimple",
+  "title": "Get in touch",
+  "intent": "Compact contact fields and a send action.",
+  "kind": "block",
+  "status": "authored",
+  "primitives": [
+    "field",
+    "input",
+    "textarea",
+    "button"
+  ],
+  "roles": [
+    {
+      "role": "heading",
+      "name": "Get in touch",
+      "level": 2
+    },
+    {
+      "role": "textbox",
+      "name": "Name",
+      "fieldName": "name",
+      "placeholder": "Your name"
+    },
+    {
+      "role": "textbox",
+      "name": "Email",
+      "fieldName": "email",
+      "placeholder": "Your email"
+    },
+    {
+      "role": "textbox",
+      "name": "Subject",
+      "fieldName": "subject",
+      "placeholder": "Subject"
+    },
+    {
+      "role": "textbox",
+      "name": "Message",
+      "fieldName": "message",
+      "placeholder": "Your message"
+    },
+    {
+      "role": "button",
+      "name": "Send message"
+    }
+  ]
+}

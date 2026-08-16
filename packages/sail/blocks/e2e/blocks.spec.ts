@@ -13,8 +13,9 @@ test('pricing is a marketing page, not three lonely cards', async ({ page }) => 
   await expect(page.getByRole('heading', { name: 'Hobby' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Choose Studio' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Compare plans' })).toBeVisible()
+  await expect(page.getByText('Two months free on Studio when you pay yearly.')).toBeVisible()
   await page.getByRole('button', { name: 'Annually' }).click()
-  await expect(page.getByText('2 months free')).toBeVisible()
+  await expect(page.getByText('billed yearly')).toHaveCount(2)
   expect(errs).toEqual([])
 })
 

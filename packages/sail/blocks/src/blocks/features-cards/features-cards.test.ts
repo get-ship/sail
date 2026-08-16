@@ -1,0 +1,54 @@
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
+import { describe, expect, it } from 'vitest'
+import { renderRoute } from '@ship/test-setup'
+import { getByRole, getByText, queryByRole } from '@ship/sail-test'
+
+const DIR = resolve(process.cwd(), 'src/blocks/features-cards')
+const SOURCE_PATH = resolve(DIR, 'features-cards.sail')
+const SOURCE = readFileSync(SOURCE_PATH, 'utf8')
+const META = JSON.parse(readFileSync(resolve(DIR, 'meta.json'), 'utf8')) as {
+  id: string
+  kind: string
+  status: string
+  primitives: string[]
+}
+
+describe('block: FeaturesCards', () => {
+  it('is authored in colocated meta.json', () => {
+    expect(META.id).toBe('FeaturesCards')
+    expect(META.kind).toBe('block')
+    expect(META.status).toBe('authored')
+    expect(META.primitives).toEqual(expect.arrayContaining(['badge', 'card', 'icon']))
+  })
+
+  it('exposes the recorded heading and feature titles by role / name / text', () => {
+    const v = renderRoute(SOURCE, { sourcePath: SOURCE_PATH })
+    expect(
+      getByRole(v.root, 'heading', {
+        name: 'Integrate effortlessly with any technology stack',
+        level: 2,
+      }),
+    ).toBeTruthy()
+    expect(getByText(v.root, 'Best company ever')).toBeTruthy()
+    expect(getByText(v.root, 'Extreme performance')).toBeTruthy()
+    expect(getByText(v.root, 'Privacy focused')).toBeTruthy()
+    expect(getByText(v.root, 'No third parties')).toBeTruthy()
+    expect(queryByRole(v.root, 'button')).toBeNull()
+    expect(queryByRole(v.root, 'link')).toBeNull()
+    expect(queryByRole(v.root, 'textbox')).toBeNull()
+    v.unmount()
+  })
+
+  it('does not paint L1 with local style()', () => {
+    const l1 = /<(badge|card|icon)\b[^>]*\bstyle\(/
+    expect(SOURCE).not.toMatch(l1)
+    expect(SOURCE).not.toMatch(/\b(fill|ink|paint|component\.)\b/)
+  })
+
+  it('has no page chrome and no data-* hooks', () => {
+    expect(SOURCE).not.toMatch(/<(navbar|footer)\b/)
+    expect(SOURCE).not.toMatch(/\bdata-testid\b/)
+    expect(SOURCE).not.toMatch(/\bdata-[a-z]/)
+  })
+})

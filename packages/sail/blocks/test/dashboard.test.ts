@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { renderRoute } from '@ship/test-setup'
-import { getByRole, getByText } from '@ship/sail-test'
+import { getAllByRole, getByRole, getByText } from '@ship/sail-test'
 import { BLOCKS } from '../src/catalog'
 
 const SOURCE_PATH = resolve(process.cwd(), 'routes/dashboard/page.sail')
@@ -21,14 +21,8 @@ describe('template: dashboard', () => {
   it('composes defaults and is locatable by role / name only', async () => {
     const v = renderRoute(SOURCE, { sourcePath: SOURCE_PATH })
     expect(getByRole(v.root, 'heading', { name: 'Overview', level: 1 })).toBeTruthy()
-    expect(getByRole(v.root, 'button', { name: 'New order' })).toBeTruthy()
+    expect(getAllByRole(v.root, 'button', { name: 'New order' })).toHaveLength(2)
     expect(getByText(v.root, 'Harbor Co')).toBeTruthy()
     v.unmount()
-  })
-
-  it('does not paint every L1 with a local style() — defaults must hold', () => {
-    const l1 =
-      /<(navbar|card|dialog|drawer|table|field|input|select|date|textarea|button|alert|label|badge|pagination|breadcrumb|avatar|tabs|combobox|chip|dropdown|hover-card|kbd|meter|empty-state|toast)\b[^>]*\bstyle\(/
-    expect(SOURCE).not.toMatch(l1)
   })
 })

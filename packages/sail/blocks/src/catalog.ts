@@ -17,8 +17,6 @@ export type BlockEntry = {
   status: BlockStatus
   /** L1 family hosts this row is meant to compose. */
   primitives: readonly string[]
-  /** Required when kind is 'block'. Head-to-head with ui.mantine.dev. */
-  mantineUrl?: string
 }
 
 export const BLOCKS: readonly BlockEntry[] = [
@@ -130,7 +128,6 @@ export const BLOCKS: readonly BlockEntry[] = [
     intent: 'Display heading, lead, and a pair of actions.',
     kind: 'block',
     status: 'authored',
-    mantineUrl: 'https://ui.mantine.dev/component/hero-title/',
     primitives: ['button', 'a'],
   },
   {
@@ -139,7 +136,6 @@ export const BLOCKS: readonly BlockEntry[] = [
     intent: 'Centered lead block with a single action.',
     kind: 'block',
     status: 'authored',
-    mantineUrl: 'https://ui.mantine.dev/component/hero-text/',
     primitives: ['button'],
   },
   {
@@ -148,7 +144,6 @@ export const BLOCKS: readonly BlockEntry[] = [
     intent: 'Three feature cards with an icon and a short blurb.',
     kind: 'block',
     status: 'authored',
-    mantineUrl: 'https://ui.mantine.dev/component/features-cards/',
     primitives: ['badge', 'card', 'icon'],
   },
   {
@@ -157,7 +152,6 @@ export const BLOCKS: readonly BlockEntry[] = [
     intent: 'A short accordion of questions.',
     kind: 'block',
     status: 'authored',
-    mantineUrl: 'https://ui.mantine.dev/component/faq-simple/',
     primitives: ['accordion'],
   },
   {
@@ -166,7 +160,6 @@ export const BLOCKS: readonly BlockEntry[] = [
     intent: 'Compact contact fields and a send action.',
     kind: 'block',
     status: 'authored',
-    mantineUrl: 'https://ui.mantine.dev/component/get-in-touch-simple/',
     primitives: ['field', 'input', 'textarea', 'button'],
   },
   {
@@ -175,7 +168,6 @@ export const BLOCKS: readonly BlockEntry[] = [
     intent: 'Identity fields under a title, one primary action.',
     kind: 'block',
     status: 'authored',
-    mantineUrl: 'https://ui.mantine.dev/component/authentication-title/',
     primitives: ['card', 'field', 'input', 'button', 'checkbox', 'a'],
   },
   {
@@ -184,7 +176,6 @@ export const BLOCKS: readonly BlockEntry[] = [
     intent: 'Brand, a few links, one action. Not a page.',
     kind: 'block',
     status: 'authored',
-    mantineUrl: 'https://ui.mantine.dev/component/header-simple/',
     primitives: ['navbar', 'a', 'button', 'icon'],
   },
   {
@@ -193,7 +184,6 @@ export const BLOCKS: readonly BlockEntry[] = [
     intent: 'Icon rail. Not app chrome for a whole product.',
     kind: 'block',
     status: 'authored',
-    mantineUrl: 'https://ui.mantine.dev/component/navbar-minimal/',
     primitives: ['navbar', 'button', 'icon'],
   },
   {
@@ -202,7 +192,6 @@ export const BLOCKS: readonly BlockEntry[] = [
     intent: 'Link columns and a short mark.',
     kind: 'block',
     status: 'authored',
-    mantineUrl: 'https://ui.mantine.dev/component/footer-links/',
     primitives: ['a', 'separator'],
   },
   {
@@ -211,7 +200,6 @@ export const BLOCKS: readonly BlockEntry[] = [
     intent: 'A row of named figures.',
     kind: 'block',
     status: 'authored',
-    mantineUrl: 'https://ui.mantine.dev/component/stats-group/',
     primitives: ['card'],
   },
   {
@@ -220,8 +208,7 @@ export const BLOCKS: readonly BlockEntry[] = [
     intent: 'One card, a few figures.',
     kind: 'block',
     status: 'authored',
-    mantineUrl: 'https://ui.mantine.dev/component/card-with-stats/',
-    primitives: ['card', 'text'],
+    primitives: ['card', 'badge'],
   },
   {
     id: 'TableSort',
@@ -229,7 +216,6 @@ export const BLOCKS: readonly BlockEntry[] = [
     intent: 'One data table. Not the table engine.',
     kind: 'block',
     status: 'planned',
-    mantineUrl: 'https://ui.mantine.dev/component/table-reviews/',
     primitives: ['table'],
   },
   {
@@ -238,7 +224,6 @@ export const BLOCKS: readonly BlockEntry[] = [
     intent: 'Avatar, name, email, as one control.',
     kind: 'block',
     status: 'authored',
-    mantineUrl: 'https://ui.mantine.dev/component/user-button/',
     primitives: ['button', 'avatar', 'icon'],
   },
   {
@@ -247,7 +232,6 @@ export const BLOCKS: readonly BlockEntry[] = [
     intent: 'Search field + submit. Defaults only.',
     kind: 'block',
     status: 'authored',
-    mantineUrl: 'https://ui.mantine.dev/component/input-with-button/',
     primitives: ['field', 'input', 'button'],
   },
   {
@@ -256,7 +240,6 @@ export const BLOCKS: readonly BlockEntry[] = [
     intent: 'A tight stack of labeled fields.',
     kind: 'block',
     status: 'planned',
-    mantineUrl: 'https://ui.mantine.dev/component/contained-inputs/',
     primitives: ['field', 'input'],
   },
   {
@@ -265,7 +248,6 @@ export const BLOCKS: readonly BlockEntry[] = [
     intent: 'Avatar, author, body.',
     kind: 'block',
     status: 'planned',
-    mantineUrl: 'https://ui.mantine.dev/component/comment-simple/',
     primitives: ['avatar'],
   },
   {
@@ -274,7 +256,6 @@ export const BLOCKS: readonly BlockEntry[] = [
     intent: 'A short notice and two actions.',
     kind: 'block',
     status: 'planned',
-    mantineUrl: 'https://ui.mantine.dev/component/cookies-banner/',
     primitives: ['alert', 'button'],
   },
   {
@@ -283,7 +264,6 @@ export const BLOCKS: readonly BlockEntry[] = [
     intent: 'Empty as the composition, not a decorated div.',
     kind: 'block',
     status: 'planned',
-    mantineUrl: 'https://ui.mantine.dev/component/nothing-found-background/',
     primitives: ['empty-state', 'button'],
   },
   {
@@ -292,7 +272,6 @@ export const BLOCKS: readonly BlockEntry[] = [
     intent: 'One bento/grid of surfaces.',
     kind: 'block',
     status: 'planned',
-    mantineUrl: 'https://ui.mantine.dev/component/lead-grid/',
     primitives: ['card'],
   },
   {
@@ -301,7 +280,6 @@ export const BLOCKS: readonly BlockEntry[] = [
     intent: 'A banner with a title and one action.',
     kind: 'block',
     status: 'planned',
-    mantineUrl: 'https://ui.mantine.dev/component/image-action-banner/',
     primitives: ['card', 'button'],
   },
 ] as const

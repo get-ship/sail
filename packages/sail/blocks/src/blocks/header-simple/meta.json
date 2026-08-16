@@ -1,0 +1,40 @@
+{
+  "id": "HeaderSimple",
+  "title": "Header simple",
+  "intent": "Brand, a few links, one action. Not a page.",
+  "kind": "block",
+  "status": "authored",
+  "primitives": [
+    "navbar",
+    "a",
+    "button",
+    "icon"
+  ],
+  "brand": "Ship",
+  "roles": [
+    {
+      "role": "link",
+      "name": "Features",
+      "href": "#"
+    },
+    {
+      "role": "link",
+      "name": "Pricing",
+      "href": "#"
+    },
+    {
+      "role": "link",
+      "name": "Learn",
+      "href": "#"
+    },
+    {
+      "role": "link",
+      "name": "Community",
+      "href": "#"
+    },
+    {
+      "role": "button",
+      "name": "Toggle navigation"
+    }
+  ]
+}

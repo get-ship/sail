@@ -1,0 +1,9 @@
+{
+  "id": "HeroTitle",
+  "kind": "block",
+  "status": "authored",
+  "primitives": [
+    "button",
+    "a"
+  ]
+}

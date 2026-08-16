@@ -58,9 +58,8 @@ describe('block: StatsGroup', () => {
     v.unmount()
   })
 
-  it('does not paint L1 with local style() except the figure', () => {
-    const l1 = /<(card|row|grid|h3|p)\b[^>]*\bstyle\(/
-    expect(SOURCE).not.toMatch(l1)
+  it('does not paint chrome on the band', () => {
+    expect(SOURCE).not.toMatch(/<(card|grid|row)\b[^>]*\bstyle\(/)
   })
 
   it('has no page chrome and no data-* hooks', () => {

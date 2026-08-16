@@ -9,7 +9,16 @@
     "noEmit": true,
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
-    "types": ["vitest/globals"]
+    "types": ["vitest/globals"],
+    "baseUrl": ".",
+    "paths": {
+      "@/components/*": ["./src/components/*"],
+      "@/compositions/*": ["./src/compositions/*"],
+      "@/constants/*": ["./src/constants/*"],
+      "@/actions/*": ["./src/actions/*"],
+      "@/stores/*": ["./src/stores/*"],
+      "@/themes/*": ["./themes/*"]
+    }
   },
   "include": ["src/**/*.ts", "test/**/*.ts"]
 }

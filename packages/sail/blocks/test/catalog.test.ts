@@ -11,27 +11,32 @@ describe('catalog contract', () => {
       const row = BLOCKS.find((b) => b.id === id)
       expect(row?.kind, id).toBe('template')
       expect(row?.status, id).toBe('authored')
-      expect(row?.mantineUrl, id).toBeUndefined()
       expect(existsSync(resolve(ROOT, 'routes', id, 'page.sail')), id).toBe(true)
     }
   })
 
-  it('gives every block a mantine URL and a PascalCase id', () => {
+  it('gives every block a PascalCase id', () => {
     for (const row of blocks()) {
       expect(row.kind).toBe('block')
-      expect(row.mantineUrl, row.id).toMatch(/^https:\/\/ui\.mantine\.dev\/component\//)
       expect(row.id, row.id).toMatch(/^[A-Z][A-Za-z]+$/)
     }
     expect(templates().every((t) => t.kind === 'template')).toBe(true)
   })
 
-  it('puts authored blocks at src/blocks/<Name>/<Name>.{sail,test.ts}', () => {
+  it('puts authored blocks at src/blocks/<kebab>/<kebab>.{sail,test.ts}', () => {
     const authored = blocks().filter((b) => b.status === 'authored')
     expect(authored.length).toBeGreaterThan(0)
+    const kebab = (id: string) =>
+      id
+        .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
+        .replace(/([A-Z]+)([A-Z][a-z])/g, '$1-$2')
+        .toLowerCase()
     for (const row of authored) {
-      const dir = resolve(ROOT, 'src/blocks', row.id)
-      expect(existsSync(resolve(dir, `${row.id}.sail`)), row.id).toBe(true)
-      expect(existsSync(resolve(dir, `${row.id}.test.ts`)), row.id).toBe(true)
+      const stem = kebab(row.id)
+      const dir = resolve(ROOT, 'src/blocks', stem)
+      expect(existsSync(resolve(dir, `${stem}.sail`)), stem).toBe(true)
+      expect(existsSync(resolve(dir, `${stem}.test.ts`)), stem).toBe(true)
+      expect(existsSync(resolve(ROOT, 'routes/lab', row.id, 'page.sail')), row.id).toBe(true)
       expect(blockLabPath(row.id)).toBe(`/lab/${row.id}`)
     }
   })

@@ -1,0 +1,24 @@
+{
+  "id": "FaqSimple",
+  "title": "FAQ simple",
+  "intent": "A short accordion of questions.",
+  "kind": "block",
+  "status": "authored",
+  "primitives": [
+    "accordion"
+  ],
+  "headings": [
+    {
+      "role": "heading",
+      "name": "Frequently Asked Questions",
+      "level": 1
+    }
+  ],
+  "questions": [
+    "How can I reset my password?",
+    "Can I create more that one account?",
+    "How can I subscribe to monthly newsletter?",
+    "Do you store credit card information securely?",
+    "What payment systems to you work with?"
+  ]
+}

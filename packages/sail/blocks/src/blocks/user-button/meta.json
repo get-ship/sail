@@ -1,0 +1,16 @@
+{
+  "id": "UserButton",
+  "title": "User button",
+  "intent": "Avatar, name, email, as one control.",
+  "kind": "block",
+  "status": "authored",
+  "primitives": [
+    "button",
+    "avatar",
+    "icon"
+  ],
+  "recorded": {
+    "name": "Ada Lovelace",
+    "email": "ada@ship.dev"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "id": "FeaturesCards",
+  "kind": "block",
+  "status": "authored",
+  "primitives": [
+    "badge",
+    "card",
+    "icon"
+  ]
+}
