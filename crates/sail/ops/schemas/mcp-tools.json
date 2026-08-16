@@ -61,7 +61,7 @@
   },
   {
     "name": "sail_hover",
-    "description": "Typed hover at a 1-based .sail position. Uses sail-lsp virtual_ts + tsgo for controller/scope/template TS regions; structure symbols otherwise. Soft-degrades when tsgo is absent.",
+    "description": "Typed hover at a 1-based .sail position. Uses sail-lsp virtual_ts + the TypeScript sidecar for controller/scope/template TS regions; structure symbols otherwise. Returns typescriptStatus: missing and omits TS diagnostics when the sidecar is absent.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -98,7 +98,7 @@
   },
   {
     "name": "sail_complete",
-    "description": "Completions at a 1-based .sail position. Proxies tsgo inside TS regions; falls back to structure scope symbols. Soft-degrades when tsgo is absent.",
+    "description": "Completions at a 1-based .sail position. Proxies the TypeScript sidecar inside TS regions; falls back to structure scope symbols. Returns typescriptStatus: missing and omits TS diagnostics when the sidecar is absent.",
     "inputSchema": {
       "type": "object",
       "properties": {

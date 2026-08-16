@@ -1,9 +1,9 @@
 //! Native TypeScript 7 sidecar resolver.
 //!
-//! Product discover prefers a Go ELF that sits next to `lib.d.ts`. Ancestor
-//! `node_modules` walks stay on the type-gate / LSP default path until the
-//! flip PR; this module owns the pin table, path math, and a unit-tested
-//! `--lsp --help` probe that is not wired on that default path.
+//! Product discover: `SAIL_TS_NATIVE` disable → `SAIL_TSC`/`SAIL_TSGO` →
+//! peer dir (`deps/` hop) → XDG → PATH last-resort ELF. Never walks
+//! ancestor `node_modules`. Returned `program` is a Go ELF next to
+//! `lib.d.ts`; `--lsp --help` + `--version` must accept pin `7.0.2`.
 
 use std::fs::File;
 use std::io::Read;
@@ -186,11 +186,21 @@ pub fn xdg_sidecar_dir() -> Option<PathBuf> {
     )
 }
 
+pub fn disable_value(v: &str) -> bool {
+    v.is_empty() || v == "0" || v.eq_ignore_ascii_case("false")
+}
+
 pub fn disable_is_set() -> bool {
-    matches!(
-        std::env::var(ENV_DISABLE),
-        Ok(v) if v.is_empty() || v == "0" || v.eq_ignore_ascii_case("false")
-    )
+    matches!(std::env::var(ENV_DISABLE), Ok(v) if disable_value(&v))
+}
+
+/// Absolute existing file. Empty / relative / missing → not usable (Missing).
+pub fn env_override_is_usable(raw: &str) -> bool {
+    if raw.is_empty() {
+        return false;
+    }
+    let path = Path::new(raw);
+    path.is_absolute() && path.is_file()
 }
 
 /// `Some(path)` = env is set (may be empty). `None` = unset.
@@ -255,25 +265,21 @@ fn finalize_tool(mut tool: TsNativeTool) -> Option<TsNativeTool> {
     if !probe.accepted {
         return None;
     }
-    if let Ok(out) = Command::new(&tool.program).arg("--version").output() {
-        if let Some(v) = parse_version_stdout(&String::from_utf8_lossy(&out.stdout)) {
-            if accept_probed_version(&v) {
-                tool.version = v;
-            }
-        }
+    let out = Command::new(&tool.program).arg("--version").output().ok()?;
+    let v = parse_version_stdout(&String::from_utf8_lossy(&out.stdout))?;
+    if !accept_probed_version(&v) {
+        return None;
     }
+    tool.version = v;
     Some(tool)
 }
 
 fn resolve_env_override() -> Option<Option<TsNativeTool>> {
     let raw = env_override()?;
-    if raw.is_empty() {
+    if !env_override_is_usable(&raw) {
         return Some(None);
     }
     let path = PathBuf::from(&raw);
-    if !path.is_absolute() || !path.is_file() {
-        return Some(None);
-    }
     let program = if is_shebang(&path) {
         sibling_platform_elf(&path)
     } else {
@@ -362,14 +368,6 @@ pub fn ts_native_status() -> TsNativeStatus {
     } else {
         TsNativeStatus::Missing
     }
-}
-
-/// Nightly `@typescript/native-preview-*` lookup used by today's default walk.
-pub fn platform_native_preview_under(node_modules: &Path) -> Option<PathBuf> {
-    let (os, arch) = npm_os_arch();
-    let pkg = format!("@typescript/native-preview-{os}-{arch}");
-    let exe = node_modules.join(pkg).join("lib").join(tsgo_file_name());
-    exe.is_file().then_some(exe)
 }
 
 /// `--lsp --help` accept rule. Combined stdout+stderr; exit ∈ {0,1,2}.

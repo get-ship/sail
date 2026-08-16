@@ -115,8 +115,6 @@ fn source_map_covers_all_fixture_kinds() {
 fn degrade_without_tsgo_keeps_structure() {
     // Session with no client still builds virtuals and never panics.
     let mut session = TsgoSession::structure_only();
-    // Force client off even if PATH has tsgo (discover may still succeed from
-    // PATH; structure path must work either way).
     let uri = "file:///tmp/degrade.sail";
     session.on_sail_change(uri, COUNTER);
     assert!(session.virtual_for(uri).is_some());

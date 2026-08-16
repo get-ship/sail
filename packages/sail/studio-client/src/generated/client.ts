@@ -618,7 +618,7 @@ export async function sailAuthoringCheck(
   return postJson<CheckRet>('/sail.ops.v1.SailAuthoring/Check', args ?? {}, opts)
 }
 
-// SailAuthoring/Hover — Typed hover at a 1-based .sail position. Uses sail-lsp virtual_ts + tsgo for controller/scope/template TS regions; structure symbols otherwise. Soft-degrades when tsgo is absent.
+// SailAuthoring/Hover — Typed hover at a 1-based .sail position. Uses sail-lsp virtual_ts + the TypeScript sidecar for controller/scope/template TS regions; structure symbols otherwise. Returns typescriptStatus: missing and omits TS diagnostics when the sidecar is absent.
 export async function sailAuthoringHover(
   args: HoverArgs,
   opts?: ClientOptions,
@@ -626,7 +626,7 @@ export async function sailAuthoringHover(
   return postJson<HoverRet>('/sail.ops.v1.SailAuthoring/Hover', args ?? {}, opts)
 }
 
-// SailAuthoring/Complete — Completions at a 1-based .sail position. Proxies tsgo inside TS regions; falls back to structure scope symbols. Soft-degrades when tsgo is absent.
+// SailAuthoring/Complete — Completions at a 1-based .sail position. Proxies the TypeScript sidecar inside TS regions; falls back to structure scope symbols. Returns typescriptStatus: missing and omits TS diagnostics when the sidecar is absent.
 export async function sailAuthoringComplete(
   args: CompleteArgs,
   opts?: ClientOptions,

@@ -3,7 +3,7 @@
 //! Spike S5.1 red gate. Calls product surfaces only:
 //! - `sail_compiler::runtime_ambient::RUNTIME_AMBIENT` (inject SSOT)
 //! - `parse::preprocess::wrap_controller_body` / `extract_controller_block`
-//! - `ambients::emit_types_dts` + tsc (when `node_modules/.bin/tsc` present)
+//! - `ambients::emit_types_dts` + tsc (when `node_modules/typescript/bin/tsc` present)
 //!
 //! Implementer must not modify, skip, or weaken these tests.
 //!
@@ -73,12 +73,8 @@ fn repo_root() -> PathBuf {
 }
 
 fn tsc_path(repo: &Path) -> Option<PathBuf> {
-    let p = repo.join("node_modules/.bin/tsc");
-    if p.exists() {
-        return Some(p);
-    }
-    let alt = repo.join("node_modules/typescript/bin/tsc");
-    alt.exists().then_some(alt)
+    let p = repo.join("node_modules/typescript/bin/tsc");
+    p.exists().then_some(p)
 }
 
 // ── 1. Inject table SSOT ────────────────────────────────────────────────────
@@ -237,7 +233,7 @@ fn bare_s5_ambient_values_typecheck_without_import() {
     let Some(tsc) = tsc_path(&repo) else {
         eprintln!(
             "SKIP ambient_table_complete tsc values: {} not found — run `bun install` to enable.",
-            repo.join("node_modules/.bin/tsc").display()
+            repo.join("node_modules/typescript/bin/tsc").display()
         );
         // Table + inject gates above still prove RED without tsc.
         // Fail hard so CI with node_modules cannot skip the type surface.
@@ -332,7 +328,7 @@ fn public_types_are_global_without_ship_import() {
     let Some(tsc) = tsc_path(&repo) else {
         eprintln!(
             "SKIP ambient_table_complete tsc types: {} not found — run `bun install` to enable.",
-            repo.join("node_modules/.bin/tsc").display()
+            repo.join("node_modules/typescript/bin/tsc").display()
         );
         if repo.join("node_modules").is_dir() {
             panic!("node_modules present but tsc binary missing — install typescript");

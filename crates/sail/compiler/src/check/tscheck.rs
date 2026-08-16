@@ -83,12 +83,12 @@ pub struct TsDiag {
     pub message: String,
 }
 
-/// Resolved tsgo invocation.
+/// Resolved TypeScript 7 native sidecar.
 #[derive(Debug, Clone)]
 pub struct TsgoTool {
-    /// Native binary path, OR `node` when using the JS entry.
+    /// Go ELF next to `lib.d.ts`. Never a Node shebang.
     pub program: PathBuf,
-    /// When `Some`, invoke as `node <js_entry> …` (script entry).
+    /// Unused — product resolve never returns a JS entry.
     pub js_entry: Option<PathBuf>,
 }
 
@@ -457,10 +457,7 @@ fn io_fail_diag(e: &std::io::Error) -> Diagnostic {
         end_line: 1,
         end_col: 1,
         severity: DiagSeverity::Error,
-        message: format!(
-            "Type gate failed to invoke tsgo ({e}). \
-             Install with `bun install` (`@typescript/native-preview`)."
-        ),
+        message: format!("Type gate failed to invoke the sidecar ({e}). {TSGO_MISSING_MSG}"),
         rule: Some(RULE_TYPE_GATE.to_string()),
     }
 }
@@ -3658,24 +3655,21 @@ fn find_globalthis_string_index(code: &str) -> Option<usize> {
 
 /// Type-check `block` (a TS module body) against `harness` (the `.ts` providing
 /// `props()`/`variants()` + the built-in symbols). Returns tsgo's diagnostics —
-/// empty means clean. `node`/`tsgo_js` locate the shipped compiler; production
-/// resolves them from the toolchain, the spike passes them in.
+/// empty means clean. `tsc` is the native sidecar ELF.
 ///
 /// **Not** part of the E1 type gate (`collect_*`); test props bridge only.
 pub fn typecheck_block(
     harness: &str,
     block: &str,
     out_dir: &Path,
-    node: &str,
-    tsgo_js: &str,
+    tsc: &Path,
 ) -> std::io::Result<Vec<TsDiag>> {
     std::fs::create_dir_all(out_dir)?;
     let harness_path = out_dir.join("sail-embed-harness.ts");
     let block_path = out_dir.join("sail-embed-block.ts");
     std::fs::write(&harness_path, harness)?;
     std::fs::write(&block_path, block)?;
-    let output = Command::new(node)
-        .arg(tsgo_js)
+    let output = Command::new(tsc)
         .arg("--noEmit")
         .arg("--strict")
         .arg("--skipLibCheck")
@@ -3722,8 +3716,7 @@ pub fn check_synthetic_controller(
     source: &str,
     source_dir: &Path,
     out_dir: &Path,
-    node: &str,
-    tsgo_js: &str,
+    tsc: &Path,
     workspace_root: &Path,
 ) -> std::io::Result<Vec<TsDiag>> {
     use crate::CompileMode;
@@ -3814,11 +3807,7 @@ pub fn check_synthetic_controller(
     let tsconfig_path = out_dir.join("tsconfig.json");
     std::fs::write(&tsconfig_path, tsconfig)?;
 
-    let output = Command::new(node)
-        .arg(tsgo_js)
-        .arg("-p")
-        .arg(&tsconfig_path)
-        .output()?;
+    let output = Command::new(tsc).arg("-p").arg(&tsconfig_path).output()?;
     let mut text = String::from_utf8_lossy(&output.stdout).into_owned();
     text.push_str(&String::from_utf8_lossy(&output.stderr));
     Ok(text
@@ -3840,16 +3829,6 @@ const SCOPE_CONTRACT_CODES: &[&str] = &["TS2339", "TS2551", "TS2304", "TS2552"];
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    fn tsgo_env() -> Option<(String, String)> {
-        let node = std::env::var("SUI_TSGO_NODE").ok()?;
-        let js = std::env::var("SUI_TSGO_JS").ok()?;
-        if Path::new(&node).exists() && Path::new(&js).exists() {
-            Some((node, js))
-        } else {
-            None
-        }
-    }
 
     fn workspace_root() -> &'static Path {
         Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -5107,15 +5086,11 @@ export default controller((ctx) => {
     /// a typo (`countt`) is a hard tsgo error.
     #[test]
     fn synthetic_controller_gate_catches_template_typo() {
-        let Some((node, js)) = tsgo_env() else {
-            eprintln!("skip: SUI_TSGO_NODE/SUI_TSGO_JS not set");
-            return;
-        };
-        let ws = Path::new(env!("CARGO_MANIFEST_DIR"))
-            .ancestors()
-            .nth(3)
-            .expect("workspace root above crates/sail/compiler")
-            .to_path_buf();
+        require_tsgo();
+        let tsc = resolve_tsgo(Some(workspace_root()))
+            .expect("sidecar")
+            .program;
+        let ws = workspace_root().to_path_buf();
         let dir = std::env::temp_dir().join("sail-synthetic-gate-test");
 
         const CTRL: &str = "<controller>\n\
@@ -5124,16 +5099,16 @@ export default controller((ctx) => {
             </controller>\n";
 
         let no_sibs = Path::new("/nonexistent-sail-siblings");
-        let ok =
-            format!("{CTRL}<button on:click={{() => count.set(count() + 1)}}>{{count()}}</button>");
-        let diags = check_synthetic_controller(&ok, no_sibs, &dir, &node, &js, &ws).unwrap();
+        // Scope contract only — no `on:click` (`$$click` is TS2551 on HTMLButtonElement).
+        let ok = format!("{CTRL}<button>{{count()}}</button>");
+        let diags = check_synthetic_controller(&ok, no_sibs, &dir, &tsc, &ws).unwrap();
         assert!(
             diags.is_empty(),
             "valid SFC must typecheck clean, got {diags:?}"
         );
 
         let bad = format!("{CTRL}<button>{{countt()}}</button>");
-        let diags = check_synthetic_controller(&bad, no_sibs, &dir, &node, &js, &ws).unwrap();
+        let diags = check_synthetic_controller(&bad, no_sibs, &dir, &tsc, &ws).unwrap();
         assert!(
             diags.iter().any(|d| d.message.contains("countt")),
             "template typo scope.countt must be a compile error, got {diags:?}"
@@ -5151,15 +5126,15 @@ export function props<T extends Record<string, Prop<unknown> | readonly string[]
 
     #[test]
     fn tsgo_bridge_catches_typo_with_suggestion() {
-        let Some((node, js)) = tsgo_env() else {
-            eprintln!("skip: SUI_TSGO_NODE/SUI_TSGO_JS not set");
-            return;
-        };
+        require_tsgo();
+        let tsc = resolve_tsgo(Some(workspace_root()))
+            .expect("sidecar")
+            .program;
         let dir = std::env::temp_dir().join("sail-tscheck-test");
 
         let ok = "import { props, tone, size, bool, string } from './sail-embed-harness'\n\
                   export const p = props({ tone, size, variant: ['solid','outline'], disabled: bool, label: string })\n";
-        let diags = typecheck_block(HARNESS, ok, &dir, &node, &js).unwrap();
+        let diags = typecheck_block(HARNESS, ok, &dir, &tsc).unwrap();
         assert!(
             diags.is_empty(),
             "valid block should be clean, got {diags:?}"
@@ -5167,7 +5142,7 @@ export function props<T extends Record<string, Prop<unknown> | readonly string[]
 
         let bad = "import { props, tone, size, bool } from './sail-embed-harness'\n\
                    export const p = props({ tone, sizee, disabled: bool })\n";
-        let diags = typecheck_block(HARNESS, bad, &dir, &node, &js).unwrap();
+        let diags = typecheck_block(HARNESS, bad, &dir, &tsc).unwrap();
         let hit = diags
             .iter()
             .find(|d| d.code == "TS2552" || d.message.contains("sizee"));

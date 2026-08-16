@@ -273,7 +273,7 @@ fn overflow_force_runs_gate_on_sail_only_tick() {
 #[test]
 fn confession_sidecar_fails_tsc_pure_config() {
     let root = workspace_root();
-    let tsc = root.join("node_modules/.bin/tsc");
+    let tsc = root.join("node_modules/typescript/bin/tsc");
     if !tsc.is_file() {
         panic!("tsc required for CI-path fixture");
     }

@@ -48,13 +48,8 @@ fn repo_root() -> PathBuf {
 }
 
 fn tsc_path(repo: &Path) -> Option<PathBuf> {
-    let p = repo.join("node_modules/.bin/tsc");
-    if p.exists() {
-        return Some(p);
-    }
-    // Allow local typescript package layout without .bin link.
-    let alt = repo.join("node_modules/typescript/bin/tsc");
-    alt.exists().then_some(alt)
+    let p = repo.join("node_modules/typescript/bin/tsc");
+    p.exists().then_some(p)
 }
 
 /// Write a minimal tsc project for `env` and typecheck `source` as `snippet.ts`.

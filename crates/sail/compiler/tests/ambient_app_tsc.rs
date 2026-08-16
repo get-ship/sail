@@ -9,7 +9,7 @@
 //! Fixture lives at `tests/fixtures/ambient-app/` (committed project shape;
 //! pack is generated, never committed — under `.sail/`).
 //!
-//! Opt-in when `node_modules/.bin/tsc` is present (same stance as synthetic_tsc).
+//! Opt-in when `node_modules/typescript/bin/tsc` is present (same stance as synthetic_tsc).
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -25,7 +25,7 @@ fn repo_root() -> PathBuf {
 }
 
 fn tsc_path(repo: &Path) -> Option<PathBuf> {
-    let p = repo.join("node_modules/.bin/tsc");
+    let p = repo.join("node_modules/typescript/bin/tsc");
     p.exists().then_some(p)
 }
 
@@ -79,7 +79,7 @@ fn ambient_app_fixture_tsc_no_emit_green() {
     let Some(tsc) = tsc_path(&repo) else {
         eprintln!(
             "SKIP ambient_app_tsc: {} not found — run `bun install` to enable.",
-            repo.join("node_modules/.bin/tsc").display()
+            repo.join("node_modules/typescript/bin/tsc").display()
         );
         return;
     };

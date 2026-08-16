@@ -12,7 +12,7 @@
 //! `@ship/sail-runtime` maps to a tiny shim (the SSR server entry + `view`) so
 //! the check stays lightweight; `@ship/sail-dom` maps to its real source.
 //!
-//! Opt-in: requires `bun install` so `node_modules/.bin/tsc` + the workspace
+//! Opt-in: requires `bun install` so `node_modules/typescript/bin/tsc` + the workspace
 //! sources exist. Absent tsc → prints why and returns (mirrors `synthetic_tsc`).
 
 use std::fs;
@@ -33,7 +33,7 @@ fn repo_root() -> PathBuf {
 }
 
 fn tsc_path(repo: &Path) -> Option<PathBuf> {
-    let p = repo.join("node_modules/.bin/tsc");
+    let p = repo.join("node_modules/typescript/bin/tsc");
     p.exists().then_some(p)
 }
 
@@ -254,7 +254,7 @@ fn client_contract_typechecks_green_across_real_surfaces() {
     let Some(tsc) = tsc_path(&repo) else {
         eprintln!(
             "SKIP synthetic_client_tsc: {} not found — run `bun install` to enable the tsc proof.",
-            repo.join("node_modules/.bin/tsc").display()
+            repo.join("node_modules/typescript/bin/tsc").display()
         );
         return;
     };

@@ -15,7 +15,7 @@ fn repo_root() -> PathBuf {
 }
 
 fn tsc_path(repo: &Path) -> Option<PathBuf> {
-    let p = repo.join("node_modules/.bin/tsc");
+    let p = repo.join("node_modules/typescript/bin/tsc");
     p.exists().then_some(p)
 }
 

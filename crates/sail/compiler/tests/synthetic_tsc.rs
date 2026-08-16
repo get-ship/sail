@@ -13,7 +13,7 @@
 //! remains. Author expressions were already fully checked; this closes the
 //! machinery gap so a synthesized view checks exactly as strictly as authored TS.
 //!
-//! Opt-in by environment: requires `bun install` so `node_modules/.bin/tsc`
+//! Opt-in by environment: requires `bun install` so `node_modules/typescript/bin/tsc`
 //! and the workspace package sources exist. When `tsc` is absent the test
 //! prints why and returns — it never fails for a missing toolchain (mirrors
 //! `parity.rs`'s opt-in stance).
@@ -62,7 +62,7 @@ fn repo_root() -> PathBuf {
 }
 
 fn tsc_path(repo: &Path) -> Option<PathBuf> {
-    let p = repo.join("node_modules/.bin/tsc");
+    let p = repo.join("node_modules/typescript/bin/tsc");
     p.exists().then_some(p)
 }
 
@@ -193,7 +193,7 @@ fn surfaces_typecheck_green_and_typo_is_caught() {
     let Some(tsc) = tsc_path(&repo) else {
         eprintln!(
             "SKIP synthetic_tsc: {} not found — run `bun install` to enable the tsc proof.",
-            repo.join("node_modules/.bin/tsc").display()
+            repo.join("node_modules/typescript/bin/tsc").display()
         );
         return;
     };

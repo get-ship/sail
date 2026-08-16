@@ -19,7 +19,8 @@
 //! - **On-save** (`didSave`): full stream including taffy layout + compose.
 //! - **Render**: on-demand only (MCP/CLI) — never part of this push path.
 //!
-//! When `tsgo` is missing the server degrades to structure-only (one log line).
+//! Missing sidecar degrades to structure-only (`initialize.sail.typescript`,
+//! `window/showMessage` Warning, and one stderr line).
 //!
 //! Library callers (Studio via sail-ops) use [`intelligence`] — the same
 //! virtual_ts + tsgo path as this stdio shell.

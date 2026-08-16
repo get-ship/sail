@@ -173,7 +173,7 @@ fn write_tsconfig(temp_dir: &Path, repo: &Path) {
 /// tsc-bound assertion (with a printed warning) when nothing's
 /// available — the structural check still gates.
 fn find_tsc(repo: &Path) -> Option<PathBuf> {
-    let direct = repo.join("node_modules/.bin/tsc");
+    let direct = repo.join("node_modules/typescript/bin/tsc");
     if direct.exists() {
         return Some(direct);
     }
@@ -412,7 +412,7 @@ fn every_sail_typechecks_against_runtime_dts() {
     // not CI. CI runs `bun install` before tests.
     let Some(tsc_bin) = find_tsc(&repo) else {
         eprintln!(
-            "shape-conformance: tsc not found at node_modules/.bin/tsc — \
+            "shape-conformance: tsc not found at node_modules/typescript/bin/tsc — \
              run `bun install` to enable the typecheck pass. Structural \
              check still gates."
         );

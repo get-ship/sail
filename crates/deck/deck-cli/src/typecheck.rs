@@ -13,9 +13,8 @@
 //! - **sail-compiler** — template / layout / vocabulary; Style DSL forms that
 //!   are not expressible as TS (hyphenated bare tokens, etc.).
 //!
-//! Unlike the synthetic_tsc test (which SKIPs when `tsc` is absent), the flag
-//! was requested explicitly, so a missing `node_modules/.bin/tsc` is a hard
-//! error.
+//! The flag was requested explicitly, so a missing native sidecar is a hard
+//! error (`sail ts-native setup`).
 
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -28,9 +27,10 @@ fn find_tsc(_project: &Path, _repo_root: &Path) -> Option<PathBuf> {
 }
 
 /// Write the ambient pack + on-the-fly tsconfig into `out_dir` and return the
-/// tsconfig path. `include`/`exclude`/`baseUrl` are ABSOLUTE so the config can
+/// tsconfig path. `include`/`files`/`exclude` are ABSOLUTE so the config can
 /// live in the build output dir while still covering the project tree —
-/// `@ship/*` resolves through the consumer's own `node_modules`.
+/// `@ship/*` resolves through the consumer's own `node_modules`. No `baseUrl`
+/// (TS 7 hard-error).
 fn write_tsconfig(project: &Path, out_dir: &Path) -> Result<PathBuf> {
     // Project-local pack (`.sail/types.d.ts`) so editors + tsc share
     // one ambient surface. Also mirror into out_dir for the ephemeral project.
@@ -50,19 +50,23 @@ fn write_tsconfig(project: &Path, out_dir: &Path) -> Result<PathBuf> {
         .to_string()
         .replace('\\', "/");
     let opts = sail_compiler::ambients::sail_tsconfig_compiler_options_json();
-    // Drop outer braces from the shared options object so we can inject baseUrl.
+    let cfg = typecheck_tsconfig_json(&opts, &proj, &out, &ambient_for_tsc);
+    let path = out_dir.join("tsconfig.typecheck.json");
+    std::fs::write(&path, cfg).with_context(|| format!("write {}", path.display()))?;
+    Ok(path)
+}
+
+fn typecheck_tsconfig_json(opts: &str, proj: &str, out: &str, ambient_for_tsc: &str) -> String {
     let opts_inner = opts
         .trim()
         .trim_start_matches('{')
         .trim_end_matches('}')
         .trim();
     // `{out}` is deploy (`dist/` unless `--out`). `.sail` is generate.
-    // `.deck` is leftover-only — ignore if present, not the product out dir.
-    let cfg = format!(
+    format!(
         r#"{{
   "compilerOptions": {{
-    {opts_inner},
-    "baseUrl": "{proj}"
+    {opts_inner}
   }},
   "files": ["{ambient_for_tsc}"],
   "include": [
@@ -70,10 +74,7 @@ fn write_tsconfig(project: &Path, out_dir: &Path) -> Result<PathBuf> {
   ],
   "exclude": ["{proj}/node_modules", "{out}", "{proj}/.sail", "{proj}/.deck"]
 }}"#
-    );
-    let path = out_dir.join("tsconfig.typecheck.json");
-    std::fs::write(&path, cfg).with_context(|| format!("write {}", path.display()))?;
-    Ok(path)
+    )
 }
 
 /// Run `tsc -p <cfg> --noEmit` (cwd = `repo_root`, so node-module resolution
@@ -111,4 +112,18 @@ pub fn run(project: &Path, out_dir: &Path, repo_root: &Path) -> Result<()> {
         sail_compiler::ambients::PROJECT_TYPES_REL
     );
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn generated_typecheck_tsconfig_has_no_base_url() {
+        let opts = sail_compiler::ambients::sail_tsconfig_compiler_options_json();
+        let cfg = typecheck_tsconfig_json(&opts, "/app", "/app/dist", "/app/sail-types.d.ts");
+        assert!(!cfg.contains("baseUrl"), "TS 7 hard-errors baseUrl: {cfg}");
+        assert!(cfg.contains("\"/app/**/*.ts\""));
+        assert!(cfg.contains("\"/app/sail-types.d.ts\""));
+    }
 }

@@ -9,8 +9,9 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use sail_compiler::ts_native::{
-    PINS_TOML, Pin, TS_NATIVE_VERSION, TsNativeSource, accept_lsp_help, expected_peer_tsc,
-    parse_pins, peer_sidecar_dirs, pins, resolve_ts_native_from_exe,
+    PINS_TOML, Pin, TS_NATIVE_VERSION, TsNativeSource, accept_lsp_help, accept_probed_version,
+    disable_value, env_override_is_usable, expected_peer_tsc, parse_pins, peer_sidecar_dirs, pins,
+    resolve_ts_native_from_exe,
 };
 
 fn write_file(path: &Path, body: &str) {
@@ -109,14 +110,11 @@ fn target_debug_shaped_exe_does_not_walk_parents_for_node_modules() {
     let exe = root.join("target/debug/sail");
     plant_exe(&exe);
 
-    let got = resolve_ts_native_from_exe(&exe);
-    if let Some(tool) = got {
-        assert_ne!(
-            tool.program, leaked,
-            "must not resolve via parent walk of current_exe"
-        );
-        assert_eq!(tool.source, TsNativeSource::Peer);
-    }
+    assert!(
+        resolve_ts_native_from_exe(&exe).is_none(),
+        "fake target/debug/sail must not resolve ancestor node_modules/.bin/tsgo ({})",
+        leaked.display()
+    );
 }
 
 #[test]
@@ -137,6 +135,33 @@ fn deps_hop_finds_profile_peer() {
         "deps hop dirs: {dirs:?}"
     );
     assert_eq!(expected_peer_tsc(&exe), profile.join("sail-ts-native/tsc"));
+}
+
+#[test]
+fn disable_value_matches_d16() {
+    assert!(disable_value(""));
+    assert!(disable_value("0"));
+    assert!(disable_value("false"));
+    assert!(disable_value("FALSE"));
+    assert!(!disable_value("1"));
+    assert!(!disable_value("true"));
+}
+
+#[test]
+fn accept_probed_version_requires_pin() {
+    assert!(accept_probed_version("7.0.2"));
+    assert!(!accept_probed_version("7.0.0-dev.20260707.2"));
+    assert!(!accept_probed_version("5.8.3"));
+    assert!(!accept_probed_version(""));
+}
+
+#[test]
+fn env_override_rejects_empty_relative_and_missing() {
+    assert!(!env_override_is_usable(""));
+    assert!(!env_override_is_usable("relative/tsc"));
+    assert!(!env_override_is_usable(
+        "/nonexistent-sail-tsc-for-env-test"
+    ));
 }
 
 #[test]

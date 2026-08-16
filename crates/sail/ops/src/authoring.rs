@@ -462,8 +462,9 @@ pub fn check(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
     let source = args.get("source").and_then(|v| v.as_str());
     let fix = args.get("fix").and_then(|v| v.as_str()).unwrap_or("off");
     let actor = args.get("actor").and_then(|v| v.as_str());
-    // Default true: Studio gutters get tsgo without a second poll (SPEC-LSP-1).
-    // Soft-degrades when tsgo is absent. Pass includeTs:false for structure-only.
+    // Default true: merge mapped TypeScript diagnostics. Returns
+    // typescriptStatus: missing and omits TS diagnostics when the sidecar
+    // is absent. Pass includeTs:false for structure-only.
     let include_ts = args
         .get("includeTs")
         .or_else(|| args.get("include_ts"))

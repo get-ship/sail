@@ -3,7 +3,8 @@
 //! Usable without stdio LSP: ops, tests, and the thin `run()` shell share this path.
 //! Positions are always **`.sail` coordinates** (1-based line/column, matching
 //! `sail_compiler::hover_at` / Check diagnostics). Internally maps via `virtual_ts`
-//! and proxies TS regions to tsgo when available (soft-degrade otherwise).
+//! and proxies TS regions to the TypeScript sidecar when available
+//! (`typescriptStatus: missing` otherwise).
 
 use std::path::{Path, PathBuf};
 use std::sync::{Mutex, OnceLock};

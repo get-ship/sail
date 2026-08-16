@@ -1346,21 +1346,16 @@ export default controller((ctx) => ({ count: signal(0) }))
         let uri = "file:///tmp/live-smoke.sail";
         session.on_sail_change(uri, src);
         let diags = session.diagnostics_mapped(uri, src);
-        // Soft: assert no panic; when runtime types resolve, countt is flagged.
-        if let Some(d) = diags.iter().find(|d| d.message.contains("countt")) {
-            let countt_off = src.find("countt").unwrap();
-            let (line, _) = offset_to_lsp_position(src, countt_off);
-            assert_eq!(
-                d.range.start.line, line,
-                "countt diagnostic must map to .sail line"
-            );
-        } else {
-            eprintln!(
-                "NOTE: no countt diagnostic yet (got {} diags) — scope recovery \
-                 may still be resolving runtime types; map+session path exercised",
-                diags.len()
-            );
-        }
+        let d = diags
+            .iter()
+            .find(|d| d.message.contains("countt"))
+            .unwrap_or_else(|| panic!("expected countt diagnostic, got {diags:?}"));
+        let countt_off = src.find("countt").unwrap();
+        let (line, _) = offset_to_lsp_position(src, countt_off);
+        assert_eq!(
+            d.range.start.line, line,
+            "countt diagnostic must map to .sail line"
+        );
     }
 
     fn owned_route_tree() -> PathBuf {
