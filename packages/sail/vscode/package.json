@@ -1,7 +1,7 @@
 {
   "name": "sail",
   "displayName": "Sail",
-  "description": "Language client for .sail files. Colors via @ship/sail-highlight (tree-sitter-sail semantic tokens). Starts `sail lsp` (stdio) — diagnostics, hover, complete, definition. Not a marketplace extension.",
+  "description": "Sail language support for VS Code and Cursor. Highlighting, diagnostics, complete, hover, and format. Requires the sail CLI on PATH (`sail lsp`).",
   "version": "0.1.0",
   "publisher": "ship",
   "private": true,

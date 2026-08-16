@@ -24,6 +24,7 @@ const TS_ARRAY_H: &str = include_str!("../../../../packages/sail/grammar/src/tre
 pub enum EditorKind {
     Helix,
     Nvim,
+    Vscode,
 }
 
 impl EditorKind {
@@ -31,7 +32,8 @@ impl EditorKind {
         match s.to_ascii_lowercase().as_str() {
             "helix" | "hx" => Ok(Self::Helix),
             "nvim" | "neovim" => Ok(Self::Nvim),
-            other => bail!("unknown editor {other:?} — helix | nvim"),
+            "vscode" | "code" | "cursor" => Ok(Self::Vscode),
+            other => bail!("unknown editor {other:?} — helix | nvim | vscode"),
         }
     }
 }
@@ -50,6 +52,7 @@ pub fn setup(editor: EditorKind, bin: Option<&Path>, home: &Path) -> Result<Setu
     match editor {
         EditorKind::Helix => setup_helix(&command, home),
         EditorKind::Nvim => setup_nvim(&command, home),
+        EditorKind::Vscode => setup_vscode(&command),
     }
 }
 
@@ -248,6 +251,20 @@ vim.api.nvim_create_autocmd("FileType", {{
         notes: vec![
             "nvim-treesitter still needs a sail parser registered from the extracted grammar path."
                 .into(),
+        ],
+        command: command.to_string(),
+    })
+}
+
+fn setup_vscode(command: &str) -> Result<SetupReport> {
+    Ok(SetupReport {
+        editor: "vscode",
+        writes: vec![],
+        notes: vec![
+            format!("VS Code / Cursor: install the Sail VSIX, then put `{command}` on PATH."),
+            "Command Palette → Extensions: Install from VSIX… → sail-*.vsix".into(),
+            format!("Or set sail.lsp.path to the `{command}` binary if the editor cannot see PATH."),
+            "Marketplace publish is a later identity cut — the VSIX is the product artifact.".into(),
         ],
         command: command.to_string(),
     })

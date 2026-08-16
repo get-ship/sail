@@ -287,7 +287,7 @@ enum Command {
 enum EditorCmd {
     /// Write Helix / Neovim config. Default command is `sail` on PATH.
     Setup {
-        /// `helix` or `nvim`.
+        /// `helix`, `nvim`, or `vscode`.
         editor: String,
         /// Override the `sail` executable (developers). Never implied.
         #[arg(long)]

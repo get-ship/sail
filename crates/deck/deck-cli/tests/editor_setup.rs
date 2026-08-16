@@ -102,6 +102,25 @@ fn nvim_setup_writes_plugin_with_path_sail() {
 }
 
 #[test]
+fn vscode_setup_prints_vsix_product_does_not_write_home() {
+    let tmp = TempDir::new().unwrap();
+    let home = tmp.path();
+    let out = run_setup(home, &["editor", "setup", "vscode"]);
+    assert!(
+        out.status.success(),
+        "{}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    let stdout = String::from_utf8_lossy(&out.stdout);
+    assert!(stdout.contains("VSIX"), "{stdout}");
+    assert!(stdout.contains("sail lsp") || stdout.contains("PATH"), "{stdout}");
+    assert!(
+        !home.join(".config").exists() || home.join(".config").read_dir().ok().map(|d| d.count()).unwrap_or(0) == 0,
+        "vscode setup must not write editor config under HOME"
+    );
+}
+
+#[test]
 fn helix_setup_bin_override_is_explicit() {
     let tmp = TempDir::new().unwrap();
     let home = tmp.path();
