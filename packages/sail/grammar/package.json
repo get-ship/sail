@@ -8,7 +8,8 @@
     "build": "tree-sitter generate",
     "test": "tree-sitter test && cargo test -p tree-sitter-sail --test injections --test block_vocabulary",
     "generate": "(cd ../.. && cargo run -q -p sail-compiler -- vocabulary --out /tmp/sail-grammar-vocab.json) && bun run scripts/generate-grammar.ts --vocab /tmp/sail-grammar-vocab.json --out-dir . --overlay-vocab ../../components/sail/code-editor/src/sail-code-editor/sail-highlight-vocab.ts",
-    "generate-check": "bun run scripts/generate-check.ts"
+    "generate-check": "bun run scripts/generate-check.ts",
+    "helix-setup": "bash scripts/helix-setup.sh"
   },
   "tree-sitter": [
     {
