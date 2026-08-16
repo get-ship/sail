@@ -21,12 +21,22 @@ const tracked = (glob: string): string[] =>
     .filter(Boolean)
 
 describe('emitter registry', () => {
-  test('product out is .deck; .sail-out is not a default', () => {
-    expect(REG.productOut).toBe('.deck')
+  test('deploy is dist; generate is .sail; .deck is not a home', () => {
+    expect(REG.productOut).toBe('dist')
+    expect(REG.generateOut).toBe('.sail')
+    expect(REG.forbiddenOut).toContain('.deck')
+    expect(REG.forbiddenOut).toContain('node_modules/.sail')
     expect(REG.forbiddenOut).toContain('.sail-out')
     const layout = readFileSync(resolve(REPO, 'crates/sail/compiler/src/out_layout.rs'), 'utf8')
-    expect(layout).toContain('pub const DEFAULT_OUT_DIR: &str = ".deck"')
-    expect(layout).not.toMatch(/DEFAULT_OUT_DIR[^\n]*sail-out/)
+    expect(layout).toContain('pub const DEFAULT_OUT_DIR: &str = ".sail"')
+    expect(layout).not.toMatch(/DEFAULT_OUT_DIR[^\n]*\.deck/)
+    const deck = readFileSync(resolve(REPO, 'crates/deck/deck-config/src/lib.rs'), 'utf8')
+    expect(deck).toContain('pub const DECK_OUT_DIRNAME: &str = "dist"')
+    expect(deck).toContain('pub const SAIL_GENERATE_DIRNAME: &str = ".sail"')
+    expect(deck).not.toMatch(/DECK_OUT_DIRNAME[^\n]*\.deck/)
+    const ambients = readFileSync(resolve(REPO, 'crates/sail/compiler/src/ambients.rs'), 'utf8')
+    expect(ambients).toContain('pub const PROJECT_SAIL_DIR_REL: &str = ".sail"')
+    expect(ambients).not.toContain('node_modules/.sail')
   })
 
   test('every registry path exists and is tracked', () => {
@@ -58,5 +68,12 @@ describe('emitter registry', () => {
       const src = readFileSync(resolve(REPO, rel), 'utf8')
       expect(src.includes('--check'), `${rel} must refuse to be a write-only script`).toBe(true)
     }
+    const runtime = readFileSync(
+      resolve(REPO, 'apps/sail-site/scripts/gen-runtime-surface.ts'),
+      'utf8',
+    )
+    expect(runtime).toContain('apps/sail-site/gen/runtime-surface.ts')
+    expect(runtime).not.toContain('src/runtime-surface.gen.ts')
+    expect(runtime).not.toContain('Missing dest is not drift')
   })
 })

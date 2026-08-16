@@ -192,22 +192,6 @@
       }
     },
     {
-      "id": "deck-features-doc",
-      "kind": "keep",
-      "verdict": "KEEP",
-      "reason": "Living feature inventory; describes current host seams.",
-      "paths": [
-        "crates/deck/FEATURES.md"
-      ],
-      "markers": [
-        "migration",
-        "shim"
-      ],
-      "expires": {
-        "never": true
-      }
-    },
-    {
       "id": "test-isolation-shims",
       "kind": "keep",
       "verdict": "KEEP",

@@ -1,5 +1,8 @@
-# deck build output + codegen (regenerated every build)
-/.deck/
+# deploy + codegen (regenerated every build)
+/dist/
+/gen/
+# Surfaces live in /gen/, not a tracked src/*.gen.ts dump.
+/src/*.gen.ts
 /routes.gen.ts
 /entry.gen.ts
 /components.gen.ts

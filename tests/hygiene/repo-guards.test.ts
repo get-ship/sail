@@ -100,7 +100,7 @@ describe('no documentElement.style under apps/**', () => {
 
 describe('sail typecheck stays wired and required', () => {
   // tsc against the generated Sail kind config: lib ESNext only (no DOM),
-  // sail ambients from node_modules/.sail/types.d.ts. If it is red, the
+  // sail ambients from .sail/types.d.ts. If it is red, the
   // gate fails — we do not skip it because the corpus is red.
   // `bun test` stays the fast local suite; CI type-gate is where this runs.
   const requiredScripts = ['typecheck:sail:studio', 'typecheck:sail:site', 'typecheck:sail']

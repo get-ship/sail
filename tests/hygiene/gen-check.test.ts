@@ -17,11 +17,33 @@ function check(script: string): void {
 }
 
 describe('generated surfaces --check', () => {
-  test('runtime-surface.gen.ts matches the runtime barrel', () => {
-    check('apps/sail-site/scripts/gen-runtime-surface.ts')
-  })
+  test(
+    'runtime-surface allowlist matches the runtime barrel',
+    () => {
+      check('apps/sail-site/scripts/gen-runtime-surface.ts')
+    },
+    { timeout: 30_000 },
+  )
 
-  test('tutorial-data.ts matches content/tutorial', () => {
-    check('apps/sail-site/scripts/gen-tutorial.ts')
-  })
+  test(
+    'runtime-surface --check fails when dest is absent',
+    () => {
+      const missing = resolve(REPO, 'apps/sail-site/gen/.__hygiene_absent-runtime-surface.ts')
+      const r = spawnSync(
+        'bun',
+        ['apps/sail-site/scripts/gen-runtime-surface.ts', '--check', '--out', missing],
+        { cwd: REPO, encoding: 'utf8' },
+      )
+      expect(r.status, r.stderr || r.stdout || 'expected non-zero for missing dest').not.toBe(0)
+    },
+    { timeout: 30_000 },
+  )
+
+  test(
+    'tutorial-data.ts matches content/tutorial',
+    () => {
+      check('apps/sail-site/scripts/gen-tutorial.ts')
+    },
+    { timeout: 30_000 },
+  )
 })

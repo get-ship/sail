@@ -1,18 +1,18 @@
-// Regenerate src/runtime-surface.gen.ts — **tier B** author runtime surface
+// Regenerate gen/runtime-surface.ts — **tier B** author runtime surface
 // of @ship/sail-runtime.
 //
 // Walks the package root barrel (`.`) with the TypeScript compiler API, then
 // keeps only names listed in packages/sail/runtime/author-surface.json.
 // That JSON is the documented allowlist for intentional human imports.
 //
-// Tier A (template / ambient / compiler tables) is language-surface.gen.ts
+// Tier A (template / ambient / compiler tables) is gen/language-surface.ts
 // from `cargo run -p sail-compiler -- prop-registry` — not this script.
 // Tier C (/internal emit ABI, host subpaths like ./framework ./server ./dev)
 // is never emitted here.
 //
 // Regen: `bun run gen` (apps/sail-site) or:
 //   node apps/sail-site/scripts/gen-runtime-surface.ts
-import { readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import * as ts from 'typescript'
@@ -218,7 +218,7 @@ out += 'export const RUNTIME_EXPORTS: RuntimeExportDoc[] = '
 out += JSON.stringify(entries, null, 2)
 out += '\n'
 
-const dest = resolve(here, '../src/runtime-surface.gen.ts')
+const dest = resolve(here, '../gen/runtime-surface.ts')
 const args = process.argv.slice(2)
 const check = args.includes('--check')
 const outFlag = args.indexOf('--out')
@@ -228,16 +228,20 @@ const destWrite =
     : dest
 
 if (check) {
-  const committed = readFileSync(dest, 'utf8')
-  if (committed !== out) {
+  // apps/sail-site/gen/runtime-surface.ts is gitignored. Absent dest is stale.
+  const existing = existsSync(destWrite) ? readFileSync(destWrite, 'utf8') : null
+  if (existing !== out) {
+    const named =
+      destWrite === dest ? 'apps/sail-site/gen/runtime-surface.ts' : destWrite
     console.error(
-      'gen-runtime-surface --check: apps/sail-site/src/runtime-surface.gen.ts drifted\n' +
+      `gen-runtime-surface --check: ${named} stale\n` +
         '  regenerate: bun apps/sail-site/scripts/gen-runtime-surface.ts',
     )
     process.exit(1)
   }
-  console.log(`ok: runtime-surface.gen.ts (${entries.length} exports)`)
+  console.log(`ok: runtime-surface (${entries.length} exports)`)
 } else {
+  mkdirSync(resolve(destWrite, '..'), { recursive: true })
   writeFileSync(destWrite, out)
   console.log(
     `wrote ${destWrite} (${entries.length} tier-B exports across ${categories.length} categories; root has ${rootNames.size} total names)`,

@@ -1,27 +1,12 @@
 {
-  "productOut": ".deck",
-  "typesOut": "node_modules/.sail",
-  "forbiddenOut": [".sail-out", ".sail", "test-results"],
+  "productOut": "dist",
+  "generateOut": ".sail",
+  "forbiddenOut": [".sail-out", ".deck", "node_modules/.sail", "test-results"],
   "trackedGenerated": [
-    {
-      "path": "apps/sail-site/src/language-surface.gen.ts",
-      "emitter": "cargo run -p sail-compiler -- prop-registry",
-      "gate": "stdlib-coupled — check after L1 stdlib move"
-    },
-    {
-      "path": "apps/sail-site/src/prop-registry.gen.ts",
-      "emitter": "cargo run -p sail-compiler -- prop-registry",
-      "gate": "stdlib-coupled — check after L1 stdlib move"
-    },
     {
       "path": "crates/sail/compiler/primitives.json",
       "emitter": "cargo run -p sail-compiler -- prop-registry",
       "gate": "stdlib-coupled — check after L1 stdlib move"
-    },
-    {
-      "path": "apps/sail-site/src/runtime-surface.gen.ts",
-      "emitter": "apps/sail-site/scripts/gen-runtime-surface.ts",
-      "gate": "bun apps/sail-site/scripts/gen-runtime-surface.ts --check"
     },
     {
       "path": "apps/sail-site/src/compositions/tutorial-data.ts",
@@ -105,6 +90,8 @@
     }
   ],
   "ignoredGenerated": [
+    "apps/*/.sail/**",
+    "apps/sail-site/gen/**",
     "apps/*/routes.gen.ts",
     "apps/*/entry.gen.ts",
     "apps/*/components.gen.ts"
@@ -122,8 +109,8 @@
     },
     {
       "path": "scripts/emit-package-dts.ts",
-      "must": "invoked by sail types",
-      "foldInto": "already sail types"
+      "must": "invoked by bun prepare / emit:package-dts",
+      "foldInto": "bun prepare / bake — not product sail types"
     }
   ]
 }

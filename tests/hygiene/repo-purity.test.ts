@@ -16,7 +16,7 @@ const tracked = (): string[] =>
 
 /** Top-level entries that are product. Anything else tracked = a conversation first. */
 const TOP_LEVEL_ALLOWLIST = new Set([
-  '.cargo', '.deck', '.github', '.gitignore', '.lsp.json', '.npmrc',
+  '.cargo', '.github', '.gitignore', '.lsp.json', '.npmrc',
   'AGENTS.md', 'CHANGELOG.md', 'Cargo.lock', 'Cargo.toml', 'LICENSE', 'README.md',
   'apps', 'bun.lock', 'crates', 'hooks', 'package.json', 'packages',
   'rust-toolchain.toml', 'scripts', 'skills', 'tests', 'third_party',
@@ -25,11 +25,12 @@ const TOP_LEVEL_ALLOWLIST = new Set([
 
 /**
  * Ignored product that may sit on disk next to tracked names.
- * Repo-root `.deck/framework/` is the build-assets exception (same
- * `DECK_OUT_DIRNAME` as app `.deck/` — not a fourth output home).
+ * `.sail/` is generate (types, bake, mirrors). `dist/` is app deploy
+ * if someone builds at repo root.
  */
 const ON_DISK_GENERATED = new Set([
-  '.deck',
+  '.sail',
+  'dist',
   'node_modules',
   'target',
   '.git',
@@ -45,7 +46,7 @@ const FORBIDDEN_ON_DISK = new Set([
   'test-results',
   'tsconfig.json',
   '.sail-out',
-  '.sail',
+  '.deck',
 ])
 
 const REPO = resolve(import.meta.dir, '../..')
