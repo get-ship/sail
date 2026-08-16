@@ -21,7 +21,6 @@ export default defineConfig({
       ),
       '@ship/studio/edit': join(root, 'src/edit/index.ts'),
       '@ship/studio/checks': join(root, 'src/checks/index.ts'),
-      '@ship/studio/cm/sail-mode': join(root, 'src/cm/sail-mode.ts'),
       // Deck remaps @ship/deck/router → package @ship/deck-router (src-direct).
       '@ship/deck/router': join(root, '../../packages/deck/router/src/index.ts'),
       '@ship/deck-router': join(root, '../../packages/deck/router/src/index.ts'),

@@ -1,7 +1,7 @@
 //! Anti-drift gate: fail the build if the generated grammar files
-//! (`grammar.js`, `queries/highlights.scm`, Studio overlay vocab)
-//! diverge from the generator, or if `src/grammar.json` (compiled
-//! `parser.c`) does not list the same rules as `grammar.js`.
+//! (`grammar.js`, `queries/highlights.scm`) diverge from the generator,
+//! or if `src/grammar.json` (compiled `parser.c`) does not list the same
+//! rules as `grammar.js`.
 //!
 //! A manifest change without `bun run generate`, or a generate without
 //! `tree-sitter generate`, is a red gate.
@@ -74,7 +74,6 @@ fn generated_grammar_matches_committed_files() {
     );
 
     // 2. Run the generator into the temp directory (same outputs as `bun run generate`).
-    let overlay_out = temp.join("sail-highlight-vocab.ts");
     let mut gen_cmd = Command::new("bun");
     gen_cmd
         .args([
@@ -84,8 +83,6 @@ fn generated_grammar_matches_committed_files() {
             vocab.to_str().unwrap(),
             "--out-dir",
             temp.to_str().unwrap(),
-            "--overlay-vocab",
-            overlay_out.to_str().unwrap(),
         ])
         .current_dir(&ws);
     run(&mut gen_cmd).expect("generator should succeed");
@@ -101,13 +98,6 @@ fn generated_grammar_matches_committed_files() {
             temp.join("queries/highlights.scm"),
             grammar_dir.join("queries/highlights.scm"),
             "queries/highlights.scm",
-        ),
-        (
-            overlay_out,
-            ws.join(
-                "packages/components/sail/code-editor/src/sail-code-editor/sail-highlight-vocab.ts",
-            ),
-            "sail-highlight-vocab.ts",
         ),
     ];
     for (generated, committed, label) in checks {

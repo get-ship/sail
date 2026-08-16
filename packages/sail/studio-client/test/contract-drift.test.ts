@@ -115,7 +115,7 @@ describe('studio contract drift', () => {
     const gen = generatedSailFns()
     const consumed = consumedSailFns()
     // Local helpers — not Connect methods.
-    const local = new Set(['sailStreamTokenizer']) // cm tokenizer, not ops
+    const local = new Set<string>()
     const unknown: string[] = []
     for (const name of consumed) {
       if (local.has(name)) continue

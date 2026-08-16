@@ -9,8 +9,7 @@
     "./edit": "./src/edit/index.ts",
     "./checks": "./src/checks/index.ts",
     "./design": "./src/design/index.ts",
-    "./tasks": "./src/tasks/index.ts",
-    "./cm/sail-mode": "./src/cm/sail-mode.ts"
+    "./tasks": "./src/tasks/index.ts"
   },
   "scripts": {
     "dev": "cd ../.. && cargo run -q -p deck-cli --bin sail -- dev --project apps/studio --addr ${STUDIO_ADDR:-127.0.0.1:7891}",

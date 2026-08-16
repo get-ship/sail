@@ -344,7 +344,6 @@ describe('Studio routes + chrome', () => {
       join(REPO, 'apps/studio/src/compositions/edit-surface/edit-surface-tabs.ts'),
       'utf8',
     )
-    const sailMode = readFileSync(join(REPO, 'apps/studio/src/cm/sail-mode.ts'), 'utf8')
     expect(surface).toMatch(/source-host/)
     expect(surface).toMatch(/source-loading|isSourceLoading/)
     expect(surface).toMatch(/source-ready|isSourceReady/)
@@ -367,7 +366,7 @@ describe('Studio routes + chrome', () => {
     expect(surfaceVm).toMatch(/onSaveSource|saveActiveSource/)
     expect(surfaceVm).toMatch(/setSourceTextFromEditor/)
     expect(tabsMod).toMatch(/pathAwareTabLabel/)
-    expect(sailMode).toMatch(/tokenizeSail|sailStreamTokenizer/)
+    expect(surface).toMatch(/sail-code-editor/)
   })
 
   it('edit-explorer: full-height project file tree only', () => {

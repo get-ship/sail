@@ -5,4 +5,3 @@ export * from './views'
 export * from './store'
 export * from './ops-adapter'
 // createCliOpsClient is Node-only — lives under test/helpers (Pure never sees it).
-export { tokenizeSail, tokenSnapshot } from '../cm/sail-mode'

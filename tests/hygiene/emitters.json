@@ -34,11 +34,6 @@
       "gate": "packages/sail/grammar/tests/injections.rs"
     },
     {
-      "path": "packages/components/sail/code-editor/src/sail-code-editor/sail-highlight-vocab.ts",
-      "emitter": "packages/sail/grammar bun run generate",
-      "gate": "packages/sail/grammar/tests/grammar_generated.rs"
-    },
-    {
       "path": "packages/sail/studio-client/src/generated/client.ts",
       "emitter": "sail-ops codegen",
       "gate": "packages/sail/studio-client/test/contract-drift.test.ts"
