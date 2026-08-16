@@ -48,18 +48,14 @@ cd packages/deck/e2e && bun run test     # real deck CLI, headless Chromium
 ## CLI
 
 ```sh
-cargo install --path crates/deck/deck-cli --bin sail
-sail ts-native setup
-# or
 cargo run -p deck-cli --bin sail -- dev --project apps/sail-site
 cargo run -p deck-cli --bin sail -- build --project <app> --bundle-framework
 cargo run -p deck-cli --bin sail -- check path/to/file.sail
 ```
 
-`sail lsp` needs the **CLI pair**: the `sail` binary and `sail-ts-native/`
-next to it (`tsc` + `lib.d.ts`). `cargo install` only drops the binary —
-`sail ts-native setup` extracts the sidecar to XDG. Confirm with
-`sail doctor --typed`.
+The published toolchain is `sail` plus `sail-ts-native/` next to it. `sail lsp`
+uses that pair. From this repo, `cargo build -p deck-cli --bin sail` places
+both under `target/debug/`.
 
 Peers on the same binary: `sail lsp`, `sail mcp`, `sail layout`, `sail tokens`,
 `sail doctor`, `sail version`.
@@ -116,7 +112,7 @@ monologue, or process ids (`job/…`, `task #N`, mission paths). Enforced by
 | `cd apps/sail-site && bun run dev` / `build` | Law | `gen` then deck CLI |
 | `bun run test` | Law | vitest + `tests/hygiene` repo guards |
 | `bun run typecheck` | Law | `scripts/typecheck-components.ts` (also runs `gen-component-types`) |
-| `cargo install --path crates/deck/deck-cli --bin sail` then `sail ts-native setup` | Product tool | Public CLI (`dev`, `build`, `check`, `lsp`, `mcp`, …) + TypeScript sidecar |
+| `cargo build -p deck-cli --bin sail` | Product tool | Public CLI (`dev`, `build`, `check`, `lsp`, `mcp`, …) + `target/debug/sail-ts-native/` |
 | `bun crates/sail/compiler/tests/l1-matrix/probe.ts` | Recipe | L1 × THEME_META matrix on the owned fixture (not sail-site) |
 
 ### `scripts/` (repo root — curated; ≤2 files)

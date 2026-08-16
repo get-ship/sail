@@ -357,7 +357,7 @@ pub fn resolve_ts_native_at(exe: Option<&Path>) -> Option<TsNativeTool> {
 /// Panic text when a typed test cannot see the profile-dir peer.
 pub fn missing_sidecar_hint() -> String {
     format!(
-        "sail ts-native setup / {}",
+        "TypeScript sidecar missing at {}",
         expected_peer_tsc_from_current_exe().display()
     )
 }

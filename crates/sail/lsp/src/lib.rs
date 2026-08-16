@@ -76,8 +76,7 @@ type Docs = HashMap<Url, String>;
 
 pub const TS_SIDECAR_MISSING_MESSAGE: &str = "\
 Sail: TypeScript 7 native compiler not found. Controller and {expr} types are off \
-(structure intelligence stays on). Run `sail ts-native setup`, or set SAIL_TSC \
-to the tsc ELF (must sit next to lib.d.ts). Product path is dirname(sail)/sail-ts-native/.";
+(structure intelligence stays on). Expected dirname(sail)/sail-ts-native/.";
 
 pub fn run() -> anyhow::Result<()> {
     let (connection, io_threads) = Connection::stdio();

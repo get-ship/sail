@@ -357,7 +357,7 @@ fn require_peer_sidecar() -> PathBuf {
         .join("sail-ts-native");
     let tsc = peer.join(if cfg!(windows) { "tsc.exe" } else { "tsc" });
     if !tsc.is_file() || !peer.join("lib.d.ts").is_file() {
-        panic!("sail ts-native setup / {}", tsc.display());
+        panic!("TypeScript sidecar missing at {}", tsc.display());
     }
     peer
 }

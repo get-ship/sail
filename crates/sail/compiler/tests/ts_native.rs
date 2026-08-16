@@ -210,7 +210,7 @@ fn extracted_sidecar_contains_tsc_and_lib_dts() {
     let dir = tsc.parent().expect("sidecar dir");
     assert!(
         tsc.is_file() && dir.join("lib.d.ts").is_file(),
-        "sidecar missing at {} (tsc={}, lib.d.ts={}). Run `sail ts-native setup`.",
+        "sidecar missing at {} (tsc={}, lib.d.ts={})",
         dir.display(),
         tsc.is_file(),
         dir.join("lib.d.ts").is_file()

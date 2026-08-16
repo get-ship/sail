@@ -14,7 +14,7 @@
 //!   are not expressible as TS (hyphenated bare tokens, etc.).
 //!
 //! The flag was requested explicitly, so a missing native sidecar is a hard
-//! error (`sail ts-native setup`).
+//! error (peer dir next to `sail`).
 
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -99,7 +99,7 @@ fn run_tsc(tsc: &Path, cfg: &Path, repo_root: &Path) -> Result<(bool, String)> {
 /// failure) bubble up so `deck build --typecheck` exits non-zero.
 pub fn run(project: &Path, out_dir: &Path, repo_root: &Path) -> Result<()> {
     let Some(tsc) = find_tsc(project, repo_root) else {
-        bail!("--typecheck requires the TypeScript 7 native sidecar. Run `sail ts-native setup`.");
+        bail!("--typecheck requires the TypeScript 7 native sidecar next to sail.");
     };
     let cfg = write_tsconfig(project, out_dir)?;
     let (ok, output) = run_tsc(&tsc, &cfg, repo_root)?;

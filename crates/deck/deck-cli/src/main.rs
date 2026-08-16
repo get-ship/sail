@@ -8,7 +8,6 @@
 mod editor;
 mod peer;
 mod scaffold;
-mod ts_native;
 mod typecheck;
 
 use std::path::{Path, PathBuf};
@@ -43,7 +42,7 @@ fn parse_render_viewport(s: &str) -> Result<(u32, u32), String> {
 #[derive(Parser)]
 #[command(
     name = "sail",
-    about = "Sail — the UI framework CLI (create, dev, build, check, types, scaffold theme, compile, tokens, fmt, inspect, lsp, mcp, editor, ts-native, op, layout, render, doctor, version)",
+    about = "Sail — the UI framework CLI (create, dev, build, check, types, scaffold theme, compile, tokens, fmt, inspect, lsp, mcp, editor, op, layout, render, doctor, version)",
     version,
     propagate_version = true
 )]
@@ -213,13 +212,6 @@ enum Command {
         cmd: EditorCmd,
     },
 
-    /// Fetch / inspect the TypeScript 7 native sidecar directory.
-    #[command(name = "ts-native")]
-    TsNative {
-        #[command(subcommand)]
-        cmd: TsNativeCmd,
-    },
-
     /// MCP server (stdio / Streamable HTTP) or install into agent hosts.
     ///
     /// Default (no subcommand): run MCP (stdio; pass `--http [ADDR]` through
@@ -293,14 +285,6 @@ enum Command {
 
     /// Print version + install hints (also available as `--version`).
     Version,
-}
-
-#[derive(Subcommand)]
-enum TsNativeCmd {
-    /// Download and extract pinned TypeScript 7 next to `sail` and into XDG.
-    Setup,
-    /// Print resolve result; exit 1 if the sidecar is missing.
-    Status,
 }
 
 #[derive(Subcommand)]
@@ -413,10 +397,6 @@ fn run() -> Result<()> {
                 editor::print_report(&report);
                 Ok(())
             }
-        },
-        Command::TsNative { cmd } => match cmd {
-            TsNativeCmd::Setup => ts_native::setup(),
-            TsNativeCmd::Status => ts_native::status(),
         },
         Command::Mcp { cmd, list_tools } => match cmd {
             Some(McpCmd::Install { project, bin }) => peer::mcp_install(project, bin),

@@ -22,17 +22,11 @@ The editor process must be able to spawn:
 sail lsp
 ```
 
-Install the CLI from this repo (`sail lsp` is a peer on that binary):
-
-```sh
-cargo install --path crates/deck/deck-cli --bin sail
-sail ts-native setup
-```
-
-Confirm with `sail ts-native status` or `sail doctor --typed`. Override the
-executable with `sail.lsp.path` (absolute path to `sail`). The client always
-appends `lsp`. It never runs `cargo run`. After `next.start()` the client
-reads `initializeResult.sail.typescript` and warns if the sidecar is missing.
+From this repo: `cargo build -p deck-cli --bin sail` and put
+`target/debug/sail` on PATH (`sail-ts-native/` sits next to it). Override the
+executable with `sail.lsp.path`. The client always appends `lsp`. It never
+runs `cargo run`. After `next.start()` the client reads
+`initializeResult.sail.typescript` and warns if the sidecar is missing.
 
 ## Install from Location (unpacked)
 

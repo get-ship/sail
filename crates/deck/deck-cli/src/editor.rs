@@ -49,25 +49,11 @@ pub struct SetupReport {
 /// Install Sail into `editor`. Paths come from `home` / XDG (tests inject).
 pub fn setup(editor: EditorKind, bin: Option<&Path>, home: &Path) -> Result<SetupReport> {
     let command = launch_command(bin);
-    let mut report = match editor {
+    let report = match editor {
         EditorKind::Helix => setup_helix(&command, home)?,
         EditorKind::Nvim => setup_nvim(&command, home)?,
         EditorKind::Vscode => setup_vscode(&command)?,
     };
-    match crate::ts_native::ensure_best_effort() {
-        Ok(Some(path)) => {
-            report
-                .notes
-                .push(format!("typescript sidecar: {}", path.display()));
-        }
-        Ok(None) => {}
-        Err(e) => {
-            eprintln!(
-                "sail editor setup: TypeScript 7 native sidecar missing ({e}). \
-                 Grammar was written. Run `sail ts-native setup`."
-            );
-        }
-    }
     Ok(report)
 }
 

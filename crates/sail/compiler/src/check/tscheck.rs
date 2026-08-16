@@ -39,7 +39,7 @@
 //! ## Resolution (STEP ZERO)
 //!
 //! Shared `sail_compiler::ts_native` resolver (peer sidecar / XDG / env).
-//! Absent → loud `sail-type-gate` error naming `sail ts-native setup`.
+//! Absent → loud `sail-type-gate` error naming the peer sidecar dir.
 //! Never a silent skip (including wasm32 — unsupported target fails loud).
 //!
 //! ## Tiers
@@ -105,7 +105,7 @@ pub const RULE_NO_NODE: &str = "sail-no-node";
 pub const TSGO_MISSING_MSG: &str = "\
 Type gate requires the TypeScript 7 native sidecar but none was found \
 (searched SAIL_TSC, dirname(sail)/sail-ts-native/tsc, XDG, and PATH). \
-Run `sail ts-native setup`. \
+The toolchain download ships that directory next to `sail`. \
 If tsc does not compile, sail does not compile — the gate never skips.";
 
 // ── tsgo resolution ────────────────────────────────────────────────────────
@@ -334,7 +334,7 @@ fn collect_sail_type_gate_native(
                 severity: DiagSeverity::Error,
                 message: format!(
                     "Type gate failed to invoke the TypeScript sidecar ({e}). \
-                     Run `sail ts-native setup`."
+                     Expected dirname(sail)/sail-ts-native/tsc."
                 ),
                 rule: Some(RULE_TYPE_GATE.to_string()),
             });

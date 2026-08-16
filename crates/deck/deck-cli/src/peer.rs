@@ -26,8 +26,8 @@ pub fn print_version(brand: &str) {
     println!("  binary: sail (cargo package deck-cli {pkg})");
     println!("  embeds: sail-compiler, sail-lsp, sail-mcp, sail-layout, sail-ops, sail-render,");
     println!("          deck-bundler, deck-axum, deck-core, deck-config, deck-ssr (in-process)");
-    println!("  install: product install TBD — put `sail` on PATH");
-    println!("  from this repo: cargo install --path crates/deck/deck-cli --bin sail");
+    println!("  install: put `sail` on PATH (sidecar is dirname(sail)/sail-ts-native/)");
+    println!("  from this repo: cargo build -p deck-cli --bin sail");
     println!("  docs:    README.md § Build / CLI; `sail doctor` for local health");
 }
 
@@ -102,7 +102,7 @@ pub fn doctor(brand: &str, typed: bool) -> Result<()> {
             );
         }
         None => {
-            println!("  typescript: missing (run `sail ts-native setup`)");
+            println!("  typescript: missing (expected dirname(sail)/sail-ts-native/)");
             if typed {
                 missing.push("typescript sidecar");
             }
@@ -331,7 +331,7 @@ fn types_check(project_dir: &Path) -> Result<()> {
         .map(|t| t.program)
         .ok_or_else(|| {
             anyhow::anyhow!(
-                "sail types --check: TypeScript sidecar missing. Run `sail ts-native setup`."
+                "sail types --check: TypeScript sidecar missing (dirname(sail)/sail-ts-native/)."
             )
         })?;
     for cfg in [&sail, &action] {

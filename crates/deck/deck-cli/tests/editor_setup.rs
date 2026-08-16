@@ -135,43 +135,24 @@ fn vscode_setup_prints_vsix_product_does_not_write_home() {
 }
 
 #[test]
-fn editor_setup_writes_xdg_sidecar_only_when_peer_exists() {
-    let peer = sail_bin()
-        .parent()
-        .expect("sail dir")
-        .join("sail-ts-native");
+fn editor_setup_writes_grammar_and_does_not_fetch_typescript() {
     let tmp = TempDir::new().unwrap();
     let home = tmp.path();
     let out = run_setup(home, &["editor", "setup", "helix"]);
     assert!(
         out.status.success(),
-        "grammar setup must succeed even if sidecar is missing: {}",
+        "grammar setup must succeed: {}",
         String::from_utf8_lossy(&out.stderr)
     );
     assert!(
         home.join(".local/share/sail/grammar/queries/highlights.scm")
             .is_file()
     );
-    if peer.join("tsc").is_file() && peer.join("lib.d.ts").is_file() {
-        let (os, arch) = match (std::env::consts::OS, std::env::consts::ARCH) {
-            ("linux", "x86_64") => ("linux", "x64"),
-            ("linux", "aarch64") => ("linux", "arm64"),
-            ("macos", "x86_64") => ("darwin", "x64"),
-            ("macos", "aarch64") => ("darwin", "arm64"),
-            ("windows", "x86_64") => ("win32", "x64"),
-            ("windows", "aarch64") => ("win32", "arm64"),
-            (os, arch) => panic!("unpinned host {os}-{arch}"),
-        };
-        let xdg = home
-            .join(".local/share/sail/ts-native/7.0.2")
-            .join(format!("{os}-{arch}"));
-        assert!(
-            xdg.join("tsc").is_file() && xdg.join("lib.d.ts").is_file(),
-            "peer sidecar existed at {} but XDG was not populated at {}",
-            peer.display(),
-            xdg.display()
-        );
-    }
+    let err = String::from_utf8_lossy(&out.stderr);
+    assert!(
+        !err.contains("ts-native"),
+        "editor setup is not a TypeScript installer: {err}"
+    );
 }
 
 #[test]

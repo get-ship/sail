@@ -1,6 +1,6 @@
 //! Fetch / extract the pinned TypeScript 7 `package/lib/**` sidecar.
 //!
-//! Shared by `sail-compiler` `build.rs` and `sail ts-native setup`.
+//! Used by `sail-compiler` `build.rs` to place `sail-ts-native/` next to the binary.
 
 use std::fs::{self, File};
 use std::io::{Read, Write};

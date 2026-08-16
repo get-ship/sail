@@ -140,7 +140,7 @@ async function start(): Promise<void> {
   )
 
   const missingTs =
-    'Sail: TypeScript 7 native compiler not found. Controller and {expr} types are off (structure intelligence stays on). Run `sail ts-native setup`, or set SAIL_TSC to the tsc ELF (must sit next to lib.d.ts). Product path is dirname(sail)/sail-ts-native/.'
+    'Sail: TypeScript 7 native compiler not found next to sail (sail-ts-native/). Controller and {expr} types are off; structure stays on.'
   try {
     await next.start()
     client = next
