@@ -34,21 +34,22 @@ fn product_route_without_style_compiles() {
 }
 
 #[test]
-fn product_route_style_is_an_error() {
-    let src = r#"<column style({ pad(6).bg(background) })><h1>x</h1></column>"#;
+fn product_route_name_and_geometry_compile() {
+    let src = r#"<column style({ size(measure).pad(page) })><h1>x</h1></column>"#;
     let path = "apps/sail-site/routes/docs/page.sail";
-    let err = compile(src, opts(path)).expect_err("route Style must fail compile");
-    let msg = format!("{err:?}");
-    assert!(
-        msg.contains("sail-style-privilege") || msg.contains("illegal"),
-        "expected privilege error, got {msg}"
-    );
+    compile(src, opts(path)).expect("L3 may spend names + geometry");
+}
+
+#[test]
+fn product_route_identity_slots_are_an_error() {
+    let src = r#"<column style({ type({ size: xs }) })><h1>x</h1></column>"#;
+    let path = "apps/sail-site/routes/docs/page.sail";
     let diags = check_all(src, Some(path.as_ref()), &[], None);
     assert!(
         diags
             .iter()
             .any(|d| d.rule.as_deref() == Some("sail-style-privilege")),
-        "check_all must name sail-style-privilege: {diags:?}"
+        "L3 slots must error: {diags:?}"
     );
 }
 

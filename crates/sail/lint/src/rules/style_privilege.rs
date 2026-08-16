@@ -1,8 +1,8 @@
-//! `sail-style-privilege` — L3 routes/pages may not write Style (SPEC-STYLE-ARCH-1).
+//! `sail-style-privilege` — L3 is names + geometry; L2 is presets (SPEC-STYLE-BUCKETS-1).
 //!
-//! Privilege is path + file kind. Config cannot grant Full. M1 flips None on
-//! for product trees (`apps/**`, `packages/sail/blocks/**`). Identities
-//! slot-reject is M2 — this rule only fires None.
+//! Privilege is path + file kind. Config cannot grant Full. Routes may spend
+//! named identities (`pad(page)`, `size(measure)`, `type(label)`). Slot
+//! assembly (`type({ size: xs })`, `pad({ x: 8 })`) stays L1-only.
 
 use std::path::Path;
 
@@ -11,6 +11,7 @@ use crate::rules::ambient::finding;
 
 pub const RULE_ID: &str = "sail-style-privilege";
 
+#[allow(dead_code)] // kept as the extract-L2 teaching line for slot errors
 const REMEDY: &str = "L3 routes write tags, not Style. Use an existing L1 tag \
      (`<label>`, `<card>`, `<button>`), extract an L2 component that spends \
      presets, or extend the theme. Chrome tags (`<pane>`, `<toolbar>`, `<form>`) \
@@ -22,27 +23,13 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
         return Vec::new();
     }
     match spinnaker::privilege_for_path(path) {
-        spinnaker::Privilege::None => none_findings(path, source),
-        spinnaker::Privilege::Identities => identities_findings(path, source),
+        // L3 (None) spends the same Style table as L2: names + geometry.
+        // Identity *assembly* (slots) stays L1-only.
+        spinnaker::Privilege::None | spinnaker::Privilege::Identities => {
+            identities_findings(path, source)
+        }
         spinnaker::Privilege::Full => Vec::new(),
     }
-}
-
-fn none_findings(path: &Path, source: &str) -> Vec<Finding> {
-    let mut findings = Vec::new();
-    for (offset, kind) in style_sites(source) {
-        if let Some(f) = finding(
-            path,
-            source,
-            offset,
-            RULE_ID,
-            format!("Style is illegal in a route ({kind}). {REMEDY}"),
-            REMEDY,
-        ) {
-            findings.push(f);
-        }
-    }
-    findings
 }
 
 // Slot form only. `pad(page)` / `pad(4)` / `margin(auto)` are presets — L2 may
@@ -155,6 +142,7 @@ fn identity_sites(source: &str) -> Vec<(usize, &'static str)> {
 }
 
 /// Sites of product Style: `style(` attach or `style name =` / `style foo =`.
+#[allow(dead_code)] // kept: L3 used to ban every Style site; Identities scans slots instead.
 fn style_sites(source: &str) -> Vec<(usize, &'static str)> {
     let bytes = source.as_bytes();
     let mut out = Vec::new();
@@ -260,20 +248,20 @@ mod tests {
     }
 
     #[test]
-    fn route_style_call_errors() {
-        let src = "<column style({ pad(6) })></column>";
-        let findings = check(&route(), src);
-        assert_eq!(findings.len(), 1, "{findings:?}");
-        assert_eq!(findings[0].rule, RULE_ID);
-        assert_eq!(findings[0].severity, Severity::Error);
-        assert!(findings[0].message.contains("illegal"));
+    fn route_name_and_geometry_are_legal() {
+        let src = "style shell = { size(measure).pad(page) }\n<column style(shell)></column>";
+        assert!(
+            check(&route(), src).is_empty(),
+            "L3 may spend names + geometry: {src}"
+        );
     }
 
     #[test]
-    fn route_named_style_errors() {
-        let src = "style shell = { pad(6).bg(background) }\n<column style(shell)></column>";
+    fn route_identity_slots_error() {
+        let src = "<column style({ type({ size: xs }) })></column>";
         let findings = check(&route(), src);
-        assert!(findings.len() >= 2, "const + use: {findings:?}");
+        assert_eq!(findings.len(), 1, "{findings:?}");
+        assert!(findings[0].message.contains("preset"), "{findings:?}");
     }
 
     #[test]
