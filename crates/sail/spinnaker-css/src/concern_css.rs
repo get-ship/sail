@@ -930,10 +930,18 @@ pub fn lower_slot_value(
             });
         }
         PaintArg::Token(tok) => {
+            let negative = tok.starts_with('-') && tok.len() > 1;
             let bare = tok
                 .strip_prefix('-')
                 .filter(|r| !r.is_empty())
                 .unwrap_or(tok);
+            let signed = |lowered: String| {
+                if negative {
+                    format!("calc(-1 * {lowered})")
+                } else {
+                    lowered
+                }
+            };
             if bare == "hairline" && slot.name == "width" {
                 "var(--border-width)".into()
             } else if bare == "control-stroke" && slot.name == "width" {
@@ -962,7 +970,7 @@ pub fn lower_slot_value(
                 }
             } else if let Some(scale) = slot.scale {
                 if let Some(lowered) = scales::lower(scale, bare) {
-                    lowered
+                    signed(lowered)
                 } else if matches!(bare, "transparent" | "current" | "currentColor") {
                     if bare == "current" {
                         "currentColor".into()
@@ -1017,7 +1025,8 @@ fn css_name_for_bind(name: &str) -> String {
 #[cfg(test)]
 mod measure_column {
     use super::*;
-    use spinnaker::concerns::find_concern;
+    use spinnaker::concerns::{find_concern, find_slot};
+    use spinnaker::ir::PaintArg;
     use spinnaker::tokens::find_composite;
 
     #[test]
@@ -1048,5 +1057,13 @@ mod measure_column {
                     .any(|(p, v)| p == "margin-right" && v == "auto"),
             "measure column must center: {decls:?}"
         );
+    }
+
+    #[test]
+    fn margin_slot_negatives_emit_calc() {
+        let spec = find_concern("margin").expect("margin concern");
+        let slot = find_slot(spec, "t").expect("margin t");
+        let (_, css) = lower_slot_value(spec, slot, &PaintArg::Token("-5".into())).expect("lower");
+        assert_eq!(css, "calc(-1 * var(--space-5))", "{css}");
     }
 }

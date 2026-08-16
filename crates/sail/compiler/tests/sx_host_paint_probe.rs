@@ -963,6 +963,36 @@ fn card_host_paint_bulk_on_host_sx() {
 }
 
 #[test]
+fn card_image_slot_bleeds_via_group_padding() {
+    let src = include_str!("../stdlib/card/card.sail");
+    let out = compile_element(src, "card").expect("card compiles");
+    assert!(
+        src.contains(r#"slot name="image""#)
+            && src.contains("group()")
+            && src.contains("group-padding-lg")
+            && (src.contains("t: -5") || src.contains("mt(-5)")),
+        "card image slot must bleed via group-padding + negative margin sx"
+    );
+    assert!(
+        out.structure_html.contains(r#"slot name="image""#)
+            && out.structure_html.contains("sail-grp")
+            && (out.structure_html.contains("grouppaddinglg-margin")
+                || out.skin_css.contains("grouppaddinglg")),
+        "image wrap must carry group-padding-lg bleed class:\nstruct={}\nskin={}",
+        out.structure_html,
+        out.skin_css
+    );
+    assert!(
+        out.skin_css.contains(".sail-grp[padding='lg']")
+            && !out.skin_css.contains("[padding='lg'].s-paddinglg-margin")
+            && out.skin_css.contains("calc(-1 * var(--space-5))")
+            && out.skin_css.contains("calc(-1 * var(--space-6))"),
+        "pad-lg image bleed must be host-descendant + negative t/x:\n{}",
+        out.skin_css
+    );
+}
+
+#[test]
 fn navbar_host_paint_on_sx_cva() {
     // Layout + paint owned by navbar.sail (layout keywords + Style match/compound).
     // No --rail-offset / --nav-*. Sticky rail uses top-0 bottom-0 +

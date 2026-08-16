@@ -139,6 +139,7 @@ pub fn when_target(key: &str) -> Option<WhenTarget> {
                     "orientation",
                     "type",
                     "placement",
+                    "padding",
                 ] {
                     if let Some(v) = base.strip_prefix(&format!("{attr}-")) {
                         if !v.is_empty()

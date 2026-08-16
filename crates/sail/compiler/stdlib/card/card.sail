@@ -19,7 +19,9 @@
     spotlight = false
   }
 
-  style base = {position(relative).overflow({ all: clip }).pad({ y: 4, x: 5 }).isolate().radius(lg).border({ color: border, width: 1 }).fg(card-foreground).elevation({ shadow: card-rest }).bg(card).filter({ backdrop: card-backdrop-filter }), animate: { transition: play(surface, fast) }}
+  // group() so image/header/footer chrome can when({ group-padding-* }).
+  // Child match { padding } keys the child's own attr, so bleed never fires.
+  style base = {position(relative).overflow({ all: clip }).pad({ y: 4, x: 5 }).isolate().group().radius(lg).border({ color: border, width: 1 }).fg(card-foreground).elevation({ shadow: card-rest }).bg(card).filter({ backdrop: card-backdrop-filter }), animate: { transition: play(surface, fast) }}
   style outline = {bg(transparent)}
   style soft = {bg(muted).border({ color: border })}
   style elevated = {elevation({ shadow: lg }).border({ color: border-subtle })}
@@ -29,7 +31,7 @@
   style padSm = {pad({ y: 2, x: 3 })}
   style padLg = {pad({ y: 5, x: 6 })}
   // Header/footer chrome: negative margins cancel host pad so chrome bleeds edge-to-edge.
-  // Each step mirrors the padding match (sm/md/lg/none) — never hard-code padMd only.
+  // Each step mirrors the host padding axis (sm/md/lg/none) via group-padding-*.
   style headerChromeBase = {border({ color: border-subtle, width: 1, edge: b }).type({ family: heading })}
   style headerChromeMd = {pad({ x: 5, y: 4 }).margin({ t: -4, x: -5, b: 3 })}
   style headerChromeSm = {pad({ x: 3, y: 2 }).margin({ t: -2, x: -3, b: 2 })}
@@ -69,18 +71,18 @@
     ]})
 >
   <div
-    style(imageWrap, {match: { padding: { md: imageMd, sm: imageSm, lg: imageLg, none: imageNone } }, when: {empty: display(none)}})
+    style(imageWrap, {when: {empty: display(none), group-padding-md: imageMd, group-padding-sm: imageSm, group-padding-lg: imageLg, group-padding-none: imageNone}})
   >
     <slot name="image"></slot>
   </div>
   <div
-    style(headerChromeBase, {match: { padding: { md: headerChromeMd, sm: headerChromeSm, lg: headerChromeLg, none: headerChromeNone } }, when: {empty: display(none)}})
+    style(headerChromeBase, {when: {empty: display(none), group-padding-md: headerChromeMd, group-padding-sm: headerChromeSm, group-padding-lg: headerChromeLg, group-padding-none: headerChromeNone}})
   >
     <slot name="header"></slot>
   </div>
   <slot></slot>
   <div
-    style(footerChromeBase, {match: { padding: { md: footerChromeMd, sm: footerChromeSm, lg: footerChromeLg, none: footerChromeNone } }, when: {empty: display(none)}})
+    style(footerChromeBase, {when: {empty: display(none), group-padding-md: footerChromeMd, group-padding-sm: footerChromeSm, group-padding-lg: footerChromeLg, group-padding-none: footerChromeNone}})
   >
     <slot name="footer"></slot>
   </div>

@@ -463,6 +463,61 @@ mod tests {
     }
 
     #[test]
+    fn group_variant_when_emits_host_attr() {
+        let (style, diags) = parse(
+            "style({ when: { group-variant-dots: { display(none) }, group-variant-bars: { display(none) } } })",
+        );
+        assert!(
+            diags.is_empty(),
+            "{:?}",
+            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
+        let (_, css) = lower_style(&style, &HashMap::new());
+        assert!(css.contains(".sail-grp[variant='dots']"), "{css}");
+        assert!(css.contains(".sail-grp[variant='bars']"), "{css}");
+        assert!(
+            !css.contains("data-state"),
+            "variant is a host attr, not data-state: {css}"
+        );
+    }
+
+    #[test]
+    fn group_padding_when_emits_host_attr() {
+        let (style, diags) = parse("style({ when: { group-padding-lg: { display(none) } } })");
+        assert!(
+            diags.is_empty(),
+            "{:?}",
+            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
+        let (_, css) = lower_style(&style, &HashMap::new());
+        assert!(css.contains(".sail-grp[padding='lg']"), "{css}");
+        assert!(
+            !css.contains("data-state"),
+            "padding is a host attr, not data-state: {css}"
+        );
+    }
+
+    #[test]
+    fn margin_slot_negatives_emit_calc() {
+        let (style, diags) = parse("style({ margin({ t: -5, x: -6, b: 5 }) })");
+        assert!(
+            diags.is_empty(),
+            "{:?}",
+            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
+        let (_, css) = lower_style(&style, &HashMap::new());
+        assert!(
+            css.contains("calc(-1 * var(--space-5))") && css.contains("calc(-1 * var(--space-6))"),
+            "image bleed negatives must survive slot lower: {css}"
+        );
+        assert!(
+            css.contains("margin-bottom:var(--space-5)")
+                || css.contains("margin-bottom: var(--space-5)"),
+            "positive b:5 must stay positive: {css}"
+        );
+    }
+
+    #[test]
     fn group_caught_and_group_inline_when_emit_ancestors() {
         let (style, diags) = parse(
             "style({  group(), when: { group-caught: {  display(none)  }, group-inline: {  display(none)  } } })",
