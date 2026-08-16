@@ -485,6 +485,165 @@ fn create_writes_four_entry_tree_and_check_is_green() {
     );
 }
 
+/// FIRST-RUN: create → `sail build` with no `bun install` and no monorepo cwd.
+/// `--bundle-framework` still needs `@ship/*` on disk; the no-flag build must
+/// not. Hello-world output has no `.wasm` (EXT-1 E5).
+#[test]
+fn create_then_build_without_install() {
+    let tmp = TempDir::new().expect("tempdir");
+    let app = tmp.path().join(unique_stem("create-build"));
+    let create = Command::new(sail_bin())
+        .args(["create", app.to_str().unwrap()])
+        .current_dir(tmp.path())
+        .output()
+        .expect("spawn sail create");
+    assert!(
+        create.status.success(),
+        "create failed: {}",
+        String::from_utf8_lossy(&create.stderr)
+    );
+    assert!(
+        !app.join("node_modules").exists(),
+        "create must not write node_modules"
+    );
+
+    let build = Command::new(sail_bin())
+        .args(["build", "--project", app.to_str().unwrap()])
+        .current_dir(tmp.path())
+        .output()
+        .expect("spawn sail build");
+    assert!(
+        build.status.success(),
+        "sail build after create (no install) failed (status {:?}):\nstdout:{}\nstderr:{}",
+        build.status,
+        String::from_utf8_lossy(&build.stdout),
+        String::from_utf8_lossy(&build.stderr),
+    );
+    let index = app.join("dist/index.html");
+    assert!(index.is_file(), "build must emit dist/index.html");
+    let html = std::fs::read_to_string(&index).expect("index.html");
+    assert!(
+        html.contains("importmap") && html.contains("root"),
+        "built index missing importmap/#root:\n{html}"
+    );
+    assert!(
+        html.contains("sail-default-theme") && html.contains("sail"),
+        "built index must stamp the sail brand default:\n{html}"
+    );
+    let wasm = walk_ext(&app.join("dist"), "wasm");
+    assert!(
+        wasm.is_empty(),
+        "hello-world build must not ship wasm: {wasm:?}"
+    );
+}
+
+/// FIRST-RUN: `sail dev` on a created app outside the monorepo serves HTML.
+#[test]
+fn create_then_dev_serves() {
+    let tmp = TempDir::new().expect("tempdir");
+    let app = tmp.path().join(unique_stem("create-dev"));
+    let create = Command::new(sail_bin())
+        .args(["create", app.to_str().unwrap()])
+        .current_dir(tmp.path())
+        .output()
+        .expect("spawn sail create");
+    assert!(
+        create.status.success(),
+        "create failed: {}",
+        String::from_utf8_lossy(&create.stderr)
+    );
+
+    let port = free_port();
+    let addr = format!("127.0.0.1:{port}");
+    let mut child = Command::new(sail_bin())
+        .args(["dev", "--project", app.to_str().unwrap(), "--addr", &addr])
+        .current_dir(tmp.path())
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::piped())
+        .spawn()
+        .expect("spawn sail dev");
+
+    let body = match wait_http_get(&addr, "/", std::time::Duration::from_secs(30)) {
+        Ok(b) => b,
+        Err(e) => {
+            let _ = child.kill();
+            let (stdout, stderr) = match child.wait_with_output() {
+                Ok(o) => (
+                    String::from_utf8_lossy(&o.stdout).into_owned(),
+                    String::from_utf8_lossy(&o.stderr).into_owned(),
+                ),
+                Err(wait_err) => (String::new(), wait_err.to_string()),
+            };
+            panic!("sail dev did not serve {addr}: {e}\nstdout:{stdout}\nstderr:{stderr}");
+        }
+    };
+    let _ = child.kill();
+    let _ = child.wait();
+
+    assert!(
+        body.contains("<html") && body.contains("sail-default-theme"),
+        "dev index missing html/theme meta:\n{body}"
+    );
+    assert!(
+        body.contains("content=\"sail\""),
+        "dev must paint the sail brand default:\n{body}"
+    );
+}
+
+fn walk_ext(dir: &std::path::Path, ext: &str) -> Vec<std::path::PathBuf> {
+    let mut out = Vec::new();
+    let Ok(rd) = std::fs::read_dir(dir) else {
+        return out;
+    };
+    for ent in rd.flatten() {
+        let p = ent.path();
+        if p.is_dir() {
+            out.extend(walk_ext(&p, ext));
+        } else if p.extension().and_then(|e| e.to_str()) == Some(ext) {
+            out.push(p);
+        }
+    }
+    out
+}
+
+fn free_port() -> u16 {
+    let listener = std::net::TcpListener::bind("127.0.0.1:0").expect("bind :0");
+    let port = listener.local_addr().expect("local_addr").port();
+    drop(listener);
+    port
+}
+
+fn wait_http_get(addr: &str, path: &str, budget: std::time::Duration) -> Result<String, String> {
+    let start = std::time::Instant::now();
+    let mut last = String::from("no attempt");
+    while start.elapsed() < budget {
+        match http_get(addr, path) {
+            Ok(body) => return Ok(body),
+            Err(e) => last = e,
+        }
+        std::thread::sleep(std::time::Duration::from_millis(200));
+    }
+    Err(last)
+}
+
+fn http_get(addr: &str, path: &str) -> Result<String, String> {
+    use std::io::{Read, Write};
+    let mut stream = std::net::TcpStream::connect(addr).map_err(|e| e.to_string())?;
+    stream
+        .set_read_timeout(Some(std::time::Duration::from_secs(2)))
+        .ok();
+    let req = format!("GET {path} HTTP/1.1\r\nHost: {addr}\r\nConnection: close\r\n\r\n");
+    stream
+        .write_all(req.as_bytes())
+        .map_err(|e| e.to_string())?;
+    let mut buf = String::new();
+    stream.read_to_string(&mut buf).map_err(|e| e.to_string())?;
+    if !buf.starts_with("HTTP/1.1 200") && !buf.starts_with("HTTP/1.0 200") {
+        return Err(format!("not 200: {}", buf.lines().next().unwrap_or("")));
+    }
+    Ok(buf)
+}
+
 /// `sail check` warns (does not fail) when `dist/` is git-tracked.
 #[test]
 fn check_warns_when_dist_is_tracked() {
