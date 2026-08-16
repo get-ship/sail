@@ -21,7 +21,7 @@
   style variantBanner = {radius(none).elevation(none).size({ w: full }).self(stretch)}
   style ico = {size(control-h-xs).radius(md).bg(muted).fg(primary)}
   style title = {type({ weight: semibold })}
-  style body = {fg(primary)}
+  style body = {fg(foreground)}
   style actions = {margin({ t: 2 })}
   style close = {display(none).self(start).size(control-h-xs).pad(0).border({ width: 0 }).radius(sm).bg(transparent).fg(primary).cursor(pointer), animate: { transition: play(colors, fast) }}
   style xmark = {display(block).size(icon-size-sm)}
