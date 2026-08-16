@@ -23,7 +23,10 @@
   // Cursor is NOT on base: base cursor(pointer) + when-disabled cursor(not-allowed) both
   // stamp classes and pointer was winning in the cascade. Match on the disabled prop so
   // only one cursor utility is active.
-  style base = {display(inline-flex).position(relative).appearance(none).radius(md).border({ width: control-stroke, style: solid }).isolate().controlFrame().select(none).type({ weight: medium, leading: none, wrap: nowrap }), when: {hover: controlLift(), active: press()}, animate: { transition: play(control, fast) }}
+  // w/min-w max: a column stretches items and `.sail-col>*` zeros min-width.
+  // A control hugs its label; authors who want a block button set size({ w: full }).
+  // Icon+label pack is the inner <row cluster> — not Style gap(), not host CSS.
+  style base = {display(inline-flex).position(relative).appearance(none).radius(md).border({ width: control-stroke, style: solid }).isolate().controlFrame().select(none).size({ w: max, min-w: max }).type({ weight: medium, leading: none, wrap: nowrap }), when: {hover: controlLift(), active: press()}, animate: { transition: play(control, fast) }}
   style pill = {radius(full)}
   style cursorOn = {cursor(pointer)}
   style cursorOff = {cursor(not-allowed).filter({ opacity: 50 })}
@@ -59,5 +62,7 @@
       {tone: muted, variant: ghost, fg(muted-foreground)},
     ]})
 >
-  <slot></slot>
+  <row cluster gap="2">
+    <slot></slot>
+  </row>
 </button>

@@ -144,6 +144,132 @@ fn top_level_element_spans(source: &str, from: usize) -> Vec<(Span, usize)> {
     out
 }
 
+/// Native inner pack: if the host's only element child wraps the default
+/// `<slot>` (`<button><row cluster gap="2"><slot></slot></row></button>`),
+/// return that child's open tag. Slot-as-direct-child (label) or extra
+/// siblings (req mark) return None so stamp-only stays stamp-only.
+fn extract_native_inner_pack(source: &str, host: &str) -> Option<String> {
+    let body_start = skip_preamble(source);
+    let roots = top_level_element_spans(source, body_start);
+    let (name_span, host_end) = roots.first().copied()?;
+    if &source[name_span.start..name_span.end] != host {
+        return None;
+    }
+    let host_open_start = name_span.start.saturating_sub(1);
+    let rel = source.get(host_open_start..host_end)?.find('>')?;
+    let inner_start = host_open_start + rel + 1;
+    let close = format!("</{host}>");
+    if host_end < close.len() {
+        return None;
+    }
+    let inner_end = host_end - close.len();
+    if inner_start >= inner_end {
+        return None;
+    }
+    let kids: Vec<_> = top_level_element_spans(source, inner_start)
+        .into_iter()
+        .filter(|(span, _)| span.start < inner_end)
+        .collect();
+    if kids.len() != 1 {
+        return None;
+    }
+    let (kid_name, kid_end) = kids[0];
+    let kid_tag = &source[kid_name.start..kid_name.end];
+    if kid_tag == "slot" {
+        return None;
+    }
+    let kid_start = kid_name.start.saturating_sub(1);
+    if kid_start >= source.len() || !source[kid_start..].starts_with('<') {
+        return None;
+    }
+    let kid_html = source.get(kid_start..kid_end.min(inner_end))?;
+    if !contains_default_slot(kid_html) {
+        return None;
+    }
+    let gt = kid_html.find('>')?;
+    Some(kid_html[..=gt].to_string())
+}
+
+/// Skip leading comments plus `<scope>` / `<style>` so the template root
+/// is the first real host tag (button.sail opens with a file comment).
+fn skip_preamble(source: &str) -> usize {
+    let mut i = 0usize;
+    loop {
+        let rest = source[i..].trim_start();
+        i += source[i..].len() - rest.len();
+        if source[i..].starts_with("<!--") {
+            match source[i..].find("-->") {
+                Some(off) => i += off + 3,
+                None => return i,
+            }
+            continue;
+        }
+        if rest.starts_with("<scope") {
+            match source[i..].find("</scope>") {
+                Some(off) => i += off + "</scope>".len(),
+                None => return i,
+            }
+            continue;
+        }
+        if rest.starts_with("<style") {
+            match source[i..].find("</style>") {
+                Some(off) => i += off + "</style>".len(),
+                None => return i,
+            }
+            continue;
+        }
+        return i;
+    }
+}
+
+fn contains_default_slot(html: &str) -> bool {
+    let bytes = html.as_bytes();
+    let mut i = 0;
+    while i + 5 <= bytes.len() {
+        if html[i..].starts_with("<slot")
+            && bytes
+                .get(i + 5)
+                .is_some_and(|&b| b.is_ascii_whitespace() || b == b'>' || b == b'/')
+        {
+            let mut k = i + 5;
+            let mut quote: Option<u8> = None;
+            while k < bytes.len() {
+                match (quote, bytes[k]) {
+                    (Some(q), b) if b == q => quote = None,
+                    (None, b'"') | (None, b'\'') => quote = Some(bytes[k]),
+                    (None, b'>') => break,
+                    _ => {}
+                }
+                k += 1;
+            }
+            if k >= bytes.len() {
+                return false;
+            }
+            let open = &html[i..=k];
+            if open_tag_has_name(open).is_none() {
+                return true;
+            }
+        }
+        i += 1;
+    }
+    false
+}
+
+fn open_tag_has_name(open: &str) -> Option<()> {
+    let inner = open
+        .trim_start_matches('<')
+        .trim_end_matches('>')
+        .trim_end_matches('/');
+    let after = inner.split_once(char::is_whitespace)?.1;
+    for part in after.split_whitespace() {
+        let name = part.split('=').next().unwrap_or("");
+        if name == "name" {
+            return Some(());
+        }
+    }
+    None
+}
+
 /// The element-mode artifacts.
 #[derive(Debug, Clone)]
 pub struct ElementOutput {
@@ -151,10 +277,15 @@ pub struct ElementOutput {
     /// (Unused for native-kind elements — their skin keys on the tag.)
     pub root_class: String,
     /// NATIVE-KIND: the template root IS the element tag (label → <label>).
-    /// The tag already exists in HTML; there is nothing to splice — the
-    /// element is skin + manifest only, and rewriting real uses would
-    /// clobber every ordinary occurrence of the tag.
+    /// The tag already exists in HTML; host paint is stamped, not spliced —
+    /// rewriting the host would clobber every real HTML use. An inner pack
+    /// around the default slot (button's `<row cluster>`) still wraps
+    /// use-site children; siblings of the slot (label's req mark) do not.
     pub native: bool,
+    /// Authored open tag of the single child that wraps the default slot
+    /// (`<row cluster gap="2">`). Native lowering wraps use-site children
+    /// with this; `None` when the slot is a direct host child.
+    pub inner_pack: Option<String>,
     /// Static structure snippet (single root element, slots preserved).
     pub structure_html: String,
     /// The class string `serialize_static` stamped on the structure root:
@@ -331,9 +462,16 @@ pub fn emit_element_with_bindings(
         .map(|b| (b.scope_name.clone(), b.unit))
         .collect();
 
+    let inner_pack = if native {
+        extract_native_inner_pack(source, name)
+    } else {
+        None
+    };
+
     Ok(ElementOutput {
         root_class,
         native,
+        inner_pack,
         structure_html: structure,
         host_classes,
         default_attrs,
@@ -487,6 +625,22 @@ fn serialize_static(
             Instr::Element(c) => serialize_static(c, root_class, false, out)?,
             Instr::StaticText { text, .. } => out.push_str(text),
             Instr::Comment { .. } => {}
+            // Bare prop text `{title}` / `{title()}` is a compile-time hole.
+            // splice_element fills it from the use-site attr — first paint,
+            // no runtime textContent. Anything richer is a component.
+            Instr::DynamicText { expr } => {
+                let Some(prop) = simple_prop_text(&expr.source) else {
+                    return Err(CompileError::new(format!(
+                        "element mode: <{}> contains control flow or dynamic content — \
+                         this is a component; compile it with --component-name",
+                        el.tag
+                    ))
+                    .with_category(RULE_ID));
+                };
+                out.push_str("<!--sail:prop:");
+                out.push_str(prop);
+                out.push_str("-->");
+            }
             _ => {
                 return Err(CompileError::new(format!(
                     "element mode: <{}> contains control flow or dynamic content — \
@@ -499,6 +653,26 @@ fn serialize_static(
     }
     out.push_str(&format!("</{}>", el.tag));
     Ok(())
+}
+
+/// Bare prop identifier, optionally called (`title` / `title()`). Anything
+/// with operators, member access, or literals is a component expression.
+fn simple_prop_text(src: &str) -> Option<&str> {
+    let s = src.trim();
+    let s = s.strip_suffix("()").unwrap_or(s).trim();
+    if s.is_empty() {
+        return None;
+    }
+    let mut chars = s.chars();
+    let first = chars.next()?;
+    if !first.is_ascii_alphabetic() && first != '_' {
+        return None;
+    }
+    if chars.all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-') {
+        Some(s)
+    } else {
+        None
+    }
 }
 
 /// The root element's `class` value out of a serialized structure snippet —

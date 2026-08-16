@@ -977,6 +977,33 @@ fn lower_into(
                     ));
                     // Same bookkeeping as the spliced path: the tag was seen.
                     css_done.insert(tag);
+                    // Inner pack (button's `<row cluster>`): wrap use-site
+                    // children. Host stays stamped — not spliced. Label-style
+                    // extras stay off the use site (`inner_pack` is None).
+                    if let Some(pack_open) = el.out.inner_pack.as_deref() {
+                        if !crate::emit::element::is_void_element(tag) {
+                            if let Some(end) = matching_close(source, k + 1, tag) {
+                                let close = format!("</{tag}>");
+                                let child_end = end.saturating_sub(close.len());
+                                let children = if child_end > k + 1 {
+                                    &source[k + 1..child_end]
+                                } else {
+                                    ""
+                                };
+                                let mut lowered = String::new();
+                                lower_into(children, registry, &mut lowered, css, css_done)?;
+                                out.push_str(pack_open);
+                                out.push_str(&lowered);
+                                if let Some(pack_tag) = pack_open_tag_name(pack_open) {
+                                    out.push_str("</");
+                                    out.push_str(pack_tag);
+                                    out.push('>');
+                                }
+                                i = child_end;
+                                continue 'outer;
+                            }
+                        }
+                    }
                     i = k + 1;
                     continue 'outer;
                 }
@@ -1087,6 +1114,15 @@ fn lower_into(
         i = next;
     }
     Ok(())
+}
+
+fn pack_open_tag_name(open: &str) -> Option<&str> {
+    let rest = open.strip_prefix('<')?;
+    let name = rest
+        .split(|c: char| c.is_ascii_whitespace() || c == '>' || c == '/')
+        .next()
+        .unwrap_or("");
+    if name.is_empty() { None } else { Some(name) }
 }
 
 /// Byte offset just past the close tag matching the `<tag …>` open whose
@@ -1674,8 +1710,53 @@ fn splice_element(
     // matching slot are dropped (shadow parity, same as the runtime).
     let (default_children, named_children) = project_children(children);
     let body = fill_slots(rest, &default_children, &named_children);
+    let body = fill_prop_holes(&body, &snippet_attrs);
     outb.push_str(&body);
     outb
+}
+
+/// Replace `<!--sail:prop:title-->` with the use-site attr (static first
+/// paint). `{expr}` values stay in the lowered template as a page binding.
+fn fill_prop_holes(body: &str, attrs: &[(String, String)]) -> String {
+    let mut out = String::with_capacity(body.len());
+    let mut rest = body;
+    const OPEN: &str = "<!--sail:prop:";
+    while let Some(start) = rest.find(OPEN) {
+        out.push_str(&rest[..start]);
+        let after = &rest[start + OPEN.len()..];
+        let Some(end) = after.find("-->") else {
+            out.push_str(&rest[start..]);
+            return out;
+        };
+        let name = after[..end].trim();
+        let raw = attrs
+            .iter()
+            .find(|(n, _)| n == name || camel_eq(n, name))
+            .map(|(_, v)| v.trim_matches(['"', '\'']).to_string())
+            .unwrap_or_default();
+        if raw.starts_with('{') {
+            out.push_str(&raw);
+        } else {
+            out.push_str(&html_escape_text(&raw));
+        }
+        rest = &after[end + 3..];
+    }
+    out.push_str(rest);
+    out
+}
+
+fn html_escape_text(s: &str) -> String {
+    let mut out = String::with_capacity(s.len());
+    for c in s.chars() {
+        match c {
+            '&' => out.push_str("&amp;"),
+            '<' => out.push_str("&lt;"),
+            '>' => out.push_str("&gt;"),
+            '"' => out.push_str("&quot;"),
+            _ => out.push(c),
+        }
+    }
+    out
 }
 
 fn camel_eq(a: &str, b: &str) -> bool {
@@ -2329,7 +2410,9 @@ fn lower_layout(source: &str) -> (String, String) {
                 // and the base CSS for the inline variant. Detected once
                 // here so the rest of the loop sees a consistent base; the
                 // attribute is consumed (not passed through) below.
-                let inline = t.attrs.iter().any(|(n, _)| n == "inline");
+                // `cluster` absorbs inline + nowrap: hug, one line, intrinsic kids.
+                let cluster = t.tag == "row" && t.attrs.iter().any(|(n, _)| n == "cluster");
+                let inline = cluster || t.attrs.iter().any(|(n, _)| n == "inline");
                 layout::base(&t.tag, inline)
             }
         {
@@ -2357,14 +2440,14 @@ fn lower_layout(source: &str) -> (String, String) {
             // `flex-wrap:nowrap` override on top of the base's wrap. Emitted
             // AFTER the base rule (see below) so source order wins — no
             // specificity game. Detected once here; consumed (not passed
-            // through) in the attr loop below.
-            let nowrap = t.tag == "row" && t.attrs.iter().any(|(n, _)| n == "nowrap");
+            // through) in the attr loop below. `cluster` implies nowrap.
+            let cluster = t.tag == "row" && t.attrs.iter().any(|(n, _)| n == "cluster");
+            let nowrap = cluster || (t.tag == "row" && t.attrs.iter().any(|(n, _)| n == "nowrap"));
             for &prop in layout::tag_props(&t.tag) {
-                // `inline`/`nowrap` are boolean axes handled outside the
-                // enum-modifier machinery — never fed into `lower_axis` (which
-                // only knows enum-style modifiers) and never emitted as raw
-                // HTML attrs.
-                if prop == "inline" || prop == "nowrap" {
+                // `inline`/`nowrap`/`cluster` are boolean axes handled outside
+                // the enum-modifier machinery — never fed into `lower_axis`
+                // and never emitted as raw HTML attrs.
+                if prop == "inline" || prop == "nowrap" || prop == "cluster" {
                     continue;
                 }
                 if skip_props.contains(prop) {
@@ -2400,11 +2483,23 @@ fn lower_layout(source: &str) -> (String, String) {
             // (`.sail-row.sail-nowrap`, specificity 0-2-0) beats the base
             // (0-1-0) in every load order — no order dependency, no !important.
             if nowrap {
-                let rule = ".sail-row.sail-nowrap{flex-wrap:nowrap}".to_string();
+                let rule = if cluster {
+                    ".sail-row-i.sail-nowrap{flex-wrap:nowrap}".to_string()
+                } else {
+                    ".sail-row.sail-nowrap{flex-wrap:nowrap}".to_string()
+                };
                 if seen.insert(rule.clone()) {
                     css.push_str(&rule);
                 }
                 static_parts.push("sail-nowrap".to_string());
+            }
+            if cluster {
+                // Compound beats `.sail-row-i>*{min-width:0}` in any sheet order.
+                let rule = ".sail-row-i.sail-cluster>*{min-width:auto;flex:0 0 auto}".to_string();
+                if seen.insert(rule.clone()) {
+                    css.push_str(&rule);
+                }
+                static_parts.push("sail-cluster".to_string());
             }
             let mut rest = String::new();
             for (name, value) in &t.attrs {
@@ -2417,7 +2512,7 @@ fn lower_layout(source: &str) -> (String, String) {
                     // modifier, so it joins the consumed set here to keep the
                     // `inline` attribute from reappearing on the div.
                     "gap" | "align" | "justify" | "min" | "flow" | "cols" | "rows"
-                    | "direction" | "tracks" | "inline" | "nowrap" => {}
+                    | "direction" | "tracks" | "inline" | "nowrap" | "cluster" => {}
                     "class" if value.starts_with('{') => {
                         dyn_parts.push(format!("({})", &value[1..value.len() - 1]));
                     }
@@ -2871,20 +2966,32 @@ fn find_outside_comments(source: &str, needle: &str) -> Option<usize> {
 pub fn check_sfc_block_order(source: &str) -> Result<(), CompileError> {
     let scope_at = find_outside_comments(source, "<scope");
     let controller_at = find_outside_comments(source, "<controller");
+    let partial_at = find_outside_comments(source, "<partial");
     match (scope_at, controller_at) {
         (Some(scope_pos), Some(controller_pos)) if controller_pos < scope_pos => {
-            Err(CompileError::new(
+            return Err(CompileError::new(
                 "`<scope>` must come before `<controller>` — block order is grammar. \
-                 Put the `<scope>` block first, then `<controller>`, then the template.",
+                 Put the `<scope>` block first, then `<controller>`, then `<partial>`, then the template.",
             )
             .with_category("sail-block-order")
             .with_span(Span::new(
                 controller_pos,
                 controller_pos + "<controller".len(),
-            )))
+            )));
         }
-        _ => Ok(()),
+        _ => {}
     }
+    if let (Some(controller_pos), Some(partial_pos)) = (controller_at, partial_at) {
+        if partial_pos < controller_pos {
+            return Err(CompileError::new(
+                "`<partial>` must come after `<controller>` — block order is grammar. \
+                 `<scope>`, then `<controller>`, then `<partial>`, then the template.",
+            )
+            .with_category("sail-block-order")
+            .with_span(Span::new(partial_pos, partial_pos + "<partial".len())));
+        }
+    }
+    Ok(())
 }
 
 /// Extract an inline `<controller>` block for the single-file-component model.
@@ -3776,6 +3883,19 @@ export default controller(() => {
     }
 
     #[test]
+    fn tab_title_attr_fills_prop_hole() {
+        let out = preprocess(r#"<tabs><tab title="One">Panel</tab></tabs>"#).expect("preprocess");
+        assert!(
+            out.contains(">One<") || out.contains(">One\n"),
+            "use-site title must fill <!--sail:prop:title-->:\n{out}"
+        );
+        assert!(
+            !out.contains("<!--sail:prop:title-->"),
+            "prop hole must not survive a static title:\n{out}"
+        );
+    }
+
+    #[test]
     fn project_children_partitions_by_slot_attr() {
         let (def, named) =
             project_children(r#"<i slot="leading">L</i>Body<b slot="actions">A</b>more"#);
@@ -4336,6 +4456,28 @@ export default controller(() => {
         assert!(
             out.contains(".sail-row.sail-nowrap{flex-wrap:nowrap}"),
             "nowrap rule: {out}"
+        );
+    }
+
+    #[test]
+    fn row_cluster_hug_nowrap_intrinsic() {
+        let out = preprocess(r#"<row cluster gap="2">x</row>"#).expect("preprocess");
+        assert!(
+            out.contains("sail-row-i"),
+            "cluster is the inline hug: {out}"
+        );
+        assert!(out.contains("sail-nowrap"), "cluster nowraps: {out}");
+        assert!(out.contains("sail-cluster"), "cluster class: {out}");
+        assert!(out.contains("sail-g-2"), "gap survives on the pack: {out}");
+        assert!(
+            out.contains(".sail-row-i.sail-cluster>*")
+                && out.contains("min-width:auto")
+                && out.contains("flex:0 0 auto"),
+            "cluster kids stay intrinsic: {out}"
+        );
+        assert!(
+            !out.contains(" cluster>") && !out.contains(" cluster="),
+            "cluster attr consumed: {out}"
         );
     }
 

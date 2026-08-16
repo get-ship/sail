@@ -5,7 +5,8 @@
 
   Host is a text-bearing <span> (text channel + Style match). Size/variant/
   selected attrs and paint classes must share one node or match CSS never
-  fires. Layout: inline-flex + gap (no outer row wrapper).
+  fires. Leading + label + remove pack is the inner <row cluster> — not
+  Style gap(), not host CSS. Do not wrap the host in a layout tag.
 -->
 
 <scope>
@@ -24,7 +25,8 @@
   style sizeMd = {size({ min-h: control-h-2xs }).pad({ x: 2_5 }).type({ size: sm })}
   style sizeSm = {size({ min-h: control-h-2xs }).pad({ x: 2 }).type({ size: xs })}
   style sizeLg = {size({ min-h: control-h-xs }).pad({ x: 3 }).type({ size: sm })}
-  style remove = {display(none).size(icon-size-xs).pad(0).border({ width: 0 }).bg(transparent).fg(currentColor).radius(full).cursor(pointer), animate: { transition: play(colors, fast) }}
+  // Glyph, not a button: no fill invert, no control chrome. Opacity-only hover.
+  style remove = {display(none).size({ w: icon-size-3xs, h: icon-size-3xs, min-w: 0, min-h: 0 }).pad(0).border({ width: 0 }).bg(transparent).fg(currentColor).radius(none).cursor(pointer).filter({ opacity: 65 }), animate: { transition: play(colors, fast) }}
   style leading = {display(contents)}
   style xmark = {display(block).size(full)}
 </scope>
@@ -74,20 +76,22 @@
       {selected: true, when: {hover: filter({ opacity: 90 })}},
     ]})
 >
-  <span style(leading)>
-    <slot name="leading"></slot>
-  </span>
-  <slot></slot>
-  <button
-    type="button"
-    anatomy
-    data-dismiss
-    label="Remove"
-    tabindex="-1"
-    style(remove, {shrink(0), match: {removable: {true: display(inline-flex), false: display(none)}}, when: {hover: bg(muted).fg(muted-foreground), focus: border({ style: solid, kind: outline, width: 2, color: ring, offset: 2 })}})
-  >
-    <svg viewBox="0 0 10 10" stroke-width="1.75" stroke-linecap="round" stroke="currentColor" fill="none" style(xmark)>
-      <path d="M2 2 L8 8 M8 2 L2 8"></path>
-    </svg>
-  </button>
+  <row cluster gap="1">
+    <span style(leading)>
+      <slot name="leading"></slot>
+    </span>
+    <slot></slot>
+    <button
+      type="button"
+      anatomy
+      data-dismiss
+      label="Remove"
+      tabindex="-1"
+      style(remove, {shrink(0).self(center), match: {removable: {true: display(inline-flex), false: display(none)}}, when: {hover: filter({ opacity: 100 }), focus: border({ style: solid, kind: outline, width: 2, color: ring, offset: 2 })}})
+    >
+      <svg viewBox="0 0 10 10" stroke-width="1.25" stroke-linecap="round" stroke="currentColor" fill="none" style(xmark)>
+        <path d="M2 2 L8 8 M8 2 L2 8"></path>
+      </svg>
+    </button>
+  </row>
 </span>
