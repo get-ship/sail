@@ -1,6 +1,6 @@
 /**
- * Closed map: tree-sitter capture (no `@`) → LSP semantic token type
- * and CodeMirror CSS class.
+ * Closed map: tree-sitter capture (no `@`) → LSP semantic token type,
+ * CodeMirror CSS class, and `<code-block>` tok-* class.
  *
  * A capture in highlights.scm that is missing here fails
  * `packages/sail/grammar/tests/highlight.rs` (SCOPES) and
@@ -48,6 +48,23 @@ export const SCOPE_TO_CM_CLASS: Record<SailScope, string> = {
   comment: 'sail-ts-cmt',
   'punctuation.bracket': 'sail-interp-brace',
   'punctuation.delimiter': 'sail-attr-modifier',
+}
+
+/**
+ * `<code-block>` tok-* classes (`platform/code-block.css`).
+ * Empty string = escaped text, no wrapper (punctuation).
+ */
+export const SCOPE_TO_TOK: Record<SailScope, string> = {
+  tag: 'tag',
+  attribute: 'attr',
+  string: 'string',
+  keyword: 'keyword',
+  'keyword.directive': 'keyword',
+  function: 'fn',
+  variable: 'bind',
+  comment: 'comment',
+  'punctuation.bracket': '',
+  'punctuation.delimiter': '',
 }
 
 export function isSailScope(name: string): name is SailScope {

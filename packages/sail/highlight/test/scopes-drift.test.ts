@@ -6,7 +6,7 @@ import { readFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, test } from 'vitest'
-import { SCOPES } from '../src/scopes'
+import { SCOPES, SCOPE_TO_TOK } from '../src/scopes'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const scm = readFileSync(
@@ -48,5 +48,23 @@ describe('highlight scope drift', () => {
 
   test('JS SCOPES equals Rust SCOPES', () => {
     expect([...SCOPES].sort()).toEqual(rustScopes(rust))
+  })
+
+  test('every scope has a SCOPE_TO_TOK row; non-empty values are code-block tok-*', () => {
+    const css = readFileSync(
+      resolve(here, '../../../../crates/sail/compiler/stdlib/platform/code-block.css'),
+      'utf8',
+    )
+    const known = new Set(
+      [...css.matchAll(/\.tok-([a-z]+)/g)].map((m) => m[1]!),
+    )
+    expect([...SCOPES].sort()).toEqual(Object.keys(SCOPE_TO_TOK).sort())
+    for (const scope of SCOPES) {
+      const tok = SCOPE_TO_TOK[scope]
+      if (tok === '') continue
+      expect(known.has(tok), `SCOPE_TO_TOK[${scope}]=${tok} missing from code-block.css`).toBe(
+        true,
+      )
+    }
   })
 })

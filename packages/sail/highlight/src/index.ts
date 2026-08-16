@@ -4,10 +4,12 @@
  */
 
 import { Parser, Language, Query } from 'web-tree-sitter'
-import { SCOPE_TO_CM_CLASS, SCOPE_TO_LSP, isSailScope, type SailScope } from './scopes'
+import { isSailScope, type SailScope } from './scopes'
+import { toTokHtml } from './tok'
 
 export type { SailScope }
-export { SCOPE_TO_CM_CLASS, SCOPE_TO_LSP, SCOPES, isSailScope } from './scopes'
+export { SCOPE_TO_CM_CLASS, SCOPE_TO_LSP, SCOPE_TO_TOK, SCOPES, isSailScope } from './scopes'
+export { toTokHtml } from './tok'
 
 export interface HighlightSpan {
   start: number
@@ -74,6 +76,31 @@ export async function initHighlight(assets: HighlightAssets): Promise<void> {
     return
   }
   await ready
+}
+
+/** Default wasm + query next to this package. Safe to call more than once. */
+export async function ensureHighlight(): Promise<void> {
+  if (ready) {
+    await ready
+    return
+  }
+  const wasmHref = new URL('../tree-sitter-sail.wasm', import.meta.url).href
+  const scmHref = new URL('../../grammar/queries/highlights.scm', import.meta.url).href
+  const highlightsScm = await readAssetText(scmHref)
+  await initHighlight({ wasm: wasmHref, highlightsScm })
+}
+
+async function readAssetText(href: string): Promise<string> {
+  const res = await fetch(href)
+  if (!res.ok) {
+    throw new Error(`sail-highlight: failed to load query (${res.status})`)
+  }
+  return res.text()
+}
+
+/** `tok-*` HTML for `<code-block>`. Requires init / ensure first. */
+export function sailTokHtml(src: string): string {
+  return toTokHtml(src, highlight(src))
 }
 
 export function highlight(src: string): HighlightSpan[] {

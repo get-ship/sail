@@ -7,6 +7,8 @@ One query (`packages/sail/grammar/queries/highlights.scm`) + one wasm
 
 - `packages/sail/vscode` — semantic tokens
 - `<sail-code-editor>` — CodeMirror decorations
+- docs / studio `<code-block>` — `registerSailHighlighter(sailTokHtml)` after
+  `ensureHighlight()` (not a runtime dependency; hello-world ships no wasm)
 
 ```sh
 bun run build-wasm   # real node, not bun's node symlink
