@@ -33,12 +33,32 @@ ln -sfn "$grammar/queries/highlights.scm" "$runtime/queries/sail/highlights.scm"
 ln -sfn "$grammar/queries/injections.scm" "$runtime/queries/sail/injections.scm"
 echo "linked queries → $runtime/queries/sail"
 
+sail_bin="sail"
+if [ -x "$repo/target/debug/sail" ]; then
+  sail_bin="$repo/target/debug/sail"
+elif command -v sail >/dev/null 2>&1; then
+  sail_bin=$(command -v sail)
+fi
+
 langs="$helix_cfg/languages.toml"
 marker="# sail-grammar (m-sail-public helix-setup)"
 block=$(
   cat <<EOF
 
 $marker
+[language-server.sail]
+command = "$sail_bin"
+args = ["lsp"]
+
+[[language]]
+name = "sail"
+scope = "source.sail"
+file-types = ["sail"]
+comment-token = "<!--"
+indent = { tab-width = 2, unit = "  " }
+language-servers = ["sail"]
+grammar = "sail"
+
 [[grammar]]
 name = "sail"
 source = { path = "$grammar" }
