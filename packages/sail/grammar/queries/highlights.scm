@@ -47,20 +47,17 @@
 ; control-flow element tags (control-flow + partial blocks: if/for/match/when/partial)
 ((tag_name) @keyword.directive
   (#match? @keyword.directive "^(if|for|match|when|partial)$"))
-"<if"          @keyword.directive
-"</if>"        @keyword.directive
-"<for"         @keyword.directive
-"</for>"       @keyword.directive
-"<match"       @keyword.directive
-"</match>"     @keyword.directive
-"<when"        @keyword.directive
-"</when>"      @keyword.directive
-"<partial"     @keyword.directive
-"</partial>"   @keyword.directive
+"<if"        @keyword.directive
+"</if>"      @keyword.directive
+"<for"       @keyword.directive
+"</for>"     @keyword.directive
+"<match"     @keyword.directive
+"</match>"   @keyword.directive
+"<when"      @keyword.directive
+"</when>"    @keyword.directive
 
-; Brace boundaries.
-"{" @punctuation.special
-"}" @punctuation.special
+; Do not capture anonymous `{` / `}` — Helix's query compiler treats
+; those quotes as an empty node type and drops all highlights.
 
 ; ── expression body (inside `{…}`) ─────────────────────────────────
 ; Identifiers in expression position are variable reads; member

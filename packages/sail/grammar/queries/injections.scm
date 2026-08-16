@@ -6,13 +6,16 @@
 ; `<controller>` / `<scope>` block bodies (SPEC-LSP-1 highlighting).
 
 ; ── TypeScript injections inside expression braces ───────────────────
+; No `#offset!` — Helix 25 rejects that predicate and then loads *no*
+; highlights for the language. include-children keeps `{…}` text in the
+; injected document (braces are unnamed tokens).
 ((interpolation) @injection.content
   (#set! injection.language "typescript")
-  (#offset! @injection.content 0 1 0 -1))
+  (#set! injection.include-children))
 
 ((brace_expression) @injection.content
   (#set! injection.language "typescript")
-  (#offset! @injection.content 0 1 0 -1))
+  (#set! injection.include-children))
 
 ; ── TypeScript injection for <controller> / <scope> block bodies ─────
 ; Controller bodies are TypeScript source. Scope bodies hold props /

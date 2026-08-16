@@ -20,7 +20,29 @@
  */
 
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { existsSync, readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+/** Anonymous STRING tokens in the last `tree-sitter generate` (parser.c). */
+function compiledAnonymousLiterals(): Set<string> | null {
+  const jsonPath = resolve(dirname(fileURLToPath(import.meta.url)), '../src/grammar.json');
+  if (!existsSync(jsonPath)) return null;
+  const lits = new Set<string>();
+  const walk = (x: unknown): void => {
+    if (Array.isArray(x)) {
+      for (const i of x) walk(i);
+      return;
+    }
+    if (x && typeof x === 'object') {
+      const o = x as { type?: string; value?: string };
+      if (o.type === 'STRING' && typeof o.value === 'string') lits.add(o.value);
+      for (const v of Object.values(o)) walk(v);
+    }
+  };
+  walk(JSON.parse(readFileSync(jsonPath, 'utf8')));
+  return lits;
+}
 
 interface Block {
   open: string;
@@ -437,12 +459,17 @@ function generateHighlights(v: Vocabulary): string {
     .map((p) => `"${p}"${' '.repeat(maxPrefixLen - p.length + 3)}@keyword.directive`)
     .join('\n');
 
-  // Element-form residual clauses only (arms are brace interpolations).
-  const controlTags = uniqueControlTags(v);
+  // Quoted markers must exist on the *compiled* parser (src/grammar.json /
+  // parser.c / sail.so). grammar.js can be ahead; Helix loads the .so and
+  // drops *all* highlights if a query names an unknown anonymous node.
+  const compiledLits = compiledAnonymousLiterals();
+  const controlTags = [...new Set(v.blocks.map((b) => tagFromOpen(b.open)))];
   const controlTagAlt = controlTags.join('|');
   const openCloseMarkers: string[] = [];
   for (const tag of controlTags) {
-    openCloseMarkers.push(`<${tag}`, `</${tag}>`);
+    for (const tok of [`<${tag}`, `</${tag}>`]) {
+      if (!compiledLits || compiledLits.has(tok)) openCloseMarkers.push(tok);
+    }
   }
   const uniqMarkers = [...new Set(openCloseMarkers)];
   const maxMarkerLen = Math.max(...uniqMarkers.map((m) => m.length), 1);
@@ -503,9 +530,8 @@ ${directivePrefixLines}
 ; Four blocks only: if / for / match / when. Arms are brace interpolations.
 ${blockMarkers}
 
-; Brace boundaries.
-"{" @punctuation.special
-"}" @punctuation.special
+; Do not capture anonymous \`{\` / \`}\` — Helix's query compiler treats
+; those quotes as an empty node type and drops all highlights.
 
 ; ── expression body (inside \`{…}\`) ─────────────────────────────────
 ; Identifiers in expression position are variable reads; member
