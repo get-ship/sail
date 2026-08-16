@@ -16,9 +16,8 @@ That links `queries/` into `~/.config/helix/runtime/queries/sail`, appends
 an absolute `[[grammar]]` path to `~/.config/helix/languages.toml`, and
 builds `sail.so`. This checkout’s `.helix/languages.toml` wires `sail lsp`.
 
-If `~/.config/helix/runtime` was a symlink to the Helix install, setup
-replaces it with a real overlay directory (stock languages still load
-from the install). Open a `.sail` from the repo root.
+Does **not** replace `~/.config/helix/runtime` (a symlink to the install
+must stay, or stock themes disappear). Open a `.sail` from the repo root.
 
 After `bun run generate`, run `helix-setup` again so queries and the
 compiled grammar match.

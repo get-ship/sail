@@ -1,6 +1,6 @@
 # Helix — this checkout. Highlight = tree-sitter-sail; intelligence = sail lsp.
-# One-time: `bun run helix-setup` in packages/sail/grammar (builds the
-# grammar + links queries into ~/.config/helix/runtime/queries/sail).
+# One-time: `bun run helix-setup` in packages/sail/grammar
+# (builds sail.so + links queries; does not touch Helix themes).
 
 [language-server.sail]
 command = "sail"

@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 # Overlay this checkout's queries + grammar into Helix. Re-run after generate.
+#
+# Never replace ~/.config/helix/runtime. If that path is a symlink to the
+# Helix install (common), write into it. Creating a new empty runtime dir
+# hides stock themes/grammars.
 set -euo pipefail
 
 here=$(cd "$(dirname "$0")" && pwd)
@@ -8,18 +12,27 @@ repo=$(cd "$grammar/../../.." && pwd)
 helix_cfg="${HELIX_CONFIG:-$HOME/.config/helix}"
 runtime="$helix_cfg/runtime"
 
-# Helix merges ~/.config/helix/runtime over the install runtime.
-# A symlink to the install would write into the install — replace it.
 if [ -L "$runtime" ]; then
-  echo "note: $runtime is a symlink to the Helix install; replacing with a real overlay dir"
-  rm "$runtime"
+  runtime=$(readlink -f "$runtime")
+  echo "using Helix runtime symlink target $runtime"
+elif [ ! -d "$runtime" ]; then
+  # Do not mkdir a blank overlay — Helix would treat it as the whole runtime.
+  if [ -d "${HELIX_RUNTIME:-}" ]; then
+    runtime="$HELIX_RUNTIME"
+  elif [ -d "$(dirname "$(command -v hx)")/../lib/helix" ]; then
+    runtime=$(cd "$(dirname "$(command -v hx)")/../lib/helix" && pwd)
+  else
+    echo "no Helix runtime found (no $helix_cfg/runtime, no HELIX_RUNTIME)"
+    exit 1
+  fi
+  echo "using Helix install runtime $runtime"
 fi
+
 mkdir -p "$runtime/queries/sail" "$runtime/grammars"
 ln -sfn "$grammar/queries/highlights.scm" "$runtime/queries/sail/highlights.scm"
 ln -sfn "$grammar/queries/injections.scm" "$runtime/queries/sail/injections.scm"
 echo "linked queries → $runtime/queries/sail"
 
-# Absolute grammar path so `hx --grammar build` finds parser.c.
 langs="$helix_cfg/languages.toml"
 marker="# sail-grammar (m-sail-public helix-setup)"
 block=$(
@@ -46,12 +59,10 @@ if ! command -v hx >/dev/null 2>&1; then
   exit 0
 fi
 
-# Helix rebuilds every listed grammar; this machine may not have
-# fetched the stock set. Success is sail.so, not a zero hx exit.
 hx --grammar build >/tmp/helix-grammar-build.log 2>&1 || true
 if [ -f "$runtime/grammars/sail.so" ]; then
   echo "built $runtime/grammars/sail.so"
-  echo "done. Open a .sail from $repo (sail on PATH)."
+  echo "done. Open a .sail from $repo (sail on PATH). Theme is Helix's, not this script."
   exit 0
 fi
 echo "sail.so missing — hx --grammar build log:"
