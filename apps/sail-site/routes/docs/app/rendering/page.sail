@@ -20,18 +20,17 @@ export default controller((_ctx: ControllerScope<Scope>) => ({ ssrConfig, buildC
 <article style(page)>
   <p style(eyebrow)>Rendering &amp; build</p>
   <h1>Rendering modes</h1>
-  <p style(lead)>deck paints a route one of two ways. The default renders on the client; opt into server rendering for first paint and SEO.</p>
+  <p style(lead)>The default app is a single-page app. The browser loads one document and paints each route as you navigate.</p>
 
-  <h2>CSR (default)</h2>
-  <p>deck serves an empty <code>&lt;div id="root"&gt;</code> and an importmap shell. The client entry mounts the <code>routes/</code> SPA and paints. The initial document is near-empty; everything is drawn in the browser.</p>
+  <h2>What the first document is</h2>
+  <p>The built <code>index.html</code> is a shell: title and description from <code>sail.config.jsonc</code> <code>app</code>, then a root element the app mounts into. Route markup is drawn in the browser. Deep links still start from the site title until the app boots — the host must serve this same document for every path (see Build).</p>
 
-  <h2>SSR</h2>
-  <p>Set <code>"render": "ssr"</code> in <code>sail.config.jsonc</code>. The matched route is server-rendered (via ship-js) into <code>#root</code>, and the client hydrates it in place.</p>
+  <h2>Server rendering</h2>
+  <p>Set <code>"render": "ssr"</code> under the <code>deck</code> object in <code>sail.config.jsonc</code> if you want the matched route in the first HTML. This site ships as a client-rendered SPA.</p>
   <code-block code={ssrConfig} lang="json"></code-block>
-  <p>With SSR the route’s markup is in the <strong>raw server bytes</strong> — good for first paint and for crawlers. (This docs site itself runs CSR; deck’s SSR path is proven by the framework’s own browser test harness.)</p>
 
-  <h2>Either way, one static dir</h2>
-  <p>Whichever mode you pick, <code>sail build</code> produces a self-contained static directory.</p>
+  <h2>One static directory</h2>
+  <p><code>sail build</code> writes a folder you can host as-is.</p>
   <code-block code={buildCmd} lang="bash"></code-block>
 
   <row style(footNav)>

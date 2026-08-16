@@ -11,4 +11,5 @@ export default controller(() => {
 
 <div>
   <h1>error boom</h1>
+  <a href="/counter">counter</a>
 </div>

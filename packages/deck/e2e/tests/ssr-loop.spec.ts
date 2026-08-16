@@ -2,17 +2,18 @@ import { test, expect } from '@playwright/test'
 
 // ── deck dev — routes/ SSR (render: ssr) ─────────────────────────────────────
 //
-// Drives the `app-ssr` fixture (sail.config { render: ssr }) on its own port.
-// Proves deck's OWN routes/ path server-first-paints via the ship-js (V8)
-// engine and the client hydrates it — verified empirically before pinning:
+// Same Project as CSR (`./app`). The runner overlays `deck.render: ssr` on
+// a copy and serves that on its own port. Proves deck's OWN routes/ path
+// server-first-paints via the ship-js (V8) engine and the client hydrates it
+// — verified empirically before pinning:
 //
 //   • the matched route's markup is in the RAW server bytes, inside #root
 //     (server-rendered), not an empty CSR shell
 //   • the index route SSRs too (not just named routes)
 //   • the SSR'd DOM hydrates and stays reactive, with no hydration mismatch
 //
-// Contrast dev-loop.spec (the CSR app/) which pins the default csr contract.
-// Absolute URLs (the SSR fixture is a second webServer on SSR_PORT).
+// Contrast dev-loop.spec (same routes, csr) which pins the default csr contract.
+// Absolute URLs (the SSR overlay is a second webServer on SSR_PORT).
 
 const SSR = `http://127.0.0.1:${process.env.DECK_E2E_SSR_PORT ?? 7879}`
 
@@ -33,7 +34,7 @@ test.describe('deck dev — routes/ SSR (render: ssr)', () => {
   test('the index route SSRs too (not just named routes)', async ({ request }) => {
     const html = await (await request.get(`${SSR}/`)).text()
     expect(html).toMatch(/id="root">\s*<main/)
-    expect(html).toContain('deck e2e ssr')
+    expect(html).toContain('deck e2e')
   })
 
   test('SSR DOM hydrates and stays reactive — no mismatch', async ({ page }) => {

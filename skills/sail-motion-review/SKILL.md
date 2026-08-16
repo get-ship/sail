@@ -54,7 +54,7 @@ below).
 - Entrance on everything at once where a stagger belongs.
 - Press feedback missing on primary buttons (`press` preset exists —
   absence on interactive elements is a finding, not a nit).
-- Controller-driven style mutation per frame (signal-updated sx in an
+- Controller-driven style mutation per frame (signal-updated Style in an
   interval/rAF) where a preset exists.
 
 ## Remedial hierarchy (prefer earlier)

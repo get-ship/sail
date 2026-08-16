@@ -36,6 +36,13 @@ import {
 // is at the size cap). Re-exported so `@ship/deck-router` is one import site.
 export { resolveLayoutChain, type LayoutShape } from './layouts'
 export { mountRouter, type MountRouterOptions, type RouterHandle } from './mount-router'
+export {
+  applyDocumentHead,
+  applySailHead,
+  type SailHead,
+  type SailHeadLink,
+  type SailHeadMeta,
+} from './document-head'
 export { setRouteSignals } from './route-port'
 export {
   installRouteBoundary,
@@ -373,11 +380,7 @@ export function mergeRoutes(
  */
 export function matchRoute(pathname: string): RouteShape | undefined {
   for (const shape of SHAPES) {
-    if (shape.regex.test(pathname)) {
-      return shape.name === undefined
-        ? { pattern: shape.pattern }
-        : { pattern: shape.pattern, name: shape.name }
-    }
+    if (shape.regex.test(pathname)) return shape
   }
   return undefined
 }

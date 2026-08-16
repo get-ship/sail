@@ -3,12 +3,13 @@ import { test, expect } from '@playwright/test'
 // ── deck HMR — state-preserving re-mount primitive ───────────────────────────
 //
 // mountRouter exposes a `__deckHmr` seam: `reloadCurrent()` re-mounts the route
-// on screen, and `swapModule(pattern, url)` points a route at a fresh chunk then
-// re-mounts it. Both preserve signal state via `restoreScope` (capture the live
-// signal VALUES, re-seed the fresh mount). This is the runtime foundation for
-// module-granular HMR — the deck dev live-reload client calls `swapModule` with
-// the rebuilt chunk on a route edit (the server-scoped-event wiring is the next
-// increment). Here we prove the primitive directly: state survives a re-mount,
+// on screen, `swapModule(pattern, url)` points one route at a fresh chunk then
+// remounts it, and `swapModules(fresh)` replaces the whole module map then
+// remounts. All preserve signal state via `restoreScope` (capture the live
+// signal VALUES, re-seed the fresh mount). Deck HMR is app-granular remount,
+// not Vite: the live-reload client re-imports the rebuilt entry, which calls
+// `swapModules`. `swapModule` is a test / optional-transport seam — not the
+// default. Here we prove `reloadCurrent` directly: state survives a re-mount,
 // and the re-mounted DOM stays reactive.
 
 test.describe('deck HMR — state-preserving re-mount', () => {

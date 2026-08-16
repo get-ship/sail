@@ -5,6 +5,7 @@
 // public `@ship/deck-router` surface is unchanged.
 
 import type { Signal } from '@ship/sail-runtime'
+import type { SailHead } from './document-head'
 
 /**
  * The reactive URL handle exposed to route scope as `route`.
@@ -34,4 +35,6 @@ export interface RouteShape {
   pattern: string
   /** Optional name for debugging. */
   name?: string
+  /** Optional static apply slot when a route table carries one. Not authored as `<scope> head:`. */
+  head?: SailHead
 }

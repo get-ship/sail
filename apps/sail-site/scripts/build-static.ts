@@ -1,12 +1,16 @@
 #!/usr/bin/env bun
-// Produce a Cloudflare-servable static dir for sail-site.
+// Wrapper around product emit: `sail build`.
 //
 //   sail build --bundle-framework --base assets --out dist
 //   + recursive public/ copy (bundler only copies top-level files)
 //   + inventory of what landed (HTML / assets / wasm / icons / fonts)
+//
+// Resolves the binary from SAIL_BIN, then `sail` on PATH. Repo
+// `target/debug/sail` is a convenience fallback if that file exists —
+// never the documented required path.
 import { spawnSync } from 'node:child_process'
 import { existsSync, mkdirSync, readdirSync, statSync, copyFileSync, writeFileSync, readFileSync } from 'node:fs'
-import { dirname, join, relative, resolve } from 'node:path'
+import { dirname, isAbsolute, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
@@ -14,7 +18,7 @@ const APP = resolve(HERE, '..')
 const REPO = resolve(APP, '../..')
 const OUT = resolve(process.env.SAIL_SITE_STATIC_OUT ?? join(APP, 'dist'))
 const WASM_PKG = join(REPO, 'packages/sail/compiler-wasm/pkg/sail_compiler_bg.wasm')
-const SAIL_BIN = join(REPO, 'target/debug/sail')
+const DEBUG_SAIL = join(REPO, 'target/debug/sail')
 
 function run(cmd, args, opts = {}) {
   const r = spawnSync(cmd, args, { stdio: 'inherit', cwd: REPO, ...opts })
@@ -73,13 +77,48 @@ function sailArgs() {
   ]
 }
 
-function runSailBuild() {
-  if (existsSync(SAIL_BIN) && process.env.SAIL_SITE_FORCE_CARGO !== '1') {
-    run(SAIL_BIN, sailArgs())
-    return `bin:${SAIL_BIN}`
+/** Inventory must stay machine-portable: `sail` or a path relative to the repo. */
+function portableVia(bin) {
+  if (!bin || bin === 'sail') return 'sail'
+  const abs = isAbsolute(bin) ? bin : resolve(REPO, bin)
+  const rel = relative(REPO, abs)
+  if (rel && !rel.startsWith('..') && !isAbsolute(rel)) return rel.replaceAll('\\', '/')
+  return 'sail'
+}
+
+function sailOnPath() {
+  const pathEnv = process.env.PATH ?? ''
+  const sep = process.platform === 'win32' ? ';' : ':'
+  for (const dir of pathEnv.split(sep)) {
+    if (!dir) continue
+    if (existsSync(join(dir, 'sail'))) return true
   }
-  run('cargo', ['run', '-q', '-p', 'deck-cli', '--bin', 'sail', '--', ...sailArgs()])
-  return 'cargo-run'
+  return false
+}
+
+function resolveSail() {
+  const envBin = process.env.SAIL_BIN?.trim()
+  if (envBin) return { cmd: envBin, prefix: [], via: portableVia(envBin) }
+
+  const forceCargo = process.env.SAIL_SITE_FORCE_CARGO === '1'
+  if (!forceCargo && sailOnPath()) {
+    return { cmd: 'sail', prefix: [], via: 'sail' }
+  }
+  // Monorepo convenience only — never the documented required path.
+  if (!forceCargo && existsSync(DEBUG_SAIL)) {
+    return { cmd: DEBUG_SAIL, prefix: [], via: 'target/debug/sail' }
+  }
+  return {
+    cmd: 'cargo',
+    prefix: ['run', '-q', '-p', 'deck-cli', '--bin', 'sail', '--'],
+    via: 'cargo-run',
+  }
+}
+
+function runSailBuild() {
+  const { cmd, prefix, via } = resolveSail()
+  run(cmd, [...prefix, ...sailArgs()])
+  return via
 }
 
 function ensureWasmPublic() {
@@ -141,7 +180,7 @@ function inventory() {
   }
   for (const rel of files) buckets[classify(rel)].push(rel)
   const report = {
-    out: OUT,
+    out: relative(REPO, OUT).replaceAll('\\', '/'),
     fileCount: files.length,
     buckets: Object.fromEntries(
       Object.entries(buckets).map(([k, v]) => [k, { count: v.length, files: v }]),

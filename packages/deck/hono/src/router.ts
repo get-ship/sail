@@ -1,13 +1,13 @@
 // The deck serve router — a framework-agnostic `Request -> Response | null`
-// handler. It mirrors the GET serve surface of `deck-axum` (crates/deck/
-// deck-axum/src/lib.rs router()) for an app built with `deck build` (the SPA
-// model): the /_deck/* framework singletons, the per-app hashed assets, the
-// index.html shell, and the SPA fallback. A `null` return means "not a deck
-// route" — the host (e.g. ship-ops's Hono app) owns it (/api, /mcp, mutations).
+// handler. It mirrors the GET product-serve surface of `deck-axum` (see
+// `crates/deck/deck-axum/src/lib.rs` `router()` and `pages.rs` `spa_fallback`)
+// for an app built with `deck build` (the SPA model): `/_deck/*` framework
+// singletons, `/api` token + theme CSS, hashed assets, the `index.html` shell,
+// and the SPA fallback. A `null` return means "not a deck route" — the host
+// (any Hono / Bun app) owns it.
 //
-// The live-data SSE / data port (/_deck/views/{name}/sse, /_deck/data) is a
-// separate concern injected via `config.live` (see live.ts); the host owns it
-// because only the host has the data.
+// Live-data SSE is host-owned. Inject it via `config.live`; Deck does not
+// special-case `views/<name>/sse`.
 
 import { readFile } from "node:fs/promises";
 import { join, normalize, sep } from "node:path";
@@ -15,27 +15,41 @@ import {
   type DaemonMode,
   type DeckResponse,
   cssAsset,
+  cssNoCache,
   html_route,
   intoResponse,
   jsAsset,
   jsonAsset,
+  jsonNoCache,
   notFound,
   svgAsset,
 } from "./response";
 
 export interface DeckAdaptorConfig {
-  /** The `deck build` output dir (`<project>/.deck`): index.html + assets/. */
+  /** The `deck build` output dir (`<project>/dist`): index.html + assets/. */
   buildDir: string;
-  /** deck-core/assets/ — the baked framework singletons + live-reload.js. */
+  /**
+   * Baked framework singletons (deck-core/assets/): runtime/dom/… plus
+   * live-reload.js and error-overlay.js when this adaptor serves dev assets.
+   */
   frameworkAssetsDir: string;
   /** package.json `name`; the URL asset namespace is its last '/'-segment. */
   appName: string;
   /** development (default) gates cache-control, ETag, and error redaction. */
   mode?: DaemonMode;
   /**
-   * Optional live-data handler. Given a Request whose path is under /_deck and
-   * not a static asset, it may return a Response (e.g. an SSE stream) or null
-   * to fall through to an honest 404. Wired by the host to its data port.
+   * Host-owned backend prefixes. Unmatched GETs under these are NOT given
+   * the SPA shell — same as deck-axum `host_backend_prefixes`. Default: none
+   * (the standalone default). Deck does not hardcode product prefixes
+   * (`/auth`, `/hooks`, `/daemon`, `/space`, `/shell`); the host injects
+   * what it owns.
+   */
+  hostBackendPrefixes?: string[];
+  /**
+   * Optional live-data handler. Given a Request whose path is under `/_deck`
+   * and not a static framework asset, it may return a Response (e.g. an SSE
+   * stream) or null to fall through to an honest 404. Wired by the host to
+   * its data port.
    */
   live?: (req: Request, mode: DaemonMode) => Promise<Response | null> | Response | null;
 }
@@ -49,13 +63,17 @@ const FRAMEWORK_JS: Record<string, { bake: string; bundled: string }> = {
   "/_deck/route.js": { bake: "deck-route.js", bundled: "route.js" },
   "/_deck/sdk-client.js": { bake: "sail-sdk-client.js", bundled: "sdk-client.js" },
   "/_deck/live-reload.js": { bake: "live-reload.js", bundled: "live-reload.js" },
+  "/_deck/error-overlay.js": { bake: "error-overlay.js", bundled: "error-overlay.js" },
   "/_deck/compiler-wasm.js": { bake: "sail-compiler-wasm.js", bundled: "compiler-wasm.js" },
   "/_deck/lsp-completions.js": { bake: "sail-lsp-completions.js", bundled: "lsp-completions.js" },
   "/_deck/lsp-diagnostics.js": { bake: "sail-lsp-diagnostics.js", bundled: "lsp-diagnostics.js" },
 };
 
-// SPA fallback exclusions (pages.rs:133-161): these prefixes keep an honest 404.
-const RESERVED_PREFIXES = ["/api", "/_deck", "/hooks", "/auth", "/daemon", "/space", "/shell"];
+// Deck-owned `/api` token + theme surface (pages.rs + deck-axum router()).
+const ROUTE_VIEW_TOKENS_CSS = "/api/assets/view-tokens.css";
+const ROUTE_SAIL_CSS = "/api/assets/sail.css";
+const ROUTE_THEME_CSS = "/api/assets/theme.css";
+const ROUTE_THEMES_LIST = "/api/v1/themes";
 
 function safeResolve(base: string, rel: string): string | null {
   const full = normalize(join(base, rel));
@@ -81,6 +99,15 @@ function assetByExt(file: string, body: Uint8Array): DeckResponse {
   return { status: 200, contentType: "application/octet-stream", cachePolicy: "asset", body, extraHeaders: [] };
 }
 
+/** SSOT: `deck-axum` `pages.rs` `spa_fallback`. */
+function deckOwnsPath(path: string): boolean {
+  return path.startsWith("/api") || path.startsWith("/_deck") || path.includes(".");
+}
+
+function hostOwnsPath(path: string, prefixes: readonly string[]): boolean {
+  return prefixes.some((p) => path.startsWith(p));
+}
+
 /**
  * Build the pure deck serve handler. Returns a function that resolves a Request
  * to a Response for deck-owned routes, or `null` to defer to the host.
@@ -90,8 +117,21 @@ export function createDeckRouter(config: DeckAdaptorConfig) {
   const ns = config.appName.split("/").pop()!;
   const assetsDir = join(config.buildDir, "assets");
   const indexPath = join(config.buildDir, "index.html");
+  const hostPrefixes = config.hostBackendPrefixes ?? [];
 
   const serve = (resp: DeckResponse) => intoResponse(resp, mode);
+
+  async function serveIndex(missing: string): Promise<Response> {
+    const body = await readOpt(indexPath);
+    return body ? serve(html_route(body)) : serve(notFound(missing, mode));
+  }
+
+  async function serveApiCss(file: string, missing: string): Promise<Response> {
+    const body =
+      (await readOpt(join(config.frameworkAssetsDir, file))) ??
+      (await readOpt(join(config.buildDir, "api", "assets", file)));
+    return body ? serve(cssNoCache(body)) : serve(notFound(missing, mode));
+  }
 
   return async function handle(req: Request): Promise<Response | null> {
     const url = new URL(req.url);
@@ -129,7 +169,39 @@ export function createDeckRouter(config: DeckAdaptorConfig) {
       return serve(notFound(`no deck route ${path}`, mode));
     }
 
-    // 4. per-app hashed assets: /<ns>/<file> -> <buildDir>/assets/<file>
+    // 4. Deck-owned /api token + theme surface
+    if (path === ROUTE_VIEW_TOKENS_CSS) {
+      return serveApiCss("view-tokens.css", "view-tokens.css missing");
+    }
+    if (path === ROUTE_SAIL_CSS) {
+      return serveApiCss("sail.css", "sail.css missing");
+    }
+    if (path === ROUTE_THEME_CSS) {
+      const body =
+        (await readOpt(join(config.frameworkAssetsDir, "theme.css"))) ??
+        (await readOpt(join(config.buildDir, "api", "assets", "theme.css")));
+      // deck-core default: empty override (base tokens apply).
+      return serve(cssNoCache(body ?? ""));
+    }
+    if (path === ROUTE_THEMES_LIST) {
+      const raw =
+        (await readOpt(join(config.frameworkAssetsDir, "themes.json"))) ??
+        (await readOpt(join(config.buildDir, "api", "v1", "themes")));
+      if (raw) {
+        try {
+          return serve(jsonNoCache(JSON.parse(new TextDecoder().decode(raw))));
+        } catch {
+          return serve(notFound("themes list is not valid JSON", mode));
+        }
+      }
+      // deck-core default: empty override list.
+      return serve(jsonNoCache([]));
+    }
+    if (path.startsWith("/api")) {
+      return serve(notFound(`no deck route ${path}`, mode));
+    }
+
+    // 5. per-app hashed assets: /<ns>/<file> -> <buildDir>/assets/<file>
     if (path.startsWith(`/${ns}/`)) {
       const rel = decodeURIComponent(path.slice(`/${ns}/`.length));
       const resolved = safeResolve(assetsDir, rel);
@@ -138,23 +210,33 @@ export function createDeckRouter(config: DeckAdaptorConfig) {
       return body ? serve(assetByExt(rel, body)) : serve(notFound(`asset ${rel} not found`, mode));
     }
 
-    // 5. index shell
+    // 6. index shell
     if (path === "/") {
-      const body = await readOpt(indexPath);
-      return body ? serve(html_route(body)) : serve(notFound("index.html not built", mode));
+      return serveIndex("index.html not built");
     }
 
-    // 6. SPA fallback: GET nav to a client route -> the index shell.
-    //    Excludes reserved prefixes and any path containing a '.' (asset/RPC).
-    const isReserved = RESERVED_PREFIXES.some((p) => path === p || path.startsWith(p + "/"));
-    if (!isReserved && !path.includes(".")) {
-      const body = await readOpt(indexPath);
-      if (body) return serve(html_route(body));
+    // 7. Dotted path — a static asset (or Connect-RPC `*.*` path). Deck owns
+    //    these; try the built SPA tree, then an honest 404. Never SPA-fallback.
+    if (path.includes(".")) {
+      const rel = decodeURIComponent(path.slice(1));
+      const resolved = safeResolve(config.buildDir, rel);
+      if (resolved) {
+        const body = await readOpt(resolved);
+        if (body) return serve(assetByExt(rel, body));
+      }
+      return serve(notFound(`asset ${rel} not found`, mode));
     }
 
-    // 7. not a deck route — let the host handle it (or 404 there)
-    return null;
+    // 8. SPA fallback (pages.rs spa_fallback): GET navigations that are not
+    //    deck-owned and not host-owned get the index shell. Host-owned prefixes
+    //    defer (`null`) so a Hono/Bun host can serve them. Everything else is
+    //    an honest 404 — never a silent SPA lie.
+    const deckOwns = deckOwnsPath(path);
+    const hostOwns = hostOwnsPath(path, hostPrefixes);
+    if (req.method === "GET" && !deckOwns && !hostOwns) {
+      return serveIndex("index.html not built");
+    }
+    if (hostOwns) return null;
+    return serve(notFound("not found", mode));
   };
 }
-
-

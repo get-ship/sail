@@ -13,8 +13,8 @@ const dist = join(root, 'dist')
 const repoRoot = join(root, '..', '..', '..')
 
 // Inline a REAL compiled route as the confinement subject (slice 2). Prefer the
-// .deck build output; the test asserts it confines + evaluates in-browser.
-const routeArtifactPath = join(repoRoot, '.deck/views/git/view.js')
+// `.sail` bake output; the test asserts it confines + evaluates in-browser.
+const routeArtifactPath = join(repoRoot, '.sail/views/git/view.js')
 if (!existsSync(routeArtifactPath)) {
   console.error(`harness: missing ${routeArtifactPath} — run the bundler (just dev-build-all) first`)
   process.exit(1)

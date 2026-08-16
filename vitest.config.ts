@@ -18,6 +18,7 @@ const PROJECTS = [
   'packages/components/sail/primitives',
   'packages/components/sail/viewer',
   'packages/deck/host',
+  'packages/deck/hono',
   'packages/deck/router',
   'packages/sail/dom',
   'packages/sail/runtime',

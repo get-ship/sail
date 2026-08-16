@@ -44,9 +44,9 @@ Config SSOT:
 | MIME | `public/_headers` (wasm / woff2 / icons / `_deck/*.js`) |
 
 Dashboard (git-connected): root directory `apps/sail-site`, same build
-command + output dir. Rust + Bun are required on the build image because
-`build:static` runs `sail build` (deck-cli). Alternative: build locally
-and `wrangler pages deploy dist` the artifact.
+command + output dir. `build:static` wraps `sail build` — put `sail` on
+PATH or set `SAIL_BIN`. Alternative: build locally and
+`wrangler pages deploy dist` the artifact.
 
 ## What a dumb host must do
 

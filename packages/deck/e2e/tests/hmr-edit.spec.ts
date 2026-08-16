@@ -5,11 +5,12 @@ import { dirname, join } from 'node:path'
 
 // ── deck HMR — edit→reload loop (state-preserving, no full document reload) ───
 //
-// The full module-granular HMR loop end-to-end against the real `deck dev`:
+// The app-granular remount loop end-to-end against the real `deck dev` (keep
+// signal values, swap CSS — not Vite per-module HMR):
 // edit a route's .sail on disk → deck dev rebuilds the SPA → emits `app` over the
 // HMR SSE → the live-reload client re-imports the freshly-bundled entry → the
-// HMR-aware bootstrap swaps the fresh `modules` (new chunk URLs) into the
-// running router + re-mounts the current route preserving signal state. No full
+// HMR-aware bootstrap calls `swapModules` (new chunk URLs) on the running
+// router + re-mounts the current route preserving signal state. No full
 // document reload. Restores the file in `finally` so the fixture stays clean.
 
 const here = dirname(fileURLToPath(import.meta.url))

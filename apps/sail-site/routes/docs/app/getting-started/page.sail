@@ -11,9 +11,9 @@
 <controller>
 import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
-import { pageExample, controllerExample, devCmd } from '../../../../src/compositions/deck-getting-started-snippets'
+import { pageExample, controllerExample, devCmd, siteConfig } from '../../../../src/compositions/deck-getting-started-snippets'
 
-export default controller((_ctx: ControllerScope<Scope>) => ({ pageExample, controllerExample, devCmd }))
+export default controller((_ctx: ControllerScope<Scope>) => ({ pageExample, controllerExample, devCmd, siteConfig }))
 </controller>
 
 <article style(page)>
@@ -29,10 +29,14 @@ export default controller((_ctx: ControllerScope<Scope>) => ({ pageExample, cont
   <p>When the page needs state, add a <code>&lt;controller&gt;</code> block to the same file. It returns a scope the template reads by name — one file, template and state together.</p>
   <code-block code={controllerExample} lang="sail"></code-block>
 
-  <h2>3. Run the dev server</h2>
+  <h2>3. Title the app</h2>
+  <p>App-wide title and description go in <code>sail.config.jsonc</code> under <code>app</code>. The first document uses these.</p>
+  <code-block code={siteConfig} lang="json"></code-block>
+
+  <h2>4. Run the dev server</h2>
   <code-block code={devCmd} lang="bash"></code-block>
   <alert tone="info">
-    <strong>No build step to develop.</strong> deck compiles <code>.sail</code> in-process and serves the SPA with HMR — edit a route and it soft-reloads with state preserved.
+    <strong>No build step to develop.</strong> Edit a route and the page updates. Signal state is kept.
   </alert>
 
   <row style(footNav)>

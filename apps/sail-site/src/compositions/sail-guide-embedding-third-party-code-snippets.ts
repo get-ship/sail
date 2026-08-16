@@ -3,13 +3,13 @@
 // Never invent one: a reader pastes these.
 export const code = {
   // packages/components/sail/primitives/sail.config.json
-  confined: `{"sx": true, "variants": true, "raw_containers": true, "stylesheets": []}`,
+  confined: `{"raw_containers": true, "stylesheets": []}`,
 
   // packages/components/sail/code-editor/sail.config.json
-  editorConfig: `{"sx": true, "variants": true, "raw_containers": true, "stylesheets": [], "unconfined": true}`,
+  editorConfig: `{"raw_containers": true, "stylesheets": []}`,
 
   // packages/components/sail/canvas/sail.config.json
-  canvasConfig: `{"sx": true, "raw_containers": true, "stylesheets": [], "network": ["self"]}`,
+  canvasConfig: `{"raw_containers": true, "stylesheets": [], "network": ["self"]}`,
 
   // The code in the editor's controller that needs `unconfined` — a dynamic
   // import, which confinement bans outright.
@@ -33,13 +33,13 @@ const resp = await fetch(ep, {
 })`,
 
   // crates/sail/lint/src/config.rs:36 — the complete key list.
-  keys: `pub const RECOGNIZED_KEYS: [&str; 8] =
-    ["preset", "sx", "variants", "raw_containers", "stylesheets", "network", "unconfined", "theme"];`,
+  keys: `pub const RECOGNIZED_KEYS includes
+    ["preset", "raw_containers", "stylesheets", "network", "unconfined", "theme"];`,
 
   // crates/sail/lint/src/rules/controller_no_ambient_authority.rs — the set.
   banned: `const ALWAYS_BANNED_CALLS: &[&str] = &["eval"];
 const NETWORK_GATED_CALLS: &[&str] = &["fetch"];
 const NETWORK_GATED_CTORS: &[&str] = &["WebSocket", "EventSource"];`,
 
-  namedOrigin: `{"sx": true, "network": ["https://api.example.com", "self"]}`,
+  namedOrigin: `{"network": ["https://api.example.com", "self"]}`,
 }

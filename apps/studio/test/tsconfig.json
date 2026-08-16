@@ -1,5 +1,5 @@
 {
-  "$comment": "Node-capable config for studio test helpers (ops-adapter-cli, vitest). The sail typecheck never loads this file — only src/** + routes/** ride node_modules/.sail/tsconfig.sail.json (no DOM, sail ambients).",
+  "$comment": "Node-capable config for studio test helpers (ops-adapter-cli, vitest). The sail typecheck never loads this file — only src/** + routes/** ride .sail/tsconfig.sail.json (no DOM, sail ambients).",
   "compilerOptions": {
     "target": "ESNext",
     "module": "ESNext",
@@ -16,5 +16,5 @@
     "allowImportingTsExtensions": true
   },
   "include": ["./**/*.ts", "../src/**/*.ts"],
-  "exclude": ["../node_modules", "../dist", "../.deck"]
+  "exclude": ["../node_modules", "../dist"]
 }

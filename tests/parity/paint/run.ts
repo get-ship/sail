@@ -182,7 +182,7 @@ function stageAndBuild(fixturePath, stageRoot) {
   )
   writeFileSync(join(stageRoot, 'public', '.gitkeep'), '')
 
-  const out = join(stageRoot, '.deck')
+  const out = join(stageRoot, 'dist')
   const build = spawnSync(
     SAIL_BIN,
     ['build', '--project', stageRoot, '--out', out, '--bundle-framework', '--base', 'assets'],

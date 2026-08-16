@@ -102,7 +102,7 @@ function describeTheme(
     }
   }
   // Project themes have app-delivered CSS tables under their own id
-  // (`.deck/themes/themes.css`). Do not fall back to catalog `studio` paint —
+  // (`.sail/themes/themes.css`). Do not fall back to catalog `studio` paint —
   // that was only correct when package themes-meta was contaminated with project ids.
   if (opts?.inProject) {
     const modeInfo = opts.modes?.length

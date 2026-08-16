@@ -31,7 +31,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({ routeTree, coloca
   <pre style(monoBlock)>{colocated}</pre>
 
   <h2>Generated tables</h2>
-  <p>Walking <code>routes/</code>, deck generates <code>routes.gen.ts</code> (the typed route table) and <code>entry.gen.ts</code> (the SPA bootstrap that calls <code>mountRouter</code>). You never edit them — they regenerate on every build and every dev run. The filesystem is the only config.</p>
+  <p>Walking <code>routes/</code>, deck writes a route table and a small bootstrap. You never edit them. The filesystem is the only config.</p>
 
   <row style(footNav)>
     <a href="/docs/app/getting-started">← Getting started</a>

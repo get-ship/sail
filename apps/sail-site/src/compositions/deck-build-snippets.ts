@@ -13,5 +13,8 @@ export const buildOut = `dist/
 export const baseCmd = `$ sail build --project . --bundle-framework --base assets --out dist
   ▸ asset URLs become /assets/<file> — matches on-disk layout`
 
+export const spaFallback = `# public/_redirects — copied into dist/ as-is
+/*    /index.html   200`
+
 export const cfDeploy = `$ bun run deploy:pages
   ▸ wrangler pages deploy dist --project-name sail-site`

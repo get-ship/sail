@@ -9,7 +9,7 @@ import { test, expect } from '@playwright/test'
 // exact blank-page class deck-bundler now fails loud on), these go red.
 //
 // Runs on its own port against `--out ./.prod-build` so it never clobbers the
-// dev server's `./app/.deck`. Absolute URLs (own webServer, no baseURL).
+// dev server's `./app/dist`. Absolute URLs (own webServer, no baseURL).
 
 // Must match playwright.config.ts's PROD_PORT default (7882 — off the example
 // app's 7880 to avoid a cross-harness collision).

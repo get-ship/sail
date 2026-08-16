@@ -9,8 +9,8 @@
  * `src/*.ts`.
  *
  * Usage: `node scripts/emit-package-dts.ts`
- * Wire: root `prepare` / `emit:package-dts` / `sail types` (monorepo) /
- *        before typecheck:sail.
+ * Wire: root `prepare` / `emit:package-dts` (bun). Not `sail types`.
+ *        Also before typecheck:sail.
  *
  * Exits non-zero if any declared dual `types` path under `dist/` is missing
  * after emit (root `types` + every `exports.*.types` / nested condition that

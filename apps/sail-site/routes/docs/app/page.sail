@@ -22,15 +22,14 @@ export default controller((_ctx: ControllerScope<Scope>) => ({ quickstart, layer
   <p style(eyebrow)>deck · 0.2.0</p>
   <h1>The standalone web framework for Sail.</h1>
   <p style(lead)>
-    deck mounts Sail routes, routes them from the filesystem, server-renders or
-    statically builds them, and serves every asset — with a dev server and
-    state-preserving HMR. It is to Sail what Next is to React.
+    deck hosts Sail pages. It turns a <code>routes/</code> folder into a running
+    app — file routing, a dev server with HMR, and a static build you can put
+    on any host. It is to Sail what Next is to React.
   </p>
 
   <alert tone="info">
-    <strong>This site is a deck app.</strong> Every page you read is a file-routed
-    deck route, server-rendered and hydrated. The docs are deck’s own canonical
-    example — and its release test.
+    <strong>This site is a deck app.</strong> Every page you read is a file in
+    <code>routes/</code>.
   </alert>
 
   <h2>The 30-second app</h2>

@@ -30,6 +30,7 @@ import {
 } from './index'
 import { resolveLayoutChain, type LayoutShape } from './layouts'
 import { installRouteBoundary, type RouteBoundaryHandle } from './route-boundary'
+import { applyDocumentHead, applySailHead } from './document-head'
 
 export interface MountRouterOptions {
   /** Mount target — a selector or element. Injected by the emitted entry; the
@@ -141,6 +142,9 @@ export function mountRouter(opts: MountRouterOptions): RouterHandle {
     // so generated patterns (`/`) still match.
     const pathname = pathForMatch(location.pathname)
     const myToken = ++token
+    if (typeof document !== 'undefined') {
+      document.dispatchEvent(new CustomEvent('sail:error-clear'))
+    }
     const chain = resolveLayoutChain(pathname, layouts)
     const chainKey = chainKeyOf(chain)
     const reuseChrome =
@@ -149,6 +153,7 @@ export function mountRouter(opts: MountRouterOptions): RouterHandle {
       prevRouteTarget.isConnected
 
     const matched = matchRoute(pathname)
+    if (matched?.head) applySailHead(matched.head)
     const raw = matched ? opts.modules[matched.pattern] : undefined
     if (!raw) {
       // No bundled route for this path — build the layout chain (so the nav +
@@ -190,6 +195,7 @@ export function mountRouter(opts: MountRouterOptions): RouterHandle {
         : raw
     // A navigation during the dynamic import supersedes this one.
     if (myToken !== token) return
+    if (!matched?.head) applyDocumentHead(mod)
 
     let target: HTMLElement
     let layoutHandles: MountHandle[]
@@ -360,9 +366,11 @@ export function mountRouter(opts: MountRouterOptions): RouterHandle {
     await mountCurrent(captureScope(current))
   }
 
-  // HMR: point a route at a fresh chunk URL, then re-mount it preserving state
-  // IF it's the route on screen (else the next navigation loads it fresh). The
-  // deck dev live-reload client calls this with the rebuilt chunk on edit.
+  // Per-route HMR seam: point a route at a fresh chunk URL, then remount it
+  // preserving state IF it's the route on screen (else the next navigation
+  // loads it fresh). Tests may call this; the deck dev live-reload client
+  // does not — it re-imports the entry, which calls `swapModules` (app-granular
+  // remount). This is not the default transport.
   async function swapModule(pattern: string, freshUrl: string): Promise<void> {
     ;(opts.modules as Record<string, unknown>)[pattern] = () =>
       import(/* @vite-ignore */ freshUrl)

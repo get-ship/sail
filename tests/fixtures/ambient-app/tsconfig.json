@@ -8,10 +8,10 @@
       "@ship/sail-runtime/*": ["../../../packages/sail/runtime/src/*"]
     }
   },
-  "files": ["node_modules/.sail/types.d.ts"],
+  "files": [".sail/types.d.ts"],
   "include": [
     "routes/**/*.ts",
     "src/**/*.ts"
   ],
-  "exclude": ["node_modules", "dist", ".deck"]
+  "exclude": ["node_modules", "dist"]
 }

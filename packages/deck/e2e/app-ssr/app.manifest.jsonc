@@ -1,6 +1,0 @@
-{
-  // The ship-js SSR engine synthesizes each page against an app manifest
-  // (client aliases). This app wires no data clients — an empty map is enough
-  // to satisfy the synth path for a pure-render SSR app.
-  "clients": {}
-}

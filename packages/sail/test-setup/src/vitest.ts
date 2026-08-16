@@ -61,10 +61,8 @@ function findRepoRoot(): string {
 }
 
 const repoRoot = findRepoRoot()
-// Product emit root (SPEC-OUTPUT-1). MUST match
-// `sail_compiler::out_layout::DEFAULT_OUT_DIR` / `deck_config::DECK_OUT_DIRNAME`
-// (`.deck`) — no second default (`.sail-out` is gone).
-const mirrorRoot = resolve(repoRoot, '.deck')
+// Generate emit root. MUST match `sail_compiler::out_layout::DEFAULT_OUT_DIR`.
+const mirrorRoot = resolve(repoRoot, '.sail')
 const compilerBin = resolve(repoRoot, 'target/debug/sail-compiler')
 // The native/CLI sail-compiler is only reachable in a repo that carries the
 // Rust workspace (a root `Cargo.toml`) or a prebuilt binary. A JS-only

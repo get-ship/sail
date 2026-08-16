@@ -22,15 +22,15 @@ export default controller((_ctx: ControllerScope<Scope>) => ({ devCmd }))
   <h1>HMR</h1>
   <p style(lead)>In dev, editing a route soft-reloads it with signal state preserved — no full document reload.</p>
 
-  <h2>Routes reload with state intact</h2>
-  <p>Save a route’s <code>.sail</code> and deck swaps the freshly-bundled module into the already-running router — via a <code>globalThis.__deckHmr</code> handle — then re-mounts. Signal state survives the swap, so counters, inputs, and scroll stay put.</p>
+  <h2>Routes keep their state</h2>
+  <p>Save a route and the page updates in place. Counters, inputs, and scroll stay put.</p>
   <code-block code={devCmd} lang="bash"></code-block>
 
-  <h2>Components hot-swap in place</h2>
-  <p>Editing a <code>&lt;sail-*&gt;</code> component hot-swaps its live instances where they sit — every mounted copy updates without a reload.</p>
+  <h2>Components update in place</h2>
+  <p>Editing a component updates every live instance without reloading the page.</p>
 
-  <h2>Pushed over SSE</h2>
-  <p>The dev server pushes changes to the browser over an <code>SSE</code> stream. HMR is a dev-only convenience; it ships in no build.</p>
+  <h2>Dev only</h2>
+  <p>The dev server pushes changes to the browser. None of that ships in a production build.</p>
 
   <row style(footNav)>
     <a href="/docs/app/rendering">← Rendering modes</a>

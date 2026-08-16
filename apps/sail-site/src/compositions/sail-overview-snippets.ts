@@ -13,20 +13,18 @@ export const code = {
   </row>
 </column>`,
   // The strict config, pure JSON (rendered by <sail-json-view> on the page).
-  configJson: `{"preset": "strict", "sx": true, "raw_containers": true}`,
+  configJson: `{"preset": "strict", "raw_containers": true}`,
   // REAL config files from this repository, verbatim — never invent these.
   configStrict: `// apps/sail-site/routes/sail.config.json — this site's docs pages
 {
   "preset": "strict",
-  "sx": true,
   "raw_containers": true
 }`,
   configComponent: `// packages/components/sail/code-editor/sail.config.json — embeds CodeMirror
-{ "sx": true, "variants": true, "raw_containers": true,
-  "stylesheets": [], "unconfined": true }
+{ "raw_containers": true, "stylesheets": [] }
 
 // packages/components/sail/canvas/sail.config.json — may fetch from self, nowhere else
-{ "sx": true, "raw_containers": true,
+{ "raw_containers": true,
   "stylesheets": [], "network": ["self"] }`,
   page: `<controller>
 export default controller(() => {

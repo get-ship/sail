@@ -1,4 +1,4 @@
-// Bridge: route controllers may only import from compositions/actions/serverfns.
+// Bridge: route controllers import from table homes (components/compositions/stores/actions/themes).
 // Re-export the docs-package registry so the thin detail shell can resolve meta.
 export {
   DOC_BY_SLUG,

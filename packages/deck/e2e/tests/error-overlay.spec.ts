@@ -37,6 +37,14 @@ test.describe('deck dev — runtime error overlay', () => {
     await expect(overlay).toHaveCount(0)
   })
 
+  test('client navigation off a throwing route clears the overlay', async ({ page }) => {
+    await page.goto('/error-boom')
+    await expect(page.locator('#__sail_error_overlay')).toBeVisible()
+    await page.getByRole('link', { name: 'counter' }).click()
+    await expect(page.getByRole('heading', { name: 'Counter' })).toBeVisible()
+    await expect(page.locator('#__sail_error_overlay')).toHaveCount(0)
+  })
+
   test('a healthy page shows no overlay', async ({ page }) => {
     await page.goto('/counter', { waitUntil: 'load' })
     await expect(page.getByRole('heading', { name: 'Counter' })).toBeVisible()

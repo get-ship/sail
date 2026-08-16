@@ -51,7 +51,7 @@ impact).
    gaps (claimed done, isn't). Auto-critical in `apps/`:
    `createElement` / `cssText` / `.style` mutation /
    `querySelector`+host assign — framework stack exists (stores,
-   `use:`, compositions, `prop:tree`, sx+tokens).
+   `use:`, compositions, `prop:tree`, Style+tokens).
 2. **Missing reaches** — L1 elements/presets/tokens that exist and
    weren't used where they obviously apply.
 3. **Missing primitives** — things the language should offer and

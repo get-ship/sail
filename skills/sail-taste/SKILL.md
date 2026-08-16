@@ -46,8 +46,8 @@ That is a hard fail — not a style preference.
 4. **`prop:tree={table}`** (identity bind) for sail-tree — NEVER
    `document.querySelector` + assign the host (same law as
    `prop:table` for tables).
-5. **sx + tokens** — only styling path. `style.cssText` / `.style` /
-   raw CSS / utility-string sx is a compile error.
+5. **Style + tokens** — only styling path. `style.cssText` / `.style` /
+   raw CSS / retired `sx=` / utility-string `style=` is a compile error.
 6. **If the primitive is missing** — stop and report the language gap.
    Do not escape to DOM.
 

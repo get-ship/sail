@@ -6,8 +6,7 @@ dist/
 *.log
 .DS_Store
 
-# Sail / deck build output (SPA + B1 app themes.css)
-.deck/
+# Deploy is `dist/` above. Generate is `.sail/` below.
 
 # Codegen (sail routes / build / dev)
 routes.gen.ts
@@ -32,4 +31,3 @@ coverage/
 
 # Ephemeral Sail local store (tasks, agent scratch — never commit)
 .sail/
-*.deck.stage*

@@ -7,12 +7,13 @@ import { defineConfig, devices } from '@playwright/test'
 const HOST = '127.0.0.1'
 const PORT = Number(process.env.DECK_E2E_PORT ?? 7878)
 const BASE_URL = `http://${HOST}:${PORT}`
-// The SSR fixture (`app-ssr`, render: ssr) runs on its own port. Its spec uses
-// absolute URLs, so it needs no per-project baseURL.
+// SSR is a mode of THE Project (`./app`), not a second museum. The runner
+// copies `./app` and overlays `deck.render: ssr` on that one config file.
+// Absolute URLs (own port), so this spec needs no per-project baseURL.
 const SSR_PORT = Number(process.env.DECK_E2E_SSR_PORT ?? 7879)
 // The PROD fixture: `deck build --bundle-framework` output, static-served (no
 // deck process). Built to an isolated `--out` so it never clobbers the dev
-// server's `./app/.deck`. Its spec uses absolute URLs.
+// server's `./app/dist`. Its spec uses absolute URLs.
 // Distinct from the example app's dev server (which defaults to 7880) so the
 // two harnesses never collide — a shared port + `reuseExistingServer` made the
 // prod bake silently serve a stale dev server.
@@ -44,8 +45,9 @@ export default defineConfig({
       stderr: 'pipe',
     },
     {
-      // The SSR fixture (render: ssr) — proves server first-paint + hydration.
-      command: `cargo run -q -p deck-cli -- dev --project ./app-ssr --addr ${HOST}:${SSR_PORT}`,
+      // Same Project as CSR (`./app`), isolated copy so two `sail dev`s do not
+      // fight over `dist/` / generated files. Overlay flips `deck.render`.
+      command: `rm -rf ./.ssr-src && cp -a ./app ./.ssr-src && rm -rf ./.ssr-src/dist ./.ssr-src/.sail && sed -i 's/"render": "csr"/"render": "ssr"/' ./.ssr-src/sail.config.jsonc && cargo run -q -p deck-cli -- dev --project ./.ssr-src --addr ${HOST}:${SSR_PORT}`,
       url: `http://${HOST}:${SSR_PORT}`,
       timeout: 180_000,
       reuseExistingServer: !process.env.CI,
