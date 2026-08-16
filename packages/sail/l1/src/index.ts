@@ -4,28 +4,28 @@
  * Not the stdlib .sail sources. Not a test package.
  */
 
-import { FAMILIES, TAGS, TAG_BY_ID, type L1Family, type L1Tag } from './generated/catalog'
+import { COMPONENTS, TAGS, TAG_BY_ID, type L1Component, type L1Tag } from './generated/catalog'
 import { L1_COPY, type L1Copy } from './copy'
 
 export {
-  FAMILIES,
+  COMPONENTS,
   TAGS,
   TAG_BY_ID,
   type L1Axis,
-  type L1Family,
+  type L1Component,
   type L1Prop,
   type L1Role,
   type L1Tag,
 } from './generated/catalog'
 export { L1_COPY, type L1Category, type L1Copy } from './copy'
 
-/** Family hosts — docs hub tiles, Studio faces. */
-export function hosts(): readonly L1Family[] {
-  return FAMILIES
+/** Component hosts — docs hub tiles, Studio faces. */
+export function hosts(): readonly L1Component[] {
+  return COMPONENTS
 }
 
-export function familyOf(tag: string): string | undefined {
-  return TAG_BY_ID[tag]?.family
+export function componentOf(tag: string): string | undefined {
+  return TAG_BY_ID[tag]?.component
 }
 
 export function tagOf(tag: string): L1Tag | undefined {
@@ -33,8 +33,8 @@ export function tagOf(tag: string): L1Tag | undefined {
 }
 
 export function copyOf(tag: string): L1Copy | undefined {
-  const family = TAG_BY_ID[tag]?.family ?? tag
-  return L1_COPY[tag] ?? L1_COPY[family]
+  const component = TAG_BY_ID[tag]?.component ?? tag
+  return L1_COPY[tag] ?? L1_COPY[component]
 }
 
 /** Concerns a host spends — the Theme Studio overlay list. Not component.* paths. */

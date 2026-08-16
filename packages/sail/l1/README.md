@@ -6,7 +6,7 @@ Generated **consumer catalog** for Sail L1.
 
 A TypeScript projection of `crates/sail/compiler/stdlib`:
 
-- families (directory = family = docs hub host)
+- components (directory = component = docs hub host)
 - tags, props, axes, slots (accepts children)
 - **concerns** each host's Style program spends (`border`, `fg`, `bg`, …)
 
@@ -17,7 +17,9 @@ Docs, Studio, and the matrix probe **import this package**. They do not copy `L1
 | Not | Lives here |
 |---|---|
 | L1 component definitions | `crates/sail/compiler/stdlib/**/*.sail` |
-| A test package | `@ship/sail-test` (queries) + `crates/sail/compiler/tests/fixtures/l1-matrix` (probe app) |
+| Queries | `@ship/sail-test` (`getByRole` / `getByText` / `click`) |
+| Theme × mode × variant matrix | `crates/sail/compiler/tests/l1-matrix` + fixture `tests/fixtures/l1-matrix` |
+| Behavioral edge cases | `crates/sail/compiler/stdlib/<tag>/<tag>.test.ts` |
 | Theme token catalog | `@ship/tokens` |
 | Composition recipes | `@ship/sail-blocks` |
 

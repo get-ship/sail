@@ -1,9 +1,4 @@
 <!-- Root `/` → `/edit`. Deep links land on leaf surfaces. -->
-<scope>
-  style redirectRoot = { grow(1).size({ h: full, min-h: 0 }).bg(background) }
-  style redirectText = { fg(muted-foreground).type({ size: sm }) }
-</scope>
-
 <controller>
 import { appRouteBase } from '../src/compositions/shell/shell-rail'
 
@@ -16,6 +11,6 @@ export default controller(() => {
 })
 </controller>
 
-<column studio-redirect align="center" justify="center" style(redirectRoot)>
-  <p style(redirectText)>Opening Edit…</p>
+<column studio-redirect align="center" justify="center">
+  <p>Opening Edit…</p>
 </column>

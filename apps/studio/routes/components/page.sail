@@ -1,5 +1,2 @@
 <!-- /components — library + inspect workspace. -->
-<scope>
-  style surfaceFill = { grow(1).size({ h: full, min-w: 0, min-h: 0 }).overflow({ all: hidden }) }
-</scope>
-<components-surface style(surfaceFill)></components-surface>
+<components-surface></components-surface>

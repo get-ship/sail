@@ -1,8 +1,5 @@
 <!--
   /themes/[id] — theme overview (editorial + docked specimen).
-  size h/full + min-h 0 under the route-slot flex host (bare grow collapses).
+  L2 host spends size(grow) under the chrome route slot.
 -->
-<scope>
-  style surfaceFill = { grow(1).size({ h: full, min-w: 0, min-h: 0 }).overflow({ all: hidden }) }
-</scope>
-<theme-overview-surface style(surfaceFill)></theme-overview-surface>
+<theme-overview-surface></theme-overview-surface>
