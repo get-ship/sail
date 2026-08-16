@@ -95,6 +95,60 @@ function extractThemeSelectors(css: string): Set<string> {
   return out
 }
 
+/** Whole-value custom-property alias: `--name: var(--target)` (optional fallback). */
+type AliasClass = 'keep' | 'rebind' | 'leftover' | 'product' | 'hue'
+type AliasSite = { name: string; target: string; cls: AliasClass }
+
+const WHOLE_VALUE_VAR = /^var\(--([a-zA-Z0-9_-]+)(?:,\s*[^)]+)?\)$/
+
+function stripCssComments(css: string): string {
+  return css.replace(/\/\*[\s\S]*?\*\//g, '')
+}
+
+function classifyAlias(name: string): AliasClass {
+  if (name === 'field' || name.startsWith('field-') || name === 'fieldset-border') {
+    return 'rebind'
+  }
+  if (name === 'brand-hue' || name.startsWith('brand-hue')) return 'product'
+  if (name.startsWith('hue-')) return 'hue'
+  if (name === 'sidebar' || name.startsWith('sidebar-')) return 'leftover'
+  return 'keep'
+}
+
+function extractWholeValueAliases(css: string): AliasSite[] {
+  const out: AliasSite[] = []
+  const re = /--([a-zA-Z0-9_-]+)\s*:\s*([^;]+);/g
+  let m: RegExpExecArray | null
+  while ((m = re.exec(stripCssComments(css))) !== null) {
+    const name = m[1]!
+    const value = m[2]!.trim()
+    const vm = value.match(WHOLE_VALUE_VAR)
+    if (!vm) continue
+    out.push({ name, target: vm[1]!, cls: classifyAlias(name) })
+  }
+  return out
+}
+
+function uniqueAliasNames(sites: AliasSite[]): Map<string, AliasSite> {
+  const unique = new Map<string, AliasSite>()
+  for (const site of sites) {
+    if (!unique.has(site.name)) unique.set(site.name, site)
+  }
+  return unique
+}
+
+function countAliasClasses(unique: Map<string, AliasSite>): Record<AliasClass, number> {
+  const counts: Record<AliasClass, number> = {
+    keep: 0,
+    rebind: 0,
+    leftover: 0,
+    product: 0,
+    hue: 0,
+  }
+  for (const site of unique.values()) counts[site.cls]++
+  return counts
+}
+
 const PRIMITIVE_TIER: ReadonlyArray<[name: string, sample: RegExp]> = [
   // Spacing scale
   ['--space-1', /--space-1\s*:\s*4px/i],
@@ -277,7 +331,7 @@ describe('@ship/tokens — theme catalog (THEMES export)', () => {
     const ok = {
       $description: 'test',
       $extensions: {
-        ship: {
+        sail: {
           themeId: 'probe',
           defaultMode: 'light',
           layer: 'theme',
@@ -285,8 +339,8 @@ describe('@ship/tokens — theme catalog (THEMES export)', () => {
         },
       },
       modes: {
-        light: { color: {}, component: {} },
-        dark: { color: {}, component: {} },
+        light: { color: {} },
+        dark: { color: {} },
       },
     }
     expect(validateThemeDoc(ok)).toEqual([])
@@ -512,11 +566,12 @@ describe('@ship/tokens — theme catalog (THEMES export)', () => {
     expect(root.getAttribute('mode')).toBe('light')
   })
 
-  // C-TH-NEST-1 — nested theme + mode; field aliases rebind on [theme]
-  it('tokens.css rebinds field slots on [theme] + color-scheme by mode', () => {
+  // Nested theme + mode: color-scheme only. Inputs spend --input, not --field.
+  it('tokens.css stamps color-scheme on [theme][mode] and does not rebind --field', () => {
     const css = loadSrc('../src/tokens.css')
-    expect(css).toMatch(/\[theme\]\s*\{[^}]*--field\s*:\s*var\(--background\)/s)
-    expect(css).toMatch(/\[theme\]\s*\{[^}]*--field-foreground\s*:\s*var\(--foreground\)/s)
+    expect(css).not.toMatch(/--field\s*:/)
+    expect(css).not.toMatch(/--field-foreground\s*:/)
+    expect(css).not.toMatch(/--fieldset-border\s*:/)
     expect(css).toMatch(
       /\[theme\]\[mode=['"]light['"]\]\s*\{\s*color-scheme\s*:\s*light\s*;/,
     )
@@ -552,56 +607,41 @@ describe('@ship/tokens — theme catalog (THEMES export)', () => {
     host.remove()
   })
 
-  it('nested [theme] rebinds --field against nested --background (cascade proof)', () => {
-    // Minimal model of the shipped cascade: :root field alias resolves once;
-    // nested theme redefines --background; [theme] rebind makes --field follow.
-    // Use hex (not oklch) so happy-dom custom-property inheritance is readable.
+  it('sail-light input and field-wrapped input share --input (no --field layer)', () => {
+    const themes = loadSrc('../src/themes.css')
+    const sailLight = /\[theme='sail'\]\[mode='light'\][\s\S]*?--input\s*:\s*([^;]+);/.exec(
+      themes,
+    )
+    const inputValue = sailLight?.[1]?.trim() ?? ''
+    expect(inputValue.length).toBeGreaterThan(0)
+
     const style = document.createElement('style')
     style.textContent = `
-      :root {
-        --background: #112233;
-        --foreground: #eeeeee;
-        --field: var(--background);
-        --field-foreground: var(--foreground);
-      }
-      [theme='paper'][mode='light'],
-      [theme='paper']:not([mode]) {
-        --background: #f5f0e6;
-        --foreground: #221100;
-      }
-      /* product rebind — matches model/chrome.css */
-      [theme] {
-        --field: var(--background);
-        --field-foreground: var(--foreground);
-      }
+      [theme='sail'][mode='light'] { --input: ${inputValue}; }
     `
     document.head.appendChild(style)
-    document.documentElement.setAttribute('theme', 'sail')
-    document.documentElement.setAttribute('mode', 'dark')
 
-    const nested = document.createElement('div')
-    nested.setAttribute('theme', 'paper')
-    nested.setAttribute('mode', 'light')
-    document.body.appendChild(nested)
+    const host = document.createElement('div')
+    host.setAttribute('theme', 'sail')
+    host.setAttribute('mode', 'light')
+    const field = document.createElement('div')
+    field.setAttribute('data-field', '')
+    host.appendChild(field)
+    document.body.appendChild(host)
 
-    const nestedField = getComputedStyle(nested).getPropertyValue('--field').trim()
-    const nestedFg = getComputedStyle(nested).getPropertyValue('--field-foreground').trim()
-    const rootField = getComputedStyle(document.documentElement)
-      .getPropertyValue('--field')
-      .trim()
-    // Nested field must resolve against paper background, not site dark field.
-    expect(nestedField.length).toBeGreaterThan(0)
-    expect(nestedField).not.toBe(rootField)
-    // Accept either unresolved var() rebind or substituted paper value.
-    const paperish =
-      nestedField.includes('f5f0e6') ||
-      nestedField.includes('245, 240, 230') ||
-      nestedField === 'var(--background)'
-    expect(paperish).toBe(true)
-    expect(nestedFg.length).toBeGreaterThan(0)
+    const hostInput = getComputedStyle(host).getPropertyValue('--input').trim()
+    expect(hostInput).toBe(inputValue)
+    // Field wrapper does not declare a second surface — same --input as the
+    // theme host. Happy-dom does not inherit custom props to children, so the
+    // proof is: no --field layer exists, and L1 skins spend --input.
+    expect(getComputedStyle(field).getPropertyValue('--field').trim()).toBe('')
+    expect(loadSrc('../src/tokens.css')).not.toMatch(/--field\s*:/)
+    const skins = loadSrc('../src/element-skins.css')
+    expect(skins).toMatch(/background-color:\s*var\(--input\)/)
+    expect(skins).not.toMatch(/var\(--field\)/)
 
     style.remove()
-    nested.remove()
+    host.remove()
   })
 
   it('nested theme= without mode inherits document mode (no JS)', () => {
@@ -980,19 +1020,24 @@ describe('@ship/tokens — DTCG SSOT / generate drift lock', () => {
     expect(css).toMatch(/model\/themes/)
   })
 
-  it('token-registry.json canonical names equal base + component source cssNames', () => {
+  it('registry is 377 names with zero component.* paths (cut pack stays cut)', () => {
     const reg = loadRegistry()
-    const model = modelBaseCssNames()
-    expect(model.size).toBeGreaterThan(100)
-    // Canonical tokens (non-alias) match model
-    const canonical = reg.names.filter((n) => !reg.tokens[n]?.aliasOf)
-    expect(canonical.length).toBe(model.size)
-    for (const n of model) {
-      expect(canonical.includes(n)).toBe(true)
-    }
-    for (const n of canonical) {
-      expect(model.has(n)).toBe(true)
-    }
+    expect(reg.names).toHaveLength(377)
+    const componentPaths = Object.keys(reg.paths ?? {}).filter((p) =>
+      p.startsWith('component.'),
+    )
+    expect(componentPaths).toEqual([])
+    expect(reg.names.some((n) => n === 'field' || n.startsWith('field-'))).toBe(
+      false,
+    )
+    expect(reg.paths?.['color.card.default']).toBe('card')
+    expect(reg.paths?.['color.input']).toBe('input')
+    expect(reg.paths?.['color.popover.default']).toBe('popover')
+    expect(reg.tokens.card?.path).toBe('color.card.default')
+    expect(reg.tokens.input?.path).toBe('color.input')
+    // Naive path-join of base.json is not an independent pin (public names
+    // drop group prefixes). Walk only to prove the model still has $value leaves.
+    expect(modelBaseCssNames().size).toBeGreaterThan(100)
   })
 
   it('registry entries expose path + cssName for sx/J2', () => {
@@ -1166,172 +1211,26 @@ describe('@ship/tokens — DTCG SSOT / generate drift lock', () => {
     }
   })
 
-  it('NAV/CHROME/MISC component packs register path → cssName', () => {
+  it('cut component packs stay gone; role aliases remain on color.*', () => {
     const reg = loadRegistry()
-    const expected: Array<[path: string, cssName: string]> = [
-      ['component.card.bg', 'card'],
-      ['component.navbar.bg', 'navbar'],
-      ['component.navbar.fg', 'navbar-foreground'],
-      ['component.navbar.border', 'navbar-border'],
-      ['component.menu-item.fg', 'menu-item-foreground'],
-      ['component.menu-item.hover-bg', 'menu-item-hover-bg'],
-      ['component.dropdown.bg', 'dropdown'],
-      ['component.dropdown.fg', 'dropdown-foreground'],
-      ['component.context-menu.bg', 'context-menu'],
-      ['component.context-menu.fg', 'context-menu-foreground'],
-      ['component.combobox.bg', 'combobox'],
-      ['component.combobox.fg', 'combobox-foreground'],
-      ['component.page.fg', 'page-foreground'],
-      ['component.page.hover-bg', 'page-hover-bg'],
-      ['component.page.current-bg', 'page-current-bg'],
-      ['component.page.current-fg', 'page-current-foreground'],
-      ['component.prose.fg', 'prose-foreground'],
-      ['component.code-block.bg', 'code-block'],
-      ['component.code-block.fg', 'code-block-foreground'],
-      ['component.theme-picker.bg', 'theme-picker'],
-      ['component.theme-picker.fg', 'theme-picker-foreground'],
-      ['component.error-boundary.bg', 'error-boundary'],
-      ['component.error-boundary.border', 'error-boundary-border'],
-      ['component.error-boundary.fg', 'error-boundary-foreground'],
-    ]
-    for (const [path, cssName] of expected) {
-      expect(reg.paths?.[path], path).toBe(cssName)
-      expect(reg.tokens[cssName]?.path).toBe(path)
-      expect(reg.tokens[cssName]?.cssName).toBe(cssName)
+    for (const path of [
+      'component.card.bg',
+      'component.field.bg',
+      'component.navbar.bg',
+      'component.combobox.bg',
+      'component.dialog.bg',
+    ]) {
+      expect(reg.paths?.[path], path).toBeUndefined()
     }
     const css = loadSrc('../src/tokens.css')
-    expect(css).toMatch(/--navbar\s*:\s*var\(--background\)/)
-    expect(css).toMatch(/--combobox\s*:\s*var\(--popover\)/)
-    expect(css).toMatch(/--code-block\s*:\s*var\(--surface-1\)/)
-    expect(css).toMatch(/--error-boundary\s*:\s*var\(--muted\)/)
-  })
-
-  it('CONTROL component packs register path → cssName', () => {
-    const reg = loadRegistry()
-    const expected: Array<[path: string, cssName: string]> = [
-      ['component.field.bg', 'field'],
-      ['component.field.fg', 'field-foreground'],
-      ['component.field.border', 'field-border'],
-      ['component.field.border-hover', 'field-border-hover'],
-      ['component.field.hint', 'field-hint'],
-      ['component.field.error', 'field-error'],
-      ['component.button.bg', 'button'],
-      ['component.button.fg', 'button-foreground'],
-      ['component.button.border', 'button-border'],
-      ['component.button.hover-bg', 'button-hover-bg'],
-      ['component.label.fg', 'label-foreground'],
-      ['component.label.required', 'label-required'],
-      ['component.switch.track', 'switch'],
-      ['component.switch.border', 'switch-border'],
-      ['component.switch.thumb', 'switch-thumb'],
-      ['component.toggle.bg', 'toggle'],
-      ['component.toggle.fg', 'toggle-foreground'],
-      ['component.toggle.border', 'toggle-border'],
-      ['component.toggle-group.bg', 'toggle-group'],
-      ['component.toggle-group.border', 'toggle-group-border'],
-      ['component.radio.fg', 'radio-foreground'],
-      ['component.tab.fg', 'tab-foreground'],
-      ['component.tab.selected-fg', 'tab-selected-foreground'],
-      ['component.tab.selected-bg', 'tab-selected-bg'],
-      ['component.tab.border', 'tab-border'],
-      ['component.tab-list.bg', 'tab-list'],
-      ['component.tab-list.border', 'tab-list-border'],
-      ['component.tab-list.rail', 'tab-list-rail'],
-      ['component.scroll-area.thumb', 'scroll-area-thumb'],
-      ['component.scroll-area.thumb-hover', 'scroll-area-thumb-hover'],
-    ]
-    for (const [path, cssName] of expected) {
-      expect(reg.paths?.[path], path).toBe(cssName)
-      expect(reg.tokens[cssName]?.path).toBe(path)
-      expect(reg.tokens[cssName]?.cssName).toBe(cssName)
-    }
-    const css = loadSrc('../src/tokens.css')
-    expect(css).toMatch(/--switch\s*:\s*var\(--muted\)/)
-    // Thumb is a light knob (contrast floor vs muted track), not surface-1.
-    expect(css).toMatch(/--switch-thumb\s*:\s*oklch\(1\s+0\s+0\)/)
-    expect(css).toMatch(/--label-foreground\s*:\s*var\(--foreground\)/)
-    expect(css).toMatch(/--field-hint\s*:\s*var\(--muted-foreground\)/)
-    expect(css).toMatch(/--field\s*:\s*var\(--background\)/)
-  })
-
-  it('L1-token-totality surface packs register path → cssName', () => {
-    const reg = loadRegistry()
-    const expected: Array<[path: string, cssName: string]> = [
-      ['component.dialog.bg', 'dialog'],
-      ['component.dialog.fg', 'dialog-foreground'],
-      ['component.dialog.border', 'dialog-border'],
-      ['component.accordion.bg', 'accordion'],
-      ['component.accordion.fg', 'accordion-foreground'],
-      ['component.accordion.border', 'accordion-border'],
-      ['component.accordion.hover-bg', 'accordion-hover-bg'],
-      ['component.accordion.chevron', 'accordion-chevron'],
-      ['component.skeleton.bg', 'skeleton'],
-      ['component.skeleton.highlight', 'skeleton-highlight'],
-      ['component.kbd.bg', 'kbd'],
-      ['component.kbd.fg', 'kbd-foreground'],
-      ['component.kbd.border', 'kbd-border'],
-      // Slice #2 residual packs
-      ['component.table.fg', 'table-foreground'],
-      ['component.table.muted-fg', 'table-muted-foreground'],
-      ['component.table.stripe', 'table-stripe'],
-      ['component.table.sticky-bg', 'table-sticky-bg'],
-      ['component.progress.track', 'progress'],
-      ['component.progress.fill', 'progress-fill'],
-      ['component.meter.track', 'meter'],
-      ['component.meter.optimum', 'meter-optimum'],
-      ['component.meter.suboptimum', 'meter-suboptimum'],
-      ['component.meter.sub-suboptimum', 'meter-sub-suboptimum'],
-      ['component.slider.track', 'slider-track'],
-      ['component.slider.fill', 'slider-fill'],
-      ['component.slider.track-border', 'slider-track-border'],
-      ['component.breadcrumb.fg', 'breadcrumb-foreground'],
-      ['component.breadcrumb.current', 'breadcrumb-current'],
-      ['component.fieldset.border', 'fieldset-border'],
-      ['component.legend.fg', 'legend-foreground'],
-      // Slice #3 residual pack extensions
-      ['component.alert.border', 'alert-border'],
-      ['component.toast.stripe', 'toast-stripe'],
-      ['component.navbar.border', 'navbar-border'],
-      ['component.empty-state.title', 'empty-state-title'],
-      ['component.tab.border', 'tab-border'],
-      // Slice #4 — panel borders + dialog anatomy
-      ['component.popover.border', 'popover-border'],
-      ['component.dropdown.border', 'dropdown-border'],
-      ['component.context-menu.border', 'context-menu-border'],
-      ['component.hover-card.border', 'hover-card-border'],
-      ['component.dialog.divider', 'dialog-divider'],
-      ['component.dialog.footer', 'dialog-footer'],
-      ['component.dialog.muted-fg', 'dialog-muted-foreground'],
-    ]
-    for (const [path, cssName] of expected) {
-      expect(reg.paths?.[path], path).toBe(cssName)
-      expect(reg.tokens[cssName]?.path).toBe(path)
-    }
-    const css = loadSrc('../src/tokens.css')
-    expect(css).toMatch(/--dialog\s*:\s*var\(--surface-1\)/)
-    expect(css).toMatch(/--accordion\s*:\s*var\(--surface-1\)/)
-    expect(css).toMatch(/--skeleton\s*:\s*var\(--muted\)/)
-    expect(css).toMatch(/--kbd\s*:\s*var\(--muted\)/)
-    expect(css).toMatch(/--table-foreground\s*:\s*var\(--foreground\)/)
-    expect(css).toMatch(/--progress\s*:\s*var\(--muted\)/)
-    expect(css).toMatch(/--progress-fill\s*:\s*var\(--primary\)/)
-    expect(css).toMatch(/--meter\s*:\s*var\(--muted\)/)
-    expect(css).toMatch(/--slider-track\s*:\s*var\(--muted\)/)
-    expect(css).toMatch(/--breadcrumb-foreground\s*:\s*var\(--muted-foreground\)/)
-    expect(css).toMatch(/--fieldset-border\s*:\s*var\(--border\)/)
-    expect(css).toMatch(/--legend-foreground\s*:\s*var\(--foreground\)/)
-    expect(css).toMatch(/--alert-border\s*:\s*var\(--border\)/)
-    expect(css).toMatch(/--toast-stripe\s*:\s*var\(--foreground\)/)
-    expect(css).toMatch(/--navbar-border\s*:\s*var\(--border\)/)
-    expect(css).toMatch(/--empty-state-title\s*:\s*var\(--foreground\)/)
-    expect(css).toMatch(/--tab-border\s*:\s*var\(--border\)/)
-    expect(css).toMatch(/--popover-border\s*:\s*var\(--border\)/)
-    expect(css).toMatch(/--dropdown-border\s*:\s*var\(--border\)/)
-    expect(css).toMatch(/--context-menu-border\s*:\s*var\(--border\)/)
-    expect(css).toMatch(/--hover-card-border\s*:\s*var\(--popover-border\)/)
-    expect(css).toMatch(/--dialog-divider\s*:\s*var\(--border-subtle\)/)
-    expect(css).toMatch(/--dialog-footer\s*:\s*var\(--muted\)/)
-    expect(css).toMatch(/--dialog-muted-foreground\s*:\s*var\(--muted-foreground\)/)
+    expect(css).toMatch(/--card\s*:\s*var\(--surface-1\)/)
+    expect(css).toMatch(/--card-foreground\s*:\s*var\(--foreground\)/)
+    expect(css).toMatch(/--popover\s*:\s*var\(--surface-1\)/)
+    expect(css).toMatch(/--input\s*:/)
+    expect(css).not.toMatch(/--field\s*:/)
+    expect(css).not.toMatch(/--navbar\s*:/)
+    expect(css).not.toMatch(/--combobox\s*:/)
+    expect(css).not.toMatch(/--dialog\s*:\s*var\(/)
   })
 
   it('color surface includes brand + tone tokens and excludes space/text', () => {
@@ -1371,6 +1270,68 @@ describe('@ship/tokens — DTCG SSOT / generate drift lock', () => {
     expect(unions).toContain("'paper'")
     expect(unions).not.toContain("'ship-light'")
     expect(unions).not.toContain("'ship-dark'")
+  })
+})
+
+describe('@ship/tokens — whole-value alias audit', () => {
+  // Pins RESULT-TOKEN-AUDIT.md. Recount: extractWholeValueAliases.
+  const PIN = {
+    tokensSites: 98,
+    tokensUnique: 93,
+    tokensKeep: 93,
+    tokensRebind: 0,
+    themesSites: 222,
+    themesUnique: 22,
+    themesKeep: 22,
+    chromeSites: 0,
+    hueFirstClass: 16,
+    sidebarFirstClass: 8,
+  } as const
+
+  it('tokens.css / themes.css / chrome.css alias classes match the RESULT pin', () => {
+    const tokens = extractWholeValueAliases(loadSrc('../src/tokens.css'))
+    const themes = extractWholeValueAliases(loadSrc('../src/themes.css'))
+    const chrome = extractWholeValueAliases(loadSrc('../model/chrome.css'))
+    const tUnique = uniqueAliasNames(tokens)
+    const thUnique = uniqueAliasNames(themes)
+    const cUnique = uniqueAliasNames(chrome)
+    const tCounts = countAliasClasses(tUnique)
+    const thCounts = countAliasClasses(thUnique)
+    const cCounts = countAliasClasses(cUnique)
+
+    expect(tokens).toHaveLength(PIN.tokensSites)
+    expect(tUnique.size).toBe(PIN.tokensUnique)
+    expect(tCounts).toEqual({
+      keep: PIN.tokensKeep,
+      rebind: PIN.tokensRebind,
+      leftover: 0,
+      product: 0,
+      hue: 0,
+    })
+    expect(themes).toHaveLength(PIN.themesSites)
+    expect(thUnique.size).toBe(PIN.themesUnique)
+    expect(thCounts.keep).toBe(PIN.themesKeep)
+    expect(thCounts.rebind).toBe(0)
+    expect(chrome).toHaveLength(PIN.chromeSites)
+    expect(cUnique.size).toBe(0)
+    expect(cCounts.rebind).toBe(0)
+  })
+
+  it('hue.* and sidebar.* are first-class leaves, not var() aliases; brand-hue is a product channel', () => {
+    const reg = JSON.parse(loadSrc('../src/token-registry.json')) as {
+      names: string[]
+    }
+    const hue = reg.names.filter((n) => n.startsWith('hue-'))
+    const sidebar = reg.names.filter((n) => n === 'sidebar' || n.startsWith('sidebar-'))
+    expect(hue).toHaveLength(PIN.hueFirstClass)
+    expect(sidebar).toHaveLength(PIN.sidebarFirstClass)
+    expect(reg.names.includes('brand-hue')).toBe(false)
+    const tokens = extractWholeValueAliases(loadSrc('../src/tokens.css'))
+    expect(tokens.some((s) => s.cls === 'hue' || s.cls === 'leftover' || s.cls === 'product')).toBe(
+      false,
+    )
+    const products = loadSrc('../src/products.css')
+    expect(products).toMatch(/--brand-hue\s*:/)
   })
 })
 

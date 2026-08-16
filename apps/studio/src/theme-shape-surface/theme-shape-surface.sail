@@ -354,7 +354,7 @@ export default controller(() => {
         on:input={shape.onSurfaceBlur}
        />
             </column>
-            <p style(fieldHint)>Writes component.card.bg α + backdrop-filter. Frost fill previews freeform; blur is theme paint after Save.</p>
+            <p style(fieldHint)>Writes card fill α + backdrop. Frost fill previews freeform; blur is theme paint after Save.</p>
           </column>
         </if>
 

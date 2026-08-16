@@ -301,15 +301,58 @@ fn map_diagnostic(
         severity = DiagSeverity::Error;
     }
 
+    let elem = element_for_diag(elements, &diag);
+    let message = refine_clipped_text_message(diag.kind, diag.message, elem);
+
     Diagnostic {
         line,
         col,
         end_line,
         end_col,
         severity,
-        message: diag.message,
+        message,
         rule: Some(rule_id_for_kind(diag.kind).to_string()),
     }
+}
+
+/// Hug-content clip must not carry a truncate FixPlan / suggest.
+fn refine_clipped_text_message(
+    kind: &str,
+    message: String,
+    elem: Option<&sail_layout::html::Element>,
+) -> String {
+    if kind != "clipped-text" {
+        return message;
+    }
+    let Some(elem) = elem else {
+        return message;
+    };
+    if !is_hug_content_width(elem) {
+        return message;
+    }
+    if !suggests_truncate_fix(&message) {
+        return message;
+    }
+    let head = message
+        .split_once(" — ")
+        .map(|(h, _)| h)
+        .unwrap_or(&message);
+    format!(
+        "{head} — glyphs clip. Widen the box or allow wrapping — type({{ wrap: truncate }}) is not a fix on a hug-content control."
+    )
+}
+
+fn is_hug_content_width(elem: &sail_layout::html::Element) -> bool {
+    // Authored width / max-width only. grow + min-w:0 is not a width.
+    elem.box_style.width.is_none() && elem.box_style.max_width.is_none()
+}
+
+fn suggests_truncate_fix(message: &str) -> bool {
+    let lower = message.to_ascii_lowercase();
+    lower.contains("add type({ wrap: truncate })")
+        || lower.contains("add `type({ wrap: truncate })`")
+        || lower.contains("add `text: truncate()`")
+        || lower.contains("text: truncate()")
 }
 
 #[cfg(test)]
@@ -907,6 +950,39 @@ mod tests {
         assert!(
             original_byte_span(src, &pre, &miss).is_none(),
             "missing tag must not clamp to EOF"
+        );
+    }
+
+    #[test]
+    fn refine_strips_truncate_suggest_on_hug_content() {
+        let hug = sail_layout::html::Element {
+            box_style: sail_layout::ResolvedBox::default(),
+            ..Default::default()
+        };
+        let raw = "<span> text measures ~37px but its box is 36px wide — glyphs clip \
+                   without truncate(). Add type({ wrap: truncate }) if ellipsis is \
+                   intended, widen the box, or allow wrapping.";
+        let refined = refine_clipped_text_message("clipped-text", raw.into(), Some(&hug));
+        assert!(
+            !suggests_truncate_fix(&refined),
+            "hug refine must drop truncate suggest: {refined}"
+        );
+        assert!(
+            refined.contains("hug-content"),
+            "hug refine must name the mask: {refined}"
+        );
+
+        let constrained = sail_layout::html::Element {
+            box_style: sail_layout::ResolvedBox {
+                max_width: Some("24".into()),
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+        let kept = refine_clipped_text_message("clipped-text", raw.into(), Some(&constrained));
+        assert!(
+            suggests_truncate_fix(&kept),
+            "max-w clip may keep truncate suggest: {kept}"
         );
     }
 }

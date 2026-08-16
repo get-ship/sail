@@ -7,9 +7,6 @@
   style specimen = { size({ w: 64, max-w: full }).pad(2).overflow({ all: visible }) }
   style controlW = { size({ w: full }) }
   style knobLabel = { fg(muted-foreground).type({ size: xs, weight: medium, tracking: wide, case: uppercase }) }
-  style sizeValue = { fg(muted-foreground).type({ family: mono, size: xs }) }
-  style tickRow = { size({ w: full }).pad({ x: 1_5, t: 1 }) }
-  style tick = { fg(muted-foreground).type({ family: mono, size: xs }) }
   style exampleBlock = { size({ w: full }).pad({ t: 2, b: 4 }).overflow({ all: visible }) }
   style sectionLabel = { fg(muted-foreground).type({ size: xs, tracking: wide, case: uppercase }) }
 </scope>
@@ -19,22 +16,12 @@ import type { Scope } from './doc-textarea.sail'
 import { DETAILS } from '../../compositions/component-details'
 
 export default controller((_ctx: Scope) => {
-  const SIZES = ['xs', 'sm', 'md', 'lg'] as const
-  const sizeIdx = signal(2)
+  const size = signal('md')
   const invalid = signal(false)
   const disabled = signal(false)
   const placeholder = signal('Tell us about yourself')
-  const rowsIdx = signal(3)
+  const rows = signal('3')
   const bio = signal('')
-
-  const size = derived(() => {
-    const i = Math.min(Math.max(0, Math.round(Number(sizeIdx()) || 0)), SIZES.length - 1)
-    return SIZES[i] ?? 'md'
-  })
-  const rows = derived(() => {
-    const n = Math.round(Number(rowsIdx()) || 3)
-    return Math.min(12, Math.max(1, n))
-  })
 
   const entry = DETAILS.textarea
   const heading = () => entry.heading
@@ -57,12 +44,10 @@ export default controller((_ctx: Scope) => {
     `<textarea size="xs" rows="2" placeholder="xs" />\n<textarea size="sm" rows="2" placeholder="sm" />\n<textarea rows="2" placeholder="md" />\n<textarea size="lg" rows="2" placeholder="lg" />`
 
   return {
-    sizeIdx,
     size,
     invalid,
     disabled,
     placeholder,
-    rowsIdx,
     rows,
     bio,
     heading,
@@ -105,18 +90,23 @@ export default controller((_ctx: Scope) => {
         <input type="text" size="sm" bind:value={placeholder} />
       </column>
       <column gap="2">
-        <row gap="2" align="center" justify="between">
-          <label style(knobLabel)>Size</label>
-          <span style(sizeValue)>{size()}</span>
-        </row>
-        <slider bind:value={sizeIdx} min="0" max="3" step="1" size="sm" label="Size" ticks="xs,sm,md,lg"></slider>
+        <label style(knobLabel)>Size</label>
+        <select size="sm" bind:value={size} label="Size">
+          <option value="xs">xs</option>
+          <option value="sm">sm</option>
+          <option value="md">md</option>
+          <option value="lg">lg</option>
+        </select>
       </column>
       <column gap="2">
-        <row gap="2" align="center" justify="between">
-          <label style(knobLabel)>Rows</label>
-          <span style(sizeValue)>{rows()}</span>
-        </row>
-        <slider bind:value={rowsIdx} min="1" max="8" step="1" size="sm" label="Rows"></slider>
+        <label style(knobLabel)>Rows</label>
+        <select size="sm" bind:value={rows} label="Rows">
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+          <option value="6">6</option>
+          <option value="8">8</option>
+        </select>
       </column>
       <row gap="4" align="center">
         <label><checkbox bind:checked={invalid} size="sm" /> Invalid</label>

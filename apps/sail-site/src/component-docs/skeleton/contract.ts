@@ -14,13 +14,10 @@ export const contract = {
     size: {
       values: ['sm', 'md', 'lg'] as const,
       default: 'md',
-      control: 'slider',
+      control: 'select',
     },
   },
-  faces: [
-    { path: 'component.skeleton.bg', label: 'Band' },
-    { path: 'component.skeleton.highlight', label: 'Highlight' },
-  ],
+  faces: [],
   visual: {
     defaultRow: true,
     cross: ['shape', 'size'],

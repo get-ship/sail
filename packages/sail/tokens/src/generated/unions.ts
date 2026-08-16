@@ -530,6 +530,8 @@ export type CssTokenName =
   | 'panel-w-side'
   | 'panel-w-toast'
   | 'play-colors-property'
+  | 'play-control-property'
+  | 'play-surface-property'
   | 'popover'
   | 'popover-foreground'
   | 'press-scale'

@@ -25,68 +25,121 @@ pub struct StdlibElement {
 }
 
 const SOURCES: &[(&str, &str)] = &[
-    ("spinner", include_str!("../stdlib/spinner.sail")),
-    ("skeleton", include_str!("../stdlib/skeleton.sail")),
-    ("button", include_str!("../stdlib/button.sail")),
-    ("input", include_str!("../stdlib/input.sail")),
-    ("checkbox", include_str!("../stdlib/checkbox.sail")),
-    ("date", include_str!("../stdlib/date.sail")),
-    ("file", include_str!("../stdlib/file.sail")),
-    ("color", include_str!("../stdlib/color.sail")),
-    ("textarea", include_str!("../stdlib/textarea.sail")),
-    ("select", include_str!("../stdlib/select.sail")),
-    ("dialog", include_str!("../stdlib/dialog.sail")),
-    ("accordion", include_str!("../stdlib/accordion.sail")),
-    ("table", include_str!("../stdlib/table.sail")),
-    ("fieldset", include_str!("../stdlib/fieldset.sail")),
-    ("legend", include_str!("../stdlib/legend.sail")),
-    ("progress", include_str!("../stdlib/progress.sail")),
-    ("meter", include_str!("../stdlib/meter.sail")),
-    ("a", include_str!("../stdlib/anchor.sail")),
-    ("separator", include_str!("../stdlib/separator.sail")),
-    ("kbd", include_str!("../stdlib/kbd.sail")),
-    ("icon", include_str!("../stdlib/icon.sail")),
-    ("label", include_str!("../stdlib/label.sail")),
-    ("card", include_str!("../stdlib/card.sail")),
-    ("switch", include_str!("../stdlib/switch.sail")),
-    ("badge", include_str!("../stdlib/badge.sail")),
-    ("avatar", include_str!("../stdlib/avatar.sail")),
-    ("tooltip", include_str!("../stdlib/tooltip.sail")),
-    ("alert", include_str!("../stdlib/alert.sail")),
-    ("empty-state", include_str!("../stdlib/empty-state.sail")),
-    ("error-state", include_str!("../stdlib/error-state.sail")),
+    ("spinner", include_str!("../stdlib/spinner/spinner.sail")),
+    ("skeleton", include_str!("../stdlib/skeleton/skeleton.sail")),
+    ("button", include_str!("../stdlib/button/button.sail")),
+    ("input", include_str!("../stdlib/input/input.sail")),
+    ("checkbox", include_str!("../stdlib/checkbox/checkbox.sail")),
+    ("date", include_str!("../stdlib/date/date.sail")),
+    ("file", include_str!("../stdlib/file/file.sail")),
+    ("color", include_str!("../stdlib/color/color.sail")),
+    ("textarea", include_str!("../stdlib/textarea/textarea.sail")),
+    ("select", include_str!("../stdlib/select/select.sail")),
+    ("dialog", include_str!("../stdlib/dialog/dialog.sail")),
+    ("drawer", include_str!("../stdlib/drawer/drawer.sail")),
+    (
+        "accordion",
+        include_str!("../stdlib/accordion/accordion.sail"),
+    ),
+    ("table", include_str!("../stdlib/table/table.sail")),
+    ("th", include_str!("../stdlib/table/th.sail")),
+    ("td", include_str!("../stdlib/table/td.sail")),
+    ("caption", include_str!("../stdlib/table/caption.sail")),
+    ("fieldset", include_str!("../stdlib/fieldset/fieldset.sail")),
+    ("legend", include_str!("../stdlib/fieldset/legend.sail")),
+    ("progress", include_str!("../stdlib/progress/progress.sail")),
+    ("meter", include_str!("../stdlib/meter/meter.sail")),
+    ("a", include_str!("../stdlib/a/anchor.sail")),
+    (
+        "separator",
+        include_str!("../stdlib/separator/separator.sail"),
+    ),
+    ("kbd", include_str!("../stdlib/kbd/kbd.sail")),
+    ("icon", include_str!("../stdlib/icon/icon.sail")),
+    ("label", include_str!("../stdlib/label/label.sail")),
+    ("card", include_str!("../stdlib/card/card.sail")),
+    ("switch", include_str!("../stdlib/switch/switch.sail")),
+    ("badge", include_str!("../stdlib/badge/badge.sail")),
+    ("avatar", include_str!("../stdlib/avatar/avatar.sail")),
+    ("tooltip", include_str!("../stdlib/tooltip/tooltip.sail")),
+    ("alert", include_str!("../stdlib/alert/alert.sail")),
+    (
+        "empty-state",
+        include_str!("../stdlib/empty-state/empty-state.sail"),
+    ),
+    (
+        "error-state",
+        include_str!("../stdlib/error-state/error-state.sail"),
+    ),
     (
         "error-boundary",
-        include_str!("../stdlib/error-boundary.sail"),
+        include_str!("../stdlib/error-boundary/error-boundary.sail"),
     ),
-    ("code-block", include_str!("../stdlib/code-block.sail")),
-    ("chip", include_str!("../stdlib/chip.sail")),
-    ("field", include_str!("../stdlib/field.sail")),
-    ("slider", include_str!("../stdlib/slider.sail")),
-    ("radio", include_str!("../stdlib/radio.sail")),
-    ("radio-group", include_str!("../stdlib/radio-group.sail")),
-    ("tabs", include_str!("../stdlib/tabs.sail")),
-    ("tab-list", include_str!("../stdlib/tab-list.sail")),
-    ("tab", include_str!("../stdlib/tab.sail")),
-    ("tab-panel", include_str!("../stdlib/tab-panel.sail")),
-    ("toggle-group", include_str!("../stdlib/toggle-group.sail")),
-    ("toggle", include_str!("../stdlib/toggle.sail")),
-    ("scroll-area", include_str!("../stdlib/scroll-area.sail")),
-    ("ticker", include_str!("../stdlib/ticker.sail")),
-    ("theme-picker", include_str!("../stdlib/theme-picker.sail")),
-    ("navbar", include_str!("../stdlib/navbar.sail")),
-    ("pagination", include_str!("../stdlib/pagination.sail")),
-    ("page", include_str!("../stdlib/page.sail")),
-    ("breadcrumb", include_str!("../stdlib/breadcrumb.sail")),
-    ("popover", include_str!("../stdlib/popover.sail")),
-    ("prose", include_str!("../stdlib/prose.sail")),
-    ("combobox", include_str!("../stdlib/combobox.sail")),
-    ("dropdown", include_str!("../stdlib/dropdown.sail")),
-    ("menu-item", include_str!("../stdlib/menu-item.sail")),
-    ("context-menu", include_str!("../stdlib/context-menu.sail")),
-    ("hover-card", include_str!("../stdlib/hover-card.sail")),
-    ("toast-region", include_str!("../stdlib/toast-region.sail")),
-    ("toast", include_str!("../stdlib/toast.sail")),
+    (
+        "code-block",
+        include_str!("../stdlib/code-block/code-block.sail"),
+    ),
+    ("chip", include_str!("../stdlib/chip/chip.sail")),
+    ("field", include_str!("../stdlib/field/field.sail")),
+    ("slider", include_str!("../stdlib/slider/slider.sail")),
+    ("radio", include_str!("../stdlib/radio-group/radio.sail")),
+    (
+        "radio-group",
+        include_str!("../stdlib/radio-group/radio-group.sail"),
+    ),
+    ("tabs", include_str!("../stdlib/tabs/tabs.sail")),
+    ("tab-list", include_str!("../stdlib/tabs/tab-list.sail")),
+    ("tab", include_str!("../stdlib/tabs/tab.sail")),
+    ("tab-panel", include_str!("../stdlib/tabs/tab-panel.sail")),
+    (
+        "toggle-group",
+        include_str!("../stdlib/toggle-group/toggle-group.sail"),
+    ),
+    ("toggle", include_str!("../stdlib/toggle-group/toggle.sail")),
+    (
+        "scroll-area",
+        include_str!("../stdlib/scroll-area/scroll-area.sail"),
+    ),
+    (
+        "resizable",
+        include_str!("../stdlib/resizable/resizable.sail"),
+    ),
+    ("ticker", include_str!("../stdlib/ticker/ticker.sail")),
+    (
+        "theme-picker",
+        include_str!("../stdlib/theme-picker/theme-picker.sail"),
+    ),
+    ("navbar", include_str!("../stdlib/navbar/navbar.sail")),
+    (
+        "pagination",
+        include_str!("../stdlib/pagination/pagination.sail"),
+    ),
+    ("page", include_str!("../stdlib/pagination/page.sail")),
+    (
+        "breadcrumb",
+        include_str!("../stdlib/breadcrumb/breadcrumb.sail"),
+    ),
+    ("popover", include_str!("../stdlib/popover/popover.sail")),
+    ("prose", include_str!("../stdlib/prose/prose.sail")),
+    ("combobox", include_str!("../stdlib/combobox/combobox.sail")),
+    ("dropdown", include_str!("../stdlib/dropdown/dropdown.sail")),
+    (
+        "menu-item",
+        include_str!("../stdlib/menu-item/menu-item.sail"),
+    ),
+    (
+        "context-menu",
+        include_str!("../stdlib/context-menu/context-menu.sail"),
+    ),
+    (
+        "hover-card",
+        include_str!("../stdlib/hover-card/hover-card.sail"),
+    ),
+    (
+        "toast-region",
+        include_str!("../stdlib/toast/toast-region.sail"),
+    ),
+    ("toast", include_str!("../stdlib/toast/toast.sail")),
 ];
 
 /// Compiled stdlib elements, memoized for the process lifetime. A stdlib
@@ -96,6 +149,54 @@ const SOURCES: &[(&str, &str)] = &[
 /// to emit the typed-props registry the lint validates against.
 pub fn sources() -> &'static [(&'static str, &'static str)] {
     SOURCES
+}
+
+/// Family id for a stdlib tag. A directory **is** the family and the docs
+/// hub host. Parts (`tab` in `tabs/`, `toast-region` in `toast/`) map to
+/// the host directory, not their file stem.
+pub fn family_of(tag: &str) -> &'static str {
+    match tag {
+        "tab" | "tab-list" | "tab-panel" => "tabs",
+        "legend" => "fieldset",
+        "toast-region" => "toast",
+        "page" => "pagination",
+        "toggle" => "toggle-group",
+        "radio" => "radio-group",
+        "th" | "td" | "caption" => "table",
+        other => SOURCES
+            .iter()
+            .map(|(t, _)| *t)
+            .find(|t| *t == other)
+            .unwrap_or("unknown"),
+    }
+}
+
+/// True when `tag` is the family host (directory name / hub tile).
+pub fn is_family_host(tag: &str) -> bool {
+    family_of(tag) == tag
+}
+
+/// Tags in `family`, host first, then parts by name.
+pub fn family_tags(family: &str) -> Vec<&'static str> {
+    let mut tags: Vec<&'static str> = SOURCES
+        .iter()
+        .map(|(t, _)| *t)
+        .filter(|t| family_of(t) == family)
+        .collect();
+    tags.sort_by(|a, b| {
+        let ha = u8::from(*a == family);
+        let hb = u8::from(*b == family);
+        hb.cmp(&ha).then_with(|| a.cmp(b))
+    });
+    tags
+}
+
+/// Distinct family ids, sorted.
+pub fn families() -> Vec<&'static str> {
+    let mut out: Vec<&'static str> = SOURCES.iter().map(|(t, _)| family_of(t)).collect();
+    out.sort_unstable();
+    out.dedup();
+    out
 }
 
 pub fn elements() -> &'static [StdlibElement] {

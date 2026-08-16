@@ -2,7 +2,9 @@ import type { SurfaceContract } from '../contract-types'
 
 /**
  * Surface contract for card — axes from prop-registry only.
- * NO invent soft/elevated/ghost variants.
+ * Variants: default | outline | soft | elevated | ghost (SPEC-L1-PASS-1).
+ * fill is an alias of soft. spotlight is an alias of accent-bar=static.
+ * image is a named slot (no URL prop).
  */
 export const contract = {
   slug: 'card',
@@ -19,11 +21,11 @@ export const contract = {
         'accent',
         'muted',
       ] as const,
-      optional: true,
+      default: 'muted',
       control: 'swatches',
     },
     variant: {
-      values: ['default', 'outline'] as const,
+      values: ['default', 'outline', 'soft', 'elevated', 'ghost'] as const,
       default: 'default',
       control: 'select',
     },
@@ -40,14 +42,12 @@ export const contract = {
     },
     'status-rail': { default: false, control: 'switch' },
     fill: { default: false, control: 'switch' },
+    spotlight: { default: false, control: 'switch', docsSkip: true },
   },
   faces: [
-    { path: 'component.card.bg', label: 'Fill' },
-    { path: 'component.card.fg', label: 'Ink' },
-    { path: 'component.card.texture', label: 'Texture' },
-    { path: 'component.card.texture-blend', label: 'Texture blend' },
-    { path: 'component.card.texture-opacity', label: 'Texture opacity' },
-    { path: 'component.card.backdrop-filter', label: 'Backdrop filter' },
+    { path: 'card', label: 'Background' },
+    { path: 'card-foreground', label: 'Foreground' },
+    { path: 'border', label: 'Border' },
   ],
   visual: {
     defaultRow: true,
@@ -59,6 +59,7 @@ export const contract = {
       'accent-bar',
       'status-rail',
       'fill',
+      'spotlight',
     ],
   },
   examples: true,

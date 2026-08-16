@@ -25,6 +25,7 @@
   style fieldLabel = { type({ size: sm, weight: semibold }) }
   style fieldValue = { type({ family: mono, size: sm }) }
   style tableFill = { size({ w: full }) }
+  style chipLabel = { type({ wrap: truncate }) }
 </scope>
 
 <controller>
@@ -87,7 +88,7 @@ export default controller(() => {
                         <column gap="1" style(growMin)>
                           <row gap="2" align="center" nowrap>
                             <p style(cardTitle)>Ship Cloud</p>
-                            <badge tone="primary" size="sm" variant="soft" pill>official</badge>
+                            <badge tone="primary" size="sm" variant="soft" pill style(chipLabel)>official</badge>
                           </row>
                           <p style(muted)>Account, sync, and hosted agents when the plugin host is available.</p>
                         </column>

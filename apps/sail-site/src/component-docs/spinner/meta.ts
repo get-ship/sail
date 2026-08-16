@@ -7,7 +7,7 @@ export const meta = {
   key: 'spinner',
   category: 'feedback',
   kind: 'host',
-  blurb: "Indeterminate wait ring. Size scales the host; omit tone for themeable spinner.foreground / spinner.track; centered parks it in the middle of its container.",
+  blurb: "Indeterminate wait ring. Size scales the glyph; tone defaults to info. Center it with the parent layout.",
   heading: "prose",
   host: 'doc-spinner',
   stageOwnsKnobs: true,

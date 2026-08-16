@@ -14,13 +14,9 @@ export const contract = {
     onErrorCaught: { control: 'none', event: true },
   },
   faces: [
-    { path: 'component.error-boundary.bg', label: 'Fill' },
-    { path: 'component.error-boundary.border', label: 'Border' },
-    { path: 'component.error-boundary.fg', label: 'Ink' },
-    { path: 'component.error-boundary.icon-fg', label: 'Icon' },
-    { path: 'component.error-boundary.message-fg', label: 'Message' },
-    { path: 'component.error-boundary.retry-bg', label: 'Retry fill' },
-    { path: 'component.error-boundary.retry-fg', label: 'Retry ink' },
+    { path: 'card', label: 'Background' },
+    { path: 'card-foreground', label: 'Foreground' },
+    { path: 'border', label: 'Border' },
   ],
   visual: {
     defaultRow: true,

@@ -2,7 +2,7 @@ import type { SurfaceContract } from '../contract-types'
 
 /**
  * Surface contract for ticker — axes from prop-registry only.
- * No component.ticker.* leaves (author paint on host).
+ * No ticker-specific pack (author Style on host).
  */
 export const contract = {
   slug: 'ticker',

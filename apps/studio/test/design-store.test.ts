@@ -1,3 +1,6 @@
+/**
+ * @vitest-environment happy-dom
+ */
 import { afterEach, beforeAll, describe, expect, it } from 'vitest'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -19,7 +22,6 @@ import {
   overrideComponentRadius,
   parseThemeJson,
   previewInApp,
-  resetInheritance,
   setDesignDensity,
   setDesignOpsClient,
   setDesignProjectRoot,
@@ -75,7 +77,7 @@ describe('scale monotonicity (client)', () => {
 describe('theme doc density + inheritance + diff', () => {
   it('density write only appears when changed (no CSS paths)', async () => {
     const base = {
-      $extensions: { ship: { themeId: 'toy', density: 'default' } },
+      $extensions: { sail: { themeId: 'toy', density: 'default' } },
       radius: {
         sm: { $value: '4px', $type: 'dimension' },
         md: { $value: '6px', $type: 'dimension' },
@@ -105,8 +107,8 @@ describe('theme doc density + inheritance + diff', () => {
   })
 
   it('diffThemeDocs includes density when only density changes', () => {
-    const a = { $extensions: { ship: { themeId: 't', density: 'default' } } }
-    const b = { $extensions: { ship: { themeId: 't', density: 'spacious' } } }
+    const a = { $extensions: { sail: { themeId: 't', density: 'default' } } }
+    const b = { $extensions: { sail: { themeId: 't', density: 'spacious' } } }
     const rows = diffThemeDocs(a, b)
     expect(rows).toEqual([
       {
@@ -118,6 +120,7 @@ describe('theme doc density + inheritance + diff', () => {
   })
 
   it('override + reset inheritance produces correct DTCG diff', async () => {
+    const { setTokenValue, clearTokenValue } = await import('../src/design')
     const base = {
       $extensions: { ship: { themeId: 'toy' } },
       radius: {
@@ -128,14 +131,13 @@ describe('theme doc density + inheritance + diff', () => {
       },
     }
     __setWorkingDocForTests(base)
-    await overrideComponentRadius('button', '9999px')
+    await setTokenValue('color.card.default', '#22c55e')
     let s = getDesignState()
-    expect(s.inheritance.find((n) => n.id === 'button')?.isOverride).toBe(true)
-    expect(s.diffRows.some((r) => r.path === 'component.button.radius')).toBe(true)
-    await resetInheritance('button')
+    expect(s.inheritance.find((n) => n.id === 'theme')).toBeTruthy()
+    expect(s.diffRows.some((r) => r.path.includes('color.card'))).toBe(true)
+    await clearTokenValue('color.card.default')
     s = getDesignState()
-    expect(s.inheritance.find((n) => n.id === 'button')?.isOverride).toBe(false)
-    expect(s.diffRows.some((r) => r.path === 'component.button.radius')).toBe(false)
+    expect(s.diffRows.some((r) => r.path.includes('color.card'))).toBe(false)
   })
 
   it('applyRadiusToDoc writes ordered extension', () => {
@@ -154,20 +156,49 @@ describe('specimen source', () => {
   })
 })
 
+const GATE_COLOR = {
+  background: { $value: 'oklch(0.98 0 0)', $type: 'color' },
+  foreground: { $value: 'oklch(0.20 0 0)', $type: 'color' },
+  primary: {
+    default: { $value: 'oklch(0.45 0.12 250)', $type: 'color' },
+    foreground: { $value: 'oklch(0.98 0 0)', $type: 'color' },
+  },
+  muted: {
+    default: { $value: 'oklch(0.92 0 0)', $type: 'color' },
+    foreground: { $value: 'oklch(0.35 0 0)', $type: 'color' },
+  },
+  brandAccent: {
+    default: { $value: 'oklch(0.45 0.16 300)', $type: 'color' },
+    foreground: { $value: 'oklch(0.98 0 0)', $type: 'color' },
+  },
+}
+
+function radiusWriteDoc(
+  themeId: string,
+  radius: Record<string, unknown>,
+): Record<string, unknown> {
+  return {
+    $extensions: { sail: { themeId, defaultMode: 'light', layer: 'theme' } },
+    modes: {
+      light: {
+        color: GATE_COLOR,
+        radius,
+      },
+    },
+  }
+}
+
 describe('ops SailTheme write + monotonicity parity', () => {
   it('ops refuses non-monotonic scale (named NonMonotonicScale)', async () => {
     const themesDir = 'apps/studio/themes'
     const path = `${themesDir}/__tool7-bad-radius.json`
-    const bad = {
-      $extensions: { ship: { themeId: 'tool7-bad-radius' } },
-      radius: {
-        sm: { $value: '12px', $type: 'dimension' },
-        md: { $value: '4px', $type: 'dimension' },
-        lg: { $value: '10px', $type: 'dimension' },
-        xl: { $value: '14px', $type: 'dimension' },
-        $extensions: { ordered: ['sm', 'md', 'lg', 'xl'] },
-      },
-    }
+    const bad = radiusWriteDoc('tool7-bad-radius', {
+      sm: { $value: '12px', $type: 'dimension' },
+      md: { $value: '4px', $type: 'dimension' },
+      lg: { $value: '10px', $type: 'dimension' },
+      xl: { $value: '14px', $type: 'dimension' },
+      $extensions: { ordered: ['sm', 'md', 'lg', 'xl'] },
+    })
     await expect(
       cli.sailThemeWrite!({
         path,
@@ -178,16 +209,13 @@ describe('ops SailTheme write + monotonicity parity', () => {
 
   it('ops accepts monotonic radius write then read roundtrip', async () => {
     const path = 'apps/studio/themes/__tool7-good-radius.json'
-    const good = {
-      $extensions: { ship: { themeId: 'tool7-good-radius' } },
-      radius: {
-        sm: { $value: '4px', $type: 'dimension' },
-        md: { $value: '6px', $type: 'dimension' },
-        lg: { $value: '10px', $type: 'dimension' },
-        xl: { $value: '16px', $type: 'dimension' },
-        $extensions: { ordered: ['sm', 'md', 'lg', 'xl'] },
-      },
-    }
+    const good = radiusWriteDoc('tool7-good-radius', {
+      sm: { $value: '4px', $type: 'dimension' },
+      md: { $value: '6px', $type: 'dimension' },
+      lg: { $value: '10px', $type: 'dimension' },
+      xl: { $value: '16px', $type: 'dimension' },
+      $extensions: { ordered: ['sm', 'md', 'lg', 'xl'] },
+    })
     try {
       const w = await cli.sailThemeWrite!({
         path,
@@ -268,7 +296,7 @@ describe('design surface source gates', () => {
     const shellVm = readFileSync(join(REPO, 'apps/studio/src/compositions/shell/shell-page-vm.ts'), 'utf8')
     expect(leaf).toMatch(/navigate\(`\$\{base\}\/themes`|\/themes/)
     expect(leaf).toMatch(/data-design-redirect|Opening Themes/)
-    expect(shellVm).toMatch(/from ['"]@ship\/studio\/design['"]/)
+    expect(shellVm).toMatch(/from ['"]@ship\/studio\/design['"]|from ['"]\.\.\/\.\.\/design/)
     expect(shellVm).toMatch(/SailTheme|loadThemes|setDesignOpsClient/)
   })
 
@@ -682,7 +710,7 @@ describe('brand color + mode-aware paths + decisions', () => {
 describe('preview in app + token filters', () => {
   it('previewInApp posts theme-preview and emits status (no documentElement CSSOM)', () => {
     const base = {
-      $extensions: { ship: { themeId: 'ship', density: 'compact' } },
+      $extensions: { sail: { themeId: 'ship', density: 'compact' } },
       radius: {
         sm: { $value: '4px', $type: 'dimension' },
         md: { $value: '6px', $type: 'dimension' },

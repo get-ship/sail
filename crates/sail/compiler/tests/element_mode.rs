@@ -281,7 +281,7 @@ export default function chip(node: Element) {
 
 #[test]
 fn stdlib_chip_compiles_with_use_stamps() {
-    let src = include_str!("../stdlib/chip.sail");
+    let src = include_str!("../stdlib/chip/chip.sail");
     let el = compile_element(src, "chip").expect("stdlib chip compiles");
     for stamp in ["use:pressable", "use:pressed", "use:dismissible"] {
         assert!(
@@ -343,7 +343,7 @@ fn stdlib_element_sources_have_no_author_style_blocks() {
 fn native_label_folds_host_sx_into_tag_rule() {
     // Native <label> never stamps host classes at use sites — host sx must
     // land as tag-keyed decls so font-(--label-weight) paints every bare label.
-    let out = sail_compiler::compile_element(include_str!("../stdlib/label.sail"), "label")
+    let out = sail_compiler::compile_element(include_str!("../stdlib/label/label.sail"), "label")
         .expect("label compiles");
     assert!(out.native, "label is native-kind");
     assert!(

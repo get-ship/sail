@@ -18,11 +18,62 @@ pub fn collect_used_icons(instrs: &[Instr]) -> BTreeSet<String> {
 }
 
 /// Parse source and collect used icon names (full preprocess + parse).
+/// Parse failure (standalone docs hosts, snippets) still scans `<icon name="…">`
+/// so a broken file cannot 404 every glyph on the page.
 pub fn collect_used_icons_from_source(source: &str) -> BTreeSet<String> {
-    match crate::parse::parse(source) {
+    let mut found = match crate::parse::parse(source) {
         Ok(program) => collect_used_icons(&program.template),
         Err(_) => BTreeSet::new(),
+    };
+    for name in collect_used_icons_heuristic(source) {
+        found.insert(name);
     }
+    found
+}
+
+fn collect_used_icons_heuristic(source: &str) -> BTreeSet<String> {
+    let mut found = BTreeSet::new();
+    let mut rest = source;
+    while let Some(pos) = rest.find("<icon") {
+        let tag = &rest[pos..];
+        if !icon_tag_boundary(&tag[5..]) {
+            rest = &tag[5..];
+            continue;
+        }
+        let end = tag.find('>').unwrap_or(tag.len());
+        let open = &tag[..end];
+        if let Some(name) = extract_static_name(open) {
+            if is_plausible_icon_name(&name) {
+                found.insert(name);
+            }
+        }
+        rest = &tag[5..];
+    }
+    found
+}
+
+/// `<icon` then whitespace / `>` / `/` — not `<iconography` or `<icons>`.
+fn icon_tag_boundary(after_icon: &str) -> bool {
+    match after_icon.chars().next() {
+        Some(c) => c.is_whitespace() || c == '>' || c == '/',
+        None => false,
+    }
+}
+
+fn extract_static_name(open_tag: &str) -> Option<String> {
+    for key in ["name=\"", "name='"] {
+        let Some(i) = open_tag.find(key) else {
+            continue;
+        };
+        let after = &open_tag[i + key.len()..];
+        let quote = key.chars().last()?;
+        let end = after.find(quote)?;
+        let v = after[..end].trim();
+        if !v.is_empty() && !v.starts_with('{') {
+            return Some(v.to_string());
+        }
+    }
+    None
 }
 
 fn visit(instrs: &[Instr], found: &mut BTreeSet<String>) {
@@ -150,5 +201,50 @@ mod tests {
     fn ignores_non_icon_name_attrs() {
         let got = icons(r#"<input name="email" /><button name="submit"></button>"#);
         assert!(got.is_empty(), "{got:?}");
+    }
+
+    #[test]
+    fn heuristic_recovers_icons_from_unparseable_source() {
+        let got = icons(
+            r#"<controller>not valid sail</controller>
+            <icon name="sparkles"></icon>
+            <icon name="inbox" size="sm"></icon>
+            <icon name={dyn()}></icon>"#,
+        );
+        assert!(got.contains("sparkles"), "{got:?}");
+        assert!(got.contains("inbox"), "{got:?}");
+        assert!(!got.iter().any(|n| n.contains("dyn")), "{got:?}");
+    }
+
+    #[test]
+    fn heuristic_unions_string_literal_names_when_parse_succeeds() {
+        let got = icons(
+            r#"<controller>
+export default controller(() => ({
+  sample: () => `<icon name="sparkles"></icon>`
+}))
+</controller>
+<div>ok</div>"#,
+        );
+        assert!(got.contains("sparkles"), "{got:?}");
+    }
+
+    #[test]
+    fn heuristic_skips_lookalike_tags_and_implausible_names() {
+        let got = icons(
+            r#"<controller>broken
+            <iconography name="sparkles"></iconography>
+            <icons name="inbox"></icons>
+            <icon name=""></icon>
+            <icon name="Not Valid"></icon>
+            <icon name="way-too-long-to-be-a-role-name-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"></icon>
+            <icon name='heart'></icon>
+            </controller>"#,
+        );
+        assert!(!got.contains("sparkles"), "{got:?}");
+        assert!(!got.contains("inbox"), "{got:?}");
+        assert!(!got.contains("Not Valid"), "{got:?}");
+        assert!(got.contains("heart"), "{got:?}");
+        assert_eq!(got.len(), 1, "{got:?}");
     }
 }

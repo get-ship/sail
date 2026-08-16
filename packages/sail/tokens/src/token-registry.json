@@ -195,6 +195,8 @@
     "panel-w-side",
     "panel-w-toast",
     "play-colors-property",
+    "play-control-property",
+    "play-surface-property",
     "popover",
     "popover-foreground",
     "press-scale",
@@ -2742,6 +2744,18 @@
       "cssName": "play-colors-property",
       "type": "string",
       "value": "color, background-color, border-color, outline-color, fill, stroke"
+    },
+    "play-control-property": {
+      "path": "play.control.property",
+      "cssName": "play-control-property",
+      "type": "string",
+      "value": "color, background-color, border-color, outline-color, transform, box-shadow, opacity"
+    },
+    "play-surface-property": {
+      "path": "play.surface.property",
+      "cssName": "play-surface-property",
+      "type": "string",
+      "value": "color, background-color, border-color, box-shadow, transform, opacity"
     }
   },
   "paths": {
@@ -2937,6 +2951,8 @@
     "panel.w-side": "panel-w-side",
     "panel.w-toast": "panel-w-toast",
     "play.colors.property": "play-colors-property",
+    "play.control.property": "play-control-property",
+    "play.surface.property": "play-surface-property",
     "color.popover.default": "popover",
     "color.popover.foreground": "popover-foreground",
     "control.press.scale": "press-scale",
@@ -3391,6 +3407,22 @@
       "members": {
         "property": "play-colors-property"
       }
+    },
+    "play.control": {
+      "path": "play.control",
+      "cssName": "play.control",
+      "type": "transition",
+      "members": {
+        "property": "play-control-property"
+      }
+    },
+    "play.surface": {
+      "path": "play.surface",
+      "cssName": "play.surface",
+      "type": "transition",
+      "members": {
+        "property": "play-surface-property"
+      }
     }
   },
   "styles": {},
@@ -3434,6 +3466,54 @@
           "transform": "translateY(0)"
         }
       }
+    },
+    "rise": {
+      "path": "keyframes.rise",
+      "type": "sail.keyframes",
+      "value": {
+        "from": {
+          "transform": "translateY(8px)"
+        },
+        "to": {
+          "transform": "translateY(0)"
+        }
+      }
+    },
+    "press": {
+      "path": "keyframes.press",
+      "type": "sail.keyframes",
+      "value": {
+        "from": {
+          "transform": "scale(1)"
+        },
+        "to": {
+          "transform": "scale(0.96)"
+        }
+      }
+    },
+    "spin": {
+      "path": "keyframes.spin",
+      "type": "sail.keyframes",
+      "value": {
+        "from": {
+          "transform": "rotate(0deg)"
+        },
+        "to": {
+          "transform": "rotate(360deg)"
+        }
+      }
+    },
+    "pulse": {
+      "path": "keyframes.pulse",
+      "type": "sail.keyframes",
+      "value": {
+        "from": {
+          "opacity": 1
+        },
+        "to": {
+          "opacity": 0.72
+        }
+      }
     }
   },
   "plays": {
@@ -3442,6 +3522,20 @@
       "type": "transition",
       "value": {
         "property": "color, background-color, border-color, outline-color, fill, stroke"
+      }
+    },
+    "control": {
+      "path": "play.control",
+      "type": "transition",
+      "value": {
+        "property": "color, background-color, border-color, outline-color, transform, box-shadow, opacity"
+      }
+    },
+    "surface": {
+      "path": "play.surface",
+      "type": "transition",
+      "value": {
+        "property": "color, background-color, border-color, box-shadow, transform, opacity"
       }
     }
   },

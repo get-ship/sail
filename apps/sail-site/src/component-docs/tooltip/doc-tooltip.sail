@@ -85,11 +85,7 @@ export default controller((_ctx: Scope) => {
       </column>
       <column gap="2">
         <label style(knobLabel)>Content</label>
-        <select size="sm" bind:value={content} label="Content">
-          <option value="Copy URL">Copy URL</option>
-          <option value="Open in new tab">Open in new tab</option>
-          <option value="Deletes the branch — cannot be undone">Destructive hint</option>
-        </select>
+        <input type="text" size="sm" bind:value={content} label="Content" placeholder="Tooltip text" />
       </column>
     </column>
 

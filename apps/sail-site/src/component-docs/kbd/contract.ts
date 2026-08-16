@@ -12,9 +12,9 @@ export const contract = {
   /** Docs-only content demo switches (not host props). */
   demoOnly: ['chord'] as const,
   faces: [
-    { path: 'component.kbd.bg', label: 'Fill' },
-    { path: 'component.kbd.border', label: 'Border' },
-    { path: 'component.kbd.fg', label: 'Ink' },
+    { path: 'card', label: 'Background' },
+    { path: 'card-foreground', label: 'Foreground' },
+    { path: 'border', label: 'Border' },
   ],
   visual: {
     defaultRow: true,

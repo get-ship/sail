@@ -742,11 +742,11 @@ describe('edit surface review gates', () => {
     const btn = tree[0]!.children!.find((c) => c.id === 'btn')!
     expect(btn.label).toBe('<button> save')
     expect(btn.trailing).toBe('L2')
-    expect(btn.icon).toBe('component')
+    expect(btn.icon).toBe('star')
     const pack = tree[0]!.children!.find((c) => c.id === 'pack')!
     expect(pack.label).toBe('<edit-explorer>')
     expect(pack.trailing).toBe('L3')
-    expect(pack.icon).toBe('box')
+    expect(pack.icon).toBe('inbox')
     const cf = pack.children![0]!
     expect(cf.label).toBe('<if> open')
     expect(cf.trailing).toBe('L1')

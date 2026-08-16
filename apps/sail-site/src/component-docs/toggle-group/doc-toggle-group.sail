@@ -44,6 +44,8 @@ export default controller((_ctx: Scope) => {
     `<toggle-group variant="segmented" value="list">\n  <toggle value="grid">Grid</toggle>\n  <toggle value="list">List</toggle>\n  <toggle value="board">Board</toggle>\n</toggle-group>`
   const exMulti = () =>
     `<toggle-group type="multiple" value="grid board">\n  <toggle value="grid">Grid</toggle>\n  <toggle value="list">List</toggle>\n  <toggle value="board">Board</toggle>\n</toggle-group>`
+  const exVert = () =>
+    `<toggle-group orientation="vertical" value="day">\n  <toggle value="day">Day</toggle>\n  <toggle value="week">Week</toggle>\n  <toggle value="month">Month</toggle>\n</toggle-group>`
 
   return {
     tgType,
@@ -60,6 +62,7 @@ export default controller((_ctx: Scope) => {
     exSingle,
     exSegmented,
     exMulti,
+    exVert,
   }
 })
 </controller>
@@ -171,6 +174,17 @@ export default controller((_ctx: Scope) => {
           <toggle value="grid">Grid</toggle>
           <toggle value="list">List</toggle>
           <toggle value="board">Board</toggle>
+        </toggle-group>
+      </doc-example>
+      <doc-example
+        title="Vertical"
+        lead='orientation="vertical" stacks the group as a column.'
+        code={exVert()}
+      >
+        <toggle-group orientation="vertical" value="day" on-toggle-change={onToggleChange}>
+          <toggle value="day">Day</toggle>
+          <toggle value="week">Week</toggle>
+          <toggle value="month">Month</toggle>
         </toggle-group>
       </doc-example>
     </column>

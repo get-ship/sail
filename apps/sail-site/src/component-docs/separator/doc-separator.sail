@@ -12,11 +12,10 @@
   style swatchPrimary = { bg(primary) }
   style swatchDestructive = { bg(destructive) }
   style swatchMuted = { bg(muted).border({ color: border }) }
-  style swatchRest = { bg(background).border({ color: border }) }
   style exampleBlock = { size({ w: full }).pad({ t: 2, b: 4 }) }
   style sectionLabel = { fg(muted-foreground).type({ size: xs, tracking: wide, case: uppercase }) }
   style sepVRow = { size({ h: 10 }) }
-  style sepStageCol = { size({ w: full, max-w: panel-max-w-sm }) }
+  style sepStageCol = { size({ w: full, max-w: panel-max-w-sm, min-h: 11 }) }
 </scope>
 
 <controller>
@@ -26,9 +25,8 @@ import { DETAILS } from '../../compositions/component-details'
 export default controller((_ctx: Scope) => {
   const variant = signal('solid')
   const sepOrientation = signal('horizontal')
-  const sepTone = signal('')
+  const sepTone = signal('muted')
   const pickSepTone = (t: string): void => sepTone.set(t)
-  const clearSepTone = (): void => sepTone.set('')
 
   const entry = DETAILS.separator
   const heading = () => entry.heading
@@ -40,8 +38,8 @@ export default controller((_ctx: Scope) => {
     const a: string[] = []
     if (sepOrientation() !== 'horizontal') a.push(`orientation="${sepOrientation()}"`)
     if (variant() !== 'solid') a.push(`variant="${variant()}"`)
-    if (sepTone()) a.push(`tone="${sepTone()}"`)
-    return a.length ? `<separator ${a.join(' ')}></separator>` : `<separator></separator>`
+    a.push(`tone="${sepTone()}"`)
+    return `<separator ${a.join(' ')}></separator>`
   })
 
   const sepExBoth = () =>
@@ -49,7 +47,7 @@ export default controller((_ctx: Scope) => {
   const sepExVariant = () =>
     `<separator variant="dashed"></separator>\n<separator variant="solid" tone="primary"></separator>`
   const sepExDefault = () =>
-    `<separator></separator>\n<separator variant="dashed"></separator>`
+    `<separator tone="muted"></separator>\n<separator variant="dashed" tone="muted"></separator>`
 
   return {
     variant,
@@ -57,7 +55,6 @@ export default controller((_ctx: Scope) => {
     sepTone,
     specimenCode,
     pickSepTone,
-    clearSepTone,
     heading,
     blurb,
     props,
@@ -84,19 +81,13 @@ export default controller((_ctx: Scope) => {
       <if {sepOrientation() === 'vertical'}>
         <row gap="3" align="center" style(sepVRow)>
           <span style(mutedSm)>A</span>
-          <if {sepTone()}>
-            <separator orientation="vertical" variant={variant()} tone={sepTone()}></separator>
-          {else =>
-            <separator orientation="vertical" variant={variant()}></separator>}</if>
+          <separator orientation="vertical" variant={variant()} tone={sepTone()}></separator>
           <span style(mutedSm)>B</span>
         </row>
       {else =>
         <column gap="2" style(fullW)>
           <p style(mutedSm)>above</p>
-          <if {sepTone()}>
-            <separator orientation="horizontal" variant={variant()} tone={sepTone()}></separator>
-          {else =>
-            <separator orientation="horizontal" variant={variant()}></separator>}</if>
+          <separator orientation="horizontal" variant={variant()} tone={sepTone()}></separator>
           <p style(mutedSm)>below</p>
         </column>}</if>
     </column>
@@ -119,12 +110,6 @@ export default controller((_ctx: Scope) => {
       <column gap="2">
         <label style(knobLabel)>Tone</label>
         <row gap="2" align="center">
-          <div
-            title="default (theme)"
-            selected={!sepTone() ? 'true' : null}
-            on:click={clearSepTone}
-            style(swatch, swatchRest)
-          ></div>
           <div
             title="muted"
             selected={sepTone() === 'muted' ? 'true' : null}
@@ -177,7 +162,7 @@ export default controller((_ctx: Scope) => {
 
       <doc-example
         title="Dashed and tone"
-        lead='variant="dashed" draws a border stroke. Tone paints only when set.'
+        lead='variant="dashed" draws a border stroke. tone defaults to muted.'
         code={sepExVariant()}
       >
         <column gap="3" style(sepStageCol)>
@@ -188,13 +173,13 @@ export default controller((_ctx: Scope) => {
       </doc-example>
 
       <doc-example
-        title="Default (theme)"
-        lead="No tone uses the theme’s default separator line."
+        title="Default tone"
+        lead="tone defaults to muted — a finished divider, not an empty swatch."
         code={sepExDefault()}
       >
         <column gap="2" style(sepStageCol)>
-          <separator></separator>
-          <separator variant="dashed"></separator>
+          <separator tone="muted"></separator>
+          <separator variant="dashed" tone="muted"></separator>
         </column>
       </doc-example>
     </column>

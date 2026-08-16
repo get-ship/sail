@@ -8,7 +8,7 @@ export const meta = {
   category: 'data',
   kind: 'host',
   blurb:
-    "The platform's table model — thead, tbody, tr — skinned by the theme. dense · striped · hoverable · bordered presence attrs. Sticky thead and numeric columns are structural; sorting/selection are L2.",
+    "The platform's table model — thead, tbody, tr — skinned by the theme. Hairline borders on by default. dense · striped · hoverable · bordered presence attrs. Sticky thead and numeric columns are structural; sorting/selection are L2.",
   host: 'doc-table',
   stageOwnsKnobs: true,
 } as const satisfies DocMeta

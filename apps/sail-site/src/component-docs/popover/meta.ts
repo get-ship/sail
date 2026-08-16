@@ -8,7 +8,7 @@ export const meta = {
   category: 'overlay',
   kind: 'host',
   blurb:
-    'Native [popover] positioned by placement. Escape and light-dismiss from the platform; use:anchor places the panel. Paint from component.popover.*.',
+    'Native [popover] positioned by placement. Escape and light-dismiss from the platform; use:anchor places the panel. Paints the popover role.',
   heading: 'popover',
   host: 'doc-popover',
   stageOwnsKnobs: true,

@@ -24,7 +24,7 @@ import {
   packLabelFor,
 } from '../../../src/compositions/component-pack-meta'
 
-/** Slugs with a compiled doc-<slug> CE mounted below. Keep in sync when peeling. Residual: accordion · combobox · theme-picker. */
+/** Slugs with a compiled doc-<slug> CE mounted below. Keep in sync when peeling. */
 const DOC_CE_SLUGS = new Set([
   'button',
   'badge',
@@ -39,7 +39,6 @@ const DOC_CE_SLUGS = new Set([
   'meter',
   'label',
   'field',
-  'radio',
   'radio-group',
   'switch',
   'slider',
@@ -68,6 +67,7 @@ const DOC_CE_SLUGS = new Set([
   'avatar',
   'breadcrumb',
   'dialog',
+  'drawer',
   'popover',
   'tooltip',
   'dropdown',
@@ -77,10 +77,18 @@ const DOC_CE_SLUGS = new Set([
   'accordion',
   'combobox',
   'theme-picker',
+  'resizable',
 ])
 
 export default controller((ctx: ControllerScope<Scope>) => {
-  const tag = derived(() => ctx.route.params.tag?.() ?? '')
+  // radio is a radio-group part — leftover /components/radio folds onto the host.
+  const tag = derived(() => {
+    const raw = ctx.route.params.tag?.() ?? ''
+    return raw === 'radio' ? 'radio-group' : raw
+  })
+  // Hub is /components. This [tag] shell stays blank until a real slug exists
+  // (router leaves tag='' while leaving the param route).
+  const hasTag = derived(() => tag().trim() !== '')
   const meta = derived(() => docMeta(tag()))
   const entry = derived<DetailEntry | null>(() => detailFor(tag()) ?? null)
   const knownDoc = derived(() => meta() !== null)
@@ -91,7 +99,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
   const firstClass = derived(() => FIRST_CLASS_HOSTS.has(tag()))
   const hasDocCe = derived(() => DOC_CE_SLUGS.has(tag()))
   const useDocHost = derived(() => firstClass() && hasDocCe())
-  const missingDocHost = derived(() => showViewer() && !useDocHost())
+  const missingDocHost = derived(() => hasTag() && showViewer() && !useDocHost())
 
   const useButton = derived(() => tag() === 'button' && useDocHost())
   const useBadge = derived(() => tag() === 'badge' && useDocHost())
@@ -106,7 +114,6 @@ export default controller((ctx: ControllerScope<Scope>) => {
   const useMeter = derived(() => tag() === 'meter' && useDocHost())
   const useLabel = derived(() => tag() === 'label' && useDocHost())
   const useField = derived(() => tag() === 'field' && useDocHost())
-  const useRadio = derived(() => tag() === 'radio' && useDocHost())
   const useRadioGroup = derived(() => tag() === 'radio-group' && useDocHost())
   const useSwitch = derived(() => tag() === 'switch' && useDocHost())
   const useSlider = derived(() => tag() === 'slider' && useDocHost())
@@ -135,6 +142,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
   const useAvatar = derived(() => tag() === 'avatar' && useDocHost())
   const useBreadcrumb = derived(() => tag() === 'breadcrumb' && useDocHost())
   const useDialog = derived(() => tag() === 'dialog' && useDocHost())
+  const useDrawer = derived(() => tag() === 'drawer' && useDocHost())
   const usePopover = derived(() => tag() === 'popover' && useDocHost())
   const useTooltip = derived(() => tag() === 'tooltip' && useDocHost())
   const useDropdown = derived(() => tag() === 'dropdown' && useDocHost())
@@ -144,6 +152,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
   const useAccordion = derived(() => tag() === 'accordion' && useDocHost())
   const useCombobox = derived(() => tag() === 'combobox' && useDocHost())
   const useThemePicker = derived(() => tag() === 'theme-picker' && useDocHost())
+  const useResizable = derived(() => tag() === 'resizable' && useDocHost())
 
   const heading = () => meta()?.heading ?? entry()?.heading ?? tag()
   const blurb = () => meta()?.blurb ?? entry()?.blurb ?? packBlurbFor(tag())
@@ -152,6 +161,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
 
   return {
     tag,
+    hasTag,
     meta,
     entry,
     knownDoc,
@@ -172,7 +182,6 @@ export default controller((ctx: ControllerScope<Scope>) => {
     useMeter,
     useLabel,
     useField,
-    useRadio,
     useRadioGroup,
     useSwitch,
     useSlider,
@@ -201,6 +210,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
     useAvatar,
     useBreadcrumb,
     useDialog,
+    useDrawer,
     usePopover,
     useTooltip,
     useDropdown,
@@ -210,6 +220,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
     useAccordion,
     useCombobox,
     useThemePicker,
+    useResizable,
 
     heading,
     blurb,
@@ -258,9 +269,6 @@ export default controller((ctx: ControllerScope<Scope>) => {
   </if>
   <if {useField()}>
     <doc-field></doc-field>
-  </if>
-  <if {useRadio()}>
-    <doc-radio></doc-radio>
   </if>
   <if {useRadioGroup()}>
     <doc-radio-group></doc-radio-group>
@@ -346,6 +354,9 @@ export default controller((ctx: ControllerScope<Scope>) => {
   <if {useDialog()}>
     <doc-dialog></doc-dialog>
   </if>
+  <if {useDrawer()}>
+    <doc-drawer></doc-drawer>
+  </if>
   <if {usePopover()}>
     <doc-popover></doc-popover>
   </if>
@@ -373,6 +384,9 @@ export default controller((ctx: ControllerScope<Scope>) => {
   <if {useThemePicker()}>
     <doc-theme-picker></doc-theme-picker>
   </if>
+  <if {useResizable()}>
+    <doc-resizable></doc-resizable>
+  </if>
   <if {missingDocHost()}>
     <breadcrumb>
       <a href="/components">components</a>
@@ -387,7 +401,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
       <a variant="solid" tone="primary" href="/components">← All components</a>
     </row>
   </if>
-  <if {!showViewer()}>
+  <if {hasTag() && !showViewer()}>
     <breadcrumb>
       <a href="/components">components</a>
       <small>{tag()}</small>

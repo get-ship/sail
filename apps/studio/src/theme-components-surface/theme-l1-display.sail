@@ -61,7 +61,7 @@ export default controller(() => {
 <if {components.stage.badge()}>
   <column gap="3" style(stageHost)>
     <column gap="2">
-      <p style(fieldHint)>Rest · component.badge tokens (theme override)</p>
+      <p style(fieldHint)>Rest · primary / muted tone roles</p>
       <row gap="2" align="center" nowrap>
         <badge variant="soft" size="sm">soft</badge>
         <badge variant="solid" size="sm">solid</badge>
@@ -83,7 +83,7 @@ export default controller(() => {
 <if {components.stage.chip()}>
   <column gap="3" style(stageHost)>
     <column gap="2">
-      <p style(fieldHint)>Rest · component.chip tokens (theme override)</p>
+      <p style(fieldHint)>Rest · primary / muted / border</p>
       <row gap="2" align="center" nowrap>
         <chip variant="solid" size="sm">solid</chip>
         <chip variant="soft" size="sm">soft</chip>
@@ -107,7 +107,7 @@ export default controller(() => {
   <card variant={components.variant() || 'default'} padding="sm" style(sampleMax)>
     <column gap="2">
       <p style(doorTitle)>Card surface</p>
-      <p style(fieldHint)>Judges component.card.radius when overridden.</p>
+      <p style(fieldHint)>Judges the radius role when overridden.</p>
     </column>
   </card>
 </if>
@@ -132,7 +132,7 @@ export default controller(() => {
     <column gap="2">
       <p style(fieldHint)>Spin · use:icon motion · currentColor ink</p>
       <row gap="4" align="center" nowrap>
-        <icon name="refresh-cw" spin label="Refreshing"></icon>
+        <icon name="refresh" spin label="Refreshing"></icon>
         <span style({ fg(primary) })>
           <icon name="heart" size="lg" label="primary ink"></icon>
         </span>
@@ -146,7 +146,7 @@ export default controller(() => {
 <if {components.stage.separator()}>
   <column gap="3" style(sampleMax)>
     <column gap="2">
-      <p style(fieldHint)>Rest · component.separator.line (theme override)</p>
+      <p style(fieldHint)>Rest · border role</p>
       <separator></separator>
       <separator variant="dashed"></separator>
     </column>
@@ -176,7 +176,7 @@ export default controller(() => {
 <if {components.stage.kbd()}>
   <column gap="3" style(sampleMax)>
     <column gap="2">
-      <p style(fieldHint)>Rest · component.kbd (bg · fg · border)</p>
+      <p style(fieldHint)>Rest · muted fill + foreground + border</p>
       <row gap="2" align="center">
         <kbd>Ctrl</kbd>
         <span style(fieldHint)>+</span>
@@ -201,7 +201,7 @@ export default controller(() => {
 </if>
 <if {components.stage.prose()}>
   <column gap="3" style(sampleMax)>
-    <p style(fieldHint)>Rest · component.prose.fg (theme override)</p>
+    <p style(fieldHint)>Rest · foreground</p>
     <prose>
       <h2>Typography scope</h2>
       <p>
@@ -218,7 +218,7 @@ export default controller(() => {
 </if>
 <if {components.stage.codeBlock()}>
   <column gap="3" style(sampleMax)>
-    <p style(fieldHint)>Rest · component.code-block.bg + fg (theme override)</p>
+    <p style(fieldHint)>Rest · surface fill + foreground</p>
     <code-block
       code={'const n = signal(0)\nconst double = derived(() => n() * 2)\n// .tok-* ink via --syntax-*'}
       lang="ts"

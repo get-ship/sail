@@ -18,12 +18,7 @@ export const contract = {
       control: 'slider',
     },
   },
-  faces: [
-    { path: 'component.meter.track', label: 'Track' },
-    { path: 'component.meter.optimum', label: 'Optimum' },
-    { path: 'component.meter.suboptimum', label: 'Suboptimum' },
-    { path: 'component.meter.sub-suboptimum', label: 'Even less good' },
-  ],
+  faces: [],
   visual: {
     defaultRow: true,
     cross: ['value', 'size'],

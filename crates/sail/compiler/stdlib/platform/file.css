@@ -1,3 +1,5 @@
-.sail-file[variant='drop'] input[type='file'] { display:none; }
-.sail-file[variant='drop'] [data-dz-files] { display:block; }
-.sail-file[variant='picker'] [data-dz-files], .sail-file:not([variant]) [data-dz-files] { display:none; }
+/* Native Browse chrome is unthemeable — always hide the UA control and
+   show the dropzone label. Click / drop still hit the hidden input via
+   use:dropzone. */
+.sail-file input[type='file'] { display:none; }
+.sail-file [data-dz-files] { display:block; }

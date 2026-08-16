@@ -22,8 +22,10 @@ export default controller((_ctx: Scope) => {
   const SIZES = ['xs', 'sm', 'md', 'lg'] as const
   const sizeIdx = signal(2)
   const accept = signal('image/*')
+  const variant = signal('drop')
   const multiple = signal(false)
   const disabled = signal(false)
+  const invalid = signal(false)
 
   const size = derived(() => {
     const i = Math.min(Math.max(0, Math.round(Number(sizeIdx()) || 0)), SIZES.length - 1)
@@ -38,9 +40,11 @@ export default controller((_ctx: Scope) => {
 
   const specimenCode = derived(() => {
     const a: string[] = []
+    if (variant() !== 'drop') a.push(`variant="${variant()}"`)
     if (accept()) a.push(`accept="${accept()}"`)
     if (multiple()) a.push('multiple')
     if (size() !== 'md') a.push(`size="${size()}"`)
+    if (invalid()) a.push('invalid')
     if (disabled()) a.push('disabled')
     return a.length ? `<file ${a.join(' ')} />` : `<file />`
   })
@@ -52,8 +56,10 @@ export default controller((_ctx: Scope) => {
     sizeIdx,
     size,
     accept,
+    variant,
     multiple,
     disabled,
+    invalid,
     heading,
     blurb,
     props,
@@ -79,8 +85,10 @@ export default controller((_ctx: Scope) => {
     <column slot="specimen" gap="3" style(fieldShell)>
       <file
         accept={accept()}
+        variant={variant()}
         multiple={multiple()}
         size={size()}
+        invalid={invalid()}
         disabled={disabled()}
         style(fullW)
       />
@@ -88,8 +96,15 @@ export default controller((_ctx: Scope) => {
 
     <column slot="knobs" gap="4" align="stretch">
       <column gap="2">
+        <label style(knobLabel)>Variant</label>
+        <select size="sm" bind:value={variant} label="Variant">
+          <option value="picker">picker</option>
+          <option value="drop">drop</option>
+        </select>
+      </column>
+      <column gap="2">
         <label style(knobLabel)>Accept</label>
-        <input type="text" size="sm" bind:value={accept} placeholder="image/*" />
+        <input type="text" size="sm" bind:value={accept} placeholder="image/*" label="Accept" />
       </column>
       <column gap="2">
         <row gap="2" align="center" justify="between">
@@ -100,6 +115,7 @@ export default controller((_ctx: Scope) => {
       </column>
       <row gap="4" align="center">
         <label><checkbox bind:checked={multiple} size="sm" /> Multiple</label>
+        <label><checkbox bind:checked={invalid} size="sm" /> Invalid</label>
         <label><checkbox bind:checked={disabled} size="sm" /> Disabled</label>
       </row>
     </column>

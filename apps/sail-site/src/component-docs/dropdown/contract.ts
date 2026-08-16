@@ -10,9 +10,9 @@ export const contract = {
     onSelect: { control: 'none', event: true },
   },
   faces: [
-    { path: 'component.dropdown.bg', label: 'Fill' },
-    { path: 'component.dropdown.fg', label: 'Ink' },
-    { path: 'component.dropdown.border', label: 'Border' },
+    { path: 'popover', label: 'Background' },
+    { path: 'foreground', label: 'Foreground' },
+    { path: 'border', label: 'Border' },
   ],
   visual: {
     defaultRow: true,

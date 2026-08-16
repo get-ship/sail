@@ -8,7 +8,7 @@ export const meta = {
   category: 'navigation',
   kind: 'host',
   blurb:
-    'Trail host only — no host props. Compose nested <a> path crumbs and inert current (small). Faces component.breadcrumb.fg / current.',
+    'Trail host only — no host props. Compose nested <a> path crumbs and inert current (small). Foreground follows muted; current is foreground.',
   heading: 'breadcrumb',
   host: 'doc-breadcrumb',
   stageOwnsKnobs: true,

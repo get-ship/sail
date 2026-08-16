@@ -1,12 +1,13 @@
 //! L1 manifest consistency vs stdlib (no native-reskin surface).
 
 use std::collections::HashSet;
+use std::path::PathBuf;
 
 use sail_compiler::l1_manifest::{
     L1JsKind, L1Kind, L1Matrix, host_pack_alias, l1_by_kind, l1_entries, l1_kind, matrix_contract,
     surface_pack_for_host,
 };
-use sail_compiler::stdlib;
+use sail_compiler::stdlib::{self, family_of, family_tags, is_family_host};
 
 #[test]
 fn every_manifest_entry_has_a_built_artifact() {
@@ -42,11 +43,74 @@ fn stdlib_tags_match_manifest() {
 }
 
 #[test]
+fn family_dirs_are_the_composition() {
+    assert_eq!(family_of("tabs"), "tabs");
+    assert_eq!(family_of("tab"), "tabs");
+    assert_eq!(family_of("tab-list"), "tabs");
+    assert_eq!(family_of("tab-panel"), "tabs");
+    assert_eq!(family_of("fieldset"), "fieldset");
+    assert_eq!(family_of("legend"), "fieldset");
+    assert_eq!(family_of("toast"), "toast");
+    assert_eq!(family_of("toast-region"), "toast");
+    assert_eq!(family_of("button"), "button");
+    assert_eq!(family_of("pagination"), "pagination");
+    assert_eq!(family_of("page"), "pagination");
+    assert_eq!(family_of("toggle-group"), "toggle-group");
+    assert_eq!(family_of("toggle"), "toggle-group");
+    assert_eq!(family_of("radio-group"), "radio-group");
+    assert_eq!(family_of("radio"), "radio-group");
+    assert_eq!(family_of("table"), "table");
+    assert_eq!(family_of("th"), "table");
+    assert_eq!(family_of("td"), "table");
+    assert_eq!(family_of("caption"), "table");
+    assert!(is_family_host("tabs"));
+    assert!(!is_family_host("tab"));
+    assert!(is_family_host("toast"));
+    assert!(!is_family_host("toast-region"));
+    assert!(is_family_host("pagination"));
+    assert!(!is_family_host("page"));
+    assert!(is_family_host("toggle-group"));
+    assert!(!is_family_host("toggle"));
+    assert!(is_family_host("radio-group"));
+    assert!(!is_family_host("radio"));
+    assert!(is_family_host("table"));
+    assert!(!is_family_host("th"));
+    assert!(!is_family_host("td"));
+    assert!(!is_family_host("caption"));
+    assert_eq!(
+        family_tags("tabs"),
+        vec!["tabs", "tab", "tab-list", "tab-panel"]
+    );
+    assert_eq!(family_tags("fieldset"), vec!["fieldset", "legend"]);
+    assert_eq!(family_tags("toast"), vec!["toast", "toast-region"]);
+    assert_eq!(family_tags("pagination"), vec!["pagination", "page"]);
+    assert_eq!(family_tags("toggle-group"), vec!["toggle-group", "toggle"]);
+    assert_eq!(family_tags("radio-group"), vec!["radio-group", "radio"]);
+    assert_eq!(family_tags("table"), vec!["table", "caption", "td", "th"]);
+}
+
+/// Published `@ship/sail-l1` catalog must match rust `catalog_ts()`.
+/// Hub tiles / l1-knobs import the file, not the in-process string.
+#[test]
+fn published_catalog_matches_catalog_ts() {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../../packages/sail/l1/src/generated/catalog.ts");
+    let on_disk =
+        std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("read {}: {e}", path.display()));
+    assert_eq!(
+        on_disk,
+        sail_compiler::l1_surface::catalog_ts(),
+        "packages/sail/l1/src/generated/catalog.ts is stale — run \
+         `cargo run -p sail-compiler -- l1-surface`"
+    );
+}
+
+#[test]
 fn l1_surface_count_is_documented() {
     let (stdlib, reskins) = l1_by_kind();
-    assert_eq!(stdlib.len(), 59, "stdlib L1 count");
+    assert_eq!(stdlib.len(), 64, "stdlib L1 count");
     assert_eq!(reskins.len(), 0, "reskins empty");
-    assert_eq!(l1_entries().len(), 59);
+    assert_eq!(l1_entries().len(), 64);
 }
 
 #[test]
@@ -160,7 +224,7 @@ fn skeleton_description_names_loading_placeholder() {
 #[test]
 fn every_l1_entry_declares_component_tokens_and_js() {
     let entries = l1_entries();
-    assert_eq!(entries.len(), 59, "stdlib L1 count");
+    assert_eq!(entries.len(), 64, "stdlib L1 count");
     for e in &entries {
         // Fields must be present (empty vec / None-kind is valid).
         let _ = &e.component_tokens;
@@ -387,7 +451,10 @@ fn gutted_entry_fails_matrix_contract() {
 fn button_matrix_axes_match_vocabulary() {
     let button = entry("button");
     let names: Vec<&str> = button.matrix.axes.iter().map(|a| a.name.as_str()).collect();
-    assert_eq!(names, ["disabled", "size", "tone", "variant"]);
+    assert_eq!(
+        names,
+        ["disabled", "loading", "pill", "size", "tone", "variant"]
+    );
     let variant = button
         .matrix
         .axes

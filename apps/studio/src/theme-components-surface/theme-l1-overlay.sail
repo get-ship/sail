@@ -199,7 +199,7 @@ export default controller(() => {
 <if {components.stage.scrollArea()}>
   <column gap="3" style(sampleMax)>
     <column gap="2">
-      <p style(fieldHint)>Vertical · rest thumb component.scroll-area.thumb · hover border-strong</p>
+      <p style(fieldHint)>Vertical · rest thumb is border · hover border-strong</p>
       <scroll-area orientation="vertical" style({ size({ w: full, max-w: panel-max-w-sm, max-h: 32 }).pad(3).border({ color: border-subtle, width: 1 }).radius(md) })>
         <column gap="2">
           <p style(fieldHint)>Scroll me — themed thin scrollbar.</p>
@@ -217,7 +217,7 @@ export default controller(() => {
       <p style(fieldHint)>Horizontal · orientation="horizontal"</p>
       <scroll-area orientation="horizontal" style({ size({ w: full, max-w: panel-max-w-sm }).pad(3).border({ color: border-subtle, width: 1 }).radius(md) })>
         <p style({ pad({ y: 1 }).type({ wrap: nowrap }) })>
-          Wide band that overflows on the x axis → scroll with thin themed thumb · component.scroll-area.*
+          Wide band that overflows on the x axis → scroll with thin themed thumb
         </p>
       </scroll-area>
     </column>
@@ -226,7 +226,7 @@ export default controller(() => {
 <if {components.stage.ticker()}>
   <column gap="3" style(sampleMax)>
     <p style(fieldHint)>
-      Geometry host + use:marquee · no component.ticker.* · author paint
+      Geometry host + use:marquee · author paint
     </p>
     <ticker duration="normal" style(sampleMax, { overflow({ all: hidden }).pad({ y: 2 }).bg(muted).radius(md) })>
       <span style({ pad({ x: 3 }).fg(muted-foreground).type({ family: mono, size: sm, wrap: nowrap }) })>

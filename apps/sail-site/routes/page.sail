@@ -38,7 +38,7 @@
   style metric = { fg(foreground).type({family: mono, size: 2xl, weight: semibold, leading: none, nums: tabular}) }
   style metricUnit = { fg(muted-foreground).type({ family: mono, size: xs }) }
   style swatch = { size(6).radius(sm).border({ color: border, width: 1 }) }
-  style statusLine = { size({ min-w: 0 }).fg(muted-foreground).type({ family: mono, size: xs, wrap: truncate }) }
+  style statusLine = { size({ min-w: 0 }).fg(muted-foreground).type({ family: mono, size: xs }) }
   style term = { pad({ x: 3, y: 2_5 }).bg(surface-0).border({ color: border, width: 1 }).radius(md).fg(muted-foreground).type({ family: mono, size: xs }) }
   style termAccent = { fg(primary) }
   style foot = { pad({ x: 4, t: 8 }), when: { tablet: pad({ x: 8, t: 12 }) } }

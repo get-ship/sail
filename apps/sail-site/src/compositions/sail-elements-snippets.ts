@@ -36,14 +36,14 @@ export const code = {
 </accordion>`,
 
   tabs: `<!-- composite components are small vocabularies: a <tabs> is a
-     <tab-list> of <tab>s plus a <tab-panel> per tab, matched by name. -->
-<tabs active="overview">
+     <tab-list> of <tab>s plus a <tab-panel> per tab, paired by position. -->
+<tabs>
   <tab-list>
-    <tab name="overview">Overview</tab>
-    <tab name="activity">Activity</tab>
+    <tab>Overview</tab>
+    <tab>Activity</tab>
   </tab-list>
-  <tab-panel name="overview">The overview panel.</tab-panel>
-  <tab-panel name="activity">The activity panel.</tab-panel>
+  <tab-panel>The overview panel.</tab-panel>
+  <tab-panel>The activity panel.</tab-panel>
 </tabs>`,
 
   behavior: `<!-- the behavior is already wired: this combobox filters as you
@@ -58,12 +58,12 @@ export const code = {
      icon meaningful (role="img"); without it the icon is decoration. -->
 <row gap="3" align="center">
   <icon name="search"></icon>
-  <icon name="git-branch"></icon>
+  <icon name="git"></icon>
   <icon name="compass"></icon>
   <icon name="zap"></icon>
   <icon name="rocket" size="lg"></icon>
   <icon name="alarm-clock" size="xl" label="Alarm"></icon>
-  <icon name="refresh-cw" spin></icon>
+  <icon name="refresh" spin></icon>
 </row>`,
 
   iconButton: `<!-- icons inherit text color, so they follow tone for free -->
@@ -71,7 +71,7 @@ export const code = {
   <icon name="rocket"></icon> Launch
 </button>
 <button variant="outline" tone="destructive">
-  <icon name="trash-2"></icon> Delete
+  <icon name="trash"></icon> Delete
 </button>`,
 
   prose: `<!-- <prose> gives rendered content typographic defaults:

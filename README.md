@@ -111,7 +111,7 @@ monologue, or process ids (`job/…`, `task #N`, mission paths). Enforced by
 | `bun run test` | Law | vitest + `tests/hygiene` repo guards |
 | `bun run typecheck` | Law | `scripts/typecheck-components.ts` (also runs `gen-component-types`) |
 | `cargo install --path crates/deck/deck-cli --bin sail` | Product tool | Public CLI (`dev`, `build`, `check`, `lsp`, `mcp`, …) |
-| `cd apps/sail-site && bun run qa` / `qa:fast` / `qa:probe` | Recipe | Layout probe (`qa/probe.ts`); needs dev server |
+| `bun crates/sail/compiler/tests/l1-matrix/probe.ts` | Recipe | L1 × THEME_META matrix on the owned fixture (not sail-site) |
 
 ### `scripts/` (repo root — curated; ≤2 files)
 

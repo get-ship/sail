@@ -49,7 +49,7 @@ type CompositeEntry = {
 export type CompositeRef = {
   /** Public identity (`dialog.border`). */
   name: string
-  /** Storage path (`component.dialog.border`). */
+  /** Storage path (`bg.card` / `color.card.default`). */
   path: string
   /** Member slot when `path` is a member leaf (`color`), else empty. */
   member: string
@@ -68,7 +68,6 @@ const GROUP_ORDER = [
   'elevation',
   'shadow',
   'motion',
-  'component',
   'icon',
   'density',
   'control',
@@ -92,7 +91,6 @@ const GROUP_LABELS: Record<string, string> = {
   elevation: 'Elevation',
   shadow: 'Shadow',
   motion: 'Motion',
-  component: 'Components',
   icon: 'Icons',
   density: 'Density',
   control: 'Controls',
@@ -155,15 +153,6 @@ export function humanLabel(path: string): string {
     const size =
       tail === 'sm' ? 'Small' : tail === 'md' ? 'Medium' : tail === 'lg' ? 'Large' : 'Extra large'
     return prev ? `${titleCase(prev)} · ${size}` : size
-  }
-  // SPEC-D1: primary UI uses short graph label (chip / chip.foreground), not
-  // raw component.chip.fg as the hero string.
-  if (parts[0] === 'component' && parts.length >= 2) {
-    const pack = parts[1]!
-    const leaf = parts.length >= 3 ? parts.slice(2).join('.') : ''
-    if (!leaf || leaf === 'bg' || leaf === 'track') return pack
-    if (leaf === 'fg') return `${pack}.foreground`
-    return `${pack}.${leaf}`
   }
   return titleCase(tail)
 }
@@ -316,8 +305,7 @@ export function listTokenGroups(): TokenGroup[] {
 export function groupKnobs(groupId: string): TokenKnob[] {
   return ALL_KNOBS.filter((k) => {
     if (pathGroup(k.path) !== groupId) return false
-    // Components facet / design group: hide parked state storage leaves.
-    if (groupId === 'component' && isParkedComponentStateLeaf(k.path)) return false
+    if (isParkedComponentStateLeaf(k.path)) return false
     return true
   })
 }

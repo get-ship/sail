@@ -19,7 +19,6 @@
   style swatchAccent = { bg(accent) }
   style swatchMuted = { bg(muted).border({ color: border }) }
   style swatchInfo = { bg(info) }
-  style swatchRest = { bg(background).border({ color: border }) }
   style exampleBlock = { size({ w: full }).pad({ t: 2, b: 4 }).overflow({ all: visible }) }
   style sectionLabel = { fg(muted-foreground).type({ size: xs, tracking: wide, case: uppercase }) }
   style demoRow = { size({ w: full }).pad({ y: 2 }) }
@@ -30,11 +29,10 @@ import type { Scope } from './doc-a.sail'
 import { DETAILS } from '../../compositions/component-details'
 
 export default controller((_ctx: Scope) => {
-  const variant = signal('solid')
+  const variant = signal('text')
   const aTone = signal('primary')
   const aDisabled = signal(false)
   const pickATone = (t: string): void => aTone.set(t)
-  const clearATone = (): void => aTone.set('')
 
   const entry = DETAILS.a
   const heading = () => entry.heading
@@ -51,7 +49,9 @@ export default controller((_ctx: Scope) => {
   })
 
   const aExBare = () =>
-    `<a href="/docs">text link</a>\n<!-- bare = freeform text link; freeform never stamps variant/tone -->`
+    `<a href="/docs">text link</a>\n<!-- bare / variant=text = no chrome; wrap a card or span -->`
+  const aExWrap = () =>
+    `<a href="/components/card">\n  <card>\n    <strong>Wrapped card</strong>\n    <p>The whole surface is the link.</p>\n  </card>\n</a>`
   const aExVariants = () =>
     `<a href="/components" variant="default" tone="primary">default</a>\n<a href="/components" variant="solid" tone="primary">solid</a>\n<a href="/components" variant="soft" tone="primary">soft</a>\n<a href="/components" variant="outline" tone="primary">outline</a>\n<a href="/components" variant="ghost" tone="primary">ghost</a>`
   const aExRest = () =>
@@ -62,13 +62,13 @@ export default controller((_ctx: Scope) => {
     aTone,
     aDisabled,
     pickATone,
-    clearATone,
     heading,
     blurb,
     props,
     usageCode,
     specimenCode,
     aExBare,
+    aExWrap,
     aExVariants,
     aExRest,
   }
@@ -103,6 +103,7 @@ export default controller((_ctx: Scope) => {
       <column gap="2">
         <label style(knobLabel)>Variant</label>
         <select size="sm" bind:value={variant} label="Variant">
+          <option value="text">text</option>
           <option value="default">default</option>
           <option value="solid">solid</option>
           <option value="soft">soft</option>
@@ -110,36 +111,33 @@ export default controller((_ctx: Scope) => {
           <option value="ghost">ghost</option>
         </select>
         <p style(mutedXs)>
-          Omit <code>variant</code> for a bare text link. Set it for button-link chrome.
-          <code>default</code> ≠ solid invert.
+          <code>text</code> (or omit) is a wrapping text link. Button chrome is
+          opt-in. <code>default</code> ≠ solid invert.
         </p>
       </column>
       <column gap="2">
         <label style(knobLabel)>Tone</label>
         <row gap="2" align="center" style(swatchRow)>
-          <tooltip content="no tone" placement="top">
-            <div label="none" on:click={clearATone} selected={!aTone() ? 'true' : null} style(swatch, swatchRest)></div>
-          </tooltip>
           <tooltip content="primary" placement="top">
-            <div label="primary" on:click={() => pickATone('primary')} selected={aTone() === 'primary' ? 'true' : null} style(swatch, swatchPrimary)></div>
+            <div title="primary" label="primary" on:click={() => pickATone('primary')} selected={aTone() === 'primary' ? 'true' : null} style(swatch, swatchPrimary)></div>
           </tooltip>
           <tooltip content="success" placement="top">
-            <div label="success" on:click={() => pickATone('success')} selected={aTone() === 'success' ? 'true' : null} style(swatch, swatchSuccess)></div>
+            <div title="success" label="success" on:click={() => pickATone('success')} selected={aTone() === 'success' ? 'true' : null} style(swatch, swatchSuccess)></div>
           </tooltip>
           <tooltip content="warning" placement="top">
-            <div label="warning" on:click={() => pickATone('warning')} selected={aTone() === 'warning' ? 'true' : null} style(swatch, swatchWarning)></div>
+            <div title="warning" label="warning" on:click={() => pickATone('warning')} selected={aTone() === 'warning' ? 'true' : null} style(swatch, swatchWarning)></div>
           </tooltip>
           <tooltip content="destructive" placement="top">
-            <div label="destructive" on:click={() => pickATone('destructive')} selected={aTone() === 'destructive' ? 'true' : null} style(swatch, swatchDestructive)></div>
+            <div title="destructive" label="destructive" on:click={() => pickATone('destructive')} selected={aTone() === 'destructive' ? 'true' : null} style(swatch, swatchDestructive)></div>
           </tooltip>
           <tooltip content="accent" placement="top">
-            <div label="accent" on:click={() => pickATone('accent')} selected={aTone() === 'accent' ? 'true' : null} style(swatch, swatchAccent)></div>
+            <div title="accent" label="accent" on:click={() => pickATone('accent')} selected={aTone() === 'accent' ? 'true' : null} style(swatch, swatchAccent)></div>
           </tooltip>
           <tooltip content="muted" placement="top">
-            <div label="muted" on:click={() => pickATone('muted')} selected={aTone() === 'muted' ? 'true' : null} style(swatch, swatchMuted)></div>
+            <div title="muted" label="muted" on:click={() => pickATone('muted')} selected={aTone() === 'muted' ? 'true' : null} style(swatch, swatchMuted)></div>
           </tooltip>
           <tooltip content="info" placement="top">
-            <div label="info" on:click={() => pickATone('info')} selected={aTone() === 'info' ? 'true' : null} style(swatch, swatchInfo)></div>
+            <div title="info" label="info" on:click={() => pickATone('info')} selected={aTone() === 'info' ? 'true' : null} style(swatch, swatchInfo)></div>
           </tooltip>
         </row>
       </column>
@@ -157,20 +155,32 @@ export default controller((_ctx: Scope) => {
     </column>
 
     <column slot="usage-preview" gap="3" align="center" style(specimen)>
-      <a href="/components" variant="solid" tone="primary">Open catalog</a>
+      <a href="/components">Open catalog</a>
     </column>
 
     <column gap="2" style(exampleBlock)>
       <p style(sectionLabel)>Examples</p>
       <doc-example
         title="Bare text link"
-        lead="No variant attr — freeform never stamps variant/tone, so every href stays inline prose."
+        lead="No variant attr — freeform never stamps variant/tone, so every href stays inline prose. variant=text is the same skin."
         code={aExBare()}
       >
         <row gap="3" align="center" style(demoRow)>
           <a href="/docs">Read the docs</a>
-          <a href="/components">Browse components</a>
+          <a href="/components" variant="text">variant=text</a>
         </row>
+      </doc-example>
+      <doc-example
+        title="Wrap another element"
+        lead="Anchor is a wrapper. A card, span, or button-looking surface can be the link — don't invent a second link API."
+        code={aExWrap()}
+      >
+        <a href="/components/card">
+          <card style({ pad(3) })>
+            <strong>Wrapped card</strong>
+            <p style(mutedXs)>The whole surface is the link.</p>
+          </card>
+        </a>
       </doc-example>
       <doc-example
         title="Button-link variants"

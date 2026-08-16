@@ -171,10 +171,10 @@ export default controller(() => {
     <row align="center" gap="3" nowrap style(shrink0)>
       <row edit-cluster align="center" gap="1" nowrap style(shrink0)>
         <button type="button" size="iconSm" variant="ghost" tone="muted" facet-undo label="Undo" disabled={!canUndo()} on:click={onUndo} style(iconBtn)>
-          <icon name="undo-2" size="sm"></icon>
+          <icon name="undo" size="sm"></icon>
         </button>
         <button type="button" size="iconSm" variant="ghost" tone="muted" facet-redo label="Redo" disabled={!canRedo()} on:click={onRedo} style(iconBtn)>
-          <icon name="redo-2" size="sm"></icon>
+          <icon name="redo" size="sm"></icon>
         </button>
         <!-- Diff dropdown always mounted so the trigger can open it when dirty. -->
         <if {isDirty()}>

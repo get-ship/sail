@@ -1,0 +1,7 @@
+{
+  "id": "HeroText",
+  "kind": "block",
+  "status": "authored",
+  "mantineUrl": "https://ui.mantine.dev/component/hero-text/",
+  "primitives": ["button"]
+}

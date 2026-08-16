@@ -61,14 +61,14 @@ export default controller(() => {
 <if {components.stage.alert()}>
   <column gap="3" style(stageHost)>
     <column gap="2">
-      <p style(fieldHint)>Rest · component.alert tokens (theme override)</p>
+      <p style(fieldHint)>Rest · tone roles (info / success / warning / danger)</p>
       <alert style(stageHost)>
         <strong slot="title">Notice</strong>
-        Rest paint uses component.alert.* leaves.
+        Rest paint uses theme tone roles.
       </alert>
     </column>
     <column gap="2">
-      <p style(fieldHint)>Toned · stripe + icon brand (host fill stays component leaves)</p>
+      <p style(fieldHint)>Toned · stripe + icon brand (host fill stays theme roles)</p>
       <column gap="2">
         <alert tone="info" style(stageHost)>
           <strong slot="title">Heads up</strong>
@@ -97,7 +97,7 @@ export default controller(() => {
 <if {components.stage.progressBar()}>
   <column gap="3" style(sampleMax)>
     <column gap="2">
-      <p style(fieldHint)>Track/fill · component.progress.track + fill</p>
+      <p style(fieldHint)>Track/fill · muted + primary</p>
       <progress value="30" max="100" size="sm"></progress>
       <progress value={components.load()} max="100"></progress>
       <progress value="90" max="100" size="lg"></progress>
@@ -111,7 +111,7 @@ export default controller(() => {
 <if {components.stage.meter()}>
   <column gap="3" style(sampleMax)>
     <column gap="2">
-      <p style(fieldHint)>Rest · sizes · component.meter.track + bands</p>
+      <p style(fieldHint)>Rest · sizes · muted track + semantic bands</p>
       <meter value="0.55" size="sm"></meter>
       <meter value="0.55"></meter>
       <meter value="0.55" size="lg"></meter>
@@ -127,7 +127,7 @@ export default controller(() => {
 <if {components.stage.spinner()}>
   <column gap="3" style(stageHost)>
     <column gap="2">
-      <p style(fieldHint)>Rest · component.spinner.fg + track (theme override)</p>
+      <p style(fieldHint)>Rest · muted arc + track</p>
       <row gap="4" align="center" nowrap>
         <spinner size="sm"></spinner>
         <spinner></spinner>
@@ -149,7 +149,7 @@ export default controller(() => {
 <if {components.stage.skeleton()}>
   <column gap="3" style(sampleMax)>
     <column gap="2">
-      <p style(fieldHint)>Sheen · component.skeleton.bg / highlight</p>
+      <p style(fieldHint)>Sheen · muted fill</p>
       <column gap="2">
         <skeleton shape="text" size="md"></skeleton>
         <skeleton shape="text" size="sm"></skeleton>
@@ -169,7 +169,7 @@ export default controller(() => {
 <if {components.stage.emptyState()}>
   <column gap="3" style(sampleMax)>
     <column gap="2">
-      <p style(fieldHint)>Rest · component.empty-state (bg · fg · border · title)</p>
+      <p style(fieldHint)>Rest · muted surface + border + title</p>
       <empty-state size="sm" style(stageHost)>
         <icon slot="icon" name="inbox"></icon>
         <strong slot="title">Empty inbox</strong>
@@ -197,10 +197,10 @@ export default controller(() => {
 <if {components.stage.errorState()}>
   <column gap="4" style(stageHost)>
     <column gap="2">
-      <p style(fieldHint)>Rest · component.error-state bg/fg/border</p>
+      <p style(fieldHint)>Rest · muted surface + border</p>
       <error-state code="ERR_THEME" size="sm">
         <strong slot="title">Couldn't load preview</strong>
-        Rest chrome — override component.error-state leaves.
+        Rest chrome — muted surface + destructive icon.
         <button slot="action" type="button" variant="outline" size="sm">Retry</button>
       </error-state>
     </column>

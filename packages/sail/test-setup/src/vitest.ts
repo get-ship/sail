@@ -302,7 +302,7 @@ function pickExportTarget(value: unknown): string | null {
   if (typeof value === 'string') return value
   if (value && typeof value === 'object') {
     const conds = value as Record<string, unknown>
-    for (const key of ['import', 'module', 'browser', 'default', 'node', 'require', 'types']) {
+    for (const key of ['bun', 'development', 'import', 'module', 'browser', 'default', 'node', 'require', 'types']) {
       const target = conds[key]
       if (typeof target === 'string') return target
       if (target && typeof target === 'object') {

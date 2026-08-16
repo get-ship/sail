@@ -13,14 +13,13 @@
     "crawl:static": "bun scripts/crawl-static.ts",
     "deploy:pages": "npx wrangler pages deploy dist --project-name sail-site",
     "test": "playwright test",
-    "qa": "bun qa/probe.ts --sweep --theme=all",
-    "qa:fast": "bun qa/probe.ts --sweep --theme=ship,glass",
-    "qa:probe": "bun qa/probe.ts"
+    "qa": "echo 'L1 matrix is not the docs site. Use: bun crates/sail/compiler/tests/l1-matrix/probe.ts' && exit 2"
   },
   "dependencies": {
     "@ship/sail-runtime": "workspace:*",
     "@ship/sail-dom": "workspace:*",
     "@ship/sail-compiler-wasm": "workspace:*",
+    "@ship/sail-l1": "workspace:*",
     "@ship/tokens": "workspace:*",
     "@ship/sail-lsp-browser": "workspace:*",
     "@ship/sail-components": "workspace:*"

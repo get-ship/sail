@@ -169,7 +169,7 @@ export default controller((_ctx: Scope) => {
       <p style(sectionLabel)>Examples</p>
       <doc-example
         title="Default table"
-        lead="Plain thead / tbody / tr — header divided, rows separated, no host flags."
+        lead="Plain thead / tbody / tr — outer hairline and row lines on by default."
         code={tbExDefault()}
       >
         <table style(tableW)>

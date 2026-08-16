@@ -13,10 +13,7 @@ export const contract = {
     },
     required: { default: false, control: 'switch' },
   },
-  faces: [
-    { path: 'component.label.fg', label: 'Ink' },
-    { path: 'component.label.required', label: 'Required marker' },
-  ],
+  faces: [],
   visual: {
     defaultRow: true,
     cross: ['size', 'required'],

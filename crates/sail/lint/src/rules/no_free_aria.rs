@@ -152,7 +152,7 @@ mod tests {
     fn skips_stdlib_and_packages() {
         assert!(
             check(
-                Path::new("crates/sail/compiler/stdlib/alert.sail"),
+                Path::new("crates/sail/compiler/stdlib/alert/alert.sail"),
                 r#"<row role="status" aria-live="polite">x</row>"#,
             )
             .is_empty()

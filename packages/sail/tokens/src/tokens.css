@@ -377,6 +377,8 @@
   --card-texture-blend: overlay;
   --card-texture-opacity: 1;
   --play-colors-property: color, background-color, border-color, outline-color, fill, stroke;
+  --play-control-property: color, background-color, border-color, outline-color, transform, box-shadow, opacity;
+  --play-surface-property: color, background-color, border-color, box-shadow, transform, opacity;
 }
 
 /* ─── Expression channels (Tier 2) ──────────────────────────────────
@@ -532,30 +534,12 @@ body::after {
   [theme]:not(:root)::after { display: none; }
 }
 
-/* ─── Nested theme: component field aliases + UA color-scheme ──────────
+/* ─── Nested theme: UA color-scheme ───────────────────────────────────
  *
- * Component slots like `--field: var(--background)` are declared on `:root`.
- * Custom properties inherit their *computed* value, so a nested `[theme]`
- * that redefines `--background` does NOT re-point inherited `--field` —
- * L1 inputs keep the site field paint while buttons (reading `--primary`
- * set on the themed host) follow the nested theme.
- *
- * Re-bind field slots on every themed host so `var(--field*)` resolves
- * against the nearest theme's globals. Pair with `mode` so dual-mode
- * nested roots select the right mode block; stamp mode from the document
- * paint when the author only sets `theme=` (see resolveNestedPaintMode).
- *
- * `color-scheme` on the themed subtree keeps native form chrome (UA
- * autofill, date pickers, scrollbars) aligned with nested light|dark. */
-[theme] {
-  --field: var(--background);
-  --field-foreground: var(--foreground);
-  --field-border: var(--border);
-  --field-border-hover: var(--border-strong);
-  --field-hint: var(--muted-foreground);
-  --field-error: var(--destructive);
-  --fieldset-border: var(--border);
-}
+ * Inputs spend `--input` / `--border` / `--foreground` set on the theme
+ * host. A second `--field*` alias layer would inherit the *computed*
+ * parent value and desync nested themes — so it is not declared.
+ * `color-scheme` keeps native form chrome aligned with nested light|dark. */
 [theme][mode='light'] {
   color-scheme: light;
 }

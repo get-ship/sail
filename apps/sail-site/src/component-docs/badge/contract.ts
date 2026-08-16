@@ -13,7 +13,7 @@ export const contract = {
     },
     tone: {
       values: ['primary', 'info', 'success', 'warning', 'destructive', 'accent', 'muted'] as const,
-      optional: true,
+      default: 'muted',
       control: 'swatches',
     },
     size: {
@@ -22,15 +22,12 @@ export const contract = {
       control: 'slider',
     },
     pill: { default: false, control: 'switch' },
+    dot: { default: false, control: 'switch', docsSkip: true },
   },
-  faces: [
-    { path: 'component.badge.bg', label: 'Fill' },
-    { path: 'component.badge.fg', label: 'Ink' },
-    { path: 'component.badge.border', label: 'Border' },
-  ],
+  faces: [],
   visual: {
     defaultRow: true,
-    cross: ['variant', 'tone', 'size', 'pill'],
+    cross: ['variant', 'tone', 'size', 'pill', 'dot'],
   },
   examples: true,
 } as const satisfies SurfaceContract

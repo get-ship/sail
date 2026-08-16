@@ -9,6 +9,7 @@
   style mutedXs = { fg(muted-foreground).type({ size: xs }) }
   style specimen = { size({ w: full, max-w: panel-max-w-md }).pad(2).overflow({ all: visible }) }
   style knobLabel = { fg(muted-foreground).type({ size: xs, weight: medium, tracking: wide, case: uppercase }) }
+  style sizeValue = { fg(muted-foreground).type({ family: mono, size: xs }) }
   style exampleBlock = { size({ w: full }).pad({ t: 2, b: 4 }).overflow({ all: visible }) }
   style sectionLabel = { fg(muted-foreground).type({ size: xs, tracking: wide, case: uppercase }) }
 </scope>
@@ -18,14 +19,23 @@ import type { Scope } from './doc-breadcrumb.sail'
 import { DETAILS } from '../../compositions/component-details'
 
 export default controller((_ctx: Scope) => {
+  const SIZES = ['sm', 'md', 'lg'] as const
+  const sizeIdx = signal(1)
+  const size = derived(() => {
+    const i = Math.min(Math.max(0, Math.round(Number(sizeIdx()) || 0)), SIZES.length - 1)
+    return SIZES[i] ?? 'md'
+  })
+
   const entry = DETAILS.breadcrumb
   const heading = () => entry.heading
   const blurb = () => entry.blurb
   const props = () => entry.props
   const usageCode = () => entry.usage
 
-  const specimenCode = () =>
-    `<breadcrumb>\n  <a href="/components">components</a>\n  <a href="/docs">docs</a>\n  <small>breadcrumb</small>\n</breadcrumb>`
+  const specimenCode = derived(() => {
+    const sz = size() !== 'md' ? ` size="${size()}"` : ''
+    return `<breadcrumb${sz}>\n  <a href="/components">components</a>\n  <a href="/docs">docs</a>\n  <small>breadcrumb</small>\n</breadcrumb>`
+  })
 
   const bcExPath = () =>
     `<breadcrumb>\n  <a href="/">Home</a>\n  <a href="/components">Components</a>\n  <small>breadcrumb</small>\n</breadcrumb>`
@@ -33,6 +43,8 @@ export default controller((_ctx: Scope) => {
     `<breadcrumb>\n  <a href="/docs">Docs</a>\n  <a href="/docs/reference">Reference</a>\n  <small>API</small>\n</breadcrumb>`
 
   return {
+    sizeIdx,
+    size,
     heading,
     blurb,
     props,
@@ -56,7 +68,7 @@ export default controller((_ctx: Scope) => {
     rows={props()}
   >
     <column slot="specimen" gap="3" align="center" style(specimen)>
-      <breadcrumb>
+      <breadcrumb size={size()}>
         <a href="/components">components</a>
         <a href="/docs">docs</a>
         <small>breadcrumb</small>
@@ -65,9 +77,13 @@ export default controller((_ctx: Scope) => {
 
     <column slot="knobs" gap="4" align="stretch">
       <column gap="2">
-        <label style(knobLabel)>Composition</label>
+        <row gap="2" align="center" justify="between">
+          <label style(knobLabel)>Size</label>
+          <span style(sizeValue)>{size()}</span>
+        </row>
+        <slider bind:value={sizeIdx} min="0" max="2" step="1" size="sm" label="Size" ticks="sm,md,lg"></slider>
         <p style(mutedXs)>
-          No host props on the trail host. Compose nested <code>a</code> crumbs and an inert
+          Type scale on the trail host. Compose nested <code>a</code> crumbs and an inert
           current (commonly <code>small</code>).
         </p>
       </column>

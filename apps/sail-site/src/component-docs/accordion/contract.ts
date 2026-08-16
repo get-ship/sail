@@ -2,7 +2,7 @@ import type { SurfaceContract } from '../contract-types'
 
 /**
  * Surface contract for accordion — axes from prop-registry only.
- * Faces: component.accordion.bg · border · chevron · fg · hover-bg.
+ * Faces: card / card-foreground / border.
  */
 export const contract = {
   slug: 'accordion',
@@ -16,11 +16,9 @@ export const contract = {
     onToggle: { control: 'none', event: true },
   },
   faces: [
-    { path: 'component.accordion.bg', label: 'Fill' },
-    { path: 'component.accordion.fg', label: 'Ink' },
-    { path: 'component.accordion.border', label: 'Border' },
-    { path: 'component.accordion.hover-bg', label: 'Hover fill' },
-    { path: 'component.accordion.chevron', label: 'Chevron' },
+    { path: 'card', label: 'Background' },
+    { path: 'card-foreground', label: 'Foreground' },
+    { path: 'border', label: 'Border' },
   ],
   visual: {
     defaultRow: true,

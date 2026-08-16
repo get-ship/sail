@@ -121,6 +121,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     // Catalog toast tile: dismiss removes the instance; re-push remounts.
     let catalogToastSeq = 0
     const catalogToastItems = signal<{ key: string }[]>([{ key: 'catalog-toast-0' }])
+    const catalogToastEmpty = derived(() => catalogToastItems().length === 0)
     const pushCatalogToast = (): void => {
       catalogToastSeq += 1
       catalogToastItems.set([{ key: `catalog-toast-${catalogToastSeq}` }])
@@ -141,7 +142,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       query, packSel, catSel, pickPack, pickCat,
       packs, cats, visibleList, countLabel, none,
       email, agreed, notify, volume, team, plan, kept, dropChip,
-      catalogToastItems, pushCatalogToast, onCatalogToastDismiss,
+      catalogToastItems, catalogToastEmpty, pushCatalogToast, onCatalogToastDismiss,
       editorSample, toolArgs, toolResult,
       DEMO_PHOTO,
     }
@@ -204,17 +205,16 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                     <button variant="solid" tone="primary">Save</button>
                     <button variant="outline">Cancel</button>
                     <button variant="ghost" tone="destructive" size="sm">Delete</button>
-                  </row>}{else-if {e.tag === 'a'} => <row gap="2" align="center">
-                    <a href="#">text link</a>
-                    <a href="#" variant="solid" tone="primary">solid</a>
-                    <a href="#" variant="outline">outline</a>
-                  </row>}{else-if {e.tag === 'input'} => <column gap="2" style({ size({ w: full }) })>
+                  </row>}{else-if {e.tag === 'a'} => <column gap="2" align="center">
+                    <a href="/components/a">Open the anchor docs</a>
+                    <a href="/components/card">
+                      <card style({ pad(2) })>
+                        <strong style({ type({ size: sm }) })>Wrapped card</strong>
+                        <p style(mutedXs)>The whole surface is the link.</p>
+                      </card>
+                    </a>
+                  </column>}{else-if {e.tag === 'input'} => <column gap="2" style({ size({ w: full }) })>
                     <input type="email" size="sm" placeholder="you@company.com" bind:value={email} />
-                    <row gap="2" align="center">
-                      <checkbox checked />
-                      <checkbox />
-                      <checkbox disabled />
-                    </row>
                   </column>}{else-if {e.tag === 'textarea'} => <column gap="1" style({ size({ w: full }) })>
                     <label style(fieldLabel)>Release notes</label>
                     <textarea size="sm" rows="2" placeholder="What changed in this ship?" />
@@ -240,9 +240,6 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                       <checkbox disabled /> Admin-only (disabled)
                     </label>
                     <p style(mutedXs)>input type=checkbox — not a separate tag</p>
-                  </column>}{else-if {e.tag === 'radio'} => <column gap="2">
-                    <radio value="pro">Pro — team seats</radio>
-                    <radio value="free" disabled>Free (disabled)</radio>
                   </column>}{else-if {e.tag === 'radio-group'} => <radio-group name="catalog-plan" value={plan()}>
                     <radio value="free">Free — community</radio>
                     <radio value="pro">Pro — team seats</radio>
@@ -273,8 +270,16 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                       <label style({ type({ size: sm }) })><checkbox checked /> Include trials</label>
                       <label style({ type({ size: sm }) })><checkbox /> Annual discount</label>
                     </column>
-                  </fieldset>}{else-if {e.tag === 'theme-picker'} => <theme-picker></theme-picker>}{else-if {e.tag === 'ticker'} => <ticker duration="normal" style({ size({ w: full }).overflow({ all: hidden }).pad({ y: 2 }).bg(muted).radius(md) })>
-                    <p style({ pad({ x: 3 }).fg(muted-foreground).type({ family: mono, size: xs, wrap: nowrap }) })>tokens · signals · a11y · hot reload · SSR ·&nbsp;</p>
+                  </fieldset>}{else-if {e.tag === 'theme-picker'} => <theme-picker></theme-picker>}{else-if {e.tag === 'ticker'} => <ticker>
+                    <row nowrap align="center" gap="3">
+                      <icon name="zap" size="sm"></icon>
+                      <span>api 14ms</span>
+                      <span>·</span>
+                      <span>worker 41ms</span>
+                      <span>·</span>
+                      <icon name="rocket" size="sm"></icon>
+                      <span>edge 9ms</span>
+                    </row>
                   </ticker>}{else-if {e.tag === 'alert'} => <alert tone="success"><strong>Deployed.</strong> v0.4.2 is live on production.</alert>}{else-if {e.tag === 'progress'} => <column gap="1" style({ size({ w: full }) })>
                     <span style(mutedXs)>Uploading assets… 62%</span>
                     <progress value="0.62" style({ size({ w: full }) })></progress>
@@ -296,7 +301,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                   </error-state>}{else-if {e.tag === 'error-boundary'} => <error-boundary>
                     <p style(mutedXs)>Child tree isolated from render faults.</p>
                   </error-boundary>}{else-if {e.tag === 'toast'} => <column gap="2" style({ size({ w: full, min-w: 0 }) })>
-                    <button type="button" size="sm" variant="ghost" on:click={pushCatalogToast} toast-show>Show toast</button>
+                    <if {catalogToastEmpty()}>
+                      <button type="button" size="sm" variant="ghost" on:click={pushCatalogToast} toast-show>Show toast</button>
+                    </if>
                     <for {catalogToastItems() as t} key={t.key}>
                       <toast tone="primary" duration="0" on-dismiss={onCatalogToastDismiss}>Invite sent to ada@ship.dev</toast>
                     </for>
@@ -421,14 +428,28 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                     <div style({ pad(2).size({ w: 16 }).bg(muted).radius(sm) })>                      <span style({ display(contents).type({ family: mono, size: xs }) })>                        aside
                       </span>
 </div>
-                  </row>}{else-if {e.tag === 'scroll-area'} => <scroll-area style({ size({ w: full, h: 32, min-h: 32 }).pad(3).border({ color: border, width: 1 }).radius(md).bg(surface-0) })>
-                    <column gap="2">
-                      <p style(mutedXs)>Build 1842 · shipped · 14:02</p>
-                      <p style(mutedXs)>Build 1841 · shipped · 11:40</p>
-                      <p style(mutedXs)>Build 1840 · failed · 09:12</p>
-                      <p style(mutedXs)>Build 1839 · shipped · yesterday</p>
-                      <p style(mutedXs)>Build 1838 · shipped · yesterday</p>
-                      <p style(mutedXs)>Build 1837 · shipped · Mon</p>
+                  </row>}{else-if {e.tag === 'scroll-area'} => <scroll-area style({ size({ w: full, h: 32, min-h: 32 }).pad(0).border({ color: border, width: 1 }).radius(md).bg(surface-0) })>
+                    <column gap="0">
+                      <row align="center" justify="between" style({ pad({ x: 3, y: 2 }).border({ color: border-subtle, width: 1, edge: b }) })>
+                        <span style({ type({ size: sm, weight: medium }) })>v0.4.2</span>
+                        <badge size="sm" tone="success" variant="soft">shipped</badge>
+                      </row>
+                      <row align="center" justify="between" style({ pad({ x: 3, y: 2 }).border({ color: border-subtle, width: 1, edge: b }) })>
+                        <span style({ type({ size: sm, weight: medium }) })>v0.4.1</span>
+                        <badge size="sm" tone="success" variant="soft">shipped</badge>
+                      </row>
+                      <row align="center" justify="between" style({ pad({ x: 3, y: 2 }).border({ color: border-subtle, width: 1, edge: b }) })>
+                        <span style({ type({ size: sm, weight: medium }) })>v0.4.0</span>
+                        <badge size="sm" tone="destructive" variant="soft">failed</badge>
+                      </row>
+                      <row align="center" justify="between" style({ pad({ x: 3, y: 2 }).border({ color: border-subtle, width: 1, edge: b }) })>
+                        <span style({ type({ size: sm, weight: medium }) })>v0.3.9</span>
+                        <badge size="sm" tone="success" variant="soft">shipped</badge>
+                      </row>
+                      <row align="center" justify="between" style({ pad({ x: 3, y: 2 }) })>
+                        <span style({ type({ size: sm, weight: medium }) })>v0.3.8</span>
+                        <badge size="sm" tone="muted" variant="soft">skipped</badge>
+                      </row>
                     </column>
                   </scroll-area>}{else-if {e.tag === 'sail-sparkline'} => <sail-sparkline data="2,5,3,8,4,6,7" width="120" height="40"></sail-sparkline>}{else-if {e.tag === 'sail-area-chart'} => <sail-area-chart series='[{"name":"a","data":[2,4,3,5]}]' labels="Q1,Q2,Q3,Q4" width="160" height="60"></sail-area-chart>}{else-if {e.tag === 'sail-bar-chart'} => <sail-bar-chart data="2,5,3,8,4" labels="A,B,C,D,E" width="160" height="60"></sail-bar-chart>}{else-if {e.tag === 'sail-donut'} => <sail-donut data='[{"label":"a","value":40},{"label":"b","value":30},{"label":"c","value":30}]' diameter="80" thickness="10"></sail-donut>}{else-if {e.tag === 'sail-gauge'} => <sail-gauge value="72" diameter="80" thickness="10"></sail-gauge>}{else-if {e.tag === 'sail-heatmap'} => <sail-heatmap rows="3" cols="5" values="1,2,3,4,3,4,5,6,5,4,3,2,1,2,3" cell-size="18" gap="3" tone="primary"></sail-heatmap>}{else-if {e.tag === 'sail-line-chart'} => <sail-line-chart series='[{"name":"a","data":[2,4,3,5]}]' labels="Q1,Q2,Q3,Q4" width="160" height="60"></sail-line-chart>}{else-if {e.tag === 'sail-media-image'} => <div style(mediaFrame)>
                     <sail-media-image src={DEMO_PHOTO} alt="Mountain lake at dusk" fit="cover" zoomable={false} style(mediaStage)></sail-media-image>
@@ -441,10 +462,27 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                   </row>}{else-if {e.tag === 'sail-tool-call'} => <sail-tool-call name="list_deploys" status="ok" open style({ size({ w: full }) })>
                     {toolArgs()}
                     <span slot="result">{toolResult()}</span>
-                  </sail-tool-call>}{else => <p style(dormant)>{e.tag}</p>}</if>
+                  </sail-tool-call>}{else-if {e.tag === 'date'} => <date type="date" style({ size({ w: full }) })></date>}{else-if {e.tag === 'file'} => <file style({ size({ w: full }) })></file>}{else-if {e.tag === 'color'} => <color value="#3b82f6"></color>}{else-if {e.tag === 'drawer'} => <column gap="2" align="center">
+                    <button size="sm" variant="outline" command="show" commandfor="grid-drawer">Open drawer</button>
+                    <drawer id="grid-drawer" side="end" size="sm">
+                      <header>Filters</header>
+                      <section>
+                        <p style(mutedXs)>Edge sheet — swipe or close to dismiss.</p>
+                      </section>
+                    </drawer>
+                  </column>}{else-if {e.tag === 'resizable'} => <div style({ size({ w: full, h: 28 }).overflow({ all: hidden }).border({ color: border, width: 1 }).radius(md) })>
+                    <resizable>
+                      <div slot="start" style({ size({ w: full, h: full }).pad(2).bg(surface-1) })>
+                        <p style(mutedXs)>Start</p>
+                      </div>
+                      <div slot="end" style({ size({ w: full, h: full }).pad(2).bg(surface-2) })>
+                        <p style(mutedXs)>End</p>
+                      </div>
+                    </resizable>
+                  </div>}{else => <p style(dormant)>{e.tag}</p>}</if>
               </row>
               <column gap="1" style(tileMeta)>
-                <a href={`/components/${e.slug}`} style(tileName)>{e.tag}</a>
+                <a href={`/components/${e.slug}`} style(tileName)>{e.tag === 'a' ? 'anchor' : e.tag}</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone={e.badgeTone} variant="soft">{e.badgeLabel}</badge>
                   <span style(cat)>{e.cat}</span>

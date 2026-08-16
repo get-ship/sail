@@ -130,6 +130,58 @@ fn named_style_ref_emits_runtime_motion_attach() {
 }
 
 #[test]
+fn play_pulse_emits_opacity_breathe_not_fade_from_zero() {
+    let js = compile_motion(r#"<div style({ animate: { loop: play(pulse) } })></div>"#)
+        .expect("compile");
+    assert!(js.contains("__sail_motion_attach("), "{js}");
+    assert!(js.contains("property: \"opacity\""), "{js}");
+    assert!(js.contains("from: 1"), "pulse must start visible:\n{js}");
+    assert!(
+        js.contains("to: 0.72"),
+        "pulse breathes, does not vanish:\n{js}"
+    );
+    assert!(
+        !js.contains("from: 0"),
+        "pulse must not inherit fade-from-0:\n{js}"
+    );
+}
+
+#[test]
+fn play_rise_emits_translate_without_opacity() {
+    let js = compile_motion(r#"<div style({ animate: { enter: play(rise) } })></div>"#)
+        .expect("compile");
+    assert!(js.contains("property: \"translate-y\""), "{js}");
+    assert!(
+        !js.contains("property: \"opacity\""),
+        "rise is solid — no opacity channel:\n{js}"
+    );
+}
+
+#[test]
+fn play_press_emits_scale_not_fade() {
+    let js = compile_motion(r#"<button style({ animate: { press: play(press) } })>x</button>"#)
+        .expect("compile");
+    assert!(js.contains("property: \"scale\""), "{js}");
+    assert!(js.contains("from: 1"), "{js}");
+    assert!(js.contains("to: 0.96"), "{js}");
+    assert!(
+        !js.contains("property: \"opacity\""),
+        "press must not fade:\n{js}"
+    );
+}
+
+#[test]
+fn play_spin_loop_emits_one_way_direction() {
+    let js =
+        compile_motion(r#"<div style({ animate: { loop: play(spin) } })></div>"#).expect("compile");
+    assert!(js.contains("property: \"rotate\""), "{js}");
+    assert!(
+        js.contains("direction: \"normal\""),
+        "spin must not ping-pong:\n{js}"
+    );
+}
+
+#[test]
 fn loop_rotate_spin_emits_infinite_one_direction() {
     let js = compile_motion(r#"<img style({ animate: { loop: play(fade) } })> x</img>"#)
         .expect("compile");

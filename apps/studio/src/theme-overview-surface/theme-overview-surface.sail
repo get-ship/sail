@@ -34,6 +34,7 @@
   style errorText = { grow(1).size({ min-w: 0 }).fg(destructive).type({ size: sm, wrap: truncate }) }
   style growMin = { grow(1).size({ min-w: 0 }) }
   style pickerHero = { size({ w: full, h: 20, min-h: 20 }) }
+  style chipLabel = { type({ wrap: truncate }) }
   type HeroColorCardProps = {
     token: string
     value: string
@@ -265,10 +266,10 @@ export default controller(() => {
                   <button type="button" size={overview.controlSize()} variant="outline" tone="primary" style(specimenBtn)>Outline</button>
                 </row>
                 <row gap="2" align="center" nowrap specimen-badges>
-                  <badge tone="primary" size={overview.badgeSize()} variant="solid" pill>Primary</badge>
-                  <badge tone="success" size={overview.badgeSize()} variant="solid" pill>Success</badge>
-                  <badge tone="warning" size={overview.badgeSize()} variant="solid" pill>Warning</badge>
-                  <badge tone="destructive" size={overview.badgeSize()} variant="solid" pill>Danger</badge>
+                  <badge tone="primary" size={overview.badgeSize()} variant="solid" pill style(chipLabel)>Primary</badge>
+                  <badge tone="success" size={overview.badgeSize()} variant="solid" pill style(chipLabel)>Success</badge>
+                  <badge tone="warning" size={overview.badgeSize()} variant="solid" pill style(chipLabel)>Warning</badge>
+                  <badge tone="destructive" size={overview.badgeSize()} variant="solid" pill style(chipLabel)>Danger</badge>
                 </row>
                 <column type-samples gap={specimenStackGap()}>
                   <p style({ type({ family: display, size: xl, weight: semibold, tracking: tight }) })>

@@ -67,7 +67,7 @@ export default controller((_ctx: Scope) => {
     <column slot="knobs" gap="4" align="stretch">
       <column gap="2">
         <label style(knobLabel)>Value</label>
-        <input type="text" size="sm" bind:value={value} placeholder="#rrggbb" />
+        <input type="text" size="sm" bind:value={value} placeholder="#rrggbb" label="Value" />
       </column>
       <row gap="4" align="center">
         <label><checkbox bind:checked={invalid} size="sm" /> Invalid</label>

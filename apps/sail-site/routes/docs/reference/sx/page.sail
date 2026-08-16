@@ -29,7 +29,7 @@ import {
 function vocabRows(tag: 'concern' | 'axis' | 'plain') {
   return STYLE_VOCAB.filter((r) => r.tag === tag).map((r) => ({
     name: r.name,
-    channel: r.channel,
+    tag: r.tag,
     slots: r.slots.length ? r.slots.join(' · ') : '—',
   }))
 }
@@ -78,7 +78,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
         <card padding="sm" style(cardShell)>
           <column gap="1">
             <code>{a.name}</code>
-            <small style(valueText)>{a.channel} · {a.slots}</small>
+            <small style(valueText)>{a.tag} · {a.slots}</small>
           </column>
         </card>
       </for>
@@ -95,7 +95,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
         <card padding="sm" style(cardShell)>
           <column gap="1">
             <code>{a.name}</code>
-            <small style(valueText)>{a.channel} · {a.slots}</small>
+            <small style(valueText)>{a.tag} · {a.slots}</small>
           </column>
         </card>
       </for>
@@ -112,7 +112,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
         <card padding="sm" style(cardShell)>
           <column gap="1">
             <code>{a.name}</code>
-            <small style(valueText)>{a.channel}</small>
+            <small style(valueText)>{a.tag}</small>
           </column>
         </card>
       </for>

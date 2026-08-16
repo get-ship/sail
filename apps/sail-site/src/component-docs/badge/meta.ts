@@ -7,7 +7,7 @@ export const meta = {
   key: 'badge',
   category: 'display',
   kind: 'host',
-  blurb: "A small statement of state. Soft by default; solid or outline when it must shout or whisper. Omit tone to use component.badge tokens (themeable rest); set tone and the semantic colour always paints.",
+  blurb: "A small statement of state. Soft by default; solid or outline when it must shout or whisper. tone defaults to muted.",
   heading: "prose",
   host: 'doc-badge',
   stageOwnsKnobs: true,

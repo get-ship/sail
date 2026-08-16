@@ -12,10 +12,10 @@ export const ACTIVITY_BY_DIGIT: Record<string, ActivityId> = {
 }
 
 const RAIL: Record<string, { label: string; icon: string; digit: string }> = {
-  edit: { label: 'Edit', icon: 'files', digit: '1' },
-  components: { label: 'Components', icon: 'box', digit: '2' },
-  themes: { label: 'Themes', icon: 'palette', digit: '3' },
-  tasks: { label: 'Tasks', icon: 'messages-square', digit: '4' },
+  edit: { label: 'Edit', icon: 'file', digit: '1' },
+  components: { label: 'Components', icon: 'compass', digit: '2' },
+  themes: { label: 'Themes', icon: 'image', digit: '3' },
+  tasks: { label: 'Tasks', icon: 'inbox', digit: '4' },
   config: { label: 'Config', icon: 'settings', digit: '5' },
 }
 
@@ -85,7 +85,7 @@ export function railRowsForPath(pathname: string, mod = hotkeyMod()): RailRow[] 
   return RAIL_ORDER.map((id) => ({
     id,
     label: railLabel(id, mod),
-    icon: RAIL[id]?.icon || 'box',
+    icon: RAIL[id]?.icon || 'file',
     href: hrefForActivity(id),
     active: active === id,
     key: id,

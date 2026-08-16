@@ -18,13 +18,13 @@ export const BLANK_SOURCE = `<!--
   Edit freely, then Run (or wait for auto-compile).
 -->
 <scope>
-  style muted = { paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
+  style muted = { fg(muted-foreground).type({ size: sm }) }
 </scope>
 
 
 <column gap="3">
   <h2>Hello Sail</h2>
-  <p>Edit this source and hit Run. Pick a recipe above for a fuller example.</p>
+  <p style(muted)>Edit this source and hit Run. Pick a recipe above for a fuller example.</p>
   <button variant="solid" tone="primary">Primary button</button>
 </column>
 `

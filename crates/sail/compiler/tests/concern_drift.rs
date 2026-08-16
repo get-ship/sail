@@ -482,8 +482,8 @@ fn stdlib_all_files_compile() {
     let files = stdlib_sail_files();
     assert_eq!(
         files.len(),
-        59,
-        "expected 59 stdlib .sail files, got {}",
+        61,
+        "expected 61 stdlib .sail files, got {}",
         files.len()
     );
     let mut failed = Vec::new();
@@ -504,7 +504,7 @@ fn stdlib_all_files_compile() {
 
 #[test]
 fn dialog_sail_authors_concern_form_and_compiles() {
-    let path = compiler_root().join("stdlib/dialog.sail");
+    let path = compiler_root().join("stdlib/dialog/dialog.sail");
     let src = fs::read_to_string(&path).expect("dialog.sail");
     assert!(
         !src.contains("border(dialog.border)") && !src.contains("border(dialog)"),
@@ -557,7 +557,7 @@ fn dialog_border_dotted_form_is_retired() {
 
 #[test]
 fn card_sail_compiles_after_two_arg_fold() {
-    let path = compiler_root().join("stdlib/card.sail");
+    let path = compiler_root().join("stdlib/card/card.sail");
     let src = fs::read_to_string(&path).expect("card.sail");
     assert!(
         src.contains("border({ color: border, width: 1 })"),
@@ -580,7 +580,7 @@ fn property_setters_do_not_parse() {
 
 #[test]
 fn select_password_keep_pad_s_not_pad_x() {
-    let select = fs::read_to_string(compiler_root().join("stdlib/select.sail")).unwrap();
+    let select = fs::read_to_string(compiler_root().join("stdlib/select/select.sail")).unwrap();
     assert!(
         select.contains("s:") && select.contains("e:"),
         "select must keep pad s/e (chevron room)"
@@ -601,7 +601,7 @@ fn select_password_keep_pad_s_not_pad_x() {
             );
         }
     }
-    let input = fs::read_to_string(compiler_root().join("stdlib/input.sail")).unwrap();
+    let input = fs::read_to_string(compiler_root().join("stdlib/input/input.sail")).unwrap();
     assert!(
         input.contains("s:") && input.contains("e:"),
         "password field must keep pad s/e"
@@ -614,7 +614,7 @@ fn select_password_keep_pad_s_not_pad_x() {
 
 #[test]
 fn tooltip_carets_are_per_edge_slot_objects() {
-    let src = fs::read_to_string(compiler_root().join("stdlib/tooltip.sail")).unwrap();
+    let src = fs::read_to_string(compiler_root().join("stdlib/tooltip/tooltip.sail")).unwrap();
     assert!(
         src.contains("edge: t")
             && src.contains("edge: b")

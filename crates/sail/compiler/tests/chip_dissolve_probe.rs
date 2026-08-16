@@ -3,7 +3,7 @@ use sail_compiler::compile_element;
 
 #[test]
 fn chip_compiles_with_style_and_capability_mixins() {
-    let src = include_str!("../stdlib/chip.sail");
+    let src = include_str!("../stdlib/chip/chip.sail");
     let out = compile_element(src, "chip").expect("chip compiles");
     assert_eq!(out.root_class, "sail-chip");
     assert!(
@@ -42,16 +42,11 @@ fn chip_compiles_with_style_and_capability_mixins() {
     );
     let size = attrs.iter().find(|a| a["name"] == "size").unwrap();
     assert_eq!(size["default"], "md", "host Style size=md default: {size}");
-    // tone is optional — no default member / no forced tone attr
-    let tone = attrs.iter().find(|a| a["name"] == "tone");
-    if let Some(tone) = tone {
-        assert!(
-            tone.get("default").is_none()
-                || tone["default"].is_null()
-                || tone["default"] == serde_json::Value::Null,
-            "tone must not default to a fake member: {tone}"
-        );
-    }
+    let tone = attrs.iter().find(|a| a["name"] == "tone").unwrap();
+    assert_eq!(
+        tone["default"], "primary",
+        "chip tone defaults to primary: {tone}"
+    );
     assert!(
         out.structure_html.contains("s-")
             && (out.structure_html.contains("s-minhcontrolhxs")
@@ -76,7 +71,8 @@ fn chip_framework_skins_emit_chip_paint() {
 
 #[test]
 fn badge_and_card_compile_style() {
-    let badge = compile_element(include_str!("../stdlib/badge.sail"), "badge").expect("badge");
+    let badge =
+        compile_element(include_str!("../stdlib/badge/badge.sail"), "badge").expect("badge");
     assert!(
         badge.skin_css.contains("variant='solid'"),
         "{}",
@@ -93,7 +89,7 @@ fn badge_and_card_compile_style() {
         badge.structure_html
     );
 
-    let card = compile_element(include_str!("../stdlib/card.sail"), "card").expect("card");
+    let card = compile_element(include_str!("../stdlib/card/card.sail"), "card").expect("card");
     assert!(
         card.skin_css.contains("variant='outline'") && card.skin_css.contains("padding='md'"),
         "card Style match: {}",
@@ -119,7 +115,7 @@ fn badge_and_card_compile_style() {
 
 #[test]
 fn alert_compiles_with_style_capability_mixins() {
-    let src = include_str!("../stdlib/alert.sail");
+    let src = include_str!("../stdlib/alert/alert.sail");
     let out = compile_element(src, "alert").expect("alert compiles");
     assert!(
         out.structure_html.contains("use:liveRegion")
@@ -144,7 +140,7 @@ fn alert_compiles_with_style_capability_mixins() {
 
 #[test]
 fn chip_non_solid_variants_clear_solid_shadow() {
-    let out = compile_element(include_str!("../stdlib/chip.sail"), "chip").expect("chip");
+    let out = compile_element(include_str!("../stdlib/chip/chip.sail"), "chip").expect("chip");
     for key in ["soft", "outline", "ghost"] {
         assert!(
             out.skin_css.contains(&format!("variant='{key}'")),

@@ -50,7 +50,7 @@ export default controller((_ctx: Scope) => {
   const iconExSizes = () =>
     `<icon name="sparkles" size="xs"></icon>\n<icon name="sparkles" size="sm"></icon>\n<icon name="sparkles"></icon>\n<icon name="sparkles" size="lg"></icon>\n<icon name="sparkles" size="xl"></icon>`
   const iconExSpin = () =>
-    `<icon name="refresh-cw" spin label="Refreshing"></icon>`
+    `<icon name="refresh" spin label="Refreshing"></icon>`
   const iconExColor = () =>
     `<span style({ fg(primary) })>\n  <icon name="heart"></icon>\n</span>`
 
@@ -103,7 +103,7 @@ export default controller((_ctx: Scope) => {
           <option value="settings">settings</option>
           <option value="search">search</option>
           <option value="heart">heart</option>
-          <option value="refresh-cw">refresh-cw</option>
+          <option value="refresh">refresh</option>
         </select>
         <p style(mutedXs)>Pack glyph via name. Use src only for same-origin SVG.</p>
       </column>
@@ -169,7 +169,7 @@ export default controller((_ctx: Scope) => {
         code={iconExSpin()}
       >
         <row gap="3" align="center" style(demoRow)>
-          <icon name="refresh-cw" spin label="Refreshing"></icon>
+          <icon name="refresh" spin label="Refreshing"></icon>
         </row>
       </doc-example>
 

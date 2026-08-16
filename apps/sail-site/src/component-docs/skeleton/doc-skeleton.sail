@@ -10,9 +10,6 @@
   style grow1 = { grow(1) }
   style skelBlock = { size({ w: full, max-w: panel-max-w-sm }) }
   style knobLabel = { fg(muted-foreground).type({ size: xs, weight: medium, tracking: wide, case: uppercase }) }
-  style sizeValue = { fg(muted-foreground).type({ family: mono, size: xs }) }
-  style tickRow = { size({ w: full }).pad({ x: 1_5, t: 1 }) }
-  style tick = { fg(muted-foreground).type({ family: mono, size: xs }) }
   style exampleBlock = { size({ w: full }).pad({ t: 2, b: 4 }).overflow({ all: visible }) }
   style sectionLabel = { fg(muted-foreground).type({ size: xs, tracking: wide, case: uppercase }) }
 </scope>
@@ -22,14 +19,8 @@ import type { Scope } from './doc-skeleton.sail'
 import { DETAILS } from '../../compositions/component-details'
 
 export default controller((_ctx: Scope) => {
-  const SKEL_SIZES = ['sm', 'md', 'lg'] as const
   const shape = signal('text')
-  const sizeIdx = signal(1)
-
-  const skelSize = derived(() => {
-    const i = Math.min(Math.max(0, Math.round(Number(sizeIdx()) || 0)), SKEL_SIZES.length - 1)
-    return SKEL_SIZES[i] ?? 'md'
-  })
+  const skelSize = signal('md')
 
   const entry = DETAILS.skeleton
   const heading = () => entry.heading
@@ -47,13 +38,12 @@ export default controller((_ctx: Scope) => {
   const skelExLines = () =>
     `<column gap="2">\n  <skeleton shape="text" size="md"></skeleton>\n  <skeleton shape="text" size="sm"></skeleton>\n  <skeleton shape="line" size="sm"></skeleton>\n</column>`
   const skelExAvatar = () =>
-    `<row gap="3" align="center">\n  <skeleton shape="circle" size="md"></skeleton>\n  <column gap="2">\n    <skeleton shape="text" size="sm"></skeleton>\n    <skeleton shape="text" size="sm"></skeleton>\n  </column>\n</row>`
+    `<row gap="3" align="center">\n  <skeleton shape="circle" size="lg"></skeleton>\n  <column gap="2">\n    <skeleton shape="text" size="md"></skeleton>\n    <skeleton shape="text" size="sm"></skeleton>\n  </column>\n</row>`
   const skelExBlock = () =>
     `<skeleton shape="block"></skeleton>\n<skeleton shape="text" size="md"></skeleton>`
 
   return {
     shape,
-    sizeIdx,
     skelSize,
     heading,
     blurb,
@@ -100,11 +90,12 @@ export default controller((_ctx: Scope) => {
         </select>
       </column>
       <column gap="2">
-        <row gap="2" align="center" justify="between">
-          <label style(knobLabel)>Size</label>
-          <span style(sizeValue)>{skelSize()}</span>
-        </row>
-        <slider bind:value={sizeIdx} min="0" max="2" step="1" size="sm" label="Size" ticks="sm,md,lg"></slider>
+        <label style(knobLabel)>Size</label>
+        <select size="sm" bind:value={skelSize} label="Size">
+          <option value="sm">sm</option>
+          <option value="md">md</option>
+          <option value="lg">lg</option>
+        </select>
       </column>
     </column>
 
@@ -130,14 +121,14 @@ export default controller((_ctx: Scope) => {
         </column>
       </doc-example>
       <doc-example
-        title="Avatar row"
-        lead="Compose circle with text bars for a list-item loading state."
+        title="Avatar + lines"
+        lead="Compose a circle with text bars. There is no skeleton prop on avatar, button, or card — wrap the same layout the loaded row uses."
         code={skelExAvatar()}
       >
         <row gap="3" align="center" style(specimen)>
-          <skeleton shape="circle" size="md"></skeleton>
+          <skeleton shape="circle" size="lg"></skeleton>
           <column gap="2" style(grow1)>
-            <skeleton shape="text" size="sm"></skeleton>
+            <skeleton shape="text" size="md"></skeleton>
             <skeleton shape="text" size="sm"></skeleton>
           </column>
         </row>

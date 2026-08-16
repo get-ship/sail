@@ -211,13 +211,13 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     configuration objects. A tab strip is written as the structure it is:
   </p>
   <code-block code={code.tabs}></code-block>
-  <tabs active="overview">
+  <tabs>
     <tab-list>
-      <tab name="overview">Overview</tab>
-      <tab name="activity">Activity</tab>
+      <tab>Overview</tab>
+      <tab>Activity</tab>
     </tab-list>
-    <tab-panel name="overview">The overview panel.</tab-panel>
-    <tab-panel name="activity">The activity panel.</tab-panel>
+    <tab-panel>The overview panel.</tab-panel>
+    <tab-panel>The activity panel.</tab-panel>
   </tabs>
 
   <h2>The behavior is already wired</h2>
@@ -249,12 +249,12 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <code-block code={code.icons}></code-block>
   <row gap="3" align="center">
     <icon name="search"></icon>
-    <icon name="git-branch"></icon>
+    <icon name="git"></icon>
     <icon name="compass"></icon>
     <icon name="zap"></icon>
     <icon name="rocket" size="lg"></icon>
     <icon name="alarm-clock" size="xl" label="Alarm"></icon>
-    <icon name="refresh-cw" spin></icon>
+    <icon name="refresh" spin></icon>
   </row>
   <p>
     An icon has no color prop — it draws in <code>currentColor</code>, the
@@ -266,7 +266,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       <icon name="rocket"></icon> Launch
     </button>
     <button variant="outline" tone="destructive">
-      <icon name="trash-2"></icon> Delete
+      <icon name="trash"></icon> Delete
     </button>
   </row>
   <p style(mutedSm)>

@@ -1,5 +1,5 @@
-// Static import map of component-docs/*/meta.ts.
-// Hub tile exists iff a package meta is listed here (and the meta.ts file exists).
+// Static import map of component-docs/*/meta.ts for detail routes.
+// L1 hub tiles come from @ship/sail-l1 hosts() — this map is not the hub SSOT.
 import { meta as buttonMeta } from './button/meta'
 import { meta as aMeta } from './a/meta'
 import { meta as inputMeta } from './input/meta'
@@ -10,7 +10,6 @@ import { meta as checkboxMeta } from './checkbox/meta'
 import { meta as dateMeta } from './date/meta'
 import { meta as fileMeta } from './file/meta'
 import { meta as colorMeta } from './color/meta'
-import { meta as radioMeta } from './radio/meta'
 import { meta as radioGroupMeta } from './radio-group/meta'
 import { meta as switchToggleMeta } from './switch/meta'
 import { meta as sliderMeta } from './slider/meta'
@@ -44,6 +43,7 @@ import { meta as popoverMeta } from './popover/meta'
 import { meta as dropdownMeta } from './dropdown/meta'
 import { meta as contextMenuMeta } from './context-menu/meta'
 import { meta as dialogMeta } from './dialog/meta'
+import { meta as drawerMeta } from './drawer/meta'
 import { meta as tabsMeta } from './tabs/meta'
 import { meta as breadcrumbMeta } from './breadcrumb/meta'
 import { meta as paginationMeta } from './pagination/meta'
@@ -52,6 +52,7 @@ import { meta as tableMeta } from './table/meta'
 import { meta as layoutMeta } from './layout/meta'
 import { meta as scrollAreaMeta } from './scroll-area/meta'
 import { meta as tickerMeta } from './ticker/meta'
+import { meta as resizableMeta } from './resizable/meta'
 import type { DocMeta } from './types'
 
 export const DOC_PACKAGES: readonly DocMeta[] = [
@@ -65,7 +66,6 @@ export const DOC_PACKAGES: readonly DocMeta[] = [
   dateMeta,
   fileMeta,
   colorMeta,
-  radioMeta,
   radioGroupMeta,
   switchToggleMeta,
   sliderMeta,
@@ -99,6 +99,7 @@ export const DOC_PACKAGES: readonly DocMeta[] = [
   dropdownMeta,
   contextMenuMeta,
   dialogMeta,
+  drawerMeta,
   tabsMeta,
   breadcrumbMeta,
   paginationMeta,
@@ -107,6 +108,7 @@ export const DOC_PACKAGES: readonly DocMeta[] = [
   layoutMeta,
   scrollAreaMeta,
   tickerMeta,
+  resizableMeta,
 ]
 
 export const DOC_BY_SLUG: Record<string, DocMeta> = Object.fromEntries(

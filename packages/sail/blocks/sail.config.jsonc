@@ -1,0 +1,10 @@
+{
+  "theme": {
+    "default": "ship",
+    "defaultMode": "light",
+    "enabled": "all"
+  },
+  "deck": {
+    "render": "csr"
+  }
+}

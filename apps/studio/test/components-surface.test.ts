@@ -128,7 +128,7 @@ describe('components-surface', () => {
     )
     expect(shellRail).toMatch(/'2':\s*'components'/)
     expect(shellRail).toMatch(/components:\s*\{\s*label:\s*'Components'/)
-    expect(shellRail).toMatch(/icon:\s*'box'/)
+    expect(shellRail).toMatch(/icon:\s*'compass'/)
     expect(shellVm).toMatch(/shell-rail/)
     expect(shellVm).toMatch(/ACTIVITY_BY_DIGIT/)
     expect(routesGen).toMatch(/pattern: '\/components'/)

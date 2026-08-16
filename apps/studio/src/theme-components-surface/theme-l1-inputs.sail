@@ -88,7 +88,7 @@ export default controller(() => {
 <if {components.stage.a()}>
   <column gap="4" style(stageHost)>
     <column gap="2">
-      <p style(fieldHint)>Bare text · + rest button-links (component.button.*)</p>
+      <p style(fieldHint)>Bare text · + rest button-links (primary / foreground)</p>
       <row gap="2" align="center" nowrap>
         <a href="#">text link</a>
         <a href="#" variant="default">default</a>
@@ -112,7 +112,7 @@ export default controller(() => {
 <if {components.stage.input()}>
   <column gap="3" style(sampleMax)>
     <column gap="2">
-      <p style(fieldHint)>Text field · sizes · component.field.bg/fg/border</p>
+      <p style(fieldHint)>Text field · sizes · input fill + foreground + border</p>
       <input type="text" size="sm" placeholder="sm field" value={components.sampleText()} on:input={components.onSampleInput} label="Sample field" />
       <input type="text" size="md" placeholder="md field" />
       <input type="text" size="lg" placeholder="lg field" />
@@ -122,22 +122,12 @@ export default controller(() => {
       <input type="email" size="sm" value="not-an-email" invalid />
       <input type="text" size="sm" placeholder="Disabled" disabled />
     </column>
-    <column gap="2">
-      <p style(fieldHint)>Checkbox type (not a separate tag) · range</p>
-      <row gap="3" align="center">
-        <input type="checkbox" checked />
-        <input type="checkbox" />
-        <input type="checkbox" disabled />
-        <input type="checkbox" size="lg" checked />
-      </row>
-      <input type="range" min="0" max="100" value="40" />
-    </column>
   </column>
 </if>
 <if {components.stage.textarea()}>
   <column gap="3" style(sampleMax)>
     <column gap="2">
-      <p style(fieldHint)>Sizes · component.field.* surface</p>
+      <p style(fieldHint)>Sizes · shared input fill</p>
       <textarea size="xs" rows="2" placeholder="xs"></textarea>
       <textarea size="sm" rows="2" placeholder="sm"></textarea>
       <textarea size={components.variant() || 'md'} rows="3" placeholder="md (chip or default)"></textarea>
@@ -153,7 +143,7 @@ export default controller(() => {
 <if {components.stage.select()}>
   <column gap="3" style(sampleMax)>
     <column gap="2">
-      <p style(fieldHint)>Sizes · component.field surface + SELECT_MAP chevron</p>
+      <p style(fieldHint)>Sizes · shared input fill + chevron</p>
       <select size="xs">
         <option>xs</option>
         <option>Engineering</option>
@@ -186,7 +176,7 @@ export default controller(() => {
       </select>
     </column>
     <p style(fieldHint)>
-      component.field bg/fg/border · hover free border-strong · not combobox
+      Input fill + foreground + border · hover border-strong · not combobox
     </p>
   </column>
 </if>
@@ -197,11 +187,22 @@ export default controller(() => {
     <option value="svelte">Svelte</option>
   </combobox>
 </if>
+<if {components.stage.checkbox()}>
+  <column gap="2" style(sampleMax)>
+    <p style(fieldHint)>Rest · sizes · input face + primary checked</p>
+    <row gap="3" align="center">
+      <checkbox checked />
+      <checkbox />
+      <checkbox disabled />
+      <checkbox size="lg" checked />
+    </row>
+  </column>
+</if>
 <if {components.stage.radio()}>
   <column gap="2" style(sampleMax)>
     <radio value="a">Option A</radio>
     <radio value="b" disabled>Disabled option</radio>
-    <p style(fieldHint)>component.radio.fg · value + disabled only</p>
+    <p style(fieldHint)>Foreground ink · value + disabled only</p>
   </column>
 </if>
 <if {components.stage.radioGroup()}>
@@ -213,7 +214,7 @@ export default controller(() => {
 <if {components.stage.switchToggle()}>
   <column gap="3" style(sampleMax)>
     <column gap="2">
-      <p style(fieldHint)>Sizes · component.switch.track + thumb</p>
+      <p style(fieldHint)>Sizes · muted track + primary checked</p>
       <row gap="3" align="center">
         <switch size="sm" checked></switch>
         <switch size={components.variant() || 'md'} checked></switch>
@@ -230,7 +231,7 @@ export default controller(() => {
       </row>
     </column>
     <column gap="2">
-      <p style(fieldHint)>Tone · checked track only; thumb stays switch.thumb</p>
+      <p style(fieldHint)>Tone · checked track only; thumb stays input face</p>
       <row gap="3" align="center">
         <switch tone="primary" checked></switch>
         <switch tone="success" checked></switch>
@@ -243,7 +244,7 @@ export default controller(() => {
 <if {components.stage.slider()}>
   <column gap="3" style(sampleMax)>
     <column gap="2">
-      <p style(fieldHint)>Sizes · component.slider.track + fill + track-border</p>
+      <p style(fieldHint)>Sizes · muted track + primary fill</p>
       <slider value="40" min="0" max="100" size="sm"></slider>
       <slider value={components.load()} min="0" max="100" size={components.variant() || 'md'}></slider>
       <slider value="80" min="0" max="100" size="lg"></slider>
@@ -252,7 +253,7 @@ export default controller(() => {
       <p style(fieldHint)>Disabled · native freeze + opacity</p>
       <slider value="55" min="0" max="100" disabled></slider>
     </column>
-    <p style(fieldHint)>Thumb face = field · rim = slider.fill · single thumb only</p>
+    <p style(fieldHint)>Thumb face = input · rim = primary fill · single thumb only</p>
   </column>
 </if>
 <if {components.stage.toggle() || components.stage.toggleGroup()}>
@@ -273,13 +274,13 @@ export default controller(() => {
 <if {components.stage.label()}>
   <column gap="3" style(sampleMax)>
     <column gap="2">
-      <p style(fieldHint)>Rest · sizes · component.label.fg + weight</p>
+      <p style(fieldHint)>Rest · sizes · foreground + label weight</p>
       <label for="theme-l1-label-sm" size="sm">Email sm</label>
       <label for="theme-l1-label-md" size={components.variant() || 'md'}>Email md</label>
       <label for="theme-l1-label-lg" size="lg">Email lg</label>
     </column>
     <column gap="2">
-      <p style(fieldHint)>Required · component.label.required marker</p>
+      <p style(fieldHint)>Required · destructive marker</p>
       <label for="theme-l1-label" size={components.variant() || 'md'} required>Email</label>
       <input id="theme-l1-label" size="sm" placeholder="ada@example.com" />
     </column>
@@ -293,7 +294,7 @@ export default controller(() => {
 <if {components.stage.fieldset()}>
   <column gap="3" style(sampleMax)>
     <column gap="2">
-      <p style(fieldHint)>Rest · component.fieldset.border</p>
+      <p style(fieldHint)>Rest · border role</p>
       <fieldset style(sampleMax)>
         <legend>Account</legend>
         <column gap="2">
@@ -316,7 +317,7 @@ export default controller(() => {
 </if>
 <if {components.stage.legend()}>
   <column gap="3" style(sampleMax)>
-    <p style(fieldHint)>Rest · component.legend.fg (theme override)</p>
+    <p style(fieldHint)>Rest · foreground caption</p>
     <fieldset>
       <legend>Account details</legend>
       <column gap="2">

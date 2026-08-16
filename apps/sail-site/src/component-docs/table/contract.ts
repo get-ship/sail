@@ -1,6 +1,9 @@
 import type { SurfaceContract } from '../contract-types'
 
-/** Surface contract for table — axes from prop-registry only. */
+/**
+ * Surface contract for table — axes from prop-registry only.
+ * sticky-header (SPEC-L1-PASS-1): thead/th sticky via descendant map.
+ */
 export const contract = {
   slug: 'table',
   tag: 'table',
@@ -10,16 +13,12 @@ export const contract = {
     striped: { default: false, control: 'switch' },
     hoverable: { default: false, control: 'switch' },
     bordered: { default: false, control: 'switch' },
+    'sticky-header': { default: false, control: 'switch', docsSkip: true },
   },
-  faces: [
-    { path: 'component.table.fg', label: 'Ink' },
-    { path: 'component.table.muted-fg', label: 'Muted ink' },
-    { path: 'component.table.sticky-bg', label: 'Sticky fill' },
-    { path: 'component.table.stripe', label: 'Stripe' },
-  ],
+  faces: [],
   visual: {
     defaultRow: true,
-    cross: ['dense', 'striped', 'hoverable', 'bordered'],
+    cross: ['dense', 'striped', 'hoverable', 'bordered', 'sticky-header'],
   },
   examples: true,
 } as const satisfies SurfaceContract

@@ -1,6 +1,6 @@
 <!--
-  Themes → Components facet — component token overrides (not the Components entity page).
-  Catalog rail | live stage | override inspector. Overrides write component.* leaves.
+  Themes → Components facet — live L1 specimens + theme role knobs
+  (not the project Components library). Catalog rail | live stage | role inspector.
 -->
 <scope>
   style sectionTitle = { type({ size: sm, weight: semibold }) }
@@ -78,8 +78,8 @@ import { createComponentsEdit } from '../compositions/theme-components-surface/t
 export default controller(() => {
   const session = createThemeSession({
     facet: 'components',
-    editGuardMessage: 'Add this theme to the project to edit component tokens.',
-    saveSuccessMessage: 'Component overrides saved.',
+    editGuardMessage: 'Add this theme to the project to edit theme roles.',
+    saveSuccessMessage: 'Theme roles saved.',
   })
   const components = createComponentsEdit(session)
   mount((host) => watchPreviewHost(host, (el) => session.attachPreviewHost(el)))
@@ -111,7 +111,7 @@ export default controller(() => {
           <p style(eyebrow)>Components</p>
           <p style({ type({ size: md, weight: semibold, tracking: tight }) })>Components</p>
           <p l1-facet-blurb style(fieldHint)>
-            Per-element exceptions for this theme — not the project Components library.
+            Theme roles this face spends — not the project Components library.
           </p>
           <row gap="2" align="center" nowrap>
             <badge tone="muted" size="sm" variant="outline" pill>{components.l1Count()} components</badge>
@@ -123,7 +123,7 @@ export default controller(() => {
             type="search"
             size="sm"
             l1-filter
-            value={components.filter()}
+            value={components.filterQuery()}
             on:input={components.onFilterInput}
             placeholder="Filter components…"
             spellcheck="false"
@@ -197,6 +197,9 @@ export default controller(() => {
                   <p style(pathMeta)>{components.registryNote()}</p>
                 </column>
 
+                <if {!components.hasSpecimen()}>
+                  <p style(fieldHint)>No live specimen for this host.</p>
+                </if>
                 <column gap="4" align="start" l1-stage-host style(stageHost)>
 
                   <!-- ── Inputs ─────────────────────────────────────── -->
@@ -239,7 +242,7 @@ export default controller(() => {
                   <if {components.stage.a()}>
                     <column gap="4" style(stageHost)>
                       <column gap="2">
-                        <p style(fieldHint)>Bare text · + rest button-links (component.button.*)</p>
+                        <p style(fieldHint)>Bare text · + rest button-links (primary / foreground)</p>
                         <row gap="2" align="center" nowrap>
                           <a href="#">text link</a>
                           <a href="#" variant="default">default</a>
@@ -263,7 +266,7 @@ export default controller(() => {
                   <if {components.stage.input()}>
                     <column gap="3" style(sampleMax)>
                       <column gap="2">
-                        <p style(fieldHint)>Text field · sizes · component.field.bg/fg/border</p>
+                        <p style(fieldHint)>Text field · sizes · input fill + foreground + border</p>
                         <input type="text" size="sm" placeholder="sm field" value={components.sampleText()} on:input={components.onSampleInput} label="Sample field" />
                         <input type="text" size="md" placeholder="md field" />
                         <input type="text" size="lg" placeholder="lg field" />
@@ -273,22 +276,12 @@ export default controller(() => {
                         <input type="email" size="sm" value="not-an-email" invalid />
                         <input type="text" size="sm" placeholder="Disabled" disabled />
                       </column>
-                      <column gap="2">
-                        <p style(fieldHint)>Checkbox type (not a separate tag) · range</p>
-                        <row gap="3" align="center">
-                          <checkbox checked />
-                          <checkbox />
-                          <checkbox disabled />
-                          <checkbox size="lg" checked />
-                        </row>
-                        <slider min="0" max="100" value="40" />
-                      </column>
                     </column>
                   </if>
                   <if {components.stage.textarea()}>
                     <column gap="3" style(sampleMax)>
                       <column gap="2">
-                        <p style(fieldHint)>Sizes · component.field.* surface</p>
+                        <p style(fieldHint)>Sizes · shared input fill</p>
                         <textarea size="xs" rows="2" placeholder="xs" />
                         <textarea size="sm" rows="2" placeholder="sm" />
                         <textarea size={components.variant() || 'md'} rows="3" placeholder="md (chip or default)" />
@@ -304,7 +297,7 @@ export default controller(() => {
                   <if {components.stage.select()}>
                     <column gap="3" style(sampleMax)>
                       <column gap="2">
-                        <p style(fieldHint)>Sizes · component.field surface + SELECT_MAP chevron</p>
+                        <p style(fieldHint)>Sizes · shared input fill + chevron</p>
                         <select size="xs">
                           <option>xs</option>
                           <option>Engineering</option>
@@ -337,7 +330,7 @@ export default controller(() => {
                         </select>
                       </column>
                       <p style(fieldHint)>
-                        component.field bg/fg/border · hover free border-strong · not combobox
+                        Input fill + foreground + border · hover border-strong · not combobox
                       </p>
                     </column>
                   </if>
@@ -348,11 +341,22 @@ export default controller(() => {
                       <option value="svelte">Svelte</option>
                     </combobox>
                   </if>
+                  <if {components.stage.checkbox()}>
+                    <column gap="2" style(sampleMax)>
+                      <p style(fieldHint)>Rest · sizes · input face + primary checked</p>
+                      <row gap="3" align="center">
+                        <checkbox checked />
+                        <checkbox />
+                        <checkbox disabled />
+                        <checkbox size="lg" checked />
+                      </row>
+                    </column>
+                  </if>
                   <if {components.stage.radio()}>
                     <column gap="2" style(sampleMax)>
                       <radio value="a">Option A</radio>
                       <radio value="b" disabled>Disabled option</radio>
-                      <p style(fieldHint)>component.radio.fg · value + disabled only</p>
+                      <p style(fieldHint)>Foreground ink · value + disabled only</p>
                     </column>
                   </if>
                   <if {components.stage.radioGroup()}>
@@ -364,7 +368,7 @@ export default controller(() => {
                   <if {components.stage.switchToggle()}>
                     <column gap="3" style(sampleMax)>
                       <column gap="2">
-                        <p style(fieldHint)>Sizes · component.switch.track + thumb</p>
+                        <p style(fieldHint)>Sizes · muted track + primary checked</p>
                         <row gap="3" align="center">
                           <switch size="sm" checked></switch>
                           <switch size={components.variant() || 'md'} checked></switch>
@@ -381,7 +385,7 @@ export default controller(() => {
                         </row>
                       </column>
                       <column gap="2">
-                        <p style(fieldHint)>Tone · checked track only; thumb stays switch.thumb</p>
+                        <p style(fieldHint)>Tone · checked track only; thumb stays input face</p>
                         <row gap="3" align="center">
                           <switch tone="primary" checked></switch>
                           <switch tone="success" checked></switch>
@@ -394,7 +398,7 @@ export default controller(() => {
                   <if {components.stage.slider()}>
                     <column gap="3" style(sampleMax)>
                       <column gap="2">
-                        <p style(fieldHint)>Sizes · component.slider.track + fill + track-border</p>
+                        <p style(fieldHint)>Sizes · muted track + primary fill</p>
                         <slider value="40" min="0" max="100" size="sm"></slider>
                         <slider value={components.load()} min="0" max="100" size={components.variant() || 'md'}></slider>
                         <slider value="80" min="0" max="100" size="lg"></slider>
@@ -403,7 +407,7 @@ export default controller(() => {
                         <p style(fieldHint)>Disabled · native freeze + opacity</p>
                         <slider value="55" min="0" max="100" disabled></slider>
                       </column>
-                      <p style(fieldHint)>Thumb face = field · rim = slider.fill · single thumb only</p>
+                      <p style(fieldHint)>Thumb face = input · rim = primary fill · single thumb only</p>
                     </column>
                   </if>
                   <if {components.stage.toggle() || components.stage.toggleGroup()}>
@@ -424,13 +428,13 @@ export default controller(() => {
                   <if {components.stage.label()}>
                     <column gap="3" style(sampleMax)>
                       <column gap="2">
-                        <p style(fieldHint)>Rest · sizes · component.label.fg + weight</p>
+                        <p style(fieldHint)>Rest · sizes · foreground + label weight</p>
                         <label for="theme-l1-label-sm" size="sm">Email sm</label>
                         <label for="theme-l1-label-md" size={components.variant() || 'md'}>Email md</label>
                         <label for="theme-l1-label-lg" size="lg">Email lg</label>
                       </column>
                       <column gap="2">
-                        <p style(fieldHint)>Required · component.label.required marker</p>
+                        <p style(fieldHint)>Required · destructive marker</p>
                         <label for="theme-l1-label" size={components.variant() || 'md'} required>Email</label>
                         <input id="theme-l1-label" size="sm" placeholder="ada@example.com" />
                       </column>
@@ -444,7 +448,7 @@ export default controller(() => {
                   <if {components.stage.fieldset()}>
                     <column gap="3" style(sampleMax)>
                       <column gap="2">
-                        <p style(fieldHint)>Rest · component.fieldset.border</p>
+                        <p style(fieldHint)>Rest · border role</p>
                         <fieldset style(sampleMax)>
                           <legend>Account</legend>
                           <column gap="2">
@@ -467,7 +471,7 @@ export default controller(() => {
                   </if>
                   <if {components.stage.legend()}>
                     <column gap="3" style(sampleMax)>
-                      <p style(fieldHint)>Rest · component.legend.fg (theme override)</p>
+                      <p style(fieldHint)>Rest · foreground caption</p>
                       <fieldset>
                         <legend>Account details</legend>
                         <column gap="2">
@@ -489,10 +493,10 @@ export default controller(() => {
                   <if {components.stage.alert()}>
                     <column gap="3" style(stageHost)>
                       <column gap="2">
-                        <p style(fieldHint)>Rest · component.alert tokens (theme override)</p>
+                        <p style(fieldHint)>Rest · tone roles (info / success / warning / danger)</p>
                         <alert style(stageHost)>
                           <strong slot="title">Notice</strong>
-                          Rest paint uses component.alert.* leaves.
+                          Rest paint uses theme tone roles.
                         </alert>
                       </column>
                       <column gap="2">
@@ -525,7 +529,7 @@ export default controller(() => {
                   <if {components.stage.progressBar()}>
                     <column gap="3" style(sampleMax)>
                       <column gap="2">
-                        <p style(fieldHint)>Track/fill · component.progress.track + fill</p>
+                        <p style(fieldHint)>Track/fill · muted + primary</p>
                         <progress value="30" max="100" size="sm"></progress>
                         <progress value={components.load()} max="100"></progress>
                         <progress value="90" max="100" size="lg"></progress>
@@ -539,7 +543,7 @@ export default controller(() => {
                   <if {components.stage.meter()}>
                     <column gap="3" style(sampleMax)>
                       <column gap="2">
-                        <p style(fieldHint)>Rest · sizes · component.meter.track + bands</p>
+                        <p style(fieldHint)>Rest · sizes · muted track + semantic bands</p>
                         <meter value="0.55" size="sm"></meter>
                         <meter value="0.55"></meter>
                         <meter value="0.55" size="lg"></meter>
@@ -555,7 +559,7 @@ export default controller(() => {
                   <if {components.stage.spinner()}>
                     <column gap="3" style(stageHost)>
                       <column gap="2">
-                        <p style(fieldHint)>Rest · component.spinner.fg + track (theme override)</p>
+                        <p style(fieldHint)>Rest · muted arc + track</p>
                         <row gap="4" align="center" nowrap>
                           <spinner size="sm"></spinner>
                           <spinner></spinner>
@@ -577,7 +581,7 @@ export default controller(() => {
                   <if {components.stage.skeleton()}>
                     <column gap="3" style(sampleMax)>
                       <column gap="2">
-                        <p style(fieldHint)>Sheen · component.skeleton.bg / highlight</p>
+                        <p style(fieldHint)>Sheen · muted fill</p>
                         <column gap="2">
                           <skeleton shape="text" size="md"></skeleton>
                           <skeleton shape="text" size="sm"></skeleton>
@@ -597,7 +601,7 @@ export default controller(() => {
                   <if {components.stage.emptyState()}>
                     <column gap="3" style(sampleMax)>
                       <column gap="2">
-                        <p style(fieldHint)>Rest · component.empty-state (bg · fg · border · title)</p>
+                        <p style(fieldHint)>Rest · muted surface + border + title</p>
                         <empty-state size="sm" style(stageHost)>
                           <icon slot="icon" name="inbox"></icon>
                           <strong slot="title">Empty inbox</strong>
@@ -625,10 +629,10 @@ export default controller(() => {
                   <if {components.stage.errorState()}>
                     <column gap="4" style(stageHost)>
                       <column gap="2">
-                        <p style(fieldHint)>Rest · component.error-state bg/fg/border</p>
+                        <p style(fieldHint)>Rest · muted surface + border</p>
                         <error-state code="ERR_THEME" size="sm">
                           <strong slot="title">Could not load preview</strong>
-                          Rest chrome — override component.error-state leaves.
+                          Rest chrome — muted surface + destructive icon.
                           <button slot="action" type="button" variant="outline" size="sm">Retry</button>
                         </error-state>
                       </column>
@@ -672,7 +676,7 @@ export default controller(() => {
                   <if {components.stage.badge()}>
                     <column gap="3" style(stageHost)>
                       <column gap="2">
-                        <p style(fieldHint)>Rest · component.badge tokens (theme override)</p>
+                        <p style(fieldHint)>Rest · primary / muted tone roles</p>
                         <row gap="2" align="center" nowrap>
                           <badge variant="soft" size="sm">soft</badge>
                           <badge variant="solid" size="sm">solid</badge>
@@ -694,7 +698,7 @@ export default controller(() => {
                   <if {components.stage.chip()}>
                     <column gap="3" style(stageHost)>
                       <column gap="2">
-                        <p style(fieldHint)>Rest · component.chip tokens (theme override)</p>
+                        <p style(fieldHint)>Rest · primary / muted / border</p>
                         <row gap="2" align="center" nowrap>
                           <chip variant="solid" size="sm">solid</chip>
                           <chip variant="soft" size="sm">soft</chip>
@@ -718,7 +722,7 @@ export default controller(() => {
                     <card variant={components.variant() || 'default'} padding="sm" style(sampleMax)>
                       <column gap="2">
                         <p style(doorTitle)>Card surface</p>
-                        <p style(fieldHint)>Judges component.card.radius when overridden.</p>
+                        <p style(fieldHint)>Judges the radius role when overridden.</p>
                       </column>
                     </card>
                   </if>
@@ -743,7 +747,7 @@ export default controller(() => {
                       <column gap="2">
                         <p style(fieldHint)>Spin · use:icon motion · currentColor ink</p>
                         <row gap="4" align="center" nowrap>
-                          <icon name="refresh-cw" spin label="Refreshing"></icon>
+                          <icon name="refresh" spin label="Refreshing"></icon>
                           <span style({ fg(primary) })>
                             <icon name="heart" size="lg" label="primary ink"></icon>
                           </span>
@@ -757,7 +761,7 @@ export default controller(() => {
                   <if {components.stage.separator()}>
                     <column gap="3" style(sampleMax)>
                       <column gap="2">
-                        <p style(fieldHint)>Rest · component.separator.line (theme override)</p>
+                        <p style(fieldHint)>Rest · border role</p>
                         <separator></separator>
                         <separator variant="dashed"></separator>
                       </column>
@@ -787,7 +791,7 @@ export default controller(() => {
                   <if {components.stage.kbd()}>
                     <column gap="3" style(sampleMax)>
                       <column gap="2">
-                        <p style(fieldHint)>Rest · component.kbd (bg · fg · border)</p>
+                        <p style(fieldHint)>Rest · muted fill + foreground + border</p>
                         <row gap="2" align="center">
                           <kbd>Ctrl</kbd>
                           <span style(fieldHint)>+</span>
@@ -812,7 +816,7 @@ export default controller(() => {
                   </if>
                   <if {components.stage.prose()}>
                     <column gap="3" style(sampleMax)>
-                      <p style(fieldHint)>Rest · component.prose.fg (theme override)</p>
+                      <p style(fieldHint)>Rest · foreground</p>
                       <prose>
                         <h2>Typography scope</h2>
                         <p>
@@ -829,7 +833,7 @@ export default controller(() => {
                   </if>
                   <if {components.stage.codeBlock()}>
                     <column gap="3" style(sampleMax)>
-                      <p style(fieldHint)>Rest · component.code-block.bg + fg (theme override)</p>
+                      <p style(fieldHint)>Rest · surface fill + foreground</p>
                       <code-block
                         code={'const n = signal(0)\nconst double = derived(() => n() * 2)\n// .tok-* ink via --syntax-*'}
                         lang="ts"
@@ -983,7 +987,7 @@ export default controller(() => {
                   <if {components.stage.scrollArea()}>
                     <column gap="3" style(sampleMax)>
                       <column gap="2">
-                        <p style(fieldHint)>Vertical · rest thumb component.scroll-area.thumb · hover border-strong</p>
+                        <p style(fieldHint)>Vertical · rest thumb is border · hover border-strong</p>
                         <scroll-area orientation="vertical" style({ size({ w: full, max-w: panel-max-w-sm, max-h: 32 }).pad(3).border({ color: border-subtle, width: 1 }).radius(md) })>
                           <column gap="2">
                             <p style(fieldHint)>Scroll me — themed thin scrollbar.</p>
@@ -1001,7 +1005,7 @@ export default controller(() => {
                         <p style(fieldHint)>Horizontal · orientation="horizontal"</p>
                         <scroll-area orientation="horizontal" style({ size({ w: full, max-w: panel-max-w-sm }).pad(3).border({ color: border-subtle, width: 1 }).radius(md) })>
                           <p style({ pad({ y: 1 }).type({ wrap: nowrap }) })>
-                            Wide band that overflows on the x axis → scroll with thin themed thumb · component.scroll-area.*
+                            Wide band that overflows on the x axis → scroll with thin themed thumb
                           </p>
                         </scroll-area>
                       </column>
@@ -1010,7 +1014,7 @@ export default controller(() => {
                   <if {components.stage.ticker()}>
                     <column gap="3" style(sampleMax)>
                       <p style(fieldHint)>
-                        Geometry host + use:marquee · no component.ticker.* · author paint
+                        Geometry host + use:marquee · author paint
                       </p>
                       <ticker duration="normal" style(sampleMax, { overflow({ all: hidden }).pad({ y: 2 }).bg(muted).radius(md) })>
                         <span style({ pad({ x: 3 }).fg(muted-foreground).type({ family: mono, size: sm, wrap: nowrap }) })>
@@ -1048,7 +1052,7 @@ export default controller(() => {
             {components.selectedLabel()}
           </p>
           <p style(fieldHint)>
-            Edit colors for this face. Defaults come from the theme; “set” means a component.* exception.
+            Edit the theme roles this face spends. Shared color and type roles — not per-component leaves.
           </p>
           <if {session.catalogHint()}>
             <p catalog-hint style(fieldHint)>Add to project to edit.</p>
@@ -1057,8 +1061,8 @@ export default controller(() => {
 
         <column section="component-tokens" gap="2">
           <row align="baseline" justify="between" gap="2" nowrap>
-            <p style(sectionTitle)>This component</p>
-            <p style(fieldHint)>overrides theme defaults</p>
+            <p style(sectionTitle)>Theme roles</p>
+            <p style(fieldHint)>shared by the theme</p>
           </row>
           <if {components.hasComponentKnobs()}>
             <column gap="2" component-knob-list>
@@ -1087,7 +1091,7 @@ export default controller(() => {
             </column>
           </if>
           <if {!components.hasComponentKnobs()}>
-            <p style(fieldHint)>No component.* leaves for this face.</p>
+            <p style(fieldHint)>This face has no dedicated theme roles to edit.</p>
           </if>
         </column>
 

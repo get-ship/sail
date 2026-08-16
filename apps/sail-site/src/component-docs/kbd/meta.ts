@@ -8,7 +8,7 @@ export const meta = {
   category: 'display',
   kind: 'host',
   blurb:
-    'Native <kbd> keycap — mono type, muted surface, doubled bottom edge. Paint from component.kbd (bg · foreground · border); no size/variant/tone props (theme the leaves, compose chords in markup).',
+    'Native <kbd> keycap — mono type, muted surface, doubled bottom edge. Paints muted / foreground / border; no size/variant/tone props (theme the roles, compose chords in markup).',
   heading: 'prose',
   host: 'doc-kbd',
   stageOwnsKnobs: true,

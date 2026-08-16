@@ -33,7 +33,7 @@ describe('THEMES-1 theme editor contract', () => {
     expect(new Set(THEME_EDITOR_CONTROL_IDS).size).toBe(THEME_EDITOR_CONTROL_IDS.length)
   })
 
-  it('schema coverage includes identity, modes, scales, component overrides', () => {
+  it('schema coverage includes identity, modes, scales — not per-tag component leaves', () => {
     const cov = contractSchemaCoverage()
     expect(cov.identity).toContain('$extensions.sail.themeId')
     expect(cov.mode).toContain('$extensions.sail.defaultMode')
@@ -41,12 +41,14 @@ describe('THEMES-1 theme editor contract', () => {
     expect(cov.scaleGroups).toContain('color')
     expect(cov.scaleGroups).toContain('radius')
     expect(cov.scaleGroups).toContain('typography')
-    expect(cov.component).toBe(true)
+    expect(cov.component).toBe(false)
   })
 
-  it('contract write path accepts mode-scoped scale + component leaves', () => {
+  it('contract write path accepts mode-scoped scale roles and refuses component leaves', () => {
     expect(isContractWritePath('modes.light.color.primary.default')).toBe(true)
-    expect(isContractWritePath('modes.dark.component.button.bg')).toBe(true)
+    expect(isContractWritePath('modes.light.color.input')).toBe(true)
+    expect(isContractWritePath('modes.light.color.card.default')).toBe(true)
+    expect(isContractWritePath('modes.dark.component.button.bg')).toBe(false)
     expect(isContractWritePath('modes.light.radius.md')).toBe(true)
     expect(isContractWritePath('modes.light.typography.fontFamily.body')).toBe(true)
     expect(isContractWritePath('modes.light.shadow.sm')).toBe(true)
@@ -70,10 +72,11 @@ describe('THEMES-1 theme editor contract', () => {
     expect(isContractWritePath('modes.light.control.h-md')).toBe(false)
   })
 
-  it('components facet exposes global fallback control (L1 pack hook)', () => {
+  it('components facet exposes live role controls (not per-tag leaves)', () => {
     const comps = controlsForFacet('components')
     expect(comps.some((c) => c.id === 'components.token')).toBe(true)
     expect(comps.some((c) => c.id === 'components.globalFallback')).toBe(true)
-    expect(comps.some((c) => c.kind === 'component')).toBe(true)
+    expect(comps.some((c) => c.kind === 'component')).toBe(false)
+    expect(comps.every((c) => !c.schemaPath.includes('component.{tag}'))).toBe(true)
   })
 })

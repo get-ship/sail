@@ -29,12 +29,9 @@ export const contract = {
     onDismiss: { control: 'none', event: true },
   },
   faces: [
-    { path: 'component.dialog.bg', label: 'Fill' },
-    { path: 'component.dialog.fg', label: 'Ink' },
-    { path: 'component.dialog.border', label: 'Border' },
-    { path: 'component.dialog.divider', label: 'Divider' },
-    { path: 'component.dialog.footer', label: 'Footer fill' },
-    { path: 'component.dialog.muted-fg', label: 'Muted ink' },
+    { path: 'popover', label: 'Background' },
+    { path: 'foreground', label: 'Foreground' },
+    { path: 'border', label: 'Border' },
   ],
   visual: {
     defaultRow: true,

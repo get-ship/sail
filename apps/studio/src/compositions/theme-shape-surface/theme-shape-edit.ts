@@ -25,8 +25,8 @@ export { ELEV_STEPS, RADIUS_KEYS, RECIPE_IDS, type ElevKey, type RadiusKey, type
 
 const BORDER_WIDTH_PATH = 'color.border.width'
 /** Frost fill — translucent card surface (not decorative surface-overlay α). */
-const CARD_BG_PATH = 'component.card.bg'
-const CARD_BACKDROP_PATH = 'component.card.backdrop-filter'
+const CARD_BG_PATH = 'color.card.default'
+const CARD_BACKDROP_PATH = 'filter.card-backdrop'
 const CARD_REST_PATH = 'shadow.card-rest'
 
 /** Mock SSOT ramp relative to md: sm / md / lg / xl. */
@@ -55,7 +55,7 @@ export function mockRadiusFamily(masterMd: number): {
 
 /**
  * Apply alpha to an oklch/color string for frosted card fill.
- * Glass catalog uses e.g. `oklch(1 0 0 / 55%)` on component.card.bg.
+ * Glass catalog uses e.g. `oklch(1 0 0 / 55%)` on color.card.default.
  */
 export function withColorAlpha(raw: string | null | undefined, alpha: number): string {
   const a = Math.max(0.1, Math.min(1, alpha))

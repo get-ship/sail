@@ -5,7 +5,7 @@
 
 <scope>
   style page = { size({ w: full, max-w: breakpoint-desktop }).margin({ x: auto }).overflow({ all: visible }) }
-  style specimen = { size({ w: 64, max-w: full }).pad(2).overflow({ all: visible }) }
+  style specimen = { size({ w: 64, max-w: full, min-h: 11 }).pad(2).overflow({ all: visible }) }
   style controlW = { size({ w: 64, max-w: full }) }
   style knobLabel = { fg(muted-foreground).type({ size: xs, weight: medium, tracking: wide, case: uppercase }) }
   style sizeValue = { fg(muted-foreground).type({ family: mono, size: xs }) }

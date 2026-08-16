@@ -26,6 +26,8 @@
 </scope>
 
 <controller>
+import type { ControllerScope } from '@ship/sail-runtime'
+import type { Scope } from './sail-components-rail.sail'
 import { CATALOG, type CatalogEntry } from '../compositions/component-catalog'
 
 function slugFromPath(p: string): string {
@@ -55,7 +57,7 @@ const CAT_LABEL: Record<CatalogEntry['cat'], string> = {
   effects: 'Effects',
 }
 
-export default controller((ctx) => {
+export default controller((ctx: ControllerScope<Scope>) => {
   // deck route.pathname is SSOT and updates same-tick on navigate.
   const path = derived(() => ctx.route?.pathname?.() ?? '')
   const navOpen = signal(false)
@@ -97,13 +99,13 @@ export default controller((ctx) => {
         on:click={onNav}
         current={currentSlug() === item.slug ? 'page' : null}
         style(railLink)
-      >{item.tag}</a>
+      >{item.tag === 'a' ? 'anchor' : item.tag}</a>
     </for>
   </for>
 </partial>
 
 <row nowrap align="stretch" gap="0" style(shell, { size({ w: full, min-w: 0 }).grow(1) })>
-  <nav label="Components" testid="components-rail" style(rail, { shrink(0) })>
+  <nav label="Components" testid="components-rail" use:scrollRestore={'components-rail'} style(rail, { shrink(0) })>
     <components-nav path={path} currentSlug={currentSlug} sections={sections} onNav={noopNav}></components-nav>
   </nav>
 

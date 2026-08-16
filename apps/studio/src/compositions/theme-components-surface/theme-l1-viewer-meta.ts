@@ -49,19 +49,19 @@ const VARIANT_META: Partial<
     variants: ['default', 'solid', 'soft', 'outline', 'ghost'],
     variantAttr: 'variant',
     blurb:
-      'Native link · bare = text; variant set = button-link. Rest component.button.*; tone always paints; default ≠ solid invert; no size.',
+      'Native link · bare = text; variant set = button-link. Rest uses primary / foreground; tone always paints; default ≠ solid invert; no size.',
   },
   switch: {
     variants: ['sm', 'md', 'lg'],
     variantAttr: 'size',
     blurb:
-      'Native checkbox · role=switch · component.switch.track + border + thumb; tone = checked track only; size sm|md|lg.',
+      'Native checkbox · role=switch · muted track + primary checked; tone = checked track only; size sm|md|lg.',
   },
   slider: {
     variants: ['sm', 'md', 'lg'],
     variantAttr: 'size',
     blurb:
-      'Native range · component.slider.track + fill + track-border; thumb face field, rim = fill; size sm|md|lg; single thumb.',
+      'Native range · muted track + primary fill; thumb face input, rim = fill; size sm|md|lg; single thumb.',
   },
   'toggle-group': {
     variants: ['outline', 'ghost', 'segmented'],
@@ -72,7 +72,7 @@ const VARIANT_META: Partial<
     variants: ['sm', 'md', 'lg'],
     variantAttr: 'size',
     blurb:
-      'Native label · component.label.fg + required; weight typography.label.weight; size sm|md|lg.',
+      'Native label · foreground + required marker; weight typography.label.weight; size sm|md|lg.',
   },
   alert: {
     variants: ['info', 'success', 'warning', 'destructive'],
@@ -102,107 +102,112 @@ const VARIANT_META: Partial<
   icon: {
     variants: ['xs', 'sm', 'md', 'lg', 'xl'],
     variantAttr: 'size',
-    blurb: 'Glyph host · size from theme icon scale; ink currentColor (no component.icon paint leaves).',
+    blurb: 'Glyph host · size from theme icon scale; currentColor.',
   },
   spinner: {
     variants: ['xs', 'sm', 'md', 'lg'],
     variantAttr: 'size',
-    blurb: 'Loading ring · rest uses component.spinner.fg + track; tone paints active arc.',
+    blurb: 'Loading ring · rest uses muted + border; tone paints active arc.',
   },
   meter: {
     variants: ['sm', 'md', 'lg'],
     variantAttr: 'size',
-    blurb: 'Native gauge · component.meter.track + optimum/suboptimum/sub-suboptimum bands.',
+    blurb: 'Native gauge · muted track + success / warning / danger bands.',
   },
   progress: {
     variants: ['sm', 'md', 'lg'],
     variantAttr: 'size',
-    blurb: 'Native bar · component.progress.track + fill; omit value = indeterminate.',
+    blurb: 'Native bar · muted track + primary fill; omit value = indeterminate.',
   },
   'scroll-area': {
     variants: ['vertical', 'horizontal', 'both'],
     variantAttr: 'orientation',
     blurb:
-      'Overflow box · orientation vertical|horizontal|both; rest component.scroll-area.thumb; hover free border-strong; constrain with Style.',
+      'Overflow box · orientation vertical|horizontal|both; rest thumb is border; hover border-strong; constrain with Style.',
   },
   skeleton: {
     variants: ['text', 'line', 'block', 'circle'],
     variantAttr: 'shape',
-    blurb: 'Loading sheen · component.skeleton.bg / highlight.',
+    blurb: 'Loading sheen · muted background.',
   },
   'empty-state': {
     variants: ['default', 'inline', 'placeholder', 'connecting'],
     variantAttr: 'variant',
     blurb:
-      'Nothing-here surface · rest uses component.empty-state.*; tone brands icon only; connecting → status/polite.',
+      'Nothing-here surface · rest uses muted + border; tone brands icon only; connecting → status/polite.',
   },
   'error-state': {
     variants: ['default', 'inline'],
     variantAttr: 'variant',
     blurb:
-      'Recovery surface · rest uses component.error-state bg/fg/border; icon + inline border brand destructive; code + details via recoverySurface.',
+      'Recovery surface · rest uses muted + border; icon + inline border brand destructive; code + details via recoverySurface.',
   },
   separator: {
     variants: ['solid', 'dashed'],
     variantAttr: 'variant',
-    blurb: 'Divider · rest uses component.separator.line; tone optional.',
+    blurb: 'Divider · tone defaults to muted.',
   },
   kbd: {
     variants: [],
     variantAttr: '',
-    blurb: 'Keycap · component.kbd bg/fg/border; no size/variant props.',
+    blurb: 'Keycap · muted background + foreground + border; no size/variant props.',
   },
   'code-block': {
     variants: [],
     variantAttr: '',
     blurb:
-      'Syntax-highlighted pre · component.code-block bg/fg; code + lang props; use:syntaxHighlight; no line numbers / copy chrome.',
+      'Syntax-highlighted pre · surface background + foreground; code + lang props; use:syntaxHighlight; no line numbers / copy chrome.',
   },
   legend: {
     variants: [],
     variantAttr: '',
-    blurb: 'Fieldset caption · component.legend.fg; nest in fieldset; no size/variant props.',
+    blurb: 'Fieldset caption · foreground; nest in fieldset; no size/variant props.',
   },
   fieldset: {
     variants: [],
     variantAttr: '',
     blurb:
-      'Form group · component.fieldset.border; disabled freezes controls + dims host; legend as child.',
+      'Form group · border role; disabled freezes controls + dims host; legend as child.',
   },
   textarea: {
     variants: ['xs', 'sm', 'md', 'lg'],
     variantAttr: 'size',
     blurb:
-      'Native multi-line · component.field.bg/fg/border (shared with input/select); size xs–lg · rows · invalid · disabled; no tone.',
+      'Native multi-line · input background + foreground + border (shared with input/select); size xs–lg · rows · invalid · disabled; no tone.',
   },
   radio: {
     variants: [],
     variantAttr: '',
     blurb:
-      'One option · component.radio.fg label ink; value + disabled only; exclusivity via radio-group.',
+      'One option · foreground label; value + disabled only; exclusivity via radio-group.',
   },
   select: {
     variants: ['xs', 'sm', 'md', 'lg'],
     variantAttr: 'size',
     blurb:
-      'Native closed picker · component.field bg/fg/border; size xs–lg; invalid + disabled + multiple; not combobox.',
+      'Native closed picker · input background + foreground + border; size xs–lg; invalid + disabled + multiple; not combobox.',
   },
   input: {
     variants: ['xs', 'sm', 'md', 'lg'],
     variantAttr: 'size',
     blurb:
-      'Native input · type-gated skins; component.field.* surface; size + invalid + disabled; checkbox is type= not a tag; no filled/unstyled variant.',
+      'Native input · type-gated skins; input background + foreground + border; size + invalid + disabled; no filled/unstyled variant.',
+  },
+  checkbox: {
+    variants: ['xs', 'sm', 'md', 'lg'],
+    variantAttr: 'size',
+    blurb: 'Boolean check · input face + primary checked; size xs–lg.',
   },
   prose: {
     variants: [],
     variantAttr: '',
-    blurb: 'Typography scope · component.prose.fg; nested tags via type map; no size/variant props.',
+    blurb: 'Typography scope · foreground; nested tags via type map; no size/variant props.',
   },
   ticker: {
     variants: ['fast', 'normal', 'slow'],
     variantAttr: 'duration',
     blurb:
-      'Infinite marquee · duration/reverse drive use:marquee; host geometry only — no component.ticker.*; author paint; reduced-motion settles.',
+      'Infinite marquee · duration/reverse drive use:marquee; host geometry only — author paint; reduced-motion settles.',
   },
   tooltip: {
     variants: ['top', 'bottom', 'left', 'right'],
@@ -222,7 +227,7 @@ const VARIANT_META: Partial<
 }
 
 const DEFAULT_BLURB =
-  'Live component under the theme preview — radius and component tokens paint here.'
+  'Live component under the theme preview — theme roles paint here.'
 
 export function viewerMetaFor(id: L1Id): L1ViewerMeta {
   const v = VARIANT_META[id]

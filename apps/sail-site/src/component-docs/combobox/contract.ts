@@ -2,7 +2,7 @@ import type { SurfaceContract } from '../contract-types'
 
 /**
  * Surface contract for combobox — axes from prop-registry only.
- * Listbox paint: component.combobox.bg / fg (field chrome uses free globals).
+ * Listbox paint: popover / fg (field chrome uses free globals).
  */
 export const contract = {
   slug: 'combobox',
@@ -14,8 +14,9 @@ export const contract = {
     onSelect: { control: 'none', event: true },
   },
   faces: [
-    { path: 'component.combobox.bg', label: 'List fill' },
-    { path: 'component.combobox.fg', label: 'List ink' },
+    { path: 'popover', label: 'Background' },
+    { path: 'foreground', label: 'Foreground' },
+    { path: 'border', label: 'Border' },
   ],
   visual: {
     defaultRow: true,

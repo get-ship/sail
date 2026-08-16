@@ -9,7 +9,7 @@ fn is_style_product(src: &str) -> bool {
 
 #[test]
 fn radio_group_zero_author_style() {
-    let src = include_str!("../stdlib/radio-group.sail");
+    let src = include_str!("../stdlib/radio-group/radio-group.sail");
     let out = compile_element(src, "radio-group").expect("radio-group compiles");
     assert!(
         !out.skin_css.contains(".sail-radio-group {"),
@@ -107,7 +107,7 @@ fn style_match_variant_lowers_attr_selectors_element_mode() {
 
 #[test]
 fn badge_soft_base_on_host_sx() {
-    let src = include_str!("../stdlib/badge.sail");
+    let src = include_str!("../stdlib/badge/badge.sail");
     let out = compile_element(src, "badge").expect("badge compiles");
     assert!(
         is_style_product(src)
@@ -174,7 +174,7 @@ fn badge_soft_base_on_host_sx() {
 fn avatar_tracking_and_inset_ring_on_host_sx() {
     // Paint stripe: tracking + inset ring + host gradient left contracts → host sx.
     // Layout row centers content; platform/avatar.css packs the injected img.
-    let src = include_str!("../stdlib/avatar.sail");
+    let src = include_str!("../stdlib/avatar/avatar.sail");
     let out = compile_element(src, "avatar").expect("avatar compiles");
     assert!(
         src.contains("align=\"center\"") && src.contains("justify=\"center\""),
@@ -260,7 +260,7 @@ fn avatar_tracking_and_inset_ring_on_host_sx() {
 
 #[test]
 fn icon_child_svg_pack_lives_in_platform_skins() {
-    let src = include_str!("../stdlib/icon.sail");
+    let src = include_str!("../stdlib/icon/icon.sail");
     let out = compile_element(src, "icon").expect("icon compiles");
     assert!(
         src.contains("size(icon-size-md)") && src.contains("fg(currentColor)"),
@@ -285,7 +285,7 @@ fn icon_child_svg_pack_lives_in_platform_skins() {
 fn empty_state_child_paint_on_structure_sx() {
     // Style product: stretch host + grow copy + semantic child tokens.
     // match(size/variant/tone) + when(empty/forced-colors). Zero contracts host CSS.
-    let src = include_str!("../stdlib/empty-state.sail");
+    let src = include_str!("../stdlib/empty-state/empty-state.sail");
     let out = compile_element(src, "empty-state").expect("empty-state compiles");
     assert!(
         !src.contains("--es-")
@@ -390,7 +390,7 @@ fn empty_state_child_paint_on_structure_sx() {
 #[test]
 fn tab_selected_underline_and_inset_focus_on_host_sx() {
     // Style product: when(selected/focus) + match(variant) for pill/enclosed chrome.
-    let src = include_str!("../stdlib/tab.sail");
+    let src = include_str!("../stdlib/tabs/tab.sail");
     let out = compile_element(src, "tab").expect("tab compiles");
     assert!(
         is_style_product(src)
@@ -453,7 +453,7 @@ fn tab_selected_underline_and_inset_focus_on_host_sx() {
         !contracts.contains(".sail-tab:focus-visible"),
         "tab focus-visible host CSS must be gone from contracts"
     );
-    let tab_src = include_str!("../stdlib/tab.sail");
+    let tab_src = include_str!("../stdlib/tabs/tab.sail");
     assert!(
         tab_src.contains("pill:")
             && tab_src.contains("enclosed:")
@@ -469,7 +469,7 @@ fn tab_selected_underline_and_inset_focus_on_host_sx() {
 #[test]
 fn toggle_pressed_focus_stack_on_host_sx() {
     // Style product: position(relative) + when(pressed/focus) z stack + outline.
-    let src = include_str!("../stdlib/toggle.sail");
+    let src = include_str!("../stdlib/toggle-group/toggle.sail");
     let out = compile_element(src, "toggle").expect("toggle");
     assert!(
         (out.structure_html.contains("positionrelative")
@@ -505,7 +505,7 @@ fn toggle_pressed_focus_stack_on_host_sx() {
 #[test]
 fn switch_host_track_paint_on_host_sx() {
     // Style product: appearance/track/thumb when(before/checked) + size/tone match.
-    let src = include_str!("../stdlib/switch.sail");
+    let src = include_str!("../stdlib/switch/switch.sail");
     let out = compile_element(src, "switch").expect("switch compiles");
     assert!(
         !src.contains("--sw-")
@@ -520,10 +520,10 @@ fn switch_host_track_paint_on_host_sx() {
                 || src.contains("bg(switch-thumb)")
                 || src.contains("bg(knob)"))
             && src.contains("radius(full)")
-            && (src.contains("w(control-h-sm)") || src.contains("w: control-h-sm"))
-            && (src.contains("h(icon-size-md)") || src.contains("h: icon-size-md"))
+            && (src.contains("w(9)") || src.contains("w: 9"))
+            && (src.contains("h(5)") || src.contains("h: 5"))
             && src.contains("content(empty)")
-            && src.contains("size(3)")
+            && src.contains("size(4)")
             && (src.contains("left(auto)") || src.contains("l: auto"))
             && (src.contains("right(px)") || src.contains("r: px"))
             && !src.contains("bg(hover-bg)")
@@ -542,9 +542,9 @@ fn switch_host_track_paint_on_host_sx() {
                 || src.contains("kind: outline"))
             && src.contains("match:")
             && src.contains("size:")
-            && src.contains("size(2_5)")
+            && src.contains("size(3)")
             && (src.contains("w(7)") || src.contains("w: 7"))
-            && src.contains("size(icon-size-sm)"),
+            && src.contains("size(5)"),
         "switch Style host: track + before thumb + size/tone match + no hover-bg wash"
     );
     // boxSizing class mint + live skin + committed element-skins.css lockstep.
@@ -604,9 +604,9 @@ fn switch_host_track_paint_on_host_sx() {
         out.skin_css
     );
     assert!(
-        out.skin_css.contains("width:var(--control-h-sm)")
-            || out.skin_css.contains("width: var(--control-h-sm)")
-            || out.structure_html.contains("controlhsm"),
+        out.skin_css.contains("width:var(--space-9)")
+            || out.skin_css.contains("width: var(--space-9)")
+            || out.structure_html.contains("w9"),
         "md size track width:\n{}",
         out.skin_css
     );
@@ -666,7 +666,7 @@ fn switch_host_track_paint_on_host_sx() {
 #[test]
 fn separator_rest_line_without_empty_tone_stomp() {
     // C-SEP-1: solid rest is separator.line; bg(tone) only under [tone] presence.
-    let src = include_str!("../stdlib/separator.sail");
+    let src = include_str!("../stdlib/separator/separator.sail");
     let out = compile_element(src, "separator").expect("separator compiles");
     assert!(
         (src.contains("bg(separator.line)") || src.contains("bg(border)"))
@@ -704,7 +704,7 @@ fn separator_rest_line_without_empty_tone_stomp() {
 #[test]
 fn toggle_pressed_uses_primary_not_invert() {
     // C-TG-1: selected = primary tokens; pressed+hover keeps identity.
-    let src = include_str!("../stdlib/toggle.sail");
+    let src = include_str!("../stdlib/toggle-group/toggle.sail");
     let out = compile_element(src, "toggle").expect("toggle compiles");
     assert!(
         src.contains("bg(primary)")
@@ -737,7 +737,7 @@ fn toggle_pressed_uses_primary_not_invert() {
 fn toast_start_stripe_on_host_sx() {
     // host CSS was border-inline-start: 3px solid var(--tone-fg). Now Style borderSWidth(3)
     // + match(tone) semantic borderS tokens.
-    let out = compile_element(include_str!("../stdlib/toast.sail"), "toast").expect("toast");
+    let out = compile_element(include_str!("../stdlib/toast/toast.sail"), "toast").expect("toast");
     assert!(
         out.structure_html.contains("s-borderSWidth3")
             || out.structure_html.contains("borderSWidth")
@@ -760,8 +760,14 @@ fn toast_start_stripe_on_host_sx() {
                 .contains("border-inline-start-color:var(--primary)")
             || out
                 .skin_css
-                .contains("border-inline-start-color: var(--primary)"),
-        "start stripe default must bind toast-stripe; tone matrices spend brand:\n{}",
+                .contains("border-inline-start-color: var(--primary)")
+            || out
+                .skin_css
+                .contains("border-inline-start-color:var(--tone)")
+            || out
+                .skin_css
+                .contains("border-inline-start-color: var(--tone)"),
+        "start stripe default must bind toast-stripe or bound tone; tone matrices spend brand:\n{}",
         out.skin_css
     );
     let contracts = include_str!(concat!(
@@ -775,7 +781,7 @@ fn toast_start_stripe_on_host_sx() {
         "toast host stripe + close anatomy host CSS must be gone"
     );
     // Close control is structure with sx (not parent host CSS).
-    let src = include_str!("../stdlib/toast.sail");
+    let src = include_str!("../stdlib/toast/toast.sail");
     assert!(
         src.contains("data-toast-close")
             && (src.contains("ms(auto)")
@@ -796,7 +802,7 @@ fn card_host_paint_bulk_on_host_sx() {
     // Full card host CSS dissolved: border-image, backdrop, status-rail (paint +
     // pad-adjust), interactive lift/forced-colors, branded tone border,
     // accent-bar, header/footer chrome → host sx / CVA / structure slots.
-    let src = include_str!("../stdlib/card.sail");
+    let src = include_str!("../stdlib/card/card.sail");
     let out = compile_element(src, "card").expect("card compiles");
 
     // Backdrop via Style filter cluster (corner-image host CSS is gone).
@@ -977,7 +983,7 @@ fn navbar_host_paint_on_sx_cva() {
     // Layout + paint owned by navbar.sail (layout keywords + Style match/compound).
     // No --rail-offset / --nav-*. Sticky rail uses top-0 bottom-0 +
     // offset top-N compounds. Center grow-1; actions ms-auto mt-auto.
-    let src = include_str!("../stdlib/navbar.sail");
+    let src = include_str!("../stdlib/navbar/navbar.sail");
     let out = compile_element(src, "navbar").expect("navbar compiles");
     assert!(
         !src.contains("--rail-offset")
@@ -1119,7 +1125,7 @@ fn navbar_host_paint_on_sx_cva() {
 fn error_state_child_paint_on_structure_sx() {
     // Style product: destructive semantic tokens + when(empty/group-state/forced).
     // No --es-* / tone-* channel paint.
-    let src = include_str!("../stdlib/error-state.sail");
+    let src = include_str!("../stdlib/error-state/error-state.sail");
     let out = compile_element(src, "error-state").expect("error-state compiles");
 
     assert!(
@@ -1223,7 +1229,7 @@ fn error_state_child_paint_on_structure_sx() {
 fn radio_nested_row_kills_label_flex_pe() {
     // Root stays <label> for native semantics; type paint on host Style.
     // Flex/gap for label+control is contracts host CSS (cannot nest <row> on label).
-    let src = include_str!("../stdlib/radio.sail");
+    let src = include_str!("../stdlib/radio-group/radio.sail");
     let out = compile_element(src, "radio").expect("radio compiles");
     assert!(
         src.contains("<label")
@@ -1268,7 +1274,7 @@ fn radio_nested_row_kills_label_flex_pe() {
 fn toggle_group_segmented_and_join_on_skins_not_pe() {
     // Segmented host Style match; size is authored on each <toggle> (not host).
     // Join/ghost/segmented on toggle first:/last: + size match (no --tg-*).
-    let src = include_str!("../stdlib/toggle-group.sail");
+    let src = include_str!("../stdlib/toggle-group/toggle-group.sail");
     let out = compile_element(src, "toggle-group").expect("toggle-group compiles");
     assert!(
         !src.contains("'tg-h'")
@@ -1280,9 +1286,18 @@ fn toggle_group_segmented_and_join_on_skins_not_pe() {
             && (src.contains("border(toggle-group-border)")
                 || (src.contains("toggle-group.border") || src.contains("toggle-group-border"))
                 || src.contains("color: border"))
-            && src.contains("<row inline gap=\"0\"")
+            && src.contains("<row inline align=\"stretch\" gap=\"0\"")
             && !src.contains("size: 'sm' | 'md' | 'lg' = 'md'"),
         "segmented host chrome on Style via muted/border tokens; host is inline row; size not on host"
+    );
+    assert!(
+        out.structure_html.contains("sail-ai-stretch")
+            || out.structure_html.contains("ai-stretch")
+            || out.skin_css.contains("align-items:stretch")
+            || out.skin_css.contains("align-items: stretch"),
+        "vertical column must stretch the cross axis so cells share one width:\nstruct={}\nskin={}",
+        out.structure_html,
+        out.skin_css
     );
     assert!(
         out.skin_css.contains("variant='segmented'")
@@ -1315,7 +1330,7 @@ fn toggle_group_segmented_and_join_on_skins_not_pe() {
             && !contracts.contains(".sail-toggle-group[variant='ghost']"),
         "toggle-group hand host CSS must be gone from contracts"
     );
-    let toggle_src = include_str!("../stdlib/toggle.sail");
+    let toggle_src = include_str!("../stdlib/toggle-group/toggle.sail");
     let toggle_out = compile_element(toggle_src, "toggle").expect("toggle compiles");
     assert!(
         !toggle_src.contains("--tg-")
@@ -1327,6 +1342,7 @@ fn toggle_group_segmented_and_join_on_skins_not_pe() {
             && is_style_product(toggle_src)
             && (toggle_src.contains("h(control-h-md)") || toggle_src.contains("h: control-h-md"))
             && (toggle_src.contains("h(control-h-sm)") || toggle_src.contains("h: control-h-sm"))
+            && (toggle_src.contains("w(full)") || toggle_src.contains("w: full"))
             && (toggle_src.contains("bg(toggle)")
                 || toggle_src.contains("bg: toggle")
                 || toggle_src.contains("bg(background)")),
@@ -1338,6 +1354,9 @@ fn toggle_group_segmented_and_join_on_skins_not_pe() {
             && (toggle_out.skin_css.contains("var(--control-h-md)")
                 || toggle_out.structure_html.contains("controlhmd")
                 || toggle_out.structure_html.contains("control-h-md"))
+            && (toggle_out.skin_css.contains("width:100%")
+                || toggle_out.skin_css.contains("width: 100%")
+                || toggle_out.structure_html.contains("wfull"))
             && !toggle_out.skin_css.contains("--tg-"),
         "toggle size CVA direct control-h tokens; no --tg-*:\n{}",
         toggle_out.skin_css
@@ -1349,7 +1368,7 @@ fn alert_tone_stripe_before_on_host_sx() {
     // Host <row nowrap align=start gap=3> owns ico|content|close (layout
     // keywords — free grid-template host Style forbidden). Stripe/empty/dismiss +
     // forced-colors via Style when/match. Zero alert host Style in contracts.
-    let src = include_str!("../stdlib/alert.sail");
+    let src = include_str!("../stdlib/alert/alert.sail");
     let out = compile_element(src, "alert").expect("alert");
     assert!(
         src.contains("<row")
@@ -1485,7 +1504,7 @@ fn alert_tone_stripe_before_on_host_sx() {
 fn toast_region_host_paint_on_sx_cva() {
     // Width + bottom reverse + paint left contracts host CSS → host Style + CVA.
     // Child hit targets: toast host pointer-events-auto (region is none).
-    let src = include_str!("../stdlib/toast-region.sail");
+    let src = include_str!("../stdlib/toast/toast-region.sail");
     let out = compile_element(src, "toast-region").expect("toast-region compiles");
     assert!(
         is_style_product(src)
@@ -1575,7 +1594,7 @@ fn theme_picker_host_paint_on_structure_sx() {
     // Layout keywords + host Style carry trigger/panel/option/swatch paint
     // on real nodes (no residual part classes). KEEP: panel anchor geometry,
     // [inline] matrices, forced-colors.
-    let src = include_str!("../stdlib/theme-picker.sail");
+    let src = include_str!("../stdlib/theme-picker/theme-picker.sail");
     let out = compile_element(src, "theme-picker").expect("theme-picker compiles");
     assert!(
         is_style_product(src)
@@ -1675,7 +1694,7 @@ fn prose_host_paint_on_sx_descendants_generated() {
     // Host block + body typeface/color/leading → host Style.
     // Descendant recipe: freeform HTML → compiler prose map → element-skins
     // (not hand contracts host CSS).
-    let src = include_str!("../stdlib/prose.sail");
+    let src = include_str!("../stdlib/prose/prose.sail");
     let out = compile_element(src, "prose").expect("prose compiles");
     assert!(
         is_style_product(src)
@@ -1748,11 +1767,65 @@ fn prose_host_paint_on_sx_descendants_generated() {
 }
 
 #[test]
+fn table_cells_are_family_parts_not_descendant_paint() {
+    // Rest cell paint is Style on native parts. Host compounds stay platform
+    // because a part cannot see table attrs and tr stays HTML.
+    let th = compile_element(include_str!("../stdlib/table/th.sail"), "th").expect("th compiles");
+    let td = compile_element(include_str!("../stdlib/table/td.sail"), "td").expect("td compiles");
+    let caption = compile_element(include_str!("../stdlib/table/caption.sail"), "caption")
+        .expect("caption compiles");
+    assert!(
+        th.native && td.native && caption.native,
+        "table parts are native tags"
+    );
+    assert!(
+        (th.skin_css.contains("padding-block:var(--space-2_5)")
+            || th.skin_css.contains("padding-block: var(--space-2_5)")
+            || th.skin_css.contains("--space-2_5"))
+            && (th.skin_css.contains("muted-foreground")
+                || th.structure_html.contains("muted-foreground")
+                || th.structure_html.contains("mutedforeground"))
+            && (th.skin_css.contains("nowrap") || th.structure_html.contains("nowrap")),
+        "th rest paint is Style:\nskin={}\nstruct={}",
+        th.skin_css,
+        th.structure_html
+    );
+    assert!(
+        th.skin_css.contains("[numeric]") || th.skin_css.contains("numeric="),
+        "th numeric is a cell match, not a table descendant:\n{}",
+        th.skin_css
+    );
+    let skins = sail_compiler::stdlib::skins_css();
+    assert!(
+        skins.contains("/* @element th */")
+            && skins.contains("/* @element td */")
+            && skins.contains("/* @element caption */"),
+        "table parts must emit their own skins"
+    );
+    assert!(
+        !skins.contains(".sail-table th { padding")
+            && !skins.contains(".sail-table td { padding")
+            && !skins.contains(".sail-table caption {")
+            && !skins.contains("th[numeric]"),
+        "cell rest paint must not be a table descendant sheet:\n{skins}"
+    );
+    assert!(
+        skins.contains("/* @provenance platform/table.css */")
+            && skins.contains(".sail-table[dense]")
+            && skins.contains(".sail-table[striped]")
+            && skins.contains(".sail-table[hoverable]")
+            && skins.contains(".sail-table[bordered]")
+            && skins.contains("border-collapse:collapse"),
+        "host compounds that Style cannot see stay in platform/table.css"
+    );
+}
+
+#[test]
 fn tab_list_sticky_and_variant_on_host_not_parent_pe() {
     // Sticky + variant on <tab-list> host. Pill track CVA. Child tab matrices
     // are stamped variant CVA on tab.sail (not parent host CSS). Vertical host axis
     // is layout-owned; list/panel orientation stamped by use:tabs.
-    let src = include_str!("../stdlib/tab-list.sail");
+    let src = include_str!("../stdlib/tabs/tab-list.sail");
     let out = compile_element(src, "tab-list").expect("tab-list compiles");
     assert!(
         src.contains("sticky = false")
@@ -1803,7 +1876,7 @@ fn tab_list_sticky_and_variant_on_host_not_parent_pe() {
         out.skin_css
     );
     // sticky/variant/size not on <tabs> — size Style match lives on <tab>.
-    let tabs_src = include_str!("../stdlib/tabs.sail");
+    let tabs_src = include_str!("../stdlib/tabs/tabs.sail");
     let _tabs_out = compile_element(tabs_src, "tabs").expect("tabs compiles");
     assert!(
         !tabs_src.contains("'tab-py'")
@@ -1816,7 +1889,7 @@ fn tab_list_sticky_and_variant_on_host_not_parent_pe() {
         "sticky/variant/size/tone not on <tabs> (no --tab-*):\n{tabs_src}"
     );
     // Size CVA lives on <tab> (text-sm py-2 px-3 …), not --tab-* custom props.
-    let tab_src = include_str!("../stdlib/tab.sail");
+    let tab_src = include_str!("../stdlib/tabs/tab.sail");
     let tab_out = compile_element(tab_src, "tab").expect("tab compiles");
     assert!(
         !tab_src.contains("--tab-")
@@ -1877,7 +1950,7 @@ fn tab_list_sticky_and_variant_on_host_not_parent_pe() {
 fn scroll_area_standard_scrollbar_on_host_sx() {
     // Standard scrollbar pack on host Style; orientation match owns overflow axes.
     // Webkit thumb pseudo pack is a documented Style-setter blocker.
-    let src = include_str!("../stdlib/scroll-area.sail");
+    let src = include_str!("../stdlib/scroll-area/scroll-area.sail");
     let out = compile_element(src, "scroll-area").expect("scroll-area compiles");
     assert!(
         is_style_product(src)
@@ -1955,7 +2028,7 @@ fn scroll_area_standard_scrollbar_on_host_sx() {
 fn code_block_pre_tab_and_tok_generated() {
     // pre tab-size:2 + line-height code → pre Style (tab(2) + leading(code)).
     // .tok-* highlighter ink: compiler code-block map → element-skins (not host Style).
-    let src = include_str!("../stdlib/code-block.sail");
+    let src = include_str!("../stdlib/code-block/code-block.sail");
     let out = compile_element(src, "code-block").expect("code-block compiles");
     assert!(
         is_style_product(src)
@@ -2018,7 +2091,7 @@ fn code_block_pre_tab_and_tok_generated() {
 #[test]
 fn field_empty_and_invalid_hint_on_structure_sx() {
     // Style product: empty/group-invalid when gates on hint/error structure.
-    let src = include_str!("../stdlib/field.sail");
+    let src = include_str!("../stdlib/field/field.sail");
     let out = compile_element(src, "field").expect("field compiles");
     assert!(
         (src.contains(".group()") || src.contains("style({ group() })") || src.contains("group()"))
@@ -2074,7 +2147,7 @@ fn field_empty_and_invalid_hint_on_structure_sx() {
 #[test]
 fn label_req_gate_in_element_skins_anatomy() {
     // Style product: .req gate via when(group-required) + component.label tokens.
-    let src = include_str!("../stdlib/label.sail");
+    let src = include_str!("../stdlib/label/label.sail");
     let out = compile_element(src, "label").expect("label compiles");
     assert!(
         !src.contains("class=")
@@ -2125,8 +2198,8 @@ fn label_req_gate_in_element_skins_anatomy() {
 fn pagination_size_cva_on_page() {
     // Size Style match lives on each <page>; <pagination> is layout-only (no size prop).
     // No --pg-* host Style in contracts.
-    let page_src = include_str!("../stdlib/page.sail");
-    let pag_src = include_str!("../stdlib/pagination.sail");
+    let page_src = include_str!("../stdlib/pagination/page.sail");
+    let pag_src = include_str!("../stdlib/pagination/pagination.sail");
     let page = compile_element(page_src, "page").expect("page compiles");
     let _pag = compile_element(pag_src, "pagination").expect("pagination compiles");
     assert!(
@@ -2262,7 +2335,7 @@ fn overlay_family_anchor_geometry_on_host_sx() {
 fn combobox_listbox_geometry_on_child_sx_options_on_popover_skin() {
     // Listbox anchor geometry + scroll chrome on child Style; option anatomy is
     // global POPOVER_SKIN [role=listbox] (author children, no structure hook).
-    let src = include_str!("../stdlib/combobox.sail");
+    let src = include_str!("../stdlib/combobox/combobox.sail");
     let out = compile_element(src, "combobox").expect("combobox compiles");
     assert!(
         is_style_product(src)
@@ -2344,7 +2417,7 @@ fn tooltip_geometry_and_show_on_sx_no_contracts_pe() {
     // Host: group + relative. Bubble: absolute + bind(tt*) geometry vars +
     // opacity show via group-hover/focus-within + after: arrow. tipDescribe
     // publishes placement vars (same bridge as use:anchor).
-    let src = include_str!("../stdlib/tooltip.sail");
+    let src = include_str!("../stdlib/tooltip/tooltip.sail");
     let out = compile_element(src, "tooltip").expect("tooltip compiles");
     assert!(
         is_style_product(src)

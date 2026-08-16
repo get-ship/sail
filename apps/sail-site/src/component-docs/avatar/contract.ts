@@ -2,7 +2,7 @@ import type { SurfaceContract } from '../contract-types'
 
 /**
  * Surface contract for avatar — axes from prop-registry only.
- * NO invent product variants beyond registry (size · shape · tone).
+ * SPEC-L1-PASS-1: size · shape · tone · ring · presence · stack.
  */
 export const contract = {
   slug: 'avatar',
@@ -23,7 +23,7 @@ export const contract = {
         'destructive',
         'muted',
       ] as const,
-      optional: true,
+      default: 'muted',
       control: 'swatches',
     },
     size: {
@@ -36,14 +36,19 @@ export const contract = {
       default: 'round',
       control: 'select',
     },
+    ring: { default: false, control: 'switch', docsSkip: true },
+    presence: {
+      values: ['off', 'online', 'busy', 'offline'] as const,
+      default: 'off',
+      control: 'select',
+      docsSkip: true,
+    },
+    stack: { default: false, control: 'switch', docsSkip: true },
   },
-  faces: [
-    { path: 'component.avatar.bg', label: 'Fill' },
-    { path: 'component.avatar.fg', label: 'Ink' },
-  ],
+  faces: [],
   visual: {
     defaultRow: true,
-    cross: ['tone', 'size', 'shape'],
+    cross: ['tone', 'size', 'shape', 'ring', 'presence', 'stack'],
   },
   examples: true,
 } as const satisfies SurfaceContract

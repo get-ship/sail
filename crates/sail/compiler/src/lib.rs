@@ -52,6 +52,7 @@ pub mod icons;
 pub mod ir;
 pub mod keys;
 pub mod l1_manifest;
+pub mod l1_surface;
 pub mod lower;
 pub mod out_layout;
 pub mod parse;

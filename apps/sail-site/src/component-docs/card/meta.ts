@@ -8,7 +8,7 @@ export const meta = {
   category: 'display',
   kind: 'host',
   blurb:
-    'The surface everything else sits on. variant default|outline, padding, tone, interactive, accent-bar, status-rail, fill — no soft/elevated/ghost invent. Rest from component.card.*.',
+    'The surface everything else sits on. variant default|outline, padding, tone, interactive, accent-bar, status-rail, fill — no soft/elevated/ghost invent. Paints the card role.',
   heading: 'card',
   host: 'doc-card',
   stageOwnsKnobs: true,

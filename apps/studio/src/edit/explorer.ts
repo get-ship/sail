@@ -270,11 +270,8 @@ function insertFileSeg(root: FileSegNode, relPath: string, filePath: string): vo
 }
 
 function fileIconForName(name: string): string {
-  if (name.endsWith('.sail')) return 'file-code-2'
+  if (name.endsWith('.sail')) return 'file-code'
   if (/\.(ts|tsx|js|jsx|mjs|cjs)$/.test(name)) return 'file-code'
-  if (/\.(json|toml|ya?ml)$/.test(name)) return 'file-json'
-  if (/\.(css|scss)$/.test(name)) return 'file-type'
-  if (/\.md$/.test(name)) return 'file-text'
   return 'file'
 }
 
@@ -389,7 +386,7 @@ export function elementSailTreeNodes(
       trailing: badge || undefined,
       // Density cue by layer — leaf-friendly lucide names.
       icon:
-        badge === 'L2' ? 'component' : badge === 'L3' ? 'box' : 'square',
+        badge === 'L2' ? 'star' : badge === 'L3' ? 'inbox' : 'circle',
       children: kids.length ? kids : undefined,
     }
   }
@@ -468,7 +465,7 @@ function routeSegToSailTree(
   return {
     id,
     label,
-    icon: node.filePath ? 'file-code-2' : 'folder',
+    icon: node.filePath ? 'file-code' : 'folder',
     children: kids.length ? kids : undefined,
   }
 }
@@ -522,7 +519,7 @@ export function routeSailTreeNodes(
     out.push({
       id: root.filePath,
       label: dirty?.has(root.filePath) ? '● /' : '/',
-      icon: 'file-code-2',
+      icon: 'file-code',
     })
   }
   for (const child of [...root.children.values()].sort((a, b) =>

@@ -110,7 +110,7 @@ export type ResolvedLayer = 'instance' | 'component' | 'global' | 'baked'
 export type EffectiveColor = {
   /** Hex for swatch/picker — empty when unresolved (never invent mid-gray / fake white). */
   hex: string
-  /** Theme has an explicit component.* leaf */
+  /** Theme has an explicit leaf at this path */
   isOverridden: boolean
   /**
    * Which override layer supplied the resolved value.

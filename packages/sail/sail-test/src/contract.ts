@@ -1,7 +1,7 @@
 // Lean test-map consumption (SPEC-TEST-2). Same shape the compiler emits.
 // Query via role / name / state — never data-* or class atoms.
 
-import { getByRole, type ByRoleOptions } from './queries'
+import { getByRole, getByText, type ByRoleOptions } from './queries'
 
 export type TestEntry = {
   role?: string
@@ -45,11 +45,20 @@ export function contractQuery(entry: TestEntry): { role: string; options: ByRole
   if (entry.states?.includes('selected')) options.selected = true
   if (entry.states?.includes('checked')) options.checked = true
   if (entry.states?.includes('hidden')) options.hidden = true
+  // `disabled` / `current` / `invalid` are on the lean map when stamped;
+  // Playwright getByRole accepts `disabled` via options in newer APIs —
+  // we keep the lean options bag role-shaped and do not invent selectors.
   return { role: entry.role, options }
 }
 
 /** Locate a published contract entry in a mounted tree. */
 export function queryContract(container: ParentNode, entry: TestEntry): HTMLElement {
+  if (!entry.role) {
+    if (!entry.name) {
+      throw new Error('queryContract: entry has neither role nor name')
+    }
+    return getByText(container, entry.name)
+  }
   const { role, options } = contractQuery(entry)
   return getByRole(container, role, options)
 }

@@ -17,7 +17,6 @@
   style swatchAccent = { bg(accent) }
   style swatchMuted = { bg(muted).border({ color: border }) }
   style swatchInfo = { bg(info) }
-  style swatchRest = { bg(background).border({ color: border }) }
   style exampleBlock = { size({ w: full }).pad({ t: 2, b: 4 }) }
   style sectionLabel = { fg(muted-foreground).type({ size: xs, tracking: wide, case: uppercase }) }
   style demoRow = { size({ w: full }).pad({ y: 2 }) }
@@ -34,7 +33,6 @@ export default controller((_ctx: Scope) => {
   const badgeTone = signal('muted')
   const badgePill = signal(false)
   const pickBadgeTone = (t: string): void => badgeTone.set(t)
-  const clearBadgeTone = (): void => badgeTone.set('')
 
   const badgeSize = derived(() => {
     const i = Math.min(Math.max(0, Math.round(Number(sizeIdx()) || 0)), BDG_SIZES.length - 1)
@@ -50,10 +48,9 @@ export default controller((_ctx: Scope) => {
   const specimenCode = derived(() => {
     const a: string[] = [`variant="${variant()}"`]
     if (badgeSize() !== 'md') a.push(`size="${badgeSize()}"`)
-    if (badgeTone()) a.push(`tone="${badgeTone()}"`)
+    a.push(`tone="${badgeTone()}"`)
     if (badgePill()) a.push('pill')
-    const label = badgeTone() || 'default'
-    return `<badge ${a.join(' ')}>${label}</badge>`
+    return `<badge ${a.join(' ')}>${badgeTone()}</badge>`
   })
 
   const bdgExStatus = () =>
@@ -61,7 +58,7 @@ export default controller((_ctx: Scope) => {
   const bdgExPill = () =>
     `<badge variant="solid" tone="primary" pill>12</badge>\n<badge variant="soft" tone="destructive" pill>3</badge>`
   const bdgExDefault = () =>
-    `<badge variant="soft">muted</badge>\n<badge variant="solid">muted</badge>\n<badge variant="outline">muted</badge>`
+    `<badge variant="soft" tone="muted">muted</badge>\n<badge variant="solid" tone="muted">muted</badge>\n<badge variant="outline" tone="muted">muted</badge>`
 
   return {
     variant,
@@ -71,7 +68,6 @@ export default controller((_ctx: Scope) => {
     badgeSize,
     specimenCode,
     pickBadgeTone,
-    clearBadgeTone,
     heading,
     blurb,
     props,
@@ -95,19 +91,14 @@ export default controller((_ctx: Scope) => {
     rows={props()}
   >
     <column slot="specimen" gap="4" align="center">
-      <if {badgeTone()}>
-        <badge
-          variant={variant()}
-          size={badgeSize()}
-          tone={badgeTone()}
-          pill={badgePill()}
-        >
-          {badgeTone()}
-        </badge>
-      {else =>
-        <badge variant={variant()} size={badgeSize()} pill={badgePill()}>
-          default
-        </badge>}</if>
+      <badge
+        variant={variant()}
+        size={badgeSize()}
+        tone={badgeTone()}
+        pill={badgePill()}
+      >
+        {badgeTone()}
+      </badge>
     </column>
 
     <column slot="knobs" gap="5" align="stretch">
@@ -122,12 +113,6 @@ export default controller((_ctx: Scope) => {
       <column gap="2">
         <label style(knobLabel)>Tone</label>
         <row gap="2" align="center">
-          <div
-            title="default (theme)"
-            selected={!badgeTone() ? 'true' : null}
-            on:click={clearBadgeTone}
-            style(swatch, swatchRest)
-          ></div>
           <div
             title="primary"
             selected={badgeTone() === 'primary' ? 'true' : null}
@@ -194,7 +179,7 @@ export default controller((_ctx: Scope) => {
 
       <doc-example
         title="Status in a table cell"
-        lead="Soft + tone for readable density. Omit tone for the theme default."
+        lead="Soft + tone for readable density. Default tone is muted."
         code={bdgExStatus()}
       >
         <row gap="2" align="center" style(demoRow)>
@@ -217,14 +202,14 @@ export default controller((_ctx: Scope) => {
       </doc-example>
 
       <doc-example
-        title="Default (theme)"
-        lead="Default tone is muted — a real colour, not the page background."
+        title="Default tone"
+        lead="tone defaults to muted — a real colour, not the page background."
         code={bdgExDefault()}
       >
         <row gap="2" align="center" style(demoRow)>
-          <badge variant="soft">muted</badge>
-          <badge variant="solid">muted</badge>
-          <badge variant="outline">muted</badge>
+          <badge variant="soft" tone="muted">muted</badge>
+          <badge variant="solid" tone="muted">muted</badge>
+          <badge variant="outline" tone="muted">muted</badge>
         </row>
       </doc-example>
     </column>

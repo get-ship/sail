@@ -24,7 +24,7 @@ export interface AxisDef {
    * driven by a decorative/role switch in the configurator).
    */
   docsControl?: AxisControl
-  /** True when omit is a valid rest path (e.g. tone → component.* leaves). */
+  /** True when omit is a valid rest path (e.g. tone → primary / muted roles). */
   optional?: boolean
   /** Handler / identity props not exposed as docs knobs. */
   event?: boolean
@@ -33,7 +33,7 @@ export interface AxisDef {
 }
 
 export interface FaceLeaf {
-  /** DTCG path, e.g. component.button.bg */
+  /** Color role this host spends, e.g. input, card, popover. */
   path: string
   label: string
 }
@@ -48,7 +48,7 @@ export interface SurfaceContract {
    * Docs-only demo knobs that are not host props (e.g. progress omit-value).
    */
   demoOnly?: readonly string[]
-  /** component.* leaves this host actually paints (host paint only). */
+  /** Color roles this host spends (host paint only). */
   faces: readonly FaceLeaf[]
   visual: {
     /** Docs configurator includes a zero-config / default rest cell. */

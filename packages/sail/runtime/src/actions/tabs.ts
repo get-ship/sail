@@ -40,7 +40,12 @@ export const tabs: Action<void> = (node) => {
   const stampOrientation = (): void => {
     const orientation = orientationOf()
     const list = listOf()
-    if (list) setAttr(list, 'orientation', orientation)
+    if (list) {
+      setAttr(list, 'orientation', orientation)
+      setAttr(list, 'role', 'tablist')
+      setAttr(list, 'aria-orientation', orientation)
+    }
+    for (const t of tabsOf()) setAttr(t, 'orientation', orientation)
     for (const p of panelsOf()) setAttr(p, 'orientation', orientation)
   }
 

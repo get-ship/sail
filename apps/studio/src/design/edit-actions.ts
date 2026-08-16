@@ -174,12 +174,13 @@ export async function setRadiusFamilyOn(
 
 export async function overrideComponentRadiusOn(
   ctx: EditCtx,
-  component: string,
+  _component: string,
   value: string | null,
 ): Promise<void> {
   const state = ctx.getState()
   if (!state.themeDoc) return
-  const path = `component.${component}.radius`
+  // Per-tag radius leaves are gone. Theme corners live on the radius role.
+  const path = 'radius.lg'
   const doc =
     value == null
       ? deletePath(state.themeDoc, path, state.modeId)
@@ -332,13 +333,12 @@ export async function setTokenValueOn(
   path: string,
   value: string,
 ): Promise<void> {
-  // SPEC-D1: theme/studio write to a path not on the token schema → hard error
-  // (never silent no-op). Component surface leaves must exist in the registry.
+  // Unknown or retired packs are a hard error (never silent no-op).
   const barePath = path
     .replace(/^modes\.(light|dark)\./, '')
     .replace(/\.\$value$/, '')
-  if (barePath.startsWith('component.') && !getKnob(barePath) && !getKnob(path)) {
-    const msg = `Unknown component surface path "${barePath}" — not in the host surface schema`
+  if (barePath.startsWith('component.') || path.startsWith('component.')) {
+    const msg = `Unknown theme path "${barePath}" — write a color, type, or radius role`
     ctx.setState({
       ...ctx.getState(),
       lastWriteError: msg,
@@ -347,8 +347,7 @@ export async function setTokenValueOn(
     ctx.emit()
     return
   }
-  // SPEC-D1 rest-only: hover/focus storage leaves are not L1-spent; refuse
-  // silent costume writes that would not change look.
+  // Hover/focus storage leaves are not rest slots; refuse silent no-ops.
   if (isParkedComponentStateLeaf(barePath) || isParkedComponentStateLeaf(path)) {
     const msg = `Parked component state path "${barePath}" — not an editable rest surface (L1 hover uses free globals)`
     ctx.setState({
@@ -364,7 +363,6 @@ export async function setTokenValueOn(
   const type = knob?.type ?? 'string'
   let writeValue = value
   // Color picker commits hex — store oklch (6-digit only).
-  // Includes component.* color leaves (alert.bg, badge.fg, …) via knob.kind.
   if (
     knob?.kind === 'color' ||
     path.includes('color.') ||

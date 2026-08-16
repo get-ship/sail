@@ -45,7 +45,7 @@ describe('theme-shape-surface', () => {
     expect(sail).toMatch(/elev-chips/)
     expect(sail).toMatch(/radius-ladder/)
     expect(sail).toMatch(/watchPreviewHost/)
-    expect(sail).toMatch(/mode=\{/)
+    expect(sail).toMatch(/paintMode\(\)|mode=\{/)
     expect(sail).toMatch(/createThemeSession|createShapeEdit/)
     expect(sail).toMatch(/variant="solid"\s+tone="primary"/)
     expect(sail).toMatch(/radius="sm"/)
@@ -72,7 +72,7 @@ describe('theme-shape-surface', () => {
     expect(sail).toMatch(/bg\(background\)/)
     expect(sail).toMatch(/spec-card/)
     expect(sail).toMatch(/watchPreviewHost/)
-    expect(edit).toMatch(/liveCardRadius\.set\(px\(lg\)\)/)
+    expect(edit).toMatch(/liveCardRadius\.set\(/)
     expect(edit).toMatch(/setRadiusFamily|setRadiusStep/)
     expect(edit).toMatch(/setTokenValue/)
   })
@@ -97,8 +97,8 @@ describe('theme-shape-surface', () => {
     const edit = readFileSync(EDIT, 'utf8')
     const sail = readFileSync(SURFACE, 'utf8')
     // Correct frost channel — not surface-overlay noise α.
-    expect(edit).toMatch(/component\.card\.bg/)
-    expect(edit).toMatch(/component\.card\.backdrop-filter/)
+    expect(edit).toMatch(/color\.card\.default/)
+    expect(edit).toMatch(/filter\.card-backdrop/)
     expect(edit).toMatch(/withColorAlpha|liveCardFill/)
     // Specimen freeform fill (liveBox pack or bind).
     expect(sail).toMatch(/liveCardFill|liveCardBox|use:liveBox/)
@@ -117,13 +117,13 @@ describe('theme-shape-surface', () => {
     const sail = readFileSync(SURFACE, 'utf8')
     const edit = readFileSync(EDIT, 'utf8')
     expect(sail).toMatch(/elevMarkNone|elevMarkXs|elevMarkXl/)
-    expect(sail).toMatch(/shadow\(xs\)/)
-    expect(sail).toMatch(/shadow\(xl\)/)
+    expect(sail).toMatch(/elevation\(xs\)/)
+    expect(sail).toMatch(/elevation\(xl\)/)
   })
 
   it('shape edit domain uses design store module', () => {
     const edit = readFileSync(EDIT, 'utf8')
-    expect(edit).toMatch(/@ship\/studio\/design/)
+    expect(edit).toMatch(/@ship\/studio\/design|\.\.\/\.\.\/design/)
   })
 
   it('domain uses design store radius/token ops + curated paths', () => {
@@ -142,8 +142,8 @@ describe('theme-shape-surface', () => {
     expect(actions).toMatch(/requestSaveTheme|saveTheme/)
     expect(edit).toMatch(/shadow\.card-rest/)
     expect(edit).toMatch(/color\.border\.width/)
-    expect(edit).toMatch(/component\.card\.bg/)
-    expect(edit).toMatch(/component\.card\.backdrop-filter/)
+    expect(edit).toMatch(/color\.card\.default/)
+    expect(edit).toMatch(/filter\.card-backdrop/)
   })
 
   it('session path navigates shape among facets', () => {

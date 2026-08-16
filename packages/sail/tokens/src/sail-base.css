@@ -201,6 +201,10 @@ a.sail-a:not([variant]):not(.s-displayinlineflex):not(.s-displayblock) {
   :where(.sail-skeleton) { animation: none !important; }
 }
 :where(input, textarea, select) { appearance: none; }
+/* Native <textarea> keeps a UA Field fill that ignores theme color-scheme
+ * on several product themes (too dark on light, too light on dark). Same
+ * input / foreground spend as <input> / <select> — not a second mud well. */
+:where(textarea) { background-color: var(--input); color: var(--foreground); box-sizing: border-box; }
 /* Listbox floor: ul reset + option anatomy for role='listbox' popovers
    (combobox dropdown). Dropped in a rewrite once — every option rendered
    unstyled; the sx-host-paint probe guards this block. */

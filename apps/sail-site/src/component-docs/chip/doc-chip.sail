@@ -17,7 +17,6 @@
   style swatchAccent = { bg(accent) }
   style swatchMuted = { bg(muted).border({ color: border }) }
   style swatchInfo = { bg(info) }
-  style swatchRest = { bg(background).border({ color: border }) }
   style exampleBlock = { size({ w: full }).pad({ t: 2, b: 4 }) }
   style sectionLabel = { fg(muted-foreground).type({ size: xs, tracking: wide, case: uppercase }) }
   style demoRow = { size({ w: full }).pad({ y: 2 }) }
@@ -38,7 +37,6 @@ export default controller((_ctx: Scope) => {
   const dropChip = (): void => kept.set(false)
   const restoreChip = (): void => kept.set(true)
   const pickChipTone = (t: string): void => chipTone.set(t)
-  const clearChipTone = (): void => chipTone.set('')
   const chipSize = derived(() => {
     const i = Math.min(Math.max(0, Math.round(Number(sizeIdx()) || 0)), CHIP_SIZES.length - 1)
     return CHIP_SIZES[i] ?? 'md'
@@ -53,11 +51,10 @@ export default controller((_ctx: Scope) => {
   const specimenCode = derived(() => {
     const a: string[] = [`variant="${variant()}"`]
     if (chipSize() !== 'md') a.push(`size="${chipSize()}"`)
-    if (chipTone()) a.push(`tone="${chipTone()}"`)
+    a.push(`tone="${chipTone()}"`)
     if (chipSelected()) a.push('selected')
     if (chipRemovable()) a.push('removable')
-    const label = chipTone() || 'default'
-    return `<chip ${a.join(' ')}>${label}</chip>`
+    return `<chip ${a.join(' ')}>${chipTone()}</chip>`
   })
 
   const chipExFilter = () =>
@@ -65,7 +62,7 @@ export default controller((_ctx: Scope) => {
   const chipExRemove = () =>
     `<chip variant="soft" tone="info" removable on-remove={onRemove}>typescript</chip>`
   const chipExDefault = () =>
-    `<chip variant="solid">default</chip>\n<chip variant="soft">default</chip>\n<chip variant="outline">default</chip>`
+    `<chip variant="solid" tone="primary">primary</chip>\n<chip variant="soft" tone="primary">primary</chip>\n<chip variant="outline" tone="primary">primary</chip>`
 
   return {
     variant,
@@ -79,7 +76,6 @@ export default controller((_ctx: Scope) => {
     dropChip,
     restoreChip,
     pickChipTone,
-    clearChipTone,
     heading,
     blurb,
     props,
@@ -104,27 +100,16 @@ export default controller((_ctx: Scope) => {
   >
     <column slot="specimen" gap="4" align="center">
       <if {kept()}>
-        <if {chipTone()}>
-          <chip
-            variant={variant()}
-            size={chipSize()}
-            tone={chipTone()}
-            selected={chipSelected() ? 'true' : null}
-            removable={chipRemovable() ? 'true' : null}
-            on-remove={dropChip}
-          >
-            {chipTone()}
-          </chip>
-        {else =>
-          <chip
-            variant={variant()}
-            size={chipSize()}
-            selected={chipSelected() ? 'true' : null}
-            removable={chipRemovable() ? 'true' : null}
-            on-remove={dropChip}
-          >
-            default
-          </chip>}</if>
+        <chip
+          variant={variant()}
+          size={chipSize()}
+          tone={chipTone()}
+          selected={chipSelected() ? 'true' : null}
+          removable={chipRemovable() ? 'true' : null}
+          on-remove={dropChip}
+        >
+          {chipTone()}
+        </chip>
       {else =>
         <button variant="ghost" size="sm" on:click={restoreChip}>bring it back</button>}</if>
     </column>
@@ -142,12 +127,6 @@ export default controller((_ctx: Scope) => {
       <column gap="2">
         <label style(knobLabel)>Tone</label>
         <row gap="2" align="center">
-          <div
-            title="default (theme)"
-            selected={!chipTone() ? 'true' : null}
-            on:click={clearChipTone}
-            style(swatch, swatchRest)
-          ></div>
           <div
             title="primary"
             selected={chipTone() === 'primary' ? 'true' : null}
@@ -242,15 +221,15 @@ export default controller((_ctx: Scope) => {
       </doc-example>
 
       <doc-example
-        title="Default (theme)"
-        lead="No tone uses the theme’s default chip colors."
+        title="Default tone"
+        lead="tone defaults to primary — a bare chip is a finished control."
         code={chipExDefault()}
       >
         <row gap="2" align="center" style(demoRow)>
-          <chip variant="solid">default</chip>
-          <chip variant="soft">default</chip>
-          <chip variant="outline">default</chip>
-          <chip variant="ghost">default</chip>
+          <chip variant="solid" tone="primary">primary</chip>
+          <chip variant="soft" tone="primary">primary</chip>
+          <chip variant="outline" tone="primary">primary</chip>
+          <chip variant="ghost" tone="primary">primary</chip>
         </row>
       </doc-example>
     </column>

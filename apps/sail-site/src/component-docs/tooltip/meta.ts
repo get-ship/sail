@@ -8,7 +8,7 @@ export const meta = {
   category: 'overlay',
   kind: 'host',
   blurb:
-    'Label on hover and focus from the content attribute. placement top|bottom|left|right. Bubble paint component.tooltip.bg / fg.',
+    'Label on hover and focus from the content attribute. placement top|bottom|left|right. Bubble paints the popover role.',
   heading: 'tooltip',
   host: 'doc-tooltip',
   stageOwnsKnobs: true,

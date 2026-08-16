@@ -41,11 +41,13 @@
   style typeDisplay = { type({ family: display, size: xl, weight: semibold, tracking: tight }) }
   style typeBody = { type({ family: body, size: sm, leading: relaxed }) }
   style typeMono = { type({ family: mono, size: xs }) }
-  style radiusChip = { size({ w: 8, h: 8 }).bg(transparent).border({ color: primary, width: 2 }) }
+  style radiusChip = { shrink(0).size({ w: 8, h: 8, min-w: 8, min-h: 8 }).bg(transparent).border({ color: primary, width: 2 }) }
   style specimen = { overflow({ all: hidden }).size({ min-w: 0 }).radius(lg).border({ color: border, width: 1 }).elevation(md).bg(background).fg(foreground) }
   style specimenHead = { pad({ x: 4 }).size({ h: 9 }).bg(surface-1).border({ edge: b, color: border-subtle, width: 1 }) }
   style specimenBody = { pad(5).bg(background) }
-  style specimenCard = { pad(4) }
+  style specimenCard = { pad(4).size({ min-w: 0 }) }
+  style specimenActions = { size({ min-w: 0 }).overflow({ x: auto }) }
+  style chipLabel = { shrink(0).type({ wrap: truncate }) }
   style cardTitle = { type({ family: heading, size: md, weight: semibold }) }
   style cardBody = { fg(muted-foreground).type({ family: body, size: sm, leading: relaxed }) }
   style fullW = { size({ w: full }) }
@@ -464,7 +466,7 @@ export default controller(() => {
             >
               <row align="center" gap="2" nowrap justify="between" style(specimenHead)>
                 <p style(titleSm)>{previewTitle()}</p>
-                <badge tone="primary" size="sm" variant="solid" pill>Preview</badge>
+                <badge tone="primary" size="sm" variant="solid" pill style(chipLabel)>Preview</badge>
               </row>
               <column gap="4" style(specimenBody)>
                 <card style(specimenCard)>
@@ -473,17 +475,17 @@ export default controller(() => {
                     <p style(cardBody)>
                       Controls, badges, and fields read this theme’s token table.
                     </p>
-                    <row gap="2" align="center">
+                    <row gap="2" align="center" style(specimenActions)>
                       <button type="button" size="sm" variant="solid" tone="primary" style(tapFloor)>Primary</button>
                       <button type="button" size="sm" variant="solid" tone="accent" style(tapFloor)>Accent</button>
                       <button type="button" size="sm" variant="outline" tone="primary" style(tapFloor)>Outline</button>
                       <button type="button" size="sm" variant="ghost" tone="muted" style(tapFloor)>Ghost</button>
                     </row>
-                    <row gap="2" align="center">
-                      <badge tone="primary" size="sm" variant="solid" pill>Primary</badge>
-                      <badge tone="success" size="sm" variant="solid" pill>Success</badge>
-                      <badge tone="warning" size="sm" variant="solid" pill>Warning</badge>
-                      <badge tone="destructive" size="sm" variant="solid" pill>Danger</badge>
+                    <row gap="2" align="center" style(specimenActions)>
+                      <badge tone="primary" size="sm" variant="solid" pill style(chipLabel)>Primary</badge>
+                      <badge tone="success" size="sm" variant="solid" pill style(chipLabel)>Success</badge>
+                      <badge tone="warning" size="sm" variant="solid" pill style(chipLabel)>Warning</badge>
+                      <badge tone="destructive" size="sm" variant="solid" pill style(chipLabel)>Danger</badge>
                     </row>
                     <input type="search" size="sm" placeholder="Search field" label="Sample search" />
                   </column>

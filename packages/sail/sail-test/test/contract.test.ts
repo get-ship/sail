@@ -37,6 +37,12 @@ describe('test-map contract', () => {
     ).toBe(true)
   })
 
+  it('queryContract falls back to name text when role is omitted', () => {
+    document.body.innerHTML = '<p>Harbor Co</p>'
+    const el = queryContract(document.body, { name: 'Harbor Co' })
+    expect(el.textContent).toBe('Harbor Co')
+  })
+
   it('queryContract uses role + name only', () => {
     document.body.innerHTML =
       '<button aria-pressed="true">Save</button><div role="status" aria-label="Loading"></div>'

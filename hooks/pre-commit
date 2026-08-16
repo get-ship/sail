@@ -36,7 +36,8 @@ if [ -n "$rs" ] && command -v rustfmt >/dev/null; then
 fi
 
 # --- product lint on staged .sail (the floor, not a grep) ---
-sails=$(printf '%s\n' "$staged" | grep '\.sail$' || true)
+# Stdlib sources compile through compile_element, not as standalone apps.
+sails=$(printf '%s\n' "$staged" | grep '\.sail$' | grep -v '^crates/sail/compiler/stdlib/' || true)
 if [ -n "$sails" ]; then
   sail_bin=""
   if [ -x "$root/target/debug/sail" ]; then sail_bin="$root/target/debug/sail"

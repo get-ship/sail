@@ -19,8 +19,8 @@
   style emptyFrame = { size({ w: full }).pad(4).border({ color: border-subtle, width: 1 }).radius(md) }
   style sourceHost = { grow(1).size({h: full, min-h: 0, basis: 0}).overflow({ all: hidden }).bg(surface-0) }
   style emptyInset = { size({ w: full }).pad(3).margin(3).border({ color: border-subtle, width: 1 }).radius(md) }
-  style fillCol = { grow(1).size({h: full, min-h: 0, basis: 0}).overflow({ all: hidden }) }
-  style editorFill = { size({ w: full, h: full, min-h: 0 }) }
+  style fillCol = { grow(1).size({h: full, min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }) }
+  style editorFill = { grow(1).size({ w: full, h: full, min-w: 0, min-h: 0, basis: 0 }).overflow({ all: hidden }) }
 </scope>
 
 <controller>
@@ -76,7 +76,7 @@ export default controller(() => {
             nowrap
             style(docTab)
           >
-            <icon name="file-code-2" size="sm"></icon>
+            <icon name="file-code" size="sm"></icon>
             <p style(tabLabel)>{tab.label}</p>
             <if {tab.dirtyDot}>
               <p dirty-dot label="Unsaved" style(dirtyDot)>

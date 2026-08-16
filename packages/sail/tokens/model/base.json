@@ -1751,6 +1751,38 @@
         "from": { "opacity": 0, "transform": "translateY(8px)" },
         "to": { "opacity": 1, "transform": "translateY(0)" }
       }
+    },
+    "rise": {
+      "$type": "sail.keyframes",
+      "$description": "Translate-up enter without fading. Always-visible tiles stay solid on first paint.",
+      "$value": {
+        "from": { "transform": "translateY(8px)" },
+        "to": { "transform": "translateY(0)" }
+      }
+    },
+    "press": {
+      "$type": "sail.keyframes",
+      "$description": "Scale-down on press. Does not fade the control out.",
+      "$value": {
+        "from": { "transform": "scale(1)" },
+        "to": { "transform": "scale(0.96)" }
+      }
+    },
+    "spin": {
+      "$type": "sail.keyframes",
+      "$description": "Full rotation. Loading marks spend this.",
+      "$value": {
+        "from": { "transform": "rotate(0deg)" },
+        "to": { "transform": "rotate(360deg)" }
+      }
+    },
+    "pulse": {
+      "$type": "sail.keyframes",
+      "$description": "Gentle opacity breathe. Loop without disappearing.",
+      "$value": {
+        "from": { "opacity": 1 },
+        "to": { "opacity": 0.72 }
+      }
     }
   },
   "play": {
@@ -1759,6 +1791,20 @@
       "$description": "Named play property-set: color-bearing CSS properties. Not a keyframe.",
       "$value": {
         "property": "color, background-color, border-color, outline-color, fill, stroke"
+      }
+    },
+    "control": {
+      "$type": "transition",
+      "$description": "Wave 0 motion tier — controls hover/press (color + transform + shadow).",
+      "$value": {
+        "property": "color, background-color, border-color, outline-color, transform, box-shadow, opacity"
+      }
+    },
+    "surface": {
+      "$type": "transition",
+      "$description": "Wave 0 motion tier — interactive surfaces (color + shadow + transform).",
+      "$value": {
+        "property": "color, background-color, border-color, box-shadow, transform, opacity"
       }
     }
   },

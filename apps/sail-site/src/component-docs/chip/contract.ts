@@ -13,7 +13,7 @@ export const contract = {
     },
     tone: {
       values: ['primary', 'info', 'success', 'warning', 'destructive', 'accent', 'muted'] as const,
-      optional: true,
+      default: 'primary',
       control: 'swatches',
     },
     size: {
@@ -27,11 +27,7 @@ export const contract = {
     disabled: { default: false, control: 'switch', docsSkip: true },
     onRemove: { control: 'none', event: true },
   },
-  faces: [
-    { path: 'component.chip.bg', label: 'Fill' },
-    { path: 'component.chip.fg', label: 'Ink' },
-    { path: 'component.chip.border', label: 'Border' },
-  ],
+  faces: [],
   visual: {
     defaultRow: true,
     // disabled stays on visual.cross for harness coverage; docsSkip only skips docs knob.

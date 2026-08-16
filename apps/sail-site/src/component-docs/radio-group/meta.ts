@@ -6,7 +6,8 @@ export const meta = {
   key: 'radio-group',
   category: 'inputs',
   kind: 'host',
-  blurb: 'A set of radios with one shared value and accessible name.',
+  blurb:
+    'A set of radios with one shared value and accessible name. <radio> is the option part — not a hub tile.',
   heading: '<radio-group>',
   host: 'doc-radio-group',
   stageOwnsKnobs: true,

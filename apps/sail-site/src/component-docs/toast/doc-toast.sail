@@ -10,7 +10,6 @@
   style mutedSm = { fg(muted-foreground).type({ size: sm }) }
   style knobLabel = { fg(muted-foreground).type({ size: xs, weight: medium, tracking: wide, case: uppercase }) }
   style swatch = { size(7).shrink(0).radius(full).cursor(pointer).border({ color: transparent, width: 2 }).elevation(xs), when: { selected: border({ color: foreground }).elevation(sm), hover: filter({ opacity: 90 }) } }
-  style swatchRest = { bg(background).border({ color: border }) }
   style swatchPrimary = { bg(primary) }
   style swatchInfo = { bg(info) }
   style swatchSuccess = { bg(success) }
@@ -27,10 +26,14 @@ import type { Scope } from './doc-toast.sail'
 import { DETAILS } from '../../compositions/component-details'
 
 export default controller((_ctx: Scope) => {
-  const toastTone = signal('success')
+  const toastTone = signal('info')
   const duration = signal('0')
   let toastSeq = 0
   const toastItems = signal<{ key: string }[]>([{ key: 'toast-0' }])
+  const toastEmpty = derived(() => toastItems().length === 0)
+  const exSuccess = signal(true)
+  const exTones = signal(true)
+  const exAction = signal(true)
 
   const pushToast = (): void => {
     toastSeq += 1
@@ -43,10 +46,12 @@ export default controller((_ctx: Scope) => {
     toastTone.set(t)
     pushToast()
   }
-  const clearTone = (): void => {
-    toastTone.set('')
-    pushToast()
-  }
+  const restoreSuccess = (): void => exSuccess.set(true)
+  const onSuccessDismiss = (): void => exSuccess.set(false)
+  const restoreTones = (): void => exTones.set(true)
+  const onTonesDismiss = (): void => exTones.set(false)
+  const restoreAction = (): void => exAction.set(true)
+  const onActionDismiss = (): void => exAction.set(false)
 
   const entry = DETAILS.toast
   const heading = () => entry.heading
@@ -55,14 +60,10 @@ export default controller((_ctx: Scope) => {
   const usageCode = () => entry.usage
 
   const specimenCode = derived(() => {
-    const a: string[] = []
-    if (toastTone()) a.push(`tone="${toastTone()}"`)
+    const a: string[] = [`tone="${toastTone()}"`]
     if (duration()) a.push(`duration="${duration()}"`)
     a.push('on-dismiss={onDismiss}')
-    const body = toastTone()
-      ? '<strong>Saved.</strong> Sticky when duration is 0.'
-      : '<strong>Notice.</strong> Default theme colors when tone is omitted.'
-    return `<toast ${a.join(' ')}>\n  ${body}\n</toast>`
+    return `<toast ${a.join(' ')}>\n  <strong>Notice.</strong> Sticky when duration is 0.\n</toast>`
   })
 
   const toastExSuccess = () =>
@@ -71,15 +72,27 @@ export default controller((_ctx: Scope) => {
     `<toast tone="info">Info</toast>\n<toast tone="warning">Warning</toast>\n<toast tone="destructive">Error</toast>`
   const toastExSticky = () =>
     `<!-- duration 0 = sticky; re-push from controller after dismiss -->\n<toast duration="0" on-dismiss={onDismiss}>Sticky</toast>`
+  const toastExAction = () =>
+    `<toast tone="info" duration="0" on-dismiss={onDismiss}>\n  <row align="center" gap="3">\n    <span>Invite sent to ada@ship.dev</span>\n    <button type="button" size="sm" variant="outline">Undo</button>\n  </row>\n</toast>`
 
   return {
     toastTone,
     duration,
     toastItems,
+    toastEmpty,
     pushToast,
     onDismiss,
     pickTone,
-    clearTone,
+    exSuccess,
+    exTones,
+    exAction,
+    restoreSuccess,
+    onSuccessDismiss,
+    restoreTones,
+    onTonesDismiss,
+    restoreAction,
+    onActionDismiss,
+    toastExAction,
     heading,
     blurb,
     props,
@@ -104,16 +117,13 @@ export default controller((_ctx: Scope) => {
     rows={props()}
   >
     <column slot="specimen" gap="3" align="center" style(specimen)>
-      <button type="button" variant="outline" size="sm" on:click={pushToast}>Show toast</button>
+      <if {toastEmpty()}>
+        <button type="button" variant="outline" size="sm" on:click={pushToast} toast-show>Show toast</button>
+      </if>
       <for {toastItems() as t} key={t.key}>
-        <if {toastTone()}>
-          <toast tone={toastTone()} duration={duration()} on-dismiss={onDismiss} style(stageCol)>
-            <strong>Saved.</strong> Sticky when duration is 0.
-          </toast>
-        {else =>
-          <toast duration={duration()} on-dismiss={onDismiss} style(stageCol)>
-            <strong>Notice.</strong> Default theme colors when tone is omitted.
-          </toast>}</if>
+        <toast tone={toastTone()} duration={duration()} on-dismiss={onDismiss} style(stageCol)>
+          <strong>Notice.</strong> Sticky when duration is 0.
+        </toast>
       </for>
     </column>
 
@@ -121,12 +131,6 @@ export default controller((_ctx: Scope) => {
       <column gap="2">
         <label style(knobLabel)>Tone</label>
         <row gap="2" align="center">
-          <div
-            title="default"
-            selected={!toastTone() ? 'true' : null}
-            on:click={clearTone}
-            style(swatch, swatchRest)
-          ></div>
           <div
             title="primary"
             selected={toastTone() === 'primary' ? 'true' : null}
@@ -195,15 +199,36 @@ export default controller((_ctx: Scope) => {
         lead='duration="0" + onDismiss — re-push from the controller after dismiss.'
         code={toastExSuccess()}
       >
-        <toast tone="success" duration="0">
-          <strong>Saved.</strong> Your changes are live.
-        </toast>
+        <if {exSuccess()}>
+          <toast tone="success" duration="0" on-dismiss={onSuccessDismiss}>
+            <strong>Saved.</strong> Your changes are live.
+          </toast>
+        {else =>
+          <button type="button" variant="outline" size="sm" on:click={restoreSuccess}>Show toast</button>}</if>
       </doc-example>
-      <doc-example title="Tone rails" lead="Semantic start-stripe per tone." code={toastExTones()}>
-        <column gap="2" style(specimen)>
-          <toast tone="info" duration="0">Info notice</toast>
-          <toast tone="warning" duration="0">Warning notice</toast>
-        </column>
+      <doc-example title="Tone rails" lead="Tone paints the start stripe and a wash on the fill." code={toastExTones()}>
+        <if {exTones()}>
+          <column gap="2" style(specimen)>
+            <toast tone="info" duration="0" on-dismiss={onTonesDismiss}>Info notice</toast>
+            <toast tone="warning" duration="0" on-dismiss={onTonesDismiss}>Warning notice</toast>
+          </column>
+        {else =>
+          <button type="button" variant="outline" size="sm" on:click={restoreTones}>Show toast</button>}</if>
+      </doc-example>
+      <doc-example
+        title="With action"
+        lead="Default slot can hold a control — no extra variant."
+        code={toastExAction()}
+      >
+        <if {exAction()}>
+          <toast tone="info" duration="0" on-dismiss={onActionDismiss} style(stageCol)>
+            <row align="center" gap="3">
+              <span>Invite sent to ada@ship.dev</span>
+              <button type="button" size="sm" variant="outline">Undo</button>
+            </row>
+          </toast>
+        {else =>
+          <button type="button" variant="outline" size="sm" on:click={restoreAction}>Show toast</button>}</if>
       </doc-example>
       <doc-example
         title="Sticky note"
