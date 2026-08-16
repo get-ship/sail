@@ -68,11 +68,10 @@ TextMate grammar.
 
 ### Studio / docs
 
-`<sail-code-editor>` paints from `@ship/sail-highlight` (same wasm +
-query). Docs `<code-block>` uses the same package via
-`registerSailHighlighter` (TS / shell snippets stay on the runtime
-regex). The generated vocab table is leftover generate output, not
-the paint engine.
+`<sail-code-editor>` and docs `<code-block>` paint from
+`@ship/sail-highlight` (same wasm + query). TS / shell snippets stay
+on the runtime regex. Apps that depend on the package get the wasm
+staged at the site root (`deckCoAssets`). Hello-world does not.
 
 ## Generate (maintainers)
 

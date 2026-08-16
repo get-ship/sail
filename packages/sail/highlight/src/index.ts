@@ -78,16 +78,28 @@ export async function initHighlight(assets: HighlightAssets): Promise<void> {
   await ready
 }
 
-/** Default wasm + query next to this package. Safe to call more than once. */
+/** Default wasm + query. Safe to call more than once. */
 export async function ensureHighlight(): Promise<void> {
   if (ready) {
     await ready
     return
   }
-  const wasmHref = new URL('../tree-sitter-sail.wasm', import.meta.url).href
-  const scmHref = new URL('../../grammar/queries/highlights.scm', import.meta.url).href
-  const highlightsScm = await readAssetText(scmHref)
-  await initHighlight({ wasm: wasmHref, highlightsScm })
+  const pkgWasm = new URL('../tree-sitter-sail.wasm', import.meta.url).href
+  if (pkgWasm.startsWith('file:')) {
+    const scmHref = new URL('../../grammar/queries/highlights.scm', import.meta.url).href
+    await initHighlight({
+      wasm: pkgWasm,
+      highlightsScm: await readAssetText(scmHref),
+    })
+    return
+  }
+  // Bundled app: `sail build` / `sail dev` copies package `deckCoAssets` to `/`.
+  const highlightsScm = await readAssetText('/highlights.scm')
+  await initHighlight({
+    wasm: '/tree-sitter-sail.wasm',
+    highlightsScm,
+    runtimeWasm: '/web-tree-sitter.wasm',
+  })
 }
 
 async function readAssetText(href: string): Promise<string> {

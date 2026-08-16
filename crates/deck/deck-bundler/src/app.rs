@@ -766,6 +766,63 @@ fn project_runtime_dep_names(project: &Path) -> Vec<String> {
     out
 }
 
+/// Copy files a dependency names in `package.json#deckCoAssets`
+/// (`destName` → package-relative path) to the SPA root.
+///
+/// Only direct project deps. An app that does not list the package
+/// does not receive its files (hello-world stays wasm-free).
+fn stage_declared_co_assets(repo_root: &Path, project: &Path, out_dir: &Path) -> Result<()> {
+    for dep in project_runtime_dep_names(project) {
+        let Some(pkg_root) = crate::node_resolve::resolve_package_root(project, &dep)
+            .or_else(|| crate::node_resolve::resolve_package_root(repo_root, &dep))
+        else {
+            continue;
+        };
+        let raw = match std::fs::read_to_string(pkg_root.join("package.json")) {
+            Ok(s) => s,
+            Err(_) => continue,
+        };
+        let pkg: serde_json::Value = match serde_json::from_str(&raw) {
+            Ok(v) => v,
+            Err(_) => continue,
+        };
+        let Some(assets) = pkg.get("deckCoAssets").and_then(|v| v.as_object()) else {
+            continue;
+        };
+        for (dest_name, rel) in assets {
+            if dest_name.is_empty()
+                || dest_name.contains('/')
+                || dest_name.contains('\\')
+                || dest_name.contains("..")
+            {
+                bail!(
+                    "app build: `{dep}` deckCoAssets key `{dest_name}` must be a single file name"
+                );
+            }
+            let Some(rel) = rel.as_str() else {
+                bail!("app build: `{dep}` deckCoAssets[{dest_name}] must be a string path");
+            };
+            let src = pkg_root.join(rel);
+            if !src.is_file() {
+                bail!(
+                    "app build: `{dep}` declares deckCoAssets[{dest_name}] = `{rel}` but {} is missing",
+                    src.display()
+                );
+            }
+            std::fs::create_dir_all(out_dir)?;
+            let dst = out_dir.join(dest_name);
+            std::fs::copy(&src, &dst).with_context(|| {
+                format!(
+                    "copy deckCoAssets {} -> {} (`{dep}`)",
+                    src.display(),
+                    dst.display()
+                )
+            })?;
+        }
+    }
+    Ok(())
+}
+
 /// Build deck's OWN framework singletons from node-resolved source and write
 /// each onto its served `_deck/<file>` path under `out_dir` — the self-contained
 /// `--bundle-framework` path. Entries are resolved by node resolution from
@@ -1164,6 +1221,7 @@ pub async fn bundle_app_with_base(
     // without this stage a bare `deck dev` (no prior `public/` copy from gen)
     // silently 404s the binary and the tutorial/playground die.
     stage_framework_co_assets(repo_root, project, out_dir)?;
+    stage_declared_co_assets(repo_root, project, out_dir)?;
 
     // 8. Write the rendered index.html (the dev doesn't author it; the
     // template was rendered above in step 4). The script tag references
@@ -1582,6 +1640,53 @@ export default controller(() => ({ id: signal('demo') }))\n\
             "co-asset must land at SPA root even when framework JS stays external"
         );
         assert_eq!(std::fs::read(&wasm).unwrap(), b"\0asm-co-asset");
+    }
+
+    /// Direct dep with `deckCoAssets` stages those files at the SPA root.
+    /// Apps without the dep stay free of those files.
+    #[tokio::test(flavor = "multi_thread")]
+    async fn bundle_app_stages_declared_co_assets() {
+        let root = tempfile::tempdir().unwrap();
+        let r = root.path();
+        write(
+            &r.join("package.json"),
+            r#"{"name":"paint-app","private":true,"type":"module",
+                "dependencies":{"@ship/paint-kit":"workspace:*"}}"#,
+        );
+        write(&r.join("routes/page.sail"), "<div>hi</div>\n");
+        write(
+            &r.join("node_modules/@ship/paint-kit/package.json"),
+            r#"{ "name": "@ship/paint-kit", "deckCoAssets": {
+                "paint.bin": "./paint.bin",
+                "query.txt": "./query.txt" } }"#,
+        );
+        std::fs::write(
+            r.join("node_modules/@ship/paint-kit/paint.bin"),
+            b"\0asm-hl",
+        )
+        .unwrap();
+        write(&r.join("node_modules/@ship/paint-kit/query.txt"), "(ok)\n");
+
+        let with = r.join("dist-with");
+        bundle_app(r, r, &with, false, false)
+            .await
+            .expect("bundle app that declares deckCoAssets");
+        assert_eq!(std::fs::read(with.join("paint.bin")).unwrap(), b"\0asm-hl");
+        assert!(with.join("query.txt").is_file());
+
+        write(
+            &r.join("plain/package.json"),
+            r#"{"name":"plain","private":true,"type":"module","dependencies":{}}"#,
+        );
+        write(&r.join("plain/routes/page.sail"), "<div>hi</div>\n");
+        let without = r.join("dist-without");
+        bundle_app(r, &r.join("plain"), &without, false, false)
+            .await
+            .expect("bundle app without the dep");
+        assert!(
+            !without.join("paint.bin").exists(),
+            "apps without the dep must not receive its co-assets"
+        );
     }
 
     /// Installed-but-unbuilt `@ship/sail-compiler-wasm` must fail the app build

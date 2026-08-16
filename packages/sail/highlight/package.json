@@ -4,11 +4,16 @@
   "private": true,
   "type": "module",
   "license": "MIT",
-  "description": "Tree-sitter-sail highlighter. One query, used by VS Code and <sail-code-editor>. Not a parser.",
+  "description": "Tree-sitter-sail highlighter. One query, used by VS Code, <sail-code-editor>, and docs <code-block>. Not a parser.",
   "main": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
     "./tree-sitter-sail.wasm": "./tree-sitter-sail.wasm"
+  },
+  "deckCoAssets": {
+    "tree-sitter-sail.wasm": "./tree-sitter-sail.wasm",
+    "web-tree-sitter.wasm": "./web-tree-sitter.wasm",
+    "highlights.scm": "../grammar/queries/highlights.scm"
   },
   "scripts": {
     "test": "vitest run",

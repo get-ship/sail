@@ -34,3 +34,21 @@ if [ ! -x "$cli" ]; then
 fi
 "$cli" build --wasm -o "$pkg/tree-sitter-sail.wasm" "$grammar"
 echo "wrote $pkg/tree-sitter-sail.wasm"
+
+runtime=""
+for c in \
+  "$pkg/node_modules/web-tree-sitter/web-tree-sitter.wasm" \
+  "$pkg/../node_modules/web-tree-sitter/web-tree-sitter.wasm" \
+  "$pkg/../../../node_modules/web-tree-sitter/web-tree-sitter.wasm"
+do
+  if [ -f "$c" ]; then
+    runtime=$c
+    break
+  fi
+done
+if [ -z "$runtime" ]; then
+  echo "web-tree-sitter.wasm not found — bun install in packages/sail/highlight"
+  exit 1
+fi
+cp "$runtime" "$pkg/web-tree-sitter.wasm"
+echo "wrote $pkg/web-tree-sitter.wasm"

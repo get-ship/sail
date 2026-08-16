@@ -4,6 +4,10 @@ import { fileURLToPath } from 'node:url'
 import { describe, expect, test } from 'vitest'
 import { highlight, initHighlight } from '../src/index'
 
+const pkg = JSON.parse(
+  readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), '../package.json'), 'utf8'),
+) as { deckCoAssets?: Record<string, string> }
+
 const here = dirname(fileURLToPath(import.meta.url))
 const wasmPath = resolve(here, '../tree-sitter-sail.wasm')
 const scm = readFileSync(resolve(here, '../../grammar/queries/highlights.scm'), 'utf8')
@@ -26,5 +30,13 @@ describe('tree-sitter-sail highlight', () => {
       .filter((s) => s.scope === 'keyword' || s.scope === 'function')
       .map((s) => src.slice(s.start, s.end))
     expect(bits.some((b) => b.includes('style') || b === 'card')).toBe(true)
+  })
+
+  test('deckCoAssets dests are the site-root files ensureHighlight fetches', () => {
+    expect(Object.keys(pkg.deckCoAssets ?? {}).sort()).toEqual([
+      'highlights.scm',
+      'tree-sitter-sail.wasm',
+      'web-tree-sitter.wasm',
+    ])
   })
 })

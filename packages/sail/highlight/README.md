@@ -10,6 +10,9 @@ One query (`packages/sail/grammar/queries/highlights.scm`) + one wasm
 - docs / studio `<code-block>` — `registerSailHighlighter(sailTokHtml)` after
   `ensureHighlight()` (not a runtime dependency; hello-world ships no wasm)
 
+An app that lists this package in `package.json` gets `deckCoAssets`
+copied to the site root on `sail dev` / `sail build`.
+
 ```sh
 bun run build-wasm   # real node, not bun's node symlink
 bun run test
