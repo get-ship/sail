@@ -198,30 +198,27 @@ fn resolve_native_under(node_modules: &Path) -> Option<PathBuf> {
 }
 
 fn platform_native_under(node_modules: &Path) -> Option<PathBuf> {
-    let os = std::env::consts::OS;
-    let arch = match std::env::consts::ARCH {
-        "x86_64" => "x64",
-        "aarch64" => "arm64",
-        other => other,
-    };
-    let os = if os == "windows" { "win32" } else { os };
-    let pkg = format!("@typescript/native-preview-{os}-{arch}");
-    let mut exe = node_modules.join(&pkg).join("lib").join("tsgo");
-    if cfg!(windows) {
-        exe.set_extension("exe");
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        crate::ts_native::platform_native_preview_under(node_modules)
     }
-    exe.exists().then_some(exe)
+    #[cfg(target_arch = "wasm32")]
+    {
+        let _ = node_modules;
+        None
+    }
 }
 
 fn which(name: &str) -> Option<PathBuf> {
-    let path = std::env::var_os("PATH")?;
-    for dir in std::env::split_paths(&path) {
-        let candidate = dir.join(name);
-        if candidate.is_file() {
-            return Some(candidate);
-        }
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        crate::ts_native::which_on_path(name)
     }
-    None
+    #[cfg(target_arch = "wasm32")]
+    {
+        let _ = name;
+        None
+    }
 }
 
 static TSGO_INVOCATIONS: AtomicU64 = AtomicU64::new(0);

@@ -95,30 +95,11 @@ fn resolve_native_tsgo(bin_script: &Path) -> Option<PathBuf> {
 }
 
 fn platform_native_under(node_modules: &Path) -> Option<PathBuf> {
-    let os = std::env::consts::OS;
-    let arch = match std::env::consts::ARCH {
-        "x86_64" => "x64",
-        "aarch64" => "arm64",
-        other => other,
-    };
-    let os = if os == "windows" { "win32" } else { os };
-    let pkg = format!("@typescript/native-preview-{os}-{arch}");
-    let mut exe = node_modules.join(&pkg).join("lib").join("tsgo");
-    if cfg!(windows) {
-        exe.set_extension("exe");
-    }
-    exe.exists().then_some(exe)
+    sail_compiler::ts_native::platform_native_preview_under(node_modules)
 }
 
 fn which(name: &str) -> Result<PathBuf, ()> {
-    let path = std::env::var_os("PATH").ok_or(())?;
-    for dir in std::env::split_paths(&path) {
-        let candidate = dir.join(name);
-        if candidate.is_file() {
-            return Ok(candidate);
-        }
-    }
-    Err(())
+    sail_compiler::ts_native::which_on_path(name).ok_or(())
 }
 
 // ── LSP client ─────────────────────────────────────────────────────────────
