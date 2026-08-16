@@ -1,15 +1,22 @@
-//! `sail-style-privilege` — L3 is names + geometry; L2 is presets (SPEC-STYLE-BUCKETS-1).
+//! `sail-style-privilege` — documents have no Style; L2 spends presets
+//! (SPEC-STYLE-ARCH-1 / SPEC-STYLE-BUCKETS-1).
 //!
-//! Privilege is path + file kind. Config cannot grant Full. Routes may spend
-//! named identities (`pad(page)`, `size(measure)`, `type(label)`). Slot
-//! assembly (`type({ size: xs })`, `pad({ x: 8 })`) stays L1-only.
+//! Privilege follows FileKind. Config cannot grant Full. Route documents
+//! (`page` / `index` / `_layout` under `routes/`) write tags, not Style.
+//! Hyphenated route-local siblings and `src/components/**` spend named
+//! identities. Slot assembly (`type({ size: xs })`, `pad({ x: 8 })`) stays
+//! L1-only.
 
 use std::path::Path;
 
+use crate::project_map::{FileKind, classify};
 use crate::report::Finding;
 use crate::rules::ambient::finding;
 
 pub const RULE_ID: &str = "sail-style-privilege";
+
+const DOCUMENT_MSG: &str = "documents write tags, not Style. Extract a colocated \
+     hyphenated CE or spend an L1 tag / theme default.";
 
 #[allow(dead_code)] // kept as the extract-L2 teaching line for slot errors
 const REMEDY: &str = "L3 routes write tags, not Style. Use an existing L1 tag \
@@ -22,14 +29,24 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
     if !spinnaker::privilege_enforced_for_path(path) {
         return Vec::new();
     }
-    match spinnaker::privilege_for_path(path) {
-        // L3 (None) spends the same Style table as L2: names + geometry.
-        // Identity *assembly* (slots) stays L1-only.
-        spinnaker::Privilege::None | spinnaker::Privilege::Identities => {
-            identities_findings(path, source)
-        }
-        spinnaker::Privilege::Full => Vec::new(),
+    // FileKind is the SSOT for the document check. privilege_for_path is
+    // the path helper (duplicated stem check; no lint → spinnaker cycle).
+    let kind = classify(path, Some(source)).kind;
+    match (spinnaker::privilege_for_path(path), kind) {
+        (spinnaker::Privilege::None, FileKind::Route) => document_findings(path, source),
+        (spinnaker::Privilege::Identities, _) => identities_findings(path, source),
+        (spinnaker::Privilege::Full, _) | (spinnaker::Privilege::None, _) => Vec::new(),
     }
+}
+
+fn document_findings(path: &Path, source: &str) -> Vec<Finding> {
+    let mut findings = Vec::new();
+    for (offset, _kind) in style_sites(source) {
+        if let Some(f) = finding(path, source, offset, RULE_ID, DOCUMENT_MSG, DOCUMENT_MSG) {
+            findings.push(f);
+        }
+    }
+    findings
 }
 
 // Slot form only. `pad(page)` / `pad(4)` / `margin(auto)` are presets — L2 may
@@ -142,7 +159,6 @@ fn identity_sites(source: &str) -> Vec<(usize, &'static str)> {
 }
 
 /// Sites of product Style: `style(` attach or `style name =` / `style foo =`.
-#[allow(dead_code)] // kept: L3 used to ban every Style site; Identities scans slots instead.
 fn style_sites(source: &str) -> Vec<(usize, &'static str)> {
     let bytes = source.as_bytes();
     let mut out = Vec::new();
@@ -232,11 +248,14 @@ fn is_word_start(bytes: &[u8], i: usize) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::report::Severity;
     use std::path::PathBuf;
 
     fn route() -> PathBuf {
         PathBuf::from("apps/sail-site/routes/docs/page.sail")
+    }
+
+    fn route_sibling() -> PathBuf {
+        PathBuf::from("apps/sail-site/routes/docs/guide/pricing-hero.sail")
     }
 
     fn component() -> PathBuf {
@@ -248,20 +267,35 @@ mod tests {
     }
 
     #[test]
-    fn route_name_and_geometry_are_legal() {
-        let src = "style shell = { size(measure).pad(page) }\n<column style(shell)></column>";
+    fn route_style_shell_errors() {
+        let src = "style shell = { pad(page) }\n<column style(shell)></column>";
+        let findings = check(&route(), src);
+        assert!(!findings.is_empty(), "document Style must error: {src}");
         assert!(
-            check(&route(), src).is_empty(),
-            "L3 may spend names + geometry: {src}"
+            findings
+                .iter()
+                .any(|f| f.message.contains("documents write tags")),
+            "{findings:?}"
+        );
+        assert_eq!(
+            classify(&route(), Some(src)).kind,
+            FileKind::Route,
+            "page.sail under routes/ is FileKind::Route"
         );
     }
 
     #[test]
-    fn route_identity_slots_error() {
-        let src = "<column style({ type({ size: xs }) })></column>";
-        let findings = check(&route(), src);
-        assert_eq!(findings.len(), 1, "{findings:?}");
-        assert!(findings[0].message.contains("preset"), "{findings:?}");
+    fn hyphenated_sibling_preset_style_passes() {
+        let src = "style x = { pad(page) }";
+        assert!(
+            check(&route_sibling(), src).is_empty(),
+            "route-local CE may spend presets: {src}"
+        );
+        assert_eq!(
+            classify(&route_sibling(), Some(src)).kind,
+            FileKind::Component,
+            "hyphenated sibling is FileKind::Component, not Route"
+        );
     }
 
     #[test]
