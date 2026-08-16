@@ -1,8 +1,8 @@
 //! Stranger proof: `sail create` then attach `sail mcp` over stdio.
 //!
 //! Agents launch `sail mcp` (see `sail mcp install`). This test is the
-//! cut gate: tools/list + check + hover + inspect on the created `.sail`,
-//! cwd = the new app (not this repo, not ops fixtures).
+//! cut gate: tools/list + check + hover + inspect + edit on the created
+//! `.sail`, cwd = the new app (not this repo, not ops fixtures).
 
 use std::io::{BufRead, BufReader, Write};
 use std::path::{Path, PathBuf};
@@ -256,7 +256,7 @@ fn create_then_mcp_list_check_hover_inspect() {
         .iter()
         .filter_map(|t| t.get("name").and_then(|n| n.as_str()))
         .collect();
-    for expected in ["sail_check", "sail_hover", "sail_inspect"] {
+    for expected in ["sail_check", "sail_hover", "sail_inspect", "sail_edit"] {
         assert!(names.contains(&expected), "missing {expected}: {names:?}");
     }
 
@@ -300,5 +300,58 @@ fn create_then_mcp_list_check_hover_inspect() {
     assert!(
         tags.iter().any(|t| *t == "column"),
         "inspect tree must include column: {tags:?}\n{inspect}"
+    );
+
+    let before = std::fs::read(&page).expect("page bytes");
+    let refuse = mcp.call_tool(
+        "sail_edit",
+        json!({
+            "path": "routes/page.sail",
+            "ops": [],
+            "writeSource": true,
+            "source": "<column style=\"display:flex\"><div>bad</div></column>\n",
+        }),
+    );
+    assert_eq!(
+        refuse["applied"], false,
+        "bad writeSource must refuse: {refuse}"
+    );
+    assert!(
+        refuse["diagnostics"]
+            .as_array()
+            .is_some_and(|d| d.iter().any(|row| {
+                row["severity"]
+                    .as_str()
+                    .is_some_and(|s| s.eq_ignore_ascii_case("error"))
+            })),
+        "refused edit must return error diagnostics: {refuse}"
+    );
+    assert_eq!(
+        std::fs::read(&page).expect("page after refuse"),
+        before,
+        "refused write must leave the created page unchanged"
+    );
+
+    let next = "<column gap=\"4\">\n  <h1>edited</h1>\n  <p>from sail_edit</p>\n</column>\n";
+    let apply = mcp.call_tool(
+        "sail_edit",
+        json!({
+            "path": "routes/page.sail",
+            "ops": [],
+            "writeSource": true,
+            "source": next,
+        }),
+    );
+    assert_eq!(
+        apply["applied"], true,
+        "good writeSource must apply: {apply}"
+    );
+    assert!(
+        apply["diagnostics"].is_array(),
+        "applied edit returns diagnostics: {apply}"
+    );
+    assert_eq!(
+        std::fs::read_to_string(&page).expect("page after apply"),
+        next
     );
 }
