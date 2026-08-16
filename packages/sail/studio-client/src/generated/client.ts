@@ -85,6 +85,7 @@ export interface CheckRet {
   fixes?: JsonValue[]
   ok: boolean
   source?: string
+  typescriptStatus?: string
 }
 
 export interface HoverArgs {
@@ -97,6 +98,7 @@ export interface HoverArgs {
 export interface HoverRet {
   contents?: string
   range?: JsonValue
+  typescriptStatus?: string
 }
 
 export interface CompleteArgs {
@@ -108,6 +110,7 @@ export interface CompleteArgs {
 
 export interface CompleteRet {
   items: JsonValue[]
+  typescriptStatus?: string
 }
 
 export interface EditArgs {

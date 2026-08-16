@@ -285,7 +285,11 @@ enum Command {
     },
 
     /// Local environment health (workspace, tokens model, peer surfaces).
-    Doctor,
+    Doctor {
+        /// Fail-close if the TypeScript 7 sidecar is missing.
+        #[arg(long)]
+        typed: bool,
+    },
 
     /// Print version + install hints (also available as `--version`).
     Version,
@@ -444,7 +448,7 @@ fn run() -> Result<()> {
             json,
             fonts_dir,
         } => peer::render(input, theme, mode, viewport, out, json, fonts_dir),
-        Command::Doctor => peer::doctor(brand),
+        Command::Doctor { typed } => peer::doctor(brand, typed),
         Command::Version => {
             peer::print_version(brand);
             Ok(())

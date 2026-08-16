@@ -58,6 +58,7 @@ struct LspClient {
     inbound: mpsc::Receiver<Value>,
     next_id: u64,
     stderr: Arc<Mutex<Vec<String>>>,
+    initialize_result: Value,
     _home: Option<TempDir>,
 }
 
@@ -138,6 +139,7 @@ impl LspClient {
             inbound: rx,
             next_id: 1,
             stderr: stderr_buf,
+            initialize_result: Value::Null,
             _home: home,
         };
         let root_uri = path_to_uri(root);
@@ -159,6 +161,7 @@ impl LspClient {
             Duration::from_secs(20),
         );
         assert!(init.get("error").is_none(), "initialize error: {init}");
+        client.initialize_result = init.get("result").cloned().unwrap_or(init);
         client.notify("initialized", json!({}));
         client
     }
@@ -520,6 +523,14 @@ export default controller(() => {
     let uri = path_to_uri(&page);
     let mut lsp = LspClient::attach_isolated(&app);
     lsp.wait_live_peer_line(&peer_dir);
+    assert_eq!(
+        lsp.initialize_result
+            .pointer("/sail/typescript/source")
+            .and_then(|v| v.as_str()),
+        Some("peer"),
+        "initializeResult.sail.typescript.source: {}",
+        lsp.initialize_result
+    );
 
     lsp.notify(
         "textDocument/didOpen",

@@ -139,9 +139,18 @@ async function start(): Promise<void> {
     clientOptions,
   )
 
+  const missingTs =
+    'Sail: TypeScript 7 native compiler not found. Controller and {expr} types are off (structure intelligence stays on). Run `sail ts-native setup`, or set SAIL_TSC to the tsc ELF (must sit next to lib.d.ts). Product path is dirname(sail)/sail-ts-native/.'
   try {
     await next.start()
     client = next
+    // initializeResult.sail.typescript — hosts that swallow window/showMessage.
+    const init = next.initializeResult as
+      | { sail?: { typescript?: { status?: string } } }
+      | undefined
+    if (init?.sail?.typescript?.status !== 'live') {
+      void window.showWarningMessage(missingTs)
+    }
   } catch (err) {
     const detail = err instanceof Error ? err.message : String(err)
     void window.showErrorMessage(

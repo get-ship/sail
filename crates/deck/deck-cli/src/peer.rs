@@ -33,12 +33,12 @@ pub fn print_version(brand: &str) {
 
 /// Local environment health check (C6).
 ///
-/// Never prints `status: ok` on an empty probe. bun and tsc/tsgo are
-/// required. When a Project exists, `<project>/.sail/types.d.ts` is
-/// required for a first-user typecheck.
+/// Never prints `status: ok` on an empty probe. bun is required. Sidecar
+/// status is reported; only `--typed` fail-closes on a missing sidecar.
+/// When a Project exists, `<project>/.sail/types.d.ts` is required.
 /// MCP is probed in-process (`sail mcp --list-tools` equivalent) so doctor
 /// does not require a different `sail` on PATH or a project MCP config.
-pub fn doctor(brand: &str) -> Result<()> {
+pub fn doctor(brand: &str, typed: bool) -> Result<()> {
     println!("{brand} doctor");
     println!("  binary: {brand} {}", env!("CARGO_PKG_VERSION"));
 
@@ -92,16 +92,20 @@ pub fn doctor(brand: &str) -> Result<()> {
     } else {
         println!("  bun: ok");
     }
-    let tsc = tool_ok(&cwd, "tsc", &["--version"]);
-    let tsgo = tool_ok(&cwd, "tsgo", &["--version"]);
-    if !tsc && !tsgo {
-        missing.push("tsc or tsgo");
-    } else {
-        if tsc {
-            println!("  tsc: ok");
+    match sail_compiler::ts_native::resolve_ts_native() {
+        Some(tool) => {
+            println!(
+                "  typescript: live ({}) {} {}",
+                tool.source.as_str(),
+                tool.version,
+                tool.program.display()
+            );
         }
-        if tsgo {
-            println!("  tsgo: ok");
+        None => {
+            println!("  typescript: missing (run `sail ts-native setup`)");
+            if typed {
+                missing.push("typescript sidecar");
+            }
         }
     }
     if let Some(project) = sail_lint::Project::discover(&cwd) {

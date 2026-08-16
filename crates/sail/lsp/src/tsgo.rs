@@ -1249,7 +1249,7 @@ fn map_diagnostic(
         },
         severity,
         code,
-        source: Some("tsgo".into()),
+        source: Some("typescript".into()),
         message,
         ..Default::default()
     })

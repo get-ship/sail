@@ -57,8 +57,15 @@ describe('packages/sail/vscode', () => {
 
   test('README names the exact sail lsp command', () => {
     expect(readme).toContain('sail lsp')
+    expect(readme).toContain('sail-ts-native/')
     expect(readme).toContain('Install from VSIX')
     expect(readme).toContain('Install from Location')
+  })
+
+  test('client inspects initializeResult.sail.typescript', () => {
+    expect(src).toContain('initializeResult')
+    expect(src).toContain('sail.typescript')
+    expect(src).toContain('showWarningMessage')
   })
 
   test('client starts sail lsp over stdio — never cargo run', () => {

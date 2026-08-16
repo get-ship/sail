@@ -417,7 +417,7 @@ pub struct CheckDiag {
     /// Machine-readable rewrite (FixPlan JSON) when confluent and fix:suggest|apply.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub rewrite: Option<Value>,
-    /// `"sail"` structure/check or `"tsgo"` mapped TypeScript (when includeTs).
+    /// `"sail"` structure/check or `"typescript"` mapped TypeScript (when includeTs).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub source: Option<String>,
 }
@@ -535,6 +535,7 @@ pub fn check(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
         "ok": true,
         "diagnostics": diags,
         "count": diags.len(),
+        "typescriptStatus": typescript_status(ctx),
     });
     if !fixes_out.is_empty() {
         out["fixes"] = Value::Array(fixes_out);
@@ -594,10 +595,11 @@ pub fn hover(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
     let payload = with_intelligence(ctx, |intel| {
         intel.hover_sail(&src, path_s.as_deref(), line, column)
     });
+    let status = typescript_status(ctx);
     match payload {
-        None => Ok(json!({ "contents": null })),
+        None => Ok(json!({ "contents": null, "typescriptStatus": status })),
         Some(h) => {
-            let mut out = json!({ "contents": h.contents });
+            let mut out = json!({ "contents": h.contents, "typescriptStatus": status });
             if let Some(r) = h.range {
                 out["range"] = json!({
                     "startLine": r.start_line,
@@ -638,7 +640,14 @@ pub fn complete(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
         .into_iter()
         .map(|i| serde_json::to_value(i).unwrap_or(json!({})))
         .collect();
-    Ok(json!({ "items": items }))
+    Ok(json!({
+        "items": items,
+        "typescriptStatus": typescript_status(ctx),
+    }))
+}
+
+fn typescript_status(ctx: &Ctx) -> &'static str {
+    with_intelligence(ctx, |intel| intel.typescript_status())
 }
 
 fn attach_rewrites_to_check_diags(diags: &mut [CheckDiag], plans: &[sail_compiler::edit::FixPlan]) {

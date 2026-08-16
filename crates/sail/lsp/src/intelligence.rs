@@ -57,7 +57,7 @@ pub struct DiagPayload {
     pub end_col: Option<usize>,
     pub severity: String,
     pub message: String,
-    /// `"sail"` structure/check or `"tsgo"` mapped TypeScript.
+    /// `"sail"` structure/check or `"typescript"` mapped TypeScript.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub source: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -87,6 +87,14 @@ impl Intelligence {
 
     pub fn is_tsgo_live(&self) -> bool {
         self.tsgo.is_live()
+    }
+
+    pub fn typescript_status(&self) -> &'static str {
+        if self.tsgo.is_live() {
+            "live"
+        } else {
+            "missing"
+        }
     }
 
     /// Open or update the virtual document for `key` (uri or path string).
@@ -452,7 +460,7 @@ pub fn diagnostics_with_session(
                 end_col: Some(d.range.end.character as usize + 1),
                 severity: sev.into(),
                 message: d.message,
-                source: Some("tsgo".into()),
+                source: Some("typescript".into()),
                 rule: d.code.map(|c| match c {
                     lsp_types::NumberOrString::String(s) => s,
                     lsp_types::NumberOrString::Number(n) => n.to_string(),

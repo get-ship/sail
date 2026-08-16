@@ -73,18 +73,48 @@ use tsgo::TsgoSession;
 
 type Docs = HashMap<Url, String>;
 
+pub const TS_SIDECAR_MISSING_MESSAGE: &str = "\
+Sail: TypeScript 7 native compiler not found. Controller and {expr} types are off \
+(structure intelligence stays on). Run `sail ts-native setup`, or set SAIL_TSC \
+to the tsc ELF (must sit next to lib.d.ts). Product path is dirname(sail)/sail-ts-native/.";
+
 pub fn run() -> anyhow::Result<()> {
     let (connection, io_threads) = Connection::stdio();
     let (id, _params) = connection.initialize_start()?;
     let tsgo = TsgoSession::start(std::env::current_dir().ok().as_deref());
-    let result = serde_json::json!({
-        "capabilities": server_capabilities(),
-        "serverInfo": { "name": "sail-lsp", "version": env!("CARGO_PKG_VERSION") },
-    });
+    let result = initialize_finish_payload(&tsgo);
     connection.initialize_finish(id, result)?;
+    if !tsgo.is_live() {
+        connection
+            .sender
+            .send(Message::Notification(lsp_server::Notification {
+                method: "window/showMessage".into(),
+                params: serde_json::json!({
+                    "type": 2,
+                    "message": TS_SIDECAR_MISSING_MESSAGE,
+                }),
+            }))?;
+    }
     main_loop(&connection, tsgo)?;
     io_threads.join()?;
     Ok(())
+}
+
+pub(crate) fn initialize_finish_payload(tsgo: &TsgoSession) -> serde_json::Value {
+    let version = tsgo
+        .probed_version()
+        .unwrap_or(sail_compiler::ts_native::TS_NATIVE_VERSION);
+    serde_json::json!({
+        "capabilities": server_capabilities(),
+        "serverInfo": { "name": "sail-lsp", "version": env!("CARGO_PKG_VERSION") },
+        "sail": {
+            "typescript": {
+                "status": if tsgo.is_live() { "live" } else { "missing" },
+                "version": version,
+                "source": tsgo.tool_source_str(),
+            }
+        }
+    })
 }
 
 fn server_capabilities() -> ServerCapabilities {
@@ -1266,6 +1296,18 @@ mod tests {
 
     fn degraded_tsgo() -> TsgoSession {
         TsgoSession::structure_only()
+    }
+
+    #[test]
+    fn initialize_finish_payload_contains_sail_typescript_status() {
+        let tsgo = TsgoSession::structure_only();
+        let v = super::initialize_finish_payload(&tsgo);
+        assert_eq!(v["sail"]["typescript"]["status"], "missing");
+        assert_eq!(
+            v["sail"]["typescript"]["version"],
+            sail_compiler::ts_native::TS_NATIVE_VERSION
+        );
+        assert!(v["capabilities"].is_object());
     }
 
     fn build_item(uri: &str, line: u32, character: u32) -> Vec<lsp_types::CompletionItem> {

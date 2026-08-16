@@ -12,6 +12,10 @@ retired syntax.
 
 ## Prerequisite
 
+Typed intelligence needs the **CLI pair** — the `sail` binary **and** the
+`sail-ts-native/` directory next to it (`tsc` + `lib.d.ts`). The VSIX does
+not ship the sidecar.
+
 The editor process must be able to spawn:
 
 ```sh
@@ -22,11 +26,13 @@ Install the CLI from this repo (`sail lsp` is a peer on that binary):
 
 ```sh
 cargo install --path crates/deck/deck-cli --bin sail
+sail ts-native setup
 ```
 
-Confirm with `sail lsp --help` or by opening a `.sail` file after install.
-Override the executable with `sail.lsp.path` (absolute path to `sail`). The
-client always appends `lsp`. It never runs `cargo run`.
+Confirm with `sail ts-native status` or `sail doctor --typed`. Override the
+executable with `sail.lsp.path` (absolute path to `sail`). The client always
+appends `lsp`. It never runs `cargo run`. After `next.start()` the client
+reads `initializeResult.sail.typescript` and warns if the sidecar is missing.
 
 ## Install from Location (unpacked)
 
