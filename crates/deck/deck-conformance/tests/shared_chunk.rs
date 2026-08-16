@@ -8,7 +8,7 @@
 //!
 //! This test drives a real Rolldown build of the demo app and asserts:
 //!   1. `demo-chip`'s marker class (`demo-chip-marker`) appears in only ONE
-//!      `.js` file under `.deck/` — the shared chunk.
+//!      `.js` file under `.sail/` — the shared chunk.
 //!   2. Both `routes/widgets/route.js` AND `routes/gallery/route.js` contain an
 //!      `import` referencing that shared chunk filename.
 //!
@@ -64,7 +64,7 @@ async fn demo_chip_lands_in_one_shared_chunk_and_both_views_import_it() {
     // workspaces. repo_root is set to `app` so the bundler treats the demo app
     // as the workspace root (same as how DECK_PROJECT_DIR == app_dir in the
     // live server). The output is redirected to a tempdir so the test never
-    // clobbers the committed .deck/ artifacts.
+    // clobbers the committed generate-tree artifacts.
     let layout = BundleLayout::with_config(app.clone(), None, DeckConfig::defaults())
         .with_out_root(out.path().to_path_buf());
     let staging = out.path().join("_staging");
@@ -102,11 +102,11 @@ async fn demo_chip_lands_in_one_shared_chunk_and_both_views_import_it() {
         .expect("multi-entry routes bundle must succeed");
 
     // ── assertion 1: demo-chip code in exactly ONE chunk ──────────────────────
-    let deck_dir = out.path().join(".deck");
+    let deck_dir = out.path().join(".sail");
     let all_js = js_files(&deck_dir);
     assert!(
         !all_js.is_empty(),
-        ".deck/ must contain at least one JS file after the build"
+        ".sail/ must contain at least one JS file after the bake"
     );
 
     let chunks_with_marker: Vec<PathBuf> = all_js
@@ -136,10 +136,10 @@ async fn demo_chip_lands_in_one_shared_chunk_and_both_views_import_it() {
         .to_string();
 
     // ── assertion 2: both route bundles import the shared chunk ───────────────
-    let widgets_js = std::fs::read_to_string(out.path().join(".deck/routes/widgets/route.js"))
-        .expect("routes/widgets/route.js must exist after build");
-    let gallery_js = std::fs::read_to_string(out.path().join(".deck/routes/gallery/route.js"))
-        .expect("routes/gallery/route.js must exist after build");
+    let widgets_js = std::fs::read_to_string(out.path().join(".sail/routes/widgets/route.js"))
+        .expect("routes/widgets/route.js must exist after bake");
+    let gallery_js = std::fs::read_to_string(out.path().join(".sail/routes/gallery/route.js"))
+        .expect("routes/gallery/route.js must exist after bake");
 
     assert!(
         widgets_js.contains(&shared_chunk_name),
@@ -167,9 +167,9 @@ async fn demo_chip_lands_in_one_shared_chunk_and_both_views_import_it() {
 
     // ── assertion 3: repo-root isolation ─────────────────────────────────────
     // The repo_root of the main monorepo must NOT be polluted — all output went
-    // to the tempdir, not to crates/deck/deck-conformance/app/.deck.
+    // to the tempdir, not to crates/deck/deck-conformance/app/.sail.
     let _ = &repo; // silence unused warning — repo_root is used only for isolation proof
-    let real_deck = app.join(".deck/routes/widgets/route.js");
+    let real_deck = app.join(".sail/routes/widgets/route.js");
     assert!(
         !real_deck.exists() || {
             // If it exists from a prior run, verify our tempdir output differs.
@@ -177,7 +177,7 @@ async fn demo_chip_lands_in_one_shared_chunk_and_both_views_import_it() {
                 .map(|s| !s.contains("deck_test_isolation_sentinel"))
                 .unwrap_or(true)
         },
-        "build output must not be written to the real .deck/ dir during tests"
+        "bake output must not be written to the real app generate dir during tests"
     );
 }
 

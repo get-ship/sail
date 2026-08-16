@@ -14,10 +14,8 @@ Deck host / meta-framework for SAIL routes: routing, SSR, bundling, CLI.
 | `deck-conformance/` | Standalone harness app |
 | `deck-ssr/` | V8 SSR path (opt-in member) |
 
-Feature inventory (drift-gated): [`FEATURES.md`](./FEATURES.md).
-
 ```sh
-cargo run -p deck-cli -- build-assets
+cargo run -p deck-cli --bin deck-bake -- build-assets
 cargo run -p deck-cli --bin sail -- dev --project apps/sail-site
 cargo test -p deck-core
 ```

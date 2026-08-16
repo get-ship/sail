@@ -40,6 +40,7 @@ const PRUNE: &[&str] = &[
     "target",
     "dist",
     deck_config::DECK_OUT_DIRNAME,
+    deck_config::SAIL_GENERATE_DIRNAME,
     ".sail-out",
     "sail-out",
 ];
@@ -50,6 +51,7 @@ const PRUNE: &[&str] = &[
 /// walking into it) self-triggers the rebuild loop fixed in deck-cli.
 fn is_pruned_dir_name(name: &str) -> bool {
     PRUNE.contains(&name)
+        || name.starts_with(".sail.stage")
         || name.starts_with(".deck.stage")
         || name.starts_with("dist.stage")
         || name.starts_with(".sail-out.stage")
@@ -89,9 +91,10 @@ pub(crate) async fn run(b: &Bundler) {
                 // the resulting atime bump as `Modify(Metadata)` (IN_ATTRIB) — neither
                 // is a source EDIT. Reacting to them is a read → rebuild → read loop:
                 // every target re-bundles ~1/s with no edits, emitting `module-changed`,
-                // and the live-reload client full-reloads on each → the page resets
-                // multiple times per second. Only real content/structural changes
-                // (Create / Remove / Modify::Data / Modify::Name) drive a rebuild.
+                // and the live-reload client remounts the SPA (or full-reloads a
+                // named-view host) on each → the page resets many times per second.
+                // Only real content/structural changes (Create / Remove /
+                // Modify::Data / Modify::Name) drive a rebuild.
                 if matches!(
                     ev.kind,
                     EventKind::Access(_) | EventKind::Modify(ModifyKind::Metadata(_))

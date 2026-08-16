@@ -38,10 +38,16 @@ export function attachErrorOverlay() {
   }
   const counts = new Map()
   const handler = (e) => renderError(e.detail, counts)
+  const clear = () => {
+    counts.clear()
+    clearOverlay()
+  }
   document.addEventListener('sail:error', handler)
+  document.addEventListener('sail:error-clear', clear)
   return {
     close() {
       document.removeEventListener('sail:error', handler)
+      document.removeEventListener('sail:error-clear', clear)
       clearOverlay()
     },
   }

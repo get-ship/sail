@@ -10,11 +10,14 @@ pub struct RouteSetupQuery {
     pub sub: Option<String>,
 }
 
-/// Serve `/_deck/views/{name}/view.js` — the built bundle when present, else an
-/// on-demand compile. Mount-scoped: the per-request [`Resolution`] carries the
-/// project root the built bundle + source `.sail` are resolved under, so one
-/// process serving many apps reads each app's routes from ITS own root (no
-/// process global).
+/// On-demand compile-or-read for a named route module (named-view leftover).
+///
+/// Product SPA is `routes/` + `mountRouter`: hashed entry from `dist/`, HMR
+/// via `__deckHmr`. Deck's public router does not serve
+/// `/_deck/views/{name}/view.js` — `views/` is not a public Deck URL.
+/// This helper remains for ship-views: when a built `routes/<name>/route.js`
+/// is present under the mount-scoped [`Resolution`] it is returned;
+/// otherwise the source `.sail` compiles in-process.
 pub fn serve_sail_route_setup(
     mode: DaemonMode,
     resolution: &Resolution,
@@ -75,13 +78,14 @@ fn compile_route_js(name: &str, resolved: &ResolvedRoute, mode: DaemonMode) -> D
     };
 
     // A route with a paired controller must be served as a bundle (the
-    // compiled module imports `./<controller>`). Deck used to bundle
-    // that in-process via Rolldown to `.deck/views/<name>/view.js`
-    // (#167); the runtime read of that path was purged (deck-purge-root).
-    // Until route chunk serving has a host-supplied path, controller
-    // routes fall back to this honest error. The in-process bundler
-    // path (when wired via `Extension<Bundler>`) can produce a bundle
-    // and serve it; the runtime read step is what was purged.
+    // compiled module imports `./<controller>`). Product emit is
+    // `routes/<name>/route.js` under the host's bundle root (`<root>/dist`
+    // or a registered route-output). Deck used to bundle in-process via
+    // Rolldown to `.deck/views/<name>/view.js` (#167); that runtime read
+    // was purged (deck-purge-root). Until a host-supplied bundle is on
+    // disk, controller routes fall back to this honest error. The
+    // in-process bundler (when wired via `Extension<Bundler>`) can still
+    // produce a bundle; the `.deck/views/` read is what was purged.
     let final_js = match (&ts_path, resolved.source_path.as_deref()) {
         (Some(ts), Some(_sail)) => {
             return DeckResponse::render_error(

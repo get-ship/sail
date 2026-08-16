@@ -142,9 +142,9 @@ fn serve_scaffold_csp_honors_package_network() {
     )
     .unwrap();
     // Built shell the serve path reads.
-    fs::create_dir_all(root.join(".deck")).unwrap();
+    fs::create_dir_all(root.join("dist")).unwrap();
     fs::write(
-        root.join(".deck/index.html"),
+        root.join("dist/index.html"),
         "<!doctype html><html><head></head><body><div id=\"root\"></div></body></html>",
     )
     .unwrap();
@@ -152,7 +152,7 @@ fn serve_scaffold_csp_honors_package_network() {
     let scaffold = AppServeConfig {
         name: "app".to_string(),
         route: "/".to_string(),
-        source: ".deck".to_string(),
+        source: "dist".to_string(),
         inject_globals: BTreeMap::new(),
         render: RenderMode::Csr,
         entry: None,
@@ -192,9 +192,9 @@ fn serve_scaffold_empty_network_matches_default_security_headers() {
     let tmp = tempfile::tempdir().unwrap();
     let root = tmp.path();
     // No sail.config at all.
-    fs::create_dir_all(root.join(".deck")).unwrap();
+    fs::create_dir_all(root.join("dist")).unwrap();
     fs::write(
-        root.join(".deck/index.html"),
+        root.join("dist/index.html"),
         "<!doctype html><html><head></head><body><div id=\"root\"></div></body></html>",
     )
     .unwrap();
@@ -202,7 +202,7 @@ fn serve_scaffold_empty_network_matches_default_security_headers() {
     let scaffold = AppServeConfig {
         name: "app".to_string(),
         route: "/".to_string(),
-        source: ".deck".to_string(),
+        source: "dist".to_string(),
         inject_globals: BTreeMap::new(),
         render: RenderMode::Csr,
         entry: None,

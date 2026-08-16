@@ -5,7 +5,7 @@
 //! locates sail-compiler once, then `build`/`build_all` drive Rolldown
 //! (`rolldown_bundle`) directly, and `start_watching` re-bundles affected
 //! targets on filesystem change (via `notify`), emitting `BundlerEvent`s on a
-//! broadcast channel for HMR. Output lands in `assets_dir_for` (under `.deck/`).
+//! broadcast channel for HMR. Output lands in `assets_dir_for` (under `.sail/`).
 
 pub mod dup_version_check;
 pub mod paths;
@@ -13,6 +13,205 @@ pub mod tag_check;
 pub mod templates;
 
 pub mod app;
+
+/// Load Deck serve settings from the project's typed [`sail_lint::config::SailConfig`].
+///
+/// One parse of the file — the same document Policy / tokens generate read.
+pub fn load_app_serve(project: &std::path::Path) -> Result<deck_config::AppServeConfig, String> {
+    deck_config::refuse_legacy_deck_jsonc(project)?;
+    let Some((path, cfg)) = sail_lint::config::load_in(project) else {
+        return Ok(deck_config::AppServeConfig::default());
+    };
+    if !cfg.parse_ok() {
+        return Err(format!("parse {}: not valid JSON", path.display()));
+    }
+    if let Some(err) = cfg.type_error() {
+        return Err(format!("parse {}: {err}", path.display()));
+    }
+    Ok(app_serve_from_sail(&cfg))
+}
+
+fn app_serve_from_sail(cfg: &sail_lint::config::SailConfig) -> deck_config::AppServeConfig {
+    use deck_config::{AppServeConfig, EntryBootstrap, RenderMode};
+    let Some(d) = &cfg.deck else {
+        return AppServeConfig::default();
+    };
+    AppServeConfig {
+        inject_globals: d.inject_globals.clone().unwrap_or_default(),
+        render: match d.render {
+            Some(sail_lint::config::DeckRender::Ssr) => RenderMode::Ssr,
+            _ => RenderMode::Csr,
+        },
+        entry: d.entry.as_ref().map(|e| EntryBootstrap {
+            clients_module: e.clients_module.clone(),
+            expose_names: e.expose_names.clone(),
+        }),
+        ..AppServeConfig::default()
+    }
+}
+
+#[cfg(test)]
+mod load_app_serve_tests {
+    use super::load_app_serve;
+    use deck_config::{AppServeConfig, RenderMode};
+
+    #[test]
+    fn no_files_is_default() {
+        let dir = tempfile::tempdir().unwrap();
+        let cfg = load_app_serve(dir.path()).unwrap();
+        assert_eq!(cfg, AppServeConfig::default());
+    }
+
+    #[test]
+    fn deck_jsonc_is_migration_error() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(
+            dir.path().join("deck.jsonc"),
+            r#"{ "render": "ssr", "injectGlobals": { "A": "1" } }"#,
+        )
+        .unwrap();
+        let err = load_app_serve(dir.path()).unwrap_err();
+        assert!(
+            err.contains("deck.jsonc is no longer supported"),
+            "unexpected err: {err}"
+        );
+    }
+
+    #[test]
+    fn deck_jsonc_errors_even_when_sail_config_exists() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(dir.path().join("deck.jsonc"), r#"{ "render": "ssr" }"#).unwrap();
+        std::fs::write(
+            dir.path().join("sail.config.jsonc"),
+            r#"{ "deck": { "render": "csr" }, "theme": { "default": "ship" } }"#,
+        )
+        .unwrap();
+        let err = load_app_serve(dir.path()).unwrap_err();
+        assert!(
+            err.contains("deck.jsonc is no longer supported"),
+            "unexpected err: {err}"
+        );
+    }
+
+    #[test]
+    fn nested_deck_serve_keys() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(
+            dir.path().join("sail.config.jsonc"),
+            r#"{ "deck": { "render": "ssr" }, "theme": { "default": "ship" } }"#,
+        )
+        .unwrap();
+        let cfg = load_app_serve(dir.path()).unwrap();
+        assert_eq!(cfg.render, RenderMode::Ssr);
+    }
+
+    /// No dual-read: top-level serve keys are ignored by the loader
+    /// (Sail refuses them as unknown keys; deck never migrates them).
+    #[test]
+    fn top_level_serve_keys_ignored() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(
+            dir.path().join("sail.config.jsonc"),
+            r#"{ "render": "ssr", "theme": { "default": "ship" } }"#,
+        )
+        .unwrap();
+        let cfg = load_app_serve(dir.path()).unwrap();
+        assert_eq!(
+            cfg,
+            AppServeConfig::default(),
+            "top-level render must not dual-read into serve config"
+        );
+    }
+
+    #[test]
+    fn theme_only_sail_is_default_serve() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(
+            dir.path().join("sail.config.jsonc"),
+            r#"{ "theme": { "default": "ship", "enabled": ["ship"] } }"#,
+        )
+        .unwrap();
+        let cfg = load_app_serve(dir.path()).unwrap();
+        assert_eq!(cfg, AppServeConfig::default());
+    }
+
+    #[test]
+    fn sail_entry_and_inject() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(
+            dir.path().join("sail.config.jsonc"),
+            r#"{
+  "deck": {
+    "render": "ssr",
+    "injectGlobals": { "DECK_APP_ID": "$id" },
+    "entry": { "clientsModule": "./src/clients.ts", "exposeNames": ["store"] }
+  }
+}"#,
+        )
+        .unwrap();
+        let cfg = load_app_serve(dir.path()).unwrap();
+        assert_eq!(cfg.render, RenderMode::Ssr);
+        assert_eq!(
+            cfg.inject_globals.get("DECK_APP_ID").map(String::as_str),
+            Some("$id")
+        );
+        let entry = cfg.entry.expect("entry");
+        assert_eq!(entry.clients_module, "./src/clients.ts");
+        assert_eq!(entry.expose_names, vec!["store"]);
+    }
+
+    #[test]
+    fn jsonc_preferred_over_json() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(
+            dir.path().join("sail.config.json"),
+            r#"{ "deck": { "render": "ssr" } }"#,
+        )
+        .unwrap();
+        std::fs::write(
+            dir.path().join("sail.config.jsonc"),
+            r#"{ "deck": { "render": "csr" } }"#,
+        )
+        .unwrap();
+        let cfg = load_app_serve(dir.path()).unwrap();
+        assert_eq!(cfg.render, RenderMode::Csr, "jsonc wins when both exist");
+    }
+
+    #[test]
+    fn studio_fixture_is_csr_with_side_effect_entry() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(
+            dir.path().join("sail.config.jsonc"),
+            r#"{
+  "theme": { "default": "studio" },
+  "deck": {
+    "render": "csr",
+    "entry": {
+      "clientsModule": "./src/clients.ts",
+      "exposeNames": []
+    }
+  }
+}"#,
+        )
+        .unwrap();
+        let cfg = load_app_serve(dir.path()).unwrap();
+        assert_eq!(cfg.render, RenderMode::Csr);
+        let entry = cfg.entry.expect("entry");
+        assert_eq!(entry.clients_module, "./src/clients.ts");
+        assert!(entry.expose_names.is_empty());
+    }
+
+    #[test]
+    fn deck_must_be_object() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(dir.path().join("sail.config.jsonc"), r#"{ "deck": "ssr" }"#).unwrap();
+        let err = load_app_serve(dir.path()).unwrap_err();
+        assert!(
+            err.contains("\"deck\" must be an object"),
+            "unexpected err: {err}"
+        );
+    }
+}
 // (formerly `mod asset_graph;`) — purged with the runtime `.deck/asset-graph.json` read.
 pub mod atomic;
 pub mod catalog;
@@ -105,8 +304,8 @@ pub struct Bundler {
 
 impl Bundler {
     /// Start the in-process bundler. `repo_root` is the monorepo/source root;
-    /// `workspace` the user-project (if distinct); `cfg` is the parsed
-    /// `deck.jsonc` (caller calls `DeckConfig::defaults()` first).
+    /// `workspace` the user-project (if distinct); `cfg` is the host
+    /// route-discovery layout (caller calls `DeckConfig::defaults()` first).
     /// The compiler is the linked `sail-compiler` crate, compiled in-process
     /// (#255) — no binary to locate, no installed-vs-local drift.
     pub fn start(repo_root: PathBuf, workspace: Option<PathBuf>, cfg: DeckConfig) -> Self {
@@ -281,12 +480,12 @@ impl Bundler {
         }
     }
 
-    /// Build every target, then aggregate the catalog into `.deck/catalogs/`.
+    /// Build every target.
     ///
     /// Honest exit (#262): every target is attempted (one failure must not
-    /// abort the others — the catalog still needs refreshing), but per-target
-    /// failures are collected and surfaced as `Err` so a caller (the asset
-    /// bake, CI) cannot mistake a partial bake for a clean one.
+    /// abort the others), but per-target failures are collected and surfaced
+    /// as `Err` so a caller (the asset bake, CI) cannot mistake a partial bake
+    /// for a clean one.
     ///
     /// Dev loop skip-lazy gate: when the env var `DECK_DEV_SKIP_LAZY=1` is
     /// set, every consumer target whose self-declaration marks it `lazy` is
@@ -294,14 +493,13 @@ impl Bundler {
     /// or PDF packs (Pixi.js + pdfjs-dist together are ~4 MB of JS that the
     /// browser heap retains even though no route references them; this is the
     /// 400 MB dev-loop reading measured 2026-06-06). Production builds
-    /// (`cargo run -p deck-cli -- build-assets` for the dist, or any consumer that
+    /// (`cargo run -p deck-cli --bin deck-bake -- build-assets` for the dist, or any consumer that
     /// explicitly wants the full asset graph) leave the env var unset and
     /// every target emits as before — the gate is a manual dev lever, so the
     /// default bake is identical whether a target is eager or lazy.
     pub async fn build_all(&self) -> Result<(), BundlerError> {
         let layout = self.layout();
         let mut failed: Vec<String> = Vec::new();
-        let mut built: Vec<BundleTarget> = Vec::new();
         // Per-route resolver (#255/#267): bundle the route targets TOGETHER
         // (multi-entry) so components shared across routes dedup into shared
         // chunks — the dedup that replaces the umbrella. Everything else stays
@@ -342,7 +540,6 @@ impl Bundler {
                 }
                 Ok(manifest) => {
                     self.update_module_graph(&t.name, manifest.modules.iter().cloned().collect());
-                    built.push(t.clone());
                 }
             }
         }
@@ -350,14 +547,13 @@ impl Bundler {
         // the whole route bundle — the bake must not ship a broken route.
         if !views.is_empty() {
             match crate::routes_bundle::bundle_routes(&layout, &views, &self.staging, true).await {
-                Ok(()) => built.extend(views),
+                Ok(()) => {}
                 Err(e) => {
                     error!(error = %e, "bundler: multi-entry route bundle failed");
                     failed.push(format!("views ({e})"));
                 }
             }
         }
-        self.refresh_catalog(&layout);
         // (formerly `write_asset_graph(&layout, &built);`) — purged:
         // the framework no longer writes a monorepo-root
         // `.deck/asset-graph.json` (deck-purge-root). The asset-graph SSOT
@@ -371,16 +567,6 @@ impl Bundler {
                 message: failed.join(", "),
             })
         }
-    }
-    fn refresh_catalog(&self, layout: &BundleLayout) {
-        // (formerly wrote `<repo_root>/.deck/catalogs/workspace.json`)
-        // — purged: the framework no longer writes a monorepo-root
-        // `.deck/catalogs/` (deck-purge-root). The workspace catalog was
-        // served via `packs::serve_catalog_workspace`, which was also
-        // removed. The `catalog::build_catalog` walker stays available
-        // for hosts that want to compute the catalog in-memory for
-        // their own devtools; it just does not get written to disk.
-        let _ = layout;
     }
 
     /// Subscribe to unsolicited build events (HMR).

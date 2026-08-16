@@ -25,7 +25,7 @@
 //! We call `bundle_target` directly (not `Bundler::build`) for ONE reason: it
 //! takes a `BundleLayout`, so we can redirect output under a scratch
 //! `out_root` (`with_out_root`) and never clobber the committed
-//! `crates/deck/deck-core/assets`, `.deck/`, or `apps/shipd/assets` trees.
+//! `crates/deck/deck-core/assets`, `.sail/`, or `apps/shipd/assets` trees.
 //! `Bundler::build` hardcodes `out_root = repo_root` (no redirect seam) and
 //! would write into the source tree. `bundle_target` IS the function
 //! `Bundler::build` ends up awaiting inside `build_single_flight`, with the

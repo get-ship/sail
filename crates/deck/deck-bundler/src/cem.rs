@@ -1,8 +1,8 @@
 //! CEM catalog integration for deck-bundler.
 //!
-//! B1: `write_component_package_cem` — compile all component `.sail` files in a component
-//!     pack in-process and write the merged `dist/custom-elements.json`
-//!     declared in `package.json`.
+//! B1: `write_component_package_cem` — compile all component `.sail` files in a
+//!     component library (`@ship/sail-components`) in-process and write the merged
+//!     `dist/custom-elements.json` declared in `package.json`.
 //! B2: `generate_components_gen` — emit `<project>/components.gen.ts` for an
 //!     app from the components package module graph. Called by `bundle_app`
 //!     before the Rolldown step so the generated catalog is current when the
@@ -121,9 +121,9 @@ pub fn write_component_package_cem(package_root: &Path) -> Result<Option<PathBuf
 /// components package that declares a `customElements` field. Run ONCE during the
 /// framework build (`deck build-assets`), so apps then aggregate the
 /// pre-written manifests via `generate_components_gen` (B2 stays a pure read).
-/// Returns the count written. A pack that fails to compile is skipped (logged),
-/// A pack that fails to compile is a BUILD FAILURE, not a warning. Skipping the
-/// bad pack and exiting 0 is how five packs sat un-migrated and invisible: the
+/// Returns the count written. A component library dep that fails to compile is
+/// a BUILD FAILURE, not a warning. Skipping the bad library and exiting 0 is
+/// how five `@ship/sail-components` trees sat un-migrated and invisible: the
 /// components silently had no manifest, and every consumer saw an empty catalog
 /// instead of an error. Every failure is collected (so one run names them all)
 /// and the build stops.
@@ -144,7 +144,7 @@ pub fn write_all_component_cems(repo_root: &Path) -> Result<usize> {
     }
     if !failures.is_empty() {
         anyhow::bail!(
-            "{} pack(s) failed to compile:\n\n{}",
+            "{} component library dep(s) failed to compile:\n\n{}",
             failures.len(),
             failures.join("\n\n")
         );
@@ -187,9 +187,9 @@ fn walk_component_sail_files(dir: &Path, out: &mut Vec<PathBuf>) {
 /// Discovers components packages the app depends on via:
 /// 1. workspace package map at `repo_root` (monorepo members + that root's deps)
 /// 2. the app's own `package.json` deps resolved through `node_modules` / `file:`
-///    (external apps; monorepo apps whose packs hang off the app dir)
+///    (external apps; monorepo apps whose component library deps hang off the app dir)
 ///
-/// Filters to packs listed in the app's `dependencies` / `devDependencies`,
+/// Filters to component library deps listed in the app's `dependencies` / `devDependencies`,
 /// reads each components package's CEM, annotates every module with a `package` field (npm
 /// name), merges modules (path-sorted, deterministic), and writes
 /// `components.gen.ts`. Returns count of components packages included.
@@ -214,7 +214,7 @@ pub fn generate_components_gen(project: &Path, repo_root: &Path) -> Result<usize
         }
     }
 
-    // 2. Discover packs: workspace map at repo_root, union project-local
+    // 2. Discover component library deps: workspace map at repo_root, union project-local
     //    dependency resolution (node_modules / file:). External apps have no
     //    workspaces field — only (2) contributes. Monorepo apps get (1) and
     //    also (2) when project ≠ repo_root so app-dir installs are visible.

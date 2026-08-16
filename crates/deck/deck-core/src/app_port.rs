@@ -47,7 +47,7 @@ mod tests {
         let hub = AppServeConfig {
             name: "hub".into(),
             route: "/".into(),
-            source: "apps/hub/.deck".into(),
+            source: "apps/hub/dist".into(),
             render: RenderMode::Csr,
             ..Default::default()
         };

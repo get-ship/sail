@@ -19,8 +19,8 @@ default = []
 specta = ["dep:specta", "deck-host/specta"]
 
 [build-dependencies]
-# The build script stages `<repo>/.deck/framework/*.js` → `assets/` for
-# `include_str!`; it resolves that `.deck` dir through the SAME single constant
+# The build script stages `<repo>/.sail/framework/*.js` → `assets/` for
+# `include_str!`; it resolves that generate dir through the SAME single constant
 # the runtime/bundler use, so the staging path can never drift from the writer.
 deck-config = { path = "../deck-config" }
 
@@ -28,6 +28,7 @@ deck-config = { path = "../deck-config" }
 deck-config = { path = "../deck-config" }
 deck-host = { path = "../deck-host" }
 sail-compiler = { path = "../../sail/compiler" }
+sail-lint = { path = "../../sail/lint" }
 
 serde = { workspace = true }
 serde_json = { workspace = true }

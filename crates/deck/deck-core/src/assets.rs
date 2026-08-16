@@ -60,13 +60,13 @@ const ERROR_OVERLAY_JS: &str = include_str!("../assets/error-overlay.js");
 const SAIL_STUDIO_BRIDGE_JS: &str = include_str!("../assets/sail-studio-bridge.js");
 
 /// Public helper (used by route.rs). The in-process bundler writes route bundles
-/// to `<root>/.deck/routes/<name>/route.js` (the per-route output dir the bundler
+/// to `<root>/.sail/routes/<name>/route.js` (the per-route generate dir the bundler
 /// owns). This reads that bundle when it exists so a controller route is served
 /// from its compiled, inlined-controller form — the on-demand build path in
 /// `route.rs::compile_route_js` only kicks in when no bundle is on disk yet.
 ///
 /// Mount-scoped: the roots come from the per-request [`Resolution`] (per-app
-/// route outputs first, then `<project_root>/.deck`), never a process global —
+/// route outputs first, then `<project_root>/dist`), never a process global —
 /// so one process serving many apps reads each app's bundles from ITS own root.
 pub fn resolve_route_js(
     resolution: Option<&crate::resolver::Resolution>,
@@ -106,7 +106,7 @@ fn read_route_bundle(root: &std::path::Path, name: &str) -> Option<String> {
 ///   `inject_globals` entry, substituting `$<param>` tokens from `params`.
 /// - Injects the daemon-mode meta tag via `inject_mode_meta`.
 ///
-/// Reads the built `.deck/<source>/index.html`; in dev (no build artifact yet)
+/// Reads the built `<source>/index.html` (host-owned; default deploy is `dist/`); in dev (no build artifact yet)
 /// falls back to the authored source `<source>/index.html`. Returns a styled
 /// 404 only when neither exists.
 /// First-paint HTML for the `routes/` page matching `request_path`, via the
@@ -297,8 +297,11 @@ pub fn serve_scaffold(
         _ => html,
     };
     // Dev-only: attach the live-reload client. deck dev rebuilds the SPA on an
-    // edit and emits `module-changed`; this client (no opts → full-document
-    // reload) drives the refresh. Served at `/_deck/live-reload.js`; it self-
+    // edit and emits `module-changed` (target `app`); this client re-imports
+    // the hashed entry → `__deckHmr.swapModules` (app-granular remount: keep
+    // signal values, swap CSS). No opts still remounts when `__deckHmr` is
+    // present — it is not a full-document-only client. Served at
+    // `/_deck/live-reload.js`; it self-
     // gates on the `deck-mode=development` meta injected above, so this is inert
     // in production even if the tag is present.
     let html = if matches!(mode, DaemonMode::Development) {
@@ -365,7 +368,7 @@ pub fn serve_scaffold_asset(
         );
     };
     // Per-app build output: `<project_root>/<source>/assets/<file>` (e.g.
-    // `apps/hub/.deck/assets/<file>`). The host owns the output location via
+    // `apps/hub/dist/assets/<file>`). The host owns the output location via
     // `scaffold.source`.
     let path = format!("{}/assets/{file}", scaffold.source);
     match read_source_asset(&root, &path) {
@@ -464,11 +467,11 @@ fn substitute_params(value: &str, params: &[(&str, &str)]) -> String {
 }
 // Framework singletons: served from the embedded `include_str!` constant
 // (baked into the binary at compile time by build.rs staging
-// `.deck/framework/` → `assets/`). The runtime `.deck/framework/` read
+// `.sail/framework/` → `assets/`). The runtime `.deck/framework/` read
 // was the framework's dev-override — purged (deck-purge-root). The
-// bake pipeline (build.rs) still stages `.deck/framework/` → `assets/` for
+// bake pipeline (build.rs) stages `.sail/framework/` → `assets/` for
 // compile-time inclusion, but the runtime serves nothing from
-// `.deck/framework/` directly.
+// the generate tree directly.
 
 pub fn serve_sail_runtime(mode: DaemonMode) -> DeckResponse {
     DeckResponse::js_asset(SUI_RUNTIME_JS.to_string(), mode)
@@ -506,7 +509,7 @@ pub fn serve_sail_lsp_diagnostics(mode: DaemonMode) -> DeckResponse {
 /// `deck-cli build_assets` writes into a baked bundle (deck-deploy-gap). The
 /// writer half lives in `deck_bundler::stamp::format_stamp_header` — keep the
 /// format in lockstep. `None` for a bake that predates stamping (an older
-/// commit's `.deck/framework/*.js`, still staged into `assets/` verbatim) —
+/// commit's `.sail/framework/*.js`, still staged into `assets/` verbatim) —
 /// callers treat that as "can't verify," not "verified fresh."
 pub fn parse_baked_stamp(js: &str) -> Option<&str> {
     js.lines()
@@ -1090,7 +1093,7 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         // Monorepo-shaped path: .../apps/my-app so sail_project_rel_from_root works.
         let app = dir.path().join("apps").join("my-app");
-        let out = app.join(".deck");
+        let out = app.join("dist");
         std::fs::create_dir_all(&out).unwrap();
         std::fs::File::create(out.join("index.html"))
             .unwrap()
@@ -1099,7 +1102,7 @@ mod tests {
         let scaffold = AppServeConfig {
             name: "my-app".into(),
             route: "/".into(),
-            source: ".deck".into(),
+            source: "dist".into(),
             inject_globals: Default::default(),
             render: RenderMode::Csr,
             entry: None,
@@ -1177,9 +1180,9 @@ mod tests {
     }
 
     /// serve_scaffold falls back to the authored SOURCE `<source>/index.html`
-    /// when there is no built `.deck/<source>/` artifact — the dev/source path
+    /// when there is no built `<source>/` artifact — the dev/source path
     /// (mirrors route.rs). Gates the fallback so the demo (and any host) never
-    /// needs to commit a `.deck/` artifact to serve a scaffold.
+    /// needs to commit a `dist/` artifact to serve a scaffold.
     #[test]
     fn serve_scaffold_falls_back_to_source_when_unbuilt() {
         let dir = tempfile::tempdir().unwrap();

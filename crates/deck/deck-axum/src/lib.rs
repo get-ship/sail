@@ -160,9 +160,6 @@ pub fn router() -> Router {
         // a monorepo-root `.deck/` (deck-purge-root). Route bundles that
         // imported `../../<chunk>.js` no longer find their chunks at
         // runtime — route chunk serving is a follow-up.
-        // (formerly `/\_deck/catalog/workspace` → `serve_catalog_workspace`)
-        // — purged with `packs::serve_catalog_workspace` and the
-        // `.deck/catalogs/workspace.json` write.
         .route("/_deck/meta", get(serve_meta))
         // Compiler policy registry (SPEC-POLICY-1) — same JSON as CLI/MCP.
         .route("/_deck/policy", get(serve_policy))

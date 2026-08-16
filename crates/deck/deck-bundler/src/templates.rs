@@ -2,14 +2,14 @@
 //!
 //! The dev doesn't author `index.html` — deck generates it. This template
 //! is the SSOT for the dev-facing SPA entry shape. The bundler renders one
-//! `<project>/.deck/index.html` per project by substituting:
+//! `<project>/dist/index.html` per project by substituting:
 //!   * `{{project_name}}`     — `package.json#name`
 //!   * `{{importmap}}`         — the generated importmap JSON
 //!   * `{{entry_module}}`      — the generated `routes.gen.ts` (or whatever
 //!                                the bundler decides to emit as the entry)
 //!
 //! The template is intentionally minimal. The dev's project adds static
-//! assets via `apps/<x>/public/` (copied verbatim to `<x>/.deck/public/`).
+//! assets via `apps/<x>/public/` (copied verbatim to `<x>/dist/public/`).
 //! Anything fancier (theme pre-paint, font preloading, deck-mode metadata)
 //! is a separate concern — the template can grow as needed.
 //!
@@ -34,11 +34,12 @@ const PREPAINT_THEME_SCRIPT: &str =
 /// `{{prepaint_theme_script}}` is replaced with the tokens-owned
 /// `PREPAINT_THEME_SCRIPT` body. Other placeholders are project-specific.
 pub const INDEX_HTML_TEMPLATE: &str = r#"<!doctype html>
-<html lang="en">
+<html lang="{{lang}}">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>{{project_name}}</title>
+  <title>{{title}}</title>
+{{description_meta}}
 
   <!-- Favicon. A project drops `favicon.svg` (preferred) and/or `favicon.ico`
        into `public/`; both are copied to the output root, and an absent file
@@ -76,6 +77,44 @@ pub const INDEX_HTML_TEMPLATE: &str = r#"<!doctype html>
 </html>
 "#;
 
+/// SPA shell title / lang / description from `sail.config` `app`.
+/// `RouteShape.head` is an optional table apply slot on navigate — not a `<scope>` member.
+#[derive(Debug, Clone)]
+pub struct SiteDocument {
+    pub title: String,
+    pub description: Option<String>,
+    pub lang: String,
+}
+
+impl SiteDocument {
+    pub fn from_project(project: &std::path::Path, package_name: &str) -> Self {
+        let mut site = Self {
+            title: package_name.to_string(),
+            description: None,
+            lang: "en".into(),
+        };
+        let Some((_, cfg)) = sail_lint::config::load_in(project) else {
+            return site;
+        };
+        if !cfg.parse_ok() || cfg.type_error().is_some() {
+            return site;
+        }
+        let Some(s) = &cfg.app else {
+            return site;
+        };
+        if let Some(t) = s.title.as_deref().filter(|t| !t.is_empty()) {
+            site.title = t.to_string();
+        }
+        if let Some(d) = s.description.as_deref().filter(|d| !d.is_empty()) {
+            site.description = Some(d.to_string());
+        }
+        if let Some(l) = s.lang.as_deref().filter(|l| !l.is_empty()) {
+            site.lang = l.to_string();
+        }
+        site
+    }
+}
+
 /// Render the template with substitutions.
 ///
 /// `importmap_json` must be a pre-serialized JSON object (i.e. the
@@ -83,15 +122,50 @@ pub const INDEX_HTML_TEMPLATE: &str = r#"<!doctype html>
 /// `entry_module` is the file name (no path) of the generated entry —
 /// `routes.gen.ts` is the current convention.
 pub fn render_index_html(project_name: &str, importmap_json: &str, entry_module: &str) -> String {
+    render_index_html_with_site(
+        importmap_json,
+        entry_module,
+        &SiteDocument {
+            title: project_name.to_string(),
+            description: None,
+            lang: "en".into(),
+        },
+    )
+}
+
+pub fn render_index_html_with_site(
+    importmap_json: &str,
+    entry_module: &str,
+    site: &SiteDocument,
+) -> String {
+    let description_meta = site
+        .description
+        .as_deref()
+        .map(|d| {
+            format!(
+                "  <meta name=\"description\" content=\"{}\" />\n",
+                html_attr(d)
+            )
+        })
+        .unwrap_or_default();
     INDEX_HTML_TEMPLATE
         .replace("{{root_id}}", ROOT_ID)
-        .replace("{{project_name}}", project_name)
+        .replace("{{title}}", &html_attr(&site.title))
+        .replace("{{lang}}", &html_attr(&site.lang))
+        .replace("{{description_meta}}", &description_meta)
         .replace("{{importmap}}", importmap_json)
         .replace("{{entry_module}}", entry_module)
         .replace(
             "{{prepaint_theme_script}}",
             PREPAINT_THEME_SCRIPT.trim_end(),
         )
+}
+
+fn html_attr(s: &str) -> String {
+    s.replace('&', "&amp;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
+        .replace('"', "&quot;")
 }
 
 #[cfg(test)]
@@ -108,6 +182,8 @@ mod tests {
         );
         assert!(INDEX_HTML_TEMPLATE.contains("{{prepaint_theme_script}}"));
         let html = render_index_html("demo", "{}", "entry.gen.ts");
+        assert!(html.contains("<title>demo</title>"));
+        assert!(html.contains("lang=\"en\""));
         assert!(
             html.contains("ship-site-theme"),
             "rendered HTML must include tokens prepaint body"
@@ -124,5 +200,22 @@ mod tests {
             html.contains("sail-default-theme"),
             "prepaint must read config default meta: {html}"
         );
+    }
+
+    #[test]
+    fn site_defaults_land_in_shell() {
+        let html = render_index_html_with_site(
+            "{}",
+            "entry.gen.ts",
+            &SiteDocument {
+                title: "Sail Docs".into(),
+                description: Some("Install Sail.".into()),
+                lang: "en".into(),
+            },
+        );
+        assert!(html.contains("<title>Sail Docs</title>"));
+        assert!(html.contains("name=\"description\""));
+        assert!(html.contains("content=\"Install Sail.\""));
+        assert!(html.contains("lang=\"en\""));
     }
 }

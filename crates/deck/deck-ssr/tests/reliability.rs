@@ -576,7 +576,7 @@ fn slice1_hub_closure_component_catalog() {
     let mut rejected_propful = 0;
     let mut dissolved = 0;
     for rel in &closure {
-        // The hub-closure chrome was dissolved to L1 (bare elements + sx +
+        // The hub-closure chrome was dissolved to L1 (bare elements + Style +
         // framework primitives) — the @ship/sail-components/primitives pack no longer
         // ships its own .sail files. The catalog records this honestly:
         // ABSENT means the component has been dissolved, NOT that the test

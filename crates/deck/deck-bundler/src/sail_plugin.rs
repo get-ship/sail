@@ -135,9 +135,9 @@ pub struct SailPlugin {
     /// host's importmap is the source of truth.
     pub component_roots: Arc<HashMap<String, PathBuf>>,
     /// Active app project root (T1 B1). When set and
-    /// `<project>/.deck/themes/themes.css` exists, `@ship/tokens/themes.css`
+    /// `<project>/.sail/themes/themes.css` exists, `@ship/tokens/themes.css`
     /// resolves there (app-filtered emit) instead of the full package sheet.
-    /// Path lives under the foreign `.deck/themes/` dir so SPA prune keeps it.
+    /// Path lives under the foreign `.sail/themes/` dir so SPA prune keeps it.
     pub project_dir: Option<PathBuf>,
 }
 
@@ -313,10 +313,10 @@ impl Plugin for SailPlugin {
             }
         }
         // T1 B1: prefer app-local filtered themes.css when present.
-        // Path: <project>/.deck/themes/themes.css (foreign dir — survives prune).
+        // Path: <project>/.sail/themes/themes.css (foreign dir — survives prune).
         if spec == "@ship/tokens/themes.css" {
             if let Some(project) = &self.project_dir {
-                let app_themes = project.join(".deck").join("themes").join("themes.css");
+                let app_themes = project.join(".sail").join("themes").join("themes.css");
                 if app_themes.is_file() {
                     return Ok(Some(HookResolveIdOutput::from_id(
                         normalize(&app_themes).to_string_lossy().to_string(),

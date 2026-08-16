@@ -60,6 +60,9 @@ g3 = []
 [dependencies.sail-compiler]
 path = "../../sail/compiler"
 
+[dependencies.sail-lint]
+path = "../../sail/lint"
+
 [dependencies.deck-core]
 path = "../deck-core"
 

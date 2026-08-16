@@ -176,7 +176,7 @@ mod tests {
     #[test]
     fn publish_swaps_prunes_and_preserves_foreign_trees() {
         let tmp = tempfile::tempdir().unwrap();
-        let dest = tmp.path().join(".deck");
+        let dest = tmp.path().join(".sail");
         // Previous build + a bundler-owned route bundle.
         write(&dest.join("index.html"), "old");
         write(&dest.join("assets/entry-OLD.js"), "old-entry");
@@ -207,7 +207,7 @@ mod tests {
         );
         assert!(
             dest.join("themes/themes.css").is_file(),
-            "B1 app themes under .deck/themes/ must survive publish prune"
+            "B1 app themes under .sail/themes/ must survive publish prune"
         );
         assert!(
             !dest.join("themes.css").exists(),
@@ -229,7 +229,7 @@ mod tests {
         assert!(!stage.exists(), "staging dir removed after publish");
     }
 
-    /// `prune: false` (a non-`.deck`/`dist` out dir) overlays without deleting
+    /// `prune: false` (a non-`.sail`/`dist` out dir) overlays without deleting
     /// anything — the pre-fix no-clean behavior for custom out dirs.
     #[test]
     fn publish_without_prune_overlays_only() {
@@ -270,7 +270,7 @@ mod tests {
     #[test]
     fn index_html_never_absent_across_repeated_publishes() {
         let tmp = tempfile::tempdir().unwrap();
-        let dest = tmp.path().join(".deck");
+        let dest = tmp.path().join(".sail");
         write(&dest.join("index.html"), "v0");
 
         let stop = Arc::new(AtomicBool::new(false));

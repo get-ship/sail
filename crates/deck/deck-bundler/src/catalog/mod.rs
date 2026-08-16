@@ -2,7 +2,7 @@
 //!
 //! Walk per-component CEMs from published packages (each package's
 //! `customElements` manifest) AND from the compiler emit mirror under
-//! `<out>/**/*.custom-elements.json` (default out is `.deck/` — SPEC-OUTPUT-1;
+//! `<out>/**/*.custom-elements.json` (default out is `.sail/`);
 //! non-packaged: shell-local, view-local), merge into the canonical workspace
 //! catalog document. Filesystem-only, deterministic (sort by tagName).
 //! Pass-through CEM arrays are kept as raw JSON so component metadata isn't
@@ -16,9 +16,9 @@ use serde::Serialize;
 use serde_json::{Value, json};
 
 pub use workspace::{
-    BundleDecl, WorkspacePackage, component_package_roots, components_package_id_for_name,
-    composed_component_index, discover_bundle_declarations, discover_dependency_packages,
-    discover_workspace_packages, discover_workspace_packages_scoped,
+    BundleDecl, WorkspacePackage, component_package_roots, component_src_roots,
+    components_package_id_for_name, composed_component_index, discover_bundle_declarations,
+    discover_dependency_packages, discover_workspace_packages, discover_workspace_packages_scoped,
 };
 use workspace::{read_json, source_tags_for_package};
 
@@ -381,7 +381,7 @@ fn find_owning_package<'a>(
 }
 
 /// Repo-relative source `.sail` path for a per-component CEM under
-/// `<out>/<mirror>/<stem>.custom-elements.json` (default out: `.deck/`).
+/// `<out>/<mirror>/<stem>.custom-elements.json` (default out: `.sail/`).
 fn source_path_for_cem(repo_root: &Path, cem_abs: &Path) -> String {
     let repo_rel = rel_unix(repo_root, cem_abs);
     let mirrored = repo_rel
@@ -420,6 +420,7 @@ fn rel_unix(base: &Path, path: &Path) -> String {
 
 #[cfg(test)]
 mod tests {
+    use super::source_tags_for_package;
     use super::*;
     use tempfile::tempdir;
 
@@ -459,9 +460,9 @@ mod tests {
             &root.join("packages/charts/dist/custom-elements.json"),
             &cem("sail-bar"),
         );
-        // A shell-local component in the product emit mirror (`.deck/`).
+        // A shell-local component in the product emit mirror (`.sail/`).
         write(
-            &root.join(".deck/apps/shell/src/sail-x/sail-x.custom-elements.json"),
+            &root.join(".sail/apps/shell/src/sail-x/sail-x.custom-elements.json"),
             &cem("sail-x"),
         );
 
@@ -502,7 +503,7 @@ mod tests {
         let root = tmp.path();
         write(&root.join("package.json"), r#"{"workspaces":[]}"#);
         write(
-            &root.join(".deck/apps/shell/src/sail-x/sail-x.custom-elements.json"),
+            &root.join(".sail/apps/shell/src/sail-x/sail-x.custom-elements.json"),
             &cem("sail-x"),
         );
         let workspace = build_catalog(root).unwrap();
@@ -945,5 +946,83 @@ mod tests {
             ws.iter().any(|p| p.name == "@ship/sail-components"),
             "workspace discovery must include hoisted dep pack"
         );
+    }
+
+    /// Classic single-domain pack: watch `src/` only. Domain `*/src` trees
+    /// are ignored unless `sailComponents: true`.
+    #[test]
+    fn component_src_roots_classic_package_is_src_only() {
+        let tmp = tempdir().unwrap();
+        let pkg = tmp.path();
+        write(&pkg.join("package.json"), r#"{"name":"@ship/charts"}"#);
+        write(&pkg.join("src/sail-bar/sail-bar.sail"), "<div>bar</div>\n");
+        // A sibling domain-shaped dir must NOT be watched without the umbrella flag.
+        write(
+            &pkg.join("extra/src/sail-extra/sail-extra.sail"),
+            "<div>x</div>\n",
+        );
+
+        let roots = component_src_roots(pkg);
+        assert_eq!(roots, vec![pkg.join("src")]);
+        assert!(
+            source_tags_for_package(pkg)
+                .iter()
+                .any(|(tag, _)| tag == "sail-bar")
+        );
+        assert!(
+            !source_tags_for_package(pkg)
+                .iter()
+                .any(|(tag, _)| tag == "sail-extra"),
+            "domain */src is not a scan root unless sailComponents: true"
+        );
+    }
+
+    #[test]
+    fn component_src_roots_empty_without_src_tree() {
+        let tmp = tempdir().unwrap();
+        let pkg = tmp.path();
+        write(&pkg.join("package.json"), r#"{"name":"@ship/empty"}"#);
+        assert!(component_src_roots(pkg).is_empty());
+    }
+
+    /// Umbrella (`sailComponents: true`): same walk as tag discovery —
+    /// package `src/` plus each domain `*/src` (primitives, charts, …).
+    #[test]
+    fn component_src_roots_umbrella_matches_tag_discovery_walk() {
+        let tmp = tempdir().unwrap();
+        let pkg = tmp.path();
+        write(
+            &pkg.join("package.json"),
+            r#"{"name":"@ship/sail-components","sailComponents":true}"#,
+        );
+        write(&pkg.join("src/index.ts"), "export {}\n");
+        write(
+            &pkg.join("primitives/src/sail-button/sail-button.sail"),
+            "<button></button>\n",
+        );
+        write(
+            &pkg.join("charts/src/sail-bar/sail-bar.sail"),
+            "<div>bar</div>\n",
+        );
+        // No src/ → not a watch root.
+        write(&pkg.join("docs/README.md"), "no src\n");
+
+        let mut roots = component_src_roots(pkg);
+        roots.sort();
+        assert_eq!(
+            roots,
+            vec![
+                pkg.join("charts/src"),
+                pkg.join("primitives/src"),
+                pkg.join("src"),
+            ]
+        );
+
+        let mut tags: Vec<String> = source_tags_for_package(pkg)
+            .into_iter()
+            .map(|(tag, _)| tag)
+            .collect();
+        tags.sort();
+        assert_eq!(tags, vec!["sail-bar", "sail-button"]);
     }
 }

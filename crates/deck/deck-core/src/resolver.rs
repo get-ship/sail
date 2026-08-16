@@ -30,8 +30,10 @@ impl Resolution {
         self
     }
 
-    /// Seed a Resolution by DETECTING the project root from `cwd` — the nearest
-    /// ancestor holding the deck-owned `views/` source marker, else `cwd` itself.
+    /// Seed a Resolution by DETECTING the project root from `cwd` —
+    /// [`sail_lint::Project::discover`] (nearest `sail.config`) plus a
+    /// documented `routes/`-only zero-config Deck app (no sail.config on the
+    /// walk), else `cwd` itself.
     ///
     /// This is the EXPLICIT replacement for the old cwd-detection FLOOR that
     /// used to hide inside the process-global resolver as a silent fallback. A
@@ -46,9 +48,10 @@ impl Resolution {
     }
 
     /// Register a per-app route-output dir. Hosts call this for each app whose
-    /// built route bundles live outside the conventional `<root>/.deck/views`
-    /// (e.g. `apps/hub/.deck/views/<name>/view.js`). Probed BEFORE the
-    /// project-root `.deck` fallback by [`route_bundle_roots`](Self::route_bundle_roots).
+    /// built route bundles live outside the conventional `<root>/dist`
+    /// (a dir containing `routes/<name>/route.js`). Probed BEFORE the
+    /// project-root `dist` fallback by [`route_bundle_roots`](Self::route_bundle_roots).
+    /// `views/` is not a public Deck out layout.
     pub fn register_route_output(&mut self, app: impl Into<String>, dir: impl Into<PathBuf>) {
         self.route_outputs.insert(app.into(), dir.into());
     }
@@ -69,12 +72,10 @@ impl Resolution {
         self.route_outputs.get(app).map(|p| p.as_path())
     }
 
-    /// Route-bundle roots to probe for `<root>/views/<name>/view.js`, in
+    /// Route-bundle roots to probe for `routes/<name>/route.js`, in
     /// precedence order: the per-app route-output dirs first (host-registered),
-    /// then the project root's `<root>/.deck` (the bundler's default output).
-    /// The `.deck` join is the SAME single constant the bundler writes through
-    /// (`deck_config::deck_out_path`), so this reader can never drift from the
-    /// writer (`inv-deck-output-location-single`).
+    /// then the project root's `<root>/dist` (the bundler's default app out).
+    /// The join is [`deck_config::deck_out_path`].
     pub(crate) fn route_bundle_roots(&self) -> Vec<PathBuf> {
         let mut roots: Vec<PathBuf> = self.route_outputs.values().cloned().collect();
         if let Some(pr) = self.project_root() {
@@ -96,32 +97,41 @@ pub fn resolve_project_root_with(resolution: Option<&Resolution>) -> Option<Path
         .map(|p| p.to_path_buf())
 }
 
-/// Nearest-ancestor detection: upwalk from `cwd`, accept the first ancestor
-/// that contains the deck-owned SOURCE marker (`views/`). Bounded at ~32 hops.
-/// Std-only — never reaches a TOPMOST-Cargo.toml workspace resolver (which
-/// would shadow a nested project's root onto the monorepo root). Never keys on
-/// `.deck` (build output, absent on fresh checkout, flips post-build), never on
-/// `deck.jsonc` (purged — see deck-purge-root), and never sniffs a host-private
-/// dir (a host with a non-conventional layout constructs a `Resolution` with an
-/// explicit root — the safe path; deck names no host dir here).
+/// One walk, one hop cap ([`sail_lint::project::DISCOVER_MAX_HOPS`]).
+///
+/// 1. Nearest `sail.config.jsonc` / `.json` — same as
+///    [`sail_lint::Project::discover`].
+/// 2. Else the nearest `routes/`-only directory (zero-config Deck; no
+///    sail.config on the walk). `routes/` is a FileKind, not a tie-break
+///    against a closer config.
+///
+/// Never a TOPMOST-Cargo.toml workspace resolver (that would shadow a nested
+/// project's root onto the monorepo). Never `dist`, `deck.jsonc`, or `views/`.
 pub(crate) fn detect_project_root_from(cwd: &Path) -> Option<PathBuf> {
-    const MAX_DEPTH: usize = 32;
-    let mut cur = cwd;
-    for _ in 0..MAX_DEPTH {
-        if cur.join("views").is_dir() {
-            return Some(cur.to_path_buf());
+    let mut cur = if cwd.is_file() {
+        cwd.parent()?.to_path_buf()
+    } else {
+        cwd.to_path_buf()
+    };
+    let mut first_routes = None;
+    for _ in 0..sail_lint::project::DISCOVER_MAX_HOPS {
+        if sail_lint::project::config_file_in(&cur).is_some() {
+            return Some(cur);
+        }
+        if first_routes.is_none() && cur.join("routes").is_dir() {
+            first_routes = Some(cur.clone());
         }
         match cur.parent() {
-            Some(p) => cur = p,
+            Some(p) => cur = p.to_path_buf(),
             None => break,
         }
     }
-    None
+    first_routes
 }
 
 use deck_host::resolver::RouteLayout;
 pub use deck_host::resolver::{ResolveError, ResolvedRoute};
-/// Build a [`RouteLayout`] from the conventional `["views"]` bucket with a
+/// Build a [`RouteLayout`] from the conventional `["routes"]` bucket with a
 /// single `page.sail` leaf. The leaf is unified across all buckets (fixes the
 /// #254 `index.sail` vs `page.sail` divergence). The framework loads no config
 /// file — a host that needs a different layout constructs a `DeckConfig` and
@@ -146,7 +156,7 @@ pub fn resolve(
 
 /// Best-effort list of top-level route names servable under `root`, for the
 /// human-facing not-found page. Scans the conventional route buckets (default
-/// `["views"]`) under the given root. Cheap (one shallow `read_dir` per bucket,
+/// `["routes"]`) under the given root. Cheap (one shallow `read_dir` per bucket,
 /// no compilation) and graceful: a missing bucket contributes nothing. Names
 /// are deduped and sorted so the page renders deterministically.
 pub fn list_route_names(root: &Path) -> Vec<String> {
@@ -184,17 +194,17 @@ mod project_root_tests {
     use super::{Resolution, detect_project_root_from};
     use std::path::{Path, PathBuf};
 
-    /// Nested project: monorepo root has a `views/`, the inner project's
-    /// `app/` ALSO has a `views/`. Detection must pick the NEAREST one
+    /// Nested project: monorepo root has a `routes/`, the inner project's
+    /// `app/` ALSO has a `routes/`. Detection must pick the NEAREST one
     /// (`app/`), not the topmost (monorepo).
     #[test]
     fn detection_picks_nearest_ancestor_marker_not_topmost() {
         let tmp = tempfile::tempdir().unwrap();
         let monorepo = tmp.path().to_path_buf();
-        std::fs::create_dir(monorepo.join("views")).unwrap();
+        std::fs::create_dir(monorepo.join("routes")).unwrap();
         let app = monorepo.join("app");
         std::fs::create_dir(&app).unwrap();
-        std::fs::create_dir(app.join("views")).unwrap();
+        std::fs::create_dir(app.join("routes")).unwrap();
         let deep = app.join("a").join("b");
         std::fs::create_dir_all(&deep).unwrap();
 
@@ -204,33 +214,91 @@ mod project_root_tests {
             Some(app.clone()),
             "nearest-ancestor-wins: expected the inner app root, got {detected:?}",
         );
-        assert!(monorepo.join("views").is_dir());
+        assert!(monorepo.join("routes").is_dir());
         assert_ne!(detected, Some(monorepo));
     }
 
-    /// `deck.jsonc` is NOT a detection marker (purged). `views/` is the source
+    /// `deck.jsonc` is NOT a detection marker (purged). `routes/` is a source
     /// marker — even nested inside a tree that also has a `deck.jsonc`.
     #[test]
-    fn stray_deck_jsonc_does_not_outrank_views_dir() {
+    fn stray_deck_jsonc_does_not_outrank_routes_dir() {
         let tmp = tempfile::tempdir().unwrap();
         let outer = tmp.path().to_path_buf();
         std::fs::write(outer.join("deck.jsonc"), "{}\n").unwrap();
         let inner = outer.join("nested");
         std::fs::create_dir(&inner).unwrap();
-        std::fs::create_dir(inner.join("views")).unwrap();
+        std::fs::create_dir(inner.join("routes")).unwrap();
         let detected = detect_project_root_from(&inner);
         assert_eq!(detected, Some(inner));
     }
 
-    /// deck detects via its OWN marker (`views/`) only. A `.ship/views`-only
-    /// layout is a HOST convention — detection must NOT key on it (a host with
-    /// that layout constructs a `Resolution` with an explicit root).
+    /// deck detects via its OWN markers (`routes/` / `sail.config`) only. A
+    /// `.ship/views`-only layout is a HOST convention — detection must NOT
+    /// key on it (a host with that layout constructs a `Resolution` with an
+    /// explicit root).
     #[test]
     fn detection_ignores_dot_ship_views_marker() {
         let tmp = tempfile::tempdir().unwrap();
         let root = tmp.path().to_path_buf();
         std::fs::create_dir_all(root.join(".ship").join("views")).unwrap();
         assert_eq!(detect_project_root_from(&root), None);
+    }
+
+    /// `views/` is a retired Ship-host source bucket, not a public Deck
+    /// marker. A views-only tree is not a Sail/Deck project.
+    #[test]
+    fn detection_ignores_views_dir() {
+        let tmp = tempfile::tempdir().unwrap();
+        let root = tmp.path().to_path_buf();
+        std::fs::create_dir(root.join("views")).unwrap();
+        assert_eq!(detect_project_root_from(&root), None);
+        let deep = root.join("a").join("b");
+        std::fs::create_dir_all(&deep).unwrap();
+        assert_eq!(detect_project_root_from(&deep), None);
+    }
+
+    /// A `sail.config.jsonc` (or `.json`) is a detection marker — same as
+    /// `Project::discover`. Config alone identifies the project; `routes/`
+    /// is not required.
+    #[test]
+    fn detection_accepts_sail_config_without_routes() {
+        let tmp = tempfile::tempdir().unwrap();
+        let root = tmp.path().to_path_buf();
+        std::fs::write(root.join("sail.config.jsonc"), "{}\n").unwrap();
+        let deep = root.join("src");
+        std::fs::create_dir(&deep).unwrap();
+        assert_eq!(detect_project_root_from(&deep), Some(root.clone()));
+
+        let json_only = tempfile::tempdir().unwrap();
+        let json_root = json_only.path().to_path_buf();
+        std::fs::write(json_root.join("sail.config.json"), "{}\n").unwrap();
+        assert_eq!(detect_project_root_from(&json_root), Some(json_root));
+    }
+
+    /// Zero-config Deck: `routes/` and no sail.config still resolves.
+    #[test]
+    fn detection_accepts_routes_only_zero_config() {
+        let tmp = tempfile::tempdir().unwrap();
+        let root = tmp.path().to_path_buf();
+        std::fs::create_dir(root.join("routes")).unwrap();
+        let deep = root.join("src");
+        std::fs::create_dir(&deep).unwrap();
+        assert_eq!(detect_project_root_from(&deep), Some(root.clone()));
+        assert_eq!(detect_project_root_from(&root), Some(root));
+    }
+
+    /// Nested package config (no routes) wins over an ancestor app that
+    /// has routes+config — same root as `Project::discover`.
+    #[test]
+    fn detection_nearest_config_wins_over_ancestor_routes() {
+        let tmp = tempfile::tempdir().unwrap();
+        let app = tmp.path().join("hello");
+        std::fs::create_dir_all(app.join("routes")).unwrap();
+        std::fs::write(app.join("sail.config.jsonc"), "{}\n").unwrap();
+        let foo = app.join("packages/foo");
+        std::fs::create_dir_all(&foo).unwrap();
+        std::fs::write(foo.join("sail.config.json"), "{}\n").unwrap();
+        assert_eq!(detect_project_root_from(&foo), Some(foo));
     }
 
     /// No marker anywhere up the tree → `None`.
@@ -242,7 +310,8 @@ mod project_root_tests {
         assert!(detect_project_root_from(&deep).is_none());
     }
 
-    /// A stray `deck.jsonc` is inert for detection — only `views/` counts.
+    /// A stray `deck.jsonc` is inert for detection — only `routes/` /
+    /// `sail.config` count.
     #[test]
     fn stray_deck_jsonc_is_not_a_detection_marker() {
         let tmp = tempfile::tempdir().unwrap();
@@ -255,7 +324,7 @@ mod project_root_tests {
         assert_eq!(detect_project_root_from(&root), None);
         assert_eq!(detect_project_root_from(&inner), None);
 
-        std::fs::create_dir(inner.join("views")).unwrap();
+        std::fs::create_dir(inner.join("routes")).unwrap();
         assert_eq!(detect_project_root_from(&inner), Some(inner.clone()));
         assert_eq!(detect_project_root_from(&root), None);
     }
@@ -310,47 +379,39 @@ mod project_root_tests {
         assert_eq!(super::resolve_project_root_with(Some(&empty)), None);
     }
 
-    /// `inv-deck-output-location-single`, cross-crate: the runtime READER
-    /// (`Resolution::route_bundle_roots`) and the bundler WRITER
-    /// (`deck_bundler::targets::BundleLayout::deck_out`) resolve the SAME `.deck`
-    /// path for the same project root — because both go through the one
-    /// `deck_config::deck_out_path` join. This is the invariant in its strongest
-    /// form: reader reads exactly where writer writes.
+    /// App serve reads `dist/`. Workspace bake writes `.sail/`.
+    /// Those are different homes.
     #[test]
-    fn reader_and_writer_agree_on_deck_output_path() {
+    fn app_serve_is_dist_workspace_bake_is_sail() {
         use deck_bundler::DeckConfig;
         use deck_bundler::targets::BundleLayout;
         let root = PathBuf::from("/proj");
-        let writer_deck =
-            BundleLayout::with_config(root.clone(), None, DeckConfig::defaults()).deck_out();
-        let reader_deck = Resolution::new()
+        let bake = BundleLayout::with_config(root.clone(), None, DeckConfig::defaults()).deck_out();
+        let serve = Resolution::new()
             .with_root(root.clone())
             .route_bundle_roots()
             .pop()
-            .expect("project-root .deck fallback present");
-        assert_eq!(
-            writer_deck, reader_deck,
-            "runtime reader must resolve the SAME .deck the bundler writer writes"
-        );
+            .expect("project-root dist fallback present");
+        assert_eq!(bake, deck_config::sail_generate_path(&root));
+        assert_eq!(serve, deck_config::deck_out_path(&root));
+        assert_ne!(bake, serve);
     }
 
-    /// The per-app route-output dirs are probed BEFORE the project-root `.deck`,
-    /// and the project-root fallback resolves through the single output-dir
-    /// constant — so the reader can't drift from the bundler writer.
+    /// The per-app route-output dirs are probed BEFORE the project-root `dist`.
     #[test]
     fn view_bundle_roots_precedence_and_single_output_join() {
         let mut r = Resolution::new().with_root("/proj");
-        r.register_route_output("hub", "/apps/hub/.deck/views");
+        r.register_route_output("hub", "/apps/hub/dist");
         let roots = r.route_bundle_roots();
         assert_eq!(
             roots[0],
-            PathBuf::from("/apps/hub/.deck/views"),
+            PathBuf::from("/apps/hub/dist"),
             "per-app output first"
         );
         assert_eq!(
             *roots.last().unwrap(),
             deck_config::deck_out_path(Path::new("/proj")),
-            "project-root fallback is <root>/.deck via the single shared constant"
+            "project-root fallback is <root>/dist"
         );
     }
 }

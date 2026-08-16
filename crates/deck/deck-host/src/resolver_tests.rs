@@ -17,9 +17,10 @@ fn layout() -> RouteLayout {
     RouteLayout::conventional()
 }
 
-/// A HOST-OVERRIDE layout: the deck-native `views/` bucket plus Ship's
-/// `.ship/views`. The override path stays — a host that serves additional
-/// buckets supplies them; deck does not bake them into `conventional()`.
+/// A HOST-OVERRIDE layout: extra buckets (`views/` plus Ship's `.ship/views`).
+/// The override path stays — a host that serves additional buckets supplies
+/// them; deck does not bake them into `conventional()` and names no host
+/// path (`routes/` is the deck-native zero-config bucket).
 fn host_layout() -> RouteLayout {
     RouteLayout {
         route_dirs: vec!["views".into(), ".ship/views".into()],

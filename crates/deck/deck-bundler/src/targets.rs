@@ -190,8 +190,8 @@ pub struct BundleTarget {
 pub struct BundleLayout {
     pub repo_root: PathBuf,
     pub source_roots: Vec<PathBuf>,
-    /// Base dir output paths are computed under (the `crates/.../assets`, `.deck`,
-    /// `apps/shipd/assets` subtrees hang off this). Defaults to `repo_root`;
+    /// Base dir output paths are computed under (the `crates/.../assets`, generate
+    /// `.sail`, `apps/shipd/assets` subtrees hang off this). Defaults to `repo_root`;
     /// redirect for tests / out-of-tree builds so output never clobbers
     /// committed assets.
     pub out_root: PathBuf,
@@ -231,31 +231,28 @@ impl BundleLayout {
         self.out_root = out_root;
         self
     }
-    /// Build-time output dir: `<out_root>/.deck` is the bake's staging
+    /// Build-time generate dir: `<out_root>/.sail` is the bake's staging
     /// area — `deck build-assets` writes framework + route + chrome
     /// bundles here, and `crates/deck-core/build.rs` copies the
     /// framework singletons into `crates/deck/deck-core/assets/` for
     /// `include_str!`. The framework's RUNTIME does not read this
     /// directory; the daemon serves singletons via `include_str!`
-    /// constants and routes on demand (route.rs). This is build-time
-    /// orchestration only — the bundler always writes under `<out_root>/.deck`
-    /// (the bake's contract), resolved through the single
-    /// `deck_config::deck_out_path` so the runtime reader can't drift from it.
+    /// constants and routes on demand (route.rs). This is generate,
+    /// not deploy (`dist`). Resolved through `sail_generate_path`.
     pub fn deck_out(&self) -> PathBuf {
-        deck_config::deck_out_path(&self.out_root)
+        deck_config::sail_generate_path(&self.out_root)
     }
     fn framework_dir(&self) -> PathBuf {
         self.deck_out().join("framework")
     }
 
-    /// Output dir for a target by name. Every build artifact lands under
-    /// `.deck/` — the bundler owns its output layout; the host / project
-    /// root is never a bake target. Deck-own framework singletons go
-    /// under `.deck/framework/` (the build-script staging path that
-    /// `build.rs` copies into `crates/deck/deck-core/assets/` for
-    /// `include_str!`); everything else — `routes/*`, `sail-components/*`,
-    /// and discovered consumer packs (`sail-marketing`, `sail-arcade`,
-    /// `sail-pdf`, `ship-code-editor`, …) — goes directly under `.deck/`.
+    /// Output dir for a target by name. Every bake artifact lands under
+    /// `.sail/` — generate, not deploy. The host / project root is never a
+    /// bake target. Deck-own framework singletons go under `.sail/framework/`
+    /// (the build-script staging path that `build.rs` copies into
+    /// `crates/deck/deck-core/assets/` for `include_str!`); everything else
+    /// — `routes/*`, `sail-components/*`, and discovered consumer packs —
+    /// goes directly under `.sail/`.
     pub fn assets_dir_for(&self, name: &str) -> PathBuf {
         if is_framework_singleton(name) {
             return self.framework_dir();
@@ -306,8 +303,8 @@ impl BundleLayout {
     /// bundler walks the workspace to find them, the same way it discovers
     /// `routes/*`. Each declaration's `entry` is package-relative, joined onto
     /// the declaring package's root. The logical name drives `assets_dir_for`
-    /// routing — every discovered consumer target lands in `.deck/` (the
-    /// bake's staging area, sibling to the framework singletons).
+    /// routing — every discovered consumer target lands in `.sail/` (the
+    /// bake's generate staging area, sibling to the framework singletons).
     pub fn consumer_targets(&self) -> Vec<BundleTarget> {
         crate::catalog::discover_bundle_declarations(&self.repo_root)
             .into_iter()
@@ -421,80 +418,81 @@ mod tests {
         std::fs::write(path, body).unwrap();
     }
 
-    /// `inv-deck-output-location-single`: every `.deck` output path resolves
-    /// through the ONE `deck_config::deck_out_path` join (the single declared
-    /// constant), so the bundler WRITER and the runtime READER can never drift
-    /// onto different directory names. This asserts the writer side equals the
-    /// shared constant; the reader side is pinned by
-    /// `deck_core::assets`'s route-bundle roundtrip test.
+    /// Generate bake (`deck_out`) is `.sail`. Deploy (`DECK_OUT_DIRNAME`) is
+    /// `dist`. Those are different homes. There is no `.deck` product out.
     #[test]
     fn deck_out_resolves_through_the_single_shared_constant() {
         let root = PathBuf::from("/proj");
         let writer =
             BundleLayout::with_config(root.clone(), None, DeckConfig::defaults()).deck_out();
-        let shared = deck_config::deck_out_path(&root);
+        let shared = deck_config::sail_generate_path(&root);
         assert_eq!(
             writer, shared,
-            "the bundler writer resolves .deck via the shared join"
+            "the bundler writer resolves generate via the shared join"
         );
         assert_eq!(
             shared,
-            root.join(deck_config::DECK_OUT_DIRNAME),
-            "the shared join is root/<const>"
+            root.join(deck_config::SAIL_GENERATE_DIRNAME),
+            "the shared generate join is root/<const>"
+        );
+        assert_eq!(
+            deck_config::SAIL_GENERATE_DIRNAME,
+            ".sail",
+            "generate dir name"
         );
         assert_eq!(
             deck_config::DECK_OUT_DIRNAME,
-            ".deck",
-            "the one declared output-dir name"
+            "dist",
+            "deploy is dist, not generate"
         );
-        // The framework sub-dir hangs off the SAME join — never a second `.deck` root.
+        assert_ne!(
+            deck_config::sail_generate_path(&root),
+            deck_config::deck_out_path(&root)
+        );
+        // The framework sub-dir hangs off the SAME generate join.
         let l = BundleLayout::with_config(root.clone(), None, DeckConfig::defaults());
         assert_eq!(l.assets_dir_for("sail-runtime"), shared.join("framework"));
     }
 
     #[test]
     fn assets_dir_routes_by_name() {
-        // Framework singletons land in `.deck/framework/` (build-script staging).
+        // Framework singletons land in `.sail/framework/` (build-script staging).
         let l = BundleLayout::with_config(PathBuf::from("/repo"), None, DeckConfig::defaults());
         assert_eq!(
             l.assets_dir_for("sail-runtime"),
-            PathBuf::from("/repo/.deck/framework")
+            PathBuf::from("/repo/.sail/framework")
         );
         assert_eq!(
             l.assets_dir_for("sail-dom"),
-            PathBuf::from("/repo/.deck/framework")
+            PathBuf::from("/repo/.sail/framework")
         );
         assert_eq!(
             l.assets_dir_for("sail-sdk-client"),
-            PathBuf::from("/repo/.deck/framework")
+            PathBuf::from("/repo/.sail/framework")
         );
-        // Per-tag chrome (`sail-components/<name>`) lands in `.deck/`.
+        // Per-tag chrome (`sail-components/<name>`) lands in `.sail/`.
         // (The umbrella `sail-components` target no longer exists — chrome
         // is per-tag tree-shaking only.)
         assert_eq!(
             l.assets_dir_for("sail-components/sail-rail"),
-            PathBuf::from("/repo/.deck")
+            PathBuf::from("/repo/.sail")
         );
         assert_eq!(
             l.assets_dir_for("routes/git/route"),
-            PathBuf::from("/repo/.deck")
+            PathBuf::from("/repo/.sail")
         );
-        // Consumer targets (e.g. sail-marketing, sail-arcade, sail-pdf,
-        // ship-code-editor) ALSO land in `.deck/` — the bake's staging
-        // area, sibling to the framework singletons. No target is a host
-        // asset; the bundler owns its output layout and every build
-        // artifact belongs under `.deck/`.
+        // Consumer targets ALSO land in `.sail/` — generate, not deploy.
         assert_eq!(
             l.assets_dir_for("sail-marketing"),
-            PathBuf::from("/repo/.deck")
+            PathBuf::from("/repo/.sail")
         );
         assert_eq!(
             l.assets_dir_for("sail-arcade"),
-            PathBuf::from("/repo/.deck")
+            PathBuf::from("/repo/.sail")
         );
         assert_eq!(
             l.assets_dir_for("ship-something"),
-            PathBuf::from("/repo/.deck")
+            PathBuf::from("/repo/.sail")
         );
     }
 

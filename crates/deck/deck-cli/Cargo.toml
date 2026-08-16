@@ -3,11 +3,15 @@ name = "deck-cli"
 version = "0.1.0"
 edition = "2024"
 publish = false
-description = "Sail CLI (`sail`) — create, dev, build, scaffold, compile, tokens, check, lsp, mcp, layout, doctor, version."
+description = "Sail CLI (`sail`) and workspace bake (`deck-bake`)."
 
 [[bin]]
 name = "sail"
 path = "src/main.rs"
+
+[[bin]]
+name = "deck-bake"
+path = "src/bin/deck-bake.rs"
 
 [dependencies]
 deck-bundler = { path = "../deck-bundler" }

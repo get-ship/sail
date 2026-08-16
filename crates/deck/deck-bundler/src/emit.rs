@@ -103,7 +103,7 @@ pub fn emit_targets(layout: &BundleLayout, names: &[String], out_dir: &Path) -> 
         let src = src_dir.join(&target.out_file);
         if !src.exists() {
             bail!(
-                "target `{name}` not built ({} missing) — run `deck build-assets` first",
+                "target `{name}` not built ({} missing) — run `deck-bake build-assets` first",
                 src.display()
             );
         }
@@ -134,15 +134,14 @@ mod tests {
     fn emits_target_with_chunk_closure() {
         let tmp = tempdir().unwrap();
         let repo = tmp.path().to_path_buf();
-        // sail-marketing is a consumer target → lands in `.deck/` (the
-        // bake's staging area), not the host's assets root.
-        std::fs::create_dir_all(repo.join(".deck")).unwrap();
+        // sail-marketing is a consumer target → lands in `.sail/` (generate).
+        std::fs::create_dir_all(repo.join(".sail")).unwrap();
         std::fs::write(
-            repo.join(".deck/sail-marketing.js"),
+            repo.join(".sail/sail-marketing.js"),
             r#"import("./Chunk-X.js");"#,
         )
         .unwrap();
-        std::fs::write(repo.join(".deck/Chunk-X.js"), "export const x = 1;").unwrap();
+        std::fs::write(repo.join(".sail/Chunk-X.js"), "export const x = 1;").unwrap();
         // Declare the consumer bundle via per-package self-declaration; the
         // bundler discovers it from the workspace (no central deck.jsonc).
         std::fs::write(

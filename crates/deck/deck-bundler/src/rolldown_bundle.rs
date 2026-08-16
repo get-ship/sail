@@ -1,5 +1,5 @@
 //! Rolldown bundler — drives Rolldown with the SAIL plugin to bundle each target.
-//! Output goes to `assets_dir_for` (under `.deck/` / dist) — no source-tree writes.
+//! Output goes to `assets_dir_for` (under `.sail/` / dist) — no source-tree writes.
 //!
 //! The SAIL resolve/load plugin lives in `sail_plugin.rs`; this module owns the
 //! target-to-bundle driver and its integration tests.
@@ -98,7 +98,7 @@ pub async fn bundle_target(
     // app builds leave component_index empty (no `@sail-tag` imports emitted).
     let emit_component_imports = target.name.starts_with("routes/");
     let resolver = if emit_component_imports {
-        component_index(&layout.repo_root, &layout.cfg.packs)
+        component_index(&layout.repo_root, &[])
     } else {
         ResolverIndex::empty()
     };
@@ -144,7 +144,7 @@ pub async fn bundle_target(
     };
 
     // Publish atomically from the staging dir to the live dir. A reader of
-    // .deck/framework/ never sees a partially-written bundle.
+    // .sail/framework/ never sees a partially-written bundle.
     crate::atomic::publish_dir(&stage_dir, &out_dir)
         .with_context(|| format!("publish bundle for {}", target.name))?;
 
@@ -539,6 +539,7 @@ const MODULE_PRUNE: &[&str] = &[
     "target",
     "dist",
     deck_config::DECK_OUT_DIRNAME,
+    deck_config::SAIL_GENERATE_DIRNAME,
     ".sail-out",
     "sail-out",
 ];

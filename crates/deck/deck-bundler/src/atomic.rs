@@ -1,6 +1,6 @@
 //! Atomic file-system writes for deck-bundler.
 //!
-//! Readers of `.deck/framework/` (the daemon, `deck emit`, `deck-core/build.rs`)
+//! Readers of `.sail/framework/` (the daemon, `deck emit`, `deck-core/build.rs`)
 //! must never observe a truncated bundle. These helpers write to a temp file in
 //! the same directory and `rename` it over the destination, which is atomic on
 //! the same filesystem.
@@ -61,9 +61,9 @@ pub fn copy<P: AsRef<Path>, Q: AsRef<Path>>(from: P, to: Q) -> Result<()> {
 /// Compute a per-writer staging directory next to `dest` on the same filesystem.
 ///
 /// Examples:
-/// - `.deck/framework` + suffix `sail-runtime` → `.deck/framework.stage.sail-runtime`
-/// - `.deck` + suffix `sail-marketing` → `.deck.stage.sail-marketing`
-/// - `.deck` + suffix `routes` → `.deck.stage.routes`
+/// - `.sail/framework` + suffix `sail-runtime` → `.sail/framework.stage.sail-runtime`
+/// - `.sail` + suffix `sail-marketing` → `.sail.stage.sail-marketing`
+/// - `.sail` + suffix `routes` → `.sail.stage.routes`
 pub fn stage_dir_for(dest: &Path, suffix: &str) -> PathBuf {
     let parent = dest.parent().unwrap_or_else(|| Path::new("."));
     let name = dest.file_name().and_then(|s| s.to_str()).unwrap_or("out");
@@ -75,7 +75,7 @@ pub fn stage_dir_for(dest: &Path, suffix: &str) -> PathBuf {
 /// Parent directories are created in `dest` as needed. Each file move is an
 /// atomic same-filesystem `rename`, so readers never see partial content.
 /// Stale files already in `dest` are intentionally left alone — the shared
-/// `.deck/` tree has multiple writers and this helper does not own pruning.
+/// `.sail/` tree has multiple writers and this helper does not own pruning.
 pub fn publish_dir(stage: &Path, dest: &Path) -> Result<()> {
     let mut files = Vec::new();
     collect_files(stage, Path::new(""), &mut files)
@@ -171,16 +171,16 @@ mod tests {
 
     #[test]
     fn stage_dir_for_produces_sibling() {
-        let dest = Path::new("/repo/.deck/framework");
+        let dest = Path::new("/repo/.sail/framework");
         assert_eq!(
             stage_dir_for(dest, "sail-runtime"),
-            Path::new("/repo/.deck/framework.stage.sail-runtime")
+            Path::new("/repo/.sail/framework.stage.sail-runtime")
         );
 
-        let dest = Path::new("/repo/.deck");
+        let dest = Path::new("/repo/.sail");
         assert_eq!(
             stage_dir_for(dest, "routes"),
-            Path::new("/repo/.deck.stage.routes")
+            Path::new("/repo/.sail.stage.routes")
         );
     }
 

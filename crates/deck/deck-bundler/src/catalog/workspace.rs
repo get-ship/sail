@@ -452,21 +452,18 @@ fn scan_sail_components(dir: &Path, out: &mut Vec<(String, PathBuf)>) {
     }
 }
 
-/// Return all `(tag, abs_path)` component pairs discovered by source scan of
-/// `pkg_root`.
+/// Source trees used by tag discovery and HMR watch.
 ///
-/// Scan roots:
+/// Same walk for both jobs:
 /// - `pkg_root/src/` (classic single-domain package)
 /// - `pkg_root/*/src/` when the package declares `sailComponents: true`
-///   (umbrella multi-domain layout used by `@ship/sail-components`)
-///
-/// Only `.sail` files whose stem contains a hyphen and is not "page" or
-/// "index" are returned; routes and other files are excluded by the guard.
-pub fn source_tags_for_package(pkg_root: &Path) -> Vec<(String, PathBuf)> {
+///   (umbrella multi-domain layout used by `@ship/sail-components`:
+///   primitives, charts, …)
+fn package_src_roots(pkg_root: &Path) -> Vec<PathBuf> {
     let mut out = Vec::new();
     let src = pkg_root.join("src");
     if src.is_dir() {
-        scan_sail_components(&src, &mut out);
+        out.push(src);
     }
     if package_is_sail_components(pkg_root) {
         if let Ok(entries) = std::fs::read_dir(pkg_root) {
@@ -477,12 +474,38 @@ pub fn source_tags_for_package(pkg_root: &Path) -> Vec<(String, PathBuf)> {
                 }
                 let domain_src = path.join("src");
                 if domain_src.is_dir() {
-                    scan_sail_components(&domain_src, &mut out);
+                    out.push(domain_src);
                 }
             }
         }
     }
     out
+}
+
+/// Return all `(tag, abs_path)` component pairs discovered by source scan of
+/// `pkg_root`.
+///
+/// Scan roots: see [`package_src_roots`] / [`component_src_roots`].
+///
+/// Only `.sail` files whose stem contains a hyphen and is not "page" or
+/// "index" are returned; routes and other files are excluded by the guard.
+pub fn source_tags_for_package(pkg_root: &Path) -> Vec<(String, PathBuf)> {
+    let mut out = Vec::new();
+    for src in package_src_roots(pkg_root) {
+        scan_sail_components(&src, &mut out);
+    }
+    out
+}
+
+/// Source directories to watch for HMR in a component package.
+///
+/// Same walk as tag discovery ([`source_tags_for_package`]): `src/` plus,
+/// when `sailComponents: true`, each `*/src` (primitives, charts, …).
+///
+/// Returns only directories that exist. Empty when the package has no
+/// source tree — `sail dev` then falls back to watching `pkg_root` itself.
+pub fn component_src_roots(pkg_root: &Path) -> Vec<PathBuf> {
+    package_src_roots(pkg_root)
 }
 
 /// Umbrella components packages declare `sailComponents: true`.

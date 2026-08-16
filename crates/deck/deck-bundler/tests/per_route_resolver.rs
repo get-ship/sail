@@ -68,7 +68,7 @@ fn second_route_target(root: &Path) -> BundleTarget {
     }
 }
 
-/// All `.js` files under `dir`, recursively (view chunks nest under `.deck/`).
+/// All `.js` files under `dir`, recursively (view chunks nest under `.sail/`).
 fn js_files(dir: &Path) -> Vec<std::path::PathBuf> {
     let mut out = Vec::new();
     let Ok(entries) = std::fs::read_dir(dir) else {
@@ -93,7 +93,7 @@ async fn bundle(root: &Path, out_root: &Path) -> String {
     bundle_target(&layout, &route_target(root), &staging, false)
         .await
         .expect("view bundles");
-    std::fs::read_to_string(out_root.join(".deck/routes/usewidget/route.js"))
+    std::fs::read_to_string(out_root.join(".sail/routes/usewidget/route.js"))
         .expect("route.js written")
 }
 
@@ -136,7 +136,7 @@ async fn shared_component_dedups_into_one_chunk_across_routes() {
     .await
     .expect("multi-entry views bundle");
 
-    let chunks_with_component = js_files(&out.path().join(".deck"))
+    let chunks_with_component = js_files(&out.path().join(".sail"))
         .into_iter()
         .filter(|p| {
             std::fs::read_to_string(p)

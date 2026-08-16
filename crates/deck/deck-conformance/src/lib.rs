@@ -9,7 +9,8 @@
 //! The host contract:
 //! 1. Point the resolver at an app dir via `DECK_PROJECT_DIR` (leave
 //!    `DECK_FIRST_PARTY_VIEWS` unset — non-ship host, no first-party bucket).
-//!    The resolver also reads built bundles from `<app_dir>/.deck/`.
+//!    The resolver also reads built bundles from `<app_dir>/dist/` (deploy)
+//!    and the generate tree under `<app_dir>/.sail/`.
 //! 2. Mount `deck::router()`. (The named-route surface — `/_deck/view(s)/*` —
 //!    was extracted out of deck into the separate `ship-views` repo and is no
 //!    longer served here; its conformance tests moved out with it.)

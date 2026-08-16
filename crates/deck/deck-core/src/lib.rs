@@ -1,6 +1,6 @@
 //! deck-core — transport-agnostic SAIL hosting logic.
 //!
-//! This crate owns *what* deck serves (compiled routes, bundles, the catalog)
+//! This crate owns *what* deck serves (compiled routes, bundles, framework assets)
 //! and produces a [`DeckResponse`] for each. It never touches axum or any
 //! HTTP framework. Server adapters (`deck-axum`, a future `deck-bun`)
 //! translate `DeckResponse` onto their own response type — the
@@ -66,6 +66,7 @@ pub use assets::{
     serve_sail_lsp_completions, serve_sail_lsp_diagnostics, serve_sail_runtime,
     serve_sail_sdk_client, serve_sail_studio_bridge, serve_scaffold, serve_scaffold_asset,
 };
+pub use css_minify::minify_css;
 pub use form_inject::inject_form_actions;
 pub use meta::{DaemonBuildInfo, serve_meta};
 pub use mode_html::{
@@ -73,8 +74,6 @@ pub use mode_html::{
     inject_theme_defaults_meta, mode_str, sail_project_rel_from_root,
 };
 pub use resolver::{Resolution, resolve_project_root_with};
-// (formerly `packs::serve_catalog_workspace`) — purged with the `.deck/` runtime read.
-pub use css_minify::minify_css;
 pub use route::{RouteSetupQuery, serve_sail_route_setup};
 pub use route_tokens::serve_route_tokens;
 pub use sail_css::serve_sail_css;

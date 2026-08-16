@@ -19,12 +19,12 @@
 //! - `deck.injectGlobals` — URL-capture → `window.<k>` injections
 //! - `deck.entry` — host entry bootstrap (`clientsModule` + `exposeNames`)
 //!
-//! [`AppServeConfig::load_from_project`] reads **only** the nested `deck`
-//! object (other top-level keys such as `theme` are ignored by this loader;
-//! Sail's recognized-key table refuses leftover top-level `render` /
-//! `entry` / `injectGlobals`). Absence of a sail config or of `deck`
-//! means fully conventional defaults. A leftover `deck.jsonc` is a hard
-//! config error.
+//! `deck_bundler::load_app_serve` is the sole project loader: one
+//! `sail_lint::config::SailConfig` parse, nested `deck` only (other
+//! top-level keys such as `theme` are ignored here; Sail's recognized-key
+//! table refuses leftover top-level `render` / `entry` / `injectGlobals`).
+//! Absence of a sail config or of `deck` means fully conventional defaults.
+//! A leftover `deck.jsonc` is a hard config error.
 //!
 //! Host-set only (never from the file): `name`, `route`, `source`,
 //! `ops_project`. Framework singletons are provider-declared via
@@ -38,29 +38,38 @@ use serde::{Deserialize, Serialize};
 mod jsonc;
 pub use jsonc::strip_jsonc_comments;
 
-/// The single build-output directory name. Every deck build artifact — the
-/// framework singletons (`.deck/framework/`), the per-route bundles
-/// (`.deck/views/<name>/view.js`), and each app's generated `index.html` +
-/// hashed `assets/` — lands under `<root>/.deck`.
+/// App bundler/serve deploy directory name (`<project>/dist`).
 ///
-/// Declared ONCE here so the bundler (writer) and the runtime (reader) can
-/// never drift onto different directory names — that drift is exactly the
-/// silent-asset-404 class the `inv-deck-output-location-single` invariant
-/// closes. Every `.deck` join in the tree resolves through this constant or
-/// [`deck_out_path`]; there is no second literal.
-pub const DECK_OUT_DIRNAME: &str = ".deck";
+/// This is the SPA tree: `index.html`, hashed `assets/`, copied `public/`.
+/// Generate (types, compiler mirrors, workspace bake) is [`SAIL_GENERATE_DIRNAME`].
+/// There is no `.deck` name.
+pub const DECK_OUT_DIRNAME: &str = "dist";
 
-/// `<root>/.deck` — the build-output dir for `root`. The SINGLE join shared by
-/// the writer ([`BundleLayout::deck_out`](../deck_bundler/targets) in
-/// deck-bundler) and the runtime route-bundle reader (`deck_core::assets`), so
-/// reader and writer resolve the SAME path for the same root — no convention
-/// duplicated across crates.
+/// Framework generate directory name (`<root>/.sail`).
+///
+/// Types, kind tsconfigs, compiler mirrors, type-gate work, app themes,
+/// and workspace `build-assets` bake (including `framework/`) live here.
+/// Not inside `dist/`. Not `.deck`.
+pub const SAIL_GENERATE_DIRNAME: &str = ".sail";
+
+/// `<root>/dist` — app deploy out. Shared by `sail build` default `--out`
+/// and the runtime reader of a built app.
 pub fn deck_out_path(root: &Path) -> PathBuf {
     root.join(DECK_OUT_DIRNAME)
 }
 
-/// Cargo rebuild trigger for restaging `.deck/framework/*` into deck-core
-/// assets. Lives in the crate (tracked, empty), never under `.deck/`.
+/// `<root>/.sail` — generate out (types, mirrors, workspace bake).
+pub fn sail_generate_path(root: &Path) -> PathBuf {
+    root.join(SAIL_GENERATE_DIRNAME)
+}
+
+/// `<root>/.sail/framework` — workspace framework singleton bake.
+pub fn framework_bake_path(root: &Path) -> PathBuf {
+    sail_generate_path(root).join("framework")
+}
+
+/// Cargo rebuild trigger for restaging `.sail/framework/*` into deck-core
+/// assets. Lives in the crate (tracked, empty), never under generate or deploy.
 /// `deck build-assets` touches mtime; `deck-core/build.rs` watches it.
 pub fn framework_stamp_path(repo_root: &Path) -> PathBuf {
     repo_root.join("crates/deck/deck-core/framework-stamp")
@@ -91,8 +100,8 @@ pub fn load_sail_config_text(project_root: &Path) -> Option<(PathBuf, String)> {
 /// `sail.config.jsonc` / `sail.config.json` (or `Default::default()` when
 /// absent / when `deck` is omitted), and the shape deck's per-app router
 /// consumes. shipd (or any deck host) builds a `Vec<AppServeConfig>` via
-/// [`AppServeConfig::load_from_project`] and pairs each with the route
-/// the host's orchestration list declares. The framework does NOT know
+/// `deck_bundler::load_app_serve` and pairs each with the route the
+/// host's orchestration list declares. The framework does NOT know
 /// the list; that is the host's concern.
 ///
 /// # Ownership (SPEC-SAIL-CONFIG-1)
@@ -109,8 +118,8 @@ pub fn load_sail_config_text(project_root: &Path) -> Option<(PathBuf, String)> {
 ///
 /// - `name` → directory basename; the host derives it.
 /// - `route` → the host's orchestration list (`apps.jsonc`).
-/// - `source` → always `<app>/.deck`; the bundler writes there.
-/// - `viewOutput` → always `<app>/.deck/views`; convention.
+/// - `source` → always `<app>/dist`; the bundler writes there.
+/// - `viewOutput` → always `<app>/dist/views`; convention.
 /// - `frameworkClients` → provider-declared discovery via
 ///   `package.json#deckFramework` (see `deck_bundler::app`).
 ///
@@ -160,7 +169,7 @@ pub struct AppServeConfig {
     #[serde(skip, default)]
     pub route: String,
     /// Path to the built app's output dir, relative to the project
-    /// root. Convention: always `<app>/.deck` (the bundler's default
+    /// root. Convention: always `<app>/dist` (the bundler's default
     /// `out_dir`). The host sets this; the file doesn't get to choose
     /// a non-conventional output location. `serde(skip)` mirrors `name`.
     #[serde(skip, default)]
@@ -223,69 +232,32 @@ pub struct EntryBootstrap {
     pub expose_names: Vec<String>,
 }
 
+/// Presence of leftover `deck.jsonc` is a hard error (serve keys live under
+/// `deck` in sail.config).
+pub fn refuse_legacy_deck_jsonc(project: &Path) -> Result<(), String> {
+    let deck_path = project.join("deck.jsonc");
+    if deck_path.is_file() {
+        return Err(format!(
+            "deck.jsonc is no longer supported (found at {}). \
+             Move serve keys under \"deck\" in sail.config.jsonc \
+             (or sail.config.json) — e.g. {{ \"deck\": {{ \"render\": \"ssr\" }} }} — \
+             and delete deck.jsonc.",
+            deck_path.display()
+        ));
+    }
+    Ok(())
+}
+
 impl AppServeConfig {
     /// Parse a **serve-object** JSONC body (the value of `deck` in
     /// sail.config) into the serve config.
     ///
     /// Strips JSONC extensions, then deserializes. Unknown keys are
     /// ignored by serde. Every field is optional; empty input is
-    /// `Default::default()`. Project load uses [`Self::load_from_project`],
-    /// which extracts the nested `deck` object first.
+    /// `Default::default()`. Project load is `deck_bundler::load_app_serve`,
+    /// which reads the nested `deck` object from the typed SailConfig.
     pub fn parse_deck_jsonc(raw: &str) -> Result<Self, serde_json::Error> {
         serde_json::from_str(&strip_jsonc_comments(raw))
-    }
-
-    /// Load app serve config from the project root.
-    ///
-    /// - Presence of `deck.jsonc` is a hard error (move serve
-    ///   keys under `deck` in `sail.config.jsonc` / `sail.config.json`,
-    ///   then delete `deck.jsonc`).
-    /// - Prefer `sail.config.jsonc` over `sail.config.json` when both exist.
-    /// - **Nested `deck` only** (SPEC-SAIL-CONFIG-1 C1): top-level
-    ///   `render` / `entry` / `injectGlobals` are not read. Sail refuses
-    ///   them as unknown keys; this loader never dual-reads.
-    /// - Absent sail config or absent `deck` ⇒ fully conventional defaults.
-    pub fn load_from_project(project: &Path) -> Result<Self, String> {
-        let deck_path = project.join("deck.jsonc");
-        if deck_path.is_file() {
-            return Err(format!(
-                "deck.jsonc is no longer supported (found at {}). \
-                 Move serve keys under \"deck\" in sail.config.jsonc \
-                 (or sail.config.json) — e.g. {{ \"deck\": {{ \"render\": \"ssr\" }} }} — \
-                 and delete deck.jsonc.",
-                deck_path.display()
-            ));
-        }
-
-        for name in ["sail.config.jsonc", "sail.config.json"] {
-            let path = project.join(name);
-            if !path.is_file() {
-                continue;
-            }
-            let raw = std::fs::read_to_string(&path)
-                .map_err(|e| format!("read {}: {e}", path.display()))?;
-            let stripped = strip_jsonc_comments(&raw);
-            let value: serde_json::Value = serde_json::from_str(&stripped)
-                .map_err(|e| format!("parse {}: {e}", path.display()))?;
-            let Some(deck) = value.get("deck") else {
-                // Theme-only / product-only sail.config — conventional serve.
-                return Ok(Self::default());
-            };
-            if deck.is_null() {
-                return Ok(Self::default());
-            }
-            if !deck.is_object() {
-                return Err(format!(
-                    "parse {}: \"deck\" must be an object (got {})",
-                    path.display(),
-                    deck
-                ));
-            }
-            return serde_json::from_value(deck.clone())
-                .map_err(|e| format!("parse {}.deck: {e}", path.display()));
-        }
-
-        Ok(Self::default())
     }
 }
 /// The parsed contents of the host's route-discovery `DeckConfig`.
@@ -304,8 +276,9 @@ impl AppServeConfig {
 /// describe the host's app list (the host reads its own `apps.jsonc` and passes
 /// a per-app `Vec<AppServeConfig>` to `serve_apps()`), the consumer bundle set
 /// (self-declared per-package in `package.json` `deck.bundles[]`, discovered by
-/// the bundler), or `@ship/<name>` component resolution (derived from the
-/// workspace package map). L1 is per-app; the host owns the list.
+/// the bundler), or component resolution (the app's `src/` plus npm deps that
+/// ship Sail components). There is no pack ACL. L1 is per-app; the host owns
+/// the list.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
 pub struct DeckConfig {
@@ -313,17 +286,6 @@ pub struct DeckConfig {
     pub source_roots: Vec<PathBuf>,
     /// Directories the bundler watches for live-reload. Defaults to `[]`.
     pub watch: Vec<PathBuf>,
-    /// Declared component packs (per-project component scope).
-    ///
-    /// When present and non-empty, component resolution is SCOPED to ONLY these
-    /// packs: the per-route resolver's tag index is filtered down to tags a
-    /// declared pack provides (matched by `package.json` `name`, e.g.
-    /// `"@ship/sail-components"`). A tag from an undeclared pack resolves to a
-    /// no-op (it never bundles) and the build emits an author diagnostic naming
-    /// the tag and the pack that provides it. When absent or empty, resolution
-    /// is GLOBAL — every workspace pack's tags are resolvable (zero behavior
-    /// change for existing projects).
-    pub packs: Vec<String>,
     /// Per-source-root route bucket names. The resolver and bundler scan
     /// `<source_root>/<route_dir>/<name>/<route_leaf>` for each `route_dir` in
     /// this list. Defaults to the deck-native `["routes"]`, so a zero-config
@@ -352,7 +314,6 @@ impl DeckConfig {
         Self {
             source_roots: vec![PathBuf::from(".")],
             watch: Vec::new(),
-            packs: Vec::new(),
             // Deck-native route bucket. Hosts that need a different layout
             // (or additional buckets like Ship's `.ship/views`) construct a
             // `DeckConfig` (clone `defaults()` + override) and pass it in — no
@@ -372,12 +333,12 @@ mod tests {
     use super::*;
     use std::path::PathBuf;
 
-    /// Minimal example deck.jsonc that exercises the route-layout fields a host
-    /// may override. Consumer bundle targets are NO LONGER here — they are
-    /// self-declared per-package (`package.json` `deck.bundles[]`) and
-    /// discovered by the bundler; `@ship/<name>` resolution is derived from the
-    /// workspace package map. So this config carries only route discovery + watch
-    /// + pack scope.
+    /// Minimal host-layout JSON that exercises the route-layout fields a host
+    /// may override. Consumer bundle targets are self-declared per-package
+    /// (`package.json` `deck.bundles[]`) and discovered by the bundler.
+    /// Component tags resolve from the app's `src/` plus npm deps that ship
+    /// Sail components — not from this struct. This config is route discovery
+    /// + watch only.
     const EXAMPLE_JSONC: &str = r#"{
   "sourceRoots": ["."],
   "watch": ["packages", "apps/site/src"],
@@ -408,30 +369,24 @@ mod tests {
         assert_eq!(d, d2);
         assert_eq!(d.source_roots, vec![PathBuf::from(".")]);
         assert!(d.watch.is_empty());
+        let serialized = serde_json::to_value(&d).expect("defaults serialize");
         assert!(
-            d.packs.is_empty(),
-            "defaults declare no packs → global resolution"
+            serialized.get("packs").is_none(),
+            "DeckConfig must not have a packs field"
         );
     }
 
-    /// `packs` is optional and additive — an absent field parses to empty,
-    /// which the bundler reads as "global" (every workspace pack resolvable).
+    /// Leftover `packs` in a host-parsed document is ignored. There is no ACL.
     #[test]
-    fn packs_absent_parses_to_empty() {
-        let cfg: DeckConfig = serde_json::from_str(&strip_jsonc_comments(EXAMPLE_JSONC))
-            .expect("example deck.jsonc must parse");
-        assert!(
-            cfg.packs.is_empty(),
-            "no packs field ⇒ empty ⇒ global behavior"
-        );
-    }
-
-    /// A declared `packs` array parses into the scoped set.
-    #[test]
-    fn packs_present_parses_declared_set() {
+    fn packs_field_must_not_exist() {
         let json = r#"{ "packs": ["@ship/sail-components", "deck-demo-app"] }"#;
         let cfg: DeckConfig = serde_json::from_str(&strip_jsonc_comments(json)).unwrap();
-        assert_eq!(cfg.packs, vec!["@ship/sail-components", "deck-demo-app"]);
+        assert_eq!(cfg, DeckConfig::defaults());
+        let serialized = serde_json::to_value(&cfg).expect("serialize");
+        assert!(
+            serialized.get("packs").is_none(),
+            "leftover packs key must not become a DeckConfig field"
+        );
     }
 
     /// A PARTIAL deck.jsonc (deck-conformance's shape: scaffolds only) must keep the
@@ -460,7 +415,7 @@ mod tests {
     /// constructs the named `clients` map off the host's
     /// `./src/lib/client.ts` factory, and calls `mountRouter`). Every
     /// other field is convention: `name` is the directory basename,
-    /// `route` comes from `apps.jsonc`, `source` is `<app>/.deck`, no
+    /// `route` comes from `apps.jsonc`, `source` is `<app>/dist`, no
     /// `frameworkClients` (the bundler discovers the SDK-client through
     /// the `deckFramework` self-declaration on `@ship/sdk-client`'s own
     /// `package.json`).
@@ -615,15 +570,15 @@ mod tests {
         // it (host-supplied config still works), but the framework does
         // not load it on its own.
         let jsonc = r#"{
-  "routeDirs": ["apps/shell/src/routes"],
+  "routeDirs": ["src/routes"],
   "routeLeaf": "page.sail"
 }"#;
         let from_str: DeckConfig =
             serde_json::from_str(&strip_jsonc_comments(jsonc)).expect("host-parsed config");
         assert_eq!(
             from_str.route_dirs,
-            vec!["apps/shell/src/routes".to_string()],
-            "host parsing of deck.jsonc-shaped content still works"
+            vec!["src/routes".to_string()],
+            "host parsing of layout JSON still works"
         );
         assert_ne!(
             d.route_dirs, from_str.route_dirs,
@@ -631,164 +586,5 @@ mod tests {
         );
         // The framework sees defaults() — the stray file is inert.
         assert_eq!(d, DeckConfig::defaults());
-    }
-
-    // ── AppServeConfig::load_from_project (sail.config only) ────────────────
-
-    #[test]
-    fn load_from_project_no_files_is_default() {
-        let dir = tempfile::tempdir().unwrap();
-        let cfg = AppServeConfig::load_from_project(dir.path()).unwrap();
-        assert_eq!(cfg, AppServeConfig::default());
-    }
-
-    #[test]
-    fn load_from_project_deck_jsonc_is_migration_error() {
-        let dir = tempfile::tempdir().unwrap();
-        std::fs::write(
-            dir.path().join("deck.jsonc"),
-            r#"{ "render": "ssr", "injectGlobals": { "A": "1" } }"#,
-        )
-        .unwrap();
-        let err = AppServeConfig::load_from_project(dir.path()).unwrap_err();
-        assert!(
-            err.contains("deck.jsonc is no longer supported"),
-            "unexpected err: {err}"
-        );
-    }
-
-    #[test]
-    fn load_from_project_deck_jsonc_errors_even_when_sail_config_exists() {
-        let dir = tempfile::tempdir().unwrap();
-        std::fs::write(dir.path().join("deck.jsonc"), r#"{ "render": "ssr" }"#).unwrap();
-        std::fs::write(
-            dir.path().join("sail.config.jsonc"),
-            r#"{ "deck": { "render": "csr" }, "theme": { "default": "ship" } }"#,
-        )
-        .unwrap();
-        let err = AppServeConfig::load_from_project(dir.path()).unwrap_err();
-        assert!(
-            err.contains("deck.jsonc is no longer supported"),
-            "unexpected err: {err}"
-        );
-    }
-
-    #[test]
-    fn load_from_project_nested_deck_serve_keys() {
-        let dir = tempfile::tempdir().unwrap();
-        std::fs::write(
-            dir.path().join("sail.config.jsonc"),
-            r#"{ "deck": { "render": "ssr" }, "theme": { "default": "ship" } }"#,
-        )
-        .unwrap();
-        let cfg = AppServeConfig::load_from_project(dir.path()).unwrap();
-        assert_eq!(cfg.render, RenderMode::Ssr);
-    }
-
-    /// No dual-read: top-level serve keys are ignored by the loader
-    /// (Sail refuses them as unknown keys; deck never migrates them).
-    #[test]
-    fn load_from_project_top_level_serve_keys_ignored() {
-        let dir = tempfile::tempdir().unwrap();
-        std::fs::write(
-            dir.path().join("sail.config.jsonc"),
-            r#"{ "render": "ssr", "theme": { "default": "ship" } }"#,
-        )
-        .unwrap();
-        let cfg = AppServeConfig::load_from_project(dir.path()).unwrap();
-        assert_eq!(
-            cfg,
-            AppServeConfig::default(),
-            "top-level render must not dual-read into serve config"
-        );
-    }
-
-    #[test]
-    fn load_from_project_theme_only_sail_is_default_serve() {
-        let dir = tempfile::tempdir().unwrap();
-        std::fs::write(
-            dir.path().join("sail.config.jsonc"),
-            r#"{ "theme": { "default": "ship", "enabled": ["ship"] } }"#,
-        )
-        .unwrap();
-        let cfg = AppServeConfig::load_from_project(dir.path()).unwrap();
-        assert_eq!(cfg, AppServeConfig::default());
-    }
-
-    #[test]
-    fn load_from_project_sail_entry_and_inject() {
-        let dir = tempfile::tempdir().unwrap();
-        std::fs::write(
-            dir.path().join("sail.config.jsonc"),
-            r#"{
-  "deck": {
-    "render": "ssr",
-    "injectGlobals": { "DECK_APP_ID": "$id" },
-    "entry": { "clientsModule": "./src/clients.ts", "exposeNames": ["store"] }
-  }
-}"#,
-        )
-        .unwrap();
-        let cfg = AppServeConfig::load_from_project(dir.path()).unwrap();
-        assert_eq!(cfg.render, RenderMode::Ssr);
-        assert_eq!(
-            cfg.inject_globals.get("DECK_APP_ID").map(String::as_str),
-            Some("$id")
-        );
-        let entry = cfg.entry.expect("entry");
-        assert_eq!(entry.clients_module, "./src/clients.ts");
-        assert_eq!(entry.expose_names, vec!["store"]);
-    }
-
-    #[test]
-    fn load_from_project_jsonc_preferred_over_json() {
-        let dir = tempfile::tempdir().unwrap();
-        std::fs::write(
-            dir.path().join("sail.config.json"),
-            r#"{ "deck": { "render": "ssr" } }"#,
-        )
-        .unwrap();
-        std::fs::write(
-            dir.path().join("sail.config.jsonc"),
-            r#"{ "deck": { "render": "csr" } }"#,
-        )
-        .unwrap();
-        let cfg = AppServeConfig::load_from_project(dir.path()).unwrap();
-        assert_eq!(cfg.render, RenderMode::Csr, "jsonc wins when both exist");
-    }
-
-    #[test]
-    fn load_from_project_studio_fixture_is_csr_with_side_effect_entry() {
-        let dir = tempfile::tempdir().unwrap();
-        std::fs::write(
-            dir.path().join("sail.config.jsonc"),
-            r#"{
-  "theme": { "default": "studio" },
-  "deck": {
-    "render": "csr",
-    "entry": {
-      "clientsModule": "./src/clients.ts",
-      "exposeNames": []
-    }
-  }
-}"#,
-        )
-        .unwrap();
-        let cfg = AppServeConfig::load_from_project(dir.path()).unwrap();
-        assert_eq!(cfg.render, RenderMode::Csr);
-        let entry = cfg.entry.expect("entry");
-        assert_eq!(entry.clients_module, "./src/clients.ts");
-        assert!(entry.expose_names.is_empty());
-    }
-
-    #[test]
-    fn load_from_project_deck_must_be_object() {
-        let dir = tempfile::tempdir().unwrap();
-        std::fs::write(dir.path().join("sail.config.jsonc"), r#"{ "deck": "ssr" }"#).unwrap();
-        let err = AppServeConfig::load_from_project(dir.path()).unwrap_err();
-        assert!(
-            err.contains("\"deck\" must be an object"),
-            "unexpected err: {err}"
-        );
     }
 }

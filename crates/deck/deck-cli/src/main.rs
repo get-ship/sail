@@ -1,8 +1,9 @@
 //! `sail` — the Sail framework CLI (user-facing brand).
 //!
-//! One installable binary covers dev/build/scaffold/tokens/compile/check/lsp/
+//! One installable binary covers create/dev/build/check/types/scaffold theme/tokens/compile/lsp/
 //! mcp/layout/doctor. Internals still use deck crates (bundler, axum, core);
-//! the product path is **Sail**.
+//! the product path is **Sail**. Workspace bake (`build-assets`, `emit`) lives
+//! on the sibling `deck-bake` bin — not this product surface.
 
 mod peer;
 mod scaffold;
@@ -34,7 +35,7 @@ fn parse_render_viewport(s: &str) -> Result<(u32, u32), String> {
 #[derive(Parser)]
 #[command(
     name = "sail",
-    about = "Sail — the UI framework CLI (create, dev, build, scaffold, compile, tokens, types, check, fmt, inspect, lsp, mcp, op, layout, render, doctor, version)",
+    about = "Sail — the UI framework CLI (create, dev, build, check, types, scaffold theme, compile, tokens, fmt, inspect, lsp, mcp, op, layout, render, doctor, version)",
     version,
     propagate_version = true
 )]
@@ -45,40 +46,24 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Command {
-    /// Regenerate the typed route tables for one or more apps.
-    ///
-    ///   --root <path>  walks <path>/routes/ for file-routed pages, writes
-    ///                  <path>/routes.gen.ts. Repeatable; the label is the
-    ///                  path's basename. First-party app routes.
-    ///
-    /// At least one --root is required.
-    Routes {
-        /// App root holding a `routes/` dir. Walks `<root>/routes/` and
-        /// writes `<root>/routes.gen.ts`. The label is the path's basename.
-        /// Repeatable. e.g. `sail routes --root apps/shell --root apps/spaces`.
-        #[arg(long = "root")]
-        root: Vec<PathBuf>,
-    },
-
     /// Scaffold a new Sail app (`package.json`, `sail.config.jsonc`, `routes/`,
-    /// `themes/`, `.gitignore` with `.deck/`). External-app product path (EXT-1 E8).
+    /// `themes/`, `.gitignore` with `dist/` + `.sail/`). External-app product path (EXT-1 E8).
     Create {
         /// App directory to create (e.g. `my-app` → `./my-app`). Basename must
         /// match `/^[a-z][a-z0-9-]*$/`.
         name: PathBuf,
     },
 
-    /// Generate boilerplate for a new route, component, components-package, or theme.
-    /// Aliases: `new`, `init` (C-package scaffold surface).
+    /// Generate boilerplate (theme). Aliases: `new`, `init`.
     #[command(subcommand, visible_alias = "new", visible_alias = "init")]
     Scaffold(Scaffold),
 
     /// Build a SAIL SPA project to a static output dir.
     Build {
-        /// Project root (`package.json` + `routes/` + `public/`). Default: cwd.
+        /// Path inside a Sail project (walks up to `sail.config.jsonc` / `.json`). Default: cwd.
         #[arg(long, default_value = ".")]
         project: PathBuf,
-        /// Output dir (default: <project>/.deck/).
+        /// Output dir (default: <project>/dist/).
         #[arg(long)]
         out: Option<PathBuf>,
         /// Materialize the /_deck/* framework surface into the output (self-contained).
@@ -97,29 +82,12 @@ enum Command {
 
     /// Run a standalone dev server with HMR (and Sail Studio bridge overlay).
     Dev {
-        /// Project root (`routes/` + `package.json` + `public/`). Default: cwd.
+        /// Path inside a Sail project (walks up to `sail.config.jsonc` / `.json`). Default: cwd.
         #[arg(long, default_value = ".")]
         project: PathBuf,
         /// Address to bind (host:port). Default `127.0.0.1:7878`.
         #[arg(long, default_value = "127.0.0.1:7878")]
         addr: String,
-    },
-
-    /// Emit already-baked target bundles into a directory.
-    Emit {
-        /// Target name(s). Repeatable.
-        #[arg(long = "target", required = true)]
-        targets: Vec<String>,
-        /// Destination directory (created if absent).
-        #[arg(long)]
-        out: PathBuf,
-    },
-
-    /// Bake all framework + consumer bundles via the in-process Rolldown bundler.
-    BuildAssets {
-        /// Skip touching `crates/deck/deck-core/framework-stamp` (tests).
-        #[arg(long = "no-stamp")]
-        no_stamp: bool,
     },
 
     /// Compile `.sail` sources (wraps sail-compiler build).
@@ -137,34 +105,33 @@ enum Command {
         component_name: Option<String>,
     },
 
-    /// Generate design tokens from the DTCG model (delivery CSS/registry only).
+    /// Generate design tokens (project themes, or explicit bake paths).
     Tokens {
-        /// Model directory. Default: `packages/sail/tokens/model`.
+        /// Model directory. Required with `--out` for workspace bake.
         #[arg(long)]
         model: Option<PathBuf>,
-        /// Output directory. Default: `packages/sail/tokens/src`.
+        /// Output directory. Required with `--model` for workspace bake.
         #[arg(long)]
         out: Option<PathBuf>,
-        /// Project root for project-theme merge (optional).
+        /// Path inside a Sail project for theme generate (walks up to sail.config).
         #[arg(long)]
         project: Option<PathBuf>,
     },
 
-    /// Emit the sail ambient TypeScript pack (`node_modules/.sail/types.d.ts`)
-    /// for tsc/tsgo, plus monorepo package `dist/*.d.ts` when present.
+    /// Emit the sail ambient TypeScript pack (`.sail/types.d.ts`)
+    /// for tsc/tsgo. Package `dist/*.d.ts` is bun prepare / bake — not this verb.
     ///
     /// Regenerated from compiler manifests (runtime ambients + Style setters +
     /// token scales). Pair with `@ship/sail-tsconfig/base` or
     /// `deck build --typecheck`. tsc owns controller/logic types; sail-compiler
-    /// owns template/layout/vocabulary. In-workspace also runs
-    /// `scripts/emit-package-dts.ts` so Pure does not fall back to Framework src.
+    /// owns template/layout/vocabulary.
     Types {
-        /// Project directory that receives `node_modules/.sail/types.d.ts`.
-        /// Must contain sail.config.jsonc / sail.config.json. Default: cwd.
+        /// Path inside a Sail project (walks up to `sail.config.jsonc` / `.json`).
+        /// Writes `.sail/types.d.ts` at the project root. Default: cwd.
         #[arg(long)]
         project: Option<PathBuf>,
         /// Write ambient pack to this path instead of
-        /// `<project>/node_modules/.sail/types.d.ts`.
+        /// `<project>/.sail/types.d.ts`.
         #[arg(long)]
         out: Option<PathBuf>,
         /// Also write a recommended project tsconfig (use `-` for stdout).
@@ -173,15 +140,6 @@ enum Command {
         /// After writing kind configs, run tsc on sail + action and fail if red.
         #[arg(long)]
         check: bool,
-    },
-
-    /// Run the lean test-contract map (SPEC-TEST-2). Rust only — no node.
-    ///
-    /// Walks `.sail` files, emits queryable role/name/state maps under
-    /// `node_modules/.sail/test-map/`, and fails if a map is not lean.
-    Test {
-        /// File or directory of `.sail` sources.
-        input: PathBuf,
     },
 
     /// Run compile-time checks on `.sail` files.
@@ -330,43 +288,11 @@ enum McpCmd {
 
 #[derive(Subcommand)]
 enum Scaffold {
-    /// New SAIL route under `routes/<name>/` (a `page.sail`; optional
-    /// route-private widget). Deck derives the URL from the directory tree
-    /// — no manifest, no host metadata.
-    Route {
-        /// Route dir name. Lowercase ASCII + hyphens.
-        name: String,
-        /// URL pattern; defaults to `/<name>`.
-        #[arg(long)]
-        path: Option<String>,
-        /// Optional route-private widget; tag must start with `<name>-`.
-        #[arg(long)]
-        component: Option<String>,
-    },
-
-    /// New SAIL primitive under `packages/components/sail/primitives/src/<tag>/`.
-    Component {
-        /// Tag name (must start with `sail-`).
-        tag: String,
-        /// Also include an inline `<controller>` stub in the `.sail`.
-        #[arg(long)]
-        controller: bool,
-    },
-
-    /// New first-party SAIL components package under `packages/components/<name>/`.
-    /// Generates package.json, tsconfig.json, the umbrella `src/index.ts`,
-    /// and a starter `<name>-example` component.
-    #[command(name = "components-package", alias = "pack")]
-    ComponentsPackage {
-        /// Package name (lowercase + hyphens). Becomes `@ship/<name>`.
-        name: String,
-    },
-
     /// Seed project theme SSOT: copy one Sail default theme into
     /// `<project>/themes/` and write a thin `sail.config.jsonc`
     /// theme section when absent (C5). Apps do not ship the full catalog.
     Theme {
-        /// Project root (`routes/` + `package.json`). Default: cwd.
+        /// Path inside a Sail project (walks up to `sail.config.jsonc` / `.json`). Default: cwd.
         #[arg(long, default_value = ".")]
         project: PathBuf,
         /// Catalog theme id to copy (default: ship — modes-in-file primary).
@@ -376,9 +302,8 @@ enum Scaffold {
 }
 
 fn main() {
-    // Surface bundler diagnostics (e.g. a view referencing a component whose
-    // pack isn't declared in `deck.jsonc packs`) to stderr. Honors RUST_LOG;
-    // floors at `warn` so the diagnostic always shows even when unset.
+    // Surface bundler diagnostics to stderr. Honors RUST_LOG; floors at
+    // `warn` so diagnostics always show even when unset.
     let filter = tracing_subscriber::EnvFilter::try_from_default_env()
         .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("warn"));
     let _ = tracing_subscriber::fmt()
@@ -396,41 +321,7 @@ fn main() {
 fn run() -> Result<()> {
     let brand = binary_brand();
     match Cli::parse().command {
-        Command::Routes { root } => {
-            let cwd = std::env::current_dir().context("cwd")?;
-            let resolve = |p: PathBuf| {
-                if p.is_absolute() { p } else { cwd.join(p) }
-            };
-            if root.is_empty() {
-                anyhow::bail!("specify --root=<path> at least once");
-            }
-            let mut routes_specs = Vec::new();
-            for s in &root {
-                let r = resolve(s.clone());
-                let label = r
-                    .file_name()
-                    .map(|n| n.to_string_lossy().into_owned())
-                    .unwrap_or_else(|| r.display().to_string());
-                routes_specs.push(deck_bundler::routes::RouteGenSpec {
-                    dir: r.join("routes"),
-                    out: r.join("routes.gen.ts"),
-                    label,
-                    entry_bootstrap: None,
-                });
-            }
-            let n_routes = deck_bundler::routes::generate_routes(&routes_specs)?;
-            println!("{brand} routes → {n_routes} first-party route(s)");
-            Ok(())
-        }
         Command::Create { name } => scaffold::run_create(name),
-        Command::Scaffold(Scaffold::Route {
-            name,
-            path,
-            component,
-        }) => scaffold::run_route(name, path, component),
-        Command::Scaffold(Scaffold::Component { tag, controller }) => {
-            scaffold::run_component(tag, controller)
-        }
         Command::Build {
             project,
             out,
@@ -439,12 +330,7 @@ fn run() -> Result<()> {
             typecheck,
             base,
         } => build(project, out, bundle_framework, !no_minify, typecheck, base),
-        Command::Scaffold(Scaffold::ComponentsPackage { name }) => {
-            scaffold::run_components_package(name)
-        }
         Command::Scaffold(Scaffold::Theme { project, id }) => scaffold::run_theme(project, id),
-        Command::Emit { targets, out } => emit(targets, out),
-        Command::BuildAssets { no_stamp } => build_assets(no_stamp),
         Command::Dev { project, addr } => dev(project, addr),
         Command::Compile {
             input,
@@ -463,7 +349,6 @@ fn run() -> Result<()> {
             tsconfig_out,
             check,
         } => peer::types(project, out, tsconfig_out, check),
-        Command::Test { input } => peer::test_contract(input),
         Command::Check { input, fix } => peer::check(input, fix),
         Command::Fmt { input, check } => peer::fmt(input, check),
         Command::Inspect {
@@ -512,227 +397,21 @@ fn run() -> Result<()> {
         }
     }
 }
-/// closure — see `deck_bundler::emit`).
-fn emit(targets: Vec<String>, out: PathBuf) -> Result<()> {
-    let cwd = std::env::current_dir().context("cwd")?;
-    let out = if out.is_absolute() {
-        out
-    } else {
-        cwd.join(out)
-    };
-    let repo_root = find_repo_root(&cwd)?;
-    let cfg = deck_bundler::DeckConfig::defaults();
-    let layout = deck_bundler::targets::BundleLayout::with_config(repo_root, None, cfg);
-    let n = deck_bundler::emit::emit_targets(&layout, &targets, &out)?;
-    println!(
-        "{} emit → {} files into {}",
-        binary_brand(),
-        n,
-        out.display()
-    );
-    Ok(())
-}
-
-fn build_assets(no_stamp: bool) -> Result<()> {
-    let cwd = std::env::current_dir().context("cwd")?;
-    let repo_root = find_repo_root(&cwd)?;
-
-    let cfg = deck_bundler::DeckConfig::defaults();
-    let bundler = deck_bundler::Bundler::start(repo_root.clone(), None, cfg.clone());
-
-    let rt = tokio::runtime::Builder::new_multi_thread()
-        .enable_all()
-        .build()
-        .context("build tokio runtime")?;
-    rt.block_on(bundler.build_all())
-        .map_err(|e| anyhow::anyhow!("build_all failed: {e}"))?;
-
-    // Build the layout once — used for the framework verify+stamp, the components package
-    // CEM step, and the consumer guard below. assets_dir_for("sail-runtime")
-    // is now .deck/framework/ (the canonical bake target per Recommendation
-    // B1).
-    let layout = deck_bundler::targets::BundleLayout::with_config(repo_root.clone(), None, cfg);
-
-    // Verify + stamp the framework singletons BEFORE the components package CEM step
-    // (deck-deploy-gap): `deck-core/build.rs` needs these 4 files to build at
-    // all (an `include_str!` bake), but components-package CEM generation can legitimately
-    // fail on an UNRELATED component's lint violations — that must not take
-    // down the framework bake `build.rs` depends on. Verify every framework
-    // singleton that RESOLVED for this repo is non-empty.
-    // build_all returns Err on per-target failure, but a swallowed empty-write
-    // wouldn't surface there — keep this as defense in depth so the daemon can
-    // never ship empty framework bytes. The set is derived from the bundler's
-    // own target list (node-resolved): a singleton not installed in this repo is
-    // skipped by the bundler, so a hardcoded list would false-fail a consumer
-    // bake that doesn't depend on every singleton.
-    let fw_targets: Vec<_> = layout
-        .all_targets()
-        .into_iter()
-        .filter(|t| deck_bundler::targets::is_framework_singleton(&t.name))
-        .collect();
-    for t in &fw_targets {
-        let path = layout.assets_dir_for(&t.name).join(&t.out_file);
-        let len = std::fs::metadata(&path).map(|m| m.len()).unwrap_or(0);
-        if len == 0 {
-            bail!(
-                "framework bundle missing or empty after bake: {}",
-                path.display()
-            );
-        }
-        println!("  {}: {len} bytes", t.out_file);
-    }
-    if fw_targets.is_empty() {
-        println!("  (no framework singletons resolved from this repo — none baked here)");
-    }
-
-    // Stamp each freshly-baked framework bundle with the content hash of the
-    // TS sources it was built from (deck-deploy-gap): a leading `/*! ... */`
-    // comment header IN the bundle (so `deck-core`'s `include_str!` bakes it
-    // along with the code — no sidecar read needed to check the RUNNING
-    // binary) plus a `manifest.json` sidecar (for tooling that wants the
-    // stamps without parsing JS). `sail dev` recomputes the current source
-    // hash at startup and compares against the header baked into its own
-    // binary; a mismatch means the binary is older than its sources.
-    if !fw_targets.is_empty() {
-        let stamps = deck_bundler::stamp::current_framework_stamps(&repo_root)
-            .context("hashing framework source trees for the bake stamp")?;
-        let mut manifest = serde_json::Map::new();
-        for t in &fw_targets {
-            let Some(stamp) = stamps.iter().find(|s| s.bundle == t.out_file) else {
-                // No source root under this repo for this singleton (an
-                // external consumer vendoring a prebuilt framework) — nothing
-                // to stamp against, leave the bundle unstamped.
-                continue;
-            };
-            let path = layout.assets_dir_for(&t.name).join(&t.out_file);
-            let body = std::fs::read_to_string(&path)
-                .with_context(|| format!("reading {} to stamp it", path.display()))?;
-            // Re-running build-assets must not pile up headers.
-            let body = match deck_core::parse_baked_stamp(&body) {
-                Some(_) => body.split_once('\n').map(|x| x.1).unwrap_or("").to_string(),
-                None => body,
-            };
-            let stamped = format!(
-                "{}{body}",
-                deck_bundler::stamp::format_stamp_header(&stamp.hash)
-            );
-            deck_bundler::atomic::write(&path, stamped)
-                .with_context(|| format!("writing stamped {}", path.display()))?;
-            manifest.insert(
-                t.out_file.clone(),
-                serde_json::Value::String(stamp.hash.clone()),
-            );
-        }
-        if !manifest.is_empty() {
-            let manifest_dir = layout.assets_dir_for(&fw_targets[0].name);
-            let manifest_path = manifest_dir.join("manifest.json");
-            deck_bundler::atomic::write(
-                &manifest_path,
-                serde_json::to_string_pretty(&serde_json::Value::Object(manifest))?,
-            )
-            .with_context(|| format!("writing {}", manifest_path.display()))?;
-            println!("  manifest: {}", manifest_path.display());
-        }
-
-        // Touch the framework bake stamp used by `deck-core/build.rs` to
-        // decide when to re-stage bundles into `assets/`. The content is
-        // irrelevant; only the mtime matters. Tests pass `--no-stamp` so they
-        // can run `deck build-assets` without re-triggering this build script
-        // while downstream doctests are queued.
-        if !no_stamp {
-            let stamp_path = deck_config::framework_stamp_path(&repo_root);
-            deck_bundler::atomic::write(
-                &stamp_path,
-                // Empty content keeps the tracked crate stamp unmodified in git;
-                // Cargo's rerun-if-changed tracks mtime, not content.
-                b"",
-            )
-            .with_context(|| format!("writing {}", stamp_path.display()))?;
-            println!("  stamp: {}", stamp_path.display());
-        }
-    }
-
-    // Materialize each components package's standard `dist/custom-elements.json`
-    // (CEM) from its source. Run once here (the framework build), so per-app
-    // builds aggregate the pre-written manifests into `<app>/components.gen.ts`
-    // (`generate_components_gen`). Also the file every package declares for
-    // external tooling (Storybook / VS Code / lit-analyzer).
-    // A package that fails to compile fails the build. Printing and continuing is
-    // how un-migrated packages stayed invisible behind an exit-0 asset bake.
-    // Runs AFTER the framework verify+stamp above (deck-deploy-gap): a
-    // components-package lint failure is real and must still fail the overall
-    // command, but it must never block the framework bundles `build.rs`
-    // needs from being staged and stamped first.
-    let n = deck_bundler::cem::write_all_component_cems(&repo_root)
-        .context("component package CEM generation")?;
-    println!("  cem: {n} components-package manifest(s) written");
-
-    // Consumer guard: the discovered consumer bundles (per-package
-    // `deck.bundles`) have no build.rs guard — verify each is non-empty as
-    // defense in depth.
-    // Use BundleLayout to derive the exact output path per target (same routing
-    // logic the bundler uses) so the guard is always in sync with reality.
-    //
-    // Dev-loop skip: when DECK_DEV_SKIP_LAZY=1, the same lazy targets the
-    // bundler skipped above are also skipped by the guard (otherwise a
-    // successful dev build would always fail the guard for the skipped
-    // targets). The lazy flag rides on the BundleTarget (from the package's
-    // self-declaration) — no central-config lookup.
-    let skip_lazy = std::env::var("DECK_DEV_SKIP_LAZY")
-        .map(|v| v == "1" || v.eq_ignore_ascii_case("true"))
-        .unwrap_or(false);
-    for t in layout.consumer_targets() {
-        if skip_lazy && t.lazy {
-            println!("  {}: skipped (DECK_DEV_SKIP_LAZY=1, lazy)", t.name);
-            continue;
-        }
-        let out_dir = layout.assets_dir_for(&t.name);
-        let out_path = out_dir.join(&t.out_file);
-        let len = std::fs::metadata(&out_path).map(|m| m.len()).unwrap_or(0);
-        if len == 0 {
-            bail!(
-                "consumer bundle missing or empty after bake: {} \
-                 (target `{}` failed — check bundler logs)",
-                out_path.display(),
-                t.name
-            );
-        }
-        println!("  {}: {len} bytes", t.name);
-    }
-
-    println!(
-        "{} build-assets: bundles baked via in-process Rolldown",
-        binary_brand()
-    );
-    Ok(())
-}
 
 /// deck-deploy-gap: the incident this closes is a stale `sail-runtime.js`
 /// baked via `include_str!` served against post-rename compiled views —
 /// every setup binding came back undefined, the site rendered nothing, and
-/// the only symptom was a silent console error. The manual cure was a
-/// 3-step dance (`build-assets`, `cargo build -p deck-cli`, restart) that
-/// nothing enforced.
+/// the only symptom was a silent console error.
 ///
 /// Called once at `sail dev` startup: recomputes the current content hash of
 /// each framework singleton's TS source tree and compares it against the
 /// hash stamped into THIS binary's baked bundle (the leading `/*! ... */`
-/// comment `build_assets` writes — see `deck_bundler::stamp`). Three
-/// outcomes:
+/// comment `deck-bake build-assets` writes — see `deck_bundler::stamp`).
+/// Product `sail` never silent-regens via cargo. Two outcomes:
 ///   - fresh (hashes match): silent, `sail dev` proceeds.
-///   - stale AND regeneration is possible (a real Cargo workspace + `cargo`
-///     on PATH, and we haven't already tried once this restart cycle): log
-///     loud, run `build_assets()` in-process to re-stage `.deck/framework/`
-///     with a fresh stamp and update `crates/deck/deck-core/framework-stamp`, then
-///     `cargo run -p deck-cli -- dev …` — cargo picks up the changed stamp
-///     via `build.rs`'s `cargo:rerun-if-changed`, rebuilds `deck-core`
-///     (re-baking the fresh, now-stamped bundle) and `deck-cli`, and launches
-///     the new binary with the same args. This process then exits with the
-///     child's status — the restart IS the "then continue."
-///   - stale AND regeneration is impossible (no Cargo workspace / no cargo /
-///     already tried once and still mismatched): HARD FAIL, naming the exact
-///     commands. Never serve a mismatched runtime silently.
-fn ensure_framework_fresh(repo_root: &Path, project: &Path, addr: &str) -> Result<()> {
+///   - stale: HARD FAIL. Workspace bake checkout → run `deck-bake`. Else
+///     upgrade/rebuild `sail`. Never serve a mismatched runtime silently.
+fn ensure_framework_fresh(repo_root: &Path) -> Result<()> {
     let current = deck_bundler::stamp::current_framework_stamps(repo_root)
         .context("sail dev: hashing framework source trees to check bake freshness")?;
     let baked = deck_core::baked_framework_stamps();
@@ -760,76 +439,26 @@ fn ensure_framework_fresh(repo_root: &Path, project: &Path, addr: &str) -> Resul
         return Ok(());
     }
 
-    const REGEN_CMDS: &str = "cargo run -p deck-cli -- build-assets && cargo build -p deck-cli";
-    let repo_has_cargo = repo_root.join("Cargo.toml").is_file();
-    let cargo_available = std::process::Command::new("cargo")
-        .arg("--version")
-        .stdout(std::process::Stdio::null())
-        .stderr(std::process::Stdio::null())
-        .status()
-        .map(|s| s.success())
-        .unwrap_or(false);
-    let already_tried = std::env::var_os("DECK_DEV_STALE_REGEN_ATTEMPTED").is_some();
-
-    if !repo_has_cargo || !cargo_available {
+    if is_workspace_bake_checkout(repo_root) {
         anyhow::bail!(
-            "sail dev: baked framework bundle(s) are STALE and cannot be regenerated from here \
-             (no Cargo workspace at {} / no `cargo` on PATH):\n  {}\n\
-             Fix: from the sail monorepo, run `{REGEN_CMDS}`, then restart `sail dev`.",
-            repo_root.display(),
+            "sail dev: baked framework bundle(s) are STALE:\n  {}\n\
+             This checkout bakes with deck-bake, not product sail.\n\
+             Run `cargo run -p deck-cli --bin deck-bake -- build-assets`, \
+             then rebuild `sail` and restart `sail dev`.",
             stale.join("\n  ")
         );
     }
-    if already_tried {
-        anyhow::bail!(
-            "sail dev: baked framework bundle(s) are STILL stale after an automatic \
-             regenerate-and-restart:\n  {}\n\
-             The stamp may not be reproducible (e.g. a source tree that changes on every \
-             read). Fix manually: `{REGEN_CMDS}`, then restart `sail dev`.",
-            stale.join("\n  ")
-        );
-    }
-
-    eprintln!(
-        "sail dev: STALE framework bundle(s) detected — regenerating automatically:\n  {}",
+    anyhow::bail!(
+        "sail dev: baked framework bundle(s) are STALE:\n  {}\n\
+         Upgrade or rebuild `sail` (this is not a workspace bake checkout).",
         stale.join("\n  ")
     );
-    build_assets(false).context("sail dev: automatic build-assets (staleness regen) failed")?;
-
-    eprintln!("sail dev: rebuilding + restarting with the fresh bake...");
-    let status = std::process::Command::new("cargo")
-        .current_dir(repo_root)
-        .env("DECK_DEV_STALE_REGEN_ATTEMPTED", "1")
-        .args(["run", "--quiet", "-p", "deck-cli", "--", "dev", "--project"])
-        .arg(project)
-        .args(["--addr", addr])
-        .status()
-        .context("sail dev: spawning `cargo run -p deck-cli -- dev` for the staleness restart")?;
-    std::process::exit(status.code().unwrap_or(1));
 }
 
-/// Resolve the workspace root for a build from `start` (the project dir).
-///
-/// In the ship monorepo the root is the topmost `Cargo.toml` (the Cargo and
-/// bun workspaces coincide there). But deck is a GENERAL framework: a consumer
-/// can be a pure-JS app with no Cargo workspace at all (e.g. ship-ops), and
-/// deck must build it too. So when there is no topmost `Cargo.toml` we fall
-/// back to the project dir itself as the root. The root is used for `@ship/*`
-/// workspace-source discovery and as the DEFAULT framework-assets origin; an
-/// external consumer overrides the latter with `DECK_FRAMEWORK_ASSETS_DIR` and
-/// resolves the framework specifiers as importmap externals (they never need
-/// source). A Cargo workspace is therefore NOT required.
-///
-/// NOTE: for a pure-JS bun/npm workspace built from an app subdir
-/// (`apps/demo`), `start` is the app dir, NOT the workspace root —
-/// framework + node_modules resolution must key off the app dir (its per-app
-/// `node_modules`), but `@ship/<pkg>` sibling-package discovery must reach the
-/// enclosing workspace. That broadening lives in
-/// `catalog::component_package_roots` (it unions the enclosing JS workspace via
-/// [`deck_bundler::paths::topmost_workspace_root`]), NOT here — so this root
-/// stays the project dir and framework resolution is unchanged.
-fn find_repo_root(start: &Path) -> Result<PathBuf> {
-    Ok(deck_bundler::paths::topmost_cargo_root(start).unwrap_or_else(|| start.to_path_buf()))
+/// This monorepo checkout — the one that bakes with `deck-bake`, not product `sail`.
+fn is_workspace_bake_checkout(root: &Path) -> bool {
+    root.join("crates/deck/deck-cli/Cargo.toml").is_file()
+        && root.join("packages/sail/runtime/src").is_dir()
 }
 
 fn build(
@@ -849,18 +478,24 @@ fn build(
         }
     };
 
-    let project = abs(&project)
+    let from = abs(&project);
+    if !from.exists() {
+        bail!("project {} does not exist", from.display());
+    }
+    let project = peer::discover_app(&from)?
+        .root()
         .canonicalize()
-        .with_context(|| format!("project {}", project.display()))?;
-    // The project is the dev's authored source tree (`package.json`,
-    // `routes/`, `public/`). The default out dir lives INSIDE the
-    // project as `<project>/.deck/` — a sibling of `routes/` and
-    // `public/`, not above them. The bundler writes the generated
-    // `index.html`, the entry chunk, and the framework surface there.
+        .with_context(|| format!("project {}", from.display()))?;
+    // The project is the directory that owns `sail.config`. The default
+    // out dir lives INSIDE it as `<project>/dist/` — a sibling of
+    // `routes/` and `public/`, not above them. The bundler writes the
+    // generated `index.html`, the entry chunk, and the framework surface
+    // there.
     let out_dir = out
         .map(|o| abs(&o))
         .unwrap_or_else(|| deck_config::deck_out_path(&project));
-    let repo_root = find_repo_root(&project)?;
+    let repo_root =
+        deck_bundler::paths::topmost_workspace_root(&project).unwrap_or(project.clone());
     // The framework singletons are resolved by NODE RESOLUTION from the
     // project's `node_modules` (the bundler's `framework_singletons` /
     // `bundle_owned_framework`) — `--bundle-framework` builds them from source.
@@ -869,11 +504,10 @@ fn build(
     // a workspace symlink), so a build runs identically inside or outside the
     // sail monorepo.
 
-    // Load the host's view-discovery config (packs scope). Consumer bundles
-    // are discovered from per-package `deck.bundles`, not read here. L1 (deck)
-    // has no per-app config — shipd's apps.jsonc owns the app list; the
-    // bundler is per-app and reads its own project root.
-    let cfg = deck_bundler::DeckConfig::defaults();
+    // Host route-discovery defaults. Consumer bundles are
+    // discovered from per-package `deck.bundles`. L1 (deck) has no per-app
+    // config — shipd's apps.jsonc owns the app list; the bundler is per-app
+    // and reads its own project root.
 
     // The app graph compiles its own `.sail` in-process via the linked
     // sail-compiler crate (#255) — no binary to locate.
@@ -884,7 +518,6 @@ fn build(
     let b = rt
         .block_on(deck_bundler::app::bundle_app_with_base(
             &repo_root,
-            &cfg.packs,
             &project,
             &out_dir,
             minify,
@@ -952,36 +585,30 @@ impl deck_core::DataPort for NoopDataPort {
 }
 
 fn dev(project: PathBuf, addr: String) -> Result<()> {
-    // Resolve the project root. Canonicalize so symlinks/bare relative paths
-    // collapse to a single absolute path the bundler and resolver can key
-    // off.
+    // Resolve the project via Project::discover (cwd or --project may be
+    // nested). Canonicalize so symlinks/bare relative paths collapse to a
+    // single absolute path the bundler and resolver can key off.
     let cwd = std::env::current_dir().context("cwd")?;
     let project_path = if project.is_absolute() {
-        project.clone()
+        project
     } else {
         cwd.join(&project)
     };
-    let project_dir = project_path
+    if !project_path.exists() {
+        anyhow::bail!("{} does not exist", project_path.display());
+    }
+    let project_dir = peer::discover_app(&project_path)?
+        .root()
         .canonicalize()
         .with_context(|| format!("canonicalize {}", project_path.display()))?;
-    // Bail up front if the path isn't a directory — keeps the later bundler
-    // diagnostics readable.
-    if !project_dir.is_dir() {
-        anyhow::bail!("{} is not a directory", project_dir.display());
-    }
-    // The real workspace root (component/workspace resolution) is found by
-    // walking up from the project; the project dir itself is one app.
-    let workspace_root = find_repo_root(&project_dir)?;
+    // Workspace is bake / monorepo `@ship` resolution — not the app.
+    let workspace_root =
+        deck_bundler::paths::topmost_workspace_root(&project_dir).unwrap_or(project_dir.clone());
 
     // deck-deploy-gap: never serve a framework bundle staler than its
-    // sources. Regenerates + restarts (see `ensure_framework_fresh`) or
-    // hard-fails naming the exact fix — checked BEFORE the server (and
-    // BEFORE the tokio runtime below exists): `ensure_framework_fresh`'s
-    // regen path calls `build_assets()`, which spins up its OWN tokio
-    // runtime — `block_on` from inside an already-running runtime panics
-    // ("Cannot start a runtime from within a runtime"), so this must run on
-    // a plain sync thread, not inside `runtime.block_on(async move { .. })`.
-    ensure_framework_fresh(&workspace_root, &project_dir, &addr)?;
+    // sources. Product `sail` does not silent-regen via cargo — fail loud
+    // (workspace bake checkout → `deck-bake`; else upgrade/rebuild `sail`).
+    ensure_framework_fresh(&workspace_root)?;
 
     let runtime = tokio::runtime::Builder::new_multi_thread()
         .enable_all()
@@ -991,7 +618,7 @@ fn dev(project: PathBuf, addr: String) -> Result<()> {
         // deck-core's resolution is mount-scoped: the project root is carried
         // per-request through the `Resolution` Extension layered below (not a
         // process global), so `serve_index` / `serve_app_*` / `spa_fallback`
-        // resolve the app's built assets (`.deck/index.html`, `/<name>/<file>`)
+        // resolve the app's built assets (`dist/index.html`, `/<name>/<file>`)
         // against THIS mount's root.
         let cfg = deck_config::DeckConfig::defaults();
 
@@ -1019,7 +646,7 @@ fn dev(project: PathBuf, addr: String) -> Result<()> {
         }
 
         // Build the app ONCE up front. `start_watching` only REBUILDS on
-        // edit; without an initial build the project emits no `.deck/`
+        // edit; without an initial build the project emits no `dist/`
         // output and EVERY page 404s — the gap a runtime-only smoke test
         // (just `/_deck/runtime.js`) misses. `bundle_framework = false`:
         // sail dev serves the framework singletons itself at `/_deck/*`,
@@ -1027,7 +654,6 @@ fn dev(project: PathBuf, addr: String) -> Result<()> {
         let out_dir = deck_config::deck_out_path(&project_dir);
         let build = deck_bundler::app::bundle_app(
             &workspace_root,
-            &cfg.packs,
             &project_dir,
             &out_dir,
             false,
@@ -1045,7 +671,7 @@ fn dev(project: PathBuf, addr: String) -> Result<()> {
         // bake. `source` is the build out dir relative to the project root.
         // sail.config nested `deck` serve keys for injectGlobals / render /
         // entry — name/route/source are host-bound here, never the file's.
-        let mut app_cfg = deck_config::AppServeConfig::load_from_project(&project_dir)
+        let mut app_cfg = deck_bundler::load_app_serve(&project_dir)
             .map_err(|e| anyhow::anyhow!("app serve config: {e}"))?;
         // SSR engine: only spin up ship-js (V8) when this app opts into SSR
         // (`sail.config { "deck": { "render": "ssr" } }`). A CSR app (the
@@ -1083,7 +709,7 @@ fn dev(project: PathBuf, addr: String) -> Result<()> {
         // for the overlay bridge (TOOL-4). Fail-soft: missing/broken/hung
         // studio build never blocks the primary app.
         //
-        // Reuse existing `.deck` by default — a full studio rebuild can hang
+        // Reuse existing `dist/` by default — a full studio rebuild can hang
         // in layout (theme-shape etc.) and used to block docs from ever
         // reaching `serving`. Set DECK_STUDIO_FORCE_REBUILD=1 to force rebuild.
         let studio_dir = workspace_root.join("apps/studio");
@@ -1117,7 +743,6 @@ fn dev(project: PathBuf, addr: String) -> Result<()> {
                     std::time::Duration::from_secs(180),
                     deck_bundler::app::bundle_app(
                         &workspace_root,
-                        &cfg.packs,
                         &studio_dir,
                         &studio_out,
                         false,
@@ -1150,8 +775,7 @@ fn dev(project: PathBuf, addr: String) -> Result<()> {
 
             if let Some(url_namespace) = namespace {
                 let mut studio_cfg =
-                    deck_config::AppServeConfig::load_from_project(&studio_dir)
-                        .unwrap_or_default();
+                    deck_bundler::load_app_serve(&studio_dir).unwrap_or_default();
                 studio_cfg.name = url_namespace;
                 studio_cfg.route = "/_studio".to_string();
                 studio_cfg.source = deck_config::DECK_OUT_DIRNAME.to_string();
@@ -1218,24 +842,24 @@ fn dev(project: PathBuf, addr: String) -> Result<()> {
             eprintln!("sail dev: watcher failed to start: {e}");
         }
 
-        // ── HMR (foundational, full-document) ────────────────────────────────
+        // ── HMR (app-granular remount: keep signals, swap CSS — not Vite) ──
         // The bundler's own watcher rebuilds TARGETS (views, framework). The
         // SPA is the one-shot `bundle_app` ENTRY — not a target — so `routes/` +
-        // `src/` + workspace components package edits emit nothing through it. sail dev owns
+        // `src/` + library source edits emit nothing through it. sail dev owns
         // this loop: a notify watcher on authored source re-runs `bundle_app`
         // and emits a `module-changed` (target `app`) on the bundler's firehose,
-        // which `serve_bundle_hmr` streams to the live-reload client → full-
-        // document reload. (Module-granular reload is the next layer.)
+        // which `serve_bundle_hmr` streams to the live-reload client → the
+        // client re-imports the hashed entry → `__deckHmr.swapModules` remounts
+        // the current route (signal values kept, hashed CSS swapped). Not a
+        // full document reload. Not per-route `swapModule`.
         //
         // Watch roots:
         // - project `routes/` + `src/` + `public/` + `themes/`
-        //   — never project root / `.deck/` (regenerated
+        //   — never project root / `dist/` / `.sail/` (regenerated
         //   `routes.gen.ts` / out dir must not self-trigger). Project theme
         //   SSOT is `themes/**`.
-        // - workspace components package `src/` trees (and package root if no `src/`)
-        //   so edits under `packages/components/...` HMR like local rails —
-        //   previously only the app tree was watched and components-package edits needed a
-        //   full `sail dev` restart.
+        // - discovered library `src/` trees (and package root if no `src/`)
+        //   so edits in `@ship/sail-components` HMR like local rails.
         // - monorepo catalog themes: `packages/sail/tokens/model/**` (DTCG SSOT;
         //   generated `src/tokens.css` / `themes.css` are NOT watched — those
         //   are outputs of `sail-compiler tokens`).
@@ -1244,9 +868,8 @@ fn dev(project: PathBuf, addr: String) -> Result<()> {
         //   save DTCG under themes/ or model/themes
         //   (or project sail.config theme section) → tokens generate:
         //     package: full catalog + project → packages/sail/tokens/src
-        //     app:     T0 effective set → <project>/.deck/themes/themes.css (B1)
+        //     app:     T0 effective set → <project>/.sail/themes/themes.css (B1)
         //   → HMR swaps CSS. No client IR / :root setProperty.
-        let hmr_packs = cfg.packs.clone();
         let (hmr_tx, mut hmr_rx) = tokio::sync::mpsc::channel::<Vec<std::path::PathBuf>>(8);
         // Set when a watched path is theme/model/config source; rebuild loop runs
         // dual `tokens_generate` before `bundle_app` so delivery CSS stays
@@ -1259,6 +882,8 @@ fn dev(project: PathBuf, addr: String) -> Result<()> {
         // Notify overflow used to be safe (next tick always rebuilt). Skip now
         // keys off the path list — a dropped `.ts` + later `.sail` would skip
         // the sail typecheck. Sticky unknown forces the gate on the next tick.
+        // A red type-gate tick is also sticky (`gate_was_dirty` in the rebuild
+        // loop): the next tick must re-run the gate, not skip.
         let hmr_gate_unknown = Arc::new(AtomicBool::new(false));
         // Keep the notify watcher alive for the whole `sail dev` session.
         // Ownership for mid-session theme attach (#13/#14):
@@ -1304,7 +929,7 @@ fn dev(project: PathBuf, addr: String) -> Result<()> {
                     }
                 }
                 // Ignore generated artifacts a rebuild writes (`.gen.ts`,
-                // `.sail.d.ts` companions, `.compiled.js`, pack `dist/`,
+                // `.sail.d.ts` companions, `.compiled.js`, library `dist/`,
                 // tokens package *delivery* under packages/sail/tokens/src)
                 // so they can't self-trigger. Model/themes JSON is SSOT and
                 // is watched deliberately.
@@ -1315,22 +940,17 @@ fn dev(project: PathBuf, addr: String) -> Result<()> {
                             || s.contains(".sail.d.ts")
                             || s.contains(".compiled.js")
                             || s.contains("/dist/")
+                            || s.contains("/.sail/")
                             || s.contains("/node_modules/")
-                            // Project-root NonRecursive watch sees `.deck` create;
-                            // never rebuild on deck out dir (self-trigger).
-                            || s.contains("/.deck/")
-                            || s.ends_with("/.deck")
-                            || p.file_name().and_then(|n| n.to_str()) == Some(".deck")
-                            // The atomic-publish STAGE sibling (`.deck.stage`,
-                            // `.deck.stage.<suffix>`) is created+removed by every
-                            // rebuild at project-root level — unfiltered, each
-                            // rebuild's own stage create/remove fired the next
-                            // rebuild: a self-sustaining Create/Remove loop at
-                            // full CPU after the first edit (the shipd-class spin).
-                            || s.contains("/.deck.stage")
+                            || s.ends_with("/dist")
+                            || p.file_name().and_then(|n| n.to_str()) == Some("dist")
+                            || s.ends_with("/.sail")
+                            || p.file_name().and_then(|n| n.to_str()) == Some(".sail")
+                            // Atomic-publish sibling (`dist.stage`, `dist.stage.<suffix>`).
+                            || s.contains("/dist.stage")
                             || p.file_name()
                                 .and_then(|n| n.to_str())
-                                .is_some_and(|n| n.starts_with(".deck.stage"))
+                                .is_some_and(|n| n.starts_with("dist.stage"))
                             || is_tokens_generated_delivery(&s)
                             // HMR rebuild re-emits the generated solution
                             // tsconfig at the project root. Even a same-bytes
@@ -1399,18 +1019,20 @@ fn dev(project: PathBuf, addr: String) -> Result<()> {
                     watched.push(dir);
                 }
             }
-            // Workspace component packs used by this monorepo (and enclosing
-            // workspace). Prefer `src/` so we don't pick up pack `dist/` churn.
-            let pack_roots = deck_bundler::catalog::component_package_roots(&workspace_root);
-            for pack_root in pack_roots.values() {
-                if pack_root == &project_dir {
+            // Discovered component libraries. Prefer source trees so we
+            // don't pick up library `dist/` churn. Umbrella
+            // `@ship/sail-components` watches `src/` and each domain
+            // `*/src` (primitives/src, charts/src, …).
+            let lib_roots = deck_bundler::catalog::component_package_roots(&workspace_root);
+            for lib_root in lib_roots.values() {
+                if lib_root == &project_dir {
                     continue; // already covered by project src/
                 }
-                let src = pack_root.join("src");
-                if src.is_dir() {
-                    watched.push(src);
-                } else if pack_root.is_dir() {
-                    watched.push(pack_root.clone());
+                let src_roots = deck_bundler::catalog::component_src_roots(lib_root);
+                if !src_roots.is_empty() {
+                    watched.extend(src_roots);
+                } else if lib_root.is_dir() {
+                    watched.push(lib_root.clone());
                 }
             }
             // Compiler stdlib `.sail` (buttons, layout keywords, …) — rare edits
@@ -1436,7 +1058,7 @@ fn dev(project: PathBuf, addr: String) -> Result<()> {
             }
             // Always NonRecursive-watch the project root so mid-session create of
             // `sail.config.json(c)` or `tokens/` is visible (#13). Not Recursive:
-            // `.deck/` write storms must not self-trigger (also filtered above).
+            // `dist/` / `.sail/` write storms must not self-trigger (also filtered above).
             let mut n_root = 0usize;
             if w
                 .watch(&project_dir, notify::RecursiveMode::NonRecursive)
@@ -1470,7 +1092,7 @@ fn dev(project: PathBuf, addr: String) -> Result<()> {
                 .map_err(|e| anyhow::anyhow!("sail dev: theme watch attach thread: {e}"))?;
             println!(
                 "sail dev: HMR watching {n} tree(s) + {n_root} project-root + \
-                 {n_cfg} theme-config (app routes/src/public/tokens + packs + \
+                 {n_cfg} theme-config (app routes/src/public/tokens + libraries + \
                  tokens model; theme paths attach mid-session)"
             );
             (w, theme_attach_join)
@@ -1485,6 +1107,11 @@ fn dev(project: PathBuf, addr: String) -> Result<()> {
             let cat_edit = Arc::clone(&catalog_model_edit);
             let gate_unknown = Arc::clone(&hmr_gate_unknown);
             tokio::spawn(async move {
+                // Last tick had type-gate errors: the next tick must re-run
+                // the gate even if `changed` is `.sail`-only. Skip would
+                // rebuild + emit `module-changed` and clear the overlay
+                // while `.ts` is still red.
+                let mut gate_was_dirty = false;
                 while let Some(first) = hmr_rx.recv().await {
                     let mut changed = first;
                     // Debounce: settle the burst, then drain coalesced ticks.
@@ -1492,9 +1119,12 @@ fn dev(project: PathBuf, addr: String) -> Result<()> {
                     while let Ok(more) = hmr_rx.try_recv() {
                         changed.extend(more);
                     }
-                    let force_gate = gate_unknown.swap(false, Ordering::AcqRel);
+                    let force_gate = force_hmr_type_gate(
+                        gate_unknown.swap(false, Ordering::AcqRel),
+                        gate_was_dirty,
+                    );
                     // Theme/model/config edit → dual generate (T1 B1):
-                    // package full catalog + app-local .deck/themes/themes.css.
+                    // package full catalog + app-local .sail/themes/themes.css.
                     if need_gen.swap(false, Ordering::AcqRel) {
                         let project_edit = proj_edit.swap(false, Ordering::AcqRel);
                         let catalog = cat_edit.swap(false, Ordering::AcqRel);
@@ -1539,6 +1169,7 @@ fn dev(project: PathBuf, addr: String) -> Result<()> {
                         .filter(|d| d.severity == sail_compiler::DiagSeverity::Error)
                         .collect();
                     if !gate_errs.is_empty() {
+                        gate_was_dirty = true;
                         let message =
                             sail_compiler::check::tscheck::format_project_gate_overlay(&gate_errs);
                         eprintln!("sail dev: sail typecheck failed");
@@ -1559,7 +1190,8 @@ fn dev(project: PathBuf, addr: String) -> Result<()> {
                         );
                         continue;
                     }
-                    match deck_bundler::app::bundle_app(&ws, &hmr_packs, &proj, &od, false, false).await {
+                    gate_was_dirty = false;
+                    match deck_bundler::app::bundle_app(&ws, &proj, &od, false, false).await {
                         Ok(_) => {
                             let _ = bundler_hmr.emit_watch_event(
                                 deck_bundler::BundlerEvent::ModuleChanged {
@@ -1707,6 +1339,14 @@ fn dev(project: PathBuf, addr: String) -> Result<()> {
         }
         Ok(())
     })
+}
+
+/// Next HMR tick must run the project type gate (no `.sail`-only skip)
+/// when notify overflowed (`unknown`) or the previous tick had type-gate
+/// errors (`last_dirty`). Overflow loses path identity; a dirty previous
+/// tick must not skip while still red (overlay would clear on rebuild).
+fn force_hmr_type_gate(unknown: bool, last_dirty: bool) -> bool {
+    unknown || last_dirty
 }
 
 /// Does this watch event change the COMPONENT STRUCTURE of the project —
@@ -1868,7 +1508,7 @@ fn is_tokens_generated_delivery(path: &str) -> bool {
 /// Dev paint path tokens generate:
 ///
 /// 1. **App** (always) — baked catalog (or monorepo disk model) + project
-///    themes → `<project>/.deck/themes/themes.css` (bundler aliases
+///    themes → `<project>/.sail/themes/themes.css` (bundler aliases
 ///    `@ship/tokens/themes.css` here when present).
 /// 2. **Package** (monorepo only) — full catalog + project merge →
 ///    `packages/sail/tokens/src`, gated by
@@ -1926,6 +1566,28 @@ mod tests {
     use super::*;
     use notify::EventKind;
     use notify::event::{CreateKind, DataChange, ModifyKind, RemoveKind, RenameMode};
+
+    #[test]
+    fn type_gate_force_when_last_tick_was_red_or_overflow() {
+        assert!(!force_hmr_type_gate(false, false));
+        assert!(force_hmr_type_gate(true, false));
+        assert!(force_hmr_type_gate(false, true));
+        assert!(force_hmr_type_gate(true, true));
+    }
+
+    #[test]
+    fn workspace_bake_checkout_detects_this_repo_shape() {
+        let tmp = tempfile::tempdir().unwrap();
+        assert!(!is_workspace_bake_checkout(tmp.path()));
+        std::fs::create_dir_all(tmp.path().join("crates/deck/deck-cli")).unwrap();
+        std::fs::write(
+            tmp.path().join("crates/deck/deck-cli/Cargo.toml"),
+            "[package]\nname = \"deck-cli\"\n",
+        )
+        .unwrap();
+        std::fs::create_dir_all(tmp.path().join("packages/sail/runtime/src")).unwrap();
+        assert!(is_workspace_bake_checkout(tmp.path()));
+    }
 
     /// A new component dir (Create), a removed one (Remove), and a rename all
     /// invalidate the component-index memo; a plain content edit does not —

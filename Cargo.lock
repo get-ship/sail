@@ -882,6 +882,7 @@ dependencies = [
  "rolldown_error",
  "rustc-hash",
  "sail-compiler",
+ "sail-lint",
  "serde",
  "serde_json",
  "tempfile",
@@ -922,7 +923,6 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "tempfile",
  "tracing",
 ]
 
@@ -961,6 +961,7 @@ dependencies = [
  "notify",
  "regex",
  "sail-compiler",
+ "sail-lint",
  "serde",
  "serde_json",
  "specta",
@@ -4639,6 +4640,7 @@ dependencies = [
  "oxc_parser 0.128.0",
  "oxc_span 0.128.0",
  "oxc_syntax 0.128.0",
+ "schemars",
  "serde",
  "serde_json",
  "spinnaker",
@@ -4681,6 +4683,7 @@ name = "sail-ops"
 version = "0.1.0"
 dependencies = [
  "axum",
+ "deck-bundler",
  "futures-util",
  "http-body-util",
  "reqwest",
@@ -6646,10 +6649,6 @@ dependencies = [
 ]
 
 [[patch.unused]]
-name = "ship-proto"
-version = "0.1.0"
-
-[[patch.unused]]
 name = "deck"
 version = "0.1.0"
 
@@ -6687,4 +6686,8 @@ version = "0.1.0"
 
 [[patch.unused]]
 name = "yoke"
+version = "0.1.0"
+
+[[patch.unused]]
+name = "ship-proto"
 version = "0.1.0"

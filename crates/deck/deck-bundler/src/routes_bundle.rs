@@ -21,7 +21,7 @@ use crate::targets::{BundleLayout, BundleTarget, TargetEntry};
 
 /// Bundle every route in `views` together so a component shared by ≥2 routes
 /// dedups into one shared chunk. Output lands under the routes' `assets_dir_for`
-/// (`.deck`). Always runs the per-route resolver (it is the whole point — the
+/// (`.sail`). Always runs the per-route resolver (it is the whole point — the
 /// routes must import their components for there to be anything to dedup). The
 /// oxc graph is dropped + arenas trimmed before returning (#256), though the
 /// multi-entry graph is necessarily larger than a single route's.
@@ -95,7 +95,7 @@ pub async fn bundle_routes(
         ..Default::default()
     };
 
-    let resolver = component_index(&layout.repo_root, &layout.cfg.packs);
+    let resolver = component_index(&layout.repo_root, &[]);
     let plugin = SailPlugin {
         repo_root: layout.repo_root.clone(),
         emit_component_imports: true,

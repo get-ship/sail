@@ -69,7 +69,7 @@ export default () => ({})
     }
     let _guard = EntryGuard(entry_path.clone());
 
-    let out_dir = repo_root.join(".deck/fonts-smoke-out");
+    let out_dir = repo_root.join(".sail/fonts-smoke-out");
     let _ = std::fs::remove_dir_all(&out_dir);
     std::fs::create_dir_all(&out_dir).unwrap();
 

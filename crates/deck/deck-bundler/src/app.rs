@@ -18,7 +18,7 @@
 //! `public/` (static assets). The bundler generates the rest: `index.html`
 //! (from a template, with the importmap substituted), `routes.gen.ts` (the
 //! entry that `index.html` references), and the bundled entry chunk.
-//! Project builds live at `<project>/.deck/` by default.
+//! Project builds live at `<project>/dist/` by default.
 
 use std::borrow::Cow;
 use std::collections::HashSet;
@@ -43,7 +43,7 @@ use rolldown_common::{ChunkFilenamesOutputOption, ModuleType, ResolvedExternal};
 /// + the router the framework owns). What is NOT here: framework CLIENTS
 /// (`@ship/sdk-client`, etc.) — those are provider-declared. A framework-
 /// singleton package self-declares its serve contract in its OWN
-/// `package.json#deckFramework` (mirror of how packs declare
+/// `package.json#deckFramework` (mirror of how libraries declare
 /// `customElements`), and the bundler DISCOVERS these by walking the
 /// app's resolved dependency graph (see [`discover_deck_frameworks`]).
 /// The app declares nothing; deck names no ship package; the singleton
@@ -96,7 +96,7 @@ const FRAMEWORK_ASSETS: &[(&str, &str, &str)] = &[
         "_deck/runtime.js",
     ),
     // Virtualization (use:virtualRow / TanStack core). Same singleton —
-    // packs that import `@ship/sail-runtime/virtual` must not inline a
+    // libraries that import `@ship/sail-runtime/virtual` must not inline a
     // second signal graph.
     (
         "@ship/sail-runtime/virtual",
@@ -150,7 +150,7 @@ pub fn framework_assets() -> &'static [(&'static str, &'static str, &'static str
 /// `framework_clients` map: the package that owns the singleton
 /// declares its serve contract, and the bundler discovers it via the
 /// app's dep graph (the same walker that finds components, bundles,
-/// routes). Mirror of how packs declare `customElements` — the package
+/// routes). Mirror of how libraries declare `customElements` — the package
 /// names itself; deck names no ship path.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct DeckFrameworkDecl {
@@ -182,8 +182,7 @@ pub(crate) struct DeckFrameworkDecl {
 /// bundler binds the alias to `/_deck/sdk-client.js`. No special-case
 /// route; one URL convention, one handler.
 ///
-/// Output is pretty-printed with 2-space indent to match the existing
-/// `apps/shell/index.html` style.
+/// Output is pretty-printed with 2-space indent.
 fn generate_importmap(dist_prefix: &str, discovered: &[DeckFrameworkDecl]) -> String {
     let mut imports: std::collections::BTreeMap<String, String> = std::collections::BTreeMap::new();
     for (alias, _src, dist_rel) in FRAMEWORK_ASSETS {
@@ -886,22 +885,12 @@ async fn bundle_owned_framework(repo_root: &Path, out_dir: &Path, minify: bool) 
 /// directly, use [`bundle_app_with_base`] with `Some("assets")`.
 pub async fn bundle_app(
     repo_root: &Path,
-    packs: &[String],
     project: &Path,
     out_dir: &Path,
     minify: bool,
     bundle_framework: bool,
 ) -> Result<AppBuild> {
-    bundle_app_with_base(
-        repo_root,
-        packs,
-        project,
-        out_dir,
-        minify,
-        bundle_framework,
-        None,
-    )
-    .await
+    bundle_app_with_base(repo_root, project, out_dir, minify, bundle_framework, None).await
 }
 
 /// `bundle_app` with an explicit asset-URL `base`. `base` overrides the URL
@@ -912,7 +901,6 @@ pub async fn bundle_app(
 /// package-name serve namespace (the host's per-app route maps it to `assets/`).
 pub async fn bundle_app_with_base(
     repo_root: &Path,
-    packs: &[String],
     project: &Path,
     out_dir: &Path,
     minify: bool,
@@ -923,7 +911,7 @@ pub async fn bundle_app_with_base(
     // OPTIONAL — an app without sail.config (or without `deck`) is fully
     // conventional (csr, no inject, no entry). Presence of deck.jsonc is a
     // hard config error. No dual-read of top-level serve keys.
-    let app_cfg = match deck_config::AppServeConfig::load_from_project(project) {
+    let app_cfg = match crate::load_app_serve(project) {
         Ok(cfg) => {
             // Treat pure-default as "absent" so callers that key on Option keep
             // prior behavior for zero-config apps.
@@ -964,9 +952,11 @@ pub async fn bundle_app_with_base(
     };
     crate::routes::generate_routes(&[routes_spec]).context("generate routes.gen.ts")?;
 
-    // 1b. Component catalog for this app: aggregate CEM modules from component
-    // pack deps and emit `components.gen.ts`. No-op when the project has no
-    // `package.json` dependencies on components packages.
+    // 1b. Studio library UI: aggregate CEM modules from component-library
+    // deps and emit `components.gen.ts`. No-op when the project has no
+    // `package.json` dependencies on those libraries. Product apps do not
+    // read this file; leaving the emit here because a Studio-only split is
+    // not a single obvious call site (Studio is built through this same path).
     crate::cem::generate_components_gen(project, repo_root)
         .context("generate components.gen.ts")?;
 
@@ -1004,7 +994,8 @@ pub async fn bundle_app_with_base(
     // default when the host declares no `entry.bootstrap`, the host's clients
     // wired in when it does. (`routes.gen.ts` is data-only and never mounts.)
     let entry_module = "entry.gen.ts";
-    let html = crate::templates::render_index_html(&project_name, &importmap_json, entry_module);
+    let site = crate::templates::SiteDocument::from_project(project, &project_name);
+    let html = crate::templates::render_index_html_with_site(&importmap_json, entry_module, &site);
     // Static build: same theme meta stamps as the dev serve path (assets.rs).
     // Without these, the product picker falls back to full THEMES and pre-paint
     // cannot read project theme.default / defaultMode.
@@ -1013,12 +1004,12 @@ pub async fn bundle_app_with_base(
     let html = deck_core::inject_theme_defaults_meta(&html, project);
     // Atomic publication (dev-loop-atomic): the old flow deleted the LIVE out
     // dir here and wrote `index.html` last, so every request during a watch
-    // rebuild saw `scaffold '<app>' not built (missing .deck/index.html)` for
+    // rebuild saw `scaffold '<app>' not built (missing dist/index.html)` for
     // the whole rebuild window. Build into a sibling staging dir instead and
     // promote it file-by-file via atomic rename at the end (`publish_build`,
     // index.html last) — the served tree always carries a complete scaffold.
     // Pruning stale files (the job `remove_dir_all` used to do, for the
-    // build-owned `dist`/`.deck` leaves only) happens AFTER the swap.
+    // build-owned `dist` leaf only) happens AFTER the swap.
     let out_leaf = out_dir.file_name().and_then(|s| s.to_str()).unwrap_or("");
     let prune_stale = out_leaf == "dist" || out_leaf == deck_config::DECK_OUT_DIRNAME;
     let dest_dir = out_dir;
@@ -1079,14 +1070,14 @@ pub async fn bundle_app_with_base(
         ..Default::default()
     };
     let app_plugin = AppPlugin { externals };
-    let resolver = crate::sail_plugin::component_index(repo_root, packs);
+    let resolver = crate::sail_plugin::component_index(repo_root, &[]);
     let sail_plugin = crate::sail_plugin::SailPlugin {
         repo_root: repo_root.to_path_buf(),
         emit_component_imports: true,
         component_index: resolver.index,
         shadowed_tags: resolver.shadowed,
         component_roots: crate::catalog::component_package_roots(repo_root),
-        // T1 B1: alias @ship/tokens/themes.css → project/.deck/themes/themes.css when present.
+        // T1 B1: alias @ship/tokens/themes.css → project/.sail/themes/themes.css when present.
         project_dir: Some(project.to_path_buf()),
     };
     let mut bundler = BundlerBuilder::default()
@@ -1149,12 +1140,8 @@ pub async fn bundle_app_with_base(
         .collect();
     let public_dir = project.join("public");
     if public_dir.exists() {
-        for entry in std::fs::read_dir(&public_dir)? {
-            let entry = entry?;
-            if entry.file_type()?.is_file() {
-                std::fs::copy(entry.path(), out_dir.join(entry.file_name()))?;
-            }
-        }
+        crate::fonts::copy_dir_recursive(&public_dir, out_dir)
+            .with_context(|| format!("copy public/ → {}", out_dir.display()))?;
     }
     // Compile-collected icons → static `_deck/icons/{name}.svg` so named
     // glyphs work offline / with the daemon stopped (TOOL-10). Collects from
@@ -1216,7 +1203,7 @@ pub async fn bundle_app_with_base(
     // App-vendored fonts CSS is pulled via entry `import './fonts/fonts.css'`
     // (hashed under /{ns}/fonts-*.css). A second <link href="/{ns}/fonts/fonts.css">
     // 404s in dev: serve_scaffold_asset only allows single-segment asset names,
-    // so nested `fonts/fonts.css` never matches. Staged `.deck/fonts/**` remains
+    // so nested `fonts/fonts.css` never matches. Staged generate-tree `fonts/**` remains
     // for offline specimen/render — not HTTP.
     std::fs::write(out_dir.join("index.html"), final_html)?;
     let mut framework_assets = 0;
@@ -1256,13 +1243,6 @@ pub async fn bundle_app_with_base(
             framework_assets += 1;
         }
     }
-    // (formerly refreshed the runtime catalog by writing
-    // `<repo_root>/.deck/catalogs/workspace.json`) — purged:
-    // the framework no longer writes a monorepo-root `.deck/catalogs/`
-    // (deck-purge-root). The catalog walker
-    // (`crate::catalog::build_catalog`) stays available for hosts that
-    // want to compute the catalog in-memory for their own devtools; it
-    // just does not get written to disk by the framework.
 
     // Promote the staged build into the live out dir: per-file atomic rename,
     // index.html LAST, stale files pruned after the swap (dev-loop-atomic).
@@ -1302,7 +1282,7 @@ mod tests {
 
         // Default: the package name's last segment is the serve namespace.
         let out_def = r.join("dist-default");
-        let def = bundle_app(r, &[], r, &out_def, false, false)
+        let def = bundle_app(r, r, &out_def, false, false)
             .await
             .expect("default");
         assert!(
@@ -1313,7 +1293,7 @@ mod tests {
 
         // `--base assets`: the URL matches the on-disk `assets/` dir.
         let out_base = r.join("dist-base");
-        let based = bundle_app_with_base(r, &[], r, &out_base, false, false, Some("assets"))
+        let based = bundle_app_with_base(r, r, &out_base, false, false, Some("assets"))
             .await
             .expect("with base");
         assert!(
@@ -1364,7 +1344,7 @@ mod tests {
         };
 
         // Build 1: the tag has no source yet — it compiles as a no-op.
-        bundle_app(r, &[], r, &out, false, false)
+        bundle_app(r, r, &out, false, false)
             .await
             .expect("first build");
         assert!(
@@ -1387,9 +1367,7 @@ mod tests {
         // The watcher's structural-change hook (deck dev calls this on a
         // Create event) clears the memo; the rebuild then registers the tag.
         crate::sail_plugin::invalidate_component_index();
-        bundle_app(r, &[], r, &out, false, false)
-            .await
-            .expect("rebuild");
+        bundle_app(r, r, &out, false, false).await.expect("rebuild");
 
         assert!(
             assets_js(&out).contains("late-probe-upgraded"),
@@ -1442,7 +1420,7 @@ export default controller(() => ({ id: signal('demo') }))\n\
         write(&r.join("public/favicon.ico"), "ICO");
 
         let out = r.join("dist");
-        let build = bundle_app(r, &[], r, &out, false, false)
+        let build = bundle_app(r, r, &out, false, false)
             .await
             .expect("bundle_app");
 
@@ -1514,8 +1492,54 @@ export default controller(() => ({ id: signal('demo') }))\n\
             "expected /test-app/entry-*.js, got {}",
             build.js_href
         );
-        // Behavior 5: public/ assets are copied to out/.
+        // Behavior 5: public/ tree is copied to out/ (nested + host files).
         assert!(out.join("favicon.ico").exists(), "public/ copied");
+    }
+
+    /// `public/` is a tree: nested files and host `_headers` / `_redirects`
+    /// land at the same relative path under deploy out.
+    #[tokio::test(flavor = "multi_thread")]
+    async fn bundle_app_copies_public_tree() {
+        let root = tempfile::tempdir().unwrap();
+        let r = root.path();
+        write(
+            &r.join("package.json"),
+            r#"{"name":"pub-app","private":true,"type":"module"}"#,
+        );
+        write(&r.join("routes/page.sail"), "<div>hi</div>\n");
+        write(&r.join("public/favicon.ico"), "ICO");
+        write(&r.join("public/icons/app.svg"), "<svg/>");
+        write(
+            &r.join("public/_headers"),
+            "/wasm\n  Content-Type: application/wasm\n",
+        );
+        write(&r.join("public/_redirects"), "/* /index.html 200\n");
+
+        let out = r.join("dist");
+        bundle_app(r, r, &out, false, false)
+            .await
+            .expect("bundle_app");
+
+        assert_eq!(
+            std::fs::read_to_string(out.join("favicon.ico")).unwrap(),
+            "ICO"
+        );
+        assert_eq!(
+            std::fs::read_to_string(out.join("icons/app.svg")).unwrap(),
+            "<svg/>"
+        );
+        assert!(
+            std::fs::read_to_string(out.join("_headers"))
+                .unwrap()
+                .contains("application/wasm"),
+            "_headers must copy to deploy root"
+        );
+        assert!(
+            std::fs::read_to_string(out.join("_redirects"))
+                .unwrap()
+                .contains("index.html"),
+            "_redirects must copy to deploy root"
+        );
     }
 
     /// Bare `deck dev` (`bundle_framework = false`) must still stage the
@@ -1548,7 +1572,7 @@ export default controller(() => ({ id: signal('demo') }))\n\
         .unwrap();
 
         let out = r.join("dist");
-        bundle_app(r, &[], r, &out, false, false)
+        bundle_app(r, r, &out, false, false)
             .await
             .expect("bundle_app without --bundle-framework");
 
@@ -1581,7 +1605,7 @@ export default controller(() => ({ id: signal('demo') }))\n\
                 "./sail_compiler_bg.wasm": "./pkg/sail_compiler_bg.wasm" } }"#,
         );
         let out = r.join("dist");
-        let result = bundle_app(r, &[], r, &out, false, false).await;
+        let result = bundle_app(r, r, &out, false, false).await;
         let err = match result {
             Ok(_) => panic!("unbuilt wasm package must fail the build"),
             Err(e) => e,
@@ -1612,7 +1636,7 @@ export default controller(() => ({ id: signal('demo') }))\n\
         );
 
         let out = r.join("dist");
-        bundle_app(r, &[], r, &out, false, false)
+        bundle_app(r, r, &out, false, false)
             .await
             .expect("bundle_app should compile the .sail entry in-process");
     }
@@ -1640,7 +1664,7 @@ export default controller(() => ({ id: signal('demo') }))\n\
         );
 
         let out = r.join("dist");
-        bundle_app(r, &[], r, &out, false, false)
+        bundle_app(r, r, &out, false, false)
             .await
             .expect("an inline-<controller> page.sail must bundle");
 
@@ -1711,7 +1735,7 @@ export default controller(() => ({ ok: probe }))\n\
         );
 
         let out = r.join("dist");
-        let build = bundle_app(r, &[], r, &out, false, false)
+        let build = bundle_app(r, r, &out, false, false)
             .await
             .expect("bundle_app");
 
@@ -1730,11 +1754,10 @@ export default controller(() => ({ ok: probe }))\n\
         );
         // The app's OWN imported CSS must be content-hashed off its source stem
         // (`styles.css` → `styles-<hash>.css`). The build ALSO emits the design
-        // tokens stylesheet (`tokens-<hash>.css`): `routes.gen.ts`/`entry.gen.ts`
-        // unconditionally import `@ship/tokens/tokens.css` (the entry contract),
-        // and `component_package_roots` now unions sail's own workspace so that
-        // import resolves to source and bundles — exactly the path proven by
-        // `bundle_app_bundles_design_tokens_via_entry`. So assert the app's stem
+        // tokens stylesheet (`tokens-<hash>.css`) when `@ship/tokens` resolves
+        // (workspace member or `node_modules`) — the entry contract in
+        // `routes.gen.ts`/`entry.gen.ts`. That path is proven by
+        // `bundle_app_bundles_design_tokens_via_entry`. Assert the app's stem
         // is present, not that it's the ONLY asset.
         assert!(
             css_on_disk.iter().any(|n| n.starts_with("styles-")),
@@ -1856,8 +1879,8 @@ export default controller(() => ({ ok: probe }))\n\
         let r = root.path();
         // Minimal workspace: the app project + the `@ship/tokens` package
         // that exports `./tokens.css`. `component_package_roots` walks the
-        // workspace to build the `@ship/<name>` → source-dir map that
-        // `SailPlugin::resolve_id` uses to re-anchor the bare specifier.
+        // app / consumer workspace to build the `@ship/<name>` → source-dir
+        // map that `SailPlugin::resolve_id` uses to re-anchor the specifier.
         // Without this map the bundler cannot find the CSS, and the gate
         write(
             &r.join("package.json"),
@@ -1899,7 +1922,7 @@ export default controller(() => ({ ok: probe }))\n\
         // controller) — that's the whole point of the gate.
         write(&r.join("routes/page.sail"), "<div>tok</div>\n");
         let out = r.join("dist");
-        let build = bundle_app(r, &[], r, &out, false, false)
+        let build = bundle_app(r, r, &out, false, false)
             .await
             .expect("bundle_app");
         // Gate 1: a hashed `tokens-<hash>.css` asset is emitted under
@@ -2013,7 +2036,7 @@ export default controller(() => ({ ok: probe }))\n\
         write(&r.join("routes/page.sail"), "<div>x</div>\n");
 
         let out = r.join("dist");
-        bundle_app(r, &[], r, &out, false, false)
+        bundle_app(r, r, &out, false, false)
             .await
             .expect("bundle_app");
 
@@ -2131,7 +2154,7 @@ export default controller(() => ({ ok: probe }))\n\
         write(&r.join("routes/page.sail"), "<div>x</div>\n");
 
         let out = r.join("dist");
-        let build = bundle_app(r, &[], r, &out, false, true)
+        let build = bundle_app(r, r, &out, false, true)
             .await
             .expect("bundle_app");
 
@@ -2208,7 +2231,7 @@ export default controller(() => ({ ok: probe }))\n\
         write(&r.join("routes/page.sail"), "<div>x</div>\n");
 
         let out = r.join("dist");
-        bundle_app(r, &[], r, &out, false, false)
+        bundle_app(r, r, &out, false, false)
             .await
             .expect("bundle_app with NO deck.jsonc");
 

@@ -14,7 +14,7 @@ use anyhow::{Context, Result, bail};
 use sail_compiler::out_layout::resolve_out_dir;
 use sail_compiler::{
     CompileMode, CompileOpts, ComponentMeta, DiagSeverity, Policy, check_all,
-    compile as compile_source, emit_test_map, validate_test_map,
+    compile as compile_source,
 };
 
 /// `sail --version` / `sail version` surface (C6).
@@ -26,14 +26,16 @@ pub fn print_version(brand: &str) {
     println!("  binary: sail (cargo package deck-cli {pkg})");
     println!("  embeds: sail-compiler, sail-lsp, sail-mcp, sail-layout, sail-ops, sail-render,");
     println!("          deck-bundler, deck-axum, deck-core, deck-config, deck-ssr (in-process)");
-    println!("  install: cargo install --path crates/deck/deck-cli --bin sail");
+    println!("  install: product install TBD — put `sail` on PATH");
+    println!("  from this repo: cargo install --path crates/deck/deck-cli --bin sail");
     println!("  docs:    README.md § Build / CLI; `sail doctor` for local health");
 }
 
 /// Local environment health check (C6).
 ///
-/// Never prints `status: ok` on an empty probe. bun, tsc/tsgo, and
-/// `node_modules/.sail/types.d.ts` are required for a first-user typecheck.
+/// Never prints `status: ok` on an empty probe. bun and tsc/tsgo are
+/// required. When a Project exists, `<project>/.sail/types.d.ts` is
+/// required for a first-user typecheck.
 /// MCP is probed in-process (`sail mcp --list-tools` equivalent) so doctor
 /// does not require a different `sail` on PATH or a project MCP config.
 pub fn doctor(brand: &str) -> Result<()> {
@@ -41,7 +43,7 @@ pub fn doctor(brand: &str) -> Result<()> {
     println!("  binary: {brand} {}", env!("CARGO_PKG_VERSION"));
 
     let cwd = std::env::current_dir().context("cwd")?;
-    let cargo_root = topmost_cargo_root(&cwd);
+    let cargo_root = deck_bundler::paths::topmost_cargo_root(&cwd);
     match &cargo_root {
         Some(root) => println!("  workspace: {}", root.display()),
         None => println!("  workspace: (none — standalone project)"),
@@ -94,12 +96,18 @@ pub fn doctor(brand: &str) -> Result<()> {
             println!("  tsgo: ok");
         }
     }
-    let types = cwd.join("node_modules/.sail/types.d.ts");
-    if types.is_file() {
-        println!("  types: {}", types.display());
+    if let Some(project) = sail_lint::Project::discover(&cwd) {
+        let types = project
+            .root()
+            .join(sail_compiler::ambients::PROJECT_TYPES_REL);
+        if types.is_file() {
+            println!("  types: {}", types.display());
+        } else {
+            println!("  types: missing at {}", types.display());
+            missing.push(".sail/types.d.ts (run `sail types`)");
+        }
     } else {
-        println!("  types: missing at {}", types.display());
-        missing.push("node_modules/.sail/types.d.ts (run `sail types`)");
+        println!("  types: (no project — skipped)");
     }
 
     if missing.is_empty() {
@@ -170,6 +178,32 @@ mod tests {
         fs::write(dir.path().join("sail.config.jsonc"), "{}\n").unwrap();
         require_sail_project(dir.path()).unwrap();
     }
+
+    #[test]
+    fn tokens_without_flags_refuses_when_no_project() {
+        let dir = tempfile::tempdir().unwrap();
+        let err = tokens(None, None, Some(dir.path().to_path_buf())).unwrap_err();
+        let msg = format!("{err:#}");
+        assert!(
+            msg.contains("pass --model/--out (bake)") || msg.contains("not inside a Sail project"),
+            "expected bake-flag refuse or missing project, got: {msg}"
+        );
+    }
+
+    #[test]
+    fn tokens_one_bake_flag_refuses_default_packages_path() {
+        let dir = tempfile::tempdir().unwrap();
+        let err = tokens(Some(dir.path().join("model")), None, None).unwrap_err();
+        let msg = format!("{err:#}");
+        assert!(
+            msg.contains("pass --model/--out (bake)"),
+            "must not default --out to packages/sail/tokens, got: {msg}"
+        );
+        assert!(
+            !msg.contains("packages/sail/tokens"),
+            "must not mention the monorepo default path, got: {msg}"
+        );
+    }
 }
 
 fn tool_ok(cwd: &Path, bin: &str, args: &[&str]) -> bool {
@@ -190,26 +224,10 @@ fn cmd_ok(bin: &Path, args: &[&str]) -> bool {
         .unwrap_or(false)
 }
 
-fn topmost_cargo_root(start: &Path) -> Option<PathBuf> {
-    let mut cur = start;
-    let mut topmost = None;
-    for _ in 0..16 {
-        if cur.join("Cargo.toml").is_file() {
-            topmost = Some(cur.to_path_buf());
-        }
-        match cur.parent() {
-            Some(p) => cur = p,
-            None => break,
-        }
-    }
-    topmost
-}
-
 /// `sail types` — ambient pack for tsc/tsgo.
 ///
-/// In the monorepo workspace, also runs `scripts/emit-package-dts.ts` so dual
-/// `exports.types → dist/*.d.ts` packages resolve for Pure/IDE (no silent
-/// fallback to Framework `src/`).
+/// Product types writes `.sail` ambients (and kind tsconfigs) only.
+/// Package `dist/*.d.ts` is bun prepare / bake (`scripts/emit-package-dts.ts`).
 ///
 /// `project_dir` must itself be a Sail project (`dir_has_config`). The
 /// monorepo root is not one — refuse so we never write a root `tsconfig.json`.
@@ -268,8 +286,6 @@ pub fn types(
             println!("sail types: tsconfig → {}", ts_out.display());
         }
     }
-    // Dual-types packages: emit dist/*.d.ts when this is the monorepo (script present).
-    emit_monorepo_package_dts(&project_dir)?;
     if check {
         types_check(&project_dir)?;
     }
@@ -324,50 +340,42 @@ fn types_check(project_dir: &Path) -> Result<()> {
     Ok(())
 }
 
-/// Run package declaration emit when `scripts/emit-package-dts.ts` exists above
-/// the project (monorepo). Standalone apps skip — published packages ship dist.
-fn emit_monorepo_package_dts(project_dir: &Path) -> Result<()> {
-    let Some(root) = topmost_cargo_root(project_dir) else {
-        return Ok(());
-    };
-    let script = root.join("scripts/emit-package-dts.ts");
-    if !script.is_file() {
-        return Ok(());
-    }
-    let status = Command::new("bun")
-        .arg(&script)
-        .current_dir(&root)
-        .status()
-        .with_context(|| format!("run {} (package dts emit)", script.display()))?;
-    if !status.success() {
-        bail!(
-            "sail types: package dts emit failed (exit {:?}). \
-             Pure typecheck requires dist/*.d.ts for dual-export @ship/* packages; \
-             fix emit errors or run `bun run emit:package-dts`.",
-            status.code()
-        );
-    }
-    println!("sail types: package dts emit ok");
-    Ok(())
-}
-
-/// `sail tokens` — DTCG model → delivery CSS/registry/unions via SailTheme/Generate.
+/// `sail tokens` — project themes, or explicit `--model`/`--out` bake.
+///
+/// Without both bake flags: generate project themes if a Project exists;
+/// else refuse (`pass --model/--out (bake)`). Never default to
+/// `packages/sail/tokens`.
 pub fn tokens(
     model: Option<PathBuf>,
     out: Option<PathBuf>,
     project: Option<PathBuf>,
 ) -> Result<()> {
     let cwd = std::env::current_dir().context("cwd")?;
-    let root = topmost_cargo_root(&cwd).unwrap_or_else(|| cwd.clone());
-    let model_dir = model.unwrap_or_else(|| root.join("packages/sail/tokens/model"));
-    let out_dir = out.unwrap_or_else(|| root.join("packages/sail/tokens/src"));
+    match (model, out) {
+        (Some(model), Some(out)) => tokens_bake(&cwd, model, out, project),
+        (None, None) => tokens_project(&cwd, project),
+        _ => bail!("sail tokens: pass --model/--out (bake)"),
+    }
+}
+
+fn tokens_bake(cwd: &Path, model: PathBuf, out: PathBuf, project: Option<PathBuf>) -> Result<()> {
+    let root = deck_bundler::paths::topmost_cargo_root(cwd).unwrap_or_else(|| cwd.to_path_buf());
+    let model_dir = if model.is_absolute() {
+        model
+    } else {
+        cwd.join(model)
+    };
+    let out_dir = if out.is_absolute() {
+        out
+    } else {
+        cwd.join(out)
+    };
 
     let mut args = serde_json::json!({
         "workspace": root.display().to_string(),
         "model": model_dir.display().to_string(),
         "out": out_dir.display().to_string(),
     });
-    // Catalog-only unless `--project` (match prior CLI contract).
     let ctx_project = if let Some(proj) = project {
         let project_dir = if proj.is_absolute() {
             proj
@@ -380,7 +388,7 @@ pub fn tokens(
         root.clone()
     };
 
-    let ctx = sail_ops::Ctx::new(&root, &ctx_project, &cwd);
+    let ctx = sail_ops::Ctx::new(&root, &ctx_project, cwd);
     let report = sail_ops::call_rpc("SailTheme", "Generate", &args, &ctx)
         .map_err(|e| anyhow::anyhow!("{e}"))?;
 
@@ -396,6 +404,45 @@ pub fn tokens(
     );
     println!("  unions: {}", report["unions_ts"].as_str().unwrap_or("?"));
     Ok(())
+}
+
+fn tokens_project(cwd: &Path, project: Option<PathBuf>) -> Result<()> {
+    let project_dir = if let Some(proj) = project {
+        let project_dir = if proj.is_absolute() {
+            proj
+        } else {
+            cwd.join(proj)
+        };
+        discover_app(&project_dir)?.root().to_path_buf()
+    } else if let Some(p) = sail_lint::Project::discover(cwd) {
+        p.root().to_path_buf()
+    } else {
+        bail!("sail tokens: pass --model/--out (bake)");
+    };
+
+    let workspace = deck_bundler::paths::topmost_cargo_root(cwd);
+    let report = sail_compiler::tokens_generate::generate_app_delivery_opt(
+        workspace.as_deref(),
+        &project_dir,
+    )
+    .map_err(|e| anyhow::anyhow!("sail tokens: project themes: {e:#}"))?;
+    println!(
+        "sail tokens: {} tokens, {} themes → {}",
+        report.token_count,
+        report.theme_count,
+        report.themes_css.display()
+    );
+    Ok(())
+}
+
+/// Walk up from `from` to the Sail app (`sail.config`). **Not Cargo.**
+pub fn discover_app(from: &Path) -> Result<sail_lint::Project> {
+    sail_lint::Project::discover(from).ok_or_else(|| {
+        anyhow::anyhow!(
+            "not inside a Sail project (no sail.config.jsonc / sail.config.json near {})",
+            from.display()
+        )
+    })
 }
 
 /// `sail op Service/Method --json '{...}'` — in-process sail-ops RPC.
@@ -579,7 +626,7 @@ fn fmt_one(path: &Path, check: bool, oxfmt_warned: &mut bool) -> Result<bool> {
 /// templates were walked.
 ///
 /// EXT-1 E8: when checking a directory (or a file inside a Sail project),
-/// warn if any path under `.deck/` is git-tracked — build output must never
+/// warn if any path under `dist/` is git-tracked — deploy output must never
 /// be committed. Warning only; does not fail the check.
 pub fn check(input: PathBuf, fix: String) -> Result<()> {
     let path = if input.is_absolute() {
@@ -596,7 +643,7 @@ pub fn check(input: PathBuf, fix: String) -> Result<()> {
             check_one(&path, &fix)?;
         }
         if let Some(project) = find_project_root_for_hygiene(&path) {
-            warn_if_deck_tracked(&project);
+            warn_if_dist_tracked(&project);
         }
     } else if path.is_dir() {
         let mut files = Vec::new();
@@ -624,8 +671,8 @@ pub fn check(input: PathBuf, fix: String) -> Result<()> {
                 failed += 1;
             }
         }
-        // Repo hygiene (EXT-1 E8): warn if `.deck/` is git-tracked.
-        warn_if_deck_tracked(&path);
+        // Repo hygiene (EXT-1 E8): warn if `dist/` is git-tracked.
+        warn_if_dist_tracked(&path);
         if failed > 0 {
             bail!("{failed}/{total} file(s) failed check");
         }
@@ -639,32 +686,14 @@ pub fn check(input: PathBuf, fix: String) -> Result<()> {
     Ok(())
 }
 
-/// Walk up from `start` looking for a Sail project root (`package.json` +
-/// `routes/` or sail.config). Used only for the `.deck` tracked warning.
-/// Config existence goes through [`sail_lint::config::dir_has_config`] —
-/// same filenames as `sail types`, no second walk of the name list.
 fn find_project_root_for_hygiene(start: &Path) -> Option<PathBuf> {
-    let mut cur = if start.is_file() {
-        start.parent()?
-    } else {
-        start
-    };
-    for _ in 0..16 {
-        let has_pkg = cur.join("package.json").is_file();
-        let has_routes = cur.join("routes").is_dir();
-        let has_cfg = sail_lint::config::dir_has_config(cur);
-        if has_pkg && (has_routes || has_cfg) {
-            return Some(cur.to_path_buf());
-        }
-        cur = cur.parent()?;
-    }
-    None
+    sail_lint::Project::discover(start).map(|p| p.root().to_path_buf())
 }
 
-/// If `project` is inside a git work tree and any path under `.deck/` is
+/// If `project` is inside a git work tree and any path under `dist/` is
 /// tracked, print a warning to stderr. Never fails; missing git is a no-op.
-fn warn_if_deck_tracked(project: &Path) {
-    let tracked = git_tracked_under_deck(project);
+fn warn_if_dist_tracked(project: &Path) {
+    let tracked = git_tracked_under_dist(project);
     if tracked.is_empty() {
         return;
     }
@@ -680,18 +709,18 @@ fn warn_if_deck_tracked(project: &Path) {
         String::new()
     };
     eprintln!(
-        "sail check: warning: .deck/ is tracked by git ({sample}{more}) — \
-         build output must not be committed. Add `.deck/` to .gitignore \
-         and `git rm -r --cached .deck`."
+        "sail check: warning: dist/ is tracked by git ({sample}{more}) — \
+         deploy output must not be committed. Add `dist/` to .gitignore \
+         and `git rm -r --cached dist`."
     );
 }
 
-/// Return paths under `<project>/.deck/` that git currently tracks.
+/// Return paths under `<project>/dist/` that git currently tracks.
 /// Empty when not a git work tree, git is missing, or nothing is tracked.
 ///
-/// Pathspecs are repo-root relative so monorepo sub-apps (`apps/foo/.deck`)
-/// and external app roots (`.deck` at the work-tree root) both work.
-fn git_tracked_under_deck(project: &Path) -> Vec<String> {
+/// Pathspecs are repo-root relative so monorepo sub-apps (`apps/foo/dist`)
+/// and external app roots (`dist` at the work-tree root) both work.
+fn git_tracked_under_dist(project: &Path) -> Vec<String> {
     let top = match std::process::Command::new("git")
         .args(["-C"])
         .arg(project)
@@ -717,18 +746,18 @@ fn git_tracked_under_deck(project: &Path) -> Vec<String> {
         .strip_prefix(&top_abs)
         .map(|p| p.to_path_buf())
         .unwrap_or_default();
-    let deck_prefix = if rel.as_os_str().is_empty() {
-        PathBuf::from(".deck")
+    let dist_prefix = if rel.as_os_str().is_empty() {
+        PathBuf::from("dist")
     } else {
-        rel.join(".deck")
+        rel.join("dist")
     };
-    let deck_str = deck_prefix.to_string_lossy().replace('\\', "/");
-    let glob = format!("{deck_str}/**");
+    let dist_str = dist_prefix.to_string_lossy().replace('\\', "/");
+    let glob = format!("{dist_str}/**");
 
     let output = std::process::Command::new("git")
         .args(["-C"])
         .arg(&top_abs)
-        .args(["ls-files", "--", deck_str.as_str(), glob.as_str()])
+        .args(["ls-files", "--", dist_str.as_str(), glob.as_str()])
         .output();
     let Ok(out) = output else {
         return Vec::new();
@@ -879,98 +908,6 @@ fn check_one(path: &Path, fix: &str) -> Result<usize> {
     Ok(fixed)
 }
 
-/// `sail test` — lean contract maps (SPEC-TEST-2). No node.
-pub fn test_contract(input: PathBuf) -> Result<()> {
-    let path = if input.is_absolute() {
-        input
-    } else {
-        std::env::current_dir()?.join(input)
-    };
-    let mut files = Vec::new();
-    if path.is_file() {
-        if path.extension().and_then(|e| e.to_str()) != Some("sail") {
-            bail!("not a .sail file: {}", path.display());
-        }
-        files.push(path.clone());
-    } else if path.is_dir() {
-        collect_sail_files(&path, &mut files)?;
-        if files.is_empty() {
-            bail!("no .sail files under {}", path.display());
-        }
-    } else {
-        bail!("not a file or directory: {}", path.display());
-    }
-    files.sort();
-    let project = find_project_root_for_hygiene(&files[0]).unwrap_or_else(|| {
-        if path.is_dir() {
-            path.clone()
-        } else {
-            path.parent()
-                .map(Path::to_path_buf)
-                .unwrap_or_else(|| path.clone())
-        }
-    });
-    let dest_root = project.join("node_modules/.sail/test-map");
-    let mut entries = 0usize;
-    let mut failed = 0usize;
-    for f in &files {
-        match emit_one_test_map(f, &project, &dest_root) {
-            Ok(n) => entries += n,
-            Err(e) => {
-                eprintln!("sail test: {}: {e:#}", f.display());
-                failed += 1;
-            }
-        }
-    }
-    if failed > 0 {
-        bail!("{failed}/{} file(s) failed test-map", files.len());
-    }
-    println!(
-        "sail test: {} file(s), {entries} queryable entries → {}",
-        files.len(),
-        dest_root.display()
-    );
-    Ok(())
-}
-
-fn emit_one_test_map(path: &Path, project: &Path, dest_root: &Path) -> Result<usize> {
-    let src = std::fs::read_to_string(path).with_context(|| format!("read {}", path.display()))?;
-    let (stripped, _) = sail_compiler::parse::preprocess::extract_controller_block(&src);
-    let program = sail_compiler::parse::parse(&stripped)
-        .map_err(|e| anyhow::anyhow!("{}", e.render(&src)))?;
-    let rel = path
-        .strip_prefix(project)
-        .unwrap_or(path)
-        .to_string_lossy()
-        .replace('\\', "/");
-    let map = emit_test_map(&program, &rel);
-    validate_test_map(&map).map_err(|e| anyhow::anyhow!("{e}"))?;
-    let dest = dest_root.join(format!("{rel}.json"));
-    if let Some(parent) = dest.parent() {
-        std::fs::create_dir_all(parent).with_context(|| format!("mkdir {}", parent.display()))?;
-    }
-    let json = serde_json::to_string_pretty(&map)? + "\n";
-    std::fs::write(&dest, json).with_context(|| format!("write {}", dest.display()))?;
-    Ok(map.entries.len())
-}
-
-fn collect_sail_files(dir: &Path, out: &mut Vec<PathBuf>) -> Result<()> {
-    for entry in std::fs::read_dir(dir).with_context(|| format!("read dir {}", dir.display()))? {
-        let entry = entry?;
-        let p = entry.path();
-        if p.is_dir() {
-            let name = p.file_name().and_then(|n| n.to_str()).unwrap_or("");
-            if name == "node_modules" || name == "target" || name.starts_with('.') {
-                continue;
-            }
-            collect_sail_files(&p, out)?;
-        } else if p.extension().and_then(|e| e.to_str()) == Some("sail") {
-            out.push(p);
-        }
-    }
-    Ok(())
-}
-
 /// Walk `dir` for plain app TypeScript that `is_app_source_ts` admits, plus
 /// author action modules under `src/actions/**` (`is_action_source_path`).
 ///
@@ -989,6 +926,23 @@ fn collect_app_source_ts(dir: &Path, out: &mut Vec<PathBuf>) -> Result<()> {
             }
             collect_app_source_ts(&p, out)?;
         } else if sail_lint::is_app_source_ts(&p) || sail_lint::is_action_source_path(&p) {
+            out.push(p);
+        }
+    }
+    Ok(())
+}
+
+fn collect_sail_files(dir: &Path, out: &mut Vec<PathBuf>) -> Result<()> {
+    for entry in std::fs::read_dir(dir).with_context(|| format!("read dir {}", dir.display()))? {
+        let entry = entry?;
+        let p = entry.path();
+        if p.is_dir() {
+            let name = p.file_name().and_then(|n| n.to_str()).unwrap_or("");
+            if name == "node_modules" || name == "target" || name.starts_with('.') {
+                continue;
+            }
+            collect_sail_files(&p, out)?;
+        } else if p.extension().and_then(|e| e.to_str()) == Some("sail") {
             out.push(p);
         }
     }
@@ -1299,7 +1253,7 @@ pub fn render(
         cwd.join(out_png)
     };
 
-    let workspace = topmost_cargo_root(&cwd).unwrap_or_else(|| cwd.clone());
+    let workspace = deck_bundler::paths::topmost_cargo_root(&cwd).unwrap_or_else(|| cwd.clone());
     let rel = path
         .strip_prefix(&workspace)
         .map(|p| p.display().to_string())

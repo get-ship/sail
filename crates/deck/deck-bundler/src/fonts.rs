@@ -79,7 +79,7 @@ pub fn stage_app_fonts(project: &Path, out_dir: &Path) -> Result<()> {
     Ok(())
 }
 
-fn copy_dir_recursive(src: &Path, dest: &Path) -> Result<()> {
+pub(crate) fn copy_dir_recursive(src: &Path, dest: &Path) -> Result<()> {
     std::fs::create_dir_all(dest)?;
     for entry in std::fs::read_dir(src)? {
         let entry = entry?;
@@ -98,7 +98,7 @@ fn copy_dir_recursive(src: &Path, dest: &Path) -> Result<()> {
 /// Formerly emitted `<link href="/{ns}/fonts/fonts.css">`. That path 404s in
 /// dev (`serve_scaffold_asset` rejects nested segments). Fonts load via entry
 /// `import './fonts/fonts.css'` instead. Kept as `None` so callers compile;
-/// staged `.deck/fonts/**` is for offline render only.
+/// staged `.sail/fonts/**` is for offline render only.
 pub fn app_fonts_css_href(_project: &Path, _url_namespace: &str) -> Option<String> {
     None
 }

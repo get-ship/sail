@@ -6,21 +6,19 @@
 //! bootstraps fresh worktrees by copying from the launching repo (or
 //! rebuilding when that's empty). The framework bundles (sail-runtime,
 //! sail-dom, sail-sdk-client, sail-components) are produced by
-//! `cargo run -p deck-cli -- build-assets` and land in `.deck/framework/`.
+//! `cargo run -p deck-cli --bin deck-bake -- build-assets` and land in `.sail/framework/`.
 //! This build script copies them into `crates/deck/deck-core/assets/` (the
 //! `include_str!` staging path) before the existence/empty guard runs.
 //! Icon glyphs are not committed here. Sail resolves used roles; Deck
-//! writes those SVGs into the app `.deck` graph. The daemon serves that
+//! writes those SVGs into the app `dist/` graph. The daemon serves that
 //! bake — it does not embed a pack.
-//! The workspace catalog is emitted to `.deck/catalogs/workspace.json`
-//! by `build-assets` and read at runtime by `src/packs.rs`.
 //!
 //! What this build script DOES:
-//! 1. Copy `.deck/framework/sail-*.js` → `assets/sail-*.js` (the staging path
+//! 1. Copy `.sail/framework/sail-*.js` → `assets/sail-*.js` (the staging path
 //!    `include_str!` requires). This keeps the canonical bake target in
-//!    `.deck/framework/` while the Rust compiler still reads a fixed path.
+//!    `.sail/framework/` while the Rust compiler still reads a fixed path.
 //! 2. Ensure every staged framework bundle EXISTS so `include_str!` can compile.
-//!    When `.deck/framework/*.js` is absent or empty (a from-zero checkout, or
+//!    When `.sail/framework/*.js` is absent or empty (a from-zero checkout, or
 //!    the very build that produces those bundles: `deck-cli` depends on
 //!    `deck-core`), write a bootstrap STUB in its place and emit a
 //!    `cargo:warning` rather than panicking. The stub lets the deck stack
@@ -30,9 +28,9 @@
 //!    longer needs the bundles it is itself producing.
 //!
 //! Bootstrap contract (now self-healing): run
-//! `cargo run -p deck-cli -- build-assets` to produce `.deck/framework/*.js`,
+//! `cargo run -p deck-cli --bin deck-bake -- build-assets` to produce `.sail/framework/*.js`,
 //! then `cargo build` to bake them in. The first `build-assets` compiles
-//! `deck-core` against stubs (see above), so no pre-seeded `.deck/framework/`
+//! `deck-core` against stubs (see above), so no pre-seeded `.sail/framework/`
 //! or sibling-worktree copy is required. `live-reload.js` and
 //! `error-overlay.js` are committed source — already present in a fresh
 //! clone, so those remain hard requirements (a missing one is a broken
@@ -43,7 +41,7 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 
 /// Framework singletons that must be baked into the binary.
-/// Sourced from `.deck/framework/`, staged to `assets/` by this script.
+/// Sourced from `.sail/framework/`, staged to `assets/` by this script.
 /// `deck-route.js` is the `@ship/deck/router` framework singleton
 /// (defineRoutes / route / navigate / setEditMode) — every per-app
 /// bundler-generated entry imports it, so the framework ships it as
@@ -73,10 +71,9 @@ const COMMITTED_ASSETS: &[&str] = &[];
 /// Content written to a framework bundle's staging path when the real bake
 /// output is not yet available (from-zero checkout, or the very build that
 /// produces the bundles). It only has to let `include_str!` compile;
-/// `build-assets` overwrites `.deck/framework/` with the real bytes, which
+/// `build-assets` overwrites `.sail/framework/` with the real bytes, which
 /// the `rerun-if-changed` hooks re-stage on the next `cargo build`.
-const BOOTSTRAP_STUB: &str =
-    "/* deck bootstrap stub — regenerate with `cargo run -p deck-cli -- build-assets`. */\n";
+const BOOTSTRAP_STUB: &str = "/* deck bootstrap stub — regenerate with `cargo run -p deck-cli --bin deck-bake -- build-assets`. */\n";
 
 // Deck's OWN source roots — the JS/TS that deck's framework singletons are
 // built from. Host-app source roots (e.g. apps/shell/src) are NOT listed
@@ -101,18 +98,18 @@ fn main() {
         .and_then(|p| p.parent())
         .expect("repo root (three levels above crates/deck/deck-core)")
         .to_path_buf();
-    let framework_src = deck_config::deck_out_path(&repo_root).join("framework");
+    let framework_src = deck_config::framework_bake_path(&repo_root);
     let framework_stamp = deck_config::framework_stamp_path(&repo_root);
 
     fs::create_dir_all(&assets).unwrap_or_else(|e| panic!("build.rs: mkdir assets: {e}"));
 
-    // ── Stage: copy .deck/framework/sail-*.js → assets/sail-*.js ───────────────
+    // ── Stage: copy .sail/framework/sail-*.js → assets/sail-*.js ───────────────
     //
-    // The canonical bake target is .deck/framework/ (produced by
-    // `cargo run -p deck-cli -- build-assets`). include_str! requires a
+    // The canonical bake target is .sail/framework/ (produced by
+    // `cargo run -p deck-cli --bin deck-bake -- build-assets`). include_str! requires a
     // fixed compile-time path inside the crate, so we stage the bytes here.
     // Only copy when the source exists — on a fresh worktree where dispatch.sh
-    // has already populated .deck/framework/, this is the fast path; if neither
+    // has already populated .sail/framework/, this is the fast path; if neither
     // the framework dir nor the staged copy exists, the guard below fires with
     // the full instructions.
     if framework_src.exists() {
@@ -121,7 +118,7 @@ fn main() {
             let dst = assets.join(name);
             if src.exists() && !file_is_empty(&src) {
                 copy_if_changed(&src, &dst).unwrap_or_else(|e| {
-                    panic!("build.rs: failed to stage {name} from .deck/framework/: {e}")
+                    panic!("build.rs: failed to stage {name} from .sail/framework/: {e}")
                 });
             }
         }
@@ -132,11 +129,11 @@ fn main() {
     // `include_str!("../assets/<name>")` (src/assets.rs) needs the file to
     // exist at compile time. On a from-zero checkout — and during the very
     // `build-assets` run that produces these bundles, since `deck-cli` depends
-    // on `deck-core` — `.deck/framework/*.js` is absent, so nothing was staged
+    // on `deck-core` — `.sail/framework/*.js` is absent, so nothing was staged
     // above. Write a stub so the deck stack compiles; `build-assets` then bakes
     // the real bundles and `rerun-if-changed` re-stages them next build. This
     // is the fix for the build-assets chicken/egg (from-zero cannot borrow a
-    // sibling worktree's `.deck/framework/`).
+    // sibling worktree's `.sail/framework/`).
     let mut stubbed: Vec<&str> = Vec::new();
     for name in FRAMEWORK_BUNDLES {
         let dst = assets.join(name);
@@ -149,8 +146,8 @@ fn main() {
     if !stubbed.is_empty() {
         println!(
             "cargo:warning=deck-core: framework bundles not yet baked ({}) — staged bootstrap \
-             stubs so the deck stack can compile. Run `cargo run -p deck-cli -- build-assets` to \
-             produce .deck/framework/*.js, then rebuild to bake the real bundles.",
+             stubs so the deck stack can compile. Run `cargo run -p deck-cli --bin deck-bake -- build-assets` to \
+             produce .sail/framework/*.js, then rebuild to bake the real bundles.",
             stubbed.join(", ")
         );
     }
@@ -186,11 +183,11 @@ fn main() {
     //
     // `deck build-assets` touches crates/deck/deck-core/framework-stamp after
     // it finishes baking. Watching that stamp (rather than the individual
-    // `.deck/framework/*.js` files) lets Cargo re-run this build script once
+    // `.sail/framework/*.js` files) lets Cargo re-run this build script once
     // per explicit bake; tests pass `--no-stamp` so they do not re-trigger
     // while downstream doctests are queued.
     //
-    // The stamp is a tracked empty file in this crate — never under `.deck/`.
+    // The stamp is a tracked empty file in this crate — never under `.sail/`.
     // `build-assets` updates mtime only. Cargo treats a *missing*
     // `rerun-if-changed` path as a stale fingerprint, so the file must exist
     // on a fresh checkout.
@@ -207,7 +204,7 @@ fn main() {
         println!("cargo:rerun-if-changed=assets/{rel}");
     }
 
-    // The `.deck/.cache` dir (written by the bake at runtime) could drive
+    // The `.sail/.cache` dir (written by the bake at runtime) could drive
     // fine-grained rerun hints, but build.rs cannot know the host's
     // `host_assets_root` — that is runtime config. Use the coarse source
     // roots below instead; cargo will re-check on any source change.

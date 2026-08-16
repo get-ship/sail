@@ -85,10 +85,6 @@ pub async fn serve_sail_studio_bridge(mode: Option<Extension<DaemonMode>>) -> Re
     into_axum(deck_core::serve_sail_studio_bridge(mode_from_ext(mode)))
 }
 
-// (formerly `serve_sail_chunk` + `serve_catalog_workspace`) — purged
-// with the runtime `.deck/` reads. The routes are gone too (deck-axum
-// `router()`).
-
 // ── Route handlers — MOVED to the `ship-views` crate ───────────────────────────
 // `serve_sail_route_setup`, `serve_route_host`, `serve_route_payload`, and
 // `serve_view_payload_subpath` (the named-route serving surface) now live in

@@ -3,26 +3,35 @@
 // This is Deck control-plane code: it owns the transport (an SSE
 // subscription to `/_deck/dev/hmr`), the `/_deck/` URL scheme, the
 // change-target classification, and the compile-error overlay. The SAIL
-// runtime owns only the *mechanism* (`mount().reload(payload)`); the host
-// supplies how to apply a view reload via `onViewChanged`.
+// runtime owns only the *mechanism* (`__deckHmr.swapModules` on SPA remount).
 //
-// Both surfaces load this one module: the third-party view host
-// (`view-host.html`) and the first-party shell. There is deliberately no
-// second implementation — HMR is one thing, done one way.
+// Product SPA (`routes/` + `mountRouter`) loads this module. `sail dev`
+// emits `target: "app"` and `compile-error` only. Named-view SSE targets
+// (`views/<name>/view`) are not a public Deck surface.
 //
 // Gating: this no-ops unless `<meta name="deck-mode" content="development">`
 // is present, so the daemon's mode is the single source of truth. The
 // route is served in every mode, but the client only subscribes in dev.
 //
-// Reload policy:
-//   - `views/<name>/view` for the current view → host's onViewChanged
-//     (in-place `handle.reload()`, preserving serializable signal state).
-//   - `views/<other>/view` → ignored (next navigation fetches it fresh).
-//   - anything else (component / island / runtime bundle) → full reload:
-//     a `<sail-*>` custom element cannot be redefined in a live document.
+// Reload policy (HMR is app-granular remount — keep signal values, swap CSS —
+// not Vite per-module HMR):
+//   - target `app` (SPA `routes/`) + `globalThis.__deckHmr` → soft reload:
+//     re-import the hashed entry; the entry bootstrap calls `swapModules`
+//     (remount current route, restore signal values, swap hashed CSS).
+//     Not a full document reload.
+//   - anything else while `__deckHmr` is mounted → ignored (a leftover
+//     `views/<name>/view` target must not full-reload the SPA).
+//   - anything else without `__deckHmr` → `onOtherChanged` or full document
+//     reload.
+//
+// Custom elements: native `customElements.define` cannot re-register a tag.
+// `defineComponent` (runtime #40) hot-swaps factory/schema on the stable
+// wrapper and re-renders live instances, so an app remount that re-imports
+// components does not need a full document reload.
 
 const HMR_ENDPOINT = '/_deck/dev/hmr'
 const OVERLAY_ID = '__sail_live_reload_overlay'
+const RUNTIME_OVERLAY_ID = '__sail_error_overlay'
 
 /** True when the served HTML declares the daemon is in development mode. */
 export function isDevMode() {
@@ -35,12 +44,9 @@ export function isDevMode() {
  * Subscribe to the bundler HMR firehose and drive reloads.
  *
  * @param {object} opts
- * @param {string} [opts.viewName] - the view this page is showing; only
- *   changes to this view trigger in-place reload.
- * @param {(e: {target:string, bytes?:number}) => void|Promise<void>} [opts.onViewChanged]
- *   - apply an in-place reload of the current view. If omitted, full reload.
  * @param {(e: {target:string}) => void|Promise<void>} [opts.onOtherChanged]
- *   - react to a non-view bundle change. Defaults to full page reload.
+ *   - react to a non-app bundle change when no SPA router is mounted.
+ *     Defaults to full page reload. Ignored while `__deckHmr` is set.
  * @param {(e: {message:string, file?:string, line?:number, col?:number}) => void} [opts.onError]
  *   - render a compile error. Defaults to an on-page overlay.
  * @returns {{ close(): void }}
@@ -63,8 +69,19 @@ export function attachLiveReload(opts = {}) {
       /* optional asset — non-fatal */
     })
 
-  const viewName = opts.viewName ?? ''
   const es = new EventSource(HMR_ENDPOINT)
+
+  // SPA nav (mount-router) dispatches `sail:error-clear`. Runtime overlay
+  // already listens; compile overlay must too so a remount/nav does not
+  // leave `#__sail_live_reload_overlay` stuck until a full document refresh.
+  // Only remove this overlay — do not call `clearOverlay()` (it re-dispatches).
+  const onErrorClear = () => {
+    if (typeof document === 'undefined') return
+    document.getElementById(OVERLAY_ID)?.remove()
+  }
+  if (typeof document !== 'undefined') {
+    document.addEventListener('sail:error-clear', onErrorClear)
+  }
 
   es.addEventListener('module-changed', (raw) => {
     let e
@@ -78,24 +95,17 @@ export function attachLiveReload(opts = {}) {
     // routes/ SPA soft reload: a full app rebuild (target `app`) re-imports the
     // freshly-bundled entry into the RUNNING router — state-preserving, no full
     // document reload. Gated on the SPA router being mounted (it exposes
-    // `globalThis.__deckHmr`); the named-view host path below keeps its own
-    // in-place / full-reload policy.
+    // `globalThis.__deckHmr`).
     if (globalThis.__deckHmr && target === 'app') {
       void softReloadSpa()
       return
     }
-    if (target.startsWith('views/')) {
-      // When the host pins a `viewName` (single-view host like view-host.html),
-      // filter to it. When omitted (a navigating host like the shell), deliver
-      // every view change and let the host filter against its current route.
-      const changed = target.split('/')[1]
-      if (viewName && changed !== viewName) return
-      if (opts.onViewChanged) void opts.onViewChanged(e)
-      else window.location.reload()
+    if (globalThis.__deckHmr) {
+      // SPA is mounted. `sail dev` only emits `app` / compile-error; leftover
+      // named-view targets (`views/<name>/view`) must not full-reload.
       return
     }
-    // Component / island / runtime bundle — must full-reload (custom
-    // elements can't be redefined in place).
+    // No SPA router (first paint, or a host without mountRouter).
     if (opts.onOtherChanged) void opts.onOtherChanged(e)
     else window.location.reload()
   })
@@ -117,6 +127,9 @@ export function attachLiveReload(opts = {}) {
   return {
     close() {
       es.close()
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('sail:error-clear', onErrorClear)
+      }
       clearOverlay()
       studioClose()
     },
@@ -126,6 +139,8 @@ export function attachLiveReload(opts = {}) {
 function clearOverlay() {
   if (typeof document === 'undefined') return
   document.getElementById(OVERLAY_ID)?.remove()
+  document.getElementById(RUNTIME_OVERLAY_ID)?.remove()
+  document.dispatchEvent(new CustomEvent('sail:error-clear'))
 }
 
 /**

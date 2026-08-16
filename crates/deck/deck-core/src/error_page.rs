@@ -1,16 +1,14 @@
-//! Human-facing error pages for the route host.
+//! Human-facing error pages for the leftover named-view host.
 //!
-//! The browser-facing route shell (`/_deck/view/<name>`) serves an HTML page.
-//! When the requested route can't be resolved, the daemon must return a
-//! *rendered* page — not the raw `{"error":{"route_not_found":…}}` JSON that
-//! the programmatic `/_deck/views/<name>` payload endpoint emits for API
-//! callers. This module owns that page: it fills the baked
-//! `view-not-found.html` shell with the requested name and the routes the
-//! daemon can actually serve, then returns a `404 text/html` `DeckResponse`.
+//! Product SPA is `routes/` + `mountRouter`: unmatched paths 404 inside the
+//! client router (or the host SPA fallback). This module is not that surface.
+//! It fills the baked `view-not-found.html` shell for ship-views and returns
+//! a `404 text/html` `DeckResponse`. `/_deck/views/<name>` is not a public
+//! Deck payload URL — do not document or mint it as current.
 //!
 //! Styling rides the daemon-served design tokens (`/api/assets/view-tokens.css`,
-//! linked by the shell) so the page tracks the active theme — the same
-//! convention `view-host.html` uses. No color/hex literals live here.
+//! linked by the shell) so the page tracks the active theme. No color/hex
+//! literals live here.
 
 use crate::resolver::list_route_names;
 use crate::response::CachePolicy;
@@ -45,9 +43,9 @@ pub fn route_not_found(
     )
 }
 
-/// Build the "available routes" block: a labelled list of links to
-/// `/_deck/view/<name>`. Empty input yields an empty string so the shell shows
-/// no stray "available routes" heading over a blank list.
+/// Build the "available routes" block: leftover named-view links to
+/// `/_deck/view/<name>` (not the product SPA `routes/` path). Empty input
+/// yields an empty string so the shell shows no stray heading over a blank list.
 fn routes_block(routes: &[String]) -> String {
     if routes.is_empty() {
         return String::new();

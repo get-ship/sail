@@ -18,7 +18,7 @@ scratch `SAIL-USE-EVALSERVICE.md`. Do not write run artifacts into this tree.
 
 ```sh
 bun install
-cargo run -p deck-cli -- build-assets    # bake framework bundles → .deck/framework/
+cargo run -p deck-cli --bin deck-bake -- build-assets    # bake framework bundles → .sail/framework/
 cargo build                              # default members (excludes deck-ssr)
 ```
 
@@ -34,7 +34,7 @@ bun run dev                              # default 127.0.0.1:7890 (SAIL_SITE_ADD
 ```
 
 Do not invent `public/fonts` — faces are at `GET /_deck/fonts/{file}`.
-Do not commit bake outputs under `.deck/` or `public/sail_compiler_bg.wasm`.
+Do not commit bake outputs under `.sail/` or `public/sail_compiler_bg.wasm`.
 
 ## Test
 
@@ -63,7 +63,7 @@ Peers on the same binary: `sail lsp`, `sail mcp`, `sail layout`, `sail tokens`,
 | Path | Role |
 |---|---|
 | `crates/sail/` | Compiler, lint, LSP, layout, ops, MCP, render |
-| `crates/deck/` | Host crates + drift-gated `FEATURES.md` |
+| `crates/deck/` | Host crates |
 | `packages/sail/` | Runtime, DOM, tokens, grammar, tutorial, compiler-wasm, studio bridge/shell/client |
 | `packages/deck/` | Router, host, hono, e2e, docs app, test-harness |
 | `packages/components/sail/` | Component packs (L2 + chat-elements) |
@@ -90,9 +90,10 @@ Cold start never requires an undocumented `node foo.mjs` — use the package.jso
 
 | Audience | Command | Owns |
 |----------|---------|------|
-| **User toolchain** | `sail` (from `deck-cli`) | `dev`, `build`, `check`, `lsp`, `mcp`, … |
+| **User toolchain** | `sail` (from `deck-cli`) | `create`, `dev`, `build`, `check`, `types`, `lsp`, `mcp`, … |
+| **This checkout (bake)** | `deck-bake` (same crate) | `build-assets`, `emit` |
 
-No third drawer: ad-hoc one-shots do not land under `scripts/`. Icon packs are declared in `sail.config` (`icons.pack` + pinned version); used glyphs land in the app `.deck` graph.
+No third drawer: ad-hoc one-shots do not land under `scripts/`. Icon packs are declared in `sail.config` (`icons.pack` + pinned version); used glyphs land in the app `dist/` graph.
 
 ### Comment hygiene
 
@@ -104,7 +105,7 @@ monologue, or process ids (`job/…`, `task #N`, mission paths). Enforced by
 
 | Command | Class | What it runs |
 |---------|-------|--------------|
-| `bun install` → `cargo run -p deck-cli -- build-assets` → `cargo build` | Law | Framework bake + default Rust members |
+| `bun install` → `cargo run -p deck-cli --bin deck-bake -- build-assets` → `cargo build` | Law | Framework bake + default Rust members |
 | `cd apps/sail-site && bun run gen` | Law | wasm · prop-registry · grammar · runtime surface · bake · tutorial |
 | `cd apps/sail-site && bun run dev` / `build` | Law | `gen` then deck CLI |
 | `bun run test` | Law | vitest + `tests/hygiene` repo guards |
@@ -141,7 +142,7 @@ No cargo test, no Playwright, no corpus build. Skip with `--no-verify`.
 
 | Path | Class | Notes |
 |------|-------|-------|
-| `gen-runtime-surface.mjs` | Law | Tier-B runtime surface → `src/runtime-surface.gen.ts` (`bun run gen`) |
+| `gen-runtime-surface.ts` | Law | Tier-B runtime surface → `apps/sail-site/gen/runtime-surface.ts` (`bun run gen`) |
 | `gen-tutorial.mjs` | Law | Tutorial prose/lessons → `src/compositions/tutorial-data.ts` |
 
 ### `apps/sail-site/qa/`
@@ -154,4 +155,4 @@ One-off screenshot helpers (`snap-cell`, `snap-hero`, `inspect-catalog`) and the
 
 ### Icons
 
-Declare a pinned pack in `sail.config.jsonc` (`icons.pack`, optional `icons.version` / `icons.roles`). Author markup uses roles (`<icon name="settings" />`), never pack prefixes. The compiler collects used roles; Deck writes only those glyph bytes into `.deck`.
+Declare a pinned pack in `sail.config.jsonc` (`icons.pack`, optional `icons.version` / `icons.roles`). Author markup uses roles (`<icon name="settings" />`), never pack prefixes. The compiler collects used roles; Deck writes only those glyph bytes into `dist/`.
