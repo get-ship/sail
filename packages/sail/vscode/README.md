@@ -5,10 +5,10 @@ Local package (not a marketplace publish). It registers language `sail` for
 diagnostics, format, and code actions come from that server — this extension
 does not invent a second protocol.
 
-Colorization is **not** here. Highlight SSOT is the Studio
-`<sail-code-editor>` overlay generated from the compiler vocabulary.
-This client does not ship a TextMate grammar, does not load tree-sitter,
-and does not teach retired syntax.
+Colorization is **tree-sitter-sail** via `@ship/sail-highlight`
+(`tree-sitter-sail.wasm` + `queries/highlights.scm`) as VS Code semantic
+tokens. This client does not ship a TextMate grammar and does not teach
+retired syntax.
 
 ## Prerequisite
 
@@ -37,6 +37,9 @@ cd packages/sail/vscode
 bun install
 bun run compile
 ```
+
+`compile` copies wasm + `highlights.scm` into `vendor/` so the highlighter
+loads from `context.extensionUri`.
 
 Then in **Cursor** or **VS Code**:
 

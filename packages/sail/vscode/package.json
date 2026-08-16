@@ -1,7 +1,7 @@
 {
   "name": "sail",
   "displayName": "Sail",
-  "description": "Language client for .sail files. Starts `sail lsp` (stdio) — diagnostics, hover, complete, definition. Not a marketplace extension.",
+  "description": "Language client for .sail files. Colors via @ship/sail-highlight (tree-sitter-sail semantic tokens). Starts `sail lsp` (stdio) — diagnostics, hover, complete, definition. Not a marketplace extension.",
   "version": "0.1.0",
   "publisher": "ship",
   "private": true,
@@ -42,12 +42,15 @@
     }
   },
   "scripts": {
-    "compile": "bun build src/extension.ts --outdir=out --target=node --format=cjs --external=vscode",
+    "vendor": "bun scripts/vendor-highlight.ts",
+    "compile": "bun run vendor && bun build src/extension.ts --outdir=out --target=node --format=cjs --external=vscode",
     "typecheck": "tsc -p tsconfig.json --noEmit",
+    "pretest": "bun run vendor",
     "test": "bun test",
     "package": "bun run compile && bunx @vscode/vsce package --no-dependencies --allow-missing-repository --skip-license"
   },
   "dependencies": {
+    "@ship/sail-highlight": "file:../highlight",
     "vscode-languageclient": "^9.0.1"
   },
   "devDependencies": {
