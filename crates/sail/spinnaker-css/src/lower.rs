@@ -1,10 +1,10 @@
 //! PaintOp → CSS declarations. The adapter kitchen.
 
 use spinnaker::ir::{PaintArg, PaintOp, StyleDiagnostic};
-use spinnaker::plains::{find_plain, PlainSpec};
+use spinnaker::plains::{PlainSpec, find_plain};
 use spinnaker::scales;
 use spinnaker::setters::{closest_unique_setter, is_border_composite, strip_neg, token_candidates};
-use spinnaker::vocab::{find_vocab, VocabTag};
+use spinnaker::vocab::{VocabTag, find_vocab};
 
 use crate::concern_css::lower_concern_op;
 use crate::plains_css::lower_plain_token;
@@ -880,11 +880,7 @@ fn lower_gap_key_css(
             } else if bare.chars().all(|c| c.is_ascii_digit()) {
                 format!("{sign}{bare}deg")
             } else if let Some(v) = scales::lower("angle", bare) {
-                if neg {
-                    format!("calc(-1 * {v})")
-                } else {
-                    v
-                }
+                if neg { format!("calc(-1 * {v})") } else { v }
             } else {
                 return Some(Err(StyleDiagnostic::BadToken {
                     setter: op.setter.clone(),

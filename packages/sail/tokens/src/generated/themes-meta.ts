@@ -56,7 +56,6 @@ export const THEME_META: readonly ThemeMeta[] = [
   { id: 'paper', dark: false, modes: ['light'], defaultMode: 'light', capability: 'light' },
   { id: 'sail', dark: false, modes: ['light', 'dark'], defaultMode: 'light', capability: 'both' },
   { id: 'ship', dark: false, modes: ['light', 'dark'], defaultMode: 'light', capability: 'both' },
-  { id: 'studio', dark: true, modes: ['light', 'dark'], defaultMode: 'dark', capability: 'both' },
   { id: 'synthwave', dark: true, modes: ['dark'], defaultMode: 'dark', capability: 'dark' },
 ] as const
 

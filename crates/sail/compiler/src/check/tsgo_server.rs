@@ -806,7 +806,7 @@ pub fn diagnose_project_files(
     // Kind `files` siblings share identity/bytes with product entries so
     // last_diags cannot survive an emptied css-modules.d.ts. Action-only
     // observation stays off the Pure program (tsc -p kind omits it).
-    let sail_dir = project_root.join("node_modules/.sail");
+    let sail_dir = project_root.join(crate::ambients::PROJECT_SAIL_DIR_REL);
     if sail_dir.is_dir() {
         let mut names = vec!["types.d.ts", "css-modules.d.ts"];
         if env == TypeEnv::Action {

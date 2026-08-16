@@ -74,6 +74,14 @@
   --card-texture: url("data:image/svg+xml,%3Csvg viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='c'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23c)' opacity='0.03'/%3E%3C/svg%3E");
   --card-texture-blend: overlay;
   --card-texture-opacity: 1;
+  --bg-surface-color: var(--surface-1);
+  --bg-muted-color: var(--muted);
+  --bg-card-color: var(--card);
+  --bg-button-color: var(--background);
+  --fg-foreground-color: var(--foreground);
+  --fg-muted-color: var(--muted-foreground);
+  --fg-card-color: var(--card-foreground);
+  --fg-button-color: var(--foreground);
 }
 
 /* ─── theme:ship (themes/ship.json#mode=dark) ─── */
@@ -142,6 +150,14 @@
   --card-texture: url("data:image/svg+xml,%3Csvg viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='c'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23c)' opacity='0.03'/%3E%3C/svg%3E");
   --card-texture-blend: overlay;
   --card-texture-opacity: 1;
+  --bg-surface-color: var(--surface-1);
+  --bg-muted-color: var(--muted);
+  --bg-card-color: var(--card);
+  --bg-button-color: var(--background);
+  --fg-foreground-color: var(--foreground);
+  --fg-muted-color: var(--muted-foreground);
+  --fg-card-color: var(--card-foreground);
+  --fg-button-color: var(--foreground);
 }
 
 /* ─── theme:neutral (themes/neutral.json#mode=light) ─── */
@@ -215,6 +231,14 @@
   --shadow-xl: 0 24px 64px -12px oklch(0 0 0 / 18%), 0 8px 24px -8px oklch(0 0 0 / 10%);
   --shadow-xs: 0 1px 2px 0 oklch(0 0 0 / 5%);
   --card-backdrop-filter: none;
+  --bg-surface-color: var(--surface-1);
+  --bg-muted-color: var(--muted);
+  --bg-card-color: var(--card);
+  --bg-button-color: var(--background);
+  --fg-foreground-color: var(--foreground);
+  --fg-muted-color: var(--muted-foreground);
+  --fg-card-color: var(--card-foreground);
+  --fg-button-color: var(--foreground);
 }
 
 /* ─── theme:neutral (themes/neutral.json#mode=dark) ─── */
@@ -286,6 +310,14 @@
   --shadow-xl: 0 28px 64px -12px oklch(0.05 0.010 264 / 65%), 0 8px 24px -8px oklch(0.05 0.010 264 / 45%);
   --shadow-xs: 0 1px 2px 0 oklch(0.05 0.010 264 / 40%);
   --card-backdrop-filter: none;
+  --bg-surface-color: var(--surface-1);
+  --bg-muted-color: var(--muted);
+  --bg-card-color: var(--card);
+  --bg-button-color: var(--background);
+  --fg-foreground-color: var(--foreground);
+  --fg-muted-color: var(--muted-foreground);
+  --fg-card-color: var(--card-foreground);
+  --fg-button-color: var(--foreground);
 }
 
 /* ─── theme:paper (themes/paper.json#mode=light) ─── */
@@ -394,6 +426,14 @@
   --shadow-xs: 0 1px 2px 0 oklch(0.30 0.04 60 / 6%);
   --card-backdrop-filter: none;
   --card-texture: none;
+  --bg-surface-color: var(--surface-1);
+  --bg-muted-color: var(--muted);
+  --bg-card-color: var(--card);
+  --bg-button-color: var(--background);
+  --fg-foreground-color: var(--foreground);
+  --fg-muted-color: var(--muted-foreground);
+  --fg-card-color: var(--card-foreground);
+  --fg-button-color: var(--foreground);
 }
 
 /* ─── theme:halo (themes/halo.json#mode=light) ─── */
@@ -500,6 +540,14 @@
   --shadow-xs: -2px -2px 5px oklch(1 0 0 / 70%), 2px 2px 5px oklch(0 0 0 / 6%);
   --card-backdrop-filter: none;
   --card-texture: none;
+  --bg-surface-color: var(--surface-1);
+  --bg-muted-color: var(--muted);
+  --bg-card-color: var(--card);
+  --bg-button-color: var(--background);
+  --fg-foreground-color: var(--foreground);
+  --fg-muted-color: var(--muted-foreground);
+  --fg-card-color: var(--card-foreground);
+  --fg-button-color: var(--foreground);
 }
 
 /* ─── theme:console (themes/console.json#mode=dark) ─── */
@@ -588,6 +636,14 @@
   --shadow-xs: 0 0 0 1px oklch(0.78 0.20 145 / 10%);
   --card-backdrop-filter: none;
   --card-texture: none;
+  --bg-surface-color: var(--surface-1);
+  --bg-muted-color: var(--muted);
+  --bg-card-color: var(--card);
+  --bg-button-color: var(--background);
+  --fg-foreground-color: var(--foreground);
+  --fg-muted-color: var(--muted-foreground);
+  --fg-card-color: var(--card-foreground);
+  --fg-button-color: var(--foreground);
 }
 
 /* ─── theme:contrast (themes/contrast.json#mode=dark) ─── */
@@ -672,6 +728,14 @@
   --shadow-xs: 0 0 0 1px oklch(1 0 0 / 60%);
   --card-backdrop-filter: none;
   --card-texture: none;
+  --bg-surface-color: var(--surface-1);
+  --bg-muted-color: var(--muted);
+  --bg-card-color: var(--card);
+  --bg-button-color: var(--background);
+  --fg-foreground-color: var(--foreground);
+  --fg-muted-color: var(--muted-foreground);
+  --fg-card-color: var(--card-foreground);
+  --fg-button-color: var(--foreground);
 }
 
 /* ─── theme:glass (themes/glass.json#mode=light) ─── */
@@ -775,6 +839,14 @@
   --shadow-xs: 0 1px 0 oklch(1 0 0 / 40%) inset, 0 2px 8px oklch(0.30 0.04 240 / 6%);
   --card-backdrop-filter: blur(24px) saturate(180%);
   --card-texture: none;
+  --bg-surface-color: var(--surface-1);
+  --bg-muted-color: var(--muted);
+  --bg-card-color: var(--card);
+  --bg-button-color: var(--background);
+  --fg-foreground-color: var(--foreground);
+  --fg-muted-color: var(--muted-foreground);
+  --fg-card-color: var(--card-foreground);
+  --fg-button-color: var(--foreground);
 }
 
 /* ─── theme:brut (themes/brut.json#mode=light) ─── */
@@ -877,6 +949,14 @@
   --shadow-xs: none;
   --card-backdrop-filter: none;
   --card-texture: none;
+  --bg-surface-color: var(--surface-1);
+  --bg-muted-color: var(--muted);
+  --bg-card-color: var(--card);
+  --bg-button-color: var(--background);
+  --fg-foreground-color: var(--foreground);
+  --fg-muted-color: var(--muted-foreground);
+  --fg-card-color: var(--card-foreground);
+  --fg-button-color: var(--foreground);
 }
 
 /* ─── theme:8bit (themes/8bit.json#mode=dark) ─── */
@@ -960,6 +1040,14 @@
   --shadow-xs: 2px 2px 0 0 oklch(0.14 0.03 265);
   --card-backdrop-filter: none;
   --card-texture: none;
+  --bg-surface-color: var(--surface-1);
+  --bg-muted-color: var(--muted);
+  --bg-card-color: var(--card);
+  --bg-button-color: var(--background);
+  --fg-foreground-color: var(--foreground);
+  --fg-muted-color: var(--muted-foreground);
+  --fg-card-color: var(--card-foreground);
+  --fg-button-color: var(--foreground);
 }
 
 /* ─── theme:synthwave (themes/synthwave.json#mode=dark) ─── */
@@ -1022,6 +1110,14 @@
   --shadow-xs: 0 1px 2px oklch(0.14 0.03 285 / 35%);
   --card-backdrop-filter: none;
   --card-texture: none;
+  --bg-surface-color: var(--surface-1);
+  --bg-muted-color: var(--muted);
+  --bg-card-color: var(--card);
+  --bg-button-color: var(--background);
+  --fg-foreground-color: var(--foreground);
+  --fg-muted-color: var(--muted-foreground);
+  --fg-card-color: var(--card-foreground);
+  --fg-button-color: var(--foreground);
 }
 
 /* ─── theme:sail (themes/sail.json#mode=light) ─── */
@@ -1092,6 +1188,14 @@
   --card-texture: url("data:image/svg+xml,%3Csvg viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='c'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23c)' opacity='0.03'/%3E%3C/svg%3E");
   --card-texture-blend: overlay;
   --card-texture-opacity: 1;
+  --bg-surface-color: var(--surface-1);
+  --bg-muted-color: var(--muted);
+  --bg-card-color: var(--card);
+  --bg-button-color: var(--background);
+  --fg-foreground-color: var(--foreground);
+  --fg-muted-color: var(--muted-foreground);
+  --fg-card-color: var(--card-foreground);
+  --fg-button-color: var(--foreground);
 }
 
 /* ─── theme:sail (themes/sail.json#mode=dark) ─── */
@@ -1160,128 +1264,14 @@
   --card-texture: url("data:image/svg+xml,%3Csvg viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='c'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23c)' opacity='0.03'/%3E%3C/svg%3E");
   --card-texture-blend: overlay;
   --card-texture-opacity: 1;
-}
-
-/* ─── theme:studio (project-themes/studio.json#mode=light) ─── */
-/* Studio workbench — warm charcoal dark, coral accent, compact density dogfood. */
-:root[theme='studio'][mode='light'],
-[theme='studio'][mode='light'],
-:root[mode='light'] [theme='studio']:not([mode]) {
-  color-scheme: light;
-  --accent: oklch(0.68 0.16 32);
-  --accent-foreground: oklch(0.18 0.02 48);
-  --background: oklch(0.975 0.002 106);
-  --border: oklch(0.147 0.004 49 / 25%);
-  --border-strong: color-mix(in oklch, var(--foreground) 55%, transparent);
-  --border-subtle: color-mix(in oklch, var(--border) 60%, transparent);
-  --foreground: oklch(0.147 0.004 49);
-  --muted: oklch(0.95 0.003 106);
-  --muted-foreground: oklch(0.40 0.02 58);
-  --primary: oklch(0.72 0.17 38);
-  --primary-foreground: oklch(0.18 0.02 48);
-  --ring: oklch(0.72 0.17 38 / 35%);
-  --surface-0: oklch(0.97 0.004 80);
-  --surface-1: oklch(1 0 0);
-  --surface-2: oklch(1 0 0);
-  --surface-3: oklch(1 0 0);
-  --surface-overlay: none;
-  --surface-overlay-blend: normal;
-  --surface-overlay-opacity: 1;
-  --syntax-keyword: oklch(0.48 0.18 32);
-  --syntax-string: oklch(0.42 0.14 152);
-  --syntax-number: oklch(0.42 0.14 250);
-  --syntax-function: oklch(0.45 0.16 305);
-  --syntax-type: oklch(0.42 0.14 200);
-  --syntax-tag: oklch(0.45 0.16 20);
-  --syntax-attr: oklch(0.48 0.14 60);
-  --syntax-comment: oklch(0.55 0.02 70);
-  --syntax-variable: var(--foreground);
-  --body-font: var(--font-body);
-  --font-body: var(--font-body-app);
-  --heading-font: Fraunces, ui-serif, Georgia, serif;
-  --heading-tracking: var(--tracking-tight);
-  --heading-weight: var(--font-weight-semibold);
-  --label-font: var(--font-body);
-  --label-tracking: 0.08em;
-  --label-weight: var(--font-weight-semibold);
-  --radius-md: 6px;
-  --radius-sm: 4px;
-  --shadow-accent: 0 0 0 3px oklch(0.67 0.16 58 / 18%), 0 8px 24px -6px oklch(0.67 0.16 58 / 30%);
-  --shadow-card-rest: 0 1px 2px 0 oklch(0 0 0 / 4%), 0 0 0 1px oklch(0 0 0 / 3%);
-  --shadow-hover: 0 8px 22px -4px oklch(0.55 0.10 58 / 14%), 0 2px 6px oklch(0 0 0 / 6%);
-  --shadow-lg: 0 14px 32px -6px oklch(0.55 0.10 58 / 16%), 0 4px 12px oklch(0 0 0 / 8%);
-  --shadow-md: 0 6px 18px -4px oklch(0.55 0.10 58 / 12%), 0 2px 6px oklch(0 0 0 / 6%);
-  --shadow-sm: 0 2px 4px -1px oklch(0.55 0.10 58 / 9%), 0 1px 2px oklch(0 0 0 / 4%);
-  --shadow-xs: 0 1px 2px 0 oklch(0.55 0.10 58 / 6%), 0 0 0 1px oklch(0 0 0 / 3%);
-  --card-backdrop-filter: none;
-  --card-texture: url("data:image/svg+xml,%3Csvg viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='c'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23c)' opacity='0.03'/%3E%3C/svg%3E");
-  --card-texture-blend: overlay;
-  --card-texture-opacity: 1;
-  --card-foreground: oklch(0.147 0.004 49);
-  --card: oklch(1 0 0);
-  --selected-strength: 14%;
-}
-
-/* ─── theme:studio (project-themes/studio.json#mode=dark) ─── */
-/* Studio workbench — warm charcoal dark, coral accent, compact density dogfood. */
-:root[theme='studio'][mode='dark'],
-:root[theme='studio']:not([mode]),
-[theme='studio'][mode='dark'],
-:root[mode='dark'] [theme='studio']:not([mode]),
-:root:not([mode]) [theme='studio']:not([mode]) {
-  color-scheme: dark;
-  --accent: oklch(0.68 0.16 32);
-  --accent-foreground: oklch(0.18 0.02 48);
-  --background: oklch(0.17 0.014 48);
-  --border: oklch(0.92 0.01 70 / 12%);
-  --border-strong: oklch(0.92 0.01 70 / 22%);
-  --border-subtle: oklch(0.92 0.01 70 / 8%);
-  --foreground: oklch(0.96 0.008 70);
-  --muted: oklch(0.22 0.012 48);
-  --muted-foreground: oklch(0.72 0.02 55);
-  --primary: oklch(0.72 0.17 38);
-  --primary-foreground: oklch(0.18 0.02 48);
-  --ring: oklch(0.72 0.17 38 / 35%);
-  --surface-0: oklch(0.15 0.012 48);
-  --surface-1: oklch(0.20 0.013 48);
-  --surface-2: oklch(0.24 0.014 48);
-  --surface-3: oklch(0.28 0.015 48);
-  --surface-overlay: none;
-  --surface-overlay-blend: normal;
-  --surface-overlay-opacity: 1;
-  --syntax-keyword: oklch(0.78 0.14 32);
-  --syntax-string: oklch(0.78 0.12 152);
-  --syntax-number: oklch(0.80 0.12 250);
-  --syntax-function: oklch(0.80 0.14 305);
-  --syntax-type: oklch(0.78 0.12 200);
-  --syntax-tag: oklch(0.78 0.14 20);
-  --syntax-attr: oklch(0.78 0.12 60);
-  --syntax-comment: oklch(0.58 0.03 70);
-  --syntax-variable: var(--foreground);
-  --body-font: var(--font-body);
-  --font-body: var(--font-body-app);
-  --heading-font: Fraunces, ui-serif, Georgia, serif;
-  --heading-tracking: var(--tracking-tight);
-  --heading-weight: var(--font-weight-semibold);
-  --label-font: var(--font-body);
-  --label-tracking: var(--tracking-normal);
-  --label-weight: var(--font-weight-semibold);
-  --radius-md: 6px;
-  --radius-sm: 4px;
-  --selected-strength: 18%;
-  --shadow-accent: 0 0 0 3px oklch(0.77 0.16 70 / 22%), 0 8px 24px -6px oklch(0.77 0.16 70 / 38%);
-  --shadow-card-rest: 0 1px 2px 0 oklch(0.05 0.02 48 / 35%), 0 0 0 1px oklch(1 0 0 / 4%);
-  --shadow-hover: 0 8px 22px -4px oklch(0.10 0.04 48 / 50%), 0 2px 6px oklch(0 0 0 / 35%);
-  --shadow-lg: 0 14px 32px -6px oklch(0.10 0.04 48 / 60%), 0 4px 12px oklch(0 0 0 / 40%);
-  --shadow-md: 0 6px 18px -4px oklch(0.10 0.04 48 / 55%), 0 2px 6px oklch(0 0 0 / 35%);
-  --shadow-sm: 0 2px 6px -1px oklch(0.10 0.04 48 / 50%), 0 0 0 1px oklch(1 0 0 / 4%);
-  --shadow-xs: 0 1px 2px 0 oklch(0 0 0 / 5%);
-  --card-backdrop-filter: none;
-  --card-texture: url("data:image/svg+xml,%3Csvg viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='c'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23c)' opacity='0.03'/%3E%3C/svg%3E");
-  --card-texture-blend: overlay;
-  --card-texture-opacity: 1;
-  --card-foreground: oklch(0.98 0.001 106);
-  --card: oklch(0.205 0.0172 48);
+  --bg-surface-color: var(--surface-1);
+  --bg-muted-color: var(--muted);
+  --bg-card-color: var(--card);
+  --bg-button-color: var(--background);
+  --fg-foreground-color: var(--foreground);
+  --fg-muted-color: var(--muted-foreground);
+  --fg-card-color: var(--card-foreground);
+  --fg-button-color: var(--foreground);
 }
 
 /*

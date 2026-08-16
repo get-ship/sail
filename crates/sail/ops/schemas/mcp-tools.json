@@ -541,7 +541,7 @@
   },
   {
     "name": "sail_tokens_generate",
-    "description": "Run DTCG model → tokens CSS/registry generate. mode=package (full catalog) or mode=app (T0 effective set → project/.deck/themes/themes.css only).",
+    "description": "Run DTCG model → tokens CSS/registry generate. mode=package (full catalog) or mode=app (T0 effective set → project/.sail/themes/themes.css only).",
     "inputSchema": {
       "type": "object",
       "properties": {

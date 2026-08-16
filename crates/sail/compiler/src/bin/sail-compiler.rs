@@ -1,7 +1,7 @@
 //! `sail-compiler` CLI. Compiles a single `.sail` file or a directory of
 //! them, writing the emitted JS (and CEM/schema/meta/dts/ssr.html sidecars)
-//! into a project-level mirror tree at `<repo-root>/.deck/<source-
-//! relative-path>/` (SPEC-OUTPUT-1 product out). Pass `--out <dir>` to
+//! into a project-level mirror tree at `<repo-root>/.sail/<source-
+//! relative-path>/` (generate out). Pass `--out <dir>` to
 //! override and emit every file to a single directory (flat `--out` behaviour).
 //! Errors render with file path, line, and column.
 //
@@ -55,7 +55,7 @@ enum Command {
         /// Path to a `.sail` file or a directory.
         input: PathBuf,
         /// Output directory. When omitted, each file's outputs land in the
-        /// project mirror tree at `<repo-root>/.deck/<source-rel>/`
+        /// project mirror tree at `<repo-root>/.sail/<source-rel>/`
         /// and the JS module is named `<stem>.compiled.js`. When supplied,
         /// every file is emitted into this single directory and the JS
         /// module is named `<stem>.js` (flat `--out` behaviour).
@@ -87,9 +87,9 @@ enum Command {
     /// content derives from the SAME sources the compiler enforces — the
     /// resolved styling policy (`sail.config.json` walk-up), the Style vocabulary
     /// tables the lint validates against, the layout keywords, and the motion
-    /// preset catalog — so the skill can never drift from the compiler. A
-    /// strict-policy directory gets a skill without the Style product surface; a
-    /// full-policy (stdlib) directory gets the complete grammar.
+    /// preset catalog — so the skill can never drift from the compiler. Product
+    /// Style is ungated in every directory; `preset` still dials
+    /// `raw_containers` (and compose autofix).
     Skill {
         /// Directory the skill describes (policy resolves from here).
         /// Default: the current directory.
@@ -135,7 +135,7 @@ enum Command {
         out: Option<PathBuf>,
         /// Also emit a TypeScript module for the docs site (the generated
         /// props tables on /components/[tag]). Default:
-        /// `apps/sail-site/src/prop-registry.gen.ts` relative to the
+        /// `apps/sail-site/gen/prop-registry.ts` relative to the
         /// workspace root. Pass an explicit path to override.
         #[arg(long)]
         ts_out: Option<PathBuf>,
@@ -196,12 +196,12 @@ enum Command {
         #[arg(long)]
         out: Option<PathBuf>,
     },
-    /// Emit the sail ambient TypeScript pack (`node_modules/.sail/types.d.ts`)
+    /// Emit the sail ambient TypeScript pack (`.sail/types.d.ts`)
     /// from the same manifests that drive the compiler (runtime ambient
     /// vocabulary + Style setters + token scales). Regenerable editor helper —
     /// not hand-authored app source (SPEC-OUTPUT-1 §4).
     Types {
-        /// Project directory that receives `node_modules/.sail/types.d.ts`.
+        /// Project directory that receives `.sail/types.d.ts`.
         /// Must contain sail.config.jsonc / sail.config.json. Default: cwd.
         #[arg(long)]
         project: Option<PathBuf>,
@@ -211,7 +211,7 @@ enum Command {
         #[arg(long)]
         tsconfig_out: Option<PathBuf>,
         /// Write the pack to this path instead of
-        /// `<project>/node_modules/.sail/types.d.ts`.
+        /// `<project>/.sail/types.d.ts`.
         #[arg(long)]
         out: Option<PathBuf>,
     },
@@ -305,7 +305,7 @@ fn main() -> Result<()> {
 fn run_profile(workspace: Option<PathBuf>, out: PathBuf, skip_dev_rss: bool) -> Result<()> {
     let workspace = match workspace {
         Some(p) => p,
-        None => workspace_root()?,
+        None => cargo_workspace_root()?,
     };
     let report = sail_compiler::profile::run(&workspace, &out, skip_dev_rss)?;
     println!(
@@ -323,7 +323,7 @@ fn run_profile(workspace: Option<PathBuf>, out: PathBuf, skip_dev_rss: bool) -> 
     Ok(())
 }
 
-/// Ambient pack → `<project>/node_modules/.sail/types.d.ts` (+ per-kind
+/// Ambient pack → `<project>/.sail/types.d.ts` (+ per-kind
 /// tsconfigs). E1c: generated configs always regenerate — hand edits wiped.
 fn gen_types(
     project: Option<PathBuf>,
@@ -394,7 +394,7 @@ fn gen_types(
 /// `--model` is the monorepo catalog-development override; default prefers
 /// on-disk `packages/sail/tokens/model`, else the baked catalog.
 fn gen_tokens(model: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
-    let root = workspace_root().ok();
+    let root = cargo_workspace_root().ok();
     let model_dir =
         sail_compiler::tokens_generate::resolve_model_dir(root.as_deref(), model.as_deref())?;
     let out_dir = match out {
@@ -455,7 +455,7 @@ fn gen_vocabulary(out: Option<PathBuf>) -> Result<()> {
 fn gen_framework_css(out: Option<PathBuf>) -> Result<()> {
     let path = match out {
         Some(p) => p,
-        None => workspace_root()?.join("packages/sail/tokens/src/element-skins.css"),
+        None => cargo_workspace_root()?.join("packages/sail/tokens/src/element-skins.css"),
     };
     let banner = "/* GENERATED from the sail-compiler stdlib registry — do not hand-edit.\n \
                   * Regenerate: cargo run -p sail-compiler -- framework-css\n \
@@ -478,17 +478,17 @@ fn gen_prop_registry(out: Option<PathBuf>, ts_out: Option<PathBuf>) -> Result<()
     use sail_compiler::ir::directive::PropKind;
     let path = match out {
         Some(p) => p,
-        None => workspace_root()?.join("crates/sail/compiler/primitives.json"),
+        None => cargo_workspace_root()?.join("crates/sail/compiler/primitives.json"),
     };
     let ts_path = match ts_out {
         Some(p) => p,
-        None => workspace_root()?.join("apps/sail-site/src/prop-registry.gen.ts"),
+        None => cargo_workspace_root()?.join("apps/sail-site/gen/prop-registry.ts"),
     };
     // Two consumers, two shapes from one walk:
     //  * primitives.json — the lint's validation registry: attribute-checkable
     //    props only (Identity props are plain-field JS values, nothing for
     //    static-attribute validation to check).
-    //  * prop-registry.gen.ts — the docs site's props tables: the FULL surface
+    //  * gen/prop-registry.ts — the docs site's props tables: the FULL surface
     //    including Identity props (shown as their verbatim TS type), so the
     //    detail pages are generated, never hand-authored.
     let mut tags = std::collections::BTreeMap::new();
@@ -582,6 +582,9 @@ fn gen_prop_registry(out: Option<PathBuf>, ts_out: Option<PathBuf>) -> Result<()
     ts.push_str("export const PROP_REGISTRY: Record<string, GenProp[]> = ");
     ts.push_str(&serde_json::to_string_pretty(&ts_tags)?);
     ts.push('\n');
+    if let Some(parent) = ts_path.parent() {
+        std::fs::create_dir_all(parent)?;
+    }
     std::fs::write(&ts_path, ts)?;
     println!("wrote {} ({} elements)", ts_path.display(), ts_tags.len());
 
@@ -589,7 +592,7 @@ fn gen_prop_registry(out: Option<PathBuf>, ts_out: Option<PathBuf>) -> Result<()
     // when: keys, layout keywords, motion tables — from the same tables the
     // lint consults. Sibling of the prop registry: one regen refreshes both.
     // The emit-leaf Tailwind utility table is not this file.
-    let surface_path = ts_path.with_file_name("language-surface.gen.ts");
+    let surface_path = ts_path.with_file_name("language-surface.ts");
     let mut sf = String::new();
     sf.push_str(
         "// AUTO-GENERATED by `cargo run -p sail-compiler -- prop-registry`. Do not edit.\n",
@@ -717,7 +720,7 @@ fn gen_prop_registry(out: Option<PathBuf>, ts_out: Option<PathBuf>) -> Result<()
     sf.push_str("\n\n");
 
     // ELEMENTS — the L1 manifest (stdlib only; reskins array always empty
-    // post SPEC-L1-1). Prop tables live in prop-registry.gen.ts.
+    // post SPEC-L1-1). Prop tables live in gen/prop-registry.ts.
     let (stdlib_l1, reskin_l1) = sail_compiler::l1_by_kind();
     debug_assert!(reskin_l1.is_empty(), "native reskins retired");
     let to_element_row = |e: &sail_compiler::l1_manifest::L1Entry| serde_json::json!({ "tag": e.tag, "description": e.description });
@@ -906,18 +909,16 @@ fn gen_prop_registry(out: Option<PathBuf>, ts_out: Option<PathBuf>) -> Result<()
     )?);
     sf.push_str("\n\n");
 
-    // CONFIG — every sail.config.json key, straight from
-    // sail_lint::config::CONFIG_KEY_DOCS (kept in lockstep with
-    // RECOGNIZED_KEYS by that module's own test).
-    let config_keys: Vec<serde_json::Value> = sail_lint::config::CONFIG_KEY_DOCS
-        .iter()
-        .map(|(key, ty, default, doc, layer)| {
+    // CONFIG — every sail.config.json key, derived from typed SailConfig.
+    let config_keys: Vec<serde_json::Value> = sail_lint::config::config_key_docs()
+        .into_iter()
+        .map(|row| {
             serde_json::json!({
-                "key": key,
-                "type": ty,
-                "default": default,
-                "doc": doc,
-                "layer": layer,
+                "key": row.key,
+                "type": row.type_name,
+                "default": row.default,
+                "doc": row.doc,
+                "layer": row.layer,
             })
         })
         .collect();
@@ -987,6 +988,9 @@ fn gen_prop_registry(out: Option<PathBuf>, ts_out: Option<PathBuf>) -> Result<()
         sail_compiler::region_capability::CONTROLLER_SIZE_THRESHOLD
     ));
 
+    if let Some(parent) = surface_path.parent() {
+        std::fs::create_dir_all(parent)?;
+    }
     std::fs::write(&surface_path, sf)?;
     println!(
         "wrote {} (style vocab {}, {} presets, {} elements, {} actions, {} ambient, {} blocks, {} directives, {} config keys)",
@@ -1003,9 +1007,9 @@ fn gen_prop_registry(out: Option<PathBuf>, ts_out: Option<PathBuf>) -> Result<()
     Ok(())
 }
 
-/// Walk up from the current dir to the workspace root (the dir whose
-/// `Cargo.toml` declares `[workspace]`).
-fn workspace_root() -> Result<PathBuf> {
+/// This checkout's Cargo `[workspace]` root. Skill / tokens / pack codegen
+/// only — never product project detection.
+fn cargo_workspace_root() -> Result<PathBuf> {
     let mut dir = std::env::current_dir()?;
     loop {
         let manifest = dir.join("Cargo.toml");
@@ -1197,97 +1201,82 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
          - Behavior is unrestricted TypeScript in `<controller>`. Static surface in\n  \
            `<scope>` (`props: {{ … }}`). If it computes, it is controller code.\n"
     );
-    if effective.sx {
-        let _ = writeln!(md, "## Style product (core)\n");
-        // Demo tags must respect raw_containers: under no-raw, bare div/span fail check.
-        // Block channel form is a plain string (style_skill_demo). In writeln! format
-        // strings, `{{` / `}}` escape to single braces in the skill markdown.
-        md.push_str(style_skill_demo(effective.raw_containers));
-        let _ = writeln!(
-            md,
-            "Attach Style as a **tag call** `style({{…}})` on the open tag — not HTML `style=` or retired `sx=`.\n\
-             Prefer named Style `style name = {{…}}` (or scope Style consts where dual path still applies),\n\
-             `style({{ match: {{…}}, when: {{…}}, compound: […] }})`,\n\
-             and first-class **`bind(name)`** for values that track props/signals/\n\
-             derived/tokens/action writes. Style is compile-time static — no dynamic\n\
-             JS expressions inside Style (computation lives in the controller; the\n\
-             template names it). Style vocab (concern | axis | plain): MCP\n\
-             `sail_surface` topic `style` (same `offered_rows()`). Layout is\n\
-             elements, not CSS — MCP topic `layout`.\n\
-             \n\
-             ### `bind(name)` units contract\n\
-             \n\
-             | Source → slot | Realization |\n\
-             |---|---|\n\
-             | number → length (`place.top`, `size.w`, `space.pad`, …) | legal; means **px** (`@property` length + reflection) |\n\
-             | number → number (`filter.opacity`, `place.z`) | direct |\n\
-             | string → any | pass-through (`syntax: '*'`) |\n\
-             | number → color (`fill`, `ink`, …) | **compile error** |\n\
-             | `derived` by name | allowed (read-only); annotate `(): number` for length |\n\
-             | action write (`use:anchor` → `anchorLeft`) | via action manifest `writes` |\n\
-             \n\
-             Do not enumerate a prop as ≥3 compound rows that only vary a setter arg —\n\
-             that is `spinnaker-value-enumeration`; use `bind(name)` instead.\n"
-        );
+    // Product Style is ungated — always document the tag-call surface.
+    let _ = writeln!(md, "## Style product (core)\n");
+    // Demo tags must respect raw_containers: under no-raw, bare div/span fail check.
+    // Block channel form is a plain string (style_skill_demo). In writeln! format
+    // strings, `{{` / `}}` escape to single braces in the skill markdown.
+    md.push_str(style_skill_demo(effective.raw_containers));
+    let _ = writeln!(
+        md,
+        "Attach Style as a **tag call** `style({{…}})` on the open tag — not HTML `style=` or retired `sx=`.\n\
+         Prefer named Style `style name = {{…}}` (or scope Style consts where dual path still applies),\n\
+         `style({{ match: {{…}}, when: {{…}}, compound: […] }})`,\n\
+         and first-class **`bind(name)`** for values that track props/signals/\n\
+         derived/tokens/action writes. Style is compile-time static — no dynamic\n\
+         JS expressions inside Style (computation lives in the controller; the\n\
+         template names it). Style vocab (concern | axis | plain): MCP\n\
+         `sail_surface` topic `style` (same `offered_rows()`). Layout is\n\
+         elements, not CSS — MCP topic `layout`.\n\
+         \n\
+         ### `bind(name)` units contract\n\
+         \n\
+         | Source → slot | Realization |\n\
+         |---|---|\n\
+         | number → length (`place.top`, `size.w`, `space.pad`, …) | legal; means **px** (`@property` length + reflection) |\n\
+         | number → number (`filter.opacity`, `place.z`) | direct |\n\
+         | string → any | pass-through (`syntax: '*'`) |\n\
+         | number → color (`fill`, `ink`, …) | **compile error** |\n\
+         | `derived` by name | allowed (read-only); annotate `(): number` for length |\n\
+         | action write (`use:anchor` → `anchorLeft`) | via action manifest `writes` |\n\
+         \n\
+         Do not enumerate a prop as ≥3 compound rows that only vary a setter arg —\n\
+         that is `spinnaker-value-enumeration`; use `bind(name)` instead.\n\
+         Variance is Style `match` / `when` / `compound` — there is no `<variants>` block.\n"
+    );
 
-        // Concern atlas only — absorbed property names are not offered.
-        let _ = writeln!(md, "### Core Style concerns (start here)\n");
-        let _ = writeln!(
-            md,
-            "Flat chain is the language (`bg(surface).pad(4)`), not constructor\n\
-             `style.padX`. Named composite or slot object. **Not listed:** absorbed\n\
-             longhands (`padX`/`fontSize`/`truncate`/`shadow`) or dead v2 names\n\
-             (`fill`/`ink`/`place`/`space`/`flow`/`motion`). Participation\n\
-             (`grow`/`shrink`/`w`) lives on `size` / `grow` / `shrink`.\n"
-        );
-        for row in spinnaker::offered_rows().filter(|r| r.tag == spinnaker::VocabTag::Concern) {
-            let _ = writeln!(md, "- {}", spinnaker::vocab_surface_line(row));
-        }
-        let _ = writeln!(md);
-        let _ = writeln!(md, "### Axis\n");
-        for row in spinnaker::offered_rows().filter(|r| r.tag == spinnaker::VocabTag::Axis) {
-            let _ = writeln!(md, "- {}", spinnaker::vocab_surface_line(row));
-        }
-        let _ = writeln!(md);
-        let _ = writeln!(md, "### Plains\n");
-        let _ = writeln!(
-            md,
-            "Verbs and singles. Full list: MCP `sail_surface` topic `style`.\n"
-        );
-        for name in ["cursor", "group", "isolate", "srOnly", "select"] {
-            let _ = writeln!(md, "- `{name}(…)`");
-        }
-        let _ = writeln!(md);
+    // Concern atlas only — absorbed property names are not offered.
+    let _ = writeln!(md, "### Core Style concerns (start here)\n");
+    let _ = writeln!(
+        md,
+        "Flat chain is the language (`bg(surface).pad(4)`), not constructor\n\
+         `style.padX`. Named composite or slot object. **Not listed:** absorbed\n\
+         longhands (`padX`/`fontSize`/`truncate`/`shadow`) or dead v2 names\n\
+         (`fill`/`ink`/`place`/`space`/`flow`/`motion`). Participation\n\
+         (`grow`/`shrink`/`w`) lives on `size` / `grow` / `shrink`.\n"
+    );
+    for row in spinnaker::offered_rows().filter(|r| r.tag == spinnaker::VocabTag::Concern) {
+        let _ = writeln!(md, "- {}", spinnaker::vocab_surface_line(row));
+    }
+    let _ = writeln!(md);
+    let _ = writeln!(md, "### Axis\n");
+    for row in spinnaker::offered_rows().filter(|r| r.tag == spinnaker::VocabTag::Axis) {
+        let _ = writeln!(md, "- {}", spinnaker::vocab_surface_line(row));
+    }
+    let _ = writeln!(md);
+    let _ = writeln!(md, "### Plains\n");
+    let _ = writeln!(
+        md,
+        "Verbs and singles. Full list: MCP `sail_surface` topic `style`.\n"
+    );
+    for name in ["cursor", "group", "isolate", "srOnly", "select"] {
+        let _ = writeln!(md, "- `{name}(…)`");
+    }
+    let _ = writeln!(md);
 
-        // Compact high-traffic scales only; full scales via MCP tokens topic.
-        let _ = writeln!(md, "### Token scales (core)\n");
-        let _ = writeln!(
-            md,
-            "Spend a token — never a raw unit. Full scales: MCP `sail_surface` topic `tokens`.\n"
-        );
-        for scale in &["space", "size", "color", "radius", "text", "weight"] {
-            let values = sail_lint::scales::values(scale);
-            if !values.is_empty() {
-                let _ = writeln!(md, "- `{scale}`: {}", values.join(", "));
-            }
+    // Compact high-traffic scales only; full scales via MCP tokens topic.
+    let _ = writeln!(md, "### Token scales (core)\n");
+    let _ = writeln!(
+        md,
+        "Spend a token — never a raw unit. Full scales: MCP `sail_surface` topic `tokens`.\n"
+    );
+    for scale in &["space", "size", "color", "radius", "text", "weight"] {
+        let values = sail_lint::scales::values(scale);
+        if !values.is_empty() {
+            let _ = writeln!(md, "- `{scale}`: {}", values.join(", "));
         }
-        let _ = writeln!(md);
-    } else {
-        let _ = writeln!(
-            md,
-            "## Style is NOT available here\n\nApplication-tier directory: compose components with props/tokens only.\n"
-        );
     }
-    if effective.variants {
-        let _ = writeln!(
-            md,
-            "## variants\n\n\
-             A variant is a prop. Prefer `match` / scope Style consts over residual\n\
-             utility maps. Token-group props (e.g. `tone: Tone`) and Size ladders are\n\
-             ordinary typed props — not special language features. Color groups bind\n\
-             in Style paint (`bg({{ color: tone }})`); Size is discrete `match` conditionality.\n"
-        );
-    }
+    let _ = writeln!(md);
     if !effective.raw_containers {
         let _ = writeln!(
             md,
@@ -1400,7 +1389,7 @@ fn gen_duplicates_report(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<(
     use std::fmt::Write as _;
     let dir = match dir {
         Some(d) => d,
-        None => workspace_root()?.join("packages/components"),
+        None => cargo_workspace_root()?.join("packages/components"),
     };
     if !dir.is_dir() {
         return Err(anyhow!(
@@ -1787,8 +1776,8 @@ fn build(
     if input.is_dir() {
         let mut projects = collect_project_roots(&input)?;
         if projects.is_empty() {
-            if let Some(p) = nearest_project_root(&targets[0]) {
-                projects.push(p);
+            if let Some(p) = sail_lint::Project::discover(&targets[0]) {
+                projects.push(p.root().to_path_buf());
             }
         }
         for project in &projects {
@@ -1798,8 +1787,8 @@ fn build(
                 project_ts_type_gate(project)?
             }
         }
-    } else if let Some(project) = nearest_project_root(&targets[0]) {
-        let _ = sail_compiler::ambients::write_project_type_configs(&project);
+    } else if let Some(project) = sail_lint::Project::discover(&targets[0]) {
+        let _ = sail_compiler::ambients::write_project_type_configs(project.root());
     }
 
     // Component mode: tag name comes from --component-name when supplied,
@@ -2005,37 +1994,6 @@ fn collect_targets(dir: &Path, out: &mut Vec<PathBuf>) -> Result<()> {
     Ok(())
 }
 
-/// Walk up from a source path looking for a sail project root.
-///
-/// Prefer `package.json` (+ `src`/`routes`) over a nested `sail.config.json`
-/// (e.g. `src/sail.config.json` is a lint preset only — not the app root).
-/// Used to place generated per-kind tsconfigs and run the project-scoped
-/// type gate (E1b).
-fn nearest_project_root(from: &Path) -> Option<PathBuf> {
-    let mut dir = if from.is_file() {
-        from.parent().map(|p| p.to_path_buf())
-    } else {
-        Some(from.to_path_buf())
-    };
-    let mut nested_config: Option<PathBuf> = None;
-    while let Some(d) = dir {
-        // App package root wins (same preference as tscheck::find_project_root).
-        if d.join("package.json").is_file() && (d.join("src").is_dir() || d.join("routes").is_dir())
-        {
-            return Some(d);
-        }
-        if nested_config.is_none() && sail_lint::config::dir_has_config(&d) {
-            nested_config = Some(d.to_path_buf());
-        }
-        // Stop at workspace root markers so monorepo apps keep their own root.
-        if d.join("Cargo.toml").is_file() && d.join("crates").is_dir() {
-            return nested_config;
-        }
-        dir = d.parent().map(|p| p.to_path_buf());
-    }
-    nested_config
-}
-
 /// Collect authored product `.ts` files under `project` and run the E1b
 /// project type gate (one tsgo invocation per TypeEnv that has files).
 fn project_ts_type_gate(project: &Path) -> Result<()> {
@@ -2096,7 +2054,7 @@ fn collect_ts_sources(project: &Path, dir: &Path, out: &mut Vec<(PathBuf, String
     let skip = [
         "node_modules",
         "dist",
-        ".deck",
+        ".sail",
         "target",
         ".git",
         "test",
@@ -2148,8 +2106,7 @@ fn collect_ts_sources(project: &Path, dir: &Path, out: &mut Vec<(PathBuf, String
     Ok(())
 }
 
-/// Package roots under `dir` that look like sail projects (`package.json` +
-/// `src/` or `routes/`). Multi-domain component trees gate each package.
+/// Package roots under `dir` that are Sail projects (`sail.config` marker).
 fn collect_project_roots(dir: &Path) -> Result<Vec<PathBuf>> {
     let mut out = Vec::new();
     collect_project_roots_rec(dir, &mut out, 0)?;
@@ -2162,7 +2119,7 @@ fn collect_project_roots_rec(dir: &Path, out: &mut Vec<PathBuf>, depth: usize) -
     if depth > 6 {
         return Ok(());
     }
-    let skip = ["node_modules", "dist", ".deck", "target", ".git"];
+    let skip = ["node_modules", "dist", ".sail", "target", ".git"];
     let entries = match fs::read_dir(dir) {
         Ok(e) => e,
         Err(_) => return Ok(()),
@@ -2178,40 +2135,13 @@ fn collect_project_roots_rec(dir: &Path, out: &mut Vec<PathBuf>, depth: usize) -
         if skip.iter().any(|s| *s == name) {
             continue;
         }
-        if p.join("package.json").is_file() && (p.join("src").is_dir() || p.join("routes").is_dir())
-        {
+        if sail_lint::project::is_project_dir(&p) {
             out.push(p.clone());
             continue;
         }
         collect_project_roots_rec(&p, out, depth + 1)?;
     }
     Ok(())
-}
-
-/// The scope capabilities for `path`, from the nearest `app.manifest.jsonc` at
-/// or above its directory — the same opt-in the synthetic client path uses, and
-/// the same walk-up as the `sail.config.json` policy lookup. Each declared
-/// client becomes a typed member of the generated `Scope`, so a controller
-/// reads it precisely and an undeclared name is a type error. No manifest → no
-/// capabilities → `Scope` is exactly the template's own declarations, as before.
-///
-/// A host that injects context beyond the app's own manifest (deck's
-/// `route`/`navigate`) merges its grant in on its own build path; this CLI
-/// names no host.
-fn app_manifest_capabilities(path: &Path) -> Vec<sail_compiler::emit::dts::ScopeCapability> {
-    let mut dir = path.parent();
-    while let Some(d) = dir {
-        let candidate = d.join("app.manifest.jsonc");
-        if candidate.is_file() {
-            return fs::read_to_string(&candidate)
-                .ok()
-                .and_then(|src| sail_compiler::emit::synthetic::AppManifest::parse(&src).ok())
-                .map(|m| sail_compiler::emit::synthetic::scope_capabilities(&m))
-                .unwrap_or_default();
-        }
-        dir = d.parent();
-    }
-    Vec::new()
 }
 
 fn compile_one(
@@ -2241,7 +2171,7 @@ fn compile_one(
         sail_compiler::parse::preprocess::extract_controller_block(&orig_source).1;
     let mode = mode.map(|m| m.into()).unwrap_or(CompileMode::Auto);
     // Resolve the emit dir for this file. Without --out, outputs land in
-    // the project mirror tree at `<repo-root>/.deck/<src-rel>/`;
+    // the project mirror tree at `<repo-root>/.sail/<src-rel>/`;
     // with --out, all files share that directory (flat single-dir mode).
     let mirror_mode = out_override.is_none();
     let out_dir: PathBuf = match out_override {
@@ -2276,11 +2206,11 @@ fn compile_one(
     //
     // A package configures capabilities with `sail.config.json`. The key the parser
     // reads is `"preset"`, values `full` | `strict` (`{"preset":"strict"}`), plus
-    // optional per-key booleans `"sx"` / `"variants"` / `"raw_containers"` that
-    // override the preset. `full` unlocks every capability (primitive authoring);
-    // `strict` locks all three (app authoring — compose primitives, no raw CSS
-    // surface). A present-but-unrecognized config fails CLOSED to `strict`, never
-    // `full`. (The floor holds under every tier — it is not a key.)
+    // the per-key boolean `"raw_containers"` that overrides the preset. `full`
+    // grants raw containers (primitive authoring); `strict` withholds them (app
+    // authoring — compose primitives, no raw boxes). Product Style is ungated.
+    // A present-but-unrecognized config fails CLOSED to `strict`, never `full`.
+    // (The floor holds under every tier — it is not a key.)
     let opts = CompileOpts {
         route_params: None,
         setup_url,
@@ -2288,7 +2218,10 @@ fn compile_one(
         source_path: Some(path.to_path_buf()),
         component_meta,
         emit_dts: !no_dts,
-        scope_capabilities: app_manifest_capabilities(path),
+        // Product compile does not walk `app.manifest.jsonc`. Host grants
+        // (deck route/navigate) land on the bundler path. `sail-compiler
+        // synthesize` takes an explicit manifest for the host/test API.
+        scope_capabilities: Vec::new(),
         emit_component_imports,
         lint_overrides: Policy::overrides_for(path),
     };

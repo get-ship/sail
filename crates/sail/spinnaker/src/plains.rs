@@ -602,7 +602,7 @@ pub fn find_plain_by_vocab(head: &str) -> Option<&'static PlainSpec> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::vocab::{vocab_rows, VocabTag};
+    use crate::vocab::{VocabTag, vocab_rows};
 
     #[test]
     fn vocab_plains_have_emit_slots() {

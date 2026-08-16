@@ -7,7 +7,7 @@
 use crate::scales;
 
 use super::ir::{PaintArg, PaintOp, StyleDiagnostic};
-use crate::plains::{find_plain, PlainSpec};
+use crate::plains::{PlainSpec, find_plain};
 
 /// Plains emit after vocab confirms Plain. Not a name atlas.
 fn emit_plain(name: &str) -> Option<&'static PlainSpec> {

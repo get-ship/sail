@@ -24,6 +24,7 @@ const SKIP_DIRS: &[&str] = &[
     ".git",
     "dist",
     "build",
+    ".sail",
     ".deck",
     "e2e",
     "fixtures",

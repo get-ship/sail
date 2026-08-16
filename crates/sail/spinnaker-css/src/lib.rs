@@ -11,17 +11,17 @@ pub mod plains_css;
 pub mod prefixes;
 pub mod when;
 
-pub use conditions::{condition_media, CONDITION_PREFIXES};
+pub use conditions::{CONDITION_PREFIXES, condition_media};
 pub use emit::{
-    emit_intent, emit_style, lower_style, lower_style_source, lower_style_source_with_motion,
-    render_rule, CssRule,
+    CssRule, emit_intent, emit_style, lower_style, lower_style_source,
+    lower_style_source_with_motion, render_rule,
 };
 pub use lower::lower_op_css;
 pub use prefixes::{
-    group_attr_presence, is_prefix, pseudo_element_prefix, state_data, state_pseudo,
-    STATE_PREFIXES, SX_EXTRA_FORMS,
+    STATE_PREFIXES, SX_EXTRA_FORMS, group_attr_presence, is_prefix, pseudo_element_prefix,
+    state_data, state_pseudo,
 };
-pub use when::{when_selector, when_target, WhenTarget};
+pub use when::{WhenTarget, when_selector, when_target};
 
 #[cfg(test)]
 mod adapter_lock;

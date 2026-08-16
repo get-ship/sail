@@ -73,9 +73,11 @@ export default grammar({
     ),
     _void_tag_name: $ => alias(
       choice(
-        'area', 'base', 'br', 'col', 'embed', 'hr',
-        'img', 'input', 'link', 'meta', 'source', 'track',
-        'wbr', 'textarea',
+        'area', 'avatar', 'base', 'br', 'checkbox', 'code-block',
+        'col', 'color', 'date', 'embed', 'file', 'hr',
+        'img', 'input', 'link', 'meta', 'meter', 'progress',
+        'separator', 'skeleton', 'slider', 'source', 'spinner', 'switch',
+        'textarea', 'theme-picker', 'track', 'wbr',
       ),
       $.tag_name,
     ),

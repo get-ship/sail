@@ -9,7 +9,8 @@ use std::process::Command;
 use sail_compiler::ambients::write_project_type_configs;
 use sail_compiler::check::tscheck::{
     check_project_type_gate, check_project_type_gate_incremental, collect_project_type_gate,
-    format_project_gate_overlay, tsgo_invocation_count,
+    format_project_gate_overlay, lsp_is_disabled, tsgo_invocation_count,
+    type_gate_program_reuse_hits,
 };
 use sail_compiler::diagnostics::DiagSeverity;
 
@@ -166,10 +167,17 @@ fn incremental_hmr_overhead_measured() {
         first.iter().all(|d| d.severity != DiagSeverity::Error),
         "clean fixture must be green: {first:?}"
     );
+    let reuse_before_warm = type_gate_program_reuse_hits();
     let t1 = std::time::Instant::now();
     let second = check_project_type_gate(project);
     let warm_ms = t1.elapsed().as_secs_f64() * 1000.0;
     assert!(second.iter().all(|d| d.severity != DiagSeverity::Error));
+    if !lsp_is_disabled() {
+        assert!(
+            type_gate_program_reuse_hits() > reuse_before_warm,
+            "warm project gate must reuse the live program (warm={warm_ms:.1}ms cold={cold_ms:.1}ms)"
+        );
+    }
     let t2 = std::time::Instant::now();
     let skipped = check_project_type_gate_incremental(
         project,
@@ -178,12 +186,6 @@ fn incremental_hmr_overhead_measured() {
     );
     let skip_ms = t2.elapsed().as_secs_f64() * 1000.0;
     assert!(skipped.is_empty());
-    if cold_ms >= 15.0 {
-        assert!(
-            warm_ms < cold_ms * 0.75,
-            "warm project gate must reuse the program (warm={warm_ms:.1}ms cold={cold_ms:.1}ms)"
-        );
-    }
 
     std::fs::write(
         project.join("src/compositions/m0.ts"),
@@ -214,6 +216,38 @@ fn incremental_hmr_overhead_measured() {
     );
 }
 
+/// sail-dev persists "last tick was red" and passes `force` on the next
+/// tick. A `.sail`-only save must still re-run the gate (not skip → rebuild
+/// → clear overlay while `.ts` is still broken).
+#[test]
+fn incremental_reruns_sail_only_when_last_tick_was_red() {
+    let tmp = tempfile::tempdir().unwrap();
+    let project = tmp.path();
+    write_app(project);
+    let bad = project.join("src/compositions/current-nav.ts");
+    std::fs::write(&bad, SIDECAR).unwrap();
+    write_project_type_configs(project).expect("kind configs");
+    let first = check_project_type_gate_incremental(project, &[bad.clone()], false);
+    assert!(
+        first
+            .iter()
+            .any(|d| d.rule.as_deref() == Some("sail-pure-region")),
+        "first .ts tick must be red: {first:?}"
+    );
+    // Same as sail-dev: last tick dirty → force the next (sail-only) tick.
+    let still = check_project_type_gate_incremental(
+        project,
+        &[project.join("src/widget/widget.sail")],
+        true,
+    );
+    assert!(
+        still
+            .iter()
+            .any(|d| d.rule.as_deref() == Some("sail-pure-region")),
+        "forced sail-only tick after red must keep the gate red: {still:?}"
+    );
+}
+
 #[test]
 fn overflow_force_runs_gate_on_sail_only_tick() {
     let tmp = tempfile::tempdir().unwrap();
@@ -235,7 +269,7 @@ fn overflow_force_runs_gate_on_sail_only_tick() {
     );
 }
 
-/// CI path: `tsc -p node_modules/.sail/tsconfig.sail.json` fails the sidecar.
+/// CI path: `tsc -p .sail/tsconfig.sail.json` fails the sidecar.
 #[test]
 fn confession_sidecar_fails_tsc_pure_config() {
     let root = workspace_root();
@@ -250,7 +284,7 @@ fn confession_sidecar_fails_tsc_pure_config() {
     write_project_type_configs(project).expect("kind configs");
     // Point tsc at the workspace typescript so the generated config resolves.
     let output = Command::new(&tsc)
-        .args(["--noEmit", "-p", "node_modules/.sail/tsconfig.sail.json"])
+        .args(["--noEmit", "-p", ".sail/tsconfig.sail.json"])
         .current_dir(project)
         .output()
         .expect("run tsc");

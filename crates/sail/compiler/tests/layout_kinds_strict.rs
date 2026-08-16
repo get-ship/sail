@@ -22,7 +22,7 @@ use std::path::{Path, PathBuf};
 
 use sail_compiler::check::layout;
 use sail_compiler::diagnostics::DiagSeverity;
-use sail_lint::config::{RECOGNIZED_KEYS, SailConfig};
+use sail_lint::config::SailConfig;
 
 const RULE_UNINTENDED_OVERFLOW: &str = "sail-unintended-overflow";
 const RULE_CLIPPED_TEXT: &str = "sail-clipped-text";
@@ -78,11 +78,6 @@ fn has_rule(diags: &[sail_compiler::Diagnostic], rule: &str) -> bool {
 fn layout_experimental_keys_are_recognized_config_keys() {
     // Explicit experimental gate without forcing full lint `strict`.
     for key in ["layoutExperimental", "layoutTextMetrics"] {
-        assert!(
-            RECOGNIZED_KEYS.contains(&key),
-            "RECOGNIZED_KEYS must include `{key}` for S4.1 experimental layout kinds \
-             (got {RECOGNIZED_KEYS:?})"
-        );
         let cfg = SailConfig::from_json(&format!(r#"{{ "{key}": true }}"#));
         assert!(cfg.parse_ok(), "{key} config must parse");
         assert!(

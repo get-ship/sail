@@ -6,7 +6,7 @@
 //! Expected product surface:
 //! - `project_map::at_alias_paths` → SSOT `AtAliasMapping` table
 //! - `ambients::emit_project_tsconfig_json` embeds `paths` from that table
-//!   (targets rewritten relative to `node_modules/.sail/`; no `baseUrl` —
+//!   (targets rewritten relative to `.sail/`; no `baseUrl` —
 //!   tsgo removes it with TS5102)
 //! - Deck resolve (out of this gate file) must use the same SSOT
 
@@ -105,8 +105,8 @@ fn emit_project_tsconfig_includes_paths_without_base_url() {
         "project tsconfig paths must include `@/*` (or fixed `@/…` keys):\n{body}"
     );
     assert!(
-        body.contains("../../src/stores/*") || body.contains("\"../../src/stores/*\""),
-        "paths targets must be relative to node_modules/.sail/:\n{body}"
+        body.contains("../src/stores/*") || body.contains("\"../src/stores/*\""),
+        "paths targets must be relative to .sail/:\n{body}"
     );
 }
 

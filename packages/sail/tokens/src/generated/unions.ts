@@ -76,7 +76,6 @@ export const THEME_IDS = [
   '8bit',
   'synthwave',
   'sail',
-  'studio',
 ] as const
 export type ThemeId = (typeof THEME_IDS)[number]
 

@@ -493,7 +493,7 @@ export function inject(styleText: string): void {
 }
 
 /// Product type-gate layout: `write_project_type_configs` then `tsgo -p`
-/// `node_modules/.sail/tsconfig.sail.json` (module pack + script CSS sibling).
+/// `.sail/tsconfig.sail.json` (module pack + script CSS sibling).
 fn tsgo_kind_pure(source: &str) -> Option<(bool, String)> {
     let repo = repo_root();
     let tool = resolve_tsgo(Some(&repo))?;
@@ -514,7 +514,7 @@ fn tsgo_kind_pure(source: &str) -> Option<(bool, String)> {
         cmd.arg(js);
     }
     let out = cmd
-        .args(["-p", "node_modules/.sail/tsconfig.sail.json", "--noEmit"])
+        .args(["-p", ".sail/tsconfig.sail.json", "--noEmit"])
         .current_dir(project)
         .output()
         .expect("run tsgo kind pure");
@@ -587,7 +587,7 @@ fn css_side_effect_import_fails_without_script_sibling() {
         cmd.arg(js);
     }
     let out = cmd
-        .args(["-p", "node_modules/.sail/tsconfig.sail.json", "--noEmit"])
+        .args(["-p", ".sail/tsconfig.sail.json", "--noEmit"])
         .current_dir(project)
         .output()
         .expect("tsgo");

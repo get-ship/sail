@@ -13,7 +13,8 @@ static LIVE_PROGRAM: Mutex<()> = Mutex::new(());
 
 use sail_compiler::DiagSeverity;
 use sail_compiler::ambients::{
-    PROJECT_TSCONFIG_ACTION_REL, PROJECT_TSCONFIG_SAIL_REL, write_project_type_configs,
+    PROJECT_CSS_MODULES_REL, PROJECT_TSCONFIG_ACTION_REL, PROJECT_TSCONFIG_SAIL_REL,
+    write_project_type_configs,
 };
 use sail_compiler::check::tscheck::{
     TsDiag, TsDiagKey, check_project_type_gate, collect_project_gate_files,
@@ -281,7 +282,7 @@ fn parity_fixture_red_when_css_ambient_dropped() {
 
     // Keep the session live. last_diags must not survive an emptied
     // css-modules.d.ts (file still present, body changed).
-    let css_ambient = project.join("node_modules/.sail/css-modules.d.ts");
+    let css_ambient = project.join(PROJECT_CSS_MODULES_REL);
     std::fs::write(&css_ambient, "// no declare module '*.css'\n").expect("clear css ambient");
     let drifted = check_project_type_gate(project);
     assert!(

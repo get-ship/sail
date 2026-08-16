@@ -172,8 +172,7 @@ Controllers never `.style` / `createElement`.\n\
                  `size` is box geometry only — pad is not a slot (use `pad`).\n"
             );
             let _ = writeln!(md, "## Concerns\n");
-            for row in spinnaker::offered_rows().filter(|r| r.tag == spinnaker::VocabTag::Concern)
-            {
+            for row in spinnaker::offered_rows().filter(|r| r.tag == spinnaker::VocabTag::Concern) {
                 let _ = writeln!(md, "- {}", spinnaker::vocab_surface_line(row));
             }
             let _ = writeln!(md, "\n## Axis\n");
@@ -1096,7 +1095,7 @@ fn is_ignored_dir(name: &str) -> bool {
         || name == "node_modules"
         || name == "target"
         || name == "dist"
-        || name == ".deck"
+        || name == ".sail"
         || name == "coverage"
         || name == "__pycache__"
 }
@@ -2202,7 +2201,7 @@ export default controller((ctx) => ({ count: signal(0) }))
         assert!(is_ignored_dir(".git"));
         assert!(is_ignored_dir("target"));
         assert!(is_ignored_dir("dist"));
-        assert!(is_ignored_dir(".deck"));
+        assert!(is_ignored_dir(".sail"));
         assert!(!is_ignored_dir("src"));
     }
 

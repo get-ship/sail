@@ -420,11 +420,11 @@ fn resolve_project_arg(args: &Value, ctx: &Ctx) -> Result<PathBuf, OpError> {
         } else {
             ctx.workspace_root.join(pb)
         };
-        if abs.join("routes").is_dir() || abs.join("package.json").is_file() {
-            return Ok(abs);
+        if let Some(project) = sail_lint::Project::discover(&abs) {
+            return Ok(project.root().to_path_buf());
         }
         return Err(OpError::InvalidArgument(format!(
-            "project {} is not an app (need routes/ or package.json)",
+            "project {} is not a Sail project (need sail.config.jsonc / sail.config.json)",
             abs.display()
         )));
     }
@@ -432,32 +432,8 @@ fn resolve_project_arg(args: &Value, ctx: &Ctx) -> Result<PathBuf, OpError> {
 }
 
 fn resolve_project(ctx: &Ctx) -> Result<PathBuf, OpError> {
-    let p = &ctx.project_root;
-    let same_as_workspace =
-        p.canonicalize().ok().as_ref() == ctx.workspace_root.canonicalize().ok().as_ref();
-
-    // Strong signal: routes/ means this is an app (external or monorepo).
-    if p.join("routes").is_dir() {
-        return Ok(p.clone());
-    }
-    // package.json alone only counts when not the monorepo workspace root
-    // (workspace roots often carry a package.json without being an app).
-    if p.join("package.json").is_file() && !same_as_workspace {
-        return Ok(p.clone());
-    }
-
-    // Monorepo fallback: first apps/* with routes (sorted — no named-app hardcode).
-    let apps = ctx.workspace_root.join("apps");
-    if apps.is_dir() {
-        if let Ok(rd) = std::fs::read_dir(&apps) {
-            let mut paths: Vec<PathBuf> = rd.flatten().map(|e| e.path()).collect();
-            paths.sort();
-            for path in paths {
-                if path.join("routes").is_dir() {
-                    return Ok(path);
-                }
-            }
-        }
+    if let Some(project) = sail_lint::Project::discover(&ctx.project_root) {
+        return Ok(project.root().to_path_buf());
     }
     Err(OpError::FailedPrecondition(
         "FontAdd needs a project (pass project: \"<app-root>\" or run with project ctx)".into(),
@@ -693,5 +669,25 @@ mod tests {
         let out = strip_family_block(css, "A");
         assert!(!out.contains("family: A"));
         assert!(out.contains("family: B"));
+    }
+
+    #[test]
+    fn resolve_project_requires_sail_config() {
+        let tmp = tempfile::tempdir().unwrap();
+        std::fs::create_dir_all(tmp.path().join("routes/about")).unwrap();
+        std::fs::write(tmp.path().join("package.json"), "{}\n").unwrap();
+        let ctx = Ctx::new(tmp.path(), tmp.path(), tmp.path());
+        let err = resolve_project(&ctx).unwrap_err();
+        assert!(
+            format!("{err}").contains("needs a project"),
+            "package.json + routes/ is not a project: {err}"
+        );
+
+        std::fs::write(tmp.path().join("sail.config.jsonc"), "{}\n").unwrap();
+        let found = resolve_project(&ctx).unwrap();
+        assert_eq!(found, tmp.path());
+
+        let nested = resolve_project_arg(&json!({ "project": "routes/about" }), &ctx).unwrap();
+        assert_eq!(nested, tmp.path());
     }
 }

@@ -15,8 +15,8 @@ dist/
 *.log
 .DS_Store
 
-# Sail / deck build output (SPA + B1 app themes.css)
-.deck/
+# Sail generate (types, kind tsconfigs, themes, tasks) is `.sail/` below.
+# App deploy out is `dist/` above.
 
 # Codegen (sail routes / build / dev)
 routes.gen.ts
@@ -45,7 +45,7 @@ coverage/
 
 /// Critical lines that must exist after merge (idempotent ensure).
 pub const CRITICAL_GITIGNORE_LINES: &[&str] = &[
-    ".deck/",
+    "dist/",
     ".sail/",
     "routes.gen.ts",
     "entry.gen.ts",
@@ -54,12 +54,13 @@ pub const CRITICAL_GITIGNORE_LINES: &[&str] = &[
     ".env",
 ];
 
-const SAIL_README: &str = r#"# Sail local store (gitignored)
+const SAIL_README: &str = r#"# Sail generate dir (gitignored)
 
+- types + kind tsconfigs (`sail types` / build / dev)
+- app themes (`themes/themes.css`)
 - `tasks/` — ephemeral agent/human threads for this machine
-- Build output is `.deck/`, not here
-- Ambient types + pure/action tsconfigs live under `node_modules/.sail/` (regenerate: `sail types` / build / dev)
-- Root `tsconfig.json` is a generated solution that references those kind configs
+- Deploy output is `dist/`, not here
+- Root `tsconfig.json` is a generated solution that references the kind configs
 "#;
 
 /// Result of [`ensure_sail_gitignore`].
@@ -141,7 +142,7 @@ pub fn ensure_sail_gitignore(project_dir: &Path) -> Result<EnsureGitignoreResult
 }
 
 /// Match a critical line against present entries, accepting leading-slash variants
-/// (`/.deck/` counts as `.deck/`).
+/// (`/dist/` counts as `dist/`).
 fn gitignore_has(present: &HashSet<&str>, line: &str) -> bool {
     let want = strip_leading_slashes(line);
     present
@@ -198,7 +199,8 @@ mod tests {
             );
         }
         assert!(body.contains(".sail/"));
-        assert!(body.contains(".deck/"));
+        assert!(body.contains("dist/"));
+        assert!(!body.contains(".deck/"));
         // Themes / config must never be in the default ignore set.
         assert!(!body.contains("tokens/themes"));
         assert!(
@@ -237,7 +239,7 @@ mod tests {
         let dir = tempdir().unwrap();
         std::fs::write(
             dir.path().join(".gitignore"),
-            "/.deck/\n/.sail/\n/routes.gen.ts\n/entry.gen.ts\n/components.gen.ts\nnode_modules/\n.env\n",
+            "/dist/\n/.sail/\n/routes.gen.ts\n/entry.gen.ts\n/components.gen.ts\nnode_modules/\n.env\n",
         )
         .unwrap();
         let r = ensure_sail_gitignore(dir.path()).unwrap();

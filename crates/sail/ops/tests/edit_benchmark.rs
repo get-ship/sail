@@ -189,17 +189,23 @@ fn tasks() -> Vec<Task> {
                 let n = idx
                     .values()
                     .find(|n| {
-                        n.tag == "div"
-                            && n.static_attrs.get("min-w").map(|v| v.as_str()) == Some("0")
+                        n.tag == "div" && src[n.full_span.start..n.full_span.end].contains(">fill<")
                     })
                     .unwrap();
                 vec![json!({
-                    "op": "setAttr",
+                    "op": "setSx",
                     "nodeId": n.id,
-                    "name": "grow"
+                    "setter": "grow",
+                    "args": [1]
                 })]
             },
-            text_rewrite: |src| src.replacen(r#"min-w="0""#, r#"min-w="0" grow"#, 1),
+            text_rewrite: |src| {
+                src.replacen(
+                    r#"<div style({ size({ min-w: 0 }) })>fill</div>"#,
+                    r#"<div style({ size({ min-w: 0 }).grow(1) })>fill</div>"#,
+                    1,
+                )
+            },
         },
         Task {
             name: "batch_attr_and_sx",
@@ -295,7 +301,7 @@ fn task_sources() -> Vec<&'static str> {
         Box::leak(wrap_chrome(r#"<column><div>old</div></column>"#).into_boxed_str()),
         Box::leak(wrap_chrome(r#"<column><div>a</div></column>"#).into_boxed_str()),
         Box::leak(wrap_chrome(r#"<column gap="8"><div>x</div></column>"#).into_boxed_str()),
-        Box::leak(wrap_chrome(r#"<div min-w="0">fill</div>"#).into_boxed_str()),
+        Box::leak(wrap_chrome(r#"<div style({ size({ min-w: 0 }) })>fill</div>"#).into_boxed_str()),
         Box::leak(wrap_chrome(r#"<row><div>c</div></row>"#).into_boxed_str()),
         Box::leak(wrap_chrome(r#"<column gap="2"><div>hero</div></column>"#).into_boxed_str()),
         Box::leak(wrap_chrome(r#"<div>before</div>"#).into_boxed_str()),
@@ -334,8 +340,8 @@ fn structured_edit_corpus_zero_uncompilable_intermediates() {
         );
         assert!(
             result.applied,
-            "task {} must apply cleanly: {:?}",
-            task.name, result.message
+            "task {} must apply cleanly: {:?} diags={:?}",
+            task.name, result.message, result.diagnostics
         );
         // re-validate
         let v = sail_compiler::edit::validate_source(&result.source, None, &[]);

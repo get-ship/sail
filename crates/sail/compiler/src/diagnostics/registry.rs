@@ -1195,6 +1195,15 @@ const DIAG_SPECS: &[DiagSpec] = &[
         docs_anchor: None,
     },
     DiagSpec {
+        id: "sail-test-map",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "test contract map is invalid",
+        allowed_list_source: None,
+        fix_text: Some("fix the role/name contract on the host so the test map can emit"),
+        docs_anchor: None,
+    },
+    DiagSpec {
         id: "sail-type-gate",
         jurisdiction: Jurisdiction::CompilerError,
         default_severity: DiagSeverity::Error,

@@ -28,11 +28,21 @@ fn compile_dts(source: &str) -> String {
 /// the d.ts emitter can pull the scope factory's fields. Returns the d.ts text.
 fn compile_dts_with_controller(_stem: &str, sail_src: &str, controller_ts: &str) -> String {
     let src = format!("<controller>\n{controller_ts}\n</controller>\n{sail_src}");
+    let tmp = tempfile::tempdir().expect("dts project");
+    let project = tmp.path();
+    std::fs::create_dir_all(project.join("src/widget")).unwrap();
+    std::fs::write(project.join("package.json"), r#"{"name":"@ship/dts-emit"}"#).unwrap();
+    std::fs::write(
+        project.join("sail.config.jsonc"),
+        "{ \"raw_containers\": true }\n",
+    )
+    .unwrap();
+    let path = project.join("src/widget/widget.sail");
     let opts = CompileOpts {
         route_params: None,
         setup_url: None,
         mode: CompileMode::Component,
-        source_path: None,
+        source_path: Some(path),
         component_meta: None,
         emit_dts: true,
         scope_capabilities: Vec::new(),

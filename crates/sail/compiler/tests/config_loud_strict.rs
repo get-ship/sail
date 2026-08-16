@@ -19,17 +19,16 @@ use std::path::{Path, PathBuf};
 use sail_compiler::check::policy::{Policy, ResolutionKind};
 use sail_compiler::{CompileError, CompileMode, CompileOpts, compile};
 
-/// `style="…"` is refused by the floor (`spinnaker`) and by the sx
-/// capability (`sail-no-sx`). `compile()` returns the first Error — both
-/// categories are a loud refusal of the stripped host. Do not accept a
-/// silent compile, and do not pin one id that fail-first may skip.
+/// `style="…"` is refused by the floor (`spinnaker` / `sail-no-inline-style`).
+/// Product Style is the tag call `style({…})` — ungated. `compile()` returns
+/// the first Error. Do not accept a silent compile.
 fn assert_style_eq_refused(err: &CompileError) {
     assert!(
         matches!(
             err.category.as_deref(),
-            Some("spinnaker") | Some("sail-no-sx")
+            Some("spinnaker") | Some("sail-no-inline-style")
         ),
-        "style= must be refused (spinnaker floor or sail-no-sx), got {:?}",
+        "style= must be refused by the floor (spinnaker or sail-no-inline-style), got {:?}",
         err.category
     );
 }
@@ -92,18 +91,14 @@ fn unknown_key_fails_closed_and_the_refusal_names_file_key_and_tier() {
         "must name the file: {config_path:?}"
     );
 
-    // A component that actually uses a stripped capability now fails the
-    // build gate — sx is off under the fail-closed strict tier.
-    // `style="p-4"` is refused twice: floor `spinnaker` (utility-string
-    // residual is not Style) and capability `sail-no-sx` (`style=` host).
-    // `compile()` fails on the first Error; either category is a loud
-    // refusal. Product attach is the tag call `style({…})` (no `=`).
+    // Residual `style="p-4"` is refused by the floor (`spinnaker` /
+    // `sail-no-inline-style`). Product attach is the tag call `style({…})`.
     let (_tmp2, sail_sx) = write_fixture(
         r#"{"polcy":"strict"}"#,
         r#"<sail-card style="p-4">x</sail-card>"#,
     );
     let err = compile(&fs::read_to_string(&sail_sx).unwrap(), opts_for(&sail_sx))
-        .expect_err("sx must be refused under the fail-closed strict tier");
+        .expect_err("style= must be refused by the floor under fail-closed strict");
     assert_style_eq_refused(&err);
 }
 
@@ -116,6 +111,41 @@ fn unparseable_config_fails_closed_and_refuses_loudly() {
         matches!(&resolution.kind, ResolutionKind::Rejected(r) if r.contains("not valid JSON")),
         "{:?}",
         resolution.kind
+    );
+}
+
+#[test]
+fn wrong_type_strict_fails_closed_and_refuses_loudly() {
+    let (_tmp, sail) = write_fixture(r#"{"strict": 1}"#, "<p>hi</p>");
+    let (_config_path, resolution) = Policy::resolve_outcome(&sail).expect("config resolves");
+    assert_eq!(resolution.tier, Policy::STRICT);
+    let ResolutionKind::Rejected(reason) = &resolution.kind else {
+        panic!(
+            "expected Rejected for wrong-typed strict, got {:?}",
+            resolution.kind
+        );
+    };
+    assert!(
+        reason.contains("strict") && reason.contains("boolean"),
+        "must name the key and expected type: {reason}"
+    );
+}
+
+#[test]
+fn leftover_sx_key_is_rejected_as_unknown() {
+    let (_tmp, sail) = write_fixture(r#"{"sx": true}"#, "<p>hi</p>");
+    let (_config_path, resolution) = Policy::resolve_outcome(&sail).expect("config resolves");
+    assert_eq!(resolution.tier, Policy::STRICT);
+    let ResolutionKind::Rejected(reason) = &resolution.kind else {
+        panic!(
+            "expected Rejected for leftover sx, got {:?}",
+            resolution.kind
+        );
+    };
+    assert!(reason.contains("sx"), "must name leftover key: {reason}");
+    assert!(
+        reason.contains("allowed keys:"),
+        "must name allowed keys: {reason}"
     );
 }
 
@@ -157,25 +187,15 @@ fn stylesheets_only_config_is_announced_not_silently_rejected() {
     );
     assert!(config_path.ends_with("sail.config.json"));
 
-    // The build-time reproduction of the original bug report: a package with
-    // only `stylesheets` declared, and an s-using component. The compile
-    // must refuse and not silently drop the sx. `style="p-4"` is a floor
-    // `spinnaker` residual plus a `sail-no-sx` capability hit; fail-first
-    // may surface either. The walk already named the config file above.
+    // Residual `style="p-4"` is still a floor refuse. The walk already named
+    // the config file above. There is no grant key that turns `style=` on.
     let (_tmp2, sail_sx) = write_fixture(
         r#"{"stylesheets": []}"#,
         r#"<sail-card style="p-4">hi</sail-card>"#,
     );
     let err = compile(&fs::read_to_string(&sail_sx).unwrap(), opts_for(&sail_sx))
-        .expect_err("sx must be refused — stylesheets-only config still fails closed to strict");
+        .expect_err("style= must be refused — floor, not a grant");
     assert_style_eq_refused(&err);
-    if err.category.as_deref() == Some("sail-no-sx") {
-        assert!(
-            err.message.contains("sail.config.json"),
-            "the capability refusal must name the config file that could grant sx: {}",
-            err.message
-        );
-    }
 }
 
 // ---------------------------------------------------------------------------
@@ -193,9 +213,9 @@ fn granted_full_preset_compiles_clean_with_one_recognized_announcement() {
     assert_eq!(resolution.tier, Policy::FULL);
     assert!(matches!(&resolution.kind, ResolutionKind::Recognized(s) if s == "preset: full"));
 
-    // sx is granted — the build succeeds, no sail-no-sx finding at all.
+    // Product Style is ungated — the build succeeds without a Style grant.
     compile(&fs::read_to_string(&sail).unwrap(), opts_for(&sail))
-        .expect("full preset must grant sx cleanly");
+        .expect("full preset must compile Style tag calls");
 }
 
 // ---------------------------------------------------------------------------
@@ -216,8 +236,7 @@ fn no_config_leaves_default_semantics_unchanged() {
         Policy::overrides_for(&sail).is_empty(),
         "no config → no capability overrides"
     );
-    // sx's natural severity is Warn, not gated — an unconfigured package
-    // keeps compiling exactly as before.
+    // Product Style is ungated — an unconfigured package compiles it.
     compile(&fs::read_to_string(&sail).unwrap(), opts_for(&sail))
         .expect("unconfigured package must compile unchanged");
 }

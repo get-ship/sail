@@ -248,6 +248,7 @@ const SKIP_DIRS: &[&str] = &[
     ".git",
     "dist",
     "build",
+    ".sail",
     ".deck",
     "test",
     "tests",
@@ -739,6 +740,7 @@ fn walk_ts(project: &Path, dir: &Path, out: &mut Vec<(PathBuf, String)>) {
     let skip = [
         "node_modules",
         "dist",
+        ".sail",
         ".deck",
         "target",
         ".git",

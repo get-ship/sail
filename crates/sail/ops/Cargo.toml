@@ -31,6 +31,7 @@ reqwest = { workspace = true, features = ["blocking", "rustls-tls", "json"] }
 
 [dev-dependencies]
 tempfile = { workspace = true }
+deck-bundler = { path = "../../deck/deck-bundler" }
 tokio = { workspace = true, features = ["rt", "macros", "time", "net", "io-util"] }
 http-body-util = "0.1"
 tower = { version = "0.5", features = ["util"] }

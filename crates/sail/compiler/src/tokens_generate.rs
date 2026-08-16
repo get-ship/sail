@@ -403,6 +403,36 @@ pub struct ThemeConfig {
 }
 
 impl ThemeConfig {
+    fn from_sail(section: Option<&sail_lint::config::ThemeConfig>) -> Self {
+        let Some(s) = section else {
+            return Self::default();
+        };
+        let (enabled, enabled_key_present) = match &s.enabled {
+            None => (CatalogAllowlist::Default, false),
+            Some(sail_lint::config::ThemeEnabled::All) => (CatalogAllowlist::All, true),
+            Some(sail_lint::config::ThemeEnabled::Ids(ids)) if ids.is_empty() => {
+                (CatalogAllowlist::Empty, true)
+            }
+            Some(sail_lint::config::ThemeEnabled::Ids(ids)) => {
+                (CatalogAllowlist::Ids(ids.clone()), true)
+            }
+        };
+        Self {
+            default: s
+                .default
+                .as_deref()
+                .filter(|x| !x.is_empty())
+                .map(str::to_string),
+            default_mode: s
+                .default_mode
+                .as_deref()
+                .filter(|x| !x.is_empty())
+                .map(str::to_string),
+            enabled,
+            enabled_key_present,
+        }
+    }
+
     /// Resolve the default theme id, falling back to [`DEFAULT_PROJECT_THEME_ID`].
     pub fn default_theme_id(&self) -> &str {
         self.default
@@ -2403,10 +2433,10 @@ fn load_theme_layers_from_dir(
 /// - Missing file / missing `theme` section → [`ThemeConfig::default`] (thin).
 /// - Unparseable body → **error** (fail loud).
 pub fn load_theme_config(project_dir: &Path) -> Result<ThemeConfig> {
-    let Some((path, text)) = read_sail_config_text(project_dir) else {
+    let Some((path, cfg)) = sail_lint::config::load_in(project_dir) else {
         return Ok(ThemeConfig::default());
     };
-    parse_theme_config(&text).with_context(|| format!("parse theme config {}", path.display()))
+    theme_from_sail(&cfg).with_context(|| format!("parse theme config {}", path.display()))
 }
 
 /// Parse a `sail.config` body (JSON or JSONC) into [`ThemeConfig`].
@@ -2414,84 +2444,17 @@ pub fn load_theme_config(project_dir: &Path) -> Result<ThemeConfig> {
 /// Unparseable JSONC/JSON is an error (config-loud). Wrong-typed `enabled`
 /// (not array and not the string `"all"`) is a **hard error**.
 pub fn parse_theme_config(text: &str) -> Result<ThemeConfig> {
-    let stripped = strip_jsonc_comments(text);
-    let value: Value = serde_json::from_str(&stripped)
-        .map_err(|e| anyhow!("invalid JSON/JSONC in sail.config: {e}"))?;
-    let Some(theme) = value.get("theme") else {
-        return Ok(ThemeConfig::default());
-    };
-    if !theme.is_object() {
-        bail!("theme config: \"theme\" must be an object");
-    }
-    let default = theme
-        .get("default")
-        .and_then(|v| v.as_str())
-        .filter(|s| !s.is_empty())
-        .map(str::to_string);
-    let default_mode = theme
-        .get("defaultMode")
-        .and_then(|v| v.as_str())
-        .filter(|s| !s.is_empty())
-        .map(str::to_string);
-    let (enabled, enabled_key_present) = match theme.get("enabled") {
-        // Omit → default Sail theme (ship), not an empty app.
-        None => (CatalogAllowlist::Default, false),
-        Some(v) => {
-            if let Some(s) = v.as_str() {
-                if s == "all" {
-                    (CatalogAllowlist::All, true)
-                } else {
-                    bail!(
-                        "theme config: \"enabled\" string must be the literal \"all\" \
-                         (got {s:?}); use an array of catalog ids for a thin allowlist"
-                    );
-                }
-            } else if let Some(arr) = v.as_array() {
-                if arr.iter().any(|item| !item.is_string()) {
-                    bail!(
-                        "theme config: \"enabled\" array elements must all be strings \
-                         (catalog theme ids)"
-                    );
-                }
-                let ids: Vec<String> = arr
-                    .iter()
-                    .filter_map(|x| x.as_str())
-                    .filter(|s| !s.is_empty())
-                    .map(str::to_string)
-                    .collect();
-                // Explicit [] = opt out of catalog; omit key keeps default ship.
-                if ids.is_empty() {
-                    (CatalogAllowlist::Empty, true)
-                } else {
-                    (CatalogAllowlist::Ids(ids), true)
-                }
-            } else {
-                bail!(
-                    "theme config: \"enabled\" must be an array of catalog ids or the \
-                     string \"all\" (got {})",
-                    v
-                );
-            }
-        }
-    };
-    Ok(ThemeConfig {
-        default,
-        default_mode,
-        enabled,
-        enabled_key_present,
-    })
+    theme_from_sail(&sail_lint::config::SailConfig::from_jsonc(text))
 }
 
-/// Dual-read `sail.config.jsonc` then `sail.config.json` under `project_dir`.
-/// Returns `(path, text)` for the first file found (jsonc wins when both exist).
-fn read_sail_config_text(project_dir: &Path) -> Option<(PathBuf, String)> {
-    for name in ["sail.config.jsonc", "sail.config.json"] {
-        let path = project_dir.join(name);
-        if let Ok(text) = fs::read_to_string(&path) {
-            return Some((path, text));
-        }
+fn theme_from_sail(cfg: &sail_lint::config::SailConfig) -> Result<ThemeConfig> {
+    if !cfg.parse_ok() {
+        bail!("invalid JSON/JSONC in sail.config");
     }
-    None
+    if let Some(err) = cfg.type_error() {
+        bail!("{err}");
+    }
+    Ok(ThemeConfig::from_sail(cfg.theme.as_ref()))
 }
 
 /// Theme id shape used by scaffold / config: `^[a-z][a-z0-9-]*$`.
@@ -2886,6 +2849,10 @@ pub fn scaffold_theme_config(project_dir: &Path, theme_id: &str) -> Result<Optio
         }
     }
     let path = project_dir.join("sail.config.jsonc");
+    let title = project_dir
+        .file_name()
+        .and_then(|n| n.to_str())
+        .unwrap_or("Sail");
     let body = format!(
         "{{\n\
          \x20\x20// Sail app config — theme (product) + deck (bundler/serve).\n\
@@ -2895,6 +2862,10 @@ pub fn scaffold_theme_config(project_dir: &Path, theme_id: &str) -> Result<Optio
          \x20\x20// Project themes under themes/ always emit. Package generate\n\
          \x20\x20// (shared @ship/tokens, monorepo only) emits full catalog + overrides.\n\
          \x20\x20// Serve keys nest under `deck` only (SPEC-SAIL-CONFIG-1) — never top-level.\n\
+         \x20\x20\"app\": {{\n\
+         \x20\x20\x20\x20\"title\": \"{title}\",\n\
+         \x20\x20\x20\x20\"lang\": \"en\"\n\
+         \x20\x20}},\n\
          \x20\x20\"theme\": {{\n\
          \x20\x20\x20\x20\"default\": \"{theme_id}\",\n\
          \x20\x20\x20\x20\"defaultMode\": \"light\",\n\
@@ -2911,18 +2882,16 @@ pub fn scaffold_theme_config(project_dir: &Path, theme_id: &str) -> Result<Optio
 
 /// App-local delivery directory for filtered `themes.css` (T1 B1).
 ///
-/// `<project>/.deck/themes/` — a **foreign top-level dir** under the SPA out tree.
-/// `publish_build(..., prune=true)` only prunes top-level **files** not in the
-/// stage manifest and contents of build-owned dirs (e.g. `assets/`). It does
-/// **not** remove foreign top-level dirs, so this path survives non-theme HMR
-/// rebuilds (unlike a bare `.deck/themes.css` top-level file, which was pruned).
-///
-/// Bundler aliases `@ship/tokens/themes.css` → [`app_themes_css_path`] when present.
+/// `<project>/.sail/themes/` — generate, not deploy. The bundler aliases
+/// `@ship/tokens/themes.css` → [`app_themes_css_path`] when present.
+/// Lives outside `dist/` so SPA prune never touches it.
 pub fn app_themes_out_dir(project_dir: &Path) -> PathBuf {
-    project_dir.join(".deck").join("themes")
+    project_dir
+        .join(crate::ambients::PROJECT_SAIL_DIR_REL)
+        .join("themes")
 }
 
-/// App-local themes.css path (T1 B1): `<project>/.deck/themes/themes.css`.
+/// App-local themes.css path (T1 B1): `<project>/.sail/themes/themes.css`.
 pub fn app_themes_css_path(project_dir: &Path) -> PathBuf {
     app_themes_out_dir(project_dir).join("themes.css")
 }
@@ -3146,7 +3115,7 @@ pub fn options_for_shared_package(
     Ok(opts)
 }
 
-/// Generate **app delivery** themes into `<project>/.deck/themes/` (T1 B1).
+/// Generate **app delivery** themes into `<project>/.sail/themes/` (T1 B1).
 ///
 /// Uses the baked catalog (or monorepo disk model when present) + project
 /// themes; writes **only** `themes.css`. Does **not** touch package delivery.
@@ -3210,7 +3179,7 @@ pub fn project_wants_theme_generate(project_dir: &Path) -> bool {
         },
         // Malformed config: still run generate so the error surfaces on the
         // cold-start path rather than only after an edit.
-        Err(_) => read_sail_config_text(project_dir).is_some(),
+        Err(_) => sail_lint::config::dir_has_config(project_dir),
     }
 }
 
@@ -5406,7 +5375,7 @@ mod tests {
             "package emit keeps full catalog including synthwave"
         );
 
-        // B1: app delivery writes filtered themes under project/.deck/themes/
+        // B1: app delivery writes filtered themes under project/.sail/themes/
         // (themes.css only — no tokens/registry/unions litter).
         let app_report = generate_app_delivery(root, &project).unwrap();
         assert_eq!(app_report.theme_count, 1);
@@ -5416,8 +5385,8 @@ mod tests {
                 .themes_css
                 .to_string_lossy()
                 .replace('\\', "/")
-                .contains("/.deck/themes/themes.css"),
-            "app path must be .deck/themes/themes.css (prune-safe foreign dir)"
+                .contains("/.sail/themes/themes.css"),
+            "app path must be .sail/themes/themes.css (generate, outside dist)"
         );
         assert!(
             !app_themes_out_dir(&project).join("tokens.css").is_file(),

@@ -575,13 +575,16 @@ impl TsgoSession {
                 view_text.replace("from \"./__ctrl__.ts\"", &format!("from \"./{ctrl_name}\""));
             // Keep a mutated copy for position mapping (import path length may differ).
             let mut virt = virt;
-            // Controller lives in a temp work_dir — rewrite relative imports to
-            // absolute paths against the real `.sail` directory so sibling
-            // modules (`../src/compositions/shell/shell-rail`) resolve under tsgo.
+            // Controller lives in a temp work_dir — rewrite relative and `@/`
+            // imports to absolute paths against the real project so siblings
+            // and `project_map` homes resolve under tsgo.
             if let Some(sail_path) = uri_to_path(sail_uri) {
                 if let Some(dir) = sail_path.parent() {
                     let original = virt.controller_text.clone();
-                    let rewritten = rewrite_relative_imports(&original, dir);
+                    let rewritten = rewrite_at_alias_imports(
+                        &rewrite_relative_imports(&original, dir),
+                        &sail_path,
+                    );
                     if rewritten != original {
                         let delta = rewritten.len() as isize - original.len() as isize;
                         for seg in &mut virt.segments {
@@ -803,6 +806,21 @@ fn write_tsconfig(work_dir: &Path, workspace_hint: Option<&Path>) {
             ));
         }
     }
+    // Product `@/` homes — SSOT `project_map::at_alias_paths`. Only when this
+    // session is rooted on a Sail project (standalone `sail check` cwd).
+    if let Some(hint) = workspace_hint {
+        if let Some(project) = sail_lint::Project::discover(hint) {
+            for m in sail_compiler::project_map::at_alias_paths() {
+                let target = m.target.trim_start_matches("./");
+                let abs = project.root().join(target);
+                paths.push_str(&format!(
+                    "      \"{}\": [\"{}\"],\n",
+                    m.pattern,
+                    escape_json_path(&abs)
+                ));
+            }
+        }
+    }
     let cfg = format!(
         r#"{{
   "compilerOptions": {{
@@ -868,10 +886,37 @@ fn uri_to_path(uri: &str) -> Option<PathBuf> {
     if pb.is_absolute() { Some(pb) } else { None }
 }
 
+/// Rewrite `@/…` specs via [`sail_compiler::project_map::resolve_at_alias`]
+/// (SSOT) to absolute on-disk modules. Same reason as relatives: the virtual
+/// controller is not inside the project, so tsconfig `paths` from a monorepo
+/// workspace hint cannot see a standalone app's `src/`.
+fn rewrite_at_alias_imports(text: &str, sail_path: &Path) -> String {
+    let Some(project) = sail_lint::Project::discover(sail_path) else {
+        return text.to_string();
+    };
+    rewrite_from_specs(text, |spec| {
+        if !spec.starts_with("@/") {
+            return None;
+        }
+        let resolved = sail_compiler::project_map::resolve_at_alias(project.root(), spec)?;
+        existing_module_file(&resolved)
+    })
+}
+
 /// Rewrite `from "./x"` / `from '../x'` specs to absolute paths resolved
 /// against `from_dir` (the real `.sail` parent). Virtual controllers live in a
 /// temp work_dir, so bare relative imports cannot resolve siblings otherwise.
 fn rewrite_relative_imports(text: &str, from_dir: &Path) -> String {
+    rewrite_from_specs(text, |spec| {
+        if spec.starts_with("./") || spec.starts_with("../") {
+            resolve_ts_module(from_dir, spec)
+        } else {
+            None
+        }
+    })
+}
+
+fn rewrite_from_specs(text: &str, mut resolve: impl FnMut(&str) -> Option<PathBuf>) -> String {
     let bytes = text.as_bytes();
     let mut replacements: Vec<(usize, usize, String)> = Vec::new();
     let mut i = 0;
@@ -890,11 +935,9 @@ fn rewrite_relative_imports(text: &str, from_dir: &Path) -> String {
                 if let Some(rel_end) = text[start..].find(q as char) {
                     let end = start + rel_end;
                     let spec = &text[start..end];
-                    if spec.starts_with("./") || spec.starts_with("../") {
-                        if let Some(abs) = resolve_ts_module(from_dir, spec) {
-                            let abs_s = abs.display().to_string().replace('\\', "/");
-                            replacements.push((start, end, abs_s));
-                        }
+                    if let Some(abs) = resolve(spec) {
+                        let abs_s = abs.display().to_string().replace('\\', "/");
+                        replacements.push((start, end, abs_s));
                     }
                     i = end + 1;
                     continue;
@@ -919,19 +962,20 @@ fn is_ident_byte(b: u8) -> bool {
 
 /// Resolve a relative TS module specifier against `from_dir`.
 fn resolve_ts_module(from_dir: &Path, spec: &str) -> Option<PathBuf> {
-    let joined = from_dir.join(spec);
-    let mut candidates = vec![
-        joined.clone(),
-        PathBuf::from(format!("{}.ts", joined.display())),
-        PathBuf::from(format!("{}.tsx", joined.display())),
-        PathBuf::from(format!("{}.d.ts", joined.display())),
-        joined.join("index.ts"),
-        joined.join("index.tsx"),
+    existing_module_file(&from_dir.join(spec))
+}
+
+/// Append TS extensions / index — do not `with_extension` (clobbers multi-dot stems).
+fn existing_module_file(base: &Path) -> Option<PathBuf> {
+    let base_s = base.to_string_lossy();
+    let candidates = [
+        base.to_path_buf(),
+        PathBuf::from(format!("{base_s}.ts")),
+        PathBuf::from(format!("{base_s}.tsx")),
+        PathBuf::from(format!("{base_s}.d.ts")),
+        base.join("index.ts"),
+        base.join("index.tsx"),
     ];
-    // Extension already present — don't double-append on the bare form only.
-    if spec.ends_with(".ts") || spec.ends_with(".tsx") || spec.ends_with(".d.ts") {
-        candidates.truncate(1);
-    }
     for c in candidates {
         if c.is_file() {
             return c.canonicalize().ok().or(Some(c));
@@ -1278,6 +1322,115 @@ export default controller((ctx) => ({ count: signal(0) }))
         let src = "import { navigate } from '@ship/deck/router'\n";
         let out = rewrite_relative_imports(src, &dir);
         assert_eq!(out, src);
+    }
+
+    fn isolated_at_alias_app() -> PathBuf {
+        let dir = std::env::temp_dir().join(format!(
+            "sail-lsp-at-alias-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map(|d| d.as_nanos())
+                .unwrap_or(0)
+        ));
+        std::fs::create_dir_all(dir.join("routes")).unwrap();
+        std::fs::create_dir_all(dir.join("src/compositions")).unwrap();
+        std::fs::create_dir_all(dir.join("src/stores")).unwrap();
+        std::fs::write(dir.join("sail.config.jsonc"), "{}\n").unwrap();
+        std::fs::write(
+            dir.join("src/compositions/double.ts"),
+            "export function double(n: number): number { return n * 2 }\n",
+        )
+        .unwrap();
+        std::fs::write(
+            dir.join("src/stores/tally.ts"),
+            "export const tally = { clicks: 0 }\n",
+        )
+        .unwrap();
+        dir
+    }
+
+    #[test]
+    fn rewrite_at_alias_imports_resolves_ssot_homes() {
+        let project = isolated_at_alias_app();
+        let page = project.join("routes/page.sail");
+        std::fs::write(&page, "").unwrap();
+        let src = "import { double } from '@/compositions/double'\nimport { tally } from '@/stores/tally'\n";
+        let out = rewrite_at_alias_imports(src, &page);
+        let _ = std::fs::remove_dir_all(&project);
+        assert!(
+            out.contains("double.ts") && out.contains("tally.ts"),
+            "expected absolute @/ targets, got: {out}"
+        );
+        assert!(
+            !out.contains("'@/compositions/double'") && !out.contains("'@/stores/tally'"),
+            "@/ specs must be rewritten: {out}"
+        );
+    }
+
+    #[test]
+    fn rewrite_at_alias_imports_needs_sail_config() {
+        let dir = std::env::temp_dir().join(format!(
+            "sail-lsp-at-noconfig-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map(|d| d.as_nanos())
+                .unwrap_or(0)
+        ));
+        std::fs::create_dir_all(dir.join("src/stores")).unwrap();
+        std::fs::write(dir.join("src/stores/tally.ts"), "export const tally = 0\n").unwrap();
+        let page = dir.join("routes/page.sail");
+        std::fs::create_dir_all(page.parent().unwrap()).unwrap();
+        let src = "import { tally } from '@/stores/tally'\n";
+        let out = rewrite_at_alias_imports(src, &page);
+        let _ = std::fs::remove_dir_all(&dir);
+        assert_eq!(out, src, "no project marker → leave @/ for TS2307");
+    }
+
+    #[test]
+    fn live_session_resolves_at_alias() {
+        reset_discovery_state_for_tests();
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../..")
+            .canonicalize()
+            .unwrap();
+        if discover_tsgo(Some(&root)).is_none() {
+            panic!("tsgo required");
+        }
+        let project = isolated_at_alias_app();
+        // Discover tsgo from this checkout; `@/` rewrite keys off the .sail path.
+        let mut session = TsgoSession::start(Some(&root));
+        if !session.is_live() {
+            let _ = std::fs::remove_dir_all(&project);
+            panic!("tsgo session failed to start");
+        }
+        let page = project.join("routes/page.sail");
+        let src = r#"<controller>
+import { double } from '@/compositions/double'
+import { tally } from '@/stores/tally'
+export default controller(() => {
+  const n = signal(1)
+  const twice = derived(() => double(n()))
+  return { n, twice, tally }
+})
+</controller>
+<p>{twice()}</p>
+"#;
+        std::fs::write(&page, src).unwrap();
+        let uri = path_to_uri(&page);
+        session.on_sail_change(&uri, src);
+        let diags = session.diagnostics_mapped(&uri, src);
+        let module_miss: Vec<_> = diags
+            .iter()
+            .filter(|d| d.message.contains("Cannot find module"))
+            .map(|d| d.message.clone())
+            .collect();
+        let _ = std::fs::remove_dir_all(&project);
+        assert!(
+            module_miss.is_empty(),
+            "standalone @/ imports must resolve under intelligence tsgo; got: {module_miss:?}"
+        );
     }
 
     #[test]

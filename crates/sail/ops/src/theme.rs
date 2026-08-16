@@ -507,7 +507,7 @@ fn rewrite_theme_id(content: &str, new_id: &str) -> Result<String, String> {
 /// - `workspace`, `model`: path overrides (must stay under workspace)
 ///
 /// **package** — full catalog + project merge → `packages/sail/tokens/src`
-/// **app** — T0 effective set only → `<project>/.deck/themes` (B1 themes.css only)
+/// **app** — T0 effective set only → `<project>/.sail/themes` (B1 themes.css only)
 pub fn generate(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
     let workspace = resolve_under_workspace(
         args.get("workspace").and_then(|v| v.as_str()),
@@ -523,14 +523,18 @@ pub fn generate(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
     };
 
     // Project merge when `project` is set in args, else if ctx.project_root
-    // differs from workspace and looks like an app (dev server path).
+    // is a discovered Sail app distinct from the workspace (dev server path).
     let project_opt = if let Some(p) = args.get("project").and_then(|v| v.as_str()) {
-        Some(resolve_path_under(&workspace, p)?)
-    } else if ctx.project_root != ctx.workspace_root
-        && (ctx.project_root.join("routes").is_dir()
-            || ctx.project_root.join("package.json").is_file())
+        let resolved = resolve_path_under(&workspace, p)?;
+        Some(
+            sail_lint::Project::discover(&resolved)
+                .map(|proj| proj.root().to_path_buf())
+                .unwrap_or(resolved),
+        )
+    } else if let Some(proj) = sail_lint::Project::discover(&ctx.project_root)
+        .filter(|p| p.root() != ctx.workspace_root.as_path())
     {
-        Some(confine_existing(&workspace, &ctx.project_root)?)
+        Some(confine_existing(&workspace, proj.root())?)
     } else {
         None
     };
@@ -539,10 +543,10 @@ pub fn generate(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
         .get("mode")
         .and_then(|v| v.as_str())
         .unwrap_or_else(|| {
-            // Infer: explicit out under .deck/themes → app; else package.
+            // Infer: explicit out under .sail/themes → app; else package.
             if let Some(out) = args.get("out").and_then(|v| v.as_str()) {
                 let n = out.replace('\\', "/");
-                if n.contains("/.deck/themes") || n.ends_with("/.deck/themes") {
+                if n.contains("/.sail/themes") || n.ends_with("/.sail/themes") {
                     return "app";
                 }
             }

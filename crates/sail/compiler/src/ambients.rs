@@ -1,7 +1,7 @@
 //! Generated ambient pack for sail TypeScript regions.
 //!
-//! Emit path: `<project>/node_modules/.sail/types.d.ts` via `sail-compiler
-//! types` (or the deck `--typecheck` hook) — SPEC-OUTPUT-1 Option B. The pack
+//! Emit path: `<project>/.sail/types.d.ts` via `sail-compiler
+//! types` (or the deck `--typecheck` hook). The pack
 //! is **not** hand-authored in app source — every name comes from the same
 //! tables the compiler / lint already own:
 //!
@@ -33,19 +33,19 @@ use spinnaker::component_surfaces;
 use spinnaker::plains::{PlainSpec, find_plain};
 use spinnaker::{VocabRow, VocabTag, find_concern, vocab_rows};
 
-/// Relative path of the ambient pack inside a sail project (SPEC-OUTPUT-1 §4).
-/// Lives under `node_modules/.sail/` so `rm -rf node_modules` clears it;
-/// `.deck/` stays purely servable output; ops session stays under `.sail/`.
-pub const PROJECT_TYPES_REL: &str = "node_modules/.sail/types.d.ts";
+/// Relative path of the ambient pack inside a sail project.
+/// Lives under `<project>/.sail/` (generate). Not deploy (`dist`). Not a
+/// leftover generate nest.
+pub const PROJECT_TYPES_REL: &str = ".sail/types.d.ts";
 
 /// Relative path of the action observation ambient (SPEC-PLATFORM-NEUTRALITY-1 §1).
 /// Pair with [`TypeEnv::Action`] + [`lib_for_type_env`] (ESNext only — no DOM lib).
-pub const PROJECT_ACTION_OBSERVATION_REL: &str = "node_modules/.sail/action-observation.d.ts";
+pub const PROJECT_ACTION_OBSERVATION_REL: &str = ".sail/action-observation.d.ts";
 
 /// Script-form CSS side-effect ambient. tsgo TS2882 ignores `declare module '*.css'`
 /// inside a module (the types pack has `import`/`export`); a sibling script `.d.ts`
 /// is what makes `import '@ship/tokens/*.css'` legal under Pure.
-pub const PROJECT_CSS_MODULES_REL: &str = "node_modules/.sail/css-modules.d.ts";
+pub const PROJECT_CSS_MODULES_REL: &str = ".sail/css-modules.d.ts";
 
 /// Regenerated header — agents/humans must not hand-edit the pack.
 const HEADER: &str = "\
@@ -277,7 +277,7 @@ pub fn emit_types_dts() -> String {
     out
 }
 
-/// Write `<project>/node_modules/.sail/types.d.ts` and the action observation
+/// Write `<project>/.sail/types.d.ts` and the action observation
 /// ambient beside it. Creates parents as needed. Returns the types pack path
 /// (primary ambient).
 pub fn write_project_types(project: &Path) -> Result<PathBuf> {
@@ -777,14 +777,13 @@ pub fn write_project_oxlintrc(project: &Path) -> Result<PathBuf> {
 }
 
 /// Directory for generated type machinery (ambient pack + pure/action
-/// tsconfigs). Lives under `node_modules/.sail/` so `rm -rf node_modules`
-/// clears it; users never author these files (G2c).
-pub const PROJECT_SAIL_DIR_REL: &str = "node_modules/.sail";
+/// tsconfigs). `<project>/.sail/` — generate, never authored (G2c).
+pub const PROJECT_SAIL_DIR_REL: &str = ".sail";
 
 /// Relative path from [`PROJECT_SAIL_DIR_REL`] up to the project root.
 /// Pure/action configs live under `.sail/`; include/exclude/`paths` use this
 /// prefix so globs and aliases still cover the project tree.
-const SAIL_DIR_TO_PROJECT_ROOT: &str = "../..";
+const SAIL_DIR_TO_PROJECT_ROOT: &str = "..";
 
 /// Build a Pure-env child tsconfig body (written under [`PROJECT_SAIL_DIR_REL`]).
 ///
@@ -797,11 +796,11 @@ const SAIL_DIR_TO_PROJECT_ROOT: &str = "../..";
 /// `include_globs` are **project-root relative** (e.g. `src/**/*.ts`); emit
 /// rewrites them for the config's nest under [`PROJECT_SAIL_DIR_REL`].
 /// The ambient pack is listed under `files` as a same-dir path (`./types.d.ts`)
-/// so `exclude: ../../node_modules` does not drop it (SPEC-OUTPUT-1 §4 Option B).
+/// so `exclude: ../node_modules` does not drop it.
 ///
 /// `compilerOptions.paths` come from [`crate::project_map::at_alias_paths`]
 /// (SPEC-PROJECT-STRUCTURE-1 §3). Targets are rewritten relative to `.sail/`
-/// (`../../src/…`) — **no `baseUrl`**: tsgo removes it (TS5102) and the gate
+/// (`../src/…`) — **no `baseUrl`**: tsgo removes it (TS5102) and the gate
 /// must use the same config as `tsc -p` / `tsgo -p`.
 pub fn emit_project_tsconfig_json(include_globs: &[&str]) -> String {
     emit_project_tsconfig_json_for(TypeEnv::Sail, include_globs)
@@ -816,7 +815,7 @@ pub fn emit_project_tsconfig_json(include_globs: &[&str]) -> String {
 /// - [`TypeEnv::Action`] also lists `./action-observation.d.ts` under `files`
 ///   so the observation set is nameable without the DOM lib
 pub fn emit_project_tsconfig_json_for(env: TypeEnv, include_globs: &[&str]) -> String {
-    // Globs are project-root relative; config lives under node_modules/.sail/.
+    // Globs are project-root relative; config lives under .sail/.
     let root = SAIL_DIR_TO_PROJECT_ROOT;
     let includes: Vec<String> = include_globs
         .iter()
@@ -830,7 +829,7 @@ pub fn emit_project_tsconfig_json_for(env: TypeEnv, include_globs: &[&str]) -> S
         .trim_end_matches('}')
         .trim();
     // Paths relative to this config dir (no baseUrl — tsgo TS5102).
-    // SSOT targets are project-root relative (`./src/stores/*`); prefix `../../`.
+    // SSOT targets are project-root relative (`./src/stores/*`); prefix `..`.
     let path_entries: Vec<String> = crate::project_map::at_alias_paths()
         .iter()
         .map(|m| {
@@ -861,10 +860,10 @@ pub fn emit_project_tsconfig_json_for(env: TypeEnv, include_globs: &[&str]) -> S
     // (no observation pack). Action files live solely under tsconfig.action.json.
     let exclude = match env {
         TypeEnv::Sail => format!(
-            "\"{root}/node_modules\", \"{root}/dist\", \"{root}/.deck\", \
+            "\"{root}/node_modules\", \"{root}/dist\", \"{root}/.sail\", \
              \"{root}/src/actions\", \"{root}/src/actions/**\""
         ),
-        _ => format!("\"{root}/node_modules\", \"{root}/dist\", \"{root}/.deck\""),
+        _ => format!("\"{root}/node_modules\", \"{root}/dist\", \"{root}/.sail\""),
     };
     format!(
         "{{\n  \
@@ -907,9 +906,9 @@ pub fn emit_project_solution_tsconfig_json() -> String {
 }
 
 /// Relative path of the generated sail-typecheck project tsconfig (G2c — under `.sail/`).
-pub const PROJECT_TSCONFIG_SAIL_REL: &str = "node_modules/.sail/tsconfig.sail.json";
+pub const PROJECT_TSCONFIG_SAIL_REL: &str = ".sail/tsconfig.sail.json";
 /// Relative path of the generated Action-env project tsconfig (G2c — under `.sail/`).
-pub const PROJECT_TSCONFIG_ACTION_REL: &str = "node_modules/.sail/tsconfig.action.json";
+pub const PROJECT_TSCONFIG_ACTION_REL: &str = ".sail/tsconfig.action.json";
 
 /// Pre-G2c root-level kind configs. Removed on regenerate when marked GENERATED.
 const LEGACY_ROOT_TSCONFIG_PURE: &str = "tsconfig.pure.json";
@@ -918,7 +917,7 @@ const LEGACY_ROOT_TSCONFIG_ACTION: &str = "tsconfig.action.json";
 /// Default include globs for the sail typecheck (controllers synthesized
 /// at the gate, compositions, stores, and general `src/**/*.ts`).
 /// Actions are **excluded** via `exclude` in [`emit_project_tsconfig_json_for`]
-/// so IDE/`tsgo -p node_modules/.sail/tsconfig.sail.json` never typechecks
+/// so IDE/`tsgo -p .sail/tsconfig.sail.json` never typechecks
 /// `src/actions/**` under the sail typecheck (no observation pack). Actions ride
 /// [`PROJECT_TSCONFIG_ACTION_REL`].
 pub const PROJECT_SAIL_INCLUDE: &[&str] = &[
@@ -953,7 +952,7 @@ fn remove_legacy_root_kind_tsconfigs(project: &Path) {
     }
 }
 
-/// Keep `node_modules/.sail/` free of scratch kind configs
+/// Keep `.sail/` free of scratch kind configs
 /// (`tsconfig.pure.g2d.json`, agent debris, etc.). Canonical names only.
 fn sweep_stale_sail_kind_tsconfigs(project: &Path) {
     let sail_dir = project.join(PROJECT_SAIL_DIR_REL);
@@ -2375,8 +2374,16 @@ mod tests {
             body.contains("src/actions"),
             "Pure project tsconfig must exclude src/actions:\n{body}"
         );
-        // Nested under node_modules/.sail/ — no baseUrl (tsgo TS5102); paths
-        // reach project root via ../../ prefix.
+        assert!(
+            body.contains("/.sail\"") && body.contains("/dist\""),
+            "kind tsconfig must exclude generate `.sail` and deploy `dist`:\n{body}"
+        );
+        assert!(
+            !body.contains("/.deck"),
+            "kind tsconfig must not treat `.deck` as generate:\n{body}"
+        );
+        // Nested under .sail/ — no baseUrl (tsgo TS5102); paths
+        // reach project root via ../ prefix.
         assert!(
             !body.contains("\"baseUrl\""),
             "kind tsconfig must not emit baseUrl (tsgo removed it):\n{body}"
@@ -2384,7 +2391,7 @@ mod tests {
         assert!(
             body.contains(&format!("\"{SAIL_DIR_TO_PROJECT_ROOT}/src/stores/*\""))
                 || body.contains(&format!("{SAIL_DIR_TO_PROJECT_ROOT}/src/stores/*")),
-            "kind paths must be relative to .sail/ (../../src/…):\n{body}"
+            "kind paths must be relative to .sail/ (../src/…):\n{body}"
         );
     }
 
@@ -2445,8 +2452,8 @@ mod tests {
         assert!(action.exists() && action.ends_with("tsconfig.action.json"));
         let pure_s = pure.to_string_lossy();
         assert!(
-            pure_s.contains("node_modules") && pure_s.contains(".sail"),
-            "pure must live under .sail/: {}",
+            !pure_s.contains("node_modules") && pure_s.contains(".sail"),
+            "pure must live under project .sail/: {}",
             pure.display()
         );
 

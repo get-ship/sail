@@ -572,7 +572,11 @@ pub fn is_project_gate_ts(path: &Path) -> bool {
     {
         return false;
     }
-    if s.contains("/node_modules/") || s.contains("/dist/") || s.contains("/.deck/") {
+    if s.contains("/node_modules/")
+        || s.contains("/dist/")
+        || s.contains("/.sail/")
+        || s.contains("/.deck/")
+    {
         return false;
     }
     s.contains("/src/")
@@ -599,7 +603,9 @@ pub fn collect_project_gate_files(project: &Path) -> Vec<(PathBuf, String)> {
 
 /// HMR project-gate entry.
 ///
-/// * `force` — unknown/lossy path list (notify overflow). Always run the gate.
+/// * `force` — do not skip. Callers pass this for notify overflow (lossy path
+///   list) **and** when the previous HMR tick had type-gate errors (gate
+///   honesty: a later `.sail`-only tick must not skip while still red).
 /// * otherwise skip tsgo when `changed` is non-empty and contains no product
 ///   `.ts`. A `.sail`-only tick is the cheap path.
 ///
@@ -736,6 +742,7 @@ fn collect_project_ts_sources(
     let skip = [
         "node_modules",
         "dist",
+        ".sail",
         ".deck",
         "target",
         ".git",
@@ -2498,7 +2505,7 @@ fn gate_temp_dir(source_path: Option<&Path>) -> PathBuf {
 
 // ── project env batch ──────────────────────────────────────────────────────
 
-/// Project batch must match `tsc -p node_modules/.sail/tsconfig.{pure,action}.json`.
+/// Project batch must match `tsc -p .sail/tsconfig.{pure,action}.json`.
 /// Prefer the generated kind config when present; only materialize a mirror when
 /// the kind file is missing (unit fixtures without `sail types`).
 fn typecheck_project_env(
@@ -2593,7 +2600,7 @@ fn typecheck_project_env_reused(
             && (f.ends_with("tsconfig.json")
                 || f.ends_with("tsconfig.sail.json")
                 || f.ends_with("tsconfig.action.json")
-                || f.contains("node_modules/.sail/")
+                || f.contains("/.sail/")
                 || f.contains("/node_modules/")
                 || f.contains("/dist/")
                 || f.contains("sail-runtime-ambient")
@@ -2840,7 +2847,7 @@ fn typecheck_project_env_via_kind_config(
     }
 
     // Kind `files` siblings must exist. tsgo "file not found" lands under
-    // `node_modules/.sail/` and is filtered as ambient noise below — a missing
+    // `.sail/` and is filtered as ambient noise below — a missing
     // required pack would silent-green product CSS/timer checks.
     if let Some(sail_dir) = kind_abs.parent() {
         let mut required = vec!["types.d.ts", "css-modules.d.ts"];
@@ -2892,7 +2899,7 @@ fn typecheck_project_env_via_kind_config(
             && (f.ends_with("tsconfig.json")
                 || f.ends_with("tsconfig.sail.json")
                 || f.ends_with("tsconfig.action.json")
-                || f.contains("node_modules/.sail/")
+                || f.contains("/.sail/")
                 || f.contains("/node_modules/")
                 || f.contains("/dist/"))
         {
@@ -2942,7 +2949,7 @@ fn typecheck_project_env_mirror(
     diags: &mut Vec<Diagnostic>,
 ) -> std::io::Result<()> {
     let out_dir = project_root
-        .join(".deck")
+        .join(crate::ambients::PROJECT_SAIL_DIR_REL)
         .join(format!("type-gate-{}", env_label(env)));
     // Fresh tree each run so stale mirrors cannot leak.
     let _ = std::fs::remove_dir_all(&out_dir);
@@ -3006,14 +3013,14 @@ fn typecheck_project_env_mirror(
         .map(|e| format!("\"{e}\""))
         .collect::<Vec<_>>()
         .join(", ");
-    // Mirror lives at `{project}/.deck/type-gate-{env}/`. Map @/ aliases back to
+    // Mirror lives at `{project}/.sail/type-gate-{env}/`. Map @/ aliases back to
     // the real project tree with paths relative to this config dir (tsgo has
     // removed `baseUrl` — TS5102 — so we must not emit it here).
     let path_entries: Vec<String> = crate::project_map::at_alias_paths()
         .iter()
         .map(|m| {
             let target = m.target.trim_start_matches("./");
-            // out_dir is project/.deck/type-gate-*/ → ../../ reaches project root.
+            // out_dir is project/.sail/type-gate-*/ → ../../ reaches project root.
             format!("      \"{}\": [\"../../{target}\"]", m.pattern)
         })
         .collect();
@@ -3941,6 +3948,42 @@ mod tests {
         }
     }
 
+    fn workspace_root() -> &'static Path {
+        Path::new(env!("CARGO_MANIFEST_DIR"))
+            .ancestors()
+            .nth(3)
+            .expect("workspace root")
+    }
+
+    fn require_tsgo() {
+        if resolve_tsgo(Some(workspace_root())).is_none() {
+            panic!("tsgo required");
+        }
+    }
+
+    /// One Project + unique persist dir so parallel/shared `apps/fake`
+    /// tsgo sessions cannot steal `controller` / `signal`.
+    fn isolated_gate_project(name: &str, link_ship_nm: bool) -> (tempfile::TempDir, PathBuf) {
+        require_tsgo();
+        let tmp = tempfile::tempdir().unwrap();
+        let project = tmp.path().to_path_buf();
+        std::fs::create_dir_all(project.join("src/widget")).unwrap();
+        std::fs::write(
+            project.join("package.json"),
+            format!(r#"{{"name":"@ship/{name}"}}"#),
+        )
+        .unwrap();
+        std::fs::write(project.join("sail.config.jsonc"), "{}\n").unwrap();
+        if link_ship_nm {
+            let nm = workspace_root().join("node_modules");
+            if nm.is_dir() {
+                let _ = std::os::unix::fs::symlink(&nm, project.join("node_modules"));
+            }
+        }
+        reset_type_gate_servers();
+        (tmp, project)
+    }
+
     #[test]
     fn resolve_product_path_does_not_double_join_cli_walk() {
         let tmp = tempfile::tempdir().unwrap();
@@ -4055,13 +4098,7 @@ export default controller((ctx) => {
 
     #[test]
     fn clean_controller_no_false_positive() {
-        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
-            .ancestors()
-            .nth(3)
-            .expect("workspace root");
-        if resolve_tsgo(Some(root)).is_none() {
-            panic!("tsgo required");
-        }
+        let (_tmp, project) = isolated_gate_project("gate-clean", false);
         let src = r#"
 <controller>
 export default controller((ctx) => {
@@ -4072,7 +4109,7 @@ export default controller((ctx) => {
 </controller>
 <button on:click={inc}>{count()}</button>
 "#;
-        let path = root.join("apps/fake/src/widget/widget.sail");
+        let path = project.join("src/widget/widget.sail");
         let diags = collect_sail_type_gate(src, Some(&path));
         let type_errs: Vec<_> = diags
             .iter()
@@ -4093,14 +4130,8 @@ export default controller((ctx) => {
     /// the previous program's diagnostics.
     #[test]
     fn controller_identifier_edit_reports_new_error() {
-        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
-            .ancestors()
-            .nth(3)
-            .expect("workspace root");
-        if resolve_tsgo(Some(root)).is_none() {
-            panic!("tsgo required");
-        }
-        let path = root.join("apps/fake/src/widget/reuse-stale.sail");
+        let (_tmp, project) = isolated_gate_project("gate-reuse-stale", false);
+        let path = project.join("src/widget/reuse-stale.sail");
         let src_ok = r#"
 <controller>
 export default controller(() => {
@@ -4166,13 +4197,7 @@ export default controller(() => {
     /// TS2304 — whole module is harnessed, not a wrapped fragment.
     #[test]
     fn harness_controller_local_type_is_visible() {
-        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
-            .ancestors()
-            .nth(3)
-            .expect("workspace root");
-        if resolve_tsgo(Some(root)).is_none() {
-            panic!("tsgo required");
-        }
+        let (_tmp, project) = isolated_gate_project("gate-local-type", false);
         let src = r#"
 <controller>
 type Row = { id: string; city: string }
@@ -4188,7 +4213,7 @@ export default controller(() => {
 </controller>
 <div />
 "#;
-        let path = root.join("apps/fake/src/widget/widget.sail");
+        let path = project.join("src/widget/widget.sail");
         let diags = collect_sail_type_gate(src, Some(&path));
         let errs = type_gate_errs(&diags);
         assert!(
@@ -4201,13 +4226,7 @@ export default controller(() => {
     /// (and thus available to the template via return) must stay green.
     #[test]
     fn harness_controller_local_const_helper_green() {
-        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
-            .ancestors()
-            .nth(3)
-            .expect("workspace root");
-        if resolve_tsgo(Some(root)).is_none() {
-            panic!("tsgo required");
-        }
+        let (_tmp, project) = isolated_gate_project("gate-local-const", false);
         let src = r#"
 <controller>
 const LABEL = 'board'
@@ -4219,7 +4238,7 @@ export default controller(() => {
 </controller>
 <span>{label}{n()}</span>
 "#;
-        let path = root.join("apps/fake/src/widget/widget.sail");
+        let path = project.join("src/widget/widget.sail");
         let diags = collect_sail_type_gate(src, Some(&path));
         let errs = type_gate_errs(&diags);
         assert!(
@@ -4231,13 +4250,7 @@ export default controller(() => {
     /// G2a / flow-trace: `type Row` in `<scope>` is visible to the controller.
     #[test]
     fn harness_scope_type_referenced_from_controller() {
-        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
-            .ancestors()
-            .nth(3)
-            .expect("workspace root");
-        if resolve_tsgo(Some(root)).is_none() {
-            panic!("tsgo required");
-        }
+        let (_tmp, project) = isolated_gate_project("gate-scope-type", false);
         let src = r#"
 <scope>
   type Row = { id: string; city: string }
@@ -4252,7 +4265,7 @@ export default controller(() => {
 </controller>
 <div />
 "#;
-        let path = root.join("apps/fake/src/widget/widget.sail");
+        let path = project.join("src/widget/widget.sail");
         let diags = collect_sail_type_gate(src, Some(&path));
         let errs = type_gate_errs(&diags);
         assert!(
@@ -4266,13 +4279,7 @@ export default controller(() => {
     /// findable; body is owned, not `apps/**`.
     #[test]
     fn flow_trace_type_gate_green() {
-        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
-            .ancestors()
-            .nth(3)
-            .expect("workspace root");
-        if resolve_tsgo(Some(root)).is_none() {
-            panic!("tsgo required");
-        }
+        let (_tmp, project) = isolated_gate_project("gate-flow-trace", false);
         let src = r#"
 <scope>
   type Row = { id: string; city: string }
@@ -4286,7 +4293,7 @@ export default controller(() => {
 </controller>
 <div />
 "#;
-        let path = root.join("apps/fake/src/widget/flow-trace.sail");
+        let path = project.join("src/widget/flow-trace.sail");
         let diags = collect_sail_type_gate(src, Some(&path));
         let errs = type_gate_errs(&diags);
         assert!(
@@ -4342,13 +4349,7 @@ export default controller(() => {
     /// G2a: npm package import (built / node_modules) is not a type-gate false positive.
     #[test]
     fn harness_npm_component_package_import_green() {
-        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
-            .ancestors()
-            .nth(3)
-            .expect("workspace root");
-        if resolve_tsgo(Some(root)).is_none() {
-            panic!("tsgo required");
-        }
+        let (_tmp, project) = isolated_gate_project("gate-npm-pack", true);
         // Bare / scoped package names are not Pure ambient law (bundler resolve);
         // must not fail the gate as TS2307 harness noise.
         // Component *subpaths* get open-any of requested names (no TS2305 suppress).
@@ -4363,7 +4364,7 @@ export default controller(() => {
 </controller>
 <div />
 "#;
-        let path = root.join("apps/fake/src/widget/widget.sail");
+        let path = project.join("src/widget/widget.sail");
         let diags = collect_sail_type_gate(src, Some(&path));
         let errs = type_gate_errs(&diags);
         assert!(
@@ -4377,15 +4378,11 @@ export default controller(() => {
     /// pattern-ambient TS2305 suppression).
     #[test]
     fn harness_ship_package_root_missing_export_fails() {
-        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
-            .ancestors()
-            .nth(3)
-            .expect("workspace root");
-        if resolve_tsgo(Some(root)).is_none() {
-            panic!("tsgo required");
-        }
+        let (_tmp, project) = isolated_gate_project("gate-missing-export", true);
         assert!(
-            root.join("node_modules/@ship/sail-studio-shell").is_dir(),
+            workspace_root()
+                .join("node_modules/@ship/sail-studio-shell")
+                .is_dir(),
             "fixture requires monorepo node_modules/@ship/sail-studio-shell"
         );
         let src = r#"
@@ -4399,8 +4396,7 @@ export default controller(() => {
 </controller>
 <div />
 "#;
-        // Path under workspace so find_ship_node_modules walks to monorepo root.
-        let path = root.join("apps/fake/src/widget/widget.sail");
+        let path = project.join("src/widget/widget.sail");
         let diags = collect_sail_type_gate(src, Some(&path));
         let errs = type_gate_errs(&diags);
         assert!(
@@ -4417,16 +4413,13 @@ export default controller(() => {
     /// Package-root *real* export stays green via node_modules types (not open-any).
     #[test]
     fn harness_ship_package_root_real_export_green() {
-        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
-            .ancestors()
-            .nth(3)
-            .expect("workspace root");
-        if resolve_tsgo(Some(root)).is_none() {
-            panic!("tsgo required");
-        }
-        if !root.join("node_modules/@ship/sail-studio-shell").is_dir() {
+        if !workspace_root()
+            .join("node_modules/@ship/sail-studio-shell")
+            .is_dir()
+        {
             return;
         }
+        let (_tmp, project) = isolated_gate_project("gate-real-export", true);
         let src = r#"
 <controller>
 import { postStudioMessage } from '@ship/sail-studio-shell'
@@ -4438,7 +4431,7 @@ export default controller(() => {
 </controller>
 <div />
 "#;
-        let path = root.join("apps/fake/src/widget/widget.sail");
+        let path = project.join("src/widget/widget.sail");
         let diags = collect_sail_type_gate(src, Some(&path));
         let errs = type_gate_errs(&diags);
         assert!(
@@ -4561,13 +4554,7 @@ export default controller((ctx) => {
 
     #[test]
     fn ambient_ship_imports_are_not_type_gate_noise() {
-        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
-            .ancestors()
-            .nth(3)
-            .expect("workspace root");
-        if resolve_tsgo(Some(root)).is_none() {
-            panic!("tsgo required");
-        }
+        let (_tmp, project) = isolated_gate_project("gate-ship-ambient", true);
         let src = r#"
 <controller>
 import { bindHtml } from '@ship/sail-runtime/internal'
@@ -4583,7 +4570,7 @@ export default controller((ctx) => {
 </controller>
 <div />
 "#;
-        let path = root.join("apps/fake/src/widget/widget.sail");
+        let path = project.join("src/widget/widget.sail");
         let diags = collect_sail_type_gate(src, Some(&path));
         let type_errs: Vec<_> = diags
             .iter()
@@ -5096,6 +5083,16 @@ export default controller(() => {
         if resolve_tsgo(Some(root)).is_none() {
             panic!("tsgo required");
         }
+        let tmp = tempfile::tempdir().unwrap();
+        let project = tmp.path();
+        std::fs::create_dir_all(project.join("src/widget")).unwrap();
+        std::fs::write(
+            project.join("package.json"),
+            r#"{"name":"@ship/gate-signal"}"#,
+        )
+        .unwrap();
+        std::fs::write(project.join("sail.config.jsonc"), "{}\n").unwrap();
+        reset_type_gate_servers();
         let src = r#"
 <controller>
 export default controller((ctx) => {
@@ -5106,7 +5103,7 @@ export default controller((ctx) => {
 </controller>
 <div />
 "#;
-        let path = root.join("apps/fake/src/widget/widget.sail");
+        let path = project.join("src/widget/widget.sail");
         let diags = collect_sail_type_gate(src, Some(&path));
         let type_errs: Vec<_> = diags
             .iter()
@@ -5129,6 +5126,16 @@ export default controller((ctx) => {
         if resolve_tsgo(Some(root)).is_none() {
             panic!("tsgo required");
         }
+        let tmp = tempfile::tempdir().unwrap();
+        let project = tmp.path();
+        std::fs::create_dir_all(project.join("src/widget")).unwrap();
+        std::fs::write(
+            project.join("package.json"),
+            r#"{"name":"@ship/gate-form"}"#,
+        )
+        .unwrap();
+        std::fs::write(project.join("sail.config.jsonc"), "{}\n").unwrap();
+        reset_type_gate_servers();
         let src = r#"
 <controller>
 export default controller((ctx) => {
@@ -5148,7 +5155,7 @@ export default controller((ctx) => {
 </controller>
 <div />
 "#;
-        let path = root.join("apps/fake/src/widget/widget.sail");
+        let path = project.join("src/widget/widget.sail");
         let diags = collect_sail_type_gate(src, Some(&path));
         let type_errs: Vec<_> = diags
             .iter()
@@ -5342,8 +5349,9 @@ export function props<T extends Record<string, Prop<unknown> | readonly string[]
         .unwrap();
         // Emit kind configs (no baseUrl; paths relative to .sail/).
         crate::ambients::write_project_type_configs(project).expect("write kind configs");
-        let body = std::fs::read_to_string(project.join("node_modules/.sail/tsconfig.sail.json"))
-            .expect("pure kind");
+        let body =
+            std::fs::read_to_string(project.join(crate::ambients::PROJECT_TSCONFIG_SAIL_REL))
+                .expect("pure kind");
         assert!(
             !body.contains("\"baseUrl\""),
             "kind config must not emit baseUrl:\n{body}"
@@ -5432,8 +5440,8 @@ export function props<T extends Record<string, Prop<unknown> | readonly string[]
             "must set types:[] so @types/node is not auto-included:\n{body}"
         );
         assert!(
-            body.contains("../../src/stores/*") || body.contains("\"../../src/stores/*\""),
-            "paths must be relative to node_modules/.sail/:\n{body}"
+            body.contains("../src/stores/*") || body.contains("\"../src/stores/*\""),
+            "paths must be relative to .sail/:\n{body}"
         );
     }
 

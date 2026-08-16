@@ -278,7 +278,7 @@ impl RoleRegistry {
         #[cfg(not(target_arch = "wasm32"))]
         {
             match sail_lint::config::resolve_product(path) {
-                Some((_, cfg)) => Self::from_config(parse_icon_config(cfg.icons_value())),
+                Some((_, cfg)) => Self::from_config(parse_icon_config(cfg.icons_value().as_ref())),
                 None => Self::core(),
             }
         }

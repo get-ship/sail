@@ -83,26 +83,30 @@ pub use taffy_tree::Layout;
 /// hooks) build trees and call compute_layout through this alias.
 pub use taffy;
 
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::cell::Cell;
 
-/// Process-wide count of taffy layout computations (each `taffy_tree::build`).
-/// Test/hook surface for SPEC-TOOLING-1 §WI6: LSP on-type must not increment
-/// this while typing.
-static LAYOUT_PASS_COUNT: AtomicU64 = AtomicU64::new(0);
-
-/// Number of taffy layout passes since process start (or last
-/// [`reset_layout_pass_count`]).
-pub fn layout_pass_count() -> u64 {
-    LAYOUT_PASS_COUNT.load(Ordering::SeqCst)
+// Per-thread, not process-global: parallel cargo-test threads must not
+// race reset / increment / assert on this hook.
+thread_local! {
+    static LAYOUT_PASS_COUNT: Cell<u64> = const { Cell::new(0) };
 }
 
-/// Reset the layout-pass counter (tests).
+/// Number of taffy layout passes on this thread since start (or last
+/// [`reset_layout_pass_count`]).
+///
+/// Test/hook surface for SPEC-TOOLING-1 §WI6: LSP on-type must not
+/// increment this while typing.
+pub fn layout_pass_count() -> u64 {
+    LAYOUT_PASS_COUNT.with(Cell::get)
+}
+
+/// Reset the layout-pass counter for this thread (tests).
 pub fn reset_layout_pass_count() {
-    LAYOUT_PASS_COUNT.store(0, Ordering::SeqCst);
+    LAYOUT_PASS_COUNT.with(|c| c.set(0));
 }
 
 pub(crate) fn record_layout_pass() {
-    LAYOUT_PASS_COUNT.fetch_add(1, Ordering::SeqCst);
+    LAYOUT_PASS_COUNT.with(|c| c.set(c.get() + 1));
 }
 
 #[cfg(test)]
@@ -213,7 +217,7 @@ pub fn check_tree(layout: &Layout, options: CheckOptions) -> anyhow::Result<Scan
 }
 
 /// Convenience for standalone callers that have their own preprocessor.
-/// `preprocess` must perform the same sx + layout lowering the compiler does.
+/// `preprocess` must perform the same Style + layout lowering the compiler does.
 pub fn check_with_preprocessor(
     source: &str,
     viewport: (f32, f32),

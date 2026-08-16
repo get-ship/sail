@@ -1123,7 +1123,7 @@ pub const METHOD_CONTRACTS: &[MethodContract] = &[
         "SailTheme",
         "Generate",
         "sail_tokens_generate",
-        "Run DTCG model → tokens CSS/registry generate. mode=package (full catalog) or mode=app (T0 effective set → project/.deck/themes/themes.css only).",
+        "Run DTCG model → tokens CSS/registry generate. mode=package (full catalog) or mode=app (T0 effective set → project/.sail/themes/themes.css only).",
         ThemeGenerateArgs,
         ThemeGenerateRet,
         "ThemeGenerateArgs",

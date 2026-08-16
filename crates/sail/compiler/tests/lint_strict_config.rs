@@ -28,7 +28,7 @@ use sail_compiler::policy::{LintSeverityValue, apply_config_to_resolved};
 use sail_compiler::{
     CompileMode, CompileOpts, DiagSeverity, LintOverride, OverrideSeverity, check_all, compile,
 };
-use sail_lint::config::{RECOGNIZED_KEYS, SailConfig};
+use sail_lint::config::SailConfig;
 
 /// Natural-Warn lint used as the promotion probe (SPEC path-gated apps).
 const WARN_RULE: &str = "sail-no-free-aria";
@@ -81,10 +81,6 @@ fn warn_rule_diags(path: &Path, src: &str) -> Vec<sail_compiler::Diagnostic> {
 #[test]
 fn top_level_strict_is_a_recognized_config_key() {
     // SPEC-LINTS-1: `"strict": true` is an operator key, not a typo.
-    assert!(
-        RECOGNIZED_KEYS.contains(&"strict"),
-        "RECOGNIZED_KEYS must include `strict` (got {RECOGNIZED_KEYS:?})"
-    );
     let cfg = SailConfig::from_json(r#"{ "strict": true }"#);
     assert!(cfg.parse_ok());
     let unknown = cfg.unknown_keys();
@@ -96,12 +92,7 @@ fn top_level_strict_is_a_recognized_config_key() {
 
 #[test]
 fn top_level_lint_object_is_a_recognized_config_key() {
-    // SPEC-LINTS-1: top-level `"lint": { severity, rules }` — not only nested
-    // `policy.lint.severity.<rule>`.
-    assert!(
-        RECOGNIZED_KEYS.contains(&"lint"),
-        "RECOGNIZED_KEYS must include `lint` (got {RECOGNIZED_KEYS:?})"
-    );
+    // SPEC-LINTS-1: top-level `"lint": { severity, rules }`.
     let cfg = SailConfig::from_json(r#"{ "lint": { "severity": "error" } }"#);
     assert!(cfg.parse_ok());
     let unknown = cfg.unknown_keys();
@@ -191,7 +182,7 @@ fn apply_config_resolves_strict_and_floor_and_lint_rules() {
     assert_eq!(
         resolved.lint_severities.get(WARN_RULE),
         Some(&LintSeverityValue::Off),
-        "lint.rules.* must merge into the severity tree (dual-read with policy.lint.severity.*)"
+        "lint.rules.* must merge into the severity tree"
     );
 }
 
@@ -287,9 +278,8 @@ fn per_rule_off_still_silences_under_strict() {
 }
 
 #[test]
-fn policy_lint_severity_off_still_silences_under_strict() {
-    // Dual-read: existing `policy.lint.severity.*` remains a valid kill switch
-    // under top-level strict (no forced cutover break).
+fn policy_nest_is_rejected_as_unknown_key() {
+    // `"policy"` is not a recognized nest — lint + raw_containers are top-level only.
     let (_tmp, sail) = write_fixture(
         r#"{
             "preset": "full",
@@ -300,13 +290,18 @@ fn policy_lint_severity_off_still_silences_under_strict() {
         }"#,
         WARN_SRC,
     );
-    let diags = warn_rule_diags(&sail, WARN_SRC);
+    let (_path, resolution) = Policy::resolve_outcome(&sail).expect("config resolves");
+    assert_eq!(resolution.tier, Policy::STRICT);
+    let ResolutionKind::Rejected(reason) = &resolution.kind else {
+        panic!(
+            "expected Rejected for policy nest, got {:?}",
+            resolution.kind
+        );
+    };
     assert!(
-        diags.is_empty(),
-        "policy.lint.severity.* off under strict must silence: {diags:?}"
+        reason.contains("policy"),
+        "must name the deleted nest: {reason}"
     );
-    compile(&fs::read_to_string(&sail).unwrap(), opts_for(&sail))
-        .expect("dual-read kill switch via policy.lint.severity must work under strict");
 }
 
 // ── 6. Compiler errors never downgraded ─────────────────────────────────────
