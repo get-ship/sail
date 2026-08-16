@@ -152,6 +152,10 @@ export function getRole(el: Element): string | null {
       return 'combobox'
     case 'progress':
       return 'progressbar'
+    case 'meter':
+      return 'meter'
+    case 'hr':
+      return 'separator'
     default:
       return null
   }
