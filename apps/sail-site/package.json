@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@ship/sail-runtime": "workspace:*",
+    "@ship/sail-highlight": "workspace:*",
     "@ship/sail-dom": "workspace:*",
     "@ship/sail-compiler-wasm": "workspace:*",
     "@ship/sail-l1": "workspace:*",

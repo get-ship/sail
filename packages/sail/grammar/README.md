@@ -69,8 +69,10 @@ TextMate grammar.
 ### Studio / docs
 
 `<sail-code-editor>` paints from `@ship/sail-highlight` (same wasm +
-query). The generated vocab table is leftover generate output, not
-the paint engine. Docs-site regex highlighter is still a third painter.
+query). Docs `<code-block>` uses the same package via
+`registerSailHighlighter` (TS / shell snippets stay on the runtime
+regex). The generated vocab table is leftover generate output, not
+the paint engine.
 
 ## Generate (maintainers)
 

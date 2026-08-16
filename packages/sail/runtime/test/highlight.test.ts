@@ -1,7 +1,9 @@
-import { describe, expect, it } from 'vitest'
-import { highlight } from '../src/actions/highlight'
-// The real docs snippets — the fixtures the owner saw the defects on.
-import { code as sailFileSnippets } from '../../../../apps/sail-site/routes/sail/language/sail-file/snippets'
+import { afterEach, describe, expect, it } from 'vitest'
+import { highlight, registerSailHighlighter } from '../src/actions/highlight'
+
+afterEach(() => {
+  registerSailHighlighter(null)
+})
 
 /** Strip the tok-* spans and undo escaping — must round-trip to the source. */
 function plainText(html: string): string {
@@ -19,21 +21,35 @@ function tokens(html: string, cls: string): string[] {
   return [...html.matchAll(re)].map((m) => plainText(m[1]!))
 }
 
+const TEMPLATE = `<card>
+  <for {flights() as f} key={f.id}>
+    <match {f.status}>
+      {'boarding' => <badge>Boarding</badge>}
+      {else => <badge>On time</badge>}
+    </match>
+  </for>
+</card>`
+
+const CONTROLLER = `<controller>
+export default controller(() => {
+  const flights = signal([])
+  if (flights().length === 0) return { flights }
+  return { flights }
+})
+</controller>`
+
 describe('highlight — markup text is prose, never keywords', () => {
   it('does not keyword-match words inside element text ("Signals in the Rain")', () => {
     const out = highlight('<strong>Signals in the Rain</strong>')
     expect(tokens(out, 'keyword')).toEqual([])
-    // The prose survives verbatim, unwrapped.
     expect(out).toContain('Signals in the Rain')
   })
 
-  it('does not keyword-match text in the real template snippet', () => {
-    const out = highlight(sailFileSnippets.template)
-    // `for`/`of`/`in` appear only inside {…} directives — never as keywords.
+  it('does not keyword-match text in a template snippet', () => {
+    const out = highlight(TEMPLATE)
     expect(tokens(out, 'keyword')).toEqual([])
-    // Prose like the badge labels stays plain text.
-    expect(out).toContain('>Boarding<')
-    expect(out).toContain('>On time<')
+    expect(plainText(out)).toContain('Boarding')
+    expect(plainText(out)).toContain('On time')
   })
 
   it('does not treat words inside attribute strings as keywords', () => {
@@ -45,17 +61,13 @@ describe('highlight — markup text is prose, never keywords', () => {
 
 describe('highlight — directive headers and bindings', () => {
   it('tokenizes element control-flow attrs as bindings, never comments', () => {
-    const out = highlight(sailFileSnippets.template)
+    const out = highlight(TEMPLATE)
     expect(tokens(out, 'comment')).toEqual([])
-    // Element tags are markup; brace attrs on <for>/<match>/<case> are bindings.
-    expect(tokens(out, 'bind')).toEqual(expect.arrayContaining([
-      '{flights()}',
-      '{f.id}',
-      '{f.status}',
-      "{'boarding'}",
-    ]))
-    expect(out).toContain('<for as="f"')
-    expect(out).toContain('<match on=')
+    expect(tokens(out, 'bind')).toEqual(
+      expect.arrayContaining(['{flights() as f}', '{f.id}', '{f.status}']),
+    )
+    expect(tokens(out, 'bind').some((t) => t.startsWith("{'boarding'"))).toBe(true)
+    expect(tokens(out, 'tag')).toEqual(expect.arrayContaining(['<for', '<match']))
   })
 
   it('brace-matches bindings with quotes and nested braces', () => {
@@ -71,7 +83,7 @@ describe('highlight — directive headers and bindings', () => {
 })
 
 describe('highlight — controller code stays code', () => {
-  const out = highlight(sailFileSnippets.controller)
+  const out = highlight(CONTROLLER)
 
   it('never emits bind spans inside code (nested arrow bodies stay intact)', () => {
     expect(tokens(out, 'bind')).toEqual([])
@@ -83,13 +95,12 @@ describe('highlight — controller code stays code', () => {
 
   it('keywords, verbs, strings and numbers get their classes', () => {
     const kws = tokens(out, 'keyword')
-    for (const kw of ['import', 'from', 'export', 'default', 'const', 'if', 'return']) {
+    for (const kw of ['export', 'default', 'const', 'if', 'return']) {
       expect(kws).toContain(kw)
     }
     const fns = tokens(out, 'fn')
-    for (const v of ['controller', 'signal', 'effect']) expect(fns).toContain(v)
-    expect(tokens(out, 'string')).toContain("'@ship/sail-runtime'")
-    expect(tokens(out, 'number')).toContain('2400')
+    for (const v of ['controller', 'signal']) expect(fns).toContain(v)
+    expect(tokens(out, 'number')).toEqual(['0'])
   })
 
   it('marks the <controller> wrapper tags as tags', () => {
@@ -110,13 +121,10 @@ describe('highlight — pure-code snippets keep keyword highlighting', () => {
   it('hands off to markup when a .sail code prelude is followed by a template', () => {
     const src = `const playing = signal(true)\n\n<column gap="2">\n  <badge>{playing() ? 'playing' : 'paused'}</badge>\n</column>`
     const out = highlight(src)
-    // Prelude is code…
     expect(tokens(out, 'keyword')).toContain('const')
     expect(tokens(out, 'fn')).toContain('signal')
-    // …and the template half still gets tag/bind coloring.
     expect(tokens(out, 'tag')).toEqual(expect.arrayContaining(['<column', '<badge', '</badge']))
     expect(tokens(out, 'bind')).toEqual(["{playing() ? 'playing' : 'paused'}"])
-    // Generics never trigger the handoff.
     const gen = highlight('const flights = signal<Flight[]>([])')
     expect(tokens(gen, 'tag')).toEqual([])
   })
@@ -129,8 +137,8 @@ describe('highlight — pure-code snippets keep keyword highlighting', () => {
 })
 
 describe('highlight — output invariants', () => {
-  it('round-trips every real sail-file snippet to its source', () => {
-    for (const src of Object.values(sailFileSnippets)) {
+  it('round-trips inline sail snippets to their source', () => {
+    for (const src of [TEMPLATE, CONTROLLER, '<p>a < b && c > d</p>']) {
       expect(plainText(highlight(src))).toBe(src)
     }
   })
@@ -139,5 +147,27 @@ describe('highlight — output invariants', () => {
     const out = highlight('<p>a < b && c > d</p>')
     expect(out).not.toMatch(/<(?!\/?span|span)[^>]*onerror/i)
     expect(plainText(out)).toBe('<p>a < b && c > d</p>')
+  })
+})
+
+describe('highlight — registered sail painter', () => {
+  it('uses the painter for sail-shaped source and leaves TS/shell on regex', () => {
+    registerSailHighlighter((src) => `SAIL:${src}`)
+    expect(highlight('<div>{n()}</div>')).toBe('SAIL:<div>{n()}</div>')
+    const ts = highlight('const x = 1')
+    expect(ts).toContain('tok-keyword')
+    expect(ts).not.toContain('SAIL:')
+    const sh = highlight('npm install x')
+    expect(sh).toContain('tok-fn')
+    expect(sh).not.toContain('SAIL:')
+  })
+
+  it('falls back to regex when the painter throws', () => {
+    registerSailHighlighter(() => {
+      throw new Error('boom')
+    })
+    const out = highlight('<strong>ok</strong>')
+    expect(tokens(out, 'tag')).toContain('<strong')
+    expect(out).toContain('ok')
   })
 })

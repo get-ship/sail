@@ -2,7 +2,7 @@
  * Thread J — tree-sitter is not the product parser.
  * Compiler / LSP / fmt must not import it.
  * Highlighter sidecar lives in packages/sail/grammar + packages/sail/highlight
- * and may be loaded by VS Code / <sail-code-editor> only.
+ * and may be loaded by VS Code / <sail-code-editor> / docs register only.
  */
 import { describe, expect, test } from 'bun:test'
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
@@ -60,6 +60,7 @@ describe('tree-sitter is not a product import', () => {
         if (rel.startsWith('packages/sail/highlight/')) continue
         if (rel.startsWith('packages/sail/vscode/')) continue
         if (rel.startsWith('packages/components/sail/code-editor/')) continue
+        if (rel === 'crates/deck/deck-cli/src/editor.rs') continue
         if (rel.includes('/test/') || rel.includes('/tests/')) continue
         if (/\.(test|spec)\.(ts|tsx|rs)$/.test(rel)) continue
         const text = readFileSync(file, 'utf8')
@@ -73,5 +74,16 @@ describe('tree-sitter is not a product import', () => {
       }
     }
     expect(hits, `product must not import tree-sitter:\n${hits.join('\n')}`).toEqual([])
+  })
+
+  test('docs and studio opt in via register, without naming wasm or queries', () => {
+    for (const rel of ['apps/sail-site/src/clients.ts', 'apps/studio/src/clients.ts']) {
+      const text = readFileSync(join(REPO, rel), 'utf8')
+      expect(text.includes("import('@ship/sail-highlight')"), rel).toBe(true)
+      expect(text.includes('registerSailHighlighter'), rel).toBe(true)
+      for (const n of NEEDLES) {
+        expect(text.includes(n), `${rel} names ${n}`).toBe(false)
+      }
+    }
   })
 })

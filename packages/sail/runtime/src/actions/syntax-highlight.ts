@@ -1,5 +1,5 @@
 import type { Action } from '../action'
-import { highlight } from './highlight'
+import { highlight, subscribeSailHighlighter } from './highlight'
 
 /**
  * `use:syntaxHighlight` — the `<code-block>` element's behavior.
@@ -125,6 +125,10 @@ export const syntaxHighlight: Action<SyntaxHighlightParam> = (node, param) => {
   }
 
   const unhook = installCodeInterceptor(host, render)
+  const unsub = subscribeSailHighlighter(() => {
+    last = ''
+    render()
+  })
 
   render()
 
@@ -153,6 +157,7 @@ export const syntaxHighlight: Action<SyntaxHighlightParam> = (node, param) => {
     destroy: () => {
       mo.disconnect()
       unhook()
+      unsub()
       if (raf && typeof cancelAnimationFrame === 'function') {
         cancelAnimationFrame(raf)
       }
