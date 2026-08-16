@@ -151,6 +151,7 @@ const THEME_MODE_GROUP_KEYS: &[&str] = &[
     "breakpoint",
     "border",
     "size",
+    "pad",
     "elevation",
     "type",
     "bg",
@@ -182,6 +183,7 @@ pub const COMPOSITE_TYPES: &[&str] = &[
     "type",
     "bg",
     "fg",
+    "pad",
 ];
 
 /// Required members of a `border` composite (DTCG + concern set).
@@ -825,6 +827,7 @@ pub fn generate_with_options(
     }
 
     let mut registry = build_registry(&base_tokens, &styles, &keyframes, &plays, &tag_defaults);
+    warn_missing_required_presets(&registry);
     if let Some(ref axis) = products {
         if let Some(obj) = registry.as_object_mut() {
             obj.insert("products".into(), products_registry_meta(axis));
@@ -1106,6 +1109,7 @@ pub fn infer_composite_member_type(composite_ty: &str, member: &str) -> &'static
         ("type", "weight" | "leading") => "number",
         ("type", "align" | "case" | "wrap") => "string",
         ("size", "w" | "h" | "min-w" | "min-h" | "max-w" | "max-h" | "aspect") => "dimension",
+        ("pad", "all" | "x" | "y" | "t" | "b" | "l" | "r" | "s" | "e") => "dimension",
         ("elevation", "shadow") => "shadow",
         ("bg" | "fg", "color") => "color",
         ("bg", "image" | "clip" | "glow") => "string",
@@ -1662,6 +1666,15 @@ fn normalize_tag_default(raw: &Value) -> Option<Value> {
     }
     let mut meta = Map::new();
     meta.insert("type".into(), Value::String(role));
+    if let Value::Object(obj) = raw {
+        if let Some(size) = obj
+            .get("size")
+            .and_then(|v| v.as_str())
+            .filter(|s| !s.is_empty())
+        {
+            meta.insert("size".into(), Value::String(size.to_string()));
+        }
+    }
     Some(Value::Object(meta))
 }
 
@@ -3553,6 +3566,26 @@ fn build_registry(
     out.insert("plays".into(), Value::Object(plays.clone()));
     out.insert("tagDefaults".into(), Value::Object(tag_defaults.clone()));
     Value::Object(out)
+}
+
+/// M0: warn (do not fail) when a required StyleSurface theme preset is absent.
+/// M3 flips this to a hard generate error.
+fn warn_missing_required_presets(registry: &Value) {
+    let present: Vec<&str> = registry
+        .get("composites")
+        .and_then(|v| v.as_object())
+        .map(|obj| obj.keys().map(|k| k.as_str()).collect())
+        .unwrap_or_default();
+    let missing = spinnaker::StyleSurface::floor().missing_required(&present);
+    for key in &missing {
+        eprintln!("error: required theme preset `{key}` missing from registry");
+    }
+    if !missing.is_empty() {
+        panic!(
+            "theme floor incomplete — missing required StyleSurface presets: {}",
+            missing.join(", ")
+        );
+    }
 }
 
 fn parse_var_ref(value: &str) -> Option<String> {

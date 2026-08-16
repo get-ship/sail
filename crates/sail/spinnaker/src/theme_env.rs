@@ -84,6 +84,8 @@ pub struct PlayPreset {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TagDefault {
     pub type_role: String,
+    /// Optional text-scale overlay (`4xl`). Theme owns the ramp; the tag is the way.
+    pub size: Option<String>,
 }
 
 /// The only resolver Style parse / complete / emit should call for theme data.
@@ -417,7 +419,15 @@ fn tag_default_from_value(raw: &Value) -> Option<TagDefault> {
     if type_role.is_empty() {
         return None;
     }
-    Some(TagDefault { type_role })
+    let size = match raw {
+        Value::Object(obj) => obj
+            .get("size")
+            .and_then(Value::as_str)
+            .filter(|s| !s.is_empty())
+            .map(str::to_string),
+        _ => None,
+    };
+    Some(TagDefault { type_role, size })
 }
 
 fn play_preset_from_value(name: &str, raw: &Value) -> PlayPreset {

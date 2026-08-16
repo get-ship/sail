@@ -49,7 +49,11 @@ pub fn resolve_type_for_tag(tag: &str) -> ResolvedType {
     let Some(def) = ThemeStyleEnv::from_registry().resolve_tag_default(tag) else {
         return ResolvedType::default();
     };
-    resolve_type_role(&def.type_role)
+    let mut out = resolve_type_role(&def.type_role);
+    if let Some(size) = def.size {
+        out.size = Some(size);
+    }
+    out
 }
 
 /// Type composite (`heading`, `body-sm`) → family / size / leading scale steps.
@@ -251,11 +255,12 @@ mod tests {
     }
 
     #[test]
-    fn tag_h2_uses_heading_role() {
+    fn tag_h2_uses_heading_role_with_ramp_size() {
         let t = resolve_type_for_tag("h2");
-        let heading = resolve_type_role("heading");
-        assert_eq!(t, heading);
-        assert_eq!(t.size.as_deref(), Some("xl"));
+        assert_eq!(t.family, resolve_type_role("heading").family);
+        assert_eq!(t.size.as_deref(), Some("2xl"));
+        assert_eq!(resolve_type_for_tag("h1").size.as_deref(), Some("4xl"));
+        assert_eq!(resolve_type_for_tag("h6").size.as_deref(), Some("sm"));
     }
 
     #[test]

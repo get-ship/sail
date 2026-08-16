@@ -3891,22 +3891,28 @@
   },
   "tagDefaults": {
     "h1": {
-      "type": "heading"
+      "type": "heading",
+      "size": "4xl"
     },
     "h2": {
-      "type": "heading"
+      "type": "heading",
+      "size": "2xl"
     },
     "h3": {
-      "type": "heading"
+      "type": "heading",
+      "size": "xl"
     },
     "h4": {
-      "type": "heading"
+      "type": "heading",
+      "size": "lg"
     },
     "h5": {
-      "type": "heading"
+      "type": "heading",
+      "size": "md"
     },
     "h6": {
-      "type": "heading"
+      "type": "heading",
+      "size": "sm"
     },
     "p": {
       "type": "body"
