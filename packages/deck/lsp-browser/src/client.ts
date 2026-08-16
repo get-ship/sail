@@ -21,6 +21,12 @@ export type { SailDiagnostic } from './diagnostics'
 export type { SailCompletionSource } from './completions'
 export type { SailHoverInfo } from './hover'
 
+export const SAIL_BROWSER_LSP = {
+  structure: true,
+  typescript: false,
+  note: 'TypeScript type-checking runs in native `sail lsp`. This worker is structure-only.',
+} as const
+
 interface Pending {
   resolve: (value: unknown) => void
   reject: (err: Error) => void
