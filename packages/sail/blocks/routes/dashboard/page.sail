@@ -2,28 +2,19 @@
   dashboard — Catalyst-shaped app chrome: rail, breadcrumb, KPIs, tabs,
   filters, sticky table, new-order dialog, toast. Measure is contained.
 -->
-<scope>
-  style shell = { size({ min-h: fill }).bg(background) }
-  style main = { grow(1).size({ min-w: 0 }).pad(6) }
-  style measure = { size({ w: full, max-w: breakpoint-desktop }) }
-  style kicker = { fg(muted-foreground).type({ size: sm }) }
-  style queryCol = { grow(1).size({ min-w: 0, max-w: panel-max-w-sm }) }
-  style kpi = { grow(1).size({ min-w: 0 }) }
-  style metric = { type({ size: 3xl, weight: semibold, leading: none, nums: tabular }) }
-  style muted = { fg(muted-foreground).type({ size: sm }) }
-</scope>
+
 
 <controller>
   export default controller(() => {
-    const toast = signal(false)
+    const orderCreated = signal(false)
     return {
-      toast,
-      created: (): void => toast.set(true),
+      orderCreated,
+      created: (): void => orderCreated.set(true),
     }
   })
 </controller>
 
-<row nowrap gap="0" align="stretch" style(shell)>
+<row nowrap gap="0" align="stretch">
   <navbar placement="rail" bordered sticky>
     <strong slot="brand">Northwind</strong>
     <column slot="center" gap="1">
@@ -38,10 +29,10 @@
     </column>
   </navbar>
 
-  <column gap="6" style(main)>
-    <column gap="6" style(measure)>
-      <alert variant="banner" tone="warning">
-        <span slot="title">Four orders need a dock slot</span>
+  <column gap="6">
+    <column gap="6">
+      <alert dismissible tone="warning">
+        <strong slot="title">Four orders need a dock slot</strong>
         Assign Harbor Co before 14:00 or they slip to tomorrow.
       </alert>
 
@@ -52,7 +43,7 @@
             <small>Overview</small>
           </breadcrumb>
           <h1>Overview</h1>
-          <p style(kicker)>Orders this week. Defaults only — if this looks wrong, the atoms are wrong.</p>
+          <p>Orders this week. Defaults only — if this looks wrong, the atoms are wrong.</p>
         </column>
         <row gap="2" align="center">
           <row>
@@ -94,6 +85,7 @@
       <dialog id="new-order">
         <header>New order</header>
         <section>
+          <form label="New order">
           <column gap="3">
             <field>
               <label slot="label">Customer</label>
@@ -122,6 +114,7 @@
               <textarea placeholder="Dock 3, morning window"></textarea>
             </field>
           </column>
+          </form>
         </section>
         <footer>
           <button command="close" commandfor="new-order" variant="ghost">Cancel</button>
@@ -129,11 +122,11 @@
         </footer>
       </dialog>
 
-      <row gap="4" align="stretch">
-        <column style(kpi)>
+      <grid min="sm" gap="4">
+        <column>
           <card>
             <small slot="header">Revenue</small>
-            <h2 style(metric)>$48,200</h2>
+            <h2>$48,200</h2>
             <row slot="footer" gap="2" align="center">
               <badge tone="success" dot>Live</badge>
               <a href="#" popovertarget="rev-tip">+12% vs last week</a>
@@ -144,26 +137,22 @@
             <p>Revenue versus the previous seven days.</p>
           </hover-card>
         </column>
-        <column style(kpi)>
-          <card>
-            <small slot="header">Open orders</small>
-            <h2 style(metric)>18</h2>
-            <span slot="footer" style(muted)>4 due today</span>
-          </card>
-        </column>
-        <column style(kpi)>
-          <card>
-            <small slot="header">Fill rate</small>
-            <h2 style(metric)>96%</h2>
-            <meter slot="footer" value="96" min="0" max="100"></meter>
-          </card>
-        </column>
-      </row>
+        <card>
+          <small slot="header">Open orders</small>
+          <h2>18</h2>
+          <small slot="footer">4 due today</small>
+        </card>
+        <card>
+          <small slot="header">Fill rate</small>
+          <h2>96%</h2>
+          <meter slot="footer" value="96" min="0" max="100"></meter>
+        </card>
+      </grid>
 
       <tabs active="orders">
         <tab-list>
-          <tab name="orders">Orders</tab>
-          <tab name="customers">Customers</tab>
+          <tab title="Orders" name="orders"></tab>
+          <tab title="Customers" name="customers"></tab>
         </tab-list>
 
         <tab-panel name="orders">
@@ -174,7 +163,7 @@
             </row>
             <column gap="4">
               <row gap="3" align="end">
-                <column style(queryCol)>
+                <column>
                   <field>
                     <label slot="label">Search</label>
                     <combobox placeholder="Order or customer">
@@ -195,7 +184,7 @@
                   </select>
                 </field>
                 <row gap="1" align="center">
-                  <span style(muted)>or</span>
+                  <small>or</small>
                   <kbd>⌘</kbd>
                   <kbd>K</kbd>
                 </row>
@@ -224,7 +213,7 @@
                     <td>
                       <row gap="2" align="center">
                         <avatar initials="HC" size="xs"></avatar>
-                        <span>Harbor Co</span>
+                        Harbor Co
                       </row>
                     </td>
                     <td><badge tone="warning">Open</badge></td>
@@ -243,7 +232,7 @@
                     <td>
                       <row gap="2" align="center">
                         <avatar initials="LE" size="xs"></avatar>
-                        <span>Lee</span>
+                        Lee
                       </row>
                     </td>
                     <td><badge tone="success">Fulfilled</badge></td>
@@ -255,7 +244,7 @@
                     <td>
                       <row gap="2" align="center">
                         <avatar initials="NP" size="xs"></avatar>
-                        <span>North Pier</span>
+                        North Pier
                       </row>
                     </td>
                     <td><badge>Held</badge></td>
@@ -267,7 +256,7 @@
                     <td>
                       <row gap="2" align="center">
                         <avatar initials="AL" size="xs"></avatar>
-                        <span>Ada Labs</span>
+                        Ada Labs
                       </row>
                     </td>
                     <td><badge tone="success">Fulfilled</badge></td>
@@ -278,9 +267,9 @@
               </table>
 
               <pagination variant="simple">
-                <page value="1">1</page>
-                <page value="2">2</page>
-                <page value="3">3</page>
+                <page-item value="1">1</page-item>
+                <page-item value="2">2</page-item>
+                <page-item value="3">3</page-item>
               </pagination>
             </column>
           </card>
@@ -289,7 +278,7 @@
         <tab-panel name="customers">
           <empty-state compact>
             <icon slot="icon" name="inbox"></icon>
-            <span slot="title">No customer selected</span>
+            <strong slot="title">No customer selected</strong>
             Pick an order, or create one with New order.
             <button slot="action" command="show-modal" commandfor="new-order">New order</button>
           </empty-state>
@@ -299,7 +288,7 @@
   </column>
 </row>
 
-<if {toast()}>
+<if {orderCreated()}>
   <toast-region position="bottom-end">
     <toast tone="success">Order created for Harbor Co.</toast>
   </toast-region>

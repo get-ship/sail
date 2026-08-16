@@ -1,7 +1,7 @@
 /**
  * Authored sidecar — blurbs and category only.
  * Axes, props, concerns come from generated/catalog.ts.
- * Docs hub derives tiles from FAMILIES / hosts(); copy is optional.
+ * Docs hub derives tiles from COMPONENTS / hosts(); copy is optional.
  */
 
 export type L1Category =
@@ -19,7 +19,7 @@ export type L1Copy = {
   blurb: string
 }
 
-/** Family-host keyed. Parts inherit the host's copy unless listed. */
+/** Component-host keyed. Parts inherit the host's copy unless listed. */
 export const L1_COPY: Record<string, L1Copy> = {
   a: {
     category: 'navigation',
@@ -48,8 +48,7 @@ export const L1_COPY: Record<string, L1Copy> = {
   },
   breadcrumb: {
     category: 'navigation',
-    blurb:
-      'Trail host only — no host props. Compose nested <a> path crumbs and inert current (small). Faces component.breadcrumb.fg / current.',
+    blurb: 'Where you are. Earlier steps are links.',
   },
   button: {
     category: 'inputs',
@@ -167,10 +166,15 @@ export const L1_COPY: Record<string, L1Copy> = {
     blurb:
       'One element, three placements — top bar, side rail, bottom bar. sticky · bordered · autohide · offset. Regions: brand, center/links, actions. Paint from component.navbar.*.',
   },
+  page: {
+    category: 'layout',
+    blurb:
+      'Document shell. Children stack. The page never kisses the viewport — measure column, horizontal inset, vertical gap. Not a rail or app chrome.',
+  },
   pagination: {
     category: 'navigation',
     blurb:
-      'A nav of <page> controls. value marks the current one with aria-current; clicking emits sail-page-change — your list, your fetch. Size is authored on each <page>.',
+      'A nav of <page-item> controls. value marks the current one with aria-current; clicking emits sail-page-change — your list, your fetch. Size is authored on each <page-item>.',
   },
   popover: {
     category: 'overlay',
@@ -240,7 +244,7 @@ export const L1_COPY: Record<string, L1Copy> = {
   tabs: {
     category: 'navigation',
     blurb:
-      'Tabs with the keyboard suite. Host props: active · orientation · onTabChange. Strip look on <tab-list>; size on each <tab>.',
+      'Tabs with the keyboard suite. Write <tab title> plus the panel it owns. Host props: active · orientation · onTabChange. Vertical is a two-column grid.',
   },
   textarea: {
     category: 'inputs',
@@ -249,7 +253,7 @@ export const L1_COPY: Record<string, L1Copy> = {
   'theme-picker': {
     category: 'inputs',
     blurb:
-      'A control for picking a theme. Click to browse live previews, or keep the list on the page with inline. mode-only is just Light / Dark / System.',
+      'A control for picking a theme. Click to browse live previews. chrome=inline keeps the list on the page. mode is one icon that cycles Light / Dark / System.',
   },
   ticker: {
     category: 'effects',

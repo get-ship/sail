@@ -114,7 +114,11 @@ const SOURCES: &[(&str, &str)] = &[
         "pagination",
         include_str!("../stdlib/pagination/pagination.sail"),
     ),
-    ("page", include_str!("../stdlib/pagination/page.sail")),
+    (
+        "page-item",
+        include_str!("../stdlib/pagination/page-item.sail"),
+    ),
+    ("page", include_str!("../stdlib/page/page.sail")),
     (
         "breadcrumb",
         include_str!("../stdlib/breadcrumb/breadcrumb.sail"),
@@ -140,6 +144,10 @@ const SOURCES: &[(&str, &str)] = &[
         include_str!("../stdlib/toast/toast-region.sail"),
     ),
     ("toast", include_str!("../stdlib/toast/toast.sail")),
+    ("pane", include_str!("../stdlib/pane/pane.sail")),
+    ("toolbar", include_str!("../stdlib/toolbar/toolbar.sail")),
+    ("form", include_str!("../stdlib/form/form.sail")),
+    ("list-row", include_str!("../stdlib/list-row/list-row.sail")),
 ];
 
 /// Compiled stdlib elements, memoized for the process lifetime. A stdlib
@@ -159,7 +167,7 @@ pub fn family_of(tag: &str) -> &'static str {
         "tab" | "tab-list" | "tab-panel" => "tabs",
         "legend" => "fieldset",
         "toast-region" => "toast",
-        "page" => "pagination",
+        "page-item" => "pagination",
         "toggle" => "toggle-group",
         "radio" => "radio-group",
         "th" | "td" | "caption" => "table",
@@ -240,12 +248,9 @@ const PLATFORM: &[(&str, &str)] = &[
     ),
     ("color", include_str!("../stdlib/platform/color.css")),
     ("dialog", include_str!("../stdlib/platform/dialog.css")),
+    ("drawer", include_str!("../stdlib/platform/drawer.css")),
     ("file", include_str!("../stdlib/platform/file.css")),
     ("icon", include_str!("../stdlib/platform/icon.css")),
-    (
-        "menu-item",
-        include_str!("../stdlib/platform/menu-item.css"),
-    ),
     ("meter", include_str!("../stdlib/platform/meter.css")),
     ("progress", include_str!("../stdlib/platform/progress.css")),
     ("prose", include_str!("../stdlib/platform/prose.css")),

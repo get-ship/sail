@@ -1,5 +1,5 @@
 <!--
-  <page> — size match owns cell geometry (author size on each page).
+  <page-item> — size match owns cell geometry (author size on each item).
   Paint from foreground / hover-bg / muted.
   variant=simple: denser cell (smaller pad, no border) for pagination simple.
 -->

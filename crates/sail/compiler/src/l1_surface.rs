@@ -1,6 +1,6 @@
 //! Generated consumer catalog for `@ship/sail-l1`.
 //!
-//! This is a TypeScript projection of the stdlib — tags, families, props,
+//! This is a TypeScript projection of the stdlib — tags, components, props,
 //! axes, spent Style concerns. It is **not** the `.sail` definitions and
 //! **not** a test package. Docs / Studio / probe import the package; they
 //! do not copy `L1_CATALOG` or hand `contract.ts` files.
@@ -40,11 +40,13 @@ pub fn catalog_ts() -> String {
         "export type L1Axis = {\n  name: string\n  values: string[]\n  optional: boolean\n}\n\n",
     );
     ts.push_str(
-        "export type L1Tag = {\n  tag: string\n  family: string\n  role: L1Role\n  description: string\n  acceptsChildren: boolean\n  props: L1Prop[]\n  axes: L1Axis[]\n  /** Style concerns this host's program spends. Overlay surface — not component.* tokens. */\n  concerns: string[]\n}\n\n",
+        "export type L1Tag = {\n  tag: string\n  component: string\n  role: L1Role\n  description: string\n  acceptsChildren: boolean\n  props: L1Prop[]\n  axes: L1Axis[]\n  /** Style concerns this host's program spends. Overlay surface — not component.* tokens. */\n  concerns: string[]\n}\n\n",
     );
-    ts.push_str("export type L1Family = {\n  id: string\n  host: string\n  parts: string[]\n}\n\n");
+    ts.push_str(
+        "export type L1Component = {\n  id: string\n  host: string\n  parts: string[]\n}\n\n",
+    );
 
-    ts.push_str("export const FAMILIES: readonly L1Family[] = [\n");
+    ts.push_str("export const COMPONENTS: readonly L1Component[] = [\n");
     for id in families() {
         let tags = family_tags(id);
         let parts: Vec<&str> = tags.iter().copied().filter(|t| *t != id).collect();
@@ -127,9 +129,9 @@ fn tag_literal(entry: &L1Entry) -> String {
     }
 
     format!(
-        "  {{\n    tag: {tag},\n    family: {family},\n    role: '{role}',\n    description: {desc},\n    acceptsChildren: {kids},\n    props: [\n{props}    ],\n    axes: [\n{axes}    ],\n    concerns: [{concerns}],\n  }},\n",
+        "  {{\n    tag: {tag},\n    component: {component},\n    role: '{role}',\n    description: {desc},\n    acceptsChildren: {kids},\n    props: [\n{props}    ],\n    axes: [\n{axes}    ],\n    concerns: [{concerns}],\n  }},\n",
         tag = ts_str(&entry.tag),
-        family = ts_str(family),
+        component = ts_str(family),
         role = role,
         desc = ts_str(&entry.description),
         kids = if entry.accepts_children {
@@ -196,12 +198,12 @@ mod tests {
     }
 
     #[test]
-    fn catalog_names_tabs_family() {
+    fn catalog_names_tabs_component() {
         let ts = catalog_ts();
         assert!(ts.contains("id: 'tabs'"));
         assert!(ts.contains("host: 'tabs'"));
         assert!(ts.contains("'tab-list'"));
-        assert!(ts.contains("family: 'tabs'"));
+        assert!(ts.contains("component: 'tabs'"));
         assert!(ts.contains("role: 'part'"));
     }
 
@@ -210,35 +212,33 @@ mod tests {
         let ts = catalog_ts();
         assert!(ts.contains("id: 'table'"));
         assert!(ts.contains("parts: ['caption', 'td', 'th']"));
-        assert!(ts.contains("family: 'table'"));
+        assert!(ts.contains("component: 'table'"));
         assert!(ts.contains("tag: 'th'"));
         assert!(ts.contains("tag: 'td'"));
         assert!(ts.contains("tag: 'caption'"));
     }
 
     #[test]
-    fn catalog_names_page_radio_toggle_as_parts() {
+    fn catalog_names_page_radio_toggle() {
         let ts = catalog_ts();
         assert!(ts.contains("id: 'pagination'"));
-        assert!(ts.contains("parts: ['page']"));
-        assert!(ts.contains("family: 'pagination'"));
+        assert!(ts.contains("parts: ['page-item']"));
+        assert!(ts.contains("component: 'pagination'"));
+        assert!(ts.contains("id: 'page'"));
+        assert!(ts.contains("host: 'page'"));
         assert!(ts.contains("id: 'radio-group'"));
         assert!(ts.contains("parts: ['radio']"));
-        assert!(ts.contains("family: 'radio-group'"));
+        assert!(ts.contains("component: 'radio-group'"));
         assert!(ts.contains("id: 'toggle-group'"));
         assert!(ts.contains("parts: ['toggle']"));
-        assert!(ts.contains("family: 'toggle-group'"));
-        assert!(
-            !ts.contains("id: 'page'"),
-            "page is a pagination part, not a family host"
-        );
+        assert!(ts.contains("component: 'toggle-group'"));
         assert!(
             !ts.contains("id: 'radio'"),
-            "radio is a radio-group part, not a family host"
+            "radio is a radio-group part, not a component host"
         );
         assert!(
             !ts.contains("id: 'toggle'"),
-            "toggle is a toggle-group part, not a family host"
+            "toggle is a toggle-group part, not a component host"
         );
     }
 }

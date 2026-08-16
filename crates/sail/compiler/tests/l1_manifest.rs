@@ -54,7 +54,8 @@ fn family_dirs_are_the_composition() {
     assert_eq!(family_of("toast-region"), "toast");
     assert_eq!(family_of("button"), "button");
     assert_eq!(family_of("pagination"), "pagination");
-    assert_eq!(family_of("page"), "pagination");
+    assert_eq!(family_of("page-item"), "pagination");
+    assert_eq!(family_of("page"), "page");
     assert_eq!(family_of("toggle-group"), "toggle-group");
     assert_eq!(family_of("toggle"), "toggle-group");
     assert_eq!(family_of("radio-group"), "radio-group");
@@ -68,7 +69,8 @@ fn family_dirs_are_the_composition() {
     assert!(is_family_host("toast"));
     assert!(!is_family_host("toast-region"));
     assert!(is_family_host("pagination"));
-    assert!(!is_family_host("page"));
+    assert!(!is_family_host("page-item"));
+    assert!(is_family_host("page"));
     assert!(is_family_host("toggle-group"));
     assert!(!is_family_host("toggle"));
     assert!(is_family_host("radio-group"));
@@ -83,7 +85,8 @@ fn family_dirs_are_the_composition() {
     );
     assert_eq!(family_tags("fieldset"), vec!["fieldset", "legend"]);
     assert_eq!(family_tags("toast"), vec!["toast", "toast-region"]);
-    assert_eq!(family_tags("pagination"), vec!["pagination", "page"]);
+    assert_eq!(family_tags("pagination"), vec!["pagination", "page-item"]);
+    assert_eq!(family_tags("page"), vec!["page"]);
     assert_eq!(family_tags("toggle-group"), vec!["toggle-group", "toggle"]);
     assert_eq!(family_tags("radio-group"), vec!["radio-group", "radio"]);
     assert_eq!(family_tags("table"), vec!["table", "caption", "td", "th"]);
@@ -108,9 +111,9 @@ fn published_catalog_matches_catalog_ts() {
 #[test]
 fn l1_surface_count_is_documented() {
     let (stdlib, reskins) = l1_by_kind();
-    assert_eq!(stdlib.len(), 64, "stdlib L1 count");
+    assert_eq!(stdlib.len(), 69, "stdlib L1 count");
     assert_eq!(reskins.len(), 0, "reskins empty");
-    assert_eq!(l1_entries().len(), 64);
+    assert_eq!(l1_entries().len(), 69);
 }
 
 #[test]
@@ -224,7 +227,7 @@ fn skeleton_description_names_loading_placeholder() {
 #[test]
 fn every_l1_entry_declares_component_tokens_and_js() {
     let entries = l1_entries();
-    assert_eq!(entries.len(), 64, "stdlib L1 count");
+    assert_eq!(entries.len(), 69, "stdlib L1 count");
     for e in &entries {
         // Fields must be present (empty vec / None-kind is valid).
         let _ = &e.component_tokens;
@@ -392,7 +395,7 @@ fn surface_pack_aliases_are_stdlib_packs() {
     assert_eq!(host_pack_alias("date"), "field");
     assert_eq!(host_pack_alias("file"), "field");
     assert_eq!(host_pack_alias("color"), "field");
-    assert_eq!(host_pack_alias("pagination"), "page");
+    assert_eq!(host_pack_alias("pagination"), "page-item");
     assert_eq!(host_pack_alias("chip"), "chip");
 
     assert_eq!(surface_pack_for_host("chip"), Some("chip"));
@@ -403,7 +406,7 @@ fn surface_pack_aliases_are_stdlib_packs() {
     assert_eq!(surface_pack_for_host("date"), Some("field"));
     assert_eq!(surface_pack_for_host("file"), Some("field"));
     assert_eq!(surface_pack_for_host("color"), Some("field"));
-    assert_eq!(surface_pack_for_host("pagination"), Some("page"));
+    assert_eq!(surface_pack_for_host("pagination"), Some("page-item"));
     assert_eq!(surface_pack_for_host("div"), None);
     assert_eq!(surface_pack_for_host("span"), None);
 }

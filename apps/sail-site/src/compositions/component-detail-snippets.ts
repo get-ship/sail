@@ -250,24 +250,9 @@ export default controller(() => ({ loading: signal(true) }))
   </card>
 </error-boundary>`,
 
-  toast: `<controller>
-export default controller(() => {
-  let seq = 0
-  const items = signal([{ key: 'toast-0' }])
-  const push = () => { seq += 1; items.set([{ key: \`toast-\${seq}\` }]) }
-  const onDismiss = () => items.set([])
-  return { items, push, onDismiss }
-})
-</controller>
-
-<button type="button" on:click={push}>Show toast</button>
-<toast-region position="bottom-end">
-  <for {items() as t} key={t.key}>
-    <toast tone="success" duration="0" on-dismiss={onDismiss} style({ animate: { enter: play(fade) } })>
-      <strong>Saved.</strong> Your changes are live.
-    </toast>
-  </for>
-</toast-region>`,
+  toast: `<toast tone="success">
+  <strong>Saved.</strong> Your changes are live.
+</toast>`,
 
   badge: `<row gap="2" align="center">
   <badge tone="success" style({ animate: { enter: play(fade) } })>
@@ -310,15 +295,10 @@ export default controller(() => {
   <icon name="refresh" spin label="Refreshing"></icon>
 </row>`,
 
-  separator: `<column gap="2">
-  <p>above</p>
+  separator: `<column gap="3">
+  <p>Ships to 14 Harbor Lane</p>
   <separator></separator>
-  <p>below — and vertical, between inline things:</p>
-  <row gap="2" align="center">
-    <span>A</span>
-    <separator orientation="vertical"></separator>
-    <span>B</span>
-  </row>
+  <p>Bills to the same address</p>
 </column>`,
 
   accordion: `<accordion style({ animate: { enter: play(fade) } })>
@@ -418,16 +398,15 @@ export default controller(() => {
 </resizable>`,
 
   tabs: `<tabs>
-  <tab-list variant="pill">
-    <tab>Overview</tab>
-    <tab>Activity</tab>
-    <tab>Settings</tab>
-  </tab-list>
-  <tab-panel style({ animate: { enter: play(fade) } })>
-    <p>Keyboard-complete: arrows rove, Home/End jump.</p>
-  </tab-panel>
-  <tab-panel><p>Activity feed.</p></tab-panel>
-  <tab-panel><p>Settings.</p></tab-panel>
+  <tab title="Overview">
+    <p>Northwind is live on two regions. Last deploy 14 minutes ago.</p>
+  </tab>
+  <tab title="Activity">
+    <p>Ada shipped the billing fix. Sam opened a PR on the ingest worker.</p>
+  </tab>
+  <tab title="Settings">
+    <p>Retention is 30 days. Notifications go to #ship-ops.</p>
+  </tab>
 </tabs>`,
 
   breadcrumb: `<breadcrumb style({ animate: { enter: play(fade) } })>
@@ -444,9 +423,9 @@ export default controller(() => {
 </controller>
 
 <pagination value={page()} on-page-change={(e) => go(e)}>
-  <page value="1">1</page>
-  <page value="2">2</page>
-  <page value="3">3</page>
+  <page-item value="1">1</page-item>
+  <page-item value="2">2</page-item>
+  <page-item value="3">3</page-item>
 </pagination>
 <p>on page {page()}</p>`,
 
@@ -466,9 +445,9 @@ export default controller(() => ({
 }))
 </controller>
 
-<table>
+<table searchable>
   <thead>
-    <tr><th>Name</th><th>Team</th><th>Status</th></tr>
+    <tr><th sortable>Name</th><th sortable>Team</th><th sortable>Status</th></tr>
   </thead>
   <tbody>
     <for {people() as p} key={p.id}>
@@ -481,7 +460,7 @@ export default controller(() => ({
   </tbody>
 </table>`,
 
-  layout: `<column gap="3" style({ animate: { enter: play(fade) } })>
+  layout: `<column gap="3">
   <row gap="2" align="center" justify="between">
     <strong>row — the x axis</strong>
     <badge tone="primary">end</badge>

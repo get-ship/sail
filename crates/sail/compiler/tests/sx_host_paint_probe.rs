@@ -735,39 +735,23 @@ fn toggle_pressed_uses_primary_not_invert() {
 
 #[test]
 fn toast_start_stripe_on_host_sx() {
-    // host CSS was border-inline-start: 3px solid var(--tone-fg). Now Style borderSWidth(3)
-    // + match(tone) semantic borderS tokens.
+    // Stripe is ::before + bg(tone); wash is color-mix(tone 15%) plus per-tone compounds.
     let out = compile_element(include_str!("../stdlib/toast/toast.sail"), "toast").expect("toast");
     assert!(
-        out.structure_html.contains("s-borderSWidth3")
-            || out.structure_html.contains("borderSWidth")
-            || out.structure_html.contains("s-borders3")
-            || out.structure_html.contains("border-s-3")
-            || out.skin_css.contains("border-inline-start-width:3px")
-            || out.skin_css.contains("border-inline-start-width: 3px"),
-        "border-s-3 must lower to 3px start width:\nstructure={}\nskin={}",
+        out.structure_html.contains("s-before-bgtone")
+            || out.structure_html.contains("before-bgtone")
+            || out.skin_css.contains("[tone].s-before-bgtone::before")
+            || out.skin_css.contains("background-color:var(--tone)"),
+        "stripe must paint bound tone on ::before:\nstructure={}\nskin={}",
         out.structure_html,
         out.skin_css
     );
     assert!(
-        out.skin_css
-            .contains("border-inline-start-color:var(--toast-stripe)")
-            || out
-                .skin_css
-                .contains("border-inline-start-color: var(--toast-stripe)")
-            || out
-                .skin_css
-                .contains("border-inline-start-color:var(--primary)")
-            || out
-                .skin_css
-                .contains("border-inline-start-color: var(--primary)")
-            || out
-                .skin_css
-                .contains("border-inline-start-color:var(--tone)")
-            || out
-                .skin_css
-                .contains("border-inline-start-color: var(--tone)"),
-        "start stripe default must bind toast-stripe or bound tone; tone matrices spend brand:\n{}",
+        out.structure_html.contains("s-bgcolortonemix15")
+            || out.skin_css.contains("color-mix(in oklch, var(--tone) 15%")
+            || out.skin_css.contains("color-mix(in oklch, var(--info) 15%"),
+        "tone wash must spend mix 15 on the fill:\nstructure={}\nskin={}",
+        out.structure_html,
         out.skin_css
     );
     let contracts = include_str!(concat!(
@@ -1035,9 +1019,11 @@ fn navbar_host_paint_on_sx_cva() {
                 || src.contains("margin({ s: auto })"))
             && src.contains("offset: number")
             && (src.contains("top(bind(offset))") || src.contains("t: bind(offset)"))
+            && src.contains("data-hidden")
+            && src.contains("pointerEvents(none)")
             && !src.contains("offset: 8")
             && !src.contains("top(8)"),
-        "navbar structure must own layout + sticky + top(bind(offset))"
+        "navbar structure must own layout + sticky + top(bind(offset)) + data-hidden tuck"
     );
     assert!(
         out.structure_html.contains("sail-row")
@@ -1078,7 +1064,8 @@ fn navbar_host_paint_on_sx_cva() {
     );
     assert!(
         out.skin_css.contains("placement='rail'")
-            && out.skin_css.contains("min-height:0")
+            && (out.skin_css.contains("min-height:0")
+                || out.skin_css.contains("min-height:calc(100dvh"))
             && out.skin_css.contains("padding-block:var(--space-5)")
             && (out.skin_css.contains("min-width:var(--panel-rail-w)")
                 || out.skin_css.contains("min-width: var(--panel-rail-w)")
@@ -1101,8 +1088,10 @@ fn navbar_host_paint_on_sx_cva() {
             && !out.skin_css.contains("offset=\"8\"")
             && (out.skin_css.contains("var(--offset)")
                 || out.structure_html.contains("topbindoffset")
-                || out.structure_html.contains("bindoffset")),
-        "placement/sticky/bordered/rail + top(bind(offset)) (no offset enumeration):\n{}",
+                || out.structure_html.contains("bindoffset"))
+            && (out.skin_css.contains("[data-hidden]")
+                || out.structure_html.contains("datahidden")),
+        "placement/sticky/bordered/rail + top(bind(offset)) + data-hidden pointer-events:\n{}",
         out.skin_css
     );
     let contracts = include_str!(concat!(
@@ -2195,12 +2184,12 @@ fn label_req_gate_in_element_skins_anatomy() {
 }
 
 #[test]
-fn pagination_size_cva_on_page() {
-    // Size Style match lives on each <page>; <pagination> is layout-only (no size prop).
+fn pagination_size_cva_on_page_item() {
+    // Size Style match lives on each <page-item>; <pagination> is layout-only (no size prop).
     // No --pg-* host Style in contracts.
-    let page_src = include_str!("../stdlib/pagination/page.sail");
+    let page_src = include_str!("../stdlib/pagination/page-item.sail");
     let pag_src = include_str!("../stdlib/pagination/pagination.sail");
-    let page = compile_element(page_src, "page").expect("page compiles");
+    let page = compile_element(page_src, "page-item").expect("page-item compiles");
     let _pag = compile_element(pag_src, "pagination").expect("pagination compiles");
     assert!(
         !pag_src.contains("size: 'sm'") && !pag_src.contains("size: 'md'"),
@@ -2220,7 +2209,7 @@ fn pagination_size_cva_on_page() {
                 || page_src.contains("text-sm")
                 || page_src.contains("font-size: sm")
                 || page_src.contains("size: sm")),
-        "page must own size Style match with control-h / text steps"
+        "page-item must own size Style match with control-h / text steps"
     );
     assert!(
         page.skin_css.contains("size='sm'")
@@ -2427,6 +2416,7 @@ fn tooltip_geometry_and_show_on_sx_no_contracts_pe() {
             && src.contains("bind(ttTx)")
             && (src.contains("group-hover") || src.contains("group-hover:"))
             && (src.contains("group-focus-within") || src.contains("group-focus-within:"))
+            && src.contains("data-hidden")
             && src.contains("content(empty)")
             && !src.contains("rotate(45)")
             && (src.contains("borderT(tooltip)")
@@ -2449,6 +2439,8 @@ fn tooltip_geometry_and_show_on_sx_no_contracts_pe() {
             && (out.structure_html.contains("s-grouphover-opacity100")
                 || out.structure_html.contains("grouphover-filteropacity100")
                 || out.skin_css.contains("opacity:1"))
+            && (out.skin_css.contains("[data-hidden]")
+                || out.structure_html.contains("datahidden"))
             && (out.structure_html.contains("borderTtooltip")
                 || out.skin_css.contains("border-top-color:var(--tooltip)")
                 || out.skin_css.contains("border-top-color: var(--tooltip)")

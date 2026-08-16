@@ -511,7 +511,11 @@ fn batch_d_chrome_menus_compile_on_style_path() {
         ),
         ("combobox", include_str!("../stdlib/combobox/combobox.sail")),
         ("navbar", include_str!("../stdlib/navbar/navbar.sail")),
-        ("page", include_str!("../stdlib/pagination/page.sail")),
+        (
+            "page-item",
+            include_str!("../stdlib/pagination/page-item.sail"),
+        ),
+        ("page", include_str!("../stdlib/page/page.sail")),
         ("prose", include_str!("../stdlib/prose/prose.sail")),
         (
             "code-block",

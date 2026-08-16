@@ -19,7 +19,7 @@ export type L1Axis = {
 
 export type L1Tag = {
   tag: string
-  family: string
+  component: string
   role: L1Role
   description: string
   acceptsChildren: boolean
@@ -29,13 +29,13 @@ export type L1Tag = {
   concerns: string[]
 }
 
-export type L1Family = {
+export type L1Component = {
   id: string
   host: string
   parts: string[]
 }
 
-export const FAMILIES: readonly L1Family[] = [
+export const COMPONENTS: readonly L1Component[] = [
   { id: 'a', host: 'a', parts: [] },
   { id: 'accordion', host: 'accordion', parts: [] },
   { id: 'alert', host: 'alert', parts: [] },
@@ -60,15 +60,19 @@ export const FAMILIES: readonly L1Family[] = [
   { id: 'field', host: 'field', parts: [] },
   { id: 'fieldset', host: 'fieldset', parts: ['legend'] },
   { id: 'file', host: 'file', parts: [] },
+  { id: 'form', host: 'form', parts: [] },
   { id: 'hover-card', host: 'hover-card', parts: [] },
   { id: 'icon', host: 'icon', parts: [] },
   { id: 'input', host: 'input', parts: [] },
   { id: 'kbd', host: 'kbd', parts: [] },
   { id: 'label', host: 'label', parts: [] },
+  { id: 'list-row', host: 'list-row', parts: [] },
   { id: 'menu-item', host: 'menu-item', parts: [] },
   { id: 'meter', host: 'meter', parts: [] },
   { id: 'navbar', host: 'navbar', parts: [] },
-  { id: 'pagination', host: 'pagination', parts: ['page'] },
+  { id: 'page', host: 'page', parts: [] },
+  { id: 'pagination', host: 'pagination', parts: ['page-item'] },
+  { id: 'pane', host: 'pane', parts: [] },
   { id: 'popover', host: 'popover', parts: [] },
   { id: 'progress', host: 'progress', parts: [] },
   { id: 'prose', host: 'prose', parts: [] },
@@ -88,13 +92,14 @@ export const FAMILIES: readonly L1Family[] = [
   { id: 'ticker', host: 'ticker', parts: [] },
   { id: 'toast', host: 'toast', parts: ['toast-region'] },
   { id: 'toggle-group', host: 'toggle-group', parts: ['toggle'] },
+  { id: 'toolbar', host: 'toolbar', parts: [] },
   { id: 'tooltip', host: 'tooltip', parts: [] },
 ]
 
 export const TAGS: readonly L1Tag[] = [
   {
     tag: 'a',
-    family: 'a',
+    component: 'a',
     role: 'host',
     description: 'native <a> (docs name: anchor). Dual mode:',
     acceptsChildren: true,
@@ -112,7 +117,7 @@ export const TAGS: readonly L1Tag[] = [
   },
   {
     tag: 'accordion',
-    family: 'accordion',
+    component: 'accordion',
     role: 'host',
     description: 'single disclosure. use:detailsToggle + use:detailsDisabled.',
     acceptsChildren: true,
@@ -132,7 +137,7 @@ export const TAGS: readonly L1Tag[] = [
   },
   {
     tag: 'alert',
-    family: 'alert',
+    component: 'alert',
     role: 'host',
     description: 'L1 inline status banner. Style value language only.',
     acceptsChildren: true,
@@ -151,7 +156,7 @@ export const TAGS: readonly L1Tag[] = [
   },
   {
     tag: 'avatar',
-    family: 'avatar',
+    component: 'avatar',
     role: 'host',
     description: 'L1 language element. Style value language only.',
     acceptsChildren: false,
@@ -179,7 +184,7 @@ export const TAGS: readonly L1Tag[] = [
   },
   {
     tag: 'badge',
-    family: 'badge',
+    component: 'badge',
     role: 'host',
     description: 'L1 language element. Style value language only.',
     acceptsChildren: true,
@@ -201,7 +206,7 @@ export const TAGS: readonly L1Tag[] = [
   },
   {
     tag: 'breadcrumb',
-    family: 'breadcrumb',
+    component: 'breadcrumb',
     role: 'host',
     description: 'trail host. ol/li/a anatomy + separators via compiler descendant map.',
     acceptsChildren: true,
@@ -215,7 +220,7 @@ export const TAGS: readonly L1Tag[] = [
   },
   {
     tag: 'button',
-    family: 'button',
+    component: 'button',
     role: 'host',
     description: 'native <button>. L1 platform control. Style value language only.',
     acceptsChildren: true,
@@ -239,7 +244,7 @@ export const TAGS: readonly L1Tag[] = [
   },
   {
     tag: 'caption',
-    family: 'table',
+    component: 'table',
     role: 'part',
     description: 'table caption. Style product only.',
     acceptsChildren: true,
@@ -251,7 +256,7 @@ export const TAGS: readonly L1Tag[] = [
   },
   {
     tag: 'card',
-    family: 'card',
+    component: 'card',
     role: 'host',
     description: 'L1 surface with header/body/footer/image slots, tone border, status rail,',
     acceptsChildren: true,
@@ -279,7 +284,7 @@ export const TAGS: readonly L1Tag[] = [
   },
   {
     tag: 'checkbox',
-    family: 'checkbox',
+    component: 'checkbox',
     role: 'host',
     description: 'boolean check product. Impl: native input type=checkbox.',
     acceptsChildren: false,
@@ -301,7 +306,7 @@ export const TAGS: readonly L1Tag[] = [
   },
   {
     tag: 'chip',
-    family: 'chip',
+    component: 'chip',
     role: 'host',
     description: 'filter/selection pill.',
     acceptsChildren: true,
@@ -326,7 +331,7 @@ export const TAGS: readonly L1Tag[] = [
   },
   {
     tag: 'code-block',
-    family: 'code-block',
+    component: 'code-block',
     role: 'host',
     description: 'syntax-highlighted source.',
     acceptsChildren: false,
@@ -342,7 +347,7 @@ export const TAGS: readonly L1Tag[] = [
   },
   {
     tag: 'color',
-    family: 'color',
+    component: 'color',
     role: 'host',
     description: 'system color swatch product. Impl: native input type=color.',
     acceptsChildren: false,
@@ -360,7 +365,7 @@ export const TAGS: readonly L1Tag[] = [
   },
   {
     tag: 'combobox',
-    family: 'combobox',
+    component: 'combobox',
     role: 'host',
     description: 'L1 filtering picker. Text input filters a listbox',
     acceptsChildren: true,
@@ -375,7 +380,7 @@ export const TAGS: readonly L1Tag[] = [
   },
   {
     tag: 'context-menu',
-    family: 'context-menu',
+    component: 'context-menu',
     role: 'host',
     description: 'L1 right-click menu. Native [popover] + use:contextMenu',
     acceptsChildren: true,
@@ -389,7 +394,7 @@ export const TAGS: readonly L1Tag[] = [
   },
   {
     tag: 'date',
-    family: 'date',
+    component: 'date',
     role: 'host',
     description: 'temporal picker product. Impl: native input; type prop selects',
     acceptsChildren: false,
@@ -419,7 +424,7 @@ export const TAGS: readonly L1Tag[] = [
   },
   {
     tag: 'dialog',
-    family: 'dialog',
+    component: 'dialog',
     role: 'host',
     description: 'native modal / sheet. Style product only.',
     acceptsChildren: true,
@@ -441,7 +446,7 @@ export const TAGS: readonly L1Tag[] = [
   },
   {
     tag: 'drawer',
-    family: 'drawer',
+    component: 'drawer',
     role: 'host',
     description: 'edge-anchored non-modal sheet. Style product only.',
     acceptsChildren: true,
@@ -461,7 +466,7 @@ export const TAGS: readonly L1Tag[] = [
   },
   {
     tag: 'dropdown',
-    family: 'dropdown',
+    component: 'dropdown',
     role: 'host',
     description: 'L1 anchored menu (element mode).',
     acceptsChildren: true,
@@ -475,7 +480,7 @@ export const TAGS: readonly L1Tag[] = [
   },
   {
     tag: 'empty-state',
-    family: 'empty-state',
+    component: 'empty-state',
     role: 'host',
     description: 'L1 centered empty placeholder.',
     acceptsChildren: true,
@@ -495,7 +500,7 @@ export const TAGS: readonly L1Tag[] = [
   },
   {
     tag: 'error-boundary',
-    family: 'error-boundary',
+    component: 'error-boundary',
     role: 'host',
     description: 'group-caught swap on Style when.',
     acceptsChildren: true,
@@ -510,7 +515,7 @@ export const TAGS: readonly L1Tag[] = [
   },
   {
     tag: 'error-state',
-    family: 'error-state',
+    component: 'error-state',
     role: 'host',
     description: 'L1 recovery surface. Style value language only.',
     acceptsChildren: true,
@@ -527,7 +532,7 @@ export const TAGS: readonly L1Tag[] = [
   },
   {
     tag: 'field',
-    family: 'field',
+    component: 'field',
     role: 'host',
     description: 'stack+gap layout; hint/error gates via structure Style.',
     acceptsChildren: true,
@@ -541,7 +546,7 @@ export const TAGS: readonly L1Tag[] = [
   },
   {
     tag: 'fieldset',
-    family: 'fieldset',
+    component: 'fieldset',
     role: 'host',
     description: 'form group. Style product only.',
     acceptsChildren: true,
@@ -555,7 +560,7 @@ export const TAGS: readonly L1Tag[] = [
   },
   {
     tag: 'file',
-    family: 'file',
+    component: 'file',
     role: 'host',
     description: 'system file picker. Native Browse chrome is hidden.',
     acceptsChildren: false,
@@ -580,8 +585,21 @@ export const TAGS: readonly L1Tag[] = [
     concerns: ['bg', 'border', 'fg', 'filter', 'play', 'size', 'type'],
   },
   {
+    tag: 'form',
+    component: 'form',
+    role: 'host',
+    description: 'native form. Reading measure. Native-kind: the tag is the host,',
+    acceptsChildren: true,
+    props: [
+      { name: 'name', type: 'string' },
+    ],
+    axes: [
+    ],
+    concerns: ['play', 'size'],
+  },
+  {
     tag: 'hover-card',
-    family: 'hover-card',
+    component: 'hover-card',
     role: 'host',
     description: 'L1 hover-preview overlay. Style value language only.',
     acceptsChildren: true,
@@ -594,7 +612,7 @@ export const TAGS: readonly L1Tag[] = [
   },
   {
     tag: 'icon',
-    family: 'icon',
+    component: 'icon',
     role: 'host',
     description: 'glyph box + size match. use:icon owns spin.',
     acceptsChildren: true,
@@ -613,7 +631,7 @@ export const TAGS: readonly L1Tag[] = [
   },
   {
     tag: 'input',
-    family: 'input',
+    component: 'input',
     role: 'host',
     description: 'text field product. Style product only.',
     acceptsChildren: false,
@@ -652,7 +670,7 @@ export const TAGS: readonly L1Tag[] = [
   },
   {
     tag: 'kbd',
-    family: 'kbd',
+    component: 'kbd',
     role: 'host',
     description: 'mono keycap chip. Style product only.',
     acceptsChildren: true,
@@ -664,9 +682,9 @@ export const TAGS: readonly L1Tag[] = [
   },
   {
     tag: 'label',
-    family: 'label',
+    component: 'label',
     role: 'host',
-    description: 'size match; weight token; .req gate via group-required when.',
+    description: 'size match; weight + transform tokens; .req gate via group-required when.',
     acceptsChildren: true,
     props: [
       { name: 'size', type: 'md | sm | lg', default: 'md', values: ['md', 'sm', 'lg'] },
@@ -680,7 +698,7 @@ export const TAGS: readonly L1Tag[] = [
   },
   {
     tag: 'legend',
-    family: 'fieldset',
+    component: 'fieldset',
     role: 'part',
     description: 'fieldset caption. Style product only.',
     acceptsChildren: true,
@@ -691,8 +709,24 @@ export const TAGS: readonly L1Tag[] = [
     concerns: ['fg', 'type'],
   },
   {
+    tag: 'list-row',
+    component: 'list-row',
+    role: 'host',
+    description: 'hover / selected / current row. Theme and settings lists.',
+    acceptsChildren: true,
+    props: [
+      { name: 'selected', type: 'bool', default: 'false' },
+      { name: 'current', type: 'bool', default: 'false' },
+    ],
+    axes: [
+      { name: 'current', values: ['false', 'true'], optional: false },
+      { name: 'selected', values: ['false', 'true'], optional: false },
+    ],
+    concerns: ['bg', 'fg'],
+  },
+  {
     tag: 'menu-item',
-    family: 'menu-item',
+    component: 'menu-item',
     role: 'host',
     description: 'item inside dropdown/context-menu. Style product host paint.',
     acceptsChildren: true,
@@ -707,7 +741,7 @@ export const TAGS: readonly L1Tag[] = [
   },
   {
     tag: 'meter',
-    family: 'meter',
+    component: 'meter',
     role: 'host',
     description: 'gauge (value-in-range). Style product only.',
     acceptsChildren: false,
@@ -727,7 +761,7 @@ export const TAGS: readonly L1Tag[] = [
   },
   {
     tag: 'navbar',
-    family: 'navbar',
+    component: 'navbar',
     role: 'host',
     description: 'application nav bar. Placements top/rail/bottom; sticky; bordered.',
     acceptsChildren: true,
@@ -752,9 +786,21 @@ export const TAGS: readonly L1Tag[] = [
   },
   {
     tag: 'page',
-    family: 'pagination',
+    component: 'page',
+    role: 'host',
+    description: 'document shell. Children stack. The page never kisses the viewport.',
+    acceptsChildren: true,
+    props: [
+    ],
+    axes: [
+    ],
+    concerns: ['play', 'size'],
+  },
+  {
+    tag: 'page-item',
+    component: 'pagination',
     role: 'part',
-    description: 'size match owns cell geometry (author size on each page).',
+    description: 'size match owns cell geometry (author size on each item).',
     acceptsChildren: true,
     props: [
       { name: 'value', type: 'string' },
@@ -771,7 +817,7 @@ export const TAGS: readonly L1Tag[] = [
   },
   {
     tag: 'pagination',
-    family: 'pagination',
+    component: 'pagination',
     role: 'host',
     description: 'nav state via use:pagination (ARIA current). Host is layout-only.',
     acceptsChildren: true,
@@ -786,8 +832,22 @@ export const TAGS: readonly L1Tag[] = [
     concerns: [],
   },
   {
+    tag: 'pane',
+    component: 'pane',
+    role: 'host',
+    description: 'bordered surface column. Settings/theme/list piles.',
+    acceptsChildren: true,
+    props: [
+      { name: 'padding', type: 'md | none | sm | lg', default: 'md', values: ['md', 'none', 'sm', 'lg'] },
+    ],
+    axes: [
+      { name: 'padding', values: ['md', 'none', 'sm', 'lg'], optional: false },
+    ],
+    concerns: ['bg', 'border', 'fg'],
+  },
+  {
     tag: 'popover',
-    family: 'popover',
+    component: 'popover',
     role: 'host',
     description: 'L1 anchored overlay. Style value language only.',
     acceptsChildren: true,
@@ -800,7 +860,7 @@ export const TAGS: readonly L1Tag[] = [
   },
   {
     tag: 'progress',
-    family: 'progress',
+    component: 'progress',
     role: 'host',
     description: 'determinate / indeterminate bar. Style product only.',
     acceptsChildren: false,
@@ -816,7 +876,7 @@ export const TAGS: readonly L1Tag[] = [
   },
   {
     tag: 'prose',
-    family: 'prose',
+    component: 'prose',
     role: 'host',
     description: 'typography scope for rendered content (markdown blobs etc.).',
     acceptsChildren: true,
@@ -828,7 +888,7 @@ export const TAGS: readonly L1Tag[] = [
   },
   {
     tag: 'radio',
-    family: 'radio-group',
+    component: 'radio-group',
     role: 'part',
     description: 'label + native radio. Root stays <label> for native semantics.',
     acceptsChildren: true,
@@ -843,7 +903,7 @@ export const TAGS: readonly L1Tag[] = [
   },
   {
     tag: 'radio-group',
-    family: 'radio-group',
+    component: 'radio-group',
     role: 'host',
     description: 'vertical group of <radio> options. use:radioGroup wires shared',
     acceptsChildren: true,
@@ -863,7 +923,7 @@ export const TAGS: readonly L1Tag[] = [
   },
   {
     tag: 'resizable',
-    family: 'resizable',
+    component: 'resizable',
     role: 'host',
     description: 'two-pane split. Start + end slots with a drag handle between.',
     acceptsChildren: true,
@@ -877,7 +937,7 @@ export const TAGS: readonly L1Tag[] = [
   },
   {
     tag: 'scroll-area',
-    family: 'scroll-area',
+    component: 'scroll-area',
     role: 'host',
     description: 'overflow axes + standard scrollbar pack on host Style.',
     acceptsChildren: true,
@@ -891,7 +951,7 @@ export const TAGS: readonly L1Tag[] = [
   },
   {
     tag: 'select',
-    family: 'select',
+    component: 'select',
     role: 'host',
     description: 'native closed picker only (host Style). Not a combobox/listbox.',
     acceptsChildren: true,
@@ -913,7 +973,7 @@ export const TAGS: readonly L1Tag[] = [
   },
   {
     tag: 'separator',
-    family: 'separator',
+    component: 'separator',
     role: 'host',
     description: 'native <hr>. Style value language only.',
     acceptsChildren: false,
@@ -932,7 +992,7 @@ export const TAGS: readonly L1Tag[] = [
   },
   {
     tag: 'skeleton',
-    family: 'skeleton',
+    component: 'skeleton',
     role: 'host',
     description: 'loading placeholder sheen. Style product for geometry;',
     acceptsChildren: false,
@@ -948,7 +1008,7 @@ export const TAGS: readonly L1Tag[] = [
   },
   {
     tag: 'slider',
-    family: 'slider',
+    component: 'slider',
     role: 'host',
     description: 'native range. Single thumb by default.',
     acceptsChildren: false,
@@ -969,16 +1029,17 @@ export const TAGS: readonly L1Tag[] = [
       { name: 'range', values: ['false', 'true'], optional: false },
       { name: 'size', values: ['sm', 'md', 'lg'], optional: false },
     ],
-    concerns: ['bg', 'filter', 'play', 'position', 'size'],
+    concerns: ['bg', 'fg', 'filter', 'play', 'position', 'size', 'type'],
   },
   {
     tag: 'spinner',
-    family: 'spinner',
+    component: 'spinner',
     role: 'host',
-    description: 'L1 language element. Style value language only.',
+    description: 'wait mark. Default variant is ring.',
     acceptsChildren: false,
     props: [
       { name: 'size', type: 'md | xs | sm | lg', default: 'md', values: ['md', 'xs', 'sm', 'lg'] },
+      { name: 'variant', type: 'ring | dots | bars', default: 'ring', values: ['ring', 'dots', 'bars'] },
       { name: 'tone', type: 'primary | info | success | warning | destructive | accent', default: 'info', values: ['primary', 'info', 'success', 'warning', 'destructive', 'accent'] },
       { name: 'centered', type: 'bool', default: 'false' },
     ],
@@ -986,12 +1047,13 @@ export const TAGS: readonly L1Tag[] = [
       { name: 'centered', values: ['false', 'true'], optional: false },
       { name: 'size', values: ['md', 'xs', 'sm', 'lg'], optional: false },
       { name: 'tone', values: ['primary', 'info', 'success', 'warning', 'destructive', 'accent'], optional: false },
+      { name: 'variant', values: ['ring', 'dots', 'bars'], optional: false },
     ],
-    concerns: ['border', 'fg', 'play', 'size'],
+    concerns: ['bg', 'border', 'fg', 'play', 'position', 'size'],
   },
   {
     tag: 'switch',
-    family: 'switch',
+    component: 'switch',
     role: 'host',
     description: 'native checkbox restyled as sliding toggle. No controller.',
     acceptsChildren: false,
@@ -1011,26 +1073,29 @@ export const TAGS: readonly L1Tag[] = [
   },
   {
     tag: 'tab',
-    family: 'tabs',
+    component: 'tabs',
     role: 'part',
-    description: 'paint + variant/size Style match for pill/enclosed and pad scale.',
+    description: 'trigger + panel in one tag.',
     acceptsChildren: true,
     props: [
+      { name: 'title', type: 'string' },
       { name: 'name', type: 'string' },
       { name: 'disabled', type: 'bool', default: 'false' },
       { name: 'variant', type: 'line | pill | enclosed', default: 'line', values: ['line', 'pill', 'enclosed'] },
       { name: 'size', type: 'md | sm | lg', default: 'md', values: ['md', 'sm', 'lg'] },
+      { name: 'orientation', type: 'horizontal | vertical', default: 'horizontal', values: ['horizontal', 'vertical'] },
     ],
     axes: [
       { name: 'disabled', values: ['false', 'true'], optional: false },
+      { name: 'orientation', values: ['horizontal', 'vertical'], optional: false },
       { name: 'size', values: ['md', 'sm', 'lg'], optional: false },
       { name: 'variant', values: ['line', 'pill', 'enclosed'], optional: false },
     ],
-    concerns: ['bg', 'border', 'elevation', 'fg', 'filter', 'play', 'type'],
+    concerns: ['bg', 'border', 'elevation', 'fg', 'filter', 'play', 'position', 'size', 'type'],
   },
   {
     tag: 'tab-list',
-    family: 'tabs',
+    component: 'tabs',
     role: 'part',
     description: 'strip chrome. Sticky + variant Style. Orientation structural stamp from use:tabs.',
     acceptsChildren: true,
@@ -1044,11 +1109,11 @@ export const TAGS: readonly L1Tag[] = [
       { name: 'sticky', values: ['false', 'true'], optional: false },
       { name: 'variant', values: ['line', 'pill', 'enclosed'], optional: false },
     ],
-    concerns: ['bg', 'border', 'position'],
+    concerns: ['bg', 'border', 'position', 'size'],
   },
   {
     tag: 'tab-panel',
-    family: 'tabs',
+    component: 'tabs',
     role: 'part',
     description: 'orientation Style match (stamped by use:tabs).',
     acceptsChildren: true,
@@ -1063,7 +1128,7 @@ export const TAGS: readonly L1Tag[] = [
   },
   {
     tag: 'table',
-    family: 'table',
+    component: 'table',
     role: 'host',
     description: 'structural data table. Style product only.',
     acceptsChildren: true,
@@ -1073,35 +1138,39 @@ export const TAGS: readonly L1Tag[] = [
       { name: 'hoverable', type: 'bool', default: 'false' },
       { name: 'bordered', type: 'bool', default: 'false' },
       { name: 'sticky-header', type: 'bool', default: 'false' },
+      { name: 'searchable', type: 'bool', default: 'false' },
     ],
     axes: [
       { name: 'bordered', values: ['false', 'true'], optional: false },
       { name: 'dense', values: ['false', 'true'], optional: false },
       { name: 'hoverable', values: ['false', 'true'], optional: false },
+      { name: 'searchable', values: ['false', 'true'], optional: false },
       { name: 'sticky-header', values: ['false', 'true'], optional: false },
       { name: 'striped', values: ['false', 'true'], optional: false },
     ],
-    concerns: ['fg', 'size', 'type'],
+    concerns: ['bg', 'border', 'fg', 'play', 'size', 'type'],
   },
   {
     tag: 'tabs',
-    family: 'tabs',
+    component: 'tabs',
     role: 'host',
-    description: 'tab strip + panels. use:tabs owns behavior + stamps orientation',
+    description: 'nowrap row. Horizontal is dir(column): rail on top, panel',
     acceptsChildren: true,
     props: [
       { name: 'active', type: 'string' },
       { name: 'orientation', type: 'horizontal | vertical', default: 'horizontal', values: ['horizontal', 'vertical'] },
+      { name: 'variant', type: 'line | pill | enclosed', default: 'line', values: ['line', 'pill', 'enclosed'] },
       { name: 'onTabChange', type: 'string' },
     ],
     axes: [
       { name: 'orientation', values: ['horizontal', 'vertical'], optional: false },
+      { name: 'variant', values: ['line', 'pill', 'enclosed'], optional: false },
     ],
     concerns: ['size'],
   },
   {
     tag: 'td',
-    family: 'table',
+    component: 'table',
     role: 'part',
     description: 'table data cell. Style product only.',
     acceptsChildren: true,
@@ -1111,11 +1180,11 @@ export const TAGS: readonly L1Tag[] = [
     axes: [
       { name: 'numeric', values: ['false', 'true'], optional: false },
     ],
-    concerns: ['border', 'type'],
+    concerns: ['border', 'fg', 'type'],
   },
   {
     tag: 'textarea',
-    family: 'textarea',
+    component: 'textarea',
     role: 'host',
     description: 'native multi-line field. Style product only.',
     acceptsChildren: false,
@@ -1137,43 +1206,53 @@ export const TAGS: readonly L1Tag[] = [
   },
   {
     tag: 'th',
-    family: 'table',
+    component: 'table',
     role: 'part',
     description: 'table header cell. Style product only.',
     acceptsChildren: true,
     props: [
       { name: 'numeric', type: 'bool', default: 'false' },
+      { name: 'sortable', type: 'bool', default: 'false' },
     ],
     axes: [
       { name: 'numeric', values: ['false', 'true'], optional: false },
+      { name: 'sortable', values: ['false', 'true'], optional: false },
     ],
-    concerns: ['border', 'fg', 'type'],
+    concerns: ['bg', 'border', 'fg', 'play', 'type'],
   },
   {
     tag: 'theme-picker',
-    family: 'theme-picker',
+    component: 'theme-picker',
     role: 'host',
-    description: 'catalog + optional mode-only.',
+    description: 'catalog, or `mode` (one icon that cycles light/dark/system).',
     acceptsChildren: false,
     props: [
       { name: 'value', type: 'string' },
+      { name: 'chrome', type: 'popover | inline', default: 'popover', values: ['popover', 'inline'] },
+      { name: 'size', type: 'full | compact', default: 'full', values: ['full', 'compact'] },
+      { name: 'orientation', type: 'horizontal | vertical', default: 'horizontal', values: ['horizontal', 'vertical'] },
       { name: 'inline', type: 'bool', default: 'false' },
+      { name: 'mode', type: 'bool', default: 'false' },
       { name: 'modeOnly', type: 'bool', default: 'false' },
       { name: 'variant', type: 'icon | menu-row | segmented', default: 'icon', values: ['icon', 'menu-row', 'segmented'] },
       { name: 'onThemeChange', type: 'string' },
     ],
     axes: [
+      { name: 'chrome', values: ['popover', 'inline'], optional: false },
       { name: 'inline', values: ['false', 'true'], optional: false },
+      { name: 'mode', values: ['false', 'true'], optional: false },
       { name: 'modeOnly', values: ['false', 'true'], optional: false },
+      { name: 'orientation', values: ['horizontal', 'vertical'], optional: false },
+      { name: 'size', values: ['full', 'compact'], optional: false },
       { name: 'variant', values: ['icon', 'menu-row', 'segmented'], optional: false },
     ],
     concerns: ['bg', 'border', 'elevation', 'fg', 'filter', 'play', 'position', 'size', 'type'],
   },
   {
     tag: 'ticker',
-    family: 'ticker',
+    component: 'ticker',
     role: 'host',
-    description: 'infinite linear marquee. Host overflow Style; track is a nowrap',
+    description: 'infinite linear marquee band. Host clips; track is a cluster',
     acceptsChildren: true,
     props: [
       { name: 'duration', type: 'fast | normal | slow', default: 'normal', values: ['fast', 'normal', 'slow'] },
@@ -1183,11 +1262,11 @@ export const TAGS: readonly L1Tag[] = [
       { name: 'duration', values: ['fast', 'normal', 'slow'], optional: false },
       { name: 'reverse', values: ['false', 'true'], optional: false },
     ],
-    concerns: ['size', 'type'],
+    concerns: ['bg', 'fg', 'size', 'type'],
   },
   {
     tag: 'toast',
-    family: 'toast',
+    component: 'toast',
     role: 'host',
     description: 'auto-dismiss + close. Style value language only.',
     acceptsChildren: true,
@@ -1199,11 +1278,11 @@ export const TAGS: readonly L1Tag[] = [
     axes: [
       { name: 'tone', values: ['primary', 'info', 'success', 'warning', 'destructive', 'accent', 'muted'], optional: false },
     ],
-    concerns: ['bg', 'border', 'elevation', 'fg', 'filter', 'size', 'type'],
+    concerns: ['bg', 'border', 'elevation', 'fg', 'filter', 'play', 'position', 'size', 'type'],
   },
   {
     tag: 'toast-region',
-    family: 'toast',
+    component: 'toast',
     role: 'part',
     description: 'fixed stacking region for toasts.',
     acceptsChildren: true,
@@ -1216,7 +1295,7 @@ export const TAGS: readonly L1Tag[] = [
   },
   {
     tag: 'toggle',
-    family: 'toggle-group',
+    component: 'toggle-group',
     role: 'part',
     description: 'pressed-button cell for <toggle-group> only (standalone died).',
     acceptsChildren: true,
@@ -1237,7 +1316,7 @@ export const TAGS: readonly L1Tag[] = [
   },
   {
     tag: 'toggle-group',
-    family: 'toggle-group',
+    component: 'toggle-group',
     role: 'host',
     description: 'segmented Style match; structural orientation stamp on cells.',
     acceptsChildren: true,
@@ -1256,8 +1335,20 @@ export const TAGS: readonly L1Tag[] = [
     concerns: ['bg', 'border', 'play'],
   },
   {
+    tag: 'toolbar',
+    component: 'toolbar',
+    role: 'host',
+    description: 'control strip. Header/action clusters.',
+    acceptsChildren: true,
+    props: [
+    ],
+    axes: [
+    ],
+    concerns: ['bg', 'border', 'fg'],
+  },
+  {
     tag: 'tooltip',
-    family: 'tooltip',
+    component: 'tooltip',
     role: 'host',
     description: 'hover/focus text bubble. use:tipDescribe supplies per-instance',
     acceptsChildren: true,
@@ -1268,7 +1359,7 @@ export const TAGS: readonly L1Tag[] = [
     axes: [
       { name: 'placement', values: ['top', 'bottom', 'left', 'right'], optional: false },
     ],
-    concerns: ['bg', 'border', 'elevation', 'fg', 'filter', 'position', 'size', 'type'],
+    concerns: ['bg', 'border', 'elevation', 'fg', 'filter', 'play', 'position', 'size', 'type'],
   },
 ]
 

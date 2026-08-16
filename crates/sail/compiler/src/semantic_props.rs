@@ -267,6 +267,15 @@ pub const HOST_ANATOMY: &[(&str, HostAnatomy)] = &[
         },
     ),
     (
+        "page",
+        HostAnatomy {
+            role: Some("region"),
+            live: None,
+            atomic: None,
+            label: Some("Page"),
+        },
+    ),
+    (
         "breadcrumb",
         HostAnatomy {
             role: None, // native <nav>
@@ -368,7 +377,124 @@ pub const HOST_ANATOMY: &[(&str, HostAnatomy)] = &[
     (
         "field",
         HostAnatomy {
-            role: None,
+            role: Some("group"),
+            live: None,
+            atomic: None,
+            label: None,
+        },
+    ),
+    (
+        "pane",
+        HostAnatomy {
+            role: Some("group"),
+            live: None,
+            atomic: None,
+            label: Some("Pane"),
+        },
+    ),
+    (
+        "toolbar",
+        HostAnatomy {
+            role: Some("toolbar"),
+            live: None,
+            atomic: None,
+            label: Some("Toolbar"),
+        },
+    ),
+    (
+        "list-row",
+        HostAnatomy {
+            role: Some("listitem"),
+            live: None,
+            atomic: None,
+            label: None,
+        },
+    ),
+    (
+        "card",
+        HostAnatomy {
+            role: Some("region"),
+            live: None,
+            atomic: None,
+            label: None,
+        },
+    ),
+    (
+        "error-boundary",
+        HostAnatomy {
+            role: Some("group"),
+            live: None,
+            atomic: None,
+            label: None,
+        },
+    ),
+    (
+        "code-block",
+        HostAnatomy {
+            role: Some("region"),
+            live: None,
+            atomic: None,
+            label: None,
+        },
+    ),
+    (
+        "prose",
+        HostAnatomy {
+            role: Some("article"),
+            live: None,
+            atomic: None,
+            label: None,
+        },
+    ),
+    (
+        "toast-region",
+        HostAnatomy {
+            role: Some("region"),
+            live: None,
+            atomic: None,
+            label: None,
+        },
+    ),
+    (
+        "avatar",
+        HostAnatomy {
+            role: Some("img"),
+            live: None,
+            atomic: None,
+            label: None,
+        },
+    ),
+    (
+        "popover",
+        HostAnatomy {
+            role: Some("dialog"),
+            live: None,
+            atomic: None,
+            label: None,
+        },
+    ),
+    (
+        "ticker",
+        HostAnatomy {
+            role: Some("status"),
+            live: None,
+            atomic: None,
+            label: None,
+        },
+    ),
+    (
+        "scroll-area",
+        HostAnatomy {
+            role: Some("region"),
+            live: None,
+            atomic: None,
+            label: None,
+        },
+    ),
+    (
+        "file",
+        HostAnatomy {
+            role: Some("group"),
             live: None,
             atomic: None,
             label: None,

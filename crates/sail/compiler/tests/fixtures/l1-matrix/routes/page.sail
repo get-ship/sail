@@ -1,6 +1,6 @@
 <!--
   Owned L1 rest-state strip. Theme paints tags. L1 owns host Style.
-  Probe inventory comes from FAMILIES, not a hand list.
+  Probe inventory comes from COMPONENTS, not a hand list.
   Overlays that need a press stay off this page.
 -->
 <scope>
@@ -107,12 +107,8 @@
       <small>Here</small>
     </breadcrumb>
     <tabs active="one">
-      <tab-list>
-        <tab name="one">One</tab>
-        <tab name="two">Two</tab>
-      </tab-list>
-      <tab-panel name="one">Panel one</tab-panel>
-      <tab-panel name="two">Panel two</tab-panel>
+      <tab name="one" title="One">Panel one</tab>
+      <tab name="two" title="Two">Panel two</tab>
     </tabs>
     <fieldset>
       <legend>Account</legend>
@@ -126,20 +122,24 @@
       One disclosure.
     </accordion>
     <pagination value="1">
-      <page value="1">1</page>
-      <page value="2">2</page>
+      <page-item value="1">1</page-item>
+      <page-item value="2">2</page-item>
     </pagination>
-    <table>
+    <table searchable>
       <thead>
         <tr>
-          <th>Col</th>
-          <th>Val</th>
+          <th>Name</th>
+          <th>Team</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td>A</td>
-          <td>1</td>
+          <td>Ada Lovelace</td>
+          <td>Engines</td>
+        </tr>
+        <tr>
+          <td>Katherine Johnson</td>
+          <td>NASA</td>
         </tr>
       </tbody>
     </table>
@@ -174,10 +174,22 @@
   <row gap="3" align="center" style(measure)>
     <avatar />
     <icon name="check" />
-    <spinner />
+    <spinner></spinner>
     <skeleton />
     <progress value="40" />
     <kbd>⌘K</kbd>
-    <separator />
+    <separator></separator>
   </row>
+
+  <column gap="3" style(measure)>
+    <h2>Overlay</h2>
+    <button command="show" commandfor="qa-drawer">Filters</button>
+    <drawer id="qa-drawer" side="end">
+      <header>Filters</header>
+      <section>Narrow the catalog.</section>
+      <footer>
+        <button command="close" commandfor="qa-drawer">Done</button>
+      </footer>
+    </drawer>
+  </column>
 </column>

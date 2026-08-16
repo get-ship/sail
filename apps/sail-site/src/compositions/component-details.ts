@@ -352,13 +352,17 @@ const DETAILS_MAP = {
   // legend is NOT a top-level DETAILS/catalog topic — documented inside fieldset.
   'theme-picker': lang('theme-picker', 'themePicker', {
     blurb:
-      'Pick a theme. Click the control to browse live previews. value selects a theme; mode-only is just Light / Dark / System; inline keeps the list on the page.',
+      'Pick a theme. Click the control to browse live previews. value selects a theme; mode is one icon for Light / Dark / System; chrome=inline keeps the list on the page.',
     variants: [],
     variantAttr: '',
     props: [
       { name: 'value', desc: 'Selected theme id (applies that theme)', type: 'string' },
-      { name: 'inline', desc: 'Keep the theme list on the page', type: 'bool' },
-      { name: 'mode-only', desc: 'Just Light / Dark / System — no theme list', type: 'bool' },
+      { name: 'chrome', desc: 'popover (default) or inline in-flow catalog', type: 'popover · inline' },
+      { name: 'size', desc: 'full specimen cards or compact density', type: 'full · compact' },
+      { name: 'orientation', desc: 'inline wrap: horizontal (default) or vertical', type: 'horizontal · vertical' },
+      { name: 'mode', desc: 'One icon button that cycles Light / Dark / System', type: 'bool' },
+      { name: 'inline', desc: 'Alias of chrome=inline', type: 'bool' },
+      { name: 'mode-only', desc: 'Alias of mode', type: 'bool' },
       { name: 'onThemeChange', desc: 'Fires with { theme, mode, preference }', type: 'callback' },
     ],
   }),
@@ -419,11 +423,12 @@ const DETAILS_MAP = {
   }),
   spinner: lang('spinner', 'spinner', {
     blurb:
-      'Indeterminate wait ring. Size scales the glyph; tone defaults to info. Center it with the parent row or column — the mark does not own the page.',
-    variants: [],
-    variantAttr: '',
+      'A compact wait mark. Default is an icon-sized ring. variant=dots or bars for the same wait, different motion. Size is the icon ladder. Center it with the parent — the mark does not own the page.',
+    variants: ['ring', 'dots', 'bars'],
+    variantAttr: 'variant',
     props: [
-      { name: 'size', desc: 'ring scale (16 · 24 · 32 · 48)', type: 'xs · sm · md · lg' },
+      { name: 'size', desc: 'icon ladder (xs · sm · md · lg)', type: 'xs · sm · md · lg' },
+      { name: 'variant', desc: 'ring · dots · bars', type: 'ring · dots · bars' },
       {
         name: 'tone',
         desc: 'active arc colour (default info); track always uses the theme track colour',
@@ -755,42 +760,42 @@ const DETAILS_MAP = {
   // ── Navigation ───────────────────────────────────────────────────────
   tabs: lang('tabs', 'tabs', {
     blurb:
-      'Tabs with the full keyboard suite — arrows rove, Home/End jump, panels wire their ARIA automatically. The tabs are the control: click one to show its panel. orientation=vertical puts the list beside the panels. Three looks via variant on <tab-list>; size on each <tab>.',
+      'Write a tab as its title plus the panel it owns. Arrows rove, Home/End jump, ARIA is automatic. orientation=vertical puts the rail beside the panel. Strip look via variant on <tab> or <tab-list>.',
     variants: [],
     variantAttr: '',
     props: [
-      { name: 'orientation', desc: 'horizontal (list above) or vertical (list beside)', type: 'horizontal · vertical' },
+      { name: 'orientation', desc: 'horizontal (triggers above) or vertical (list beside — parts form)', type: 'horizontal · vertical' },
       { name: 'onTabChange', desc: 'fires with { name } when the user picks a tab', type: 'callback' },
       {
-        name: '<tab-list variant>',
-        desc: 'strip look — line · pill · enclosed (on the strip, not <tabs>)',
-        type: 'line · pill · enclosed',
+        name: '<tab title>',
+        desc: 'title is the trigger; default slot is the panel',
+        type: 'title + children',
       },
       {
-        name: '<tab>',
-        desc: 'label is the tab children; pairs with the matching <tab-panel> by position',
-        type: 'children',
+        name: '<tab-list variant>',
+        desc: 'optional strip for pill/enclosed/vertical rail',
+        type: 'line · pill · enclosed',
       },
     ],
   }),
   breadcrumb: lang('breadcrumb', 'breadcrumb', {
-    blurb:
-      'A trail of links with the right nav/ARIA and themed separators. No host props — anchors for the path, inert current (small). Link and current colours come from the theme.',
+    blurb: 'Where you are. Earlier steps are links.',
     variants: [],
     variantAttr: '',
     props: [
-      { name: '<a>', desc: 'the path — ordinary links', type: 'children' },
-      { name: '<small>', desc: 'the current page, inert', type: 'children' },
+      { name: 'size', desc: 'sm · md · lg', type: 'sm · md · lg' },
+      { name: '<a>', desc: 'a step you can go back to', type: 'children' },
+      { name: '<small>', desc: 'this page', type: 'children' },
     ],
   }),
   pagination: lang('pagination', 'pagination', {
     blurb:
-      'A nav of <page> controls. value marks the current one with aria-current; clicking emits sail-page-change — your list, your fetch. Size is authored on each <page>.',
+      'A nav of <page-item> controls. value marks the current one with aria-current; clicking emits sail-page-change — your list, your fetch. Size is authored on each <page-item>.',
     variants: [],
     variantAttr: '',
     props: [
       { name: 'value', desc: 'the current page', type: 'string' },
-      { name: '<page value size>', desc: 'each control — prev/next are pages too; size on each page', type: 'children' },
+      { name: '<page-item value size>', desc: 'each control — prev/next are items too; size on each item', type: 'children' },
       { name: 'on-page-change', desc: 'page-change callback, { page }', type: 'callback' },
     ],
   }),
@@ -812,7 +817,7 @@ const DETAILS_MAP = {
   // ── Data ─────────────────────────────────────────────────────────────
   table: lang('table', 'table', {
     blurb:
-      "The platform's table model — thead, tbody, tr — skinned by the theme. Hairline borders on by default. dense · striped · hoverable · bordered presence attrs. No grid component to learn: markup in, a designed table out.",
+      "The platform's table model — thead, tbody, tr — skinned by the theme. Hairline, header fill, and row hover on by default. searchable adds a filter field; <th sortable> cycles row order.",
     variants: [],
     variantAttr: '',
     props: [
@@ -820,6 +825,8 @@ const DETAILS_MAP = {
       { name: 'striped', desc: 'even rows get a light stripe from the theme', type: 'bool' },
       { name: 'hoverable', desc: 'row hover fill from the stripe colour', type: 'bool' },
       { name: 'bordered', desc: 'box every cell', type: 'bool' },
+      { name: 'searchable', desc: 'search field above the table; filters rows as you type', type: 'bool' },
+      { name: '<th sortable>', desc: 'click cycles none → asc → desc; numeric compares as numbers', type: 'bool' },
       { name: '<thead> <tbody> <tr>', desc: 'the platform table model', type: 'children' },
       { name: '{#for}', desc: 'rows render from state and stay live', type: 'block' },
     ],

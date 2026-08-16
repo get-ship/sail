@@ -19,13 +19,14 @@
       },
       "variant": {
         "values": [
+          "text",
           "default",
           "solid",
           "soft",
           "outline",
           "ghost"
         ],
-        "default": "default"
+        "default": "text"
       }
     },
     "accordion": {
@@ -646,7 +647,13 @@
           "picker",
           "drop"
         ],
-        "default": "picker"
+        "default": "drop"
+      }
+    },
+    "form": {
+      "name": {
+        "type": "string",
+        "default": ""
       }
     },
     "hover-card": {
@@ -793,6 +800,16 @@
         "default": "md"
       }
     },
+    "list-row": {
+      "current": {
+        "type": "bool",
+        "default": "false"
+      },
+      "selected": {
+        "type": "bool",
+        "default": "false"
+      }
+    },
     "menu-item": {
       "disabled": {
         "type": "bool",
@@ -871,7 +888,7 @@
         "default": "false"
       }
     },
-    "page": {
+    "page-item": {
       "disabled": {
         "type": "bool",
         "default": "false"
@@ -907,6 +924,17 @@
           "simple"
         ],
         "default": "default"
+      }
+    },
+    "pane": {
+      "padding": {
+        "values": [
+          "md",
+          "none",
+          "sm",
+          "lg"
+        ],
+        "default": "md"
       }
     },
     "popover": {
@@ -1132,6 +1160,14 @@
           "accent"
         ],
         "default": "info"
+      },
+      "variant": {
+        "values": [
+          "ring",
+          "dots",
+          "bars"
+        ],
+        "default": "ring"
       }
     },
     "switch": {
@@ -1173,6 +1209,13 @@
         "type": "string",
         "default": ""
       },
+      "orientation": {
+        "values": [
+          "horizontal",
+          "vertical"
+        ],
+        "default": "horizontal"
+      },
       "size": {
         "values": [
           "md",
@@ -1180,6 +1223,10 @@
           "lg"
         ],
         "default": "md"
+      },
+      "title": {
+        "type": "string",
+        "default": ""
       },
       "variant": {
         "values": [
@@ -1237,6 +1284,10 @@
         "type": "bool",
         "default": "false"
       },
+      "searchable": {
+        "type": "bool",
+        "default": "false"
+      },
       "sticky-header": {
         "type": "bool",
         "default": "false"
@@ -1257,6 +1308,20 @@
           "vertical"
         ],
         "default": "horizontal"
+      },
+      "variant": {
+        "values": [
+          "line",
+          "pill",
+          "enclosed"
+        ],
+        "default": "line"
+      }
+    },
+    "td": {
+      "numeric": {
+        "type": "bool",
+        "default": "false"
       }
     },
     "textarea": {
@@ -1294,14 +1359,49 @@
         "default": "default"
       }
     },
+    "th": {
+      "numeric": {
+        "type": "bool",
+        "default": "false"
+      },
+      "sortable": {
+        "type": "bool",
+        "default": "false"
+      }
+    },
     "theme-picker": {
+      "chrome": {
+        "values": [
+          "popover",
+          "inline"
+        ],
+        "default": "popover"
+      },
       "inline": {
+        "type": "bool",
+        "default": "false"
+      },
+      "mode": {
         "type": "bool",
         "default": "false"
       },
       "modeOnly": {
         "type": "bool",
         "default": "false"
+      },
+      "orientation": {
+        "values": [
+          "horizontal",
+          "vertical"
+        ],
+        "default": "horizontal"
+      },
+      "size": {
+        "values": [
+          "full",
+          "compact"
+        ],
+        "default": "full"
       },
       "value": {
         "type": "string",

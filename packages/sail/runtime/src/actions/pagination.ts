@@ -5,17 +5,17 @@ const host = (name: string) => `[data-sail-host="${name}"]`
 
 /**
  * Internal: L1 `<pagination>` closed behavior (not a public `use:`).
- * Authors use `<pagination>`, not `use:pagination`. Marks the page host whose
+ * Authors use `<pagination>`, not `use:pagination`. Marks the page-item whose
  * value matches the element's `value` with `aria-current="page"`, and on click
- * of a page sets `value` + invokes `onPageChange`. Prev/next are just pages
- * whose value is the target page. Structure (which pages/ellipsis to show) is
- * authored; this owns the state contract. Size Style match is on each `<page>`.
+ * of a page-item sets `value` + invokes `onPageChange`. Prev/next are just
+ * items whose value is the target page. Structure (which items/ellipsis to show) is
+ * authored; this owns the state contract. Size Style match is on each `<page-item>`.
  */
 export const pagination: Action<void> = (node) => {
   const root = node as HTMLElement
   const valueOf = (el: Element): string => el.getAttribute('value') ?? ''
   const pagesOf = (): HTMLElement[] =>
-    Array.from(root.querySelectorAll<HTMLElement>(host('page')))
+    Array.from(root.querySelectorAll<HTMLElement>(host('page-item')))
   const current = (): string => root.getAttribute('value') ?? ''
 
   if (!root.hasAttribute('aria-label')) root.setAttribute('aria-label', 'Pagination')
@@ -36,7 +36,7 @@ export const pagination: Action<void> = (node) => {
   }
 
   const pageFrom = (e: Event): HTMLElement | null => {
-    const p = (e.target as Element | null)?.closest<HTMLElement>(host('page')) ?? null
+    const p = (e.target as Element | null)?.closest<HTMLElement>(host('page-item')) ?? null
     return p && root.contains(p) ? p : null
   }
 

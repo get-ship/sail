@@ -293,7 +293,7 @@ pub fn host_pack_alias(host: &str) -> &str {
     match host {
         "a" | "anchor" => "button",
         "input" | "textarea" | "select" | "date" | "file" | "color" => "field",
-        "pagination" => "page",
+        "pagination" => "page-item",
         other => other,
     }
 }

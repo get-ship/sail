@@ -1,11 +1,11 @@
 <!--
   <pagination> — nav state via use:pagination (ARIA current). Host is layout-only.
-  Size Style match lives on each <page> (author there).
+  Size Style match lives on each <page-item> (author there).
 
   variant=simple: denser host Style (no extra pad). Page-number chrome is
   authored in the slot — there are no built-in number buttons to hide.
-  Slotted <page> does not inherit this variant (Style cannot target
-  descendants); set variant on each <page> for smaller pad / no border.
+  Slotted <page-item> does not inherit this variant (Style cannot target
+  descendants); set variant on each <page-item> for smaller pad / no border.
 -->
 
 <scope>
