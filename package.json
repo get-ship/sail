@@ -4,6 +4,7 @@
   "workspaces": {
     "packages": [
       "packages/sail/compiler-wasm",
+      "packages/sail/highlight",
       "packages/sail/dom",
       "packages/sail/runtime",
       "packages/sail/tokens",

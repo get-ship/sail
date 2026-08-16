@@ -1,7 +1,8 @@
 /**
  * Thread J — tree-sitter is not the product parser.
- * Compiler parse / LSP / fmt / Studio overlay must not import it.
- * packages/sail/grammar may keep the sidecar; nothing else loads it.
+ * Compiler / LSP / fmt must not import it.
+ * Highlighter sidecar lives in packages/sail/grammar + packages/sail/highlight
+ * and may be loaded by VS Code / <sail-code-editor> only.
  */
 import { describe, expect, test } from 'bun:test'
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
@@ -56,6 +57,9 @@ describe('tree-sitter is not a product import', () => {
       for (const file of walk(root)) {
         const rel = relative(REPO, file)
         if (rel.startsWith('packages/sail/grammar/')) continue
+        if (rel.startsWith('packages/sail/highlight/')) continue
+        if (rel.startsWith('packages/sail/vscode/')) continue
+        if (rel.startsWith('packages/components/sail/code-editor/')) continue
         if (rel.includes('/test/') || rel.includes('/tests/')) continue
         if (/\.(test|spec)\.(ts|tsx|rs)$/.test(rel)) continue
         const text = readFileSync(file, 'utf8')

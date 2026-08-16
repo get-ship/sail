@@ -36,7 +36,7 @@
     {
       "path": "packages/components/sail/code-editor/src/sail-code-editor/sail-highlight-vocab.ts",
       "emitter": "packages/sail/grammar bun run generate",
-      "gate": "packages/sail/grammar/scripts/generate-check.ts"
+      "gate": "packages/sail/grammar/tests/grammar_generated.rs"
     },
     {
       "path": "packages/sail/studio-client/src/generated/client.ts",
