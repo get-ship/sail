@@ -6,7 +6,7 @@
  */
 
 import type { Extension } from '@codemirror/state'
-import { sailHighlight } from './sail-code-editor.sail-highlight'
+import { sailHighlight, ensureSailHighlight } from './sail-code-editor.sail-highlight'
 
 export type SupportedLanguage =
   | 'yaml' | 'json' | 'jsonc' | 'javascript' | 'typescript'
@@ -40,10 +40,11 @@ export async function loadLanguage(lang: string): Promise<Extension> {
       return markdown()
     }
     // SAIL is HTML-shaped (tags, attributes, `{expr}` interpolations);
-    // base highlighting on HTML mode, then layer the SAIL interpolation
-    // + live directive-prefix overlay on top.
+    // base highlighting on HTML mode, then layer tree-sitter spans
+    // from `@ship/sail-highlight` (same wasm + highlights.scm as VS Code).
     case 'sail': {
       const { html: htmlLang } = await import('@codemirror/lang-html')
+      void ensureSailHighlight()
       return [htmlLang(), sailHighlight]
     }
     case 'html': {
