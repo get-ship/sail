@@ -122,6 +122,9 @@ fn parse_prepared(source: &str, prepared: &str) -> Result<Program, CompileError>
                         })
                         .collect();
                     let block = scope_block::parse_scope_block(&body, el.span)?;
+                    if let Some(err) = block.style_errors.into_iter().next() {
+                        return Err(remap_style_row_error(err, source));
+                    }
                     props.extend(block.props);
                     scope_types.push_str(&block.types);
                     continue;
@@ -156,4 +159,40 @@ fn parse_prepared(source: &str, prepared: &str) -> Result<Program, CompileError>
         source_len: source.len(),
         span: Span::new(0, source.len()),
     })
+}
+
+/// Point a Style-table row error at the declaration in author source.
+/// Preprocess injects CSS before `<scope>`, so the parse span is the wrong
+/// buffer — search the author text for `style name` / `const name`.
+fn remap_style_row_error(err: CompileError, author: &str) -> CompileError {
+    let Some(name) = err
+        .message
+        .strip_prefix("Style `")
+        .and_then(|rest| rest.split('`').next())
+        .filter(|n| !n.is_empty())
+        .map(str::to_string)
+    else {
+        return err;
+    };
+    if let Some(at) = find_named_style_binding(author, &name) {
+        return err.with_span(Span::new(at, at + 6 + name.len()));
+    }
+    err
+}
+
+fn find_named_style_binding(source: &str, name: &str) -> Option<usize> {
+    for kw in ["style ", "const "] {
+        let needle = format!("{kw}{name}");
+        let mut start = 0usize;
+        while let Some(rel) = source[start..].find(&needle) {
+            let i = start + rel;
+            let after = i + needle.len();
+            let rest = source.get(after..).unwrap_or("").trim_start();
+            if rest.starts_with('=') {
+                return Some(i);
+            }
+            start = after;
+        }
+    }
+    None
 }

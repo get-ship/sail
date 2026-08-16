@@ -356,6 +356,7 @@ pub fn concerns() -> &'static [ConcernSpec] {
                         "screen",
                         "border-width",
                         "half",
+                        "panel-rail-w",
                     ],
                 },
                 ConcernSlot {
@@ -722,6 +723,22 @@ pub fn prepare_concern_call(method: &str, args: Vec<PaintArg>) -> (String, Vec<P
         Some(PaintArg::Token(name)) if resolve_concern_name(spec, &name).is_some() => {
             vec![PaintArg::Token(name)]
         }
+        Some(PaintArg::Token(name))
+            if spec.name == "size" && matches!(name.as_str(), "hug" | "grow" | "max") =>
+        {
+            vec![PaintArg::Token(name)]
+        }
+        Some(PaintArg::Token(name))
+            if spec.name == "size"
+                && is_identity_name(&name)
+                && resolve_concern_name(spec, &name).is_none()
+                && !is_named_scale_step(spec, &name) =>
+        {
+            // Unknown identity (`size(wide)`). Do not fold onto w/h or the
+            // diagnostic becomes `size:h(wide)` and the row looks like a
+            // scale miss instead of a missing table identity.
+            vec![PaintArg::Token(name)]
+        }
         Some(PaintArg::Token(name)) if spec.name == "size" => {
             vec![PaintArg::Slots(BTreeMap::from([
                 ("w".to_string(), PaintArg::Token(name.clone())),
@@ -1082,6 +1099,15 @@ pub fn validate_concern_op(spec: &ConcernSpec, op: &PaintOp) -> Result<(), Style
                     source: op.source.clone(),
                 });
             }
+            if spec.name == "size"
+                && is_identity_name(name)
+                && !matches!(name.as_str(), "hug" | "grow" | "max")
+            {
+                return Err(StyleDiagnostic::UnknownVocabulary {
+                    name: format!("size.{name}"),
+                    source: op.source.clone(),
+                });
+            }
             let teaching = if spec.name == "border" {
                 format!("border({{ color: {name} }}) or border(subtle)")
             } else if spec.name == "bg" {
@@ -1117,6 +1143,18 @@ pub fn reject_size_pad_members(
     Ok(())
 }
 
+/// Bare concern arg that looks like a table identity (`wide`, `page`,
+/// `control-md`), not a numeric / scale-step token (`4`, `1_5`).
+fn is_identity_name(name: &str) -> bool {
+    let mut chars = name.chars();
+    match chars.next() {
+        Some(c) if c.is_ascii_alphabetic() => {
+            chars.all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
+        }
+        _ => false,
+    }
+}
+
 pub fn is_named_scale_step(spec: &ConcernSpec, name: &str) -> bool {
     match spec.name {
         "radius" => {
@@ -1128,6 +1166,9 @@ pub fn is_named_scale_step(spec: &ConcernSpec, name: &str) -> bool {
             slot.keywords.contains(&name) || slot.scale.is_some_and(|s| scales::contains(s, name))
         }
         "size" => {
+            if matches!(name, "hug" | "grow" | "max") {
+                return true;
+            }
             // `full` / control steps write geometry. `control-md` resolves as
             // composite when the catalog has it; otherwise accept size-scale names
             // that are not pad-like.
@@ -1262,6 +1303,24 @@ mod tests {
         for m in MARKERS {
             assert!(!names.contains(m), "marker {m} must not be a concern");
         }
+    }
+
+    #[test]
+    fn unknown_size_identity_is_named_at_the_token() {
+        let (_, diags) = parse("style({ size(wide) })");
+        assert!(
+            diags.iter().any(|d| matches!(
+                d,
+                StyleDiagnostic::UnknownVocabulary { name, .. } if name == "size.wide"
+            )),
+            "size(wide) must name the identity, not fold onto size:h: {:?}",
+            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
+        assert!(
+            !diags.iter().any(|d| d.message().contains("size:h")),
+            "must not rewrite the identity into a scale slot: {:?}",
+            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
     }
 
     #[test]

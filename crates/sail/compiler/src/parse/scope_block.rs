@@ -45,7 +45,11 @@ pub(crate) struct ScopeBlock {
     /// module (aliases hoist, so appending preserves controller spans).
     pub types: String,
     /// Scope Style values (`style name = …` → env for product `style(name)` Ref).
+    /// A failed row never drops names already in this table (SPEC-STYLE-BUCKETS-1 §4.7).
     pub style_env: StyleEnv,
+    /// Terminal Style-row errors (unknown identity, bad token). The table
+    /// still holds every well-formed sibling. Empty when the table is clean.
+    pub style_errors: Vec<CompileError>,
 }
 
 const TONE_VOCAB: &str = "primary|info|success|warning|destructive|accent|muted";
@@ -72,6 +76,7 @@ pub(crate) fn parse_scope_block_at(
         props: Vec::new(),
         types: String::new(),
         style_env: HashMap::new(),
+        style_errors: Vec::new(),
     };
 
     while i < bytes.len() {
@@ -129,30 +134,26 @@ pub(crate) fn parse_scope_block_at(
                 i = arr_span.1 + 1;
             }
             "const" => {
-                let (name, style, end) = parse_style_const(body, after, span)?;
-                if out.style_env.contains_key(&name) {
-                    return Err(CompileError::new(format!(
-                        "Style `{name}` is declared twice in `<scope>`."
-                    ))
-                    .with_span(span)
-                    .with_category(RULE_ID));
-                }
-                out.style_env.insert(name, style);
-                i = end;
+                i = take_style_row(
+                    body,
+                    after,
+                    span,
+                    StyleBindingKw::Const,
+                    &mut out.style_env,
+                    &mut out.style_errors,
+                )?;
             }
             "style" => {
                 // First-class Style decl: `style name = <rhs>` (not tag-position
                 // `style(…)` — that lives on hosts, not as a scope statement).
-                let (name, style, end) = parse_style_decl(body, after, span)?;
-                if out.style_env.contains_key(&name) {
-                    return Err(CompileError::new(format!(
-                        "Style `{name}` is declared twice in `<scope>`."
-                    ))
-                    .with_span(span)
-                    .with_category(RULE_ID));
-                }
-                out.style_env.insert(name, style);
-                i = end;
+                i = take_style_row(
+                    body,
+                    after,
+                    span,
+                    StyleBindingKw::Style,
+                    &mut out.style_env,
+                    &mut out.style_errors,
+                )?;
             }
             "" => {
                 return Err(CompileError::new(format!(
@@ -663,6 +664,70 @@ fn parse_style_decl(
     parse_named_style_binding(s, after_style, span, StyleBindingKw::Style)
 }
 
+/// Register one Style table row. A failed RHS is recorded and skipped —
+/// already-registered sibling names stay in `env` (SPEC-STYLE-BUCKETS-1 §4.7).
+fn take_style_row(
+    body: &str,
+    after_kw: usize,
+    span: Span,
+    kw: StyleBindingKw,
+    env: &mut StyleEnv,
+    errors: &mut Vec<CompileError>,
+) -> Result<usize, CompileError> {
+    match parse_named_style_binding(body, after_kw, span, kw) {
+        Ok((name, style, end)) => {
+            if env.contains_key(&name) {
+                return Err(CompileError::new(format!(
+                    "Style `{name}` is declared twice in `<scope>`."
+                ))
+                .with_span(binding_span(body, after_kw, end, span))
+                .with_category(RULE_ID));
+            }
+            env.insert(name, style);
+            Ok(end)
+        }
+        Err(e) if is_style_row_value_error(&e) => {
+            errors.push(e);
+            Ok(skip_style_binding(body, after_kw))
+        }
+        Err(e) => Err(e),
+    }
+}
+
+fn binding_span(body: &str, after_kw: usize, end: usize, fallback: Span) -> Span {
+    let start = skip_trivia(body, after_kw, None);
+    if start < end && end <= body.len() {
+        Span::new(start, end)
+    } else {
+        fallback
+    }
+}
+
+/// Advance past a `style name = <rhs>` / `const name = <rhs>` whose parse
+/// failed so the next table row can still register.
+fn skip_style_binding(s: &str, after_kw: usize) -> usize {
+    let bytes = s.as_bytes();
+    let i = skip_trivia(s, after_kw, None);
+    let (name, after_name) = read_word(s, i);
+    if name.is_empty() {
+        return (i + 1).min(s.len());
+    }
+    let mut j = skip_trivia(s, after_name, None);
+    if j < bytes.len() && bytes[j] == b'=' {
+        if j + 1 < bytes.len() && bytes[j + 1] == b'>' {
+            return after_name.max(i + 1);
+        }
+        j = skip_trivia(s, j + 1, None);
+        j = scan_style_expr_end(s, j);
+        j = skip_trivia(s, j, None);
+        if j < bytes.len() && bytes[j] == b';' {
+            j += 1;
+        }
+        return j;
+    }
+    after_name.max(i + 1)
+}
+
 enum StyleBindingKw {
     Const,
     Style,
@@ -763,7 +828,7 @@ fn parse_named_style_binding(
     let (style, diags) = spinnaker::parse_style_const_rhs(rhs);
     if let Some(msg) = style_const_diag_message(&diags) {
         return Err(CompileError::new(format!("Style `{name}`: {msg}"))
-            .with_span(span)
+            .with_span(binding_span(s, after_kw, end, span))
             .with_category(RULE_ID));
     }
     let mut after = skip_trivia(s, end, None);
@@ -797,6 +862,13 @@ fn looks_like_style_const_rhs(rhs: &str) -> bool {
 fn style_const_diag_message(diags: &[StyleDiagnostic]) -> Option<String> {
     // Any Style diagnostic on a const RHS is a hard compile error (fail closed).
     diags.first().map(|d| d.message())
+}
+
+/// Value-row failures (`Style \`wide\`: unknown vocabulary …`) stay in the
+/// table as named errors. Structural refusals (`const MAX = 1`, missing `=`)
+/// still abort the statement.
+fn is_style_row_value_error(err: &CompileError) -> bool {
+    err.message.starts_with("Style `") && err.message.contains(": ")
 }
 
 /// End of a Style RHS: balanced `{}`/`()`/`[]` (strings/comments skipped).
@@ -2172,6 +2244,42 @@ style b = { pad(2) }
         assert!(
             scope_noise.is_empty(),
             "false scope-member diags: {scope_noise:?}\nall={diags:?}"
+        );
+    }
+
+    /// SPEC-STYLE-BUCKETS-1 invariant 7: one bad table row must not drop
+    /// already-registered sibling names. `size(wide)` is the 08-16 poison.
+    #[test]
+    fn failed_style_row_keeps_sibling_names() {
+        let b = parse_scope_block(
+            "style base = { pad(page) }\nstyle wide = { size(wide) }\nstyle next = { pad(2) }",
+            Span::new(0, 80),
+        )
+        .expect("a failed row is not a structural scope error");
+        assert!(
+            b.style_env.contains_key("base"),
+            "base must stay registered: {:?}",
+            b.style_env.keys()
+        );
+        assert!(
+            b.style_env.contains_key("next"),
+            "later siblings must still register: {:?}",
+            b.style_env.keys()
+        );
+        assert!(
+            !b.style_env.contains_key("wide"),
+            "the failed row itself is not registered: {:?}",
+            b.style_env.keys()
+        );
+        assert_eq!(b.style_errors.len(), 1, "{:?}", b.style_errors);
+        let msg = &b.style_errors[0].message;
+        assert!(
+            msg.contains("wide") || msg.contains("size.wide"),
+            "error must name the bad identity: {msg}"
+        );
+        assert!(
+            !msg.contains("unknown vocabulary `base`"),
+            "must not poison sibling `base`: {msg}"
         );
     }
 }
