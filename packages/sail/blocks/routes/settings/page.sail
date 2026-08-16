@@ -1,15 +1,7 @@
 <!--
-  settings — rail + tabbed form. Fields live in a readable column, not the viewport.
+  settings — rail + tabbed form. Stretch is the leftover, not a 38ch island.
 -->
-<scope>
-  style shell = { size({ min-h: fill }).bg(background) }
-  style main = { grow(1).size({ min-w: 0 }).pad(6) }
-  style form = { size({ max-w: panel-max-w-md }) }
-  style kicker = { fg(muted-foreground).type({ size: sm }) }
-  style danger = { fg(destructive).type({ size: sm }) }
-</scope>
-
-<row nowrap gap="0" align="stretch" style(shell)>
+<row nowrap gap="0" align="stretch">
   <navbar placement="rail" bordered sticky>
     <strong slot="brand">Northwind</strong>
     <column slot="center" gap="1">
@@ -24,25 +16,26 @@
     </column>
   </navbar>
 
-  <column gap="6" style(main)>
+  <app-main>
     <column gap="2">
       <breadcrumb>
         <a href="/dashboard">Northwind</a>
         <small>Settings</small>
       </breadcrumb>
       <h1>Settings</h1>
-      <p style(kicker)>Account and preferences. Stretch is the form column, not the page.</p>
+      <p>Account and preferences. Stretch is the leftover, not a postcard form.</p>
     </column>
 
     <tabs active="profile">
       <tab-list variant="line">
-        <tab name="profile">Profile</tab>
-        <tab name="team">Team</tab>
-        <tab name="billing">Billing</tab>
+        <tab title="Profile" name="profile"></tab>
+        <tab title="Team" name="team"></tab>
+        <tab title="Billing" name="billing"></tab>
       </tab-list>
 
       <tab-panel name="profile">
-        <column gap="5" style(form)>
+        <form label="Profile" layout="fill">
+        <column gap="5">
           <fieldset>
             <legend>Profile</legend>
             <column gap="4">
@@ -51,13 +44,13 @@
                 <field>
                   <label slot="label">Photo</label>
                   <file accept="image/*" />
-                  <span slot="hint">Square, at least 256px.</span>
+                  <small slot="hint">Square, at least 256px.</small>
                 </field>
               </row>
               <field>
                 <label slot="label">Display name</label>
                 <input surface="filled" placeholder="Ada Lovelace" />
-                <span slot="hint">Shown on invoices and the dashboard.</span>
+                <small slot="hint">Shown on invoices and the dashboard.</small>
               </field>
               <field>
                 <label slot="label">Email</label>
@@ -106,6 +99,7 @@
             <button>Save changes</button>
           </row>
         </column>
+        </form>
       </tab-panel>
 
       <tab-panel name="team">
@@ -128,7 +122,7 @@
                   <td>
                     <row gap="2" align="center">
                       <avatar initials="AL" size="sm"></avatar>
-                      <span>Ada Lovelace</span>
+                      Ada Lovelace
                     </row>
                   </td>
                   <td><chip size="sm">Owner</chip></td>
@@ -138,7 +132,7 @@
                   <td>
                     <row gap="2" align="center">
                       <avatar initials="HC" size="sm"></avatar>
-                      <span>Harbor Co</span>
+                      Harbor Co
                     </row>
                   </td>
                   <td><chip size="sm" variant="outline">Admin</chip></td>
@@ -148,7 +142,7 @@
                   <td>
                     <row gap="2" align="center">
                       <avatar initials="NP" size="sm"></avatar>
-                      <span>North Pier</span>
+                      North Pier
                     </row>
                   </td>
                   <td><chip size="sm" variant="outline">Member</chip></td>
@@ -161,7 +155,8 @@
       </tab-panel>
 
       <tab-panel name="billing">
-        <column gap="5" style(form)>
+        <form label="Billing" layout="fill">
+        <column gap="5">
           <fieldset>
             <legend>Plan</legend>
             <radio-group name="plan" value="studio">
@@ -182,11 +177,12 @@
 
           <column gap="3">
             <h2>Danger zone</h2>
-            <p style(danger)>Deleting the workspace removes orders, themes, and seats.</p>
+            <p>Deleting the workspace removes orders, themes, and seats.</p>
             <button variant="outline" tone="destructive">Delete workspace</button>
           </column>
         </column>
+        </form>
       </tab-panel>
     </tabs>
-  </column>
+  </app-main>
 </row>

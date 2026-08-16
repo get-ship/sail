@@ -29,8 +29,7 @@
     </column>
   </navbar>
 
-  <column gap="6">
-    <column gap="6">
+  <app-main>
       <alert dismissible tone="warning">
         <strong slot="title">Four orders need a dock slot</strong>
         Assign Harbor Co before 14:00 or they slip to tomorrow.
@@ -123,20 +122,14 @@
       </dialog>
 
       <grid min="sm" gap="4">
-        <column>
-          <card>
-            <small slot="header">Revenue</small>
-            <h2>$48,200</h2>
-            <row slot="footer" gap="2" align="center">
-              <badge tone="success" dot>Live</badge>
-              <a href="#" popovertarget="rev-tip">+12% vs last week</a>
-            </row>
-          </card>
-          <hover-card id="rev-tip">
-            <strong>Week over week</strong>
-            <p>Revenue versus the previous seven days.</p>
-          </hover-card>
-        </column>
+        <card>
+          <small slot="header">Revenue</small>
+          <h2>$48,200</h2>
+          <row slot="footer" gap="2" align="center">
+            <badge tone="success" dot>Live</badge>
+            <a href="#" popovertarget="rev-tip">+12% vs last week</a>
+          </row>
+        </card>
         <card>
           <small slot="header">Open orders</small>
           <h2>18</h2>
@@ -148,6 +141,10 @@
           <meter slot="footer" value="96" min="0" max="100"></meter>
         </card>
       </grid>
+      <hover-card id="rev-tip">
+        <strong>Week over week</strong>
+        <p>Revenue versus the previous seven days.</p>
+      </hover-card>
 
       <tabs active="orders">
         <tab-list>
@@ -162,33 +159,33 @@
               <badge tone="info">Live</badge>
             </row>
             <column gap="4">
-              <row gap="3" align="end">
-                <column>
-                  <field>
-                    <label slot="label">Search</label>
-                    <combobox placeholder="Order or customer">
-                      <option value="1042">#1042 Harbor Co</option>
-                      <option value="1041">#1041 Lee</option>
-                      <option value="1040">#1040 North Pier</option>
-                      <option value="1039">#1039 Ada Labs</option>
-                    </combobox>
-                  </field>
-                </column>
+              <grid min="sm" gap="3">
                 <field>
-                  <label slot="label">Status</label>
-                  <select>
-                    <option>All</option>
-                    <option>Open</option>
-                    <option>Fulfilled</option>
-                    <option>Held</option>
-                  </select>
+                  <label slot="label">Search</label>
+                  <combobox placeholder="Order or customer">
+                    <option value="1042">#1042 Harbor Co</option>
+                    <option value="1041">#1041 Lee</option>
+                    <option value="1040">#1040 North Pier</option>
+                    <option value="1039">#1039 Ada Labs</option>
+                  </combobox>
                 </field>
-                <row gap="1" align="center">
-                  <small>or</small>
-                  <kbd>⌘</kbd>
-                  <kbd>K</kbd>
+                <row gap="3" align="end">
+                  <field>
+                    <label slot="label">Status</label>
+                    <select>
+                      <option>All</option>
+                      <option>Open</option>
+                      <option>Fulfilled</option>
+                      <option>Held</option>
+                    </select>
+                  </field>
+                  <row gap="1" align="center">
+                    <small>or</small>
+                    <kbd>⌘</kbd>
+                    <kbd>K</kbd>
+                  </row>
                 </row>
-              </row>
+              </grid>
 
               <row gap="2">
                 <chip selected>All</chip>
@@ -284,8 +281,7 @@
           </empty-state>
         </tab-panel>
       </tabs>
-    </column>
-  </column>
+  </app-main>
 </row>
 
 <if {orderCreated()}>

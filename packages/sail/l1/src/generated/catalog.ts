@@ -538,8 +538,10 @@ export const TAGS: readonly L1Tag[] = [
     acceptsChildren: true,
     props: [
       { name: 'invalid', type: 'bool', default: 'false' },
+      { name: 'fill', type: 'bool', default: 'true' },
     ],
     axes: [
+      { name: 'fill', values: ['false', 'true'], optional: false },
       { name: 'invalid', values: ['false', 'true'], optional: false },
     ],
     concerns: ['fg', 'play', 'size', 'type'],
@@ -588,12 +590,14 @@ export const TAGS: readonly L1Tag[] = [
     tag: 'form',
     component: 'form',
     role: 'host',
-    description: 'native form. Reading measure. Native-kind: the tag is the host,',
+    description: 'native form. Native-kind: the tag is the host, children stay',
     acceptsChildren: true,
     props: [
       { name: 'name', type: 'string' },
+      { name: 'layout', type: 'measure | fill', default: 'measure', values: ['measure', 'fill'] },
     ],
     axes: [
+      { name: 'layout', values: ['measure', 'fill'], optional: false },
     ],
     concerns: ['play', 'size'],
   },
@@ -788,13 +792,13 @@ export const TAGS: readonly L1Tag[] = [
     tag: 'page',
     component: 'page',
     role: 'host',
-    description: 'document shell. Children stack. The page never kisses the viewport.',
+    description: 'the document. Not chrome. Not a measure. Not a max-width box.',
     acceptsChildren: true,
     props: [
     ],
     axes: [
     ],
-    concerns: ['play', 'size'],
+    concerns: [],
   },
   {
     tag: 'page-item',
