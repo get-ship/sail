@@ -22,28 +22,9 @@ use std::process::Command;
 
 use anyhow::{Context, Result, bail};
 
-/// Locate the workspace `tsc`. Walks up from `project` (covering `repo_root`
-/// when it is an ancestor), then falls back to `repo_root` directly for the
-/// cross-repo case where the two don't share a parent.
-fn find_tsc(project: &Path, repo_root: &Path) -> Option<PathBuf> {
-    let candidates = ["node_modules/.bin/tsc", "node_modules/.bin/tsc.cmd"];
-    let mut dir = Some(project);
-    while let Some(d) = dir {
-        for rel in candidates {
-            let p = d.join(rel);
-            if p.exists() {
-                return Some(p);
-            }
-        }
-        dir = d.parent();
-    }
-    for rel in candidates {
-        let p = repo_root.join(rel);
-        if p.exists() {
-            return Some(p);
-        }
-    }
-    None
+/// Shared native sidecar (ELF only). Never exec `node_modules/.bin/tsc`.
+fn find_tsc(_project: &Path, _repo_root: &Path) -> Option<PathBuf> {
+    sail_compiler::ts_native::resolve_ts_native().map(|t| t.program)
 }
 
 /// Write the ambient pack + on-the-fly tsconfig into `out_dir` and return the
@@ -117,12 +98,7 @@ fn run_tsc(tsc: &Path, cfg: &Path, repo_root: &Path) -> Result<(bool, String)> {
 /// failure) bubble up so `deck build --typecheck` exits non-zero.
 pub fn run(project: &Path, out_dir: &Path, repo_root: &Path) -> Result<()> {
     let Some(tsc) = find_tsc(project, repo_root) else {
-        bail!(
-            "--typecheck requires `node_modules/.bin/tsc` (searched up from {} and at {}). \
-             Install dependencies first (e.g. `bun install` / `npm install`).",
-            project.display(),
-            repo_root.display(),
-        );
+        bail!("--typecheck requires the TypeScript 7 native sidecar. Run `sail ts-native setup`.");
     };
     let cfg = write_tsconfig(project, out_dir)?;
     let (ok, output) = run_tsc(&tsc, &cfg, repo_root)?;

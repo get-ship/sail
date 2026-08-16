@@ -75,9 +75,14 @@ type Docs = HashMap<Url, String>;
 
 pub fn run() -> anyhow::Result<()> {
     let (connection, io_threads) = Connection::stdio();
-    let capabilities = serde_json::to_value(server_capabilities())?;
-    let _init = connection.initialize(capabilities)?;
-    main_loop(&connection)?;
+    let (id, _params) = connection.initialize_start()?;
+    let tsgo = TsgoSession::start(std::env::current_dir().ok().as_deref());
+    let result = serde_json::json!({
+        "capabilities": server_capabilities(),
+        "serverInfo": { "name": "sail-lsp", "version": env!("CARGO_PKG_VERSION") },
+    });
+    connection.initialize_finish(id, result)?;
+    main_loop(&connection, tsgo)?;
     io_threads.join()?;
     Ok(())
 }
@@ -103,10 +108,8 @@ fn server_capabilities() -> ServerCapabilities {
     }
 }
 
-fn main_loop(conn: &Connection) -> anyhow::Result<()> {
+fn main_loop(conn: &Connection, mut tsgo: TsgoSession) -> anyhow::Result<()> {
     let mut docs: Docs = HashMap::new();
-    // Discover tsgo from CWD / repo; degrades cleanly when absent.
-    let mut tsgo = TsgoSession::start(std::env::current_dir().ok().as_deref());
     for msg in &conn.receiver {
         match msg {
             Message::Request(req) => {
@@ -1262,8 +1265,7 @@ mod tests {
     }
 
     fn degraded_tsgo() -> TsgoSession {
-        // Structure-only session: no tsgo subprocess.
-        TsgoSession::start(Some(std::path::Path::new("/nonexistent-sail-tsgo-root")))
+        TsgoSession::structure_only()
     }
 
     fn build_item(uri: &str, line: u32, character: u32) -> Vec<lsp_types::CompletionItem> {

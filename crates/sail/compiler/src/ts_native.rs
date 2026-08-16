@@ -240,6 +240,31 @@ fn tool(program: PathBuf, source: TsNativeSource) -> TsNativeTool {
     }
 }
 
+/// Probe `--lsp --help` then `--version`. Never return a shebang.
+fn finalize_tool(mut tool: TsNativeTool) -> Option<TsNativeTool> {
+    if !tool.program.is_file() {
+        return None;
+    }
+    if is_shebang(&tool.program) {
+        tool.program = sibling_platform_elf(&tool.program)?;
+    }
+    if is_shebang(&tool.program) || !accept_sidecar_elf(&tool.program) {
+        return None;
+    }
+    let probe = probe_lsp_help(&tool.program).ok()?;
+    if !probe.accepted {
+        return None;
+    }
+    if let Ok(out) = Command::new(&tool.program).arg("--version").output() {
+        if let Some(v) = parse_version_stdout(&String::from_utf8_lossy(&out.stdout)) {
+            if accept_probed_version(&v) {
+                tool.version = v;
+            }
+        }
+    }
+    Some(tool)
+}
+
 fn resolve_env_override() -> Option<Option<TsNativeTool>> {
     let raw = env_override()?;
     if raw.is_empty() {
@@ -249,27 +274,20 @@ fn resolve_env_override() -> Option<Option<TsNativeTool>> {
     if !path.is_absolute() || !path.is_file() {
         return Some(None);
     }
-    let elf = if is_shebang(&path) {
+    let program = if is_shebang(&path) {
         sibling_platform_elf(&path)
     } else {
         Some(path)
     };
-    match elf {
-        Some(program) if accept_sidecar_elf(&program) => {
-            Some(Some(tool(program, TsNativeSource::Env)))
-        }
-        _ => Some(None),
+    match program {
+        Some(program) => Some(finalize_tool(tool(program, TsNativeSource::Env))),
+        None => Some(None),
     }
 }
 
 fn resolve_xdg() -> Option<TsNativeTool> {
     let dir = xdg_sidecar_dir()?;
-    let program = sidecar_tsc(&dir);
-    if accept_sidecar_elf(&program) {
-        Some(tool(program, TsNativeSource::Xdg))
-    } else {
-        None
-    }
+    finalize_tool(tool(sidecar_tsc(&dir), TsNativeSource::Xdg))
 }
 
 pub fn which_on_path(name: &str) -> Option<PathBuf> {
@@ -291,22 +309,21 @@ fn resolve_path_last_resort() -> Option<TsNativeTool> {
         let Some(hit) = which_on_path(name) else {
             continue;
         };
-        let elf = if is_shebang(&hit) {
+        let program = if is_shebang(&hit) {
             sibling_platform_elf(&hit)
         } else {
             Some(hit)
         };
-        if let Some(program) = elf {
-            if accept_sidecar_elf(&program) {
-                return Some(tool(program, TsNativeSource::Path));
+        if let Some(program) = program {
+            if let Some(tool) = finalize_tool(tool(program, TsNativeSource::Path)) {
+                return Some(tool);
             }
         }
     }
     None
 }
 
-/// Future-order resolve (env → peer → XDG → PATH). Probe is not applied.
-/// Default `resolve_tsgo` / `discover_tsgo` do not call this yet.
+/// Env → peer (plus `deps/` hop) → XDG → PATH. Never walks `node_modules`.
 pub fn resolve_ts_native() -> Option<TsNativeTool> {
     resolve_ts_native_at(std::env::current_exe().ok().as_deref())
 }
@@ -320,7 +337,7 @@ pub fn resolve_ts_native_at(exe: Option<&Path>) -> Option<TsNativeTool> {
     }
     if let Some(exe) = exe {
         if let Some(tool) = resolve_ts_native_from_exe(exe) {
-            if accept_sidecar_elf(&tool.program) || tool.program.is_file() {
+            if let Some(tool) = finalize_tool(tool) {
                 return Some(tool);
             }
         }
@@ -329,6 +346,14 @@ pub fn resolve_ts_native_at(exe: Option<&Path>) -> Option<TsNativeTool> {
         return Some(tool);
     }
     resolve_path_last_resort()
+}
+
+/// Panic text when a typed test cannot see the profile-dir peer.
+pub fn missing_sidecar_hint() -> String {
+    format!(
+        "sail ts-native setup / {}",
+        expected_peer_tsc_from_current_exe().display()
+    )
 }
 
 pub fn ts_native_status() -> TsNativeStatus {

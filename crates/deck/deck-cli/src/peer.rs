@@ -323,29 +323,20 @@ fn types_check(project_dir: &Path) -> Result<()> {
             action.display()
         );
     }
-    let local_tsc = project_dir.join("node_modules/.bin/tsc");
-    let tsc: PathBuf = if local_tsc.is_file() {
-        local_tsc.clone()
-    } else {
-        PathBuf::from("tsc")
-    };
+    let tsc = sail_compiler::ts_native::resolve_ts_native()
+        .map(|t| t.program)
+        .ok_or_else(|| {
+            anyhow::anyhow!(
+                "sail types --check: TypeScript sidecar missing. Run `sail ts-native setup`."
+            )
+        })?;
     for cfg in [&sail, &action] {
         let status = Command::new(&tsc)
             .args(["--noEmit", "-p"])
             .arg(cfg)
             .current_dir(project_dir)
             .status()
-            .with_context(|| {
-                if !local_tsc.is_file() {
-                    format!(
-                        "sail types --check: tsc not found (no {} and no PATH tsc). \
-                         typescript is a create devDep — bun install after @ship packages are published",
-                        local_tsc.display()
-                    )
-                } else {
-                    format!("run tsc -p {}", cfg.display())
-                }
-            })?;
+            .with_context(|| format!("run tsc -p {}", cfg.display()))?;
         if !status.success() {
             bail!(
                 "sail types --check: tsc -p {} failed (exit {:?})",

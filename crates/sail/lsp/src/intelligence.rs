@@ -72,10 +72,16 @@ pub struct Intelligence {
 }
 
 impl Intelligence {
-    /// Discover tsgo from `workspace_hint` (and ancestors); degrade when absent.
+    /// Discover the sidecar; `workspace_hint` is for tsconfig / `@/` only.
     pub fn start(workspace_hint: Option<&Path>) -> Self {
         Self {
             tsgo: TsgoSession::start(workspace_hint),
+        }
+    }
+
+    pub fn structure_only() -> Self {
+        Self {
+            tsgo: TsgoSession::structure_only(),
         }
     }
 
@@ -654,8 +660,7 @@ export default controller((ctx) => ({ count: signal(0) }))
 
     #[test]
     fn structure_hover_without_tsgo() {
-        let mut intel =
-            Intelligence::start(Some(Path::new("/nonexistent-sail-tsgo-root-for-intel")));
+        let mut intel = Intelligence::structure_only();
         // count in template — structure scope may still resolve
         let count_line = COUNTER
             .lines()
@@ -683,8 +688,7 @@ export default controller((ctx) => ({ count: signal(0) }))
 
     #[test]
     fn diagnostics_structure_always() {
-        let mut intel =
-            Intelligence::start(Some(Path::new("/nonexistent-sail-tsgo-root-for-intel")));
+        let mut intel = Intelligence::structure_only();
         // Channel-era structure diag: bare participation attr (not retired style= attr).
         let bad = r#"<column grow>x</column>"#;
         let diags = intel.diagnostics_sail(bad, None);
@@ -701,8 +705,7 @@ export default controller((ctx) => ({ count: signal(0) }))
     fn complete_spinnaker_fill_tokens_without_tsgo() {
         // SPEC-STYLE-COMPLETE-1: Style complete inside style({ bg({ color: ¦ }) })
         // does not require tsgo.
-        let mut intel =
-            Intelligence::start(Some(Path::new("/nonexistent-sail-tsgo-root-for-intel")));
+        let mut intel = Intelligence::structure_only();
         let src = r#"<div style({ bg({ color:  }) })>x</div>"#;
         let offset = src.find("color: ").expect("color") + 7;
         let (line0, col0) = offset_to_lsp_position(src, offset);
@@ -732,8 +735,7 @@ export default controller((ctx) => ({ count: signal(0) }))
 
     #[test]
     fn complete_spinnaker_prefers_style_over_scope() {
-        let mut intel =
-            Intelligence::start(Some(Path::new("/nonexistent-sail-tsgo-root-for-intel")));
+        let mut intel = Intelligence::structure_only();
         let src = r#"<controller>
 import { controller, signal } from '@ship/sail-runtime'
 export default controller(() => ({ primary: signal(0) }))

@@ -102,123 +102,30 @@ pub const RULE_TYPE_GATE: &str = "sail-type-gate";
 /// Node/Bun live in test/ and tooling only — never product Pure/Action.
 pub const RULE_NO_NODE: &str = "sail-no-node";
 
-/// Loud install fix when tsgo cannot be resolved.
+/// Loud install fix when the native sidecar cannot be resolved.
 pub const TSGO_MISSING_MSG: &str = "\
-Type gate requires `tsgo` but none was found \
-(searched node_modules/.bin/tsgo, @typescript/native-preview-*, and PATH). \
-Install with `bun install` (provides `@typescript/native-preview`). \
+Type gate requires the TypeScript 7 native sidecar but none was found \
+(searched SAIL_TSC, dirname(sail)/sail-ts-native/tsc, XDG, and PATH). \
+Run `sail ts-native setup`. \
 If tsc does not compile, sail does not compile — the gate never skips.";
 
 // ── tsgo resolution ────────────────────────────────────────────────────────
 
-/// Discover tsgo starting from `start` (file or directory) walking up to root,
-/// then CWD (when `start` is outside the workspace, e.g. `/tmp` fixtures), then
-/// PATH. Returns `None` only when truly absent — callers must fail loud.
-///
-/// Paths are **canonicalized** when possible so later `Command` runs with
-/// `current_dir(temp)` still find the binary (relative workspace paths would
-/// otherwise ENOENT under the harness temp dir).
-pub fn resolve_tsgo(start: Option<&Path>) -> Option<TsgoTool> {
-    let mut starts: Vec<PathBuf> = Vec::new();
-    if let Some(p) = start {
-        let p = p.canonicalize().unwrap_or_else(|_| p.to_path_buf());
-        starts.push(if p.is_file() {
-            p.parent().unwrap_or(p.as_path()).to_path_buf()
-        } else {
-            p
-        });
+/// Shared resolver. `start` is unused (kept so ~20 call sites stay stable).
+pub fn resolve_tsgo(_start: Option<&Path>) -> Option<TsgoTool> {
+    #[cfg(target_arch = "wasm32")]
+    {
+        return None;
     }
-    if let Ok(cwd) = std::env::current_dir() {
-        if starts.first().map(|s| s.as_path()) != Some(cwd.as_path()) {
-            starts.push(cwd);
-        }
-    }
-    // CARGO_MANIFEST_DIR is unavailable at runtime; walk each start to root.
-
-    for start_dir in starts {
-        let mut dir = Some(start_dir);
-        while let Some(d) = dir {
-            if let Some(tool) = look_in_dir(&d) {
-                return Some(tool);
-            }
-            dir = d.parent().map(|p| p.to_path_buf());
-        }
-    }
-
-    if let Some(path) = which("tsgo") {
-        return Some(TsgoTool {
-            program: abs(path),
-            js_entry: None,
-        });
-    }
-    None
-}
-
-fn look_in_dir(d: &Path) -> Option<TsgoTool> {
-    let bin = d.join("node_modules/.bin/tsgo");
-    if bin.exists() {
-        if let Some(nm) = bin.parent().and_then(|p| p.parent()) {
-            if let Some(native) = resolve_native_under(nm) {
-                return Some(TsgoTool {
-                    program: abs(native),
-                    js_entry: None,
-                });
-            }
-        }
-        // Shell script → run via node + package entry when possible.
-        let js = d.join("node_modules/@typescript/native-preview/lib/tsgo.js");
-        if js.exists() {
-            if let Some(node) = which("node") {
-                return Some(TsgoTool {
-                    program: abs(node),
-                    js_entry: Some(abs(js)),
-                });
-            }
-        }
-        return Some(TsgoTool {
-            program: abs(bin),
-            js_entry: None,
-        });
-    }
-    if let Some(native) = platform_native_under(&d.join("node_modules")) {
-        return Some(TsgoTool {
-            program: abs(native),
-            js_entry: None,
-        });
-    }
-    None
+    #[cfg(not(target_arch = "wasm32"))]
+    crate::ts_native::resolve_ts_native().map(|t| TsgoTool {
+        program: abs(t.program),
+        js_entry: None,
+    })
 }
 
 fn abs(p: PathBuf) -> PathBuf {
     p.canonicalize().unwrap_or(p)
-}
-
-fn resolve_native_under(node_modules: &Path) -> Option<PathBuf> {
-    platform_native_under(node_modules)
-}
-
-fn platform_native_under(node_modules: &Path) -> Option<PathBuf> {
-    #[cfg(not(target_arch = "wasm32"))]
-    {
-        crate::ts_native::platform_native_preview_under(node_modules)
-    }
-    #[cfg(target_arch = "wasm32")]
-    {
-        let _ = node_modules;
-        None
-    }
-}
-
-fn which(name: &str) -> Option<PathBuf> {
-    #[cfg(not(target_arch = "wasm32"))]
-    {
-        crate::ts_native::which_on_path(name)
-    }
-    #[cfg(target_arch = "wasm32")]
-    {
-        let _ = name;
-        None
-    }
 }
 
 static TSGO_INVOCATIONS: AtomicU64 = AtomicU64::new(0);
@@ -3954,7 +3861,7 @@ mod tests {
 
     fn require_tsgo() {
         if resolve_tsgo(Some(workspace_root())).is_none() {
-            panic!("tsgo required");
+            panic!("{}", crate::ts_native::missing_sidecar_hint());
         }
     }
 
@@ -4044,14 +3951,19 @@ mod tests {
 
     #[test]
     fn resolve_tsgo_finds_workspace() {
-        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
-            .ancestors()
-            .nth(3)
-            .expect("workspace root");
-        let tool = resolve_tsgo(Some(root));
+        let tool = resolve_tsgo(Some(workspace_root())).expect("profile-dir peer");
+        let peer = crate::ts_native::expected_peer_tsc_from_current_exe();
+        let peer_dir = peer.parent().expect("sidecar dir");
         assert!(
-            tool.is_some(),
-            "tsgo must resolve from workspace (bun install @typescript/native-preview)"
+            tool.program.starts_with(peer_dir) || tool.program == peer,
+            "resolve_tsgo must use the profile-dir peer, not node_modules: {} (peer {})",
+            tool.program.display(),
+            peer.display()
+        );
+        assert!(
+            !tool.program.to_string_lossy().contains("node_modules"),
+            "must not resolve via node_modules: {}",
+            tool.program.display()
         );
     }
 
