@@ -2,11 +2,15 @@
   <field> — stack+gap layout; hint/error gates via structure Style.
   Hint/error paint from input / foreground / border; control surface shared with
   input/select/textarea via input / foreground / border.
+  fill (default true): the field is a group host so the slotted control
+  stretches (`when: { group-fill }`). A naked input still hugs. fill=false
+  keeps the compact search-in-a-row case.
 -->
 
 <scope>
   props: {
     invalid = false
+    fill = true
   }
 
   style host = {group().type({ family: body })}

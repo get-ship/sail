@@ -59,7 +59,7 @@
           }
         },
         "input": {
-          "$value": "oklch(0.147 0.004 49.25 / 25%)",
+          "$value": "{background}",
           "$type": "color"
         },
         "muted": {
@@ -361,7 +361,7 @@
           }
         },
         "input": {
-          "$value": "oklch(1 0 0 / 14%)",
+          "$value": "{background}",
           "$type": "color"
         },
         "muted": {

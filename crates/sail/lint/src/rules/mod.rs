@@ -68,6 +68,7 @@ pub mod prop_value;
 pub mod route_inline_style;
 pub mod space_literal;
 pub mod style_concern;
+pub mod style_privilege;
 pub mod style_rule;
 pub mod style_value_enumeration;
 pub mod surface_not_card;
@@ -143,6 +144,7 @@ pub const SUI_TEMPLATE_RULES: &[(&str, RuleFn)] = &[
     (dimension_literal::RULE_ID, dimension_literal::check),
     (primary_for_status::RULE_ID, primary_for_status::check),
     (route_inline_style::RULE_ID, route_inline_style::check),
+    (style_privilege::RULE_ID, style_privilege::check),
     (surface_not_card::RULE_ID, surface_not_card::check),
     (for_key::RULE_ID, for_key::check),
     (style_rule::RULE_ID, style_rule::check),

@@ -120,13 +120,18 @@ pub fn lower_concern_op(
     match op.first_arg() {
         PaintArg::Slots(slots) => lower_slot_object(spec, op, slots),
         PaintArg::Token(name) => {
+            if spec.name == "size" {
+                if let Some(decls) = language_size_decls(name) {
+                    return Ok(decls);
+                }
+            }
             if let Some(composite) = resolve_concern_name(spec, name) {
                 if spec.name == "size" {
                     reject_size_pad_members(composite, op)?;
                 }
                 return Ok(lower_composite(spec, composite));
             }
-            if is_named_scale_step(spec, name) {
+            if is_named_scale_step(spec, name) && !spinnaker::is_language_size_preset(name) {
                 return lower_named_scale_step(spec, name);
             }
             Err(StyleDiagnostic::RetiredSetter {
@@ -143,6 +148,33 @@ pub fn lower_concern_op(
             let css = spinnaker::token_groups::bridge_var_ref(root, path);
             Ok(primary_decls(spec, css))
         }
+    }
+}
+
+/// `size(hug|grow|max)` — participation, never a width token.
+/// grow/max must not emit `width: 100%`.
+fn language_size_decls(name: &str) -> Option<Vec<(String, String)>> {
+    match name {
+        "hug" => Some(vec![
+            ("flex-grow".into(), "0".into()),
+            ("flex-shrink".into(), "0".into()),
+            ("flex-basis".into(), "auto".into()),
+            ("min-width".into(), "auto".into()),
+            ("min-height".into(), "auto".into()),
+        ]),
+        "grow" => Some(vec![
+            ("flex-grow".into(), "1".into()),
+            ("flex-shrink".into(), "1".into()),
+            ("flex-basis".into(), "0".into()),
+            ("min-width".into(), "0".into()),
+            ("min-height".into(), "0".into()),
+        ]),
+        "max" => Some(vec![
+            ("align-self".into(), "stretch".into()),
+            ("min-width".into(), "0".into()),
+            ("min-height".into(), "0".into()),
+        ]),
+        _ => None,
     }
 }
 
@@ -199,6 +231,25 @@ fn lower_named_scale_step(
 
 /// Lower a resolved composite to the concern's CSS longhands (member vars).
 pub fn lower_composite(spec: &ConcernSpec, composite: &CompositeToken) -> Vec<(String, String)> {
+    // size(measure*) is a reading column, not a max-width cap. Cap-only
+    // lets a hug parent grow when an accordion opens (pricing FAQ).
+    // Width is the theme measure; max-width 100% so a narrow viewport wins.
+    // margin-inline auto is Container centering — without it every measured
+    // host sits on the left of a wide parent.
+    if spec.name == "size" && is_measure_identity(composite.name) {
+        if let Some((_, css)) = composite
+            .members
+            .iter()
+            .find(|(member, _)| *member == "max-w")
+        {
+            return vec![
+                ("width".into(), format!("var(--{css})")),
+                ("max-width".into(), "100%".into()),
+                ("margin-left".into(), "auto".into()),
+                ("margin-right".into(), "auto".into()),
+            ];
+        }
+    }
     let mut out = Vec::new();
     for slot in spec.slots {
         if slot_css(spec, slot).is_none() {
@@ -844,6 +895,8 @@ fn lower_motion_slots(
             "animate" => {
                 let css = match value {
                     PaintArg::Token(t) if t == "spin" => "var(--animate-spin)".into(),
+                    PaintArg::Token(t) if t == "bob" => "var(--animate-bob)".into(),
+                    PaintArg::Token(t) if t == "eq" => "var(--animate-eq)".into(),
                     PaintArg::Token(t) if t == "none" => "none".into(),
                     other => other.display(),
                 };
@@ -939,6 +992,13 @@ pub fn lower_slot_value(
     Ok((slot_css(spec, slot).unwrap_or("").to_string(), css))
 }
 
+fn is_measure_identity(name: &str) -> bool {
+    matches!(
+        name,
+        "size.measure" | "size.measure-sm" | "size.measure-md" | "size.measure-lg"
+    )
+}
+
 fn css_name_for_bind(name: &str) -> String {
     let mut out = String::new();
     for (i, c) in name.chars().enumerate() {
@@ -952,4 +1012,41 @@ fn css_name_for_bind(name: &str) -> String {
         }
     }
     out
+}
+
+#[cfg(test)]
+mod measure_column {
+    use super::*;
+    use spinnaker::concerns::find_concern;
+    use spinnaker::tokens::find_composite;
+
+    #[test]
+    fn size_measure_is_a_column_not_a_max_width_cap() {
+        let spec = find_concern("size").expect("size concern");
+        let composite = find_composite("size.measure").expect("size.measure");
+        let decls = lower_composite(spec, composite);
+        assert!(
+            decls
+                .iter()
+                .any(|(p, v)| p == "width" && v.contains("size-measure-max-w")),
+            "{decls:?}"
+        );
+        assert!(
+            decls.iter().any(|(p, v)| p == "max-width" && v == "100%"),
+            "{decls:?}"
+        );
+        assert!(
+            !decls
+                .iter()
+                .any(|(p, v)| p == "max-width" && v.contains("size-measure")),
+            "cap-only max-width would hug: {decls:?}"
+        );
+        assert!(
+            decls.iter().any(|(p, v)| p == "margin-left" && v == "auto")
+                && decls
+                    .iter()
+                    .any(|(p, v)| p == "margin-right" && v == "auto"),
+            "measure column must center: {decls:?}"
+        );
+    }
 }

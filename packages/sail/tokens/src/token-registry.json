@@ -25,8 +25,11 @@
     "backdrop",
     "background",
     "bg-button-color",
+    "bg-canvas-color",
     "bg-card-color",
+    "bg-control-color",
     "bg-muted-color",
+    "bg-overlay-color",
     "bg-surface-color",
     "body-font",
     "body-weight",
@@ -90,9 +93,12 @@
     "elevation-xl-shadow",
     "elevation-xs-shadow",
     "fg-button-color",
+    "fg-canvas-color",
     "fg-card-color",
     "fg-foreground-color",
     "fg-muted-color",
+    "fg-on-control-color",
+    "fg-on-surface-color",
     "focus-ring",
     "focus-ring-offset",
     "font-body",
@@ -165,6 +171,9 @@
     "mono-font",
     "muted",
     "muted-foreground",
+    "pad-page-lg-x",
+    "pad-page-md-x",
+    "pad-page-x",
     "panel-body-pad-y",
     "panel-ch-w-lg",
     "panel-ch-w-md",
@@ -254,6 +263,18 @@
     "size-control-sm-h",
     "size-full-h",
     "size-full-w",
+    "size-icon-lg-h",
+    "size-icon-lg-w",
+    "size-icon-md-h",
+    "size-icon-md-w",
+    "size-icon-sm-h",
+    "size-icon-sm-w",
+    "size-icon-xs-h",
+    "size-icon-xs-w",
+    "size-measure-lg-max-w",
+    "size-measure-max-w",
+    "size-measure-md-max-w",
+    "size-measure-sm-max-w",
     "space-0_75",
     "space-1",
     "space-10",
@@ -403,8 +424,11 @@
     "backdrop",
     "background",
     "bg-button-color",
+    "bg-canvas-color",
     "bg-card-color",
+    "bg-control-color",
     "bg-muted-color",
+    "bg-overlay-color",
     "bg-surface-color",
     "border",
     "border-default-color",
@@ -418,9 +442,12 @@
     "destructive-foreground",
     "divider",
     "fg-button-color",
+    "fg-canvas-color",
     "fg-card-color",
     "fg-foreground-color",
     "fg-muted-color",
+    "fg-on-control-color",
+    "fg-on-surface-color",
     "foreground",
     "hover-bg",
     "hue-amber",
@@ -1543,7 +1570,7 @@
       "path": "color.input",
       "cssName": "input",
       "type": "color",
-      "value": "oklch(0.147 0.004 49.25 / 25%)"
+      "value": "var(--background)"
     },
     "card": {
       "path": "color.card.default",
@@ -1983,6 +2010,24 @@
       "type": "number",
       "value": "24%"
     },
+    "pad-page-x": {
+      "path": "pad.page.x",
+      "cssName": "pad-page-x",
+      "type": "dimension",
+      "value": "var(--space-4)"
+    },
+    "pad-page-md-x": {
+      "path": "pad.page-md.x",
+      "cssName": "pad-page-md-x",
+      "type": "dimension",
+      "value": "var(--space-6)"
+    },
+    "pad-page-lg-x": {
+      "path": "pad.page-lg.x",
+      "cssName": "pad-page-lg-x",
+      "type": "dimension",
+      "value": "var(--space-8)"
+    },
     "border-default-color": {
       "path": "border.default.color",
       "cssName": "border-default-color",
@@ -2066,6 +2111,78 @@
       "cssName": "size-full-h",
       "type": "dimension",
       "value": "100%"
+    },
+    "size-measure-max-w": {
+      "path": "size.measure.max-w",
+      "cssName": "size-measure-max-w",
+      "type": "dimension",
+      "value": "var(--panel-ch-w-md)"
+    },
+    "size-measure-sm-max-w": {
+      "path": "size.measure-sm.max-w",
+      "cssName": "size-measure-sm-max-w",
+      "type": "dimension",
+      "value": "var(--panel-max-w-xs)"
+    },
+    "size-measure-md-max-w": {
+      "path": "size.measure-md.max-w",
+      "cssName": "size-measure-md-max-w",
+      "type": "dimension",
+      "value": "var(--panel-ch-w-md)"
+    },
+    "size-measure-lg-max-w": {
+      "path": "size.measure-lg.max-w",
+      "cssName": "size-measure-lg-max-w",
+      "type": "dimension",
+      "value": "var(--panel-ch-w-lg)"
+    },
+    "size-icon-xs-w": {
+      "path": "size.icon-xs.w",
+      "cssName": "size-icon-xs-w",
+      "type": "dimension",
+      "value": "var(--icon-size-xs)"
+    },
+    "size-icon-xs-h": {
+      "path": "size.icon-xs.h",
+      "cssName": "size-icon-xs-h",
+      "type": "dimension",
+      "value": "var(--icon-size-xs)"
+    },
+    "size-icon-sm-w": {
+      "path": "size.icon-sm.w",
+      "cssName": "size-icon-sm-w",
+      "type": "dimension",
+      "value": "var(--icon-size-sm)"
+    },
+    "size-icon-sm-h": {
+      "path": "size.icon-sm.h",
+      "cssName": "size-icon-sm-h",
+      "type": "dimension",
+      "value": "var(--icon-size-sm)"
+    },
+    "size-icon-md-w": {
+      "path": "size.icon-md.w",
+      "cssName": "size-icon-md-w",
+      "type": "dimension",
+      "value": "var(--icon-size-md)"
+    },
+    "size-icon-md-h": {
+      "path": "size.icon-md.h",
+      "cssName": "size-icon-md-h",
+      "type": "dimension",
+      "value": "var(--icon-size-md)"
+    },
+    "size-icon-lg-w": {
+      "path": "size.icon-lg.w",
+      "cssName": "size-icon-lg-w",
+      "type": "dimension",
+      "value": "var(--icon-size-lg)"
+    },
+    "size-icon-lg-h": {
+      "path": "size.icon-lg.h",
+      "cssName": "size-icon-lg-h",
+      "type": "dimension",
+      "value": "var(--icon-size-lg)"
     },
     "type-body-family": {
       "path": "type.body.family",
@@ -2349,6 +2466,24 @@
       "type": "color",
       "value": "var(--background)"
     },
+    "bg-canvas-color": {
+      "path": "bg.canvas.color",
+      "cssName": "bg-canvas-color",
+      "type": "color",
+      "value": "var(--background)"
+    },
+    "bg-control-color": {
+      "path": "bg.control.color",
+      "cssName": "bg-control-color",
+      "type": "color",
+      "value": "var(--input)"
+    },
+    "bg-overlay-color": {
+      "path": "bg.overlay.color",
+      "cssName": "bg-overlay-color",
+      "type": "color",
+      "value": "var(--popover)"
+    },
     "fg-foreground-color": {
       "path": "fg.foreground.color",
       "cssName": "fg-foreground-color",
@@ -2370,6 +2505,24 @@
     "fg-button-color": {
       "path": "fg.button.color",
       "cssName": "fg-button-color",
+      "type": "color",
+      "value": "var(--foreground)"
+    },
+    "fg-canvas-color": {
+      "path": "fg.canvas.color",
+      "cssName": "fg-canvas-color",
+      "type": "color",
+      "value": "var(--foreground)"
+    },
+    "fg-on-surface-color": {
+      "path": "fg.on-surface.color",
+      "cssName": "fg-on-surface-color",
+      "type": "color",
+      "value": "var(--card-foreground)"
+    },
+    "fg-on-control-color": {
+      "path": "fg.on-control.color",
+      "cssName": "fg-on-control-color",
       "type": "color",
       "value": "var(--foreground)"
     },
@@ -2781,8 +2934,11 @@
     "color.backdrop": "backdrop",
     "color.background": "background",
     "bg.button.color": "bg-button-color",
+    "bg.canvas.color": "bg-canvas-color",
     "bg.card.color": "bg-card-color",
+    "bg.control.color": "bg-control-color",
     "bg.muted.color": "bg-muted-color",
+    "bg.overlay.color": "bg-overlay-color",
     "bg.surface.color": "bg-surface-color",
     "typography.body.font": "body-font",
     "typography.body.weight": "body-weight",
@@ -2846,9 +3002,12 @@
     "elevation.xl.shadow": "elevation-xl-shadow",
     "elevation.xs.shadow": "elevation-xs-shadow",
     "fg.button.color": "fg-button-color",
+    "fg.canvas.color": "fg-canvas-color",
     "fg.card.color": "fg-card-color",
     "fg.foreground.color": "fg-foreground-color",
     "fg.muted.color": "fg-muted-color",
+    "fg.on-control.color": "fg-on-control-color",
+    "fg.on-surface.color": "fg-on-surface-color",
     "interaction.focus.ring": "focus-ring",
     "interaction.focus.ring-offset": "focus-ring-offset",
     "typography.font.body": "font-body",
@@ -2921,6 +3080,9 @@
     "typography.monoFont": "mono-font",
     "color.muted.default": "muted",
     "color.muted.foreground": "muted-foreground",
+    "pad.page-lg.x": "pad-page-lg-x",
+    "pad.page-md.x": "pad-page-md-x",
+    "pad.page.x": "pad-page-x",
     "panel.body-pad-y": "panel-body-pad-y",
     "panel.ch-w-lg": "panel-ch-w-lg",
     "panel.ch-w-md": "panel-ch-w-md",
@@ -3010,6 +3172,18 @@
     "size.control-sm.h": "size-control-sm-h",
     "size.full.h": "size-full-h",
     "size.full.w": "size-full-w",
+    "size.icon-lg.h": "size-icon-lg-h",
+    "size.icon-lg.w": "size-icon-lg-w",
+    "size.icon-md.h": "size-icon-md-h",
+    "size.icon-md.w": "size-icon-md-w",
+    "size.icon-sm.h": "size-icon-sm-h",
+    "size.icon-sm.w": "size-icon-sm-w",
+    "size.icon-xs.h": "size-icon-xs-h",
+    "size.icon-xs.w": "size-icon-xs-w",
+    "size.measure-lg.max-w": "size-measure-lg-max-w",
+    "size.measure.max-w": "size-measure-max-w",
+    "size.measure-md.max-w": "size-measure-md-max-w",
+    "size.measure-sm.max-w": "size-measure-sm-max-w",
     "space.0_75": "space-0_75",
     "space.1": "space-1",
     "space.10": "space-10",
@@ -3139,6 +3313,30 @@
   },
   "aliases": {},
   "composites": {
+    "pad.page": {
+      "path": "pad.page",
+      "cssName": "pad.page",
+      "type": "pad",
+      "members": {
+        "x": "pad-page-x"
+      }
+    },
+    "pad.page-md": {
+      "path": "pad.page-md",
+      "cssName": "pad.page-md",
+      "type": "pad",
+      "members": {
+        "x": "pad-page-md-x"
+      }
+    },
+    "pad.page-lg": {
+      "path": "pad.page-lg",
+      "cssName": "pad.page-lg",
+      "type": "pad",
+      "members": {
+        "x": "pad-page-lg-x"
+      }
+    },
     "border.default": {
       "path": "border.default",
       "cssName": "border.default",
@@ -3200,6 +3398,74 @@
       "members": {
         "w": "size-full-w",
         "h": "size-full-h"
+      }
+    },
+    "size.measure": {
+      "path": "size.measure",
+      "cssName": "size.measure",
+      "type": "size",
+      "members": {
+        "max-w": "size-measure-max-w"
+      }
+    },
+    "size.measure-sm": {
+      "path": "size.measure-sm",
+      "cssName": "size.measure-sm",
+      "type": "size",
+      "members": {
+        "max-w": "size-measure-sm-max-w"
+      }
+    },
+    "size.measure-md": {
+      "path": "size.measure-md",
+      "cssName": "size.measure-md",
+      "type": "size",
+      "members": {
+        "max-w": "size-measure-md-max-w"
+      }
+    },
+    "size.measure-lg": {
+      "path": "size.measure-lg",
+      "cssName": "size.measure-lg",
+      "type": "size",
+      "members": {
+        "max-w": "size-measure-lg-max-w"
+      }
+    },
+    "size.icon-xs": {
+      "path": "size.icon-xs",
+      "cssName": "size.icon-xs",
+      "type": "size",
+      "members": {
+        "w": "size-icon-xs-w",
+        "h": "size-icon-xs-h"
+      }
+    },
+    "size.icon-sm": {
+      "path": "size.icon-sm",
+      "cssName": "size.icon-sm",
+      "type": "size",
+      "members": {
+        "w": "size-icon-sm-w",
+        "h": "size-icon-sm-h"
+      }
+    },
+    "size.icon-md": {
+      "path": "size.icon-md",
+      "cssName": "size.icon-md",
+      "type": "size",
+      "members": {
+        "w": "size-icon-md-w",
+        "h": "size-icon-md-h"
+      }
+    },
+    "size.icon-lg": {
+      "path": "size.icon-lg",
+      "cssName": "size.icon-lg",
+      "type": "size",
+      "members": {
+        "w": "size-icon-lg-w",
+        "h": "size-icon-lg-h"
       }
     },
     "type.body": {
@@ -3368,6 +3634,30 @@
         "color": "bg-button-color"
       }
     },
+    "bg.canvas": {
+      "path": "bg.canvas",
+      "cssName": "bg.canvas",
+      "type": "bg",
+      "members": {
+        "color": "bg-canvas-color"
+      }
+    },
+    "bg.control": {
+      "path": "bg.control",
+      "cssName": "bg.control",
+      "type": "bg",
+      "members": {
+        "color": "bg-control-color"
+      }
+    },
+    "bg.overlay": {
+      "path": "bg.overlay",
+      "cssName": "bg.overlay",
+      "type": "bg",
+      "members": {
+        "color": "bg-overlay-color"
+      }
+    },
     "fg.foreground": {
       "path": "fg.foreground",
       "cssName": "fg.foreground",
@@ -3398,6 +3688,30 @@
       "type": "fg",
       "members": {
         "color": "fg-button-color"
+      }
+    },
+    "fg.canvas": {
+      "path": "fg.canvas",
+      "cssName": "fg.canvas",
+      "type": "fg",
+      "members": {
+        "color": "fg-canvas-color"
+      }
+    },
+    "fg.on-surface": {
+      "path": "fg.on-surface",
+      "cssName": "fg.on-surface",
+      "type": "fg",
+      "members": {
+        "color": "fg-on-surface-color"
+      }
+    },
+    "fg.on-control": {
+      "path": "fg.on-control",
+      "cssName": "fg.on-control",
+      "type": "fg",
+      "members": {
+        "color": "fg-on-control-color"
       }
     },
     "play.colors": {
@@ -3436,6 +3750,18 @@
         },
         "to": {
           "opacity": 1
+        }
+      }
+    },
+    "fade-out": {
+      "path": "keyframes.fade-out",
+      "type": "sail.keyframes",
+      "value": {
+        "from": {
+          "opacity": 1
+        },
+        "to": {
+          "opacity": 0
         }
       }
     },
@@ -3508,10 +3834,34 @@
       "type": "sail.keyframes",
       "value": {
         "from": {
-          "opacity": 1
+          "transform": "scale(1)"
         },
         "to": {
-          "opacity": 0.72
+          "transform": "scale(1.08)"
+        }
+      }
+    },
+    "bob": {
+      "path": "keyframes.bob",
+      "type": "sail.keyframes",
+      "value": {
+        "from": {
+          "transform": "translateY(0px)"
+        },
+        "to": {
+          "transform": "translateY(-6px)"
+        }
+      }
+    },
+    "eq": {
+      "path": "keyframes.eq",
+      "type": "sail.keyframes",
+      "value": {
+        "from": {
+          "transform": "scaleY(0.35)"
+        },
+        "to": {
+          "transform": "scaleY(1)"
         }
       }
     }

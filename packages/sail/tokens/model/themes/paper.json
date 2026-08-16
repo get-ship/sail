@@ -58,7 +58,7 @@
           }
         },
         "input": {
-          "$value": "oklch(0.20 0.015 60 / 14%)",
+          "$value": "oklch(0.20 0.015 60 / 5%)",
           "$type": "color"
         },
         "muted": {

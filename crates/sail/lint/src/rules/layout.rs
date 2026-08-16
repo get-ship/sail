@@ -68,7 +68,7 @@ pub fn tag_props(tag: &str) -> &'static [&'static str] {
         // toolbars, split panes, anything that must NOT reflow onto a second
         // line. Presence is the whole vocabulary (like `inline`); it layers a
         // `flex-wrap:nowrap` override on the base and composes with `inline`.
-        "row" => &["gap", "align", "justify", "inline", "nowrap"],
+        "row" => &["gap", "align", "justify", "inline", "nowrap", "cluster"],
         // `cols` is a fixed column count (1..=12); it conflicts with `min`
         // (the responsive `auto-fill minmax` axis) — `cols` wins if both
         // are present. `rows` is the orthogonal explicit ROW count
@@ -119,6 +119,8 @@ fn base_css(tag: &str) -> Vec<String> {
         "column" => vec![
             ".sail-col{display:flex;flex-direction:column;min-width:0}".into(),
             ".sail-col>*{min-width:0}".into(),
+            // size(hug) must beat the child crush (0-2-1 vs 0-1-1).
+            ".sail-col>.s-sizehug{min-width:auto;min-height:auto;flex:0 0 auto}".into(),
             // Defense: layout display must not override UA closed popover none.
             // Prefer a plain div[popover] host with layout nested inside.
             ".sail-col[popover]:not(:popover-open){display:none!important}".into(),
@@ -127,6 +129,12 @@ fn base_css(tag: &str) -> Vec<String> {
         "row" => vec![
             ".sail-row{display:flex;flex-wrap:wrap;min-width:0}".into(),
             ".sail-row>*{min-width:0}".into(),
+            // size(hug) must beat the child crush (0-2-1 vs 0-1-1).
+            ".sail-row>.s-sizehug{min-width:auto;min-height:auto;flex:0 0 auto}".into(),
+            // App shell: nowrap + stretch + a column sibling. The column
+            // takes leftover so a hug rail does not leave a dead right track.
+            // L3 cannot size(grow). Dashboard/settings are this row.
+            ".sail-row.sail-nowrap.sail-ai-stretch>.sail-col{flex:1 1 0;min-width:0}".into(),
             ".sail-row[popover]:not(:popover-open){display:none!important}".into(),
             ".sail-row[popover]:popover-open{display:flex;flex-wrap:wrap;min-width:0}".into(),
         ],
@@ -137,13 +145,19 @@ fn base_css(tag: &str) -> Vec<String> {
             ".sail-grid[popover]:not(:popover-open){display:none!important}".into(),
             ".sail-grid[popover]:popover-open{display:grid;min-width:0}".into(),
             ".sail-grid>*{grid-column:span 1;grid-row:span 1;min-width:0}".into(),
-            // Language attrs `col-span` / `row-span`.
+            // Language attrs on direct children. Not data-*. Not descendants.
             ".sail-grid>*[col-span='2']{grid-column:span 2}".into(),
             ".sail-grid>*[col-span='3']{grid-column:span 3}".into(),
             ".sail-grid>*[col-span='4']{grid-column:span 4}".into(),
+            ".sail-grid>*[col-span='all']{grid-column:1/-1}".into(),
             ".sail-grid>*[row-span='2']{grid-row:span 2}".into(),
             ".sail-grid>*[row-span='3']{grid-row:span 3}".into(),
             ".sail-grid>*[row-span='4']{grid-row:span 4}".into(),
+            ".sail-grid>*[row-span='all']{grid-row:1/-1}".into(),
+            ".sail-grid>*[col='1']{grid-column:1}".into(),
+            ".sail-grid>*[col='2']{grid-column:2}".into(),
+            ".sail-grid>*[col='3']{grid-column:3}".into(),
+            ".sail-grid>*[col='4']{grid-column:4}".into(),
             "@media(max-width:720px){.sail-grid>*[col-span]{grid-column:span 1}.sail-grid>*[row-span]{grid-row:span 1}}".into(),
         ],
         "center" => vec![
@@ -169,21 +183,29 @@ fn inline_base_css(tag: &str) -> Vec<String> {
         "column" => vec![
             ".sail-col-i{display:inline-flex;flex-direction:column;min-width:0}".into(),
             ".sail-col-i>*{min-width:0}".into(),
+            ".sail-col-i>.s-sizehug{min-width:auto;min-height:auto;flex:0 0 auto}".into(),
         ],
         "row" => vec![
             ".sail-row-i{display:inline-flex;flex-wrap:wrap;min-width:0}".into(),
             ".sail-row-i>*{min-width:0}".into(),
+            ".sail-row-i>.s-sizehug{min-width:auto;min-height:auto;flex:0 0 auto}".into(),
         ],
         "grid" => vec![
             ".sail-grid-i{display:inline-grid;min-width:0}".into(),
             ".sail-grid-i>*{grid-column:span 1;grid-row:span 1;min-width:0}".into(),
-            ".sail-grid-i>*[col-span='2'],.sail-grid-i>*[data-col-span='2']{grid-column:span 2}".into(),
-            ".sail-grid-i>*[col-span='3'],.sail-grid-i>*[data-col-span='3']{grid-column:span 3}".into(),
-            ".sail-grid-i>*[col-span='4'],.sail-grid-i>*[data-col-span='4']{grid-column:span 4}".into(),
-            ".sail-grid-i>*[row-span='2'],.sail-grid-i>*[data-row-span='2']{grid-row:span 2}".into(),
-            ".sail-grid-i>*[row-span='3'],.sail-grid-i>*[data-row-span='3']{grid-row:span 3}".into(),
-            ".sail-grid-i>*[row-span='4'],.sail-grid-i>*[data-row-span='4']{grid-row:span 4}".into(),
-            "@media(max-width:720px){.sail-grid-i>*[col-span],.sail-grid-i>*[data-col-span]{grid-column:span 1}.sail-grid-i>*[row-span],.sail-grid-i>*[data-row-span]{grid-row:span 1}}".into(),
+            ".sail-grid-i>*[col-span='2']{grid-column:span 2}".into(),
+            ".sail-grid-i>*[col-span='3']{grid-column:span 3}".into(),
+            ".sail-grid-i>*[col-span='4']{grid-column:span 4}".into(),
+            ".sail-grid-i>*[col-span='all']{grid-column:1/-1}".into(),
+            ".sail-grid-i>*[row-span='2']{grid-row:span 2}".into(),
+            ".sail-grid-i>*[row-span='3']{grid-row:span 3}".into(),
+            ".sail-grid-i>*[row-span='4']{grid-row:span 4}".into(),
+            ".sail-grid-i>*[row-span='all']{grid-row:1/-1}".into(),
+            ".sail-grid-i>*[col='1']{grid-column:1}".into(),
+            ".sail-grid-i>*[col='2']{grid-column:2}".into(),
+            ".sail-grid-i>*[col='3']{grid-column:3}".into(),
+            ".sail-grid-i>*[col='4']{grid-column:4}".into(),
+            "@media(max-width:720px){.sail-grid-i>*[col-span]{grid-column:span 1}.sail-grid-i>*[row-span]{grid-row:span 1}}".into(),
         ],
         // `<center inline>` drops the `width:100%` block default — an inline
         // center hug-wraps its content like an inline-flex equivalent of
@@ -233,7 +255,9 @@ pub const COLS_VALUES: &[&str] = &[
 ];
 fn allowed(prop: &str) -> &'static [&'static str] {
     match prop {
-        "gap" => &["0", "1", "2", "3", "4", "5", "6", "7", "8", "density"],
+        "gap" => &[
+            "0", "1", "2", "2_5", "3", "4", "5", "6", "7", "8", "density",
+        ],
         "align" => &["start", "center", "end", "stretch", "baseline"],
         // `evenly` (space-evenly) completes the main-axis distribution set:
         // `between` puts all extra space BETWEEN items, `evenly` puts equal
@@ -451,7 +475,10 @@ pub fn lower(tag: &str, attrs: &[(String, String)]) -> Option<(Vec<String>, Vec<
     // `inline` is a boolean axis: presence selects the inline base. It has
     // no class modifier of its own — the swap happens at the base, not as
     // an `sail-*` atomic riding on top of the block base.
-    let inline = attrs.iter().any(|(n, _)| n == "inline");
+    // `cluster` absorbs nowrap + inline: hug, nowrap, intrinsic kids.
+    // Default `<row>` is fill/wrap/crush. Cluster is the button-inner pack.
+    let cluster = tag == "row" && attrs.iter().any(|(n, _)| n == "cluster");
+    let inline = cluster || attrs.iter().any(|(n, _)| n == "inline");
     let mut classes = vec![if inline {
         inline_base_class(tag).to_string()
     } else {
@@ -466,10 +493,14 @@ pub fn lower(tag: &str, attrs: &[(String, String)]) -> Option<(Vec<String>, Vec<
     // override on top of the base's `flex-wrap:wrap`. Injected AFTER the base
     // rule so source order gives it the win (single-class selectors, so no
     // specificity game). Composes with `inline` — `<row inline nowrap>` gets
-    // the inline base plus this override.
-    if tag == "row" && attrs.iter().any(|(n, _)| n == "nowrap") {
+    // the inline base plus this override. `cluster` implies nowrap.
+    if tag == "row" && (cluster || attrs.iter().any(|(n, _)| n == "nowrap")) {
         classes.push("sail-nowrap".to_string());
         css.push(".sail-nowrap{flex-wrap:nowrap}".to_string());
+    }
+    if cluster {
+        classes.push("sail-cluster".to_string());
+        css.push(".sail-cluster>*{min-width:auto;flex:0 0 auto}".to_string());
     }
     // Mirror the compiler-side precedence: `cols` wins over `min` on `<grid>`.
     // Both own `grid-template-columns`, so when both axes are present the
@@ -483,7 +514,7 @@ pub fn lower(tag: &str, attrs: &[(String, String)]) -> Option<(Vec<String>, Vec<
     for &prop in tag_props(tag) {
         // `inline` is handled at the base, `nowrap` as a boolean override
         // above — neither is an enum-valued axis modifier.
-        if prop == "inline" || prop == "nowrap" {
+        if prop == "inline" || prop == "nowrap" || prop == "cluster" {
             continue;
         }
         if skip.contains(prop) {
@@ -670,7 +701,7 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                 if name == "gap"
                     && (value.ends_with("px") || value.chars().all(|c| c.is_ascii_digit()))
                 {
-                    m.push_str(" (gap is a spacing token 0–8, not a raw length)");
+                    m.push_str(" (gap is a spacing token 0–8 / 2_5, not a raw length)");
                 }
                 findings.push(mk(path, line, col, m));
             }
@@ -739,7 +770,7 @@ fn is_known_axis_prop(name: &str) -> bool {
 /// **Grid spans are language attrs**, not `data-*`. Author `col-span="2"`;
 /// the compiler leaves the attr on the host and layout CSS targets it.
 pub const PARTICIPATION_ATTRS: &[&str] = &[
-    "grow", "shrink", "w", "min-w", "max-w", "col-span", "row-span",
+    "grow", "shrink", "w", "min-w", "max-w", "col-span", "row-span", "col",
 ];
 
 pub fn is_participation_attr(name: &str) -> bool {
@@ -753,7 +784,7 @@ fn participation_setter(name: &str) -> Option<&'static str> {
         "grow" => "grow",
         "shrink" => "shrink",
         "w" | "min-w" | "max-w" => "size",
-        "col-span" | "row-span" => return None,
+        "col-span" | "row-span" | "col" => return None,
         _ => return None,
     })
 }
@@ -795,19 +826,37 @@ fn participation_token(name: &str, value: &str) -> Result<String, String> {
         "col-span" | "row-span" => {
             if value.is_empty() {
                 return Err(format!(
-                    "`{name}` needs a span count (e.g. `{name}=\"2\"`). Values: 2, 3, or 4."
+                    "`{name}` needs a span (e.g. `{name}=\"2\"`). Values: 2, 3, 4, or all."
                 ));
             }
             if value.starts_with('{') {
                 return Err(format!(
-                    "`{name}={{…}}` — grid span attrs are static integers (2|3|4)."
+                    "`{name}={{…}}` — grid span attrs are static (2|3|4|all)."
                 ));
             }
-            if matches!(value, "2" | "3" | "4") {
+            if matches!(value, "2" | "3" | "4" | "all") {
                 return Ok(value.to_string());
             }
             Err(format!(
-                "`{name}=\"{value}\"` — allowed values: \"2\", \"3\", or \"4\" (1 is the default)."
+                "`{name}=\"{value}\"` — allowed values: \"2\", \"3\", \"4\", or \"all\"."
+            ))
+        }
+        "col" => {
+            if value.is_empty() {
+                return Err(
+                    "`col` needs a track (e.g. `col=\"1\"`). Values: 1, 2, 3, or 4.".into(),
+                );
+            }
+            if value.starts_with('{') {
+                return Err(
+                    "`col={…}` — grid column placement is a static track (1|2|3|4).".into(),
+                );
+            }
+            if matches!(value, "1" | "2" | "3" | "4") {
+                return Ok(value.to_string());
+            }
+            Err(format!(
+                "`col=\"{value}\"` — allowed values: \"1\", \"2\", \"3\", or \"4\"."
             ))
         }
         _ => Err(format!("unknown participation attr `{name}`")),
@@ -822,7 +871,7 @@ fn participation_token(name: &str, value: &str) -> Result<String, String> {
 pub fn lower_participation(name: &str, value: &str) -> Option<(String, String)> {
     // Grid spans: validated but not class-lowered — layout CSS selects
     // `[col-span='N']` / `[row-span='N']` on children of `.sail-grid`.
-    if name == "col-span" || name == "row-span" {
+    if name == "col-span" || name == "row-span" || name == "col" {
         let _ = participation_token(name, value).ok()?;
         return None;
     }
@@ -857,7 +906,7 @@ pub fn participation_error(name: &str, value: &str) -> Option<String> {
         Err(msg) => Some(msg),
         Ok(token) => {
             // Grid spans stay as attrs — valid token is enough.
-            if name == "col-span" || name == "row-span" {
+            if name == "col-span" || name == "row-span" || name == "col" {
                 return None;
             }
             // Reuse Style resolution so allowed tokens stay in lockstep with
@@ -1392,6 +1441,17 @@ mod tests {
                 .any(|r| r.contains("justify-content:space-between"))
         );
         assert!(css.iter().any(|r| r.contains(".sail-row>*{min-width:0}")));
+        assert!(
+            css.iter()
+                .any(|r| r.contains(".sail-row>.s-sizehug{min-width:auto")),
+            "size(hug) must beat row crush: {css:?}"
+        );
+        assert!(
+            css.iter().any(|r| r.contains(
+                ".sail-row.sail-nowrap.sail-ai-stretch>.sail-col{flex:1 1 0;min-width:0}"
+            )),
+            "app-shell column beside a hug rail must grow: {css:?}"
+        );
     }
 
     #[test]
@@ -1410,6 +1470,22 @@ mod tests {
         let m = run(r#"<column gap="99">x</column>"#);
         assert_eq!(m.len(), 1);
         assert!(m[0].contains("spacing token"), "{}", m[0]);
+    }
+
+    #[test]
+    fn accepts_half_step_gap_2_5() {
+        assert!(run(r#"<row gap="2_5">x</row>"#).is_empty());
+        let (classes, css) = lower(
+            "row",
+            &[("cluster".into(), "".into()), ("gap".into(), "2_5".into())],
+        )
+        .unwrap();
+        assert!(classes.contains(&"sail-g-2_5".to_string()), "{classes:?}");
+        assert!(
+            css.iter()
+                .any(|r| r.contains(".sail-g-2_5") && r.contains("var(--space-2_5)")),
+            "half-step gap token: {css:?}"
+        );
     }
 
     #[test]
@@ -1657,6 +1733,28 @@ mod tests {
     }
 
     #[test]
+    fn lowers_row_cluster_to_hug_nowrap_intrinsic() {
+        let (classes, css) = lower(
+            "row",
+            &[("cluster".into(), "".into()), ("gap".into(), "2".into())],
+        )
+        .unwrap();
+        assert!(classes.contains(&"sail-row-i".to_string()), "{classes:?}");
+        assert!(classes.contains(&"sail-nowrap".to_string()), "{classes:?}");
+        assert!(classes.contains(&"sail-cluster".to_string()), "{classes:?}");
+        assert!(classes.contains(&"sail-g-2".to_string()), "{classes:?}");
+        assert!(
+            css.iter().any(|r| r.contains("flex-wrap:nowrap")),
+            "cluster nowrap: {css:?}"
+        );
+        assert!(
+            css.iter()
+                .any(|r| r.contains(".sail-cluster>*") && r.contains("min-width:auto")),
+            "cluster kids hug: {css:?}"
+        );
+    }
+
+    #[test]
     fn lowers_column_inline_with_default_axes() {
         // Default axis props still apply on `<column inline>` — the swap is
         // orthogonal to axis selection. `gap="4"` and `align="stretch"` are
@@ -1669,10 +1767,8 @@ mod tests {
 
     #[test]
     fn lowers_grid_inline_to_inline_grid_base_class() {
-        // Grid mirrors the same swap (`display:grid` → `inline-grid`). The
-        // child span/data-* selectors carry over identically — the inline
-        // base class has its own block of rules (`.sail-grid-i>` not
-        // `.sail-grid>`) so no rule collides across the two bases.
+        // Grid mirrors the same swap (`display:grid` → `inline-grid`).
+        // Span attrs stay language attrs (`col-span`), never data-*.
         let (classes, css) = lower("grid", &[("inline".into(), "".into())]).unwrap();
         assert_eq!(classes[0], "sail-grid-i");
         assert!(
@@ -1959,6 +2055,10 @@ mod tests {
         // the compiler consults) — if `<row>` ever loses `inline`, the
         // suggestion goes stale again and the test catches it.
         assert!(
+            tag_props("row").contains(&"cluster"),
+            "<row cluster> is the hug/nowrap/intrinsic pack"
+        );
+        assert!(
             tag_props("row").contains(&"inline"),
             "<row> must still take `inline` so the sx refusal's suggestion compiles"
         );
@@ -2103,7 +2203,7 @@ fn mk(path: &Path, line: usize, col: usize, message: String) -> Finding {
         message,
         suggest: Some(
             "Layout keywords: row/column (flex), grid, center, stack (z-overlay). \
-             gap is 0–8 (spacing tokens); align/justify take the flex enums."
+             gap is 0–8 or 2_5 (spacing tokens); align/justify take the flex enums."
                 .to_string(),
         ),
     }

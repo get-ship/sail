@@ -124,12 +124,36 @@ pub fn when_target(key: &str) -> Option<WhenTarget> {
                 if let Some(p) = sx_rules::state_data(base) {
                     return Some(WhenTarget::Ancestor(Cow::Owned(format!(".sail-grp{p} "))));
                 }
+                // Presence attrs win over a free `data-state~=` guess. `searchable`
+                // / `mode-only` / `mode` are host booleans, not data-state tokens.
+                if let Some(n) = sx_rules::group_attr_presence(base) {
+                    return Some(WhenTarget::Ancestor(Cow::Owned(format!(".sail-grp[{n}] "))));
+                }
+                // Enumerated host prop: group-variant-ring → .sail-grp[variant='ring']
+                // Same grammar for chrome / size / orientation / type / placement
+                // (navbar rail). Presence-only attrs stay on group_attr_presence.
+                for attr in [
+                    "variant",
+                    "chrome",
+                    "size",
+                    "orientation",
+                    "type",
+                    "placement",
+                ] {
+                    if let Some(v) = base.strip_prefix(&format!("{attr}-")) {
+                        if !v.is_empty()
+                            && v.bytes()
+                                .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-')
+                        {
+                            return Some(WhenTarget::Ancestor(Cow::Owned(format!(
+                                ".sail-grp[{attr}='{v}'] "
+                            ))));
+                        }
+                    }
+                }
                 // bare data-state value on group host: group-user → data-state~=user
                 if let Some(p) = sx_rules::state_data(&format!("state-{base}")) {
                     return Some(WhenTarget::Ancestor(Cow::Owned(format!(".sail-grp{p} "))));
-                }
-                if let Some(n) = sx_rules::group_attr_presence(base) {
-                    return Some(WhenTarget::Ancestor(Cow::Owned(format!(".sail-grp[{n}] "))));
                 }
             }
             None

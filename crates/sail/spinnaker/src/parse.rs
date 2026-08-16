@@ -2063,6 +2063,8 @@ fn expand_keyframe_play(
     if !from_tf.is_empty() || !to_tf.is_empty() {
         for (prop, fn_name) in [
             ("scale", "scale"),
+            ("scale-y", "scaleY"),
+            ("scale-x", "scaleX"),
             ("translate-y", "translateY"),
             ("translate-x", "translateX"),
             ("rotate", "rotate"),
@@ -2086,6 +2088,11 @@ fn expand_keyframe_play(
         if play.name == "spin" {
             parts.push("direction: 'normal'".into());
         }
+    }
+    // Siblings that share an enter/loop play cascade. A lone child is
+    // stagger(80)(0, 1) → 0 delay, so single tiles stay on the beat.
+    if trigger == "enter" || trigger == "loop" {
+        parts.push("stagger: 80".into());
     }
     if let Some(PaintArg::Token(tok)) = duration {
         if !tok.is_empty() && tok.chars().all(|c| c.is_ascii_digit() || c == '.') {
@@ -2324,26 +2331,22 @@ fn normalize_paint_arg(
 
     // L1 host surface graph — identity stays MemberPath; emit maps to public name.
     // Pack name comes from the compiler via host_ctx, not a table here.
-    if current_surface_pack().as_deref() == Some(root.as_str()) {
-        if super::component_surfaces::surface_slots(&root).is_some() {
-            if let Err(msg) = resolve_surface_author(&root, &path) {
-                diags.push(StyleDiagnostic::BadToken {
-                    setter: String::new(),
-                    value: if path.is_empty() {
-                        root.clone()
-                    } else {
-                        format!("{root}.{}", path.join("."))
-                    },
-                    source: source.clone(),
-                });
-                let _ = msg;
-            }
-        } else if path.len() > 1 {
+    // A host without a surface graph must not swallow its own name
+    // (`pad(page)` on `<page>` is the theme inset, not var(--page)).
+    if current_surface_pack().as_deref() == Some(root.as_str())
+        && super::component_surfaces::surface_slots(&root).is_some()
+    {
+        if let Err(msg) = resolve_surface_author(&root, &path) {
             diags.push(StyleDiagnostic::BadToken {
                 setter: String::new(),
-                value: format!("{root}.{}", path.join(".")),
+                value: if path.is_empty() {
+                    root.clone()
+                } else {
+                    format!("{root}.{}", path.join("."))
+                },
                 source: source.clone(),
             });
+            let _ = msg;
         }
         return PaintArg::MemberPath { root, path };
     }
@@ -2927,5 +2930,33 @@ mod flat_chain_tests {
             !joined.contains("CSS") && !joined.contains("Tailwind") && !joined.contains("HTML"),
             "generic unknown must not invent a pointer: {joined}"
         );
+    }
+
+    #[test]
+    fn page_host_does_not_swallow_page_theme_identities() {
+        // `<page>` installs host surface "page" with no surface graph.
+        // pad(page) is the theme inset, not var(--page).
+        crate::host_ctx::with_host_surface(Some("page"), || {
+            let (style, diags) = parse("style({ pad(page) })");
+            assert!(diags.is_empty(), "{:?}", msgs(&diags));
+            let mut seen_pad = false;
+            fn walk(s: &Style, pad: &mut bool) {
+                match s {
+                    Style::Set(op) => {
+                        if op.setter == "pad" {
+                            *pad = matches!(op.first_arg(), crate::ir::PaintArg::Token(n) if n == "page");
+                        }
+                    }
+                    Style::Chain(xs) | Style::List(xs) => {
+                        for x in xs {
+                            walk(x, pad);
+                        }
+                    }
+                    _ => {}
+                }
+            }
+            walk(&style, &mut seen_pad);
+            assert!(seen_pad, "pad(page) must stay a token: {style:?}");
+        });
     }
 }

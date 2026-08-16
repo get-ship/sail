@@ -857,7 +857,7 @@
       }
     },
     "input": {
-      "$value": "oklch(0.147 0.004 49.25 / 25%)",
+      "$value": "{background}",
       "$type": "color"
     },
     "card": {
@@ -1181,6 +1181,29 @@
       }
     }
   },
+  "pad": {
+    "page": {
+      "$type": "pad",
+      "$description": "Document inset at the default (mobile) breakpoint. Theme picks a space step.",
+      "$value": {
+        "x": "{space-4}"
+      }
+    },
+    "page-md": {
+      "$type": "pad",
+      "$description": "Document inset at tablet.",
+      "$value": {
+        "x": "{space-6}"
+      }
+    },
+    "page-lg": {
+      "$type": "pad",
+      "$description": "Document inset at desktop.",
+      "$value": {
+        "x": "{space-8}"
+      }
+    }
+  },
   "border": {
     "default": {
       "$type": "border",
@@ -1234,10 +1257,70 @@
     },
     "full": {
       "$type": "size",
-      "$description": "Fill the containing box (width + height 100%). Geometry only.",
+      "$description": "Fill the containing box (width + height 100%). Geometry only. Dies after size(grow)|size(max) migrate.",
       "$value": {
         "w": "100%",
         "h": "100%"
+      }
+    },
+    "measure": {
+      "$type": "size",
+      "$description": "Default reading column. Language lowers width + max-width 100% so the box does not hug.",
+      "$value": {
+        "max-w": "{panel.ch-w-md}"
+      }
+    },
+    "measure-sm": {
+      "$type": "size",
+      "$description": "Narrow reading width.",
+      "$value": {
+        "max-w": "{panel.max-w-xs}"
+      }
+    },
+    "measure-md": {
+      "$type": "size",
+      "$description": "Default reading width (alias of measure).",
+      "$value": {
+        "max-w": "{panel.ch-w-md}"
+      }
+    },
+    "measure-lg": {
+      "$type": "size",
+      "$description": "Wide reading width.",
+      "$value": {
+        "max-w": "{panel.ch-w-lg}"
+      }
+    },
+    "icon-xs": {
+      "$type": "size",
+      "$description": "Icon box xs. Geometry only.",
+      "$value": {
+        "w": "{icon.xs}",
+        "h": "{icon.xs}"
+      }
+    },
+    "icon-sm": {
+      "$type": "size",
+      "$description": "Icon box sm.",
+      "$value": {
+        "w": "{icon.sm}",
+        "h": "{icon.sm}"
+      }
+    },
+    "icon-md": {
+      "$type": "size",
+      "$description": "Icon box md.",
+      "$value": {
+        "w": "{icon.md}",
+        "h": "{icon.md}"
+      }
+    },
+    "icon-lg": {
+      "$type": "size",
+      "$description": "Icon box lg.",
+      "$value": {
+        "w": "{icon.lg}",
+        "h": "{icon.lg}"
       }
     }
   },
@@ -1403,9 +1486,30 @@
     },
     "button": {
       "$type": "bg",
-      "$description": "Button fill face. Color member aliases color.background.",
+      "$description": "Button fill face. Host pack — delete after L1 retarget. Color member aliases color.background.",
       "$value": {
         "color": "{color.background}"
+      }
+    },
+    "canvas": {
+      "$type": "bg",
+      "$description": "Page/root face. Color member aliases color.background.",
+      "$value": {
+        "color": "{color.background}"
+      }
+    },
+    "control": {
+      "$type": "bg",
+      "$description": "Input/combobox face. Color member aliases color.input.",
+      "$value": {
+        "color": "{color.input}"
+      }
+    },
+    "overlay": {
+      "$type": "bg",
+      "$description": "Popover/menu face. Color member aliases color.popover.",
+      "$value": {
+        "color": "{color.popover.default}"
       }
     }
   },
@@ -1433,7 +1537,28 @@
     },
     "button": {
       "$type": "fg",
-      "$description": "Button ink face. Color member aliases color.foreground.",
+      "$description": "Button ink face. Host pack — delete after L1 retarget.",
+      "$value": {
+        "color": "{color.foreground}"
+      }
+    },
+    "canvas": {
+      "$type": "fg",
+      "$description": "Ink on canvas. Alias of foreground during migrate.",
+      "$value": {
+        "color": "{color.foreground}"
+      }
+    },
+    "on-surface": {
+      "$type": "fg",
+      "$description": "Ink on surface. Color member aliases color.card.foreground.",
+      "$value": {
+        "color": "{color.card.foreground}"
+      }
+    },
+    "on-control": {
+      "$type": "fg",
+      "$description": "Ink on control. Color member aliases color.foreground.",
       "$value": {
         "color": "{color.foreground}"
       }
@@ -1730,10 +1855,18 @@
   "keyframes": {
     "fade": {
       "$type": "sail.keyframes",
-      "$description": "Opacity enter/exit preset.",
+      "$description": "Opacity enter preset. Exit uses fade-out.",
       "$value": {
         "from": { "opacity": 0 },
         "to": { "opacity": 1 }
+      }
+    },
+    "fade-out": {
+      "$type": "sail.keyframes",
+      "$description": "Opacity exit preset. Starts visible — does not pin rest at 0.",
+      "$value": {
+        "from": { "opacity": 1 },
+        "to": { "opacity": 0 }
       }
     },
     "fade-scale-in": {
@@ -1778,10 +1911,26 @@
     },
     "pulse": {
       "$type": "sail.keyframes",
-      "$description": "Gentle opacity breathe. Loop without disappearing.",
+      "$description": "Scale breathe. No opacity — looping opacity is a blink.",
       "$value": {
-        "from": { "opacity": 1 },
-        "to": { "opacity": 0.72 }
+        "from": { "transform": "scale(1)" },
+        "to": { "transform": "scale(1.08)" }
+      }
+    },
+    "bob": {
+      "$type": "sail.keyframes",
+      "$description": "Small vertical bounce. Ambient dots and idle marks spend this.",
+      "$value": {
+        "from": { "transform": "translateY(0px)" },
+        "to": { "transform": "translateY(-6px)" }
+      }
+    },
+    "eq": {
+      "$type": "sail.keyframes",
+      "$description": "Scale-Y bounce from the origin. Equalizer bars spend this.",
+      "$value": {
+        "from": { "transform": "scaleY(0.35)" },
+        "to": { "transform": "scaleY(1)" }
       }
     }
   },

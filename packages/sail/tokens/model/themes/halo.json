@@ -37,7 +37,7 @@
             "$type": "color"
           },
           "subtle": {
-            "$value": "transparent",
+            "$value": "oklch(0.30 0.015 230 / 10%)",
             "$type": "color"
           }
         },

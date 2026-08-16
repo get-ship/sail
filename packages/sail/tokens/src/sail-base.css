@@ -37,13 +37,19 @@
 
 @layer sail {
 @keyframes sail-spin { to { transform: rotate(360deg); } }
+@keyframes sail-bob { 0%, 100% { translate: 0 0; } 50% { translate: 0 -4px; } }
+@keyframes sail-eq { 0%, 100% { scale: 1 0.35; } 50% { scale: 1 1; } }
 @keyframes sail-skeleton-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 @keyframes sail-progress-indeterminate { 0% { background-position: -40% 0; } 100% { background-position: 140% 0; } }
-:root { --animate-spin: sail-spin 0.7s linear infinite; --animate-shimmer: sail-skeleton-shimmer 1.5s ease-in-out infinite; --animate-progress-indeterminate: sail-progress-indeterminate 1.2s ease-in-out infinite; }
+:root { --animate-spin: sail-spin 0.7s linear infinite; --animate-bob: sail-bob 0.7s ease-in-out infinite; --animate-eq: sail-eq 0.7s ease-in-out infinite; --animate-shimmer: sail-skeleton-shimmer 1.5s ease-in-out infinite; --animate-progress-indeterminate: sail-progress-indeterminate 1.2s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { :root { --animate-spin: sail-spin 1.5s linear infinite; } }
 *, *::before, *::after { box-sizing: border-box; }
-html, body { font-family: var(--font-body); color: var(--foreground); background: var(--background); }
-body { margin: 0; min-height: 100vh; font-size: var(--text-base); font-weight: var(--body-weight); line-height: var(--leading-normal, 1.5); }
+html, body { height: 100%; font-family: var(--font-body); color: var(--foreground); background: var(--background); }
+body { margin: 0; min-height: 100%; font-size: var(--text-base); font-weight: var(--body-weight); line-height: var(--leading-normal, 1.5); }
+/* Page mount is a block hug. Make it a viewport flex column so L2 size(grow)
+   on the site shell can take leftover (navbar hug + main grow). Substrate,
+   not paint — Identities cannot spell size({ h: fill }). */
+body > div:first-child { display: flex; flex-direction: column; min-height: 100%; }
 /*
  * Field captions (label for=…) keep --label-transform (often uppercase).
  * Checkbox/radio *captions* are sentence-case — never scream "I AGREE".
