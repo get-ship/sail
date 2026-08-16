@@ -112,9 +112,16 @@ describe('getRole', () => {
       <a href="/x">link</a>
       <input type="checkbox" />
       <input type="text" />
+      <hr aria-label="Or" />
+      <meter value="72" min="0" max="100"></meter>
+      <progress value="64" max="100"></progress>
     `)
     expect(getRole(root.querySelector('a')!)).toBe('link')
     expect(getRole(root.querySelector('input[type=checkbox]')!)).toBe('checkbox')
     expect(getRole(root.querySelector('input[type=text]')!)).toBe('textbox')
+    expect(getRole(root.querySelector('hr')!)).toBe('separator')
+    expect(getByRole(root, 'separator', { name: 'Or' })).toBeTruthy()
+    expect(getRole(root.querySelector('meter')!)).toBe('meter')
+    expect(getRole(root.querySelector('progress')!)).toBe('progressbar')
   })
 })
