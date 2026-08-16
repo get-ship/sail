@@ -15,7 +15,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import * as ts from 'typescript'
+import * as ts from '@typescript/typescript6'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const runtimeDir = resolve(here, '../../../packages/sail/runtime')

@@ -113,7 +113,7 @@ pub fn run_create(name: PathBuf) -> Result<()> {
          \"@ship/tokens\": \"^0.3.0\"\n  \
          }},\n  \
          \"devDependencies\": {{\n    \
-         \"typescript\": \"~5.8.3\",\n    \
+         \"typescript\": \"~7.0.2\",\n    \
          \"oxlint\": \"^1.77.0\"\n  \
          }}\n\
          }}\n"
@@ -179,9 +179,9 @@ pub fn run_create(name: PathBuf) -> Result<()> {
     );
     println!("[create] next steps:");
     println!("  1. cd {rel}");
-    println!("  2. bun install   # after @ship packages are published");
+    println!("  2. bun install   # package types + oxlint — not what turns LSP types on");
     println!("  3. bun run typecheck && bun run lint  # typecheck is `sail types --check`");
-    println!("  4. sail dev");
+    println!("  4. sail dev     # `sail lsp` types come from the sail + sail-ts-native pair");
     println!("  5. sail check .");
     Ok(())
 }

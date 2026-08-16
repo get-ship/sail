@@ -38,9 +38,8 @@
 //!
 //! ## Resolution (STEP ZERO)
 //!
-//! Prefer the native `@typescript/native-preview-*` binary (same order as
-//! `sail-lsp`), then `node_modules/.bin/tsgo`, then `tsgo` on PATH. Absent →
-//! loud `sail-type-gate` error naming `bun install` / `@typescript/native-preview`.
+//! Shared `sail_compiler::ts_native` resolver (peer sidecar / XDG / env).
+//! Absent → loud `sail-type-gate` error naming `sail ts-native setup`.
 //! Never a silent skip (including wasm32 — unsupported target fails loud).
 //!
 //! ## Tiers
@@ -334,8 +333,8 @@ fn collect_sail_type_gate_native(
                 end_col: 1,
                 severity: DiagSeverity::Error,
                 message: format!(
-                    "Type gate failed to invoke tsgo ({e}). \
-                     Install with `bun install` (`@typescript/native-preview`)."
+                    "Type gate failed to invoke the TypeScript sidecar ({e}). \
+                     Run `sail ts-native setup`."
                 ),
                 rule: Some(RULE_TYPE_GATE.to_string()),
             });

@@ -17,7 +17,7 @@
     "@ship/tokens": "^0.3.0"
   },
   "devDependencies": {
-    "typescript": "~5.8.3",
+    "typescript": "~7.0.2",
     "oxlint": "^1.77.0"
   }
 }

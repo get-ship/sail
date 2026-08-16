@@ -412,7 +412,7 @@ pub fn parse_version_stdout(stdout: &str) -> Option<String> {
     }
 }
 
-/// Until the pin PR, accept `7.0.2` or `7.0.0-dev.*`.
+/// Product pin is exact `7.0.2`.
 pub fn accept_probed_version(version: &str) -> bool {
-    version == TS_NATIVE_VERSION || version.starts_with("7.0.0-dev.")
+    version == TS_NATIVE_VERSION
 }

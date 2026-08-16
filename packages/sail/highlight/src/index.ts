@@ -3,6 +3,8 @@
  * Same query the Rust crate runs (`tree_sitter_sail::highlight`).
  */
 
+/// <reference lib="dom" />
+
 import { Parser, Language, Query } from 'web-tree-sitter'
 import { isSailScope, type SailScope } from './scopes'
 import { toTokHtml } from './tok'

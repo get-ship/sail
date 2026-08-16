@@ -22,7 +22,9 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 console.log('▸ generating .sail.d.ts companions')
 execFileSync('bun', [resolve(ROOT, 'scripts/gen-component-types.ts')], { stdio: 'inherit' })
 
-const tsc = resolve(ROOT, 'node_modules/.bin/tsc')
+// typescript@7 wrapper (not `.bin/tsc` — bun hoists `@typescript/old`'s tsc
+// when `@typescript/typescript6` is a workspace dep).
+const tsc = resolve(ROOT, 'node_modules/typescript/bin/tsc')
 const PACKS = readdirSync(resolve(ROOT, 'packages/components/sail'))
   .map((d) => resolve(ROOT, 'packages/components/sail', d))
   .filter((d) => statSync(d).isDirectory() && existsSync(resolve(d, 'tsconfig.json')))
