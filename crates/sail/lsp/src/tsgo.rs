@@ -1330,14 +1330,12 @@ mod tests {
             .join("../../..")
             .canonicalize()
             .unwrap();
-        if discover_tsgo(Some(&root)).is_none() {
-            eprintln!("SKIP live_session: no tsgo");
-            return;
+        if discover_tsgo(None).is_none() {
+            panic!("{}", sail_compiler::ts_native::missing_sidecar_hint());
         }
         let mut session = TsgoSession::start(Some(&root));
         if !session.is_live() {
-            eprintln!("SKIP live_session: failed to start");
-            return;
+            panic!("sidecar present but TsgoSession failed to start");
         }
         let src = r#"<controller>
 import { controller, signal } from '@ship/sail-runtime'
@@ -1483,8 +1481,8 @@ export default controller((ctx) => ({ count: signal(0) }))
             .join("../../..")
             .canonicalize()
             .unwrap();
-        if discover_tsgo(Some(&root)).is_none() {
-            panic!("tsgo required");
+        if discover_tsgo(None).is_none() {
+            panic!("{}", sail_compiler::ts_native::missing_sidecar_hint());
         }
         let project = isolated_at_alias_app();
         // Discover tsgo from this checkout; `@/` rewrite keys off the .sail path.
@@ -1536,14 +1534,12 @@ export default controller(() => {
             .join("../../..")
             .canonicalize()
             .unwrap();
-        if discover_tsgo(Some(&root)).is_none() {
-            eprintln!("SKIP live_module_resolve: no tsgo");
-            return;
+        if discover_tsgo(None).is_none() {
+            panic!("{}", sail_compiler::ts_native::missing_sidecar_hint());
         }
         let mut session = TsgoSession::start(Some(&root));
         if !session.is_live() {
-            eprintln!("SKIP live_module_resolve: failed to start");
-            return;
+            panic!("sidecar present but TsgoSession failed to start");
         }
         let dir = owned_route_tree();
         let page = dir.join("routes/page.sail");
@@ -1576,11 +1572,9 @@ export default controller(() => ({ navigate, appRouteBase }))
             .join("../../..")
             .canonicalize()
             .unwrap();
-        let found = discover_tsgo(Some(&root));
-        let Some(_) = found else {
-            eprintln!("SKIP live_tsgo_named_style_ref_is_in_scope: no tsgo");
-            return;
-        };
+        if discover_tsgo(None).is_none() {
+            panic!("{}", sail_compiler::ts_native::missing_sidecar_hint());
+        }
         let mut session = TsgoSession::start(Some(&root));
         assert!(
             session.is_live(),
@@ -1633,9 +1627,8 @@ export default controller(() => ({}))
             .join("../../..")
             .canonicalize()
             .unwrap();
-        if discover_tsgo(Some(&root)).is_none() {
-            eprintln!("SKIP live_tsgo_multiline_scope_type: no tsgo");
-            return;
+        if discover_tsgo(None).is_none() {
+            panic!("{}", sail_compiler::ts_native::missing_sidecar_hint());
         }
         let mut session = TsgoSession::start(Some(&root));
         assert!(session.is_live(), "tsgo session failed to start");
@@ -1673,9 +1666,8 @@ export default controller(() => ({}))
             .join("../../..")
             .canonicalize()
             .unwrap();
-        if discover_tsgo(Some(&root)).is_none() {
-            eprintln!("SKIP live_tsgo_landing_shaped_named_styles_are_in_scope: no tsgo");
-            return;
+        if discover_tsgo(None).is_none() {
+            panic!("{}", sail_compiler::ts_native::missing_sidecar_hint());
         }
         let mut session = TsgoSession::start(Some(&root));
         assert!(session.is_live(), "tsgo session failed to start");

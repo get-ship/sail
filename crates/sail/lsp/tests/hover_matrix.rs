@@ -1,7 +1,6 @@
 //! JOB-EDITOR-1 hover matrix — local fixture only (no studio walk).
 //!
-//! Records 1-based line/col + contents for each probe. Empty hover when
-//! tsgo is on PATH is a fail. Soft-skip only if tsgo/node_modules is missing.
+//! Structure probes always run. TS probes are red gates.
 
 use std::path::PathBuf;
 use std::time::Duration;
@@ -98,19 +97,14 @@ fn hover_matrix_records_probes() {
     let mut intel = Intelligence::start(Some(&repo_root()));
     intel.open_or_update(&doc_key(Some(path), "hover.sail"), FIXTURE);
 
-    let tsgo = sail_lsp::tsgo_test::discover_tsgo(Some(&repo_root()));
-    let tsgo_present = tsgo.is_some();
-    if tsgo_present {
-        assert!(
-            intel.is_tsgo_live(),
-            "tsgo is on PATH — dead session is a fail"
-        );
-        std::thread::sleep(Duration::from_millis(200));
-    } else {
-        eprintln!(
-            "NOTE: tsgo/node_modules missing — TS probes soft-skip; structure probes still run"
-        );
+    if sail_lsp::tsgo_test::discover_tsgo(None).is_none() {
+        panic!("{}", sail_compiler::ts_native::missing_sidecar_hint());
     }
+    assert!(
+        intel.is_tsgo_live(),
+        "sidecar present but Intelligence session is dead"
+    );
+    std::thread::sleep(Duration::from_millis(200));
 
     // ── probes (1-based) ──────────────────────────────────────────────
     let (theme_l, theme_c) = pos_of(FIXTURE, "primary");
@@ -126,15 +120,9 @@ fn hover_matrix_records_probes() {
     let layout = settle_hover(&mut intel, path, col_l, col_c);
     let unknown = settle_hover(&mut intel, path, pad_l, pad_c);
 
-    let (signal, controller, style_foo) = if tsgo_present {
-        (
-            settle_hover(&mut intel, path, signal_l, signal_c),
-            settle_hover(&mut intel, path, ctrl_l, ctrl_c),
-            settle_hover(&mut intel, path, foo_l, foo_c),
-        )
-    } else {
-        (String::new(), String::new(), String::new())
-    };
+    let signal = settle_hover(&mut intel, path, signal_l, signal_c);
+    let controller = settle_hover(&mut intel, path, ctrl_l, ctrl_c);
+    let style_foo = settle_hover(&mut intel, path, foo_l, foo_c);
 
     eprintln!(
         "\nHOVER MATRIX (1-based)\n\
@@ -189,14 +177,9 @@ fn hover_matrix_records_probes() {
     );
     assert!(!unknown.contains("Pure."), "do not say Pure.: {unknown}");
 
-    if !tsgo_present {
-        return;
-    }
-
-    // signal / controller — empty is a fail when tsgo is present
     assert!(
         !signal.trim().is_empty(),
-        "empty hover on `signal` when tsgo is on PATH is a fail"
+        "empty hover on `signal` is a fail"
     );
     assert!(
         looks_typed_signal_or_fn(&signal),
@@ -204,7 +187,7 @@ fn hover_matrix_records_probes() {
     );
     assert!(
         !controller.trim().is_empty(),
-        "empty hover on `controller` when tsgo is on PATH is a fail"
+        "empty hover on `controller` is a fail"
     );
     assert!(
         looks_typed_signal_or_fn(&controller),
@@ -214,7 +197,7 @@ fn hover_matrix_records_probes() {
     // style.foo must not be typed as {} if we claim types
     assert!(
         !style_foo.trim().is_empty(),
-        "empty hover on style.bg when tsgo is on PATH is a fail"
+        "empty hover on style.bg is a fail"
     );
     assert!(
         !is_empty_object_type(&style_foo),

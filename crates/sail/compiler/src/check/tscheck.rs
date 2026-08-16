@@ -3973,9 +3973,7 @@ mod tests {
             .ancestors()
             .nth(3)
             .expect("workspace root");
-        if resolve_tsgo(Some(root)).is_none() {
-            panic!("tsgo required for type gate tests — run bun install");
-        }
+        require_tsgo();
         let src = r#"
 <controller>
 export default controller((ctx) => {
@@ -4218,9 +4216,7 @@ export default controller(() => {
             .ancestors()
             .nth(3)
             .expect("workspace root");
-        if resolve_tsgo(Some(root)).is_none() {
-            panic!("tsgo required");
-        }
+        require_tsgo();
         let tmp = tempfile::tempdir().unwrap();
         let project = tmp.path();
         std::fs::create_dir_all(project.join("src/stores")).unwrap();
@@ -4376,9 +4372,7 @@ export default controller((ctx) => {
             .ancestors()
             .nth(3)
             .expect("workspace root");
-        if resolve_tsgo(Some(workspace)).is_none() {
-            panic!("tsgo required");
-        }
+        require_tsgo();
         let tmp = tempfile::tempdir().expect("temp project");
         let root = tmp.path();
         let bad = (
@@ -4414,9 +4408,7 @@ export default controller((ctx) => {
             .ancestors()
             .nth(3)
             .expect("workspace root");
-        if resolve_tsgo(Some(workspace)).is_none() {
-            panic!("tsgo required");
-        }
+        require_tsgo();
         let tmp = tempfile::tempdir().expect("temp project");
         let root = tmp.path();
         let file = (
@@ -4438,9 +4430,7 @@ export default controller((ctx) => {
             .ancestors()
             .nth(3)
             .expect("workspace root");
-        if resolve_tsgo(Some(root)).is_none() {
-            panic!("tsgo required");
-        }
+        require_tsgo();
         // Doctrine: real type errors (not just DOM names) fail the gate.
         let src = r#"
 <controller>
@@ -4507,9 +4497,7 @@ export default controller((ctx) => {
             .ancestors()
             .nth(3)
             .expect("workspace root");
-        if resolve_tsgo(Some(root)).is_none() {
-            panic!("tsgo required");
-        }
+        require_tsgo();
         let src = r#"
 <controller>
 import { helper } from './definitely-missing-mod-xyz'
@@ -4536,9 +4524,7 @@ export default controller((ctx) => {
             .ancestors()
             .nth(3)
             .expect("workspace root");
-        if resolve_tsgo(Some(root)).is_none() {
-            panic!("tsgo required");
-        }
+        require_tsgo();
         let tmp = tempfile::tempdir().unwrap();
         let project = tmp.path();
         std::fs::create_dir_all(project.join("src")).unwrap();
@@ -4575,9 +4561,7 @@ export default controller((ctx) => {
             .ancestors()
             .nth(3)
             .expect("workspace root");
-        if resolve_tsgo(Some(root)).is_none() {
-            panic!("tsgo required");
-        }
+        require_tsgo();
         let src = r#"
 <controller>
 export default controller((ctx) => {
@@ -4603,9 +4587,7 @@ export default controller((ctx) => {
             .ancestors()
             .nth(3)
             .expect("workspace root");
-        if resolve_tsgo(Some(root)).is_none() {
-            panic!("tsgo required");
-        }
+        require_tsgo();
         let cases = [
             ("const x = v as unknown as string", "as unknown as"),
             ("const x = v satisfies any", "satisfies any"),
@@ -4642,9 +4624,7 @@ export default controller((ctx) => {{
             .ancestors()
             .nth(3)
             .expect("workspace root");
-        if resolve_tsgo(Some(root)).is_none() {
-            panic!("tsgo required");
-        }
+        require_tsgo();
         let src = r#"
 <controller>
 export default controller((ctx) => {
@@ -4740,9 +4720,7 @@ export default controller(() => {
             .ancestors()
             .nth(3)
             .expect("workspace root");
-        if resolve_tsgo(Some(root)).is_none() {
-            panic!("tsgo required");
-        }
+        require_tsgo();
         let src = r#"
 <controller>
 import type { Scope } from './missing-sibling.sail'
@@ -4800,9 +4778,7 @@ export default controller(() => {{
             .ancestors()
             .nth(3)
             .expect("workspace root");
-        if resolve_tsgo(Some(root)).is_none() {
-            panic!("tsgo required");
-        }
+        require_tsgo();
         let tmp = tempfile::tempdir().unwrap();
         let project = tmp.path();
         write_export_kind_fixture(project);
@@ -4840,9 +4816,7 @@ export default controller(() => {{
             .ancestors()
             .nth(3)
             .expect("workspace root");
-        if resolve_tsgo(Some(root)).is_none() {
-            panic!("tsgo required");
-        }
+        require_tsgo();
         let tmp = tempfile::tempdir().unwrap();
         let project = tmp.path();
         write_export_kind_fixture(project);
@@ -4882,9 +4856,7 @@ export default controller(() => {{
             .ancestors()
             .nth(3)
             .expect("workspace root");
-        if resolve_tsgo(Some(root)).is_none() {
-            panic!("tsgo required");
-        }
+        require_tsgo();
         let tmp = tempfile::tempdir().unwrap();
         let project = tmp.path();
         std::fs::create_dir_all(project.join("src/stores")).unwrap();
@@ -4927,9 +4899,7 @@ export default controller(() => {
             .ancestors()
             .nth(3)
             .expect("workspace root");
-        if resolve_tsgo(Some(root)).is_none() {
-            panic!("tsgo required");
-        }
+        require_tsgo();
         let tmp = tempfile::tempdir().unwrap();
         let project = tmp.path();
         std::fs::create_dir_all(project.join("src")).unwrap();
@@ -4989,9 +4959,7 @@ export default controller(() => {
             .ancestors()
             .nth(3)
             .expect("workspace root");
-        if resolve_tsgo(Some(root)).is_none() {
-            panic!("tsgo required");
-        }
+        require_tsgo();
         let tmp = tempfile::tempdir().unwrap();
         let project = tmp.path();
         std::fs::create_dir_all(project.join("src/widget")).unwrap();
@@ -5032,9 +5000,7 @@ export default controller((ctx) => {
             .ancestors()
             .nth(3)
             .expect("workspace root");
-        if resolve_tsgo(Some(root)).is_none() {
-            panic!("tsgo required");
-        }
+        require_tsgo();
         let tmp = tempfile::tempdir().unwrap();
         let project = tmp.path();
         std::fs::create_dir_all(project.join("src/widget")).unwrap();
@@ -5082,9 +5048,7 @@ export default controller((ctx) => {
             .ancestors()
             .nth(3)
             .expect("workspace root");
-        if resolve_tsgo(Some(root)).is_none() {
-            panic!("tsgo required");
-        }
+        require_tsgo();
         // First content line is indented; `window` starts at author col 14
         // (2-space indent + "const x = " is 10 → window at 13? Let's compute:
         // "  const x = window" → w is at index 12 → col 13).
@@ -5112,9 +5076,7 @@ export default controller((ctx) => {
             .ancestors()
             .nth(3)
             .expect("workspace root");
-        if resolve_tsgo(Some(root)).is_none() {
-            panic!("tsgo required");
-        }
+        require_tsgo();
         let src = r#"
 <controller>
 export default controller((ctx) => {
@@ -5230,9 +5192,7 @@ export function props<T extends Record<string, Prop<unknown> | readonly string[]
             .ancestors()
             .nth(3)
             .expect("workspace root");
-        if resolve_tsgo(Some(root)).is_none() {
-            panic!("tsgo required");
-        }
+        require_tsgo();
         let tmp = tempfile::tempdir().expect("tmpdir");
         let project = tmp.path();
         std::fs::create_dir_all(project.join("src/stores")).unwrap();

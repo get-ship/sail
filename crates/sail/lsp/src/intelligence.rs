@@ -761,11 +761,8 @@ export default controller(() => ({ primary: signal(0) }))
 
     #[test]
     fn hover_signal_typed_when_tsgo_present() {
-        // Soft-skip only when tsgo/node_modules is missing. When the session is
-        // live, require a typed hover (warm + brief settle; no silent skip).
-        if crate::tsgo::discover_tsgo(Some(&repo_root())).is_none() {
-            eprintln!("SKIP intelligence hover: no tsgo");
-            return;
+        if crate::tsgo::discover_tsgo(None).is_none() {
+            panic!("{}", sail_compiler::ts_native::missing_sidecar_hint());
         }
         let mut intel = Intelligence::start(Some(&repo_root()));
         assert!(

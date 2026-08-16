@@ -1595,16 +1595,12 @@ mod tests {
     fn hover_signal_typed_when_tsgo_present() {
         use crate::call_rpc;
         use crate::ctx::Ctx;
-        // Soft-skip only when tsgo/node_modules is missing. When discovered and
-        // the session is live, warm + retry then require typed hover (no silent
-        // empty-skip). Matches intelligence::hover_signal_typed_when_tsgo_present.
         let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../..")
             .canonicalize()
             .expect("repo root");
-        if sail_lsp::tsgo_test::discover_tsgo(Some(&root)).is_none() {
-            eprintln!("SKIP hover_signal: tsgo not found");
-            return;
+        if sail_lsp::tsgo_test::discover_tsgo(None).is_none() {
+            panic!("{}", sail_compiler::ts_native::missing_sidecar_hint());
         }
         let ctx = Ctx::new(&root, &root, &root);
         let src = r#"<controller>
@@ -1685,7 +1681,9 @@ export default controller((ctx) => ({ count: signal(0) }))
             .join("../../..")
             .canonicalize()
             .expect("repo root");
-        let tsgo_present = sail_lsp::tsgo_test::discover_tsgo(Some(&root)).is_some();
+        if sail_lsp::tsgo_test::discover_tsgo(None).is_none() {
+            panic!("{}", sail_compiler::ts_native::missing_sidecar_hint());
+        }
         let ctx = Ctx::new(&root, &root, &root);
 
         let pos_of = |needle: &str| -> (u32, u32) {
@@ -1738,10 +1736,6 @@ export default controller((ctx) => ({ count: signal(0) }))
         );
         assert!(!layout.contains("Pure.") && !unknown.contains("Pure."));
 
-        if !tsgo_present {
-            eprintln!("SKIP hover_matrix rpc TS probes: tsgo not found");
-            return;
-        }
         let live = sail_lsp::with_global_session(Some(&root), |intel| intel.is_tsgo_live());
         assert!(
             live,
