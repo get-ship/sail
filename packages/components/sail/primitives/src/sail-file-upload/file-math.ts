@@ -7,7 +7,10 @@ export function fmtSize(bytes: number): string {
 }
 
 /** True when `file` matches a comma-separated accept string (ext, type, or type/*). */
-export function matchesAccept(file: File, accept: string): boolean {
+export function matchesAccept(
+  file: { name: string; type: string },
+  accept: string,
+): boolean {
   const tokens = accept
     .split(',')
     .map((t: string) => t.trim().toLowerCase())

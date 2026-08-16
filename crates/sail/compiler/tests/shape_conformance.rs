@@ -153,7 +153,6 @@ fn write_tsconfig(temp_dir: &Path, repo: &Path) {
             "isolatedModules": false,
             "allowImportingTsExtensions": true,
             "types": [],
-            "baseUrl": ".",
             "paths": {
                 "@ship/sail-runtime": [runtime_index.to_string_lossy()],
                 "@ship/sail-runtime/template-hooks": [runtime_template_hooks.to_string_lossy()],
@@ -168,16 +167,14 @@ fn write_tsconfig(temp_dir: &Path, repo: &Path) {
     fs::write(&path, serde_json::to_string_pretty(&cfg).unwrap()).expect("write tsconfig");
 }
 
-/// Discover `tsc`. Production CI runs `bun install --frozen-lockfile`
-/// before tests; locally devs may run from a fresh clone. Skip the
-/// tsc-bound assertion (with a printed warning) when nothing's
-/// available — the structural check still gates.
-fn find_tsc(repo: &Path) -> Option<PathBuf> {
-    let direct = repo.join("node_modules/typescript/bin/tsc");
-    if direct.exists() {
-        return Some(direct);
-    }
-    None
+fn require_tsc(repo: &Path) -> PathBuf {
+    let p = repo.join("node_modules/typescript/bin/tsc");
+    assert!(
+        p.is_file(),
+        "repo TypeScript wrapper missing at {} — bun install",
+        p.display()
+    );
+    p
 }
 
 /// Parse named imports of a given module specifier from emitted JS.
@@ -408,16 +405,7 @@ fn every_sail_compiles_and_imports_resolve() {
 fn every_sail_typechecks_against_runtime_dts() {
     let repo = repo_root();
 
-    // Skip cleanly when tsc isn't available — local first-clone flow,
-    // not CI. CI runs `bun install` before tests.
-    let Some(tsc_bin) = find_tsc(&repo) else {
-        eprintln!(
-            "shape-conformance: tsc not found at node_modules/typescript/bin/tsc — \
-             run `bun install` to enable the typecheck pass. Structural \
-             check still gates."
-        );
-        return;
-    };
+    let tsc_bin = require_tsc(&repo);
 
     let temp = tempfile::tempdir().expect("tempdir");
     let temp_path = temp.path().to_path_buf();

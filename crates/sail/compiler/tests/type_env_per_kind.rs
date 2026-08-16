@@ -22,8 +22,8 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 use sail_compiler::ambients::{
-    PROJECT_CSS_MODULES_REL, TypeEnv, emit_action_observation_dts, emit_css_side_effect_module,
-    lib_for_type_env, type_env_for_kind, type_env_for_path, write_project_type_configs,
+    PROJECT_CSS_MODULES_REL, TypeEnv, emit_action_observation_dts, lib_for_type_env,
+    type_env_for_kind, type_env_for_path, write_project_type_configs,
 };
 use sail_compiler::check::tscheck::resolve_tsgo;
 use sail_compiler::project_map::{FileKind, classify};
@@ -47,14 +47,19 @@ fn repo_root() -> PathBuf {
         .unwrap()
 }
 
-fn tsc_path(repo: &Path) -> Option<PathBuf> {
+fn require_tsc(repo: &Path) -> PathBuf {
     let p = repo.join("node_modules/typescript/bin/tsc");
-    p.exists().then_some(p)
+    assert!(
+        p.is_file(),
+        "repo TypeScript wrapper missing at {} — bun install",
+        p.display()
+    );
+    p
 }
 
 /// Write a minimal tsc project for `env` and typecheck `source` as `snippet.ts`.
 /// Returns (success, combined stdout+stderr).
-fn tsc_snippet(env: TypeEnv, source: &str) -> Option<(bool, String)> {
+fn tsc_snippet(env: TypeEnv, source: &str) -> (bool, String) {
     tsc_snippet_with_extra(env, source, &[])
 }
 
@@ -63,9 +68,9 @@ fn tsc_snippet_with_extra(
     env: TypeEnv,
     source: &str,
     extra_dts: &[(&str, String)],
-) -> Option<(bool, String)> {
+) -> (bool, String) {
     let repo = repo_root();
-    let tsc = tsc_path(&repo)?;
+    let tsc = require_tsc(&repo);
 
     let work = tempfile::tempdir().expect("tempdir for type-env tsc");
     let root = work.path();
@@ -113,7 +118,7 @@ fn tsc_snippet_with_extra(
         String::from_utf8_lossy(&out.stdout),
         String::from_utf8_lossy(&out.stderr)
     );
-    Some((out.status.success(), combined))
+    (out.status.success(), combined)
 }
 
 // ── 1. classify → type env selection ───────────────────────────────────────
@@ -334,11 +339,11 @@ fn action_observation_ambient_does_not_declare_god_globals() {
     }
 }
 
-// ── 4. tsc behavioral proofs (opt-in when tsc present) ──────────────────────
+// ── 4. tsc behavioral proofs ───────────────────────────────────────────────
 
 #[test]
 fn pure_composition_snippet_document_fails_typecheck() {
-    let Some((ok, out)) = tsc_snippet(
+    let (ok, out) = tsc_snippet(
         TypeEnv::Sail,
         r#"
 // composition / store / controller shape — must not see document
@@ -346,17 +351,7 @@ export function useTitle(n: number): void {
   document.title = `count: ${n}`
 }
 "#,
-    ) else {
-        eprintln!("SKIP pure_composition_snippet_document_fails_typecheck: tsc not found");
-        // Still fail the *product* contract when tsc is absent: Pure lib must
-        // exclude DOM so document is unnameable by construction.
-        let lib = lib_for_type_env(TypeEnv::Sail);
-        assert!(
-            !has_dom_lib(lib),
-            "without tsc, Pure lib must still exclude DOM (got {lib:?})"
-        );
-        return;
-    };
+    );
     assert!(
         !ok,
         "Pure env must fail typecheck when naming document; was green:\n{out}"
@@ -372,19 +367,14 @@ export function useTitle(n: number): void {
 
 #[test]
 fn pure_store_snippet_window_fails_typecheck() {
-    let Some((ok, out)) = tsc_snippet(
+    let (ok, out) = tsc_snippet(
         TypeEnv::Sail,
         r#"
 export function openBlank(url: string): void {
   window.open(url, '_blank')
 }
 "#,
-    ) else {
-        eprintln!("SKIP pure_store_snippet_window_fails_typecheck: tsc not found");
-        let lib = lib_for_type_env(TypeEnv::Sail);
-        assert!(!has_dom_lib(lib), "Pure lib must exclude DOM, got {lib:?}");
-        return;
-    };
+    );
     assert!(
         !ok,
         "Pure env must fail typecheck when naming window; was green:\n{out}"
@@ -393,7 +383,7 @@ export function openBlank(url: string): void {
 
 #[test]
 fn action_snippet_document_fails_typecheck() {
-    let Some((ok, out)) = tsc_snippet(
+    let (ok, out) = tsc_snippet(
         TypeEnv::Action,
         r#"
 export function paintRoot(node: Element): void {
@@ -401,15 +391,7 @@ export function paintRoot(node: Element): void {
   document.body.appendChild(node)
 }
 "#,
-    ) else {
-        eprintln!("SKIP action_snippet_document_fails_typecheck: tsc not found");
-        let lib = lib_for_type_env(TypeEnv::Action);
-        assert!(
-            !has_dom_lib(lib),
-            "Action lib must exclude DOM so document is unnameable, got {lib:?}"
-        );
-        return;
-    };
+    );
     assert!(
         !ok,
         "Action env must fail typecheck when naming document; was green:\n{out}"
@@ -418,7 +400,7 @@ export function paintRoot(node: Element): void {
 
 #[test]
 fn action_snippet_observation_set_typechecks() {
-    let Some((ok, out)) = tsc_snippet(
+    let (ok, out) = tsc_snippet(
         TypeEnv::Action,
         r#"
 export function observe(node: Element): { destroy(): void } {
@@ -437,27 +419,7 @@ export function observe(node: Element): { destroy(): void } {
   }
 }
 "#,
-    ) else {
-        eprintln!("SKIP action_snippet_observation_set_typechecks: tsc not found");
-        // Without tsc: observation ambient must still declare the set.
-        let dts = emit_action_observation_dts();
-        for name in [
-            "requestAnimationFrame",
-            "ResizeObserver",
-            "getComputedStyle",
-        ] {
-            assert!(
-                dts.contains(name),
-                "observation ambient must declare {name} (tsc absent):\n{dts}"
-            );
-        }
-        let lib = lib_for_type_env(TypeEnv::Action);
-        assert!(
-            !has_dom_lib(lib),
-            "Action lib must be ESNext-only (observation ambient supplies names), got {lib:?}"
-        );
-        return;
-    };
+    );
     assert!(
         ok,
         "Action env must typecheck observation set (rAF / ResizeObserver / getComputedStyle):\n{out}"
@@ -466,7 +428,7 @@ export function observe(node: Element): { destroy(): void } {
 
 #[test]
 fn framework_snippet_document_typechecks() {
-    let Some((ok, out)) = tsc_snippet(
+    let (ok, out) = tsc_snippet(
         TypeEnv::Framework,
         r#"
 export function inject(styleText: string): void {
@@ -475,23 +437,16 @@ export function inject(styleText: string): void {
   document.head.appendChild(el)
 }
 "#,
-    ) else {
-        eprintln!("SKIP framework_snippet_document_typechecks: tsc not found");
-        let lib = lib_for_type_env(TypeEnv::Framework);
-        assert!(
-            has_dom_lib(lib),
-            "Framework lib must include DOM when tsc absent, got {lib:?}"
-        );
-        return;
-    };
+    );
     assert!(ok, "Framework env must allow document:\n{out}");
 }
 
-/// Product type-gate layout: `write_project_type_configs` then `tsgo -p`
+/// Product type-gate layout: `write_project_type_configs` then native tsc `-p`
 /// `.sail/tsconfig.sail.json` (module pack + script CSS sibling).
-fn tsgo_kind_pure(source: &str) -> Option<(bool, String)> {
+fn tsgo_kind_pure(source: &str) -> (bool, String) {
     let repo = repo_root();
-    let tool = resolve_tsgo(Some(&repo))?;
+    let tool = resolve_tsgo(Some(&repo))
+        .unwrap_or_else(|| panic!("{}", sail_compiler::ts_native::missing_sidecar_hint()));
 
     let work = tempfile::tempdir().expect("tempdir for kind-tsgo");
     let project = work.path();
@@ -524,7 +479,7 @@ fn tsgo_kind_pure(source: &str) -> Option<(bool, String)> {
         (l.contains("snippet.ts") || l.contains("compositions/snippet.ts"))
             && (l.contains("error TS") || l.contains(": error"))
     });
-    Some((out.status.success() && !product_red, combined))
+    (out.status.success() && !product_red, combined)
 }
 
 #[test]
@@ -537,15 +492,7 @@ import '@ship/tokens/element-skins.css'
 import '@ship/tokens/products.css'
 export const loaded = true
 "#;
-    let Some((ok, out)) = tsgo_kind_pure(src) else {
-        eprintln!("SKIP pure_css_side_effect_import_typechecks: tsgo not found");
-        let dts = emit_css_side_effect_module();
-        assert!(
-            dts.contains("declare module '*.css'"),
-            "platform ambient must declare CSS modules when tsgo absent:\n{dts}"
-        );
-        return;
-    };
+    let (ok, out) = tsgo_kind_pure(src);
     assert!(
         ok,
         "Pure kind tsgo must accept legal @ship/tokens/*.css side-effect imports:\n{out}"
@@ -555,10 +502,8 @@ export const loaded = true
 #[test]
 fn css_side_effect_import_fails_without_script_sibling() {
     let repo = repo_root();
-    let Some(tool) = resolve_tsgo(Some(&repo)) else {
-        eprintln!("SKIP css_side_effect_import_fails_without_script_sibling: tsgo not found");
-        return;
-    };
+    let tool = resolve_tsgo(Some(&repo))
+        .unwrap_or_else(|| panic!("{}", sail_compiler::ts_native::missing_sidecar_hint()));
     let work = tempfile::tempdir().expect("tempdir");
     let project = work.path();
     fs::create_dir_all(project.join("src/compositions")).unwrap();
@@ -606,10 +551,7 @@ export function later(fn: () => void): () => void {
   return () => clearTimeout(id)
 }
 "#;
-    let Some((ok, out)) = tsgo_kind_pure(src) else {
-        eprintln!("SKIP pure_settimeout_and_cleartimeout_typecheck: tsgo not found");
-        return;
-    };
+    let (ok, out) = tsgo_kind_pure(src);
     assert!(
         ok,
         "Pure kind tsgo must name setTimeout/clearTimeout via framework ambient:\n{out}"
@@ -623,12 +565,7 @@ export function retitle(n: number): void {
   document.title = `count: ${n}`
 }
 "#;
-    let Some((ok, out)) = tsgo_kind_pure(src) else {
-        eprintln!("SKIP pure_document_still_fails_with_platform_ambient: tsgo not found");
-        let lib = lib_for_type_env(TypeEnv::Sail);
-        assert!(!has_dom_lib(lib), "Pure lib must exclude DOM, got {lib:?}");
-        return;
-    };
+    let (ok, out) = tsgo_kind_pure(src);
     assert!(
         !ok,
         "framework platform ambient must not grant document:\n{out}"
@@ -643,15 +580,7 @@ fn pure_css_value_import_fails() {
 import { className } from '@ship/tokens/tokens.css'
 export const used = className
 "#;
-    let Some((ok, out)) = tsgo_kind_pure(src) else {
-        eprintln!("SKIP pure_css_value_import_fails: tsgo not found");
-        let dts = emit_css_side_effect_module();
-        assert!(
-            !dts.contains("export"),
-            "CSS ambient must stay side-effect-only when tsgo absent:\n{dts}"
-        );
-        return;
-    };
+    let (ok, out) = tsgo_kind_pure(src);
     assert!(!ok, "CSS value import must stay untyped under Pure:\n{out}");
 }
 
@@ -662,10 +591,7 @@ export function go(url: string): void {
   void fetch(url)
 }
 "#;
-    let Some((ok, out)) = tsgo_kind_pure(src) else {
-        eprintln!("SKIP pure_free_fetch_is_cannot_find_name: tsgo not found");
-        return;
-    };
+    let (ok, out) = tsgo_kind_pure(src);
     let names_fetch =
         out.contains("Cannot find name 'fetch'") || out.contains("TS2304") && out.contains("fetch");
     assert!(
@@ -681,10 +607,7 @@ export function go(): void {
   void globalThis.fetch
 }
 "#;
-    let Some((ok, out)) = tsgo_kind_pure(src) else {
-        eprintln!("SKIP pure_globalthis_fetch_is_ts7017: tsgo not found");
-        return;
-    };
+    let (ok, out) = tsgo_kind_pure(src);
     assert!(
         !ok && out.contains("TS7017"),
         "globalThis.fetch must stay TS7017 under Pure:\n{out}"

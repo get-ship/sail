@@ -9,7 +9,7 @@
 //! Fixture lives at `tests/fixtures/ambient-app/` (committed project shape;
 //! pack is generated, never committed — under `.sail/`).
 //!
-//! Opt-in when `node_modules/typescript/bin/tsc` is present (same stance as synthetic_tsc).
+//! Requires `node_modules/typescript/bin/tsc` (bun install). Missing wrapper panics.
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -24,9 +24,14 @@ fn repo_root() -> PathBuf {
         .unwrap()
 }
 
-fn tsc_path(repo: &Path) -> Option<PathBuf> {
+fn require_tsc(repo: &Path) -> PathBuf {
     let p = repo.join("node_modules/typescript/bin/tsc");
-    p.exists().then_some(p)
+    assert!(
+        p.is_file(),
+        "repo TypeScript wrapper missing at {} — bun install",
+        p.display()
+    );
+    p
 }
 
 fn fixture_dir(repo: &Path) -> PathBuf {
@@ -76,13 +81,7 @@ fn assert_no_hand_ambient_shims(project: &Path) {
 #[test]
 fn ambient_app_fixture_tsc_no_emit_green() {
     let repo = repo_root();
-    let Some(tsc) = tsc_path(&repo) else {
-        eprintln!(
-            "SKIP ambient_app_tsc: {} not found — run `bun install` to enable.",
-            repo.join("node_modules/typescript/bin/tsc").display()
-        );
-        return;
-    };
+    let tsc = require_tsc(&repo);
 
     let project = fixture_dir(&repo);
     assert!(

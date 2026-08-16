@@ -72,9 +72,14 @@ fn repo_root() -> PathBuf {
         .unwrap()
 }
 
-fn tsc_path(repo: &Path) -> Option<PathBuf> {
+fn require_tsc(repo: &Path) -> PathBuf {
     let p = repo.join("node_modules/typescript/bin/tsc");
-    p.exists().then_some(p)
+    assert!(
+        p.is_file(),
+        "repo TypeScript wrapper missing at {} — bun install",
+        p.display()
+    );
+    p
 }
 
 // ── 1. Inject table SSOT ────────────────────────────────────────────────────
@@ -230,18 +235,7 @@ fn ambient_pack_declares_s5_value_names() {
 #[test]
 fn bare_s5_ambient_values_typecheck_without_import() {
     let repo = repo_root();
-    let Some(tsc) = tsc_path(&repo) else {
-        eprintln!(
-            "SKIP ambient_table_complete tsc values: {} not found — run `bun install` to enable.",
-            repo.join("node_modules/typescript/bin/tsc").display()
-        );
-        // Table + inject gates above still prove RED without tsc.
-        // Fail hard so CI with node_modules cannot skip the type surface.
-        if repo.join("node_modules").is_dir() {
-            panic!("node_modules present but tsc binary missing — install typescript");
-        }
-        return;
-    };
+    let tsc = require_tsc(&repo);
 
     let work = repo.join("target/ambient-table-complete-tsc");
     let _ = fs::remove_dir_all(&work);
@@ -325,16 +319,7 @@ export default controller(() => {
 fn public_types_are_global_without_ship_import() {
     // SPEC §1: Signal, Theme, Store (StoreDef), … via declare global — no import type.
     let repo = repo_root();
-    let Some(tsc) = tsc_path(&repo) else {
-        eprintln!(
-            "SKIP ambient_table_complete tsc types: {} not found — run `bun install` to enable.",
-            repo.join("node_modules/typescript/bin/tsc").display()
-        );
-        if repo.join("node_modules").is_dir() {
-            panic!("node_modules present but tsc binary missing — install typescript");
-        }
-        return;
-    };
+    let tsc = require_tsc(&repo);
 
     let work = repo.join("target/ambient-table-complete-types-tsc");
     let _ = fs::remove_dir_all(&work);

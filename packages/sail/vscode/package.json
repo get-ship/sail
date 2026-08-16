@@ -1,7 +1,7 @@
 {
   "name": "sail",
   "displayName": "Sail",
-  "description": "Sail language support for VS Code and Cursor. Highlighting, diagnostics, complete, hover, and format. Requires the sail CLI on PATH (`sail lsp`).",
+  "description": "Sail language support for VS Code and Cursor. Highlighting, diagnostics, complete, hover, and format. Requires the sail CLI pair on PATH (`sail` and `sail-ts-native/`).",
   "version": "0.1.0",
   "publisher": "ship",
   "private": true,

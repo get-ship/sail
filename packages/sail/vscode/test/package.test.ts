@@ -58,6 +58,7 @@ describe('packages/sail/vscode', () => {
   test('README names the exact sail lsp command', () => {
     expect(readme).toContain('sail lsp')
     expect(readme).toContain('sail-ts-native/')
+    expect(pkg.description ?? '').toContain('sail-ts-native/')
     expect(readme).toContain('Install from VSIX')
     expect(readme).toContain('Install from Location')
   })
