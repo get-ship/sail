@@ -8,6 +8,7 @@ if / else if / else
 
 (source_file
   (if_block
+    (control_open)
     (dynamic_attr
       name: (attr_name)
       value: (brace_expression
@@ -33,7 +34,8 @@ if / else if / else
         tag: (tag_name)
         (text)
         close_tag: (tag_name))
-      close_tag: (tag_name))))
+      close_tag: (tag_name))
+    (control_close)))
 
 ==================
 for / key / else
@@ -45,6 +47,7 @@ for / key / else
 
 (source_file
   (for_block
+    (control_open)
     (static_attr
       name: (attr_name)
       value: (string_literal))
@@ -67,7 +70,8 @@ for / key / else
         tag: (tag_name)
         (text)
         close_tag: (tag_name))
-      close_tag: (tag_name))))
+      close_tag: (tag_name))
+    (control_close)))
 
 ==================
 for / index binding
@@ -79,6 +83,7 @@ for / index binding
 
 (source_file
   (for_block
+    (control_open)
     (static_attr
       name: (attr_name)
       value: (string_literal))
@@ -100,7 +105,8 @@ for / index binding
       (text)
       (interpolation
         (identifier))
-      close_tag: (tag_name))))
+      close_tag: (tag_name))
+    (control_close)))
 
 ==================
 match / case / default
@@ -112,6 +118,7 @@ match / case / default
 
 (source_file
   (match_block
+    (control_open)
     (dynamic_attr
       name: (attr_name)
       value: (brace_expression
@@ -142,7 +149,8 @@ match / case / default
         tag: (tag_name)
         (text)
         close_tag: (tag_name))
-      close_tag: (tag_name))))
+      close_tag: (tag_name))
+    (control_close)))
 
 ==================
 when / else
@@ -154,6 +162,7 @@ when / else
 
 (source_file
   (when_block
+    (control_open)
     (dynamic_attr
       name: (attr_name)
       value: (brace_expression
@@ -168,7 +177,8 @@ when / else
         tag: (tag_name)
         (text)
         close_tag: (tag_name))
-      close_tag: (tag_name))))
+      close_tag: (tag_name))
+    (control_close)))
 
 ==================
 nested for inside if
@@ -180,11 +190,13 @@ nested for inside if
 
 (source_file
   (if_block
+    (control_open)
     (dynamic_attr
       name: (attr_name)
       value: (brace_expression
         (identifier)))
     (for_block
+      (control_open)
       (static_attr
         name: (attr_name)
         value: (string_literal))
@@ -196,7 +208,9 @@ nested for inside if
         tag: (tag_name)
         (interpolation
           (identifier))
-        close_tag: (tag_name)))))
+        close_tag: (tag_name))
+      (control_close))
+    (control_close)))
 
 ==================
 match LiveState arms (loading / error / ok)
@@ -212,6 +226,7 @@ match LiveState arms (loading / error / ok)
 
 (source_file
   (match_block
+    (control_open)
     (dynamic_attr
       name: (attr_name)
       value: (brace_expression
@@ -241,4 +256,5 @@ match LiveState arms (loading / error / ok)
       (identifier)
       (identifier)
       (identifier)
-      (identifier))))
+      (identifier))
+    (control_close)))

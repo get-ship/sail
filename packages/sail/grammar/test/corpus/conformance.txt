@@ -109,7 +109,6 @@ conformance smoke: full live surface in one document
             (identifier)))
         (text)
         (interpolation
-          (identifier)
           (identifier))
         (text)
         (element
@@ -125,6 +124,7 @@ conformance smoke: full live surface in one document
         close_tag: (tag_name))
       close_tag: (tag_name))
     (match_block
+      (control_open)
       (dynamic_attr
         name: (attr_name)
         value: (brace_expression
@@ -221,5 +221,6 @@ conformance smoke: full live surface in one document
         (identifier)
         (identifier)
         (identifier)
-        (identifier)))
+        (identifier))
+      (control_close))
     close_tag: (tag_name)))

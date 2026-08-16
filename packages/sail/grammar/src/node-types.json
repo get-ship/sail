@@ -66,6 +66,64 @@
     }
   },
   {
+    "type": "controller",
+    "named": true,
+    "fields": {
+      "body": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "controller_body",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "bind_attr",
+          "named": true
+        },
+        {
+          "type": "boolean_attr",
+          "named": true
+        },
+        {
+          "type": "control_close",
+          "named": true
+        },
+        {
+          "type": "control_open",
+          "named": true
+        },
+        {
+          "type": "dynamic_attr",
+          "named": true
+        },
+        {
+          "type": "event_attr",
+          "named": true
+        },
+        {
+          "type": "static_attr",
+          "named": true
+        },
+        {
+          "type": "style_attr",
+          "named": true
+        },
+        {
+          "type": "use_attr",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "dynamic_attr",
     "named": true,
     "fields": {
@@ -129,6 +187,10 @@
           "named": true
         },
         {
+          "type": "controller",
+          "named": true
+        },
+        {
           "type": "dynamic_attr",
           "named": true
         },
@@ -161,7 +223,19 @@
           "named": true
         },
         {
+          "type": "partial_block",
+          "named": true
+        },
+        {
+          "type": "scope",
+          "named": true
+        },
+        {
           "type": "static_attr",
+          "named": true
+        },
+        {
+          "type": "style_attr",
           "named": true
         },
         {
@@ -221,7 +295,7 @@
     "fields": {},
     "children": {
       "multiple": true,
-      "required": false,
+      "required": true,
       "types": [
         {
           "type": "bind_attr",
@@ -229,6 +303,22 @@
         },
         {
           "type": "boolean_attr",
+          "named": true
+        },
+        {
+          "type": "brace_expression",
+          "named": true
+        },
+        {
+          "type": "control_close",
+          "named": true
+        },
+        {
+          "type": "control_open",
+          "named": true
+        },
+        {
+          "type": "controller",
           "named": true
         },
         {
@@ -252,6 +342,10 @@
           "named": true
         },
         {
+          "type": "identifier",
+          "named": true
+        },
+        {
           "type": "if_block",
           "named": true
         },
@@ -264,7 +358,19 @@
           "named": true
         },
         {
+          "type": "partial_block",
+          "named": true
+        },
+        {
+          "type": "scope",
+          "named": true
+        },
+        {
           "type": "static_attr",
+          "named": true
+        },
+        {
+          "type": "style_attr",
           "named": true
         },
         {
@@ -288,7 +394,7 @@
     "fields": {},
     "children": {
       "multiple": true,
-      "required": false,
+      "required": true,
       "types": [
         {
           "type": "bind_attr",
@@ -296,6 +402,22 @@
         },
         {
           "type": "boolean_attr",
+          "named": true
+        },
+        {
+          "type": "brace_expression",
+          "named": true
+        },
+        {
+          "type": "control_close",
+          "named": true
+        },
+        {
+          "type": "control_open",
+          "named": true
+        },
+        {
+          "type": "controller",
           "named": true
         },
         {
@@ -319,6 +441,10 @@
           "named": true
         },
         {
+          "type": "identifier",
+          "named": true
+        },
+        {
           "type": "if_block",
           "named": true
         },
@@ -331,7 +457,19 @@
           "named": true
         },
         {
+          "type": "partial_block",
+          "named": true
+        },
+        {
+          "type": "scope",
+          "named": true
+        },
+        {
           "type": "static_attr",
+          "named": true
+        },
+        {
+          "type": "style_attr",
           "named": true
         },
         {
@@ -370,7 +508,7 @@
     "fields": {},
     "children": {
       "multiple": true,
-      "required": false,
+      "required": true,
       "types": [
         {
           "type": "bind_attr",
@@ -378,6 +516,22 @@
         },
         {
           "type": "boolean_attr",
+          "named": true
+        },
+        {
+          "type": "brace_expression",
+          "named": true
+        },
+        {
+          "type": "control_close",
+          "named": true
+        },
+        {
+          "type": "control_open",
+          "named": true
+        },
+        {
+          "type": "controller",
           "named": true
         },
         {
@@ -401,6 +555,10 @@
           "named": true
         },
         {
+          "type": "identifier",
+          "named": true
+        },
+        {
           "type": "if_block",
           "named": true
         },
@@ -413,7 +571,19 @@
           "named": true
         },
         {
+          "type": "partial_block",
+          "named": true
+        },
+        {
+          "type": "scope",
+          "named": true
+        },
+        {
           "type": "static_attr",
+          "named": true
+        },
+        {
+          "type": "style_attr",
           "named": true
         },
         {
@@ -432,6 +602,210 @@
     }
   },
   {
+    "type": "partial_block",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "bind_attr",
+          "named": true
+        },
+        {
+          "type": "boolean_attr",
+          "named": true
+        },
+        {
+          "type": "brace_expression",
+          "named": true
+        },
+        {
+          "type": "control_close",
+          "named": true
+        },
+        {
+          "type": "control_open",
+          "named": true
+        },
+        {
+          "type": "controller",
+          "named": true
+        },
+        {
+          "type": "dynamic_attr",
+          "named": true
+        },
+        {
+          "type": "element",
+          "named": true
+        },
+        {
+          "type": "event_attr",
+          "named": true
+        },
+        {
+          "type": "for_block",
+          "named": true
+        },
+        {
+          "type": "html_comment",
+          "named": true
+        },
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "if_block",
+          "named": true
+        },
+        {
+          "type": "interpolation",
+          "named": true
+        },
+        {
+          "type": "match_block",
+          "named": true
+        },
+        {
+          "type": "partial_block",
+          "named": true
+        },
+        {
+          "type": "scope",
+          "named": true
+        },
+        {
+          "type": "static_attr",
+          "named": true
+        },
+        {
+          "type": "style_attr",
+          "named": true
+        },
+        {
+          "type": "text",
+          "named": true
+        },
+        {
+          "type": "use_attr",
+          "named": true
+        },
+        {
+          "type": "when_block",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "props_block",
+    "named": true,
+    "fields": {
+      "body": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "brace_expression",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "props_kw",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "scope",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "bind_attr",
+          "named": true
+        },
+        {
+          "type": "boolean_attr",
+          "named": true
+        },
+        {
+          "type": "brace_expression",
+          "named": true
+        },
+        {
+          "type": "control_close",
+          "named": true
+        },
+        {
+          "type": "control_open",
+          "named": true
+        },
+        {
+          "type": "dynamic_attr",
+          "named": true
+        },
+        {
+          "type": "event_attr",
+          "named": true
+        },
+        {
+          "type": "html_comment",
+          "named": true
+        },
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "line_comment",
+          "named": true
+        },
+        {
+          "type": "props_block",
+          "named": true
+        },
+        {
+          "type": "scope_punct",
+          "named": true
+        },
+        {
+          "type": "static_attr",
+          "named": true
+        },
+        {
+          "type": "string_literal",
+          "named": true
+        },
+        {
+          "type": "style_attr",
+          "named": true
+        },
+        {
+          "type": "style_decl",
+          "named": true
+        },
+        {
+          "type": "use_attr",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "source_file",
     "named": true,
     "root": true,
@@ -440,6 +814,10 @@
       "multiple": true,
       "required": false,
       "types": [
+        {
+          "type": "controller",
+          "named": true
+        },
         {
           "type": "element",
           "named": true
@@ -462,6 +840,14 @@
         },
         {
           "type": "match_block",
+          "named": true
+        },
+        {
+          "type": "partial_block",
+          "named": true
+        },
+        {
+          "type": "scope",
           "named": true
         },
         {
@@ -507,6 +893,100 @@
     "fields": {}
   },
   {
+    "type": "style_attr",
+    "named": true,
+    "fields": {
+      "args": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "style_call",
+            "named": true
+          }
+        ]
+      },
+      "chain": {
+        "multiple": true,
+        "required": false,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "style_call",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "style_call",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "brace_expression",
+          "named": true
+        },
+        {
+          "type": "identifier",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "style_decl",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          }
+        ]
+      },
+      "value": {
+        "multiple": true,
+        "required": true,
+        "types": [
+          {
+            "type": ",",
+            "named": false
+          },
+          {
+            "type": "brace_expression",
+            "named": true
+          },
+          {
+            "type": "identifier",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "tag_name",
+    "named": true,
+    "fields": {}
+  },
+  {
     "type": "use_attr",
     "named": true,
     "fields": {
@@ -538,7 +1018,7 @@
     "fields": {},
     "children": {
       "multiple": true,
-      "required": false,
+      "required": true,
       "types": [
         {
           "type": "bind_attr",
@@ -546,6 +1026,22 @@
         },
         {
           "type": "boolean_attr",
+          "named": true
+        },
+        {
+          "type": "brace_expression",
+          "named": true
+        },
+        {
+          "type": "control_close",
+          "named": true
+        },
+        {
+          "type": "control_open",
+          "named": true
+        },
+        {
+          "type": "controller",
           "named": true
         },
         {
@@ -569,6 +1065,10 @@
           "named": true
         },
         {
+          "type": "identifier",
+          "named": true
+        },
+        {
           "type": "if_block",
           "named": true
         },
@@ -581,7 +1081,19 @@
           "named": true
         },
         {
+          "type": "partial_block",
+          "named": true
+        },
+        {
+          "type": "scope",
+          "named": true
+        },
+        {
           "type": "static_attr",
+          "named": true
+        },
+        {
+          "type": "style_attr",
           "named": true
         },
         {
@@ -608,7 +1120,23 @@
     "named": false
   },
   {
+    "type": ",",
+    "named": false
+  },
+  {
+    "type": ".",
+    "named": false
+  },
+  {
     "type": "/>",
+    "named": false
+  },
+  {
+    "type": ":",
+    "named": false
+  },
+  {
+    "type": ";",
     "named": false
   },
   {
@@ -617,38 +1145,6 @@
   },
   {
     "type": "</",
-    "named": false
-  },
-  {
-    "type": "</for>",
-    "named": false
-  },
-  {
-    "type": "</if>",
-    "named": false
-  },
-  {
-    "type": "</match>",
-    "named": false
-  },
-  {
-    "type": "</when>",
-    "named": false
-  },
-  {
-    "type": "<for",
-    "named": false
-  },
-  {
-    "type": "<if",
-    "named": false
-  },
-  {
-    "type": "<match",
-    "named": false
-  },
-  {
-    "type": "<when",
     "named": false
   },
   {
@@ -672,6 +1168,18 @@
     "named": false
   },
   {
+    "type": "control_close",
+    "named": true
+  },
+  {
+    "type": "control_open",
+    "named": true
+  },
+  {
+    "type": "controller_body",
+    "named": true
+  },
+  {
     "type": "html_comment",
     "named": true
   },
@@ -680,12 +1188,24 @@
     "named": true
   },
   {
+    "type": "line_comment",
+    "named": true
+  },
+  {
     "type": "on:",
     "named": false
   },
   {
-    "type": "tag_name",
+    "type": "props_kw",
     "named": true
+  },
+  {
+    "type": "scope_punct",
+    "named": true
+  },
+  {
+    "type": "style",
+    "named": false
   },
   {
     "type": "text",

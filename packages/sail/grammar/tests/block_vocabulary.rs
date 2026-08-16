@@ -29,6 +29,9 @@ fn token_present(token: &str) -> bool {
     GRAMMAR_SRC.contains(&open)
         || GRAMMAR_SRC.contains(&close)
         || GRAMMAR_SRC.contains(&format!("'{tag}'"))
+        || GRAMMAR_SRC.contains(&format!("/{tag}/"))
+        || GRAMMAR_SRC.contains(&format!("<{tag}>"))
+        || GRAMMAR_SRC.contains(&format!("<{tag}["))
 }
 
 #[test]
@@ -73,11 +76,11 @@ fn grammar_block_rules_are_if_for_match_when_partial_only() {
 }
 
 #[test]
-fn grammar_has_no_style_attr_directive() {
+fn grammar_has_no_style_colon_directive() {
     assert!(
-        !GRAMMAR_SRC.contains("style_attr") && !GRAMMAR_SRC.contains("'style:'"),
+        !GRAMMAR_SRC.contains("'style:'"),
         "grammar.js still declares a `style:` attribute rule, but the \
-         compiler hard-refuses `style:`.",
+         compiler hard-refuses `style:`. Live attach is style_attr `style(…)`.",
     );
 }
 

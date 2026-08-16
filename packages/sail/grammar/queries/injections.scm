@@ -1,9 +1,9 @@
 ; Embedded language injections for `.sail`.
 ;
 ; Routes interpolation/binding bodies to TypeScript and inline `<style>`
-; blocks to CSS so editors get host-language IntelliSense, formatting,
-; and diagnostics inside those ranges. Also injects TypeScript into
-; `<controller>` / `<scope>` block bodies (SPEC-LSP-1 highlighting).
+; blocks to CSS so editors get host-language highlighting inside those
+; ranges. `<controller>` is raw TypeScript. `<scope>` is Style decls +
+; `props:` (not a TS document — style_decl / props_block are structured).
 
 ; ── TypeScript injections inside expression braces ───────────────────
 ; No `#offset!` — Helix 25 rejects that predicate and then loads *no*
@@ -17,16 +17,22 @@
   (#set! injection.language "typescript")
   (#set! injection.include-children))
 
-; ── TypeScript injection for <controller> / <scope> block bodies ─────
-; Controller bodies are TypeScript source. Scope bodies hold props /
-; style declarations (TS-ish). Both are plain `element` nodes today;
-; match on tag_name like the style→css rule. Brace fragments inside the
-; body still get TS via the interpolation rule above.
-((element
-  (tag_name) @_t
-  (text) @injection.content)
-  (#any-of? @_t "controller" "scope")
+; ── TypeScript for <controller> raw body ─────────────────────────────
+; Leaf token — no include-children (same as html `raw_text` → javascript).
+; Helix loads `grammars/typescript.so`; helix-setup must not wipe it.
+((controller_body) @injection.content
   (#set! injection.language "typescript"))
+
+; Style `{ … }` chains and `props: { … }` — TS so pad/bg and types paint.
+((style_decl
+  (brace_expression) @injection.content)
+  (#set! injection.language "typescript")
+  (#set! injection.include-children))
+
+((props_block
+  (brace_expression) @injection.content)
+  (#set! injection.language "typescript")
+  (#set! injection.include-children))
 
 ; ── CSS injection for inline `<style>` blocks ────────────────────────
 ; The runtime treats `<style src="…"/>` (self-closing, external) as a

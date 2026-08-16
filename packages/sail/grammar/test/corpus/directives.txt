@@ -32,13 +32,14 @@ scope directive with declared props
 ---
 
 (source_file
-  (element
-    tag: (tag_name)
-    (text)
-    (interpolation
-      (identifier)
-      (identifier))
-    close_tag: (tag_name)))
+  (scope
+    (control_open)
+    (props_block
+      (props_kw)
+      body: (brace_expression
+        (identifier)
+        (identifier)))
+    (control_close)))
 
 ==================
 scope with first-class style name = declaration (opaque body text)
@@ -54,12 +55,16 @@ scope with first-class style name = declaration (opaque body text)
 ---
 
 (source_file
-  (element
-    tag: (tag_name)
-    (text)
-    (interpolation
-      (identifier))
-    close_tag: (tag_name)))
+  (scope
+    (control_open)
+    (style_decl
+      name: (identifier)
+      value: (identifier))
+    (props_block
+      (props_kw)
+      body: (brace_expression
+        (identifier)))
+    (control_close)))
 
 ==================
 style: attribute is refused syntax — must NOT parse as a directive
@@ -75,7 +80,6 @@ style: attribute is refused syntax — must NOT parse as a directive
     (dynamic_attr
       name: (attr_name)
       (ERROR
-        (UNEXPECTED ':')
         (tag_name))
       value: (brace_expression
         (identifier)))

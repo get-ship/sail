@@ -44,17 +44,11 @@
 
 ; ── template control flow markers ────────────────────────────────────
 ; Four blocks only: if / for / match / when. Arms are brace interpolations.
-; control-flow element tags (control-flow + partial blocks: if/for/match/when/partial)
+; control-flow + dedicated tags (if/for/match/when/partial/controller/scope)
+(control_open) @keyword.directive
+(control_close) @keyword.directive
 ((tag_name) @keyword.directive
-  (#match? @keyword.directive "^(if|for|match|when|partial)$"))
-"<if"        @keyword.directive
-"</if>"      @keyword.directive
-"<for"       @keyword.directive
-"</for>"     @keyword.directive
-"<match"     @keyword.directive
-"</match>"   @keyword.directive
-"<when"      @keyword.directive
-"</when>"    @keyword.directive
+  (#match? @keyword.directive "^(if|for|match|when|partial|controller|scope)$"))
 
 ; Do not capture anonymous `{` / `}` — Helix's query compiler treats
 ; those quotes as an empty node type and drops all highlights.
@@ -65,6 +59,14 @@
 ; Arm heads (`{loading => …}`, `{ok as x => …}`) land here too.
 (interpolation (identifier) @variable)
 (brace_expression (identifier) @variable)
+
+; ── Style (scope decls + element attach) ────────────────────────────
+(style_decl "style" @keyword)
+(style_attr "style" @keyword)
+(style_decl (identifier) @function)
+(style_attr (identifier) @function)
+(props_block (props_kw) @keyword)
+(line_comment) @comment
 
 ; ── comments ─────────────────────────────────────────────────────────
 (html_comment) @comment

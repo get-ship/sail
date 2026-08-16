@@ -28,6 +28,8 @@ export default grammar({
     // ── template nodes ────────────────────────────────────────────
     _template_node: $ => choice(
       $.html_comment,
+      $.controller,
+      $.scope,
       $.if_block,
       $.for_block,
       $.match_block,
@@ -93,8 +95,10 @@ export default grammar({
     ),
     // Tag names allow hyphens (custom elements: `ship-button`,
     // `error-boundary`, …) but not `:` so SVG-style namespaces aren't
-    // confused with binding prefixes.
-    tag_name: $ => /[a-zA-Z][a-zA-Z0-9-]*/,
+    // confused with binding prefixes. `'style'` is a keyword (style_attr /
+    // style_decl) so it must also be a legal tag_name — otherwise `<style>`
+    // CSS blocks fail to parse.
+    tag_name: $ => choice('style', /[a-zA-Z][a-zA-Z0-9-]*/),
 
     // ── attributes ────────────────────────────────────────────────
     // `style:` and `let:` are deliberately absent: `style:` is a hard
@@ -104,6 +108,7 @@ export default grammar({
     // `style:foo` / `let:err` produce an ERROR node rather than
     // parsing as legitimate directives.
     _attribute: $ => choice(
+      $.style_attr,
       $.bind_attr,
       $.event_attr,
       $.use_attr,
@@ -146,10 +151,89 @@ export default grammar({
     // boolean read of `name`.
     boolean_attr: $ => prec(-1, $.attr_name),
 
+    // Live Style attach: style(name), style({ … }), style(name, { … }),
+    // optional `.when({…})` chain. Must beat boolean_attr on `style`.
+    style_attr: $ => prec(1, seq(
+      'style',
+      field('args', $.style_call),
+      repeat(seq('.', field('chain', $.identifier), $.style_call)),
+    )),
+    style_call: $ => seq(
+      '(',
+      optional(seq($._style_arg, repeat(seq(',', $._style_arg)))),
+      ')',
+    ),
+    _style_arg: $ => choice($.identifier, $.brace_expression),
+
+    // ── <controller> raw TypeScript ────────────────────────────────
+    // Same contract as the compiler RAW_TEXT_TAGS: the body is not a
+    // template. A regular element would split on `{` / `<` (generics).
+    // Tree-sitter regex has no lookahead, so match-until-</controller>
+    // is the usual "eat anything that isn't the closer" expansion.
+    controller: $ => seq(
+      choice(
+        alias(token(/<controller>/), $.control_open),
+        seq(alias(token(/<controller[\s]+/), $.control_open), repeat($._attribute), '>'),
+      ),
+      optional(field('body', $.controller_body)),
+      alias(token(/<\/controller>/), $.control_close),
+    ),
+    controller_body: $ => token(new RegExp(
+      '(?:[^<]|<[^/]|</[^c]|</c[^o]|</co[^n]|</con[^t]|</cont[^r]|</contr[^o]|</contro[^l]|</control[^l]|</controll[^e]|</controlle[^r]|</controller[^>])+'
+    )),
+
+    // ── <scope> Style + static surface ─────────────────────────────
+    // Compiler members: style name = …, props: {…}, type/import, residual
+    // compound. Unknown lines fall through so a props/import cannot ERROR
+    // the rest of the block (and kill highlighting).
+    scope: $ => seq(
+      choice(
+        alias(token(/<scope>/), $.control_open),
+        seq(alias(token(/<scope[\s]+/), $.control_open), repeat($._attribute), '>'),
+      ),
+      repeat($._scope_item),
+      alias(token(/<\/scope>/), $.control_close),
+    ),
+    _scope_item: $ => choice(
+      $.style_decl,
+      $.props_block,
+      $.line_comment,
+      $.html_comment,
+      // One-token leftovers (`type` / `import` / `=` / `{…}`) so a
+      // type alias cannot ERROR the rest of the block.
+      $.identifier,
+      $.brace_expression,
+      $.string_literal,
+      $.scope_punct,
+    ),
+    style_decl: $ => prec(1, seq(
+      'style',
+      field('name', $.identifier),
+      '=',
+      field('value', $._style_value),
+      optional(';'),
+    )),
+    // `{…}`, compose `host`, or `host, {…}`.
+    _style_value: $ => choice(
+      $.brace_expression,
+      seq($.identifier, optional(seq(',', $.brace_expression))),
+    ),
+    props_block: $ => prec(1, seq(
+      $.props_kw,
+      ':',
+      field('body', $.brace_expression),
+      optional(';'),
+    )),
+    // Named token — not the string literal 'props' — so we do not steal
+    // `props` from attribute position (`<partial name props: Type>`).
+    props_kw: $ => token(prec(1, /props/)),
+    line_comment: $ => token(seq('//', /[^\n]*/)),
+    scope_punct: $ => token(/[^\s<"'`a-zA-Z_{]+/),
+
     // Attribute names exclude `:` so the `bind:` / `on:` / … literals
-    // tokenise as their own keyword. No production attribute uses
-    // SVG-style namespacing (`xlink:href`, etc.) today.
-    attr_name: $ => /[a-zA-Z_][a-zA-Z0-9_-]*/,
+    // tokenise as their own keyword. `'style'` is a keyword so it must
+    // remain a legal attr_name (`style="…"` residual HTML).
+    attr_name: $ => choice('style', /[a-zA-Z_][a-zA-Z0-9_-]*/),
     attr_local: $ => /[a-zA-Z_][a-zA-Z0-9_-]*/,
 
     // Quoted literal — opaque content. No interpolation inside quoted
@@ -169,43 +253,53 @@ export default grammar({
     brace_expression: $ => seq('{', optional($._expr), '}'),
 
     if_block: $ => seq(
-      '<if',
-      repeat($._attribute),
-      '>',
+      choice(
+      alias(token(/<if>/), $.control_open),
+      seq(alias(token(/<if\{/), $.control_open), optional($._expr), '}', repeat($._attribute), '>'),
+      seq(alias(token(/<if[\s]+/), $.control_open), optional($.brace_expression), repeat($._attribute), '>'),
+    ),
       repeat($._template_node),
-      '</if>',
+      alias(token(/<\/if>/), $.control_close),
     ),
 
     for_block: $ => seq(
-      '<for',
-      repeat($._attribute),
-      '>',
+      choice(
+      alias(token(/<for>/), $.control_open),
+      seq(alias(token(/<for\{/), $.control_open), optional($._expr), '}', repeat($._attribute), '>'),
+      seq(alias(token(/<for[\s]+/), $.control_open), optional($.brace_expression), repeat($._attribute), '>'),
+    ),
       repeat($._template_node),
-      '</for>',
+      alias(token(/<\/for>/), $.control_close),
     ),
 
     match_block: $ => seq(
-      '<match',
-      repeat($._attribute),
-      '>',
+      choice(
+      alias(token(/<match>/), $.control_open),
+      seq(alias(token(/<match\{/), $.control_open), optional($._expr), '}', repeat($._attribute), '>'),
+      seq(alias(token(/<match[\s]+/), $.control_open), optional($.brace_expression), repeat($._attribute), '>'),
+    ),
       repeat($._template_node),
-      '</match>',
+      alias(token(/<\/match>/), $.control_close),
     ),
 
     when_block: $ => seq(
-      '<when',
-      repeat($._attribute),
-      '>',
+      choice(
+      alias(token(/<when>/), $.control_open),
+      seq(alias(token(/<when\{/), $.control_open), optional($._expr), '}', repeat($._attribute), '>'),
+      seq(alias(token(/<when[\s]+/), $.control_open), optional($.brace_expression), repeat($._attribute), '>'),
+    ),
       repeat($._template_node),
-      '</when>',
+      alias(token(/<\/when>/), $.control_close),
     ),
 
     partial_block: $ => seq(
-      '<partial',
-      repeat($._attribute),
-      '>',
+      choice(
+      alias(token(/<partial>/), $.control_open),
+      seq(alias(token(/<partial\{/), $.control_open), optional($._expr), '}', repeat($._attribute), '>'),
+      seq(alias(token(/<partial[\s]+/), $.control_open), optional($.brace_expression), repeat($._attribute), '>'),
+    ),
       repeat($._template_node),
-      '</partial>',
+      alias(token(/<\/partial>/), $.control_close),
     ),
 
     // `x of items` (bare binding) or `(x, i) of items` (parenthesized

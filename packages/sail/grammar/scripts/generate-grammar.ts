@@ -20,29 +20,7 @@
  */
 
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
-import { existsSync, readFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
-
-/** Anonymous STRING tokens in the last `tree-sitter generate` (parser.c). */
-function compiledAnonymousLiterals(): Set<string> | null {
-  const jsonPath = resolve(dirname(fileURLToPath(import.meta.url)), '../src/grammar.json');
-  if (!existsSync(jsonPath)) return null;
-  const lits = new Set<string>();
-  const walk = (x: unknown): void => {
-    if (Array.isArray(x)) {
-      for (const i of x) walk(i);
-      return;
-    }
-    if (x && typeof x === 'object') {
-      const o = x as { type?: string; value?: string };
-      if (o.type === 'STRING' && typeof o.value === 'string') lits.add(o.value);
-      for (const v of Object.values(o)) walk(v);
-    }
-  };
-  walk(JSON.parse(readFileSync(jsonPath, 'utf8')));
-  return lits;
-}
+import { resolve } from 'node:path';
 
 interface Block {
   open: string;
@@ -147,18 +125,24 @@ function generateGrammar(v: Vocabulary): string {
   })();
   const directiveElements = v.directive_elements.join('|');
 
-  // Element-form control flow: open-tag prefix + attrs + body + close-tag.
-  // Clause tags parse as nested control elements inside the body.
+  // Open tokens include the delimiter (`<if>`, `<if `, `<if{`) so `<form>`
+  // cannot tokenize as `<for` + boolean `m`. Tree-sitter has no lookahead
+  // and higher prec beats a longer tag_name match.
+  const openChoice = (tag: string) => `choice(
+  alias(token(/<${tag}>/), $.control_open),
+  seq(alias(token(/<${tag}\\{/), $.control_open), optional($._expr), '}', repeat($._attribute), '>'),
+  seq(alias(token(/<${tag}[\\s]+/), $.control_open), optional($.brace_expression), repeat($._attribute), '>'),
+)`;
+  const closeTok = (tag: string) => `alias(token(/<\\/${tag}>/), $.control_close)`;
+
   const blockRules = v.blocks
     .map((b) => {
       const rule = blockRuleName(b.open);
       const tag = tagFromOpen(b.open);
       return `${rule}: $ => seq(
-  ${jsString('<' + tag)},
-  repeat($._attribute),
-  '>',
+  ${openChoice(tag)},
   repeat($._template_node),
-  ${jsString('</' + tag + '>')},
+  ${closeTok(tag)},
 ),`;
     })
     .join('\n\n');
@@ -184,11 +168,9 @@ function generateGrammar(v: Vocabulary): string {
       const rule = clauseRuleName(c);
       const tag = tagFromClause(c)!;
       return `${rule}: $ => seq(
-  ${jsString('<' + tag)},
-  repeat($._attribute),
-  '>',
+  ${openChoice(tag)},
   repeat($._template_node),
-  ${jsString('</' + tag + '>')},
+  ${closeTok(tag)},
 ),`;
     })
     .join('\n\n');
@@ -270,6 +252,8 @@ export default grammar({
     // ── template nodes ────────────────────────────────────────────
     _template_node: $ => choice(
       $.html_comment,
+      $.controller,
+      $.scope,
 ${blockNodeChoices}
       $.element,
       $.interpolation,
@@ -327,8 +311,10 @@ ${voidTags},
     ),
     // Tag names allow hyphens (custom elements: \`ship-button\`,
     // \`error-boundary\`, …) but not \`:\` so SVG-style namespaces aren't
-    // confused with binding prefixes.
-    tag_name: $ => /[a-zA-Z][a-zA-Z0-9-]*/,
+    // confused with binding prefixes. \`'style'\` is a keyword (style_attr /
+    // style_decl) so it must also be a legal tag_name — otherwise \`<style>\`
+    // CSS blocks fail to parse.
+    tag_name: $ => choice('style', /[a-zA-Z][a-zA-Z0-9-]*/),
 
     // ── attributes ────────────────────────────────────────────────
     // \`style:\` and \`let:\` are deliberately absent: \`style:\` is a hard
@@ -338,6 +324,7 @@ ${voidTags},
     // \`style:foo\` / \`let:err\` produce an ERROR node rather than
     // parsing as legitimate directives.
     _attribute: $ => choice(
+      $.style_attr,
 ${attributeChoice}
       $.dynamic_attr,
       $.static_attr,
@@ -359,10 +346,89 @@ ${attributeRules}
     // boolean read of \`name\`.
     boolean_attr: $ => prec(-1, $.attr_name),
 
+    // Live Style attach: style(name), style({ … }), style(name, { … }),
+    // optional \`.when({…})\` chain. Must beat boolean_attr on \`style\`.
+    style_attr: $ => prec(1, seq(
+      'style',
+      field('args', $.style_call),
+      repeat(seq('.', field('chain', $.identifier), $.style_call)),
+    )),
+    style_call: $ => seq(
+      '(',
+      optional(seq($._style_arg, repeat(seq(',', $._style_arg)))),
+      ')',
+    ),
+    _style_arg: $ => choice($.identifier, $.brace_expression),
+
+    // ── <controller> raw TypeScript ────────────────────────────────
+    // Same contract as the compiler RAW_TEXT_TAGS: the body is not a
+    // template. A regular element would split on \`{\` / \`<\` (generics).
+    // Tree-sitter regex has no lookahead, so match-until-</controller>
+    // is the usual "eat anything that isn't the closer" expansion.
+    controller: $ => seq(
+      choice(
+        alias(token(/<controller>/), $.control_open),
+        seq(alias(token(/<controller[\\s]+/), $.control_open), repeat($._attribute), '>'),
+      ),
+      optional(field('body', $.controller_body)),
+      alias(token(/<\\/controller>/), $.control_close),
+    ),
+    controller_body: $ => token(new RegExp(
+      '(?:[^<]|<[^/]|</[^c]|</c[^o]|</co[^n]|</con[^t]|</cont[^r]|</contr[^o]|</contro[^l]|</control[^l]|</controll[^e]|</controlle[^r]|</controller[^>])+'
+    )),
+
+    // ── <scope> Style + static surface ─────────────────────────────
+    // Compiler members: style name = …, props: {…}, type/import, residual
+    // compound. Unknown lines fall through so a props/import cannot ERROR
+    // the rest of the block (and kill highlighting).
+    scope: $ => seq(
+      choice(
+        alias(token(/<scope>/), $.control_open),
+        seq(alias(token(/<scope[\\s]+/), $.control_open), repeat($._attribute), '>'),
+      ),
+      repeat($._scope_item),
+      alias(token(/<\\/scope>/), $.control_close),
+    ),
+    _scope_item: $ => choice(
+      $.style_decl,
+      $.props_block,
+      $.line_comment,
+      $.html_comment,
+      // One-token leftovers (\`type\` / \`import\` / \`=\` / \`{…}\`) so a
+      // type alias cannot ERROR the rest of the block.
+      $.identifier,
+      $.brace_expression,
+      $.string_literal,
+      $.scope_punct,
+    ),
+    style_decl: $ => prec(1, seq(
+      'style',
+      field('name', $.identifier),
+      '=',
+      field('value', $._style_value),
+      optional(';'),
+    )),
+    // \`{…}\`, compose \`host\`, or \`host, {…}\`.
+    _style_value: $ => choice(
+      $.brace_expression,
+      seq($.identifier, optional(seq(',', $.brace_expression))),
+    ),
+    props_block: $ => prec(1, seq(
+      $.props_kw,
+      ':',
+      field('body', $.brace_expression),
+      optional(';'),
+    )),
+    // Named token — not the string literal 'props' — so we do not steal
+    // \`props\` from attribute position (\`<partial name props: Type>\`).
+    props_kw: $ => token(prec(1, /props/)),
+    line_comment: $ => token(seq('//', /[^\\n]*/)),
+    scope_punct: $ => token(/[^\\s<\"'\`a-zA-Z_{]+/),
+
     // Attribute names exclude \`:\` so the \`bind:\` / \`on:\` / … literals
-    // tokenise as their own keyword. No production attribute uses
-    // SVG-style namespacing (\`xlink:href\`, etc.) today.
-    attr_name: $ => /[a-zA-Z_][a-zA-Z0-9_-]*/,
+    // tokenise as their own keyword. \`'style'\` is a keyword so it must
+    // remain a legal attr_name (\`style="…"\` residual HTML).
+    attr_name: $ => choice('style', /[a-zA-Z_][a-zA-Z0-9_-]*/),
     attr_local: $ => /[a-zA-Z_][a-zA-Z0-9_-]*/,
 
     // Quoted literal — opaque content. No interpolation inside quoted
@@ -459,25 +525,15 @@ function generateHighlights(v: Vocabulary): string {
     .map((p) => `"${p}"${' '.repeat(maxPrefixLen - p.length + 3)}@keyword.directive`)
     .join('\n');
 
-  // Quoted markers must exist on the *compiled* parser (src/grammar.json /
-  // parser.c / sail.so). grammar.js can be ahead; Helix loads the .so and
-  // drops *all* highlights if a query names an unknown anonymous node.
-  const compiledLits = compiledAnonymousLiterals();
   const controlTags = [...new Set(v.blocks.map((b) => tagFromOpen(b.open)))];
   const controlTagAlt = controlTags.join('|');
-  const openCloseMarkers: string[] = [];
-  for (const tag of controlTags) {
-    for (const tok of [`<${tag}`, `</${tag}>`]) {
-      if (!compiledLits || compiledLits.has(tok)) openCloseMarkers.push(tok);
-    }
-  }
-  const uniqMarkers = [...new Set(openCloseMarkers)];
-  const maxMarkerLen = Math.max(...uniqMarkers.map((m) => m.length), 1);
-  const blockMarkers =
-    `; control-flow element tags (control-flow + partial blocks: if/for/match/when/partial)\n((tag_name) @keyword.directive\n  (#match? @keyword.directive "^(${controlTagAlt})$"))\n` +
-    uniqMarkers
-      .map((m) => `"${m}"${' '.repeat(maxMarkerLen - m.length + 3)}@keyword.directive`)
-      .join('\n');
+  // Named `control_tag` (not `"<if"` literals) so `<form>` cannot tokenize
+  // as `'<for'` + `m`. Helix also drops all highlights on unknown anons.
+  const blockMarkers = `; control-flow + dedicated tags (if/for/match/when/partial/controller/scope)
+(control_open) @keyword.directive
+(control_close) @keyword.directive
+((tag_name) @keyword.directive
+  (#match? @keyword.directive "^(${controlTagAlt}|controller|scope)$"))`;
 
   const identifierTargets: string[] = [
     '(interpolation (identifier) @variable)',
@@ -538,6 +594,14 @@ ${blockMarkers}
 ; access shows up as a single \`.foo\` token (the \`_member\` rule).
 ; Arm heads (\`{loading => …}\`, \`{ok as x => …}\`) land here too.
 ${identifierTargets.join('\n')}
+
+; ── Style (scope decls + element attach) ────────────────────────────
+(style_decl "style" @keyword)
+(style_attr "style" @keyword)
+(style_decl (identifier) @function)
+(style_attr (identifier) @function)
+(props_block (props_kw) @keyword)
+(line_comment) @comment
 
 ; ── comments ─────────────────────────────────────────────────────────
 (html_comment) @comment
