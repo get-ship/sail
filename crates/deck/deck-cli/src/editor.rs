@@ -6,7 +6,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 
 const MARKER: &str = "# sail-editor (sail editor setup)";
 
@@ -49,11 +49,26 @@ pub struct SetupReport {
 /// Install Sail into `editor`. Paths come from `home` / XDG (tests inject).
 pub fn setup(editor: EditorKind, bin: Option<&Path>, home: &Path) -> Result<SetupReport> {
     let command = launch_command(bin);
-    match editor {
-        EditorKind::Helix => setup_helix(&command, home),
-        EditorKind::Nvim => setup_nvim(&command, home),
-        EditorKind::Vscode => setup_vscode(&command),
+    let mut report = match editor {
+        EditorKind::Helix => setup_helix(&command, home)?,
+        EditorKind::Nvim => setup_nvim(&command, home)?,
+        EditorKind::Vscode => setup_vscode(&command)?,
+    };
+    match crate::ts_native::ensure_best_effort() {
+        Ok(Some(path)) => {
+            report
+                .notes
+                .push(format!("typescript sidecar: {}", path.display()));
+        }
+        Ok(None) => {}
+        Err(e) => {
+            eprintln!(
+                "sail editor setup: TypeScript 7 native sidecar missing ({e}). \
+                 Grammar was written. Run `sail ts-native setup`."
+            );
+        }
     }
+    Ok(report)
 }
 
 fn launch_command(bin: Option<&Path>) -> String {
@@ -263,8 +278,11 @@ fn setup_vscode(command: &str) -> Result<SetupReport> {
         notes: vec![
             format!("VS Code / Cursor: install the Sail VSIX, then put `{command}` on PATH."),
             "Command Palette → Extensions: Install from VSIX… → sail-*.vsix".into(),
-            format!("Or set sail.lsp.path to the `{command}` binary if the editor cannot see PATH."),
-            "Marketplace publish is a later identity cut — the VSIX is the product artifact.".into(),
+            format!(
+                "Or set sail.lsp.path to the `{command}` binary if the editor cannot see PATH."
+            ),
+            "Marketplace publish is a later identity cut — the VSIX is the product artifact."
+                .into(),
         ],
         command: command.to_string(),
     })

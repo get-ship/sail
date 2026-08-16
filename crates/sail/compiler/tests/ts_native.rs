@@ -179,6 +179,20 @@ fn probe_script_fixture_exit_2_stdio() {
 }
 
 #[test]
+fn extracted_sidecar_contains_tsc_and_lib_dts() {
+    let exe = std::env::current_exe().expect("current_exe");
+    let tsc = expected_peer_tsc(&exe);
+    let dir = tsc.parent().expect("sidecar dir");
+    assert!(
+        tsc.is_file() && dir.join("lib.d.ts").is_file(),
+        "sidecar missing at {} (tsc={}, lib.d.ts={}). Run `sail ts-native setup`.",
+        dir.display(),
+        tsc.is_file(),
+        dir.join("lib.d.ts").is_file()
+    );
+}
+
+#[test]
 fn expected_peer_path_is_dir_plus_tsc_not_renamed_file() {
     let exe = PathBuf::from("/opt/sail/sail");
     assert_eq!(

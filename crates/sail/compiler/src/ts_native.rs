@@ -12,6 +12,7 @@ use std::process::Command;
 
 mod pins;
 pub use pins::{PINS_TOML, Pin, TS_NATIVE_VERSION, parse_pins, pin_for, pins};
+pub mod fetch;
 /// npm optionalDependency package prefix.
 pub const TS_NATIVE_NPM_PREFIX: &str = "@typescript/typescript";
 /// argv for the language server. Same flags tsgo nightly already speaks.
@@ -62,6 +63,7 @@ pub enum TsNativeStatus {
 pub fn npm_os_arch() -> (&'static str, &'static str) {
     let os = match std::env::consts::OS {
         "windows" => "win32",
+        "macos" => "darwin",
         other => other,
     };
     let arch = match std::env::consts::ARCH {
