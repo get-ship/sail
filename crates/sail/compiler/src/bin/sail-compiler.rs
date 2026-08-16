@@ -1157,9 +1157,7 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
          | lint/compile diagnostics (JSON) | MCP `sail_check` (prefer `source`; optional `fix`: off|suggest|apply) |\n\
          | structured grammar-aware edit | MCP `sail_edit` (ops batch; validate-before-write) |\n\
          | regenerate this skill | `cargo run -p sail-compiler -- skill` |\n\n\
-         MCP server: `cargo run -p sail-mcp` or `target/release/sail-mcp`. Workspace\n\
-         `.mcp.json` may be **Ship-managed** and wiped on `ship compile` — re-add the\n\
-         sail server (prefer the release binary) if tools disappear.\n"
+         MCP server: `sail mcp` (stdio). `sail mcp install` writes project `.mcp.json`.\n"
     );
     let _ = writeln!(md, "## Framework stack (do not invent alternatives)\n");
     let _ = writeln!(
