@@ -96,4 +96,39 @@ describe('describedControl (use: action)', () => {
     expect(input!.getAttribute('aria-describedby')).toBe(hint.id)
     expect(input!.getAttribute('aria-invalid')).toBe('false')
   })
+
+  // Pair to field fill=true: the control must be described by the live hint
+  // (valid) / error (invalid) node. Dropping setAttribute('aria-describedby')
+  // leaves getElementById(null) and this fails.
+  it('describedby idref resolves to the live hint, then the error', async () => {
+    const { el, hint, error, input } = makeHost()
+    el.setAttribute('fill', '')
+    describedControl(el)
+    expect(input).not.toBeNull()
+
+    const hintRef = input!.getAttribute('aria-describedby')
+    expect(hintRef).toBeTruthy()
+    expect(document.getElementById(hintRef!)).toBe(hint)
+    expect(document.getElementById(hintRef!)!.textContent).toContain('never share')
+    expect(input!.getAttribute('aria-invalid')).toBe('false')
+
+    el.setAttribute('invalid', '')
+    await Promise.resolve()
+    const errorRef = input!.getAttribute('aria-describedby')
+    expect(errorRef).toBeTruthy()
+    expect(document.getElementById(errorRef!)).toBe(error)
+    expect(document.getElementById(errorRef!)!.textContent).toContain('valid email')
+    expect(input!.getAttribute('aria-invalid')).toBe('true')
+  })
+
+  it('late-mounted control still gets aria-describedby at the hint', async () => {
+    const { el, hint, control } = makeHost({ withControl: false })
+    describedControl(el)
+    const input = document.createElement('input')
+    input.type = 'email'
+    control.append(input)
+    await Promise.resolve()
+    expect(input.getAttribute('aria-describedby')).toBe(hint.id)
+    expect(document.getElementById(input.getAttribute('aria-describedby')!)).toBe(hint)
+  })
 })
