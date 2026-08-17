@@ -8,11 +8,11 @@
  */
 
 /** Allowed top-level keys on a theme document. */
-export const THEME_ROOT_KEYS = ['$description', '$extensions', 'modes'] as const
+export const THEME_ROOT_KEYS = ['$description', '$extensions', 'modes', 'anchors'] as const
 export type ThemeRootKey = (typeof THEME_ROOT_KEYS)[number]
 
 /** Allowed keys under `$extensions.sail` on a theme. */
-export const THEME_SAIL_KEYS = ['layer', 'themeId', 'defaultMode', 'supportedModes', 'density', 'ordered'] as const
+export const THEME_SAIL_KEYS = ['layer', 'themeId', 'defaultMode', 'supportedModes', 'density', 'ordered', 'identity', 'variants', 'chrome', 'inherits'] as const
 export type ThemeSailKey = (typeof THEME_SAIL_KEYS)[number]
 
 /** Allowed paint mode names (`mode` values). */
@@ -20,7 +20,7 @@ export const THEME_PAINT_MODES = ['light', 'dark'] as const
 export type ThemePaintMode = (typeof THEME_PAINT_MODES)[number]
 
 /** Allowed top-level groups inside a mode body (scale + component overrides). */
-export const THEME_MODE_GROUP_KEYS = ['$extensions', 'component', 'color', 'filter', 'image', 'control', 'interaction', 'motion', 'radius', 'scrollbar', 'shadow', 'typography', 'space', 'icon', 'density', 'panel', 'z', 'breakpoint', 'border', 'size', 'pad', 'elevation', 'type', 'bg', 'fg', 'l1', 'style', 'keyframes', 'play', 'tagDefaults', 'tags'] as const
+export const THEME_MODE_GROUP_KEYS = ['$extensions', 'component', 'color', 'filter', 'image', 'control', 'interaction', 'motion', 'radius', 'scrollbar', 'shadow', 'typography', 'space', 'icon', 'density', 'panel', 'z', 'breakpoint', 'border', 'size', 'pad', 'elevation', 'type', 'bg', 'fg', 'l1', 'style', 'keyframes', 'play', 'tagDefaults', 'tags', 'anchors'] as const
 export type ThemeModeGroupKey = (typeof THEME_MODE_GROUP_KEYS)[number]
 
 /**

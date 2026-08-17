@@ -1,7 +1,70 @@
 {
   "version": 2,
+  "schema": "spinnaker.registry.v2",
   "source": "packages/sail/tokens/model",
   "generated": true,
+  "metadata": {
+    "spaceN": 4.0,
+    "chromaticRoles": [
+      "primary",
+      "accent",
+      "secondary",
+      "success",
+      "warning",
+      "info",
+      "danger",
+      "neutral"
+    ],
+    "chromaticSteps": [
+      "solid",
+      "hover",
+      "subtle",
+      "border",
+      "text"
+    ]
+  },
+  "contrastPairs": [
+    {
+      "fg": "foreground",
+      "bg": "background",
+      "ratio": 18.38,
+      "floor": 4.5,
+      "ok": true,
+      "soft": false
+    },
+    {
+      "fg": "primary-foreground",
+      "bg": "primary",
+      "ratio": 3.05,
+      "floor": 4.5,
+      "ok": false,
+      "soft": false
+    },
+    {
+      "fg": "accent-foreground",
+      "bg": "accent",
+      "ratio": 3.98,
+      "floor": 4.5,
+      "ok": false,
+      "soft": false
+    },
+    {
+      "fg": "muted-foreground",
+      "bg": "muted",
+      "ratio": 8.0,
+      "floor": 4.5,
+      "ok": true,
+      "soft": true
+    },
+    {
+      "fg": "muted-foreground",
+      "bg": "background",
+      "ratio": 8.62,
+      "floor": 4.5,
+      "ok": true,
+      "soft": true
+    }
+  ],
   "names": [
     "accent",
     "accent-foreground",
@@ -1191,7 +1254,8 @@
       "path": "color.ring.default",
       "cssName": "ring",
       "type": "color",
-      "value": "oklch(0.67 0.16 var(--brand-hue, 58)/ 40%)"
+      "value": "oklch(0.67 0.16 var(--brand-hue, 58)/ 40%)",
+      "luminance": 0.2845510813982442
     },
     "ring-color": {
       "path": "color.ring.color",
@@ -1203,25 +1267,29 @@
       "path": "color.surface.0",
       "cssName": "surface-0",
       "type": "color",
-      "value": "oklch(0.97 0.004 80)"
+      "value": "oklch(0.97 0.004 80)",
+      "luminance": 0.9125604839865409
     },
     "surface-1": {
       "path": "color.surface.1",
       "cssName": "surface-1",
       "type": "color",
-      "value": "oklch(1 0 0)"
+      "value": "oklch(1 0 0)",
+      "luminance": 1.0
     },
     "surface-2": {
       "path": "color.surface.2",
       "cssName": "surface-2",
       "type": "color",
-      "value": "oklch(1 0 0)"
+      "value": "oklch(1 0 0)",
+      "luminance": 1.0
     },
     "surface-3": {
       "path": "color.surface.3",
       "cssName": "surface-3",
       "type": "color",
-      "value": "oklch(1 0 0)"
+      "value": "oklch(1 0 0)",
+      "luminance": 1.0
     },
     "surface-overlay": {
       "path": "color.surface.overlay",
@@ -1257,7 +1325,8 @@
       "path": "color.border.default",
       "cssName": "border",
       "type": "color",
-      "value": "oklch(0.147 0.004 49.25 / 25%)"
+      "value": "oklch(0.147 0.004 49.25 / 25%)",
+      "luminance": 0.0031570251183193902
     },
     "border-subtle": {
       "path": "color.border.subtle",
@@ -1317,25 +1386,29 @@
       "path": "color.background",
       "cssName": "background",
       "type": "color",
-      "value": "oklch(0.975 0.002 106.423)"
+      "value": "oklch(0.975 0.002 106.423)",
+      "luminance": 0.9271331893440472
     },
     "foreground": {
       "path": "color.foreground",
       "cssName": "foreground",
       "type": "color",
-      "value": "oklch(0.147 0.004 49.25)"
+      "value": "oklch(0.147 0.004 49.25)",
+      "luminance": 0.0031570251183193902
     },
     "primary": {
       "path": "color.primary.default",
       "cssName": "primary",
       "type": "color",
-      "value": "oklch(0.67 0.16 var(--brand-hue, 58))"
+      "value": "oklch(0.67 0.16 var(--brand-hue, 58))",
+      "luminance": 0.2845510813982442
     },
     "primary-foreground": {
       "path": "color.primary.foreground",
       "cssName": "primary-foreground",
       "type": "color",
-      "value": "oklch(0.99 0.02 95)"
+      "value": "oklch(0.99 0.02 95)",
+      "luminance": 0.9715640523079332
     },
     "primary-hover": {
       "path": "color.primary.hover",
@@ -1347,49 +1420,57 @@
       "path": "color.secondary.default",
       "cssName": "secondary",
       "type": "color",
-      "value": "oklch(0.95 0.02 302)"
+      "value": "oklch(0.95 0.02 302)",
+      "luminance": 0.8530479815971515
     },
     "secondary-foreground": {
       "path": "color.secondary.foreground",
       "cssName": "secondary-foreground",
       "type": "color",
-      "value": "oklch(0.33 0.11 302)"
+      "value": "oklch(0.33 0.11 302)",
+      "luminance": 0.03207200607651446
     },
     "muted": {
       "path": "color.muted.default",
       "cssName": "muted",
       "type": "color",
-      "value": "oklch(0.95 0.003 106.424)"
+      "value": "oklch(0.95 0.003 106.424)",
+      "luminance": 0.8577640050159848
     },
     "muted-foreground": {
       "path": "color.muted.foreground",
       "cssName": "muted-foreground",
       "type": "color",
-      "value": "oklch(0.40 0.02 58.071)"
+      "value": "oklch(0.40 0.02 58.071)",
+      "luminance": 0.06341773182208232
     },
     "accent": {
       "path": "color.brandAccent.default",
       "cssName": "accent",
       "type": "color",
-      "value": "oklch(0.61 0.23 var(--brand-hue, 303))"
+      "value": "oklch(0.61 0.23 var(--brand-hue, 303))",
+      "luminance": 0.19804624923008468
     },
     "accent-foreground": {
       "path": "color.brandAccent.foreground",
       "cssName": "accent-foreground",
       "type": "color",
-      "value": "oklch(0.98 0.02 301)"
+      "value": "oklch(0.98 0.02 301)",
+      "luminance": 0.9366903446535898
     },
     "destructive": {
       "path": "color.destructive.default",
       "cssName": "destructive",
       "type": "color",
-      "value": "oklch(0.577 0.245 27.325)"
+      "value": "oklch(0.577 0.245 27.325)",
+      "luminance": 0.1703696284534957
     },
     "destructive-foreground": {
       "path": "color.destructive.foreground",
       "cssName": "destructive-foreground",
       "type": "color",
-      "value": "oklch(0.99 0.02 25)"
+      "value": "oklch(0.99 0.02 25)",
+      "luminance": 0.9638152462406719
     },
     "input": {
       "path": "color.input",
@@ -1425,139 +1506,162 @@
       "path": "color.knob",
       "cssName": "knob",
       "type": "color",
-      "value": "oklch(1 0 0)"
+      "value": "oklch(1 0 0)",
+      "luminance": 1.0
     },
     "success": {
       "path": "color.success.default",
       "cssName": "success",
       "type": "color",
-      "value": "oklch(0.65 0.2 150)"
+      "value": "oklch(0.65 0.2 150)",
+      "luminance": 0.3089790434243503
     },
     "success-foreground": {
       "path": "color.success.foreground",
       "cssName": "success-foreground",
       "type": "color",
-      "value": "oklch(0.99 0.02 150)"
+      "value": "oklch(0.99 0.02 150)",
+      "luminance": 0.9771264442421163
     },
     "warning": {
       "path": "color.warning.default",
       "cssName": "warning",
       "type": "color",
-      "value": "oklch(0.75 0.15 75)"
+      "value": "oklch(0.75 0.15 75)",
+      "luminance": 0.41154347511744943
     },
     "warning-foreground": {
       "path": "color.warning.foreground",
       "cssName": "warning-foreground",
       "type": "color",
-      "value": "oklch(0.2 0.04 75)"
+      "value": "oklch(0.2 0.04 75)",
+      "luminance": 0.007804083676301267
     },
     "info": {
       "path": "color.info.default",
       "cssName": "info",
       "type": "color",
-      "value": "oklch(0.6 0.18 260)"
+      "value": "oklch(0.6 0.18 260)",
+      "luminance": 0.2102692130835034
     },
     "info-foreground": {
       "path": "color.info.foreground",
       "cssName": "info-foreground",
       "type": "color",
-      "value": "oklch(0.99 0.02 260)"
+      "value": "oklch(0.99 0.02 260)",
+      "luminance": 0.9707196994995677
     },
     "status-gray": {
       "path": "color.status.gray",
       "cssName": "status-gray",
       "type": "color",
-      "value": "oklch(0.5 0.01 58)"
+      "value": "oklch(0.5 0.01 58)",
+      "luminance": 0.12456299680675118
     },
     "status-blue": {
       "path": "color.status.blue",
       "cssName": "status-blue",
       "type": "color",
-      "value": "oklch(0.6 0.18 260)"
+      "value": "oklch(0.6 0.18 260)",
+      "luminance": 0.2102692130835034
     },
     "status-red": {
       "path": "color.status.red",
       "cssName": "status-red",
       "type": "color",
-      "value": "oklch(0.55 0.25 25)"
+      "value": "oklch(0.55 0.25 25)",
+      "luminance": 0.15691974094533306
     },
     "status-green": {
       "path": "color.status.green",
       "cssName": "status-green",
       "type": "color",
-      "value": "oklch(0.65 0.2 150)"
+      "value": "oklch(0.65 0.2 150)",
+      "luminance": 0.3089790434243503
     },
     "status-yellow": {
       "path": "color.status.yellow",
       "cssName": "status-yellow",
       "type": "color",
-      "value": "oklch(0.7 0.18 55)"
+      "value": "oklch(0.7 0.18 55)",
+      "luminance": 0.32216671703202937
     },
     "status-purple": {
       "path": "color.status.purple",
       "cssName": "status-purple",
       "type": "color",
-      "value": "oklch(0.6 0.2 300)"
+      "value": "oklch(0.6 0.2 300)",
+      "luminance": 0.19320983479205445
     },
     "status-orange": {
       "path": "color.status.orange",
       "cssName": "status-orange",
       "type": "color",
-      "value": "oklch(0.6 0.2 35)"
+      "value": "oklch(0.6 0.2 35)",
+      "luminance": 0.1925462500820865
     },
     "status-amber": {
       "path": "color.status.amber",
       "cssName": "status-amber",
       "type": "color",
-      "value": "oklch(0.75 0.15 75)"
+      "value": "oklch(0.75 0.15 75)",
+      "luminance": 0.41154347511744943
     },
     "syntax-keyword": {
       "path": "color.syntax.keyword",
       "cssName": "syntax-keyword",
       "type": "color",
-      "value": "oklch(0.55 0.20 280)"
+      "value": "oklch(0.55 0.20 280)",
+      "luminance": 0.15156463500843353
     },
     "syntax-string": {
       "path": "color.syntax.string",
       "cssName": "syntax-string",
       "type": "color",
-      "value": "oklch(0.50 0.15 152)"
+      "value": "oklch(0.50 0.15 152)",
+      "luminance": 0.14121738718265991
     },
     "syntax-number": {
       "path": "color.syntax.number",
       "cssName": "syntax-number",
       "type": "color",
-      "value": "oklch(0.50 0.16 250)"
+      "value": "oklch(0.50 0.16 250)",
+      "luminance": 0.12684135468707033
     },
     "syntax-function": {
       "path": "color.syntax.function",
       "cssName": "syntax-function",
       "type": "color",
-      "value": "oklch(0.55 0.22 310)"
+      "value": "oklch(0.55 0.22 310)",
+      "luminance": 0.14251292823645703
     },
     "syntax-type": {
       "path": "color.syntax.type",
       "cssName": "syntax-type",
       "type": "color",
-      "value": "oklch(0.55 0.18 200)"
+      "value": "oklch(0.55 0.18 200)",
+      "luminance": 0.2130374309831503
     },
     "syntax-tag": {
       "path": "color.syntax.tag",
       "cssName": "syntax-tag",
       "type": "color",
-      "value": "oklch(0.50 0.20 25)"
+      "value": "oklch(0.50 0.20 25)",
+      "luminance": 0.10743292090713152
     },
     "syntax-attr": {
       "path": "color.syntax.attr",
       "cssName": "syntax-attr",
       "type": "color",
-      "value": "oklch(0.55 0.16 60)"
+      "value": "oklch(0.55 0.16 60)",
+      "luminance": 0.15719749852533638
     },
     "syntax-comment": {
       "path": "color.syntax.comment",
       "cssName": "syntax-comment",
       "type": "color",
-      "value": "oklch(0.55 0.02 250)"
+      "value": "oklch(0.55 0.02 250)",
+      "luminance": 0.16687576111288077
     },
     "syntax-variable": {
       "path": "color.syntax.variable",
@@ -1569,109 +1673,127 @@
       "path": "color.hue.red",
       "cssName": "hue-red",
       "type": "color",
-      "value": "oklch(0.62 0.21 25)"
+      "value": "oklch(0.62 0.21 25)",
+      "luminance": 0.21021554767083112
     },
     "hue-orange": {
       "path": "color.hue.orange",
       "cssName": "hue-orange",
       "type": "color",
-      "value": "oklch(0.68 0.18 50)"
+      "value": "oklch(0.68 0.18 50)",
+      "luminance": 0.29226902578910674
     },
     "hue-amber": {
       "path": "color.hue.amber",
       "cssName": "hue-amber",
       "type": "color",
-      "value": "oklch(0.74 0.16 75)"
+      "value": "oklch(0.74 0.16 75)",
+      "luminance": 0.3946128499303536
     },
     "hue-yellow": {
       "path": "color.hue.yellow",
       "cssName": "hue-yellow",
       "type": "color",
-      "value": "oklch(0.82 0.16 95)"
+      "value": "oklch(0.82 0.16 95)",
+      "luminance": 0.5524071757968184
     },
     "hue-lime": {
       "path": "color.hue.lime",
       "cssName": "hue-lime",
       "type": "color",
-      "value": "oklch(0.78 0.18 130)"
+      "value": "oklch(0.78 0.18 130)",
+      "luminance": 0.5002503503826301
     },
     "hue-green": {
       "path": "color.hue.green",
       "cssName": "hue-green",
       "type": "color",
-      "value": "oklch(0.62 0.16 150)"
+      "value": "oklch(0.62 0.16 150)",
+      "luminance": 0.25886407111064363
     },
     "hue-teal": {
       "path": "color.hue.teal",
       "cssName": "hue-teal",
       "type": "color",
-      "value": "oklch(0.62 0.13 185)"
+      "value": "oklch(0.62 0.13 185)",
+      "luminance": 0.266228951087432
     },
     "hue-cyan": {
       "path": "color.hue.cyan",
       "cssName": "hue-cyan",
       "type": "color",
-      "value": "oklch(0.68 0.13 220)"
+      "value": "oklch(0.68 0.13 220)",
+      "luminance": 0.33174037731127687
     },
     "hue-sky": {
       "path": "color.hue.sky",
       "cssName": "hue-sky",
       "type": "color",
-      "value": "oklch(0.65 0.16 235)"
+      "value": "oklch(0.65 0.16 235)",
+      "luminance": 0.29090292893379044
     },
     "hue-blue": {
       "path": "color.hue.blue",
       "cssName": "hue-blue",
       "type": "color",
-      "value": "oklch(0.55 0.20 260)"
+      "value": "oklch(0.55 0.20 260)",
+      "luminance": 0.15931193068390206
     },
     "hue-indigo": {
       "path": "color.hue.indigo",
       "cssName": "hue-indigo",
       "type": "color",
-      "value": "oklch(0.50 0.20 280)"
+      "value": "oklch(0.50 0.20 280)",
+      "luminance": 0.11195290371975289
     },
     "hue-violet": {
       "path": "color.hue.violet",
       "cssName": "hue-violet",
       "type": "color",
-      "value": "oklch(0.55 0.22 295)"
+      "value": "oklch(0.55 0.22 295)",
+      "luminance": 0.14488624459044305
     },
     "hue-purple": {
       "path": "color.hue.purple",
       "cssName": "hue-purple",
       "type": "color",
-      "value": "oklch(0.55 0.22 310)"
+      "value": "oklch(0.55 0.22 310)",
+      "luminance": 0.14251292823645703
     },
     "hue-fuchsia": {
       "path": "color.hue.fuchsia",
       "cssName": "hue-fuchsia",
       "type": "color",
-      "value": "oklch(0.60 0.25 330)"
+      "value": "oklch(0.60 0.25 330)",
+      "luminance": 0.18190209794532816
     },
     "hue-pink": {
       "path": "color.hue.pink",
       "cssName": "hue-pink",
       "type": "color",
-      "value": "oklch(0.68 0.20 345)"
+      "value": "oklch(0.68 0.20 345)",
+      "luminance": 0.2793534418592826
     },
     "hue-rose": {
       "path": "color.hue.rose",
       "cssName": "hue-rose",
       "type": "color",
-      "value": "oklch(0.62 0.21 5)"
+      "value": "oklch(0.62 0.21 5)",
+      "luminance": 0.20818778110902858
     },
     "backdrop": {
       "path": "color.backdrop",
       "cssName": "backdrop",
       "type": "color",
-      "value": "oklch(0 0 0 / 40%)"
+      "value": "oklch(0 0 0 / 40%)",
+      "luminance": 0.0
     },
     "scrim": {
       "path": "color.scrim",
       "cssName": "scrim",
       "type": "color",
-      "value": "oklch(0 0 0 / 20%)"
+      "value": "oklch(0 0 0 / 20%)",
+      "luminance": 0.0
     },
     "divider": {
       "path": "color.divider",

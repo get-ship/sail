@@ -713,6 +713,14 @@ pub fn generate_with_options(
         ordered.push(l);
     }
 
+    let prepared_platform_chrome = chrome::generate_platform_chrome();
+    let prepared_themes_chrome = prepare_themes_chrome(model_dir);
+    // J4 writes these in place of the relocated hand files. Catalog emit
+    // still concatenates those files so today's tokens.css/themes.css stay
+    // stable; the calls keep the engine path live.
+    if prepared_platform_chrome.is_empty() || prepared_themes_chrome.is_empty() {
+        bail!("engine chrome emit is empty");
+    }
     let chrome = load_platform_chrome("chrome.css", model_dir);
 
     let mut css_parts: Vec<String> = vec![GENERATED_HEADER.to_string()];
@@ -879,6 +887,37 @@ pub fn generate_with_options(
         registry_json,
         unions_ts,
     })
+}
+
+/// Per-theme structural CSS from `$extensions.sail.chrome`. Header-only when
+/// the catalog has no chrome entries (today's themes); J4 spends this string.
+fn prepare_themes_chrome(model_dir: &Path) -> String {
+    let themes_dir = model_dir.join("themes");
+    if !themes_dir.is_dir() {
+        return chrome::generate_all_themes_chrome(std::iter::empty());
+    }
+    let mut docs: Vec<(String, Value)> = Vec::new();
+    let Ok(rd) = fs::read_dir(&themes_dir) else {
+        return chrome::generate_all_themes_chrome(std::iter::empty());
+    };
+    for e in rd.flatten() {
+        let path = e.path();
+        if path.extension().and_then(|s| s.to_str()) != Some("json") {
+            continue;
+        }
+        let Ok(doc) = load_json(&path) else {
+            continue;
+        };
+        let id = path
+            .file_stem()
+            .map(|s| s.to_string_lossy().into_owned())
+            .unwrap_or_default();
+        if !id.is_empty() {
+            docs.push((id, doc));
+        }
+    }
+    let refs: Vec<(&str, &Value)> = docs.iter().map(|(id, d)| (id.as_str(), d)).collect();
+    chrome::generate_all_themes_chrome(refs)
 }
 
 fn platform_dir_candidates() -> Vec<PathBuf> {
@@ -1649,6 +1688,13 @@ fn flatten_tokens(doc: &Value, path_prefix: &[String], inherited_type: Option<&s
     };
     for (key, node) in obj {
         if key.starts_with('$') {
+            continue;
+        }
+        // Anchors are authoring input; derived steps are the public tokens.
+        if path_prefix.first().is_some_and(|p| p == "color") && key == "anchors" {
+            continue;
+        }
+        if path_prefix.is_empty() && key == "anchors" {
             continue;
         }
         if !node.is_object() {
@@ -7142,5 +7188,18 @@ mod tests {
         );
         assert!(reg["contrastPairs"].as_array().is_some());
         assert!(reg["metadata"]["chromaticRoles"].is_array());
+        for step in ["primary", "primary-hover", "primary-foreground"] {
+            assert!(
+                reg["tokens"][step].is_object(),
+                "derived chromatic step {step} missing"
+            );
+        }
+        let pair = reg["contrastPairs"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|p| p["fg"] == "foreground" && p["bg"] == "background");
+        assert!(pair.is_some(), "floor pair foreground/background missing");
+        assert!(pair.unwrap()["ok"].as_bool().unwrap());
     }
 }
