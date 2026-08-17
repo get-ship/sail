@@ -16,7 +16,7 @@
   // no preset: display inline
   style brandWord = { display(inline) }
   style brandLink = { size(hug) }
-  style shell = { size(max) }
+  style shell = { size(grow) }
   // no preset: overflow x hidden / y auto
   style landingMain = { size(grow).overflow({ x: hidden, y: auto }) }
   // no preset: display flex / dir column
