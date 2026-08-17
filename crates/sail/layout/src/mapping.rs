@@ -262,6 +262,13 @@ pub static LAYOUT_RULES: &[LayoutRule] = &[
     LayoutRule {
         selector: Selector::Modifier {
             prefix: "sail-g-",
+            value: "2_5",
+        },
+        declarations: &[Declaration::Gap(10.0, 10.0)],
+    },
+    LayoutRule {
+        selector: Selector::Modifier {
+            prefix: "sail-g-",
             value: "3",
         },
         declarations: &[Declaration::Gap(12.0, 12.0)],

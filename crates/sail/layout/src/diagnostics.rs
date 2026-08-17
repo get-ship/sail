@@ -17,9 +17,11 @@
 //!    path; kill switch `text_metrics: false`). Truncate is an opt-in only
 //!    on a constrained width (`max-w` / explicit `w`); hug-content +
 //!    truncate is a clip mask and still errors.
+//! 6. **sibling-overlap** — two in-flow siblings share pixels inside a
+//!    `row` / `column` / `grid`. Overlay is `<stack>`.
 //!
 //! Experimental (gated by [`crate::CheckOptions::experimental`]):
-//! 6. **sub-min-tap-target** — interactive host shorter axis below 24px.
+//! 7. **sub-min-tap-target** — interactive host shorter axis below 24px.
 //!
 //! Each span is into the **preprocessed** source.
 
@@ -373,6 +375,10 @@ pub fn scan_with(
         }
     }
 
+    // Flow siblings that share pixels. `<stack>` is the overlay keyword —
+    // overlap there is the product. Absolute/fixed children are out of flow.
+    scan_sibling_overlap(layout, &mut out);
+
     // Case 5 (LAYOUT-5 default Error, still killable via text_metrics: false):
     // text run wider than its box while overflow clips on the inline axis.
     // Truncate suppresses only on a constrained width — not hug-content.
@@ -389,6 +395,100 @@ pub fn scan_with(
         boxes,
         viewport,
     })
+}
+
+fn is_stack_host(elem: &crate::html::Element) -> bool {
+    elem.class
+        .split_whitespace()
+        .any(|c| c == "sail-stackz" || c == "sail-stackz-i")
+}
+
+fn is_out_of_flow(style: &crate::style::ResolvedStyle) -> bool {
+    matches!(style.style.position, taffy::style::Position::Absolute)
+}
+
+fn layouts_overlap(a: &taffy::Layout, b: &taffy::Layout) -> Option<(f32, f32)> {
+    let ax2 = a.location.x + a.size.width;
+    let ay2 = a.location.y + a.size.height;
+    let bx2 = b.location.x + b.size.width;
+    let by2 = b.location.y + b.size.height;
+    let w = ax2.min(bx2) - a.location.x.max(b.location.x);
+    let h = ay2.min(by2) - a.location.y.max(b.location.y);
+    if w > 1.0 && h > 1.0 {
+        Some((w, h))
+    } else {
+        None
+    }
+}
+
+/// Siblings in a flow layout (`row` / `column` / `grid`) must not share
+/// pixels. Overlay is `<stack>`. This is how overlapping controls become a
+/// compile error instead of a screenshot note.
+fn scan_sibling_overlap(layout: &Layout, out: &mut Vec<Diagnostic>) {
+    for (i, elem) in layout.elements.iter().enumerate() {
+        if i == 0 || is_stack_host(elem) || is_control_flow_tag(elem.tag.as_str()) {
+            continue;
+        }
+        if layout.unknown_subtree.get(i).copied().unwrap_or(false) {
+            continue;
+        }
+        let kids = &elem.children;
+        if kids.len() < 2 {
+            continue;
+        }
+        for (ai, &a_idx) in kids.iter().enumerate() {
+            let Some(a_node) = layout.nodes.get(a_idx).copied().flatten() else {
+                continue;
+            };
+            let Ok(a_lay) = layout.taffy.layout(a_node).cloned() else {
+                continue;
+            };
+            if a_lay.size.width <= EPSILON || a_lay.size.height <= EPSILON {
+                continue;
+            }
+            if layout.styles.get(a_idx).is_some_and(is_out_of_flow) {
+                continue;
+            }
+            if layout.unknown_subtree.get(a_idx).copied().unwrap_or(false) {
+                continue;
+            }
+            for &b_idx in &kids[ai + 1..] {
+                let Some(b_node) = layout.nodes.get(b_idx).copied().flatten() else {
+                    continue;
+                };
+                let Ok(b_lay) = layout.taffy.layout(b_node).cloned() else {
+                    continue;
+                };
+                if b_lay.size.width <= EPSILON || b_lay.size.height <= EPSILON {
+                    continue;
+                }
+                if layout.styles.get(b_idx).is_some_and(is_out_of_flow) {
+                    continue;
+                }
+                if layout.unknown_subtree.get(b_idx).copied().unwrap_or(false) {
+                    continue;
+                }
+                let Some((w, h)) = layouts_overlap(&a_lay, &b_lay) else {
+                    continue;
+                };
+                out.push(Diagnostic {
+                    kind: "sibling-overlap",
+                    severity: Severity::Error,
+                    element_index: b_idx,
+                    element_tag: layout.elements[b_idx].tag.clone(),
+                    element_class: layout.elements[b_idx].class.clone(),
+                    message: format!(
+                        "<{}> overlaps <{}> by {:.0}×{:.0}px inside <{}> — siblings in a \
+                         flow layout must not share pixels. Add gap, wrap, or use <stack> \
+                         if overlay is the intent.",
+                        layout.elements[b_idx].tag, layout.elements[a_idx].tag, w, h, elem.tag
+                    ),
+                    span: layout.elements[b_idx].span,
+                    geometry: None,
+                });
+            }
+        }
+    }
 }
 
 fn has_truncate(elem: &crate::html::Element) -> bool {

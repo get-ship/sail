@@ -399,6 +399,25 @@ fn pad_from_arg(arg: &PaintArg, side: &str) -> ResolvedBox {
 
 fn size_from_arg(arg: &PaintArg) -> ResolvedBox {
     match arg {
+        PaintArg::Token(name) if name == "grow" => ResolvedBox {
+            grow: Some(1.0),
+            shrink: Some(1.0),
+            min_width: Some("0".into()),
+            min_height: Some("0".into()),
+            ..Default::default()
+        },
+        PaintArg::Token(name) if name == "hug" => ResolvedBox {
+            grow: Some(0.0),
+            shrink: Some(0.0),
+            min_width: Some("auto".into()),
+            min_height: Some("auto".into()),
+            ..Default::default()
+        },
+        PaintArg::Token(name) if name == "max" => ResolvedBox {
+            min_width: Some("0".into()),
+            min_height: Some("0".into()),
+            ..Default::default()
+        },
         PaintArg::Token(name) if !name.is_empty() => ResolvedBox {
             width: Some(name.clone()),
             height: Some(name.clone()),

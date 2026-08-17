@@ -200,6 +200,21 @@ fn apply_declarations(
             style.grid_row = span(n);
         }
     }
+    // Language `col` / `row` on a grid child — same cell is overlap.
+    if let Some(c) = elem.attrs.get("col") {
+        if let Ok(n) = c.parse::<i16>() {
+            if n > 0 {
+                style.grid_column = line(n);
+            }
+        }
+    }
+    if let Some(r) = elem.attrs.get("row") {
+        if let Ok(n) = r.parse::<i16>() {
+            if n > 0 {
+                style.grid_row = line(n);
+            }
+        }
+    }
 }
 
 fn to_taffy_display(d: MappingDisplay) -> Display {

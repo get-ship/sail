@@ -928,3 +928,56 @@ fn tap_target_skips_checkbox_inside_label() {
         result.diagnostics
     );
 }
+
+const KIND_SIBLING_OVERLAP: &str = "sibling-overlap";
+
+const OVERLAP_ROW: &str = r#"
+<div class="sail-grid">
+  <div class="s-w20 s-h8" col="1" row="1">a</div>
+  <div class="s-w20 s-h8" col="1" row="1">b</div>
+</div>
+"#;
+
+const STACK_OVERLAY: &str = r#"
+<div class="sail-stackz">
+  <div class="s-w20 s-h8">a</div>
+  <div class="s-w20 s-h8">b</div>
+</div>
+"#;
+
+const GAPPED_ROW: &str = r#"
+<div class="sail-row sail-g-4">
+  <div class="s-w8 s-h8">a</div>
+  <div class="s-w8 s-h8">b</div>
+</div>
+"#;
+
+#[test]
+fn sibling_overlap_in_a_row_is_an_error() {
+    let result = check_preprocessed(OVERLAP_ROW, VP).expect("layout");
+    assert!(
+        has_kind(&result.diagnostics, KIND_SIBLING_OVERLAP),
+        "in-flow siblings that share pixels must error: {:?}",
+        result.diagnostics
+    );
+}
+
+#[test]
+fn stack_is_the_overlap_opt_in() {
+    let result = check_preprocessed(STACK_OVERLAY, VP).expect("layout");
+    assert!(
+        !has_kind(&result.diagnostics, KIND_SIBLING_OVERLAP),
+        "<stack> overlay must not fire sibling-overlap: {:?}",
+        result.diagnostics
+    );
+}
+
+#[test]
+fn gapped_row_does_not_overlap() {
+    let result = check_preprocessed(GAPPED_ROW, VP).expect("layout");
+    assert!(
+        !has_kind(&result.diagnostics, KIND_SIBLING_OVERLAP),
+        "a gapped row is legal flow: {:?}",
+        result.diagnostics
+    );
+}
