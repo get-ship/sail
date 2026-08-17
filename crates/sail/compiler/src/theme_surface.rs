@@ -78,7 +78,7 @@ pub fn theme_override_vocabulary(host: Option<&str>) -> Vec<ThemeTokenRef> {
         });
     }
     // Additional public semantic paints commonly overridden (not required).
-    for extra in ["border", "ring", "card", "popover"] {
+    for extra in ["border", "ring", "surface", "overlay"] {
         if REQUIRED_SLOTS.contains(&extra) {
             continue;
         }
@@ -337,7 +337,7 @@ fn css_name_for_author(name: &str) -> Option<String> {
     if n.is_empty() {
         return None;
     }
-    if REQUIRED_SLOTS.contains(&n) || matches!(n, "border" | "ring" | "card" | "popover") {
+    if REQUIRED_SLOTS.contains(&n) || matches!(n, "border" | "ring" | "surface" | "overlay") {
         return Some(n.to_string());
     }
     if let Some(css) = sail_lint::tokens::path_to_css_name(n) {
@@ -371,20 +371,28 @@ fn resolved_values(
     mode: &str,
     css_name: &str,
 ) -> Option<(String, Option<ModeDivergence>)> {
-    let doc = load_theme_doc(theme)?;
-    let this = resolve_css_in_mode(&doc, mode, css_name)?;
-    let other_mode = if mode == "dark" { "light" } else { "dark" };
-    let divergence = resolve_css_in_mode(&doc, other_mode, css_name).and_then(|other| {
-        if other != this {
-            Some(ModeDivergence {
-                other_mode: other_mode.to_string(),
-                other_value: other,
-            })
-        } else {
-            None
+    // Theme JSON is identity (anchors). Resolved paint lives on registry v2.
+    if let Some(doc) = load_theme_doc(theme) {
+        if let Some(this) = resolve_css_in_mode(&doc, mode, css_name) {
+            let other_mode = if mode == "dark" { "light" } else { "dark" };
+            let divergence = resolve_css_in_mode(&doc, other_mode, css_name).and_then(|other| {
+                if other != this {
+                    Some(ModeDivergence {
+                        other_mode: other_mode.to_string(),
+                        other_value: other,
+                    })
+                } else {
+                    None
+                }
+            });
+            return Some((this, divergence));
         }
-    });
-    Some((this, divergence))
+    }
+    let value = sail_lint::tokens::token_value(css_name)?;
+    if value.is_empty() {
+        return None;
+    }
+    Some((value.to_string(), None))
 }
 
 fn load_theme_doc(theme: &str) -> Option<Value> {
@@ -711,11 +719,11 @@ mod tests {
             elev.value
         );
 
-        let fill = resolve_theme_token("surface-1", "sail", "light").expect("surface-1");
-        assert_eq!(fill.name, "surface-1");
+        let fill = resolve_theme_token("surface", "sail", "light").expect("surface");
+        assert_eq!(fill.name, "surface");
         assert!(
             fill.value.contains("oklch") || fill.value.contains("color"),
-            "surface-1 value: {}",
+            "surface value: {}",
             fill.value
         );
     }

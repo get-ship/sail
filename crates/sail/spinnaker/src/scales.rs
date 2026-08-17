@@ -338,7 +338,7 @@ mod tests {
     #[test]
     fn tokens_lower_to_their_var() {
         assert_eq!(lower("space", "4").unwrap(), "var(--space-4)");
-        assert_eq!(lower("color", "surface-2").unwrap(), "var(--surface-2)");
+        assert_eq!(lower("color", "surface").unwrap(), "var(--surface)");
         assert_eq!(lower("radius", "md").unwrap(), "var(--radius-md)");
         assert_eq!(lower("duration", "fast").unwrap(), "var(--duration-fast)");
     }

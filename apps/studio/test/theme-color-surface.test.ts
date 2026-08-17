@@ -40,7 +40,7 @@ const modesTheme = (primary = 'oklch(0.65 0.15 40)') => ({
           3: { $value: 'oklch(1 0 0)', $type: 'color' },
         },
         success: { default: { $value: 'oklch(0.6 0.15 145)', $type: 'color' } },
-        destructive: { default: { $value: 'oklch(0.55 0.2 25)', $type: 'color' } },
+        danger: { default: { $value: 'oklch(0.55 0.2 25)', $type: 'color' } },
       },
     },
   },

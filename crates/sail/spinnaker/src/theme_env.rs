@@ -45,9 +45,8 @@ pub fn with_styling_policy<T>(policy: StylingPolicy, f: impl FnOnce() -> T) -> T
     })
 }
 
-/// Generated registry artifact (DTCG emit). Same file [`crate::tokens`] reads.
-const TOKEN_REGISTRY_JSON: &str =
-    include_str!("../../../../packages/sail/tokens/src/token-registry.json");
+/// Same generated artifact [`crate::tokens`] reads — one include, one schema.
+use crate::tokens::{REGISTRY_SCHEMA_V2, TOKEN_REGISTRY_JSON};
 
 /// `sail.config.jsonc` styling policy. Default is Open.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -112,6 +111,12 @@ impl ThemeStyleEnv {
     fn from_json(json: &str) -> Self {
         let root: Value = serde_json::from_str(json)
             .unwrap_or_else(|e| panic!("token-registry.json parse failed: {e}"));
+        if let Some(schema) = root.get("schema").and_then(Value::as_str) {
+            assert_eq!(
+                schema, REGISTRY_SCHEMA_V2,
+                "theme env reads {REGISTRY_SCHEMA_V2} only (got {schema:?})"
+            );
+        }
         Self::from_value(&root)
     }
 
@@ -588,12 +593,12 @@ mod tests {
             "styles": {
                 "card-chrome": {
                     "$type": "sail.style",
-                    "$value": { "bg": "card", "border": "subtle", "radius": "lg" }
+                    "$value": { "bg": "surface", "border": "subtle", "radius": "lg" }
                 },
                 "navLink": {
                     "type": "sail.style",
                     "value": { "type": "label" },
-                    "when": { "hover": { "bg": "surface-2" } }
+                    "when": { "hover": { "bg": "overlay" } }
                 }
             },
             "keyframes": {
@@ -611,7 +616,10 @@ mod tests {
         }"#;
         let env = ThemeStyleEnv::from_json(json);
         let chrome = env.resolve_named_style("card-chrome").expect("card-chrome");
-        assert_eq!(chrome.value.get("bg"), Some(&Value::String("card".into())));
+        assert_eq!(
+            chrome.value.get("bg"),
+            Some(&Value::String("surface".into()))
+        );
         assert_eq!(
             chrome.value.get("border"),
             Some(&Value::String("subtle".into()))
@@ -706,7 +714,7 @@ mod tests {
             "styles": {
                 "card-chrome": {
                     "$type": "sail.style",
-                    "$value": { "bg": "card", "border": "subtle", "radius": "lg" }
+                    "$value": { "bg": "surface", "border": "subtle", "radius": "lg" }
                 }
             }
         }"#;
@@ -720,13 +728,13 @@ mod tests {
     fn theme_named_style_wins_over_local() {
         let json = r#"{
             "styles": {
-                "foo": { "$type": "sail.style", "$value": { "bg": "card" } }
+                "foo": { "$type": "sail.style", "$value": { "bg": "surface" } }
             }
         }"#;
         let env = ThemeStyleEnv::from_json(json);
         let got = env
             .resolve_style_ref("foo", &locals_foo(), StylingPolicy::Open)
             .expect("theme wins");
-        assert_eq!(got.value.get("bg"), Some(&Value::String("card".into())));
+        assert_eq!(got.value.get("bg"), Some(&Value::String("surface".into())));
     }
 }

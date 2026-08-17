@@ -4,6 +4,13 @@
  */
 import registry from '@ship/tokens/token-registry.json'
 
+const REGISTRY_SCHEMA = (registry as { schema?: string }).schema
+if (REGISTRY_SCHEMA !== 'spinnaker.registry.v2') {
+  throw new Error(
+    `studio token-groups reads spinnaker.registry.v2 (got ${String(REGISTRY_SCHEMA)})`,
+  )
+}
+
 export type TokenKind =
   | 'color'
   | 'dimension'

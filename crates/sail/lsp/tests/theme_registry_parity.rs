@@ -30,7 +30,7 @@ fn lsp_and_compiler_complete_theme_eq_same_ids() {
         via_api, via_lsp,
         "LSP intelligence must serve the same theme= registry as compiler"
     );
-    assert!(via_api.iter().any(|id| id == "ship"), "{via_api:?}");
+    assert!(via_api.iter().any(|id| id == "sail"), "{via_api:?}");
     assert!(via_api.iter().all(|id| {
         theme_complete_at(src, off, None)
             .iter()
@@ -40,7 +40,7 @@ fn lsp_and_compiler_complete_theme_eq_same_ids() {
 
 #[test]
 fn lsp_and_compiler_hover_primary_same_resolved_value() {
-    let src = r#"<div theme="ship" style({ bg(primary) })>x</div>"#;
+    let src = r#"<div theme="sail" style({ bg(primary) })>x</div>"#;
     let off = src.find("primary").expect("primary");
     let (line, col) = {
         let mut l = 1usize;
@@ -58,7 +58,7 @@ fn lsp_and_compiler_hover_primary_same_resolved_value() {
         }
         (l, c)
     };
-    let via_resolve = resolve_theme_token("primary", "ship", "light").expect("resolve");
+    let via_resolve = resolve_theme_token("primary", "sail", "light").expect("resolve");
     let via_hover = hover_at(src, None, line, col).expect("hover");
     assert_eq!(via_hover.kind, "theme-token");
     assert!(

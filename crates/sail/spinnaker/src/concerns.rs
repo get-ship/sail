@@ -1621,14 +1621,14 @@ mod tests {
     }
 
     #[test]
-    fn alias_bg_card_stays_named_or_color() {
-        let (name, args) = prepare_concern_call("bg", vec![PaintArg::Token("card".into())]);
+    fn alias_bg_surface_stays_named_or_color() {
+        let (name, args) = prepare_concern_call("bg", vec![PaintArg::Token("surface".into())]);
         assert_eq!(name, "bg");
         assert!(
-            args == vec![PaintArg::Token("card".into())]
+            args == vec![PaintArg::Token("surface".into())]
                 || matches!(
                     &args[0],
-                    PaintArg::Slots(slots) if slots.get("color") == Some(&PaintArg::Token("card".into()))
+                    PaintArg::Slots(slots) if slots.get("color") == Some(&PaintArg::Token("surface".into()))
                 ),
             "{args:?}"
         );

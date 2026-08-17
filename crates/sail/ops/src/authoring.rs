@@ -1261,13 +1261,14 @@ pub fn sail_layout_check(source: &str) -> Result<Value, OpError> {
     let diagnostics: Vec<Value> = diags
         .into_iter()
         .map(|d| {
-            let kind = kind_for.get(&d.message).copied().or_else(|| {
-                match d.rule.as_deref() {
+            let kind = kind_for
+                .get(&d.message)
+                .copied()
+                .or_else(|| match d.rule.as_deref() {
                     Some("sail-clipped-text") => Some("clipped-text"),
                     Some("sail-unintended-overflow") => Some("unintended-overflow"),
                     _ => None,
-                }
-            });
+                });
             json!({
                 "kind": kind,
                 "severity": match d.severity {
@@ -1449,7 +1450,7 @@ mod tests {
             .iter()
             .filter_map(|i| i.get("label").and_then(|v| v.as_str()).map(str::to_string))
             .collect();
-        for want in ["subtle", "card"] {
+        for want in ["subtle", "default"] {
             assert!(
                 labels.iter().any(|l| l == want),
                 "{want} missing: {labels:?}"
@@ -1566,7 +1567,7 @@ mod tests {
         }
 
         let size = complete_labels("style({ size() })", "size(", 5);
-        for want in ["control-sm", "control-md", "control-lg", "full"] {
+        for want in ["control-sm", "control-md", "control-lg", "grow"] {
             assert!(size.iter().any(|l| l == want), "{want} missing: {size:?}");
         }
 
@@ -1581,7 +1582,7 @@ mod tests {
         }
 
         let fill = complete_labels("style({ bg() })", "bg(", 3);
-        for want in ["surface-1", "card", "muted"] {
+        for want in ["surface", "overlay", "muted"] {
             assert!(fill.iter().any(|l| l == want), "{want} missing: {fill:?}");
         }
 

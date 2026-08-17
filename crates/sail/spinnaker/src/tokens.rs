@@ -20,17 +20,25 @@
 //! adding a token to the DTCG model (and regenerating) makes `style.fontSize(3xl)`
 //! legal automatically.
 
+use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 use std::sync::OnceLock;
 
 use serde::Deserialize;
 
 /// Generated registry artifact (DTCG emit). Path is relative to this crate.
-const TOKEN_REGISTRY_JSON: &str =
+/// Theme env / complete / check all read this same include.
+pub const TOKEN_REGISTRY_JSON: &str =
     include_str!("../../../../packages/sail/tokens/src/token-registry.json");
 
-#[derive(Debug, Deserialize)]
+/// Consumers accept this schema only. No v1 dual-read.
+pub const REGISTRY_SCHEMA_V2: &str = "spinnaker.registry.v2";
+
+#[derive(Debug, Deserialize, Clone)]
 struct RegistryFile {
+    /// `spinnaker.registry.v2` — required. Absent / other = not this artifact.
+    #[serde(default)]
+    schema: String,
     /// Public CSS custom-property names (no `--` prefix). Includes alias
     /// names (empty after TOKENS-1 app-accent-* scrub).
     names: Vec<String>,
@@ -42,7 +50,7 @@ struct RegistryFile {
     /// path → cssName (canonical tokens only). Present from registry v2.
     #[serde(default)]
     paths: HashMap<String, String>,
-    /// DTCG composite identities (`border.subtle`, `card.border`, …).
+    /// DTCG composite identities (`border.subtle`, `bg.surface`, …).
     #[serde(default)]
     composites: HashMap<String, CompositeMeta>,
 }
@@ -132,31 +140,111 @@ pub const CONVENTION_TOKENS: &[&str] = &[
     // channels that still need var(--x) legitimacy in author CSS.
 ];
 
+thread_local! {
+    static REGISTRY_OVERRIDE: RefCell<Option<RegistryFile>> = const { RefCell::new(None) };
+}
+
+fn parse_registry_v2(json: &str) -> RegistryFile {
+    let file: RegistryFile = serde_json::from_str(json)
+        .unwrap_or_else(|e| panic!("token-registry.json parse failed: {e}"));
+    assert_eq!(
+        file.schema, REGISTRY_SCHEMA_V2,
+        "consumers read {REGISTRY_SCHEMA_V2} only (got {:?})",
+        file.schema
+    );
+    file
+}
+
 fn registry_file() -> &'static RegistryFile {
     static CACHE: OnceLock<RegistryFile> = OnceLock::new();
-    CACHE.get_or_init(|| {
-        serde_json::from_str(TOKEN_REGISTRY_JSON)
-            .unwrap_or_else(|e| panic!("token-registry.json parse failed: {e}"))
+    CACHE.get_or_init(|| parse_registry_v2(TOKEN_REGISTRY_JSON))
+}
+
+/// Run `f` against a registry JSON instead of the baked artifact.
+/// Complete and check both read [`color_values`] / [`registry`] from this file.
+pub fn with_registry_json<T>(json: &str, f: impl FnOnce() -> T) -> T {
+    let parsed = parse_registry_v2(json);
+    REGISTRY_OVERRIDE.with(|cell| {
+        let prev = cell.replace(Some(parsed));
+        let out = f();
+        *cell.borrow_mut() = prev;
+        out
     })
+}
+
+/// Clone the baked v2 registry, add a color name, return JSON.
+/// Used by the complete∩check one-artifact test — not a product token.
+pub fn inject_registry_color(json: &str, name: &str) -> String {
+    use serde_json::{Value, json};
+    let mut root: Value =
+        serde_json::from_str(json).unwrap_or_else(|e| panic!("inject parse: {e}"));
+    assert_eq!(
+        root.get("schema").and_then(Value::as_str),
+        Some(REGISTRY_SCHEMA_V2),
+        "inject requires {REGISTRY_SCHEMA_V2}"
+    );
+    if let Some(Value::Array(names)) = root.get_mut("names") {
+        names.push(Value::String(name.into()));
+    }
+    if let Some(Value::Array(colors)) = root.get_mut("colors") {
+        colors.push(Value::String(name.into()));
+    }
+    if let Some(Value::Object(tokens)) = root.get_mut("tokens") {
+        tokens.insert(
+            name.into(),
+            json!({
+                "type": "color",
+                "value": "oklch(0.62 0.18 320)",
+                "path": format!("color.{name}.solid"),
+                "cssName": name,
+            }),
+        );
+    }
+    root.to_string()
+}
+
+fn collect_color_names(file: &RegistryFile) -> Vec<&'static str> {
+    let mut colors: HashSet<&'static str> = HashSet::new();
+    for name in &file.colors {
+        if !name.is_empty()
+            && name
+                .bytes()
+                .all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_')
+        {
+            colors.insert(Box::leak(name.clone().into_boxed_str()));
+        }
+    }
+    for kw in crate::scales::KEYWORD_COLORS {
+        colors.insert(kw);
+    }
+    let mut out: Vec<&'static str> = colors.into_iter().collect();
+    out.sort_unstable();
+    out
+}
+
+fn collect_registry_names(file: &RegistryFile) -> HashSet<&'static str> {
+    let mut out: HashSet<&'static str> = CONVENTION_TOKENS.iter().copied().collect();
+    for name in &file.names {
+        if !name.is_empty()
+            && name
+                .bytes()
+                .all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_')
+        {
+            out.insert(Box::leak(name.clone().into_boxed_str()));
+        }
+    }
+    out
 }
 
 /// Every valid design-token name (no `--` prefix): names from the generated
 /// registry, plus the [`CONVENTION_TOKENS`] allowlist. Loaded once.
 pub fn registry() -> &'static HashSet<&'static str> {
-    static CACHE: OnceLock<HashSet<&'static str>> = OnceLock::new();
-    CACHE.get_or_init(|| {
-        let file = registry_file();
-        let mut out: HashSet<&'static str> = CONVENTION_TOKENS.iter().copied().collect();
-        for name in &file.names {
-            if !name.is_empty()
-                && name
-                    .bytes()
-                    .all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_')
-            {
-                out.insert(Box::leak(name.clone().into_boxed_str()));
-            }
+    REGISTRY_OVERRIDE.with(|cell| {
+        if let Some(file) = cell.borrow().as_ref() {
+            return &*Box::leak(Box::new(collect_registry_names(file)));
         }
-        out
+        static CACHE: OnceLock<HashSet<&'static str>> = OnceLock::new();
+        CACHE.get_or_init(|| collect_registry_names(registry_file()))
     })
 }
 
@@ -196,33 +284,13 @@ pub fn text_values() -> &'static [&'static str] {
 /// or surface is usable in sx the moment it lands in the model and is
 /// regenerated — no hand-maintained color list to drift.
 pub fn color_values() -> &'static [&'static str] {
-    static C: OnceLock<Vec<&'static str>> = OnceLock::new();
-    C.get_or_init(|| {
-        let file = registry_file();
-        let mut colors: HashSet<&'static str> = HashSet::new();
-        for name in &file.colors {
-            if !name.is_empty()
-                && name
-                    .bytes()
-                    .all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_')
-            {
-                // Full registry colors including component emit labels (lower needs
-                // them). Author Style cannot *name* surfaces as free Tokens —
-                // validate rejects component public names (SPEC-D1).
-                colors.insert(Box::leak(name.clone().into_boxed_str()));
-            }
+    REGISTRY_OVERRIDE.with(|cell| {
+        if let Some(file) = cell.borrow().as_ref() {
+            return &*Box::leak(collect_color_names(file).into_boxed_slice());
         }
-        // Sanctioned CSS-wide keyword colors — "named zeros", not raw values.
-        // `bg:transparent` (outline/ghost surfaces) and `fg:currentColor` /
-        // `border:currentColor` (ink inheritance) are expressible without a
-        // token. Single source with the lowering (which emits them verbatim,
-        // not `var(--X)`), so vocabulary and emission can never drift.
-        for kw in crate::scales::KEYWORD_COLORS {
-            colors.insert(kw);
-        }
-        let mut out: Vec<&'static str> = colors.into_iter().collect();
-        out.sort_unstable();
-        out
+        static C: OnceLock<Vec<&'static str>> = OnceLock::new();
+        C.get_or_init(|| collect_color_names(registry_file()))
+            .as_slice()
     })
 }
 
@@ -506,10 +574,10 @@ mod tests {
             "primary",
             "foreground",
             "success",
-            "surface-1",
+            "surface",
             "muted-foreground",
             "hover-bg",
-            "primary",
+            "danger",
             "accent-foreground",
         ] {
             assert!(c.contains(&want), "color surface missing `{want}`");
@@ -528,7 +596,8 @@ mod tests {
         let reg = registry();
         // from generated registry
         assert!(reg.contains("primary"), "brand token from registry");
-        assert!(reg.contains("surface-1"), "semantic surface from registry");
+        assert!(reg.contains("surface"), "semantic surface from registry");
+        assert_eq!(registry_file().schema, REGISTRY_SCHEMA_V2);
         assert!(reg.contains("space-4") && reg.contains("text-2xl"));
         // curated convention allowlist (no global value, must still be accepted)
         assert!(reg.contains("sail-tooltip-anchor"));

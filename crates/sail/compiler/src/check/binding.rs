@@ -1206,7 +1206,7 @@ mod tests {
     #[test]
     fn a_token_var_is_unaffected_and_wires_nothing() {
         let program = program_with_props(vec![]);
-        let source = r#"<div style({ bg(surface-2) })></div>"#;
+        let source = r#"<div style({ bg(surface) })></div>"#;
         let out = resolve(source, &program, None).unwrap();
         assert!(out.is_empty());
     }

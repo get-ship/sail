@@ -1078,16 +1078,16 @@ fn span_to_coords(source: &str, span: (usize, usize)) -> (usize, usize, usize, u
 fn token_luminance(name: &str) -> Option<f64> {
     // Order: approximate WCAG relative luminance L in [0,1] for light mode.
     match name {
-        "background" | "surface-0" | "surface-1" | "card" | "muted" | "popover" => Some(0.96),
-        "surface-2" | "surface-3" => Some(0.94),
+        "background" | "surface" | "muted" | "overlay" => Some(0.96),
+        "inset" | "subtle" => Some(0.94),
         "primary" => Some(0.35),
         "primary-foreground" => Some(0.98),
         "secondary" => Some(0.40),
         "secondary-foreground" => Some(0.25),
         "accent" => Some(0.45),
         "accent-foreground" => Some(0.98),
-        "destructive" => Some(0.30),
-        "destructive-foreground" => Some(0.98),
+        "danger" => Some(0.30),
+        "danger-foreground" => Some(0.98),
         "muted-foreground" => Some(0.35),
         "foreground" => Some(0.12),
         "border" => Some(0.80),
@@ -1108,11 +1108,11 @@ fn color_family(token: &str) -> &'static str {
         "secondary"
     } else if token.starts_with("accent") {
         "accent"
-    } else if token.starts_with("destructive") {
-        "destructive"
+    } else if token.starts_with("danger") {
+        "danger"
     } else if token.starts_with("muted") || token == "foreground" || token == "background" {
         "neutral"
-    } else if token.starts_with("surface") || token == "card" || token == "popover" {
+    } else if token.starts_with("surface") || token == "overlay" || token == "inset" {
         "surface"
     } else {
         "other"
@@ -1129,7 +1129,7 @@ fn nearest_passing_fg(bg: &str, current_fg: &str) -> Option<&'static str> {
         "primary" => &["primary-foreground", "primary"],
         "secondary" => &["secondary-foreground", "secondary"],
         "accent" => &["accent-foreground", "accent"],
-        "destructive" => &["destructive-foreground", "destructive"],
+        "danger" => &["danger-foreground", "danger"],
         "neutral" => &["foreground", "muted-foreground", "muted", "background"],
         "surface" => &["foreground", "muted-foreground"],
         _ => return None,

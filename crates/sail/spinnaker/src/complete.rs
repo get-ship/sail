@@ -924,7 +924,7 @@ fn partial_before(source: &str, offset: usize) -> (String, usize) {
     while start > 0 {
         let b = bytes[start - 1];
         if is_ident_byte(b) || b == b'-' || b == b'.' {
-            // Dotted paths / kebab tokens (`surface-1`, `chip.foreground`).
+            // Dotted paths / kebab tokens (`surface`, `chip.foreground`).
             start -= 1;
         } else {
             break;
@@ -1106,7 +1106,7 @@ mod tests {
         let items = style_complete_at(&src, None, off, None);
         let labs = labels(&items);
         assert!(labs.contains(&"primary"), "primary: {labs:?}");
-        assert!(labs.contains(&"surface-1"), "surface-1: {labs:?}");
+        assert!(labs.contains(&"surface"), "surface: {labs:?}");
         // radius scale-only names must not dominate color complete
         assert!(
             !labs.contains(&"md") || labs.contains(&"primary"),
@@ -1125,7 +1125,7 @@ mod tests {
             "chip-foreground: {labs:?}"
         );
         assert!(!labs.contains(&"chip"), "bare chip: {labs:?}");
-        assert!(labs.contains(&"card"), "card is a global: {labs:?}");
+        assert!(labs.contains(&"surface"), "surface is a global: {labs:?}");
     }
 
     #[test]
@@ -1202,7 +1202,7 @@ mod tests {
         let items = style_complete_at(&src, None, off, Some("chip"));
         let labs = labels(&items);
         assert!(labs.contains(&"muted"), "muted: {labs:?}");
-        assert!(labs.contains(&"card"), "card: {labs:?}");
+        assert!(labs.contains(&"surface"), "surface: {labs:?}");
         // Pack author spelling is legal because the compiler installed `chip`.
         assert!(labs.contains(&"chip"), "host pack: {labs:?}");
         assert!(
@@ -1431,5 +1431,38 @@ mod tests {
             matches!(ctx, StyleCompleteContext::SetterArg { ref setter, .. } if setter == "bg"),
             "{ctx:?}"
         );
+    }
+
+    /// One artifact, two surfaces: a name added to registry JSON appears in
+    /// complete and is accepted by check. Not two independent string lists.
+    #[test]
+    fn added_registry_name_is_completed_and_checked() {
+        const NAME: &str = "j3-probe-orchid";
+        let json = crate::tokens::inject_registry_color(crate::tokens::TOKEN_REGISTRY_JSON, NAME);
+        crate::tokens::with_registry_json(&json, || {
+            let (src, off) = at_caret("style({ bg({ color: j3-probe-¦ }) })");
+            let items = style_complete_at(&src, None, off, None);
+            assert!(
+                items.iter().any(|i| i.label == NAME),
+                "complete must offer the injected registry name: {:?}",
+                labels(&items)
+            );
+            let (_, diags) = parse(&format!("style({{ bg({{ color: {NAME} }}) }})"));
+            assert!(
+                !diags
+                    .iter()
+                    .any(|d| matches!(d, StyleDiagnostic::BadToken { .. })),
+                "check must accept the same registry name: {:?}",
+                diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+            );
+            let (_, unknown) = parse("style({ bg({ color: j3-not-in-registry }) })");
+            assert!(
+                unknown
+                    .iter()
+                    .any(|d| matches!(d, StyleDiagnostic::BadToken { .. })),
+                "check must reject a name absent from that artifact: {:?}",
+                unknown.iter().map(|d| d.message()).collect::<Vec<_>>()
+            );
+        });
     }
 }

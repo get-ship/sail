@@ -24,7 +24,16 @@ import registry from '@ship/tokens/token-registry.json'
 import type { SailHost } from './sail-host'
 import { unwrapSailHost } from './sail-host-dom'
 
-const REGISTRY_PATHS = (registry as { paths?: Record<string, string> }).paths ?? {}
+const REGISTRY = registry as {
+  schema?: string
+  paths?: Record<string, string>
+}
+if (REGISTRY.schema !== 'spinnaker.registry.v2') {
+  throw new Error(
+    `runtime theme reads spinnaker.registry.v2 (got ${String(REGISTRY.schema)})`,
+  )
+}
+const REGISTRY_PATHS = REGISTRY.paths ?? {}
 
 function publicNameFromRegistry(path: string): string {
   const mapped = REGISTRY_PATHS[path]

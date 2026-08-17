@@ -47,7 +47,7 @@ fn lsp_and_compiler_complete_border_concern() {
         via_style, via_lsp,
         "LSP must serve the same border(¦) registry as compiler"
     );
-    for want in ["subtle", "card"] {
+    for want in ["subtle", "default"] {
         assert!(
             via_lsp.iter().any(|l| l == want),
             "{want} missing: {via_lsp:?}"
@@ -82,7 +82,7 @@ fn lsp_and_compiler_complete_border_color_slot() {
 #[test]
 fn lsp_and_compiler_hover_border_subtle() {
     let (src, _off, line, col) = at_caret("style({ border(border.su¦btle) })");
-    let via_resolve = resolve_theme_token("border.subtle", "ship", "light").expect("resolve");
+    let via_resolve = resolve_theme_token("border.subtle", "sail", "light").expect("resolve");
     let via_hover = hover_at(&src, None, line as usize, col as usize).expect("hover");
     assert_eq!(via_hover.kind, "theme-token");
     assert!(
@@ -179,7 +179,7 @@ fn lsp_and_compiler_complete_box_and_text_channels() {
 #[test]
 fn lsp_and_compiler_complete_size_type_elevation_fill_names() {
     let (_, _, size) = labels_at("style({ size(¦) })");
-    for want in ["control-sm", "control-md", "control-lg", "full"] {
+    for want in ["control-sm", "control-md", "control-lg", "grow"] {
         assert!(size.iter().any(|l| l == want), "{want} missing: {size:?}");
     }
 
@@ -194,7 +194,7 @@ fn lsp_and_compiler_complete_size_type_elevation_fill_names() {
     }
 
     let (_, _, fill) = labels_at("style({ bg(¦) })");
-    for want in ["surface", "card", "muted"] {
+    for want in ["surface", "overlay", "muted"] {
         assert!(fill.iter().any(|l| l == want), "{want} missing: {fill:?}");
     }
 }
@@ -221,10 +221,10 @@ fn lsp_and_compiler_hover_size_type_elevation_fill() {
             "elevation.sm",
             "shadow:",
         ),
-        ("style({ bg(surface-¦1) })", "surface-1", "oklch"),
+        ("style({ bg(surfa¦ce) })", "surface", "oklch"),
     ] {
         let (src, _off, line, col) = at_caret(src);
-        let via_resolve = resolve_theme_token(resolve_name, "ship", "light")
+        let via_resolve = resolve_theme_token(resolve_name, "sail", "light")
             .unwrap_or_else(|| panic!("resolve {resolve_name}"));
         let via_hover = hover_at(&src, None, line as usize, col as usize)
             .unwrap_or_else(|| panic!("hover {resolve_name}"));
@@ -252,13 +252,13 @@ fn lsp_and_compiler_hover_size_type_elevation_fill() {
 }
 
 #[test]
-fn lsp_and_compiler_hover_card_global() {
-    let (src, _off, line, col) = at_caret("style({ bg(ca¦rd) })");
-    let via_resolve = resolve_theme_token("card", "ship", "light").expect("resolve");
+fn lsp_and_compiler_hover_surface_global() {
+    let (src, _off, line, col) = at_caret("style({ bg(surfa¦ce) })");
+    let via_resolve = resolve_theme_token("surface", "sail", "light").expect("resolve");
     let via_lsp = hover_sail(&src, Some("apps/demo/src/home.sail"), line, col).expect("lsp hover");
     assert!(
         via_lsp.contents.contains(&via_resolve.value),
-        "card hover {}\n{}",
+        "surface hover {}\n{}",
         via_resolve.value,
         via_lsp.contents
     );

@@ -346,16 +346,10 @@ export function deletePath(
  * Used to walk `{alias}` when extracting faces from a theme doc.
  */
 const FONT_CSS_TO_PATH: Record<string, string> = {
-  'display-font': 'typography.displayFont',
-  'heading-font': 'typography.heading.font',
-  'body-font': 'typography.body.font',
-  'mono-font': 'typography.monoFont',
   'font-display': 'typography.font.display',
-  'font-display-app': 'typography.font.display-app',
+  'font-heading': 'typography.font.heading',
   'font-body': 'typography.font.body',
-  'font-body-app': 'typography.font.body-app',
   'font-mono': 'typography.font.mono',
-  'font-mono-app': 'typography.font.mono-app',
 }
 
 /**
@@ -363,13 +357,9 @@ const FONT_CSS_TO_PATH: Record<string, string> = {
  * Not product CSS — identity for honest role labels when the DTCG leaf is `{cssName}`.
  */
 const PLATFORM_STACK_FACE: Record<string, string> = {
-  'font-press-start': 'Press Start 2P',
-  'font-press-start-app': 'Press Start 2P',
-  'font-display-app': 'Syne',
   'font-display': 'Syne',
-  'font-body-app': 'DM Sans',
+  'font-heading': 'Syne',
   'font-body': 'DM Sans',
-  'font-mono-app': 'JetBrains Mono',
   'font-mono': 'JetBrains Mono',
 }
 

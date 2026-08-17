@@ -713,8 +713,8 @@ export default controller((ctx) => ({ count: signal(0) }))
             items.iter().map(|i| &i.label).collect::<Vec<_>>()
         );
         assert!(
-            items.iter().any(|i| i.label == "surface-1"),
-            "expected surface-1: {:?}",
+            items.iter().any(|i| i.label == "surface"),
+            "expected surface: {:?}",
             items.iter().map(|i| &i.label).collect::<Vec<_>>()
         );
         assert!(
@@ -751,7 +751,7 @@ export default controller(() => ({ primary: signal(0) }))
         );
         // Scope signal must not be the only hit — Style labels present.
         assert!(
-            items.iter().any(|i| i.label == "surface-1"),
+            items.iter().any(|i| i.label == "surface"),
             "style tokens present: {:?}",
             items.iter().map(|i| &i.label).collect::<Vec<_>>()
         );

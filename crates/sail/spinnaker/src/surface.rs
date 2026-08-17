@@ -181,21 +181,15 @@ pub const REQUIRED_THEME_PRESETS: &[StylePreset] = &[
     req("border", "default", "default stroke"),
     req("border", "subtle", "quiet stroke"),
     req("border", "strong", "emphatic stroke"),
-    // bg — semantic faces, not host packs
-    req("bg", "canvas", "page/root face"),
+    // bg — J2 surface steps (app / surface / subtle / inset / overlay)
+    req("bg", "app", "page/root face"),
     req("bg", "surface", "raised surface"),
-    req("bg", "muted", "recessed face"),
-    req("bg", "control", "input/combobox face"),
+    req("bg", "subtle", "recessed face"),
+    req("bg", "inset", "input/combobox face"),
     req("bg", "overlay", "popover/menu face"),
     // fg
-    req(
-        "fg",
-        "canvas",
-        "ink on canvas (alias of foreground during migrate)",
-    ),
+    req("fg", "foreground", "ink"),
     req("fg", "muted", "secondary ink"),
-    req("fg", "on-surface", "ink on surface"),
-    req("fg", "on-control", "ink on control"),
     // elevation
     req("elevation", "none", "no shadow"),
     req("elevation", "xs", "shadow step"),
@@ -249,15 +243,13 @@ pub const REQUIRED_KEYS: &[&str] = &[
     "border.default",
     "border.subtle",
     "border.strong",
-    "bg.canvas",
+    "bg.app",
     "bg.surface",
-    "bg.muted",
-    "bg.control",
+    "bg.subtle",
+    "bg.inset",
     "bg.overlay",
-    "fg.canvas",
+    "fg.foreground",
     "fg.muted",
-    "fg.on-surface",
-    "fg.on-control",
     "elevation.none",
     "elevation.xs",
     "elevation.sm",
@@ -640,9 +632,15 @@ mod tests {
     }
 
     #[test]
-    fn missing_required_names_canvas_and_measure() {
+    fn missing_required_names_app_and_measure() {
         let missing = StyleSurface::floor().missing_required_from_registry();
-        for key in ["bg.canvas", "bg.control", "bg.overlay", "size.measure"] {
+        for key in [
+            "bg.app",
+            "bg.inset",
+            "bg.overlay",
+            "fg.foreground",
+            "size.measure",
+        ] {
             assert!(
                 !missing.contains(&key),
                 "{key} must be on the floor now: {missing:?}"

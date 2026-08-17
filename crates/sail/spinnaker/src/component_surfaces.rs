@@ -309,10 +309,12 @@ mod tests {
     fn app_vocab_includes_promoted_globals() {
         let app = color_paint_vocabulary(None);
         assert!(app.contains("primary"));
-        assert!(app.contains("card"));
-        assert!(app.contains("card-foreground"));
-        assert!(app.contains("popover"));
-        assert!(app.contains("popover-foreground"));
+        assert!(app.contains("surface"));
+        assert!(app.contains("foreground"));
+        assert!(app.contains("overlay"));
+        assert!(!app.contains("card"));
+        assert!(!app.contains("card-foreground"));
+        assert!(!app.contains("popover"));
         assert!(!app.contains("chip"));
         assert!(!app.contains("chip.foreground"));
         let chip = color_paint_vocabulary(Some("chip"));

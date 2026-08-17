@@ -45,24 +45,15 @@ pub struct TokenGroup {
 
 /// Preferred color-group (Tone) allowlist order (membership from registry; this only sorts).
 const COLOR_GROUP_ORDER: &[&str] = &[
-    "primary",
-    "info",
-    "success",
-    "warning",
-    "destructive",
-    "accent",
-    "muted",
+    "primary", "info", "success", "warning", "danger", "accent", "muted",
 ];
 
 /// Canonical Size ladder steps (base). Hosts may extend with `xs` / `xl`.
 const SIZE_STEPS: &[&str] = &["xs", "sm", "md", "lg", "xl"];
 
-/// DTCG path stem for a public Tone name (`accent` ← `brandAccent`).
+/// DTCG path stem for a public Tone name. v2 stores roles under `color.{name}`.
 fn dtcg_stem(public_group: &str) -> &str {
-    match public_group {
-        "accent" => "brandAccent",
-        other => other,
-    }
+    public_group
 }
 
 fn leak_str(s: String) -> &'static str {
@@ -90,8 +81,9 @@ fn derive_color_group_tables() -> (&'static [&'static str], &'static [TokenGroup
         let stem = dtcg_stem(name);
         let mut members: Vec<GroupMember> = Vec::new();
 
-        // default
-        let default_public = tokens::path_to_css_name(&format!("color.{stem}.default"))
+        // default — v2 solid step, then legacy default leaf
+        let default_public = tokens::path_to_css_name(&format!("color.{stem}.solid"))
+            .or_else(|| tokens::path_to_css_name(&format!("color.{stem}.default")))
             .or_else(|| tokens::path_to_css_name(&format!("color.{stem}")))
             .unwrap_or(name);
         members.push(GroupMember {
@@ -103,14 +95,13 @@ fn derive_color_group_tables() -> (&'static [&'static str], &'static [TokenGroup
             },
         });
 
-        // foreground
-        let fg_public = tokens::path_to_css_name(&format!("color.{stem}.foreground"))
+        // foreground — v2 text step, then legacy foreground leaf
+        let fg_public = tokens::path_to_css_name(&format!("color.{stem}.text"))
+            .or_else(|| tokens::path_to_css_name(&format!("color.{stem}.foreground")))
             .map(|s| {
                 if s == name {
-                    // shouldn't happen
                     leak_str(format!("{name}-foreground"))
                 } else {
-                    // Prefer leaked stable string; common names match pattern.
                     leak_str(s.to_string())
                 }
             })
@@ -381,7 +372,7 @@ mod tests {
     #[test]
     fn hover_only_where_present() {
         assert!(resolve_static_member_path("primary", &["hover".into()]).is_ok());
-        assert!(resolve_static_member_path("info", &["hover".into()]).is_err());
+        assert!(resolve_static_member_path("muted", &["hover".into()]).is_err());
     }
 
     #[test]
@@ -390,8 +381,8 @@ mod tests {
         assert!(bound_member_valid(&["foreground".into()]).is_ok());
         assert!(bound_member_valid(&["hover".into()]).is_err());
         assert_eq!(
-            public_name_for_group_value("destructive", &["foreground".into()]),
-            Some("destructive-foreground")
+            public_name_for_group_value("danger", &["foreground".into()]),
+            Some("danger-foreground")
         );
     }
 
@@ -412,7 +403,7 @@ mod tests {
             "info".into(),
             "success".into(),
             "warning".into(),
-            "destructive".into(),
+            "danger".into(),
             "accent".into(),
             "muted".into(),
         ]));

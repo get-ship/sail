@@ -1275,8 +1275,8 @@ mod tests {
             items.iter().map(|s| &s.name).collect::<Vec<_>>()
         );
         assert!(
-            items.iter().any(|s| s.name == "surface-1"),
-            "expected surface-1: {:?}",
+            items.iter().any(|s| s.name == "surface"),
+            "expected surface: {:?}",
             items.iter().map(|s| &s.name).collect::<Vec<_>>()
         );
         assert!(
