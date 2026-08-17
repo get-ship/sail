@@ -1085,7 +1085,7 @@ describe('@ship/tokens — DTCG SSOT / generate drift lock', () => {
     // Match modes-in-file theme layers:
     //   :root[theme='id'][mode='…'],
     //   [theme='id'][mode='…'] { … }
-    // (not themes-chrome structural flourishes on body/card selectors).
+    // (not generated $extensions.sail.chrome flourishes on body/card selectors).
     const reg = loadRegistry()
     const known = new Set(reg.names)
     const themesCss = loadSrc('../src/themes.css')
@@ -1248,30 +1248,24 @@ describe('@ship/tokens — DTCG SSOT / generate drift lock', () => {
 describe('@ship/tokens — whole-value alias audit', () => {
   // Pins RESULT-TOKEN-AUDIT.md. Recount: extractWholeValueAliases.
   const PIN = {
-    tokensSites: 82,
-    tokensUnique: 77,
-    tokensKeep: 77,
+    tokensSites: 83,
+    tokensUnique: 78,
+    tokensKeep: 78,
     tokensRebind: 0,
-    themesSites: 41,
-    themesUnique: 7,
-    themesKeep: 7,
-    chromeSites: 0,
+    themesSites: 37,
+    themesUnique: 5,
+    themesKeep: 5,
     hueFirstClass: 16,
     sidebarFirstClass: 0,
   } as const
 
-  it('tokens.css / themes.css / chrome.css alias classes match the RESULT pin', () => {
+  it('tokens.css / themes.css alias classes match the RESULT pin', () => {
     const tokens = extractWholeValueAliases(loadSrc('../src/tokens.css'))
     const themes = extractWholeValueAliases(loadSrc('../src/themes.css'))
-    const chrome = extractWholeValueAliases(
-      loadSrc('../../../../crates/sail/compiler/stdlib/platform/chrome.css'),
-    )
     const tUnique = uniqueAliasNames(tokens)
     const thUnique = uniqueAliasNames(themes)
-    const cUnique = uniqueAliasNames(chrome)
     const tCounts = countAliasClasses(tUnique)
     const thCounts = countAliasClasses(thUnique)
-    const cCounts = countAliasClasses(cUnique)
 
     expect(tokens).toHaveLength(PIN.tokensSites)
     expect(tUnique.size).toBe(PIN.tokensUnique)
@@ -1286,9 +1280,6 @@ describe('@ship/tokens — whole-value alias audit', () => {
     expect(thUnique.size).toBe(PIN.themesUnique)
     expect(thCounts.keep).toBe(PIN.themesKeep)
     expect(thCounts.rebind).toBe(0)
-    expect(chrome).toHaveLength(PIN.chromeSites)
-    expect(cUnique.size).toBe(0)
-    expect(cCounts.rebind).toBe(0)
   })
 
   it('hue.* stays first-class; sidebar.* and products.css are gone from Sail', () => {

@@ -12,7 +12,7 @@
  *   4. Primitives         — spacing, radii, typography scale, motion curves
  *
  * Components should read the HIGHEST layer that fits.
- * Themes: model/themes/*.json → themes.css (plus model/themes-chrome.css).
+ * Themes: model/themes/*.json → themes.css + $extensions.sail.chrome.
  */
 
 /* ─── base (base.json) ─── */
@@ -407,16 +407,12 @@
 }
 
 /*
- * Chrome CSS (not design-token values).
- * Hand-edited structural rules that consume tokens.
- * Token custom properties are emitted from DTCG model JSON.
+ * GENERATED FILE — do not edit by hand.
+ * Structural chrome from the theme engine (spinnaker-tokens).
+ * Regenerate: cargo run -p sail-compiler --offline -- tokens
  */
 
-/* ─── Surface gradient — body-level wash channel ───────────────────────
- * Sits UNDER content (z-index -1), unlike --overlay-fill which floats
- * above it: a wash tints the page, a texture sits on the glass. Default
- * `none` paints nothing, so a theme that never sets it pays no pixels.
- * `position: fixed` so the wash doesn't scroll away on a long page. */
+/* Surface wash — under content. Default --gradient-surface: none. */
 body::before {
   content: '';
   position: fixed;
@@ -426,12 +422,7 @@ body::before {
   background: var(--gradient-surface);
 }
 
-/* ─── Surface overlay — body-level texture channel ─────────────────────
- * Themes set --overlay-fill to a background value (data-URI SVG noise,
- * repeating-linear-gradient scanlines, etc.) and optionally bend the
- * blend-mode/opacity. Default `none` is a no-op. Sits at z-index 9999 so
- * it floats above content without intercepting pointer events. Reduced
- * motion preference disables overlays entirely. */
+/* Surface overlay — texture above content. Default --overlay-fill: none. */
 body::after {
   content: '';
   position: fixed;
@@ -443,17 +434,7 @@ body::after {
   opacity: var(--overlay-opacity);
 }
 
-/* The same channel, scoped to a THEMED SUBTREE.
- *
- * `body::after` only fires for the theme on <html>/<body>. A subtree that
- * carries its own [theme] — a docs theme preview, a split-screen
- * comparison, a studio canvas — set --overlay-fill and got nothing:
- * the only painter was body-level, so scanlines/grain/dither silently
- * dropped out of exactly the surface built to demonstrate them.
- *
- * `position: fixed` would be wrong here (the overlay must clip to the
- * subtree, not the viewport), so this variant is absolutely positioned
- * and the subtree is made a containing block. z-index stays local. */
+/* Themed subtree: overlay clips to the host, not the viewport. */
 [theme]:not(:root) {
   position: relative;
   isolation: isolate;
@@ -473,12 +454,6 @@ body::after {
   [theme]:not(:root)::after { display: none; }
 }
 
-/* ─── Nested theme: UA color-scheme ───────────────────────────────────
- *
- * Inputs spend `--input` / `--border` / `--foreground` set on the theme
- * host. A second `--field*` alias layer would inherit the *computed*
- * parent value and desync nested themes — so it is not declared.
- * `color-scheme` keeps native form chrome aligned with nested light|dark. */
 [theme][mode='light'] {
   color-scheme: light;
 }
@@ -486,18 +461,11 @@ body::after {
   color-scheme: dark;
 }
 
+/* Reduced-motion floor. Duration tokens override in reduced-motion.json;
+ * this kills animation/transition on anything that has not opted in.
+ * :where(...) is zero-specificity so a component that owns reduced-motion
+ * (spinner ring) still wins. transition/scroll-behavior stay !important. */
 @media (prefers-reduced-motion: reduce) {
-  /* duration token overrides emitted from model/reduced-motion.json */
-  /* :where(...) carries zero specificity, and neither property below is
-   * !important — so a component that OWNS its reduced-motion behaviour
-   * (spinner's CSS-fx slowdown via `.sail-spinner .ring`) has real rule
-   * specificity and wins this default on the cascade, unforced. Ticker/icon
-   * spin ride fx: (use:marquee / use:icon) and settle under reduced
-   * motion in the runtime, not via CSS PE. Anything that has NOT opted in
-   * still gets stopped here — this is the floor, not a universal override.
-   * transition-duration/scroll-behavior stay a blanket !important kill:
-   * hover/interaction micro-transitions are not a component's motion
-   * design decision, so there is nothing legitimate to lose here. */
   :where(*, *::before, *::after) {
     animation-duration: 0.01ms;
     animation-iteration-count: 1;
@@ -506,62 +474,38 @@ body::after {
   }
 }
 
-/* ─── Scrollbar utility classes ─────────────────────────────────────
- * Tokenized scroll styling. The `.ship-scroll-thin` utility on a
- * scrolling ancestor (typically <body>) applies thin tokenized
- * scrollbars to that element AND, via descendant `*` selectors, to
- * every nested scroll container — same coverage as the previous
- * global rules in apps/shell/index.html, now centralized so themes
- * can bend it through the --scrollbar-* channel.
- *
- * Use `.ship-scroll` for default-width, `.ship-scroll-thin` for thin
- * rails (sidebars, dock), `.ship-scroll-none` to hide completely.
- * Apply on a single root container; descendants inherit via the
- * descendant selectors below. */
-.ship-scroll, .ship-scroll-thin {
+/* Scrollbar — spends scrollbar.* tokens on the document. */
+html {
+  scrollbar-width: thin;
   scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
 }
-.ship-scroll-thin, .ship-scroll-thin * { scrollbar-width: thin; }
-.ship-scroll-none, .ship-scroll-none * { scrollbar-width: none; }
-.ship-scroll-thin *,
-.ship-scroll * {
-  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+::-webkit-scrollbar {
+  width: var(--scrollbar-width);
+  height: var(--scrollbar-width);
 }
-
-.ship-scroll::-webkit-scrollbar,
-.ship-scroll *::-webkit-scrollbar { width: var(--scrollbar-width); height: var(--scrollbar-width); }
-.ship-scroll-thin::-webkit-scrollbar,
-.ship-scroll-thin *::-webkit-scrollbar { width: var(--scrollbar-width-thin); height: var(--scrollbar-width-thin); }
-.ship-scroll-none::-webkit-scrollbar,
-.ship-scroll-none *::-webkit-scrollbar { display: none; }
-
-.ship-scroll::-webkit-scrollbar-track,
-.ship-scroll-thin::-webkit-scrollbar-track,
-.ship-scroll *::-webkit-scrollbar-track,
-.ship-scroll-thin *::-webkit-scrollbar-track { background: var(--scrollbar-track); }
-
-.ship-scroll::-webkit-scrollbar-thumb,
-.ship-scroll-thin::-webkit-scrollbar-thumb,
-.ship-scroll *::-webkit-scrollbar-thumb,
-.ship-scroll-thin *::-webkit-scrollbar-thumb {
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+::-webkit-scrollbar-thumb {
   background: var(--scrollbar-thumb);
   border-radius: var(--scrollbar-radius);
-  border: 2px solid transparent;
-  background-clip: padding-box;
-  transition: background-color var(--duration-fast) var(--ease-out);
 }
 
-.ship-scroll::-webkit-scrollbar-thumb:hover,
-.ship-scroll-thin::-webkit-scrollbar-thumb:hover,
-.ship-scroll *::-webkit-scrollbar-thumb:hover,
-.ship-scroll-thin *::-webkit-scrollbar-thumb:hover {
-  background-color: var(--scrollbar-thumb-hover);
+/* Dark-mode syntax remap — mode attr only (no .dark / twin theme ids).
+ * Theme blocks (higher specificity) still win when they override syntax.*.
+ * Console is dark-only: cover the host that omits mode. */
+:root[mode='dark'],
+:root[theme='console']:not([mode]) {
+  --syntax-keyword:  oklch(0.78 0.16 290);
+  --syntax-string:   oklch(0.80 0.15 145);
+  --syntax-number:   oklch(0.78 0.14 230);
+  --syntax-function: oklch(0.78 0.18 60);
+  --syntax-type:     oklch(0.80 0.13 195);
+  --syntax-tag:      oklch(0.78 0.18 25);
+  --syntax-attr:     oklch(0.82 0.14 90);
+  --syntax-comment:  oklch(0.62 0.03 250);
+  --syntax-variable: var(--foreground);
 }
-
-.ship-scroll::-webkit-scrollbar-corner,
-.ship-scroll-thin::-webkit-scrollbar-corner,
-.ship-scroll *::-webkit-scrollbar-corner,
-.ship-scroll-thin *::-webkit-scrollbar-corner { background: transparent; }
 
 /* ─── reduced-motion (reduced-motion.json) ─── */
 /* Reduced-motion duration overrides. */

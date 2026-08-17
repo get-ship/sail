@@ -2,7 +2,7 @@
  * GENERATED FILE — do not edit by hand.
  *
  * Theme token overrides from packages/sail/tokens/model/themes/*.json.
- * Structural flourishes: packages/sail/tokens/model/themes-chrome.css
+ * Structural flourishes: $extensions.sail.chrome on each theme (generated).
  * Regenerate: cargo run -p sail-compiler -- tokens
  */
 
@@ -805,109 +805,76 @@
 }
 
 /*
- * Theme structural chrome — hand-edited rules that are NOT pure token overrides.
- * Pure per-theme token values live in model/themes/*.json and are generated
- * into src/themes.css. This file is concatenated after theme token blocks.
+ * GENERATED FILE — do not edit by hand.
+ * Per-theme structural chrome from $extensions.sail.chrome.
+ * Regenerate: cargo run -p sail-compiler --offline -- tokens
  */
 
-:root[theme='halo'] body,
-[theme='halo'].tc-bg {
-  background-image: radial-gradient(
-    ellipse 90% 60% at 50% -10%,
-    oklch(1 0 0 / 8%),
-    transparent 70%
-  );
-  background-attachment: fixed;
+/* theme chrome: console */
+@media (prefers-reduced-motion: no-preference) {
+  :root[theme='console'] :focus-visible, [theme='console'] :focus-visible {
+    animation: console-blink 1.05s steps(2, end) infinite;
+  }
 }
-:root[theme='halo'] button:active,
-:root[theme='halo'] .dash-link-btn:active {
-  box-shadow: var(--shadow-inset-soft);
+@keyframes console-blink {
+  0%, 49% {
+    box-shadow: var(--shadow-accent);
+  }
+  50%, 100% {
+    box-shadow: 0 0 0 2px oklch(0.78 0.20 145 / 20%);
+  }
 }
-:root[theme='glass'] body,
-[theme='glass'].tc-bg {
+
+/* theme chrome: glass */
+:root[theme='glass'] body, [theme='glass'].tc-bg {
   background-color: oklch(0.97 0.005 240);
-  background-image:
-    radial-gradient(ellipse 80% 60% at 0% 0%, oklch(0.92 0.05 220 / 18%), transparent 75%),
-    radial-gradient(ellipse 75% 55% at 100% 100%, oklch(0.92 0.05 30 / 14%), transparent 75%),
-    radial-gradient(ellipse 60% 45% at 100% 0%, oklch(0.93 0.04 300 / 10%), transparent 80%);
-  background-attachment: fixed;
-}
-:root[theme='paper'] sail-card,
-:root[theme='paper'] .sail-card,
-:root[theme='paper'] [class*='card'] {
-  /* Soft paper-fold corner cue: extra warm inner shadow on the top-left
-   * to hint at a leaf of paper sitting on the page. Skipped under
-   * reduced-motion to keep the page perfectly still on request. */
-  background-image: linear-gradient(
-    135deg,
-    oklch(0.30 0.04 60 / 4%) 0%,
-    transparent 12px
-  );
-}
-:root[theme='halo'] body {
-  background-image:
-    radial-gradient(ellipse 60% 40% at 50% 0%, oklch(0.85 0.06 40 / 28%), transparent 60%),
-    radial-gradient(ellipse 90% 60% at 50% -10%, oklch(1 0 0 / 8%), transparent 70%);
+  background-image: radial-gradient(ellipse 80% 60% at 0% 0%, oklch(0.92 0.05 220 / 18%), transparent 75%), radial-gradient(ellipse 75% 55% at 100% 100%, oklch(0.92 0.05 30 / 14%), transparent 75%), radial-gradient(ellipse 60% 45% at 100% 0%, oklch(0.93 0.04 300 / 10%), transparent 80%);
   background-attachment: fixed;
 }
 @media (prefers-reduced-motion: no-preference) {
-  :root[theme='halo'] button:hover {
-    box-shadow:
-      -3px -3px 8px oklch(1 0 0 / 80%),
-      3px 3px 8px oklch(0 0 0 / 8%),
-      0 0 0 4px oklch(0.62 0.14 50 / 12%);
+  :root[theme='glass'] body, [theme='glass'].tc-bg {
+    animation: glass-mesh 36s ease-in-out infinite alternate;
   }
 }
-@media (prefers-reduced-motion: no-preference) {
-  :root[theme='glass'] body {
-    animation: ship-glass-mesh 36s ease-in-out infinite alternate;
+@keyframes glass-mesh {
+  0% {
+    background-position: 0% 0%, 100% 100%, 100% 0%;
+  }
+  100% {
+    background-position: 8% 4%, 92% 96%, 96% 4%;
   }
 }
-@keyframes ship-glass-mesh {
-  0%   { background-position: 0% 0%, 100% 100%, 100% 0%; }
-  100% { background-position: 8% 4%, 92% 96%, 96% 4%; }
+:root[theme='glass'] sail-card, [theme='glass'] sail-card,
+:root[theme='glass'] .sail-card, [theme='glass'] .sail-card {
+  border-image: linear-gradient(135deg, oklch(0.62 0.14 280 / 50%), oklch(1 0 0 / 60%) 30%, oklch(0.62 0.16 50 / 50%) 70%, oklch(1 0 0 / 60%)) 1;
 }
-:root[theme='glass'] sail-card,
-:root[theme='glass'] .sail-card {
-  border-image: linear-gradient(
-    135deg,
-    oklch(0.62 0.14 280 / 50%),
-    oklch(1 0 0 / 60%) 30%,
-    oklch(0.62 0.16 50 / 50%) 70%,
-    oklch(1 0 0 / 60%)
-  ) 1;
+:root[theme='glass'] h1, [theme='glass'] h1,
+:root[theme='glass'] h2, [theme='glass'] h2,
+:root[theme='glass'] [class*='heading'], [theme='glass'] [class*='heading'] {
+  text-shadow: 0 1px 0 oklch(1 0 0 / 50%), 0 0 12px oklch(0.62 0.14 280 / 14%);
 }
-:root[theme='glass'] h1,
-:root[theme='glass'] h2,
-:root[theme='glass'] [class*='heading'] {
-  text-shadow:
-    0 1px 0 oklch(1 0 0 / 50%),
-    0 0 12px oklch(0.62 0.14 280 / 14%);
-}
-:root[theme='glass'] sail-card:hover,
-:root[theme='glass'] .sail-card:hover {
+:root[theme='glass'] sail-card:hover, [theme='glass'] sail-card:hover,
+:root[theme='glass'] .sail-card:hover, [theme='glass'] .sail-card:hover {
   --filter-backdrop: blur(32px) saturate(220%);
 }
+
+/* theme chrome: halo */
+:root[theme='halo'] body, [theme='halo'].tc-bg {
+  background-image: radial-gradient(ellipse 60% 40% at 50% 0%, oklch(0.85 0.06 40 / 28%), transparent 60%), radial-gradient(ellipse 90% 60% at 50% -10%, oklch(1 0 0 / 8%), transparent 70%);
+  background-attachment: fixed;
+}
+:root[theme='halo'] button:active, [theme='halo'] button:active {
+  box-shadow: var(--shadow-inset-soft);
+}
 @media (prefers-reduced-motion: no-preference) {
-  :root[theme='console'] :focus-visible {
-    animation: ship-console-blink 1.05s steps(2, end) infinite;
+  :root[theme='halo'] button:hover, [theme='halo'] button:hover {
+    box-shadow: -3px -3px 8px oklch(1 0 0 / 80%), 3px 3px 8px oklch(0 0 0 / 8%), 0 0 0 4px oklch(0.62 0.14 50 / 12%);
   }
 }
-@keyframes ship-console-blink {
-  0%, 49%   { box-shadow: var(--shadow-accent); }
-  50%, 100% { box-shadow: 0 0 0 2px oklch(0.78 0.20 145 / 20%); }
-}
-/* Dark-mode syntax palette — mode attr only (no .dark / twin theme ids). */
-:root[mode='dark'],
-:root[theme='console'][mode='dark'],
-:root[theme='console']:not([mode]) {
-  --syntax-keyword:  oklch(0.78 0.16 290);
-  --syntax-string:   oklch(0.80 0.15 145);
-  --syntax-number:   oklch(0.78 0.14 230);
-  --syntax-function: oklch(0.78 0.18 60);
-  --syntax-type:     oklch(0.80 0.13 195);
-  --syntax-tag:      oklch(0.78 0.18 25);
-  --syntax-attr:     oklch(0.82 0.14 90);
-  --syntax-comment:  oklch(0.62 0.03 250);
-  --syntax-variable: var(--foreground);
+
+/* theme chrome: paper */
+:root[theme='paper'] sail-card, [theme='paper'] sail-card,
+:root[theme='paper'] .sail-card, [theme='paper'] .sail-card,
+:root[theme='paper'] [class*='card'], [theme='paper'] [class*='card'] {
+  background-image: linear-gradient(135deg, oklch(0.30 0.04 60 / 4%) 0%, transparent 12px);
 }
