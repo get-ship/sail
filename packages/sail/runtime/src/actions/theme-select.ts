@@ -17,7 +17,7 @@ import {
   type ModePreference,
 } from '@ship/tokens/themes'
 import type { Action } from '../action'
-import { invokeCallback } from '../callback'
+import { invokeCallback } from '@ship/sail-runtime/internal'
 
 /**
  * `use:themeSelect` — product theme picker:

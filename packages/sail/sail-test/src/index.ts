@@ -48,4 +48,4 @@ export {
   clearQueryMocks,
   type QueryKey,
   type LiveState,
-} from '@ship/sail-runtime'
+} from '@ship/sail-runtime/query-mock'

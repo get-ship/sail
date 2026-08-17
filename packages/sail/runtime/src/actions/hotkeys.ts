@@ -6,7 +6,7 @@
 // Per-key opt-in: value may be `{ run, allowInInputs?: true }`.
 
 import type { Action } from '../action'
-import { matchesKey } from '../on'
+import { matchesKey } from '@ship/sail-runtime/internal'
 
 export type HotkeyHandler = (e: KeyboardEvent) => void
 

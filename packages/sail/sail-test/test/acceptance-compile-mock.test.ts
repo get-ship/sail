@@ -5,7 +5,7 @@
 //   4. zero backend hits while mocked
 
 import { describe, expect, it } from 'vitest'
-import { queryKeyed } from '@ship/sail-runtime'
+import { queryKeyed } from '@ship/sail-runtime/query'
 import { renderRoute } from '@ship/test-setup'
 import {
   getByRole,

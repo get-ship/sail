@@ -14,10 +14,14 @@
 // Reduced motion is decided HERE, once, per driver — not by each caller.
 // See `clock()` for the rule and why it is jump-to-end.
 
-import { frame, cancelFrame, motionValue, springValue as motionSpringValue } from 'motion-dom'
-import type { SpringOptions } from 'motion-dom'
-import { signal, effect, type Signal } from './signal'
-import { onCleanup } from './effect-scope'
+import {
+  frame,
+  cancelFrame,
+  motionValue,
+  springValue as motionSpringValue,
+} from './motion-dom-used'
+import type { SpringOptions } from './motion-dom-used'
+import { signal, effect, onCleanup, type Signal } from '@ship/sail-runtime'
 
 // ── Shared plumbing ──────────────────────────────────────────────────────────
 

@@ -61,10 +61,11 @@ pub use window_registry::{
 
 pub use assets::{
     baked_framework_stamps, parse_baked_stamp, resolve_route_js, serve_deck_route,
-    serve_framework_font, serve_public_asset, serve_sail_compiler_wasm, serve_sail_dom,
-    serve_sail_error_overlay, serve_sail_icon, serve_sail_icon_from, serve_sail_live_reload,
-    serve_sail_lsp_completions, serve_sail_lsp_diagnostics, serve_sail_runtime,
-    serve_sail_sdk_client, serve_sail_studio_bridge, serve_scaffold, serve_scaffold_asset,
+    serve_framework_font, serve_public_asset, serve_sail_actions, serve_sail_compiler_wasm,
+    serve_sail_dom, serve_sail_error_overlay, serve_sail_icon, serve_sail_icon_from,
+    serve_sail_live_reload, serve_sail_lsp_completions, serve_sail_lsp_diagnostics,
+    serve_sail_motion, serve_sail_query, serve_sail_runtime, serve_sail_sdk_client,
+    serve_sail_studio_bridge, serve_sail_virtual, serve_scaffold, serve_scaffold_asset,
 };
 pub use css_minify::minify_css;
 pub use form_inject::inject_form_actions;

@@ -14,9 +14,10 @@ pub mod render_helpers;
 pub mod sail_source;
 pub use handlers::{
     serve_bundle_hmr, serve_deck_route, serve_framework_font, serve_meta, serve_policy,
-    serve_sail_compiler_wasm, serve_sail_dom, serve_sail_error_overlay, serve_sail_icon,
-    serve_sail_live_reload, serve_sail_lsp_completions, serve_sail_lsp_diagnostics,
-    serve_sail_runtime, serve_sail_sdk_client, serve_sail_studio_bridge,
+    serve_sail_actions, serve_sail_compiler_wasm, serve_sail_dom, serve_sail_error_overlay,
+    serve_sail_icon, serve_sail_live_reload, serve_sail_lsp_completions,
+    serve_sail_lsp_diagnostics, serve_sail_motion, serve_sail_query, serve_sail_runtime,
+    serve_sail_sdk_client, serve_sail_studio_bridge, serve_sail_virtual,
 };
 // The named-route handlers (serve_sail_route_setup / serve_route_host /
 // serve_route_payload[_subpath]) moved to the `ship-views` crate. deck-axum's
@@ -140,6 +141,10 @@ pub fn router() -> Router {
         // when no bundler is wired), so no `if Development` guard is needed.
         .route("/_deck/dev/hmr", get(serve_bundle_hmr))
         .route("/_deck/runtime.js", get(serve_sail_runtime))
+        .route("/_deck/actions.js", get(serve_sail_actions))
+        .route("/_deck/motion.js", get(serve_sail_motion))
+        .route("/_deck/query.js", get(serve_sail_query))
+        .route("/_deck/virtual.js", get(serve_sail_virtual))
         .route("/_deck/dom.js", get(serve_sail_dom))
         .route("/_deck/sdk-client.js", get(serve_sail_sdk_client))
         .route("/_deck/compiler-wasm.js", get(serve_sail_compiler_wasm))

@@ -49,6 +49,18 @@
       "development": "./src/virtual.ts",
       "default": "./dist/virtual.js"
     },
+    "./motion": {
+      "types": "./dist/motion-bundle.d.ts",
+      "bun": "./src/motion-bundle.ts",
+      "development": "./src/motion-bundle.ts",
+      "default": "./dist/motion-bundle.js"
+    },
+    "./query": {
+      "types": "./dist/query.d.ts",
+      "bun": "./src/query.ts",
+      "development": "./src/query.ts",
+      "default": "./dist/query.js"
+    },
     "./internal": {
       "types": "./dist/internal.d.ts",
       "bun": "./src/internal.ts",
@@ -66,6 +78,12 @@
       "bun": "./src/actions/index.ts",
       "development": "./src/actions/index.ts",
       "default": "./dist/actions/index.js"
+    },
+    "./query-mock": {
+      "types": "./dist/query-mock.d.ts",
+      "bun": "./src/query-mock.ts",
+      "development": "./src/query-mock.ts",
+      "default": "./dist/query-mock.js"
     },
     "./framework": {
       "types": "./dist/framework-bundle.d.ts",

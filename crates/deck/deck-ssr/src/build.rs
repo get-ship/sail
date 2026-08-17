@@ -191,6 +191,24 @@ async fn bundle(repo: &Path, build_dir: &Path, client_aliases: &[ClientAlias]) -
             vec![Some(path_str(&runtime_actions))],
         ),
         (
+            "@ship/sail-runtime/motion".to_string(),
+            vec![Some(path_str(
+                &repo.join("packages/sail/runtime/src/motion-bundle.ts"),
+            ))],
+        ),
+        (
+            "@ship/sail-runtime/query".to_string(),
+            vec![Some(path_str(
+                &repo.join("packages/sail/runtime/src/query.ts"),
+            ))],
+        ),
+        (
+            "@ship/sail-runtime/virtual".to_string(),
+            vec![Some(path_str(
+                &repo.join("packages/sail/runtime/src/virtual.ts"),
+            ))],
+        ),
+        (
             "@ship/deck/router".to_string(),
             vec![Some(path_str(&route_server))],
         ),

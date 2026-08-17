@@ -14,8 +14,9 @@
 //! - `query`, `mutation`
 //!
 //! Behavioral law: a controller that references these names without importing
-//! them gets a self-contained emit module (ambient inject from
-//! `@ship/sail-runtime/internal`). Types (`Signal`, `Theme`, `StoreDef`, …)
+//! them gets a self-contained emit module (ambient inject). Core language
+//! comes from `@ship/sail-runtime/internal`; `query`/`mutation` from
+//! `@ship/sail-runtime/query`. Types (`Signal`, `Theme`, `StoreDef`, …)
 //! are free globals via the ambient pack — no `import type` from `@ship/*`.
 
 use std::collections::HashSet;
@@ -46,23 +47,22 @@ fn ambient_authored_names() -> HashSet<&'static str> {
         .collect()
 }
 
-fn ambient_import_line(body: &str) -> Option<&str> {
-    body.lines().find(|l| {
-        let t = l.trim_start();
-        t.starts_with("import") && t.contains(RUNTIME_SPECIFIER)
-    })
-}
-
 fn asserts_ambient_inject(body: &str, idents: &[&str]) {
-    let line = ambient_import_line(body).unwrap_or_else(|| {
-        panic!("expected ambient inject from `{RUNTIME_SPECIFIER}`, got module:\n{body}")
-    });
     for ident in idents {
+        let line = body.lines().find(|l| {
+            let t = l.trim_start();
+            t.starts_with("import") && t.contains(ident) && t.contains("@ship/sail-runtime")
+        });
+        let line = line.unwrap_or_else(|| {
+            panic!("expected ambient inject of `{ident}` from @ship/sail-runtime/*, got module:\n{body}")
+        });
+        let expected = sail_compiler::runtime_ambient::ambient_module(ident);
         assert!(
-            line.contains(ident),
-            "ambient `{ident}` missing from inject line `{line}`\nmodule:\n{body}"
+            line.contains(expected),
+            "ambient `{ident}` must inject from `{expected}`, got `{line}`\nmodule:\n{body}"
         );
     }
+    let _ = RUNTIME_SPECIFIER;
 }
 
 fn repo_root() -> PathBuf {

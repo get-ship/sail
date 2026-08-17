@@ -1,6 +1,5 @@
 import type { Action } from '../action'
-import { invokeCallback } from '../callback'
-import { attachBoundary, detachBoundary } from '../error-boundary'
+import { attachBoundary, detachBoundary, invokeCallback } from '@ship/sail-runtime/internal'
 
 /** The boundary hangs `reset()` on its own host so callers can recover it
  *  programmatically: `document.querySelector('error-boundary').reset()`. */

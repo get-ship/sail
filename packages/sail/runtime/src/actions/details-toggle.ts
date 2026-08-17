@@ -5,7 +5,7 @@
 // Stacked with `use:detailsDisabled` on the L1 <accordion> root.
 
 import type { Action } from '../action'
-import { invokeCallback } from '../callback'
+import { invokeCallback } from '@ship/sail-runtime/internal'
 
 /**
  * On native `toggle`, invoke `onToggle` with `{ open: el.open }` so hosts

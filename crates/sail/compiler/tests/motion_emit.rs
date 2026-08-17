@@ -34,6 +34,10 @@ fn static_hover_scale_emits_runtime_dispatch() {
         js.contains("__sail_motion_attach("),
         "expected runtime attach call:\n{js}"
     );
+    assert!(
+        js.contains("from \"@ship/sail-runtime/motion\""),
+        "fx: must import the motion singleton:\n{js}"
+    );
     assert!(js.contains("\"hover\""), "expected trigger string:\n{js}");
     assert!(
         js.contains("property: \"opacity\""),

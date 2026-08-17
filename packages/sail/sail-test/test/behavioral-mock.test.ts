@@ -2,7 +2,8 @@
 // queries + mockQueryState — no structure selectors, no backend.
 
 import { describe, expect, it, afterEach } from 'vitest'
-import { queryKeyed, effect, type LiveState } from '@ship/sail-runtime'
+import { effect, type LiveState } from '@ship/sail-runtime'
+import { queryKeyed } from '@ship/sail-runtime/query'
 // Owner-tree scopes are emit/host ABI; tests use the internal helpers.
 import { createScope, withScope } from '@ship/sail-runtime/internal'
 import {

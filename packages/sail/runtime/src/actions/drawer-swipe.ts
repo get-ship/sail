@@ -7,7 +7,7 @@
 // still move in the close direction.
 
 import type { Action } from '../action'
-import { invokeCallback } from '../callback'
+import { invokeCallback } from '@ship/sail-runtime/internal'
 
 type Axis = 'x' | 'y'
 

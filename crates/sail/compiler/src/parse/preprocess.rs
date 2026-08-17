@@ -2722,22 +2722,30 @@ fn inject_ambient_runtime_imports(module: &str) -> String {
     if needed.is_empty() {
         return module.to_string();
     }
-    let specifiers: Vec<String> = needed
-        .iter()
-        .map(|(authored, exported, _)| {
-            if authored == exported {
-                (*authored).to_string()
-            } else {
-                format!("{exported} as {authored}")
-            }
-        })
-        .collect();
-    format!(
-        "import {{ {} }} from '{}';\n{}",
-        specifiers.join(", "),
-        crate::runtime_ambient::RUNTIME_SPECIFIER,
-        module
-    )
+    // One import per specifier (internal / query / motion / virtual).
+    // Mixing batteries onto `/internal` puts them back on hello-world.
+    let mut groups: Vec<(&str, Vec<String>)> = Vec::new();
+    for (authored, exported, _) in &needed {
+        let spec = crate::runtime_ambient::ambient_module(authored);
+        let binding = if authored == exported {
+            (*authored).to_string()
+        } else {
+            format!("{exported} as {authored}")
+        };
+        if let Some((_, list)) = groups.iter_mut().find(|(s, _)| *s == spec) {
+            list.push(binding);
+        } else {
+            groups.push((spec, vec![binding]));
+        }
+    }
+    let mut imports = String::new();
+    for (spec, names) in groups {
+        imports.push_str(&format!(
+            "import {{ {} }} from '{spec}';\n",
+            names.join(", ")
+        ));
+    }
+    format!("{imports}{module}")
 }
 
 /// Idents the module already binds: named-import bindings (single-line OR

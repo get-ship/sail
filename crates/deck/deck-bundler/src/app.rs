@@ -88,20 +88,30 @@ const FRAMEWORK_ASSETS: &[(&str, &str, &str)] = &[
         "_deck/runtime.js",
     ),
     // Compiler auto-imports `use:` actions from this subpath (see
-    // sail-compiler emit/js/imports.rs). Shares the framework-bundle
-    // singleton (full action surface + runtime) — must not be inlined.
+    // sail-compiler emit/js/imports.rs). Separate singleton so a
+    // hello-world page does not download the action catalog.
     (
         "@ship/sail-runtime/actions",
-        "sail-runtime.js",
-        "_deck/runtime.js",
+        "sail-actions.js",
+        "_deck/actions.js",
     ),
-    // Virtualization (use:virtualRow / TanStack core). Same singleton —
-    // libraries that import `@ship/sail-runtime/virtual` must not inline a
-    // second signal graph.
+    (
+        "@ship/sail-runtime/motion",
+        "sail-motion.js",
+        "_deck/motion.js",
+    ),
+    (
+        "@ship/sail-runtime/query",
+        "sail-query.js",
+        "_deck/query.js",
+    ),
+    // Virtualization (TanStack core). Own singleton so hello-world does
+    // not download it; still importmapped so a page that uses it shares
+    // one signal graph with the runtime.
     (
         "@ship/sail-runtime/virtual",
-        "sail-runtime.js",
-        "_deck/runtime.js",
+        "sail-virtual.js",
+        "_deck/virtual.js",
     ),
     ("@ship/sail-dom", "sail-dom.js", "_deck/dom.js"),
     // `@ship/deck/router` lives in the framework because the bundler

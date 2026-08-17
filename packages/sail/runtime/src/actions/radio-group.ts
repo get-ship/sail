@@ -1,5 +1,5 @@
 import type { Action } from '../action'
-import { invokeCallback } from '../callback'
+import { invokeCallback } from '@ship/sail-runtime/internal'
 
 let _seq = 0
 

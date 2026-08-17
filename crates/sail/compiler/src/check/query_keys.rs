@@ -104,7 +104,7 @@ pub fn rewrite(source: &str) -> Result<String, CompileError> {
     // after this rewrite; the direct inject here keeps the rewritten body
     // self-contained even if a caller only rewrites.
     if used_dunder_invalidate && !imports.contains("__invalidate") {
-        out = format!("import {{ __invalidate }} from '@ship/sail-runtime'\n{out}");
+        out = format!("import {{ __invalidate }} from '@ship/sail-runtime/query'\n{out}");
     }
     Ok(out)
 }

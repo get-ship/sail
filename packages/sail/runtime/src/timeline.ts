@@ -25,9 +25,32 @@
 // position; `timeline()` cannot hand work to the compositor. Pick by whether
 // something outside the animation owns its clock.
 
-import { interpolate } from 'motion-dom'
-import { cubicBezier } from 'motion'
-import { derived, type Derived } from './signal'
+import { interpolate } from './motion-dom-used'
+import { derived, type Derived } from '@ship/sail-runtime'
+
+/** Unit cubic-bezier. `from 'motion'` pulled the full framer-motion DOM graph. */
+function cubicBezier(x1: number, y1: number, x2: number, y2: number): (t: number) => number {
+  const ax = 3 * x1 - 3 * x2 + 1
+  const bx = 3 * x2 - 6 * x1
+  const cx = 3 * x1
+  const ay = 3 * y1 - 3 * y2 + 1
+  const by = 3 * y2 - 6 * y1
+  const cy = 3 * y1
+  const sampleX = (t: number) => ((ax * t + bx) * t + cx) * t
+  const sampleY = (t: number) => ((ay * t + by) * t + cy) * t
+  const sampleDx = (t: number) => (3 * ax * t + 2 * bx) * t + cx
+  return (t: number) => {
+    let x = t
+    for (let i = 0; i < 8; i++) {
+      const err = sampleX(x) - t
+      if (Math.abs(err) < 1e-6) break
+      const d = sampleDx(x)
+      if (Math.abs(d) < 1e-6) break
+      x -= err / d
+    }
+    return sampleY(x)
+  }
+}
 
 // ── Easing ───────────────────────────────────────────────────────────────────
 

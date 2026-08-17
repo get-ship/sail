@@ -1,7 +1,7 @@
 /**
  * Design store UI projections + font/icon helpers.
  */
-import { query } from '@ship/sail-runtime'
+import { query } from '@ship/sail-runtime/query'
 import type { DesignOpsClient, DesignSurfaceState } from './types'
 import {
   densityLabel,

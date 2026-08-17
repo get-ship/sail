@@ -2,7 +2,7 @@
 // Not a `use:` action; keeps dual stamps from double-firing / double-removing.
 // Invokes the host's `onDismiss` callback prop, then removes the node.
 
-import { invokeCallback } from '../callback'
+import { invokeCallback } from '@ship/sail-runtime/internal'
 
 const dismissed = new WeakSet<Element>()
 
