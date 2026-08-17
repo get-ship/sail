@@ -1,7 +1,7 @@
 {
   "name": "@ship/sail-studio-client",
   "version": "0.1.0",
-  "description": "Generated typed client for sail-ops Connect unary + watch SSE. Source: `sail op gen` from crates/sail/ops contracts.",
+  "description": "Generated typed client for sail-ops Connect unary + watch SSE. Source: `deck-bake gen` from crates/sail/ops contracts.",
   "type": "module",
   "license": "MIT",
   "main": "src/index.ts",

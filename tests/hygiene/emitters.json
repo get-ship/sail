@@ -75,12 +75,12 @@
     },
     {
       "path": "crates/sail/ops/schemas/catalog.json",
-      "emitter": "sail op gen",
+      "emitter": "deck-bake gen",
       "gate": "sail-ops assert_no_drift"
     },
     {
       "path": "crates/sail/ops/schemas/mcp-tools.json",
-      "emitter": "sail op gen",
+      "emitter": "deck-bake gen",
       "gate": "sail-ops assert_no_drift"
     }
   ],

@@ -330,7 +330,7 @@ pub fn health_json(ctx: &Ctx) -> Value {
     })
 }
 
-/// Run codegen (`sail op gen`).
+/// Run codegen (`deck-bake gen`).
 pub fn op_gen(workspace_root: Option<&std::path::Path>) -> Result<Vec<std::path::PathBuf>, String> {
     let root = workspace_root
         .map(|p| p.to_path_buf())
@@ -413,13 +413,13 @@ mod tests {
 
     #[test]
     fn mcp_stdio_descriptors_match_committed_artifact() {
-        // Non-tautological: core descriptors == committed mcp-tools.json from `sail op gen`.
+        // Non-tautological: core descriptors == committed mcp-tools.json from `deck-bake gen`.
         // Module tools are additive at runtime and must not drift the committed SSOT.
         let from_registry = registry::mcp_tool_descriptors_core();
         let root = codegen::find_workspace_root();
         let path = root.join("crates/sail/ops/schemas/mcp-tools.json");
         let committed = std::fs::read_to_string(&path)
-            .unwrap_or_else(|e| panic!("missing {}; run `sail op gen`: {e}", path.display()));
+            .unwrap_or_else(|e| panic!("missing {}; run `deck-bake gen`: {e}", path.display()));
         let from_file: Value = serde_json::from_str(&committed).expect("mcp-tools.json");
         assert_eq!(
             from_registry, from_file,
@@ -473,7 +473,7 @@ mod tests {
     fn generated_ts_client_matches_committed() {
         let root = codegen::find_workspace_root();
         let paths = codegen::GenPaths::from_workspace(root);
-        codegen::assert_no_drift(&paths).expect("run `sail op gen` to refresh client/schemas");
+        codegen::assert_no_drift(&paths).expect("run `deck-bake gen` to refresh client/schemas");
     }
 
     /// TOOLING-1 WI4 — core agent MCP tools are a forever contract.
@@ -527,7 +527,7 @@ mod tests {
                 .unwrap_or_else(|e| panic!("missing schema snapshot {}: {e}", snap_path.display()));
             assert_eq!(
                 actual, expected,
-                "WI4 schema drift on {tool}: run `sail op gen`"
+                "WI4 schema drift on {tool}: run `deck-bake gen`"
             );
 
             // tools/list descriptor row matches live generation.
