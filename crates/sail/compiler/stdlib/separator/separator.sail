@@ -17,9 +17,9 @@
     label = ''
   }
 
-  style base = {display(block).size({ w: full, h: border-width }).pad(0).margin({ y: 2 }).border({ width: 0 }).bg(border)}
-  style orientH = {display(block).size({ w: full, h: border-width }).margin({ y: 2, x: 0 })}
-  style orientV = {display(inline-block).self(stretch).size({ w: border-width, h: full }).margin({ x: 2, y: 0 })}
+  style base = {display(block).size({ w: 100%, h: border-width }).pad(0).margin({ y: 2 }).border({ width: 0 }).bg(border)}
+  style orientH = {display(block).size({ w: 100%, h: border-width }).margin({ y: 2, x: 0 })}
+  style orientV = {display(inline-block).self(stretch).size({ w: border-width, h: 100% }).margin({ x: 2, y: 0 })}
   style solid = {pad(0).bg(border).border({ width: 0 })}
   style dashed = {pad(0).bg(transparent).border({ width: 0 })}
 </scope>
@@ -32,8 +32,10 @@
       {tone: *, variant: solid, bg(tone)},
       {orientation: horizontal, tone: *, variant: dashed, border({ color: tone, edge: t })},
       {orientation: vertical, tone: *, variant: dashed, border({ color: tone, edge: l })},
-      {tone: muted, variant: solid, bg(border-subtle)},
-      {orientation: horizontal, tone: muted, variant: dashed, border({ color: border-subtle, edge: t })},
-      {orientation: vertical, tone: muted, variant: dashed, border({ color: border-subtle, edge: l })},
+      // Muted spends --border (the line), not --border-subtle. Themes that
+      // zero subtle (halo) would make a divider disappear.
+      {tone: muted, variant: solid, bg(border)},
+      {orientation: horizontal, tone: muted, variant: dashed, border({ color: border, edge: t })},
+      {orientation: vertical, tone: muted, variant: dashed, border({ color: border, edge: l })},
     ]})
 >

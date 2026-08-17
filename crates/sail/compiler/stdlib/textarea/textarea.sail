@@ -14,7 +14,7 @@
     rows = 3
   }
 
-  style stretch = {size({ w: full })}
+  style stretch = {size({ w: 100% })}
   // Same input / foreground / border spend as <input> — no special well.
   style base = {display(block).size({ min-h: control-h-md }).pad({ y: 1_5, x: 3 }).fg(foreground).bg(control).border({ color: border, width: 1 }).radius(md).elevation(xs).type({ size: base }).boxSizing(border), when: {hover: border({ color: border-strong }), disabled: cursor(not-allowed).filter({ opacity: 50 }), group-fill: stretch}}
   style sizeXs = {size({ min-h: control-h-2xs }).pad({ x: 2 }).type({ size: xs })}

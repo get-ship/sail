@@ -14,7 +14,7 @@
   }
 
   style base = {display(block).size(measure)}
-  style fill = {size({ w: full })}
+  style fill = {size({ w: 100% })}
 </scope>
 
 <form style(base, {match: {layout: {fill: fill}}})>

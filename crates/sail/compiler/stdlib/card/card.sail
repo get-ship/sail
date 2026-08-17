@@ -21,7 +21,7 @@
 
   // group() so image/header/footer chrome can when({ group-padding-* }).
   // Child match { padding } keys the child's own attr, so bleed never fires.
-  style base = {position(relative).overflow({ all: clip }).pad({ y: 4, x: 5 }).isolate().group().radius(lg).border({ color: border, width: 1 }).fg(card-foreground).elevation({ shadow: card-rest }).bg(card).filter({ backdrop: card-backdrop-filter }), animate: { transition: play(surface, fast) }}
+  style base = {position(relative).overflow({ all: clip }).pad({ y: 4, x: 5 }).isolate().group().radius(lg).border({ color: border, width: 1 }).fg(card-foreground).elevation({ shadow: card-rest }).bg(surface).filter({ backdrop: filter-backdrop }), animate: { transition: play(surface, fast) }}
   style outline = {bg(transparent)}
   style soft = {bg(muted).border({ color: border })}
   style elevated = {elevation({ shadow: lg }).border({ color: border-subtle })}
@@ -46,7 +46,7 @@
   style accentBar = {position({ scheme: absolute, l: 0, r: 0, t: 0 }).size({ h: half }).content(empty).bg({ image: primary-accent }).radius({ t: lg }).transition(opacity).duration(medium).ease(out).pointerEvents(none)}
   // Image slot: full-bleed top crop box. object-cover lives on the author's
   // <img> — Style cannot paint a slotted descendant.
-  style imageWrap = {overflow({ all: hidden }).size({ w: full, h: 36, min-h: 36 }).bg(muted)}
+  style imageWrap = {overflow({ all: hidden }).size({ w: 100%, h: 36, min-h: 36 }).bg(muted)}
   style imageMd = {margin({ t: -4, x: -5, b: 4 })}
   style imageSm = {margin({ t: -2, x: -3, b: 3 })}
   style imageLg = {margin({ t: -5, x: -6, b: 5 })}
@@ -54,7 +54,7 @@
 </scope>
 
 <div
-  style(base, {match: {variant: {default: bg(card), outline: outline, soft: soft, elevated: elevated, ghost: ghost}, padding: { md: padMd, none: padNone, sm: padSm, lg: padLg }}, compound: [
+  style(base, {match: {variant: {default: bg(surface), outline: outline, soft: soft, elevated: elevated, ghost: ghost}, padding: { md: padMd, none: padNone, sm: padSm, lg: padLg }}, compound: [
       {tone: *, border({ color: tone })},
       {interactive: true, cursor(pointer).tapHighlight(none), when: {hover: border({ color: border-strong }).elevation({ shadow: hover }).translateY(-px), active: elevation({ shadow: card-rest }).translateY(0).duration(instant), motion-reduce: translateY(0), focus: border({ width: 2, kind: outline }), forced-colors: {when: {focus: border({ color: CanvasText, kind: outline })}}}},
       {fill: true, soft},

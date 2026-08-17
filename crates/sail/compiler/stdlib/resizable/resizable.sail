@@ -11,7 +11,7 @@
   }
 
   // h(full) is required so vertical flex-basis % has a definite container.
-  style host = {display(flex).size({ w: full, h: full, min-h: 32, min-w: 0 })}
+  style host = {display(flex).size({ w: 100%, h: 100%, min-h: 32, min-w: 0 })}
   style horiz = {dir(row)}
   style vert = {dir(column)}
   style pane = {grow(1).shrink(1).size({ min-w: 0, min-h: 0, basis: 0 }).overflow({ all: hidden })}

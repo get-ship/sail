@@ -17,9 +17,9 @@
   }
 
   // Compact browse well — same dropzone skin, shorter.
-  style pickerHost = {display(flex).size({ w: full, min-h: control-h-lg }).pad({ x: 4, y: 3 }).group().fg(muted-foreground).bg(muted).border({ color: border, width: 1, style: dashed }).radius(md).cursor(pointer).type({ align: center, family: body, size: sm, weight: medium }), when: {hover: border({ color: primary }).bg({ color: primary, mix: 10 }).fg(foreground), stateOver: border({ color: primary }).bg({ color: primary, mix: 10 }).fg(foreground), disabled: cursor(not-allowed).filter({ opacity: 50 })}}
+  style pickerHost = {display(flex).size({ w: 100%, min-h: control-h-lg }).pad({ x: 4, y: 3 }).group().fg(muted-foreground).bg(muted).border({ color: border, width: 1, style: dashed }).radius(md).cursor(pointer).type({ align: center, family: body, size: sm, weight: medium }), when: {hover: border({ color: primary }).bg({ color: primary, mix: 10 }).fg(foreground), stateOver: border({ color: primary }).bg({ color: primary, mix: 10 }).fg(foreground), disabled: cursor(not-allowed).filter({ opacity: 50 })}}
   // Dashed drop surface for variant=drop.
-  style dropHost = {display(flex).size({ w: full, min-h: 32 }).pad(6).group().fg(muted-foreground).bg(muted).border({ color: border, width: 1, style: dashed }).radius(lg).cursor(pointer).type({ align: center, family: body, size: sm, weight: medium }), when: {hover: border({ color: primary }).bg({ color: primary, mix: 10 }).fg(foreground), stateOver: border({ color: primary }).bg({ color: primary, mix: 10 }).fg(foreground), disabled: cursor(not-allowed).filter({ opacity: 50 })}}
+  style dropHost = {display(flex).size({ w: 100%, min-h: 32 }).pad(6).group().fg(muted-foreground).bg(muted).border({ color: border, width: 1, style: dashed }).radius(lg).cursor(pointer).type({ align: center, family: body, size: sm, weight: medium }), when: {hover: border({ color: primary }).bg({ color: primary, mix: 10 }).fg(foreground), stateOver: border({ color: primary }).bg({ color: primary, mix: 10 }).fg(foreground), disabled: cursor(not-allowed).filter({ opacity: 50 })}}
   style file = {display(none)}
   style sizeXs = {size({ min-h: control-h-2xs }).pad({ x: 2 }).type({ size: xs })}
   style sizeSm = {size({ min-h: control-h-sm }).pad({ x: 2_5 }).type({ size: sm })}

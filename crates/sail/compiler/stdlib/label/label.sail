@@ -1,7 +1,7 @@
 <!--
-  <label> — size match; weight token; .req gate via group-required when.
+  <label> — size match; weight + transform tokens; .req gate via group-required when.
   Host + .req via style chains / match / when.
-  Tokens: foreground + label-weight.
+  Tokens: foreground, label-weight, label-transform. Default type is sm, not base.
 -->
 
 <scope>
@@ -10,10 +10,10 @@
     required = false
   }
 
-  style base = {fg(foreground).cursor(pointer).group().type({ family: body, weight: bind(labelWeight), tracking: normal, size: base })}
-  style sizeMd = {type({ size: base })}
-  style sizeSm = {type({ size: sm })}
-  style sizeLg = {type({ size: lg })}
+  style base = {fg(foreground).cursor(pointer).group().type({ family: body, weight: bind(labelWeight), tracking: normal, size: sm, case: label-transform })}
+  style sizeMd = {type({ size: sm })}
+  style sizeSm = {type({ size: xs })}
+  style sizeLg = {type({ size: md })}
   style req = {display(none).margin({ s: 1 }).fg(destructive).type({ weight: bold })}
 </scope>
 

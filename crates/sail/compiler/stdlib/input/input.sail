@@ -32,7 +32,7 @@
 
   // Replaced element: width:auto is the UA size=20 (~174px). Inside a
   // field (group-fill) the control fills the column. Naked input hugs.
-  style stretch = {size({ w: full })}
+  style stretch = {size({ w: 100% })}
   // Text-like fields share input / foreground / border with select/textarea.
   style field = {display(block).size({ min-h: control-h-md }).pad({ y: 1_5, x: 3 }).fg(foreground).bg(control).border({ color: border, width: 1 }).radius(md).elevation(xs).type({ size: base }), when: {hover: border({ color: border-strong }), disabled: cursor(not-allowed).filter({ opacity: 50 }), group-fill: stretch}}
   // Password: reserve end chrome for reveal (select chevron model — padE, not padX).

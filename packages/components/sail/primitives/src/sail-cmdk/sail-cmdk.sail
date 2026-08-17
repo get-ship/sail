@@ -219,7 +219,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
       const selectByItem = (item: VisibleItem | undefined) => {
         if (!item || item.disabled) return
-        host.emit?.('sail-cmdk-select', { id: item.id, value: item.value })
+        const payload = { id: item.id, value: item.value }
+        const fn = (h as { onSelect?: (d: { id: string; value: string }) => void }).onSelect
+        if (typeof fn === 'function') fn(payload)
+        host.emit?.('sail-cmdk-select', payload)
         h.open = false
       }
 
@@ -315,7 +318,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     <ul role="listbox" id={listId()} aria-label={label()} use:captureList style({ grow(1).size({ min-h: 0, max-h: panel-vh-sm }).pad(1).overflow({ y: auto }) })>
       <for {rows() as row} key={row.key}>
         <if {row.isHeading}>
-          <li role="presentation" style({ pad({ y: 2, b: 1 }).fg(muted-foreground).select(none).type({ size: xs, weight: semibold, tracking: wide, case: uppercase }) })>{row.heading}</li>
+          <li role="presentation" style({ pad({ y: 2, b: 1 }).fg(muted-foreground).select(none).type(label) })>{row.heading}</li>
         {else => <li role="option" id={row.optId} data-id={row.id} data-value={row.value} aria-selected={!row.disabled && row.id === highlightId() ? 'true' : 'false'} aria-disabled={row.disabled ? 'true' : 'false'} style({ pad(2).group().radius(sm).fg(foreground).cursor(pointer).select(none).type({ size: sm }), when: { selected: bg(selected-bg), disabled: fg(muted-foreground).cursor(default).filter({ opacity: 50 }) } })>
             <if {row.icon !== ''}>
               <icon name={row.icon} size="sm" style({ grow(0).fg(muted-foreground), when: { groupSelected: fg(foreground) } })></icon>

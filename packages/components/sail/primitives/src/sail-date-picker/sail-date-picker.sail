@@ -253,8 +253,8 @@ export default controller(({ value, min, max, disabled }: ControllerScope<Scope>
   })
 
 </controller>
-<column gap="0" style({ position(relative).size({ w: full }) })>
-  <row gap="2" align="center" style({ size({ w: full, h: control-h-md }).pad({ x: 2_5 }).bg(background).fg(foreground).border({ color: border, width: 1 }).radius(md), when: { focusWithin: border({ kind: outline, color: ring }) } })>
+<column gap="0" style({ position(relative).size({ w: 100% }) })>
+  <row gap="2" align="center" style({ size({ w: 100%, h: control-h-md }).pad({ x: 2_5 }).bg(background).fg(foreground).border({ color: border, width: 1 }).radius(md), when: { focusWithin: border({ kind: outline, color: ring }) } })>
     <input
       type="text"
       flush

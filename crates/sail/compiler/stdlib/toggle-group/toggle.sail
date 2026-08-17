@@ -23,16 +23,19 @@
   style outline = {margin({ s: -px }).radius(none)}
   style ghost = {margin({ s: 0, e: 1 }).border({ color: transparent }).radius(md)}
   style segmented = {margin({ s: 0, e: 1 }).border({ color: transparent }).radius(sm)}
+  // Vertical cells share the column width (widest label). Match orientation —
+  // do not require variant= on the cell (docs omit it; default is outline).
+  style vertCell = {size({ w: 100% }).self(stretch)}
 </scope>
 
 <button
   type="button"
-  style(base, {when: {hover: bg(hover-bg).fg(foreground), pressed: {bg(primary).fg(primary-foreground).border({ color: primary }), when: {hover: bg(primary).fg(primary-foreground).border({ color: primary }).filter({ opacity: 90 })}, position({ z: 1 })}, disabled: filter({ opacity: 50 }).cursor(not-allowed), focus: border({ style: solid, kind: outline, width: 2, color: ring }).position({ z: 2 })}, match: { size: { md: sizeMd, sm: sizeSm, lg: sizeLg }, variant: { outline: outline, ghost: ghost, segmented: segmented } }, compound: [
-      {orientation: vertical, variant: outline, margin({ t: -px, s: 0, e: 0 }).radius(none).size({ w: full })},
+  style(base, {when: {hover: bg(hover-bg).fg(foreground), pressed: {bg(primary).fg(primary-foreground).border({ color: primary }), when: {hover: bg(primary).fg(primary-foreground).border({ color: primary }).filter({ opacity: 90 })}, position({ z: 1 })}, disabled: filter({ opacity: 50 }).cursor(not-allowed), focus: border({ style: solid, kind: outline, width: 2, color: ring }).position({ z: 2 })}, match: { size: { md: sizeMd, sm: sizeSm, lg: sizeLg }, variant: { outline: outline, ghost: ghost, segmented: segmented }, orientation: { vertical: vertCell } }, compound: [
+      {orientation: vertical, variant: outline, margin({ t: -px, s: 0, e: 0 }).radius(none).size({ w: 100% }).self(stretch)},
       {variant: ghost, margin({ s: 0, t: 0, e: 1 }).border({ color: transparent }).radius(md)},
       {variant: segmented, margin({ s: 0, t: 0, e: 1 }).border({ color: transparent }).radius(sm)},
-      {orientation: vertical, variant: ghost, margin({ s: 0, t: 0, e: 0, b: 1 }).border({ color: transparent }).radius(md)},
-      {orientation: vertical, variant: segmented, margin({ s: 0, t: 0, e: 0, b: 1 }).border({ color: transparent }).radius(sm)},
+      {orientation: vertical, variant: ghost, margin({ s: 0, t: 0, e: 0, b: 1 }).border({ color: transparent }).radius(md).size({ w: 100% }).self(stretch)},
+      {orientation: vertical, variant: segmented, margin({ s: 0, t: 0, e: 0, b: 1 }).border({ color: transparent }).radius(sm).size({ w: 100% }).self(stretch)},
       {orientation: horizontal, variant: outline, when: {first: margin({ s: 0 }).radius({ l: md }), last: radius({ r: md })}},
       {orientation: vertical, variant: outline, when: {first: margin({ t: 0 }).radius({ t: md }), last: radius({ b: md })}},
       {variant: ghost, when: {last: margin({ e: 0 })}},

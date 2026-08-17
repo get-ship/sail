@@ -14,9 +14,9 @@
   }
 
   style host = {display(block).position(relative)}
-  style pre = {pad({ y: 4, s: 5, e: 12 }).margin(0).overflow({ x: hidden, y: auto }).bg(card).fg(foreground).border({ color: border, width: 1 }).radius(lg).type({ family: mono, size: sm, leading: code, wrap: pre-wrap }).tab(2)}
+  style pre = {pad({ y: 4, s: 5, e: 12 }).margin(0).overflow({ x: hidden, y: auto }).bg(surface).fg(foreground).border({ color: border, width: 1 }).radius(lg).type({ family: mono, size: sm, leading: code, wrap: pre-wrap }).tab(2)}
   style terminalPre = {bg(surface-inverse).fg(background)}
 </scope>
-<div use:syntaxHighlight style(host)>
+<div label="Code" use:syntaxHighlight style(host)>
   <pre style(pre, {match: { terminal: { true: terminalPre } }})></pre>
 </div>

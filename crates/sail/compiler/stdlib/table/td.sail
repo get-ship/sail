@@ -9,7 +9,7 @@
     numeric = false
   }
 
-  style base = {pad({ y: 2_5, x: 3 }).border({ color: border, width: 1, edge: b })}
+  style base = {pad({ y: 2_5, x: 3 }).fg(foreground).border({ color: border, width: 1, edge: b })}
   style nums = {type({ align: end, nums: tabular })}
 </scope>
 

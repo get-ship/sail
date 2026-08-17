@@ -18,7 +18,7 @@
   style stripe = {position({ scheme: absolute, l: 0, t: 0, b: 0 }).size({ w: 1 }).content(empty).bg(primary)}
   style variantDefault = {radius(md).elevation(xs)}
   // Full-bleed: flush radius, no lift, stretch width, thicker start stripe.
-  style variantBanner = {radius(none).elevation(none).size({ w: full }).self(stretch)}
+  style variantBanner = {radius(none).elevation(none).size({ w: 100% }).self(stretch)}
   style ico = {size(control-h-xs).radius(md).bg(muted).fg(primary)}
   style title = {type({ weight: semibold })}
   style body = {fg(foreground)}

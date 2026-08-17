@@ -16,7 +16,7 @@
   style icon = {size(icon-size-lg).margin({ t: 1 }).fg(destructive)}
   style body = {size({ min-w: 0 })}
   style message = {fg(muted-foreground).type({ leading: normal })}
-  style retry = {self(start).pad({ y: 1, x: 3 }).bg(card).border({ color: border, width: 1 }).radius(sm).fg(foreground).elevation(xs).cursor(pointer).type({ family: body, size: xs, weight: semibold })}
+  style retry = {self(start).pad({ y: 1, x: 3 }).bg(surface).border({ color: border, width: 1 }).radius(sm).fg(foreground).elevation(xs).cursor(pointer).type({ family: body, size: xs, weight: semibold })}
 </scope>
 <div use:catchRender style(root)>
   <div style(content, {when: {group-caught: display(none)}})><slot></slot></div>

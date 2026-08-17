@@ -1,7 +1,7 @@
 <!--
   <tooltip> — hover/focus text bubble. use:tipDescribe supplies per-instance
-  anchor geometry vars (placement offsets + arrow insets), content text, and
-  Escape. Style value language only.
+  anchor geometry vars (placement offsets + arrow insets), content text,
+  Escape, and data-hidden (instant hide state). Style value language only.
   Arrow is a border-colored caret (not a rotated square) so one edge is not a
   double/broken seam against the bubble fill + shadow.
 -->
@@ -17,7 +17,12 @@
   // column instead of the button chrome.
   style host = {position(relative).display(inline-flex).self(start).group()}
   // No opacity transition — linger after leave was a real product bug.
-  style bubble = {position({ scheme: absolute, t: bind(ttTop), b: bind(ttBottom), l: bind(ttLeft), r: bind(ttRight), z: popover }).pad({ y: 1, x: 2 }).translateX(bind(ttTx)).filter({ opacity: 0 }).bg(popover).fg(popover-foreground).radius(md).elevation(md).border({ width: 0 }).pointerEvents(none).type({ family: body, size: xs, weight: medium, wrap: nowrap })}
+  // Hug the hint. Wrap only after a real max — max-w alone makes a skinny column.
+  // Instant hide is state: use:tipDescribe stamps data-hidden; this skin
+  // beats group-hover / group-focus-within so Escape-while-hovering snaps.
+  style hide = {filter({ opacity: 0 })}
+  style show = {filter({ opacity: 100 }), match: { 'data-hidden': { true: hide } }}
+  style bubble = {position({ scheme: absolute, t: bind(ttTop), b: bind(ttBottom), l: bind(ttLeft), r: bind(ttRight), z: popover }).pad({ y: 1, x: 2 }).size({ w: max, min-w: max }).overflow({ all: visible }).translateX(bind(ttTx)).filter({ opacity: 0 }).bg(popover).fg(popover-foreground).radius(md).elevation(md).border({ width: 0 }).pointerEvents(none).type({ family: body, size: xs, weight: medium, wrap: nowrap })}
   // Zero-box border triangle; match placement points the filled edge outward.
   style arrowBox = {position({ scheme: absolute, t: bind(ttArrowTop), b: bind(ttArrowBottom), l: bind(ttArrowLeft), r: bind(ttArrowRight) }).size({ w: 0, h: 0 }).margin({ s: bind(ttArrowMl), t: bind(ttArrowMt) }).content(empty).bg(transparent).border({ width: 0, style: solid })}
   // placement=top → caret on bubble bottom, points down (border-top filled).
@@ -36,6 +41,6 @@
   <!-- tooltip role stamped by use:tipDescribe (closed part anatomy) -->
   <span
     data-tooltip-bubble
-    style(bubble, {match: { placement: { top: { when: { after: style(arrowBox, arrowFromTop) } }, bottom: { when: { after: style(arrowBox, arrowFromBottom) } }, left: { when: { after: style(arrowBox, arrowFromLeft) } }, right: { when: { after: style(arrowBox, arrowFromRight) } } } }, when: {group-hover: filter({ opacity: 100 }), group-focus-within: filter({ opacity: 100 })}})
+    style(bubble, {match: { placement: { top: { when: { after: style(arrowBox, arrowFromTop) } }, bottom: { when: { after: style(arrowBox, arrowFromBottom) } }, left: { when: { after: style(arrowBox, arrowFromLeft) } }, right: { when: { after: style(arrowBox, arrowFromRight) } } }, 'data-hidden': { true: hide } }, when: {group-hover: show, group-focus-within: show}})
   ></span>
 </span>

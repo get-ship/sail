@@ -28,7 +28,7 @@
   // Glyph, not a button: no fill invert, no control chrome. Opacity-only hover.
   style remove = {display(none).size({ w: icon-size-3xs, h: icon-size-3xs, min-w: 0, min-h: 0 }).pad(0).border({ width: 0 }).bg(transparent).fg(currentColor).radius(none).cursor(pointer).filter({ opacity: 65 }), animate: { transition: play(colors, fast) }}
   style leading = {display(contents)}
-  style xmark = {display(block).size(full)}
+  style xmark = {display(block).size(grow)}
 </scope>
 
 <span

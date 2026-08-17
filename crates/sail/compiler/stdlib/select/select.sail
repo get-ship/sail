@@ -20,7 +20,7 @@
     multiple = false
   }
 
-  style stretch = {size({ w: full })}
+  style stretch = {size({ w: 100% })}
   // Rest: input / foreground / border (shared with input/textarea).
   style base = {display(block).size({ min-h: control-h-md }).pad({ y: 1_5, s: 3, e: 8 }).fg(foreground).bg(control).border({ color: border, width: 1 }).radius(md).elevation(xs).cursor(pointer).type({ size: base }), when: {hover: border({ color: border-strong }), disabled: cursor(not-allowed).filter({ opacity: 50 }), group-fill: stretch}}
   style sizeXs = {size({ min-h: control-h-2xs }).pad({ s: 2 }).type({ size: xs })}

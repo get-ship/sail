@@ -15,12 +15,13 @@
 
   style base = {display(inline-block).size({ min-w: 8, min-h: 3 }).align(middle).radius(sm)}
   // text + line share the full-width bar geometry.
-  style shapeBar = {size({ w: full, h: 3, min-h: 0 })}
-  style shapeBlock = {display(block).size({ w: full, min-h: 20 })}
+  style shapeBar = {size({ w: 100%, h: 3, min-h: 0 })}
+  style shapeBlock = {display(block).size({ w: 100%, min-h: 20 })}
   style shapeCircle = {size(8).radius(full)}
 </scope>
 
 <span
+  label="Loading"
   style(base, {match: {shape: {text: shapeBar, line: shapeBar, block: shapeBlock, circle: shapeCircle}}, compound: [
       {shape: text, size: sm, size({ h: 2 })},
       {shape: text, size: md, size({ h: 3 })},

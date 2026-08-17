@@ -15,8 +15,8 @@
   // line + enclosed share the bottom-edge strip chrome.
   style variantStrip = {border({ color: border, edge: l }).border({ color: border, edge: r }).border({ color: border, edge: t }).border({ color: border, width: 1, edge: b })}
   style pill = {pad(1).border({ width: 0, edge: l }).border({ width: 0, edge: r }).border({ width: 0, edge: t }).border({ width: 0, edge: b }).radius(md).bg(muted)}
-  style horiz = {dir(row)}
-  style vert = {dir(column).shrink(0)}
+  style horiz = {dir(row).size({ w: 100% })}
+  style vert = {dir(column).shrink(0).size({ w: auto, min-w: 0 })}
 </scope>
 
 <row

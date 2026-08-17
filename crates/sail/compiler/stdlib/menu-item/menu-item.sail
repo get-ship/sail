@@ -12,7 +12,7 @@
   // display(flex) not inline-flex: inline items sit on one line under a
   // max-content menu and the panel width becomes the SUM of labels.
   // padY(2)+padX(3) ≈ 32px hit; icons align via the inner cluster.
-  style base = {display(flex).pad({ y: 2, x: 3 }).size({ w: full }).border({ width: 0 }).fg(foreground).bg(transparent).radius(sm).cursor(pointer).type({ align: start, family: body, size: sm, leading: tight, wrap: nowrap })}
+  style base = {display(flex).pad({ y: 2, x: 3 }).size({ w: 100% }).border({ width: 0 }).fg(foreground).bg(transparent).radius(sm).cursor(pointer).type({ align: start, family: body, size: sm, leading: tight, wrap: nowrap })}
 </scope>
 
 <button

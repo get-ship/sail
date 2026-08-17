@@ -331,7 +331,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
             data-state={cr.state}
             aria-current={cr.cell.today ? 'date' : null}
             aria-label={cr.cell.iso}
-            gap="1" style({ pad({ x: density-row-px, y: density-row-py }).size({ min-h: panel-min-h-cell }).group().border({ edge: r, color: border, width: 1 }).border({ edge: b, color: border, width: 1 }), when: { stateOut: fg(muted-foreground).bg(muted), stateWeekend: bg(muted), stateRange: bg(selected-bg) } })>
+            gap="1" style({ pad({ x: density-row-px, y: density-row-py }).size({ min-h: 84px }).group().border({ edge: r, color: border, width: 1 }).border({ edge: b, color: border, width: 1 }), when: { stateOut: fg(muted-foreground).bg(muted), stateWeekend: bg(muted), stateRange: bg(selected-bg) } })>
             <row align="center" justify="center" gap="0" style({ size({ h: control-h-2xs, min-w: control-h-2xs }).radius(full), when: { groupStateToday: fg(primary).border({ kind: outline, color: primary }) } })>              <span style({ display(contents).type({ size: density }), when: { groupStateToday: type({ weight: semibold }) } })>                {cr.cell.day}
               </span>
 </row>
@@ -367,7 +367,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
     </column>
     <row gap="0" style({ grow(1) })>
       <for {dayColumns() as dc} key={dc.key}>
-        <div data-state={dc.col.today ? 'today' : ''} data-iso={dc.col.iso} style({ grow(1).position(relative).size({ min-h: panel-min-h-daycol }).border({ edge: r, color: border, width: 1 }), when: { stateToday: bg(selected-bg) } })>
+        <div data-state={dc.col.today ? 'today' : ''} data-iso={dc.col.iso} style({ grow(1).position(relative).size({ min-h: 864px }).border({ edge: r, color: border, width: 1 }), when: { stateToday: bg(selected-bg) } })>
           <column gap="0" style({ position({ scheme: absolute, t: 0, b: 0, l: 0, r: 0 }) })>
             <for {timeSlots() as slot} key={slot.key}>
               <div data-iso={dc.col.iso} data-minutes={slot.minutes} style({ grow(1).size({ min-h: control-h-md }).cursor(cell).border({ edge: b, color: border, width: 1 }), when: { hover: bg(hover-bg) } })></div>

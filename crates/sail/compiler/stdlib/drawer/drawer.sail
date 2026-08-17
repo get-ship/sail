@@ -18,19 +18,18 @@
     onDismiss: () => void
   }
 
-  // Non-modal: no top layer, so z(dialog). inset:0 + opposite-edge margin auto
-  // docks the used box (max-w / max-h) without min() platform geometry.
-  // size sets both max-w (start/end) and max-h (top/bottom). Side sheets
-  // cancel max-h so they stay viewport-tall.
-  style host = {position({ scheme: fixed, inset: 0, z: dialog }).pad({ y: 5, x: 6 }).margin(0).size({ w: full, h: full }).overflow({ y: auto, overscroll: contain }).border({ color: border, width: 1 }).radius(none).bg(card).fg(card-foreground).elevation(xl).type({ family: body }), animate: { transition: play(surface, fast) }}
+  // Shell only. Edge dock + header/section/footer live in platform/drawer.css
+  // (same native-<dialog> adaptor as dialog). inset:0 + w/h full made a
+  // full-viewport card — that is not a drawer.
+  style host = {position({ scheme: fixed, z: dialog }).pad(0).margin(0).overflow({ y: auto, overscroll: contain }).border({ color: border, width: 1 }).radius(none).bg(overlay).fg(card-foreground).elevation(xl).type({ family: body }), animate: { transition: play(surface, fast) }}
   style shown = {display(flex).dir(column)}
   style sizeSm = {size({ max-w: panel-max-w-sm, max-h: panel-vh-sm })}
   style sizeMd = {size({ max-w: panel-max-w-md, max-h: panel-vh-md })}
   style sizeLg = {size({ max-w: panel-max-w-lg, max-h: panel-vh-lg })}
-  style sideStart = {size({ w: full, h: full, max-h: none }).margin({ e: auto }).border({ width: 0, edge: s }).touch(pan-y)}
-  style sideEnd = {size({ w: full, h: full, max-h: none }).margin({ s: auto }).border({ width: 0, edge: e }).touch(pan-y)}
-  style sideTop = {size({ w: full, max-w: none, h: fit }).margin({ b: auto }).border({ width: 0, edge: t }).touch(pan-x)}
-  style sideBottom = {size({ w: full, max-w: none, h: fit }).margin({ t: auto }).border({ width: 0, edge: b }).touch(pan-x)}
+  style sideStart = {touch(pan-y)}
+  style sideEnd = {touch(pan-y)}
+  style sideTop = {touch(pan-x)}
+  style sideBottom = {touch(pan-x)}
 </scope>
 
 <dialog

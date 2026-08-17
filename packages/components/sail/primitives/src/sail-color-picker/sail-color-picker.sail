@@ -1,6 +1,8 @@
 <!--
   <sail-color-picker> — live swatch + popover (`#rrggbb` control; HSL sliders).
-  variant=swatch fills a relative parent (studio chips). Popover: native + use:anchor.
+  variant=swatch fills a relative parent (studio chips). Panel is a native
+  popover centered on the viewport (fixed + inset 0 + margin auto, like
+  dialog). Trigger opens via JS, so use:anchor cannot find popovertarget.
 -->
 
 <scope>
@@ -420,25 +422,23 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       aria-label="Choose color"
       use:captureInput
       use:swatch={value() || '#000000'}
-      style({ size({ w: full, h: full, min-w: 0, min-h: 0 }).pad(0).radius(md).border({ color: border-subtle, width: 1 }).bg(bind(swatchColor)).cursor(pointer).elevation(none), when: { focusWithin: border({ kind: outline, color: ring }) } })
+      style({ size({ w: 100%, h: 100%, min-w: 0, min-h: 0 }).pad(0).radius(md).border({ color: border-subtle, width: 1 }).bg(bind(swatchColor)).cursor(pointer).elevation(none), when: { focusWithin: border({ kind: outline, color: ring }) } })
     ></button>
     <if {open() && !disabled()}>
       <div
         id={panelId()}
         data-color-panel
         popover="manual"
-        use:anchor
-        placement="bottom-start"
         role="dialog"
         aria-label="Choose color"
-        style({ size({ w: panel-max-w-md }).pad(3).position({ z: popover }).bg(surface-1).fg(foreground).border({ color: border, width: 1 }).radius(md).elevation(md) })
+        style({ size({ w: panel-max-w-md, h: fit, max-h: panel-vh-md }).pad(3).position({ scheme: fixed, inset: 0, z: popover }).margin(auto).bg(surface-1).fg(foreground).border({ color: border, width: 1 }).radius(md).elevation(md) })
       >
         <span style({ display(contents).type({ size: size-fs }) })>
           <column gap="3">
             <div
               use:swatch={value() || '#000000'}
               aria-hidden="true"
-              style({ size({ w: full, h: 16 }).radius(md).border({ color: border, width: 1 }).bg(bind(swatchColor)).elevation(sm) })
+              style({ size({ w: 100%, h: 16 }).radius(md).border({ color: border, width: 1 }).bg(bind(swatchColor)).elevation(sm) })
             ></div>
             <grid cols="6" gap="2">
               <for {swatches() as sw} key={sw.hex}>
@@ -491,13 +491,13 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     gap="0"
     data-color-picker-root
     data-variant="default"
-    style({ position(relative).size({ w: full, min-h: 0 }) })
+    style({ position(relative).size({ w: 100%, min-h: 0 }) })
   >
     <row
       data-color-trigger
       align="center"
       gap="2"
-      style({ size({ w: full, min-h: size-h }).pad({ x: 1_5, y: 1 }).bg(background).fg(foreground).border({ color: border, width: 1 }).radius(md).cursor(pointer), when: { focusWithin: border({ kind: outline, color: ring }) } })
+      style({ size({ w: 100%, min-h: size-h }).pad({ x: 1_5, y: 1 }).bg(background).fg(foreground).border({ color: border, width: 1 }).radius(md).cursor(pointer), when: { focusWithin: border({ kind: outline, color: ring }) } })
     >
       <button
         type="button"
@@ -529,18 +529,16 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         id={panelId()}
         data-color-panel
         popover="manual"
-        use:anchor
-        placement="bottom-start"
         role="dialog"
         aria-label="Choose color"
-        style({ size({ w: panel-max-w-md }).pad(3).position({ z: popover }).bg(surface-1).fg(foreground).border({ color: border, width: 1 }).radius(md).elevation(md) })
+        style({ size({ w: panel-max-w-md, h: fit, max-h: panel-vh-md }).pad(3).position({ scheme: fixed, inset: 0, z: popover }).margin(auto).bg(surface-1).fg(foreground).border({ color: border, width: 1 }).radius(md).elevation(md) })
       >
         <span style({ display(contents).type({ size: size-fs }) })>
           <column gap="3">
             <div
               use:swatch={value() || '#000000'}
               aria-hidden="true"
-              style({ size({ w: full, h: 16 }).radius(md).border({ color: border, width: 1 }).bg(bind(swatchColor)).elevation(sm) })
+              style({ size({ w: 100%, h: 16 }).radius(md).border({ color: border, width: 1 }).bg(bind(swatchColor)).elevation(sm) })
             ></div>
             <grid cols="6" gap="2">
               <for {swatches() as sw} key={sw.hex}>

@@ -13,11 +13,12 @@
     }
   }
 
-  style base = {position({ scheme: fixed, t: 0, r: auto, b: auto, l: 0, z: toast }).pad(4).size({ w: panel-w-toast }).pointerEvents(none)}
+  style base = {position({ scheme: fixed, t: 0, r: auto, b: auto, l: 0, z: toast }).pad(4).size({ w: 24rem, max-w: 100% }).pointerEvents(none)}
 </scope>
 
 <column
   gap="2"
+  label="Notifications"
   style(base, {match: {position: {top-start: position({ t: 0, r: auto, b: auto, l: 0 }), top-end: position({ t: 0, r: 0, b: auto, l: auto }), bottom-start: position({ t: auto, r: auto, b: 0, l: 0 }).dir(column-reverse), bottom-end: position({ t: auto, r: 0, b: 0, l: auto }).dir(column-reverse)}}})
 >
   <slot></slot>

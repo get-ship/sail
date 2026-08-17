@@ -156,7 +156,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
 </controller>
 <if {error() !== ''}>
-<div role="alert" style({ display(block).size({ w: full }).fg(foreground) })>
+<div role="alert" style({ display(block).size({ w: 100% }).fg(foreground) })>
   <error-state>{error()}</error-state>
 </div>
 {else-if {isEmptyInitial()} => <div role="status">
@@ -167,7 +167,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       <button slot="action" type="button" data-action="clear-filters">Clear filters</button>
     </empty-state>
   </slot>
-</div>}{else => <column role="treegrid" gap="0" use:gridTracks={gridTemplate()} aria-label={label() || null} aria-rowcount={rowCount()} aria-multiselectable={selectable() === 'multi' ? 'true' : null} style({ size({ w: full }).overflow({ all: hidden }).bg(surface-1).border({ color: border, width: 1 }).radius(lg) })>  <span style({ display(contents).type({ family: body, size: density }) })>    <grid tracks="--sail-grid-template" gap="0" role="row" style({ position({ scheme: sticky, t: 0 }).position({ z: sticky }).bg(surface-2).border({ edge: b, color: border, width: 1 }) })>
+</div>}{else => <column role="treegrid" gap="0" use:gridTracks={gridTemplate()} aria-label={label() || null} aria-rowcount={rowCount()} aria-multiselectable={selectable() === 'multi' ? 'true' : null} style({ size({ w: 100% }).overflow({ all: hidden }).bg(surface-1).border({ color: border, width: 1 }).radius(lg) })>  <span style({ display(contents).type({ family: body, size: density }) })>    <grid tracks="--sail-grid-template" gap="0" role="row" style({ position({ scheme: sticky, t: 0 }).position({ z: sticky }).bg(surface-2).border({ edge: b, color: border, width: 1 }) })>
     <for {headers() as h} key={h.id}>
       <row gap="1" align="center" role="columnheader" data-col-id={h.id} data-sortable={h.canSort ? 'true' : null} data-sorted={h.sorted || null} aria-sort={h.canSort ? h.ariaSort : null} style({ position(relative).pad({ x: density-row-px, y: density-row-py }).fg(foreground).border({ edge: b, color: border-subtle, width: 1 }), when: { sortable: cursor(pointer) } })>        <span style({ display(contents).type({ size: xs, weight: semibold, tracking: wide, case: uppercase, wrap: nowrap }) })>          <span style({ grow(1).size({ min-w: 0 }).type({ wrap: truncate }) })>{h.label}</span>
         <if {h.sorted === 'asc'}>
@@ -185,9 +185,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 </row>
     </for>
   </grid>
-  <div use:captureViewport style({ position(relative).size({ w: full, h: full, min-h: 0 }).overflow({ y: auto }) })>
+  <div use:captureViewport style({ position(relative).size({ w: 100%, h: 100%, min-h: 0 }).overflow({ y: auto }) })>
       <for {windowItems() as w} key={`${w.key}|${w.cellsKey}`}>
-        <grid tracks="--sail-grid-template" gap="0" role="row" data-node-id={w.id} aria-level={w.level} aria-posinset={w.posInSet} aria-setsize={w.setSize} aria-rowindex={w.index + 1} aria-expanded={w.canExpand ? (w.expanded ? 'true' : 'false') : null} aria-selected={selectable() !== 'none' ? (w.selected ? 'true' : 'false') : null} data-can-expand={w.canExpand ? 'true' : null} data-expanded={w.expanded ? 'true' : null} data-selected={w.selected ? 'true' : null} tabindex={w.id === activeRowId() ? '0' : '-1'} use:virtualRow={w.start} style({ position({ scheme: absolute, l: 0 }).size({ w: full }).group().translateY(bind(rowY)).cursor(pointer), when: { hover: bg(hover-bg), selected: bg(selected-bg), focus: border({ kind: outline, color: ring }) } })>
+        <grid tracks="--sail-grid-template" gap="0" role="row" data-node-id={w.id} aria-level={w.level} aria-posinset={w.posInSet} aria-setsize={w.setSize} aria-rowindex={w.index + 1} aria-expanded={w.canExpand ? (w.expanded ? 'true' : 'false') : null} aria-selected={selectable() !== 'none' ? (w.selected ? 'true' : 'false') : null} data-can-expand={w.canExpand ? 'true' : null} data-expanded={w.expanded ? 'true' : null} data-selected={w.selected ? 'true' : null} tabindex={w.id === activeRowId() ? '0' : '-1'} use:virtualRow={w.start} style({ position({ scheme: absolute, l: 0 }).size({ w: 100% }).group().translateY(bind(rowY)).cursor(pointer), when: { hover: bg(hover-bg), selected: bg(selected-bg), focus: border({ kind: outline, color: ring }) } })>
           <span aria-hidden="true" style({ position({ scheme: absolute, t: 1, b: 1, l: 0 }).size({ w: half }).radius(full).bg(primary).filter({ opacity: 0 }), when: { groupSelected: filter({ opacity: 100 }) } })></span>
           <for {w.cells as c} key={c.columnId}>
             <if {c.first}>

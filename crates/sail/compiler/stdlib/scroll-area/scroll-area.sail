@@ -17,6 +17,7 @@
 </scope>
 
 <div
+  label="Scroll"
   style(base, {when: {hover: scrollbarThumb(border-strong)}, match: { orientation: { vertical: vertical, horizontal: horizontal, both: both } }})
 >
   <slot></slot>
