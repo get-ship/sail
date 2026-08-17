@@ -1,64 +1,15 @@
 <!--
   /tutorial/[slug] — two-pane lesson: prose + stepper left; editor, preview,
-  console right. Playground state is signals; live-sail-boot owns wasm + same-
-  document preview mount; use: capture actions hold editor/host refs. Workbench
-  chrome via sail-docs-rail. Language gaps: no column clamp atom (uses max-w
-  panel token); no transform/gradient stepper polish.
+  console right. Fill/overflow lives on <sail-fill-shell> (layout). Route is
+  tags only — pad → card, no Style.
 -->
 <scope>
-  style workbench = { size({ w: full, h: fill, min-w: 0, min-h: 0 }).overflow({ all: hidden }) }
-  style workbenchMobile = { size({ w: full, h: fill, min-h: 0 }).overflow({ all: hidden }) }
-  style lessonPane = { shrink(1).size({ w: panel-max-w-md, min-w: 0, min-h: 0, max-w: panel-max-w-md }).bg(surface-1).border({ color: border, width: 1, edge: r }) }
-  style lessonScroll = { grow(1).size({ min-h: 0 }).overflow({ x: hidden, y: auto }).pad({ x: 5, y: 4 }) }
-  style tutLabel = { fg(primary).type({ family: mono, size: xs, weight: medium, tracking: wide }) }
-  style countLabel = { fg(muted-foreground).type({ family: mono, size: xs, tracking: wide }) }
-  style stepDone = { grow(1).size({ h: 1 }).radius(full).bg(primary) }
-  style stepCurrent = { grow(1).size({ h: 1 }).radius(full).bg(primary).filter({ opacity: 50 }) }
-  style stepTodo = { grow(1).size({ h: 1 }).radius(full).bg(surface-2) }
-  style title = { type({ size: 2xl, leading: tight }) }
-  style titleSm = { type({ size: xl, leading: tight }) }
-  style desc = { fg(muted-foreground).type({ size: sm, leading: relaxed }) }
-  style descSm = { fg(muted-foreground).type({ size: sm }) }
-  style proseHost = { size({ w: full, min-w: 0 }).overflow({ x: hidden }) }
-  style lessonFoot = { shrink(0).pad({ x: 4, y: 2 }).border({ color: border, width: 1, edge: t }).bg(surface-1) }
-  style allLessons = { display(inline-flex).pad({ x: 3, y: 1_5 }).radius(md).fg(muted-foreground).type({ size: sm, weight: semibold }), when: { hover: fg(foreground).bg(surface-2) } }
-  style allLessonsSm = { fg(muted-foreground).type({ size: xs }) }
-  style playground = { grow(1).size({min-w: 0, min-h: 0, basis: 0}).pad(1).bg(surface-0) }
-  style card = { grow(1).size({min-h: 0, basis: 0}).overflow({ all: hidden }).border({ color: border, width: 1 }).radius(md).bg(surface-1) }
-  style cardBar = { shrink(0).pad({ x: 2, y: 1 }).border({ color: border, width: 1, edge: b }).bg(surface-1) }
-  style paneCol = { grow(1).size({ min-h: 0 }).overflow({ all: hidden }) }
-  style diffBar = { shrink(0).pad({ x: 2, y: 1 }).border({ color: border, width: 1, edge: b }) }
-  style monoXs = { fg(muted-foreground).type({ family: mono, size: xs, tracking: wide }) }
-  style diffShell = { grow(1).size({ min-h: 0 }).position(relative).overflow({ all: hidden }) }
-  style diffAbs = { position({ scheme: absolute, inset: 0 }).overflow({ x: auto, y: auto }).size({ w: full }) }
-  style previewBand = { shrink(0).size({ h: 56, min-h: 48 }).overflow({ all: hidden }).border({ color: border, width: 1 }).radius(md).bg(surface-1) }
-  style previewBandMobile = { shrink(0).size({ h: 40, min-h: 32 }).overflow({ all: hidden }).border({ color: border, width: 1 }).radius(md).bg(surface-1) }
-  style previewBar = { shrink(0).pad({ x: 2, y: 1 }).border({ color: border, width: 1, edge: b }) }
-  style previewHost = { size({ w: full, h: full, min-h: 0 }).overflow({ all: auto }).pad(4).bg(surface-0) }
-  style console = { shrink(0).size({ h: 16, min-h: 16 }).pad({ x: 2, y: 1 }).overflow({ y: auto }).border({ color: border, width: 1, edge: t }).bg(surface-0) }
-  style consoleMobile = { shrink(0).size({ h: 14, min-h: 14 }).pad({ x: 2, y: 1 }).overflow({ y: auto }).border({ color: border, width: 1, edge: t }).bg(surface-0) }
-  style monoContents = { display(contents).type({ family: mono, size: xs }) }
-  style logTs = { fg(muted-foreground).filter({ opacity: 50 }) }
-  style logOk = { fg(success) }
-  style logWarn = { fg(warning) }
-  style logErr = { fg(destructive) }
-  style logInfo = { fg(muted-foreground) }
-  style logErrRow = { pad({ all: 1, x: 2 }).bg(muted).radius(sm) }
-  style mobileHead = { shrink(0).pad({ x: 4, y: 3 }).size({ max-h: 40 }).overflow({ y: auto }).border({ color: border, width: 1, edge: b }).bg(surface-1) }
-  style growMin = { grow(1).size({ min-h: 0 }).overflow({ all: hidden }) }
-
   type LogLineProps = {
     ts: string
     kind: string
     msg: string
   }
 </scope>
-
-<!--
-  size({ h: fill }) not size({ h: full }): shell is display:contents up the tree, so % height collapses.
-  Tabs drive a signal; panes are plain grow columns (tab-panel pad ate the editor).
-  tablet+: side-by-side; mobile/SSR else: stacked.
--->
 
 <controller>
 import type { Action, ControllerScope, SailHost } from '@ship/sail-runtime'
@@ -92,8 +43,6 @@ interface LogLine {
   msg: string
 }
 
-// The prose is TRUSTED, pre-rendered HTML (gen-tutorial.mjs converts the
-// lesson markdown at build time); bindHtml is the runtime's one blob seam.
 const prose: Action<string> = (node, html) => {
   const content = signal(html ?? '')
   const dispose = bindHtml(node, () => content())
@@ -110,7 +59,6 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const nextSlug = derived(() => lesson()?.next ?? '')
 
         const editorEl = signal<CodeEditorHost | null>(null)
-    // Opaque mount handle — capability firewall (no DOM surface in Pure).
     const hostEl = signal<SailHost | null>(null)
     let previewMount: PreviewMount | null = null
     const captureEditor: Action<void> = (node) => {
@@ -137,13 +85,9 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const statusText = signal<string>('loading…')
     const logs = signal<LogLine[]>([])
     const solutionShown = signal(false)
-    // ONE source: the lesson `.sail`, controller block and template together —
-    // the file the student edits and the compiler compiles.
     const srcValue = signal('')
 
     const compile = signal<CompileFn | null>(null)
-    // signal.set treats a bare function as an updater — wrap so the CompileFn
-    // itself (also a function) is stored as the value, not invoked as the updater.
     ensureWasm('/sail_compiler_bg.wasm')
       .then(() => compile.set(() => makeCompile()))
       .catch((err) => console.error('[sail-site] wasm compile seam failed:', err))
@@ -188,8 +132,6 @@ export default controller((ctx: ControllerScope<Scope>) => {
       previewMount = mount
       if (result.kind === 'err') {
         setStatus('error', 'compile error')
-        // The full compiler message lands in the console, destructive-toned, and
-        // its line/column are the editor's own — one file, one coordinate space.
         log(result.message, 'error')
         editorEl()?.setDiagnostics?.([{
           line: result.line ?? 1,
@@ -201,7 +143,6 @@ export default controller((ctx: ControllerScope<Scope>) => {
         return
       }
       editorEl()?.setDiagnostics?.([])
-      // Inline module mount is async under CSP; settle status when the host paints.
       if (ready) {
         void ready
           .then((m) => {
@@ -220,7 +161,6 @@ export default controller((ctx: ControllerScope<Scope>) => {
       }
     }
 
-    /** Push source into the signal AND the upgraded editor host (when ready). */
     const applyCode = (source: string): void => {
       srcValue.set(source)
       lastPushedKey = ''
@@ -268,15 +208,6 @@ export default controller((ctx: ControllerScope<Scope>) => {
       runNow()
     }
 
-        // Source seed is independent of wasm / preview host. The e2e contract is
-    // that sail-code-editor[pane]=source].value holds the lesson `.sail` as
-    // soon as the editor upgrades — gating that on compile/host left the
-    // editor empty whenever the host ref raced the one-shot write, or when
-    // wasm was still loading.
-    //
-    // Do NOT read `ed.value` inside this effect: the host getter falls through
-    // to the editor's valSig, which would subscribe this effect to the editor
-    // and re-enter on every programmatic write (main-thread hang).
     effect(() => {
       const l = lesson()
       if (!l) return
@@ -291,14 +222,8 @@ export default controller((ctx: ControllerScope<Scope>) => {
       const ed = editorEl()
       const source = srcValue()
       if (!ed || !source) return
-      // Re-push when the host ref appears or the lesson source changes — never
-      // when the editor's own valSig ticks (user typing / CM internal sync).
       const key = lastSourceSlug + '\0' + source.length + '\0' + source.slice(0, 32)
       if (key === lastPushedKey) return
-      // captureEditor can fire before the CE's connectedCallback publishes host.value
-      // (defineProperty). Writing then is a dead expando that mount overwrites with
-      // ''. Wait until setDiagnostics exists — that runs in the same mount() as the
-      // value property — then assign and mark pushed.
       const push = (): void => {
         if (editorEl() !== ed) return
         if (typeof ed.setDiagnostics !== 'function') {
@@ -311,9 +236,6 @@ export default controller((ctx: ControllerScope<Scope>) => {
       push()
     })
 
-    // Re-run when the preview host, compile seam, or lesson slug is ready.
-    // Do NOT subscribe to srcValue here — keystrokes are debounced via
-    // onSourceChange → schedule(runNow); applyCode / run call runNow directly.
     let lastPreviewSlug = ''
     effect(() => {
       const l = lesson()
@@ -334,7 +256,6 @@ export default controller((ctx: ControllerScope<Scope>) => {
       previewMount = null
     })
 
-        // The lesson's real filename — the tab is the file, so it says so.
     const fileName = derived(() => (lesson()?.starterStem ?? 'lesson') + '.sail')
 
     const steps = derived((): StepSegment[] => {
@@ -380,54 +301,57 @@ export default controller((ctx: ControllerScope<Scope>) => {
 
 <partial log-line props: LogLineProps>
   <match {kind}>
-    {'success' => <row gap="2"><small style(logTs)>{ts}</small><small style(logOk)>{msg}</small></row>}
-    {'warn' => <row gap="2"><small style(logTs)>{ts}</small><small style(logWarn)>{msg}</small></row>}
-    {'error' => <row gap="2" style(logErrRow)><small style(logTs)>{ts}</small><small style(logErr)>{msg}</small></row>}
-    {else => <row gap="2"><small style(logTs)>{ts}</small><small style(logInfo)>{msg}</small></row>}
+    {'success' => <row gap="2"><small>{ts}</small><small>{msg}</small></row>}
+    {'warn' => <row gap="2"><small>{ts}</small><small>{msg}</small></row>}
+    {'error' => <row gap="2"><small>{ts}</small><small>{msg}</small></row>}
+    {else => <row gap="2"><small>{ts}</small><small>{msg}</small></row>}
   </match>
 </partial>
 
 <when {tablet}>
-<row nowrap align="stretch" gap="0" style(workbench)>
-  <!-- Lesson pane -->
-  <column style(lessonPane)>
-    <column gap="3" style(lessonScroll)>
-      <row align="center" justify="between" gap="2">
-        <p style(tutLabel)>TUTORIAL</p>
-        <small style(countLabel)>{lessonNumLabel()} / {totalLessons()}</small>
-      </row>
+<row nowrap align="stretch" gap="0">
+  <column>
+    <scroll-area>
+      <column gap="3">
+        <row align="center" justify="between" gap="2">
+          <p>TUTORIAL</p>
+          <small>{lessonNumLabel()} / {totalLessons()}</small>
+        </row>
 
-      <row gap="1" label="Lesson progress">
-        <for {steps() as step} key={step.slug}>
-          <match {step.state}>
-            {'done' => <a href={step.href} title={step.title} style(stepDone)></a>}{'current' => <a href={step.href} title={step.title} current="step" style(stepCurrent)></a>}{else => <a href={step.href} title={step.title} style(stepTodo)></a>}</match>
-        </for>
-      </row>
+        <row gap="1" label="Lesson progress">
+          <for {steps() as step} key={step.slug}>
+            <match {step.state}>
+              {'done' => <a href={step.href} title={step.title}><badge tone="primary" size="sm">·</badge></a>}
+              {'current' => <a href={step.href} title={step.title} current="step"><badge tone="accent" size="sm">·</badge></a>}
+              {else => <a href={step.href} title={step.title}><badge tone="muted" size="sm">·</badge></a>}
+            </match>
+          </for>
+        </row>
 
-      <column gap="1">
-        <h1 style(title)>{title()}</h1>
-        <p style(desc)>{description()}</p>
+        <column gap="1">
+          <h1>{title()}</h1>
+          <p>{description()}</p>
+        </column>
+
+        <div use:prose={proseHtml()}></div>
       </column>
+    </scroll-area>
 
-      <div use:prose={proseHtml()} style(proseHost)></div>
-    </column>
-
-    <row align="center" justify="between" gap="2" style(lessonFoot)>
-      <a href="/sail/tutorial" style(allLessons)>← All lessons</a>
+    <row nowrap> gap="2">
+      <a href="/sail/tutorial">← All lessons</a>
       <if {hasNext()}>
         <a href={nextHref()} variant="solid" tone="primary">{nextTitle()}</a>
       </if>
     </row>
   </column>
 
-  <column gap="1" style(playground)>
-    <!-- Editor card — file tabs + actions on one thin bar -->
-    <column gap="0" style(card)>
-      <row align="center" justify="between" gap="2" style(cardBar)>
+  <column gap="1">
+    <card padding="none">
+      <row nowrap> gap="2">
         <tabs active="source" on-tab-change={onTabChange}>
           <tab-list variant="pill">
-            <tab name="source">{fileName()}</tab>
-            <tab name="diff">diff</tab>
+            <tab name="source" title={fileName()}></tab>
+            <tab name="diff" title="diff"></tab>
           </tab-list>
         </tabs>
         <row gap="1" align="center">
@@ -435,87 +359,68 @@ export default controller((ctx: ControllerScope<Scope>) => {
           <button variant="outline" tone="primary" size="sm" on:click={toggleSolution}>{solutionLabel()}</button>
         </row>
       </row>
-      <!--
-        One pane at a time via if (not hidden=). Boolean hidden="false" is still
-        present in HTML and keeps display:none — both panes fought for grow and
-        collapsed the editor to ~0. Remount re-pushes via the existing editor
-        effect when captureEditor fires again.
-      -->
-      <column gap="0" style(paneCol)>
-        <if {tab() === 'source'}>
-          <column gap="0" style(paneCol)>
-            <sail-code-editor
-              pane="source"
-              language="sail"
-              size="sm"
-              chrome="flush"
-              wasm-url="/sail_compiler_bg.wasm"
-              use:captureEditor
-              on-change={onSourceChange}
-            ></sail-code-editor>
-          </column>
-        </if>
-        <if {tab() === 'diff'}>
-          <column gap="0" style(paneCol)>
-            <row align="center" gap="2" style(diffBar)>
-              <small style(countLabel)>your code → solution · {fileName()}</small>
-            </row>
-            <!-- Absolute fill: CE display:contents + content-height flex min
-                 let the LCS list blow past the viewport; lock a real scrollport. -->
-            <column gap="0" style(diffShell)>
-              <div style(diffAbs)>
-                <sail-diff from={srcValue()} to={solvedSource()}></sail-diff>
-              </div>
-            </column>
-          </column>
-        </if>
-      </column>
-    </column>
+      <if {tab() === 'source'}>
+        <sail-code-editor
+          pane="source"
+          language="sail"
+          size="sm"
+          chrome="flush"
+          wasm-url="/sail_compiler_bg.wasm"
+          use:captureEditor
+          on-change={onSourceChange}
+        ></sail-code-editor>
+      </if>
+      <if {tab() === 'diff'}>
+        <column gap="0">
+          <row nowrap> gap="2">
+            <small>your code → solution · {fileName()}</small>
+          </row>
+          <scroll-area>
+            <sail-diff from={srcValue()} to={solvedSource()}></sail-diff>
+          </scroll-area>
+        </column>
+      </if>
+    </card>
 
-    <!-- Preview + console: fixed lower band; console is a real pane, not a 28px strip. -->
-    <column gap="0" style(previewBand)>
-      <row align="center" justify="between" gap="2" style(diffBar)>
-        <row gap="2" align="center">
-          <badge tone={statusTone()} variant="soft" size="sm">{statusText()}</badge>
-          <small style(countLabel)>PREVIEW</small>
-        </row>
+    <column gap="0">
+      <row nowrap> gap="2">
+        <badge tone={statusTone()} variant="soft" size="sm">{statusText()}</badge>
+        <small>PREVIEW</small>
         <button variant="outline" tone="primary" size="sm" on:click={run}>▶ Run</button>
       </row>
-      <column gap="0" style(paneCol)>
+      <card padding="sm">
         <div
           testid="tut-preview"
           label="Tutorial preview"
-          use:captureHost style(previewHost)></div>
-      </column>
-      <!-- size({ h: 16 }) ≈ 4rem ≈ 5 mono lines; was size({ max-h: 7 })=28px under a gap-4 column. -->
-      <column live="polite" label="Preview console" gap="0" style(console)>
-        <span style(monoContents)>
-          <for {logs() as entry} key={entry.id}>
-            <log-line ts={entry.ts} kind={entry.kind} msg={entry.msg}></log-line>
-          </for>
-        </span>
-      </column>
+          use:captureHost
+        ></div>
+      </card>
+      <card padding="sm" live="polite" label="Preview console">
+        <for {logs() as entry} key={entry.id}>
+          <log-line ts={entry.ts} kind={entry.kind} msg={entry.msg}></log-line>
+        </for>
+      </card>
     </column>
   </column>
 </row>
-{else => <!-- Mobile: stacked — short lesson header + full-width playground -->
-<column gap="0" style(workbenchMobile)>
-  <column gap="2" style(mobileHead)>
+{else =>
+<column gap="2">
+  <card padding="sm">
     <row align="center" justify="between" gap="2">
-      <p style(tutLabel)>TUTORIAL · {lessonNumLabel()}/{totalLessons()}</p>
-      <a href="/sail/tutorial" style(allLessonsSm)>All lessons</a>
+      <p>TUTORIAL · {lessonNumLabel()}/{totalLessons()}</p>
+      <a href="/sail/tutorial">All lessons</a>
     </row>
-    <h1 style(titleSm)>{title()}</h1>
-    <p style(descSm)>{description()}</p>
-    <div use:prose={proseHtml()} style(proseHost)></div>
-  </column>
-  <column gap="1" style(playground)>
-    <column gap="0" style(card)>
-      <row align="center" justify="between" gap="2" style(cardBar)>
+    <h1>{title()}</h1>
+    <p>{description()}</p>
+    <div use:prose={proseHtml()}></div>
+  </card>
+  <column gap="1">
+    <card padding="none">
+      <row nowrap> gap="2">
         <tabs active="source" on-tab-change={onTabChange}>
           <tab-list variant="pill">
-            <tab name="source">{fileName()}</tab>
-            <tab name="diff">diff</tab>
+            <tab name="source" title={fileName()}></tab>
+            <tab name="diff" title="diff"></tab>
           </tab-list>
         </tabs>
         <row gap="1" align="center">
@@ -523,47 +428,40 @@ export default controller((ctx: ControllerScope<Scope>) => {
           <button variant="outline" tone="primary" size="sm" on:click={toggleSolution}>{solutionLabel()}</button>
         </row>
       </row>
-      <column gap="0" style(paneCol)>
-        <if {tab() === 'source'}>
-          <column gap="0" style(paneCol)>
-            <sail-code-editor
-              pane="source"
-              language="sail"
-              size="sm"
-              chrome="flush"
-              wasm-url="/sail_compiler_bg.wasm"
-              use:captureEditor
-              on-change={onSourceChange}
-            ></sail-code-editor>
-          </column>
-        </if>
-        <if {tab() === 'diff'}>
-          <column gap="0" style(paneCol)>
-            <scroll-area style(paneCol)>
-              <sail-diff from={srcValue()} to={solvedSource()}></sail-diff>
-            </scroll-area>
-          </column>
-        </if>
-      </column>
-    </column>
-    <column gap="0" style(previewBandMobile)>
-      <row align="center" justify="between" gap="2" style(diffBar)>
+      <if {tab() === 'source'}>
+        <sail-code-editor
+          pane="source"
+          language="sail"
+          size="sm"
+          chrome="flush"
+          wasm-url="/sail_compiler_bg.wasm"
+          use:captureEditor
+          on-change={onSourceChange}
+        ></sail-code-editor>
+      </if>
+      <if {tab() === 'diff'}>
+        <scroll-area>
+          <sail-diff from={srcValue()} to={solvedSource()}></sail-diff>
+        </scroll-area>
+      </if>
+    </card>
+    <column gap="0">
+      <row nowrap> gap="2">
         <badge tone={statusTone()} variant="soft" size="sm">{statusText()}</badge>
         <button variant="outline" tone="primary" size="sm" on:click={run}>▶ Run</button>
       </row>
-      <column gap="0" style(paneCol)>
+      <card padding="sm">
         <div
           testid="tut-preview"
           label="Tutorial preview"
-          use:captureHost style(previewHost)></div>
-      </column>
-      <column live="polite" label="Preview console" gap="0" style(consoleMobile)>
-        <span style(monoContents)>
-          <for {logs() as entry} key={entry.id}>
-            <log-line ts={entry.ts} kind={entry.kind} msg={entry.msg}></log-line>
-          </for>
-        </span>
-      </column>
+          use:captureHost
+        ></div>
+      </card>
+      <card padding="sm" live="polite" label="Preview console">
+        <for {logs() as entry} key={entry.id}>
+          <log-line ts={entry.ts} kind={entry.kind} msg={entry.msg}></log-line>
+        </for>
+      </card>
     </column>
   </column>
 </column>}</when>

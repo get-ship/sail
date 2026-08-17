@@ -2,13 +2,6 @@
   /docs/reference — language surface index by API tier.
   Tier A: compiler tables. Tier B: author-surface.json → runtime-surface.gen.
 -->
-<scope>
-  style root = { size({ min-w: 0 }) }
-  style intro = { size({ max-w: breakpoint-tablet }) }
-  style cardShell = { size({ h: full, min-w: 0 }) }
-  style muted = { fg(muted-foreground) }
-</scope>
-
 <controller>
 import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
@@ -55,14 +48,14 @@ const SECTIONS: SectionCard[] = [
     href: '/docs/reference/scope',
     title: 'Scope grammar',
     count: `${SCOPE_GRAMMAR.length} constructs`,
-    description: 'Tier A — everything a <scope> block can declare — props forms, type aliases, variants.',
+    description: 'Tier A — everything a &lt;scope&gt; block can declare — props forms, type aliases, variants.',
     tier: 'A',
   },
   {
     href: '/docs/reference/sx',
     title: 'Style',
     count: `${STYLE_VOCAB.length} vocab rows`,
-    description: 'Tier A — style({ pad(4).bg(surface), when: { hover: bg(muted) } }), style name =, when/match/compound/bind; Style vocab (concern · axis · plain).',
+    description: 'Tier A — Style attach (pad/bg/when), named Style, when/match/compound/bind; Style vocab (concern · axis · plain).',
     tier: 'A',
   },
   {
@@ -124,11 +117,11 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 }))
 </controller>
 
-<column gap="6" style(root)>
-  <column gap="5" style(intro)>
-    <p token="doc-eyebrow">Reference</p>
+<column gap="6">
+  <column gap="5">
+    <p>Reference</p>
     <h1>The language surface</h1>
-    <p token="doc-lead">
+    <p>
       Three tiers: <strong>A</strong> template / ambient (compiler tables),
       <strong>B</strong> author runtime (intentional
       <code>@ship/sail-runtime</code> imports — {authorRuntimeCount()} symbols),
@@ -144,16 +137,16 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
   <grid cols="3" gap="3">
     <for {sections() as s} key={s.href}>
       <a href={s.href}>
-        <card padding="md" style(cardShell)>
+        <card padding="md">
           <column gap="2">
             <row justify="between" align="center">
               <h3>{s.title}</h3>
               <row gap="2" align="center">
                 <badge size="sm">tier {s.tier}</badge>
-                <small style(muted)>{s.count}</small>
+                <small>{s.count}</small>
               </row>
             </row>
-            <small style(muted)>{s.description}</small>
+            <small>{s.description}</small>
           </column>
         </card>
       </a>

@@ -1,16 +1,6 @@
 <!--
   /docs/reference/config — every sail.config.json key from lint CONFIG_KEY_DOCS.
 -->
-<scope>
-  style root = { size({ min-w: 0 }) }
-  style intro = { size({ max-w: breakpoint-tablet }) }
-  style eyebrow = { fg(accent).type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
-  style lead = { fg(muted-foreground).type({ size: lg, leading: relaxed }) }
-  style cardMin = { size({ min-w: 0 }) }
-  style keyType = { fg(muted-foreground).type({ family: mono }) }
-  style cardDoc = { size({ max-w: breakpoint-tablet }).fg(muted-foreground) }
-  style defaultVal = { fg(muted-foreground) }
-</scope>
 
 <controller>
 import type { ControllerScope } from '@ship/sail-runtime'
@@ -23,11 +13,11 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 }))
 </controller>
 
-<column gap="6" style(root)>
-  <column gap="5" style(intro)>
-    <p style(eyebrow)>Reference</p>
+<column gap="6">
+  <column gap="5">
+    <p>Reference</p>
     <h1>sail.config.json — {keyCount()} keys</h1>
-    <p style(lead)>
+    <p>
       Resolved by one walk-up from a source file to the nearest
       <code>sail.config.json</code>, one parse. Any other top-level key is a
       typo or a made-up name — the compiler refuses it loudly rather than
@@ -37,14 +27,14 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 
   <column gap="2">
     <for {keys() as k} key={k.key}>
-      <card padding="sm" style(cardMin)>
+      <card padding="sm">
         <column gap="1">
           <row gap="3" align="center">
             <code>{k.key}</code>
-            <small style(keyType)>{k.type}</small>
+            <small>{k.type}</small>
           </row>
-          <small style(cardDoc)>{k.doc}</small>
-          <small style(defaultVal)>default: {k.default}</small>
+          <small>{k.doc}</small>
+          <small>default: {k.default}</small>
         </column>
       </card>
     </for>

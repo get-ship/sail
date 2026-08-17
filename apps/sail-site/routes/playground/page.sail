@@ -1,38 +1,9 @@
 <!--
   /playground — free workbench: recipe select + editor + same-doc preview
-  + console. Reuses live-sail-boot (wasm compile + mount). No lesson prose,
-  stepper, solution toggle, or diff tab.
+  + console. Fill/overflow lives on <sail-fill-shell> (layout). Route is
+  tags only — pad → card, no Style.
 -->
 <scope>
-  style workbench = { size({ w: full, h: fill, min-w: 0, min-h: 0 }).overflow({ all: hidden }) }
-  style workbenchMobile = { size({ w: full, h: fill, min-h: 0 }).overflow({ all: hidden }) }
-  // Full-bleed workbench: single chrome bar, no site navbar tax.
-  style playground = { grow(1).size({min-w: 0, min-h: 0, basis: 0}).pad(half).bg(surface-0) }
-  // Desktop: editor | preview+console side by side (not stacked).
-  style split = { grow(1).size({min-w: 0, min-h: 0, basis: 0}) }
-  style card = { grow(1).size({min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }).border({ color: border, width: 1 }).radius(md).bg(surface-1) }
-  style toolbar = { shrink(0).pad({ x: 2, y: 1 }).border({ color: border, width: 1, edge: b }).bg(surface-1) }
-  style paneCol = { grow(1).size({ min-w: 0, min-h: 0 }).overflow({ all: hidden }) }
-  style monoXs = { fg(muted-foreground).type({ family: mono, size: xs, tracking: wide }) }
-  style countLabel = { fg(muted-foreground).type({ family: mono, size: xs, tracking: wide }) }
-  style pgLabel = { fg(primary).type({ family: mono, size: xs, weight: medium, tracking: wide }) }
-  style backLink = { display(inline-flex).pad({ x: 1_5 }).size({ h: control-h-sm }).radius(md).fg(muted-foreground).type({size: sm, weight: medium, wrap: nowrap, decoration: none}), when: { hover: fg(foreground).bg(hover-bg) } }
-  style recipeSelect = { size({ min-w: 48, max-w: 64 }) }
-  style descClamp = { size({ min-w: 0, max-w: 64 }).fg(muted-foreground).type({ size: sm, wrap: truncate }) }
-  // Side-by-side pane: fill height of the split; console stays a fixed foot.
-  style previewBand = { grow(1).size({min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }).border({ color: border, width: 1 }).radius(md).bg(surface-1) }
-  style previewBandMobile = { shrink(0).size({ h: 40, min-h: 32 }).overflow({ all: hidden }).border({ color: border, width: 1 }).radius(md).bg(surface-1) }
-  style previewBar = { shrink(0).pad({ x: 2, y: 1 }).border({ color: border, width: 1, edge: b }) }
-  style previewHost = { size({ w: full, h: full, min-h: 0 }).overflow({ all: auto }).pad(4).bg(surface-0) }
-  style console = { shrink(0).size({ h: 16, min-h: 16 }).pad({ x: 2, y: 1 }).overflow({ y: auto }).border({ color: border, width: 1, edge: t }).bg(surface-0) }
-  style consoleMobile = { shrink(0).size({ h: 14, min-h: 14 }).pad({ x: 2, y: 1 }).overflow({ y: auto }).border({ color: border, width: 1, edge: t }).bg(surface-0) }
-  style monoContents = { display(contents).type({ family: mono, size: xs }) }
-  style logTs = { fg(muted-foreground).filter({ opacity: 50 }) }
-  style logOk = { fg(success) }
-  style logWarn = { fg(warning) }
-  style logErr = { fg(destructive) }
-  style logInfo = { fg(muted-foreground) }
-  style logErrRow = { pad({ all: 1, x: 2 }).bg(muted).radius(sm) }
   type LogLineProps = {
     ts: string
     kind: string
@@ -66,7 +37,6 @@ interface LogLine {
 
 export default controller((_ctx: ControllerScope<Scope>) => {
   const editorEl = signal<CodeEditorHost | null>(null)
-  // Opaque mount handle — capability firewall (no DOM surface in Pure).
   const hostEl = signal<SailHost | null>(null)
   let previewMount: PreviewMount | null = null
 
@@ -97,8 +67,6 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   const recipes = PLAYGROUND_RECIPES
 
   const compile = signal<CompileFn | null>(null)
-  // signal.set treats a bare function as an updater — wrap so the CompileFn
-  // itself is stored as the value, not invoked as the updater.
   ensureWasm('/sail_compiler_bg.wasm')
     .then(() => compile.set(() => makeCompile()))
     .catch((err) => console.error('[sail-site] wasm compile seam failed:', err))
@@ -172,7 +140,6 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     }
   }
 
-  /** Push source into the signal AND the upgraded editor host (when ready). */
   const applyCode = (source: string): void => {
     srcValue.set(source)
     lastPushedKey = ''
@@ -208,8 +175,6 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     runNow()
   }
 
-  // Seed editor when recipe changes or host appears. Do NOT read ed.value
-  // (would subscribe this effect to the editor's valSig and re-enter).
   effect(() => {
     const id = recipeId()
     const r = recipeById(id)
@@ -237,8 +202,6 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     push()
   })
 
-  // Re-run when preview host / compile seam / recipe is ready.
-  // Do NOT subscribe to srcValue — keystrokes are debounced via onSourceChange.
   let lastPreviewRecipe = ''
   effect(() => {
     const id = recipeId()
@@ -283,101 +246,36 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
 <partial log-line props: LogLineProps>
   <match {kind}>
-    {'success' => <row gap="2"><small style(logTs)>{ts}</small><small style(logOk)>{msg}</small></row>}
-    {'warn' => <row gap="2"><small style(logTs)>{ts}</small><small style(logWarn)>{msg}</small></row>}
-    {'error' => <row gap="2" style(logErrRow)><small style(logTs)>{ts}</small><small style(logErr)>{msg}</small></row>}
-    {else => <row gap="2"><small style(logTs)>{ts}</small><small style(logInfo)>{msg}</small></row>}
+    {'success' => <row gap="2"><small>{ts}</small><small>{msg}</small></row>}
+    {'warn' => <row gap="2"><small>{ts}</small><small>{msg}</small></row>}
+    {'error' => <row gap="2"><small>{ts}</small><small>{msg}</small></row>}
+    {else => <row gap="2"><small>{ts}</small><small>{msg}</small></row>}
   </match>
 </partial>
 
 <when {tablet}>
-<column gap="0" style(workbench, playground)>
-  <!-- One chrome bar: exit + recipe + theme + run. No site navbar, no SOURCE tax. -->
-  <row align="center" justify="between" gap="2" style(toolbar) testid="pg-toolbar">
-    <row gap="2" align="center" nowrap style({ size({ min-w: 0 }).grow(1) })>
-      <a href="/docs" label="Back to Docs" style(backLink) testid="pg-back">← Docs</a>
-      <p style(pgLabel)>PLAYGROUND</p>
-      <select
-        size="sm"
-        bind:value={recipeId}
-        label="Recipe"
-        testid="pg-recipe"
-        style(recipeSelect)
-      >
-        <for {recipes as r} key={r.id}>
-          <option value={r.id}>{r.title}</option>
-        </for>
-      </select>
-      <small style(descClamp)>{recipeDesc()}</small>
-    </row>
-    <row gap="1" align="center" nowrap style({ shrink(0) })>
-      <theme-picker></theme-picker>
-      <button variant="ghost" size="sm" on:click={reset}>↺ Reset</button>
-      <button variant="outline" tone="primary" size="sm" on:click={run}>▶ Run</button>
-    </row>
+<column gap="2">
+  <row nowrap> gap="2" testid="pg-toolbar">
+    <a href="/docs" label="Back to Docs" testid="pg-back">← Docs</a>
+    <p>PLAYGROUND</p>
+    <select
+      size="sm"
+      bind:value={recipeId}
+      label="Recipe"
+      testid="pg-recipe"
+    >
+      <for {recipes as r} key={r.id}>
+        <option value={r.id}>{r.title}</option>
+      </for>
+    </select>
+    <small>{recipeDesc()}</small>
+    <theme-picker></theme-picker>
+    <button variant="ghost" size="sm" on:click={reset}>↺ Reset</button>
+    <button variant="outline" tone="primary" size="sm" on:click={run}>▶ Run</button>
   </row>
 
-  <row nowrap gap="1" align="stretch" style(split, { pad(half) })>
-    <column gap="0" style(card)>
-      <column gap="0" style(paneCol)>
-        <sail-code-editor
-          pane="source"
-          language="sail"
-          size="sm"
-          chrome="flush"
-          wasm-url="/sail_compiler_bg.wasm"
-          use:captureEditor
-          on-change={onSourceChange}
-        ></sail-code-editor>
-      </column>
-    </column>
-
-    <column gap="0" style(previewBand)>
-      <row align="center" justify="between" gap="2" style(previewBar)>
-        <row gap="2" align="center">
-          <badge tone={statusTone()} variant="soft" size="sm">{statusText()}</badge>
-          <small style(countLabel)>PREVIEW · {recipeTitle()}</small>
-        </row>
-        <button variant="ghost" size="sm" on:click={clearConsole}>Clear console</button>
-      </row>
-      <column gap="0" style(paneCol)>
-        <div
-          testid="pg-preview"
-          label="Playground preview"
-          use:captureHost
-          style(previewHost)
-        ></div>
-      </column>
-      <column live="polite" label="Playground console" gap="0" style(console)>
-        <span style(monoContents)>
-          <for {logs() as entry} key={entry.id}>
-            <log-line ts={entry.ts} kind={entry.kind} msg={entry.msg}></log-line>
-          </for>
-        </span>
-      </column>
-    </column>
-  </row>
-</column>
-{else =>
-<!-- Phone: stacked editor over preview — still one chrome bar. -->
-<column gap="0" style(workbenchMobile, playground)>
-  <row align="center" justify="between" gap="2" style(toolbar) testid="pg-toolbar">
-    <row gap="2" align="center" nowrap style({ size({ min-w: 0 }).grow(1) })>
-      <a href="/docs" label="Back to Docs" style(backLink) testid="pg-back">← Docs</a>
-      <select size="sm" bind:value={recipeId} label="Recipe" testid="pg-recipe" style(recipeSelect)>
-        <for {recipes as r} key={r.id}>
-          <option value={r.id}>{r.title}</option>
-        </for>
-      </select>
-    </row>
-    <row gap="1" align="center" nowrap style({ shrink(0) })>
-      <theme-picker></theme-picker>
-      <button variant="ghost" size="sm" on:click={reset}>↺</button>
-      <button variant="outline" tone="primary" size="sm" on:click={run}>▶</button>
-    </row>
-  </row>
-  <column gap="0" style(card, { grow(1).size({ min-h: 0 }) })>
-    <column gap="0" style(paneCol)>
+  <row nowrap gap="2" align="stretch">
+    <card padding="none">
       <sail-code-editor
         pane="source"
         language="sail"
@@ -387,27 +285,69 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         use:captureEditor
         on-change={onSourceChange}
       ></sail-code-editor>
+    </card>
+
+    <column gap="0">
+      <row nowrap> gap="2">
+        <badge tone={statusTone()} variant="soft" size="sm">{statusText()}</badge>
+        <small>PREVIEW · {recipeTitle()}</small>
+        <button variant="ghost" size="sm" on:click={clearConsole}>Clear console</button>
+      </row>
+      <card padding="sm">
+        <div
+          testid="pg-preview"
+          label="Playground preview"
+          use:captureHost
+        >Preview</div>
+      </card>
+      <card padding="sm" live="polite" label="Playground console">
+        <for {logs() as entry} key={entry.id}>
+          <log-line ts={entry.ts} kind={entry.kind} msg={entry.msg}></log-line>
+        </for>
+      </card>
     </column>
-  </column>
-  <column gap="0" style(previewBandMobile)>
-    <row align="center" justify="between" gap="2" style(previewBar)>
+  </row>
+</column>
+{else =>
+<column gap="2">
+  <row nowrap> gap="2" testid="pg-toolbar">
+    <a href="/docs" label="Back to Docs" testid="pg-back">← Docs</a>
+    <select size="sm" bind:value={recipeId} label="Recipe" testid="pg-recipe">
+      <for {recipes as r} key={r.id}>
+        <option value={r.id}>{r.title}</option>
+      </for>
+    </select>
+    <theme-picker></theme-picker>
+    <button variant="ghost" size="sm" on:click={reset}>↺</button>
+    <button variant="outline" tone="primary" size="sm" on:click={run}>▶</button>
+  </row>
+  <card padding="none">
+    <sail-code-editor
+      pane="source"
+      language="sail"
+      size="sm"
+      chrome="flush"
+      wasm-url="/sail_compiler_bg.wasm"
+      use:captureEditor
+      on-change={onSourceChange}
+    ></sail-code-editor>
+  </card>
+  <column gap="0">
+    <row nowrap> gap="2">
       <badge tone={statusTone()} variant="soft" size="sm">{statusText()}</badge>
       <button variant="ghost" size="sm" on:click={clearConsole}>Clear</button>
     </row>
-    <column gap="0" style(paneCol)>
+    <card padding="sm">
       <div
         testid="pg-preview"
         label="Playground preview"
         use:captureHost
-        style(previewHost)
-      ></div>
-    </column>
-    <column live="polite" label="Playground console" gap="0" style(consoleMobile)>
-      <span style(monoContents)>
-        <for {logs() as entry} key={entry.id}>
-          <log-line ts={entry.ts} kind={entry.kind} msg={entry.msg}></log-line>
-        </for>
-      </span>
-    </column>
+      >Preview</div>
+    </card>
+    <card padding="sm" live="polite" label="Playground console">
+      <for {logs() as entry} key={entry.id}>
+        <log-line ts={entry.ts} kind={entry.kind} msg={entry.msg}></log-line>
+      </for>
+    </card>
   </column>
 </column>}</when>

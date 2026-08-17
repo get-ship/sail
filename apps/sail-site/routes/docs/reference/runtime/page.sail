@@ -1,21 +1,6 @@
 <!--
   Author runtime (tier B) — exports from author-surface.json via runtime-surface composition.
 -->
-<scope>
-  style root = { size({ min-w: 0 }) }
-  style intro = { size({ max-w: breakpoint-tablet }) }
-  style eyebrow = { fg(accent).type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
-  style lead = { fg(muted-foreground).type({ size: lg, leading: relaxed }) }
-  style sectionLead = { size({ max-w: breakpoint-tablet }) }
-  style sectionSummary = { size({ max-w: breakpoint-tablet }).fg(muted-foreground) }
-  style cardMin = { size({ min-w: 0 }) }
-  style cardDoc = { size({ max-w: panel-max-w-sm }).fg(muted-foreground) }
-  style exportRow = { pad({ x: 3, y: 2 }).radius(md).border({ color: border, width: 1 }) }
-  style exportName = { size({ min-w: 32 }) }
-  style exportSig = { fg(muted-foreground).type({ family: mono }) }
-  style exportDoc = { fg(muted-foreground) }
-  style exportBody = { size({ min-w: 0 }) }
-</scope>
 
 <controller>
 import type { ControllerScope } from '@ship/sail-runtime'
@@ -60,11 +45,11 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 }))
 </controller>
 
-<column gap="6" style(root)>
-  <column gap="5" style(intro)>
-    <p style(eyebrow)>Reference · tier B</p>
+<column gap="6">
+  <column gap="5">
+    <p>Reference · tier B</p>
     <h1>Author runtime — {totalCount()} exports</h1>
-    <p style(lead)>
+    <p>
       Intentional imports from <code>@ship/sail-runtime</code> (root barrel),
       filtered by <code>author-surface.json</code>. Host subpaths
       (<code>./framework</code>, <code>./server</code>, <code>./dev</code>, …)
@@ -75,17 +60,17 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 
   <column gap="3">
     <h2>Controller — ambient vocabulary (tier A)</h2>
-    <p style(sectionLead)>
+    <p>
       A <code>&lt;controller&gt;</code> block may reference these without
       importing them — the compiler injects the import for exactly the
       idents referenced. Same symbols are also available as tier B imports.
     </p>
     <grid cols="3" gap="2">
       <for {controllerRows() as c} key={c.name}>
-        <card padding="sm" style(cardMin)>
+        <card padding="sm">
           <column gap="1">
             <code>{c.name}</code>
-            <small style(cardDoc)>{c.doc}</small>
+            <small>{c.doc}</small>
           </column>
         </card>
       </for>
@@ -95,19 +80,21 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
   <for {groups() as group} key={group.id}>
     <column gap="3">
       <h2>{group.id} — {group.count}</h2>
-      <p style(sectionSummary)>{group.summary}</p>
+      <p>{group.summary}</p>
       <column gap="1">
         <for {group.exports as e} key={e.name}>
-          <row gap="3" align="start" style(exportRow)>
-            <code style(exportName)>{e.name}</code>
-            <badge size="sm">{e.kind}</badge>
-            <column gap="1" style(exportBody)>
-              <code style(exportSig)>{e.signature}</code>
-              <if {e.doc}>
-                <small style(exportDoc)>{e.doc}</small>
-              </if>
-            </column>
-          </row>
+          <card padding="sm">
+            <row gap="3" align="start">
+              <code>{e.name}</code>
+              <badge size="sm">{e.kind}</badge>
+              <column gap="1">
+                <code>{e.signature}</code>
+                <if {e.doc}>
+                  <small>{e.doc}</small>
+                </if>
+              </column>
+            </row>
+          </card>
         </for>
       </column>
     </column>

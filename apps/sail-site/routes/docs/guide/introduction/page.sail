@@ -2,18 +2,6 @@
   /docs/guide/introduction — Introduction. Signals, Style, query, components, theme.
 -->
 
-<scope>
-  style page = { size({ max-w: breakpoint-tablet }).margin({ x: auto }) }
-  style intro = { size({ max-w: breakpoint-tablet }) }
-  style eyebrow = { fg(accent).type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
-  style lead = { fg(muted-foreground).type({ size: lg, leading: relaxed }) }
-  style colGrow = { grow(1).size({min-w: 0, basis: breakpoint-mobile}) }
-  style demoPane = { grow(1).size({min-w: 0, basis: 64}).pad(4).bg(muted).border({ color: border, width: 1 }).radius(lg) }
-  style pathLabel = { fg(muted-foreground).type({ family: mono, size: xs }) }
-  style mutedSm = { fg(muted-foreground).type({ size: sm }) }
-  style ctaRow = { pad({ t: 4 }).margin({ t: 4 }).border({ color: border, width: 1, edge: t }) }
-</scope>
-
 <controller>
 import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
@@ -25,11 +13,11 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 })
 </controller>
 
-<column gap="6" style(page)>
-  <column gap="3" style(intro)>
-    <p style(eyebrow)>Introduction</p>
+<article>
+  <column gap="5">
+    <p>Introduction</p>
     <h1>Sail</h1>
-    <p style(lead)>
+    <p>
       Sail is a compiled language that includes everything you need to build
       beautiful, consistent, and performant websites. It is optimized for AI
       agents: the language provides the APIs an interface needs — signals for
@@ -39,9 +27,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       practices and consistency hold across an entire application, not just
       the files someone reviewed.
     </p>
-  </column>
 
-  <column gap="3">
     <h2>It reads like HTML, it runs on signals</h2>
     <p>
       A component is one file: a template that reads like HTML, TypeScript
@@ -51,20 +37,18 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       component — and the same lines running:
     </p>
     <row gap="6" align="start">
-      <column gap="2" style(colGrow)>
+      <column gap="2">
         <code-block code={code.hello}></code-block>
       </column>
-      <column gap="2" justify="center" style(demoPane)>
+      <card>
         <demo-player playing={playing()}></demo-player>
         <row gap="2" align="center">
           <switch bind:checked={playing}></switch>
           <badge>{playing() ? 'playing' : 'paused'}</badge>
         </row>
-      </column>
+      </card>
     </row>
-  </column>
 
-  <column gap="3">
     <h2>Design is data</h2>
     <p>
       Styling draws from a token system the compiler enforces — colors,
@@ -74,12 +58,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       written in Sail:
     </p>
     <theme-picker inline></theme-picker>
-  </column>
 
-  <column gap="3" style(intro)>
     <h2>The compiler pushes back</h2>
     <row gap="6" align="start">
-      <column gap="3" style(colGrow)>
+      <column gap="3">
         <p>
           The compiler checks more than syntax: a colour that isn’t a token, a
           stylesheet beside a component, an animation outside the motion
@@ -97,8 +79,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           isn’t granted doesn’t compile.
         </p>
       </column>
-      <column gap="2" style(colGrow)>
-        <p style(pathLabel)>apps/sail-site/routes/sail.config.json</p>
+      <column gap="2">
+        <label>apps/sail-site/routes/sail.config.json</label>
         <sail-json-view data={code.configJson} expanded depth={2}></sail-json-view>
       </column>
     </row>
@@ -130,16 +112,17 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       as their own runtime on top of the framework’s.
     </p>
 
-    <p style(mutedSm)>
+    <p>
       Sail is in alpha. It builds real websites today — this site is one —
       and the language is still settling.
     </p>
 
-    <row gap="2" style(ctaRow)>
+    <separator />
+    <row gap="2">
       <a variant="solid" tone="primary" href="/docs/guide/getting-started">Installation →</a>
       <a variant="default" href="/playground">Playground</a>
       <a variant="default" href="/showcase">Showcase</a>
       <a variant="default" href="/docs/guide/why">Why Sail</a>
     </row>
   </column>
-</column>
+</article>

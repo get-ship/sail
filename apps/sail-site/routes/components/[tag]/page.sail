@@ -7,17 +7,13 @@
     - empty state when no package / pack meta
 -->
 
-<scope>
-  style page = { size({ w: full, max-w: breakpoint-desktop }).margin({ x: auto }) }
-  style emptyEnter = { animate: { enter: play(slide-up) } }
-</scope>
-
 <controller>
 import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 import { docMeta, FIRST_CLASS_HOSTS } from '../../../src/compositions/component-docs-registry'
 import { detailFor, type DetailEntry } from '../../../src/compositions/component-details'
 import {
+  DEMO_PHOTO,
   PACK_PROPS,
   PACK_TAGS,
   packBlurbFor,
@@ -78,6 +74,7 @@ const DOC_CE_SLUGS = new Set([
   'combobox',
   'theme-picker',
   'resizable',
+  'layout',
 ])
 
 export default controller((ctx: ControllerScope<Scope>) => {
@@ -99,7 +96,8 @@ export default controller((ctx: ControllerScope<Scope>) => {
   const firstClass = derived(() => FIRST_CLASS_HOSTS.has(tag()))
   const hasDocCe = derived(() => DOC_CE_SLUGS.has(tag()))
   const useDocHost = derived(() => firstClass() && hasDocCe())
-  const missingDocHost = derived(() => hasTag() && showViewer() && !useDocHost())
+  const usePack = derived(() => hasTag() && knownPack())
+  const missingDocHost = derived(() => hasTag() && firstClass() && !hasDocCe())
 
   const useButton = derived(() => tag() === 'button' && useDocHost())
   const useBadge = derived(() => tag() === 'badge' && useDocHost())
@@ -153,6 +151,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
   const useCombobox = derived(() => tag() === 'combobox' && useDocHost())
   const useThemePicker = derived(() => tag() === 'theme-picker' && useDocHost())
   const useResizable = derived(() => tag() === 'resizable' && useDocHost())
+  const useLayout = derived(() => tag() === 'layout' && useDocHost())
 
   const heading = () => meta()?.heading ?? entry()?.heading ?? tag()
   const blurb = () => meta()?.blurb ?? entry()?.blurb ?? packBlurbFor(tag())
@@ -168,7 +167,9 @@ export default controller((ctx: ControllerScope<Scope>) => {
     knownPack,
     showViewer,
     firstClass,
+    usePack,
     missingDocHost,
+    demoPhoto: () => DEMO_PHOTO,
     useButton,
     useBadge,
     useFieldset,
@@ -221,6 +222,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
     useCombobox,
     useThemePicker,
     useResizable,
+    useLayout,
 
     heading,
     blurb,
@@ -230,7 +232,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
 })
 </controller>
 
-<column gap="4" style(page)>
+<column gap="4">
   <if {useButton()}>
     <doc-button></doc-button>
   </if>
@@ -387,12 +389,102 @@ export default controller((ctx: ControllerScope<Scope>) => {
   <if {useResizable()}>
     <doc-resizable></doc-resizable>
   </if>
+  <if {useLayout()}>
+    <doc-layout></doc-layout>
+  </if>
+  <if {usePack()}>
+    <breadcrumb>
+      <a href="/components">components</a>
+      <small>{tag()}</small>
+    </breadcrumb>
+    <column gap="4">
+      <badge>{packLabel()}</badge>
+      <h1>{tag()}</h1>
+      <p>{blurb()}</p>
+      <card padding="lg">
+        <if {tag() === 'sail-sparkline'}>
+          <sail-sparkline data="2,5,3,8,4,6,7" width="240" height="64"></sail-sparkline>
+        </if>
+        <if {tag() === 'sail-area-chart'}>
+          <sail-area-chart series='[{"name":"a","data":[2,4,3,5]}]' labels="Q1,Q2,Q3,Q4" width="320" height="140"></sail-area-chart>
+        </if>
+        <if {tag() === 'sail-bar-chart'}>
+          <sail-bar-chart data="2,5,3,8,4" labels="A,B,C,D,E" width="320" height="140"></sail-bar-chart>
+        </if>
+        <if {tag() === 'sail-donut'}>
+          <sail-donut data='[{"label":"a","value":40},{"label":"b","value":30},{"label":"c","value":30}]' diameter="120" thickness="12"></sail-donut>
+        </if>
+        <if {tag() === 'sail-gauge'}>
+          <sail-gauge value="72" diameter="120" thickness="12"></sail-gauge>
+        </if>
+        <if {tag() === 'sail-heatmap'}>
+          <sail-heatmap rows="3" cols="5" values="1,2,3,4,3,4,5,6,5,4,3,2,1,2,3" cell-size="22" gap="3" tone="primary"></sail-heatmap>
+        </if>
+        <if {tag() === 'sail-line-chart'}>
+          <sail-line-chart series='[{"name":"a","data":[2,4,3,5]}]' labels="Q1,Q2,Q3,Q4" width="320" height="140"></sail-line-chart>
+        </if>
+        <if {tag() === 'sail-media-image'}>
+          <sail-media-image src={demoPhoto()} alt="Mountain lake at dusk" fit="cover" zoomable={false}></sail-media-image>
+        </if>
+        <if {tag() === 'sail-media-av'}>
+          <sail-media-av></sail-media-av>
+        </if>
+        <if {tag() === 'sail-code-editor'}>
+          <sail-code-editor value="const ok = true" language="javascript" line-numbers></sail-code-editor>
+        </if>
+        <if {tag() === 'sail-mermaid'}>
+          <sail-mermaid value="graph TD; A[Idea]-->B[Build]; B-->C[Ship]"></sail-mermaid>
+        </if>
+        <if {tag() === 'sail-message'}>
+          <column gap="2">
+            <sail-message from="user" status="sent">Can you summarize yesterday’s deploy?</sail-message>
+            <sail-message from="assistant" status="sent">v0.4.2 went out at 14:02 — 3 services, zero rollbacks.</sail-message>
+          </column>
+        </if>
+        <if {tag() === 'sail-citation'}>
+          <sail-citation source="docs.ship.dev" href="#">Deploy pipeline overview</sail-citation>
+        </if>
+        <if {tag() === 'sail-composer'}>
+          <sail-composer placeholder="Message the agent…"></sail-composer>
+        </if>
+        <if {tag() === 'sail-thinking-dots'}>
+          <row gap="2" align="center">
+            <sail-thinking-dots></sail-thinking-dots>
+            <span>Agent is thinking…</span>
+          </row>
+        </if>
+        <if {tag() === 'sail-tool-call'}>
+          <sail-tool-call name="list_deploys" status="ok" open>
+            <span slot="result">3 deploys</span>
+          </sail-tool-call>
+        </if>
+        <if {tag() === 'sail-canvas' || tag() === 'sail-board' || tag() === 'sail-draw' || tag() === 'sail-graph-canvas' || tag() === 'sail-annotation-layer' || tag() === 'sail-annotation-list' || tag() === 'sail-annotation-marker'}>
+          <p>World-layer pack — mount it on a canvas surface. This page is the contract, not a fake stage.</p>
+        </if>
+      </card>
+      <if {packProps().length > 0}>
+        <column gap="2">
+          <h2>Props</h2>
+          <for {packProps() as prop} key={prop.name}>
+            <row gap="3" align="start">
+              <code>{prop.name}</code>
+              <small>{prop.type}</small>
+              <span>{prop.desc}</span>
+            </row>
+          </for>
+        </column>
+      </if>
+    </column>
+    <row gap="2">
+      <a variant="default" href="/components">← All components</a>
+    </row>
+  </if>
   <if {missingDocHost()}>
     <breadcrumb>
       <a href="/components">components</a>
       <small>{tag()}</small>
     </breadcrumb>
-    <empty-state style(emptyEnter)>
+    <empty-state>
       <strong slot="title">Docs host not wired for “{tag()}”</strong>
       Package meta is first-class (<code>doc-{tag()}</code>) but this shell has no
       mount for that CE yet.
@@ -406,7 +498,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
       <a href="/components">components</a>
       <small>{tag()}</small>
     </breadcrumb>
-    <empty-state style(emptyEnter)>
+    <empty-state>
       <strong slot="title">Nothing named “{tag()}” here</strong>
       Every element with a docs package has a detail page. Pack components
       from the catalog render here too — this looks like a typo.

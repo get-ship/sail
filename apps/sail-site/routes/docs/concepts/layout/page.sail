@@ -1,217 +1,209 @@
 <!--
-  /docs/concepts/layout — chapter 5, round 2 per owner review: lead with WHY
-  one mechanism (many ways exist; one spelling is what tools and agents can
-  reason about), render EVERY element live, explain in sentences not
-  keyword-lists, no "flow not clamp" jargon, no s-refusal opener (that
-  lives on the styling page), no whole-vocabulary overclaim.
+  /docs/concepts/layout — five layout elements live. Chrome is tags; Style
+  teaching text stays as style&#40; / code-block.
 -->
 
-<scope>
-  style page = { size({ max-w: breakpoint-tablet }).margin({ x: auto }) }
-  style eyebrow = { margin({ b: 2 }).fg(accent).type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
-  style lead = { fg(muted-foreground).type({ size: lg, leading: relaxed }) }
-  style demo = { pad(4).bg(surface-1).border({ color: border, width: 1 }).radius(md) }
-  style demoCenter = { size({ min-h: 11 }).pad(4).bg(surface-1).border({ color: border, width: 1 }).radius(md) }
-  style cardPad = { pad(4) }
-  style cardPadSm = { pad(3) }
-  style stackCard = { size({ w: 24, h: 12 }).bg(muted).radius(md) }
-  style stackDot = { size(4).radius(full).bg(primary) }
-  style growMin = { grow(1).size({ min-w: 0 }) }
-  style shrink0 = { shrink(0) }
-  style footNote = { margin({ t: 4 }).fg(muted-foreground).type({ size: sm }) }
-  style footNav = { pad({ t: 4 }).margin({ t: 8 }).border({ color: border, width: 1, edge: t }) }
-</scope>
-
 <controller>
-import type { ControllerScope } from '@ship/sail-runtime'
-import type { Scope } from './page.sail'
 import { code } from '../../../../src/compositions/sail-language-layout-snippets'
 
-export default controller((_ctx: ControllerScope<Scope>) => {
+export default controller(() => {
   return { code }
 })
 </controller>
 
-<column gap="5" style(page)>
-  <p style(eyebrow)>The language</p>
-  <h1>Layout</h1>
-  <p style(lead)>
-    The web has accumulated half a dozen ways to lay things out — floats,
-    positioning, flexbox, grid, and the properties that tune them. Sail
-    ships <strong>one</strong> mechanism: five layout elements —
-    <code>&lt;row&gt;</code>, <code>&lt;column&gt;</code>,
-    <code>&lt;grid&gt;</code>, <code>&lt;stack&gt;</code>,
-    <code>&lt;center&gt;</code>. Everything those systems express —
-    wrapping, two dimensions, spanning, layering, centering — is still
-    expressible; what’s gone is the second and third way to spell it.
-  </p>
-  <p>
-    One spelling is the point. When every layout in a codebase is a handful
-    of elements with named axes, geometry is readable from source — by the
-    compiler, which checks every attribute and redirects wrong turns, and
-    by an agent, which sees the same five words in every file it opens
-    instead of six eras of CSS technique.
-  </p>
+<article>
+  <column gap="5">
+    <p>The language</p>
+    <h1>Layout</h1>
+    <p>
+      The web has accumulated half a dozen ways to lay things out — floats,
+      positioning, flexbox, grid, and the properties that tune them. Sail
+      ships <strong>one</strong> mechanism: five layout elements —
+      <code>&lt;row&gt;</code>, <code>&lt;column&gt;</code>,
+      <code>&lt;grid&gt;</code>, <code>&lt;stack&gt;</code>,
+      <code>&lt;center&gt;</code>. Everything those systems express —
+      wrapping, two dimensions, spanning, layering, centering — is still
+      expressible; what’s gone is the second and third way to spell it.
+    </p>
+    <p>
+      One spelling is the point. When every layout in a codebase is a handful
+      of elements with named axes, geometry is readable from source — by the
+      compiler, which checks every attribute and redirects wrong turns, and
+      by an agent, which sees the same five words in every file it opens
+      instead of six eras of CSS technique.
+    </p>
 
-  <h2><code>&lt;row&gt;</code></h2>
-  <p>
-    A row lays children out left to right. <code>gap</code> spaces them
-    (spacing-scale steps), <code>align</code> positions them on the cross
-    axis, <code>justify</code> distributes them along the row:
-  </p>
-  <row gap="3" align="center" justify="between" style(demo)>
-    <strong>Ada Lovelace</strong>
-    <badge tone="success">Active</badge>
-  </row>
-  <code-block code={code.row}></code-block>
-  <p>
-    When a row runs out of width, its children move to the next line —
-    rows <strong>wrap by default</strong>, like text does. Watch this one
-    as the window narrows:
-  </p>
-  <row gap="2" style(demo)>
-    <chip>signals</chip>
-    <chip>derived</chip>
-    <chip>effects</chip>
-    <chip>stores</chip>
-    <chip>compositions</chip>
-    <chip>actions</chip>
-    <chip>tones</chip>
-    <chip>variants</chip>
-  </row>
-  <p>
-    Some rows must stay on one line no matter what — a toolbar, a sidebar
-    beside content. Those say <code>nowrap</code>, and manage width with
-    their children instead:
-  </p>
-  <code-block code={code.nowrap}></code-block>
+    <h2><code>&lt;row&gt;</code></h2>
+    <p>
+      A row lays children out left to right. <code>gap</code> spaces them
+      (spacing-scale steps), <code>align</code> positions them on the cross
+      axis, <code>justify</code> distributes them along the row:
+    </p>
+    <card>
+      <row gap="3" align="center" justify="between">
+        <strong>Ada Lovelace</strong>
+        <badge tone="success">Active</badge>
+      </row>
+    </card>
+    <code-block code={code.row}></code-block>
+    <p>
+      When a row runs out of width, its children move to the next line —
+      rows <strong>wrap by default</strong>, like text does. Watch this one
+      as the window narrows:
+    </p>
+    <card>
+      <row gap="2">
+        <chip>signals</chip>
+        <chip>derived</chip>
+        <chip>effects</chip>
+        <chip>stores</chip>
+        <chip>compositions</chip>
+        <chip>actions</chip>
+        <chip>tones</chip>
+        <chip>variants</chip>
+      </row>
+    </card>
+    <p>
+      Some rows must stay on one line no matter what — a toolbar, a sidebar
+      beside content. Those say <code>nowrap</code>, and manage width with
+      their children instead:
+    </p>
+    <code-block code={code.nowrap}></code-block>
 
-  <h2><code>&lt;column&gt;</code></h2>
-  <p>
-    A column is the same idea, top to bottom. <code>gap</code> spaces the
-    children; <code>align</code> positions them horizontally — the label
-    and input below are <code>align="start"</code>, so they hug the left
-    edge instead of stretching:
-  </p>
-  <column gap="2" align="start" style(demo)>
-    <label>Email</label>
-    <input type="email" placeholder="ada@example.com" />
-    <button>Subscribe</button>
+    <h2><code>&lt;column&gt;</code></h2>
+    <p>
+      A column is the same idea, top to bottom. <code>gap</code> spaces the
+      children; <code>align</code> positions them horizontally — the label
+      and input below are <code>align="start"</code>, so they hug the left
+      edge instead of stretching:
+    </p>
+    <card>
+      <column gap="2" align="start">
+        <label>Email</label>
+        <input type="email" placeholder="ada@example.com" />
+        <button>Subscribe</button>
+      </column>
+    </card>
+    <code-block code={code.column}></code-block>
+
+    <h2><code>&lt;grid&gt;</code></h2>
+    <p>
+      A grid lays children out in columns and rows. <code>cols</code> fixes
+      the column count — every child takes one cell, wrapping to new rows as
+      needed:
+    </p>
+    <grid cols="3" gap="3">
+      <card><strong>One</strong></card>
+      <card><strong>Two</strong></card>
+      <card><strong>Three</strong></card>
+    </grid>
+    <code-block code={code.grid}></code-block>
+    <p>
+      <code>min</code> is the responsive alternative to a fixed count: give a
+      minimum column width, and the grid fits as many columns of at least
+      that width as the space allows — fewer on a phone, more on a desktop,
+      no media query written.
+    </p>
+    <p>
+      A child can cover more than one cell with the layout attrs
+      <code>col-span</code> / <code>row-span</code> — language attrs, not
+      <code>data-*</code>. Below 720px, spans collapse and every child goes
+      back to one cell, so a wide card never forces a phone to scroll
+      sideways:
+    </p>
+    <grid cols="4" gap="3">
+      <card col-span="2">wide — spans 2</card>
+      <card>one</card>
+      <card>two</card>
+    </grid>
+    <code-block code={code.spans}></code-block>
+
+    <h2><code>&lt;stack&gt;</code></h2>
+    <p>
+      A stack places children on top of each other in the same cell — the
+      overlay cases: a badge on an avatar, a caption on an image, a dot on an
+      icon.
+    </p>
+    <card>
+      <stack align="start" justify="end">
+        <avatar size="lg"></avatar>
+        <badge tone="primary" size="sm">live</badge>
+      </stack>
+    </card>
+    <code-block code={code.stack}></code-block>
+
+    <h2><code>&lt;center&gt;</code></h2>
+    <p>
+      Centers its child, horizontally and vertically, in whatever space the
+      element has:
+    </p>
+    <card>
+      <center>
+        <badge tone="primary">centered</badge>
+      </center>
+    </card>
+    <code-block code={code.center}></code-block>
+
+    <h2>How children size themselves</h2>
+    <p>
+      The parent decides how children sit; a child decides how it fills the
+      space it was given with <strong>Style</strong> — legal on any
+      element, not only layout keywords:
+    </p>
+    <card>
+      <row gap="3" align="center">
+        <strong>Ada Lovelace</strong>
+        <badge tone="success">Active</badge>
+      </row>
+    </card>
+    <code-block code={code.grow}></code-block>
+    <p>
+      Participation is one spelling: Style.
+      <code>grow&#40;1&#41;</code> / <code>shrink&#40;0&#41;</code> are flex participation;
+      <code>size(&#123; w: full &#125;)</code>, <code>size(&#123; min-w: 0 &#125;)</code>, and <code>size(&#123; max-w: … &#125;)</code> take
+      the same size tokens as other Style setters. Bare attrs
+      (<code>grow</code>, <code>min-w=</code>, <code>shrink</code>) are refused
+      (<code>sail-participation-style</code>) — write
+      <code>style&#40;growMin&#41;</code> instead.
+    </p>
+    <p>
+      Layout-keyword <strong>axis</strong> sugar is separate and intentional:
+      <code>gap</code> / <code>align</code> / <code>justify</code> stay on
+      <code>&lt;row&gt;</code> / <code>&lt;column&gt;</code> /
+      <code>&lt;grid&gt;</code>. Style also owns paint (pad, color, type,
+      chrome), intrinsic box size (<code>h</code>, icon
+      <code>w</code>/<code>size</code>), and chrome like <code>minH</code> on
+      badges — all as a block Style statement. Every child of a layout element
+      is also born with <code>min-width: 0</code> — the browser default where an
+      item refuses to shrink below its content is corrected at the language
+      level, so <code>style&#40;&#123; type(&#123; wrap: truncate &#125;) &#125;&#41;</code> works the first time.
+    </p>
+
+    <h2><code>&lt;when&gt;</code> — different trees per breakpoint</h2>
+    <p>
+      When the layout itself changes shape — a side-by-side workbench on tablet,
+      a stacked column on mobile — that is a <strong>tree</strong> decision, not
+      paint. <code>&lt;when &#123;tablet&#125;&gt;</code> takes a theme breakpoint
+      token (<code>mobile</code> / <code>tablet</code> / <code>desktop</code>) and
+      keeps an optional <code>&lt;else&gt;</code> as the default branch:
+    </p>
+    <code-block code={code.when}></code-block>
+    <p>
+      The server cannot know the viewport, so <strong>SSR always emits the
+      <code>&lt;else&gt;</code> / default branch</strong> (mobile-first). After
+      hydrate, the client matchMedia-swaps to the matching branch. No UA sniffing.
+      Style <code>style&#40;&#123; when: &#123; tablet: … &#125; &#125;&#41;</code> stays paint-level —
+      density and color tweaks — and is unchanged.
+    </p>
+
+    <p>
+      For the full surface: <a href="/docs/reference/layout">reference → Layout keywords</a>.
+    </p>
+
+    <separator />
+    <row gap="2">
+      <a variant="default" href="/docs/concepts/styling">← Styling</a>
+      <a variant="solid" tone="primary" href="/docs/concepts/animation">Animation →</a>
+    </row>
   </column>
-  <code-block code={code.column}></code-block>
-
-  <h2><code>&lt;grid&gt;</code></h2>
-  <p>
-    A grid lays children out in columns and rows. <code>cols</code> fixes
-    the column count — every child takes one cell, wrapping to new rows as
-    needed:
-  </p>
-  <grid cols="3" gap="3">
-    <card style(cardPad)><strong>One</strong></card>
-    <card style(cardPad)><strong>Two</strong></card>
-    <card style(cardPad)><strong>Three</strong></card>
-  </grid>
-  <code-block code={code.grid}></code-block>
-  <p>
-    <code>min</code> is the responsive alternative to a fixed count: give a
-    minimum column width, and the grid fits as many columns of at least
-    that width as the space allows — fewer on a phone, more on a desktop,
-    no media query written.
-  </p>
-  <p>
-    A child can cover more than one cell with the layout attrs
-    <code>col-span</code> / <code>row-span</code> — language attrs, not
-    <code>data-*</code>. Below 720px, spans collapse and every child goes
-    back to one cell, so a wide card never forces a phone to scroll
-    sideways:
-  </p>
-  <grid cols="4" gap="3">
-    <card col-span="2" style(cardPadSm)>wide — spans 2</card>
-    <card style(cardPadSm)>one</card>
-    <card style(cardPadSm)>two</card>
-  </grid>
-  <code-block code={code.spans}></code-block>
-
-  <h2><code>&lt;stack&gt;</code></h2>
-  <p>
-    A stack places children on top of each other in the same cell — the
-    overlay cases: a badge on an avatar, a caption on an image, a dot on an
-    icon.
-  </p>
-  <row style(demo)>
-    <stack align="start" justify="end">
-      <card style(stackCard)></card>
-      <div style(stackDot)></div>
-    </stack>
-  </row>
-  <code-block code={code.stack}></code-block>
-
-  <h2><code>&lt;center&gt;</code></h2>
-  <p>
-    Centers its child, horizontally and vertically, in whatever space the
-    element has:
-  </p>
-  <center style(demoCenter)>
-    <badge tone="primary">centered</badge>
-  </center>
-  <code-block code={code.center}></code-block>
-
-  <h2>How children size themselves</h2>
-  <p>
-    The parent decides how children sit; a child decides how it fills the
-    space it was given with <strong>Style</strong> — legal on any
-    element, not only layout keywords:
-  </p>
-  <row gap="3" align="center" style(demo)>
-    <strong style(growMin)>Ada Lovelace</strong>
-    <badge tone="success" style(shrink0)>Active</badge>
-  </row>
-  <code-block code={code.grow}></code-block>
-  <p>
-    Participation is one spelling: Style.
-    <code>grow(1)</code> / <code>shrink(0)</code> are flex participation;
-    <code>size(&#123; w: full &#125;)</code>, <code>size(&#123; min-w: 0 &#125;)</code>, and <code>size(&#123; max-w: … &#125;)</code> take
-    the same size tokens as other Style setters. Bare attrs
-    (<code>grow</code>, <code>min-w=</code>, <code>shrink</code>) are refused
-    (<code>sail-participation-style</code>) — write
-    <code style(growMin)></code> instead.
-  </p>
-  <p>
-    Layout-keyword <strong>axis</strong> sugar is separate and intentional:
-    <code>gap</code> / <code>align</code> / <code>justify</code> stay on
-    <code>&lt;row&gt;</code> / <code>&lt;column&gt;</code> /
-    <code>&lt;grid&gt;</code>. Style also owns paint (pad, color, type,
-    chrome), intrinsic box size (<code>h</code>, icon
-    <code>w</code>/<code>size</code>), and chrome like <code>minH</code> on
-    badges — all as a block Style statement. Every child of a layout element
-    is also born with <code>min-width: 0</code> — the browser default where an
-    item refuses to shrink below its content is corrected at the language
-    level, so <code style({ type({ wrap: truncate }) })></code> works the first time.
-  </p>
-
-  <h2><code>&lt;when&gt;</code> — different trees per breakpoint</h2>
-  <p>
-    When the layout itself changes shape — a side-by-side workbench on tablet,
-    a stacked column on mobile — that is a <strong>tree</strong> decision, not
-    paint. <code>&lt;when &#123;tablet&#125;&gt;</code> takes a theme breakpoint
-    token (<code>mobile</code> / <code>tablet</code> / <code>desktop</code>) and
-    keeps an optional <code>&lt;else&gt;</code> as the default branch:
-  </p>
-  <code-block code={code.when}></code-block>
-  <p>
-    The server cannot know the viewport, so <strong>SSR always emits the
-    <code>&lt;else&gt;</code> / default branch</strong> (mobile-first). After
-    hydrate, the client matchMedia-swaps to the matching branch. No UA sniffing.
-    Style <code>.style&#40;&#123; when: &#123; 123: tablet &#125; &#125;&#41;</code> stays paint-level —
-    density and color tweaks — and is unchanged.
-  </p>
-
-  <p style(footNote)>
-    For the full surface: <a href="/docs/reference/layout">reference → Layout keywords</a>.
-  </p>
-
-  <row justify="between" gap="2" style(footNav)>
-    <a variant="default" href="/docs/concepts/styling">← Styling</a>
-    <a variant="solid" tone="primary" href="/docs/concepts/animation">Animation →</a>
-  </row>
-</column>
+</article>

@@ -2,16 +2,6 @@
   /docs/reference/template — template directives, on: modifiers/events,
   bind: targets, foreign idioms, block vocabulary. From language-surface.gen.
 -->
-<scope>
-  style root = { size({ min-w: 0 }) }
-  style intro = { size({ max-w: breakpoint-tablet }) }
-  style mutedBody = { size({ max-w: breakpoint-tablet }) }
-  style cardShell = { size({ min-w: 0 }) }
-  style valueText = { size({ max-w: panel-max-w-sm }).fg(muted-foreground) }
-  style muted = { fg(muted-foreground) }
-  style banCode = { fg(destructive) }
-  style directiveCode = { size({ min-w: 40 }) }
-</scope>
 
 <controller>
 import type { ControllerScope } from '@ship/sail-runtime'
@@ -48,11 +38,11 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 }))
 </controller>
 
-<column gap="6" style(root)>
-  <column gap="5" style(intro)>
-    <p token="doc-eyebrow">Reference</p>
+<column gap="6">
+  <column gap="5">
+    <p>Reference</p>
     <h1>Template directives</h1>
-    <p token="doc-lead">
+    <p>
       Every attribute-position directive the parser accepts, in one table.
     </p>
   </column>
@@ -60,10 +50,10 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
   <column gap="3">
     <grid cols="1" gap="2">
       <for {directives() as d} key={d.syntax}>
-        <card padding="sm" style(cardShell)>
+        <card padding="sm">
           <row gap="3" align="center">
-            <code style(directiveCode)>{d.syntax}</code>
-            <small style(muted)>{d.summary}</small>
+            <code>{d.syntax}</code>
+            <small>{d.summary}</small>
           </row>
         </card>
       </for>
@@ -72,7 +62,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 
   <column gap="3">
     <h3>on: events</h3>
-    <p style(mutedBody)>
+    <p>
       Standard DOM event names only. Component moments are typed
       <code>on-*</code> callback props (e.g. <code>on-select=&#123;fn&#125;</code>);
       form mutation moments are <code>on-success</code> /
@@ -81,10 +71,10 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     </p>
     <grid cols="2" gap="2">
       <for {eventNames() as e} key={e.name}>
-        <card padding="sm" style(cardShell)>
+        <card padding="sm">
           <column gap="1">
             <code>on:{e.name}</code>
-            <small style(valueText)>{e.summary}</small>
+            <small>{e.summary}</small>
           </column>
         </card>
       </for>
@@ -93,13 +83,13 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 
   <column gap="3">
     <h3>on: modifiers</h3>
-    <p style(mutedBody)>Chain any number with |, e.g. on:keydown|prevent|key:Enter.</p>
+    <p>Chain any number with |, e.g. on:keydown|prevent|key:Enter.</p>
     <grid cols="2" gap="2">
       <for {modifierRows() as m} key={m.key}>
-        <card padding="sm" style(cardShell)>
+        <card padding="sm">
           <column gap="1">
             <code>{m.written}{m.arg}</code>
-            <small style(valueText)>{m.summary}</small>
+            <small>{m.summary}</small>
           </column>
         </card>
       </for>
@@ -110,10 +100,10 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     <h3>bind: targets</h3>
     <grid cols="3" gap="2">
       <for {bindTargets() as b} key={b.target}>
-        <card padding="sm" style(cardShell)>
+        <card padding="sm">
           <column gap="1">
             <code>bind:{b.target}</code>
-            <small style(valueText)>{b.summary}</small>
+            <small>{b.summary}</small>
           </column>
         </card>
       </for>
@@ -124,13 +114,13 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     <h3>Blocks</h3>
     <grid cols="2" gap="2">
       <for {blockRows() as b} key={b.open}>
-        <card padding="sm" style(cardShell)>
+        <card padding="sm">
           <column gap="1">
             <row gap="2" align="center">
               <code>{b.open}</code>
-              <small style(muted)>{b.clauses}</small>
+              <small>{b.clauses}</small>
             </row>
-            <small style(valueText)>{b.summary}</small>
+            <small>{b.summary}</small>
           </column>
         </card>
       </for>
@@ -139,15 +129,15 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 
   <column gap="3">
     <h3>Foreign idioms</h3>
-    <p style(mutedBody)>
+    <p>
       HTML/CSS/JS habits the parser teaches against, with the sail way.
     </p>
     <grid cols="1" gap="2">
       <for {foreignIdioms() as r} key={r.syntax}>
-        <card padding="sm" style(cardShell)>
+        <card padding="sm">
           <column gap="1">
-            <code style(banCode)>{r.syntax}</code>
-            <small style(valueText)>→ {r.instead}</small>
+            <code>{r.syntax}</code>
+            <small>→ {r.instead}</small>
           </column>
         </card>
       </for>

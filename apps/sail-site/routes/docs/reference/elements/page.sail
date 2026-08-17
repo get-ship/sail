@@ -1,15 +1,6 @@
 <!--
   /docs/reference/elements — every stdlib L1 element from prop-registry gen.
 -->
-<scope>
-  style root = { size({ min-w: 0 }) }
-  style intro = { size({ max-w: breakpoint-tablet }) }
-  style eyebrow = { fg(accent).type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
-  style lead = { fg(muted-foreground).type({ size: lg, leading: relaxed }) }
-  style cardMin = { size({ min-w: 0 }) }
-  style propCount = { fg(muted-foreground) }
-  style cardDoc = { size({ max-w: panel-max-w-sm }).fg(muted-foreground) }
-</scope>
 
 <controller>
 import type { ControllerScope } from '@ship/sail-runtime'
@@ -41,11 +32,11 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 }))
 </controller>
 
-<column gap="6" style(root)>
-  <column gap="5" style(intro)>
-    <p style(eyebrow)>Reference</p>
+<column gap="6">
+  <column gap="5">
+    <p>Reference</p>
     <h1>Elements — {stdlibCount()} stdlib</h1>
-    <p style(lead)>
+    <p>
       Every standard element, with its one-line description and its full
       prop table on its detail page. Dividers are <code>separator</code>;
       keycaps are <code>kbd</code>; disclosure is <code>accordion</code>.
@@ -55,10 +46,10 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
   <column gap="3">
     <grid cols="3" gap="2">
       <for {stdlibElements() as e} key={e.tag}>
-        <card padding="sm" style(cardMin)>
+        <card padding="sm">
           <column gap="1">
-            <a href={e.href}><code>{e.tag}</code> <small style(propCount)>{e.propCount}</small></a>
-            <small style(cardDoc)>{e.description}</small>
+            <a href={e.href}><code>{e.tag}</code> <small>{e.propCount}</small></a>
+            <small>{e.description}</small>
           </column>
         </card>
       </for>

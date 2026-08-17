@@ -1,16 +1,6 @@
 <!--
   /docs/reference/regions — region/expression capability matrix (compiler SSOT).
 -->
-<scope>
-  style root = { size({ min-w: 0 }) }
-  style intro = { size({ max-w: breakpoint-tablet }) }
-  style eyebrow = { fg(accent).type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
-  style lead = { fg(muted-foreground).type({ size: lg, leading: relaxed }) }
-  style meta = { fg(muted-foreground).type({ size: sm }) }
-  style cardMin = { size({ min-w: 0 }) }
-  style monoMuted = { fg(muted-foreground).type({ family: mono, size: xs }) }
-  style notes = { size({ max-w: breakpoint-tablet }).fg(muted-foreground) }
-</scope>
 
 <controller>
 import type { ControllerScope } from '@ship/sail-runtime'
@@ -34,17 +24,17 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 }))
 </controller>
 
-<column gap="6" style(root)>
-  <column gap="5" style(intro)>
-    <p style(eyebrow)>Reference</p>
+<column gap="6">
+  <column gap="5">
+    <p>Reference</p>
     <h1>Region capability matrix</h1>
-    <p style(lead)>
+    <p>
       What is legal in each region of a <code>.sail</code> file — scope,
       controller, template, and the Style chain grammar — and what enforces it.
       The table is the compiler SSOT (<code>region_capability</code>); every row
       cites a lint rule, a parse gate, or an honest residual gap.
     </p>
-    <p style(meta)>
+    <p>
       Thin-controller policy: a setup body of
       <strong>{sizeThreshold()}+</strong> non-empty, non-comment lines emits
       <code>sail-controller-size</code> (policy warning, default on).
@@ -57,15 +47,15 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
       <h2>{g.region}</h2>
       <column gap="2">
         <for {g.rows as row} key={row.capability}>
-          <card padding="sm" style(cardMin)>
+          <card padding="sm">
             <column gap="1">
               <row gap="3" align="center">
                 <strong>{row.capability}</strong>
-                <code style(monoMuted)>legal: {row.legal}</code>
-                <code style(monoMuted)>{row.status}</code>
+                <code>legal: {row.legal}</code>
+                <code>{row.status}</code>
               </row>
-              <small style(notes)>{row.notes}</small>
-              <small style(monoMuted)>{row.enforcement}</small>
+              <small>{row.notes}</small>
+              <small>{row.enforcement}</small>
             </column>
           </card>
         </for>

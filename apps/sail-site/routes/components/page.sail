@@ -381,8 +381,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                       <tr><td>worker</td><td>degraded</td></tr>
                     </tbody>
                   </table>}{else-if {e.tag === 'layout'} => <row gap="2">
-                    <pane><small>main</small></pane>
-                    <pane><small>aside</small></pane>
+                    <card><small>main</small></card>
+                    <card><small>aside</small></card>
                   </row>}{else-if {e.tag === 'scroll-area'} => <scroll-area>
                     <column gap="0">
                       <row align="center" justify="between">

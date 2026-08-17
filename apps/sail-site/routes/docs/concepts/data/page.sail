@@ -1,15 +1,3 @@
-<scope>
-  style page = { size({ max-w: breakpoint-tablet }).margin({ x: auto }) }
-  style eyebrow = { margin({ b: 2 }).fg(accent).type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
-  style lead = { fg(muted-foreground).type({ size: lg, leading: relaxed }) }
-  style monoLabel = { margin({ b: 2 }).fg(muted-foreground).type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
-  style livePanel = { pad(6).size({ min-h: 8 }).border({ color: border, width: 1 }).radius(lg).bg(surface-1) }
-  style loadingText = { fg(muted-foreground).type({ size: sm }) }
-  style callout = { pad({ all: 3, x: 4 }).border({ edge: t, color: border, width: 1 }).border({ edge: r, color: border, width: 1 }).border({ edge: b, color: border, width: 1 }).border({ edge: l, color: primary, width: 3 }).radius(md).fg(muted-foreground).type({ size: sm }) }
-  style footNote = { margin({ t: 4 }).fg(muted-foreground).type({ size: sm }) }
-  style footNav = { pad({ t: 4 }).margin({ t: 8 }).border({ color: border, width: 1, edge: t }) }
-</scope>
-
 <controller>
 // Live query demo: attempt/sabotage in the call args mint a new cache key (refetch).
 
@@ -37,89 +25,92 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 })
 </controller>
 
-<column gap="5" style(page)>
-  <p style(eyebrow)>Concepts</p>
-  <h1>Data</h1>
-  <p style(lead)>
-    Data that arrives over the network is in one of three states at any
-    moment: still loading, failed, or loaded. <code>query()</code> turns an
-    async call into a signal that carries which state it is in, and the
-    template renders each state explicitly — including the two that are easy
-    to forget.
-  </p>
+<article>
+  <column gap="5">
+    <p>Concepts</p>
+    <h1>Data</h1>
+    <p>
+      Data that arrives over the network is in one of three states at any
+      moment: still loading, failed, or loaded. <code>query()</code> turns an
+      async call into a signal that carries which state it is in, and the
+      template renders each state explicitly — including the two that are easy
+      to forget.
+    </p>
 
-  <h2>The three states, live</h2>
-  <grid cols="2" gap="4">
-    <column>
-      <p style(monoLabel)>Live — a 900 ms fake API</p>
-      <column gap="3" style(livePanel)>
-        <row gap="2">
-          <button on:click={reload}>Reload</button>
-          <button on:click={breakIt} tone="destructive" variant="outline">Fail the next one</button>
-        </row>
-        <match {users()}>
-          {loading =>
-            <row gap="2" align="center">
-              <spinner></spinner>
-              <p style(loadingText)>loading…</p>
-            </row>}
-          {error as err =>
-            <alert tone="destructive">{err.message}</alert>}
-          {ok as value =>
-            <row gap="2">
-              <for {value as name} key={name}>
-                <badge>{name}</badge>
-              </for>
-            </row>}
-        </match>
+    <h2>The three states, live</h2>
+    <grid cols="2" gap="4">
+      <column>
+        <label>Live — a 900 ms fake API</label>
+        <card>
+          <row gap="2">
+            <button on:click={reload}>Reload</button>
+            <button on:click={breakIt} tone="destructive" variant="outline">Fail the next one</button>
+          </row>
+          <match {users()}>
+            {loading =>
+              <row gap="2" align="center">
+                <spinner></spinner>
+                <small>loading…</small>
+              </row>}
+            {error as err =>
+              <alert tone="destructive">{err.message}</alert>}
+            {ok as value =>
+              <row gap="2">
+                <for {value as name} key={name}>
+                  <badge>{name}</badge>
+                </for>
+              </row>}
+          </match>
+        </card>
       </column>
-    </column>
-    <column>
-      <p style(monoLabel)>Source</p>
-      <code-block code={code.demo}></code-block>
-    </column>
-  </grid>
+      <column>
+        <label>Source</label>
+        <code-block code={code.demo}></code-block>
+      </column>
+    </grid>
 
-  <h2>Wrap an async source</h2>
-  <p>
-    <code>query()</code> takes a thunk that calls a client method and hands
-    back a signal of a tagged state:
-    <code>&#123; kind: 'loading' &#125;</code>, then either
-    <code>&#123; kind: 'ok', value &#125;</code> or
-    <code>&#123; kind: 'error', error &#125;</code>.
-    It starts loading immediately and settles when the source resolves.
-  </p>
-  <code-block code={code.source}></code-block>
+    <h2>Wrap an async source</h2>
+    <p>
+      <code>query()</code> takes a thunk that calls a client method and hands
+      back a signal of a tagged state:
+      <code>&#123; kind: 'loading' &#125;</code>, then either
+      <code>&#123; kind: 'ok', value &#125;</code> or
+      <code>&#123; kind: 'error', error &#125;</code>.
+      It starts loading immediately and settles when the source resolves.
+    </p>
+    <code-block code={code.source}></code-block>
 
-  <h2>Render the three states</h2>
-  <p>
-    One <code>&lt;match &#123;users()&#125;&gt;</code> carries the three arms:
-    <code>&#123;loading =&gt; …&#125;</code>,
-    <code>&#123;error as err =&gt; …&#125;</code>, and
-    <code>&#123;ok as value =&gt; …&#125;</code>. Arms are structural — you
-    cannot render the list without having handled loading and error first.
-    There is no <code>while-loading</code> / sibling-case form; those are dead.
-  </p>
-  <code-block code={code.states}></code-block>
+    <h2>Render the three states</h2>
+    <p>
+      One <code>&lt;match &#123;users()&#125;&gt;</code> carries the three arms:
+      <code>&#123;loading =&gt; …&#125;</code>,
+      <code>&#123;error as err =&gt; …&#125;</code>, and
+      <code>&#123;ok as value =&gt; …&#125;</code>. Arms are structural — you
+      cannot render the list without having handled loading and error first.
+      There is no <code>while-loading</code> / sibling-case form; those are dead.
+    </p>
+    <code-block code={code.states}></code-block>
 
-  <p style(callout)>
-    The loaded value is only reachable on the <code>ok</code> arm
-    (<code>as value</code>), so a template cannot render data it hasn’t
-    confirmed has arrived — handling loading and error is built into the
-    shape, not left to discipline.
-  </p>
+    <alert>
+      The loaded value is only reachable on the <code>ok</code> arm
+      (<code>as value</code>), so a template cannot render data it hasn’t
+      confirmed has arrived — handling loading and error is built into the
+      shape, not left to discipline.
+    </alert>
 
-  <p>
-    <code>query()</code> is the read side of the story; the write side —
-    forms that validate, submit, and carry the same pending and failure
-    states — is the <a href="/docs/guide/forms">Forms guide</a>.
-  </p>
-  <p style(footNote)>
-    For the author runtime (tier B): <a href="/docs/reference/runtime">reference → Author runtime</a>.
-  </p>
+    <p>
+      <code>query()</code> is the read side of the story; the write side —
+      forms that validate, submit, and carry the same pending and failure
+      states — is the <a href="/docs/guide/forms">Forms guide</a>.
+    </p>
+    <p>
+      For the author runtime (tier B): <a href="/docs/reference/runtime">reference → Author runtime</a>.
+    </p>
 
-  <row justify="between" gap="2" style(footNav)>
-    <a variant="default" href="/docs/concepts/actions">← Actions</a>
-    <a variant="solid" tone="primary" href="/docs/concepts/capabilities">Capabilities →</a>
-  </row>
-</column>
+    <separator />
+    <row gap="2">
+      <a variant="default" href="/docs/concepts/actions">← Actions</a>
+      <a variant="solid" tone="primary" href="/docs/concepts/capabilities">Capabilities →</a>
+    </row>
+  </column>
+</article>
