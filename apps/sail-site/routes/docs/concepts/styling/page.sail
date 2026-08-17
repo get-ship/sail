@@ -37,9 +37,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     </p>
 
     <h2>The chain</h2>
-    <card>
-      <p>This card is styled by the code below it.</p>
-    </card>
+    <column gap="2">
+      <p>This surface is styled by the code below it.</p>
+    </column>
     <code-block code={code.sx}></code-block>
     <p>
       A value off the system is a compile error, and the error names what the
@@ -61,13 +61,11 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       Browser and ARIA state are a map, not string prefixes. Hover these —
       <code>&lt;button&gt;</code> already lifts on hover:
     </p>
-    <card>
-      <row gap="3">
-        <button>hover → lift</button>
-        <button variant="outline" tone="primary">hover → outline</button>
-        <button variant="solid" tone="primary">active: press</button>
-      </row>
-    </card>
+    <row gap="3">
+      <button>hover → lift</button>
+      <button variant="outline" tone="primary">hover → outline</button>
+      <button variant="solid" tone="primary">active: press</button>
+    </row>
     <code-block code={code.states}></code-block>
     <p>
       Keys include <code>hover</code>, <code>focus</code> (→
@@ -86,9 +84,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       <code>style&#40;&#123; when: &#123; tablet: …, desktop: … &#125; &#125;&#41;</code>. A
       <code>&lt;card&gt;</code> already owns pad + surface:
     </p>
-    <card>
-      <p>pad 3 on a phone; when tablet → pad 6 — written as Style in L1/L2, not in a route.</p>
-    </card>
+    <p>pad 3 on a phone; when tablet → pad 6 — written as Style in L1/L2, not in a route.</p>
     <code-block code={code.conditions}></code-block>
     <p>
       Preference media uses the same map:
@@ -116,15 +112,12 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       and reflects the signal onto the host. A number bound into a length
       setter is px. Drag — the value is live; the tile paint lives in L1/L2:
     </p>
-    <card>
-      <column gap="3">
-        <slider min="0" max="200" step="1" bind:value={shift} />
-        <row gap="2" align="center">
-          <card></card>
-          <small>{shift()} px</small>
-        </row>
-      </column>
-    </card>
+    <column gap="3">
+      <slider min="0" max="200" step="1" bind:value={shift} />
+      <row gap="2" align="center">
+        <small>{shift()} px</small>
+      </row>
+    </column>
     <code-block code={code.dynamic}></code-block>
     <p>
       State stays in the controller and Style reads it — the

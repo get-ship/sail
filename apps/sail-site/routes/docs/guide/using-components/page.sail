@@ -277,7 +277,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       chips, table borders:
     </p>
     <code-block code={code.prose}></code-block>
-    <card>
+    <column gap="3">
       <prose>
         <h3>Release notes</h3>
         <p>The build went <strong>green</strong> at noon — see
@@ -288,7 +288,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           <li>elements carry their own behavior</li>
         </ul>
       </prose>
-    </card>
+    </column>
     <p>
       It takes no props. This site used to carry 515 lines of hand-written
       reading-column CSS; the framework stylesheet and
