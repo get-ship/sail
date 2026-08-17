@@ -329,7 +329,7 @@ mod emit_integration {
     #[test]
     fn app_style_card_is_a_global() {
         with_host_surface(None, || {
-            let (_, diags) = parse("style({ bg(card) })");
+            let (_, diags) = parse("style({ bg(surface) })");
             assert!(
                 !diags
                     .iter()

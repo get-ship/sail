@@ -26,7 +26,7 @@ export { ELEV_STEPS, RADIUS_KEYS, RECIPE_IDS, type ElevKey, type RadiusKey, type
 const BORDER_WIDTH_PATH = 'color.border.width'
 /** Frost fill — translucent card surface (not decorative surface-overlay α). */
 const CARD_BG_PATH = 'color.card.default'
-const CARD_BACKDROP_PATH = 'filter.card-backdrop'
+const CARD_BACKDROP_PATH = 'filter.backdrop'
 const CARD_REST_PATH = 'shadow.card-rest'
 
 /** Mock SSOT ramp relative to md: sm / md / lg / xl. */

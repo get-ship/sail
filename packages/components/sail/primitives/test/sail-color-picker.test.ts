@@ -48,6 +48,19 @@ describe('<sail-color-picker>', () => {
     expect(l!.max).toBe('100')
   })
 
+  it('opens a dialog named Choose color', async () => {
+    const { el } = mount(reg, 'sail-color-picker', { value: '#ff0000' })
+    await flush()
+    const trigger =
+      (shadow(el).querySelector('button[aria-label="Choose color"]') as HTMLElement | null) ??
+      inputOf(el)
+    trigger.click()
+    await flush()
+    const panel = shadow(el).querySelector('[role="dialog"][aria-label="Choose color"]')
+    expect(panel).not.toBeNull()
+    expect(panel!.getAttribute('popover')).toBe('manual')
+  })
+
   it('clicking a swatch commits its hex and invokes onChange', async () => {
     // Start away from black so the first base-ramp swatch is a real change.
     const { el } = mount(reg, 'sail-color-picker', { value: '#ff0000' })

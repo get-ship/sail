@@ -143,16 +143,16 @@ describe('component token write behavior', () => {
 })
 
 describe('composite component knobs (SPIN-3)', () => {
-  it('bg.card / bg.button members label as one face', async () => {
+  it('bg.surface / bg.canvas members label as one face', async () => {
     const { compositeForPath, componentKnobLabel } = await import('../src/design')
-    const color = compositeForPath('bg.card.color')
-    expect(color?.name).toBe('bg.card')
+    const color = compositeForPath('bg.surface.color')
+    expect(color?.name).toBe('bg.surface')
     expect(color?.member).toBe('color')
-    const button = compositeForPath('bg.button.color')
-    expect(button?.name).toBe('bg.button')
-    expect(button?.member).toBe('color')
-    expect(componentKnobLabel('bg.card.color', 'color')).toBe('bg.card · color')
-    expect(componentKnobLabel('bg.button.color', 'color')).toBe('bg.button · color')
+    const canvas = compositeForPath('bg.canvas.color')
+    expect(canvas?.name).toBe('bg.canvas')
+    expect(canvas?.member).toBe('color')
+    expect(componentKnobLabel('bg.surface.color', 'color')).toBe('bg.surface · color')
+    expect(componentKnobLabel('bg.canvas.color', 'color')).toBe('bg.canvas · color')
     expect(compositeForPath('color.card.default')).toBeNull()
   })
 

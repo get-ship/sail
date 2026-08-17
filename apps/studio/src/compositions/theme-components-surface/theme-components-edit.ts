@@ -126,8 +126,8 @@ export const FACE_ROLES: Record<string, { path: string; label: string }[]> = {
   card: [
     { path: 'color.card.default', label: 'Card' },
     { path: 'color.card.foreground', label: 'Card foreground' },
-    { path: 'filter.card-backdrop', label: 'Card backdrop' },
-    { path: 'image.card-texture', label: 'Card texture' },
+    { path: 'filter.backdrop', label: 'Card backdrop' },
+    { path: 'image.texture', label: 'Card texture' },
     { path: 'radius.lg', label: 'Radius' },
   ],
   popover: OVERLAY_ROLES,

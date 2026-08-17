@@ -1977,7 +1977,7 @@ mod tests {
 
     #[test]
     fn button_vsoft_rhs_diags() {
-        let rhs = "{bg(hover-bg).border({ color: border }).fg(button), when: {hover: filter({ opacity: 90 })}}";
+        let rhs = "{bg(hover-bg).border({ color: border }).fg(foreground), when: {hover: filter({ opacity: 90 })}}";
         let (_, diags) = spinnaker::parse_style_const_rhs(rhs);
         assert!(
             diags.is_empty(),

@@ -98,7 +98,7 @@ describe('theme-shape-surface', () => {
     const sail = readFileSync(SURFACE, 'utf8')
     // Correct frost channel — not surface-overlay noise α.
     expect(edit).toMatch(/color\.card\.default/)
-    expect(edit).toMatch(/filter\.card-backdrop/)
+    expect(edit).toMatch(/filter\.backdrop/)
     expect(edit).toMatch(/withColorAlpha|liveCardFill/)
     // Specimen freeform fill (liveBox pack or bind).
     expect(sail).toMatch(/liveCardFill|liveCardBox|use:liveBox/)
@@ -143,7 +143,7 @@ describe('theme-shape-surface', () => {
     expect(edit).toMatch(/shadow\.card-rest/)
     expect(edit).toMatch(/color\.border\.width/)
     expect(edit).toMatch(/color\.card\.default/)
-    expect(edit).toMatch(/filter\.card-backdrop/)
+    expect(edit).toMatch(/filter\.backdrop/)
   })
 
   it('session path navigates shape among facets', () => {

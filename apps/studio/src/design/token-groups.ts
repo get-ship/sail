@@ -49,7 +49,7 @@ type CompositeEntry = {
 export type CompositeRef = {
   /** Public identity (`dialog.border`). */
   name: string
-  /** Storage path (`bg.card` / `color.card.default`). */
+  /** Storage path (`bg.surface` / `color.card.default`). */
   path: string
   /** Member slot when `path` is a member leaf (`color`), else empty. */
   member: string

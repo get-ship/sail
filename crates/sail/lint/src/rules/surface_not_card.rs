@@ -18,10 +18,10 @@
 //! What it deliberately does NOT flag:
 //! - `var(--card-foreground)` — the paired text-on-card token, a separate
 //!   slot, not the surface.
-//! - `var(--card-texture)` — the texture channel (a `background` value
+//! - `var(--image-texture)` — the texture channel (a `background` value
 //!   like `none` or a data-URI), not the surface color either.
 //! - `--card: …;` declarations — themes defining the slot.
-//! - `--card-foreground: …;` / `--card-texture: …;` declarations — same.
+//! - `--card-foreground: …;` / `--image-texture: …;` declarations — same.
 //! - `var(--card-…)` for any other modifier (`--card-edge`,
 //!   `--card-shadow`, …) — the rule fires only on the bare surface slot.
 //!
@@ -99,7 +99,7 @@ struct CardHit<'a> {
 /// 1. The declaration's *property* must be in `SURFACE_PROPERTIES` —
 ///    `font-weight: var(--card)` etc. is not the surface layer.
 /// 2. The token name must be *exactly* `--card` — `--card-foreground`,
-///    `--card-texture`, etc. have a different slot semantics and are
+///    `--image-texture`, etc. have a different slot semantics and are
 ///    skipped via the `is_ident_byte` boundary check.
 fn scan_card_value_uses(content: &str) -> Vec<CardHit<'_>> {
     let mut out = Vec::new();
@@ -337,11 +337,11 @@ mod tests {
 
     #[test]
     fn var_card_texture_does_not_fire() {
-        // `--card-texture` is a CSS background value (e.g. `none` or a
+        // `--image-texture` is a CSS background value (e.g. `none` or a
         // data-URI), not the surface slot. Even when used in
-        // `background-image: var(--card-texture)` it is the texture
+        // `background-image: var(--image-texture)` it is the texture
         // channel, not the color.
-        let src = "<style>.x { background-image: var(--card-texture); }</style>";
+        let src = "<style>.x { background-image: var(--image-texture); }</style>";
         let f = run(src);
         assert!(f.is_empty(), "{f:?}");
     }
@@ -373,7 +373,7 @@ mod tests {
 
     #[test]
     fn card_texture_definition_does_not_fire() {
-        let src = "<style>:root { --card-texture: none; }</style>";
+        let src = "<style>:root { --image-texture: none; }</style>";
         let f = run(src);
         assert!(f.is_empty(), "{f:?}");
     }
