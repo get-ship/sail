@@ -19,26 +19,12 @@ fn bake_tokens_model() {
 
     println!("cargo:rerun-if-changed={}", model_src.display());
     walk_rerun(&model_src);
-    let platform_src = manifest.join("../compiler/stdlib/platform");
-    println!("cargo:rerun-if-changed={}", platform_src.display());
-    for name in ["chrome.css", "themes-chrome.css"] {
-        println!(
-            "cargo:rerun-if-changed={}",
-            platform_src.join(name).display()
-        );
-    }
 
     let out_dir = PathBuf::from(env::var("OUT_DIR").expect("OUT_DIR"));
     let dest = out_dir.join("baked_tokens_model.rs");
 
     let mut files: Vec<(String, PathBuf)> = Vec::new();
     collect_model_files(&model_src, &model_src, &mut files);
-    for name in ["chrome.css", "themes-chrome.css"] {
-        let p = platform_src.join(name);
-        if p.is_file() {
-            files.push((name.to_string(), p));
-        }
-    }
     files.sort_by(|a, b| a.0.cmp(&b.0));
 
     if files.is_empty() {

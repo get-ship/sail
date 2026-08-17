@@ -43,7 +43,7 @@ const GENERATED_HEADER: &str = "\
  *   4. Primitives         — spacing, radii, typography scale, motion curves
  *
  * Components should read the HIGHEST layer that fits.
- * Themes: model/themes/*.json → themes.css (plus model/themes-chrome.css).
+ * Themes: model/themes/*.json → themes.css + $extensions.sail.chrome.
  */
 ";
 
@@ -52,7 +52,7 @@ const THEMES_HEADER: &str = "\
  * GENERATED FILE — do not edit by hand.
  *
  * Theme token overrides from packages/sail/tokens/model/themes/*.json.
- * Structural flourishes: packages/sail/tokens/model/themes-chrome.css
+ * Structural flourishes: $extensions.sail.chrome on each theme (generated).
  * Regenerate: cargo run -p sail-compiler -- tokens
  */
 ";
@@ -359,7 +359,8 @@ pub const DEFAULT_PROJECT_THEME_ID: &str = "sail";
 /// Relative monorepo path to the on-disk DTCG model (catalog development).
 pub const MONOREPO_MODEL_REL: &str = "packages/sail/tokens/model";
 
-/// Platform-CSS layer that owns hand chrome (relocated out of the DTCG home).
+/// Platform-CSS layer (UA / vendor / anatomy adaptors). Structural chrome is
+/// generated from the theme engine — not a file in this directory.
 pub const MONOREPO_PLATFORM_REL: &str = "crates/sail/compiler/stdlib/platform";
 
 /// Relative monorepo path to package delivery output.
@@ -709,15 +710,21 @@ pub fn generate_with_options(
         ordered.push(l);
     }
 
-    let prepared_platform_chrome = chrome::generate_platform_chrome();
-    let prepared_themes_chrome = prepare_themes_chrome(model_dir);
-    // J4 writes these in place of the relocated hand files. Catalog emit
-    // still concatenates those files so today's tokens.css/themes.css stay
-    // stable; the calls keep the engine path live.
-    if prepared_platform_chrome.is_empty() || prepared_themes_chrome.is_empty() {
+    let emit_platform_chrome = is_product_catalog(model_dir);
+    let prepared_platform_chrome = if emit_platform_chrome {
+        chrome::generate_platform_chrome()
+    } else {
+        String::new()
+    };
+    let emit_ids: HashSet<String> = themes
+        .iter()
+        .filter_map(|t| t.meta.theme_id.clone())
+        .collect();
+    let prepared_themes_chrome = prepare_themes_chrome(model_dir, opts, &emit_ids);
+    if emit_platform_chrome && prepared_platform_chrome.is_empty() {
         bail!("engine chrome emit is empty");
     }
-    let chrome = load_platform_chrome("chrome.css", model_dir);
+    let chrome = prepared_platform_chrome.clone();
 
     let mut css_parts: Vec<String> = vec![GENERATED_HEADER.to_string()];
     for l in &ordered {
@@ -793,13 +800,10 @@ pub fn generate_with_options(
         theme_parts.push(emit_layer(t));
         theme_parts.push(String::new());
     }
-    // Structural chrome is hand-authored for the full catalog; it is always
-    // concatenated even when `enabled_catalog` thins token blocks (Phase D
-    // may slim chrome to match the emit set). Token variables still follow
-    // the emit set — chrome only adds non-token flourishes.
-    let themes_chrome = load_platform_chrome("themes-chrome.css", model_dir);
-    if !themes_chrome.is_empty() {
-        theme_parts.push(themes_chrome.trim_end().to_string());
+    // Per-theme structural chrome from `$extensions.sail.chrome` — emit-set
+    // only (thinned catalog does not ship unused theme flourishes).
+    if !prepared_themes_chrome.is_empty() {
+        theme_parts.push(prepared_themes_chrome.trim_end().to_string());
         theme_parts.push(String::new());
     }
     let themes_css_body = collapse_blank_lines(&theme_parts.join("\n"));
@@ -850,8 +854,21 @@ pub fn generate_with_options(
     let path_count = registry["paths"].as_object().map(|o| o.len()).unwrap_or(0);
     let token_count = registry["names"].as_array().map(|a| a.len()).unwrap_or(0);
     gate_model_var_refs(&base_tokens, &registry)?;
+    // Theme chrome is author data — always gate, even on fixture catalogs.
+    gate_css_var_refs(
+        "generated themes chrome",
+        &prepared_themes_chrome,
+        &registry,
+    )?;
     // Platform CSS is the product stdlib; skip the gate on tiny fixture catalogs.
     if token_count >= 100 {
+        if emit_platform_chrome {
+            gate_css_var_refs(
+                "generated platform chrome",
+                &prepared_platform_chrome,
+                &registry,
+            )?;
+        }
         gate_platform_css_var_refs(&registry)?;
     }
     let registry_json = out_dir.join("token-registry.json");
@@ -886,15 +903,28 @@ pub fn generate_with_options(
 }
 
 /// Per-theme structural CSS from `$extensions.sail.chrome`. Header-only when
-/// the catalog has no chrome entries (today's themes); J4 spends this string.
-fn prepare_themes_chrome(model_dir: &Path) -> String {
-    let themes_dir = model_dir.join("themes");
-    if !themes_dir.is_dir() {
-        return chrome::generate_all_themes_chrome(std::iter::empty());
+/// the emit set has no chrome entries. Project themes override catalog on id.
+fn prepare_themes_chrome(
+    model_dir: &Path,
+    opts: &GenerateOptions,
+    emit_ids: &HashSet<String>,
+) -> String {
+    let mut docs: BTreeMap<String, Value> = BTreeMap::new();
+    collect_theme_chrome_docs(&model_dir.join("themes"), &mut docs);
+    for dir in &opts.project_theme_dirs {
+        collect_theme_chrome_docs(dir, &mut docs);
     }
-    let mut docs: Vec<(String, Value)> = Vec::new();
-    let Ok(rd) = fs::read_dir(&themes_dir) else {
-        return chrome::generate_all_themes_chrome(std::iter::empty());
+    docs.retain(|id, _| emit_ids.contains(id));
+    let refs: Vec<(&str, &Value)> = docs.iter().map(|(id, d)| (id.as_str(), d)).collect();
+    chrome::generate_all_themes_chrome(refs)
+}
+
+fn collect_theme_chrome_docs(dir: &Path, docs: &mut BTreeMap<String, Value>) {
+    if !dir.is_dir() {
+        return;
+    }
+    let Ok(rd) = fs::read_dir(dir) else {
+        return;
     };
     for e in rd.flatten() {
         let path = e.path();
@@ -909,11 +939,14 @@ fn prepare_themes_chrome(model_dir: &Path) -> String {
             .map(|s| s.to_string_lossy().into_owned())
             .unwrap_or_default();
         if !id.is_empty() {
-            docs.push((id, doc));
+            docs.insert(id, doc);
         }
     }
-    let refs: Vec<(&str, &Value)> = docs.iter().map(|(id, d)| (id.as_str(), d)).collect();
-    chrome::generate_all_themes_chrome(refs)
+}
+
+/// Product catalog (not a tiny fixture) — owns generated platform chrome.
+fn is_product_catalog(model_dir: &Path) -> bool {
+    model_dir.join("density-compact.json").is_file()
 }
 
 fn platform_dir_candidates() -> Vec<PathBuf> {
@@ -962,23 +995,21 @@ fn cargo_workspace_root() -> Result<PathBuf> {
     Ok(dir)
 }
 
-fn load_platform_chrome(name: &str, model_dir: &Path) -> String {
-    let local = model_dir.join(name);
-    if let Ok(s) = fs::read_to_string(&local) {
-        return s;
-    }
-    // Fixture catalogs omit chrome on purpose — do not splice product chrome.
-    let looks_like_catalog = model_dir.join("density-compact.json").is_file();
-    if !looks_like_catalog {
-        return String::new();
-    }
-    for dir in platform_dir_candidates() {
-        let p = dir.join(name);
-        if let Ok(s) = fs::read_to_string(&p) {
-            return s;
+fn gate_css_var_refs(label: &str, css: &str, registry: &Value) -> Result<()> {
+    let known = registry_css_names(registry);
+    let declared = extract_css_var_decls(css);
+    let mut missing = BTreeSet::new();
+    for name in extract_css_var_refs(css) {
+        if platform_var_allowed(&name, &known, &declared) {
+            continue;
         }
+        missing.insert(format!("{label} uses var(--{name})"));
     }
-    String::new()
+    if !missing.is_empty() {
+        let list = missing.into_iter().collect::<Vec<_>>().join("; ");
+        bail!("platform CSS var() gate: unresolvable references: {list}");
+    }
+    Ok(())
 }
 
 fn extract_css_var_refs(text: &str) -> BTreeSet<String> {
@@ -4402,6 +4433,193 @@ mod tests {
     }
 
     #[test]
+    fn unresolvable_var_fails_gate() {
+        let registry = serde_json::json!({ "names": ["foreground"] });
+        let err = gate_css_var_refs(
+            "generated platform chrome",
+            "body { background: var(--not-a-real-token); }",
+            &registry,
+        )
+        .unwrap_err()
+        .to_string();
+        assert!(
+            err.contains("unresolvable") && err.contains("not-a-real-token"),
+            "expected unresolvable-var gate error, got: {err}"
+        );
+        // Fallback is not a resolve.
+        let err = gate_css_var_refs(
+            "generated platform chrome",
+            "body { color: var(--missing, black); }",
+            &registry,
+        )
+        .unwrap_err()
+        .to_string();
+        assert!(
+            err.contains("missing"),
+            "fallback must not count as declared: {err}"
+        );
+        assert!(
+            gate_css_var_refs(
+                "generated platform chrome",
+                "body { color: var(--foreground); }",
+                &registry,
+            )
+            .is_ok()
+        );
+    }
+
+    #[test]
+    fn unresolvable_theme_chrome_var_fails_generate() {
+        let dir = tempfile::tempdir().unwrap();
+        let model = dir.path().join("model");
+        let out = dir.path().join("src");
+        write_file(
+            &model.join("base.json"),
+            r#"{
+  "$extensions": { "sail": { "selector": ":root", "layer": "base" } },
+  "color": {
+    "primary": { "$value": "oklch(0.5 0.1 250)", "$type": "color" },
+    "background": { "$value": "oklch(0.98 0 0)", "$type": "color" },
+    "foreground": { "$value": "oklch(0.2 0 0)", "$type": "color" },
+    "muted": {
+      "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
+      "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
+    },
+    "accent": {
+      "default": { "$value": "oklch(0.55 0.16 50)", "$type": "color" },
+      "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
+    }
+  }
+}"#,
+        );
+        write_file(
+            &model.join("themes/paper.json"),
+            r#"{
+  "$extensions": {
+    "sail": {
+      "themeId": "paper",
+      "defaultMode": "light",
+      "supportedModes": ["light"],
+      "chrome": [{
+        "selector": "body",
+        "props": { "background": "var(--not-a-real-token)" }
+      }]
+    }
+  },
+  "modes": {
+    "light": {
+      "color": {
+        "primary": {
+          "default": { "$value": "oklch(0.4 0.05 75)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
+        },
+        "background": { "$value": "oklch(0.98 0 0)", "$type": "color" },
+        "foreground": { "$value": "oklch(0.20 0 0)", "$type": "color" },
+        "muted": {
+          "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
+        },
+        "accent": {
+          "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
+        }
+      }
+    }
+  }
+}"#,
+        );
+        let err = generate(&model, &out).unwrap_err().to_string();
+        assert!(
+            err.contains("unresolvable") && err.contains("not-a-real-token"),
+            "generate must refuse unknown chrome var, got: {err}"
+        );
+    }
+
+    #[test]
+    fn generate_writes_engine_platform_chrome_for_catalog() {
+        let dir = tempfile::tempdir().unwrap();
+        let model = dir.path().join("model");
+        let out = dir.path().join("src");
+        write_file(
+            &model.join("base.json"),
+            r#"{
+  "$extensions": { "sail": { "selector": ":root", "layer": "base" } },
+  "color": {
+    "primary": { "$value": "oklch(0.5 0.1 250)", "$type": "color" },
+    "background": { "$value": "oklch(0.98 0 0)", "$type": "color" },
+    "foreground": { "$value": "oklch(0.2 0 0)", "$type": "color" },
+    "gradient": { "surface": { "$value": "none", "$type": "string" } }
+  },
+  "overlay": {
+    "fill": { "$value": "none", "$type": "string" },
+    "blend": { "$value": "normal", "$type": "string" },
+    "opacity": { "$value": "1", "$type": "number" }
+  },
+  "scrollbar": {
+    "thumb": { "$value": "transparent", "$type": "color" },
+    "track": { "$value": "transparent", "$type": "string" },
+    "width": { "$value": "10px", "$type": "dimension" },
+    "radius": { "$value": "999px", "$type": "dimension" }
+  },
+  "z": { "max": { "$value": "100", "$type": "number" } }
+}"#,
+        );
+        // density-compact marks a product catalog so platform chrome emits.
+        write_file(
+            &model.join("density-compact.json"),
+            r#"{ "$extensions": { "sail": { "selector": ":root", "layer": "density-compact" } } }"#,
+        );
+        write_file(
+            &model.join("themes/sail.json"),
+            r#"{
+  "$extensions": {
+    "sail": {
+      "themeId": "sail",
+      "defaultMode": "light",
+      "supportedModes": ["light"]
+    }
+  },
+  "modes": {
+    "light": {
+      "color": {
+        "primary": {
+          "default": { "$value": "oklch(0.5 0.1 250)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
+        },
+        "background": { "$value": "oklch(0.98 0 0)", "$type": "color" },
+        "foreground": { "$value": "oklch(0.20 0 0)", "$type": "color" },
+        "muted": {
+          "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
+        },
+        "accent": {
+          "default": { "$value": "oklch(0.55 0.16 50)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
+        }
+      }
+    }
+  }
+}"#,
+        );
+        generate(&model, &out).expect("catalog chrome generate");
+        let tokens_css = fs::read_to_string(out.join("tokens.css")).unwrap();
+        assert!(
+            tokens_css.contains("body::before"),
+            "catalog emit must write generated platform chrome: {tokens_css}"
+        );
+        assert!(tokens_css.contains("var(--overlay-fill)"));
+        assert!(tokens_css.contains("var(--scrollbar-thumb)"));
+        assert!(
+            !tokens_css.contains("ship-scroll"),
+            "generated chrome must not revive ship-scroll utilities"
+        );
+        assert!(
+            !tokens_css.contains("/* chrome */\nbody { margin: 0; }"),
+            "must not concatenate a hand chrome.css"
+        );
+    }
+
+    #[test]
     fn flatten_and_resolve_alias() {
         let doc: Value = serde_json::json!({
             "space": {
@@ -4511,7 +4729,10 @@ mod tests {
     "sail": {
       "layer": "theme",
       "themeId": "paper",
-      "defaultMode": "light"
+      "defaultMode": "light",
+      "chrome": [
+        { "selector": "body", "props": { "background-color": "ivory" } }
+      ]
     }
   },
   "modes": {
@@ -4556,15 +4777,6 @@ mod tests {
 }
 "#,
         );
-        write_file(
-            &model.join("chrome.css"),
-            "/* chrome */\nbody { margin: 0; }\n",
-        );
-        write_file(
-            &model.join("themes-chrome.css"),
-            "/* themes chrome */\nbody[theme='paper'] { background: white; }\n",
-        );
-
         let report = generate(&model, &out).unwrap();
         assert!(report.tokens_css.is_file());
         assert!(report.themes_css.is_file());
@@ -4579,7 +4791,10 @@ mod tests {
             !tokens_css.contains(".dark {"),
             "dark.json dual layer must not emit"
         );
-        assert!(tokens_css.contains("/* chrome */"));
+        assert!(
+            !tokens_css.contains("body::before"),
+            "tiny fixtures must not splice product platform chrome"
+        );
 
         let themes_css = fs::read_to_string(&report.themes_css).unwrap();
         assert!(
@@ -4596,7 +4811,15 @@ mod tests {
             themes_css.contains("--bg-muted-color: var(--muted);"),
             "theme scopes must rebind bg.muted: {themes_css}"
         );
-        assert!(themes_css.contains("/* themes chrome */"));
+        assert!(
+            themes_css.contains("Per-theme structural chrome"),
+            "themes.css must include generated chrome header: {themes_css}"
+        );
+        assert!(
+            themes_css.contains("[theme='paper']"),
+            "paper chrome from $extensions.sail.chrome: {themes_css}"
+        );
+        assert!(themes_css.contains("background-color: ivory"));
 
         let reg: Value =
             serde_json::from_str(&fs::read_to_string(&report.registry_json).unwrap()).unwrap();

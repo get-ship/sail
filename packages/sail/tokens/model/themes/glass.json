@@ -11,7 +11,45 @@
         "density": true,
         "contrast": true,
         "reducedMotion": true
-      }
+      },
+      "chrome": [
+        {
+          "selector": "body",
+          "props": {
+            "background-color": "oklch(0.97 0.005 240)",
+            "background-image": "radial-gradient(ellipse 80% 60% at 0% 0%, oklch(0.92 0.05 220 / 18%), transparent 75%), radial-gradient(ellipse 75% 55% at 100% 100%, oklch(0.92 0.05 30 / 14%), transparent 75%), radial-gradient(ellipse 60% 45% at 100% 0%, oklch(0.93 0.04 300 / 10%), transparent 80%)",
+            "background-attachment": "fixed"
+          }
+        },
+        {
+          "selector": "body",
+          "media": "(prefers-reduced-motion: no-preference)",
+          "props": { "animation": "glass-mesh 36s ease-in-out infinite alternate" }
+        },
+        {
+          "keyframes": "glass-mesh",
+          "frames": {
+            "0%": { "background-position": "0% 0%, 100% 100%, 100% 0%" },
+            "100%": { "background-position": "8% 4%, 92% 96%, 96% 4%" }
+          }
+        },
+        {
+          "selector": "sail-card, .sail-card",
+          "props": {
+            "border-image": "linear-gradient(135deg, oklch(0.62 0.14 280 / 50%), oklch(1 0 0 / 60%) 30%, oklch(0.62 0.16 50 / 50%) 70%, oklch(1 0 0 / 60%)) 1"
+          }
+        },
+        {
+          "selector": "h1, h2, [class*='heading']",
+          "props": {
+            "text-shadow": "0 1px 0 oklch(1 0 0 / 50%), 0 0 12px oklch(0.62 0.14 280 / 14%)"
+          }
+        },
+        {
+          "selector": "sail-card:hover, .sail-card:hover",
+          "props": { "--filter-backdrop": "blur(32px) saturate(220%)" }
+        }
+      ]
     }
   },
   "anchors": {
