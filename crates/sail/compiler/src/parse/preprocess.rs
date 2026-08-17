@@ -2011,13 +2011,7 @@ fn parse_attr_list(s: &str) -> Vec<(String, String)> {
 ///     skins, contracts, and CEM see nothing new.
 fn lower_prop_shorthand(source: &str) -> String {
     const TONES: &[&str] = &[
-        "primary",
-        "info",
-        "success",
-        "warning",
-        "destructive",
-        "accent",
-        "muted",
+        "primary", "info", "success", "warning", "danger", "accent", "muted",
     ];
     const SIZES: &[&str] = &["xs", "sm", "md", "lg", "xl"];
     const VARIANTS: &[&str] = &["solid", "soft", "outline", "ghost"];

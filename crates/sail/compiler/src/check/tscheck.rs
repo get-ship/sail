@@ -5272,7 +5272,7 @@ export default controller((ctx) => {
 
     const HARNESS: &str = r#"
 export type Prop<T> = { readonly __prop: T }
-export const tone: Prop<'default'|'primary'|'info'|'success'|'warning'|'destructive'|'accent'|'muted'> = { __prop: 'default' }
+export const tone: Prop<'default'|'primary'|'info'|'success'|'warning'|'danger'|'accent'|'muted'> = { __prop: 'default' }
 export const size: Prop<'sm'|'md'|'lg'> = { __prop: 'md' }
 export const bool: Prop<boolean> = { __prop: false }
 export const string: Prop<string> = { __prop: '' }

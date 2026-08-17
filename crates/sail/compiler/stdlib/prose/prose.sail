@@ -4,7 +4,7 @@
 -->
 
 <scope>
-  style host = {display(block).fg(foreground).type({ family: body, leading: loose })}
+  style host = {display(block).fg(foreground).type({ family: body, leading: normal })}
 </scope>
 
 <div style(host)>

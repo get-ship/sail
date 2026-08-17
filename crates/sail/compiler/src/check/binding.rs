@@ -120,7 +120,7 @@ pub fn resolve(
                     "`{scope_name}` is used as a token-group paint path \
                      (`{scope_name}.{}`) but its type is not a color group \
                      (Tone) — annotate the prop with the Tone union \
-                     (primary·info·success·warning·destructive·accent·muted).",
+                     (primary·info·success·warning·danger·accent·muted).",
                     site.member.as_deref().unwrap_or("")
                 ))
                 .with_span(site.span)

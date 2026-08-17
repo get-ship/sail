@@ -66,7 +66,7 @@ pub const SCOPE_GRAMMAR: &[ScopeEntry] = &[
     ScopeEntry {
         form: "shared tone/size prop",
         syntax: "tone = 'primary'  ·  size = 'md'",
-        summary: "Bare tone/size defaults type as the shared stdlib unions (tone: primary·info·success·warning·destructive·accent·muted; size: xs·sm·md·lg) and reflect as ordinary props — CVA axes by convention",
+        summary: "Bare tone/size defaults type as the shared stdlib unions (tone: primary·info·success·warning·danger·accent·muted; size: xs·sm·md·lg) and reflect as ordinary props — CVA axes by convention",
         example: "<scope>\n  props: { tone = 'primary', size = 'md' }\n</scope>\n<p>{tone}</p>",
     },
     ScopeEntry {

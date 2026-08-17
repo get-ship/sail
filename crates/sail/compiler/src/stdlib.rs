@@ -223,6 +223,25 @@ pub fn element(tag: &str) -> Option<&'static StdlibElement> {
     elements().iter().find(|e| e.tag == tag)
 }
 
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn every_stdlib_element_compiles() {
+        let mut fails = Vec::new();
+        for (tag, src) in super::SOURCES {
+            if let Err(e) = crate::compile_element(src, tag) {
+                fails.push(format!("{tag}: {}", e.message));
+            }
+        }
+        assert!(
+            fails.is_empty(),
+            "stdlib elements failed to compile ({}):\n{}",
+            fails.len(),
+            fails.join("\n")
+        );
+    }
+}
+
 /// Platform adaptor CSS — vendor/UA/native plumbing the vocabulary cannot
 /// yet express. Authored as files under `stdlib/platform/`; never Rust strings.
 const PLATFORM: &[(&str, &str)] = &[

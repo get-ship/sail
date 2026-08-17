@@ -1,7 +1,7 @@
 <!--
   <label> — size match; weight + transform tokens; .req gate via group-required when.
   Host + .req via style chains / match / when.
-  Tokens: foreground, type-label-weight, type-label-case. Default type is sm, not base.
+  Tokens: foreground, type-label-weight. Case is uppercase (type.label). Default type is sm, not base.
 -->
 
 <scope>
@@ -10,7 +10,7 @@
     required = false
   }
 
-  style base = {fg(foreground).cursor(pointer).group().type({ family: body, weight: bind(labelWeight), tracking: normal, size: sm, case: type-label-case })}
+  style base = {fg(foreground).cursor(pointer).group().type({ family: body, weight: bind(type-label-weight), tracking: normal, size: sm, case: uppercase })}
   style sizeMd = {type({ size: sm })}
   style sizeSm = {type({ size: xs })}
   style sizeLg = {type({ size: md })}

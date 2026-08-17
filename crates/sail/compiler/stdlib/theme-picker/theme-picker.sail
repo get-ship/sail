@@ -41,11 +41,11 @@
   style triggerIcon = {size(icon-size-sm).display(block)}
   style glyph = {fg(foreground).type({ size: sm, leading: none })}
 
-  style panel = {position({ scheme: fixed, inset: auto, l: bind(anchorLeft), t: bind(anchorTop), z: popover }).pad(0).margin(0).size({ w: panel-max-w-sm, max-w: 24rem, min-w: 0, max-h: panel-vh-md }).overflow({ x: hidden, y: auto, overscroll: contain }).fg(foreground).bg(popover).border({ color: border, width: hairline }).radius(lg).elevation(lg), when: {group-inline: gone, group-chrome-inline: gone, group-mode: gone, group-mode-only: gone}}
+  style panel = {position({ scheme: fixed, inset: auto, l: bind(anchorLeft), t: bind(anchorTop), z: popover }).pad(0).margin(0).size({ w: panel-max-w-sm, max-w: 24rem, min-w: 0, max-h: panel-vh-md }).overflow({ x: hidden, y: auto, overscroll: contain }).fg(foreground).bg(overlay).border({ color: border, width: hairline }).radius(lg).elevation(lg), when: {group-inline: gone, group-chrome-inline: gone, group-mode: gone, group-mode-only: gone}}
   style panelMenuRow = {size({ w: 100%, max-w: none, min-w: 0 })}
 
   style header = {size({ w: 100%, min-w: 0 }).pad({ x: 3, t: 3, b: 0 })}
-  style headerEyebrow = {fg(muted-foreground).type({ size: xs, weight: semibold, tracking: wide, case: type-label-case, leading: none })}
+  style headerEyebrow = {fg(muted-foreground).type({ size: xs, weight: semibold, tracking: wide, case: uppercase, leading: none })}
   style headerTitle = {fg(foreground).type({ family: heading, weight: bind(type-heading-weight), size: base, leading: tight, wrap: truncate })}
   style headerMeta = {fg(muted-foreground).type({ size: xs, leading: none })}
 
@@ -54,7 +54,7 @@
   style modeSegBtn = {grow(1).size({ min-w: 0 }).pad({ y: 2, x: 2 }).fg(muted-foreground).bg(transparent).border({ width: 0, edge: l }).border({ width: 0, edge: r }).border({ width: 0, edge: t }).border({ width: 2, edge: b, color: transparent }).radius({ t: sm }).cursor(pointer).select(none).tapHighlight(none).type({ size: xs, weight: medium, align: center, wrap: nowrap }), when: {hover: fg(foreground).bg(hover-bg), focus: border({ style: solid, kind: outline, width: 2, color: ring, offset: ring-offset }), selected: fg(foreground).bg(hover-bg).border({ color: primary, edge: b }).type({ weight: semibold })}}
   style modeSegBtnPill = {border({ width: 0 }).radius(sm), when: {selected: bg(background).fg(foreground).border({ width: 0 }).type({ weight: semibold })}}
 
-  style catalogHead = {size({ w: 100%, min-w: 0 }).pad({ x: 3, t: 2, b: 1 }).fg(muted-foreground).type({ size: xs, weight: semibold, tracking: wide, case: type-label-case })}
+  style catalogHead = {size({ w: 100%, min-w: 0 }).pad({ x: 3, t: 2, b: 1 }).fg(muted-foreground).type({ size: xs, weight: semibold, tracking: wide, case: uppercase })}
 
   style panelList = {size({ w: 100%, min-w: 0 }).pad(1_5)}
   style option = {size({ w: 100%, min-w: 0 }).pad(0).overflow({ all: hidden }).bg(transparent).border({ color: transparent, width: hairline }).radius(md).cursor(pointer).type({ align: start }), when: {group-chrome-inline: optionInline, group-inline: optionInline, group-orientation-vertical: optionStretch}}

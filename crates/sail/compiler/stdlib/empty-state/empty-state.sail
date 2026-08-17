@@ -26,7 +26,7 @@
   style icon = {self(center).size(12).radius(lg).bg(muted).fg(muted-foreground)}
   style copy = {self(center).size({ max-w: 38ch, w: 100% })}
   style title = {fg(foreground).type({ family: heading, weight: semibold, leading: tight, size: md, align: center })}
-  style desc = {size({ max-w: 38ch }).fg(muted-foreground).type({ leading: loose, size: sm, align: center })}
+  style desc = {size({ max-w: 38ch }).fg(muted-foreground).type({ leading: normal, size: sm, align: center })}
   style actions = {self(center)}
 </scope>
 

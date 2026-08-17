@@ -52,7 +52,7 @@ pub(crate) struct ScopeBlock {
     pub style_errors: Vec<CompileError>,
 }
 
-const TONE_VOCAB: &str = "primary|info|success|warning|destructive|accent|muted";
+const TONE_VOCAB: &str = "primary|info|success|warning|danger|accent|muted";
 const SIZE_VOCAB: &str = "xs|sm|md|lg";
 
 const ALLOWED_HINT: &str = "`<scope>` holds `type` declarations, type/Style-value \

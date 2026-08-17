@@ -22,18 +22,18 @@
   // beats group-hover / group-focus-within so Escape-while-hovering snaps.
   style hide = {filter({ opacity: 0 })}
   style show = {filter({ opacity: 100 }), match: { 'data-hidden': { true: hide } }}
-  style bubble = {position({ scheme: absolute, t: bind(ttTop), b: bind(ttBottom), l: bind(ttLeft), r: bind(ttRight), z: popover }).pad({ y: 1, x: 2 }).size({ w: max, min-w: max }).overflow({ all: visible }).translateX(bind(ttTx)).filter({ opacity: 0 }).bg(popover).fg(foreground).radius(md).elevation(md).border({ width: 0 }).pointerEvents(none).type({ family: body, size: xs, weight: medium, wrap: nowrap })}
+  style bubble = {position({ scheme: absolute, t: bind(ttTop), b: bind(ttBottom), l: bind(ttLeft), r: bind(ttRight), z: popover }).pad({ y: 1, x: 2 }).size({ w: max, min-w: max }).overflow({ all: visible }).translateX(bind(ttTx)).filter({ opacity: 0 }).bg(overlay).fg(foreground).radius(md).elevation(md).border({ width: 0 }).pointerEvents(none).type({ family: body, size: xs, weight: medium, wrap: nowrap })}
   // Zero-box border triangle; match placement points the filled edge outward.
   style arrowBox = {position({ scheme: absolute, t: bind(ttArrowTop), b: bind(ttArrowBottom), l: bind(ttArrowLeft), r: bind(ttArrowRight) }).size({ w: 0, h: 0 }).margin({ s: bind(ttArrowMl), t: bind(ttArrowMt) }).content(empty).bg(transparent).border({ width: 0, style: solid })}
   // placement=top → caret on bubble bottom, points down (border-top filled).
   // Border widths are px scale (0|1|2|3|4|8) — 4px sides ≈ prior diamond size.
-  style arrowFromTop = {border({ width: 4, edge: l, color: transparent }).border({ width: 4, edge: r, color: transparent }).border({ width: 4, edge: t, color: popover }).border({ width: 0, edge: b, color: transparent })}
+  style arrowFromTop = {border({ width: 4, edge: l, color: transparent }).border({ width: 4, edge: r, color: transparent }).border({ width: 4, edge: t, color: overlay }).border({ width: 0, edge: b, color: transparent })}
   // placement=bottom → caret on bubble top, points up.
-  style arrowFromBottom = {border({ width: 4, edge: l, color: transparent }).border({ width: 4, edge: r, color: transparent }).border({ width: 4, edge: b, color: popover }).border({ width: 0, edge: t, color: transparent })}
+  style arrowFromBottom = {border({ width: 4, edge: l, color: transparent }).border({ width: 4, edge: r, color: transparent }).border({ width: 4, edge: b, color: overlay }).border({ width: 0, edge: t, color: transparent })}
   // placement=left → caret on bubble right, points right.
-  style arrowFromLeft = {border({ width: 4, edge: t, color: transparent }).border({ width: 4, edge: b, color: transparent }).border({ width: 4, edge: l, color: popover }).border({ width: 0, edge: r, color: transparent })}
+  style arrowFromLeft = {border({ width: 4, edge: t, color: transparent }).border({ width: 4, edge: b, color: transparent }).border({ width: 4, edge: l, color: overlay }).border({ width: 0, edge: r, color: transparent })}
   // placement=right → caret on bubble left, points left.
-  style arrowFromRight = {border({ width: 4, edge: t, color: transparent }).border({ width: 4, edge: b, color: transparent }).border({ width: 4, edge: r, color: popover }).border({ width: 0, edge: l, color: transparent })}
+  style arrowFromRight = {border({ width: 4, edge: t, color: transparent }).border({ width: 4, edge: b, color: transparent }).border({ width: 4, edge: r, color: overlay }).border({ width: 0, edge: l, color: transparent })}
 </scope>
 
 <span use:tipDescribe style(host)>
