@@ -184,7 +184,7 @@ fn scaffold_theme_copies_default_and_writes_config() {
     assert!(status.success(), "deck scaffold theme exited {status:?}");
 
     // Modern external layout: <project>/themes/<id>.json (EXT-1 E4).
-    let theme = project.join("themes/ship.json");
+    let theme = project.join("themes/sail.json");
     assert!(
         theme.is_file(),
         "missing {} after scaffold theme",
@@ -205,13 +205,13 @@ fn scaffold_theme_copies_default_and_writes_config() {
     );
     let body = std::fs::read_to_string(&cfg).expect("read config");
     assert!(
-        body.contains("\"default\": \"ship\""),
+        body.contains("\"default\": \"sail\""),
         "config missing default theme: {body}"
     );
     // Thin single-id allowlist (C5) — not a full catalog list / null.
     assert!(
-        body.contains("\"enabled\": [\"ship\"]"),
-        "config must thin-enable only ship: {body}"
+        body.contains("\"enabled\": [\"sail\"]"),
+        "config must thin-enable only sail: {body}"
     );
     assert!(
         body.contains("\"deck\"") && body.contains("\"render\": \"csr\""),
@@ -363,7 +363,7 @@ fn create_writes_four_entry_tree_and_check_is_green() {
         "package.json",
         "sail.config.jsonc",
         "routes/page.sail",
-        "themes/ship.json",
+        "themes/sail.json",
     ] {
         let p = app.join(rel);
         assert!(

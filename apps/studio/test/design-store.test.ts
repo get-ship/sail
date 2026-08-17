@@ -713,7 +713,7 @@ describe('brand color + mode-aware paths + decisions', () => {
 describe('preview in app + token filters', () => {
   it('previewInApp posts theme-preview and emits status (no documentElement CSSOM)', () => {
     const base = {
-      $extensions: { sail: { themeId: 'ship', density: 'compact' } },
+      $extensions: { sail: { themeId: 'sail', density: 'compact' } },
       radius: {
         sm: { $value: '4px', $type: 'dimension' },
         md: { $value: '6px', $type: 'dimension' },
@@ -742,7 +742,7 @@ describe('preview in app + token filters', () => {
             (m as { channel?: string }).channel === 'sail-studio',
         ),
       ).toBe(true)
-      expect(getDesignState().statusNote).toMatch(/preview ship/)
+      expect(getDesignState().statusNote).toMatch(/preview sail/)
       expect(getDesignState().statusNote).toMatch(/density compact/)
     } finally {
       window.postMessage = orig
@@ -751,7 +751,7 @@ describe('preview in app + token filters', () => {
 
   it('loadThemes preserves dirty working doc on catalog refresh', async () => {
     const base = {
-      $extensions: { ship: { themeId: 'ship', density: 'default' } },
+      $extensions: { ship: { themeId: 'sail', density: 'default' } },
       radius: {
         sm: { $value: '4px', $type: 'dimension' },
         md: { $value: '6px', $type: 'dimension' },
@@ -768,7 +768,7 @@ describe('preview in app + token filters', () => {
     const mock = {
       sailThemeList: async ({ path }: { path: string }) => {
         lists.push(path)
-        return { files: ['ship.json'] }
+        return { files: ['sail.json'] }
       },
       sailThemeRead: async () => {
         readCalls += 1
@@ -785,7 +785,7 @@ describe('preview in app + token filters', () => {
     expect(lists.length).toBeGreaterThan(0)
     expect(readCalls).toBe(0)
     // Explicit themeId still attempts reopen (fork / force path); errors are humanized.
-    await loadThemes({ themeId: 'ship' })
+    await loadThemes({ themeId: 'sail' })
     expect(readCalls).toBeGreaterThan(0)
     expect(getDesignState().error).toMatch(/Could not open that theme/)
     expect(getDesignState().error).not.toMatch(/openTheme must not run/)

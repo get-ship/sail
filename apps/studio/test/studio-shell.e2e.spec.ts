@@ -292,7 +292,7 @@ test.describe('studio shell (operator-visible contract)', () => {
     const candidates = [
       '/themes/studio/components',
       '/themes/my-ship/components',
-      '/themes/ship/components',
+      '/themes/sail/components',
     ]
     let landed = ''
     for (const url of candidates) {

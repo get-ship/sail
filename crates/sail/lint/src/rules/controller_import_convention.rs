@@ -485,8 +485,8 @@ mod tests {
         let f = lint_at(
             "apps/demo/src/page.controller.ts",
             "import { Widget } from '@/components/widget'\n\
-             import { ship } from '@/themes/ship'\n\
-             export default controller(() => ({ Widget, ship }))\n",
+             import { sail } from '@/themes/sail'\n\
+             export default controller(() => ({ Widget, sail }))\n",
         );
         assert!(
             f.is_empty(),
@@ -502,8 +502,8 @@ mod tests {
              import { Widget } from '@/components/widget'\n\
              import { double } from '@/compositions/double'\n\
              import { save } from '@/actions/save'\n\
-             import { ship } from '@/themes/ship'\n\
-             export default controller(() => ({ tally, Widget, double, save, ship }))\n",
+             import { sail } from '@/themes/sail'\n\
+             export default controller(() => ({ tally, Widget, double, save, sail }))\n",
         );
         assert!(f.is_empty(), "every table @/ home must be allowed: {f:?}");
     }
@@ -515,8 +515,8 @@ mod tests {
             "import { listModel } from './compositions/list-model'\n\
              import { Widget } from './components/widget'\n\
              import { save } from './actions/save'\n\
-             import { ship } from '../themes/ship'\n\
-             export default controller(() => ({ listModel, Widget, save, ship }))\n",
+             import { sail } from '../themes/sail'\n\
+             export default controller(() => ({ listModel, Widget, save, sail }))\n",
         );
         assert!(
             f.is_empty(),

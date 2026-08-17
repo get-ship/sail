@@ -207,7 +207,7 @@ mod tests {
         let args = json!({
             "source": r#"<div style({ bg(primary).pad(2) })>Hi {ticks()}</div>"#,
             "viewport": "200x100",
-            "theme": "ship",
+            "theme": "sail",
             "mode": "light"
         });
         let out = screenshot(&args, &ctx).expect("screenshot");
@@ -243,7 +243,7 @@ mod tests {
         let args = json!({
             "path": rel,
             "viewport": "400x300",
-            "theme": "ship",
+            "theme": "sail",
             "mode": "light"
         });
         let out = screenshot(&args, &ctx).expect("screenshot");

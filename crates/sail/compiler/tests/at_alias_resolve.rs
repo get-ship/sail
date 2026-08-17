@@ -31,7 +31,7 @@ fn norm(p: &Path) -> String {
 }
 
 /// Whether `resolved` is under `project_root` and ends with `expected_rel`
-/// (e.g. `src/stores/tally` or `themes/ship.json`).
+/// (e.g. `src/stores/tally` or `themes/acme.json`).
 fn ends_with_home(project_root: &Path, resolved: &Path, expected_rel: &str) -> bool {
     let root = norm(project_root).trim_end_matches('/').to_string();
     let got = norm(resolved);
@@ -79,11 +79,11 @@ fn resolve_at_alias_stores_under_src_stores() {
 #[test]
 fn resolve_at_alias_themes_under_themes() {
     let root = fixture_app_root();
-    let resolved = resolve_at_alias(&root, "@/themes/ship")
+    let resolved = resolve_at_alias(&root, "@/themes/acme")
         .expect("resolve_at_alias must map @/themes/… via project_map SSOT");
     assert!(
-        ends_with_home(&root, &resolved, "themes/ship"),
-        "@/themes/ship must resolve under themes/ (not src/); got {}",
+        ends_with_home(&root, &resolved, "themes/acme"),
+        "@/themes/acme must resolve under themes/ (not src/); got {}",
         norm(&resolved)
     );
 }
@@ -112,7 +112,7 @@ fn resolve_at_alias_uses_same_ssot_as_at_alias_paths() {
         ("@/compositions/use-foo", "src/compositions/use-foo"),
         ("@/stores/tally", "src/stores/tally"),
         ("@/actions/focus", "src/actions/focus"),
-        ("@/themes/ship", "themes/ship"),
+        ("@/themes/acme", "themes/acme"),
     ];
     let map = at_alias_paths();
     assert!(

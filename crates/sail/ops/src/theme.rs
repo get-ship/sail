@@ -638,7 +638,7 @@ pub fn graph(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
 
 /// Build alias graph from catalog (and optional project) theme JSON only.
 pub fn graph_internal(theme_id: Option<&str>, ctx: &Ctx) -> Result<Value, OpError> {
-    let id = theme_id.unwrap_or("ship");
+    let id = theme_id.unwrap_or("sail");
     // Refuse path-like / traversal theme ids.
     if id.contains("..")
         || id.contains('/')
@@ -1389,7 +1389,7 @@ mod tests {
         // Refusals.
         assert!(!is_write_theme_path("apps/sail-site/tokens/base.json"));
         assert!(!is_write_theme_path(
-            "packages/sail/tokens/model/themes/ship.json"
+            "packages/sail/tokens/model/themes/sail.json"
         ));
         assert!(!is_write_theme_path(
             "apps/sail-site/tokens/themes/../secrets.json"
@@ -1398,7 +1398,7 @@ mod tests {
         assert!(!is_write_theme_path("themes/notes.txt"));
         // Catalog / model reads.
         assert!(is_read_theme_path(
-            "packages/sail/tokens/model/themes/ship.json"
+            "packages/sail/tokens/model/themes/sail.json"
         ));
         assert!(is_read_theme_path("packages/sail/tokens/model/base.json"));
         assert!(is_read_theme_path(
@@ -1425,8 +1425,8 @@ mod tests {
         std::fs::create_dir_all(ws.join("apps/demo/themes")).unwrap();
         std::fs::create_dir_all(ws.join("packages/sail/tokens/model/themes")).unwrap();
         std::fs::write(
-            ws.join("packages/sail/tokens/model/themes/ship.json"),
-            r#"{"$extensions":{"sail":{"themeId":"ship"}}}"#,
+            ws.join("packages/sail/tokens/model/themes/sail.json"),
+            r#"{"$extensions":{"sail":{"themeId":"sail"}}}"#,
         )
         .unwrap();
 
@@ -1434,7 +1434,7 @@ mod tests {
 
         let denied = write(
             &json!({
-                "path": "packages/sail/tokens/model/themes/ship.json",
+                "path": "packages/sail/tokens/model/themes/sail.json",
                 "content": "{}"
             }),
             &ctx,
@@ -1593,8 +1593,8 @@ mod tests {
         std::fs::create_dir_all(project.join("routes")).unwrap();
         std::fs::write(project.join("package.json"), r#"{"name":"ext-app"}"#).unwrap();
         std::fs::write(
-            project.join("themes/ship.json"),
-            r#"{"$extensions":{"sail":{"themeId":"ship"}}}"#,
+            project.join("themes/probe.json"),
+            r#"{"$extensions":{"sail":{"themeId":"probe"}}}"#,
         )
         .unwrap();
 
@@ -1604,9 +1604,9 @@ mod tests {
         assert_eq!(listed["ok"], true);
         let files = listed["files"].as_array().unwrap();
         assert_eq!(files.len(), 1);
-        assert_eq!(files[0], "ship.json");
+        assert_eq!(files[0], "probe.json");
 
-        let r = read(&json!({"path": "themes/ship.json"}), &ctx).unwrap();
+        let r = read(&json!({"path": "themes/probe.json"}), &ctx).unwrap();
         assert!(r["content"].as_str().unwrap().contains("themeId"));
 
         let w = write(
@@ -1631,15 +1631,15 @@ mod tests {
         std::fs::create_dir_all(ws.join("apps/demo/themes")).unwrap();
         std::fs::create_dir_all(ws.join("packages/sail/tokens/model/themes")).unwrap();
         std::fs::write(
-            ws.join("packages/sail/tokens/model/themes/ship.json"),
-            gate_theme("ship", true),
+            ws.join("packages/sail/tokens/model/themes/sail.json"),
+            gate_theme("sail", true),
         )
         .unwrap();
         let ctx = Ctx::new(ws, ws.join("apps/demo"), ws);
 
         let bad_id = fork(
             &json!({
-                "source_path": "packages/sail/tokens/model/themes/ship.json",
+                "source_path": "packages/sail/tokens/model/themes/sail.json",
                 "dest_path": "apps/demo/themes/bad.json",
                 "new_id": "Not-Valid"
             }),
@@ -1649,7 +1649,7 @@ mod tests {
 
         let bad_json = fork(
             &json!({
-                "source_path": "packages/sail/tokens/model/themes/ship.json",
+                "source_path": "packages/sail/tokens/model/themes/sail.json",
                 "dest_path": "apps/demo/themes/x.json",
                 "new_id": "ok-id",
                 "content": "not-json"
@@ -1660,7 +1660,7 @@ mod tests {
 
         let ok = fork(
             &json!({
-                "source_path": "packages/sail/tokens/model/themes/ship.json",
+                "source_path": "packages/sail/tokens/model/themes/sail.json",
                 "dest_path": "apps/demo/themes/my-fork.json",
                 "new_id": "my-fork"
             }),
@@ -1682,15 +1682,15 @@ mod tests {
         std::fs::create_dir_all(project.join("themes")).unwrap();
         std::fs::create_dir_all(project.join("packages/sail/tokens/model/themes")).unwrap();
         std::fs::write(
-            project.join("packages/sail/tokens/model/themes/ship.json"),
-            gate_theme("ship", true),
+            project.join("packages/sail/tokens/model/themes/sail.json"),
+            gate_theme("sail", true),
         )
         .unwrap();
         let ctx = Ctx::new(project, project, project);
 
         let ok = fork(
             &json!({
-                "source_path": "packages/sail/tokens/model/themes/ship.json",
+                "source_path": "packages/sail/tokens/model/themes/sail.json",
                 "dest_path": "themes/my-fork.json",
                 "new_id": "my-fork"
             }),

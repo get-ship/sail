@@ -98,7 +98,7 @@ describe('config-surface', () => {
     const base = { devUrl: 'sail dev', moduleCount: 0, themeId: 'studio', modeId: 'dark' }
     expect(liveShellChanged(base, base)).toBe(false)
     expect(liveShellChanged(base, { ...base, devUrl: 'http://x' })).toBe(true)
-    expect(liveShellChanged(base, { ...base, themeId: 'ship' })).toBe(true)
+    expect(liveShellChanged(base, { ...base, themeId: 'sail' })).toBe(true)
   })
 
   it('applyLiveShell republishes module count', () => {

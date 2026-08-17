@@ -207,7 +207,7 @@
             }
           ],
           "default": null,
-          "description": "Catalog theme allowlist. Omit → default ship; `[]` → none; `\"all\"` → full."
+          "description": "Catalog theme allowlist. Omit → default sail; `[]` → none; `\"all\"` → full."
         }
       },
       "type": "object"

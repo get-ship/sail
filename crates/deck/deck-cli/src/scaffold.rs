@@ -58,7 +58,7 @@ fn validate_app_name(name: &str) -> Result<()> {
 ///   package.json         # registry-style @ship/* deps (no file:/workspace:*)
 ///   sail.config.jsonc    # theme + deck.render (nested serve)
 ///   routes/page.sail     # hello-world source
-///   themes/ship.json     # modern project theme SSOT (baked catalog)
+///   themes/sail.json     # modern project theme SSOT (baked catalog)
 ///   .gitignore           # includes dist/ + .sail/ (deploy + generate — never commit)
 /// ```
 ///
@@ -202,7 +202,7 @@ pub fn run_theme(project: PathBuf, theme_id: Option<String>) -> Result<()> {
     if !project_dir.is_dir() {
         bail!("project dir does not exist: {}", project_dir.display());
     }
-    // Prefer --id; else existing sail.config theme.default; else ship (modes-in-file).
+    // Prefer --id; else existing sail.config theme.default; else sail (modes-in-file).
     let id = match theme_id {
         Some(id) => id,
         None => sail_compiler::tokens_generate::load_theme_config(&project_dir)?

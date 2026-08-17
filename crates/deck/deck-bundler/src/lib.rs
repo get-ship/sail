@@ -83,7 +83,7 @@ mod load_app_serve_tests {
         std::fs::write(dir.path().join("deck.jsonc"), r#"{ "render": "ssr" }"#).unwrap();
         std::fs::write(
             dir.path().join("sail.config.jsonc"),
-            r#"{ "deck": { "render": "csr" }, "theme": { "default": "ship" } }"#,
+            r#"{ "deck": { "render": "csr" }, "theme": { "default": "sail" } }"#,
         )
         .unwrap();
         let err = load_app_serve(dir.path()).unwrap_err();
@@ -98,7 +98,7 @@ mod load_app_serve_tests {
         let dir = tempfile::tempdir().unwrap();
         std::fs::write(
             dir.path().join("sail.config.jsonc"),
-            r#"{ "deck": { "render": "ssr" }, "theme": { "default": "ship" } }"#,
+            r#"{ "deck": { "render": "ssr" }, "theme": { "default": "sail" } }"#,
         )
         .unwrap();
         let cfg = load_app_serve(dir.path()).unwrap();
@@ -112,7 +112,7 @@ mod load_app_serve_tests {
         let dir = tempfile::tempdir().unwrap();
         std::fs::write(
             dir.path().join("sail.config.jsonc"),
-            r#"{ "render": "ssr", "theme": { "default": "ship" } }"#,
+            r#"{ "render": "ssr", "theme": { "default": "sail" } }"#,
         )
         .unwrap();
         let cfg = load_app_serve(dir.path()).unwrap();
@@ -128,7 +128,7 @@ mod load_app_serve_tests {
         let dir = tempfile::tempdir().unwrap();
         std::fs::write(
             dir.path().join("sail.config.jsonc"),
-            r#"{ "theme": { "default": "ship", "enabled": ["ship"] } }"#,
+            r#"{ "theme": { "default": "sail", "enabled": ["sail"] } }"#,
         )
         .unwrap();
         let cfg = load_app_serve(dir.path()).unwrap();

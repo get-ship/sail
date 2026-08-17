@@ -31,7 +31,7 @@ describe('studio channel message typing', () => {
     })
     postStudioMessage({
       type: 'theme-preview',
-      themeId: 'ship',
+      themeId: 'sail',
       density: 'compact',
       patch: { '--radius-md': '6px' },
     })
@@ -48,7 +48,7 @@ describe('studio channel message typing', () => {
     postStudioMessage({ type: 'select', arbitrary: true } as Record<string, unknown>)
 
     // @ts-expect-error theme-preview requires patch
-    postStudioMessage({ type: 'theme-preview', themeId: 'ship', density: 'default' })
+    postStudioMessage({ type: 'theme-preview', themeId: 'sail', density: 'default' })
   })
 
   it('isStudioMessage narrows wire payloads with channel', () => {
@@ -75,7 +75,7 @@ describe('studio channel message typing', () => {
       isStudioMessage({
         channel: STUDIO_CHANNEL,
         type: 'theme-preview',
-        themeId: 'ship',
+        themeId: 'sail',
         density: 'default',
       }),
     ).toBe(false)
@@ -90,7 +90,7 @@ describe('studio channel message typing', () => {
       isStudioMessage({
         channel: STUDIO_CHANNEL,
         type: 'theme-preview',
-        themeId: 'ship',
+        themeId: 'sail',
         density: 'default',
         patch: {},
       }),

@@ -667,7 +667,7 @@ mod tests {
             "apps/x/src/actions/save.ts",
             "src/actions"
         ));
-        assert!(path_is_under_home("apps/x/themes/ship.json", "themes"));
+        assert!(path_is_under_home("apps/x/themes/acme.json", "themes"));
         assert!(path_is_under_store_home("apps/x/src/stores/tally.ts"));
         assert!(!path_is_under_store_home(
             "apps/x/src/compositions/tally.ts"

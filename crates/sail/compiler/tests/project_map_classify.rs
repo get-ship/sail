@@ -106,6 +106,6 @@ fn composition_without_define_store() {
 
 #[test]
 fn theme_path_classifies_as_theme() {
-    let c = kind_of("apps/x/themes/ship.json", None);
+    let c = kind_of("apps/x/themes/acme.json", None);
     assert_eq!(c.kind, FileKind::Theme, "path under themes/ is Theme");
 }

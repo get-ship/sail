@@ -2,11 +2,10 @@
   // App-level Sail config (theme + deck serve). Project themes: themes/*.json.
   // `enabled` catalog allowlist:
   //   omit / []  → thin (no catalog themes)
-  //   ["ship"]   → only those catalog ids
+  //   ["sail"]   → only those catalog ids
   //   "all"      → explicit full catalog (marketing site)
   "theme": {
-    "default": "ship",
-    // Marketing first impression: ship/dark (honest config boot — no route force).
+    "default": "sail",
     "defaultMode": "dark",
     "enabled": "all"
   },

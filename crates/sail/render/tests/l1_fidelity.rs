@@ -30,7 +30,7 @@ fn opts(viewport: (u32, u32), mode: &str) -> RenderOptions {
         viewport,
         fonts_dir: Some(fonts()),
         app_fonts_dir: None,
-        theme: Some("ship".into()),
+        theme: Some("sail".into()),
         mode: Some(mode.into()),
         workspace: workspace_root(),
         file: None,

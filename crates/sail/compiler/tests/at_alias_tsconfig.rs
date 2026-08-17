@@ -192,7 +192,7 @@ fn classify_homes_align_with_alias_targets() {
             FileKind::Action,
             "actions",
         ),
-        ("app/themes/ship.json", None, FileKind::Theme, "themes"),
+        ("app/themes/acme.json", None, FileKind::Theme, "themes"),
     ];
 
     let map = at_alias_paths();

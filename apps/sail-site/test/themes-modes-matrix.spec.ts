@@ -154,16 +154,16 @@ test.describe('theme × mode paint matrix (/components)', () => {
     }
   })
 
-  test('mode switch ship light→dark→light: primary stays defined', async ({ page }) => {
-    await applyThemeMode(page, 'ship', 'light')
+  test('mode switch sail light→dark→light: primary stays defined', async ({ page }) => {
+    await applyThemeMode(page, 'sail', 'light')
     const light = await readCriticalVars(page)
     expect(isUnsetOpaque(light['--primary'] ?? '')).toBe(false)
 
-    await applyThemeMode(page, 'ship', 'dark')
+    await applyThemeMode(page, 'sail', 'dark')
     const dark = await readCriticalVars(page)
     expect(isUnsetOpaque(dark['--primary'] ?? '')).toBe(false)
 
-    await applyThemeMode(page, 'ship', 'light')
+    await applyThemeMode(page, 'sail', 'light')
     const light2 = await readCriticalVars(page)
     expect(isUnsetOpaque(light2['--primary'] ?? '')).toBe(false)
     // After round-trip, primary should still match first light application
@@ -172,16 +172,16 @@ test.describe('theme × mode paint matrix (/components)', () => {
   })
 
   test('switching theme changes --primary (catalog not a single paint)', async ({ page }) => {
-    await applyThemeMode(page, 'ship', 'light')
-    const ship = (await readCriticalVars(page))['--primary']
+    await applyThemeMode(page, 'sail', 'light')
+    const sail = (await readCriticalVars(page))['--primary']
     // Prefer a dual-mode catalog peer; fall back to any other declared theme mode.
-    const peer = THEME_CASES.find((t) => t.id === 'paper') ?? THEME_CASES.find((t) => t.id !== 'ship')
+    const peer = THEME_CASES.find((t) => t.id === 'paper') ?? THEME_CASES.find((t) => t.id !== 'sail')
     expect(peer, 'need a second catalog theme').toBeTruthy()
     const peerMode = peer!.modes.includes('light') ? 'light' : peer!.modes[0]!
     await applyThemeMode(page, peer!.id, peerMode)
     const other = (await readCriticalVars(page))['--primary']
-    expect(isUnsetOpaque(ship ?? '')).toBe(false)
+    expect(isUnsetOpaque(sail ?? '')).toBe(false)
     expect(isUnsetOpaque(other ?? '')).toBe(false)
-    expect(other).not.toBe(ship)
+    expect(other).not.toBe(sail)
   })
 })

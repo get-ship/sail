@@ -3269,7 +3269,7 @@ pub fn scaffold_theme_config(project_dir: &Path, theme_id: &str) -> Result<Optio
          \x20\x20// Sail app config — theme (product) + deck (bundler/serve).\n\
          \x20\x20// `default` / `defaultMode` drive first paint (theme / mode).\n\
          \x20\x20// `enabled` is the catalog allowlist for app CSS emit:\n\
-         \x20\x20//   omit → default theme ship; [] → no catalog; [\"id\"] → those; \"all\" → full.\n\
+         \x20\x20//   omit → default theme sail; [] → no catalog; [\"id\"] → those; \"all\" → full.\n\
          \x20\x20// Project themes under themes/ always emit. Package generate\n\
          \x20\x20// (shared @ship/tokens, monorepo only) emits full catalog + overrides.\n\
          \x20\x20// Serve keys nest under `deck` only (SPEC-SAIL-CONFIG-1) — never top-level.\n\
@@ -3335,7 +3335,7 @@ pub fn list_theme_ids_in_dir(dir: &Path) -> Vec<String> {
 ///
 /// ```text
 /// project_ids = stems of project themes/*.json
-/// catalog_allow = all | list | default [ship] | explicit []
+/// catalog_allow = all | list | default [sail] | explicit []
 /// effective_catalog = catalog_allow ∩ catalog (disk model or baked)
 /// emit_set = project ∪ effective_catalog (project wins on id at emit)
 /// ```
@@ -3583,7 +3583,7 @@ pub fn project_wants_theme_generate(project_dir: &Path) -> bool {
             // Explicit opt-out: only generate if defaults still need validation
             // (or project themes already returned true above).
             CatalogAllowlist::Empty => cfg.default.is_some() || cfg.default_mode.is_some(),
-            // Default ship / all / explicit list → app should emit CSS.
+            // Default sail / all / explicit list → app should emit CSS.
             CatalogAllowlist::Default | CatalogAllowlist::All | CatalogAllowlist::Ids(_) => true,
         },
         // Malformed config: still run generate so the error surfaces on the
@@ -5295,14 +5295,14 @@ mod tests {
         assert_eq!(empty.default_theme_id(), DEFAULT_PROJECT_THEME_ID);
         assert_eq!(empty.enabled, CatalogAllowlist::Default);
         assert!(!empty.enabled_key_present);
-        // Omit enabled → default Sail theme (ship), not full catalog and not empty.
+        // Omit enabled → default Sail theme (sail), not full catalog and not empty.
         assert_eq!(
             empty.enabled_catalog_for_app().as_deref(),
             Some([DEFAULT_PROJECT_THEME_ID.to_string()].as_slice())
         );
 
-        let no_enabled = parse_theme_config(r#"{ "theme": { "default": "ship" } }"#).unwrap();
-        assert_eq!(no_enabled.default.as_deref(), Some("ship"));
+        let no_enabled = parse_theme_config(r#"{ "theme": { "default": "sail" } }"#).unwrap();
+        assert_eq!(no_enabled.default.as_deref(), Some("sail"));
         assert_eq!(no_enabled.enabled, CatalogAllowlist::Default);
         assert!(!no_enabled.enabled_key_present);
 
@@ -5332,7 +5332,7 @@ mod tests {
             "non-string element must error"
         );
         assert!(
-            parse_theme_config(r#"{ "theme": { "enabled": "ship" } }"#).is_err(),
+            parse_theme_config(r#"{ "theme": { "enabled": "sail" } }"#).is_err(),
             "string other than \"all\" must error"
         );
         let empty_list = parse_theme_config(r#"{ "theme": { "enabled": [] } }"#).unwrap();
@@ -5361,7 +5361,7 @@ mod tests {
 
     #[test]
     fn validate_theme_id_rejects_path_escape() {
-        assert!(validate_theme_id("ship").is_ok());
+        assert!(validate_theme_id("sail").is_ok());
         assert!(validate_theme_id("../evil").is_err());
         assert!(validate_theme_id("has space").is_err());
         assert!(validate_theme_id("Ship").is_err());
@@ -5523,13 +5523,13 @@ mod tests {
         let full = generate_with_options(&model, &dir.path().join("src3"), &shared).unwrap();
         assert_eq!(full.theme_count, 3, "sail + paper + custom");
 
-        // Omit enabled → default ship from catalog (when present); not full catalog.
+        // Omit enabled → default sail from catalog (when present); not full catalog.
         let bare = dir.path().join("bare");
         fs::create_dir_all(&bare).unwrap();
         write_file(
-            &model.join("themes/ship.json"),
+            &model.join("themes/probe.json"),
             r#"{
-  "$extensions": { "sail": { "layer": "theme", "themeId": "ship", "defaultMode": "light" } },
+  "$extensions": { "sail": { "layer": "theme", "themeId": "probe", "defaultMode": "light" } },
   "modes": { "light": { "color": {
         "primary": {
           "default": { "$value": "oklch(0.5 0.1 250)", "$type": "color" },
@@ -5591,7 +5591,7 @@ mod tests {
             generate_with_options(&model, &dir.path().join("src5"), &all_opts).unwrap();
         assert_eq!(
             all_report.theme_count, 3,
-            "sail + paper + ship from catalog under enabled=all"
+            "sail + paper + probe from catalog under enabled=all"
         );
     }
 
@@ -6094,11 +6094,11 @@ mod tests {
     #[test]
     fn project_wants_theme_generate_detects_ssot() {
         let dir = tempfile::tempdir().unwrap();
-        // No config → CatalogAllowlist::Default (ship) still wants generate so
+        // No config → CatalogAllowlist::Default (sail) still wants generate so
         // bare apps get default Sail styling without opt-in.
         assert!(
             project_wants_theme_generate(dir.path()),
-            "default ship allowlist should cold-start generate"
+            "default sail allowlist should cold-start generate"
         );
         write_file(
             &dir.path().join("themes/x.json"),
@@ -6108,7 +6108,7 @@ mod tests {
         let bare = tempfile::tempdir().unwrap();
         write_file(
             &bare.path().join("sail.config.jsonc"),
-            r#"{ "theme": { "default": "ship" } }"#,
+            r#"{ "theme": { "default": "sail" } }"#,
         );
         assert!(project_wants_theme_generate(bare.path()));
         // Explicit empty catalog + no project themes → no generate needed for paint.
@@ -6135,9 +6135,9 @@ mod tests {
 
         // Missing `modes` (valid root keys only) → modes-in-file required.
         write_file(
-            &model.join("themes/ship.json"),
+            &model.join("themes/probe.json"),
             r#"{
-  "$extensions": { "sail": { "themeId": "ship", "layer": "theme" } }
+  "$extensions": { "sail": { "themeId": "probe", "layer": "theme" } }
 }
 "#,
         );
@@ -6146,15 +6146,15 @@ mod tests {
             err.contains("modes-in-file"),
             "expected modes-in-file error, got: {err}"
         );
-        let _ = fs::remove_file(model.join("themes/ship.json"));
+        let _ = fs::remove_file(model.join("themes/probe.json"));
 
         // Twin theme id with modes envelope still refuses (one id + modes.*).
         write_file(
-            &model.join("themes/ship-light.json"),
+            &model.join("themes/probe-light.json"),
             r#"{
   "$extensions": {
     "sail": {
-      "themeId": "ship-light",
+      "themeId": "probe-light",
       "defaultMode": "light",
       "layer": "theme"
     }
@@ -6492,10 +6492,10 @@ mod tests {
 "#,
         );
         write_file(
-            &model.join("themes/ship.json"),
+            &model.join("themes/probe.json"),
             r#"{
   "$extensions": {
-    "sail": { "layer": "theme", "themeId": "ship", "defaultMode": "light" }
+    "sail": { "layer": "theme", "themeId": "probe", "defaultMode": "light" }
   },
   "modes": {
     "light": {
@@ -6543,25 +6543,25 @@ mod tests {
         assert_eq!(report.theme_count, 1, "one theme id, two modes");
         let css = fs::read_to_string(&report.themes_css).unwrap();
         assert!(
-            css.contains("theme='ship'][mode='light'")
-                || css.contains(r#"theme='ship'][mode='light'"#),
+            css.contains("theme='probe'][mode='light'")
+                || css.contains(r#"theme='probe'][mode='light'"#),
             "light mode selector missing: {css}"
         );
         assert!(
-            css.contains("theme='ship'][mode='dark'"),
+            css.contains("theme='probe'][mode='dark'"),
             "dark mode selector missing: {css}"
         );
         assert!(
-            css.contains("[theme='ship'][mode='light']") || css.contains("[theme='ship']"),
+            css.contains("[theme='probe'][mode='light']") || css.contains("[theme='probe']"),
             "author IR [theme=id] selector missing: {css}"
         );
         assert!(
-            css.contains(":root[mode='dark'] [theme='ship']:not([mode])"),
+            css.contains(":root[mode='dark'] [theme='probe']:not([mode])"),
             "dual-mode nested host must inherit document dark: {css}"
         );
         assert!(
-            css.contains(":root[mode='light'] [theme='ship']:not([mode])")
-                || css.contains(":root:not([mode]) [theme='ship']:not([mode])"),
+            css.contains(":root[mode='light'] [theme='probe']:not([mode])")
+                || css.contains(":root:not([mode]) [theme='probe']:not([mode])"),
             "dual-mode nested host must inherit document light/cold: {css}"
         );
         assert!(
@@ -6571,14 +6571,14 @@ mod tests {
         // Global `[theme=id]:not([mode])` would pin nested dual-mode hosts
         // to the default mode. Only ancestor-qualified forms are allowed.
         let global_bare = css.lines().any(|l| {
-            l.trim() == "[theme='ship']:not([mode])" || l.trim() == "[theme='ship']:not([mode]),"
+            l.trim() == "[theme='probe']:not([mode])" || l.trim() == "[theme='probe']:not([mode]),"
         });
         assert!(
             !global_bare,
             "dual-mode must not emit a global [theme=id]:not([mode]) selector: {css}"
         );
         let meta = fs::read_to_string(out.join("generated/themes-meta.ts")).unwrap();
-        assert!(meta.contains("id: 'ship'"));
+        assert!(meta.contains("id: 'probe'"));
         assert!(meta.contains("'light'"));
         assert!(meta.contains("'dark'"));
         assert!(meta.contains("defaultMode: 'light'"));

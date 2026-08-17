@@ -315,15 +315,15 @@ describe('theme-draft-paint adapter', () => {
     // No draft doc → applyRegisteredAttrs. mode= is the cascade bit.
     setDraftPaintApplier(null)
     const host = document.createElement('div')
-    host.setAttribute('data-theme', 'ship')
+    host.setAttribute('data-theme', 'sail')
     bindPreviewHost(host)
     flushDraftPaint({
       doc: null,
       mode: 'dark',
       themeId: 'my-ship',
-      paintId: 'ship',
+      paintId: 'sail',
     })
-    expect(host.getAttribute('theme')).toBe('ship')
+    expect(host.getAttribute('theme')).toBe('sail')
     expect(host.getAttribute('mode')).toBe('dark')
     expect(host.getAttribute('draft-paint')).toBe('registered')
     unbindPreviewHost(host)

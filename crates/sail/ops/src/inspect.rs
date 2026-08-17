@@ -1527,7 +1527,7 @@ fn topic_cascade(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
 
     Ok(json!({
         "token": token,
-        "themeId": graph.get("themeId").cloned().unwrap_or(json!(theme_id.unwrap_or("ship"))),
+        "themeId": graph.get("themeId").cloned().unwrap_or(json!(theme_id.unwrap_or("sail"))),
         "chain": chain,
         "resolved": chain.last().cloned().unwrap_or(json!(null)),
         "sites": sites,
@@ -2982,20 +2982,20 @@ export default controller((_ctx: ControllerScope<any>) => {
         std::fs::create_dir_all(&theme_dir).unwrap();
         std::fs::write(
             root.join("packages/sail/tokens/model/base.json"),
-            r#"{"color":{"base":{"$value":"oklch(0.5 0 0)","$type":"color","$extensions":{"ship":{"cssName":"base","layer":"base"}}}}}"#,
+            r#"{"color":{"base":{"$value":"oklch(0.5 0 0)","$type":"color","$extensions":{"sail":{"cssName":"base","layer":"base"}}}}}"#,
         )
         .unwrap();
         std::fs::write(
-            theme_dir.join("ship.json"),
+            theme_dir.join("probe.json"),
             r#"{
-              "$extensions": { "ship": { "layer": "theme", "themeId": "ship" } },
+              "$extensions": { "sail": { "layer": "theme", "themeId": "probe" } },
               "modes": {
                 "light": {
                   "color": {
                     "primary": {
                       "$value": "{color.base}",
                       "$type": "color",
-                      "$extensions": { "ship": { "cssName": "primary", "layer": "theme" } }
+                      "$extensions": { "sail": { "cssName": "primary", "layer": "theme" } }
                     }
                   }
                 },
@@ -3004,7 +3004,7 @@ export default controller((_ctx: ControllerScope<any>) => {
                     "primary": {
                       "$value": "oklch(0.8 0.1 250)",
                       "$type": "color",
-                      "$extensions": { "ship": { "cssName": "primary", "layer": "theme" } }
+                      "$extensions": { "sail": { "cssName": "primary", "layer": "theme" } }
                     }
                   }
                 }
@@ -3104,7 +3104,7 @@ export default controller((_ctx: ControllerScope<any>) => {
     fn wi5_topic_cascade_resolves_alias_chain() {
         let (_dir, ctx, _rel) = wi5_fixture();
         let out = inspect(
-            &json!({"topic": "cascade", "token": "primary", "themeId": "ship"}),
+            &json!({"topic": "cascade", "token": "primary", "themeId": "probe"}),
             &ctx,
         )
         .expect("cascade");
@@ -3225,12 +3225,12 @@ export default controller((_ctx: ControllerScope<any>) => {
     #[test]
     fn wi5_topic_themes_matrix() {
         let (_dir, ctx, _rel) = wi5_fixture();
-        let out = inspect(&json!({"topic": "themes", "themeId": "ship"}), &ctx).expect("themes");
+        let out = inspect(&json!({"topic": "themes", "themeId": "probe"}), &ctx).expect("themes");
         assert_eq!(out["topic"], "themes");
         let matrix = out["matrix"].as_array().unwrap();
         assert!(!matrix.is_empty(), "{out}");
         for row in matrix {
-            assert_eq!(row["themeId"], "ship");
+            assert_eq!(row["themeId"], "probe");
             assert!(row.get("mode").is_some());
             assert_eq!(row["product"], "web");
         }

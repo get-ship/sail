@@ -128,14 +128,14 @@ function harness(opts?: { modeOnly?: boolean; extraOption?: string }) {
     btn.appendChild(row)
     return btn
   }
-  grid.appendChild(mkOption('ship', 'SHIP'))
+  grid.appendChild(mkOption('sail', 'SAIL'))
   if (opts?.extraOption) {
     grid.appendChild(mkOption(opts.extraOption, opts.extraOption))
   }
   panel.appendChild(grid)
 
   document.body.appendChild(root)
-  document.documentElement.setAttribute('theme', 'ship')
+  document.documentElement.setAttribute('theme', 'sail')
   document.documentElement.setAttribute('mode', 'light')
   return {
     root,
@@ -197,13 +197,13 @@ describe('themeSelect — catalog filter + theme apply', () => {
   })
 
   it('builds product grid from allowlist (effective emit set), not full THEMES', () => {
-    setEffectiveThemeIds(['neutral', 'paper'])
+    setEffectiveThemeIds(['sail', 'paper'])
     const { root, grid } = harness({ extraOption: 'synthwave' })
     const action = themeSelect(root)
     destroy = action?.destroy
 
     const values = optionValues(grid)
-    expect(values.sort()).toEqual(['neutral', 'paper'].sort())
+    expect(values.sort()).toEqual(['sail', 'paper'].sort())
     expect(values).not.toContain('synthwave')
     expect(values).not.toContain('ship')
     expect(values).not.toContain('glass')
@@ -227,26 +227,26 @@ describe('themeSelect — catalog filter + theme apply', () => {
     destroy = action?.destroy
     expect(optionValues(grid)).toEqual([])
 
-    setEffectiveThemeIds(['neutral', 'paper'])
+    setEffectiveThemeIds(['sail', 'paper'])
     document.dispatchEvent(new CustomEvent('ship:theme:change'))
-    expect(optionValues(grid).sort()).toEqual(['neutral', 'paper'].sort())
+    expect(optionValues(grid).sort()).toEqual(['sail', 'paper'].sort())
   })
 
   it('reads sail-effective-themes meta as product grid source', () => {
-    stampMeta('sail-effective-themes', 'neutral,paper')
+    stampMeta('sail-effective-themes', 'sail,paper')
 
     const { root, grid } = harness()
     const action = themeSelect(root)
     destroy = action?.destroy
 
-    expect(optionValues(grid).sort()).toEqual(['neutral', 'paper'].sort())
+    expect(optionValues(grid).sort()).toEqual(['sail', 'paper'].sort())
   })
 
   it('meta takes precedence over session ops ids', () => {
     stampMeta('sail-effective-themes', 'paper')
     // Session would suggest a broader set if consulted first.
-    expect(readEffectiveThemeIds(['neutral', 'paper', 'ship'])).toEqual(['paper'])
-    expect(effectiveProductThemes(['neutral', 'paper', 'ship']).map((t) => t.id)).toEqual([
+    expect(readEffectiveThemeIds(['neutral', 'paper', 'acme'])).toEqual(['paper'])
+    expect(effectiveProductThemes(['neutral', 'paper', 'acme']).map((t) => t.id)).toEqual([
       'paper',
     ])
   })
@@ -254,16 +254,16 @@ describe('themeSelect — catalog filter + theme apply', () => {
   it('parseEffectiveThemeIdsContent rejects path-like and unsafe tokens', () => {
     expect(parseEffectiveThemeIdsContent('all')).toBeNull()
     expect(parseEffectiveThemeIdsContent('')).toEqual([])
-    expect(parseEffectiveThemeIdsContent('neutral,paper')).toEqual(['neutral', 'paper'])
-    expect(parseEffectiveThemeIdsContent('../evil,ship,Has Space')).toEqual(['ship'])
-    expect(parseEffectiveThemeIdsContent('ship/../x')).toEqual([])
+    expect(parseEffectiveThemeIdsContent('sail,paper')).toEqual(['sail', 'paper'])
+    expect(parseEffectiveThemeIdsContent('../evil,acme,Has Space')).toEqual(['acme'])
+    expect(parseEffectiveThemeIdsContent('acme/../x')).toEqual([])
   })
 
   it('effectiveProductThemes filters THEMES by allowlist', () => {
-    setEffectiveThemeIds(['neutral', 'paper'])
+    setEffectiveThemeIds(['sail', 'paper'])
     const ids = effectiveProductThemes().map((t) => t.id)
-    expect(ids.sort()).toEqual(['neutral', 'paper'].sort())
-    expect(readEffectiveThemeIds()).toEqual(['neutral', 'paper'])
+    expect(ids.sort()).toEqual(['sail', 'paper'].sort())
+    expect(readEffectiveThemeIds()).toEqual(['sail', 'paper'])
   })
 
   it('pending session is fail-closed empty; meta still wins over pending', () => {
@@ -282,7 +282,7 @@ describe('themeSelect — catalog filter + theme apply', () => {
         ok: true,
         json: async () => ({
           ok: true,
-          all: ['neutral', 'paper', '../evil', 'Has Space'],
+          all: ['sail', 'paper', '../evil', 'Has Space'],
         }),
       } as Response
     })
@@ -296,7 +296,7 @@ describe('themeSelect — catalog filter + theme apply', () => {
     expect(optionValues(grid)).toEqual([])
 
     await vi.waitFor(() => {
-      expect(optionValues(grid).sort()).toEqual(['neutral', 'paper'].sort())
+      expect(optionValues(grid).sort()).toEqual(['sail', 'paper'].sort())
     })
     expect(fetchMock).toHaveBeenCalled()
   })
@@ -371,7 +371,7 @@ describe('themeSelect — catalog filter + theme apply', () => {
       await gate
       return {
         ok: true,
-        json: async () => ({ ok: true, all: ['neutral', 'paper'] }),
+        json: async () => ({ ok: true, all: ['sail', 'paper'] }),
       } as Response
     })
     vi.stubGlobal('fetch', fetchMock)
@@ -384,9 +384,9 @@ describe('themeSelect — catalog filter + theme apply', () => {
     expect(fetchMock).toHaveBeenCalled()
 
     // Host override mid-flight — grid follows override, not pending/session.
-    setEffectiveThemeIds(['ship'])
+    setEffectiveThemeIds(['console'])
     document.dispatchEvent(new CustomEvent('ship:theme:change'))
-    expect(optionValues(grid)).toEqual(['ship'])
+    expect(optionValues(grid)).toEqual(['console'])
 
     // Ops settles while override is active — must still store session allowlist.
     releaseFetch()
@@ -395,15 +395,15 @@ describe('themeSelect — catalog filter + theme apply', () => {
     await Promise.resolve()
     await Promise.resolve()
     await Promise.resolve()
-    expect(optionValues(grid)).toEqual(['ship'])
+    expect(optionValues(grid)).toEqual(['console'])
 
     // Clear override — session should already be settled (not stuck pending).
     setEffectiveThemeIds(null)
     document.dispatchEvent(new CustomEvent('ship:theme:change'))
-    expect(optionValues(grid).sort()).toEqual(['neutral', 'paper'].sort())
+    expect(optionValues(grid).sort()).toEqual(['sail', 'paper'].sort())
   })
 
-  it('shows System filter tab for dual-mode themes (ship/sail)', () => {
+  it('shows System filter tab for dual-mode themes (sail/paper)', () => {
     const { root } = harness()
     const action = themeSelect(root)
     destroy = action?.destroy
@@ -418,7 +418,7 @@ describe('themeSelect — catalog filter + theme apply', () => {
 
   it('filter tabs do NOT change document mode, theme, or mode localStorage', () => {
     const { root } = harness()
-    applyTheme('ship', document.documentElement, 'light')
+    applyTheme('sail', document.documentElement, 'light')
     persistMode('light')
     const action = themeSelect(root)
     destroy = action?.destroy
@@ -463,9 +463,9 @@ describe('themeSelect — catalog filter + theme apply', () => {
       false,
     )
     // duals visible with dark preview
-    expect(root.querySelector<HTMLElement>('[role="option"][value="ship"]')?.hidden).toBe(false)
+    expect(root.querySelector<HTMLElement>('[role="option"][value="sail"]')?.hidden).toBe(false)
     expect(
-      root.querySelector('[theme="ship"]')?.getAttribute('mode'),
+      root.querySelector('[theme="sail"]')?.getAttribute('mode'),
     ).toBe('dark')
     expect(
       root.querySelector('[theme="synthwave"]')?.getAttribute('mode'),
@@ -489,9 +489,9 @@ describe('themeSelect — catalog filter + theme apply', () => {
       true,
     )
     expect(root.querySelector<HTMLElement>('[role="option"][value="glass"]')?.hidden).toBe(false)
-    expect(root.querySelector<HTMLElement>('[role="option"][value="ship"]')?.hidden).toBe(false)
+    expect(root.querySelector<HTMLElement>('[role="option"][value="sail"]')?.hidden).toBe(false)
     expect(
-      root.querySelector('[theme="ship"]')?.getAttribute('mode'),
+      root.querySelector('[theme="sail"]')?.getAttribute('mode'),
     ).toBe('light')
     expect(
       root.querySelector('[theme="glass"]')?.getAttribute('mode'),
@@ -510,7 +510,7 @@ describe('themeSelect — catalog filter + theme apply', () => {
     expect(root.querySelector<HTMLElement>('[role="option"][value="synthwave"]')?.hidden).toBe(
       true,
     )
-    expect(root.querySelector<HTMLElement>('[role="option"][value="ship"]')?.hidden).toBe(false)
+    expect(root.querySelector<HTMLElement>('[role="option"][value="sail"]')?.hidden).toBe(false)
     expect(root.querySelector('[data-catalog-label]')?.textContent).toMatch(/Dual/i)
     // Document paint unchanged by tab
     expect(document.documentElement.getAttribute('mode')).not.toBe('system')
@@ -518,7 +518,7 @@ describe('themeSelect — catalog filter + theme apply', () => {
 
   it('clicking a theme under dark filter applies that theme with dark paint', () => {
     const { root } = harness()
-    applyTheme('ship', document.documentElement, 'light')
+    applyTheme('sail', document.documentElement, 'light')
     persistMode('light')
     const action = themeSelect(root)
     destroy = action?.destroy
@@ -527,12 +527,12 @@ describe('themeSelect — catalog filter + theme apply', () => {
     // Tab must not have painted yet
     expect(document.documentElement.getAttribute('mode')).toBe('light')
 
-    // neutral is dual-mode (visible under dark); paper is light-only
-    const neutral = root.querySelector<HTMLButtonElement>('[role="option"][value="neutral"]')!
-    expect(neutral.hidden).toBe(false)
-    neutral.click()
+    // sail is dual-mode (visible under dark); paper is light-only
+    const sail = root.querySelector<HTMLButtonElement>('[role="option"][value="sail"]')!
+    expect(sail.hidden).toBe(false)
+    sail.click()
 
-    expect(document.documentElement.getAttribute('theme')).toBe('neutral')
+    expect(document.documentElement.getAttribute('theme')).toBe('sail')
     expect(document.documentElement.getAttribute('mode')).toBe('dark')
     expect(readModePreference()).toBe('dark')
     expect(localStorage.getItem(THEME_MODE_STORAGE_KEY)).toBe('dark')
@@ -546,8 +546,8 @@ describe('themeSelect — catalog filter + theme apply', () => {
     }
     const action = themeSelect(root)
     destroy = action?.destroy
-    root.querySelector<HTMLButtonElement>('[role="option"][value="neutral"]')!.click()
-    expect(document.documentElement.getAttribute('theme')).toBe('neutral')
+    root.querySelector<HTMLButtonElement>('[role="option"][value="sail"]')!.click()
+    expect(document.documentElement.getAttribute('theme')).toBe('sail')
     expect(closed).toBe(false)
   })
 
@@ -567,8 +567,8 @@ describe('themeSelect — catalog filter + theme apply', () => {
     paper.click()
     expect(paper.getAttribute('aria-selected')).toBe('true')
     expect(paper.querySelector<HTMLElement>('[data-selected-check]')?.hidden).toBe(false)
-    const ship = root.querySelector<HTMLButtonElement>('[role="option"][value="ship"]')!
-    expect(ship.querySelector<HTMLElement>('[data-selected-check]')?.hidden).toBe(true)
+    const sail = root.querySelector<HTMLButtonElement>('[role="option"][value="sail"]')!
+    expect(sail.querySelector<HTMLElement>('[data-selected-check]')?.hidden).toBe(true)
   })
 
   it('selected header tracks active theme label', () => {
@@ -584,22 +584,22 @@ describe('themeSelect — catalog filter + theme apply', () => {
     const action = themeSelect(root)
     destroy = action?.destroy
 
-    applyTheme('ship', document.documentElement, 'light')
+    applyTheme('sail', document.documentElement, 'light')
     persistMode('light')
     root.querySelector<HTMLButtonElement>('button[mode="light"]')!.click()
-    const neutral = root.querySelector<HTMLButtonElement>('[role="option"][value="neutral"]')!
-    neutral.click()
-    expect(document.documentElement.getAttribute('theme')).toBe('neutral')
+    const sail = root.querySelector<HTMLButtonElement>('[role="option"][value="sail"]')!
+    sail.click()
+    expect(document.documentElement.getAttribute('theme')).toBe('sail')
     expect(document.documentElement.getAttribute('mode')).toBe('light')
-    expect(neutral.getAttribute('aria-selected')).toBe('true')
+    expect(sail.getAttribute('aria-selected')).toBe('true')
     expect(
-      root.querySelector('[role="option"][value="ship"]')?.getAttribute('aria-selected'),
+      root.querySelector('[role="option"][value="paper"]')?.getAttribute('aria-selected'),
     ).toBe('false')
   })
 
   it('selecting dual theme under system filter persists system preference', () => {
     const { root } = harness()
-    applyTheme('ship', document.documentElement, 'light')
+    applyTheme('sail', document.documentElement, 'light')
     persistMode('light')
     const action = themeSelect(root)
     destroy = action?.destroy
@@ -608,8 +608,8 @@ describe('themeSelect — catalog filter + theme apply', () => {
     expect(localStorage.getItem(THEME_MODE_STORAGE_KEY)).toBe('light') // filter only
 
     // dual-mode theme under system filter
-    root.querySelector<HTMLButtonElement>('[role="option"][value="neutral"]')!.click()
-    expect(document.documentElement.getAttribute('theme')).toBe('neutral')
+    root.querySelector<HTMLButtonElement>('[role="option"][value="sail"]')!.click()
+    expect(document.documentElement.getAttribute('theme')).toBe('sail')
     expect(readModePreference()).toBe('system')
     expect(document.documentElement.getAttribute('mode')).not.toBe('system')
     expect(['light', 'dark']).toContain(document.documentElement.getAttribute('mode'))
@@ -617,7 +617,7 @@ describe('themeSelect — catalog filter + theme apply', () => {
 
   it('modeOnly shows the Light/Dark/System bar and hides the catalog', () => {
     const { root, grid, modeTrigger, panel, modeBar } = harness({ modeOnly: true })
-    document.documentElement.setAttribute('theme', 'ship')
+    document.documentElement.setAttribute('theme', 'sail')
     document.documentElement.setAttribute('mode', 'light')
     persistMode('light')
     const action = themeSelect(root)
@@ -678,7 +678,7 @@ describe('themeSelect — catalog filter + theme apply', () => {
     const { root } = harness()
     const action = themeSelect(root)
     destroy = action?.destroy
-    document.documentElement.setAttribute('theme', 'ship')
+    document.documentElement.setAttribute('theme', 'sail')
     document.documentElement.setAttribute('mode', 'light')
     document.documentElement.dataset.studioPreview = '1'
 
@@ -688,23 +688,23 @@ describe('themeSelect — catalog filter + theme apply', () => {
     expect(root.getAttribute('data-catalog-filter')).toBe('dark')
 
     root.querySelector<HTMLButtonElement>('[role="option"][value="paper"]')!.click()
-    expect(document.documentElement.getAttribute('theme')).toBe('ship')
+    expect(document.documentElement.getAttribute('theme')).toBe('sail')
   })
 
   it('initial catalog filter follows live paint (not storage preference alone)', () => {
     // Storage says light, document is dark (config boot / external apply).
-    applyTheme('ship', document.documentElement, 'dark')
+    applyTheme('sail', document.documentElement, 'dark')
     persistMode('light')
     expect(readModePreference()).toBe('light')
 
     const { root } = harness()
-    document.documentElement.setAttribute('theme', 'ship')
+    document.documentElement.setAttribute('theme', 'sail')
     document.documentElement.setAttribute('mode', 'dark')
     const action = themeSelect(root)
     destroy = action?.destroy
 
     expect(root.getAttribute('data-catalog-filter')).toBe('dark')
-    expect(document.documentElement.getAttribute('theme')).toBe('ship')
+    expect(document.documentElement.getAttribute('theme')).toBe('sail')
     expect(document.documentElement.getAttribute('mode')).toBe('dark')
     expect(
       root.querySelector('button[mode="dark"]')?.getAttribute('aria-selected'),
@@ -716,17 +716,17 @@ describe('themeSelect — catalog filter + theme apply', () => {
   })
 
   it('sync reconciles catalog filter to live paint after external theme change', () => {
-    applyTheme('ship', document.documentElement, 'light')
+    applyTheme('sail', document.documentElement, 'light')
     persistMode('light')
     const { root } = harness()
-    document.documentElement.setAttribute('theme', 'ship')
+    document.documentElement.setAttribute('theme', 'sail')
     document.documentElement.setAttribute('mode', 'light')
     const action = themeSelect(root)
     destroy = action?.destroy
     expect(root.getAttribute('data-catalog-filter')).toBe('light')
 
     // External writer flips paint without going through the filter tabs.
-    applyTheme('ship', document.documentElement, 'dark')
+    applyTheme('sail', document.documentElement, 'dark')
     document.dispatchEvent(new CustomEvent('ship:theme:change'))
 
     expect(root.getAttribute('data-catalog-filter')).toBe('dark')

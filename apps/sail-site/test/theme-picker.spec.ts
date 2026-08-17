@@ -28,7 +28,7 @@ test.describe('U2.1b site theme-picker', () => {
     )
     // Catalog is non-empty and includes core + known aesthetics.
     expect(optionValues.length).toBeGreaterThanOrEqual(8)
-    expect(optionValues).toContain('ship')
+    expect(optionValues).toContain('sail')
     expect(optionValues).toContain('synthwave')
     expect(optionValues).toContain('paper')
     // No twin ids
@@ -84,11 +84,11 @@ test.describe('U2.1b site theme-picker', () => {
     expect(afterDark.mode).not.toBe('system')
 
     // Dual-mode theme swatches track filter specimen mode.
-    const shipSwatch = await panel
-      .locator('[theme="ship"], [theme="sail"]')
+    const sailSwatch = await panel
+      .locator('[theme="sail"]')
       .first()
       .getAttribute('mode')
-    expect(shipSwatch).toBe('dark')
+    expect(sailSwatch).toBe('dark')
 
     await panel.locator('button[mode="system"]').click()
     await page.waitForFunction(
@@ -213,17 +213,17 @@ test.describe('U2.1b site theme-picker', () => {
     expect(glassHidden).toBe(true)
 
     // dual preview paints dark specimen
-    const shipMode = await panel
-      .locator('[theme="ship"], [theme="sail"]')
+    const sailMode = await panel
+      .locator('[theme="sail"]')
       .first()
       .getAttribute('mode')
-    expect(shipMode).toBe('dark')
+    expect(sailMode).toBe('dark')
 
     // Theme click under dark filter is what paints the site (dual-mode theme).
-    await panel.locator('[role="option"][value="neutral"]').click()
+    await panel.locator('[role="option"][value="sail"]').click()
     await page.waitForFunction(
       () =>
-        (document.documentElement.getAttribute('theme') ?? '') === 'neutral' &&
+        (document.documentElement.getAttribute('theme') ?? '') === 'sail' &&
         (document.documentElement.dataset.mode ?? '') === 'dark',
       undefined,
       { timeout: 10_000 },

@@ -21,8 +21,8 @@ const VIEWPORTS = [
   { name: 'mobile', width: 375, height: 812 },
 ] as const
 const CELLS = [
-  { theme: 'ship', mode: 'light' },
-  { theme: 'ship', mode: 'dark' },
+  { theme: 'sail', mode: 'light' },
+  { theme: 'sail', mode: 'dark' },
 ] as const
 
 type Finding = { id: string; route: string; cell: string; detail: string }
@@ -130,7 +130,7 @@ for (const vp of VIEWPORTS) {
 await page.setViewportSize({ width: 1440, height: 900 })
 await page.goto(BASE + '/dashboard', { waitUntil: 'domcontentloaded' })
 await page.waitForTimeout(500)
-await setTheme(page, 'ship', 'light')
+await setTheme(page, 'sail', 'light')
 
 const newOrder = page.getByRole('button', { name: 'New order' }).first()
 if ((await newOrder.count()) === 0) {
@@ -179,7 +179,7 @@ if ((await customers.count()) === 0) {
 
 await page.goto(BASE + '/pricing', { waitUntil: 'domcontentloaded' })
 await page.waitForTimeout(500)
-await setTheme(page, 'ship', 'light')
+await setTheme(page, 'sail', 'light')
 const annual = page.getByRole('button', { name: 'Annually' })
 if ((await annual.count()) === 0) {
   note('/pricing', 'interact', 'Annually toggle missing')
@@ -204,7 +204,7 @@ if ((await faq.count()) === 0) {
 
 await page.goto(BASE + '/settings', { waitUntil: 'domcontentloaded' })
 await page.waitForTimeout(500)
-await setTheme(page, 'ship', 'light')
+await setTheme(page, 'sail', 'light')
 const team = page.getByRole('tab', { name: 'Team' })
 if ((await team.count()) === 0) {
   note('/settings', 'interact', 'Team tab missing')
@@ -245,7 +245,7 @@ surface: blocks
 status: ${status}
 run: ${DIR.split('/').pop()}
 elements_probed: ${ROUTES.length * VIEWPORTS.length * CELLS.length}
-themes_covered: ship-light, ship-dark
+themes_covered: sail-light, sail-dark
 viewports_covered: 1440x900, 375x812
 console_errors: ${consoleErrs.length}
 network_failures: ${networkFails.length}
@@ -275,7 +275,7 @@ writeFileSync(join(DIR, 'report.md'), md)
 writeFileSync(join(DIR, 'plan.md'), `# Blocks probe
 
 Routes: ${ROUTES.join(', ')}
-Themes: ship light/dark
+Themes: sail light/dark
 Viewports: desktop 1440x900, mobile 375x812
 Interactions: New order dialog, Filters drawer, Customers tab, Annually toggle, FAQ, Team tab
 `)

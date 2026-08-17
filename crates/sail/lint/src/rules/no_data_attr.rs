@@ -158,7 +158,7 @@ mod tests {
     #[test]
     fn flags_theme_substrate_and_teaches_theme_eq() {
         for (src, needle) in [
-            (r#"<column data-theme="ship">x</column>"#, "data-theme"),
+            (r#"<column data-theme="sail">x</column>"#, "data-theme"),
             (r#"<column data-product="sail">x</column>"#, "data-product"),
             (r#"<column data-mode="dark">x</column>"#, "data-mode"),
         ] {

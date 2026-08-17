@@ -14,7 +14,7 @@ fn library_renders_png() {
         viewport: (400, 300),
         fonts_dir: Some(fixture("fonts")),
         app_fonts_dir: None,
-        theme: Some("ship".into()),
+        theme: Some("sail".into()),
         mode: Some("light".into()),
         workspace: None,
         file: Some("paint.sail".into()),

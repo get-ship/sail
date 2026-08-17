@@ -147,7 +147,7 @@ describe('C2 static preview helpers + region overlay', () => {
       sourceText: readFileSync(join(REPO, path), 'utf8'),
       loadPreview: true,
       viewport: { width: 400, height: 300 },
-      theme: 'ship',
+      theme: 'sail',
       mode: 'dark',
     })
     expect(doc).not.toBeNull()
@@ -171,7 +171,7 @@ describe('preview region click selects node', () => {
       sourceText: readFileSync(join(REPO, path), 'utf8'),
       loadPreview: true,
       viewport: { width: 400, height: 300 },
-      theme: 'ship',
+      theme: 'sail',
       mode: 'dark',
     })
     expect(doc).not.toBeNull()
@@ -269,7 +269,7 @@ describe('C3 source pane: ready/empty/dirty + scroll-to-span', () => {
       sourceText: readFileSync(join(REPO, path), 'utf8'),
       loadPreview: true,
       viewport: { width: 400, height: 300 },
-      theme: 'ship',
+      theme: 'sail',
       mode: 'dark',
     })
     expect(doc).not.toBeNull()
@@ -902,7 +902,7 @@ describe('edit surface review gates', () => {
       sourceText: readFileSync(join(REPO, path), 'utf8'),
       loadPreview: true,
       viewport: { width: 400, height: 300 },
-      theme: 'ship',
+      theme: 'sail',
       mode: 'dark',
     })
     const region = getEditState().docs.get(path)?.preview.regions?.[0]
@@ -988,7 +988,7 @@ describe('preview failure surfaces error + retry (no infinite opening)', () => {
           imagePng: 'iVBORw0KGgo=',
           ms: 1,
           regions: [],
-          theme: 'ship',
+          theme: 'sail',
           viewport: { width: 400, height: 300 },
         }
       }),
@@ -1077,7 +1077,7 @@ describe('preview failure surfaces error + retry (no infinite opening)', () => {
           imagePng: 'fast-png',
           ms: 1,
           regions: [],
-          theme: 'ship',
+          theme: 'sail',
           viewport: { width: 400, height: 300 },
         })
       }),
@@ -1104,7 +1104,7 @@ describe('preview failure surfaces error + retry (no infinite opening)', () => {
       imagePng: 'slow-stale-png',
       ms: 99,
       regions: [],
-      theme: 'ship',
+      theme: 'sail',
       viewport: { width: 400, height: 300 },
     })
     const slowResult = await slow
@@ -1164,7 +1164,7 @@ describe('preview failure surfaces error + retry (no infinite opening)', () => {
           imagePng: `png-for-${args.path}`,
           ms: 1,
           regions: [],
-          theme: 'ship',
+          theme: 'sail',
           viewport: { width: 400, height: 300 },
         }
       },
@@ -1223,7 +1223,7 @@ describe('preview failure surfaces error + retry (no infinite opening)', () => {
           imagePng: 'winner-png',
           ms: 1,
           regions: [],
-          theme: 'ship',
+          theme: 'sail',
           viewport: { width: 400, height: 300 },
         })
       }),
@@ -1258,7 +1258,7 @@ describe('preview failure surfaces error + retry (no infinite opening)', () => {
       imagePng: 'stale-png',
       ms: 1,
       regions: [],
-      theme: 'ship',
+      theme: 'sail',
       viewport: { width: 400, height: 300 },
     })
     await firstDone

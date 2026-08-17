@@ -160,7 +160,7 @@ async function themesRoundTrip(): Promise<void> {
   void write.ok
 
   const forkArgs: ThemeForkArgs = {
-    source_path: 'packages/sail/tokens/model/themes/ship.json',
+    source_path: 'packages/sail/tokens/model/themes/sail.json',
     dest_path: 'apps/studio/themes/fork.json',
     new_id: 'fork',
   }

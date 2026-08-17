@@ -542,7 +542,7 @@ async function loadPreview(
     const ret = await withTimeout(
       client.sailRenderScreenshot({
         path,
-        theme: opts?.theme ?? 'ship',
+        theme: opts?.theme ?? 'sail',
         mode: opts?.mode ?? 'dark',
         viewport: `${vp.width}x${vp.height}`,
       }),

@@ -14,7 +14,7 @@ const _select: StudioOp = {
 }
 const _preview: StudioOp = {
   type: 'theme-preview',
-  themeId: 'ship',
+  themeId: 'sail',
   density: 'compact',
   patch: { '--radius-md': '6px' },
 }
@@ -35,7 +35,7 @@ const _badRecord: StudioOp = { type: 'select', arbitrary: true } as Record<strin
 void _badRecord
 
 // @ts-expect-error theme-preview requires patch
-const _badPreview: StudioOp = { type: 'theme-preview', themeId: 'ship', density: 'default' }
+const _badPreview: StudioOp = { type: 'theme-preview', themeId: 'sail', density: 'default' }
 void _badPreview
 
 // @ts-expect-error annotate requires rect

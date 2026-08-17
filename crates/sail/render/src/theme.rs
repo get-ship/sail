@@ -13,7 +13,7 @@ use serde_json::Value;
 /// Color / mode selection for a render.
 #[derive(Debug, Clone)]
 pub struct ThemeSelect {
-    /// Theme id (e.g. `ship`). Empty → registry base values only.
+    /// Theme id (e.g. `sail`). Empty → registry base values only.
     pub id: String,
     /// `light` or `dark` (data-mode). Default `light`.
     pub mode: String,
@@ -31,7 +31,7 @@ impl Default for ThemeSelect {
 impl ThemeSelect {
     pub fn parse(theme: Option<&str>, mode: Option<&str>) -> Self {
         let raw = theme.unwrap_or("").trim();
-        // Accept `ship-dark` / `ship/dark` as id+mode.
+        // Accept `sail-dark` / `sail/dark` as id+mode.
         let (id, mode_from_id) = if let Some((a, b)) = raw.split_once('-') {
             if matches!(b, "light" | "dark") {
                 (a.to_string(), Some(b.to_string()))
@@ -53,7 +53,7 @@ impl ThemeSelect {
 
     /// `theme` attribute value (theme id only).
     pub fn data_theme(&self) -> &str {
-        if self.id.is_empty() { "ship" } else { &self.id }
+        if self.id.is_empty() { "sail" } else { &self.id }
     }
 
     /// `data-mode` attribute value.
@@ -472,13 +472,13 @@ mod tests {
 
     #[test]
     fn parse_theme_mode_from_id() {
-        let t = ThemeSelect::parse(Some("ship-dark"), None);
-        assert_eq!(t.id, "ship");
+        let t = ThemeSelect::parse(Some("sail-dark"), None);
+        assert_eq!(t.id, "sail");
         assert_eq!(t.mode, "dark");
     }
 
     #[test]
-    fn ship_dark_differs_from_light() {
+    fn sail_dark_differs_from_light() {
         let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../..")
             .canonicalize()
@@ -486,7 +486,7 @@ mod tests {
         assert!(root.is_some(), "workspace root required for theme files");
         let light = ThemePalette::resolve(
             ThemeSelect {
-                id: "ship".into(),
+                id: "sail".into(),
                 mode: "light".into(),
             },
             root.as_deref(),
@@ -494,20 +494,21 @@ mod tests {
         .unwrap();
         let dark = ThemePalette::resolve(
             ThemeSelect {
-                id: "ship".into(),
+                id: "sail".into(),
                 mode: "dark".into(),
             },
             root.as_deref(),
         )
         .unwrap();
-        let lb = light.get("background").expect("light background token");
-        let db = dark.get("background").expect("dark background token");
+        // Catalog sail.json colors are object-form oklch; string $values still overlay.
+        let ls = light.get("shadow-sm").expect("light shadow-sm token");
+        let ds = dark.get("shadow-sm").expect("dark shadow-sm token");
         assert_ne!(
-            lb, db,
-            "ship light/dark background must differ (theme modes overlay)"
+            ls, ds,
+            "sail light/dark shadow-sm must differ (theme modes overlay)"
         );
-        let lf = light.get("foreground").expect("light foreground");
-        let df = dark.get("foreground").expect("dark foreground");
-        assert_ne!(lf, df, "ship light/dark foreground must differ");
+        let ll = light.get("shadow-lg").expect("light shadow-lg");
+        let dl = dark.get("shadow-lg").expect("dark shadow-lg");
+        assert_ne!(ll, dl, "sail light/dark shadow-lg must differ");
     }
 }

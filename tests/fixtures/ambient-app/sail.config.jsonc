@@ -2,7 +2,7 @@
   // Minimal sail-app shape for ambient-pack / tsc consumer proof.
   // Not a product app — typecheck fixture only.
   "theme": {
-    "default": "ship",
+    "default": "sail",
     "defaultMode": "light"
   }
 }

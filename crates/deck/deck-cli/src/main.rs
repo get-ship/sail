@@ -243,8 +243,8 @@ enum Command {
     Render {
         /// Path to a `.sail` source file.
         input: PathBuf,
-        /// Theme id (e.g. `ship`). Default `ship`.
-        #[arg(long, default_value = "ship")]
+        /// Theme id (e.g. `sail`). Default `sail`.
+        #[arg(long, default_value = "sail")]
         theme: String,
         /// Mode `light` or `dark` (data-mode). Default `light`.
         #[arg(long, default_value = "light")]
@@ -295,7 +295,7 @@ enum Scaffold {
         /// Path inside a Sail project (walks up to `sail.config.jsonc` / `.json`). Default: cwd.
         #[arg(long, default_value = ".")]
         project: PathBuf,
-        /// Catalog theme id to copy (default: ship — modes-in-file primary).
+        /// Catalog theme id to copy (default: sail — modes-in-file primary).
         #[arg(long)]
         id: Option<String>,
     },
@@ -1613,7 +1613,7 @@ mod tests {
             "apps/sail-site/themes/custom.json"
         )));
         assert!(is_project_theme_path(Path::new("apps/sail-site/themes")));
-        assert!(is_project_theme_path(Path::new("my-app/themes/ship.json")));
+        assert!(is_project_theme_path(Path::new("my-app/themes/acme.json")));
         assert!(is_project_theme_path(Path::new("my-app/themes")));
         // Retired tokens/themes layout is not a project theme source.
         assert!(!is_theme_source_path(Path::new(
@@ -1651,11 +1651,11 @@ mod tests {
         ));
         // Leaf theme edits must not re-queue attach (#15).
         assert!(!path_suggests_new_theme_watch(
-            Path::new("apps/demo/tokens/themes/ship.json"),
+            Path::new("apps/demo/tokens/themes/acme.json"),
             Path::new("apps/demo")
         ));
         assert!(!path_suggests_new_theme_watch(
-            Path::new("apps/demo/themes/ship.json"),
+            Path::new("apps/demo/themes/acme.json"),
             Path::new("apps/demo")
         ));
         assert!(!path_suggests_new_theme_watch(

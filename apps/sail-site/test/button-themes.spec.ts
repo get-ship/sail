@@ -1,8 +1,8 @@
 // Compiled <button> × first-party themes.
 //
-// First-party for this gate: ship (light product) + console (dark product).
-// We do not matrix sail + neutral here — they are first-party cousins of ship
-// and blow the surface without adding a new paint model. Fun themes (halo,
+// First-party for this gate: sail (light product) + console (dark product).
+// We do not matrix paper here — it is a first-party cousin of sail
+// and blows the surface without adding a new paint model. Fun themes (halo,
 // glass, brut, 8bit, synthwave, paper, contrast) stay picker catalog / taste,
 // not this CI grid.
 //
@@ -13,7 +13,7 @@ import { test, expect, type Page } from '@playwright/test'
 test.setTimeout(60_000)
 
 const FIRST_PARTY = [
-  { id: 'ship', mode: 'light' },
+  { id: 'sail', mode: 'light' },
   { id: 'console', mode: 'dark' },
 ] as const
 

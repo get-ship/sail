@@ -2,14 +2,14 @@
   // Sail app config — theme (product) + deck (bundler/serve).
   // `default` / `defaultMode` drive first paint (theme / mode).
   // `enabled` is the catalog allowlist for app CSS emit:
-  //   omit → default theme ship; [] → no catalog; ["id"] → those; "all" → full.
+  //   omit → default theme sail; [] → no catalog; ["id"] → those; "all" → full.
   // Project themes under themes/ always emit. Package generate
   // (shared @ship/tokens, monorepo only) emits full catalog + overrides.
   // Serve keys nest under `deck` only (SPEC-SAIL-CONFIG-1) — never top-level.
   "theme": {
-    "default": "ship",
+    "default": "sail",
     "defaultMode": "light",
-    "enabled": ["ship"]
+    "enabled": ["sail"]
   },
   "deck": {
     "render": "csr"

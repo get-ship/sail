@@ -41,7 +41,7 @@ fn style_bg_primary_ok() {
 
 #[test]
 fn theme_eq_id_ok() {
-    compile(r#"<column theme="ship">x</column>"#, app_opts()).expect("theme= id must compile");
+    compile(r#"<column theme="sail">x</column>"#, app_opts()).expect("theme= id must compile");
 }
 
 #[test]
@@ -58,7 +58,7 @@ fn component_storage_paths_are_gone() {
 #[test]
 fn data_theme_product_mode_fire_sail_no_data_attr() {
     for (src, name) in [
-        (r#"<column data-theme="ship">x</column>"#, "data-theme"),
+        (r#"<column data-theme="sail">x</column>"#, "data-theme"),
         (r#"<column data-product="sail">x</column>"#, "data-product"),
         (r#"<column data-mode="dark">x</column>"#, "data-mode"),
     ] {

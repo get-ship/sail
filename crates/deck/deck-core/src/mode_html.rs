@@ -189,7 +189,7 @@ pub fn inject_effective_themes_meta(html: &str, project_root: &std::path::Path) 
 /// - `<meta name="sail-default-theme" content="{theme.default}">`
 /// - `<meta name="sail-default-mode" content="{theme.defaultMode}">`
 ///
-/// Missing config → compiler defaults (`ship` / `light`). Unparseable config
+/// Missing config → compiler defaults (`sail` / `light`). Unparseable config
 /// leaves HTML unchanged (config-loud elsewhere).
 pub fn inject_theme_defaults_meta(html: &str, project_root: &std::path::Path) -> String {
     let Ok(cfg) = sail_compiler::tokens_generate::load_theme_config(project_root) else {
@@ -311,14 +311,14 @@ mod tests {
 
     #[test]
     fn inject_effective_themes_meta_stamps_allowlist() {
-        // Baked catalog supplies neutral/paper/… — no monorepo packages/ tree.
+        // Baked catalog supplies sail/paper/… — no monorepo packages/ tree.
         let dir = tempfile::tempdir().unwrap();
         let app = dir.path().join("thin-app");
         std::fs::create_dir_all(app.join("themes")).unwrap();
-        // Thin allowlist — only neutral + paper from baked catalog.
+        // Thin allowlist — only sail + paper from baked catalog.
         std::fs::write(
             app.join("sail.config.jsonc"),
-            r#"{ "theme": { "default": "neutral", "enabled": ["neutral", "paper"] } }"#,
+            r#"{ "theme": { "default": "sail", "enabled": ["sail", "paper"] } }"#,
         )
         .unwrap();
 
@@ -333,7 +333,7 @@ mod tests {
         let end = out[start..].find('"').expect("close quote") + start;
         let content = &out[start..end];
         let parts: Vec<&str> = content.split(',').filter(|s| !s.is_empty()).collect();
-        assert!(parts.contains(&"neutral"), "{content}");
+        assert!(parts.contains(&"sail"), "{content}");
         assert!(parts.contains(&"paper"), "{content}");
         assert!(
             !parts.contains(&"synthwave"),
@@ -344,14 +344,14 @@ mod tests {
 
     #[test]
     fn inject_effective_themes_meta_uses_baked_default_without_workspace() {
-        // External empty app: no packages/, no project themes — default ship
+        // External empty app: no packages/, no project themes — default sail
         // from baked catalog still stamps (dev paint path).
         let dir = tempfile::tempdir().unwrap();
         let html = "<head>\n<title>X</title>\n</head>";
         let out = inject_effective_themes_meta(html, dir.path());
         assert!(
-            out.contains("name=\"sail-effective-themes\" content=\"ship\""),
-            "expected default ship from baked catalog: {out}"
+            out.contains("name=\"sail-effective-themes\" content=\"sail\""),
+            "expected default sail from baked catalog: {out}"
         );
     }
 
@@ -362,13 +362,13 @@ mod tests {
         std::fs::create_dir_all(&app).unwrap();
         std::fs::write(
             app.join("sail.config.jsonc"),
-            r#"{ "theme": { "default": "ship", "defaultMode": "dark", "enabled": "all" } }"#,
+            r#"{ "theme": { "default": "paper", "defaultMode": "dark", "enabled": "all" } }"#,
         )
         .unwrap();
         let html = "<head>\n<title>X</title>\n</head>";
         let out = inject_theme_defaults_meta(html, &app);
         assert!(
-            out.contains("name=\"sail-default-theme\" content=\"ship\""),
+            out.contains("name=\"sail-default-theme\" content=\"paper\""),
             "{out}"
         );
         assert!(
@@ -382,9 +382,9 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let html = "<head>\n<title>X</title>\n</head>";
         let out = inject_theme_defaults_meta(html, dir.path());
-        // DEFAULT_PROJECT_THEME_ID = ship; omitted defaultMode → light.
+        // DEFAULT_PROJECT_THEME_ID = sail; omitted defaultMode → light.
         assert!(
-            out.contains("name=\"sail-default-theme\" content=\"ship\""),
+            out.contains("name=\"sail-default-theme\" content=\"sail\""),
             "{out}"
         );
         assert!(

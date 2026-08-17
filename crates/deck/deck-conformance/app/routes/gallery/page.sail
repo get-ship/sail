@@ -16,7 +16,7 @@
 <controller>
 // Themes that pair with data-mode=dark on <html> (deck shell mode-of-theme).
 const THEME_OPTIONS = [
-  { id: 'ship', label: 'SHIP' },
+  { id: 'sail', label: 'SAIL' },
   { id: 'paper', label: 'Paper' },
   { id: 'halo', label: 'Halo' },
   { id: 'console', label: 'Console' },
@@ -24,7 +24,7 @@ const THEME_OPTIONS = [
 ] as const
 
 export default controller(() => {
-  const activeTheme = signal<string>('ship')
+  const activeTheme = signal<string>('sail')
   const themes = THEME_OPTIONS
 
   return {

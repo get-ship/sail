@@ -239,7 +239,7 @@ pub struct ThemeConfig {
     /// Initial `mode` (prefer `light` when omitted at host).
     #[serde(default)]
     pub default_mode: Option<String>,
-    /// Catalog theme allowlist. Omit → default ship; `[]` → none; `"all"` → full.
+    /// Catalog theme allowlist. Omit → default sail; `[]` → none; `"all"` → full.
     #[serde(default)]
     pub enabled: Option<ThemeEnabled>,
 }
@@ -880,7 +880,7 @@ mod config_doc_tests {
     #[test]
     fn deck_object_recognized_top_level_render_still_unknown() {
         let ok = SailConfig::from_json(
-            r#"{ "deck": { "render": "ssr" }, "theme": { "default": "ship" } }"#,
+            r#"{ "deck": { "render": "ssr" }, "theme": { "default": "sail" } }"#,
         );
         assert!(ok.type_error().is_none(), "{:?}", ok.type_error());
         assert!(ok.unknown_keys().is_empty(), "nested deck is recognized");

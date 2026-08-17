@@ -144,7 +144,7 @@ mod tests {
     fn allows_theme_attr_and_tags() {
         let f = check(
             Path::new("apps/demo/src/page.sail"),
-            r#"<column theme="ship"><button>ok</button><card>x</card></column>"#,
+            r#"<column theme="sail"><button>ok</button><card>x</card></column>"#,
         );
         assert!(f.is_empty(), "{f:?}");
     }

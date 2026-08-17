@@ -125,7 +125,7 @@ export type RenderShot = {
 export async function sailRenderRegion(
   path: string,
   viewport: { width: number; height: number },
-  theme = 'ship',
+  theme = 'sail',
   mode = 'dark',
 ): Promise<RenderShot | null> {
   try {
@@ -159,7 +159,7 @@ export async function resolveRegion(
     const shot = await sailRenderRegion(
       opts.sailPath,
       opts.viewport ?? { width: 1440, height: 900 },
-      opts.theme ?? 'ship',
+      opts.theme ?? 'sail',
       opts.mode ?? 'dark',
     )
     if (shot) {

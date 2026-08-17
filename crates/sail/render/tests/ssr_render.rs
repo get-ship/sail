@@ -29,7 +29,7 @@ fn opts(viewport: (u32, u32)) -> RenderOptions {
         viewport,
         fonts_dir: Some(fonts()),
         app_fonts_dir: None,
-        theme: Some("ship".into()),
+        theme: Some("sail".into()),
         mode: Some("light".into()),
         workspace: workspace_root(),
         file: Some("controller-initial.sail".into()),
@@ -121,7 +121,7 @@ export default controller(() => {
         RenderOptions {
             viewport: (240, 120),
             fonts_dir: Some(fonts()),
-            theme: Some("ship".into()),
+            theme: Some("sail".into()),
             mode: Some("light".into()),
             workspace: workspace_root(),
             file: Some("inline.sail".into()),
@@ -155,7 +155,7 @@ fn unknown_if_does_not_paint_both_branches() {
         RenderOptions {
             viewport: (240, 120),
             fonts_dir: Some(fonts()),
-            theme: Some("ship".into()),
+            theme: Some("sail".into()),
             mode: Some("light".into()),
             workspace: workspace_root(),
             file: Some("unknown-if.sail".into()),

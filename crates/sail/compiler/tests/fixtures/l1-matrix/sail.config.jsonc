@@ -1,7 +1,7 @@
 {
   // Full catalog — the matrix probe sweeps THEME_META, not a site allowlist.
   "theme": {
-    "default": "ship",
+    "default": "sail",
     "defaultMode": "light",
     "enabled": "all"
   },

@@ -101,7 +101,6 @@ export default controller((_ctx: Scope) => {
         <label style(knobLabel)>Selected theme</label>
         <select size="sm" bind:value={value} label="Value">
           <option value="">(site default)</option>
-          <option value="ship">ship</option>
           <option value="sail">sail</option>
           <option value="console">console</option>
           <option value="paper">paper</option>

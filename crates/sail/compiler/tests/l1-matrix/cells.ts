@@ -3,7 +3,7 @@
  *
  * Fan-out is not cartesian:
  *   1. rest default × every THEME_META id × that theme's modes
- *   2. axis sweep on ship light + ship dark (other axes at default)
+ *   2. axis sweep on sail light + sail dark (other axes at default)
  *   3. interacting pairs only when PAIR_TUNES names them
  *   4. overlays are opened (overlay: true) — never a permanent skip
  *
@@ -12,7 +12,7 @@
 import { COMPONENTS, TAGS, type L1Tag } from '../../../../../packages/sail/l1/src/index.ts'
 import { THEME_META } from '../../../../../packages/sail/tokens/src/generated/themes-meta.ts'
 
-export const CANONICAL_THEME = 'ship'
+export const CANONICAL_THEME = 'sail'
 export const CANONICAL_MODES = ['light', 'dark'] as const
 
 /** Hosts whose painted surface is off-page until opened. */
