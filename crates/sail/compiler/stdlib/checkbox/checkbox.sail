@@ -31,5 +31,5 @@
 
 <input
   type="checkbox"
-  style(check, {shrink(0), match: { size: { xs: checkSm, sm: checkSm, md: checkMd, lg: checkLg } }, compound: [{invalid: true, border({ color: destructive })}]})
+  style(check, {shrink(0), match: { size: { xs: checkSm, sm: checkSm, md: checkMd, lg: checkLg } }, compound: [{invalid: true, border({ color: danger })}]})
 >

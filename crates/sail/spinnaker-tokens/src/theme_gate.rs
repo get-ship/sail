@@ -172,14 +172,32 @@ fn walk_leaves(node: &Value, prefix: &[String]) -> Vec<ColorLeaf> {
             .unwrap_or("color")
             .to_string();
         if is_composite_type(&ty) && obj.get("$value").is_some_and(Value::is_object) {
-            return expand_composite_leaves(obj, prefix, &ty);
+            let structured = obj
+                .get("$value")
+                .and_then(|v| v.as_object())
+                .is_some_and(|v| {
+                    (ty == "shadow"
+                        && (v.contains_key("blur")
+                            || v.contains_key("offset")
+                            || v.contains_key("offsetX")
+                            || v.contains_key("offsetY")))
+                        || (ty == "gradient" && (v.contains_key("kind") || v.contains_key("stops")))
+                });
+            if !structured {
+                return expand_composite_leaves(obj, prefix, &ty);
+            }
         }
         let value = match obj.get("$value") {
             Some(Value::String(s)) => s.clone(),
             Some(Value::Number(n)) => n.to_string(),
             Some(Value::Bool(b)) => b.to_string(),
             Some(Value::Null) => "null".into(),
-            Some(other) => other.to_string(),
+            Some(other @ (Value::Object(_) | Value::Array(_))) => {
+                let resolve = |name: &str| Some(format!("{{{name}}}"));
+                crate::eval::evaluate(other, &resolve)
+                    .map(|e| e.css)
+                    .unwrap_or_else(|_| other.to_string())
+            }
             None => return Vec::new(),
         };
         let path = prefix.join(".");
@@ -913,8 +931,9 @@ mod tests {
                 continue;
             }
             let text = std::fs::read_to_string(&path).unwrap();
-            let doc: Value = serde_json::from_str(&text).unwrap();
+            let mut doc: Value = serde_json::from_str(&text).unwrap();
             let label = path.file_name().unwrap().to_string_lossy();
+            crate::derive::apply_theme_derivation(&mut doc).unwrap();
             validate_theme_gate(&doc, &label).unwrap_or_else(|e| {
                 panic!("{}: {e}", path.display());
             });

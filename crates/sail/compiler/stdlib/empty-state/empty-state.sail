@@ -9,7 +9,7 @@
   props: {
     variant: 'default' | 'inline' | 'placeholder' | 'connecting' = 'default'
     size: 'md' | 'sm' | 'lg' = 'md'
-    tone: 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted' = 'muted'
+    tone: 'primary' | 'info' | 'success' | 'warning' | 'danger' | 'accent' | 'muted' = 'muted'
     compact = false
   }
 

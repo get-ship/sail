@@ -21,7 +21,7 @@
   // Shell only. Edge dock + header/section/footer live in platform/drawer.css
   // (same native-<dialog> adaptor as dialog). inset:0 + w/h full made a
   // full-viewport card — that is not a drawer.
-  style host = {position({ scheme: fixed, z: dialog }).pad(0).margin(0).overflow({ y: auto, overscroll: contain }).border({ color: border, width: 1 }).radius(none).bg(overlay).fg(card-foreground).elevation(xl).type({ family: body }), animate: { transition: play(surface, fast) }}
+  style host = {position({ scheme: fixed, z: dialog }).pad(0).margin(0).overflow({ y: auto, overscroll: contain }).border({ color: border, width: 1 }).radius(none).bg(overlay).fg(foreground).elevation(xl).type({ family: body }), animate: { transition: play(surface, fast) }}
   style shown = {display(flex).dir(column)}
   style sizeSm = {size({ max-w: panel-max-w-sm, max-h: panel-vh-sm })}
   style sizeMd = {size({ max-w: panel-max-w-md, max-h: panel-vh-md })}

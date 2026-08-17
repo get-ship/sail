@@ -15,7 +15,7 @@
 
   style host = {group().type({ family: body })}
   style hint = {margin({ t: 1 }).fg(muted-foreground).type({ size: xs, leading: snug })}
-  style error = {margin({ t: 1 }).fg(destructive).type({ size: xs, leading: snug, weight: medium })}
+  style error = {margin({ t: 1 }).fg(danger).type({ size: xs, leading: snug, weight: medium })}
   style icon = {size(icon-size-sm)}
 </scope>
 

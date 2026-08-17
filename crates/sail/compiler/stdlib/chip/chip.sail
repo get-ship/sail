@@ -11,7 +11,7 @@
 
 <scope>
   props: {
-    tone: 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted' = 'primary'
+    tone: 'primary' | 'info' | 'success' | 'warning' | 'danger' | 'accent' | 'muted' = 'primary'
     variant: 'solid' | 'soft' | 'outline' | 'ghost' = 'solid'
     size: 'md' | 'sm' | 'lg' = 'md'
     selected = false
@@ -41,7 +41,7 @@
       {tone: info, variant: solid, bg(info).fg(info-foreground).border({ color: info })},
       {tone: success, variant: solid, bg(success).fg(success-foreground).border({ color: success })},
       {tone: warning, variant: solid, bg(warning).fg(warning-foreground).border({ color: warning })},
-      {tone: destructive, variant: solid, bg(destructive).fg(destructive-foreground).border({ color: destructive })},
+      {tone: danger, variant: solid, bg(danger).fg(danger-foreground).border({ color: danger })},
       {tone: accent, variant: solid, bg(accent).fg(accent-foreground).border({ color: accent })},
       {tone: muted, variant: solid, bg(muted).fg(muted-foreground).border({ color: border })},
       // Tone + soft (wash)
@@ -49,7 +49,7 @@
       {tone: info, variant: soft, bg({ color: info, mix: 15 }).border({ color: info }).fg(info), when: {hover: bg({ color: info, mix: 25 })}},
       {tone: success, variant: soft, bg({ color: success, mix: 15 }).border({ color: success }).fg(success), when: {hover: bg({ color: success, mix: 25 })}},
       {tone: warning, variant: soft, bg({ color: warning, mix: 15 }).border({ color: warning }).fg(warning), when: {hover: bg({ color: warning, mix: 25 })}},
-      {tone: destructive, variant: soft, bg({ color: destructive, mix: 15 }).border({ color: destructive }).fg(destructive), when: {hover: bg({ color: destructive, mix: 25 })}},
+      {tone: danger, variant: soft, bg({ color: danger, mix: 15 }).border({ color: danger }).fg(danger), when: {hover: bg({ color: danger, mix: 25 })}},
       {tone: accent, variant: soft, bg({ color: accent, mix: 15 }).border({ color: accent }).fg(accent), when: {hover: bg({ color: accent, mix: 25 })}},
       {tone: muted, variant: soft, bg({ color: muted, mix: 15 }).border({ color: border }).fg(muted-foreground), when: {hover: bg({ color: muted, mix: 25 })}},
       // Tone + outline / ghost
@@ -57,14 +57,14 @@
       {tone: info, variant: outline, bg(transparent).fg(info).border({ color: info })},
       {tone: success, variant: outline, bg(transparent).fg(success).border({ color: success })},
       {tone: warning, variant: outline, bg(transparent).fg(warning).border({ color: warning })},
-      {tone: destructive, variant: outline, bg(transparent).fg(destructive).border({ color: destructive })},
+      {tone: danger, variant: outline, bg(transparent).fg(danger).border({ color: danger })},
       {tone: accent, variant: outline, bg(transparent).fg(accent).border({ color: accent })},
       {tone: muted, variant: outline, fg(muted-foreground).border({ color: border })},
       {tone: primary, variant: ghost, bg(transparent).border({ color: transparent }).fg(primary)},
       {tone: info, variant: ghost, bg(transparent).border({ color: transparent }).fg(info)},
       {tone: success, variant: ghost, bg(transparent).border({ color: transparent }).fg(success)},
       {tone: warning, variant: ghost, bg(transparent).border({ color: transparent }).fg(warning)},
-      {tone: destructive, variant: ghost, bg(transparent).border({ color: transparent }).fg(destructive)},
+      {tone: danger, variant: ghost, bg(transparent).border({ color: transparent }).fg(danger)},
       {tone: accent, variant: ghost, bg(transparent).border({ color: transparent }).fg(accent)},
       {tone: muted, variant: ghost, fg(muted-foreground)},
       // Selected beats tone×variant (same/higher attr count so it can win cascade).

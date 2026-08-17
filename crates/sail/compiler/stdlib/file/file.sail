@@ -30,11 +30,11 @@
 
 <div
   use:dropzone
-  style({group(), match: { variant: { picker: pickerHost, drop: dropHost } }, compound: [{invalid: true, variant: drop, border({ color: destructive })}]})
+  style({group(), match: { variant: { picker: pickerHost, drop: dropHost } }, compound: [{invalid: true, variant: drop, border({ color: danger })}]})
 >
   <input
     type="file"
-    style(file, {match: { size: { xs: sizeXs, sm: sizeSm, md: sizeMd, lg: sizeLg } }, compound: [{invalid: true, border({ color: destructive })}]})
+    style(file, {match: { size: { xs: sizeXs, sm: sizeSm, md: sizeMd, lg: sizeLg } }, compound: [{invalid: true, border({ color: danger })}]})
   >
   <span data-dz-files style(hint)>Drop a file or click to browse</span>
 </div>

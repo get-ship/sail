@@ -4,7 +4,7 @@
 //!  Use the tone ramps. `--primary` is a brand slot, not a status signal."
 //!
 //! `--primary` is the *brand* colour. It does not communicate success,
-//! failure, or warning. Components that tint a `destructive` / `warning`
+//! failure, or warning. Components that tint a `danger` / `warning`
 //! / `success` / `info` / `accent` selector with `var(--primary)` bake
 //! themselves against a slot that says "this is the company colour",
 //! defeating the entire status vocabulary. The fix is the matching tone
@@ -46,7 +46,7 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
     for block in scan_style_blocks(source) {
         for rule in scan_rule_blocks(&block.content) {
             // A list of selectors can mix status and non-status
-            // (`:host([tone='destructive']), :host([invalid])`).
+            // (`:host([tone='danger']), :host([invalid])`).
             // Evaluate each comma-separated piece independently — if
             // ANY piece is a status-tone selector, the whole rule is
             // a status block.
@@ -100,11 +100,11 @@ const SUGGEST: &str = "Use the matching tone ramp \
 /// default-tone block, which is supposed to read like the brand), or
 /// `muted` (a non-status tint). The non-status tones map to brand or
 /// neutral layers and `--primary` there is fine.
-const STATUS_TONES: &[&str] = &["destructive", "warning", "success", "info", "accent"];
+const STATUS_TONES: &[&str] = &["danger", "warning", "success", "info", "accent"];
 
 /// True iff `piece` is a selector for a *status* tone. Matches:
-/// - `:host([tone='destructive'])` (and siblings)
-/// - `:host([tone="destructive"])` (double-quoted form, just in case)
+/// - `:host([tone='danger'])` (and siblings)
+/// - `:host([tone="danger"])` (double-quoted form, just in case)
 /// - `:host([invalid])` (a status signal even without an explicit tone)
 ///
 /// Brand tone, default tone, no-tone default, and any other modifier
@@ -242,7 +242,7 @@ fn scan_rule_blocks(content: &str) -> Vec<RuleBlock<'_>> {
     let mut i = 0;
     while i < bytes.len() {
         // Skip CSS comments. Without this, a commented-out
-        // `:host([tone='destructive']) { background: var(--primary); }`
+        // `:host([tone='danger']) { background: var(--primary); }`
         // gets parsed as a real rule and fires a finding.
         if bytes[i] == b'/' && bytes.get(i + 1) == Some(&b'*') {
             if let Some(end_rel) = find_subslice(&bytes[i + 2..], b"*/") {
@@ -358,14 +358,14 @@ mod tests {
     // --- Status tones fire ---
 
     #[test]
-    fn destructive_with_primary_fires() {
-        let src = "<style>:host([tone='destructive']) { background: var(--primary); }</style>";
+    fn danger_with_primary_fires() {
+        let src = "<style>:host([tone='danger']) { background: var(--primary); }</style>";
         let f = run(src);
         assert_eq!(f.len(), 1, "{f:?}");
         assert_eq!(f[0].rule, RULE_ID);
         assert_eq!(f[0].severity, Severity::Warn);
         assert!(f[0].message.contains("var(--primary)"), "{}", f[0].message);
-        assert!(f[0].message.contains("destructive"), "{}", f[0].message);
+        assert!(f[0].message.contains("danger"), "{}", f[0].message);
         assert!(f[0].suggest.as_deref().unwrap().contains("tone-X"));
     }
 
@@ -411,7 +411,7 @@ mod tests {
     fn list_selector_with_status_piece_fires() {
         // The list mixes a status piece with another; the rule fires
         // because the body is reachable from the status selector.
-        let src = "<style>:host([tone='destructive']), :host([invalid]) { border-color: var(--primary); }</style>";
+        let src = "<style>:host([tone='danger']), :host([invalid]) { border-color: var(--primary); }</style>";
         let f = run(src);
         assert_eq!(f.len(), 1, "{f:?}");
     }
@@ -453,8 +453,7 @@ mod tests {
         // `--primary-foreground` is the paired text token; reading
         // it from a status block is the correct way to put primary-
         // coloured text on a status surface.
-        let src =
-            "<style>:host([tone='destructive']) { color: var(--primary-foreground); }</style>";
+        let src = "<style>:host([tone='danger']) { color: var(--primary-foreground); }</style>";
         assert!(run(src).is_empty(), "{:?}", run(src));
     }
 
@@ -469,9 +468,9 @@ mod tests {
     // --- Status tone block with NO primary use does NOT fire ---
 
     #[test]
-    fn status_block_using_destructive_does_not_fire() {
+    fn status_block_using_danger_does_not_fire() {
         // Status block, but it uses the right token. No finding.
-        let src = "<style>:host([tone='destructive']) { background: var(--destructive); }</style>";
+        let src = "<style>:host([tone='danger']) { background: var(--danger); }</style>";
         assert!(run(src).is_empty(), "{:?}", run(src));
     }
 
@@ -486,7 +485,7 @@ mod tests {
 
     #[test]
     fn no_style_block_no_findings() {
-        let src = "<div>:host([tone='destructive']) { background: var(--primary); }</div>";
+        let src = "<div>:host([tone='danger']) { background: var(--primary); }</div>";
         assert!(run(src).is_empty(), "{:?}", run(src));
     }
 
@@ -494,15 +493,14 @@ mod tests {
     fn commented_status_block_is_skipped() {
         // The status-tone comment is just text; the only real
         // declaration is the comment. No body, no finding.
-        let src =
-            "<style>/* :host([tone='destructive']) { background: var(--primary); } */</style>";
+        let src = "<style>/* :host([tone='danger']) { background: var(--primary); } */</style>";
         assert!(run(src).is_empty(), "{:?}", run(src));
     }
 
     #[test]
     fn media_wrapper_status_block_fires() {
         // @media wraps the real status block; the rule descends.
-        let src = "<style>@media (min-width: 600px) { :host([tone='destructive']) { background: var(--primary); } }</style>";
+        let src = "<style>@media (min-width: 600px) { :host([tone='danger']) { background: var(--primary); } }</style>";
         let f = run(src);
         assert_eq!(f.len(), 1, "{f:?}");
     }
@@ -524,15 +522,14 @@ mod tests {
                 border: 1px solid var(--border);
             }
             :host([tone='primary']) { background: var(--primary); }
-            :host([tone='destructive']) { background: var(--hover-bg); }
+            :host([tone='danger']) { background: var(--hover-bg); }
         </style>"#;
         assert!(run(src).is_empty(), "{:?}", run(src));
     }
 
     #[test]
     fn position_points_at_var_call() {
-        let src =
-            "<style>\n  :host([tone='destructive']) { background: var(--primary); }\n</style>";
+        let src = "<style>\n  :host([tone='danger']) { background: var(--primary); }\n</style>";
         let f = run(src);
         assert_eq!(f.len(), 1);
         assert_eq!(f[0].line, 2);
@@ -540,7 +537,7 @@ mod tests {
 
     #[test]
     fn multiple_status_blocks_each_fire() {
-        let src = "<style>:host([tone='destructive']) { background: var(--primary); } :host([tone='warning']) { border-color: var(--primary); }</style>";
+        let src = "<style>:host([tone='danger']) { background: var(--primary); } :host([tone='warning']) { border-color: var(--primary); }</style>";
         let f = run(src);
         assert_eq!(f.len(), 2, "{f:?}");
     }

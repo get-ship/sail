@@ -8,7 +8,7 @@
 <scope>
   props: {// default ≡ solid (kept as enum value so existing markup doesn't break).
     variant: 'default' | 'solid' | 'soft' | 'outline' | 'ghost' = 'solid'
-    tone: 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted' = 'primary'
+    tone: 'primary' | 'info' | 'success' | 'warning' | 'danger' | 'accent' | 'muted' = 'primary'
     // icon / iconSm / iconLg = square hit targets (no hyphen — Style match keys are idents).
     size: 'xs' | 'sm' | 'md' | 'lg' | 'icon' | 'iconSm' | 'iconLg' = 'md'
     disabled = false

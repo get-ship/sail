@@ -75,7 +75,7 @@ function extractVarDecls(css: string): Set<string> {
   const out = new Set<string>()
   // Match `--name:` followed by anything to the end of the line OR a
   // semicolon. The CSS uses single-line declarations exclusively.
-  // Underscores appear in fine-step space names (space-0_75, space-1_5, …).
+  // Underscores appear in named half-steps (space-1_5, space-2_5).
   const re = /--([a-z0-9_-]+)\s*:/gi
   let m: RegExpExecArray | null
   while ((m = re.exec(css)) !== null) {
@@ -174,22 +174,18 @@ const PRIMITIVE_TIER: ReadonlyArray<[name: string, sample: RegExp]> = [
 ] as const
 
 const SEMANTIC_TIER: ReadonlyArray<[name: string, sample: RegExp]> = [
-  // Surface stack
-  ['--surface-0', /--surface-0\s*:/i],
-  ['--surface-1', /--surface-1\s*:/i],
-  ['--surface-2', /--surface-2\s*:/i],
-  ['--surface-3', /--surface-3\s*:/i],
-  // Overlay channel (semantic — the spec's "an --overlay-*")
-  ['--surface-overlay', /--surface-overlay\s*:/i],
+  // Purpose steps (app / subtle / surface / inset / overlay)
+  ['--background', /--background\s*:/i],
+  ['--surface', /--surface\s*:/i],
+  ['--inset', /--inset\s*:/i],
+  ['--overlay', /--overlay\s*:/i],
+  ['--overlay-fill', /--overlay-fill\s*:/i],
   ['--backdrop', /--backdrop\s*:/i],
-  // Semantic hues + soft surfaces (no tone-* ramp tokens)
   ['--primary', /--primary\s*:/i],
   ['--hover-bg', /--hover-bg\s*:/i],
   ['--success', /--success\s*:/i],
   ['--warning', /--warning\s*:/i],
-  ['--destructive', /--destructive\s*:/i],
-  // Brand palette
-  ['--primary', /--primary\s*:/i],
+  ['--danger', /--danger\s*:/i],
   ['--foreground', /--foreground\s*:/i],
   ['--muted-foreground', /--muted-foreground\s*:/i],
 ] as const
@@ -201,15 +197,14 @@ const COMPONENT_TIER: ReadonlyArray<[name: string, sample: RegExp]> = [
   // Control heights + stroke
   ['--control-h-md', /--control-h-md\s*:/i],
   ['--control-stroke', /--control-stroke\s*:/i],
-  // Edge highlight (filled surfaces)
-  ['--edge-highlight', /--edge-highlight\s*:/i],
+  ['--shadow-edge-highlight', /--shadow-edge-highlight\s*:/i],
 ] as const
 
 /** Tokens the spec calls out by name — these MUST exist in every theme.
  *  Stored as BARE names (no leading --); the regex prepends it. */
 const REPRSENTATIVE_PER_THEME = [
-  'surface-1',
-  'surface-overlay',
+  'surface',
+  'overlay-fill',
   'panel-max-w-md',
 ] as const
 
@@ -1089,7 +1084,7 @@ describe('@ship/tokens — DTCG SSOT / generate drift lock', () => {
   })
 
   it('theme override blocks redeclare public cssNames only (registry-known vars)', () => {
-    // themes.css must override --primary / --surface-1 etc. — the same public
+    // themes.css must override --primary / --surface etc. — the same public
     // surface Layout, Fx, and contracts consume — never invent parallel names.
     // Match modes-in-file theme layers:
     //   :root[theme='id'][mode='…'],
@@ -1126,8 +1121,7 @@ describe('@ship/tokens — DTCG SSOT / generate drift lock', () => {
     for (const n of overrideNames) {
       expect(known.has(n), `theme override --${n} not in token-registry names`).toBe(true)
     }
-    // Public brand + surface tokens still overridden somewhere
-    for (const n of ['primary', 'foreground', 'background', 'surface-0', 'surface-1']) {
+    for (const n of ['primary', 'foreground', 'background', 'surface']) {
       expect(overrideNames.has(n)).toBe(true)
     }
   })
@@ -1202,10 +1196,12 @@ describe('@ship/tokens — DTCG SSOT / generate drift lock', () => {
       expect(reg.paths?.[path], path).toBeUndefined()
     }
     const css = loadSrc('../src/tokens.css')
-    expect(css).toMatch(/--card\s*:\s*var\(--surface-1\)/)
-    expect(css).toMatch(/--card-foreground\s*:\s*var\(--foreground\)/)
-    expect(css).toMatch(/--popover\s*:\s*var\(--surface-1\)/)
-    expect(css).toMatch(/--input\s*:/)
+    expect(css).toMatch(/--surface\s*:/)
+    expect(css).toMatch(/--overlay\s*:/)
+    expect(css).toMatch(/--inset\s*:/)
+    expect(css).not.toMatch(/--card\s*:/)
+    expect(css).not.toMatch(/--popover\s*:/)
+    expect(css).not.toMatch(/--input\s*:/)
     expect(css).not.toMatch(/--field\s*:/)
     expect(css).not.toMatch(/--navbar\s*:/)
     expect(css).not.toMatch(/--combobox\s*:/)
@@ -1215,7 +1211,7 @@ describe('@ship/tokens — DTCG SSOT / generate drift lock', () => {
   it('color surface includes brand + tone tokens and excludes space/text', () => {
     const reg = loadRegistry()
     const colors = new Set(reg.colors)
-    for (const n of ['primary', 'foreground', 'surface-1', 'hover-bg', 'accent-foreground']) {
+    for (const n of ['primary', 'foreground', 'surface', 'hover-bg', 'accent-foreground']) {
       expect(colors.has(n)).toBe(true)
     }
     for (const n of ['space-4', 'text-2xl', 'radius-lg']) {
@@ -1238,7 +1234,7 @@ describe('@ship/tokens — DTCG SSOT / generate drift lock', () => {
     expect(unions).toMatch(/export type SpaceToken =/)
     expect(unions).toMatch(/export type SemanticColorName =/)
     // Tone membership from DTCG color.tone ramps
-    for (const tone of ['default', 'primary', 'info', 'success', 'warning', 'destructive', 'accent', 'muted']) {
+    for (const tone of ['primary', 'info', 'success', 'warning', 'danger', 'accent', 'muted']) {
       expect(unions).toContain(`'${tone}'`)
     }
     // Registry names appear in CssTokenName
@@ -1256,13 +1252,13 @@ describe('@ship/tokens — DTCG SSOT / generate drift lock', () => {
 describe('@ship/tokens — whole-value alias audit', () => {
   // Pins RESULT-TOKEN-AUDIT.md. Recount: extractWholeValueAliases.
   const PIN = {
-    tokensSites: 105,
-    tokensUnique: 100,
-    tokensKeep: 100,
+    tokensSites: 82,
+    tokensUnique: 77,
+    tokensKeep: 77,
     tokensRebind: 0,
-    themesSites: 117,
-    themesUnique: 17,
-    themesKeep: 17,
+    themesSites: 41,
+    themesUnique: 7,
+    themesKeep: 7,
     chromeSites: 0,
     hueFirstClass: 16,
     sidebarFirstClass: 0,

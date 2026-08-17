@@ -32,11 +32,25 @@ pub fn evaluate(value: &Value, resolve: &RefResolver<'_>) -> Result<EvalResult> 
         Value::Number(n) => Ok(EvalResult::scalar(n.to_string())),
         Value::Bool(b) => Ok(EvalResult::scalar(b.to_string())),
         Value::Null => Ok(EvalResult::scalar("null")),
-        Value::Array(stops) => {
-            // Bare stop list is not a value; require a gradient wrapper.
+        Value::Array(items) => {
+            // Multi-layer shadow: [{offset, blur, ...}, ...]
+            if !items.is_empty()
+                && items.iter().all(|i| {
+                    i.get("blur").is_some()
+                        || i.get("offset").is_some()
+                        || i.get("offsetX").is_some()
+                        || i.get("offsetY").is_some()
+                })
+            {
+                let mut parts = Vec::new();
+                for item in items {
+                    parts.push(evaluate(item, resolve)?.css);
+                }
+                return Ok(EvalResult::scalar(parts.join(", ")));
+            }
             bail!(
-                "structured value: bare array is not a token value ({} stops) — use {{kind, stops}}",
-                stops.len()
+                "structured value: bare array is not a token value ({} items) — use {{kind, stops}} or a shadow layer list",
+                items.len()
             )
         }
         Value::Object(obj) => evaluate_object(obj, resolve),

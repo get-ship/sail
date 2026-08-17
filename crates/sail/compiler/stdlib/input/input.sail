@@ -34,9 +34,9 @@
   // field (group-fill) the control fills the column. Naked input hugs.
   style stretch = {size({ w: 100% })}
   // Text-like fields share input / foreground / border with select/textarea.
-  style field = {display(block).size({ min-h: control-h-md }).pad({ y: 1_5, x: 3 }).fg(foreground).bg(control).border({ color: border, width: 1 }).radius(md).elevation(xs).type({ size: base }), when: {hover: border({ color: border-strong }), disabled: cursor(not-allowed).filter({ opacity: 50 }), group-fill: stretch}}
+  style field = {display(block).size({ min-h: control-h-md }).pad({ y: 1_5, x: 3 }).fg(foreground).bg(inset).border({ color: border, width: 1 }).radius(md).elevation(xs).type({ size: base }), when: {hover: border({ color: border-strong }), disabled: cursor(not-allowed).filter({ opacity: 50 }), group-fill: stretch}}
   // Password: reserve end chrome for reveal (select chevron model — padE, not padX).
-  style fieldPassword = {display(block).size({ min-h: control-h-md }).pad({ y: 1_5, s: 3, e: 8 }).fg(foreground).bg(control).border({ color: border, width: 1 }).radius(md).elevation(xs).type({ size: base }), when: {hover: border({ color: border-strong }), disabled: cursor(not-allowed).filter({ opacity: 50 }), group-fill: stretch}}
+  style fieldPassword = {display(block).size({ min-h: control-h-md }).pad({ y: 1_5, s: 3, e: 8 }).fg(foreground).bg(inset).border({ color: border, width: 1 }).radius(md).elevation(xs).type({ size: base }), when: {hover: border({ color: border-strong }), disabled: cursor(not-allowed).filter({ opacity: 50 }), group-fill: stretch}}
   style sizeXs = {size({ min-h: control-h-2xs }).pad({ x: 2 }).type({ size: xs })}
   style sizeSm = {size({ min-h: control-h-sm }).pad({ x: 2_5 }).type({ size: sm })}
   style sizeMd = {size({ min-h: control-h-md }).pad({ x: 3 }).type({ size: base })}
@@ -51,9 +51,9 @@
   style hidden = {display(none)}
   // default = current field (bg input, border). filled = muted well, no outer border.
   // flushed = no fill, underline only (border edge b).
-  style surfaceDefault = {bg(control).border({ color: border, width: 1 })}
+  style surfaceDefault = {bg(inset).border({ color: border, width: 1 })}
   style surfaceFilled = {bg(muted).border({ color: transparent }).elevation(none), when: {hover: border({ color: transparent })}}
   style surfaceFlushed = {bg(transparent).elevation(none).radius(none).border({ width: 0, edge: l }).border({ width: 0, edge: r }).border({ width: 0, edge: t }).border({ width: 1, edge: b, color: border }), when: {hover: border({ color: border-strong, edge: b })}}
 </scope>
 
-<input style({match: {type: {text: fieldSized, email: fieldSized, password: passwordSized, number: fieldSized, search: fieldSized, tel: fieldSized, url: fieldSized, hidden: style(hidden, {size({ min-h: 0 })})}, surface: { default: surfaceDefault, filled: surfaceFilled, flushed: surfaceFlushed }}, compound: [{invalid: true, border({ color: destructive })}]})>
+<input style({match: {type: {text: fieldSized, email: fieldSized, password: passwordSized, number: fieldSized, search: fieldSized, tel: fieldSized, url: fieldSized, hidden: style(hidden, {size({ min-h: 0 })})}, surface: { default: surfaceDefault, filled: surfaceFilled, flushed: surfaceFlushed }}, compound: [{invalid: true, border({ color: danger })}]})>

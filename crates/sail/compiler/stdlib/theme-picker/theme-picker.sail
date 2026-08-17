@@ -41,20 +41,20 @@
   style triggerIcon = {size(icon-size-sm).display(block)}
   style glyph = {fg(foreground).type({ size: sm, leading: none })}
 
-  style panel = {position({ scheme: fixed, inset: auto, l: bind(anchorLeft), t: bind(anchorTop), z: popover }).pad(0).margin(0).size({ w: panel-max-w-sm, max-w: 24rem, min-w: 0, max-h: panel-vh-md }).overflow({ x: hidden, y: auto, overscroll: contain }).fg(popover-foreground).bg(popover).border({ color: border, width: hairline }).radius(lg).elevation(lg), when: {group-inline: gone, group-chrome-inline: gone, group-mode: gone, group-mode-only: gone}}
+  style panel = {position({ scheme: fixed, inset: auto, l: bind(anchorLeft), t: bind(anchorTop), z: popover }).pad(0).margin(0).size({ w: panel-max-w-sm, max-w: 24rem, min-w: 0, max-h: panel-vh-md }).overflow({ x: hidden, y: auto, overscroll: contain }).fg(foreground).bg(popover).border({ color: border, width: hairline }).radius(lg).elevation(lg), when: {group-inline: gone, group-chrome-inline: gone, group-mode: gone, group-mode-only: gone}}
   style panelMenuRow = {size({ w: 100%, max-w: none, min-w: 0 })}
 
   style header = {size({ w: 100%, min-w: 0 }).pad({ x: 3, t: 3, b: 0 })}
-  style headerEyebrow = {fg(muted-foreground).type({ size: xs, weight: semibold, tracking: wide, case: label-transform, leading: none })}
-  style headerTitle = {fg(popover-foreground).type({ family: heading, weight: bind(heading-weight), size: base, leading: tight, wrap: truncate })}
+  style headerEyebrow = {fg(muted-foreground).type({ size: xs, weight: semibold, tracking: wide, case: type-label-case, leading: none })}
+  style headerTitle = {fg(foreground).type({ family: heading, weight: bind(type-heading-weight), size: base, leading: tight, wrap: truncate })}
   style headerMeta = {fg(muted-foreground).type({ size: xs, leading: none })}
 
   style modeSeg = {size({ w: 100%, min-w: 0 }).pad({ x: 1 }).border({ width: 1, edge: b, color: border })}
   style modeSegRail = {pad(1).bg(muted).border({ color: border, width: 1 }).radius(md)}
-  style modeSegBtn = {grow(1).size({ min-w: 0 }).pad({ y: 2, x: 2 }).fg(muted-foreground).bg(transparent).border({ width: 0, edge: l }).border({ width: 0, edge: r }).border({ width: 0, edge: t }).border({ width: 2, edge: b, color: transparent }).radius({ t: sm }).cursor(pointer).select(none).tapHighlight(none).type({ size: xs, weight: medium, align: center, wrap: nowrap }), when: {hover: fg(popover-foreground).bg(hover-bg), focus: border({ style: solid, kind: outline, width: 2, color: ring, offset: ring-offset }), selected: fg(popover-foreground).bg(hover-bg).border({ color: primary, edge: b }).type({ weight: semibold })}}
+  style modeSegBtn = {grow(1).size({ min-w: 0 }).pad({ y: 2, x: 2 }).fg(muted-foreground).bg(transparent).border({ width: 0, edge: l }).border({ width: 0, edge: r }).border({ width: 0, edge: t }).border({ width: 2, edge: b, color: transparent }).radius({ t: sm }).cursor(pointer).select(none).tapHighlight(none).type({ size: xs, weight: medium, align: center, wrap: nowrap }), when: {hover: fg(foreground).bg(hover-bg), focus: border({ style: solid, kind: outline, width: 2, color: ring, offset: ring-offset }), selected: fg(foreground).bg(hover-bg).border({ color: primary, edge: b }).type({ weight: semibold })}}
   style modeSegBtnPill = {border({ width: 0 }).radius(sm), when: {selected: bg(background).fg(foreground).border({ width: 0 }).type({ weight: semibold })}}
 
-  style catalogHead = {size({ w: 100%, min-w: 0 }).pad({ x: 3, t: 2, b: 1 }).fg(muted-foreground).type({ size: xs, weight: semibold, tracking: wide, case: label-transform })}
+  style catalogHead = {size({ w: 100%, min-w: 0 }).pad({ x: 3, t: 2, b: 1 }).fg(muted-foreground).type({ size: xs, weight: semibold, tracking: wide, case: type-label-case })}
 
   style panelList = {size({ w: 100%, min-w: 0 }).pad(1_5)}
   style option = {size({ w: 100%, min-w: 0 }).pad(0).overflow({ all: hidden }).bg(transparent).border({ color: transparent, width: hairline }).radius(md).cursor(pointer).type({ align: start }), when: {group-chrome-inline: optionInline, group-inline: optionInline, group-orientation-vertical: optionStretch}}
@@ -63,11 +63,11 @@
 
   style swatch = {position(relative).size({ w: 100%, min-w: 0, h: 20, min-h: 20 }).overflow({ all: hidden }).radius(md).bg(background).fg(foreground).isolate(), when: {group-size-compact: swatchCompact}}
   style swatchRow = {size({ w: 100%, min-w: 0, h: auto, min-h: 0 }).bg(transparent).radius(none)}
-  style overlay = {position({ scheme: absolute, inset: 0, z: 1 }).filter({ opacity: bind(surface-overlay-opacity), blend: bind(surface-overlay-blend) }).bg(bind(surface-overlay)).pointerEvents(none)}
+  style overlay = {position({ scheme: absolute, inset: 0, z: 1 }).filter({ opacity: bind(overlay-opacity), blend: bind(overlay-blend) }).bg(bind(overlay-fill)).pointerEvents(none)}
   style specimen = {position({ scheme: relative, z: 2 }).size({ w: 100%, h: 100%, min-w: 0 }).pad(2_5)}
   style specimenRow = {pad({ y: 2, x: 2 })}
   style hideOnMenuRow = {display(none)}
-  style title = {fg(foreground).type({ family: heading, weight: bind(heading-weight), size: sm, leading: tight, wrap: truncate })}
+  style title = {fg(foreground).type({ family: heading, weight: bind(type-heading-weight), size: sm, leading: tight, wrap: truncate })}
   style stripPrimary = {size({ h: 3, min-w: 0 }).radius(sm).bg(primary)}
   style stripSecondary = {size({ h: 3, min-w: 0 }).radius(sm).bg(secondary)}
   style stripAccent = {size({ h: 3, min-w: 0 }).radius(sm).bg(accent)}

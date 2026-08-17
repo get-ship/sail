@@ -5,7 +5,7 @@
  */
 
 /* ─── Surface gradient — body-level wash channel ───────────────────────
- * Sits UNDER content (z-index -1), unlike --surface-overlay which floats
+ * Sits UNDER content (z-index -1), unlike --overlay-fill which floats
  * above it: a wash tints the page, a texture sits on the glass. Default
  * `none` paints nothing, so a theme that never sets it pays no pixels.
  * `position: fixed` so the wash doesn't scroll away on a long page. */
@@ -19,7 +19,7 @@ body::before {
 }
 
 /* ─── Surface overlay — body-level texture channel ─────────────────────
- * Themes set --surface-overlay to a background value (data-URI SVG noise,
+ * Themes set --overlay-fill to a background value (data-URI SVG noise,
  * repeating-linear-gradient scanlines, etc.) and optionally bend the
  * blend-mode/opacity. Default `none` is a no-op. Sits at z-index 9999 so
  * it floats above content without intercepting pointer events. Reduced
@@ -30,16 +30,16 @@ body::after {
   inset: 0;
   pointer-events: none;
   z-index: 9999;
-  background: var(--surface-overlay);
-  mix-blend-mode: var(--surface-overlay-blend);
-  opacity: var(--surface-overlay-opacity);
+  background: var(--overlay-fill);
+  mix-blend-mode: var(--overlay-blend);
+  opacity: var(--overlay-opacity);
 }
 
 /* The same channel, scoped to a THEMED SUBTREE.
  *
  * `body::after` only fires for the theme on <html>/<body>. A subtree that
  * carries its own [theme] — a docs theme preview, a split-screen
- * comparison, a studio canvas — set --surface-overlay and got nothing:
+ * comparison, a studio canvas — set --overlay-fill and got nothing:
  * the only painter was body-level, so scanlines/grain/dither silently
  * dropped out of exactly the surface built to demonstrate them.
  *
@@ -56,9 +56,9 @@ body::after {
   inset: 0;
   pointer-events: none;
   z-index: var(--z-max);
-  background: var(--surface-overlay);
-  mix-blend-mode: var(--surface-overlay-blend);
-  opacity: var(--surface-overlay-opacity);
+  background: var(--overlay-fill);
+  mix-blend-mode: var(--overlay-blend);
+  opacity: var(--overlay-opacity);
 }
 @media (prefers-reduced-motion: reduce) {
   body::after,

@@ -12,7 +12,7 @@
  */
 
 /** Where {@link TONE_NAMES} membership is sourced from. */
-export const TONE_NAMES_SOURCE = 'dtcg-groups:color.{primary,info,success,warning,destructive,brandAccent→accent,muted}' as const
+export const TONE_NAMES_SOURCE = 'dtcg-groups:color.{primary,info,success,warning,danger,accent,muted}' as const
 
 /** Semantic paint tone groups (Style bound `tone` / host prop). No `'default'`. */
 export const TONE_NAMES = [
@@ -20,7 +20,7 @@ export const TONE_NAMES = [
   'info',
   'success',
   'warning',
-  'destructive',
+  'danger',
   'accent',
   'muted',
 ] as const
@@ -38,22 +38,27 @@ export const TONE = {
   info: {
     default: 'info',
     foreground: 'info-foreground',
+    hover: 'info-hover',
   },
   success: {
     default: 'success',
     foreground: 'success-foreground',
+    hover: 'success-hover',
   },
   warning: {
     default: 'warning',
     foreground: 'warning-foreground',
+    hover: 'warning-hover',
   },
-  destructive: {
-    default: 'destructive',
-    foreground: 'destructive-foreground',
+  danger: {
+    default: 'danger',
+    foreground: 'danger-foreground',
+    hover: 'danger-hover',
   },
   accent: {
     default: 'accent',
     foreground: 'accent-foreground',
+    hover: 'accent-hover',
   },
   muted: {
     default: 'muted',
@@ -69,7 +74,6 @@ export const THEME_IDS = [
   'paper',
   'halo',
   'console',
-  'contrast',
   'glass',
   'brut',
   '8bit',
@@ -131,14 +135,12 @@ export type TextSizeToken = (typeof TEXT_SIZE_TOKENS)[number]
 
 /** Spacing scale token cssNames (space-*). */
 export const SPACE_TOKENS = [
-  'space-0_75',
   'space-1',
   'space-10',
   'space-11',
   'space-12',
   'space-14',
   'space-16',
-  'space-1_25',
   'space-1_5',
   'space-2',
   'space-20',
@@ -148,12 +150,10 @@ export const SPACE_TOKENS = [
   'space-3',
   'space-32',
   'space-36',
-  'space-3_5',
   'space-4',
   'space-40',
   'space-44',
   'space-48',
-  'space-4_5',
   'space-5',
   'space-52',
   'space-56',
@@ -183,7 +183,6 @@ export type RadiusToken = (typeof RADIUS_TOKENS)[number]
 export const DURATION_TOKENS = [
   'duration-deliberate',
   'duration-fast',
-  'duration-glacial',
   'duration-instant',
   'duration-medium',
   'duration-slow',
@@ -193,61 +192,88 @@ export type DurationToken = (typeof DURATION_TOKENS)[number]
 /** Brand / semantic surface paint tokens under color.* (excl. tone ramps & product accents). */
 export const SEMANTIC_COLOR_TOKENS = [
   'accent',
+  'accent-border',
   'accent-foreground',
+  'accent-hover',
+  'accent-subtle',
   'backdrop',
   'background',
-  'destructive',
-  'destructive-foreground',
+  'danger',
+  'danger-border',
+  'danger-foreground',
+  'danger-hover',
+  'danger-subtle',
   'divider',
   'foreground',
   'info',
+  'info-border',
   'info-foreground',
-  'input',
+  'info-hover',
+  'info-subtle',
+  'inset',
   'muted',
   'muted-foreground',
+  'neutral',
+  'neutral-border',
+  'neutral-foreground',
+  'neutral-hover',
+  'neutral-subtle',
+  'overlay',
   'primary',
+  'primary-border',
   'primary-foreground',
   'primary-hover',
-  'ring',
-  'ring-color',
+  'primary-subtle',
   'scrim',
   'secondary',
+  'secondary-border',
   'secondary-foreground',
+  'secondary-hover',
+  'secondary-subtle',
   'success',
+  'success-border',
   'success-foreground',
+  'success-hover',
+  'success-subtle',
+  'surface',
   'warning',
+  'warning-border',
   'warning-foreground',
+  'warning-hover',
+  'warning-subtle',
 ] as const
 export type SemanticColorName = (typeof SEMANTIC_COLOR_TOKENS)[number]
 
 /** Every color-typed token cssName in the registry (paint tokens). */
 export type ColorTokenName =
   | 'accent'
+  | 'accent-border'
   | 'accent-foreground'
+  | 'accent-hover'
+  | 'accent-subtle'
   | 'active-bg'
   | 'backdrop'
   | 'background'
-  | 'bg-canvas-color'
-  | 'bg-control-color'
-  | 'bg-muted-color'
+  | 'bg-app-color'
+  | 'bg-inset-color'
   | 'bg-overlay-color'
+  | 'bg-subtle-color'
   | 'bg-surface-color'
   | 'border'
   | 'border-default-color'
+  | 'border-none-color'
   | 'border-strong'
   | 'border-strong-color'
   | 'border-subtle'
   | 'border-subtle-color'
-  | 'card'
-  | 'card-foreground'
-  | 'destructive'
-  | 'destructive-foreground'
+  | 'danger'
+  | 'danger-border'
+  | 'danger-foreground'
+  | 'danger-hover'
+  | 'danger-subtle'
   | 'divider'
-  | 'fg-canvas-color'
   | 'fg-foreground-color'
   | 'fg-muted-color'
-  | 'fg-on-control-color'
-  | 'fg-on-surface-color'
   | 'foreground'
   | 'hover-bg'
   | 'hue-amber'
@@ -267,40 +293,43 @@ export type ColorTokenName =
   | 'hue-violet'
   | 'hue-yellow'
   | 'info'
+  | 'info-border'
   | 'info-foreground'
-  | 'input'
+  | 'info-hover'
+  | 'info-subtle'
+  | 'inset'
   | 'knob'
   | 'muted'
   | 'muted-foreground'
-  | 'popover'
-  | 'popover-foreground'
+  | 'neutral'
+  | 'neutral-border'
+  | 'neutral-foreground'
+  | 'neutral-hover'
+  | 'neutral-subtle'
+  | 'overlay'
   | 'primary'
+  | 'primary-border'
   | 'primary-foreground'
   | 'primary-hover'
+  | 'primary-subtle'
   | 'ring'
   | 'ring-color'
   | 'scrim'
   | 'scrollbar-thumb'
   | 'scrollbar-thumb-hover'
   | 'secondary'
+  | 'secondary-border'
   | 'secondary-foreground'
+  | 'secondary-hover'
+  | 'secondary-subtle'
   | 'selected-bg'
   | 'selected-border'
-  | 'status-amber'
-  | 'status-blue'
-  | 'status-gray'
-  | 'status-green'
-  | 'status-orange'
-  | 'status-purple'
-  | 'status-red'
-  | 'status-yellow'
   | 'success'
+  | 'success-border'
   | 'success-foreground'
-  | 'surface-0'
-  | 'surface-1'
-  | 'surface-2'
-  | 'surface-3'
-  | 'surface-inverse'
+  | 'success-hover'
+  | 'success-subtle'
+  | 'surface'
   | 'syntax-attr'
   | 'syntax-comment'
   | 'syntax-function'
@@ -311,27 +340,34 @@ export type ColorTokenName =
   | 'syntax-type'
   | 'syntax-variable'
   | 'warning'
+  | 'warning-border'
   | 'warning-foreground'
+  | 'warning-hover'
+  | 'warning-subtle'
 
 /** Every public token cssName in the registry (without the -- prefix). */
 export type CssTokenName =
   | 'accent'
+  | 'accent-border'
   | 'accent-foreground'
+  | 'accent-hover'
+  | 'accent-subtle'
   | 'active-bg'
   | 'active-strength'
   | 'backdrop'
   | 'background'
-  | 'bg-canvas-color'
-  | 'bg-control-color'
-  | 'bg-muted-color'
+  | 'bg-app-color'
+  | 'bg-inset-color'
   | 'bg-overlay-color'
+  | 'bg-subtle-color'
   | 'bg-surface-color'
-  | 'body-font'
-  | 'body-weight'
   | 'border'
   | 'border-default-color'
   | 'border-default-style'
   | 'border-default-width'
+  | 'border-none-color'
+  | 'border-none-style'
+  | 'border-none-width'
   | 'border-strong'
   | 'border-strong-color'
   | 'border-strong-style'
@@ -344,8 +380,6 @@ export type CssTokenName =
   | 'breakpoint-desktop'
   | 'breakpoint-mobile'
   | 'breakpoint-tablet'
-  | 'card'
-  | 'card-foreground'
   | 'control-frame'
   | 'control-h-2xs'
   | 'control-h-lg'
@@ -355,19 +389,19 @@ export type CssTokenName =
   | 'control-h-xs'
   | 'control-lift'
   | 'control-stroke'
-  | 'corner-image'
+  | 'danger'
+  | 'danger-border'
+  | 'danger-foreground'
+  | 'danger-hover'
+  | 'danger-subtle'
   | 'density-icon'
   | 'density-row-gap'
   | 'density-row-px'
   | 'density-row-py'
   | 'density-text'
-  | 'destructive'
-  | 'destructive-foreground'
-  | 'display-font'
   | 'divider'
   | 'duration-deliberate'
   | 'duration-fast'
-  | 'duration-glacial'
   | 'duration-instant'
   | 'duration-medium'
   | 'duration-slow'
@@ -376,29 +410,21 @@ export type CssTokenName =
   | 'ease-out'
   | 'ease-out-soft'
   | 'ease-spring'
-  | 'edge-highlight'
   | 'elevation-lg-shadow'
   | 'elevation-md-shadow'
   | 'elevation-none-shadow'
   | 'elevation-sm-shadow'
   | 'elevation-xl-shadow'
   | 'elevation-xs-shadow'
-  | 'fg-canvas-color'
   | 'fg-foreground-color'
   | 'fg-muted-color'
-  | 'fg-on-control-color'
-  | 'fg-on-surface-color'
   | 'filter-backdrop'
   | 'focus-ring'
   | 'focus-ring-offset'
   | 'font-body'
-  | 'font-body-app'
   | 'font-display'
-  | 'font-display-app'
+  | 'font-heading'
   | 'font-mono'
-  | 'font-mono-app'
-  | 'font-press-start'
-  | 'font-press-start-app'
   | 'font-weight-bold'
   | 'font-weight-medium'
   | 'font-weight-normal'
@@ -409,10 +435,6 @@ export type CssTokenName =
   | 'gradient-accent'
   | 'gradient-primary'
   | 'gradient-surface'
-  | 'heading-font'
-  | 'heading-tracking'
-  | 'heading-transform'
-  | 'heading-weight'
   | 'hover-bg'
   | 'hover-strength'
   | 'hue-amber'
@@ -440,19 +462,17 @@ export type CssTokenName =
   | 'icon-size-sm'
   | 'icon-size-xl'
   | 'icon-size-xs'
+  | 'image-corner'
   | 'image-texture'
   | 'image-texture-blend'
   | 'image-texture-opacity'
   | 'info'
+  | 'info-border'
   | 'info-foreground'
-  | 'input'
+  | 'info-hover'
+  | 'info-subtle'
+  | 'inset'
   | 'knob'
-  | 'label-font'
-  | 'label-tracking'
-  | 'label-transform'
-  | 'label-weight'
-  | 'leading-code'
-  | 'leading-loose'
   | 'leading-none'
   | 'leading-normal'
   | 'leading-relaxed'
@@ -461,9 +481,17 @@ export type CssTokenName =
   | 'mix-bg'
   | 'mix-border'
   | 'mix-hover'
-  | 'mono-font'
   | 'muted'
   | 'muted-foreground'
+  | 'neutral'
+  | 'neutral-border'
+  | 'neutral-foreground'
+  | 'neutral-hover'
+  | 'neutral-subtle'
+  | 'overlay'
+  | 'overlay-blend'
+  | 'overlay-fill'
+  | 'overlay-opacity'
   | 'pad-page-lg-x'
   | 'pad-page-md-x'
   | 'pad-page-x'
@@ -482,14 +510,14 @@ export type CssTokenName =
   | 'play-colors-property'
   | 'play-control-property'
   | 'play-surface-property'
-  | 'popover'
-  | 'popover-foreground'
   | 'press-scale'
   | 'press-shadow'
   | 'press-translate'
   | 'primary'
+  | 'primary-border'
   | 'primary-foreground'
   | 'primary-hover'
+  | 'primary-subtle'
   | 'radius-default'
   | 'radius-full'
   | 'radius-lg'
@@ -509,12 +537,16 @@ export type CssTokenName =
   | 'scrollbar-width'
   | 'scrollbar-width-thin'
   | 'secondary'
+  | 'secondary-border'
   | 'secondary-foreground'
+  | 'secondary-hover'
+  | 'secondary-subtle'
   | 'selected-bg'
   | 'selected-border'
   | 'selected-strength'
   | 'shadow-accent'
   | 'shadow-card-rest'
+  | 'shadow-edge-highlight'
   | 'shadow-edge-top'
   | 'shadow-hover'
   | 'shadow-inset-ring'
@@ -525,7 +557,6 @@ export type CssTokenName =
   | 'shadow-sticky'
   | 'shadow-xl'
   | 'shadow-xs'
-  | 'shape-pill'
   | 'size-control-lg-h'
   | 'size-control-md-h'
   | 'size-control-sm-h'
@@ -541,14 +572,12 @@ export type CssTokenName =
   | 'size-measure-max-w'
   | 'size-measure-md-max-w'
   | 'size-measure-sm-max-w'
-  | 'space-0_75'
   | 'space-1'
   | 'space-10'
   | 'space-11'
   | 'space-12'
   | 'space-14'
   | 'space-16'
-  | 'space-1_25'
   | 'space-1_5'
   | 'space-2'
   | 'space-20'
@@ -558,12 +587,10 @@ export type CssTokenName =
   | 'space-3'
   | 'space-32'
   | 'space-36'
-  | 'space-3_5'
   | 'space-4'
   | 'space-40'
   | 'space-44'
   | 'space-48'
-  | 'space-4_5'
   | 'space-5'
   | 'space-52'
   | 'space-56'
@@ -575,24 +602,12 @@ export type CssTokenName =
   | 'space-9'
   | 'space-half'
   | 'space-px'
-  | 'status-amber'
-  | 'status-blue'
-  | 'status-gray'
-  | 'status-green'
-  | 'status-orange'
-  | 'status-purple'
-  | 'status-red'
-  | 'status-yellow'
   | 'success'
+  | 'success-border'
   | 'success-foreground'
-  | 'surface-0'
-  | 'surface-1'
-  | 'surface-2'
-  | 'surface-3'
-  | 'surface-inverse'
-  | 'surface-overlay'
-  | 'surface-overlay-blend'
-  | 'surface-overlay-opacity'
+  | 'success-hover'
+  | 'success-subtle'
+  | 'surface'
   | 'syntax-attr'
   | 'syntax-comment'
   | 'syntax-function'
@@ -629,11 +644,16 @@ export type CssTokenName =
   | 'type-body-sm-weight'
   | 'type-body-tracking'
   | 'type-body-weight'
+  | 'type-display-family'
+  | 'type-display-leading'
+  | 'type-display-size'
   | 'type-display-sm-family'
   | 'type-display-sm-leading'
   | 'type-display-sm-size'
   | 'type-display-sm-tracking'
   | 'type-display-sm-weight'
+  | 'type-display-tracking'
+  | 'type-display-weight'
   | 'type-heading-case'
   | 'type-heading-family'
   | 'type-heading-leading'
@@ -657,7 +677,10 @@ export type CssTokenName =
   | 'type-mono-tracking'
   | 'type-mono-weight'
   | 'warning'
+  | 'warning-border'
   | 'warning-foreground'
+  | 'warning-hover'
+  | 'warning-subtle'
   | 'z-base'
   | 'z-dialog'
   | 'z-dropdown'
@@ -666,5 +689,4 @@ export type CssTokenName =
   | 'z-popover'
   | 'z-sticky'
   | 'z-toast'
-  | 'z-toast-region'
 

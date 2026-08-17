@@ -15,7 +15,7 @@
     'icon-slug' = ''
     name = ''
     initials = ''
-    tone: 'primary' | 'accent' | 'info' | 'success' | 'warning' | 'destructive' | 'muted' = 'muted'
+    tone: 'primary' | 'accent' | 'info' | 'success' | 'warning' | 'danger' | 'muted' = 'muted'
     size: 'md' | 'xs' | 'sm' | 'lg' | 'xl' = 'md'
     shape: 'round' | 'square' = 'round'
     ring = false
@@ -34,7 +34,7 @@
   // Inset so overflow(hidden) + radius still clips the photo but keeps the pip.
   style pip = {position({ scheme: absolute, r: px, b: px, z: 1 }).size(1_5).content(empty).radius(full).border({ color: background, width: 1 }).pointerEvents(none)}
   style pipOnline = {when: {after: style(pip, {bg(success)})}}
-  style pipBusy = {when: {after: style(pip, {bg(destructive)})}}
+  style pipBusy = {when: {after: style(pip, {bg(danger)})}}
   style pipOffline = {when: {after: style(pip, {bg(muted-foreground)})}}
 </scope>
 

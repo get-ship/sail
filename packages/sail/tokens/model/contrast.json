@@ -1,0 +1,36 @@
+{
+  "$description": "High-contrast variant any theme can fulfill.",
+  "$extensions": {
+    "sail": {
+      "selector": ":root[data-contrast='high']",
+      "layer": "contrast"
+    }
+  },
+  "color": {
+    "border": {
+      "default": {
+        "$value": { "space": "oklch", "l": 0.75, "c": 0, "h": 0 },
+        "$type": "color"
+      },
+      "strong": {
+        "$value": { "space": "oklch", "l": 0.99, "c": 0, "h": 0 },
+        "$type": "color"
+      },
+      "subtle": {
+        "$value": { "space": "oklch", "l": 0.5, "c": 0, "h": 0 },
+        "$type": "color"
+      }
+    },
+    "muted": {
+      "foreground": {
+        "$value": { "space": "oklch", "l": 0.85, "c": 0, "h": 0 },
+        "$type": "color"
+      }
+    }
+  },
+  "interaction": {
+    "hover": { "strength": { "$value": "14%", "$type": "number" } },
+    "active": { "strength": { "$value": "22%", "$type": "number" } },
+    "selected": { "strength": { "$value": "30%", "$type": "number" } }
+  }
+}

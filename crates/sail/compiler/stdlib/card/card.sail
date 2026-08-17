@@ -7,7 +7,7 @@
 
 <scope>
   props: {
-    tone: 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted' = 'muted'
+    tone: 'primary' | 'info' | 'success' | 'warning' | 'danger' | 'accent' | 'muted' = 'muted'
     variant: 'default' | 'outline' | 'soft' | 'elevated' | 'ghost' = 'default'
     padding: 'md' | 'none' | 'sm' | 'lg' = 'md'
     interactive = false
@@ -21,7 +21,7 @@
 
   // group() so image/header/footer chrome can when({ group-padding-* }).
   // Child match { padding } keys the child's own attr, so bleed never fires.
-  style base = {position(relative).overflow({ all: clip }).pad({ y: 4, x: 5 }).isolate().group().radius(lg).border({ color: border, width: 1 }).fg(card-foreground).elevation({ shadow: card-rest }).bg(surface).filter({ backdrop: filter-backdrop }), animate: { transition: play(surface, fast) }}
+  style base = {position(relative).overflow({ all: clip }).pad({ y: 4, x: 5 }).isolate().group().radius(lg).border({ color: border, width: 1 }).fg(foreground).elevation({ shadow: card-rest }).bg(surface).filter({ backdrop: filter-backdrop }), animate: { transition: play(surface, fast) }}
   style outline = {bg(transparent)}
   style soft = {bg(muted).border({ color: border })}
   style elevated = {elevation({ shadow: lg }).border({ color: border-subtle })}

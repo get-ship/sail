@@ -21,10 +21,6 @@
       "deliberate": {
         "$value": "0.01ms",
         "$type": "duration"
-      },
-      "glacial": {
-        "$value": "0.01ms",
-        "$type": "duration"
       }
     },
     "$type": "duration"

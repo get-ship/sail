@@ -100,7 +100,6 @@ const THEME_ORDER: &[&str] = &[
     "paper",
     "halo",
     "console",
-    "contrast",
     "glass",
     "brut",
     "8bit",
@@ -174,6 +173,7 @@ const THEME_MODE_GROUP_KEYS: &[&str] = &[
     "tagDefaults",
     "tags",
     "anchors",
+    "overlay",
 ];
 
 /// Sail theme extensions (SPEC-SPINNAKER-3 §8 / §10). Not DTCG composites —
@@ -231,13 +231,7 @@ const THEME_OVERRIDE_ORDER: &[&str] = &["instance", "component", "global", "bake
 /// Preferred L1 tone axis order. Membership itself comes from DTCG
 /// `color.tone.<name>.{fg,bg,...}` ramps when present; this only sorts the set.
 const TONE_ORDER: &[&str] = &[
-    "primary",
-    "info",
-    "success",
-    "warning",
-    "destructive",
-    "accent",
-    "muted",
+    "primary", "info", "success", "warning", "danger", "accent", "muted",
 ];
 
 /// Fallback tone membership (no `'default'` — rest = omit tone).
@@ -250,6 +244,7 @@ const SPECIAL_LAYERS: &[&str] = &[
     "reduced-motion",
     "density-compact",
     "density-spacious",
+    "contrast",
 ];
 
 /// Semantic brand / surface paint groups under `color.*` (not product accents,
@@ -259,18 +254,19 @@ const SEMANTIC_COLOR_GROUPS: &[&str] = &[
     "foreground",
     "primary",
     "secondary",
+    "accent",
     "muted",
-    "brandAccent",
-    "destructive",
+    "danger",
     "info",
     "success",
     "warning",
-    "input",
-    "ring",
+    "neutral",
+    "surface",
+    "inset",
+    "overlay",
     "backdrop",
     "divider",
     "scrim",
-    "edgeHighlight",
 ];
 
 #[derive(Debug, Clone)]
@@ -755,7 +751,7 @@ pub fn generate_with_options(
         css_parts.push(emit_layer(l));
         css_parts.push(String::new());
     }
-    for name in ["density-compact", "density-spacious"] {
+    for name in ["density-compact", "density-spacious", "contrast"] {
         if let Some(l) = by_layer.get(name) {
             css_parts.push(emit_layer(l));
             css_parts.push(String::new());
@@ -1504,7 +1500,27 @@ fn is_composite_leaf(node: &Value, inherited_type: Option<&str>) -> bool {
         .and_then(|v| v.as_str())
         .or(inherited_type)
         .unwrap_or("");
-    is_composite_type(ty)
+    if !is_composite_type(ty) {
+        return false;
+    }
+    // Structured shadow / gradient values are leaves, not member maps.
+    if let Some(Value::Object(v)) = obj.get("$value") {
+        if ty == "shadow"
+            && (v.contains_key("blur")
+                || v.contains_key("offset")
+                || v.contains_key("offsetX")
+                || v.contains_key("offsetY"))
+        {
+            return false;
+        }
+        if ty == "gradient" && (v.contains_key("kind") || v.contains_key("stops")) {
+            return false;
+        }
+    }
+    if obj.get("$value").is_some_and(Value::is_array) && matches!(ty, "shadow" | "gradient") {
+        return false;
+    }
+    true
 }
 
 /// Resolve an authored `$value` to a CSS/alias string plus optional
@@ -1516,14 +1532,13 @@ fn flatten_authored_value(value: &Value) -> (String, BTreeMap<String, String>) {
         Value::Number(n) => (n.to_string(), BTreeMap::new()),
         Value::Bool(b) => (b.to_string(), BTreeMap::new()),
         Value::Null => ("null".into(), BTreeMap::new()),
-        Value::Object(_) => {
+        Value::Object(_) | Value::Array(_) => {
             let resolve = |name: &str| Some(format!("{{{name}}}"));
             match eval::evaluate(value, &resolve) {
                 Ok(ev) => (ev.css, ev.breakpoints),
                 Err(_) => (value.to_string(), BTreeMap::new()),
             }
         }
-        other => (other.to_string(), BTreeMap::new()),
     }
 }
 
@@ -1594,14 +1609,7 @@ pub fn public_name(path: &str) -> String {
             return format!("accent-{}", tail.join("-"));
         }
         if !rest.is_empty() && rest[0] == "danger" {
-            if rest.len() == 2 && matches!(rest[1], "default" | "solid") {
-                return "destructive".into();
-            }
-            if rest.len() == 2 && rest[1] == "text" {
-                return "destructive-foreground".into();
-            }
-            let tail: Vec<String> = rest[1..].iter().map(|s| camel_to_kebab(s)).collect();
-            return format!("destructive-{}", tail.join("-"));
+            // Public name is danger (destructive migrated off).
         }
         if rest.len() == 2 && rest[0] == "mix" {
             let leaf = rest[1];
@@ -1625,16 +1633,22 @@ pub fn public_name(path: &str) -> String {
         return segs.join("-");
     }
     if root == "bg" && parts.len() >= 2 && parts[1] == "app" {
-        if parts.len() == 2 || parts.get(2) == Some(&"color") {
-            return "background".into();
+        // bg.app is the identity; --background stays the color.background leaf.
+        if parts.len() == 2 {
+            return "bg-app".into();
         }
     }
     if matches!(root, "typography" | "motion" | "interaction") {
-        return parts[1..]
-            .iter()
-            .map(|s| camel_to_kebab(s))
-            .collect::<Vec<_>>()
-            .join("-");
+        let mut segs: Vec<String> = parts[1..].iter().map(|s| camel_to_kebab(s)).collect();
+        if root == "interaction" && segs.len() >= 2 {
+            match segs.last().map(|s| s.as_str()) {
+                Some("default") | Some("solid") => {
+                    segs.pop();
+                }
+                _ => {}
+            }
+        }
+        return segs.join("-");
     }
     if root == "control" && parts.len() >= 2 && parts[1] == "press" {
         return parts[1..]
@@ -4025,7 +4039,7 @@ fn registry_string_list(registry: &Value, key: &str) -> Vec<String> {
 fn tone_names_from_tokens(_tokens: &[Token]) -> (Vec<String>, &'static str) {
     (
         TONE_FALLBACK.iter().map(|s| (*s).to_string()).collect(),
-        "dtcg-groups:color.{primary,info,success,warning,destructive,brandAccent→accent,muted}",
+        "dtcg-groups:color.{primary,info,success,warning,danger,accent,muted}",
     )
 }
 
@@ -4038,14 +4052,11 @@ fn tone_group_table(tokens: &[Token]) -> Vec<(String, Vec<(String, String)>)> {
         .collect();
     let mut out = Vec::new();
     for name in &names {
-        let dtcg_stem = if name == "accent" {
-            "brandAccent"
-        } else {
-            name.as_str()
-        };
+        let dtcg_stem = name.as_str();
         let mut members = Vec::new();
         // default member
         let default_paths = [
+            format!("color.{dtcg_stem}.solid"),
             format!("color.{dtcg_stem}.default"),
             format!("color.{dtcg_stem}"),
         ];
@@ -4054,21 +4065,15 @@ fn tone_group_table(tokens: &[Token]) -> Vec<(String, Vec<(String, String)>)> {
             .find_map(|p| path_to_css.get(p.as_str()).copied())
             .unwrap_or(name.as_str());
         members.push(("default".to_string(), default_public.to_string()));
-        // foreground
-        let fg_path = format!("color.{dtcg_stem}.foreground");
-        let fg_public = path_to_css
-            .get(fg_path.as_str())
-            .copied()
-            .unwrap_or_else(|| {
-                // brandAccent.foreground → accent-foreground via public_name
-                let _ = dtcg_stem;
-                if name == "accent" {
-                    "accent-foreground"
-                } else {
-                    // leak a static by formatting into members below
-                    ""
-                }
-            });
+        // foreground / text step
+        let fg_paths = [
+            format!("color.{dtcg_stem}.text"),
+            format!("color.{dtcg_stem}.foreground"),
+        ];
+        let fg_public = fg_paths
+            .iter()
+            .find_map(|p| path_to_css.get(p.as_str()).copied())
+            .unwrap_or("");
         let fg = if fg_public.is_empty() {
             format!("{name}-foreground")
         } else {
@@ -5759,13 +5764,21 @@ mod tests {
         )
         .unwrap();
         let mut doc: Value = serde_json::from_str(&fs::read_to_string(&dest).unwrap()).unwrap();
-        // Modes-in-file nests tokens under modes.<default>; twins use root.
-        let mode_ptr = "/modes/light/color/primary/default/$value";
-        if doc.pointer(mode_ptr).is_some() {
-            *doc.pointer_mut(mode_ptr).unwrap() = Value::String(marker.to_string());
-        } else {
-            panic!("default theme must be modes-in-file with color.primary.default");
-        }
+        // Authored solid step wins over derived-from-anchor.
+        let color = doc
+            .pointer_mut("/modes/light/color")
+            .and_then(|v| v.as_object_mut())
+            .expect("default theme must be modes-in-file with modes.light.color");
+        let primary = color
+            .entry("primary")
+            .or_insert_with(|| Value::Object(Map::new()));
+        let group = primary
+            .as_object_mut()
+            .expect("color.primary must be an object");
+        group.insert(
+            "solid".into(),
+            serde_json::json!({ "$value": marker, "$type": "color" }),
+        );
         fs::write(&dest, serde_json::to_string_pretty(&doc).unwrap() + "\n").unwrap();
         write_file(
             &project.join("sail.config.jsonc"),
@@ -7113,9 +7126,9 @@ mod tests {
         assert_eq!(public_name("color.primary.solid"), "primary");
         assert_eq!(public_name("color.primary.text"), "primary-foreground");
         assert_eq!(public_name("color.accent.solid"), "accent");
-        assert_eq!(public_name("color.danger.solid"), "destructive");
-        assert_eq!(public_name("color.danger.text"), "destructive-foreground");
-        assert_eq!(public_name("bg.app.color"), "background");
+        assert_eq!(public_name("color.danger.solid"), "danger");
+        assert_eq!(public_name("color.danger.text"), "danger-foreground");
+        assert_eq!(public_name("bg.app.color"), "bg-app-color");
         assert_eq!(public_name("color.primary.default"), "primary");
     }
 

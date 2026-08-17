@@ -51,7 +51,7 @@ const DIMENSIONS: &[Dim] = &[
             (600, "--radius-md"),
             (1000, "--radius-lg"),
             (1400, "--radius-xl"),
-            (999900, "--shape-pill"),
+            (999900, "--radius-full"),
         ],
         label: "radius",
     },

@@ -2,12 +2,12 @@
   <alert> — L1 inline status banner. Style value language only.
   tone defaults to info — a bare <alert> is a finished status banner.
   Semantic paint = bound tone group paths.
-  Host subset: muted | info | success | warning | destructive (no primary/accent product use).
+  Host subset: muted | info | success | warning | danger (no primary/accent product use).
 -->
 
 <scope>
   props: {
-    tone: 'muted' | 'info' | 'success' | 'warning' | 'destructive' = 'info'
+    tone: 'muted' | 'info' | 'success' | 'warning' | 'danger' = 'info'
     variant: 'default' | 'banner' = 'default'
     dismissible = false
     onDismiss: () => void

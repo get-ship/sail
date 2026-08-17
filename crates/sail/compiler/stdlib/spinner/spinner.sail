@@ -8,7 +8,7 @@
   props: {
     size: 'md' | 'xs' | 'sm' | 'lg' = 'md'
     variant: 'ring' | 'dots' | 'bars' = 'ring'
-    tone: 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' = 'info'
+    tone: 'primary' | 'info' | 'success' | 'warning' | 'danger' | 'accent' = 'info'
     centered = false
   }
 

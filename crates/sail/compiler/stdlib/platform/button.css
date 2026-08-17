@@ -1,2 +1,2 @@
-/* leftover: borderImage has no concern slot that preserves --corner-image */
-.sail-button { border-image: var(--corner-image); }
+/* leftover: borderImage has no concern slot that preserves --image-corner */
+.sail-button { border-image: var(--image-corner); }

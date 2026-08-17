@@ -114,7 +114,7 @@
       "kind": "tween",
       "from": 0.0,
       "to": 360.0,
-      "duration_token": "duration-glacial",
+      "duration_token": "duration-deliberate",
       "easing": "linear",
       "iterations": "infinite",
       "direction": "normal",
@@ -127,8 +127,7 @@
     "fast": "duration-fast",
     "medium": "duration-medium",
     "slow": "duration-slow",
-    "deliberate": "duration-deliberate",
-    "glacial": "duration-glacial"
+    "deliberate": "duration-deliberate"
   },
 
   "easing_tokens": {

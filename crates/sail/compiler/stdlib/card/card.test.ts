@@ -20,7 +20,7 @@ function injectFrameworkCss() {
 }
 
 const VARIANTS = ['default', 'outline', 'soft', 'elevated', 'ghost'] as const
-const TONES = ['primary', 'info', 'success', 'warning', 'destructive', 'accent', 'muted'] as const
+const TONES = ['primary', 'info', 'success', 'warning', 'danger', 'accent', 'muted'] as const
 const PADDINGS = ['none', 'sm', 'md', 'lg'] as const
 const ACCENT = ['off', 'hover', 'static'] as const
 

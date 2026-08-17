@@ -3,7 +3,7 @@ import { renderRoute } from '@ship/test-setup'
 import { getByRole } from '@ship/sail-test'
 
 const VARIANTS = ['default', 'solid', 'soft', 'outline', 'ghost'] as const
-const TONES = ['primary', 'info', 'success', 'warning', 'destructive', 'accent', 'muted'] as const
+const TONES = ['primary', 'info', 'success', 'warning', 'danger', 'accent', 'muted'] as const
 
 describe('l1 button', () => {
   it('is locatable by button name', () => {

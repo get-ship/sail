@@ -15,7 +15,7 @@
   // Host when:disabled does not paint — :disabled/:aria-disabled only match form
   // controls; label hosts carry [disabled] for radio-group to read. Input when:
   // disabled paints after group (or native) sets input.disabled.
-  // textCase(normal) → CSS none: host is a <label>; label-transform must not scream.
+  // textCase(normal) → CSS none: host is a <label>; type-label-case must not scream.
   style host = {fg(foreground).cursor(pointer).select(none).type({ family: body, size: sm, weight: normal, case: normal, tracking: normal })}
   // Checked disc via RADIO_INPUT_MAP (empty face + primary dot — native, no SVG).
   style input = {display(inline-block).shrink(0).pad(0).margin(0).size({ min-h: 0, w: icon-size-md, h: icon-size-md }).appearance(none).align(middle).border({ color: border, width: 1, style: solid }).radius(full).cursor(pointer).boxSizing(border), when: {disabled: cursor(not-allowed).filter({ opacity: 50 })}}

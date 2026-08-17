@@ -6,7 +6,7 @@
 
 <scope>
   props: {
-    tone: 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted' = 'muted'
+    tone: 'primary' | 'info' | 'success' | 'warning' | 'danger' | 'accent' | 'muted' = 'muted'
     variant: 'soft' | 'solid' | 'outline' = 'soft'
     size: 'md' | 'sm' | 'lg' = 'md'
     pill = false

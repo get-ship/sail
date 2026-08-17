@@ -6,7 +6,7 @@
 
 <scope>
   props: {
-    tone: 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted' = 'info'
+    tone: 'primary' | 'info' | 'success' | 'warning' | 'danger' | 'accent' | 'muted' = 'info'
     duration = ''
     onDismiss: () => void
   }
@@ -33,7 +33,7 @@
       {tone: info, bg({ color: info, mix: 15 }).border({ color: info })},
       {tone: success, bg({ color: success, mix: 15 }).border({ color: success })},
       {tone: warning, bg({ color: warning, mix: 15 }).border({ color: warning })},
-      {tone: destructive, bg({ color: destructive, mix: 15 }).border({ color: destructive })},
+      {tone: danger, bg({ color: danger, mix: 15 }).border({ color: danger })},
       {tone: accent, bg({ color: accent, mix: 15 }).border({ color: accent })},
       {tone: muted, bg({ color: muted, mix: 15 }).border({ color: border })},
     ]})

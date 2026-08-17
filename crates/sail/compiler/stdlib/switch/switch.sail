@@ -19,7 +19,7 @@
   props: {
     checked = false
     disabled = false
-    tone: 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted' = 'primary'
+    tone: 'primary' | 'info' | 'success' | 'warning' | 'danger' | 'accent' | 'muted' = 'primary'
     size: 'md' | 'sm' | 'lg' = 'md'
   }
 

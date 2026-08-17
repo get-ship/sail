@@ -1,1647 +1,656 @@
 {
-  "$description": "Sail base design tokens (:root). SSOT \u2014 edit here, run generate.",
-  "radius": {
-    "default": {
-      "$value": "10px",
-      "$type": "dimension"
-    },
-    "sm": {
-      "$value": "4px",
-      "$type": "dimension"
-    },
-    "md": {
-      "$value": "6px",
-      "$type": "dimension"
-    },
-    "lg": {
-      "$value": "10px",
-      "$type": "dimension"
-    },
-    "xl": {
-      "$value": "14px",
-      "$type": "dimension"
-    },
-    "full": {
-      "$value": "9999px",
-      "$type": "dimension"
-    },
+  "$description": "Sail base — decisions only. Engine derives chromatic scales, space ramp, and syntax.",
+  "space": {
     "$type": "dimension",
     "$extensions": {
-      "ordered": [
-        "sm",
-        "md",
-        "lg",
-        "xl"
-      ]
+      "sail": { "n": 4 }
     }
   },
-  "space": {
-    "1": {
-      "$value": "4px",
-      "$type": "dimension"
-    },
-    "2": {
-      "$value": "8px",
-      "$type": "dimension"
-    },
-    "3": {
-      "$value": "12px",
-      "$type": "dimension"
-    },
-    "4": {
-      "$value": "16px",
-      "$type": "dimension"
-    },
-    "5": {
-      "$value": "20px",
-      "$type": "dimension"
-    },
-    "6": {
-      "$value": "24px",
-      "$type": "dimension"
-    },
-    "7": {
-      "$value": "28px",
-      "$type": "dimension"
-    },
-    "8": {
-      "$value": "32px",
-      "$type": "dimension"
-    },
-    "9": {
-      "$value": "36px",
-      "$type": "dimension"
-    },
-    "10": {
-      "$value": "40px",
-      "$type": "dimension"
-    },
-    "11": {
-      "$value": "44px",
-      "$type": "dimension"
-    },
-    "12": {
-      "$value": "48px",
-      "$type": "dimension"
-    },
-    "14": {
-      "$value": "56px",
-      "$type": "dimension"
-    },
-    "16": {
-      "$value": "64px",
-      "$type": "dimension"
-    },
-    "20": {
-      "$value": "80px",
-      "$type": "dimension"
-    },
-    "24": {
-      "$value": "96px",
-      "$type": "dimension"
-    },
-    "28": {
-      "$value": "112px",
-      "$type": "dimension"
-    },
-    "32": {
-      "$value": "128px",
-      "$type": "dimension"
-    },
-    "36": {
-      "$value": "144px",
-      "$type": "dimension"
-    },
-    "40": {
-      "$value": "160px",
-      "$type": "dimension"
-    },
-    "44": {
-      "$value": "176px",
-      "$type": "dimension"
-    },
-    "48": {
-      "$value": "192px",
-      "$type": "dimension"
-    },
-    "52": {
-      "$value": "208px",
-      "$type": "dimension"
-    },
-    "56": {
-      "$value": "224px",
-      "$type": "dimension"
-    },
-    "60": {
-      "$value": "240px",
-      "$type": "dimension"
-    },
-    "64": {
-      "$value": "256px",
-      "$type": "dimension"
-    },
-    "px": {
-      "$value": "1px",
-      "$type": "dimension"
-    },
-    "half": {
-      "$value": "2px",
-      "$type": "dimension"
-    },
-    "0_75": {
-      "$value": "3px",
-      "$type": "dimension"
-    },
-    "1_25": {
-      "$value": "5px",
-      "$type": "dimension"
-    },
-    "1_5": {
-      "$value": "6px",
-      "$type": "dimension"
-    },
-    "2_5": {
-      "$value": "10px",
-      "$type": "dimension"
-    },
-    "3_5": {
-      "$value": "14px",
-      "$type": "dimension"
-    },
-    "4_5": {
-      "$value": "18px",
-      "$type": "dimension"
-    },
-    "$type": "dimension"
+  "radius": {
+    "sm": { "$value": "4px", "$type": "dimension" },
+    "md": { "$value": "6px", "$type": "dimension" },
+    "lg": { "$value": "10px", "$type": "dimension" },
+    "xl": { "$value": "14px", "$type": "dimension" },
+    "full": { "$value": "9999px", "$type": "dimension" },
+    "default": { "$value": "{radius-lg}", "$type": "dimension" },
+    "$type": "dimension",
+    "$extensions": { "ordered": ["sm", "md", "lg", "xl"] }
   },
   "icon": {
-    "3xs": {
-      "$value": "8px",
-      "$type": "dimension"
-    },
-    "2xs": {
-      "$value": "10px",
-      "$type": "dimension"
-    },
-    "xs": {
-      "$value": "12px",
-      "$type": "dimension"
-    },
-    "sm": {
-      "$value": "14px",
-      "$type": "dimension"
-    },
-    "md": {
-      "$value": "16px",
-      "$type": "dimension"
-    },
-    "lg": {
-      "$value": "18px",
-      "$type": "dimension"
-    },
-    "xl": {
-      "$value": "20px",
-      "$type": "dimension"
-    },
-    "2xl": {
-      "$value": "24px",
-      "$type": "dimension"
-    },
-    "3xl": {
-      "$value": "28px",
-      "$type": "dimension"
-    },
+    "3xs": { "$value": "8px", "$type": "dimension" },
+    "2xs": { "$value": "10px", "$type": "dimension" },
+    "xs": { "$value": "12px", "$type": "dimension" },
+    "sm": { "$value": "14px", "$type": "dimension" },
+    "md": { "$value": "16px", "$type": "dimension" },
+    "lg": { "$value": "18px", "$type": "dimension" },
+    "xl": { "$value": "20px", "$type": "dimension" },
+    "2xl": { "$value": "24px", "$type": "dimension" },
+    "3xl": { "$value": "28px", "$type": "dimension" },
     "$type": "dimension"
   },
   "control": {
-    "h-2xs": {
-      "$value": "22px",
-      "$type": "dimension"
-    },
-    "h-xs": {
-      "$value": "24px",
-      "$type": "dimension"
-    },
-    "h-sm": {
-      "$value": "28px",
-      "$type": "dimension"
-    },
-    "h-md": {
-      "$value": "34px",
-      "$type": "dimension"
-    },
-    "h-lg": {
-      "$value": "40px",
-      "$type": "dimension"
-    },
-    "h-xl": {
-      "$value": "44px",
-      "$type": "dimension"
-    },
-    "stroke": {
-      "$value": "2px",
-      "$type": "dimension"
-    },
+    "h-2xs": { "$value": "22px", "$type": "dimension" },
+    "h-xs": { "$value": "24px", "$type": "dimension" },
+    "h-sm": { "$value": "28px", "$type": "dimension" },
+    "h-md": { "$value": "34px", "$type": "dimension" },
+    "h-lg": { "$value": "40px", "$type": "dimension" },
+    "h-xl": { "$value": "44px", "$type": "dimension" },
+    "stroke": { "$value": "2px", "$type": "dimension" },
     "frame": {
       "$value": "0 0 0 0 transparent",
       "$type": "shadow",
-      "$description": "Control framing \u2014 an extra box-shadow \"frame\" drawn around controls, stacked BEFORE the variant's own shadow so it reads as chrome rather than elevation.\nThe no-op is a fully transparent shadow, NOT `none`: this value is composed into a comma-separated box-shadow list, and `none` is not a legal list member \u2014 `box-shadow: none, var(--shadow-xs)` drops the whole declaration. A zero-size transparent layer paints nothing and composes cleanly. Same reasoning for --press-shadow and the --glow-* family.",
-      "$extensions": {
-        "sail": {
-          "channel": true
-        }
-      }
+      "$description": "Transparent no-op so frame composes into a box-shadow list. `none` is not a legal list member.",
+      "$extensions": { "sail": { "channel": true } }
     },
     "lift": {
       "$value": "-1px",
       "$type": "dimension",
-      "$description": "Interaction motion. The baseline button lift/press was decided once, globally, in the contract (`translateY(-1px)` / `translateY(1px) scale(0.98)`) \u2014 the whole product's personality in two literals. Routed through channels so a calm theme sets 0 and an arcade theme exaggerates. Defaults reproduce the historical values.",
-      "$extensions": {
-        "sail": {
-          "channel": true
-        }
-      }
+      "$description": "Resting lift. Themes set 0 to kill the bounce.",
+      "$extensions": { "sail": { "channel": true } }
     },
     "press": {
       "translate": {
         "$value": "1px",
         "$type": "dimension",
-        "$description": "Interaction motion \u2014 see control.lift. Default reproduces the historical :active translate.",
-        "$extensions": {
-          "sail": {
-            "channel": true
-          }
-        }
+        "$extensions": { "sail": { "channel": true } }
       },
       "scale": {
         "$value": "0.98",
         "$type": "number",
-        "$description": "Interaction motion \u2014 see control.lift. Default reproduces the historical :active scale.",
-        "$extensions": {
-          "sail": {
-            "channel": true
-          }
-        }
+        "$extensions": { "sail": { "channel": true } }
       },
       "shadow": {
         "$value": "0 0 0 0 transparent",
         "$type": "shadow",
-        "$description": "Shadow applied on :active, composed on top of the control's resting shadow. Transparent no-op (see control.frame); an 8-bit theme gives it a hard offset that collapses on press.",
-        "$extensions": {
-          "sail": {
-            "channel": true
-          }
-        }
+        "$description": "Transparent no-op; composes on :active. See control.frame.",
+        "$extensions": { "sail": { "channel": true } }
       }
     },
     "$type": "dimension"
   },
   "panel": {
-    "max-w-sm": {
-      "$value": "320px",
-      "$type": "dimension"
-    },
-    "max-w-md": {
-      "$value": "480px",
-      "$type": "dimension"
-    },
-    "max-w-lg": {
-      "$value": "720px",
-      "$type": "dimension"
-    },
-    "max-h-sm": {
-      "$value": "240px",
-      "$type": "dimension"
-    },
-    "max-h-md": {
-      "$value": "480px",
-      "$type": "dimension"
-    },
-    "max-h-lg": {
-      "$value": "720px",
-      "$type": "dimension"
-    },
-    "min-w-sm": {
-      "$value": "180px",
-      "$type": "dimension"
-    },
-    "min-w-md": {
-      "$value": "240px",
-      "$type": "dimension"
-    },
-    "min-w-lg": {
-      "$value": "320px",
-      "$type": "dimension"
-    },
-    "vh-sm": {
-      "$value": "50vh",
-      "$type": "dimension"
-    },
-    "vh-md": {
-      "$value": "80vh",
-      "$type": "dimension"
-    },
-    "vh-lg": {
-      "$value": "90vh",
-      "$type": "dimension"
-    },
+    "max-w-sm": { "$value": "320px", "$type": "dimension" },
+    "max-w-md": { "$value": "480px", "$type": "dimension" },
+    "max-w-lg": { "$value": "720px", "$type": "dimension" },
+    "max-h-sm": { "$value": "240px", "$type": "dimension" },
+    "max-h-md": { "$value": "480px", "$type": "dimension" },
+    "max-h-lg": { "$value": "720px", "$type": "dimension" },
+    "min-w-sm": { "$value": "180px", "$type": "dimension" },
+    "min-w-md": { "$value": "240px", "$type": "dimension" },
+    "min-w-lg": { "$value": "320px", "$type": "dimension" },
+    "vh-sm": { "$value": "50vh", "$type": "dimension" },
+    "vh-md": { "$value": "80vh", "$type": "dimension" },
+    "vh-lg": { "$value": "90vh", "$type": "dimension" },
     "$type": "dimension"
   },
   "typography": {
-    "leading": {
-      "loose": {
-        "$value": "1.55",
-        "$type": "number"
-      },
-      "none": {
-        "$value": "1",
-        "$type": "number"
-      },
-      "tight": {
-        "$value": "1.2",
-        "$type": "number"
-      },
-      "snug": {
-        "$value": "1.35",
-        "$type": "number"
-      },
-      "normal": {
-        "$value": "1.5",
-        "$type": "number"
-      },
-      "code": {
-        "$value": "1.6",
-        "$type": "number"
-      },
-      "relaxed": {
-        "$value": "1.7",
-        "$type": "number"
-      }
-    },
     "text": {
-      "xs": {
-        "$value": "11px",
-        "$type": "dimension"
-      },
-      "sm": {
-        "$value": "12px",
-        "$type": "dimension"
-      },
-      "base": {
-        "$value": "13px",
-        "$type": "dimension"
-      },
-      "md": {
-        "$value": "14px",
-        "$type": "dimension"
-      },
-      "lg": {
-        "$value": "16px",
-        "$type": "dimension"
-      },
-      "xl": {
-        "$value": "20px",
-        "$type": "dimension"
-      },
-      "2xl": {
-        "$value": "24px",
-        "$type": "dimension"
-      },
-      "3xl": {
-        "$value": "28px",
-        "$type": "dimension"
-      },
-      "4xl": {
-        "$value": "36px",
-        "$type": "dimension"
-      },
-      "display": {
-        "$value": "clamp(3rem, 9vw, 8.5rem)",
-        "$type": "dimension"
-      }
+      "xs": { "$value": "11px", "$type": "dimension" },
+      "sm": { "$value": "12px", "$type": "dimension" },
+      "base": { "$value": "13px", "$type": "dimension" },
+      "md": { "$value": "14px", "$type": "dimension" },
+      "lg": { "$value": "16px", "$type": "dimension" },
+      "xl": { "$value": "20px", "$type": "dimension" },
+      "2xl": { "$value": "24px", "$type": "dimension" },
+      "3xl": { "$value": "28px", "$type": "dimension" },
+      "4xl": { "$value": "36px", "$type": "dimension" },
+      "display": { "$value": { "min": "3rem", "pref": "9vw", "max": "8.5rem" }, "$type": "dimension" }
     },
     "font": {
-      "weight-normal": {
-        "$value": "400",
-        "$type": "number"
-      },
-      "weight-medium": {
-        "$value": "500",
-        "$type": "number"
-      },
-      "weight-semibold": {
-        "$value": "600",
-        "$type": "number"
-      },
-      "weight-bold": {
-        "$value": "700",
-        "$type": "number"
-      },
-      "display-app": {
-        "$value": "\"Syne Variable\", \"Syne\", \"Inter\", sans-serif",
-        "$type": "fontFamily"
-      },
-      "body-app": {
+      "body": {
         "$value": "\"DM Sans Variable\", \"DM Sans\", \"Inter\", sans-serif",
         "$type": "fontFamily"
       },
-      "mono-app": {
-        "$value": "\"JetBrains Mono Variable\", \"JetBrains Mono\", ui-monospace, \"SFMono-Regular\", Menlo, Consolas, monospace",
-        "$type": "fontFamily"
-      },
-      "press-start-app": {
-        "$value": "\"Press Start 2P\", \"Press Start 2P Fallback\", ui-monospace, \"SFMono-Regular\", Menlo, Consolas, monospace",
-        "$type": "fontFamily"
-      },
-      "display": {
-        "$value": "{font-display-app}",
-        "$type": "fontFamily"
-      },
-      "body": {
-        "$value": "{font-body-app}",
+      "heading": {
+        "$value": "\"Syne Variable\", \"Syne\", \"Inter\", sans-serif",
         "$type": "fontFamily"
       },
       "mono": {
-        "$value": "{font-mono-app}",
+        "$value": "\"JetBrains Mono Variable\", \"JetBrains Mono\", ui-monospace, \"SFMono-Regular\", Menlo, Consolas, monospace",
         "$type": "fontFamily"
       },
-      "press-start": {
-        "$value": "{font-press-start-app}",
+      "display": {
+        "$value": "\"Syne Variable\", \"Syne\", \"Inter\", sans-serif",
         "$type": "fontFamily"
-      }
+      },
+      "weight-normal": { "$value": "400", "$type": "number" },
+      "weight-medium": { "$value": "500", "$type": "number" },
+      "weight-semibold": { "$value": "600", "$type": "number" },
+      "weight-bold": { "$value": "700", "$type": "number" }
+    },
+    "leading": {
+      "none": { "$value": "1", "$type": "number" },
+      "tight": { "$value": "1.2", "$type": "number" },
+      "snug": { "$value": "1.35", "$type": "number" },
+      "normal": { "$value": "1.5", "$type": "number" },
+      "relaxed": { "$value": "1.7", "$type": "number" }
     },
     "tracking": {
-      "tighter": {
-        "$value": "-0.03em",
-        "$type": "dimension"
-      },
-      "tight": {
-        "$value": "-0.01em",
-        "$type": "dimension"
-      },
-      "normal": {
-        "$value": "0",
-        "$type": "dimension"
-      },
-      "wide": {
-        "$value": "0.04em",
-        "$type": "dimension"
-      },
-      "wider": {
-        "$value": "0.1em",
-        "$type": "dimension"
-      }
-    },
-    "heading": {
-      "font": {
-        "$value": "{font-display}",
-        "$type": "fontFamily"
-      },
-      "weight": {
-        "$value": "{font-weight-semibold}",
-        "$type": "number"
-      },
-      "tracking": {
-        "$value": "{tracking-tight}",
-        "$type": "dimension"
-      },
-      "transform": {
-        "$value": "none",
-        "$type": "string",
-        "$description": "Casing channel. The default is what the system ALREADY does, not a uniform `none`: headings render as authored. Governed property: `text-transform`.",
-        "$extensions": {
-          "sail": {
-            "channel": true
-          }
-        }
-      }
-    },
-    "body": {
-      "font": {
-        "$value": "{font-body}",
-        "$type": "fontFamily"
-      },
-      "weight": {
-        "$value": "{font-weight-normal}",
-        "$type": "number"
-      }
-    },
-    "monoFont": {
-      "$value": "{font-mono}",
-      "$type": "fontFamily"
-    },
-    "label": {
-      "font": {
-        "$value": "{font-body}",
-        "$type": "fontFamily"
-      },
-      "weight": {
-        "$value": "{font-weight-semibold}",
-        "$type": "number"
-      },
-      "tracking": {
-        "$value": "{tracking-wide}",
-        "$type": "dimension"
-      },
-      "transform": {
-        "$value": "uppercase",
-        "$type": "string",
-        "$description": "Casing channel. The label role has always been upper-cased (hand-written `text-transform: uppercase` in every skin that carries a label), so the default is `uppercase` \u2014 defaulting to `none` would have quietly lower-cased every eyebrow and rail heading in the product. A channel is a seam, not a restyle. Governed property: `text-transform`.",
-        "$extensions": {
-          "sail": {
-            "channel": true
-          }
-        }
-      }
-    },
-    "displayFont": {
-      "$value": "{font-display}",
-      "$type": "fontFamily",
-      "$description": "Display type \u2014 the hero/wordmark role, themable independently of --heading-font. Default aliases the existing display stack so nothing moves.",
-      "$extensions": {
-        "sail": {
-          "channel": true
-        }
-      }
-    },
-    "$type": "dimension"
+      "tighter": { "$value": "-0.03em", "$type": "dimension" },
+      "tight": { "$value": "-0.01em", "$type": "dimension" },
+      "normal": { "$value": "0", "$type": "dimension" },
+      "wide": { "$value": "0.04em", "$type": "dimension" },
+      "wider": { "$value": "0.1em", "$type": "dimension" }
+    }
   },
   "color": {
-    "edgeHighlight": {
-      "$value": "inset 0 1px 0 0 var(--hover-bg)",
-      "$type": "shadow"
+    "anchors": {
+      "primary": { "space": "oklch", "l": 0.67, "c": 0.16, "h": 58 },
+      "accent": { "space": "oklch", "l": 0.61, "c": 0.23, "h": 303 },
+      "secondary": { "space": "oklch", "l": 0.95, "c": 0.02, "h": 302 },
+      "success": { "space": "oklch", "l": 0.65, "c": 0.2, "h": 150 },
+      "warning": { "space": "oklch", "l": 0.75, "c": 0.15, "h": 75 },
+      "info": { "space": "oklch", "l": 0.6, "c": 0.18, "h": 260 },
+      "danger": { "space": "oklch", "l": 0.577, "c": 0.245, "h": 27.325 },
+      "neutral": { "space": "oklch", "l": 0.5, "c": 0.01, "h": 58 }
     },
-    "ring": {
-      "width": {
-        "$value": "3px",
-        "$type": "dimension"
-      },
-      "offset": {
-        "$value": "2px",
-        "$type": "dimension"
-      },
-      "opacity": {
-        "$value": "25%",
-        "$type": "number"
-      },
+    "background": {
+      "$value": { "space": "oklch", "l": 0.975, "c": 0.002, "h": 106.423 },
+      "$type": "color"
+    },
+    "foreground": {
+      "$value": { "space": "oklch", "l": 0.147, "c": 0.004, "h": 49.25 },
+      "$type": "color"
+    },
+    "muted": {
       "default": {
-        "$value": "oklch(0.67 0.16 var(--brand-hue, 58)/ 40%)",
+        "$value": { "space": "oklch", "l": 0.95, "c": 0.003, "h": 106.424 },
         "$type": "color"
       },
-      "color": {
-        "$value": "{primary}",
+      "foreground": {
+        "$value": { "space": "oklch", "l": 0.4, "c": 0.02, "h": 58.071 },
         "$type": "color"
       }
     },
     "surface": {
-      "0": {
-        "$value": "oklch(0.97 0.004 80)",
-        "$type": "color"
-      },
-      "1": {
-        "$value": "oklch(1 0 0)",
-        "$type": "color"
-      },
-      "2": {
-        "$value": "oklch(1 0 0)",
-        "$type": "color"
-      },
-      "3": {
-        "$value": "oklch(1 0 0)",
-        "$type": "color"
-      },
-      "overlay": {
-        "$value": "none",
-        "$type": "string"
-      },
-      "overlay-blend": {
-        "$value": "overlay",
-        "$type": "string"
-      },
-      "overlay-opacity": {
-        "$value": "1",
-        "$type": "number"
-      },
-      "inverse": {
-        "$value": "{foreground}",
-        "$type": "color"
-      }
+      "$value": { "space": "oklch", "l": 1, "c": 0, "h": 0 },
+      "$type": "color"
+    },
+    "inset": {
+      "$value": { "ref": "background" },
+      "$type": "color"
+    },
+    "overlay": {
+      "$value": { "space": "oklch", "l": 1, "c": 0, "h": 0 },
+      "$type": "color"
     },
     "border": {
-      "width": {
-        "$value": "1px",
-        "$type": "dimension",
-        "$description": "Stroke weight. Every hairline in the system lowers to this instead of a literal 1px, so a brutalist or 8-bit theme can thicken every control edge at once. Governed property: `border-width`.",
-        "$extensions": {
-          "sail": {
-            "channel": true
-          }
-        }
-      },
       "default": {
-        "$value": "oklch(0.147 0.004 49.25 / 25%)",
+        "$value": { "space": "oklch", "l": 0.147, "c": 0.004, "h": 49.25, "a": 0.25 },
         "$type": "color"
       },
       "subtle": {
-        "$value": "color-mix(in oklch, var(--border) 60%, transparent)",
+        "$value": { "op": "mix", "from": { "ref": "border" }, "onto": "transparent", "amount": 0.6 },
         "$type": "color"
       },
       "strong": {
-        "$value": "color-mix(in oklch, var(--foreground) 55%, transparent)",
+        "$value": { "op": "mix", "from": { "ref": "foreground" }, "onto": "transparent", "amount": 0.55 },
         "$type": "color"
       }
     },
-    "cornerImage": {
-      "$value": "none",
-      "$type": "string",
-      "$description": "Corner treatment \u2014 a `border-image` value for controls and cards. Default `none` leaves `border-radius` in charge. A pixel-art theme supplies a slice so corners are drawn, not rounded. Governed property: `border-image`.",
-      "$extensions": {
-        "sail": {
-          "channel": true
-        }
-      }
+    "knob": {
+      "$value": { "space": "oklch", "l": 1, "c": 0, "h": 0 },
+      "$type": "color",
+      "$description": "Light control face. Not surface: muted ≈ surface in dark, so a dedicated light knob keeps track/thumb contrast."
+    },
+    "hue": {
+      "red": { "$value": { "space": "oklch", "l": 0.62, "c": 0.21, "h": 25 }, "$type": "color" },
+      "orange": { "$value": { "space": "oklch", "l": 0.68, "c": 0.18, "h": 50 }, "$type": "color" },
+      "amber": { "$value": { "space": "oklch", "l": 0.74, "c": 0.16, "h": 75 }, "$type": "color" },
+      "yellow": { "$value": { "space": "oklch", "l": 0.82, "c": 0.16, "h": 95 }, "$type": "color" },
+      "lime": { "$value": { "space": "oklch", "l": 0.78, "c": 0.18, "h": 130 }, "$type": "color" },
+      "green": { "$value": { "space": "oklch", "l": 0.62, "c": 0.16, "h": 150 }, "$type": "color" },
+      "teal": { "$value": { "space": "oklch", "l": 0.62, "c": 0.13, "h": 185 }, "$type": "color" },
+      "cyan": { "$value": { "space": "oklch", "l": 0.68, "c": 0.13, "h": 220 }, "$type": "color" },
+      "sky": { "$value": { "space": "oklch", "l": 0.65, "c": 0.16, "h": 235 }, "$type": "color" },
+      "blue": { "$value": { "space": "oklch", "l": 0.55, "c": 0.2, "h": 260 }, "$type": "color" },
+      "indigo": { "$value": { "space": "oklch", "l": 0.5, "c": 0.2, "h": 280 }, "$type": "color" },
+      "violet": { "$value": { "space": "oklch", "l": 0.55, "c": 0.22, "h": 295 }, "$type": "color" },
+      "purple": { "$value": { "space": "oklch", "l": 0.55, "c": 0.22, "h": 310 }, "$type": "color" },
+      "fuchsia": { "$value": { "space": "oklch", "l": 0.6, "c": 0.25, "h": 330 }, "$type": "color" },
+      "pink": { "$value": { "space": "oklch", "l": 0.68, "c": 0.2, "h": 345 }, "$type": "color" },
+      "rose": { "$value": { "space": "oklch", "l": 0.62, "c": 0.21, "h": 5 }, "$type": "color" }
+    },
+    "syntax": {
+      "keyword": { "$value": { "ref": "hue-indigo" }, "$type": "color" },
+      "string": { "$value": { "ref": "hue-green" }, "$type": "color" },
+      "number": { "$value": { "ref": "hue-blue" }, "$type": "color" },
+      "function": { "$value": { "ref": "hue-purple" }, "$type": "color" },
+      "type": { "$value": { "ref": "hue-cyan" }, "$type": "color" },
+      "tag": { "$value": { "ref": "hue-red" }, "$type": "color" },
+      "attr": { "$value": { "ref": "hue-amber" }, "$type": "color" },
+      "comment": { "$value": { "ref": "muted-foreground" }, "$type": "color" },
+      "variable": { "$value": { "ref": "foreground" }, "$type": "color" }
+    },
+    "backdrop": {
+      "$value": { "space": "oklch", "l": 0, "c": 0, "h": 0, "a": 0.4 },
+      "$type": "color"
+    },
+    "scrim": {
+      "$value": { "space": "oklch", "l": 0, "c": 0, "h": 0, "a": 0.2 },
+      "$type": "color"
+    },
+    "divider": {
+      "$value": { "ref": "border-subtle" },
+      "$type": "color"
     },
     "gradient": {
       "primary": {
-        "$value": "linear-gradient(180deg, var(--primary) 0%, transparent 92%)",
-        "$type": "dimension",
-        "$description": "Gradient channel. This lived as a literal INSIDE the sx vocabulary's atom (text-gradient-primary), so a theme could restyle every colour in the system and still not touch its own wordmark. Lifted here; the atom now reads the channel. Default is the exact former literal, so this is a pure refactor until a theme opts in.",
-        "$extensions": {
-          "sail": {
-            "channel": true
-          }
-        }
+        "$type": "gradient",
+        "$value": {
+          "kind": "linear",
+          "angle": "180deg",
+          "stops": [
+            { "color": { "ref": "primary" }, "at": "0%" },
+            { "color": "transparent", "at": "92%" }
+          ]
+        },
+        "$extensions": { "sail": { "channel": true } }
       },
       "accent": {
-        "$value": "linear-gradient(180deg, var(--accent) 0%, transparent 92%)",
-        "$type": "dimension",
-        "$description": "Gradient channel \u2014 a PROMOTION, not a new idea: two atoms wanted the same shape with a different base, so both now reference named globals instead of one being implicitly derived from the other.",
-        "$extensions": {
-          "sail": {
-            "channel": true
-          }
-        }
+        "$type": "gradient",
+        "$value": {
+          "kind": "linear",
+          "angle": "180deg",
+          "stops": [
+            { "color": { "ref": "accent" }, "at": "0%" },
+            { "color": "transparent", "at": "92%" }
+          ]
+        },
+        "$extensions": { "sail": { "channel": true } }
       },
       "surface": {
         "$value": "none",
         "$type": "string",
-        "$description": "A page-level gradient wash, painted under content by the surface reader. Nothing gradient-washes the page today, so `none` is both the no-op and the honest default.",
-        "$extensions": {
-          "sail": {
-            "channel": true
-          }
-        }
+        "$description": "Page wash. none is the honest default.",
+        "$extensions": { "sail": { "channel": true } }
       }
     },
     "glow": {
       "primary": {
-        "$value": "radial-gradient(circle, color-mix(in oklch, var(--primary) 8%, transparent), transparent 60%)",
-        "$type": "dimension",
-        "$description": "Per-tone glow \u2014 a radial background wash keyed to the tone ramp names (see the tone ramps), so `--glow-{tone}` is addressable wherever `--tone-*` is. Defaults to the former bg-glow-primary literal.\nNOTE: this is a BACKGROUND channel. A neon box-shadow rim (what a synthwave theme reaches for on controls) is --control-frame's job \u2014 one token, one meaning.",
-        "$extensions": {
-          "sail": {
-            "channel": true
-          }
-        }
+        "$type": "gradient",
+        "$value": {
+          "kind": "radial",
+          "stops": [
+            { "color": { "op": "mix", "from": { "ref": "primary" }, "onto": "transparent", "amount": 0.08 } },
+            { "color": "transparent", "at": "60%" }
+          ]
+        },
+        "$extensions": { "sail": { "channel": true } }
       },
       "accent": {
-        "$value": "radial-gradient(circle, color-mix(in oklch, var(--accent) 8%, transparent), transparent 60%)",
-        "$type": "dimension",
-        "$description": "Per-tone glow (see glow.primary). Defaults to the former bg-glow-accent literal.",
-        "$extensions": {
-          "sail": {
-            "channel": true
-          }
-        }
+        "$type": "gradient",
+        "$value": {
+          "kind": "radial",
+          "stops": [
+            { "color": { "op": "mix", "from": { "ref": "accent" }, "onto": "transparent", "amount": 0.08 } },
+            { "color": "transparent", "at": "60%" }
+          ]
+        },
+        "$extensions": { "sail": { "channel": true } }
       }
     },
-    "shapePill": {
-      "$value": "9999px",
-      "$type": "dimension",
-      "$description": "Pill sentinel \u2014 SPLIT from --radius-full.\n--radius-full (9999px) was doing double duty: a shape token meaning \"this element is a circle/pill\" AND the top of the radius scale. A theme that squared off its radius scale had no way to say \"\u2026but intrinsically round elements stay round\", because both meanings lowered to the same name. --shape-pill carries the SHAPE meaning; --radius-full stays in the scale. Elements that are intrinsically round (dots, avatars, spinners, switch thumbs) read --shape-pill.",
-      "$extensions": {
-        "sail": {
-          "channel": true
-        }
-      }
-    },
-    "background": {
-      "$value": "oklch(0.975 0.002 106.423)",
-      "$type": "color"
-    },
-    "foreground": {
-      "$value": "oklch(0.147 0.004 49.25)",
-      "$type": "color"
-    },
-    "primary": {
-      "default": {
-        "$value": "oklch(0.67 0.16 var(--brand-hue, 58))",
-        "$type": "color"
-      },
-      "foreground": {
-        "$value": "oklch(0.99 0.02 95)",
-        "$type": "color"
-      },
-      "hover": {
-        "$value": "color-mix(in oklch, var(--primary) 88%, var(--foreground))",
-        "$type": "color"
-      }
-    },
-    "secondary": {
-      "default": {
-        "$value": "oklch(0.95 0.02 302)",
-        "$type": "color"
-      },
-      "foreground": {
-        "$value": "oklch(0.33 0.11 302)",
-        "$type": "color"
-      }
-    },
-    "muted": {
-      "default": {
-        "$value": "oklch(0.95 0.003 106.424)",
-        "$type": "color"
-      },
-      "foreground": {
-        "$value": "oklch(0.40 0.02 58.071)",
-        "$type": "color"
-      }
-    },
-    "brandAccent": {
-      "default": {
-        "$value": "oklch(0.61 0.23 var(--brand-hue, 303))",
-        "$type": "color"
-      },
-      "foreground": {
-        "$value": "oklch(0.98 0.02 301)",
-        "$type": "color"
-      }
-    },
-    "destructive": {
-      "default": {
-        "$value": "oklch(0.577 0.245 27.325)",
-        "$type": "color"
-      },
-      "foreground": {
-        "$value": "oklch(0.99 0.02 25)",
-        "$type": "color"
-      }
-    },
-    "input": {
-      "$value": "{background}",
-      "$type": "color"
-    },
-    "card": {
-      "default": {
-        "$value": "{color.surface.1}",
-        "$type": "color",
-        "$description": "Card / panel fill. Themes remap this (was component.card.bg). Public name --card."
-      },
-      "foreground": {
-        "$value": "{color.foreground}",
-        "$type": "color",
-        "$description": "Ink on card. Public name --card-foreground."
-      }
-    },
-    "popover": {
-      "default": {
-        "$value": "{color.surface.1}",
-        "$type": "color",
-        "$description": "Floating panel fill. Themes remap this (was component.popover.bg). Public name --popover."
-      },
-      "foreground": {
-        "$value": "{color.foreground}",
-        "$type": "color",
-        "$description": "Ink on popover. Public name --popover-foreground."
-      }
-    },
-    "knob": {
-      "$value": "oklch(1 0 0)",
-      "$type": "color",
-      "$description": "Light control knob (switch thumb). Not surface-1: muted \u2248 surface-1 in dark modes, so a dedicated light face keeps track/thumb contrast."
-    },
-    "success": {
-      "default": {
-        "$value": "oklch(0.65 0.2 150)",
-        "$type": "color"
-      },
-      "foreground": {
-        "$value": "oklch(0.99 0.02 150)",
-        "$type": "color"
-      }
-    },
-    "warning": {
-      "default": {
-        "$value": "oklch(0.75 0.15 75)",
-        "$type": "color"
-      },
-      "foreground": {
-        "$value": "oklch(0.2 0.04 75)",
-        "$type": "color"
-      }
-    },
-    "info": {
-      "default": {
-        "$value": "oklch(0.6 0.18 260)",
-        "$type": "color"
-      },
-      "foreground": {
-        "$value": "oklch(0.99 0.02 260)",
-        "$type": "color"
-      }
-    },
-    "status": {
-      "gray": {
-        "$value": "oklch(0.5 0.01 58)",
-        "$type": "color"
-      },
-      "blue": {
-        "$value": "oklch(0.6 0.18 260)",
-        "$type": "color"
-      },
-      "red": {
-        "$value": "oklch(0.55 0.25 25)",
-        "$type": "color"
-      },
-      "green": {
-        "$value": "oklch(0.65 0.2 150)",
-        "$type": "color"
-      },
-      "yellow": {
-        "$value": "oklch(0.7 0.18 55)",
-        "$type": "color"
-      },
-      "purple": {
-        "$value": "oklch(0.6 0.2 300)",
-        "$type": "color"
-      },
-      "orange": {
-        "$value": "oklch(0.6 0.2 35)",
-        "$type": "color"
-      },
-      "amber": {
-        "$value": "oklch(0.75 0.15 75)",
-        "$type": "color"
-      }
-    },
-    "syntax": {
-      "keyword": {
-        "$value": "oklch(0.55 0.20 280)",
-        "$type": "color"
-      },
-      "string": {
-        "$value": "oklch(0.50 0.15 152)",
-        "$type": "color"
-      },
-      "number": {
-        "$value": "oklch(0.50 0.16 250)",
-        "$type": "color"
-      },
-      "function": {
-        "$value": "oklch(0.55 0.22 310)",
-        "$type": "color"
-      },
-      "type": {
-        "$value": "oklch(0.55 0.18 200)",
-        "$type": "color"
-      },
-      "tag": {
-        "$value": "oklch(0.50 0.20 25)",
-        "$type": "color"
-      },
-      "attr": {
-        "$value": "oklch(0.55 0.16 60)",
-        "$type": "color"
-      },
-      "comment": {
-        "$value": "oklch(0.55 0.02 250)",
-        "$type": "color"
-      },
-      "variable": {
-        "$value": "{foreground}",
-        "$type": "color"
-      }
-    },
-    "hue": {
-      "red": {
-        "$value": "oklch(0.62 0.21 25)",
-        "$type": "color"
-      },
-      "orange": {
-        "$value": "oklch(0.68 0.18 50)",
-        "$type": "color"
-      },
-      "amber": {
-        "$value": "oklch(0.74 0.16 75)",
-        "$type": "color"
-      },
-      "yellow": {
-        "$value": "oklch(0.82 0.16 95)",
-        "$type": "color"
-      },
-      "lime": {
-        "$value": "oklch(0.78 0.18 130)",
-        "$type": "color"
-      },
-      "green": {
-        "$value": "oklch(0.62 0.16 150)",
-        "$type": "color"
-      },
-      "teal": {
-        "$value": "oklch(0.62 0.13 185)",
-        "$type": "color"
-      },
-      "cyan": {
-        "$value": "oklch(0.68 0.13 220)",
-        "$type": "color"
-      },
-      "sky": {
-        "$value": "oklch(0.65 0.16 235)",
-        "$type": "color"
-      },
-      "blue": {
-        "$value": "oklch(0.55 0.20 260)",
-        "$type": "color"
-      },
-      "indigo": {
-        "$value": "oklch(0.50 0.20 280)",
-        "$type": "color"
-      },
-      "violet": {
-        "$value": "oklch(0.55 0.22 295)",
-        "$type": "color"
-      },
-      "purple": {
-        "$value": "oklch(0.55 0.22 310)",
-        "$type": "color"
-      },
-      "fuchsia": {
-        "$value": "oklch(0.60 0.25 330)",
-        "$type": "color"
-      },
-      "pink": {
-        "$value": "oklch(0.68 0.20 345)",
-        "$type": "color"
-      },
-      "rose": {
-        "$value": "oklch(0.62 0.21 5)",
-        "$type": "color"
-      }
-    },
-    "backdrop": {
-      "$value": "oklch(0 0 0 / 40%)",
-      "$type": "color"
-    },
-    "scrim": {
-      "$value": "oklch(0 0 0 / 20%)",
-      "$type": "color"
-    },
-    "divider": {
-      "$value": "{border-subtle}",
-      "$type": "color"
-    },
-    "$type": "color",
-    "mix": {
-      "bgMix": {
-        "$value": "18%",
-        "$type": "number"
-      },
-      "borderMix": {
-        "$value": "35%",
-        "$type": "number"
-      },
-      "hoverMix": {
-        "$value": "24%",
-        "$type": "number"
-      }
-    }
+    "$type": "color"
   },
   "pad": {
     "page": {
       "$type": "pad",
-      "$description": "Document inset at the default (mobile) breakpoint. Theme picks a space step.",
-      "$value": {
-        "x": "{space-4}"
-      }
+      "$description": "Document inset at the default (mobile) breakpoint.",
+      "$value": { "x": "{space-4}" }
     },
     "page-md": {
       "$type": "pad",
       "$description": "Document inset at tablet.",
-      "$value": {
-        "x": "{space-6}"
-      }
+      "$value": { "x": "{space-6}" }
     },
     "page-lg": {
       "$type": "pad",
       "$description": "Document inset at desktop.",
-      "$value": {
-        "x": "{space-8}"
-      }
+      "$value": { "x": "{space-8}" }
     }
   },
   "border": {
+    "width": {
+      "$value": "1px",
+      "$type": "dimension",
+      "$description": "Stroke weight. Themes thicken this (brut/8bit) without touching color.",
+      "$extensions": { "sail": { "channel": true } }
+    },
+    "none": {
+      "$type": "border",
+      "$description": "No stroke. Variant arms that remove a border spend this molecule.",
+      "$value": { "color": "transparent", "width": "0px", "style": "none" }
+    },
     "default": {
       "$type": "border",
-      "$description": "Semantic default border (color + width + style). Color member aliases color.border.default so --border stays the paint token.",
-      "$value": {
-        "color": "{color.border.default}",
-        "width": "{color.border.width}",
-        "style": "solid"
-      }
+      "$value": { "color": "{color.border.default}", "width": "{border.width}", "style": "solid" }
     },
     "subtle": {
       "$type": "border",
-      "$description": "Semantic subtle border composite. Color member aliases color.border.subtle (--border-subtle).",
-      "$value": {
-        "color": "{color.border.subtle}",
-        "width": "{color.border.width}",
-        "style": "solid"
-      }
+      "$value": { "color": "{color.border.subtle}", "width": "{border.width}", "style": "solid" }
     },
     "strong": {
       "$type": "border",
-      "$description": "Semantic strong border composite. Color member aliases color.border.strong (--border-strong).",
-      "$value": {
-        "color": "{color.border.strong}",
-        "width": "{color.border.width}",
-        "style": "solid"
-      }
+      "$value": { "color": "{color.border.strong}", "width": "{border.width}", "style": "solid" }
     }
   },
   "size": {
-    "control-sm": {
-      "$type": "size",
-      "$description": "Control height step sm. Geometry only \u2014 pad is space.",
-      "$value": {
-        "h": "{control.h-sm}"
-      }
-    },
-    "control-md": {
-      "$type": "size",
-      "$description": "Control height step md. Geometry only \u2014 pad is space.",
-      "$value": {
-        "h": "{control.h-md}"
-      }
-    },
-    "control-lg": {
-      "$type": "size",
-      "$description": "Control height step lg. Geometry only \u2014 pad is space.",
-      "$value": {
-        "h": "{control.h-lg}"
-      }
-    },
-    "measure": {
-      "$type": "size",
-      "$description": "Default reading column. Language lowers width + max-width 100% so the box does not hug.",
-      "$value": {
-        "max-w": "38ch"
-      }
-    },
-    "measure-sm": {
-      "$type": "size",
-      "$description": "Narrow reading width.",
-      "$value": {
-        "max-w": "20rem"
-      }
-    },
-    "measure-md": {
-      "$type": "size",
-      "$description": "Default reading width (alias of measure).",
-      "$value": {
-        "max-w": "38ch"
-      }
-    },
-    "measure-lg": {
-      "$type": "size",
-      "$description": "Wide reading width.",
-      "$value": {
-        "max-w": "60ch"
-      }
-    },
-    "icon-xs": {
-      "$type": "size",
-      "$description": "Icon box xs. Geometry only.",
-      "$value": {
-        "w": "{icon.xs}",
-        "h": "{icon.xs}"
-      }
-    },
-    "icon-sm": {
-      "$type": "size",
-      "$description": "Icon box sm.",
-      "$value": {
-        "w": "{icon.sm}",
-        "h": "{icon.sm}"
-      }
-    },
-    "icon-md": {
-      "$type": "size",
-      "$description": "Icon box md.",
-      "$value": {
-        "w": "{icon.md}",
-        "h": "{icon.md}"
-      }
-    },
-    "icon-lg": {
-      "$type": "size",
-      "$description": "Icon box lg.",
-      "$value": {
-        "w": "{icon.lg}",
-        "h": "{icon.lg}"
-      }
-    }
+    "control-sm": { "$type": "size", "$value": { "h": "{control.h-sm}" } },
+    "control-md": { "$type": "size", "$value": { "h": "{control.h-md}" } },
+    "control-lg": { "$type": "size", "$value": { "h": "{control.h-lg}" } },
+    "measure": { "$type": "size", "$value": { "max-w": "38ch" } },
+    "measure-sm": { "$type": "size", "$value": { "max-w": "20rem" } },
+    "measure-md": { "$type": "size", "$value": { "max-w": "38ch" } },
+    "measure-lg": { "$type": "size", "$value": { "max-w": "60ch" } },
+    "icon-xs": { "$type": "size", "$value": { "w": "{icon.xs}", "h": "{icon.xs}" } },
+    "icon-sm": { "$type": "size", "$value": { "w": "{icon.sm}", "h": "{icon.sm}" } },
+    "icon-md": { "$type": "size", "$value": { "w": "{icon.md}", "h": "{icon.md}" } },
+    "icon-lg": { "$type": "size", "$value": { "w": "{icon.lg}", "h": "{icon.lg}" } }
   },
   "type": {
     "body": {
       "$type": "type",
-      "$description": "Body type role. Aliases typography.body + text-base; does not invent a second scale.",
       "$value": {
-        "family": "{typography.body.font}",
+        "family": "{typography.font.body}",
         "size": "{typography.text.base}",
-        "weight": "{typography.body.weight}",
+        "weight": "{typography.font.weight-normal}",
         "leading": "{typography.leading.normal}",
         "tracking": "{typography.tracking.normal}"
       }
     },
     "body-sm": {
       "$type": "type",
-      "$description": "Small body type role. Same family/weight as body at text-sm.",
       "$value": {
-        "family": "{typography.body.font}",
+        "family": "{typography.font.body}",
         "size": "{typography.text.sm}",
-        "weight": "{typography.body.weight}",
+        "weight": "{typography.font.weight-normal}",
         "leading": "{typography.leading.normal}",
         "tracking": "{typography.tracking.normal}"
       }
     },
     "label": {
       "$type": "type",
-      "$description": "Label / eyebrow type role. Includes case because typography.label owns transform.",
       "$value": {
-        "family": "{typography.label.font}",
+        "family": "{typography.font.body}",
         "size": "{typography.text.xs}",
-        "weight": "{typography.label.weight}",
+        "weight": "{typography.font.weight-semibold}",
         "leading": "{typography.leading.snug}",
-        "tracking": "{typography.label.tracking}",
-        "case": "{typography.label.transform}"
+        "tracking": "{typography.tracking.wide}",
+        "case": "uppercase"
       }
     },
     "heading": {
       "$type": "type",
-      "$description": "Heading type role. Includes case because typography.heading owns transform.",
       "$value": {
-        "family": "{typography.heading.font}",
+        "family": "{typography.font.heading}",
         "size": "{typography.text.xl}",
-        "weight": "{typography.heading.weight}",
+        "weight": "{typography.font.weight-semibold}",
         "leading": "{typography.leading.tight}",
-        "tracking": "{typography.heading.tracking}",
-        "case": "{typography.heading.transform}"
+        "tracking": "{typography.tracking.tight}",
+        "case": "none"
       }
     },
     "mono": {
       "$type": "type",
-      "$description": "Mono / code type role. Aliases typography.monoFont + text-sm + leading.code.",
       "$value": {
-        "family": "{typography.monoFont}",
+        "family": "{typography.font.mono}",
         "size": "{typography.text.sm}",
         "weight": "{typography.font.weight-normal}",
-        "leading": "{typography.leading.code}",
+        "leading": "{typography.leading.relaxed}",
         "tracking": "{typography.tracking.normal}"
-      }
-    },
-    "display-sm": {
-      "$type": "type",
-      "$description": "Small display type role. Aliases typography.displayFont + the 4xl scale step (largest fixed display step before the fluid hero).",
-      "$value": {
-        "family": "{typography.displayFont}",
-        "size": "{typography.text.4xl}",
-        "weight": "{typography.heading.weight}",
-        "leading": "{typography.leading.tight}",
-        "tracking": "{typography.heading.tracking}"
       }
     },
     "mono-sm": {
       "$type": "type",
-      "$description": "Small mono / code type role. Aliases typography.monoFont + text-xs + leading.code.",
       "$value": {
-        "family": "{typography.monoFont}",
+        "family": "{typography.font.mono}",
         "size": "{typography.text.xs}",
         "weight": "{typography.font.weight-normal}",
-        "leading": "{typography.leading.code}",
+        "leading": "{typography.leading.relaxed}",
         "tracking": "{typography.tracking.normal}"
+      }
+    },
+    "display": {
+      "$type": "type",
+      "$description": "Hero display. Spends the clamp step.",
+      "$value": {
+        "family": "{typography.font.display}",
+        "size": "{typography.text.display}",
+        "weight": "{typography.font.weight-semibold}",
+        "leading": "{typography.leading.tight}",
+        "tracking": "{typography.tracking.tight}"
+      }
+    },
+    "display-sm": {
+      "$type": "type",
+      "$value": {
+        "family": "{typography.font.display}",
+        "size": "{typography.text.4xl}",
+        "weight": "{typography.font.weight-semibold}",
+        "leading": "{typography.leading.tight}",
+        "tracking": "{typography.tracking.tight}"
       }
     }
   },
   "tagDefaults": {
-    "$description": "HTML tag \u2192 type role (SPEC-SPINNAKER-3 \u00a710). Theme data, not CSS vars. Markup style() overrides. No heading-2 \u2014 the tag is the way. strong/b/a have no type default.",
-    "h1": {
-      "type": "heading",
-      "size": "4xl"
-    },
-    "h2": {
-      "type": "heading",
-      "size": "2xl"
-    },
-    "h3": {
-      "type": "heading",
-      "size": "xl"
-    },
-    "h4": {
-      "type": "heading",
-      "size": "lg"
-    },
-    "h5": {
-      "type": "heading",
-      "size": "md"
-    },
-    "h6": {
-      "type": "heading",
-      "size": "sm"
-    },
+    "$description": "HTML tag → type role + step. Theme data, not CSS vars.",
+    "h1": { "type": "heading", "size": "4xl" },
+    "h2": { "type": "heading", "size": "2xl" },
+    "h3": { "type": "heading", "size": "xl" },
+    "h4": { "type": "heading", "size": "lg" },
+    "h5": { "type": "heading", "size": "md" },
+    "h6": { "type": "heading", "size": "sm" },
     "p": "body",
     "code": "mono",
     "pre": "mono",
     "small": "body-sm"
   },
   "elevation": {
-    "xs": {
-      "$type": "elevation",
-      "$description": "Elevation step xs. Shadow member aliases shadow.xs.",
-      "$value": {
-        "shadow": "{shadow.xs}"
-      }
-    },
-    "sm": {
-      "$type": "elevation",
-      "$description": "Elevation step sm. Shadow member aliases shadow.sm.",
-      "$value": {
-        "shadow": "{shadow.sm}"
-      }
-    },
-    "md": {
-      "$type": "elevation",
-      "$description": "Elevation step md. Shadow member aliases shadow.md.",
-      "$value": {
-        "shadow": "{shadow.md}"
-      }
-    },
-    "lg": {
-      "$type": "elevation",
-      "$description": "Elevation step lg. Shadow member aliases shadow.lg.",
-      "$value": {
-        "shadow": "{shadow.lg}"
-      }
-    },
-    "xl": {
-      "$type": "elevation",
-      "$description": "Elevation step xl. Shadow member aliases shadow.xl.",
-      "$value": {
-        "shadow": "{shadow.xl}"
-      }
-    },
-    "none": {
-      "$type": "elevation",
-      "$description": "No elevation. Shadow member is the CSS none keyword.",
-      "$value": {
-        "shadow": "none"
-      }
-    }
+    "xs": { "$type": "elevation", "$value": { "shadow": "{shadow.xs}" } },
+    "sm": { "$type": "elevation", "$value": { "shadow": "{shadow.sm}" } },
+    "md": { "$type": "elevation", "$value": { "shadow": "{shadow.md}" } },
+    "lg": { "$type": "elevation", "$value": { "shadow": "{shadow.lg}" } },
+    "xl": { "$type": "elevation", "$value": { "shadow": "{shadow.xl}" } },
+    "none": { "$type": "elevation", "$value": { "shadow": "none" } }
   },
   "bg": {
-    "surface": {
-      "$type": "bg",
-      "$description": "Surface fill identity. Color member aliases color.surface.1 (--surface-1).",
-      "$value": {
-        "color": "{color.surface.1}"
-      }
-    },
-    "muted": {
-      "$type": "bg",
-      "$description": "Muted fill identity. Color member aliases color.muted.default (--muted).",
-      "$value": {
-        "color": "{color.muted.default}"
-      }
-    },
-    "canvas": {
-      "$type": "bg",
-      "$description": "Page/root face. Color member aliases color.background.",
-      "$value": {
-        "color": "{color.background}"
-      }
-    },
-    "control": {
-      "$type": "bg",
-      "$description": "Input/combobox face. Color member aliases color.input.",
-      "$value": {
-        "color": "{color.input}"
-      }
-    },
-    "overlay": {
-      "$type": "bg",
-      "$description": "Popover/menu face. Color member aliases color.popover.",
-      "$value": {
-        "color": "{color.popover.default}"
-      }
-    }
+    "app": { "$type": "bg", "$value": { "color": "{color.background}" } },
+    "subtle": { "$type": "bg", "$value": { "color": "{color.muted.default}" } },
+    "surface": { "$type": "bg", "$value": { "color": "{color.surface}" } },
+    "inset": { "$type": "bg", "$value": { "color": "{color.inset}" } },
+    "overlay": { "$type": "bg", "$value": { "color": "{color.overlay}" } }
   },
   "fg": {
-    "foreground": {
-      "$type": "fg",
-      "$description": "Foreground ink identity. Color member aliases color.foreground (--foreground).",
-      "$value": {
-        "color": "{color.foreground}"
-      }
-    },
-    "muted": {
-      "$type": "fg",
-      "$description": "Muted ink identity. Color member aliases color.muted.foreground (--muted-foreground).",
-      "$value": {
-        "color": "{color.muted.foreground}"
-      }
-    },
-    "canvas": {
-      "$type": "fg",
-      "$description": "Ink on canvas. Alias of foreground during migrate.",
-      "$value": {
-        "color": "{color.foreground}"
-      }
-    },
-    "on-surface": {
-      "$type": "fg",
-      "$description": "Ink on surface. Color member aliases color.card.foreground.",
-      "$value": {
-        "color": "{color.card.foreground}"
-      }
-    },
-    "on-control": {
-      "$type": "fg",
-      "$description": "Ink on control. Color member aliases color.foreground.",
-      "$value": {
-        "color": "{color.foreground}"
-      }
-    }
+    "foreground": { "$type": "fg", "$value": { "color": "{color.foreground}" } },
+    "muted": { "$type": "fg", "$value": { "color": "{color.muted.foreground}" } }
   },
   "z": {
-    "base": {
-      "$value": "0",
-      "$type": "number"
-    },
-    "elevated": {
-      "$value": "1",
-      "$type": "number"
-    },
-    "dropdown": {
-      "$value": "10",
-      "$type": "number"
-    },
-    "sticky": {
-      "$value": "20",
-      "$type": "number"
-    },
-    "popover": {
-      "$value": "30",
-      "$type": "number"
-    },
-    "dialog": {
-      "$value": "40",
-      "$type": "number"
-    },
-    "toast": {
-      "$value": "50",
-      "$type": "number"
-    },
-    "toast-region": {
-      "$value": "{z.toast}",
-      "$type": "number",
-      "$description": "Toast stacking region elevation (closed z scale; was component.toast-region.z)."
-    },
-    "max": {
-      "$value": "100",
-      "$type": "number"
-    },
+    "base": { "$value": "0", "$type": "number" },
+    "elevated": { "$value": "1", "$type": "number" },
+    "dropdown": { "$value": "10", "$type": "number" },
+    "sticky": { "$value": "20", "$type": "number" },
+    "popover": { "$value": "30", "$type": "number" },
+    "dialog": { "$value": "40", "$type": "number" },
+    "toast": { "$value": "50", "$type": "number" },
+    "max": { "$value": "100", "$type": "number" },
     "$type": "number"
   },
   "motion": {
     "ease": {
-      "out": {
-        "$value": "cubic-bezier(0.16, 1, 0.3, 1)",
-        "$type": "cubicBezier"
-      },
-      "out-soft": {
-        "$value": "cubic-bezier(0.33, 1, 0.68, 1)",
-        "$type": "cubicBezier"
-      },
-      "in": {
-        "$value": "cubic-bezier(0.7, 0, 0.84, 0)",
-        "$type": "cubicBezier"
-      },
-      "in-out": {
-        "$value": "cubic-bezier(0.65, 0, 0.35, 1)",
-        "$type": "cubicBezier"
-      },
-      "spring": {
-        "$value": "cubic-bezier(0.34, 1.56, 0.64, 1)",
-        "$type": "cubicBezier"
-      }
+      "out": { "$value": "cubic-bezier(0.16, 1, 0.3, 1)", "$type": "cubicBezier" },
+      "out-soft": { "$value": "cubic-bezier(0.33, 1, 0.68, 1)", "$type": "cubicBezier" },
+      "in": { "$value": "cubic-bezier(0.7, 0, 0.84, 0)", "$type": "cubicBezier" },
+      "in-out": { "$value": "cubic-bezier(0.65, 0, 0.35, 1)", "$type": "cubicBezier" },
+      "spring": { "$value": "cubic-bezier(0.34, 1.56, 0.64, 1)", "$type": "cubicBezier" }
     },
     "duration": {
-      "instant": {
-        "$value": "60ms",
-        "$type": "duration"
-      },
-      "fast": {
-        "$value": "120ms",
-        "$type": "duration"
-      },
-      "medium": {
-        "$value": "180ms",
-        "$type": "duration"
-      },
-      "slow": {
-        "$value": "280ms",
-        "$type": "duration"
-      },
-      "deliberate": {
-        "$value": "420ms",
-        "$type": "duration"
-      },
-      "glacial": {
-        "$value": "14000ms",
-        "$type": "duration"
-      }
+      "instant": { "$value": "60ms", "$type": "duration" },
+      "fast": { "$value": "120ms", "$type": "duration" },
+      "medium": { "$value": "180ms", "$type": "duration" },
+      "slow": { "$value": "280ms", "$type": "duration" },
+      "deliberate": { "$value": "420ms", "$type": "duration" }
     },
     "tooltip": {
-      "show-delay": {
-        "$value": "300ms",
-        "$type": "duration"
-      },
-      "hide-delay": {
-        "$value": "100ms",
-        "$type": "duration"
-      }
+      "show-delay": { "$value": "300ms", "$type": "duration" },
+      "hide-delay": { "$value": "100ms", "$type": "duration" }
     },
     "$type": "duration"
   },
   "interaction": {
     "focus": {
-      "ring": {
-        "$value": "2px solid var(--ring-color)",
-        "$type": "dimension"
-      },
-      "ring-offset": {
-        "$value": "2px",
-        "$type": "dimension"
-      }
+      "ring": { "$value": "2px solid var(--ring-color)", "$type": "dimension" },
+      "ring-offset": { "$value": "2px", "$type": "dimension" }
     },
     "hover": {
-      "strength": {
-        "$value": "6%",
-        "$type": "number"
-      },
+      "strength": { "$value": "6%", "$type": "number" },
       "bg": {
-        "$value": "color-mix(in oklch, var(--foreground) var(--hover-strength), transparent)",
+        "$value": { "op": "mix", "from": { "ref": "foreground" }, "onto": "transparent", "amount": 0.06 },
         "$type": "color"
       }
     },
     "active": {
-      "strength": {
-        "$value": "10%",
-        "$type": "number"
-      },
+      "strength": { "$value": "10%", "$type": "number" },
       "bg": {
-        "$value": "color-mix(in oklch, var(--foreground) var(--active-strength), transparent)",
+        "$value": { "op": "mix", "from": { "ref": "foreground" }, "onto": "transparent", "amount": 0.1 },
         "$type": "color"
       }
     },
     "selected": {
-      "strength": {
-        "$value": "14%",
-        "$type": "number"
-      },
+      "strength": { "$value": "14%", "$type": "number" },
       "bg": {
-        "$value": "color-mix(in oklch, var(--primary) var(--selected-strength), transparent)",
+        "$value": { "op": "mix", "from": { "ref": "primary" }, "onto": "transparent", "amount": 0.14 },
         "$type": "color"
       },
       "border": {
-        "$value": "color-mix(in oklch, var(--primary) 40%, transparent)",
+        "$value": { "op": "mix", "from": { "ref": "primary" }, "onto": "transparent", "amount": 0.4 },
         "$type": "color"
       }
+    },
+    "ring": {
+      "width": { "$value": "3px", "$type": "dimension" },
+      "offset": { "$value": "2px", "$type": "dimension" },
+      "opacity": { "$value": "25%", "$type": "number" },
+      "default": {
+        "$value": { "space": "oklch", "l": 0.67, "c": 0.16, "h": 58, "a": 0.4 },
+        "$type": "color"
+      },
+      "color": { "$value": { "ref": "primary" }, "$type": "color" }
+    },
+    "mix": {
+      "bg": { "$value": "18%", "$type": "number" },
+      "border": { "$value": "35%", "$type": "number" },
+      "hover": { "$value": "24%", "$type": "number" }
     }
   },
   "breakpoint": {
-    "mobile": {
-      "$value": "390px",
-      "$type": "dimension"
-    },
-    "tablet": {
-      "$value": "768px",
-      "$type": "dimension"
-    },
-    "desktop": {
-      "$value": "1280px",
-      "$type": "dimension"
-    },
+    "mobile": { "$value": "390px", "$type": "dimension" },
+    "tablet": { "$value": "768px", "$type": "dimension" },
+    "desktop": { "$value": "1280px", "$type": "dimension" },
     "$type": "dimension"
   },
   "density": {
-    "row-py": {
-      "$value": "{space-2}",
-      "$type": "dimension"
-    },
-    "row-px": {
-      "$value": "{space-3}",
-      "$type": "dimension"
-    },
-    "row-gap": {
-      "$value": "{space-2}",
-      "$type": "dimension"
-    },
-    "text": {
-      "$value": "{text-base}",
-      "$type": "dimension"
-    },
-    "icon": {
-      "$value": "16px",
-      "$type": "dimension"
-    },
+    "row-py": { "$value": "{space-2}", "$type": "dimension" },
+    "row-px": { "$value": "{space-3}", "$type": "dimension" },
+    "row-gap": { "$value": "{space-2}", "$type": "dimension" },
+    "text": { "$value": "{text-base}", "$type": "dimension" },
+    "icon": { "$value": "16px", "$type": "dimension" },
     "$type": "dimension"
   },
   "shadow": {
     "xs": {
-      "$value": "0 1px 2px 0 oklch(0 0 0 / 5%)",
-      "$type": "shadow"
+      "$type": "shadow",
+      "$value": { "offsetX": "0", "offsetY": "1px", "blur": "2px", "spread": "0", "color": { "space": "oklch", "l": 0, "c": 0, "h": 0, "a": 0.05 } }
     },
     "sm": {
-      "$value": "0 1px 3px 0 oklch(0 0 0 / 7%), 0 1px 2px -1px oklch(0 0 0 / 5%)",
-      "$type": "shadow"
+      "$type": "shadow",
+      "$value": [
+        { "offsetX": "0", "offsetY": "1px", "blur": "3px", "spread": "0", "color": { "space": "oklch", "l": 0, "c": 0, "h": 0, "a": 0.07 } },
+        { "offsetX": "0", "offsetY": "1px", "blur": "2px", "spread": "-1px", "color": { "space": "oklch", "l": 0, "c": 0, "h": 0, "a": 0.05 } }
+      ]
     },
     "md": {
-      "$value": "0 4px 12px -2px oklch(0 0 0 / 9%), 0 2px 4px -2px oklch(0 0 0 / 6%)",
-      "$type": "shadow"
+      "$type": "shadow",
+      "$value": [
+        { "offsetX": "0", "offsetY": "4px", "blur": "12px", "spread": "-2px", "color": { "space": "oklch", "l": 0, "c": 0, "h": 0, "a": 0.09 } },
+        { "offsetX": "0", "offsetY": "2px", "blur": "4px", "spread": "-2px", "color": { "space": "oklch", "l": 0, "c": 0, "h": 0, "a": 0.06 } }
+      ]
     },
     "lg": {
-      "$value": "0 12px 32px -6px oklch(0 0 0 / 13%), 0 4px 12px -4px oklch(0 0 0 / 8%)",
-      "$type": "shadow"
+      "$type": "shadow",
+      "$value": [
+        { "offsetX": "0", "offsetY": "12px", "blur": "32px", "spread": "-6px", "color": { "space": "oklch", "l": 0, "c": 0, "h": 0, "a": 0.13 } },
+        { "offsetX": "0", "offsetY": "4px", "blur": "12px", "spread": "-4px", "color": { "space": "oklch", "l": 0, "c": 0, "h": 0, "a": 0.08 } }
+      ]
     },
     "xl": {
-      "$value": "0 24px 64px -12px oklch(0 0 0 / 18%), 0 8px 24px -8px oklch(0 0 0 / 10%)",
-      "$type": "shadow"
+      "$type": "shadow",
+      "$value": [
+        { "offsetX": "0", "offsetY": "24px", "blur": "64px", "spread": "-12px", "color": { "space": "oklch", "l": 0, "c": 0, "h": 0, "a": 0.18 } },
+        { "offsetX": "0", "offsetY": "8px", "blur": "24px", "spread": "-8px", "color": { "space": "oklch", "l": 0, "c": 0, "h": 0, "a": 0.1 } }
+      ]
     },
     "card-rest": {
-      "$value": "0 1px 3px oklch(0.20 0.04 60 / 6%), 0 0 0 1px oklch(0.20 0.04 60 / 6%)",
-      "$type": "shadow"
+      "$type": "shadow",
+      "$value": [
+        { "offsetX": "0", "offsetY": "1px", "blur": "3px", "spread": "0", "color": { "space": "oklch", "l": 0.2, "c": 0.04, "h": 60, "a": 0.06 } },
+        { "offsetX": "0", "offsetY": "0", "blur": "0", "spread": "1px", "color": { "space": "oklch", "l": 0.2, "c": 0.04, "h": 60, "a": 0.06 } }
+      ]
     },
     "hover": {
-      "$value": "0 8px 20px oklch(0.20 0.04 60 / 12%), 0 0 0 1px oklch(0.20 0.04 60 / 8%)",
-      "$type": "shadow"
+      "$type": "shadow",
+      "$value": [
+        { "offsetX": "0", "offsetY": "8px", "blur": "20px", "spread": "0", "color": { "space": "oklch", "l": 0.2, "c": 0.04, "h": 60, "a": 0.12 } },
+        { "offsetX": "0", "offsetY": "0", "blur": "0", "spread": "1px", "color": { "space": "oklch", "l": 0.2, "c": 0.04, "h": 60, "a": 0.08 } }
+      ]
     },
     "sticky": {
-      "$value": "0 2px 6px -2px oklch(0 0 0 / 8%), 0 1px 2px oklch(0 0 0 / 4%)",
-      "$type": "shadow"
+      "$type": "shadow",
+      "$value": [
+        { "offsetX": "0", "offsetY": "2px", "blur": "6px", "spread": "-2px", "color": { "space": "oklch", "l": 0, "c": 0, "h": 0, "a": 0.08 } },
+        { "offsetX": "0", "offsetY": "1px", "blur": "2px", "spread": "0", "color": { "space": "oklch", "l": 0, "c": 0, "h": 0, "a": 0.04 } }
+      ]
     },
     "accent": {
-      "$value": "0 0 0 3px color-mix(in oklch, var(--primary) 22%, transparent)",
-      "$type": "shadow"
+      "$type": "shadow",
+      "$value": { "offsetX": "0", "offsetY": "0", "blur": "0", "spread": "3px", "color": { "op": "mix", "from": { "ref": "primary" }, "onto": "transparent", "amount": 0.22 } }
     },
     "inset-soft": {
-      "$value": "inset 0 1px 2px oklch(0 0 0 / 5%)",
-      "$type": "shadow"
+      "$type": "shadow",
+      "$value": { "inset": true, "offsetX": "0", "offsetY": "1px", "blur": "2px", "spread": "0", "color": { "space": "oklch", "l": 0, "c": 0, "h": 0, "a": 0.05 } }
     },
     "inset-ring": {
-      "$value": "inset 0 0 0 1px var(--border), inset 0 1px 0 var(--background)",
-      "$type": "shadow"
+      "$type": "shadow",
+      "$value": [
+        { "inset": true, "offsetX": "0", "offsetY": "0", "blur": "0", "spread": "1px", "color": { "ref": "border" } },
+        { "inset": true, "offsetX": "0", "offsetY": "1px", "blur": "0", "spread": "0", "color": { "ref": "background" } }
+      ]
     },
     "edge-top": {
-      "$value": "0 -8px 24px -8px oklch(0 0 0 / 8%), 0 -1px 0 oklch(0 0 0 / 4%)",
-      "$type": "shadow"
+      "$type": "shadow",
+      "$value": [
+        { "offsetX": "0", "offsetY": "-8px", "blur": "24px", "spread": "-8px", "color": { "space": "oklch", "l": 0, "c": 0, "h": 0, "a": 0.08 } },
+        { "offsetX": "0", "offsetY": "-1px", "blur": "0", "spread": "0", "color": { "space": "oklch", "l": 0, "c": 0, "h": 0, "a": 0.04 } }
+      ]
+    },
+    "edge-highlight": {
+      "$type": "shadow",
+      "$value": { "inset": true, "offsetX": "0", "offsetY": "1px", "blur": "0", "spread": "0", "color": { "ref": "hover-bg" } }
     },
     "$type": "shadow"
   },
   "scrollbar": {
     "thumb": {
-      "$value": "color-mix(in oklab, var(--foreground) 22%, transparent)",
+      "$value": { "op": "mix", "from": { "ref": "foreground" }, "onto": "transparent", "amount": 0.22 },
       "$type": "color"
     },
     "thumb-hover": {
-      "$value": "color-mix(in oklab, var(--foreground) 38%, transparent)",
+      "$value": { "op": "mix", "from": { "ref": "foreground" }, "onto": "transparent", "amount": 0.38 },
       "$type": "color"
     },
-    "track": {
-      "$value": "transparent",
-      "$type": "string"
-    },
-    "width": {
-      "$value": "10px",
-      "$type": "dimension"
-    },
-    "width-thin": {
-      "$value": "6px",
-      "$type": "dimension"
-    },
-    "radius": {
-      "$value": "999px",
-      "$type": "dimension"
-    },
+    "track": { "$value": "transparent", "$type": "string" },
+    "width": { "$value": "10px", "$type": "dimension" },
+    "width-thin": { "$value": "6px", "$type": "dimension" },
+    "radius": { "$value": "999px", "$type": "dimension" },
     "$type": "dimension"
   },
   "filter": {
@@ -1652,169 +661,71 @@
     }
   },
   "image": {
-    "texture": {
+    "texture": { "$value": "none", "$type": "string" },
+    "texture-blend": { "$value": "overlay", "$type": "string" },
+    "texture-opacity": { "$value": "1", "$type": "number" },
+    "corner": {
       "$value": "none",
       "$type": "string",
-      "$description": "Texture image preset. Themes remap; leftover/lint still name the var."
-    },
-    "texture-blend": {
-      "$value": "overlay",
-      "$type": "string",
-      "$description": "Texture mix-blend-mode."
-    },
-    "texture-opacity": {
-      "$value": "1",
-      "$type": "number",
-      "$description": "Texture opacity."
+      "$description": "border-image for controls. none leaves radius in charge.",
+      "$extensions": { "sail": { "channel": true } }
     }
+  },
+  "overlay": {
+    "fill": { "$value": "none", "$type": "string" },
+    "blend": { "$value": "overlay", "$type": "string" },
+    "opacity": { "$value": "1", "$type": "number" }
   },
   "keyframes": {
     "fade": {
       "$type": "sail.keyframes",
-      "$description": "Opacity enter preset. Exit uses fade-out.",
-      "$value": {
-        "from": {
-          "opacity": 0
-        },
-        "to": {
-          "opacity": 1
-        }
-      }
+      "$value": { "from": { "opacity": 0 }, "to": { "opacity": 1 } }
     },
     "fade-out": {
       "$type": "sail.keyframes",
-      "$description": "Opacity exit preset. Starts visible \u2014 does not pin rest at 0.",
-      "$value": {
-        "from": {
-          "opacity": 1
-        },
-        "to": {
-          "opacity": 0
-        }
-      }
+      "$value": { "from": { "opacity": 1 }, "to": { "opacity": 0 } }
     },
     "fade-scale-in": {
       "$type": "sail.keyframes",
-      "$description": "Opacity + slight scale enter preset.",
       "$value": {
-        "from": {
-          "opacity": 0,
-          "transform": "scale(0.96)"
-        },
-        "to": {
-          "opacity": 1,
-          "transform": "scale(1)"
-        }
+        "from": { "opacity": 0, "transform": "scale(0.96)" },
+        "to": { "opacity": 1, "transform": "scale(1)" }
       }
     },
     "slide-up": {
       "$type": "sail.keyframes",
-      "$description": "Opacity + upward translate enter preset.",
       "$value": {
-        "from": {
-          "opacity": 0,
-          "transform": "translateY(8px)"
-        },
-        "to": {
-          "opacity": 1,
-          "transform": "translateY(0)"
-        }
-      }
-    },
-    "rise": {
-      "$type": "sail.keyframes",
-      "$description": "Translate-up enter without fading. Always-visible tiles stay solid on first paint.",
-      "$value": {
-        "from": {
-          "transform": "translateY(8px)"
-        },
-        "to": {
-          "transform": "translateY(0)"
-        }
+        "from": { "opacity": 0, "transform": "translateY(8px)" },
+        "to": { "opacity": 1, "transform": "translateY(0)" }
       }
     },
     "press": {
       "$type": "sail.keyframes",
-      "$description": "Scale-down on press. Does not fade the control out.",
       "$value": {
-        "from": {
-          "transform": "scale(1)"
-        },
-        "to": {
-          "transform": "scale(0.96)"
-        }
+        "from": { "transform": "scale(1)" },
+        "to": { "transform": "scale(0.96)" }
       }
     },
     "spin": {
       "$type": "sail.keyframes",
-      "$description": "Full rotation. Loading marks spend this.",
       "$value": {
-        "from": {
-          "transform": "rotate(0deg)"
-        },
-        "to": {
-          "transform": "rotate(360deg)"
-        }
-      }
-    },
-    "pulse": {
-      "$type": "sail.keyframes",
-      "$description": "Scale breathe. No opacity \u2014 looping opacity is a blink.",
-      "$value": {
-        "from": {
-          "transform": "scale(1)"
-        },
-        "to": {
-          "transform": "scale(1.08)"
-        }
-      }
-    },
-    "bob": {
-      "$type": "sail.keyframes",
-      "$description": "Small vertical bounce. Ambient dots and idle marks spend this.",
-      "$value": {
-        "from": {
-          "transform": "translateY(0px)"
-        },
-        "to": {
-          "transform": "translateY(-6px)"
-        }
-      }
-    },
-    "eq": {
-      "$type": "sail.keyframes",
-      "$description": "Scale-Y bounce from the origin. Equalizer bars spend this.",
-      "$value": {
-        "from": {
-          "transform": "scaleY(0.35)"
-        },
-        "to": {
-          "transform": "scaleY(1)"
-        }
+        "from": { "transform": "rotate(0deg)" },
+        "to": { "transform": "rotate(360deg)" }
       }
     }
   },
   "play": {
     "colors": {
       "$type": "transition",
-      "$description": "Named play property-set: color-bearing CSS properties. Not a keyframe.",
-      "$value": {
-        "property": "color, background-color, border-color, outline-color, fill, stroke"
-      }
+      "$value": { "property": "color, background-color, border-color, outline-color, fill, stroke" }
     },
     "control": {
       "$type": "transition",
-      "$description": "Wave 0 motion tier \u2014 controls hover/press (color + transform + shadow).",
-      "$value": {
-        "property": "color, background-color, border-color, outline-color, transform, box-shadow, opacity"
-      }
+      "$value": { "property": "color, background-color, border-color, outline-color, transform, box-shadow, opacity" }
     },
     "surface": {
       "$type": "transition",
-      "$description": "Wave 0 motion tier \u2014 interactive surfaces (color + shadow + transform).",
-      "$value": {
-        "property": "color, background-color, border-color, box-shadow, transform, opacity"
-      }
+      "$value": { "property": "color, background-color, border-color, box-shadow, transform, opacity" }
     }
   },
   "$extensions": {

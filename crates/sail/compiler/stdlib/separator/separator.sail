@@ -3,7 +3,7 @@
   tone defaults to muted — a bare <separator> is a finished divider.
   Semantic paint = bound tone via presence compound only (never unconditional
   bg(tone) — empty --tone would stomp the rest line).
-  Host subset: muted | primary | destructive (not full Tone).
+  Host subset: muted | primary | danger (not full Tone).
   Orientation × dashed compounds remain (not pure group-member paint).
   label = accessible name (aria-label). Visible labeled chrome (two lines +
   text) is a language gap: native hr is void, a slot would drop author-void.
@@ -12,7 +12,7 @@
 <scope>
   props: {
     orientation: 'horizontal' | 'vertical' = 'horizontal'
-    tone: 'muted' | 'primary' | 'destructive' = 'muted'
+    tone: 'muted' | 'primary' | 'danger' = 'muted'
     variant: 'solid' | 'dashed' = 'solid'
     label = ''
   }

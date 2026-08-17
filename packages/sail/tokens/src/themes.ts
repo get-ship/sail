@@ -116,16 +116,6 @@ const THEME_PRESENTATION: Record<
       'oklch(0.78 0.16 195)',
     ],
   },
-  contrast: {
-    label: 'High Contrast',
-    tier: 'catalog',
-    swatches: [
-      'oklch(0.09 0 0)',
-      'oklch(0.15 0 0)',
-      'oklch(0.87 0.18 85)',
-      'oklch(0.99 0 0)',
-    ],
-  },
   glass: {
     label: 'Glass',
     tier: 'catalog',

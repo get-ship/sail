@@ -1,6 +1,6 @@
 <!--
   <error-boundary> — group-caught swap on Style when.
-  Fallback chrome from muted / destructive / foreground.
+  Fallback chrome from muted / danger / foreground.
 -->
 <scope>
   props: {
@@ -12,8 +12,8 @@
   style root = {display(contents).group()}
   style content = {display(contents)}
   style fallback = {display(none)}
-  style alert = {pad({ y: 4, x: 5 }).bg(muted).border({ color: destructive, width: 1 }).radius(md).elevation(xs).fg(foreground).type({ family: body, size: sm })}
-  style icon = {size(icon-size-lg).margin({ t: 1 }).fg(destructive)}
+  style alert = {pad({ y: 4, x: 5 }).bg(muted).border({ color: danger, width: 1 }).radius(md).elevation(xs).fg(foreground).type({ family: body, size: sm })}
+  style icon = {size(icon-size-lg).margin({ t: 1 }).fg(danger)}
   style body = {size({ min-w: 0 })}
   style message = {fg(muted-foreground).type({ leading: normal })}
   style retry = {self(start).pad({ y: 1, x: 3 }).bg(surface).border({ color: border, width: 1 }).radius(sm).fg(foreground).elevation(xs).cursor(pointer).type({ family: body, size: xs, weight: semibold })}

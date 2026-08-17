@@ -13,10 +13,10 @@
   }
 
   // One field border only; swatch is edge-to-edge inside it.
-  style color = {size({ w: 9, h: control-h-md, min-h: 0 }).pad(0).overflow({ all: hidden }).appearance(none).border({ color: border, width: 1, style: solid }).radius(md).bg(control).cursor(pointer), when: {hover: border({ color: border-strong }), disabled: cursor(not-allowed).filter({ opacity: 50 })}}
+  style color = {size({ w: 9, h: control-h-md, min-h: 0 }).pad(0).overflow({ all: hidden }).appearance(none).border({ color: border, width: 1, style: solid }).radius(md).bg(inset).cursor(pointer), when: {hover: border({ color: border-strong }), disabled: cursor(not-allowed).filter({ opacity: 50 })}}
 </scope>
 
 <input
   type="color"
-  style(color, {compound: [{invalid: true, border({ color: destructive })}]})
+  style(color, {compound: [{invalid: true, border({ color: danger })}]})
 >

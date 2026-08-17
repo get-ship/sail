@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { renderRoute } from '@ship/test-setup'
 import { accessibleName, getByRole, getByText, queryByRole } from '@ship/sail-test'
 
-const TONES = ['muted', 'info', 'success', 'warning', 'destructive'] as const
+const TONES = ['muted', 'info', 'success', 'warning', 'danger'] as const
 
 describe('l1 alert', () => {
   it('is a status named by its body', async () => {

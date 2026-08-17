@@ -1,13 +1,13 @@
 //! `sail-surface-not-card` — anti-smell #4 from `ship-design-system`.
 //!
-//! "Never reach for `var(--card)` when `var(--surface-1)` captures intent.
+//! "Never reach for `var(--card)` when `var(--surface)` captures intent.
 //!  Cards consume the surface layer so a theme that raises card depth (a
-//!  gradient background, a tinted nested panel) only touches `--surface-1`
-//!  / `--surface-2`."
+//!  gradient background, a tinted nested panel) only touches `--surface`
+//!  / `--overlay`."
 //!
 //! Cards are a layout concept; surfaces are the depth layer. A theme that
 //! wants a warmer card, a tinted nested panel, or a gradient body surface
-//! works through `--surface-1` / `--surface-2`. Components that read
+//! works through `--surface` / `--overlay`. Components that read
 //! `var(--card)` directly bake themselves against one palette slot and
 //! stay frozen when a theme bends depth.
 //!
@@ -51,7 +51,7 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                 severity: SEVERITY,
                 message: format!(
                     "`var(--card)` used as the surface in `{}` — read \
-                     `var(--surface-1)` (or `var(--surface-2)`) instead",
+                     `var(--surface)` (or `var(--overlay)`) instead",
                     hit.property
                 ),
                 suggest: Some(SUGGEST.to_string()),
@@ -64,10 +64,10 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
 
 /// Shared fix hint. Stays in front of the human author so the intent
 /// (the surface layer, not the card slot) is the obvious next step.
-const SUGGEST: &str = "Replace with `var(--surface-1)` — cards consume the \
+const SUGGEST: &str = "Replace with `var(--surface)` — cards consume the \
                        surface layer so a theme that raises card depth (a \
                        gradient background, a tinted nested panel) only \
-                       touches `--surface-1` / `--surface-2` (anti-smell #4).";
+                       touches `--surface` / `--overlay` (anti-smell #4).";
 
 /// Properties whose value is the surface (a color-bearing background
 /// channel). The rule fires only on declarations in this set.
@@ -302,7 +302,7 @@ mod tests {
         assert_eq!(f[0].severity, Severity::Warn);
         assert!(f[0].message.contains("var(--card)"), "{}", f[0].message);
         assert!(f[0].message.contains("background"), "{}", f[0].message);
-        assert!(f[0].suggest.as_deref().unwrap().contains("--surface-1"));
+        assert!(f[0].suggest.as_deref().unwrap().contains("--surface"));
     }
 
     #[test]
@@ -420,7 +420,7 @@ mod tests {
         // `var(--card, …)` — the var() is a fallback form, but the
         // surface smell is *using* `--card` as a value. Anti-smell #4
         // is independent of anti-smell #8; the same finding fires.
-        let src = "<style>:host { background: var(--card, var(--surface-1)); }</style>";
+        let src = "<style>:host { background: var(--card, var(--surface)); }</style>";
         let f = run(src);
         // The sibling css_literals rule owns the *fallback* smell
         // (severity Warn, different rule id); this rule fires only on
@@ -436,7 +436,7 @@ mod tests {
     fn clean_surface_use_has_no_findings() {
         let src = r#"<style>
             :host {
-                background: var(--surface-1);
+                background: var(--surface);
                 border: 1px solid var(--border);
                 color: var(--foreground);
             }

@@ -1,6 +1,6 @@
 <!--
   <error-state> — L1 recovery surface. Style value language only.
-  Rest chrome = muted / destructive when not brand/destructive.
+  Rest chrome = muted / danger when not brand/danger.
   Destructive paint via semantic tokens (no tone-* channels).
 -->
 
@@ -11,23 +11,23 @@
     code = ''
   }
 
-  style base = {pad({ y: 8, x: 4 }).fg(destructive).border({ color: destructive, width: 1 }).radius(lg).bg(muted).elevation(xs).group().type({ family: body, align: center })}
+  style base = {pad({ y: 8, x: 4 }).fg(danger).border({ color: danger, width: 1 }).radius(lg).bg(muted).elevation(xs).group().type({ family: body, align: center })}
   style sizeMd = {pad({ y: 8, x: 4 })}
   style sizeSm = {pad({ y: 7 })}
   style sizeLg = {pad({ y: 8, x: 6 })}
-  style variantDefault = {border({ color: destructive, width: 1 }).radius(lg).bg(muted).elevation(xs).type({ align: center })}
-  // Inline: brand-destructive border + muted fill (intentional).
-  style variantInline = {pad({ y: 3, x: 4 }).border({ color: destructive, width: 1 }).radius(md).bg(muted).elevation(none).type({ align: start })}
-  // Icon face: brand-destructive on muted wash (intentional, not pack rest).
-  style icon = {self(center).size(control-h-xl).radius(lg).bg(muted).fg(destructive).border({ width: 1, kind: outline, style: solid, color: destructive, offset: ring-inset })}
+  style variantDefault = {border({ color: danger, width: 1 }).radius(lg).bg(muted).elevation(xs).type({ align: center })}
+  // Inline: brand-danger border + muted fill (intentional).
+  style variantInline = {pad({ y: 3, x: 4 }).border({ color: danger, width: 1 }).radius(md).bg(muted).elevation(none).type({ align: start })}
+  // Icon face: brand-danger on muted wash (intentional, not pack rest).
+  style icon = {self(center).size(control-h-xl).radius(lg).bg(muted).fg(danger).border({ width: 1, kind: outline, style: solid, color: danger, offset: ring-inset })}
   style glyph = {size(control-h-2xs)}
   style copy = {self(center).size({ max-w: 38ch, w: 100% })}
   // Strong title ink — free foreground (same path as empty-state title weight).
   style title = {fg(foreground).type({ family: heading, weight: semibold, leading: tight, size: md, align: center })}
-  style desc = {size({ max-w: 38ch }).fg(destructive).type({ leading: loose, size: sm, align: center })}
-  style codeBox = {pad({ y: 1, x: 2 }).margin({ t: 1 }).fg(destructive).bg(muted).border({ color: destructive, width: 1 }).radius(sm).type({ family: mono, size: xs })}
-  style detailsToggle = {display(none).pad({ y: 1, x: 2 }).margin({ t: 1 }).border({ width: 0 }).bg(transparent).fg(destructive).radius(sm).cursor(pointer).type({ family: body, size: xs })}
-  style details = {display(none).pad({ y: 2, x: 3 }).margin({ t: 2 }).size({ max-w: 60ch }).bg(muted).radius(sm).fg(destructive).type({ family: mono, size: xs, wrap: words, align: start })}
+  style desc = {size({ max-w: 38ch }).fg(danger).type({ leading: loose, size: sm, align: center })}
+  style codeBox = {pad({ y: 1, x: 2 }).margin({ t: 1 }).fg(danger).bg(muted).border({ color: danger, width: 1 }).radius(sm).type({ family: mono, size: xs })}
+  style detailsToggle = {display(none).pad({ y: 1, x: 2 }).margin({ t: 1 }).border({ width: 0 }).bg(transparent).fg(danger).radius(sm).cursor(pointer).type({ family: body, size: xs })}
+  style details = {display(none).pad({ y: 2, x: 3 }).margin({ t: 2 }).size({ max-w: 60ch }).bg(muted).radius(sm).fg(danger).type({ family: mono, size: xs, wrap: words, align: start })}
   style actions = {self(center)}
 </scope>
 
