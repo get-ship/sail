@@ -6,7 +6,7 @@
       "themeId": "halo",
       "defaultMode": "light",
       "supportedModes": ["light"],
-      "identity": "Halo is a soft glow: large radii, dual-cast shadows, and muted gold on a cool gray field.",
+      "identity": "Soft glow.",
       "variants": {
         "density": true,
         "contrast": true,

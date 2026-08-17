@@ -6,7 +6,7 @@
       "themeId": "paper",
       "defaultMode": "light",
       "supportedModes": ["light"],
-      "identity": "Paper is warm print: cream stock, serif type, a pulp grain, and unhurried motion on a light-only page.",
+      "identity": "Warm print.",
       "variants": {
         "density": true,
         "contrast": true,

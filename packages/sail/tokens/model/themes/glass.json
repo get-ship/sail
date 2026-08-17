@@ -6,7 +6,7 @@
       "themeId": "glass",
       "defaultMode": "light",
       "supportedModes": ["light"],
-      "identity": "Glass is translucent frost: large radii, backdrop blur, inset highlights, and amber-on-violet accents over a pale wash.",
+      "identity": "Translucent frost.",
       "variants": {
         "density": true,
         "contrast": true,

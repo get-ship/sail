@@ -6,7 +6,7 @@
       "themeId": "8bit",
       "defaultMode": "dark",
       "supportedModes": ["dark"],
-      "identity": "8bit is a dark pixel grid: 3px ink, zero radius, offset drop-shadows, Press Start 2P, and a navy checkerboard.",
+      "identity": "Pixel grid.",
       "variants": {
         "density": true,
         "contrast": true,

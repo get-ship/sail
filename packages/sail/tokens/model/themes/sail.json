@@ -5,7 +5,7 @@
       "layer": "theme",
       "themeId": "sail",
       "defaultMode": "light",
-      "identity": "Sail is the cool-electric dual-mode default: a cyan-tinged blue primary on near-white and deep-navy surfaces, tight radii, and a faint grain.",
+      "identity": "Cool electric default.",
       "variants": {
         "density": true,
         "contrast": true,

@@ -6,7 +6,7 @@
       "themeId": "synthwave",
       "defaultMode": "dark",
       "supportedModes": ["dark"],
-      "identity": "Synthwave is neon night: magenta and cyan on a purple field, horizon scanlines, and a hot glow.",
+      "identity": "Neon night.",
       "variants": {
         "density": true,
         "contrast": true,

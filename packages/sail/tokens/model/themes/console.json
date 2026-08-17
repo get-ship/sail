@@ -6,7 +6,7 @@
       "themeId": "console",
       "defaultMode": "dark",
       "supportedModes": ["dark"],
-      "identity": "Console is terminal phosphor: green-on-black mono, scanlines, hairline radii, and a CRT glow.",
+      "identity": "Terminal green.",
       "variants": {
         "density": true,
         "contrast": true,

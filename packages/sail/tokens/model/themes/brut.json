@@ -6,7 +6,7 @@
       "themeId": "brut",
       "defaultMode": "light",
       "supportedModes": ["light"],
-      "identity": "Brut is hard-edged high-ink neo-brutalism: 2px black strokes, zero radius, no shadows, and a hot orange accent on white.",
+      "identity": "Hard edges, high ink.",
       "variants": {
         "density": true,
         "contrast": true,
