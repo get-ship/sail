@@ -67,9 +67,9 @@ pub mod scope_manifest;
 pub mod semantic_props;
 pub mod stdlib;
 pub mod text_host;
-pub mod theme_gate;
+pub use spinnaker_tokens::theme_gate;
 pub mod theme_surface;
-pub mod tokens_generate;
+pub use spinnaker_tokens as tokens_generate;
 pub mod used_icons;
 pub mod used_tags;
 
@@ -463,7 +463,24 @@ pub fn compile_element(
     })
 }
 
+/// Hyphenated stem (not `page`/`index`) is a custom-element tag — same rule
+/// as deck `detect_mode`. Colocated `routes/<r>/<tag>.sail` is a component.
+fn component_meta_from_path(path: Option<&std::path::Path>) -> Option<ComponentMeta> {
+    let stem = path?.file_stem()?.to_str()?;
+    if stem.contains('-') && stem != "page" && stem != "index" {
+        Some(ComponentMeta {
+            name: stem.to_string(),
+        })
+    } else {
+        None
+    }
+}
+
 pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, CompileError> {
+    let mut opts = opts;
+    if opts.component_meta.is_none() {
+        opts.component_meta = component_meta_from_path(opts.source_path.as_deref());
+    }
     // Light DOM is the architecture (invariant 9): components render into
     // their own element, so native events from composed L1 controls bubble
     // to the host with no boundary.

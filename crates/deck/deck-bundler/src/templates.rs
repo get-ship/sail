@@ -24,10 +24,10 @@
 pub const ROOT_ID: &str = "root";
 
 /// Pre-paint FOUC guard body — owned by `@ship/tokens`
-/// (`packages/sail/tokens/src/prepaint-theme.js` / `PREPAINT_THEME_SCRIPT`).
+/// (`packages/sail/runtime/src/prepaint-theme.js` / `PREPAINT_THEME_SCRIPT`).
 /// Deck pastes; does **not** hand-write storage keys or seam attr names.
 const PREPAINT_THEME_SCRIPT: &str =
-    include_str!("../../../../packages/sail/tokens/src/prepaint-theme.js");
+    include_str!("../../../../packages/sail/runtime/src/prepaint-theme.js");
 
 /// The minimal `index.html` template for a deck project.
 ///

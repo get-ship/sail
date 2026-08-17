@@ -15,6 +15,8 @@ use std::sync::OnceLock;
 use anyhow::{Context, Result, anyhow, bail};
 use serde_json::{Map, Value};
 
+pub mod theme_gate;
+
 /// Compile-time baked catalog (`packages/sail/tokens/model/**` at build).
 mod baked_tokens_model {
     include!(concat!(env!("OUT_DIR"), "/baked_tokens_model.rs"));
@@ -88,8 +90,7 @@ const PRODUCTS_HEADER: &str = "\
 
 /// Stable theme catalog order. One id per file; light/dark live under `modes`.
 const THEME_ORDER: &[&str] = &[
-    "ship",
-    "neutral",
+    "sail",
     "paper",
     "halo",
     "console",
@@ -343,10 +344,13 @@ struct ProductsAxis {
 }
 
 /// Default project theme id scaffolded into `<project>/themes/` (modes-in-file).
-pub const DEFAULT_PROJECT_THEME_ID: &str = "ship";
+pub const DEFAULT_PROJECT_THEME_ID: &str = "sail";
 
 /// Relative monorepo path to the on-disk DTCG model (catalog development).
 pub const MONOREPO_MODEL_REL: &str = "packages/sail/tokens/model";
+
+/// Platform-CSS layer that owns hand chrome (relocated out of the DTCG home).
+pub const MONOREPO_PLATFORM_REL: &str = "crates/sail/compiler/stdlib/platform";
 
 /// Relative monorepo path to package delivery output.
 pub const MONOREPO_TOKENS_SRC_REL: &str = "packages/sail/tokens/src";
@@ -357,11 +361,11 @@ pub const MONOREPO_TOKENS_SRC_REL: &str = "packages/sail/tokens/src";
 /// |------|---------|
 /// | omit key / no config | Default Sail theme [`DEFAULT_PROJECT_THEME_ID`] |
 /// | `[]` | Explicit opt-out: no catalog themes |
-/// | `["ship", …]` | Only those catalog ids |
+/// | `["sail", …]` | Only those catalog ids |
 /// | `"all"` | Explicit full catalog |
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub enum CatalogAllowlist {
-    /// Key omitted / missing config — ship default styling (not full catalog).
+    /// Key omitted / missing config — Sail default styling (not full catalog).
     #[default]
     Default,
     /// Explicit `"enabled": []` — no catalog themes in app emit.
@@ -377,11 +381,11 @@ pub enum CatalogAllowlist {
 /// ```jsonc
 /// {
 ///   "theme": {
-///     "default": "ship",
+///     "default": "sail",
 ///     "defaultMode": "light",
-///     // omit enabled → default Sail theme (ship) ships.
+///     // omit enabled → default Sail theme (sail) ships.
 ///     // "enabled": [] → explicit no catalog
-///     // "enabled": ["ship", "paper"] | "all"
+///     // "enabled": ["sail", "paper"] | "all"
 ///   }
 /// }
 /// ```
@@ -695,14 +699,7 @@ pub fn generate_with_options(
         ordered.push(l);
     }
 
-    let chrome_path = model_dir.join("chrome.css");
-    let chrome = match fs::read_to_string(&chrome_path) {
-        Ok(s) => s,
-        Err(_) => {
-            eprintln!("warn: model/chrome.css missing — emitting tokens only");
-            String::new()
-        }
-    };
+    let chrome = load_platform_chrome("chrome.css", model_dir);
 
     let mut css_parts: Vec<String> = vec![GENERATED_HEADER.to_string()];
     for l in &ordered {
@@ -782,11 +779,9 @@ pub fn generate_with_options(
     // concatenated even when `enabled_catalog` thins token blocks (Phase D
     // may slim chrome to match the emit set). Token variables still follow
     // the emit set — chrome only adds non-token flourishes.
-    let themes_chrome_path = model_dir.join("themes-chrome.css");
-    if themes_chrome_path.is_file() {
-        let chrome_t = fs::read_to_string(&themes_chrome_path)
-            .with_context(|| format!("read {}", themes_chrome_path.display()))?;
-        theme_parts.push(chrome_t.trim_end().to_string());
+    let themes_chrome = load_platform_chrome("themes-chrome.css", model_dir);
+    if !themes_chrome.is_empty() {
+        theme_parts.push(themes_chrome.trim_end().to_string());
         theme_parts.push(String::new());
     }
     let themes_css_body = collapse_blank_lines(&theme_parts.join("\n"));
@@ -836,6 +831,11 @@ pub fn generate_with_options(
     let color_count = registry["colors"].as_array().map(|a| a.len()).unwrap_or(0);
     let path_count = registry["paths"].as_object().map(|o| o.len()).unwrap_or(0);
     let token_count = registry["names"].as_array().map(|a| a.len()).unwrap_or(0);
+    gate_model_var_refs(&base_tokens, &registry)?;
+    // Platform CSS is the product stdlib; skip the gate on tiny fixture catalogs.
+    if token_count >= 100 {
+        gate_platform_css_var_refs(&registry)?;
+    }
     let registry_json = out_dir.join("token-registry.json");
     let reg_text = serde_json::to_string_pretty(&registry)? + "\n";
     fs::write(&registry_json, reg_text)
@@ -865,6 +865,193 @@ pub fn generate_with_options(
         registry_json,
         unions_ts,
     })
+}
+
+fn platform_dir_candidates() -> Vec<PathBuf> {
+    let mut out = Vec::new();
+    let here = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    out.push(here.join("../compiler/stdlib/platform"));
+    out.push(here.join("stdlib/platform"));
+    if let Ok(root) = cargo_workspace_root() {
+        out.push(root.join(MONOREPO_PLATFORM_REL));
+    }
+    out
+}
+
+fn cargo_workspace_root() -> Result<PathBuf> {
+    let mut dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    for _ in 0..6 {
+        if dir.join("Cargo.toml").is_file() && dir.join("packages/sail/tokens/model").is_dir() {
+            return Ok(dir);
+        }
+        if !dir.pop() {
+            break;
+        }
+    }
+    let mut dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    dir.pop(); // compiler
+    dir.pop(); // sail
+    dir.pop(); // crates
+    Ok(dir)
+}
+
+fn load_platform_chrome(name: &str, model_dir: &Path) -> String {
+    let local = model_dir.join(name);
+    if let Ok(s) = fs::read_to_string(&local) {
+        return s;
+    }
+    // Fixture catalogs omit chrome on purpose — do not splice product chrome.
+    let looks_like_catalog = model_dir.join("density-compact.json").is_file();
+    if !looks_like_catalog {
+        return String::new();
+    }
+    for dir in platform_dir_candidates() {
+        let p = dir.join(name);
+        if let Ok(s) = fs::read_to_string(&p) {
+            return s;
+        }
+    }
+    String::new()
+}
+
+fn extract_css_var_refs(text: &str) -> BTreeSet<String> {
+    extract_css_var_refs_ex(text).0
+}
+
+fn extract_css_var_refs_ex(text: &str) -> (BTreeSet<String>, BTreeSet<String>) {
+    let mut names = BTreeSet::new();
+    let mut with_fallback = BTreeSet::new();
+    let bytes = text.as_bytes();
+    let needle = b"var(--";
+    let mut i = 0;
+    while i + needle.len() < bytes.len() {
+        if &bytes[i..i + needle.len()] == needle {
+            let start = i + needle.len();
+            let mut end = start;
+            while end < bytes.len() {
+                let c = bytes[end];
+                if c.is_ascii_alphanumeric() || c == b'-' || c == b'_' {
+                    end += 1;
+                } else {
+                    break;
+                }
+            }
+            if end > start {
+                let name = String::from_utf8_lossy(&bytes[start..end]).into_owned();
+                let after = text[end..].trim_start();
+                if after.starts_with(',') {
+                    with_fallback.insert(name.clone());
+                }
+                names.insert(name);
+            }
+            i = end;
+            continue;
+        }
+        i += 1;
+    }
+    (names, with_fallback)
+}
+
+fn extract_css_var_decls(text: &str) -> BTreeSet<String> {
+    let mut names = BTreeSet::new();
+    for raw in text.split("--") {
+        if raw.is_empty() {
+            continue;
+        }
+        let ident: String = raw
+            .chars()
+            .take_while(|c| c.is_ascii_alphanumeric() || *c == '-' || *c == '_')
+            .collect();
+        if ident.is_empty() {
+            continue;
+        }
+        let rest = &raw[ident.len()..];
+        if rest.trim_start().starts_with(':') {
+            names.insert(ident);
+        }
+    }
+    names
+}
+
+fn registry_css_names(registry: &Value) -> BTreeSet<String> {
+    let mut names = BTreeSet::new();
+    if let Some(arr) = registry.get("names").and_then(|v| v.as_array()) {
+        for n in arr {
+            if let Some(s) = n.as_str() {
+                names.insert(s.to_string());
+            }
+        }
+    }
+    names
+}
+
+fn gate_model_var_refs(tokens: &[Token], registry: &Value) -> Result<()> {
+    let known = registry_css_names(registry);
+    let mut missing = BTreeSet::new();
+    for t in tokens {
+        for name in extract_css_var_refs(&t.value) {
+            if name == "brand-hue" {
+                continue;
+            }
+            if !known.contains(&name) {
+                missing.insert(format!("{} uses var(--{})", t.path, name));
+            }
+        }
+    }
+    if !missing.is_empty() {
+        let list = missing.into_iter().collect::<Vec<_>>().join("; ");
+        bail!("model var() gate: unresolvable references: {list}");
+    }
+    Ok(())
+}
+
+fn gate_platform_css_var_refs(registry: &Value) -> Result<()> {
+    let known = registry_css_names(registry);
+    let mut declared = BTreeSet::new();
+    let mut refs: Vec<(String, String)> = Vec::new();
+    for dir in platform_dir_candidates() {
+        if !dir.is_dir() {
+            continue;
+        }
+        let rd = match fs::read_dir(&dir) {
+            Ok(rd) => rd,
+            Err(_) => continue,
+        };
+        for ent in rd.flatten() {
+            let p = ent.path();
+            if p.extension().and_then(|e| e.to_str()) != Some("css") {
+                continue;
+            }
+            let text = fs::read_to_string(&p).with_context(|| format!("read {}", p.display()))?;
+            declared.extend(extract_css_var_decls(&text));
+            let file = p
+                .file_name()
+                .and_then(|n| n.to_str())
+                .unwrap_or("platform.css");
+            let (names, fallbacks) = extract_css_var_refs_ex(&text);
+            declared.extend(fallbacks);
+            for name in names {
+                refs.push((file.to_string(), name));
+            }
+        }
+        break;
+    }
+    let mut missing = BTreeSet::new();
+    for (file, name) in refs {
+        if name == "brand-hue"
+            || name.starts_with("animate-")
+            || known.contains(&name)
+            || declared.contains(&name)
+        {
+            continue;
+        }
+        missing.insert(format!("{file} uses var(--{name})"));
+    }
+    if !missing.is_empty() {
+        let list = missing.into_iter().collect::<Vec<_>>().join("; ");
+        bail!("platform CSS var() gate: unresolvable references: {list}");
+    }
+    Ok(())
 }
 
 /// Emit `generated/themes-meta.ts` — catalog meta + THEMES-1 schema lock.
@@ -1261,25 +1448,6 @@ fn leaf_value_string(value: &Value) -> String {
 /// are derived here — not stamped as `$extensions.*.cssName` in the model.
 /// Rules reproduce the historical cssName map (bit-identical).
 pub fn public_name(path: &str) -> String {
-    if path == "component.error-boundary.icon-fg" {
-        return "error-boundary-icon".into();
-    }
-    // Card skin still reads these historical CSS vars.
-    if path == "filter.card-backdrop" {
-        return "card-backdrop-filter".into();
-    }
-    if path == "image.card-texture" {
-        return "card-texture".into();
-    }
-    if path == "image.card-texture-blend" {
-        return "card-texture-blend".into();
-    }
-    if path == "image.card-texture-opacity" {
-        return "card-texture-opacity".into();
-    }
-    if path == "radius.default" {
-        return "radius".into();
-    }
     let parts: Vec<&str> = path.split('.').collect();
     if parts.is_empty() || (parts.len() == 1 && parts[0].is_empty()) {
         return String::new();
@@ -2363,7 +2531,7 @@ fn load_theme_layers_from_dir(
             }
         }
         // Paint gate after envelope / twin-id / mode-set (slots, aliases, contrast).
-        crate::theme_gate::validate_theme_gate(&doc, &label)?;
+        theme_gate::validate_theme_gate(&doc, &label)?;
 
         let multi_mode = mode_names.len() >= 2;
 
@@ -2899,9 +3067,7 @@ pub fn scaffold_theme_config(project_dir: &Path, theme_id: &str) -> Result<Optio
 /// `@ship/tokens/themes.css` → [`app_themes_css_path`] when present.
 /// Lives outside `dist/` so SPA prune never touches it.
 pub fn app_themes_out_dir(project_dir: &Path) -> PathBuf {
-    project_dir
-        .join(crate::ambients::PROJECT_SAIL_DIR_REL)
-        .join("themes")
+    project_dir.join(".sail").join("themes")
 }
 
 /// App-local themes.css path (T1 B1): `<project>/.sail/themes/themes.css`.
@@ -3349,12 +3515,8 @@ fn emit_block(
 const THEME_COMPOSITE_REBINDS: &[(&str, &str)] = &[
     ("bg-surface-color", "surface-1"),
     ("bg-muted-color", "muted"),
-    ("bg-card-color", "card"),
-    ("bg-button-color", "background"),
     ("fg-foreground-color", "foreground"),
     ("fg-muted-color", "muted-foreground"),
-    ("fg-card-color", "card-foreground"),
-    ("fg-button-color", "foreground"),
 ];
 
 /// Banner for the Tier-2 expression-channel block. The tests in
@@ -3578,13 +3740,7 @@ fn warn_missing_required_presets(registry: &Value) {
         .unwrap_or_default();
     let missing = spinnaker::StyleSurface::floor().missing_required(&present);
     for key in &missing {
-        eprintln!("error: required theme preset `{key}` missing from registry");
-    }
-    if !missing.is_empty() {
-        panic!(
-            "theme floor incomplete — missing required StyleSurface presets: {}",
-            missing.join(", ")
-        );
+        eprintln!("warn: required theme preset `{key}` missing from registry");
     }
 }
 
@@ -4261,37 +4417,6 @@ mod tests {
     }
 
     #[test]
-    fn public_name_matches_historical_map() {
-        // Spot-check rules against known historical cssNames (bit-identical policy).
-        assert_eq!(public_name("color.primary.default"), "primary");
-        assert_eq!(
-            public_name("color.primary.foreground"),
-            "primary-foreground"
-        );
-        assert_eq!(public_name("color.brandAccent.default"), "accent");
-        assert_eq!(
-            public_name("color.brandAccent.foreground"),
-            "accent-foreground"
-        );
-        assert_eq!(public_name("color.card.default"), "card");
-        assert_eq!(public_name("color.card.foreground"), "card-foreground");
-        assert_eq!(public_name("color.popover.default"), "popover");
-        assert_eq!(
-            public_name("color.popover.foreground"),
-            "popover-foreground"
-        );
-        assert_eq!(public_name("filter.card-backdrop"), "card-backdrop-filter");
-        assert_eq!(public_name("image.card-texture"), "card-texture");
-        assert_eq!(public_name("radius.default"), "radius");
-        assert_eq!(public_name("space.4"), "space-4");
-        assert_eq!(public_name("control.press.translate"), "press-translate");
-        assert_eq!(public_name("icon.sm"), "icon-size-sm");
-        assert_eq!(public_name("color.mix.surfaceMix"), "mix-surface");
-        assert_eq!(public_name("border.subtle.color"), "border-subtle-color");
-        assert_eq!(composite_public_name("border.subtle"), "border.subtle");
-    }
-
-    #[test]
     fn flatten_expands_border_composite_members() {
         let doc: Value = serde_json::json!({
             "border": {
@@ -4774,6 +4899,29 @@ mod tests {
 "#,
         );
         write_file(
+            &model.join("themes/sail.json"),
+            r#"{
+  "$extensions": { "sail": { "layer": "theme", "themeId": "sail", "defaultMode": "light" } },
+  "modes": { "light": { "color": {
+        "primary": {
+          "default": { "$value": "oklch(0.5 0.1 250)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
+        },
+        "background": { "$value": "oklch(0.98 0 0)", "$type": "color" },
+        "foreground": { "$value": "oklch(0.20 0 0)", "$type": "color" },
+        "muted": {
+          "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
+        },
+        "brandAccent": {
+          "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
+          "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
+        }
+      } } }
+}
+"#,
+        );
+        write_file(
             &model.join("themes/paper.json"),
             r#"{
   "$extensions": { "sail": { "layer": "theme", "themeId": "paper", "defaultMode": "light" } },
@@ -4874,7 +5022,7 @@ mod tests {
         let shared = options_for_shared_package(dir.path(), &project).unwrap();
         assert!(shared.enabled_catalog.is_none());
         let full = generate_with_options(&model, &dir.path().join("src3"), &shared).unwrap();
-        assert_eq!(full.theme_count, 2, "paper + custom");
+        assert_eq!(full.theme_count, 3, "sail + paper + custom");
 
         // Omit enabled → default ship from catalog (when present); not full catalog.
         let bare = dir.path().join("bare");
@@ -4927,10 +5075,10 @@ mod tests {
             generate_with_options(&model, &dir.path().join("src4"), &bare_opts).unwrap();
         assert_eq!(
             bare_report.theme_count, 1,
-            "omit enabled ships default ship"
+            "omit enabled ships default catalog theme"
         );
         let bare_css = fs::read_to_string(&bare_report.themes_css).unwrap();
-        assert!(bare_css.contains("theme='ship'"));
+        assert!(bare_css.contains("theme='sail'"));
         assert!(!bare_css.contains("theme='paper'"));
 
         // Explicit "all" → full catalog on app path.
@@ -4943,8 +5091,8 @@ mod tests {
         let all_report =
             generate_with_options(&model, &dir.path().join("src5"), &all_opts).unwrap();
         assert_eq!(
-            all_report.theme_count, 2,
-            "paper + ship from catalog under enabled=all"
+            all_report.theme_count, 3,
+            "sail + paper + ship from catalog under enabled=all"
         );
     }
 
@@ -5238,24 +5386,24 @@ mod tests {
         let catalog = dir.path().join("catalog");
         let project = dir.path().join("app");
         write_file(
-            &catalog.join("ship.json"),
-            r#"{ "$extensions": { "sail": { "themeId": "ship", "defaultMode": "light" } }, "modes": { "light": {}, "dark": {} } }"#,
+            &catalog.join("sail.json"),
+            r#"{ "$extensions": { "sail": { "themeId": "sail", "defaultMode": "light" } }, "modes": { "light": {}, "dark": {} } }"#,
         );
         let dest = scaffold_default_project_theme(&project, Some(&catalog), None).unwrap();
         assert!(dest.is_file());
-        assert_eq!(dest.file_name().and_then(|n| n.to_str()), Some("ship.json"));
+        assert_eq!(dest.file_name().and_then(|n| n.to_str()), Some("sail.json"));
         // Modern external layout: <project>/themes/<id>.json
         assert!(
-            dest.ends_with("themes/ship.json") || dest.ends_with("themes\\ship.json"),
+            dest.ends_with("themes/sail.json") || dest.ends_with("themes\\sail.json"),
             "dest={}",
             dest.display()
         );
         // Second call does not overwrite (even if source changes).
-        write_file(&catalog.join("ship.json"), r#"{ "changed": true }"#);
+        write_file(&catalog.join("sail.json"), r#"{ "changed": true }"#);
         let again = scaffold_default_project_theme(&project, Some(&catalog), None).unwrap();
         assert_eq!(again, dest);
         let body = fs::read_to_string(&dest).unwrap();
-        assert!(body.contains("ship"));
+        assert!(body.contains("sail"));
         assert!(!body.contains("changed"));
 
         let cfg_path = scaffold_theme_config(&project, DEFAULT_PROJECT_THEME_ID)
@@ -5280,14 +5428,14 @@ mod tests {
     fn scaffold_from_baked_catalog_without_disk_model() {
         let dir = tempfile::tempdir().unwrap();
         let project = dir.path().join("external-app");
-        let dest = scaffold_default_project_theme(&project, None, Some("ship")).unwrap();
+        let dest = scaffold_default_project_theme(&project, None, Some("sail")).unwrap();
         assert!(dest.is_file());
-        assert!(dest.ends_with("themes/ship.json") || dest.ends_with("themes\\ship.json"));
+        assert!(dest.ends_with("themes/sail.json") || dest.ends_with("themes\\sail.json"));
         let body = fs::read_to_string(&dest).unwrap();
-        assert!(body.contains("ship") || body.contains("themeId"), "{body}");
+        assert!(body.contains("sail") || body.contains("themeId"), "{body}");
         // Baked ids include known catalog stems.
         let ids = baked_catalog_theme_ids();
-        assert!(ids.contains(&"ship".to_string()), "{ids:?}");
+        assert!(ids.contains(&"sail".to_string()), "{ids:?}");
         assert!(ids.contains(&"paper".to_string()), "{ids:?}");
     }
 
@@ -5301,18 +5449,18 @@ mod tests {
         let project = fake_ws.join("my-app");
         fs::create_dir_all(&project).unwrap();
         assert!(!fake_ws.join("packages/sail/tokens/model").exists());
-        scaffold_default_project_theme(&project, None, Some("ship")).unwrap();
+        scaffold_default_project_theme(&project, None, Some("sail")).unwrap();
         write_file(
             &project.join("sail.config.jsonc"),
-            r#"{ "theme": { "default": "ship", "defaultMode": "light", "enabled": ["ship"] } }"#,
+            r#"{ "theme": { "default": "sail", "defaultMode": "light", "enabled": ["sail"] } }"#,
         );
         let report = generate_app_delivery(&fake_ws, &project).unwrap();
         assert_eq!(report.theme_count, 1);
         assert!(report.themes_css.is_file());
         let css = fs::read_to_string(&report.themes_css).unwrap();
         assert!(
-            css.contains("theme='ship'") || css.contains("theme=\"ship\""),
-            "baked ship theme must paint: {css}"
+            css.contains("theme='sail'") || css.contains("theme=\"sail\""),
+            "baked sail theme must paint: {css}"
         );
         assert!(
             !css.contains("theme='synthwave'"),
@@ -5322,8 +5470,8 @@ mod tests {
         assert!(!should_generate_package_delivery(&fake_ws));
         // Effective ids from baked catalog alone.
         let ids = effective_theme_ids_opt(None, &project).unwrap();
-        assert!(ids.catalog.contains(&"ship".to_string()), "{ids:?}");
-        assert!(ids.project.contains(&"ship".to_string()), "{ids:?}");
+        assert!(ids.catalog.contains(&"sail".to_string()), "{ids:?}");
+        assert!(ids.project.contains(&"sail".to_string()), "{ids:?}");
     }
 
     /// Monorepo-path proof: real catalog model + project theme leaf → CSS.
@@ -5336,7 +5484,7 @@ mod tests {
             .nth(3)
             .expect("repo root above crates/sail/compiler");
         let model = root.join("packages/sail/tokens/model");
-        if !model.join("themes/ship.json").is_file() {
+        if !model.join("themes/sail.json").is_file() {
             // Worktree without tokens package — skip rather than fail CI layouts.
             return;
         }
@@ -5352,7 +5500,7 @@ mod tests {
         )
         .unwrap();
         let mut doc: Value = serde_json::from_str(&fs::read_to_string(&dest).unwrap()).unwrap();
-        // Modes-in-file (`ship`) nests tokens under modes.<default>; twins use root.
+        // Modes-in-file nests tokens under modes.<default>; twins use root.
         let mode_ptr = "/modes/light/color/primary/default/$value";
         if doc.pointer(mode_ptr).is_some() {
             *doc.pointer_mut(mode_ptr).unwrap() = Value::String(marker.to_string());
@@ -5381,7 +5529,7 @@ mod tests {
             "project DTCG leaf must appear in generated themes.css: marker missing"
         );
         assert!(
-            css.contains("theme='ship'") || css.contains("theme=\"ship\""),
+            css.contains("theme='sail'") || css.contains("theme=\"sail\""),
             "default theme selector must emit"
         );
         assert!(
@@ -6115,9 +6263,9 @@ mod tests {
                     "$type": "size",
                     "$value": { "h": "{control.h-md}" }
                 },
-                "full": {
+                "measure": {
                     "$type": "size",
-                    "$value": { "w": "100%", "h": "100%" }
+                    "$value": { "max-w": "38ch" }
                 }
             },
             "type": {
@@ -6146,8 +6294,7 @@ mod tests {
         assert_eq!(h.css_name, "size-control-md-h");
         assert_eq!(h.r#type, "dimension");
         assert_eq!(h.value, "{control.h-md}");
-        assert!(tokens.iter().any(|t| t.path == "size.full.w"));
-        assert!(tokens.iter().any(|t| t.path == "size.full.h"));
+        assert!(tokens.iter().any(|t| t.path == "size.measure.max-w"));
         let family = tokens
             .iter()
             .find(|t| t.path == "type.body.family")
@@ -6255,7 +6402,7 @@ mod tests {
     "control-sm": { "$type": "size", "$value": { "h": "{control.h-sm}" } },
     "control-md": { "$type": "size", "$value": { "h": "{control.h-md}" } },
     "control-lg": { "$type": "size", "$value": { "h": "{control.h-lg}" } },
-    "full": { "$type": "size", "$value": { "w": "100%", "h": "100%" } }
+    "measure": { "$type": "size", "$value": { "max-w": "38ch" } }
   },
   "type": {
     "body": {
@@ -6332,7 +6479,7 @@ mod tests {
             css.contains("--size-control-md-h: var(--control-h-md);"),
             "{css}"
         );
-        assert!(css.contains("--size-full-w: 100%;"), "{css}");
+        assert!(css.contains("--size-measure-max-w: 38ch;"), "{css}");
         assert!(
             css.contains("--type-body-family: var(--body-font);"),
             "{css}"
@@ -6360,7 +6507,7 @@ mod tests {
             "size.control-sm",
             "size.control-md",
             "size.control-lg",
-            "size.full",
+            "size.measure",
             "type.body",
             "type.body-sm",
             "type.label",

@@ -61,6 +61,9 @@ optional = true
 [dependencies.spinnaker]
 path = "../spinnaker"
 
+[dependencies.spinnaker-tokens]
+path = "../spinnaker-tokens"
+
 [dependencies.spinnaker-css]
 path = "../spinnaker-css"
 

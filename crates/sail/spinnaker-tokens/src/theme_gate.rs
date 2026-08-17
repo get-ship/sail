@@ -7,7 +7,7 @@
 use anyhow::{Result, bail};
 use serde_json::Value;
 
-use crate::tokens_generate::{
+use crate::{
     composite_member_css_name, infer_composite_member_type, is_composite_type, public_name,
     required_composite_members, validate_composite_schema, validate_theme_doc_schema,
 };
@@ -252,7 +252,7 @@ fn expand_composite_leaves(
             out
         }
         Some(Value::String(alias)) => vec![ColorLeaf {
-            css_name: crate::tokens_generate::composite_public_name(&path),
+            css_name: crate::composite_public_name(&path),
             path,
             value: alias.clone(),
             ty: ty.to_string(),
