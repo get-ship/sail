@@ -87,40 +87,6 @@
             "$type": "color"
           }
         },
-        "sidebar": {
-          "default": {
-            "$value": "oklch(0.13 0.008 220)",
-            "$type": "color"
-          },
-          "accent": {
-            "$value": "oklch(0.18 0.012 220)",
-            "$type": "color"
-          },
-          "accent-foreground": {
-            "$value": "oklch(0.92 0.06 145)",
-            "$type": "color"
-          },
-          "border": {
-            "$value": "oklch(0.30 0.04 145 / 30%)",
-            "$type": "color"
-          },
-          "foreground": {
-            "$value": "oklch(0.92 0.06 145)",
-            "$type": "color"
-          },
-          "primary": {
-            "$value": "oklch(0.78 0.20 var(--brand-hue, 145))",
-            "$type": "color"
-          },
-          "primary-foreground": {
-            "$value": "oklch(0.13 0.008 220)",
-            "$type": "color"
-          },
-          "ring": {
-            "$value": "oklch(0.78 0.20 145 / 50%)",
-            "$type": "color"
-          }
-        },
         "success": {
           "default": {
             "$value": "oklch(0.78 0.20 145)",
@@ -382,13 +348,13 @@
         }
       },
       "filter": {
-        "card-backdrop": {
+        "backdrop": {
           "$value": "none",
           "$type": "string"
         }
       },
       "image": {
-        "card-texture": {
+        "texture": {
           "$value": "none",
           "$type": "string"
         }

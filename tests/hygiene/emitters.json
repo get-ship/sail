@@ -59,11 +59,6 @@
       "gate": "packages/sail/tokens/test/tokens.test.ts"
     },
     {
-      "path": "packages/sail/tokens/src/products.css",
-      "emitter": "cargo run -p sail-compiler -- tokens",
-      "gate": "packages/sail/tokens/test/tokens.test.ts"
-    },
-    {
       "path": "packages/sail/tokens/src/token-registry.json",
       "emitter": "cargo run -p sail-compiler -- tokens",
       "gate": "packages/sail/tokens/test/tokens.test.ts"

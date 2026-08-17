@@ -102,40 +102,6 @@
             "$type": "color"
           }
         },
-        "sidebar": {
-          "default": {
-            "$value": "oklch(0.97 0.010 250)",
-            "$type": "color"
-          },
-          "accent": {
-            "$value": "oklch(0.95 0.012 250)",
-            "$type": "color"
-          },
-          "accent-foreground": {
-            "$value": "oklch(0.22 0.035 255)",
-            "$type": "color"
-          },
-          "border": {
-            "$value": "oklch(0.20 0.03 250 / 12%)",
-            "$type": "color"
-          },
-          "foreground": {
-            "$value": "oklch(0.22 0.035 255)",
-            "$type": "color"
-          },
-          "primary": {
-            "$value": "oklch(0.58 0.18 var(--brand-hue, 245))",
-            "$type": "color"
-          },
-          "primary-foreground": {
-            "$value": "oklch(0.99 0.01 245)",
-            "$type": "color"
-          },
-          "ring": {
-            "$value": "oklch(0.58 0.18 245 / 40%)",
-            "$type": "color"
-          }
-        },
         "success": {
           "default": {
             "$value": "oklch(0.62 0.15 150)",
@@ -285,21 +251,21 @@
         }
       },
       "filter": {
-        "card-backdrop": {
+        "backdrop": {
           "$value": "none",
           "$type": "string"
         }
       },
       "image": {
-        "card-texture": {
+        "texture": {
           "$value": "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='c'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23c)' opacity='0.03'/%3E%3C/svg%3E\")",
           "$type": "string"
         },
-        "card-texture-blend": {
+        "texture-blend": {
           "$value": "overlay",
           "$type": "string"
         },
-        "card-texture-opacity": {
+        "texture-opacity": {
           "$value": "1",
           "$type": "number"
         }
@@ -401,40 +367,6 @@
           },
           "foreground": {
             "$value": "oklch(0.97 0.01 250)",
-            "$type": "color"
-          }
-        },
-        "sidebar": {
-          "default": {
-            "$value": "oklch(0.14 0.032 255)",
-            "$type": "color"
-          },
-          "accent": {
-            "$value": "oklch(0.22 0.035 255)",
-            "$type": "color"
-          },
-          "accent-foreground": {
-            "$value": "oklch(0.97 0.01 250)",
-            "$type": "color"
-          },
-          "border": {
-            "$value": "oklch(1 0 0 / 12%)",
-            "$type": "color"
-          },
-          "foreground": {
-            "$value": "oklch(0.97 0.01 250)",
-            "$type": "color"
-          },
-          "primary": {
-            "$value": "oklch(0.72 0.16 var(--brand-hue, 230))",
-            "$type": "color"
-          },
-          "primary-foreground": {
-            "$value": "oklch(0.16 0.03 255)",
-            "$type": "color"
-          },
-          "ring": {
-            "$value": "oklch(0.72 0.16 230 / 35%)",
             "$type": "color"
           }
         },
@@ -582,21 +514,21 @@
         }
       },
       "filter": {
-        "card-backdrop": {
+        "backdrop": {
           "$value": "none",
           "$type": "string"
         }
       },
       "image": {
-        "card-texture": {
+        "texture": {
           "$value": "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='c'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23c)' opacity='0.03'/%3E%3C/svg%3E\")",
           "$type": "string"
         },
-        "card-texture-blend": {
+        "texture-blend": {
           "$value": "overlay",
           "$type": "string"
         },
-        "card-texture-opacity": {
+        "texture-opacity": {
           "$value": "1",
           "$type": "number"
         }

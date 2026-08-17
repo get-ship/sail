@@ -1,5 +1,5 @@
 {
-  "$description": "Sail base design tokens (:root). SSOT — edit here, run generate.",
+  "$description": "Sail base design tokens (:root). SSOT \u2014 edit here, run generate.",
   "radius": {
     "default": {
       "$value": "10px",
@@ -245,7 +245,7 @@
     "frame": {
       "$value": "0 0 0 0 transparent",
       "$type": "shadow",
-      "$description": "Control framing — an extra box-shadow \"frame\" drawn around controls, stacked BEFORE the variant's own shadow so it reads as chrome rather than elevation.\nThe no-op is a fully transparent shadow, NOT `none`: this value is composed into a comma-separated box-shadow list, and `none` is not a legal list member — `box-shadow: none, var(--shadow-xs)` drops the whole declaration. A zero-size transparent layer paints nothing and composes cleanly. Same reasoning for --press-shadow and the --glow-* family.",
+      "$description": "Control framing \u2014 an extra box-shadow \"frame\" drawn around controls, stacked BEFORE the variant's own shadow so it reads as chrome rather than elevation.\nThe no-op is a fully transparent shadow, NOT `none`: this value is composed into a comma-separated box-shadow list, and `none` is not a legal list member \u2014 `box-shadow: none, var(--shadow-xs)` drops the whole declaration. A zero-size transparent layer paints nothing and composes cleanly. Same reasoning for --press-shadow and the --glow-* family.",
       "$extensions": {
         "sail": {
           "channel": true
@@ -255,7 +255,7 @@
     "lift": {
       "$value": "-1px",
       "$type": "dimension",
-      "$description": "Interaction motion. The baseline button lift/press was decided once, globally, in the contract (`translateY(-1px)` / `translateY(1px) scale(0.98)`) — the whole product's personality in two literals. Routed through channels so a calm theme sets 0 and an arcade theme exaggerates. Defaults reproduce the historical values.",
+      "$description": "Interaction motion. The baseline button lift/press was decided once, globally, in the contract (`translateY(-1px)` / `translateY(1px) scale(0.98)`) \u2014 the whole product's personality in two literals. Routed through channels so a calm theme sets 0 and an arcade theme exaggerates. Defaults reproduce the historical values.",
       "$extensions": {
         "sail": {
           "channel": true
@@ -266,7 +266,7 @@
       "translate": {
         "$value": "1px",
         "$type": "dimension",
-        "$description": "Interaction motion — see control.lift. Default reproduces the historical :active translate.",
+        "$description": "Interaction motion \u2014 see control.lift. Default reproduces the historical :active translate.",
         "$extensions": {
           "sail": {
             "channel": true
@@ -276,7 +276,7 @@
       "scale": {
         "$value": "0.98",
         "$type": "number",
-        "$description": "Interaction motion — see control.lift. Default reproduces the historical :active scale.",
+        "$description": "Interaction motion \u2014 see control.lift. Default reproduces the historical :active scale.",
         "$extensions": {
           "sail": {
             "channel": true
@@ -307,10 +307,6 @@
     },
     "max-w-lg": {
       "$value": "720px",
-      "$type": "dimension"
-    },
-    "max-w-xs": {
-      "$value": "20rem",
       "$type": "dimension"
     },
     "max-h-sm": {
@@ -347,71 +343,6 @@
     },
     "vh-lg": {
       "$value": "90vh",
-      "$type": "dimension"
-    },
-    "ch-w-md": {
-      "$value": "38ch",
-      "$type": "dimension"
-    },
-    "ch-w-lg": {
-      "$value": "60ch",
-      "$type": "dimension"
-    },
-    "rail-w": {
-      "$value": "14rem",
-      "$type": "dimension"
-    },
-    "menuMinW": {
-      "$value": "12rem",
-      "$type": "dimension"
-    },
-    "toast-region-width": {
-      "$value": "{panel.w-toast}",
-      "$type": "dimension",
-      "$description": "Toast stacking region max width (panel family; was component.toast-region.width)."
-    },
-    "pad-x": {
-      "$value": "{space-6}",
-      "$type": "dimension"
-    },
-    "head-pad-y": {
-      "$value": "18px",
-      "$type": "dimension"
-    },
-    "body-pad-y": {
-      "$value": "{space-4}",
-      "$type": "dimension"
-    },
-    "foot-pad-y": {
-      "$value": "{space-4}",
-      "$type": "dimension"
-    },
-    "close-inset": {
-      "$value": "{space-7}",
-      "$type": "dimension"
-    },
-    "pad-card": {
-      "$value": "{space-2}",
-      "$type": "dimension"
-    },
-    "pad-menu": {
-      "$value": "{space-1}",
-      "$type": "dimension"
-    },
-    "w-side": {
-      "$value": "420px",
-      "$type": "dimension"
-    },
-    "w-toast": {
-      "$value": "min(24rem, calc(100vw - var(--space-8)))",
-      "$type": "dimension"
-    },
-    "min-h-cell": {
-      "$value": "84px",
-      "$type": "dimension"
-    },
-    "min-h-daycol": {
-      "$value": "864px",
       "$type": "dimension"
     },
     "$type": "dimension"
@@ -615,7 +546,7 @@
       "transform": {
         "$value": "uppercase",
         "$type": "string",
-        "$description": "Casing channel. The label role has always been upper-cased (hand-written `text-transform: uppercase` in every skin that carries a label), so the default is `uppercase` — defaulting to `none` would have quietly lower-cased every eyebrow and rail heading in the product. A channel is a seam, not a restyle. Governed property: `text-transform`.",
+        "$description": "Casing channel. The label role has always been upper-cased (hand-written `text-transform: uppercase` in every skin that carries a label), so the default is `uppercase` \u2014 defaulting to `none` would have quietly lower-cased every eyebrow and rail heading in the product. A channel is a seam, not a restyle. Governed property: `text-transform`.",
         "$extensions": {
           "sail": {
             "channel": true
@@ -626,7 +557,7 @@
     "displayFont": {
       "$value": "{font-display}",
       "$type": "fontFamily",
-      "$description": "Display type — the hero/wordmark role, themable independently of --heading-font. Default aliases the existing display stack so nothing moves.",
+      "$description": "Display type \u2014 the hero/wordmark role, themable independently of --heading-font. Default aliases the existing display stack so nothing moves.",
       "$extensions": {
         "sail": {
           "channel": true
@@ -723,7 +654,7 @@
     "cornerImage": {
       "$value": "none",
       "$type": "string",
-      "$description": "Corner treatment — a `border-image` value for controls and cards. Default `none` leaves `border-radius` in charge. A pixel-art theme supplies a slice so corners are drawn, not rounded. Governed property: `border-image`.",
+      "$description": "Corner treatment \u2014 a `border-image` value for controls and cards. Default `none` leaves `border-radius` in charge. A pixel-art theme supplies a slice so corners are drawn, not rounded. Governed property: `border-image`.",
       "$extensions": {
         "sail": {
           "channel": true
@@ -744,7 +675,7 @@
       "accent": {
         "$value": "linear-gradient(180deg, var(--accent) 0%, transparent 92%)",
         "$type": "dimension",
-        "$description": "Gradient channel — a PROMOTION, not a new idea: two atoms wanted the same shape with a different base, so both now reference named globals instead of one being implicitly derived from the other.",
+        "$description": "Gradient channel \u2014 a PROMOTION, not a new idea: two atoms wanted the same shape with a different base, so both now reference named globals instead of one being implicitly derived from the other.",
         "$extensions": {
           "sail": {
             "channel": true
@@ -766,7 +697,7 @@
       "primary": {
         "$value": "radial-gradient(circle, color-mix(in oklch, var(--primary) 8%, transparent), transparent 60%)",
         "$type": "dimension",
-        "$description": "Per-tone glow — a radial background wash keyed to the tone ramp names (see the tone ramps), so `--glow-{tone}` is addressable wherever `--tone-*` is. Defaults to the former bg-glow-primary literal.\nNOTE: this is a BACKGROUND channel. A neon box-shadow rim (what a synthwave theme reaches for on controls) is --control-frame's job — one token, one meaning.",
+        "$description": "Per-tone glow \u2014 a radial background wash keyed to the tone ramp names (see the tone ramps), so `--glow-{tone}` is addressable wherever `--tone-*` is. Defaults to the former bg-glow-primary literal.\nNOTE: this is a BACKGROUND channel. A neon box-shadow rim (what a synthwave theme reaches for on controls) is --control-frame's job \u2014 one token, one meaning.",
         "$extensions": {
           "sail": {
             "channel": true
@@ -787,7 +718,7 @@
     "shapePill": {
       "$value": "9999px",
       "$type": "dimension",
-      "$description": "Pill sentinel — SPLIT from --radius-full.\n--radius-full (9999px) was doing double duty: a shape token meaning \"this element is a circle/pill\" AND the top of the radius scale. A theme that squared off its radius scale had no way to say \"…but intrinsically round elements stay round\", because both meanings lowered to the same name. --shape-pill carries the SHAPE meaning; --radius-full stays in the scale. Elements that are intrinsically round (dots, avatars, spinners, switch thumbs) read --shape-pill.",
+      "$description": "Pill sentinel \u2014 SPLIT from --radius-full.\n--radius-full (9999px) was doing double duty: a shape token meaning \"this element is a circle/pill\" AND the top of the radius scale. A theme that squared off its radius scale had no way to say \"\u2026but intrinsically round elements stay round\", because both meanings lowered to the same name. --shape-pill carries the SHAPE meaning; --radius-full stays in the scale. Elements that are intrinsically round (dots, avatars, spinners, switch thumbs) read --shape-pill.",
       "$extensions": {
         "sail": {
           "channel": true
@@ -887,7 +818,7 @@
     "knob": {
       "$value": "oklch(1 0 0)",
       "$type": "color",
-      "$description": "Light control knob (switch thumb). Not surface-1: muted ≈ surface-1 in dark modes, so a dedicated light face keeps track/thumb contrast."
+      "$description": "Light control knob (switch thumb). Not surface-1: muted \u2248 surface-1 in dark modes, so a dedicated light face keeps track/thumb contrast."
     },
     "success": {
       "default": {
@@ -991,40 +922,6 @@
         "$type": "color"
       }
     },
-    "sidebar": {
-      "default": {
-        "$value": "oklch(0.99 0.001 106.423)",
-        "$type": "color"
-      },
-      "foreground": {
-        "$value": "oklch(0.147 0.004 49.25)",
-        "$type": "color"
-      },
-      "primary": {
-        "$value": "oklch(0.67 0.16 var(--brand-hue, 58))",
-        "$type": "color"
-      },
-      "primary-foreground": {
-        "$value": "oklch(0.99 0.02 95)",
-        "$type": "color"
-      },
-      "accent": {
-        "$value": "oklch(0.95 0.001 106)",
-        "$type": "color"
-      },
-      "accent-foreground": {
-        "$value": "oklch(0.147 0.004 49.25)",
-        "$type": "color"
-      },
-      "border": {
-        "$value": "oklch(0.147 0.004 49.25 / 12%)",
-        "$type": "color"
-      },
-      "ring": {
-        "$value": "oklch(0.67 0.16 58 / 20%)",
-        "$type": "color"
-      }
-    },
     "hue": {
       "red": {
         "$value": "oklch(0.62 0.21 25)",
@@ -1103,68 +1000,6 @@
       "$value": "{border-subtle}",
       "$type": "color"
     },
-    "accent": {
-      "dashboard": {
-        "$value": "oklch(0.62 0.18 260)",
-        "$type": "color"
-      },
-      "pipelines": {
-        "$value": "oklch(0.67 0.16 58)",
-        "$type": "color"
-      },
-      "agents": {
-        "$value": "oklch(0.58 0.22 295)",
-        "$type": "color"
-      },
-      "skills": {
-        "$value": "oklch(0.62 0.16 152)",
-        "$type": "color"
-      },
-      "git": {
-        "$value": "oklch(0.58 0.21 25)",
-        "$type": "color"
-      },
-      "collections": {
-        "$value": "oklch(0.65 0.15 200)",
-        "$type": "color"
-      },
-      "canvas": {
-        "$value": "oklch(0.72 0.16 80)",
-        "$type": "color"
-      },
-      "settings": {
-        "$value": "oklch(0.55 0.02 60)",
-        "$type": "color"
-      },
-      "chat": {
-        "$value": "oklch(0.62 0.13 280)",
-        "$type": "color"
-      },
-      "events": {
-        "$value": "oklch(0.62 0.18 30)",
-        "$type": "color"
-      },
-      "specs": {
-        "$value": "oklch(0.55 0.05 240)",
-        "$type": "color"
-      },
-      "theme": {
-        "$value": "oklch(0.66 0.20 320)",
-        "$type": "color"
-      },
-      "setup": {
-        "$value": "oklch(0.68 0.16 110)",
-        "$type": "color"
-      },
-      "overview": {
-        "$value": "oklch(0.60 0.10 230)",
-        "$type": "color"
-      },
-      "mesh": {
-        "$value": "oklch(0.64 0.14 195)",
-        "$type": "color"
-      }
-    },
     "$type": "color",
     "mix": {
       "bgMix": {
@@ -1236,59 +1071,51 @@
   "size": {
     "control-sm": {
       "$type": "size",
-      "$description": "Control height step sm. Geometry only — pad is space.",
+      "$description": "Control height step sm. Geometry only \u2014 pad is space.",
       "$value": {
         "h": "{control.h-sm}"
       }
     },
     "control-md": {
       "$type": "size",
-      "$description": "Control height step md. Geometry only — pad is space.",
+      "$description": "Control height step md. Geometry only \u2014 pad is space.",
       "$value": {
         "h": "{control.h-md}"
       }
     },
     "control-lg": {
       "$type": "size",
-      "$description": "Control height step lg. Geometry only — pad is space.",
+      "$description": "Control height step lg. Geometry only \u2014 pad is space.",
       "$value": {
         "h": "{control.h-lg}"
-      }
-    },
-    "full": {
-      "$type": "size",
-      "$description": "Fill the containing box (width + height 100%). Geometry only. Dies after size(grow)|size(max) migrate.",
-      "$value": {
-        "w": "100%",
-        "h": "100%"
       }
     },
     "measure": {
       "$type": "size",
       "$description": "Default reading column. Language lowers width + max-width 100% so the box does not hug.",
       "$value": {
-        "max-w": "{panel.ch-w-md}"
+        "max-w": "38ch"
       }
     },
     "measure-sm": {
       "$type": "size",
       "$description": "Narrow reading width.",
       "$value": {
-        "max-w": "{panel.max-w-xs}"
+        "max-w": "20rem"
       }
     },
     "measure-md": {
       "$type": "size",
       "$description": "Default reading width (alias of measure).",
       "$value": {
-        "max-w": "{panel.ch-w-md}"
+        "max-w": "38ch"
       }
     },
     "measure-lg": {
       "$type": "size",
       "$description": "Wide reading width.",
       "$value": {
-        "max-w": "{panel.ch-w-lg}"
+        "max-w": "60ch"
       }
     },
     "icon-xs": {
@@ -1406,13 +1233,31 @@
     }
   },
   "tagDefaults": {
-    "$description": "HTML tag → type role (SPEC-SPINNAKER-3 §10). Theme data, not CSS vars. Markup style() overrides. No heading-2 — the tag is the way. strong/b/a have no type default.",
-    "h1": { "type": "heading", "size": "4xl" },
-    "h2": { "type": "heading", "size": "2xl" },
-    "h3": { "type": "heading", "size": "xl" },
-    "h4": { "type": "heading", "size": "lg" },
-    "h5": { "type": "heading", "size": "md" },
-    "h6": { "type": "heading", "size": "sm" },
+    "$description": "HTML tag \u2192 type role (SPEC-SPINNAKER-3 \u00a710). Theme data, not CSS vars. Markup style() overrides. No heading-2 \u2014 the tag is the way. strong/b/a have no type default.",
+    "h1": {
+      "type": "heading",
+      "size": "4xl"
+    },
+    "h2": {
+      "type": "heading",
+      "size": "2xl"
+    },
+    "h3": {
+      "type": "heading",
+      "size": "xl"
+    },
+    "h4": {
+      "type": "heading",
+      "size": "lg"
+    },
+    "h5": {
+      "type": "heading",
+      "size": "md"
+    },
+    "h6": {
+      "type": "heading",
+      "size": "sm"
+    },
     "p": "body",
     "code": "mono",
     "pre": "mono",
@@ -1477,20 +1322,6 @@
         "color": "{color.muted.default}"
       }
     },
-    "card": {
-      "$type": "bg",
-      "$description": "Card fill face. Color member aliases color.card (--card).",
-      "$value": {
-        "color": "{color.card.default}"
-      }
-    },
-    "button": {
-      "$type": "bg",
-      "$description": "Button fill face. Host pack — delete after L1 retarget. Color member aliases color.background.",
-      "$value": {
-        "color": "{color.background}"
-      }
-    },
     "canvas": {
       "$type": "bg",
       "$description": "Page/root face. Color member aliases color.background.",
@@ -1526,20 +1357,6 @@
       "$description": "Muted ink identity. Color member aliases color.muted.foreground (--muted-foreground).",
       "$value": {
         "color": "{color.muted.foreground}"
-      }
-    },
-    "card": {
-      "$type": "fg",
-      "$description": "Card ink face. Color member aliases color.card.foreground (--card-foreground).",
-      "$value": {
-        "color": "{color.card.foreground}"
-      }
-    },
-    "button": {
-      "$type": "fg",
-      "$description": "Button ink face. Host pack — delete after L1 retarget.",
-      "$value": {
-        "color": "{color.foreground}"
       }
     },
     "canvas": {
@@ -1800,7 +1617,6 @@
     },
     "$type": "shadow"
   },
-  "misc": {},
   "scrollbar": {
     "thumb": {
       "$value": "color-mix(in oklab, var(--foreground) 22%, transparent)",
@@ -1829,27 +1645,27 @@
     "$type": "dimension"
   },
   "filter": {
-    "card-backdrop": {
+    "backdrop": {
       "$value": "none",
       "$type": "string",
-      "$description": "Card backdrop-filter. Public name --card-backdrop-filter (skin still reads that var). Glass remaps to blur."
+      "$description": "Backdrop-filter preset. Glass remaps to blur."
     }
   },
   "image": {
-    "card-texture": {
+    "texture": {
       "$value": "none",
       "$type": "string",
-      "$description": "Card texture image. Public name --card-texture (themes remap; leftover/lint still name the var)."
+      "$description": "Texture image preset. Themes remap; leftover/lint still name the var."
     },
-    "card-texture-blend": {
+    "texture-blend": {
       "$value": "overlay",
       "$type": "string",
-      "$description": "Card texture mix-blend-mode. Public name --card-texture-blend."
+      "$description": "Texture mix-blend-mode."
     },
-    "card-texture-opacity": {
+    "texture-opacity": {
       "$value": "1",
       "$type": "number",
-      "$description": "Card texture opacity. Public name --card-texture-opacity."
+      "$description": "Texture opacity."
     }
   },
   "keyframes": {
@@ -1857,80 +1673,124 @@
       "$type": "sail.keyframes",
       "$description": "Opacity enter preset. Exit uses fade-out.",
       "$value": {
-        "from": { "opacity": 0 },
-        "to": { "opacity": 1 }
+        "from": {
+          "opacity": 0
+        },
+        "to": {
+          "opacity": 1
+        }
       }
     },
     "fade-out": {
       "$type": "sail.keyframes",
-      "$description": "Opacity exit preset. Starts visible — does not pin rest at 0.",
+      "$description": "Opacity exit preset. Starts visible \u2014 does not pin rest at 0.",
       "$value": {
-        "from": { "opacity": 1 },
-        "to": { "opacity": 0 }
+        "from": {
+          "opacity": 1
+        },
+        "to": {
+          "opacity": 0
+        }
       }
     },
     "fade-scale-in": {
       "$type": "sail.keyframes",
       "$description": "Opacity + slight scale enter preset.",
       "$value": {
-        "from": { "opacity": 0, "transform": "scale(0.96)" },
-        "to": { "opacity": 1, "transform": "scale(1)" }
+        "from": {
+          "opacity": 0,
+          "transform": "scale(0.96)"
+        },
+        "to": {
+          "opacity": 1,
+          "transform": "scale(1)"
+        }
       }
     },
     "slide-up": {
       "$type": "sail.keyframes",
       "$description": "Opacity + upward translate enter preset.",
       "$value": {
-        "from": { "opacity": 0, "transform": "translateY(8px)" },
-        "to": { "opacity": 1, "transform": "translateY(0)" }
+        "from": {
+          "opacity": 0,
+          "transform": "translateY(8px)"
+        },
+        "to": {
+          "opacity": 1,
+          "transform": "translateY(0)"
+        }
       }
     },
     "rise": {
       "$type": "sail.keyframes",
       "$description": "Translate-up enter without fading. Always-visible tiles stay solid on first paint.",
       "$value": {
-        "from": { "transform": "translateY(8px)" },
-        "to": { "transform": "translateY(0)" }
+        "from": {
+          "transform": "translateY(8px)"
+        },
+        "to": {
+          "transform": "translateY(0)"
+        }
       }
     },
     "press": {
       "$type": "sail.keyframes",
       "$description": "Scale-down on press. Does not fade the control out.",
       "$value": {
-        "from": { "transform": "scale(1)" },
-        "to": { "transform": "scale(0.96)" }
+        "from": {
+          "transform": "scale(1)"
+        },
+        "to": {
+          "transform": "scale(0.96)"
+        }
       }
     },
     "spin": {
       "$type": "sail.keyframes",
       "$description": "Full rotation. Loading marks spend this.",
       "$value": {
-        "from": { "transform": "rotate(0deg)" },
-        "to": { "transform": "rotate(360deg)" }
+        "from": {
+          "transform": "rotate(0deg)"
+        },
+        "to": {
+          "transform": "rotate(360deg)"
+        }
       }
     },
     "pulse": {
       "$type": "sail.keyframes",
-      "$description": "Scale breathe. No opacity — looping opacity is a blink.",
+      "$description": "Scale breathe. No opacity \u2014 looping opacity is a blink.",
       "$value": {
-        "from": { "transform": "scale(1)" },
-        "to": { "transform": "scale(1.08)" }
+        "from": {
+          "transform": "scale(1)"
+        },
+        "to": {
+          "transform": "scale(1.08)"
+        }
       }
     },
     "bob": {
       "$type": "sail.keyframes",
       "$description": "Small vertical bounce. Ambient dots and idle marks spend this.",
       "$value": {
-        "from": { "transform": "translateY(0px)" },
-        "to": { "transform": "translateY(-6px)" }
+        "from": {
+          "transform": "translateY(0px)"
+        },
+        "to": {
+          "transform": "translateY(-6px)"
+        }
       }
     },
     "eq": {
       "$type": "sail.keyframes",
       "$description": "Scale-Y bounce from the origin. Equalizer bars spend this.",
       "$value": {
-        "from": { "transform": "scaleY(0.35)" },
-        "to": { "transform": "scaleY(1)" }
+        "from": {
+          "transform": "scaleY(0.35)"
+        },
+        "to": {
+          "transform": "scaleY(1)"
+        }
       }
     }
   },
@@ -1944,14 +1804,14 @@
     },
     "control": {
       "$type": "transition",
-      "$description": "Wave 0 motion tier — controls hover/press (color + transform + shadow).",
+      "$description": "Wave 0 motion tier \u2014 controls hover/press (color + transform + shadow).",
       "$value": {
         "property": "color, background-color, border-color, outline-color, transform, box-shadow, opacity"
       }
     },
     "surface": {
       "$type": "transition",
-      "$description": "Wave 0 motion tier — interactive surfaces (color + shadow + transform).",
+      "$description": "Wave 0 motion tier \u2014 interactive surfaces (color + shadow + transform).",
       "$value": {
         "property": "color, background-color, border-color, box-shadow, transform, opacity"
       }
