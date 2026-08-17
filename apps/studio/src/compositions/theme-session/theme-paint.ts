@@ -19,7 +19,7 @@ export type PaintResolve = {
   warning?: string
 }
 
-const SAFE_PAINT_FALLBACK = 'studio'
+const SAFE_PAINT_FALLBACK = 'sail'
 
 function titleCase(id: string): string {
   return (

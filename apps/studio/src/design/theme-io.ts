@@ -5,6 +5,8 @@
  */
 import { validateMonotonic } from './scale'
 import {
+  CATALOG_THEME_IDS,
+  isCatalogThemeId,
   parseThemeJson,
   projectThemesDir,
   setThemeId,
@@ -92,15 +94,22 @@ export async function loadThemesOn(
   ctx.emit()
   state = ctx.getState()
   try {
-    const [cat, proj] = await Promise.all([
+    const [cat, proj, registry] = await Promise.all([
       client.sailThemeList({ path: CATALOG_THEMES_DIR }),
       client.sailThemeList({ path: state.themesDir }).catch(() => ({ files: [] as string[] })),
+      client.sailThemeRegistry?.({ section: 'catalog' }).catch(() => null),
     ])
+    const catalogOrder =
+      registry?.catalog?.filter((id): id is string => typeof id === 'string' && isCatalogThemeId(id))
+        ?? [...CATALOG_THEME_IDS]
+    const catalogRank = new Map(catalogOrder.map((id, i) => [id, i]))
     const catalogThemes = themeFilesFromList(
       cat.files ?? [],
       CATALOG_THEMES_DIR,
       true,
     )
+      .filter((t) => catalogRank.has(t.id))
+      .sort((a, b) => (catalogRank.get(a.id) ?? 99) - (catalogRank.get(b.id) ?? 99))
     const projectThemes = themeFilesFromList(
       proj.files ?? [],
       state.themesDir,
@@ -161,11 +170,9 @@ export async function loadThemesOn(
       opts?.themeId ||
       state.themeId ||
       projectThemes[0]?.id ||
-      catalogThemes.find((t) => t.id === 'studio')?.id ||
-      projectThemes.find((t) => t.id === 'studio')?.id ||
-      catalogThemes.find((t) => t.id === 'ship')?.id ||
+      catalogThemes.find((t) => t.id === 'sail')?.id ||
       catalogThemes[0]?.id ||
-      'studio'
+      'sail'
     if (!opts?.themeId && state.themeDoc && state.themeId === prefer) {
       ctx.setState({ ...ctx.getState(), loading: false })
       ctx.emit()
@@ -426,6 +433,56 @@ export async function deleteThemeOn(
   }
 }
 
+/** Engine-gated generate: check_theme then write+tokens generate. */
+export async function generateThemeOn(ctx: ThemeIoCtx): Promise<boolean> {
+  const client = ctx.getClient()
+  const state = ctx.getState()
+  if (!client?.sailThemeCheckTheme || !state.themeDoc) {
+    ctx.setState({
+      ...state,
+      lastWriteError: 'Generate needs the theme engine.',
+    })
+    ctx.emit()
+    return false
+  }
+  try {
+    const check = await client.sailThemeCheckTheme({
+      theme: state.themeDoc,
+      derive: true,
+      label: state.themeId || 'theme',
+    })
+    if (!check.ok) {
+      const err =
+        (Array.isArray(check.errors) && check.errors[0]) ||
+        'Theme failed the contrast gate.'
+      ctx.setState({
+        ...ctx.getState(),
+        lastWriteError: String(err),
+        statusNote: 'Generate refused — contrast gate',
+      })
+      ctx.emit()
+      return false
+    }
+    if (!ctx.getState().themePath) {
+      ctx.setState({
+        ...ctx.getState(),
+        lastWriteError: null,
+        statusNote: 'Theme is valid. Add to project to save.',
+      })
+      ctx.emit()
+      return true
+    }
+    return saveThemeOn(ctx)
+  } catch (e) {
+    ctx.setState({
+      ...ctx.getState(),
+      lastWriteError: userError(e, 'Could not generate the theme — try again.'),
+    })
+    ctx.emit()
+    return false
+  }
+}
+
 export function emptyDesignState(): DesignSurfaceState {
   return {
     projectRoot: '',
@@ -433,7 +490,7 @@ export function emptyDesignState(): DesignSurfaceState {
     groupId: DEFAULT_GROUP_ID,
     decisionId: 'color',
     density: 'default',
-    themeId: 'ship',
+    themeId: 'sail',
     modeId: 'dark',
     forkedFrom: null,
     themePath: null,

@@ -83,6 +83,9 @@ export function createCliOpsClient(repoRoot: string): OpsClient {
     sailThemeGenerate: (args) => run('SailTheme/Generate', args),
     sailThemeGraph: (args) => run('SailTheme/Graph', args),
     sailThemeEffectiveIds: (args) => run('SailTheme/EffectiveIds', args),
+    sailThemeDeriveScale: (args) => run('SailTheme/DeriveScale', args),
+    sailThemeCheckTheme: (args) => run('SailTheme/CheckTheme', args),
+    sailThemeRegistry: (args) => run('SailTheme/Registry', args),
     readSource: async (path: string) => {
       const { readFileSync } = await import('node:fs')
       const { join } = await import('node:path')

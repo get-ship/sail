@@ -220,5 +220,5 @@ export function brandContrastFlags(opts: {
   })
 }
 
-export const BRAND_PRIMARY_PATH = 'color.primary.default'
-export const BRAND_FG_PATH = 'color.primary.foreground'
+export const BRAND_PRIMARY_PATH = 'color.primary.solid'
+export const BRAND_FG_PATH = 'color.primary.text'

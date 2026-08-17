@@ -45,6 +45,7 @@ describe('THEMES-1 theme editor contract', () => {
   })
 
   it('contract write path accepts mode-scoped scale roles and refuses component leaves', () => {
+    expect(isContractWritePath('anchors.light.primary')).toBe(true)
     expect(isContractWritePath('modes.light.color.primary.default')).toBe(true)
     expect(isContractWritePath('modes.light.color.input')).toBe(true)
     expect(isContractWritePath('modes.light.color.card.default')).toBe(true)

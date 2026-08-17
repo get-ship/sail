@@ -57,7 +57,6 @@ const THEME_BLURBS: Record<string, string> = {
   paper: 'Print-inspired light surfaces and editorial type feel.',
   halo: 'Soft luminous surfaces with gentle depth.',
   console: 'Terminal-dark phosphor energy for dense tooling.',
-  contrast: 'High-contrast accessibility-first pairings.',
   glass: 'Translucent panels and soft refraction cues.',
   brut: 'Brutalist edges — hard borders, strong type.',
   '8bit': 'Retro game-adjacent palette and hard pixels.',
@@ -144,8 +143,8 @@ export function createThemesSurface() {
   /** True when selected theme is in the project (file on disk). */
   const previewInProject = signal(false)
   const previewIsCatalog = signal(false)
-  const previewThemeId = signal('studio')
-  const previewPaintId = signal('studio')
+  const previewThemeId = signal('sail')
+  const previewPaintId = signal('sail')
   /** Paint mode for the selected theme (clamped to that theme’s tables). */
   const previewModeId = signal<'light' | 'dark'>('dark')
   const previewModesLabel = signal('')
@@ -293,8 +292,8 @@ export function createThemesSurface() {
       previewStatusTone.set('muted')
       previewInProject.set(false)
       previewIsCatalog.set(false)
-      previewThemeId.set(ds.themeId || 'studio')
-      previewPaintId.set(ds.themeId || 'studio')
+      previewThemeId.set(ds.themeId || 'sail')
+      previewPaintId.set(ds.themeId || 'sail')
       previewModeId.set('dark')
       previewModesLabel.set('')
       canToggleMode.set(false)
@@ -430,7 +429,7 @@ export function createThemesSurface() {
       selectedId() ||
       getDesignState().themeId ||
       getDesignState().catalogThemes[0]?.id ||
-      'studio'
+      'sail'
     const stamp = Date.now().toString(36).slice(-4)
     const newId = `my-theme-${stamp}`
     const srcName = describeTheme(src).name

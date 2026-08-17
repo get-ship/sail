@@ -313,6 +313,9 @@ export type OpsClient = Pick<
       | 'sailThemeFontAdd'
       | 'sailThemeFontSearch'
       | 'sailThemeEffectiveIds'
+      | 'sailThemeDeriveScale'
+      | 'sailThemeCheckTheme'
+      | 'sailThemeRegistry'
     >
   > &
   StudioLocalOps

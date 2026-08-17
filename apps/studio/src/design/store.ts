@@ -14,6 +14,7 @@ import {
   previewInAppOn,
   refreshBlastAggregateOn,
   repaintSpecimenOn,
+  setAnchorColorOn,
   setBrandColorOn,
   setDesignDensityOn,
   setIconScaleStepOn,
@@ -39,6 +40,7 @@ import {
 import {
   emptyDesignState,
   forkThemeOn,
+  generateThemeOn,
   loadThemesOn,
   openThemeOn,
   saveThemeOn,
@@ -481,6 +483,15 @@ export async function setTokenValue(path: string, value: string): Promise<void> 
 export async function setBrandColor(hexOrOklch: string): Promise<void> {
   pushHistoryBeforeWrite()
   await setBrandColorOn(editCtx(), hexOrOklch)
+}
+
+export async function setAnchorColor(role: string, hexOrOklch: string): Promise<void> {
+  pushHistoryBeforeWrite()
+  await setAnchorColorOn(editCtx(), role, hexOrOklch)
+}
+
+export async function generateTheme(): Promise<boolean> {
+  return generateThemeOn(themeCtx())
 }
 
 export function undoThemeEdit(): boolean {

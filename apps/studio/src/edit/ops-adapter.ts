@@ -1,5 +1,5 @@
 import type { ClientOptions } from '@ship/sail-studio-client'
-import { sailAuthoringEdit, sailAuthoringCheck, sailAuthoringLayoutCheck, sailInspectModel, sailInspectState, sailInspectTree, sailInspectTokenUsage, sailRenderScreenshot, sailTaskList, sailTaskGet, sailTaskCreate, sailTaskComment, sailTaskAddArtifact, sailTaskAgentNote, sailTaskThreadCreate, sailTaskThreadReply, sailTaskThreadList, sailTaskReanchor, sailTaskCommitIntent, sailThemeFork, sailThemeList, sailThemeRead, sailThemeWrite, sailThemeDelete, sailThemeGenerate, sailThemeGraph, sailThemeEffectiveIds, sailThemeFontAdd, sailThemeFontSearch } from '@ship/sail-studio-client'
+import { sailAuthoringEdit, sailAuthoringCheck, sailAuthoringLayoutCheck, sailInspectModel, sailInspectState, sailInspectTree, sailInspectTokenUsage, sailRenderScreenshot, sailTaskList, sailTaskGet, sailTaskCreate, sailTaskComment, sailTaskAddArtifact, sailTaskAgentNote, sailTaskThreadCreate, sailTaskThreadReply, sailTaskThreadList, sailTaskReanchor, sailTaskCommitIntent, sailThemeFork, sailThemeList, sailThemeRead, sailThemeWrite, sailThemeDelete, sailThemeGenerate, sailThemeGraph, sailThemeEffectiveIds, sailThemeDeriveScale, sailThemeCheckTheme, sailThemeRegistry, sailThemeFontAdd, sailThemeFontSearch } from '@ship/sail-studio-client'
 import type { OpsClient } from './types'
 
 /** Injected or host fetch — `ClientOptions.fetch` is the sanctioned type. */
@@ -102,6 +102,9 @@ export function createOpsClient(opts?: ClientOptions): OpsClient {
     sailThemeGenerate: (args) => sailThemeGenerate(args, opts),
     sailThemeGraph: (args) => sailThemeGraph(args, opts),
     sailThemeEffectiveIds: (args) => sailThemeEffectiveIds(args, opts),
+    sailThemeDeriveScale: (args) => sailThemeDeriveScale(args, opts),
+    sailThemeCheckTheme: (args) => sailThemeCheckTheme(args, opts),
+    sailThemeRegistry: (args) => sailThemeRegistry(args, opts),
     sailThemeFontAdd: (args) => sailThemeFontAdd(args, opts),
     sailThemeFontSearch: (args) => sailThemeFontSearch(args, opts),
     readSource: async (path: string) => {

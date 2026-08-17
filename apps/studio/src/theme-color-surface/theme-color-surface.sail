@@ -60,6 +60,12 @@
   }
   style shrink0 = { size(hug) }
   style scrollCanvas = { size(grow).bg(canvas) }
+  style dimBar = { pad(3).radius(md).border(subtle).bg(surface-0) }
+  style rampStep = { position(relative).size({ w: 8, h: 8, min-w: 8, min-h: 8 }).overflow(hidden).radius(sm).border(subtle) }
+  style gauntletGrid = { pad(2) }
+  style gauntletCell = { size({ w: 6, h: 6, min-w: 6, min-h: 6 }).radius(sm).border(subtle).bg(bind(swatchColor)) }
+  style contrastOk = { fg(success).type(mono-sm) }
+  style contrastFail = { fg(destructive).type(mono-sm) }
 </scope>
 
 <controller>
@@ -90,6 +96,18 @@ export default controller(() => {
     warningHex: color.warningHex,
     dangerHex: color.dangerHex,
     infoHex: color.infoHex,
+    rampRows: color.rampRows,
+    gauntletCells: color.gauntletCells,
+    contrastPairs: color.contrastPairs,
+    generateEnabled: color.generateEnabled,
+    generateBusy: color.generateBusy,
+    showDensity: color.showDensity,
+    showBreakpoint: color.showBreakpoint,
+    showMode: color.showMode,
+    densityCompactOn: color.densityCompactOn,
+    densityDefaultOn: color.densityDefaultOn,
+    densitySpaciousOn: color.densitySpaciousOn,
+    breakpointRows: color.breakpointRows,
   }
 })
 </controller>
@@ -164,11 +182,49 @@ export default controller(() => {
       <column gap="8" style(editorCol)>
         <column color-header gap="2">
           <p style(pageTitle)>Color</p>
-          <p style(fieldHint)>Brand · surfaces · text · semantic</p>
+          <p style(fieldHint)>Anchors · derived steps · engine contrast</p>
         </column>
 
+        <row dim-bar align="center" gap="3" wrap style(dimBar)>
+          <if {showMode()}>
+            <row dim-mode gap="2" align="center" nowrap>
+              <p style(fieldHint, shrink0)>Mode</p>
+              <button type="button" size="sm" variant={session.modeDarkOn() ? 'ghost' : 'soft'} tone="muted" dim-mode-light on:click={() => color.onPreviewMode('light')}>
+                Light
+              </button>
+              <button type="button" size="sm" variant={session.modeDarkOn() ? 'soft' : 'ghost'} tone="muted" dim-mode-dark on:click={() => color.onPreviewMode('dark')}>
+                Dark
+              </button>
+            </row>
+          </if>
+          <if {showDensity()}>
+            <row dim-density gap="2" align="center" nowrap>
+              <p style(fieldHint, shrink0)>Density</p>
+              <button type="button" size="sm" variant={densityCompactOn() ? 'soft' : 'ghost'} tone="muted" dim-density-compact on:click={() => color.onDensity('compact')}>
+                Compact
+              </button>
+              <button type="button" size="sm" variant={densityDefaultOn() ? 'soft' : 'ghost'} tone="muted" dim-density-default on:click={() => color.onDensity('default')}>
+                Default
+              </button>
+              <button type="button" size="sm" variant={densitySpaciousOn() ? 'soft' : 'ghost'} tone="muted" dim-density-spacious on:click={() => color.onDensity('spacious')}>
+                Spacious
+              </button>
+            </row>
+          </if>
+          <if {showBreakpoint()}>
+            <row dim-breakpoint gap="2" align="center" nowrap>
+              <p style(fieldHint, shrink0)>Breakpoint</p>
+              <for {breakpointRows() as bp} key={bp.key}>
+                <button type="button" size="sm" variant={bp.on ? 'soft' : 'ghost'} tone="muted" dim-breakpoint-item on:click={() => color.onBreakpoint(bp.key)}>
+                  {bp.label}
+                </button>
+              </for>
+            </row>
+          </if>
+        </row>
+
         <row seed-strip align="center" gap="3" nowrap style(seedStrip)>
-          <p style(fieldHint, shrink0)>Seed</p>
+          <p style(fieldHint, shrink0)>Generate</p>
           <row gap="1" align="center" nowrap hidden="true" style(growMin)>
             <stack use:swatch={primaryHex()} style(seedDot)></stack>
             <stack use:swatch={secondaryHex()} style(seedDot)></stack>
@@ -178,10 +234,85 @@ export default controller(() => {
             <stack use:swatch={mutedHex()} style(seedDot)></stack>
             <stack use:swatch={borderHex()} style(seedDot)></stack>
           </row>
-          <button type="button" size="sm" variant="outline" tone="muted" seed-generate disabled on:click={color.onSeedGenerate} title="Coming soon">
-            Generate…
+          <button type="button" size="sm" variant="solid" tone="primary" seed-generate disabled={!generateEnabled() || generateBusy() || !session.canEdit()} on:click={color.onSeedGenerate} title="Derive + gate via the engine">
+            Generate
           </button>
         </row>
+
+        <column section="ramps" gap="3">
+          <row align="baseline" justify="between" gap="3" nowrap>
+            <p style(sectionTitle)>Ramps</p>
+            <p style(pathMeta)>anchors · solid hover subtle border text</p>
+          </row>
+          <column ramp-list gap="2">
+            <for {rampRows() as ramp} key={ramp.role}>
+              <row ramp-row align="center" gap="3" nowrap style(tokenRow)>
+                <stack token-chip style(tokenChip)>
+                  <sail-color-picker
+                    token={ramp.role}
+                    value={ramp.hex}
+                    disabled={!session.canEdit()}
+                    variant="swatch"
+                    showHex={false}
+                    label={ramp.label}
+                    on-change={color.onAnchorColor}
+                  ></sail-color-picker>
+                </stack>
+                <column gap="0" style(growMin)>
+                  <p style(doorTitle)>{ramp.label}</p>
+                  <p style(pathMeta)>anchors.{ramp.role}</p>
+                </column>
+                <row ramp-steps gap="1" align="center" nowrap>
+                  <for {ramp.steps as step} key={step.key}>
+                    <stack ramp-step use:swatch={step.color} style(rampStep)>
+                      <sail-color-picker
+                        token={step.path}
+                        value={step.color}
+                        disabled={!session.canEdit() || !step.color}
+                        variant="swatch"
+                        showHex={false}
+                        label={step.key}
+                        on-change={color.onStepColor}
+                      ></sail-color-picker>
+                    </stack>
+                  </for>
+                </row>
+              </row>
+            </for>
+          </column>
+        </column>
+
+        <column section="contrast" gap="3">
+          <row align="baseline" justify="between" gap="3" nowrap>
+            <p style(sectionTitle)>Contrast</p>
+            <p style(pathMeta)>engine contrastPairs</p>
+          </row>
+          <column contrast-list gap="1">
+            <for {contrastPairs() as pair} key={pair.key}>
+              <row contrast-row align="center" justify="between" gap="3" nowrap style(tokenRow)>
+                <p style(doorTitle)>{pair.label}</p>
+                <if {pair.ok}>
+                  <p contrast-ratio style(contrastOk)>{pair.ratio}</p>
+                </if>
+                <if {!pair.ok}>
+                  <p contrast-ratio style(contrastFail)>{pair.ratio}</p>
+                </if>
+              </row>
+            </for>
+          </column>
+        </column>
+
+        <column section="gauntlet" gap="3">
+          <row align="baseline" justify="between" gap="3" nowrap>
+            <p style(sectionTitle)>Gauntlet</p>
+            <p style(pathMeta)>derived cells</p>
+          </row>
+          <row gauntlet-grid gap="1" wrap style(gauntletGrid)>
+            <for {gauntletCells() as cell} key={cell.key}>
+              <stack gauntlet-cell use:swatch={cell.color} title={cell.label} style(gauntletCell)></stack>
+            </for>
+          </row>
+        </column>
 
         <column section="brand" gap="3">
           <row align="baseline" justify="between" gap="3" nowrap>

@@ -16,6 +16,156 @@ import type {
   TypeRoles,
 } from './types'
 
+/** Registry catalog order (sail + gallery). Not ship/neutral/contrast-as-theme. */
+export const CATALOG_THEME_IDS = [
+  'sail',
+  'paper',
+  'halo',
+  'console',
+  'glass',
+  'brut',
+  '8bit',
+  'synthwave',
+] as const
+
+export function isCatalogThemeId(id: string): boolean {
+  return (CATALOG_THEME_IDS as readonly string[]).includes(id)
+}
+
+export function formatStructuredColor(v: unknown): string | null {
+  if (typeof v === 'string') {
+    const s = v.trim()
+    return s.startsWith('oklch') || s.startsWith('#') ? s : null
+  }
+  if (!v || typeof v !== 'object' || Array.isArray(v)) return null
+  const obj = v as Record<string, unknown>
+  if (obj.$value != null) return formatStructuredColor(obj.$value)
+  if ('l' in obj && 'c' in obj && 'h' in obj) {
+    const l = Number(obj.l)
+    const c = Number(obj.c)
+    const h = Number(obj.h)
+    if (![l, c, h].every(Number.isFinite)) return null
+    const a = obj.a != null ? Number(obj.a) : undefined
+    if (a != null && Number.isFinite(a) && a < 0.999) {
+      return `oklch(${l} ${c} ${h} / ${a})`
+    }
+    return `oklch(${l} ${c} ${h})`
+  }
+  return null
+}
+
+export function anchorsForMode(
+  doc: Record<string, unknown> | null,
+  modeId: 'light' | 'dark' = 'light',
+): Record<string, string> {
+  const out: Record<string, string> = {}
+  if (!doc) return out
+  const root = doc.anchors
+  if (root && typeof root === 'object' && !Array.isArray(root)) {
+    const obj = root as Record<string, unknown>
+    const split = 'light' in obj || 'dark' in obj
+    const map = (
+      split ? (obj[modeId] ?? obj.light ?? obj.dark) : obj
+    ) as Record<string, unknown> | undefined
+    if (map && typeof map === 'object' && !Array.isArray(map)) {
+      for (const [k, v] of Object.entries(map)) {
+        if (k.startsWith('$')) continue
+        const css = formatStructuredColor(v)
+        if (css) out[k] = css
+      }
+    }
+  }
+  const modes = doc.modes as Record<string, unknown> | undefined
+  const modeBody = modes?.[modeId] as Record<string, unknown> | undefined
+  const modeAnchors = modeBody?.anchors
+  if (modeAnchors && typeof modeAnchors === 'object' && !Array.isArray(modeAnchors)) {
+    for (const [k, v] of Object.entries(modeAnchors as Record<string, unknown>)) {
+      if (k.startsWith('$')) continue
+      const css = formatStructuredColor(v)
+      if (css) out[k] = css
+    }
+  }
+  return out
+}
+
+export function setAnchorValue(
+  doc: Record<string, unknown>,
+  role: string,
+  color: string,
+  modeId: 'light' | 'dark' = 'light',
+): Record<string, unknown> {
+  const next = structuredClone(doc) as Record<string, unknown>
+  if (!next.anchors || typeof next.anchors !== 'object' || Array.isArray(next.anchors)) {
+    next.anchors = {}
+  }
+  const root = next.anchors as Record<string, unknown>
+  const split =
+    'light' in root || 'dark' in root || (next.modes != null && typeof next.modes === 'object')
+  let bucket: Record<string, unknown>
+  if (split) {
+    const existing = root[modeId]
+    if (!existing || typeof existing !== 'object' || Array.isArray(existing)) {
+      root[modeId] = {}
+    }
+    bucket = root[modeId] as Record<string, unknown>
+  } else {
+    bucket = root
+  }
+  const m = /^oklch\(\s*([\d.]+)\s+([\d.]+)\s+([\d.]+)/i.exec(color.trim())
+  if (m) {
+    bucket[role] = {
+      space: 'oklch',
+      l: Number(m[1]),
+      c: Number(m[2]),
+      h: Number(m[3]),
+    }
+  } else {
+    bucket[role] = { $value: color, $type: 'color' }
+  }
+  return next
+}
+
+export type FulfilledDimensions = {
+  modes: ('light' | 'dark')[]
+  density: boolean
+  breakpoints: string[]
+}
+
+export function fulfilledDimensions(
+  doc: Record<string, unknown> | null,
+): FulfilledDimensions {
+  if (!doc) return { modes: [], density: false, breakpoints: [] }
+  const modesObj = doc.modes
+  const modes =
+    modesObj && typeof modesObj === 'object' && !Array.isArray(modesObj)
+      ? Object.keys(modesObj as Record<string, unknown>).filter(
+          (m): m is 'light' | 'dark' => m === 'light' || m === 'dark',
+        )
+      : []
+  const ext = doc.$extensions as Record<string, unknown> | undefined
+  const sail = ext?.sail as Record<string, unknown> | undefined
+  const variants = sail?.variants as Record<string, unknown> | undefined
+  const density = variants?.density === true
+  const breakpoints: string[] = []
+  if (variants?.breakpoint === true) {
+    breakpoints.push('mobile', 'tablet', 'desktop')
+  }
+  if (modesObj && typeof modesObj === 'object' && !Array.isArray(modesObj)) {
+    for (const m of modes) {
+      const body = (modesObj as Record<string, unknown>)[m] as
+        | Record<string, unknown>
+        | undefined
+      const bp = body?.breakpoint
+      if (bp && typeof bp === 'object' && !Array.isArray(bp)) {
+        for (const k of Object.keys(bp as Record<string, unknown>)) {
+          if (!k.startsWith('$') && !breakpoints.includes(k)) breakpoints.push(k)
+        }
+      }
+    }
+  }
+  return { modes, density, breakpoints }
+}
+
 export function parseThemeJson(content: string): Record<string, unknown> {
   const v = JSON.parse(content) as unknown
   if (!v || typeof v !== 'object' || Array.isArray(v)) {

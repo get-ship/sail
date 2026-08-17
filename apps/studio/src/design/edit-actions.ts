@@ -25,6 +25,7 @@ import {
   patchIconScale,
   patchRadius,
   patchTypeRoles,
+  setAnchorValue,
   setDensity,
   setPathValue,
 } from './theme-doc'
@@ -262,6 +263,43 @@ export async function setIconScaleStepOn(
  * Also co-writes primary-foreground for AA when L is extreme.
  * Ramp in the panel is preview-only (derived; not persisted as a scale).
  */
+export async function setAnchorColorOn(
+  ctx: EditCtx,
+  role: string,
+  hexOrOklch: string,
+): Promise<void> {
+  const raw = String(hexOrOklch ?? '').trim()
+  if (!raw || !role) return
+  const oklch = raw.startsWith('oklch')
+    ? raw
+    : (() => {
+        try {
+          return hexToOklchString(raw)
+        } catch {
+          return null
+        }
+      })()
+  if (!oklch) {
+    ctx.setState({
+      ...ctx.getState(),
+      lastWriteError: 'That color is not valid',
+    })
+    ctx.emit()
+    return
+  }
+  const state = ctx.getState()
+  if (!state.themeDoc) return
+  const doc = setAnchorValue(state.themeDoc, role, oklch, state.modeId)
+  ctx.recomputeDerived(doc)
+  ctx.setState({
+    ...ctx.getState(),
+    lastWriteError: null,
+    statusNote: `Anchor ${role}`,
+  })
+  ctx.emit()
+  await ctx.repaintSpecimen()
+}
+
 export async function setBrandColorOn(
   ctx: EditCtx,
   hexOrOklch: string,

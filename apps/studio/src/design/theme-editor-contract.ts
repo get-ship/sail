@@ -122,6 +122,14 @@ export const THEME_EDITOR_CONTROLS: readonly ThemeEditorControl[] = [
 
   // ── Color ───────────────────────────────────────────────────────────────
   {
+    id: 'color.anchors',
+    facet: 'color',
+    label: 'Chromatic anchors',
+    kind: 'scale',
+    schemaPath: 'anchors.{mode}.*',
+    modeGroup: 'color',
+  },
+  {
     id: 'color.brand',
     facet: 'color',
     label: 'Brand colors',
@@ -228,6 +236,7 @@ export function isContractWritePath(path: string): boolean {
   const p = path.trim()
   if (!p) return false
   // Envelope / meta
+  if (p.startsWith('anchors.')) return true
   if (p.startsWith('$extensions.sail.')) {
     const key = p.slice('$extensions.sail.'.length).split('.')[0]
     return (

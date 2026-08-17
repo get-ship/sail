@@ -81,7 +81,7 @@ export function createThemeSession(opts: ThemeSessionOpts) {
   const addModeLabel = signal('Add dark table')
   const modeLightOn = signal(true)
   const modeDarkOn = signal(false)
-  const paintId = signal('studio')
+  const paintId = signal('sail')
   const paintMode = signal<'light' | 'dark'>('light')
   const activeModeLabel = signal('Light')
   const isDirty = signal(false)

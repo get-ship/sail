@@ -3,13 +3,20 @@
  * Not template string scans.
  */
 import { afterEach, describe, expect, it } from 'vitest'
+import { readFileSync } from 'node:fs'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import {
   __resetDesignForTests,
+  __setThemePathForTests,
   __setWorkingDocForTests,
+  generateTheme,
   getDesignState,
   getPathValue,
+  setAnchorColor,
   setBrandColor,
   setDesignMode,
+  setDesignOpsClient,
   setTokenValue,
   toPickerHex,
   hexToOklchString,
@@ -26,21 +33,16 @@ const modesTheme = (primary = 'oklch(0.65 0.15 40)') => ({
     light: {
       color: {
         primary: {
-          default: { $value: primary, $type: 'color' },
-          foreground: { $value: 'oklch(0.98 0.01 90)', $type: 'color' },
+          solid: { $value: primary, $type: 'color' },
+          text: { $value: 'oklch(0.98 0.01 90)', $type: 'color' },
         },
         secondary: {
-          default: { $value: 'oklch(0.5 0.05 250)', $type: 'color' },
+          solid: { $value: 'oklch(0.5 0.05 250)', $type: 'color' },
         },
         background: { $value: 'oklch(0.98 0 0)', $type: 'color' },
         foreground: { $value: 'oklch(0.2 0 0)', $type: 'color' },
-        surface: {
-          1: { $value: 'oklch(1 0 0)', $type: 'color' },
-          2: { $value: 'oklch(0.96 0 0)', $type: 'color' },
-          3: { $value: 'oklch(1 0 0)', $type: 'color' },
-        },
-        success: { default: { $value: 'oklch(0.6 0.15 145)', $type: 'color' } },
-        danger: { default: { $value: 'oklch(0.55 0.2 25)', $type: 'color' } },
+        success: { solid: { $value: 'oklch(0.6 0.15 145)', $type: 'color' } },
+        danger: { solid: { $value: 'oklch(0.55 0.2 25)', $type: 'color' } },
       },
     },
   },
@@ -72,8 +74,7 @@ describe('color pick pipeline (hex → oklch write)', () => {
     const s = getDesignState()
     expect(s.dirty).toBe(true)
     expect(s.diffRows.some((r) => r.path.includes('color.primary'))).toBe(true)
-    // Co-write AA foreground for brand
-    expect(getPathValue(s.themeDoc, 'color.primary.foreground', 'light')).toMatch(/^oklch\(/)
+    expect(getPathValue(s.themeDoc, 'color.primary.text', 'light')).toMatch(/^oklch\(/)
   })
 
   it('non-primary role pick uses setTokenValue hex→oklch (secondary path)', async () => {
@@ -149,9 +150,9 @@ describe('color pick pipeline (hex → oklch write)', () => {
     expect(doc).toBeTruthy()
     const modes = (doc as { modes?: { light?: Record<string, unknown> } }).modes?.light
     const success = (modes?.color as Record<string, unknown> | undefined)?.success as
-      | { default?: { $extensions?: { sail?: { cssName?: string } }; $value?: string } }
+      | { solid?: { $extensions?: { sail?: { cssName?: string } }; $value?: string } }
       | undefined
-    const leaf = success?.default
+    const leaf = success?.solid
     expect(leaf?.$value, 'written oklch').toMatch(/^oklch\(/)
     expect(leaf?.$extensions?.sail?.cssName, 'no cssName stamp').toBeUndefined()
     // lowerThemeDoc twin of applyScope must emit --success via publicName(path)
@@ -187,5 +188,115 @@ describe('color facet event adapter (sail-change shape)', () => {
       host.getAttribute('token')
     expect(role).toBe('primary')
     expect(role! in COLOR_ROLES).toBe(true)
+  })
+})
+
+describe('ramp editor is a thin client over the engine', () => {
+  it('does not invent contrast ratios in the color facet', () => {
+    const src = readFileSync(
+      join(dirname(fileURLToPath(import.meta.url)), '../src/compositions/theme-color-surface/theme-color-edit.ts'),
+      'utf8',
+    )
+    expect(src).not.toMatch(/contrastRatio\(/)
+    expect(src).toMatch(/sailThemeDeriveScale/)
+    expect(src).toMatch(/sailThemeCheckTheme/)
+  })
+
+  it('anchor edit + generate call derive_scale and check_theme, then write', async () => {
+    const deriveArgs: unknown[] = []
+    const checkArgs: unknown[] = []
+    const writes: { path: string; content: string }[] = []
+    setDesignOpsClient({
+      sailThemeList: async () => ({ files: [] }),
+      sailThemeRead: async ({ path }) => ({ path, content: '{}' }),
+      sailThemeWrite: async ({ path, content }) => {
+        writes.push({ path, content })
+        return { ok: true, path, bytes: content.length }
+      },
+      sailThemeFork: async () => ({ ok: true }),
+      sailThemeDeriveScale: async (args) => {
+        deriveArgs.push(args)
+        return {
+          ok: true,
+          mode: 'light',
+          scales: {
+            primary: {
+              solid: 'oklch(0.5400 0.1800 245.00)',
+              hover: 'oklch(0.4968 0.1584 245.00)',
+              subtle: 'oklch(0.9272 0.0216 245.00)',
+              border: 'oklch(0.8568 0.0504 245.00)',
+              text: 'oklch(0.9800 0.0000 245.00)',
+            },
+          },
+          derived: ['color.primary.solid'],
+        }
+      },
+      sailThemeCheckTheme: async (args) => {
+        checkArgs.push(args)
+        return {
+          ok: true,
+          errors: [],
+          contrastPairs: [
+            { fg: 'foreground', bg: 'background', ratio: 18.38, floor: 4.5, ok: true, soft: false },
+          ],
+          derived: ['color.primary.solid'],
+        }
+      },
+      sailThemeGenerate: async () => ({ ok: true }),
+    })
+    __setWorkingDocForTests({
+      $extensions: { sail: { themeId: 'probe', layer: 'theme', defaultMode: 'light' } },
+      anchors: {
+        light: {
+          primary: { space: 'oklch', l: 0.54, c: 0.18, h: 245 },
+        },
+      },
+      modes: {
+        light: {
+          color: {
+            background: { $value: 'oklch(0.98 0 0)', $type: 'color' },
+            foreground: { $value: 'oklch(0.20 0 0)', $type: 'color' },
+          },
+        },
+      },
+    })
+    __setThemePathForTests('apps/studio/themes/probe.json')
+    setDesignMode('light')
+
+    await setAnchorColor('primary', 'oklch(0.54 0.18 245)')
+    const anchors = (getDesignState().themeDoc as { anchors?: { light?: { primary?: { l?: number } } } })
+      .anchors?.light?.primary
+    expect(anchors?.l).toBeCloseTo(0.54)
+
+    const ok = await generateTheme()
+    expect(ok).toBe(true)
+    expect(checkArgs.length).toBeGreaterThan(0)
+    expect(writes.length).toBe(1)
+    expect(writes[0]!.path).toBe('apps/studio/themes/probe.json')
+    expect(writes[0]!.content).toContain('anchors')
+  })
+
+  it('generate refuses when check_theme reports a floor pair', async () => {
+    setDesignOpsClient({
+      sailThemeList: async () => ({ files: [] }),
+      sailThemeRead: async ({ path }) => ({ path, content: '{}' }),
+      sailThemeWrite: async () => ({ ok: true, path: '', bytes: 0 }),
+      sailThemeFork: async () => ({ ok: true }),
+      sailThemeCheckTheme: async () => ({
+        ok: false,
+        errors: ['theme probe modes.light: muted-foreground on muted is 1.20:1, floor 4.5:1'],
+        contrastPairs: [
+          { fg: 'muted-foreground', bg: 'muted', ratio: 1.2, floor: 4.5, ok: false, soft: false },
+        ],
+      }),
+    })
+    __setWorkingDocForTests({
+      $extensions: { sail: { themeId: 'probe' } },
+      modes: { light: { color: {} } },
+    })
+    __setThemePathForTests('apps/studio/themes/probe.json')
+    const ok = await generateTheme()
+    expect(ok).toBe(false)
+    expect(getDesignState().lastWriteError).toMatch(/floor 4.5:1/)
   })
 })

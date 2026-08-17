@@ -266,11 +266,14 @@ describe('ops SailTheme write + monotonicity parity', () => {
     expect(Array.isArray(r.sites)).toBe(true)
   }, 60_000)
 
-  it('SailTheme/List catalog has ship', async () => {
+  it('SailTheme/List catalog has sail (not ship/contrast)', async () => {
     const listed = await cli.sailThemeList!({
       path: 'packages/sail/tokens/model/themes',
     })
-    expect(listed.files ?? []).toContain('ship.json')
+    const files = listed.files ?? []
+    expect(files).toContain('sail.json')
+    expect(files).not.toContain('ship.json')
+    expect(files).not.toContain('contrast.json')
   }, 30_000)
 })
 

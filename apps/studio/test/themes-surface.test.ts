@@ -62,9 +62,9 @@ const DOC = JSON.stringify({
   },
 })
 
-/** Dual-mode catalog theme present in package THEME_META (not project-only studio). */
-const SHIP_DOC = JSON.stringify({
-  $extensions: { ship: { themeId: 'ship' } },
+/** Dual-mode catalog theme present in package THEME_META. */
+const SAIL_DOC = JSON.stringify({
+  $extensions: { sail: { themeId: 'sail' } },
   modes: {
     light: {
       color: {
@@ -92,14 +92,20 @@ function wireProjectAndCatalog(opts?: {
         if (String(path).includes('apps/studio/themes')) {
           return { files: [...projectFiles] }
         }
-        // Catalog = package model themes (ship is dual-mode and always registered).
-        return { files: ['ship.json'] }
+        return { files: ['sail.json'] }
       },
+      sailThemeRegistry: async () => ({
+        ok: true,
+        schema: 'spinnaker.registry.v2',
+        catalog: ['sail', 'paper', 'halo', 'console', 'glass', 'brut', '8bit', 'synthwave'],
+        contrastPairs: [],
+        metadata: {},
+      }),
       sailThemeRead: async ({ path }) => {
         if (String(path).includes('my-ship')) {
           return { path, content: DOC }
         }
-        return { path, content: SHIP_DOC }
+        return { path, content: SAIL_DOC }
       },
       sailThemeDelete: async (args: { path: string }) => {
         opts?.onDelete?.(args.path)
@@ -140,10 +146,17 @@ describe('themes home — delete behavior (store)', () => {
       mockClient({
         sailThemeList: async ({ path }) => {
           if (String(path).includes('model/themes')) {
-            return { files: ['studio.json'] }
+            return { files: ['sail.json'] }
           }
           return { files: [] }
         },
+        sailThemeRegistry: async () => ({
+          ok: true,
+          schema: 'spinnaker.registry.v2',
+          catalog: ['sail'],
+          contrastPairs: [],
+          metadata: {},
+        }),
         sailThemeRead: async ({ path }) => ({
           path,
           content: JSON.stringify({
@@ -178,7 +191,7 @@ describe('themes home — delete behavior (store)', () => {
     expect(ok).toBe(true)
     expect(deleted).toEqual(['apps/studio/themes/my-ship.json'])
     const after = getDesignState()
-    expect(after.themeId === '' || after.themeId === 'ship').toBe(true)
+    expect(after.themeId === '' || after.themeId === 'sail').toBe(true)
     if (after.themeId === '') {
       expect(after.themeDoc).toBeNull()
     } else {
@@ -244,10 +257,9 @@ describe('themes home — UI contracts (source)', () => {
 describe('themes home — surface handlers (behavioral)', () => {
   it('list click selects theme id + marks active row (closure path)', async () => {
     wireProjectAndCatalog({ projectFiles: ['my-ship.json'] })
-    await loadThemes({ themeId: 'ship' })
+    await loadThemes({ themeId: 'sail' })
     const vm = makeSurface()
-    // Catalog ship is selected from load; switch to project id via id-param handler.
-    expect(vm.selectedId()).toBe('ship')
+    expect(vm.selectedId()).toBe('sail')
     vm.onListClick('my-ship')
     expect(vm.selectedId()).toBe('my-ship')
     expect(vm.hasSelected()).toBe(true)
@@ -302,12 +314,12 @@ describe('themes home — surface handlers (behavioral)', () => {
       projectFiles: [],
       onDelete: (p) => deleted.push(p),
     })
-    await loadThemes({ themeId: 'ship' })
+    await loadThemes({ themeId: 'sail' })
     setThemeConfirm(() => true)
 
     const vm = makeSurface()
-    expect(vm.catalogRows().some((r) => r.id === 'ship')).toBe(true)
-    vm.onMenuOpen('ship')
+    expect(vm.catalogRows().some((r) => r.id === 'sail')).toBe(true)
+    vm.onMenuOpen('sail')
     vm.onRowMenu(menuDetail('delete'))
     await new Promise((r) => setTimeout(r, 20))
     expect(deleted).toEqual([])
@@ -320,15 +332,15 @@ describe('themes home — surface handlers (behavioral)', () => {
       projectFiles: [],
       onFork: (a) => forks.push({ new_id: a.new_id, source_path: a.source_path }),
     })
-    await loadThemes({ themeId: 'ship' })
+    await loadThemes({ themeId: 'sail' })
     setThemeConfirm(() => true)
 
     const vm = makeSurface()
-    vm.onAddToProject('ship')
+    vm.onAddToProject('sail')
     await new Promise((r) => setTimeout(r, 30))
     expect(forks.length).toBe(1)
-    expect(forks[0]!.new_id).toBe('my-ship')
-    expect(vm.selectedId()).toBe('my-ship')
+    expect(forks[0]!.new_id).toBe('my-sail')
+    expect(vm.selectedId()).toBe('my-sail')
   })
 
   it('add to project confirm false → no fork', async () => {
@@ -337,11 +349,11 @@ describe('themes home — surface handlers (behavioral)', () => {
       projectFiles: [],
       onFork: (a) => forks.push(a.new_id),
     })
-    await loadThemes({ themeId: 'ship' })
+    await loadThemes({ themeId: 'sail' })
     setThemeConfirm(() => false)
 
     const vm = makeSurface()
-    vm.onAddToProject('ship')
+    vm.onAddToProject('sail')
     await new Promise((r) => setTimeout(r, 20))
     expect(forks).toEqual([])
     expect(vm.toastMessage()).toMatch(/cancelled/i)
@@ -349,10 +361,9 @@ describe('themes home — surface handlers (behavioral)', () => {
 
   it('mode switch updates previewModeId for dual-mode themes', async () => {
     wireProjectAndCatalog({ projectFiles: [] })
-    await loadThemes({ themeId: 'ship' })
+    await loadThemes({ themeId: 'sail' })
     const vm = makeSurface()
-    // loadThemes opens ship (dual-mode catalog); surface sync selects it.
-    expect(vm.selectedId()).toBe('ship')
+    expect(vm.selectedId()).toBe('sail')
     expect(vm.canToggleMode()).toBe(true)
     const start = vm.previewModeId()
     const flipToDark = start !== 'dark'
@@ -401,6 +412,42 @@ describe('themes home — surface handlers (behavioral)', () => {
     expect(confirms[0]).not.toMatch(/^Add “/)
     expect(forks.length).toBe(1)
     expect(forks[0]).toMatch(/^my-theme-/)
+  })
+})
+
+describe('themes home — catalog is the registry 8', () => {
+  it('drops ship/neutral/contrast even when the file list includes them', async () => {
+    setDesignProjectRoot('apps/studio')
+    setDesignOpsClient(
+      mockClient({
+        sailThemeList: async ({ path }) => {
+          if (String(path).includes('apps/studio/themes')) return { files: [] }
+          return { files: ['sail.json', 'ship.json', 'contrast.json', 'neutral.json', 'paper.json'] }
+        },
+        sailThemeRegistry: async () => ({
+          ok: true,
+          schema: 'spinnaker.registry.v2',
+          catalog: ['sail', 'paper', 'halo', 'console', 'glass', 'brut', '8bit', 'synthwave'],
+          contrastPairs: [],
+          metadata: {},
+        }),
+        sailThemeRead: async ({ path }) => ({
+          path,
+          content: JSON.stringify({
+            $extensions: { sail: { themeId: path.includes('paper') ? 'paper' : 'sail' } },
+            modes: { light: { color: {} } },
+          }),
+        }),
+        sailThemeWrite: async () => ({ ok: true }),
+        sailThemeFork: async () => ({ ok: true }),
+      }),
+    )
+    await loadThemes({ themeId: 'sail' })
+    const ids = getDesignState().catalogThemes.map((t) => t.id)
+    expect(ids).toEqual(['sail', 'paper'])
+    expect(ids).not.toContain('ship')
+    expect(ids).not.toContain('contrast')
+    expect(ids).not.toContain('neutral')
   })
 })
 
