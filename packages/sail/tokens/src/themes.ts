@@ -43,7 +43,7 @@ export {
 /**
  * Theme shipping tier.
  *
- * - `core` — ships with every Sail project (identity + neutral). Keep small.
+ * - `core` — ships with every Sail project (identity). Keep small.
  * - `catalog` — full aesthetic library (studio / marketing / opt-in).
  */
 export type ThemeTier = 'core' | 'catalog'
@@ -84,26 +84,6 @@ const THEME_PRESENTATION: Record<
       'oklch(1 0 0)',
       'oklch(0.58 0.18 245)',
       'oklch(0.62 0.14 195)',
-    ],
-  },
-  ship: {
-    label: 'SHIP',
-    tier: 'catalog',
-    swatches: [
-      'oklch(0.99 0.001 106.423)',
-      'oklch(1 0 0)',
-      'oklch(0.67 0.16 58)',
-      'oklch(0.61 0.23 303)',
-    ],
-  },
-  neutral: {
-    label: 'Neutral',
-    tier: 'core',
-    swatches: [
-      'oklch(0.985 0.002 264)',
-      'oklch(1 0 0)',
-      'oklch(0.27 0.020 264)',
-      'oklch(0.55 0.090 255)',
     ],
   },
   paper: {
@@ -221,7 +201,7 @@ function buildThemes(): Theme[] {
 }
 
 /** Themes that ship into a default project stamp. Keep this set tight. */
-export const CORE_THEME_IDS = ['sail', 'neutral'] as const satisfies readonly ThemeId[]
+export const CORE_THEME_IDS = ['sail'] as const satisfies readonly ThemeId[]
 
 export const THEMES: Theme[] = buildThemes()
 
@@ -259,7 +239,7 @@ export const THEME_DEFAULT_MODE_META = 'sail-default-mode'
  * Classic FOUC-guard body for deck `index.html`.
  *
  * Source of truth for the pre-paint seam (storage keys + `theme`/`mode`
- * attrs). Deck pastes this via `include_str!` of `./prepaint-theme.js` —
+ * attrs). Deck pastes this via `include_str!` of runtime `prepaint-theme.js` —
  * tokens tests keep that file equal to this constant. No modules available
  * yet when this runs.
  */

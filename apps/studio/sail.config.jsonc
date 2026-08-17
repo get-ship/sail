@@ -8,9 +8,7 @@
       "studio",
       "my-ship",
       "my-theme-vbtk",
-      "ship",
       "sail",
-      "neutral",
       "paper",
       "halo",
       "console",
@@ -26,6 +24,10 @@
     "version": "1.28.0"
   },
   "network": ["self"],
+  // Bundler injects `import './fonts/fonts.css'` when the vendor file exists.
+  // Declare it so sail-no-undeclared-stylesheet does not fire once routes
+  // are Style-free and compile proceeds past privilege.
+  "stylesheets": ["fonts/fonts.css"],
   // Ban <div>/<span> for app-local components under src/ (routes/ has its own).
   "raw_containers": false,
   // Studio layout gate (Workstream A): promote main-axis overflow, collapsed

@@ -53,9 +53,7 @@ export type ThemeRowUi = {
 
 const THEME_BLURBS: Record<string, string> = {
   studio: 'Warm product chrome for day-to-day building.',
-  ship: 'Cool SHIP defaults — slate surfaces and amber primary.',
   sail: 'Sail brand — the default identity for new apps.',
-  neutral: 'Quiet grays. Lets content and one accent do the work.',
   paper: 'Print-inspired light surfaces and editorial type feel.',
   halo: 'Soft luminous surfaces with gentle depth.',
   console: 'Terminal-dark phosphor energy for dense tooling.',
