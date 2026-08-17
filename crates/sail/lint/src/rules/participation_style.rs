@@ -242,8 +242,8 @@ mod tests {
     }
 
     #[test]
-    fn flags_w_full_attr() {
-        let f = run(r#"<row w="full" gap="2">x</row>"#);
+    fn flags_w_pct_attr() {
+        let f = run(r#"<row w="100%" gap="2">x</row>"#);
         assert!(f.iter().any(|x| x.message.contains("`w`")), "{f:?}");
         // gap is axis sugar — not participation
         assert!(!f.iter().any(|x| x.message.contains("gap")), "{f:?}");
@@ -252,13 +252,15 @@ mod tests {
     #[test]
     fn allows_box_channel_grow_and_paint() {
         assert!(
-            run(r#"<div style({ grow(1).size({ min-w: 0 }).bg(card) })>  x
-</div>"#)
+            run(
+                r#"<div style({ grow(1).size({ min-w: 0 }).bg(surface) })>  x
+</div>"#
+            )
             .is_empty()
         );
         assert!(
             run(
-                r#"<row gap="2" align="center" style({ grow(1).size({ w: full }) })>  x
+                r#"<row gap="2" align="center" style({ grow(1).size({ w: '100%' }) })>  x
 </row>"#
             )
             .is_empty()

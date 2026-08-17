@@ -185,9 +185,9 @@ fn is_viewport_clip_root(sx: &str, axes: &OverflowAxes) -> bool {
         || has_style_arg(sx, "minh", "screen")
         || size_slot(sx, "h", "screen")
         || size_slot(sx, "min-h", "screen")
-        || (has_style_arg(sx, "h", "full")
+        || (has_style_arg(sx, "h", "100%")
             && (has_style_arg(sx, "minH", "screen") || has_style_arg(sx, "minh", "screen")))
-        || (size_slot(sx, "h", "full") && size_slot(sx, "min-h", "screen"))
+        || (size_slot(sx, "h", "100%") && size_slot(sx, "min-h", "screen"))
         || token_atom(sx, "h-screen")
         || token_atom(sx, "min-h-screen")
 }
@@ -429,7 +429,7 @@ mod tests {
     #[test]
     fn viewport_clip_root_with_screen_height_skipped() {
         // Studio chrome shell: definite viewport size + outer clip only.
-        let src = r#"<row style({ size({ min-h: screen, h: screen, w: full }).overflow(hidden) })></row>"#;
+        let src = r#"<row style({ size({ min-h: screen, h: screen, w: '100%' }).overflow(hidden) })></row>"#;
         assert!(
             lint(src).is_empty(),
             "viewport clip root must not fire: {:?}",

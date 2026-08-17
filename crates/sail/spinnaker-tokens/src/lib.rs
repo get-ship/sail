@@ -878,6 +878,24 @@ fn platform_dir_candidates() -> Vec<PathBuf> {
     out
 }
 
+fn sail_base_css_candidates() -> Vec<PathBuf> {
+    let mut out = Vec::new();
+    if let Ok(root) = cargo_workspace_root() {
+        out.push(root.join(MONOREPO_TOKENS_SRC_REL).join("sail-base.css"));
+    }
+    let here = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    out.push(here.join("../../../packages/sail/tokens/src/sail-base.css"));
+    out
+}
+
+/// Names that are not registry tokens and not `--x:` decls: product hue axis
+/// (`brand-hue`) and host-set runtime locals (range fill, table paint).
+const PLATFORM_VAR_ALLOW: &[&str] = &["brand-hue", "rng-pct", "table-stripe", "table-sticky-bg"];
+
+fn platform_var_allowed(name: &str, known: &BTreeSet<String>, declared: &BTreeSet<String>) -> bool {
+    PLATFORM_VAR_ALLOW.contains(&name) || known.contains(name) || declared.contains(name)
+}
+
 fn cargo_workspace_root() -> Result<PathBuf> {
     let mut dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     for _ in 0..6 {
@@ -1028,21 +1046,25 @@ fn gate_platform_css_var_refs(registry: &Value) -> Result<()> {
                 .file_name()
                 .and_then(|n| n.to_str())
                 .unwrap_or("platform.css");
-            let (names, fallbacks) = extract_css_var_refs_ex(&text);
-            declared.extend(fallbacks);
-            for name in names {
+            // Fallback in `var(--x, y)` is a CSS safety net, not a generate-time
+            // resolution — still require registry or a `--x:` declaration.
+            for name in extract_css_var_refs(&text) {
                 refs.push((file.to_string(), name));
             }
         }
         break;
     }
+    // `--animate-*` (and any other sail-base locals) are declared there, not
+    // in the registry. Scan exact `--name:` decls — no prefix allow.
+    for p in sail_base_css_candidates() {
+        if let Ok(text) = fs::read_to_string(&p) {
+            declared.extend(extract_css_var_decls(&text));
+            break;
+        }
+    }
     let mut missing = BTreeSet::new();
     for (file, name) in refs {
-        if name == "brand-hue"
-            || name.starts_with("animate-")
-            || known.contains(&name)
-            || declared.contains(&name)
-        {
+        if platform_var_allowed(&name, &known, &declared) {
             continue;
         }
         missing.insert(format!("{file} uses var(--{name})"));
@@ -4136,6 +4158,23 @@ mod tests {
         }
         let mut f = fs::File::create(path).unwrap();
         f.write_all(body.as_bytes()).unwrap();
+    }
+
+    #[test]
+    fn platform_var_fallback_is_not_a_declaration() {
+        let known = BTreeSet::from(["border".into()]);
+        let declared = BTreeSet::from(["sheet-size".into()]);
+        assert!(platform_var_allowed("border", &known, &declared));
+        assert!(platform_var_allowed("sheet-size", &known, &declared));
+        assert!(platform_var_allowed("brand-hue", &known, &declared));
+        assert!(platform_var_allowed("rng-pct", &known, &declared));
+        // `var(--undefined-token, 1px)` must still fail — fallback ≠ resolve.
+        assert!(!platform_var_allowed("undefined-token", &known, &declared));
+        assert!(!platform_var_allowed(
+            "animate-does-not-exist",
+            &known,
+            &declared
+        ));
     }
 
     #[test]

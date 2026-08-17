@@ -814,7 +814,7 @@ fn participation_token(name: &str, value: &str) -> Result<String, String> {
         "w" | "min-w" | "max-w" => {
             if value.is_empty() {
                 return Err(format!(
-                    "`{name}` needs a size token (e.g. `{name}=\"full\"`, `{name}=\"0\"`)."
+                    "`{name}` needs a size token (e.g. `{name}=\"100%\"`, `{name}=\"0\"`)."
                 ));
             }
             if value.starts_with('{') {
@@ -866,7 +866,7 @@ fn participation_token(name: &str, value: &str) -> Result<String, String> {
 
 /// Lower one participation attr to the same atomic class + CSS Style would
 /// emit for the matching setter (`style.grow(1)` → `s-grow1{flex-grow:1}`,
-/// `style.w(full)` → `s-wfull{width:100%}`, …). `None` when the value is
+/// `style.size({ w: 100% })` → `s-sizew100{width:100%}`, …). `None` when the value is
 /// off-vocab (lint reports it; preprocess skips) **or** when the attr is a
 /// grid span that stays on the host for CSS attribute selectors.
 pub fn lower_participation(name: &str, value: &str) -> Option<(String, String)> {
@@ -2126,9 +2126,9 @@ mod tests {
     }
 
     #[test]
-    fn accepts_w_full_and_min_w_zero() {
-        assert!(run(r#"<column w="full" min-w="0">x</column>"#).is_empty());
-        assert!(run(r#"<main w="full" max-w="panel-max-w-sm">x</main>"#).is_empty());
+    fn accepts_w_pct_and_min_w_zero() {
+        assert!(run(r#"<column w="100%" min-w="0">x</column>"#).is_empty());
+        assert!(run(r#"<main w="100%" max-w="panel-max-w-sm">x</main>"#).is_empty());
     }
 
     #[test]
@@ -2159,9 +2159,9 @@ mod tests {
         assert!(classes.contains("s-shrink0"), "{classes}");
         assert!(css.contains("flex-shrink:0"), "{css}");
 
-        let (classes, css) = lower_participation("w", "full").unwrap();
+        let (classes, css) = lower_participation("w", "100%").unwrap();
         assert!(
-            classes.contains("s-wfull") || classes.contains("s-sizewfull"),
+            classes.contains("s-w100") || classes.contains("s-sizew100"),
             "{classes}"
         );
         assert!(

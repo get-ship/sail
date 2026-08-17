@@ -815,18 +815,6 @@
 :root[theme='halo'] .dash-link-btn:active {
   box-shadow: var(--shadow-inset-soft);
 }
-:root[theme='ship'] body,
-:root[theme='ship'][mode='dark'] body,
-[theme='ship'].tc-bg,
-[theme='ship'][mode='dark'].tc-bg {
-  background-image: linear-gradient(
-    to bottom,
-    color-mix(in oklch, var(--surface-0) 100%, white 1.5%) 0%,
-    var(--surface-0) 60%,
-    color-mix(in oklch, var(--surface-0) 100%, black 1.5%) 100%
-  );
-  background-attachment: fixed;
-}
 :root[theme='glass'] body,
 [theme='glass'].tc-bg {
   background-color: oklch(0.97 0.005 240);
@@ -834,17 +822,6 @@
     radial-gradient(ellipse 80% 60% at 0% 0%, oklch(0.92 0.05 220 / 18%), transparent 75%),
     radial-gradient(ellipse 75% 55% at 100% 100%, oklch(0.92 0.05 30 / 14%), transparent 75%),
     radial-gradient(ellipse 60% 45% at 100% 0%, oklch(0.93 0.04 300 / 10%), transparent 80%);
-  background-attachment: fixed;
-}
-:root[theme='ship'][mode='dark'] body {
-  background-image:
-    radial-gradient(ellipse 60% 40% at 0% 0%, oklch(1 0 0 / 4%), transparent 60%),
-    linear-gradient(
-      to bottom,
-      color-mix(in oklch, var(--surface-0) 100%, white 1.5%) 0%,
-      var(--surface-0) 60%,
-      color-mix(in oklch, var(--surface-0) 100%, black 1.5%) 100%
-    );
   background-attachment: fixed;
 }
 :root[theme='paper'] sail-card,
