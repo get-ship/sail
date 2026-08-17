@@ -306,6 +306,51 @@ export interface ThemeEffectiveIdsRet {
   [key: string]: JsonValue | undefined
 }
 
+export interface ThemeDeriveScaleArgs {
+  anchors?: JsonValue
+  bg?: JsonValue
+  fg?: JsonValue
+  mode?: string
+  overrides?: JsonValue
+  theme?: JsonValue
+}
+
+export interface ThemeDeriveScaleRet {
+  derived?: string[]
+  mode: string
+  ok: boolean
+  scales: JsonValue
+}
+
+export interface ThemeCheckArgs {
+  content?: string
+  derive?: boolean
+  label?: string
+  theme?: JsonValue
+}
+
+export interface ThemeCheckRet {
+  contrastPairs: JsonValue
+  derived?: string[]
+  errors?: string[]
+  ok: boolean
+}
+
+export interface ThemeRegistryArgs {
+  model?: string
+  section?: string
+  workspace?: string
+}
+
+export interface ThemeRegistryRet {
+  catalog: string[]
+  contrastPairs: JsonValue
+  metadata: JsonValue
+  ok: boolean
+  registry?: JsonValue
+  schema: string
+}
+
 export interface ThemeFontSearchArgs {
   category?: string
   limit?: number
@@ -765,6 +810,30 @@ export async function sailThemeEffectiveIds(
   opts?: ClientOptions,
 ): Promise<ThemeEffectiveIdsRet> {
   return postJson<ThemeEffectiveIdsRet>('/sail.ops.v1.SailTheme/EffectiveIds', args ?? {}, opts)
+}
+
+// SailTheme/DeriveScale — Derive chromatic scale steps from anchors (engine). No file writes. anchors in, solid/hover/subtle/border/text out.
+export async function sailThemeDeriveScale(
+  args: ThemeDeriveScaleArgs,
+  opts?: ClientOptions,
+): Promise<ThemeDeriveScaleRet> {
+  return postJson<ThemeDeriveScaleRet>('/sail.ops.v1.SailTheme/DeriveScale', args ?? {}, opts)
+}
+
+// SailTheme/CheckTheme — Contrast/contract gate on an in-memory theme (engine). Floor pairs fail. No file writes.
+export async function sailThemeCheckTheme(
+  args: ThemeCheckArgs,
+  opts?: ClientOptions,
+): Promise<ThemeCheckRet> {
+  return postJson<ThemeCheckRet>('/sail.ops.v1.SailTheme/CheckTheme', args ?? {}, opts)
+}
+
+// SailTheme/Registry — Read registry v2 (schema, catalog ids, contrastPairs, metadata, optional full registry). No file writes.
+export async function sailThemeRegistry(
+  args: ThemeRegistryArgs,
+  opts?: ClientOptions,
+): Promise<ThemeRegistryRet> {
+  return postJson<ThemeRegistryRet>('/sail.ops.v1.SailTheme/Registry', args ?? {}, opts)
 }
 
 // SailTheme/FontSearch — Search Google Fonts catalog (bundled) by family query + optional category/limit. Empty query returns popular families. Offline after catalog bake.

@@ -245,13 +245,12 @@ pub fn write(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
         )));
     }
 
-    // Parse + THEMES-1 document gate + ordered-scale gate (refuse before write).
-    // Invalid JSON is a schema refusal — never write a document the gate
-    // cannot inspect.
+    // Parse + derive + THEMES-1 document gate + ordered-scale gate (refuse
+    // before write). Authored JSON stays decisions-only; the gate inspects
+    // the engine-derived clone so contrast floors cannot be skipped.
     let doc: Value = serde_json::from_str(content)
         .map_err(|e| OpError::InvalidArgument(format!("theme schema invalid (JSON): {e}")))?;
-    sail_compiler::theme_gate::validate_theme_gate(&doc, rel)
-        .map_err(|e| OpError::InvalidArgument(e.to_string()))?;
+    gate_theme_doc(&doc, rel)?;
     validate_ordered_scales(&doc)?;
 
     let target = ctx.workspace_root.join(rel);
@@ -831,6 +830,326 @@ fn parse_alias_ref(value: &str) -> Option<String> {
     None
 }
 
+/// Derive chromatic steps from anchors. No disk writes.
+pub fn derive_scale(args: &Value, _ctx: &Ctx) -> Result<Value, OpError> {
+    let mode = args
+        .get("mode")
+        .and_then(|v| v.as_str())
+        .unwrap_or("light")
+        .to_string();
+    if mode != "light" && mode != "dark" {
+        return Err(OpError::InvalidArgument(format!(
+            "derive_scale mode must be light|dark (got {mode:?})"
+        )));
+    }
+    let mut anchors = if let Some(theme) = args.get("theme") {
+        sail_compiler::tokens_generate::derive::anchors_for_mode(theme, &mode)
+    } else {
+        serde_json::Map::new()
+    };
+    if let Some(obj) = args.get("anchors").and_then(|v| v.as_object()) {
+        for (k, v) in obj {
+            if k.starts_with('$') {
+                continue;
+            }
+            anchors.insert(k.clone(), v.clone());
+        }
+    }
+    if anchors.is_empty() {
+        return Err(OpError::InvalidArgument(
+            "derive_scale requires `anchors` or a `theme` document with anchors".into(),
+        ));
+    }
+
+    let mut body = if let Some(theme) = args.get("theme") {
+        theme
+            .pointer(&format!("/modes/{mode}"))
+            .cloned()
+            .unwrap_or_else(|| json!({}))
+    } else {
+        json!({})
+    };
+    if !body.is_object() {
+        body = json!({});
+    }
+    if let Some(bg) = args.get("bg") {
+        insert_color_slot(&mut body, "background", bg)?;
+    }
+    if let Some(fg) = args.get("fg") {
+        insert_color_slot(&mut body, "foreground", fg)?;
+    }
+    if let Some(overrides) = args.get("overrides").and_then(|v| v.as_object()) {
+        merge_step_overrides(&mut body, overrides)?;
+    }
+
+    let paint = sail_compiler::tokens_generate::derive::PaintMode::parse(&mode);
+    let derived =
+        sail_compiler::tokens_generate::derive::fulfill_mode_scales(&mut body, &anchors, paint)
+            .map_err(|e| OpError::InvalidArgument(e.to_string()))?;
+
+    let mut scales = serde_json::Map::new();
+    for role in sail_compiler::tokens_generate::derive::CHROMATIC_ROLES {
+        let Some(group) = body.pointer(&format!("/color/{role}")) else {
+            continue;
+        };
+        let mut steps = serde_json::Map::new();
+        for step in sail_compiler::tokens_generate::derive::CHROMATIC_STEPS {
+            if let Some(css) = color_css_of(group.get(*step).or_else(|| legacy_step(group, step))) {
+                steps.insert((*step).to_string(), json!(css));
+            }
+        }
+        if !steps.is_empty() {
+            scales.insert((*role).to_string(), Value::Object(steps));
+        }
+    }
+
+    Ok(json!({
+        "ok": true,
+        "mode": mode,
+        "scales": scales,
+        "derived": derived,
+    }))
+}
+
+/// Contrast/contract gate on an in-memory theme. No disk writes.
+/// Floor pairs fail (`ok: false` + named errors).
+pub fn check_theme(args: &Value, _ctx: &Ctx) -> Result<Value, OpError> {
+    let mut doc = theme_doc_from_args(args)?;
+    let apply_derive = args.get("derive").and_then(|v| v.as_bool()).unwrap_or(true);
+    let label = args
+        .get("label")
+        .and_then(|v| v.as_str())
+        .unwrap_or("theme");
+    let mut derived = Vec::new();
+    if apply_derive {
+        derived = sail_compiler::tokens_generate::derive::apply_theme_derivation(&mut doc)
+            .map_err(|e| OpError::InvalidArgument(e.to_string()))?;
+    }
+    let contrast_pairs = sail_compiler::theme_gate::contrast_reports_json(&doc);
+    match sail_compiler::theme_gate::validate_theme_gate(&doc, label) {
+        Ok(()) => {
+            let floor_fail = contrast_pairs.iter().any(|p| {
+                p.get("ok").and_then(|v| v.as_bool()) == Some(false)
+                    && p.get("soft").and_then(|v| v.as_bool()) != Some(true)
+            });
+            if floor_fail {
+                return Ok(json!({
+                    "ok": false,
+                    "errors": ["contrast floor pair failed"],
+                    "contrastPairs": contrast_pairs,
+                    "derived": derived,
+                }));
+            }
+            Ok(json!({
+                "ok": true,
+                "errors": [],
+                "contrastPairs": contrast_pairs,
+                "derived": derived,
+            }))
+        }
+        Err(e) => Ok(json!({
+            "ok": false,
+            "errors": [e.to_string()],
+            "contrastPairs": contrast_pairs,
+            "derived": derived,
+        })),
+    }
+}
+
+/// Read registry v2 (+ catalog ids). No writes.
+pub fn registry(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
+    let workspace = resolve_under_workspace(
+        args.get("workspace").and_then(|v| v.as_str()),
+        &ctx.workspace_root,
+        /* must_exist */ true,
+    )?;
+    let model_dir = if let Some(m) = args.get("model").and_then(|v| v.as_str()) {
+        resolve_path_under(&workspace, m)?
+    } else {
+        sail_compiler::tokens_generate::resolve_model_dir(Some(&workspace), None)
+            .map_err(|e| OpError::Internal(format!("resolve tokens model: {e}")))?
+    };
+    let mut registry = sail_compiler::tokens_generate::registry_v2(&model_dir)
+        .map_err(|e| OpError::Internal(format!("registry v2: {e}")))?;
+    let catalog: Vec<String> = sail_compiler::tokens_generate::catalog_theme_order()
+        .iter()
+        .map(|s| (*s).to_string())
+        .collect();
+    if let Some(obj) = registry.as_object_mut() {
+        obj.insert("catalog".into(), json!(catalog.clone()));
+    }
+    let schema = registry
+        .get("schema")
+        .and_then(|v| v.as_str())
+        .unwrap_or("")
+        .to_string();
+    if schema != "spinnaker.registry.v2" {
+        return Err(OpError::Internal(format!(
+            "registry schema is {schema:?}, expected spinnaker.registry.v2"
+        )));
+    }
+    let section = args
+        .get("section")
+        .and_then(|v| v.as_str())
+        .unwrap_or("all");
+    let contrast_pairs = registry
+        .get("contrastPairs")
+        .cloned()
+        .unwrap_or_else(|| json!([]));
+    let metadata = registry
+        .get("metadata")
+        .cloned()
+        .unwrap_or_else(|| json!({}));
+    match section {
+        "catalog" => Ok(json!({
+            "ok": true,
+            "schema": schema,
+            "catalog": catalog,
+            "contrastPairs": contrast_pairs,
+            "metadata": metadata,
+        })),
+        "contrast" => Ok(json!({
+            "ok": true,
+            "schema": schema,
+            "catalog": catalog,
+            "contrastPairs": contrast_pairs,
+            "metadata": metadata,
+        })),
+        "metadata" => Ok(json!({
+            "ok": true,
+            "schema": schema,
+            "catalog": catalog,
+            "contrastPairs": contrast_pairs,
+            "metadata": metadata,
+        })),
+        _ => Ok(json!({
+            "ok": true,
+            "schema": schema,
+            "catalog": catalog,
+            "contrastPairs": contrast_pairs,
+            "metadata": metadata,
+            "registry": registry,
+        })),
+    }
+}
+
+fn gate_theme_doc(doc: &Value, label: &str) -> Result<(), OpError> {
+    let mut gated = doc.clone();
+    sail_compiler::tokens_generate::derive::apply_theme_derivation(&mut gated)
+        .map_err(|e| OpError::InvalidArgument(e.to_string()))?;
+    sail_compiler::theme_gate::validate_theme_gate(&gated, label)
+        .map_err(|e| OpError::InvalidArgument(e.to_string()))?;
+    Ok(())
+}
+
+fn theme_doc_from_args(args: &Value) -> Result<Value, OpError> {
+    if let Some(theme) = args.get("theme") {
+        if theme.is_object() {
+            return Ok(theme.clone());
+        }
+        return Err(OpError::InvalidArgument(
+            "check_theme `theme` must be an object".into(),
+        ));
+    }
+    if let Some(content) = args.get("content").and_then(|v| v.as_str()) {
+        return serde_json::from_str(content).map_err(|e| {
+            OpError::InvalidArgument(format!("check_theme content is not JSON: {e}"))
+        });
+    }
+    Err(OpError::InvalidArgument(
+        "check_theme requires `theme` or `content`".into(),
+    ))
+}
+
+fn insert_color_slot(body: &mut Value, slot: &str, color: &Value) -> Result<(), OpError> {
+    let obj = body
+        .as_object_mut()
+        .ok_or_else(|| OpError::InvalidArgument("mode body must be an object".into()))?;
+    if !obj.contains_key("color") {
+        obj.insert("color".into(), json!({}));
+    }
+    let color_obj = obj
+        .get_mut("color")
+        .and_then(|v| v.as_object_mut())
+        .ok_or_else(|| OpError::InvalidArgument("color must be an object".into()))?;
+    let leaf = match color {
+        Value::String(s) => json!({ "$value": s, "$type": "color" }),
+        other => other.clone(),
+    };
+    color_obj.insert(slot.into(), leaf);
+    Ok(())
+}
+
+fn merge_step_overrides(
+    body: &mut Value,
+    overrides: &serde_json::Map<String, Value>,
+) -> Result<(), OpError> {
+    let obj = body
+        .as_object_mut()
+        .ok_or_else(|| OpError::InvalidArgument("mode body must be an object".into()))?;
+    if !obj.contains_key("color") {
+        obj.insert("color".into(), json!({}));
+    }
+    let color = obj
+        .get_mut("color")
+        .and_then(|v| v.as_object_mut())
+        .ok_or_else(|| OpError::InvalidArgument("color must be an object".into()))?;
+    for (role, steps) in overrides {
+        if role.starts_with('$') {
+            continue;
+        }
+        if !color.contains_key(role) {
+            color.insert(role.clone(), json!({}));
+        }
+        let group = color
+            .get_mut(role)
+            .and_then(|v| v.as_object_mut())
+            .ok_or_else(|| {
+                OpError::InvalidArgument(format!("overrides.{role} must be an object"))
+            })?;
+        let Some(step_obj) = steps.as_object() else {
+            return Err(OpError::InvalidArgument(format!(
+                "overrides.{role} must be an object of steps"
+            )));
+        };
+        for (step, val) in step_obj {
+            if step.starts_with('$') {
+                continue;
+            }
+            let leaf = match val {
+                Value::String(s) => json!({ "$value": s, "$type": "color" }),
+                other => other.clone(),
+            };
+            group.insert(step.clone(), leaf);
+        }
+    }
+    Ok(())
+}
+
+fn legacy_step<'a>(group: &'a Value, step: &str) -> Option<&'a Value> {
+    match step {
+        "solid" => group.get("default"),
+        "text" => group.get("foreground"),
+        _ => None,
+    }
+}
+
+fn color_css_of(node: Option<&Value>) -> Option<String> {
+    let node = node?;
+    if let Some(s) = node.as_str() {
+        return Some(s.to_string());
+    }
+    if let Some(v) = node.get("$value") {
+        if let Some(s) = v.as_str() {
+            return Some(s.to_string());
+        }
+        if let Some(c) = sail_compiler::tokens_generate::derive::parse_anchor(v) {
+            return Some(c.to_css());
+        }
+    }
+    sail_compiler::tokens_generate::derive::parse_anchor(node).map(|c| c.to_css())
+}
+
 /// List effective theme ids for a project (`project` arg or ctx.project_root).
 pub fn effective_ids(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
     let workspace = resolve_under_workspace(
@@ -1397,5 +1716,136 @@ mod tests {
             &ctx,
         );
         assert!(matches!(escaped, Err(OpError::PermissionDenied(_))));
+    }
+
+    #[test]
+    fn derive_scale_calls_engine_without_writes() {
+        let dir = tempdir().unwrap();
+        let ws = dir.path();
+        let ctx = Ctx::new(ws, ws, ws);
+        let out = derive_scale(
+            &json!({
+                "anchors": {
+                    "primary": { "space": "oklch", "l": 0.54, "c": 0.18, "h": 245 }
+                },
+                "mode": "light"
+            }),
+            &ctx,
+        )
+        .unwrap();
+        assert_eq!(out["ok"], true);
+        let solid = out["scales"]["primary"]["solid"].as_str().unwrap();
+        let text = out["scales"]["primary"]["text"].as_str().unwrap();
+        assert!(solid.starts_with("oklch("), "{solid}");
+        assert!(text.starts_with("oklch("), "{text}");
+        assert_ne!(solid, text);
+        assert!(
+            ws.read_dir().unwrap().next().is_none(),
+            "derive_scale must not write files"
+        );
+    }
+
+    #[test]
+    fn check_theme_fails_floor_pairs_without_writes() {
+        let dir = tempdir().unwrap();
+        let ws = dir.path();
+        let ctx = Ctx::new(ws, ws, ws);
+        let mut doc: Value = serde_json::from_str(&gate_theme("probe", false)).unwrap();
+        doc["modes"]["light"]["color"]["muted"] = json!({
+            "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
+            "foreground": { "$value": "oklch(0.85 0 0)", "$type": "color" }
+        });
+        let out = check_theme(&json!({ "theme": doc, "derive": false }), &ctx).unwrap();
+        assert_eq!(out["ok"], false);
+        let err = out["errors"][0].as_str().unwrap();
+        assert!(err.contains("muted-foreground"), "{err}");
+        assert!(err.contains("floor 4.5:1"), "{err}");
+        let pairs = out["contrastPairs"].as_array().unwrap();
+        assert!(
+            pairs.iter().any(|p| {
+                p["fg"] == "muted-foreground" && p["ok"] == false && p["ratio"].as_f64().is_some()
+            }),
+            "{pairs:?}"
+        );
+        assert!(
+            ws.read_dir().unwrap().next().is_none(),
+            "check_theme must not write files"
+        );
+    }
+
+    #[test]
+    fn check_theme_accepts_engine_derived_catalog_shape() {
+        let dir = tempdir().unwrap();
+        let ws = dir.path();
+        let ctx = Ctx::new(ws, ws, ws);
+        let doc = json!({
+            "$extensions": { "sail": { "themeId": "probe", "defaultMode": "light", "layer": "theme" } },
+            "anchors": {
+                "primary": { "space": "oklch", "l": 0.45, "c": 0.12, "h": 250 },
+                "accent": { "space": "oklch", "l": 0.45, "c": 0.16, "h": 300 },
+                "secondary": { "space": "oklch", "l": 0.92, "c": 0.02, "h": 250 },
+                "success": { "space": "oklch", "l": 0.62, "c": 0.15, "h": 150 },
+                "warning": { "space": "oklch", "l": 0.72, "c": 0.15, "h": 75 },
+                "info": { "space": "oklch", "l": 0.58, "c": 0.16, "h": 230 },
+                "danger": { "space": "oklch", "l": 0.58, "c": 0.22, "h": 27 },
+                "neutral": { "space": "oklch", "l": 0.92, "c": 0.01, "h": 250 }
+            },
+            "modes": {
+                "light": {
+                    "color": {
+                        "background": { "$value": "oklch(0.98 0 0)", "$type": "color" },
+                        "foreground": { "$value": "oklch(0.20 0 0)", "$type": "color" },
+                        "muted": {
+                            "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
+                            "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
+                        }
+                    }
+                }
+            }
+        });
+        let out = check_theme(&json!({ "theme": doc }), &ctx).unwrap();
+        assert_eq!(out["ok"], true, "{out}");
+        assert!(out["derived"].as_array().unwrap().len() >= 5, "{out}");
+        assert!(
+            out["contrastPairs"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|p| p["fg"] == "foreground" && p["ok"] == true)
+        );
+    }
+
+    #[test]
+    fn registry_read_is_v2_with_catalog() {
+        let ctx = Ctx::from_env();
+        let out = registry(&json!({ "section": "catalog" }), &ctx).unwrap();
+        assert_eq!(out["ok"], true);
+        assert_eq!(out["schema"], "spinnaker.registry.v2");
+        let catalog: Vec<&str> = out["catalog"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter_map(|v| v.as_str())
+            .collect();
+        assert_eq!(
+            catalog,
+            [
+                "sail",
+                "paper",
+                "halo",
+                "console",
+                "glass",
+                "brut",
+                "8bit",
+                "synthwave"
+            ]
+        );
+        assert!(
+            !catalog
+                .iter()
+                .any(|id| { matches!(*id, "ship" | "neutral" | "contrast" | "studio") })
+        );
+        assert!(out["contrastPairs"].as_array().unwrap().len() >= 3);
+        assert!(out.get("registry").is_none());
     }
 }

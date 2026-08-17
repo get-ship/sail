@@ -1190,6 +1190,258 @@
     },
     {
       "service": "SailTheme",
+      "method": "DeriveScale",
+      "mcp_tool": "sail_theme_derive_scale",
+      "description": "Derive chromatic scale steps from anchors (engine). No file writes. anchors in, solid/hover/subtle/border/text out.",
+      "path": "/sail.ops.v1.SailTheme/DeriveScale",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "anchors": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/Json"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "bg": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/Json"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "fg": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/Json"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "mode": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "overrides": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/Json"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "theme": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/Json"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "definitions": {
+          "Json": {}
+        }
+      },
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "ThemeDeriveScaleRet",
+        "type": "object",
+        "required": [
+          "mode",
+          "ok",
+          "scales"
+        ],
+        "properties": {
+          "derived": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "mode": {
+            "type": "string"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "scales": {
+            "$ref": "#/definitions/Json"
+          }
+        },
+        "definitions": {
+          "Json": {}
+        }
+      }
+    },
+    {
+      "service": "SailTheme",
+      "method": "CheckTheme",
+      "mcp_tool": "sail_theme_check",
+      "description": "Contrast/contract gate on an in-memory theme (engine). Floor pairs fail. No file writes.",
+      "path": "/sail.ops.v1.SailTheme/CheckTheme",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "derive": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "label": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "theme": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/Json"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "definitions": {
+          "Json": {}
+        }
+      },
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "ThemeCheckRet",
+        "type": "object",
+        "required": [
+          "contrastPairs",
+          "ok"
+        ],
+        "properties": {
+          "contrastPairs": {
+            "$ref": "#/definitions/Json"
+          },
+          "derived": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "errors": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "ok": {
+            "type": "boolean"
+          }
+        },
+        "definitions": {
+          "Json": {}
+        }
+      }
+    },
+    {
+      "service": "SailTheme",
+      "method": "Registry",
+      "mcp_tool": "sail_theme_registry",
+      "description": "Read registry v2 (schema, catalog ids, contrastPairs, metadata, optional full registry). No file writes.",
+      "path": "/sail.ops.v1.SailTheme/Registry",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "model": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "section": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "workspace": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "ThemeRegistryRet",
+        "type": "object",
+        "required": [
+          "catalog",
+          "contrastPairs",
+          "metadata",
+          "ok",
+          "schema"
+        ],
+        "properties": {
+          "catalog": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "contrastPairs": {
+            "$ref": "#/definitions/Json"
+          },
+          "metadata": {
+            "$ref": "#/definitions/Json"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "registry": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/Json"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "schema": {
+            "type": "string"
+          }
+        },
+        "definitions": {
+          "Json": {}
+        }
+      }
+    },
+    {
+      "service": "SailTheme",
       "method": "FontSearch",
       "mcp_tool": "sail_theme_font_search",
       "description": "Search Google Fonts catalog (bundled) by family query + optional category/limit. Empty query returns popular families. Offline after catalog bake.",

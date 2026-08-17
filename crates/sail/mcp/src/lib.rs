@@ -108,6 +108,78 @@ mod tests {
             .collect();
         assert!(names.contains(&"sail_theme_write"));
         assert!(names.contains(&"sail_tokens_generate"));
+        assert!(names.contains(&"sail_theme_derive_scale"));
+        assert!(names.contains(&"sail_theme_check"));
+        assert!(names.contains(&"sail_theme_registry"));
+    }
+
+    #[test]
+    fn derive_and_check_theme_call_engine_without_writes() {
+        let ctx = Ctx::from_env();
+        let derived = call_tool_with_ctx(
+            "sail_theme_derive_scale",
+            &json!({
+                "anchors": {
+                    "primary": { "space": "oklch", "l": 0.54, "c": 0.18, "h": 245 }
+                },
+                "mode": "light"
+            }),
+            &ctx,
+        )
+        .unwrap();
+        assert_eq!(derived["ok"], true);
+        let solid = derived["scales"]["primary"]["solid"].as_str().unwrap();
+        assert!(solid.starts_with("oklch("), "{solid}");
+
+        let mut theme = json!({
+            "$extensions": { "sail": { "themeId": "mcp-probe", "defaultMode": "light", "layer": "theme" } },
+            "anchors": {
+                "primary": { "space": "oklch", "l": 0.45, "c": 0.12, "h": 250 },
+                "accent": { "space": "oklch", "l": 0.45, "c": 0.16, "h": 300 },
+                "secondary": { "space": "oklch", "l": 0.92, "c": 0.02, "h": 250 },
+                "success": { "space": "oklch", "l": 0.62, "c": 0.15, "h": 150 },
+                "warning": { "space": "oklch", "l": 0.72, "c": 0.15, "h": 75 },
+                "info": { "space": "oklch", "l": 0.58, "c": 0.16, "h": 230 },
+                "danger": { "space": "oklch", "l": 0.58, "c": 0.22, "h": 27 },
+                "neutral": { "space": "oklch", "l": 0.92, "c": 0.01, "h": 250 }
+            },
+            "modes": {
+                "light": {
+                    "color": {
+                        "background": { "$value": "oklch(0.98 0 0)", "$type": "color" },
+                        "foreground": { "$value": "oklch(0.20 0 0)", "$type": "color" },
+                        "muted": {
+                            "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
+                            "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
+                        }
+                    }
+                }
+            }
+        });
+        let ok = call_tool_with_ctx("sail_theme_check", &json!({ "theme": theme }), &ctx).unwrap();
+        assert_eq!(ok["ok"], true, "{ok}");
+        theme["modes"]["light"]["color"]["muted"]["foreground"]["$value"] =
+            json!("oklch(0.85 0 0)");
+        let bad = call_tool_with_ctx(
+            "sail_theme_check",
+            &json!({ "theme": theme, "derive": true }),
+            &ctx,
+        )
+        .unwrap();
+        assert_eq!(bad["ok"], false, "{bad}");
+        assert!(
+            bad["errors"][0].as_str().unwrap().contains("floor 4.5:1"),
+            "{bad}"
+        );
+
+        let reg = call_tool_with_ctx(
+            "sail_theme_registry",
+            &json!({ "section": "catalog" }),
+            &ctx,
+        )
+        .unwrap();
+        assert_eq!(reg["schema"], "spinnaker.registry.v2");
+        assert_eq!(reg["catalog"].as_array().unwrap().len(), 8);
     }
 
     #[test]

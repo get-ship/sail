@@ -1,0 +1,74 @@
+{
+  "service": "SailTheme",
+  "method": "CheckTheme",
+  "mcp_tool": "sail_theme_check",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "content": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "derive": {
+        "type": [
+          "boolean",
+          "null"
+        ]
+      },
+      "label": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "theme": {
+        "anyOf": [
+          {
+            "$ref": "#/definitions/Json"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      }
+    },
+    "definitions": {
+      "Json": {}
+    }
+  },
+  "outputSchema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "ThemeCheckRet",
+    "type": "object",
+    "required": [
+      "contrastPairs",
+      "ok"
+    ],
+    "properties": {
+      "contrastPairs": {
+        "$ref": "#/definitions/Json"
+      },
+      "derived": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "errors": {
+        "default": [],
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "ok": {
+        "type": "boolean"
+      }
+    },
+    "definitions": {
+      "Json": {}
+    }
+  }
+}

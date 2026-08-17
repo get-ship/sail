@@ -36,6 +36,26 @@ pub const CONTRAST_PAIRS: &[(&str, &str)] = &[
     ("accent-foreground", "accent"),
 ];
 
+/// Engine contrast pairs for every declared mode (registry metadata shape).
+pub fn contrast_reports_json(doc: &Value) -> Vec<Value> {
+    let Some(modes) = doc.get("modes").and_then(|v| v.as_object()) else {
+        return Vec::new();
+    };
+    let mut out = Vec::new();
+    for (mode_name, body) in modes {
+        let map = paint_map(body);
+        let lookup = |name: &str| map.get(name).map(|l| l.value.clone());
+        for r in crate::contract::contrast_reports(&lookup, mode_name) {
+            let mut j = r.to_json();
+            if let Some(obj) = j.as_object_mut() {
+                obj.insert("mode".into(), serde_json::json!(mode_name));
+            }
+            out.push(j);
+        }
+    }
+    out
+}
+
 /// Full theme document gate. Schema lock runs first.
 pub fn validate_theme_gate(doc: &Value, label: &str) -> Result<()> {
     validate_theme_doc_schema(doc, label)?;

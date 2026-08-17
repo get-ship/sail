@@ -163,6 +163,18 @@ pub fn call_rpc(
             let _a: contracts::ThemeEffectiveIdsArgs = parse_args(args_json)?;
             theme::effective_ids(args_json, ctx)
         }
+        ("SailTheme", "DeriveScale") => {
+            let _a: contracts::ThemeDeriveScaleArgs = parse_args(args_json)?;
+            theme::derive_scale(args_json, ctx)
+        }
+        ("SailTheme", "CheckTheme") => {
+            let _a: contracts::ThemeCheckArgs = parse_args(args_json)?;
+            theme::check_theme(args_json, ctx)
+        }
+        ("SailTheme", "Registry") => {
+            let _a: contracts::ThemeRegistryArgs = parse_args(args_json)?;
+            theme::registry(args_json, ctx)
+        }
         ("SailTheme", "FontSearch") => {
             let _a: contracts::ThemeFontSearchArgs = parse_args(args_json)?;
             fonts::font_search(args_json, ctx)
@@ -377,6 +389,9 @@ mod tests {
         assert!(names.contains(&"sail_theme_write"));
         assert!(names.contains(&"sail_tokens_generate"));
         assert!(names.contains(&"sail_theme_effective_ids"));
+        assert!(names.contains(&"sail_theme_derive_scale"));
+        assert!(names.contains(&"sail_theme_check"));
+        assert!(names.contains(&"sail_theme_registry"));
         assert!(names.contains(&"sail_dev_server_start"));
         assert!(names.contains(&"sail_dev_server_status"));
         assert!(names.contains(&"sail_dev_server_stop"));

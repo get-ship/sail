@@ -61,6 +61,9 @@ pub fn connect_router_with_ctx(ctx: Ctx) -> Router {
         .route("/sail.ops.v1.SailTheme/Fork", post(unary))
         .route("/sail.ops.v1.SailTheme/Generate", post(unary))
         .route("/sail.ops.v1.SailTheme/EffectiveIds", post(unary))
+        .route("/sail.ops.v1.SailTheme/DeriveScale", post(unary))
+        .route("/sail.ops.v1.SailTheme/CheckTheme", post(unary))
+        .route("/sail.ops.v1.SailTheme/Registry", post(unary))
         .route("/sail.ops.v1.SailTheme/FontSearch", post(unary))
         .route("/sail.ops.v1.SailTheme/FontAdd", post(unary))
         .route("/sail.ops.v1.SailDevServer/Start", post(unary))
@@ -366,6 +369,16 @@ mod tests {
         )
         .await;
         assert_http_matches_rpc("SailTheme", "EffectiveIds", json!({})).await;
+        assert_http_matches_rpc(
+            "SailTheme",
+            "DeriveScale",
+            json!({
+                "anchors": { "primary": { "space": "oklch", "l": 0.54, "c": 0.18, "h": 245 } },
+                "mode": "light"
+            }),
+        )
+        .await;
+        assert_http_matches_rpc("SailTheme", "Registry", json!({ "section": "catalog" })).await;
     }
 
     /// SPEC-STUDIO-CONTRACT-1: Tasks surface HTTP ≈ RPC.

@@ -600,6 +600,141 @@
     }
   },
   {
+    "name": "sail_theme_derive_scale",
+    "description": "Derive chromatic scale steps from anchors (engine). No file writes. anchors in, solid/hover/subtle/border/text out.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "anchors": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Json"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bg": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Json"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fg": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Json"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "mode": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "overrides": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Json"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "theme": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Json"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "definitions": {
+        "Json": {}
+      }
+    }
+  },
+  {
+    "name": "sail_theme_check",
+    "description": "Contrast/contract gate on an in-memory theme (engine). Floor pairs fail. No file writes.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "content": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "derive": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "label": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "theme": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Json"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "definitions": {
+        "Json": {}
+      }
+    }
+  },
+  {
+    "name": "sail_theme_registry",
+    "description": "Read registry v2 (schema, catalog ids, contrastPairs, metadata, optional full registry). No file writes.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "model": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "section": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "workspace": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  },
+  {
     "name": "sail_theme_font_search",
     "description": "Search Google Fonts catalog (bundled) by family query + optional category/limit. Empty query returns popular families. Offline after catalog bake.",
     "inputSchema": {

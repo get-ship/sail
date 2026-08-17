@@ -1,0 +1,99 @@
+{
+  "service": "SailTheme",
+  "method": "DeriveScale",
+  "mcp_tool": "sail_theme_derive_scale",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "anchors": {
+        "anyOf": [
+          {
+            "$ref": "#/definitions/Json"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "bg": {
+        "anyOf": [
+          {
+            "$ref": "#/definitions/Json"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "fg": {
+        "anyOf": [
+          {
+            "$ref": "#/definitions/Json"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "mode": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "overrides": {
+        "anyOf": [
+          {
+            "$ref": "#/definitions/Json"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "theme": {
+        "anyOf": [
+          {
+            "$ref": "#/definitions/Json"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      }
+    },
+    "definitions": {
+      "Json": {}
+    }
+  },
+  "outputSchema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "ThemeDeriveScaleRet",
+    "type": "object",
+    "required": [
+      "mode",
+      "ok",
+      "scales"
+    ],
+    "properties": {
+      "derived": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "mode": {
+        "type": "string"
+      },
+      "ok": {
+        "type": "boolean"
+      },
+      "scales": {
+        "$ref": "#/definitions/Json"
+      }
+    },
+    "definitions": {
+      "Json": {}
+    }
+  }
+}

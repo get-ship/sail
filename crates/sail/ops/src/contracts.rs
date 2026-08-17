@@ -454,6 +454,76 @@ pub struct ThemeEffectiveIdsRet {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct ThemeDeriveScaleArgs {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub anchors: Option<Json>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mode: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bg: Option<Json>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fg: Option<Json>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub overrides: Option<Json>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub theme: Option<Json>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct ThemeDeriveScaleRet {
+    pub ok: bool,
+    pub mode: String,
+    pub scales: Json,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub derived: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct ThemeCheckArgs {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub theme: Option<Json>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub content: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub derive: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub label: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct ThemeCheckRet {
+    pub ok: bool,
+    #[serde(default)]
+    pub errors: Vec<String>,
+    #[serde(rename = "contrastPairs")]
+    pub contrast_pairs: Json,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub derived: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct ThemeRegistryArgs {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub section: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub workspace: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub model: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct ThemeRegistryRet {
+    pub ok: bool,
+    pub schema: String,
+    pub catalog: Vec<String>,
+    #[serde(rename = "contrastPairs")]
+    pub contrast_pairs: Json,
+    pub metadata: Json,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub registry: Option<Json>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct ThemeFontSearchArgs {
     /// Family substring filter (case-insensitive). Empty → popularity order.
     #[serde(default)]
@@ -1142,6 +1212,42 @@ pub const METHOD_CONTRACTS: &[MethodContract] = &[
         "ThemeEffectiveIdsRet",
         "  project?: string\n  workspace?: string\n",
         "  [key: string]: JsonValue | undefined\n"
+    ),
+    contract!(
+        "SailTheme",
+        "DeriveScale",
+        "sail_theme_derive_scale",
+        "Derive chromatic scale steps from anchors (engine). No file writes. anchors in, solid/hover/subtle/border/text out.",
+        ThemeDeriveScaleArgs,
+        ThemeDeriveScaleRet,
+        "ThemeDeriveScaleArgs",
+        "ThemeDeriveScaleRet",
+        "  anchors?: JsonValue\n  mode?: string\n  bg?: JsonValue\n  fg?: JsonValue\n  overrides?: JsonValue\n  theme?: JsonValue\n",
+        "  ok: boolean\n  mode: string\n  scales: JsonValue\n  derived?: string[]\n"
+    ),
+    contract!(
+        "SailTheme",
+        "CheckTheme",
+        "sail_theme_check",
+        "Contrast/contract gate on an in-memory theme (engine). Floor pairs fail. No file writes.",
+        ThemeCheckArgs,
+        ThemeCheckRet,
+        "ThemeCheckArgs",
+        "ThemeCheckRet",
+        "  theme?: JsonValue\n  content?: string\n  derive?: boolean\n  label?: string\n",
+        "  ok: boolean\n  errors: string[]\n  contrastPairs: JsonValue\n  derived?: string[]\n"
+    ),
+    contract!(
+        "SailTheme",
+        "Registry",
+        "sail_theme_registry",
+        "Read registry v2 (schema, catalog ids, contrastPairs, metadata, optional full registry). No file writes.",
+        ThemeRegistryArgs,
+        ThemeRegistryRet,
+        "ThemeRegistryArgs",
+        "ThemeRegistryRet",
+        "  section?: string\n  workspace?: string\n  model?: string\n",
+        "  ok: boolean\n  schema: string\n  catalog: string[]\n  contrastPairs: JsonValue\n  metadata: JsonValue\n  registry?: JsonValue\n"
     ),
     contract!(
         "SailTheme",

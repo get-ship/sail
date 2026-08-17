@@ -565,6 +565,18 @@ fn baked_model_fingerprint() -> u64 {
     h.finish()
 }
 
+/// Stable catalog order (sail + gallery). Not ship/neutral/contrast-as-theme.
+pub fn catalog_theme_order() -> &'static [&'static str] {
+    THEME_ORDER
+}
+
+/// Registry v2 as a value — no CSS/file emit. Agents/studio read this.
+pub fn registry_v2(model_dir: &Path) -> Result<Value> {
+    let (_layers, _name_index, base_tokens, styles, keyframes, plays, tag_defaults) =
+        load_base_layers(model_dir)?;
+    build_registry(&base_tokens, &styles, &keyframes, &plays, &tag_defaults)
+}
+
 /// Theme ids present in the baked catalog (sorted).
 pub fn baked_catalog_theme_ids() -> Vec<String> {
     let mut ids: Vec<String> = baked_tokens_model::BAKED_MODEL_FILES
