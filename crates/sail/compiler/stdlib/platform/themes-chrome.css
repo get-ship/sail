@@ -94,9 +94,7 @@
 /* Dark-mode syntax palette — mode attr only (no .dark / twin theme ids). */
 :root[mode='dark'],
 :root[theme='console'][mode='dark'],
-:root[theme='contrast'][mode='dark'],
-:root[theme='console']:not([mode]),
-:root[theme='contrast']:not([mode]) {
+:root[theme='console']:not([mode]) {
   --syntax-keyword:  oklch(0.78 0.16 290);
   --syntax-string:   oklch(0.80 0.15 145);
   --syntax-number:   oklch(0.78 0.14 230);

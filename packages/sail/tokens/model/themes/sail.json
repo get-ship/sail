@@ -1,11 +1,11 @@
 {
-  "$description": "Sail brand theme \u2014 dual-mode with cooler electric primary (framework default).",
+  "$description": "Canonical dual-mode default. Cool electric primary, tight radii, faint grain.",
   "$extensions": {
     "sail": {
       "layer": "theme",
       "themeId": "sail",
       "defaultMode": "light",
-      "identity": "Cool electric default.",
+      "identity": "Sail is the cool-electric dual-mode default: a cyan-tinged blue primary on near-white and deep-navy surfaces, tight radii, and a faint grain.",
       "variants": {
         "density": true,
         "contrast": true,
@@ -15,578 +15,118 @@
   },
   "anchors": {
     "light": {
-      "primary": {
-        "space": "oklch",
-        "l": 0.54,
-        "c": 0.18,
-        "h": 245.0
-      },
-      "accent": {
-        "space": "oklch",
-        "l": 0.5,
-        "c": 0.14,
-        "h": 195.0
-      },
-      "secondary": {
-        "space": "oklch",
-        "l": 0.95,
-        "c": 0.012,
-        "h": 250.0
-      },
-      "success": {
-        "space": "oklch",
-        "l": 0.62,
-        "c": 0.15,
-        "h": 150.0
-      },
-      "warning": {
-        "space": "oklch",
-        "l": 0.72,
-        "c": 0.15,
-        "h": 75.0
-      },
-      "info": {
-        "space": "oklch",
-        "l": 0.58,
-        "c": 0.16,
-        "h": 230.0
-      },
-      "danger": {
-        "space": "oklch",
-        "l": 0.58,
-        "c": 0.22,
-        "h": 27.0
-      },
-      "neutral": {
-        "space": "oklch",
-        "l": 0.95,
-        "c": 0.012,
-        "h": 250.0
-      }
+      "primary": { "space": "oklch", "l": 0.54, "c": 0.18, "h": 245 },
+      "accent": { "space": "oklch", "l": 0.5, "c": 0.14, "h": 195 },
+      "secondary": { "space": "oklch", "l": 0.95, "c": 0.012, "h": 250 },
+      "success": { "space": "oklch", "l": 0.62, "c": 0.15, "h": 150 },
+      "warning": { "space": "oklch", "l": 0.72, "c": 0.15, "h": 75 },
+      "info": { "space": "oklch", "l": 0.58, "c": 0.16, "h": 230 },
+      "danger": { "space": "oklch", "l": 0.58, "c": 0.22, "h": 27 },
+      "neutral": { "space": "oklch", "l": 0.95, "c": 0.012, "h": 250 }
     },
     "dark": {
-      "primary": {
-        "space": "oklch",
-        "l": 0.72,
-        "c": 0.16,
-        "h": 230.0
-      },
-      "accent": {
-        "space": "oklch",
-        "l": 0.68,
-        "c": 0.14,
-        "h": 195.0
-      },
-      "secondary": {
-        "space": "oklch",
-        "l": 0.22,
-        "c": 0.035,
-        "h": 255.0
-      },
-      "success": {
-        "space": "oklch",
-        "l": 0.72,
-        "c": 0.15,
-        "h": 150.0
-      },
-      "warning": {
-        "space": "oklch",
-        "l": 0.78,
-        "c": 0.15,
-        "h": 75.0
-      },
-      "info": {
-        "space": "oklch",
-        "l": 0.72,
-        "c": 0.14,
-        "h": 230.0
-      },
-      "danger": {
-        "space": "oklch",
-        "l": 0.65,
-        "c": 0.2,
-        "h": 25.0
-      },
-      "neutral": {
-        "space": "oklch",
-        "l": 0.22,
-        "c": 0.035,
-        "h": 255.0
-      }
+      "primary": { "space": "oklch", "l": 0.72, "c": 0.16, "h": 230 },
+      "accent": { "space": "oklch", "l": 0.68, "c": 0.14, "h": 195 },
+      "secondary": { "space": "oklch", "l": 0.22, "c": 0.035, "h": 255 },
+      "success": { "space": "oklch", "l": 0.72, "c": 0.15, "h": 150 },
+      "warning": { "space": "oklch", "l": 0.78, "c": 0.15, "h": 75 },
+      "info": { "space": "oklch", "l": 0.72, "c": 0.14, "h": 230 },
+      "danger": { "space": "oklch", "l": 0.65, "c": 0.2, "h": 25 },
+      "neutral": { "space": "oklch", "l": 0.22, "c": 0.035, "h": 255 }
     }
   },
   "modes": {
     "light": {
       "color": {
-        "background": {
-          "$value": {
-            "space": "oklch",
-            "l": 0.985,
-            "c": 0.008,
-            "h": 250.0
-          },
-          "$type": "color"
-        },
-        "foreground": {
-          "$value": {
-            "space": "oklch",
-            "l": 0.22,
-            "c": 0.035,
-            "h": 255.0
-          },
-          "$type": "color"
-        },
+        "background": { "$value": { "space": "oklch", "l": 0.985, "c": 0.008, "h": 250 }, "$type": "color" },
+        "foreground": { "$value": { "space": "oklch", "l": 0.22, "c": 0.035, "h": 255 }, "$type": "color" },
         "muted": {
-          "default": {
-            "$value": {
-              "space": "oklch",
-              "l": 0.95,
-              "c": 0.012,
-              "h": 250.0
-            },
-            "$type": "color"
-          },
-          "foreground": {
-            "$value": {
-              "space": "oklch",
-              "l": 0.42,
-              "c": 0.04,
-              "h": 250.0
-            },
-            "$type": "color"
-          }
+          "default": { "$value": { "space": "oklch", "l": 0.95, "c": 0.012, "h": 250 }, "$type": "color" },
+          "foreground": { "$value": { "space": "oklch", "l": 0.42, "c": 0.04, "h": 250 }, "$type": "color" }
         },
-        "surface": {
-          "$value": {
-            "space": "oklch",
-            "l": 1.0,
-            "c": 0.0,
-            "h": 0.0
-          },
-          "$type": "color"
-        },
-        "inset": {
-          "$value": {
-            "space": "oklch",
-            "l": 0.2,
-            "c": 0.03,
-            "h": 250.0,
-            "a": 0.05
-          },
-          "$type": "color"
-        },
-        "overlay": {
-          "$value": {
-            "space": "oklch",
-            "l": 1.0,
-            "c": 0.0,
-            "h": 0.0
-          },
-          "$type": "color"
-        },
+        "surface": { "$value": { "space": "oklch", "l": 1, "c": 0, "h": 0 }, "$type": "color" },
+        "inset": { "$value": { "space": "oklch", "l": 0.2, "c": 0.03, "h": 250, "a": 0.05 }, "$type": "color" },
+        "overlay": { "$value": { "space": "oklch", "l": 1, "c": 0, "h": 0 }, "$type": "color" },
         "border": {
-          "default": {
-            "$value": {
-              "space": "oklch",
-              "l": 0.2,
-              "c": 0.03,
-              "h": 250.0,
-              "a": 0.16
-            },
-            "$type": "color"
-          },
-          "subtle": {
-            "$value": "color-mix(in oklch, var(--border) 60%, transparent)",
-            "$type": "color"
-          },
-          "strong": {
-            "$value": "color-mix(in oklch, var(--foreground) 55%, transparent)",
-            "$type": "color"
-          }
-        },
-        "backdrop": {
-          "$value": {
-            "space": "oklch",
-            "l": 0.0,
-            "c": 0.0,
-            "h": 0.0,
-            "a": 0.4
-          },
-          "$type": "color"
-        },
-        "scrim": {
-          "$value": {
-            "space": "oklch",
-            "l": 0.0,
-            "c": 0.0,
-            "h": 0.0,
-            "a": 0.2
-          },
-          "$type": "color"
-        },
-        "primary": {
-          "text": {
-            "$value": {
-              "space": "oklch",
-              "l": 0.99,
-              "c": 0.01,
-              "h": 245.0
-            },
-            "$type": "color"
-          }
-        },
-        "accent": {
-          "text": {
-            "$value": {
-              "space": "oklch",
-              "l": 0.99,
-              "c": 0.01,
-              "h": 195.0
-            },
-            "$type": "color"
-          }
-        },
-        "secondary": {
-          "text": {
-            "$value": {
-              "space": "oklch",
-              "l": 0.22,
-              "c": 0.035,
-              "h": 255.0
-            },
-            "$type": "color"
-          }
+          "default": { "$value": { "space": "oklch", "l": 0.2, "c": 0.03, "h": 250, "a": 0.16 }, "$type": "color" },
+          "subtle": { "$value": { "op": "mix", "from": { "ref": "border" }, "onto": "transparent", "amount": 0.6 }, "$type": "color" },
+          "strong": { "$value": { "op": "mix", "from": { "ref": "foreground" }, "onto": "transparent", "amount": 0.55 }, "$type": "color" }
         }
       },
       "overlay": {
-        "fill": {
-          "$value": "none",
-          "$type": "string"
-        },
-        "blend": {
-          "$value": "normal",
-          "$type": "string"
-        },
-        "opacity": {
-          "$value": "1",
-          "$type": "number"
-        }
+        "fill": { "$value": "none", "$type": "string" },
+        "blend": { "$value": "normal", "$type": "string" },
+        "opacity": { "$value": "1", "$type": "number" }
       },
       "radius": {
-        "md": {
-          "$value": "6px",
-          "$type": "dimension"
-        },
-        "sm": {
-          "$value": "4px",
-          "$type": "dimension"
-        }
+        "sm": { "$value": "4px", "$type": "dimension" },
+        "md": { "$value": "6px", "$type": "dimension" }
       },
       "shadow": {
-        "accent": {
-          "$value": "0 0 0 3px oklch(0.58 0.18 245 / 18%), 0 8px 24px -6px oklch(0.58 0.18 245 / 28%)",
-          "$type": "shadow"
-        },
-        "card-rest": {
-          "$value": "0 1px 2px 0 oklch(0 0 0 / 4%), 0 0 0 1px oklch(0 0 0 / 3%)",
-          "$type": "shadow"
-        },
-        "hover": {
-          "$value": "0 8px 22px -4px oklch(0.45 0.10 245 / 14%), 0 2px 6px oklch(0 0 0 / 6%)",
-          "$type": "shadow"
-        },
-        "lg": {
-          "$value": "0 14px 32px -6px oklch(0.45 0.10 245 / 16%), 0 4px 12px oklch(0 0 0 / 8%)",
-          "$type": "shadow"
-        },
-        "md": {
-          "$value": "0 6px 18px -4px oklch(0.45 0.10 245 / 12%), 0 2px 6px oklch(0 0 0 / 6%)",
-          "$type": "shadow"
-        },
-        "sm": {
-          "$value": "0 2px 4px -1px oklch(0.45 0.10 245 / 9%), 0 1px 2px oklch(0 0 0 / 4%)",
-          "$type": "shadow"
-        },
-        "xs": {
-          "$value": "0 1px 2px 0 oklch(0.45 0.10 245 / 6%), 0 0 0 1px oklch(0 0 0 / 3%)",
-          "$type": "shadow"
-        }
+        "xs": { "$value": "0 1px 2px 0 oklch(0.45 0.10 245 / 6%), 0 0 0 1px oklch(0 0 0 / 3%)", "$type": "shadow" },
+        "sm": { "$value": "0 2px 4px -1px oklch(0.45 0.10 245 / 9%), 0 1px 2px oklch(0 0 0 / 4%)", "$type": "shadow" },
+        "md": { "$value": "0 6px 18px -4px oklch(0.45 0.10 245 / 12%), 0 2px 6px oklch(0 0 0 / 6%)", "$type": "shadow" },
+        "lg": { "$value": "0 14px 32px -6px oklch(0.45 0.10 245 / 16%), 0 4px 12px oklch(0 0 0 / 8%)", "$type": "shadow" },
+        "card-rest": { "$value": "0 1px 2px 0 oklch(0 0 0 / 4%), 0 0 0 1px oklch(0 0 0 / 3%)", "$type": "shadow" },
+        "hover": { "$value": "0 8px 22px -4px oklch(0.45 0.10 245 / 14%), 0 2px 6px oklch(0 0 0 / 6%)", "$type": "shadow" },
+        "accent": { "$value": "0 0 0 3px oklch(0.58 0.18 245 / 18%), 0 8px 24px -6px oklch(0.58 0.18 245 / 28%)", "$type": "shadow" }
       },
-      "interaction": {
-        "selected": {
-          "strength": {
-            "$value": "14%",
-            "$type": "number"
-          }
-        }
-      },
-      "filter": {
-        "backdrop": {
-          "$value": "none",
-          "$type": "string"
-        }
-      },
+      "filter": { "backdrop": { "$value": "none", "$type": "string" } },
       "image": {
         "texture": {
           "$value": "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='c'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23c)' opacity='0.03'/%3E%3C/svg%3E\")",
           "$type": "string"
         },
-        "texture-blend": {
-          "$value": "overlay",
-          "$type": "string"
-        },
-        "texture-opacity": {
-          "$value": "1",
-          "$type": "number"
-        }
+        "texture-blend": { "$value": "overlay", "$type": "string" },
+        "texture-opacity": { "$value": "1", "$type": "number" }
       },
-      "$extensions": {
-        "sail": {
-          "dark": false
-        }
-      }
+      "$extensions": { "sail": { "dark": false } }
     },
     "dark": {
       "color": {
-        "background": {
-          "$value": {
-            "space": "oklch",
-            "l": 0.16,
-            "c": 0.03,
-            "h": 255.0
-          },
-          "$type": "color"
-        },
-        "foreground": {
-          "$value": {
-            "space": "oklch",
-            "l": 0.97,
-            "c": 0.01,
-            "h": 250.0
-          },
-          "$type": "color"
-        },
+        "background": { "$value": { "space": "oklch", "l": 0.16, "c": 0.03, "h": 255 }, "$type": "color" },
+        "foreground": { "$value": { "space": "oklch", "l": 0.97, "c": 0.01, "h": 250 }, "$type": "color" },
         "muted": {
-          "default": {
-            "$value": {
-              "space": "oklch",
-              "l": 0.22,
-              "c": 0.035,
-              "h": 255.0
-            },
-            "$type": "color"
-          },
-          "foreground": {
-            "$value": {
-              "space": "oklch",
-              "l": 0.72,
-              "c": 0.03,
-              "h": 250.0
-            },
-            "$type": "color"
-          }
+          "default": { "$value": { "space": "oklch", "l": 0.22, "c": 0.035, "h": 255 }, "$type": "color" },
+          "foreground": { "$value": { "space": "oklch", "l": 0.72, "c": 0.03, "h": 250 }, "$type": "color" }
         },
-        "surface": {
-          "$value": {
-            "space": "oklch",
-            "l": 0.2,
-            "c": 0.035,
-            "h": 255.0
-          },
-          "$type": "color"
-        },
-        "inset": {
-          "$value": {
-            "space": "oklch",
-            "l": 1.0,
-            "c": 0.0,
-            "h": 0.0,
-            "a": 0.06
-          },
-          "$type": "color"
-        },
-        "overlay": {
-          "$value": {
-            "space": "oklch",
-            "l": 0.24,
-            "c": 0.035,
-            "h": 255.0
-          },
-          "$type": "color"
-        },
+        "surface": { "$value": { "space": "oklch", "l": 0.2, "c": 0.035, "h": 255 }, "$type": "color" },
+        "inset": { "$value": { "space": "oklch", "l": 1, "c": 0, "h": 0, "a": 0.06 }, "$type": "color" },
+        "overlay": { "$value": { "space": "oklch", "l": 0.24, "c": 0.035, "h": 255 }, "$type": "color" },
         "border": {
-          "default": {
-            "$value": {
-              "space": "oklch",
-              "l": 1.0,
-              "c": 0.0,
-              "h": 0.0,
-              "a": 0.12
-            },
-            "$type": "color"
-          },
-          "subtle": {
-            "$value": {
-              "space": "oklch",
-              "l": 1.0,
-              "c": 0.0,
-              "h": 0.0,
-              "a": 0.08
-            },
-            "$type": "color"
-          },
-          "strong": {
-            "$value": {
-              "space": "oklch",
-              "l": 1.0,
-              "c": 0.0,
-              "h": 0.0,
-              "a": 0.22
-            },
-            "$type": "color"
-          }
-        },
-        "backdrop": {
-          "$value": {
-            "space": "oklch",
-            "l": 0.0,
-            "c": 0.0,
-            "h": 0.0,
-            "a": 0.55
-          },
-          "$type": "color"
-        },
-        "scrim": {
-          "$value": {
-            "space": "oklch",
-            "l": 0.0,
-            "c": 0.0,
-            "h": 0.0,
-            "a": 0.3
-          },
-          "$type": "color"
-        },
-        "primary": {
-          "text": {
-            "$value": {
-              "space": "oklch",
-              "l": 0.16,
-              "c": 0.03,
-              "h": 255.0
-            },
-            "$type": "color"
-          }
-        },
-        "accent": {
-          "text": {
-            "$value": {
-              "space": "oklch",
-              "l": 0.16,
-              "c": 0.03,
-              "h": 255.0
-            },
-            "$type": "color"
-          }
-        },
-        "secondary": {
-          "text": {
-            "$value": {
-              "space": "oklch",
-              "l": 0.97,
-              "c": 0.01,
-              "h": 250.0
-            },
-            "$type": "color"
-          }
+          "default": { "$value": { "space": "oklch", "l": 1, "c": 0, "h": 0, "a": 0.12 }, "$type": "color" },
+          "subtle": { "$value": { "space": "oklch", "l": 1, "c": 0, "h": 0, "a": 0.08 }, "$type": "color" },
+          "strong": { "$value": { "space": "oklch", "l": 1, "c": 0, "h": 0, "a": 0.22 }, "$type": "color" }
         }
       },
       "overlay": {
-        "fill": {
-          "$value": "none",
-          "$type": "string"
-        },
-        "blend": {
-          "$value": "normal",
-          "$type": "string"
-        },
-        "opacity": {
-          "$value": "1",
-          "$type": "number"
-        }
+        "fill": { "$value": "none", "$type": "string" },
+        "blend": { "$value": "normal", "$type": "string" },
+        "opacity": { "$value": "1", "$type": "number" }
       },
       "radius": {
-        "md": {
-          "$value": "6px",
-          "$type": "dimension"
-        },
-        "sm": {
-          "$value": "4px",
-          "$type": "dimension"
-        }
+        "sm": { "$value": "4px", "$type": "dimension" },
+        "md": { "$value": "6px", "$type": "dimension" }
       },
       "shadow": {
-        "accent": {
-          "$value": "0 0 0 3px oklch(0.72 0.16 230 / 22%), 0 8px 24px -6px oklch(0.72 0.16 230 / 38%)",
-          "$type": "shadow"
-        },
-        "card-rest": {
-          "$value": "0 1px 2px 0 oklch(0.05 0.03 255 / 35%), 0 0 0 1px oklch(1 0 0 / 4%)",
-          "$type": "shadow"
-        },
-        "hover": {
-          "$value": "0 8px 22px -4px oklch(0.10 0.04 255 / 50%), 0 2px 6px oklch(0 0 0 / 35%)",
-          "$type": "shadow"
-        },
-        "lg": {
-          "$value": "0 14px 32px -6px oklch(0.10 0.04 255 / 60%), 0 4px 12px oklch(0 0 0 / 40%)",
-          "$type": "shadow"
-        },
-        "md": {
-          "$value": "0 6px 18px -4px oklch(0.10 0.04 255 / 55%), 0 2px 6px oklch(0 0 0 / 35%)",
-          "$type": "shadow"
-        },
-        "sm": {
-          "$value": "0 2px 6px -1px oklch(0.10 0.04 255 / 50%), 0 0 0 1px oklch(1 0 0 / 4%)",
-          "$type": "shadow"
-        },
-        "xs": {
-          "$value": "0 1px 2px 0 oklch(0 0 0 / 5%)",
-          "$type": "shadow"
-        }
+        "xs": { "$value": "0 1px 2px 0 oklch(0 0 0 / 5%)", "$type": "shadow" },
+        "sm": { "$value": "0 2px 6px -1px oklch(0.10 0.04 255 / 50%), 0 0 0 1px oklch(1 0 0 / 4%)", "$type": "shadow" },
+        "md": { "$value": "0 6px 18px -4px oklch(0.10 0.04 255 / 55%), 0 2px 6px oklch(0 0 0 / 35%)", "$type": "shadow" },
+        "lg": { "$value": "0 14px 32px -6px oklch(0.10 0.04 255 / 60%), 0 4px 12px oklch(0 0 0 / 40%)", "$type": "shadow" },
+        "card-rest": { "$value": "0 1px 2px 0 oklch(0.05 0.03 255 / 35%), 0 0 0 1px oklch(1 0 0 / 4%)", "$type": "shadow" },
+        "hover": { "$value": "0 8px 22px -4px oklch(0.10 0.04 255 / 50%), 0 2px 6px oklch(0 0 0 / 35%)", "$type": "shadow" },
+        "accent": { "$value": "0 0 0 3px oklch(0.72 0.16 230 / 22%), 0 8px 24px -6px oklch(0.72 0.16 230 / 38%)", "$type": "shadow" }
       },
-      "interaction": {
-        "selected": {
-          "strength": {
-            "$value": "18%",
-            "$type": "number"
-          }
-        }
-      },
-      "filter": {
-        "backdrop": {
-          "$value": "none",
-          "$type": "string"
-        }
-      },
+      "filter": { "backdrop": { "$value": "none", "$type": "string" } },
       "image": {
         "texture": {
           "$value": "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='c'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23c)' opacity='0.03'/%3E%3C/svg%3E\")",
           "$type": "string"
         },
-        "texture-blend": {
-          "$value": "overlay",
-          "$type": "string"
-        },
-        "texture-opacity": {
-          "$value": "1",
-          "$type": "number"
-        }
+        "texture-blend": { "$value": "overlay", "$type": "string" },
+        "texture-opacity": { "$value": "1", "$type": "number" }
       },
-      "$extensions": {
-        "sail": {
-          "dark": true
-        }
-      }
+      "$extensions": { "sail": { "dark": true } }
     }
   }
 }

@@ -596,13 +596,16 @@ body::after {
 }
 
 /* ─── contrast (contrast.json) ─── */
-/* High-contrast variant any theme can fulfill. */
+/* High-contrast variant any theme can fulfill. Mode-keyed values follow color-scheme (sail is the demo host). */
 :root[data-contrast='high'] {
-  --border: oklch(0.7500 0.0000 0.00);
-  --border-strong: oklch(0.9900 0.0000 0.00);
-  --border-subtle: oklch(0.5000 0.0000 0.00);
-  --muted-foreground: oklch(0.8500 0.0000 0.00);
-  --hover-strength: 14%;
-  --active-strength: 22%;
-  --selected-strength: 30%;
+  --background: light-dark(oklch(1.0000 0.0000 0.00), oklch(0.0600 0.0000 0.00));
+  --foreground: light-dark(oklch(0.0800 0.0000 0.00), oklch(0.9900 0.0000 0.00));
+  --muted: light-dark(oklch(0.9200 0.0000 0.00), oklch(0.1600 0.0000 0.00));
+  --muted-foreground: light-dark(oklch(0.1800 0.0000 0.00), oklch(0.9200 0.0000 0.00));
+  --border: light-dark(oklch(0.0800 0.0000 0.00), oklch(0.9900 0.0000 0.00));
+  --border-strong: light-dark(oklch(0.0800 0.0000 0.00), oklch(0.9900 0.0000 0.00));
+  --border-subtle: light-dark(oklch(0.0800 0.0000 0.00 / 0.720), oklch(0.9900 0.0000 0.00 / 0.720));
+  --hover-strength: 16%;
+  --active-strength: 24%;
+  --selected-strength: 32%;
 }

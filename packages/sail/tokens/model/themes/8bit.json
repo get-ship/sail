@@ -1,14 +1,12 @@
 {
-  "$description": "Pixel / 8-bit. Modes-in-file (light/dark).",
+  "$description": "Pixel / 8-bit. Dark-only pixel grid.",
   "$extensions": {
     "sail": {
       "layer": "theme",
       "themeId": "8bit",
       "defaultMode": "dark",
-      "supportedModes": [
-        "dark"
-      ],
-      "identity": "Pixel grid.",
+      "supportedModes": ["dark"],
+      "identity": "8bit is a dark pixel grid: 3px ink, zero radius, offset drop-shadows, Press Start 2P, and a navy checkerboard.",
       "variants": {
         "density": true,
         "contrast": true,
@@ -18,381 +16,95 @@
   },
   "anchors": {
     "dark": {
-      "primary": {
-        "space": "oklch",
-        "l": 0.72,
-        "c": 0.21,
-        "h": 25.0
-      },
-      "accent": {
-        "space": "oklch",
-        "l": 0.82,
-        "c": 0.2,
-        "h": 95.0
-      },
-      "secondary": {
-        "space": "oklch",
-        "l": 0.3,
-        "c": 0.05,
-        "h": 265.0
-      },
-      "success": {
-        "space": "oklch",
-        "l": 0.78,
-        "c": 0.22,
-        "h": 140.0
-      },
-      "warning": {
-        "space": "oklch",
-        "l": 0.85,
-        "c": 0.2,
-        "h": 95.0
-      },
-      "info": {
-        "space": "oklch",
-        "l": 0.72,
-        "c": 0.18,
-        "h": 230.0
-      },
-      "danger": {
-        "space": "oklch",
-        "l": 0.62,
-        "c": 0.25,
-        "h": 25.0
-      },
-      "neutral": {
-        "space": "oklch",
-        "l": 0.3,
-        "c": 0.05,
-        "h": 265.0
-      }
+      "primary": { "space": "oklch", "l": 0.72, "c": 0.21, "h": 25 },
+      "accent": { "space": "oklch", "l": 0.82, "c": 0.2, "h": 95 },
+      "secondary": { "space": "oklch", "l": 0.3, "c": 0.05, "h": 265 },
+      "success": { "space": "oklch", "l": 0.78, "c": 0.22, "h": 140 },
+      "warning": { "space": "oklch", "l": 0.85, "c": 0.2, "h": 95 },
+      "info": { "space": "oklch", "l": 0.72, "c": 0.18, "h": 230 },
+      "danger": { "space": "oklch", "l": 0.62, "c": 0.25, "h": 25 },
+      "neutral": { "space": "oklch", "l": 0.3, "c": 0.05, "h": 265 }
     }
   },
   "modes": {
     "dark": {
       "border": {
-        "width": {
-          "$value": "3px",
-          "$type": "dimension"
-        }
+        "width": { "$value": "3px", "$type": "dimension" }
       },
       "color": {
-        "background": {
-          "$value": {
-            "space": "oklch",
-            "l": 0.18,
-            "c": 0.05,
-            "h": 265.0
-          },
-          "$type": "color"
-        },
-        "foreground": {
-          "$value": {
-            "space": "oklch",
-            "l": 0.95,
-            "c": 0.02,
-            "h": 265.0
-          },
-          "$type": "color"
-        },
+        "background": { "$value": { "space": "oklch", "l": 0.18, "c": 0.05, "h": 265 }, "$type": "color" },
+        "foreground": { "$value": { "space": "oklch", "l": 0.95, "c": 0.02, "h": 265 }, "$type": "color" },
         "muted": {
-          "default": {
-            "$value": {
-              "space": "oklch",
-              "l": 0.3,
-              "c": 0.05,
-              "h": 265.0
-            },
-            "$type": "color"
-          },
-          "foreground": {
-            "$value": {
-              "space": "oklch",
-              "l": 0.72,
-              "c": 0.04,
-              "h": 265.0
-            },
-            "$type": "color"
-          }
+          "default": { "$value": { "space": "oklch", "l": 0.3, "c": 0.05, "h": 265 }, "$type": "color" },
+          "foreground": { "$value": { "space": "oklch", "l": 0.72, "c": 0.04, "h": 265 }, "$type": "color" }
         },
-        "surface": {
-          "$value": {
-            "space": "oklch",
-            "l": 0.24,
-            "c": 0.06,
-            "h": 265.0
-          },
-          "$type": "color"
-        },
-        "inset": {
-          "$value": {
-            "space": "oklch",
-            "l": 0.12,
-            "c": 0.05,
-            "h": 265.0
-          },
-          "$type": "color"
-        },
-        "overlay": {
-          "$value": {
-            "space": "oklch",
-            "l": 0.24,
-            "c": 0.06,
-            "h": 265.0
-          },
-          "$type": "color"
-        },
+        "surface": { "$value": { "space": "oklch", "l": 0.24, "c": 0.06, "h": 265 }, "$type": "color" },
+        "inset": { "$value": { "space": "oklch", "l": 0.12, "c": 0.05, "h": 265 }, "$type": "color" },
+        "overlay": { "$value": { "space": "oklch", "l": 0.24, "c": 0.06, "h": 265 }, "$type": "color" },
         "border": {
-          "default": {
-            "$value": {
-              "space": "oklch",
-              "l": 0.95,
-              "c": 0.02,
-              "h": 265.0
-            },
-            "$type": "color"
-          },
-          "subtle": {
-            "$value": {
-              "space": "oklch",
-              "l": 0.95,
-              "c": 0.02,
-              "h": 265.0,
-              "a": 0.55
-            },
-            "$type": "color"
-          },
-          "strong": {
-            "$value": {
-              "space": "oklch",
-              "l": 0.95,
-              "c": 0.02,
-              "h": 265.0
-            },
-            "$type": "color"
-          }
-        },
-        "primary": {
-          "text": {
-            "$value": {
-              "space": "oklch",
-              "l": 0.14,
-              "c": 0.03,
-              "h": 265.0
-            },
-            "$type": "color"
-          }
-        },
-        "accent": {
-          "text": {
-            "$value": {
-              "space": "oklch",
-              "l": 0.14,
-              "c": 0.03,
-              "h": 265.0
-            },
-            "$type": "color"
-          }
-        },
-        "secondary": {
-          "text": {
-            "$value": {
-              "space": "oklch",
-              "l": 0.95,
-              "c": 0.02,
-              "h": 265.0
-            },
-            "$type": "color"
-          }
-        },
-        "glow": {
-          "accent": {
-            "$value": "radial-gradient(circle, oklch(0.82 0.20 95 / 22%), transparent 60%)",
-            "$type": "dimension"
-          },
-          "primary": {
-            "$value": "radial-gradient(circle, oklch(0.72 0.21 25 / 22%), transparent 60%)",
-            "$type": "dimension"
-          }
+          "default": { "$value": { "space": "oklch", "l": 0.95, "c": 0.02, "h": 265 }, "$type": "color" },
+          "subtle": { "$value": { "space": "oklch", "l": 0.95, "c": 0.02, "h": 265, "a": 0.55 }, "$type": "color" },
+          "strong": { "$value": { "space": "oklch", "l": 0.95, "c": 0.02, "h": 265 }, "$type": "color" }
         }
       },
       "overlay": {
         "fill": {
-          "$value": "repeating-conic-gradient( oklch(1 0 0 / 4%) 0% 25%, transparent 0% 50% )",
+          "$value": "repeating-conic-gradient(oklch(1 0 0 / 4%) 0% 25%, transparent 0% 50%)",
           "$type": "string"
         },
-        "blend": {
-          "$value": "overlay",
-          "$type": "string"
-        },
-        "opacity": {
-          "$value": "0.6",
-          "$type": "number"
-        }
+        "blend": { "$value": "overlay", "$type": "string" },
+        "opacity": { "$value": "0.6", "$type": "number" }
       },
       "typography": {
         "font": {
-          "heading": {
-            "$value": "\"Press Start 2P\", \"Press Start 2P Fallback\", ui-monospace, \"SFMono-Regular\", Menlo, Consolas, monospace",
-            "$type": "fontFamily"
-          },
-          "display": {
-            "$value": "\"Press Start 2P\", \"Press Start 2P Fallback\", ui-monospace, \"SFMono-Regular\", Menlo, Consolas, monospace",
-            "$type": "fontFamily"
-          },
-          "body": {
-            "$value": "{font-mono}",
-            "$type": "fontFamily"
-          }
+          "heading": { "$value": "\"Press Start 2P\", \"Press Start 2P Fallback\", ui-monospace, \"SFMono-Regular\", Menlo, Consolas, monospace", "$type": "fontFamily" },
+          "display": { "$value": "\"Press Start 2P\", \"Press Start 2P Fallback\", ui-monospace, \"SFMono-Regular\", Menlo, Consolas, monospace", "$type": "fontFamily" },
+          "body": { "$value": "{font-mono}", "$type": "fontFamily" }
         }
       },
       "radius": {
-        "default": {
-          "$value": "0px",
-          "$type": "dimension"
-        },
-        "lg": {
-          "$value": "0px",
-          "$type": "dimension"
-        },
-        "md": {
-          "$value": "0px",
-          "$type": "dimension"
-        },
-        "sm": {
-          "$value": "0px",
-          "$type": "dimension"
-        },
-        "xl": {
-          "$value": "0px",
-          "$type": "dimension"
-        },
-        "full": {
-          "$value": "0px",
-          "$type": "dimension"
-        }
+        "default": { "$value": "0px", "$type": "dimension" },
+        "sm": { "$value": "0px", "$type": "dimension" },
+        "md": { "$value": "0px", "$type": "dimension" },
+        "lg": { "$value": "0px", "$type": "dimension" },
+        "xl": { "$value": "0px", "$type": "dimension" },
+        "full": { "$value": "0px", "$type": "dimension" }
       },
       "shadow": {
-        "accent": {
-          "$value": "0 0 0 3px oklch(0.82 0.20 95 / 70%)",
-          "$type": "shadow"
-        },
-        "card-rest": {
-          "$value": "4px 4px 0 0 oklch(0.14 0.03 265)",
-          "$type": "shadow"
-        },
-        "edge-top": {
-          "$value": "0 -3px 0 0 oklch(0.14 0.03 265)",
-          "$type": "shadow"
-        },
-        "hover": {
-          "$value": "6px 6px 0 0 oklch(0.14 0.03 265)",
-          "$type": "shadow"
-        },
-        "inset-soft": {
-          "$value": "none",
-          "$type": "shadow"
-        },
-        "lg": {
-          "$value": "6px 6px 0 0 oklch(0.14 0.03 265)",
-          "$type": "shadow"
-        },
-        "md": {
-          "$value": "4px 4px 0 0 oklch(0.14 0.03 265)",
-          "$type": "shadow"
-        },
-        "sm": {
-          "$value": "3px 3px 0 0 oklch(0.14 0.03 265)",
-          "$type": "shadow"
-        },
-        "sticky": {
-          "$value": "0 3px 0 0 oklch(0.14 0.03 265)",
-          "$type": "shadow"
-        },
-        "xl": {
-          "$value": "8px 8px 0 0 oklch(0.14 0.03 265)",
-          "$type": "shadow"
-        },
-        "xs": {
-          "$value": "2px 2px 0 0 oklch(0.14 0.03 265)",
-          "$type": "shadow"
+        "xs": { "$value": "2px 2px 0 0 oklch(0.14 0.03 265)", "$type": "shadow" },
+        "sm": { "$value": "3px 3px 0 0 oklch(0.14 0.03 265)", "$type": "shadow" },
+        "md": { "$value": "4px 4px 0 0 oklch(0.14 0.03 265)", "$type": "shadow" },
+        "lg": { "$value": "6px 6px 0 0 oklch(0.14 0.03 265)", "$type": "shadow" },
+        "xl": { "$value": "8px 8px 0 0 oklch(0.14 0.03 265)", "$type": "shadow" },
+        "card-rest": { "$value": "4px 4px 0 0 oklch(0.14 0.03 265)", "$type": "shadow" },
+        "hover": { "$value": "6px 6px 0 0 oklch(0.14 0.03 265)", "$type": "shadow" },
+        "sticky": { "$value": "0 3px 0 0 oklch(0.14 0.03 265)", "$type": "shadow" },
+        "accent": { "$value": "0 0 0 3px oklch(0.82 0.20 95 / 70%)", "$type": "shadow" },
+        "inset-soft": { "$value": "none", "$type": "shadow" },
+        "edge-top": { "$value": "0 -3px 0 0 oklch(0.14 0.03 265)", "$type": "shadow" }
+      },
+      "filter": { "backdrop": { "$value": "none", "$type": "string" } },
+      "image": { "texture": { "$value": "none", "$type": "string" } },
+      "control": {
+        "lift": { "$value": "0px", "$type": "dimension" },
+        "press": {
+          "scale": { "$value": "1", "$type": "number" },
+          "translate": { "$value": "2px", "$type": "dimension" },
+          "shadow": { "$value": "-2px -2px 0 0 oklch(0.14 0.03 265)", "$type": "shadow" }
         }
       },
       "interaction": {
-        "active": {
-          "strength": {
-            "$value": "26%",
-            "$type": "number"
-          }
-        },
-        "hover": {
-          "strength": {
-            "$value": "18%",
-            "$type": "number"
-          }
-        },
-        "selected": {
-          "strength": {
-            "$value": "32%",
-            "$type": "number"
-          }
-        }
-      },
-      "filter": {
-        "backdrop": {
-          "$value": "none",
-          "$type": "string"
-        }
-      },
-      "image": {
-        "texture": {
-          "$value": "none",
-          "$type": "string"
-        }
-      },
-      "control": {
-        "lift": {
-          "$value": "0px",
-          "$type": "dimension"
-        },
-        "press": {
-          "scale": {
-            "$value": "1",
-            "$type": "number"
-          },
-          "shadow": {
-            "$value": "-2px -2px 0 0 oklch(0.14 0.03 265)",
-            "$type": "shadow"
-          },
-          "translate": {
-            "$value": "2px",
-            "$type": "dimension"
-          }
-        }
+        "hover": { "strength": { "$value": "18%", "$type": "number" } },
+        "active": { "strength": { "$value": "26%", "$type": "number" } },
+        "selected": { "strength": { "$value": "32%", "$type": "number" } }
       },
       "scrollbar": {
-        "radius": {
-          "$value": "0px",
-          "$type": "dimension"
-        },
-        "thumb": {
-          "$value": "oklch(0.82 0.20 95)",
-          "$type": "color"
-        },
-        "thumb-hover": {
-          "$value": "oklch(0.72 0.21 25)",
-          "$type": "color"
-        },
-        "width": {
-          "$value": "16px",
-          "$type": "dimension"
-        }
+        "radius": { "$value": "0px", "$type": "dimension" },
+        "width": { "$value": "16px", "$type": "dimension" },
+        "thumb": { "$value": "oklch(0.82 0.20 95)", "$type": "color" },
+        "thumb-hover": { "$value": "oklch(0.72 0.21 25)", "$type": "color" }
       },
-      "$extensions": {
-        "sail": {
-          "dark": true
-        }
-      }
+      "$extensions": { "sail": { "dark": true } }
     }
   }
 }

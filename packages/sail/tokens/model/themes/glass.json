@@ -1,14 +1,12 @@
 {
-  "$description": "Glass / frosted. Modes-in-file (light/dark).",
+  "$description": "Glass / frost. Light-only translucent wash. Weakest gallery, kept deliberately.",
   "$extensions": {
     "sail": {
       "layer": "theme",
       "themeId": "glass",
       "defaultMode": "light",
-      "supportedModes": [
-        "light"
-      ],
-      "identity": "Translucent frost.",
+      "supportedModes": ["light"],
+      "identity": "Glass is translucent frost: large radii, backdrop blur, inset highlights, and amber-on-violet accents over a pale wash.",
       "variants": {
         "density": true,
         "contrast": true,
@@ -18,346 +16,72 @@
   },
   "anchors": {
     "light": {
-      "primary": {
-        "space": "oklch",
-        "l": 0.55,
-        "c": 0.16,
-        "h": 50.0
-      },
-      "accent": {
-        "space": "oklch",
-        "l": 0.55,
-        "c": 0.14,
-        "h": 280.0
-      },
-      "secondary": {
-        "space": "oklch",
-        "l": 0.95,
-        "c": 0.02,
-        "h": 302.0
-      },
-      "success": {
-        "space": "oklch",
-        "l": 0.62,
-        "c": 0.14,
-        "h": 152.0
-      },
-      "warning": {
-        "space": "oklch",
-        "l": 0.72,
-        "c": 0.15,
-        "h": 75.0
-      },
-      "info": {
-        "space": "oklch",
-        "l": 0.62,
-        "c": 0.14,
-        "h": 230.0
-      },
-      "danger": {
-        "space": "oklch",
-        "l": 0.6,
-        "c": 0.22,
-        "h": 27.0
-      },
-      "neutral": {
-        "space": "oklch",
-        "l": 0.94,
-        "c": 0.008,
-        "h": 240.0
-      }
+      "primary": { "space": "oklch", "l": 0.55, "c": 0.16, "h": 50 },
+      "accent": { "space": "oklch", "l": 0.55, "c": 0.14, "h": 280 },
+      "secondary": { "space": "oklch", "l": 0.94, "c": 0.008, "h": 240 },
+      "success": { "space": "oklch", "l": 0.62, "c": 0.14, "h": 152 },
+      "warning": { "space": "oklch", "l": 0.72, "c": 0.15, "h": 75 },
+      "info": { "space": "oklch", "l": 0.62, "c": 0.14, "h": 230 },
+      "danger": { "space": "oklch", "l": 0.6, "c": 0.22, "h": 27 },
+      "neutral": { "space": "oklch", "l": 0.94, "c": 0.008, "h": 240 }
     }
   },
   "modes": {
     "light": {
       "color": {
-        "background": {
-          "$value": {
-            "space": "oklch",
-            "l": 0.97,
-            "c": 0.005,
-            "h": 240.0
-          },
-          "$type": "color"
-        },
-        "foreground": {
-          "$value": {
-            "space": "oklch",
-            "l": 0.22,
-            "c": 0.02,
-            "h": 250.0
-          },
-          "$type": "color"
-        },
+        "background": { "$value": { "space": "oklch", "l": 0.97, "c": 0.005, "h": 240 }, "$type": "color" },
+        "foreground": { "$value": { "space": "oklch", "l": 0.22, "c": 0.02, "h": 250 }, "$type": "color" },
         "muted": {
-          "default": {
-            "$value": {
-              "space": "oklch",
-              "l": 0.94,
-              "c": 0.008,
-              "h": 240.0
-            },
-            "$type": "color"
-          },
-          "foreground": {
-            "$value": {
-              "space": "oklch",
-              "l": 0.42,
-              "c": 0.02,
-              "h": 250.0
-            },
-            "$type": "color"
-          }
+          "default": { "$value": { "space": "oklch", "l": 0.94, "c": 0.008, "h": 240 }, "$type": "color" },
+          "foreground": { "$value": { "space": "oklch", "l": 0.42, "c": 0.02, "h": 250 }, "$type": "color" }
         },
-        "surface": {
-          "$value": {
-            "space": "oklch",
-            "l": 1.0,
-            "c": 0.0,
-            "h": 0.0,
-            "a": 0.55
-          },
-          "$type": "color"
-        },
-        "inset": {
-          "$value": {
-            "space": "oklch",
-            "l": 1.0,
-            "c": 0.0,
-            "h": 0.0,
-            "a": 0.28
-          },
-          "$type": "color"
-        },
-        "overlay": {
-          "$value": {
-            "space": "oklch",
-            "l": 1.0,
-            "c": 0.0,
-            "h": 0.0,
-            "a": 0.78
-          },
-          "$type": "color"
-        },
+        "surface": { "$value": { "space": "oklch", "l": 1, "c": 0, "h": 0, "a": 0.55 }, "$type": "color" },
+        "inset": { "$value": { "space": "oklch", "l": 1, "c": 0, "h": 0, "a": 0.28 }, "$type": "color" },
+        "overlay": { "$value": { "space": "oklch", "l": 1, "c": 0, "h": 0, "a": 0.78 }, "$type": "color" },
         "border": {
-          "default": {
-            "$value": {
-              "space": "oklch",
-              "l": 1.0,
-              "c": 0.0,
-              "h": 0.0,
-              "a": 0.22
-            },
-            "$type": "color"
-          },
-          "subtle": {
-            "$value": {
-              "space": "oklch",
-              "l": 1.0,
-              "c": 0.0,
-              "h": 0.0,
-              "a": 0.14
-            },
-            "$type": "color"
-          },
-          "strong": {
-            "$value": {
-              "space": "oklch",
-              "l": 1.0,
-              "c": 0.0,
-              "h": 0.0,
-              "a": 0.36
-            },
-            "$type": "color"
-          }
-        },
-        "backdrop": {
-          "$value": {
-            "space": "oklch",
-            "l": 0.0,
-            "c": 0.0,
-            "h": 0.0,
-            "a": 0.4
-          },
-          "$type": "color"
-        },
-        "scrim": {
-          "$value": {
-            "space": "oklch",
-            "l": 0.0,
-            "c": 0.0,
-            "h": 0.0,
-            "a": 0.2
-          },
-          "$type": "color"
-        },
-        "primary": {
-          "text": {
-            "$value": {
-              "space": "oklch",
-              "l": 0.99,
-              "c": 0.005,
-              "h": 240.0
-            },
-            "$type": "color"
-          }
-        },
-        "accent": {
-          "text": {
-            "$value": {
-              "space": "oklch",
-              "l": 0.99,
-              "c": 0.005,
-              "h": 240.0
-            },
-            "$type": "color"
-          }
-        },
-        "secondary": {
-          "text": {
-            "$value": {
-              "space": "oklch",
-              "l": 0.33,
-              "c": 0.11,
-              "h": 302.0
-            },
-            "$type": "color"
-          }
+          "default": { "$value": { "space": "oklch", "l": 1, "c": 0, "h": 0, "a": 0.22 }, "$type": "color" },
+          "subtle": { "$value": { "space": "oklch", "l": 1, "c": 0, "h": 0, "a": 0.14 }, "$type": "color" },
+          "strong": { "$value": { "space": "oklch", "l": 1, "c": 0, "h": 0, "a": 0.36 }, "$type": "color" }
         }
       },
       "overlay": {
-        "fill": {
-          "$value": "none",
-          "$type": "string"
-        },
-        "blend": {
-          "$value": "normal",
-          "$type": "string"
-        },
-        "opacity": {
-          "$value": "1",
-          "$type": "number"
-        }
+        "fill": { "$value": "none", "$type": "string" },
+        "blend": { "$value": "normal", "$type": "string" },
+        "opacity": { "$value": "1", "$type": "number" }
       },
       "radius": {
-        "default": {
-          "$value": "14px",
-          "$type": "dimension"
-        },
-        "lg": {
-          "$value": "18px",
-          "$type": "dimension"
-        },
-        "md": {
-          "$value": "12px",
-          "$type": "dimension"
-        },
-        "sm": {
-          "$value": "8px",
-          "$type": "dimension"
-        },
-        "xl": {
-          "$value": "24px",
-          "$type": "dimension"
-        }
+        "sm": { "$value": "8px", "$type": "dimension" },
+        "md": { "$value": "12px", "$type": "dimension" },
+        "default": { "$value": "14px", "$type": "dimension" },
+        "lg": { "$value": "18px", "$type": "dimension" },
+        "xl": { "$value": "24px", "$type": "dimension" }
       },
       "shadow": {
-        "accent": {
-          "$value": "0 1px 0 oklch(1 0 0 / 60%) inset, 0 8px 24px oklch(0.62 0.16 50 / 28%)",
-          "$type": "shadow"
-        },
-        "card-rest": {
-          "$value": "0 1px 0 oklch(1 0 0 / 50%) inset, 0 6px 16px oklch(0.30 0.04 240 / 8%)",
-          "$type": "shadow"
-        },
-        "edge-top": {
-          "$value": "0 -1px 0 oklch(1 0 0 / 36%) inset",
-          "$type": "shadow"
-        },
-        "hover": {
-          "$value": "0 1px 0 oklch(1 0 0 / 60%) inset, 0 12px 32px oklch(0.30 0.04 240 / 14%)",
-          "$type": "shadow"
-        },
-        "lg": {
-          "$value": "0 1px 0 oklch(1 0 0 / 60%) inset, 0 16px 48px oklch(0.30 0.04 240 / 16%)",
-          "$type": "shadow"
-        },
-        "md": {
-          "$value": "0 1px 0 oklch(1 0 0 / 50%) inset, 0 8px 24px oklch(0.30 0.04 240 / 10%)",
-          "$type": "shadow"
-        },
-        "sm": {
-          "$value": "0 1px 0 oklch(1 0 0 / 50%) inset, 0 4px 12px oklch(0.30 0.04 240 / 8%)",
-          "$type": "shadow"
-        },
-        "sticky": {
-          "$value": "0 1px 0 oklch(1 0 0 / 50%) inset, 0 2px 8px oklch(0.30 0.04 240 / 8%)",
-          "$type": "shadow"
-        },
-        "xl": {
-          "$value": "0 1px 0 oklch(1 0 0 / 60%) inset, 0 28px 72px oklch(0.30 0.04 240 / 22%)",
-          "$type": "shadow"
-        },
-        "xs": {
-          "$value": "0 1px 0 oklch(1 0 0 / 40%) inset, 0 2px 8px oklch(0.30 0.04 240 / 6%)",
-          "$type": "shadow"
-        }
+        "xs": { "$value": "0 1px 0 oklch(1 0 0 / 40%) inset, 0 2px 8px oklch(0.30 0.04 240 / 6%)", "$type": "shadow" },
+        "sm": { "$value": "0 1px 0 oklch(1 0 0 / 50%) inset, 0 4px 12px oklch(0.30 0.04 240 / 8%)", "$type": "shadow" },
+        "md": { "$value": "0 1px 0 oklch(1 0 0 / 50%) inset, 0 8px 24px oklch(0.30 0.04 240 / 10%)", "$type": "shadow" },
+        "lg": { "$value": "0 1px 0 oklch(1 0 0 / 60%) inset, 0 16px 48px oklch(0.30 0.04 240 / 16%)", "$type": "shadow" },
+        "xl": { "$value": "0 1px 0 oklch(1 0 0 / 60%) inset, 0 28px 72px oklch(0.30 0.04 240 / 22%)", "$type": "shadow" },
+        "card-rest": { "$value": "0 1px 0 oklch(1 0 0 / 50%) inset, 0 6px 16px oklch(0.30 0.04 240 / 8%)", "$type": "shadow" },
+        "hover": { "$value": "0 1px 0 oklch(1 0 0 / 60%) inset, 0 12px 32px oklch(0.30 0.04 240 / 14%)", "$type": "shadow" },
+        "sticky": { "$value": "0 1px 0 oklch(1 0 0 / 50%) inset, 0 2px 8px oklch(0.30 0.04 240 / 8%)", "$type": "shadow" },
+        "accent": { "$value": "0 1px 0 oklch(1 0 0 / 60%) inset, 0 8px 24px oklch(0.62 0.16 50 / 28%)", "$type": "shadow" },
+        "edge-top": { "$value": "0 -1px 0 oklch(1 0 0 / 36%) inset", "$type": "shadow" }
       },
+      "filter": { "backdrop": { "$value": "blur(24px) saturate(180%)", "$type": "string" } },
+      "image": { "texture": { "$value": "none", "$type": "string" } },
       "interaction": {
-        "active": {
-          "strength": {
-            "$value": "9%",
-            "$type": "number"
-          }
-        },
-        "hover": {
-          "strength": {
-            "$value": "5%",
-            "$type": "number"
-          }
-        },
-        "selected": {
-          "strength": {
-            "$value": "12%",
-            "$type": "number"
-          }
-        }
-      },
-      "filter": {
-        "backdrop": {
-          "$value": "blur(24px) saturate(180%)",
-          "$type": "string"
-        }
-      },
-      "image": {
-        "texture": {
-          "$value": "none",
-          "$type": "string"
-        }
+        "hover": { "strength": { "$value": "5%", "$type": "number" } },
+        "active": { "strength": { "$value": "9%", "$type": "number" } },
+        "selected": { "strength": { "$value": "12%", "$type": "number" } }
       },
       "motion": {
         "duration": {
-          "fast": {
-            "$value": "160ms",
-            "$type": "duration"
-          },
-          "medium": {
-            "$value": "240ms",
-            "$type": "duration"
-          }
-        },
-        "ease": {
-          "out": {
-            "$value": "{ease-out-soft}",
-            "$type": "cubicBezier"
-          }
+          "fast": { "$value": "160ms", "$type": "duration" },
+          "medium": { "$value": "240ms", "$type": "duration" }
         }
       },
-      "$extensions": {
-        "sail": {
-          "dark": false
-        }
-      }
+      "$extensions": { "sail": { "dark": false } }
     }
   }
 }

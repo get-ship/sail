@@ -375,33 +375,29 @@ describe('@ship/tokens — theme catalog (THEMES export)', () => {
       '../model/themes/paper.json',
     )
     const paper = JSON.parse(readFileSync(paperPath, 'utf8')) as {
+      $extensions?: { sail?: { identity?: string } }
+      anchors: { light: { primary: { l: number; c: number; h: number } } }
       modes: {
         light: {
-          color: { primary: { default: { $value: string } } }
-          component?: { card?: { bg?: { $value: string } } }
+          color: { background: { $value: { l?: number } | string } }
         }
       }
     }
-    const primaryValue = paper.modes.light.color.primary.default.$value
-    expect(primaryValue.length).toBeGreaterThan(0)
+    expect(paper.$extensions?.sail?.identity).toMatch(/warm print/i)
+    const paperBg = paper.modes.light.color.background.$value
+    expect(paperBg).toBeTruthy()
 
     const reg = JSON.parse(loadSrc('../src/token-registry.json')) as {
       paths?: Record<string, string>
       tokens?: Record<string, { path?: string; value?: string }>
     }
-    expect(reg.paths?.['color.primary.default']).toBe('primary')
-    expect(reg.tokens?.primary?.path).toBe('color.primary.default')
+    expect(reg.paths?.['color.primary.solid']).toBe('primary')
+    expect(reg.tokens?.primary?.path).toBe('color.primary.solid')
 
     const themesCss = loadSrc('../src/themes.css')
-    // paper light block must emit the same leaf the theme JSON authors.
-    expect(themesCss).toMatch(
-      new RegExp(
-        `theme=['"]paper['"]\\][\\s\\S]*?--primary\\s*:\\s*${primaryValue.replace(
-          /[.*+?^${}()|[\]\\]/g,
-          '\\$&',
-        )}`,
-      ),
-    )
+    // paper light block emits the derived --primary from the brick-red anchor.
+    expect(themesCss).toMatch(/theme=['"]paper['"]\][\s\S]*?--primary\s*:/)
+    expect(paper.anchors.light.primary.h).toBe(30)
 
     // Theme remaps color.card → --card
     const cardBg = paper.modes.light.color?.card?.default?.$value

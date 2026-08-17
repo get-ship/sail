@@ -1,4 +1,5 @@
-//! Structured-value evaluation: `{ref}`, `{op: mix}`, gradients, fluid, breakpoint-keyed.
+//! Structured-value evaluation: `{ref}`, `{op: mix}`, gradients, fluid,
+//! breakpoint-keyed, mode-keyed (`light-dark()`).
 
 use std::collections::BTreeMap;
 
@@ -136,8 +137,11 @@ fn evaluate_object(
     if is_breakpoint_map(obj) {
         return evaluate_breakpoints(obj, resolve);
     }
+    if is_mode_map(obj) {
+        return evaluate_modes(obj, resolve);
+    }
     bail!(
-        "structured value: unrecognized object keys {:?} — expected ref / op / color / gradient / fluid / shadow / breakpoint map",
+        "structured value: unrecognized object keys {:?} — expected ref / op / color / gradient / fluid / shadow / breakpoint map / mode map",
         obj.keys().cloned().collect::<Vec<_>>()
     )
 }
@@ -148,6 +152,33 @@ fn is_breakpoint_map(obj: &serde_json::Map<String, Value>) -> bool {
         && obj
             .keys()
             .all(|k| KEYS.contains(&k.as_str()) || k.starts_with('$'))
+}
+
+/// Mode-keyed value (`{light, dark}`) — same shape breakpoints use.
+/// Emits CSS `light-dark()` so a variant file can revalue both modes.
+fn is_mode_map(obj: &serde_json::Map<String, Value>) -> bool {
+    const KEYS: &[&str] = &["light", "dark"];
+    obj.keys().any(|k| KEYS.contains(&k.as_str()))
+        && obj
+            .keys()
+            .all(|k| KEYS.contains(&k.as_str()) || k.starts_with('$'))
+}
+
+fn evaluate_modes(
+    obj: &serde_json::Map<String, Value>,
+    resolve: &RefResolver<'_>,
+) -> Result<EvalResult> {
+    let light = obj.get("light").map(|v| evaluate(v, resolve)).transpose()?;
+    let dark = obj.get("dark").map(|v| evaluate(v, resolve)).transpose()?;
+    match (light, dark) {
+        (Some(l), Some(d)) => Ok(EvalResult::scalar(format!(
+            "light-dark({}, {})",
+            l.css, d.css
+        ))),
+        (Some(l), None) => Ok(l),
+        (None, Some(d)) => Ok(d),
+        (None, None) => bail!("mode map requires `light` and/or `dark`"),
+    }
 }
 
 fn evaluate_breakpoints(
@@ -403,6 +434,20 @@ mod tests {
         let ev = evaluate(&v, &resolve).unwrap();
         assert_eq!(ev.css, "16px");
         assert_eq!(ev.breakpoints.get("tablet").unwrap(), "24px");
+    }
+
+    #[test]
+    fn mode_keyed_emits_light_dark() {
+        let v = json!({
+            "light": { "space": "oklch", "l": 1.0, "c": 0.0, "h": 0.0 },
+            "dark": { "space": "oklch", "l": 0.06, "c": 0.0, "h": 0.0 }
+        });
+        let ev = evaluate(&v, &resolve).unwrap();
+        assert!(
+            ev.css.starts_with("light-dark(") && ev.css.contains("oklch("),
+            "expected light-dark() pair, got {}",
+            ev.css
+        );
     }
 
     #[test]

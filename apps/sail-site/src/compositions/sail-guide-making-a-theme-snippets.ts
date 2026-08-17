@@ -76,8 +76,8 @@ export const code = {
 
   // packages/sail/tokens/src/themes.ts:16-24 and one THEMES entry.
   themeType: `export type ThemeId =
-  | 'ship' | 'neutral' | 'paper' | 'halo' | 'console'
-  | 'contrast' | 'glass' | 'brut' | '8bit' | 'synthwave'
+  | 'sail' | 'paper' | 'halo' | 'console'
+  | 'glass' | 'brut' | '8bit' | 'synthwave'
 
 export interface Theme {
   id: ThemeId

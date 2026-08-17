@@ -1,14 +1,12 @@
 {
-  "$description": "Editorial reading mode. Light-only (dark locked \u2014 broken dual-mode).",
+  "$description": "Editorial reading. Light-only warm print.",
   "$extensions": {
     "sail": {
       "layer": "theme",
       "themeId": "paper",
       "defaultMode": "light",
-      "supportedModes": [
-        "light"
-      ],
-      "identity": "Warm print.",
+      "supportedModes": ["light"],
+      "identity": "Paper is warm print: cream stock, serif type, a pulp grain, and unhurried motion on a light-only page.",
       "variants": {
         "density": true,
         "contrast": true,
@@ -18,209 +16,32 @@
   },
   "anchors": {
     "light": {
-      "primary": {
-        "space": "oklch",
-        "l": 0.5,
-        "c": 0.16,
-        "h": 30.0
-      },
-      "accent": {
-        "space": "oklch",
-        "l": 0.45,
-        "c": 0.1,
-        "h": 280.0
-      },
-      "secondary": {
-        "space": "oklch",
-        "l": 0.95,
-        "c": 0.02,
-        "h": 302.0
-      },
-      "success": {
-        "space": "oklch",
-        "l": 0.58,
-        "c": 0.14,
-        "h": 150.0
-      },
-      "warning": {
-        "space": "oklch",
-        "l": 0.7,
-        "c": 0.15,
-        "h": 75.0
-      },
-      "info": {
-        "space": "oklch",
-        "l": 0.55,
-        "c": 0.15,
-        "h": 240.0
-      },
-      "danger": {
-        "space": "oklch",
-        "l": 0.55,
-        "c": 0.22,
-        "h": 27.0
-      },
-      "neutral": {
-        "space": "oklch",
-        "l": 0.92,
-        "c": 0.02,
-        "h": 75.0
-      }
+      "primary": { "space": "oklch", "l": 0.5, "c": 0.16, "h": 30 },
+      "accent": { "space": "oklch", "l": 0.45, "c": 0.1, "h": 280 },
+      "secondary": { "space": "oklch", "l": 0.92, "c": 0.02, "h": 75 },
+      "success": { "space": "oklch", "l": 0.58, "c": 0.14, "h": 150 },
+      "warning": { "space": "oklch", "l": 0.7, "c": 0.15, "h": 75 },
+      "info": { "space": "oklch", "l": 0.55, "c": 0.15, "h": 240 },
+      "danger": { "space": "oklch", "l": 0.55, "c": 0.22, "h": 27 },
+      "neutral": { "space": "oklch", "l": 0.92, "c": 0.02, "h": 75 }
     }
   },
   "modes": {
     "light": {
       "color": {
-        "background": {
-          "$value": {
-            "space": "oklch",
-            "l": 0.985,
-            "c": 0.02,
-            "h": 75.0
-          },
-          "$type": "color"
-        },
-        "foreground": {
-          "$value": {
-            "space": "oklch",
-            "l": 0.2,
-            "c": 0.015,
-            "h": 60.0
-          },
-          "$type": "color"
-        },
+        "background": { "$value": { "space": "oklch", "l": 0.985, "c": 0.02, "h": 75 }, "$type": "color" },
+        "foreground": { "$value": { "space": "oklch", "l": 0.2, "c": 0.015, "h": 60 }, "$type": "color" },
         "muted": {
-          "default": {
-            "$value": {
-              "space": "oklch",
-              "l": 0.92,
-              "c": 0.02,
-              "h": 75.0
-            },
-            "$type": "color"
-          },
-          "foreground": {
-            "$value": {
-              "space": "oklch",
-              "l": 0.45,
-              "c": 0.015,
-              "h": 60.0
-            },
-            "$type": "color"
-          }
+          "default": { "$value": { "space": "oklch", "l": 0.92, "c": 0.02, "h": 75 }, "$type": "color" },
+          "foreground": { "$value": { "space": "oklch", "l": 0.45, "c": 0.015, "h": 60 }, "$type": "color" }
         },
-        "surface": {
-          "$value": {
-            "space": "oklch",
-            "l": 0.995,
-            "c": 0.012,
-            "h": 75.0
-          },
-          "$type": "color"
-        },
-        "inset": {
-          "$value": {
-            "space": "oklch",
-            "l": 0.2,
-            "c": 0.015,
-            "h": 60.0,
-            "a": 0.05
-          },
-          "$type": "color"
-        },
-        "overlay": {
-          "$value": {
-            "space": "oklch",
-            "l": 1.0,
-            "c": 0.0,
-            "h": 75.0
-          },
-          "$type": "color"
-        },
+        "surface": { "$value": { "space": "oklch", "l": 0.995, "c": 0.012, "h": 75 }, "$type": "color" },
+        "inset": { "$value": { "space": "oklch", "l": 0.2, "c": 0.015, "h": 60, "a": 0.05 }, "$type": "color" },
+        "overlay": { "$value": { "space": "oklch", "l": 1, "c": 0, "h": 75 }, "$type": "color" },
         "border": {
-          "default": {
-            "$value": {
-              "space": "oklch",
-              "l": 0.2,
-              "c": 0.015,
-              "h": 60.0,
-              "a": 0.14
-            },
-            "$type": "color"
-          },
-          "subtle": {
-            "$value": {
-              "space": "oklch",
-              "l": 0.2,
-              "c": 0.015,
-              "h": 60.0,
-              "a": 0.08
-            },
-            "$type": "color"
-          },
-          "strong": {
-            "$value": {
-              "space": "oklch",
-              "l": 0.2,
-              "c": 0.015,
-              "h": 60.0,
-              "a": 0.3
-            },
-            "$type": "color"
-          }
-        },
-        "backdrop": {
-          "$value": {
-            "space": "oklch",
-            "l": 0.0,
-            "c": 0.0,
-            "h": 0.0,
-            "a": 0.4
-          },
-          "$type": "color"
-        },
-        "scrim": {
-          "$value": {
-            "space": "oklch",
-            "l": 0.0,
-            "c": 0.0,
-            "h": 0.0,
-            "a": 0.2
-          },
-          "$type": "color"
-        },
-        "primary": {
-          "text": {
-            "$value": {
-              "space": "oklch",
-              "l": 0.985,
-              "c": 0.02,
-              "h": 75.0
-            },
-            "$type": "color"
-          }
-        },
-        "accent": {
-          "text": {
-            "$value": {
-              "space": "oklch",
-              "l": 0.985,
-              "c": 0.02,
-              "h": 75.0
-            },
-            "$type": "color"
-          }
-        },
-        "secondary": {
-          "text": {
-            "$value": {
-              "space": "oklch",
-              "l": 0.33,
-              "c": 0.11,
-              "h": 302.0
-            },
-            "$type": "color"
-          }
+          "default": { "$value": { "space": "oklch", "l": 0.2, "c": 0.015, "h": 60, "a": 0.14 }, "$type": "color" },
+          "subtle": { "$value": { "space": "oklch", "l": 0.2, "c": 0.015, "h": 60, "a": 0.08 }, "$type": "color" },
+          "strong": { "$value": { "space": "oklch", "l": 0.2, "c": 0.015, "h": 60, "a": 0.3 }, "$type": "color" }
         }
       },
       "overlay": {
@@ -228,152 +49,47 @@
           "$value": "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 240 240' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23p)' opacity='0.05'/%3E%3C/svg%3E\")",
           "$type": "string"
         },
-        "blend": {
-          "$value": "multiply",
-          "$type": "string"
-        },
-        "opacity": {
-          "$value": "0.4",
-          "$type": "number"
+        "blend": { "$value": "multiply", "$type": "string" },
+        "opacity": { "$value": "0.4", "$type": "number" }
+      },
+      "typography": {
+        "font": {
+          "body": { "$value": "Iowan Old Style, Palatino, Palatino Linotype, Georgia, serif", "$type": "fontFamily" },
+          "heading": { "$value": "Iowan Old Style, Palatino, Palatino Linotype, Georgia, serif", "$type": "fontFamily" },
+          "display": { "$value": "Iowan Old Style, Palatino, Palatino Linotype, Georgia, serif", "$type": "fontFamily" }
         }
       },
       "radius": {
-        "default": {
-          "$value": "10px",
-          "$type": "dimension"
-        },
-        "lg": {
-          "$value": "12px",
-          "$type": "dimension"
-        },
-        "md": {
-          "$value": "6px",
-          "$type": "dimension"
-        },
-        "sm": {
-          "$value": "4px",
-          "$type": "dimension"
-        },
-        "xl": {
-          "$value": "18px",
-          "$type": "dimension"
-        }
+        "sm": { "$value": "4px", "$type": "dimension" },
+        "md": { "$value": "6px", "$type": "dimension" },
+        "default": { "$value": "10px", "$type": "dimension" },
+        "lg": { "$value": "12px", "$type": "dimension" },
+        "xl": { "$value": "18px", "$type": "dimension" }
       },
       "shadow": {
-        "accent": {
-          "$value": "0 8px 24px -6px oklch(0.50 0.16 30 / 30%)",
-          "$type": "shadow"
-        },
-        "card-rest": {
-          "$value": "0 1px 2px oklch(0.30 0.04 60 / 8%), 0 0 0 1px oklch(0.20 0.015 60 / 6%)",
-          "$type": "shadow"
-        },
-        "edge-top": {
-          "$value": "0 -6px 18px oklch(0.30 0.04 60 / 8%), 0 -1px 0 oklch(0.30 0.04 60 / 6%)",
-          "$type": "shadow"
-        },
-        "hover": {
-          "$value": "0 6px 18px oklch(0.30 0.04 60 / 14%), 0 2px 6px oklch(0.30 0.04 60 / 8%)",
-          "$type": "shadow"
-        },
-        "lg": {
-          "$value": "0 12px 32px oklch(0.30 0.04 60 / 18%), 0 4px 12px oklch(0.30 0.04 60 / 10%)",
-          "$type": "shadow"
-        },
-        "md": {
-          "$value": "0 4px 12px oklch(0.30 0.04 60 / 12%), 0 2px 4px oklch(0.30 0.04 60 / 8%)",
-          "$type": "shadow"
-        },
-        "sm": {
-          "$value": "0 2px 4px -1px oklch(0.30 0.04 60 / 9%)",
-          "$type": "shadow"
-        },
-        "xl": {
-          "$value": "0 24px 64px oklch(0.30 0.04 60 / 24%)",
-          "$type": "shadow"
-        },
-        "xs": {
-          "$value": "0 1px 2px 0 oklch(0.30 0.04 60 / 6%)",
-          "$type": "shadow"
-        }
+        "xs": { "$value": "0 1px 2px 0 oklch(0.30 0.04 60 / 6%)", "$type": "shadow" },
+        "sm": { "$value": "0 2px 4px -1px oklch(0.30 0.04 60 / 9%)", "$type": "shadow" },
+        "md": { "$value": "0 4px 12px oklch(0.30 0.04 60 / 12%), 0 2px 4px oklch(0.30 0.04 60 / 8%)", "$type": "shadow" },
+        "lg": { "$value": "0 12px 32px oklch(0.30 0.04 60 / 18%), 0 4px 12px oklch(0.30 0.04 60 / 10%)", "$type": "shadow" },
+        "xl": { "$value": "0 24px 64px oklch(0.30 0.04 60 / 24%)", "$type": "shadow" },
+        "card-rest": { "$value": "0 1px 2px oklch(0.30 0.04 60 / 8%), 0 0 0 1px oklch(0.20 0.015 60 / 6%)", "$type": "shadow" },
+        "hover": { "$value": "0 6px 18px oklch(0.30 0.04 60 / 14%), 0 2px 6px oklch(0.30 0.04 60 / 8%)", "$type": "shadow" },
+        "accent": { "$value": "0 8px 24px -6px oklch(0.50 0.16 30 / 30%)", "$type": "shadow" }
       },
-      "interaction": {
-        "active": {
-          "strength": {
-            "$value": "7%",
-            "$type": "number"
-          }
-        },
-        "hover": {
-          "strength": {
-            "$value": "4%",
-            "$type": "number"
-          }
-        },
-        "selected": {
-          "strength": {
-            "$value": "10%",
-            "$type": "number"
-          }
-        }
-      },
-      "filter": {
-        "backdrop": {
-          "$value": "none",
-          "$type": "string"
-        }
-      },
-      "image": {
-        "texture": {
-          "$value": "none",
-          "$type": "string"
+      "filter": { "backdrop": { "$value": "none", "$type": "string" } },
+      "motion": {
+        "duration": {
+          "fast": { "$value": "200ms", "$type": "duration" },
+          "medium": { "$value": "300ms", "$type": "duration" },
+          "slow": { "$value": "420ms", "$type": "duration" },
+          "deliberate": { "$value": "560ms", "$type": "duration" }
         }
       },
       "scrollbar": {
-        "thumb": {
-          "$value": "oklch(0.20 0.015 60 / 18%)",
-          "$type": "color"
-        },
-        "thumb-hover": {
-          "$value": "oklch(0.20 0.015 60 / 36%)",
-          "$type": "color"
-        },
-        "width": {
-          "$value": "12px",
-          "$type": "dimension"
-        }
+        "thumb": { "$value": "oklch(0.20 0.015 60 / 18%)", "$type": "color" },
+        "thumb-hover": { "$value": "oklch(0.20 0.015 60 / 36%)", "$type": "color" }
       },
-      "motion": {
-        "duration": {
-          "deliberate": {
-            "$value": "560ms",
-            "$type": "duration"
-          },
-          "fast": {
-            "$value": "200ms",
-            "$type": "duration"
-          },
-          "medium": {
-            "$value": "300ms",
-            "$type": "duration"
-          },
-          "slow": {
-            "$value": "420ms",
-            "$type": "duration"
-          }
-        },
-        "ease": {
-          "out": {
-            "$value": "{ease-out-soft}",
-            "$type": "cubicBezier"
-          }
-        }
-      },
-      "$extensions": {
-        "sail": {
-          "dark": false
-        }
-      }
+      "$extensions": { "sail": { "dark": false } }
     }
   }
 }
