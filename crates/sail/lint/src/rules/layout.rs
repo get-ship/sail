@@ -755,6 +755,7 @@ fn is_known_axis_prop(name: &str) -> bool {
             | "tracks"
             | "inline"
             | "nowrap"
+            | "cluster"
     ) || is_participation_attr(name)
 }
 

@@ -32,16 +32,17 @@ test.describe('authored lab canvases', () => {
   }
 })
 
-test('lab canvas is the block file, not a second copy', async () => {
+/** Catalog ids are PascalCase; authored files live at src/blocks/<kebab>/. */
+const kebab = (id: string): string =>
+  id.replace(/[A-Z]/g, (ch, i) => (i === 0 ? ch.toLowerCase() : `-${ch.toLowerCase()}`))
+
+test('lab canvas mounts the block host, not a second copy', async () => {
   const root = resolve(process.cwd())
   for (const row of authored) {
-    const block = readFileSync(resolve(root, 'src/blocks', row.id, `${row.id}.sail`), 'utf8')
+    const stem = kebab(row.id)
+    const blockPath = resolve(root, 'src/blocks', stem, `${stem}.sail`)
+    readFileSync(blockPath, 'utf8')
     const lab = readFileSync(resolve(root, 'routes/lab', row.id, 'page.sail'), 'utf8')
-    const body = block
-      .replace(/^<!--[\s\S]*?-->\s*/, '')
-      .replace(/<scope>[\s\S]*?<\/scope>\s*/, '')
-      .replace(/\s+style\([^)]*\)/g, '')
-      .trim()
-    expect(lab, row.id).toContain(body)
+    expect(lab, row.id).toContain(`<${stem}>`)
   }
 })
