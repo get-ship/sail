@@ -4,29 +4,12 @@
   "generated": true,
   "names": [
     "accent",
-    "accent-agents",
-    "accent-canvas",
-    "accent-chat",
-    "accent-collections",
-    "accent-dashboard",
-    "accent-events",
     "accent-foreground",
-    "accent-git",
-    "accent-mesh",
-    "accent-overview",
-    "accent-pipelines",
-    "accent-settings",
-    "accent-setup",
-    "accent-skills",
-    "accent-specs",
-    "accent-theme",
     "active-bg",
     "active-strength",
     "backdrop",
     "background",
-    "bg-button-color",
     "bg-canvas-color",
-    "bg-card-color",
     "bg-control-color",
     "bg-muted-color",
     "bg-overlay-color",
@@ -50,11 +33,7 @@
     "breakpoint-mobile",
     "breakpoint-tablet",
     "card",
-    "card-backdrop-filter",
     "card-foreground",
-    "card-texture",
-    "card-texture-blend",
-    "card-texture-opacity",
     "control-frame",
     "control-h-2xs",
     "control-h-lg",
@@ -92,13 +71,12 @@
     "elevation-sm-shadow",
     "elevation-xl-shadow",
     "elevation-xs-shadow",
-    "fg-button-color",
     "fg-canvas-color",
-    "fg-card-color",
     "fg-foreground-color",
     "fg-muted-color",
     "fg-on-control-color",
     "fg-on-surface-color",
+    "filter-backdrop",
     "focus-ring",
     "focus-ring-offset",
     "font-body",
@@ -150,6 +128,9 @@
     "icon-size-sm",
     "icon-size-xl",
     "icon-size-xs",
+    "image-texture",
+    "image-texture-blend",
+    "image-texture-opacity",
     "info",
     "info-foreground",
     "input",
@@ -174,35 +155,18 @@
     "pad-page-lg-x",
     "pad-page-md-x",
     "pad-page-x",
-    "panel-body-pad-y",
-    "panel-ch-w-lg",
-    "panel-ch-w-md",
-    "panel-close-inset",
-    "panel-foot-pad-y",
-    "panel-head-pad-y",
     "panel-max-h-lg",
     "panel-max-h-md",
     "panel-max-h-sm",
     "panel-max-w-lg",
     "panel-max-w-md",
     "panel-max-w-sm",
-    "panel-max-w-xs",
-    "panel-menu-min-w",
-    "panel-min-h-cell",
-    "panel-min-h-daycol",
     "panel-min-w-lg",
     "panel-min-w-md",
     "panel-min-w-sm",
-    "panel-pad-card",
-    "panel-pad-menu",
-    "panel-pad-x",
-    "panel-rail-w",
-    "panel-toast-region-width",
     "panel-vh-lg",
     "panel-vh-md",
     "panel-vh-sm",
-    "panel-w-side",
-    "panel-w-toast",
     "play-colors-property",
     "play-control-property",
     "play-surface-property",
@@ -214,7 +178,7 @@
     "primary",
     "primary-foreground",
     "primary-hover",
-    "radius",
+    "radius-default",
     "radius-full",
     "radius-lg",
     "radius-md",
@@ -250,19 +214,9 @@
     "shadow-xl",
     "shadow-xs",
     "shape-pill",
-    "sidebar",
-    "sidebar-accent",
-    "sidebar-accent-foreground",
-    "sidebar-border",
-    "sidebar-foreground",
-    "sidebar-primary",
-    "sidebar-primary-foreground",
-    "sidebar-ring",
     "size-control-lg-h",
     "size-control-md-h",
     "size-control-sm-h",
-    "size-full-h",
-    "size-full-w",
     "size-icon-lg-h",
     "size-icon-lg-w",
     "size-icon-md-h",
@@ -404,28 +358,11 @@
   ],
   "colors": [
     "accent",
-    "accent-agents",
-    "accent-canvas",
-    "accent-chat",
-    "accent-collections",
-    "accent-dashboard",
-    "accent-events",
     "accent-foreground",
-    "accent-git",
-    "accent-mesh",
-    "accent-overview",
-    "accent-pipelines",
-    "accent-settings",
-    "accent-setup",
-    "accent-skills",
-    "accent-specs",
-    "accent-theme",
     "active-bg",
     "backdrop",
     "background",
-    "bg-button-color",
     "bg-canvas-color",
-    "bg-card-color",
     "bg-control-color",
     "bg-muted-color",
     "bg-overlay-color",
@@ -441,9 +378,7 @@
     "destructive",
     "destructive-foreground",
     "divider",
-    "fg-button-color",
     "fg-canvas-color",
-    "fg-card-color",
     "fg-foreground-color",
     "fg-muted-color",
     "fg-on-control-color",
@@ -486,14 +421,6 @@
     "secondary-foreground",
     "selected-bg",
     "selected-border",
-    "sidebar",
-    "sidebar-accent",
-    "sidebar-accent-foreground",
-    "sidebar-border",
-    "sidebar-foreground",
-    "sidebar-primary",
-    "sidebar-primary-foreground",
-    "sidebar-ring",
     "status-amber",
     "status-blue",
     "status-gray",
@@ -522,9 +449,9 @@
     "warning-foreground"
   ],
   "tokens": {
-    "radius": {
+    "radius-default": {
       "path": "radius.default",
-      "cssName": "radius",
+      "cssName": "radius-default",
       "type": "dimension",
       "value": "10px"
     },
@@ -906,12 +833,6 @@
       "type": "dimension",
       "value": "720px"
     },
-    "panel-max-w-xs": {
-      "path": "panel.max-w-xs",
-      "cssName": "panel-max-w-xs",
-      "type": "dimension",
-      "value": "20rem"
-    },
     "panel-max-h-sm": {
       "path": "panel.max-h-sm",
       "cssName": "panel-max-h-sm",
@@ -965,102 +886,6 @@
       "cssName": "panel-vh-lg",
       "type": "dimension",
       "value": "90vh"
-    },
-    "panel-ch-w-md": {
-      "path": "panel.ch-w-md",
-      "cssName": "panel-ch-w-md",
-      "type": "dimension",
-      "value": "38ch"
-    },
-    "panel-ch-w-lg": {
-      "path": "panel.ch-w-lg",
-      "cssName": "panel-ch-w-lg",
-      "type": "dimension",
-      "value": "60ch"
-    },
-    "panel-rail-w": {
-      "path": "panel.rail-w",
-      "cssName": "panel-rail-w",
-      "type": "dimension",
-      "value": "14rem"
-    },
-    "panel-menu-min-w": {
-      "path": "panel.menuMinW",
-      "cssName": "panel-menu-min-w",
-      "type": "dimension",
-      "value": "12rem"
-    },
-    "panel-toast-region-width": {
-      "path": "panel.toast-region-width",
-      "cssName": "panel-toast-region-width",
-      "type": "dimension",
-      "value": "var(--panel-w-toast)"
-    },
-    "panel-pad-x": {
-      "path": "panel.pad-x",
-      "cssName": "panel-pad-x",
-      "type": "dimension",
-      "value": "var(--space-6)"
-    },
-    "panel-head-pad-y": {
-      "path": "panel.head-pad-y",
-      "cssName": "panel-head-pad-y",
-      "type": "dimension",
-      "value": "18px"
-    },
-    "panel-body-pad-y": {
-      "path": "panel.body-pad-y",
-      "cssName": "panel-body-pad-y",
-      "type": "dimension",
-      "value": "var(--space-4)"
-    },
-    "panel-foot-pad-y": {
-      "path": "panel.foot-pad-y",
-      "cssName": "panel-foot-pad-y",
-      "type": "dimension",
-      "value": "var(--space-4)"
-    },
-    "panel-close-inset": {
-      "path": "panel.close-inset",
-      "cssName": "panel-close-inset",
-      "type": "dimension",
-      "value": "var(--space-7)"
-    },
-    "panel-pad-card": {
-      "path": "panel.pad-card",
-      "cssName": "panel-pad-card",
-      "type": "dimension",
-      "value": "var(--space-2)"
-    },
-    "panel-pad-menu": {
-      "path": "panel.pad-menu",
-      "cssName": "panel-pad-menu",
-      "type": "dimension",
-      "value": "var(--space-1)"
-    },
-    "panel-w-side": {
-      "path": "panel.w-side",
-      "cssName": "panel-w-side",
-      "type": "dimension",
-      "value": "420px"
-    },
-    "panel-w-toast": {
-      "path": "panel.w-toast",
-      "cssName": "panel-w-toast",
-      "type": "dimension",
-      "value": "min(24rem, calc(100vw - var(--space-8)))"
-    },
-    "panel-min-h-cell": {
-      "path": "panel.min-h-cell",
-      "cssName": "panel-min-h-cell",
-      "type": "dimension",
-      "value": "84px"
-    },
-    "panel-min-h-daycol": {
-      "path": "panel.min-h-daycol",
-      "cssName": "panel-min-h-daycol",
-      "type": "dimension",
-      "value": "864px"
     },
     "leading-loose": {
       "path": "typography.leading.loose",
@@ -1740,54 +1565,6 @@
       "type": "color",
       "value": "var(--foreground)"
     },
-    "sidebar": {
-      "path": "color.sidebar.default",
-      "cssName": "sidebar",
-      "type": "color",
-      "value": "oklch(0.99 0.001 106.423)"
-    },
-    "sidebar-foreground": {
-      "path": "color.sidebar.foreground",
-      "cssName": "sidebar-foreground",
-      "type": "color",
-      "value": "oklch(0.147 0.004 49.25)"
-    },
-    "sidebar-primary": {
-      "path": "color.sidebar.primary",
-      "cssName": "sidebar-primary",
-      "type": "color",
-      "value": "oklch(0.67 0.16 var(--brand-hue, 58))"
-    },
-    "sidebar-primary-foreground": {
-      "path": "color.sidebar.primary-foreground",
-      "cssName": "sidebar-primary-foreground",
-      "type": "color",
-      "value": "oklch(0.99 0.02 95)"
-    },
-    "sidebar-accent": {
-      "path": "color.sidebar.accent",
-      "cssName": "sidebar-accent",
-      "type": "color",
-      "value": "oklch(0.95 0.001 106)"
-    },
-    "sidebar-accent-foreground": {
-      "path": "color.sidebar.accent-foreground",
-      "cssName": "sidebar-accent-foreground",
-      "type": "color",
-      "value": "oklch(0.147 0.004 49.25)"
-    },
-    "sidebar-border": {
-      "path": "color.sidebar.border",
-      "cssName": "sidebar-border",
-      "type": "color",
-      "value": "oklch(0.147 0.004 49.25 / 12%)"
-    },
-    "sidebar-ring": {
-      "path": "color.sidebar.ring",
-      "cssName": "sidebar-ring",
-      "type": "color",
-      "value": "oklch(0.67 0.16 58 / 20%)"
-    },
     "hue-red": {
       "path": "color.hue.red",
       "cssName": "hue-red",
@@ -1902,96 +1679,6 @@
       "type": "color",
       "value": "var(--border-subtle)"
     },
-    "accent-dashboard": {
-      "path": "color.accent.dashboard",
-      "cssName": "accent-dashboard",
-      "type": "color",
-      "value": "oklch(0.62 0.18 260)"
-    },
-    "accent-pipelines": {
-      "path": "color.accent.pipelines",
-      "cssName": "accent-pipelines",
-      "type": "color",
-      "value": "oklch(0.67 0.16 58)"
-    },
-    "accent-agents": {
-      "path": "color.accent.agents",
-      "cssName": "accent-agents",
-      "type": "color",
-      "value": "oklch(0.58 0.22 295)"
-    },
-    "accent-skills": {
-      "path": "color.accent.skills",
-      "cssName": "accent-skills",
-      "type": "color",
-      "value": "oklch(0.62 0.16 152)"
-    },
-    "accent-git": {
-      "path": "color.accent.git",
-      "cssName": "accent-git",
-      "type": "color",
-      "value": "oklch(0.58 0.21 25)"
-    },
-    "accent-collections": {
-      "path": "color.accent.collections",
-      "cssName": "accent-collections",
-      "type": "color",
-      "value": "oklch(0.65 0.15 200)"
-    },
-    "accent-canvas": {
-      "path": "color.accent.canvas",
-      "cssName": "accent-canvas",
-      "type": "color",
-      "value": "oklch(0.72 0.16 80)"
-    },
-    "accent-settings": {
-      "path": "color.accent.settings",
-      "cssName": "accent-settings",
-      "type": "color",
-      "value": "oklch(0.55 0.02 60)"
-    },
-    "accent-chat": {
-      "path": "color.accent.chat",
-      "cssName": "accent-chat",
-      "type": "color",
-      "value": "oklch(0.62 0.13 280)"
-    },
-    "accent-events": {
-      "path": "color.accent.events",
-      "cssName": "accent-events",
-      "type": "color",
-      "value": "oklch(0.62 0.18 30)"
-    },
-    "accent-specs": {
-      "path": "color.accent.specs",
-      "cssName": "accent-specs",
-      "type": "color",
-      "value": "oklch(0.55 0.05 240)"
-    },
-    "accent-theme": {
-      "path": "color.accent.theme",
-      "cssName": "accent-theme",
-      "type": "color",
-      "value": "oklch(0.66 0.20 320)"
-    },
-    "accent-setup": {
-      "path": "color.accent.setup",
-      "cssName": "accent-setup",
-      "type": "color",
-      "value": "oklch(0.68 0.16 110)"
-    },
-    "accent-overview": {
-      "path": "color.accent.overview",
-      "cssName": "accent-overview",
-      "type": "color",
-      "value": "oklch(0.60 0.10 230)"
-    },
-    "accent-mesh": {
-      "path": "color.accent.mesh",
-      "cssName": "accent-mesh",
-      "type": "color",
-      "value": "oklch(0.64 0.14 195)"
-    },
     "mix-bg": {
       "path": "color.mix.bgMix",
       "cssName": "mix-bg",
@@ -2100,41 +1787,29 @@
       "type": "dimension",
       "value": "var(--control-h-lg)"
     },
-    "size-full-w": {
-      "path": "size.full.w",
-      "cssName": "size-full-w",
-      "type": "dimension",
-      "value": "100%"
-    },
-    "size-full-h": {
-      "path": "size.full.h",
-      "cssName": "size-full-h",
-      "type": "dimension",
-      "value": "100%"
-    },
     "size-measure-max-w": {
       "path": "size.measure.max-w",
       "cssName": "size-measure-max-w",
       "type": "dimension",
-      "value": "var(--panel-ch-w-md)"
+      "value": "38ch"
     },
     "size-measure-sm-max-w": {
       "path": "size.measure-sm.max-w",
       "cssName": "size-measure-sm-max-w",
       "type": "dimension",
-      "value": "var(--panel-max-w-xs)"
+      "value": "20rem"
     },
     "size-measure-md-max-w": {
       "path": "size.measure-md.max-w",
       "cssName": "size-measure-md-max-w",
       "type": "dimension",
-      "value": "var(--panel-ch-w-md)"
+      "value": "38ch"
     },
     "size-measure-lg-max-w": {
       "path": "size.measure-lg.max-w",
       "cssName": "size-measure-lg-max-w",
       "type": "dimension",
-      "value": "var(--panel-ch-w-lg)"
+      "value": "60ch"
     },
     "size-icon-xs-w": {
       "path": "size.icon-xs.w",
@@ -2454,18 +2129,6 @@
       "type": "color",
       "value": "var(--muted)"
     },
-    "bg-card-color": {
-      "path": "bg.card.color",
-      "cssName": "bg-card-color",
-      "type": "color",
-      "value": "var(--card)"
-    },
-    "bg-button-color": {
-      "path": "bg.button.color",
-      "cssName": "bg-button-color",
-      "type": "color",
-      "value": "var(--background)"
-    },
     "bg-canvas-color": {
       "path": "bg.canvas.color",
       "cssName": "bg-canvas-color",
@@ -2495,18 +2158,6 @@
       "cssName": "fg-muted-color",
       "type": "color",
       "value": "var(--muted-foreground)"
-    },
-    "fg-card-color": {
-      "path": "fg.card.color",
-      "cssName": "fg-card-color",
-      "type": "color",
-      "value": "var(--card-foreground)"
-    },
-    "fg-button-color": {
-      "path": "fg.button.color",
-      "cssName": "fg-button-color",
-      "type": "color",
-      "value": "var(--foreground)"
     },
     "fg-canvas-color": {
       "path": "fg.canvas.color",
@@ -2868,27 +2519,27 @@
       "type": "dimension",
       "value": "999px"
     },
-    "card-backdrop-filter": {
-      "path": "filter.card-backdrop",
-      "cssName": "card-backdrop-filter",
+    "filter-backdrop": {
+      "path": "filter.backdrop",
+      "cssName": "filter-backdrop",
       "type": "string",
       "value": "none"
     },
-    "card-texture": {
-      "path": "image.card-texture",
-      "cssName": "card-texture",
+    "image-texture": {
+      "path": "image.texture",
+      "cssName": "image-texture",
       "type": "string",
       "value": "none"
     },
-    "card-texture-blend": {
-      "path": "image.card-texture-blend",
-      "cssName": "card-texture-blend",
+    "image-texture-blend": {
+      "path": "image.texture-blend",
+      "cssName": "image-texture-blend",
       "type": "string",
       "value": "overlay"
     },
-    "card-texture-opacity": {
-      "path": "image.card-texture-opacity",
-      "cssName": "card-texture-opacity",
+    "image-texture-opacity": {
+      "path": "image.texture-opacity",
+      "cssName": "image-texture-opacity",
       "type": "number",
       "value": "1"
     },
@@ -2913,29 +2564,12 @@
   },
   "paths": {
     "color.brandAccent.default": "accent",
-    "color.accent.agents": "accent-agents",
-    "color.accent.canvas": "accent-canvas",
-    "color.accent.chat": "accent-chat",
-    "color.accent.collections": "accent-collections",
-    "color.accent.dashboard": "accent-dashboard",
-    "color.accent.events": "accent-events",
     "color.brandAccent.foreground": "accent-foreground",
-    "color.accent.git": "accent-git",
-    "color.accent.mesh": "accent-mesh",
-    "color.accent.overview": "accent-overview",
-    "color.accent.pipelines": "accent-pipelines",
-    "color.accent.settings": "accent-settings",
-    "color.accent.setup": "accent-setup",
-    "color.accent.skills": "accent-skills",
-    "color.accent.specs": "accent-specs",
-    "color.accent.theme": "accent-theme",
     "interaction.active.bg": "active-bg",
     "interaction.active.strength": "active-strength",
     "color.backdrop": "backdrop",
     "color.background": "background",
-    "bg.button.color": "bg-button-color",
     "bg.canvas.color": "bg-canvas-color",
-    "bg.card.color": "bg-card-color",
     "bg.control.color": "bg-control-color",
     "bg.muted.color": "bg-muted-color",
     "bg.overlay.color": "bg-overlay-color",
@@ -2959,11 +2593,7 @@
     "breakpoint.mobile": "breakpoint-mobile",
     "breakpoint.tablet": "breakpoint-tablet",
     "color.card.default": "card",
-    "filter.card-backdrop": "card-backdrop-filter",
     "color.card.foreground": "card-foreground",
-    "image.card-texture": "card-texture",
-    "image.card-texture-blend": "card-texture-blend",
-    "image.card-texture-opacity": "card-texture-opacity",
     "control.frame": "control-frame",
     "control.h-2xs": "control-h-2xs",
     "control.h-lg": "control-h-lg",
@@ -3001,13 +2631,12 @@
     "elevation.sm.shadow": "elevation-sm-shadow",
     "elevation.xl.shadow": "elevation-xl-shadow",
     "elevation.xs.shadow": "elevation-xs-shadow",
-    "fg.button.color": "fg-button-color",
     "fg.canvas.color": "fg-canvas-color",
-    "fg.card.color": "fg-card-color",
     "fg.foreground.color": "fg-foreground-color",
     "fg.muted.color": "fg-muted-color",
     "fg.on-control.color": "fg-on-control-color",
     "fg.on-surface.color": "fg-on-surface-color",
+    "filter.backdrop": "filter-backdrop",
     "interaction.focus.ring": "focus-ring",
     "interaction.focus.ring-offset": "focus-ring-offset",
     "typography.font.body": "font-body",
@@ -3059,6 +2688,9 @@
     "icon.sm": "icon-size-sm",
     "icon.xl": "icon-size-xl",
     "icon.xs": "icon-size-xs",
+    "image.texture": "image-texture",
+    "image.texture-blend": "image-texture-blend",
+    "image.texture-opacity": "image-texture-opacity",
     "color.info.default": "info",
     "color.info.foreground": "info-foreground",
     "color.input": "input",
@@ -3083,35 +2715,18 @@
     "pad.page-lg.x": "pad-page-lg-x",
     "pad.page-md.x": "pad-page-md-x",
     "pad.page.x": "pad-page-x",
-    "panel.body-pad-y": "panel-body-pad-y",
-    "panel.ch-w-lg": "panel-ch-w-lg",
-    "panel.ch-w-md": "panel-ch-w-md",
-    "panel.close-inset": "panel-close-inset",
-    "panel.foot-pad-y": "panel-foot-pad-y",
-    "panel.head-pad-y": "panel-head-pad-y",
     "panel.max-h-lg": "panel-max-h-lg",
     "panel.max-h-md": "panel-max-h-md",
     "panel.max-h-sm": "panel-max-h-sm",
     "panel.max-w-lg": "panel-max-w-lg",
     "panel.max-w-md": "panel-max-w-md",
     "panel.max-w-sm": "panel-max-w-sm",
-    "panel.max-w-xs": "panel-max-w-xs",
-    "panel.menuMinW": "panel-menu-min-w",
-    "panel.min-h-cell": "panel-min-h-cell",
-    "panel.min-h-daycol": "panel-min-h-daycol",
     "panel.min-w-lg": "panel-min-w-lg",
     "panel.min-w-md": "panel-min-w-md",
     "panel.min-w-sm": "panel-min-w-sm",
-    "panel.pad-card": "panel-pad-card",
-    "panel.pad-menu": "panel-pad-menu",
-    "panel.pad-x": "panel-pad-x",
-    "panel.rail-w": "panel-rail-w",
-    "panel.toast-region-width": "panel-toast-region-width",
     "panel.vh-lg": "panel-vh-lg",
     "panel.vh-md": "panel-vh-md",
     "panel.vh-sm": "panel-vh-sm",
-    "panel.w-side": "panel-w-side",
-    "panel.w-toast": "panel-w-toast",
     "play.colors.property": "play-colors-property",
     "play.control.property": "play-control-property",
     "play.surface.property": "play-surface-property",
@@ -3123,7 +2738,7 @@
     "color.primary.default": "primary",
     "color.primary.foreground": "primary-foreground",
     "color.primary.hover": "primary-hover",
-    "radius.default": "radius",
+    "radius.default": "radius-default",
     "radius.full": "radius-full",
     "radius.lg": "radius-lg",
     "radius.md": "radius-md",
@@ -3159,19 +2774,9 @@
     "shadow.xl": "shadow-xl",
     "shadow.xs": "shadow-xs",
     "color.shapePill": "shape-pill",
-    "color.sidebar.default": "sidebar",
-    "color.sidebar.accent": "sidebar-accent",
-    "color.sidebar.accent-foreground": "sidebar-accent-foreground",
-    "color.sidebar.border": "sidebar-border",
-    "color.sidebar.foreground": "sidebar-foreground",
-    "color.sidebar.primary": "sidebar-primary",
-    "color.sidebar.primary-foreground": "sidebar-primary-foreground",
-    "color.sidebar.ring": "sidebar-ring",
     "size.control-lg.h": "size-control-lg-h",
     "size.control-md.h": "size-control-md-h",
     "size.control-sm.h": "size-control-sm-h",
-    "size.full.h": "size-full-h",
-    "size.full.w": "size-full-w",
     "size.icon-lg.h": "size-icon-lg-h",
     "size.icon-lg.w": "size-icon-lg-w",
     "size.icon-md.h": "size-icon-md-h",
@@ -3389,15 +2994,6 @@
       "type": "size",
       "members": {
         "h": "size-control-lg-h"
-      }
-    },
-    "size.full": {
-      "path": "size.full",
-      "cssName": "size.full",
-      "type": "size",
-      "members": {
-        "w": "size-full-w",
-        "h": "size-full-h"
       }
     },
     "size.measure": {
@@ -3618,22 +3214,6 @@
         "color": "bg-muted-color"
       }
     },
-    "bg.card": {
-      "path": "bg.card",
-      "cssName": "bg.card",
-      "type": "bg",
-      "members": {
-        "color": "bg-card-color"
-      }
-    },
-    "bg.button": {
-      "path": "bg.button",
-      "cssName": "bg.button",
-      "type": "bg",
-      "members": {
-        "color": "bg-button-color"
-      }
-    },
     "bg.canvas": {
       "path": "bg.canvas",
       "cssName": "bg.canvas",
@@ -3672,22 +3252,6 @@
       "type": "fg",
       "members": {
         "color": "fg-muted-color"
-      }
-    },
-    "fg.card": {
-      "path": "fg.card",
-      "cssName": "fg.card",
-      "type": "fg",
-      "members": {
-        "color": "fg-card-color"
-      }
-    },
-    "fg.button": {
-      "path": "fg.button",
-      "cssName": "fg.button",
-      "type": "fg",
-      "members": {
-        "color": "fg-button-color"
       }
     },
     "fg.canvas": {
@@ -3925,34 +3489,6 @@
     },
     "small": {
       "type": "body-sm"
-    }
-  },
-  "products": {
-    "layer": "system",
-    "axis": "product",
-    "channel": "brand-hue",
-    "compositionLaw": "theme owns L/C; product owns hue. Every brand token reads oklch(L C var(--brand-hue, <theme's own hue>)). With no product set the theme looks as authored; with one set only the hue moves.",
-    "entries": {
-      "ship": {
-        "hue": 195,
-        "label": "teal — umbrella"
-      },
-      "sail": {
-        "hue": 27,
-        "label": "red — the framework"
-      },
-      "deck": {
-        "hue": 285,
-        "label": "violet — the app framework"
-      },
-      "components": {
-        "hue": 155,
-        "label": "green — the library"
-      },
-      "ai": {
-        "hue": 255,
-        "label": "blue — agent tooling"
-      }
     }
   }
 }

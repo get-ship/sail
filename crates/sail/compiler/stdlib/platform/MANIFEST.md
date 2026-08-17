@@ -37,6 +37,8 @@ Reason classes:
 | skeleton.css | skeleton | composite | Shimmer gradient + `background-size` + animation | GAP-STDLIB-VOCAB-1 |
 | slider.css | slider | vendor-pseudo | WebKit / Firefox range track + thumb | none |
 | table.css | table | native-anatomy | Host compounds Style cannot see: `border-collapse`, dense pad, striped/hoverable on HTML `tr`, bordered cell box, sticky thead. Cell rest paint is `table/th.sail` + `td.sail` + `caption.sail` | none |
+| chrome.css | (tokens.css) | composite | Structural chrome consumed by token generate (body wash/overlay/scroll). Relocated from the DTCG model home. | none |
+| themes-chrome.css | (themes.css) | composite | Theme-flavored structural chrome consumed by token generate. Relocated from the DTCG model home. | none |
 
 ## Ledger
 

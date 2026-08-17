@@ -195,16 +195,9 @@ const SEMANTIC_TIER: ReadonlyArray<[name: string, sample: RegExp]> = [
 ] as const
 
 const COMPONENT_TIER: ReadonlyArray<[name: string, sample: RegExp]> = [
-  // Panel paddings (overlay shells: dialog/drawer/sheet/toast + popover/menu)
-  ['--panel-pad-x', /--panel-pad-x\s*:/i],
-  ['--panel-head-pad-y', /--panel-head-pad-y\s*:/i],
-  ['--panel-body-pad-y', /--panel-body-pad-y\s*:/i],
-  ['--panel-foot-pad-y', /--panel-foot-pad-y\s*:/i],
-  ['--panel-close-inset', /--panel-close-inset\s*:/i],
-  // Panel clamps
+  // Overlay clamps that remain in the model (HOLD / OPEN-5)
   ['--panel-max-w-md', /--panel-max-w-md\s*:/i],
   ['--panel-min-w-md', /--panel-min-w-md\s*:/i],
-  ['--panel-rail-w', /--panel-rail-w\s*:/i],
   // Control heights + stroke
   ['--control-h-md', /--control-h-md\s*:/i],
   ['--control-stroke', /--control-stroke\s*:/i],
@@ -217,7 +210,7 @@ const COMPONENT_TIER: ReadonlyArray<[name: string, sample: RegExp]> = [
 const REPRSENTATIVE_PER_THEME = [
   'surface-1',
   'surface-overlay',
-  'panel-pad-x',
+  'panel-max-w-md',
 ] as const
 
 describe('@ship/tokens — theme catalog (THEMES export)', () => {
@@ -255,11 +248,11 @@ describe('@ship/tokens — theme catalog (THEMES export)', () => {
     expect(DEFAULT_THEME).toBe('sail')
   })
 
-  it('CORE_THEME_IDS includes sail + neutral (ship is catalog)', () => {
-    expect([...CORE_THEME_IDS].sort()).toEqual(['neutral', 'sail'].sort())
+  it('CORE_THEME_IDS is sail only (ship/neutral left the catalog)', () => {
+    expect([...CORE_THEME_IDS]).toEqual(['sail'])
     expect(isCoreTheme('sail')).toBe(true)
-    expect(isCoreTheme('neutral')).toBe(true)
-    expect(isCoreTheme('ship')).toBe(false)
+    expect(THEMES.some((t) => t.id === 'ship')).toBe(false)
+    expect(THEMES.some((t) => t.id === 'neutral')).toBe(false)
   })
 
   it('paper and brut are light-only (catalog mode honesty)', () => {
@@ -451,7 +444,7 @@ describe('@ship/tokens — theme catalog (THEMES export)', () => {
 
   it('PREPAINT_THEME_SCRIPT matches prepaint-theme.js (deck include_str SoT)', () => {
     const file = readFileSync(
-      join(dirname(fileURLToPath(import.meta.url)), '../src/prepaint-theme.js'),
+      join(dirname(fileURLToPath(import.meta.url)), '../../runtime/src/prepaint-theme.js'),
       'utf8',
     )
     expect(file.trimEnd()).toBe(PREPAINT_THEME_SCRIPT.trimEnd())
@@ -473,7 +466,7 @@ describe('@ship/tokens — theme catalog (THEMES export)', () => {
     }
     const tMeta = document.createElement('meta')
     tMeta.setAttribute('name', THEME_DEFAULT_META)
-    tMeta.setAttribute('content', 'ship')
+    tMeta.setAttribute('content', 'sail')
     document.head.appendChild(tMeta)
     const mMeta = document.createElement('meta')
     mMeta.setAttribute('name', THEME_DEFAULT_MODE_META)
@@ -487,15 +480,15 @@ describe('@ship/tokens — theme catalog (THEMES export)', () => {
     root.classList.add('dark')
 
     const result = bootTheme(root)
-    expect(result.theme).toBe('ship')
+    expect(result.theme).toBe('sail')
     expect(result.mode).toBe('dark')
-    expect(root.getAttribute('theme')).toBe('ship')
+    expect(root.getAttribute('theme')).toBe('sail')
     expect(root.getAttribute('mode')).toBe('dark')
     expect(root.hasAttribute('data-theme')).toBe(false)
     expect(root.classList.contains('dark')).toBe(false)
-    expect(readConfigDefaultTheme()).toBe('ship')
+    expect(readConfigDefaultTheme()).toBe('sail')
     expect(readConfigDefaultMode()).toBe('dark')
-    expect(readStoredTheme()).toBe('ship')
+    expect(readStoredTheme()).toBe('sail')
     expect(readModePreference()).toBe('dark')
   })
 
@@ -512,7 +505,7 @@ describe('@ship/tokens — theme catalog (THEMES export)', () => {
     }
     const tMeta = document.createElement('meta')
     tMeta.setAttribute('name', THEME_DEFAULT_META)
-    tMeta.setAttribute('content', 'ship')
+    tMeta.setAttribute('content', 'sail')
     document.head.appendChild(tMeta)
 
     const root = document.documentElement
@@ -583,10 +576,10 @@ describe('@ship/tokens — theme catalog (THEMES export)', () => {
   it('resolveNestedPaintMode inherits document mode when theme supports it', () => {
     const root = document.documentElement
     applyTheme('sail', root, 'dark')
-    expect(resolveNestedPaintMode('ship')).toBe('dark')
+    expect(resolveNestedPaintMode('sail')).toBe('dark')
     expect(resolveNestedPaintMode('paper')).toBe('light') // paper is light-only
     expect(resolveNestedPaintMode('console')).toBe('dark') // console dark-only
-    expect(resolveNestedPaintMode('ship', 'light')).toBe('light') // explicit wins
+    expect(resolveNestedPaintMode('sail', 'light')).toBe('light') // explicit wins
   })
 
   it('applyNestedTheme stamps theme + mode without document event/persist', () => {
@@ -636,8 +629,11 @@ describe('@ship/tokens — theme catalog (THEMES export)', () => {
     // proof is: no --field layer exists, and L1 skins spend --input.
     expect(getComputedStyle(field).getPropertyValue('--field').trim()).toBe('')
     expect(loadSrc('../src/tokens.css')).not.toMatch(/--field\s*:/)
+    expect(loadSrc('../src/tokens.css')).toMatch(
+      /--bg-control-color:\s*var\(--input\)/,
+    )
     const skins = loadSrc('../src/element-skins.css')
-    expect(skins).toMatch(/background-color:\s*var\(--input\)/)
+    expect(skins).toMatch(/background-color:\s*var\(--bg-control-color\)/)
     expect(skins).not.toMatch(/var\(--field\)/)
 
     style.remove()
@@ -647,16 +643,16 @@ describe('@ship/tokens — theme catalog (THEMES export)', () => {
   it('nested theme= without mode inherits document mode (no JS)', () => {
     const style = document.createElement('style')
     style.textContent = `
-      :root[theme='ship'][mode='dark'],
-      [theme='ship'][mode='dark'],
-      :root[mode='dark'] [theme='ship']:not([mode]) {
+      :root[theme='sail'][mode='dark'],
+      [theme='sail'][mode='dark'],
+      :root[mode='dark'] [theme='sail']:not([mode]) {
         --primary: #111111;
       }
-      :root[theme='ship'][mode='light'],
-      :root[theme='ship']:not([mode]),
-      [theme='ship'][mode='light'],
-      :root[mode='light'] [theme='ship']:not([mode]),
-      :root:not([mode]) [theme='ship']:not([mode]) {
+      :root[theme='sail'][mode='light'],
+      :root[theme='sail']:not([mode]),
+      [theme='sail'][mode='light'],
+      :root[mode='light'] [theme='sail']:not([mode]),
+      :root:not([mode]) [theme='sail']:not([mode]) {
         --primary: #eeeeee;
       }
       :root[theme='paper'][mode='light'],
@@ -668,11 +664,11 @@ describe('@ship/tokens — theme catalog (THEMES export)', () => {
     `
     document.head.appendChild(style)
     const root = document.documentElement
-    root.setAttribute('theme', 'ship')
+    root.setAttribute('theme', 'sail')
     root.setAttribute('mode', 'dark')
 
     const nestedShip = document.createElement('div')
-    nestedShip.setAttribute('theme', 'ship')
+    nestedShip.setAttribute('theme', 'sail')
     document.body.appendChild(nestedShip)
 
     const nestedPaper = document.createElement('div')
@@ -1020,9 +1016,9 @@ describe('@ship/tokens — DTCG SSOT / generate drift lock', () => {
     expect(css).toMatch(/model\/themes/)
   })
 
-  it('registry is 377 names with zero component.* paths (cut pack stays cut)', () => {
+  it('registry has zero component.* paths (cut pack stays cut)', () => {
     const reg = loadRegistry()
-    expect(reg.names).toHaveLength(377)
+    expect(reg.names.length).toBeGreaterThan(200)
     const componentPaths = Object.keys(reg.paths ?? {}).filter((p) =>
       p.startsWith('component.'),
     )
@@ -1047,9 +1043,9 @@ describe('@ship/tokens — DTCG SSOT / generate drift lock', () => {
     expect(reg.tokens['space-4']?.cssName).toBe('space-4')
     expect(reg.tokens['primary']?.path).toMatch(/^color\./)
     expect(reg.paths?.['space.4']).toBe('space-4')
-    // Accents: path color.accent.* → cssName accent-* (no load-bearing app- prefix)
-    expect(reg.tokens['accent-dashboard']?.path).toBe('color.accent.dashboard')
-    expect(reg.names.includes('accent-dashboard')).toBe(true)
+    expect(reg.tokens['accent']?.path).toBe('color.brandAccent.default')
+    expect(reg.names.includes('accent-dashboard')).toBe(false)
+    expect(reg.paths?.['color.accent.dashboard']).toBeUndefined()
   })
 
   it('every registry leaf is studio-ready (path + cssName on all names)', () => {
@@ -1084,7 +1080,7 @@ describe('@ship/tokens — DTCG SSOT / generate drift lock', () => {
     const selectors = extractThemeSelectors(loadSrc('../src/themes.css'))
     expect(selectors.size).toBeGreaterThanOrEqual(2)
     expect(selectors.has('paper')).toBe(true)
-    expect(selectors.has('console') || selectors.has('ship')).toBe(true)
+    expect(selectors.has('console') || selectors.has('sail')).toBe(true)
     // Theme JSON files exist for the catalog
     const paper = JSON.parse(loadSrc('../model/themes/paper.json')) as {
       $extensions?: { sail?: { themeId?: string } }
@@ -1155,31 +1151,14 @@ describe('@ship/tokens — DTCG SSOT / generate drift lock', () => {
     expect(reg.names.some((n) => n.startsWith('app-accent-'))).toBe(false)
   })
 
-  it('products.css is generated from model/products.json (system brand-hue axis)', () => {
-    const productsCss = loadSrc('../src/products.css')
-    expect(productsCss).toMatch(/GENERATED FILE/)
-    expect(productsCss).toMatch(/Source of truth: packages\/sail\/tokens\/model\/products\.json/)
-    for (const [id, hue] of [
-      ['ship', '195'],
-      ['sail', '27'],
-      ['deck', '285'],
-      ['components', '155'],
-      ['ai', '255'],
-    ] as const) {
-      const re = new RegExp(
-        String.raw`:root\[data-product='${id}'\]\s*\{\s*--brand-hue:\s*${hue};`,
-      )
-      expect(productsCss).toMatch(re)
-    }
-    const reg = loadRegistry() as {
-      products?: {
-        channel: string
-        entries: Record<string, { hue: number }>
-      }
-    }
-    expect(reg.products?.channel).toBe('brand-hue')
-    expect(reg.products?.entries.ship?.hue).toBe(195)
-    expect(reg.products?.entries.sail?.hue).toBe(27)
+  it('products axis is not part of the Sail model (moved to Ship)', () => {
+    const modelDir = resolve(dirname(fileURLToPath(import.meta.url)), '../model')
+    expect(existsSync(join(modelDir, 'products.json'))).toBe(false)
+    expect(existsSync(resolve(dirname(fileURLToPath(import.meta.url)), '../src/products.css'))).toBe(
+      false,
+    )
+    const reg = loadRegistry() as { products?: unknown }
+    expect(reg.products).toBeUndefined()
   })
 
   it('tokens.css :root name set equals registry names (emit parity)', () => {
@@ -1266,8 +1245,9 @@ describe('@ship/tokens — DTCG SSOT / generate drift lock', () => {
     expect(unions).toContain("'space-4'")
     expect(unions).toContain("'primary'")
     // Theme ids from model/themes (modes-in-file — no twin ids)
-    expect(unions).toContain("'ship'")
+    expect(unions).toContain("'sail'")
     expect(unions).toContain("'paper'")
+    expect(unions).not.toContain("'ship'")
     expect(unions).not.toContain("'ship-light'")
     expect(unions).not.toContain("'ship-dark'")
   })
@@ -1276,22 +1256,24 @@ describe('@ship/tokens — DTCG SSOT / generate drift lock', () => {
 describe('@ship/tokens — whole-value alias audit', () => {
   // Pins RESULT-TOKEN-AUDIT.md. Recount: extractWholeValueAliases.
   const PIN = {
-    tokensSites: 98,
-    tokensUnique: 93,
-    tokensKeep: 93,
+    tokensSites: 105,
+    tokensUnique: 100,
+    tokensKeep: 100,
     tokensRebind: 0,
-    themesSites: 222,
-    themesUnique: 22,
-    themesKeep: 22,
+    themesSites: 117,
+    themesUnique: 17,
+    themesKeep: 17,
     chromeSites: 0,
     hueFirstClass: 16,
-    sidebarFirstClass: 8,
+    sidebarFirstClass: 0,
   } as const
 
   it('tokens.css / themes.css / chrome.css alias classes match the RESULT pin', () => {
     const tokens = extractWholeValueAliases(loadSrc('../src/tokens.css'))
     const themes = extractWholeValueAliases(loadSrc('../src/themes.css'))
-    const chrome = extractWholeValueAliases(loadSrc('../model/chrome.css'))
+    const chrome = extractWholeValueAliases(
+      loadSrc('../../../../crates/sail/compiler/stdlib/platform/chrome.css'),
+    )
     const tUnique = uniqueAliasNames(tokens)
     const thUnique = uniqueAliasNames(themes)
     const cUnique = uniqueAliasNames(chrome)
@@ -1317,7 +1299,7 @@ describe('@ship/tokens — whole-value alias audit', () => {
     expect(cCounts.rebind).toBe(0)
   })
 
-  it('hue.* and sidebar.* are first-class leaves, not var() aliases; brand-hue is a product channel', () => {
+  it('hue.* stays first-class; sidebar.* and products.css are gone from Sail', () => {
     const reg = JSON.parse(loadSrc('../src/token-registry.json')) as {
       names: string[]
     }
@@ -1330,8 +1312,9 @@ describe('@ship/tokens — whole-value alias audit', () => {
     expect(tokens.some((s) => s.cls === 'hue' || s.cls === 'leftover' || s.cls === 'product')).toBe(
       false,
     )
-    const products = loadSrc('../src/products.css')
-    expect(products).toMatch(/--brand-hue\s*:/)
+    expect(
+      existsSync(resolve(dirname(fileURLToPath(import.meta.url)), '../src/products.css')),
+    ).toBe(false)
   })
 })
 

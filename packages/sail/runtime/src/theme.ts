@@ -20,9 +20,19 @@
 //   theme.applyScope(host, { doc, mode }) — host-scoped DTCG draft paint
 //   theme.clearScope(host)   — teardown applyScope writes
 
-import { publicName } from '@ship/tokens'
+import registry from '@ship/tokens/token-registry.json'
 import type { SailHost } from './sail-host'
 import { unwrapSailHost } from './sail-host-dom'
+
+const REGISTRY_PATHS = (registry as { paths?: Record<string, string> }).paths ?? {}
+
+function publicNameFromRegistry(path: string): string {
+  const mapped = REGISTRY_PATHS[path]
+  if (!mapped) {
+    throw new Error(`token-registry has no public name for path ${path}`)
+  }
+  return mapped
+}
 
 /** A patch maps token names (`--foo`) to CSS values. TokenName is validated at
  *  write time against the registered `@property` tokens (or a declared `:root`
@@ -327,7 +337,7 @@ function valueToString(v: unknown): string {
 
 /**
  * Port of `tokens_generate::flatten_tokens` — walk DTCG groups, collect leaves.
- * Public short names via generator policy (`publicName(path)`), not model stamps.
+ * Public short names from the generated registry, not model stamps.
  */
 function flattenTokens(
   doc: unknown,
@@ -342,7 +352,7 @@ function flattenTokens(
     if (isTokenLeaf(node)) {
       const pathParts = [...pathPrefix, key]
       const path = pathParts.join('.')
-      const cssName = publicName(path)
+      const cssName = publicNameFromRegistry(path)
       const ty =
         (typeof node.$type === 'string' ? node.$type : undefined) ?? inheritedType ?? 'string'
       const value = valueToString(node.$value)

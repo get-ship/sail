@@ -20,7 +20,6 @@ export {
 } from './generated/unions'
 export { FONTS } from './fonts'
 export type { FontFaceSpec, FontRole } from './fonts'
-export { publicName } from './public-name'
 // ThemeId is re-exported via ./themes (sourced from generated/unions).
 export type {
   Tone,

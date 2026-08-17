@@ -103,7 +103,7 @@
 }
 :root[theme='glass'] sail-card:hover,
 :root[theme='glass'] .sail-card:hover {
-  --card-backdrop-filter: blur(32px) saturate(220%);
+  --filter-backdrop: blur(32px) saturate(220%);
 }
 @media (prefers-reduced-motion: no-preference) {
   :root[theme='console'] :focus-visible {
