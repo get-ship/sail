@@ -73,6 +73,7 @@ tests/perf/baselines/
 **/.static-crawl.json
 
 # Residual local dirs only — `.deck` is not a product home.
+.deck/
 .sail-out/
 # Generate (types, bake, mirrors, tasks). Deploy is `dist/` above.
 .sail/
