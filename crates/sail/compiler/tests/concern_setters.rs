@@ -160,10 +160,14 @@ fn slot_color_unknown_pack_name_is_bad_token() {
 
 #[test]
 fn size_slot_object_and_named_full() {
-    let css = css_of("style({ size({ w: full, h: full }) })");
+    let css = css_of("style({ size({ w: 100%, h: 100% }) })");
     assert!(css.contains("width") && css.contains("100%"), "{css}");
-    let css = css_of("style({ size(full) })");
-    assert!(css.contains("width") || css.contains("100%"), "{css}");
+    let css = css_of("style({ size(grow) })");
+    assert!(css.contains("flex-grow"), "{css}");
+    assert!(
+        !css.contains("width:100%") && !css.contains("width: 100%"),
+        "size(grow) must not emit width 100%: {css}"
+    );
 }
 
 #[test]
@@ -259,7 +263,7 @@ fn slot_merge_partial_hover() {
 
 #[test]
 fn size_and_space_do_not_clash() {
-    let (style, diags) = parse("style({ size({ w: full }).pad({ x: 3 }) })");
+    let (style, diags) = parse("style({ size({ w: '100%' }).pad({ x: 3 }) })");
     assert!(diags.is_empty(), "{diags:?}");
     let clashes = clash::detect_clashes(&style, &HashMap::new());
     assert!(clashes.is_empty(), "{clashes:?}");
@@ -324,7 +328,7 @@ fn sx_attribute_hard_fails() {
 
 #[test]
 fn intra_channel_chain_stays() {
-    let css = css_of("style({ size({ w: full }).position(absolute) })");
+    let css = css_of("style({ size({ w: '100%' }).position(absolute) })");
     assert!(css.contains("width"), "{css}");
     assert!(
         css.contains("position") && css.contains("absolute"),

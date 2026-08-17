@@ -278,7 +278,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
       </column>
     </if>
 
-    <div use:captureStage use:maxWidth={stageMaxWidth()} style({ size({ w: full, max-w: bind(maxW) }).margin({ l: auto, r: auto }) })></div>
+    <div use:captureStage use:maxWidth={stageMaxWidth()} style({ size({ w: 100%, max-w: bind(maxW) }).margin({ l: auto, r: auto }) })></div>
     </span>
 </column>
 </error-boundary>

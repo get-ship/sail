@@ -11,7 +11,7 @@
     controls = true
     waveform = false
   }
-  style mediaChrome = { display(block).size({ w: full }).radius(md).bg(surface-1).border({ color: border, width: 1 }).elevation(xs) }
+  style mediaChrome = { display(block).size({ w: 100% }).radius(md).bg(surface-1).border({ color: border, width: 1 }).elevation(xs) }
 </scope>
 
 <controller>
@@ -134,5 +134,5 @@ export default controller((_ctx: Scope) => {
   <video use:mediaWire style(mediaChrome)></video>
 {else => <audio use:mediaWire style(mediaChrome)></audio>
   <if {showWaveform()}>
-    <canvas aria-hidden="true" use:waveform style({ display(block).size({ w: full }).margin({ t: 2 }) })></canvas>
+    <canvas aria-hidden="true" use:waveform style({ display(block).size({ w: 100% }).margin({ t: 2 }) })></canvas>
   </if>}</if>

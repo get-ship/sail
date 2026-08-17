@@ -676,6 +676,6 @@ function makeCompletionSource(src: SailCompletionSource) {
 }
 
 </controller>
-<div use:editorMount style({ display(flex).dir(column).position(relative).overflow({ all: hidden }).size({ w: full, h: full, min-w: 0, min-h: 0 }), when: { focusWithin: border({ kind: outline, color: ring }) } })>  <span style({ display(contents).type({ family: mono }) })>    
+<div use:editorMount style({ display(flex).dir(column).position(relative).overflow({ all: hidden }).size({ w: 100%, h: 100%, min-w: 0, min-h: 0 }), when: { focusWithin: border({ kind: outline, color: ring }) } })>  <span style({ display(contents).type({ family: mono }) })>    
   </span>
 </div>

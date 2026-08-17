@@ -199,7 +199,7 @@ export default controller(({ value, layout }: Scope) => {
   role="application"
   aria-label={label()}
   canvas={canvas}
-  readonly={readonly()} style({ display(block).position(relative).size({ w: full, h: full }) })>
+  readonly={readonly()} style({ display(block).position(relative).size({ w: 100%, h: 100% }) })>
   <svg aria-hidden="true" style({ position({ scheme: absolute, t: 0, l: 0 }).overflow({ all: visible }).pointerEvents(none) })>
     <for {routes() as r} key={r.id}>
       <path d={r.path} data-edge-id={r.id} data-state={incidentSet().has(r.id) ? 'incident' : null} fill="none" stroke="currentColor" stroke-width="2" style({ fg(border), when: { stateIncident: fg(primary) } })></path>

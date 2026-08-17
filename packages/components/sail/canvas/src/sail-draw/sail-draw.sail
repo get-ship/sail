@@ -214,7 +214,7 @@ export default controller(({ value, sketchy, readonly }: Scope) => {
   aria-label={label()}
   canvas={canvas}
   readonly={readonly()}
-  on:pointerdown={surfaceDown} style({ display(block).position(relative).size({ w: full, h: full }).fg(foreground) })>
+  on:pointerdown={surfaceDown} style({ display(block).position(relative).size({ w: 100%, h: 100% }).fg(foreground) })>
   <svg role="group" aria-label={statusLabel()} style({ position({ scheme: absolute, t: 0, l: 0 }).overflow({ all: visible }).pointerEvents(none) })>
     <for {rendered() as el} key={el.id}>
       <if {el.kind === 'text'}>

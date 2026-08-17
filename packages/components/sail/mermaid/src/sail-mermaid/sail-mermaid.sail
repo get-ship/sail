@@ -104,12 +104,12 @@ export default controller((ctx) => {
   });
 </controller>
 
-<center use:paintDiagram hidden={hasError()} style({ size({ w: full, min-h: 8 }) })></center>
+<center use:paintDiagram hidden={hasError()} style({ size({ w: 100%, min-h: 8 }) })></center>
 
 <if {error()}>
   <column
     gap="2"
-    style({ size({ w: full }).pad({ all: 3, x: 4 }).border({ color: destructive, width: 1 }).radius(md).bg(muted) })
+    style({ size({ w: 100% }).pad({ all: 3, x: 4 }).border({ color: destructive, width: 1 }).radius(md).bg(muted) })
   >
     <span style({ display(contents).type({ size: sm }) })>
       <row gap="2" align="center" style({ fg(destructive) })>

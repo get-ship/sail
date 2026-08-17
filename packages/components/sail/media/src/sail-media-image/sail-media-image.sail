@@ -214,19 +214,19 @@ export default controller((_ctx: Scope) => {
     role="img"
     aria-label={alt()}
     use:svgInline
-    style({ position(relative).size({ w: full, h: full, min-h: 28 }).overflow({ all: hidden }).bg(surface-1).radius(md) })
+    style({ position(relative).size({ w: 100%, h: 100%, min-h: 28 }).overflow({ all: hidden }).bg(surface-1).radius(md) })
   ></center>
 {else =>
   <center
     tabindex="0"
     use:zoomStage
-    style({ position(relative).size({ w: full, h: full, min-h: 28 }).overflow({ all: hidden }).bg(surface-1).radius(md) })
+    style({ position(relative).size({ w: 100%, h: 100%, min-h: 28 }).overflow({ all: hidden }).bg(surface-1).radius(md) })
   >
     <img
       alt={alt()}
       use:rasterImg
       use:zoomPan={zoomPanSig()}
-      style({ display(block).size({ w: full, h: full, max-h: full }).objectFit(cover).transform(bind(zoomTx)) })
+      style({ display(block).size({ w: 100%, h: 100%, max-h: 100% }).objectFit(cover).transform(bind(zoomTx)) })
     >
   </center>
   <if {isGallery()}>

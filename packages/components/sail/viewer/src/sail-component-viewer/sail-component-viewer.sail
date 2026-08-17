@@ -54,24 +54,24 @@
     onVariantChange: (detail: { variant: string }) => void
   }
   style sectionLabel = { fg(muted-foreground).type({ size: xs, tracking: wide, case: uppercase }) }
-  style stageSplit = { size({ w: full, min-w: 0, min-h: 64 }).overflow({ all: visible }) }
+  style stageSplit = { size({ w: 100%, min-w: 0, min-h: 64 }).overflow({ all: visible }) }
   /**
    * Specimen canvas. pad must clear focus ring (ring-width + ring-offset ≈ 5px;
    * use pad(4)+ so knobs and specimen never clip outlines on the frame edge).
    */
   style stageCanvas = { grow(1).size({ min-w: 0, min-h: 64 }).pad(6).overflow({ all: visible }) }
-  style specimenStack = { size({ w: full, max-w: full }).pad(1).overflow({ all: visible }) }
+  style specimenStack = { size({ w: 100%, max-w: 100% }).pad(1).overflow({ all: visible }) }
   /**
    * Snippet frame wraps the bordered code-block. Copy is absolute *inside*
    * that frame (top-right of the pre box). Hover-reveal; pre padE reserves
    * room so glyphs never sit under the button.
    */
-  style snippetShell = { size({ w: full, max-w: full }).position(relative).group() }
+  style snippetShell = { size({ w: 100%, max-w: 100% }).position(relative).group() }
   style snippetCopy = { position({ scheme: absolute, t: 3, r: 3, z: 2 }).bg(surface-0).fg(muted-foreground).radius(sm).filter({ opacity: 0 }).pointerEvents(none).elevation(xs), when: { group-hover: filter({ opacity: 100 }).pointerEvents(auto) } }
   /** Knobs rail: space scale, never panel-* tokens. Pad for focus rings. */
   style knobColumn = { size({ w: 64, min-w: 64, min-h: 64 }).shrink(0).pad(5).overflow({ all: visible }).border({ edge: l, color: border-subtle, width: 1 }) }
-  style usageFrame = { size({ w: full }).pad(4).overflow({ all: visible }).radius(lg).border({ color: border, width: 1 }).bg(surface-0) }
-  style usagePreviewPad = { size({ w: full }).pad(4).overflow({ all: visible }) }
+  style usageFrame = { size({ w: 100% }).pad(4).overflow({ all: visible }).radius(lg).border({ color: border, width: 1 }).bg(surface-0) }
+  style usagePreviewPad = { size({ w: 100% }).pad(4).overflow({ all: visible }) }
 </scope>
 
 <controller>
@@ -171,7 +171,7 @@ export default controller(({ variants, rows, usage, snippet, usageLive, variantA
 })
 </controller>
 
-<column gap="4" style({ size({ w: full }).overflow({ all: visible }) })>
+<column gap="4" style({ size({ w: 100% }).overflow({ all: visible }) })>
   <row gap="3" align="center">
     <h2 style({ type({ family: mono, tracking: tight }) })>{name()}</h2>
     <if {pack() !== ''}>
@@ -278,7 +278,7 @@ export default controller(({ variants, rows, usage, snippet, usageLive, variantA
           <code-block code={usage()} lang="sail"></code-block>
         </div>
       {else =>
-        <row nowrap gap="4" align="start" style({ size({ w: full, min-w: 0 }).overflow({ all: visible }) })>
+        <row nowrap gap="4" align="start" style({ size({ w: 100%, min-w: 0 }).overflow({ all: visible }) })>
           <if {usageIsSplit()}>
             <div style(snippetShell, { grow(1).size({ min-w: 0 }) })>
               <button

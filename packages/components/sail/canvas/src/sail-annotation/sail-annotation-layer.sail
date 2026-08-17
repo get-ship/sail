@@ -269,7 +269,7 @@ export default controller((props: ControllerScope<Scope>, _host?: HostBag) => {
   })
 
 </controller>
-<div style({ position(relative).size({ w: full, h: full }) })>  <span style({ display(contents).type({ family: body }) })>    <slot></slot>
+<div style({ position(relative).size({ w: 100%, h: 100% }) })>  <span style({ display(contents).type({ family: body }) })>    <slot></slot>
   <div use:overlayAction data-state={captureState()} style({ position({ scheme: absolute, t: 0, b: 0, l: 0, r: 0 }).position({ z: dropdown }).pointerEvents(none), when: { stateCapture: pointerEvents(auto) } })>
     <if {dragVisible()}>
       <div
@@ -294,7 +294,7 @@ export default controller((props: ControllerScope<Scope>, _host?: HostBag) => {
 
        style({ position({ scheme: absolute, t: bind(boxTop), l: bind(boxLeft) }).size({ min-w: panel-min-w-md }).pad(2).position({ z: sticky }).bg(surface-1).fg(foreground).border({ color: border, width: 1 }).radius(md).elevation(lg).pointerEvents(auto) })>
 
-        <textarea placeholder="Add a note…" bind:value={noteText} on:keydown={onNoteKeydown} style({ size({ w: full }).radius(sm) }) />
+        <textarea placeholder="Add a note…" bind:value={noteText} on:keydown={onNoteKeydown} style({ size({ w: 100% }).radius(sm) }) />
         <row gap="2" justify="end">
           <button type="button" on:click={cancelPending} style({ pad({ x: 2_5 }).radius(sm).cursor(pointer).type({ size: sm }) })>Cancel</button>
           <button type="button" data-primary variant="solid" tone="primary" on:click={sendNote} style({ pad({ x: 2_5 }).radius(sm).cursor(pointer).type({ size: sm }) })>Send</button>

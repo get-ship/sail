@@ -15,13 +15,13 @@
     multiline = true
   }
 
-  style frame = { size({ w: full, min-w: 0 }).pad(3).fg(foreground).bg(background).border({ color: border, width: 1 }).radius(lg), when: { focusWithin: border({ color: primary, width: 1 }).border({ kind: outline, color: ring }), stateDisabled: bg(muted).filter({ opacity: 75 }) } }
+  style frame = { size({ w: 100%, min-w: 0 }).pad(3).fg(foreground).bg(background).border({ color: border, width: 1 }).radius(lg), when: { focusWithin: border({ color: primary, width: 1 }).border({ kind: outline, color: ring }), stateDisabled: bg(muted).filter({ opacity: 75 }) } }
   // Chat field: full width. rows="3" + fixed autosize (never height:0) is the
   // empty-state floor — L1 size=md minH(control-h-md) only floors, it does not
   // cap. maxH caps the open box once content grows.
-  style fieldMulti = { size({ w: full, min-w: 0, min-h: 20, max-h: 48 }).pad({ x: 2, y: 2 }).overflow({ y: auto }).fg(foreground).bg(transparent).border({ width: 0 }).radius(none).elevation(none).type({ family: body, size: base, leading: relaxed }) }
-  style field = { size({ w: full, min-w: 0, min-h: control-h-md }).pad({ x: 2, y: 1_5 }).fg(foreground).bg(transparent).border({ width: 0 }).radius(none).elevation(none).type({ family: body, size: base, leading: normal }) }
-  style actions = { size({ w: full }) }
+  style fieldMulti = { size({ w: 100%, min-w: 0, min-h: 20, max-h: 48 }).pad({ x: 2, y: 2 }).overflow({ y: auto }).fg(foreground).bg(transparent).border({ width: 0 }).radius(none).elevation(none).type({ family: body, size: base, leading: relaxed }) }
+  style field = { size({ w: 100%, min-w: 0, min-h: control-h-md }).pad({ x: 2, y: 1_5 }).fg(foreground).bg(transparent).border({ width: 0 }).radius(none).elevation(none).type({ family: body, size: base, leading: normal }) }
+  style actions = { size({ w: 100% }) }
   style send = { shrink(0) }
 </scope>
 
@@ -107,7 +107,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     </row>
   </if>
   <if {!multiline()}>
-    <row nowrap gap="2" align="center" style({ size({ w: full }) })>
+    <row nowrap gap="2" align="center" style({ size({ w: 100% }) })>
       <input
         type="text"
         placeholder={placeholder()}

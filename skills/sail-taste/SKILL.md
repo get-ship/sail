@@ -58,7 +58,7 @@ That is a hard fail — not a style preference.
 
 - Layout: `column`/`row`/`stack`/`grid`/`center`. Never raw containers.
 - Spacing/typography/color: concern Style with token values only —
-  `style({ size({ w: full }).pad(4).bg(surface), when: { hover: bg(muted) } })`.
+  `style({ size({ w: "100%" }).pad(4).bg(surface), when: { hover: bg(muted) } })`.
   No raw px/hex; no flat `style.fontSize(…)` product path.
 - Motion: `animate:` keyed map of `play` (`enter`/`exit`/`loop`/`scroll`/`transition`) —
   `style({ animate: { enter: play(fade) } })`. Never hand-rolled CSS animation.

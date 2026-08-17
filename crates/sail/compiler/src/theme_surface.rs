@@ -231,7 +231,7 @@ fn concern_arg_name(setter: &str, name: &str) -> String {
 
 /// Resolve a semantic slot, composite, or component token under `theme` + `mode`.
 pub fn resolve_theme_token(name: &str, theme: &str, mode: &str) -> Option<ThemeTokenHover> {
-    let theme = if theme.is_empty() { "ship" } else { theme };
+    let theme = if theme.is_empty() { "sail" } else { theme };
     let mode = if mode.is_empty() { "light" } else { mode };
     if let Some(composite) = sail_lint::tokens::find_composite(name) {
         return Some(resolve_composite_hover(composite, theme, mode));
@@ -327,7 +327,7 @@ fn expand_fully(theme: &str, mode: &str, raw: &str) -> String {
 
 /// Default theme + mode inferred from source (`theme="id"`; mode defaults light).
 pub fn infer_active_theme_mode(source: &str) -> (String, String) {
-    let theme = last_quoted_attr(source, "theme").unwrap_or_else(|| "ship".into());
+    let theme = last_quoted_attr(source, "theme").unwrap_or_else(|| "sail".into());
     let mode = last_quoted_attr(source, "data-mode").unwrap_or_else(|| "light".into());
     (theme, mode)
 }
@@ -614,29 +614,29 @@ mod tests {
 
     #[test]
     fn theme_eq_completes_catalog_ids() {
-        let src = r#"<column theme="shi">x</column>"#;
-        let off = src.find("shi").unwrap() + 3;
+        let src = r#"<column theme="sai">x</column>"#;
+        let off = src.find("sai").unwrap() + 3;
         let items = theme_complete_at(src, off, None);
         assert!(
             items
                 .iter()
-                .any(|i| i.name == "ship" && i.kind == ThemeTokenKind::ThemeId),
+                .any(|i| i.name == "sail" && i.kind == ThemeTokenKind::ThemeId),
             "{items:?}"
         );
     }
 
     #[test]
     fn hover_primary_under_ship_light() {
-        let h = resolve_theme_token("primary", "ship", "light").expect("primary");
+        let h = resolve_theme_token("primary", "sail", "light").expect("primary");
         assert!(!h.value.is_empty(), "{h:?}");
         assert_eq!(h.css_name, "primary");
-        assert_eq!(h.theme, "ship");
+        assert_eq!(h.theme, "sail");
         assert_eq!(h.mode, "light");
     }
 
     #[test]
     fn hover_flags_mode_divergence_when_modes_differ() {
-        let h = resolve_theme_token("background", "ship", "light").expect("background");
+        let h = resolve_theme_token("background", "sail", "light").expect("background");
         if let Some(div) = &h.mode_divergence {
             assert_eq!(div.other_mode, "dark");
             assert_ne!(div.other_value, h.value);
@@ -648,7 +648,7 @@ mod tests {
 
     #[test]
     fn hover_border_subtle_shows_resolved_members() {
-        let h = resolve_theme_token("border.subtle", "ship", "light").expect("border.subtle");
+        let h = resolve_theme_token("border.subtle", "sail", "light").expect("border.subtle");
         assert_eq!(h.name, "border.subtle");
         assert!(
             h.value.contains("color:") && h.value.contains("width:") && h.value.contains("style:"),
@@ -672,8 +672,8 @@ mod tests {
 
     #[test]
     fn hover_dialog_border_shows_resolved_members() {
-        let Some(h) = resolve_theme_token("dialog.border", "ship", "light")
-            .or_else(|| resolve_theme_token("border", "ship", "light"))
+        let Some(h) = resolve_theme_token("dialog.border", "sail", "light")
+            .or_else(|| resolve_theme_token("border", "sail", "light"))
         else {
             return;
         };
@@ -686,7 +686,7 @@ mod tests {
 
     #[test]
     fn hover_size_type_elevation_fill_show_resolved_members() {
-        let size = resolve_theme_token("size.control-md", "ship", "light").expect("size");
+        let size = resolve_theme_token("size.control-md", "sail", "light").expect("size");
         assert_eq!(size.name, "size.control-md");
         assert!(size.value.contains("h:"), "size members: {}", size.value);
         assert!(
@@ -695,7 +695,7 @@ mod tests {
             size.value
         );
 
-        let typ = resolve_theme_token("type.heading", "ship", "light").expect("type");
+        let typ = resolve_theme_token("type.heading", "sail", "light").expect("type");
         assert_eq!(typ.name, "type.heading");
         assert!(
             typ.value.contains("family:") && typ.value.contains("size:"),
@@ -703,7 +703,7 @@ mod tests {
             typ.value
         );
 
-        let elev = resolve_theme_token("elevation.sm", "ship", "light").expect("elevation");
+        let elev = resolve_theme_token("elevation.sm", "sail", "light").expect("elevation");
         assert_eq!(elev.name, "elevation.sm");
         assert!(
             elev.value.contains("shadow:"),
@@ -711,7 +711,7 @@ mod tests {
             elev.value
         );
 
-        let fill = resolve_theme_token("surface-1", "ship", "light").expect("surface-1");
+        let fill = resolve_theme_token("surface-1", "sail", "light").expect("surface-1");
         assert_eq!(fill.name, "surface-1");
         assert!(
             fill.value.contains("oklch") || fill.value.contains("color"),
@@ -724,7 +724,7 @@ mod tests {
     fn hover_unqualified_control_md_inside_size_setter() {
         let src = "style({ size(control-md) })";
         let off = src.find("control-md").expect("control-md");
-        let h = theme_hover_at(src, off, "ship", "light").expect("hover");
+        let h = theme_hover_at(src, off, "sail", "light").expect("hover");
         assert_eq!(h.name, "size.control-md");
         assert!(h.value.contains("h:"), "{}", h.value);
     }
@@ -733,7 +733,7 @@ mod tests {
     fn hover_unqualified_subtle_inside_border_setter() {
         let src = "style({ border(subtle) })";
         let off = src.find("subtle").expect("subtle");
-        let h = theme_hover_at(src, off, "ship", "light").expect("hover");
+        let h = theme_hover_at(src, off, "sail", "light").expect("hover");
         assert_eq!(h.name, "border.subtle");
         assert!(
             h.value.contains("color:") && h.value.contains("style:"),
@@ -746,7 +746,7 @@ mod tests {
     fn hover_setter_arg_primary_still_resolves() {
         let src = "style({ bg(primary) })";
         let off = src.find("primary").expect("primary");
-        let h = theme_hover_at(src, off, "ship", "light").expect("primary arg");
+        let h = theme_hover_at(src, off, "sail", "light").expect("primary arg");
         assert_eq!(h.name, "primary");
         assert!(!h.value.is_empty(), "{h:?}");
     }
@@ -755,7 +755,7 @@ mod tests {
     fn hover_slot_color_arg_resolves() {
         let src = "style({ border({ color: muted }) })";
         let off = src.find("muted").expect("muted");
-        let h = theme_hover_at(src, off, "ship", "light").expect("slot arg");
+        let h = theme_hover_at(src, off, "sail", "light").expect("slot arg");
         assert_eq!(h.name, "muted");
     }
 
@@ -764,7 +764,7 @@ mod tests {
         let src = "style({ border(subtle) })";
         let off = src.find("border").expect("setter");
         assert!(
-            theme_hover_at(src, off, "ship", "light").is_none(),
+            theme_hover_at(src, off, "sail", "light").is_none(),
             "setter name must not resolve as the paint slot"
         );
     }
@@ -774,7 +774,7 @@ mod tests {
         let src = "const primary = style({ bg(muted) })\nstyle(primary)";
         let off = src.rfind("primary").expect("style ref");
         assert!(
-            theme_hover_at(src, off, "ship", "light").is_none(),
+            theme_hover_at(src, off, "sail", "light").is_none(),
             "StyleRef must not resolve as a color token"
         );
     }
@@ -784,12 +784,12 @@ mod tests {
         let src = "<div style({ bg(primary) })><card>{primary()}</card></div>";
         let card = src.find("<card>").expect("card") + 1;
         assert!(
-            theme_hover_at(src, card, "ship", "light").is_none(),
+            theme_hover_at(src, card, "sail", "light").is_none(),
             "tag after closed style() must not be theme-token"
         );
         let interp = src.find("{primary()").expect("interp") + 1;
         assert!(
-            theme_hover_at(src, interp, "ship", "light").is_none(),
+            theme_hover_at(src, interp, "sail", "light").is_none(),
             "interpolation after closed style() must not be theme-token"
         );
 

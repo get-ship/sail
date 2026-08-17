@@ -269,7 +269,7 @@ mod tests {
             let src = format!("style({{ pad(2), when: {{ {key}: {{ pad(4) }} }} }})");
             assert!(gate_err(&src), "pad under {key} must refuse: {src}");
             let src = format!(
-                "style({{ size({{ w: full }}), when: {{ {key}: {{ size({{ h: full }}) }} }} }})"
+                "style({{ size({{ w: '100%' }}), when: {{ {key}: {{ size({{ h: '100%' }}) }} }} }})"
             );
             assert!(gate_err(&src), "size under {key} must refuse: {src}");
         }

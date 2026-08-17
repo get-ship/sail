@@ -1,5 +1,6 @@
 //! `SailAuthoring` RPCs — Surface, Check, Edit, LayoutCheck, ListFiles, Policy, Hover, Complete.
 
+use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 use serde::Serialize;
@@ -96,7 +97,7 @@ Controllers never `.style` / `createElement`.\n\
                 "- No `<style>` / `style=` / raw px-hex — tokens only.\n\
                  - Style product: `style({{ pad(4).bg(surface) }})` — not utility strings.\n\
                  - Layout keywords: `<row>` `<column>` `<grid>` `<center>` `<stack>`.\n\
-                 - Participation via `size` / `grow` / `shrink`: `style({{ size({{ w: full, min-w: 0 }}).grow(1) }})` \
+                 - Participation via `size` / `grow` / `shrink`: `style({{ size({{ w: '100%', min-w: 0 }}).grow(1) }})` \
                    (`sail-participation-style` refuses bare `grow`/`shrink`/`w`/`min-w`/`max-w`).\n\
                  - Never `display(…)` on layout keywords (`sail-display-on-layout`):\n  \
                    `.sail-col` / `.sail-row` beat `.s-displaynone`. Plain host + nest layout.\n\
@@ -142,7 +143,7 @@ Controllers never `.style` / `createElement`.\n\
             let _ = writeln!(
                 md,
                 "\n**Participation (any element):** \
-                 `style({{ size({{ w: full, min-w: 0 }}).grow(1) }})` / `shrink(0)` — bare attrs refused \
+                 `style({{ size({{ w: '100%', min-w: 0 }}).grow(1) }})` / `shrink(0)` — bare attrs refused \
                  (`sail-participation-style`). Axis sugar `gap`/`align`/`justify` stays on layout keywords.\n\n\
                  **Layout is elements, not Style atoms.** `flex`/`grid`/`gap-*`/`items-*` \
                  are not vocabulary — use `<row>` / `<column>` / `<grid>` and their attrs.\n\n\
@@ -166,12 +167,36 @@ Controllers never `.style` / `createElement`.\n\
                  }}\n\
                  ```\n\n\
                  **Participation** lives on `size` / `grow` / `shrink` \
-                 (`style({{ size({{ w: full, min-w: 0 }}).grow(1) }})`). \
+                 (`style({{ size({{ w: '100%', min-w: 0 }}).grow(1) }})`). \
                  Bare attrs refused (`sail-participation-style`).\n\n\
                  `border` slots are `color`/`width`/`style`/`edge`/`kind` — radius is not a slot.\n\
                  `size` is box geometry only — pad is not a slot (use `pad`).\n"
             );
-            let _ = writeln!(md, "## Concerns\n");
+            let surface = spinnaker::StyleSurface::merged();
+            let _ = writeln!(md, "## StyleSurface presets\n");
+            let _ = writeln!(
+                md,
+                "Complete / validate / this topic read **one** table. \
+                 `type(heading)` is a theme preset. `size(grow)` is a language \
+                 preset (IR, not DTCG) — lowering lands in M2b.\n"
+            );
+            let _ = writeln!(md, "### Language\n");
+            for p in surface
+                .presets
+                .iter()
+                .filter(|p| p.origin == spinnaker::PresetOrigin::Language)
+            {
+                let _ = writeln!(md, "- `{}({})` — {}", p.concern, p.name, p.meaning);
+            }
+            let _ = writeln!(md, "\n### Required theme\n");
+            for p in surface
+                .presets
+                .iter()
+                .filter(|p| p.origin == spinnaker::PresetOrigin::ThemeRequired)
+            {
+                let _ = writeln!(md, "- `{}.{}` — {}", p.concern, p.name, p.meaning);
+            }
+            let _ = writeln!(md, "\n## Concerns\n");
             for row in spinnaker::offered_rows().filter(|r| r.tag == spinnaker::VocabTag::Concern) {
                 let _ = writeln!(md, "- {}", spinnaker::vocab_surface_line(row));
             }
@@ -227,7 +252,7 @@ Controllers never `.style` / `createElement`.\n\
                 let _ = writeln!(
                     md,
                     "Dotted identities (not CSS names). Concern setters resolve \
-                     these first. Atlas: `border.*`, `size.control-*`/`size.full`, \
+                     these first. Atlas: `border.*`, `size.control-*`/`size.measure*`, \
                      `type.*`, `elevation.*`. Authors write `bg(surface)` / \
                      `fg(foreground)`. `border` slots \
                      color/width/style; radius is not a slot. `size` has no pad.\n"
@@ -1177,30 +1202,12 @@ fn walk_project_files(project_root: &Path, dir: &Path, project_rel: &str, out: &
 
 pub fn sail_layout_check(source: &str) -> Result<Value, OpError> {
     let diags = sail_compiler::check::layout::collect(source);
-    let diagnostics: Vec<Value> = diags
-        .into_iter()
-        .map(|d| {
-            json!({
-                "severity": match d.severity {
-                    sail_compiler::DiagSeverity::Error => "error",
-                    sail_compiler::DiagSeverity::Warning => "warning",
-                    sail_compiler::DiagSeverity::Fix => "fix",
-                },
-                "rule": d.rule.unwrap_or_else(|| "sail-layout".into()),
-                "message": d.message,
-                "line": d.line,
-                "col": d.col,
-                "end_line": d.end_line,
-                "end_col": d.end_col,
-            })
-        })
-        .collect();
-
     let (preprocessed, type_hosts) =
         sail_compiler::parse::preprocess::preprocess_with_types(source)
             .map_err(|e| OpError::InvalidArgument(format!("preprocess: {e}")))?;
     let viewports = sail_compiler::check::layout::layout_viewports(&preprocessed);
     let mut viewport_reports: Vec<Value> = Vec::new();
+    let mut kind_for: BTreeMap<String, &'static str> = BTreeMap::new();
     for vp in viewports {
         match sail_layout::check_preprocessed_with_types(
             &preprocessed,
@@ -1209,6 +1216,9 @@ pub fn sail_layout_check(source: &str) -> Result<Value, OpError> {
             &type_hosts,
         ) {
             Ok(scan) => {
+                for d in &scan.diagnostics {
+                    kind_for.insert(d.message.clone(), d.kind);
+                }
                 let boxes: Vec<Value> = scan
                     .boxes
                     .iter()
@@ -1248,6 +1258,32 @@ pub fn sail_layout_check(source: &str) -> Result<Value, OpError> {
             }
         }
     }
+    let diagnostics: Vec<Value> = diags
+        .into_iter()
+        .map(|d| {
+            let kind = kind_for.get(&d.message).copied().or_else(|| {
+                match d.rule.as_deref() {
+                    Some("sail-clipped-text") => Some("clipped-text"),
+                    Some("sail-unintended-overflow") => Some("unintended-overflow"),
+                    _ => None,
+                }
+            });
+            json!({
+                "kind": kind,
+                "severity": match d.severity {
+                    sail_compiler::DiagSeverity::Error => "error",
+                    sail_compiler::DiagSeverity::Warning => "warning",
+                    sail_compiler::DiagSeverity::Fix => "fix",
+                },
+                "rule": d.rule.unwrap_or_else(|| "sail-layout".into()),
+                "message": d.message,
+                "line": d.line,
+                "col": d.col,
+                "end_line": d.end_line,
+                "end_col": d.end_col,
+            })
+        })
+        .collect();
 
     let count = diagnostics.len();
     Ok(json!({
@@ -1309,6 +1345,12 @@ mod tests {
         assert!(
             style.contains("pad is not a slot") && style.contains("## Plains"),
             "size geometry + plains: {style}"
+        );
+        assert!(
+            style.contains("## StyleSurface presets")
+                && style.contains("`type.heading`")
+                && style.contains("`size(grow)`"),
+            "style topic must project StyleSurface: {style}"
         );
         let tokens = surface_markdown(SurfaceTopic::Tokens);
         assert!(

@@ -12,7 +12,7 @@
     status: 'sent' | 'sending' | 'error' = 'sent'
   }
 
-  style host = { size({ max-w: full }).group().fg(foreground).type({ family: body }) }
+  style host = { size({ max-w: 100% }).group().fg(foreground).type({ family: body }) }
   style meta = { pad({ x: half }).fg(muted-foreground).type({ size: xs }) }
   style fromLabel = { type({ weight: medium }) }
   style bubble = { pad({ x: 3, y: 2 }).radius(lg).bg(surface-1).border({ color: border, width: 1 }).fg(foreground).type({ size: base, leading: normal }), when: { groupStateUser: bg(hover-bg).border({ color: primary, width: 1 }), groupStateSystem: bg(muted).fg(muted-foreground), groupStateTool: bg(hover-bg).border({ color: accent, width: 1 }), groupStateError: border({ color: destructive, width: 1 }), groupStateSending: filter({ opacity: 75 }), groupStateCode: type({ family: mono, size: sm, wrap: pre-wrap }), groupStateToolCall: type({ family: mono, size: sm, wrap: pre-wrap }), groupStateTerminalSnapshot: bg(surface-inverse).fg(background).border({ color: border-subtle, width: 1 }).type({ family: mono, size: sm, wrap: pre-wrap }) } }

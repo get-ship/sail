@@ -92,7 +92,7 @@ export default controller(({ data, labels, tone, orientation, max, width, height
     aria-label={ariaLabel()}
     aria-describedby="chart-data"
     use:observeViewport
-    style({ display(block).size({ w: full }).overflow({ all: hidden }) })
+    style({ display(block).size({ w: 100% }).overflow({ all: hidden }) })
   >
     <for {bars() as b} key={b.id}>
       <rect

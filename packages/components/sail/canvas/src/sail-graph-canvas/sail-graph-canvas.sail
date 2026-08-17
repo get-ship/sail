@@ -110,11 +110,11 @@ export default controller(({ nodes, edges, width, height, layout, selectedId }: 
   })
 </controller>
 
-<div style({ position(relative).size({ w: full }).overflow({ all: hidden }).bg(surface-1).border({ color: border, width: 1 }).radius(md) })>
+<div style({ position(relative).size({ w: 100% }).overflow({ all: hidden }).bg(surface-1).border({ color: border, width: 1 }).radius(md) })>
   <svg
     viewBox={`0 0 ${width() || 1000} ${height() || 600}`}
     preserveAspectRatio="none"
-    aria-hidden="true" style({ display(block).size({ w: full, h: auto }).pointerEvents(none) })>
+    aria-hidden="true" style({ display(block).size({ w: 100%, h: auto }).pointerEvents(none) })>
     <for {edgeViews() as e} key={e.key}>
       <path
         d={e.d}

@@ -112,10 +112,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 <scroll-area
   orientation="vertical"
   use:captureScroll
-  style({ position(relative).size({ h: full, min-h: 0 }).pad(3) })
+  style({ position(relative).size({ h: 100%, min-h: 0 }).pad(3) })
 >
   <span style({ display(contents).type({ family: body }) })>
-    <div use:virtualSpacer={totalSize()} style({ position(relative).size({ w: full, h: bind(rowsH) }) })>
+    <div use:virtualSpacer={totalSize()} style({ position(relative).size({ w: 100%, h: bind(rowsH) }) })>
     <for {windowItems() as w} key={w.key}>
       <column
         gap="0"
