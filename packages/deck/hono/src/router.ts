@@ -96,6 +96,9 @@ function assetByExt(file: string, body: Uint8Array): DeckResponse {
   if (file.endsWith(".css")) return cssAsset(body);
   if (file.endsWith(".svg")) return svgAsset(body);
   if (file.endsWith(".map") || file.endsWith(".json")) return jsonAsset(JSON.parse(new TextDecoder().decode(body)));
+  if (file.endsWith(".wasm")) {
+    return { status: 200, contentType: "application/wasm", cachePolicy: "asset", body, extraHeaders: [] };
+  }
   return { status: 200, contentType: "application/octet-stream", cachePolicy: "asset", body, extraHeaders: [] };
 }
 
