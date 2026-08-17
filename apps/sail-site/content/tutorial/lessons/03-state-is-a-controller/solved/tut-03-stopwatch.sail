@@ -6,11 +6,11 @@
 -->
 
 <scope>
-  style face = { pad(6).bg(surface-1).border({ color: border, width: 1 }).radius(lg) }
-  style clockFace = { type({ size: 4xl, tracking: tight }) }
-  style lapRow = { pad({ x: 3, y: 1 }).bg(surface-1).radius(md) }
-  style lapMeta = { fg(muted-foreground) }
-  style lapAt = { type({ size: sm }) }
+  style face = { pad(6).bg(surface).border(subtle).radius(lg) }
+  style clockFace = { type(display-sm) }
+  style lapRow = { pad(3).bg(surface).radius(md) }
+  style lapMeta = { fg(muted) }
+  style lapAt = { type(body-sm) }
 </scope>
 
 <controller>

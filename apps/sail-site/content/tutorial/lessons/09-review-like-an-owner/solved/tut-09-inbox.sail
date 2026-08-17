@@ -4,40 +4,42 @@
   Compare with the starter: the title flows from the prop; all three
   query() states render; the {#for} keys on identity (m.id); rows exit as
   well as enter; and the empty case is the semantic <empty-state>, not a
-  hand-rolled div.
+  hand-rolled box.
 -->
 <scope>
   props: {
     title = 'Support inbox'
   }
 
-  style loadingRow = { pad(4).bg(surface-1).radius(md) }
-  style muted = { fg(muted-foreground) }
-  style messageRow = { pad({ x: 3, y: 2 }).bg(surface-1).border({ color: border-subtle, width: 1 }).radius(md) }
-  style unreadDot = { display(inline-block).size(1_5).radius(full).bg(primary) }
-  style from = { type({ size: sm }) }
+  style loadingRow = { pad(4).bg(surface).radius(md) }
+  style muted = { fg(muted) }
+  style messageRow = { pad(3).bg(surface).border(subtle).radius(md) }
+  style unreadDot = { size(1_5).radius(full).bg(primary) }
+  style from = { type(body-sm) }
+  style fill = { size(grow) }
+  style rowMotion = { animate: { enter: play(slide-up), exit: play(fade) } }
 </scope>
 <controller>
 import { inboxClient } from '@/compositions/tut-09-inbox-client'
 
 export default controller(() => {
     const inbox = query(() => inboxClient.messages.list())
-    const filter = signal<'all' | 'unread'>('all')
+    const view = signal<'all' | 'unread'>('all')
     const archived = signal<number[]>([])
 
     // Visible list composes the live value with local state: archive hides
-    // rows client-side so exit animation can play; filter narrows to unread.
+    // rows client-side so exit animation can play; view narrows to unread.
     const visible = derived(() => {
       const state = inbox()
       if (state.kind !== 'ok') return []
-      return state.value.filter((m) => !archived().includes(m.id) && (filter() === 'all' || !m.read))
+      return state.value.filter((m) => !archived().includes(m.id) && (view() === 'all' || !m.read))
     })
 
     return {
       inbox,
-      filter,
+      view,
       visible,
-      setFilter: (f: 'all' | 'unread'): void => filter.set(f),
+      setView: (f: 'all' | 'unread'): void => view.set(f),
       archive: (id: number): void => archived.set([...archived(), id]),
     }
   })
@@ -47,8 +49,8 @@ export default controller(() => {
   <row align="center" justify="between">
     <h3>{title()}</h3>
     <row gap="1">
-      <button size="sm" tone="primary" variant={filter() === 'all' ? 'solid' : 'ghost'} on:click={() => setFilter('all')}>All</button>
-      <button size="sm" tone="primary" variant={filter() === 'unread' ? 'solid' : 'ghost'} on:click={() => setFilter('unread')}>Unread</button>
+      <button size="sm" tone="primary" variant={view() === 'all' ? 'solid' : 'ghost'} on:click={() => setView('all')}>All</button>
+      <button size="sm" tone="primary" variant={view() === 'unread' ? 'solid' : 'ghost'} on:click={() => setView('unread')}>Unread</button>
     </row>
   </row>
 
@@ -68,12 +70,12 @@ export default controller(() => {
           <row
             gap="3"
             align="center"
-            style(messageRow, { animate: { enter: play(slide-up), exit: play(fade) } })
+            style(messageRow, rowMotion)
           >
             <if {!m.read}>
-              <span style(unreadDot)></span>
+              <strong style(unreadDot)></strong>
             </if>
-            <column gap="0" style({ grow(1) })>
+            <column gap="0" style(fill)>
               <strong style(from)>{m.from}</strong>
               <small style(muted)>{m.subject}</small>
             </column>
@@ -83,7 +85,7 @@ export default controller(() => {
         </for>
         <if {visible().length === 0}>
           <empty-state variant="inline" tone="muted">
-            <span slot="title">Inbox zero</span>
+            <strong slot="title">Inbox zero</strong>
             Nothing matches this filter.
           </empty-state>
         </if>

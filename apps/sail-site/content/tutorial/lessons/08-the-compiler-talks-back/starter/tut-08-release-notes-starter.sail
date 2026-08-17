@@ -10,6 +10,12 @@
   carries the allowed vocabulary — the error IS the documentation.
 -->
 
+<scope>
+  style meta = { fg(muted).type(body-sm) }
+  style noteRow = { pad(3).bg(surface).radius(md) }
+  style noteText = { type(body-sm) }
+</scope>
+
 <controller>
 interface Note {
   id: number
@@ -42,13 +48,13 @@ export default controller(() => {
     <badge tone="primary" variant="soft" style({ animate: { enter: play(whoosh) } })>v2.4.0</badge>
   </row>
 
-  <p style({ fg(muted-foreground).type({ size: sm }) })>published {formatDate(publishedAt())}</p>
+  <p style(meta)>published {formatDate(publishedAt())}</p>
 
   <column gap="1">
     <for {notes() as note} key={note.id}>
-      <row gap="3" align="center" style({ pad({ x: 3, y: 2 }).bg(surface-1).radius(md) })>
+      <row gap="3" align="center" style(noteRow)>
         <badge tone="muted" variant="outline" size="sm">{note.tag}</badge>
-        <p style({ type({ size: sm }) })>{note.text}</p>
+        <p style(noteText)>{note.text}</p>
       </row>
     </for>
   </column>

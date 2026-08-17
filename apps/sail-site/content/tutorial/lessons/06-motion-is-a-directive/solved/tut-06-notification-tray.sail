@@ -9,10 +9,13 @@
 -->
 
 <scope>
-  style unreadDot = { display(inline-block).size(1_5).radius(full).bg(destructive) }
-  style noteRow = { pad(3).bg(surface-1).border({ color: border-subtle, width: 1 }).radius(md) }
-  style noteText = { type({ size: sm }) }
-  style empty = { pad(3).fg(muted-foreground).type({ size: sm }) }
+  style unreadDot = { size(1_5).radius(full).bg(destructive), animate: { loop: play(fade) } }
+  style noteRow = { pad(3).bg(surface).border(subtle).radius(md), animate: { enter: play(fade), exit: play(fade) } }
+  style noteText = { type(body-sm).size(grow) }
+  style empty = { pad(3).fg(muted).type(body-sm), animate: { enter: play(fade) } }
+  style restockHint = { animate: { hover: play(fade) } }
+  style triggerFeel = { animate: { hover: play(fade), press: play(fade) } }
+  style panelMotion = { animate: { enter: play(fade), exit: play(fade) } }
 </scope>
 
 <controller>
@@ -56,18 +59,18 @@ export default controller(() => {
         variant="ghost"
         size="sm"
         on:click={() => restock()}
-        style({ animate: { hover: play(fade) } })
+        style(restockHint)
       >Restock</button>
       <button
         variant="outline"
         tone="primary"
         size="sm"
         on:click={() => toggle()}
-        style({ animate: { hover: play(fade), press: play(fade) } })
+        style(triggerFeel)
       >
         {open() ? 'Close tray' : 'Open tray'}
         <if {unread() > 0}>
-          <span style(unreadDot, { animate: { loop: play(fade) } })></span>
+          <strong style(unreadDot)></strong>
         </if>
       </button>
     </row>
@@ -76,21 +79,21 @@ export default controller(() => {
   <if {open()}>
     <column
       gap="2"
-      style({ animate: { enter: play(fade), exit: play(fade) } })
+      style(panelMotion)
     >
       <for {notes() as n} key={n.id}>
         <row
           gap="3"
           align="center"
-          style(noteRow, { animate: { enter: play(fade), exit: play(fade) } })
+          style(noteRow)
         >
           <badge tone={n.tone} variant="soft" size="sm">{n.kind}</badge>
-          <p style(noteText, { grow(1) })>{n.text}</p>
+          <p style(noteText)>{n.text}</p>
           <button variant="ghost" size="sm" on:click={() => dismiss(n.id)}>Dismiss</button>
         </row>
       </for>
       <if {notes().length === 0}>
-        <p style(empty, { animate: { enter: play(fade) } })>All clear.</p>
+        <p style(empty)>All clear.</p>
       </if>
     </column>
   </if>

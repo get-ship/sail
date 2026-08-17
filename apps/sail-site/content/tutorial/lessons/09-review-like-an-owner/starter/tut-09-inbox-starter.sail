@@ -11,11 +11,13 @@
     title = 'Support inbox'
   }
 
-  style messageRow = { pad({ x: 3, y: 2 }).bg(surface-1).border({ color: border-subtle, width: 1 }).radius(md) }
-  style unreadDot = { display(inline-block).size(1_5).radius(full).bg(primary) }
-  style from = { type({ size: sm }) }
-  style muted = { fg(muted-foreground) }
-  style emptyImprovised = { pad(4).fg(muted-foreground).type({ size: sm }) }
+  style messageRow = { pad(3).bg(surface).border(subtle).radius(md) }
+  style unreadDot = { size(1_5).radius(full).bg(primary) }
+  style from = { type(body-sm) }
+  style muted = { fg(muted) }
+  style emptyImprovised = { pad(4).fg(muted).type(body-sm) }
+  style fill = { size(grow) }
+  style rowEnter = { animate: { enter: play(slide-up) } }
 </scope>
 <controller>
 import { inboxClient } from '@/compositions/tut-09-inbox-client'
@@ -25,20 +27,20 @@ import { inboxClient } from '@/compositions/tut-09-inbox-client'
 // compiler owns correctness of the surface, the reviewer owns intent.
 export default controller(() => {
     const inbox = query(() => inboxClient.messages.list())
-    const filter = signal<'all' | 'unread'>('all')
+    const view = signal<'all' | 'unread'>('all')
     const archived = signal<number[]>([])
 
     const visible = derived(() => {
       const state = inbox()
       if (state.kind !== 'ok') return []
-      return state.value.filter((m) => !archived().includes(m.id) && (filter() === 'all' || !m.read))
+      return state.value.filter((m) => !archived().includes(m.id) && (view() === 'all' || !m.read))
     })
 
     return {
       inbox,
-      filter,
+      view,
       visible,
-      setFilter: (f: 'all' | 'unread'): void => filter.set(f),
+      setView: (f: 'all' | 'unread'): void => view.set(f),
       archive: (id: number): void => archived.set([...archived(), id]),
     }
   })
@@ -48,8 +50,8 @@ export default controller(() => {
   <row align="center" justify="between">
     <h3>Support inbox</h3>
     <row gap="1">
-      <button size="sm" tone="primary" variant={filter() === 'all' ? 'solid' : 'ghost'} on:click={() => setFilter('all')}>All</button>
-      <button size="sm" tone="primary" variant={filter() === 'unread' ? 'solid' : 'ghost'} on:click={() => setFilter('unread')}>Unread</button>
+      <button size="sm" tone="primary" variant={view() === 'all' ? 'solid' : 'ghost'} on:click={() => setView('all')}>All</button>
+      <button size="sm" tone="primary" variant={view() === 'unread' ? 'solid' : 'ghost'} on:click={() => setView('unread')}>Unread</button>
     </row>
   </row>
 
@@ -64,10 +66,10 @@ export default controller(() => {
           <row
             gap="3"
             align="center"
-            style(messageRow, { animate: { enter: play(slide-up) } })
+            style(messageRow, rowEnter)
           >
-            <if {!m.read}><span style(unreadDot)></span></if>
-            <column gap="0" style({ grow(1) })>
+            <if {!m.read}><strong style(unreadDot)></strong></if>
+            <column gap="0" style(fill)>
               <strong style(from)>{m.from}</strong>
               <small style(muted)>{m.subject}</small>
             </column>

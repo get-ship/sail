@@ -1,21 +1,20 @@
 <!--
   Lesson 02 solved — the whole surface is the Style product.
 
-  Spacing, color, radius, border, elevation, and type are tokens via a
-  Style chain; interaction states are when({ hover, focusWithin,
-  current, … }). Nothing here is a raw value — a px or a hex would not
-  compile. Named scope Style (style name = { … }) is reused on tags as
-  style(name).
+  Spacing, color, radius, border, elevation, and type are theme presets;
+  interaction states are when: { hover, focusWithin, current, … }.
+  Nothing here is a raw value — a px or a hex would not compile. Named
+  scope Style (style name = { … }) is reused on tags as style(name).
 -->
 <scope>
-  style pill = { pad({ x: 3, y: 1 }).radius(full).fg(muted-foreground).type({ size: sm, weight: semibold }), when: { hover: fg(foreground).bg(surface-2), current: bg(primary).fg(primary-foreground) } }
-  style card = { pad(5).bg(surface-1).border({ color: border, width: 1 }).radius(lg).elevation(sm), when: { hover: elevation(hover) } }
-  style label = { fg(muted-foreground).type({ size: sm, tracking: wide }) }
-  style muted = { fg(muted-foreground) }
-  style value = { type({ size: 3xl, tracking: tight }) }
-  style of = { pad({ b: 1 }).fg(muted-foreground) }
-  style body = { fg(muted-foreground).type({ size: sm, leading: relaxed }) }
-  style alertRow = { pad(2).radius(md).border({ color: border-subtle, width: 1 }), when: { focusWithin: border({ color: primary }) } }
+  style pill = { pad(2).radius(full).fg(muted).type(label), when: { hover: fg(foreground).bg(muted), current: bg(primary).fg(primary-foreground) } }
+  style card = { pad(5).bg(surface).border(subtle).radius(lg).elevation(sm), when: { hover: elevation(hover) } }
+  style label = { fg(muted).type(label) }
+  style muted = { fg(muted) }
+  style value = { type(display-sm) }
+  style of = { pad(1).fg(muted) }
+  style body = { fg(muted).type(body-sm) }
+  style alertRow = { pad(2).radius(md).border(subtle), when: { focusWithin: border(strong) } }
 </scope>
 
 <column gap="4">

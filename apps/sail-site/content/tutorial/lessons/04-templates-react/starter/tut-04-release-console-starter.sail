@@ -7,9 +7,10 @@
 -->
 
 <scope>
-  style envRow = { pad({ x: 3, y: 2 }).bg(surface-1).radius(md) }
-  style envName = { type({ size: sm }) }
-  style envRegion = { fg(muted-foreground) }
+  style envRow = { pad(3).bg(surface).radius(md) }
+  style envName = { type(body-sm).size(grow) }
+  style envRegion = { fg(muted) }
+  style fadeEnter = { animate: { enter: play(fade) } }
 </scope>
 
 <controller>
@@ -62,7 +63,7 @@ export default controller(() => {
     <match {phase()}>
       {'idle' => <badge tone="muted">idle</badge>}
       <!-- TODO 4: add {'building' => …} and {'live' => …} branches, each with
-           style({ animate: { enter: play(fade) } }) so the swapped-in badge announces itself. -->
+           style(fadeEnter) so the swapped-in badge announces itself. -->
       {else => <badge tone="destructive">failed</badge>}
     </match>
   </row>
@@ -86,7 +87,7 @@ export default controller(() => {
     <for {filtered() as env} key={env.id}>
       <row gap="3" align="center" style(envRow)>
         <badge tone={env.tier === 'prod' ? 'primary' : 'muted'} variant="outline" size="sm">{env.tier}</badge>
-        <strong style(envName, { grow(1) })>{env.name}</strong>
+        <strong style(envName)>{env.name}</strong>
         <small style(envRegion)>{env.region}</small>
         <button size="sm" variant="ghost" on:click={() => promote(env.id)}>Promote</button>
       </row>

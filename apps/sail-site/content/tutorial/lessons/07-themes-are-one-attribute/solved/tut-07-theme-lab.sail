@@ -8,10 +8,10 @@
 -->
 
 <scope>
-  style muted = { fg(muted-foreground) }
-  style preview = { pad(4).radius(lg).border({ color: border, width: 1 }).bg(background).fg(foreground) }
-  style title = { type({ size: sm }) }
-  style body = { fg(muted-foreground).type({ size: sm }) }
+  style muted = { fg(muted) }
+  style preview = { pad(4).radius(lg).border(subtle).bg(background).fg(foreground) }
+  style title = { type(body-sm) }
+  style body = { fg(muted).type(body-sm) }
   type PinnedPreviewProps = { pin: string }
 </scope>
 

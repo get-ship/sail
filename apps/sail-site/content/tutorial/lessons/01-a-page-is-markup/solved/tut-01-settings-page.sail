@@ -6,10 +6,10 @@
   the layout keywords, appearance from the tone/variant/size contracts.
 -->
 <scope>
-  style title = { type({ tracking: tight }) }
-  style muted = { fg(muted-foreground).type({ size: sm }) }
-  style hint = { fg(muted-foreground) }
-  style rowLabel = { type({ size: sm }) }
+  style title = { type(heading) }
+  style muted = { fg(muted).type(body-sm) }
+  style hint = { fg(muted) }
+  style rowLabel = { type(body-sm) }
   type NotifyRowProps = { label: string; detail: string; enabled: boolean }
 </scope>
 

@@ -9,10 +9,10 @@
 -->
 
 <scope>
-  style unreadDot = { display(inline-block).size(1_5).radius(full).bg(destructive) }
-  style noteRow = { pad(3).bg(surface-1).border({ color: border-subtle, width: 1 }).radius(md) }
-  style noteText = { type({ size: sm }) }
-  style empty = { pad(3).fg(muted-foreground).type({ size: sm }) }
+  style unreadDot = { size(1_5).radius(full).bg(destructive) }
+  style noteRow = { pad(3).bg(surface).border(subtle).radius(md) }
+  style noteText = { type(body-sm).size(grow) }
+  style empty = { pad(3).fg(muted).type(body-sm) }
 </scope>
 
 <controller>
@@ -52,32 +52,33 @@ export default controller(() => {
   <row align="center" justify="between">
     <h3>Notifications</h3>
     <row gap="2" align="center">
-      <!-- TODO 1: style({ animate: { hover: play(fade) } }) — a playful hint. -->
+      <!-- TODO 1: animate: { hover: play(fade) } — a playful hint. -->
       <button variant="ghost" size="sm" on:click={() => restock()}>Restock</button>
-      <!-- TODO 2: style({ animate: { hover: play(fade), press: play(fade) } }) —
+      <!-- TODO 2: animate: { hover: play(fade), press: play(fade) } —
            tactile feedback belongs on the trigger. -->
       <button variant="outline" tone="primary" size="sm" on:click={() => toggle()}>
         {open() ? 'Close tray' : 'Open tray'}
         <if {unread() > 0}>
-          <!-- TODO 3: style(unreadDot, { animate: { loop: play(fade) } }) — ambient, and it
-               stops under prefers-reduced-motion for free. -->
-          <span style(unreadDot)></span>
+          <!-- TODO 3: compose unreadDot with animate: { loop: play(fade) } —
+               ambient, and it stops under prefers-reduced-motion for free. -->
+          <strong style(unreadDot)></strong>
         </if>
       </button>
     </row>
   </row>
 
   <if {open()}>
-    <!-- TODO 4: the panel should arrive (style({ animate: { enter: play(fade) } }))
-         and leave (`exit: play(fade)`). Exit is the one
-         thing CSS can't do alone: the framework holds the node until the animation ends. -->
+    <!-- TODO 4: the panel should arrive (animate: { enter: play(fade),
+         exit: play(fade) }). Exit is the one thing CSS can't do alone:
+         the framework holds the node until the animation ends. -->
     <column gap="2">
       <for {notes() as n} key={n.id}>
-        <!-- TODO 5: rows should cascade in (style(noteRow, { animate: { enter: play(slide-up), exit: play(fade) } }))
+        <!-- TODO 5: rows should cascade in (noteRow + animate:
+             { enter: play(slide-up), exit: play(fade) })
              and fade out on dismiss. Compose named paint + animate in one style(). -->
         <row gap="3" align="center" style(noteRow)>
           <badge tone={n.tone} variant="soft" size="sm">{n.kind}</badge>
-          <p style(noteText, { grow(1) })>{n.text}</p>
+          <p style(noteText)>{n.text}</p>
           <button variant="ghost" size="sm" on:click={() => dismiss(n.id)}>Dismiss</button>
         </row>
       </for>
