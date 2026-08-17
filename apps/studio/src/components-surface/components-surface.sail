@@ -3,36 +3,49 @@
   Composition: { session, library }. Inspect is a sibling route surface.
 -->
 <scope>
-  style eyebrow = { fg(muted-foreground).type({ size: xs, weight: semibold, tracking: wide, case: uppercase }) }
-  style pathMeta = { fg(muted-foreground).type({ family: mono, size: xs }) }
-  style muted = { fg(muted-foreground).type({ size: sm }) }
-  style surfaceRoot = { grow(1).size({ h: full, min-w: 0, min-h: 0 }).overflow({ all: hidden }).bg(background) }
-  style workbench = { grow(1).size({h: full, min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }) }
-  style navPane = { grow(1).size({h: full, min-w: panel-min-w-md, min-h: 0, max-w: panel-max-w-md, basis: 0}).overflow({ all: hidden }).border({ edge: r, color: border-subtle, width: 1 }).bg(surface-0) }
-  style navHead = { shrink(0).pad({ x: 4, t: 4, b: 3 }).border({ edge: b, color: border-subtle, width: 1 }) }
-  style detailPane = { grow(1).size({h: full, min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }).bg(background) }
-  style detailHead = { shrink(0).pad({ x: 5, y: 4 }).border({ edge: b, color: border-subtle, width: 1 }).bg(surface-0) }
+  style eyebrow = { fg(muted).type(label) }
+  style pathMeta = { fg(muted).type(mono-sm) }
+  style muted = { fg(muted).type(body-sm) }
+  style surfaceRoot = { size(grow).overflow(hidden).bg(canvas) }
+  style workbench = { size(grow).overflow(hidden) }
+  // no preset: edge-only border
+  style navPane = { size(grow).overflow(hidden).border({ edge: r, color: border-subtle, width: 1 }).bg(surface-0) }
+  // no preset: edge-only border
+  style navHead = { size(hug).pad(4).border({ edge: b, color: border-subtle, width: 1 }) }
+  style detailPane = { size(grow).overflow(hidden).bg(canvas) }
+  // no preset: edge-only border
+  style detailHead = { size(hug).pad(5).border({ edge: b, color: border-subtle, width: 1 }).bg(surface-0) }
+  // no preset: min-w lock
   style detailHeadMain = { size({ min-w: 0 }).overflow({ x: auto }) }
-  style scrollGrow = { grow(1).size({h: full, min-h: 0, basis: 0}) }
+  style scrollGrow = { size(grow) }
   style listPad = { pad(3) }
-  style loadRow = { shrink(0).pad({ x: 4, y: 2 }) }
-  style shrink0 = { shrink(0) }
-  style growMin = { grow(1).size({ min-w: 0 }) }
-  style detailTitle = { type({ size: lg, weight: semibold, tracking: tight, wrap: truncate }) }
+  style loadRow = { size(hug).pad(4) }
+  style shrink0 = { size(hug) }
+  style growMin = { size(grow) }
+  style detailTitle = { type(heading) }
+  // no preset: min-w lock
   style bodyPad = { pad(5).size({ min-w: 0 }) }
-  style specimenChrome = { shrink(0).pad({ x: 3 }).size({ h: 8, min-w: 0, min-h: 8 }).border({ edge: b, color: border-subtle, width: 1 }).bg(surface-1) }
-  style trafficDots = { shrink(0).size({ min-w: 12 }) }
-  style trafficDot = { shrink(0).size({ w: 2, h: 2, min-w: 2, min-h: 2 }).radius(full) }
-  style chromeTitle = { grow(1).size({ min-w: 0 }).fg(muted-foreground).type({ size: xs, wrap: truncate }) }
-  style previewFrame = { size({ min-w: 0 }).overflow({ all: hidden }).elevation(lg) }
-  style previewBody = { pad(6).size({ min-h: 32 }).bg(background) }
-  style previewTitle = { type({ family: heading, size: md, weight: semibold }) }
-  style previewHint = { fg(muted-foreground).type({ size: sm, leading: relaxed }) }
-  style propHead = { pad({ y: 1 }).border({ edge: b, color: border-subtle, width: 1 }) }
-  style propRow = { pad({ y: 2 }).border({ edge: b, color: border-subtle, width: 1 }) }
-  style kvLabel = { shrink(0).size({ w: 24 }).fg(muted-foreground).type({ size: xs }) }
-  style kvValue = { grow(1).size({ min-w: 0 }).type({ family: mono, size: sm, wrap: truncate }) }
-  style footnote = { pad({ x: 1 }).fg(muted-foreground).type({ size: xs, leading: snug }) }
+  // no preset: min-w lock + edge-only border
+  style specimenChrome = { pad(3).size({ h: 8, min-w: 0, min-h: 8 }).border({ edge: b, color: border-subtle, width: 1 }).bg(surface-1) }
+  // no preset: size lock
+  style trafficDots = { size({ min-w: 12 }) }
+  // no preset: size lock
+  style trafficDot = { size({ w: 2, h: 2, min-w: 2, min-h: 2 }).radius(full) }
+  style chromeTitle = { size(grow).fg(muted).type(body-sm) }
+  // no preset: min-w lock
+  style previewFrame = { size({ min-w: 0 }).overflow(hidden).elevation(lg) }
+  // no preset: size lock
+  style previewBody = { pad(6).size({ min-h: 32 }).bg(canvas) }
+  style previewTitle = { type(heading) }
+  style previewHint = { fg(muted).type(body-sm) }
+  // no preset: edge-only border
+  style propHead = { pad(1).border({ edge: b, color: border-subtle, width: 1 }) }
+  // no preset: edge-only border
+  style propRow = { pad(2).border({ edge: b, color: border-subtle, width: 1 }) }
+  // no preset: size lock
+  style kvLabel = { size({ w: 24 }).fg(muted).type(body-sm) }
+  style kvValue = { size(grow).type(mono) }
+  style footnote = { pad(1).fg(muted).type(body-sm) }
 </scope>
 
 <controller>
@@ -200,9 +213,10 @@ export default controller(() => {
       <scroll-area components-detail-body style(scrollGrow)>
         <column gap="4" style(bodyPad)>
           <if {session.showNewForm()}>
+            <!-- no preset: min-w lock -->
             <card new-form padding="md" style({ size({ min-w: 0 }) })>
               <column gap="3">
-                <p style({ type({ size: md, weight: semibold }) })>New component</p>
+                <p style({ type(heading) })>New component</p>
                 <p style(muted)>Creates a draft brief only — does not write files yet.</p>
                 <field label="Name">
                   <input type="text" size="sm" placeholder="my-widget" value={session.newName()} on:input={session.onNewNameInput} />
@@ -254,10 +268,10 @@ export default controller(() => {
               <tab value="contract">Contract</tab>
             </tab-list>
             <tab-panel value="overview">
-              <column gap="3" style({ pad({ y: 3 }) })>
+              <column gap="3" style({ pad(3) })>
                 <column gap="1">
                   <p style(eyebrow)>Intent</p>
-                  <p detail-intent style({ type({ size: sm, leading: relaxed }) })>{library.detailIntent()}</p>
+                  <p detail-intent style({ type(body-sm) })>{library.detailIntent()}</p>
                 </column>
                 <column gap="2">
                   <p style(eyebrow)>Meta</p>
@@ -276,7 +290,7 @@ export default controller(() => {
               </column>
             </tab-panel>
             <tab-panel value="contract">
-              <column gap="3" style({ pad({ y: 3 }) })>
+              <column gap="3" style({ pad(3) })>
                 <if {library.schemaNote()}>
                   <p schema-note style(muted)>{library.schemaNote()}</p>
                 </if>
@@ -288,18 +302,18 @@ export default controller(() => {
                 <if {library.hasProps()}>
                   <column props-table gap="1">
                     <row gap="3" nowrap style(propHead)>
-                      <p style(eyebrow, { grow(1) })>Name</p>
+                      <p style(eyebrow, growMin)>Name</p>
                       <p style(eyebrow)>Type</p>
                       <p style(eyebrow)>Default</p>
                     </row>
                     <for {library.propRows() as prop} key={prop.key}>
                       <row prop-row gap="3" align="start" nowrap style(propRow)>
                         <column gap="0" style(growMin)>
-                          <p style({ type({ family: mono, size: sm }) })>{prop.name}</p>
-                          <p style({ fg(muted-foreground).type({ size: xs }) })>{prop.requiredLabel}</p>
+                          <p style({ type(mono) })>{prop.name}</p>
+                          <p style({ fg(muted).type(body-sm) })>{prop.requiredLabel}</p>
                         </column>
-                        <p style(pathMeta, { shrink(0) })>{prop.type}</p>
-                        <p style(pathMeta, { shrink(0) })>{prop.defaultValue}</p>
+                        <p style(pathMeta, shrink0)>{prop.type}</p>
+                        <p style(pathMeta, shrink0)>{prop.defaultValue}</p>
                       </row>
                     </for>
                   </column>

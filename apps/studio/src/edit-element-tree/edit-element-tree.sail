@@ -2,13 +2,14 @@
   <edit-element-tree> — active-doc component tree (sail-tree identity bind).
 -->
 <scope>
-  style surfaceRoot = { grow(1).size({h: full, min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }) }
-  style headRow = { shrink(0).size({ h: 7 }).pad({ x: 3 }).border({ edge: b, color: border-subtle, width: 1 }) }
-  style eyebrow = { fg(muted-foreground).type({ size: xs, weight: semibold, tracking: wide, case: uppercase }) }
-  style pathMeta = { grow(1).size({ min-w: 0 }).fg(muted-foreground).type({ family: mono, size: xs, wrap: truncate }) }
-  style treeBody = { grow(1).size({min-h: 0, basis: 0}).pad({ x: 1, y: 1 }).overflow({ all: hidden }) }
-  style emptyFrame = { size({ w: full }).pad(3).border({ color: border-subtle, width: 1 }).radius(md) }
-  style treeHost = { size({ w: full, h: full, min-h: 0 }) }
+  style surfaceRoot = { size(grow).overflow(hidden) }
+  // no preset: size lock + edge-only border
+  style headRow = { size({ h: 7 }).pad(3).border({ edge: b, color: border-subtle, width: 1 }) }
+  style eyebrow = { fg(muted).type(label) }
+  style pathMeta = { size(grow).fg(muted).type(mono-sm) }
+  style treeBody = { size(grow).pad(1).overflow(hidden) }
+  style emptyFrame = { size(max).pad(3).border(subtle).radius(md) }
+  style treeHost = { size(max) }
 </scope>
 
 <controller>

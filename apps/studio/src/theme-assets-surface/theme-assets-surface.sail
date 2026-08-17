@@ -2,39 +2,52 @@
   Theme assets facet — type roles + icons deep edit.
   Thin shell: chrome + editor + specimen (draft paint via applyScope bind).
 -->
+
 <scope>
-  style sectionTitle = { type({ size: sm, weight: semibold }) }
-  style fieldHint = { fg(muted-foreground).type({ size: xs }) }
-  style pathMeta = { fg(muted-foreground).type({ family: mono, size: xs }) }
+  style sectionTitle = { type(body-sm) }
+  style fieldHint = { fg(muted).type(body-sm) }
+  style pathMeta = { fg(muted).type(mono-sm) }
+  // no preset: type weight
   style doorTitle = { type({ weight: semibold }) }
-  style editorCol = { pad({ x: 6, t: 6, b: 10 }).size({ max-w: panel-max-w-lg }) }
-  style bandStatus = { pad({ x: 4, y: 2 }) }
-  style bandError = { pad({ x: 4, y: 2 }).border({ edge: b, color: border, width: 1 }) }
-  style iconCell = { size({ w: 10, h: 10, min-w: 10, min-h: 10 }).radius(md).border({ color: border-subtle, width: 1 }).bg(surface-0) }
-  style fullBtn = { size({ w: full }) }
-  style fontHit = { pad(2_5).size({ min-w: 0 }).radius(md).border({ color: border-subtle, width: 1 }).bg(surface-0) }
-  style fontSample = { size({ min-w: 0 }).fg(foreground).type({ size: lg, leading: snug }) }
-  style catChip = { when: { selected: bg(selected-bg).fg(foreground).border({ color: border }) } }
-  style surfaceRoot = { grow(1).size({ h: full, min-w: 0, min-h: 0 }).overflow({ all: hidden }).bg(background) }
-  style workbench = { grow(1).size({h: full, min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }).bg(background) }
-  style editorScroll = { grow(1).size({h: full, min-w: 0, min-h: 0, basis: 0}).bg(background) }
-  style pageTitle = { type({ size: xl, weight: semibold, tracking: tight }) }
-  style errorText = { grow(1).size({ min-w: 0 }).fg(destructive).type({ size: sm, wrap: truncate }) }
-  style growMin = { grow(1).size({ min-w: 0 }) }
-  style shrink0 = { shrink(0) }
+  // no preset: size lock
+  style editorCol = { pad(6).size({ max-w: panel-max-w-lg }) }
+  style bandStatus = { pad(4) }
+  // no preset: edge-only border
+  style bandError = { pad(4).border({ edge: b, color: border, width: 1 }) }
+  // no preset: size lock
+  style iconCell = { size({ w: 10, h: 10, min-w: 10, min-h: 10 }).radius(md).border(subtle).bg(surface-0) }
+  style fullBtn = { size(max) }
+  // no preset: min-w lock
+  style fontHit = { pad(2_5).size({ min-w: 0 }).radius(md).border(subtle).bg(surface-0) }
+  // no preset: min-w lock
+  style fontSample = { size({ min-w: 0 }).fg(canvas).type(body) }
+  style catChip = { when: { selected: bg(selected-bg).fg(canvas).border(subtle) } }
+  style surfaceRoot = { size(grow).overflow(hidden).bg(canvas) }
+  style workbench = { size(grow).overflow(hidden).bg(canvas) }
+  style editorScroll = { size(grow).bg(canvas) }
+  style pageTitle = { type(heading) }
+  style errorText = { size(grow).fg(destructive).type(body-sm) }
+  style growMin = { size(grow) }
+  style shrink0 = { size(hug) }
+  // no preset: min-w lock
   style catsScroll = { overflow({ x: auto }).size({ min-w: 0 }) }
-  style specimenDock = { grow(1).size({h: full, min-w: 0, min-h: 0, max-w: panel-max-w-md, basis: 0}).overflow({ all: hidden }).border({ edge: l, color: border-subtle, width: 1 }).bg(background) }
-  style specimenPad = { grow(1).size({ h: full, min-h: 0 }).pad(4) }
-  style specimenFrame = { size({ h: full, min-w: 0, min-h: 0 }).overflow({ all: hidden }).elevation(lg) }
-  style specimenChrome = { shrink(0).pad({ x: 3 }).size({ h: 8, min-w: 0, min-h: 8 }).border({ edge: b, color: border-subtle, width: 1 }).bg(surface-1) }
-  style trafficDots = { shrink(0).size({ min-w: 12 }) }
-  style trafficDot = { shrink(0).size({ w: 2, h: 2, min-w: 2, min-h: 2 }).radius(full) }
-  style chromeTitle = { grow(1).size({ min-w: 0 }).fg(muted-foreground).type({ size: xs, wrap: truncate }) }
-  style scrollGrow = { grow(1).size({ h: full, min-h: 0 }).bg(background) }
+  // no preset: edge-only border
+  style specimenDock = { size(grow).overflow(hidden).border({ edge: l, color: border-subtle, width: 1 }).bg(canvas) }
+  style specimenPad = { size(grow).pad(4) }
+  style specimenFrame = { size(max).overflow(hidden).elevation(lg) }
+  // no preset: min-w lock + edge-only border
+  style specimenChrome = { pad(3).size({ h: 8, min-w: 0, min-h: 8 }).border({ edge: b, color: border-subtle, width: 1 }).bg(surface-1) }
+  // no preset: size lock
+  style trafficDots = { size({ min-w: 12 }) }
+  // no preset: size lock
+  style trafficDot = { size({ w: 2, h: 2, min-w: 2, min-h: 2 }).radius(full) }
+  style chromeTitle = { size(grow).fg(muted).type(body-sm) }
+  style scrollGrow = { size(grow).bg(canvas) }
+  // no preset: min-w lock
   style stageBody = { pad(5).size({ min-w: 0 }) }
-  style typeDisplay = { type({ family: display, size: 2xl, weight: semibold, tracking: tight }) }
-  style typeBody = { type({ family: body, size: sm, leading: relaxed }) }
-  style typeMono = { type({ family: mono, size: xs }) }
+  style typeDisplay = { type(display-sm) }
+  style typeBody = { type(body-sm) }
+  style typeMono = { type(mono-sm) }
   type TypeRoleSelectProps = {
     token: string
     label: string
@@ -51,7 +64,24 @@
     onUseRole: any
     onInstall: any
   }
+  style scrollCanvas = { size(grow).bg(canvas) }
 </scope>
+
+<controller>
+import { createThemeSession } from '../compositions/theme-session/theme-session'
+import { watchPreviewHost } from '../compositions/theme-session/bind-preview-host'
+import { createAssetsEdit } from '../compositions/theme-assets-surface/theme-assets-edit'
+export default controller(() => {
+  const session = createThemeSession({
+    facet: 'assets',
+    editGuardMessage: 'Add this theme to the project to edit assets.',
+    saveSuccessMessage: 'Type and icon choices saved where the store persists them.',
+  })
+  const assets = createAssetsEdit(session)
+  mount((host) => watchPreviewHost(host, (el) => session.attachPreviewHost(el)))
+  return { session, assets }
+})
+</controller>
 
 <partial type-role-select props: TypeRoleSelectProps>
   <column gap="1">
@@ -67,8 +97,8 @@
 <partial font-hit-row props: FontHitProps>
   <column gap="2" font-hit font-family={fontFamily} style(fontHit)>
     <row align="baseline" justify="between" gap="2" nowrap>
-      <p style(doorTitle, { grow(1).size({ min-w: 0 }) })>{fontFamily}</p>
-      <p style(pathMeta, { shrink(0) })>{category}</p>
+      <p style(doorTitle, growMin)>{fontFamily}</p>
+      <p style(pathMeta, shrink0)>{category}</p>
     </row>
     <p font-sample face={fontFamily} style(fontSample)>{sample}</p>
     <row gap="1" align="center">
@@ -88,34 +118,18 @@
   </column>
 </partial>
 
-<controller>
-import { createThemeSession } from '../compositions/theme-session/theme-session'
-import { watchPreviewHost } from '../compositions/theme-session/bind-preview-host'
-import { createAssetsEdit } from '../compositions/theme-assets-surface/theme-assets-edit'
-export default controller(() => {
-  const session = createThemeSession({
-    facet: 'assets',
-    editGuardMessage: 'Add this theme to the project to edit assets.',
-    saveSuccessMessage: 'Type and icon choices saved where the store persists them.',
-  })
-  const assets = createAssetsEdit(session)
-  mount((host) => watchPreviewHost(host, (el) => session.attachPreviewHost(el)))
-  return { session, assets }
-})
-</controller>
-
 <column surface="themes" theme-assets-surface assets-chrome gap="0" style(surfaceRoot)>
   <theme-facet-chrome session={session}></theme-facet-chrome>
 
   <if {session.hasError()}>
-    <row assets-error align="center" gap="2" style(bandError, { shrink(0) })>
+    <row assets-error align="center" gap="2" style(bandError, shrink0)>
       <p style(errorText)>{session.errorText()}</p>
       <button type="button" size="sm" variant="ghost" assets-retry on:click={session.onRetry}>Retry</button>
     </row>
   </if>
 
   <if {session.loading()}>
-    <row assets-loading align="center" gap="2" style(bandStatus, { shrink(0) })>
+    <row assets-loading align="center" gap="2" style(bandStatus, shrink0)>
       <spinner size="sm"></spinner>
       <p style(fieldHint)>Loading…</p>
     </row>
@@ -184,7 +198,7 @@ export default controller(() => {
             </row>
             <row gap="1" align="center" nowrap font-cats style(catsScroll)>
               <for {assets.fontCategoryOpts() as c} key={c.key}>
-                <button type="button" size="xs" variant="outline" tone="muted" font-cat={c.id} selected={c.on ? 'true' : null} on:click={() => assets.onFontCategory(c.id)} style(catChip, { shrink(0) })>
+                <button type="button" size="xs" variant="outline" tone="muted" font-cat={c.id} selected={c.on ? 'true' : null} on:click={() => assets.onFontCategory(c.id)} style(catChip, shrink0)>
                   {c.label}
                 </button>
               </for>
@@ -241,7 +255,7 @@ export default controller(() => {
           <if {assets.hasIconGlyphs()}>
             <grid cols="4" gap="2" icon-grid>
               <for {assets.iconGlyphs() as g} key={g.key}>
-                <center title={g.name} style(iconCell, { shrink(0) })>
+                <center title={g.name} style(iconCell, shrink0)>
                   <icon name={g.name} size="md" label={g.name}></icon>
                 </center>
               </for>
@@ -281,7 +295,7 @@ export default controller(() => {
           assets-specimen
           preview-specimen
           padding="none" style(specimenFrame)>
-          <column gap="0" style({ grow(1).size({ h: full, min-h: 0 }) })>
+          <column gap="0" style(growMin)>
             <row preview-chrome align="center" gap="2" nowrap style(specimenChrome)>
               <row gap="2" align="center" nowrap hidden="true" style(trafficDots)>
                 <stack style(trafficDot, { bg(destructive) })></stack>
@@ -289,7 +303,7 @@ export default controller(() => {
                 <stack style(trafficDot, { bg(success) })></stack>
               </row>
               <p style(chromeTitle)>Preview · {session.nameEdit()}</p>
-              <p style(pathMeta, { shrink(0) })>{session.paintMode()}</p>
+              <p style(pathMeta, shrink0)>{session.paintMode()}</p>
             </row>
           <scroll-area style(scrollGrow)>
             <column specimen-body gap="5" style(stageBody)>
@@ -320,7 +334,7 @@ export default controller(() => {
               <if {assets.hasIconGlyphs()}>
                 <row specimen-icons gap="3" align="center" nowrap>
                   <for {assets.iconGlyphs() as g} key={g.key}>
-                    <icon name={g.name} size={assets.iconPreviewSize()} label={g.name} style({ shrink(0) })></icon>
+                    <icon name={g.name} size={assets.iconPreviewSize()} label={g.name} style(shrink0)></icon>
                   </for>
                 </row>
               </if>

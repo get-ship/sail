@@ -3,56 +3,77 @@
   List (In project / Catalog) + preview (color story, type, live chrome) under scoped theme.
   Membership = project file on disk. Catalog: Add to project (confirm).
 -->
+
 <scope>
-  style pageHeader = { shrink(0).pad({ x: 6, y: 4 }).border({ edge: b, color: border-subtle, width: 1 }).bg(surface-1) }
-  style errorBand = { shrink(0).pad({ x: 6, y: 2 }).border({ edge: b, color: border, width: 1 }) }
-  style loadBand = { shrink(0).pad({ x: 6, y: 2 }) }
-  style workbench = { grow(1).size({h: full, min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }) }
-  style listPane = { grow(1).size({min-w: panel-min-w-md, min-h: 0, max-w: panel-max-w-md, basis: 0}).border({ edge: r, color: border-subtle, width: 1 }).bg(surface-1) }
-  style listHead = { shrink(0).pad({ x: 4, t: 4, b: 3 }).border({ edge: b, color: border-subtle, width: 1 }) }
-  style groupLabel = { pad({ x: 2, t: 1, b: 1 }).fg(muted-foreground).type({ size: xs, weight: semibold, tracking: wide, case: uppercase }) }
-  style groupLabelCatalog = { pad({ x: 2, t: 4, b: 1 }).fg(muted-foreground).type({ size: xs, weight: semibold, tracking: wide, case: uppercase }) }
+  // no preset: edge-only border
+  style pageHeader = { size(hug).pad(6).border({ edge: b, color: border-subtle, width: 1 }).bg(surface-1) }
+  // no preset: edge-only border
+  style errorBand = { size(hug).pad(6).border({ edge: b, color: border, width: 1 }) }
+  style loadBand = { size(hug).pad(6) }
+  style workbench = { size(grow).overflow(hidden) }
+  // no preset: edge-only border
+  style listPane = { size(grow).border({ edge: r, color: border-subtle, width: 1 }).bg(surface-1) }
+  // no preset: edge-only border
+  style listHead = { size(hug).pad(4).border({ edge: b, color: border-subtle, width: 1 }) }
+  style groupLabel = { pad(2).fg(muted).type(label) }
+  style groupLabelCatalog = { pad(2).fg(muted).type(label) }
+  // no preset: transparent border
   style themeRow = { pad(2).radius(md).cursor(pointer).border({ color: transparent, width: 1 }), when: { hover: bg(hover-bg), current: bg(selected-bg).border({ color: selected-border }) } }
-  style swatchStrip = { shrink(0).size({ w: 14, h: 7, min-w: 14 }).overflow({ all: hidden }).radius(sm).border({ color: border-subtle, width: 1 }) }
-  style swatchCell = { grow(1).size({ h: full, min-w: 0 }) }
-  style growMin = { grow(1).size({ min-w: 0 }) }
-  style shrink0 = { shrink(0) }
-  style titleSm = { type({ size: sm, weight: semibold, wrap: truncate }) }
-  style mutedXs = { fg(muted-foreground).type({ size: xs, wrap: truncate }) }
-  style mutedSm = { fg(muted-foreground).type({ size: sm }) }
-  style mutedSmLead = { fg(muted-foreground).type({ size: sm, leading: snug }) }
-  style mutedXsPlain = { fg(muted-foreground).type({ size: xs }) }
-  style pageTitle = { fg(foreground).type({ size: lg, weight: semibold, tracking: tight }) }
-  style libraryEyebrow = { fg(muted-foreground).type({ size: xs, weight: bold, tracking: wide, case: uppercase }) }
-  style sectionEyebrow = { fg(muted-foreground).type({ size: xs, weight: semibold, tracking: wide, case: uppercase }) }
-  style errorText = { grow(1).size({ min-w: 0 }).fg(destructive).type({ size: sm, wrap: truncate }) }
-  style surfaceRoot = { grow(1).size({ h: full, min-w: 0, min-h: 0 }).overflow({ all: hidden }).bg(background) }
-  style scrollGrow = { grow(1).size({h: full, min-h: 0, basis: 0}) }
+  // no preset: size lock
+  style swatchStrip = { size({ w: 14, h: 7, min-w: 14 }).overflow(hidden).radius(sm).border(subtle) }
+  style swatchCell = { size(grow) }
+  style swatchCanvas = { bg(canvas) }
+  style swatchSurface2 = { bg(surface-2) }
+  style swatchPrimary = { bg(primary) }
+  style swatchAccent = { bg(accent) }
+  style swatchSurface1 = { bg(surface-1) }
+  style swatchSecondary = { bg(secondary) }
+  style growMin = { size(grow) }
+  style shrink0 = { size(hug) }
+  style titleSm = { type(body-sm) }
+  style mutedXs = { fg(muted).type(body-sm) }
+  style mutedSm = { fg(muted).type(body-sm) }
+  style mutedSmLead = { fg(muted).type(body-sm) }
+  style mutedXsPlain = { fg(muted).type(body-sm) }
+  style pageTitle = { fg(canvas).type(heading) }
+  style libraryEyebrow = { fg(muted).type(label) }
+  style sectionEyebrow = { fg(muted).type(label) }
+  style errorText = { size(grow).fg(destructive).type(body-sm) }
+  style surfaceRoot = { size(grow).overflow(hidden).bg(canvas) }
+  style scrollGrow = { size(grow) }
   style listPad = { pad(3) }
-  style previewScroll = { grow(1).size({h: full, min-w: 0, min-h: 0, basis: 0}).bg(background) }
-  style previewCol = { pad({ x: 8, t: 6, b: 10 }).size({ max-w: panel-max-w-lg }) }
-  style previewTitle = { type({ family: display, size: 2xl, weight: medium, tracking: tight }) }
-  style previewDesc = { fg(muted-foreground).type({ size: sm, leading: relaxed }) }
-  style modeLabel = { fg(muted-foreground).type({ size: xs, weight: semibold }) }
-  style modeIcon = { shrink(0).fg(muted-foreground) }
-  style storySwatch = { size({ h: 16 }).radius(md).border({ color: border-subtle, width: 1 }) }
-  style storyLabel = { type({ size: xs, weight: medium }) }
-  style typeStory = { pad(4).radius(lg).border({ color: border-subtle, width: 1 }).bg(surface-1).fg(foreground) }
-  style typeDisplay = { type({ family: display, size: xl, weight: semibold, tracking: tight }) }
-  style typeBody = { type({ family: body, size: sm, leading: relaxed }) }
-  style typeMono = { type({ family: mono, size: xs }) }
-  style radiusChip = { shrink(0).size({ w: 8, h: 8, min-w: 8, min-h: 8 }).bg(transparent).border({ color: primary, width: 2 }) }
-  style specimen = { overflow({ all: hidden }).size({ min-w: 0 }).radius(lg).border({ color: border, width: 1 }).elevation(md).bg(background).fg(foreground) }
-  style specimenHead = { pad({ x: 4 }).size({ h: 9 }).bg(surface-1).border({ edge: b, color: border-subtle, width: 1 }) }
-  style specimenBody = { pad(5).bg(background) }
+  style previewScroll = { size(grow).bg(canvas) }
+  // no preset: size lock
+  style previewCol = { pad(8).size({ max-w: panel-max-w-lg }) }
+  style previewTitle = { type(display-sm) }
+  style previewDesc = { fg(muted).type(body-sm) }
+  style modeLabel = { fg(muted).type(label) }
+  style modeIcon = { size(hug).fg(muted) }
+  // no preset: size lock
+  style storySwatch = { size({ h: 16 }).radius(md).border(subtle) }
+  style storyLabel = { type(body-sm) }
+  style typeStory = { pad(4).radius(lg).border(subtle).bg(surface-1).fg(canvas) }
+  style typeDisplay = { type(display-sm) }
+  style typeBody = { type(body-sm) }
+  style typeMono = { type(mono-sm) }
+  // no preset: size lock + transparent border
+  style radiusChip = { size({ w: 8, h: 8, min-w: 8, min-h: 8 }).bg(transparent).border({ color: primary, width: 2 }) }
+  // no preset: min-w lock
+  style specimen = { overflow(hidden).size({ min-w: 0 }).radius(lg).border(subtle).elevation(md).bg(canvas).fg(canvas) }
+  // no preset: size lock + edge-only border
+  style specimenHead = { pad(4).size({ h: 9 }).bg(surface-1).border({ edge: b, color: border-subtle, width: 1 }) }
+  style specimenBody = { pad(5).bg(canvas) }
+  // no preset: min-w lock
   style specimenCard = { pad(4).size({ min-w: 0 }) }
+  // no preset: min-w lock
   style specimenActions = { size({ min-w: 0 }).overflow({ x: auto }) }
-  style chipLabel = { shrink(0).type({ wrap: truncate }) }
-  style cardTitle = { type({ family: heading, size: md, weight: semibold }) }
-  style cardBody = { fg(muted-foreground).type({ family: body, size: sm, leading: relaxed }) }
-  style fullW = { size({ w: full }) }
-  style tapFloor = { shrink(0).size({ min-w: control-h-sm, min-h: control-h-sm }) }
-  style iconBtn = { shrink(0).size({ w: control-h-sm, h: control-h-sm, min-w: control-h-sm, min-h: control-h-sm }) }
+  // no preset: type wrap
+  style chipLabel = { size(hug).type({ wrap: truncate }) }
+  style cardTitle = { type(heading) }
+  style cardBody = { fg(muted).type(body-sm) }
+  style fullW = { size(max) }
+  style tapFloor = { size(control-sm) }
+  style iconBtn = { size(control-sm) }
 
   type ThemeSwatchProps = {
     previewId: string
@@ -73,7 +94,76 @@
     onMenuOpen: any
     onRowMenu: any
   }
+  style scrollCanvas = { size(grow).bg(canvas) }
 </scope>
+
+<controller>
+import type { UiEvent } from '../compositions/ui-event'
+import type { Action } from '@ship/sail-runtime'
+import { hostSetAttribute, hostRemoveAttribute } from '../compositions/host-paint'
+import { createThemesSurface } from '../compositions/themes-surface/themes-surface-vm'
+export default controller(() => {
+  const vm = createThemesSurface()
+  // Mode stamp for themed preview subtrees (action writes host attribute).
+  const paintMode: Action<string | null | undefined> = (node, initial) => {
+    const host = asSailHost(node)
+    const apply = (m: string | null | undefined): void => {
+      if (m === 'light' || m === 'dark') {
+        hostSetAttribute(host, 'mode', m)
+        hostRemoveAttribute(host, 'data-mode')
+      } else hostRemoveAttribute(host, 'mode')
+    }
+    apply(initial)
+    return {
+      update: (next) => apply(next),
+      destroy: () => hostRemoveAttribute(host, 'mode'),
+    }
+  }
+  return {
+    projectRows: vm.projectRows,
+    catalogRows: vm.catalogRows,
+    hasProjectRows: vm.hasProjectRows,
+    hasCatalogRows: vm.hasCatalogRows,
+    hasAnyThemes: vm.hasAnyThemes,
+    hasSelected: vm.hasSelected,
+    previewTitle: vm.previewTitle,
+    previewDesc: vm.previewDesc,
+    previewMeta: vm.previewMeta,
+    previewStatusLabel: vm.previewStatusLabel,
+    previewStatusTone: vm.previewStatusTone,
+    previewInProject: vm.previewInProject,
+    previewIsCatalog: vm.previewIsCatalog,
+    previewThemeId: vm.previewThemeId,
+    previewPaintId: vm.previewPaintId,
+    previewModeId: vm.previewModeId,
+    previewModesLabel: vm.previewModesLabel,
+    canToggleMode: vm.canToggleMode,
+    modeLightOn: vm.modeLightOn,
+    modeDarkOn: vm.modeDarkOn,
+    showToast: vm.showToast,
+    toastMessage: vm.toastMessage,
+    toastTone: vm.toastTone,
+    toastItems: vm.toastItems,
+    themesError: vm.themesError,
+    hasThemesError: vm.hasThemesError,
+    loadingLabel: vm.loadingLabel,
+    isLoading: vm.isLoading,
+    projectCountLabel: vm.projectCountLabel,
+    catalogCountLabel: vm.catalogCountLabel,
+    paintMode,
+    onListClick: (id: string) => vm.onListClick(id),
+    onMenuOpen: (id: string, e?: UiEvent) => vm.onMenuOpen(id, e),
+    onAddToProject: (id: string, e?: UiEvent) => vm.onAddToProject(id, e),
+    onPreviewOpen: () => vm.onPreviewOpen(),
+    onPreviewAddToProject: () => vm.onPreviewAddToProject(),
+    onPreviewModeSwitch: (e: UiEvent) => vm.onPreviewModeSwitch(e),
+    onNewTheme: () => vm.onNewTheme(),
+    onRowMenu: (detail: { value?: string }) => vm.onRowMenu(detail),
+    onRetryThemes: () => vm.onRetryThemes(),
+    onToastDismiss: () => vm.onToastDismiss(),
+  }
+})
+</controller>
 
 <partial theme-swatches props: ThemeSwatchProps>
   <row
@@ -85,10 +175,10 @@
     hidden="true"
     style(swatchStrip)
   >
-    <center style(swatchCell, { bg(background) })></center>
-    <center style(swatchCell, { bg(surface-2) })></center>
-    <center style(swatchCell, { bg(primary) })></center>
-    <center style(swatchCell, { bg(accent) })></center>
+    <center style(swatchCell, swatchCanvas)></center>
+    <center style(swatchCell, swatchSurface2)></center>
+    <center style(swatchCell, swatchPrimary)></center>
+    <center style(swatchCell, swatchAccent)></center>
   </row>
 </partial>
 
@@ -168,74 +258,6 @@
     </if>
   </row>
 </partial>
-
-<controller>
-import type { UiEvent } from '../compositions/ui-event'
-import type { Action } from '@ship/sail-runtime'
-import { hostSetAttribute, hostRemoveAttribute } from '../compositions/host-paint'
-import { createThemesSurface } from '../compositions/themes-surface/themes-surface-vm'
-export default controller(() => {
-  const vm = createThemesSurface()
-  // Mode stamp for themed preview subtrees (action writes host attribute).
-  const paintMode: Action<string | null | undefined> = (node, initial) => {
-    const host = asSailHost(node)
-    const apply = (m: string | null | undefined): void => {
-      if (m === 'light' || m === 'dark') {
-        hostSetAttribute(host, 'mode', m)
-        hostRemoveAttribute(host, 'data-mode')
-      } else hostRemoveAttribute(host, 'mode')
-    }
-    apply(initial)
-    return {
-      update: (next) => apply(next),
-      destroy: () => hostRemoveAttribute(host, 'mode'),
-    }
-  }
-  return {
-    projectRows: vm.projectRows,
-    catalogRows: vm.catalogRows,
-    hasProjectRows: vm.hasProjectRows,
-    hasCatalogRows: vm.hasCatalogRows,
-    hasAnyThemes: vm.hasAnyThemes,
-    hasSelected: vm.hasSelected,
-    previewTitle: vm.previewTitle,
-    previewDesc: vm.previewDesc,
-    previewMeta: vm.previewMeta,
-    previewStatusLabel: vm.previewStatusLabel,
-    previewStatusTone: vm.previewStatusTone,
-    previewInProject: vm.previewInProject,
-    previewIsCatalog: vm.previewIsCatalog,
-    previewThemeId: vm.previewThemeId,
-    previewPaintId: vm.previewPaintId,
-    previewModeId: vm.previewModeId,
-    previewModesLabel: vm.previewModesLabel,
-    canToggleMode: vm.canToggleMode,
-    modeLightOn: vm.modeLightOn,
-    modeDarkOn: vm.modeDarkOn,
-    showToast: vm.showToast,
-    toastMessage: vm.toastMessage,
-    toastTone: vm.toastTone,
-    toastItems: vm.toastItems,
-    themesError: vm.themesError,
-    hasThemesError: vm.hasThemesError,
-    loadingLabel: vm.loadingLabel,
-    isLoading: vm.isLoading,
-    projectCountLabel: vm.projectCountLabel,
-    catalogCountLabel: vm.catalogCountLabel,
-    paintMode,
-    onListClick: (id: string) => vm.onListClick(id),
-    onMenuOpen: (id: string, e?: UiEvent) => vm.onMenuOpen(id, e),
-    onAddToProject: (id: string, e?: UiEvent) => vm.onAddToProject(id, e),
-    onPreviewOpen: () => vm.onPreviewOpen(),
-    onPreviewAddToProject: () => vm.onPreviewAddToProject(),
-    onPreviewModeSwitch: (e: UiEvent) => vm.onPreviewModeSwitch(e),
-    onNewTheme: () => vm.onNewTheme(),
-    onRowMenu: (detail: { value?: string }) => vm.onRowMenu(detail),
-    onRetryThemes: () => vm.onRetryThemes(),
-    onToastDismiss: () => vm.onToastDismiss(),
-  }
-})
-</controller>
 
 <column surface="themes" themes-surface gap="0" style(surfaceRoot)>
   <row themes-header align="center" justify="between" gap="4" nowrap style(pageHeader)>
@@ -400,23 +422,23 @@ export default controller(() => {
             <p style(sectionEyebrow)>Color story</p>
             <row theme={previewPaintId()} use:paintMode={previewModeId()} gap="2" color-story-grid>
               <column gap="1" style(growMin)>
-                <center style(storySwatch, { bg(primary) })></center>
+                <center style(storySwatch, swatchPrimary)></center>
                 <p style(storyLabel)>Primary</p>
               </column>
               <column gap="1" style(growMin)>
-                <center style(storySwatch, { bg(secondary) })></center>
+                <center style(storySwatch, swatchSecondary)></center>
                 <p style(storyLabel)>Secondary</p>
               </column>
               <column gap="1" style(growMin)>
-                <center style(storySwatch, { bg(accent) })></center>
+                <center style(storySwatch, swatchAccent)></center>
                 <p style(storyLabel)>Accent</p>
               </column>
               <column gap="1" style(growMin)>
-                <center style(storySwatch, { bg(background) })></center>
+                <center style(storySwatch, swatchCanvas)></center>
                 <p style(storyLabel)>Background</p>
               </column>
               <column gap="1" style(growMin)>
-                <center style(storySwatch, { bg(surface-1) })></center>
+                <center style(storySwatch, swatchSurface1)></center>
                 <p style(storyLabel)>Surface</p>
               </column>
             </row>

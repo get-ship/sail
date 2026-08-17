@@ -2,30 +2,38 @@
   Color facet specimen — draft paint via theme-session host bind.
 -->
 <scope>
-  style fieldHint = { fg(muted-foreground).type({ size: xs }) }
-  style pathMeta = { fg(muted-foreground).type({ family: mono, size: xs }) }
-  style mutedSm = { fg(muted-foreground).type({ family: body, size: sm, leading: relaxed }) }
-  style mutedRelaxed = { fg(muted-foreground).type({ size: xs, leading: relaxed }) }
-  style specimenDock = { grow(1).size({h: full, min-w: 0, min-h: 0, max-w: panel-max-w-md, basis: 0}).overflow({ all: hidden }).border({ edge: l, color: border-subtle, width: 1 }).bg(background) }
-  style specimenPad = { grow(1).size({ h: full, min-h: 0 }).pad(4) }
-  style specimenFrame = { size({ h: full, min-w: 0, min-h: 0 }).overflow({ all: hidden }).elevation(lg) }
-  style fillCol = { grow(1).size({ h: full, min-h: 0 }) }
-  style specimenChrome = { shrink(0).pad({ x: 3 }).size({ h: 8, min-w: 0, min-h: 8 }).border({ edge: b, color: border-subtle, width: 1 }).bg(surface-1) }
-  style trafficDots = { shrink(0).size({ min-w: 12 }) }
-  style trafficDotDestructive = { shrink(0).size({ w: 2, h: 2, min-w: 2, min-h: 2 }).radius(full).bg(destructive) }
-  style trafficDotWarning = { shrink(0).size({ w: 2, h: 2, min-w: 2, min-h: 2 }).radius(full).bg(warning) }
-  style trafficDotSuccess = { shrink(0).size({ w: 2, h: 2, min-w: 2, min-h: 2 }).radius(full).bg(success) }
-  style chromeTitle = { grow(1).size({ min-w: 0 }).fg(muted-foreground).type({ size: xs, wrap: truncate }) }
-  style modeMeta = { shrink(0).fg(muted-foreground).type({ family: mono, size: xs }) }
-  style scrollGrow = { grow(1).size({h: full, min-h: 0, basis: 0}).bg(background) }
+  style fieldHint = { fg(muted).type(body-sm) }
+  style pathMeta = { fg(muted).type(mono-sm) }
+  style mutedSm = { fg(muted).type(body-sm) }
+  style mutedRelaxed = { fg(muted).type(body-sm) }
+  // no preset: edge-only border
+  style specimenDock = { size(grow).overflow(hidden).border({ edge: l, color: border-subtle, width: 1 }).bg(canvas) }
+  style specimenPad = { size(grow).pad(4) }
+  style specimenFrame = { size(max).overflow(hidden).elevation(lg) }
+  style fillCol = { size(grow) }
+  // no preset: min-w lock + edge-only border
+  style specimenChrome = { pad(3).size({ h: 8, min-w: 0, min-h: 8 }).border({ edge: b, color: border-subtle, width: 1 }).bg(surface-1) }
+  // no preset: size lock
+  style trafficDots = { size({ min-w: 12 }) }
+  // no preset: size lock
+  style trafficDotDestructive = { size({ w: 2, h: 2, min-w: 2, min-h: 2 }).radius(full).bg(destructive) }
+  // no preset: size lock
+  style trafficDotWarning = { size({ w: 2, h: 2, min-w: 2, min-h: 2 }).radius(full).bg(warning) }
+  // no preset: size lock
+  style trafficDotSuccess = { size({ w: 2, h: 2, min-w: 2, min-h: 2 }).radius(full).bg(success) }
+  style chromeTitle = { size(grow).fg(muted).type(body-sm) }
+  style modeMeta = { size(hug).fg(muted).type(mono-sm) }
+  style scrollGrow = { size(grow).bg(canvas) }
+  // no preset: min-w lock
   style bodyPad = { pad(5).size({ min-w: 0 }) }
-  style productTitle = { type({ family: heading, size: md, weight: semibold }) }
-  style fgOnSurface = { fg(foreground).type({ size: sm }) }
-  style cardTitle = { type({ size: sm, weight: semibold }) }
-  style surfaceBg = { pad(3).radius(md).border({ color: border-subtle, width: 1 }).bg(background) }
-  style surface1 = { pad(3).radius(md).border({ color: border-subtle, width: 1 }).bg(surface-1) }
-  style surface2 = { pad(3).radius(md).border({ color: border-subtle, width: 1 }).bg(surface-2) }
-  style surface3 = { pad(3).radius(md).border({ color: border-subtle, width: 1 }).bg(surface-3) }
+  style productTitle = { type(heading) }
+  style fgOnSurface = { fg(canvas).type(body-sm) }
+  style cardTitle = { type(body-sm) }
+  style surfaceBg = { pad(3).radius(md).border(subtle).bg(canvas) }
+  style surface1 = { pad(3).radius(md).border(subtle).bg(surface-1) }
+  style surface2 = { pad(3).radius(md).border(subtle).bg(surface-2) }
+  style surface3 = { pad(3).radius(md).border(subtle).bg(surface-3) }
+  style scrollCanvas = { size(grow).bg(canvas) }
 </scope>
 
 <controller>

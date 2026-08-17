@@ -3,22 +3,28 @@
   Rail: Edit · Components · Themes · Tasks · Config (Checks = status panel).
 -->
 <scope>
-  style shellRoot = { size({ w: full, h: screen, min-w: 0, min-h: screen }).overflow({ all: hidden }).bg(background).fg(foreground) }
-  style railItem = { size({ w: 10, h: 10, min-w: 10, min-h: 10 }).radius(md).fg(muted-foreground), when: { hover: bg(hover-bg).fg(foreground), current: bg(selected-bg).fg(primary) } }
-  style exitBtn = { size({ w: 10, h: 10, min-w: 10, min-h: 10 }).radius(md).fg(muted-foreground).bg(transparent).border({ width: 0 }).cursor(pointer), when: { hover: bg(hover-bg).fg(foreground) } }
-  style centerFill = { size(full) }
-  style mainCol = { grow(1).size({h: full, min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }) }
-  style batchTray = { shrink(0).pad({ x: 3 }).size({ h: 7, min-h: 7 }).border({ edge: b, color: border-subtle, width: 1 }).bg(surface-1) }
-  style batchLabel = { fg(muted-foreground).type({ size: xs, weight: semibold }) }
-  style grow1 = { grow(1) }
-  style contentRow = { grow(1).size({h: full, min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }) }
-  style surfaceSlot = { grow(1).size({h: full, min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }) }
-  style statusBar = { shrink(0).size({ h: 6, min-w: 0, min-h: 6 }).pad({ x: 3 }).overflow({ all: hidden }).border({ edge: t, color: border, width: 1 }).bg(surface-0).fg(muted-foreground) }
-  style statusLine = { grow(1).size({ min-w: 0 }).type({ family: mono, size: xs, wrap: truncate }) }
-  style statusMeta = { shrink(0).type({ size: xs }) }
-  style statusMuted = { shrink(0).fg(muted-foreground).type({ size: xs }) }
-  style findingsBtn = { shrink(0).pad({ x: 2 }).size({ h: 6, min-h: 6 }) }
-  style healthChip = { shrink(0).pad({ x: 1 }), when: { hover: bg(hover-bg) } }
+  // no preset: min-w lock
+  style shellRoot = { size({ w: full, h: screen, min-w: 0, min-h: screen }).overflow(hidden).bg(canvas).fg(canvas) }
+  // no preset: size lock
+  style railItem = { size({ w: 10, h: 10, min-w: 10, min-h: 10 }).radius(md).fg(muted), when: { hover: bg(hover-bg).fg(canvas), current: bg(selected-bg).fg(primary) } }
+  // no preset: size lock + border width 0
+  style exitBtn = { size({ w: 10, h: 10, min-w: 10, min-h: 10 }).radius(md).fg(muted).bg(transparent).border({ width: 0 }).cursor(pointer), when: { hover: bg(hover-bg).fg(canvas) } }
+  style centerFill = { size(max) }
+  style mainCol = { size(grow).overflow(hidden) }
+  // no preset: size lock + edge-only border
+  style batchTray = { pad(3).size({ h: 7, min-h: 7 }).border({ edge: b, color: border-subtle, width: 1 }).bg(surface-1) }
+  style batchLabel = { fg(muted).type(label) }
+  style grow1 = { size(grow) }
+  style contentRow = { size(grow).overflow(hidden) }
+  style surfaceSlot = { size(grow).overflow(hidden) }
+  // no preset: min-w lock + edge-only border
+  style statusBar = { size({ h: 6, min-w: 0, min-h: 6 }).pad(3).overflow(hidden).border({ edge: t, color: border, width: 1 }).bg(surface-0).fg(muted) }
+  style statusLine = { size(grow).type(mono-sm) }
+  style statusMeta = { size(hug).type(body-sm) }
+  style statusMuted = { size(hug).fg(muted).type(body-sm) }
+  // no preset: size lock
+  style findingsBtn = { pad(2).size({ h: 6, min-h: 6 }) }
+  style healthChip = { size(hug).pad(1), when: { hover: bg(hover-bg) } }
 </scope>
 
 <controller>

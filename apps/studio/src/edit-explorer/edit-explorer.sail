@@ -2,12 +2,13 @@
   <edit-explorer> — project file tree (studio-sidebar + sail-tree).
 -->
 <scope>
-  style toolbar = { shrink(0).pad(2).border({ edge: b, color: border-subtle, width: 1 }).bg(surface-1) }
-  style filterInput = { size({ w: full }) }
-  style countMono = { fg(muted-foreground).type({ family: mono, size: xs }) }
-  style treeBody = { grow(1).size({h: full, min-h: 0, basis: 0}).pad({ x: 1, y: 1 }).overflow({ all: hidden }).bg(surface-0) }
-  style emptyFrame = { size({ w: full }).pad(3).border({ color: border-subtle, width: 1 }).radius(md) }
-  style treeHost = { size({ w: full, h: full, min-h: 0 }) }
+  // no preset: edge-only border
+  style toolbar = { size(hug).pad(2).border({ edge: b, color: border-subtle, width: 1 }).bg(surface-1) }
+  style filterInput = { size(max) }
+  style countMono = { fg(muted).type(mono-sm) }
+  style treeBody = { size(grow).pad(1).overflow(hidden).bg(surface-0) }
+  style emptyFrame = { size(max).pad(3).border(subtle).radius(md) }
+  style treeHost = { size(max) }
 </scope>
 
 <controller>

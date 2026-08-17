@@ -2,29 +2,38 @@
   <config-surface> — project/runtime settings. Nav categories + field tables.
 -->
 <scope>
-  style eyebrow = { fg(muted-foreground).type({ size: xs, weight: semibold, tracking: wide, case: uppercase }) }
-  style muted = { fg(muted-foreground).type({ size: sm }) }
-  style surfaceRoot = { grow(1).size({ h: full, min-w: 0, min-h: 0 }).overflow({ all: hidden }).bg(background) }
-  style workbench = { grow(1).size({h: full, min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }) }
-  style navPane = { grow(1).size({h: full, min-w: panel-min-w-sm, min-h: 0, max-w: panel-max-w-sm, basis: 0}).overflow({ all: hidden }).border({ edge: r, color: border-subtle, width: 1 }).bg(surface-1) }
-  style navHead = { shrink(0).pad({ x: 3, t: 3, b: 2 }).border({ edge: b, color: border-subtle, width: 1 }) }
-  style scrollGrow = { grow(1).size({h: full, min-h: 0, basis: 0}) }
+  style eyebrow = { fg(muted).type(label) }
+  style muted = { fg(muted).type(body-sm) }
+  style surfaceRoot = { size(grow).overflow(hidden).bg(canvas) }
+  style workbench = { size(grow).overflow(hidden) }
+  // no preset: edge-only border
+  style navPane = { size(grow).overflow(hidden).border({ edge: r, color: border-subtle, width: 1 }).bg(surface-1) }
+  // no preset: edge-only border
+  style navHead = { size(hug).pad(3).border({ edge: b, color: border-subtle, width: 1 }) }
+  style scrollGrow = { size(grow) }
   style navListPad = { pad(2) }
-  style fullBtn = { size({ w: full }) }
-  style mainPane = { grow(1).size({h: full, min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }).bg(background) }
-  style mainHead = { shrink(0).pad({ x: 5, y: 3 }).border({ edge: b, color: border-subtle, width: 1 }).bg(surface-0) }
-  style sectionTitle = { type({ size: lg, weight: semibold, tracking: tight }) }
+  style fullBtn = { size(max) }
+  style mainPane = { size(grow).overflow(hidden).bg(canvas) }
+  // no preset: edge-only border
+  style mainHead = { size(hug).pad(5).border({ edge: b, color: border-subtle, width: 1 }).bg(surface-0) }
+  style sectionTitle = { type(heading) }
+  // no preset: min-w lock
   style bodyPad = { pad(4).size({ min-w: 0 }) }
-  style configBlock = { size({ min-w: 0 }).overflow({ all: hidden }).radius(md).border({ color: border-subtle, width: 1 }).bg(surface-0) }
+  // no preset: min-w lock
+  style configBlock = { size({ min-w: 0 }).overflow(hidden).radius(md).border(subtle).bg(surface-0) }
+  // no preset: edge-only border
   style blockPad = { pad(3).border({ edge: b, color: border-subtle, width: 1 }) }
+  // no preset: edge-only border
   style dangerBand = { pad(4).border({ edge: b, color: border-subtle, width: 1 }).bg(surface-1) }
+  // no preset: min-w lock + tone border
   style cloudCard = { size({ min-w: 0 }).border({ color: primary, width: 1 }).bg(surface-1) }
-  style growMin = { grow(1).size({ min-w: 0 }) }
-  style shrink0 = { shrink(0) }
-  style cardTitle = { type({ size: md, weight: semibold }) }
-  style fieldLabel = { type({ size: sm, weight: semibold }) }
-  style fieldValue = { type({ family: mono, size: sm }) }
-  style tableFill = { size({ w: full }) }
+  style growMin = { size(grow) }
+  style shrink0 = { size(hug) }
+  style cardTitle = { type(heading) }
+  style fieldLabel = { type(body-sm) }
+  style fieldValue = { type(mono) }
+  style tableFill = { size(max) }
+  // no preset: type wrap
   style chipLabel = { type({ wrap: truncate }) }
 </scope>
 

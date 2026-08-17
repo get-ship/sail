@@ -9,34 +9,44 @@
     /** true when hosted in shell findings drawer — compact layout only */
     panel = false
   }
-  style surfaceRoot = { grow(1).size({ h: full, min-w: 0, min-h: 0 }).overflow({ all: hidden }) }
-  style shrink0 = { shrink(0) }
-  style growMin = { grow(1).size({ min-w: 0 }) }
+  style surfaceRoot = { size(grow).overflow(hidden) }
+  style shrink0 = { size(hug) }
+  style growMin = { size(grow) }
+  // no preset: size lock
   style filterW = { size({ w: 28 }) }
-  style filterFull = { size({ w: full, min-w: 0 }) }
+  style filterFull = { size(max) }
+  // no preset: size lock
   style sepH = { size({ h: 4 }) }
-  style mutedXs = { fg(muted-foreground).type({ size: xs }) }
-  style errorCount = { fg(destructive).type({ size: xs }) }
-  style warnCount = { fg(warning).type({ size: xs }) }
-  style errorText = { grow(1).size({ min-w: 0 }).fg(destructive).type({ size: xs, wrap: truncate }) }
-  style errorBand = { shrink(0).size({ h: 7 }).pad({ x: 3 }).border({ edge: b, color: border, width: 1 }) }
-  style panelTools = { shrink(0).pad({ x: 3, y: 2 }).size({ min-w: 0 }).border({ edge: b, color: border-subtle, width: 1 }).bg(surface-1) }
-  style findingsScroll = { grow(1).size({h: full, min-w: 0, min-h: 0, basis: 0}) }
-  style groupHeader = { size({ h: 6 }).pad({ x: 3 }), when: { hover: bg(hover-bg) } }
-  style ruleMono = { grow(1).size({ min-w: 0 }).fg(muted-foreground).type({ family: mono, size: xs, weight: semibold, wrap: truncate }) }
-  style findingTrigger = { size({ w: full, h: 6 }).pad({ x: 3 }), when: { hover: bg(hover-bg) } }
-  style monoXs = { fg(muted-foreground).type({ family: mono, size: xs }) }
-  style msgSm = { grow(1).size({ min-w: 0 }).type({ size: sm, wrap: truncate }) }
-  style fixChip = { fg(primary).type({ size: xs }) }
-  style detailPad = { pad({ x: 2, b: 2 }) }
-  style whyPre = { pad(2).size({ min-h: 0, max-h: 40 }).overflow({ all: auto }).bg(surface-0).radius(sm).type({ family: mono, size: xs, wrap: pre-wrap }) }
+  style mutedXs = { fg(muted).type(body-sm) }
+  style errorCount = { fg(destructive).type(body-sm) }
+  style warnCount = { fg(warning).type(body-sm) }
+  style errorText = { size(grow).fg(destructive).type(body-sm) }
+  // no preset: size lock + edge-only border
+  style errorBand = { size({ h: 7 }).pad(3).border({ edge: b, color: border, width: 1 }) }
+  // no preset: min-w lock + edge-only border
+  style panelTools = { pad(3).size({ min-w: 0 }).border({ edge: b, color: border-subtle, width: 1 }).bg(surface-1) }
+  style findingsScroll = { size(grow) }
+  // no preset: size lock
+  style groupHeader = { size({ h: 6 }).pad(3), when: { hover: bg(hover-bg) } }
+  style ruleMono = { size(grow).fg(muted).type(mono-sm) }
+  // no preset: size lock
+  style findingTrigger = { size({ w: full, h: 6 }).pad(3), when: { hover: bg(hover-bg) } }
+  style monoXs = { fg(muted).type(mono-sm) }
+  style msgSm = { size(grow).type(body-sm) }
+  style fixChip = { fg(primary).type(body-sm) }
+  style detailPad = { pad(2) }
+  // no preset: size lock
+  style whyPre = { pad(2).size({ min-h: 0, max-h: 40 }).overflow(auto).bg(surface-0).radius(sm).type(mono-sm) }
   style snippetBox = { pad(2).bg(surface-0).radius(sm) }
-  style snippetLine = { type({ family: mono, size: xs }) }
-  style statusBar = { shrink(0).size({ h: 6 }).pad({ x: 3 }).border({ edge: t, color: border-subtle, width: 1 }).fg(muted-foreground) }
-  style reviewSheet = { shrink(0).pad(3).size({ min-w: 0, max-h: 56 }).overflow({ all: auto }).border({ edge: t, color: border, width: 1 }).bg(surface-1) }
-  style titleSm = { type({ size: sm, weight: semibold }) }
-  style fullW = { size({ w: full }) }
-  style chipLabel = { shrink(0).type({ wrap: truncate }) }
+  style snippetLine = { type(mono-sm) }
+  // no preset: size lock + edge-only border
+  style statusBar = { size({ h: 6 }).pad(3).border({ edge: t, color: border-subtle, width: 1 }).fg(muted) }
+  // no preset: min-w lock + edge-only border
+  style reviewSheet = { pad(3).size({ min-w: 0, max-h: 56 }).overflow(auto).border({ edge: t, color: border, width: 1 }).bg(surface-1) }
+  style titleSm = { type(body-sm) }
+  style fullW = { size(max) }
+  // no preset: type wrap
+  style chipLabel = { size(hug).type({ wrap: truncate }) }
 </scope>
 
 <controller>
@@ -154,6 +164,7 @@ export default controller(() => {
   <!-- Drawer: one dense tools strip — no dual headers, no overflowing selects -->
   <if {panel()}>
     <column findings-panel-tools gap="2" style(panelTools)>
+      <!-- no preset: min-w lock -->
       <row align="center" justify="between" nowrap gap="2" style({ size({ min-w: 0 }) })>
         <row align="center" gap="2" nowrap style(growMin)>
           <badge error-count tone="destructive" size="sm" variant="soft" pill>{errorCountLabel()}</badge>
@@ -173,6 +184,7 @@ export default controller(() => {
           <option value={opt.value}>{opt.label}</option>
         </for>
       </select>
+      <!-- no preset: type wrap -->
       <p last-run style(mutedXs, { type({ wrap: truncate }) })>{lastRunLabel()}</p>
     </column>
   </if>
@@ -187,7 +199,7 @@ export default controller(() => {
   </if>
 
   <scroll-area findings-list findings-table findings-table-host style(findingsScroll)>
-    <column gap="0" style({ pad({ y: 1 }) })>
+    <column gap="0" style({ pad(1) })>
       <if {!hasFindings()}>
         <if {!hasChecksError()}>
           <studio-empty
@@ -379,7 +391,7 @@ export default controller(() => {
     </column>
   </scroll-area>
 
-  <row checks-status align="center" style(statusBar)>    <p style({ type({ size: xs }) })>      {checksStatusNote()}
+  <row checks-status align="center" style(statusBar)>    <p style({ type(body-sm) })>      {checksStatusNote()}
     </p>
 </row>
 
@@ -407,6 +419,7 @@ export default controller(() => {
               <badge tone="primary" size="sm" variant="soft">{item.rule}</badge>
               <p style(msgSm)>{item.message}</p>
             </row>
+            <!-- no preset: min-w lock -->
             <column review-diff gap="1" style({ size({ min-w: 0 }) })>
               <sail-diff from={item.before} to={item.after}></sail-diff>
             </column>

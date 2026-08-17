@@ -6,10 +6,11 @@
   props: {
     title = ''
   }
-  style headerRoot = { shrink(0).size({ h: 7 }).pad({ x: 3 }).border({ edge: b, color: border-subtle, width: 1 }).bg(surface-1) }
-  style leadRow = { grow(1).size({ min-w: 0 }) }
-  style eyebrow = { fg(muted-foreground).type({ size: xs, weight: semibold, tracking: wide, case: uppercase }) }
-  style actionsRow = { shrink(0) }
+  // no preset: size lock + edge-only border
+  style headerRoot = { size({ h: 7 }).pad(3).border({ edge: b, color: border-subtle, width: 1 }).bg(surface-1) }
+  style leadRow = { size(grow) }
+  style eyebrow = { fg(muted).type(label) }
+  style actionsRow = { size(hug) }
 </scope>
 
 <row studio-page-header align="center" gap="2" nowrap justify="between" style(headerRoot)>

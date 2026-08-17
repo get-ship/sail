@@ -4,12 +4,16 @@
   Slots: brand, default (items), footer.
 -->
 <scope>
-  style railRoot = { display(flex).dir(column).shrink(0).size({ w: 12, h: full, min-w: 12, min-h: 0, max-w: 12 }).overflow({ all: visible }).bg(surface-0).border({ edge: r, color: border, width: 1 }) }
-  style brandSlot = { shrink(0).size({ w: full, h: 12, min-h: 12 }).pad({ x: 1, y: 1 }).border({ edge: b, color: border-subtle, width: 1 }) }
-  style brandMark = { size({ w: 10, h: 10, min-w: 10, min-h: 10 }).radius(md).bg(surface-1).fg(muted-foreground).border({ color: border-subtle, width: 1 }) }
-  style itemsCol = { shrink(0).size({ w: full }).pad({ x: 1, y: 2 }) }
-  style spacer = { grow(1).size({ min-h: 0 }) }
-  style footerCol = { shrink(0).size({ w: full }).pad({ x: 1, y: 2 }).border({ edge: t, color: border-subtle, width: 1 }) }
+  // no preset: size lock + edge-only border
+  style railRoot = { display(flex).dir(column).size({ w: 12, h: full, min-w: 12, min-h: 0, max-w: 12 }).overflow(visible).bg(surface-0).border({ edge: r, color: border, width: 1 }) }
+  // no preset: size lock + edge-only border
+  style brandSlot = { size({ w: full, h: 12, min-h: 12 }).pad(1).border({ edge: b, color: border-subtle, width: 1 }) }
+  // no preset: size lock
+  style brandMark = { size({ w: 10, h: 10, min-w: 10, min-h: 10 }).radius(md).bg(surface-1).fg(muted).border(subtle) }
+  style itemsCol = { size(max).pad(1) }
+  style spacer = { size(grow) }
+  // no preset: edge-only border
+  style footerCol = { size(max).pad(1).border({ edge: t, color: border-subtle, width: 1 }) }
 </scope>
 
 <nav label="Studio activities" style(railRoot)>

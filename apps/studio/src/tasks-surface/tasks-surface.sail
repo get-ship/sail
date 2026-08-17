@@ -2,33 +2,43 @@
   <tasks-surface> — thread list + conversation + composer.
 -->
 <scope>
-  style surfaceRoot = { grow(1).size({ h: full, min-w: 0, min-h: 0 }).overflow({ all: hidden }) }
-  style pageHeader = { shrink(0).size({ h: 10 }).pad({ x: 4 }).border({ edge: b, color: border-subtle, width: 1 }).bg(surface-1) }
-  style growMin = { grow(1).size({ min-w: 0 }) }
-  style shrink0 = { shrink(0) }
-  style titleMd = { type({ size: md, weight: semibold }) }
-  style countMono = { fg(muted-foreground).type({ family: mono, size: xs }) }
+  style surfaceRoot = { size(grow).overflow(hidden) }
+  // no preset: size lock + edge-only border
+  style pageHeader = { size({ h: 10 }).pad(4).border({ edge: b, color: border-subtle, width: 1 }).bg(surface-1) }
+  style growMin = { size(grow) }
+  style shrink0 = { size(hug) }
+  style titleMd = { type(heading) }
+  style countMono = { fg(muted).type(mono-sm) }
+  // no preset: size lock
   style filterOpen = { size({ w: 24 }) }
+  // no preset: size lock
   style filterActor = { size({ w: 28 }) }
-  style errorBand = { shrink(0).pad({ x: 3 }).size({ h: 7 }).border({ edge: b, color: border, width: 1 }) }
-  style errorText = { grow(1).size({ min-w: 0 }).fg(destructive).type({ size: xs, wrap: truncate }) }
-  style workbench = { grow(1).size({h: full, min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }) }
-  style navPane = { grow(1).size({h: full, min-w: panel-min-w-md, min-h: 0, max-w: panel-max-w-md, basis: 0}).overflow({ all: hidden }).border({ edge: r, color: border-subtle, width: 1 }).bg(surface-1) }
-  style scrollGrow = { grow(1).size({h: full, min-h: 0, basis: 0}) }
-  style listPad = { pad({ x: 1, y: 1 }) }
-  style detailPane = { grow(1).size({h: full, min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }).bg(surface-0) }
-  style emptyCenter = { grow(1).size({ h: full, min-h: 0 }).pad(4) }
-  style fullW = { size({ w: full }) }
-  style detailHead = { shrink(0).size({ h: 10, min-w: 0 }).pad({ x: 3 }).border({ edge: b, color: border-subtle, width: 1 }).bg(surface-1) }
-  style titleTruncate = { type({ size: md, wrap: truncate }) }
-  style anchorRow = { shrink(0).pad({ x: 3, y: 2 }).size({ min-w: 0 }).border({ edge: b, color: border-subtle, width: 1 }).bg(surface-0) }
-  style pathMono = { grow(1).size({ min-w: 0 }).type({ family: mono, size: xs, wrap: truncate }) }
-  style attachRow = { shrink(0).pad({ x: 3, y: 2 }).border({ edge: b, color: border-subtle, width: 1 }) }
-  style conversation = { grow(1).size({h: full, min-h: 0, basis: 0}).overflow({ all: hidden }) }
-  style mdScroll = { shrink(0).size({ min-h: 0, max-h: 32 }) }
+  // no preset: size lock + edge-only border
+  style errorBand = { pad(3).size({ h: 7 }).border({ edge: b, color: border, width: 1 }) }
+  style errorText = { size(grow).fg(destructive).type(body-sm) }
+  style workbench = { size(grow).overflow(hidden) }
+  // no preset: edge-only border
+  style navPane = { size(grow).overflow(hidden).border({ edge: r, color: border-subtle, width: 1 }).bg(surface-1) }
+  style scrollGrow = { size(grow) }
+  style listPad = { pad(1) }
+  style detailPane = { size(grow).overflow(hidden).bg(surface-0) }
+  style emptyCenter = { size(grow).pad(4) }
+  style fullW = { size(max) }
+  // no preset: min-w lock + edge-only border
+  style detailHead = { size({ h: 10, min-w: 0 }).pad(3).border({ edge: b, color: border-subtle, width: 1 }).bg(surface-1) }
+  style titleTruncate = { type(body) }
+  // no preset: min-w lock + edge-only border
+  style anchorRow = { pad(3).size({ min-w: 0 }).border({ edge: b, color: border-subtle, width: 1 }).bg(surface-0) }
+  style pathMono = { size(grow).type(mono-sm) }
+  // no preset: edge-only border
+  style attachRow = { size(hug).pad(3).border({ edge: b, color: border-subtle, width: 1 }) }
+  style conversation = { size(grow).overflow(hidden) }
+  // no preset: size lock
+  style mdScroll = { size({ min-h: 0, max-h: 32 }) }
   style mdPad = { pad(3) }
-  style messagesHost = { grow(1).size({w: full, h: full, min-h: 0, basis: 0}) }
-  style composer = { shrink(0).pad(3).border({ edge: t, color: border-subtle, width: 1 }).bg(surface-1) }
+  style messagesHost = { size(grow) }
+  // no preset: edge-only border
+  style composer = { size(hug).pad(3).border({ edge: t, color: border-subtle, width: 1 }).bg(surface-1) }
 </scope>
 
 <controller>

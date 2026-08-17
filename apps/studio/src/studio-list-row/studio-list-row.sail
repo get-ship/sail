@@ -9,9 +9,10 @@
     meta = ''
     selected = false
   }
-  style rowRoot = { size({ h: 6, min-w: 0 }).pad({ x: 3 }), when: { hover: bg(hover-bg), selected: bg(surface-2) } }
-  style titleText = { grow(1).size({ min-w: 0 }).type({ size: sm, wrap: truncate }) }
-  style metaText = { shrink(0).fg(muted-foreground).type({ size: xs }) }
+  // no preset: min-w lock
+  style rowRoot = { size({ h: 6, min-w: 0 }).pad(3), when: { hover: bg(hover-bg), selected: bg(surface-2) } }
+  style titleText = { size(grow).type(body-sm) }
+  style metaText = { size(hug).fg(muted).type(body-sm) }
 </scope>
 
 <row studio-list-row selected={selected() ? 'true' : 'false'} gap="2" align="center" nowrap style(rowRoot)>

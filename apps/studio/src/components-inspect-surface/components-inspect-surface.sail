@@ -3,27 +3,31 @@
   Composition: { session, inspect }. Library is the sibling route surface.
 -->
 <scope>
-  style eyebrow = { fg(muted-foreground).type({ size: xs, weight: semibold, tracking: wide, case: uppercase }) }
-  style pathMeta = { fg(muted-foreground).type({ family: mono, size: xs }) }
-  style muted = { fg(muted-foreground).type({ size: sm }) }
-  style surfaceRoot = { grow(1).size({ h: full, min-w: 0, min-h: 0 }).overflow({ all: hidden }).bg(background) }
-  style workbench = { grow(1).size({h: full, min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }) }
-  style treePane = { grow(1).size({h: full, min-w: panel-min-w-lg, min-h: 0, basis: 0}).overflow({ all: hidden }).border({ edge: r, color: border-subtle, width: 1 }).bg(surface-0) }
-  style treeHead = { shrink(0).pad({ x: 4, t: 4, b: 3 }).border({ edge: b, color: border-subtle, width: 1 }) }
-  style detailPane = { grow(1).size({h: full, min-w: panel-min-w-md, min-h: 0, basis: 0}).overflow({ all: hidden }).bg(background) }
-  style detailHead = { shrink(0).pad({ x: 5, y: 4 }).border({ edge: b, color: border-subtle, width: 1 }).bg(surface-0) }
-  style loadRow = { shrink(0).pad({ x: 4, y: 2 }) }
-  style treeBody = { grow(1).size({min-h: 0, basis: 0}).pad(1).overflow({ all: hidden }) }
-  style scrollGrow = { grow(1).size({h: full, min-h: 0, basis: 0}) }
+  style eyebrow = { fg(muted).type(label) }
+  style pathMeta = { fg(muted).type(mono-sm) }
+  style muted = { fg(muted).type(body-sm) }
+  style surfaceRoot = { size(grow).overflow(hidden).bg(canvas) }
+  style workbench = { size(grow).overflow(hidden) }
+  // no preset: edge-only border
+  style treePane = { size(grow).overflow(hidden).border({ edge: r, color: border-subtle, width: 1 }).bg(surface-0) }
+  // no preset: edge-only border
+  style treeHead = { size(hug).pad(4).border({ edge: b, color: border-subtle, width: 1 }) }
+  style detailPane = { size(grow).overflow(hidden).bg(canvas) }
+  // no preset: edge-only border
+  style detailHead = { size(hug).pad(5).border({ edge: b, color: border-subtle, width: 1 }).bg(surface-0) }
+  style loadRow = { size(hug).pad(4) }
+  style treeBody = { size(grow).pad(1).overflow(hidden) }
+  style scrollGrow = { size(grow) }
   style bodyPad = { pad(5) }
-  style titleLg = { type({ size: lg, weight: semibold }) }
-  style nodeTag = { type({ family: mono, size: lg, weight: semibold }) }
-  style treeHost = { size({ w: full, h: full, min-h: 0 }) }
-  style shrink0 = { shrink(0) }
-  style growMin = { grow(1).size({ min-w: 0 }) }
-  style msgSm = { type({ size: sm }) }
-  style monoSm = { shrink(0).type({ family: mono, size: sm }) }
-  style stateName = { grow(1).size({ min-w: 0 }).type({ family: mono, size: sm, wrap: truncate }) }
+  style titleLg = { type(heading) }
+  style nodeTag = { type(mono) }
+  style treeHost = { size(max) }
+  style shrink0 = { size(hug) }
+  style growMin = { size(grow) }
+  style msgSm = { type(body-sm) }
+  style monoSm = { size(hug).type(mono) }
+  style stateName = { size(grow).type(mono) }
+  // no preset: size lock
   style pickerMax = { size({ max-h: 28 }) }
 </scope>
 
@@ -168,9 +172,9 @@ export default controller(() => {
             <if {inspect.hasLayout()}>
               <p style(muted)>Boxes from the compiler model (not browser computed style).</p>
               <for {inspect.layoutRows() as box} key={box.key}>
-                <row gap="2" align="center" nowrap style({ pad({ y: 1 }) })>
+                <row gap="2" align="center" nowrap style({ pad(1) })>
                   <p style(monoSm)>{box.tag}</p>
-                  <p style(pathMeta, { grow(1).size({ min-w: 0 }) })>{box.dims}</p>
+                  <p style(pathMeta, growMin)>{box.dims}</p>
                   <if {box.flags}>
                     <badge tone="warning" size="sm" variant="soft" pill style(shrink0)>{box.flags}</badge>
                   </if>

@@ -2,34 +2,46 @@
   Theme color facet — thin shell: chrome + roles editor + specimen.
   Controller composition: session + color domain.
 -->
+
 <scope>
-  style sectionTitle = { type({ size: sm, weight: semibold }) }
-  style fieldHint = { fg(muted-foreground).type({ size: xs }) }
-  style monoMeta = { fg(muted-foreground).type({ family: mono, size: xs }) }
-  style pathMeta = { fg(muted-foreground).type({ family: mono, size: xs }) }
+  style sectionTitle = { type(body-sm) }
+  style fieldHint = { fg(muted).type(body-sm) }
+  style monoMeta = { fg(muted).type(mono-sm) }
+  style pathMeta = { fg(muted).type(mono-sm) }
+  // no preset: type weight
   style doorTitle = { type({ weight: semibold }) }
-  style editorCol = { pad({ x: 6, t: 6, b: 10 }).size({ max-w: panel-max-w-lg }) }
-  style brandCard = { overflow({ all: hidden }).size({ min-w: 0 }).radius(lg).border({ color: border-subtle, width: 1 }).bg(surface-1) }
+  // no preset: size lock
+  style editorCol = { pad(6).size({ max-w: panel-max-w-lg }) }
+  // no preset: min-w lock
+  style brandCard = { overflow(hidden).size({ min-w: 0 }).radius(lg).border(subtle).bg(surface-1) }
   // position:relative sized box — sail-color-picker host is display:contents; swatch fills this box.
-  style brandSwatch = { position(relative).size({ w: full, h: 28, min-h: 28 }).overflow({ all: hidden }), when: { stateEdit: cursor(pointer), stateLocked: cursor(default) } }
+  // no preset: size lock + position
+  style brandSwatch = { position(relative).size({ w: full, h: 28, min-h: 28 }).overflow(hidden), when: { stateEdit: cursor(pointer), stateLocked: cursor(default) } }
   // Token-row chip: explicit size + relative so absolute-fill swatch has a real hit target.
-  style tokenChip = { position(relative).size({ w: 9, h: 9, min-w: 9, min-h: 9 }).overflow({ all: hidden }).radius(md).border({ color: border-subtle, width: 1 }) }
-  style heroMeta = { pad({ x: 3, y: 2 }) }
-  style tokenRow = { pad({ y: 2 }).size({ min-w: 0 }) }
-  style seedDot = { size({ w: 4, h: 4, min-w: 4, min-h: 4 }).radius(full).border({ color: border-subtle, width: 1 }).bg(bind(swatchColor)) }
-  style surfaceChip = { pad({ x: 2, y: 1 }).radius(md).border({ color: border-subtle, width: 1 }).bg(surface-0) }
-  style surfaceDot = { size({ w: 3, h: 3, min-w: 3, min-h: 3 }).radius(full).border({ color: border-subtle, width: 1 }).bg(bind(swatchColor)) }
-  style bandStatus = { pad({ x: 4, y: 2 }) }
-  style bandError = { pad({ x: 4, y: 2 }).border({ edge: b, color: border, width: 1 }) }
-  style surfaceRoot = { grow(1).size({ h: full, min-w: 0, min-h: 0 }).overflow({ all: hidden }).bg(background) }
-  style workbench = { grow(1).size({h: full, min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }).bg(background) }
-  style editorScroll = { grow(1).size({h: full, min-w: 0, min-h: 0, basis: 0}).bg(background) }
-  style pageTitle = { type({ size: xl, weight: semibold, tracking: tight }) }
-  style seedStrip = { pad(3).size({ min-w: 0 }).radius(lg).border({ color: border-subtle, width: 1 }).bg(surface-0) }
-  style growMin = { grow(1).size({ min-w: 0 }) }
-  style errorText = { grow(1).size({ min-w: 0 }).fg(destructive).type({ size: sm, wrap: truncate }) }
-  style pickerFill = { size({ w: full, h: full, min-h: full }) }
-  style footerRule = { pad({ t: 2 }).border({ edge: t, color: border-subtle, width: 1 }) }
+  // no preset: size lock + position
+  style tokenChip = { position(relative).size({ w: 9, h: 9, min-w: 9, min-h: 9 }).overflow(hidden).radius(md).border(subtle) }
+  style heroMeta = { pad(3) }
+  // no preset: min-w lock
+  style tokenRow = { pad(2).size({ min-w: 0 }) }
+  // no preset: size lock
+  style seedDot = { size({ w: 4, h: 4, min-w: 4, min-h: 4 }).radius(full).border(subtle).bg(bind(swatchColor)) }
+  style surfaceChip = { pad(2).radius(md).border(subtle).bg(surface-0) }
+  // no preset: size lock
+  style surfaceDot = { size({ w: 3, h: 3, min-w: 3, min-h: 3 }).radius(full).border(subtle).bg(bind(swatchColor)) }
+  style bandStatus = { pad(4) }
+  // no preset: edge-only border
+  style bandError = { pad(4).border({ edge: b, color: border, width: 1 }) }
+  style surfaceRoot = { size(grow).overflow(hidden).bg(canvas) }
+  style workbench = { size(grow).overflow(hidden).bg(canvas) }
+  style editorScroll = { size(grow).bg(canvas) }
+  style pageTitle = { type(heading) }
+  // no preset: min-w lock
+  style seedStrip = { pad(3).size({ min-w: 0 }).radius(lg).border(subtle).bg(surface-0) }
+  style growMin = { size(grow) }
+  style errorText = { size(grow).fg(destructive).type(body-sm) }
+  style pickerFill = { size(max) }
+  // no preset: edge-only border
+  style footerRule = { pad(2).border({ edge: t, color: border-subtle, width: 1 }) }
   type ColorTokenRowProps = {
     token: string
     value: string
@@ -46,52 +58,9 @@
     disabled: boolean
     onChange: any
   }
+  style shrink0 = { size(hug) }
+  style scrollCanvas = { size(grow).bg(canvas) }
 </scope>
-
-<partial color-token-row props: ColorTokenRowProps>
-  <row token-row token={token} sem={token} align="center" gap="3" nowrap style(tokenRow)>
-    <stack token-chip style(tokenChip, { shrink(0) })>
-      <sail-color-picker
-        token={token}
-        value={value}
-        disabled={disabled}
-        variant="swatch"
-        showHex={false}
-        label={label}
-        on-change={onChange}
-      ></sail-color-picker>
-    </stack>
-    <column gap="0" style(growMin)>
-      <p style(doorTitle)>{label}</p>
-      <p style(pathMeta)>{path}</p>
-    </column>
-    <p style(monoMeta, { shrink(0) })>{value}</p>
-  </row>
-</partial>
-
-<partial brand-role-card props: BrandRoleCardProps>
-  <column brand-card token={token} gap="0" style(brandCard, { grow(1).size({ min-w: 0 }) })>
-    <stack token={token} style(brandSwatch)>
-      <sail-color-picker
-        token={token}
-        value={value}
-        disabled={disabled}
-        variant="swatch"
-        showHex={false}
-        label={label}
-        on-change={onChange}
-        style(pickerFill)
-      ></sail-color-picker>
-    </stack>
-    <row align="center" justify="between" style(heroMeta)>
-      <column gap="0" style({ size({ min-w: 0 }) })>
-        <p style(doorTitle)>{label}</p>
-        <p style(pathMeta)>{path}</p>
-      </column>
-      <p style(monoMeta)>{value}</p>
-    </row>
-  </column>
-</partial>
 
 <controller>
 import { createThemeSession } from '../compositions/theme-session/theme-session'
@@ -125,11 +94,57 @@ export default controller(() => {
 })
 </controller>
 
+<partial color-token-row props: ColorTokenRowProps>
+  <row token-row token={token} sem={token} align="center" gap="3" nowrap style(tokenRow)>
+    <stack token-chip style(tokenChip, shrink0)>
+      <sail-color-picker
+        token={token}
+        value={value}
+        disabled={disabled}
+        variant="swatch"
+        showHex={false}
+        label={label}
+        on-change={onChange}
+      ></sail-color-picker>
+    </stack>
+    <column gap="0" style(growMin)>
+      <p style(doorTitle)>{label}</p>
+      <p style(pathMeta)>{path}</p>
+    </column>
+    <p style(monoMeta, shrink0)>{value}</p>
+  </row>
+</partial>
+
+<partial brand-role-card props: BrandRoleCardProps>
+  <column brand-card token={token} gap="0" style(brandCard, growMin)>
+    <stack token={token} style(brandSwatch)>
+      <sail-color-picker
+        token={token}
+        value={value}
+        disabled={disabled}
+        variant="swatch"
+        showHex={false}
+        label={label}
+        on-change={onChange}
+        style(pickerFill)
+      ></sail-color-picker>
+    </stack>
+    <row align="center" justify="between" style(heroMeta)>
+      <!-- no preset: min-w lock -->
+      <column gap="0" style({ size({ min-w: 0 }) })>
+        <p style(doorTitle)>{label}</p>
+        <p style(pathMeta)>{path}</p>
+      </column>
+      <p style(monoMeta)>{value}</p>
+    </row>
+  </column>
+</partial>
+
 <column surface="themes" theme-color-surface color-chrome gap="0" style(surfaceRoot)>
   <theme-facet-chrome session={session}></theme-facet-chrome>
 
   <if {session.hasError()}>
-    <row color-error align="center" gap="2" style(bandError, { shrink(0) })>
+    <row color-error align="center" gap="2" style(bandError, shrink0)>
       <p style(errorText)>{session.errorText()}</p>
       <button type="button" size="sm" variant="ghost" color-retry on:click={session.onRetry}>
         Retry
@@ -138,7 +153,7 @@ export default controller(() => {
   </if>
 
   <if {session.loading()}>
-    <row color-loading align="center" gap="2" style(bandStatus, { shrink(0) })>
+    <row color-loading align="center" gap="2" style(bandStatus, shrink0)>
       <spinner size="sm"></spinner>
       <p style(fieldHint)>Loading…</p>
     </row>
@@ -153,7 +168,7 @@ export default controller(() => {
         </column>
 
         <row seed-strip align="center" gap="3" nowrap style(seedStrip)>
-          <p style(fieldHint, { shrink(0) })>Seed</p>
+          <p style(fieldHint, shrink0)>Seed</p>
           <row gap="1" align="center" nowrap hidden="true" style(growMin)>
             <stack use:swatch={primaryHex()} style(seedDot)></stack>
             <stack use:swatch={secondaryHex()} style(seedDot)></stack>

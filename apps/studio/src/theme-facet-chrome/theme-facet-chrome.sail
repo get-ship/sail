@@ -3,20 +3,25 @@
   Identity bind: session={session}. Path crumb, mode switch, Save/Add, leave dialog.
 -->
 <scope>
-  style chromeRoot = { shrink(0).size({ min-w: 0 }) }
-  style chromeBar = { shrink(0).pad({ x: 4 }).size({ h: 10, min-w: 0, min-h: 10 }).border({ edge: b, color: border-subtle, width: 1 }).bg(background) }
-  style growMin = { grow(1).size({ min-w: 0 }) }
-  style shrink0 = { shrink(0) }
-  style tapFloor = { shrink(0).size({ min-w: control-h-sm, min-h: control-h-sm }) }
-  style iconBtn = { shrink(0).size({ w: control-h-sm, h: control-h-sm, min-w: control-h-sm, min-h: control-h-sm }) }
-  style slashMuted = { fg(muted-foreground).type({ size: sm }) }
+  // no preset: min-w lock
+  style chromeRoot = { size({ min-w: 0 }) }
+  // no preset: min-w lock + edge-only border
+  style chromeBar = { pad(4).size({ h: 10, min-w: 0, min-h: 10 }).border({ edge: b, color: border-subtle, width: 1 }).bg(canvas) }
+  style growMin = { size(grow) }
+  style shrink0 = { size(hug) }
+  style tapFloor = { size(control-sm) }
+  style iconBtn = { size(control-sm) }
+  style slashMuted = { fg(muted).type(body-sm) }
+  // no preset: type weight + size lock + border width 0
   style nameInput = { size({ max-w: 48 }).border({ width: 0 }).type({ weight: semibold }) }
+  // no preset: panel width lock
   style diffMenu = { pad(3).size({ min-w: panel-min-w-md, max-w: panel-max-w-md }) }
-  style diffTitle = { fg(muted-foreground).type({ size: xs, weight: semibold }) }
-  style diffPath = { fg(foreground).type({ family: mono, size: xs, wrap: truncate }) }
-  style diffDelta = { fg(muted-foreground).type({ family: mono, size: xs, wrap: truncate }) }
-  style diffEmpty = { fg(muted-foreground).type({ size: xs }) }
-  style modeIcon = { shrink(0).fg(muted-foreground) }
+  style diffTitle = { fg(muted).type(label) }
+  style diffPath = { fg(canvas).type(mono-sm) }
+  style diffDelta = { fg(muted).type(mono-sm) }
+  style diffEmpty = { fg(muted).type(body-sm) }
+  style modeIcon = { size(hug).fg(muted) }
+  // no preset: size lock
   style divider = { size({ w: half, h: 5, min-w: half }).bg(border-subtle) }
 </scope>
 
@@ -156,7 +161,7 @@ export default controller(() => {
       <dropdown id={pathMenuId()} placement="bottom-start" on-select={onPathSelect}>
         <for {pathNav() as item} key={item.key}>
           <menu-item value={item.value}>
-            <icon name={item.icon} size="sm" style({ shrink(0) })></icon>
+            <icon name={item.icon} size="sm" style(shrink0)></icon>
             {item.label}
           </menu-item>
         </for>
@@ -187,6 +192,7 @@ export default controller(() => {
           <column gap="2" style(diffMenu)>
             <p style(diffTitle)>Unsaved changes</p>
             <if {hasDiffRows()}>
+              <!-- no preset: size lock -->
               <scroll-area style({ size({ max-h: 48 }) })>
                 <column gap="2">
                   <for {diffRows() as row} key={row.key}>

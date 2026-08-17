@@ -2,47 +2,71 @@
   Themes → Components facet — live L1 specimens + theme role knobs
   (not the project Components library). Catalog rail | live stage | role inspector.
 -->
+
 <scope>
-  style sectionTitle = { type({ size: sm, weight: semibold }) }
-  style fieldHint = { fg(muted-foreground).type({ size: xs }) }
-  style pathMeta = { fg(muted-foreground).type({ family: mono, size: xs }) }
+  style sectionTitle = { type(body-sm) }
+  style fieldHint = { fg(muted).type(body-sm) }
+  style pathMeta = { fg(muted).type(mono-sm) }
+  // no preset: type weight
   style doorTitle = { type({ weight: semibold }) }
-  style bandStatus = { pad({ x: 4, y: 2 }) }
-  style bandError = { pad({ x: 4, y: 2 }).border({ edge: b, color: border, width: 1 }) }
-  style railCol = { pad({ x: 3, t: 4, b: 6 }).size({ min-w: 0 }) }
-  style inspectorCol = { pad({ x: 4, t: 4, b: 8 }).size({ min-w: 0 }) }
-  style fullBtn = { size({ w: full }) }
+  style bandStatus = { pad(4) }
+  // no preset: edge-only border
+  style bandError = { pad(4).border({ edge: b, color: border, width: 1 }) }
+  // no preset: min-w lock
+  style railCol = { pad(3).size({ min-w: 0 }) }
+  // no preset: min-w lock
+  style inspectorCol = { pad(4).size({ min-w: 0 }) }
+  style fullBtn = { size(max) }
+  // no preset: min-w lock
   style chipCol = { size({ min-w: 0 }) }
   // Selected rail row: soft fill + subtle border.
-  style listRow = { pad({ x: 2_5, y: 2 }).radius(md).cursor(pointer).border({ color: transparent, width: 1 }), when: { hover: bg(hover-bg), selected: bg(surface-2).border({ color: border-subtle }) } }
-  style eyebrow = { fg(muted-foreground).type({ size: xs, weight: semibold, tracking: wide, case: uppercase }) }
-  style tokenStrip = { pad({ x: 2, y: 1 }).fg(muted-foreground).radius(sm).bg(surface-0).type({ family: mono, size: xs }) }
-  style tokenRow = { pad({ y: 1_5 }).border({ edge: b, color: border-subtle, width: 1 }) }
-  style surfaceRoot = { grow(1).size({ h: full, min-w: 0, min-h: 0 }).overflow({ all: hidden }).bg(background) }
-  style workbench = { grow(1).size({h: full, min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }).bg(background) }
-  style panelRail = { shrink(0).size({ w: panel-max-w-sm, h: full, min-w: panel-min-w-sm, min-h: 0, max-w: panel-max-w-sm }).border({ edge: r, color: border-subtle, width: 1 }).bg(background) }
-  style panelInspector = { shrink(0).size({ w: panel-max-w-sm, h: full, min-w: panel-min-w-sm, min-h: 0, max-w: panel-max-w-sm }).border({ edge: l, color: border-subtle, width: 1 }).bg(background) }
-  style specimenDock = { grow(1).size({h: full, min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }).bg(background) }
-  style specimenPad = { grow(1).size({ h: full, min-h: 0 }).pad(4) }
-  style specimenFrame = { size({ h: full, min-w: 0, min-h: 0 }).overflow({ all: hidden }).elevation(lg) }
-  style specimenChrome = { shrink(0).pad({ x: 3 }).size({ h: 8, min-w: 0, min-h: 8 }).border({ edge: b, color: border-subtle, width: 1 }).bg(surface-1) }
-  style specimenVariants = { shrink(0).pad({ x: 3, y: 2 }).size({ min-w: 0 }).border({ edge: b, color: border-subtle, width: 1 }).bg(surface-1) }
-  style trafficDots = { shrink(0).size({ min-w: 12 }) }
-  style trafficDot = { shrink(0).size({ w: 2, h: 2, min-w: 2, min-h: 2 }).radius(full) }
-  style chromeTitle = { grow(1).size({ min-w: 0 }).fg(muted-foreground).type({ size: xs, wrap: truncate }) }
-  style errorText = { grow(1).size({ min-w: 0 }).fg(destructive).type({ size: sm, wrap: truncate }) }
-  style growMin = { grow(1).size({ min-w: 0 }) }
-  style shrink0 = { shrink(0) }
-  style tapFloor = { shrink(0).size({ min-w: control-h-sm, min-h: control-h-sm }) }
-  style iconBtn = { shrink(0).size({ w: control-h-sm, h: control-h-sm, min-w: control-h-sm, min-h: control-h-sm }) }
-  style stageHost = { size({ w: full }) }
+  // no preset: transparent border
+  style listRow = { pad(2).radius(md).cursor(pointer).border({ color: transparent, width: 1 }), when: { hover: bg(hover-bg), selected: bg(surface-2).border(subtle) } }
+  style eyebrow = { fg(muted).type(label) }
+  style tokenStrip = { pad(2).fg(muted).radius(sm).bg(surface-0).type(mono-sm) }
+  // no preset: edge-only border
+  style tokenRow = { pad(2).border({ edge: b, color: border-subtle, width: 1 }) }
+  style surfaceRoot = { size(grow).overflow(hidden).bg(canvas) }
+  style workbench = { size(grow).overflow(hidden).bg(canvas) }
+  // no preset: panel width lock + edge-only border
+  style panelRail = { size({ w: panel-max-w-sm, h: full, min-w: panel-min-w-sm, min-h: 0, max-w: panel-max-w-sm }).border({ edge: r, color: border-subtle, width: 1 }).bg(canvas) }
+  // no preset: panel width lock + edge-only border
+  style panelInspector = { size({ w: panel-max-w-sm, h: full, min-w: panel-min-w-sm, min-h: 0, max-w: panel-max-w-sm }).border({ edge: l, color: border-subtle, width: 1 }).bg(canvas) }
+  style specimenDock = { size(grow).overflow(hidden).bg(canvas) }
+  style specimenPad = { size(grow).pad(4) }
+  style specimenFrame = { size(max).overflow(hidden).elevation(lg) }
+  // no preset: min-w lock + edge-only border
+  style specimenChrome = { pad(3).size({ h: 8, min-w: 0, min-h: 8 }).border({ edge: b, color: border-subtle, width: 1 }).bg(surface-1) }
+  // no preset: min-w lock + edge-only border
+  style specimenVariants = { pad(3).size({ min-w: 0 }).border({ edge: b, color: border-subtle, width: 1 }).bg(surface-1) }
+  // no preset: size lock
+  style trafficDots = { size({ min-w: 12 }) }
+  // no preset: size lock
+  style trafficDot = { size({ w: 2, h: 2, min-w: 2, min-h: 2 }).radius(full) }
+  style chromeTitle = { size(grow).fg(muted).type(body-sm) }
+  style errorText = { size(grow).fg(destructive).type(body-sm) }
+  style growMin = { size(grow) }
+  style shrink0 = { size(hug) }
+  style tapFloor = { size(control-sm) }
+  style iconBtn = { size(control-sm) }
+  style stageHost = { size(max) }
+  // no preset: size lock
   style sampleMax = { size({ w: full, max-w: panel-max-w-sm }) }
-  style scrollGrow = { grow(1).size({h: full, min-h: 0, basis: 0}).bg(background) }
+  // no preset: size lock
+  style menuItemShell = { size({ w: full, max-w: panel-max-w-sm }).pad(1).border(subtle).radius(md).bg(surface-1) }
+  style ctxBox = { size(max).pad(3).border(subtle).radius(md) }
+  // no preset: size lock
+  style scrollVert = { size({ w: full, max-w: panel-max-w-sm, max-h: 32 }).pad(3).border(subtle).radius(md) }
+  // no preset: size lock
+  style scrollHoriz = { size({ w: full, max-w: panel-max-w-sm }).pad(3).border(subtle).radius(md) }
+  style scrollGrow = { size(grow).bg(canvas) }
+  // no preset: min-w lock
   style stageBody = { pad(5).size({ min-w: 0, min-h: full }) }
-  style stageTitle = { type({ family: heading, size: md, weight: semibold }) }
-  style stageBlurb = { fg(muted-foreground).type({ family: body, size: sm, leading: relaxed }) }
-  style inspectorTitle = { type({ family: heading, size: xl, weight: semibold, tracking: tight }) }
-  style tokenChip = { shrink(0).position(relative).size({ w: 9, h: 9, min-w: 9, min-h: 9 }).overflow({ all: hidden }).radius(md).border({ color: border-subtle, width: 1 }).bg(surface-0) }
+  style stageTitle = { type(heading) }
+  style stageBlurb = { fg(muted).type(body-sm) }
+  style inspectorTitle = { type(heading) }
+  // no preset: size lock + position
+  style tokenChip = { position(relative).size({ w: 9, h: 9, min-w: 9, min-h: 9 }).overflow(hidden).radius(md).border(subtle).bg(surface-0) }
   type ComponentRailRowProps = {
     id: string
     label: string
@@ -50,7 +74,24 @@
     selected: boolean
     hasOverride: boolean
   }
+  style scrollCanvas = { size(grow).bg(canvas) }
 </scope>
+
+<controller>
+import { createThemeSession } from '../compositions/theme-session/theme-session'
+import { watchPreviewHost } from '../compositions/theme-session/bind-preview-host'
+import { createComponentsEdit } from '../compositions/theme-components-surface/theme-components-edit'
+export default controller(() => {
+  const session = createThemeSession({
+    facet: 'components',
+    editGuardMessage: 'Add this theme to the project to edit theme roles.',
+    saveSuccessMessage: 'Theme roles saved.',
+  })
+  const components = createComponentsEdit(session)
+  mount((host) => watchPreviewHost(host, (el) => session.attachPreviewHost(el)))
+  return { session, components }
+})
+</controller>
 
 <partial component-rail-row props: ComponentRailRowProps>
   <row
@@ -71,34 +112,18 @@
   </row>
 </partial>
 
-<controller>
-import { createThemeSession } from '../compositions/theme-session/theme-session'
-import { watchPreviewHost } from '../compositions/theme-session/bind-preview-host'
-import { createComponentsEdit } from '../compositions/theme-components-surface/theme-components-edit'
-export default controller(() => {
-  const session = createThemeSession({
-    facet: 'components',
-    editGuardMessage: 'Add this theme to the project to edit theme roles.',
-    saveSuccessMessage: 'Theme roles saved.',
-  })
-  const components = createComponentsEdit(session)
-  mount((host) => watchPreviewHost(host, (el) => session.attachPreviewHost(el)))
-  return { session, components }
-})
-</controller>
-
 <column surface="themes" theme-components-surface components-chrome gap="0" style(surfaceRoot)>
   <theme-facet-chrome session={session}></theme-facet-chrome>
 
   <if {session.hasError()}>
-    <row components-error align="center" gap="2" style(bandError, { shrink(0) })>
+    <row components-error align="center" gap="2" style(bandError, shrink0)>
       <p style(errorText)>{session.errorText()}</p>
       <button type="button" size="sm" variant="ghost" components-retry on:click={session.onRetry}>Retry</button>
     </row>
   </if>
 
   <if {session.loading()}>
-    <row components-loading align="center" gap="2" style(bandStatus, { shrink(0) })>
+    <row components-loading align="center" gap="2" style(bandStatus, shrink0)>
       <spinner size="sm"></spinner>
       <p style(fieldHint)>Loading…</p>
     </row>
@@ -109,7 +134,7 @@ export default controller(() => {
       <column gap="3" style(railCol)>
         <column gap="2">
           <p style(eyebrow)>Components</p>
-          <p style({ type({ size: md, weight: semibold, tracking: tight }) })>Components</p>
+          <p style({ type(heading) })>Components</p>
           <p l1-facet-blurb style(fieldHint)>
             Theme roles this face spends — not the project Components library.
           </p>
@@ -151,7 +176,7 @@ export default controller(() => {
           components-specimen
           preview-specimen
           padding="none" style(specimenFrame)>
-          <column gap="0" style({ grow(1).size({ h: full, min-h: 0 }) })>
+          <column gap="0" style(growMin)>
             <row preview-chrome align="center" gap="2" nowrap style(specimenChrome)>
               <row gap="2" align="center" nowrap hidden="true" style(trafficDots)>
                 <stack style(trafficDot, { bg(destructive) })></stack>
@@ -161,12 +186,12 @@ export default controller(() => {
               <p style(chromeTitle)>
                 Preview · {session.nameEdit()} · {components.selectedLabel()}
               </p>
-              <p style(pathMeta, { shrink(0) })>{session.paintMode()}</p>
+              <p style(pathMeta, shrink0)>{session.paintMode()}</p>
             </row>
 
             <if {components.hasVariants()}>
               <row specimen-variants align="center" gap="2" nowrap on:click={components.onVariantPick} style(specimenVariants)>
-                <p style(pathMeta, { shrink(0) })>{components.viewerVariantAttr()}:</p>
+                <p style(pathMeta, shrink0)>{components.viewerVariantAttr()}:</p>
                 <for {components.variantChips() as c} key={c.key}>
                   <button
                     type="button"
@@ -335,10 +360,10 @@ export default controller(() => {
                     </column>
                   </if>
                   <if {components.stage.combobox()}>
-                    <combobox placeholder="Type to filter…" style(sampleMax)>
-                      <option value="sail">Sail</option>
-                      <option value="react">React</option>
-                      <option value="svelte">Svelte</option>
+                    <combobox placeholder="Pick a fruit" style(sampleMax)>
+                      <option value="apple">Apple</option>
+                      <option value="mango">Mango</option>
+                      <option value="plum">Plum</option>
                     </combobox>
                   </if>
                   <if {components.stage.checkbox()}>
@@ -593,6 +618,7 @@ export default controller(() => {
                         <row gap="3" align="center">
                           <skeleton shape="circle" size="md"></skeleton>
                           <skeleton shape="circle" size="sm"></skeleton>
+                          <!-- no preset: size lock -->
                           <skeleton shape="block" style({ size({ w: 24, min-h: 16 }) })></skeleton>
                         </row>
                       </column>
@@ -666,6 +692,7 @@ export default controller(() => {
                     </toast>
                   </if>
                   <if {components.stage.toastRegion()}>
+                    <!-- no preset: size lock + position -->
                     <column gap="2" style({ size({ w: full, min-h: 24, max-w: panel-max-w-sm }).position(relative) })>
                       <p style(fieldHint)>Toast region hosts stacked toasts (fixed in product).</p>
                       <toast tone="info" duration="0">Region child toast</toast>
@@ -767,6 +794,7 @@ export default controller(() => {
                       </column>
                       <column gap="2">
                         <p style(fieldHint)>Vertical · same face between labels</p>
+                        <!-- no preset: size lock -->
                         <row gap="3" align="center" style({ size({ h: 10 }) })>
                           <span style(fieldHint)>A</span>
                           <separator orientation="vertical"></separator>
@@ -881,7 +909,8 @@ export default controller(() => {
                     </column>
                   </if>
                   <if {components.stage.menuItem()}>
-                    <column gap="1" style({ size({ w: full, max-w: panel-max-w-sm }).pad(1).border({ color: border, width: 1 }).radius(md).bg(surface-1) })>
+                    <!-- no preset: size lock -->
+                    <column gap="1" style(menuItemShell)>
                       <menu-item>Edit theme</menu-item>
                       <menu-item>Duplicate</menu-item>
                       <menu-item>Export</menu-item>
@@ -889,7 +918,7 @@ export default controller(() => {
                   </if>
                   <if {components.stage.contextMenu()}>
                     <column gap="2" align="center" style(sampleMax)>
-                      <column id="theme-l1-ctx" gap="1" style({ size({ w: full }).pad(3).border({ color: border, width: 1 }).radius(md) })>
+                      <column id="theme-l1-ctx" gap="1" style(ctxBox)>
                         <p style(fieldHint)>Right-click this area</p>
                       </column>
                       <context-menu for="theme-l1-ctx">
@@ -917,9 +946,9 @@ export default controller(() => {
                   <if {components.stage.tabs()}>
                     <tabs style(stageHost)>
                       <tab-list variant={components.variant() || 'line'}>
-                        <tab>Overview</tab>
-                        <tab>Shape</tab>
-                        <tab>Assets</tab>
+                        <tab title="Overview"></tab>
+                        <tab title="Shape"></tab>
+                        <tab title="Assets"></tab>
                       </tab-list>
                       <tab-panel><p style(fieldHint)>Overview panel</p></tab-panel>
                       <tab-panel><p style(fieldHint)>Shape panel</p></tab-panel>
@@ -928,13 +957,13 @@ export default controller(() => {
                   </if>
                   <if {components.stage.tabList()}>
                     <tab-list variant="line">
-                      <tab>One</tab>
-                      <tab>Two</tab>
-                      <tab>Three</tab>
+                      <tab title="One"></tab>
+                      <tab title="Two"></tab>
+                      <tab title="Three"></tab>
                     </tab-list>
                   </if>
                   <if {components.stage.tab()}>
-                    <tab>Selected tab chrome</tab>
+                    <tab title="Selected tab chrome"></tab>
                   </if>
                   <if {components.stage.tabPanel()}>
                     <tab-panel>
@@ -950,18 +979,23 @@ export default controller(() => {
                   </if>
                   <if {components.stage.pagination()}>
                     <pagination value={components.pageNo()} on-page-change={components.onPageChange}>
-                      <page value="1">1</page>
-                      <page value="2">2</page>
-                      <page value="3">3</page>
-                      <page value="4">4</page>
+                      <page-item value="1">1</page-item>
+                      <page-item value="2">2</page-item>
+                      <page-item value="3">3</page-item>
+                      <page-item value="4">4</page-item>
                     </pagination>
                   </if>
-                  <if {components.stage.page()}>
+                  <if {components.stage.pageItem()}>
                     <row gap="1" align="center">
-                      <page value="1">1</page>
-                      <page value="2">2</page>
-                      <page value="3">3</page>
+                      <page-item value="1">1</page-item>
+                      <page-item value="2">2</page-item>
+                      <page-item value="3">3</page-item>
                     </row>
+                  </if>
+                  <if {components.stage.page()}>
+                    <page>
+                      <h1>Edition</h1>
+                    </page>
                   </if>
                   <if {components.stage.navbar()}>
                     <navbar bordered style(stageHost)>
@@ -988,7 +1022,8 @@ export default controller(() => {
                     <column gap="3" style(sampleMax)>
                       <column gap="2">
                         <p style(fieldHint)>Vertical · rest thumb is border · hover border-strong</p>
-                        <scroll-area orientation="vertical" style({ size({ w: full, max-w: panel-max-w-sm, max-h: 32 }).pad(3).border({ color: border-subtle, width: 1 }).radius(md) })>
+                        <!-- no preset: size lock -->
+                        <scroll-area orientation="vertical" style(scrollVert)>
                           <column gap="2">
                             <p style(fieldHint)>Scroll me — themed thin scrollbar.</p>
                             <p style(fieldHint)>Line 2</p>
@@ -1003,8 +1038,10 @@ export default controller(() => {
                       </column>
                       <column gap="2">
                         <p style(fieldHint)>Horizontal · orientation="horizontal"</p>
-                        <scroll-area orientation="horizontal" style({ size({ w: full, max-w: panel-max-w-sm }).pad(3).border({ color: border-subtle, width: 1 }).radius(md) })>
-                          <p style({ pad({ y: 1 }).type({ wrap: nowrap }) })>
+                        <!-- no preset: size lock -->
+                        <scroll-area orientation="horizontal" style(scrollHoriz)>
+                          <!-- no preset: type wrap -->
+                          <p style({ pad(1).type({ wrap: nowrap }) })>
                             Wide band that overflows on the x axis → scroll with thin themed thumb
                           </p>
                         </scroll-area>
@@ -1016,13 +1053,13 @@ export default controller(() => {
                       <p style(fieldHint)>
                         Geometry host + use:marquee · author paint
                       </p>
-                      <ticker duration="normal" style(sampleMax, { overflow({ all: hidden }).pad({ y: 2 }).bg(muted).radius(md) })>
-                        <span style({ pad({ x: 3 }).fg(muted-foreground).type({ family: mono, size: sm, wrap: nowrap }) })>
+                      <ticker duration="normal" style(sampleMax, { overflow(hidden).pad(2).bg(muted).radius(md) })>
+                        <span style({ pad(3).fg(muted).type(mono) })>
                           Live ticker · muted band · normal ·&nbsp;
                         </span>
                       </ticker>
-                      <ticker duration="slow" reverse style(sampleMax, { overflow({ all: hidden }).pad({ y: 2 }).bg(primary).radius(md) })>
-                        <span style({ pad({ x: 3 }).fg(primary-foreground).type({ size: sm, weight: bold, wrap: nowrap }) })>
+                      <ticker duration="slow" reverse style(sampleMax, { overflow(hidden).pad(2).bg(primary).radius(md) })>
+                        <span style({ pad(3).fg(primary-foreground).type(body-sm) })>
                           Reverse · slow · brand paint ·&nbsp;
                         </span>
                       </ticker>

@@ -3,12 +3,21 @@
   Host bind: components={components}. One face visible via stage gates.
 -->
 <scope>
-  style fieldHint = { fg(muted-foreground).type({ size: xs }) }
+  style fieldHint = { fg(muted).type(body-sm) }
+  // no preset: type weight
   style doorTitle = { type({ weight: semibold }) }
-  style iconBtn = { shrink(0).size({ w: control-h-sm, h: control-h-sm, min-w: control-h-sm, min-h: control-h-sm }) }
-  style tapFloor = { shrink(0).size({ min-w: control-h-sm, min-h: control-h-sm }) }
-  style stageHost = { size({ w: full }) }
+  style iconBtn = { size(control-sm) }
+  style tapFloor = { size(control-sm) }
+  style stageHost = { size(max) }
+  // no preset: size lock
   style sampleMax = { size({ w: full, max-w: panel-max-w-sm }) }
+  // no preset: size lock
+  style menuItemShell = { size({ w: full, max-w: panel-max-w-sm }).pad(1).border(subtle).radius(md).bg(surface-1) }
+  style ctxBox = { size(max).pad(3).border(subtle).radius(md) }
+  // no preset: size lock
+  style scrollVert = { size({ w: full, max-w: panel-max-w-sm, max-h: 32 }).pad(3).border(subtle).radius(md) }
+  // no preset: size lock
+  style scrollHoriz = { size({ w: full, max-w: panel-max-w-sm }).pad(3).border(subtle).radius(md) }
 </scope>
 
 <controller>
@@ -93,7 +102,8 @@ export default controller(() => {
   </column>
 </if>
 <if {components.stage.menuItem()}>
-  <column gap="1" style({ size({ w: full, max-w: panel-max-w-sm }).pad(1).border({ color: border, width: 1 }).radius(md).bg(surface-1) })>
+  <!-- no preset: size lock -->
+  <column gap="1" style(menuItemShell)>
     <menu-item>Edit theme</menu-item>
     <menu-item>Duplicate</menu-item>
     <menu-item>Export</menu-item>
@@ -101,7 +111,7 @@ export default controller(() => {
 </if>
 <if {components.stage.contextMenu()}>
   <column gap="2" align="center" style(sampleMax)>
-    <column id="theme-l1-ctx" gap="1" style({ size({ w: full }).pad(3).border({ color: border, width: 1 }).radius(md) })>
+    <column id="theme-l1-ctx" gap="1" style(ctxBox)>
       <p style(fieldHint)>Right-click this area</p>
     </column>
     <context-menu for="theme-l1-ctx">
@@ -129,9 +139,9 @@ export default controller(() => {
 <if {components.stage.tabs()}>
   <tabs style(stageHost)>
     <tab-list variant={components.variant() || 'line'}>
-      <tab>Overview</tab>
-      <tab>Shape</tab>
-      <tab>Assets</tab>
+      <tab title="Overview"></tab>
+      <tab title="Shape"></tab>
+      <tab title="Assets"></tab>
     </tab-list>
     <tab-panel><p style(fieldHint)>Overview panel</p></tab-panel>
     <tab-panel><p style(fieldHint)>Shape panel</p></tab-panel>
@@ -140,13 +150,13 @@ export default controller(() => {
 </if>
 <if {components.stage.tabList()}>
   <tab-list variant="line">
-    <tab>One</tab>
-    <tab>Two</tab>
-    <tab>Three</tab>
+    <tab title="One"></tab>
+    <tab title="Two"></tab>
+    <tab title="Three"></tab>
   </tab-list>
 </if>
 <if {components.stage.tab()}>
-  <tab>Selected tab chrome</tab>
+  <tab title="Selected tab chrome"></tab>
 </if>
 <if {components.stage.tabPanel()}>
   <tab-panel>
@@ -162,18 +172,23 @@ export default controller(() => {
 </if>
 <if {components.stage.pagination()}>
   <pagination value={components.pageNo()} on-page-change={components.onPageChange}>
-    <page value="1">1</page>
-    <page value="2">2</page>
-    <page value="3">3</page>
-    <page value="4">4</page>
+    <page-item value="1">1</page-item>
+    <page-item value="2">2</page-item>
+    <page-item value="3">3</page-item>
+    <page-item value="4">4</page-item>
   </pagination>
 </if>
-<if {components.stage.page()}>
+<if {components.stage.pageItem()}>
   <row gap="1" align="center">
-    <page value="1">1</page>
-    <page value="2">2</page>
-    <page value="3">3</page>
+    <page-item value="1">1</page-item>
+    <page-item value="2">2</page-item>
+    <page-item value="3">3</page-item>
   </row>
+</if>
+<if {components.stage.page()}>
+  <page>
+    <h1>Edition</h1>
+  </page>
 </if>
 <if {components.stage.navbar()}>
   <navbar bordered style(stageHost)>
@@ -200,7 +215,8 @@ export default controller(() => {
   <column gap="3" style(sampleMax)>
     <column gap="2">
       <p style(fieldHint)>Vertical · rest thumb is border · hover border-strong</p>
-      <scroll-area orientation="vertical" style({ size({ w: full, max-w: panel-max-w-sm, max-h: 32 }).pad(3).border({ color: border-subtle, width: 1 }).radius(md) })>
+      <!-- no preset: size lock -->
+      <scroll-area orientation="vertical" style(scrollVert)>
         <column gap="2">
           <p style(fieldHint)>Scroll me — themed thin scrollbar.</p>
           <p style(fieldHint)>Line 2</p>
@@ -215,8 +231,10 @@ export default controller(() => {
     </column>
     <column gap="2">
       <p style(fieldHint)>Horizontal · orientation="horizontal"</p>
-      <scroll-area orientation="horizontal" style({ size({ w: full, max-w: panel-max-w-sm }).pad(3).border({ color: border-subtle, width: 1 }).radius(md) })>
-        <p style({ pad({ y: 1 }).type({ wrap: nowrap }) })>
+      <!-- no preset: size lock -->
+      <scroll-area orientation="horizontal" style(scrollHoriz)>
+        <!-- no preset: type wrap -->
+        <p style({ pad(1).type({ wrap: nowrap }) })>
           Wide band that overflows on the x axis → scroll with thin themed thumb
         </p>
       </scroll-area>
@@ -228,13 +246,13 @@ export default controller(() => {
     <p style(fieldHint)>
       Geometry host + use:marquee · author paint
     </p>
-    <ticker duration="normal" style(sampleMax, { overflow({ all: hidden }).pad({ y: 2 }).bg(muted).radius(md) })>
-      <span style({ pad({ x: 3 }).fg(muted-foreground).type({ family: mono, size: sm, wrap: nowrap }) })>
+    <ticker duration="normal" style(sampleMax, { overflow(hidden).pad(2).bg(muted).radius(md) })>
+      <span style({ pad(3).fg(muted).type(mono) })>
         Live ticker · muted band · normal ·&nbsp;
       </span>
     </ticker>
-    <ticker duration="slow" reverse style(sampleMax, { overflow({ all: hidden }).pad({ y: 2 }).bg(primary).radius(md) })>
-      <span style({ pad({ x: 3 }).fg(primary-foreground).type({ size: sm, weight: bold, wrap: nowrap }) })>
+    <ticker duration="slow" reverse style(sampleMax, { overflow(hidden).pad(2).bg(primary).radius(md) })>
+      <span style({ pad(3).fg(primary-foreground).type(body-sm) })>
         Reverse · slow · brand paint ·&nbsp;
       </span>
     </ticker>
