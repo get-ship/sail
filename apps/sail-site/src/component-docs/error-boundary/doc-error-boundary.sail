@@ -4,15 +4,13 @@
 -->
 
 <scope>
-  style page = { size({ w: full, max-w: breakpoint-desktop }).margin({ x: auto }).overflow({ all: visible }) }
-  style specimen = { size({ w: full, max-w: panel-max-w-md }).pad(2).overflow({ all: visible }) }
-  style fullW = { size({ w: full }) }
-  style mutedSm = { fg(muted-foreground).type({ size: sm }) }
-  style mutedXs = { fg(muted-foreground).type({ size: xs }) }
-  style centerBox = { pad(4).border({ color: border-subtle, width: 1 }).radius(md) }
-  style knobLabel = { fg(muted-foreground).type({ size: xs, weight: medium, tracking: wide, case: uppercase }) }
-  style exampleBlock = { size({ w: full }).pad({ t: 2, b: 4 }).overflow({ all: visible }) }
-  style sectionLabel = { fg(muted-foreground).type({ size: xs, tracking: wide, case: uppercase }) }
+  style page = { size(max).overflow(visible) }
+  style specimen = { size(measure).overflow(visible) }
+  style fullW = { size(max) }
+  style mutedSm = { fg(muted).type(body-sm) }
+  style mutedXs = { fg(muted).type(body-sm) }
+  style exampleBlock = { size(max).overflow(visible) }
+  style sectionLabel = { fg(muted).type(label) }
 </scope>
 
 <controller>
@@ -60,23 +58,23 @@ export default controller((_ctx: Scope) => {
     rows={props()}
   >
     <column slot="specimen" gap="3" align="stretch" style(specimen)>
-      <div style(centerBox)>
+      <card>
         <error-boundary message={message()}>
           <p style(mutedSm)>Healthy child tree — the boundary stays invisible.</p>
         </error-boundary>
-      </div>
+      </card>
     </column>
 
     <column slot="knobs" gap="4" align="stretch">
       <column gap="2">
-        <label style(knobLabel)>Message</label>
+        <label>Message</label>
         <input
           type="text"
           bind:value={message}
           size="sm"
           placeholder="fallback copy"
           style(fullW)
-       />
+ />
         <p style(mutedXs)>User-facing fallback copy — not the raw Error string.</p>
       </column>
     </column>

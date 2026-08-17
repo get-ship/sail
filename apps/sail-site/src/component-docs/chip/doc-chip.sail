@@ -4,22 +4,19 @@
 -->
 
 <scope>
-  style page = { size({ w: full, max-w: breakpoint-desktop }).margin({ x: auto }) }
-  style knobLabel = { fg(muted-foreground).type({ size: xs, weight: medium, tracking: wide, case: uppercase }) }
-  style sizeValue = { fg(muted-foreground).type({ family: mono, size: xs }) }
-  style tickRow = { size({ w: full }).pad({ x: 1_5, t: 1 }) }
-  style tick = { fg(muted-foreground).type({ family: mono, size: xs }) }
-  style swatch = { size(7).shrink(0).radius(full).cursor(pointer).border({ color: transparent, width: 2 }).elevation(xs), when: { selected: border({ color: foreground }).elevation(sm), hover: filter({ opacity: 90 }) } }
+  style page = { size(max) }
+  style swatch = { size(7).radius(full).cursor(pointer).border(subtle).elevation(xs), when: { selected: border(strong).elevation(sm), hover: bg(muted) } }
   style swatchPrimary = { bg(primary) }
   style swatchSuccess = { bg(success) }
   style swatchWarning = { bg(warning) }
   style swatchDestructive = { bg(destructive) }
   style swatchAccent = { bg(accent) }
-  style swatchMuted = { bg(muted).border({ color: border }) }
+  style swatchMuted = { bg(muted).border(default) }
   style swatchInfo = { bg(info) }
-  style exampleBlock = { size({ w: full }).pad({ t: 2, b: 4 }) }
-  style sectionLabel = { fg(muted-foreground).type({ size: xs, tracking: wide, case: uppercase }) }
-  style demoRow = { size({ w: full }).pad({ y: 2 }) }
+  style exampleBlock = { size(max) }
+  style sectionLabel = { fg(muted).type(label) }
+  style demoRow = { size(max) }
+  style growCol = { size(grow) }
 </scope>
 
 <controller>
@@ -116,7 +113,7 @@ export default controller((_ctx: Scope) => {
 
     <column slot="knobs" gap="5" align="stretch">
       <column gap="2">
-        <label style(knobLabel)>Variant</label>
+        <label>Variant</label>
         <select size="sm" bind:value={variant} label="Variant">
           <option value="solid">solid</option>
           <option value="soft">soft</option>
@@ -125,7 +122,7 @@ export default controller((_ctx: Scope) => {
         </select>
       </column>
       <column gap="2">
-        <label style(knobLabel)>Tone</label>
+        <label>Tone</label>
         <row gap="2" align="center">
           <div
             title="primary"
@@ -172,19 +169,16 @@ export default controller((_ctx: Scope) => {
         </row>
       </column>
       <column gap="2">
-        <row gap="2" align="center" justify="between">
-          <label style(knobLabel)>Size</label>
-          <span style(sizeValue)>{chipSize()}</span>
-        </row>
+        <label>Size</label>
         <slider bind:value={sizeIdx} min="0" max="2" step="1" size="sm" label="Size" ticks="sm,md,lg"></slider>
       </column>
       <row gap="5" align="start">
-        <column gap="2" style({ grow(1).size({ min-w: 0 }) })>
-          <label style(knobLabel)>Selected</label>
+        <column gap="2" style(growCol)>
+          <label>Selected</label>
           <switch bind:checked={chipSelected} size="sm" label="Selected"></switch>
         </column>
-        <column gap="2" style({ grow(1).size({ min-w: 0 }) })>
-          <label style(knobLabel)>Removable</label>
+        <column gap="2" style(growCol)>
+          <label>Removable</label>
           <switch bind:checked={chipRemovable} size="sm" label="Removable"></switch>
         </column>
       </row>

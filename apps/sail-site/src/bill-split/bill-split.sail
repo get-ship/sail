@@ -8,17 +8,17 @@
     total = 96
   }
 
-  style card = { pad(4).size({ w: full, max-w: panel-max-w-sm }) }
-  style title = { type({ size: sm, tracking: wide, case: uppercase }) }
-  style totalText = { fg(muted-foreground).type({ family: mono, size: sm }) }
-  style peopleCount = { size({ w: 8 }).type({family: mono, size: sm, align: center, nums: tabular}) }
-  style shareText = { type({family: mono, size: 2xl, nums: tabular}) }
+  style card = { size(measure-sm) }
+  style title = { type(label) }
+  style totalText = { fg(muted).type(mono) }
+  style peopleCount = { type(mono-sm) }
+  style shareText = { type(mono) }
 </scope>
 
 <controller>
 const money = (n: number): string => '$' + n.toFixed(2)
 
-export default controller((ctx) => {
+export default controller((ctx: { total: () => number }) => {
   const people = signal(2)
   const add = (): void => people.set((n) => Math.min(n + 1, 12))
   const remove = (): void => people.set((n) => Math.max(n - 1, 1))

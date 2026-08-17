@@ -5,14 +5,12 @@
 -->
 
 <scope>
-  style page = { size({ w: full, max-w: breakpoint-desktop }).margin({ x: auto }).overflow({ all: visible }) }
-  style mutedXs = { fg(muted-foreground).type({ size: xs }) }
-  style monoXs = { fg(muted-foreground).type({ family: mono, size: xs }) }
-  style specimen = { pad(2).overflow({ all: visible }) }
-  style knobLabel = { fg(muted-foreground).type({ size: xs, weight: medium, tracking: wide, case: uppercase }) }
-  style centerBox = { pad(4).border({ color: border-subtle, width: 1 }).radius(md) }
-  style exampleBlock = { size({ w: full }).pad({ t: 2, b: 4 }).overflow({ all: visible }) }
-  style sectionLabel = { fg(muted-foreground).type({ size: xs, tracking: wide, case: uppercase }) }
+  style page = { size(max).overflow(visible) }
+  style mutedXs = { fg(muted).type(body-sm) }
+  style monoXs = { fg(muted).type(mono-sm) }
+  style specimen = { overflow(visible) }
+  style exampleBlock = { size(max).overflow(visible) }
+  style sectionLabel = { fg(muted).type(label) }
 </scope>
 
 <controller>
@@ -66,7 +64,7 @@ export default controller((_ctx: Scope) => {
     rows={props()}
   >
     <column slot="specimen" gap="3" align="center" style(specimen)>
-      <p id="doc-cm-target" style(centerBox)>Right-click this card</p>
+      <card id="doc-cm-target">Right-click this card</card>
       <context-menu for="doc-cm-target" id="doc-cm-live" on-select={onSelect}>
         <menu-item value="copy">Copy id</menu-item>
         <menu-item value="delete">Delete</menu-item>
@@ -78,7 +76,7 @@ export default controller((_ctx: Scope) => {
 
     <column slot="knobs" gap="4" align="stretch">
       <column gap="2">
-        <label style(knobLabel)>For</label>
+        <label>For</label>
         <p style(mutedXs)>
           <code>for</code> is the id of the right-click target (wired on specimen to
           <code>doc-cm-target</code>). Not a free-form knob — specimen owns the link.
@@ -87,7 +85,7 @@ export default controller((_ctx: Scope) => {
     </column>
 
     <column slot="usage-preview" gap="3" align="center" style(specimen)>
-      <p id="doc-cm-usage" style(centerBox)>right-click me</p>
+      <card id="doc-cm-usage">right-click me</card>
       <context-menu for="doc-cm-usage" on-select={onSelect}>
         <menu-item value="cut">Cut</menu-item>
         <menu-item value="copy">Copy</menu-item>
@@ -101,7 +99,7 @@ export default controller((_ctx: Scope) => {
         lead="Opens at the pointer on contextmenu of for."
         code={cmExBasic()}
       >
-        <p id="doc-cm-ex1" style(centerBox)>right-click me</p>
+        <card id="doc-cm-ex1">right-click me</card>
         <context-menu for="doc-cm-ex1" on-select={onSelect}>
           <menu-item value="cut">Cut</menu-item>
           <menu-item value="copy">Copy</menu-item>
@@ -112,7 +110,7 @@ export default controller((_ctx: Scope) => {
         lead="Attach a menu to any row or list item via for."
         code={cmExMore()}
       >
-        <p id="doc-cm-ex2" style(centerBox)>right-click row</p>
+        <card id="doc-cm-ex2">right-click row</card>
         <context-menu for="doc-cm-ex2">
           <menu-item value="open">Open</menu-item>
           <menu-item value="del">Delete</menu-item>

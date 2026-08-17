@@ -7,28 +7,30 @@
     city: string
   }
 
-  style board = { pad(4) }
-  style boardTitle = { type({ size: sm, tracking: wide, case: uppercase }) }
-  style departedBadge = { pad({ x: 1 }).fg(muted-foreground).radius(sm).type({ family: mono, size: xs }), when: { stateLive: bg(primary).fg(primary-foreground) } }
-  style list = { margin({ t: 3 }).type({ family: mono, size: sm }) }
-  style city = { type({ wrap: truncate }) }
-  style stage = { pad(3).border({ color: border, width: 1 }).filter({ opacity: 50 }), when: { stateLive: filter({ opacity: 100 }).border({ color: primary }).bg(muted) } }
-  style stageTitle = { type({ size: sm }) }
-  style stageBody = { fg(muted-foreground).type({ family: mono, size: xs }) }
+  style board = { size(max) }
+  style boardTitle = { type(label) }
+  // no preset: stateLive when
+  style departedBadge = { fg(muted).radius(sm).type(mono-sm), when: { stateLive: bg(primary).fg(primary-foreground) } }
+  style list = { type(mono) }
+  style city = { type(mono) }
+  style enterFade = { animate: { enter: play(fade), exit: play(fade) } }
+  // no preset: stateLive when
+  style stage = { border(subtle), when: { stateLive: border(strong).bg(muted) } }
+  style stageTitle = { type(body-sm) }
+  style stageBody = { fg(muted).type(mono-sm) }
 </scope>
 
 <controller>
-
 const CITIES = ['Osaka', 'Nairobi', 'Tbilisi', 'Porto', 'Auckland', 'Reykjavík']
 
 export default controller(() => {
   let seq = 0
-  const mk = (): Row => {
+  const mk = () => {
     const city = CITIES[seq % CITIES.length]!
     return { id: `${city}-${seq++}`, city }
   }
 
-  const rows = signal<Row[]>([mk(), mk(), mk()])
+  const rows = signal([mk(), mk(), mk()])
   const departed = signal(0)
   const step = signal('idle')
 
@@ -61,7 +63,7 @@ export default controller(() => {
     </row>
     <column gap="1" style(list)>
       <for {rows() as r} key={r.id}>
-        <row nowrap style({ animate: { enter: play(fade), exit: play(fade) } })>
+        <row nowrap style(enterFade)>
           <span style(city)>{r.city}</span>
         </row>
       </for>

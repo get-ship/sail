@@ -6,9 +6,8 @@
     label = 'Counter'
   }
 
-  style card = { pad(4) }
-  style labelText = { fg(muted-foreground).type({ size: xs, tracking: wide, case: uppercase }) }
-  style count = { type({ size: lg }) }
+  style labelText = { fg(muted).type(label) }
+  style count = { type(heading) }
 </scope>
 
 <controller>
@@ -20,7 +19,7 @@ export default controller(() => {
 })
 </controller>
 
-<card style(card)>
+<card>
   <column gap="2" align="start">
     <small style(labelText)>{label()}</small>
     <row gap="3" align="center" nowrap>

@@ -4,8 +4,8 @@
   never a path-if branch inside this rail.
 
   Geometry (viewport-locked site-header <main> is the parent):
-  - shell size({ h: full }) + overflow hidden — fill the budget, no page-level scroll
-  - rail: independent overflow({ y: auto }), fixed width, stretches to shell height
+  - shell size(grow) + overflow hidden — fill the budget, no page-level scroll
+  - rail: independent overflow({ y: auto }), hugs content (w:56 dropped — no L2 width attr), stretches to shell height
   - mainDocs: independent overflow({ y: auto }) — content scrolls; rail does not leave
 
   Responsive — style when:{ tablet } + structural <when {tablet}> for drawer:
@@ -19,22 +19,24 @@
 
 <scope>
   // Fill the site-header <main> budget. Independent rail + main scrollports.
-  style shell = { size({ h: full, min-w: 0, min-h: 0 }).overflow({ all: hidden }) }
-  // Plain div rail: fixed width, never grows into the content pane.
-  // Mobile base = flow({ display: none }); tablet+ restores flex column.
-  // NOT <column> — .sail-col { display:flex } beats .s-displaynone.
-  // 14rem rail (space-56 ≡ --panel-rail-w).
-  style rail = { display(none).dir(column).size({ w: 56, h: full, min-h: 0 }).pad({ x: 3, y: 4 }).overflow({ x: hidden, y: auto }).border({ color: border, width: 1, edge: e }).bg(background).fg(foreground), when: { tablet: display(flex) } }
-  style railLabel = { margin({ t: 4, b: 1 }).fg(muted-foreground).type({ size: xs, weight: semibold, tracking: wide, case: uppercase }) }
+  style shell = { size(grow).overflow(hidden) }
+  // Hug width so the rail does not steal leftover from main. Height comes from
+  // the parent row align=stretch. Pad dropped (L1-only). No L2 width attr for
+  // the old 14rem rail — ledgered. Visibility is structural `<when {tablet}>`
+  // — do not pair display(none) with tablet:display(flex). Global
+  // `.s-displaynone` in element-skins beats the media query.
+  // no preset: display flex / dir column / overflow x hidden y auto
+  style rail = { display(flex).dir(column).size(hug).overflow({ x: hidden, y: auto }).bg(canvas).fg(canvas) }
+  style railLabel = { fg(muted).type(label) }
   // Current must paint over the base muted ink — filled pill for active page.
-  style railLink = { display(block).pad({ x: 2, y: 1 }).size({ min-h: control-h-xs }).radius(md).fg(muted-foreground).type({ size: sm }), when: { hover: fg(foreground).bg(hover-bg), current: fg(primary).bg(muted).type({ weight: semibold }) } }
-  style mainDocs = { pad(4).size({min-h: 0, basis: 0}).overflow({ x: hidden, y: auto }), when: { tablet: pad(6) } }
-  // Mobile-only chrome — plain div so display:none wins at tablet+.
-  style mobileBar = { display(flex).pad({ x: 3, y: 2 }).border({ color: border, width: 1, edge: b }).bg(background), when: { tablet: display(none) } }
-  style contentCol = { size({ min-w: 0, min-h: 0 }) }
-  style mobileLabel = { fg(muted-foreground).type({ family: mono, size: xs }) }
-  style drawerTitle = { type({ size: sm }) }
-  style fullW = { size({ w: full }) }
+  // no preset: display block / hover+current when
+  style railLink = { display(block).radius(md).fg(muted).type(body-sm), when: { hover: fg(canvas).bg(hover-bg), current: fg(primary).bg(muted) } }
+  // no preset: overflow x hidden / y auto
+  style mainDocs = { size(grow).overflow({ x: hidden, y: auto }) }
+  style contentCol = { size(grow) }
+  style mobileLabel = { fg(muted).type(mono-sm) }
+  style drawerTitle = { type(body-sm) }
+  style fullW = { size(max) }
 
   type DocsNavProps = {
     path: any
@@ -48,7 +50,7 @@
  * navigations under /docs/* — deck route.pathname updates synchronously on
  * navigate (pathname SSOT), so the rail tracks the leaf without browser API wraps.
  */
-export default controller((ctx) => {
+export default controller((ctx: { route?: { pathname?: () => string } }) => {
   const path = derived(() => ctx.route?.pathname?.() ?? '')
   const navOpen = signal(false)
   const openNav = (): void => navOpen.set(true)
@@ -114,19 +116,23 @@ export default controller((ctx) => {
   <a href="/docs/reference/regions" on:click={onNav} current={path() === '/docs/reference/regions' ? 'page' : null} style(railLink)>Region matrix</a>
 </partial>
 
-<row nowrap align="stretch" gap="0" style(shell, { size({ w: full, min-w: 0 }).grow(1) })>
-  <nav label="Docs" testid="docs-rail" style(rail, { shrink(0) })>
-    <docs-nav path={path} onNav={noopNav}></docs-nav>
-  </nav>
+<row nowrap align="stretch" gap="0" style(shell)>
+  <when {tablet}>
+    <nav label="Docs" testid="docs-rail" style(rail)>
+      <docs-nav path={path} onNav={noopNav}></docs-nav>
+    </nav>
+  </when>
 
-  <column gap="0" style(contentCol, { grow(1).size({ min-w: 0 }) })>
-    <div style(mobileBar)>
-      <row gap="2" align="center">
-        <button type="button" variant="outline" size="sm" on:click={openNav} expanded={navOpen() ? 'true' : 'false'}>Menu</button>
-        <small style(mobileLabel)>Docs</small>
-      </row>
-    </div>
-    <main style(mainDocs, { grow(1).size({ min-w: 0 }) })>
+  <column gap="0" style(contentCol)>
+    <when {tablet}>
+    {else =>
+    <!-- no preset: cluster attr (is_known_axis_prop); nowrap is the working hug row -->
+    <row nowrap gap="2" align="center">
+      <button type="button" variant="outline" size="sm" on:click={openNav} expanded={navOpen() ? 'true' : 'false'}>Menu</button>
+      <small style(mobileLabel)>Docs</small>
+    </row>
+    }</when>
+    <main style(mainDocs)>
       <slot name="route"></slot>
     </main>
   </column>

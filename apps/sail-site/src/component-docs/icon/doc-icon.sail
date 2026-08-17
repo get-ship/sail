@@ -4,15 +4,14 @@
 -->
 
 <scope>
-  style page = { size({ w: full, max-w: breakpoint-desktop }).margin({ x: auto }) }
-  style mutedXs = { fg(muted-foreground).type({ size: xs }) }
-  style knobLabel = { fg(muted-foreground).type({ size: xs, weight: medium, tracking: wide, case: uppercase }) }
-  style sizeValue = { fg(muted-foreground).type({ family: mono, size: xs }) }
-  style tickRow = { size({ w: full }).pad({ x: 1_5, t: 1 }) }
-  style tick = { fg(muted-foreground).type({ family: mono, size: xs }) }
-  style exampleBlock = { size({ w: full }).pad({ t: 2, b: 4 }) }
-  style sectionLabel = { fg(muted-foreground).type({ size: xs, tracking: wide, case: uppercase }) }
-  style demoRow = { size({ w: full }).pad({ y: 2 }) }
+  style page = { size(max) }
+  style mutedXs = { fg(muted).type(body-sm) }
+  style exampleBlock = { size(max) }
+  style sectionLabel = { fg(muted).type(label) }
+  style demoRow = { size(max) }
+  style growCol = { size(grow) }
+  style iconPrimary = { fg(primary) }
+  style iconDestructive = { fg(destructive) }
 </scope>
 
 <controller>
@@ -96,7 +95,7 @@ export default controller((_ctx: Scope) => {
 
     <column slot="knobs" gap="5" align="stretch">
       <column gap="2">
-        <label style(knobLabel)>Name</label>
+        <label>Name</label>
         <select size="sm" bind:value={iconName} label="Name">
           <option value="sparkles">sparkles</option>
           <option value="check">check</option>
@@ -108,19 +107,16 @@ export default controller((_ctx: Scope) => {
         <p style(mutedXs)>Pack glyph via name. Use src only for same-origin SVG.</p>
       </column>
       <column gap="2">
-        <row gap="2" align="center" justify="between">
-          <label style(knobLabel)>Size</label>
-          <span style(sizeValue)>{iconSize()}</span>
-        </row>
+        <label>Size</label>
         <slider bind:value={sizeIdx} min="0" max="4" step="1" size="sm" label="Size" ticks="xs,sm,md,lg,xl"></slider>
       </column>
       <row gap="5" align="start">
-        <column gap="2" style({ grow(1).size({ min-w: 0 }) })>
-          <label style(knobLabel)>Spin</label>
+        <column gap="2" style(growCol)>
+          <label>Spin</label>
           <switch bind:checked={iconSpin} size="sm" label="Spin"></switch>
         </column>
-        <column gap="2" style({ grow(1).size({ min-w: 0 }) })>
-          <label style(knobLabel)>Label</label>
+        <column gap="2" style(growCol)>
+          <label>Label</label>
           <switch bind:checked={iconLabeled} size="sm" label="Accessible label"></switch>
         </column>
       </row>
@@ -179,8 +175,8 @@ export default controller((_ctx: Scope) => {
         code={iconExColor()}
       >
         <row gap="3" align="center" style(demoRow)>
-          <span style({ fg(primary) })><icon name="heart"></icon></span>
-          <span style({ fg(destructive) })><icon name="heart"></icon></span>
+          <span style(iconPrimary)><icon name="heart"></icon></span>
+          <span style(iconDestructive)><icon name="heart"></icon></span>
         </row>
       </doc-example>
     </column>

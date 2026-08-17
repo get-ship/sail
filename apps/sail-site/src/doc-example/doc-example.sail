@@ -11,11 +11,11 @@
     code = ''
   }
 
-  style section = { size({ w: full }).pad({ y: 4 }).overflow({ all: visible }) }
-  style heading = { type({ size: md, weight: semibold }) }
-  style leadText = { fg(muted-foreground).type({ size: sm }) }
-  style liveFrame = { grow(1).size({min-w: 0, basis: 0}).pad(4).overflow({ all: visible }).radius(lg).border({ color: border, width: 1 }).bg(surface-0) }
-  style codeCol = { grow(1).size({min-w: 0, basis: 0}) }
+  style section = { size(max).overflow(visible) }
+  style heading = { type(heading) }
+  style leadText = { fg(muted).type(body-sm) }
+  style liveFrame = { size(grow).overflow(visible).radius(lg).border(subtle).bg(canvas) }
+  style codeCol = { size(grow) }
 </scope>
 
 <column gap="3" style(section)>
@@ -25,7 +25,7 @@
   <if {lead() !== ''}>
     <p style(leadText)>{lead()}</p>
   </if>
-  <row gap="4" align="start" style({ size({ w: full, min-w: 0 }).overflow({ all: visible }) })>
+  <row nowrap gap="4" align="start" style(section)>
     <column gap="3" style(liveFrame)>
       <slot></slot>
     </column>

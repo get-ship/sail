@@ -14,16 +14,16 @@
     seed: Flight[] = []
   }
 
-  style card = { pad(4).size({ w: full }) }
-  style titleText = { type({ size: sm, tracking: wide, case: uppercase }) }
-  style meta = { fg(muted-foreground).type({ family: mono, size: xs }) }
-  style list = { margin({ t: 3 }).type({ family: mono, size: sm }) }
-  style city = { type({ wrap: truncate }) }
-  style gate = { fg(muted-foreground) }
+  style card = { size(max) }
+  style titleText = { type(label) }
+  style meta = { fg(muted).type(mono-sm) }
+  style list = { type(mono) }
+  style city = { type(mono).size(grow) }
+  style gate = { fg(muted) }
+  style enterFade = { animate: { enter: play(fade) } }
 </scope>
 
 <controller>
-
 const POOL: Array<[string, string]> = [
   ['Reykjavík', 'A2'],
   ['Osaka', 'B7'],
@@ -35,15 +35,15 @@ const POOL: Array<[string, string]> = [
   ['Ulaanbaatar', 'B1'],
 ]
 
-export default controller((ctx) => {
+export default controller((ctx: { seed: () => Array<{ id: string; city: string; gate: string; status: 'boarding' | 'on-time' | 'delayed' }> }) => {
   let seq = 0
-  const boardRow = (i: number, status: Flight['status']): Flight => {
+  const boardRow = (i: number, status: 'boarding' | 'on-time' | 'delayed') => {
     const pair = POOL[i % POOL.length] ?? POOL[0] ?? ['—', '—']
     const [city, gate] = pair
     return { id: `${city}-${seq++}`, city, gate, status }
   }
 
-  const flights = signal<Flight[]>(
+  const flights = signal(
     ctx.seed().length > 0
       ? ctx.seed()
       : [
@@ -78,8 +78,8 @@ export default controller((ctx) => {
   </row>
   <column gap="1" style(list)>
     <for {flights() as f} key={f.id}>
-      <row align="center" gap="3" nowrap style({ animate: { enter: play(fade) } })>
-        <span style(city, { grow(1).size({ min-w: 0 }) })>{f.city}</span>
+      <row nowrap align="center" gap="3" style(enterFade)>
+        <span style(city)>{f.city}</span>
         <span style(gate)>{f.gate}</span>
         <match {f.status}>
           {'boarding' => <badge tone="success">Boarding</badge>}

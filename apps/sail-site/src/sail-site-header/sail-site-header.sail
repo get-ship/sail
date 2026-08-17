@@ -8,15 +8,21 @@
 -->
 
 <scope>
-  style brand = { type({ size: lg, tracking: tight, wrap: nowrap }) }
   style brandMark = { fg(primary) }
-  style productSwitch = { pad(half).size({ min-w: 0, max-w: full }).overflow({ x: auto }).bg(muted).border({ color: border, width: 1, style: solid }).radius(full) }
-  style productLink = { display(inline-flex).pad({ x: 1_5 }).size({ h: control-h-sm }).radius(full).fg(muted-foreground).type({size: xs, weight: medium, leading: none, wrap: nowrap, decoration: none}), when: { hover: fg(foreground).bg(hover-bg), current: bg(primary).fg(primary-foreground), tablet: pad({ x: 2_5 }).type({ size: sm }) } }
-  style brandWord = { display(none).type({ wrap: nowrap }), when: { tablet: display(inline) } }
-  style shell = { size({ h: screen, min-h: screen }) }
-  style landingMain = { size({basis: 0, min-w: 0, min-h: 0, max-w: full}).overflow({ x: hidden, y: auto }) }
-  style appMain = { display(flex).dir(column).size({min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }) }
-  style githubLink = { display(inline-flex).pad(1).radius(md).fg(muted-foreground), when: { hover: fg(foreground).bg(hover-bg) } }
+  // no preset: overflow x auto (pill switch scrolls on narrow)
+  style productSwitch = { size(grow).overflow({ x: auto }).bg(muted).border(subtle).radius(full) }
+  // no preset: display inline-flex / hover+current+tablet when
+  style productLink = { display(inline-flex).size(control-sm).radius(full).fg(muted).type(label), when: { hover: fg(canvas).bg(hover-bg), current: bg(primary).fg(primary-foreground), tablet: type(body-sm) } }
+  // no preset: display inline
+  style brandWord = { display(inline) }
+  style brandLink = { size(hug) }
+  style shell = { size(max) }
+  // no preset: overflow x hidden / y auto
+  style landingMain = { size(grow).overflow({ x: hidden, y: auto }) }
+  // no preset: display flex / dir column
+  style appMain = { display(flex).dir(column).size(grow).overflow(hidden) }
+  // no preset: display inline-flex / hover when
+  style githubLink = { display(inline-flex).radius(md).fg(muted), when: { hover: fg(canvas).bg(hover-bg) } }
 </scope>
 
 <controller>
@@ -57,11 +63,11 @@ export default controller((ctx) => {
 })
 </controller>
 
-<column gap="0" style(shell, { size({ w: full }) })>
+<column gap="0" style(shell)>
   <if {!workbench()}>
     <navbar sticky bordered autohide={autohide() ? true : null} use:chromeOffset>
-      <a slot="brand" href="/" label="SHIP UI home" style({ shrink(0) })>
-        <row gap="2" align="center" nowrap>
+      <a slot="brand" href="/" label="SHIP UI home" style(brandLink)>
+        <row nowrap gap="2" align="center">
           <svg width="22" height="22" viewBox="0 0 26 26" fill="none" hidden="true">
             <circle cx="6" cy="6" r="3.4" fill="var(--primary)" />
             <circle cx="20" cy="6" r="3.4" fill="var(--primary)" opacity="0.45" />
@@ -73,13 +79,13 @@ export default controller((ctx) => {
         </row>
       </a>
 
-      <row slot="center" gap="1" align="center" nowrap testid="site-nav" label="Site" style(productSwitch, { size({ min-w: 0 }) })>
-        <a href="/docs" current={section() === 'docs' ? 'page' : null} style(productLink, { shrink(0) })>Docs</a>
-        <a href="/components" current={section() === 'components' ? 'page' : null} style(productLink, { shrink(0) })>Components</a>
-        <a href="/playground" current={section() === 'playground' ? 'page' : null} style(productLink, { shrink(0) })>Playground</a>
+      <row slot="center" gap="1" align="center" nowrap testid="site-nav" label="Site" style(productSwitch)>
+        <a href="/docs" current={section() === 'docs' ? 'page' : null} style(productLink)>Docs</a>
+        <a href="/components" current={section() === 'components' ? 'page' : null} style(productLink)>Components</a>
+        <a href="/playground" current={section() === 'playground' ? 'page' : null} style(productLink)>Playground</a>
       </row>
 
-      <row slot="actions" gap="2" align="center" nowrap>
+      <row nowrap gap="2" align="center" slot="actions">
         <a
           href="https://github.com/get-ship/sail"
           target="_blank"
@@ -97,10 +103,10 @@ export default controller((ctx) => {
   </if>
 
   <if {landing()}>
-    <main style(landingMain, { grow(1).size({ w: full, min-w: 0 }) })>
+    <main style(landingMain)>
       <slot name="route"></slot>
     </main>
-  {else => <main style(appMain, { grow(1).size({ w: full, min-w: 0 }) })>
+  {else => <main style(appMain)>
       <slot name="route"></slot>
     </main>}</if>
 </column>

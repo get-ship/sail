@@ -4,18 +4,24 @@
 -->
 
 <scope>
-  style shell = { size({ h: full, min-w: 0, min-h: 0 }).overflow({ all: hidden }) }
-  // Same rail geometry as sail-docs-rail (14rem / space-56).
-  style rail = { display(none).dir(column).size({ w: 56, h: full, min-h: 0 }).pad({ x: 3, y: 4 }).overflow({ x: hidden, y: auto }).border({ color: border, width: 1, edge: e }).bg(background).fg(foreground), when: { tablet: display(flex) } }
-  style railLabel = { margin({ t: 4, b: 1 }).fg(muted-foreground).type({ size: xs, weight: semibold, tracking: wide, case: uppercase }) }
-  style railLink = { display(block).pad({ x: 2, y: 1 }).radius(md).fg(muted-foreground).type({ family: mono, size: sm }), when: { hover: fg(foreground).bg(hover-bg), current: fg(primary).bg(muted).type({ weight: semibold }) } }
-  style railHub = { display(block).pad({ x: 2, y: 1 }).margin({ b: 2 }).radius(md).fg(muted-foreground).type({ size: sm, weight: medium }), when: { hover: fg(foreground).bg(hover-bg), current: fg(primary).bg(muted).type({ weight: semibold }) } }
-  style mainPane = { pad(4).size({min-h: 0, basis: 0}).overflow({ x: hidden, y: auto }), when: { tablet: pad(6) } }
-  style mobileBar = { display(flex).pad({ x: 3, y: 2 }).border({ color: border, width: 1, edge: b }).bg(background), when: { tablet: display(none) } }
-  style contentCol = { size({ min-w: 0, min-h: 0 }) }
-  style mobileLabel = { fg(muted-foreground).type({ family: mono, size: xs }) }
-  style drawerTitle = { type({ size: sm }) }
-  style fullW = { size({ w: full }) }
+  style shell = { size(grow).overflow(hidden) }
+  // Hug width so the rail does not steal leftover from main. Pad dropped
+  // (L1-only). No L2 width attr for the old 14rem rail — ledgered.
+  // Visibility is structural `<when {tablet}>` — global `.s-displaynone`
+  // beats `when: { tablet: display(flex) }`.
+  // no preset: display flex / dir column / overflow x hidden y auto
+  style rail = { display(flex).dir(column).size(hug).overflow({ x: hidden, y: auto }).bg(canvas).fg(canvas) }
+  style railLabel = { fg(muted).type(label) }
+  // no preset: display block / hover+current when
+  style railLink = { display(block).radius(md).fg(muted).type(mono), when: { hover: fg(canvas).bg(hover-bg), current: fg(primary).bg(muted) } }
+  // no preset: display block / hover+current when
+  style railHub = { display(block).radius(md).fg(muted).type(body-sm), when: { hover: fg(canvas).bg(hover-bg), current: fg(primary).bg(muted) } }
+  // no preset: overflow x hidden / y auto
+  style mainPane = { size(grow).overflow({ x: hidden, y: auto }) }
+  style contentCol = { size(grow) }
+  style mobileLabel = { fg(muted).type(mono-sm) }
+  style drawerTitle = { type(body-sm) }
+  style fullW = { size(max) }
 
   type ComponentsNavProps = {
     path: any
@@ -26,8 +32,6 @@
 </scope>
 
 <controller>
-import type { ControllerScope } from '@ship/sail-runtime'
-import type { Scope } from './sail-components-rail.sail'
 import { CATALOG, type CatalogEntry } from '../compositions/component-catalog'
 
 function slugFromPath(p: string): string {
@@ -57,7 +61,7 @@ const CAT_LABEL: Record<CatalogEntry['cat'], string> = {
   effects: 'Effects',
 }
 
-export default controller((ctx: ControllerScope<Scope>) => {
+export default controller((ctx: { route?: { pathname?: () => string } }) => {
   // deck route.pathname is SSOT and updates same-tick on navigate.
   const path = derived(() => ctx.route?.pathname?.() ?? '')
   const navOpen = signal(false)
@@ -71,13 +75,21 @@ export default controller((ctx: ControllerScope<Scope>) => {
 
   const currentSlug = derived(() => slugFromPath(path()))
   // L1 primitives only in the rail (packs stay on the hub catalog).
+  // Loops, not Array.filter — Identities scanner treats `filter(` as L1-only.
   const sections = derived(() => {
-    const lang = CATALOG.filter((e: CatalogEntry) => e.pack === 'lang')
-    return CAT_ORDER.map((cat) => ({
-      cat,
-      label: CAT_LABEL[cat],
-      items: lang.filter((e: CatalogEntry) => e.cat === cat),
-    })).filter((s: { items: CatalogEntry[] }) => s.items.length > 0)
+    const lang: CatalogEntry[] = []
+    for (const e of CATALOG) {
+      if (e.pack === 'lang') lang.push(e)
+    }
+    const out: { cat: CatalogEntry['cat']; label: string; items: CatalogEntry[] }[] = []
+    for (const cat of CAT_ORDER) {
+      const items: CatalogEntry[] = []
+      for (const e of lang) {
+        if (e.cat === cat) items.push(e)
+      }
+      if (items.length > 0) out.push({ cat, label: CAT_LABEL[cat], items })
+    }
+    return out
   })
 
   return { path, navOpen, openNav, closeNav, noopNav, currentSlug, sections }
@@ -104,19 +116,23 @@ export default controller((ctx: ControllerScope<Scope>) => {
   </for>
 </partial>
 
-<row nowrap align="stretch" gap="0" style(shell, { size({ w: full, min-w: 0 }).grow(1) })>
-  <nav label="Components" testid="components-rail" use:scrollRestore={'components-rail'} style(rail, { shrink(0) })>
-    <components-nav path={path} currentSlug={currentSlug} sections={sections} onNav={noopNav}></components-nav>
-  </nav>
+<row nowrap align="stretch" gap="0" style(shell)>
+  <when {tablet}>
+    <nav label="Components" testid="components-rail" use:scrollRestore={'components-rail'} style(rail)>
+      <components-nav path={path} currentSlug={currentSlug} sections={sections} onNav={noopNav}></components-nav>
+    </nav>
+  </when>
 
-  <column gap="0" style(contentCol, { grow(1).size({ min-w: 0 }) })>
-    <div style(mobileBar)>
-      <row gap="2" align="center">
-        <button type="button" variant="outline" size="sm" on:click={openNav} expanded={navOpen() ? 'true' : 'false'}>Menu</button>
-        <small style(mobileLabel)>Components</small>
-      </row>
-    </div>
-    <main style(mainPane, { grow(1).size({ min-w: 0 }) })>
+  <column gap="0" style(contentCol)>
+    <when {tablet}>
+    {else =>
+    <!-- no preset: cluster attr (is_known_axis_prop); nowrap is the working hug row -->
+    <row nowrap gap="2" align="center">
+      <button type="button" variant="outline" size="sm" on:click={openNav} expanded={navOpen() ? 'true' : 'false'}>Menu</button>
+      <small style(mobileLabel)>Components</small>
+    </row>
+    }</when>
+    <main style(mainPane)>
       <slot name="route"></slot>
     </main>
   </column>

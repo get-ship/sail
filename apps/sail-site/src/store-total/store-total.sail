@@ -2,8 +2,8 @@
   Third reader of the shared tally store (State chapter demo).
 -->
 <scope>
-  style line = { fg(muted-foreground).type({ size: sm }) }
-  style total = { fg(foreground) }
+  style line = { fg(muted).type(body-sm) }
+  style total = { fg(canvas) }
 </scope>
 
 <controller>

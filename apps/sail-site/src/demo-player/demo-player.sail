@@ -8,26 +8,24 @@
     playing = true
   }
 
-  style card = { pad(3).size({ w: full }) }
-  style title = { type({ size: sm, wrap: truncate }) }
-  style artist = { fg(muted-foreground).type({ size: xs, wrap: truncate }) }
-  style eq = { size({ min-h: 6 }) }
-  style bar = { size({ w: 1 }).radius(sm).bg(primary).origin(bottom) }
-  style barDim = { size({ w: 1 }).radius(sm).bg(primary).filter({ opacity: 75 }).origin(bottom) }
-  style rest = { size({ w: 1, h: 2 }).radius(full).bg(muted-foreground).filter({ opacity: 50 }) }
-  style meta = { grow(1).size({ min-w: 0 }) }
+  style card = { size(max) }
+  style title = { type(body-sm) }
+  style artist = { fg(muted).type(label) }
+  style eq = { size(grow) }
+  style bar = { size(1).radius(sm).bg(primary).origin(bottom), animate: { loop: play(eq) } }
+  style barDim = { size(1).radius(sm).bg(primary).origin(bottom), animate: { loop: play(eq) } }
+  style rest = { size(2).radius(full).bg(muted) }
+  style meta = { size(grow) }
 </scope>
 
 <controller>
-import type { Scope } from './demo-player.sail'
-
-export default controller((ctx: Scope) => {
-  const position = signal(23)
+export default controller((ctx: { playing: () => boolean }) => {
+  const clock = signal(23)
   effect(() => {
     if (!ctx.playing()) return
-    interval(() => position.set((p) => (p + 1) % 100), 150)
+    interval(() => clock.set((p) => (p + 1) % 100), 150)
   })
-  return { position }
+  return { clock }
 })
 </controller>
 
@@ -36,14 +34,14 @@ export default controller((ctx: Scope) => {
     <column gap="1" style(meta)>
       <strong style(title)>Signals in the Rain</strong>
       <p style(artist)>The Reactive Quartet</p>
-      <progress value={position()} max="100"></progress>
+      <progress value={clock()} max="100"></progress>
     </column>
     <if {playing()}>
       <row gap="1" align="end" style(eq)>
-        <div style(bar, { size({ h: 4 }), animate: { loop: play(fade) } })></div>
-        <div style(barDim, { size({ h: 6 }), animate: { loop: play(fade) } })></div>
-        <div style(bar, { size({ h: 3 }), animate: { loop: play(fade) } })></div>
-        <div style(barDim, { size({ h: 5 }), animate: { loop: play(fade) } })></div>
+        <div style(bar)></div>
+        <div style(barDim)></div>
+        <div style(bar)></div>
+        <div style(barDim)></div>
       </row>
     {else =>
       <row gap="1" align="center" style(eq)>

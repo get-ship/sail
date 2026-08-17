@@ -4,31 +4,25 @@
 -->
 
 <scope>
-  style page = { size({ w: full, max-w: breakpoint-desktop }).margin({ x: auto }) }
-  style monoXs = { fg(muted-foreground).type({ family: mono, size: xs }) }
-  style knobLabel = { fg(muted-foreground).type({ size: xs, weight: medium, tracking: wide, case: uppercase }) }
-  style sizeValue = { fg(muted-foreground).type({ family: mono, size: xs }) }
-  /**
-   * Discrete steps: padX ≈ half thumb so ends sit under the thumb center;
-   * justify-between places labels at 0%…100% (not column midpoints).
-   */
-  style tickRow = { size({ w: full }).pad({ x: 1_5, t: 1 }) }
-  style tick = { fg(muted-foreground).type({ family: mono, size: xs }) }
+  style page = { size(max) }
+  style monoXs = { fg(muted).type(mono-sm) }
+  style sizeValue = { fg(muted).type(mono-sm) }
   /** Tone dots — plain divs (never <button>). size() sets w+h together. */
-  style swatch = { size(7).shrink(0).radius(full).cursor(pointer).border({ color: transparent, width: 2 }).elevation(xs), when: { selected: border({ color: foreground }).elevation(sm), hover: filter({ opacity: 90 }) } }
+  style swatch = { size(7).radius(full).cursor(pointer).border(subtle).elevation(xs), when: { selected: border(strong).elevation(sm), hover: bg(muted) } }
   style swatchPrimary = { bg(primary) }
   style swatchSuccess = { bg(success) }
   style swatchWarning = { bg(warning) }
   style swatchDestructive = { bg(destructive) }
   style swatchAccent = { bg(accent) }
-  style swatchMuted = { bg(muted).border({ color: border }) }
+  style swatchMuted = { bg(muted).border(default) }
   style swatchInfo = { bg(info) }
-  style exampleBlock = { size({ w: full }).pad({ t: 2, b: 4 }) }
-  style exampleSection = { size({ w: full }).pad({ y: 4 }) }
-  style exampleH = { type({ size: md, weight: semibold }) }
-  style exampleLead = { fg(muted-foreground).type({ size: sm }) }
-  style sectionLabel = { fg(muted-foreground).type({ size: xs, tracking: wide, case: uppercase }) }
-  style demoRow = { size({ w: full }).pad({ y: 2 }) }
+  style exampleBlock = { size(max) }
+  style exampleSection = { size(max) }
+  style exampleH = { type(heading) }
+  style exampleLead = { fg(muted).type(body-sm) }
+  style sectionLabel = { fg(muted).type(label) }
+  style demoRow = { size(max) }
+  style growCol = { size(grow) }
 </scope>
 
 <controller>
@@ -75,13 +69,14 @@ export default controller((_ctx: Scope) => {
   const entry = DETAILS.button
   const heading = () => entry.heading
   const blurb = () => entry.blurb
-  const props = () =>
-    entry.props.filter((r) =>
-        r.name === 'variant' ||
-        r.name === 'tone' ||
-        r.name === 'size' ||
-        r.name === 'disabled' ||
-        r.name === 'label')
+  const props = () => {
+    const keep = new Set(['variant', 'tone', 'size', 'disabled', 'label'])
+    const out = []
+    for (const r of entry.props) {
+      if (keep.has(r.name)) out.push(r)
+    }
+    return out
+  }
   const usageCode = () => entry.usage
 
   const btnExWithIcon = () =>
@@ -169,7 +164,7 @@ export default controller((_ctx: Scope) => {
 
     <column slot="knobs" gap="5" align="stretch">
       <column gap="2">
-        <label style(knobLabel)>Variant</label>
+        <label>Variant</label>
         <select size="sm" bind:value={variant} label="Variant">
           <option value="solid">solid</option>
           <option value="soft">soft</option>
@@ -178,7 +173,7 @@ export default controller((_ctx: Scope) => {
         </select>
       </column>
       <column gap="2">
-        <label style(knobLabel)>Tone</label>
+        <label>Tone</label>
         <row gap="2" align="center">
           <div
             title="primary"
@@ -225,22 +220,19 @@ export default controller((_ctx: Scope) => {
         </row>
       </column>
       <column gap="2">
-        <row gap="2" align="center" justify="between">
-          <label style(knobLabel)>Size</label>
-          <span style(sizeValue)>{btnSize()}</span>
-        </row>
+        <label>Size</label>
         <slider bind:value={sizeIdx} min="0" max="6" step="1" size="sm" label="Size" ticks="xs,sm,md,lg,icon,iSm,iLg"></slider>
       </column>
       <row gap="5" align="start">
-        <column gap="2" style({ grow(1).size({ min-w: 0 }) })>
-          <label style(knobLabel)>Icon</label>
+        <column gap="2" style(growCol)>
+          <label>Icon</label>
           <if {isIconSize()}>
             <p style(sizeValue)>Required for icon sizes</p>
           {else =>
             <switch bind:checked={withIcon} size="sm" label="Show icon"></switch>}</if>
         </column>
-        <column gap="2" style({ grow(1).size({ min-w: 0 }) })>
-          <label style(knobLabel)>Disabled</label>
+        <column gap="2" style(growCol)>
+          <label>Disabled</label>
           <switch bind:checked={disabled} size="sm" label="Disabled"></switch>
         </column>
       </row>
