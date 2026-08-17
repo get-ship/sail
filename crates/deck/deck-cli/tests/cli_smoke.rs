@@ -401,8 +401,12 @@ fn create_writes_four_entry_tree_and_check_is_green() {
         "create package.json missing typecheck/lint scripts:\n{pkg}"
     );
     assert!(
-        pkg.contains("typescript") && pkg.contains("oxlint"),
-        "create package.json missing typescript/oxlint devDeps:\n{pkg}"
+        pkg.contains("oxlint"),
+        "create package.json missing oxlint devDep:\n{pkg}"
+    );
+    assert!(
+        !pkg.contains("\"typescript\""),
+        "create must not pin npm typescript — types use the sail sidecar:\n{pkg}"
     );
     assert!(
         pkg.contains("sail build --bundle-framework"),
@@ -590,6 +594,145 @@ fn create_then_dev_serves() {
     );
 }
 
+/// Created app: doctor is project health; types/fmt/inspect/tokens work
+/// with no bun install. `sail op gen` does not dump a fake monorepo.
+#[test]
+fn create_then_product_cli_verbs() {
+    let tmp = TempDir::new().expect("tempdir");
+    let app = tmp.path().join(unique_stem("create-cli"));
+    let create = Command::new(sail_bin())
+        .args(["create", app.to_str().unwrap()])
+        .current_dir(tmp.path())
+        .output()
+        .expect("spawn sail create");
+    assert!(
+        create.status.success(),
+        "create failed: {}",
+        String::from_utf8_lossy(&create.stderr)
+    );
+    let stdout = String::from_utf8_lossy(&create.stdout);
+    assert!(
+        !stdout.contains("bun install"),
+        "create next-steps must not lead with bun install:\n{stdout}"
+    );
+
+    let doctor = Command::new(sail_bin())
+        .args(["doctor"])
+        .current_dir(&app)
+        .output()
+        .expect("spawn sail doctor");
+    let d_out = String::from_utf8_lossy(&doctor.stdout);
+    let d_err = String::from_utf8_lossy(&doctor.stderr);
+    assert!(
+        doctor.status.success(),
+        "doctor on created app failed:\nstdout:{d_out}\nstderr:{d_err}"
+    );
+    assert!(
+        d_out.contains("status: ok")
+            && d_out.contains("theme: sail")
+            && d_out.contains("types: .sail/types.d.ts")
+            && d_out.contains("render: csr"),
+        "doctor must report product shape:\n{d_out}"
+    );
+    for leak in ["bun:", "typescript:", "workspace:", "list-tools", "sidecar"] {
+        assert!(
+            !d_out.contains(leak),
+            "doctor must not report toolchain `{leak}`:\n{d_out}"
+        );
+    }
+
+    for (args, label) in [
+        (vec!["types", "--check"], "types --check"),
+        (vec!["fmt", "--check", "."], "fmt --check"),
+        (vec!["tokens"], "tokens"),
+    ] {
+        let out = Command::new(sail_bin())
+            .args(&args)
+            .current_dir(&app)
+            .output()
+            .expect(label);
+        assert!(
+            out.status.success(),
+            "{label} failed (status {:?}):\nstdout:{}\nstderr:{}",
+            out.status,
+            String::from_utf8_lossy(&out.stdout),
+            String::from_utf8_lossy(&out.stderr),
+        );
+    }
+
+    let inspect = Command::new(sail_bin())
+        .args(["inspect", "tree", "routes/page.sail"])
+        .current_dir(&app)
+        .output()
+        .expect("inspect");
+    assert!(
+        inspect.status.success(),
+        "inspect tree failed:\n{}",
+        String::from_utf8_lossy(&inspect.stderr)
+    );
+    let tree = String::from_utf8_lossy(&inspect.stdout);
+    assert!(
+        tree.contains("\"tag\": \"column\"") || tree.contains("\"tag\":\"column\""),
+        "inspect tree must name the page root:\n{tree}"
+    );
+
+    let op_gen = Command::new(sail_bin())
+        .args(["op", "gen"])
+        .current_dir(&app)
+        .output()
+        .expect("sail op gen");
+    assert!(
+        !op_gen.status.success(),
+        "sail op gen must refuse on a created app"
+    );
+    let gen_err = String::from_utf8_lossy(&op_gen.stderr);
+    assert!(
+        gen_err.contains("deck-bake gen"),
+        "refuse must name deck-bake gen:\n{gen_err}"
+    );
+    assert!(
+        !app.join("packages/sail/studio-client").exists(),
+        "sail op gen must not write packages/ into a created app"
+    );
+}
+
+/// `sail check` lints created-app `src/` (not only monorepo `apps/`).
+#[test]
+fn create_then_check_lints_src() {
+    let tmp = TempDir::new().expect("tempdir");
+    let app = tmp.path().join(unique_stem("create-src"));
+    let create = Command::new(sail_bin())
+        .args(["create", app.to_str().unwrap()])
+        .current_dir(tmp.path())
+        .output()
+        .expect("spawn sail create");
+    assert!(create.status.success(), "create failed");
+    std::fs::create_dir_all(app.join("src/stores")).expect("mkdir src/stores");
+    std::fs::write(
+        app.join("src/stores/leak.ts"),
+        "export function leak(el: { style: { cssText: string } }) {\n  el.style.cssText = \"x\";\n}\n",
+    )
+    .expect("write leak");
+    let check = Command::new(sail_bin())
+        .args(["check", "."])
+        .current_dir(&app)
+        .output()
+        .expect("sail check");
+    let combined = format!(
+        "{}{}",
+        String::from_utf8_lossy(&check.stdout),
+        String::from_utf8_lossy(&check.stderr)
+    );
+    assert!(
+        !check.status.success(),
+        "check must fail on src/stores/leak.ts:\n{combined}"
+    );
+    assert!(
+        combined.contains("leak.ts"),
+        "check must name leak.ts:\n{combined}"
+    );
+}
+
 fn walk_ext(dir: &std::path::Path, ext: &str) -> Vec<std::path::PathBuf> {
     let mut out = Vec::new();
     let Ok(rd) = std::fs::read_dir(dir) else {
@@ -706,7 +849,7 @@ fn check_warns_when_dist_is_tracked() {
 // ── sail surface (C-pack) ───────────────────────────────────────────────────
 
 #[test]
-fn sail_version_and_doctor_smoke() {
+fn sail_version_smoke() {
     let out = Command::new(sail_bin())
         .args(["version"])
         .current_dir(repo_root())
@@ -715,28 +858,59 @@ fn sail_version_and_doctor_smoke() {
     assert!(out.status.success(), "sail version failed: {:?}", out);
     let stdout = String::from_utf8_lossy(&out.stdout);
     assert!(
-        stdout.contains("sail") || stdout.contains("0.1.0"),
+        stdout.contains("sail") && stdout.contains("0.1.0"),
         "unexpected version output: {stdout}"
     );
-
-    let doc = Command::new(sail_bin())
-        .args(["doctor"])
-        .current_dir(repo_root())
-        .output()
-        .expect("spawn sail doctor");
-    assert!(doc.status.success(), "sail doctor failed: {:?}", doc);
-    let d = String::from_utf8_lossy(&doc.stdout);
-    assert!(d.contains("status: ok"), "doctor: {d}");
     assert!(
-        d.contains("sail mcp --list-tools") && d.contains("tools (ok)"),
-        "doctor must probe in-process list-tools: {d}"
+        !stdout.contains("cargo") && !stdout.contains("embeds:") && !stdout.contains("sidecar"),
+        "version must not dump internals:\n{stdout}"
     );
 }
 
-/// Empty probe dirs still fail on bun/tsc/types, but list-tools must not
-/// require a project MCP config (in-process sail-mcp).
+/// Default `sail` does not link V8. Asking for SSR is a project fail, not CSR.
 #[test]
-fn doctor_list_tools_does_not_require_mcp_config() {
+fn doctor_refuses_ssr_when_v8_unlinked() {
+    let tmp = TempDir::new().expect("tempdir");
+    let app = tmp.path().join(unique_stem("ssr-refused"));
+    let create = Command::new(sail_bin())
+        .args(["create", app.to_str().unwrap()])
+        .current_dir(tmp.path())
+        .output()
+        .expect("spawn sail create");
+    assert!(
+        create.status.success(),
+        "create failed: {}",
+        String::from_utf8_lossy(&create.stderr)
+    );
+    let cfg = app.join("sail.config.jsonc");
+    let body = std::fs::read_to_string(&cfg).expect("read config");
+    let body = body.replace("\"render\": \"csr\"", "\"render\": \"ssr\"");
+    std::fs::write(&cfg, body).expect("write ssr config");
+
+    let doctor = Command::new(sail_bin())
+        .args(["doctor"])
+        .current_dir(&app)
+        .output()
+        .expect("spawn sail doctor");
+    let d_out = String::from_utf8_lossy(&doctor.stdout);
+    let d_err = String::from_utf8_lossy(&doctor.stderr);
+    assert!(
+        !doctor.status.success(),
+        "doctor must fail an SSR project on a V8-less sail:\n{d_out}\n{d_err}"
+    );
+    assert!(
+        d_out.contains("render: ssr") && d_out.contains("status: fail"),
+        "doctor must name the SSR refuse:\n{d_out}"
+    );
+    assert!(
+        !d_out.contains("V8") && !d_err.contains("V8"),
+        "doctor is product health, not a V8 selfie:\n{d_out}\n{d_err}"
+    );
+}
+
+/// Empty dir is not a Sail project. Doctor does not report bun/sidecar/cargo.
+#[test]
+fn doctor_refuses_empty_dir() {
     let tmp = TempDir::new().expect("tempdir");
     let doc = Command::new(sail_bin())
         .args(["doctor"])
@@ -746,25 +920,31 @@ fn doctor_list_tools_does_not_require_mcp_config() {
     let stdout = String::from_utf8_lossy(&doc.stdout);
     let stderr = String::from_utf8_lossy(&doc.stderr);
     assert!(
-        stdout.contains("sail mcp --list-tools") && stdout.contains("tools (ok)"),
-        "list-tools must pass without .mcp.json:\nstdout:{stdout}\nstderr:{stderr}"
-    );
-    assert!(
         !doc.status.success(),
-        "empty probe must still fail (types/bun/tsc), got success:\n{stdout}"
+        "empty dir must fail doctor:\n{stdout}"
     );
     assert!(
-        stdout.contains("status: fail"),
-        "empty probe must print status: fail:\n{stdout}"
+        stdout.contains("status: fail") && stdout.contains("project: (none)"),
+        "empty dir must print project none / fail:\n{stdout}"
     );
     assert!(
-        stdout.contains("tokens model: baked catalog (ok)"),
-        "standalone doctor must not demand a monorepo tokens tree:\n{stdout}"
+        stderr.contains("not a Sail project"),
+        "expected project refuse, got:\n{stderr}"
     );
-    assert!(
-        !stderr.contains("sail mcp --list-tools"),
-        "list-tools must not be the doctor failure:\n{stderr}"
-    );
+    for leak in [
+        "bun:",
+        "typescript:",
+        "workspace:",
+        "tokens model:",
+        "list-tools",
+        "in-process",
+        "sidecar",
+    ] {
+        assert!(
+            !stdout.contains(leak) && !stderr.contains(leak),
+            "doctor must not report toolchain `{leak}`:\nstdout:{stdout}\nstderr:{stderr}"
+        );
+    }
 }
 
 #[test]
@@ -802,7 +982,7 @@ fn deck_bake_help_lists_bake_verbs() {
         .expect("spawn deck-bake --help");
     assert!(out.status.success());
     let help = String::from_utf8_lossy(&out.stdout);
-    for cmd in ["build-assets", "emit"] {
+    for cmd in ["build-assets", "emit", "gen"] {
         assert!(
             help_has_subcommand(&help, cmd),
             "deck-bake --help missing `{cmd}`:\n{help}"

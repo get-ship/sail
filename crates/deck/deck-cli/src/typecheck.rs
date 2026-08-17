@@ -1,4 +1,4 @@
-//! Opt-in `deck build --typecheck`: ambient pack + on-the-fly tsconfig +
+//! Opt-in `sail build --typecheck`: ambient pack + on-the-fly tsconfig +
 //! `tsc --noEmit` over the app's `.ts` sources (authored controllers + the
 //! bundler's generated `routes.gen.ts` / `entry.gen.ts` /
 //! `components.gen.ts`), failing the build command on TypeScript errors.
@@ -96,7 +96,7 @@ fn run_tsc(tsc: &Path, cfg: &Path, repo_root: &Path) -> Result<(bool, String)> {
 }
 
 /// Typecheck the freshly-built app. Errors (a missing `tsc`, or a `tsc`
-/// failure) bubble up so `deck build --typecheck` exits non-zero.
+/// failure) bubble up so `sail build --typecheck` exits non-zero.
 pub fn run(project: &Path, out_dir: &Path, repo_root: &Path) -> Result<()> {
     let Some(tsc) = find_tsc(project, repo_root) else {
         bail!("--typecheck requires the TypeScript 7 native sidecar next to sail.");
@@ -105,7 +105,7 @@ pub fn run(project: &Path, out_dir: &Path, repo_root: &Path) -> Result<()> {
     let (ok, output) = run_tsc(&tsc, &cfg, repo_root)?;
     if !ok {
         eprint!("{output}");
-        bail!("deck build --typecheck: tsc reported type errors");
+        bail!("sail build --typecheck: tsc reported type errors");
     }
     println!(
         "  typecheck  ok (tsc --noEmit; ambients {})",

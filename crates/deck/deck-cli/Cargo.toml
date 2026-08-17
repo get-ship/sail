@@ -18,9 +18,10 @@ deck-bundler = { path = "../deck-bundler" }
 deck-axum = { path = "../deck-axum" }
 deck-core = { path = "../deck-core" }
 deck-config = { path = "../deck-config" }
-# `sail dev` SSR: register the ship-js (V8) first-paint engine when an app opts
-# into `render: ssr`. Pulled in lazily-at-runtime (only spun up for SSR apps).
-deck-ssr = { path = "../deck-ssr" }
+# SSR first-paint (ship-js / V8). Off by default — `render: ssr` is not a
+# product path yet, and linking V8 costs ~50MB in the `sail` binary.
+# Re-enable with `cargo build -p deck-cli --features ssr`.
+deck-ssr = { path = "../deck-ssr", optional = true }
 # In-process `tokens_generate` on theme JSON edits (same pipeline as
 # `sail tokens` / production) — live path = DTCG → generate → HMR.
 sail-compiler = { path = "../../sail/compiler" }
@@ -30,7 +31,7 @@ sail-mcp = { path = "../../sail/mcp" }
 sail-ops = { path = "../../sail/ops" }
 sail-layout = { path = "../../sail/layout" }
 sail-render = { path = "../../sail/render" }
-# App-source floor for `sail check apps/*` — plain `apps/*/src/**/*.ts` modules.
+# App-source floor for `sail check` — project `src/**/*.ts` modules.
 sail-lint = { path = "../../sail/lint" }
 clap = { workspace = true }
 anyhow = { workspace = true }
@@ -40,6 +41,11 @@ tokio = { workspace = true, features = ["net", "rt", "rt-multi-thread", "signal"
 tracing-subscriber = { workspace = true, features = ["env-filter"] }
 # `sail dev` HMR: watch the project source, rebuild the SPA, push a reload.
 notify = { workspace = true }
+
+[features]
+default = []
+# Links deck-ssr → ship-js → V8. Not the product default.
+ssr = ["dep:deck-ssr"]
 
 [dev-dependencies]
 tempfile = { workspace = true }

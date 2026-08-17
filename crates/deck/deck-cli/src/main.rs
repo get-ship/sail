@@ -8,6 +8,7 @@
 mod editor;
 mod peer;
 mod scaffold;
+mod ssr;
 mod typecheck;
 
 use std::path::{Path, PathBuf};
@@ -126,12 +127,11 @@ enum Command {
     },
 
     /// Emit the sail ambient TypeScript pack (`.sail/types.d.ts`)
-    /// for tsc/tsgo. Package `dist/*.d.ts` is bun prepare / bake — not this verb.
+    /// for the native TypeScript sidecar. Package `dist/*.d.ts` is bun
+    /// prepare / bake — not this verb.
     ///
     /// Regenerated from compiler manifests (runtime ambients + Style setters +
-    /// token scales). Pair with `@ship/sail-tsconfig/base` or
-    /// `deck build --typecheck`. tsc owns controller/logic types; sail-compiler
-    /// owns template/layout/vocabulary.
+    /// token scales). Pair with `sail types --check` or `sail build --typecheck`.
     Types {
         /// Path inside a Sail project (walks up to `sail.config.jsonc` / `.json`).
         /// Writes `.sail/types.d.ts` at the project root. Default: cwd.
@@ -172,14 +172,14 @@ enum Command {
         check: bool,
     },
 
-    /// Read-only IR projections (TOOLING-1 WI5). Twin of MCP `sail_inspect`.
+    /// Read-only IR projections. Twin of MCP `sail_inspect`.
     ///
     /// Topics: tree | geometry | cascade | states | a11y | invalidations |
     /// uses | cost | themes. JSON on stdout.
     ///
     /// Examples:
-    ///   sail inspect tree apps/demo/routes/page.sail
-    ///   sail inspect geometry apps/demo/routes/page.sail --viewport 1440x900
+    ///   sail inspect tree routes/page.sail
+    ///   sail inspect geometry routes/page.sail --viewport 1440x900
     ///   sail inspect cascade --token primary
     ///   sail inspect themes
     Inspect {
@@ -227,22 +227,21 @@ enum Command {
         list_tools: bool,
     },
 
-    /// Invoke a sail-ops RPC in-process (`Service/Method`), or `gen` for codegen.
+    /// Invoke a sail-ops RPC in-process (`Service/Method`).
     ///
     /// Same handlers as MCP tools and Connect HTTP under `sail dev`.
-    /// Example: `sail op SailTheme/List --json '{"path":"apps/sail-site/themes"}'`
-    /// Codegen: `sail op gen` → packages/sail/studio-client + schema snapshots.
+    /// Example: `sail op SailTheme/List --json '{"path":"themes"}'`
     Op {
-        /// `Service/Method` (e.g. `SailAuthoring/Surface`) or `gen`.
+        /// `Service/Method` (e.g. `SailAuthoring/Surface`).
         target: String,
         /// JSON request body (object). Default `{}`. Ignored for `gen`.
         #[arg(long, default_value = "{}")]
         json: String,
     },
 
-    /// Static box-tree layout diagnostics (spike).
+    /// Static box-tree layout diagnostics.
     Layout {
-        /// Path to preprocessed/source HTML, or `-` for stdin.
+        /// Path to a `.sail` file, or `-` for stdin.
         input: PathBuf,
         /// Viewport `WxH` (default 1440x900).
         #[arg(long, value_parser = peer::parse_viewport, default_value = "1440x900")]
@@ -276,12 +275,8 @@ enum Command {
         fonts_dir: Option<PathBuf>,
     },
 
-    /// Local environment health (workspace, tokens model, peer surfaces).
-    Doctor {
-        /// Fail-close if the TypeScript 7 sidecar is missing.
-        #[arg(long)]
-        typed: bool,
-    },
+    /// Project health (config, routes, theme, types).
+    Doctor,
 
     /// Print version + install hints (also available as `--version`).
     Version,
@@ -428,7 +423,7 @@ fn run() -> Result<()> {
             json,
             fonts_dir,
         } => peer::render(input, theme, mode, viewport, out, json, fonts_dir),
-        Command::Doctor { typed } => peer::doctor(brand, typed),
+        Command::Doctor => peer::doctor(brand),
         Command::Version => {
             peer::print_version(brand);
             Ok(())
@@ -711,28 +706,14 @@ fn dev(project: PathBuf, addr: String) -> Result<()> {
         // entry — name/route/source are host-bound here, never the file's.
         let mut app_cfg = deck_bundler::load_app_serve(&project_dir)
             .map_err(|e| anyhow::anyhow!("app serve config: {e}"))?;
-        // SSR engine: only spin up ship-js (V8) when this app opts into SSR
-        // (`sail.config { "deck": { "render": "ssr" } }`). A CSR app (the
-        // default) pays no V8 cost. Standalone dev has no live data port, so
-        // the engine renders with NoopData (None). The engine is a MOUNT-SCOPED
-        // handle layered as an Extension below — not a process-global install.
-        // If it can't start, log + continue; the serve path falls back to CSR
-        // (`renderer = None`).
-        let renderer: Option<Arc<dyn deck_core::synthetic_ssr::SyntheticSsr>> =
-            if app_cfg.render == deck_config::RenderMode::Ssr {
-                match deck_ssr::serve::engine(None) {
-                    Ok(r) => {
-                        println!("sail dev: ship-js SSR engine ready (render: ssr)");
-                        Some(r)
-                    }
-                    Err(e) => {
-                        eprintln!("sail dev: ship-js SSR engine unavailable, serving CSR: {e:#}");
-                        None
-                    }
-                }
-            } else {
-                None
-            };
+        // First-paint engine. Default `sail` does not link V8; `render: ssr`
+        // is refused (not silently served as CSR). `--features ssr` brings
+        // ship-js back. The handle is mount-scoped, not process-global.
+        let renderer = ssr::engine_for(app_cfg.render)
+            .map_err(|e| anyhow::anyhow!("sail dev: {e}"))?;
+        if renderer.is_some() {
+            println!("sail dev: SSR engine ready (render: ssr)");
+        }
         app_cfg.name = build.url_namespace.clone();
         app_cfg.route = "/".to_string();
         app_cfg.source = deck_config::DECK_OUT_DIRNAME.to_string();
@@ -822,31 +803,23 @@ fn dev(project: PathBuf, addr: String) -> Result<()> {
                 if let Some(rel) = deck_core::sail_project_rel_from_root(&project_dir) {
                     studio_cfg.ops_project = Some(rel);
                 }
-                // Studio opts into SSR; share the primary renderer if already
-                // spun up, else start one when Studio needs it.
-                let studio_renderer: Option<Arc<dyn deck_core::synthetic_ssr::SyntheticSsr>> =
+                // Studio overlay is fail-soft: missing V8 or a dead engine
+                // does not take down the primary app.
+                let studio_renderer = if let Some(r) = renderer.clone() {
                     if studio_cfg.render == deck_config::RenderMode::Ssr {
-                        if let Some(r) = renderer.clone() {
-                            Some(r)
-                        } else {
-                            match deck_ssr::serve::engine(None) {
-                                Ok(r) => {
-                                    println!(
-                                        "sail dev: ship-js SSR engine ready (studio overlay)"
-                                    );
-                                    Some(r)
-                                }
-                                Err(e) => {
-                                    eprintln!(
-                                        "sail dev: studio SSR unavailable, CSR overlay: {e:#}"
-                                    );
-                                    None
-                                }
-                            }
-                        }
+                        Some(r)
                     } else {
                         None
-                    };
+                    }
+                } else {
+                    match ssr::engine_for(studio_cfg.render) {
+                        Ok(r) => r,
+                        Err(e) => {
+                            eprintln!("sail dev: studio overlay SSR unavailable: {e:#}");
+                            None
+                        }
+                    }
+                };
                 let studio_resolution =
                     Arc::new(deck_core::Resolution::new().with_root(studio_dir.clone()));
                 println!(
@@ -1346,7 +1319,7 @@ fn dev(project: PathBuf, addr: String) -> Result<()> {
             .unwrap_or_else(|_| bind_addr.clone());
         println!("sail dev: serving {} on http://{bound}", project_dir.display());
         println!(
-            "sail dev: standalone — routes/assets/HMR/SSR-opt-in; no live DataPort/query multiplex (server-functions #32)"
+            "sail dev: standalone — routes/assets/HMR; no live DataPort/query multiplex (server-functions #32)"
         );
         println!("sail dev: ctrl-c to stop");
 
