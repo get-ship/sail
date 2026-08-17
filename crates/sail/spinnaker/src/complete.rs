@@ -295,6 +295,32 @@ fn concern_arg_items(
     host: Option<&str>,
 ) -> impl Iterator<Item = StyleCompleteItem> {
     let mut labels: Vec<(String, StyleCompleteKind, Option<String>)> = Vec::new();
+    // StyleSurface is the preset table. Offer only presets that already
+    // validate (complete ⊆ validate). Language IR (size.grow) waits for M2b.
+    let surface = crate::StyleSurface::merged();
+    for preset in surface.presets_for(concern.name) {
+        if preset.origin == crate::PresetOrigin::Language {
+            // M2b: language size names validate. Offer them.
+            if concern.name != "size" || !crate::is_language_size_preset(preset.name) {
+                continue;
+            }
+        }
+        let key = preset.key();
+        let language_size = concern.name == "size" && crate::is_language_size_preset(preset.name);
+        if !language_size
+            && crate::tokens::find_composite(&key).is_none()
+            && crate::tokens::find_composite(&format!("{}.{}", preset.name, concern.name)).is_none()
+        {
+            continue;
+        }
+        if !labels.iter().any(|(l, _, _)| l == preset.name) {
+            labels.push((
+                preset.name.to_string(),
+                StyleCompleteKind::Token,
+                Some(format!("preset `{key}`")),
+            ));
+        }
+    }
     for composite in crate::tokens::composites_of_type(concern.name) {
         let short = composite
             .name

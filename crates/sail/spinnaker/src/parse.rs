@@ -548,7 +548,7 @@ fn tokenize(input: &str) -> Vec<SpannedTok<'_>> {
                 let mut j = i + 1;
                 while j < b.len() {
                     let ch = b[j] as char;
-                    if ch.is_ascii_alphanumeric() || ch == '_' || ch == '-' {
+                    if ch.is_ascii_alphanumeric() || ch == '_' || ch == '-' || ch == '%' {
                         j += 1;
                     } else {
                         break;
@@ -787,7 +787,7 @@ fn parse_style_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> St
         let preview: String = source.chars().take(80).collect();
         diags.push(StyleDiagnostic::ParseError {
             message: "flat `style.method(…)` chains are retired — write concern calls: \
-                      style({ size({ w: full }).pad(4).bg(surface), when: { hover: bg(muted) } })"
+                      style({ size({ w: '100%' }).pad(4).bg(surface), when: { hover: bg(muted) } })"
                 .into(),
             source: if preview.is_empty() {
                 "style.".into()
@@ -1066,7 +1066,7 @@ fn parse_style_arg(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Styl
     }
 }
 
-/// Style object: concern/setter calls (`size({ w: full }).bg(card)`), plus
+/// Style object: concern/setter calls (`size({ w: '100%' }).bg(surface)`), plus
 /// keyed members (`when:`, `match:`, `animate:`). Geometry / paint / text
 /// object keys are dissolved.
 ///
@@ -1128,7 +1128,7 @@ fn parse_style_object(
                 diags.push(StyleDiagnostic::ParseError {
                     message: format!(
                         "`{key}:` is not a style member — write concern calls: \
-                         style({{ size({{ w: full }}).pad(4).bg(surface), when: {{ hover: bg(muted) }} }})"
+                         style({{ size({{ w: '100%' }}).pad(4).bg(surface), when: {{ hover: bg(muted) }} }})"
                     ),
                     source: format!("{key}:"),
                 });

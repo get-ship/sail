@@ -300,7 +300,7 @@ pub fn concerns() -> &'static [ConcernSpec] {
                 ConcernSlot {
                     name: "backdrop",
                     scale: None,
-                    keywords: &["none", "card-backdrop-filter"],
+                    keywords: &["none", "filter-backdrop"],
                 },
                 ConcernSlot {
                     name: "blend",
@@ -348,7 +348,6 @@ pub fn concerns() -> &'static [ConcernSpec] {
                     scale: Some("size"),
                     keywords: &[
                         "0",
-                        "full",
                         "auto",
                         "fit",
                         "min",
@@ -356,7 +355,6 @@ pub fn concerns() -> &'static [ConcernSpec] {
                         "screen",
                         "border-width",
                         "half",
-                        "panel-rail-w",
                     ],
                 },
                 ConcernSlot {
@@ -364,7 +362,6 @@ pub fn concerns() -> &'static [ConcernSpec] {
                     scale: Some("size"),
                     keywords: &[
                         "0",
-                        "full",
                         "auto",
                         "fit",
                         "min",
@@ -377,22 +374,22 @@ pub fn concerns() -> &'static [ConcernSpec] {
                 ConcernSlot {
                     name: "min-w",
                     scale: Some("size"),
-                    keywords: &["0", "full", "screen", "panel-menu-min-w", "panel-rail-w"],
+                    keywords: &["0", "screen"],
                 },
                 ConcernSlot {
                     name: "min-h",
                     scale: Some("size"),
-                    keywords: &["0", "full", "screen"],
+                    keywords: &["0", "screen"],
                 },
                 ConcernSlot {
                     name: "max-w",
                     scale: Some("size"),
-                    keywords: &["0", "full", "screen", "none"],
+                    keywords: &["0", "screen", "none"],
                 },
                 ConcernSlot {
                     name: "max-h",
                     scale: Some("size"),
-                    keywords: &["0", "full", "screen", "none"],
+                    keywords: &["0", "screen", "none"],
                 },
                 ConcernSlot {
                     name: "aspect",
@@ -402,7 +399,7 @@ pub fn concerns() -> &'static [ConcernSpec] {
                 ConcernSlot {
                     name: "basis",
                     scale: Some("size"),
-                    keywords: &["0", "auto", "full"],
+                    keywords: &["0", "auto"],
                 },
             ],
             covered_setters: &["w", "h", "minW", "minH", "maxW", "maxH", "aspect", "basis"],
@@ -1249,6 +1246,9 @@ pub fn validate_slot_value(
             if slot.keywords.contains(&bare) {
                 return Ok(());
             }
+            if spec.name == "size" && is_free_size_value(bare) {
+                return Ok(());
+            }
             if let Some(scale) = slot.scale {
                 if scales::contains(scale, bare) {
                     return Ok(());
@@ -1272,6 +1272,37 @@ pub fn validate_slot_value(
             })
         }
     }
+}
+
+/// Use-site free geometry after a named size token is evicted (px/rem/%/calc).
+pub fn is_free_size_value(raw: &str) -> bool {
+    let s = raw.trim();
+    let s = s
+        .strip_prefix('\'')
+        .and_then(|s| s.strip_suffix('\''))
+        .or_else(|| s.strip_prefix('"').and_then(|s| s.strip_suffix('"')))
+        .unwrap_or(s);
+    if s.is_empty() {
+        return false;
+    }
+    if s.starts_with("min(")
+        || s.starts_with("max(")
+        || s.starts_with("clamp(")
+        || s.starts_with("calc(")
+    {
+        return s.ends_with(')');
+    }
+    if let Some(num) = s.strip_suffix('%') {
+        return !num.is_empty() && num.parse::<f64>().is_ok();
+    }
+    for unit in [
+        "rem", "px", "em", "ch", "vh", "vw", "dvh", "dvw", "svh", "lvh",
+    ] {
+        if let Some(num) = s.strip_suffix(unit) {
+            return !num.is_empty() && num.parse::<f64>().is_ok();
+        }
+    }
+    false
 }
 
 #[cfg(test)]
@@ -1474,7 +1505,7 @@ mod tests {
 
     #[test]
     fn size_and_space_do_not_clash() {
-        let (style, diags) = parse("style({ size({ w: full }).pad({ x: 3 }) })");
+        let (style, diags) = parse("style({ size({ w: '100%' }).pad({ x: 3 }) })");
         assert!(
             diags.is_empty(),
             "{:?}",
@@ -1486,7 +1517,7 @@ mod tests {
 
     #[test]
     fn fg_button_is_the_named_composite() {
-        let (_style, diags) = parse("style({ fg(button) })");
+        let (_style, diags) = parse("style({ fg(foreground) })");
         assert!(
             diags.is_empty(),
             "{:?}",

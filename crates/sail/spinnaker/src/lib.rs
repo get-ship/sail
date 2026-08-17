@@ -20,6 +20,7 @@ pub mod plains;
 pub mod scales;
 pub mod setters;
 pub mod style_vocab;
+pub mod surface;
 pub mod theme_env;
 pub mod token_groups;
 pub mod tokens;
@@ -42,8 +43,8 @@ pub use component_surfaces::{
 };
 pub use concerns::{
     ConcernSlot, ConcernSpec, MARKERS, concern_doc_line, concern_kind, concerns, find_concern,
-    is_concern_form, is_marker, prepare_concern_call, primary_slot, resolve_concern_name,
-    retired_replacement,
+    is_concern_form, is_free_size_value, is_marker, prepare_concern_call, primary_slot,
+    resolve_concern_name, retired_replacement,
 };
 pub use foreign_idioms::{
     FOREIGN_IDIOMS, ForeignIdiom, IdiomKind, find_foreign_idiom, teaching_line,
@@ -58,6 +59,11 @@ pub use parse::{
     parse_style_const_rhs, validate_style_refs,
 };
 pub use plains::{PlainSpec, find_plain, plain_doc_line};
+pub use surface::{
+    LANGUAGE_PRESETS, PresetOrigin, Privilege, REQUIRED_KEYS, REQUIRED_THEME_PRESETS, StyleAtom,
+    StylePreset, StyleSurface, generate_missing_warnings, is_language_size_preset,
+    privilege_enforced_for_path, privilege_for_path,
+};
 pub use theme_env::{
     NamedStyle, PlayPreset, StylingPolicy, TagDefault, ThemeStyleEnv, VocabTag,
     current_styling_policy, with_styling_policy,

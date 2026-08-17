@@ -101,6 +101,10 @@ const GROUP_ATTR_NAMES: &[&str] = &[
     "expanded",
     "busy",
     "sortable",
+    "expanded",
+    "searchable",
+    "mode-only",
+    "mode",
 ];
 
 /// CamelCase spelling used by complete for multi-word condition keys.

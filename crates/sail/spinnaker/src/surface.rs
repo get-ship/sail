@@ -211,33 +211,8 @@ pub const REQUIRED_THEME_PRESETS: &[StylePreset] = &[
     req("radius", "full", "pill"),
 ];
 
-/// Migrate-window aliases. Present in the table, not required, die after grep-zero.
-const MIGRATE_ALIASES: &[StylePreset] = &[
-    StylePreset {
-        concern: "bg",
-        name: "card",
-        origin: PresetOrigin::ThemeOptional,
-        meaning: "alias of surface — delete after corpus grep-zero",
-    },
-    StylePreset {
-        concern: "fg",
-        name: "foreground",
-        origin: PresetOrigin::ThemeOptional,
-        meaning: "alias of canvas — delete after corpus grep-zero",
-    },
-    StylePreset {
-        concern: "fg",
-        name: "card",
-        origin: PresetOrigin::ThemeOptional,
-        meaning: "alias of on-surface — delete after corpus grep-zero",
-    },
-    StylePreset {
-        concern: "size",
-        name: "full",
-        origin: PresetOrigin::ThemeOptional,
-        meaning: "DTCG CSS trap — dies; use size(grow)|size(max)",
-    },
-];
+/// Empty: migrate-window aliases die after corpus grep-zero (retirement law).
+const MIGRATE_ALIASES: &[StylePreset] = &[];
 
 const fn req(concern: &'static str, name: &'static str, meaning: &'static str) -> StylePreset {
     StylePreset {
@@ -458,7 +433,7 @@ fn required_key_is_present(key: &str, present: &[&str]) -> bool {
     }
     // Radius floor is the scale, not DTCG composites.
     if let Some(name) = key.strip_prefix("radius.") {
-        return crate::tokens::radius_values().iter().any(|v| *v == name);
+        return crate::tokens::radius_values().contains(&name);
     }
     false
 }
@@ -632,7 +607,7 @@ mod tests {
     fn type_heading_is_required_theme_preset() {
         let surface = StyleSurface::floor();
         assert!(
-            surface.required.iter().any(|k| *k == "type.heading"),
+            surface.required.contains(&"type.heading"),
             "required: {:?}",
             surface.required
         );
@@ -646,7 +621,7 @@ mod tests {
         let grow = surface.find("size", "grow").expect("size.grow");
         assert_eq!(grow.origin, PresetOrigin::Language);
         assert!(
-            !surface.required.iter().any(|k| *k == "size.grow"),
+            !surface.required.contains(&"size.grow"),
             "language presets are not required of the theme"
         );
         assert!(
@@ -656,10 +631,12 @@ mod tests {
     }
 
     #[test]
-    fn size_full_is_migrate_alias_not_language() {
+    fn size_full_is_gone() {
         let surface = StyleSurface::floor();
-        let full = surface.find("size", "full").expect("size.full migrate");
-        assert_eq!(full.origin, PresetOrigin::ThemeOptional);
+        assert!(
+            surface.find("size", "full").is_none(),
+            "size.full retired — use size(grow)|size(max) or free 100%"
+        );
     }
 
     #[test]
@@ -667,12 +644,12 @@ mod tests {
         let missing = StyleSurface::floor().missing_required_from_registry();
         for key in ["bg.canvas", "bg.control", "bg.overlay", "size.measure"] {
             assert!(
-                !missing.iter().any(|k| *k == key),
+                !missing.contains(&key),
                 "{key} must be on the floor now: {missing:?}"
             );
         }
         assert!(
-            !missing.iter().any(|k| *k == "type.heading"),
+            !missing.contains(&"type.heading"),
             "type.heading exists in the registry: {missing:?}"
         );
         assert!(missing.is_empty(), "M3 floor must be complete: {missing:?}");

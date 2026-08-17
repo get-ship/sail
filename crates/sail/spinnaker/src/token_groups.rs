@@ -54,8 +54,8 @@ const COLOR_GROUP_ORDER: &[&str] = &[
     "muted",
 ];
 
-/// Canonical Size ladder steps (base). Hosts may extend with `xs` / `xl` / `full`.
-const SIZE_STEPS: &[&str] = &["xs", "sm", "md", "lg", "xl", "full"];
+/// Canonical Size ladder steps (base). Hosts may extend with `xs` / `xl`.
+const SIZE_STEPS: &[&str] = &["xs", "sm", "md", "lg", "xl"];
 
 /// DTCG path stem for a public Tone name (`accent` ← `brandAccent`).
 fn dtcg_stem(public_group: &str) -> &str {
@@ -247,7 +247,7 @@ pub fn is_size_union(members: &[String]) -> bool {
     if !all_known {
         return false;
     }
-    // Reject pure specialty ladders that are not control size (e.g. only `full`).
+    // Reject empty or non-ladder sets.
     members
         .iter()
         .any(|m| matches!(m.as_str(), "xs" | "sm" | "md" | "lg" | "xl"))
@@ -255,7 +255,7 @@ pub fn is_size_union(members: &[String]) -> bool {
 
 /// Canonical Size step names for ambient emission (base ladder; hosts may narrow/extend).
 pub fn size_step_names() -> &'static [&'static str] {
-    // Product ambient `Size` is the common sm|md|lg core; xs/xl/full are extensions.
+    // Product ambient `Size` is the common sm|md|lg core; xs/xl are extensions.
     &["sm", "md", "lg"]
 }
 
@@ -431,7 +431,7 @@ mod tests {
             "lg".into(),
             "xl".into(),
         ]));
-        assert!(is_size_union(&[
+        assert!(!is_size_union(&[
             "sm".into(),
             "md".into(),
             "lg".into(),

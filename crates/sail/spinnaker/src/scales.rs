@@ -47,7 +47,6 @@ pub fn values(scale: &str) -> Vec<String> {
             s.extend(
                 [
                     "auto",
-                    "full",
                     "screen",
                     "fill",
                     "rail-fill",
@@ -170,7 +169,6 @@ pub fn lower(scale: &str, token: &str) -> Option<String> {
         "size" => match token {
             "0" => "0".into(),
             "auto" => "auto".into(),
-            "full" => "100%".into(),
             "fit" => "fit-content".into(),
             "min" => "min-content".into(),
             "max" => "max-content".into(),
