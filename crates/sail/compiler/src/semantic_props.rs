@@ -384,33 +384,6 @@ pub const HOST_ANATOMY: &[(&str, HostAnatomy)] = &[
         },
     ),
     (
-        "pane",
-        HostAnatomy {
-            role: Some("group"),
-            live: None,
-            atomic: None,
-            label: Some("Pane"),
-        },
-    ),
-    (
-        "toolbar",
-        HostAnatomy {
-            role: Some("toolbar"),
-            live: None,
-            atomic: None,
-            label: Some("Toolbar"),
-        },
-    ),
-    (
-        "list-row",
-        HostAnatomy {
-            role: Some("listitem"),
-            live: None,
-            atomic: None,
-            label: None,
-        },
-    ),
-    (
         "card",
         HostAnatomy {
             role: Some("region"),

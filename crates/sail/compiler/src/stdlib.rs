@@ -144,10 +144,7 @@ const SOURCES: &[(&str, &str)] = &[
         include_str!("../stdlib/toast/toast-region.sail"),
     ),
     ("toast", include_str!("../stdlib/toast/toast.sail")),
-    ("pane", include_str!("../stdlib/pane/pane.sail")),
-    ("toolbar", include_str!("../stdlib/toolbar/toolbar.sail")),
     ("form", include_str!("../stdlib/form/form.sail")),
-    ("list-row", include_str!("../stdlib/list-row/list-row.sail")),
 ];
 
 /// Compiled stdlib elements, memoized for the process lifetime. A stdlib
@@ -248,7 +245,6 @@ const PLATFORM: &[(&str, &str)] = &[
     ),
     ("color", include_str!("../stdlib/platform/color.css")),
     ("dialog", include_str!("../stdlib/platform/dialog.css")),
-    ("drawer", include_str!("../stdlib/platform/drawer.css")),
     ("file", include_str!("../stdlib/platform/file.css")),
     ("icon", include_str!("../stdlib/platform/icon.css")),
     ("meter", include_str!("../stdlib/platform/meter.css")),

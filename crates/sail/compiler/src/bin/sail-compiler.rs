@@ -314,7 +314,7 @@ fn main() -> Result<()> {
 fn gen_l1_surface(out: Option<PathBuf>) -> Result<()> {
     let path = match out {
         Some(p) => p,
-        None => workspace_root()?.join("packages/sail/l1/src/generated/catalog.ts"),
+        None => cargo_workspace_root()?.join("packages/sail/l1/src/generated/catalog.ts"),
     };
     sail_compiler::l1_surface::emit_catalog_ts(&path)
         .map_err(|e| anyhow!("l1-surface emit failed: {e}"))?;
