@@ -14,9 +14,10 @@ use std::path::{Component, Path, PathBuf};
 /// Kind of authoring file under the fixed project map.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum FileKind {
-    /// `.sail` under `routes/` (page.sail grant shape).
+    /// Document `.sail` (`page.sail` / `index.sail` / `_layout.sail` under `routes/`).
     Route,
-    /// `.sail` outside `routes/`.
+    /// `.sail` fragment. Global home is `src/components/<domain>/`.
+    /// Hyphenated siblings of a route document are route-local (still L3).
     Component,
     /// Action module — path `src/actions/**` (or action-shaped export).
     Action,
@@ -24,6 +25,8 @@ pub enum FileKind {
     Store,
     /// Composition — pure signal helpers under `src/compositions/**`.
     Composition,
+    /// Catalog / copy tables — `src/constants/**`.
+    Constant,
     /// Theme assets under `themes/`.
     Theme,
     /// Unclassified path (outside the fixed map).
@@ -43,8 +46,9 @@ pub struct Classified {
 /// Classify `path` using path segments and optional `source` shape signals.
 ///
 /// Shape rules (S1.1 minimal):
-/// - `.sail` + path contains a `routes` segment → Route
+/// - `.sail` document (`page`/`index`/`_layout`) under `routes/` → Route
 ///   (wins over a later `themes` segment: `routes/themes/page.sail`)
+/// - hyphenated `.sail` sibling of a route document → Component (route-local)
 /// - `.sail` elsewhere → Component
 /// - `defineStore(` in source → Store (even under compositions — misplacement)
 /// - path under `src/actions/` → Action
@@ -55,13 +59,21 @@ pub fn classify(path: &Path, source: Option<&str>) -> Classified {
     let path_str = path_as_str(path);
     let segs = path_segments(path);
 
-    // .sail: routes/ → Route, else Component.
+    // .sail documents under routes/ are Route. Hyphenated siblings are
+    // route-local components (the page is the document; they are tags).
     // Must beat the themes/ check: `routes/themes/page.sail` is a route.
     if is_sail(path) {
         if has_segment(&segs, "routes") {
+            if is_document_sail(path) {
+                return Classified {
+                    kind: FileKind::Route,
+                    home: home_for(FileKind::Route).to_string(),
+                    ok: true,
+                };
+            }
             return Classified {
-                kind: FileKind::Route,
-                home: home_for(FileKind::Route).to_string(),
+                kind: FileKind::Component,
+                home: home_for(FileKind::Component).to_string(),
                 ok: true,
             };
         }
@@ -116,6 +128,13 @@ pub fn classify(path: &Path, source: Option<&str>) -> Classified {
             ok: true,
         };
     }
+    if is_under_src_dir(&segs, "constants") {
+        return Classified {
+            kind: FileKind::Constant,
+            home: home_for(FileKind::Constant).to_string(),
+            ok: true,
+        };
+    }
 
     let _ = path_str; // kept for future path-string heuristics
     Classified {
@@ -155,6 +174,7 @@ pub struct AtAliasMapping {
 /// SPEC-PROJECT-STRUCTURE-1 §3 fixed import roots:
 /// - `@/components/*` → `./src/components/*`
 /// - `@/compositions/*` → `./src/compositions/*`
+/// - `@/constants/*` → `./src/constants/*`
 /// - `@/stores/*` → `./src/stores/*`
 /// - `@/actions/*` → `./src/actions/*`
 /// - `@/themes/*` → `./themes/*`
@@ -170,6 +190,10 @@ pub fn at_alias_paths() -> &'static [AtAliasMapping] {
         AtAliasMapping {
             pattern: "@/compositions/*",
             target: "./src/compositions/*",
+        },
+        AtAliasMapping {
+            pattern: "@/constants/*",
+            target: "./src/constants/*",
         },
         AtAliasMapping {
             pattern: "@/stores/*",
@@ -349,6 +373,7 @@ fn home_for(kind: FileKind) -> &'static str {
         FileKind::Action => "src/actions/",
         FileKind::Store => "src/stores/",
         FileKind::Composition => "src/compositions/",
+        FileKind::Constant => "src/constants/",
         FileKind::Theme => "themes/",
         FileKind::Other => "",
     }
@@ -361,6 +386,7 @@ fn kind_label(kind: FileKind) -> &'static str {
         FileKind::Action => "actions",
         FileKind::Store => "stores",
         FileKind::Composition => "compositions",
+        FileKind::Constant => "constants",
         FileKind::Theme => "themes",
         FileKind::Other => "files",
     }
@@ -390,6 +416,15 @@ fn is_under_src_dir(segs: &[String], dir: &str) -> bool {
 
 fn is_sail(path: &Path) -> bool {
     path.extension().and_then(|e| e.to_str()) == Some("sail")
+}
+
+/// The document file in a route folder. Everything else hyphenated next to it
+/// is a tag for that route.
+fn is_document_sail(path: &Path) -> bool {
+    matches!(
+        path.file_stem().and_then(|s| s.to_str()),
+        Some("page" | "index" | "_layout")
+    )
 }
 
 /// Conservative source scan: `defineStore(` as a call site (not a full AST).
@@ -524,8 +559,14 @@ mod tests {
         let r = classify(Path::new("apps/x/routes/foo/page.sail"), None);
         assert_eq!(r.kind, FileKind::Route);
         assert!(r.ok);
+        let local = classify(Path::new("apps/x/routes/foo/pricing-hero.sail"), None);
+        assert_eq!(local.kind, FileKind::Component);
+        assert!(local.ok);
         let c = classify(Path::new("apps/x/src/widget/widget.sail"), None);
         assert_eq!(c.kind, FileKind::Component);
+        let k = classify(Path::new("apps/x/src/constants/pricing.ts"), None);
+        assert_eq!(k.kind, FileKind::Constant);
+        assert!(k.ok);
     }
 
     #[test]
@@ -609,6 +650,7 @@ mod tests {
         for expected in [
             "src/components",
             "src/compositions",
+            "src/constants",
             "src/actions",
             "themes",
         ] {

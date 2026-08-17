@@ -353,6 +353,7 @@ pub fn type_env_for_kind(kind: crate::project_map::FileKind) -> TypeEnv {
         FileKind::Route
         | FileKind::Component
         | FileKind::Composition
+        | FileKind::Constant
         | FileKind::Store
         | FileKind::Theme
         | FileKind::Other => TypeEnv::Sail,

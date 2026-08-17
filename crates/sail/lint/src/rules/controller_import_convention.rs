@@ -35,12 +35,12 @@ pub const RULE_ID: &str = "sail-controller-import-convention";
 
 // Product-facing: name the law, name the path. No process jargon, no strategy essay.
 const MESSAGE: &str = "disallowed controller import — value imports must be \
-     `@ship/*`, a table `@/` alias (`@/components|compositions|stores|actions|themes/…`), \
-     a relative `.sail` module, or relative under `src/actions|compositions|components` \
+     `@ship/*`, a table `@/` alias (`@/components|compositions|constants|stores|actions|themes/…`), \
+     a relative `.sail` module, or relative under `src/actions|compositions|constants|components` \
      or `themes/`";
 
-const SUGGEST: &str = "Prefer `@/stores|compositions|actions|components|themes/…` for \
-     table homes; relative under `src/actions|compositions|components` or `themes/`; \
+const SUGGEST: &str = "Prefer `@/stores|compositions|constants|actions|components|themes/…` for \
+     table homes; relative under `src/actions|compositions|constants|components` or `themes/`; \
      `@ship/*` for packages; `import type` when only types are needed.";
 
 const STORE_RELATIVE_MESSAGE: &str =
