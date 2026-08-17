@@ -15,6 +15,12 @@ use std::sync::OnceLock;
 use anyhow::{Context, Result, anyhow, bail};
 use serde_json::{Map, Value};
 
+pub mod chrome;
+pub mod color;
+pub mod contract;
+pub mod derive;
+pub mod eval;
+pub mod space;
 pub mod theme_gate;
 
 /// Compile-time baked catalog (`packages/sail/tokens/model/**` at build).
@@ -107,7 +113,7 @@ const THEME_ORDER: &[&str] = &[
 // overrides }. Unknown keys refuse naming valid ones.
 
 /// Allowed top-level keys on a theme document.
-const THEME_ROOT_KEYS: &[&str] = &["$description", "$extensions", "modes"];
+const THEME_ROOT_KEYS: &[&str] = &["$description", "$extensions", "modes", "anchors"];
 
 /// Allowed keys under `$extensions.sail` on a theme document.
 const THEME_SAIL_KEYS: &[&str] = &[
@@ -117,6 +123,10 @@ const THEME_SAIL_KEYS: &[&str] = &[
     "supportedModes",
     "density",
     "ordered",
+    "identity",
+    "variants",
+    "chrome",
+    "inherits",
 ];
 
 /// Allowed paint mode names (`mode` values).
@@ -163,6 +173,7 @@ const THEME_MODE_GROUP_KEYS: &[&str] = &[
     "play",
     "tagDefaults",
     "tags",
+    "anchors",
 ];
 
 /// Sail theme extensions (SPEC-SPINNAKER-3 §8 / §10). Not DTCG composites —
@@ -280,6 +291,9 @@ struct Token {
     /// True when this is a DTCG composite identity (not a CSS leaf).
     /// Scalar `$type: shadow` strings stay false so emit still writes them.
     composite_identity: bool,
+    /// Breakpoint-keyed resolution (`base` / `tablet` / `desktop`) when the
+    /// authored value was a keyed map. Empty = scalar.
+    breakpoints: BTreeMap<String, String>,
 }
 
 #[derive(Debug, Clone)]
@@ -821,7 +835,7 @@ pub fn generate_with_options(
         write_with_trailing_newline(&products_css, &emit_products_css(axis))?;
     }
 
-    let mut registry = build_registry(&base_tokens, &styles, &keyframes, &plays, &tag_defaults);
+    let mut registry = build_registry(&base_tokens, &styles, &keyframes, &plays, &tag_defaults)?;
     warn_missing_required_presets(&registry);
     if let Some(ref axis) = products {
         if let Some(obj) = registry.as_object_mut() {
@@ -1454,13 +1468,23 @@ fn is_composite_leaf(node: &Value, inherited_type: Option<&str>) -> bool {
     is_composite_type(ty)
 }
 
-fn leaf_value_string(value: &Value) -> String {
+/// Resolve an authored `$value` to a CSS/alias string plus optional
+/// breakpoint map. Structured objects go through [`eval`]; refs stay as
+/// `{name}` so [`resolve_value`] can bind them after the name index exists.
+fn flatten_authored_value(value: &Value) -> (String, BTreeMap<String, String>) {
     match value {
-        Value::String(s) => s.clone(),
-        Value::Number(n) => n.to_string(),
-        Value::Bool(b) => b.to_string(),
-        Value::Null => "null".into(),
-        other => other.to_string(),
+        Value::String(s) => (s.clone(), BTreeMap::new()),
+        Value::Number(n) => (n.to_string(), BTreeMap::new()),
+        Value::Bool(b) => (b.to_string(), BTreeMap::new()),
+        Value::Null => ("null".into(), BTreeMap::new()),
+        Value::Object(_) => {
+            let resolve = |name: &str| Some(format!("{{{name}}}"));
+            match eval::evaluate(value, &resolve) {
+                Ok(ev) => (ev.css, ev.breakpoints),
+                Err(_) => (value.to_string(), BTreeMap::new()),
+            }
+        }
+        other => (other.to_string(), BTreeMap::new()),
     }
 }
 
@@ -1516,12 +1540,29 @@ pub fn public_name(path: &str) -> String {
     }
     if root == "color" {
         let rest = &parts[1..];
+        if rest.first() == Some(&"anchors") {
+            let tail: Vec<String> = rest[1..].iter().map(|s| camel_to_kebab(s)).collect();
+            return format!("anchor-{}", tail.join("-"));
+        }
         if !rest.is_empty() && rest[0] == "brandAccent" {
-            if rest.len() == 2 && rest[1] == "default" {
+            if rest.len() == 2 && matches!(rest[1], "default" | "solid") {
                 return "accent".into();
+            }
+            if rest.len() == 2 && rest[1] == "text" {
+                return "accent-foreground".into();
             }
             let tail: Vec<String> = rest[1..].iter().map(|s| camel_to_kebab(s)).collect();
             return format!("accent-{}", tail.join("-"));
+        }
+        if !rest.is_empty() && rest[0] == "danger" {
+            if rest.len() == 2 && matches!(rest[1], "default" | "solid") {
+                return "destructive".into();
+            }
+            if rest.len() == 2 && rest[1] == "text" {
+                return "destructive-foreground".into();
+            }
+            let tail: Vec<String> = rest[1..].iter().map(|s| camel_to_kebab(s)).collect();
+            return format!("destructive-{}", tail.join("-"));
         }
         if rest.len() == 2 && rest[0] == "mix" {
             let leaf = rest[1];
@@ -1530,10 +1571,24 @@ pub fn public_name(path: &str) -> String {
             }
         }
         let mut segs: Vec<String> = rest.iter().map(|s| camel_to_kebab(s)).collect();
-        if segs.len() >= 2 && segs.last().map(|s| s.as_str()) == Some("default") {
-            segs.pop();
+        if segs.len() >= 2 {
+            match segs.last().map(|s| s.as_str()) {
+                Some("default") | Some("solid") => {
+                    segs.pop();
+                }
+                Some("text") => {
+                    segs.pop();
+                    segs.push("foreground".into());
+                }
+                _ => {}
+            }
         }
         return segs.join("-");
+    }
+    if root == "bg" && parts.len() >= 2 && parts[1] == "app" {
+        if parts.len() == 2 || parts.get(2) == Some(&"color") {
+            return "background".into();
+        }
     }
     if matches!(root, "typography" | "motion" | "interaction") {
         return parts[1..]
@@ -1640,26 +1695,25 @@ fn flatten_tokens(doc: &Value, path_prefix: &[String], inherited_type: Option<&s
                         channel,
                         description: description.clone(),
                         composite_identity: true,
+                        breakpoints: BTreeMap::new(),
                     });
                     for (member, mval) in members {
                         if member.starts_with('$') {
                             continue;
                         }
                         let mpath = format!("{path}.{member}");
-                        let (mty, mvalue) = match mval {
+                        let (mty, raw) = match mval {
                             Value::Object(mobj) if mobj.contains_key("$value") => {
                                 let mt = mobj
                                     .get("$type")
                                     .and_then(|v| v.as_str())
                                     .unwrap_or_else(|| infer_composite_member_type(&ty, member))
                                     .to_string();
-                                (mt, leaf_value_string(&mobj["$value"]))
+                                (mt, &mobj["$value"])
                             }
-                            other => (
-                                infer_composite_member_type(&ty, member).to_string(),
-                                leaf_value_string(other),
-                            ),
+                            other => (infer_composite_member_type(&ty, member).to_string(), other),
                         };
+                        let (mvalue, breakpoints) = flatten_authored_value(raw);
                         out.push(Token {
                             path: mpath,
                             css_name: composite_member_css_name(&path, member),
@@ -1669,6 +1723,7 @@ fn flatten_tokens(doc: &Value, path_prefix: &[String], inherited_type: Option<&s
                             channel,
                             description: None,
                             composite_identity: false,
+                            breakpoints,
                         });
                     }
                 }
@@ -1684,6 +1739,7 @@ fn flatten_tokens(doc: &Value, path_prefix: &[String], inherited_type: Option<&s
                         channel,
                         description,
                         composite_identity: true,
+                        breakpoints: BTreeMap::new(),
                     });
                 }
                 _ => {}
@@ -1700,8 +1756,8 @@ fn flatten_tokens(doc: &Value, path_prefix: &[String], inherited_type: Option<&s
                 .map(|s| s.to_string())
                 .or_else(|| inherited_type.map(|s| s.to_string()))
                 .unwrap_or_else(|| "string".into());
-            let value = match node.get("$value") {
-                Some(v) => leaf_value_string(v),
+            let (value, breakpoints) = match node.get("$value") {
+                Some(v) => flatten_authored_value(v),
                 None => continue,
             };
             let channel = node
@@ -1722,6 +1778,7 @@ fn flatten_tokens(doc: &Value, path_prefix: &[String], inherited_type: Option<&s
                 channel,
                 description,
                 composite_identity: false,
+                breakpoints,
             });
         } else if is_group(node) {
             let group_type = node
@@ -1928,7 +1985,8 @@ fn build_name_index(tokens: &[Token]) -> NameIndex {
 /// Resolve DTCG `$value` → CSS. Aliases `{path}` / `{cssName}` → `var(--cssName)`.
 ///
 /// SPEC-D1 failure modes: dangling alias and alias cycles are hard errors
-/// (never silent kebab fallback).
+/// (never silent kebab fallback). Inline `{name}` inside mix/gradient strings
+/// are rewritten the same way.
 fn resolve_value(value: &str, name_index: &NameIndex) -> Result<String> {
     let alias = parse_alias(value);
     if let Some(ref_name) = alias {
@@ -1937,7 +1995,48 @@ fn resolve_value(value: &str, name_index: &NameIndex) -> Result<String> {
         })?;
         return Ok(format!("var(--{css_name})"));
     }
-    Ok(value.to_string())
+    rewrite_inline_aliases(value, name_index)
+}
+
+fn resolve_token_breakpoints(t: &mut Token, name_index: &NameIndex) -> Result<()> {
+    if t.breakpoints.is_empty() {
+        return Ok(());
+    }
+    let mut resolved = BTreeMap::new();
+    for (k, v) in &t.breakpoints {
+        resolved.insert(k.clone(), resolve_value(v, name_index)?);
+    }
+    t.breakpoints = resolved;
+    Ok(())
+}
+
+fn rewrite_inline_aliases(value: &str, name_index: &NameIndex) -> Result<String> {
+    let bytes = value.as_bytes();
+    let mut out = String::with_capacity(value.len());
+    let mut i = 0;
+    while i < bytes.len() {
+        if bytes[i] == b'{' {
+            if let Some(end) = bytes[i + 1..].iter().position(|&b| b == b'}') {
+                let inner = &value[i + 1..i + 1 + end];
+                if !inner.is_empty()
+                    && inner
+                        .bytes()
+                        .all(|b| b.is_ascii_alphanumeric() || b == b'_' || b == b'.' || b == b'-')
+                {
+                    if let Some(css) = resolve_alias_target(inner, name_index) {
+                        out.push_str("var(--");
+                        out.push_str(&css);
+                        out.push(')');
+                        i += end + 2;
+                        continue;
+                    }
+                }
+            }
+        }
+        out.push(bytes[i] as char);
+        i += 1;
+    }
+    Ok(out)
 }
 
 /// Map `{path}` / `{cssName}` to a known public cssName, or None if dangling.
@@ -2127,6 +2226,9 @@ fn load_base_layers(
     // Component token packs live under model/components/*.json and merge into
     // the base layer (paths like component.card.bg → public cssNames).
     merge_component_sources(model_dir, &mut base_doc)?;
+    space::apply_space_ramp(&mut base_doc);
+    derive::apply_base_derivation(&mut base_doc)?;
+    contract::validate_base_contract(&base_doc, "base")?;
     reject_pseudo_composite_dual_forms(&base_doc, &[], "base")?;
     validate_composite_schema(&base_doc, "base")?;
     let base_tokens_raw = flatten_tokens(&base_doc, &[], None);
@@ -2150,6 +2252,7 @@ fn load_base_layers(
                 continue;
             }
             t.css_value = resolve_value(&t.value, &name_index)?;
+            resolve_token_breakpoints(&mut t, &name_index)?;
             tokens.push(t);
         }
         layers.push(Layer { meta, tokens });
@@ -2419,9 +2522,10 @@ fn load_theme_layers_from_dir(
 
     let mut themes = Vec::new();
     for file in files {
-        let doc = load_json(&themes_dir.join(&file))?;
+        let mut doc = load_json(&themes_dir.join(&file))?;
         let fallback = file.trim_end_matches(".json");
         let label = format!("{label_prefix}/{file}");
+        derive::apply_theme_derivation(&mut doc)?;
 
         // Envelope first so modes-in-file / twin-id errors stay specific.
         validate_theme_doc_schema(&doc, &label)?;
@@ -2623,6 +2727,7 @@ fn load_theme_layers_from_dir(
                     continue;
                 }
                 t.css_value = resolve_value(&t.value, name_index)?;
+                resolve_token_breakpoints(&mut t, name_index)?;
                 tokens.push(t);
             }
             themes.push(Layer { meta, tokens });
@@ -3654,7 +3759,7 @@ fn build_registry(
     keyframes: &Map<String, Value>,
     plays: &Map<String, Value>,
     tag_defaults: &Map<String, Value>,
-) -> Value {
+) -> Result<Value> {
     let mut tokens: Map<String, Value> = Map::new();
     let mut composites: Map<String, Value> = Map::new();
     for t in base_tokens {
@@ -3681,6 +3786,24 @@ fn build_registry(
         meta.insert("cssName".into(), Value::String(t.css_name.clone()));
         meta.insert("type".into(), Value::String(t.r#type.clone()));
         meta.insert("value".into(), Value::String(t.css_value.clone()));
+        if !t.breakpoints.is_empty() {
+            let mut bp = Map::new();
+            for (k, v) in &t.breakpoints {
+                bp.insert(k.clone(), Value::String(v.clone()));
+            }
+            meta.insert("breakpoints".into(), Value::Object(bp));
+        }
+        if t.r#type == "color" {
+            if let Some(c) = color::parse_color(&t.css_value) {
+                meta.insert(
+                    "luminance".into(),
+                    Value::Number(
+                        serde_json::Number::from_f64(color::relative_luminance(&c))
+                            .unwrap_or_else(|| serde_json::Number::from(0)),
+                    ),
+                );
+            }
+        }
         tokens.insert(t.css_name.clone(), Value::Object(meta));
     }
 
@@ -3726,13 +3849,63 @@ fn build_registry(
     let mut colors_vec: Vec<String> = colors.into_iter().collect();
     colors_vec.sort();
 
+    let lookup = |name: &str| {
+        tokens
+            .get(name)
+            .and_then(|m| m.get("value"))
+            .and_then(|v| v.as_str())
+            .map(str::to_string)
+    };
+    let contrast_pairs = contract::contrast_reports(&lookup, "registry");
+    // New-shape (derived text/solid steps) must meet the floor. Legacy
+    // catalogs keep reports for J6; theme_gate still owns theme files.
+    let derived_shape = base_tokens.iter().any(|t| {
+        let p = t.path.as_str();
+        (p.starts_with("color.") && (p.ends_with(".solid") || p.ends_with(".text")))
+            || p.starts_with("color.anchors")
+    });
+    if derived_shape {
+        contract::enforce_floor_pairs(&contrast_pairs, &lookup, "registry")?;
+    }
+    let contrast_json: Vec<Value> = contrast_pairs.iter().map(|r| r.to_json()).collect();
+
+    let mut metadata = Map::new();
+    metadata.insert(
+        "spaceN".into(),
+        Value::Number(serde_json::Number::from_f64(space::DEFAULT_N).unwrap_or(4.into())),
+    );
+    metadata.insert(
+        "chromaticRoles".into(),
+        Value::Array(
+            derive::CHROMATIC_ROLES
+                .iter()
+                .map(|s| Value::String((*s).into()))
+                .collect(),
+        ),
+    );
+    metadata.insert(
+        "chromaticSteps".into(),
+        Value::Array(
+            derive::CHROMATIC_STEPS
+                .iter()
+                .map(|s| Value::String((*s).into()))
+                .collect(),
+        ),
+    );
+
     let mut out = Map::new();
     out.insert("version".into(), Value::Number(2.into()));
+    out.insert(
+        "schema".into(),
+        Value::String("spinnaker.registry.v2".into()),
+    );
     out.insert(
         "source".into(),
         Value::String("packages/sail/tokens/model".into()),
     );
     out.insert("generated".into(), Value::Bool(true));
+    out.insert("metadata".into(), Value::Object(metadata));
+    out.insert("contrastPairs".into(), Value::Array(contrast_json));
     out.insert(
         "names".into(),
         Value::Array(names.into_iter().map(Value::String).collect()),
@@ -3749,7 +3922,7 @@ fn build_registry(
     out.insert("keyframes".into(), Value::Object(keyframes.clone()));
     out.insert("plays".into(), Value::Object(plays.clone()));
     out.insert("tagDefaults".into(), Value::Object(tag_defaults.clone()));
-    Value::Object(out)
+    Ok(Value::Object(out))
 }
 
 /// M0: warn (do not fail) when a required StyleSurface theme preset is absent.
@@ -4442,6 +4615,7 @@ mod tests {
             channel: false,
             description: None,
             composite_identity: false,
+            breakpoints: BTreeMap::new(),
         }];
         let (names, source) = tone_names_from_tokens(&tokens);
         assert_eq!(
@@ -6886,5 +7060,87 @@ mod tests {
         assert_eq!(defaults["p"]["type"], "body");
         assert_eq!(defaults["code"]["type"], "mono");
         assert_eq!(defaults["small"]["type"], "body-sm");
+    }
+
+    #[test]
+    fn public_name_solid_and_text_steps() {
+        assert_eq!(public_name("color.primary.solid"), "primary");
+        assert_eq!(public_name("color.primary.text"), "primary-foreground");
+        assert_eq!(public_name("color.accent.solid"), "accent");
+        assert_eq!(public_name("color.danger.solid"), "destructive");
+        assert_eq!(public_name("color.danger.text"), "destructive-foreground");
+        assert_eq!(public_name("bg.app.color"), "background");
+        assert_eq!(public_name("color.primary.default"), "primary");
+    }
+
+    #[test]
+    fn flatten_evaluates_structured_color() {
+        let doc: Value = serde_json::json!({
+            "color": {
+                "primary": {
+                    "solid": {
+                        "$type": "color",
+                        "$value": { "space": "oklch", "l": 0.54, "c": 0.18, "h": 245 }
+                    }
+                }
+            }
+        });
+        let tokens = flatten_tokens(&doc, &[], None);
+        let t = tokens
+            .iter()
+            .find(|t| t.path == "color.primary.solid")
+            .unwrap();
+        assert!(t.value.starts_with("oklch("), "got {}", t.value);
+        assert_eq!(t.css_name, "primary");
+    }
+
+    #[test]
+    fn generate_registry_v2_from_anchor_fixture() {
+        let dir = tempfile::tempdir().unwrap();
+        let model = dir.path();
+        write_file(
+            &model.join("base.json"),
+            r#"{
+              "$description": "fixture",
+              "$extensions": { "sail": { "selector": ":root", "layer": "base" } },
+              "space": { "$type": "dimension", "$extensions": { "sail": { "n": 4 } } },
+              "color": {
+                "background": { "$value": "oklch(0.98 0 0)", "$type": "color" },
+                "foreground": { "$value": "oklch(0.20 0 0)", "$type": "color" },
+                "anchors": {
+                  "primary": { "space": "oklch", "l": 0.45, "c": 0.12, "h": 250 },
+                  "accent": { "space": "oklch", "l": 0.50, "c": 0.14, "h": 195 },
+                  "secondary": { "space": "oklch", "l": 0.70, "c": 0.04, "h": 250 },
+                  "success": { "space": "oklch", "l": 0.55, "c": 0.12, "h": 150 },
+                  "warning": { "space": "oklch", "l": 0.70, "c": 0.14, "h": 75 },
+                  "info": { "space": "oklch", "l": 0.55, "c": 0.10, "h": 230 },
+                  "danger": { "space": "oklch", "l": 0.55, "c": 0.20, "h": 27 },
+                  "neutral": { "space": "oklch", "l": 0.45, "c": 0.02, "h": 250 }
+                }
+              }
+            }"#,
+        );
+        let out = dir.path().join("out");
+        let report = generate(model, &out).unwrap();
+        let reg: Value =
+            serde_json::from_str(&fs::read_to_string(&report.registry_json).unwrap()).unwrap();
+        assert_eq!(reg["version"], 2);
+        assert_eq!(reg["schema"], "spinnaker.registry.v2");
+        assert!(reg["tokens"]["primary"]["luminance"].is_number());
+        assert!(
+            reg["tokens"]["primary-foreground"]["value"]
+                .as_str()
+                .unwrap()
+                .starts_with("oklch(")
+        );
+        assert!(
+            reg["names"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|n| n.as_str() == Some("space-4"))
+        );
+        assert!(reg["contrastPairs"].as_array().is_some());
+        assert!(reg["metadata"]["chromaticRoles"].is_array());
     }
 }
