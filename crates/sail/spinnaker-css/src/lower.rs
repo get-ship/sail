@@ -549,15 +549,12 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
                     ("-webkit-backdrop-filter".into(), "none".into()),
                 ]);
             }
-            ("backdrop", "card-backdrop-filter") => {
+            ("backdrop", "filter-backdrop") => {
                 return Ok(vec![
-                    (
-                        "backdrop-filter".into(),
-                        "var(--card-backdrop-filter)".into(),
-                    ),
+                    ("backdrop-filter".into(), "var(--filter-backdrop)".into()),
                     (
                         "-webkit-backdrop-filter".into(),
-                        "var(--card-backdrop-filter)".into(),
+                        "var(--filter-backdrop)".into(),
                     ),
                 ]);
             }

@@ -120,7 +120,7 @@ fn base_css(tag: &str) -> Vec<String> {
             ".sail-col{display:flex;flex-direction:column;min-width:0}".into(),
             ".sail-col>*{min-width:0}".into(),
             // size(hug) must beat the child crush (0-2-1 vs 0-1-1).
-            ".sail-col>.s-sizehug{min-width:auto;min-height:auto;flex:0 0 auto}".into(),
+            ".sail-col>.s-size-hug{min-width:auto;min-height:auto;flex:0 0 auto}".into(),
             // Defense: layout display must not override UA closed popover none.
             // Prefer a plain div[popover] host with layout nested inside.
             ".sail-col[popover]:not(:popover-open){display:none!important}".into(),
@@ -130,7 +130,7 @@ fn base_css(tag: &str) -> Vec<String> {
             ".sail-row{display:flex;flex-wrap:wrap;min-width:0}".into(),
             ".sail-row>*{min-width:0}".into(),
             // size(hug) must beat the child crush (0-2-1 vs 0-1-1).
-            ".sail-row>.s-sizehug{min-width:auto;min-height:auto;flex:0 0 auto}".into(),
+            ".sail-row>.s-size-hug{min-width:auto;min-height:auto;flex:0 0 auto}".into(),
             // App shell: nowrap + stretch + a column sibling. The column
             // takes leftover so a hug rail does not leave a dead right track.
             // L3 cannot size(grow). Dashboard/settings are this row.
@@ -183,12 +183,12 @@ fn inline_base_css(tag: &str) -> Vec<String> {
         "column" => vec![
             ".sail-col-i{display:inline-flex;flex-direction:column;min-width:0}".into(),
             ".sail-col-i>*{min-width:0}".into(),
-            ".sail-col-i>.s-sizehug{min-width:auto;min-height:auto;flex:0 0 auto}".into(),
+            ".sail-col-i>.s-size-hug{min-width:auto;min-height:auto;flex:0 0 auto}".into(),
         ],
         "row" => vec![
             ".sail-row-i{display:inline-flex;flex-wrap:wrap;min-width:0}".into(),
             ".sail-row-i>*{min-width:0}".into(),
-            ".sail-row-i>.s-sizehug{min-width:auto;min-height:auto;flex:0 0 auto}".into(),
+            ".sail-row-i>.s-size-hug{min-width:auto;min-height:auto;flex:0 0 auto}".into(),
         ],
         "grid" => vec![
             ".sail-grid-i{display:inline-grid;min-width:0}".into(),
@@ -869,8 +869,8 @@ fn participation_token(name: &str, value: &str) -> Result<String, String> {
 }
 
 /// Lower one participation attr to the same atomic class + CSS Style would
-/// emit for the matching setter (`style.grow(1)` → `s-grow1{flex-grow:1}`,
-/// `style.size({ w: 100% })` → `s-sizew100{width:100%}`, …). `None` when the value is
+/// emit for the matching setter (`style.grow(1)` → `s-grow-1{flex-grow:1}`,
+/// `style.size({ w: 100% })` → `s-size-w-100pct{width:100%}`, …). `None` when the value is
 /// off-vocab (lint reports it; preprocess skips) **or** when the attr is a
 /// grid span that stays on the host for CSS attribute selectors.
 pub fn lower_participation(name: &str, value: &str) -> Option<(String, String)> {
@@ -1441,13 +1441,14 @@ mod tests {
         assert!(classes.contains(&"sail-row".to_string()));
         assert!(classes.contains(&"sail-g-2".to_string()));
         assert!(classes.contains(&"sail-jc-between".to_string()));
-        assert!(css
-            .iter()
-            .any(|r| r.contains("justify-content:space-between")));
+        assert!(
+            css.iter()
+                .any(|r| r.contains("justify-content:space-between"))
+        );
         assert!(css.iter().any(|r| r.contains(".sail-row>*{min-width:0}")));
         assert!(
             css.iter()
-                .any(|r| r.contains(".sail-row>.s-sizehug{min-width:auto")),
+                .any(|r| r.contains(".sail-row>.s-size-hug{min-width:auto")),
             "size(hug) must beat row crush: {css:?}"
         );
         assert!(
@@ -1460,10 +1461,12 @@ mod tests {
 
     #[test]
     fn accepts_valid_tags() {
-        assert!(run(
-            r#"<column gap="4" align="center"><row gap="2" justify="between">x</row></column>"#
-        )
-        .is_empty());
+        assert!(
+            run(
+                r#"<column gap="4" align="center"><row gap="2" justify="between">x</row></column>"#
+            )
+            .is_empty()
+        );
         assert!(run(r#"<grid min="lg" gap="4" flow="auto">x</grid>"#).is_empty());
     }
 
@@ -1664,10 +1667,10 @@ mod tests {
         // Studio surfaces after DOMDEC-1: `surface="edit"` + bare hooks on
         // layout keywords must not trip unknown-attr.
         assert!(run(r#"<row surface="edit" edit-surface gap="0" grow>x</row>"#).is_empty());
-        assert!(run(
-            r#"<column surface="tasks" tasks-surface tasks-header section="list">x</column>"#
-        )
-        .is_empty());
+        assert!(
+            run(r#"<column surface="tasks" tasks-surface tasks-header section="list">x</column>"#)
+                .is_empty()
+        );
         // Axis typos still hard-error (guard not weakened).
         let m = run(r#"<grid colz="7">x</grid>"#);
         assert!(m.iter().any(|s| s.contains("unknown")), "got: {m:?}");
@@ -2161,16 +2164,18 @@ mod tests {
     #[test]
     fn lowers_participation_to_style_classes() {
         let (classes, css) = lower_participation("grow", "").unwrap();
-        assert!(classes.contains("s-grow1"), "{classes}");
+        assert!(classes.contains("s-grow-1"), "{classes}");
         assert!(css.contains("flex-grow:1"), "{css}");
 
         let (classes, css) = lower_participation("shrink", "0").unwrap();
-        assert!(classes.contains("s-shrink0"), "{classes}");
+        assert!(classes.contains("s-shrink-0"), "{classes}");
         assert!(css.contains("flex-shrink:0"), "{css}");
 
         let (classes, css) = lower_participation("w", "100%").unwrap();
         assert!(
-            classes.contains("s-w100") || classes.contains("s-sizew100"),
+            classes.contains("s-size-w-100pct")
+                || classes.contains("s-size-w-100")
+                || classes.contains("s-w-100pct"),
             "{classes}"
         );
         assert!(
@@ -2180,9 +2185,9 @@ mod tests {
 
         let (classes, css) = lower_participation("min-w", "0").unwrap();
         assert!(
-            classes.contains("s-minW0")
-                || classes.contains("s-sizemin-w0")
-                || classes.contains("s-sizeminw0"),
+            classes.contains("s-size-min-w0")
+                || classes.contains("s-size-min-w-0")
+                || classes.contains("s-min-w-0"),
             "{classes}"
         );
         assert!(

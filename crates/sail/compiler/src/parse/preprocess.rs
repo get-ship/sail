@@ -1197,7 +1197,13 @@ fn author_sets_select_width(attrs: &[(String, String)]) -> bool {
                 let v = value.trim_matches(['"', '\'']);
                 for c in v.split_whitespace() {
                     let cl = c.to_ascii_lowercase();
-                    if cl.starts_with("s-w")
+                    if cl.starts_with("s-w-")
+                        || cl.starts_with("s-min-w-")
+                        || cl.starts_with("s-max-w-")
+                        || cl.starts_with("s-size-w-")
+                        || cl.starts_with("s-size-min-w-")
+                        || cl.starts_with("s-size-max-w-")
+                        || cl.starts_with("s-w")
                         || cl.starts_with("s-minw")
                         || cl.starts_with("s-maxw")
                         || cl.starts_with("s-sizew")

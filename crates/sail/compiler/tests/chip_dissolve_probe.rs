@@ -23,6 +23,7 @@ fn chip_compiles_with_style_and_capability_mixins() {
             && out.skin_css.contains("variant='soft'")
             && (out.skin_css.contains("var(--chip)")
                 || out.skin_css.contains("var(--primary)")
+                || out.structure_html.contains("s-bg-chip")
                 || out.structure_html.contains("s-bgchip")),
         "variant paint via Style tokens: {}",
         out.skin_css

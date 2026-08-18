@@ -59,7 +59,7 @@ const OK: &[OkCase] = &[
         selector_needles: &[],
     },
     OkCase {
-        src: "style({ size({ w: full, h: full }) })",
+        src: "style({ size({ w: 100%, h: 100% }) })",
         decls: &[("width", "100%"), ("height", "100%")],
         selector_needles: &[],
     },
@@ -83,7 +83,7 @@ const OK: &[OkCase] = &[
     },
     OkCase {
         src: "style({ when: { hover: bg(muted) } })",
-        decls: &[("background-color", "var(--bg-muted-color)")],
+        decls: &[("background-color", "var(--muted)")],
         selector_needles: &[":hover"],
     },
     OkCase {

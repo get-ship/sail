@@ -63,33 +63,55 @@ fn scale_rule_already_resolved(
     }
 }
 
-/// Product Style mints `s-{setter}{arg}` and CVA compounds
-/// `s-{path}-{setter}{arg}` (hyphens stripped from args). Path is attr+pseudo
-/// tags concatenated; only bare atoms and compounds whose path matches host
-/// attrs (and is free of pseudo markers) apply.
+/// Product Style mints `s-{setter}-{arg}` and CVA compounds
+/// `s-{path}-{setter}-{arg}` (BUCKETS §2.6). Path is kebabed attr+pseudo
+/// tags; only bare atoms and compounds whose path matches host attrs
+/// (and is free of pseudo markers) apply.
 fn match_sx_scale_rule(c: &str, attrs: &HashMap<String, String>) -> Option<(String, SxScaleRule)> {
     let rest = c.strip_prefix("s-")?;
-    // Longest setter first (padX before pad, minH before h, …).
+    if let Some(hit) = match_setter_and_tail(rest) {
+        return Some(hit);
+    }
+    if path_has_pseudo(rest) {
+        return None;
+    }
+    let segs = attr_path_segments();
+    let mut rem = rest;
+    let mut peeled = false;
+    while !rem.is_empty() {
+        let mut hit_seg = false;
+        for (seg, attr, val) in segs.iter() {
+            if let Some(after) = rem.strip_prefix(seg.as_str()) {
+                if after.is_empty() || after.starts_with('-') {
+                    if !host_attr_matches(attrs, attr, val) {
+                        return None;
+                    }
+                    rem = after.strip_prefix('-').unwrap_or(after);
+                    peeled = true;
+                    hit_seg = true;
+                    break;
+                }
+            }
+        }
+        if !hit_seg {
+            break;
+        }
+    }
+    if peeled {
+        match_setter_and_tail(rem)
+    } else {
+        None
+    }
+}
+
+fn match_setter_and_tail(body: &str) -> Option<(String, SxScaleRule)> {
     for (prefix, rule) in SX_SCALE_RULES {
         let setter = prefix.strip_prefix("s-")?;
-        // Bare: s-{setter}{arg}
-        if let Some(tail) = rest.strip_prefix(setter) {
+        if let Some(after) = body.strip_prefix(setter) {
+            let tail = after.strip_prefix('-').unwrap_or(after);
             if is_plausible_scale_tail(tail, *rule) {
                 return Some((tail.to_string(), *rule));
             }
-        }
-        // Compound: s-{path}-{setter}{arg}
-        let needle = format!("-{setter}");
-        if let Some(idx) = rest.rfind(&needle) {
-            let path = &rest[..idx];
-            let tail = &rest[idx + needle.len()..];
-            if !is_plausible_scale_tail(tail, *rule) {
-                continue;
-            }
-            if !compound_path_applies(path, attrs) {
-                continue;
-            }
-            return Some((tail.to_string(), *rule));
         }
     }
     None
@@ -105,20 +127,20 @@ fn path_has_pseudo(path: &str) -> bool {
         "active",
         "disabled",
         "checked",
-        "focusvisible",
-        "motionreduce",
-        "forcedcolors",
+        "focus-visible",
+        "motion-reduce",
+        "forced-colors",
         "open",
         "selected",
         "invalid",
         "empty",
         "indeterminate",
-        "popoveropen",
+        "popover-open",
     ];
     MARKERS.iter().any(|m| path.contains(m))
 }
 
-/// Attr+value segments as they appear in product class paths (alnum only).
+/// Attr+value segments as they appear in product class paths (kebabed).
 /// Longer values first so `2xs` wins over `xs`.
 fn attr_path_segments() -> &'static [(String, &'static str, &'static str)] {
     static SEGS: OnceLock<Vec<(String, &'static str, &'static str)>> = OnceLock::new();
@@ -168,18 +190,35 @@ fn attr_path_segments() -> &'static [(String, &'static str, &'static str)] {
                     "info",
                 ],
             ),
-            // accent-bar → accentbar in path
             ("accent-bar", &["static", "hover", "off"]),
         ];
+        fn kebab_seg(s: &str) -> String {
+            let mut out = String::with_capacity(s.len() + 4);
+            let mut prev_dash = true;
+            for (i, c) in s.chars().enumerate() {
+                if c.is_ascii_uppercase() {
+                    if !prev_dash && i > 0 {
+                        out.push('-');
+                    }
+                    out.push(c.to_ascii_lowercase());
+                    prev_dash = false;
+                } else if c.is_ascii_alphanumeric() || c == '_' || c == '-' {
+                    if c == '-' && prev_dash {
+                        continue;
+                    }
+                    out.push(c.to_ascii_lowercase());
+                    prev_dash = c == '-';
+                }
+            }
+            out
+        }
         for (attr, values) in gates {
             for val in *values {
-                let mut seg = String::new();
-                seg.extend(attr.chars().filter(|c| c.is_ascii_alphanumeric()));
-                seg.extend(val.chars().filter(|c| c.is_ascii_alphanumeric()));
+                let seg = format!("{}-{}", kebab_seg(attr), kebab_seg(val));
                 out.push((seg, *attr, *val));
             }
         }
-        // Boolean attrs (presence = true): path is just the alnum name.
+        // Boolean attrs (presence = true): path is the kebab name.
         for b in [
             "interactive",
             "sticky",
@@ -187,12 +226,10 @@ fn attr_path_segments() -> &'static [(String, &'static str, &'static str)] {
             "fill",
             "pill",
             "centered",
-            "statusrail", // status-rail
+            "statusrail",
             "status-rail",
         ] {
-            let mut seg = String::new();
-            seg.extend(b.chars().filter(|c| c.is_ascii_alphanumeric()));
-            out.push((seg, b, "true"));
+            out.push((kebab_seg(b), b, "true"));
         }
         out.sort_by_key(|b| std::cmp::Reverse(b.0.len()));
         out
@@ -239,35 +276,6 @@ fn host_attr_matches(attrs: &HashMap<String, String>, attr: &str, want: &str) ->
     }
 }
 
-/// Fully consume `path` as attr gates that match the host; reject pseudo / unknown.
-fn compound_path_applies(path: &str, attrs: &HashMap<String, String>) -> bool {
-    if path.is_empty() {
-        return true;
-    }
-    if path_has_pseudo(path) {
-        return false;
-    }
-    let mut rem = path;
-    let segs = attr_path_segments();
-    while !rem.is_empty() {
-        let mut hit = false;
-        for (seg, attr, val) in segs.iter() {
-            if rem.starts_with(seg.as_str()) {
-                if !host_attr_matches(attrs, attr, val) {
-                    return false;
-                }
-                rem = &rem[seg.len()..];
-                hit = true;
-                break;
-            }
-        }
-        if !hit {
-            return false;
-        }
-    }
-    true
-}
-
 fn is_plausible_scale_tail(tail: &str, rule: SxScaleRule) -> bool {
     if tail.is_empty() {
         return false;
@@ -304,13 +312,13 @@ fn is_plausible_scale_tail(tail: &str, rule: SxScaleRule) -> bool {
     }
 }
 
-/// Alnum-stripped half-steps (`1_5` → `15`) → space token name.
+/// Half-steps: author `1_5` or the alnum-stripped fossil `15`.
 fn space_fraction_token(tail: &str) -> Option<&'static str> {
     match tail {
-        "15" => Some("1_5"),
-        "25" => Some("2_5"),
-        "35" => Some("3_5"),
-        "45" => Some("4_5"),
+        "1_5" | "15" => Some("1_5"),
+        "2_5" | "25" => Some("2_5"),
+        "3_5" | "35" => Some("3_5"),
+        "4_5" | "45" => Some("4_5"),
         _ => None,
     }
 }
@@ -540,7 +548,7 @@ mod tests {
     fn sx_size_sets_width_and_height() {
         let e = Element {
             tag: "div".into(),
-            class: "s-size2".into(),
+            class: "s-size-2".into(),
             ..Default::default()
         };
         let all = vec![Element::default(), e.clone()];
@@ -561,7 +569,7 @@ mod tests {
     fn switch_skin_size_classes_resolve_nonzero() {
         let elem = Element {
             tag: "input".into(),
-            class: "sail-switch s-wcontrolhsm s-hiconsizemd s-shrink0".into(),
+            class: "sail-switch s-w-control-h-sm s-h-icon-size-md s-shrink-0".into(),
             ..Default::default()
         };
         let resolved = resolve(&elem, &[Element::default()], 480.0);
@@ -575,10 +583,10 @@ mod tests {
         // not win; only size=md compounds apply.
         let elem = Element {
             tag: "input".into(),
-            class: "sail-switch s-wcontrolhsm s-hiconsizemd \
-                    s-sizesm-wcontrolhxs s-sizesm-hiconsizesm \
-                    s-sizemd-wcontrolhsm s-sizemd-hiconsizemd \
-                    s-sizelg-w7 s-sizelg-hiconsizelg"
+            class: "sail-switch s-w-control-h-sm s-h-icon-size-md \
+                    s-size-sm-w-control-h-xs s-size-sm-h-icon-size-sm \
+                    s-size-md-w-control-h-sm s-size-md-h-icon-size-md \
+                    s-size-lg-w7 s-size-lg-h-icon-size-lg"
                 .into(),
             attrs: {
                 let mut m = HashMap::new();
@@ -605,8 +613,8 @@ mod tests {
         let elem = Element {
             tag: "input".into(),
             class:
-                "sail-input s-wfull s-typetext-minHcontrolhmd s-typetext-padY15 s-typetext-padX3 \
-                 s-typetextsizelg-minHcontrolhlg"
+                "sail-input s-w-full s-type-text-min-h-control-h-md s-type-text-pad-y1_5 s-type-text-pad-x3 \
+                 s-type-text-size-lg-min-h-control-h-lg"
                     .into(),
             attrs: {
                 let mut m = HashMap::new();
@@ -631,9 +639,9 @@ mod tests {
     fn button_sizeicon_square_compounds_resolve() {
         let elem = Element {
             tag: "button".into(),
-            class: "sail-button s-sizeicon-wcontrolhmd s-sizeicon-hcontrolhmd \
-                    s-sizeiconsm-wcontrolhsm s-sizeiconsm-hcontrolhsm \
-                    s-sizemd-minHcontrolhmd"
+            class: "sail-button s-size-icon-w-control-h-md s-size-icon-h-control-h-md \
+                    s-size-icon-sm-w-control-h-sm s-size-icon-sm-h-control-h-sm \
+                    s-size-md-min-h-control-h-md"
                 .into(),
             attrs: {
                 let mut m = HashMap::new();
@@ -654,8 +662,8 @@ mod tests {
     fn button_sizemd_minh_compound_resolves() {
         let elem = Element {
             tag: "button".into(),
-            class: "sail-button s-sizemd-minHcontrolhmd s-sizemd-padX3 \
-                    s-sizelg-minHcontrolhlg s-sizelg-padX4"
+            class: "sail-button s-size-md-min-h-control-h-md s-size-md-pad-x3 \
+                    s-size-lg-min-h-control-h-lg s-size-lg-pad-x4"
                 .into(),
             attrs: {
                 let mut m = HashMap::new();
@@ -673,8 +681,8 @@ mod tests {
     fn accent_bar_before_height_does_not_size_card_host() {
         let elem = Element {
             tag: "div".into(),
-            class: "sail-card s-padY4 s-padX5 s-accentbarstaticbefore-hhalf \
-                    s-accentbarhoverbefore-hhalf s-bgcard"
+            class: "sail-card s-pad-y4 s-pad-x5 s-accent-bar-static-before-h-half \
+                    s-accent-bar-hover-before-h-half s-bg-card"
                 .into(),
             attrs: {
                 let mut m = HashMap::new();
@@ -698,7 +706,7 @@ mod tests {
     fn paddingmd_compound_does_not_clobber_via_false_pad_prefix() {
         let elem = Element {
             tag: "div".into(),
-            class: "s-padY4 s-paddingmd-padY4".into(),
+            class: "s-pad-y4 s-padding-md-pad-y4".into(),
             attrs: {
                 let mut m = HashMap::new();
                 m.insert("padding".into(), "md".into());
@@ -714,8 +722,8 @@ mod tests {
     fn placement_rail_compound_skipped_when_placement_top() {
         let elem = Element {
             tag: "div".into(),
-            class: "s-minH14 s-padY2 s-placementrail-minH0 s-placementrail-padY5 \
-                    s-placementtop-minH14 s-placementtop-padY2"
+            class: "s-min-h-14 s-pad-y2 s-placement-rail-min-h-0 s-placement-rail-pad-y5 \
+                    s-placement-top-min-h-14 s-placement-top-pad-y2"
                 .into(),
             attrs: {
                 let mut m = HashMap::new();

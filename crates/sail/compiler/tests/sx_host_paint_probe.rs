@@ -111,11 +111,14 @@ fn badge_soft_base_on_host_sx() {
     let out = compile_element(src, "badge").expect("badge compiles");
     assert!(
         is_style_product(src)
-            && (out.structure_html.contains("s-bgmuted")
+            && (out.structure_html.contains("s-bg-muted")
+                || out.structure_html.contains("s-bgmuted")
                 || out.structure_html.contains("bgmuted")
                 || out.skin_css.contains("var(--muted)")
+                || out.structure_html.contains("s-bg-tone")
                 || out.structure_html.contains("s-bgtonebg"))
-            && (out.structure_html.contains("s-fgmutedforeground")
+            && (out.structure_html.contains("s-fg-muted-foreground")
+                || out.structure_html.contains("s-fgmutedforeground")
                 || out.structure_html.contains("mutedforeground")
                 || out.skin_css.contains("var(--muted-foreground)")
                 || out.structure_html.contains("s-texttonefg")
@@ -193,7 +196,10 @@ fn avatar_tracking_and_inset_ring_on_host_sx() {
         out.skin_css
     );
     assert!(
-        (out.structure_html.contains("s-sizeh7w7") || out.structure_html.contains("s-size7"))
+        (out.structure_html.contains("s-size-h7-w7")
+            || out.structure_html.contains("s-sizeh7w7")
+            || out.structure_html.contains("s-size-7")
+            || out.structure_html.contains("s-size7"))
             && (out.structure_html.contains("radiusallfull")
                 || out.structure_html.contains("s-radiusfull")
                 || out.structure_html.contains("s-roundedfull")
@@ -222,6 +228,7 @@ fn avatar_tracking_and_inset_ring_on_host_sx() {
     assert!(
         (out.skin_css.contains("background-color:var(--tone)")
             || out.skin_css.contains("background-color: var(--tone)")
+            || out.skin_css.contains("s-bg-tone")
             || out.skin_css.contains("s-bgtone"))
             && out.skin_css.contains("size='xs'")
             && out.skin_css.contains("shape='square'"),
@@ -333,8 +340,10 @@ fn empty_state_child_paint_on_structure_sx() {
             || out
                 .skin_css
                 .contains("background-color: var(--empty-state)")
+            || out.structure_html.contains("s-bg-empty-state")
             || out.structure_html.contains("s-bgemptystate")
             || out.skin_css.contains("var(--bg-muted-color)")
+            || out.structure_html.contains("s-bg-muted")
             || out.structure_html.contains("s-bgmuted"),
         "icon soft surface via muted rest (no tone-bg):\n{}",
         out.skin_css
@@ -343,6 +352,8 @@ fn empty_state_child_paint_on_structure_sx() {
         out.skin_css.contains("var(--empty-state-title)")
             || out.structure_html.contains("emptystatetitle")
             || out.skin_css.contains("var(--fg-foreground-color)")
+            || out.structure_html.contains("s-fg-foreground")
+            || out.structure_html.contains("s-fg-foreground")
             || out.structure_html.contains("s-fgforeground"),
         "title must read foreground / heading ink:\n{}",
         out.skin_css
@@ -598,6 +609,7 @@ fn switch_host_track_paint_on_host_sx() {
             || out.skin_css.contains("background-color: var(--switch)")
             || out.structure_html.contains("bgswitch")
             || out.skin_css.contains("var(--bg-muted-color)")
+            || out.structure_html.contains("s-bg-muted")
             || out.structure_html.contains("s-bgmuted"),
         "off-track paint (switch token or muted rest):\nstruct={}\nskin={}",
         out.structure_html,
@@ -747,7 +759,8 @@ fn toast_start_stripe_on_host_sx() {
         out.skin_css
     );
     assert!(
-        out.structure_html.contains("s-bgcolortonemix15")
+        out.structure_html.contains("s-bg-color-tone-mix15")
+            || out.structure_html.contains("s-bgcolortonemix15")
             || out.skin_css.contains("color-mix(in oklch, var(--tone) 15%")
             || out.skin_css.contains("color-mix(in oklch, var(--info) 15%"),
         "tone wash must spend mix 15 on the fill:\nstructure={}\nskin={}",
@@ -791,33 +804,33 @@ fn card_host_paint_bulk_on_host_sx() {
 
     // Backdrop via Style filter cluster (corner-image host CSS is gone).
     assert!(
-        src.contains("backdrop: card-backdrop-filter")
-            || src.contains("backdrop(card-backdrop-filter)")
-            || src.contains("backdrop-(--card-backdrop-filter)")
-            || src.contains("card-backdrop-filter"),
+        src.contains("backdrop: filter-backdrop")
+            || src.contains("filter({ backdrop: filter-backdrop })")
+            || src.contains("filter-backdrop"),
         "card host sx must bind backdrop token"
     );
     assert!(
-        out.structure_html.contains("s-backdropcardbackdropfilter")
-            || out.structure_html.contains("card-backdrop-filter")
-            || out.structure_html.contains("filterbackdrop")
+        out.structure_html
+            .contains("s-filter-backdrop-filter-backdrop")
+            || out.structure_html.contains("filter-backdrop")
+            || out.structure_html.contains("s-filter")
             || out
                 .skin_css
-                .contains("backdrop-filter:var(--card-backdrop-filter)")
+                .contains("backdrop-filter:var(--filter-backdrop)")
             || out
                 .skin_css
-                .contains("backdrop-filter: var(--card-backdrop-filter)"),
+                .contains("backdrop-filter: var(--filter-backdrop)"),
         "backdrop token must land:\nstruct={}\nskin={}",
         out.structure_html,
         out.skin_css
     );
     assert!(
         out.skin_css
-            .contains("-webkit-backdrop-filter:var(--card-backdrop-filter)")
+            .contains("-webkit-backdrop-filter:var(--filter-backdrop)")
             || out
                 .skin_css
-                .contains("-webkit-backdrop-filter: var(--card-backdrop-filter)")
-            || out.structure_html.contains("s-backdrop"),
+                .contains("-webkit-backdrop-filter: var(--filter-backdrop)")
+            || out.structure_html.contains("s-filter"),
         "webkit backdrop prefix must land with token:\nskin={}",
         out.skin_css
     );
@@ -984,6 +997,7 @@ fn card_image_slot_bleeds_via_group_padding() {
     );
     assert!(
         out.skin_css.contains(".sail-grp[padding='lg']")
+            && !out.skin_css.contains("[padding='lg'].s-padding-lg-margin")
             && !out.skin_css.contains("[padding='lg'].s-paddinglg-margin")
             && out.skin_css.contains("calc(-1 * var(--space-5))")
             && out.skin_css.contains("calc(-1 * var(--space-6))"),
@@ -1059,15 +1073,18 @@ fn navbar_host_paint_on_sx_cva() {
         out.structure_html.contains("sail-row")
             && out.structure_html.contains("sail-nowrap")
             && (out.structure_html.contains("sail-g-4") || out.structure_html.contains("sail-g-"))
-            && (out.structure_html.contains("s-bgnavbar")
+            && (out.structure_html.contains("s-bg-navbar")
+                || out.structure_html.contains("s-bgnavbar")
                 || out.structure_html.contains("bgnavbar")
                 || out.skin_css.contains("var(--navbar)")
                 || out.skin_css.contains("var(--background)")
                 || out.structure_html.contains("bgcolorbackground"))
             && (out.structure_html.contains("navbarforeground")
+                || out.structure_html.contains("s-fg-navbar")
                 || out.structure_html.contains("s-fgnavbar")
                 || out.skin_css.contains("var(--navbar-foreground)")
                 || out.skin_css.contains("var(--fg-foreground-color)")
+                || out.structure_html.contains("s-fg-foreground")
                 || out.structure_html.contains("s-fgforeground"))
             && (out.structure_html.contains("s-minh14")
                 || out.structure_html.contains("minh14")
@@ -1551,7 +1568,9 @@ fn toast_region_host_paint_on_sx_cva() {
             && (out.structure_html.contains("s-zztoast")
                 || out.structure_html.contains("ztoast")
                 || out.skin_css.contains("var(--z-toast)"))
-            && (out.structure_html.contains("s-pad4")
+            && (out.structure_html.contains("s-pad-4")
+                || out.structure_html.contains("s-pad4")
+                || out.structure_html.contains("s-pad-all4")
                 || out.structure_html.contains("s-padall4")
                 || out.skin_css.contains("padding:var(--space-4)"))
             && out.structure_html.contains("s-pointerEventsnone")
@@ -1638,11 +1657,13 @@ fn theme_picker_host_paint_on_structure_sx() {
         "theme-picker structure must carry Style product without class anatomy; roles via use:themeSelect"
     );
     assert!(
-        (out.structure_html.contains("s-sizecontrolhsm")
+        (out.structure_html.contains("s-size-control-h-sm")
+            || out.structure_html.contains("s-sizecontrolhsm")
             || out.structure_html.contains("sizecontrolhsm")
             || out.structure_html.contains("hcontrolhsm")
             || out.skin_css.contains("var(--control-h-sm)"))
-            && (out.structure_html.contains("s-bgthemepicker")
+            && (out.structure_html.contains("s-bg-theme-picker")
+                || out.structure_html.contains("s-bgthemepicker")
                 || out.structure_html.contains("bgthemepicker")
                 || out.skin_css.contains("var(--theme-picker)")
                 || out.skin_css.contains("var(--popover)")
@@ -1666,7 +1687,8 @@ fn theme_picker_host_paint_on_structure_sx() {
             && !out.structure_html.contains("class=\"tc-")
             && (out.structure_html.contains("data-theme-grid")
                 || out.structure_html.contains("value=\"sail\""))
-            && (out.structure_html.contains("s-bgprimary")
+            && (out.structure_html.contains("s-bg-primary")
+                || out.structure_html.contains("s-bgprimary")
                 || out.structure_html.contains("bgprimary")
                 || out.skin_css.contains("var(--primary)"))
             && (out.skin_css.contains("CanvasText") || out.structure_html.contains("CanvasText")),
@@ -1740,6 +1762,7 @@ fn prose_host_paint_on_sx_descendants_generated() {
                 || out.structure_html.contains("typefamilybody")
                 || out.skin_css.contains("var(--body-font)"))
             && (out.structure_html.contains("proseforeground")
+                || out.structure_html.contains("s-fg-prose")
                 || out.structure_html.contains("s-fgprose")
                 || out.skin_css.contains("var(--prose-foreground)")
                 || out.structure_html.contains("s-textforeground")
@@ -1862,6 +1885,7 @@ fn tab_list_sticky_and_variant_on_host_not_parent_pe() {
     );
     assert!(
         (out.structure_html.contains("bgtablist")
+            || out.structure_html.contains("s-bg-background")
             || out.structure_html.contains("s-bgbackground")
             || out.structure_html.contains("bgcolorbackground")
             || out.skin_css.contains("var(--tab-list)")

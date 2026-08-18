@@ -26,10 +26,10 @@ fn style_pad_lowers_to_padding_var() {
 
 #[test]
 fn style_bg_surface_lowers() {
-    let out = pp(r#"<div style({ bg(surface-1) })> x</div>"#);
+    let out = pp(r#"<div style({ bg(surface) })> x</div>"#);
     assert!(
         out.contains("var(--surface-1)") || out.contains("background"),
-        "style({{ bg(surface-1) }}) must bind surface token:\n{out}"
+        "style({{ bg(surface) }}) must bind surface token:\n{out}"
     );
 }
 
@@ -53,7 +53,7 @@ fn style_radius_lowers() {
 
 #[test]
 fn style_chain_multi_setters() {
-    let out = pp(r#"<div style({ pad(4).bg(surface-1).fg(muted-foreground) })> x</div>"#);
+    let out = pp(r#"<div style({ pad(4).bg(surface).fg(muted-foreground) })> x</div>"#);
     assert!(out.contains("s-"), "chain must emit classes:\n{out}");
     assert!(
         out.contains("var(--space-4)") || out.contains("padding"),

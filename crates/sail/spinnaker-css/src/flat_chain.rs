@@ -14,7 +14,7 @@ fn msgs(diags: &[StyleDiagnostic]) -> Vec<String> {
 #[test]
 fn form_card_parses_and_lowers() {
     let (style, diags) = parse_style_const_rhs(
-        "{ size(full).pad({ x: 5, y: 4 }).bg(card).border(subtle).radius(lg) }",
+        "{ size({ w: 100% }).pad({ x: 5, y: 4 }).bg(surface).border(subtle).radius(lg) }",
     );
     assert!(diags.is_empty(), "{:?}", msgs(&diags));
     assert!(!matches!(style, Style::Empty));
@@ -22,15 +22,15 @@ fn form_card_parses_and_lowers() {
     assert!(classes.contains("s-"), "{classes}");
     assert!(
         css.contains("width") || css.contains("100%"),
-        "size(full) must emit geometry: {css}"
+        "size w 100% must emit geometry: {css}"
     );
     assert!(
         css.contains("padding"),
         "pad slots must emit padding: {css}"
     );
     assert!(
-        css.contains("background") || css.contains("--fill-card") || css.contains("--card"),
-        "bg(card) must emit fill: {css}"
+        css.contains("background") || css.contains("--bg-surface") || css.contains("--surface"),
+        "bg(surface) must emit fill: {css}"
     );
     assert!(
         css.contains("border"),
@@ -59,12 +59,12 @@ fn muted_parses_and_lowers() {
 
 #[test]
 fn when_bare_chain_parses_and_lowers() {
-    let (style, diags) = parse("style({ when: { hover: bg(surface-2) } })");
+    let (style, diags) = parse("style({ when: { hover: bg(muted) } })");
     assert!(diags.is_empty(), "{:?}", msgs(&diags));
     let (_, css) = lower_style(&style, &HashMap::new());
     assert!(css.contains(":hover"), "{css}");
     assert!(
-        css.contains("background") || css.contains("surface-2"),
+        css.contains("background") || css.contains("muted"),
         "hover bg must emit fill: {css}"
     );
 }
@@ -72,7 +72,7 @@ fn when_bare_chain_parses_and_lowers() {
 #[test]
 fn chain_then_when_in_declared_object() {
     let (style, diags) = parse_style_const_rhs(
-        "{ pad({ x: 3, y: 2 }).radius(md).type(label), when: { hover: bg(surface-2), current: bg(primary).fg(primary-foreground) } }",
+        "{ pad({ x: 3, y: 2 }).radius(md).type(label), when: { hover: bg(muted), current: bg(primary).fg(primary-foreground) } }",
     );
     assert!(diags.is_empty(), "{:?}", msgs(&diags));
     let (_, css) = lower_style(&style, &HashMap::new());
@@ -85,7 +85,7 @@ fn chain_then_when_in_declared_object() {
 
 #[test]
 fn flat_concern_chain_parses() {
-    let (style, diags) = parse("style({ size({ w: full }).pad(4).bg(muted) })");
+    let (style, diags) = parse("style({ size({ w: 100% }).pad(4).bg(muted) })");
     assert!(diags.is_empty(), "{:?}", msgs(&diags));
     assert!(!matches!(style, Style::Empty));
     let (_, css) = lower_style(&style, &HashMap::new());
@@ -100,23 +100,23 @@ fn tone_bound_paint_gates_selector_not_class() {
     assert!(diags.is_empty(), "{:?}", msgs(&diags));
     let (classes, css) = lower_style(&style, &HashMap::new());
     assert!(
-        classes.contains("s-variantsoft-bgmuted"),
+        classes.contains("s-variant-soft-bg-muted"),
         "muted rest class: {classes}"
     );
     assert!(
-        classes.contains("s-variantsoft-bgcolortonemix15"),
+        classes.contains("s-variant-soft-bg-color-tone-mix15"),
         "tone wash class: {classes}"
     );
     assert!(
-        css.contains("[variant='soft'].s-variantsoft-bgmuted"),
+        css.contains("[variant='soft'].s-variant-soft-bg-muted"),
         "muted rest stays variant-gated only: {css}"
     );
     assert!(
-        css.contains("[variant='soft'][tone].s-variantsoft-bgcolortonemix15"),
+        css.contains("[variant='soft'][tone].s-variant-soft-bg-color-tone-mix15"),
         "tone wash must be [tone]-gated: {css}"
     );
     assert!(
-        !css.contains("[variant='soft'].s-variantsoft-bgcolortonemix15{"),
+        !css.contains("[variant='soft'].s-variant-soft-bg-color-tone-mix15{"),
         "ungated tone wash would lose to later muted rest: {css}"
     );
 }

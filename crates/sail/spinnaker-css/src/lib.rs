@@ -27,3 +27,5 @@ pub use when::{WhenTarget, when_selector, when_target};
 mod adapter_lock;
 #[cfg(test)]
 mod flat_chain;
+#[cfg(test)]
+mod vocab_class;

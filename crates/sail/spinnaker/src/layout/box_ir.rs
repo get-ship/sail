@@ -595,7 +595,7 @@ mod tests {
         assert_eq!(r.pad.all.as_deref(), Some("4"));
         let elem = Element {
             tag: "div".into(),
-            class: "s-pad8".into(),
+            class: "s-pad-8".into(),
             box_style: r,
             ..Default::default()
         };

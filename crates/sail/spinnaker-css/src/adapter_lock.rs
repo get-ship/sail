@@ -856,7 +856,7 @@ mod tests {
         );
         let (classes, _) = lower_style(&style, &HashMap::new());
         assert!(
-            classes.contains("s-pad2") || classes.contains("pad"),
+            classes.contains("s-pad-2") || classes.contains("pad"),
             "{classes}"
         );
     }
@@ -1307,7 +1307,7 @@ mod tests {
 
     #[test]
     fn size_slot_object_lowers() {
-        let op = only_op("style({ size({ w: full, h: full }) })");
+        let op = only_op("style({ size({ w: 100%, h: 100% }) })");
         let css = crate::lower_op_css(&op).unwrap();
         assert!(
             css.iter().any(|(p, v)| p == "width" && v.contains("100%")),

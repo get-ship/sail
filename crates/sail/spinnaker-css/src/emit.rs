@@ -83,25 +83,30 @@ impl Ctx {
     fn with_attr(&self, k: &str, v: &str) -> Self {
         let mut n = self.clone();
         n.attrs.push((k.into(), v.into()));
-        n.path_tags.push(format!("{k}{v}"));
+        let tag = if v == "true" || v == "*" || v.is_empty() {
+            kebab_ident(k)
+        } else {
+            format!("{}-{}", kebab_ident(k), kebab_ident(v))
+        };
+        n.path_tags.push(tag);
         n
     }
     fn with_pseudo(&self, key: &str, sel: &str) -> Self {
         let mut n = self.clone();
         n.pseudo.push_str(sel);
-        n.path_tags.push(key.into());
+        n.path_tags.push(kebab_ident(key));
         n
     }
     fn with_ancestor(&self, key: &str, anc: &str) -> Self {
         let mut n = self.clone();
         n.ancestor = format!("{}{anc}", n.ancestor);
-        n.path_tags.push(key.into());
+        n.path_tags.push(kebab_ident(key));
         n
     }
     fn with_media(&self, key: &str, media: &str) -> Self {
         let mut n = self.clone();
         n.media = Some(media.into());
-        n.path_tags.push(key.into());
+        n.path_tags.push(kebab_ident(key));
         n
     }
 }
@@ -239,9 +244,9 @@ fn emit_play(
         format!("var(--duration-{duration_tok})")
     };
     let class = format!(
-        "s-play{}{}",
-        sanitize_ident(&preset),
-        sanitize_ident(&duration_tok)
+        "s-play-{}-{}",
+        kebab_ident(&preset),
+        kebab_ident(&duration_tok)
     );
     let selector = build_selector(&class, ctx);
     let decls = vec![
@@ -269,8 +274,88 @@ fn extract_play_field(config: &str, field: &str) -> Option<String> {
     Some(token.to_string())
 }
 
-fn sanitize_ident(s: &str) -> String {
-    s.chars().filter(|c| c.is_ascii_alphanumeric()).collect()
+/// Author vocabulary, kebabed. CSS class fragment — no leading/trailing dash.
+fn kebab_ident(s: &str) -> String {
+    let mut out = String::with_capacity(s.len() + 4);
+    let mut prev_dash = true;
+    for (i, c) in s.chars().enumerate() {
+        if c.is_ascii_uppercase() {
+            if !prev_dash && i > 0 {
+                out.push('-');
+            }
+            out.push(c.to_ascii_lowercase());
+            prev_dash = false;
+        } else if c.is_ascii_alphanumeric() || c == '_' {
+            out.push(c.to_ascii_lowercase());
+            prev_dash = false;
+        } else if c == '-' {
+            if !prev_dash {
+                out.push('-');
+                prev_dash = true;
+            }
+        } else if c == '%' {
+            out.push_str("pct");
+            prev_dash = false;
+        } else if c == '.' {
+            if !prev_dash {
+                out.push('-');
+                prev_dash = true;
+            }
+        }
+    }
+    while out.ends_with('-') {
+        out.pop();
+    }
+    out
+}
+
+fn is_numeric_token(s: &str) -> bool {
+    !s.is_empty() && s.chars().all(|c| c.is_ascii_digit() || c == '_')
+}
+
+fn arg_vocab(a: &PaintArg) -> String {
+    match a {
+        PaintArg::Token(t) => kebab_ident(t),
+        PaintArg::Bind(n) => format!("bind-{}", kebab_ident(n)),
+        PaintArg::MemberPath { root, path } => {
+            let mut parts = vec![kebab_ident(root)];
+            parts.extend(path.iter().map(|s| kebab_ident(s)));
+            parts.join("-")
+        }
+        PaintArg::Slots(slots) => {
+            // Bare `bg(muted)` / `pad(4)` lower to a single default slot.
+            // Elide it so the class reads like the Style attr.
+            if slots.len() == 1 {
+                if let Some((k, v)) = slots.iter().next() {
+                    if matches!(k.as_str(), "all" | "color") {
+                        return arg_vocab(v);
+                    }
+                }
+            }
+            slots
+                .iter()
+                .map(|(k, v)| slot_vocab(k, v))
+                .filter(|s| !s.is_empty())
+                .collect::<Vec<_>>()
+                .join("-")
+        }
+    }
+}
+
+fn slot_vocab(k: &str, v: &PaintArg) -> String {
+    let key = kebab_ident(k);
+    let val = arg_vocab(v);
+    if key.is_empty() {
+        return val;
+    }
+    if val.is_empty() {
+        return key;
+    }
+    if is_numeric_token(&val) {
+        format!("{key}{val}")
+    } else {
+        format!("{key}-{val}")
+    }
 }
 
 /// PaintOp is a private helper inside the adapter — Intent is the public input.
@@ -324,7 +409,7 @@ fn emit_op(op: &PaintOp, ctx: &Ctx, out: &mut Vec<CssRule>, seen: &mut HashSet<S
     let class = class_name(op_ref, ctx);
     // Tone-bound paint (`bg(tone)`, `fg(tone.foreground)`, mix on --tone)
     // must be `[tone]`-gated. Rest fills in the same match arm share
-    // `[variant=soft].s-variantsoft-bgmuted`; later elements re-emit that
+    // `[variant=soft].s-variant-soft-bg-muted`; later elements re-emit that
     // selector and crush the tone wash (badge/chip/avatar all go muted).
     let tone_ctx;
     let sel_ctx = if op_uses_tone(op_ref) && !ctx.attrs.iter().any(|(k, _)| k == "tone") {
@@ -346,45 +431,29 @@ fn emit_op(op: &PaintOp, ctx: &Ctx, out: &mut Vec<CssRule>, seen: &mut HashSet<S
 }
 
 fn class_name(op: &PaintOp, ctx: &Ctx) -> String {
-    // All args feed the class name — composites like border(1, border) vs
-    // border(1, primary) must not share an atomic class.
-    let mut arg = String::new();
-    for a in &op.args {
-        match a {
-            PaintArg::Token(t) => arg.extend(t.chars().filter(|c| c.is_ascii_alphanumeric())),
-            PaintArg::Bind(n) => {
-                arg.push_str("bind");
-                arg.extend(n.chars().filter(|c| c.is_ascii_alphanumeric()));
-            }
-            PaintArg::MemberPath { root, path } => {
-                arg.extend(root.chars().filter(|c| c.is_ascii_alphanumeric()));
-                for seg in path {
-                    arg.extend(seg.chars().filter(|c| c.is_ascii_alphanumeric()));
-                }
-            }
-            PaintArg::Slots(slots) => {
-                for (k, v) in slots {
-                    arg.extend(k.chars().filter(|c| c.is_ascii_alphanumeric()));
-                    arg.extend(v.display().chars().filter(|c| c.is_ascii_alphanumeric()));
-                }
-            }
-        }
-    }
-    let setter: String = op
-        .setter
-        .chars()
-        .filter(|c| c.is_ascii_alphanumeric())
-        .collect();
-    let path: String = ctx
+    // One class per concern, named after the author vocabulary, kebabed
+    // (BUCKETS §2.6): bg(surface) → s-bg-surface, pad({ x: 4, y: 16 }) →
+    // s-pad-x4-y16, when hover → s-hover-bg-muted.
+    let setter = kebab_ident(&op.setter);
+    let arg = op
+        .args
+        .iter()
+        .map(arg_vocab)
+        .filter(|s| !s.is_empty())
+        .collect::<Vec<_>>()
+        .join("-");
+    let path = ctx
         .path_tags
         .iter()
-        .flat_map(|t| t.chars())
-        .filter(|c| c.is_ascii_alphanumeric())
-        .collect();
-    if path.is_empty() {
-        format!("s-{setter}{arg}")
-    } else {
-        format!("s-{path}-{setter}{arg}")
+        .filter(|t| !t.is_empty())
+        .cloned()
+        .collect::<Vec<_>>()
+        .join("-");
+    match (path.is_empty(), arg.is_empty()) {
+        (true, true) => format!("s-{setter}"),
+        (true, false) => format!("s-{setter}-{arg}"),
+        (false, true) => format!("s-{path}-{setter}"),
+        (false, false) => format!("s-{path}-{setter}-{arg}"),
     }
 }
 

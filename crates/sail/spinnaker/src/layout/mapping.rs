@@ -512,7 +512,7 @@ const DISPLAY_CENTER_INLINE: &[Declaration] = &[
 // Scale-driven sx prefixes resolved at runtime through `crate::scales`.
 // ---------------------------------------------------------------------------
 
-/// A scale prefix that maps a product Style atom like `s-pad4` to a layout
+/// A scale prefix that maps a product Style atom like `s-pad-4` to a layout
 /// property. The value tail is fed to the scale resolver.
 #[derive(Debug, Clone, Copy)]
 pub enum SxScaleRule {
@@ -541,26 +541,25 @@ pub enum SideSet {
 /// Every product `s-*` prefix whose value lives on a closed scale. Order
 /// matters: the longest prefix must be checked first.
 ///
-/// Style mints classes from setter names + alphanumeric args:
-/// `pad(4)` → `s-pad4`, `padX(2)` → `s-padX2`, `minW(0)` → `s-minW0`
-/// (camelCase preserved). Utility-string fossils (`s-p4`, `s-minw0`) are
-/// not a scale — fixtures use `pad()` / `size()` / hosts.
+/// Style mints classes from setter names + kebabed args (BUCKETS §2.6):
+/// `pad(4)` → `s-pad-4`, `pad({ x: 2 })` → `s-pad-x2`, `size({ min-w: 0 })` →
+/// `s-size-min-w-0`. Utility-string fossils (`s-p4`, `s-minw0`) are not a
+/// scale — fixtures use `pad()` / `size()` / hosts.
 pub static SX_SCALE_RULES: &[(&str, SxScaleRule)] = &[
-    // Product pad* (longest first: padX before pad).
-    ("s-padX", SxScaleRule::Padding(SideSet::X)),
-    ("s-padY", SxScaleRule::Padding(SideSet::Y)),
-    ("s-padT", SxScaleRule::Padding(SideSet::T)),
-    ("s-padR", SxScaleRule::Padding(SideSet::R)),
-    ("s-padB", SxScaleRule::Padding(SideSet::B)),
-    ("s-padL", SxScaleRule::Padding(SideSet::L)),
-    ("s-padS", SxScaleRule::Padding(SideSet::L)), // inline-start ≈ left for taffy
-    ("s-padE", SxScaleRule::Padding(SideSet::R)), // inline-end ≈ right for taffy
+    // Longest first: pad-x before pad, min-h before h.
+    ("s-pad-x", SxScaleRule::Padding(SideSet::X)),
+    ("s-pad-y", SxScaleRule::Padding(SideSet::Y)),
+    ("s-pad-t", SxScaleRule::Padding(SideSet::T)),
+    ("s-pad-r", SxScaleRule::Padding(SideSet::R)),
+    ("s-pad-b", SxScaleRule::Padding(SideSet::B)),
+    ("s-pad-l", SxScaleRule::Padding(SideSet::L)),
+    ("s-pad-s", SxScaleRule::Padding(SideSet::L)), // inline-start ≈ left for taffy
+    ("s-pad-e", SxScaleRule::Padding(SideSet::R)), // inline-end ≈ right for taffy
     ("s-pad", SxScaleRule::Padding(SideSet::All)),
-    // Product size atoms (camelCase minW / maxH).
-    ("s-minW", SxScaleRule::MinWidth),
-    ("s-minH", SxScaleRule::MinHeight),
-    ("s-maxW", SxScaleRule::MaxWidth),
-    ("s-maxH", SxScaleRule::MaxHeight),
+    ("s-min-w", SxScaleRule::MinWidth),
+    ("s-min-h", SxScaleRule::MinHeight),
+    ("s-max-w", SxScaleRule::MaxWidth),
+    ("s-max-h", SxScaleRule::MaxHeight),
     // Product `size(N)` → width+height (before bare w/h).
     ("s-size", SxScaleRule::Size),
     ("s-w", SxScaleRule::Width),

@@ -484,7 +484,7 @@ fn gen_framework_css(out: Option<PathBuf>) -> Result<()> {
                   * @provenance headers. sail-base is the document floor. */\n";
     // Same `sail` cascade layer as route/page style install. Page atomics
     // must not ship unlayered — they share class names with skins and would
-    // crush compound fills (e.g. solid bg loses to .s-bgtransparent).
+    // crush compound fills (e.g. solid bg loses to .s-bg-transparent).
     let body = format!(
         "{banner}@layer sail {{\n{}}}\n",
         sail_compiler::stdlib::skins_css()

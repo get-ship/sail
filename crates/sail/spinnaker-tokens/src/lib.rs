@@ -7380,6 +7380,16 @@ mod tests {
     }
 
     #[test]
+    fn public_name_has_no_historical_exceptions() {
+        assert_eq!(public_name("filter.backdrop"), "filter-backdrop");
+        assert_eq!(public_name("image.texture"), "image-texture");
+        assert_eq!(public_name("image.texture-blend"), "image-texture-blend");
+        assert_eq!(public_name("radius.md"), "radius-md");
+        assert_ne!(public_name("filter.backdrop"), "card-backdrop-filter");
+        assert_ne!(public_name("image.texture"), "card-texture");
+    }
+
+    #[test]
     fn flatten_evaluates_structured_color() {
         let doc: Value = serde_json::json!({
             "color": {

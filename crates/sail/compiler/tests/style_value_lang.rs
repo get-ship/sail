@@ -63,7 +63,9 @@ fn chain_emits_token_vars_on_product_path() {
     let out =
         preprocess(r#"<div style({ pad({ x: 2 }).bg(primary) })> x</div>"#).expect("preprocess");
     assert!(
-        out.contains("var(--primary)") || out.contains("s-bgprimary"),
+        out.contains("var(--primary)")
+            || out.contains("s-bg-primary")
+            || out.contains("s-bgprimary"),
         "chain must emit token paint:\n{out}"
     );
     assert!(
@@ -289,11 +291,16 @@ fn scope_style_const_resolves_in_host_sx() {
     )
     .expect("preprocess");
     assert!(
-        out.contains("var(--primary)") || out.contains("s-bgprimary"),
+        out.contains("var(--primary)")
+            || out.contains("s-bg-primary")
+            || out.contains("s-bgprimary"),
         "scope Style const must resolve via StyleEnv:\n{out}"
     );
     assert!(
-        out.contains("var(--space-2)") || out.contains("padding") || out.contains("s-padx"),
+        out.contains("var(--space-2)")
+            || out.contains("padding")
+            || out.contains("s-pad-x")
+            || out.contains("s-padx"),
         "const chain setters must emit:\n{out}"
     );
 }
@@ -310,11 +317,16 @@ fn scope_style_decl_resolves_in_host_sx() {
     )
     .expect("preprocess");
     assert!(
-        out.contains("var(--primary)") || out.contains("s-bgprimary"),
+        out.contains("var(--primary)")
+            || out.contains("s-bg-primary")
+            || out.contains("s-bgprimary"),
         "style name = must resolve via StyleEnv:\n{out}"
     );
     assert!(
-        out.contains("var(--space-2)") || out.contains("padding") || out.contains("s-padx"),
+        out.contains("var(--space-2)")
+            || out.contains("padding")
+            || out.contains("s-pad-x")
+            || out.contains("s-padx"),
         "style decl setters must emit:\n{out}"
     );
 }
@@ -333,7 +345,9 @@ fn scope_style_decl_compose_merges() {
     .expect("preprocess");
     // pad(2) should win/merge from compose partial; primary paint from base.
     assert!(
-        out.contains("var(--primary)") || out.contains("s-bgprimary"),
+        out.contains("var(--primary)")
+            || out.contains("s-bg-primary")
+            || out.contains("s-bgprimary"),
         "compose base paint must resolve:\n{out}"
     );
     assert!(
