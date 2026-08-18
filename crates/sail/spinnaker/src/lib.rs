@@ -45,9 +45,10 @@ pub use component_surfaces::{
     is_theme_owned_author_root, is_theme_owned_token_name, surface_slots,
 };
 pub use concerns::{
-    ConcernSlot, ConcernSpec, MARKERS, concern_doc_line, concern_kind, concerns, find_concern,
-    is_concern_form, is_free_size_value, is_marker, prepare_concern_call, primary_slot,
-    resolve_concern_name, retired_replacement,
+    ConcernSlot, ConcernSpec, GRADIENT_MOLECULES, MARKERS, concern_doc_line, concern_kind,
+    concerns, find_concern, is_concern_form, is_free_size_value, is_marker, is_structured_value,
+    prepare_concern_call, primary_slot, resolve_concern_name, retired_replacement,
+    validate_structured,
 };
 pub use foreign_idioms::{
     FOREIGN_IDIOMS, ForeignIdiom, IdiomKind, find_foreign_idiom, teaching_line,

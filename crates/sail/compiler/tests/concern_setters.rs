@@ -207,6 +207,85 @@ fn ink_gradient_and_motion_transform_bind() {
 }
 
 #[test]
+fn gradient_molecules_paint_bg_fg_border() {
+    for name in ["primary", "accent", "surface"] {
+        let css = css_of(&format!("style({{ bg({{ gradient: {name} }}) }})"));
+        assert!(
+            css.contains(&format!("--gradient-{name}")),
+            "bg {name}: {css}"
+        );
+        let css = css_of(&format!("style({{ fg({{ gradient: {name} }}) }})"));
+        assert!(
+            css.contains(&format!("--gradient-{name}")) && css.contains("background-clip"),
+            "fg {name}: {css}"
+        );
+        let css = css_of(&format!("style({{ border({{ gradient: {name} }}) }})"));
+        assert!(
+            css.contains(&format!("--gradient-{name}")) && css.contains("border-image"),
+            "border {name}: {css}"
+        );
+    }
+    let css = css_of("style({ bg({ gradient: none }) })");
+    assert!(
+        css.contains("background-image") && css.contains("none"),
+        "{css}"
+    );
+}
+
+#[test]
+fn gradient_unknown_names_the_table() {
+    let diags = parse_diags("style({ bg({ gradient: rainbow }) })");
+    let msg = diags
+        .iter()
+        .map(|d| d.message())
+        .find(|m| m.contains("gradient molecule"))
+        .expect("must name the table");
+    assert!(
+        msg.contains("rainbow")
+            && msg.contains("primary")
+            && msg.contains("accent")
+            && msg.contains("surface")
+            && msg.contains("none"),
+        "{msg}"
+    );
+}
+
+#[test]
+fn structured_ref_and_op_paint() {
+    let css = css_of("style({ bg({ ref: primary }) })");
+    assert!(css.contains("var(--primary)"), "{css}");
+    let css = css_of("style({ fg({ color: { ref: accent } }) })");
+    assert!(css.contains("var(--accent)"), "{css}");
+    let css = css_of("style({ bg({ op: mix, from: primary, onto: accent, amount: 50 }) })");
+    assert!(
+        css.contains("color-mix") && css.contains("--primary") && css.contains("--accent"),
+        "{css}"
+    );
+}
+
+#[test]
+fn structured_unknown_op_names_the_form() {
+    let diags = parse_diags("style({ bg({ op: blur, from: primary, onto: accent }) })");
+    let msg = diags
+        .iter()
+        .map(|d| d.message())
+        .find(|m| m.contains("unknown op"))
+        .expect("must name the form");
+    assert!(msg.contains("`blur`") && msg.contains("{op: mix}"), "{msg}");
+}
+
+#[test]
+fn structured_dangling_ref_names_the_form() {
+    let diags = parse_diags("style({ bg({ ref: no-such }) })");
+    let msg = diags
+        .iter()
+        .map(|d| d.message())
+        .find(|m| m.contains("dangling ref"))
+        .expect("must name the form");
+    assert!(msg.contains("`{no-such}`"), "{msg}");
+}
+
+#[test]
 fn kind_stroke_plus_ring_coexist() {
     let (style, diags) = parse("style({ border(subtle).border({ kind: ring, color: primary }) })");
     assert!(diags.is_empty(), "{diags:?}");

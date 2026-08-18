@@ -98,6 +98,18 @@ fn identities_findings(path: &Path, source: &str) -> Vec<Finding> {
     findings
 }
 
+/// Gradient / structured `{ref}` `{op}` slot objects are author Style (P3).
+/// Other paint slot assembly stays L1.
+fn is_open_paint_form(source: &str, offset: usize, kind: &str) -> bool {
+    if !matches!(kind, "bg({" | "fg({" | "border({") {
+        return false;
+    }
+    let rest = &source[offset..];
+    let end = rest.find('}').unwrap_or(rest.len().min(240));
+    let body = &rest[..end];
+    body.contains("gradient:") || body.contains("ref:") || body.contains("op:")
+}
+
 fn identity_sites(source: &str) -> Vec<(usize, &'static str)> {
     let bytes = source.as_bytes();
     let mut out = Vec::new();
@@ -144,7 +156,9 @@ fn identity_sites(source: &str) -> Vec<(usize, &'static str)> {
             }
         }
         if let Some(kind) = hit {
-            out.push((i, kind));
+            if !is_open_paint_form(source, i, kind) {
+                out.push((i, kind));
+            }
             i += kind.len();
             continue;
         }

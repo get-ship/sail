@@ -27,6 +27,9 @@ pub struct ConcernSpec {
     pub covered_setters: &'static [&'static str],
 }
 
+/// Named gradient molecules. Same table on bg / fg / border.
+pub const GRADIENT_MOLECULES: &[&str] = &["primary", "accent", "surface", "none"];
+
 /// Markers stay verbs (SPEC-SPINNAKER-2 §4). Not concerns.
 pub const MARKERS: &[&str] = &[
     "group",
@@ -96,6 +99,11 @@ pub fn concerns() -> &'static [ConcernSpec] {
                     scale: Some("color"),
                     keywords: &["none", "primary", "accent"],
                 },
+                ConcernSlot {
+                    name: "gradient",
+                    scale: None,
+                    keywords: GRADIENT_MOLECULES,
+                },
             ],
             covered_setters: &[
                 "bg",
@@ -134,7 +142,7 @@ pub fn concerns() -> &'static [ConcernSpec] {
                 ConcernSlot {
                     name: "gradient",
                     scale: None,
-                    keywords: &["primary", "accent", "none"],
+                    keywords: GRADIENT_MOLECULES,
                 },
             ],
             covered_setters: &["fg", "caret", "accent", "stroke", "textGradient", "color"],
@@ -187,6 +195,11 @@ pub fn concerns() -> &'static [ConcernSpec] {
                     name: "offset",
                     scale: Some("space"),
                     keywords: &["0", "1", "2", "ring-offset", "ring-inset"],
+                },
+                ConcernSlot {
+                    name: "gradient",
+                    scale: None,
+                    keywords: GRADIENT_MOLECULES,
                 },
             ],
             covered_setters: &[
@@ -1075,6 +1088,9 @@ pub fn validate_concern_op(spec: &ConcernSpec, op: &PaintOp) -> Result<(), Style
         });
     }
     match op.first_arg() {
+        PaintArg::Slots(slots) if is_structured_value(slots) => {
+            validate_structured(slots, &op.source)
+        }
         PaintArg::Slots(slots) => validate_slot_object(spec, op, slots),
         PaintArg::Token(name) => {
             if crate::ir::raw_inner(name).is_some() {
@@ -1208,7 +1224,18 @@ pub fn validate_slot_object(
                 source: op.source.clone(),
             });
         };
-        if matches!(value, PaintArg::Slots(_)) {
+        if let PaintArg::Slots(inner) = value {
+            if is_structured_value(inner) {
+                validate_structured(inner, &op.source)?;
+                continue;
+            }
+            if slot.name == "gradient" {
+                return Err(StyleDiagnostic::BadToken {
+                    setter: format!("{}:gradient", spec.name),
+                    value: value.display(),
+                    source: op.source.clone(),
+                });
+            }
             return Err(StyleDiagnostic::BadToken {
                 setter: spec.name.to_string(),
                 value: value.display(),
@@ -1228,6 +1255,14 @@ pub fn validate_slot_value(
 ) -> Result<(), StyleDiagnostic> {
     match value {
         PaintArg::Bind(_) | PaintArg::MemberPath { .. } => Ok(()),
+        PaintArg::Slots(inner) if is_structured_value(inner) => {
+            validate_structured(inner, &op.source)
+        }
+        PaintArg::Slots(_) if slot.name == "gradient" => Err(StyleDiagnostic::BadToken {
+            setter: format!("{}:gradient", spec.name),
+            value: value.display(),
+            source: op.source.clone(),
+        }),
         PaintArg::Slots(_) => Err(StyleDiagnostic::BadToken {
             setter: spec.name.to_string(),
             value: value.display(),
@@ -1277,6 +1312,105 @@ pub fn validate_slot_value(
                 value: tok.clone(),
                 source: op.source.clone(),
             })
+        }
+    }
+}
+
+/// Theme `{ref}` / `{op}` object, opened as a Style value.
+pub fn is_structured_value(slots: &BTreeMap<String, PaintArg>) -> bool {
+    slots.contains_key("ref") || slots.contains_key("op")
+}
+
+fn is_structured_ref_target(name: &str) -> bool {
+    crate::scales::is_keyword_color(name)
+        || name == "current"
+        || crate::tokens::registry().contains(name)
+        || crate::scales::contains("color", name)
+}
+
+pub fn validate_structured(
+    slots: &BTreeMap<String, PaintArg>,
+    source: &str,
+) -> Result<(), StyleDiagnostic> {
+    if let Some(r) = slots.get("ref") {
+        let name = match r {
+            PaintArg::Token(t) => t.as_str(),
+            other => {
+                return Err(StyleDiagnostic::BadToken {
+                    setter: "structured:ref".into(),
+                    value: other.display(),
+                    source: source.to_string(),
+                });
+            }
+        };
+        if !is_structured_ref_target(name) {
+            return Err(StyleDiagnostic::BadToken {
+                setter: "structured:ref".into(),
+                value: name.to_string(),
+                source: source.to_string(),
+            });
+        }
+        return Ok(());
+    }
+    if let Some(op) = slots.get("op") {
+        let name = match op {
+            PaintArg::Token(t) => t.as_str(),
+            other => {
+                return Err(StyleDiagnostic::BadToken {
+                    setter: "structured:op".into(),
+                    value: other.display(),
+                    source: source.to_string(),
+                });
+            }
+        };
+        if name != "mix" {
+            return Err(StyleDiagnostic::BadToken {
+                setter: "structured:op".into(),
+                value: name.to_string(),
+                source: source.to_string(),
+            });
+        }
+        let from = slots.get("from").or_else(|| slots.get("color"));
+        let onto = slots.get("onto").or_else(|| slots.get("with"));
+        if from.is_none() {
+            return Err(StyleDiagnostic::BadToken {
+                setter: "structured:mix".into(),
+                value: "from".into(),
+                source: source.to_string(),
+            });
+        }
+        if onto.is_none() {
+            return Err(StyleDiagnostic::BadToken {
+                setter: "structured:mix".into(),
+                value: "onto".into(),
+                source: source.to_string(),
+            });
+        }
+        validate_structured_operand(from.unwrap(), source)?;
+        validate_structured_operand(onto.unwrap(), source)?;
+        return Ok(());
+    }
+    Err(StyleDiagnostic::BadToken {
+        setter: "structured".into(),
+        value: "ref / op".into(),
+        source: source.to_string(),
+    })
+}
+
+fn validate_structured_operand(value: &PaintArg, source: &str) -> Result<(), StyleDiagnostic> {
+    match value {
+        PaintArg::Bind(_) | PaintArg::MemberPath { .. } => Ok(()),
+        PaintArg::Slots(inner) => validate_structured(inner, source),
+        PaintArg::Token(t) => {
+            if is_structured_ref_target(t) {
+                Ok(())
+            } else {
+                Err(StyleDiagnostic::BadToken {
+                    setter: "structured:ref".into(),
+                    value: t.clone(),
+                    source: source.to_string(),
+                })
+            }
         }
     }
 }

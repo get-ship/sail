@@ -292,6 +292,25 @@ impl StyleDiagnostic {
                         );
                     }
                 }
+                if setter.ends_with(":gradient") || setter == "ink:gradient" {
+                    return format!(
+                        "{value} is not a gradient molecule: {}",
+                        crate::concerns::GRADIENT_MOLECULES.join(" | ")
+                    );
+                }
+                if setter == "structured:ref" {
+                    return format!(
+                        "structured value: dangling ref `{{{value}}}` — target identity does not exist"
+                    );
+                }
+                if setter == "structured:op" {
+                    return format!(
+                        "structured value: unknown op `{value}` — expected {{op: mix}}"
+                    );
+                }
+                if setter == "structured:mix" {
+                    return format!("structured value: mix op requires `{value}`");
+                }
                 format!("style `{setter}({value})` — value is not a token on this setter's scale")
             }
             StyleDiagnostic::ThemeOwnedToken { name, .. } => {

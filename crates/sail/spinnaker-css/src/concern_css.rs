@@ -4,8 +4,9 @@
 //! adapter's longhand map.
 
 use spinnaker::concerns::{
-    ConcernSlot, ConcernSpec, concern_teaching, find_concern, find_slot, is_named_scale_step,
-    reject_size_pad_members, resolve_concern_name,
+    ConcernSlot, ConcernSpec, GRADIENT_MOLECULES, concern_teaching, find_concern, find_slot,
+    is_named_scale_step, is_structured_value, reject_size_pad_members, resolve_concern_name,
+    validate_structured,
 };
 use spinnaker::ir::{PaintArg, PaintOp, StyleDiagnostic};
 use spinnaker::scales;
@@ -97,7 +98,11 @@ pub fn concern_css_prop(concern: &str, slot: &str) -> Option<&'static str> {
         ("type", "italic") => Some("font-style"),
         ("type", "nums") => Some("font-variant-numeric"),
         ("type", "break") => Some("overflow-wrap"),
-        ("fg", "gradient") | ("border", "edge") | ("border", "kind") => None,
+        ("bg", "gradient")
+        | ("fg", "gradient")
+        | ("border", "gradient")
+        | ("border", "edge")
+        | ("border", "kind") => None,
         _ => None,
     }
 }
@@ -118,6 +123,11 @@ pub fn lower_concern_op(
         });
     }
     match op.first_arg() {
+        PaintArg::Slots(slots) if is_structured_value(slots) => {
+            validate_structured(slots, &op.source)?;
+            let css = lower_structured(slots, &op.source)?;
+            Ok(primary_decls(spec, css))
+        }
         PaintArg::Slots(slots) => lower_slot_object(spec, op, slots),
         PaintArg::Token(name) => {
             if let Some(inner) = spinnaker::raw_inner(name) {
@@ -295,6 +305,100 @@ pub fn lower_composite(spec: &ConcernSpec, composite: &CompositeToken) -> Vec<(S
     out
 }
 
+fn lower_structured(
+    slots: &std::collections::BTreeMap<String, PaintArg>,
+    source: &str,
+) -> Result<String, StyleDiagnostic> {
+    if let Some(r) = slots.get("ref") {
+        return lower_structured_operand(r, source);
+    }
+    if let Some(PaintArg::Token(op)) = slots.get("op") {
+        if op == "mix" {
+            let from = slots
+                .get("from")
+                .or_else(|| slots.get("color"))
+                .ok_or_else(|| StyleDiagnostic::BadToken {
+                    setter: "structured:mix".into(),
+                    value: "from".into(),
+                    source: source.to_string(),
+                })?;
+            let onto = slots
+                .get("onto")
+                .or_else(|| slots.get("with"))
+                .ok_or_else(|| StyleDiagnostic::BadToken {
+                    setter: "structured:mix".into(),
+                    value: "onto".into(),
+                    source: source.to_string(),
+                })?;
+            let from_css = lower_structured_operand(from, source)?;
+            let onto_css = lower_structured_operand(onto, source)?;
+            let amount = slots
+                .get("amount")
+                .or_else(|| slots.get("pct"))
+                .and_then(|v| match v {
+                    PaintArg::Token(t) => t.trim_end_matches('%').parse::<f64>().ok(),
+                    _ => None,
+                })
+                .unwrap_or(0.5);
+            let pct = if amount <= 1.0 {
+                amount * 100.0
+            } else {
+                amount
+            };
+            return Ok(format!(
+                "color-mix(in oklch, {from_css} {pct:.2}%, {onto_css})"
+            ));
+        }
+        return Err(StyleDiagnostic::BadToken {
+            setter: "structured:op".into(),
+            value: op.clone(),
+            source: source.to_string(),
+        });
+    }
+    Err(StyleDiagnostic::BadToken {
+        setter: "structured".into(),
+        value: "ref / op".into(),
+        source: source.to_string(),
+    })
+}
+
+fn lower_structured_operand(value: &PaintArg, source: &str) -> Result<String, StyleDiagnostic> {
+    match value {
+        PaintArg::Bind(n) => Ok(format!("var(--{})", css_name_for_bind(n))),
+        PaintArg::MemberPath { root, path } => {
+            Ok(spinnaker::token_groups::bridge_var_ref(root, path))
+        }
+        PaintArg::Slots(inner) => lower_structured(inner, source),
+        PaintArg::Token(t) => {
+            if t == "current" || t == "currentColor" {
+                return Ok("currentColor".into());
+            }
+            if scales::is_keyword_color(t) {
+                return Ok(t.clone());
+            }
+            Ok(format!("var(--{t})"))
+        }
+    }
+}
+
+fn lower_gradient_name(setter: &str, value: &PaintArg) -> Result<Option<String>, StyleDiagnostic> {
+    match value {
+        PaintArg::Token(t) if GRADIENT_MOLECULES.contains(&t.as_str()) => {
+            if t == "none" {
+                Ok(None)
+            } else {
+                Ok(Some(format!("var(--gradient-{t})")))
+            }
+        }
+        PaintArg::Bind(n) => Ok(Some(format!("var(--{})", css_name_for_bind(n)))),
+        other => Err(StyleDiagnostic::BadToken {
+            setter: setter.into(),
+            value: other.display(),
+            source: other.display(),
+        }),
+    }
+}
+
 fn lower_slot_object(
     spec: &ConcernSpec,
     op: &PaintOp,
@@ -399,6 +503,47 @@ fn lower_border_slots(
     let color = slots.get("color");
     let width = slots.get("width");
     let style = slots.get("style");
+    if let Some(g) = slots.get("gradient") {
+        let mut out = Vec::new();
+        match lower_gradient_name("border:gradient", g)? {
+            Some(css) => {
+                out.push(("border-image-source".into(), css));
+                out.push(("border-image-slice".into(), "1".into()));
+            }
+            None => out.push(("border-image".into(), "none".into())),
+        }
+        if let Some(v) = width {
+            for prop in edge_props(edge, "width") {
+                out.push(lower_named_css(
+                    spec,
+                    prop,
+                    find_slot(spec, "width").unwrap(),
+                    v,
+                )?);
+            }
+        }
+        if let Some(v) = style {
+            for prop in edge_props(edge, "style") {
+                out.push(lower_named_css(
+                    spec,
+                    prop,
+                    find_slot(spec, "style").unwrap(),
+                    v,
+                )?);
+            }
+        }
+        if let Some(v) = color {
+            for prop in edge_props(edge, "color") {
+                out.push(lower_named_css(
+                    spec,
+                    prop,
+                    find_slot(spec, "color").unwrap(),
+                    v,
+                )?);
+            }
+        }
+        return Ok(out);
+    }
     match kind {
         "outline" => {
             let mut out = Vec::new();
@@ -599,7 +744,7 @@ fn lower_ink_slots(
                     out.push(("-webkit-background-clip".into(), "border-box".into()));
                     out.push(("background-clip".into(), "border-box".into()));
                 }
-                "primary" | "accent" => {
+                "primary" | "accent" | "surface" => {
                     out.push(("background".into(), format!("var(--gradient-{bare})")));
                     out.push(("-webkit-background-clip".into(), "text".into()));
                     out.push(("background-clip".into(), "text".into()));
@@ -659,6 +804,13 @@ fn lower_fill_slots(
     let mut out = Vec::new();
     for (name, value) in slots {
         if name == "mix" {
+            continue;
+        }
+        if name == "gradient" {
+            match lower_gradient_name("bg:gradient", value)? {
+                Some(css) => out.push(("background-image".into(), css)),
+                None => out.push(("background-image".into(), "none".into())),
+            }
             continue;
         }
         if name == "image" {
@@ -937,6 +1089,9 @@ pub fn lower_slot_value(
     let css = match value {
         PaintArg::Bind(name) => format!("var(--{})", css_name_for_bind(name)),
         PaintArg::MemberPath { root, path } => spinnaker::token_groups::bridge_var_ref(root, path),
+        PaintArg::Slots(inner) if is_structured_value(inner) => {
+            lower_structured(inner, &value.display())?
+        }
         PaintArg::Slots(_) => {
             return Err(StyleDiagnostic::BadToken {
                 setter: slot.name.to_string(),
