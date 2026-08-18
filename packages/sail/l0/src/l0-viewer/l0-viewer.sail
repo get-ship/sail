@@ -1,8 +1,3 @@
-<!--
-  l0-viewer — gauntlet harness chrome, not a cell.
-  Theme/mode: existing <theme-picker>. Viewport: resize the window.
-  Dual-render: live DOM slot + labeled empty takumi slot (not wired).
--->
 <scope>
   style shell = { pad(page) }
   style kicker = { type(label).fg(muted) }

@@ -500,7 +500,7 @@ pub fn privilege_for_path(path: &std::path::Path) -> Privilege {
 }
 
 /// Product trees PLAN-ARCH flips on. Test fixtures are not these trees.
-/// Site / studio / blocks only. Fixtures stay off.
+/// Site / studio / blocks / l0 only. Fixtures stay off.
 pub fn privilege_enforced_for_path(path: &std::path::Path) -> bool {
     let p = path.to_string_lossy().replace('\\', "/");
     if is_stdlib_path(&p) {

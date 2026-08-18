@@ -583,20 +583,43 @@ fn style_const_row_span(
         .split('`')
         .next()
         .filter(|n| !n.is_empty())?;
-    let needle = format!("style {name}");
-    let mut search = 0usize;
-    let mut at = None;
-    while let Some(rel) = source[search..].find(&needle) {
-        let i = search + rel;
-        let after = i + needle.len();
-        if source.get(after..)?.trim_start().starts_with('=') {
-            at = Some(i);
-            break;
-        }
-        search = after;
-    }
-    let at = at?;
+    let offset = line_col_to_offset(source, d.line, d.col);
+    let at = style_const_at_offset(source, offset, name)?;
     expand_style_const_row(source, at)
+}
+
+/// Bindings are found from the diagnostic line, not byte 0. Quoted
+/// `style wide =` in `<!-- … -->` must not steal the live row.
+fn style_const_at_offset(source: &str, offset: usize, name: &str) -> Option<usize> {
+    let needle = format!("style {name}");
+    let bytes = source.as_bytes();
+    let mut line_start = offset.min(source.len());
+    while line_start > 0 && bytes[line_start - 1] != b'\n' {
+        line_start -= 1;
+    }
+    let mut i = line_start;
+    while let Some(rel) = source[i..].find(&needle) {
+        let at = i + rel;
+        let after = at + needle.len();
+        if in_html_comment(source, at) {
+            i = after;
+            continue;
+        }
+        if source.get(after..)?.trim_start().starts_with('=') {
+            return Some(at);
+        }
+        i = after;
+    }
+    None
+}
+
+fn in_html_comment(source: &str, at: usize) -> bool {
+    let before = &source[..at];
+    match (before.rfind("<!--"), before.rfind("-->")) {
+        (Some(open), Some(close)) => open > close,
+        (Some(_), None) => true,
+        _ => false,
+    }
 }
 
 fn expand_style_const_row(source: &str, at: usize) -> Option<(usize, usize)> {
@@ -1365,6 +1388,9 @@ mod tests {
     #[test]
     fn scope_block_fix_deletes_unknown_style_const_row() {
         let src = r#"
+<!--
+        style wide = { size(wide) }
+-->
 <scope>
   style base = { pad(page) }
   style wide = { size(wide) }
@@ -1384,12 +1410,22 @@ mod tests {
             1
         );
         let patch = p.text_patch.as_ref().expect("text patch");
+        let comment_end = src.find("-->").expect("quoted trap comment");
+        assert!(
+            patch.start > comment_end,
+            "must delete the live row, not the quoted trap: start={} comment_end={comment_end}",
+            patch.start
+        );
         let (out, skipped) =
             apply_text_patches(src, &[(patch.start, patch.end, patch.replacement.clone())]);
         assert_eq!(skipped, 0);
         assert!(
-            !out.contains("style wide") && !out.contains("size(wide)"),
+            !out.contains("\n  style wide ="),
             "failed row must be gone: {out}"
+        );
+        assert!(
+            out.contains("        style wide = { size(wide) }"),
+            "quoted trap in the comment must stay: {out}"
         );
         assert!(
             out.contains("style base = { pad(page) }"),
