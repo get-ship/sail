@@ -2,7 +2,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use super::node::{EditNode, build_node_index};
+use super::node::{build_node_index, EditNode};
 use super::ops::EditOp;
 use std::collections::BTreeMap;
 
@@ -108,6 +108,11 @@ pub fn suggest_fixes(
             }
             "spinnaker" => {
                 if let Some(p) = fix_unknown_sx_setter(source, &index, d) {
+                    plans.push(p);
+                }
+            }
+            "sail-scope-block" => {
+                if let Some(p) = fix_unknown_style_const_row(source, d) {
                     plans.push(p);
                 }
             }
@@ -541,6 +546,102 @@ fn fix_unknown_sx_setter(
         }),
         actor: None,
     })
+}
+
+/// Delete a value-row unknown identity (`Style \`name\`: unknown vocabulary`).
+/// Structural scope errors stay unfixed. `wide` is not rewritten to a size name.
+fn fix_unknown_style_const_row(
+    source: &str,
+    d: &crate::diagnostics::Diagnostic,
+) -> Option<FixPlan> {
+    if !d.message.starts_with("Style `") || !d.message.contains("unknown vocabulary") {
+        return None;
+    }
+    let (start, end) = style_const_row_span(source, d)?;
+    Some(FixPlan {
+        rule: "sail-scope-block".into(),
+        line: d.line,
+        col: d.col,
+        message: "delete unknown style-const row".into(),
+        ops: vec![],
+        text_patch: Some(TextPatch {
+            start,
+            end,
+            replacement: String::new(),
+        }),
+        actor: None,
+    })
+}
+
+fn style_const_row_span(
+    source: &str,
+    d: &crate::diagnostics::Diagnostic,
+) -> Option<(usize, usize)> {
+    let name = d
+        .message
+        .strip_prefix("Style `")?
+        .split('`')
+        .next()
+        .filter(|n| !n.is_empty())?;
+    let needle = format!("style {name}");
+    let mut search = 0usize;
+    let mut at = None;
+    while let Some(rel) = source[search..].find(&needle) {
+        let i = search + rel;
+        let after = i + needle.len();
+        if source.get(after..)?.trim_start().starts_with('=') {
+            at = Some(i);
+            break;
+        }
+        search = after;
+    }
+    let at = at?;
+    expand_style_const_row(source, at)
+}
+
+fn expand_style_const_row(source: &str, at: usize) -> Option<(usize, usize)> {
+    let bytes = source.as_bytes();
+    let mut start = at.min(bytes.len());
+    while start > 0 && bytes[start - 1] != b'\n' && bytes[start - 1].is_ascii_whitespace() {
+        start -= 1;
+    }
+    let eq = source[start..].find('=')?;
+    let mut i = start + eq + 1;
+    while i < bytes.len() && bytes[i].is_ascii_whitespace() {
+        i += 1;
+    }
+    i = scan_style_rhs_end(source, i);
+    if i < bytes.len() && bytes[i] == b';' {
+        i += 1;
+    }
+    if i < bytes.len() && bytes[i] == b'\n' {
+        i += 1;
+    }
+    Some((start, i))
+}
+
+fn scan_style_rhs_end(source: &str, start: usize) -> usize {
+    let bytes = source.as_bytes();
+    let mut i = start;
+    let mut depth = 0i32;
+    while i < bytes.len() {
+        match bytes[i] {
+            b'{' | b'(' | b'[' => depth += 1,
+            b'}' | b')' | b']' => {
+                if depth == 0 {
+                    return i;
+                }
+                depth -= 1;
+                if depth == 0 {
+                    return i + 1;
+                }
+            }
+            b'\n' | b';' if depth == 0 => return i,
+            _ => {}
+        }
+        i += 1;
+    }
+    bytes.len()
 }
 
 fn extract_did_you_mean(message: &str) -> Option<String> {
@@ -1259,5 +1360,56 @@ mod tests {
         let next = replace_sx_setter(open, "pad", "4").unwrap();
         assert_eq!(next, r#"<div style({ pad(4) })>"#);
         assert!(!next.contains("style={"), "{next}");
+    }
+
+    #[test]
+    fn scope_block_fix_deletes_unknown_style_const_row() {
+        let src = r#"
+<scope>
+  style base = { pad(page) }
+  style wide = { size(wide) }
+</scope>
+<column style(base)>x</column>
+"#;
+        let plans = suggest_fixes_for_source(src, "t.sail", None);
+        let p = plans
+            .iter()
+            .find(|p| p.rule == "sail-scope-block")
+            .expect("sail-scope-block fix");
+        assert_eq!(
+            plans
+                .iter()
+                .filter(|p| p.rule == "sail-scope-block")
+                .count(),
+            1
+        );
+        let patch = p.text_patch.as_ref().expect("text patch");
+        let (out, skipped) =
+            apply_text_patches(src, &[(patch.start, patch.end, patch.replacement.clone())]);
+        assert_eq!(skipped, 0);
+        assert!(
+            !out.contains("style wide") && !out.contains("size(wide)"),
+            "failed row must be gone: {out}"
+        );
+        assert!(
+            out.contains("style base = { pad(page) }"),
+            "sibling const must stay: {out}"
+        );
+        let diags = crate::check_all(&out, None, &[], None);
+        let joined = diags
+            .iter()
+            .map(|d| d.message.as_str())
+            .collect::<Vec<_>>()
+            .join("\n");
+        assert!(
+            !joined.contains("unknown vocabulary") && !joined.contains("wide"),
+            "fixed source must not diagnose wide: {joined}"
+        );
+        let lowered =
+            crate::parse::preprocess::preprocess(&out).expect("fixed source must preprocess");
+        assert!(
+            lowered.contains("s-padpage") || lowered.contains("--pad-page"),
+            "style(base) must still lower: {lowered}"
+        );
     }
 }
