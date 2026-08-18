@@ -1,6 +1,7 @@
 <!--
   Look: every gradient molecule on bg / fg (text) / border.
-        primary and accent wash the face. surface is none on sail.
+        primary and accent wash the face. surface is none on sail —
+        fg surface keeps authored ink (does not clip to none).
         none clears the wash. Text clip reads as gradient ink.
   Spelling: bg({ gradient: primary }) · fg({ gradient: accent }) · border({ gradient: primary })
   Owner: language (gradient slot table: primary | accent | surface | none)

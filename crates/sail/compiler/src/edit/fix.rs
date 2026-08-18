@@ -79,6 +79,10 @@ pub fn suggest_fixes(
             plans.push(p);
             continue;
         }
+        if let Some(p) = fix_structured_mix(source, d) {
+            plans.push(p);
+            continue;
+        }
         let rule = d.rule.as_deref().unwrap_or("");
         match rule {
             "sail-participation-style" => {
@@ -309,6 +313,44 @@ fn fix_structured_dangling_ref(
             start,
             end,
             replacement: "primary".into(),
+        }),
+        actor: None,
+    })
+}
+
+/// Suggest-only: mix missing `from` / `onto` → insert the key. Nothing auto-applies.
+fn fix_structured_mix(source: &str, d: &crate::diagnostics::Diagnostic) -> Option<FixPlan> {
+    if !d.message.contains("mix op requires `") {
+        return None;
+    }
+    let key = d
+        .message
+        .split("mix op requires `")
+        .nth(1)?
+        .split('`')
+        .next()
+        .filter(|s| !s.is_empty())?;
+    let insert = match key {
+        "from" => "from: primary",
+        "onto" => "onto: accent",
+        _ => return None,
+    };
+    let offset = line_col_to_offset(source, d.line, d.col);
+    let from = offset.min(source.len());
+    let rel = source[from..]
+        .find('}')
+        .or_else(|| source.find('}').map(|i| i.saturating_sub(from)))?;
+    let at = from + rel;
+    Some(FixPlan {
+        rule: d.rule.clone().unwrap_or_else(|| "spinnaker".into()),
+        line: d.line,
+        col: d.col,
+        message: format!("insert `{insert}`"),
+        ops: vec![],
+        text_patch: Some(TextPatch {
+            start: at,
+            end: at,
+            replacement: format!(", {insert}"),
         }),
         actor: None,
     })
@@ -2042,6 +2084,26 @@ mod tests {
             apply_text_patches(src, &[(patch.start, patch.end, patch.replacement.clone())]);
         assert_eq!(skipped, 0);
         assert!(out.contains("op: mix"), "{out}");
+        crate::parse::preprocess::preprocess(&out)
+            .unwrap_or_else(|e| panic!("fixed source must compile: {e:?}\n{out}"));
+    }
+
+    #[test]
+    fn structured_mix_missing_from_inserts_key() {
+        let src = r#"<div style({ bg({ op: mix, onto: accent }) })>x</div>"#;
+        let plans = suggest_fixes_for_source(src, "t.sail", None);
+        let mix: Vec<_> = plans
+            .iter()
+            .filter(|p| p.message.contains("from: primary"))
+            .collect();
+        assert_eq!(mix.len(), 1, "{plans:?}");
+        assert!(!is_auto_apply_plan(mix[0]), "suggest-only: {:?}", mix[0]);
+        let patch = mix[0].text_patch.as_ref().unwrap();
+        assert_eq!(patch.replacement, ", from: primary");
+        let (out, skipped) =
+            apply_text_patches(src, &[(patch.start, patch.end, patch.replacement.clone())]);
+        assert_eq!(skipped, 0);
+        assert!(out.contains("from: primary"), "{out}");
         crate::parse::preprocess::preprocess(&out)
             .unwrap_or_else(|e| panic!("fixed source must compile: {e:?}\n{out}"));
     }

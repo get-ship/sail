@@ -107,7 +107,19 @@ fn is_open_paint_form(source: &str, offset: usize, kind: &str) -> bool {
     let rest = &source[offset..];
     let end = rest.find('}').unwrap_or(rest.len().min(240));
     let body = &rest[..end];
-    body.contains("gradient:") || body.contains("ref:") || body.contains("op:")
+    has_open_key(body, "gradient") || has_open_key(body, "ref") || has_open_key(body, "op")
+}
+
+fn has_open_key(body: &str, key: &str) -> bool {
+    let mut start = 0;
+    while let Some(rel) = body[start..].find(key) {
+        let at = start + rel + key.len();
+        if body[at..].trim_start().starts_with(':') {
+            return true;
+        }
+        start = at;
+    }
+    false
 }
 
 fn identity_sites(source: &str) -> Vec<(usize, &'static str)> {
@@ -320,6 +332,35 @@ mod tests {
             check(&component(), src).is_empty(),
             "preset calls are Identities-legal: {src}"
         );
+    }
+
+    #[test]
+    fn identities_open_paint_forms_are_legal() {
+        for src in [
+            "style box = { bg({ gradient: primary }) }",
+            "style box = { bg({ ref: primary }) }",
+            "style box = { bg({ gradient : primary }) }",
+        ] {
+            assert!(
+                check(&component(), src).is_empty(),
+                "opened paint form must be Identities-legal: {src}"
+            );
+        }
+    }
+
+    #[test]
+    fn identities_closed_paint_slots_stay_red() {
+        for src in [
+            "style box = { bg({ color: primary }) }",
+            "style box = { type({ size: xs }) }",
+            "style box = { filter({ opacity: 50 }) }",
+        ] {
+            let findings = check(&component(), src);
+            assert!(
+                !findings.is_empty(),
+                "closed slot must stay privilege: {src}"
+            );
+        }
     }
 
     #[test]

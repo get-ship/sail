@@ -215,10 +215,21 @@ fn gradient_molecules_paint_bg_fg_border() {
             "bg {name}: {css}"
         );
         let css = css_of(&format!("style({{ fg({{ gradient: {name} }}) }})"));
-        assert!(
-            css.contains(&format!("--gradient-{name}")) && css.contains("background-clip"),
-            "fg {name}: {css}"
-        );
+        if name == "surface" {
+            assert!(
+                css.contains("background-clip") && css.contains("border-box"),
+                "fg surface must not clip ink to none: {css}"
+            );
+            assert!(
+                !css.contains("transparent"),
+                "fg surface must keep authored color: {css}"
+            );
+        } else {
+            assert!(
+                css.contains(&format!("--gradient-{name}")) && css.contains("background-clip"),
+                "fg {name}: {css}"
+            );
+        }
         let css = css_of(&format!("style({{ border({{ gradient: {name} }}) }})"));
         assert!(
             css.contains(&format!("--gradient-{name}")) && css.contains("border-image"),
@@ -272,6 +283,17 @@ fn structured_unknown_op_names_the_form() {
         .find(|m| m.contains("unknown op"))
         .expect("must name the form");
     assert!(msg.contains("`blur`") && msg.contains("{op: mix}"), "{msg}");
+}
+
+#[test]
+fn structured_mix_missing_from_names_the_form() {
+    let diags = parse_diags("style({ bg({ op: mix, onto: accent }) })");
+    let msg = diags
+        .iter()
+        .map(|d| d.message())
+        .find(|m| m.contains("mix op requires"))
+        .expect("must name the form");
+    assert!(msg.contains("`from`"), "{msg}");
 }
 
 #[test]

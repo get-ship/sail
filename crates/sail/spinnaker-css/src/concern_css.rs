@@ -739,12 +739,14 @@ fn lower_ink_slots(
                 }
             };
             match bare {
-                "none" => {
+                // surface is a page wash that defaults to none — clip-to-none
+                // makes ink invisible. Keep authored color, same as `none`.
+                "none" | "surface" => {
                     out.push(("background".into(), "none".into()));
                     out.push(("-webkit-background-clip".into(), "border-box".into()));
                     out.push(("background-clip".into(), "border-box".into()));
                 }
-                "primary" | "accent" | "surface" => {
+                "primary" | "accent" => {
                     out.push(("background".into(), format!("var(--gradient-{bare})")));
                     out.push(("-webkit-background-clip".into(), "text".into()));
                     out.push(("background-clip".into(), "text".into()));

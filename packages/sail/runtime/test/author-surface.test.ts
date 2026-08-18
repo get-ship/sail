@@ -82,6 +82,8 @@ describe('author-surface (tier B)', () => {
       'applyPatch',
       'emit',
       'mockQueryState',
+      'writeCssVar',
+      'bindCssVar',
     ]) {
       expect(author.exports[abi], `ABI/host symbol ${abi} must not be tier B`).toBeUndefined()
     }

@@ -82,6 +82,44 @@ export function bindShow(el: HTMLElement, get: () => unknown): Disposer {
 }
 
 /**
+ * Tone group → members → public token name (mirrors registry-derived TONE table).
+ * Used when `data-sail-bridge` marks a group-typed attr so dynamic values
+ * reflect CSS var *references* (`--tone: var(--primary)`).
+ */
+const TONE_BRIDGE: Record<string, Record<string, string>> = {
+  primary: { '': 'primary', foreground: 'primary-foreground', hover: 'primary-hover' },
+  info: { '': 'info', foreground: 'info-foreground' },
+  success: { '': 'success', foreground: 'success-foreground' },
+  warning: { '': 'warning', foreground: 'warning-foreground' },
+  destructive: { '': 'destructive', foreground: 'destructive-foreground' },
+  accent: { '': 'accent', foreground: 'accent-foreground' },
+  muted: { '': 'muted', foreground: 'muted-foreground' },
+}
+
+const TONE_BRIDGE_MEMBERS = ['', 'foreground', 'hover'] as const
+
+/** Reflect a Tone group value onto `--{prop}` / `--{prop}-foreground` bridges. */
+function reflectToneBridge(el: Element, prop: string, value: string | null): void {
+  for (const m of TONE_BRIDGE_MEMBERS) {
+    const css = m ? `--${prop}-${m}` : `--${prop}`
+    writeCssVar(el, css, null)
+  }
+  if (value == null || value === '') return
+  const group = TONE_BRIDGE[value]
+  if (!group) return
+  for (const [m, pub] of Object.entries(group)) {
+    const css = m ? `--${prop}-${m}` : `--${prop}`
+    writeCssVar(el, css, `var(--${pub})`)
+  }
+}
+
+function bridgePropsFor(el: Element): string[] {
+  const raw = el.getAttribute('data-sail-bridge')
+  if (!raw) return []
+  return raw.split(/\s+/).filter(Boolean)
+}
+
+/**
  * Bind a reactive value to a DOM attribute, with attribute-presence
  * semantics built in.
  *
@@ -111,78 +149,6 @@ export function bindShow(el: HTMLElement, get: () => unknown): Disposer {
  *
  * @see bindProp when binding to a typed JS property.
  */
-/**
- * Tone group → members → public token name (mirrors registry-derived TONE table).
- * Used when `data-sail-bridge` marks a group-typed attr so dynamic values
- * reflect CSS var *references* (`--tone: var(--primary)`).
- */
-const TONE_BRIDGE: Record<string, Record<string, string>> = {
-  primary: { '': 'primary', foreground: 'primary-foreground', hover: 'primary-hover' },
-  info: { '': 'info', foreground: 'info-foreground' },
-  success: { '': 'success', foreground: 'success-foreground' },
-  warning: { '': 'warning', foreground: 'warning-foreground' },
-  destructive: { '': 'destructive', foreground: 'destructive-foreground' },
-  accent: { '': 'accent', foreground: 'accent-foreground' },
-  muted: { '': 'muted', foreground: 'muted-foreground' },
-}
-
-const TONE_BRIDGE_MEMBERS = ['', 'foreground', 'hover'] as const
-
-/**
- * Compiler-private custom-property write. Authors never call this —
- * `bind(name)` in Style is the channel; the emitter writes this.
- * `null` removes the property.
- */
-export function writeCssVar(el: Element, name: string, value: string | null): void {
-  const style = (el as HTMLElement).style
-  if (!style || typeof style.setProperty !== 'function') return
-  if (value == null) style.removeProperty(name)
-  else style.setProperty(name, value)
-}
-
-/**
- * Geometry channel: keep a custom property live from a signal read.
- * Compiler-private. Authors write `bind(name)` in Style, not this.
- */
-export function bindCssVar(
-  el: Element,
-  name: string,
-  get: () => unknown,
-  unit?: 'px',
-): Disposer {
-  return effect(() => {
-    const v = get()
-    if (v == null) {
-      writeCssVar(el, name, null)
-      return
-    }
-    const next =
-      unit === 'px' && typeof v === 'number' ? `${v}px` : String(v)
-    writeCssVar(el, name, next)
-  })
-}
-
-/** Reflect a Tone group value onto `--{prop}` / `--{prop}-foreground` bridges. */
-function reflectToneBridge(el: Element, prop: string, value: string | null): void {
-  for (const m of TONE_BRIDGE_MEMBERS) {
-    const css = m ? `--${prop}-${m}` : `--${prop}`
-    writeCssVar(el, css, null)
-  }
-  if (value == null || value === '') return
-  const group = TONE_BRIDGE[value]
-  if (!group) return
-  for (const [m, pub] of Object.entries(group)) {
-    const css = m ? `--${prop}-${m}` : `--${prop}`
-    writeCssVar(el, css, `var(--${pub})`)
-  }
-}
-
-function bridgePropsFor(el: Element): string[] {
-  const raw = el.getAttribute('data-sail-bridge')
-  if (!raw) return []
-  return raw.split(/\s+/).filter(Boolean)
-}
-
 export function bindAttr(el: Element, name: string, get: () => unknown): Disposer {
   let prev: unknown
   let init = false
@@ -203,6 +169,18 @@ export function bindAttr(el: Element, name: string, get: () => unknown): Dispose
     prev = v
     init = true
   })
+}
+
+/**
+ * Compiler-private custom-property write. Authors never call this —
+ * `bind(name)` in Style is the channel; the emitter writes this.
+ * `null` removes the property.
+ */
+export function writeCssVar(el: Element, name: string, value: string | null): void {
+  const style = (el as HTMLElement).style
+  if (!style || typeof style.setProperty !== 'function') return
+  if (value == null) style.removeProperty(name)
+  else style.setProperty(name, value)
 }
 
 /**

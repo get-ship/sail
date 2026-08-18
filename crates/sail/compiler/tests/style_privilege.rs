@@ -316,3 +316,39 @@ fn matrix_fixture_route_style_still_compiles() {
     let path = "crates/sail/compiler/tests/fixtures/l1-matrix/routes/button/page.sail";
     compile(src, opts(path)).expect("M1 must not change matrix fixture compile");
 }
+
+#[test]
+fn identities_open_paint_forms_are_legal() {
+    let path = "apps/studio/src/studio-panel/studio-panel.sail";
+    for src in [
+        r#"<div style({ bg({ gradient: primary }) })>x</div>"#,
+        r#"<div style({ bg({ ref: primary }) })>x</div>"#,
+        r#"<div style({ bg({ gradient : primary }) })>x</div>"#,
+    ] {
+        let diags = check_all(src, Some(path.as_ref()), &[], None);
+        assert!(
+            !diags
+                .iter()
+                .any(|d| d.rule.as_deref() == Some("sail-style-privilege")),
+            "opened paint form must be legal: {src} {diags:?}"
+        );
+    }
+}
+
+#[test]
+fn identities_closed_paint_slots_stay_red() {
+    let path = "apps/studio/src/studio-panel/studio-panel.sail";
+    for src in [
+        r#"<div style({ bg({ color: primary }) })>x</div>"#,
+        r#"<p style({ type({ size: xs }) })>x</p>"#,
+        r#"<div style({ filter({ opacity: 50 }) })>x</div>"#,
+    ] {
+        let diags = check_all(src, Some(path.as_ref()), &[], None);
+        assert!(
+            diags
+                .iter()
+                .any(|d| d.rule.as_deref() == Some("sail-style-privilege")),
+            "closed slot must stay privilege: {src} {diags:?}"
+        );
+    }
+}
