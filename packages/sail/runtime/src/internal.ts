@@ -28,11 +28,8 @@
 // source of truth for the public names.
 export * from './index'
 
-// Virtualizer stays OFF the author root barrel (bundle-weight), but ambient
-// inject (RUNTIME_AMBIENT) and compiler-emitted controllers resolve it via
-// `/internal` so pack authors never value-import `@ship/sail-runtime/virtual`.
-export { createVirtualizer } from './virtual'
-export type { Virtual, VirtualItem, VirtualOptions } from './virtual'
+// Virtualizer, motion attach, and query live on their own singletons
+// (`/virtual`, `/motion`, `/query`). Hello-world must not download them.
 
 // ── ABI-only: DOM binders ──────────────────────────────────────────────────
 export {
@@ -71,8 +68,6 @@ export {
   markHydrateAttr,
   markHydrateBoundary,
 } from './hydrate-mark'
-export { __sail_motion_attach } from './motion'
-export type { MotionAttachConfig, MotionConfig } from './motion'
 export { runEnter, runLeave, cancelTransitions, setTransitionRunner } from './transition-runner'
 
 // ── ABI-only: form / dialog / popover wire ─────────────────────────────────
@@ -95,9 +90,6 @@ export {
   currentScope,
   walkScope,
 } from './effect-scope'
-
-// ── Compiler-only data plumbing ────────────────────────────────────────────
-export { __invalidate } from './query'
 
 // ── Untaught reactivity utilities (not tier B; pack engines may import) ───
 export { selector, withHost } from './signal'
@@ -200,5 +192,3 @@ export type {
   RouteManifest,
 } from './generated'
 
-// ── Test seam (prefer `@ship/sail-test` for authors) ───────────────────────
-export { mockQueryState, clearQueryMocks } from './native-cache'

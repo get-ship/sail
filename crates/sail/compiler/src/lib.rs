@@ -70,6 +70,8 @@ pub mod text_host;
 pub use spinnaker_tokens::theme_gate;
 pub mod theme_surface;
 pub use spinnaker_tokens as tokens_generate;
+#[cfg(not(target_arch = "wasm32"))]
+pub mod ts_native;
 pub mod used_icons;
 pub mod used_tags;
 

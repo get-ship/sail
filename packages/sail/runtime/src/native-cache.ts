@@ -1,8 +1,8 @@
 // Signals-native cache engine used by query()/mutation().
 // Entry is a signal on the owner tree; pull and push share CacheEntry.
 
-import { signal, type Signal } from './signal'
-import { onCleanup, currentScope, createScope, type EffectScope } from './effect-scope'
+import { signal, onCleanup, type Signal, type EffectScope } from '@ship/sail-runtime'
+import { currentScope, createScope } from '@ship/sail-runtime/internal'
 import {
   isLiveSource,
   makeAbortController,

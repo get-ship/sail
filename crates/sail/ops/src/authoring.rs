@@ -442,7 +442,7 @@ pub struct CheckDiag {
     /// Machine-readable rewrite (FixPlan JSON) when confluent and fix:suggest|apply.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub rewrite: Option<Value>,
-    /// `"sail"` structure/check or `"tsgo"` mapped TypeScript (when includeTs).
+    /// `"sail"` structure/check or `"typescript"` mapped TypeScript (when includeTs).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub source: Option<String>,
 }
@@ -487,8 +487,9 @@ pub fn check(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
     let source = args.get("source").and_then(|v| v.as_str());
     let fix = args.get("fix").and_then(|v| v.as_str()).unwrap_or("off");
     let actor = args.get("actor").and_then(|v| v.as_str());
-    // Default true: Studio gutters get tsgo without a second poll (SPEC-LSP-1).
-    // Soft-degrades when tsgo is absent. Pass includeTs:false for structure-only.
+    // Default true: merge mapped TypeScript diagnostics. Returns
+    // typescriptStatus: missing and omits TS diagnostics when the sidecar
+    // is absent. Pass includeTs:false for structure-only.
     let include_ts = args
         .get("includeTs")
         .or_else(|| args.get("include_ts"))
@@ -560,6 +561,7 @@ pub fn check(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
         "ok": true,
         "diagnostics": diags,
         "count": diags.len(),
+        "typescriptStatus": typescript_status(ctx),
     });
     if !fixes_out.is_empty() {
         out["fixes"] = Value::Array(fixes_out);
@@ -619,10 +621,11 @@ pub fn hover(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
     let payload = with_intelligence(ctx, |intel| {
         intel.hover_sail(&src, path_s.as_deref(), line, column)
     });
+    let status = typescript_status(ctx);
     match payload {
-        None => Ok(json!({ "contents": null })),
+        None => Ok(json!({ "contents": null, "typescriptStatus": status })),
         Some(h) => {
-            let mut out = json!({ "contents": h.contents });
+            let mut out = json!({ "contents": h.contents, "typescriptStatus": status });
             if let Some(r) = h.range {
                 out["range"] = json!({
                     "startLine": r.start_line,
@@ -663,7 +666,14 @@ pub fn complete(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
         .into_iter()
         .map(|i| serde_json::to_value(i).unwrap_or(json!({})))
         .collect();
-    Ok(json!({ "items": items }))
+    Ok(json!({
+        "items": items,
+        "typescriptStatus": typescript_status(ctx),
+    }))
+}
+
+fn typescript_status(ctx: &Ctx) -> &'static str {
+    with_intelligence(ctx, |intel| intel.typescript_status())
 }
 
 fn attach_rewrites_to_check_diags(diags: &mut [CheckDiag], plans: &[sail_compiler::edit::FixPlan]) {
@@ -1638,16 +1648,12 @@ mod tests {
     fn hover_signal_typed_when_tsgo_present() {
         use crate::call_rpc;
         use crate::ctx::Ctx;
-        // Soft-skip only when tsgo/node_modules is missing. When discovered and
-        // the session is live, warm + retry then require typed hover (no silent
-        // empty-skip). Matches intelligence::hover_signal_typed_when_tsgo_present.
         let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../..")
             .canonicalize()
             .expect("repo root");
-        if sail_lsp::tsgo_test::discover_tsgo(Some(&root)).is_none() {
-            eprintln!("SKIP hover_signal: tsgo not found");
-            return;
+        if sail_lsp::tsgo_test::discover_tsgo(None).is_none() {
+            panic!("{}", sail_compiler::ts_native::missing_sidecar_hint());
         }
         let ctx = Ctx::new(&root, &root, &root);
         let src = r#"<controller>
@@ -1728,7 +1734,9 @@ export default controller((ctx) => ({ count: signal(0) }))
             .join("../../..")
             .canonicalize()
             .expect("repo root");
-        let tsgo_present = sail_lsp::tsgo_test::discover_tsgo(Some(&root)).is_some();
+        if sail_lsp::tsgo_test::discover_tsgo(None).is_none() {
+            panic!("{}", sail_compiler::ts_native::missing_sidecar_hint());
+        }
         let ctx = Ctx::new(&root, &root, &root);
 
         let pos_of = |needle: &str| -> (u32, u32) {
@@ -1781,10 +1789,6 @@ export default controller((ctx) => ({ count: signal(0) }))
         );
         assert!(!layout.contains("Pure.") && !unknown.contains("Pure."));
 
-        if !tsgo_present {
-            eprintln!("SKIP hover_matrix rpc TS probes: tsgo not found");
-            return;
-        }
         let live = sail_lsp::with_global_session(Some(&root), |intel| intel.is_tsgo_live());
         assert!(
             live,

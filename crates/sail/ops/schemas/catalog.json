@@ -61,7 +61,7 @@
             ]
           },
           "includeTs": {
-            "description": "When true (default), merge mapped tsgo TypeScript diagnostics into structure/check results (SPEC-LSP-1 studio gutters). Soft-noops when tsgo is absent. Set `false` for structure-only / faster agent polls.",
+            "description": "When true (default), merge mapped TypeScript diagnostics into structure/check results. Returns `typescriptStatus: missing` and omits TS diagnostics when the sidecar is absent.",
             "type": [
               "boolean",
               "null"
@@ -130,6 +130,13 @@
               "string",
               "null"
             ]
+          },
+          "typescriptStatus": {
+            "description": "`\"live\"` or `\"missing\"`.",
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "definitions": {
@@ -141,7 +148,7 @@
       "service": "SailAuthoring",
       "method": "Hover",
       "mcp_tool": "sail_hover",
-      "description": "Typed hover at a 1-based .sail position. Uses sail-lsp virtual_ts + tsgo for controller/scope/template TS regions; structure symbols otherwise. Soft-degrades when tsgo is absent.",
+      "description": "Typed hover at a 1-based .sail position. Uses sail-lsp virtual_ts + the TypeScript sidecar for controller/scope/template TS regions; structure symbols otherwise. Returns typescriptStatus: missing and omits TS diagnostics when the sidecar is absent.",
       "path": "/sail.ops.v1.SailAuthoring/Hover",
       "inputSchema": {
         "type": "object",
@@ -198,6 +205,12 @@
                 "type": "null"
               }
             ]
+          },
+          "typescriptStatus": {
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "definitions": {
@@ -209,7 +222,7 @@
       "service": "SailAuthoring",
       "method": "Complete",
       "mcp_tool": "sail_complete",
-      "description": "Completions at a 1-based .sail position. Proxies tsgo inside TS regions; falls back to structure scope symbols. Soft-degrades when tsgo is absent.",
+      "description": "Completions at a 1-based .sail position. Proxies the TypeScript sidecar inside TS regions; falls back to structure scope symbols. Returns typescriptStatus: missing and omits TS diagnostics when the sidecar is absent.",
       "path": "/sail.ops.v1.SailAuthoring/Complete",
       "inputSchema": {
         "type": "object",
@@ -255,6 +268,12 @@
             "items": {
               "$ref": "#/definitions/Json"
             }
+          },
+          "typescriptStatus": {
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "definitions": {

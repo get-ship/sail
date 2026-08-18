@@ -46,6 +46,12 @@
         "items": {
           "$ref": "#/definitions/Json"
         }
+      },
+      "typescriptStatus": {
+        "type": [
+          "string",
+          "null"
+        ]
       }
     },
     "definitions": {

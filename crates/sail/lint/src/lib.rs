@@ -2,7 +2,7 @@
 //!
 //! Lints `*.controller.ts` (paired SAIL controllers), `*.sail` templates,
 //! the `.ts` composition modules under a components package's `src/`, plain app
-//! TypeScript under `apps/*/src/**`, and **author** `use:` Action bodies under
+//! TypeScript under a project's `src/` / `routes/`, and **author** `use:` Action bodies under
 //! app `src/actions/**` (ACTIONS-1 regime). Rule IDs are prefixed
 //! `sail-<descriptor>`.
 //!
@@ -109,16 +109,16 @@ pub fn is_pack_source_ts(path: &std::path::Path) -> bool {
     p.contains("/src/") || p.ends_with("/src")
 }
 
-/// True iff `path` is plain app TypeScript under `apps/*/src/**` or
-/// `apps/*/routes/**` (SPEC-DOMDEC-1).
+/// True iff `path` is plain app TypeScript under a Sail project's `src/`
+/// or `routes/` (created app or `apps/*`).
 ///
 /// Controllers (`.controller.ts`) are matched first by `is_controller_path`
 /// and never count as app sources. Test files (`*.test.ts`, `*.spec.ts`) are
-/// out of scope — vitest harnesses create DOM freely.
+/// out of scope — vitest harnesses create DOM freely. Pack sources and the
+/// runtime catalog are not this floor.
 ///
-/// This is the gate that closed the studio escape hatch: a side module under
-/// `apps/studio/src/edit/region-overlay.ts` used to skip every style floor
-/// because it was neither a controller nor a components-package source.
+/// Synthetic paths in unit tests (no `sail.config` on disk) still match
+/// `apps/*/src|routes`.
 pub fn is_app_source_ts(path: &std::path::Path) -> bool {
     if path.extension().and_then(|e| e.to_str()) != Some("ts") {
         return false;
@@ -131,6 +131,9 @@ pub fn is_app_source_ts(path: &std::path::Path) -> bool {
     if is_action_source_path(path) {
         return false;
     }
+    if is_pack_source_ts(path) {
+        return false;
+    }
     let p = path.to_string_lossy().replace('\\', "/");
     if p.contains(".test.ts")
         || p.contains(".spec.ts")
@@ -138,10 +141,37 @@ pub fn is_app_source_ts(path: &std::path::Path) -> bool {
         || p.contains("/test/")
         || p.contains("/qa/")
         || p.contains("/scripts/")
+        || p.contains("/packages/sail/")
     {
         return false;
     }
-    // Workspace-relative (`apps/studio/src/…`) or absolute (`…/apps/studio/src/…`).
+    if let Some(project) = Project::discover(path) {
+        let abs = if path.is_absolute() {
+            path.to_path_buf()
+        } else {
+            std::env::current_dir()
+                .map(|cwd| cwd.join(path))
+                .unwrap_or_else(|_| path.to_path_buf())
+        };
+        if let Ok(rel) = abs.strip_prefix(project.root()) {
+            let rel = rel.to_string_lossy().replace('\\', "/");
+            if rel.starts_with("node_modules/")
+                || rel.contains("/node_modules/")
+                || rel.starts_with("dist/")
+                || rel.starts_with(".sail/")
+                || rel.starts_with("target/")
+            {
+                // not author source
+            } else if rel.starts_with("src/")
+                || rel.contains("/src/")
+                || rel.starts_with("routes/")
+                || rel.contains("/routes/")
+            {
+                return true;
+            }
+        }
+    }
+    // Synthetic monorepo shape (unit tests, no config on disk).
     let under_apps = p.contains("/apps/") || p.starts_with("apps/");
     if !under_apps {
         return false;

@@ -98,8 +98,8 @@ export { form, selection, filteredList } from './compositions'
 export type { FormOptions, ListSource } from './compositions'
 
 // ── Data ───────────────────────────────────────────────────────────────────
-// `__invalidate` is compiler ambient only — on /internal, not tier B.
-export { query, queryKeyed, mutation, unwrap, unwrapOr } from './query'
+// Values live on `@ship/sail-runtime/query` (a separate singleton).
+// Types stay here so authored `import type` does not pull the cache engine.
 export type {
   QueryOpts,
   QueryKey,
@@ -136,7 +136,8 @@ export type {
 } from './theme'
 
 // ── Motion (scrub lane; Style motion is template/A) ────────────────────────
-export { timeline, SailTimelineError } from './timeline'
+// Values live on `@ship/sail-runtime/motion`. Types stay on the language barrel.
+export type { SailTimelineError } from './timeline'
 export type {
   TimelineValue,
   TimelineEasing,
@@ -148,29 +149,13 @@ export type {
   TimelineSignals,
   TimelineOptions,
 } from './timeline'
-export { clock, scrollProgress, springValue } from './drivers'
 export type { ClockOptions, ClockSignal, ScrollProgressOptions, SpringOptions } from './drivers'
 
-// ── Actions (public use: + Action types) ───────────────────────────────────
+// ── Actions ────────────────────────────────────────────────────────────────
+// Value exports live on `@ship/sail-runtime/actions` (a separate singleton).
+// Re-exporting them here pulled zoom-pan / virtual-row into every page.
 export type { Action, ActionResult } from './action'
 export type { Disposer } from './bind'
-// icon is internal (L1 <icon> owns it) — auto-import for stdlib only.
-export {
-  anchor,
-  autosize,
-  clipboard,
-  clickOutside,
-  contextMenu,
-  dropzone,
-  focus,
-  hotkeys,
-  inView,
-  primeIconCache,
-  rect,
-  tipDescribe,
-  virtualRow,
-  zoomPan,
-} from './actions'
 export type {
   AnchorPlacement,
   ClipboardParam,

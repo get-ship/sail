@@ -14,7 +14,7 @@ use clap::{Parser, Subcommand};
 #[derive(Parser)]
 #[command(
     name = "deck-bake",
-    about = "Workspace bake CLI (build-assets, emit). Not the product sail CLI.",
+    about = "Workspace bake CLI (build-assets, emit, gen). Not the product sail CLI.",
     version,
     propagate_version = true
 )]
@@ -41,6 +41,9 @@ enum Command {
         #[arg(long = "no-stamp")]
         no_stamp: bool,
     },
+
+    /// Emit studio-client + sail-ops schema snapshots. This checkout only.
+    Gen,
 }
 
 fn main() {
@@ -61,5 +64,6 @@ fn run() -> Result<()> {
     match Cli::parse().command {
         Command::Emit { targets, out } => bake::emit(targets, out),
         Command::BuildAssets { no_stamp } => bake::build_assets(no_stamp),
+        Command::Gen => bake::generate_ops(),
     }
 }

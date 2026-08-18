@@ -1,13 +1,12 @@
 //! Anti-drift gate: fail the build if the generated grammar files
-//! (`grammar.js`, `queries/highlights.scm`) diverge from the output of
-//! the generator script. A manifest change without regenerating the
-//! grammar files is a red gate.
+//! (`grammar.js`, `queries/highlights.scm`) diverge from the generator,
+//! or if `src/grammar.json` (compiled `parser.c`) does not list the same
+//! rules as `grammar.js`.
 //!
-//! The test runs the native vocabulary dump (`sail-compiler vocabulary`) and
-//! then the TypeScript generator (`scripts/generate-grammar.ts`) into a
-//! temporary directory, then asserts the result is byte-identical to the
-//! committed files. This is the cannot-differ mechanism for the grammar.
+//! A manifest change without `bun run generate`, or a generate without
+//! `tree-sitter generate`, is a red gate.
 
+use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
@@ -74,7 +73,7 @@ fn generated_grammar_matches_committed_files() {
         vocab.display()
     );
 
-    // 2. Run the generator into the temp directory.
+    // 2. Run the generator into the temp directory (same outputs as `bun run generate`).
     let mut gen_cmd = Command::new("bun");
     gen_cmd
         .args([
@@ -89,45 +88,97 @@ fn generated_grammar_matches_committed_files() {
     run(&mut gen_cmd).expect("generator should succeed");
 
     // 3. Compare generated files with committed files.
-    let generated_grammar = temp.join("grammar.js");
-    let generated_highlights = temp.join("queries/highlights.scm");
-    let committed_grammar = grammar_dir.join("grammar.js");
-    let committed_highlights = grammar_dir.join("queries/highlights.scm");
-
-    let lhs_grammar = std::fs::read_to_string(&generated_grammar)
-        .unwrap_or_else(|_| panic!("generated grammar missing: {}", generated_grammar.display()));
-    let rhs_grammar = std::fs::read_to_string(&committed_grammar)
-        .unwrap_or_else(|_| panic!("committed grammar missing: {}", committed_grammar.display()));
-    if lhs_grammar != rhs_grammar {
-        panic!(
-            "grammar.js is stale; regenerate with `bun run generate` in packages/sail/grammar.\n\
-             Generated: {}\nCommitted: {}",
-            generated_grammar.display(),
-            committed_grammar.display(),
-        );
+    let checks = [
+        (
+            temp.join("grammar.js"),
+            grammar_dir.join("grammar.js"),
+            "grammar.js",
+        ),
+        (
+            temp.join("queries/highlights.scm"),
+            grammar_dir.join("queries/highlights.scm"),
+            "queries/highlights.scm",
+        ),
+    ];
+    for (generated, committed, label) in checks {
+        let lhs = std::fs::read_to_string(&generated)
+            .unwrap_or_else(|_| panic!("generated {label} missing: {}", generated.display()));
+        let rhs = std::fs::read_to_string(&committed)
+            .unwrap_or_else(|_| panic!("committed {label} missing: {}", committed.display()));
+        if lhs != rhs {
+            panic!(
+                "{label} is stale; regenerate with `bun run generate` in packages/sail/grammar.\n\
+                 Generated: {}\nCommitted: {}",
+                generated.display(),
+                committed.display(),
+            );
+        }
     }
 
-    let lhs_highlights = std::fs::read_to_string(&generated_highlights).unwrap_or_else(|_| {
-        panic!(
-            "generated highlights missing: {}",
-            generated_highlights.display()
-        )
-    });
-    let rhs_highlights = std::fs::read_to_string(&committed_highlights).unwrap_or_else(|_| {
-        panic!(
-            "committed highlights missing: {}",
-            committed_highlights.display()
-        )
-    });
-    if lhs_highlights != rhs_highlights {
-        panic!(
-            "queries/highlights.scm is stale; regenerate with `bun run generate` in packages/sail/grammar.\n\
-             Generated: {}\nCommitted: {}",
-            generated_highlights.display(),
-            committed_highlights.display(),
-        );
-    }
-
-    // 4. Clean up.
     let _ = std::fs::remove_dir_all(&temp);
+}
+
+/// `grammar.js` is the authored tree-sitter DSL. `src/grammar.json` is what
+/// `tree-sitter generate` compiled into `parser.c`. If the JSON rules lag
+/// the JS, Helix/nvim load a stale highlighter.
+#[test]
+fn compiled_parser_rules_match_grammar_js() {
+    let dir = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let js = std::fs::read_to_string(dir.join("grammar.js")).expect("grammar.js");
+    let json = std::fs::read_to_string(dir.join("src/grammar.json")).expect("src/grammar.json");
+    let from_js = rule_names_from_grammar_js(&js);
+    let from_json = rule_names_from_grammar_json(&json);
+    assert!(
+        !from_js.is_empty() && !from_json.is_empty(),
+        "expected to find rules in grammar.js and src/grammar.json"
+    );
+    if from_js != from_json {
+        let only_js: Vec<_> = from_js.difference(&from_json).collect();
+        let only_json: Vec<_> = from_json.difference(&from_js).collect();
+        panic!(
+            "src/grammar.json (parser.c) drifted from grammar.js — run `tree-sitter generate` \
+             in packages/sail/grammar with a real node (not bun).\n\
+             only in grammar.js: {only_js:?}\n\
+             only in grammar.json: {only_json:?}"
+        );
+    }
+}
+
+fn rule_names_from_grammar_js(src: &str) -> BTreeSet<String> {
+    let start = src
+        .find("rules: {")
+        .expect("grammar.js must contain `rules: {`");
+    let mut names = BTreeSet::new();
+    for line in src[start..].lines() {
+        let t = line.trim();
+        let Some((name, _)) = t.split_once(": $ =>") else {
+            continue;
+        };
+        if name.chars().all(|c| c.is_ascii_alphanumeric() || c == '_') {
+            names.insert(name.to_string());
+        }
+    }
+    names
+}
+
+fn rule_names_from_grammar_json(src: &str) -> BTreeSet<String> {
+    let start = src
+        .find("\"rules\": {")
+        .expect("grammar.json must contain `\"rules\": {`");
+    let mut names = BTreeSet::new();
+    for line in src[start..].lines() {
+        if !line.starts_with("    \"") {
+            continue;
+        }
+        let rest = &line[5..];
+        let Some(end) = rest.find('"') else {
+            continue;
+        };
+        let name = &rest[..end];
+        let after = &rest[end + 1..];
+        if after.trim_start().starts_with(':') && after.contains('{') {
+            names.insert(name.to_string());
+        }
+    }
+    names
 }

@@ -79,9 +79,8 @@ pub fn print_stdio_help() {
            sail mcp                 # stdio\n  \
            sail mcp --http          # 127.0.0.1:3920 POST /mcp\n  \
            sail mcp --http :3921    # custom bind\n  \
-           sail mcp --list-tools    # print tool descriptors as JSON\n  \
-           sail-mcp                 # package binary (`cargo run -p sail-mcp`)\n\n\
-         Bare JSON objects accepted without trailing newline (Grok-compatible).\n"
+           sail mcp --list-tools    # print tool descriptors as JSON\n\n\
+         Bare JSON objects accepted without trailing newline.\n"
     );
 }
 

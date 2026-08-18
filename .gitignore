@@ -11,6 +11,9 @@ dist/
 
 # wasm-pack output (regenerated via `bun run wasm`)
 packages/sail/compiler-wasm/pkg/
+# tree-sitter-sail.wasm — regenerated via packages/sail/highlight bun run build-wasm
+packages/sail/highlight/*.wasm
+packages/sail/vscode/vendor/
 
 # deck's OWN baked product — sail-runtime/dom/sdk-client + deck-route. Canonical
 # bake target is .sail/framework/. build.rs copies those sail-*.js into
@@ -148,3 +151,6 @@ tests/parity/*/out/
 # local minified scratch
 **/.tmp-*.min.js
 **/.tmp-*
+
+# Checkout Helix overlay — not product
+.helix/

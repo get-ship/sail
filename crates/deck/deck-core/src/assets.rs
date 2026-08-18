@@ -40,6 +40,10 @@ fn read_source_asset(root: &std::path::Path, rel: &str) -> Option<Vec<u8>> {
 }
 
 const SUI_RUNTIME_JS: &str = include_str!("../assets/sail-runtime.js");
+const SUI_ACTIONS_JS: &str = include_str!("../assets/sail-actions.js");
+const SUI_MOTION_JS: &str = include_str!("../assets/sail-motion.js");
+const SUI_QUERY_JS: &str = include_str!("../assets/sail-query.js");
+const SUI_VIRTUAL_JS: &str = include_str!("../assets/sail-virtual.js");
 const SUI_DOM_JS: &str = include_str!("../assets/sail-dom.js");
 const SUI_SDK_CLIENT_JS: &str = include_str!("../assets/sail-sdk-client.js");
 // `deck/route` is the bundler-generated entry's `@ship/deck/router`
@@ -477,6 +481,22 @@ pub fn serve_sail_runtime(mode: DaemonMode) -> DeckResponse {
     DeckResponse::js_asset(SUI_RUNTIME_JS.to_string(), mode)
 }
 
+pub fn serve_sail_actions(mode: DaemonMode) -> DeckResponse {
+    DeckResponse::js_asset(SUI_ACTIONS_JS.to_string(), mode)
+}
+
+pub fn serve_sail_motion(mode: DaemonMode) -> DeckResponse {
+    DeckResponse::js_asset(SUI_MOTION_JS.to_string(), mode)
+}
+
+pub fn serve_sail_query(mode: DaemonMode) -> DeckResponse {
+    DeckResponse::js_asset(SUI_QUERY_JS.to_string(), mode)
+}
+
+pub fn serve_sail_virtual(mode: DaemonMode) -> DeckResponse {
+    DeckResponse::js_asset(SUI_VIRTUAL_JS.to_string(), mode)
+}
+
 pub fn serve_sail_dom(mode: DaemonMode) -> DeckResponse {
     DeckResponse::js_asset(SUI_DOM_JS.to_string(), mode)
 }
@@ -526,6 +546,10 @@ pub fn parse_baked_stamp(js: &str) -> Option<&str> {
 pub fn baked_framework_stamps() -> Vec<(&'static str, Option<&'static str>)> {
     vec![
         ("sail-runtime.js", parse_baked_stamp(SUI_RUNTIME_JS)),
+        ("sail-actions.js", parse_baked_stamp(SUI_ACTIONS_JS)),
+        ("sail-motion.js", parse_baked_stamp(SUI_MOTION_JS)),
+        ("sail-query.js", parse_baked_stamp(SUI_QUERY_JS)),
+        ("sail-virtual.js", parse_baked_stamp(SUI_VIRTUAL_JS)),
         ("sail-dom.js", parse_baked_stamp(SUI_DOM_JS)),
         ("sail-sdk-client.js", parse_baked_stamp(SUI_SDK_CLIENT_JS)),
         ("deck-route.js", parse_baked_stamp(DECK_ROUTE_JS)),
@@ -765,6 +789,38 @@ mod tests {
     }
 
     #[test]
+    fn runtime_js_does_not_ship_the_action_catalog() {
+        assert!(
+            !SUI_RUNTIME_JS.contains("zoomPan") && !SUI_RUNTIME_JS.contains("syntaxHighlight"),
+            "hello-world runtime must not include L1 use: actions"
+        );
+        assert!(
+            !SUI_RUNTIME_JS.contains("VisualElement")
+                && !SUI_RUNTIME_JS.contains("scrapeMotionValues"),
+            "runtime must not pull the motion-dom render barrel"
+        );
+        assert!(
+            !SUI_RUNTIME_JS.contains("createVirtualizer")
+                && !SUI_RUNTIME_JS.contains("estimateSize"),
+            "hello-world runtime must not include the virtualizer"
+        );
+        assert!(
+            !SUI_RUNTIME_JS.contains("queryKeyed") && !SUI_RUNTIME_JS.contains("__invalidate"),
+            "hello-world runtime must not include the query engine"
+        );
+        assert!(
+            !SUI_RUNTIME_JS.contains("__sail_motion_attach"),
+            "hello-world runtime must not include the motion attach"
+        );
+        assert!(
+            !SUI_RUNTIME_JS.contains("mockQueryState"),
+            "test mock must not ship in the product runtime"
+        );
+        let actions = serve_sail_actions(DaemonMode::Development);
+        assert_eq!(actions.status, 200);
+    }
+
+    #[test]
     fn parse_baked_stamp_reads_the_leading_comment() {
         let js = "/*! sail-framework-stamp: sha=deadbeef00000000 */\nexport const x = 1;\n";
         assert_eq!(parse_baked_stamp(js), Some("deadbeef00000000"));
@@ -786,6 +842,10 @@ mod tests {
             names,
             vec![
                 "sail-runtime.js",
+                "sail-actions.js",
+                "sail-motion.js",
+                "sail-query.js",
+                "sail-virtual.js",
                 "sail-dom.js",
                 "sail-sdk-client.js",
                 "deck-route.js",

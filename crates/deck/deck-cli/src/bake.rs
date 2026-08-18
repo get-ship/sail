@@ -1,4 +1,4 @@
-//! Workspace bake (`deck-bake`): `build-assets` and `emit`.
+//! Workspace bake (`deck-bake`): `build-assets`, `emit`, and `gen`.
 //!
 //! Not product `sail`. A stranger never runs these; this checkout bakes
 //! with the `deck-bake` binary.
@@ -192,5 +192,21 @@ pub fn build_assets(no_stamp: bool) -> Result<()> {
     }
 
     println!("{BRAND} build-assets: bundles baked via in-process Rolldown");
+    Ok(())
+}
+
+/// Emit studio-client + sail-ops schema snapshots. Refuses outside this checkout.
+pub fn generate_ops() -> Result<()> {
+    let cwd = std::env::current_dir().context("cwd")?;
+    let root = deck_bundler::paths::topmost_cargo_root(&cwd).unwrap_or(cwd);
+    if !root.join("crates/sail/ops").is_dir() || !root.join("packages/sail/studio-client").is_dir()
+    {
+        bail!("deck-bake gen: this is not the Sail checkout");
+    }
+    let written = sail_ops::op_gen(Some(&root)).map_err(|e| anyhow::anyhow!("{e}"))?;
+    println!("{BRAND} gen: wrote {} file(s)", written.len());
+    for p in &written {
+        println!("  {}", p.display());
+    }
     Ok(())
 }

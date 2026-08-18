@@ -19,6 +19,9 @@
 // `/internal` carries language + ABI so rewritten compiled imports resolve.
 import * as sailRuntime from '@ship/sail-runtime/internal'
 import * as sailActions from '@ship/sail-runtime/actions'
+import * as sailMotion from '@ship/sail-runtime/motion'
+import * as sailQuery from '@ship/sail-runtime/query'
+import * as sailVirtual from '@ship/sail-runtime/virtual'
 import * as sailDom from '@ship/sail-dom'
 import * as sailRoute from '@ship/sail-runtime/route'
 import '@ship/sail-runtime/template-hooks'
@@ -49,6 +52,18 @@ function rewriteImports(js: string): string {
     .replace(
       /^\s*import\s*\{\s*([^}]+?)\s*\}\s*from\s*["']@ship\/sail-runtime\/actions["']\s*;?\s*$/gm,
       'const { $1 } = __actions;',
+    )
+    .replace(
+      /^\s*import\s*\{\s*([^}]+?)\s*\}\s*from\s*["']@ship\/sail-runtime\/motion["']\s*;?\s*$/gm,
+      'const { $1 } = __motion;',
+    )
+    .replace(
+      /^\s*import\s*\{\s*([^}]+?)\s*\}\s*from\s*["']@ship\/sail-runtime\/query["']\s*;?\s*$/gm,
+      'const { $1 } = __query;',
+    )
+    .replace(
+      /^\s*import\s*\{\s*([^}]+?)\s*\}\s*from\s*["']@ship\/sail-runtime\/virtual["']\s*;?\s*$/gm,
+      'const { $1 } = __virtual;',
     )
     // import { …names… } from "@ship/sail-dom"
       .replace(
@@ -82,14 +97,36 @@ function normalizeSetup(setup: InjectedSetup | undefined): { setup: (ctx: unknow
 export function evalViewModule(js: string, setup?: InjectedSetup): MountModule {
   const body = rewriteImports(js).replace(/\bexport\s+default\s+/g, 'return ')
   // eslint-disable-next-line @typescript-eslint/no-implied-eval
-  const fn = new Function('__runtime', '__dom', '__route', '__setup', '__actions', body) as (
+  const fn = new Function(
+    '__runtime',
+    '__dom',
+    '__route',
+    '__setup',
+    '__actions',
+    '__motion',
+    '__query',
+    '__virtual',
+    body,
+  ) as (
     r: typeof sailRuntime,
     d: typeof sailDom,
     rt: typeof sailRoute,
     s: { setup: (ctx: unknown) => unknown } | null,
     a: typeof sailActions,
+    m: typeof sailMotion,
+    q: typeof sailQuery,
+    v: typeof sailVirtual,
   ) => MountModule
-  return fn(sailRuntime, sailDom, sailRoute, normalizeSetup(setup), sailActions)
+  return fn(
+    sailRuntime,
+    sailDom,
+    sailRoute,
+    normalizeSetup(setup),
+    sailActions,
+    sailMotion,
+    sailQuery,
+    sailVirtual,
+  )
 }
 
 /**
@@ -102,12 +139,25 @@ export function evalViewModule(js: string, setup?: InjectedSetup): MountModule {
 export function evalComponentModule(js: string): void {
   const body = rewriteImports(js).replace(/\bexport\s+default\s+/g, '')
   // eslint-disable-next-line @typescript-eslint/no-implied-eval
-  const fn = new Function('__runtime', '__dom', '__route', '__setup', '__actions', body) as (
+  const fn = new Function(
+    '__runtime',
+    '__dom',
+    '__route',
+    '__setup',
+    '__actions',
+    '__motion',
+    '__query',
+    '__virtual',
+    body,
+  ) as (
     r: typeof sailRuntime,
     d: typeof sailDom,
     rt: typeof sailRoute,
     s: null,
     a: typeof sailActions,
+    m: typeof sailMotion,
+    q: typeof sailQuery,
+    v: typeof sailVirtual,
   ) => void
-  fn(sailRuntime, sailDom, sailRoute, null, sailActions)
+  fn(sailRuntime, sailDom, sailRoute, null, sailActions, sailMotion, sailQuery, sailVirtual)
 }

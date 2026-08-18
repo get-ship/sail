@@ -19,7 +19,8 @@
 //! - **On-save** (`didSave`): full stream including taffy layout + compose.
 //! - **Render**: on-demand only (MCP/CLI) — never part of this push path.
 //!
-//! When `tsgo` is missing the server degrades to structure-only (one log line).
+//! Missing sidecar degrades to structure-only (`initialize.sail.typescript`,
+//! `window/showMessage` Warning, and one stderr line).
 //!
 //! Library callers (Studio via sail-ops) use [`intelligence`] — the same
 //! virtual_ts + tsgo path as this stdio shell.
@@ -73,13 +74,47 @@ use tsgo::TsgoSession;
 
 type Docs = HashMap<Url, String>;
 
+pub const TS_SIDECAR_MISSING_MESSAGE: &str = "\
+Sail: TypeScript 7 native compiler not found. Controller and {expr} types are off \
+(structure intelligence stays on). Expected dirname(sail)/sail-ts-native/.";
+
 pub fn run() -> anyhow::Result<()> {
     let (connection, io_threads) = Connection::stdio();
-    let capabilities = serde_json::to_value(server_capabilities())?;
-    let _init = connection.initialize(capabilities)?;
-    main_loop(&connection)?;
+    let (id, _params) = connection.initialize_start()?;
+    let tsgo = TsgoSession::start(std::env::current_dir().ok().as_deref());
+    let result = initialize_finish_payload(&tsgo);
+    connection.initialize_finish(id, result)?;
+    if !tsgo.is_live() {
+        connection
+            .sender
+            .send(Message::Notification(lsp_server::Notification {
+                method: "window/showMessage".into(),
+                params: serde_json::json!({
+                    "type": 2,
+                    "message": TS_SIDECAR_MISSING_MESSAGE,
+                }),
+            }))?;
+    }
+    main_loop(&connection, tsgo)?;
     io_threads.join()?;
     Ok(())
+}
+
+pub(crate) fn initialize_finish_payload(tsgo: &TsgoSession) -> serde_json::Value {
+    let version = tsgo
+        .probed_version()
+        .unwrap_or(sail_compiler::ts_native::TS_NATIVE_VERSION);
+    serde_json::json!({
+        "capabilities": server_capabilities(),
+        "serverInfo": { "name": "sail-lsp", "version": env!("CARGO_PKG_VERSION") },
+        "sail": {
+            "typescript": {
+                "status": if tsgo.is_live() { "live" } else { "missing" },
+                "version": version,
+                "source": tsgo.tool_source_str(),
+            }
+        }
+    })
 }
 
 fn server_capabilities() -> ServerCapabilities {
@@ -103,10 +138,8 @@ fn server_capabilities() -> ServerCapabilities {
     }
 }
 
-fn main_loop(conn: &Connection) -> anyhow::Result<()> {
+fn main_loop(conn: &Connection, mut tsgo: TsgoSession) -> anyhow::Result<()> {
     let mut docs: Docs = HashMap::new();
-    // Discover tsgo from CWD / repo; degrades cleanly when absent.
-    let mut tsgo = TsgoSession::start(std::env::current_dir().ok().as_deref());
     for msg in &conn.receiver {
         match msg {
             Message::Request(req) => {
@@ -1262,8 +1295,19 @@ mod tests {
     }
 
     fn degraded_tsgo() -> TsgoSession {
-        // Structure-only session: no tsgo subprocess.
-        TsgoSession::start(Some(std::path::Path::new("/nonexistent-sail-tsgo-root")))
+        TsgoSession::structure_only()
+    }
+
+    #[test]
+    fn initialize_finish_payload_contains_sail_typescript_status() {
+        let tsgo = TsgoSession::structure_only();
+        let v = super::initialize_finish_payload(&tsgo);
+        assert_eq!(v["sail"]["typescript"]["status"], "missing");
+        assert_eq!(
+            v["sail"]["typescript"]["version"],
+            sail_compiler::ts_native::TS_NATIVE_VERSION
+        );
+        assert!(v["capabilities"].is_object());
     }
 
     fn build_item(uri: &str, line: u32, character: u32) -> Vec<lsp_types::CompletionItem> {

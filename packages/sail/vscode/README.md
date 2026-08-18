@@ -5,12 +5,16 @@ Local package (not a marketplace publish). It registers language `sail` for
 diagnostics, format, and code actions come from that server — this extension
 does not invent a second protocol.
 
-Colorization is **not** here. Highlight SSOT is the Studio
-`<sail-code-editor>` overlay generated from the compiler vocabulary.
-This client does not ship a TextMate grammar, does not load tree-sitter,
-and does not teach retired syntax.
+Colorization is **tree-sitter-sail** via `@ship/sail-highlight`
+(`tree-sitter-sail.wasm` + `queries/highlights.scm`) as VS Code semantic
+tokens. This client does not ship a TextMate grammar and does not teach
+retired syntax.
 
 ## Prerequisite
+
+Typed intelligence needs the **CLI pair** — the `sail` binary **and** the
+`sail-ts-native/` directory next to it (`tsc` + `lib.d.ts`). The VSIX does
+not ship the sidecar.
 
 The editor process must be able to spawn:
 
@@ -18,15 +22,11 @@ The editor process must be able to spawn:
 sail lsp
 ```
 
-Install the CLI from this repo (`sail lsp` is a peer on that binary):
-
-```sh
-cargo install --path crates/deck/deck-cli --bin sail
-```
-
-Confirm with `sail lsp --help` or by opening a `.sail` file after install.
-Override the executable with `sail.lsp.path` (absolute path to `sail`). The
-client always appends `lsp`. It never runs `cargo run`.
+From this repo: `cargo build -p deck-cli --bin sail` and put
+`target/debug/sail` on PATH (`sail-ts-native/` sits next to it). Override the
+executable with `sail.lsp.path`. The client always appends `lsp`. It never
+runs `cargo run`. After `next.start()` the client reads
+`initializeResult.sail.typescript` and warns if the sidecar is missing.
 
 ## Install from Location (unpacked)
 
@@ -37,6 +37,9 @@ cd packages/sail/vscode
 bun install
 bun run compile
 ```
+
+`compile` copies wasm + `highlights.scm` into `vendor/` so the highlighter
+loads from `context.extensionUri`.
 
 Then in **Cursor** or **VS Code**:
 

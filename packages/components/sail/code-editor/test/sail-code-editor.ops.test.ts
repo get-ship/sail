@@ -41,7 +41,7 @@ describe('parseOpsDiagnostics', () => {
   it('maps Check/Diagnose diagnostic shapes', () => {
     const out = parseOpsDiagnostics([
       { line: 2, col: 4, end_line: 2, end_col: 10, severity: 'warning', message: 'x', rule: 'r' },
-      { line: 1, column: 1, severity: 'error', message: 'y', source: 'tsgo' },
+      { line: 1, column: 1, severity: 'error', message: 'y', source: 'typescript' },
     ])
     expect(out).toHaveLength(2)
     expect(out[0]).toMatchObject({
@@ -52,7 +52,7 @@ describe('parseOpsDiagnostics', () => {
       severity: 'warning',
       message: 'x',
     })
-    expect(out[1]).toMatchObject({ line: 1, column: 1, severity: 'error', source: 'tsgo' })
+    expect(out[1]).toMatchObject({ line: 1, column: 1, severity: 'error', source: 'typescript' })
   })
 })
 

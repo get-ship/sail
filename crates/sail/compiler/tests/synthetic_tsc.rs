@@ -13,10 +13,7 @@
 //! remains. Author expressions were already fully checked; this closes the
 //! machinery gap so a synthesized view checks exactly as strictly as authored TS.
 //!
-//! Opt-in by environment: requires `bun install` so `node_modules/.bin/tsc`
-//! and the workspace package sources exist. When `tsc` is absent the test
-//! prints why and returns — it never fails for a missing toolchain (mirrors
-//! `parity.rs`'s opt-in stance).
+//! Requires `node_modules/typescript/bin/tsc` (bun install). Missing wrapper panics.
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -61,9 +58,14 @@ fn repo_root() -> PathBuf {
         .unwrap()
 }
 
-fn tsc_path(repo: &Path) -> Option<PathBuf> {
-    let p = repo.join("node_modules/.bin/tsc");
-    p.exists().then_some(p)
+fn require_tsc(repo: &Path) -> PathBuf {
+    let p = repo.join("node_modules/typescript/bin/tsc");
+    assert!(
+        p.is_file(),
+        "repo TypeScript wrapper missing at {} — bun install",
+        p.display()
+    );
+    p
 }
 
 struct Surface {
@@ -152,7 +154,6 @@ fn write_tsconfig(repo: &Path, dir: &Path, include: &[&str], name: &str) {
     "skipLibCheck": true,
     "noEmit": true,
     "allowImportingTsExtensions": true,
-    "baseUrl": ".",
     "paths": {{
       "@ship/deck/router": ["{r}/packages/deck/router/src/server.ts"],
       "@ship/sail-runtime": ["{r}/packages/sail/runtime/src/server.ts"],
@@ -190,13 +191,7 @@ fn run_tsc(tsc: &Path, dir: &Path, project: &str) -> (bool, String) {
 #[test]
 fn surfaces_typecheck_green_and_typo_is_caught() {
     let repo = repo_root();
-    let Some(tsc) = tsc_path(&repo) else {
-        eprintln!(
-            "SKIP synthetic_tsc: {} not found — run `bun install` to enable the tsc proof.",
-            repo.join("node_modules/.bin/tsc").display()
-        );
-        return;
-    };
+    let tsc = require_tsc(&repo);
 
     let manifest_src =
         fs::read_to_string(repo.join("crates/deck/deck-conformance/app/app.manifest.jsonc"))

@@ -4,7 +4,7 @@
 //! - good Style usage typechecks green
 //! - wrong setter / wrong token type is a tsc error
 //!
-//! Opt-in when `node_modules/.bin/tsc` is present (same stance as synthetic_tsc).
+//! Requires `node_modules/typescript/bin/tsc` (bun install). Missing wrapper panics.
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -19,21 +19,20 @@ fn repo_root() -> PathBuf {
         .unwrap()
 }
 
-fn tsc_path(repo: &Path) -> Option<PathBuf> {
-    let p = repo.join("node_modules/.bin/tsc");
-    p.exists().then_some(p)
+fn require_tsc(repo: &Path) -> PathBuf {
+    let p = repo.join("node_modules/typescript/bin/tsc");
+    assert!(
+        p.is_file(),
+        "repo TypeScript wrapper missing at {} — bun install",
+        p.display()
+    );
+    p
 }
 
 #[test]
 fn style_misuse_is_tsc_error_and_good_chain_is_green() {
     let repo = repo_root();
-    let Some(tsc) = tsc_path(&repo) else {
-        eprintln!(
-            "SKIP ambients_style_tsc: {} not found — run `bun install` to enable.",
-            repo.join("node_modules/.bin/tsc").display()
-        );
-        return;
-    };
+    let tsc = require_tsc(&repo);
 
     let work = repo.join("target/ambients-style-tsc");
     let _ = fs::remove_dir_all(&work);

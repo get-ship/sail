@@ -31,7 +31,7 @@ fn workspace_root() -> PathBuf {
 }
 
 fn tsc_bin(root: &Path) -> PathBuf {
-    let tsc = root.join("node_modules/.bin/tsc");
+    let tsc = root.join("node_modules/typescript/bin/tsc");
     assert!(tsc.is_file(), "tsc required at {}", tsc.display());
     tsc
 }

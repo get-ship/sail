@@ -1,6 +1,6 @@
 //! Codegen: emit TS client + schema snapshots from typed contracts.
 //!
-//! Invoked by `sail op gen` (deck-cli) or tests.
+//! Invoked by `deck-bake gen` (deck-cli) or tests.
 //! Named `codegen` because `gen` is a Rust 2024 reserved keyword.
 
 use std::fs;
@@ -120,13 +120,13 @@ pub fn assert_no_drift(paths: &GenPaths) -> Result<(), String> {
     let expected_ts = generate_ts_client(METHOD_CONTRACTS);
     let actual_ts = fs::read_to_string(&paths.ts_out).map_err(|e| {
         format!(
-            "missing generated TS client at {} ({e}); run `sail op gen`",
+            "missing generated TS client at {} ({e}); run `deck-bake gen`",
             paths.ts_out.display()
         )
     })?;
     if actual_ts != expected_ts {
         return Err(format!(
-            "drift: {} is stale; run `sail op gen`",
+            "drift: {} is stale; run `deck-bake gen`",
             paths.ts_out.display()
         ));
     }
@@ -139,7 +139,7 @@ pub fn assert_no_drift(paths: &GenPaths) -> Result<(), String> {
             .map_err(|e| format!("missing schema snapshot {} ({e})", path.display()))?;
         if actual != expected {
             return Err(format!(
-                "drift: schema snapshot {} is stale; run `sail op gen`",
+                "drift: schema snapshot {} is stale; run `deck-bake gen`",
                 path.display()
             ));
         }
@@ -149,13 +149,13 @@ pub fn assert_no_drift(paths: &GenPaths) -> Result<(), String> {
     let expected_cat = expected_catalog()?;
     let actual_cat = fs::read_to_string(&catalog_path).map_err(|e| {
         format!(
-            "missing catalog.json at {} ({e}); run `sail op gen`",
+            "missing catalog.json at {} ({e}); run `deck-bake gen`",
             catalog_path.display()
         )
     })?;
     if actual_cat != expected_cat {
         return Err(format!(
-            "drift: {} is stale; run `sail op gen`",
+            "drift: {} is stale; run `deck-bake gen`",
             catalog_path.display()
         ));
     }
@@ -164,13 +164,13 @@ pub fn assert_no_drift(paths: &GenPaths) -> Result<(), String> {
     let expected_mcp = expected_mcp_tools()?;
     let actual_mcp = fs::read_to_string(&mcp_path).map_err(|e| {
         format!(
-            "missing mcp-tools.json at {} ({e}); run `sail op gen`",
+            "missing mcp-tools.json at {} ({e}); run `deck-bake gen`",
             mcp_path.display()
         )
     })?;
     if actual_mcp != expected_mcp {
         return Err(format!(
-            "drift: {} is stale; run `sail op gen`",
+            "drift: {} is stale; run `deck-bake gen`",
             mcp_path.display()
         ));
     }

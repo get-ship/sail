@@ -1,10 +1,7 @@
 //! tsgo LSP sidecar — spawn, discover, and proxy position-based requests.
 //!
-//! Binary discovery order (SPEC-LSP-1):
-//! 1. `node_modules/.bin/tsgo` walking up from a file/workspace path
-//! 2. Prefer the native platform binary next to `@typescript/native-preview`
-//! 3. `tsgo` on `PATH`
-//! 4. Graceful degrade (structure-only); log once
+//! Binary discovery is `sail_compiler::ts_native` (peer dir / XDG / env).
+//! `workspace_hint` is for `write_tsconfig` paths and `@/` homes, not the ELF.
 //!
 //! Speaks standard LSP over stdio (`tsgo --lsp -stdio`). Diagnostics use the
 //! pull model (`textDocument/diagnostic`).
@@ -25,41 +22,19 @@ use crate::virtual_ts::{VirtualFile, VirtualTs, lsp_position_to_offset, offset_t
 static DEGRADE_LOGGED: AtomicBool = AtomicBool::new(false);
 static TSGO_AVAILABLE: AtomicBool = AtomicBool::new(false);
 
-/// Discover a tsgo binary. See module docs for the search order.
-pub fn discover_tsgo(start: Option<&Path>) -> Option<PathBuf> {
-    let mut dir = start
-        .map(|p| {
-            if p.is_file() {
-                p.parent().unwrap_or(p).to_path_buf()
-            } else {
-                p.to_path_buf()
-            }
-        })
-        .or_else(|| std::env::current_dir().ok());
-
-    while let Some(d) = dir {
-        let bin = d.join("node_modules/.bin/tsgo");
-        if bin.exists() {
-            if let Some(native) = resolve_native_tsgo(&bin) {
-                TSGO_AVAILABLE.store(true, Ordering::SeqCst);
-                return Some(native);
-            }
+/// Discover the native TypeScript sidecar. `start` is unused (workspace hint
+/// is for tsconfig / `@/` only).
+pub fn discover_tsgo(_start: Option<&Path>) -> Option<PathBuf> {
+    match sail_compiler::ts_native::resolve_ts_native() {
+        Some(tool) => {
             TSGO_AVAILABLE.store(true, Ordering::SeqCst);
-            return Some(bin);
+            Some(tool.program)
         }
-        if let Some(native) = platform_native_under(&d.join("node_modules")) {
-            TSGO_AVAILABLE.store(true, Ordering::SeqCst);
-            return Some(native);
+        None => {
+            TSGO_AVAILABLE.store(false, Ordering::SeqCst);
+            None
         }
-        dir = d.parent().map(|p| p.to_path_buf());
     }
-
-    if let Ok(path) = which("tsgo") {
-        TSGO_AVAILABLE.store(true, Ordering::SeqCst);
-        return Some(path);
-    }
-    TSGO_AVAILABLE.store(false, Ordering::SeqCst);
-    None
 }
 
 /// Log the degrade message once. Returns true if this call logged it.
@@ -69,8 +44,9 @@ pub fn log_degrade_once() -> bool {
         .is_ok()
     {
         eprintln!(
-            "sail-lsp: tsgo not found (searched node_modules/.bin/tsgo and PATH) — \
-             TypeScript intelligence disabled; structure capabilities remain active"
+            "sail-lsp: TypeScript 7 native compiler not found next to sail \
+             (dirname(sail)/sail-ts-native/). Controller and {{expr}} types are off; \
+             structure stays on."
         );
         true
     } else {
@@ -87,38 +63,6 @@ pub fn reset_discovery_state_for_tests() {
 #[allow(dead_code)]
 pub fn tsgo_is_available() -> bool {
     TSGO_AVAILABLE.load(Ordering::SeqCst)
-}
-
-fn resolve_native_tsgo(bin_script: &Path) -> Option<PathBuf> {
-    let nm = bin_script.parent()?.parent()?;
-    platform_native_under(nm)
-}
-
-fn platform_native_under(node_modules: &Path) -> Option<PathBuf> {
-    let os = std::env::consts::OS;
-    let arch = match std::env::consts::ARCH {
-        "x86_64" => "x64",
-        "aarch64" => "arm64",
-        other => other,
-    };
-    let os = if os == "windows" { "win32" } else { os };
-    let pkg = format!("@typescript/native-preview-{os}-{arch}");
-    let mut exe = node_modules.join(&pkg).join("lib").join("tsgo");
-    if cfg!(windows) {
-        exe.set_extension("exe");
-    }
-    exe.exists().then_some(exe)
-}
-
-fn which(name: &str) -> Result<PathBuf, ()> {
-    let path = std::env::var_os("PATH").ok_or(())?;
-    for dir in std::env::split_paths(&path) {
-        let candidate = dir.join(name);
-        if candidate.is_file() {
-            return Ok(candidate);
-        }
-    }
-    Err(())
 }
 
 // ── LSP client ─────────────────────────────────────────────────────────────
@@ -497,10 +441,11 @@ pub struct TsgoSession {
     client: Option<TsgoClient>,
     work_dir: PathBuf,
     virtuals: HashMap<String, VirtualTs>,
+    tool: Option<sail_compiler::ts_native::TsNativeTool>,
 }
 
 impl TsgoSession {
-    pub fn start(workspace_hint: Option<&Path>) -> Self {
+    fn new_work_dir() -> PathBuf {
         // Unique per session: parallel tests in one process can share a
         // millisecond clock tick, and Drop removes the work_dir — colliding
         // names delete another session's virtual project mid-flight.
@@ -515,15 +460,37 @@ impl TsgoSession {
             WORK_DIR_SEQ.fetch_add(1, Ordering::Relaxed)
         ));
         let _ = std::fs::create_dir_all(&work_dir);
+        work_dir
+    }
 
-        let tsgo = discover_tsgo(workspace_hint);
-        let client = match tsgo {
-            Some(bin) => {
+    /// Dead sidecar without consulting resolve. The only in-process disable.
+    pub fn structure_only() -> Self {
+        Self {
+            client: None,
+            work_dir: Self::new_work_dir(),
+            virtuals: HashMap::new(),
+            tool: None,
+        }
+    }
+
+    pub fn start(workspace_hint: Option<&Path>) -> Self {
+        let work_dir = Self::new_work_dir();
+        let tool = sail_compiler::ts_native::resolve_ts_native();
+        let client = match &tool {
+            Some(tool) => {
                 write_tsconfig(&work_dir, workspace_hint);
-                match TsgoClient::spawn(&bin, &work_dir) {
-                    Ok(c) => Some(c),
+                match TsgoClient::spawn(&tool.program, &work_dir) {
+                    Ok(c) => {
+                        eprintln!(
+                            "sail-lsp: typescript {} live ({}) {}",
+                            tool.version,
+                            tool.source.as_str(),
+                            tool.program.display()
+                        );
+                        Some(c)
+                    }
                     Err(e) => {
-                        eprintln!("sail-lsp: failed to start tsgo ({e}) — degrading");
+                        eprintln!("sail-lsp: failed to start typescript sidecar ({e}) — degrading");
                         let _ = log_degrade_once();
                         None
                     }
@@ -539,11 +506,20 @@ impl TsgoSession {
             client,
             work_dir,
             virtuals: HashMap::new(),
+            tool,
         }
     }
 
     pub fn is_live(&self) -> bool {
         self.client.is_some()
+    }
+
+    pub fn probed_version(&self) -> Option<&str> {
+        self.tool.as_ref().map(|t| t.version.as_str())
+    }
+
+    pub fn tool_source_str(&self) -> Option<&'static str> {
+        self.tool.as_ref().map(|t| t.source.as_str())
     }
 
     pub fn virtual_for(&self, sail_uri: &str) -> Option<&VirtualTs> {
@@ -784,9 +760,119 @@ const FRAMEWORK_TS_PATHS: &[(&str, &str)] = &[
     ("@ship/sail-dom", "packages/sail/dom/src/index.ts"),
 ];
 
+const AMBIENTS_RS: &str = include_str!("../../compiler/src/ambients.rs");
+
+fn import_type_names(src: &str, specifier: &str) -> std::collections::BTreeSet<String> {
+    let needle = format!("from '{specifier}'");
+    let mut out = std::collections::BTreeSet::new();
+    let mut rest = src;
+    while let Some(idx) = rest.find(&needle) {
+        let before = &rest[..idx];
+        if let Some(brace) = before.rfind('{') {
+            for part in before[brace + 1..].split(',') {
+                let name = part
+                    .lines()
+                    .last()
+                    .unwrap_or(part)
+                    .trim()
+                    .trim_end_matches(',')
+                    .trim();
+                if !name.is_empty() && name.chars().all(|c| c.is_ascii_alphanumeric() || c == '_') {
+                    out.insert(name.to_string());
+                }
+            }
+        }
+        rest = &rest[idx + needle.len()..];
+    }
+    out
+}
+
+fn import_call_names(src: &str, specifier: &str) -> std::collections::BTreeSet<String> {
+    let needle = format!("import('{specifier}').");
+    let mut out = std::collections::BTreeSet::new();
+    let mut rest = src;
+    while let Some(idx) = rest.find(&needle) {
+        let after = &rest[idx + needle.len()..];
+        let name: String = after
+            .chars()
+            .take_while(|c| c.is_ascii_alphanumeric() || *c == '_')
+            .collect();
+        if !name.is_empty() {
+            out.insert(name);
+        }
+        rest = &rest[idx + needle.len()..];
+    }
+    out
+}
+
+fn runtime_stub_names() -> std::collections::BTreeSet<String> {
+    let mut names = import_type_names(AMBIENTS_RS, "@ship/sail-runtime");
+    names.extend(import_call_names(AMBIENTS_RS, "@ship/sail-runtime"));
+    names.extend(import_type_names(
+        AMBIENTS_RS,
+        "@ship/sail-runtime/internal",
+    ));
+    names.extend(import_call_names(
+        AMBIENTS_RS,
+        "@ship/sail-runtime/internal",
+    ));
+    names
+}
+
+fn runtime_stub_dts() -> String {
+    let names = runtime_stub_names();
+    let mut body = String::from(
+        "// enough that signal() is not any.\n\
+         declare module '@ship/sail-runtime' {\n\
+         \x20 export interface Signal<T> {\n\
+         \x20   (): T\n\
+         \x20   set(value: T): void\n\
+         \x20 }\n\
+         \x20 export function signal<T>(init: T): Signal<T>\n\
+         \x20 export function controller<S>(setup: (ctx: unknown) => S): { __def: (ctx: unknown) => S }\n\
+         \x20 export interface RouteSignals {\n\
+         \x20   readonly path: string\n\
+         \x20   readonly params: Record<string, string>\n\
+         \x20 }\n",
+    );
+    for name in &names {
+        if matches!(name.as_str(), "Signal" | "RouteSignals") {
+            continue;
+        }
+        body.push_str(&format!("  export type {name} = unknown\n"));
+    }
+    body.push_str(
+        "}\n\
+         declare module '@ship/sail-runtime/internal' {\n\
+         \x20 export * from '@ship/sail-runtime'\n\
+         \x20 export function mountAmbient(...args: never[]): void\n\
+         }\n",
+    );
+    body
+}
+
 fn write_tsconfig(work_dir: &Path, workspace_hint: Option<&Path>) {
     let mut paths = String::new();
+    let runtime_src = find_package_src(workspace_hint, "packages/sail/runtime/src/index.ts");
+    let internal_src = find_package_src(workspace_hint, "packages/sail/runtime/src/internal.ts");
+    if runtime_src.is_none() || internal_src.is_none() {
+        let _ = std::fs::write(work_dir.join("sail-runtime-stub.d.ts"), runtime_stub_dts());
+        if runtime_src.is_none() {
+            paths.push_str("      \"@ship/sail-runtime\": [\"./sail-runtime-stub.d.ts\"],\n");
+        }
+        if internal_src.is_none() {
+            paths.push_str(
+                "      \"@ship/sail-runtime/internal\": [\"./sail-runtime-stub.d.ts\"],\n",
+            );
+        }
+    }
     for (spec, rel) in FRAMEWORK_TS_PATHS {
+        if *spec == "@ship/sail-runtime" && runtime_src.is_none() {
+            continue;
+        }
+        if *spec == "@ship/sail-runtime/internal" && internal_src.is_none() {
+            continue;
+        }
         if let Some(p) = find_package_src(workspace_hint, rel) {
             paths.push_str(&format!(
                 "      \"{}\": [\"{}\"],\n",
@@ -989,33 +1075,21 @@ fn escape_json_path(p: &Path) -> String {
 }
 
 fn find_package_src(hint: Option<&Path>, rel: &str) -> Option<PathBuf> {
-    let mut dir = hint.map(|p| {
-        if p.is_file() {
-            p.parent().unwrap_or(p).to_path_buf()
-        } else {
-            p.to_path_buf()
-        }
-    });
-    if dir.is_none() {
-        dir = std::env::current_dir().ok();
-    }
-    let manifest = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    let candidates = [
-        dir.clone(),
-        Some(manifest.clone()),
-        manifest.parent().map(|p| p.to_path_buf()),
-        manifest.ancestors().nth(2).map(|p| p.to_path_buf()),
-        manifest.ancestors().nth(3).map(|p| p.to_path_buf()),
-    ];
-    for start in candidates.into_iter().flatten() {
-        let mut d = Some(start);
-        while let Some(cur) = d {
-            let p = cur.join(rel);
-            if p.exists() {
-                return p.canonicalize().ok().or(Some(p));
+    let mut d = hint
+        .map(|p| {
+            if p.is_file() {
+                p.parent().unwrap_or(p).to_path_buf()
+            } else {
+                p.to_path_buf()
             }
-            d = cur.parent().map(|x| x.to_path_buf());
+        })
+        .or_else(|| std::env::current_dir().ok());
+    while let Some(cur) = d {
+        let p = cur.join(rel);
+        if p.exists() {
+            return p.canonicalize().ok().or(Some(p));
         }
+        d = cur.parent().map(|x| x.to_path_buf());
     }
     None
 }
@@ -1175,7 +1249,7 @@ fn map_diagnostic(
         },
         severity,
         code,
-        source: Some("tsgo".into()),
+        source: Some("typescript".into()),
         message,
         ..Default::default()
     })
@@ -1188,17 +1262,14 @@ mod tests {
     #[test]
     fn discover_finds_workspace_tsgo() {
         reset_discovery_state_for_tests();
-        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../..")
-            .canonicalize()
-            .unwrap();
-        let found = discover_tsgo(Some(&root));
-        // Soft-skip when worktree has no bun install (SPEC-LSP-1 degrade path).
-        let Some(p) = found else {
-            eprintln!("SKIP discover: no tsgo under workspace node_modules");
-            return;
-        };
-        assert!(p.exists(), "{}", p.display());
+        let found = discover_tsgo(None)
+            .unwrap_or_else(|| panic!("{}", sail_compiler::ts_native::missing_sidecar_hint()));
+        assert!(found.exists(), "{}", found.display());
+        assert!(
+            !found.to_string_lossy().contains("node_modules"),
+            "discover must not walk node_modules: {}",
+            found.display()
+        );
     }
 
     #[test]
@@ -1210,13 +1281,7 @@ mod tests {
 
     #[test]
     fn session_degrades_without_panic_when_forced_missing() {
-        let work_dir = std::env::temp_dir().join("sail-lsp-degrade-test");
-        let _ = std::fs::create_dir_all(&work_dir);
-        let mut session = TsgoSession {
-            client: None,
-            work_dir: work_dir.clone(),
-            virtuals: HashMap::new(),
-        };
+        let mut session = TsgoSession::structure_only();
         session.on_sail_change(
             "file:///x.sail",
             "<controller>\nconst x = 1\nexport default { x }\n</controller>\n<div>{x}</div>",
@@ -1232,7 +1297,30 @@ mod tests {
                 .is_none()
         );
         assert!(session.diagnostics_mapped("file:///x.sail", "").is_empty());
-        let _ = std::fs::remove_dir_all(&work_dir);
+    }
+
+    #[test]
+    fn runtime_stub_covers_ambient_runtime_names() {
+        let src = AMBIENTS_RS;
+        let stub = runtime_stub_dts();
+        for spec in ["@ship/sail-runtime", "@ship/sail-runtime/internal"] {
+            for name in import_type_names(src, spec) {
+                assert!(
+                    stub.contains(&name),
+                    "stub missing import-type {name} from {spec}"
+                );
+            }
+            for name in import_call_names(src, spec) {
+                assert!(
+                    stub.contains(&name),
+                    "stub missing import() {name} from {spec}"
+                );
+            }
+        }
+        assert!(
+            stub.contains("HostPropertyDesc"),
+            "top import block misses HostPropertyDesc; import() form must be included"
+        );
     }
 
     #[test]
@@ -1242,14 +1330,12 @@ mod tests {
             .join("../../..")
             .canonicalize()
             .unwrap();
-        if discover_tsgo(Some(&root)).is_none() {
-            eprintln!("SKIP live_session: no tsgo");
-            return;
+        if discover_tsgo(None).is_none() {
+            panic!("{}", sail_compiler::ts_native::missing_sidecar_hint());
         }
         let mut session = TsgoSession::start(Some(&root));
         if !session.is_live() {
-            eprintln!("SKIP live_session: failed to start");
-            return;
+            panic!("sidecar present but TsgoSession failed to start");
         }
         let src = r#"<controller>
 import { controller, signal } from '@ship/sail-runtime'
@@ -1260,21 +1346,16 @@ export default controller((ctx) => ({ count: signal(0) }))
         let uri = "file:///tmp/live-smoke.sail";
         session.on_sail_change(uri, src);
         let diags = session.diagnostics_mapped(uri, src);
-        // Soft: assert no panic; when runtime types resolve, countt is flagged.
-        if let Some(d) = diags.iter().find(|d| d.message.contains("countt")) {
-            let countt_off = src.find("countt").unwrap();
-            let (line, _) = offset_to_lsp_position(src, countt_off);
-            assert_eq!(
-                d.range.start.line, line,
-                "countt diagnostic must map to .sail line"
-            );
-        } else {
-            eprintln!(
-                "NOTE: no countt diagnostic yet (got {} diags) — scope recovery \
-                 may still be resolving runtime types; map+session path exercised",
-                diags.len()
-            );
-        }
+        let d = diags
+            .iter()
+            .find(|d| d.message.contains("countt"))
+            .unwrap_or_else(|| panic!("expected countt diagnostic, got {diags:?}"));
+        let countt_off = src.find("countt").unwrap();
+        let (line, _) = offset_to_lsp_position(src, countt_off);
+        assert_eq!(
+            d.range.start.line, line,
+            "countt diagnostic must map to .sail line"
+        );
     }
 
     fn owned_route_tree() -> PathBuf {
@@ -1395,8 +1476,8 @@ export default controller((ctx) => ({ count: signal(0) }))
             .join("../../..")
             .canonicalize()
             .unwrap();
-        if discover_tsgo(Some(&root)).is_none() {
-            panic!("tsgo required");
+        if discover_tsgo(None).is_none() {
+            panic!("{}", sail_compiler::ts_native::missing_sidecar_hint());
         }
         let project = isolated_at_alias_app();
         // Discover tsgo from this checkout; `@/` rewrite keys off the .sail path.
@@ -1448,14 +1529,12 @@ export default controller(() => {
             .join("../../..")
             .canonicalize()
             .unwrap();
-        if discover_tsgo(Some(&root)).is_none() {
-            eprintln!("SKIP live_module_resolve: no tsgo");
-            return;
+        if discover_tsgo(None).is_none() {
+            panic!("{}", sail_compiler::ts_native::missing_sidecar_hint());
         }
         let mut session = TsgoSession::start(Some(&root));
         if !session.is_live() {
-            eprintln!("SKIP live_module_resolve: failed to start");
-            return;
+            panic!("sidecar present but TsgoSession failed to start");
         }
         let dir = owned_route_tree();
         let page = dir.join("routes/page.sail");
@@ -1488,11 +1567,9 @@ export default controller(() => ({ navigate, appRouteBase }))
             .join("../../..")
             .canonicalize()
             .unwrap();
-        let found = discover_tsgo(Some(&root));
-        let Some(_) = found else {
-            eprintln!("SKIP live_tsgo_named_style_ref_is_in_scope: no tsgo");
-            return;
-        };
+        if discover_tsgo(None).is_none() {
+            panic!("{}", sail_compiler::ts_native::missing_sidecar_hint());
+        }
         let mut session = TsgoSession::start(Some(&root));
         assert!(
             session.is_live(),
@@ -1545,9 +1622,8 @@ export default controller(() => ({}))
             .join("../../..")
             .canonicalize()
             .unwrap();
-        if discover_tsgo(Some(&root)).is_none() {
-            eprintln!("SKIP live_tsgo_multiline_scope_type: no tsgo");
-            return;
+        if discover_tsgo(None).is_none() {
+            panic!("{}", sail_compiler::ts_native::missing_sidecar_hint());
         }
         let mut session = TsgoSession::start(Some(&root));
         assert!(session.is_live(), "tsgo session failed to start");
@@ -1585,9 +1661,8 @@ export default controller(() => ({}))
             .join("../../..")
             .canonicalize()
             .unwrap();
-        if discover_tsgo(Some(&root)).is_none() {
-            eprintln!("SKIP live_tsgo_landing_shaped_named_styles_are_in_scope: no tsgo");
-            return;
+        if discover_tsgo(None).is_none() {
+            panic!("{}", sail_compiler::ts_native::missing_sidecar_hint());
         }
         let mut session = TsgoSession::start(Some(&root));
         assert!(session.is_live(), "tsgo session failed to start");

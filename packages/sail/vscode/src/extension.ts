@@ -1,20 +1,34 @@
-import { type ExtensionContext, window, workspace } from 'vscode'
+import {
+  type ExtensionContext,
+  languages,
+  SemanticTokens,
+  SemanticTokensLegend,
+  Uri,
+  window,
+  workspace,
+} from 'vscode'
 import {
   LanguageClient,
   type LanguageClientOptions,
   RevealOutputChannelOn,
   type ServerOptions,
 } from 'vscode-languageclient/node'
+import { highlight, initHighlight } from '@ship/sail-highlight'
+import {
+  buildSemanticTokens,
+  encodeTokenData,
+  LEGEND_TOKEN_MODIFIERS,
+  LEGEND_TOKEN_TYPES,
+} from './tokens'
 
 /**
  * VS Code / Cursor client for `.sail`.
  *
- * Spawns **`sail lsp`** on stdio (same protocol as the `sail-lsp` crate).
- * Optional `sail.lsp.path` replaces the executable; the `lsp` argument is
- * always appended. The spawned argv is exactly `[<sail>, "lsp"]`.
+ * Colorization: `@ship/sail-highlight` (tree-sitter-sail.wasm + highlights.scm)
+ * as a DocumentSemanticTokensProvider. Not TextMate. Not the Studio overlay.
  *
- * Highlighting is not this package — the Studio overlay (compiler
- * vocabulary) owns colorization. This client does not load tree-sitter.
+ * Intelligence: **`sail lsp`** on stdio. Optional `sail.lsp.path` replaces the
+ * executable; the `lsp` argument is always appended. argv is `[<sail>, "lsp"]`.
  */
 
 let client: LanguageClient | undefined
@@ -29,6 +43,7 @@ export async function activate(context: ExtensionContext): Promise<void> {
       }
     }),
   )
+  await registerHighlight(context)
   await start()
 }
 
@@ -50,6 +65,48 @@ function sailExecutable(): string {
     return raw.trim()
   }
   return 'sail'
+}
+
+function vendorUri(context: ExtensionContext, name: string): Uri {
+  return Uri.joinPath(context.extensionUri, 'vendor', name)
+}
+
+async function registerHighlight(context: ExtensionContext): Promise<void> {
+  const scmUri = vendorUri(context, 'highlights.scm')
+  const langUri = vendorUri(context, 'tree-sitter-sail.wasm')
+  const runtimeUri = vendorUri(context, 'web-tree-sitter.wasm')
+  try {
+    const scm = new TextDecoder().decode(await workspace.fs.readFile(scmUri))
+    const wasm = await workspace.fs.readFile(langUri)
+    const runtimeWasm = await workspace.fs.readFile(runtimeUri)
+    await initHighlight({ wasm, highlightsScm: scm, runtimeWasm })
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err)
+    void window.showErrorMessage(
+      `Sail: failed to load tree-sitter-sail highlighter (${detail}). Colors need vendor/ from bun run compile.`,
+    )
+    return
+  }
+
+  const legend = new SemanticTokensLegend(LEGEND_TOKEN_TYPES, LEGEND_TOKEN_MODIFIERS)
+  context.subscriptions.push(
+    languages.registerDocumentSemanticTokensProvider(
+      { language: 'sail' },
+      {
+        provideDocumentSemanticTokens(document) {
+          try {
+            const src = document.getText()
+            const spans = highlight(src)
+            const data = encodeTokenData(buildSemanticTokens(src, spans))
+            return new SemanticTokens(new Uint32Array(data))
+          } catch {
+            return new SemanticTokens(new Uint32Array())
+          }
+        },
+      },
+      legend,
+    ),
+  )
 }
 
 async function start(): Promise<void> {
@@ -82,9 +139,18 @@ async function start(): Promise<void> {
     clientOptions,
   )
 
+  const missingTs =
+    'Sail: TypeScript 7 native compiler not found next to sail (sail-ts-native/). Controller and {expr} types are off; structure stays on.'
   try {
     await next.start()
     client = next
+    // initializeResult.sail.typescript — hosts that swallow window/showMessage.
+    const init = next.initializeResult as
+      | { sail?: { typescript?: { status?: string } } }
+      | undefined
+    if (init?.sail?.typescript?.status !== 'live') {
+      void window.showWarningMessage(missingTs)
+    }
   } catch (err) {
     const detail = err instanceof Error ? err.message : String(err)
     void window.showErrorMessage(

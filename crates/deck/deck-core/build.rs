@@ -48,6 +48,10 @@ use std::path::{Path, PathBuf};
 /// `include_str!("../assets/deck-route.js")` from `assets.rs`.
 const FRAMEWORK_BUNDLES: &[&str] = &[
     "sail-runtime.js",
+    "sail-actions.js",
+    "sail-motion.js",
+    "sail-query.js",
+    "sail-virtual.js",
     "sail-dom.js",
     "sail-sdk-client.js",
     "deck-route.js",

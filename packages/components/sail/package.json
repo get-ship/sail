@@ -251,6 +251,7 @@
     "@codemirror/state": "^6",
     "@codemirror/view": "^6",
     "@lezer/highlight": "^1",
+    "@ship/sail-highlight": "workspace:*",
     "mermaid": "^11.4.0"
   },
   "devDependencies": {

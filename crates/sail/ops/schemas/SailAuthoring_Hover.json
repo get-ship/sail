@@ -57,6 +57,12 @@
             "type": "null"
           }
         ]
+      },
+      "typescriptStatus": {
+        "type": [
+          "string",
+          "null"
+        ]
       }
     },
     "definitions": {

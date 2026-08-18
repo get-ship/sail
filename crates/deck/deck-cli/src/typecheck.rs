@@ -1,4 +1,4 @@
-//! Opt-in `deck build --typecheck`: ambient pack + on-the-fly tsconfig +
+//! Opt-in `sail build --typecheck`: ambient pack + on-the-fly tsconfig +
 //! `tsc --noEmit` over the app's `.ts` sources (authored controllers + the
 //! bundler's generated `routes.gen.ts` / `entry.gen.ts` /
 //! `components.gen.ts`), failing the build command on TypeScript errors.
@@ -13,43 +13,24 @@
 //! - **sail-compiler** — template / layout / vocabulary; Style DSL forms that
 //!   are not expressible as TS (hyphenated bare tokens, etc.).
 //!
-//! Unlike the synthetic_tsc test (which SKIPs when `tsc` is absent), the flag
-//! was requested explicitly, so a missing `node_modules/.bin/tsc` is a hard
-//! error.
+//! The flag was requested explicitly, so a missing native sidecar is a hard
+//! error (peer dir next to `sail`).
 
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
 use anyhow::{Context, Result, bail};
 
-/// Locate the workspace `tsc`. Walks up from `project` (covering `repo_root`
-/// when it is an ancestor), then falls back to `repo_root` directly for the
-/// cross-repo case where the two don't share a parent.
-fn find_tsc(project: &Path, repo_root: &Path) -> Option<PathBuf> {
-    let candidates = ["node_modules/.bin/tsc", "node_modules/.bin/tsc.cmd"];
-    let mut dir = Some(project);
-    while let Some(d) = dir {
-        for rel in candidates {
-            let p = d.join(rel);
-            if p.exists() {
-                return Some(p);
-            }
-        }
-        dir = d.parent();
-    }
-    for rel in candidates {
-        let p = repo_root.join(rel);
-        if p.exists() {
-            return Some(p);
-        }
-    }
-    None
+/// Shared native sidecar (ELF only). Never exec `node_modules/.bin/tsc`.
+fn find_tsc(_project: &Path, _repo_root: &Path) -> Option<PathBuf> {
+    sail_compiler::ts_native::resolve_ts_native().map(|t| t.program)
 }
 
 /// Write the ambient pack + on-the-fly tsconfig into `out_dir` and return the
-/// tsconfig path. `include`/`exclude`/`baseUrl` are ABSOLUTE so the config can
+/// tsconfig path. `include`/`files`/`exclude` are ABSOLUTE so the config can
 /// live in the build output dir while still covering the project tree —
-/// `@ship/*` resolves through the consumer's own `node_modules`.
+/// `@ship/*` resolves through the consumer's own `node_modules`. No `baseUrl`
+/// (TS 7 hard-error).
 fn write_tsconfig(project: &Path, out_dir: &Path) -> Result<PathBuf> {
     // Project-local pack (`.sail/types.d.ts`) so editors + tsc share
     // one ambient surface. Also mirror into out_dir for the ephemeral project.
@@ -69,19 +50,23 @@ fn write_tsconfig(project: &Path, out_dir: &Path) -> Result<PathBuf> {
         .to_string()
         .replace('\\', "/");
     let opts = sail_compiler::ambients::sail_tsconfig_compiler_options_json();
-    // Drop outer braces from the shared options object so we can inject baseUrl.
+    let cfg = typecheck_tsconfig_json(&opts, &proj, &out, &ambient_for_tsc);
+    let path = out_dir.join("tsconfig.typecheck.json");
+    std::fs::write(&path, cfg).with_context(|| format!("write {}", path.display()))?;
+    Ok(path)
+}
+
+fn typecheck_tsconfig_json(opts: &str, proj: &str, out: &str, ambient_for_tsc: &str) -> String {
     let opts_inner = opts
         .trim()
         .trim_start_matches('{')
         .trim_end_matches('}')
         .trim();
     // `{out}` is deploy (`dist/` unless `--out`). `.sail` is generate.
-    // `.deck` is leftover-only — ignore if present, not the product out dir.
-    let cfg = format!(
+    format!(
         r#"{{
   "compilerOptions": {{
-    {opts_inner},
-    "baseUrl": "{proj}"
+    {opts_inner}
   }},
   "files": ["{ambient_for_tsc}"],
   "include": [
@@ -89,10 +74,7 @@ fn write_tsconfig(project: &Path, out_dir: &Path) -> Result<PathBuf> {
   ],
   "exclude": ["{proj}/node_modules", "{out}", "{proj}/.sail", "{proj}/.deck"]
 }}"#
-    );
-    let path = out_dir.join("tsconfig.typecheck.json");
-    std::fs::write(&path, cfg).with_context(|| format!("write {}", path.display()))?;
-    Ok(path)
+    )
 }
 
 /// Run `tsc -p <cfg> --noEmit` (cwd = `repo_root`, so node-module resolution
@@ -114,25 +96,34 @@ fn run_tsc(tsc: &Path, cfg: &Path, repo_root: &Path) -> Result<(bool, String)> {
 }
 
 /// Typecheck the freshly-built app. Errors (a missing `tsc`, or a `tsc`
-/// failure) bubble up so `deck build --typecheck` exits non-zero.
+/// failure) bubble up so `sail build --typecheck` exits non-zero.
 pub fn run(project: &Path, out_dir: &Path, repo_root: &Path) -> Result<()> {
     let Some(tsc) = find_tsc(project, repo_root) else {
-        bail!(
-            "--typecheck requires `node_modules/.bin/tsc` (searched up from {} and at {}). \
-             Install dependencies first (e.g. `bun install` / `npm install`).",
-            project.display(),
-            repo_root.display(),
-        );
+        bail!("--typecheck requires the TypeScript 7 native sidecar next to sail.");
     };
     let cfg = write_tsconfig(project, out_dir)?;
     let (ok, output) = run_tsc(&tsc, &cfg, repo_root)?;
     if !ok {
         eprint!("{output}");
-        bail!("deck build --typecheck: tsc reported type errors");
+        bail!("sail build --typecheck: tsc reported type errors");
     }
     println!(
         "  typecheck  ok (tsc --noEmit; ambients {})",
         sail_compiler::ambients::PROJECT_TYPES_REL
     );
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn generated_typecheck_tsconfig_has_no_base_url() {
+        let opts = sail_compiler::ambients::sail_tsconfig_compiler_options_json();
+        let cfg = typecheck_tsconfig_json(&opts, "/app", "/app/dist", "/app/sail-types.d.ts");
+        assert!(!cfg.contains("baseUrl"), "TS 7 hard-errors baseUrl: {cfg}");
+        assert!(cfg.contains("\"/app/**/*.ts\""));
+        assert!(cfg.contains("\"/app/sail-types.d.ts\""));
+    }
 }

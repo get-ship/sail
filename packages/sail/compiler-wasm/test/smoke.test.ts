@@ -6,6 +6,9 @@ import { beforeAll, describe, expect, test } from 'vitest'
 // browser. This smoke test drives it headlessly: initSync from the raw wasm
 // bytes (no fetch), then exercise the real compile/analyze surface. pkg/ is
 // built by `bun run wasm` (wired as `pretest`), so a fresh checkout is covered.
+// Structure-only wasm surface: analyze / hover_at / completions / compile.
+// There is no TypeScript program and no tsgo / typecheck export.
+import * as wasmApi from '../pkg/sail_compiler.js'
 import {
   analyze,
   compile,
@@ -37,6 +40,13 @@ interface WasmHover {
 }
 
 describe('@ship/sail-compiler-wasm', () => {
+  test('export list does not include tsgo or typecheck', () => {
+    const names = Object.keys(wasmApi)
+    expect(names.some((n) => n.toLowerCase().includes('tsgo'))).toBe(false)
+    expect(names.some((n) => n.toLowerCase().includes('typecheck'))).toBe(false)
+    expect(names).toEqual(expect.arrayContaining(['analyze', 'compile', 'hover_at', 'completions_at']))
+  })
+
   test('compiles a trivial source to runtime-bound component JS', () => {
     const out = compile('<column><p>hi</p></column>', '{}')
     expect(out.kind).toBe('ok')

@@ -73,7 +73,14 @@ const RUNTIME_AMBIENT: Array<[string, string]> = [
   ['untrack', 'untrack'],
   ['useStore', 'useStore'],
 ]
-const RUNTIME_SPECIFIER = '@ship/sail-runtime/internal'
+function ambientModule(authored: string): string {
+  if (authored === 'query' || authored === 'mutation' || authored === '__invalidate') {
+    return '@ship/sail-runtime/query'
+  }
+  if (authored === 'timeline') return '@ship/sail-runtime/motion'
+  if (authored === 'createVirtualizer') return '@ship/sail-runtime/virtual'
+  return '@ship/sail-runtime/internal'
+}
 
 /** Inject ambient runtime imports a lesson controller references but does not bind. */
 function wrapControllerBody(body: string): string {
@@ -89,14 +96,22 @@ function wrapControllerBody(body: string): string {
   for (const m of body.matchAll(/\b(?:const|let|var|function|class)\s+(\w+)/g)) {
     bound.add(m[1]!)
   }
-  const needed: string[] = []
+  const groups = new Map<string, string[]>()
   for (const [authored, exported] of RUNTIME_AMBIENT) {
     if (bound.has(authored)) continue
     if (!new RegExp(`\\b${authored}\\b`).test(body)) continue
-    needed.push(authored === exported ? authored : `${exported} as ${authored}`)
+    const spec = ambientModule(authored)
+    const binding = authored === exported ? authored : `${exported} as ${authored}`
+    const list = groups.get(spec) ?? []
+    list.push(binding)
+    groups.set(spec, list)
   }
-  if (needed.length === 0) return body
-  return `import { ${needed.join(', ')} } from '${RUNTIME_SPECIFIER}';\n${body}`
+  if (groups.size === 0) return body
+  let imports = ''
+  for (const [spec, names] of groups) {
+    imports += `import { ${names.join(', ')} } from '${spec}';\n`
+  }
+  return `${imports}${body}`
 }
 
 /** Strip TypeScript-only syntax from a (simple) lesson controller so it runs

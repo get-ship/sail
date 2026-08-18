@@ -352,6 +352,24 @@ fn app_source_path_recognises_apps_src() {
 }
 
 #[test]
+fn app_source_path_recognises_created_app_src() {
+    let dir = tempfile::tempdir().unwrap();
+    let src = dir.path().join("src/stores");
+    std::fs::create_dir_all(&src).unwrap();
+    std::fs::write(dir.path().join("sail.config.jsonc"), "{}\n").unwrap();
+    let leak = src.join("leak.ts");
+    std::fs::write(&leak, "export const x = 1;\n").unwrap();
+    assert!(
+        is_app_source_ts(&leak),
+        "created-app src/stores must be app source: {}",
+        leak.display()
+    );
+    assert!(!is_app_source_ts(
+        &dir.path().join("node_modules/foo/src/index.ts")
+    ));
+}
+
+#[test]
 fn app_source_lints_csstext_floor() {
     // The hole this job closed: plain studio modules were never dispatched.
     // CSSOM still dual-linted; ambient document.* is TypeEnv::Sail (S2.3).

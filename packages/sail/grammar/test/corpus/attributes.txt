@@ -46,9 +46,7 @@ prop: attribute is refused syntax — must NOT parse as a directive
     tag: (tag_name)
     (dynamic_attr
       name: (attr_name)
-      (ERROR
-        (UNEXPECTED ':')
-        (tag_name))
+      (ERROR)
       value: (brace_expression
         (identifier)))
     close_tag: (tag_name)))
@@ -98,9 +96,7 @@ attr: attribute is refused syntax — must NOT parse as a directive
     tag: (tag_name)
     (dynamic_attr
       name: (attr_name)
-      (ERROR
-        (UNEXPECTED ':')
-        (tag_name))
+      (ERROR)
       value: (brace_expression
         (identifier)))
     close_tag: (tag_name)))

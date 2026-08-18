@@ -27,6 +27,10 @@ use anyhow::{Context, Result};
 /// that gets an `include_str!` bake.
 pub const FRAMEWORK_SOURCE_ROOTS: &[(&str, &str)] = &[
     ("sail-runtime.js", "packages/sail/runtime/src"),
+    ("sail-actions.js", "packages/sail/runtime/src"),
+    ("sail-motion.js", "packages/sail/runtime/src"),
+    ("sail-query.js", "packages/sail/runtime/src"),
+    ("sail-virtual.js", "packages/sail/runtime/src"),
     ("sail-dom.js", "packages/sail/dom/src"),
     ("sail-sdk-client.js", "packages/deck/sdk-client/src"),
     ("deck-route.js", "packages/deck/router/src"),

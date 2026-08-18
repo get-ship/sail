@@ -95,6 +95,8 @@ const PRODUCTS_HEADER: &str = "\
 ";
 
 /// Stable theme catalog order. One id per file; light/dark live under `modes`.
+/// Product default is [`DEFAULT_PROJECT_THEME_ID`] (`sail`), not this list's
+/// first entry — `ship` stays a catalog id.
 const THEME_ORDER: &[&str] = &[
     "sail",
     "paper",
@@ -3277,6 +3279,7 @@ pub fn scaffold_theme_config(project_dir: &Path, theme_id: &str) -> Result<Optio
          \x20\x20\x20\x20\"title\": \"{title}\",\n\
          \x20\x20\x20\x20\"lang\": \"en\"\n\
          \x20\x20}},\n\
+         \x20\x20\"preset\": \"strict\",\n\
          \x20\x20\"theme\": {{\n\
          \x20\x20\x20\x20\"default\": \"{theme_id}\",\n\
          \x20\x20\x20\x20\"defaultMode\": \"light\",\n\
@@ -5265,6 +5268,11 @@ mod tests {
     }
 
     #[test]
+    fn default_project_theme_is_sail_brand_not_ship() {
+        assert_eq!(DEFAULT_PROJECT_THEME_ID, "sail");
+    }
+
+    #[test]
     fn parse_theme_config_jsonc_and_defaults() {
         let cfg = parse_theme_config(
             r#"{
@@ -5983,7 +5991,10 @@ mod tests {
             .nth(3)
             .expect("repo root above crates/sail/compiler");
         let model = root.join("packages/sail/tokens/model");
-        if !model.join("themes/sail.json").is_file() {
+        if !model
+            .join(format!("themes/{DEFAULT_PROJECT_THEME_ID}.json"))
+            .is_file()
+        {
             // Worktree without tokens package — skip rather than fail CI layouts.
             return;
         }
@@ -6036,7 +6047,8 @@ mod tests {
             "project DTCG leaf must appear in generated themes.css: marker missing"
         );
         assert!(
-            css.contains("theme='sail'") || css.contains("theme=\"sail\""),
+            css.contains(&format!("theme='{DEFAULT_PROJECT_THEME_ID}'"))
+                || css.contains(&format!("theme=\"{DEFAULT_PROJECT_THEME_ID}\"")),
             "default theme selector must emit"
         );
         assert!(

@@ -14,9 +14,14 @@ fn repo_root() -> PathBuf {
         .unwrap()
 }
 
-fn tsc_path(repo: &Path) -> Option<PathBuf> {
-    let p = repo.join("node_modules/.bin/tsc");
-    p.exists().then_some(p)
+fn require_tsc(repo: &Path) -> PathBuf {
+    let p = repo.join("node_modules/typescript/bin/tsc");
+    assert!(
+        p.is_file(),
+        "repo TypeScript wrapper missing at {} — bun install",
+        p.display()
+    );
+    p
 }
 
 fn generated_scope_dts() -> String {
@@ -69,7 +74,6 @@ fn check(repo: &Path, work: &Path, body: &str) -> (bool, String) {
     "noEmit": true,
     "skipLibCheck": true,
     "allowImportingTsExtensions": true,
-    "baseUrl": ".",
     "paths": {{
       "@ship/sail-runtime": ["{r}/packages/sail/runtime/src/index.ts"],
       "@ship/sail-runtime/internal": ["{r}/packages/sail/runtime/src/internal.ts"]
@@ -80,7 +84,7 @@ fn check(repo: &Path, work: &Path, body: &str) -> (bool, String) {
         ),
     )
     .unwrap();
-    let out = Command::new(tsc_path(repo).unwrap())
+    let out = Command::new(require_tsc(repo))
         .arg("-p")
         .arg("tsconfig.json")
         .current_dir(work)
@@ -113,10 +117,6 @@ declare module '@ship/sail-runtime' {
 #[test]
 fn granted_capabilities_reach_the_controller_precisely() {
     let repo = repo_root();
-    if tsc_path(&repo).is_none() {
-        eprintln!("SKIP controller_scope_port_tsc: tsc not found — run `bun install`.");
-        return;
-    }
     let body = format!(
         "{PRELUDE}
 export default controller((ctx: ControllerScope<Scope>) => {{
@@ -141,10 +141,6 @@ export default controller((ctx: ControllerScope<Scope>) => {{
 #[test]
 fn controller_scope_has_no_ship_member() {
     let repo = repo_root();
-    if tsc_path(&repo).is_none() {
-        eprintln!("SKIP controller_scope_port_tsc: tsc not found — run `bun install`.");
-        return;
-    }
     let body = format!(
         "{PRELUDE}
 export default controller((ctx: ControllerScope<Scope>) => {{
@@ -170,10 +166,6 @@ export default controller((ctx: ControllerScope<Scope>) => {{
 #[test]
 fn controller_scope_has_no_clients_bag() {
     let repo = repo_root();
-    if tsc_path(&repo).is_none() {
-        eprintln!("SKIP controller_scope_port_tsc: tsc not found — run `bun install`.");
-        return;
-    }
     let body = format!(
         "{PRELUDE}
 export default controller((ctx: ControllerScope<Scope>) => {{
@@ -199,10 +191,6 @@ export default controller((ctx: ControllerScope<Scope>) => {{
 #[test]
 fn typo_on_a_declared_client_is_caught() {
     let repo = repo_root();
-    if tsc_path(&repo).is_none() {
-        eprintln!("SKIP controller_scope_port_tsc: tsc not found — run `bun install`.");
-        return;
-    }
     let body = format!(
         "{PRELUDE}
 export default controller((ctx: ControllerScope<Scope>) => {{
@@ -221,10 +209,6 @@ export default controller((ctx: ControllerScope<Scope>) => {{
 #[test]
 fn an_undeclared_ambient_name_is_a_type_error() {
     let repo = repo_root();
-    if tsc_path(&repo).is_none() {
-        eprintln!("SKIP controller_scope_port_tsc: tsc not found — run `bun install`.");
-        return;
-    }
     let body = format!(
         "{PRELUDE}
 export default controller((ctx: ControllerScope<Scope>) => {{
@@ -247,10 +231,6 @@ export default controller((ctx: ControllerScope<Scope>) => {{
 #[test]
 fn scope_mutable_state_and_the_runtime_context_agree() {
     let repo = repo_root();
-    if tsc_path(&repo).is_none() {
-        eprintln!("SKIP controller_scope_port_tsc: tsc not found — run `bun install`.");
-        return;
-    }
     let body = format!(
         "{PRELUDE}
 import type {{ MutableState }} from '@ship/sail-runtime'

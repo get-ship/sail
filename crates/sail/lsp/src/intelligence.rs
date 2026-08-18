@@ -3,7 +3,8 @@
 //! Usable without stdio LSP: ops, tests, and the thin `run()` shell share this path.
 //! Positions are always **`.sail` coordinates** (1-based line/column, matching
 //! `sail_compiler::hover_at` / Check diagnostics). Internally maps via `virtual_ts`
-//! and proxies TS regions to tsgo when available (soft-degrade otherwise).
+//! and proxies TS regions to the TypeScript sidecar when available
+//! (`typescriptStatus: missing` otherwise).
 
 use std::path::{Path, PathBuf};
 use std::sync::{Mutex, OnceLock};
@@ -57,7 +58,7 @@ pub struct DiagPayload {
     pub end_col: Option<usize>,
     pub severity: String,
     pub message: String,
-    /// `"sail"` structure/check or `"tsgo"` mapped TypeScript.
+    /// `"sail"` structure/check or `"typescript"` mapped TypeScript.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub source: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -72,15 +73,29 @@ pub struct Intelligence {
 }
 
 impl Intelligence {
-    /// Discover tsgo from `workspace_hint` (and ancestors); degrade when absent.
+    /// Discover the sidecar; `workspace_hint` is for tsconfig / `@/` only.
     pub fn start(workspace_hint: Option<&Path>) -> Self {
         Self {
             tsgo: TsgoSession::start(workspace_hint),
         }
     }
 
+    pub fn structure_only() -> Self {
+        Self {
+            tsgo: TsgoSession::structure_only(),
+        }
+    }
+
     pub fn is_tsgo_live(&self) -> bool {
         self.tsgo.is_live()
+    }
+
+    pub fn typescript_status(&self) -> &'static str {
+        if self.tsgo.is_live() {
+            "live"
+        } else {
+            "missing"
+        }
     }
 
     /// Open or update the virtual document for `key` (uri or path string).
@@ -446,7 +461,7 @@ pub fn diagnostics_with_session(
                 end_col: Some(d.range.end.character as usize + 1),
                 severity: sev.into(),
                 message: d.message,
-                source: Some("tsgo".into()),
+                source: Some("typescript".into()),
                 rule: d.code.map(|c| match c {
                     lsp_types::NumberOrString::String(s) => s,
                     lsp_types::NumberOrString::Number(n) => n.to_string(),
@@ -654,8 +669,7 @@ export default controller((ctx) => ({ count: signal(0) }))
 
     #[test]
     fn structure_hover_without_tsgo() {
-        let mut intel =
-            Intelligence::start(Some(Path::new("/nonexistent-sail-tsgo-root-for-intel")));
+        let mut intel = Intelligence::structure_only();
         // count in template — structure scope may still resolve
         let count_line = COUNTER
             .lines()
@@ -683,8 +697,7 @@ export default controller((ctx) => ({ count: signal(0) }))
 
     #[test]
     fn diagnostics_structure_always() {
-        let mut intel =
-            Intelligence::start(Some(Path::new("/nonexistent-sail-tsgo-root-for-intel")));
+        let mut intel = Intelligence::structure_only();
         // Channel-era structure diag: bare participation attr (not retired style= attr).
         let bad = r#"<column grow>x</column>"#;
         let diags = intel.diagnostics_sail(bad, None);
@@ -701,8 +714,7 @@ export default controller((ctx) => ({ count: signal(0) }))
     fn complete_spinnaker_fill_tokens_without_tsgo() {
         // SPEC-STYLE-COMPLETE-1: Style complete inside style({ bg({ color: ¦ }) })
         // does not require tsgo.
-        let mut intel =
-            Intelligence::start(Some(Path::new("/nonexistent-sail-tsgo-root-for-intel")));
+        let mut intel = Intelligence::structure_only();
         let src = r#"<div style({ bg({ color:  }) })>x</div>"#;
         let offset = src.find("color: ").expect("color") + 7;
         let (line0, col0) = offset_to_lsp_position(src, offset);
@@ -732,8 +744,7 @@ export default controller((ctx) => ({ count: signal(0) }))
 
     #[test]
     fn complete_spinnaker_prefers_style_over_scope() {
-        let mut intel =
-            Intelligence::start(Some(Path::new("/nonexistent-sail-tsgo-root-for-intel")));
+        let mut intel = Intelligence::structure_only();
         let src = r#"<controller>
 import { controller, signal } from '@ship/sail-runtime'
 export default controller(() => ({ primary: signal(0) }))
@@ -759,11 +770,8 @@ export default controller(() => ({ primary: signal(0) }))
 
     #[test]
     fn hover_signal_typed_when_tsgo_present() {
-        // Soft-skip only when tsgo/node_modules is missing. When the session is
-        // live, require a typed hover (warm + brief settle; no silent skip).
-        if crate::tsgo::discover_tsgo(Some(&repo_root())).is_none() {
-            eprintln!("SKIP intelligence hover: no tsgo");
-            return;
+        if crate::tsgo::discover_tsgo(None).is_none() {
+            panic!("{}", sail_compiler::ts_native::missing_sidecar_hint());
         }
         let mut intel = Intelligence::start(Some(&repo_root()));
         assert!(

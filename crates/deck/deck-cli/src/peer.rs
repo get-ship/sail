@@ -17,97 +17,78 @@ use sail_compiler::{
     compile as compile_source,
 };
 
-/// `sail --version` / `sail version` surface (C6).
+/// `sail --version` / `sail version`.
 pub fn print_version(brand: &str) {
-    let pkg = env!("CARGO_PKG_VERSION");
-    println!("{brand} {pkg}");
-    // Cargo package id is historical (`deck-cli`); the product binary is `sail`.
-    // Deck crates (bundler/axum/core/host) are linked in-process — not shell-outs.
-    println!("  binary: sail (cargo package deck-cli {pkg})");
-    println!("  embeds: sail-compiler, sail-lsp, sail-mcp, sail-layout, sail-ops, sail-render,");
-    println!("          deck-bundler, deck-axum, deck-core, deck-config, deck-ssr (in-process)");
-    println!("  install: product install TBD — put `sail` on PATH");
-    println!("  from this repo: cargo install --path crates/deck/deck-cli --bin sail");
-    println!("  docs:    README.md § Build / CLI; `sail doctor` for local health");
+    println!("{brand} {}", env!("CARGO_PKG_VERSION"));
 }
 
-/// Local environment health check (C6).
+/// Project health. Not a toolchain selfie — sidecar/bun/cargo are a
+/// release gate, not something the stranger repairs.
 ///
-/// Never prints `status: ok` on an empty probe. bun and tsc/tsgo are
-/// required. When a Project exists, `<project>/.sail/types.d.ts` is
-/// required for a first-user typecheck.
-/// MCP is probed in-process (`sail mcp --list-tools` equivalent) so doctor
-/// does not require a different `sail` on PATH or a project MCP config.
+/// Requires a Sail project. Reports config, routes, theme, types.
+/// Never prints `status: ok` outside a project.
 pub fn doctor(brand: &str) -> Result<()> {
     println!("{brand} doctor");
-    println!("  binary: {brand} {}", env!("CARGO_PKG_VERSION"));
-
     let cwd = std::env::current_dir().context("cwd")?;
-    let cargo_root = deck_bundler::paths::topmost_cargo_root(&cwd);
-    match &cargo_root {
-        Some(root) => println!("  workspace: {}", root.display()),
-        None => println!("  workspace: (none — standalone project)"),
-    }
+    let Some(project) = sail_lint::Project::discover(&cwd) else {
+        println!("  project: (none)");
+        println!("  status: fail");
+        bail!(
+            "not a Sail project (no sail.config.jsonc / sail.config.json). \
+             Run inside an app, or `sail create <name>`."
+        );
+    };
+    let root = project.root();
+    println!("  project: {}", root.display());
 
-    let model = cargo_root
-        .as_ref()
-        .map(|r| r.join("packages/sail/tokens/model"))
-        .unwrap_or_else(|| cwd.join("packages/sail/tokens/model"));
-    if model.is_dir() {
-        println!("  tokens model: {} (ok)", model.display());
-    } else {
-        println!("  tokens model: missing at {}", model.display());
-    }
-
-    // Peer libraries linked into this binary — not PATH probes.
-    println!("  sail compile/tokens/check/fmt: in-process (sail-compiler)");
-    println!("  sail inspect: in-process (sail-ops SailInspect/Inspect)");
-    println!("  sail lsp: in-process (sail-lsp)");
-    println!("  sail mcp: in-process (sail-mcp → sail-ops)");
-    println!("  sail op: in-process (sail-ops Connect handlers)");
-    println!("  sail layout: in-process (sail-layout)");
-    println!("  sail render: in-process (sail-render)");
+    let cfg = project
+        .config_path()
+        .strip_prefix(root)
+        .unwrap_or(project.config_path());
+    println!("  config: {}", cfg.display());
 
     let mut missing = Vec::new();
-    // In-process `--list-tools` (this binary embeds sail-mcp). Do not spawn
-    // a different `sail` from PATH — doctor must pass inside the monorepo
-    // and must not require a project `.mcp.json`.
-    match probe_mcp_list_tools() {
-        Ok(n) => println!("  sail mcp --list-tools: {n} tools (ok)"),
-        Err(e) => {
-            println!("  sail mcp --list-tools: fail ({e})");
-            missing.push("sail mcp --list-tools");
-        }
+
+    let render = std::fs::read_to_string(project.config_path())
+        .ok()
+        .map(|text| sail_lint::SailConfig::from_jsonc(&text))
+        .and_then(|c| c.deck.and_then(|d| d.render))
+        .unwrap_or(sail_lint::config::DeckRender::Csr);
+    println!("  render: {}", render.as_str());
+    if render == sail_lint::config::DeckRender::Ssr && !crate::ssr::LINKED {
+        println!("  render: ssr is not available (use csr)");
+        missing.push("ssr");
     }
-    if !tool_ok(&cwd, "bun", &["--version"]) {
-        missing.push("bun");
-    } else {
-        println!("  bun: ok");
+
+    let mut routes = Vec::new();
+    let routes_dir = root.join("routes");
+    if routes_dir.is_dir() {
+        collect_sail_files(&routes_dir, &mut routes)?;
     }
-    let tsc = tool_ok(&cwd, "tsc", &["--version"]);
-    let tsgo = tool_ok(&cwd, "tsgo", &["--version"]);
-    if !tsc && !tsgo {
-        missing.push("tsc or tsgo");
+    if routes.is_empty() {
+        println!("  routes: (none)");
+        missing.push("routes");
     } else {
-        if tsc {
-            println!("  tsc: ok");
-        }
-        if tsgo {
-            println!("  tsgo: ok");
-        }
+        println!("  routes: {} .sail", routes.len());
     }
-    if let Some(project) = sail_lint::Project::discover(&cwd) {
-        let types = project
-            .root()
-            .join(sail_compiler::ambients::PROJECT_TYPES_REL);
-        if types.is_file() {
-            println!("  types: {}", types.display());
-        } else {
-            println!("  types: missing at {}", types.display());
-            missing.push(".sail/types.d.ts (run `sail types`)");
-        }
+
+    let theme_id = sail_compiler::tokens_generate::load_theme_config(root)
+        .map(|c| c.default_theme_id().to_string())
+        .unwrap_or_else(|_| sail_compiler::tokens_generate::DEFAULT_PROJECT_THEME_ID.to_string());
+    let theme_rel = format!("themes/{theme_id}.json");
+    if root.join(&theme_rel).is_file() {
+        println!("  theme: {theme_id}");
     } else {
-        println!("  types: (no project — skipped)");
+        println!("  theme: missing {theme_rel}");
+        missing.push("theme");
+    }
+
+    let types = root.join(sail_compiler::ambients::PROJECT_TYPES_REL);
+    if types.is_file() {
+        println!("  types: {}", sail_compiler::ambients::PROJECT_TYPES_REL);
+    } else {
+        println!("  types: missing (run `sail types`)");
+        missing.push("types");
     }
 
     if missing.is_empty() {
@@ -119,22 +100,10 @@ pub fn doctor(brand: &str) -> Result<()> {
     }
 }
 
-/// Same path as `sail mcp --list-tools` / `print_list_tools`, in-process.
-fn probe_mcp_list_tools() -> Result<usize> {
-    let tools = sail_mcp::list_tools().map_err(|e| anyhow::anyhow!("{e}"))?;
-    Ok(tools.len())
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
     use std::fs;
-
-    #[test]
-    fn mcp_list_tools_probe_nonempty() {
-        let n = super::probe_mcp_list_tools().expect("in-process list-tools");
-        assert!(n > 0, "list-tools returned empty");
-    }
 
     #[test]
     fn types_refuses_dir_without_sail_config() {
@@ -204,24 +173,6 @@ mod tests {
             "must not mention the monorepo default path, got: {msg}"
         );
     }
-}
-
-fn tool_ok(cwd: &Path, bin: &str, args: &[&str]) -> bool {
-    let local = cwd.join("node_modules/.bin").join(bin);
-    if local.is_file() && cmd_ok(&local, args) {
-        return true;
-    }
-    cmd_ok(Path::new(bin), args)
-}
-
-fn cmd_ok(bin: &Path, args: &[&str]) -> bool {
-    Command::new(bin)
-        .args(args)
-        .stdout(std::process::Stdio::null())
-        .stderr(std::process::Stdio::null())
-        .status()
-        .map(|s| s.success())
-        .unwrap_or(false)
 }
 
 /// `sail types` — ambient pack for tsc/tsgo.
@@ -315,12 +266,13 @@ fn types_check(project_dir: &Path) -> Result<()> {
             action.display()
         );
     }
-    let tsc = project_dir.join("node_modules/.bin/tsc");
-    let tsc: PathBuf = if tsc.is_file() {
-        tsc
-    } else {
-        PathBuf::from("tsc")
-    };
+    let tsc = sail_compiler::ts_native::resolve_ts_native()
+        .map(|t| t.program)
+        .ok_or_else(|| {
+            anyhow::anyhow!(
+                "sail types --check: TypeScript sidecar missing (dirname(sail)/sail-ts-native/)."
+            )
+        })?;
     for cfg in [&sail, &action] {
         let status = Command::new(&tsc)
             .args(["--noEmit", "-p"])
@@ -447,11 +399,10 @@ pub fn discover_app(from: &Path) -> Result<sail_lint::Project> {
 
 /// `sail op Service/Method --json '{...}'` — in-process sail-ops RPC.
 ///
-/// Special target `gen` regenerates the TS client + schema snapshots from
-/// typed contracts (`sail op gen`).
+/// Repo schema/client codegen is `deck-bake gen`, not this product verb.
 pub fn op(target: &str, json_body: &str) -> Result<()> {
     if target.trim() == "gen" {
-        return op_gen();
+        bail!("sail op: `gen` is not a product method. Repo codegen is `deck-bake gen`.");
     }
     let (service, method) = parse_op_target(target)?;
     let args: serde_json::Value = serde_json::from_str(json_body)
@@ -463,16 +414,6 @@ pub fn op(target: &str, json_body: &str) -> Result<()> {
         "{}",
         serde_json::to_string_pretty(&result).unwrap_or_else(|_| result.to_string())
     );
-    Ok(())
-}
-
-/// `sail op gen` — emit packages/sail/studio-client + schema snapshots.
-pub fn op_gen() -> Result<()> {
-    let written = sail_ops::op_gen(None).map_err(|e| anyhow::anyhow!("{e}"))?;
-    println!("sail op gen: wrote {} file(s)", written.len());
-    for p in &written {
-        println!("  {}", p.display());
-    }
     Ok(())
 }
 
@@ -619,11 +560,8 @@ fn fmt_one(path: &Path, check: bool, oxfmt_warned: &mut bool) -> Result<bool> {
 
 /// `sail check` — compile-time diagnostics for one `.sail` file or directory.
 ///
-/// Directories also lint plain app TypeScript under `apps/*/src/**/*.ts`
-/// (floor + ambient DOM) and author action modules under `src/actions/**`
-/// (ACTIONS-1 regime). That closes the escape hatch where a side module
-/// under studio carried `cssText` / `createElement` because only `.sail`
-/// templates were walked.
+/// Directories also lint plain app TypeScript under the project's `src/`
+/// and author action modules under `src/actions/**` (ACTIONS-1 regime).
 ///
 /// EXT-1 E8: when checking a directory (or a file inside a Sail project),
 /// warn if any path under `dist/` is git-tracked — deploy output must never
@@ -911,9 +849,8 @@ fn check_one(path: &Path, fix: &str) -> Result<usize> {
 /// Walk `dir` for plain app TypeScript that `is_app_source_ts` admits, plus
 /// author action modules under `src/actions/**` (`is_action_source_path`).
 ///
-/// When `dir` is `apps/studio` (or any apps/* tree), modules under `src/` are
-/// the floor surface. When `dir` is a monorepo root, every `apps/*/src/**/*.ts`
-/// under it is included. Controllers are excluded by both predicates.
+/// Modules under a Sail project's `src/` are the floor surface. Controllers
+/// are excluded by both predicates.
 fn collect_app_source_ts(dir: &Path, out: &mut Vec<PathBuf>) -> Result<()> {
     for entry in std::fs::read_dir(dir).with_context(|| format!("read dir {}", dir.display()))? {
         let entry = entry?;

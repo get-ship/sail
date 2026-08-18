@@ -22,6 +22,22 @@ pub async fn serve_sail_runtime(mode: Option<Extension<DaemonMode>>) -> Response
     into_axum(deck_core::serve_sail_runtime(mode_from_ext(mode)))
 }
 
+pub async fn serve_sail_actions(mode: Option<Extension<DaemonMode>>) -> Response {
+    into_axum(deck_core::serve_sail_actions(mode_from_ext(mode)))
+}
+
+pub async fn serve_sail_motion(mode: Option<Extension<DaemonMode>>) -> Response {
+    into_axum(deck_core::serve_sail_motion(mode_from_ext(mode)))
+}
+
+pub async fn serve_sail_query(mode: Option<Extension<DaemonMode>>) -> Response {
+    into_axum(deck_core::serve_sail_query(mode_from_ext(mode)))
+}
+
+pub async fn serve_sail_virtual(mode: Option<Extension<DaemonMode>>) -> Response {
+    into_axum(deck_core::serve_sail_virtual(mode_from_ext(mode)))
+}
+
 pub async fn serve_sail_dom(mode: Option<Extension<DaemonMode>>) -> Response {
     into_axum(deck_core::serve_sail_dom(mode_from_ext(mode)))
 }

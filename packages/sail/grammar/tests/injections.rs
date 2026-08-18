@@ -1,13 +1,15 @@
 //! Injection-query coverage for SPEC-LSP-1 highlighting.
 //!
 //! Asserts that `queries/injections.scm`:
-//! - injects TypeScript into `<controller>` / `<scope>` text bodies
+//! - injects TypeScript into `<controller>` raw bodies
+//! - injects TypeScript into `style name = {…}` / `props: {…}` braces
 //! - keeps TypeScript injection on interpolation / brace_expression
 //! - keeps CSS injection on inline `<style>` text bodies
 
 use tree_sitter::{Parser, Query, QueryCursor, StreamingIterator};
 
 const INJECTIONS_SCM: &str = include_str!("../queries/injections.scm");
+const HIGHLIGHTS_SCM: &str = include_str!("../queries/highlights.scm");
 
 fn parse(src: &str) -> tree_sitter::Tree {
     let mut parser = Parser::new();
@@ -58,6 +60,54 @@ fn injections_query_parses() {
 }
 
 #[test]
+fn highlights_query_parses() {
+    let language = tree_sitter_sail::LANGUAGE;
+    Query::new(&language.into(), HIGHLIGHTS_SCM).expect("highlights.scm must be a valid query");
+}
+
+fn has_error(src: &str) -> bool {
+    parse(src).root_node().has_error()
+}
+
+#[test]
+fn controller_with_ts_generics_parses() {
+    let src = r#"
+<controller>
+interface Lap { id: number }
+const laps = signal<Lap[]>([])
+export default controller(() => ({ laps }))
+</controller>
+"#;
+    assert!(!has_error(src), "controller body must stay raw through `<` generics");
+}
+
+#[test]
+fn scope_style_and_props_parse() {
+    let src = r#"
+<scope>
+  type Row = { id: string }
+  props: {
+    label = 'Counter'
+  }
+  style card = { pad(4).bg(surface) }
+  style quiet = host, { fg(muted-foreground) }
+</scope>
+"#;
+    assert!(!has_error(src), "scope must parse style_decl + props + leftover type lines");
+}
+
+#[test]
+fn style_attach_on_element_parses() {
+    let src = r#"
+<row nowrap gap="2" style(card, { grow(1) })>
+  <strong style(name)>x</strong>
+  <div style({ pad(4) })>y</div>
+</row>
+"#;
+    assert!(!has_error(src), "tag-position style() must parse as style_attr");
+}
+
+#[test]
 fn controller_body_injects_typescript() {
     let src = r#"
 <controller>
@@ -73,22 +123,22 @@ export default controller(() => ({ count: 0 }))
         ts_hits
             .iter()
             .any(|(_, text)| text.contains("export default controller")),
-        "controller body text must inject as typescript; hits={hits:?}",
+        "controller_body must inject as typescript; hits={hits:?}",
     );
 }
 
 #[test]
-fn scope_body_injects_typescript() {
+fn scope_style_chain_injects_typescript() {
     let src = r#"
 <scope>
-  const card = style.pad(4)
+  style card = { pad(4).bg(surface) }
 </scope>
 "#;
     let hits = injection_hits(src);
     assert!(
         hits.iter()
-            .any(|(lang, text)| { lang == "typescript" && text.contains("const card") }),
-        "scope body text must inject as typescript; hits={hits:?}",
+            .any(|(lang, text)| lang == "typescript" && text.contains("pad")),
+        "style_decl brace body must inject as typescript; hits={hits:?}",
     );
 }
 

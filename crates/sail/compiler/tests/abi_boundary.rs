@@ -97,13 +97,13 @@ fn root_barrel_does_not_export_abi_plumbing() {
         "`internal.ts` must be a curated ABI list (not only `export * from './index'`)"
     );
     // Curated ABI list must name the emitters' worst symbols.
+    // Motion attach / query / virtualizer live on their own singletons.
     for sym in [
         "bindFor",
         "bindIf",
         "bindText",
         "runAction",
         "__tpl",
-        "__sail_motion_attach",
         "delegateEvents",
         "mountComponent",
         "markHydrateText",
@@ -176,6 +176,48 @@ fn sibling_subpaths_are_not_rewritten_into_the_abi_path() {
         out.js
     );
 }
+
+/// Hello-world does not import query / motion / virtual / actions.
+#[test]
+fn hello_world_does_not_import_batteries() {
+    let src = "<column><h1>Hi</h1><p>Sail app ready.</p></column>";
+    let out = compile(src, opts()).expect("compile");
+    for banned in [
+        "@ship/sail-runtime/query",
+        "@ship/sail-runtime/motion",
+        "@ship/sail-runtime/virtual",
+        "@ship/sail-runtime/actions",
+    ] {
+        assert!(
+            !out.js.contains(banned),
+            "hello-world must not import {banned}:\n{}",
+            out.js
+        );
+    }
+    assert!(
+        out.js.contains(ABI),
+        "hello-world still needs the ABI barrel:\n{}",
+        out.js
+    );
+}
+
+/// `fx:` pulls motion, not the kitchen-sink ABI barrel for attach.
+#[test]
+fn fx_imports_motion_singleton() {
+    let src = r#"<button style({ animate: { hover: play(fade) } })>hi</button>"#;
+    let out = compile(src, opts()).expect("compile");
+    assert!(
+        out.js.contains("@ship/sail-runtime/motion"),
+        "fx: must import the motion singleton:\n{}",
+        out.js
+    );
+    assert!(
+        !out.js.contains("__sail_motion_attach")
+            || out.js.contains("from \"@ship/sail-runtime/motion\""),
+        "motion attach must come from /motion:\n{}",
+        out.js
+    );
+}
 /// Every *public* action the action table declares must be exported by
 /// the runtime front door (`index.ts`). Internal stamps are NOT on the
 /// front door — they live on `@ship/sail-runtime/actions` only (see
@@ -204,27 +246,17 @@ fn action_table_is_exported_by_the_runtime() {
 
     assert_eq!(PUBLIC_ACTION_COUNT, 13);
 
-    let missing: Vec<&str> = ACTIONS
+    let leaked: Vec<&str> = ACTIONS
         .iter()
         .map(|a| a.name)
-        .filter(|a| is_public_action(a))
-        .filter(|a| {
-            // The runtime's front door carries a single
-            // `export { … } from './actions'` block; the format is
-            // `\n  {name},` (2-space indent inside that block).
-            !src.contains(&format!("\n  {a},"))
-                // Some entries were already there pre-block (e.g. the
-                // top-of-file imports) — accept those too.
-                && !src.contains(&format!("{a},"))
-        })
+        .filter(|a| src.contains(&format!("\n  {a},")))
         .collect();
 
     assert!(
-        missing.is_empty(),
-        "PUBLIC_ACTION_NAMES lists these names and the runtime's top-level \
-         `index.ts` does not export them — the taught public surface must \
-         match the front door:\n  {}",
-        missing.join("\n  ")
+        leaked.is_empty(),
+        "action values must not re-export from the language barrel \
+         (they load `@ship/sail-runtime/actions`):\n  {}",
+        leaked.join("\n  ")
     );
 }
 
@@ -232,11 +264,12 @@ fn action_table_is_exported_by_the_runtime() {
 /// that disagrees with the table must fail this test.
 ///
 /// - ALL actions must appear in `actions/index.ts` (full auto-import surface)
-/// - ONLY public actions may appear as `\n  {name},` in the top-level
-///   `export { … } from './actions'` block
+/// - NO action values on the language barrel (`index.ts`) — that file is
+///   every page's runtime. Public and internal actions load via
+///   `@ship/sail-runtime/actions`.
 #[test]
 fn action_table_has_no_phantom_consumers() {
-    use sail_compiler::action_manifest::{ACTIONS, PUBLIC_ACTION_COUNT, is_public_action};
+    use sail_compiler::action_manifest::{ACTIONS, PUBLIC_ACTION_COUNT};
     let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../..");
     let runtime_actions_barrel = root.join("packages/sail/runtime/src/actions/index.ts");
     let runtime_top_barrel = root.join("packages/sail/runtime/src/index.ts");
@@ -264,35 +297,20 @@ fn action_table_has_no_phantom_consumers() {
         })
         .collect();
 
-    // Top-level front door: only public names as `\n  {name},` inside
-    // the actions re-export block. Non-public actions must not appear
-    // in that form (careful not to false-positive other exports).
-    let leaked_internal: Vec<&str> = ACTIONS
+    let leaked_on_language_barrel: Vec<&str> = ACTIONS
         .iter()
         .map(|a| a.name)
-        .filter(|n| !is_public_action(n))
         .filter(|n| top_src.contains(&format!("\n  {n},")))
         .collect();
 
-    let missing_public_top: Vec<&str> = ACTIONS
-        .iter()
-        .map(|a| a.name)
-        .filter(|n| is_public_action(n))
-        .filter(|n| !top_src.contains(&format!("\n  {n},")))
-        .collect();
-
     assert!(
-        missing_actions_barrel.is_empty()
-            && leaked_internal.is_empty()
-            && missing_public_top.is_empty(),
+        missing_actions_barrel.is_empty() && leaked_on_language_barrel.is_empty(),
         "action table disagrees with the runtime barrels — the table is the \
          single source; update the barrels, not the table. \
          Missing from actions/index.ts: {:?}. \
-         Non-public leaked into top-level actions export: {:?}. \
-         Public missing from top-level actions export: {:?}.",
+         Leaked onto language barrel: {:?}.",
         missing_actions_barrel,
-        leaked_internal,
-        missing_public_top,
+        leaked_on_language_barrel,
     );
 }
 

@@ -3,7 +3,7 @@
 //! Spike S5.1 red gate. Calls product surfaces only:
 //! - `sail_compiler::runtime_ambient::RUNTIME_AMBIENT` (inject SSOT)
 //! - `parse::preprocess::wrap_controller_body` / `extract_controller_block`
-//! - `ambients::emit_types_dts` + tsc (when `node_modules/.bin/tsc` present)
+//! - `ambients::emit_types_dts` + tsc (when `node_modules/typescript/bin/tsc` present)
 //!
 //! Implementer must not modify, skip, or weaken these tests.
 //!
@@ -14,8 +14,9 @@
 //! - `query`, `mutation`
 //!
 //! Behavioral law: a controller that references these names without importing
-//! them gets a self-contained emit module (ambient inject from
-//! `@ship/sail-runtime/internal`). Types (`Signal`, `Theme`, `StoreDef`, …)
+//! them gets a self-contained emit module (ambient inject). Core language
+//! comes from `@ship/sail-runtime/internal`; `query`/`mutation` from
+//! `@ship/sail-runtime/query`. Types (`Signal`, `Theme`, `StoreDef`, …)
 //! are free globals via the ambient pack — no `import type` from `@ship/*`.
 
 use std::collections::HashSet;
@@ -46,23 +47,22 @@ fn ambient_authored_names() -> HashSet<&'static str> {
         .collect()
 }
 
-fn ambient_import_line(body: &str) -> Option<&str> {
-    body.lines().find(|l| {
-        let t = l.trim_start();
-        t.starts_with("import") && t.contains(RUNTIME_SPECIFIER)
-    })
-}
-
 fn asserts_ambient_inject(body: &str, idents: &[&str]) {
-    let line = ambient_import_line(body).unwrap_or_else(|| {
-        panic!("expected ambient inject from `{RUNTIME_SPECIFIER}`, got module:\n{body}")
-    });
     for ident in idents {
+        let line = body.lines().find(|l| {
+            let t = l.trim_start();
+            t.starts_with("import") && t.contains(ident) && t.contains("@ship/sail-runtime")
+        });
+        let line = line.unwrap_or_else(|| {
+            panic!("expected ambient inject of `{ident}` from @ship/sail-runtime/*, got module:\n{body}")
+        });
+        let expected = sail_compiler::runtime_ambient::ambient_module(ident);
         assert!(
-            line.contains(ident),
-            "ambient `{ident}` missing from inject line `{line}`\nmodule:\n{body}"
+            line.contains(expected),
+            "ambient `{ident}` must inject from `{expected}`, got `{line}`\nmodule:\n{body}"
         );
     }
+    let _ = RUNTIME_SPECIFIER;
 }
 
 fn repo_root() -> PathBuf {
@@ -72,13 +72,14 @@ fn repo_root() -> PathBuf {
         .unwrap()
 }
 
-fn tsc_path(repo: &Path) -> Option<PathBuf> {
-    let p = repo.join("node_modules/.bin/tsc");
-    if p.exists() {
-        return Some(p);
-    }
-    let alt = repo.join("node_modules/typescript/bin/tsc");
-    alt.exists().then_some(alt)
+fn require_tsc(repo: &Path) -> PathBuf {
+    let p = repo.join("node_modules/typescript/bin/tsc");
+    assert!(
+        p.is_file(),
+        "repo TypeScript wrapper missing at {} — bun install",
+        p.display()
+    );
+    p
 }
 
 // ── 1. Inject table SSOT ────────────────────────────────────────────────────
@@ -234,18 +235,7 @@ fn ambient_pack_declares_s5_value_names() {
 #[test]
 fn bare_s5_ambient_values_typecheck_without_import() {
     let repo = repo_root();
-    let Some(tsc) = tsc_path(&repo) else {
-        eprintln!(
-            "SKIP ambient_table_complete tsc values: {} not found — run `bun install` to enable.",
-            repo.join("node_modules/.bin/tsc").display()
-        );
-        // Table + inject gates above still prove RED without tsc.
-        // Fail hard so CI with node_modules cannot skip the type surface.
-        if repo.join("node_modules").is_dir() {
-            panic!("node_modules present but tsc binary missing — install typescript");
-        }
-        return;
-    };
+    let tsc = require_tsc(&repo);
 
     let work = repo.join("target/ambient-table-complete-tsc");
     let _ = fs::remove_dir_all(&work);
@@ -329,16 +319,7 @@ export default controller(() => {
 fn public_types_are_global_without_ship_import() {
     // SPEC §1: Signal, Theme, Store (StoreDef), … via declare global — no import type.
     let repo = repo_root();
-    let Some(tsc) = tsc_path(&repo) else {
-        eprintln!(
-            "SKIP ambient_table_complete tsc types: {} not found — run `bun install` to enable.",
-            repo.join("node_modules/.bin/tsc").display()
-        );
-        if repo.join("node_modules").is_dir() {
-            panic!("node_modules present but tsc binary missing — install typescript");
-        }
-        return;
-    };
+    let tsc = require_tsc(&repo);
 
     let work = repo.join("target/ambient-table-complete-types-tsc");
     let _ = fs::remove_dir_all(&work);

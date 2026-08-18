@@ -1,4 +1,4 @@
-import { queryKeyed } from '@ship/sail-runtime'
+import { queryKeyed } from '@ship/sail-runtime/query'
 
 type Ctx = {
   ship: { agents: { summaries: () => Promise<{ items: { id: string; name: string }[] }> } }

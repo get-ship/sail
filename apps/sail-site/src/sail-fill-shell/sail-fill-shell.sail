@@ -1,6 +1,5 @@
 <!--
-  <sail-fill-shell> — full-bleed fill shell for workbench / residual routes.
-  Used by /playground and parked /sail/tutorial* — no docs rail.
+  <sail-fill-shell> — full-bleed workbench (no docs rail).
 -->
 <scope>
   style shell = { size({ w: full, h: full, min-w: 0, min-h: 0 }).grow(1).overflow({ all: hidden }) }

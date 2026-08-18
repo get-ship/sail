@@ -25,6 +25,22 @@ export default defineConfig({
         replacement: resolve(__dirname, '../runtime/src/actions/index.ts'),
       },
       {
+        find: '@ship/sail-runtime/motion',
+        replacement: resolve(__dirname, '../runtime/src/motion-bundle.ts'),
+      },
+      {
+        find: '@ship/sail-runtime/query',
+        replacement: resolve(__dirname, '../runtime/src/query.ts'),
+      },
+      {
+        find: '@ship/sail-runtime/virtual',
+        replacement: resolve(__dirname, '../runtime/src/virtual.ts'),
+      },
+      {
+        find: '@ship/sail-runtime/internal',
+        replacement: resolve(__dirname, '../runtime/src/internal.ts'),
+      },
+      {
         find: '@ship/sail-runtime',
         replacement: resolve(__dirname, '../runtime/src/index.ts'),
       },

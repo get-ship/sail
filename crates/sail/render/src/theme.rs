@@ -53,7 +53,11 @@ impl ThemeSelect {
 
     /// `theme` attribute value (theme id only).
     pub fn data_theme(&self) -> &str {
-        if self.id.is_empty() { "sail" } else { &self.id }
+        if self.id.is_empty() {
+            sail_compiler::tokens_generate::DEFAULT_PROJECT_THEME_ID
+        } else {
+            &self.id
+        }
     }
 
     /// `data-mode` attribute value.

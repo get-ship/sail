@@ -18,6 +18,10 @@
 //! [`Parser`]: https://docs.rs/tree-sitter/0.26.8/tree_sitter/struct.Parser.html
 //! [tree-sitter]: https://tree-sitter.github.io/
 
+pub mod highlight;
+
+pub use highlight::{HighlightSpan, highlight};
+
 use tree_sitter_language::LanguageFn;
 
 extern "C" {

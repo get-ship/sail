@@ -125,7 +125,6 @@ fn which_on_path(bin: &str) -> bool {
 struct Launch {
     command: String,
     args: Vec<String>,
-    /// Working directory (cargo monorepo runs need the workspace root).
     cwd: Option<PathBuf>,
 }
 

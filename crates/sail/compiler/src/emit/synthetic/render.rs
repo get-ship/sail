@@ -194,6 +194,13 @@ pub(super) fn emit_render(
             action_imports.join(", ")
         ));
     }
+    let motion_imports = render_motion_imports(program, true);
+    if !motion_imports.is_empty() {
+        w.line(&format!(
+            "import {{ {} }} from \"@ship/sail-runtime/motion\";",
+            motion_imports.join(", ")
+        ));
+    }
     if authored {
         w.line(&format!(
             "import {{ scope, __disposeAuthoredSetup }} from {};",
@@ -320,6 +327,13 @@ pub(super) fn emit_render_client(
             action_imports.join(", ")
         ));
     }
+    let motion_imports = render_motion_imports(program, true);
+    if !motion_imports.is_empty() {
+        w.line(&format!(
+            "import {{ {} }} from \"@ship/sail-runtime/motion\";",
+            motion_imports.join(", ")
+        ));
+    }
     if !dom_imports.is_empty() {
         w.line(&format!(
             "import {{ {} }} from \"@ship/sail-dom\";",
@@ -405,12 +419,19 @@ fn render_runtime_imports(program: &Program, is_route: bool) -> Vec<String> {
         .filter(|s| !CONTROLLER_ONLY_IMPORTS.contains(s))
         .map(|s| s.to_string())
         .collect();
-    for &name in &lowered.motion_builtins {
-        let s = name.to_string();
-        if !imports.contains(&s) {
-            imports.push(s);
-        }
-    }
+    imports.sort();
+    imports
+}
+
+fn render_motion_imports(program: &Program, is_route: bool) -> Vec<String> {
+    let Ok(lowered) = lower::lower(program, is_route) else {
+        return Vec::new();
+    };
+    let mut imports: Vec<String> = lowered
+        .motion_builtins
+        .iter()
+        .map(|s| (*s).to_string())
+        .collect();
     imports.sort();
     imports
 }

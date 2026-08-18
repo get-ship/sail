@@ -1,8 +1,8 @@
 #!/usr/bin/env bun
 /**
- * Fail if checked-in `grammar.js`, `queries/highlights.scm`, or the
- * CM6 overlay vocab table drift from a fresh compiler vocabulary dump
- * + `generate-grammar.ts`. Same inputs as `bun run generate`.
+ * Fail if checked-in `grammar.js` or `queries/highlights.scm` drift
+ * from a fresh compiler vocabulary dump + `generate-grammar.ts`.
+ * Same inputs as `bun run generate`.
  *
  * Usage (from packages/sail/grammar):
  *   bun run generate-check
@@ -18,10 +18,6 @@ const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const GRAMMAR_DIR = resolve(SCRIPT_DIR, '..');
 const WORKSPACE = resolve(GRAMMAR_DIR, '../../..');
 const GENERATOR = join(SCRIPT_DIR, 'generate-grammar.ts');
-const OVERLAY_VOCAB = resolve(
-  WORKSPACE,
-  'packages/components/sail/code-editor/src/sail-code-editor/sail-highlight-vocab.ts',
-);
 
 const CHECKS: Array<{ generated: string; committed: string; label: string }> = [
   {
@@ -33,11 +29,6 @@ const CHECKS: Array<{ generated: string; committed: string; label: string }> = [
     generated: 'queries/highlights.scm',
     committed: join(GRAMMAR_DIR, 'queries/highlights.scm'),
     label: 'queries/highlights.scm',
-  },
-  {
-    generated: 'sail-highlight-vocab.ts',
-    committed: OVERLAY_VOCAB,
-    label: 'sail-highlight-vocab.ts',
   },
 ];
 
@@ -76,7 +67,6 @@ function main(): void {
   const tmp = mkdtempSync(join(tmpdir(), 'sail-generate-check-'));
   try {
     const vocabPath = join(tmp, 'vocab.json');
-    const overlayOut = join(tmp, 'sail-highlight-vocab.ts');
 
     run(
       'cargo',
@@ -93,8 +83,6 @@ function main(): void {
         vocabPath,
         '--out-dir',
         tmp,
-        '--overlay-vocab',
-        overlayOut,
       ],
       GRAMMAR_DIR,
     );

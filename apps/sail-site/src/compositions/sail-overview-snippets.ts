@@ -1,6 +1,7 @@
 // Code snippets for the introduction. The `page` snippet IS the live demo's
 // program; the tour snippets are deliberately tiny. All compiled by the build.
-import { signal, derived, effect, query, filteredList, applyTheme } from '@ship/sail-runtime'
+import { signal, derived, effect, filteredList, applyTheme } from '@ship/sail-runtime'
+import { query } from '@ship/sail-runtime/query'
 export const code = {
   // Section 2 — the whole demo, six lines. The page renders these same lines live.
   hello: `const playing = signal(true)

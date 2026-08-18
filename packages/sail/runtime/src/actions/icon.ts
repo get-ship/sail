@@ -9,7 +9,7 @@
 // Named icons NEVER use a CDN. The `src` attribute is only for **relative**
 // or **same-origin** custom SVG URLs (not a pack escape hatch).
 
-import { __sail_motion_attach } from '../motion'
+import { __sail_motion_attach } from '@ship/sail-runtime/motion'
 
 const ENDPOINT = '/_deck/icons/'
 

@@ -1,5 +1,5 @@
 import type { Action } from '../action'
-import { invokeCallback } from '../callback'
+import { invokeCallback } from '@ship/sail-runtime/internal'
 
 const host = (name: string) => `[data-sail-host="${name}"]`
 

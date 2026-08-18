@@ -38,9 +38,8 @@
 //!
 //! ## Resolution (STEP ZERO)
 //!
-//! Prefer the native `@typescript/native-preview-*` binary (same order as
-//! `sail-lsp`), then `node_modules/.bin/tsgo`, then `tsgo` on PATH. Absent →
-//! loud `sail-type-gate` error naming `bun install` / `@typescript/native-preview`.
+//! Shared `sail_compiler::ts_native` resolver (peer sidecar / XDG / env).
+//! Absent → loud `sail-type-gate` error naming the peer sidecar dir.
 //! Never a silent skip (including wasm32 — unsupported target fails loud).
 //!
 //! ## Tiers
@@ -84,12 +83,12 @@ pub struct TsDiag {
     pub message: String,
 }
 
-/// Resolved tsgo invocation.
+/// Resolved TypeScript 7 native sidecar.
 #[derive(Debug, Clone)]
 pub struct TsgoTool {
-    /// Native binary path, OR `node` when using the JS entry.
+    /// Go ELF next to `lib.d.ts`. Never a Node shebang.
     pub program: PathBuf,
-    /// When `Some`, invoke as `node <js_entry> …` (script entry).
+    /// Unused — product resolve never returns a JS entry.
     pub js_entry: Option<PathBuf>,
 }
 
@@ -102,126 +101,30 @@ pub const RULE_TYPE_GATE: &str = "sail-type-gate";
 /// Node/Bun live in test/ and tooling only — never product Pure/Action.
 pub const RULE_NO_NODE: &str = "sail-no-node";
 
-/// Loud install fix when tsgo cannot be resolved.
+/// Loud install fix when the native sidecar cannot be resolved.
 pub const TSGO_MISSING_MSG: &str = "\
-Type gate requires `tsgo` but none was found \
-(searched node_modules/.bin/tsgo, @typescript/native-preview-*, and PATH). \
-Install with `bun install` (provides `@typescript/native-preview`). \
+Type gate requires the TypeScript 7 native sidecar but none was found \
+(searched SAIL_TSC, dirname(sail)/sail-ts-native/tsc, XDG, and PATH). \
+The toolchain download ships that directory next to `sail`. \
 If tsc does not compile, sail does not compile — the gate never skips.";
 
 // ── tsgo resolution ────────────────────────────────────────────────────────
 
-/// Discover tsgo starting from `start` (file or directory) walking up to root,
-/// then CWD (when `start` is outside the workspace, e.g. `/tmp` fixtures), then
-/// PATH. Returns `None` only when truly absent — callers must fail loud.
-///
-/// Paths are **canonicalized** when possible so later `Command` runs with
-/// `current_dir(temp)` still find the binary (relative workspace paths would
-/// otherwise ENOENT under the harness temp dir).
-pub fn resolve_tsgo(start: Option<&Path>) -> Option<TsgoTool> {
-    let mut starts: Vec<PathBuf> = Vec::new();
-    if let Some(p) = start {
-        let p = p.canonicalize().unwrap_or_else(|_| p.to_path_buf());
-        starts.push(if p.is_file() {
-            p.parent().unwrap_or(p.as_path()).to_path_buf()
-        } else {
-            p
-        });
+/// Shared resolver. `start` is unused (kept so ~20 call sites stay stable).
+pub fn resolve_tsgo(_start: Option<&Path>) -> Option<TsgoTool> {
+    #[cfg(target_arch = "wasm32")]
+    {
+        return None;
     }
-    if let Ok(cwd) = std::env::current_dir() {
-        if starts.first().map(|s| s.as_path()) != Some(cwd.as_path()) {
-            starts.push(cwd);
-        }
-    }
-    // CARGO_MANIFEST_DIR is unavailable at runtime; walk each start to root.
-
-    for start_dir in starts {
-        let mut dir = Some(start_dir);
-        while let Some(d) = dir {
-            if let Some(tool) = look_in_dir(&d) {
-                return Some(tool);
-            }
-            dir = d.parent().map(|p| p.to_path_buf());
-        }
-    }
-
-    if let Some(path) = which("tsgo") {
-        return Some(TsgoTool {
-            program: abs(path),
-            js_entry: None,
-        });
-    }
-    None
-}
-
-fn look_in_dir(d: &Path) -> Option<TsgoTool> {
-    let bin = d.join("node_modules/.bin/tsgo");
-    if bin.exists() {
-        if let Some(nm) = bin.parent().and_then(|p| p.parent()) {
-            if let Some(native) = resolve_native_under(nm) {
-                return Some(TsgoTool {
-                    program: abs(native),
-                    js_entry: None,
-                });
-            }
-        }
-        // Shell script → run via node + package entry when possible.
-        let js = d.join("node_modules/@typescript/native-preview/lib/tsgo.js");
-        if js.exists() {
-            if let Some(node) = which("node") {
-                return Some(TsgoTool {
-                    program: abs(node),
-                    js_entry: Some(abs(js)),
-                });
-            }
-        }
-        return Some(TsgoTool {
-            program: abs(bin),
-            js_entry: None,
-        });
-    }
-    if let Some(native) = platform_native_under(&d.join("node_modules")) {
-        return Some(TsgoTool {
-            program: abs(native),
-            js_entry: None,
-        });
-    }
-    None
+    #[cfg(not(target_arch = "wasm32"))]
+    crate::ts_native::resolve_ts_native().map(|t| TsgoTool {
+        program: abs(t.program),
+        js_entry: None,
+    })
 }
 
 fn abs(p: PathBuf) -> PathBuf {
     p.canonicalize().unwrap_or(p)
-}
-
-fn resolve_native_under(node_modules: &Path) -> Option<PathBuf> {
-    platform_native_under(node_modules)
-}
-
-fn platform_native_under(node_modules: &Path) -> Option<PathBuf> {
-    let os = std::env::consts::OS;
-    let arch = match std::env::consts::ARCH {
-        "x86_64" => "x64",
-        "aarch64" => "arm64",
-        other => other,
-    };
-    let os = if os == "windows" { "win32" } else { os };
-    let pkg = format!("@typescript/native-preview-{os}-{arch}");
-    let mut exe = node_modules.join(&pkg).join("lib").join("tsgo");
-    if cfg!(windows) {
-        exe.set_extension("exe");
-    }
-    exe.exists().then_some(exe)
-}
-
-fn which(name: &str) -> Option<PathBuf> {
-    let path = std::env::var_os("PATH")?;
-    for dir in std::env::split_paths(&path) {
-        let candidate = dir.join(name);
-        if candidate.is_file() {
-            return Some(candidate);
-        }
-    }
-    None
 }
 
 static TSGO_INVOCATIONS: AtomicU64 = AtomicU64::new(0);
@@ -430,8 +333,8 @@ fn collect_sail_type_gate_native(
                 end_col: 1,
                 severity: DiagSeverity::Error,
                 message: format!(
-                    "Type gate failed to invoke tsgo ({e}). \
-                     Install with `bun install` (`@typescript/native-preview`)."
+                    "Type gate failed to invoke the TypeScript sidecar ({e}). \
+                     Expected dirname(sail)/sail-ts-native/tsc."
                 ),
                 rule: Some(RULE_TYPE_GATE.to_string()),
             });
@@ -554,10 +457,7 @@ fn io_fail_diag(e: &std::io::Error) -> Diagnostic {
         end_line: 1,
         end_col: 1,
         severity: DiagSeverity::Error,
-        message: format!(
-            "Type gate failed to invoke tsgo ({e}). \
-             Install with `bun install` (`@typescript/native-preview`)."
-        ),
+        message: format!("Type gate failed to invoke the sidecar ({e}). {TSGO_MISSING_MSG}"),
         rule: Some(RULE_TYPE_GATE.to_string()),
     }
 }
@@ -3755,24 +3655,21 @@ fn find_globalthis_string_index(code: &str) -> Option<usize> {
 
 /// Type-check `block` (a TS module body) against `harness` (the `.ts` providing
 /// `props()`/`variants()` + the built-in symbols). Returns tsgo's diagnostics —
-/// empty means clean. `node`/`tsgo_js` locate the shipped compiler; production
-/// resolves them from the toolchain, the spike passes them in.
+/// empty means clean. `tsc` is the native sidecar ELF.
 ///
 /// **Not** part of the E1 type gate (`collect_*`); test props bridge only.
 pub fn typecheck_block(
     harness: &str,
     block: &str,
     out_dir: &Path,
-    node: &str,
-    tsgo_js: &str,
+    tsc: &Path,
 ) -> std::io::Result<Vec<TsDiag>> {
     std::fs::create_dir_all(out_dir)?;
     let harness_path = out_dir.join("sail-embed-harness.ts");
     let block_path = out_dir.join("sail-embed-block.ts");
     std::fs::write(&harness_path, harness)?;
     std::fs::write(&block_path, block)?;
-    let output = Command::new(node)
-        .arg(tsgo_js)
+    let output = Command::new(tsc)
         .arg("--noEmit")
         .arg("--strict")
         .arg("--skipLibCheck")
@@ -3819,8 +3716,7 @@ pub fn check_synthetic_controller(
     source: &str,
     source_dir: &Path,
     out_dir: &Path,
-    node: &str,
-    tsgo_js: &str,
+    tsc: &Path,
     workspace_root: &Path,
 ) -> std::io::Result<Vec<TsDiag>> {
     use crate::CompileMode;
@@ -3911,11 +3807,7 @@ pub fn check_synthetic_controller(
     let tsconfig_path = out_dir.join("tsconfig.json");
     std::fs::write(&tsconfig_path, tsconfig)?;
 
-    let output = Command::new(node)
-        .arg(tsgo_js)
-        .arg("-p")
-        .arg(&tsconfig_path)
-        .output()?;
+    let output = Command::new(tsc).arg("-p").arg(&tsconfig_path).output()?;
     let mut text = String::from_utf8_lossy(&output.stdout).into_owned();
     text.push_str(&String::from_utf8_lossy(&output.stderr));
     Ok(text
@@ -3938,16 +3830,6 @@ const SCOPE_CONTRACT_CODES: &[&str] = &["TS2339", "TS2551", "TS2304", "TS2552"];
 mod tests {
     use super::*;
 
-    fn tsgo_env() -> Option<(String, String)> {
-        let node = std::env::var("SUI_TSGO_NODE").ok()?;
-        let js = std::env::var("SUI_TSGO_JS").ok()?;
-        if Path::new(&node).exists() && Path::new(&js).exists() {
-            Some((node, js))
-        } else {
-            None
-        }
-    }
-
     fn workspace_root() -> &'static Path {
         Path::new(env!("CARGO_MANIFEST_DIR"))
             .ancestors()
@@ -3957,7 +3839,7 @@ mod tests {
 
     fn require_tsgo() {
         if resolve_tsgo(Some(workspace_root())).is_none() {
-            panic!("tsgo required");
+            panic!("{}", crate::ts_native::missing_sidecar_hint());
         }
     }
 
@@ -4047,14 +3929,19 @@ mod tests {
 
     #[test]
     fn resolve_tsgo_finds_workspace() {
-        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
-            .ancestors()
-            .nth(3)
-            .expect("workspace root");
-        let tool = resolve_tsgo(Some(root));
+        let tool = resolve_tsgo(Some(workspace_root())).expect("profile-dir peer");
+        let peer = crate::ts_native::expected_peer_tsc_from_current_exe();
+        let peer_dir = peer.parent().expect("sidecar dir");
         assert!(
-            tool.is_some(),
-            "tsgo must resolve from workspace (bun install @typescript/native-preview)"
+            tool.program.starts_with(peer_dir) || tool.program == peer,
+            "resolve_tsgo must use the profile-dir peer, not node_modules: {} (peer {})",
+            tool.program.display(),
+            peer.display()
+        );
+        assert!(
+            !tool.program.to_string_lossy().contains("node_modules"),
+            "must not resolve via node_modules: {}",
+            tool.program.display()
         );
     }
 
@@ -4064,9 +3951,7 @@ mod tests {
             .ancestors()
             .nth(3)
             .expect("workspace root");
-        if resolve_tsgo(Some(root)).is_none() {
-            panic!("tsgo required for type gate tests — run bun install");
-        }
+        require_tsgo();
         let src = r#"
 <controller>
 export default controller((ctx) => {
@@ -4309,9 +4194,7 @@ export default controller(() => {
             .ancestors()
             .nth(3)
             .expect("workspace root");
-        if resolve_tsgo(Some(root)).is_none() {
-            panic!("tsgo required");
-        }
+        require_tsgo();
         let tmp = tempfile::tempdir().unwrap();
         let project = tmp.path();
         std::fs::create_dir_all(project.join("src/stores")).unwrap();
@@ -4467,9 +4350,7 @@ export default controller((ctx) => {
             .ancestors()
             .nth(3)
             .expect("workspace root");
-        if resolve_tsgo(Some(workspace)).is_none() {
-            panic!("tsgo required");
-        }
+        require_tsgo();
         let tmp = tempfile::tempdir().expect("temp project");
         let root = tmp.path();
         let bad = (
@@ -4505,9 +4386,7 @@ export default controller((ctx) => {
             .ancestors()
             .nth(3)
             .expect("workspace root");
-        if resolve_tsgo(Some(workspace)).is_none() {
-            panic!("tsgo required");
-        }
+        require_tsgo();
         let tmp = tempfile::tempdir().expect("temp project");
         let root = tmp.path();
         let file = (
@@ -4529,9 +4408,7 @@ export default controller((ctx) => {
             .ancestors()
             .nth(3)
             .expect("workspace root");
-        if resolve_tsgo(Some(root)).is_none() {
-            panic!("tsgo required");
-        }
+        require_tsgo();
         // Doctrine: real type errors (not just DOM names) fail the gate.
         let src = r#"
 <controller>
@@ -4598,9 +4475,7 @@ export default controller((ctx) => {
             .ancestors()
             .nth(3)
             .expect("workspace root");
-        if resolve_tsgo(Some(root)).is_none() {
-            panic!("tsgo required");
-        }
+        require_tsgo();
         let src = r#"
 <controller>
 import { helper } from './definitely-missing-mod-xyz'
@@ -4627,9 +4502,7 @@ export default controller((ctx) => {
             .ancestors()
             .nth(3)
             .expect("workspace root");
-        if resolve_tsgo(Some(root)).is_none() {
-            panic!("tsgo required");
-        }
+        require_tsgo();
         let tmp = tempfile::tempdir().unwrap();
         let project = tmp.path();
         std::fs::create_dir_all(project.join("src")).unwrap();
@@ -4666,9 +4539,7 @@ export default controller((ctx) => {
             .ancestors()
             .nth(3)
             .expect("workspace root");
-        if resolve_tsgo(Some(root)).is_none() {
-            panic!("tsgo required");
-        }
+        require_tsgo();
         let src = r#"
 <controller>
 export default controller((ctx) => {
@@ -4694,9 +4565,7 @@ export default controller((ctx) => {
             .ancestors()
             .nth(3)
             .expect("workspace root");
-        if resolve_tsgo(Some(root)).is_none() {
-            panic!("tsgo required");
-        }
+        require_tsgo();
         let cases = [
             ("const x = v as unknown as string", "as unknown as"),
             ("const x = v satisfies any", "satisfies any"),
@@ -4733,9 +4602,7 @@ export default controller((ctx) => {{
             .ancestors()
             .nth(3)
             .expect("workspace root");
-        if resolve_tsgo(Some(root)).is_none() {
-            panic!("tsgo required");
-        }
+        require_tsgo();
         let src = r#"
 <controller>
 export default controller((ctx) => {
@@ -4831,9 +4698,7 @@ export default controller(() => {
             .ancestors()
             .nth(3)
             .expect("workspace root");
-        if resolve_tsgo(Some(root)).is_none() {
-            panic!("tsgo required");
-        }
+        require_tsgo();
         let src = r#"
 <controller>
 import type { Scope } from './missing-sibling.sail'
@@ -4891,9 +4756,7 @@ export default controller(() => {{
             .ancestors()
             .nth(3)
             .expect("workspace root");
-        if resolve_tsgo(Some(root)).is_none() {
-            panic!("tsgo required");
-        }
+        require_tsgo();
         let tmp = tempfile::tempdir().unwrap();
         let project = tmp.path();
         write_export_kind_fixture(project);
@@ -4931,9 +4794,7 @@ export default controller(() => {{
             .ancestors()
             .nth(3)
             .expect("workspace root");
-        if resolve_tsgo(Some(root)).is_none() {
-            panic!("tsgo required");
-        }
+        require_tsgo();
         let tmp = tempfile::tempdir().unwrap();
         let project = tmp.path();
         write_export_kind_fixture(project);
@@ -4973,9 +4834,7 @@ export default controller(() => {{
             .ancestors()
             .nth(3)
             .expect("workspace root");
-        if resolve_tsgo(Some(root)).is_none() {
-            panic!("tsgo required");
-        }
+        require_tsgo();
         let tmp = tempfile::tempdir().unwrap();
         let project = tmp.path();
         std::fs::create_dir_all(project.join("src/stores")).unwrap();
@@ -5018,9 +4877,7 @@ export default controller(() => {
             .ancestors()
             .nth(3)
             .expect("workspace root");
-        if resolve_tsgo(Some(root)).is_none() {
-            panic!("tsgo required");
-        }
+        require_tsgo();
         let tmp = tempfile::tempdir().unwrap();
         let project = tmp.path();
         std::fs::create_dir_all(project.join("src")).unwrap();
@@ -5080,9 +4937,7 @@ export default controller(() => {
             .ancestors()
             .nth(3)
             .expect("workspace root");
-        if resolve_tsgo(Some(root)).is_none() {
-            panic!("tsgo required");
-        }
+        require_tsgo();
         let tmp = tempfile::tempdir().unwrap();
         let project = tmp.path();
         std::fs::create_dir_all(project.join("src/widget")).unwrap();
@@ -5123,9 +4978,7 @@ export default controller((ctx) => {
             .ancestors()
             .nth(3)
             .expect("workspace root");
-        if resolve_tsgo(Some(root)).is_none() {
-            panic!("tsgo required");
-        }
+        require_tsgo();
         let tmp = tempfile::tempdir().unwrap();
         let project = tmp.path();
         std::fs::create_dir_all(project.join("src/widget")).unwrap();
@@ -5173,9 +5026,7 @@ export default controller((ctx) => {
             .ancestors()
             .nth(3)
             .expect("workspace root");
-        if resolve_tsgo(Some(root)).is_none() {
-            panic!("tsgo required");
-        }
+        require_tsgo();
         // First content line is indented; `window` starts at author col 14
         // (2-space indent + "const x = " is 10 → window at 13? Let's compute:
         // "  const x = window" → w is at index 12 → col 13).
@@ -5203,9 +5054,7 @@ export default controller((ctx) => {
             .ancestors()
             .nth(3)
             .expect("workspace root");
-        if resolve_tsgo(Some(root)).is_none() {
-            panic!("tsgo required");
-        }
+        require_tsgo();
         let src = r#"
 <controller>
 export default controller((ctx) => {
@@ -5237,15 +5086,11 @@ export default controller((ctx) => {
     /// a typo (`countt`) is a hard tsgo error.
     #[test]
     fn synthetic_controller_gate_catches_template_typo() {
-        let Some((node, js)) = tsgo_env() else {
-            eprintln!("skip: SUI_TSGO_NODE/SUI_TSGO_JS not set");
-            return;
-        };
-        let ws = Path::new(env!("CARGO_MANIFEST_DIR"))
-            .ancestors()
-            .nth(3)
-            .expect("workspace root above crates/sail/compiler")
-            .to_path_buf();
+        require_tsgo();
+        let tsc = resolve_tsgo(Some(workspace_root()))
+            .expect("sidecar")
+            .program;
+        let ws = workspace_root().to_path_buf();
         let dir = std::env::temp_dir().join("sail-synthetic-gate-test");
 
         const CTRL: &str = "<controller>\n\
@@ -5254,16 +5099,16 @@ export default controller((ctx) => {
             </controller>\n";
 
         let no_sibs = Path::new("/nonexistent-sail-siblings");
-        let ok =
-            format!("{CTRL}<button on:click={{() => count.set(count() + 1)}}>{{count()}}</button>");
-        let diags = check_synthetic_controller(&ok, no_sibs, &dir, &node, &js, &ws).unwrap();
+        // Scope contract only — no `on:click` (`$$click` is TS2551 on HTMLButtonElement).
+        let ok = format!("{CTRL}<button>{{count()}}</button>");
+        let diags = check_synthetic_controller(&ok, no_sibs, &dir, &tsc, &ws).unwrap();
         assert!(
             diags.is_empty(),
             "valid SFC must typecheck clean, got {diags:?}"
         );
 
         let bad = format!("{CTRL}<button>{{countt()}}</button>");
-        let diags = check_synthetic_controller(&bad, no_sibs, &dir, &node, &js, &ws).unwrap();
+        let diags = check_synthetic_controller(&bad, no_sibs, &dir, &tsc, &ws).unwrap();
         assert!(
             diags.iter().any(|d| d.message.contains("countt")),
             "template typo scope.countt must be a compile error, got {diags:?}"
@@ -5281,15 +5126,15 @@ export function props<T extends Record<string, Prop<unknown> | readonly string[]
 
     #[test]
     fn tsgo_bridge_catches_typo_with_suggestion() {
-        let Some((node, js)) = tsgo_env() else {
-            eprintln!("skip: SUI_TSGO_NODE/SUI_TSGO_JS not set");
-            return;
-        };
+        require_tsgo();
+        let tsc = resolve_tsgo(Some(workspace_root()))
+            .expect("sidecar")
+            .program;
         let dir = std::env::temp_dir().join("sail-tscheck-test");
 
         let ok = "import { props, tone, size, bool, string } from './sail-embed-harness'\n\
                   export const p = props({ tone, size, variant: ['solid','outline'], disabled: bool, label: string })\n";
-        let diags = typecheck_block(HARNESS, ok, &dir, &node, &js).unwrap();
+        let diags = typecheck_block(HARNESS, ok, &dir, &tsc).unwrap();
         assert!(
             diags.is_empty(),
             "valid block should be clean, got {diags:?}"
@@ -5297,7 +5142,7 @@ export function props<T extends Record<string, Prop<unknown> | readonly string[]
 
         let bad = "import { props, tone, size, bool } from './sail-embed-harness'\n\
                    export const p = props({ tone, sizee, disabled: bool })\n";
-        let diags = typecheck_block(HARNESS, bad, &dir, &node, &js).unwrap();
+        let diags = typecheck_block(HARNESS, bad, &dir, &tsc).unwrap();
         let hit = diags
             .iter()
             .find(|d| d.code == "TS2552" || d.message.contains("sizee"));
@@ -5321,9 +5166,7 @@ export function props<T extends Record<string, Prop<unknown> | readonly string[]
             .ancestors()
             .nth(3)
             .expect("workspace root");
-        if resolve_tsgo(Some(root)).is_none() {
-            panic!("tsgo required");
-        }
+        require_tsgo();
         let tmp = tempfile::tempdir().expect("tmpdir");
         let project = tmp.path();
         std::fs::create_dir_all(project.join("src/stores")).unwrap();

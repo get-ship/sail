@@ -17,6 +17,10 @@ path = "src/lib.rs"
 # referenced in code as `build_info`) so there is no absolute back-edge to the
 # Ship repo and no build-info package collision in Ship's lockfile.
 build-info = { package = "sail-build-info", path = "../../build-info" }
+sha2 = "0.10"
+base64 = "0.22"
+flate2 = "1"
+tar = "0.4"
 
 [[bin]]
 name = "sail-compiler"
@@ -41,6 +45,10 @@ anyhow = { workspace = true }
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 clap = { workspace = true }
 libc = { workspace = true }
+sha2 = "0.10"
+base64 = "0.22"
+flate2 = "1"
+tar = "0.4"
 
 [dependencies.wasm-bindgen]
 version = "0.2"

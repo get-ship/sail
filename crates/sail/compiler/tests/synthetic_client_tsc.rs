@@ -12,8 +12,7 @@
 //! `@ship/sail-runtime` maps to a tiny shim (the SSR server entry + `view`) so
 //! the check stays lightweight; `@ship/sail-dom` maps to its real source.
 //!
-//! Opt-in: requires `bun install` so `node_modules/.bin/tsc` + the workspace
-//! sources exist. Absent tsc → prints why and returns (mirrors `synthetic_tsc`).
+//! Requires `node_modules/typescript/bin/tsc` (bun install). Missing wrapper panics.
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -32,9 +31,14 @@ fn repo_root() -> PathBuf {
         .unwrap()
 }
 
-fn tsc_path(repo: &Path) -> Option<PathBuf> {
-    let p = repo.join("node_modules/.bin/tsc");
-    p.exists().then_some(p)
+fn require_tsc(repo: &Path) -> PathBuf {
+    let p = repo.join("node_modules/typescript/bin/tsc");
+    assert!(
+        p.is_file(),
+        "repo TypeScript wrapper missing at {} — bun install",
+        p.display()
+    );
+    p
 }
 
 struct Surface {
@@ -213,7 +217,6 @@ fn write_tsconfig(repo: &Path, work: &Path, include: &[String], name: &str) {
     "noEmit": true,
     "allowImportingTsExtensions": true,
     "allowArbitraryExtensions": true,
-    "baseUrl": ".",
     "paths": {{
       "@ship/sail-runtime": ["./runtime-shim.ts"],
       "@ship/sail-runtime/*": ["{r}/packages/sail/runtime/src/*"],
@@ -251,13 +254,7 @@ fn run_tsc(tsc: &Path, dir: &Path, project: &str) -> (bool, String) {
 #[test]
 fn client_contract_typechecks_green_across_real_surfaces() {
     let repo = repo_root();
-    let Some(tsc) = tsc_path(&repo) else {
-        eprintln!(
-            "SKIP synthetic_client_tsc: {} not found — run `bun install` to enable the tsc proof.",
-            repo.join("node_modules/.bin/tsc").display()
-        );
-        return;
-    };
+    let tsc = require_tsc(&repo);
 
     let work = repo.join("target/synthetic-client-tsc-proof");
     let _ = fs::remove_dir_all(&work);
@@ -325,10 +322,7 @@ fn client_contract_typechecks_green_across_real_surfaces() {
 #[test]
 fn client_render_typo_is_caught_by_tsgo() {
     let repo = repo_root();
-    let Some(tsc) = tsc_path(&repo) else {
-        eprintln!("SKIP synthetic_client_tsc typo: tsc not found — run `bun install`.");
-        return;
-    };
+    let tsc = require_tsc(&repo);
     let manifest_src = fs::read_to_string(repo.join(CONF_MANIFEST)).unwrap();
     let mut manifest = AppManifest::parse(&manifest_src).unwrap();
     inject_host_context(&mut manifest);
@@ -395,10 +389,7 @@ fn client_render_typo_is_caught_by_tsgo() {
 #[ignore = "board/controller.ts fixture doesn't exist (pre-existing gap, unrelated to controller-collapse) — the __def/overload regression this test tracked is fixed, see doc comment"]
 fn controller_recovers_scope_factory_return_type() {
     let repo = repo_root();
-    let Some(tsc) = tsc_path(&repo) else {
-        eprintln!("SKIP synthetic_client_tsc board G4: tsc not found — run `bun install`.");
-        return;
-    };
+    let tsc = require_tsc(&repo);
     let work = repo.join("target/synthetic-client-tsc-g4");
     let _ = fs::remove_dir_all(&work);
     let gendir = work.join("generated");

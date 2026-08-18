@@ -41,9 +41,9 @@ pub struct CheckArgs {
     /// Attribution when fix=apply (e.g. `agent`, `human:name`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub actor: Option<String>,
-    /// When true (default), merge mapped tsgo TypeScript diagnostics into
-    /// structure/check results (SPEC-LSP-1 studio gutters). Soft-noops when
-    /// tsgo is absent. Set `false` for structure-only / faster agent polls.
+    /// When true (default), merge mapped TypeScript diagnostics into
+    /// structure/check results. Returns `typescriptStatus: missing` and
+    /// omits TS diagnostics when the sidecar is absent.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "includeTs")]
     pub include_ts: Option<bool>,
@@ -61,6 +61,10 @@ pub struct CheckRet {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "autoFixed")]
     pub auto_fixed: Option<Vec<Json>>,
+    /// `"live"` or `"missing"`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "typescriptStatus")]
+    pub typescript_status: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
@@ -173,6 +177,9 @@ pub struct HoverRet {
     /// Optional range in 1-based line/col.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub range: Option<Json>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "typescriptStatus")]
+    pub typescript_status: Option<String>,
 }
 
 /// Completions at a 1-based position (tsgo in TS regions; structure fallback).
@@ -189,6 +196,9 @@ pub struct CompleteArgs {
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct CompleteRet {
     pub items: Vec<Json>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "typescriptStatus")]
+    pub typescript_status: Option<String>,
 }
 
 /// Compiler policy registry projection (SPEC-POLICY-1).
@@ -988,7 +998,7 @@ pub const METHOD_CONTRACTS: &[MethodContract] = &[
         "SailAuthoring",
         "Hover",
         "sail_hover",
-        "Typed hover at a 1-based .sail position. Uses sail-lsp virtual_ts + tsgo for controller/scope/template TS regions; structure symbols otherwise. Soft-degrades when tsgo is absent.",
+        "Typed hover at a 1-based .sail position. Uses sail-lsp virtual_ts + the TypeScript sidecar for controller/scope/template TS regions; structure symbols otherwise. Returns typescriptStatus: missing and omits TS diagnostics when the sidecar is absent.",
         HoverArgs,
         HoverRet,
         "HoverArgs",
@@ -1000,7 +1010,7 @@ pub const METHOD_CONTRACTS: &[MethodContract] = &[
         "SailAuthoring",
         "Complete",
         "sail_complete",
-        "Completions at a 1-based .sail position. Proxies tsgo inside TS regions; falls back to structure scope symbols. Soft-degrades when tsgo is absent.",
+        "Completions at a 1-based .sail position. Proxies the TypeScript sidecar inside TS regions; falls back to structure scope symbols. Returns typescriptStatus: missing and omits TS diagnostics when the sidecar is absent.",
         CompleteArgs,
         CompleteRet,
         "CompleteArgs",

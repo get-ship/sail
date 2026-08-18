@@ -25,12 +25,12 @@ path = "bindings/rust/lib.rs"
 
 [dependencies]
 tree-sitter-language = "0.1"
+tree-sitter = "0.26.8"
 
 [build-dependencies]
 cc = "1.2"
 
 [dev-dependencies]
-tree-sitter = "0.26.8"
 # Anti-drift check only (bindings/rust/tests/block_vocabulary.rs): read the
 # compiler's own block_manifest::BLOCKS table and fail the build if
 # grammar.js's block/clause vocabulary has drifted from it. Not used by the

@@ -1,0 +1,80 @@
+==================
+controller raw TypeScript including generics
+==================
+
+<controller>
+interface Lap { id: number }
+const laps = signal<Lap[]>([])
+export default controller(() => ({ laps }))
+</controller>
+
+---
+
+(source_file
+  (controller
+    (control_open)
+    body: (controller_body)
+    (control_close)))
+
+==================
+scope style decl object and compose
+==================
+
+<scope>
+  style card = { pad(4).bg(surface) }
+  style quiet = host, { fg(muted-foreground) }
+</scope>
+
+---
+
+(source_file
+  (scope
+    (control_open)
+    (style_decl
+      name: (identifier)
+      value: (brace_expression
+        (identifier)))
+    (style_decl
+      name: (identifier)
+      value: (identifier)
+      value: (brace_expression
+        (identifier)))
+    (control_close)))
+
+==================
+tag-position style attach
+==================
+
+<row nowrap style(card, { grow(1) })>
+  <strong style(name)>x</strong>
+  <div style({ pad(4) })>y</div>
+</row>
+
+---
+
+(source_file
+  (element
+    tag: (tag_name)
+    (boolean_attr
+      (attr_name))
+    (style_attr
+      args: (style_call
+        (identifier)
+        (brace_expression
+          (identifier))))
+    (element
+      tag: (tag_name)
+      (style_attr
+        args: (style_call
+          (identifier)))
+      (text)
+      close_tag: (tag_name))
+    (element
+      tag: (tag_name)
+      (style_attr
+        args: (style_call
+          (brace_expression
+            (identifier))))
+      (text)
+      close_tag: (tag_name))
+    close_tag: (tag_name)))

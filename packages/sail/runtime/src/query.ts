@@ -3,8 +3,8 @@
 // Returns Signal<LiveState<T>>; background revalidate never flips ok→loading.
 // One cache per owner-tree root (not a module singleton).
 
-import { signal, effect, untrack, type Signal } from './signal'
-import { onCleanup, createChildScope, withScope } from './effect-scope'
+import { signal, effect, untrack, onCleanup, type Signal } from '@ship/sail-runtime'
+import { createChildScope, withScope } from '@ship/sail-runtime/internal'
 import { makeAbortController, type LiveState, type LiveSignal, type LiveSource } from './live-state'
 import {
   nativeQuery,

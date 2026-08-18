@@ -42,13 +42,42 @@ pub(crate) struct FrameworkSingleton {
 pub(crate) const FRAMEWORK_SINGLETONS: &[FrameworkSingleton] = &[
     FrameworkSingleton {
         name: "sail-runtime",
-        // Full singleton surface (front door + all `use:` actions) so the
-        // importmap can map `@ship/sail-runtime` and `/actions` to one URL
-        // without losing auto-imported action names. Author TS still resolves
-        // bare `@ship/sail-runtime` → curated `./src/index.ts`.
+        // Language + compiler ABI only. `use:` actions are `sail-actions`.
         spec: "@ship/sail-runtime/framework",
         out_file: "sail-runtime.js",
         externals: &[],
+        co_assets: &[],
+    },
+    FrameworkSingleton {
+        name: "sail-actions",
+        spec: "@ship/sail-runtime/actions",
+        out_file: "sail-actions.js",
+        externals: &[
+            "@ship/sail-runtime",
+            "@ship/sail-runtime/internal",
+            "@ship/sail-runtime/motion",
+        ],
+        co_assets: &[],
+    },
+    FrameworkSingleton {
+        name: "sail-motion",
+        spec: "@ship/sail-runtime/motion",
+        out_file: "sail-motion.js",
+        externals: &["@ship/sail-runtime", "@ship/sail-runtime/internal"],
+        co_assets: &[],
+    },
+    FrameworkSingleton {
+        name: "sail-query",
+        spec: "@ship/sail-runtime/query",
+        out_file: "sail-query.js",
+        externals: &["@ship/sail-runtime", "@ship/sail-runtime/internal"],
+        co_assets: &[],
+    },
+    FrameworkSingleton {
+        name: "sail-virtual",
+        spec: "@ship/sail-runtime/virtual",
+        out_file: "sail-virtual.js",
+        externals: &["@ship/sail-runtime", "@ship/sail-runtime/internal"],
         co_assets: &[],
     },
     FrameworkSingleton {

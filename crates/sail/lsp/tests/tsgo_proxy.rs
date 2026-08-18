@@ -1,7 +1,6 @@
 //! Integration tests: virtual TS + tsgo proxy round-trips at **.sail** positions.
 //!
-//! Soft-skip when tsgo is absent (mirrors `synthetic_tsc` opt-in style).
-//! Asserts hover / diagnostics land on `.sail` spans, not virtual ones.
+//! Live cases are red gates (profile-dir peer via the `deps/` hop).
 
 use std::path::PathBuf;
 
@@ -17,16 +16,21 @@ fn repo_root() -> PathBuf {
         .expect("repo root")
 }
 
-fn skip_without_tsgo() -> bool {
-    if discover_tsgo(Some(&repo_root())).is_none() {
-        eprintln!(
-            "SKIP tsgo_proxy: tsgo not found under {} — run `bun install` \
-             (provides node_modules/.bin/tsgo via @typescript/native-preview).",
-            repo_root().join("node_modules/.bin/tsgo").display()
-        );
-        return true;
+fn require_sidecar() {
+    if discover_tsgo(None).is_none() {
+        panic!("{}", sail_compiler::ts_native::missing_sidecar_hint());
     }
-    false
+}
+
+fn live_session() -> TsgoSession {
+    require_sidecar();
+    let session = TsgoSession::start(Some(&repo_root()));
+    assert!(
+        session.is_live(),
+        "sidecar present but TsgoSession failed to start — {}",
+        sail_compiler::ts_native::missing_sidecar_hint()
+    );
+    session
 }
 
 const COUNTER: &str = r#"<controller>
@@ -110,9 +114,7 @@ fn source_map_covers_all_fixture_kinds() {
 #[test]
 fn degrade_without_tsgo_keeps_structure() {
     // Session with no client still builds virtuals and never panics.
-    let mut session = TsgoSession::start(Some(std::path::Path::new("/no-tsgo-here-for-degrade")));
-    // Force client off even if PATH has tsgo (discover may still succeed from
-    // PATH; structure path must work either way).
+    let mut session = TsgoSession::structure_only();
     let uri = "file:///tmp/degrade.sail";
     session.on_sail_change(uri, COUNTER);
     assert!(session.virtual_for(uri).is_some());
@@ -124,15 +126,7 @@ fn degrade_without_tsgo_keeps_structure() {
 
 #[test]
 fn tsgo_template_typo_maps_to_sail_span() {
-    if skip_without_tsgo() {
-        return;
-    }
-    let root = repo_root();
-    let mut session = TsgoSession::start(Some(&root));
-    if !session.is_live() {
-        eprintln!("SKIP tsgo_proxy typo: session failed to start");
-        return;
-    }
+    let mut session = live_session();
     let uri = "file:///tmp/expr-typo.sail";
     session.on_sail_change(uri, EXPR_TYPO);
     // Give tsgo a moment after didOpen before pull diagnostics.
@@ -163,15 +157,7 @@ fn tsgo_template_typo_maps_to_sail_span() {
 
 #[test]
 fn tsgo_controller_typo_maps_to_sail_span() {
-    if skip_without_tsgo() {
-        return;
-    }
-    let root = repo_root();
-    let mut session = TsgoSession::start(Some(&root));
-    if !session.is_live() {
-        eprintln!("SKIP tsgo_proxy controller typo: session failed to start");
-        return;
-    }
+    let mut session = live_session();
     let uri = "file:///tmp/ctrl-typo.sail";
     session.on_sail_change(uri, CTRL_TYPO);
     std::thread::sleep(std::time::Duration::from_millis(200));
@@ -193,15 +179,7 @@ fn tsgo_controller_typo_maps_to_sail_span() {
 
 #[test]
 fn tsgo_hover_in_controller_returns_typed_result() {
-    if skip_without_tsgo() {
-        return;
-    }
-    let root = repo_root();
-    let mut session = TsgoSession::start(Some(&root));
-    if !session.is_live() {
-        eprintln!("SKIP tsgo_proxy hover: session failed to start");
-        return;
-    }
+    let mut session = live_session();
     let uri = "file:///tmp/counter-hover.sail";
     session.on_sail_change(uri, COUNTER);
     std::thread::sleep(std::time::Duration::from_millis(200));
@@ -222,15 +200,7 @@ fn tsgo_hover_in_controller_returns_typed_result() {
 
 #[test]
 fn tsgo_hover_in_template_expression() {
-    if skip_without_tsgo() {
-        return;
-    }
-    let root = repo_root();
-    let mut session = TsgoSession::start(Some(&root));
-    if !session.is_live() {
-        eprintln!("SKIP tsgo_proxy expr hover: session failed to start");
-        return;
-    }
+    let mut session = live_session();
     let uri = "file:///tmp/counter-expr-hover.sail";
     session.on_sail_change(uri, COUNTER);
     std::thread::sleep(std::time::Duration::from_millis(300));

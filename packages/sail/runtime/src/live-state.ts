@@ -50,7 +50,7 @@ export interface LiveSource<T> {
  */
 export type LiveValueOf<R> = R extends LiveSource<infer U> ? U : Awaited<R>
 
-import type { Signal } from './signal'
+import type { Signal } from '@ship/sail-runtime'
 
 export const toError = (err: unknown): Error =>
   err instanceof Error ? err : new Error(String(err))

@@ -58,7 +58,7 @@ fn validate_app_name(name: &str) -> Result<()> {
 ///   package.json         # registry-style @ship/* deps (no file:/workspace:*)
 ///   sail.config.jsonc    # theme + deck.render (nested serve)
 ///   routes/page.sail     # hello-world source
-///   themes/sail.json     # modern project theme SSOT (baked catalog)
+///   themes/sail.json     # catalog default (baked)
 ///   .gitignore           # includes dist/ + .sail/ (deploy + generate — never commit)
 /// ```
 ///
@@ -89,20 +89,18 @@ pub fn run_create(name: PathBuf) -> Result<()> {
 
     // Registry-style deps only (no file:, no workspace:*). Versions track the
     // monorepo package versions; operator npm publish is out of band (E8).
-    // typescript + oxlint as devDeps so a fresh app type-checks / lints with
-    // zero hand edits after install (TOOLING-1 WI2).
-    // typecheck runs `sail types` first so pure/action configs + (monorepo)
-    // package dts exist; bare tsc alone is wrong after clone or dist wipe.
+    // Typecheck is `sail types --check` (native sidecar). oxlint is optional
+    // after install — not what turns types on.
     let pkg_json = format!(
         "{{\n  \
          \"name\": \"{basen}\",\n  \
          \"private\": true,\n  \
          \"version\": \"0.1.0\",\n  \
          \"type\": \"module\",\n  \
-         \"description\": \"Sail app scaffolded by `sail create`. Run `bun run typecheck` (chains `sail types`); re-run after install or package-type changes.\",\n  \
+         \"description\": \"Sail app scaffolded by `sail create`.\",\n  \
          \"scripts\": {{\n    \
          \"dev\": \"sail dev\",\n    \
-         \"build\": \"sail build\",\n    \
+         \"build\": \"sail build --bundle-framework\",\n    \
          \"check\": \"sail check .\",\n    \
          \"typecheck\": \"sail types --check\",\n    \
          \"lint\": \"oxlint .\"\n  \
@@ -113,7 +111,6 @@ pub fn run_create(name: PathBuf) -> Result<()> {
          \"@ship/tokens\": \"^0.3.0\"\n  \
          }},\n  \
          \"devDependencies\": {{\n    \
-         \"typescript\": \"~5.8.3\",\n    \
          \"oxlint\": \"^1.77.0\"\n  \
          }}\n\
          }}\n"
@@ -179,10 +176,9 @@ pub fn run_create(name: PathBuf) -> Result<()> {
     );
     println!("[create] next steps:");
     println!("  1. cd {rel}");
-    println!("  2. bun install   # after @ship packages are published");
-    println!("  3. bun run typecheck && bun run lint  # typecheck is `sail types --check`");
+    println!("  2. sail check .");
+    println!("  3. sail types --check");
     println!("  4. sail dev");
-    println!("  5. sail check .");
     Ok(())
 }
 

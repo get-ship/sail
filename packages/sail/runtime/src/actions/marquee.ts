@@ -13,7 +13,7 @@
 // loop appears frozen.
 
 import type { Action } from '../action'
-import { __sail_motion_attach, type MotionAttachConfig } from '../motion'
+import { __sail_motion_attach, type MotionAttachConfig } from '@ship/sail-runtime/motion'
 
 const DURATION_S: Record<string, number> = {
   fast: 16,

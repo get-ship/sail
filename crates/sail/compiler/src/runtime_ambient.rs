@@ -13,12 +13,22 @@
 //! manifest, and the action manifest: the closed vocabulary is data, not
 //! scattered string literals.
 
-/// Specifier every ambient runtime ident is imported from. `/internal` is the
-/// compiler ABI barrel (`packages/sail/runtime/src/internal.ts`): curated emit
-/// symbols plus a re-export of the public language surface so ambient inject
-/// and render modules share one specifier — bundle externalization treats a
-/// controller module's imports identically to a render module's.
+/// Default specifier for ambient inject. `/internal` is the compiler ABI
+/// barrel plus the language surface hello-world actually needs. Heavy
+/// batteries (`query`, `createVirtualizer`, `timeline`) inject from their
+/// own subpaths so a page that never mentions them does not download them.
 pub const RUNTIME_SPECIFIER: &str = "@ship/sail-runtime/internal";
+
+/// Where an ambient ident's *value* lives. Most stay on [`RUNTIME_SPECIFIER`].
+/// Batteries get their own singleton (same split as `use:` → `/actions`).
+pub fn ambient_module(authored: &str) -> &'static str {
+    match authored {
+        "createVirtualizer" => "@ship/sail-runtime/virtual",
+        "query" | "mutation" | "__invalidate" => "@ship/sail-runtime/query",
+        "timeline" => "@ship/sail-runtime/motion",
+        _ => RUNTIME_SPECIFIER,
+    }
+}
 
 /// The ambient authoring vocabulary of a controller: the reactive primitives,
 /// the controller factory, and its ambient lifecycle (`mount`/`onCleanup`). A

@@ -23,7 +23,7 @@ import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
-const TSC = join(ROOT, 'node_modules/.bin/tsc')
+const TSC = join(ROOT, 'node_modules/typescript/bin/tsc')
 
 /** Shared Framework declaration emit options (DOM allowed — these packages are Framework). */
 const FRAMEWORK_EMIT = {

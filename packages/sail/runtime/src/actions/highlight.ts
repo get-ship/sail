@@ -1,17 +1,16 @@
-// A small, dependency-free syntax highlighter for the docs — covers the .sail /
-// HTML / TS we show. It escapes all source text and only ever emits its own
-// <span class="tok-*"> wrappers (no injection), which the codeblock styles via
-// the --syntax-* tokens.
+// Sync highlighter for `<code-block>` / `use:syntaxHighlight`.
 //
-// Context model (the part a flat regex can't do): a snippet is either MARKUP
-// (starts with a tag or a control-flow element / `{…}` binding) or CODE (TS / bash). Markup text
-// is prose — words there are never keywords. `{…}` in markup is a binding,
-// matched with real nested-brace/quote awareness so nested braces in `{…}` attrs stay one span. Inside `<controller>` / `<scope>` / `<script>` the scanner drops
-// into CODE mode until the closing tag; there, braces are plain punctuation
-// (never bindings) and keyword/verb matching applies.
+// TS / shell (and sail-shaped first paint) stay a small regex scanner so
+// the runtime never ships a wasm grammar. Apps that have the highlighter
+// (docs, studio) call `registerSailHighlighter` after init; sail-shaped
+// source then paints from that function. Escapes all source text and only
+// ever emits its own <span class="tok-*"> wrappers.
 //
-// (A faithful tree-sitter-sail pass is the eventual upgrade; this gets real,
-// correct colour now.)
+// Context model for the regex path: a snippet is either MARKUP (starts
+// with a tag or `{#…}`) or CODE (TS / bash). Markup text is prose —
+// words there are never keywords. `{…}` in markup is a binding, matched
+// with nested-brace/quote awareness. Inside `<controller>` / `<scope>` /
+// `<script>` the scanner drops into CODE mode until the closing tag.
 
 const KEYWORDS = new Set([
   'import', 'export', 'from', 'const', 'let', 'var', 'return', 'function',
@@ -243,8 +242,36 @@ function highlightMarkup(src: string): string {
   return out
 }
 
+export type SailHtmlHighlighter = (src: string) => string
+
+let sailHtml: SailHtmlHighlighter | null = null
+const listeners = new Set<() => void>()
+
+function isSailShaped(code: string): boolean {
+  const t = code.trimStart()
+  return t.startsWith('<') || t.startsWith('{#')
+}
+
+/** Opt-in `.sail` painter (docs / studio). Hello-world does not register. */
+export function registerSailHighlighter(fn: SailHtmlHighlighter | null): void {
+  sailHtml = fn
+  for (const l of listeners) l()
+}
+
+export function subscribeSailHighlighter(fn: () => void): () => void {
+  listeners.add(fn)
+  return () => {
+    listeners.delete(fn)
+  }
+}
+
 export function highlight(code: string): string {
-  const trimmed = code.trimStart()
-  const isMarkup = trimmed.startsWith('<') || trimmed.startsWith('{#')
-  return isMarkup ? highlightMarkup(code) : highlightCode(code, true)
+  if (isSailShaped(code) && sailHtml) {
+    try {
+      return sailHtml(code)
+    } catch {
+      /* regex fallback */
+    }
+  }
+  return isSailShaped(code) ? highlightMarkup(code) : highlightCode(code, true)
 }

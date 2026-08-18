@@ -43,16 +43,15 @@
 // This is the one place in the runtime where a spring is "really" a
 // spring: a sampled curve the browser drives.
 
-import { setTransitionRunner } from './transition-runner'
-import { effect, untrack } from './signal'
-import type { Disposer } from './bind'
+import { setTransitionRunner } from '@ship/sail-runtime/internal'
+import { effect, untrack } from '@ship/sail-runtime'
+import type { Disposer } from '@ship/sail-runtime'
 import { animate } from 'motion/mini'
 import {
   spring as motionSpring,
-  stagger as motionStagger,
   generateLinearEasing,
   calcGeneratorDuration,
-} from 'motion-dom'
+} from './motion-dom-used'
 
 /** Per-property motion config the compiler emits. */
 export interface MotionConfig {
@@ -483,7 +482,8 @@ function computeStaggerDelay(config: MotionAttachConfig, el: Element): number | 
   const parent = el.parentElement
   if (!parent) return 0
   const index = nextStaggerIndex(parent, config.trigger)
-  return motionStagger(config.stagger)(index, index + 1)
+  // motion-dom stagger(`duration`, { from: 0 }) is `duration * index`.
+  return config.stagger * index
 }
 
 /** The subset of `AnimationPlaybackControls` this runtime relies on —
