@@ -63,6 +63,10 @@ pub fn suggest_fixes(
             plans.append(&mut ps);
             continue;
         }
+        if let Some(mut ps) = fix_flex_trap(source, d) {
+            plans.append(&mut ps);
+            continue;
+        }
         let rule = d.rule.as_deref().unwrap_or("");
         match rule {
             "sail-participation-style" => {
@@ -194,6 +198,45 @@ fn fix_off_scale_space(source: &str, d: &crate::diagnostics::Diagnostic) -> Opti
         return None;
     }
     Some(plans)
+}
+
+/// Suggest-only: point `size(full)` at `size(grow)` and `size(max)`. Nothing auto-applies.
+fn fix_flex_trap(source: &str, d: &crate::diagnostics::Diagnostic) -> Option<Vec<FixPlan>> {
+    if d.rule.as_deref() != Some("sail-flex-trap")
+        && !d.message.contains("`size(full)` is a DTCG CSS trap")
+    {
+        return None;
+    }
+    let offset = line_col_to_offset(source, d.line, d.col);
+    let (start, end) = find_token_span_from(source, offset, "size(full)")?;
+    Some(vec![
+        FixPlan {
+            rule: "sail-flex-trap".into(),
+            line: d.line,
+            col: d.col,
+            message: "rewrite `size(full)` to `size(grow)`".into(),
+            ops: vec![],
+            text_patch: Some(TextPatch {
+                start,
+                end,
+                replacement: "size(grow)".into(),
+            }),
+            actor: None,
+        },
+        FixPlan {
+            rule: "sail-flex-trap".into(),
+            line: d.line,
+            col: d.col,
+            message: "rewrite `size(full)` to `size(max)`".into(),
+            ops: vec![],
+            text_patch: Some(TextPatch {
+                start,
+                end,
+                replacement: "size(max)".into(),
+            }),
+            actor: None,
+        },
+    ])
 }
 
 /// Suggest-only: rewrite `size(grow)` to `size(hug)` when grow sits outside a host.
@@ -1555,6 +1598,49 @@ mod tests {
         assert!(
             lowered.contains("s-padpage") || lowered.contains("--pad-page"),
             "style(base) must still lower: {lowered}"
+        );
+    }
+
+    #[test]
+    fn flex_trap_suggests_grow_and_max() {
+        let src = r#"<row><column style({ size(full) })>x</column></row>"#;
+        let plans = suggest_fixes_for_source(src, "t.sail", None);
+        let flex: Vec<_> = plans
+            .iter()
+            .filter(|p| p.rule == "sail-flex-trap")
+            .collect();
+        assert_eq!(flex.len(), 2, "{plans:?}");
+        let reps: Vec<&str> = flex
+            .iter()
+            .filter_map(|p| p.text_patch.as_ref().map(|t| t.replacement.as_str()))
+            .collect();
+        assert!(reps.contains(&"size(grow)"), "{reps:?}");
+        assert!(reps.contains(&"size(max)"), "{reps:?}");
+        for p in &flex {
+            assert!(!is_auto_apply_plan(p), "suggest-only: {p:?}");
+        }
+    }
+
+    #[test]
+    fn flex_trap_apply_does_not_consume() {
+        let src = r#"<row><column style({ size(full) })>x</column></row>"#;
+        let result = crate::edit::apply_ops_to_source(
+            src,
+            "t.sail",
+            &[],
+            None,
+            crate::edit::AutofixMode::Apply,
+            Some("test"),
+        );
+        assert!(
+            result.auto_fixed.is_empty(),
+            "fix=apply must not rewrite flex-trap: {:?}",
+            result.auto_fixed
+        );
+        assert!(
+            result.source.contains("size(full)"),
+            "source must stay full: {}",
+            result.source
         );
     }
 

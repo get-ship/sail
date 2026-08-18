@@ -10,7 +10,7 @@
 
 use std::path::Path;
 
-use crate::project_map::{classify, FileKind};
+use crate::project_map::{FileKind, classify};
 use crate::report::Finding;
 use crate::rules::ambient::finding;
 
@@ -84,10 +84,6 @@ fn identities_findings(path: &Path, source: &str) -> Vec<Finding> {
                 ),
                 "Rewrite to size(grow) or size(hug). Do not invent fill.",
             ),
-            "size(full)" => (
-                "`size(full)` is a DTCG CSS trap. Use `size(grow)` or `size(max)`.".into(),
-                "size(grow) shares leftover; size(max) stretches the containing block.",
-            ),
             _ => (
                 format!(
                     "L2 Style takes a preset, not slots (`{kind}`). Type presets: body | body-sm | heading | label | mono | mono-sm | display-sm."
@@ -135,8 +131,6 @@ fn identity_sites(source: &str) -> Vec<(usize, &'static str)> {
             hit = Some("grow(");
         } else if rest.starts_with("shrink(") && is_word_start(bytes, i) {
             hit = Some("shrink(");
-        } else if rest.starts_with("size(full)") && is_word_start(bytes, i) {
-            hit = Some("size(full)");
         } else {
             for needle in SLOT_CONCERNS
                 .iter()

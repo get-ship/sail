@@ -350,6 +350,10 @@ impl StyleDiagnostic {
                 )
             }
             StyleDiagnostic::UnknownVocabulary { name, .. } => {
+                if name == "size.full" || name == "full" {
+                    return "`size(full)` is a DTCG CSS trap. Use `size(grow)` or `size(max)`."
+                        .into();
+                }
                 match crate::foreign_idioms::teaching_line(name) {
                     Some(teach) => format!("unknown vocabulary `{name}` — {teach}"),
                     None => format!("unknown vocabulary `{name}`"),

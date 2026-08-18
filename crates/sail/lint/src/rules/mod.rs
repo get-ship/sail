@@ -40,6 +40,7 @@ pub mod dimension_literal;
 pub mod directory_jurisdiction;
 pub mod display_on_layout;
 pub mod event_name;
+pub mod flex_trap;
 pub mod font_literal;
 pub mod for_key;
 pub mod framework_import_teaching;
@@ -158,6 +159,7 @@ pub const SUI_TEMPLATE_RULES: &[(&str, RuleFn)] = &[
     (virtualizer::RULE_ID, virtualizer::check),
     (participation_style::RULE_ID, participation_style::check),
     (grow_outside_host::RULE_ID, grow_outside_host::check),
+    (flex_trap::RULE_ID, flex_trap::check),
     (display_on_layout::RULE_ID, display_on_layout::check),
     (no_raw_container::RULE_ID, no_raw_container::check),
     (no_script::RULE_ID, no_script::check),

@@ -39,6 +39,7 @@ const PINNED_RULE_IDS: &[&str] = &[
     "sail-directory-jurisdiction",
     "sail-display-on-layout",
     "sail-event-name",
+    "sail-flex-trap",
     "sail-font-literal",
     "sail-for-key",
     "sail-framework-import-teaching",

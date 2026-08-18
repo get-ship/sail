@@ -10,9 +10,11 @@
   Owner: language (participation)
   Default: hug
   Trap: fixtures/grow-outside-host.bad.sail — `size(grow)` shares leftover inside a host (`<row>` `<column>` `<grid>` `<center>` `<stack>`). This element is not a child of a host.
-        Quoted below. Not compiled on this page.
+        fixtures/flex-trap.bad.sail — Style error: `size(full)` is a DTCG CSS trap. Use `size(grow)` or `size(max)`.
+        Language pointer only. Do not stamp size(max). Quoted below. Not compiled on this page.
 
         <column style({ size(grow) })>x</column>
+        <row><column style({ size(full) })>x</column></row>
 -->
 <scope>
   style hugged = { size(hug), bg(primary) }

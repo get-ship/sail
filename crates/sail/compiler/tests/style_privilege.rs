@@ -54,6 +54,21 @@ fn product_route_identity_slots_are_an_error() {
 }
 
 #[test]
+fn size_full_is_a_flex_trap() {
+    let src = r#"<row><column style({ size(full) })>x</column></row>"#;
+    let path = "apps/studio/src/studio-panel/studio-panel.sail";
+    let diags = check_all(src, Some(path.as_ref()), &[], None);
+    assert!(
+        diags.iter().any(|d| {
+            d.message.contains("`size(full)` is a DTCG CSS trap")
+                && d.message.contains("size(grow)")
+                && d.message.contains("size(max)")
+        }),
+        "size(full) must point at grow/max: {diags:?}"
+    );
+}
+
+#[test]
 fn size_grow_outside_host_is_an_error() {
     let src = r#"<column style({ size(grow) })>x</column>"#;
     let path = "apps/studio/src/studio-panel/studio-panel.sail";
