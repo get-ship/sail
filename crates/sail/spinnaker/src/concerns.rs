@@ -1670,11 +1670,19 @@ mod tests {
     #[test]
     fn pad_off_scale_names_space_steps() {
         let (_, diags) = parse("style({ pad({ x: 3.5 }) })");
-        let msgs: Vec<String> = diags.iter().map(|d| d.message()).collect();
+        let scale: Vec<String> = diags
+            .iter()
+            .map(|d| d.message())
+            .filter(|m| m.contains("3.5 is not a space step"))
+            .collect();
+        assert_eq!(scale.len(), 1, "{scale:?}");
         assert!(
-            msgs.iter()
-                .any(|m| m.contains("3.5 is not a space step") && m.contains("3 | 4")),
-            "{msgs:?}"
+            scale[0].contains("3.5 is not a space step: 3 | 4"),
+            "{scale:?}"
+        );
+        assert!(
+            !scale[0].contains("3.5 is not a space step: 3 | 4;"),
+            "scale sentence must appear once: {scale:?}"
         );
     }
 

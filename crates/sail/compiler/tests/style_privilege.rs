@@ -96,11 +96,18 @@ fn l2_off_scale_pad_names_the_space_steps() {
     let src = r#"<div style({ pad({ x: 3.5 }) })>x</div>"#;
     let path = "apps/studio/src/studio-panel/studio-panel.sail";
     let diags = check_all(src, Some(path.as_ref()), &[], None);
+    let scale: Vec<_> = diags
+        .iter()
+        .filter(|d| d.message.contains("3.5 is not a space step"))
+        .collect();
+    assert_eq!(scale.len(), 1, "{diags:?}");
     assert!(
-        diags
-            .iter()
-            .any(|d| d.message.contains("3.5 is not a space step") && d.message.contains("3 | 4")),
-        "off-scale pad must name the scale: {diags:?}"
+        scale[0].message.contains("3.5 is not a space step: 3 | 4"),
+        "{scale:?}"
+    );
+    assert!(
+        !scale[0].message.contains("3.5 is not a space step: 3 | 4;"),
+        "scale sentence must appear once: {scale:?}"
     );
 }
 

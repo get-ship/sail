@@ -2177,16 +2177,9 @@ fn push_paint_op(
             name: method.to_string(),
             source: source.clone(),
         });
-    } else {
-        let op = PaintOp {
-            setter: method.clone(),
-            args: args.clone(),
-            source: source.clone(),
-        };
-        if let Err(d) = validate_op(&op) {
-            diags.push(d);
-        }
     }
+    // Token/slot scale is checked once in `validate_style` after the tree is
+    // built. Checking here too doubled pad scale misses.
     ops.push(Style::Set(PaintOp {
         setter: method,
         args,
