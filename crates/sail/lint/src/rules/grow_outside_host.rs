@@ -28,7 +28,8 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                 if spends_grow(&tag, &grow_consts) {
                     let parent = stack.last().map(String::as_str);
                     if !parent.is_some_and(|p| HOSTS.contains(&p)) {
-                        let (line, col) = layout::offset_to_line_col(source, tag.start);
+                        let at = inline_size_grow_offset(source, &tag).unwrap_or(tag.start);
+                        let (line, col) = layout::offset_to_line_col(source, at);
                         findings.push(Finding {
                             file: path.to_path_buf(),
                             line,
@@ -105,6 +106,12 @@ fn scan_close_tags(source: &str) -> Vec<(usize, String)> {
         }
     }
     out
+}
+
+fn inline_size_grow_offset(source: &str, tag: &OpenTag) -> Option<usize> {
+    let open = source.get(tag.start..tag.end)?;
+    let rel = open.find("size(grow)")?;
+    Some(tag.start + rel)
 }
 
 fn spends_grow(tag: &OpenTag, grow_consts: &HashSet<String>) -> bool {

@@ -245,20 +245,122 @@ fn fix_grow_outside_host(source: &str, d: &crate::diagnostics::Diagnostic) -> Op
         return None;
     }
     let offset = line_col_to_offset(source, d.line, d.col);
-    let (start, end) = find_token_span_from(source, offset, "size(grow)")?;
+    let text_patch = grow_outside_host_span(source, offset).map(|(start, end)| TextPatch {
+        start,
+        end,
+        replacement: "size(hug)".into(),
+    });
     Some(vec![FixPlan {
         rule: "sail-grow-outside-host".into(),
         line: d.line,
         col: d.col,
         message: "rewrite `size(grow)` to `size(hug)`".into(),
         ops: vec![],
-        text_patch: Some(TextPatch {
-            start,
-            end,
-            replacement: "size(hug)".into(),
-        }),
+        text_patch,
         actor: None,
     }])
+}
+
+/// Inline `size(grow)` on the flagged tag, else that tag's named-const RHS.
+/// Never a later sibling's `size(grow)`.
+fn grow_outside_host_span(source: &str, offset: usize) -> Option<(usize, usize)> {
+    let tags = sail_lint::rules::layout::scan_any_open_tags(source);
+    let tag = tags
+        .iter()
+        .filter(|t| t.start <= offset && offset < t.end)
+        .min_by_key(|t| t.end - t.start)
+        .or_else(|| {
+            tags.iter()
+                .filter(|t| t.start <= offset)
+                .max_by_key(|t| t.start)
+        })?;
+    if let Some(rel) = source.get(tag.start..tag.end)?.find("size(grow)") {
+        let start = tag.start + rel;
+        return Some((start, start + "size(grow)".len()));
+    }
+    let sx = tag.attrs.iter().find(|(n, _)| n == "style")?.1.as_str();
+    let name = style_const_ref(sx)?;
+    const_rhs_size_grow_span(source, &name)
+}
+
+fn style_const_ref(sx: &str) -> Option<String> {
+    let mut s = sx.trim();
+    if let Some(rest) = s.strip_prefix("style") {
+        let rest = rest.trim_start();
+        if let Some(inner) = rest.strip_prefix('(').and_then(|t| t.strip_suffix(')')) {
+            s = inner.trim();
+        } else {
+            return None;
+        }
+    } else {
+        return None;
+    }
+    if s.is_empty()
+        || !s
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '$')
+        || s.chars().next()?.is_ascii_digit()
+    {
+        return None;
+    }
+    Some(s.to_string())
+}
+
+fn const_rhs_size_grow_span(source: &str, name: &str) -> Option<(usize, usize)> {
+    let bytes = source.as_bytes();
+    let mut i = 0;
+    while i < bytes.len() {
+        if source[i..].starts_with("<!--") {
+            match source[i..].find("-->") {
+                Some(end) => {
+                    i += end + 3;
+                    continue;
+                }
+                None => break,
+            }
+        }
+        if source[i..].starts_with("style") && (i == 0 || !bytes[i - 1].is_ascii_alphanumeric()) {
+            let mut j = i + "style".len();
+            while j < bytes.len() && bytes[j].is_ascii_whitespace() {
+                j += 1;
+            }
+            if source[j..].starts_with(name) {
+                let after = j + name.len();
+                if after < bytes.len()
+                    && (bytes[after].is_ascii_alphanumeric()
+                        || bytes[after] == b'_'
+                        || bytes[after] == b'$')
+                {
+                    i += 1;
+                    continue;
+                }
+                let mut k = after;
+                while k < bytes.len() && bytes[k].is_ascii_whitespace() {
+                    k += 1;
+                }
+                if bytes.get(k) == Some(&b'=') {
+                    k += 1;
+                    let init_start = k;
+                    while k < bytes.len() && bytes[k] != b'\n' {
+                        if (bytes[k] & 0xC0) != 0x80 && source[k..].starts_with("</scope>") {
+                            break;
+                        }
+                        k += 1;
+                    }
+                    if let Some(rel) = source[init_start..k].find("size(grow)") {
+                        let start = init_start + rel;
+                        return Some((start, start + "size(grow)".len()));
+                    }
+                    return None;
+                }
+            }
+        }
+        i += 1;
+        while i < bytes.len() && (bytes[i] & 0xC0) == 0x80 {
+            i += 1;
+        }
+    }
+    None
 }
 
 fn off_scale_space_value(message: &str) -> Option<&str> {
@@ -1641,6 +1743,52 @@ mod tests {
             result.source.contains("size(full)"),
             "source must stay full: {}",
             result.source
+        );
+    }
+
+    #[test]
+    fn grow_outside_host_const_ref_rewrites_rhs_not_later_sibling() {
+        let src = r#"
+<scope>
+  style leftover = { size(grow), bg(accent) }
+</scope>
+<column style(leftover)>x</column>
+<row>
+  <column style({ size(grow) })>legal</column>
+</row>
+"#;
+        let plans = suggest_fixes_for_source(src, "t.sail", None);
+        let grow: Vec<_> = plans
+            .iter()
+            .filter(|p| p.rule == "sail-grow-outside-host")
+            .collect();
+        assert_eq!(grow.len(), 1, "{plans:?}");
+        assert!(!is_auto_apply_plan(grow[0]), "suggest-only: {:?}", grow[0]);
+        let patch = grow[0].text_patch.as_ref().expect("const RHS patch");
+        assert_eq!(patch.replacement, "size(hug)");
+        let sliced = &src[patch.start..patch.end];
+        assert_eq!(sliced, "size(grow)");
+        assert!(
+            patch.start < src.find("<column style(leftover)>").unwrap(),
+            "must rewrite the const RHS, not a later use: start={}",
+            patch.start
+        );
+        let legal = src.find("<column style({ size(grow) })>").unwrap();
+        assert!(
+            patch.end <= legal,
+            "must not rewrite the later legal size(grow): start={} legal={legal}",
+            patch.start
+        );
+        let (out, skipped) =
+            apply_text_patches(src, &[(patch.start, patch.end, patch.replacement.clone())]);
+        assert_eq!(skipped, 0);
+        assert!(
+            out.contains("style leftover = { size(hug), bg(accent) }"),
+            "{out}"
+        );
+        assert!(
+            out.contains("<column style({ size(grow) })>legal</column>"),
+            "{out}"
         );
     }
 

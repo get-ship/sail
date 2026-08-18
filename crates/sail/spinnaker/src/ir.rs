@@ -350,7 +350,7 @@ impl StyleDiagnostic {
                 )
             }
             StyleDiagnostic::UnknownVocabulary { name, .. } => {
-                if name == "size.full" || name == "full" {
+                if name == "size.full" {
                     return "`size(full)` is a DTCG CSS trap. Use `size(grow)` or `size(max)`."
                         .into();
                 }

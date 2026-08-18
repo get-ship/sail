@@ -8,11 +8,11 @@ use sail_layout::{BoxReport, CheckOptions, check_preprocessed_with_hosts};
 
 const VP: (f32, f32) = (400.0, 300.0);
 
-fn layout(src: &str) -> (String, Vec<BoxReport>, Vec<String>) {
+fn layout_at(src: &str, viewport: (f32, f32)) -> (String, Vec<BoxReport>, Vec<String>) {
     let (pre, hosts) = preprocess_with_style(src).expect("preprocess");
     let result = check_preprocessed_with_hosts(
         &pre,
-        VP,
+        viewport,
         CheckOptions::default(),
         &hosts.types,
         &hosts.boxes,
@@ -24,6 +24,10 @@ fn layout(src: &str) -> (String, Vec<BoxReport>, Vec<String>) {
         .map(|d| d.kind.to_string())
         .collect();
     (pre, result.boxes, kinds)
+}
+
+fn layout(src: &str) -> (String, Vec<BoxReport>, Vec<String>) {
+    layout_at(src, VP)
 }
 
 fn finite(boxes: &[BoxReport]) {
@@ -198,6 +202,10 @@ fn sidebar_fixed_fluid_gives_leftover_to_fluid() {
         .max_by(|a, b| a.x.partial_cmp(&b.x).unwrap())
         .unwrap();
     assert!(rail.x <= fluid.x, "rail left of fluid: {cols:?}");
+    assert!(
+        fluid.width > rail.width + 0.5,
+        "fluid must take leftover (wider than the w:8 rail): rail={rail:?} fluid={fluid:?}"
+    );
 }
 
 #[test]
@@ -215,7 +223,12 @@ fn bento_span_is_wider_than_a_single_cell() {
   <column col-span="2" style(spanB)>d</column>
 </grid>
 "#;
-    let (_pre, boxes, _kinds) = layout(src);
+    // col-span collapses below 720 — measure the seed at desktop width.
+    let (pre, boxes, _kinds) = layout_at(src, (1440.0, 400.0));
+    assert!(
+        pre.contains("col-span=\"2\""),
+        "preprocess must keep col-span: {pre}"
+    );
     finite(&boxes);
     let cells: Vec<_> = boxes
         .iter()
@@ -232,7 +245,7 @@ fn bento_span_is_wider_than_a_single_cell() {
         .min_by(|a, b| a.width.partial_cmp(&b.width).unwrap())
         .unwrap();
     assert!(
-        widest.width + 0.5 >= narrowest.width,
-        "span should be at least as wide as a single cell: wide={widest:?} narrow={narrowest:?}"
+        widest.width + 0.5 >= narrowest.width * 1.8,
+        "col-span 2 must be ~2× a single cell: wide={widest:?} narrow={narrowest:?}"
     );
 }

@@ -54,6 +54,23 @@ fn product_route_identity_slots_are_an_error() {
 }
 
 #[test]
+fn bare_full_is_not_the_flex_trap() {
+    let path = "apps/studio/src/studio-panel/studio-panel.sail";
+    for src in [
+        r#"<column style(full)>x</column>"#,
+        r#"<column style({ play(full) })>x</column>"#,
+    ] {
+        let diags = check_all(src, Some(path.as_ref()), &[], None);
+        assert!(
+            !diags
+                .iter()
+                .any(|d| d.message.contains("`size(full)` is a DTCG CSS trap")),
+            "bare `full` must stay generic unknown-vocabulary, not flex-trap: {src} {diags:?}"
+        );
+    }
+}
+
+#[test]
 fn size_full_is_a_flex_trap() {
     let src = r#"<row><column style({ size(full) })>x</column></row>"#;
     let path = "apps/studio/src/studio-panel/studio-panel.sail";

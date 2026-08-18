@@ -2507,6 +2507,17 @@ fn lower_layout(source: &str) -> (String, String) {
                     // `inline` attribute from reappearing on the div.
                     "gap" | "align" | "justify" | "min" | "flow" | "cols" | "rows"
                     | "direction" | "tracks" | "inline" | "nowrap" | "cluster" => {}
+                    // Grid placement stays on the host — layout CSS selects
+                    // `[col-span='N']` / `[row-span='N']` / `[col='N']`.
+                    "col-span" | "row-span" | "col" => {
+                        rest.push(' ');
+                        rest.push_str(name);
+                        if !value.is_empty() {
+                            rest.push_str("=\"");
+                            rest.push_str(value);
+                            rest.push('"');
+                        }
+                    }
                     "class" if value.starts_with('{') => {
                         dyn_parts.push(format!("({})", &value[1..value.len() - 1]));
                     }
@@ -4575,6 +4586,21 @@ export default controller(() => {
         assert!(
             out.contains("sail-grid"),
             "the base layout class still there: {out}"
+        );
+    }
+
+    #[test]
+    fn grid_span_attrs_ride_to_the_div() {
+        let out =
+            preprocess(r#"<grid cols="4"><column col-span="2" row-span="2">a</column></grid>"#)
+                .expect("preprocess");
+        assert!(
+            out.contains(r#"col-span="2""#),
+            "col-span must stay on the host: {out}"
+        );
+        assert!(
+            out.contains(r#"row-span="2""#),
+            "row-span must stay on the host: {out}"
         );
     }
 

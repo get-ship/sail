@@ -2,7 +2,6 @@
 //!
 //! Language pointer only: use `size(grow)` (share leftover) or `size(max)`
 //! (stretch the containing block). Suggest-only FixPlan; nothing auto-applies.
-//! Do not stamp `size(max)` on the corpus.
 
 use std::path::Path;
 
