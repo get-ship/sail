@@ -4,7 +4,7 @@
 //! - `compile` / `tokens` / `check` → `sail-compiler` library
 //! - `lsp` → `sail-lsp` library (stdio LSP)
 //! - `mcp` → `sail-mcp` library (stdio / Streamable HTTP, MCP 2026-07-28)
-//! - `layout` → `sail-layout` library
+//! - `layout` → `spinnaker::layout`
 //! - `doctor` / `version` → local diagnostics
 
 use std::path::{Path, PathBuf};

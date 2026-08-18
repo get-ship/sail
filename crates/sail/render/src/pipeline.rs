@@ -121,7 +121,7 @@ pub fn render(source: &str, opts: &PipelineOptions) -> Result<PipelineOutput> {
     // 6. Layout.
     let viewport_f = (opts.viewport.0 as f32, opts.viewport.1 as f32);
     let layout = spinnaker::layout::taffy_tree::build(elements.clone(), viewport_f)
-        .context("computing layout with sail_layout")?;
+        .context("computing layout with spinnaker::layout")?;
 
     // 7. Regions + unknown dynamics joined to SailInspect node ids (T-I3).
     let (mut regions, mut dynamics) = join_layout_regions(&elements, &layout, &tree);

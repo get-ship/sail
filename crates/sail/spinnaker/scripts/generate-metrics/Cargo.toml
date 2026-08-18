@@ -6,7 +6,7 @@ edition = "2024"
 # This crate is intentionally NOT a member of the parent workspace; it
 # depends on the woff2 C++ bridge (via woofwoof) and fontdue, which are only
 # needed for regenerating the embedded metrics table. Keep it out of the
-# layout crate's dependency graph.
+# spinnaker dependency graph.
 [workspace]
 resolver = "2"
 

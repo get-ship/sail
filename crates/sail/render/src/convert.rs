@@ -1,4 +1,4 @@
-//! Mechanical conversion from `sail_layout`'s resolved `taffy::Style` to
+//! Mechanical conversion from `spinnaker::layout`'s resolved `taffy::Style` to
 //! `takumi::Style` declarations.
 //!
 //! This is intentionally one place: if takumi's style model needs a value, it

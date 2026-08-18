@@ -1,9 +1,9 @@
 //! Conformance pin: the taffy box tree must match the CSS the compiler emits.
 //!
 //! Each test preprocesses a `.sail` fragment, parses the emitted CSS, resolves
-//! the same element in `sail-layout`, and asserts parity on the properties that
+//! the same element in `spinnaker::layout`, and asserts parity on the properties that
 //! drive layout diagnostics. This catches drift between the compiler's lowering
-//! and the layout crate's mapping table.
+//! and the presentation crate's mapping table.
 
 use std::collections::HashMap;
 
