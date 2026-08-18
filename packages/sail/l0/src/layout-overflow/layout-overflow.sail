@@ -20,39 +20,39 @@
   style tall = { size({ w: 8, h: 24 }), bg(accent) }
 </scope>
 <column gap="6">
-  <column gap="2">
-    <p style(look)>64px well clips a 96px-tall child</p>
-    <p style(spell)>overflow(hidden) · size w:16 h:16 · child h:24</p>
+  <l0-case>
+    <p slot="look" style(look)>64px well clips a 96px-tall child</p>
+    <p slot="spell" style(spell)>overflow(hidden) · size w:16 h:16 · child h:24</p>
     <column style(clip)>
       <column style(tall)></column>
     </column>
-  </column>
-  <column gap="2">
-    <p style(look)>overflow(auto) — scroll if needed</p>
-    <p style(spell)>overflow(auto) · child h:24</p>
+  </l0-case>
+  <l0-case>
+    <p slot="look" style(look)>overflow(auto) — scroll if needed</p>
+    <p slot="spell" style(spell)>overflow(auto) · child h:24</p>
     <column style(auto)>
       <column style(tall)></column>
     </column>
-  </column>
-  <column gap="2">
-    <p style(look)>overflow(clip) — clip without a scrollport</p>
-    <p style(spell)>overflow(clip) · child h:24</p>
+  </l0-case>
+  <l0-case>
+    <p slot="look" style(look)>overflow(clip) — clip without a scrollport</p>
+    <p slot="spell" style(spell)>overflow(clip) · child h:24</p>
     <column style(clipWell)>
       <column style(tall)></column>
     </column>
-  </column>
-  <column gap="2">
-    <p style(look)>overflow(scroll) — always a scrollport</p>
-    <p style(spell)>overflow(scroll) · child h:24</p>
+  </l0-case>
+  <l0-case>
+    <p slot="look" style(look)>overflow(scroll) — always a scrollport</p>
+    <p slot="spell" style(spell)>overflow(scroll) · child h:24</p>
     <column style(scroll)>
       <column style(tall)></column>
     </column>
-  </column>
-  <column gap="2">
-    <p style(look)>overflow(visible) — do not clip</p>
-    <p style(spell)>overflow(visible) · child h:24</p>
+  </l0-case>
+  <l0-case>
+    <p slot="look" style(look)>overflow(visible) — do not clip</p>
+    <p slot="spell" style(spell)>overflow(visible) · child h:24</p>
     <column style(vis)>
       <column style(tall)></column>
     </column>
-  </column>
+  </l0-case>
 </column>

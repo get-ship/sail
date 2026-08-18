@@ -19,31 +19,31 @@
   style c = { size({ w: 16, h: 8 }), bg(muted) }
 </scope>
 <column gap="6">
-  <column gap="2">
-    <p style(look)>three 16×8 bars packed, hug + nowrap, 8px between</p>
-    <p style(spell)>&lt;row cluster gap="2"&gt;</p>
+  <l0-case>
+    <p slot="look" style(look)>three 16×8 bars packed, hug + nowrap, 8px between</p>
+    <p slot="spell" style(spell)>&lt;row cluster gap="2"&gt;</p>
     <row cluster gap="2">
       <column style(a)></column>
       <column style(b)></column>
       <column style(c)></column>
     </row>
-  </column>
-  <column gap="2">
-    <p style(look)>nowrap — single line, fills the host</p>
-    <p style(spell)>&lt;row nowrap gap="2"&gt;</p>
+  </l0-case>
+  <l0-case>
+    <p slot="look" style(look)>nowrap — single line, fills the host</p>
+    <p slot="spell" style(spell)>&lt;row nowrap gap="2"&gt;</p>
     <row nowrap gap="2">
       <column style(a)></column>
       <column style(b)></column>
       <column style(c)></column>
     </row>
-  </column>
-  <column gap="2">
-    <p style(look)>inline — shrink-to-fit next to text</p>
-    <p style(spell)>&lt;row inline gap="2"&gt;</p>
+  </l0-case>
+  <l0-case>
+    <p slot="look" style(look)>inline — shrink-to-fit next to text</p>
+    <p slot="spell" style(spell)>&lt;row inline gap="2"&gt;</p>
     <row inline gap="2">
       <column style(a)></column>
       <column style(b)></column>
       <column style(c)></column>
     </row>
-  </column>
+  </l0-case>
 </column>

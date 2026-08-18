@@ -21,11 +21,11 @@
   style base = { pad(page) }
   style face = { bg(primary) }
 </scope>
-<column gap="3">
-  <p style(look)>base survived — pad page still paints after the illegal sibling</p>
-  <p style(spell)>style base = pad page · illegal sibling size.wide did not unregister base</p>
-  <p style(spell)>trap: Style wide — unknown vocabulary size.wide</p>
+<l0-case>
+  <p slot="look" style(look)>base survived — pad page still paints after the illegal sibling</p>
+  <p slot="spell" style(spell)>style base = pad page · illegal sibling size.wide did not unregister base</p>
+  <p slot="note" style(spell)>trap: Style wide — unknown vocabulary size.wide</p>
   <column style(base)>
     <column style(face)>base survived</column>
   </column>
-</column>
+</l0-case>

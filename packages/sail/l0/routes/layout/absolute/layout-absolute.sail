@@ -23,29 +23,29 @@
   style stickPad = { size({ h: 24 }), bg(muted) }
 </scope>
 <column gap="6">
-  <column gap="2">
-    <p style(look)>pin 4 steps from the top-left of a 24×16 host</p>
-    <p style(spell)>position relative + absolute t:4 l:4 · pin 8×8</p>
+  <l0-case>
+    <p slot="look" style(look)>pin 4 steps from the top-left of a 24×16 host</p>
+    <p slot="spell" style(spell)>position relative + absolute t:4 l:4 · pin 8×8</p>
     <column style(host)>
       <column style(pin)></column>
     </column>
-  </column>
-  <column gap="2">
-    <p style(look)>static — normal flow</p>
-    <p style(spell)>position(static)</p>
+  </l0-case>
+  <l0-case>
+    <p slot="look" style(look)>static — normal flow</p>
+    <p slot="spell" style(spell)>position(static)</p>
     <column style(stat)></column>
-  </column>
-  <column gap="2">
-    <p style(look)>relative — containing block</p>
-    <p style(spell)>position(relative)</p>
+  </l0-case>
+  <l0-case>
+    <p slot="look" style(look)>relative — containing block</p>
+    <p slot="spell" style(spell)>position(relative)</p>
     <column style(rel)></column>
-  </column>
-  <column gap="2">
-    <p style(look)>sticky — sticks inside the scroller</p>
-    <p style(spell)>position sticky t:0 in overflow(auto)</p>
+  </l0-case>
+  <l0-case>
+    <p slot="look" style(look)>sticky — sticks inside the scroller</p>
+    <p slot="spell" style(spell)>position sticky t:0 in overflow(auto)</p>
     <column style(stickWell)>
       <column style(stick)>sticky</column>
       <column style(stickPad)></column>
     </column>
-  </column>
+  </l0-case>
 </column>

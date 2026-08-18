@@ -24,49 +24,49 @@
   style baseC = { size({ w: 8 }), pad(1), bg(muted) }
 </scope>
 <column gap="6">
-  <column gap="2">
-    <p style(look)>three bars on a 16-step rail, align=end, 8px between</p>
-    <p style(spell)>&lt;row align="end" gap="2"&gt;</p>
+  <l0-case>
+    <p slot="look" style(look)>three bars on a 16-step rail, align=end, 8px between</p>
+    <p slot="spell" style(spell)>&lt;row align="end" gap="2"&gt;</p>
     <row align="end" gap="2" style(rail)>
       <column style(a)></column>
       <column style(b)></column>
       <column style(c)></column>
     </row>
-  </column>
-  <column gap="2">
-    <p style(look)>align=start</p>
-    <p style(spell)>&lt;row align="start" gap="2"&gt;</p>
+  </l0-case>
+  <l0-case>
+    <p slot="look" style(look)>align=start</p>
+    <p slot="spell" style(spell)>&lt;row align="start" gap="2"&gt;</p>
     <row align="start" gap="2" style(rail)>
       <column style(a)></column>
       <column style(b)></column>
       <column style(c)></column>
     </row>
-  </column>
-  <column gap="2">
-    <p style(look)>align=center</p>
-    <p style(spell)>&lt;row align="center" gap="2"&gt;</p>
+  </l0-case>
+  <l0-case>
+    <p slot="look" style(look)>align=center</p>
+    <p slot="spell" style(spell)>&lt;row align="center" gap="2"&gt;</p>
     <row align="center" gap="2" style(rail)>
       <column style(a)></column>
       <column style(b)></column>
       <column style(c)></column>
     </row>
-  </column>
-  <column gap="2">
-    <p style(look)>align=stretch</p>
-    <p style(spell)>&lt;row align="stretch" gap="2"&gt;</p>
+  </l0-case>
+  <l0-case>
+    <p slot="look" style(look)>align=stretch</p>
+    <p slot="spell" style(spell)>&lt;row align="stretch" gap="2"&gt;</p>
     <row align="stretch" gap="2" style(rail)>
       <column style(stretchA)></column>
       <column style(stretchB)></column>
       <column style(stretchC)></column>
     </row>
-  </column>
-  <column gap="2">
-    <p style(look)>align=baseline</p>
-    <p style(spell)>&lt;row align="baseline" gap="2"&gt;</p>
+  </l0-case>
+  <l0-case>
+    <p slot="look" style(look)>align=baseline</p>
+    <p slot="spell" style(spell)>&lt;row align="baseline" gap="2"&gt;</p>
     <row align="baseline" gap="2" style(rail)>
       <column style(baseA)>Ay</column>
       <column style(baseB)>Hg</column>
       <column style(baseC)>x</column>
     </row>
-  </column>
+  </l0-case>
 </column>

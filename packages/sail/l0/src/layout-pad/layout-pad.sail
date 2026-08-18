@@ -31,14 +31,14 @@
   style inner = { size({ w: 4, h: 4 }), bg(muted) }
 </scope>
 <column gap="6">
-  <column gap="2">
-    <p style(look)>16-step bar, 4-step (16px) inset on x</p>
-    <p style(spell)>pad x:4 · size w:16 h:8 · bg(primary)</p>
+  <l0-case>
+    <p slot="look" style(look)>16-step bar, 4-step (16px) inset on x</p>
+    <p slot="spell" style(spell)>pad x:4 · size w:16 h:8 · bg(primary)</p>
     <column style(box)>x</column>
-  </column>
-  <column gap="2">
-    <p style(look)>step list — pad(N) on one face, same host</p>
-    <p style(spell)>pad(1) … pad(8) · pad(2_5)</p>
+  </l0-case>
+  <l0-case>
+    <p slot="look" style(look)>step list — pad(N) on one face, same host</p>
+    <p slot="spell" style(spell)>pad(1) … pad(8) · pad(2_5)</p>
     <row gap="2">
       <column style(pad1)><column style(inner)></column></column>
       <column style(pad2)><column style(inner)></column></column>
@@ -50,10 +50,10 @@
       <column style(pad7)><column style(inner)></column></column>
       <column style(pad8)><column style(inner)></column></column>
     </row>
-  </column>
-  <column gap="2">
-    <p style(look)>edges — x y t r b l at step 4</p>
-    <p style(spell)>pad x / y / t / r / b / l at step 4</p>
+  </l0-case>
+  <l0-case>
+    <p slot="look" style(look)>edges — x y t r b l at step 4</p>
+    <p slot="spell" style(spell)>pad x / y / t / r / b / l at step 4</p>
     <row gap="2">
       <column style(edgeX)>x</column>
       <column style(edgeY)>y</column>
@@ -62,5 +62,5 @@
       <column style(edgeB)>b</column>
       <column style(edgeL)>l</column>
     </row>
-  </column>
+  </l0-case>
 </column>

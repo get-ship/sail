@@ -21,47 +21,47 @@
   style hug = { size(hug) }
 </scope>
 <column gap="6">
-  <column gap="2">
-    <p style(look)>row — three 64×32 bars, 8px between</p>
-    <p style(spell)>&lt;row gap="2"&gt; size w:16 h:8</p>
+  <l0-case>
+    <p slot="look" style(look)>row — three 64×32 bars, 8px between</p>
+    <p slot="spell" style(spell)>&lt;row gap="2"&gt; size w:16 h:8</p>
     <row gap="2">
       <column style(a)></column>
       <column style(b)></column>
       <column style(c)></column>
     </row>
-  </column>
-  <column gap="2">
-    <p style(look)>column — same bars stacked</p>
-    <p style(spell)>&lt;column gap="2"&gt;</p>
+  </l0-case>
+  <l0-case>
+    <p slot="look" style(look)>column — same bars stacked</p>
+    <p slot="spell" style(spell)>&lt;column gap="2"&gt;</p>
     <column gap="2">
       <column style(a)></column>
       <column style(b)></column>
       <column style(c)></column>
     </column>
-  </column>
-  <column gap="2">
-    <p style(look)>grid — 2 columns, hug the tracks</p>
-    <p style(spell)>&lt;grid cols="2" gap="2"&gt; size(hug)</p>
+  </l0-case>
+  <l0-case>
+    <p slot="look" style(look)>grid — 2 columns, hug the tracks</p>
+    <p slot="spell" style(spell)>&lt;grid cols="2" gap="2"&gt; size(hug)</p>
     <grid cols="2" gap="2" style(hug)>
       <column style(a)></column>
       <column style(b)></column>
       <column style(c)></column>
       <column style(a)></column>
     </grid>
-  </column>
-  <column gap="2">
-    <p style(look)>center — one bar in the host</p>
-    <p style(spell)>&lt;center&gt;</p>
+  </l0-case>
+  <l0-case>
+    <p slot="look" style(look)>center — one bar in the host</p>
+    <p slot="spell" style(spell)>&lt;center&gt;</p>
     <center>
       <column style(b)></column>
     </center>
-  </column>
-  <column gap="2">
-    <p style(look)>stack — overlay, muted under primary</p>
-    <p style(spell)>&lt;stack&gt;</p>
+  </l0-case>
+  <l0-case>
+    <p slot="look" style(look)>stack — overlay, muted under primary</p>
+    <p slot="spell" style(spell)>&lt;stack&gt;</p>
     <stack>
       <column style(c)></column>
       <column style(a)></column>
     </stack>
-  </column>
+  </l0-case>
 </column>

@@ -32,40 +32,40 @@
   style fill = { size({ w: 100% }) }
 </scope>
 <column gap="6">
-  <column gap="2">
-    <p style(look)>grow-without-bound — grow child, host has no width</p>
-    <p style(spell)>size(grow) in &lt;row&gt;</p>
+  <l0-case>
+    <p slot="look" style(look)>grow-without-bound — grow child, host has no width</p>
+    <p slot="spell" style(spell)>size(grow) in &lt;row&gt;</p>
     <row>
       <column style(leftover)>grow</column>
     </row>
-  </column>
-  <column gap="2">
-    <p style(look)>circular-percentage — child 50% of a 50% parent</p>
-    <p style(spell)>size w:50% nested</p>
+  </l0-case>
+  <l0-case>
+    <p slot="look" style(look)>circular-percentage — child 50% of a 50% parent</p>
+    <p slot="spell" style(spell)>size w:50% nested</p>
     <column style(pctParent)>
       <column style(pctChild)>pct</column>
     </column>
-  </column>
-  <column gap="2">
-    <p style(look)>RTL wrap — dir=rtl, 8px gap</p>
-    <p style(spell)>&lt;row dir="rtl" gap="2"&gt;</p>
+  </l0-case>
+  <l0-case>
+    <p slot="look" style(look)>RTL wrap — dir=rtl, 8px gap</p>
+    <p slot="spell" style(spell)>&lt;row dir="rtl" gap="2"&gt;</p>
     <row dir="rtl" gap="2">
       <column style(box4)></column>
       <column style(box4a)></column>
       <column style(box4m)></column>
     </row>
-  </column>
-  <column gap="2">
-    <p style(look)>sibling-overlap opt-in — stack overlays</p>
-    <p style(spell)>&lt;stack&gt;</p>
+  </l0-case>
+  <l0-case>
+    <p slot="look" style(look)>sibling-overlap opt-in — stack overlays</p>
+    <p slot="spell" style(spell)>&lt;stack&gt;</p>
     <stack>
       <column style(overlapA)></column>
       <column style(overlapB)></column>
     </stack>
-  </column>
-  <column gap="2">
-    <p style(look)>holy-grail — header / nav+main+aside / footer</p>
-    <p style(spell)>column of rows · nav/aside w:16 · main grow</p>
+  </l0-case>
+  <l0-case>
+    <p slot="look" style(look)>holy-grail — header / nav+main+aside / footer</p>
+    <p slot="spell" style(spell)>column of rows · nav/aside w:16 · main grow</p>
     <column style(fill)>
       <row style(header)>header</row>
       <row nowrap>
@@ -75,23 +75,23 @@
       </row>
       <row style(footer)>footer</row>
     </column>
-  </column>
-  <column gap="2">
-    <p style(look)>sidebar-fixed-fluid — 16-step rail + grow</p>
-    <p style(spell)>size w:16 + size(grow)</p>
+  </l0-case>
+  <l0-case>
+    <p slot="look" style(look)>sidebar-fixed-fluid — 16-step rail + grow</p>
+    <p slot="spell" style(spell)>size w:16 + size(grow)</p>
     <row nowrap style(fill)>
       <column style(rail)>rail</column>
       <column style(fluid)>fluid</column>
     </row>
-  </column>
-  <column gap="2">
-    <p style(look)>bento spanning — col-span / row-span on 4 tracks</p>
-    <p style(spell)>&lt;grid cols="4"&gt; col-span=2 row-span=2</p>
+  </l0-case>
+  <l0-case>
+    <p slot="look" style(look)>bento spanning — col-span / row-span on 4 tracks</p>
+    <p slot="spell" style(spell)>&lt;grid cols="4"&gt; col-span=2 row-span=2</p>
     <grid cols="4" gap="2">
       <column col-span="2" row-span="2" style(spanA)>a</column>
       <column style(spanB)>b</column>
       <column style(spanC)>c</column>
       <column col-span="2" style(spanB)>d</column>
     </grid>
-  </column>
+  </l0-case>
 </column>

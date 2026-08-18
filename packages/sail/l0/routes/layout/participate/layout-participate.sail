@@ -28,59 +28,59 @@
   style rail = { size({ w: 24 }) }
 </scope>
 <column gap="6">
-  <column gap="2">
-    <p style(look)>row — hug + grow leftover</p>
-    <p style(spell)>size(hug) / size(grow) in &lt;row&gt;</p>
+  <l0-case>
+    <p slot="look" style(look)>row — hug + grow leftover</p>
+    <p slot="spell" style(spell)>size(hug) / size(grow) in &lt;row&gt;</p>
     <row style(rail)>
       <column style(hugged)>hug</column>
       <column style(leftover)>grow</column>
     </row>
-  </column>
-  <column gap="2">
-    <p style(look)>row — leftover fills the stage</p>
-    <p style(spell)>size(hug) / size(grow) · no w:24 pin</p>
+  </l0-case>
+  <l0-case>
+    <p slot="look" style(look)>row — leftover fills the stage</p>
+    <p slot="spell" style(spell)>size(hug) / size(grow) · no w:24 pin</p>
     <row>
       <column style(hugged)>hug</column>
       <column style(leftover)>grow</column>
     </row>
-  </column>
-  <column gap="2">
-    <p style(look)>row — hug + max stretch</p>
-    <p style(spell)>size(hug) / size(max)</p>
+  </l0-case>
+  <l0-case>
+    <p slot="look" style(look)>row — hug + max stretch</p>
+    <p slot="spell" style(spell)>size(hug) / size(max)</p>
     <row style(rail)>
       <column style(hugged)>hug</column>
       <column style(stretched)>max</column>
     </row>
-  </column>
-  <column gap="2">
-    <p style(look)>column — hug + grow, host 16 tall</p>
-    <p style(spell)>&lt;column&gt; size h:16</p>
+  </l0-case>
+  <l0-case>
+    <p slot="look" style(look)>column — hug + grow, host 16 tall</p>
+    <p slot="spell" style(spell)>&lt;column&gt; size h:16</p>
     <column style(tall)>
       <row style(hugged)>hug</row>
       <row style(leftover)>grow</row>
     </column>
-  </column>
-  <column gap="2">
-    <p style(look)>grid — hug cell + grow cell</p>
-    <p style(spell)>&lt;grid cols="2"&gt;</p>
+  </l0-case>
+  <l0-case>
+    <p slot="look" style(look)>grid — hug cell + grow cell</p>
+    <p slot="spell" style(spell)>&lt;grid cols="2"&gt;</p>
     <grid cols="2" gap="2">
       <column style(hugged)>hug</column>
       <column style(leftover)>grow</column>
     </grid>
-  </column>
-  <column gap="2">
-    <p style(look)>center — hug child</p>
-    <p style(spell)>&lt;center&gt; size(hug)</p>
+  </l0-case>
+  <l0-case>
+    <p slot="look" style(look)>center — hug child</p>
+    <p slot="spell" style(spell)>&lt;center&gt; size(hug)</p>
     <center>
       <column style(hugged)>hug</column>
     </center>
-  </column>
-  <column gap="2">
-    <p style(look)>stack — hug layer over a muted bar</p>
-    <p style(spell)>&lt;stack&gt;</p>
+  </l0-case>
+  <l0-case>
+    <p slot="look" style(look)>stack — hug layer over a muted bar</p>
+    <p slot="spell" style(spell)>&lt;stack&gt;</p>
     <stack>
       <column style(layer)></column>
       <column style(hugged)>hug</column>
     </stack>
-  </column>
+  </l0-case>
 </column>

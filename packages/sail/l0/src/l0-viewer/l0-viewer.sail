@@ -1,116 +1,103 @@
 <scope>
   style shell = { size({ w: 100%, h: 100% }) }
   style stage = { size(grow), pad(5), overflow(auto), bg(surface) }
-  style title = { type(heading) }
-  style meta = { type(mono), fg(muted) }
-  style railLabel = { type(label), fg(muted) }
+  style sub = { pad({ x: 5, y: 3 }), bg(muted) }
 </scope>
 
 <controller>
-  function titleFor(p: string): string {
-    if (p === '/') return 'L0 gauntlet'
-    if (p === '/poison') return 'poison'
-    if (p === '/layout') return 'hosts'
-    if (p === '/layout/gap') return 'gap'
-    if (p === '/layout/pad') return 'pad'
-    if (p === '/layout/margin') return 'margin'
-    if (p === '/layout/box') return 'box'
-    if (p === '/layout/participate') return 'participate'
-    if (p === '/layout/align') return 'align'
-    if (p === '/layout/cluster') return 'cluster'
-    if (p === '/layout/measure') return 'measure'
-    if (p === '/layout/when') return 'when'
-    if (p === '/layout/overflow') return 'overflow'
-    if (p === '/layout/absolute') return 'absolute'
-    if (p === '/layout/grid') return 'grid'
-    if (p === '/layout/seeds') return 'seeds'
-    return 'L0'
+  type Link = { href: string; label: string }
+  type Group = { id: string; label: string; href: string; members: Link[] }
+
+  const groups: Group[] = [
+    { id: 'home', label: 'L0', href: '/', members: [] },
+    { id: 'poison', label: 'poison', href: '/poison', members: [] },
+    { id: 'hosts', label: 'hosts', href: '/layout', members: [] },
+    {
+      id: 'space',
+      label: 'space',
+      href: '/layout/gap',
+      members: [
+        { href: '/layout/gap', label: 'gap' },
+        { href: '/layout/pad', label: 'pad' },
+        { href: '/layout/margin', label: 'margin' },
+        { href: '/layout/box', label: 'box' },
+      ],
+    },
+    {
+      id: 'structure',
+      label: 'structure',
+      href: '/layout/participate',
+      members: [
+        { href: '/layout/participate', label: 'participate' },
+        { href: '/layout/align', label: 'align' },
+        { href: '/layout/cluster', label: 'cluster' },
+        { href: '/layout/measure', label: 'measure' },
+      ],
+    },
+    {
+      id: 'flow',
+      label: 'flow',
+      href: '/layout/when',
+      members: [
+        { href: '/layout/when', label: 'when' },
+        { href: '/layout/overflow', label: 'overflow' },
+        { href: '/layout/absolute', label: 'absolute' },
+        { href: '/layout/grid', label: 'grid' },
+      ],
+    },
+    { id: 'seeds', label: 'seeds', href: '/layout/seeds', members: [] },
+  ]
+
+  function groupFor(p: string): Group {
+    if (p === '/') return groups[0]
+    if (p === '/poison') return groups[1]
+    if (p === '/layout') return groups[2]
+    if (p === '/layout/seeds') return groups[6]
+    for (const g of groups) {
+      if (g.members.some((m) => m.href === p)) return g
+    }
+    return groups[0]
   }
 
   export default controller((ctx: { route?: { pathname?: () => string } }) => {
     const path = derived(() => ctx.route?.pathname?.() ?? '')
-    const title = derived(() => titleFor(path()))
-    const boxList = signal<{ k: string; t: string }[]>([])
-    let cells: Element | null = null
-    const tick = (): void => {
-      if (!cells) return
-      const out: { k: string; t: string }[] = []
-      const walk = (n: Element): void => {
-        for (const c of Array.from(n.children)) {
-          if (c.localName === 'p') continue
-          const r = c.getBoundingClientRect()
-          const bg = getComputedStyle(c).backgroundColor
-          const painted =
-            bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent' && r.width > 0 && r.height > 0
-          if (painted) {
-            out.push({
-              k: String(out.length),
-              t: `${c.localName} ${Math.round(r.width)}×${Math.round(r.height)} @${Math.round(r.x)},${Math.round(r.y)}`,
-            })
-          }
-          walk(c)
-        }
-      }
-      walk(cells)
-      boxList.set(out)
-    }
-    mount((el) => {
-      cells = el.querySelector('[data-l0-cells]')
-      queueMicrotask(tick)
-      if (!cells || typeof ResizeObserver === 'undefined') return
-      const ro = new ResizeObserver(tick)
-      ro.observe(cells)
-      return () => {
-        ro.disconnect()
-        cells = null
-      }
-    })
-    return { path, title, boxList }
+    const group = derived(() => groupFor(path()))
+    const links = derived(() => group().members)
+    return { path, group, links, groups }
   })
 </controller>
 
-<row nowrap align="stretch" style(shell)>
-  <navbar placement="rail" bordered expanded>
+<column style(shell)>
+  <navbar placement="top" bordered>
     <a
       slot="brand"
       href="/"
       variant={path() === '/' ? 'soft' : 'ghost'}
       current={path() === '/' ? 'page' : null}
     >L0</a>
-    <column slot="center" gap="1">
-      <a href="/" variant={path() === '/' ? 'soft' : 'ghost'} current={path() === '/' ? 'page' : null}>L0</a>
-      <a href="/poison" variant={path() === '/poison' ? 'soft' : 'ghost'} current={path() === '/poison' ? 'page' : null}>poison</a>
-      <a href="/layout" variant={path() === '/layout' ? 'soft' : 'ghost'} current={path() === '/layout' ? 'page' : null}>hosts</a>
-      <separator></separator>
-      <a href="/layout/gap" variant={path() === '/layout/gap' ? 'soft' : 'ghost'} current={path() === '/layout/gap' ? 'page' : null}>gap</a>
-      <a href="/layout/pad" variant={path() === '/layout/pad' ? 'soft' : 'ghost'} current={path() === '/layout/pad' ? 'page' : null}>pad</a>
-      <a href="/layout/margin" variant={path() === '/layout/margin' ? 'soft' : 'ghost'} current={path() === '/layout/margin' ? 'page' : null}>margin</a>
-      <a href="/layout/box" variant={path() === '/layout/box' ? 'soft' : 'ghost'} current={path() === '/layout/box' ? 'page' : null}>box</a>
-      <separator></separator>
-      <a href="/layout/participate" variant={path() === '/layout/participate' ? 'soft' : 'ghost'} current={path() === '/layout/participate' ? 'page' : null}>participate</a>
-      <a href="/layout/align" variant={path() === '/layout/align' ? 'soft' : 'ghost'} current={path() === '/layout/align' ? 'page' : null}>align</a>
-      <a href="/layout/cluster" variant={path() === '/layout/cluster' ? 'soft' : 'ghost'} current={path() === '/layout/cluster' ? 'page' : null}>cluster</a>
-      <a href="/layout/measure" variant={path() === '/layout/measure' ? 'soft' : 'ghost'} current={path() === '/layout/measure' ? 'page' : null}>measure</a>
-      <separator></separator>
-      <a href="/layout/when" variant={path() === '/layout/when' ? 'soft' : 'ghost'} current={path() === '/layout/when' ? 'page' : null}>when</a>
-      <a href="/layout/overflow" variant={path() === '/layout/overflow' ? 'soft' : 'ghost'} current={path() === '/layout/overflow' ? 'page' : null}>overflow</a>
-      <a href="/layout/absolute" variant={path() === '/layout/absolute' ? 'soft' : 'ghost'} current={path() === '/layout/absolute' ? 'page' : null}>absolute</a>
-      <a href="/layout/grid" variant={path() === '/layout/grid' ? 'soft' : 'ghost'} current={path() === '/layout/grid' ? 'page' : null}>grid</a>
-      <separator></separator>
-      <a href="/layout/seeds" variant={path() === '/layout/seeds' ? 'soft' : 'ghost'} current={path() === '/layout/seeds' ? 'page' : null}>seeds</a>
-    </column>
+    <row slot="center" nowrap gap="1" align="center">
+      <for {groups as g} key={g.id}>
+        <a
+          href={g.href}
+          variant={group().id === g.id ? 'soft' : 'ghost'}
+          current={group().id === g.id ? 'page' : null}
+        >{g.label}</a>
+      </for>
+    </row>
     <theme-picker slot="actions" size="compact"></theme-picker>
   </navbar>
-  <column gap="5" style(stage)>
-    <p style(title)>{title()}</p>
-    <column gap="6" data-l0-cells>
-      <slot></slot>
-    </column>
-    <column gap="1">
-      <p style(railLabel)>boxes</p>
-      <for {boxList() as line} key={line.k}>
-        <p style(meta)>{line.t}</p>
+  <if {links().length > 0}>
+    <row cluster gap="2" style(sub)>
+      <for {links() as m} key={m.href}>
+        <a
+          href={m.href}
+          variant={path() === m.href ? 'soft' : 'ghost'}
+          current={path() === m.href ? 'page' : null}
+        >{m.label}</a>
       </for>
-    </column>
+    </row>
+  </if>
+  <column gap="6" style(stage)>
+    <slot></slot>
   </column>
-</row>
+</column>
