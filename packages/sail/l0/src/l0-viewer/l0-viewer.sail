@@ -55,6 +55,15 @@
       ],
     },
     { id: 'seeds', label: 'seeds', href: '/layout/seeds', members: [] },
+    {
+      id: 'inspect',
+      label: 'inspect',
+      href: '/inspect/names',
+      members: [
+        { href: '/inspect/names', label: 'names' },
+        { href: '/inspect/sheet', label: 'sheet' },
+      ],
+    },
   ]
 
   function groupFor(p: string): Group {
