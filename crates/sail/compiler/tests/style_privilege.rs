@@ -78,6 +78,33 @@ fn l2_preset_style_still_compiles() {
 }
 
 #[test]
+fn l2_on_scale_pad_slots_are_legal() {
+    let src = r#"<div style({ pad({ x: 4 }).bg(surface) })>x</div>"#;
+    let path = "apps/studio/src/studio-panel/studio-panel.sail";
+    let diags = check_all(src, Some(path.as_ref()), &[], None);
+    assert!(
+        !diags
+            .iter()
+            .any(|d| d.message.contains("is not a space step")
+                || d.rule.as_deref() == Some("sail-style-privilege")),
+        "on-scale pad slots must be legal on L2: {diags:?}"
+    );
+}
+
+#[test]
+fn l2_off_scale_pad_names_the_space_steps() {
+    let src = r#"<div style({ pad({ x: 3.5 }) })>x</div>"#;
+    let path = "apps/studio/src/studio-panel/studio-panel.sail";
+    let diags = check_all(src, Some(path.as_ref()), &[], None);
+    assert!(
+        diags
+            .iter()
+            .any(|d| d.message.contains("3.5 is not a space step") && d.message.contains("3 | 4")),
+        "off-scale pad must name the scale: {diags:?}"
+    );
+}
+
+#[test]
 fn l2_slot_style_is_an_error() {
     let src = r#"
 <scope>

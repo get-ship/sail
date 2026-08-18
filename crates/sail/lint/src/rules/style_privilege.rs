@@ -4,8 +4,8 @@
 //! Privilege follows FileKind. Config cannot grant Full. Route documents
 //! (`page` / `index` / `_layout` under `routes/`) write tags, not Style.
 //! Hyphenated route-local siblings and `src/components/**` spend named
-//! identities. Slot assembly (`type({ size: xs })`, `pad({ x: 8 })`) stays
-//! L1-only.
+//! identities. Identity slot assembly (`type({ size: xs })`) stays L1-only.
+//! Geometry `size({` and pad slots `pad({` are free on files that may Style.
 
 use std::path::Path;
 
@@ -49,13 +49,12 @@ fn document_findings(path: &Path, source: &str) -> Vec<Finding> {
     findings
 }
 
-// Slot form only. `pad(page)` / `pad(4)` / `margin(auto)` are presets — L2 may
-// spend them. `pad({ x: 8 })` is the slot form and stays L1-only.
-const L1_ONLY_SLOTS: &[&str] = &["pad({", "margin({", "position({", "filter({"];
+// Slot form only. `margin({` / `position({` / `filter({` stay L1-only.
+// `pad({` is theme scale + free edges; `size({` is geometry — not identity.
+const L1_ONLY_SLOTS: &[&str] = &["margin({", "position({", "filter({"];
 const L1_ONLY_BARE: &[&str] = &["position(", "filter("];
 const SLOT_CONCERNS: &[&str] = &[
     "type({",
-    "size({",
     "border({",
     "bg({",
     "fg({",
@@ -67,11 +66,11 @@ fn identities_findings(path: &Path, source: &str) -> Vec<Finding> {
     let mut findings = Vec::new();
     for (offset, kind) in identity_sites(source) {
         let (msg, suggest) = match kind {
-            "pad({" | "margin({" | "position({" | "filter({" => (
+            "margin({" | "position({" | "filter({" => (
                 format!(
                     "`{kind}` is the slot form — L1-only. L2 spends presets (`pad(page)`, `pad(4)`, `margin(auto)`)."
                 ),
-                "pad({{ x: 8 }}) → pad(page) or pad(4). Do not invent a pad-only tag.",
+                "margin({{ x: auto }}) → margin(auto). Do not invent a margin-only tag.",
             ),
             "position(" | "filter(" => (
                 format!("`{kind}` is L1-only. L2 spends presets only."),
@@ -318,7 +317,13 @@ mod tests {
         let src = "style eyebrow = { type({ size: xs }) }";
         let findings = check(&component(), src);
         assert_eq!(findings.len(), 1, "{findings:?}");
-        assert!(findings[0].message.contains("preset"));
+        assert!(
+            findings[0].message.contains("preset")
+                && findings[0]
+                    .message
+                    .contains("body | body-sm | heading | label"),
+            "type slots must name the type table: {findings:?}"
+        );
     }
 
     #[test]
@@ -336,12 +341,25 @@ mod tests {
     }
 
     #[test]
-    fn l2_pad_slots_error() {
-        let src = "style box = { pad({ x: 8 }).bg(surface) }";
-        let findings = check(&component(), src);
+    fn l2_pad_slots_legal() {
+        let src = "style box = { pad({ x: 4 }).bg(surface) }";
         assert!(
-            findings.iter().any(|f| f.message.contains("slot form")),
-            "{findings:?}"
+            check(&component(), src).is_empty(),
+            "pad({{ x: 4 }}) is theme scale + free edges: {src}"
+        );
+        let src8 = "style box = { pad({ x: 8 }).bg(surface) }";
+        assert!(
+            check(&component(), src8).is_empty(),
+            "pad({{ x: 8 }}) is a live space step: {src8}"
+        );
+    }
+
+    #[test]
+    fn l2_size_slots_legal() {
+        let src = "style box = { size({ w: 7 }) }";
+        assert!(
+            check(&component(), src).is_empty(),
+            "size({{ w: 7 }}) is geometry, not identity: {src}"
         );
     }
 

@@ -1666,4 +1666,25 @@ mod tests {
             other => panic!("expected pad slots, got {other:?}"),
         }
     }
+
+    #[test]
+    fn pad_off_scale_names_space_steps() {
+        let (_, diags) = parse("style({ pad({ x: 3.5 }) })");
+        let msgs: Vec<String> = diags.iter().map(|d| d.message()).collect();
+        assert!(
+            msgs.iter()
+                .any(|m| m.contains("3.5 is not a space step") && m.contains("3 | 4")),
+            "{msgs:?}"
+        );
+    }
+
+    #[test]
+    fn pad_on_scale_slots_are_silent() {
+        let (_, diags) = parse("style({ pad({ x: 4 }) })");
+        assert!(
+            diags.is_empty(),
+            "{:?}",
+            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
+    }
 }

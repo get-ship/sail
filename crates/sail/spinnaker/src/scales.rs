@@ -19,6 +19,36 @@ pub fn contains(scale: &str, value: &str) -> bool {
     values(scale).iter().any(|v| v == value)
 }
 
+/// Neighboring space-scale steps around an off-scale value (`3.5` → `3 | 4`).
+pub fn space_neighbors(value: &str) -> Option<String> {
+    let n = parse_space_step_number(value)?;
+    if contains("space", value) {
+        return None;
+    }
+    let mut steps: Vec<(f64, String)> = values("space")
+        .into_iter()
+        .filter_map(|s| parse_space_step_number(&s).map(|v| (v, s)))
+        .collect();
+    steps.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal));
+    steps.dedup_by(|a, b| a.0 == b.0);
+    let lo = steps
+        .iter()
+        .rev()
+        .find(|(v, _)| *v < n)
+        .map(|(_, s)| s.as_str());
+    let hi = steps.iter().find(|(v, _)| *v > n).map(|(_, s)| s.as_str());
+    match (lo, hi) {
+        (Some(l), Some(h)) => Some(format!("{l} | {h}")),
+        (Some(l), None) => Some(l.to_string()),
+        (None, Some(h)) => Some(h.to_string()),
+        (None, None) => None,
+    }
+}
+
+fn parse_space_step_number(raw: &str) -> Option<f64> {
+    raw.replace('_', ".").parse().ok()
+}
+
 /// Every value on this scale — this is what a diagnostic prints, so the author is
 /// told what to SPEND, not merely what is disallowed.
 pub fn values(scale: &str) -> Vec<String> {
@@ -363,5 +393,11 @@ mod tests {
     fn a_raw_value_never_lowers() {
         assert!(lower("space", "16px").is_none());
         assert!(lower("color", "#3366ff").is_none());
+    }
+
+    #[test]
+    fn off_scale_space_names_neighbors() {
+        assert_eq!(space_neighbors("3.5").as_deref(), Some("3 | 4"));
+        assert!(space_neighbors("4").is_none());
     }
 }

@@ -2329,6 +2329,15 @@ fn normalize_paint_arg(
         static_token_group,
     };
 
+    // `3.5` tokenizes as Word("3") Dot Word("5"). That is a scale miss, not
+    // a member path (`tone.foreground`).
+    if path.len() == 1
+        && root.chars().all(|c| c.is_ascii_digit())
+        && path[0].chars().all(|c| c.is_ascii_digit())
+    {
+        return PaintArg::Token(format!("{root}.{}", path[0]));
+    }
+
     // L1 host surface graph — identity stays MemberPath; emit maps to public name.
     // Pack name comes from the compiler via host_ctx, not a table here.
     // A host without a surface graph must not swallow its own name

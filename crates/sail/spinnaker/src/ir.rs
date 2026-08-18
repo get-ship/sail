@@ -243,6 +243,11 @@ impl StyleDiagnostic {
                 }
             }
             StyleDiagnostic::BadToken { setter, value, .. } => {
+                if setter.starts_with("pad") {
+                    if let Some(neighbors) = crate::scales::space_neighbors(value) {
+                        return format!("{value} is not a space step: {neighbors}");
+                    }
+                }
                 format!("style `{setter}({value})` — value is not a token on this setter's scale")
             }
             StyleDiagnostic::ThemeOwnedToken { name, .. } => {
