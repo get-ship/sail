@@ -318,9 +318,9 @@ pub fn write_project_action_observation(project: &Path) -> Result<PathBuf> {
 
 // ── Per-kind type environments (SPEC-PLATFORM-NEUTRALITY-1 §1 / S2.1) ───────
 //
-// Product branches the TypeScript lib/ambient by file kind so app
-// controllers/compositions/stores cannot name document/window/localStorage.
-// Action files get the observation port only. Framework packages keep DOM.
+// Author typecheck is two envs. FileKind is the only detector — monorepo
+// path is not identity. Runtime / dom / compiler TS is not an author
+// surface and is not granted DOM via a third env.
 //
 // Gate: crates/sail/compiler/tests/type_env_per_kind.rs
 
@@ -332,8 +332,6 @@ pub enum TypeEnv {
     Sail,
     /// author action — observation set only (no `document` / `window`).
     Action,
-    /// framework runtime packages — full DOM lib allowed.
-    Framework,
 }
 
 /// Map a classified [`crate::project_map::FileKind`] to its type environment.
@@ -344,8 +342,6 @@ pub enum TypeEnv {
 /// | Composition / Store | Sail |
 /// | Action | Action |
 /// | Theme / Other | Sail (apps never gain free DOM via kind alone) |
-///
-/// Framework packages are selected via [`type_env_for_path`], not this table.
 pub fn type_env_for_kind(kind: crate::project_map::FileKind) -> TypeEnv {
     use crate::project_map::FileKind;
     match kind {
@@ -360,48 +356,22 @@ pub fn type_env_for_kind(kind: crate::project_map::FileKind) -> TypeEnv {
     }
 }
 
-/// Path-aware type-env selection.
+/// Path-aware type-env selection: [`crate::project_map::classify`] → [`type_env_for_kind`].
 ///
-/// 1. Framework packages (`packages/sail/**`) → [`TypeEnv::Framework`]
-/// 2. Else [`crate::project_map::classify`] → [`type_env_for_kind`]
-///
-/// Framework wins over path-shaped Action (runtime catalog may live under
-/// `…/actions/**` and is still allowed full DOM).
+/// Author `.sail` under `packages/sail/**` (e.g. l0) is still FileKind-only.
+/// Runtime / dom / compiler TS is not an author surface of this gate.
 pub fn type_env_for_path(path: &Path, source: Option<&str>) -> TypeEnv {
-    if is_framework_package_path(path) {
-        return TypeEnv::Framework;
-    }
     type_env_for_kind(crate::project_map::classify(path, source).kind)
-}
-
-/// True when `path` sits under a framework package that may use the full DOM lib.
-///
-/// Matches `packages/sail/**` (runtime, dom, tokens, …). App / component
-/// packages do **not** get free DOM — they go through [`type_env_for_kind`].
-fn is_framework_package_path(path: &Path) -> bool {
-    use std::path::Component;
-    let segs: Vec<_> = path
-        .components()
-        .filter_map(|c| match c {
-            Component::Normal(s) => Some(s.to_string_lossy()),
-            _ => None,
-        })
-        .collect();
-    segs.windows(2)
-        .any(|w| w[0] == "packages" && w[1] == "sail")
 }
 
 /// `compilerOptions.lib` entries for `env`.
 ///
-/// - [`TypeEnv::Sail`] / [`TypeEnv::Action`]: ESNext only — no `DOM` / `DOM.Iterable`
-/// - [`TypeEnv::Framework`]: `ESNext` + `DOM` + `DOM.Iterable`
-///
+/// [`TypeEnv::Sail`] / [`TypeEnv::Action`]: ESNext only — no `DOM` / `DOM.Iterable`.
 /// Action observation names (rAF, observers, `getComputedStyle`) come from
 /// [`emit_action_observation_dts`], not from the DOM lib.
 pub fn lib_for_type_env(env: TypeEnv) -> &'static [&'static str] {
     match env {
         TypeEnv::Sail | TypeEnv::Action => &["ESNext"],
-        TypeEnv::Framework => &["ESNext", "DOM", "DOM.Iterable"],
     }
 }
 
@@ -692,11 +662,10 @@ pub const SAIL_TSCONFIG_REQUIRED_FLAGS: &[&str] = &[
 /// Default sail project `compilerOptions` (Pure / product typecheck).
 ///
 /// Product FileKinds (Route/Component/Composition/Store) are Sail — ESNext
-/// only, no DOM. Framework packages that need DOM use
-/// [`sail_tsconfig_compiler_options_json_for`]([`TypeEnv::Framework`]) or
-/// `packages/sail/tsconfig/tsconfig.base.json` (TOOLING-1 WI2).
+/// only, no DOM. Runtime / dom / compiler TS is not an author surface of
+/// this gate; its own tsconfig is its own business.
 ///
-/// Per-kind (Pure / Action / Framework) options:
+/// Per-kind (Sail / Action) options:
 /// [`sail_tsconfig_compiler_options_json_for`]. Ambient pack registration is
 /// **not** a `compilerOptions.types` package name: the generated file lives
 /// at [`PROJECT_TYPES_REL`] and is wired via `files` in
@@ -707,8 +676,8 @@ pub fn sail_tsconfig_compiler_options_json() -> String {
 
 /// `compilerOptions` JSON object body for a specific [`TypeEnv`].
 ///
-/// Pure/Action get ESNext-only `lib` (document unnameable). Framework keeps
-/// DOM. Shared TOOLING-1 WI2 flags are identical across envs.
+/// Sail/Action get ESNext-only `lib` (document unnameable). Shared
+/// TOOLING-1 WI2 flags are identical across envs.
 pub fn sail_tsconfig_compiler_options_json_for(env: TypeEnv) -> String {
     let lib = lib_for_type_env(env);
     let lib_arr = lib
@@ -790,9 +759,7 @@ const SAIL_DIR_TO_PROJECT_ROOT: &str = "..";
 ///
 /// Default uses [`TypeEnv::Sail`] (ESNext only — no DOM) so product projects
 /// enforce unnameable `document`/`window` (SPEC-PLATFORM-NEUTRALITY-1).
-/// Framework packages that need the DOM lib use
-/// [`emit_project_tsconfig_json_for`]([`TypeEnv::Framework`]) or path-aware
-/// selection via [`type_env_for_path`].
+/// Runtime / dom / compiler TS is not emitted through this gate.
 ///
 /// `include_globs` are **project-root relative** (e.g. `src/**/*.ts`); emit
 /// rewrites them for the config's nest under [`PROJECT_SAIL_DIR_REL`].
@@ -855,7 +822,6 @@ pub fn emit_project_tsconfig_json_for(env: TypeEnv, include_globs: &[&str]) -> S
         TypeEnv::Action => {
             "TypeEnv::Action — ESNext + action-observation.d.ts; no document/window."
         }
-        TypeEnv::Framework => "TypeEnv::Framework — ESNext + DOM (framework packages).",
     };
     // Sail product config must not typecheck actions under the sail typecheck
     // (no observation pack). Action files live solely under tsconfig.action.json.
@@ -2565,8 +2531,14 @@ mod tests {
         assert_eq!(type_env_for_kind(FileKind::Composition), TypeEnv::Sail);
         assert_eq!(type_env_for_kind(FileKind::Action), TypeEnv::Action);
         assert_eq!(
+            type_env_for_path(Path::new("packages/sail/l0/src/l0-case/l0-case.sail"), None),
+            TypeEnv::Sail
+        );
+        // Runtime TS is not an author surface of this gate — FileKind only,
+        // no DOM grant. `src/index.ts` is Other → Sail (still no DOM lib).
+        assert_eq!(
             type_env_for_path(Path::new("packages/sail/runtime/src/index.ts"), None),
-            TypeEnv::Framework
+            TypeEnv::Sail
         );
         let dts = emit_action_observation_dts();
         assert!(dts.contains("requestAnimationFrame"));

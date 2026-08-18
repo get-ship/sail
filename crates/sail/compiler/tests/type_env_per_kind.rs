@@ -1,21 +1,23 @@
 //! Gate tests for SPEC-PLATFORM-NEUTRALITY-1 §1 — per-kind type environments.
 //!
-//! Spike S2.1 red gate. Calls product APIs only.
-//! Implementer must not modify, skip, or weaken these tests.
+//! Author typecheck is two envs. `type_env_for_path` classifies by FileKind
+//! only — monorepo path is not identity. Runtime / dom / compiler TS is not
+//! an author surface of this gate and is not granted DOM via a third env.
 //!
 //! Expected product surface (`sail_compiler::ambients`):
-//! - `TypeEnv` — `Pure` | `Action` | `Framework`
+//! - `TypeEnv` — `Sail` | `Action`
 //! - `type_env_for_kind(FileKind) -> TypeEnv`
-//! - `type_env_for_path(path, source?) -> TypeEnv` (framework packages first, else classify)
-//! - `lib_for_type_env(TypeEnv) -> &[&str]` — Pure/Action: ESNext only; Framework: +DOM
+//! - `type_env_for_path(path, source?) -> TypeEnv` (FileKind only)
+//! - `lib_for_type_env(TypeEnv) -> &[&str]` — Sail/Action: ESNext only (no DOM)
 //! - `emit_action_observation_dts() -> String` — rAF / observers / getComputedStyle ambient
 //!
 //! Behavioral law:
-//! 1. Composition / store / controller (Pure) snippets cannot name `document`
+//! 1. Composition / store / controller (Sail) snippets cannot name `document`
 //! 2. Action snippets cannot name `document`
 //! 3. Action snippets can name observation set (rAF, getComputedStyle, …)
-//! 4. Framework package paths keep DOM
-//! 5. `project_map::classify` feeds kind into env selection
+//! 4. Author `.sail` under `packages/sail/**` (l0 is an app) is Sail
+//! 5. Runtime / dom / compiler TS is not in this gate (no DOM grant)
+//! 6. `project_map::classify` feeds kind into env selection
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -195,7 +197,7 @@ fn classify_feeds_action_path_to_action_env() {
 
 #[test]
 fn controller_region_paths_are_pure() {
-    // Controllers live in route/component regions — Pure, not Action/Framework.
+    // Controllers live in route/component regions — Sail, not Action.
     let route_ctrl = Path::new("apps/x/routes/home/controller.ts");
     assert_eq!(
         type_env_for_path(route_ctrl, Some("export default controller(() => ({}))\n")),
@@ -213,36 +215,53 @@ fn controller_region_paths_are_pure() {
 }
 
 #[test]
-fn framework_package_path_keeps_dom_env() {
-    let cases = [
-        "packages/sail/runtime/src/actions/focus.ts",
-        "packages/sail/runtime/src/index.ts",
-        "packages/sail/dom/src/hydrate/index.ts",
-    ];
-    for p in cases {
+fn l0_author_sail_is_sail_env() {
+    for p in [
+        "packages/sail/l0/src/l0-case/l0-case.sail",
+        "packages/sail/l0/src/paint-bind/paint-bind.sail",
+        "packages/sail/l0/routes/page.sail",
+    ] {
         assert_eq!(
             type_env_for_path(Path::new(p), None),
-            TypeEnv::Framework,
-            "framework path {p} must be Framework (DOM allowed)"
+            TypeEnv::Sail,
+            "author .sail {p} must be Sail (l0 is an app; FileKind only)"
         );
     }
 }
 
 #[test]
-fn framework_wins_over_actions_path_shape() {
-    // Runtime catalog under …/actions/** is still Framework, not author Action.
+fn runtime_package_is_not_in_author_type_gate() {
+    // Runtime / dom / compiler TS is not an author surface. Classified by
+    // FileKind only — no third env that grants DOM.
+    let cases = [
+        "packages/sail/runtime/src/index.ts",
+        "packages/sail/dom/src/hydrate/index.ts",
+        "packages/sail/compiler/src/index.ts",
+    ];
+    for p in cases {
+        let env = type_env_for_path(Path::new(p), None);
+        assert!(
+            !has_dom_lib(lib_for_type_env(env)),
+            "runtime/dom/compiler path {p} must not be granted DOM (env={env:?})"
+        );
+    }
+}
+
+#[test]
+fn runtime_actions_path_classifies_as_action_without_dom() {
+    // Path shape is Action; that is FileKind, not a DOM grant.
     let path = Path::new("packages/sail/runtime/src/actions/in-view.ts");
-    // classify would say Action from path shape; product must prefer framework.
-    let c = classify(path, Some("export const inView = (node) => ({})\n"));
+    let src = "export const inView = (node) => ({})\n";
+    let c = classify(path, Some(src));
     assert_eq!(
         c.kind,
         FileKind::Action,
         "sanity: path shape classifies as Action"
     );
-    assert_eq!(
-        type_env_for_path(path, Some("export const inView = (node) => ({})\n")),
-        TypeEnv::Framework,
-        "framework package must not be stripped to Action env"
+    assert_eq!(type_env_for_path(path, Some(src)), TypeEnv::Action);
+    assert!(
+        !has_dom_lib(lib_for_type_env(TypeEnv::Action)),
+        "runtime catalog is not in this gate — Action env has no DOM"
     );
 }
 
@@ -275,16 +294,14 @@ fn action_lib_is_esnext_only_without_dom() {
 }
 
 #[test]
-fn framework_lib_includes_dom() {
-    let lib = lib_for_type_env(TypeEnv::Framework);
-    assert!(
-        has_esnext_lib(lib),
-        "Framework env must include an ES* lib, got {lib:?}"
-    );
-    assert!(
-        has_dom_lib(lib),
-        "Framework env must include DOM, got {lib:?}"
-    );
+fn author_type_envs_never_include_dom() {
+    for env in [TypeEnv::Sail, TypeEnv::Action] {
+        assert!(
+            !has_dom_lib(lib_for_type_env(env)),
+            "{env:?} must not include DOM (no third env grants it), got {:?}",
+            lib_for_type_env(env)
+        );
+    }
 }
 
 // ── 3. action observation ambient ──────────────────────────────────────────
@@ -424,21 +441,6 @@ export function observe(node: Element): { destroy(): void } {
         ok,
         "Action env must typecheck observation set (rAF / ResizeObserver / getComputedStyle):\n{out}"
     );
-}
-
-#[test]
-fn framework_snippet_document_typechecks() {
-    let (ok, out) = tsc_snippet(
-        TypeEnv::Framework,
-        r#"
-export function inject(styleText: string): void {
-  const el = document.createElement('style')
-  el.textContent = styleText
-  document.head.appendChild(el)
-}
-"#,
-    );
-    assert!(ok, "Framework env must allow document:\n{out}");
 }
 
 /// Product type-gate layout: `write_project_type_configs` then native tsc `-p`

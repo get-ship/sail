@@ -295,10 +295,6 @@ fn collect_sail_type_gate_native(
     let env = source_path
         .map(|p| type_env_for_path(p, Some(author_source)))
         .unwrap_or(TypeEnv::Sail);
-    // Framework packages keep DOM — type gate does not ban window there.
-    if env == TypeEnv::Framework {
-        return diags;
-    }
 
     let Some(tool) = resolve_tsgo(source_path) else {
         diags.push(Diagnostic {
@@ -346,7 +342,7 @@ fn collect_sail_type_gate_native(
 
 /// Project-scoped type gate over `.ts` sources (E1b).
 ///
-/// Groups files by [`TypeEnv`] (Pure / Action; Framework skipped), writes
+/// Groups files by [`TypeEnv`] (Sail / Action), writes
 /// per-kind tsconfigs, runs **one** `tsgo -p` per env that has files.
 /// Returns diagnostics with paths encoded in the message when multi-file
 /// (`… [real/path.ts]`) so multi-file CLIs can print `path:line:col`.
@@ -400,10 +396,6 @@ fn collect_project_type_gate_native(
 
     // E1c + E4a R1: @ts-ignore and type-erase in product envs.
     for (path, src) in ts_files {
-        let env = type_env_for_path(path, Some(src));
-        if env == TypeEnv::Framework {
-            continue;
-        }
         for f in sail_lint::lint_app_source_source(path, src) {
             if f.rule != sail_lint::rules::directory_jurisdiction::RULE_ID {
                 continue;
@@ -436,7 +428,6 @@ fn collect_project_type_gate_native(
         match type_env_for_path(path, Some(src)) {
             TypeEnv::Sail => pure.push((path.as_path(), src.as_str())),
             TypeEnv::Action => action.push((path.as_path(), src.as_str())),
-            TypeEnv::Framework => {}
         }
     }
 
@@ -591,7 +582,6 @@ pub fn collect_project_ts_diags(
             match type_env_for_path(path, Some(src)) {
                 TypeEnv::Sail => pure.push((path.as_path(), src.as_str())),
                 TypeEnv::Action => action.push((path.as_path(), src.as_str())),
-                TypeEnv::Framework => {}
             }
         }
         let mut out = Vec::new();
@@ -602,7 +592,6 @@ pub fn collect_project_ts_diags(
             let kind_rel = match env {
                 TypeEnv::Sail => Some(crate::ambients::PROJECT_TSCONFIG_SAIL_REL),
                 TypeEnv::Action => Some(crate::ambients::PROJECT_TSCONFIG_ACTION_REL),
-                TypeEnv::Framework => continue,
             };
             let use_kind = kind_rel
                 .map(|r| project_root.join(r).is_file())
@@ -2443,7 +2432,6 @@ fn typecheck_project_env_reused(
     let kind_rel = match env {
         TypeEnv::Sail => Some(crate::ambients::PROJECT_TSCONFIG_SAIL_REL),
         TypeEnv::Action => Some(crate::ambients::PROJECT_TSCONFIG_ACTION_REL),
-        TypeEnv::Framework => return Ok(()),
     };
     let kind_abs = kind_rel.map(|r| project_root.join(r));
     let all_on_disk = files
@@ -2591,9 +2579,6 @@ fn env_program_ts_diags(
         let kind_rel = match env {
             TypeEnv::Sail => crate::ambients::PROJECT_TSCONFIG_SAIL_REL,
             TypeEnv::Action => crate::ambients::PROJECT_TSCONFIG_ACTION_REL,
-            TypeEnv::Framework => {
-                return Ok(Vec::new());
-            }
         };
         let cfg = std::fs::read_to_string(project_root.join(kind_rel))?;
         let entries: Vec<(PathBuf, String, String)> = files
@@ -2739,7 +2724,6 @@ fn typecheck_project_env_via_kind_config(
     let kind_rel = match env {
         TypeEnv::Sail => crate::ambients::PROJECT_TSCONFIG_SAIL_REL,
         TypeEnv::Action => crate::ambients::PROJECT_TSCONFIG_ACTION_REL,
-        TypeEnv::Framework => return Ok(true),
     };
     let kind_abs = project_root.join(kind_rel);
     if !kind_abs.is_file() {
@@ -2997,7 +2981,6 @@ fn env_label(env: TypeEnv) -> &'static str {
     match env {
         TypeEnv::Sail => "sail",
         TypeEnv::Action => "action",
-        TypeEnv::Framework => "framework",
     }
 }
 
@@ -3044,7 +3027,7 @@ fn map_region_diag(d: &TsDiag, env: TypeEnv) -> Option<Diagnostic> {
                     return None;
                 }
                 let (rule, message) = match env {
-                    TypeEnv::Sail | TypeEnv::Framework => (
+                    TypeEnv::Sail => (
                         RULE_PURE_REGION,
                         format!(
                             "`{name}` is not nameable here — controllers/compositions/stores are under \
@@ -3401,13 +3384,8 @@ fn scan_ts_ignore(source: &str) -> Vec<Diagnostic> {
 
 // ── type-erase scan (E4a R1) ───────────────────────────────────────────────
 
-fn scan_type_erase(source: &str, source_path: Option<&Path>) -> Vec<Diagnostic> {
+fn scan_type_erase(source: &str, _source_path: Option<&Path>) -> Vec<Diagnostic> {
     let mut diags = Vec::new();
-    if let Some(p) = source_path {
-        if type_env_for_path(p, Some(source)) == TypeEnv::Framework {
-            return diags;
-        }
-    }
     let region = if source.contains("<controller") {
         let Some(r) = extract_controller_region(source) else {
             return diags;
@@ -3451,7 +3429,7 @@ fn scan_type_erase(source: &str, source_path: Option<&Path>) -> Vec<Diagnostic> 
                 col0,
                 "as unknown as",
                 "`as unknown as` is double type erasure. Name a real type or move the \
-                 code to Action / Framework where the surface is legal.",
+                 code to a `use:` action where the observation surface is legal.",
             ));
         }
         if let Some(col0) = find_satisfies_any(&code) {
@@ -3978,6 +3956,40 @@ export default controller((ctx) => {
             hit.line >= 3,
             "window line must map into controller body, got line {}",
             hit.line
+        );
+    }
+
+    #[test]
+    fn l0_controller_document_is_type_gate_error() {
+        // packages/sail/l0 is an app. The old Framework path skip must not
+        // silent-green `document` in an l0 controller. Type env is the floor.
+        let (_tmp, project) = isolated_gate_project("l0-document-gate", false);
+        let src = r#"
+<controller>
+export default controller(() => {
+  const title = document.title
+  return { title }
+})
+</controller>
+<div>{title}</div>
+"#;
+        let path = project.join("packages/sail/l0/src/l0-case/l0-case.sail");
+        assert_eq!(
+            type_env_for_path(&path, Some(src)),
+            TypeEnv::Sail,
+            "l0-case path must classify as Sail (FileKind only)"
+        );
+        let diags = collect_sail_type_gate(src, Some(&path));
+        assert!(
+            diags.iter().any(|d| {
+                d.severity == DiagSeverity::Error
+                    && (d.rule.as_deref() == Some(RULE_PURE_REGION)
+                        || d.rule.as_deref() == Some(RULE_TYPE_GATE))
+                    && (d.message.contains("`document`")
+                        || d.message.contains("document")
+                        || d.message.contains("Cannot find name"))
+            }),
+            "document in an l0 <controller> must be a type-gate Error, got {diags:?}"
         );
     }
 

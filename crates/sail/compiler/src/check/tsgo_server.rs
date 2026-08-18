@@ -716,7 +716,6 @@ fn env_tag(env: TypeEnv) -> &'static str {
     match env {
         TypeEnv::Sail => "sail",
         TypeEnv::Action => "action",
-        TypeEnv::Framework => "framework",
     }
 }
 
@@ -779,7 +778,6 @@ pub fn diagnose_project_files(
                 let rel = match env {
                     TypeEnv::Sail => crate::ambients::PROJECT_TSCONFIG_SAIL_REL,
                     TypeEnv::Action => crate::ambients::PROJECT_TSCONFIG_ACTION_REL,
-                    TypeEnv::Framework => "tsconfig.json",
                 };
                 let _ = c.notify_file_changed(&project_root.join(rel));
             }
