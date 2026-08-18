@@ -8,8 +8,8 @@ use std::path::PathBuf;
 use sail_compiler::check::layout;
 use sail_compiler::check::layout_corpus::{self, TREE_NAMES, default_tap_out_path};
 use sail_compiler::parse::preprocess::preprocess_with_style;
-use sail_layout::CheckOptions;
-use sail_layout::canary;
+use spinnaker::layout::CheckOptions;
+use spinnaker::layout::canary;
 
 fn workspace_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -96,7 +96,7 @@ fn scan_file_kind(path: &std::path::Path, kind: &'static str) -> canary::Preproc
     let viewports = layout::layout_viewports(&pre);
     let mut scan = canary::PreprocessedScan::default();
     for &viewport in &viewports {
-        match sail_layout::check_preprocessed_with_hosts(
+        match spinnaker::layout::check_preprocessed_with_hosts(
             &pre,
             viewport,
             CheckOptions::experimental(),

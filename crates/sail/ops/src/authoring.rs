@@ -4,7 +4,7 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 use serde::Serialize;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
 use crate::ctx::Ctx;
 use crate::error::OpError;
@@ -975,11 +975,7 @@ fn resolve_write_path(path_s: &str, apply_root: &Path) -> Result<PathBuf, String
         .unwrap_or_else(|_| apply_root.to_path_buf());
     let candidate = {
         let p = PathBuf::from(path_s);
-        if p.is_absolute() {
-            p
-        } else {
-            root.join(p)
-        }
+        if p.is_absolute() { p } else { root.join(p) }
     };
     let resolved = canonicalize_for_write(&candidate)?;
     if !resolved.starts_with(&root) {
@@ -1225,10 +1221,10 @@ pub fn sail_layout_check(source: &str) -> Result<Value, OpError> {
     let mut viewport_reports: Vec<Value> = Vec::new();
     let mut kind_for: BTreeMap<String, &'static str> = BTreeMap::new();
     for vp in viewports {
-        match sail_layout::check_preprocessed_with_types(
+        match spinnaker::layout::check_preprocessed_with_types(
             &preprocessed,
             vp,
-            sail_layout::CheckOptions::default(),
+            spinnaker::layout::CheckOptions::default(),
             &type_hosts,
         ) {
             Ok(scan) => {
@@ -2088,7 +2084,7 @@ export default controller((ctx) => ({ count: signal(0) }))
     fn identity_scoped_edit_survives_in_file_move() {
         use crate::call_rpc;
         use crate::ctx::Ctx;
-        use crate::identity::{resolve_identity, ElementIdentity};
+        use crate::identity::{ElementIdentity, resolve_identity};
 
         let dir = tempfile::tempdir().unwrap();
         let root = dir.path();

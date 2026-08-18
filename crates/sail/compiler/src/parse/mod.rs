@@ -35,7 +35,7 @@ pub fn parse(source: &str) -> Result<Program, CompileError> {
 pub struct Parsed {
     pub program: Program,
     pub preprocessed: String,
-    pub style_hosts: sail_layout::StyleHosts,
+    pub style_hosts: spinnaker::layout::StyleHosts,
 }
 
 /// Like [`parse`], retaining the preprocessed HTML.

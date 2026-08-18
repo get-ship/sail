@@ -4,12 +4,12 @@
 //! This is intentionally one place: if takumi's style model needs a value, it
 //! comes from the `ResolvedStyle` that the diagnostics already consume.
 
-use sail_layout::taffy::style as ts;
-use sail_layout::taffy::style::CompactLength;
+use spinnaker::layout::taffy::style as ts;
+use spinnaker::layout::taffy::style::CompactLength;
 use takumi::prelude::*;
 
 /// Convert a `taffy::Style` into a `takumi::Style` builder chain.
-pub fn style(taffy_style: &sail_layout::taffy::Style) -> Style {
+pub fn style(taffy_style: &spinnaker::layout::taffy::Style) -> Style {
     let mut style = Style::default();
 
     style = style.with(StyleDeclaration::display(display(taffy_style.display)));

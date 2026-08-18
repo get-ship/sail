@@ -7,7 +7,7 @@
 use std::time::Instant;
 
 use anyhow::{Context, Result};
-use sail_layout::html::Element;
+use spinnaker::layout::html::Element;
 use takumi::prelude::*;
 
 use crate::convert;
@@ -111,16 +111,16 @@ pub fn render(source: &str, opts: &PipelineOptions) -> Result<PipelineOutput> {
     css_all.push('\n');
     css_all.push_str(css);
     let sheet = StyleSheet::parse(&css_all);
-    let mut elements = sail_layout::html::parse_source(&html);
-    sail_layout::apply_resolved_types(&mut elements, &hosts.types);
-    sail_layout::apply_resolved_boxes(&mut elements, &hosts.boxes);
+    let mut elements = spinnaker::layout::html::parse_source(&html);
+    spinnaker::layout::apply_resolved_types(&mut elements, &hosts.types);
+    spinnaker::layout::apply_resolved_boxes(&mut elements, &hosts.boxes);
     if elements.len() <= 1 {
         anyhow::bail!("preprocessed source produced no renderable elements");
     }
 
     // 6. Layout.
     let viewport_f = (opts.viewport.0 as f32, opts.viewport.1 as f32);
-    let layout = sail_layout::taffy_tree::build(elements.clone(), viewport_f)
+    let layout = spinnaker::layout::taffy_tree::build(elements.clone(), viewport_f)
         .context("computing layout with sail_layout")?;
 
     // 7. Regions + unknown dynamics joined to SailInspect node ids (T-I3).
@@ -259,7 +259,7 @@ fn looks_like_expr(s: &str) -> bool {
 
 fn build_takumi_tree(
     elements: &[Element],
-    layout: &sail_layout::taffy_tree::Layout,
+    layout: &spinnaker::layout::taffy_tree::Layout,
     sheet: &StyleSheet,
     palette: &ThemePalette,
 ) -> Result<Node> {
@@ -291,7 +291,7 @@ fn build_takumi_tree(
 fn attach_region_styles(
     regions: &mut [Region],
     elements: &[Element],
-    layout: &sail_layout::taffy_tree::Layout,
+    layout: &spinnaker::layout::taffy_tree::Layout,
     sheet: &StyleSheet,
     palette: &ThemePalette,
 ) {
@@ -323,7 +323,7 @@ fn attach_region_styles(
 
 fn build_node(
     elements: &[Element],
-    layout: &sail_layout::taffy_tree::Layout,
+    layout: &spinnaker::layout::taffy_tree::Layout,
     sheet: &StyleSheet,
     palette: &ThemePalette,
     idx: usize,
@@ -343,8 +343,8 @@ fn build_node(
         )));
     }
 
-    let resolved = sail_layout::style::resolve(elem, elements, layout.viewport.0);
-    if resolved.visibility == sail_layout::style::Visibility::Ignored {
+    let resolved = spinnaker::layout::style::resolve(elem, elements, layout.viewport.0);
+    if resolved.visibility == spinnaker::layout::style::Visibility::Ignored {
         return Ok(None);
     }
 
@@ -372,7 +372,7 @@ fn build_node(
 
     let mut child_nodes = Vec::new();
     if !elem.flow.is_empty() {
-        use sail_layout::html::FlowItem;
+        use spinnaker::layout::html::FlowItem;
         for item in &elem.flow {
             match item {
                 FlowItem::Text(t) => {
@@ -498,7 +498,7 @@ fn text_style_for(
     paint: &Paint,
     palette: &ThemePalette,
 ) -> Style {
-    let (family, size) = sail_layout::metrics::resolve_family_size(idx, elements);
+    let (family, size) = spinnaker::layout::metrics::resolve_family_size(idx, elements);
     let font_size_px = paint.font_size_px.unwrap_or_else(|| size.px());
     let color = paint
         .color
@@ -535,12 +535,12 @@ fn text_node_for(
     Node::text(text.to_string()).with_style(text_style_for(elements, idx, paint, palette))
 }
 
-fn family_name(f: sail_layout::metrics::Family) -> String {
+fn family_name(f: spinnaker::layout::metrics::Family) -> String {
     match f {
-        sail_layout::metrics::Family::Body => "DM Sans",
-        sail_layout::metrics::Family::Mono => "JetBrains Mono",
-        sail_layout::metrics::Family::Display => "Syne",
-        sail_layout::metrics::Family::PressStart => "Press Start 2P",
+        spinnaker::layout::metrics::Family::Body => "DM Sans",
+        spinnaker::layout::metrics::Family::Mono => "JetBrains Mono",
+        spinnaker::layout::metrics::Family::Display => "Syne",
+        spinnaker::layout::metrics::Family::PressStart => "Press Start 2P",
     }
     .to_string()
 }

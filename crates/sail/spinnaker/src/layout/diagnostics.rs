@@ -20,14 +20,14 @@
 //! 6. **sibling-overlap** — two in-flow siblings share pixels inside a
 //!    `row` / `column` / `grid`. Overlay is `<stack>`.
 //!
-//! Experimental (gated by [`crate::CheckOptions::experimental`]):
+//! Experimental (gated by [`crate::layout::CheckOptions::experimental`]):
 //! 7. **sub-min-tap-target** — interactive host shorter axis below 24px.
 //!
 //! Each span is into the **preprocessed** source.
 
-use crate::CheckOptions;
-use crate::metrics::{self, table as metrics_table};
-use crate::taffy_tree::Layout;
+use crate::layout::CheckOptions;
+use crate::layout::metrics::{self, table as metrics_table};
+use crate::layout::taffy_tree::Layout;
 use serde::Serialize;
 use taffy::style::Overflow;
 
@@ -287,7 +287,7 @@ pub fn scan_with(
             });
 
             // Case 4 (LAYOUT-5 default Error): same geometry, no author opt-in.
-            if crate::unintended_overflow::should_emit(
+            if crate::layout::unintended_overflow::should_emit(
                 layout,
                 i,
                 cidx,
@@ -387,7 +387,7 @@ pub fn scan_with(
     }
 
     if options.experimental {
-        crate::tap_targets::scan(layout, &mut out)?;
+        crate::layout::tap_targets::scan(layout, &mut out)?;
     }
 
     Ok(ScanResult {
@@ -397,13 +397,13 @@ pub fn scan_with(
     })
 }
 
-fn is_stack_host(elem: &crate::html::Element) -> bool {
+fn is_stack_host(elem: &crate::layout::html::Element) -> bool {
     elem.class
         .split_whitespace()
         .any(|c| c == "sail-stackz" || c == "sail-stackz-i")
 }
 
-fn is_out_of_flow(style: &crate::style::ResolvedStyle) -> bool {
+fn is_out_of_flow(style: &crate::layout::style::ResolvedStyle) -> bool {
     matches!(style.style.position, taffy::style::Position::Absolute)
 }
 
@@ -491,14 +491,14 @@ fn scan_sibling_overlap(layout: &Layout, out: &mut Vec<Diagnostic>) {
     }
 }
 
-fn has_truncate(elem: &crate::html::Element) -> bool {
+fn has_truncate(elem: &crate::layout::html::Element) -> bool {
     elem.box_style.truncate
 }
 
 /// Authored `width` / `max-width` only. Flex `grow` + `min-w: 0` is not a
 /// width — treating allocation as a constraint is a language change.
 /// Truncate / overflow-hidden on this shape is a mask, not an opt-in.
-fn is_hug_content_width(elem: &crate::html::Element) -> bool {
+fn is_hug_content_width(elem: &crate::layout::html::Element) -> bool {
     elem.box_style.width.is_none() && elem.box_style.max_width.is_none()
 }
 
@@ -554,7 +554,7 @@ fn scan_clipped_text(layout: &Layout, out: &mut Vec<Diagnostic>) -> anyhow::Resu
             continue;
         };
         let text_w: f32 = elem.text.chars().map(|c| metrics::char_width(m, c)).sum();
-        if crate::unintended_overflow::text_is_unbound_expr(&elem.text) {
+        if crate::layout::unintended_overflow::text_is_unbound_expr(&elem.text) {
             continue;
         }
         if text_w > box_w + EPSILON {
@@ -576,8 +576,8 @@ fn scan_clipped_text(layout: &Layout, out: &mut Vec<Diagnostic>) -> anyhow::Resu
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::html::Element;
-    use crate::taffy_tree::build;
+    use crate::layout::html::Element;
+    use crate::layout::taffy_tree::build;
 
     #[test]
     fn zero_main_axis_on_known_container_still_fires() {
@@ -744,7 +744,7 @@ mod tests {
     #[test]
     fn hug_content_width_is_authored_size_not_class_soup() {
         let hug = Element {
-            box_style: crate::box_ir::ResolvedBox {
+            box_style: crate::layout::box_ir::ResolvedBox {
                 overflow_x: None,
                 ..Default::default()
             },
@@ -752,7 +752,7 @@ mod tests {
         };
         assert!(is_hug_content_width(&hug));
         let max_w = Element {
-            box_style: crate::box_ir::ResolvedBox {
+            box_style: crate::layout::box_ir::ResolvedBox {
                 max_width: Some("24".into()),
                 truncate: true,
                 ..Default::default()
@@ -761,7 +761,7 @@ mod tests {
         };
         assert!(!is_hug_content_width(&max_w));
         let explicit_w = Element {
-            box_style: crate::box_ir::ResolvedBox {
+            box_style: crate::layout::box_ir::ResolvedBox {
                 width: Some("16".into()),
                 ..Default::default()
             },

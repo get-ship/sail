@@ -29,7 +29,7 @@ sail-compiler = { path = "../../sail/compiler" }
 sail-lsp = { path = "../../sail/lsp" }
 sail-mcp = { path = "../../sail/mcp" }
 sail-ops = { path = "../../sail/ops" }
-sail-layout = { path = "../../sail/layout" }
+spinnaker = { path = "../../sail/spinnaker" }
 sail-render = { path = "../../sail/render" }
 # App-source floor for `sail check` — project `src/**/*.ts` modules.
 sail-lint = { path = "../../sail/lint" }

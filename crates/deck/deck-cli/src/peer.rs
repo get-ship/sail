@@ -10,11 +10,11 @@
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use sail_compiler::out_layout::resolve_out_dir;
 use sail_compiler::{
-    check_all, compile as compile_source, CompileMode, CompileOpts, ComponentMeta, DiagSeverity,
-    Policy,
+    CompileMode, CompileOpts, ComponentMeta, DiagSeverity, Policy, check_all,
+    compile as compile_source,
 };
 
 /// `sail --version` / `sail version`.
@@ -1105,7 +1105,8 @@ pub fn layout(input: PathBuf, viewport: (f32, f32), json: bool) -> Result<()> {
         std::fs::read_to_string(&input).with_context(|| format!("read {}", input.display()))?
     };
 
-    let result = sail_layout::check_preprocessed(&source, viewport).context("layout check")?;
+    let result =
+        spinnaker::layout::check_preprocessed(&source, viewport).context("layout check")?;
 
     if json {
         println!(
@@ -1115,7 +1116,7 @@ pub fn layout(input: PathBuf, viewport: (f32, f32), json: bool) -> Result<()> {
         let errors = result
             .diagnostics
             .iter()
-            .filter(|d| matches!(d.severity, sail_layout::Severity::Error))
+            .filter(|d| matches!(d.severity, spinnaker::layout::Severity::Error))
             .count();
         if errors > 0 {
             bail!("{errors} layout error(s)");
@@ -1134,11 +1135,11 @@ pub fn layout(input: PathBuf, viewport: (f32, f32), json: bool) -> Result<()> {
     let mut errors = 0usize;
     for d in &result.diagnostics {
         let sev = match d.severity {
-            sail_layout::Severity::Error => {
+            spinnaker::layout::Severity::Error => {
                 errors += 1;
                 "error"
             }
-            sail_layout::Severity::Warning => "warning",
+            spinnaker::layout::Severity::Warning => "warning",
         };
         eprintln!(
             "{sev}: [{}] at byte {}..{} (tag={}, class=\"{}\") — {}",

@@ -8,7 +8,7 @@ use std::path::{Path, PathBuf};
 
 use serde::Serialize;
 
-use crate::{CheckOptions, check_preprocessed_with};
+use crate::layout::{CheckOptions, check_preprocessed_with};
 
 /// Default viewport for canary scans (matches gate vehicles).
 const DEFAULT_VIEWPORT: (f32, f32) = (400.0, 300.0);
@@ -100,7 +100,7 @@ gate). S4.2 records counts + FP verdicts; it does not promote.";
 /// # Contract
 ///
 /// - Every entry in `fixture_sources` is scanned under
-///   [`crate::CheckOptions::experimental`].
+///   [`crate::layout::CheckOptions::experimental`].
 /// - `corpus_roots` may be empty; when non-empty, walks `*.html` files
 ///   (treated as preprocessed HTML) as a best-effort extension of the canary.
 /// - Report populates [`CanaryCounts`], samples, per-sample FP verdicts,
@@ -307,7 +307,7 @@ pub struct KindFinding {
     pub element_tag: String,
     pub element_class: String,
     pub element_index: usize,
-    pub geometry: Option<crate::OverflowGeometry>,
+    pub geometry: Option<crate::layout::OverflowGeometry>,
 }
 
 /// Multi-viewport scan of one preprocessed source, filtered to a single kind.
@@ -385,20 +385,20 @@ pub fn scan_preprocessed(
     }
 }
 
-fn snap_geometry(g: crate::OverflowGeometry) -> crate::OverflowGeometry {
-    crate::OverflowGeometry {
+fn snap_geometry(g: crate::layout::OverflowGeometry) -> crate::layout::OverflowGeometry {
+    crate::layout::OverflowGeometry {
         axis: g.axis,
         child_main: snap_px(g.child_main),
         parent_main: snap_px(g.parent_main),
         child_index: g.child_index,
         parent_index: g.parent_index,
-        child: crate::BoxExtents {
+        child: crate::layout::BoxExtents {
             x: snap_px(g.child.x),
             y: snap_px(g.child.y),
             width: snap_px(g.child.width),
             height: snap_px(g.child.height),
         },
-        parent: crate::BoxExtents {
+        parent: crate::layout::BoxExtents {
             x: snap_px(g.parent.x),
             y: snap_px(g.parent.y),
             width: snap_px(g.parent.width),
@@ -418,7 +418,7 @@ fn snap_px(v: f32) -> f32 {
 #[cfg(test)]
 mod scan_preprocessed_tests {
     use super::*;
-    use crate::CheckOptions;
+    use crate::layout::CheckOptions;
 
     const OVERFLOW_NO_OPTIN: &str = r#"
 <div class="sail-col s-h20 s-wfull">

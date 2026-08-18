@@ -60,34 +60,37 @@ pub fn collect_with(
     };
 
     let owned;
-    let (preprocessed, elements, trees): (&str, &[sail_layout::html::Element], &[SharedViewport]) =
-        if let Some(b) = boxes {
-            (
-                b.preprocessed.as_str(),
-                b.elements.as_slice(),
-                b.trees.as_slice(),
-            )
-        } else {
-            match crate::parse::preprocess::preprocess_with_style(source) {
-                Ok((pre, hosts)) => {
-                    owned = crate::check::layout::prepare_boxes(
-                        pre,
-                        &hosts,
-                        crate::check::layout::layout_check_options_for(source_path).1,
-                    );
-                    (
-                        owned.preprocessed.as_str(),
-                        owned.elements.as_slice(),
-                        owned.trees.as_slice(),
-                    )
-                }
-                Err(_) => {
-                    // Style errors can prevent preprocess; still surface off-scale
-                    // spacing from raw author tags so starter rewrites stay available.
-                    return collect_off_scale_for_check(source, source_path, overrides);
-                }
+    let (preprocessed, elements, trees): (
+        &str,
+        &[spinnaker::layout::html::Element],
+        &[SharedViewport],
+    ) = if let Some(b) = boxes {
+        (
+            b.preprocessed.as_str(),
+            b.elements.as_slice(),
+            b.trees.as_slice(),
+        )
+    } else {
+        match crate::parse::preprocess::preprocess_with_style(source) {
+            Ok((pre, hosts)) => {
+                owned = crate::check::layout::prepare_boxes(
+                    pre,
+                    &hosts,
+                    crate::check::layout::layout_check_options_for(source_path).1,
+                );
+                (
+                    owned.preprocessed.as_str(),
+                    owned.elements.as_slice(),
+                    owned.trees.as_slice(),
+                )
             }
-        };
+            Err(_) => {
+                // Style errors can prevent preprocess; still surface off-scale
+                // spacing from raw author tags so starter rewrites stay available.
+                return collect_off_scale_for_check(source, source_path, overrides);
+            }
+        }
+    };
 
     let ids: Vec<Fingerprint> = elements
         .iter()
@@ -121,7 +124,8 @@ pub fn collect_with(
             }
 
             // Build (elem_index, layout) pairs for children that taffy laid out.
-            let mut child_layouts: Vec<(usize, sail_layout::taffy::tree::Layout)> = Vec::new();
+            let mut child_layouts: Vec<(usize, spinnaker::layout::taffy::tree::Layout)> =
+                Vec::new();
             for child_node in taffy_children {
                 let Ok(child_layout) = layout.taffy.layout(child_node).cloned() else {
                     continue;
@@ -325,8 +329,8 @@ enum ContainerKind {
     Column,
 }
 
-fn container_kind(style: &sail_layout::taffy::style::Style) -> ContainerKind {
-    use sail_layout::taffy::style::{Display, FlexDirection};
+fn container_kind(style: &spinnaker::layout::taffy::style::Style) -> ContainerKind {
+    use spinnaker::layout::taffy::style::{Display, FlexDirection};
     if style.display != Display::Flex {
         return ContainerKind::None;
     }
@@ -391,7 +395,7 @@ struct RhythmBucket {
     pre_index: usize,
     /// Parent fingerprint for span mapping (set when pattern is collected).
     fp: Option<Fingerprint>,
-    child_layouts: Vec<(usize, sail_layout::taffy::tree::Layout)>,
+    child_layouts: Vec<(usize, spinnaker::layout::taffy::tree::Layout)>,
     pattern: Option<SpacingPattern>,
 }
 
@@ -437,7 +441,7 @@ fn spacing_pattern(
     preprocessed: &str,
     parent_fp: &Fingerprint,
     parent_pre_index: usize,
-    elements: &[sail_layout::html::Element],
+    elements: &[spinnaker::layout::html::Element],
     ids: &[Fingerprint],
     parent_idx: usize,
     kind: ContainerKind,
@@ -884,8 +888,8 @@ struct Fingerprint {
 }
 
 fn element_identity(
-    elem: &sail_layout::html::Element,
-    all: &[sail_layout::html::Element],
+    elem: &spinnaker::layout::html::Element,
+    all: &[spinnaker::layout::html::Element],
 ) -> Fingerprint {
     if let Some(host) = elem.attrs.get("data-sail-host") {
         let h = host.trim();
@@ -899,14 +903,14 @@ fn element_identity(
     if layout_keyword_tag(&tag) {
         return Fingerprint { tag };
     }
-    let resolved = sail_layout::style::resolve(elem, all, 1440.0);
+    let resolved = spinnaker::layout::style::resolve(elem, all, 1440.0);
     match container_kind(&resolved.style) {
         ContainerKind::Column => Fingerprint {
             tag: "column".into(),
         },
         ContainerKind::Row => Fingerprint { tag: "row".into() },
         ContainerKind::None => {
-            use sail_layout::taffy::style::Display;
+            use spinnaker::layout::taffy::style::Display;
             if resolved.style.display == Display::Grid {
                 Fingerprint { tag: "grid".into() }
             } else {
@@ -1147,7 +1151,7 @@ fn nearest_passing_fg(bg: &str, current_fg: &str) -> Option<&'static str> {
 fn collect_contrast(
     source: &str,
     preprocessed: &str,
-    elements: &[sail_layout::html::Element],
+    elements: &[spinnaker::layout::html::Element],
     ids: &[Fingerprint],
     severity: DiagSeverity,
 ) -> Vec<Diagnostic> {
@@ -1257,7 +1261,7 @@ const SPACING_SETTERS: &[&str] = &[
 fn collect_off_scale_spacing(
     source: &str,
     _preprocessed: &str,
-    _elements: &[sail_layout::html::Element],
+    _elements: &[spinnaker::layout::html::Element],
     severity: DiagSeverity,
 ) -> Vec<Diagnostic> {
     collect_off_scale_from_source(source, severity)
@@ -1417,7 +1421,7 @@ fn left_edge_drifts(
 fn collect_alignment(
     source: &str,
     preprocessed: &str,
-    elements: &[sail_layout::html::Element],
+    elements: &[spinnaker::layout::html::Element],
     ids: &[Fingerprint],
     trees: &[SharedViewport],
     severity: DiagSeverity,
@@ -1500,12 +1504,15 @@ mod spacing_slot_tests {
         let src = "<column><p>a</p><p>b</p><p>c</p></column>";
         let (pre, hosts) =
             crate::parse::preprocess::preprocess_with_style(src).expect("preprocess");
-        let boxes =
-            crate::check::layout::prepare_boxes(pre, &hosts, sail_layout::CheckOptions::default());
-        let after_build = sail_layout::layout_pass_count();
+        let boxes = crate::check::layout::prepare_boxes(
+            pre,
+            &hosts,
+            spinnaker::layout::CheckOptions::default(),
+        );
+        let after_build = spinnaker::layout::layout_pass_count();
         let _ = collect_with(src, None, &[], Some(&boxes));
         assert_eq!(
-            sail_layout::layout_pass_count(),
+            spinnaker::layout::layout_pass_count(),
             after_build,
             "shared compose must not rebuild taffy"
         );
@@ -1513,21 +1520,21 @@ mod spacing_slot_tests {
 
     #[test]
     fn identity_uses_host_and_style_not_s_atoms() {
-        let mut host = sail_layout::html::Element {
+        let mut host = spinnaker::layout::html::Element {
             tag: "div".into(),
             class: "s-mr4 s-mb8".into(),
             ..Default::default()
         };
         host.attrs.insert("data-sail-host".into(), "card".into());
-        let all = vec![sail_layout::html::Element::default(), host];
+        let all = vec![spinnaker::layout::html::Element::default(), host];
         assert_eq!(element_identity(&all[1], &all).tag, "card");
 
-        let col = sail_layout::html::Element {
+        let col = spinnaker::layout::html::Element {
             tag: "div".into(),
             class: "sail-col".into(),
             ..Default::default()
         };
-        let all = vec![sail_layout::html::Element::default(), col];
+        let all = vec![spinnaker::layout::html::Element::default(), col];
         assert_eq!(element_identity(&all[1], &all).tag, "column");
     }
 }

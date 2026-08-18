@@ -4,7 +4,7 @@
 //! relational (finite boxes, order, leftover) — no pixel pins.
 
 use sail_compiler::parse::preprocess::preprocess_with_style;
-use sail_layout::{BoxReport, CheckOptions, check_preprocessed_with_hosts};
+use spinnaker::layout::{BoxReport, CheckOptions, check_preprocessed_with_hosts};
 
 const VP: (f32, f32) = (400.0, 300.0);
 

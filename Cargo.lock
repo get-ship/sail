@@ -905,13 +905,13 @@ dependencies = [
  "deck-ssr",
  "notify",
  "sail-compiler",
- "sail-layout",
  "sail-lint",
  "sail-lsp",
  "sail-mcp",
  "sail-ops",
  "sail-render",
  "serde_json",
+ "spinnaker",
  "tempfile",
  "tokio",
  "tracing-subscriber",
@@ -4594,7 +4594,6 @@ dependencies = [
  "flate2",
  "libc",
  "sail-build-info",
- "sail-layout",
  "sail-lint",
  "serde",
  "serde-wasm-bindgen",
@@ -4619,20 +4618,6 @@ dependencies = [
  "sail-compiler",
  "serde",
  "serde_json",
-]
-
-[[package]]
-name = "sail-layout"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "clap",
- "sail-lint",
- "serde",
- "serde_json",
- "spinnaker",
- "taffy 0.12.2",
- "thiserror 2.0.20",
 ]
 
 [[package]]
@@ -4661,7 +4646,6 @@ dependencies = [
  "lsp-server",
  "lsp-types",
  "sail-compiler",
- "sail-layout",
  "sail-lint",
  "serde",
  "serde_json",
@@ -4693,7 +4677,6 @@ dependencies = [
  "http-body-util",
  "reqwest",
  "sail-compiler",
- "sail-layout",
  "sail-lint",
  "sail-lsp",
  "sail-render",
@@ -4716,10 +4699,10 @@ dependencies = [
  "anyhow",
  "png 0.17.16",
  "sail-compiler",
- "sail-layout",
  "sail-lint",
  "serde",
  "serde_json",
+ "spinnaker",
  "takumi",
  "takumi-raster",
  "tempfile",
@@ -5135,8 +5118,12 @@ dependencies = [
 name = "spinnaker"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
+ "clap",
  "serde",
  "serde_json",
+ "taffy 0.12.2",
+ "thiserror 2.0.20",
 ]
 
 [[package]]
@@ -6698,6 +6685,26 @@ dependencies = [
 ]
 
 [[patch.unused]]
+name = "ship-proto"
+version = "0.1.0"
+
+[[patch.unused]]
+name = "deck"
+version = "0.1.0"
+
+[[patch.unused]]
+name = "deck-core"
+version = "0.1.0"
+
+[[patch.unused]]
+name = "deck-ssr"
+version = "0.1.0"
+
+[[patch.unused]]
+name = "sail-compiler"
+version = "0.1.0"
+
+[[patch.unused]]
 name = "agent-driver"
 version = "0.1.0"
 
@@ -6719,24 +6726,4 @@ version = "0.1.0"
 
 [[patch.unused]]
 name = "yoke"
-version = "0.1.0"
-
-[[patch.unused]]
-name = "deck"
-version = "0.1.0"
-
-[[patch.unused]]
-name = "deck-core"
-version = "0.1.0"
-
-[[patch.unused]]
-name = "deck-ssr"
-version = "0.1.0"
-
-[[patch.unused]]
-name = "sail-compiler"
-version = "0.1.0"
-
-[[patch.unused]]
-name = "ship-proto"
 version = "0.1.0"

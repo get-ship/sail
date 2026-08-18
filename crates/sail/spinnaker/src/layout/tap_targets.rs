@@ -9,9 +9,9 @@
 //! - control internals (checkbox/radio/switch face, descendants of a label/button)
 //! - the wrapping `<label>` owns the hit area
 
-use crate::diagnostics::{Diagnostic, Severity};
-use crate::taffy_tree::Layout;
-use crate::unintended_overflow;
+use crate::layout::diagnostics::{Diagnostic, Severity};
+use crate::layout::taffy_tree::Layout;
+use crate::layout::unintended_overflow;
 
 pub const KIND: &str = "sub-min-tap-target";
 pub const FLOOR_PX: f32 = 24.0;
@@ -66,23 +66,23 @@ pub fn scan(layout: &Layout, out: &mut Vec<Diagnostic>) -> anyhow::Result<()> {
                 long = w.max(h),
             ),
             span: elem.span,
-            geometry: Some(crate::OverflowGeometry {
+            geometry: Some(crate::layout::OverflowGeometry {
                 axis: if w <= h {
-                    crate::MainAxis::Width
+                    crate::layout::MainAxis::Width
                 } else {
-                    crate::MainAxis::Height
+                    crate::layout::MainAxis::Height
                 },
                 child_main: short,
                 parent_main: FLOOR_PX,
                 child_index: i,
                 parent_index: i,
-                child: crate::BoxExtents {
+                child: crate::layout::BoxExtents {
                     x: computed.location.x,
                     y: computed.location.y,
                     width: w,
                     height: h,
                 },
-                parent: crate::BoxExtents {
+                parent: crate::layout::BoxExtents {
                     x: 0.0,
                     y: 0.0,
                     width: FLOOR_PX,
@@ -94,7 +94,7 @@ pub fn scan(layout: &Layout, out: &mut Vec<Diagnostic>) -> anyhow::Result<()> {
     Ok(())
 }
 
-fn is_interactive(elem: &crate::html::Element) -> bool {
+fn is_interactive(elem: &crate::layout::html::Element) -> bool {
     let tag = elem.tag.as_str();
     if matches!(tag, "button" | "select" | "textarea" | "summary" | "label") {
         return true;
@@ -154,7 +154,7 @@ fn is_phrasing_tag(tag: &str) -> bool {
     )
 }
 
-fn parent_is_standalone_cluster(parent: &crate::html::Element) -> bool {
+fn parent_is_standalone_cluster(parent: &crate::layout::html::Element) -> bool {
     if matches!(
         parent.tag.as_str(),
         "nav" | "row" | "column" | "grid" | "menu" | "toolbar"
@@ -175,7 +175,7 @@ fn parent_is_standalone_cluster(parent: &crate::html::Element) -> bool {
     )
 }
 
-fn has_explicit_box(elem: &crate::html::Element) -> bool {
+fn has_explicit_box(elem: &crate::layout::html::Element) -> bool {
     let b = &elem.box_style;
     if b.width.is_some() || b.height.is_some() || b.min_width.is_some() || b.min_height.is_some() {
         return true;
@@ -188,7 +188,7 @@ fn has_explicit_box(elem: &crate::html::Element) -> bool {
     false
 }
 
-fn has_control_chrome(elem: &crate::html::Element) -> bool {
+fn has_control_chrome(elem: &crate::layout::html::Element) -> bool {
     elem.class.split_whitespace().any(|c| {
         matches!(
             c,
@@ -212,7 +212,7 @@ fn is_control_internal(layout: &Layout, index: usize) -> bool {
     ancestor_is_hit_owner(layout, index)
 }
 
-fn is_control_face(elem: &crate::html::Element) -> bool {
+fn is_control_face(elem: &crate::layout::html::Element) -> bool {
     if elem.tag == "input" {
         let ty = elem.attrs.get("type").map(|s| s.as_str()).unwrap_or("text");
         if matches!(ty, "checkbox" | "radio") {
@@ -251,7 +251,7 @@ fn ancestor_is_hit_owner(layout: &Layout, mut index: usize) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::html::Element;
+    use crate::layout::html::Element;
     use std::collections::HashMap;
 
     fn el(tag: &str, attrs: &[(&str, &str)]) -> Element {

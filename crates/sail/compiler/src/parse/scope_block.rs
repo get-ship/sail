@@ -896,7 +896,10 @@ fn looks_like_style_const_rhs(rhs: &str) -> bool {
 fn style_const_diag_message(diags: &[StyleDiagnostic]) -> Option<String> {
     // Prefer the scale / two-doors sentence so a later unknown-vocab
     // cannot hide `3.5 is not a space step`.
-    if let Some(d) = diags.iter().find(|d| d.message().contains("is not a space step")) {
+    if let Some(d) = diags
+        .iter()
+        .find(|d| d.message().contains("is not a space step"))
+    {
         return Some(d.message());
     }
     // Any Style diagnostic on a const RHS is a hard compile error (fail closed).

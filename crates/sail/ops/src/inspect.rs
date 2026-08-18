@@ -710,16 +710,16 @@ fn build_layout(
         sail_compiler::check::layout::layout_viewports(&preprocessed)
     };
 
-    let mut elements = sail_layout::html::parse_source(&preprocessed);
-    sail_layout::apply_resolved_types(&mut elements, &hosts.types);
-    sail_layout::apply_resolved_boxes(&mut elements, &hosts.boxes);
+    let mut elements = spinnaker::layout::html::parse_source(&preprocessed);
+    spinnaker::layout::apply_resolved_types(&mut elements, &hosts.types);
+    spinnaker::layout::apply_resolved_boxes(&mut elements, &hosts.boxes);
 
     let mut out = Vec::new();
     for vp in viewports {
-        let scan = match sail_layout::check_preprocessed_with_hosts(
+        let scan = match spinnaker::layout::check_preprocessed_with_hosts(
             &preprocessed,
             vp,
-            sail_layout::CheckOptions::default(),
+            spinnaker::layout::CheckOptions::default(),
             &hosts.types,
             &hosts.boxes,
         ) {
@@ -839,8 +839,8 @@ fn resolve_layout_node_id(
 /// v3 measure does not stamp `sail-col`/`sail-row` as join IR — do not scrape
 /// those class tokens.
 fn author_tag_from_element(
-    elem: &sail_layout::html::Element,
-    all: &[sail_layout::html::Element],
+    elem: &spinnaker::layout::html::Element,
+    all: &[spinnaker::layout::html::Element],
     viewport_w: f32,
 ) -> String {
     if let Some(host) = elem.attrs.get("data-sail-host") {
@@ -853,8 +853,8 @@ fn author_tag_from_element(
     if matches!(tag.as_str(), "column" | "row" | "grid" | "center" | "stack") {
         return tag;
     }
-    let resolved = sail_layout::style::resolve(elem, all, viewport_w);
-    use sail_layout::taffy::style::{Display, FlexDirection};
+    let resolved = spinnaker::layout::style::resolve(elem, all, viewport_w);
+    use spinnaker::layout::taffy::style::{Display, FlexDirection};
     match resolved.style.display {
         Display::Flex => match resolved.style.flex_direction {
             FlexDirection::Column | FlexDirection::ColumnReverse => "column".into(),

@@ -401,7 +401,7 @@ fn scan_file(path: &Path, src: &str, sites: &mut Vec<Site>) {
                 i = next_char_boundary(src, i + 1);
                 continue;
             }
-            // Foreign types (`sail_layout::Diagnostic`) are not compiler throw sites.
+            // Foreign types (`spinnaker::layout::Diagnostic`) are not compiler throw sites.
             if i >= 2 && bytes[i - 1] == b':' && bytes[i - 2] == b':' {
                 i = next_char_boundary(src, i + 1);
                 continue;
@@ -890,11 +890,11 @@ mod tests {
         assert_eq!(sites[1].class, SiteClass::Idd);
     }
 
-    /// `sail_layout::Diagnostic` is a foreign type, not a compiler throw site.
+    /// `spinnaker::layout::Diagnostic` is a foreign type, not a compiler throw site.
     #[test]
     fn foreign_layout_diagnostic_is_not_a_compiler_site() {
         let src = r#"
-            let d = sail_layout::Diagnostic {
+            let d = spinnaker::layout::Diagnostic {
                 message: "layout".into(),
                 rule: None,
             };
@@ -903,7 +903,7 @@ mod tests {
         scan_file(Path::new("fixture.rs"), src, &mut sites);
         assert!(
             sites.is_empty(),
-            "sail_layout::Diagnostic must not count as a compiler throw site, got {sites:?}"
+            "spinnaker::layout::Diagnostic must not count as a compiler throw site, got {sites:?}"
         );
     }
 

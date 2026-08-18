@@ -1,4 +1,4 @@
-//! Regenerate `crates/sail/layout/src/metrics/metrics_generated.rs` from
+//! Regenerate `crates/sail/spinnaker/src/layout/metrics/metrics_generated.rs` from
 //! the framework's self-hosted woff2 fonts in `packages/sail/tokens/src/fonts/`.
 //!
 //! Run from this directory:
@@ -33,10 +33,8 @@ enum Size {
 
 fn main() {
     let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    let font_dir = manifest_dir
-        .join("../../../../../packages/sail/tokens/src/fonts");
-    let out_path = manifest_dir
-        .join("../../src/metrics/metrics_generated.rs");
+    let font_dir = manifest_dir.join("../../../../../packages/sail/tokens/src/fonts");
+    let out_path = manifest_dir.join("../../src/layout/metrics/metrics_generated.rs");
 
     let families = [
         (Family::Body, "dm-sans-latin-wght-normal.woff2"),
@@ -60,9 +58,8 @@ fn main() {
     let mut table: HashMap<(Family, Size), Vec<f32>> = HashMap::new();
     for (family, file) in &families {
         let woff2 = fs::read(font_dir.join(file)).unwrap();
-        let ttf = woofwoof::decompress(&woff2).unwrap_or_else(|| {
-            panic!("decompress failed for {file:?}")
-        });
+        let ttf = woofwoof::decompress(&woff2)
+            .unwrap_or_else(|| panic!("decompress failed for {file:?}"));
         let font = fontdue::Font::from_bytes(ttf, fontdue::FontSettings::default())
             .unwrap_or_else(|e| panic!("fontdue load failed for {file:?}: {e:?}"));
         for (size, px) in &sizes {
@@ -98,7 +95,11 @@ fn main() {
     writeln!(out).unwrap();
     writeln!(out, "#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]").unwrap();
     writeln!(out, "pub enum Size {{").unwrap();
-    writeln!(out, "    Xs, Sm, Base, Md, Lg, Xl, Xxl, Xxxl, Xxxxl, Display").unwrap();
+    writeln!(
+        out,
+        "    Xs, Sm, Base, Md, Lg, Xl, Xxl, Xxxl, Xxxxl, Display"
+    )
+    .unwrap();
     writeln!(out, "}}").unwrap();
     writeln!(out).unwrap();
     writeln!(out, "impl Size {{").unwrap();
@@ -144,7 +145,12 @@ fn main() {
             .collect();
         // Average ASCII width as fallback for non-ASCII characters.
         let fallback = widths[32..=126].iter().sum::<f32>() / 95.0;
-        writeln!(out, "    t.insert((Family::{}, Size::{}), Metrics {{", family_name, size_name).unwrap();
+        writeln!(
+            out,
+            "    t.insert((Family::{}, Size::{}), Metrics {{",
+            family_name, size_name
+        )
+        .unwrap();
         writeln!(out, "        font_size_px: {:.1},", px).unwrap();
         writeln!(out, "        line_height_px: {:.1},", line_height).unwrap();
         writeln!(out, "        ascii_widths: [").unwrap();

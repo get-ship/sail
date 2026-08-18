@@ -4,9 +4,11 @@
 //! without it every `<p>`/`<h1>`/`<small>` measures `0×0` and the
 //! diagnostic stream is full of false-positive "collapsed" warnings.
 
-use crate::html::Element;
-use crate::metrics::{apply_tag_default_types, resolve_family_size, table as metrics_table};
-use crate::style::{ResolvedStyle, Role, Visibility, resolve};
+use crate::layout::html::Element;
+use crate::layout::metrics::{
+    apply_tag_default_types, resolve_family_size, table as metrics_table,
+};
+use crate::layout::style::{ResolvedStyle, Role, Visibility, resolve};
 use anyhow::Result;
 use std::collections::HashMap;
 use taffy::prelude::*;
@@ -49,7 +51,7 @@ where
     I: IntoIterator<Item = Element>,
 {
     // SPEC-TOOLING-1 §WI6: every taffy compute is a countable "layout pass".
-    crate::record_layout_pass();
+    crate::layout::record_layout_pass();
 
     let mut elements: Vec<Element> = elements.into_iter().collect();
     apply_tag_default_types(&mut elements);
@@ -173,7 +175,7 @@ where
 /// the available space. Word-wraps on overflow, stacks `line_height` per line.
 fn measure_text(
     text: &str,
-    m: &crate::metrics::Metrics,
+    m: &crate::layout::metrics::Metrics,
     known: Size<Option<f32>>,
     available: Size<AvailableSpace>,
 ) -> Size<f32> {
@@ -190,10 +192,10 @@ fn measure_text(
         return Size::ZERO;
     }
 
-    let space_width = crate::metrics::char_width(m, ' ');
+    let space_width = crate::layout::metrics::char_width(m, ' ');
     let word_widths: Vec<f32> = words
         .iter()
-        .map(|w| crate::metrics::word_width(m, w))
+        .map(|w| crate::layout::metrics::word_width(m, w))
         .collect();
     let max_line_width =
         word_widths.iter().sum::<f32>() + (words.len().saturating_sub(1) as f32) * space_width;
@@ -338,8 +340,10 @@ mod tests {
 
     #[test]
     fn measure_text_single_line_hello() {
-        let m =
-            &crate::metrics::table()[&(crate::metrics::Family::Body, crate::metrics::Size::Base)];
+        let m = &crate::layout::metrics::table()[&(
+            crate::layout::metrics::Family::Body,
+            crate::layout::metrics::Size::Base,
+        )];
         let known = Size::<Option<f32>>::NONE;
         let available = Size {
             width: AvailableSpace::Definite(1000.0),
@@ -355,11 +359,13 @@ mod tests {
 
     #[test]
     fn measure_text_wraps_to_two_lines() {
-        let m =
-            &crate::metrics::table()[&(crate::metrics::Family::Body, crate::metrics::Size::Base)];
-        let hello_w = crate::metrics::word_width(m, "Hello");
-        let world_w = crate::metrics::word_width(m, "World");
-        let space_w = crate::metrics::char_width(m, ' ');
+        let m = &crate::layout::metrics::table()[&(
+            crate::layout::metrics::Family::Body,
+            crate::layout::metrics::Size::Base,
+        )];
+        let hello_w = crate::layout::metrics::word_width(m, "Hello");
+        let world_w = crate::layout::metrics::word_width(m, "World");
+        let space_w = crate::layout::metrics::char_width(m, ' ');
         // Available width forces a wrap after "Hello".
         let available_width = hello_w + space_w + 1.0;
         let known = Size::<Option<f32>>::NONE;
@@ -382,8 +388,10 @@ mod tests {
 
     #[test]
     fn measure_text_empty_returns_zero() {
-        let m =
-            &crate::metrics::table()[&(crate::metrics::Family::Body, crate::metrics::Size::Base)];
+        let m = &crate::layout::metrics::table()[&(
+            crate::layout::metrics::Family::Body,
+            crate::layout::metrics::Size::Base,
+        )];
         let known = Size::<Option<f32>>::NONE;
         let available = Size {
             width: AvailableSpace::Definite(1000.0),

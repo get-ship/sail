@@ -9,7 +9,7 @@
 
 use std::collections::HashMap;
 
-use sail_layout::html::Element;
+use spinnaker::layout::html::Element;
 use takumi::prelude::*;
 
 use crate::identity::RegionStyle;
@@ -829,7 +829,7 @@ fn parse_font_weight(css: &str) -> Option<f32> {
 mod tests {
     use super::*;
     use crate::theme::{ThemePalette, ThemeSelect};
-    use sail_layout::html::Element;
+    use spinnaker::layout::html::Element;
     use std::collections::HashMap;
 
     #[test]

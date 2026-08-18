@@ -1,10 +1,10 @@
-//! `sail-layout` — compile-time box-tree computation for `.sail` templates.
+//! `spinnaker::layout` — compile-time box-tree computation for `.sail` templates.
 //!
 //! SPIKE for **Job H — taffy: the compiler computes the box tree, with no
 //! browser**. The thesis is that the closed vocabulary pays for static layout:
 //! no cascade, tokens resolve to pixels, layout intent is declared.
 //!
-//! This crate is a **diagnostic engine**, not a renderer. "This box is 0px tall
+//! This module is a **diagnostic engine**, not a renderer. "This box is 0px tall
 //! with two children" is a safe report. "This looks right" is not — taffy's
 //! pixel arithmetic differs from every browser at the edges.
 //!
@@ -15,15 +15,15 @@
 //!        │
 //!        ├── caller-supplied preprocess  (Style IR → classes + TypeHost + BoxHost)
 //!        ▼
-//!   lowered HTML ──► sail_layout::html::parse  ──►  Vec<Element>
+//!   lowered HTML ──► spinnaker::layout::html::parse  ──►  Vec<Element>
 //!        │
 //!        ├── apply_resolved_types (Style tokens + theme tag defaults)
 //!        ├── apply_resolved_boxes (Style box tokens)
-//!        ├── sail_layout::style::resolve  (Style IR + layout primitives → taffy)
+//!        ├── spinnaker::layout::style::resolve  (Style IR + layout primitives → taffy)
 //!        ▼
 //!   taffy::TaffyTree<NodeContext> ──► compute_layout_with_measure
 //!        │                              (text leaves use the metrics table)
-//!        ├── sail_layout::diagnostics::scan
+//!        ├── spinnaker::layout::diagnostics::scan
 //!        ▼
 //!   Vec<Diagnostic>
 //! ```

@@ -8,13 +8,13 @@
 //! - Kerning, ligatures, BiDi, and complex shaping are cut. The goal is
 //!   "honest bounds for layout diagnostics", not pixel-perfect rendering.
 //!
-//! Regeneration: see `scripts/generate-metrics/` in this crate.
+//! Regeneration: see `scripts/generate-metrics/` in the spinnaker crate.
 
 mod metrics_generated;
 
 pub use metrics_generated::{Family, Metrics, Size, table};
 
-use crate::html::Element;
+use crate::layout::html::Element;
 
 impl Size {
     /// Parse a type scale step (`xl`, `2xl`). Unknown → `base` (the same
@@ -68,7 +68,7 @@ pub struct TypeHost {
 }
 
 impl TypeHost {
-    pub fn from_resolved(classes: &str, resolved: &spinnaker::ResolvedType) -> Option<Self> {
+    pub fn from_resolved(classes: &str, resolved: &crate::ResolvedType) -> Option<Self> {
         if resolved.is_empty() {
             return None;
         }
@@ -94,7 +94,7 @@ pub fn apply_tag_default_types(elements: &mut [Element]) {
         if elem.tag.is_empty() {
             continue;
         }
-        let resolved = spinnaker::resolve_type_for_tag(&elem.tag);
+        let resolved = crate::resolve_type_for_tag(&elem.tag);
         if elem.type_size.is_none() {
             elem.type_size = resolved.size;
         }
@@ -275,12 +275,12 @@ mod tests {
         });
         apply_tag_default_types(&mut all);
         let (family, size) = resolve_family_size(1, &all);
-        let expected = spinnaker::resolve_type_for_tag("h2");
+        let expected = crate::resolve_type_for_tag("h2");
         assert_eq!(
             size,
             Size::from_scale_token(expected.size.as_deref().unwrap_or("base"))
         );
-        assert_eq!(size, Size::Xl);
+        assert_eq!(size, Size::Xxl);
         assert_eq!(family, Family::Display);
     }
 
@@ -307,19 +307,19 @@ mod tests {
 
     #[test]
     fn style_type_size_xl_changes_measure() {
-        let (style, diags) = spinnaker::parse("style({ type({ size: xl }) })");
+        let (style, diags) = crate::parse("style({ type({ size: xl }) })");
         assert!(
             diags.is_empty(),
             "{:?}",
             diags.iter().map(|d| d.message()).collect::<Vec<_>>()
         );
-        let resolved = spinnaker::resolve_type(&style, &Default::default());
+        let resolved = crate::resolve_type(&style, &Default::default());
         assert_eq!(resolved.size.as_deref(), Some("xl"));
 
         let xl = Size::from_scale_token(resolved.size.as_deref().unwrap());
         let sm = {
-            let (s, _) = spinnaker::parse("style({ type({ size: sm }) })");
-            let r = spinnaker::resolve_type(&s, &Default::default());
+            let (s, _) = crate::parse("style({ type({ size: sm }) })");
+            let r = crate::resolve_type(&s, &Default::default());
             Size::from_scale_token(r.size.as_deref().unwrap())
         };
         assert_ne!(xl, sm);

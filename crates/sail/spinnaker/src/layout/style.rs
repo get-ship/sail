@@ -5,15 +5,15 @@
 //! owns layout primitives (`sail-col`, gap, align). Scale atoms fill pad/size
 //! only when Style has not already resolved those tokens.
 
-use crate::html::Element;
-use crate::mapping::{
+use crate::layout::html::Element;
+use crate::layout::mapping::{
     Declaration, Dimension as MappingDimension, Display as MappingDisplay,
     FlexDirection as MappingFlexDirection, FlexWrap as MappingFlexWrap,
     GridAutoFlow as MappingGridAutoFlow, GridTemplate, JustifyContent as MappingJustifyContent,
     LAYOUT_RULES, Overflow as MappingOverflow, PaddingSide, Position as MappingPosition, Selector,
     TrackRecipe, grid_count_template, grid_recipe_template,
 };
-use crate::style_scale;
+use crate::layout::style_scale;
 use taffy::prelude::*;
 use taffy::style::{GridTemplateComponent, GridTemplateRepetition, Overflow, RepetitionCount};
 
@@ -243,8 +243,8 @@ fn to_taffy_flex_wrap(w: MappingFlexWrap) -> FlexWrap {
     }
 }
 
-fn to_taffy_align_items(a: crate::mapping::AlignItems) -> AlignItems {
-    use crate::mapping::AlignItems as A;
+fn to_taffy_align_items(a: crate::layout::mapping::AlignItems) -> AlignItems {
+    use crate::layout::mapping::AlignItems as A;
     match a {
         A::Start => AlignItems::START,
         A::End => AlignItems::END,
@@ -255,7 +255,7 @@ fn to_taffy_align_items(a: crate::mapping::AlignItems) -> AlignItems {
 }
 
 fn to_taffy_justify_content(j: MappingJustifyContent) -> JustifyContent {
-    use crate::mapping::JustifyContent as J;
+    use crate::layout::mapping::JustifyContent as J;
     match j {
         J::Start => JustifyContent::START,
         J::End => JustifyContent::END,
@@ -383,7 +383,7 @@ fn grid_count_from_class(c: &str) -> Option<(bool, GridTemplate)> {
     None
 }
 
-fn apply_resolved_box(style: &mut Style, box_style: &crate::box_ir::ResolvedBox) {
+fn apply_resolved_box(style: &mut Style, box_style: &crate::layout::box_ir::ResolvedBox) {
     if let Some(d) = box_style.display.as_deref() {
         style.display = display_token(d);
     }
@@ -431,7 +431,7 @@ fn apply_resolved_box(style: &mut Style, box_style: &crate::box_ir::ResolvedBox)
     }
 }
 
-fn apply_pad_tokens(style: &mut Style, pad: &crate::box_ir::PadTokens) {
+fn apply_pad_tokens(style: &mut Style, pad: &crate::layout::box_ir::PadTokens) {
     if let Some(v) = pad.all.as_deref() {
         apply_padding(style, PaddingSide::All, style_scale::padding_token_to_px(v));
     }
@@ -485,7 +485,7 @@ fn position_token(tok: &str) -> Position {
 fn apply_class_box_atoms(
     style: &mut Style,
     classes: &[&str],
-    resolved: &crate::box_ir::ResolvedBox,
+    resolved: &crate::layout::box_ir::ResolvedBox,
 ) {
     for c in classes {
         let Some(atom) = c.strip_prefix("s-") else {
@@ -732,8 +732,8 @@ mod tests {
     fn sx_padding_resolves_to_rect() {
         let elem = Element {
             tag: "div".into(),
-            box_style: crate::box_ir::ResolvedBox {
-                pad: crate::box_ir::PadTokens {
+            box_style: crate::layout::box_ir::ResolvedBox {
+                pad: crate::layout::box_ir::PadTokens {
                     all: Some("4".into()),
                     ..Default::default()
                 },

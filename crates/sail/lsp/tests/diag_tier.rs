@@ -6,8 +6,8 @@
 use std::sync::{Mutex, OnceLock};
 
 use sail_compiler::{DiagnosticTier, check_all_with_tier};
-use sail_layout::{layout_pass_count, reset_layout_pass_count};
 use sail_lsp::{Intelligence, diagnostics_sail_tier};
+use spinnaker::layout::{layout_pass_count, reset_layout_pass_count};
 
 /// Serialize tests that observe the process-wide layout-pass counter.
 fn layout_counter_lock() -> std::sync::MutexGuard<'static, ()> {

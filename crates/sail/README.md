@@ -1,6 +1,6 @@
 # crates/sail/
 
-Rust side of SAIL: `.sail` compiler, lint, LSP, layout, ops, MCP.
+Rust side of SAIL: `.sail` compiler, lint, LSP, ops, MCP.
 
 | Crate | Role |
 |---|---|
@@ -8,7 +8,7 @@ Rust side of SAIL: `.sail` compiler, lint, LSP, layout, ops, MCP.
 | `compiler-napi/` | Node N-API binding |
 | `lint/` | Template + controller lint rules |
 | `lsp/` | stdio language server |
-| `layout/` | Static layout diagnostics |
+| `spinnaker/` | Style language + compile-time box-tree diagnostics |
 | `ops/` | Ops data model for tooling |
 | `mcp/` | MCP server |
 | `render/` | Static render support |

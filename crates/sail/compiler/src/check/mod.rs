@@ -278,7 +278,7 @@ pub fn collect(
     overrides: &[crate::check::lint_overrides::LintOverride],
     route_params: Option<&[String]>,
     tier: DiagnosticTier,
-    prepared: Option<(&str, &sail_layout::StyleHosts)>,
+    prepared: Option<(&str, &spinnaker::layout::StyleHosts)>,
 ) -> Vec<Diagnostic> {
     let mut diags: Vec<Diagnostic> = Vec::new();
 

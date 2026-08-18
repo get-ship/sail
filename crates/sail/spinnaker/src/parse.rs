@@ -7,7 +7,7 @@ use super::capabilities::is_animate_trigger;
 use super::intent::is_known_when_key;
 use super::ir::{PaintArg, PaintOp, Style, StyleDiagnostic};
 use super::setters::validate_op;
-use super::theme_env::{current_styling_policy, PlayPreset, ThemeStyleEnv};
+use super::theme_env::{PlayPreset, ThemeStyleEnv, current_styling_policy};
 
 /// Parse a Style expression. Flat `style.method(…)` chains are refused —
 /// use `style({ pad(4).bg(surface), when: { hover: bg(muted) } })`.
@@ -786,10 +786,9 @@ fn parse_style_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> St
         let source = p.remainder();
         let preview: String = source.chars().take(80).collect();
         diags.push(StyleDiagnostic::ParseError {
-            message:
-                "flat `style.method(…)` chains are retired — write concern calls: \
+            message: "flat `style.method(…)` chains are retired — write concern calls: \
                       style({ size({ w: '100%' }).pad(4).bg(surface), when: { hover: bg(muted) } })"
-                    .into(),
+                .into(),
             source: if preview.is_empty() {
                 "style.".into()
             } else {
@@ -2639,7 +2638,7 @@ mod utility_detect_tests {
 
 #[cfg(test)]
 mod const_rhs_tests {
-    use super::{parse_style_const_rhs, Style};
+    use super::{Style, parse_style_const_rhs};
 
     #[test]
     fn bare_object_form() {
@@ -2674,7 +2673,7 @@ mod const_rhs_tests {
 mod flat_chain_tests {
     use std::collections::HashMap;
 
-    use super::{parse, Style};
+    use super::{Style, parse};
 
     fn msgs(diags: &[crate::StyleDiagnostic]) -> Vec<String> {
         diags.iter().map(|d| d.message()).collect()

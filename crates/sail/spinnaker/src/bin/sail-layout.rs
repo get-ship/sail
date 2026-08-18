@@ -21,7 +21,7 @@ use std::path::PathBuf;
 
 use anyhow::{Context, Result};
 use clap::Parser;
-use sail_layout as layout;
+use spinnaker::layout;
 
 #[derive(Parser, Debug)]
 #[command(about = "Compile-time box-tree diagnostics for .sail templates (spike)")]

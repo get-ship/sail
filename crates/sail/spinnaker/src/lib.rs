@@ -5,6 +5,8 @@
 //! Layers: domain (`ir`, `vocab`, `intent`) → application (`parse`, `complete`,
 //! `clash`, `theme_env`). HTML/CSS realization is `spinnaker-css`.
 //! Foreign CSS / Tailwind / HTML habits teach through [`foreign_idioms`].
+//!
+//! Box-tree diagnostics live in [`layout`]: preprocess → hosts → taffy → scan.
 
 pub mod capabilities;
 pub mod clash;
@@ -15,6 +17,7 @@ pub mod foreign_idioms;
 pub mod host_ctx;
 pub mod intent;
 pub mod ir;
+pub mod layout;
 pub mod parse;
 pub mod plains;
 pub mod scales;

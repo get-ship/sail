@@ -23,9 +23,5 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 anyhow = { workspace = true }
 
-[dev-dependencies]
-# WI6: layout-pass counter for the typing-never-triggers-layout acceptance test.
-sail-layout = { path = "../layout" }
-
 [lints]
 workspace = true

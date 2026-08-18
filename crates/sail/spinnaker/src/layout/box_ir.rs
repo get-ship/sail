@@ -4,7 +4,7 @@
 //! Layout consumes this resolution. Class spelling is output — measure does
 //! not parse `s-displayflex` / `s-grow1` to learn what Style already decided.
 
-use spinnaker::{PaintArg, PaintOp, Style, StyleEnv};
+use crate::{PaintArg, PaintOp, Style, StyleEnv};
 
 /// Tokens Style spent on the box channel (resting layer, not when/hover).
 #[derive(Debug, Clone, Default, PartialEq)]
@@ -166,7 +166,7 @@ impl BoxHost {
 }
 
 /// Overlay Style-resolved box onto hosts whose emitted class identity matches.
-pub fn apply_resolved_boxes(elements: &mut [crate::html::Element], hosts: &[BoxHost]) {
+pub fn apply_resolved_boxes(elements: &mut [crate::layout::html::Element], hosts: &[BoxHost]) {
     if hosts.is_empty() {
         return;
     }
@@ -483,14 +483,14 @@ fn number_arg(arg: &PaintArg) -> Option<f32> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::html::Element;
-    use crate::style::resolve;
+    use crate::layout::html::Element;
+    use crate::layout::style::resolve;
     use std::collections::HashMap;
     use taffy::prelude::*;
     use taffy::style::Overflow;
 
     fn resolved(src: &str) -> ResolvedBox {
-        let (style, diags) = spinnaker::parse(src);
+        let (style, diags) = crate::parse(src);
         assert!(
             diags.is_empty(),
             "{src}: {:?}",

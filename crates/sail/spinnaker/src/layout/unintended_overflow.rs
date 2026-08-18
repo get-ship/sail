@@ -1,8 +1,8 @@
 //! Experimental `unintended-overflow` emit predicates.
 
-use crate::html::Element;
-use crate::style::ResolvedStyle;
-use crate::taffy_tree::Layout;
+use crate::layout::html::Element;
+use crate::layout::style::ResolvedStyle;
+use crate::layout::taffy_tree::Layout;
 use taffy::style::{Overflow, Position};
 
 const EPSILON: f32 = 0.5;
@@ -373,15 +373,15 @@ fn element_main(layout: &Layout, index: usize, height_axis: bool) -> f32 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::html::Element;
-    use crate::taffy_tree::build;
+    use crate::layout::html::Element;
+    use crate::layout::taffy_tree::build;
 
     #[test]
     fn overflow_opt_in_reads_taffy_style() {
-        use crate::style::resolve;
+        use crate::layout::style::resolve;
         let hidden = Element {
             tag: "div".into(),
-            box_style: crate::box_ir::ResolvedBox {
+            box_style: crate::layout::box_ir::ResolvedBox {
                 overflow_x: Some("hidden".into()),
                 overflow_y: Some("hidden".into()),
                 ..Default::default()
@@ -390,7 +390,7 @@ mod tests {
         };
         let auto_y = Element {
             tag: "div".into(),
-            box_style: crate::box_ir::ResolvedBox {
+            box_style: crate::layout::box_ir::ResolvedBox {
                 overflow_y: Some("auto".into()),
                 ..Default::default()
             },
@@ -410,7 +410,7 @@ mod tests {
         assert!(!is_ticker_host("div", "sail-col"));
         let trunc = Element {
             tag: "div".into(),
-            box_style: crate::box_ir::ResolvedBox {
+            box_style: crate::layout::box_ir::ResolvedBox {
                 overflow_x: Some("hidden".into()),
                 truncate: true,
                 ..Default::default()

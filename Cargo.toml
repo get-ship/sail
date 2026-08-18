@@ -13,7 +13,6 @@ members = [
     "crates/sail/spinnaker",
     "crates/sail/spinnaker-css",
     "crates/sail/spinnaker-tokens",
-    "crates/sail/layout",
     "crates/sail/lsp",
     "crates/sail/mcp",
     "crates/sail/ops",

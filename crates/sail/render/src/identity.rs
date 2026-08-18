@@ -6,8 +6,8 @@
 
 use std::collections::BTreeMap;
 
-use sail_layout::html::Element;
 use serde::Serialize;
+use spinnaker::layout::html::Element;
 
 /// Resolved static paint for a region (PARITY-1 paint half / agent overlays).
 ///
@@ -280,7 +280,7 @@ impl<'a> TreeBuild<'a> {
 /// Join layout elements to inspect node ids; emit regions + unknown dynamics.
 pub fn join_layout_regions(
     elements: &[Element],
-    layout: &sail_layout::taffy_tree::Layout,
+    layout: &spinnaker::layout::taffy_tree::Layout,
     tree: &InspectTreeIndex,
 ) -> (Vec<Region>, Vec<DynamicRegion>) {
     let mut regions = Vec::new();
@@ -505,7 +505,7 @@ pub fn is_unjoined_id(id: &str) -> bool {
 
 /// Sum taffy parent-relative locations up the element parent chain → viewport.
 pub fn absolute_location(
-    layout: &sail_layout::taffy_tree::Layout,
+    layout: &spinnaker::layout::taffy_tree::Layout,
     elements: &[Element],
     idx: usize,
 ) -> (f32, f32) {
@@ -599,8 +599,9 @@ mod tests {
         let src = r#"<column style({ pad(4) })>  <span>Hi</span>
 </column>"#;
         let pre = sail_compiler::parse::preprocess::preprocess(src).unwrap();
-        let elements = sail_layout::html::parse_source(&pre);
-        let layout = sail_layout::taffy_tree::build(elements.clone(), (320.0, 200.0)).unwrap();
+        let elements = spinnaker::layout::html::parse_source(&pre);
+        let layout =
+            spinnaker::layout::taffy_tree::build(elements.clone(), (320.0, 200.0)).unwrap();
         // Find nested span (not synthetic root).
         let span_idx = elements
             .iter()

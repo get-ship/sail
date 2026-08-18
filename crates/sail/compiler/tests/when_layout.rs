@@ -27,7 +27,7 @@ fn layout_enumerates_when_wide_branch_overflow() {
         pre.contains("wide-only-overflow") && pre.contains("narrow-ok"),
         "both when branches remain in preprocessed source for layout"
     );
-    let elems = sail_layout::html::parse_source(&pre);
+    let elems = spinnaker::layout::html::parse_source(&pre);
     let texts: Vec<_> = elems.iter().map(|e| e.text.as_str()).collect();
     assert!(
         texts.iter().any(|t| t.contains("wide-only-overflow")),

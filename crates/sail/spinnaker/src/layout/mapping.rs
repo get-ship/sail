@@ -509,7 +509,7 @@ const DISPLAY_CENTER_INLINE: &[Declaration] = &[
 ];
 
 // ---------------------------------------------------------------------------
-// Scale-driven sx prefixes resolved at runtime through `sail_lint::scales`.
+// Scale-driven sx prefixes resolved at runtime through `crate::scales`.
 // ---------------------------------------------------------------------------
 
 /// A scale prefix that maps a product Style atom like `s-pad4` to a layout

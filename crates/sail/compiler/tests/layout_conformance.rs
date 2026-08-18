@@ -11,13 +11,16 @@ fn preprocess(src: &str) -> String {
     sail_compiler::parse::preprocess::preprocess(src).expect("preprocess")
 }
 
-fn preprocess_with_hosts(src: &str) -> (String, sail_layout::StyleHosts) {
+fn preprocess_with_hosts(src: &str) -> (String, spinnaker::layout::StyleHosts) {
     sail_compiler::parse::preprocess::preprocess_with_style(src).expect("preprocess")
 }
 
-fn apply_hosts(elements: &mut [sail_layout::html::Element], hosts: &sail_layout::StyleHosts) {
-    sail_layout::apply_resolved_types(elements, &hosts.types);
-    sail_layout::apply_resolved_boxes(elements, &hosts.boxes);
+fn apply_hosts(
+    elements: &mut [spinnaker::layout::html::Element],
+    hosts: &spinnaker::layout::StyleHosts,
+) {
+    spinnaker::layout::apply_resolved_types(elements, &hosts.types);
+    spinnaker::layout::apply_resolved_boxes(elements, &hosts.boxes);
 }
 
 fn split_html_css(preprocessed: &str) -> (&str, &str) {
@@ -114,10 +117,10 @@ fn resolve_element_with_class(
     preprocessed: &str,
     class: &str,
     viewport_width: f32,
-) -> sail_layout::ResolvedStyle {
+) -> spinnaker::layout::ResolvedStyle {
     resolve_element_with_class_hosts(
         preprocessed,
-        &sail_layout::StyleHosts::default(),
+        &spinnaker::layout::StyleHosts::default(),
         class,
         viewport_width,
     )
@@ -125,25 +128,25 @@ fn resolve_element_with_class(
 
 fn resolve_element_with_class_hosts(
     preprocessed: &str,
-    hosts: &sail_layout::StyleHosts,
+    hosts: &spinnaker::layout::StyleHosts,
     class: &str,
     viewport_width: f32,
-) -> sail_layout::ResolvedStyle {
-    let mut elements = sail_layout::html::parse_source(preprocessed);
+) -> spinnaker::layout::ResolvedStyle {
+    let mut elements = spinnaker::layout::html::parse_source(preprocessed);
     apply_hosts(&mut elements, hosts);
     let idx = elements
         .iter()
         .position(|e| e.class.split_whitespace().any(|c| c == class))
         .unwrap_or_else(|| panic!("no element with class {class:?} in {preprocessed:?}"));
-    sail_layout::style::resolve(&elements[idx], &elements, viewport_width)
+    spinnaker::layout::style::resolve(&elements[idx], &elements, viewport_width)
 }
 
 fn resolve_child_of_class(
     preprocessed: &str,
     parent_class: &str,
     viewport_width: f32,
-) -> sail_layout::ResolvedStyle {
-    let elements = sail_layout::html::parse_source(preprocessed);
+) -> spinnaker::layout::ResolvedStyle {
+    let elements = spinnaker::layout::html::parse_source(preprocessed);
     let parent_idx = elements
         .iter()
         .position(|e| e.class.split_whitespace().any(|c| c == parent_class))
@@ -153,7 +156,7 @@ fn resolve_child_of_class(
         .first()
         .copied()
         .unwrap_or_else(|| panic!("parent {parent_class:?} has no children"));
-    sail_layout::style::resolve(&elements[child_idx], &elements, viewport_width)
+    spinnaker::layout::style::resolve(&elements[child_idx], &elements, viewport_width)
 }
 
 #[test]
@@ -167,7 +170,7 @@ fn column_base_matches_css() {
     assert_eq!(col["flex-direction"], "column");
 
     let style = resolve_element_with_class(&preprocessed, "sail-col", 1440.0);
-    use sail_layout::taffy::prelude::*;
+    use spinnaker::layout::taffy::prelude::*;
     assert_eq!(style.style.display, Display::Flex);
     assert_eq!(style.style.flex_direction, FlexDirection::Column);
 }
@@ -183,7 +186,7 @@ fn row_wraps_by_default_and_nowrap_overrides() {
     assert_eq!(row["flex-wrap"], "wrap");
 
     let style = resolve_element_with_class(&preprocessed, "sail-row", 1440.0);
-    use sail_layout::taffy::prelude::*;
+    use spinnaker::layout::taffy::prelude::*;
     assert_eq!(style.style.display, Display::Flex);
     assert_eq!(style.style.flex_wrap, FlexWrap::Wrap);
 
@@ -207,7 +210,7 @@ fn gap_modifier_matches_css() {
     assert_eq!(gap["gap"], "var(--space-4)");
 
     let style = resolve_element_with_class(&preprocessed, "sail-col", 1440.0);
-    use sail_layout::taffy::prelude::*;
+    use spinnaker::layout::taffy::prelude::*;
     assert_eq!(style.style.gap.height, LengthPercentage::length(16.0));
     assert_eq!(style.style.gap.width, LengthPercentage::length(16.0));
 }
@@ -225,7 +228,7 @@ fn center_grid_alignment_matches_css() {
     assert_eq!(center["width"], "100%");
 
     let style = resolve_element_with_class(&preprocessed, "sail-center", 1440.0);
-    use sail_layout::taffy::prelude::*;
+    use spinnaker::layout::taffy::prelude::*;
     assert_eq!(style.style.display, Display::Grid);
     assert_eq!(style.style.align_items, Some(AlignItems::CENTER));
     assert_eq!(style.style.justify_content, Some(JustifyContent::CENTER));
@@ -242,7 +245,7 @@ fn grid_cols_count_matches_css() {
     assert_eq!(cols["grid-template-columns"], "repeat(3,minmax(0,1fr))");
 
     let style = resolve_element_with_class(&preprocessed, "sail-grid", 1440.0);
-    use sail_layout::taffy::style::{
+    use spinnaker::layout::taffy::style::{
         GridTemplateComponent, GridTemplateRepetition, RepetitionCount,
     };
     let col = style
@@ -278,7 +281,7 @@ fn stack_child_layers_at_line_one() {
     assert_eq!(child["position"], "relative");
 
     let style = resolve_child_of_class(&preprocessed, "sail-stackz", 1440.0);
-    use sail_layout::taffy::prelude::*;
+    use spinnaker::layout::taffy::prelude::*;
     assert_eq!(style.style.position, Position::Relative);
     assert_eq!(style.style.grid_row, line(1));
     assert_eq!(style.style.grid_column, line(1));
@@ -289,7 +292,7 @@ fn flex_child_gets_min_width_zero() {
     let src = r#"<row><p>x</p></row>"#;
     let preprocessed = preprocess(src);
     let style = resolve_child_of_class(&preprocessed, "sail-row", 1440.0);
-    use sail_layout::taffy::prelude::*;
+    use spinnaker::layout::taffy::prelude::*;
     assert_eq!(style.style.min_size.width, Dimension::length(0.0));
 }
 
@@ -305,7 +308,7 @@ fn sx_width_full_matches_css() {
     assert_eq!(rule["width"], "100%");
 
     let style = resolve_element_with_class_hosts(&preprocessed, &hosts, &class, 1440.0);
-    use sail_layout::taffy::prelude::*;
+    use spinnaker::layout::taffy::prelude::*;
     assert_eq!(style.style.size.width, Dimension::percent(1.0));
 }
 
@@ -333,7 +336,7 @@ fn min_w_box_channel_maps_to_taffy_min_width() {
     let (preprocessed, hosts) = preprocess_with_hosts(src);
     let class = extract_first_sx_class(&preprocessed).expect("sx class present");
     let style = resolve_element_with_class_hosts(&preprocessed, &hosts, &class, 1440.0);
-    use sail_layout::taffy::prelude::*;
+    use spinnaker::layout::taffy::prelude::*;
     assert_eq!(style.style.min_size.width, Dimension::length(0.0));
 }
 
@@ -344,7 +347,7 @@ fn style_pad_maps_to_taffy_padding() {
     let (preprocessed, hosts) = preprocess_with_hosts(src);
     let class = extract_first_sx_class(&preprocessed).expect("sx class present");
     let style = resolve_element_with_class_hosts(&preprocessed, &hosts, &class, 1440.0);
-    use sail_layout::taffy::prelude::*;
+    use spinnaker::layout::taffy::prelude::*;
     assert_eq!(style.style.padding.top, LengthPercentage::length(16.0));
     assert_eq!(style.style.padding.left, LengthPercentage::length(16.0));
 }
@@ -379,7 +382,7 @@ fn sx_hidden_matches_css() {
     assert_eq!(rule["display"], "none");
 
     let style = resolve_element_with_class(&preprocessed, &class, 1440.0);
-    use sail_layout::taffy::prelude::*;
+    use spinnaker::layout::taffy::prelude::*;
     assert_eq!(
         style.style.display,
         Display::None,
@@ -393,13 +396,13 @@ fn grid_col_span_collapses_below_breakpoint() {
     let preprocessed = preprocess(src);
 
     let wide = resolve_child_of_class(&preprocessed, "sail-grid", 1440.0);
-    use sail_layout::taffy::prelude::*;
+    use spinnaker::layout::taffy::prelude::*;
     assert_eq!(wide.style.grid_column, span(2));
 
     let narrow = resolve_child_of_class(&preprocessed, "sail-grid", 600.0);
     assert_eq!(
         narrow.style.grid_column,
-        sail_layout::taffy::style::Style::default().grid_column
+        spinnaker::layout::taffy::style::Style::default().grid_column
     );
 }
 

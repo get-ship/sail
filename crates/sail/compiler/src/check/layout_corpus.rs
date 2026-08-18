@@ -13,8 +13,8 @@ use serde::Serialize;
 use crate::check::layout;
 use crate::diagnostics::line_col;
 use crate::parse::preprocess::{preprocess, preprocess_impl, preprocess_with_style};
-use sail_layout::canary::{self, KindFinding};
-use sail_layout::{BoxHost, CheckOptions, OverflowGeometry, StyleHosts, TypeHost};
+use spinnaker::layout::canary::{self, KindFinding};
+use spinnaker::layout::{BoxHost, CheckOptions, OverflowGeometry, StyleHosts, TypeHost};
 
 const KIND: &str = "unintended-overflow";
 
@@ -408,7 +408,7 @@ fn scan_preprocessed_hosts(
     let mut viewports_ok = 0usize;
 
     for &viewport in viewports {
-        match sail_layout::check_preprocessed_with_hosts(
+        match spinnaker::layout::check_preprocessed_with_hosts(
             preprocessed,
             viewport,
             opts,
@@ -474,13 +474,13 @@ fn snap_geometry(g: OverflowGeometry) -> OverflowGeometry {
         parent_main: snap_px(g.parent_main),
         child_index: g.child_index,
         parent_index: g.parent_index,
-        child: sail_layout::BoxExtents {
+        child: spinnaker::layout::BoxExtents {
             x: snap_px(g.child.x),
             y: snap_px(g.child.y),
             width: snap_px(g.child.width),
             height: snap_px(g.child.height),
         },
-        parent: sail_layout::BoxExtents {
+        parent: spinnaker::layout::BoxExtents {
             x: snap_px(g.parent.x),
             y: snap_px(g.parent.y),
             width: snap_px(g.parent.width),
@@ -583,9 +583,9 @@ fn map_finding(
     tree: &str,
     hit: KindFinding,
 ) -> CorpusFinding {
-    let stub = sail_layout::Diagnostic {
+    let stub = spinnaker::layout::Diagnostic {
         kind: KIND,
-        severity: sail_layout::Severity::Warning,
+        severity: spinnaker::layout::Severity::Warning,
         element_index: hit.element_index,
         element_tag: hit.element_tag.clone(),
         element_class: hit.element_class.clone(),

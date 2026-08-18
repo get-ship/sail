@@ -188,10 +188,10 @@ fn assert_regions_match_check(fixture_name: &str, viewport: (u32, u32)) {
     let (preprocessed, hosts) =
         sail_compiler::parse::preprocess::preprocess_with_style(&source).unwrap();
     let vp = (viewport.0 as f32, viewport.1 as f32);
-    let scan = sail_layout::check_preprocessed_with_hosts(
+    let scan = spinnaker::layout::check_preprocessed_with_hosts(
         &preprocessed,
         vp,
-        sail_layout::CheckOptions::default(),
+        spinnaker::layout::CheckOptions::default(),
         &hosts.types,
         &hosts.boxes,
     )
@@ -207,10 +207,10 @@ fn assert_regions_match_check(fixture_name: &str, viewport: (u32, u32)) {
 
     // Regions are viewport-absolute; BoxReport is parent-relative — promote check
     // boxes with the same parent-chain walk used by join_layout_regions.
-    let mut elements = sail_layout::html::parse_source(&preprocessed);
-    sail_layout::apply_resolved_types(&mut elements, &hosts.types);
-    sail_layout::apply_resolved_boxes(&mut elements, &hosts.boxes);
-    let layout = sail_layout::taffy_tree::build(elements.clone(), vp).expect("taffy build");
+    let mut elements = spinnaker::layout::html::parse_source(&preprocessed);
+    spinnaker::layout::apply_resolved_types(&mut elements, &hosts.types);
+    spinnaker::layout::apply_resolved_boxes(&mut elements, &hosts.boxes);
+    let layout = spinnaker::layout::taffy_tree::build(elements.clone(), vp).expect("taffy build");
     assert_eq!(
         result.regions.len(),
         scan.boxes.len(),

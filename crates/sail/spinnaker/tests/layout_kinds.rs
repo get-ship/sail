@@ -7,7 +7,7 @@
 //!
 //! LAYOUT-5: `unintended-overflow` and `clipped-text` are default Error.
 //! `sub-min-tap-target` stays experimental. Product entry:
-//! [`sail_layout::check_preprocessed_with`] + [`sail_layout::CheckOptions`].
+//! [`spinnaker::layout::check_preprocessed_with`] + [`spinnaker::layout::CheckOptions`].
 //!
 //! Gate cases (job-spec-spike-s4-1-layout-kinds + LAYOUT-5):
 //! 1. Overflow without opt-in → finding with kind id
@@ -20,7 +20,7 @@
 //! Implementer: do not weaken these assertions to green-wash a partial land.
 //! Adversarial "must not fire" cases are part of the promotion law.
 
-use sail_layout::{
+use spinnaker::layout::{
     BoxHost, CheckOptions, Diagnostic, ResolvedBox, check_preprocessed, check_preprocessed_with,
     check_preprocessed_with_hosts,
 };
@@ -304,7 +304,7 @@ fn default_check_emits_promoted_overflow() {
         .iter()
         .find(|d| d.kind == KIND_UNINTENDED_OVERFLOW)
         .unwrap();
-    assert_eq!(hit.severity, sail_layout::Severity::Error);
+    assert_eq!(hit.severity, spinnaker::layout::Severity::Error);
 }
 
 #[test]

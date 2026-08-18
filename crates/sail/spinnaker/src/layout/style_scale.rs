@@ -8,8 +8,8 @@
 use std::collections::HashMap;
 use std::sync::OnceLock;
 
-use crate::mapping::{PaddingSide, SX_SCALE_RULES, SideSet, SxScaleRule};
-use sail_lint::scales;
+use crate::layout::mapping::{PaddingSide, SX_SCALE_RULES, SideSet, SxScaleRule};
+use crate::scales;
 use taffy::prelude::*;
 use taffy::style::Style;
 
@@ -19,7 +19,7 @@ pub(crate) fn apply_scale_classes(
     style: &mut Style,
     classes: &[&str],
     attrs: &HashMap<String, String>,
-    resolved: &crate::box_ir::ResolvedBox,
+    resolved: &crate::layout::box_ir::ResolvedBox,
 ) {
     for c in classes {
         if let Some((tail, rule)) = match_sx_scale_rule(c, attrs) {
@@ -31,7 +31,10 @@ pub(crate) fn apply_scale_classes(
     }
 }
 
-fn scale_rule_already_resolved(rule: SxScaleRule, resolved: &crate::box_ir::ResolvedBox) -> bool {
+fn scale_rule_already_resolved(
+    rule: SxScaleRule,
+    resolved: &crate::layout::box_ir::ResolvedBox,
+) -> bool {
     match rule {
         SxScaleRule::Padding(side) => match side {
             SideSet::All => resolved.pad.all.is_some(),
@@ -492,7 +495,7 @@ fn parse_css_length(v: &str) -> Option<Dimension> {
     if let Some(inner) = v.strip_prefix("var(--").and_then(|s| s.strip_suffix(')')) {
         let name = inner.split(',').next()?.trim();
         let name = name.strip_prefix("--").unwrap_or(name);
-        if let Some(resolved) = sail_lint::tokens::token_value(name) {
+        if let Some(resolved) = crate::tokens::token_value(name) {
             return parse_css_length(resolved);
         }
         return None;
@@ -521,8 +524,8 @@ fn parse_css_length(v: &str) -> Option<Dimension> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::html::Element;
-    use crate::style::resolve;
+    use crate::layout::html::Element;
+    use crate::layout::style::resolve;
 
     #[test]
     fn sx_size_sets_width_and_height() {

@@ -12,7 +12,6 @@ path = "src/lib.rs"
 
 [dependencies]
 sail-compiler = { path = "../compiler" }
-sail-layout = { path = "../layout" }
 sail-lint = { path = "../lint" }
 spinnaker = { path = "../spinnaker" }
 sail-lsp = { path = "../lsp" }

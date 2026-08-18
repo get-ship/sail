@@ -24,7 +24,7 @@ pub fn preprocess(source: &str) -> Result<String, CompileError> {
 /// Layout measure uses the tokens, not the emitted `s-fontSize*` classes.
 pub fn preprocess_with_types(
     source: &str,
-) -> Result<(String, Vec<sail_layout::TypeHost>), CompileError> {
+) -> Result<(String, Vec<spinnaker::layout::TypeHost>), CompileError> {
     let (html, hosts) = preprocess_with_style(source)?;
     Ok((html, hosts.types))
 }
@@ -32,7 +32,7 @@ pub fn preprocess_with_types(
 /// Full preprocess plus Style-resolved type and box tokens per lifted host.
 pub fn preprocess_with_style(
     source: &str,
-) -> Result<(String, sail_layout::StyleHosts), CompileError> {
+) -> Result<(String, spinnaker::layout::StyleHosts), CompileError> {
     preprocess_impl_full(source, true)
 }
 
@@ -61,7 +61,7 @@ pub(crate) fn preprocess_impl(source: &str, expand_elements: bool) -> Result<Str
 pub(crate) fn preprocess_impl_full(
     source: &str,
     expand_elements: bool,
-) -> Result<(String, sail_layout::StyleHosts), CompileError> {
+) -> Result<(String, spinnaker::layout::StyleHosts), CompileError> {
     // SPEC-PARTIAL-1: expand in-file `<partial>` BEFORE quote_brace_attrs so
     // bare param reads inside attr values (`token={token}`) are still
     // identifiers — quoting would bury them in `"{token}"` and block
@@ -205,7 +205,7 @@ fn is_void_tag(tag: &str) -> bool {
 fn lift_tag_style(
     source: &str,
     env: &spinnaker::StyleEnv,
-) -> Result<(String, String, sail_layout::StyleHosts), CompileError> {
+) -> Result<(String, String, spinnaker::layout::StyleHosts), CompileError> {
     struct Lift {
         gt_pos: usize,
         call_lo: usize,
@@ -217,7 +217,7 @@ fn lift_tag_style(
     let mut lifts: Vec<Lift> = Vec::new();
     let mut css = String::new();
     let mut seen: std::collections::HashSet<String> = std::collections::HashSet::new();
-    let mut hosts = sail_layout::StyleHosts::default();
+    let mut hosts = spinnaker::layout::StyleHosts::default();
     let mut i = 0;
     while i < bytes.len() {
         if source[i..].starts_with("<!--") {
@@ -295,11 +295,15 @@ fn lift_tag_style(
                 let val = strip_outer_braces(expr.trim());
                 let (style_ir, _) = spinnaker::parse(val);
                 let resolved_type = spinnaker::resolve_type(&style_ir, env);
-                if let Some(host) = sail_layout::TypeHost::from_resolved(&classes, &resolved_type) {
+                if let Some(host) =
+                    spinnaker::layout::TypeHost::from_resolved(&classes, &resolved_type)
+                {
                     hosts.types.push(host);
                 }
-                let resolved_box = sail_layout::resolve_box(&style_ir, env);
-                if let Some(host) = sail_layout::BoxHost::from_resolved(&classes, &resolved_box) {
+                let resolved_box = spinnaker::layout::resolve_box(&style_ir, env);
+                if let Some(host) =
+                    spinnaker::layout::BoxHost::from_resolved(&classes, &resolved_box)
+                {
                     hosts.boxes.push(host);
                 }
                 lifts.push(Lift {
@@ -4960,18 +4964,18 @@ export default controller({ setup: () => ({ d: derived(() => signal(0)()) }) })\
             "type({{ size: sm }}) must resolve sm: {:?}",
             hosts_sm.types
         );
-        let xl = sail_layout::check_preprocessed_with_hosts(
+        let xl = spinnaker::layout::check_preprocessed_with_hosts(
             &pre_xl,
             (1440.0, 900.0),
-            sail_layout::CheckOptions::default(),
+            spinnaker::layout::CheckOptions::default(),
             &hosts_xl.types,
             &hosts_xl.boxes,
         )
         .expect("xl layout");
-        let sm = sail_layout::check_preprocessed_with_hosts(
+        let sm = spinnaker::layout::check_preprocessed_with_hosts(
             &pre_sm,
             (1440.0, 900.0),
-            sail_layout::CheckOptions::default(),
+            spinnaker::layout::CheckOptions::default(),
             &hosts_sm.types,
             &hosts_sm.boxes,
         )
@@ -5005,12 +5009,12 @@ export default controller({ setup: () => ({ d: derived(() => signal(0)()) }) })\
                     && h.resolved.position.as_deref() == Some("absolute")
             })
             .unwrap_or_else(|| panic!("box host missing: {:?}", hosts.boxes));
-        let mut elements = sail_layout::html::parse_source(&pre);
-        sail_layout::apply_resolved_boxes(&mut elements, &hosts.boxes);
+        let mut elements = spinnaker::layout::html::parse_source(&pre);
+        spinnaker::layout::apply_resolved_boxes(&mut elements, &hosts.boxes);
         let elem = elements.iter().find(|e| e.tag == "div").expect("div");
-        let resolved = sail_layout::style::resolve(elem, &elements, 1440.0);
-        use sail_layout::taffy::prelude::*;
-        use sail_layout::taffy::style::Overflow;
+        let resolved = spinnaker::layout::style::resolve(elem, &elements, 1440.0);
+        use spinnaker::layout::taffy::prelude::*;
+        use spinnaker::layout::taffy::style::Overflow;
         assert_eq!(resolved.style.display, Display::Flex);
         assert!((resolved.style.flex_grow - 1.0).abs() < f32::EPSILON);
         assert_eq!(resolved.style.overflow.x, Overflow::Hidden);

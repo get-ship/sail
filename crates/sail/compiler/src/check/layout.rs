@@ -27,7 +27,7 @@ const DEFAULT_ERROR_KINDS: &[&str] = &["unintended-overflow", "clipped-text"];
 /// Dedups when the source already pins a mobile-sized viewport.
 /// Public for MCP / agent layout reports that need the same viewport set.
 pub fn layout_viewports(preprocessed: &str) -> Vec<(f32, f32)> {
-    let desktop = sail_layout::source_viewport(preprocessed).unwrap_or(DEFAULT_VIEWPORT);
+    let desktop = spinnaker::layout::source_viewport(preprocessed).unwrap_or(DEFAULT_VIEWPORT);
     let mut viewports = vec![MOBILE_VIEWPORT, desktop];
     viewports.dedup_by(|a, b| (a.0 - b.0).abs() < 0.5 && (a.1 - b.1).abs() < 0.5);
     viewports
@@ -37,26 +37,26 @@ pub fn layout_viewports(preprocessed: &str) -> Vec<(f32, f32)> {
 /// compose share this so neither re-preprocesses or rebuilds.
 pub struct SharedBoxes {
     pub preprocessed: String,
-    pub elements: Vec<sail_layout::html::Element>,
+    pub elements: Vec<spinnaker::layout::html::Element>,
     pub trees: Vec<SharedViewport>,
 }
 
 /// A computed box tree at one viewport, or the taffy error for that pass.
 pub struct SharedViewport {
     pub viewport: (f32, f32),
-    pub layout: Result<sail_layout::Layout, String>,
-    pub scan: Result<sail_layout::ScanResult, String>,
+    pub layout: Result<spinnaker::layout::Layout, String>,
+    pub scan: Result<spinnaker::layout::ScanResult, String>,
 }
 
 /// Parse HTML once and compute one taffy tree per viewport.
 pub fn prepare_boxes(
     preprocessed: String,
-    hosts: &sail_layout::StyleHosts,
-    check_opts: sail_layout::CheckOptions,
+    hosts: &spinnaker::layout::StyleHosts,
+    check_opts: spinnaker::layout::CheckOptions,
 ) -> SharedBoxes {
-    let mut elements = sail_layout::html::parse_source(&preprocessed);
-    sail_layout::apply_resolved_types(&mut elements, &hosts.types);
-    sail_layout::apply_resolved_boxes(&mut elements, &hosts.boxes);
+    let mut elements = spinnaker::layout::html::parse_source(&preprocessed);
+    spinnaker::layout::apply_resolved_types(&mut elements, &hosts.types);
+    spinnaker::layout::apply_resolved_boxes(&mut elements, &hosts.boxes);
     let viewports = layout_viewports(&preprocessed);
     let mut trees = Vec::with_capacity(viewports.len());
     for viewport in viewports {
@@ -76,13 +76,14 @@ pub fn prepare_boxes(
 }
 
 fn compute_viewport(
-    elements: Vec<sail_layout::html::Element>,
+    elements: Vec<spinnaker::layout::html::Element>,
     viewport: (f32, f32),
-    check_opts: sail_layout::CheckOptions,
+    check_opts: spinnaker::layout::CheckOptions,
 ) -> SharedViewport {
-    let layout = sail_layout::taffy_tree::build(elements, viewport).map_err(|e| e.to_string());
+    let layout =
+        spinnaker::layout::taffy_tree::build(elements, viewport).map_err(|e| e.to_string());
     let scan = match &layout {
-        Ok(tree) => sail_layout::check_tree(tree, check_opts).map_err(|e| e.to_string()),
+        Ok(tree) => spinnaker::layout::check_tree(tree, check_opts).map_err(|e| e.to_string()),
         Err(e) => Err(e.clone()),
     };
     SharedViewport {
@@ -210,22 +211,22 @@ pub fn collect_from(
 /// - `text_metrics` ← explicit `layoutTextMetrics`, else promoted default on
 pub(crate) fn layout_check_options_for(
     source_path: Option<&Path>,
-) -> (bool, sail_layout::CheckOptions) {
+) -> (bool, spinnaker::layout::CheckOptions) {
     let Some(path) = source_path else {
-        return (false, sail_layout::CheckOptions::default());
+        return (false, spinnaker::layout::CheckOptions::default());
     };
     let Some(dir) = path.parent() else {
-        return (false, sail_layout::CheckOptions::default());
+        return (false, spinnaker::layout::CheckOptions::default());
     };
     let Some((_, cfg)) = sail_lint::config::resolve(dir) else {
-        return (false, sail_layout::CheckOptions::default());
+        return (false, spinnaker::layout::CheckOptions::default());
     };
     let strict = cfg.strict();
     let experimental = strict || cfg.layout_experimental();
     let text_metrics = cfg.layout_text_metrics_opt().unwrap_or(true);
     (
         strict,
-        sail_layout::CheckOptions {
+        spinnaker::layout::CheckOptions {
             experimental,
             text_metrics: Some(text_metrics),
         },
@@ -239,9 +240,9 @@ pub(crate) fn layout_check_options_for(
 pub fn original_byte_span(
     original: &str,
     preprocessed: &str,
-    diag: &sail_layout::Diagnostic,
+    diag: &spinnaker::layout::Diagnostic,
 ) -> Option<(usize, usize)> {
-    let elements = sail_layout::html::parse_source(preprocessed);
+    let elements = spinnaker::layout::html::parse_source(preprocessed);
     if let Some(span) = find_original_span(original, &elements, diag) {
         return Some(span);
     }
@@ -262,8 +263,8 @@ fn rule_id_for_kind(kind: &str) -> &'static str {
 
 fn map_diagnostic(
     original: &str,
-    elements: &[sail_layout::html::Element],
-    diag: sail_layout::Diagnostic,
+    elements: &[spinnaker::layout::html::Element],
+    diag: spinnaker::layout::Diagnostic,
     promote_soft: bool,
     strict: bool,
 ) -> Diagnostic {
@@ -286,8 +287,8 @@ fn map_diagnostic(
     };
 
     let mut severity = match diag.severity {
-        sail_layout::Severity::Error => DiagSeverity::Error,
-        sail_layout::Severity::Warning => DiagSeverity::Warning,
+        spinnaker::layout::Severity::Error => DiagSeverity::Error,
+        spinnaker::layout::Severity::Warning => DiagSeverity::Warning,
     };
     if promote_soft && severity == DiagSeverity::Warning && PROMOTE_KINDS.contains(&diag.kind) {
         severity = DiagSeverity::Error;
@@ -319,7 +320,7 @@ fn map_diagnostic(
 fn refine_clipped_text_message(
     kind: &str,
     message: String,
-    elem: Option<&sail_layout::html::Element>,
+    elem: Option<&spinnaker::layout::html::Element>,
 ) -> String {
     if kind != "clipped-text" {
         return message;
@@ -342,7 +343,7 @@ fn refine_clipped_text_message(
     )
 }
 
-fn is_hug_content_width(elem: &sail_layout::html::Element) -> bool {
+fn is_hug_content_width(elem: &spinnaker::layout::html::Element) -> bool {
     // Authored width / max-width only. grow + min-w:0 is not a width.
     elem.box_style.width.is_none() && elem.box_style.max_width.is_none()
 }
@@ -431,8 +432,8 @@ mod severity_tests {
 /// identity — not `s-*` class atoms. Returns `(start_byte, end_byte)`.
 fn find_original_span(
     original: &str,
-    elements: &[sail_layout::html::Element],
-    diag: &sail_layout::Diagnostic,
+    elements: &[spinnaker::layout::html::Element],
+    diag: &spinnaker::layout::Diagnostic,
 ) -> Option<(usize, usize)> {
     let elem = element_for_diag(elements, diag)?;
     let identity = element_identity(elem)?;
@@ -441,9 +442,9 @@ fn find_original_span(
 }
 
 fn element_for_diag<'a>(
-    elements: &'a [sail_layout::html::Element],
-    diag: &sail_layout::Diagnostic,
-) -> Option<&'a sail_layout::html::Element> {
+    elements: &'a [spinnaker::layout::html::Element],
+    diag: &spinnaker::layout::Diagnostic,
+) -> Option<&'a spinnaker::layout::html::Element> {
     elements
         .iter()
         .skip(1)
@@ -465,7 +466,7 @@ fn element_for_diag<'a>(
 fn find_nth_tag(
     original: &str,
     preprocessed: &str,
-    diag: &sail_layout::Diagnostic,
+    diag: &spinnaker::layout::Diagnostic,
 ) -> Option<(usize, usize)> {
     let tag = diag.element_tag.as_str();
     if tag.is_empty() || tag.eq_ignore_ascii_case("div") {
@@ -534,7 +535,7 @@ fn walk_open_tags(source: &str, mut visit: impl FnMut(usize, usize, &str) -> boo
 
 /// Author-facing layout identity: `data-sail-host`, then a layout keyword,
 /// then a `sail-col` / `sail-row` primitive. Never Style `s-*` atoms.
-fn element_identity(elem: &sail_layout::html::Element) -> Option<String> {
+fn element_identity(elem: &spinnaker::layout::html::Element) -> Option<String> {
     if let Some(host) = elem.attrs.get("data-sail-host") {
         let h = host.trim();
         if !h.is_empty() {
@@ -572,7 +573,7 @@ fn layout_keyword_tag(tag: &str) -> Option<&str> {
 }
 
 fn count_identity_before(
-    elements: &[sail_layout::html::Element],
+    elements: &[spinnaker::layout::html::Element],
     identity: &str,
     before_byte: usize,
 ) -> usize {
@@ -751,7 +752,7 @@ mod tests {
 
     #[test]
     fn identity_uses_host_and_layout_tag_not_s_atoms() {
-        let host = sail_layout::html::parse_source(
+        let host = spinnaker::layout::html::parse_source(
             r#"<span class="s-displayinlineflex s-grow1" data-sail-host="spinner"></span>"#,
         );
         assert_eq!(
@@ -759,7 +760,7 @@ mod tests {
             Some("spinner"),
             "host stamp wins over s-* class soup"
         );
-        let col = sail_layout::html::parse_source(
+        let col = spinnaker::layout::html::parse_source(
             r#"<div class="sail-col s-grow1 s-pad4 s-overflowhidden">x</div>"#,
         );
         assert_eq!(
@@ -826,7 +827,7 @@ mod tests {
         let src = "<column><p>hi</p></column>";
         let (pre, hosts) =
             crate::parse::preprocess::preprocess_with_style(src).expect("preprocess");
-        let boxes = prepare_boxes(pre, &hosts, sail_layout::CheckOptions::default());
+        let boxes = prepare_boxes(pre, &hosts, spinnaker::layout::CheckOptions::default());
         assert_eq!(boxes.trees.len(), 2, "viewports: {:?}", boxes.trees.len());
         assert!(
             boxes.trees.iter().all(|t| t.layout.is_ok()),
@@ -842,8 +843,8 @@ mod tests {
         let src = ZERO_MAIN_SRC;
         let (pre, hosts) =
             crate::parse::preprocess::preprocess_with_style(src).expect("preprocess");
-        let opts = sail_layout::CheckOptions::default();
-        let mobile = sail_layout::check_preprocessed_with_hosts(
+        let opts = spinnaker::layout::CheckOptions::default();
+        let mobile = spinnaker::layout::check_preprocessed_with_hosts(
             &pre,
             MOBILE_VIEWPORT,
             opts,
@@ -851,7 +852,7 @@ mod tests {
             &hosts.boxes,
         )
         .expect("mobile");
-        let desktop = sail_layout::check_preprocessed_with_hosts(
+        let desktop = spinnaker::layout::check_preprocessed_with_hosts(
             &pre,
             DEFAULT_VIEWPORT,
             opts,
@@ -891,8 +892,9 @@ mod tests {
         let long = "W".repeat(80);
         let src = format!(r#"<row nowrap><p>{long}</p></row>"#);
         let pre = crate::parse::preprocess::preprocess(&src).expect("preprocess");
-        let mobile = sail_layout::check_preprocessed(&pre, MOBILE_VIEWPORT).expect("mobile");
-        let desktop = sail_layout::check_preprocessed(&pre, DEFAULT_VIEWPORT).expect("desktop");
+        let mobile = spinnaker::layout::check_preprocessed(&pre, MOBILE_VIEWPORT).expect("mobile");
+        let desktop =
+            spinnaker::layout::check_preprocessed(&pre, DEFAULT_VIEWPORT).expect("desktop");
         let mobile_overflow = mobile
             .diagnostics
             .iter()
@@ -913,10 +915,10 @@ mod tests {
         );
     }
 
-    fn stub_diag(tag: &str, class: &str, span: (usize, usize)) -> sail_layout::Diagnostic {
-        sail_layout::Diagnostic {
+    fn stub_diag(tag: &str, class: &str, span: (usize, usize)) -> spinnaker::layout::Diagnostic {
+        spinnaker::layout::Diagnostic {
             kind: "unintended-overflow",
-            severity: sail_layout::Severity::Warning,
+            severity: spinnaker::layout::Severity::Warning,
             element_index: 1,
             element_tag: tag.to_string(),
             element_class: class.to_string(),
@@ -955,8 +957,8 @@ mod tests {
 
     #[test]
     fn refine_strips_truncate_suggest_on_hug_content() {
-        let hug = sail_layout::html::Element {
-            box_style: sail_layout::ResolvedBox::default(),
+        let hug = spinnaker::layout::html::Element {
+            box_style: spinnaker::layout::ResolvedBox::default(),
             ..Default::default()
         };
         let raw = "<span> text measures ~37px but its box is 36px wide — glyphs clip \
@@ -972,8 +974,8 @@ mod tests {
             "hug refine must name the mask: {refined}"
         );
 
-        let constrained = sail_layout::html::Element {
-            box_style: sail_layout::ResolvedBox {
+        let constrained = spinnaker::layout::html::Element {
+            box_style: spinnaker::layout::ResolvedBox {
                 max_width: Some("24".into()),
                 ..Default::default()
             },

@@ -2,17 +2,17 @@
 //!
 //! **Test-writer owns this file. Implementer MUST NOT modify these tests.**
 //!
-//! # Product surface (`sail_layout::canary`)
+//! # Product surface (`spinnaker::layout::canary`)
 //!
 //! | Symbol | Contract |
 //! |--------|----------|
-//! | [`CanaryCounts`](sail_layout::canary::CanaryCounts) | `files_scanned`, `unintended_overflow`, `clipped_text` |
-//! | [`CanarySample`](sail_layout::canary::CanarySample) | path + kind + message |
-//! | [`FpVerdict`](sail_layout::canary::FpVerdict) | path + kind + judgment + note |
-//! | [`PromotionStatus`](sail_layout::canary::PromotionStatus) | `experimental_only` + criteria prose |
-//! | [`CanaryReport`](sail_layout::canary::CanaryReport) | counts + samples + fp_verdicts + promotion |
-//! | [`run`](sail_layout::canary::run) | experimental scan over fixtures (+ optional corpus roots) |
-//! | [`report_to_json`](sail_layout::canary::report_to_json) | machine-readable RESULT JSON |
+//! | [`CanaryCounts`](spinnaker::layout::canary::CanaryCounts) | `files_scanned`, `unintended_overflow`, `clipped_text` |
+//! | [`CanarySample`](spinnaker::layout::canary::CanarySample) | path + kind + message |
+//! | [`FpVerdict`](spinnaker::layout::canary::FpVerdict) | path + kind + judgment + note |
+//! | [`PromotionStatus`](spinnaker::layout::canary::PromotionStatus) | `experimental_only` + criteria prose |
+//! | [`CanaryReport`](spinnaker::layout::canary::CanaryReport) | counts + samples + fp_verdicts + promotion |
+//! | [`run`](spinnaker::layout::canary::run) | experimental scan over fixtures (+ optional corpus roots) |
+//! | [`report_to_json`](spinnaker::layout::canary::report_to_json) | machine-readable RESULT JSON |
 //!
 //! # Gate contract (job-spec-spike-s4-2-canary)
 //!
@@ -30,10 +30,10 @@
 
 use std::path::Path;
 
-use sail_layout::canary::{
+use spinnaker::layout::canary::{
     self, CanaryCounts, CanaryReport, CanarySample, FpJudgment, FpVerdict, PromotionStatus,
 };
-use sail_layout::{CheckOptions, check_preprocessed, check_preprocessed_with};
+use spinnaker::layout::{CheckOptions, check_preprocessed, check_preprocessed_with};
 
 const VP: (f32, f32) = (400.0, 300.0);
 
