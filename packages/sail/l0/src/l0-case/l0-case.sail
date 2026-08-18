@@ -61,7 +61,9 @@
   </column>
   <row gap="4" align="stretch" style(pair)>
     <column data-l0-well style(well)>
-      <slot></slot>
+      <center>
+        <slot></slot>
+      </center>
     </column>
     <column gap="1" style(nums)>
       <for {boxList() as line} key={line.k}>
