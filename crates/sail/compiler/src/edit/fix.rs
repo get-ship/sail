@@ -2,7 +2,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use super::node::{build_node_index, EditNode};
+use super::node::{EditNode, build_node_index};
 use super::ops::EditOp;
 use std::collections::BTreeMap;
 
@@ -56,6 +56,10 @@ pub fn suggest_fixes(
     let mut plans = Vec::new();
     for d in diags {
         if let Some(mut ps) = fix_off_scale_space(source, d) {
+            plans.append(&mut ps);
+            continue;
+        }
+        if let Some(mut ps) = fix_grow_outside_host(source, d) {
             plans.append(&mut ps);
             continue;
         }
@@ -192,14 +196,32 @@ fn fix_off_scale_space(source: &str, d: &crate::diagnostics::Diagnostic) -> Opti
     Some(plans)
 }
 
+/// Suggest-only: rewrite `size(grow)` to `size(hug)` when grow sits outside a host.
+fn fix_grow_outside_host(source: &str, d: &crate::diagnostics::Diagnostic) -> Option<Vec<FixPlan>> {
+    if d.rule.as_deref() != Some("sail-grow-outside-host") {
+        return None;
+    }
+    let offset = line_col_to_offset(source, d.line, d.col);
+    let (start, end) = find_token_span_from(source, offset, "size(grow)")?;
+    Some(vec![FixPlan {
+        rule: "sail-grow-outside-host".into(),
+        line: d.line,
+        col: d.col,
+        message: "rewrite `size(grow)` to `size(hug)`".into(),
+        ops: vec![],
+        text_patch: Some(TextPatch {
+            start,
+            end,
+            replacement: "size(hug)".into(),
+        }),
+        actor: None,
+    }])
+}
+
 fn off_scale_space_value(message: &str) -> Option<&str> {
     let head = message.split(" is not a space step").next()?;
     let value = head.rsplit(": ").next().unwrap_or(head).trim();
-    if value.is_empty() {
-        None
-    } else {
-        Some(value)
-    }
+    if value.is_empty() { None } else { Some(value) }
 }
 
 fn find_token_span_from(source: &str, offset: usize, value: &str) -> Option<(usize, usize)> {
@@ -1533,6 +1555,54 @@ mod tests {
         assert!(
             lowered.contains("s-padpage") || lowered.contains("--pad-page"),
             "style(base) must still lower: {lowered}"
+        );
+    }
+
+    #[test]
+    fn grow_outside_host_suggests_hug_only() {
+        let src = r#"<column style({ size(grow) })>x</column>"#;
+        let plans = suggest_fixes_for_source(src, "t.sail", None);
+        let grow: Vec<_> = plans
+            .iter()
+            .filter(|p| p.rule == "sail-grow-outside-host")
+            .collect();
+        assert_eq!(grow.len(), 1, "{plans:?}");
+        assert!(!is_auto_apply_plan(grow[0]), "suggest-only: {:?}", grow[0]);
+        let patch = grow[0].text_patch.as_ref().expect("text patch");
+        assert_eq!(patch.replacement, "size(hug)");
+        let (out, skipped) =
+            apply_text_patches(src, &[(patch.start, patch.end, patch.replacement.clone())]);
+        assert_eq!(skipped, 0);
+        assert!(out.contains("size(hug)"), "{out}");
+        let diags = crate::check_all(&out, None, &[], None);
+        assert!(
+            !diags
+                .iter()
+                .any(|d| d.rule.as_deref() == Some("sail-grow-outside-host")),
+            "hug rewrite must clear the diagnostic: {diags:?}"
+        );
+    }
+
+    #[test]
+    fn grow_outside_host_apply_does_not_consume() {
+        let src = r#"<column style({ size(grow) })>x</column>"#;
+        let result = crate::edit::apply_ops_to_source(
+            src,
+            "t.sail",
+            &[],
+            None,
+            crate::edit::AutofixMode::Apply,
+            Some("test"),
+        );
+        assert!(
+            result.auto_fixed.is_empty(),
+            "fix=apply must not rewrite grow-outside-host: {:?}",
+            result.auto_fixed
+        );
+        assert!(
+            result.source.contains("size(grow)"),
+            "source must stay grow: {}",
+            result.source
         );
     }
 

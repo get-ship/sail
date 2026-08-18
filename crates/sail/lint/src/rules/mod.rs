@@ -43,6 +43,7 @@ pub mod event_name;
 pub mod font_literal;
 pub mod for_key;
 pub mod framework_import_teaching;
+pub mod grow_outside_host;
 pub mod height_chain;
 pub mod layout;
 pub mod layout_primitive;
@@ -156,6 +157,7 @@ pub const SUI_TEMPLATE_RULES: &[(&str, RuleFn)] = &[
     (height_chain::RULE_ID, height_chain::check),
     (virtualizer::RULE_ID, virtualizer::check),
     (participation_style::RULE_ID, participation_style::check),
+    (grow_outside_host::RULE_ID, grow_outside_host::check),
     (display_on_layout::RULE_ID, display_on_layout::check),
     (no_raw_container::RULE_ID, no_raw_container::check),
     (no_script::RULE_ID, no_script::check),

@@ -3,7 +3,7 @@
 
 use std::path::PathBuf;
 
-use sail_compiler::{check_all, compile, CompileMode, CompileOpts};
+use sail_compiler::{CompileMode, CompileOpts, check_all, compile};
 
 fn opts(path: &str) -> CompileOpts {
     CompileOpts {
@@ -54,12 +54,47 @@ fn product_route_identity_slots_are_an_error() {
 }
 
 #[test]
+fn size_grow_outside_host_is_an_error() {
+    let src = r#"<column style({ size(grow) })>x</column>"#;
+    let path = "apps/studio/src/studio-panel/studio-panel.sail";
+    let diags = check_all(src, Some(path.as_ref()), &[], None);
+    assert!(
+        diags.iter().any(|d| {
+            d.rule.as_deref() == Some("sail-grow-outside-host")
+                && d.message
+                    .contains("`size(grow)` shares leftover inside a host")
+        }),
+        "grow outside a host must error: {diags:?}"
+    );
+}
+
+#[test]
+fn size_grow_inside_row_is_legal() {
+    let src = r#"
+<row>
+  <column style({ size(hug) })>hug</column>
+  <column style({ size(grow) })>grow</column>
+</row>
+"#;
+    let path = "apps/studio/src/studio-panel/studio-panel.sail";
+    let diags = check_all(src, Some(path.as_ref()), &[], None);
+    assert!(
+        !diags
+            .iter()
+            .any(|d| d.rule.as_deref() == Some("sail-grow-outside-host")),
+        "grow inside a host must be legal: {diags:?}"
+    );
+}
+
+#[test]
 fn l2_size_grow_compiles() {
     let src = r#"
 <scope>
   style fill = { size(grow) }
 </scope>
-<div style(fill)>x</div>
+<row>
+  <div style(fill)>x</div>
+</row>
 "#;
     let path = "apps/studio/src/studio-panel/studio-panel.sail";
     compile(src, opts(path)).expect("L2 size(grow) must compile after M2b");

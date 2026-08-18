@@ -42,6 +42,7 @@ const PINNED_RULE_IDS: &[&str] = &[
     "sail-font-literal",
     "sail-for-key",
     "sail-framework-import-teaching",
+    "sail-grow-outside-host",
     "sail-height-chain",
     "sail-layout",
     "sail-layout-primitive",
