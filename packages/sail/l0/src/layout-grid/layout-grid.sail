@@ -17,14 +17,106 @@
   style b = { size({ w: 16, h: 8 }), bg(accent) }
   style c = { size({ w: 16, h: 8 }), bg(muted) }
   style d = { size({ w: 16, h: 8 }), bg(primary) }
+  style cell = { size({ h: 8 }), bg(primary) }
+  style cellA = { size({ h: 8 }), bg(accent) }
+  style cellM = { size({ h: 8 }), bg(muted) }
 </scope>
-<column gap="3">
-  <p style(look)>2-col hug grid, four 16×8 bars, 8px gap</p>
-  <p style(spell)>&lt;grid cols="2" gap="2"&gt; size(hug)</p>
-  <grid cols="2" gap="2" style(hug)>
-    <column style(a)></column>
-    <column style(b)></column>
-    <column style(c)></column>
-    <column style(d)></column>
-  </grid>
+<column gap="6">
+  <column gap="2">
+    <p style(look)>2-col hug grid, four 16×8 bars, 8px gap</p>
+    <p style(spell)>&lt;grid cols="2" gap="2"&gt; size(hug)</p>
+    <grid cols="2" gap="2" style(hug)>
+      <column style(a)></column>
+      <column style(b)></column>
+      <column style(c)></column>
+      <column style(d)></column>
+    </grid>
+  </column>
+  <column gap="2">
+    <p style(look)>cols=1</p>
+    <p style(spell)>&lt;grid cols="1" gap="2"&gt;</p>
+    <grid cols="1" gap="2" style(hug)>
+      <column style(a)></column>
+      <column style(b)></column>
+    </grid>
+  </column>
+  <column gap="2">
+    <p style(look)>cols=3</p>
+    <p style(spell)>&lt;grid cols="3" gap="2"&gt;</p>
+    <grid cols="3" gap="2" style(hug)>
+      <column style(a)></column>
+      <column style(b)></column>
+      <column style(c)></column>
+    </grid>
+  </column>
+  <column gap="2">
+    <p style(look)>cols=4</p>
+    <p style(spell)>&lt;grid cols="4" gap="2"&gt;</p>
+    <grid cols="4" gap="2" style(hug)>
+      <column style(a)></column>
+      <column style(b)></column>
+      <column style(c)></column>
+      <column style(d)></column>
+    </grid>
+  </column>
+  <column gap="2">
+    <p style(look)>min=xs</p>
+    <p style(spell)>&lt;grid min="xs" gap="2"&gt;</p>
+    <grid min="xs" gap="2">
+      <column style(cell)></column>
+      <column style(cellA)></column>
+      <column style(cellM)></column>
+      <column style(cell)></column>
+    </grid>
+  </column>
+  <column gap="2">
+    <p style(look)>min=sm</p>
+    <p style(spell)>&lt;grid min="sm" gap="2"&gt;</p>
+    <grid min="sm" gap="2">
+      <column style(cell)></column>
+      <column style(cellA)></column>
+      <column style(cellM)></column>
+      <column style(cell)></column>
+    </grid>
+  </column>
+  <column gap="2">
+    <p style(look)>min=md</p>
+    <p style(spell)>&lt;grid min="md" gap="2"&gt;</p>
+    <grid min="md" gap="2">
+      <column style(cell)></column>
+      <column style(cellA)></column>
+      <column style(cellM)></column>
+      <column style(cell)></column>
+    </grid>
+  </column>
+  <column gap="2">
+    <p style(look)>min=lg</p>
+    <p style(spell)>&lt;grid min="lg" gap="2"&gt;</p>
+    <grid min="lg" gap="2">
+      <column style(cell)></column>
+      <column style(cellA)></column>
+      <column style(cellM)></column>
+      <column style(cell)></column>
+    </grid>
+  </column>
+  <column gap="2">
+    <p style(look)>flow=auto</p>
+    <p style(spell)>&lt;grid cols="3" flow="auto" gap="2"&gt;</p>
+    <grid cols="3" flow="auto" gap="2" style(hug)>
+      <column style(a)></column>
+      <column style(b)></column>
+      <column style(c)></column>
+      <column style(d)></column>
+    </grid>
+  </column>
+  <column gap="2">
+    <p style(look)>flow=dense</p>
+    <p style(spell)>&lt;grid cols="3" flow="dense" gap="2"&gt;</p>
+    <grid cols="3" flow="dense" gap="2" style(hug)>
+      <column style(a)></column>
+      <column style(b)></column>
+      <column style(c)></column>
+      <column style(d)></column>
+    </grid>
+  </column>
 </column>

@@ -18,12 +18,32 @@
   style b = { size({ w: 16, h: 8 }), bg(accent) }
   style c = { size({ w: 16, h: 8 }), bg(muted) }
 </scope>
-<column gap="3">
-  <p style(look)>three 16×8 bars packed, hug + nowrap, 8px between</p>
-  <p style(spell)>&lt;row cluster gap="2"&gt;</p>
-  <row cluster gap="2">
-    <column style(a)></column>
-    <column style(b)></column>
-    <column style(c)></column>
-  </row>
+<column gap="6">
+  <column gap="2">
+    <p style(look)>three 16×8 bars packed, hug + nowrap, 8px between</p>
+    <p style(spell)>&lt;row cluster gap="2"&gt;</p>
+    <row cluster gap="2">
+      <column style(a)></column>
+      <column style(b)></column>
+      <column style(c)></column>
+    </row>
+  </column>
+  <column gap="2">
+    <p style(look)>nowrap — single line, fills the host</p>
+    <p style(spell)>&lt;row nowrap gap="2"&gt;</p>
+    <row nowrap gap="2">
+      <column style(a)></column>
+      <column style(b)></column>
+      <column style(c)></column>
+    </row>
+  </column>
+  <column gap="2">
+    <p style(look)>inline — shrink-to-fit next to text</p>
+    <p style(spell)>&lt;row inline gap="2"&gt;</p>
+    <row inline gap="2">
+      <column style(a)></column>
+      <column style(b)></column>
+      <column style(c)></column>
+    </row>
+  </column>
 </column>

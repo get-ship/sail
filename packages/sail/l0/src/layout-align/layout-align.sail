@@ -17,12 +17,50 @@
   style b = { size({ w: 8, h: 8 }), bg(accent) }
   style c = { size({ w: 8, h: 4 }), bg(muted) }
 </scope>
-<column gap="3">
-  <p style(look)>three bars on a 16-step rail, align=end, 8px between</p>
-  <p style(spell)>&lt;row align="end" gap="2"&gt;</p>
-  <row align="end" gap="2" style(rail)>
-    <column style(a)></column>
-    <column style(b)></column>
-    <column style(c)></column>
-  </row>
+<column gap="6">
+  <column gap="2">
+    <p style(look)>three bars on a 16-step rail, align=end, 8px between</p>
+    <p style(spell)>&lt;row align="end" gap="2"&gt;</p>
+    <row align="end" gap="2" style(rail)>
+      <column style(a)></column>
+      <column style(b)></column>
+      <column style(c)></column>
+    </row>
+  </column>
+  <column gap="2">
+    <p style(look)>align=start</p>
+    <p style(spell)>&lt;row align="start" gap="2"&gt;</p>
+    <row align="start" gap="2" style(rail)>
+      <column style(a)></column>
+      <column style(b)></column>
+      <column style(c)></column>
+    </row>
+  </column>
+  <column gap="2">
+    <p style(look)>align=center</p>
+    <p style(spell)>&lt;row align="center" gap="2"&gt;</p>
+    <row align="center" gap="2" style(rail)>
+      <column style(a)></column>
+      <column style(b)></column>
+      <column style(c)></column>
+    </row>
+  </column>
+  <column gap="2">
+    <p style(look)>align=stretch</p>
+    <p style(spell)>&lt;row align="stretch" gap="2"&gt;</p>
+    <row align="stretch" gap="2" style(rail)>
+      <column style(a)></column>
+      <column style(b)></column>
+      <column style(c)></column>
+    </row>
+  </column>
+  <column gap="2">
+    <p style(look)>align=baseline</p>
+    <p style(spell)>&lt;row align="baseline" gap="2"&gt;</p>
+    <row align="baseline" gap="2" style(rail)>
+      <column style(a)></column>
+      <column style(b)></column>
+      <column style(c)></column>
+    </row>
+  </column>
 </column>

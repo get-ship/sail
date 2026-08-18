@@ -28,6 +28,7 @@
   style spanC = { pad(3), bg(muted) }
   style overlapA = { size({ w: 16, h: 16 }), bg(primary) }
   style overlapB = { size({ w: 16, h: 16 }), bg(accent) }
+  style fill = { size({ w: 100% }) }
 </scope>
 <column gap="6">
   <column gap="2">
@@ -64,7 +65,7 @@
   <column gap="2">
     <p style(look)>holy-grail — header / nav+main+aside / footer</p>
     <p style(spell)>column of rows · nav/aside w:16 · main grow</p>
-    <column>
+    <column style(fill)>
       <row style(header)>header</row>
       <row nowrap>
         <column style(nav)>nav</column>
@@ -77,7 +78,7 @@
   <column gap="2">
     <p style(look)>sidebar-fixed-fluid — 16-step rail + grow</p>
     <p style(spell)>size w:16 + size(grow)</p>
-    <row nowrap>
+    <row nowrap style(fill)>
       <column style(rail)>rail</column>
       <column style(fluid)>fluid</column>
     </row>

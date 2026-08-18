@@ -15,9 +15,16 @@
         <column style(base)>x</column>
 -->
 <scope>
+  style look = { type(label), fg(muted) }
+  style spell = { type(mono), fg(muted) }
   style base = { pad(page) }
   style face = { bg(primary) }
 </scope>
-<column style(base)>
-  <column style(face)>base survived</column>
+<column gap="3">
+  <p style(look)>base survived — pad page still paints after the illegal sibling</p>
+  <p style(spell)>style base = pad page · illegal sibling size.wide did not unregister base</p>
+  <p style(spell)>trap: Style wide — unknown vocabulary size.wide</p>
+  <column style(base)>
+    <column style(face)>base survived</column>
+  </column>
 </column>

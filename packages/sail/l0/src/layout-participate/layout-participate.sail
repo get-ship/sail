@@ -36,6 +36,14 @@
     </row>
   </column>
   <column gap="2">
+    <p style(look)>row — leftover fills the stage</p>
+    <p style(spell)>size(hug) / size(grow) · no w:24 pin</p>
+    <row>
+      <column style(hugged)>hug</column>
+      <column style(leftover)>grow</column>
+    </row>
+  </column>
+  <column gap="2">
     <p style(look)>row — hug + max stretch</p>
     <p style(spell)>size(hug) / size(max)</p>
     <row style(rail)>

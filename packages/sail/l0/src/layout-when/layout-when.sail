@@ -13,9 +13,29 @@
   style look = { type(label), fg(muted) }
   style spell = { type(mono), fg(muted) }
   style box = { size({ w: 16, h: 16 }), bg(primary), when: { tablet: bg(accent), desktop: bg(muted) } }
+  style mobile = { size({ w: 16, h: 16 }), bg(muted), when: { mobile: bg(primary) } }
+  style tablet = { size({ w: 16, h: 16 }), bg(muted), when: { tablet: bg(accent) } }
+  style desktop = { size({ w: 16, h: 16 }), bg(muted), when: { desktop: bg(primary) } }
 </scope>
-<column gap="3">
-  <p style(look)>64px box: primary, accent at tablet, muted at desktop</p>
-  <p style(spell)>when tablet / desktop · size w:16 h:16</p>
-  <column style(box)></column>
+<column gap="6">
+  <column gap="2">
+    <p style(look)>64px box: primary, accent at tablet, muted at desktop</p>
+    <p style(spell)>when tablet / desktop · size w:16 h:16</p>
+    <column style(box)></column>
+  </column>
+  <column gap="2">
+    <p style(look)>mobile — primary at mobile, muted otherwise</p>
+    <p style(spell)>when mobile · bg(primary)</p>
+    <column style(mobile)></column>
+  </column>
+  <column gap="2">
+    <p style(look)>tablet — accent at tablet, muted otherwise</p>
+    <p style(spell)>when tablet · bg(accent)</p>
+    <column style(tablet)></column>
+  </column>
+  <column gap="2">
+    <p style(look)>desktop — primary at desktop, muted otherwise</p>
+    <p style(spell)>when desktop · bg(primary)</p>
+    <column style(desktop)></column>
+  </column>
 </column>
