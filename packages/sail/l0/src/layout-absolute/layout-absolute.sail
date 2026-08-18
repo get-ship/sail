@@ -18,7 +18,7 @@
   style stat = { position(static), size({ w: 16, h: 8 }), bg(accent) }
   style rel = { position(relative), size({ w: 16, h: 8 }), bg(primary) }
   style stickWell = { size({ w: 24, h: 16 }), overflow(auto), bg(muted) }
-  style stick = { position(sticky), size({ w: 16, h: 8 }), bg(accent) }
+  style stick = { position({ scheme: sticky, t: 0 }), size({ w: 16, h: 8 }), bg(accent) }
   style stickPad = { size({ h: 24 }), bg(muted) }
 </scope>
 <column gap="6">
@@ -41,7 +41,7 @@
   </column>
   <column gap="2">
     <p style(look)>sticky — sticks inside the scroller</p>
-    <p style(spell)>position(sticky) in overflow(auto)</p>
+    <p style(spell)>position sticky t:0 in overflow(auto)</p>
     <column style(stickWell)>
       <column style(stick)>sticky</column>
       <column style(stickPad)></column>

@@ -1,7 +1,3 @@
-<!--
-  One public chrome. Navbar rail + leftover stage + box readout.
-  Routes stay Style-less wrappers. Cells stay painted boxes.
--->
 <scope>
   style shell = { size({ w: 100%, h: 100% }) }
   style stage = { size(grow), pad(5), overflow(auto), bg(surface) }
@@ -31,14 +27,13 @@
     return 'L0'
   }
 
-  export default controller((ctx: { route?: { pathname?: () => string } }, host) => {
+  export default controller((ctx: { route?: { pathname?: () => string } }) => {
     const path = derived(() => ctx.route?.pathname?.() ?? '')
     const title = derived(() => titleFor(path()))
     const boxList = signal<{ k: string; t: string }[]>([])
+    let cells: Element | null = null
     const tick = (): void => {
-      if (!host) return
-      const root = host.querySelector('[data-l0-cells]')
-      if (!root) return
+      if (!cells) return
       const out: { k: string; t: string }[] = []
       const walk = (n: Element): void => {
         for (const c of Array.from(n.children)) {
@@ -56,14 +51,20 @@
           walk(c)
         }
       }
-      walk(root)
+      walk(cells)
       boxList.set(out)
     }
-    queueMicrotask(tick)
-    if (host && typeof ResizeObserver !== 'undefined') {
-      const root = host.querySelector('[data-l0-cells]')
-      new ResizeObserver(tick).observe(root ?? host)
-    }
+    mount((el) => {
+      cells = el.querySelector('[data-l0-cells]')
+      queueMicrotask(tick)
+      if (!cells || typeof ResizeObserver === 'undefined') return
+      const ro = new ResizeObserver(tick)
+      ro.observe(cells)
+      return () => {
+        ro.disconnect()
+        cells = null
+      }
+    })
     return { path, title, boxList }
   })
 </controller>

@@ -61,6 +61,122 @@
     </grid>
   </column>
   <column gap="2">
+    <p style(look)>cols=5</p>
+    <p style(spell)>&lt;grid cols="5" gap="2"&gt;</p>
+    <grid cols="5" gap="2" style(hug)>
+      <column style(cell)></column>
+      <column style(cellA)></column>
+      <column style(cellM)></column>
+      <column style(cell)></column>
+      <column style(cellA)></column>
+    </grid>
+  </column>
+  <column gap="2">
+    <p style(look)>cols=6</p>
+    <p style(spell)>&lt;grid cols="6" gap="2"&gt;</p>
+    <grid cols="6" gap="2" style(hug)>
+      <column style(cell)></column>
+      <column style(cellA)></column>
+      <column style(cellM)></column>
+      <column style(cell)></column>
+      <column style(cellA)></column>
+      <column style(cellM)></column>
+    </grid>
+  </column>
+  <column gap="2">
+    <p style(look)>cols=7</p>
+    <p style(spell)>&lt;grid cols="7" gap="2"&gt;</p>
+    <grid cols="7" gap="2" style(hug)>
+      <column style(cell)></column>
+      <column style(cellA)></column>
+      <column style(cellM)></column>
+      <column style(cell)></column>
+      <column style(cellA)></column>
+      <column style(cellM)></column>
+      <column style(cell)></column>
+    </grid>
+  </column>
+  <column gap="2">
+    <p style(look)>cols=8</p>
+    <p style(spell)>&lt;grid cols="8" gap="2"&gt;</p>
+    <grid cols="8" gap="2" style(hug)>
+      <column style(cell)></column>
+      <column style(cellA)></column>
+      <column style(cellM)></column>
+      <column style(cell)></column>
+      <column style(cellA)></column>
+      <column style(cellM)></column>
+      <column style(cell)></column>
+      <column style(cellA)></column>
+    </grid>
+  </column>
+  <column gap="2">
+    <p style(look)>cols=9</p>
+    <p style(spell)>&lt;grid cols="9" gap="2"&gt;</p>
+    <grid cols="9" gap="2" style(hug)>
+      <column style(cell)></column>
+      <column style(cellA)></column>
+      <column style(cellM)></column>
+      <column style(cell)></column>
+      <column style(cellA)></column>
+      <column style(cellM)></column>
+      <column style(cell)></column>
+      <column style(cellA)></column>
+      <column style(cellM)></column>
+    </grid>
+  </column>
+  <column gap="2">
+    <p style(look)>cols=10</p>
+    <p style(spell)>&lt;grid cols="10" gap="2"&gt;</p>
+    <grid cols="10" gap="2" style(hug)>
+      <column style(cell)></column>
+      <column style(cellA)></column>
+      <column style(cellM)></column>
+      <column style(cell)></column>
+      <column style(cellA)></column>
+      <column style(cellM)></column>
+      <column style(cell)></column>
+      <column style(cellA)></column>
+      <column style(cellM)></column>
+      <column style(cell)></column>
+    </grid>
+  </column>
+  <column gap="2">
+    <p style(look)>cols=11</p>
+    <p style(spell)>&lt;grid cols="11" gap="2"&gt;</p>
+    <grid cols="11" gap="2" style(hug)>
+      <column style(cell)></column>
+      <column style(cellA)></column>
+      <column style(cellM)></column>
+      <column style(cell)></column>
+      <column style(cellA)></column>
+      <column style(cellM)></column>
+      <column style(cell)></column>
+      <column style(cellA)></column>
+      <column style(cellM)></column>
+      <column style(cell)></column>
+      <column style(cellA)></column>
+    </grid>
+  </column>
+  <column gap="2">
+    <p style(look)>cols=12</p>
+    <p style(spell)>&lt;grid cols="12" gap="2"&gt;</p>
+    <grid cols="12" gap="2" style(hug)>
+      <column style(cell)></column>
+      <column style(cellA)></column>
+      <column style(cellM)></column>
+      <column style(cell)></column>
+      <column style(cellA)></column>
+      <column style(cellM)></column>
+      <column style(cell)></column>
+      <column style(cellA)></column>
+      <column style(cellM)></column>
+      <column style(cell)></column>
+      <column style(cellA)></column>
+      <column style(cellM)></column>
+    </grid>
+  </column>
+  <column gap="2">
     <p style(look)>min=xs</p>
     <p style(spell)>&lt;grid min="xs" gap="2"&gt;</p>
     <grid min="xs" gap="2">
