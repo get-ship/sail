@@ -431,9 +431,7 @@ fn emit_op(op: &PaintOp, ctx: &Ctx, out: &mut Vec<CssRule>, seen: &mut HashSet<S
 }
 
 fn class_name(op: &PaintOp, ctx: &Ctx) -> String {
-    // One class per concern, named after the author vocabulary, kebabed
-    // (BUCKETS §2.6): bg(surface) → s-bg-surface, pad({ x: 4, y: 16 }) →
-    // s-pad-x4-y16, when hover → s-hover-bg-muted.
+    // One class per concern, kebabed after the author vocabulary.
     let setter = kebab_ident(&op.setter);
     let arg = op
         .args

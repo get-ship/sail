@@ -353,7 +353,6 @@ fn empty_state_child_paint_on_structure_sx() {
             || out.structure_html.contains("emptystatetitle")
             || out.skin_css.contains("var(--fg-foreground-color)")
             || out.structure_html.contains("s-fg-foreground")
-            || out.structure_html.contains("s-fg-foreground")
             || out.structure_html.contains("s-fgforeground"),
         "title must read foreground / heading ink:\n{}",
         out.skin_css

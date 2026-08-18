@@ -517,7 +517,7 @@ const DISPLAY_CENTER_INLINE: &[Declaration] = &[
 #[derive(Debug, Clone, Copy)]
 pub enum SxScaleRule {
     Padding(SideSet),
-    /// `style.size(N)` → `s-sizeN` sets both width and height.
+    /// `size(4)` → `s-size-4` sets both width and height.
     Size,
     Width,
     Height,
@@ -541,10 +541,7 @@ pub enum SideSet {
 /// Every product `s-*` prefix whose value lives on a closed scale. Order
 /// matters: the longest prefix must be checked first.
 ///
-/// Style mints classes from setter names + kebabed args (BUCKETS §2.6):
-/// `pad(4)` → `s-pad-4`, `pad({ x: 2 })` → `s-pad-x2`, `size({ min-w: 0 })` →
-/// `s-size-min-w-0`. Utility-string fossils (`s-p4`, `s-minw0`) are not a
-/// scale — fixtures use `pad()` / `size()` / hosts.
+/// Style mints `s-pad-4`, `s-pad-x2`, `s-size-min-w0`.
 pub static SX_SCALE_RULES: &[(&str, SxScaleRule)] = &[
     // Longest first: pad-x before pad, min-h before h.
     ("s-pad-x", SxScaleRule::Padding(SideSet::X)),

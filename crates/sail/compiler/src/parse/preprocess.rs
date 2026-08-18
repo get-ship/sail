@@ -1165,19 +1165,27 @@ fn matching_close(source: &str, from: usize, tag: &str) -> Option<usize> {
 /// is only known at runtime.
 const FREEFORM_DYNAMIC: &str = "\0dyn";
 
-/// `head` is the class segment after the axis name (before the first `-` prop).
-/// Nested match/compound emit `checkboxchecked`, `checkboxsizemd`, etc.
+/// `head` is the class segment after the axis name. Kebab arms are
+/// `soft-bg-muted` / `icon-sm-w-…`; concatenated fossils are `checkboxchecked`.
 fn freeform_axis_value_matches(head: &str, want: &str) -> bool {
     let head_l = head.to_ascii_lowercase();
     let want_l = want.to_ascii_lowercase();
-    if head_l == want_l {
+    let want_k = kebab_of(want).to_ascii_lowercase();
+    if head_l == want_l || head_l == want_k {
         return true;
+    }
+    if head_l.starts_with(&want_k) {
+        let rem = &head_l[want_k.len()..];
+        if rem.is_empty() || rem.starts_with('-') {
+            return true;
+        }
     }
     if !head_l.starts_with(&want_l) {
         return false;
     }
     let rem = &head_l[want_l.len()..];
     rem.is_empty()
+        || rem.starts_with('-')
         || rem.starts_with("checked")
         || rem.starts_with("disabled")
         || rem.starts_with("indeterminate")
@@ -1196,20 +1204,7 @@ fn author_sets_select_width(attrs: &[(String, String)]) -> bool {
             "class" => {
                 let v = value.trim_matches(['"', '\'']);
                 for c in v.split_whitespace() {
-                    let cl = c.to_ascii_lowercase();
-                    if cl.starts_with("s-w-")
-                        || cl.starts_with("s-min-w-")
-                        || cl.starts_with("s-max-w-")
-                        || cl.starts_with("s-size-w-")
-                        || cl.starts_with("s-size-min-w-")
-                        || cl.starts_with("s-size-max-w-")
-                        || cl.starts_with("s-w")
-                        || cl.starts_with("s-minw")
-                        || cl.starts_with("s-maxw")
-                        || cl.starts_with("s-sizew")
-                        || cl.starts_with("s-sizeminw")
-                        || cl.starts_with("s-sizemaxw")
-                    {
+                    if class_sets_select_width(c) {
                         return true;
                     }
                 }
@@ -1220,6 +1215,70 @@ fn author_sets_select_width(attrs: &[(String, String)]) -> bool {
     false
 }
 
+fn size_concern_head(head: &str) -> bool {
+    let first = head.split('-').next().unwrap_or(head);
+    if first.chars().next().is_some_and(|c| c.is_ascii_digit()) {
+        return true;
+    }
+    matches!(
+        first,
+        "w" | "h" | "min" | "max" | "aspect" | "basis" | "hug" | "grow"
+    ) || (first.starts_with('w')
+        && first[1..]
+            .chars()
+            .next()
+            .is_some_and(|c| c.is_ascii_digit()))
+        || (first.starts_with('h')
+            && first[1..]
+                .chars()
+                .next()
+                .is_some_and(|c| c.is_ascii_digit()))
+}
+
+fn type_concern_head(head: &str) -> bool {
+    let first = head.split('-').next().unwrap_or(head);
+    matches!(
+        first,
+        "family"
+            | "leading"
+            | "size"
+            | "weight"
+            | "align"
+            | "wrap"
+            | "case"
+            | "nums"
+            | "tracking"
+            | "decoration"
+            | "body"
+            | "heading"
+            | "label"
+            | "mono"
+            | "display"
+    )
+}
+
+/// Author `size({ w / min-w / max-w })` class — kebab (`s-size-w28`,
+/// `s-size-w-100pct`, `s-size-min-w0`) or leftover concatenated forms.
+fn class_sets_select_width(class: &str) -> bool {
+    let cl = class.to_ascii_lowercase();
+    cl.starts_with("s-size-min-w")
+        || cl.starts_with("s-size-max-w")
+        || cl.starts_with("s-size-w")
+        || cl.starts_with("s-min-w")
+        || cl.starts_with("s-max-w")
+        || cl.starts_with("s-minw")
+        || cl.starts_with("s-maxw")
+        || cl.starts_with("s-w-")
+        || cl.starts_with("s-wfull")
+        || cl.starts_with("s-sizew")
+        || cl.starts_with("s-sizeminw")
+        || cl.starts_with("s-sizemaxw")
+}
+
+fn is_select_default_stretch(class: &str) -> bool {
+    class == "s-size-w-100pct" || class == "s-wfull"
+}
+
 /// Whether a freeform host class is needed for the active attr set.
 ///
 /// Host Style lowers *every* `match` / `compound` arm into classes. Freeform
@@ -1227,15 +1286,13 @@ fn author_sets_select_width(attrs: &[(String, String)]) -> bool {
 /// Keeps base/state classes; drops inactive variant/size/tone/type match arms.
 /// (Style match/compound — not CVA string maps.)
 ///
-/// Class names compound: `s-typecheckboxchecked-bgprimary`,
-/// `s-typecheckboxsizemd-w…`. The axis value is a *prefix* of the head segment,
-/// not the whole head (`checkbox` not `checkboxchecked`).
+/// Class names: `s-variant-soft-bg-muted`, `s-size-md-min-h-…`. The axis
+/// value is the kebab segment after the axis name.
 fn freeform_class_active(class: &str, active: &std::collections::HashMap<String, String>) -> bool {
     // Layout / identity tokens always stay.
-    if !class.starts_with("s-") {
+    let Some(rest) = class.strip_prefix("s-") else {
         return true;
-    }
-    let rest = &class[3..];
+    };
     // State / pseudo arms (hover, focus, disabled, first/last, group, …).
     const STATE: &[&str] = &[
         "hover-",
@@ -1263,9 +1320,8 @@ fn freeform_class_active(class: &str, active: &std::collections::HashMap<String,
     if STATE.iter().any(|p| rest.starts_with(p)) {
         return true;
     }
-    // Attr-gated match arms: s-variant{value}-*, s-size{value}-*, s-type{value}-*, …
-    // Nested match emits typecheckboxsizemd / typecheckboxchecked as one head —
-    // active value must be a case-insensitive *prefix* of that head.
+    // Attr-gated match arms: s-variant-soft-*, s-size-md-*, s-type-checkbox-*.
+    // Empty head after the axis is a boolean/presence arm — keep it.
     const AXES: &[&str] = &[
         "variant",
         "size",
@@ -1280,8 +1336,16 @@ fn freeform_class_active(class: &str, active: &std::collections::HashMap<String,
     ];
     for axis in AXES {
         if let Some(after) = rest.strip_prefix(axis) {
-            let head = after.split('-').next().unwrap_or("");
+            let head = after.strip_prefix('-').unwrap_or(after);
             if head.is_empty() {
+                return true;
+            }
+            // `size` / `type` are also concern setters (`s-size-w28`,
+            // `s-type-family-body`). Those are not match arms.
+            if *axis == "size" && size_concern_head(head) {
+                return true;
+            }
+            if *axis == "type" && type_concern_head(head) {
                 return true;
             }
             let want = active.get(*axis).map(String::as_str).unwrap_or("");
@@ -1291,14 +1355,12 @@ fn freeform_class_active(class: &str, active: &std::collections::HashMap<String,
             if want.is_empty() {
                 return false;
             }
-            // Exact or compound: "checkbox" matches "checkbox", "checkboxchecked",
-            // "checkboxsizemd" — remainder must be a known compound suffix.
             return freeform_axis_value_matches(head, want);
         }
     }
-    // Tone / compound: s-tone{t}-* or s-tone{t}variant{v}-*
+    // Tone: s-tone-primary-* or s-tone-primary-variant-solid-*
     if let Some(after) = rest.strip_prefix("tone") {
-        let head = after.split('-').next().unwrap_or("");
+        let head = after.strip_prefix('-').unwrap_or(after);
         if head.is_empty() {
             return true;
         }
@@ -1307,15 +1369,22 @@ fn freeform_class_active(class: &str, active: &std::collections::HashMap<String,
         if want_t == FREEFORM_DYNAMIC || want_v == FREEFORM_DYNAMIC {
             return true;
         }
+        if let Some(idx) = head.find("-variant-") {
+            let tone = &head[..idx];
+            let variant = head[idx + "-variant-".len()..]
+                .split('-')
+                .next()
+                .unwrap_or("");
+            return freeform_axis_value_matches(tone, want_t)
+                && freeform_axis_value_matches(variant, want_v);
+        }
         if let Some(idx) = head.find("variant") {
             let tone = &head[..idx];
             let variant = &head[idx + "variant".len()..];
-            return tone.eq_ignore_ascii_case(want_t) && variant.eq_ignore_ascii_case(want_v);
+            return freeform_axis_value_matches(tone, want_t)
+                && freeform_axis_value_matches(variant, want_v);
         }
-        return !want_t.is_empty()
-            && head
-                .to_ascii_lowercase()
-                .starts_with(&want_t.to_ascii_lowercase());
+        return !want_t.is_empty() && freeform_axis_value_matches(head, want_t);
     }
     // Unconditional base paint (display, pad, radius, borderWidth, …).
     true
@@ -1402,15 +1471,15 @@ fn stamp_native_host(
         }
     }
 
-    // Select base ships `w(full)` for form columns; when the author already
-    // sets width (participation or Style), drop the default so fixed toolbar
-    // widths are not dual-classed with `s-wfull`.
-    let drop_select_wfull = tag_name == "select" && author_sets_select_width(&attrs);
+    // Select base ships `size({ w: 100% })` for form columns; when the author
+    // already sets width, drop that stretch so fixed toolbar widths are not
+    // dual-classed with `s-size-w-100pct`.
+    let drop_select_stretch = tag_name == "select" && author_sets_select_width(&attrs);
 
     let mut seen: std::collections::HashSet<&str> = std::collections::HashSet::new();
     let mut merged: Vec<&str> = Vec::new();
     for c in host_classes.split_whitespace() {
-        if drop_select_wfull && c == "s-wfull" {
+        if drop_select_stretch && is_select_default_stretch(c) {
             continue;
         }
         if !bare_link && !freeform_class_active(c, &active) {
@@ -4023,20 +4092,17 @@ export default controller(() => {
         let out =
             preprocess(r#"<select size="sm"><option>All</option></select>"#).expect("preprocess");
         assert!(out.contains("sail-select"), "host stamp: {out}");
+        assert!(out.contains("s-pad-e8"), "chevron room on base: {out}");
         assert!(
-            out.to_ascii_lowercase().contains("pade8") || out.contains("padE8"),
-            "chevron room on base: {out}"
-        );
-        assert!(
-            out.to_ascii_lowercase().contains("pads25"),
+            out.contains("s-pad-s2_5") || out.contains("pad-s2_5"),
             "size ladder uses pads not padX: {out}"
         );
         assert!(
-            !out.contains("s-sizesm-padX") && !out.contains("s-padX3"),
+            !out.contains("s-size-sm-pad-x") && !out.contains("s-pad-x3"),
             "size/base must not set padX (clobbers end pad): {out}"
         );
         assert!(
-            out.contains("wfull") || out.contains("w-full") || out.contains("sizew100"),
+            out.contains("s-size-w-100pct") || out.contains("s-group-fill-size-w-100pct"),
             "bare select keeps full width: {out}"
         );
     }
@@ -4048,13 +4114,10 @@ export default controller(() => {
             r#"<select size="sm" style({ size({ w: 28 }) })> <option>x</option></select>"#,
         )
         .expect("box w");
+        assert!(via_w.contains("s-size-w28"), "author w: {via_w}");
         assert!(
-            via_w.contains("s-w28") || via_w.contains("w28"),
-            "author w: {via_w}"
-        );
-        assert!(
-            !via_w.contains("s-wfull"),
-            "default w(full) dropped for box w: {via_w}"
+            !via_w.contains("s-size-w-100pct") && !via_w.contains("s-wfull"),
+            "default stretch dropped for box w: {via_w}"
         );
 
         let via_min = preprocess(
@@ -4062,8 +4125,8 @@ export default controller(() => {
         )
         .expect("box minW/w");
         assert!(
-            !via_min.contains("s-wfull"),
-            "default w(full) dropped for minW/w: {via_min}"
+            !via_min.contains("s-size-w-100pct") && !via_min.contains("s-wfull"),
+            "default stretch dropped for minW/w: {via_min}"
         );
 
         let via_sx = preprocess(
@@ -4071,12 +4134,49 @@ export default controller(() => {
         )
         .expect("sx w");
         assert!(
-            !via_sx.contains("s-wfull"),
-            "default w(full) dropped for Style w: {via_sx}"
+            !via_sx.contains("s-size-w-100pct") && !via_sx.contains("s-wfull"),
+            "default stretch dropped for Style w: {via_sx}"
+        );
+        assert!(via_sx.contains("s-size-w24"), "author sx w: {via_sx}");
+    }
+
+    #[test]
+    fn kebab_variant_arm_matches_active_only() {
+        let mut active = std::collections::HashMap::new();
+        active.insert("variant".into(), "soft".into());
+        assert!(
+            super::freeform_class_active("s-variant-soft-bg-muted", &active),
+            "soft arm stays"
         );
         assert!(
-            via_sx.contains("s-w24") || via_sx.contains("w24"),
-            "author sx w: {via_sx}"
+            !super::freeform_class_active("s-variant-solid-bg-foreground", &active),
+            "solid arm drops"
+        );
+        assert!(
+            super::freeform_class_active("s-display-inline-flex", &active),
+            "base stays"
+        );
+    }
+
+    #[test]
+    fn freeform_thins_inactive_kebab_variant_arms() {
+        let soft = preprocess(r#"<button variant="soft">x</button>"#).expect("soft");
+        assert!(
+            soft.contains("s-variant-soft"),
+            "active soft arm stays: {soft}"
+        );
+        assert!(
+            !soft.contains("s-variant-solid") && !soft.contains("s-variant-outline"),
+            "inactive variant arms drop: {soft}"
+        );
+        let solid = preprocess(r#"<button variant="solid">x</button>"#).expect("solid");
+        assert!(
+            solid.contains("s-variant-solid"),
+            "active solid arm stays: {solid}"
+        );
+        assert!(
+            !solid.contains("s-variant-soft") && !solid.contains("s-variant-outline"),
+            "inactive variant arms drop: {solid}"
         );
     }
 

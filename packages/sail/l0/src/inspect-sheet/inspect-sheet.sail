@@ -14,9 +14,9 @@
 <controller>
   export default controller(() => {
     const count = signal('')
-    mount((el) => {
+    mount(() => {
       const tick = (): void => {
-        const tag = el.querySelector('style')
+        const tag = document.getElementById('sail-style-inspect-sheet')
         const css = tag?.textContent ?? ''
         let n = 0
         let from = 0
