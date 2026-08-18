@@ -11,12 +11,18 @@
         <column cluster>x</column>
 -->
 <scope>
-  style a = { size({ w: 4, h: 4 }), bg(primary) }
-  style b = { size({ w: 4, h: 4 }), bg(accent) }
-  style c = { size({ w: 4, h: 4 }), bg(muted) }
+  style look = { type(label), fg(muted) }
+  style spell = { type(mono), fg(muted) }
+  style a = { size({ w: 16, h: 8 }), bg(primary) }
+  style b = { size({ w: 16, h: 8 }), bg(accent) }
+  style c = { size({ w: 16, h: 8 }), bg(muted) }
 </scope>
-<row cluster gap="2">
-  <column style(a)></column>
-  <column style(b)></column>
-  <column style(c)></column>
-</row>
+<column gap="3">
+  <p style(look)>three 16×8 bars packed, hug + nowrap, 8px between</p>
+  <p style(spell)>&lt;row cluster gap="2"&gt;</p>
+  <row cluster gap="2">
+    <column style(a)></column>
+    <column style(b)></column>
+    <column style(c)></column>
+  </row>
+</column>

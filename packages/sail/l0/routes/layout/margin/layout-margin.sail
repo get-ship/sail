@@ -11,10 +11,16 @@
         <column style({ margin({ t: 3.5 }) })>x</column>
 -->
 <scope>
-  style first = { size({ w: 4, h: 4 }), bg(accent) }
-  style box = { margin({ t: 4 }), size({ w: 4, h: 4 }), bg(primary) }
+  style look = { type(label), fg(muted) }
+  style spell = { type(mono), fg(muted) }
+  style first = { size({ w: 16, h: 8 }), bg(accent) }
+  style box = { margin({ t: 4 }), size({ w: 16, h: 8 }), bg(primary) }
 </scope>
-<column>
-  <column style(first)></column>
-  <column style(box)></column>
+<column gap="3">
+  <p style(look)>two 16×8 bars; second is 4 steps (16px) below the first</p>
+  <p style(spell)>margin t:4 · size w:16 h:8</p>
+  <column>
+    <column style(first)></column>
+    <column style(box)></column>
+  </column>
 </column>

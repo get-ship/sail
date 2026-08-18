@@ -11,9 +11,15 @@
         <column style({ overflow(foo) })>x</column>
 -->
 <scope>
-  style clip = { size({ w: 8, h: 8 }), overflow(hidden), bg(muted) }
-  style tall = { size({ w: 4, h: 16 }), bg(accent) }
+  style look = { type(label), fg(muted) }
+  style spell = { type(mono), fg(muted) }
+  style clip = { size({ w: 16, h: 16 }), overflow(hidden), bg(muted) }
+  style tall = { size({ w: 8, h: 24 }), bg(accent) }
 </scope>
-<column style(clip)>
-  <column style(tall)></column>
+<column gap="3">
+  <p style(look)>64px well clips a 96px-tall child</p>
+  <p style(spell)>overflow(hidden) · size w:16 h:16 · child h:24</p>
+  <column style(clip)>
+    <column style(tall)></column>
+  </column>
 </column>

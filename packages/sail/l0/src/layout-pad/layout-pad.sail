@@ -10,6 +10,12 @@
         <column style({ pad({ x: 3.5 }) })>x</column>
 -->
 <scope>
-  style box = { pad({ x: 4 }), bg(primary) }
+  style look = { type(label), fg(muted) }
+  style spell = { type(mono), fg(muted) }
+  style box = { pad({ x: 4 }), size({ w: 16, h: 8 }), bg(primary) }
 </scope>
-<column style(box)>x</column>
+<column gap="3">
+  <p style(look)>16-step bar, 4-step (16px) inset on x</p>
+  <p style(spell)>pad x:4 · size w:16 h:8 · bg(primary)</p>
+  <column style(box)>x</column>
+</column>

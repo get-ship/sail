@@ -10,12 +10,19 @@
         <row align="middle">x</row>
 -->
 <scope>
-  style a = { size({ w: 4, h: 4 }), bg(primary) }
-  style b = { size({ w: 4, h: 4 }), bg(accent) }
-  style c = { size({ w: 4, h: 4 }), bg(muted) }
+  style look = { type(label), fg(muted) }
+  style spell = { type(mono), fg(muted) }
+  style rail = { size({ h: 16 }), bg(muted) }
+  style a = { size({ w: 8, h: 4 }), bg(primary) }
+  style b = { size({ w: 8, h: 8 }), bg(accent) }
+  style c = { size({ w: 8, h: 4 }), bg(muted) }
 </scope>
-<row align="end" gap="2">
-  <column style(a)></column>
-  <column style(b)></column>
-  <column style(c)></column>
-</row>
+<column gap="3">
+  <p style(look)>three bars on a 16-step rail, align=end, 8px between</p>
+  <p style(spell)>&lt;row align="end" gap="2"&gt;</p>
+  <row align="end" gap="2" style(rail)>
+    <column style(a)></column>
+    <column style(b)></column>
+    <column style(c)></column>
+  </row>
+</column>

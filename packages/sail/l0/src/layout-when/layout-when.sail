@@ -10,6 +10,12 @@
         <column style({ bg(primary), when: { phone: bg(accent) } })>x</column>
 -->
 <scope>
-  style box = { size({ w: 8, h: 8 }), bg(primary), when: { tablet: bg(accent), desktop: bg(muted) } }
+  style look = { type(label), fg(muted) }
+  style spell = { type(mono), fg(muted) }
+  style box = { size({ w: 16, h: 16 }), bg(primary), when: { tablet: bg(accent), desktop: bg(muted) } }
 </scope>
-<column style(box)></column>
+<column gap="3">
+  <p style(look)>64px box: primary, accent at tablet, muted at desktop</p>
+  <p style(spell)>when tablet / desktop · size w:16 h:16</p>
+  <column style(box)></column>
+</column>

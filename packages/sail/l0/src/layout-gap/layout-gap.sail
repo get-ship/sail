@@ -9,12 +9,18 @@
   Trap: none
 -->
 <scope>
+  style look = { type(label), fg(muted) }
+  style spell = { type(mono), fg(muted) }
   style a = { size({ w: 4, h: 4 }), bg(primary) }
   style b = { size({ w: 4, h: 4 }), bg(accent) }
   style c = { size({ w: 4, h: 4 }), bg(muted) }
 </scope>
-<row gap="2">
-  <column style(a)></column>
-  <column style(b)></column>
-  <column style(c)></column>
-</row>
+<column gap="3">
+  <p style(look)>three 4-step boxes (16px), 8px between, none stretch</p>
+  <p style(spell)>&lt;row gap="2"&gt; size w:4 h:4 · 8px is space-2</p>
+  <row gap="2">
+    <column style(a)></column>
+    <column style(b)></column>
+    <column style(c)></column>
+  </row>
+</column>
