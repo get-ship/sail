@@ -9,9 +9,8 @@
   type Group = { id: string; label: string; href: string; members: Link[] }
 
   const groups: Group[] = [
-    { id: 'home', label: 'L0', href: '/', members: [] },
+    { id: 'hosts', label: 'hosts', href: '/', members: [] },
     { id: 'poison', label: 'poison', href: '/poison', members: [] },
-    { id: 'hosts', label: 'hosts', href: '/layout', members: [] },
     {
       id: 'space',
       label: 'space',
@@ -59,10 +58,9 @@
   ]
 
   function groupFor(p: string): Group {
-    if (p === '/') return groups[0]
+    if (p === '/' || p === '/layout') return groups[0]
     if (p === '/poison') return groups[1]
-    if (p === '/layout') return groups[2]
-    if (p === '/layout/seeds') return groups[7]
+    if (p === '/layout/seeds') return groups[6]
     for (const g of groups) {
       if (g.members.some((m) => m.href === p)) return g
     }
