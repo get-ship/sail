@@ -1,6 +1,7 @@
 <scope>
   props: {}
-  style band = { pad(5), bg(muted), radius(md) }
+  style band = { size({ w: 100% }), pad(5), bg(muted), radius(md) }
+  style pair = { size({ w: 100%, min-h: 32 }) }
   style well = { size(grow), pad(6), bg(surface), radius(sm) }
   style nums = { size({ w: 48 }), pad({ l: 4 }) }
   style meta = { type(mono), fg(muted) }
@@ -58,7 +59,7 @@
     <slot name="spell"></slot>
     <slot name="note"></slot>
   </column>
-  <row gap="4" align="start">
+  <row gap="4" align="stretch" style(pair)>
     <column data-l0-well style(well)>
       <slot></slot>
     </column>

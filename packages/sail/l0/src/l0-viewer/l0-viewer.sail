@@ -1,5 +1,5 @@
 <scope>
-  style shell = { size({ w: 100%, h: 100% }) }
+  style shell = { size({ w: 100%, min-h: 100vh }) }
   style stage = { size(grow), pad(5), overflow(auto), bg(surface) }
   style sub = { pad({ x: 5, y: 3 }), bg(muted) }
 </scope>

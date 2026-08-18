@@ -14,10 +14,10 @@
 <scope>
   style look = { type(label), fg(muted) }
   style spell = { type(mono), fg(muted) }
-  style refBg = { size({ w: 16, h: 8 }), radius(sm), bg({ ref: primary }) }
-  style refFg = { size({ w: 16, h: 8 }), radius(sm), type(label), fg({ color: { ref: accent } }) }
-  style mix = { size({ w: 16, h: 8 }), radius(sm), bg({ op: mix, from: primary, onto: accent, amount: 50 }) }
-  style chain = { size({ w: 16, h: 8 }), radius(sm), pad(3), bg({ ref: muted }), fg({ ref: primary }) }
+  style refBg = { size({ w: 100%, h: 24 }), radius(sm), bg({ ref: primary }) }
+  style refFg = { size({ w: 100%, h: 24 }), radius(sm), type(heading), fg({ color: { ref: accent } }) }
+  style mix = { size({ w: 100%, h: 24 }), radius(sm), bg({ op: mix, from: primary, onto: accent, amount: 50 }) }
+  style chain = { size({ w: 100%, h: 24 }), radius(sm), pad(4), bg({ ref: muted }), fg({ ref: primary }), type(heading) }
 </scope>
 <column gap="6">
   <l0-case>
@@ -37,7 +37,7 @@
   </l0-case>
   <l0-case>
     <p slot="look" style(look)>chain — pad + muted face + primary ink, both refs</p>
-    <p slot="spell" style(spell)>pad 3 · bg ref muted · fg ref primary</p>
+    <p slot="spell" style(spell)>pad 4 · bg ref muted · fg ref primary</p>
     <column style(chain)>Aa</column>
   </l0-case>
 </column>
