@@ -77,13 +77,17 @@
   ]
 
   function groupFor(p: string): Group {
-    if (p === '/' || p === '/layout') return groups[0]
-    if (p === '/poison') return groups[1]
-    if (p === '/layout/seeds') return groups[6]
+    const hosts = groups[0]
+    const poison = groups[1]
+    const seeds = groups[6]
+    if (!hosts) throw new Error('hosts')
+    if (p === '/' || p === '/layout') return hosts
+    if (p === '/poison') return poison ?? hosts
+    if (p === '/layout/seeds') return seeds ?? hosts
     for (const g of groups) {
       if (g.members.some((m) => m.href === p)) return g
     }
-    return groups[0]
+    return hosts
   }
 
   export default controller((ctx: { route?: { pathname?: () => string } }) => {
