@@ -45,6 +45,16 @@
         { href: '/layout/grid', label: 'grid' },
       ],
     },
+    {
+      id: 'paint',
+      label: 'paint',
+      href: '/paint/gradient',
+      members: [
+        { href: '/paint/gradient', label: 'gradient' },
+        { href: '/paint/structured', label: 'structured' },
+        { href: '/paint/bind', label: 'bind' },
+      ],
+    },
     { id: 'seeds', label: 'seeds', href: '/layout/seeds', members: [] },
   ]
 
@@ -52,7 +62,7 @@
     if (p === '/') return groups[0]
     if (p === '/poison') return groups[1]
     if (p === '/layout') return groups[2]
-    if (p === '/layout/seeds') return groups[6]
+    if (p === '/layout/seeds') return groups[7]
     for (const g of groups) {
       if (g.members.some((m) => m.href === p)) return g
     }
