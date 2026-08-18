@@ -19,4 +19,5 @@
   <a href="/layout/overflow">overflow</a>
   <a href="/layout/absolute">absolute</a>
   <a href="/layout/grid">grid</a>
+  <a href="/layout/seeds">seeds</a>
 </column>
