@@ -64,6 +64,16 @@
         { href: '/inspect/sheet', label: 'sheet' },
       ],
     },
+    {
+      id: 'break',
+      label: 'break',
+      href: '/break/wide',
+      members: [
+        { href: '/break/wide', label: 'wide' },
+        { href: '/break/tablet', label: 'tablet' },
+        { href: '/break/token', label: 'token' },
+      ],
+    },
   ]
 
   function groupFor(p: string): Group {
