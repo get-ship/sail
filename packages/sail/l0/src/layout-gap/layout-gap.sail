@@ -1,0 +1,19 @@
+<!--
+  Look: three 4-step boxes, 8px between, none stretch
+  Spelling: <row gap="4"> + three painted children (bg(primary) / bg(accent) / bg(muted)).
+            Children use size({ w: 4, h: 4 }). w: 4 is a space-step length, so this is
+            the spec look. h: 4 keeps them boxes (not stretch, not zero-height).
+  Owner: language (gap) + theme scale for the step
+  Default: no gap
+  Trap: none
+-->
+<scope>
+  style a = { size({ w: 4, h: 4 }), bg(primary) }
+  style b = { size({ w: 4, h: 4 }), bg(accent) }
+  style c = { size({ w: 4, h: 4 }), bg(muted) }
+</scope>
+<row gap="4">
+  <column style(a)></column>
+  <column style(b)></column>
+  <column style(c)></column>
+</row>
