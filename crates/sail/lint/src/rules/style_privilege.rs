@@ -5,11 +5,12 @@
 //! (`page` / `index` / `_layout` under `routes/`) write tags, not Style.
 //! Hyphenated route-local siblings and `src/components/**` spend named
 //! identities. Identity slot assembly (`type({ size: xs })`) stays L1-only.
-//! Geometry `size({` and pad slots `pad({` are free on files that may Style.
+//! Geometry `size({` / `position({` and scale-edge `pad({` / `margin({`
+//! are free on files that may Style. `filter({` stays L1-only.
 
 use std::path::Path;
 
-use crate::project_map::{FileKind, classify};
+use crate::project_map::{classify, FileKind};
 use crate::report::Finding;
 use crate::rules::ambient::finding;
 
@@ -49,10 +50,11 @@ fn document_findings(path: &Path, source: &str) -> Vec<Finding> {
     findings
 }
 
-// Slot form only. `margin({` / `position({` / `filter({` stay L1-only.
-// `pad({` is theme scale + free edges; `size({` is geometry — not identity.
-const L1_ONLY_SLOTS: &[&str] = &["margin({", "position({", "filter({"];
-const L1_ONLY_BARE: &[&str] = &["position(", "filter("];
+// Slot form only. `filter({` stays L1-only.
+// `pad({` / `margin({` are theme scale + free edges; `size({` / `position({`
+// are geometry — not identity.
+const L1_ONLY_SLOTS: &[&str] = &["filter({"];
+const L1_ONLY_BARE: &[&str] = &["filter("];
 const SLOT_CONCERNS: &[&str] = &[
     "type({",
     "border({",
@@ -66,15 +68,15 @@ fn identities_findings(path: &Path, source: &str) -> Vec<Finding> {
     let mut findings = Vec::new();
     for (offset, kind) in identity_sites(source) {
         let (msg, suggest) = match kind {
-            "margin({" | "position({" | "filter({" => (
+            "filter({" => (
                 format!(
                     "`{kind}` is the slot form — L1-only. L2 spends presets (`pad(page)`, `pad(4)`, `margin(auto)`)."
                 ),
-                "margin({{ x: auto }}) → margin(auto). Do not invent a margin-only tag.",
+                "Do not invent a filter-only tag.",
             ),
-            "position(" | "filter(" => (
+            "filter(" => (
                 format!("`{kind}` is L1-only. L2 spends presets only."),
-                "Do not invent a chrome tag to hold position/filter.",
+                "Do not invent a chrome tag to hold filter.",
             ),
             "grow(" | "shrink(" => (
                 format!(
@@ -360,6 +362,40 @@ mod tests {
         assert!(
             check(&component(), src).is_empty(),
             "size({{ w: 7 }}) is geometry, not identity: {src}"
+        );
+    }
+
+    #[test]
+    fn l2_margin_slots_legal() {
+        let src = "style box = { margin({ t: 4 }).bg(primary) }";
+        assert!(
+            check(&component(), src).is_empty(),
+            "margin({{ t: 4 }}) is theme scale + free edges: {src}"
+        );
+    }
+
+    #[test]
+    fn l2_position_slots_and_preset_legal() {
+        let slots = "style pin = { position({ scheme: absolute, t: 4, l: 4 }) }";
+        assert!(
+            check(&component(), slots).is_empty(),
+            "position({{ … }}) is geometry, not identity: {slots}"
+        );
+        let preset = "style host = { position(relative) }";
+        assert!(
+            check(&component(), preset).is_empty(),
+            "position(relative) is a language preset: {preset}"
+        );
+    }
+
+    #[test]
+    fn l2_filter_slots_still_error() {
+        let src = "style box = { filter({ opacity: 50 }) }";
+        let findings = check(&component(), src);
+        assert_eq!(findings.len(), 1, "{findings:?}");
+        assert!(
+            findings[0].message.contains("filter({") && findings[0].message.contains("L1-only"),
+            "filter slots stay L1-only: {findings:?}"
         );
     }
 

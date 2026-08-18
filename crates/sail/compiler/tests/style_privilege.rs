@@ -78,6 +78,33 @@ fn l2_preset_style_still_compiles() {
 }
 
 #[test]
+fn l2_on_scale_margin_slots_are_legal() {
+    let src = r#"<div style({ margin({ t: 4 }).bg(primary) })>x</div>"#;
+    let path = "apps/studio/src/studio-panel/studio-panel.sail";
+    let diags = check_all(src, Some(path.as_ref()), &[], None);
+    assert!(
+        !diags
+            .iter()
+            .any(|d| d.message.contains("is not a space step")
+                || d.rule.as_deref() == Some("sail-style-privilege")),
+        "on-scale margin slots must be legal on L2: {diags:?}"
+    );
+}
+
+#[test]
+fn l2_position_slots_are_legal() {
+    let src = r#"<div style({ position({ scheme: absolute, t: 4, l: 4 }).bg(accent) })>x</div>"#;
+    let path = "apps/studio/src/studio-panel/studio-panel.sail";
+    let diags = check_all(src, Some(path.as_ref()), &[], None);
+    assert!(
+        !diags
+            .iter()
+            .any(|d| d.rule.as_deref() == Some("sail-style-privilege")),
+        "position slots must be legal on L2: {diags:?}"
+    );
+}
+
+#[test]
 fn l2_on_scale_pad_slots_are_legal() {
     let src = r#"<div style({ pad({ x: 4 }).bg(surface) })>x</div>"#;
     let path = "apps/studio/src/studio-panel/studio-panel.sail";
@@ -88,6 +115,24 @@ fn l2_on_scale_pad_slots_are_legal() {
             .any(|d| d.message.contains("is not a space step")
                 || d.rule.as_deref() == Some("sail-style-privilege")),
         "on-scale pad slots must be legal on L2: {diags:?}"
+    );
+}
+
+#[test]
+fn l2_off_scale_margin_names_the_space_steps() {
+    let src = r#"<div style({ margin({ t: 3.5 }) })>x</div>"#;
+    let path = "apps/studio/src/studio-panel/studio-panel.sail";
+    let diags = check_all(src, Some(path.as_ref()), &[], None);
+    let scale: Vec<_> = diags
+        .iter()
+        .filter(|d| d.message.contains("3.5 is not a space step"))
+        .collect();
+    assert_eq!(scale.len(), 1, "{diags:?}");
+    assert!(
+        scale[0].message.contains(
+            "3.5 is not a space step: did you mean 3 | 4 — or is this an exception: raw(3.5)?"
+        ),
+        "{scale:?}"
     );
 }
 

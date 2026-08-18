@@ -1675,6 +1675,23 @@ mod tests {
     }
 
     #[test]
+    fn margin_off_scale_names_space_steps() {
+        let (_, diags) = parse("style({ margin({ t: 3.5 }) })");
+        let scale: Vec<String> = diags
+            .iter()
+            .map(|d| d.message())
+            .filter(|m| m.contains("3.5 is not a space step"))
+            .collect();
+        assert_eq!(scale.len(), 1, "{scale:?}");
+        assert!(
+            scale[0].contains(
+                "3.5 is not a space step: did you mean 3 | 4 — or is this an exception: raw(3.5)?"
+            ),
+            "{scale:?}"
+        );
+    }
+
+    #[test]
     fn pad_off_scale_names_space_steps() {
         let (_, diags) = parse("style({ pad({ x: 3.5 }) })");
         let scale: Vec<String> = diags

@@ -722,7 +722,7 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
 /// an enum value, so the lint rejects both a dynamic reading (`nowrap={x}`)
 /// and an explicit value (`nowrap="yes"`).
 fn is_boolean_axis(name: &str) -> bool {
-    matches!(name, "inline" | "nowrap")
+    matches!(name, "inline" | "nowrap" | "cluster")
 }
 
 /// Prose for a boolean axis's two element variants: `(default/block form,
@@ -737,6 +737,10 @@ fn boolean_axis_variants(name: &str, tag: &str) -> (String, String) {
         "nowrap" => (
             format!("<{tag}> (wraps)"),
             format!("<{tag} nowrap> (single line)"),
+        ),
+        "cluster" => (
+            format!("<{tag}> (fill/wrap)"),
+            format!("<{tag} cluster> (hug/nowrap pack)"),
         ),
         _ => (format!("<{tag}>"), format!("<{tag} {name}>")),
     }
@@ -1437,10 +1441,9 @@ mod tests {
         assert!(classes.contains(&"sail-row".to_string()));
         assert!(classes.contains(&"sail-g-2".to_string()));
         assert!(classes.contains(&"sail-jc-between".to_string()));
-        assert!(
-            css.iter()
-                .any(|r| r.contains("justify-content:space-between"))
-        );
+        assert!(css
+            .iter()
+            .any(|r| r.contains("justify-content:space-between")));
         assert!(css.iter().any(|r| r.contains(".sail-row>*{min-width:0}")));
         assert!(
             css.iter()
@@ -1457,12 +1460,10 @@ mod tests {
 
     #[test]
     fn accepts_valid_tags() {
-        assert!(
-            run(
-                r#"<column gap="4" align="center"><row gap="2" justify="between">x</row></column>"#
-            )
-            .is_empty()
-        );
+        assert!(run(
+            r#"<column gap="4" align="center"><row gap="2" justify="between">x</row></column>"#
+        )
+        .is_empty());
         assert!(run(r#"<grid min="lg" gap="4" flow="auto">x</grid>"#).is_empty());
     }
 
@@ -1663,10 +1664,10 @@ mod tests {
         // Studio surfaces after DOMDEC-1: `surface="edit"` + bare hooks on
         // layout keywords must not trip unknown-attr.
         assert!(run(r#"<row surface="edit" edit-surface gap="0" grow>x</row>"#).is_empty());
-        assert!(
-            run(r#"<column surface="tasks" tasks-surface tasks-header section="list">x</column>"#)
-                .is_empty()
-        );
+        assert!(run(
+            r#"<column surface="tasks" tasks-surface tasks-header section="list">x</column>"#
+        )
+        .is_empty());
         // Axis typos still hard-error (guard not weakened).
         let m = run(r#"<grid colz="7">x</grid>"#);
         assert!(m.iter().any(|s| s.contains("unknown")), "got: {m:?}");
@@ -1730,6 +1731,14 @@ mod tests {
         assert!(
             !css.iter().any(|r| r.starts_with(".sail-row{display:flex")),
             "no block-flex rule when inline is set: {css:?}"
+        );
+    }
+
+    #[test]
+    fn accepts_row_cluster_flag() {
+        assert!(
+            run(r#"<row cluster gap="2">x</row>"#).is_empty(),
+            "<row cluster> is a boolean axis"
         );
     }
 

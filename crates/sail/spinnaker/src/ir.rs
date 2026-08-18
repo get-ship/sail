@@ -285,7 +285,7 @@ impl StyleDiagnostic {
                 }
             }
             StyleDiagnostic::BadToken { setter, value, .. } => {
-                if setter.starts_with("pad") {
+                if setter.starts_with("pad") || setter.starts_with("margin") {
                     if let Some(neighbors) = crate::scales::space_neighbors(value) {
                         return format!(
                             "{value} is not a space step: did you mean {neighbors} — or is this an exception: raw({value})?"
