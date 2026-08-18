@@ -6,11 +6,11 @@ use std::path::Path;
 use serde::Serialize;
 
 use super::fix::{self, FixPlan};
-use super::node::{EditNode, build_node_index, model_revision};
+use super::node::{build_node_index, model_revision, EditNode};
 use super::ops::EditOp;
-use super::validate::{ValidateOutcome, validate_source};
-use crate::LintOverride;
+use super::validate::{validate_source, ValidateOutcome};
 use crate::diagnostics::Diagnostic;
+use crate::LintOverride;
 
 /// Result of applying an edit batch (in memory; write is caller's job).
 #[derive(Debug, Clone, Serialize)]
@@ -140,7 +140,12 @@ fn apply_ops_inner(
     if matches!(autofix, AutofixMode::Suggest | AutofixMode::Apply) {
         let plans = fix::suggest_fixes_for_source(&working, file, path);
         if autofix == AutofixMode::Apply {
-            let patches: Vec<_> = plans
+            let apply_plans: Vec<_> = plans
+                .iter()
+                .filter(|p| fix::is_auto_apply_plan(p))
+                .cloned()
+                .collect();
+            let patches: Vec<_> = apply_plans
                 .iter()
                 .filter_map(|p| {
                     p.text_patch
@@ -164,7 +169,7 @@ fn apply_ops_inner(
                 }
                 working = next;
             }
-            for mut p in plans {
+            for mut p in apply_plans {
                 p.actor = actor.map(|a| a.to_string());
                 auto_fixed.push(p);
             }

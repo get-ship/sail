@@ -10,11 +10,11 @@
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-use anyhow::{Context, Result, bail};
+use anyhow::{bail, Context, Result};
 use sail_compiler::out_layout::resolve_out_dir;
 use sail_compiler::{
-    CompileMode, CompileOpts, ComponentMeta, DiagSeverity, Policy, check_all,
-    compile as compile_source,
+    check_all, compile as compile_source, CompileMode, CompileOpts, ComponentMeta, DiagSeverity,
+    Policy,
 };
 
 /// `sail --version` / `sail version`.
@@ -593,8 +593,12 @@ pub fn check(input: PathBuf, fix: String) -> Result<()> {
         }
         let mut failed = 0usize;
         let mut fixed = 0usize;
+        let mut raw_count = 0usize;
         let total = files.len() + app_ts.len();
         for f in &files {
+            if let Ok(src) = std::fs::read_to_string(f) {
+                raw_count += src.matches("raw(").count();
+            }
             match check_one(f, &fix) {
                 Ok(n) => fixed += n,
                 Err(e) => {
@@ -615,8 +619,8 @@ pub fn check(input: PathBuf, fix: String) -> Result<()> {
             bail!("{failed}/{total} file(s) failed check");
         }
         println!(
-            "sail check: {} file(s) ok, {} fix(es) applied",
-            total, fixed
+            "sail check: {} file(s) ok, {} fix(es) applied, rawCount={}",
+            total, fixed, raw_count
         );
     } else {
         bail!("not a file or directory: {}", path.display());

@@ -141,6 +141,9 @@ pub fn validate_op(op: &PaintOp) -> Result<(), StyleDiagnostic> {
             source: op.source.clone(),
         }),
         PaintArg::Token(tok) => {
+            if crate::ir::raw_inner(tok).is_some() {
+                return Ok(());
+            }
             let (neg, bare) = strip_neg(tok);
             if neg && !spec.negatable {
                 return Err(StyleDiagnostic::BadToken {

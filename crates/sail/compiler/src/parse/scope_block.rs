@@ -646,6 +646,40 @@ pub(crate) fn style_env_from_source(source: &str) -> StyleEnv {
     env
 }
 
+/// Style-table row errors from every `<scope>` body. Used so `check_all`
+/// still surfaces a declaration-site scale sentence when preprocess fails
+/// first at a use site.
+pub(crate) fn style_row_errors_from_source(source: &str) -> Vec<CompileError> {
+    let mut out = Vec::new();
+    let mut rest = source;
+    while let Some(open_rel) = rest.find("<scope") {
+        let after_open_tag = &rest[open_rel..];
+        let Some(gt_rel) = after_open_tag.find('>') else {
+            break;
+        };
+        let tag_head = &after_open_tag[..gt_rel];
+        if tag_head
+            .as_bytes()
+            .get(6)
+            .is_some_and(|b| b.is_ascii_alphanumeric() || *b == b'-')
+        {
+            rest = &after_open_tag[1..];
+            continue;
+        }
+        let body_start = open_rel + gt_rel + 1;
+        let after_body = &rest[body_start..];
+        let Some(close_rel) = after_body.find("</scope>") else {
+            break;
+        };
+        let body = &after_body[..close_rel];
+        if let Ok(block) = parse_scope_block(body, Span::new(0, body.len())) {
+            out.extend(block.style_errors);
+        }
+        rest = &after_body[close_rel + "</scope>".len()..];
+    }
+    out
+}
+
 /// `const name = <Style expr>` — Style const binding (no runtime computation).
 fn parse_style_const(
     s: &str,
@@ -860,6 +894,11 @@ fn looks_like_style_const_rhs(rhs: &str) -> bool {
 }
 
 fn style_const_diag_message(diags: &[StyleDiagnostic]) -> Option<String> {
+    // Prefer the scale / two-doors sentence so a later unknown-vocab
+    // cannot hide `3.5 is not a space step`.
+    if let Some(d) = diags.iter().find(|d| d.message().contains("is not a space step")) {
+        return Some(d.message());
+    }
     // Any Style diagnostic on a const RHS is a hard compile error (fail closed).
     diags.first().map(|d| d.message())
 }

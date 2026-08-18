@@ -4,7 +4,7 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 use serde::Serialize;
-use serde_json::{Value, json};
+use serde_json::{json, Value};
 
 use crate::ctx::Ctx;
 use crate::error::OpError;
@@ -519,6 +519,7 @@ pub fn check(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
             fixes_out.push(v);
         }
         if mode == sail_compiler::edit::AutofixMode::Apply {
+            plans.retain(sail_compiler::edit::is_auto_apply_plan);
             let patches: Vec<_> = plans
                 .iter()
                 .filter_map(|p| {
@@ -561,6 +562,7 @@ pub fn check(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
         "ok": true,
         "diagnostics": diags,
         "count": diags.len(),
+        "rawCount": spinnaker::count_raw_uses_in_source(&src),
         "typescriptStatus": typescript_status(ctx),
     });
     if !fixes_out.is_empty() {
@@ -973,7 +975,11 @@ fn resolve_write_path(path_s: &str, apply_root: &Path) -> Result<PathBuf, String
         .unwrap_or_else(|_| apply_root.to_path_buf());
     let candidate = {
         let p = PathBuf::from(path_s);
-        if p.is_absolute() { p } else { root.join(p) }
+        if p.is_absolute() {
+            p
+        } else {
+            root.join(p)
+        }
     };
     let resolved = canonicalize_for_write(&candidate)?;
     if !resolved.starts_with(&root) {
@@ -2082,7 +2088,7 @@ export default controller((ctx) => ({ count: signal(0) }))
     fn identity_scoped_edit_survives_in_file_move() {
         use crate::call_rpc;
         use crate::ctx::Ctx;
-        use crate::identity::{ElementIdentity, resolve_identity};
+        use crate::identity::{resolve_identity, ElementIdentity};
 
         let dir = tempfile::tempdir().unwrap();
         let root = dir.path();

@@ -4,8 +4,8 @@
 //! adapter's longhand map.
 
 use spinnaker::concerns::{
-    ConcernSlot, ConcernSpec, concern_teaching, find_concern, find_slot, is_named_scale_step,
-    reject_size_pad_members, resolve_concern_name,
+    concern_teaching, find_concern, find_slot, is_named_scale_step, reject_size_pad_members,
+    resolve_concern_name, ConcernSlot, ConcernSpec,
 };
 use spinnaker::ir::{PaintArg, PaintOp, StyleDiagnostic};
 use spinnaker::scales;
@@ -120,6 +120,21 @@ pub fn lower_concern_op(
     match op.first_arg() {
         PaintArg::Slots(slots) => lower_slot_object(spec, op, slots),
         PaintArg::Token(name) => {
+            if let Some(inner) = spinnaker::raw_inner(name) {
+                if spec.name == "pad" || spec.name == "margin" {
+                    if is_numeric_raw(inner) {
+                        return Ok(primary_decls(spec, format!("{inner}px")));
+                    }
+                }
+                return lower_concern_op(
+                    spec,
+                    &PaintOp {
+                        setter: op.setter.clone(),
+                        args: vec![PaintArg::Token(inner.to_string())],
+                        source: op.source.clone(),
+                    },
+                );
+            }
             if spec.name == "size" {
                 if let Some(decls) = language_size_decls(name) {
                     return Ok(decls);
@@ -930,6 +945,15 @@ pub fn lower_slot_value(
             });
         }
         PaintArg::Token(tok) => {
+            if let Some(inner) = spinnaker::raw_inner(tok) {
+                if slot.scale == Some("space") && is_numeric_raw(inner) {
+                    return Ok((
+                        slot_css(spec, slot).unwrap_or("").to_string(),
+                        format!("{inner}px"),
+                    ));
+                }
+                return lower_slot_value(spec, slot, &PaintArg::Token(inner.to_string()));
+            }
             let negative = tok.starts_with('-') && tok.len() > 1;
             let bare = tok
                 .strip_prefix('-')
@@ -998,6 +1022,11 @@ pub fn lower_slot_value(
         }
     };
     Ok((slot_css(spec, slot).unwrap_or("").to_string(), css))
+}
+
+fn is_numeric_raw(inner: &str) -> bool {
+    let t = inner.trim();
+    !t.is_empty() && t.replace('_', ".").parse::<f64>().is_ok()
 }
 
 fn is_measure_identity(name: &str) -> bool {

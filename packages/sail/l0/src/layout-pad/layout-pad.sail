@@ -3,7 +3,7 @@
   Spelling: style box = { pad({ x: 4 }), bg(primary) }
   Owner: theme scale + free edges
   Default: no inset
-  Trap: fixtures/pad-off-scale.bad.sail — Style error: 3.5 is not a space step: 3 | 4
+  Trap: fixtures/pad-off-scale.bad.sail — Style error: 3.5 is not a space step: did you mean 3 | 4 — or is this an exception: raw(3.5)?
         Quoted below. Not compiled on this page (CI: pages compile;
         trap fixtures assert the error).
 

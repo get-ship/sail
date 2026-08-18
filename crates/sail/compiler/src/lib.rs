@@ -338,22 +338,27 @@ pub fn check_all_with_tier(
         )
     });
     match parse::parse_full(&stripped) {
-        Ok(parsed) => check::collect(
-            &parsed.program,
-            &stripped,
-            source, // author source — type gate maps controller spans here
-            source_path,
-            controller.as_ref(),
-            overrides,
-            route_params,
-            tier,
-            Some((&parsed.preprocessed, &parsed.style_hosts)),
-        ),
+        Ok(parsed) => {
+            let mut diags = check::collect(
+                &parsed.program,
+                &stripped,
+                source, // author source — type gate maps controller spans here
+                source_path,
+                controller.as_ref(),
+                overrides,
+                route_params,
+                tier,
+                Some((&parsed.preprocessed, &parsed.style_hosts)),
+            );
+            merge_style_row_diags(source, &mut diags);
+            diags
+        }
         Err(e) => {
             // Fatal parse/preprocess error — still surface confluent off-scale
             // spacing rewrites from raw author tags on the full (OnSave) path.
             // OnType stays parse-only for this fatal branch (no compose).
             let mut diags = vec![Diagnostic::from_compile_error(&e, &stripped)];
+            merge_style_row_diags(source, &mut diags);
             if tier.includes_layout() {
                 diags.extend(check::compose::collect_off_scale_for_check(
                     &stripped,
@@ -368,6 +373,21 @@ pub fn check_all_with_tier(
                 diags.extend(check::tscheck::collect_sail_type_gate(source, source_path));
             }
             diags
+        }
+    }
+}
+
+/// Keep declaration-site Style-table errors (scale sentence, unknown identity)
+/// even when preprocess failed first at a use site.
+fn merge_style_row_diags(source: &str, diags: &mut Vec<Diagnostic>) {
+    for err in parse::scope_block::style_row_errors_from_source(source) {
+        let err = parse::remap_style_row_error(err, source);
+        let d = Diagnostic::from_compile_error(&err, source);
+        if !diags
+            .iter()
+            .any(|e| e.message == d.message && e.line == d.line)
+        {
+            diags.push(d);
         }
     }
 }

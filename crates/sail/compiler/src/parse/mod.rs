@@ -164,7 +164,7 @@ fn parse_prepared(source: &str, prepared: &str) -> Result<Program, CompileError>
 /// Point a Style-table row error at the declaration in author source.
 /// Preprocess injects CSS before `<scope>`, so the parse span is the wrong
 /// buffer — search the author text for `style name` / `const name`.
-fn remap_style_row_error(err: CompileError, author: &str) -> CompileError {
+pub(crate) fn remap_style_row_error(err: CompileError, author: &str) -> CompileError {
     let Some(name) = err
         .message
         .strip_prefix("Style `")

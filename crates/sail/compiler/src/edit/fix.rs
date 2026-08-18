@@ -55,6 +55,10 @@ pub fn suggest_fixes(
     let index = build_node_index(source, file).unwrap_or_default();
     let mut plans = Vec::new();
     for d in diags {
+        if let Some(mut ps) = fix_off_scale_space(source, d) {
+            plans.append(&mut ps);
+            continue;
+        }
         let rule = d.rule.as_deref().unwrap_or("");
         match rule {
             "sail-participation-style" => {
@@ -120,6 +124,89 @@ pub fn suggest_fixes(
         }
     }
     plans
+}
+
+/// Confluent allow-list for `fix=apply`. Off-scale two-doors plans are
+/// suggest-only — never auto-apply, never delete the slot, never pick a neighbor.
+pub fn is_auto_apply_plan(plan: &FixPlan) -> bool {
+    match plan.rule.as_str() {
+        "sail-participation-style"
+        | "sail-display-on-layout"
+        | "sail-prefer-primitive"
+        | "sail-compose-rhythm"
+        | "sail-compose-contrast"
+        | "sail-compose-spacing"
+        | "sail-no-raw-container" => true,
+        "spinnaker" => plan.message.starts_with("rewrite unknown setter"),
+        "sail-scope-block" => plan.message.starts_with("delete unknown style-const"),
+        _ => false,
+    }
+}
+
+/// Three suggest-only plans for `3.5 is not a space step` (neighbors + `raw()`).
+fn fix_off_scale_space(source: &str, d: &crate::diagnostics::Diagnostic) -> Option<Vec<FixPlan>> {
+    if !d.message.contains("is not a space step") || !d.message.contains("raw(") {
+        return None;
+    }
+    let value = off_scale_space_value(&d.message)?;
+    let neighbors = spinnaker::scales::space_neighbors(value)?;
+    let offset = line_col_to_offset(source, d.line, d.col);
+    let (start, end) = find_token_span_from(source, offset, value)?;
+    let rule = d.rule.clone().unwrap_or_else(|| "spinnaker".into());
+    let mut plans = Vec::new();
+    for neighbor in neighbors
+        .split('|')
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+    {
+        plans.push(FixPlan {
+            rule: rule.clone(),
+            line: d.line,
+            col: d.col,
+            message: format!("replace `{value}` with `{neighbor}`"),
+            ops: vec![],
+            text_patch: Some(TextPatch {
+                start,
+                end,
+                replacement: neighbor.to_string(),
+            }),
+            actor: None,
+        });
+    }
+    plans.push(FixPlan {
+        rule,
+        line: d.line,
+        col: d.col,
+        message: format!("wrap as `raw({value})`"),
+        ops: vec![],
+        text_patch: Some(TextPatch {
+            start,
+            end,
+            replacement: format!("raw({value})"),
+        }),
+        actor: None,
+    });
+    if plans.len() < 2 {
+        return None;
+    }
+    Some(plans)
+}
+
+fn off_scale_space_value(message: &str) -> Option<&str> {
+    let head = message.split(" is not a space step").next()?;
+    let value = head.rsplit(": ").next().unwrap_or(head).trim();
+    if value.is_empty() {
+        None
+    } else {
+        Some(value)
+    }
+}
+
+fn find_token_span_from(source: &str, offset: usize, value: &str) -> Option<(usize, usize)> {
+    let from = offset.min(source.len());
+    let rel = source[from..].find(value)?;
+    let start = from + rel;
+    Some((start, start + value.len()))
 }
 
 fn fix_participation_style(
@@ -1446,6 +1533,63 @@ mod tests {
         assert!(
             lowered.contains("s-padpage") || lowered.contains("--pad-page"),
             "style(base) must still lower: {lowered}"
+        );
+    }
+
+    #[test]
+    fn off_scale_pad_suggests_three_plans() {
+        let src = r#"<div style({ pad({ x: 3.5 }) })>x</div>"#;
+        let plans = suggest_fixes_for_source(src, "t.sail", None);
+        let space: Vec<_> = plans
+            .iter()
+            .filter(|p| {
+                p.rule == "spinnaker"
+                    || p.rule == "sail-scope-block"
+                    || p.message.contains("raw(3.5)")
+                    || p.message.contains("replace `3.5`")
+            })
+            .collect();
+        assert_eq!(space.len(), 3, "{plans:?}");
+        let reps: Vec<&str> = space
+            .iter()
+            .filter_map(|p| p.text_patch.as_ref().map(|t| t.replacement.as_str()))
+            .collect();
+        assert!(reps.contains(&"3"), "{reps:?}");
+        assert!(reps.contains(&"4"), "{reps:?}");
+        assert!(reps.contains(&"raw(3.5)"), "{reps:?}");
+        for p in &space {
+            assert!(!is_auto_apply_plan(p), "suggest-only: {p:?}");
+        }
+        for p in &space {
+            let patch = p.text_patch.as_ref().expect("text patch");
+            let (out, skipped) =
+                apply_text_patches(src, &[(patch.start, patch.end, patch.replacement.clone())]);
+            assert_eq!(skipped, 0, "{out}");
+            crate::parse::preprocess::preprocess(&out)
+                .unwrap_or_else(|e| panic!("applying {:?} must compile: {e:?}\n{out}", p.message));
+        }
+    }
+
+    #[test]
+    fn off_scale_pad_apply_does_not_consume() {
+        let src = r#"<div style({ pad({ x: 3.5 }) })>x</div>"#;
+        let result = crate::edit::apply_ops_to_source(
+            src,
+            "t.sail",
+            &[],
+            None,
+            crate::edit::AutofixMode::Apply,
+            Some("test"),
+        );
+        assert!(
+            result.auto_fixed.is_empty(),
+            "fix=apply must not rewrite two-doors plans: {:?}",
+            result.auto_fixed
+        );
+        assert!(
+            result.source.contains("3.5"),
+            "source must stay unwrapped: {}",
+            result.source
         );
     }
 }

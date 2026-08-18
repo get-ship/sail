@@ -7,7 +7,7 @@ use super::capabilities::is_animate_trigger;
 use super::intent::is_known_when_key;
 use super::ir::{PaintArg, PaintOp, Style, StyleDiagnostic};
 use super::setters::validate_op;
-use super::theme_env::{PlayPreset, ThemeStyleEnv, current_styling_policy};
+use super::theme_env::{current_styling_policy, PlayPreset, ThemeStyleEnv};
 
 /// Parse a Style expression. Flat `style.method(…)` chains are refused —
 /// use `style({ pad(4).bg(surface), when: { hover: bg(muted) } })`.
@@ -786,9 +786,10 @@ fn parse_style_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> St
         let source = p.remainder();
         let preview: String = source.chars().take(80).collect();
         diags.push(StyleDiagnostic::ParseError {
-            message: "flat `style.method(…)` chains are retired — write concern calls: \
+            message:
+                "flat `style.method(…)` chains are retired — write concern calls: \
                       style({ size({ w: '100%' }).pad(4).bg(surface), when: { hover: bg(muted) } })"
-                .into(),
+                    .into(),
             source: if preview.is_empty() {
                 "style.".into()
             } else {
@@ -2207,6 +2208,12 @@ fn parse_paint_arg(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>, setter:
         return parse_slot_object(p, diags, setter);
     }
     match p.bump() {
+        Some(Tok::Word("raw")) if p.peek() == Some(&Tok::LParen) => {
+            p.expect(Tok::LParen, diags);
+            let inner = parse_paint_arg(p, diags, setter);
+            p.expect(Tok::RParen, diags);
+            PaintArg::Token(crate::ir::wrap_raw(&inner.display()))
+        }
         Some(Tok::Word("bind")) => {
             p.expect(Tok::LParen, diags);
             let name = match p.bump() {
@@ -2632,7 +2639,7 @@ mod utility_detect_tests {
 
 #[cfg(test)]
 mod const_rhs_tests {
-    use super::{Style, parse_style_const_rhs};
+    use super::{parse_style_const_rhs, Style};
 
     #[test]
     fn bare_object_form() {
@@ -2667,7 +2674,7 @@ mod const_rhs_tests {
 mod flat_chain_tests {
     use std::collections::HashMap;
 
-    use super::{Style, parse};
+    use super::{parse, Style};
 
     fn msgs(diags: &[crate::StyleDiagnostic]) -> Vec<String> {
         diags.iter().map(|d| d.message()).collect()

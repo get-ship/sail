@@ -41,6 +41,15 @@ impl PaintArg {
             }
         }
     }
+
+    /// Count `raw(…)` wrappers in this arg (marker, not a privilege).
+    pub fn count_raw_uses(&self) -> usize {
+        match self {
+            PaintArg::Token(t) => usize::from(raw_inner(t).is_some()),
+            PaintArg::Slots(slots) => slots.values().map(PaintArg::count_raw_uses).sum(),
+            PaintArg::Bind(_) | PaintArg::MemberPath { .. } => 0,
+        }
+    }
 }
 
 /// One chained paint setter (never a guard).
@@ -136,6 +145,39 @@ impl Style {
             _ => Style::Chain(flat),
         }
     }
+
+    /// Count `raw(…)` wrappers in this Style tree. The corpus tally is the
+    /// signal; there is no per-use warning.
+    pub fn count_raw_uses(&self) -> usize {
+        match self {
+            Style::Empty | Style::MotionAttach { .. } | Style::Ref(_) => 0,
+            Style::Set(op) => op.args.iter().map(PaintArg::count_raw_uses).sum(),
+            Style::Chain(items) | Style::List(items) => {
+                items.iter().map(Style::count_raw_uses).sum()
+            }
+            Style::Match { arms, .. } => arms.iter().map(|(_, s)| s.count_raw_uses()).sum(),
+            Style::Compound { body, .. } => body.count_raw_uses(),
+            Style::When { entries } => entries.iter().map(|(_, s)| s.count_raw_uses()).sum(),
+        }
+    }
+}
+
+/// Inner value of a `raw(V)` wrapper token. Anyone may spend it; it is a
+/// marker, not a privilege. Source stays greppable (`raw(`).
+pub fn raw_inner(tok: &str) -> Option<&str> {
+    let t = tok.trim();
+    let inner = t.strip_prefix("raw(")?.strip_suffix(')')?;
+    Some(inner)
+}
+
+/// Wrap a scale token as `raw(V)`.
+pub fn wrap_raw(inner: &str) -> String {
+    format!("raw({inner})")
+}
+
+/// `raw(` occurrences in source — same greppable signal the corpus tally uses.
+pub fn count_raw_uses_in_source(source: &str) -> usize {
+    source.matches("raw(").count()
 }
 
 /// Diagnostic from parse / resolve / clash.
@@ -245,7 +287,9 @@ impl StyleDiagnostic {
             StyleDiagnostic::BadToken { setter, value, .. } => {
                 if setter.starts_with("pad") {
                     if let Some(neighbors) = crate::scales::space_neighbors(value) {
-                        return format!("{value} is not a space step: {neighbors}");
+                        return format!(
+                            "{value} is not a space step: did you mean {neighbors} — or is this an exception: raw({value})?"
+                        );
                     }
                 }
                 format!("style `{setter}({value})` — value is not a token on this setter's scale")

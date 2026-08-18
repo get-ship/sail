@@ -3,7 +3,7 @@
 
 use std::path::PathBuf;
 
-use sail_compiler::{CompileMode, CompileOpts, check_all, compile};
+use sail_compiler::{check_all, compile, CompileMode, CompileOpts};
 
 fn opts(path: &str) -> CompileOpts {
     CompileOpts {
@@ -102,12 +102,76 @@ fn l2_off_scale_pad_names_the_space_steps() {
         .collect();
     assert_eq!(scale.len(), 1, "{diags:?}");
     assert!(
-        scale[0].message.contains("3.5 is not a space step: 3 | 4"),
+        scale[0].message.contains(
+            "3.5 is not a space step: did you mean 3 | 4 — or is this an exception: raw(3.5)?"
+        ),
         "{scale:?}"
     );
     assert!(
         !scale[0].message.contains("3.5 is not a space step: 3 | 4;"),
         "scale sentence must appear once: {scale:?}"
+    );
+}
+
+#[test]
+fn l2_raw_pad_compiles_silently() {
+    let src = r#"<div style({ pad({ x: raw(3.5) }) })>x</div>"#;
+    let path = "apps/studio/src/studio-panel/studio-panel.sail";
+    compile(src, opts(path)).expect("raw() must compile silently");
+    let diags = check_all(src, Some(path.as_ref()), &[], None);
+    assert!(
+        !diags
+            .iter()
+            .any(|d| d.message.contains("is not a space step")),
+        "raw() must not emit a scale sentence: {diags:?}"
+    );
+    let lowered = sail_compiler::parse::preprocess::preprocess(src).expect("raw() must lower");
+    assert!(
+        lowered.contains("3.5px"),
+        "numeric raw in a length slot lowers as px: {lowered}"
+    );
+}
+
+#[test]
+fn named_const_off_scale_fires_scale_sentence_at_declaration() {
+    let src = r#"
+<scope>
+  style base = { pad(page) }
+  style box = { pad({ x: 3.5 }) }
+</scope>
+<column style(base)>x</column>
+"#;
+    let path = "apps/studio/src/studio-panel/studio-panel.sail";
+    let err = compile(src, opts(path)).expect_err("off-scale named const is terminal");
+    let err_s = format!("{err:?}");
+    assert!(
+        err_s.contains("3.5 is not a space step") && err_s.contains("raw(3.5)"),
+        "compile must carry the two-doors sentence: {err_s}"
+    );
+    assert!(
+        !err_s.contains("unknown vocabulary `base`"),
+        "must not poison sibling `base`: {err_s}"
+    );
+
+    let diags = check_all(src, Some(path.as_ref()), &[], None);
+    let joined = diags
+        .iter()
+        .map(|d| format!("{} @{}:{}", d.message, d.line, d.col))
+        .collect::<Vec<_>>()
+        .join("\n");
+    assert!(
+        joined.contains("3.5 is not a space step") && joined.contains("raw(3.5)"),
+        "check_all must carry the two-doors sentence: {joined}"
+    );
+    assert!(
+        !joined.contains("unknown vocabulary `base`"),
+        "must not poison sibling `base`: {joined}"
+    );
+    assert!(
+        diags
+            .iter()
+            .any(|d| { d.message.contains("3.5 is not a space step") && d.line == 4 }),
+        "scale sentence must sit on `style box`: {joined}"
     );
 }
 

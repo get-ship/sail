@@ -1077,6 +1077,9 @@ pub fn validate_concern_op(spec: &ConcernSpec, op: &PaintOp) -> Result<(), Style
     match op.first_arg() {
         PaintArg::Slots(slots) => validate_slot_object(spec, op, slots),
         PaintArg::Token(name) => {
+            if crate::ir::raw_inner(name).is_some() {
+                return Ok(());
+            }
             if resolve_concern_name(spec, name).is_some() {
                 if spec.name == "size" {
                     if let Some(c) = resolve_concern_name(spec, name) {
@@ -1231,6 +1234,10 @@ pub fn validate_slot_value(
             source: op.source.clone(),
         }),
         PaintArg::Token(tok) => {
+            // `raw(V)` is a marker anyone may spend — skip scale membership.
+            if crate::ir::raw_inner(tok).is_some() {
+                return Ok(());
+            }
             let bare = tok
                 .strip_prefix('-')
                 .filter(|r| !r.is_empty())
@@ -1677,12 +1684,53 @@ mod tests {
             .collect();
         assert_eq!(scale.len(), 1, "{scale:?}");
         assert!(
-            scale[0].contains("3.5 is not a space step: 3 | 4"),
+            scale[0].contains(
+                "3.5 is not a space step: did you mean 3 | 4 — or is this an exception: raw(3.5)?"
+            ),
             "{scale:?}"
         );
         assert!(
             !scale[0].contains("3.5 is not a space step: 3 | 4;"),
             "scale sentence must appear once: {scale:?}"
+        );
+    }
+
+    #[test]
+    fn pad_raw_compiles_silently_and_counts() {
+        let (style, diags) = parse("style({ pad({ x: raw(3.5) }) })");
+        assert!(
+            diags.is_empty(),
+            "{:?}",
+            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
+        assert_eq!(style.count_raw_uses(), 1);
+        assert_eq!(crate::count_raw_uses_in_source("pad({ x: raw(3.5) })"), 1);
+    }
+
+    #[test]
+    fn pad_raw_two_uses_count_two() {
+        let (style, diags) = parse("style({ pad({ x: raw(3.5), y: raw(2.5) }) })");
+        assert!(
+            diags.is_empty(),
+            "{:?}",
+            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
+        assert_eq!(style.count_raw_uses(), 2);
+        assert_eq!(
+            crate::count_raw_uses_in_source("pad({ x: raw(3.5), y: raw(2.5) })"),
+            2
+        );
+    }
+
+    #[test]
+    fn pad_unwrapped_off_scale_still_errors() {
+        let (_, diags) = parse("style({ pad({ x: 3.5 }) })");
+        assert!(
+            diags
+                .iter()
+                .any(|d| d.message().contains("3.5 is not a space step")),
+            "{:?}",
+            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
         );
     }
 

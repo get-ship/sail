@@ -15,7 +15,10 @@ pub use apply::{
     AutofixMode, DiagJson, EditResult, apply_ops, apply_ops_to_source, attach_rewrites,
     validate_sx_setter,
 };
-pub use fix::{FixPlan, TextPatch, apply_text_patches, suggest_fixes, suggest_fixes_for_source};
+pub use fix::{
+    FixPlan, TextPatch, apply_text_patches, is_auto_apply_plan, suggest_fixes,
+    suggest_fixes_for_source,
+};
 pub use node::{EditNode, build_node_index, model_revision};
 pub use ops::{EditOp, Position, parse_ops};
 pub use validate::{ValidateOutcome, validate_source};
