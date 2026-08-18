@@ -519,7 +519,8 @@ pub fn privilege_enforced_for_path(path: &std::path::Path) -> bool {
         || p.starts_with("apps/studio/");
     let under_blocks =
         p.contains("/packages/sail/blocks/") || p.starts_with("packages/sail/blocks/");
-    under_apps || under_blocks
+    let under_l0 = p.contains("/packages/sail/l0/") || p.starts_with("packages/sail/l0/");
+    under_apps || under_blocks || under_l0
 }
 
 fn is_stdlib_path(p: &str) -> bool {
@@ -590,6 +591,20 @@ mod tests {
         assert!(privilege_enforced_for_path(Path::new(
             "packages/sail/blocks/routes/pricing/pricing-hero.sail"
         )));
+        assert!(privilege_enforced_for_path(Path::new(
+            "packages/sail/l0/routes/poison/poison-trap.sail"
+        )));
+        assert!(privilege_enforced_for_path(Path::new(
+            "packages/sail/l0/src/l0-viewer/l0-viewer.sail"
+        )));
+        assert_eq!(
+            privilege_for_path(Path::new("packages/sail/l0/routes/page.sail")),
+            Privilege::None
+        );
+        assert_eq!(
+            privilege_for_path(Path::new("packages/sail/l0/routes/poison/poison-trap.sail")),
+            Privilege::Identities
+        );
         assert!(!privilege_enforced_for_path(Path::new(
             "crates/sail/compiler/tests/fixtures/l1-matrix/routes/button/page.sail"
         )));

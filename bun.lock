@@ -196,6 +196,15 @@
         "vitest": "^4.1.5",
       },
     },
+    "packages/sail/l0": {
+      "name": "@ship/sail-l0",
+      "version": "0.1.0",
+      "dependencies": {
+        "@ship/sail-dom": "workspace:*",
+        "@ship/sail-runtime": "workspace:*",
+        "@ship/tokens": "workspace:*",
+      },
+    },
     "packages/sail/l1": {
       "name": "@ship/sail-l1",
       "version": "0.1.0",
@@ -458,6 +467,8 @@
     "@ship/sail-dom": ["@ship/sail-dom@workspace:packages/sail/dom"],
 
     "@ship/sail-highlight": ["@ship/sail-highlight@workspace:packages/sail/highlight"],
+
+    "@ship/sail-l0": ["@ship/sail-l0@workspace:packages/sail/l0"],
 
     "@ship/sail-l1": ["@ship/sail-l1@workspace:packages/sail/l1"],
 

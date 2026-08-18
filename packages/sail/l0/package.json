@@ -1,0 +1,16 @@
+{
+  "name": "@ship/sail-l0",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "description": "L0 gauntlet — language cells as a first-party Deck app.",
+  "scripts": {
+    "dev": "sail dev"
+  },
+  "dependencies": {
+    "@ship/sail-runtime": "workspace:*",
+    "@ship/sail-dom": "workspace:*",
+    "@ship/tokens": "workspace:*"
+  }
+}
