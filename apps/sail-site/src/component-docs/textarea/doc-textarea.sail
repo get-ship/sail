@@ -3,11 +3,11 @@
 -->
 
 <scope>
-  style page = { size({ w: full, max-w: breakpoint-desktop }).margin({ x: auto }).overflow({ all: visible }) }
-  style specimen = { size({ w: 64, max-w: full }).pad(2).overflow({ all: visible }) }
-  style controlW = { size({ w: full }) }
+  style page = { size({ w: 100%, max-w: breakpoint-desktop }).margin({ x: auto }).overflow({ all: visible }) }
+  style specimen = { size({ w: 64, max-w: 100% }).pad(2).overflow({ all: visible }) }
+  style controlW = { size({ w: 100% }) }
   style knobLabel = { fg(muted-foreground).type({ size: xs, weight: medium, tracking: wide, case: uppercase }) }
-  style exampleBlock = { size({ w: full }).pad({ t: 2, b: 4 }).overflow({ all: visible }) }
+  style exampleBlock = { size({ w: 100% }).pad({ t: 2, b: 4 }).overflow({ all: visible }) }
   style sectionLabel = { fg(muted-foreground).type({ size: xs, tracking: wide, case: uppercase }) }
 </scope>
 

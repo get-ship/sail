@@ -9,7 +9,7 @@
   style monoMeta = { fg(muted).type(mono-sm) }
   style mutedIcon = { fg(muted) }
   // no preset: min-w lock
-  style panelCard = { pad(4).size({ h: full, min-w: 0 }).radius(lg).border(subtle).bg(surface-1) }
+  style panelCard = { pad(4).size({ h: 100%, min-w: 0 }).radius(lg).border(subtle).bg(surface-1) }
   style doorCard = { pad(3).cursor(pointer), when: { hover: bg(hover-bg) } }
   // no preset: type weight
   style doorTitle = { type({ weight: semibold }) }
@@ -17,7 +17,7 @@
   // no preset: min-w lock
   style heroCard = { overflow(hidden).size({ min-w: 0 }).radius(lg).border(subtle).bg(surface-1) }
   // no preset: size lock + position
-  style heroSwatch = { position(relative).size({ w: full, h: 28, min-h: 28 }).overflow(hidden).bg(bind(swatchColor)), when: { stateEdit: cursor(pointer), stateLocked: cursor(default) } }
+  style heroSwatch = { position(relative).size({ w: 100%, h: 28, min-h: 28 }).overflow(hidden).bg(bind(swatchColor)), when: { stateEdit: cursor(pointer), stateLocked: cursor(default) } }
   // no preset: border width 0 + position + filter
   style heroColorInput = { position({ scheme: absolute, t: 0, l: 0 }).size(max).pad(0).border({ width: 0 }).cursor(pointer).filter({ opacity: 0 }), when: { disabled: cursor(not-allowed) } }
   style heroMeta = { pad(3) }
@@ -48,7 +48,7 @@
   style errorText = { size(grow).fg(destructive).type(body-sm) }
   style growMin = { size(grow) }
   // no preset: size lock
-  style pickerHero = { size({ w: full, h: 20, min-h: 20 }) }
+  style pickerHero = { size({ w: 100%, h: 20, min-h: 20 }) }
   // no preset: type wrap
   style chipLabel = { type({ wrap: truncate }) }
   type HeroColorCardProps = {

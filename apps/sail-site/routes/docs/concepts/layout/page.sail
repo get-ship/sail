@@ -160,8 +160,8 @@ export default controller(() => {
     <p>
       Participation is one spelling: Style.
       <code>grow&#40;1&#41;</code> / <code>shrink&#40;0&#41;</code> are flex participation;
-      <code>size(&#123; w: full &#125;)</code>, <code>size(&#123; min-w: 0 &#125;)</code>, and <code>size(&#123; max-w: … &#125;)</code> take
-      the same size tokens as other Style setters. Bare attrs
+      <code>size(&#123; w: 100% &#125;)</code>, <code>size(&#123; min-w: 0 &#125;)</code>, and <code>size(&#123; max-w: … &#125;)</code> are
+      free geometry on the size concern. Bare attrs
       (<code>grow</code>, <code>min-w=</code>, <code>shrink</code>) are refused
       (<code>sail-participation-style</code>) — write
       <code>style&#40;growMin&#41;</code> instead.

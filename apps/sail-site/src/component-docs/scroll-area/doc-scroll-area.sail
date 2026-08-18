@@ -4,15 +4,15 @@
 -->
 
 <scope>
-  style page = { size({ w: full, max-w: breakpoint-desktop }).margin({ x: auto }).overflow({ all: visible }) }
-  style specimen = { size({ w: full, max-w: panel-max-w-md }).pad(2).overflow({ all: visible }) }
+  style page = { size({ w: 100%, max-w: breakpoint-desktop }).margin({ x: auto }).overflow({ all: visible }) }
+  style specimen = { size({ w: 100%, max-w: panel-max-w-md }).pad(2).overflow({ all: visible }) }
   style knobLabel = { fg(muted-foreground).type({ size: xs, weight: medium, tracking: wide, case: uppercase }) }
   style mutedSm = { fg(muted-foreground).type({ size: sm }) }
   style mutedXs = { fg(muted-foreground).type({ size: xs }) }
-  style exampleBlock = { size({ w: full }).pad({ t: 2, b: 4 }).overflow({ all: visible }) }
+  style exampleBlock = { size({ w: 100% }).pad({ t: 2, b: 4 }).overflow({ all: visible }) }
   style sectionLabel = { fg(muted-foreground).type({ size: xs, tracking: wide, case: uppercase }) }
-  style scrollDemoV = { size({ w: full, h: 32, max-w: panel-max-w-sm }).pad(3).border({ color: border-subtle, width: 1 }).radius(md).bg(surface-0) }
-  style scrollDemoH = { size({ w: full, max-w: panel-max-w-sm }).pad(3).border({ color: border-subtle, width: 1 }).radius(md).bg(surface-0) }
+  style scrollDemoV = { size({ w: 100%, h: 32, max-w: panel-max-w-sm }).pad(3).border({ color: border-subtle, width: 1 }).radius(md).bg(surface-0) }
+  style scrollDemoH = { size({ w: 100%, max-w: panel-max-w-sm }).pad(3).border({ color: border-subtle, width: 1 }).radius(md).bg(surface-0) }
   style wideBand = { size({ w: panel-max-w-lg }).type({ wrap: nowrap }) }
 </scope>
 
@@ -32,30 +32,30 @@ export default controller((_ctx: Scope) => {
   const specimenCode = derived(() => {
     const o = orientation()
     if (o === 'horizontal') {
-      return `<scroll-area orientation="horizontal" style({ size({ w: full }).pad(3).border({ color: border, width: 1 }).radius(md) })>
+      return `<scroll-area orientation="horizontal" style({ size({ w: 100% }).pad(3).border({ color: border, width: 1 }).radius(md) })>
   <p style({ type({ wrap: nowrap }) })>Wide content that overflows →</p>
 </scroll-area>`
     }
     if (o === 'both') {
-      return `<scroll-area orientation="both" style({ size({ w: full, h: 32 }).pad(3).border({ color: border, width: 1 }).radius(md) })>
+      return `<scroll-area orientation="both" style({ size({ w: 100%, h: 32 }).pad(3).border({ color: border, width: 1 }).radius(md) })>
   <p>Overflow content…</p>
 </scroll-area>`
     }
-    return `<scroll-area orientation="vertical" style({ size({ w: full, h: 32 }).pad(3).border({ color: border, width: 1 }).radius(md) })>
+    return `<scroll-area orientation="vertical" style({ size({ w: 100%, h: 32 }).pad(3).border({ color: border, width: 1 }).radius(md) })>
   <p>Overflow content…</p>
 </scroll-area>`
   })
 
   const saExVertical = () =>
-    `<scroll-area orientation="vertical" style({ size({ w: full, h: 32 }).pad(3).border({ color: border, width: 1 }).radius(md) })>
+    `<scroll-area orientation="vertical" style({ size({ w: 100%, h: 32 }).pad(3).border({ color: border, width: 1 }).radius(md) })>
   <p>Overflow content…</p>
 </scroll-area>`
   const saExHorizontal = () =>
-    `<scroll-area orientation="horizontal" style({ size({ w: full }).pad(3).border({ color: border, width: 1 }).radius(md) })>
+    `<scroll-area orientation="horizontal" style({ size({ w: 100% }).pad(3).border({ color: border, width: 1 }).radius(md) })>
   <p style({ type({ wrap: nowrap }) })>Wide content that overflows →</p>
 </scroll-area>`
   const saExBoth = () =>
-    `<scroll-area orientation="both" style({ size({ w: full, h: 32 }).pad(3).border({ color: border, width: 1 }).radius(md) })>
+    `<scroll-area orientation="both" style({ size({ w: 100%, h: 32 }).pad(3).border({ color: border, width: 1 }).radius(md) })>
   <p>Tall and wide overflow…</p>
 </scroll-area>`
 

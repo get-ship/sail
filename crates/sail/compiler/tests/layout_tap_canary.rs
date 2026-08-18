@@ -133,7 +133,7 @@ fn scan_file_kind(path: &std::path::Path, kind: &'static str) -> canary::Preproc
 /// Owned quiet-clip page: short wrapping copy plus truncate opt-in.
 /// Must stay silent for `clipped-text` at every collect viewport.
 const QUIET_CLIP_SRC: &str = r#"
-<column style({ pad(4).size({ w: full, min-w: 0 }) })>
+<column style({ pad(4).size({ w: 100%, min-w: 0 }) })>
   <h1>Quiet clip</h1>
   <p>Short copy that fits every viewport.</p>
   <p style({ size({ w: 16, min-w: 0 }).type({ wrap: truncate }) })>Supercalifragilisticexpialidocious</p>

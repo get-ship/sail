@@ -16,7 +16,7 @@
   style brandCard = { overflow(hidden).size({ min-w: 0 }).radius(lg).border(subtle).bg(surface-1) }
   // position:relative sized box — sail-color-picker host is display:contents; swatch fills this box.
   // no preset: size lock + position
-  style brandSwatch = { position(relative).size({ w: full, h: 28, min-h: 28 }).overflow(hidden), when: { stateEdit: cursor(pointer), stateLocked: cursor(default) } }
+  style brandSwatch = { position(relative).size({ w: 100%, h: 28, min-h: 28 }).overflow(hidden), when: { stateEdit: cursor(pointer), stateLocked: cursor(default) } }
   // Token-row chip: explicit size + relative so absolute-fill swatch has a real hit target.
   // no preset: size lock + position
   style tokenChip = { position(relative).size({ w: 9, h: 9, min-w: 9, min-h: 9 }).overflow(hidden).radius(md).border(subtle) }

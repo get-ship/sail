@@ -4,7 +4,7 @@
 -->
 <scope>
   // no preset: min-w lock
-  style shellRoot = { size({ w: full, h: screen, min-w: 0, min-h: screen }).overflow(hidden).bg(canvas).fg(canvas) }
+  style shellRoot = { size({ w: 100%, h: screen, min-w: 0, min-h: screen }).overflow(hidden).bg(canvas).fg(canvas) }
   // no preset: size lock
   style railItem = { size({ w: 10, h: 10, min-w: 10, min-h: 10 }).radius(md).fg(muted), when: { hover: bg(hover-bg).fg(canvas), current: bg(selected-bg).fg(primary) } }
   // no preset: size lock + border width 0

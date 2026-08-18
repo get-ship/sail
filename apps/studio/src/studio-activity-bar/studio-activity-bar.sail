@@ -5,9 +5,9 @@
 -->
 <scope>
   // no preset: size lock + edge-only border
-  style railRoot = { display(flex).dir(column).size({ w: 12, h: full, min-w: 12, min-h: 0, max-w: 12 }).overflow(visible).bg(surface-0).border({ edge: r, color: border, width: 1 }) }
+  style railRoot = { display(flex).dir(column).size({ w: 12, h: 100%, min-w: 12, min-h: 0, max-w: 12 }).overflow(visible).bg(surface-0).border({ edge: r, color: border, width: 1 }) }
   // no preset: size lock + edge-only border
-  style brandSlot = { size({ w: full, h: 12, min-h: 12 }).pad(1).border({ edge: b, color: border-subtle, width: 1 }) }
+  style brandSlot = { size({ w: 100%, h: 12, min-h: 12 }).pad(1).border({ edge: b, color: border-subtle, width: 1 }) }
   // no preset: size lock
   style brandMark = { size({ w: 10, h: 10, min-w: 10, min-h: 10 }).radius(md).bg(surface-1).fg(muted).border(subtle) }
   style itemsCol = { size(max).pad(1) }

@@ -7,7 +7,7 @@ import { signal, derived } from '@ship/sail-runtime'
 export const code = {
   // Step 1 — markup only. No props, no controller: a .sail file with nothing
   // but a template is a valid component.
-  markup: `<card style({ pad(4).size({ w: full, max-w: panel-max-w-sm }) })>
+  markup: `<card style({ pad(4).size({ w: 100%, max-w: panel-max-w-sm }) })>
   <column gap="3">
     <row align="center" justify="between" nowrap>
       <strong style({ type({ size: sm, tracking: wide, case: uppercase }) })>
@@ -26,7 +26,7 @@ export const code = {
   }
 </scope>
 
-<card style({ pad(4).size({ w: full, max-w: panel-max-w-sm }) })>
+<card style({ pad(4).size({ w: 100%, max-w: panel-max-w-sm }) })>
   <column gap="3">
     <row align="center" justify="between" nowrap>
       <strong style({ type({ size: sm, tracking: wide, case: uppercase }) })>

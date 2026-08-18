@@ -4,10 +4,10 @@
 -->
 
 <scope>
-  style page = { size({ w: full, max-w: breakpoint-desktop }).margin({ x: auto }) }
+  style page = { size({ w: 100%, max-w: breakpoint-desktop }).margin({ x: auto }) }
   style knobLabel = { fg(muted-foreground).type({ size: xs, weight: medium, tracking: wide, case: uppercase }) }
   style sizeValue = { fg(muted-foreground).type({ family: mono, size: xs }) }
-  style tickRow = { size({ w: full }).pad({ x: 1_5, t: 1 }) }
+  style tickRow = { size({ w: 100% }).pad({ x: 1_5, t: 1 }) }
   style tick = { fg(muted-foreground).type({ family: mono, size: xs }) }
   style swatch = { size(7).shrink(0).radius(full).cursor(pointer).border({ color: transparent, width: 2 }).elevation(xs), when: { selected: border({ color: foreground }).elevation(sm), hover: filter({ opacity: 90 }) } }
   style swatchPrimary = { bg(primary) }
@@ -17,9 +17,9 @@
   style swatchDestructive = { bg(destructive) }
   style swatchAccent = { bg(accent) }
   style swatchMuted = { bg(muted).border({ color: border }) }
-  style exampleBlock = { size({ w: full }).pad({ t: 2, b: 4 }) }
+  style exampleBlock = { size({ w: 100% }).pad({ t: 2, b: 4 }) }
   style sectionLabel = { fg(muted-foreground).type({ size: xs, tracking: wide, case: uppercase }) }
-  style demoRow = { size({ w: full }).pad({ y: 2 }) }
+  style demoRow = { size({ w: 100% }).pad({ y: 2 }) }
   style mutedXs = { fg(muted-foreground).type({ size: xs }) }
 </scope>
 

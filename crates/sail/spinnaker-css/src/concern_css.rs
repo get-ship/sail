@@ -4,8 +4,8 @@
 //! adapter's longhand map.
 
 use spinnaker::concerns::{
-    concern_teaching, find_concern, find_slot, is_named_scale_step, reject_size_pad_members,
-    resolve_concern_name, ConcernSlot, ConcernSpec,
+    ConcernSlot, ConcernSpec, concern_teaching, find_concern, find_slot, is_named_scale_step,
+    reject_size_pad_members, resolve_concern_name,
 };
 use spinnaker::ir::{PaintArg, PaintOp, StyleDiagnostic};
 use spinnaker::scales;
@@ -992,6 +992,8 @@ pub fn lower_slot_value(
                     "current" => "currentColor".into(),
                     other => other.to_string(),
                 }
+            } else if spec.name == "size" && spinnaker::is_free_size_value(bare) {
+                strip_size_quotes(bare)
             } else if let Some(scale) = slot.scale {
                 if let Some(lowered) = scales::lower(scale, bare) {
                     signed(lowered)
@@ -1027,6 +1029,15 @@ pub fn lower_slot_value(
 fn is_numeric_raw(inner: &str) -> bool {
     let t = inner.trim();
     !t.is_empty() && t.replace('_', ".").parse::<f64>().is_ok()
+}
+
+fn strip_size_quotes(raw: &str) -> String {
+    let s = raw.trim();
+    s.strip_prefix('\'')
+        .and_then(|s| s.strip_suffix('\''))
+        .or_else(|| s.strip_prefix('"').and_then(|s| s.strip_suffix('"')))
+        .unwrap_or(s)
+        .to_string()
 }
 
 fn is_measure_identity(name: &str) -> bool {
@@ -1094,5 +1105,14 @@ mod measure_column {
         let slot = find_slot(spec, "t").expect("margin t");
         let (_, css) = lower_slot_value(spec, slot, &PaintArg::Token("-5".into())).expect("lower");
         assert_eq!(css, "calc(-1 * var(--space-5))", "{css}");
+    }
+
+    #[test]
+    fn size_free_percent_is_literal_not_a_var() {
+        let spec = find_concern("size").expect("size concern");
+        let slot = find_slot(spec, "w").expect("size w");
+        let (_, css) =
+            lower_slot_value(spec, slot, &PaintArg::Token("100%".into())).expect("lower");
+        assert_eq!(css, "100%", "{css}");
     }
 }

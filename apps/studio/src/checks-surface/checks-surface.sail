@@ -30,7 +30,7 @@
   style groupHeader = { size({ h: 6 }).pad(3), when: { hover: bg(hover-bg) } }
   style ruleMono = { size(grow).fg(muted).type(mono-sm) }
   // no preset: size lock
-  style findingTrigger = { size({ w: full, h: 6 }).pad(3), when: { hover: bg(hover-bg) } }
+  style findingTrigger = { size({ w: 100%, h: 6 }).pad(3), when: { hover: bg(hover-bg) } }
   style monoXs = { fg(muted).type(mono-sm) }
   style msgSm = { size(grow).type(body-sm) }
   style fixChip = { fg(primary).type(body-sm) }

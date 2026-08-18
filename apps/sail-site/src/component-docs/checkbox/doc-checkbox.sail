@@ -4,17 +4,17 @@
 -->
 
 <scope>
-  style page = { size({ w: full, max-w: breakpoint-desktop }).margin({ x: auto }).overflow({ all: visible }) }
-  style fieldShell = { size({ w: full, max-w: 64 }).pad(2).overflow({ all: visible }) }
-  style fullW = { size({ w: full }) }
+  style page = { size({ w: 100%, max-w: breakpoint-desktop }).margin({ x: auto }).overflow({ all: visible }) }
+  style fieldShell = { size({ w: 100%, max-w: 64 }).pad(2).overflow({ all: visible }) }
+  style fullW = { size({ w: 100% }) }
   style knobLabel = { fg(muted-foreground).type({ size: xs, weight: medium, tracking: wide, case: uppercase }) }
   style sizeValue = { fg(muted-foreground).type({ family: mono, size: xs }) }
-  style tickRow = { size({ w: full }).pad({ x: 1_5, t: 1 }) }
+  style tickRow = { size({ w: 100% }).pad({ x: 1_5, t: 1 }) }
   style tick = { fg(muted-foreground).type({ family: mono, size: xs }) }
-  style exampleBlock = { size({ w: full }).pad({ t: 2, b: 4 }).overflow({ all: visible }) }
+  style exampleBlock = { size({ w: 100% }).pad({ t: 2, b: 4 }).overflow({ all: visible }) }
   style exampleLead = { fg(muted-foreground).type({ size: sm }) }
   style sectionLabel = { fg(muted-foreground).type({ size: xs, tracking: wide, case: uppercase }) }
-  style demoRow = { size({ w: full }).pad({ y: 2 }) }
+  style demoRow = { size({ w: 100% }).pad({ y: 2 }) }
 </scope>
 
 <controller>

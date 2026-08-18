@@ -2,12 +2,12 @@
   <sail-fill-shell> — full-bleed workbench (no docs rail).
 -->
 <scope>
-  style shell = { size({ w: full, h: full, min-w: 0, min-h: 0 }).grow(1).overflow({ all: hidden }) }
+  style shell = { size({ w: 100%, h: 100%, min-w: 0, min-h: 0 }).grow(1).overflow({ all: hidden }) }
   style mainWorkbench = { display(flex).dir(column).size({h: fill, min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }) }
 </scope>
 
 <row nowrap align="stretch" gap="0" style(shell)>
-  <main testid="fill-shell" style(mainWorkbench, { grow(1).size({ w: full, min-w: 0 }) })>
+  <main testid="fill-shell" style(mainWorkbench, { grow(1).size({ w: 100%, min-w: 0 }) })>
     <slot name="route"></slot>
   </main>
 </row>

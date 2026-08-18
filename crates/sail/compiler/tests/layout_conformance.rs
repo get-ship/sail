@@ -298,7 +298,7 @@ fn flex_child_gets_min_width_zero() {
 
 #[test]
 fn sx_width_full_matches_css() {
-    let src = r#"<div style({ size({ w: full }) })> x</div>"#;
+    let src = r#"<div style({ size({ w: 100% }) })> x</div>"#;
     let (preprocessed, hosts) = preprocess_with_hosts(src);
     let (_, css) = split_html_css(&preprocessed);
     let rules = parse_css(css);

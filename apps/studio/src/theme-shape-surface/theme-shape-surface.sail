@@ -47,19 +47,19 @@
   // no preset: min-w lock
   style statCell = { pad(2_5).size({ min-w: 0 }).radius(sm).border(subtle) }
   // no preset: size lock
-  style stageSolid = { size({ h: full, min-h: 0 }).bg(background) }
+  style stageSolid = { size({ h: 100%, min-h: 0 }).bg(background) }
   // Primary specimen card: radius.lg + elev + border + freeform fill (frost α live).
   style liveCard = { pad(5).border(subtle) }
   // no preset: size lock
-  style glassMini = { size({ w: full, max-w: panel-max-w-sm }).pad(4).border(subtle) }
+  style glassMini = { size({ w: 100%, max-w: panel-max-w-sm }).pad(4).border(subtle) }
   style surfaceRoot = { size(grow).overflow(hidden).bg(background) }
   style workbench = { size(grow).overflow(hidden).bg(background) }
   // no preset: panel width lock + edge-only border
-  style panelRail = { size({ w: panel-max-w-sm, h: full, min-w: panel-min-w-sm, min-h: 0, max-w: panel-max-w-sm }).border({ edge: r, color: border-subtle, width: 1 }).bg(background) }
+  style panelRail = { size({ w: panel-max-w-sm, h: 100%, min-w: panel-min-w-sm, min-h: 0, max-w: panel-max-w-sm }).border({ edge: r, color: border-subtle, width: 1 }).bg(background) }
   style specimenDock = { size(grow).overflow(hidden).bg(background) }
   style specimenPad = { size(grow).pad(4) }
   // no preset: min-w lock
-  style specimenFrame = { size({ h: full, min-w: 0, min-h: 0 }).overflow(hidden).elevation(lg) }
+  style specimenFrame = { size({ h: 100%, min-w: 0, min-h: 0 }).overflow(hidden).elevation(lg) }
   // no preset: min-w lock + edge-only border
   style specimenChrome = { pad(3).size({ h: 8, min-w: 0, min-h: 8 }).border({ edge: b, color: border-subtle, width: 1 }).bg(surface-1) }
   // no preset: size lock
@@ -421,9 +421,9 @@ export default controller(() => {
               <column
                 specimen-body
                 gap="5"
-                align="center" style({ pad(6).size({ w: full, min-w: 0 }) })>
+                align="center" style({ pad(6).size({ w: 100%, min-w: 0 }) })>
                 <!-- no preset: size lock -->
-                <column gap="1" style({ size({ w: full, max-w: panel-max-w-sm }) })>
+                <column gap="1" style({ size({ w: 100%, max-w: panel-max-w-sm }) })>
                   <p style({ type(heading) })>Studio surface</p>
                   <p style({ fg(muted).type(body-sm) })>
                     Radius + elevation + border as character. Dial left — this card follows.
@@ -433,7 +433,7 @@ export default controller(() => {
                 <!-- Single character card: freeform fill (frost α live), not solid nested plate. -->
                 <stack spec-card use:liveBox={liveCardBox()} style(liveCard)>
                   <!-- no preset: size lock -->
-                  <column gap="4" style({ size({ w: full, max-w: panel-max-w-sm }) })>
+                  <column gap="4" style({ size({ w: 100%, max-w: panel-max-w-sm }) })>
                     <row gap="3" align="center" nowrap>
                       <avatar size="sm" initials="S" tone="primary"></avatar>
                       <column gap="0" style(growMin)>
@@ -509,7 +509,7 @@ export default controller(() => {
                 </column>
 
                 <!-- no preset: size lock -->
-                <row align="center" justify="between" gap="2" nowrap style({ size({ w: full, max-w: panel-max-w-md }) })>
+                <row align="center" justify="between" gap="2" nowrap style({ size({ w: 100%, max-w: panel-max-w-md }) })>
                   <p style(fieldHint)>Globals only — dial once, surfaces follow.</p>
                   <p style(pathMeta)>{shape.liveCssLine()}</p>
                 </row>

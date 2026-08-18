@@ -4,13 +4,13 @@
 -->
 
 <scope>
-  style page = { size({ w: full, max-w: breakpoint-desktop }).margin({ x: auto }).overflow({ all: visible }) }
-  style specimen = { size({ w: full, max-w: panel-max-w-sm }).pad(2).overflow({ all: visible }) }
-  style fullW = { size({ w: full }) }
+  style page = { size({ w: 100%, max-w: breakpoint-desktop }).margin({ x: auto }).overflow({ all: visible }) }
+  style specimen = { size({ w: 100%, max-w: panel-max-w-sm }).pad(2).overflow({ all: visible }) }
+  style fullW = { size({ w: 100% }) }
   style grow1 = { grow(1) }
-  style skelBlock = { size({ w: full, max-w: panel-max-w-sm }) }
+  style skelBlock = { size({ w: 100%, max-w: panel-max-w-sm }) }
   style knobLabel = { fg(muted-foreground).type({ size: xs, weight: medium, tracking: wide, case: uppercase }) }
-  style exampleBlock = { size({ w: full }).pad({ t: 2, b: 4 }).overflow({ all: visible }) }
+  style exampleBlock = { size({ w: 100% }).pad({ t: 2, b: 4 }).overflow({ all: visible }) }
   style sectionLabel = { fg(muted-foreground).type({ size: xs, tracking: wide, case: uppercase }) }
 </scope>
 

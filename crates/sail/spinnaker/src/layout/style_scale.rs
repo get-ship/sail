@@ -442,6 +442,12 @@ fn length_px(d: Dimension) -> Option<f32> {
 }
 
 pub(crate) fn size_token_to_dimension(value: &str) -> Dimension {
+    let value = value.trim();
+    let value = value
+        .strip_prefix('\'')
+        .and_then(|s| s.strip_suffix('\''))
+        .or_else(|| value.strip_prefix('"').and_then(|s| s.strip_suffix('"')))
+        .unwrap_or(value);
     match value {
         "0" => Dimension::length(0.0),
         "auto" => Dimension::auto(),
@@ -454,6 +460,9 @@ pub(crate) fn size_token_to_dimension(value: &str) -> Dimension {
         "min" => Dimension::auto(),
         "max" => Dimension::auto(),
         other => {
+            if let Some(d) = parse_css_length(other) {
+                return d;
+            }
             if let Ok(step) = other.parse::<u32>() {
                 return Dimension::length(token_px_for_space(step));
             }

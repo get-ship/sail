@@ -13,7 +13,7 @@ export const code = {
 
 <card>{title()}</card>`,
 
-  template: `<card style({ pad(4).size({ w: full }) })>
+  template: `<card style({ pad(4).size({ w: 100% }) })>
   <row align="center" justify="between" nowrap>
     <strong style({ type({ size: sm, tracking: wide, case: uppercase }) })>
       {title()}</strong>
@@ -70,7 +70,7 @@ export default controller((ctx) => {
 
   usage: `<departures-board title="Departures — SFO"></departures-board>`,
 
-  slotDef: `<card style({ pad(4).size({ w: full }) })>
+  slotDef: `<card style({ pad(4).size({ w: 100% }) })>
   ...the board...
   <slot name="footer"></slot>
 </card>`,
