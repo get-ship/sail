@@ -67,6 +67,18 @@ pub fn suggest_fixes(
             plans.append(&mut ps);
             continue;
         }
+        if let Some(mut ps) = fix_gradient_molecule(source, d) {
+            plans.append(&mut ps);
+            continue;
+        }
+        if let Some(p) = fix_structured_unknown_op(source, d) {
+            plans.push(p);
+            continue;
+        }
+        if let Some(p) = fix_structured_dangling_ref(source, d) {
+            plans.push(p);
+            continue;
+        }
         let rule = d.rule.as_deref().unwrap_or("");
         match rule {
             "sail-participation-style" => {
@@ -198,6 +210,108 @@ fn fix_off_scale_space(source: &str, d: &crate::diagnostics::Diagnostic) -> Opti
         return None;
     }
     Some(plans)
+}
+
+/// Suggest-only: unknown gradient molecule → table names. Nothing auto-applies.
+fn fix_gradient_molecule(source: &str, d: &crate::diagnostics::Diagnostic) -> Option<Vec<FixPlan>> {
+    if !d.message.contains("is not a gradient molecule:") {
+        return None;
+    }
+    let head = d
+        .message
+        .split(" is not a gradient molecule:")
+        .next()?
+        .trim();
+    let value = head.strip_prefix("Style error:").unwrap_or(head).trim();
+    if value.is_empty() {
+        return None;
+    }
+    let offset = line_col_to_offset(source, d.line, d.col);
+    let (start, end) = find_token_span_from(source, offset, value)
+        .or_else(|| find_token_span_from(source, 0, value))?;
+    let rule = d.rule.clone().unwrap_or_else(|| "spinnaker".into());
+    let plans = spinnaker::GRADIENT_MOLECULES
+        .iter()
+        .map(|name| FixPlan {
+            rule: rule.clone(),
+            line: d.line,
+            col: d.col,
+            message: format!("replace `{value}` with `{name}`"),
+            ops: vec![],
+            text_patch: Some(TextPatch {
+                start,
+                end,
+                replacement: (*name).to_string(),
+            }),
+            actor: None,
+        })
+        .collect::<Vec<_>>();
+    if plans.is_empty() { None } else { Some(plans) }
+}
+
+/// Suggest-only: unknown structured op → `mix`. Nothing auto-applies.
+fn fix_structured_unknown_op(source: &str, d: &crate::diagnostics::Diagnostic) -> Option<FixPlan> {
+    if !d.message.contains("unknown op `") || !d.message.contains("expected {op: mix}") {
+        return None;
+    }
+    let value = d
+        .message
+        .split("unknown op `")
+        .nth(1)?
+        .split('`')
+        .next()
+        .filter(|s| !s.is_empty())?;
+    let offset = line_col_to_offset(source, d.line, d.col);
+    let (start, end) = find_token_span_from(source, offset, value)?;
+    Some(FixPlan {
+        rule: d.rule.clone().unwrap_or_else(|| "spinnaker".into()),
+        line: d.line,
+        col: d.col,
+        message: format!("replace `{value}` with `mix`"),
+        ops: vec![],
+        text_patch: Some(TextPatch {
+            start,
+            end,
+            replacement: "mix".into(),
+        }),
+        actor: None,
+    })
+}
+
+/// Suggest-only: dangling `{ref}` → `primary`. Nothing auto-applies.
+fn fix_structured_dangling_ref(
+    source: &str,
+    d: &crate::diagnostics::Diagnostic,
+) -> Option<FixPlan> {
+    if !d.message.contains("dangling ref `") {
+        return None;
+    }
+    let inner = d
+        .message
+        .split("dangling ref `")
+        .nth(1)?
+        .split('`')
+        .next()
+        .filter(|s| !s.is_empty())?;
+    let value = inner.trim_start_matches('{').trim_end_matches('}');
+    if value.is_empty() {
+        return None;
+    }
+    let offset = line_col_to_offset(source, d.line, d.col);
+    let (start, end) = find_token_span_from(source, offset, value)?;
+    Some(FixPlan {
+        rule: d.rule.clone().unwrap_or_else(|| "spinnaker".into()),
+        line: d.line,
+        col: d.col,
+        message: format!("replace `{value}` with `primary`"),
+        ops: vec![],
+        text_patch: Some(TextPatch {
+            start,
+            end,
+            replacement: "primary".into(),
+        }),
+        actor: None,
+    })
 }
 
 /// Suggest-only: point `size(full)` at `size(grow)` and `size(max)`. Nothing auto-applies.
@@ -1872,6 +1986,84 @@ mod tests {
             crate::parse::preprocess::preprocess(&out)
                 .unwrap_or_else(|e| panic!("applying {:?} must compile: {e:?}\n{out}", p.message));
         }
+    }
+
+    #[test]
+    fn gradient_unknown_suggests_table() {
+        let src = r#"<div style({ bg({ gradient: rainbow }) })>x</div>"#;
+        let plans = suggest_fixes_for_source(src, "t.sail", None);
+        let g: Vec<_> = plans
+            .iter()
+            .filter(|p| p.message.starts_with("replace `") && p.text_patch.is_some())
+            .filter(|p| {
+                matches!(
+                    p.text_patch.as_ref().map(|t| t.replacement.as_str()),
+                    Some("primary" | "accent" | "surface" | "none")
+                )
+            })
+            .collect();
+        let reps: Vec<&str> = g
+            .iter()
+            .filter_map(|p| p.text_patch.as_ref().map(|t| t.replacement.as_str()))
+            .collect();
+        assert!(reps.contains(&"primary"), "{plans:?}");
+        assert!(reps.contains(&"accent"), "{reps:?}");
+        assert!(reps.contains(&"surface"), "{reps:?}");
+        assert!(reps.contains(&"none"), "{reps:?}");
+        for p in &g {
+            assert!(!is_auto_apply_plan(p), "suggest-only: {p:?}");
+        }
+        let primary = g
+            .iter()
+            .find(|p| p.text_patch.as_ref().map(|t| t.replacement.as_str()) == Some("primary"))
+            .unwrap();
+        let patch = primary.text_patch.as_ref().unwrap();
+        let (out, skipped) =
+            apply_text_patches(src, &[(patch.start, patch.end, patch.replacement.clone())]);
+        assert_eq!(skipped, 0);
+        assert!(out.contains("gradient: primary"), "{out}");
+        crate::parse::preprocess::preprocess(&out)
+            .unwrap_or_else(|e| panic!("fixed source must compile: {e:?}\n{out}"));
+    }
+
+    #[test]
+    fn structured_unknown_op_suggests_mix() {
+        let src = r#"<div style({ bg({ op: blur, from: primary, onto: accent }) })>x</div>"#;
+        let plans = suggest_fixes_for_source(src, "t.sail", None);
+        let op: Vec<_> = plans
+            .iter()
+            .filter(|p| p.message.contains("`mix`"))
+            .collect();
+        assert_eq!(op.len(), 1, "{plans:?}");
+        assert!(!is_auto_apply_plan(op[0]), "suggest-only: {:?}", op[0]);
+        let patch = op[0].text_patch.as_ref().unwrap();
+        assert_eq!(patch.replacement, "mix");
+        let (out, skipped) =
+            apply_text_patches(src, &[(patch.start, patch.end, patch.replacement.clone())]);
+        assert_eq!(skipped, 0);
+        assert!(out.contains("op: mix"), "{out}");
+        crate::parse::preprocess::preprocess(&out)
+            .unwrap_or_else(|e| panic!("fixed source must compile: {e:?}\n{out}"));
+    }
+
+    #[test]
+    fn structured_dangling_ref_suggests_primary() {
+        let src = r#"<div style({ bg({ ref: no-such }) })>x</div>"#;
+        let plans = suggest_fixes_for_source(src, "t.sail", None);
+        let r: Vec<_> = plans
+            .iter()
+            .filter(|p| p.message.contains("`primary`"))
+            .collect();
+        assert_eq!(r.len(), 1, "{plans:?}");
+        assert!(!is_auto_apply_plan(r[0]), "suggest-only: {:?}", r[0]);
+        let patch = r[0].text_patch.as_ref().unwrap();
+        assert_eq!(patch.replacement, "primary");
+        let (out, skipped) =
+            apply_text_patches(src, &[(patch.start, patch.end, patch.replacement.clone())]);
+        assert_eq!(skipped, 0);
+        assert!(out.contains("ref: primary"), "{out}");
+        crate::parse::preprocess::preprocess(&out)
+            .unwrap_or_else(|e| panic!("fixed source must compile: {e:?}\n{out}"));
     }
 
     #[test]

@@ -128,20 +128,52 @@ const TONE_BRIDGE: Record<string, Record<string, string>> = {
 
 const TONE_BRIDGE_MEMBERS = ['', 'foreground', 'hover'] as const
 
-/** Reflect a Tone group value onto `--{prop}` / `--{prop}-foreground` bridges. */
-function reflectToneBridge(el: Element, prop: string, value: string | null): void {
+/**
+ * Compiler-private custom-property write. Authors never call this —
+ * `bind(name)` in Style is the channel; the emitter writes this.
+ * `null` removes the property.
+ */
+export function writeCssVar(el: Element, name: string, value: string | null): void {
   const style = (el as HTMLElement).style
   if (!style || typeof style.setProperty !== 'function') return
+  if (value == null) style.removeProperty(name)
+  else style.setProperty(name, value)
+}
+
+/**
+ * Geometry channel: keep a custom property live from a signal read.
+ * Compiler-private. Authors write `bind(name)` in Style, not this.
+ */
+export function bindCssVar(
+  el: Element,
+  name: string,
+  get: () => unknown,
+  unit?: 'px',
+): Disposer {
+  return effect(() => {
+    const v = get()
+    if (v == null) {
+      writeCssVar(el, name, null)
+      return
+    }
+    const next =
+      unit === 'px' && typeof v === 'number' ? `${v}px` : String(v)
+    writeCssVar(el, name, next)
+  })
+}
+
+/** Reflect a Tone group value onto `--{prop}` / `--{prop}-foreground` bridges. */
+function reflectToneBridge(el: Element, prop: string, value: string | null): void {
   for (const m of TONE_BRIDGE_MEMBERS) {
     const css = m ? `--${prop}-${m}` : `--${prop}`
-    style.removeProperty(css)
+    writeCssVar(el, css, null)
   }
   if (value == null || value === '') return
   const group = TONE_BRIDGE[value]
   if (!group) return
   for (const [m, pub] of Object.entries(group)) {
     const css = m ? `--${prop}-${m}` : `--${prop}`
-    style.setProperty(css, `var(--${pub})`)
+    writeCssVar(el, css, `var(--${pub})`)
   }
 }
 

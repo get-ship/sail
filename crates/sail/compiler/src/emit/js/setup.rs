@@ -113,7 +113,7 @@ pub(super) fn emit_setup_body(
                         _ => "String(__v)".to_string(),
                     };
                     mount_w.line(&format!(
-                        "{{ const __v = ($scope.{scope_ident}()); if (__v == null) __root.style.removeProperty({css_prop}); else __root.style.setProperty({css_prop}, {value_expr}); }}"
+                        "{{ const __v = ($scope.{scope_ident}()); if (__v == null) writeCssVar(__root, {css_prop}, null); else writeCssVar(__root, {css_prop}, {value_expr}); }}"
                     ));
                 }
             }
@@ -228,11 +228,11 @@ fn emit_token_group_reflect(
     line.push_str(&map);
     line.push_str("; const __bridges = [");
     line.push_str(&bridges_lit);
-    line.push_str("]; if (__v == null || __v === \"\") { for (const __p of __bridges) __root.style.removeProperty(__p); } else { const __g = __map[String(__v)]; for (const __p of __bridges) __root.style.removeProperty(__p); if (__g) { for (const __k of Object.keys(__g)) { const __prop = __k ? `--");
+    line.push_str("]; if (__v == null || __v === \"\") { for (const __p of __bridges) writeCssVar(__root, __p, null); } else { const __g = __map[String(__v)]; for (const __p of __bridges) writeCssVar(__root, __p, null); if (__g) { for (const __k of Object.keys(__g)) { const __prop = __k ? `--");
     line.push_str(css_name);
     line.push_str("-${__k}` : `--");
     line.push_str(css_name);
-    line.push_str("`; __root.style.setProperty(__prop, `var(--${__g[__k]})`); } } } }");
+    line.push_str("`; writeCssVar(__root, __prop, `var(--${__g[__k]})`); } } } }");
     w.line(&line);
 }
 

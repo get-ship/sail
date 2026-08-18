@@ -41,6 +41,8 @@ export {
   bindValue,
   bindChecked,
   bindHtml,
+  writeCssVar,
+  bindCssVar,
 } from './bind'
 
 // ── ABI-only: events ───────────────────────────────────────────────────────

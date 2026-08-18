@@ -65,6 +65,7 @@ pub fn emit_module(
     let mut lowered = lowered.clone();
     if !sx_var_bindings.is_empty() {
         lowered.runtime_imports.insert("effect");
+        lowered.runtime_imports.insert("writeCssVar");
         lowered.dom_imports.insert("registerCustomProperties");
     }
     let lowered = &lowered;

@@ -55,10 +55,7 @@ fn a_prop_bound_var_ref_emits_length_property_and_host_reflection() {
         "{js}"
     );
     assert!(js.contains("$scope.glowRadius()"), "{js}");
-    assert!(
-        js.contains("__root.style.setProperty(\"--glow-radius\""),
-        "{js}"
-    );
+    assert!(js.contains("writeCssVar(__root, \"--glow-radius\""), "{js}");
     assert!(
         js.contains("__v + \"px\"") || js.contains("+ \"px\"") || js.contains("String(__v)"),
         "prop bind must reflect onto the host custom property:\n{js}"
@@ -90,6 +87,24 @@ fn action_write_without_use_refuses() {
 }
 
 #[test]
+fn size_bind_signal_uses_write_css_var_not_set_property() {
+    let js = compile_component(
+        r#"<div style({ size({ w: bind(boxW) }), bg(primary) })> </div>"#,
+        Some("controller((ctx) => { const boxW = signal(8); return { boxW }; })"),
+    )
+    .expect("compile");
+    assert!(js.contains("writeCssVar(__root, \"--box-w\""), "{js}");
+    assert!(
+        !js.contains("style.setProperty"),
+        "bind runtime path must not write the mailbox:\n{js}"
+    );
+    assert!(
+        js.contains("__v + \"px\"") || js.contains("+ \"px\""),
+        "{js}"
+    );
+}
+
+#[test]
 fn a_setup_returned_signal_var_ref_emits_property_and_host_reflection() {
     let js = compile_component(
         r#"<div style({ opacity(bind(fade)) })> </div>"#,
@@ -100,7 +115,7 @@ fn a_setup_returned_signal_var_ref_emits_property_and_host_reflection() {
     assert!(js.contains("@property --fade"), "{js}");
     assert!(js.contains("syntax: '<number>'"), "{js}");
     assert!(js.contains("$scope.fade()"), "{js}");
-    assert!(js.contains("__root.style.setProperty(\"--fade\""), "{js}");
+    assert!(js.contains("writeCssVar(__root, \"--fade\""), "{js}");
 }
 
 #[test]
@@ -138,7 +153,7 @@ fn number_to_color_refuses() {
 
 #[test]
 fn a_global_token_var_ref_emits_no_component_local_wiring() {
-    let js = compile_component(r#"<div style({ bg(surface-2) })> </div>"#, None).expect("compile");
+    let js = compile_component(r#"<div style({ bg(primary) })> </div>"#, None).expect("compile");
     assert!(!js.contains("registerCustomProperties("), "{js}");
     assert!(!js.contains("@property"), "{js}");
 }
