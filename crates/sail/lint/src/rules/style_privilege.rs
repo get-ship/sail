@@ -4,7 +4,9 @@
 //! Privilege follows FileKind. Config cannot grant Full. Route documents
 //! (`page` / `index` / `_layout` under `routes/`) write tags, not Style.
 //! Hyphenated route-local siblings and `src/components/**` spend named
-//! identities. Identity slot assembly (`type({ size: xs })`) stays L1-only.
+//! identities. Identity slot assembly (`type({ size: xs })`) stays L1-only
+//! on product L2. `packages/sail/l0/**` specimen CEs are Full — the
+//! gauntlet speaks the language. `raw()` is not this door.
 //! Geometry `size({` / `position({` and scale-edge `pad({` / `margin({`
 //! are free on files that may Style. `filter({` stays L1-only.
 
@@ -374,6 +376,31 @@ mod tests {
                     .message
                     .contains("body | body-sm | heading | label"),
             "type slots must name the type table: {findings:?}"
+        );
+    }
+
+    #[test]
+    fn l0_specimen_may_spend_slot_form() {
+        let path = PathBuf::from("packages/sail/l0/routes/paint/type/l0-type-face.sail");
+        for src in [
+            "style box = { type({ size: xs }) }",
+            "style box = { bg({ color: primary }) }",
+            "style box = { radius({ all: md }) }",
+            "style box = { elevation({ shadow: sm }) }",
+            "style box = { filter({ opacity: 50 }) }",
+        ] {
+            assert!(
+                check(&path, src).is_empty(),
+                "L0 specimen CE speaks the language: {src}"
+            );
+        }
+        let page = PathBuf::from("packages/sail/l0/routes/paint/type/page.sail");
+        let findings = check(&page, "style box = { type({ size: xs }) }");
+        assert!(
+            findings
+                .iter()
+                .any(|f| f.message.contains("documents write tags")),
+            "L0 page.sail stays a document: {findings:?}"
         );
     }
 

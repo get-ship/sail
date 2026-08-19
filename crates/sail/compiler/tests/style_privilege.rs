@@ -379,3 +379,17 @@ fn identities_closed_paint_slots_stay_red() {
         );
     }
 }
+
+#[test]
+fn l0_specimen_slot_form_compiles() {
+    let path = "packages/sail/l0/routes/paint/type/l0-type-face.sail";
+    let src = r#"<span style({ type({ size: xs }), bg({ color: primary }) })>Aa</span>"#;
+    compile(src, opts(path)).expect("L0 specimen CE may spend slot form");
+    let diags = check_all(src, Some(path.as_ref()), &[], None);
+    assert!(
+        !diags
+            .iter()
+            .any(|d| d.rule.as_deref() == Some("sail-style-privilege")),
+        "L0 specimen must not emit privilege: {diags:?}"
+    );
+}

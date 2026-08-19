@@ -477,11 +477,14 @@ fn leak_str(s: &str) -> &'static str {
 /// import sail-lint (cycle), so the document-stem check is duplicated here:
 /// - `crates/sail/compiler/stdlib/**` → Full
 /// - `.sail` stem `page` | `index` | `_layout` under `routes/` → None
-/// - other `.sail` → Identities (includes hyphenated route-local CEs)
+/// - `packages/sail/l0/**` hyphenated CEs → Full (gauntlet specimens
+///   speak the language; this is not `raw()`, which is the off-scale door)
+/// - other `.sail` → Identities (product L2: presets only)
 /// - else → None
 ///
 /// Do **not** treat every `routes/**` file as None.
 /// `routes/pricing/pricing-hero.sail` is Identities.
+/// L0 `page.sail` stays None. L0 `l0-type-face.sail` is Full.
 ///
 /// M1 enforcement is scoped to product trees so compiler test fixtures
 /// (including the L1 matrix) stay compilable.
@@ -493,6 +496,9 @@ pub fn privilege_for_path(path: &std::path::Path) -> Privilege {
     if p.ends_with(".sail") {
         if is_route_document_path(path, &p) {
             return Privilege::None;
+        }
+        if is_l0_path(&p) {
+            return Privilege::Full;
         }
         return Privilege::Identities;
     }
@@ -519,8 +525,12 @@ pub fn privilege_enforced_for_path(path: &std::path::Path) -> bool {
         || p.starts_with("apps/studio/");
     let under_blocks =
         p.contains("/packages/sail/blocks/") || p.starts_with("packages/sail/blocks/");
-    let under_l0 = p.contains("/packages/sail/l0/") || p.starts_with("packages/sail/l0/");
+    let under_l0 = is_l0_path(&p);
     under_apps || under_blocks || under_l0
+}
+
+fn is_l0_path(p: &str) -> bool {
+    p.contains("/packages/sail/l0/") || p.starts_with("packages/sail/l0/")
 }
 
 fn is_stdlib_path(p: &str) -> bool {
@@ -603,6 +613,16 @@ mod tests {
         );
         assert_eq!(
             privilege_for_path(Path::new("packages/sail/l0/routes/poison/poison-trap.sail")),
+            Privilege::Full
+        );
+        assert_eq!(
+            privilege_for_path(Path::new(
+                "packages/sail/l0/routes/paint/type/l0-type-face.sail"
+            )),
+            Privilege::Full
+        );
+        assert_eq!(
+            privilege_for_path(Path::new("apps/sail-site/src/doc-example/doc-example.sail")),
             Privilege::Identities
         );
         assert!(!privilege_enforced_for_path(Path::new(
