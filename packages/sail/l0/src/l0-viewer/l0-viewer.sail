@@ -47,8 +47,15 @@
     {
       id: 'paint',
       label: 'paint',
-      href: '/paint/gradient',
+      href: '/paint/bg',
       members: [
+        { href: '/paint/bg', label: 'bg' },
+        { href: '/paint/fg', label: 'fg' },
+        { href: '/paint/border', label: 'border' },
+        { href: '/paint/radius', label: 'radius' },
+        { href: '/paint/elevation', label: 'elevation' },
+        { href: '/paint/filter', label: 'filter' },
+        { href: '/paint/type', label: 'type' },
         { href: '/paint/gradient', label: 'gradient' },
         { href: '/paint/structured', label: 'structured' },
         { href: '/paint/bind', label: 'bind' },
