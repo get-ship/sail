@@ -1064,8 +1064,6 @@ fn lower_motion_slots(
             "animate" => {
                 let css = match value {
                     PaintArg::Token(t) if t == "spin" => "var(--animate-spin)".into(),
-                    PaintArg::Token(t) if t == "bob" => "var(--animate-bob)".into(),
-                    PaintArg::Token(t) if t == "eq" => "var(--animate-eq)".into(),
                     PaintArg::Token(t) if t == "none" => "none".into(),
                     other => other.display(),
                 };

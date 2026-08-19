@@ -525,7 +525,7 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
             // ambient @keyframes live in the generated contracts sheet,
             // not free CSS and not fx:loop. Keywords on the animate
             // animate keywords must stay in lockstep with styleAnimate:true rows.
-            ("animate", name) if matches!(name, "spin" | "bob" | "eq") => {
+            ("animate", name) if matches!(name, "spin") => {
                 return Ok(vec![("animation".into(), format!("var(--animate-{name})"))]);
             }
             ("bgImage", "none") => {
@@ -533,9 +533,6 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
             }
             ("borderImage", "none") => {
                 return Ok(vec![("border-image".into(), "none".into())]);
-            }
-            ("borderImage", "corner-image") => {
-                return Ok(vec![("border-image".into(), "var(--corner-image)".into())]);
             }
             ("backdrop", "none") => {
                 return Ok(vec![

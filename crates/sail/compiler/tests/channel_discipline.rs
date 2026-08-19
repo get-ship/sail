@@ -63,7 +63,6 @@ const GOVERNED: &[(&str, &str, &str)] = &[
         "--heading-transform / --label-transform",
         "casing",
     ),
-    ("border-image", "--corner-image", "corner treatment"),
 ];
 
 /// Declared exemptions, each with the reason it is NOT a channel breach.

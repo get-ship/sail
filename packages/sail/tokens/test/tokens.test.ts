@@ -389,21 +389,6 @@ describe('@ship/tokens — theme catalog (THEMES export)', () => {
     // paper light block emits the derived --primary from the brick-red anchor.
     expect(themesCss).toMatch(/theme=['"]paper['"]\][\s\S]*?--primary\s*:/)
     expect(paper.anchors.light.primary.h).toBe(30)
-
-    // Theme remaps color.card → --card
-    const cardBg = paper.modes.light.color?.card?.default?.$value
-    if (cardBg) {
-      expect(reg.paths?.['color.card.default']).toBe('card')
-      expect(reg.tokens?.card?.path).toBe('color.card.default')
-      expect(themesCss).toMatch(
-        new RegExp(
-          `theme=['"]paper['"]\\][\\s\\S]*?--card\\s*:\\s*${cardBg.replace(
-            /[.*+?^${}()|[\]\\]/g,
-            '\\$&',
-          )}`,
-        ),
-      )
-    }
   })
 
   it('every THEMES id is also a `:root[theme="id"]` selector in themes.css', () => {

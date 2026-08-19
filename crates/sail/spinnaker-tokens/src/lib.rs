@@ -36,14 +36,8 @@ const GENERATED_HEADER: &str = "\
  * Regenerate: cargo run -p sail-compiler -- tokens
  *            (or: pnpm --filter @ship/tokens generate)
  *
- * Token layers, in order of abstraction (highest first):
- *   1. Semantic surfaces  — --surface-0..3, --backdrop
- *   2. Tone ramps         — --tone-{name}-{fg|bg|bg-solid|border|ring}
- *   3. Brand palette      — --primary, --accent, --foreground, etc.
- *   4. Primitives         — spacing, radii, typography scale, motion curves
- *
- * Components should read the HIGHEST layer that fits.
- * Themes: model/themes/*.json → themes.css + $extensions.sail.chrome.
+ * Purpose steps (bg/fg), chromatic roles, overlay clamps, control
+ * heights, space ramp. Themes: model/themes/*.json → themes.css.
  */
 ";
 
