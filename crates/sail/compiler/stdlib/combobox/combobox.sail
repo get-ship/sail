@@ -1,8 +1,8 @@
 <!--
   <combobox placeholder="…"> — L1 filtering picker. Text input filters a listbox
-  and commits one option. Listbox is a native [popover] via CSS anchor; the
-  host controller owns ARIA + keyboard. Commit fires onSelect { value, label } and reflects value.
-  Element-mode structure is static: placeholder rides the host attr into the controller.
+  and commits one option. Listbox is a native [popover] via CSS anchor; use:combobox
+  owns ARIA + keyboard. Commit fires onSelect { value, label } and reflects value.
+  Element-mode structure is static: placeholder rides the host attr into use:combobox.
 -->
 
 <scope>
@@ -19,21 +19,9 @@
   style listbox = {position({ scheme: absolute, inset: auto, anchor: auto, area: bottom, z: popover }).pad(1).margin(0).size({ w: 100%, min-w: 100%, max-h: panel-max-h-sm }).overflow({ y: auto, overscroll: contain }).fg(foreground).bg(overlay).border({ color: border, width: 1 }).radius(md).elevation(lg)}
 </scope>
 
-<controller>
-import { combobox } from '@ship/sail-runtime/actions'
-export default controller((_ctx, host) => {
-  mount((el) => {
-    const result = combobox((el ?? host) as HTMLElement)
-    return () => {
-      result?.destroy?.()
-    }
-  })
-  return {}
-})
-</controller>
-<div style(host)>
+<div use:combobox style(host)>
   <input type="text" style(input)>
-  <!-- manual: auto light-dismiss races pointerdown-open (flash). The controller dismisses. -->
+  <!-- manual: auto light-dismiss races pointerdown-open (flash). use:combobox dismisses. -->
   <div popover="manual" placement="bottom" style(listbox)>
     <slot></slot>
   </div>

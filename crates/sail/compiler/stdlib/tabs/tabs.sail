@@ -7,7 +7,7 @@
       <tab title="Overview">panel…</tab>
     </tabs>
 
-  The host controller projects triggers into the built-in <tab-list> rail so the
+  use:tabs projects triggers into the built-in <tab-list> rail so the
   rail is a real layout child (not display:contents hunting). Parts form
   still works: an authored <tab-list> is the rail; the built-in one stays idle.
 -->
@@ -26,19 +26,7 @@
   style horiz = {dir(column)}
   style vert = {dir(row)}
 </scope>
-<controller>
-import { tabs } from '@ship/sail-runtime/actions'
-export default controller((_ctx, host) => {
-  mount((el) => {
-    const result = tabs((el ?? host) as HTMLElement)
-    return () => {
-      result?.destroy?.()
-    }
-  })
-  return {}
-})
-</controller>
-<row nowrap gap="3" style(host, {match: { orientation: { horizontal: horiz, vertical: vert } }})>
+<row nowrap gap="3" use:tabs style(host, {match: { orientation: { horizontal: horiz, vertical: vert } }})>
   <tab-list data-tabs-rail hidden></tab-list>
   <slot></slot>
 </row>

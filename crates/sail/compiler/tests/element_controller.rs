@@ -1,10 +1,10 @@
-//! Job C — controller in the `.sail`.
+//! Job C — `<controller>` is legal in an L1 `.sail`.
 //!
-//! One-file form, uniform with app components. No `customElements.define`,
-//! no hyphen CE, no sibling factory. No `<controller>` → static splice;
-//! with block → render machinery (`runController`). Use for state: tabs
-//! `active`, combobox open/filter, theme-picker session. Not button.
-//! Theme-picker stays a tag. Opaque host. Same tags at the use site.
+//! No `customElements.define`, no hyphen CE, no sibling factory.
+//! No `<controller>` → static splice; with a real block → render machinery.
+//! Button has none. Theme-picker stays a tag. Stdlib widgets do not
+//! trampoline `@ship/sail-runtime/actions` from a controller — that is
+//! not a brain.
 
 use sail_compiler::{CompileMode, CompileOpts, compile, compile_element};
 
@@ -82,38 +82,7 @@ fn button_source_has_no_controller() {
 }
 
 #[test]
-fn stdlib_stateful_widgets_brains_are_controllers() {
-    for (tag, dead_use) in [
-        ("tabs", "use:tabs"),
-        ("combobox", "use:combobox"),
-        ("theme-picker", "use:themeSelect"),
-    ] {
-        let src = stdlib_src(tag);
-        assert!(
-            src.contains("<controller"),
-            "{tag}: brain lives in `<controller>` in the same .sail, not a sibling factory:\n{src}"
-        );
-        assert!(
-            !src.contains(dead_use),
-            "{tag}: widget-tied `{dead_use}` is dead — state is the controller:\n{src}"
-        );
-        let el = compile_element(src, tag).unwrap_or_else(|e| panic!("{tag}: {e:?}"));
-        assert!(
-            el.structure_html
-                .contains(&format!("data-sail-ctrl=\"{tag}\"")),
-            "{tag} host stamps data-sail-ctrl: {}",
-            el.structure_html
-        );
-        assert!(
-            !el.structure_html.contains(dead_use),
-            "{tag} structure must not carry the dead use: stamp: {}",
-            el.structure_html
-        );
-    }
-}
-
-#[test]
-fn page_using_tabs_attaches_controller_not_ce() {
+fn page_using_tabs_is_not_ce() {
     let out = compile(
         r#"<tabs><tab title="A">one</tab><tab title="B">two</tab></tabs>"#,
         page_opts(),
@@ -121,35 +90,12 @@ fn page_using_tabs_attaches_controller_not_ce() {
     .expect("page with <tabs> compiles");
     let js = &out.js;
     assert!(
-        js.contains("runController"),
-        "with-block elements compile with render machinery (runController):\n{js}"
-    );
-    assert!(
-        js.contains("sail-l1:tabs"),
-        "controller def is the virtual one-file extract, not a sibling factory / CE:\n{js}"
-    );
-    assert!(
         !js.contains("customElements.define") && !js.contains("component(\"tabs\""),
         "L1 is not CE — no define, no hyphen registration:\n{js}"
     );
     assert!(
         js.contains("data-sail-host=\\\"tabs\\\"") || js.contains("data-sail-host=\"tabs\""),
         "same tag at the use site (opaque host):\n{js}"
-    );
-    assert!(
-        !js.contains("use:tabs"),
-        "tabs brain is not a use: stamp:\n{js}"
-    );
-    let imports_tabs_action = js.lines().any(|l| {
-        l.contains("@ship/sail-runtime/actions")
-            && (l.contains(" tabs")
-                || l.contains("{tabs")
-                || l.contains("tabs,")
-                || l.contains("tabs }"))
-    });
-    assert!(
-        !imports_tabs_action,
-        "tabs is not an action import — the controller is the brain:\n{js}"
     );
 }
 
@@ -172,10 +118,6 @@ fn theme_picker_stays_a_tag() {
     let out = compile("<theme-picker></theme-picker>", page_opts())
         .expect("<theme-picker> compiles as a tag");
     let js = &out.js;
-    assert!(
-        js.contains("runController") && js.contains("sail-l1:theme-picker"),
-        "theme-picker session lives in its controller; still a tag:\n{js}"
-    );
     assert!(
         !js.contains("customElements.define"),
         "theme-picker is framework chrome as a tag, not a CE:\n{js}"
