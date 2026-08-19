@@ -11,12 +11,9 @@
 //!   - the props block feeds the element MANIFEST (and, downstream, the
 //!     bare-shorthand vocabulary).
 //!
-//! The mode enforces the seam test mechanically: element *templates* are
-//! static structure + slots. Control flow, dynamic attributes, or dynamic
-//! text mean the source is a COMPONENT — the error says so. JS enhancement
-//! rides stacked `use:<behavior>` stamps on the static structure (lowered
-//! to `runAction` at the use site); an inline `<controller>` block is an
-//! L2-component facility and is REJECTED here (see `compile_element`).
+//! Element templates may include `{#if}` / `{#for}` / `{#match}` (legal in
+//! L1). Those compile with the render machinery — same tag, same registry.
+//! Dynamic attributes still refuse. An inline `<controller>` is Job C.
 
 use crate::CompileError;
 use crate::diagnostics::Span;
@@ -631,8 +628,8 @@ fn serialize_static(
             Instr::DynamicText { expr } => {
                 let Some(prop) = simple_prop_text(&expr.source) else {
                     return Err(CompileError::new(format!(
-                        "element mode: <{}> contains control flow or dynamic content — \
-                         this is a component; compile it with --component-name",
+                        "element mode: <{}> contains dynamic content that is not a prop — \
+                         bind a prop or use control flow",
                         el.tag
                     ))
                     .with_category(RULE_ID));
@@ -641,17 +638,87 @@ fn serialize_static(
                 out.push_str(prop);
                 out.push_str("-->");
             }
-            _ => {
-                return Err(CompileError::new(format!(
-                    "element mode: <{}> contains control flow or dynamic content — \
-                     this is a component; compile it with --component-name",
-                    el.tag
-                ))
-                .with_category(RULE_ID));
+            Instr::If(i) => {
+                out.push_str("<!--sail:if-->");
+                for b in &i.branches {
+                    serialize_static_instrs(&b.body, root_class, out)?;
+                }
+                if let Some(eb) = &i.else_body {
+                    serialize_static_instrs(eb, root_class, out)?;
+                }
+            }
+            Instr::For(f) => {
+                out.push_str("<!--sail:for-->");
+                serialize_static_instrs(&f.body, root_class, out)?;
+            }
+            Instr::Match(m) => {
+                out.push_str("<!--sail:match-->");
+                for c in &m.cases {
+                    serialize_static_instrs(&c.body, root_class, out)?;
+                }
+                if let Some(d) = &m.default {
+                    serialize_static_instrs(d, root_class, out)?;
+                }
+            }
+            Instr::When(w) => {
+                serialize_static_instrs(&w.body, root_class, out)?;
+                if let Some(eb) = &w.else_body {
+                    serialize_static_instrs(eb, root_class, out)?;
+                }
             }
         }
     }
     out.push_str(&format!("</{}>", el.tag));
+    Ok(())
+}
+
+fn serialize_static_instrs(
+    instrs: &[Instr],
+    root_class: &str,
+    out: &mut String,
+) -> Result<(), CompileError> {
+    for child in instrs {
+        match child {
+            Instr::Element(c) => serialize_static(c, root_class, false, out)?,
+            Instr::StaticText { text, .. } => out.push_str(text),
+            Instr::Comment { .. } => {}
+            Instr::DynamicText { expr } => {
+                if let Some(prop) = simple_prop_text(&expr.source) {
+                    out.push_str("<!--sail:prop:");
+                    out.push_str(prop);
+                    out.push_str("-->");
+                }
+            }
+            Instr::If(i) => {
+                out.push_str("<!--sail:if-->");
+                for b in &i.branches {
+                    serialize_static_instrs(&b.body, root_class, out)?;
+                }
+                if let Some(eb) = &i.else_body {
+                    serialize_static_instrs(eb, root_class, out)?;
+                }
+            }
+            Instr::For(f) => {
+                out.push_str("<!--sail:for-->");
+                serialize_static_instrs(&f.body, root_class, out)?;
+            }
+            Instr::Match(m) => {
+                out.push_str("<!--sail:match-->");
+                for c in &m.cases {
+                    serialize_static_instrs(&c.body, root_class, out)?;
+                }
+                if let Some(d) = &m.default {
+                    serialize_static_instrs(d, root_class, out)?;
+                }
+            }
+            Instr::When(w) => {
+                serialize_static_instrs(&w.body, root_class, out)?;
+                if let Some(eb) = &w.else_body {
+                    serialize_static_instrs(eb, root_class, out)?;
+                }
+            }
+        }
+    }
     Ok(())
 }
 

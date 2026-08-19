@@ -435,11 +435,10 @@ fn validate_custom_element_name(name: &str) -> Result<(), &'static str> {
 /// authoring technology per layer; see `emit::element`). Same parse pipeline
 /// as `compile()` — preprocess then parse — but the outputs are the element
 /// artifacts: a static structure snippet for use-site lowering, framework-sheet
-/// skin CSS keyed on `.sail-<name>`, and the element manifest. The mode enforces
-/// the seam test on the *template*: control flow or dynamic attributes are
-/// compile errors naming the source a component. A `<controller>` block is an
-/// L2-component facility — element mode REJECTS it: JS enhancement rides
-/// stacked `use:<behavior>` stamps instead.
+/// skin CSS keyed on `.sail-<name>`, and the element manifest. Control flow
+/// (`{#if}` / `{#for}` / `{#match}`) is legal in element mode. Dynamic
+/// attributes still refuse. A `<controller>` block is Job C (currently
+/// rejected here).
 pub fn compile_element(
     source: &str,
     name: &str,

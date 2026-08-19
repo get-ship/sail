@@ -77,13 +77,31 @@ fn element_emits_structure_skin_and_manifest() {
 }
 
 #[test]
-fn element_rejects_control_flow_as_component() {
-    let src = "<span class=\"x\"><if {open()}><b>y</b></if></span>";
-    let err = compile_element(src, "toggle").unwrap_err();
+fn element_mode_accepts_if() {
+    let src = r#"<span class="x"><if {open()}><b>y</b></if></span>"#;
+    let el = compile_element(src, "toggle").expect("element mode: {#if} / <if> is legal");
+    assert_eq!(el.root_class, "sail-toggle");
+    assert_eq!(el.manifest["tag"], "toggle");
     assert!(
-        format!("{err:?}").contains("component"),
-        "the seam-test error names it a component: {err:?}"
+        el.structure_html.contains("y") || el.structure_html.contains("sail:if"),
+        "control flow compiles with render machinery, not dropped: {}",
+        el.structure_html
     );
+}
+
+#[test]
+fn element_mode_accepts_for() {
+    let src = r#"<span class="x"><for {items as item}><i>{item}</i></for></span>"#;
+    let el = compile_element(src, "listish").expect("element mode: {#for} / <for> is legal");
+    assert_eq!(el.manifest["tag"], "listish");
+}
+
+#[test]
+fn element_mode_accepts_match() {
+    let src =
+        r#"<span class="x"><match {kind}>{ok => <b>yes</b>}{else => <i>no</i>}</match></span>"#;
+    let el = compile_element(src, "kinded").expect("element mode: {#match} / <match> is legal");
+    assert_eq!(el.manifest["tag"], "kinded");
 }
 
 #[test]

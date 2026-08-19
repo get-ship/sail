@@ -406,7 +406,7 @@ const DIAG_SPECS: &[DiagSpec] = &[
         id: "sail-element-mode",
         jurisdiction: Jurisdiction::CompilerError,
         default_severity: DiagSeverity::Error,
-        message_template: "element mode: static single-root structure only — control flow, dynamic attrs, or `<controller>` belong on a component",
+        message_template: "element mode: one root tag — dynamic attrs still refuse; `{#if}`/`{#for}`/`{#match}` are legal",
         allowed_list_source: None,
         fix_text: Some(
             "compile as a component (`--component-name`) or keep one static root with `use:` behavior",
