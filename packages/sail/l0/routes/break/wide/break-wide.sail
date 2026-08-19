@@ -4,5 +4,6 @@
   Spelling: bg(primary) · when: { wide: bg(accent) }
   Owner: theme breakpoints (4-bp including wide)
   Trap: fixtures/when-undeclared.bad.sail — Style error: style when key `kiosk`
-        is not in the closed browser-state table.
+        is not in the theme breakpoint table (mobile, tablet, desktop, wide)
+        or a language state.
 -->

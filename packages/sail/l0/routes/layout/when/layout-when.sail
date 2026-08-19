@@ -5,7 +5,7 @@
             Language keys + theme breakpoints. Colored-box demo, not an app remap.
   Owner: language keys, theme breakpoints
   Default: no breakpoint arms
-  Trap: fixtures/when-unknown-key.bad.sail — Style error: style when key `phone` is not in the closed browser-state table
+  Trap: fixtures/when-unknown-key.bad.sail — Style error: style when key `phone` is not in the theme breakpoint table (mobile, tablet, desktop, wide) or a language state
         Quoted below. Not compiled on this page.
 
         <column style({ bg(primary), when: { phone: bg(accent) } })>x</column>

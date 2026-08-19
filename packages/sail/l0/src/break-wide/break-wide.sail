@@ -2,12 +2,12 @@
   Look: a painted box; primary by default, accent at wide
   Spelling: style box = { bg(primary), when: { wide: bg(accent) } }
             Theme offers wide. 4-bp table: mobile / tablet / desktop / wide.
-            wide is not in today's closed table — that red is the cell.
   Owner: theme breakpoints (4-bp including wide)
   Default: primary
   Theme: mobile 390 · tablet 768 · desktop 1280 · wide 1600
   Trap: fixtures/when-undeclared.bad.sail — Style error: style when key `kiosk`
-        is not in the closed browser-state table
+        is not in the theme breakpoint table (mobile, tablet, desktop, wide)
+        or a language state
         (kiosk is neither a language state nor a theme breakpoint).
         Quoted below. Not compiled on this page.
 
