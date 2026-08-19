@@ -21,16 +21,13 @@ use crate::rules::layout::{self, OpenTag};
 
 pub const RULE_ID: &str = "sail-virtualizer";
 
-pub fn check(path: &Path, source: &str) -> Vec<Finding> {
-    let mut findings = Vec::new();
-    for t in layout::scan_any_open_tags(source) {
-        if let Some(f) = check_tag(path, source, &t) {
-            findings.push(f);
-        }
-    }
-    findings
+pub fn check(_path: &Path, _source: &str) -> Vec<Finding> {
+    // Job A: `--row-y` / `--rows-h` mailboxes are dead. Geometry is
+    // `bind(signal)` from a controller, not an action CSS-var bridge.
+    Vec::new()
 }
 
+#[allow(dead_code)]
 fn check_tag(path: &Path, source: &str, t: &OpenTag) -> Option<Finding> {
     let has_row = t
         .attrs
@@ -97,6 +94,7 @@ fn check_tag(path: &Path, source: &str, t: &OpenTag) -> Option<Finding> {
 }
 
 /// Tag-position `style(…)` call text on the open tag (if any).
+#[allow(dead_code)]
 fn tag_style_text(t: &OpenTag) -> String {
     t.attrs
         .iter()
@@ -112,6 +110,7 @@ fn tag_style_text(t: &OpenTag) -> String {
 /// `translateY` / `translate-y` co-occurring with `rowY` / `row-y` / `--row-y`
 /// on the same element's Style region passes. The rule is a same-node wiring
 /// check (action + Style on one element), not a full Style-AST proof.
+#[allow(dead_code)]
 fn has_row_translate(sx: &str) -> bool {
     let s = sx;
     // style.translateY(bind(rowY)) / translateY(bind(rowY))
@@ -141,6 +140,7 @@ fn has_row_translate(sx: &str) -> bool {
 ///
 /// **Loose same-node accept is intentional** (mirrors [`has_row_translate`]):
 /// height setter + `rowsH` / `--rows-h` on the same element Style is enough.
+#[allow(dead_code)]
 fn has_spacer_height(sx: &str) -> bool {
     let s = sx;
     if contains_ci(s, "h(bind(rowsH))")
@@ -167,6 +167,7 @@ fn has_spacer_height(sx: &str) -> bool {
     has_h && has_var
 }
 
+#[allow(dead_code)]
 fn contains_ci(hay: &str, needle: &str) -> bool {
     hay.to_ascii_lowercase()
         .contains(&needle.to_ascii_lowercase())

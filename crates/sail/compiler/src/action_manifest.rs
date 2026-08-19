@@ -479,21 +479,16 @@ pub const ACTIONS: &[ActionEntry] = &[
 /// `pagination`, `combobox`, `icon`, `resizable`) are closed impl inside L1 widgets — not public.
 /// An action is node-lifetime imperative behavior the language has no syntax
 /// for — never content, state, or data (icon fails that test; the element owns it).
-pub const PUBLIC_ACTION_COUNT: usize = 13;
+pub const PUBLIC_ACTION_COUNT: usize = 8;
 pub const PUBLIC_ACTION_NAMES: &[&str; PUBLIC_ACTION_COUNT] = &[
-    "anchor",
     "autosize",
     "clickOutside",
     "clipboard",
-    "contextMenu",
     "dropzone",
     "focus",
     "hotkeys",
     "inView",
     "rect",
-    "tipDescribe",
-    "virtualRow",
-    "zoomPan",
 ];
 
 /// Whether `name` is part of the curated public `use:` surface.
@@ -724,7 +719,7 @@ mod tests {
     #[test]
     fn public_action_count_matches_names_array() {
         assert_eq!(PUBLIC_ACTION_COUNT, PUBLIC_ACTION_NAMES.len());
-        assert_eq!(PUBLIC_ACTION_COUNT, 13);
+        assert_eq!(PUBLIC_ACTION_COUNT, 8);
     }
 
     #[test]

@@ -237,14 +237,14 @@ fn fx_imports_motion_singleton() {
 /// the runtime barrel is checked against the public subset here.
 #[test]
 fn action_table_is_exported_by_the_runtime() {
-    use sail_compiler::action_manifest::{ACTIONS, PUBLIC_ACTION_COUNT, is_public_action};
+    use sail_compiler::action_manifest::{ACTIONS, PUBLIC_ACTION_COUNT};
     let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../..");
     let index = root.join("packages/sail/runtime/src/index.ts");
     let Ok(src) = std::fs::read_to_string(&index) else {
         return;
     };
 
-    assert_eq!(PUBLIC_ACTION_COUNT, 13);
+    assert_eq!(PUBLIC_ACTION_COUNT, 8);
 
     let leaked: Vec<&str> = ACTIONS
         .iter()
@@ -280,7 +280,7 @@ fn action_table_has_no_phantom_consumers() {
         return;
     };
 
-    assert_eq!(PUBLIC_ACTION_COUNT, 13);
+    assert_eq!(PUBLIC_ACTION_COUNT, 8);
 
     // Every action in the table must be re-exported from the full
     // actions barrel. Drift here is the class of bug this test exists
@@ -314,22 +314,18 @@ fn action_table_has_no_phantom_consumers() {
     );
 }
 
-/// The curated public `use:` surface is exactly 13 names (ACTIONS-1 diet
-/// + sanctioned pre-RC `focus`/`inView`; icon is widget-private with the
-/// L1 `<icon>` element), all present in ACTIONS, sorted, and the only
-/// action names on the runtime front door. The compiler still auto-imports
-/// *all* actions from `@ship/sail-runtime/actions` (stdlib needs internal
-/// stamps for tabs/menu/pagination/radioGroup/combobox/icon closed widget
-/// impl).
+/// Public `use:` is the generic toolkit (Job E). Widget-tied names
+/// stay auto-imported for stdlib until Job C moves brains into
+/// `<controller>`.
 #[test]
 fn public_action_surface_is_curated() {
     use sail_compiler::action_manifest::{
         ACTIONS, PUBLIC_ACTION_COUNT, PUBLIC_ACTION_NAMES, is_public_action, public_actions,
     };
 
-    assert_eq!(PUBLIC_ACTION_COUNT, 13);
-    assert_eq!(PUBLIC_ACTION_NAMES.len(), 13);
-    assert_eq!(public_actions().count(), 13);
+    assert_eq!(PUBLIC_ACTION_COUNT, 8);
+    assert_eq!(PUBLIC_ACTION_NAMES.len(), 8);
+    assert_eq!(public_actions().count(), 8);
 
     let mut sorted = PUBLIC_ACTION_NAMES.to_vec();
     sorted.sort();
@@ -345,6 +341,21 @@ fn public_action_surface_is_curated() {
             "public action `{name}` missing from ACTIONS"
         );
         assert!(is_public_action(name));
+    }
+    for widget in [
+        "tabs",
+        "icon",
+        "combobox",
+        "themeSelect",
+        "syntaxHighlight",
+        "contextMenu",
+        "anchor",
+        "tipDescribe",
+    ] {
+        assert!(
+            !is_public_action(widget),
+            "{widget} is widget-tied — not the public toolkit"
+        );
     }
 
     // Emitter pulls every builtin action (including internal) from the
@@ -395,15 +406,7 @@ fn builtin_actions_emit_bare_not_scope_qualified() {
     let mut broken = Vec::new();
     for a in sail_compiler::lower::bindings::BUILTIN_ACTIONS {
         // Pairing checks require the sx bridge on the same node for some actions.
-        let src = match *a {
-            "virtualRow" => {
-                r#"<div use:virtualRow style({ translateY(bind(rowY)) })> </div>"#.to_string()
-            }
-            "virtualSpacer" => {
-                r#"<div use:virtualSpacer style({ size({ h: bind(rowsH) }) })> </div>"#.to_string()
-            }
-            _ => format!(r#"<div use:{a}></div>"#),
-        };
+        let src = format!(r#"<div use:{a}></div>"#);
         let out = sail_compiler::compile(
             &src,
             sail_compiler::CompileOpts {
