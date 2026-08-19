@@ -29,7 +29,8 @@ const REMEDY: &str = "L3 routes write tags, not Style. Use an existing L1 tag \
      Style into a route partial.";
 
 pub fn check(path: &Path, source: &str) -> Vec<Finding> {
-    if !spinnaker::privilege_enforced_for_path(path) {
+    let slots = crate::config::style_slots_for(path);
+    if !slots && !spinnaker::privilege_enforced_for_path(path) {
         return Vec::new();
     }
     // FileKind is the SSOT for the document check. privilege_for_path is
@@ -37,7 +38,7 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
     let kind = classify(path, Some(source)).kind;
     match (spinnaker::privilege_for_path(path), kind) {
         (spinnaker::Privilege::None, FileKind::Route) => document_findings(path, source),
-        (spinnaker::Privilege::Identities, _) if crate::config::style_slots_for(path) => Vec::new(),
+        (spinnaker::Privilege::Identities, _) if slots => Vec::new(),
         (spinnaker::Privilege::Identities, _) => identities_findings(path, source),
         (spinnaker::Privilege::Full, _) | (spinnaker::Privilege::None, _) => Vec::new(),
     }
@@ -380,30 +381,36 @@ mod tests {
         );
     }
 
+    fn style_slots_project() -> (tempfile::TempDir, PathBuf, PathBuf) {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(
+            dir.path().join("sail.config.jsonc"),
+            "{ \"style_slots\": true }\n",
+        )
+        .unwrap();
+        let face = dir.path().join("slot-face.sail");
+        std::fs::write(&face, "").unwrap();
+        let routes = dir.path().join("routes");
+        std::fs::create_dir_all(&routes).unwrap();
+        let page = routes.join("page.sail");
+        std::fs::write(&page, "").unwrap();
+        (dir, face, page)
+    }
+
     #[test]
-    fn l0_specimen_may_spend_slot_form() {
-        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../../packages/sail/l0/routes/paint/type/l0-type-face.sail");
-        for src in [
-            "style box = { type({ size: xs }) }",
-            "style box = { bg({ color: primary }) }",
-            "style box = { radius({ all: md }) }",
-            "style box = { elevation({ shadow: sm }) }",
-            "style box = { filter({ opacity: 50 }) }",
-        ] {
-            assert!(
-                check(&path, src).is_empty(),
-                "L0 specimen CE speaks the language: {src}"
-            );
-        }
-        let page = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../../packages/sail/l0/routes/paint/type/page.sail");
-        let findings = check(&page, "style box = { type({ size: xs }) }");
+    fn style_slots_flag_unlocks_ce_not_the_route() {
+        let (_dir, face, page) = style_slots_project();
+        let src = "style box = { bg({ color: primary }) }";
+        assert!(
+            check(&face, src).is_empty(),
+            "style_slots grants slot form on a CE"
+        );
+        let findings = check(&page, src);
         assert!(
             findings
                 .iter()
                 .any(|f| f.message.contains("documents write tags")),
-            "L0 page.sail stays a document: {findings:?}"
+            "style_slots does not grant Style on page.sail: {findings:?}"
         );
     }
 

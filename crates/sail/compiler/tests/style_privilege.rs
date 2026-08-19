@@ -381,16 +381,21 @@ fn identities_closed_paint_slots_stay_red() {
 }
 
 #[test]
-fn l0_specimen_slot_form_compiles() {
-    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../../packages/sail/l0/routes/paint/type/l0-type-face.sail");
-    let src = r#"<p style({ type({ size: xs }), bg({ color: primary }) })>Aa</p>"#;
-    compile(src, opts(path.to_str().unwrap())).expect("L0 specimen CE may spend slot form");
+fn style_slots_flag_unlocks_ce_slot_form() {
+    let dir = tempfile::tempdir().unwrap();
+    std::fs::write(
+        dir.path().join("sail.config.jsonc"),
+        "{ \"style_slots\": true }\n",
+    )
+    .unwrap();
+    let path = dir.path().join("slot-face.sail");
+    let src = "<column style({ bg({ color: primary }) })></column>";
+    std::fs::write(&path, src).unwrap();
     let diags = check_all(src, Some(path.as_path()), &[], None);
     assert!(
         !diags
             .iter()
             .any(|d| d.rule.as_deref() == Some("sail-style-privilege")),
-        "L0 specimen must not emit privilege: {diags:?}"
+        "style_slots is the grant, not a product page: {diags:?}"
     );
 }
