@@ -3,9 +3,7 @@
   (settings + dashboard). Not a pane. Identities: presets only.
 -->
 <scope>
-  style insetMd = { pad(page-md) }
-  style insetLg = { pad(page-lg) }
-  style base = { size(grow), pad(page), when: { tablet: insetMd, desktop: insetLg } }
+  style base = { size(grow), pad(page) }
 </scope>
 
 <column gap="6" style(base)>

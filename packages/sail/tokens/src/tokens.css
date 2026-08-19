@@ -172,8 +172,6 @@
   --neutral-border: oklch(0.8420 0.0042 92.86);
   --neutral-foreground: oklch(0.9900 0.0004 58.00);
   --pad-page-x: var(--space-4);
-  --pad-page-md-x: var(--space-6);
-  --pad-page-lg-x: var(--space-8);
   --border-none-color: transparent;
   --border-none-width: 0px;
   --border-none-style: none;
@@ -314,7 +312,7 @@
   --density-row-px: var(--space-3);
   --density-row-gap: var(--space-2);
   --density-text: var(--text-base);
-  --density-icon: 16px;
+  --density-icon: var(--icon-size-md);
   --shadow-xs: 0 1px 2px 0 oklch(0.0000 0.0000 0.00 / 0.050);
   --shadow-sm: 0 1px 3px 0 oklch(0.0000 0.0000 0.00 / 0.070), 0 1px 2px -1px oklch(0.0000 0.0000 0.00 / 0.050);
   --shadow-md: 0 4px 12px -2px oklch(0.0000 0.0000 0.00 / 0.090), 0 2px 4px -2px oklch(0.0000 0.0000 0.00 / 0.060);
@@ -354,6 +352,11 @@
   --play-control-property: color, background-color, border-color, outline-color, transform, box-shadow, opacity;
   --play-surface-property: color, background-color, border-color, box-shadow, transform, opacity;
 }
+@media (min-width: 768px) {
+  :root {
+    --pad-page-x: var(--space-6);
+  }
+}
 @media (min-width: 1280px) {
   :root {
     --control-h-2xs: 22px;
@@ -361,11 +364,7 @@
     --control-h-sm: 28px;
     --control-h-md: 34px;
     --control-h-lg: 40px;
-  }
-}
-@media (min-width: 768px) {
-  :root {
-    --pad-page-x: var(--space-6);
+    --pad-page-x: var(--space-8);
   }
 }
 
@@ -420,9 +419,6 @@
 
   /* Stroke weight. Themes thicken this (brut/8bit) without touching color. */
   --border-width: 1px;
-
-  /* border-image for controls. none leaves radius in charge. */
-  --image-corner: none;
 }
 
 /*

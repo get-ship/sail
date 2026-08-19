@@ -19,8 +19,6 @@ Reason classes:
 | accordion.css | accordion | native-anatomy | Hosted `<summary>` chevron mask + UA marker kill; sibling-stack radius merge | none |
 | avatar.css | avatar | native-anatomy | Hosted `img` pack: cover for photo src; contain+pad when `icon-slug` (child Style cannot see host attr) | none |
 | breadcrumb.css | breadcrumb | native-anatomy | Projected `ol`/`li`/`a` crumbs + `::before` separator | none |
-| button.css | button | vocab-gap | `borderImage` leftover — no concern slot preserves `--corner-image`. Inner pack is `<row cluster gap="2">` (not Style `gap()`) | SPEC-SPINNAKER-2 |
-| card.css | card | vocab-gap | `borderImage(corner-image)` leftover — no concern slot preserves `--corner-image` | SPEC-SPINNAKER-2 |
 | checkbox.css | checkbox | vocab-gap | `:checked` / `:indeterminate` fill + data-uri marks. Style `bg()` loses to unlayered component scopes | BUG-STDLIB-LAYER-1 |
 | chip.css | chip | native-anatomy | Removable-button visibility keyed on host `removable` (child Style cannot see host attr). Inner pack is `<row cluster gap="1">` (not Style `gap()`) | none |
 | code-block.css | code-block | native-anatomy | Highlighter token spans (`.tok-*`) inside the host | none |

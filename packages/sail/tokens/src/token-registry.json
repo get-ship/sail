@@ -182,7 +182,6 @@
     "icon-size-sm",
     "icon-size-xl",
     "icon-size-xs",
-    "image-corner",
     "image-texture",
     "image-texture-blend",
     "image-texture-opacity",
@@ -221,8 +220,6 @@
     "overlay-vh-lg",
     "overlay-vh-md",
     "overlay-vh-sm",
-    "pad-page-lg-x",
-    "pad-page-md-x",
     "pad-page-x",
     "play-colors-property",
     "play-control-property",
@@ -1631,20 +1628,9 @@
       "value": "var(--space-4)",
       "breakpoints": {
         "base": "var(--space-4)",
+        "desktop": "var(--space-8)",
         "tablet": "var(--space-6)"
       }
-    },
-    "pad-page-md-x": {
-      "path": "pad.page-md.x",
-      "cssName": "pad-page-md-x",
-      "type": "dimension",
-      "value": "var(--space-6)"
-    },
-    "pad-page-lg-x": {
-      "path": "pad.page-lg.x",
-      "cssName": "pad-page-lg-x",
-      "type": "dimension",
-      "value": "var(--space-8)"
     },
     "border-width": {
       "path": "border.width",
@@ -2497,7 +2483,7 @@
       "path": "density.icon",
       "cssName": "density-icon",
       "type": "dimension",
-      "value": "16px"
+      "value": "var(--icon-size-md)"
     },
     "shadow-xs": {
       "path": "shadow.xs",
@@ -2636,12 +2622,6 @@
       "cssName": "image-texture-opacity",
       "type": "number",
       "value": "1"
-    },
-    "image-corner": {
-      "path": "image.corner",
-      "cssName": "image-corner",
-      "type": "string",
-      "value": "none"
     },
     "overlay-max-w-sm": {
       "path": "overlay.max-w-sm",
@@ -2878,7 +2858,6 @@
     "icon.sm": "icon-size-sm",
     "icon.xl": "icon-size-xl",
     "icon.xs": "icon-size-xs",
-    "image.corner": "image-corner",
     "image.texture": "image-texture",
     "image.texture-blend": "image-texture-blend",
     "image.texture-opacity": "image-texture-opacity",
@@ -2917,8 +2896,6 @@
     "overlay.vh-lg": "overlay-vh-lg",
     "overlay.vh-md": "overlay-vh-md",
     "overlay.vh-sm": "overlay-vh-sm",
-    "pad.page-lg.x": "pad-page-lg-x",
-    "pad.page-md.x": "pad-page-md-x",
     "pad.page.x": "pad-page-x",
     "play.colors.property": "play-colors-property",
     "play.control.property": "play-control-property",
@@ -3124,22 +3101,6 @@
       "type": "pad",
       "members": {
         "x": "pad-page-x"
-      }
-    },
-    "pad.page-md": {
-      "path": "pad.page-md",
-      "cssName": "pad.page-md",
-      "type": "pad",
-      "members": {
-        "x": "pad-page-md-x"
-      }
-    },
-    "pad.page-lg": {
-      "path": "pad.page-lg",
-      "cssName": "pad.page-lg",
-      "type": "pad",
-      "members": {
-        "x": "pad-page-lg-x"
       }
     },
     "border.none": {

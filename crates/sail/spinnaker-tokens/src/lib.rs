@@ -3889,11 +3889,21 @@ fn emit_token_breakpoint_media(selector: &str, tokens: &[Token]) -> String {
                 .push((t.css_name.as_str(), v.as_str()));
         }
     }
-    let mut out = String::new();
-    for (bp, items) in by_bp {
-        let Some(width) = widths.get(&bp) else {
+    let mut rows: Vec<(u32, &str, Vec<(&str, &str)>)> = Vec::new();
+    for (bp, items) in &by_bp {
+        let Some(width) = widths.get(bp) else {
             continue;
         };
+        let px = width
+            .trim()
+            .trim_end_matches("px")
+            .parse::<u32>()
+            .unwrap_or(0);
+        rows.push((px, width.as_str(), items.clone()));
+    }
+    rows.sort_by_key(|(px, _, _)| *px);
+    let mut out = String::new();
+    for (_, width, items) in rows {
         out.push_str(&format!("@media (min-width: {width}) {{\n"));
         out.push_str(&format!("  {selector} {{\n"));
         for (css_name, value) in items {

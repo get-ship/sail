@@ -8,9 +8,7 @@
 -->
 
 <scope>
-  style insetMd = { pad(page-md) }
-  style insetLg = { pad(page-lg) }
-  style base = { pad(page), when: { tablet: insetMd, desktop: insetLg } }
+  style base = { pad(page) }
 </scope>
 
 <column gap="6" style(base)>

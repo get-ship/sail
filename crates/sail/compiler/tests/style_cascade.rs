@@ -97,8 +97,8 @@ fn sibling_unknown_identity_does_not_poison_style_base() {
 fn page_shape_sibling_unknown_does_not_unregister_base() {
     let src = r#"
 <scope>
-  style insetMd = { pad(page-md) }
-  style insetLg = { pad(page-lg) }
+  style insetMd = { pad(2) }
+  style insetLg = { pad(3) }
   style base = { pad(page), when: { tablet: insetMd, desktop: insetLg } }
   style wide = { size(wide) }
 </scope>
@@ -113,7 +113,7 @@ fn page_shape_sibling_unknown_does_not_unregister_base() {
         "style(base) must resolve:\n{out}"
     );
     assert!(
-        out.contains("pad-page-md") || out.contains("s-tablet-padpagemd"),
+        out.contains("s-tablet") || out.contains("insetMd") || out.contains("pad-2"),
         "insetMd when-ref must stay registered:\n{out}"
     );
 

@@ -4,9 +4,7 @@
   tracks once inset (min=sm + gap-6 + pad-lg only fits three).
 -->
 <scope>
-  style insetMd = { pad(page-md) }
-  style insetLg = { pad(page-lg) }
-  style shell = { pad(page), when: { tablet: insetMd, desktop: insetLg } }
+  style shell = { pad(page) }
 </scope>
 
 <column gap="6" style(shell)>

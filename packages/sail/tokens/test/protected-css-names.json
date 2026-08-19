@@ -117,7 +117,7 @@
     "icon-size-sm",
     "icon-size-xl",
     "icon-size-xs",
-    "image-corner",
+
     "image-texture",
     "image-texture-blend",
     "image-texture-opacity",
@@ -156,8 +156,7 @@
     "overlay-vh-lg",
     "overlay-vh-md",
     "overlay-vh-sm",
-    "pad-page-lg-x",
-    "pad-page-md-x",
+
     "pad-page-x",
     "play-colors-property",
     "play-control-property",

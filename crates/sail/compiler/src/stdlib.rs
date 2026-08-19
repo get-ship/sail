@@ -254,8 +254,6 @@ const PLATFORM: &[(&str, &str)] = &[
         "breadcrumb",
         include_str!("../stdlib/platform/breadcrumb.css"),
     ),
-    ("button", include_str!("../stdlib/platform/button.css")),
-    ("card", include_str!("../stdlib/platform/card.css")),
     ("checkbox", include_str!("../stdlib/platform/checkbox.css")),
     ("chip", include_str!("../stdlib/platform/chip.css")),
     (

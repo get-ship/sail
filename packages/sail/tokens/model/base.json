@@ -281,18 +281,8 @@
   "pad": {
     "page": {
       "$type": "pad",
-      "$description": "Document inset. Theme-keyed: space-4 at base, space-6 at tablet.",
-      "$value": { "x": { "base": "{space-4}", "tablet": "{space-6}" } }
-    },
-    "page-md": {
-      "$type": "pad",
-      "$description": "Document inset at tablet.",
-      "$value": { "x": "{space-6}" }
-    },
-    "page-lg": {
-      "$type": "pad",
-      "$description": "Document inset at desktop.",
-      "$value": { "x": "{space-8}" }
+      "$description": "Document inset. Keyed: space-4 / tablet space-6 / desktop space-8.",
+      "$value": { "x": { "base": "{space-4}", "tablet": "{space-6}", "desktop": "{space-8}" } }
     }
   },
   "border": {
@@ -548,7 +538,7 @@
     "row-px": { "$value": "{space-3}", "$type": "dimension" },
     "row-gap": { "$value": "{space-2}", "$type": "dimension" },
     "text": { "$value": "{text-base}", "$type": "dimension" },
-    "icon": { "$value": "16px", "$type": "dimension" },
+    "icon": { "$value": "{icon.md}", "$type": "dimension" },
     "$type": "dimension"
   },
   "shadow": {
@@ -658,13 +648,7 @@
   "image": {
     "texture": { "$value": "none", "$type": "string" },
     "texture-blend": { "$value": "overlay", "$type": "string" },
-    "texture-opacity": { "$value": "1", "$type": "number" },
-    "corner": {
-      "$value": "none",
-      "$type": "string",
-      "$description": "border-image for controls. none leaves radius in charge.",
-      "$extensions": { "sail": { "channel": true } }
-    }
+    "texture-opacity": { "$value": "1", "$type": "number" }
   },
   "overlay": {
     "max-w-sm": { "$value": { "base": "320px" }, "$type": "dimension" },
