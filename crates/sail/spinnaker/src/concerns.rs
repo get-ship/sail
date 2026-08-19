@@ -942,6 +942,7 @@ pub fn concern_kind(op: &PaintOp) -> &'static str {
 
 /// Clash keys: per-`(concern, kind)` and, for stroke borders, per-edge.
 /// Different edges coexist (tooltip carets). `edge: all` overlaps every edge.
+/// Size keys participation separately from geometry slots (`aspect`/`w`/`h`).
 pub fn concern_clash_keys(op: &PaintOp) -> Option<Vec<&'static str>> {
     let spec = find_concern(&op.setter)?;
     if op.args.len() != 1 {
@@ -956,6 +957,8 @@ pub fn concern_clash_keys(op: &PaintOp) -> Option<Vec<&'static str>> {
                 Some(border_clash_keys(concern_kind(op), concern_edge(op)))
             } else if spec.name == "position" {
                 Some(position_clash_keys(op))
+            } else if spec.name == "size" {
+                Some(size_clash_keys(op))
             } else {
                 Some(vec![clash_key(spec.name, concern_kind(op))])
             }
@@ -1016,6 +1019,53 @@ fn position_clash_keys(op: &PaintOp) -> Vec<&'static str> {
         PaintArg::Token(_) | PaintArg::Bind(_) | PaintArg::MemberPath { .. } => {
             vec!["position:scheme"]
         }
+    }
+}
+
+/// Participation (`grow`/`hug`/`max`) is one write. Geometry slots
+/// (`aspect`/`w`/`h`/min/max) are their own. Same slot twice clashes.
+fn size_clash_keys(op: &PaintOp) -> Vec<&'static str> {
+    match op.first_arg() {
+        PaintArg::Slots(slots) => {
+            let mut keys = Vec::new();
+            for name in slots.keys() {
+                keys.push(size_slot_clash_key(name));
+            }
+            if keys.is_empty() { vec!["size"] } else { keys }
+        }
+        PaintArg::Token(name) if matches!(name.as_str(), "hug" | "grow" | "max") => {
+            vec!["size:participate"]
+        }
+        PaintArg::Token(name) => {
+            if let Some(spec) = find_concern("size") {
+                if let Some(c) = resolve_concern_name(spec, name) {
+                    let keys: Vec<_> = c
+                        .members
+                        .iter()
+                        .map(|(member, _)| size_slot_clash_key(member))
+                        .collect();
+                    if !keys.is_empty() {
+                        return keys;
+                    }
+                }
+            }
+            vec!["size"]
+        }
+        PaintArg::Bind(_) | PaintArg::MemberPath { .. } => vec!["size"],
+    }
+}
+
+fn size_slot_clash_key(name: &str) -> &'static str {
+    match name {
+        "w" => "size:w",
+        "h" => "size:h",
+        "min-w" | "minW" => "size:min-w",
+        "min-h" | "minH" => "size:min-h",
+        "max-w" | "maxW" => "size:max-w",
+        "max-h" | "maxH" => "size:max-h",
+        "aspect" => "size:aspect",
+        "basis" => "size:basis",
+        _ => "size",
     }
 }
 
@@ -1694,6 +1744,55 @@ mod tests {
     fn position_same_slot_twice_clashes() {
         let (style, parse_diags) =
             parse("style({ position({ z: dropdown }).position({ z: sticky }) })");
+        assert!(
+            parse_diags.is_empty(),
+            "{:?}",
+            parse_diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
+        let clashes = crate::clash::detect_clashes(&style, &HashMap::new());
+        assert!(
+            clashes
+                .iter()
+                .any(|d| matches!(d, StyleDiagnostic::Clash { .. })),
+            "{clashes:?}"
+        );
+    }
+
+    #[test]
+    fn size_grow_and_aspect_do_not_clash() {
+        let (style, diags) = parse("style({ size(grow), size({ aspect: square }) })");
+        assert!(
+            diags.is_empty(),
+            "{:?}",
+            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
+        let clashes = crate::clash::detect_clashes(&style, &HashMap::new());
+        assert!(clashes.is_empty(), "{clashes:?}");
+    }
+
+    #[test]
+    fn size_grow_twice_clashes() {
+        // Same token text is an idempotent rewrite. Two participate
+        // tokens (`grow` + `hug`) still write the same key.
+        let (style, parse_diags) = parse("style({ size(grow), size(hug) })");
+        assert!(
+            parse_diags.is_empty(),
+            "{:?}",
+            parse_diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
+        let clashes = crate::clash::detect_clashes(&style, &HashMap::new());
+        assert!(
+            clashes
+                .iter()
+                .any(|d| matches!(d, StyleDiagnostic::Clash { .. })),
+            "{clashes:?}"
+        );
+    }
+
+    #[test]
+    fn size_aspect_twice_clashes() {
+        let (style, parse_diags) =
+            parse("style({ size({ aspect: square }), size({ aspect: video }) })");
         assert!(
             parse_diags.is_empty(),
             "{:?}",

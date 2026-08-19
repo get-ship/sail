@@ -5,8 +5,6 @@
   Owner: language (structure) + free geometry
   Default: —
   Trap: none on this page (traps live on the verb pages)
-  Skipped: aspect-vs-grow — size(grow) and size({ aspect: square }) clash
-           on size@base. No legal spelling without changing the spec.
 -->
 <scope>
   style look = { type(label), fg(muted) }
@@ -30,6 +28,7 @@
   style overlapA = { size({ w: 16, h: 16 }), bg(primary) }
   style overlapB = { size({ w: 16, h: 16 }), bg(accent) }
   style fill = { size({ w: 100% }) }
+  style box = { size(grow), size({ aspect: square }), bg(primary) }
 </scope>
 <column gap="6">
   <l0-case>
@@ -93,5 +92,12 @@
       <column style(spanC)>c</column>
       <column col-span="2" style(spanB)>d</column>
     </grid>
+  </l0-case>
+  <l0-case>
+    <p slot="look" style(look)>aspect-vs-grow — leftover width, height matches</p>
+    <p slot="spell" style(spell)>size(grow) + size({ aspect: square })</p>
+    <row>
+      <column style(box)></column>
+    </row>
   </l0-case>
 </column>

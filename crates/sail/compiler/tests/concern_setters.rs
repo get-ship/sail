@@ -171,6 +171,19 @@ fn size_slot_object_and_named_full() {
 }
 
 #[test]
+fn size_grow_and_aspect_emit_both() {
+    let css = css_of("style({ size(grow), size({ aspect: square }) })");
+    assert!(
+        css.contains("flex-grow"),
+        "size(grow) must emit leftover: {css}"
+    );
+    assert!(
+        css.contains("aspect-ratio") && (css.contains("1 / 1") || css.contains("1/1")),
+        "size({{ aspect: square }}) must emit square: {css}"
+    );
+}
+
+#[test]
 fn size_basis_slot_lowers() {
     let css = css_of("style({ size({ basis: 0, min-w: 0 }) })");
     assert!(css.contains("flex-basis") && css.contains("0"), "{css}");
