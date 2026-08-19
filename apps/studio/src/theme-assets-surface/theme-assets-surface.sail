@@ -10,7 +10,7 @@
   // no preset: type weight
   style doorTitle = { type({ weight: semibold }) }
   // no preset: size lock
-  style editorCol = { pad(6).size({ max-w: panel-max-w-lg }) }
+  style editorCol = { pad(6).size({ max-w: overlay-max-w-lg }) }
   style bandStatus = { pad(4) }
   // no preset: edge-only border
   style bandError = { pad(4).border({ edge: b, color: border, width: 1 }) }

@@ -105,7 +105,7 @@ export default controller(({ value }: Scope) => {
   on:pointermove={pointerMove}
   on:pointerup={pointerUp}
   on:wheel={wheel}
-  style({ position(relative).size({ w: 100%, h: 100%, min-h: panel-min-w-lg }).overflow({ all: hidden }).bg(background).fg(foreground).border({ color: border, width: 1 }).radius(md).cursor(grab) })
+  style({ position(relative).size({ w: 100%, h: 100%, min-h: overlay-max-w-sm }).overflow({ all: hidden }).bg(background).fg(foreground).border({ color: border, width: 1 }).radius(md).cursor(grab) })
 >
   <div
     use:worldTransform={worldTransformCss()}

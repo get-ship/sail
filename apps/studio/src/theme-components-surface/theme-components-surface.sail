@@ -29,9 +29,9 @@
   style surfaceRoot = { size(grow).overflow(hidden).bg(canvas) }
   style workbench = { size(grow).overflow(hidden).bg(canvas) }
   // no preset: panel width lock + edge-only border
-  style panelRail = { size({ w: panel-max-w-sm, h: 100%, min-w: panel-min-w-sm, min-h: 0, max-w: panel-max-w-sm }).border({ edge: r, color: border-subtle, width: 1 }).bg(canvas) }
+  style panelRail = { size({ w: overlay-max-w-sm, h: 100%, min-h: 0, max-w: overlay-max-w-sm }).border({ edge: r, color: border-subtle, width: 1 }).bg(canvas) }
   // no preset: panel width lock + edge-only border
-  style panelInspector = { size({ w: panel-max-w-sm, h: 100%, min-w: panel-min-w-sm, min-h: 0, max-w: panel-max-w-sm }).border({ edge: l, color: border-subtle, width: 1 }).bg(canvas) }
+  style panelInspector = { size({ w: overlay-max-w-sm, h: 100%, min-h: 0, max-w: overlay-max-w-sm }).border({ edge: l, color: border-subtle, width: 1 }).bg(canvas) }
   style specimenDock = { size(grow).overflow(hidden).bg(canvas) }
   style specimenPad = { size(grow).pad(4) }
   style specimenFrame = { size(max).overflow(hidden).elevation(lg) }
@@ -51,14 +51,14 @@
   style iconBtn = { size(control-sm) }
   style stageHost = { size(max) }
   // no preset: size lock
-  style sampleMax = { size({ w: 100%, max-w: panel-max-w-sm }) }
+  style sampleMax = { size({ w: 100%, max-w: overlay-max-w-sm }) }
   // no preset: size lock
-  style menuItemShell = { size({ w: 100%, max-w: panel-max-w-sm }).pad(1).border(subtle).radius(md).bg(surface-1) }
+  style menuItemShell = { size({ w: 100%, max-w: overlay-max-w-sm }).pad(1).border(subtle).radius(md).bg(surface-1) }
   style ctxBox = { size(max).pad(3).border(subtle).radius(md) }
   // no preset: size lock
-  style scrollVert = { size({ w: 100%, max-w: panel-max-w-sm, max-h: 32 }).pad(3).border(subtle).radius(md) }
+  style scrollVert = { size({ w: 100%, max-w: overlay-max-w-sm, max-h: 32 }).pad(3).border(subtle).radius(md) }
   // no preset: size lock
-  style scrollHoriz = { size({ w: 100%, max-w: panel-max-w-sm }).pad(3).border(subtle).radius(md) }
+  style scrollHoriz = { size({ w: 100%, max-w: overlay-max-w-sm }).pad(3).border(subtle).radius(md) }
   style scrollGrow = { size(grow).bg(canvas) }
   // no preset: min-w lock
   style stageBody = { pad(5).size({ min-w: 0, min-h: 100% }) }
@@ -693,7 +693,7 @@ export default controller(() => {
                   </if>
                   <if {components.stage.toastRegion()}>
                     <!-- no preset: size lock + position -->
-                    <column gap="2" style({ size({ w: 100%, min-h: 24, max-w: panel-max-w-sm }).position(relative) })>
+                    <column gap="2" style({ size({ w: 100%, min-h: 24, max-w: overlay-max-w-sm }).position(relative) })>
                       <p style(fieldHint)>Toast region hosts stacked toasts (fixed in product).</p>
                       <toast tone="info" duration="0">Region child toast</toast>
                     </column>

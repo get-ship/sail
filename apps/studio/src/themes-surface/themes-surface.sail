@@ -44,7 +44,7 @@
   style listPad = { pad(3) }
   style previewScroll = { size(grow).bg(canvas) }
   // no preset: size lock
-  style previewCol = { pad(8).size({ max-w: panel-max-w-lg }) }
+  style previewCol = { pad(8).size({ max-w: overlay-max-w-lg }) }
   style previewTitle = { type(display-sm) }
   style previewDesc = { fg(muted).type(body-sm) }
   style modeLabel = { fg(muted).type(label) }

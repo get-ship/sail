@@ -1,7 +1,7 @@
 <!-- RENDER-0 regression: center > column > field > select with options panicked parley
      via grid min-content measure of padded select option text. -->
 <center style({ pad(6).size({ min-h: screen }).bg(background) })>
-  <column gap="4" style({ size({ w: 100%, max-w: panel-max-w-md }) })>
+  <column gap="4" style({ size({ w: 100%, max-w: overlay-max-w-md }) })>
     <h1 style({ fg(foreground).type({ size: 2xl, weight: semibold }) })>Shipping address</h1>
     <card style({ size({ w: 100% }) })>
       <form>

@@ -211,22 +211,19 @@
     "overlay",
     "overlay-blend",
     "overlay-fill",
+    "overlay-max-h-lg",
+    "overlay-max-h-md",
+    "overlay-max-h-sm",
+    "overlay-max-w-lg",
+    "overlay-max-w-md",
+    "overlay-max-w-sm",
     "overlay-opacity",
+    "overlay-vh-lg",
+    "overlay-vh-md",
+    "overlay-vh-sm",
     "pad-page-lg-x",
     "pad-page-md-x",
     "pad-page-x",
-    "panel-max-h-lg",
-    "panel-max-h-md",
-    "panel-max-h-sm",
-    "panel-max-w-lg",
-    "panel-max-w-md",
-    "panel-max-w-sm",
-    "panel-min-w-lg",
-    "panel-min-w-md",
-    "panel-min-w-sm",
-    "panel-vh-lg",
-    "panel-vh-md",
-    "panel-vh-sm",
     "play-colors-property",
     "play-control-property",
     "play-surface-property",
@@ -852,78 +849,6 @@
       "cssName": "press-shadow",
       "type": "shadow",
       "value": "0 0 0 0 transparent"
-    },
-    "panel-max-w-sm": {
-      "path": "panel.max-w-sm",
-      "cssName": "panel-max-w-sm",
-      "type": "dimension",
-      "value": "320px"
-    },
-    "panel-max-w-md": {
-      "path": "panel.max-w-md",
-      "cssName": "panel-max-w-md",
-      "type": "dimension",
-      "value": "480px"
-    },
-    "panel-max-w-lg": {
-      "path": "panel.max-w-lg",
-      "cssName": "panel-max-w-lg",
-      "type": "dimension",
-      "value": "720px"
-    },
-    "panel-max-h-sm": {
-      "path": "panel.max-h-sm",
-      "cssName": "panel-max-h-sm",
-      "type": "dimension",
-      "value": "240px"
-    },
-    "panel-max-h-md": {
-      "path": "panel.max-h-md",
-      "cssName": "panel-max-h-md",
-      "type": "dimension",
-      "value": "480px"
-    },
-    "panel-max-h-lg": {
-      "path": "panel.max-h-lg",
-      "cssName": "panel-max-h-lg",
-      "type": "dimension",
-      "value": "720px"
-    },
-    "panel-min-w-sm": {
-      "path": "panel.min-w-sm",
-      "cssName": "panel-min-w-sm",
-      "type": "dimension",
-      "value": "180px"
-    },
-    "panel-min-w-md": {
-      "path": "panel.min-w-md",
-      "cssName": "panel-min-w-md",
-      "type": "dimension",
-      "value": "240px"
-    },
-    "panel-min-w-lg": {
-      "path": "panel.min-w-lg",
-      "cssName": "panel-min-w-lg",
-      "type": "dimension",
-      "value": "320px"
-    },
-    "panel-vh-sm": {
-      "path": "panel.vh-sm",
-      "cssName": "panel-vh-sm",
-      "type": "dimension",
-      "value": "50vh"
-    },
-    "panel-vh-md": {
-      "path": "panel.vh-md",
-      "cssName": "panel-vh-md",
-      "type": "dimension",
-      "value": "80vh"
-    },
-    "panel-vh-lg": {
-      "path": "panel.vh-lg",
-      "cssName": "panel-vh-lg",
-      "type": "dimension",
-      "value": "90vh"
     },
     "text-xs": {
       "path": "typography.text.xs",
@@ -2604,6 +2529,87 @@
       "type": "string",
       "value": "none"
     },
+    "overlay-max-w-sm": {
+      "path": "overlay.max-w-sm",
+      "cssName": "overlay-max-w-sm",
+      "type": "dimension",
+      "value": "320px",
+      "breakpoints": {
+        "base": "320px"
+      }
+    },
+    "overlay-max-w-md": {
+      "path": "overlay.max-w-md",
+      "cssName": "overlay-max-w-md",
+      "type": "dimension",
+      "value": "480px",
+      "breakpoints": {
+        "base": "480px"
+      }
+    },
+    "overlay-max-w-lg": {
+      "path": "overlay.max-w-lg",
+      "cssName": "overlay-max-w-lg",
+      "type": "dimension",
+      "value": "720px",
+      "breakpoints": {
+        "base": "720px"
+      }
+    },
+    "overlay-max-h-sm": {
+      "path": "overlay.max-h-sm",
+      "cssName": "overlay-max-h-sm",
+      "type": "dimension",
+      "value": "240px",
+      "breakpoints": {
+        "base": "240px"
+      }
+    },
+    "overlay-max-h-md": {
+      "path": "overlay.max-h-md",
+      "cssName": "overlay-max-h-md",
+      "type": "dimension",
+      "value": "480px",
+      "breakpoints": {
+        "base": "480px"
+      }
+    },
+    "overlay-max-h-lg": {
+      "path": "overlay.max-h-lg",
+      "cssName": "overlay-max-h-lg",
+      "type": "dimension",
+      "value": "720px",
+      "breakpoints": {
+        "base": "720px"
+      }
+    },
+    "overlay-vh-sm": {
+      "path": "overlay.vh-sm",
+      "cssName": "overlay-vh-sm",
+      "type": "dimension",
+      "value": "50vh",
+      "breakpoints": {
+        "base": "50vh"
+      }
+    },
+    "overlay-vh-md": {
+      "path": "overlay.vh-md",
+      "cssName": "overlay-vh-md",
+      "type": "dimension",
+      "value": "80vh",
+      "breakpoints": {
+        "base": "80vh"
+      }
+    },
+    "overlay-vh-lg": {
+      "path": "overlay.vh-lg",
+      "cssName": "overlay-vh-lg",
+      "type": "dimension",
+      "value": "90vh",
+      "breakpoints": {
+        "base": "90vh"
+      }
+    },
     "overlay-fill": {
       "path": "overlay.fill",
       "cssName": "overlay-fill",
@@ -2787,22 +2793,19 @@
     "color.overlay": "overlay",
     "overlay.blend": "overlay-blend",
     "overlay.fill": "overlay-fill",
+    "overlay.max-h-lg": "overlay-max-h-lg",
+    "overlay.max-h-md": "overlay-max-h-md",
+    "overlay.max-h-sm": "overlay-max-h-sm",
+    "overlay.max-w-lg": "overlay-max-w-lg",
+    "overlay.max-w-md": "overlay-max-w-md",
+    "overlay.max-w-sm": "overlay-max-w-sm",
     "overlay.opacity": "overlay-opacity",
+    "overlay.vh-lg": "overlay-vh-lg",
+    "overlay.vh-md": "overlay-vh-md",
+    "overlay.vh-sm": "overlay-vh-sm",
     "pad.page-lg.x": "pad-page-lg-x",
     "pad.page-md.x": "pad-page-md-x",
     "pad.page.x": "pad-page-x",
-    "panel.max-h-lg": "panel-max-h-lg",
-    "panel.max-h-md": "panel-max-h-md",
-    "panel.max-h-sm": "panel-max-h-sm",
-    "panel.max-w-lg": "panel-max-w-lg",
-    "panel.max-w-md": "panel-max-w-md",
-    "panel.max-w-sm": "panel-max-w-sm",
-    "panel.min-w-lg": "panel-min-w-lg",
-    "panel.min-w-md": "panel-min-w-md",
-    "panel.min-w-sm": "panel-min-w-sm",
-    "panel.vh-lg": "panel-vh-lg",
-    "panel.vh-md": "panel-vh-md",
-    "panel.vh-sm": "panel-vh-sm",
     "play.colors.property": "play-colors-property",
     "play.control.property": "play-control-property",
     "play.surface.property": "play-surface-property",

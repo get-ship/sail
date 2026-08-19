@@ -2,16 +2,9 @@
 //
 // The design substrate is tiered:
 //   1. PRIMITIVE   — spacing scale, radii, typography, motion curves,
-//                    z-index, icon/control/panel dimensional scales.
-//                    These never change per theme.
-//   2. SEMANTIC    — surface stack (--surface-{0..3}), tone ramps
-//                    (--tone-*-{fg,bg,bg-solid,border,ring}), brand
-//                    palette (--primary, --accent, --foreground, ...).
-//                    Themes override this layer; components read from
-//                    here at the HIGHEST level that fits.
-//   3. COMPONENT   — panel paddings/clamp/width, control heights/stroke,
-//                    edge highlights. The overlay/dialog/drawer/sheet
-//                    shells + popover/menu quartet read from this tier.
+//                    z-index, icon/control dimensional scales.
+//   2. SEMANTIC    — purpose surfaces, chromatic roles, foregrounds.
+//   3. COMPONENT   — overlay clamps, control heights/stroke.
 //
 // Every test here parses the .css files directly — the assert is on
 // the SHIPPED source-of-truth text, not on a runtime computed value
@@ -191,10 +184,8 @@ const SEMANTIC_TIER: ReadonlyArray<[name: string, sample: RegExp]> = [
 ] as const
 
 const COMPONENT_TIER: ReadonlyArray<[name: string, sample: RegExp]> = [
-  // Overlay clamps that remain in the model (HOLD / OPEN-5)
-  ['--panel-max-w-md', /--panel-max-w-md\s*:/i],
-  ['--panel-min-w-md', /--panel-min-w-md\s*:/i],
-  // Control heights + stroke
+  ['--overlay-max-w-md', /--overlay-max-w-md\s*:/i],
+  ['--overlay-vh-md', /--overlay-vh-md\s*:/i],
   ['--control-h-md', /--control-h-md\s*:/i],
   ['--control-stroke', /--control-stroke\s*:/i],
   ['--shadow-edge-highlight', /--shadow-edge-highlight\s*:/i],
@@ -205,7 +196,7 @@ const COMPONENT_TIER: ReadonlyArray<[name: string, sample: RegExp]> = [
 const REPRSENTATIVE_PER_THEME = [
   'surface',
   'overlay-fill',
-  'panel-max-w-md',
+  'overlay-max-w-md',
 ] as const
 
 describe('@ship/tokens — theme catalog (THEMES export)', () => {
@@ -830,7 +821,7 @@ describe('@ship/tokens — semantic tier (theme-overridable)', () => {
   }
 })
 
-describe('@ship/tokens — component tier (panel + control family)', () => {
+describe('@ship/tokens — component tier (overlay + control family)', () => {
   const tokens = loadSrc('../src/tokens.css')
   for (const [name, sample] of COMPONENT_TIER) {
     it(`declares ${name} in tokens.css`, () => {
@@ -1017,11 +1008,9 @@ describe('@ship/tokens — DTCG SSOT / generate drift lock', () => {
     expect(reg.names.some((n) => n === 'field' || n.startsWith('field-'))).toBe(
       false,
     )
-    expect(reg.paths?.['color.card.default']).toBe('card')
-    expect(reg.paths?.['color.input']).toBe('input')
-    expect(reg.paths?.['color.popover.default']).toBe('popover')
-    expect(reg.tokens.card?.path).toBe('color.card.default')
-    expect(reg.tokens.input?.path).toBe('color.input')
+    expect(reg.paths?.['color.card.default']).toBeUndefined()
+    expect(reg.paths?.['color.input']).toBeUndefined()
+    expect(reg.paths?.['color.popover.default']).toBeUndefined()
     // Naive path-join of base.json is not an independent pin (public names
     // drop group prefixes). Walk only to prove the model still has $value leaves.
     expect(modelBaseCssNames().size).toBeGreaterThan(100)
@@ -1034,7 +1023,7 @@ describe('@ship/tokens — DTCG SSOT / generate drift lock', () => {
     expect(reg.tokens['space-4']?.cssName).toBe('space-4')
     expect(reg.tokens['primary']?.path).toMatch(/^color\./)
     expect(reg.paths?.['space.4']).toBe('space-4')
-    expect(reg.tokens['accent']?.path).toBe('color.brandAccent.default')
+    expect(reg.tokens['accent']?.path).toBe('color.accent.solid')
     expect(reg.names.includes('accent-dashboard')).toBe(false)
     expect(reg.paths?.['color.accent.dashboard']).toBeUndefined()
   })

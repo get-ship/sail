@@ -60,7 +60,7 @@ describe('theme-shape-surface', () => {
     const edit = readFileSync(EDIT, 'utf8')
     const recipes = readFileSync(RECIPES, 'utf8')
     expect(sail).toMatch(/shape-workbench/)
-    expect(sail).toMatch(/panel-max-w-sm|maxW\(panel-max-w-sm\)/)
+    expect(sail).toMatch(/overlay-max-w-sm|maxW\(overlay-max-w-sm\)/)
     expect(sail).toMatch(/shape-canvas/)
     expect(recipes).toMatch(/soft:|sharp:|glass:|flat:|elevated:/)
     expect(recipes).toMatch(/RECIPE_IDS/)

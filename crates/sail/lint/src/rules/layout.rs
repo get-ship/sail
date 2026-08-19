@@ -2140,7 +2140,7 @@ mod tests {
     #[test]
     fn accepts_w_pct_and_min_w_zero() {
         assert!(run(r#"<column w="100%" min-w="0">x</column>"#).is_empty());
-        assert!(run(r#"<main w="100%" max-w="panel-max-w-sm">x</main>"#).is_empty());
+        assert!(run(r#"<main w="100%" max-w="overlay-max-w-sm">x</main>"#).is_empty());
     }
 
     #[test]

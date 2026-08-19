@@ -85,7 +85,6 @@ pub fn validate_base_contract(doc: &Value, label: &str) -> Result<()> {
     for role in CHROMATIC_ROLES {
         let alt = match *role {
             "danger" => "destructive",
-            "accent" => "brandAccent",
             _ => *role,
         };
         if !map.contains_key(*role) && !map.contains_key(alt) {

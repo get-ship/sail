@@ -148,7 +148,7 @@ export default controller(() => {
 </controller>
 
 <center style({ pad(6).size({ min-h: screen }).bg(background) })>
-  <column gap="4" style({ size({ w: 100%, max-w: panel-max-w-md }) })>
+  <column gap="4" style({ size({ w: 100%, max-w: overlay-max-w-md }) })>
     <column gap="1">
       <h1 style({ fg(foreground).type({ size: 2xl, weight: semibold }) })>Shipping address</h1>
       <p style({ fg(muted-foreground).type({ size: sm }) })>

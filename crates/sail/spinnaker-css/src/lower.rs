@@ -520,12 +520,6 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
                 let prop = if spec.name == "w" { "width" } else { "height" };
                 return Ok(vec![(prop.into(), "var(--border-width)".into())]);
             }
-            ("w", "panel-toast-region-width") => {
-                return Ok(vec![(
-                    "width".into(),
-                    "var(--panel-toast-region-width)".into(),
-                )]);
-            }
             // Closed product keyframe catalog (packages/sail/runtime
             // keyframes-catalog.ts). Style.animate(name) → CSS host Style var;
             // ambient @keyframes live in the generated contracts sheet,
@@ -567,47 +561,8 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
             ("w", "max") => {
                 return Ok(vec![("width".into(), "max-content".into())]);
             }
-            ("w", "panel-max-w-md") => {
-                return Ok(vec![("width".into(), "var(--panel-max-w-md)".into())]);
-            }
-            ("w", "panel-max-w-sm") => {
-                return Ok(vec![("width".into(), "var(--panel-max-w-sm)".into())]);
-            }
-            ("w", "panel-max-w-lg") => {
-                return Ok(vec![("width".into(), "var(--panel-max-w-lg)".into())]);
-            }
-            ("w", "panel-max-w-xs") => {
-                return Ok(vec![("width".into(), "var(--panel-max-w-xs)".into())]);
-            }
-            ("maxW", "panel-max-w-md") => {
-                return Ok(vec![("max-width".into(), "var(--panel-max-w-md)".into())]);
-            }
-            ("maxW", "panel-max-w-sm") => {
-                return Ok(vec![("max-width".into(), "var(--panel-max-w-sm)".into())]);
-            }
-            ("maxW", "panel-max-w-lg") => {
-                return Ok(vec![("max-width".into(), "var(--panel-max-w-lg)".into())]);
-            }
-            ("maxW", "panel-max-w-xs") => {
-                return Ok(vec![("max-width".into(), "var(--panel-max-w-xs)".into())]);
-            }
-            ("maxW", "panel-ch-w-md") => {
-                return Ok(vec![("max-width".into(), "var(--panel-ch-w-md)".into())]);
-            }
-            ("maxW", "panel-ch-w-lg") => {
-                return Ok(vec![("max-width".into(), "var(--panel-ch-w-lg)".into())]);
-            }
             ("dir", dir @ ("row" | "column" | "row-reverse" | "column-reverse")) => {
                 return Ok(vec![("flex-direction".into(), dir.into())]);
-            }
-            ("minW", "panel-menu-min-w") => {
-                return Ok(vec![("min-width".into(), "var(--panel-menu-min-w)".into())]);
-            }
-            ("minW", "panel-rail-w") => {
-                return Ok(vec![("min-width".into(), "var(--panel-rail-w)".into())]);
-            }
-            ("w", "panel-rail-w") => {
-                return Ok(vec![("width".into(), "var(--panel-rail-w)".into())]);
             }
             ("textAlign", align @ ("left" | "center" | "right" | "justify" | "start" | "end")) => {
                 return Ok(vec![("text-align".into(), align.into())]);

@@ -23,9 +23,9 @@
   // full-viewport card — that is not a drawer.
   style host = {position({ scheme: fixed, z: dialog }).pad(0).margin(0).overflow({ y: auto, overscroll: contain }).border({ color: border, width: 1 }).radius(none).bg(overlay).fg(foreground).elevation(xl).type({ family: body }), animate: { transition: play(surface, fast) }}
   style shown = {display(flex).dir(column)}
-  style sizeSm = {size({ max-w: panel-max-w-sm, max-h: panel-vh-sm })}
-  style sizeMd = {size({ max-w: panel-max-w-md, max-h: panel-vh-md })}
-  style sizeLg = {size({ max-w: panel-max-w-lg, max-h: panel-vh-lg })}
+  style sizeSm = {size({ max-w: overlay-max-w-sm, max-h: overlay-vh-sm })}
+  style sizeMd = {size({ max-w: overlay-max-w-md, max-h: overlay-vh-md })}
+  style sizeLg = {size({ max-w: overlay-max-w-lg, max-h: overlay-vh-lg })}
   style sideStart = {touch(pan-y)}
   style sideEnd = {touch(pan-y)}
   style sideTop = {touch(pan-x)}

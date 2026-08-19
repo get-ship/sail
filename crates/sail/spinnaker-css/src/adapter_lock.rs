@@ -659,7 +659,7 @@ mod tests {
             "style({ size({ w: 1 }).radius(sm).bg(primary).origin(bottom) })",
             "style({ size({ w: 8 }).type({ family: mono, size: sm, nums: tabular, align: center }) })",
             "style({ type({ family: mono, size: 2xl, nums: tabular }) })",
-            "style({ pad(4).size({ w: full, max-w: panel-max-w-sm }) })",
+            "style({ pad(4).size({ w: full, max-w: overlay-max-w-sm }) })",
             "style({ size({ w: full, max-w: breakpoint-desktop }).margin({ x: auto }) })",
             "style({ size({ max-w: breakpoint-mobile }).fg(muted-foreground).type({ size: lg, leading: relaxed, align: center }) })",
             "style({ display(block).size({ min-w: 0 }).type({ decoration: none }) })",
@@ -777,7 +777,7 @@ mod tests {
         let packages_exprs = [
             "style({ size({ max-w: full }).group().fg(foreground).type({ family: body }) })",
             "style({  pad({ y: 2, x: 3 }).radius(lg).bg(surface-1).border({ width: 1, color: border }).fg(foreground).type({ size: base, leading: normal }), when: { groupStateUser: {  bg(hover-bg).border({ width: 1, color: primary })  }, groupStateSystem: {  bg(muted).fg(muted-foreground)  }, groupStateError: {  border({ width: 1, color: destructive })  }, groupStateSending: {  opacity(75)  } } })",
-            "style({  pad({ y: density-row-py, x: density-row-px }).size({ min-h: panel-min-h-cell }).group().border({ edge: r, width: 1, color: border }).border({ edge: b, width: 1, color: border }), when: { stateOut: {  fg(muted-foreground).bg(muted)  }, stateWeekend: {  bg(muted)  }, stateRange: {  bg(selected-bg)  } } })",
+            "style({  pad({ y: density-row-py, x: density-row-px }).size({ min-h: control-h-md }).group().border({ edge: r, width: 1, color: border }).border({ edge: b, width: 1, color: border }), when: { stateOut: {  fg(muted-foreground).bg(muted)  }, stateWeekend: {  bg(muted)  }, stateRange: {  bg(selected-bg)  } } })",
             "style({  position({ scheme: absolute, t: bind(evtTop), l: bind(evtLeft) }).size({ h: bind(evtH), w: bind(evtW) }).pad({ y: half, x: 1 }).overflow(hidden).cursor(pointer).fg(primary).bg(hover-bg).radius(sm).type({ align: start, size: density }), when: { selected: {  border({ kind: outline, color: ring })  } } })",
             "style({  pad({ y: 6, x: 4 }).group().border({ width: 1, color: border, style: dashed }).radius(lg).cursor(pointer).fg(muted-foreground).select(none).type({ align: center }), when: { focus: {  border({ kind: outline, color: ring })  }, stateOver: {  border({ width: 1, color: ring }).bg(muted)  } } })",
             "style({ position({ scheme: absolute, l: bind(boxLeft), t: bind(boxTop) }).size({ w: bind(boxW), h: bind(boxH) }).bg(hover-bg).border({ width: 1, color: primary, style: dashed }).radius(sm).cursor(pointer).pointerEvents(auto) })",

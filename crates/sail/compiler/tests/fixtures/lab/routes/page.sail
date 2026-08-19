@@ -1,6 +1,6 @@
 <scope>
   style shell = {size({ min-h: fill }).pad(6).bg(background)}
-  style measure = {size({ max-w: panel-ch-w-lg, w: 100% })}
+  style measure = {size({ max-w: 60ch, w: 100% })}
 </scope>
 
 <column gap="6" align="start" style(shell)>

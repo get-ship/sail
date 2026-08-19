@@ -66,7 +66,7 @@ pub fn values(scale: &str) -> Vec<String> {
             // The space ramp IS the small end of the size scale — an icon is 5
             // steps tall the same way it is 5 steps from its neighbour. Plus the
             // intrinsic keywords, the dimensional families (icon-size/control-h/
-            // panel/breakpoint), and the framework's own size + density channels,
+            // overlay/breakpoint), and the framework's own size + density channels,
             // which a component spends to sit on the platform's density axis.
             let mut s: Vec<String> = tokens::size_values()
                 .iter()
@@ -213,7 +213,8 @@ pub fn lower(scale: &str, token: &str) -> Option<String> {
             t if is_channel(t)
                 || t.starts_with("icon-size-")
                 || t.starts_with("control-h-")
-                || t.starts_with("panel-")
+                || t.starts_with("overlay-max-")
+                || t.starts_with("overlay-vh-")
                 || t.starts_with("breakpoint-") =>
             {
                 format!("var(--{t})")

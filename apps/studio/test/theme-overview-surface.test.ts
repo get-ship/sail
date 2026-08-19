@@ -117,8 +117,7 @@ describe('theme-overview-surface', () => {
 
   it('fluid specimen dock uses panel size tokens (no fixed w prison)', () => {
     const sail = readFileSync(SURFACE, 'utf8')
-    expect(sail).toMatch(/panel-min-w-md|minW\(panel-min-w-md\)/)
-    expect(sail).toMatch(/panel-max-w-md|maxW\(panel-max-w-md\)/)
+    expect(sail).toMatch(/overlay-max-w-lg|maxW\(overlay-max-w-lg\)/)
   })
 
   it('hero swatch hit targets + leave guard', () => {

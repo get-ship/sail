@@ -312,7 +312,7 @@ fn empty_state_child_paint_on_structure_sx() {
             && src.contains("size(12)")
             && (src.contains("fontSize(md)") || src.contains("size: md"))
             && (src.contains("fontSize(sm)") || src.contains("size: sm"))
-            && (src.contains("maxW(panel-ch-w-md)") || src.contains("max-w: panel-ch-w-md"))
+            && (src.contains("max-w: 38ch") || src.contains("maxW(38ch)"))
             && src.contains("empty:")
             && src.contains("forced-colors"),
         "empty-state Style product + stretch/grow + host child tokens"
@@ -330,9 +330,9 @@ fn empty_state_child_paint_on_structure_sx() {
         out.skin_css
     );
     assert!(
-        out.skin_css.contains("max-width:var(--panel-ch-w-md)")
-            || out.skin_css.contains("max-width: var(--panel-ch-w-md)"),
-        "desc maxW(panel-ch-w-md) must emit real max-width CSS:\n{}",
+        out.skin_css.contains("max-width:38ch")
+            || out.skin_css.contains("max-width: 38ch"),
+        "desc max-w 38ch must emit real max-width CSS:\n{}",
         out.skin_css
     );
     assert!(
@@ -1050,7 +1050,7 @@ fn navbar_host_paint_on_sx_cva() {
             && (src.contains("borderEWidth(1)")
                 || src.contains("border-e")
                 || src.contains("edge: e"))
-            && (src.contains("minW(panel-rail-w)") || src.contains("panel-rail-w"))
+            && (src.contains("min-w: 14rem") || src.contains("minW(14rem)") || src.contains("14rem"))
             && (src.contains("display(contents)")
                 || src.contains("contents")
                 || src.contains("inset: 0")
@@ -1113,10 +1113,9 @@ fn navbar_host_paint_on_sx_cva() {
             && (out.skin_css.contains("min-height:0")
                 || out.skin_css.contains("min-height:calc(100dvh"))
             && out.skin_css.contains("padding-block:var(--space-5)")
-            && (out.skin_css.contains("min-width:var(--panel-rail-w)")
-                || out.skin_css.contains("min-width: var(--panel-rail-w)")
-                || out.skin_css.contains("minwpanelrailw")
-                || out.structure_html.contains("minwpanelrailw"))
+            && (out.skin_css.contains("min-width:14rem")
+                || out.skin_css.contains("min-width: 14rem")
+                || out.structure_html.contains("minw14rem"))
             && out.skin_css.contains("flex-direction:column")
             && out.skin_css.contains("[sticky]")
             && out.skin_css.contains("position:sticky")
@@ -1178,8 +1177,8 @@ fn error_state_child_paint_on_structure_sx() {
             && (src.contains("outlineOffset(ring-inset)") || src.contains("offset: ring-inset"))
             && (src.contains("fontSize(md)") || src.contains("size: md"))
             && (src.contains("fontSize(sm)") || src.contains("size: sm"))
-            && (src.contains("maxW(panel-ch-w-md)") || src.contains("max-w: panel-ch-w-md"))
-            && (src.contains("maxW(panel-ch-w-lg)") || src.contains("max-w: panel-ch-w-lg"))
+            && (src.contains("max-w: 38ch") || src.contains("maxW(38ch)"))
+            && (src.contains("max-w: 60ch") || src.contains("maxW(60ch)"))
             && src.contains("size(control-h-xl)")
             && src.contains("size(control-h-2xs)")
             && src.contains("empty:")
@@ -1198,10 +1197,10 @@ fn error_state_child_paint_on_structure_sx() {
                 || out.skin_css.contains("font-size: var(--text-sm)")
                 || out.structure_html.contains("s-textsm")
                 || out.structure_html.contains("fontsizesm"))
-            && (out.skin_css.contains("max-width:var(--panel-ch-w-md)")
-                || out.skin_css.contains("max-width: var(--panel-ch-w-md)"))
-            && (out.skin_css.contains("max-width:var(--panel-ch-w-lg)")
-                || out.skin_css.contains("max-width: var(--panel-ch-w-lg)"))
+            && (out.skin_css.contains("max-width:38ch")
+                || out.skin_css.contains("max-width: 38ch"))
+            && (out.skin_css.contains("max-width:60ch")
+                || out.skin_css.contains("max-width: 60ch"))
             && (out.skin_css.contains("outline-color:var(--destructive)")
                 || out.skin_css.contains("outline-color: var(--destructive)")
                 || out.structure_html.contains("outlinedestructive")
@@ -1548,9 +1547,7 @@ fn toast_region_host_paint_on_sx_cva() {
                 || src.contains("position({ scheme: fixed"))
             && (src.contains("z(z-toast)") || src.contains("z-toast") || src.contains("z: toast"))
             && (src.contains("pointerEvents(none)") || src.contains("pointer-events"))
-            && (src.contains("w(panel-w-toast)")
-                || src.contains("panel-w-toast")
-                || src.contains("w: panel-w-toast"))
+            && (src.contains("w: 24rem") || src.contains("w(24rem)"))
             && src.contains("top-0 right-auto bottom-auto left-0")
             && src.contains("'top-end': 'top-0 right-0 bottom-auto left-auto'")
             && src.contains("col-reverse")
@@ -1576,9 +1573,10 @@ fn toast_region_host_paint_on_sx_cva() {
             && (out.structure_html.contains("s-top0")
                 || out.structure_html.contains("t0")
                 || out.skin_css.contains("top:0"))
-            && (out.structure_html.contains("s-wpanelwtoast")
-                || out.structure_html.contains("wpanelwtoast")
-                || out.skin_css.contains("var(--panel-w-toast)")),
+            && (out.structure_html.contains("s-w24rem")
+                || out.structure_html.contains("w24rem")
+                || out.skin_css.contains("width:24rem")
+                || out.skin_css.contains("width: 24rem")),
         "host paint atoms on structure:\n{}\nskin={}",
         out.structure_html,
         out.skin_css
@@ -2298,8 +2296,8 @@ fn overlay_family_anchor_geometry_on_host_sx() {
     for (tag, extra) in [
         ("dropdown", "use:menu"),
         ("context-menu", "use:contextMenu"),
-        ("hover-card", "panel-max-w-sm"),
-        ("popover", "panel-menu-min-w"),
+        ("hover-card", "overlay-max-w-sm"),
+        ("popover", "12rem"),
     ] {
         let src = sail_compiler::stdlib::sources()
             .iter()
@@ -2395,9 +2393,9 @@ fn combobox_listbox_geometry_on_child_sx_options_on_popover_skin() {
                 || src.contains("w-(--anchor-width)")
                 || src.contains("width: (--anchor-width)")
                 || src.contains("w: bind(anchorWidth)"))
-            && (src.contains("maxH(panel-max-h-sm)")
-                || src.contains("max-h-panel-max-h-sm")
-                || src.contains("panel-max-h-sm"))
+            && (src.contains("maxH(overlay-max-h-sm)")
+                || src.contains("max-h-overlay-max-h-sm")
+                || src.contains("overlay-max-h-sm"))
             && (src.contains("overflowY(auto)")
                 || src.contains("overflow-y-auto")
                 || src.contains("overflow-y: auto")
@@ -2417,9 +2415,10 @@ fn combobox_listbox_geometry_on_child_sx_options_on_popover_skin() {
                 || out.structure_html.contains("s-minwanchorwidth")
                 || out.structure_html.contains("s-wbindanchorwidth")
                 || out.skin_css.contains("var(--anchor-width)"))
-            && (out.structure_html.contains("maxhpanelmaxhsm")
-                || out.structure_html.contains("s-maxhpanelmaxhsm")
-                || out.skin_css.contains("var(--panel-max-h-sm)"))
+            && (out.structure_html.contains("maxhoverlaymaxhsm")
+                || out.structure_html.contains("s-maxhoverlaymaxhsm")
+                || out.structure_html.contains("maxhpanelmaxhsm")
+                || out.skin_css.contains("var(--overlay-max-h-sm)"))
             && (out.structure_html.contains("overflowyauto")
                 || out.structure_html.contains("s-overflowyauto")
                 || out.skin_css.contains("overflow-y:auto")

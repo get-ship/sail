@@ -19,14 +19,14 @@
   // pad 0 — air lives on >header / >section / >footer (DIALOG_MAP). Flat content
   // without those gets a :has() floor in the map. h(fit) keeps inset:0 from
   // stretching the shell to the full viewport.
-  style base = {position({ scheme: fixed, inset: 0 }).pad(0).margin(auto).size({ w: 100%, max-w: panel-max-w-md, min-w: panel-max-w-sm }).overflow({ all: hidden }).border({ color: border, width: 1 }).radius(xl).bg(overlay).fg(foreground).elevation(xl).type({ family: body }), animate: { transition: play(surface, fast) }}
-  style open = {display(flex).dir(column).size({ h: fit, max-h: panel-vh-md })}
-  style sizeSm = {size({ max-w: panel-max-w-sm, min-w: 0 })}
-  style sizeMd = {size({ max-w: panel-max-w-md })}
-  style sizeLg = {size({ max-w: panel-max-w-lg })}
+  style base = {position({ scheme: fixed, inset: 0 }).pad(0).margin(auto).size({ w: 100%, max-w: overlay-max-w-md, min-w: overlay-max-w-sm }).overflow({ all: hidden }).border({ color: border, width: 1 }).radius(xl).bg(overlay).fg(foreground).elevation(xl).type({ family: body }), animate: { transition: play(surface, fast) }}
+  style open = {display(flex).dir(column).size({ h: fit, max-h: overlay-vh-md })}
+  style sizeSm = {size({ max-w: overlay-max-w-sm, min-w: 0 })}
+  style sizeMd = {size({ max-w: overlay-max-w-md })}
+  style sizeLg = {size({ max-w: overlay-max-w-lg })}
   style sizeFull = {size({ max-w: 100%, max-h: 100%, min-w: 0, h: 100% })}
   // Side sheets: radius/inset floor; edge margin + 100vh width live in DIALOG_MAP.
-  style sideEdge = {position({ inset: 0 }).size({ max-w: panel-max-w-sm }).margin(0).radius(none)}
+  style sideEdge = {position({ inset: 0 }).size({ max-w: overlay-max-w-sm }).margin(0).radius(none)}
   style sideBand = {position({ inset: 0 }).size({ w: 100%, max-w: none }).margin(0).radius(none)}
 </scope>
 

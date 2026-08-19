@@ -41,7 +41,7 @@
   style triggerIcon = {size(icon-size-sm).display(block)}
   style glyph = {fg(foreground).type({ size: sm, leading: none })}
 
-  style panel = {position({ scheme: fixed, inset: auto, l: bind(anchorLeft), t: bind(anchorTop), z: popover }).pad(0).margin(0).size({ w: panel-max-w-sm, max-w: 24rem, min-w: 0, max-h: panel-vh-md }).overflow({ x: hidden, y: auto, overscroll: contain }).fg(foreground).bg(overlay).border({ color: border, width: hairline }).radius(lg).elevation(lg), when: {group-inline: gone, group-chrome-inline: gone, group-mode: gone, group-mode-only: gone}}
+  style panel = {position({ scheme: fixed, inset: auto, l: bind(anchorLeft), t: bind(anchorTop), z: popover }).pad(0).margin(0).size({ w: overlay-max-w-sm, max-w: 24rem, min-w: 0, max-h: overlay-vh-md }).overflow({ x: hidden, y: auto, overscroll: contain }).fg(foreground).bg(overlay).border({ color: border, width: hairline }).radius(lg).elevation(lg), when: {group-inline: gone, group-chrome-inline: gone, group-mode: gone, group-mode-only: gone}}
   style panelMenuRow = {size({ w: 100%, max-w: none, min-w: 0 })}
 
   style header = {size({ w: 100%, min-w: 0 }).pad({ x: 3, t: 3, b: 0 })}

@@ -519,7 +519,7 @@ describe('Studio routes + chrome', () => {
     expect(surface).toMatch(/theme=\{row\.previewId\}|theme=\{previewPaintId\(\)\}/)
     expect(surface).toMatch(/createThemesSurface\(\)/)
     expect(surface).toMatch(/<scroll-area\b/)
-    expect(surface).toMatch(/panel-min-w-md|panel-max-w-md/)
+    expect(surface).toMatch(/overlay-max-w-sm|overlay-max-w-md/)
     expect(vm).toMatch(/loadThemes|openTheme|addThemeToProject|forkTheme/)
     expect(vm).toMatch(/subscribeDesign|getDesignState/)
     expect(vm).toMatch(/from ['"]@ship\/studio\/design['"]/)

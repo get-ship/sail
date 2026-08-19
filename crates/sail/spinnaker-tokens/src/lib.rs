@@ -158,7 +158,6 @@ const THEME_MODE_GROUP_KEYS: &[&str] = &[
     "space",
     "icon",
     "density",
-    "panel",
     "z",
     "breakpoint",
     "border",

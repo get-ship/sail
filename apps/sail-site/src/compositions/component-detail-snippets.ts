@@ -479,7 +479,7 @@ export default controller(() => ({
 </column>`,
 
   'scroll-area': `<scroll-area orientation="vertical"
-  style({ size({ max-h: panel-max-h-sm }).pad(3).border({ color: border-subtle, width: 1 }).radius(md) })>
+  style({ size({ max-h: overlay-max-h-sm }).pad(3).border({ color: border-subtle, width: 1 }).radius(md) })>
   <p>Constrain height/width with Style — overflow scrolls behind thin themed thumbs.</p>
   <p>orientation picks the axis (vertical · horizontal · both).</p>
   <p>Thumb from the theme; hover uses the stronger border colour.</p>

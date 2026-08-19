@@ -1,5 +1,5 @@
 <!-- Stacked settings cards + solid primary button. Static only. -->
-<column gap="6" style({ size({ max-w: panel-max-w-md }).pad(6) })>
+<column gap="6" style({ size({ max-w: overlay-max-w-md }).pad(6) })>
   <h1 style({ fg(foreground).type({ size: 2xl, weight: semibold }) })>Settings</h1>
 
   <card style({ size({ w: 100% }) })>

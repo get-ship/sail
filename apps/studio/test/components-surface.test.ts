@@ -62,7 +62,7 @@ describe('components-surface', () => {
     expect(sail).toMatch(/createComponentsLibrary/)
     expect(sail).toMatch(/return \{ session, library \}/)
     expect(sail).toMatch(/<toast-region\b/)
-    expect(sail).toMatch(/panel-min-w-md|panel-max-w-md/)
+    expect(sail).toMatch(/overlay-max-w-sm|overlay-max-w-md/)
     expect(inspectSail).toMatch(/components-inspect/)
     expect(inspectSail).toMatch(/data-inspect-tree|sail-tree/)
     expect(inspectSail).toMatch(/surface-picker/)

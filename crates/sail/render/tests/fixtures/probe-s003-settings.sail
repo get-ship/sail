@@ -5,7 +5,7 @@
   that matches browser CVA, not a paint miss. Keep this solid so goldens pin
   the anti-steering path (L1 skins, not raw sx fills).
 -->
-<column gap="6" style({ size({ max-w: panel-max-w-md }).pad(6) })>
+<column gap="6" style({ size({ max-w: overlay-max-w-md }).pad(6) })>
   <h1 style({ fg(foreground).type({ size: 2xl, weight: semibold }) })>Settings</h1>
 
   <card style({ size({ w: 100% }) })>

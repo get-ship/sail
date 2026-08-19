@@ -16,12 +16,11 @@ const THEMES_CSS: &str = include_str!("../../../../packages/sail/tokens/src/them
 const CONTRACTS_CSS: &str = include_str!("../../../../packages/sail/tokens/src/sail-base.css");
 const SKINS_CSS: &str = include_str!("../../../../packages/sail/tokens/src/element-skins.css");
 
-/// TIER 0 — primitives that are never themed. Spacing, icon sizes, z-index and
-/// panel geometry are structural: they are read by dozens of unrelated
-/// surfaces, so "retuning" one from a theme block is never a local change.
-/// A theme that wants a roomier card changes the card's own token, not the
-/// spacing step the card happens to spend.
-const TIER_0_PREFIXES: &[&str] = &["space-", "icon-size-", "z-", "panel-"];
+/// TIER 0 — primitives that are never themed. Spacing, icon sizes, z-index
+/// are structural: they are read by dozens of unrelated surfaces, so
+/// "retuning" one from a theme block is never a local change.
+/// Overlay clamps are theme-owned (not Tier 0).
+const TIER_0_PREFIXES: &[&str] = &["space-", "icon-size-", "z-"];
 
 #[test]
 fn no_tier_0_primitive_is_declared_inside_a_theme_block() {
@@ -44,7 +43,7 @@ fn no_tier_0_primitive_is_declared_inside_a_theme_block() {
     assert!(
         breaches.is_empty(),
         "a theme block declares a Tier-0 primitive:\n  {}\n\n\
-         Tier-0 tokens (spacing, icon sizes, z-index, panel geometry) are read \
+         Tier-0 tokens (spacing, icon sizes, z-index) are read \
          by unrelated surfaces across the whole system, so overriding one from \
          a theme moves things the theme never meant to touch. If the theme \
          needs a different value for ONE surface, promote a named token for \
