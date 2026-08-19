@@ -352,6 +352,7 @@ mod tests {
         assert!(contains("space", "4"));
         assert!(!contains("space", "16px"));
         assert!(!contains("color", "#3366ff"));
+        assert!(!contains("size", "full"), "full is not a size-slot keyword");
     }
 
     #[test]

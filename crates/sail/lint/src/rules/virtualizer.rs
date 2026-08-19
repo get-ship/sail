@@ -64,7 +64,7 @@ fn check_tag(path: &Path, source: &str, t: &OpenTag) -> Option<Finding> {
             ),
             suggest: Some(
                 "Add tag-position Style with translateY for the row offset, e.g. \
-                 `<el use:virtualRow style({ position({ scheme: absolute, l: 0 }).size({ w: full }).translateY(bind(rowY)) })>` \
+                 `<el use:virtualRow style({ position({ scheme: absolute, l: 0 }).size({ w: 100% }).translateY(bind(rowY)) })>` \
                  (see sail-tree / virtual-row.ts)."
                     .to_string(),
             ),
@@ -86,7 +86,7 @@ fn check_tag(path: &Path, source: &str, t: &OpenTag) -> Option<Finding> {
             ),
             suggest: Some(
                 "Add tag-position Style with height from the spacer var, e.g. \
-                 `<el use:virtualSpacer style({ position(relative).size({ w: full, h: bind(rowsH) }) })>` \
+                 `<el use:virtualSpacer style({ position(relative).size({ w: 100%, h: bind(rowsH) }) })>` \
                  (see sail-tree / virtual-row.ts)."
                     .to_string(),
             ),
@@ -184,7 +184,7 @@ mod tests {
     #[test]
     fn virtual_row_without_translate_fails() {
         let src = r#"
-            <div use:virtualRow={w.start} style({ position({ scheme: absolute, l: 0 }).size({ w: full }) })>              row
+            <div use:virtualRow={w.start} style({ position({ scheme: absolute, l: 0 }).size({ w: 100% }) })>              row
             </div>
         "#;
         let f = lint(src);
@@ -197,7 +197,7 @@ mod tests {
     #[test]
     fn virtual_row_with_translate_passes() {
         let src = r#"
-            <row use:virtualRow={w.start} style({ position({ scheme: absolute, l: 0 }).size({ w: full }).translateY(bind(rowY)) })>              row
+            <row use:virtualRow={w.start} style({ position({ scheme: absolute, l: 0 }).size({ w: 100% }).translateY(bind(rowY)) })>              row
             </row>
         "#;
         assert!(lint(src).is_empty(), "{:?}", lint(src));
@@ -206,7 +206,7 @@ mod tests {
     #[test]
     fn virtual_spacer_without_height_fails() {
         let src = r#"
-            <div use:virtualSpacer={totalSize()} style({ position(relative).size({ w: full }) })>            </div>
+            <div use:virtualSpacer={totalSize()} style({ position(relative).size({ w: 100% }) })>            </div>
         "#;
         let f = lint(src);
         assert_eq!(f.len(), 1, "{f:?}");
@@ -216,7 +216,7 @@ mod tests {
     #[test]
     fn virtual_spacer_with_rows_h_passes() {
         let src = r#"
-            <div use:virtualSpacer={totalSize()} style({ position(relative).size({ w: full, h: bind(rowsH) }) })>            </div>
+            <div use:virtualSpacer={totalSize()} style({ position(relative).size({ w: 100%, h: bind(rowsH) }) })>            </div>
         "#;
         assert!(lint(src).is_empty(), "{:?}", lint(src));
     }
@@ -233,7 +233,7 @@ mod tests {
     #[test]
     fn translate_y_plain_is_the_author_form() {
         let src = r#"
-            <grid use:virtualRow={w.start} style({ position({ scheme: absolute, l: 0 }).size({ w: full }).translateY(bind(rowY)) })>            </grid>
+            <grid use:virtualRow={w.start} style({ position({ scheme: absolute, l: 0 }).size({ w: 100% }).translateY(bind(rowY)) })>            </grid>
         "#;
         assert!(lint(src).is_empty(), "{:?}", lint(src));
     }

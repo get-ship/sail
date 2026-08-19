@@ -297,15 +297,7 @@ fn is_plausible_scale_tail(tail: &str, rule: SxScaleRule) -> bool {
         | SxScaleRule::MaxHeight => {
             matches!(
                 tail,
-                "0" | "auto"
-                    | "full"
-                    | "screen"
-                    | "fill"
-                    | "fit"
-                    | "min"
-                    | "max"
-                    | "railfill"
-                    | "half"
+                "0" | "auto" | "screen" | "fill" | "fit" | "min" | "max" | "railfill" | "half"
             ) || tail.parse::<u32>().is_ok()
                 || denormalize_size_token(tail).is_some()
         }
@@ -459,7 +451,6 @@ pub(crate) fn size_token_to_dimension(value: &str) -> Dimension {
     match value {
         "0" => Dimension::length(0.0),
         "auto" => Dimension::auto(),
-        "full" => Dimension::percent(1.0),
         "screen" => Dimension::percent(1.0),
         "fill" => Dimension::percent(1.0),
         "railfill" => Dimension::percent(1.0),
@@ -545,6 +536,16 @@ mod tests {
     use crate::layout::style::resolve;
 
     #[test]
+    fn full_is_not_a_percent_stamp() {
+        assert_ne!(
+            size_token_to_dimension("full"),
+            Dimension::percent(1.0),
+            "full is not a size-slot keyword"
+        );
+        assert_eq!(size_token_to_dimension("100%"), Dimension::percent(1.0));
+    }
+
+    #[test]
     fn sx_size_sets_width_and_height() {
         let e = Element {
             tag: "div".into(),
@@ -613,7 +614,7 @@ mod tests {
         let elem = Element {
             tag: "input".into(),
             class:
-                "sail-input s-w-full s-type-text-min-h-control-h-md s-type-text-pad-y1_5 s-type-text-pad-x3 \
+                "sail-input s-type-text-min-h-control-h-md s-type-text-pad-y1_5 s-type-text-pad-x3 \
                  s-type-text-size-lg-min-h-control-h-lg"
                     .into(),
             attrs: {
@@ -630,7 +631,6 @@ mod tests {
             Dimension::length(34.0),
             "md minH not lg"
         );
-        assert_eq!(resolved.style.size.width, Dimension::percent(1.0));
         assert_eq!(resolved.style.padding.top, LengthPercentage::length(6.0));
         assert_eq!(resolved.style.padding.left, LengthPercentage::length(12.0));
     }

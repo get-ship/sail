@@ -1235,9 +1235,9 @@ pub fn is_named_scale_step(spec: &ConcernSpec, name: &str) -> bool {
             if matches!(name, "hug" | "grow" | "max") {
                 return true;
             }
-            // `full` / control steps write geometry. `control-md` resolves as
-            // composite when the catalog has it; otherwise accept size-scale names
-            // that are not pad-like.
+            // Participation is hug/grow/max. Control steps write geometry
+            // through the catalog composite; otherwise accept size-scale names
+            // that are not pad-like. `full` is not a size-slot keyword.
             let slot = find_slot(spec, "w").unwrap();
             slot.keywords.contains(&name) || slot.scale.is_some_and(|s| scales::contains(s, name))
         }
@@ -1327,6 +1327,15 @@ pub fn validate_slot_value(
                 .strip_prefix('-')
                 .filter(|r| !r.is_empty())
                 .unwrap_or(tok);
+            // Slot `full` is not a size keyword. Bare `size(full)` stays the
+            // flex-trap. Free geometry is `100%`; leftover is grow/max.
+            if spec.name == "size" && bare == "full" {
+                return Err(StyleDiagnostic::BadToken {
+                    setter: format!("size:{}", slot.name),
+                    value: "full".into(),
+                    source: op.source.clone(),
+                });
+            }
             if slot.scale == Some("color")
                 && crate::component_surfaces::is_component_public_name(bare)
             {
@@ -1704,6 +1713,36 @@ mod tests {
         );
         let clashes = crate::clash::detect_clashes(&style, &HashMap::new());
         assert!(clashes.is_empty(), "{clashes:?}");
+    }
+
+    #[test]
+    fn size_slot_full_is_retired() {
+        for src in [
+            "style({ size({ w: full }) })",
+            "style({ size({ h: full }) })",
+            "style({ size({ min-w: full }) })",
+            "style({ size({ max-w: full }) })",
+            "style({ size({ basis: full }) })",
+        ] {
+            let (_, diags) = parse(src);
+            assert!(
+                diags.iter().any(|d| d
+                    .message()
+                    .contains("size.full retired — use size(grow)|size(max) or free 100%")),
+                "{src}: {:?}",
+                diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+            );
+        }
+    }
+
+    #[test]
+    fn radius_full_stays() {
+        let (_, diags) = parse("style({ radius(full) })");
+        assert!(
+            diags.is_empty(),
+            "radius(full) is a pill: {:?}",
+            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
     }
 
     #[test]

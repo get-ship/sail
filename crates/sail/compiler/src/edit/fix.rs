@@ -67,6 +67,10 @@ pub fn suggest_fixes(
             plans.append(&mut ps);
             continue;
         }
+        if let Some(mut ps) = fix_size_slot_full(source, d) {
+            plans.append(&mut ps);
+            continue;
+        }
         if let Some(mut ps) = fix_gradient_molecule(source, d) {
             plans.append(&mut ps);
             continue;
@@ -516,6 +520,93 @@ fn fix_unknown_when_key(source: &str, d: &crate::diagnostics::Diagnostic) -> Opt
         })
         .collect::<Vec<_>>();
     if plans.is_empty() { None } else { Some(plans) }
+}
+
+/// Suggest-only: three doors for retired size-slot `full`. Nothing auto-applies.
+fn fix_size_slot_full(source: &str, d: &crate::diagnostics::Diagnostic) -> Option<Vec<FixPlan>> {
+    if !d.message.contains("size.full retired") {
+        return None;
+    }
+    let offset = line_col_to_offset(source, d.line, d.col);
+    let (tok_start, tok_end) = find_token_span_from(source, offset, "full")
+        .or_else(|| find_token_span_from(source, 0, "full"))?;
+    // Bare `size(full)` is the flex-trap, not a slot spend.
+    if source.get(tok_start.saturating_sub(5)..tok_start) == Some("size(") {
+        return None;
+    }
+    let rule = d.rule.clone().unwrap_or_else(|| "spinnaker".into());
+    let mut plans = vec![FixPlan {
+        rule: rule.clone(),
+        line: d.line,
+        col: d.col,
+        message: "rewrite `full` to `100%`".into(),
+        ops: vec![],
+        text_patch: Some(TextPatch {
+            start: tok_start,
+            end: tok_end,
+            replacement: "100%".into(),
+        }),
+        actor: None,
+    }];
+    if let Some((call_start, call_end)) = find_size_slot_call_span(source, tok_start) {
+        for (rep, msg) in [
+            ("size(grow)", "rewrite slot `full` to `size(grow)`"),
+            ("size(max)", "rewrite slot `full` to `size(max)`"),
+        ] {
+            plans.push(FixPlan {
+                rule: rule.clone(),
+                line: d.line,
+                col: d.col,
+                message: msg.into(),
+                ops: vec![],
+                text_patch: Some(TextPatch {
+                    start: call_start,
+                    end: call_end,
+                    replacement: rep.into(),
+                }),
+                actor: None,
+            });
+        }
+    }
+    Some(plans)
+}
+
+fn find_size_slot_call_span(source: &str, inside: usize) -> Option<(usize, usize)> {
+    let bytes = source.as_bytes();
+    let mut i = inside;
+    while i > 0 {
+        if source.get(i..).is_some_and(|s| s.starts_with("size("))
+            && (i == 0 || !bytes[i - 1].is_ascii_alphanumeric())
+        {
+            let end = scan_paren_close(source, i + 4)?;
+            return Some((i, end));
+        }
+        i -= 1;
+    }
+    None
+}
+
+fn scan_paren_close(source: &str, open_paren: usize) -> Option<usize> {
+    let bytes = source.as_bytes();
+    if bytes.get(open_paren) != Some(&b'(') {
+        return None;
+    }
+    let mut depth = 0i32;
+    let mut i = open_paren;
+    while i < bytes.len() {
+        match bytes[i] {
+            b'(' => depth += 1,
+            b')' => {
+                depth -= 1;
+                if depth == 0 {
+                    return Some(i + 1);
+                }
+            }
+            _ => {}
+        }
+        i += 1;
+    }
+    None
 }
 
 /// Suggest-only: point `size(full)` at `size(grow)` and `size(max)`. Nothing auto-applies.
@@ -2059,6 +2150,54 @@ mod tests {
         );
         assert!(
             result.source.contains("size(full)"),
+            "source must stay full: {}",
+            result.source
+        );
+    }
+
+    #[test]
+    fn size_slot_full_suggests_three_doors() {
+        let src = r#"<div style({ size({ w: full }) })>x</div>"#;
+        let plans = suggest_fixes_for_source(src, "t.sail", None);
+        let retired: Vec<_> = plans
+            .iter()
+            .filter(|p| {
+                p.message.contains("100%")
+                    || p.message.contains("size(grow)")
+                    || p.message.contains("size(max)")
+            })
+            .collect();
+        assert_eq!(retired.len(), 3, "{plans:?}");
+        let reps: Vec<&str> = retired
+            .iter()
+            .filter_map(|p| p.text_patch.as_ref().map(|t| t.replacement.as_str()))
+            .collect();
+        assert!(reps.contains(&"100%"), "{reps:?}");
+        assert!(reps.contains(&"size(grow)"), "{reps:?}");
+        assert!(reps.contains(&"size(max)"), "{reps:?}");
+        for p in &retired {
+            assert!(!is_auto_apply_plan(p), "suggest-only: {p:?}");
+        }
+    }
+
+    #[test]
+    fn size_slot_full_apply_does_not_consume() {
+        let src = r#"<div style({ size({ w: full }) })>x</div>"#;
+        let result = crate::edit::apply_ops_to_source(
+            src,
+            "t.sail",
+            &[],
+            None,
+            crate::edit::AutofixMode::Apply,
+            Some("test"),
+        );
+        assert!(
+            result.auto_fixed.is_empty(),
+            "fix=apply must not rewrite slot full: {:?}",
+            result.auto_fixed
+        );
+        assert!(
+            result.source.contains("w: full"),
             "source must stay full: {}",
             result.source
         );

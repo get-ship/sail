@@ -1,9 +1,9 @@
 <!-- Owned construct: multiline native <input> + named style + if. -->
 <scope>
-  style page = { size({ w: full }) }
-  style fullW = { size({ w: full }) }
+  style page = { size({ w: 100% }) }
+  style fullW = { size({ w: 100% }) }
   style mutedSm = { fg(muted-foreground).type({ size: sm }) }
-  style mapRow = { size({ w: full }).pad({ y: 1 }) }
+  style mapRow = { size({ w: 100% }).pad({ y: 1 }) }
 </scope>
 <controller>
 export default controller(() => {

@@ -428,7 +428,7 @@ function pageSource(component: string, all: ReturnType<typeof cells>): string {
 -->
 <scope>
   style shell = { pad(6).bg(background) }
-  style band = { size({ w: full, max-w: breakpoint-desktop }) }
+  style band = { size({ w: 100%, max-w: breakpoint-desktop }) }
 </scope>
 
 <column gap="8" style(shell)>

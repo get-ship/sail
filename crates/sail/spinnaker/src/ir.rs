@@ -285,6 +285,9 @@ impl StyleDiagnostic {
                 }
             }
             StyleDiagnostic::BadToken { setter, value, .. } => {
+                if value == "full" && setter.starts_with("size:") {
+                    return "size.full retired — use size(grow)|size(max) or free 100%".into();
+                }
                 if setter.starts_with("pad") || setter.starts_with("margin") {
                     if let Some(neighbors) = crate::scales::space_neighbors(value) {
                         return format!(

@@ -1,7 +1,7 @@
 //! `sail-no-style-block` — raw `<style>` blocks are not the floor styling surface.
 //!
 //! The styling floor is: **one way to do CSS — the design-token vocabulary**,
-//! authored as Style on the open tag (`style({ size({ w: full }).pad(4).bg(surface), when: { hover: bg(muted) } })`).
+//! authored as Style on the open tag (`style({ size({ w: 100% }).pad(4).bg(surface), when: { hover: bg(muted) } })`).
 //! Motion, tone/state variants, and responsive breakpoints are becoming
 //! first-class *language elements* rather than hand-authored CSS. A raw
 //! `<style>` block is the escape hatch the floor exists to remove.
@@ -56,7 +56,7 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                         severity: Severity::Warn,
                         message:
                             "raw <style> is not the floor styling surface — the floor is one way \
-                             to do CSS: Style tag call (`style({ size({ w: full }).pad(4).bg(surface), when: { hover: bg(muted) } })`). \
+                             to do CSS: Style tag call (`style({ size({ w: 100% }).pad(4).bg(surface), when: { hover: bg(muted) } })`). \
                              Motion/variants/responsive are becoming language elements, not raw \
                              CSS. This is the opinionated floor; primitives use it too."
                                 .to_string(),

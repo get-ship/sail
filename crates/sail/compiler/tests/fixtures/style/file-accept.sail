@@ -1,8 +1,8 @@
 <!-- Owned construct: MIME accept + named style on <file> / <input>. -->
 <scope>
-  style page = { size({ w: full }) }
-  style fieldShell = { size({ w: full, max-w: 64 }).pad(2) }
-  style fullW = { size({ w: full }) }
+  style page = { size({ w: 100% }) }
+  style fieldShell = { size({ w: 100%, max-w: 64 }).pad(2) }
+  style fullW = { size({ w: 100% }) }
   style knobLabel = { fg(muted-foreground).type({ size: xs }) }
 </scope>
 <controller>

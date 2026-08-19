@@ -86,6 +86,33 @@ fn size_full_is_a_flex_trap() {
 }
 
 #[test]
+fn size_slot_full_is_retired() {
+    let src = r#"<div style({ size({ w: full }) })>x</div>"#;
+    let path = "apps/studio/src/studio-panel/studio-panel.sail";
+    let diags = check_all(src, Some(path.as_ref()), &[], None);
+    assert!(
+        diags.iter().any(|d| d
+            .message
+            .contains("size.full retired — use size(grow)|size(max) or free 100%")),
+        "w: full must teach retirement: {diags:?}"
+    );
+}
+
+#[test]
+fn size_free_percent_compiles() {
+    let src = r#"<div style({ size({ w: 100% }) })>x</div>"#;
+    let path = "apps/studio/src/studio-panel/studio-panel.sail";
+    compile(src, opts(path)).expect("size({{ w: 100% }}) is free geometry");
+}
+
+#[test]
+fn radius_full_compiles() {
+    let src = r#"<div style({ radius(full).bg(primary) })>x</div>"#;
+    let path = "apps/studio/src/studio-panel/studio-panel.sail";
+    compile(src, opts(path)).expect("radius(full) stays a pill");
+}
+
+#[test]
 fn size_grow_outside_host_is_an_error() {
     let src = r#"<column style({ size(grow) })>x</column>"#;
     let path = "apps/studio/src/studio-panel/studio-panel.sail";

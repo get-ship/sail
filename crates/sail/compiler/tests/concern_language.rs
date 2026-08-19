@@ -402,7 +402,7 @@ fn slot_merge_partial_hover() {
 
 #[test]
 fn size_and_space_do_not_clash() {
-    let src = "style({ size({ w: full }).pad({ x: 3 }) })";
+    let src = "style({ size({ w: 100% }).pad({ x: 3 }) })";
     let (style, diags) = parse(src);
     assert!(
         diags.is_empty(),
@@ -419,7 +419,7 @@ fn size_and_space_do_not_clash() {
     let norm = css.replace(' ', "");
     assert!(
         norm.contains("width") && (norm.contains("100%") || norm.contains("--size")),
-        "size({{ w: full }}) must lower: {css}"
+        "size({{ w: 100% }}) must lower: {css}"
     );
     assert!(
         norm.contains("padding-inline") || norm.contains("padding"),
@@ -527,7 +527,7 @@ fn member_access_does_not_resolve() {
 
 #[test]
 fn intra_channel_chain_stays() {
-    let src = "style({ size({ w: full }).position(absolute) })";
+    let src = "style({ size({ w: 100% }).position(absolute) })";
     let (style, diags) = parse(src);
     assert!(
         diags.is_empty(),
@@ -538,10 +538,41 @@ fn intra_channel_chain_stays() {
     let norm = css.replace(' ', "");
     assert!(
         norm.contains("width") && (norm.contains("100%") || norm.contains("--size")),
-        "size({{ w: full }}) must lower: {css}"
+        "size({{ w: 100% }}) must lower: {css}"
     );
     assert!(
         norm.contains("position:absolute") || norm.contains("position: absolute"),
         "position(absolute) must lower: {css}"
+    );
+}
+
+#[test]
+fn size_slot_full_is_retired() {
+    let diags = lower_must_fail("style({ size({ w: full }) })");
+    assert!(
+        diags.iter().any(|d| d
+            .message()
+            .contains("size.full retired — use size(grow)|size(max) or free 100%")),
+        "size({{ w: full }}) must teach retirement: {:?}",
+        diag_messages(&diags)
+    );
+}
+
+#[test]
+fn size_free_percent_still_lowers() {
+    let css = css_of("style({ size({ w: 100% }) })");
+    let norm = css.replace(' ', "");
+    assert!(
+        norm.contains("width:100%") || norm.contains("width: 100%"),
+        "size({{ w: 100% }}) must lower as free geometry: {css}"
+    );
+}
+
+#[test]
+fn radius_full_still_lowers() {
+    let css = css_of("style({ radius(full) })");
+    assert!(
+        css.contains("border-radius") && css.contains("--radius-full"),
+        "radius(full) stays a pill: {css}"
     );
 }

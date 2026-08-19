@@ -101,7 +101,7 @@ pub fn resolve(elem: &Element, elements: &[Element], viewport_width: f32) -> Res
     //    (canary / kinds + L1 display/grow stamps). Style-set fields win.
     apply_class_box_atoms(&mut style, &classes, &elem.box_style);
 
-    // 6. Fallback `style:` width / height declarations (e.g. `style:w="full"`).
+    // 6. Fallback `style:` width / height declarations (e.g. `style:w="100%"`).
     apply_style_size(&mut style, &elem.style);
 
     // Taffy defaults that the SAIL vocabulary never leaves unset.
@@ -615,13 +615,9 @@ fn apply_style_size(style: &mut Style, map: &std::collections::HashMap<String, S
     if let Some(v) = map.get("w") {
         if let Some(n) = parse_simple_px(v) {
             style.size.width = Dimension::length(n);
-        } else if v == "full" || v.ends_with('%') {
-            if v == "full" {
-                style.size.width = Dimension::percent(1.0);
-            } else if let Some(rest) = v.strip_suffix('%') {
-                if let Ok(n) = rest.parse::<f32>() {
-                    style.size.width = Dimension::percent(n / 100.0);
-                }
+        } else if let Some(rest) = v.strip_suffix('%') {
+            if let Ok(n) = rest.parse::<f32>() {
+                style.size.width = Dimension::percent(n / 100.0);
             }
         }
     }
@@ -759,14 +755,33 @@ mod tests {
     }
 
     #[test]
-    fn sx_width_full_resolves_to_percent() {
+    fn sx_width_percent_resolves() {
+        let elem = Element {
+            tag: "div".into(),
+            style: {
+                let mut m = std::collections::HashMap::new();
+                m.insert("w".into(), "100%".into());
+                m
+            },
+            ..Default::default()
+        };
+        let resolved = resolve(&elem, &[Element::default()], 1440.0);
+        assert_eq!(resolved.style.size.width, Dimension::percent(1.0));
+    }
+
+    #[test]
+    fn sx_width_full_class_is_not_percent() {
         let elem = Element {
             tag: "div".into(),
             class: "s-wfull".into(),
             ..Default::default()
         };
         let resolved = resolve(&elem, &[Element::default()], 1440.0);
-        assert_eq!(resolved.style.size.width, Dimension::percent(1.0));
+        assert_ne!(
+            resolved.style.size.width,
+            Dimension::percent(1.0),
+            "full is not a size-slot keyword"
+        );
     }
 
     #[test]

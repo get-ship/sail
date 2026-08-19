@@ -1209,7 +1209,7 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
            `<stack>` with `gap` / `align` / `justify` / `cols` attrs. Rows **wrap by\n  \
            default**; `<row nowrap>` is the single-line row. Unrecognized attrs on a\n  \
            layout keyword are a compile error.\n\
-         - **Participation is geometry** — `style({{ size({{ w: full, min-w: 0 }}).grow(1) }})`\n  \
+         - **Participation is geometry** — `style({{ size({{ w: 100%, min-w: 0 }}).grow(1) }})`\n  \
            (or `shrink(0)`). Bare attrs `grow` / `shrink` / `w` / `min-w` / `max-w` are a\n  \
            hard lint (`sail-participation-style`). Layout-keyword **axis** attrs\n  \
            (`gap` / `align` / `justify` on row|column|grid) stay. Paint (`bg`, `fg`,\n  \

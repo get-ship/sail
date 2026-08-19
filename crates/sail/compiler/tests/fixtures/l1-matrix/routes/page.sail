@@ -5,7 +5,7 @@
 -->
 <scope>
   style shell = { size({ min-h: fill }).pad(6).bg(background) }
-  style measure = { size({ w: full, max-w: breakpoint-desktop }) }
+  style measure = { size({ w: 100%, max-w: breakpoint-desktop }) }
 </scope>
 
 <column gap="8" style(shell)>
