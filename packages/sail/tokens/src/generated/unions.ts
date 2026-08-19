@@ -380,6 +380,7 @@ export type CssTokenName =
   | 'breakpoint-desktop'
   | 'breakpoint-mobile'
   | 'breakpoint-tablet'
+  | 'breakpoint-wide'
   | 'control-frame'
   | 'control-h-2xs'
   | 'control-h-lg'

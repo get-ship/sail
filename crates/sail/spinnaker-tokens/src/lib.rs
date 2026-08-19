@@ -3838,6 +3838,7 @@ fn emit_layer(layer: &Layer) -> String {
         None
     };
     let block = emit_block(&layer.meta.selector, &layer.tokens, "  ", color_scheme);
+    let bp_media = emit_token_breakpoint_media(&layer.meta.selector, &layer.tokens);
     if let Some(media) = &layer.meta.media {
         parts.push(format!("@media {media} {{"));
         let indented: String = block
@@ -3856,7 +3857,58 @@ fn emit_layer(layer: &Layer) -> String {
     } else {
         parts.push(block);
     }
+    if !bp_media.is_empty() {
+        parts.push(bp_media);
+    }
     parts.join("\n")
+}
+
+/// Emit `@media` rebinds for breakpoint-keyed token values.
+/// Widths come from `breakpoint-*` tokens in this layer (theme table).
+fn emit_token_breakpoint_media(selector: &str, tokens: &[Token]) -> String {
+    let widths: BTreeMap<String, String> = tokens
+        .iter()
+        .filter_map(|t| {
+            t.path
+                .strip_prefix("breakpoint.")
+                .filter(|n| !n.is_empty() && !n.contains('.'))
+                .map(|n| (n.to_string(), t.css_value.clone()))
+        })
+        .collect();
+    if widths.is_empty() {
+        return String::new();
+    }
+    let mut by_bp: BTreeMap<String, Vec<(&str, &str)>> = BTreeMap::new();
+    for t in tokens {
+        if t.composite_identity {
+            continue;
+        }
+        for (k, v) in &t.breakpoints {
+            if k == "base" {
+                continue;
+            }
+            if !widths.contains_key(k) {
+                continue;
+            }
+            by_bp
+                .entry(k.clone())
+                .or_default()
+                .push((t.css_name.as_str(), v.as_str()));
+        }
+    }
+    let mut out = String::new();
+    for (bp, items) in by_bp {
+        let Some(width) = widths.get(&bp) else {
+            continue;
+        };
+        out.push_str(&format!("@media (min-width: {width}) {{\n"));
+        out.push_str(&format!("  {selector} {{\n"));
+        for (css_name, value) in items {
+            out.push_str(&format!("    --{css_name}: {value};\n"));
+        }
+        out.push_str("  }\n}\n");
+    }
+    out
 }
 
 fn build_registry(
@@ -7471,5 +7523,49 @@ mod tests {
             .find(|p| p["fg"] == "foreground" && p["bg"] == "background");
         assert!(pair.is_some(), "floor pair foreground/background missing");
         assert!(pair.unwrap()["ok"].as_bool().unwrap());
+    }
+
+    #[test]
+    fn generate_emits_breakpoint_keyed_token_media() {
+        let dir = tempfile::tempdir().unwrap();
+        let model = dir.path().join("model");
+        let out = dir.path().join("src");
+        write_file(
+            &model.join("base.json"),
+            r#"{
+  "$extensions": { "sail": { "selector": ":root", "layer": "base" } },
+  "space": {
+    "4": { "$value": "16px", "$type": "dimension" },
+    "6": { "$value": "24px", "$type": "dimension" }
+  },
+  "breakpoint": {
+    "mobile": { "$value": "390px", "$type": "dimension" },
+    "tablet": { "$value": "768px", "$type": "dimension" },
+    "wide": { "$value": "1600px", "$type": "dimension" },
+    "$type": "dimension"
+  },
+  "pad": {
+    "page": {
+      "$type": "pad",
+      "$value": { "x": { "base": "{space-4}", "tablet": "{space-6}" } }
+    }
+  }
+}"#,
+        );
+        generate(&model, &out).expect("generate keyed pad");
+        let css = fs::read_to_string(out.join("tokens.css")).unwrap();
+        assert!(
+            css.contains("--pad-page-x: var(--space-4)"),
+            "base value from theme: {css}"
+        );
+        assert!(
+            css.contains("@media (min-width: 768px)")
+                && css.contains("--pad-page-x: var(--space-6)"),
+            "tablet arm from theme value, not a hex dump: {css}"
+        );
+        assert!(
+            css.contains("--breakpoint-wide: 1600px"),
+            "theme extra wide: {css}"
+        );
     }
 }

@@ -22,8 +22,8 @@
   --inset: oklch(0.2000 0.0300 250.00 / 0.050);
   --overlay: oklch(1.0000 0.0000 0.00);
   --border: oklch(0.2000 0.0300 250.00 / 0.160);
-  --border-subtle: color-mix(in oklch, var(--var(--border)) 60.00%, transparent);
-  --border-strong: color-mix(in oklch, var(--var(--foreground)) 55.00%, transparent);
+  --border-subtle: color-mix(in oklch, var(--border) 60.00%, transparent);
+  --border-strong: color-mix(in oklch, var(--foreground) 55.00%, transparent);
   --primary: oklch(0.5400 0.1800 245.00);
   --primary-hover: oklch(0.5016 0.1626 246.20);
   --primary-subtle: oklch(0.9316 0.0286 249.40);
@@ -735,8 +735,8 @@
   --border: oklch(0.9500 0.0500 320.00 / 0.300);
   --border-subtle: oklch(0.9500 0.0500 320.00 / 0.180);
   --border-strong: oklch(0.9500 0.0500 320.00 / 0.450);
-  --glow-primary: radial-gradient(color-mix(in oklch, var(--var(--primary)) 18.00%, transparent), transparent 60%);
-  --glow-accent: radial-gradient(color-mix(in oklch, var(--var(--accent)) 18.00%, transparent), transparent 60%);
+  --glow-primary: radial-gradient(color-mix(in oklch, var(--primary) 18.00%, transparent), transparent 60%);
+  --glow-accent: radial-gradient(color-mix(in oklch, var(--accent) 18.00%, transparent), transparent 60%);
   --primary: oklch(0.6500 0.2800 340.00);
   --primary-hover: oklch(0.6800 0.2540 352.00);
   --primary-subtle: oklch(0.2188 0.0864 291.60);

@@ -295,8 +295,8 @@
   "pad": {
     "page": {
       "$type": "pad",
-      "$description": "Document inset at the default (mobile) breakpoint.",
-      "$value": { "x": "{space-4}" }
+      "$description": "Document inset. Theme-keyed: space-4 at base, space-6 at tablet.",
+      "$value": { "x": { "base": "{space-4}", "tablet": "{space-6}" } }
     },
     "page-md": {
       "$type": "pad",
@@ -546,6 +546,7 @@
     "mobile": { "$value": "390px", "$type": "dimension" },
     "tablet": { "$value": "768px", "$type": "dimension" },
     "desktop": { "$value": "1280px", "$type": "dimension" },
+    "wide": { "$value": "1600px", "$type": "dimension" },
     "$type": "dimension"
   },
   "density": {

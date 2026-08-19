@@ -99,6 +99,7 @@
     "breakpoint-desktop",
     "breakpoint-mobile",
     "breakpoint-tablet",
+    "breakpoint-wide",
     "control-frame",
     "control-h-2xs",
     "control-h-lg",
@@ -1131,7 +1132,7 @@
       "path": "color.inset",
       "cssName": "inset",
       "type": "color",
-      "value": "var(--var(--background))"
+      "value": "var(--background)"
     },
     "overlay": {
       "path": "color.overlay",
@@ -1151,13 +1152,13 @@
       "path": "color.border.subtle",
       "cssName": "border-subtle",
       "type": "color",
-      "value": "color-mix(in oklch, var(--var(--border)) 60.00%, transparent)"
+      "value": "color-mix(in oklch, var(--border) 60.00%, transparent)"
     },
     "border-strong": {
       "path": "color.border.strong",
       "cssName": "border-strong",
       "type": "color",
-      "value": "color-mix(in oklch, var(--var(--foreground)) 55.00%, transparent)"
+      "value": "color-mix(in oklch, var(--foreground) 55.00%, transparent)"
     },
     "knob": {
       "path": "color.knob",
@@ -1282,55 +1283,55 @@
       "path": "color.syntax.keyword",
       "cssName": "syntax-keyword",
       "type": "color",
-      "value": "var(--var(--hue-indigo))"
+      "value": "var(--hue-indigo)"
     },
     "syntax-string": {
       "path": "color.syntax.string",
       "cssName": "syntax-string",
       "type": "color",
-      "value": "var(--var(--hue-green))"
+      "value": "var(--hue-green)"
     },
     "syntax-number": {
       "path": "color.syntax.number",
       "cssName": "syntax-number",
       "type": "color",
-      "value": "var(--var(--hue-blue))"
+      "value": "var(--hue-blue)"
     },
     "syntax-function": {
       "path": "color.syntax.function",
       "cssName": "syntax-function",
       "type": "color",
-      "value": "var(--var(--hue-purple))"
+      "value": "var(--hue-purple)"
     },
     "syntax-type": {
       "path": "color.syntax.type",
       "cssName": "syntax-type",
       "type": "color",
-      "value": "var(--var(--hue-cyan))"
+      "value": "var(--hue-cyan)"
     },
     "syntax-tag": {
       "path": "color.syntax.tag",
       "cssName": "syntax-tag",
       "type": "color",
-      "value": "var(--var(--hue-red))"
+      "value": "var(--hue-red)"
     },
     "syntax-attr": {
       "path": "color.syntax.attr",
       "cssName": "syntax-attr",
       "type": "color",
-      "value": "var(--var(--hue-amber))"
+      "value": "var(--hue-amber)"
     },
     "syntax-comment": {
       "path": "color.syntax.comment",
       "cssName": "syntax-comment",
       "type": "color",
-      "value": "var(--var(--muted-foreground))"
+      "value": "var(--muted-foreground)"
     },
     "syntax-variable": {
       "path": "color.syntax.variable",
       "cssName": "syntax-variable",
       "type": "color",
-      "value": "var(--var(--foreground))"
+      "value": "var(--foreground)"
     },
     "backdrop": {
       "path": "color.backdrop",
@@ -1350,19 +1351,19 @@
       "path": "color.divider",
       "cssName": "divider",
       "type": "color",
-      "value": "var(--var(--border-subtle))"
+      "value": "var(--border-subtle)"
     },
     "gradient-primary": {
       "path": "color.gradient.primary",
       "cssName": "gradient-primary",
       "type": "gradient",
-      "value": "linear-gradient(180deg, var(--var(--primary)) 0%, transparent 92%)"
+      "value": "linear-gradient(180deg, var(--primary) 0%, transparent 92%)"
     },
     "gradient-accent": {
       "path": "color.gradient.accent",
       "cssName": "gradient-accent",
       "type": "gradient",
-      "value": "linear-gradient(180deg, var(--var(--accent)) 0%, transparent 92%)"
+      "value": "linear-gradient(180deg, var(--accent) 0%, transparent 92%)"
     },
     "gradient-surface": {
       "path": "color.gradient.surface",
@@ -1374,13 +1375,13 @@
       "path": "color.glow.primary",
       "cssName": "glow-primary",
       "type": "gradient",
-      "value": "radial-gradient(color-mix(in oklch, var(--var(--primary)) 8.00%, transparent), transparent 60%)"
+      "value": "radial-gradient(color-mix(in oklch, var(--primary) 8.00%, transparent), transparent 60%)"
     },
     "glow-accent": {
       "path": "color.glow.accent",
       "cssName": "glow-accent",
       "type": "gradient",
-      "value": "radial-gradient(color-mix(in oklch, var(--var(--accent)) 8.00%, transparent), transparent 60%)"
+      "value": "radial-gradient(color-mix(in oklch, var(--accent) 8.00%, transparent), transparent 60%)"
     },
     "primary": {
       "path": "color.primary.solid",
@@ -1666,7 +1667,11 @@
       "path": "pad.page.x",
       "cssName": "pad-page-x",
       "type": "dimension",
-      "value": "var(--space-4)"
+      "value": "var(--space-4)",
+      "breakpoints": {
+        "base": "var(--space-4)",
+        "tablet": "var(--space-6)"
+      }
     },
     "pad-page-md-x": {
       "path": "pad.page-md.x",
@@ -2320,7 +2325,7 @@
       "path": "interaction.hover.bg",
       "cssName": "hover-bg",
       "type": "color",
-      "value": "color-mix(in oklch, var(--var(--foreground)) 6.00%, transparent)"
+      "value": "color-mix(in oklch, var(--foreground) 6.00%, transparent)"
     },
     "active-strength": {
       "path": "interaction.active.strength",
@@ -2332,7 +2337,7 @@
       "path": "interaction.active.bg",
       "cssName": "active-bg",
       "type": "color",
-      "value": "color-mix(in oklch, var(--var(--foreground)) 10.00%, transparent)"
+      "value": "color-mix(in oklch, var(--foreground) 10.00%, transparent)"
     },
     "selected-strength": {
       "path": "interaction.selected.strength",
@@ -2344,13 +2349,13 @@
       "path": "interaction.selected.bg",
       "cssName": "selected-bg",
       "type": "color",
-      "value": "color-mix(in oklch, var(--var(--primary)) 14.00%, transparent)"
+      "value": "color-mix(in oklch, var(--primary) 14.00%, transparent)"
     },
     "selected-border": {
       "path": "interaction.selected.border",
       "cssName": "selected-border",
       "type": "color",
-      "value": "color-mix(in oklch, var(--var(--primary)) 40.00%, transparent)"
+      "value": "color-mix(in oklch, var(--primary) 40.00%, transparent)"
     },
     "ring-width": {
       "path": "interaction.ring.width",
@@ -2381,7 +2386,7 @@
       "path": "interaction.ring.color",
       "cssName": "ring-color",
       "type": "color",
-      "value": "var(--var(--primary))"
+      "value": "var(--primary)"
     },
     "mix-bg": {
       "path": "interaction.mix.bg",
@@ -2418,6 +2423,12 @@
       "cssName": "breakpoint-desktop",
       "type": "dimension",
       "value": "1280px"
+    },
+    "breakpoint-wide": {
+      "path": "breakpoint.wide",
+      "cssName": "breakpoint-wide",
+      "type": "dimension",
+      "value": "1600px"
     },
     "density-row-py": {
       "path": "density.row-py",
@@ -2501,7 +2512,7 @@
       "path": "shadow.accent",
       "cssName": "shadow-accent",
       "type": "shadow",
-      "value": "0 0 0 3px color-mix(in oklch, var(--var(--primary)) 22.00%, transparent)"
+      "value": "0 0 0 3px color-mix(in oklch, var(--primary) 22.00%, transparent)"
     },
     "shadow-inset-soft": {
       "path": "shadow.inset-soft",
@@ -2513,7 +2524,7 @@
       "path": "shadow.inset-ring",
       "cssName": "shadow-inset-ring",
       "type": "shadow",
-      "value": "inset 0 0 0 1px var(--var(--border)), inset 0 1px 0 0 var(--var(--background))"
+      "value": "inset 0 0 0 1px var(--border), inset 0 1px 0 0 var(--background)"
     },
     "shadow-edge-top": {
       "path": "shadow.edge-top",
@@ -2525,19 +2536,19 @@
       "path": "shadow.edge-highlight",
       "cssName": "shadow-edge-highlight",
       "type": "shadow",
-      "value": "inset 0 1px 0 0 var(--var(--hover-bg))"
+      "value": "inset 0 1px 0 0 var(--hover-bg)"
     },
     "scrollbar-thumb": {
       "path": "scrollbar.thumb",
       "cssName": "scrollbar-thumb",
       "type": "color",
-      "value": "color-mix(in oklch, var(--var(--foreground)) 22.00%, transparent)"
+      "value": "color-mix(in oklch, var(--foreground) 22.00%, transparent)"
     },
     "scrollbar-thumb-hover": {
       "path": "scrollbar.thumb-hover",
       "cssName": "scrollbar-thumb-hover",
       "type": "color",
-      "value": "color-mix(in oklch, var(--var(--foreground)) 38.00%, transparent)"
+      "value": "color-mix(in oklch, var(--foreground) 38.00%, transparent)"
     },
     "scrollbar-track": {
       "path": "scrollbar.track",
@@ -2664,6 +2675,7 @@
     "breakpoint.desktop": "breakpoint-desktop",
     "breakpoint.mobile": "breakpoint-mobile",
     "breakpoint.tablet": "breakpoint-tablet",
+    "breakpoint.wide": "breakpoint-wide",
     "control.frame": "control-frame",
     "control.h-2xs": "control-h-2xs",
     "control.h-lg": "control-h-lg",

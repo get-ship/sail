@@ -87,7 +87,11 @@ fn parse_ref_token(s: &str) -> Option<String> {
 fn resolve_ref(name: &str, resolve: &RefResolver<'_>) -> Result<String> {
     resolve(name)
         .map(|css| {
-            if css.starts_with("var(--") || css.starts_with('#') || css.starts_with("oklch(") {
+            if (css.starts_with('{') && css.ends_with('}'))
+                || css.starts_with("var(--")
+                || css.starts_with('#')
+                || css.starts_with("oklch(")
+            {
                 css
             } else if css.starts_with("--") {
                 format!("var({css})")
@@ -147,7 +151,7 @@ fn evaluate_object(
 }
 
 fn is_breakpoint_map(obj: &serde_json::Map<String, Value>) -> bool {
-    const KEYS: &[&str] = &["base", "mobile", "tablet", "desktop"];
+    const KEYS: &[&str] = &["base", "mobile", "tablet", "desktop", "wide"];
     obj.keys().any(|k| KEYS.contains(&k.as_str()))
         && obj
             .keys()
@@ -434,6 +438,16 @@ mod tests {
         let ev = evaluate(&v, &resolve).unwrap();
         assert_eq!(ev.css, "16px");
         assert_eq!(ev.breakpoints.get("tablet").unwrap(), "24px");
+    }
+
+    #[test]
+    fn breakpoint_keyed_wide_and_refs() {
+        let resolve_alias = |name: &str| Some(format!("{{{name}}}"));
+        let v = json!({ "base": "{space-4}", "tablet": "{space-6}", "wide": "{space-8}" });
+        let ev = evaluate(&v, &resolve_alias).unwrap();
+        assert_eq!(ev.css, "{space-4}");
+        assert_eq!(ev.breakpoints.get("tablet").unwrap(), "{space-6}");
+        assert_eq!(ev.breakpoints.get("wide").unwrap(), "{space-8}");
     }
 
     #[test]

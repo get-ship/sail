@@ -115,11 +115,11 @@
   --muted: oklch(0.9500 0.0030 106.42);
   --muted-foreground: oklch(0.4000 0.0200 58.07);
   --surface: oklch(1.0000 0.0000 0.00);
-  --inset: var(--var(--background));
+  --inset: var(--background);
   --overlay: oklch(1.0000 0.0000 0.00);
   --border: oklch(0.1470 0.0040 49.25 / 0.250);
-  --border-subtle: color-mix(in oklch, var(--var(--border)) 60.00%, transparent);
-  --border-strong: color-mix(in oklch, var(--var(--foreground)) 55.00%, transparent);
+  --border-subtle: color-mix(in oklch, var(--border) 60.00%, transparent);
+  --border-strong: color-mix(in oklch, var(--foreground) 55.00%, transparent);
   --knob: oklch(1.0000 0.0000 0.00);
   --hue-red: oklch(0.6200 0.2100 25.00);
   --hue-orange: oklch(0.6800 0.1800 50.00);
@@ -137,18 +137,18 @@
   --hue-fuchsia: oklch(0.6000 0.2500 330.00);
   --hue-pink: oklch(0.6800 0.2000 345.00);
   --hue-rose: oklch(0.6200 0.2100 5.00);
-  --syntax-keyword: var(--var(--hue-indigo));
-  --syntax-string: var(--var(--hue-green));
-  --syntax-number: var(--var(--hue-blue));
-  --syntax-function: var(--var(--hue-purple));
-  --syntax-type: var(--var(--hue-cyan));
-  --syntax-tag: var(--var(--hue-red));
-  --syntax-attr: var(--var(--hue-amber));
-  --syntax-comment: var(--var(--muted-foreground));
-  --syntax-variable: var(--var(--foreground));
+  --syntax-keyword: var(--hue-indigo);
+  --syntax-string: var(--hue-green);
+  --syntax-number: var(--hue-blue);
+  --syntax-function: var(--hue-purple);
+  --syntax-type: var(--hue-cyan);
+  --syntax-tag: var(--hue-red);
+  --syntax-attr: var(--hue-amber);
+  --syntax-comment: var(--muted-foreground);
+  --syntax-variable: var(--foreground);
   --backdrop: oklch(0.0000 0.0000 0.00 / 0.400);
   --scrim: oklch(0.0000 0.0000 0.00 / 0.200);
-  --divider: var(--var(--border-subtle));
+  --divider: var(--border-subtle);
   --primary: oklch(0.6700 0.1600 58.00);
   --primary-hover: oklch(0.6072 0.1413 56.95);
   --primary-subtle: oklch(0.9384 0.0210 100.61);
@@ -297,23 +297,24 @@
   --focus-ring: 2px solid var(--ring-color);
   --focus-ring-offset: 2px;
   --hover-strength: 6%;
-  --hover-bg: color-mix(in oklch, var(--var(--foreground)) 6.00%, transparent);
+  --hover-bg: color-mix(in oklch, var(--foreground) 6.00%, transparent);
   --active-strength: 10%;
-  --active-bg: color-mix(in oklch, var(--var(--foreground)) 10.00%, transparent);
+  --active-bg: color-mix(in oklch, var(--foreground) 10.00%, transparent);
   --selected-strength: 14%;
-  --selected-bg: color-mix(in oklch, var(--var(--primary)) 14.00%, transparent);
-  --selected-border: color-mix(in oklch, var(--var(--primary)) 40.00%, transparent);
+  --selected-bg: color-mix(in oklch, var(--primary) 14.00%, transparent);
+  --selected-border: color-mix(in oklch, var(--primary) 40.00%, transparent);
   --ring-width: 3px;
   --ring-offset: 2px;
   --ring-opacity: 25%;
   --ring: oklch(0.6700 0.1600 58.00 / 0.400);
-  --ring-color: var(--var(--primary));
+  --ring-color: var(--primary);
   --mix-bg: 18%;
   --mix-border: 35%;
   --mix-hover: 24%;
   --breakpoint-mobile: 390px;
   --breakpoint-tablet: 768px;
   --breakpoint-desktop: 1280px;
+  --breakpoint-wide: 1600px;
   --density-row-py: var(--space-2);
   --density-row-px: var(--space-3);
   --density-row-gap: var(--space-2);
@@ -327,13 +328,13 @@
   --shadow-card-rest: 0 1px 3px 0 oklch(0.2000 0.0400 60.00 / 0.060), 0 0 0 1px oklch(0.2000 0.0400 60.00 / 0.060);
   --shadow-hover: 0 8px 20px 0 oklch(0.2000 0.0400 60.00 / 0.120), 0 0 0 1px oklch(0.2000 0.0400 60.00 / 0.080);
   --shadow-sticky: 0 2px 6px -2px oklch(0.0000 0.0000 0.00 / 0.080), 0 1px 2px 0 oklch(0.0000 0.0000 0.00 / 0.040);
-  --shadow-accent: 0 0 0 3px color-mix(in oklch, var(--var(--primary)) 22.00%, transparent);
+  --shadow-accent: 0 0 0 3px color-mix(in oklch, var(--primary) 22.00%, transparent);
   --shadow-inset-soft: inset 0 1px 2px 0 oklch(0.0000 0.0000 0.00 / 0.050);
-  --shadow-inset-ring: inset 0 0 0 1px var(--var(--border)), inset 0 1px 0 0 var(--var(--background));
+  --shadow-inset-ring: inset 0 0 0 1px var(--border), inset 0 1px 0 0 var(--background);
   --shadow-edge-top: 0 -8px 24px -8px oklch(0.0000 0.0000 0.00 / 0.080), 0 -1px 0 0 oklch(0.0000 0.0000 0.00 / 0.040);
-  --shadow-edge-highlight: inset 0 1px 0 0 var(--var(--hover-bg));
-  --scrollbar-thumb: color-mix(in oklch, var(--var(--foreground)) 22.00%, transparent);
-  --scrollbar-thumb-hover: color-mix(in oklch, var(--var(--foreground)) 38.00%, transparent);
+  --shadow-edge-highlight: inset 0 1px 0 0 var(--hover-bg);
+  --scrollbar-thumb: color-mix(in oklch, var(--foreground) 22.00%, transparent);
+  --scrollbar-thumb-hover: color-mix(in oklch, var(--foreground) 38.00%, transparent);
   --scrollbar-track: transparent;
   --scrollbar-width: 10px;
   --scrollbar-width-thin: 6px;
@@ -348,6 +349,11 @@
   --play-colors-property: color, background-color, border-color, outline-color, fill, stroke;
   --play-control-property: color, background-color, border-color, outline-color, transform, box-shadow, opacity;
   --play-surface-property: color, background-color, border-color, box-shadow, transform, opacity;
+}
+@media (min-width: 768px) {
+  :root {
+    --pad-page-x: var(--space-6);
+  }
 }
 
 /* ─── Expression channels (Tier 2) ──────────────────────────────────
@@ -391,13 +397,13 @@
 
   /* Transparent no-op; composes on :active. See control.frame. */
   --press-shadow: 0 0 0 0 transparent;
-  --gradient-primary: linear-gradient(180deg, var(--var(--primary)) 0%, transparent 92%);
-  --gradient-accent: linear-gradient(180deg, var(--var(--accent)) 0%, transparent 92%);
+  --gradient-primary: linear-gradient(180deg, var(--primary) 0%, transparent 92%);
+  --gradient-accent: linear-gradient(180deg, var(--accent) 0%, transparent 92%);
 
   /* Page wash. none is the honest default. */
   --gradient-surface: none;
-  --glow-primary: radial-gradient(color-mix(in oklch, var(--var(--primary)) 8.00%, transparent), transparent 60%);
-  --glow-accent: radial-gradient(color-mix(in oklch, var(--var(--accent)) 8.00%, transparent), transparent 60%);
+  --glow-primary: radial-gradient(color-mix(in oklch, var(--primary) 8.00%, transparent), transparent 60%);
+  --glow-accent: radial-gradient(color-mix(in oklch, var(--accent) 8.00%, transparent), transparent 60%);
 
   /* Stroke weight. Themes thicken this (brut/8bit) without touching color. */
   --border-width: 1px;
