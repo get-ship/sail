@@ -66,6 +66,39 @@ fn style_chain_multi_setters() {
 }
 
 #[test]
+fn style_when_wide_emits_theme_media() {
+    let out = pp(r#"<div style({ bg(primary), when: { wide: bg(accent) } })> x</div>"#);
+    assert!(
+        out.contains("@media") && (out.contains("1600px") || out.contains("min-width")),
+        "when wide must emit theme width:\n{out}"
+    );
+}
+
+#[test]
+fn style_when_tablet_compiles_away_on_1bp_theme() {
+    spinnaker::tokens::with_breakpoint_table(&[("mobile", "390px")], || {
+        let out = pp(r#"<div style({ bg(primary), when: { tablet: bg(accent) } })> x</div>"#);
+        assert!(
+            !out.contains("768") && !out.contains("@media"),
+            "1-bp theme must compile tablet away:\n{out}"
+        );
+    });
+}
+
+#[test]
+fn style_pad_page_spends_theme_token() {
+    let out = pp(r#"<div style({ pad(page) })> x</div>"#);
+    assert!(
+        out.contains("--pad-page") || out.contains("s-pad"),
+        "pad(page) must spend the theme token:\n{out}"
+    );
+    assert!(
+        !out.contains("#") || out.contains("var(--"),
+        "must not hex-dump the inset:\n{out}"
+    );
+}
+
+#[test]
 fn style_when_hover_emits_pseudo() {
     // Free `when({…})` / `.when(…)` chains are residual; product is object-key when:.
     let out = pp(r#"<div style({ when: { hover: bg(muted) } })> x</div>"#);

@@ -83,6 +83,10 @@ pub fn suggest_fixes(
             plans.push(p);
             continue;
         }
+        if let Some(mut ps) = fix_unknown_when_key(source, d) {
+            plans.append(&mut ps);
+            continue;
+        }
         let rule = d.rule.as_deref().unwrap_or("");
         match rule {
             "sail-participation-style" => {
@@ -354,6 +358,48 @@ fn fix_structured_mix(source: &str, d: &crate::diagnostics::Diagnostic) -> Optio
         }),
         actor: None,
     })
+}
+
+/// Suggest-only: unknown `when:` key → theme breakpoints + `hover`.
+fn fix_unknown_when_key(source: &str, d: &crate::diagnostics::Diagnostic) -> Option<Vec<FixPlan>> {
+    if !d.message.contains("is not in the theme breakpoint table") {
+        return None;
+    }
+    let key = d
+        .message
+        .split("style when key `")
+        .nth(1)?
+        .split('`')
+        .next()
+        .filter(|s| !s.is_empty())?;
+    let offset = line_col_to_offset(source, d.line, d.col);
+    let (start, end) = find_token_span_from(source, offset, key)
+        .or_else(|| find_token_span_from(source, 0, key))?;
+    let rule = d.rule.clone().unwrap_or_else(|| "spinnaker".into());
+    let mut names: Vec<String> = spinnaker::tokens::breakpoint_table()
+        .into_iter()
+        .map(|(n, _)| n)
+        .collect();
+    if !names.iter().any(|n| n == "hover") {
+        names.insert(0, "hover".into());
+    }
+    let plans = names
+        .into_iter()
+        .map(|name| FixPlan {
+            rule: rule.clone(),
+            line: d.line,
+            col: d.col,
+            message: format!("replace `{key}` with `{name}`"),
+            ops: vec![],
+            text_patch: Some(TextPatch {
+                start,
+                end,
+                replacement: name,
+            }),
+            actor: None,
+        })
+        .collect::<Vec<_>>();
+    if plans.is_empty() { None } else { Some(plans) }
 }
 
 /// Suggest-only: point `size(full)` at `size(grow)` and `size(max)`. Nothing auto-applies.
@@ -2149,5 +2195,46 @@ mod tests {
             "source must stay unwrapped: {}",
             result.source
         );
+    }
+
+    #[test]
+    fn unknown_when_key_suggests_theme_breakpoints() {
+        let src = r#"<column style({ bg(primary), when: { kiosk: bg(accent) } })>x</column>"#;
+        let plans = suggest_fixes_for_source(src, "t.sail", None);
+        let when_plans: Vec<_> = plans
+            .iter()
+            .filter(|p| p.message.contains("replace `kiosk`"))
+            .collect();
+        assert!(
+            !when_plans.is_empty(),
+            "expected FixPlan for undeclared when key: {plans:?}"
+        );
+        assert!(
+            when_plans.iter().any(|p| p.message.contains("`hover`")),
+            "must offer a language state: {when_plans:?}"
+        );
+        for name in ["mobile", "tablet", "desktop"] {
+            assert!(
+                when_plans
+                    .iter()
+                    .any(|p| p.message.contains(&format!("`{name}`"))),
+                "must offer theme bp `{name}`: {when_plans:?}"
+            );
+        }
+        assert!(
+            when_plans.iter().all(|p| !is_auto_apply_plan(p)),
+            "suggest-only: {when_plans:?}"
+        );
+        let hover = when_plans
+            .iter()
+            .find(|p| p.text_patch.as_ref().map(|t| t.replacement.as_str()) == Some("hover"))
+            .unwrap();
+        let patch = hover.text_patch.as_ref().unwrap();
+        let (out, skipped) =
+            apply_text_patches(src, &[(patch.start, patch.end, patch.replacement.clone())]);
+        assert_eq!(skipped, 0);
+        assert!(out.contains("when: { hover:"), "{out}");
+        crate::parse::preprocess::preprocess(&out)
+            .unwrap_or_else(|e| panic!("fixed source must compile: {e:?}\n{out}"));
     }
 }

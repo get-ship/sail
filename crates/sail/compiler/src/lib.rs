@@ -319,6 +319,18 @@ pub fn check_all_with_tier(
     route_params: Option<&[String]>,
     tier: DiagnosticTier,
 ) -> Vec<Diagnostic> {
+    breakpoints::with_source_breakpoints(source_path, || {
+        check_all_with_tier_inner(source, source_path, overrides, route_params, tier)
+    })
+}
+
+fn check_all_with_tier_inner(
+    source: &str,
+    source_path: Option<&std::path::Path>,
+    overrides: &[LintOverride],
+    route_params: Option<&[String]>,
+    tier: DiagnosticTier,
+) -> Vec<Diagnostic> {
     // SPEC-PROJECT-STRUCTURE-1 §4: block order is grammar — same law as
     // `compile()`, on the author source before stripping `<controller>`.
     if let Err(e) = parse::preprocess::check_sfc_block_order(source) {
@@ -499,6 +511,11 @@ fn component_meta_from_path(path: Option<&std::path::Path>) -> Option<ComponentM
 }
 
 pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, CompileError> {
+    let source_path = opts.source_path.clone();
+    breakpoints::with_source_breakpoints(source_path.as_deref(), || compile_inner(source, opts))
+}
+
+fn compile_inner(source: &str, opts: CompileOpts) -> Result<CompileOutput, CompileError> {
     let mut opts = opts;
     if opts.component_meta.is_none() {
         opts.component_meta = component_meta_from_path(opts.source_path.as_deref());

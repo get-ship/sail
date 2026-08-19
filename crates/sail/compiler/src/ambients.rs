@@ -129,6 +129,7 @@ const WHEN_IDENT_KEYS: &[&str] = &[
     "mobile",
     "tablet",
     "desktop",
+    "wide",
     "dark",
     "light",
 ];
