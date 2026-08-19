@@ -362,6 +362,76 @@ mod severity_tests {
     use crate::diagnostics::DiagSeverity;
     use std::io::Write;
 
+    /// Author Style: fixed-height column, taller shrink-0 child, no overflow
+    /// opt-in. G5: this is a compile Error, not a class-HTML vehicle.
+    #[test]
+    fn style_overflow_without_opt_in_is_compile_error() {
+        let src = r#"
+<column style({ size({ h: 20, w: 40 }) })>
+  <div style({ size({ h: 40, w: 40 }), shrink(0) })>x</div>
+</column>
+"#;
+        let diags = collect(src);
+        assert!(
+            diags.iter().any(|d| {
+                d.severity == DiagSeverity::Error
+                    && d.rule.as_deref() == Some("sail-unintended-overflow")
+            }),
+            "Style overflow must fail compile: {diags:?}"
+        );
+    }
+
+    /// Same geometry via named Style consts — the form authors actually write.
+    #[test]
+    fn named_style_overflow_is_compile_error() {
+        let src = r#"
+<scope>
+  style shell = { size({ h: 20, w: 40 }) }
+  style tall = { size({ h: 40, w: 40 }), shrink(0) }
+</scope>
+<column style(shell)>
+  <div style(tall)>x</div>
+</column>
+"#;
+        let diags = collect(src);
+        assert!(
+            diags.iter().any(|d| {
+                d.severity == DiagSeverity::Error
+                    && d.rule.as_deref() == Some("sail-unintended-overflow")
+            }),
+            "named Style overflow must fail compile: {diags:?}"
+        );
+    }
+
+    /// Clipped text without truncate is a compile Error on author Style.
+    #[test]
+    fn style_clipped_text_without_truncate_is_compile_error() {
+        let src = r#"<div style({ size({ w: 16 }), overflow({ x: hidden }) })>Supercalifragilisticexpialidocious</div>"#;
+        let diags = collect(src);
+        assert!(
+            diags.iter().any(|d| {
+                d.severity == DiagSeverity::Error && d.rule.as_deref() == Some("sail-clipped-text")
+            }),
+            "Style clipped text must fail compile: {diags:?}"
+        );
+    }
+
+    #[test]
+    fn compile_rejects_style_overflow() {
+        let src = r#"
+<column style({ size({ h: 20, w: 40 }) })>
+  <div style({ size({ h: 40, w: 40 }), shrink(0) })>x</div>
+</column>
+"#;
+        let err = crate::compile(src, crate::CompileOpts::default())
+            .expect_err("overflow must fail compile()");
+        let s = format!("{err:?}");
+        assert!(
+            s.contains("unintended-overflow") || s.contains("overflows") || s.contains("no overflow"),
+            "compile error must be the taffy overflow: {s}"
+        );
+    }
+
     /// Silent-clip regressions must fail the build (Error), not warn-and-ship.
     #[test]
     fn overflow_hidden_collapse_is_error_severity() {
