@@ -216,10 +216,22 @@ fn indent_block(block: &str) -> String {
 
 fn json_css_value(v: &Value) -> String {
     match v {
-        Value::String(s) => s.clone(),
+        Value::String(s) => resolve_token_ref(s),
         Value::Number(n) => n.to_string(),
         other => other.to_string(),
     }
+}
+
+/// `{shadow-accent}` in chrome data → `var(--shadow-accent)` in CSS.
+fn resolve_token_ref(s: &str) -> String {
+    let t = s.trim();
+    if let Some(inner) = t.strip_prefix('{').and_then(|s| s.strip_suffix('}')) {
+        let name = inner.trim();
+        if !name.is_empty() && name.chars().all(|c| c.is_ascii_alphanumeric() || c == '-') {
+            return format!("var(--{name})");
+        }
+    }
+    t.to_string()
 }
 
 fn scope_selector(theme_id: &str, sel: &str) -> String {

@@ -22,7 +22,7 @@
         },
         {
           "selector": "button:active",
-          "props": { "box-shadow": "var(--shadow-inset-soft)" }
+          "props": { "box-shadow": "{shadow-inset-soft}" }
         },
         {
           "selector": "button:hover",
