@@ -631,6 +631,19 @@ pub fn resolve_used_glyphs(
     out
 }
 
+/// Roots to search for offline pack data (`node_modules`, crate dir).
+pub fn default_glyph_search_roots() -> Vec<std::path::PathBuf> {
+    let mut roots = Vec::new();
+    if let Ok(cwd) = std::env::current_dir() {
+        roots.push(cwd.clone());
+        roots.push(cwd.join("node_modules"));
+    }
+    let manifest = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    roots.push(manifest.clone());
+    roots.push(manifest.join("../../../node_modules"));
+    roots
+}
+
 /// Load a pack glyph as a standalone SVG. Offline only — never hits a CDN.
 ///
 /// Search order per root: `@iconify-json/{pack}/icons.json`, then

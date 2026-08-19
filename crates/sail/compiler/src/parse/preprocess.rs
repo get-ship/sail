@@ -1826,11 +1826,42 @@ fn splice_element(
     // each `<slot [name=…]>fallback</slot>` region of the structure. A slot
     // with no matching projected content keeps its fallback; children with no
     // matching slot are dropped (shadow parity, same as the runtime).
-    let (default_children, named_children) = project_children(children);
+    let (mut default_children, named_children) = project_children(children);
+    if default_children.trim().is_empty() {
+        if let Some(svg) = inline_pack_icon_svg(&snippet_attrs) {
+            default_children = svg;
+            snippet_attrs.retain(|(n, _)| n != "use:icon");
+        }
+    }
     let body = fill_slots(rest, &default_children, &named_children);
     let body = fill_prop_holes(&body, &snippet_attrs);
     outb.push_str(&body);
     outb
+}
+
+/// Named-pack `<icon name>`: compiler inlines the SVG. `src` stays `<img>`
+/// or author children. No fetch, no `/_deck/icons` for pack roles.
+fn inline_pack_icon_svg(attrs: &[(String, String)]) -> Option<String> {
+    let src = attrs
+        .iter()
+        .find(|(n, _)| n == "src")
+        .map(|(_, v)| v.trim_matches(['"', '\'']).trim().to_string())
+        .unwrap_or_default();
+    if !src.is_empty() {
+        return None;
+    }
+    let name = attrs
+        .iter()
+        .find(|(n, _)| n == "name")
+        .map(|(_, v)| v.trim_matches(['"', '\'']).trim().to_string())?;
+    if name.is_empty() || name.starts_with('{') {
+        return None;
+    }
+    let registry = crate::icons::RoleRegistry::core();
+    let binding = registry.resolve(&name)?;
+    let roots = crate::icons::default_glyph_search_roots();
+    let refs: Vec<&std::path::Path> = roots.iter().map(|p| p.as_path()).collect();
+    crate::icons::load_glyph_svg(&binding.pack, &binding.glyph, &refs)
 }
 
 /// Replace `<!--sail:prop:title-->` with the use-site attr (static first
