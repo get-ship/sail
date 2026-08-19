@@ -63,11 +63,11 @@
   --icon-size-xl: 20px;
   --icon-size-2xl: 24px;
   --icon-size-3xl: 28px;
-  --control-h-2xs: 22px;
-  --control-h-xs: 24px;
-  --control-h-sm: 28px;
-  --control-h-md: 34px;
-  --control-h-lg: 40px;
+  --control-h-2xs: 44px;
+  --control-h-xs: 44px;
+  --control-h-sm: 44px;
+  --control-h-md: 44px;
+  --control-h-lg: 44px;
   --control-h-xl: 44px;
   --control-stroke: 2px;
   --text-xs: 11px;
@@ -192,13 +192,20 @@
   --border-strong-color: var(--border-strong);
   --border-strong-width: var(--border-width);
   --border-strong-style: solid;
+  --size-control-2xs-h: var(--control-h-2xs);
+  --size-control-xs-h: var(--control-h-xs);
   --size-control-sm-h: var(--control-h-sm);
   --size-control-md-h: var(--control-h-md);
   --size-control-lg-h: var(--control-h-lg);
+  --size-control-xl-h: var(--control-h-xl);
   --size-measure-max-w: 38ch;
   --size-measure-sm-max-w: 20rem;
   --size-measure-md-max-w: 38ch;
   --size-measure-lg-max-w: 60ch;
+  --size-icon-3xs-w: var(--icon-size-3xs);
+  --size-icon-3xs-h: var(--icon-size-3xs);
+  --size-icon-2xs-w: var(--icon-size-2xs);
+  --size-icon-2xs-h: var(--icon-size-2xs);
   --size-icon-xs-w: var(--icon-size-xs);
   --size-icon-xs-h: var(--icon-size-xs);
   --size-icon-sm-w: var(--icon-size-sm);
@@ -207,6 +214,12 @@
   --size-icon-md-h: var(--icon-size-md);
   --size-icon-lg-w: var(--icon-size-lg);
   --size-icon-lg-h: var(--icon-size-lg);
+  --size-icon-xl-w: var(--icon-size-xl);
+  --size-icon-xl-h: var(--icon-size-xl);
+  --size-icon-2xl-w: var(--icon-size-2xl);
+  --size-icon-2xl-h: var(--icon-size-2xl);
+  --size-icon-3xl-w: var(--icon-size-3xl);
+  --size-icon-3xl-h: var(--icon-size-3xl);
   --type-body-family: var(--font-body);
   --type-body-size: var(--text-base);
   --type-body-weight: var(--font-weight-normal);
@@ -346,6 +359,15 @@
   --play-colors-property: color, background-color, border-color, outline-color, fill, stroke;
   --play-control-property: color, background-color, border-color, outline-color, transform, box-shadow, opacity;
   --play-surface-property: color, background-color, border-color, box-shadow, transform, opacity;
+}
+@media (min-width: 1280px) {
+  :root {
+    --control-h-2xs: 22px;
+    --control-h-xs: 24px;
+    --control-h-sm: 28px;
+    --control-h-md: 34px;
+    --control-h-lg: 40px;
+  }
 }
 @media (min-width: 768px) {
   :root {

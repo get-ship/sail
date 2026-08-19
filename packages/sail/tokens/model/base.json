@@ -29,12 +29,12 @@
     "$type": "dimension"
   },
   "control": {
-    "h-2xs": { "$value": "22px", "$type": "dimension" },
-    "h-xs": { "$value": "24px", "$type": "dimension" },
-    "h-sm": { "$value": "28px", "$type": "dimension" },
-    "h-md": { "$value": "34px", "$type": "dimension" },
-    "h-lg": { "$value": "40px", "$type": "dimension" },
-    "h-xl": { "$value": "44px", "$type": "dimension" },
+    "h-2xs": { "$value": { "base": "44px", "desktop": "22px" }, "$type": "dimension" },
+    "h-xs": { "$value": { "base": "44px", "desktop": "24px" }, "$type": "dimension" },
+    "h-sm": { "$value": { "base": "44px", "desktop": "28px" }, "$type": "dimension" },
+    "h-md": { "$value": { "base": "44px", "desktop": "34px" }, "$type": "dimension" },
+    "h-lg": { "$value": { "base": "44px", "desktop": "40px" }, "$type": "dimension" },
+    "h-xl": { "$value": { "base": "44px" }, "$type": "dimension" },
     "stroke": { "$value": "2px", "$type": "dimension" },
     "frame": {
       "$value": "0 0 0 0 transparent",
@@ -321,17 +321,25 @@
     }
   },
   "size": {
+    "control-2xs": { "$type": "size", "$value": { "h": "{control.h-2xs}" } },
+    "control-xs": { "$type": "size", "$value": { "h": "{control.h-xs}" } },
     "control-sm": { "$type": "size", "$value": { "h": "{control.h-sm}" } },
     "control-md": { "$type": "size", "$value": { "h": "{control.h-md}" } },
     "control-lg": { "$type": "size", "$value": { "h": "{control.h-lg}" } },
+    "control-xl": { "$type": "size", "$value": { "h": "{control.h-xl}" } },
     "measure": { "$type": "size", "$value": { "max-w": "38ch" } },
     "measure-sm": { "$type": "size", "$value": { "max-w": "20rem" } },
     "measure-md": { "$type": "size", "$value": { "max-w": "38ch" } },
     "measure-lg": { "$type": "size", "$value": { "max-w": "60ch" } },
+    "icon-3xs": { "$type": "size", "$value": { "w": "{icon.3xs}", "h": "{icon.3xs}" } },
+    "icon-2xs": { "$type": "size", "$value": { "w": "{icon.2xs}", "h": "{icon.2xs}" } },
     "icon-xs": { "$type": "size", "$value": { "w": "{icon.xs}", "h": "{icon.xs}" } },
     "icon-sm": { "$type": "size", "$value": { "w": "{icon.sm}", "h": "{icon.sm}" } },
     "icon-md": { "$type": "size", "$value": { "w": "{icon.md}", "h": "{icon.md}" } },
-    "icon-lg": { "$type": "size", "$value": { "w": "{icon.lg}", "h": "{icon.lg}" } }
+    "icon-lg": { "$type": "size", "$value": { "w": "{icon.lg}", "h": "{icon.lg}" } },
+    "icon-xl": { "$type": "size", "$value": { "w": "{icon.xl}", "h": "{icon.xl}" } },
+    "icon-2xl": { "$type": "size", "$value": { "w": "{icon.2xl}", "h": "{icon.2xl}" } },
+    "icon-3xl": { "$type": "size", "$value": { "w": "{icon.3xl}", "h": "{icon.3xl}" } }
   },
   "type": {
     "body": {

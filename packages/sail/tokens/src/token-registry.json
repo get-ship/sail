@@ -274,15 +274,28 @@
     "shadow-sticky",
     "shadow-xl",
     "shadow-xs",
+    "size-control-2xs-h",
     "size-control-lg-h",
     "size-control-md-h",
     "size-control-sm-h",
+    "size-control-xl-h",
+    "size-control-xs-h",
+    "size-icon-2xl-h",
+    "size-icon-2xl-w",
+    "size-icon-2xs-h",
+    "size-icon-2xs-w",
+    "size-icon-3xl-h",
+    "size-icon-3xl-w",
+    "size-icon-3xs-h",
+    "size-icon-3xs-w",
     "size-icon-lg-h",
     "size-icon-lg-w",
     "size-icon-md-h",
     "size-icon-md-w",
     "size-icon-sm-h",
     "size-icon-sm-w",
+    "size-icon-xl-h",
+    "size-icon-xl-w",
     "size-icon-xs-h",
     "size-icon-xs-w",
     "size-measure-lg-max-w",
@@ -782,37 +795,60 @@
       "path": "control.h-2xs",
       "cssName": "control-h-2xs",
       "type": "dimension",
-      "value": "22px"
+      "value": "44px",
+      "breakpoints": {
+        "base": "44px",
+        "desktop": "22px"
+      }
     },
     "control-h-xs": {
       "path": "control.h-xs",
       "cssName": "control-h-xs",
       "type": "dimension",
-      "value": "24px"
+      "value": "44px",
+      "breakpoints": {
+        "base": "44px",
+        "desktop": "24px"
+      }
     },
     "control-h-sm": {
       "path": "control.h-sm",
       "cssName": "control-h-sm",
       "type": "dimension",
-      "value": "28px"
+      "value": "44px",
+      "breakpoints": {
+        "base": "44px",
+        "desktop": "28px"
+      }
     },
     "control-h-md": {
       "path": "control.h-md",
       "cssName": "control-h-md",
       "type": "dimension",
-      "value": "34px"
+      "value": "44px",
+      "breakpoints": {
+        "base": "44px",
+        "desktop": "34px"
+      }
     },
     "control-h-lg": {
       "path": "control.h-lg",
       "cssName": "control-h-lg",
       "type": "dimension",
-      "value": "40px"
+      "value": "44px",
+      "breakpoints": {
+        "base": "44px",
+        "desktop": "40px"
+      }
     },
     "control-h-xl": {
       "path": "control.h-xl",
       "cssName": "control-h-xl",
       "type": "dimension",
-      "value": "44px"
+      "value": "44px",
+      "breakpoints": {
+        "base": "44px"
+      }
     },
     "control-stroke": {
       "path": "control.stroke",
@@ -1688,6 +1724,18 @@
       "type": "string",
       "value": "solid"
     },
+    "size-control-2xs-h": {
+      "path": "size.control-2xs.h",
+      "cssName": "size-control-2xs-h",
+      "type": "dimension",
+      "value": "var(--control-h-2xs)"
+    },
+    "size-control-xs-h": {
+      "path": "size.control-xs.h",
+      "cssName": "size-control-xs-h",
+      "type": "dimension",
+      "value": "var(--control-h-xs)"
+    },
     "size-control-sm-h": {
       "path": "size.control-sm.h",
       "cssName": "size-control-sm-h",
@@ -1705,6 +1753,12 @@
       "cssName": "size-control-lg-h",
       "type": "dimension",
       "value": "var(--control-h-lg)"
+    },
+    "size-control-xl-h": {
+      "path": "size.control-xl.h",
+      "cssName": "size-control-xl-h",
+      "type": "dimension",
+      "value": "var(--control-h-xl)"
     },
     "size-measure-max-w": {
       "path": "size.measure.max-w",
@@ -1729,6 +1783,30 @@
       "cssName": "size-measure-lg-max-w",
       "type": "dimension",
       "value": "60ch"
+    },
+    "size-icon-3xs-w": {
+      "path": "size.icon-3xs.w",
+      "cssName": "size-icon-3xs-w",
+      "type": "dimension",
+      "value": "var(--icon-size-3xs)"
+    },
+    "size-icon-3xs-h": {
+      "path": "size.icon-3xs.h",
+      "cssName": "size-icon-3xs-h",
+      "type": "dimension",
+      "value": "var(--icon-size-3xs)"
+    },
+    "size-icon-2xs-w": {
+      "path": "size.icon-2xs.w",
+      "cssName": "size-icon-2xs-w",
+      "type": "dimension",
+      "value": "var(--icon-size-2xs)"
+    },
+    "size-icon-2xs-h": {
+      "path": "size.icon-2xs.h",
+      "cssName": "size-icon-2xs-h",
+      "type": "dimension",
+      "value": "var(--icon-size-2xs)"
     },
     "size-icon-xs-w": {
       "path": "size.icon-xs.w",
@@ -1777,6 +1855,42 @@
       "cssName": "size-icon-lg-h",
       "type": "dimension",
       "value": "var(--icon-size-lg)"
+    },
+    "size-icon-xl-w": {
+      "path": "size.icon-xl.w",
+      "cssName": "size-icon-xl-w",
+      "type": "dimension",
+      "value": "var(--icon-size-xl)"
+    },
+    "size-icon-xl-h": {
+      "path": "size.icon-xl.h",
+      "cssName": "size-icon-xl-h",
+      "type": "dimension",
+      "value": "var(--icon-size-xl)"
+    },
+    "size-icon-2xl-w": {
+      "path": "size.icon-2xl.w",
+      "cssName": "size-icon-2xl-w",
+      "type": "dimension",
+      "value": "var(--icon-size-2xl)"
+    },
+    "size-icon-2xl-h": {
+      "path": "size.icon-2xl.h",
+      "cssName": "size-icon-2xl-h",
+      "type": "dimension",
+      "value": "var(--icon-size-2xl)"
+    },
+    "size-icon-3xl-w": {
+      "path": "size.icon-3xl.w",
+      "cssName": "size-icon-3xl-w",
+      "type": "dimension",
+      "value": "var(--icon-size-3xl)"
+    },
+    "size-icon-3xl-h": {
+      "path": "size.icon-3xl.h",
+      "cssName": "size-icon-3xl-h",
+      "type": "dimension",
+      "value": "var(--icon-size-3xl)"
     },
     "type-body-family": {
       "path": "type.body.family",
@@ -2856,15 +2970,28 @@
     "shadow.sticky": "shadow-sticky",
     "shadow.xl": "shadow-xl",
     "shadow.xs": "shadow-xs",
+    "size.control-2xs.h": "size-control-2xs-h",
     "size.control-lg.h": "size-control-lg-h",
     "size.control-md.h": "size-control-md-h",
     "size.control-sm.h": "size-control-sm-h",
+    "size.control-xl.h": "size-control-xl-h",
+    "size.control-xs.h": "size-control-xs-h",
+    "size.icon-2xl.h": "size-icon-2xl-h",
+    "size.icon-2xl.w": "size-icon-2xl-w",
+    "size.icon-2xs.h": "size-icon-2xs-h",
+    "size.icon-2xs.w": "size-icon-2xs-w",
+    "size.icon-3xl.h": "size-icon-3xl-h",
+    "size.icon-3xl.w": "size-icon-3xl-w",
+    "size.icon-3xs.h": "size-icon-3xs-h",
+    "size.icon-3xs.w": "size-icon-3xs-w",
     "size.icon-lg.h": "size-icon-lg-h",
     "size.icon-lg.w": "size-icon-lg-w",
     "size.icon-md.h": "size-icon-md-h",
     "size.icon-md.w": "size-icon-md-w",
     "size.icon-sm.h": "size-icon-sm-h",
     "size.icon-sm.w": "size-icon-sm-w",
+    "size.icon-xl.h": "size-icon-xl-h",
+    "size.icon-xl.w": "size-icon-xl-w",
     "size.icon-xs.h": "size-icon-xs-h",
     "size.icon-xs.w": "size-icon-xs-w",
     "size.measure-lg.max-w": "size-measure-lg-max-w",
@@ -3055,6 +3182,22 @@
         "style": "border-strong-style"
       }
     },
+    "size.control-2xs": {
+      "path": "size.control-2xs",
+      "cssName": "size.control-2xs",
+      "type": "size",
+      "members": {
+        "h": "size-control-2xs-h"
+      }
+    },
+    "size.control-xs": {
+      "path": "size.control-xs",
+      "cssName": "size.control-xs",
+      "type": "size",
+      "members": {
+        "h": "size-control-xs-h"
+      }
+    },
     "size.control-sm": {
       "path": "size.control-sm",
       "cssName": "size.control-sm",
@@ -3077,6 +3220,14 @@
       "type": "size",
       "members": {
         "h": "size-control-lg-h"
+      }
+    },
+    "size.control-xl": {
+      "path": "size.control-xl",
+      "cssName": "size.control-xl",
+      "type": "size",
+      "members": {
+        "h": "size-control-xl-h"
       }
     },
     "size.measure": {
@@ -3109,6 +3260,24 @@
       "type": "size",
       "members": {
         "max-w": "size-measure-lg-max-w"
+      }
+    },
+    "size.icon-3xs": {
+      "path": "size.icon-3xs",
+      "cssName": "size.icon-3xs",
+      "type": "size",
+      "members": {
+        "w": "size-icon-3xs-w",
+        "h": "size-icon-3xs-h"
+      }
+    },
+    "size.icon-2xs": {
+      "path": "size.icon-2xs",
+      "cssName": "size.icon-2xs",
+      "type": "size",
+      "members": {
+        "w": "size-icon-2xs-w",
+        "h": "size-icon-2xs-h"
       }
     },
     "size.icon-xs": {
@@ -3145,6 +3314,33 @@
       "members": {
         "w": "size-icon-lg-w",
         "h": "size-icon-lg-h"
+      }
+    },
+    "size.icon-xl": {
+      "path": "size.icon-xl",
+      "cssName": "size.icon-xl",
+      "type": "size",
+      "members": {
+        "w": "size-icon-xl-w",
+        "h": "size-icon-xl-h"
+      }
+    },
+    "size.icon-2xl": {
+      "path": "size.icon-2xl",
+      "cssName": "size.icon-2xl",
+      "type": "size",
+      "members": {
+        "w": "size-icon-2xl-w",
+        "h": "size-icon-2xl-h"
+      }
+    },
+    "size.icon-3xl": {
+      "path": "size.icon-3xl",
+      "cssName": "size.icon-3xl",
+      "type": "size",
+      "members": {
+        "w": "size-icon-3xl-w",
+        "h": "size-icon-3xl-h"
       }
     },
     "type.body": {
