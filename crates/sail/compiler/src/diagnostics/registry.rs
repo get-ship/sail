@@ -120,6 +120,15 @@ const DIAG_SPECS: &[DiagSpec] = &[
         docs_anchor: None,
     },
     DiagSpec {
+        id: "sail-application-default",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "`{spend}` is the default for `<{tag}>` — omit it, or is this not an {tag}?",
+        allowed_list_source: None,
+        fix_text: Some("omit the restated Style (leave the tag)"),
+        docs_anchor: Some("SPEC-STYLE-BUCKETS-1#invariants"),
+    },
+    DiagSpec {
         id: "sail-attr-bool-prop",
         jurisdiction: Jurisdiction::CompilerError,
         default_severity: DiagSeverity::Error,
@@ -201,6 +210,15 @@ const DIAG_SPECS: &[DiagSpec] = &[
         allowed_list_source: None,
         fix_text: None,
         docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-const-eq-name",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "`{name}` already names `{meaning}` — spend the name, don't redeclare it.",
+        allowed_list_source: None,
+        fix_text: Some("delete the exact alias `style name = { … }`"),
+        docs_anchor: Some("SPEC-STYLE-BUCKETS-1#invariants"),
     },
     DiagSpec {
         id: "sail-controller-context",
@@ -345,6 +363,15 @@ const DIAG_SPECS: &[DiagSpec] = &[
         allowed_list_source: None,
         fix_text: None,
         docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-dead-const",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "`{name}` is never spent — delete it, or apply `style({name})`.",
+        allowed_list_source: None,
+        fix_text: Some("delete the unused style const"),
+        docs_anchor: Some("SPEC-STYLE-BUCKETS-1#invariants"),
     },
     DiagSpec {
         id: "sail-directory-jurisdiction",

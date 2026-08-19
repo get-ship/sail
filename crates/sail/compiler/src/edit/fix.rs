@@ -87,6 +87,18 @@ pub fn suggest_fixes(
             plans.append(&mut ps);
             continue;
         }
+        if let Some(p) = fix_application_default(source, d) {
+            plans.push(p);
+            continue;
+        }
+        if let Some(p) = fix_delete_style_const_alias(source, d) {
+            plans.push(p);
+            continue;
+        }
+        if let Some(p) = fix_delete_dead_style_const(source, d) {
+            plans.push(p);
+            continue;
+        }
         let rule = d.rule.as_deref().unwrap_or("");
         match rule {
             "sail-participation-style" => {
@@ -164,11 +176,115 @@ pub fn is_auto_apply_plan(plan: &FixPlan) -> bool {
         | "sail-compose-rhythm"
         | "sail-compose-contrast"
         | "sail-compose-spacing"
-        | "sail-no-raw-container" => true,
+        | "sail-no-raw-container"
+        | "sail-application-default"
+        | "sail-const-eq-name"
+        | "sail-dead-const" => true,
         "spinnaker" => plan.message.starts_with("rewrite unknown setter"),
         "sail-scope-block" => plan.message.starts_with("delete unknown style-const"),
         _ => false,
     }
+}
+
+/// Omit a Style spend that restates the tag default (`type(heading)` on `<h1>`).
+fn fix_application_default(source: &str, d: &crate::diagnostics::Diagnostic) -> Option<FixPlan> {
+    if d.rule.as_deref() != Some("sail-application-default") {
+        return None;
+    }
+    let offset = line_col_to_offset(source, d.line, d.col);
+    let (start, end) = restated_style_call_span(source, offset)?;
+    Some(FixPlan {
+        rule: "sail-application-default".into(),
+        line: d.line,
+        col: d.col,
+        message: "omit restated tag-default Style".into(),
+        ops: vec![],
+        text_patch: Some(TextPatch {
+            start,
+            end,
+            replacement: String::new(),
+        }),
+        actor: None,
+    })
+}
+
+/// Delete `style heading = { type(heading) }` — exact alias of an existing name.
+fn fix_delete_style_const_alias(
+    source: &str,
+    d: &crate::diagnostics::Diagnostic,
+) -> Option<FixPlan> {
+    if d.rule.as_deref() != Some("sail-const-eq-name") {
+        return None;
+    }
+    delete_backtick_style_const(source, d, "sail-const-eq-name", "delete alias style const")
+}
+
+/// Delete an unused `style name =`.
+fn fix_delete_dead_style_const(
+    source: &str,
+    d: &crate::diagnostics::Diagnostic,
+) -> Option<FixPlan> {
+    if d.rule.as_deref() != Some("sail-dead-const") {
+        return None;
+    }
+    delete_backtick_style_const(source, d, "sail-dead-const", "delete unused style const")
+}
+
+fn delete_backtick_style_const(
+    source: &str,
+    d: &crate::diagnostics::Diagnostic,
+    rule: &str,
+    message: &str,
+) -> Option<FixPlan> {
+    let name = first_backtick_name(&d.message)?;
+    let offset = line_col_to_offset(source, d.line, d.col);
+    let at = style_const_at_offset(source, offset, name)?;
+    let (start, end) = expand_style_const_row(source, at)?;
+    Some(FixPlan {
+        rule: rule.into(),
+        line: d.line,
+        col: d.col,
+        message: message.into(),
+        ops: vec![],
+        text_patch: Some(TextPatch {
+            start,
+            end,
+            replacement: String::new(),
+        }),
+        actor: None,
+    })
+}
+
+fn first_backtick_name(message: &str) -> Option<&str> {
+    let rest = message.strip_prefix('`')?;
+    let name = rest.split('`').next()?;
+    if name.is_empty() { None } else { Some(name) }
+}
+
+/// Whole `style(…)` call on the flagged tag, including the leading space.
+fn restated_style_call_span(source: &str, offset: usize) -> Option<(usize, usize)> {
+    let tags = sail_lint::rules::layout::scan_any_open_tags(source);
+    let tag = tags
+        .iter()
+        .filter(|t| t.start <= offset && offset < t.end)
+        .min_by_key(|t| t.end - t.start)
+        .or_else(|| {
+            tags.iter()
+                .filter(|t| t.start <= offset)
+                .max_by_key(|t| t.start)
+        })?;
+    let sx = tag.attrs.iter().find(|(n, _)| n == "style")?.1.as_str();
+    let open = source.get(tag.start..tag.end)?;
+    let rel = open.find(sx)?;
+    let mut start = tag.start + rel;
+    while start > tag.start {
+        let prev = source.as_bytes()[start - 1];
+        if !prev.is_ascii_whitespace() || prev == b'\n' {
+            break;
+        }
+        start -= 1;
+    }
+    Some((start, tag.start + rel + sx.len()))
 }
 
 /// Three suggest-only plans for `3.5 is not a space step` (neighbors + `raw()`).

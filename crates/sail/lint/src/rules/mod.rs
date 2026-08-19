@@ -17,8 +17,10 @@ pub mod action_no_style;
 pub mod action_signature;
 pub mod ambient;
 pub mod animate_token_only;
+pub mod application_default;
 pub mod attr_bool_prop;
 pub mod attr_presence;
+pub mod const_eq_name;
 pub mod controller_context;
 pub mod controller_empty;
 pub mod controller_import_convention;
@@ -36,6 +38,7 @@ pub mod css_content_text;
 pub mod css_literal;
 pub mod css_literals;
 pub mod css_token;
+pub mod dead_const;
 pub mod dimension_literal;
 pub mod directory_jurisdiction;
 pub mod display_on_layout;
@@ -70,6 +73,7 @@ pub mod prop_value;
 pub mod route_inline_style;
 pub mod space_literal;
 pub mod style_concern;
+pub(crate) mod style_invariants;
 pub mod style_privilege;
 pub mod style_rule;
 pub mod style_value_enumeration;
@@ -160,6 +164,9 @@ pub const SUI_TEMPLATE_RULES: &[(&str, RuleFn)] = &[
     (participation_style::RULE_ID, participation_style::check),
     (grow_outside_host::RULE_ID, grow_outside_host::check),
     (flex_trap::RULE_ID, flex_trap::check),
+    (application_default::RULE_ID, application_default::check),
+    (const_eq_name::RULE_ID, const_eq_name::check),
+    (dead_const::RULE_ID, dead_const::check),
     (display_on_layout::RULE_ID, display_on_layout::check),
     (no_raw_container::RULE_ID, no_raw_container::check),
     (no_script::RULE_ID, no_script::check),
