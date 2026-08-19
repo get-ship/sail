@@ -148,7 +148,7 @@ export default controller(() => {
 </controller>
 
 <center style({ pad(6).size({ min-h: screen }).bg(background) })>
-  <column gap="4" style({ size({ w: full, max-w: panel-max-w-md }) })>
+  <column gap="4" style({ size({ w: 100%, max-w: panel-max-w-md }) })>
     <column gap="1">
       <h1 style({ fg(foreground).type({ size: 2xl, weight: semibold }) })>Shipping address</h1>
       <p style({ fg(muted-foreground).type({ size: sm }) })>
@@ -189,10 +189,10 @@ export default controller(() => {
       </alert>
     </if>
 
-    <card style({ size({ w: full }) })>
+    <card style({ size({ w: 100% }) })>
       <form on:submit={onSubmit}>
-        <column gap="4" style({ size({ w: full }).pad(5) })>
-          <field invalid={nameInvalid()} style({ size({ w: full }) })>
+        <column gap="4" style({ size({ w: 100% }).pad(5) })>
+          <field invalid={nameInvalid()} style({ size({ w: 100% }) })>
             <label slot="label" required>Name</label>
             <input
               type="text"
@@ -200,11 +200,11 @@ export default controller(() => {
               autocomplete="name"
               placeholder="Ada Lovelace"
               bind:value={name}
-              disabled={pending()} style({ size({ w: full }) })>
+              disabled={pending()} style({ size({ w: 100% }) })>
             <span slot="error">{errors().name}</span>
           </field>
 
-          <field invalid={emailInvalid()} style({ size({ w: full }) })>
+          <field invalid={emailInvalid()} style({ size({ w: 100% }) })>
             <label slot="label" required>Email</label>
             <input
               type="email"
@@ -212,17 +212,17 @@ export default controller(() => {
               autocomplete="email"
               placeholder="ada@example.com"
               bind:value={email}
-              disabled={pending()} style({ size({ w: full }) })>
+              disabled={pending()} style({ size({ w: 100% }) })>
             <span slot="error">{errors().email}</span>
             <span slot="hint">We use this only for delivery updates.</span>
           </field>
 
-          <field invalid={countryInvalid()} style({ size({ w: full }) })>
+          <field invalid={countryInvalid()} style({ size({ w: 100% }) })>
             <label slot="label" required>Country</label>
             <select
               name="country"
               bind:value={country}
-              disabled={pending()} style({ size({ w: full }) })>
+              disabled={pending()} style({ size({ w: 100% }) })>
               <option value="">Select a country</option>
               <option value="US">United States</option>
               <option value="CA">Canada</option>
@@ -232,12 +232,12 @@ export default controller(() => {
           </field>
 
           <if {needsRegion()}>
-            <field invalid={stateInvalid()} style({ size({ w: full }) })>
+            <field invalid={stateInvalid()} style({ size({ w: 100% }) })>
               <label slot="label" required>{regionLabel()}</label>
               <select
                 name="state"
                 bind:value={state}
-                disabled={pending()} style({ size({ w: full }) })>
+                disabled={pending()} style({ size({ w: 100% }) })>
                 <option value="">Select {regionLabel()}</option>
                 <for {regions() as region} key={region.code}>
                   <option value={region.code}>{region.name}</option>
@@ -245,15 +245,15 @@ export default controller(() => {
               </select>
               <span slot="error">{errors().state}</span>
             </field>
-          {else => <field style({ size({ w: full }) })>
+          {else => <field style({ size({ w: 100% }) })>
               <label slot="label">State / Province</label>
-              <select name="state" disabled style({ size({ w: full }) })>
+              <select name="state" disabled style({ size({ w: 100% }) })>
                 <option value="">Not required for Other</option>
               </select>
               <span slot="hint">Region is not required when country is Other.</span>
             </field>}</if>
 
-          <row gap="2" align="center" justify="end" style({ size({ w: full }) })>
+          <row gap="2" align="center" justify="end" style({ size({ w: 100% }) })>
             <button type="button" variant="outline" on:click={onReset} disabled={pending()}>
               Reset
             </button>

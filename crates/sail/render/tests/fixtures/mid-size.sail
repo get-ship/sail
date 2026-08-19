@@ -1,6 +1,6 @@
-<column gap="3" style({ pad(4).size({ w: full }).bg(surface-0) })>
+<column gap="3" style({ pad(4).size({ w: 100% }).bg(surface-0) })>
   <h1 style({ fg(foreground).type({ size: 2xl }) })>Mid-size route</h1>
-  <row gap="3" style({ size({ w: full }) })>
+  <row gap="3" style({ size({ w: 100% }) })>
     <div style({ grow(1).pad(3).bg(surface-1).radius(md) })>
       <h2 style({ fg(foreground).type({ size: lg }) })>Card A</h2>
       <p style({ fg(muted-foreground) })>Static projection paint probe.</p>

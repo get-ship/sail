@@ -2537,7 +2537,7 @@ export default controller((ctx) => ({ count: signal(0) }))
 
     const LANDING_SHAPED: &str = r#"
 <scope>
-  style page = { size({ w: full, min-w: 0 }).bg(surface-0) }
+  style page = { size({ w: 100%, min-w: 0 }).bg(surface-0) }
   style hero = { pad(4), when: { tablet: pad(8) } }
   style display = { fg(foreground) }
   style cardLink = { display(block) }
@@ -2629,7 +2629,7 @@ export default controller(() => ({}))
     fn when_tag_breakpoint_is_not_a_scope_member() {
         let src = r#"
 <scope>
-  style grid = { size({ w: full }) }
+  style grid = { size({ w: 100% }) }
 </scope>
 <controller>
 export default controller(() => ({ ticks: signal(0) }))
@@ -2805,7 +2805,7 @@ export default controller(() => ({}))
     #[test]
     fn style_slot_object_is_not_a_template_embed() {
         // Bare slot / JSON-shaped objects (not a `style({…})` head) must not
-        // become TS. Tag-position `style({ size({ w: full }) })` is a real
+        // become TS. Tag-position `style({ size({ w: 100% }) })` is a real
         // style embed and is rewritten separately.
         let src = r#"
 <div slots={ w: full, h: 32 }>
