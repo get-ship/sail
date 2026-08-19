@@ -12,7 +12,7 @@
   }
 
   // w(max)=max-content hugs the longest item (no minW floor). pad(1_5) insets items.
-  style host = {position({ scheme: absolute, inset: auto, anchor: auto, area: bottom, z: popover }).pad(1_5).margin(0).size({ w: max }).fg(foreground).bg(background).border({ color: border, width: 1 }).radius(md).elevation(md), match: { placement: { top: position({ area: top }), bottom: position({ area: bottom }), left: position({ area: left }), right: position({ area: right }), 'top-end': position({ area: top-end }), 'bottom-end': position({ area: bottom-end }), 'left-end': position({ area: left-end }), 'right-end': position({ area: right-end }) } }}
+  style host = {position({ scheme: absolute, inset: auto, anchor: auto, area: bottom, z: popover }).pad(1_5).margin(0).size({ w: max }).fg(foreground).bg(background).border({ color: border, width: 1 }).radius(md).elevation(md), match: { placement: { top: position({ area: top }), bottom: position({ area: bottom }), left: position({ area: left }), right: position({ area: right }), 'top-end': position({ area: top-end }), 'bottom-end': position({ area: bottom-end }), 'left-end': position({ area: left-end }), 'right-end': position({ area: right-end }) } }, animate: { enter: play(fade), exit: play(fade) }}
 </scope>
 
 <div popover use:menu style(host)><slot></slot></div>

@@ -22,7 +22,7 @@
   // beats group-hover / group-focus-within so Escape-while-hovering snaps.
   style hide = {filter({ opacity: 0 })}
   style show = {filter({ opacity: 100 }), match: { 'data-hidden': { true: hide } }}
-  style bubble = {position({ scheme: absolute, anchor: tooltip, area: top, z: popover }).pad({ y: 1, x: 2 }).size({ w: max, min-w: max }).overflow({ all: visible }).filter({ opacity: 0 }).bg(overlay).fg(foreground).radius(md).elevation(md).border({ width: 0 }).pointerEvents(none).type({ family: body, size: xs, weight: medium, wrap: nowrap }), match: { placement: { top: position({ area: top }), bottom: position({ area: bottom }), left: position({ area: left }), right: position({ area: right }) } }}
+  style bubble = {position({ scheme: absolute, anchor: tooltip, area: top, z: popover }).pad({ y: 1, x: 2 }).size({ w: max, min-w: max }).overflow({ all: visible }).filter({ opacity: 0 }).bg(overlay).fg(foreground).radius(md).elevation(md).border({ width: 0 }).pointerEvents(none).type({ family: body, size: xs, weight: medium, wrap: nowrap }), match: { placement: { top: position({ area: top }), bottom: position({ area: bottom }), left: position({ area: left }), right: position({ area: right }) } }, animate: { enter: play(fade), exit: play(fade) }}
   // Zero-box border triangle; match placement points the filled edge outward.
   style arrowBox = {position({ scheme: absolute, b: auto }).size({ w: 0, h: 0 }).content(empty).bg(transparent).border({ width: 0, style: solid })}
   // placement=top → caret on bubble bottom, points down (border-top filled).

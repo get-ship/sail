@@ -309,6 +309,10 @@ pub struct ElementOutput {
     pub skin_css: String,
     /// The element manifest (contract): tag, attributes, anatomy.
     pub manifest: Value,
+    /// Root `_sail_m_<trigger>` stamps (enter/exit play). Spliced hosts
+    /// already carry them in `structure_html`; native-kind lowering copies
+    /// them onto the real tag so `/motion` still attaches.
+    pub motion_stamps: Vec<(String, String)>,
 }
 
 pub fn emit_element(
@@ -466,6 +470,7 @@ pub fn emit_element_with_bindings(
     } else {
         None
     };
+    let motion_stamps = collect_root_motion_stamps(&structure);
 
     Ok(ElementOutput {
         root_class,
@@ -477,7 +482,95 @@ pub fn emit_element_with_bindings(
         bound_props,
         skin_css,
         manifest,
+        motion_stamps,
     })
+}
+
+/// Reconstruct the `_sail_m_*` config object parse_motion accepts.
+fn motion_config_literal(
+    props: &[crate::ir::MotionProp],
+    stagger_ms: Option<u32>,
+    timing: &crate::ir::MotionTiming,
+) -> String {
+    let mut parts: Vec<String> = Vec::new();
+    for p in props {
+        let mut fields: Vec<String> = Vec::new();
+        if let Some(v) = &p.from {
+            fields.push(format!("from: {}", motion_value_literal(v)));
+        }
+        if let Some(v) = &p.to {
+            fields.push(format!("to: {}", motion_value_literal(v)));
+        }
+        if let Some(preset) = &p.preset
+            && preset != "inline"
+            && fields.is_empty()
+        {
+            parts.push(format!("{}: '{preset}'", p.property));
+            continue;
+        }
+        if fields.is_empty() {
+            continue;
+        }
+        parts.push(format!("{}: {{ {} }}", p.property, fields.join(", ")));
+    }
+    if let Some(ms) = stagger_ms {
+        parts.push(format!("stagger: {ms}"));
+    }
+    if let Some(v) = &timing.duration {
+        parts.push(format!("duration: {}", motion_value_literal(v)));
+    }
+    if let Some(v) = &timing.delay {
+        parts.push(format!("delay: {}", motion_value_literal(v)));
+    }
+    if let Some(v) = &timing.easing {
+        parts.push(format!("easing: {}", motion_value_literal(v)));
+    }
+    if let Some(v) = &timing.iterations {
+        parts.push(format!("iterations: {}", motion_value_literal(v)));
+    }
+    if let Some(v) = &timing.direction {
+        parts.push(format!("direction: {}", motion_value_literal(v)));
+    }
+    format!("{{ {} }}", parts.join(", "))
+}
+
+fn motion_value_literal(v: &crate::ir::MotionValue) -> String {
+    match v {
+        crate::ir::MotionValue::Num(n) if *n == n.trunc() => format!("{}", *n as i64),
+        crate::ir::MotionValue::Num(n) => format!("{n}"),
+        crate::ir::MotionValue::Str(s) => format!("'{s}'"),
+        crate::ir::MotionValue::Bezier([a, b, c, d]) => format!("[{a}, {b}, {c}, {d}]"),
+        crate::ir::MotionValue::Expr(e) => e.source.clone(),
+    }
+}
+
+/// `_sail_m_<trigger>="…"` on the structure root — native lowering copies these.
+fn collect_root_motion_stamps(structure: &str) -> Vec<(String, String)> {
+    let Some(gt) = structure.find('>') else {
+        return Vec::new();
+    };
+    let open = &structure[..gt];
+    let mut out = Vec::new();
+    let mut rest = open;
+    while let Some(idx) = rest.find("_sail_m_") {
+        rest = &rest[idx + "_sail_m_".len()..];
+        let Some(eq) = rest.find('=') else {
+            break;
+        };
+        let trigger = rest[..eq].trim().to_string();
+        rest = rest[eq + 1..].trim_start();
+        let Some(q) = rest.chars().next().filter(|c| *c == '"' || *c == '\'') else {
+            continue;
+        };
+        rest = &rest[1..];
+        let Some(end) = rest.find(q) else {
+            break;
+        };
+        let value = rest[..end].replace("&quot;", "\"");
+        out.push((trigger, value));
+        rest = &rest[end + 1..];
+    }
+    out
 }
 
 /// Stamp compiler-owned controller identity on the structure root so the
@@ -601,6 +694,34 @@ fn serialize_static(
             AttrInstr::Controller { tag, .. } => {
                 out.push_str(" data-sail-ctrl=\"");
                 out.push_str(tag);
+                out.push('"');
+            }
+            // `animate: { enter: play(fade) }` — same as `use:`: toolchain
+            // behavior that rides the static splice as `_sail_m_*`. The page
+            // parse lowers it to `__sail_motion_attach`. Dynamic magnitudes
+            // (signal from/to) still refuse.
+            AttrInstr::Motion {
+                trigger,
+                props,
+                stagger_ms,
+                timing,
+                ..
+            } => {
+                if props.iter().any(|p| !p.exprs().is_empty()) || !timing.exprs().is_empty() {
+                    return Err(CompileError::new(format!(
+                        "element mode: dynamic motion on <{}> — enter/exit play() \
+                         must be a static play, not a per-instance signal",
+                        el.tag
+                    ))
+                    .with_category(RULE_ID));
+                }
+                let config = motion_config_literal(props, *stagger_ms, timing);
+                let value = format!("{{{config}}}");
+                let escaped = value.replace('"', "&quot;");
+                out.push_str(" _sail_m_");
+                out.push_str(trigger);
+                out.push_str("=\"");
+                out.push_str(&escaped);
                 out.push('"');
             }
             _ => {

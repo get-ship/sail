@@ -1017,6 +1017,7 @@ fn lower_into(
                         &el.out.host_classes,
                         &el.out.default_attrs,
                         &el.out.bound_props,
+                        &el.out.motion_stamps,
                     ));
                     // Same bookkeeping as the spliced path: the tag was seen.
                     css_done.insert(tag);
@@ -1458,6 +1459,7 @@ fn stamp_native_host(
     host_classes: &str,
     default_attrs: &[(String, String)],
     bound_props: &[(String, crate::check::binding::StyleBindingUnit)],
+    motion_stamps: &[(String, String)],
 ) -> String {
     let self_closing = open_tag.ends_with("/>");
     let inner = &open_tag[..open_tag.len() - if self_closing { 2 } else { 1 }];
@@ -1479,7 +1481,11 @@ fn stamp_native_host(
             .collect()
     };
 
-    if host_classes.trim().is_empty() && default_attrs.is_empty() && bridge_list.is_empty() {
+    if host_classes.trim().is_empty()
+        && default_attrs.is_empty()
+        && bridge_list.is_empty()
+        && motion_stamps.is_empty()
+    {
         return open_tag.to_string();
     }
     let host_name = host_classes
@@ -1664,6 +1670,14 @@ fn stamp_native_host(
     }
     if stamp_password_reveal {
         outb.push_str(" use:passwordReveal");
+    }
+    for (trigger, value) in motion_stamps {
+        let attr = format!("_sail_m_{trigger}");
+        if present.contains(&attr) {
+            continue;
+        }
+        let escaped = value.replace('"', "&quot;");
+        outb.push_str(&format!(" {attr}=\"{escaped}\""));
     }
     if self_closing {
         outb.push('/');
