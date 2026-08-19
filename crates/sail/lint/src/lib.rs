@@ -23,6 +23,8 @@ pub mod source;
 // keep `sail_lint::tokens` (etc.) compiling.
 pub use spinnaker::{host_ctx, scales, style_vocab, token_groups, tokens};
 #[cfg(test)]
+mod same_law_everywhere;
+#[cfg(test)]
 mod tests;
 
 pub use config::SailConfig;
