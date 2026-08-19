@@ -6,7 +6,10 @@
             (not stretch, not zero-height).
   Owner: language (gap) + theme scale for the step
   Default: no gap
-  Trap: none
+  Trap: fixtures/gap-off-enum.bad.sail — <row gap="3.5"> — `3.5` is not valid. allowed: 0, 1, 2, 2_5, 3, 4, 5, 6, 7, 8, density
+        Quoted below. Not compiled on this page.
+
+        <row gap="3.5">x</row>
 -->
 <scope>
   style look = { type(label), fg(muted) }
@@ -104,6 +107,13 @@
       <column style(a)></column>
       <column style(b)></column>
       <column style(c)></column>
+    </row>
+  </l0-case>
+  <l0-case>
+    <p slot="look" style(look)>one 4-step box in a gapped row</p>
+    <p slot="spell" style(spell)>&lt;row gap="2"&gt; one child</p>
+    <row gap="2">
+      <column style(a)></column>
     </row>
   </l0-case>
 </column>

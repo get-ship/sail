@@ -3,7 +3,10 @@
   Spelling: style box = { size({ w: 7 }), bg(accent) }
   Owner: free
   Default: hug content
-  Trap: none this slice
+  Trap: fixtures/size-wide.bad.sail — Style error: unknown vocabulary `size.wide`
+        Quoted below. Not compiled on this page.
+
+        <column style({ size(wide) })>x</column>
 -->
 <scope>
   style look = { type(label), fg(muted) }
@@ -18,6 +21,9 @@
   style square = { size({ w: 16, aspect: square }), bg(primary) }
   style video = { size({ w: 16, aspect: video }), bg(accent) }
   style auto = { size({ w: 16, h: 8, aspect: auto }), bg(muted) }
+  style zero = { size({ w: 0, h: 0 }), bg(primary) }
+  style clamp = { size({ max-w: 16 }), overflow(hidden), bg(muted) }
+  style huge = { size({ w: 48, h: 8 }), bg(accent) }
 </scope>
 <column gap="6">
   <l0-case>
@@ -69,5 +75,17 @@
     <p slot="look" style(look)>aspect auto</p>
     <p slot="spell" style(spell)>size w:16 h:8 aspect:auto</p>
     <column style(auto)></column>
+  </l0-case>
+  <l0-case>
+    <p slot="look" style(look)>zero box</p>
+    <p slot="spell" style(spell)>size w:0 h:0</p>
+    <column style(zero)></column>
+  </l0-case>
+  <l0-case>
+    <p slot="look" style(look)>16-step clamp, 48-step child</p>
+    <p slot="spell" style(spell)>size max-w:16 overflow(hidden) · child w:48</p>
+    <column style(clamp)>
+      <column style(huge)></column>
+    </column>
   </l0-case>
 </column>

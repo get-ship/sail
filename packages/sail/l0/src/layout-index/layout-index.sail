@@ -9,7 +9,8 @@
             8px is space-2 (gap="2"). 16-step is 64px.
   Owner: language (hosts)
   Default: —
-  Trap: none
+  Trap: none — hosts have no trap of their own. Axis traps live on
+        align / cluster / grid / gap.
 -->
 <scope>
   style look = { type(label), fg(muted) }
