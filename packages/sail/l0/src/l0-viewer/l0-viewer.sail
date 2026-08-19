@@ -137,6 +137,6 @@
     </row>
   </if>
   <column gap="6" style(stage)>
-    <slot></slot>
+    <slot name="route"></slot>
   </column>
 </column>
