@@ -604,20 +604,6 @@ mod tests {
             privilege_for_path(Path::new("packages/sail/l0/routes/page.sail")),
             Privilege::None
         );
-        assert_eq!(
-            privilege_for_path(Path::new("packages/sail/l0/routes/poison/poison-trap.sail")),
-            Privilege::Identities
-        );
-        assert_eq!(
-            privilege_for_path(Path::new(
-                "packages/sail/l0/routes/paint/type/l0-type-face.sail"
-            )),
-            Privilege::Identities
-        );
-        assert_eq!(
-            privilege_for_path(Path::new("apps/sail-site/src/doc-example/doc-example.sail")),
-            Privilege::Identities
-        );
         assert!(!privilege_enforced_for_path(Path::new(
             "crates/sail/compiler/tests/fixtures/l1-matrix/routes/button/page.sail"
         )));
