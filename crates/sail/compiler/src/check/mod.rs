@@ -715,6 +715,7 @@ where
                 f(e)?;
             }
         }
+        AttrInstr::Controller { .. } => {}
         // A `fx:` config is a statically-parsed object, but any of its
         // fields may hold a signal (`duration: speed()`). Those are ordinary
         // expressions and get the ordinary treatment.

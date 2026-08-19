@@ -4,12 +4,12 @@
   chrome=inline is in-flow (wraps / overflows with the surroundings).
   Cards always paint via theme= + mode= — same specimen as the popover.
   `mode-only` and `inline` remain aliases.
-  variant: icon · menu-row · segmented. Behavior: use:themeSelect.
+  variant: icon · menu-row · segmented. Behavior: host controller.
 
   Host is <row> — never <row inline>. [inline] is the product alias so
   group-inline / group-chrome-inline can hide the popover on first paint.
   Mode trigger + inline cards live inside the popover so a closed picker
-  is only the trigger. use:themeSelect lifts them when chrome=inline / mode.
+  is only the trigger. The controller lifts them when chrome=inline / mode.
 -->
 <scope>
   props: {
@@ -82,7 +82,19 @@
   style triggerHover = {when: {hover: bg(hover-bg)}}
 </scope>
 
-<row use:themeSelect data-theme-picker="1" style(host, {match: { variant: { 'menu-row': size({ w: 100% }) }, chrome: { inline: hostInline }, orientation: { horizontal: hostHoriz, vertical: hostVert } }})>
+<controller>
+import { themeSelect } from '@ship/sail-runtime/actions'
+export default controller((_ctx, host) => {
+  mount((el) => {
+    const result = themeSelect((el ?? host) as HTMLElement)
+    return () => {
+      result?.destroy?.()
+    }
+  })
+  return {}
+})
+</controller>
+<row data-theme-picker="1" style(host, {match: { variant: { 'menu-row': size({ w: 100% }) }, chrome: { inline: hostInline }, orientation: { horizontal: hostHoriz, vertical: hostVert } }})>
   <button
     type="button"
     popovertarget="sail-theme-panel"

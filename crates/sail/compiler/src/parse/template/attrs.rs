@@ -87,6 +87,18 @@ fn compile_attr(
     if let Some(rest) = name.strip_prefix("use:") {
         return compile_use(rest, value, value_span, loc);
     }
+    if name == "data-sail-ctrl" {
+        let tag = value.trim().trim_matches(['"', '\'']);
+        if tag.is_empty() {
+            return Err(CompileError::new("data-sail-ctrl requires an element tag")
+                .with_span(value_span)
+                .with_category(RULE_ID));
+        }
+        return Ok(AttrInstr::Controller {
+            tag: tag.to_string(),
+            span: value_span,
+        });
+    }
     // Unknown colon-prefix: not an active directive. Foreign idioms already
     // handled above; everything else is generic unknown vocabulary.
     if let Some((prefix, _)) = name.split_once(':') {

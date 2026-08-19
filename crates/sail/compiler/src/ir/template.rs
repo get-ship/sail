@@ -95,6 +95,10 @@ pub enum AttrInstr {
         param: Option<Expr>,
         span: Span,
     },
+    /// Compiler stamp `data-sail-ctrl="{tag}"` — attach the L1 element's
+    /// `<controller>` to this opaque host via `runController`. Not a
+    /// custom element and not a public `use:`.
+    Controller { tag: String, span: Span },
 }
 
 /// One animated property within a `fx:` config. The optional preset

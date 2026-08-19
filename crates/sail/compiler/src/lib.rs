@@ -437,8 +437,7 @@ fn validate_custom_element_name(name: &str) -> Result<(), &'static str> {
 /// artifacts: a static structure snippet for use-site lowering, framework-sheet
 /// skin CSS keyed on `.sail-<name>`, and the element manifest. Control flow
 /// (`{#if}` / `{#for}` / `{#match}`) is legal in element mode. Dynamic
-/// attributes still refuse. A `<controller>` block is Job C (currently
-/// rejected here).
+/// attributes still refuse. A `<controller>` block is Job C.
 pub fn compile_element(
     source: &str,
     name: &str,
@@ -466,18 +465,18 @@ pub fn compile_element(
         ))
         .with_category("sail-element-name"));
     }
-    // A `<controller>` block is the L2-component behavior channel; L1
-    // elements carry behavior as stacked `use:<behavior>` stamps on their
-    // static structure (lowered to `runAction` at the use site), so the
-    // block is a targeted compile error here, not a captured module.
+    // Job C: `<controller>` is the L1 state home (same one-file form as
+    // app components). Extracted from the template; the block is served
+    // as `sail-l1:{tag}` and attached with `runController` — not CE.
     let (stripped, controller_src) = parse::preprocess::extract_controller_block(source);
-    if controller_src.is_some() {
-        let at = source.find("<controller").unwrap_or(0);
-        return Err(CompileError::new(
-            "element mode: `<controller>` is not supported — attach behavior with `use:<behavior>`.",
+    let parsed = controller_src.as_ref().and_then(|body| {
+        check::controller_parse::parse(
+            PathBuf::from(format!("stdlib/{name}.sail")),
+            parse::preprocess::wrap_controller_body(body),
         )
-        .with_span(crate::diagnostics::Span::point(at))
-        .with_category("sail-element-mode"));
+    });
+    if let Some(ref p) = parsed {
+        check::controller_purity::check(Some(p), &[])?;
     }
     // parse_element_source: the pipeline minus the stdlib-element pass — an
     // element source may not use stdlib elements (no recursion).
@@ -491,8 +490,13 @@ pub fn compile_element(
     };
     spinnaker::with_host_surface(Some(host), || {
         let program = parse::parse_element_source(&stripped)?;
-        let bindings = check::binding::resolve(&stripped, &program, None)?;
-        emit::element::emit_element_with_bindings(&program, &stripped, name, &bindings)
+        let bindings = check::binding::resolve(&stripped, &program, parsed.as_ref())?;
+        let mut out =
+            emit::element::emit_element_with_bindings(&program, &stripped, name, &bindings)?;
+        if controller_src.is_some() {
+            emit::element::stamp_ctrl(&mut out.structure_html, name);
+        }
+        Ok(out)
     })
 }
 

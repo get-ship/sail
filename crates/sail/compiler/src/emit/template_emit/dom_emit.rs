@@ -431,6 +431,12 @@ impl TemplateEmitter {
                     .unwrap_or_else(|| "undefined".to_string());
                 w.line(&format!("runAction({el_var}, {action_rw}, {param_thunk});",));
             }
+            AttrInstr::Controller { tag, .. } => {
+                let ident = crate::emit::util::l1_controller_ident(tag);
+                w.line(&format!(
+                    "{cleanups_var}.push(runController({el_var}, {ident}));"
+                ));
+            }
             AttrInstr::Motion {
                 trigger,
                 props,
@@ -940,6 +946,12 @@ impl super::TemplateEmitter {
         }
         for a in &el.attrs {
             // Everything else is applied at runtime after the clone.
+            if let AttrInstr::Controller { tag, .. } = a {
+                out.push_str(" data-sail-ctrl=\"");
+                out.push_str(&escape_attr(tag));
+                out.push('"');
+                continue;
+            }
             if let AttrInstr::Static { name, value, .. } = a {
                 if name.eq_ignore_ascii_case("class") {
                     classes.push(value.clone());

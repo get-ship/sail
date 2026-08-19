@@ -1,5 +1,15 @@
 //! Shared identifier helpers for the JS emitter.
 
+/// Binding for a virtual L1 controller import (`sail-l1:theme-picker` → `__ctrl_theme_picker`).
+pub fn l1_controller_ident(tag: &str) -> String {
+    format!("__ctrl_{}", js_ident(tag))
+}
+
+/// Specifier the bundler resolves to the element's `<controller>` extract.
+pub fn l1_controller_specifier(tag: &str) -> String {
+    format!("sail-l1:{tag}")
+}
+
 /// Coerce `name` into a valid JS identifier — replace any character
 /// that wouldn't be legal in a binding with `_`.
 pub fn js_ident(name: &str) -> String {

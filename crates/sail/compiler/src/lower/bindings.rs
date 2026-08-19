@@ -44,6 +44,10 @@ pub fn collect_attr_imports(
     let direct_emit = is_route && depth == 0;
     match a {
         AttrInstr::Static { .. } => {}
+        AttrInstr::Controller { tag, .. } => {
+            out.runtime_imports.insert("runController");
+            out.l1_controllers.insert(tag.clone());
+        }
         AttrInstr::Expr { name, .. } => {
             // Web backend (hidden from author): CE → bindDynamic; native IDL
             // prop table → bindProp; dialog open → bindOpen; else bindAttr.

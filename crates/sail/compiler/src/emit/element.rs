@@ -13,7 +13,9 @@
 //!
 //! Element templates may include `{#if}` / `{#for}` / `{#match}` (legal in
 //! L1). Those compile with the render machinery — same tag, same registry.
-//! Dynamic attributes still refuse. An inline `<controller>` is Job C.
+//! Dynamic attributes still refuse. An inline `<controller>` is Job C:
+//! the block is legal; the host stays an opaque splice stamped
+//! `data-sail-ctrl`.
 
 use crate::CompileError;
 use crate::diagnostics::Span;
@@ -478,6 +480,19 @@ pub fn emit_element_with_bindings(
     })
 }
 
+/// Stamp compiler-owned controller identity on the structure root so the
+/// page parse lowers it to `runController`. Inserted inside the first open
+/// tag; a second stamp is a no-op.
+pub fn stamp_ctrl(structure: &mut String, tag: &str) {
+    if structure.contains("data-sail-ctrl=") {
+        return;
+    }
+    let Some(gt) = structure.find('>') else {
+        return;
+    };
+    structure.insert_str(gt, &format!(" data-sail-ctrl=\"{tag}\""));
+}
+
 /// Attribute defaults for freeform hosts. Skips Identity props and bool false.
 ///
 /// `<a>` is dual-mode: bare = text link (sail-base `a:not([variant])`), with
@@ -582,6 +597,11 @@ fn serialize_static(
                 }
                 out.push_str(" use:");
                 out.push_str(action);
+            }
+            AttrInstr::Controller { tag, .. } => {
+                out.push_str(" data-sail-ctrl=\"");
+                out.push_str(tag);
+                out.push('"');
             }
             _ => {
                 return Err(CompileError::new(format!(

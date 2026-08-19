@@ -1649,11 +1649,11 @@ fn theme_picker_host_paint_on_structure_sx() {
             && src.contains("data-theme-listbox")
             && src.contains("data-theme-grid")
             && src.contains("data-mode-bar")
-            && src.contains("use:themeSelect")
+            && src.contains("<controller")
             && !src.contains(" role=")
             && src.contains("<row inline")
             && !src.contains("sx=\""),
-        "theme-picker structure must carry Style product without class anatomy; roles via use:themeSelect"
+        "theme-picker structure must carry Style product without class anatomy; roles via the host controller"
     );
     assert!(
         (out.structure_html.contains("s-size-control-h-sm")
@@ -1664,14 +1664,18 @@ fn theme_picker_host_paint_on_structure_sx() {
             && (out.structure_html.contains("s-bg-theme-picker")
                 || out.structure_html.contains("s-bgthemepicker")
                 || out.structure_html.contains("bgthemepicker")
+                || out.structure_html.contains("s-bg-overlay")
                 || out.skin_css.contains("var(--theme-picker)")
                 || out.skin_css.contains("var(--popover)")
+                || out.skin_css.contains("var(--bg-overlay")
                 || out.structure_html.contains("bgcolorpopover"))
             && (out.structure_html.contains("s-isolate")
                 || out.skin_css.contains("isolation:isolate")
                 || out.skin_css.contains("isolation: isolate"))
             && (out.structure_html.contains("data-theme-listbox")
-                || out.structure_html.contains("use:themeSelect"))
+                || out
+                    .structure_html
+                    .contains("data-sail-ctrl=\"theme-picker\""))
             && out.structure_html.contains("theme=\"")
             && (out.structure_html.contains("sail-row-i") || out.skin_css.contains("inline-flex")),
         "child paint + layout classes on structure:\nstruct={}\nskin={}",
@@ -1680,7 +1684,7 @@ fn theme_picker_host_paint_on_structure_sx() {
     );
     // Option rows are real nodes with selected/hover/focus borders — no tc-*
     // mini-card classes, no part classes, primary/accent paint present.
-    // role=option is stamped at runtime by use:themeSelect, not structure HTML.
+    // role=option is stamped at runtime by the host controller, not structure HTML.
     assert!(
         !out.structure_html.contains("tc-overlay")
             && !out.structure_html.contains("class=\"tc-")

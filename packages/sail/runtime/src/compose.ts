@@ -16,7 +16,9 @@
 // the CSR build path: `setup → __mount`.
 
 import type { MountModule } from './component-mount'
-import { createChildScope, withScope } from './effect-scope'
+import type { ControllerDef } from './controller'
+import { resolveController } from './controller-resolver'
+import { createChildScope, onCleanup, withScope } from './effect-scope'
 import { withHost } from './signal'
 
 /**
@@ -66,4 +68,44 @@ export function mountComponent(
       console.error('[sail/compose] child unmount threw:', e)
     }
   }
+}
+
+/**
+ * Attach an L1 element's `<controller>` to its opaque spliced host.
+ *
+ * Compiler target for `data-sail-ctrl="{tag}"` — not a custom element,
+ * not a sibling factory. Child scope + `withHost` so `mount()` / `onCleanup()`
+ * in the element's controller enroll here; the returned disposer also
+ * rides the page `__cleanups` list so CSR `__mount` (which may run
+ * outside `withScope`) still tears down.
+ */
+type ControllerModule = {
+  setup?: (ctx: { host?: Element } & Record<string, unknown>) => unknown
+  __def?: ControllerDef
+}
+
+export function runController(
+  el: Element,
+  def: ControllerDef | ControllerModule | null | undefined,
+): () => void {
+  if (def == null) return () => {}
+  const host = el as HTMLElement
+  const scope = createChildScope()
+  withScope(scope, () =>
+    withHost(host, () => {
+      if (typeof def === 'function') {
+        resolveController(def, { host })
+      } else if (typeof def.setup === 'function') {
+        def.setup({ host })
+      } else if (typeof def.__def === 'function') {
+        resolveController(def.__def, { host })
+      }
+      scope.runMounts(host)
+    }),
+  )
+  const dispose = (): void => {
+    scope.dispose()
+  }
+  onCleanup(dispose)
+  return dispose
 }

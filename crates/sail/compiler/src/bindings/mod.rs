@@ -124,9 +124,9 @@ impl Builder {
             AttrInstr::Mutation { expr, .. } => {
                 self.push(BindingKind::Mutation, &expr.source, expr.allow_arrow);
             }
-            AttrInstr::Use { .. } => {
-                // Actions register on element construction, same as
-                // transitions — no SSR marker, no key, no manifest entry.
+            AttrInstr::Use { .. } | AttrInstr::Controller { .. } => {
+                // Actions / L1 controllers register on element construction,
+                // same as transitions — no SSR marker, no key, no manifest entry.
             }
             // `fx:` produces pre-baked `element.animate(...)` calls
             // — no binding-key allocation, no SSR marker, no manifest

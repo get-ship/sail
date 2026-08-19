@@ -63,6 +63,9 @@ pub struct Lowered {
     /// The bundler resolves them through the role registry and emits only
     /// those glyphs.
     pub used_icons: BTreeSet<String>,
+    /// L1 tags whose spliced host carries `data-sail-ctrl` — emit
+    /// `import __ctrl_{tag} from "sail-l1:{tag}"` + `runController`.
+    pub l1_controllers: BTreeSet<String>,
 }
 
 /// Walk the program, build a `Lowered` summary.
@@ -133,7 +136,8 @@ fn check_attr_for_route(a: &AttrInstr, out: &mut Lowered) {
         }
         AttrInstr::Static { .. }
         | AttrInstr::SlotReflectEmpty { .. }
-        | AttrInstr::Motion { .. } => {}
+        | AttrInstr::Motion { .. }
+        | AttrInstr::Controller { .. } => {}
         AttrInstr::Use { param, .. } => {
             if let Some(e) = param
                 && expr_references_route(&e.source)

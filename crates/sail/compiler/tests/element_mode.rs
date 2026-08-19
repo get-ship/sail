@@ -269,33 +269,7 @@ fn stdlib_elements_can_self_nest() {
     assert!(n >= 2, "expected both cards lowered, got {n}:\n{}", out.js);
 }
 
-#[test]
-fn element_rejects_controller_block() {
-    // `<controller>` is the L2-component behavior channel. An element carries
-    // behavior as stacked `use:<behavior>` stamps on its static structure —
-    // an inline block is a targeted compile error, not a captured module.
-    let src = r#"
-<scope>
-  props: { selected = false }
-</scope>
-<style>
-  .sail-chip { display: inline-flex; }
-</style>
-<controller>
-export default function chip(node: Element) {
-  (node as HTMLElement).setAttribute('role', 'button')
-}
-</controller>
-<span>label</span>
-"#;
-    let err = compile_element(src, "chip").unwrap_err();
-    assert!(
-        format!("{err:?}").contains(
-            "element mode: `<controller>` is not supported — attach behavior with `use:<behavior>`."
-        ),
-        "targeted rejection: {err:?}"
-    );
-}
+// Job C: `<controller>` in element mode is legal — see `element_controller.rs`.
 
 #[test]
 fn stdlib_chip_compiles_with_use_stamps() {
