@@ -1,10 +1,10 @@
 <!--
   HeroTitle — display heading, lead, pair of actions.
-  size(measure-lg) is the section column (60ch). An h1 without it
-  spans the viewport (fillRatio 1). Measure already centers.
+  size({ w: 60ch, max-w: 100% }) is the section column. An h1 without it
+  spans the viewport (fillRatio 1).
 -->
 <scope>
-  style shell = { size(measure-lg) }
+  style shell = { size({ w: 60ch, max-w: 100% }).margin({ x: auto }) }
 </scope>
 
 <column gap="6" style(shell)>

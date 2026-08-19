@@ -9,7 +9,7 @@
   style monoXs = { fg(muted).type(mono-sm) }
   style mutedSm = { fg(muted).type(body-sm) }
   /** Shared demo width + ring clearance. */
-  style fieldShell = { size(measure).overflow(visible) }
+  style fieldShell = { size({ w: 38ch, max-w: 100% }).overflow(visible) }
   style fullW = { size(max).overflow(visible) }
   style exampleBlock = { size(max).overflow(visible) }
   style exampleSection = { size(max).overflow(visible) }

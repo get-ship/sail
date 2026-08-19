@@ -2,11 +2,11 @@
   FaqSimple — a short accordion of questions.
   Roles: heading "Frequently Asked Questions".
   Questions are accordion triggers (native <summary> — locatable by text).
-  size(measure-lg) is the wide reading column (60ch). measure (38ch) is a
-  form, not an FAQ. Open must not resize the surface.
+  size({ w: 60ch, max-w: 100% }) is the wide reading column. A cap-only
+  max-width lets an open accordion grow the surface.
 -->
 <scope>
-  style shell = { size(measure-lg) }
+  style shell = { size({ w: 60ch, max-w: 100% }).margin({ x: auto }) }
 </scope>
 
 <column gap="6" style(shell)>

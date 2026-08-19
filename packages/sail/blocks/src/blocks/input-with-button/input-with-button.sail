@@ -1,10 +1,10 @@
 <!--
   InputWithButton — search field + submit. Defaults only.
-  size(measure) is the field, not the row: a hugging input is
-  the label width. Field fill stretches the control inside.
+  size({ w: 38ch, max-w: 100% }) is the field, not the row: a hugging
+  input is the label width. Field fill stretches the control inside.
 -->
 <scope>
-  style shell = { size(measure) }
+  style shell = { size({ w: 38ch, max-w: 100% }) }
 </scope>
 
 <row align="end" gap="2">

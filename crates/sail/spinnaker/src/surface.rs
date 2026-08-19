@@ -165,14 +165,6 @@ pub const REQUIRED_THEME_PRESETS: &[StylePreset] = &[
     req("size", "control-md", "control height recipe"),
     req("size", "control-lg", "control height recipe"),
     req("size", "control-xl", "control height recipe"),
-    req(
-        "size",
-        "measure",
-        "reading column — width is the measure, max-width 100%",
-    ),
-    req("size", "measure-sm", "narrow reading column"),
-    req("size", "measure-md", "default reading column"),
-    req("size", "measure-lg", "wide reading column"),
     req("pad", "page", "document inset"),
     req("size", "icon-3xs", "icon box"),
     req("size", "icon-2xs", "icon box"),
@@ -238,10 +230,6 @@ pub const REQUIRED_KEYS: &[&str] = &[
     "size.control-md",
     "size.control-lg",
     "size.control-xl",
-    "size.measure",
-    "size.measure-sm",
-    "size.measure-md",
-    "size.measure-lg",
     "pad.page",
     "size.icon-3xs",
     "size.icon-2xs",
@@ -659,14 +647,14 @@ mod tests {
     }
 
     #[test]
-    fn missing_required_names_app_and_measure() {
+    fn missing_required_names_app_and_surfaces() {
         let missing = StyleSurface::floor().missing_required_from_registry();
         for key in [
             "bg.app",
             "bg.inset",
             "bg.overlay",
             "fg.foreground",
-            "size.measure",
+            "size.control-md",
         ] {
             assert!(
                 !missing.contains(&key),

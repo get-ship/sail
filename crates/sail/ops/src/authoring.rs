@@ -252,7 +252,7 @@ Controllers never `.style` / `createElement`.\n\
                 let _ = writeln!(
                     md,
                     "Dotted identities (not CSS names). Concern setters resolve \
-                     these first. Atlas: `border.*`, `size.control-*`/`size.measure*`, \
+                     these first. Atlas: `border.*`, `size.control-*`, \
                      `type.*`, `elevation.*`. Authors write `bg(surface)` / \
                      `fg(foreground)`. `border` slots \
                      color/width/style; radius is not a slot. `size` has no pad.\n"

@@ -13,7 +13,7 @@
     layout: 'measure' | 'fill' = 'measure'
   }
 
-  style base = {display(block).size(measure)}
+  style base = {display(block).size({ w: 38ch, max-w: 100% }).margin({ x: auto })}
   style fill = {size({ w: 100% })}
 </scope>
 

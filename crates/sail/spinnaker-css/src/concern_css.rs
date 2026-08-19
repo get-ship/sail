@@ -256,25 +256,6 @@ fn lower_named_scale_step(
 
 /// Lower a resolved composite to the concern's CSS longhands (member vars).
 pub fn lower_composite(spec: &ConcernSpec, composite: &CompositeToken) -> Vec<(String, String)> {
-    // size(measure*) is a reading column, not a max-width cap. Cap-only
-    // lets a hug parent grow when an accordion opens (pricing FAQ).
-    // Width is the theme measure; max-width 100% so a narrow viewport wins.
-    // margin-inline auto is Container centering — without it every measured
-    // host sits on the left of a wide parent.
-    if spec.name == "size" && is_measure_identity(composite.name) {
-        if let Some((_, css)) = composite
-            .members
-            .iter()
-            .find(|(member, _)| *member == "max-w")
-        {
-            return vec![
-                ("width".into(), format!("var(--{css})")),
-                ("max-width".into(), "100%".into()),
-                ("margin-left".into(), "auto".into()),
-                ("margin-right".into(), "auto".into()),
-            ];
-        }
-    }
     let mut out = Vec::new();
     for slot in spec.slots {
         if slot_css(spec, slot).is_none() {
@@ -1195,13 +1176,6 @@ fn strip_size_quotes(raw: &str) -> String {
         .to_string()
 }
 
-fn is_measure_identity(name: &str) -> bool {
-    matches!(
-        name,
-        "size.measure" | "size.measure-sm" | "size.measure-md" | "size.measure-lg"
-    )
-}
-
 fn css_name_for_bind(name: &str) -> String {
     let mut out = String::new();
     for (i, c) in name.chars().enumerate() {
@@ -1222,37 +1196,6 @@ mod measure_column {
     use super::*;
     use spinnaker::concerns::{find_concern, find_slot};
     use spinnaker::ir::PaintArg;
-    use spinnaker::tokens::find_composite;
-
-    #[test]
-    fn size_measure_is_a_column_not_a_max_width_cap() {
-        let spec = find_concern("size").expect("size concern");
-        let composite = find_composite("size.measure").expect("size.measure");
-        let decls = lower_composite(spec, composite);
-        assert!(
-            decls
-                .iter()
-                .any(|(p, v)| p == "width" && v.contains("size-measure-max-w")),
-            "{decls:?}"
-        );
-        assert!(
-            decls.iter().any(|(p, v)| p == "max-width" && v == "100%"),
-            "{decls:?}"
-        );
-        assert!(
-            !decls
-                .iter()
-                .any(|(p, v)| p == "max-width" && v.contains("size-measure")),
-            "cap-only max-width would hug: {decls:?}"
-        );
-        assert!(
-            decls.iter().any(|(p, v)| p == "margin-left" && v == "auto")
-                && decls
-                    .iter()
-                    .any(|(p, v)| p == "margin-right" && v == "auto"),
-            "measure column must center: {decls:?}"
-        );
-    }
 
     #[test]
     fn margin_slot_negatives_emit_calc() {

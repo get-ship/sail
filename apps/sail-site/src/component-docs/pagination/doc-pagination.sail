@@ -7,7 +7,7 @@
 <scope>
   style page = { size(max).overflow(visible) }
   style mutedXs = { fg(muted).type(body-sm) }
-  style specimen = { size(measure).overflow(visible) }
+  style specimen = { size({ w: 38ch, max-w: 100% }).overflow(visible) }
   style exampleBlock = { size(max).overflow(visible) }
   style sectionLabel = { fg(muted).type(label) }
 </scope>

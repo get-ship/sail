@@ -8,7 +8,7 @@
     total = 96
   }
 
-  style card = { size(measure-sm) }
+  style card = { size({ w: 20ch, max-w: 100% }) }
   style title = { type(label) }
   style totalText = { fg(muted).type(mono) }
   style peopleCount = { type(mono-sm) }

@@ -274,10 +274,6 @@
     "size-icon-xl-w",
     "size-icon-xs-h",
     "size-icon-xs-w",
-    "size-measure-lg-max-w",
-    "size-measure-max-w",
-    "size-measure-md-max-w",
-    "size-measure-sm-max-w",
     "space-1",
     "space-10",
     "space-11",
@@ -1584,30 +1580,6 @@
       "type": "dimension",
       "value": "var(--control-h-xl)"
     },
-    "size-measure-max-w": {
-      "path": "size.measure.max-w",
-      "cssName": "size-measure-max-w",
-      "type": "dimension",
-      "value": "38ch"
-    },
-    "size-measure-sm-max-w": {
-      "path": "size.measure-sm.max-w",
-      "cssName": "size-measure-sm-max-w",
-      "type": "dimension",
-      "value": "20ch"
-    },
-    "size-measure-md-max-w": {
-      "path": "size.measure-md.max-w",
-      "cssName": "size-measure-md-max-w",
-      "type": "dimension",
-      "value": "38ch"
-    },
-    "size-measure-lg-max-w": {
-      "path": "size.measure-lg.max-w",
-      "cssName": "size-measure-lg-max-w",
-      "type": "dimension",
-      "value": "60ch"
-    },
     "size-icon-3xs-w": {
       "path": "size.icon-3xs.w",
       "cssName": "size-icon-3xs-w",
@@ -2776,10 +2748,6 @@
     "size.icon-xl.w": "size-icon-xl-w",
     "size.icon-xs.h": "size-icon-xs-h",
     "size.icon-xs.w": "size-icon-xs-w",
-    "size.measure-lg.max-w": "size-measure-lg-max-w",
-    "size.measure.max-w": "size-measure-max-w",
-    "size.measure-md.max-w": "size-measure-md-max-w",
-    "size.measure-sm.max-w": "size-measure-sm-max-w",
     "space.1": "space-1",
     "space.10": "space-10",
     "space.11": "space-11",
@@ -2994,38 +2962,6 @@
       "type": "size",
       "members": {
         "h": "size-control-xl-h"
-      }
-    },
-    "size.measure": {
-      "path": "size.measure",
-      "cssName": "size.measure",
-      "type": "size",
-      "members": {
-        "max-w": "size-measure-max-w"
-      }
-    },
-    "size.measure-sm": {
-      "path": "size.measure-sm",
-      "cssName": "size.measure-sm",
-      "type": "size",
-      "members": {
-        "max-w": "size-measure-sm-max-w"
-      }
-    },
-    "size.measure-md": {
-      "path": "size.measure-md",
-      "cssName": "size.measure-md",
-      "type": "size",
-      "members": {
-        "max-w": "size-measure-md-max-w"
-      }
-    },
-    "size.measure-lg": {
-      "path": "size.measure-lg",
-      "cssName": "size.measure-lg",
-      "type": "size",
-      "members": {
-        "max-w": "size-measure-lg-max-w"
       }
     },
     "size.icon-3xs": {

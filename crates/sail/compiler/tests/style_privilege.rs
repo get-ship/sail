@@ -35,9 +35,9 @@ fn product_route_without_style_compiles() {
 
 #[test]
 fn product_route_name_and_geometry_compile() {
-    let src = r#"<column style({ size(measure).pad(page) })><h1>x</h1></column>"#;
-    let path = "apps/sail-site/routes/docs/page.sail";
-    compile(src, opts(path)).expect("L3 may spend names + geometry");
+    let src = r#"<column style({ size(control-md).pad(page) })><h1>x</h1></column>"#;
+    let path = "apps/sail-site/routes/docs/guide/pricing-hero.sail";
+    compile(src, opts(path)).expect("hyphenated CE may spend names + geometry");
 }
 
 #[test]

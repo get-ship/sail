@@ -5,11 +5,12 @@
     text: 80% completed
     text: 56 km this month • 17% improvement compared to last month • 443 place in global scoreboard
     stats: Distance 27.4 km | Avg. speed 9.6 km/h | Score 88/100
-  size(measure) is the card, not a banner. Local photo — Unsplash never
-  arrived. Cover fills the L1 image crop. Footer kickers are type(label).
+  size({ w: 38ch, max-w: 100% }) is the card, not a banner. Local photo
+  — Unsplash never arrived. Cover fills the L1 image crop. Footer
+  kickers are type(label).
 -->
 <scope>
-  style frame = { size(measure) }
+  style frame = { size({ w: 38ch, max-w: 100% }) }
   style cover = { size(max).objectFit(cover) }
   style inset = { pad(5) }
   style kicker = { type(label).fg(muted) }

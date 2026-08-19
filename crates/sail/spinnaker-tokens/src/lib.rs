@@ -6837,10 +6837,6 @@ mod tests {
                 "control-md": {
                     "$type": "size",
                     "$value": { "h": "{control.h-md}" }
-                },
-                "measure": {
-                    "$type": "size",
-                    "$value": { "max-w": "38ch" }
                 }
             },
             "type": {
@@ -6869,7 +6865,6 @@ mod tests {
         assert_eq!(h.css_name, "size-control-md-h");
         assert_eq!(h.r#type, "dimension");
         assert_eq!(h.value, "{control.h-md}");
-        assert!(tokens.iter().any(|t| t.path == "size.measure.max-w"));
         let family = tokens
             .iter()
             .find(|t| t.path == "type.body.family")
@@ -6976,8 +6971,7 @@ mod tests {
   "size": {
     "control-sm": { "$type": "size", "$value": { "h": "{control.h-sm}" } },
     "control-md": { "$type": "size", "$value": { "h": "{control.h-md}" } },
-    "control-lg": { "$type": "size", "$value": { "h": "{control.h-lg}" } },
-    "measure": { "$type": "size", "$value": { "max-w": "38ch" } }
+    "control-lg": { "$type": "size", "$value": { "h": "{control.h-lg}" } }
   },
   "type": {
     "body": {
@@ -7054,7 +7048,6 @@ mod tests {
             css.contains("--size-control-md-h: var(--control-h-md);"),
             "{css}"
         );
-        assert!(css.contains("--size-measure-max-w: 38ch;"), "{css}");
         assert!(
             css.contains("--type-body-family: var(--body-font);"),
             "{css}"
@@ -7082,7 +7075,6 @@ mod tests {
             "size.control-sm",
             "size.control-md",
             "size.control-lg",
-            "size.measure",
             "type.body",
             "type.body-sm",
             "type.label",

@@ -1,12 +1,12 @@
 <!--
   HeroText — centered lead with two actions.
-  size(measure-lg) is the section column (60ch) so the dek wraps.
+  size({ w: 60ch, max-w: 100% }) is the section column so the dek wraps.
   Do not wrap that column in <center>: max-width 100% goes circular
-  in a grid item and the heading overflows at 390. Measure centers.
+  in a grid item and the heading overflows at 390.
   Inner <center> sits the title; type(align) is illegal.
 -->
 <scope>
-  style shell = { size(measure-lg) }
+  style shell = { size({ w: 60ch, max-w: 100% }).margin({ x: auto }) }
 </scope>
 
 <column gap="4" style(shell)>
