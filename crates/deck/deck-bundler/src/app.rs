@@ -131,6 +131,11 @@ const FRAMEWORK_ASSETS: &[(&str, &str, &str)] = &[
     // `import('@ship/sail-lsp-browser/completions' | '/diagnostics')`) are
     // registered — `/worker` and `/hover` are real exports but unused by
     // any route today, so they are not surfaced here.
+];
+
+/// Playground / LSP — not on the hello-world importmap. Still served at
+/// `/_deck/*` when an app depends on them (docs site, code-editor).
+const EDITOR_FRAMEWORK_ASSETS: &[(&str, &str, &str)] = &[
     (
         "@ship/sail-compiler-wasm",
         "sail-compiler-wasm.js",
@@ -154,6 +159,19 @@ const FRAMEWORK_ASSETS: &[(&str, &str, &str)] = &[
 /// routes — a new singleton needs an entry here AND a matching serve handler.
 pub fn framework_assets() -> &'static [(&'static str, &'static str, &'static str)] {
     FRAMEWORK_ASSETS
+}
+
+/// Editor/playground singletons. Served at `/_deck/*`; listed on the
+/// importmap only when the app depends on them.
+pub fn editor_framework_assets() -> &'static [(&'static str, &'static str, &'static str)] {
+    EDITOR_FRAMEWORK_ASSETS
+}
+
+fn project_needs_editor(project: &Path) -> bool {
+    let Ok(pkg) = std::fs::read_to_string(project.join("package.json")) else {
+        return false;
+    };
+    pkg.contains("sail-compiler-wasm") || pkg.contains("sail-lsp-browser")
 }
 /// A framework-singleton self-declaration, read from a package's
 /// `package.json#deckFramework`. Replaces the host-declared
@@ -193,10 +211,19 @@ pub(crate) struct DeckFrameworkDecl {
 /// route; one URL convention, one handler.
 ///
 /// Output is pretty-printed with 2-space indent.
-fn generate_importmap(dist_prefix: &str, discovered: &[DeckFrameworkDecl]) -> String {
+fn generate_importmap(
+    dist_prefix: &str,
+    discovered: &[DeckFrameworkDecl],
+    include_editor: bool,
+) -> String {
     let mut imports: std::collections::BTreeMap<String, String> = std::collections::BTreeMap::new();
     for (alias, _src, dist_rel) in FRAMEWORK_ASSETS {
         imports.insert((*alias).to_string(), format!("{dist_prefix}/{dist_rel}"));
+    }
+    if include_editor {
+        for (alias, _src, dist_rel) in EDITOR_FRAMEWORK_ASSETS {
+            imports.insert((*alias).to_string(), format!("{dist_prefix}/{dist_rel}"));
+        }
     }
     // Provider-declared singletons: `<alias>` → `/_deck/<basename>`.
     // The dep's package.json#deckFramework#serve field provides the
@@ -861,6 +888,7 @@ async fn bundle_owned_framework(repo_root: &Path, out_dir: &Path, minify: bool) 
         // provider-declared, not deck-owned) maps to none → skip it.
         let dists: Vec<&str> = FRAMEWORK_ASSETS
             .iter()
+            .chain(EDITOR_FRAMEWORK_ASSETS.iter())
             .filter(|(_, src, _)| *src == target.out_file)
             .map(|(_, _, dist_rel)| *dist_rel)
             .collect();
@@ -1051,7 +1079,7 @@ pub async fn bundle_app_with_base(
     // handler serves them on the same code path as the framework
     // singletons. No per-app dist prefix; the app's name is its URL
     // namespace.
-    let importmap_json = generate_importmap("", &discovered);
+    let importmap_json = generate_importmap("", &discovered, project_needs_editor(project));
     let externals = importmap_externals_from_json(&importmap_json)?;
     // 4. Render `index.html` from the template. The dev doesn't author
     // index.html — it's deck's entry contract. The template has placeholders
@@ -1332,6 +1360,32 @@ mod tests {
     fn write(p: &Path, s: &str) {
         std::fs::create_dir_all(p.parent().unwrap()).unwrap();
         std::fs::write(p, s).unwrap();
+    }
+
+    #[test]
+    fn default_importmap_has_no_wasm_lsp_studio() {
+        let json = generate_importmap("", &[], false);
+        assert!(
+            !json.contains("compiler-wasm")
+                && !json.contains("lsp-browser")
+                && !json.contains("studio-bridge"),
+            "hello-world importmap is runtime+dom+router, not playground:\n{json}"
+        );
+        assert!(
+            json.contains("@ship/sail-runtime")
+                && json.contains("@ship/sail-dom")
+                && json.contains("@ship/deck/router"),
+            "default importmap still has runtime/dom/router:\n{json}"
+        );
+    }
+
+    #[test]
+    fn editor_importmap_lists_wasm() {
+        let json = generate_importmap("", &[], true);
+        assert!(
+            json.contains("compiler-wasm") && json.contains("lsp-browser"),
+            "docs/playground importmap lists editor splits:\n{json}"
+        );
     }
 
     /// `bundle_app_with_base(Some("assets"))` emits asset URLs that MATCH the

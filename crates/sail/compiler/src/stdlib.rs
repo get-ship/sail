@@ -291,8 +291,23 @@ fn platform_css(tag: &str) -> Option<&'static str> {
 /// element contributes lowered host Style, then any platform adaptor file,
 /// under structured provenance headers.
 pub fn skins_css() -> String {
+    skins_css_for(elements().iter().map(|el| el.tag))
+}
+
+/// Framework skins + platform adaptor sheets for the used L1 tags only.
+/// A button page does not download `prose.css`.
+pub fn skins_css_for<I, S>(tags: I) -> String
+where
+    I: IntoIterator<Item = S>,
+    S: AsRef<str>,
+{
+    let want: std::collections::BTreeSet<String> =
+        tags.into_iter().map(|t| t.as_ref().to_string()).collect();
     let mut out = String::new();
     for el in elements() {
+        if !want.contains(el.tag) {
+            continue;
+        }
         let style = el.out.skin_css.trim_end();
         let platform = platform_css(el.tag)
             .map(str::trim_end)
@@ -315,6 +330,9 @@ pub fn skins_css() -> String {
             out.push('\n');
         }
         out.push('\n');
+    }
+    if out.is_empty() {
+        return out;
     }
     out.truncate(out.trim_end().len());
     out.push('\n');

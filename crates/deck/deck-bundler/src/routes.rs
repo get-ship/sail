@@ -10,9 +10,33 @@
 //! directory with a `page.sail` and (optionally) `controller.ts`. A `[param]`
 //! segment in the dir name is a dynamic. No manifests, no per-route metadata.
 
+use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result, bail};
+
+fn collect_routes_stdlib_tags(routes_dir: &Path) -> BTreeSet<String> {
+    let mut tags = BTreeSet::new();
+    let mut stack = vec![routes_dir.to_path_buf()];
+    while let Some(dir) = stack.pop() {
+        let Ok(rd) = std::fs::read_dir(&dir) else {
+            continue;
+        };
+        for e in rd.flatten() {
+            let p = e.path();
+            if p.is_dir() {
+                stack.push(p);
+            } else if p.extension().and_then(|s| s.to_str()) == Some("sail") {
+                if let Ok(src) = std::fs::read_to_string(&p) {
+                    tags.extend(sail_compiler::used_tags::collect_stdlib_tags_from_source(
+                        &src,
+                    ));
+                }
+            }
+        }
+    }
+    tags
+}
 
 /// One codegen spec: walk `dir` recursively for mountable routes (`page.sail`),
 /// emit the generated `routes.gen.ts` content to `out`. `label` is the
@@ -561,6 +585,21 @@ pub(crate) fn render_entry_gen_at(
         .filter(|p| p.join("fonts/fonts.css").is_file())
         .map(|_| "import './fonts/fonts.css';\n")
         .unwrap_or("");
+    let skins_import = match project_dir {
+        Some(dir) => {
+            let tags = collect_routes_stdlib_tags(&dir.join("routes"));
+            let css = sail_compiler::stdlib::skins_css_for(tags.iter().map(String::as_str));
+            if css.trim().is_empty() {
+                String::new()
+            } else {
+                let sail_dir = dir.join(".sail");
+                let _ = std::fs::create_dir_all(&sail_dir);
+                let _ = std::fs::write(sail_dir.join("element-skins.used.css"), css);
+                "import './.sail/element-skins.used.css';\n".to_string()
+            }
+        }
+        None => "import '@ship/tokens/element-skins.css';\n".to_string(),
+    };
     // Even with zero routes the bootstrap still runs — it sets up the
     // mount target + the token CSS. The router displays its not-found
     // fallback.
@@ -589,8 +628,7 @@ import {{ mountRouter }} from '@ship/deck/router';
 import '@ship/tokens/tokens.css';
 import '@ship/tokens/themes.css';
 import '@ship/tokens/sail-base.css';
-import '@ship/tokens/element-skins.css';
-{app_fonts_import}// On an HMR re-import the framework router is already mounted (it exposes
+{skins_import}{app_fonts_import}// On an HMR re-import the framework router is already mounted (it exposes
 // `globalThis.__deckHmr`). Swap the freshly-bundled `modules` (their thunks
 // point at the new chunk URLs) into the running router + re-mount preserving
 // state, instead of mounting a second time. First load: `__deckHmr` is unset,

@@ -19,6 +19,7 @@ async fn every_importmap_dist_file_is_served() {
     let addr = serve().await;
     let dists: HashSet<_> = deck_bundler::app::framework_assets()
         .iter()
+        .chain(deck_bundler::app::editor_framework_assets().iter())
         .map(|(_, _, dist_rel)| format!("/{dist_rel}"))
         .collect();
     assert!(!dists.is_empty(), "FRAMEWORK_ASSETS must not be empty");
