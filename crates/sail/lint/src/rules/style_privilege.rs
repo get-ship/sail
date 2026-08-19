@@ -1,12 +1,12 @@
 //! `sail-style-privilege` — documents have no Style; L2 spends presets
 //! (SPEC-STYLE-ARCH-1 / SPEC-STYLE-BUCKETS-1).
 //!
-//! Privilege follows FileKind. Config cannot grant Full. Route documents
-//! (`page` / `index` / `_layout` under `routes/`) write tags, not Style.
-//! Hyphenated route-local siblings and `src/components/**` spend named
-//! identities. Identity slot assembly (`type({ size: xs })`) stays L1-only
-//! on product L2. `packages/sail/l0/**` specimen CEs are Full — the
-//! gauntlet speaks the language. `raw()` is not this door.
+//! Privilege follows FileKind. Route documents (`page` / `index` /
+//! `_layout` under `routes/`) write tags, not Style. Hyphenated
+//! siblings spend named identities. Slot assembly stays L1-only on
+//! product L2 unless the project's `sail.config` sets `style_slots`.
+//! That grant is a compiler setting, not a folder or tag prefix.
+//! `raw()` is the off-scale door, not this one. Routes never receive it.
 //! Geometry `size({` / `position({` and scale-edge `pad({` / `margin({`
 //! are free on files that may Style. `filter({` stays L1-only.
 
@@ -37,6 +37,7 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
     let kind = classify(path, Some(source)).kind;
     match (spinnaker::privilege_for_path(path), kind) {
         (spinnaker::Privilege::None, FileKind::Route) => document_findings(path, source),
+        (spinnaker::Privilege::Identities, _) if crate::config::style_slots_for(path) => Vec::new(),
         (spinnaker::Privilege::Identities, _) => identities_findings(path, source),
         (spinnaker::Privilege::Full, _) | (spinnaker::Privilege::None, _) => Vec::new(),
     }
@@ -381,7 +382,8 @@ mod tests {
 
     #[test]
     fn l0_specimen_may_spend_slot_form() {
-        let path = PathBuf::from("packages/sail/l0/routes/paint/type/l0-type-face.sail");
+        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../../packages/sail/l0/routes/paint/type/l0-type-face.sail");
         for src in [
             "style box = { type({ size: xs }) }",
             "style box = { bg({ color: primary }) }",
@@ -394,7 +396,8 @@ mod tests {
                 "L0 specimen CE speaks the language: {src}"
             );
         }
-        let page = PathBuf::from("packages/sail/l0/routes/paint/type/page.sail");
+        let page = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../../packages/sail/l0/routes/paint/type/page.sail");
         let findings = check(&page, "style box = { type({ size: xs }) }");
         assert!(
             findings

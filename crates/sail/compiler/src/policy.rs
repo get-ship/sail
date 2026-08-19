@@ -121,6 +121,14 @@ pub static REGISTRY: &[PolicyEntry] = &[
         status: PolicyStatus::Stable,
     },
     PolicyEntry {
+        name: "style_slots",
+        ty: PolicyType::Bool,
+        default_json: "false",
+        scope: "project",
+        description: "Hyphenated CEs may spend Style slot form; routes stay tag-only",
+        status: PolicyStatus::Stable,
+    },
+    PolicyEntry {
         name: "lint.severity.<rule-id>",
         ty: PolicyType::PerRuleTree,
         default_json: "null",

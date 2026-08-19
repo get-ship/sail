@@ -6,5 +6,6 @@
   },
   "deck": {
     "render": "csr"
-  }
+  },
+  "style_slots": true
 }

@@ -42,7 +42,7 @@ fn product_route_name_and_geometry_compile() {
 
 #[test]
 fn product_route_identity_slots_are_an_error() {
-    let src = r#"<column style({ type({ size: xs }) })><h1>x</h1></column>"#;
+    let src = r#"<column style({ bg({ color: primary }) })><h1>x</h1></column>"#;
     let path = "apps/sail-site/routes/docs/page.sail";
     let diags = check_all(src, Some(path.as_ref()), &[], None);
     assert!(
@@ -382,10 +382,11 @@ fn identities_closed_paint_slots_stay_red() {
 
 #[test]
 fn l0_specimen_slot_form_compiles() {
-    let path = "packages/sail/l0/routes/paint/type/l0-type-face.sail";
-    let src = r#"<span style({ type({ size: xs }), bg({ color: primary }) })>Aa</span>"#;
-    compile(src, opts(path)).expect("L0 specimen CE may spend slot form");
-    let diags = check_all(src, Some(path.as_ref()), &[], None);
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../../packages/sail/l0/routes/paint/type/l0-type-face.sail");
+    let src = r#"<p style({ type({ size: xs }), bg({ color: primary }) })>Aa</p>"#;
+    compile(src, opts(path.to_str().unwrap())).expect("L0 specimen CE may spend slot form");
+    let diags = check_all(src, Some(path.as_path()), &[], None);
     assert!(
         !diags
             .iter()

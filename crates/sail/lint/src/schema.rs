@@ -239,6 +239,7 @@ mod schema_tests {
         assert!(keys.contains(&"icons".into()));
         assert!(keys.contains(&"theme".into()));
         assert!(keys.contains(&"raw_containers".into()));
+        assert!(keys.contains(&"style_slots".into()));
         assert!(!keys.iter().any(|k| k == "policy"));
         assert!(!keys.iter().any(|k| k == "fonts"));
         assert!(!keys.iter().any(|k| k == "editor"));

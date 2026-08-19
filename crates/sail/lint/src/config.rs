@@ -378,6 +378,13 @@ pub struct SailConfig {
     #[serde(default)]
     pub raw_containers: Option<bool>,
 
+    /// POLICY. Hyphenated CEs in this project may spend Style slot form
+    /// (`type({ size: xs })`, `bg({ clip: text })`, `filter({ blur: 4 })`).
+    /// Routes stay tag-only. Product apps omit this and stay presets.
+    /// Default: off.
+    #[serde(default)]
+    pub style_slots: Option<bool>,
+
     /// POLICY. Auto-fix sibling rhythm violations; false warns only.
     ///
     /// Default: true.
@@ -643,6 +650,7 @@ impl SailConfig {
 fn first_type_error(map: &serde_json::Map<String, Value>) -> Option<String> {
     let bool_keys = [
         "raw_containers",
+        "style_slots",
         "compose_rhythm",
         "unconfined",
         "strict",
@@ -718,6 +726,15 @@ pub fn resolve(dir: &Path) -> Option<(PathBuf, SailConfig)> {
 /// Not a second walker — overlays fields on the one Project load.
 pub fn resolve_product(from: &Path) -> Option<(PathBuf, SailConfig)> {
     resolve(from)
+}
+
+/// True when the Project config for `source_file` sets `"style_slots": true`.
+///
+/// Missing config or missing key is no grant. Routes still cannot Style.
+pub fn style_slots_for(source_file: &Path) -> bool {
+    resolve(source_file)
+        .map(|(_, cfg)| cfg.style_slots == Some(true))
+        .unwrap_or(false)
 }
 
 /// True when the Project config for `source_file` sets `"layout": "error"`.

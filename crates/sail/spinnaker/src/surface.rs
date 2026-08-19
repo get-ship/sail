@@ -471,20 +471,16 @@ fn leak_str(s: &str) -> &'static str {
     Box::leak(s.to_string().into_boxed_str())
 }
 
-/// Resolve privilege from a source path. Config cannot grant Full.
-///
-/// FileKind is the SSOT (`sail-lint` `classify()`). Spinnaker cannot
-/// import sail-lint (cycle), so the document-stem check is duplicated here:
+/// Resolve privilege from a source path. Config cannot grant Full here
+/// (spinnaker cannot read `sail.config`). Slot form on project CEs is
+/// `style_slots` in sail-lint. This helper is FileKind only:
 /// - `crates/sail/compiler/stdlib/**` → Full
 /// - `.sail` stem `page` | `index` | `_layout` under `routes/` → None
-/// - `packages/sail/l0/**` hyphenated CEs → Full (gauntlet specimens
-///   speak the language; this is not `raw()`, which is the off-scale door)
-/// - other `.sail` → Identities (product L2: presets only)
+/// - other `.sail` → Identities (includes hyphenated route-local CEs)
 /// - else → None
 ///
 /// Do **not** treat every `routes/**` file as None.
 /// `routes/pricing/pricing-hero.sail` is Identities.
-/// L0 `page.sail` stays None. L0 `l0-type-face.sail` is Full.
 ///
 /// M1 enforcement is scoped to product trees so compiler test fixtures
 /// (including the L1 matrix) stay compilable.
@@ -496,9 +492,6 @@ pub fn privilege_for_path(path: &std::path::Path) -> Privilege {
     if p.ends_with(".sail") {
         if is_route_document_path(path, &p) {
             return Privilege::None;
-        }
-        if is_l0_path(&p) {
-            return Privilege::Full;
         }
         return Privilege::Identities;
     }
@@ -613,13 +606,13 @@ mod tests {
         );
         assert_eq!(
             privilege_for_path(Path::new("packages/sail/l0/routes/poison/poison-trap.sail")),
-            Privilege::Full
+            Privilege::Identities
         );
         assert_eq!(
             privilege_for_path(Path::new(
                 "packages/sail/l0/routes/paint/type/l0-type-face.sail"
             )),
-            Privilege::Full
+            Privilege::Identities
         );
         assert_eq!(
             privilege_for_path(Path::new("apps/sail-site/src/doc-example/doc-example.sail")),
