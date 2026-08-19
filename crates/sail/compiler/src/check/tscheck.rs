@@ -428,6 +428,7 @@ fn collect_project_type_gate_native(
         match type_env_for_path(path, Some(src)) {
             TypeEnv::Sail => pure.push((path.as_path(), src.as_str())),
             TypeEnv::Action => action.push((path.as_path(), src.as_str())),
+            TypeEnv::Writer => {}
         }
     }
 
@@ -582,6 +583,7 @@ pub fn collect_project_ts_diags(
             match type_env_for_path(path, Some(src)) {
                 TypeEnv::Sail => pure.push((path.as_path(), src.as_str())),
                 TypeEnv::Action => action.push((path.as_path(), src.as_str())),
+                TypeEnv::Writer => {}
             }
         }
         let mut out = Vec::new();
@@ -590,7 +592,7 @@ pub fn collect_project_ts_diags(
                 continue;
             }
             let kind_rel = match env {
-                TypeEnv::Sail => Some(crate::ambients::PROJECT_TSCONFIG_SAIL_REL),
+                TypeEnv::Sail | TypeEnv::Writer => Some(crate::ambients::PROJECT_TSCONFIG_SAIL_REL),
                 TypeEnv::Action => Some(crate::ambients::PROJECT_TSCONFIG_ACTION_REL),
             };
             let use_kind = kind_rel
@@ -2430,7 +2432,7 @@ fn typecheck_project_env_reused(
     diags: &mut Vec<Diagnostic>,
 ) -> std::io::Result<()> {
     let kind_rel = match env {
-        TypeEnv::Sail => Some(crate::ambients::PROJECT_TSCONFIG_SAIL_REL),
+        TypeEnv::Sail | TypeEnv::Writer => Some(crate::ambients::PROJECT_TSCONFIG_SAIL_REL),
         TypeEnv::Action => Some(crate::ambients::PROJECT_TSCONFIG_ACTION_REL),
     };
     let kind_abs = kind_rel.map(|r| project_root.join(r));
@@ -2577,7 +2579,7 @@ fn env_program_ts_diags(
     let work_dir = tsgo_server::project_work_dir(project_root, env, use_kind);
     let (tsconfig, entries, persist_tsconfig) = if use_kind {
         let kind_rel = match env {
-            TypeEnv::Sail => crate::ambients::PROJECT_TSCONFIG_SAIL_REL,
+            TypeEnv::Sail | TypeEnv::Writer => crate::ambients::PROJECT_TSCONFIG_SAIL_REL,
             TypeEnv::Action => crate::ambients::PROJECT_TSCONFIG_ACTION_REL,
         };
         let cfg = std::fs::read_to_string(project_root.join(kind_rel))?;
@@ -2722,7 +2724,7 @@ fn typecheck_project_env_via_kind_config(
     diags: &mut Vec<Diagnostic>,
 ) -> std::io::Result<bool> {
     let kind_rel = match env {
-        TypeEnv::Sail => crate::ambients::PROJECT_TSCONFIG_SAIL_REL,
+        TypeEnv::Sail | TypeEnv::Writer => crate::ambients::PROJECT_TSCONFIG_SAIL_REL,
         TypeEnv::Action => crate::ambients::PROJECT_TSCONFIG_ACTION_REL,
     };
     let kind_abs = project_root.join(kind_rel);
@@ -2981,6 +2983,7 @@ fn env_label(env: TypeEnv) -> &'static str {
     match env {
         TypeEnv::Sail => "sail",
         TypeEnv::Action => "action",
+        TypeEnv::Writer => "writer",
     }
 }
 
@@ -3043,6 +3046,7 @@ fn map_region_diag(d: &TsDiag, env: TypeEnv) -> Option<Diagnostic> {
                              name document/window."
                         ),
                     ),
+                    TypeEnv::Writer => return None,
                 };
                 return Some(Diagnostic {
                     line: d.line,

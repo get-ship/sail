@@ -231,15 +231,14 @@ pub const APP_SOURCE_RULES: &[(&str, RuleFn)] = &[
     ),
 ];
 
-/// Rules that lint an **author** `use:` Action body (ACTIONS-1 regime).
+/// Rules that lint a `use:` Action body (author `src/actions/**` and catalog
+/// stamps under `packages/sail/runtime/src/actions/**`). Same law. No caste.
 ///
-/// Dispatches on app `src/actions/**` (and any path `is_action_source_path`
-/// admits). The framework catalog (`packages/sail/runtime/src/actions/*`) is
-/// **trusted** and not subject to this floor.
-///
-/// Floor (ERROR): no style/class/layout writes; no state primitives; no
-/// network; handed host only; Action signature.
+/// Floor (ERROR): `sail-no-imperative-style` (access is the crime), plus
+/// no class/layout writes, no state primitives, no network, handed host
+/// only, Action signature.
 pub const ACTION_RULES: &[(&str, RuleFn)] = &[
+    (no_imperative_style::RULE_ID, no_imperative_style::check),
     (action_no_style::RULE_ID, action_no_style::check),
     (action_no_state::RULE_ID, action_no_state::check),
     (action_no_network::RULE_ID, action_no_network::check),

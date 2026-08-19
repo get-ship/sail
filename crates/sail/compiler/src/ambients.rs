@@ -333,6 +333,9 @@ pub enum TypeEnv {
     Sail,
     /// author action — observation set only (no `document` / `window`).
     Action,
+    /// Style writer allowlist (theme.ts, mount CSS inject, generated bind
+    /// paint writer). Full DOM. The only CSSOM endowment.
+    Writer,
 }
 
 /// Map a classified [`crate::project_map::FileKind`] to its type environment.
@@ -362,6 +365,9 @@ pub fn type_env_for_kind(kind: crate::project_map::FileKind) -> TypeEnv {
 /// Author `.sail` under `packages/sail/**` (e.g. l0) is still FileKind-only.
 /// Runtime / dom / compiler TS is not an author surface of this gate.
 pub fn type_env_for_path(path: &Path, source: Option<&str>) -> TypeEnv {
+    if sail_lint::is_style_writer_allowlist(path) {
+        return TypeEnv::Writer;
+    }
     type_env_for_kind(crate::project_map::classify(path, source).kind)
 }
 
@@ -373,6 +379,7 @@ pub fn type_env_for_path(path: &Path, source: Option<&str>) -> TypeEnv {
 pub fn lib_for_type_env(env: TypeEnv) -> &'static [&'static str] {
     match env {
         TypeEnv::Sail | TypeEnv::Action => &["ESNext"],
+        TypeEnv::Writer => &["ESNext", "DOM"],
     }
 }
 
@@ -822,6 +829,9 @@ pub fn emit_project_tsconfig_json_for(env: TypeEnv, include_globs: &[&str]) -> S
         }
         TypeEnv::Action => {
             "TypeEnv::Action — ESNext + action-observation.d.ts; no document/window."
+        }
+        TypeEnv::Writer => {
+            "TypeEnv::Writer — ESNext + DOM; style-writer allowlist only (theme/mount/generated bind)."
         }
     };
     // Sail product config must not typecheck actions under the sail typecheck

@@ -1,9 +1,9 @@
 //! `sail-action-no-style` — author action modules may not class, style, or write layout.
 //!
-//! **Author floor (ACTIONS-1):** ERROR. Applies to app `src/actions/**` and other
-//! modules the dispatcher classifies as author action bodies. The framework
-//! catalog (`packages/sail/runtime/src/actions/*`) is trusted and is **not**
-//! dispatched here.
+//! **Action floor (ACTIONS-1):** ERROR. Applies to app `src/actions/**` and
+//! catalog stamps (`packages/sail/runtime/src/actions/*`). Same law.
+//! `sail-no-imperative-style` is the CSSOM floor (access is the crime);
+//! this rule still refuses class/layout writes.
 //!
 //! **Refuse**
 //! - any `.style` access (including `setProperty` / `removeProperty` / CSS vars)
@@ -31,9 +31,9 @@ use crate::report::{Finding, Severity};
 
 pub const RULE_ID: &str = "sail-action-no-style";
 
-const REMEDY: &str = "Author actions must not paint or lay out. Put visuals in sx/tokens \
-     (or an L1 widget). ARIA/data attributes and host listeners are the sanctioned surface. \
-     CSS custom-property bridges stay in the trusted framework catalog, not author modules.";
+const REMEDY: &str = "Actions must not paint or lay out. Put visuals in Style / \
+     `bind(signal)` / the element's `<controller>`. ARIA/data attributes and host \
+     listeners are the sanctioned surface. There is no trusted catalog caste.";
 
 pub fn check(path: &Path, source: &str) -> Vec<Finding> {
     let allocator = Allocator::default();
