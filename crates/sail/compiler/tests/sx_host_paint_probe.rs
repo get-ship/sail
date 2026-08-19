@@ -1710,16 +1710,7 @@ fn theme_picker_host_paint_on_structure_sx() {
             && !contracts.contains("color-mix(in oklch, currentColor 14%"),
         "moved theme-picker paint piles must be gone from contracts"
     );
-    // Anchor geometry + [inline] matrices live on structure Style / element-skins now.
-    assert!(
-        out.structure_html.contains("anchorleft")
-            || out.structure_html.contains("anchor-left")
-            || out.skin_css.contains("var(--anchor-left)")
-            || out.skin_css.contains("left:var(--anchor-left)"),
-        "anchor geometry must land on structure/skin:\nstruct={}\nskin={}",
-        out.structure_html,
-        out.skin_css
-    );
+    // Overlay geometry is CSS anchor positioning (Job A), not a mailbox.
     assert!(
         src.contains("group-inline")
             || src.contains("inline = false")
@@ -2291,15 +2282,13 @@ fn pagination_size_cva_on_page_item() {
 }
 
 #[test]
-fn overlay_family_anchor_geometry_on_host_sx() {
-    // dropdown / context-menu / hover-card / popover: fixed + inset-auto + m-0 +
-    // left/top bind(anchor*) geometry on host Style (or residual structured sx).
-    // Backdrop is global :where([popover])::backdrop. role=menu min-width is POPOVER_SKIN.
+fn overlay_family_css_anchor_on_host_sx() {
+    // dropdown / context-menu / hover-card / popover: CSS anchor positioning.
     for (tag, extra) in [
         ("dropdown", "use:menu"),
         ("context-menu", "use:contextMenu"),
         ("hover-card", "panel-max-w-sm"),
-        ("popover", "panel-menu-min-w"),
+        ("popover", "min-w: 12rem"),
     ] {
         let src = sail_compiler::stdlib::sources()
             .iter()
@@ -2307,49 +2296,14 @@ fn overlay_family_anchor_geometry_on_host_sx() {
             .map(|(_, s)| *s)
             .unwrap_or_else(|| panic!("{tag} registered"));
         let out = compile_element(src, tag).unwrap_or_else(|e| panic!("{tag}: {e:?}"));
-        let geometry = (src.contains("position(fixed)")
-            || src.contains("scheme: fixed")
-            || src.contains("fixed"))
-            && (src.contains("inset(auto)")
-                || src.contains("inset: auto")
-                || src.contains("inset-auto"))
-            && (src.contains("m(0)")
-                || src.contains("m: 0")
-                || src.contains("m-0")
-                || src.contains("margin(0)"))
-            && (src.contains("bind(anchorLeft)")
-                || src.contains("left-(--anchor-left)")
-                || src.contains("left: (--anchor-left)"))
-            && (src.contains("bind(anchorTop)")
-                || src.contains("top-(--anchor-top)")
-                || src.contains("top: (--anchor-top)"));
         assert!(
-            geometry && src.contains(extra),
-            "{tag} host Style/sx must carry anchor geometry + extras:\n{src}"
+            src.contains("anchor: auto") && src.contains("area:") && src.contains(extra),
+            "{tag} host Style must carry CSS anchor + extras:\n{src}"
         );
         assert!(
-            (out.structure_html.contains("s-positionfixed")
-                || out.structure_html.contains("s-fixed")
-                || out.skin_css.contains("position:fixed")
-                || out.skin_css.contains("position: fixed"))
-                && (out.structure_html.contains("insetauto")
-                    || out.structure_html.contains("s-insetauto")
-                    || out.skin_css.contains("inset:auto")
-                    || out.skin_css.contains("inset: auto"))
-                && (out.structure_html.contains("s-m0")
-                    || out.structure_html.contains("m0")
-                    || out.skin_css.contains("margin:0")
-                    || out.skin_css.contains("margin: 0"))
-                && (out.structure_html.contains("anchorLeft")
-                    || out.structure_html.contains("anchorleft")
-                    || out.structure_html.contains("s-leftanchorleft")
-                    || out.skin_css.contains("var(--anchor-left)"))
-                && (out.structure_html.contains("anchorTop")
-                    || out.structure_html.contains("anchortop")
-                    || out.structure_html.contains("s-topanchortop")
-                    || out.skin_css.contains("var(--anchor-top)")),
-            "{tag} geometry atoms on structure:\n{}",
-            out.structure_html
+            out.skin_css.contains("position-anchor") || out.skin_css.contains("position-area"),
+            "{tag} emit CSS anchor: {}",
+            out.skin_css
         );
     }
     let contracts = include_str!(concat!(
@@ -2381,20 +2335,8 @@ fn combobox_listbox_geometry_on_child_sx_options_on_popover_skin() {
     let out = compile_element(src, "combobox").expect("combobox compiles");
     assert!(
         is_style_product(src)
-            && (src.contains("bind(anchorLeft)")
-                || src.contains("left-(--anchor-left)")
-                || src.contains("left: (--anchor-left)"))
-            && (src.contains("bind(anchorTop)")
-                || src.contains("top-(--anchor-top)")
-                || src.contains("top: (--anchor-top)"))
-            && (src.contains("bind(anchorWidth)")
-                || src.contains("min-w-(--anchor-width)")
-                || src.contains("min-w: (--anchor-width)"))
-            // List width = trigger: both w and minW from --anchor-width (C-CB-1).
-            && (src.contains("w(bind(anchorWidth))")
-                || src.contains("w-(--anchor-width)")
-                || src.contains("width: (--anchor-width)")
-                || src.contains("w: bind(anchorWidth)"))
+            && src.contains("anchor: auto")
+            && src.contains("area: bottom")
             && (src.contains("maxH(panel-max-h-sm)")
                 || src.contains("max-h-panel-max-h-sm")
                 || src.contains("panel-max-h-sm"))
@@ -2408,15 +2350,7 @@ fn combobox_listbox_geometry_on_child_sx_options_on_popover_skin() {
         "listbox Style must carry anchor geometry + scroll"
     );
     assert!(
-        (out.structure_html.contains("s-positionfixed")
-            || out.structure_html.contains("s-fixed")
-            || out.skin_css.contains("position:fixed")
-            || out.skin_css.contains("position: fixed"))
-            && (out.structure_html.contains("anchorWidth")
-                || out.structure_html.contains("anchorwidth")
-                || out.structure_html.contains("s-minwanchorwidth")
-                || out.structure_html.contains("s-wbindanchorwidth")
-                || out.skin_css.contains("var(--anchor-width)"))
+        (out.skin_css.contains("position-anchor") || out.skin_css.contains("position-area"))
             && (out.structure_html.contains("maxhpanelmaxhsm")
                 || out.structure_html.contains("s-maxhpanelmaxhsm")
                 || out.skin_css.contains("var(--panel-max-h-sm)"))
@@ -2464,9 +2398,8 @@ fn tooltip_geometry_and_show_on_sx_no_contracts_pe() {
     assert!(
         is_style_product(src)
             && src.contains("group()")
-            && src.contains("position(relative)")
-            && src.contains("bind(ttTop)")
-            && src.contains("bind(ttTx)")
+            && src.contains("name: tooltip")
+            && src.contains("anchor: tooltip")
             && (src.contains("group-hover") || src.contains("group-hover:"))
             && (src.contains("group-focus-within") || src.contains("group-focus-within:"))
             && src.contains("data-hidden")
@@ -2476,31 +2409,19 @@ fn tooltip_geometry_and_show_on_sx_no_contracts_pe() {
                 || src.contains("borderL(tooltip)")
                 || src.contains("color: popover")
                 || src.contains("edge: t")),
-        "tooltip host/bubble Style must carry geometry + show + border caret (not diamond)"
+        "tooltip host/bubble Style must carry CSS anchor + show + border caret (not diamond)"
     );
-    // Style-minted class names (bind args mint as `<setter>bind<Name>`).
     assert!(
         out.structure_html.contains("sail-grp")
-            && (out.structure_html.contains("s-positionrelative")
-                || out.structure_html.contains("s-positionschemerelative"))
-            && (out.structure_html.contains("s-positionabsolute")
-                || out.structure_html.contains("schemeabsolute")
-                || out.skin_css.contains("position:absolute"))
-            && (out.structure_html.contains("s-topbindttTop")
-                || out.structure_html.contains("tbindttTop")
-                || out.skin_css.contains("var(--tt-top)"))
+            && (out.skin_css.contains("position-anchor") || out.skin_css.contains("anchor-name"))
             && (out.structure_html.contains("s-grouphover-opacity100")
                 || out.structure_html.contains("grouphover-filteropacity100")
                 || out.skin_css.contains("opacity:1"))
             && (out.skin_css.contains("[data-hidden]")
-                || out.structure_html.contains("datahidden"))
-            && (out.structure_html.contains("borderTtooltip")
-                || out.skin_css.contains("border-top-color:var(--tooltip)")
-                || out.skin_css.contains("border-top-color: var(--tooltip)")
-                || out.skin_css.contains("border-top-color:var(--popover)")
-                || out.structure_html.contains("bordercolorpopoveredget")),
-        "tooltip structure atoms (border caret):\n{}",
-        out.structure_html
+                || out.structure_html.contains("datahidden")),
+        "tooltip structure atoms:\n{}\nskin={}",
+        out.structure_html,
+        out.skin_css
     );
     let contracts = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),

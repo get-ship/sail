@@ -79,6 +79,9 @@ pub fn concern_css_prop(concern: &str, slot: &str) -> Option<&'static str> {
         ("position", "r") => Some("right"),
         ("position", "z") => Some("z-index"),
         ("position", "order") => Some("order"),
+        ("position", "anchor") => Some("position-anchor"),
+        ("position", "area") => Some("position-area"),
+        ("position", "name") => Some("anchor-name"),
         ("overflow", "all") => Some("overflow"),
         ("overflow", "x") => Some("overflow-x"),
         ("overflow", "y") => Some("overflow-y"),
@@ -1140,6 +1143,22 @@ pub fn lower_slot_value(
                     "auto" => "auto".into(),
                     other => other.to_string(),
                 }
+            } else if spec.name == "position" && slot.name == "area" {
+                match bare {
+                    "top-end" => "top span-right".into(),
+                    "bottom-end" => "bottom span-right".into(),
+                    "left-end" => "left span-bottom".into(),
+                    "right-end" => "right span-bottom".into(),
+                    other => other.to_string(),
+                }
+            } else if spec.name == "position" && slot.name == "anchor" {
+                if bare == "auto" {
+                    "auto".into()
+                } else {
+                    format!("--{bare}")
+                }
+            } else if spec.name == "position" && slot.name == "name" {
+                format!("--{bare}")
             } else if slot.name == "order" && bare == "first" {
                 "-9999".into()
             } else if slot.name == "order" && bare == "last" {

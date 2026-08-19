@@ -125,7 +125,6 @@ describe('use:contextMenu — live for-target bind', () => {
     )
     vi.runAllTimers()
     expect(show).toHaveBeenCalled()
-    expect(menu.style.getPropertyValue('--anchor-left')).toBeTruthy()
 
     handle.destroy()
   })
@@ -292,32 +291,13 @@ describe('use:combobox — picker-first open + filter + width', () => {
     destroy?.()
   })
 
-  it('use:anchor publishes --anchor-width from the trigger for list width match', () => {
-    const { input, list, destroy } = mountCb()
-    // Give the input a measurable width; anchor reads getBoundingClientRect.
-    input.getBoundingClientRect = () =>
-      ({
-        width: 260,
-        height: 36,
-        left: 10,
-        top: 20,
-        right: 270,
-        bottom: 56,
-        x: 10,
-        y: 20,
-        toJSON() {},
-      }) as DOMRect
-    Object.defineProperty(list, 'offsetWidth', { value: 100, configurable: true })
-    Object.defineProperty(list, 'offsetHeight', { value: 120, configurable: true })
-    list.matches = ((s: string) => s === ':popover-open') as typeof list.matches
-
-    const h = anchor(list, 'bottom') as { update: (p: string) => void; destroy: () => void }
-    // Synchronous place on update (open + measured).
-    h.update('bottom')
-    expect(list.style.getPropertyValue('--anchor-width')).toBe('260px')
-    // Product contract: listbox skin uses both w and minW from this var
-    // (see combobox.sail + element-skins .s-wbindanchorWidth).
-    h.destroy()
+  it('use:anchor does not write a geometry mailbox', () => {
+    const { list, destroy } = mountCb()
+    const h = anchor(list, 'bottom') as { update?: (p: string) => void; destroy?: () => void }
+    h.update?.('bottom')
+    expect(list.style.getPropertyValue('--anchor-width')).toBe('')
+    expect(list.style.getPropertyValue('--anchor-left')).toBe('')
+    h.destroy?.()
     destroy?.()
   })
 })

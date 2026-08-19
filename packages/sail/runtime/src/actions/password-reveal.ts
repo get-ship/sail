@@ -1,10 +1,8 @@
 import type { Action } from '../action'
 
 /**
- * `use:passwordReveal` — product peek control for password fields.
- * Stamped by the compiler on freeform `<input type="password">` when
- * `reveal` is not false. Injects an end-aligned toggle button (padE room
- * reserved by host Style). Zero-op when type is not password.
+ * `use:passwordReveal` — peek control. Paint is Style / platform CSS
+ * (Job A). Anatomy in `input.sail` is E/C. This stamp only toggles type.
  */
 export const passwordReveal: Action<void> = (node) => {
   const el = node as HTMLInputElement
@@ -18,7 +16,6 @@ export const passwordReveal: Action<void> = (node) => {
       teardown()
       return
     }
-    // Only own fields that started as password (or still are).
     const revealOff =
       el.getAttribute('reveal') === 'false' ||
       el.getAttribute('reveal') === '0' ||
@@ -28,44 +25,14 @@ export const passwordReveal: Action<void> = (node) => {
       return
     }
     if (btn) return
-    const parent = el.parentElement
-    if (!parent) return
-    if (getComputedStyle(parent).position === 'static') {
-      parent.style.position = 'relative'
-    }
     btn = document.createElement('button')
     btn.type = 'button'
     btn.tabIndex = -1
     btn.setAttribute('aria-label', 'Show password')
     btn.setAttribute('aria-pressed', 'false')
-    Object.assign(btn.style, {
-      position: 'absolute',
-      right: '0.5rem',
-      top: '50%',
-      transform: 'translateY(-50%)',
-      border: 'none',
-      background: 'transparent',
-      padding: '0.25rem',
-      margin: '0',
-      cursor: 'pointer',
-      lineHeight: '1',
-      color: 'var(--muted-foreground, currentColor)',
-      fontSize: '0.75rem',
-    })
     btn.textContent = 'Show'
     btn.addEventListener('click', onToggle)
-    // Position relative to the input: wrap if parent is a form row with siblings.
-    if (el.nextSibling !== btn) {
-      el.insertAdjacentElement('afterend', btn)
-      // Prefer wrapping so absolute coords attach to the field box.
-      const wrap = document.createElement('span')
-      wrap.style.position = 'relative'
-      wrap.style.display = 'block'
-      wrap.style.width = el.style.width || '100%'
-      el.parentElement?.insertBefore(wrap, el)
-      wrap.appendChild(el)
-      wrap.appendChild(btn)
-    }
+    el.insertAdjacentElement('afterend', btn)
   }
 
   const onToggle = (e: Event): void => {
@@ -87,7 +54,6 @@ export const passwordReveal: Action<void> = (node) => {
     }
   }
 
-  // Defer until connected so parent exists.
   queueMicrotask(ensure)
   const obs = new MutationObserver(() => ensure())
   obs.observe(el, { attributes: true, attributeFilter: ['type', 'reveal'] })

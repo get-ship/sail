@@ -1,28 +1,22 @@
 #[test]
-fn popover_structure_carries_use_anchor() {
+fn popover_structure_is_native_popover() {
     let out =
         sail_compiler::compile_element(include_str!("../stdlib/popover/popover.sail"), "popover")
             .expect("popover compiles");
     assert!(
-        out.structure_html.contains("use:anchor"),
-        "popover structure must stamp use:anchor for splice → runAction; got:\n{}",
+        out.structure_html.contains("popover"),
+        "popover structure keeps the native popover attr; got:\n{}",
         out.structure_html
     );
 }
 
 #[test]
-fn page_with_popover_emits_run_action_anchor() {
+fn page_with_popover_compiles() {
     let src = r#"
 <button popovertarget="p">Open</button>
 <popover id="p">Hello</popover>
 "#;
-    let out =
-        sail_compiler::compile(src, sail_compiler::CompileOpts::default()).expect("page compiles");
-    assert!(
-        out.js.contains("runAction") && out.js.contains("anchor"),
-        "page must emit runAction(..., anchor); js:\n{}",
-        out.js
-    );
+    sail_compiler::compile(src, sail_compiler::CompileOpts::default()).expect("page compiles");
 }
 
 /// Regression: bindIf/for/when wire helpers used to name their Comment
@@ -56,9 +50,5 @@ export default controller(() => {
         !out.js.contains("(anchor) => bindIf({"),
         "bindIf wire must not use param name `anchor`: {}",
         out.js
-    );
-    assert!(
-        out.js.contains("runAction") && out.js.contains(", anchor,"),
-        "runAction must still reference the imported action name `anchor`"
     );
 }

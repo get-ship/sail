@@ -564,6 +564,31 @@ pub fn concerns() -> &'static [ConcernSpec] {
                     scale: None,
                     keywords: &["0", "1", "2", "first", "last"],
                 },
+                // CSS Anchor Positioning — overlay home. Not a JS mailbox.
+                ConcernSlot {
+                    name: "anchor",
+                    scale: None,
+                    keywords: &["auto", "tooltip", "trigger"],
+                },
+                ConcernSlot {
+                    name: "area",
+                    scale: None,
+                    keywords: &[
+                        "top",
+                        "bottom",
+                        "left",
+                        "right",
+                        "top-end",
+                        "bottom-end",
+                        "left-end",
+                        "right-end",
+                    ],
+                },
+                ConcernSlot {
+                    name: "name",
+                    scale: None,
+                    keywords: &["tooltip", "trigger"],
+                },
             ],
             covered_setters: &[
                 "position", "inset", "top", "bottom", "left", "right", "z", "order",

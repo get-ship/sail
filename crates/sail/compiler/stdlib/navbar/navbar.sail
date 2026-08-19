@@ -54,7 +54,7 @@
   // none so the bar does not steal clicks; a fixed top edge still reveals.
   // translateY(-100%) is residual on the action — Style translateY is space
   // scale (translateY(-full/-100/-screen) do not compile).
-  style tuck = {pointerEvents(none)}
+  style tuck = {pointerEvents(none).size({ h: 0, min-h: 0 }).overflow({ all: hidden })}
 </scope>
 
 <row
