@@ -208,75 +208,67 @@
       "comment": { "$value": { "ref": "muted-foreground" }, "$type": "color" },
       "variable": { "$value": { "ref": "foreground" }, "$type": "color" }
     },
-    "backdrop": {
-      "$value": { "space": "oklch", "l": 0, "c": 0, "h": 0, "a": 0.4 },
-      "$type": "color"
-    },
     "scrim": {
       "$value": { "space": "oklch", "l": 0, "c": 0, "h": 0, "a": 0.2 },
       "$type": "color"
     },
-    "divider": {
-      "$value": { "ref": "border-subtle" },
-      "$type": "color"
-    },
-    "gradient": {
-      "primary": {
-        "$type": "gradient",
-        "$value": {
-          "kind": "linear",
-          "angle": "180deg",
-          "stops": [
-            { "color": { "ref": "primary" }, "at": "0%" },
-            { "color": "transparent", "at": "92%" }
-          ]
-        },
-        "$extensions": { "sail": { "channel": true } }
-      },
-      "accent": {
-        "$type": "gradient",
-        "$value": {
-          "kind": "linear",
-          "angle": "180deg",
-          "stops": [
-            { "color": { "ref": "accent" }, "at": "0%" },
-            { "color": "transparent", "at": "92%" }
-          ]
-        },
-        "$extensions": { "sail": { "channel": true } }
-      },
-      "surface": {
-        "$value": "none",
-        "$type": "string",
-        "$description": "Page wash. none is the honest default.",
-        "$extensions": { "sail": { "channel": true } }
-      }
-    },
-    "glow": {
-      "primary": {
-        "$type": "gradient",
-        "$value": {
-          "kind": "radial",
-          "stops": [
-            { "color": { "op": "mix", "from": { "ref": "primary" }, "onto": "transparent", "amount": 0.08 } },
-            { "color": "transparent", "at": "60%" }
-          ]
-        },
-        "$extensions": { "sail": { "channel": true } }
-      },
-      "accent": {
-        "$type": "gradient",
-        "$value": {
-          "kind": "radial",
-          "stops": [
-            { "color": { "op": "mix", "from": { "ref": "accent" }, "onto": "transparent", "amount": 0.08 } },
-            { "color": "transparent", "at": "60%" }
-          ]
-        },
-        "$extensions": { "sail": { "channel": true } }
-      }
-    },
     "$type": "color"
+  },
+  "gradient": {
+    "primary": {
+      "$type": "gradient",
+      "$value": {
+        "kind": "linear",
+        "angle": "180deg",
+        "stops": [
+          { "color": { "ref": "primary" }, "at": "0%" },
+          { "color": "transparent", "at": "92%" }
+        ]
+      },
+      "$extensions": { "sail": { "channel": true } }
+    },
+    "accent": {
+      "$type": "gradient",
+      "$value": {
+        "kind": "linear",
+        "angle": "180deg",
+        "stops": [
+          { "color": { "ref": "accent" }, "at": "0%" },
+          { "color": "transparent", "at": "92%" }
+        ]
+      },
+      "$extensions": { "sail": { "channel": true } }
+    },
+    "surface": {
+      "$value": "none",
+      "$type": "string",
+      "$description": "Page wash. none is the honest default.",
+      "$extensions": { "sail": { "channel": true } }
+    }
+  },
+  "glow": {
+    "primary": {
+      "$type": "gradient",
+      "$value": {
+        "kind": "radial",
+        "stops": [
+          { "color": { "op": "mix", "from": { "ref": "primary" }, "onto": "transparent", "amount": 0.08 } },
+          { "color": "transparent", "at": "60%" }
+        ]
+      },
+      "$extensions": { "sail": { "channel": true } }
+    },
+    "accent": {
+      "$type": "gradient",
+      "$value": {
+        "kind": "radial",
+        "stops": [
+          { "color": { "op": "mix", "from": { "ref": "accent" }, "onto": "transparent", "amount": 0.08 } },
+          { "color": "transparent", "at": "60%" }
+        ]
+      },
+      "$extensions": { "sail": { "channel": true } }
+    }
   },
   "pad": {
     "page": {
@@ -318,7 +310,7 @@
     "control-lg": { "$type": "size", "$value": { "h": "{control.h-lg}" } },
     "control-xl": { "$type": "size", "$value": { "h": "{control.h-xl}" } },
     "measure": { "$type": "size", "$value": { "max-w": "38ch" } },
-    "measure-sm": { "$type": "size", "$value": { "max-w": "20rem" } },
+    "measure-sm": { "$type": "size", "$value": { "max-w": "20ch" } },
     "measure-md": { "$type": "size", "$value": { "max-w": "38ch" } },
     "measure-lg": { "$type": "size", "$value": { "max-w": "60ch" } },
     "icon-3xs": { "$type": "size", "$value": { "w": "{icon.3xs}", "h": "{icon.3xs}" } },
@@ -481,10 +473,6 @@
     "$type": "duration"
   },
   "interaction": {
-    "focus": {
-      "ring": { "$value": "2px solid var(--ring-color)", "$type": "dimension" },
-      "ring-offset": { "$value": "2px", "$type": "dimension" }
-    },
     "hover": {
       "strength": { "$value": "6%", "$type": "number" },
       "bg": {
@@ -530,7 +518,6 @@
     "mobile": { "$value": "390px", "$type": "dimension" },
     "tablet": { "$value": "768px", "$type": "dimension" },
     "desktop": { "$value": "1280px", "$type": "dimension" },
-    "wide": { "$value": "1600px", "$type": "dimension" },
     "$type": "dimension"
   },
   "density": {

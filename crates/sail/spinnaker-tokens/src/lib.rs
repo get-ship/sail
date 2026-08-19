@@ -169,6 +169,8 @@ const THEME_MODE_GROUP_KEYS: &[&str] = &[
     "tags",
     "anchors",
     "overlay",
+    "gradient",
+    "glow",
 ];
 
 /// Sail theme extensions (SPEC-SPINNAKER-3 §8 / §10). Not DTCG composites —
@@ -259,8 +261,6 @@ const SEMANTIC_COLOR_GROUPS: &[&str] = &[
     "surface",
     "inset",
     "overlay",
-    "backdrop",
-    "divider",
     "scrim",
 ];
 

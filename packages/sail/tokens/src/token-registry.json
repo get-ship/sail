@@ -73,7 +73,6 @@
     "accent-subtle",
     "active-bg",
     "active-strength",
-    "backdrop",
     "background",
     "bg-app-color",
     "bg-inset-color",
@@ -99,7 +98,6 @@
     "breakpoint-desktop",
     "breakpoint-mobile",
     "breakpoint-tablet",
-    "breakpoint-wide",
     "control-frame",
     "control-h-2xs",
     "control-h-lg",
@@ -119,7 +117,6 @@
     "density-row-px",
     "density-row-py",
     "density-text",
-    "divider",
     "duration-deliberate",
     "duration-fast",
     "duration-instant",
@@ -139,8 +136,6 @@
     "fg-foreground-color",
     "fg-muted-color",
     "filter-backdrop",
-    "focus-ring",
-    "focus-ring-offset",
     "font-body",
     "font-display",
     "font-heading",
@@ -424,7 +419,6 @@
     "accent-hover",
     "accent-subtle",
     "active-bg",
-    "backdrop",
     "background",
     "bg-app-color",
     "bg-inset-color",
@@ -443,7 +437,6 @@
     "danger-foreground",
     "danger-hover",
     "danger-subtle",
-    "divider",
     "fg-foreground-color",
     "fg-muted-color",
     "foreground",
@@ -1291,55 +1284,12 @@
       "type": "color",
       "value": "var(--foreground)"
     },
-    "backdrop": {
-      "path": "color.backdrop",
-      "cssName": "backdrop",
-      "type": "color",
-      "value": "oklch(0.0000 0.0000 0.00 / 0.400)",
-      "luminance": 0.0
-    },
     "scrim": {
       "path": "color.scrim",
       "cssName": "scrim",
       "type": "color",
       "value": "oklch(0.0000 0.0000 0.00 / 0.200)",
       "luminance": 0.0
-    },
-    "divider": {
-      "path": "color.divider",
-      "cssName": "divider",
-      "type": "color",
-      "value": "var(--border-subtle)"
-    },
-    "gradient-primary": {
-      "path": "color.gradient.primary",
-      "cssName": "gradient-primary",
-      "type": "gradient",
-      "value": "linear-gradient(180deg, var(--primary) 0%, transparent 92%)"
-    },
-    "gradient-accent": {
-      "path": "color.gradient.accent",
-      "cssName": "gradient-accent",
-      "type": "gradient",
-      "value": "linear-gradient(180deg, var(--accent) 0%, transparent 92%)"
-    },
-    "gradient-surface": {
-      "path": "color.gradient.surface",
-      "cssName": "gradient-surface",
-      "type": "string",
-      "value": "none"
-    },
-    "glow-primary": {
-      "path": "color.glow.primary",
-      "cssName": "glow-primary",
-      "type": "gradient",
-      "value": "radial-gradient(color-mix(in oklch, var(--primary) 8.00%, transparent), transparent 60%)"
-    },
-    "glow-accent": {
-      "path": "color.glow.accent",
-      "cssName": "glow-accent",
-      "type": "gradient",
-      "value": "radial-gradient(color-mix(in oklch, var(--accent) 8.00%, transparent), transparent 60%)"
     },
     "primary": {
       "path": "color.primary.solid",
@@ -1621,6 +1571,36 @@
       "value": "oklch(0.9900 0.0004 58.00)",
       "luminance": 0.970232447312069
     },
+    "gradient-primary": {
+      "path": "gradient.primary",
+      "cssName": "gradient-primary",
+      "type": "gradient",
+      "value": "linear-gradient(180deg, var(--primary) 0%, transparent 92%)"
+    },
+    "gradient-accent": {
+      "path": "gradient.accent",
+      "cssName": "gradient-accent",
+      "type": "gradient",
+      "value": "linear-gradient(180deg, var(--accent) 0%, transparent 92%)"
+    },
+    "gradient-surface": {
+      "path": "gradient.surface",
+      "cssName": "gradient-surface",
+      "type": "string",
+      "value": "none"
+    },
+    "glow-primary": {
+      "path": "glow.primary",
+      "cssName": "glow-primary",
+      "type": "gradient",
+      "value": "radial-gradient(color-mix(in oklch, var(--primary) 8.00%, transparent), transparent 60%)"
+    },
+    "glow-accent": {
+      "path": "glow.accent",
+      "cssName": "glow-accent",
+      "type": "gradient",
+      "value": "radial-gradient(color-mix(in oklch, var(--accent) 8.00%, transparent), transparent 60%)"
+    },
     "pad-page-x": {
       "path": "pad.page.x",
       "cssName": "pad-page-x",
@@ -1756,7 +1736,7 @@
       "path": "size.measure-sm.max-w",
       "cssName": "size-measure-sm-max-w",
       "type": "dimension",
-      "value": "20rem"
+      "value": "20ch"
     },
     "size-measure-md-max-w": {
       "path": "size.measure-md.max-w",
@@ -2328,18 +2308,6 @@
       "type": "duration",
       "value": "100ms"
     },
-    "focus-ring": {
-      "path": "interaction.focus.ring",
-      "cssName": "focus-ring",
-      "type": "dimension",
-      "value": "2px solid var(--ring-color)"
-    },
-    "focus-ring-offset": {
-      "path": "interaction.focus.ring-offset",
-      "cssName": "focus-ring-offset",
-      "type": "dimension",
-      "value": "2px"
-    },
     "hover-strength": {
       "path": "interaction.hover.strength",
       "cssName": "hover-strength",
@@ -2448,12 +2416,6 @@
       "cssName": "breakpoint-desktop",
       "type": "dimension",
       "value": "1280px"
-    },
-    "breakpoint-wide": {
-      "path": "breakpoint.wide",
-      "cssName": "breakpoint-wide",
-      "type": "dimension",
-      "value": "1600px"
     },
     "density-row-py": {
       "path": "density.row-py",
@@ -2749,7 +2711,6 @@
     "color.accent.subtle": "accent-subtle",
     "interaction.active.bg": "active-bg",
     "interaction.active.strength": "active-strength",
-    "color.backdrop": "backdrop",
     "color.background": "background",
     "bg.app.color": "bg-app-color",
     "bg.inset.color": "bg-inset-color",
@@ -2775,7 +2736,6 @@
     "breakpoint.desktop": "breakpoint-desktop",
     "breakpoint.mobile": "breakpoint-mobile",
     "breakpoint.tablet": "breakpoint-tablet",
-    "breakpoint.wide": "breakpoint-wide",
     "control.frame": "control-frame",
     "control.h-2xs": "control-h-2xs",
     "control.h-lg": "control-h-lg",
@@ -2795,7 +2755,6 @@
     "density.row-px": "density-row-px",
     "density.row-py": "density-row-py",
     "density.text": "density-text",
-    "color.divider": "divider",
     "motion.duration.deliberate": "duration-deliberate",
     "motion.duration.fast": "duration-fast",
     "motion.duration.instant": "duration-instant",
@@ -2815,8 +2774,6 @@
     "fg.foreground.color": "fg-foreground-color",
     "fg.muted.color": "fg-muted-color",
     "filter.backdrop": "filter-backdrop",
-    "interaction.focus.ring": "focus-ring",
-    "interaction.focus.ring-offset": "focus-ring-offset",
     "typography.font.body": "font-body",
     "typography.font.display": "font-display",
     "typography.font.heading": "font-heading",
@@ -2826,11 +2783,11 @@
     "typography.font.weight-normal": "font-weight-normal",
     "typography.font.weight-semibold": "font-weight-semibold",
     "color.foreground": "foreground",
-    "color.glow.accent": "glow-accent",
-    "color.glow.primary": "glow-primary",
-    "color.gradient.accent": "gradient-accent",
-    "color.gradient.primary": "gradient-primary",
-    "color.gradient.surface": "gradient-surface",
+    "glow.accent": "glow-accent",
+    "glow.primary": "glow-primary",
+    "gradient.accent": "gradient-accent",
+    "gradient.primary": "gradient-primary",
+    "gradient.surface": "gradient-surface",
     "interaction.hover.bg": "hover-bg",
     "interaction.hover.strength": "hover-strength",
     "color.hue.amber": "hue-amber",

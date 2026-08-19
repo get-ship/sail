@@ -520,7 +520,7 @@ pub fn breakpoint_width(name: &str) -> Option<String> {
         .map(|(_, w)| w)
 }
 
-/// Human list for diagnostics: `mobile, tablet, desktop, wide`.
+/// Human list for diagnostics: the active theme table.
 pub fn breakpoint_names_display() -> String {
     let names: Vec<String> = breakpoint_table().into_iter().map(|(n, _)| n).collect();
     if names.is_empty() {

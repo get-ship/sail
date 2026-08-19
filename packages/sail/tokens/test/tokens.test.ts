@@ -173,7 +173,7 @@ const SEMANTIC_TIER: ReadonlyArray<[name: string, sample: RegExp]> = [
   ['--inset', /--inset\s*:/i],
   ['--overlay', /--overlay\s*:/i],
   ['--overlay-fill', /--overlay-fill\s*:/i],
-  ['--backdrop', /--backdrop\s*:/i],
+  ['--scrim', /--scrim\s*:/i],
   ['--primary', /--primary\s*:/i],
   ['--hover-bg', /--hover-bg\s*:/i],
   ['--success', /--success\s*:/i],

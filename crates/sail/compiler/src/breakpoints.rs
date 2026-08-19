@@ -15,7 +15,7 @@ pub fn breakpoint_media(token: &str) -> Option<String> {
     spinnaker_css::condition_media(t)
 }
 
-/// Human-readable list for diagnostics: `mobile, tablet, desktop, wide`.
+/// Human-readable list for diagnostics: `mobile, tablet, desktop`.
 pub fn breakpoint_token_list() -> String {
     spinnaker::tokens::breakpoint_names_display()
 }

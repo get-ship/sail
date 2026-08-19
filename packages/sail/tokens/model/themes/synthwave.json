@@ -42,27 +42,27 @@
           "default": { "$value": { "space": "oklch", "l": 0.95, "c": 0.05, "h": 320, "a": 0.3 }, "$type": "color" },
           "subtle": { "$value": { "space": "oklch", "l": 0.95, "c": 0.05, "h": 320, "a": 0.18 }, "$type": "color" },
           "strong": { "$value": { "space": "oklch", "l": 0.95, "c": 0.05, "h": 320, "a": 0.45 }, "$type": "color" }
+        }
+      },
+      "glow": {
+        "primary": {
+          "$type": "gradient",
+          "$value": {
+            "kind": "radial",
+            "stops": [
+              { "color": { "op": "mix", "from": { "ref": "primary" }, "onto": "transparent", "amount": 0.18 } },
+              { "color": "transparent", "at": "60%" }
+            ]
+          }
         },
-        "glow": {
-          "primary": {
-            "$type": "gradient",
-            "$value": {
-              "kind": "radial",
-              "stops": [
-                { "color": { "op": "mix", "from": { "ref": "primary" }, "onto": "transparent", "amount": 0.18 } },
-                { "color": "transparent", "at": "60%" }
-              ]
-            }
-          },
-          "accent": {
-            "$type": "gradient",
-            "$value": {
-              "kind": "radial",
-              "stops": [
-                { "color": { "op": "mix", "from": { "ref": "accent" }, "onto": "transparent", "amount": 0.18 } },
-                { "color": "transparent", "at": "60%" }
-              ]
-            }
+        "accent": {
+          "$type": "gradient",
+          "$value": {
+            "kind": "radial",
+            "stops": [
+              { "color": { "op": "mix", "from": { "ref": "accent" }, "onto": "transparent", "amount": 0.18 } },
+              { "color": "transparent", "at": "60%" }
+            ]
           }
         }
       },

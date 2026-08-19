@@ -735,8 +735,6 @@
   --border: oklch(0.9500 0.0500 320.00 / 0.300);
   --border-subtle: oklch(0.9500 0.0500 320.00 / 0.180);
   --border-strong: oklch(0.9500 0.0500 320.00 / 0.450);
-  --glow-primary: radial-gradient(color-mix(in oklch, var(--primary) 18.00%, transparent), transparent 60%);
-  --glow-accent: radial-gradient(color-mix(in oklch, var(--accent) 18.00%, transparent), transparent 60%);
   --primary: oklch(0.6500 0.2800 340.00);
   --primary-hover: oklch(0.6800 0.2540 352.00);
   --primary-subtle: oklch(0.2188 0.0864 291.60);
@@ -777,6 +775,8 @@
   --neutral-subtle: oklch(0.1768 0.0600 285.00);
   --neutral-border: oklch(0.1992 0.0600 285.00);
   --neutral-foreground: oklch(0.9900 0.0024 285.00);
+  --glow-primary: radial-gradient(color-mix(in oklch, var(--primary) 18.00%, transparent), transparent 60%);
+  --glow-accent: radial-gradient(color-mix(in oklch, var(--accent) 18.00%, transparent), transparent 60%);
   --overlay-fill: repeating-linear-gradient(0deg, transparent 0 23px, oklch(0.65 0.28 340 / 5%) 23px 24px, transparent 24px 47px, oklch(0.75 0.22 190 / 5%) 47px 48px);
   --overlay-blend: screen;
   --overlay-opacity: 0.35;

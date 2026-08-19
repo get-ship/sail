@@ -128,9 +128,7 @@
   --syntax-attr: var(--hue-amber);
   --syntax-comment: var(--muted-foreground);
   --syntax-variable: var(--foreground);
-  --backdrop: oklch(0.0000 0.0000 0.00 / 0.400);
   --scrim: oklch(0.0000 0.0000 0.00 / 0.200);
-  --divider: var(--border-subtle);
   --primary: oklch(0.6700 0.1600 58.00);
   --primary-hover: oklch(0.6072 0.1413 56.95);
   --primary-subtle: oklch(0.9384 0.0210 100.61);
@@ -191,7 +189,7 @@
   --size-control-lg-h: var(--control-h-lg);
   --size-control-xl-h: var(--control-h-xl);
   --size-measure-max-w: 38ch;
-  --size-measure-sm-max-w: 20rem;
+  --size-measure-sm-max-w: 20ch;
   --size-measure-md-max-w: 38ch;
   --size-measure-lg-max-w: 60ch;
   --size-icon-3xs-w: var(--icon-size-3xs);
@@ -287,8 +285,6 @@
   --duration-deliberate: 420ms;
   --tooltip-show-delay: 300ms;
   --tooltip-hide-delay: 100ms;
-  --focus-ring: 2px solid var(--ring-color);
-  --focus-ring-offset: 2px;
   --hover-strength: 6%;
   --hover-bg: color-mix(in oklch, var(--foreground) 6.00%, transparent);
   --active-strength: 10%;
@@ -307,7 +303,6 @@
   --breakpoint-mobile: 390px;
   --breakpoint-tablet: 768px;
   --breakpoint-desktop: 1280px;
-  --breakpoint-wide: 1600px;
   --density-row-py: var(--space-2);
   --density-row-px: var(--space-3);
   --density-row-gap: var(--space-2);

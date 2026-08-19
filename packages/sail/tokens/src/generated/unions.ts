@@ -196,14 +196,12 @@ export const SEMANTIC_COLOR_TOKENS = [
   'accent-foreground',
   'accent-hover',
   'accent-subtle',
-  'backdrop',
   'background',
   'danger',
   'danger-border',
   'danger-foreground',
   'danger-hover',
   'danger-subtle',
-  'divider',
   'foreground',
   'info',
   'info-border',
@@ -252,7 +250,6 @@ export type ColorTokenName =
   | 'accent-hover'
   | 'accent-subtle'
   | 'active-bg'
-  | 'backdrop'
   | 'background'
   | 'bg-app-color'
   | 'bg-inset-color'
@@ -271,7 +268,6 @@ export type ColorTokenName =
   | 'danger-foreground'
   | 'danger-hover'
   | 'danger-subtle'
-  | 'divider'
   | 'fg-foreground-color'
   | 'fg-muted-color'
   | 'foreground'
@@ -354,7 +350,6 @@ export type CssTokenName =
   | 'accent-subtle'
   | 'active-bg'
   | 'active-strength'
-  | 'backdrop'
   | 'background'
   | 'bg-app-color'
   | 'bg-inset-color'
@@ -380,7 +375,6 @@ export type CssTokenName =
   | 'breakpoint-desktop'
   | 'breakpoint-mobile'
   | 'breakpoint-tablet'
-  | 'breakpoint-wide'
   | 'control-frame'
   | 'control-h-2xs'
   | 'control-h-lg'
@@ -400,7 +394,6 @@ export type CssTokenName =
   | 'density-row-px'
   | 'density-row-py'
   | 'density-text'
-  | 'divider'
   | 'duration-deliberate'
   | 'duration-fast'
   | 'duration-instant'
@@ -420,8 +413,6 @@ export type CssTokenName =
   | 'fg-foreground-color'
   | 'fg-muted-color'
   | 'filter-backdrop'
-  | 'focus-ring'
-  | 'focus-ring-offset'
   | 'font-body'
   | 'font-display'
   | 'font-heading'

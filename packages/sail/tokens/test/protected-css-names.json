@@ -8,7 +8,7 @@
     "accent-subtle",
     "active-bg",
     "active-strength",
-    "backdrop",
+
     "background",
     "bg-app-color",
     "bg-inset-color",
@@ -34,7 +34,6 @@
     "breakpoint-desktop",
     "breakpoint-mobile",
     "breakpoint-tablet",
-    "breakpoint-wide",
     "control-frame",
     "control-h-2xs",
     "control-h-lg",
@@ -54,7 +53,7 @@
     "density-row-px",
     "density-row-py",
     "density-text",
-    "divider",
+
     "duration-deliberate",
     "duration-fast",
     "duration-instant",
@@ -74,8 +73,7 @@
     "fg-foreground-color",
     "fg-muted-color",
     "filter-backdrop",
-    "focus-ring",
-    "focus-ring-offset",
+
     "font-body",
     "font-display",
     "font-heading",
