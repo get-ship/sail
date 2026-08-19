@@ -7,7 +7,20 @@ use std::collections::BTreeMap;
 
 use crate::ir::{PaintArg, PaintOp, Style};
 
-/// Media / environment condition keys. Adapter maps these to host queries.
+/// Preference / environment media. Not theme-declared.
+pub const PREFERENCE_CONDITION_KEYS: &[&str] = &[
+    "motion-reduce",
+    "motion-safe",
+    "forced-colors",
+    "dark",
+    "light",
+];
+
+/// Language viewport names that compile away when the active theme omits them.
+pub const LANGUAGE_BREAKPOINT_KEYS: &[&str] = &["mobile", "tablet", "desktop"];
+
+/// Media / environment condition keys (language floor). Theme extras
+/// (`wide`) join via [`crate::tokens::breakpoint_table`].
 pub const CONDITION_KEYS: &[&str] = &[
     "mobile",
     "tablet",
@@ -139,15 +152,25 @@ fn state_value_ok(v: &str) -> bool {
 }
 
 /// True when `when:` may name this key. Names only — no selectors.
+///
+/// Theme breakpoints are legal iff the active theme declares them.
+/// Language viewport names (`tablet`, …) stay legal so a 1-bp theme
+/// can compile them away instead of hard-erroring.
 pub fn is_known_when_key(key: &str) -> bool {
     if SELF_WHEN_KEYS.contains(&key) || GROUP_WHEN_KEYS.contains(&key) {
         return true;
     }
-    if CONDITION_KEYS.contains(&key) {
+    let kebab = when_key_kebab(key);
+    if PREFERENCE_CONDITION_KEYS.contains(&key)
+        || PREFERENCE_CONDITION_KEYS.contains(&kebab.as_str())
+    {
         return true;
     }
-    let kebab = when_key_kebab(key);
-    if CONDITION_KEYS.contains(&kebab.as_str()) {
+    if crate::tokens::is_theme_breakpoint(key) || crate::tokens::is_theme_breakpoint(&kebab) {
+        return true;
+    }
+    if LANGUAGE_BREAKPOINT_KEYS.contains(&key) || LANGUAGE_BREAKPOINT_KEYS.contains(&kebab.as_str())
+    {
         return true;
     }
     if kebab.starts_with("state-") {
@@ -166,8 +189,8 @@ pub fn is_known_when_key(key: &str) -> bool {
 }
 
 /// Closed `when:` keys for complete (static list; dynamic families stay open).
-pub fn closed_when_keys() -> Vec<&'static str> {
-    let mut keys: Vec<&'static str> = vec![
+pub fn closed_when_keys() -> Vec<String> {
+    let mut keys: Vec<String> = [
         "hover",
         "focus",
         "focusWithin",
@@ -200,11 +223,24 @@ pub fn closed_when_keys() -> Vec<&'static str> {
         "groupStateOpen",
         "groupCaught",
         "groupInline",
-    ];
-    for name in CONDITION_KEYS {
+    ]
+    .into_iter()
+    .map(str::to_string)
+    .collect();
+    for name in PREFERENCE_CONDITION_KEYS
+        .iter()
+        .copied()
+        .chain(LANGUAGE_BREAKPOINT_KEYS.iter().copied())
+    {
         let camel = condition_complete_name(name);
-        if !keys.contains(&camel) {
-            keys.push(camel);
+        if !keys.iter().any(|k| k == camel) {
+            keys.push(camel.to_string());
+        }
+    }
+    for (name, _) in crate::tokens::breakpoint_table() {
+        let camel = condition_complete_name(&name);
+        if !keys.iter().any(|k| k == camel) {
+            keys.push(camel.to_string());
         }
     }
     keys.sort_unstable();
@@ -346,7 +382,17 @@ mod tests {
         assert!(is_known_when_key("motionReduce"));
         assert!(is_known_when_key("group-hover"));
         assert!(is_known_when_key("state-weekend"));
+        assert!(is_known_when_key("wide"));
         assert!(!is_known_when_key("not-a-when-key"));
+        assert!(!is_known_when_key("kiosk"));
+        crate::tokens::with_breakpoint_table(&[("mobile", "390px")], || {
+            assert!(is_known_when_key("tablet"), "language bp compiles away");
+            assert!(
+                !is_known_when_key("wide"),
+                "theme extra is legal iff declared"
+            );
+            assert!(!is_known_when_key("kiosk"));
+        });
     }
 
     /// Concatenate so this file never contains CSS property spellings

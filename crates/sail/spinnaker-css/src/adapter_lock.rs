@@ -67,34 +67,41 @@ mod tests {
         );
     }
 
-    /// Style `when` breakpoints are design-token locked (not a string path).
+    /// Style `when` breakpoints follow the active theme table.
     #[test]
     fn when_breakpoints_match_design_tokens() {
-        for name in ["mobile", "tablet", "desktop"] {
+        let table = spinnaker::tokens::breakpoint_table();
+        assert!(
+            table.iter().any(|(n, _)| n == "wide"),
+            "default theme must declare wide: {table:?}"
+        );
+        for (name, width) in &table {
             let query = crate::condition_media(name).expect("Style condition table");
             assert_eq!(
                 crate::when_target(name),
-                Some(crate::WhenTarget::Media(std::borrow::Cow::Borrowed(query))),
+                Some(crate::WhenTarget::Media(std::borrow::Cow::Owned(
+                    query.clone()
+                ))),
                 "when({{{name}:…}}) must resolve via Style conditions"
             );
-            let value = spinnaker::tokens::token_value(&format!("breakpoint-{name}"))
-                .unwrap_or_else(|| panic!("breakpoint-{name} token missing from registry"));
             assert!(
-                query.contains(value.trim()),
-                "`{name}` media {query} must embed token breakpoint-{name}={value}"
+                query.contains(width.trim()),
+                "`{name}` media {query} must embed theme width {width}"
             );
         }
 
-        for (name, query) in crate::CONDITION_PREFIXES {
+        for (name, query) in crate::PREFERENCE_PREFIXES {
             assert_eq!(
                 crate::when_target(name),
-                Some(crate::WhenTarget::Media(std::borrow::Cow::Borrowed(*query))),
+                Some(crate::WhenTarget::Media(std::borrow::Cow::Owned(
+                    (*query).to_string()
+                ))),
                 "missing when key for Style condition `{name}`"
             );
         }
 
         let (style, diags) = parse(
-            "style({ type({ size: sm }), when: { tablet: { type({ size: lg }) }, desktop: { type({ size: xl }) } } })",
+            "style({ type({ size: sm }), when: { tablet: { type({ size: lg }) }, desktop: { type({ size: xl }) }, wide: { type({ size: xl }) } } })",
         );
         assert!(
             diags.is_empty(),
@@ -110,6 +117,10 @@ mod tests {
             css.contains("@media (min-width: 1280px)") || css.contains("@media(min-width: 1280px)"),
             "desktop when must emit desktop media: {css}"
         );
+        assert!(
+            css.contains("@media (min-width: 1600px)") || css.contains("@media(min-width: 1600px)"),
+            "wide when must emit theme width: {css}"
+        );
         let (style2, diags2) =
             parse("style({ when: { motionReduce: { filter({ opacity: 100 }) } } })");
         assert!(diags2.is_empty(), "{:?}", diags2);
@@ -117,6 +128,59 @@ mod tests {
         assert!(
             css2.contains("prefers-reduced-motion"),
             "motionReduce camelCase must resolve: {css2}"
+        );
+    }
+
+    #[test]
+    fn when_tablet_compiles_away_without_theme_bp() {
+        spinnaker::tokens::with_breakpoint_table(&[("mobile", "390px")], || {
+            let (style, diags) = parse("style({ bg(primary), when: { tablet: { bg(accent) } } })");
+            assert!(
+                diags.is_empty(),
+                "omitted tablet is not a hard error: {:?}",
+                diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+            );
+            let (_, css) = lower_style(&style, &HashMap::new());
+            assert!(
+                !css.contains("768") && !css.contains("tablet"),
+                "no tablet media on a 1-bp theme: {css}"
+            );
+            assert!(
+                crate::when_target("tablet").is_none(),
+                "tablet must compile away"
+            );
+            assert!(
+                crate::when_target("wide").is_none(),
+                "undeclared theme extra is not a target"
+            );
+        });
+    }
+
+    #[test]
+    fn when_undeclared_key_names_theme_table() {
+        let (_, diags) = parse("style({ bg(primary), when: { kiosk: { bg(accent) } } })");
+        let joined = diags
+            .iter()
+            .map(|d| d.message())
+            .collect::<Vec<_>>()
+            .join("; ");
+        assert!(
+            joined.contains("theme breakpoint table"),
+            "diagnostic must name the theme table: {joined}"
+        );
+        assert!(
+            joined.contains("kiosk") && joined.contains("language state"),
+            "must name the key and language states: {joined}"
+        );
+        for name in ["mobile", "tablet", "desktop"] {
+            assert!(
+                joined.contains(name),
+                "must list theme bp `{name}`: {joined}"
+            );
+        }
+        assert!(
+            !joined.contains("closed browser-state table"),
+            "old closed-table sentence is a lie: {joined}"
         );
     }
 

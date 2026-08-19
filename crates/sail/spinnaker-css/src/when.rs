@@ -29,9 +29,6 @@ fn pseudo_static(s: &'static str) -> WhenTarget {
 fn ancestor_static(s: &'static str) -> WhenTarget {
     WhenTarget::Ancestor(Cow::Borrowed(s))
 }
-fn media_static(s: &'static str) -> WhenTarget {
-    WhenTarget::Media(Cow::Borrowed(s))
-}
 
 /// Closed `when({ key: Style })` browser/framework-state and media keys.
 ///
@@ -103,7 +100,7 @@ pub fn when_target(key: &str) -> Option<WhenTarget> {
             if let Some(m) = crate::conditions::condition_media(other)
                 .or_else(|| crate::conditions::condition_media(&kebab))
             {
-                return Some(media_static(m));
+                return Some(WhenTarget::Media(Cow::Owned(m)));
             }
             // ARIA / pseudo from the closed STATE_PREFIXES table.
             if let Some(p) =

@@ -322,7 +322,10 @@ impl StyleDiagnostic {
                 format!("style `{setter}` does not accept {got} positional arguments")
             }
             StyleDiagnostic::UnknownWhenKey { key, .. } => {
-                format!("style when key `{key}` is not in the closed browser-state table")
+                let table = crate::tokens::breakpoint_names_display();
+                format!(
+                    "style when key `{key}` is not in the theme breakpoint table ({table}) or a language state"
+                )
             }
             StyleDiagnostic::UnknownRef { name, .. } => {
                 format!("style const `{name}` is not defined in scope")

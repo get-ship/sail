@@ -688,8 +688,8 @@ fn gen_prop_registry(out: Option<PathBuf>, ts_out: Option<PathBuf>) -> Result<()
     sf.push_str(&serde_json::to_string_pretty(&states)?);
     sf.push_str("\n\n");
     // when: keys — media conditions (product: when: { tablet: … }).
-    let conds: Vec<serde_json::Value> = sail_lint::rules::style_rule::CONDITION_PREFIXES
-        .iter()
+    let conds: Vec<serde_json::Value> = sail_lint::rules::style_rule::condition_prefixes()
+        .into_iter()
         .map(|(n, m)| serde_json::json!({ "prefix": n, "media": m }))
         .collect();
     sf.push_str("export const SX_CONDITION_PREFIXES: Array<{ prefix: string; media: string }> = ");

@@ -448,6 +448,95 @@ pub fn path_to_css_name(path: &str) -> Option<&'static str> {
     map.get(path).copied()
 }
 
+thread_local! {
+    static BREAKPOINT_OVERRIDE: RefCell<Option<Vec<(String, String)>>> =
+        const { RefCell::new(None) };
+}
+
+/// Active theme breakpoint table: `(name, width)` in declaration order.
+///
+/// Default is the registry `breakpoint-*` tokens. Tests and a 1-bp compile
+/// install a replacement via [`with_breakpoint_table`].
+pub fn breakpoint_table() -> Vec<(String, String)> {
+    if let Some(over) = BREAKPOINT_OVERRIDE.with(|c| c.borrow().clone()) {
+        return over;
+    }
+    static CACHE: OnceLock<Vec<(String, String)>> = OnceLock::new();
+    CACHE.get_or_init(registry_breakpoint_table).clone()
+}
+
+fn registry_breakpoint_table() -> Vec<(String, String)> {
+    let file = registry_file();
+    let mut rows: Vec<(String, String)> = file
+        .tokens
+        .iter()
+        .filter_map(|(css, meta)| {
+            let name = css.strip_prefix("breakpoint-")?;
+            if name.is_empty() {
+                return None;
+            }
+            Some((name.to_string(), meta.value.clone()))
+        })
+        .collect();
+    rows.sort_by(|a, b| {
+        width_px(&a.1)
+            .cmp(&width_px(&b.1))
+            .then_with(|| a.0.cmp(&b.0))
+    });
+    rows
+}
+
+fn width_px(value: &str) -> u32 {
+    value
+        .trim()
+        .trim_end_matches("px")
+        .parse::<f32>()
+        .ok()
+        .map(|n| n as u32)
+        .unwrap_or(u32::MAX)
+}
+
+/// Run `f` against an explicit theme breakpoint table.
+pub fn with_breakpoint_table<T>(table: &[(&str, &str)], f: impl FnOnce() -> T) -> T {
+    let owned: Vec<(String, String)> = table
+        .iter()
+        .map(|(n, w)| ((*n).to_string(), (*w).to_string()))
+        .collect();
+    BREAKPOINT_OVERRIDE.with(|cell| {
+        let prev = cell.replace(Some(owned));
+        let out = f();
+        *cell.borrow_mut() = prev;
+        out
+    })
+}
+
+/// True when `name` is a breakpoint the active theme declared.
+pub fn is_theme_breakpoint(name: &str) -> bool {
+    let kebab = crate::intent::when_key_kebab(name);
+    breakpoint_table()
+        .iter()
+        .any(|(n, _)| n == name || n == &kebab)
+}
+
+/// Width for a theme-declared breakpoint (`"768px"`), if present.
+pub fn breakpoint_width(name: &str) -> Option<String> {
+    let kebab = crate::intent::when_key_kebab(name);
+    breakpoint_table()
+        .into_iter()
+        .find(|(n, _)| n == name || n == &kebab)
+        .map(|(_, w)| w)
+}
+
+/// Human list for diagnostics: `mobile, tablet, desktop, wide`.
+pub fn breakpoint_names_display() -> String {
+    let names: Vec<String> = breakpoint_table().into_iter().map(|(n, _)| n).collect();
+    if names.is_empty() {
+        "(none)".into()
+    } else {
+        names.join(", ")
+    }
+}
+
 /// Look up a token's generated CSS value (base layer). Used by tests that pin
 /// scale alignment (e.g. Tailwind space ramp). Returns `None` if unknown.
 pub fn token_value(name: &str) -> Option<&'static str> {

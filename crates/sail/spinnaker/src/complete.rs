@@ -82,7 +82,7 @@ pub const OBJECT_KEYS: &[&str] = &["animate", "when", "match", "compound"];
 
 /// Closed product `when` keys. Dynamic `state-*` / `group-*` families
 /// remain open-ended and are not enumerated here.
-pub fn when_keys() -> Vec<&'static str> {
+pub fn when_keys() -> Vec<String> {
     crate::intent::closed_when_keys()
 }
 
@@ -1279,6 +1279,7 @@ mod tests {
             labs.contains(&"tablet") || labs.contains(&"desktop"),
             "{labs:?}"
         );
+        assert!(labs.contains(&"wide"), "theme extra completes: {labs:?}");
     }
 
     #[test]

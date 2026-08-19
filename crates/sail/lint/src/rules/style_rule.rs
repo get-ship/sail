@@ -44,8 +44,8 @@ pub const RULE_ID: &str = "spinnaker";
 // Residual string lowerers still call these names. SSOT is the CSS adapter:
 // `spinnaker_css::conditions` (`when({ tablet: … })`) and `spinnaker_css::prefixes`.
 pub use spinnaker_css::{
-    CONDITION_PREFIXES, STATE_PREFIXES, SX_EXTRA_FORMS, condition_media, group_attr_presence,
-    is_prefix, pseudo_element_prefix, state_data, state_pseudo,
+    CONDITION_PREFIXES, STATE_PREFIXES, SX_EXTRA_FORMS, condition_media, condition_prefixes,
+    group_attr_presence, is_prefix, pseudo_element_prefix, state_data, state_pseudo,
 };
 
 /// Internal emit/lint helper: every emit-leaf utility name with the values
@@ -676,15 +676,11 @@ mod tests {
     #[test]
     fn breakpoints_match_the_tokens() {
         // Residual path must not diverge from Style conditions / design tokens.
-        for (name, query) in CONDITION_PREFIXES
-            .iter()
-            .filter(|(n, _)| matches!(*n, "mobile" | "tablet" | "desktop"))
-        {
-            let value = crate::tokens::token_value(&format!("breakpoint-{name}"))
-                .expect("the breakpoint token exists in the registry");
+        for (name, width) in crate::tokens::breakpoint_table() {
+            let query = condition_media(&name).expect("theme breakpoint media");
             assert!(
-                query.contains(value),
-                "Style condition `{name}` is {query} but --breakpoint-{name} is {value}"
+                query.contains(width.trim()),
+                "Style condition `{name}` is {query} but theme width is {width}"
             );
         }
     }

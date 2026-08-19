@@ -1,16 +1,13 @@
 //! Style media / environment conditions — CSS realization of `when({ key })`.
 //!
-//! Author names live on `spinnaker::intent::CONDITION_KEYS`. This table maps
-//! those names to `@media` queries. Widths must match design-token
-//! `breakpoint-*` lengths (enforced by adapter tests).
+//! Author names live on `spinnaker::intent`. Breakpoint widths come from
+//! the active theme table (`spinnaker::tokens::breakpoint_table`). Preference
+//! media stays language, not theme.
 
-/// Closed condition keys → `@media` query for Style `when` (and residual
-/// string-sx lowerers until that product is deleted).
-pub const CONDITION_PREFIXES: &[(&str, &str)] = &[
-    // Responsive, mobile-first (min-width). Widths ARE the breakpoint tokens.
-    ("mobile", "(min-width: 390px)"),
-    ("tablet", "(min-width: 768px)"),
-    ("desktop", "(min-width: 1280px)"),
+use spinnaker::tokens;
+
+/// Preference / environment media. Not theme-declared.
+pub const PREFERENCE_PREFIXES: &[(&str, &str)] = &[
     ("motion-reduce", "(prefers-reduced-motion: reduce)"),
     ("motion-safe", "(prefers-reduced-motion: no-preference)"),
     ("forced-colors", "(forced-colors: active)"),
@@ -18,9 +15,30 @@ pub const CONDITION_PREFIXES: &[(&str, &str)] = &[
     ("light", "(prefers-color-scheme: light)"),
 ];
 
-pub fn condition_media(name: &str) -> Option<&'static str> {
-    CONDITION_PREFIXES
+/// Theme breakpoints + preference media. Widths follow the active theme.
+pub fn condition_prefixes() -> Vec<(String, String)> {
+    let mut out: Vec<(String, String)> = tokens::breakpoint_table()
+        .into_iter()
+        .map(|(name, width)| (name, format!("(min-width: {width})")))
+        .collect();
+    for (name, query) in PREFERENCE_PREFIXES {
+        out.push(((*name).to_string(), (*query).to_string()));
+    }
+    out
+}
+
+/// Closed table kept for residual string-sx callers. Preference media only —
+/// viewport widths are theme-declared via [`condition_prefixes`].
+pub const CONDITION_PREFIXES: &[(&str, &str)] = PREFERENCE_PREFIXES;
+
+pub fn condition_media(name: &str) -> Option<String> {
+    let kebab = spinnaker::intent::when_key_kebab(name);
+    if let Some(width) = tokens::breakpoint_width(name).or_else(|| tokens::breakpoint_width(&kebab))
+    {
+        return Some(format!("(min-width: {width})"));
+    }
+    PREFERENCE_PREFIXES
         .iter()
-        .find(|(n, _)| *n == name)
-        .map(|(_, m)| *m)
+        .find(|(n, _)| *n == name || *n == kebab.as_str())
+        .map(|(_, q)| (*q).to_string())
 }

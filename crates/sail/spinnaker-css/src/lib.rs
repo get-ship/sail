@@ -11,7 +11,9 @@ pub mod plains_css;
 pub mod prefixes;
 pub mod when;
 
-pub use conditions::{CONDITION_PREFIXES, condition_media};
+pub use conditions::{
+    CONDITION_PREFIXES, PREFERENCE_PREFIXES, condition_media, condition_prefixes,
+};
 pub use emit::{
     CssRule, emit_intent, emit_style, lower_style, lower_style_source,
     lower_style_source_with_motion, render_rule,
