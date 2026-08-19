@@ -179,3 +179,27 @@ fn style_display_none() {
         "display(none):\n{out}"
     );
 }
+
+#[test]
+fn bare_headings_spend_tag_default_size_classes() {
+    let out = pp("<h1>h1</h1><h2>h2</h2><h3>h3</h3><h4>h4</h4><h5>h5</h5><h6>h6</h6>");
+    let expected = [
+        ("h1", "s-type-size-4xl"),
+        ("h2", "s-type-size-2xl"),
+        ("h3", "s-type-size-xl"),
+        ("h4", "s-type-size-lg"),
+        ("h5", "s-type-size-md"),
+        ("h6", "s-type-size-sm"),
+    ];
+    let mut sizes = Vec::new();
+    for (tag, class) in expected {
+        assert!(
+            out.contains(class),
+            "{tag} must spend tagDefault size class {class}:\n{out}"
+        );
+        sizes.push(class);
+    }
+    sizes.sort();
+    sizes.dedup();
+    assert_eq!(sizes.len(), 6, "six distinct size classes: {sizes:?}");
+}

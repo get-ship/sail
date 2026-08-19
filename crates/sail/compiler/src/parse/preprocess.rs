@@ -288,24 +288,48 @@ fn lift_tag_style(
                 .with_span(Span::new(bad, bad + 5))
                 .with_category("spinnaker"));
             }
-            if let Some((call_lo, call_hi, expr)) = find_tag_style_call(source, tag_end, gt_pos) {
+            let style_call = find_tag_style_call(source, tag_end, gt_pos);
+            if let Some((call_lo, call_hi, expr)) = style_call {
                 refuse_text_on_non_text_host(tag, expr, env, call_lo, call_hi)?;
-                let (classes, motions) = lower_sx_value(expr, env, &mut css, &mut seen)
+            }
+            let mut authored_classes = String::new();
+            let mut motions = Vec::new();
+            let mut authored_type = spinnaker::ResolvedType::default();
+            if let Some((call_lo, call_hi, expr)) = style_call {
+                let (classes, m) = lower_sx_value(expr, env, &mut css, &mut seen)
                     .map_err(|diags| style_error(diags, call_lo, call_hi))?;
+                authored_classes = classes;
+                motions = m;
                 let val = strip_outer_braces(expr.trim());
                 let (style_ir, _) = spinnaker::parse(val);
-                let resolved_type = spinnaker::resolve_type(&style_ir, env);
+                authored_type = spinnaker::resolve_type(&style_ir, env);
                 if let Some(host) =
-                    spinnaker::layout::TypeHost::from_resolved(&classes, &resolved_type)
+                    spinnaker::layout::TypeHost::from_resolved(&authored_classes, &authored_type)
                 {
                     hosts.types.push(host);
                 }
                 let resolved_box = spinnaker::layout::resolve_box(&style_ir, env);
                 if let Some(host) =
-                    spinnaker::layout::BoxHost::from_resolved(&classes, &resolved_box)
+                    spinnaker::layout::BoxHost::from_resolved(&authored_classes, &resolved_box)
                 {
                     hosts.boxes.push(host);
                 }
+            }
+            let fill = leftover_tag_type(tag, &authored_type);
+            let tag_classes = if fill.is_empty() {
+                String::new()
+            } else {
+                spinnaker_css::emit_resolved_type(&fill, &mut css, &mut seen)
+            };
+            let classes = [tag_classes.as_str(), authored_classes.as_str()]
+                .into_iter()
+                .filter(|s| !s.is_empty())
+                .collect::<Vec<_>>()
+                .join(" ");
+            if !classes.is_empty() || !motions.is_empty() {
+                let (call_lo, call_hi) = style_call
+                    .map(|(lo, hi, _)| (lo, hi))
+                    .unwrap_or((gt_pos, gt_pos));
                 lifts.push(Lift {
                     gt_pos,
                     call_lo,
@@ -700,6 +724,21 @@ fn consume_style_expr(s: &str) -> Option<usize> {
     } else {
         None
     }
+}
+
+/// Tag-default type slots that authored Style did not set.
+fn leftover_tag_type(tag: &str, authored: &spinnaker::ResolvedType) -> spinnaker::ResolvedType {
+    let mut fill = spinnaker::resolve_type_for_tag(tag);
+    if authored.size.is_some() {
+        fill.size = None;
+    }
+    if authored.family.is_some() {
+        fill.family = None;
+    }
+    if authored.leading.is_some() {
+        fill.leading = None;
+    }
+    fill
 }
 
 fn style_error(diags: Vec<spinnaker::StyleDiagnostic>, start: usize, end: usize) -> CompileError {

@@ -1,8 +1,9 @@
 //! Style IR → atomic CSS (token vars, attr selectors, when pseudos).
 
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 use crate::lower::lower_op_css;
+use spinnaker::ResolvedType;
 use spinnaker::intent::{Intent, IntentNode, IntentValue, lower_to_intent};
 use spinnaker::ir::{PaintArg, PaintOp, Style, StyleEnv};
 use spinnaker::theme_env::{ThemeStyleEnv, current_styling_policy};
@@ -51,6 +52,60 @@ pub fn lower_style(style: &Style, env: &StyleEnv) -> (String, String) {
         css.push_str(&render_rule(r));
     }
     (classes.join(" "), css)
+}
+
+/// Emit tag-default / leftover type through the one Style emitter.
+///
+/// One class per filled slot (`s-type-size-4xl`, `s-type-family-display`) so
+/// size shares with authored `type({ size })` spends.
+pub fn emit_resolved_type(
+    ty: &ResolvedType,
+    css: &mut String,
+    seen: &mut HashSet<String>,
+) -> String {
+    let env: StyleEnv = HashMap::new();
+    let mut classes = Vec::new();
+    for (slot, value) in [
+        ("family", ty.family.as_deref()),
+        ("size", ty.size.as_deref()),
+        ("leading", ty.leading.as_deref()),
+    ] {
+        let Some(value) = value else {
+            continue;
+        };
+        let src = format!("style({{ type({{ {slot}: {value} }}) }})");
+        let Ok(part) = lower_style_source(&src, &env, css, seen) else {
+            continue;
+        };
+        if !part.is_empty() {
+            classes.push(part);
+        }
+    }
+    classes.join(" ")
+}
+
+fn append_rules(rules: &[CssRule], css: &mut String, seen: &mut HashSet<String>) -> String {
+    let mut classes = Vec::new();
+    for r in rules {
+        if r.selector.is_empty() && r.declarations.is_empty() {
+            if !classes.iter().any(|c| c == &r.class) {
+                classes.push(r.class.clone());
+            }
+            continue;
+        }
+        let dedupe_key = if r.selector.is_empty() {
+            r.class.clone()
+        } else {
+            r.selector.clone()
+        };
+        if seen.insert(dedupe_key) {
+            css.push_str(&render_rule(r));
+        }
+        if !classes.iter().any(|c| c == &r.class) {
+            classes.push(r.class.clone());
+        }
+    }
+    classes.join(" ")
 }
 
 pub fn render_rule(r: &CssRule) -> String {
@@ -626,29 +681,5 @@ pub fn lower_style_source_with_motion(
     // still inject `_sail_m_*` attrs. CSS emit already expands refs; motion
     // collection must not skip them or ambient/enter/exit on named styles die.
     let motions = spinnaker::parse::collect_motion_attaches_env(&style, env);
-    let rules = emit_style(&style, env);
-    let mut classes = Vec::new();
-    for r in &rules {
-        // Marker-only rules (group) contribute a class with empty selector.
-        if r.selector.is_empty() && r.declarations.is_empty() {
-            if !classes.iter().any(|c| c == &r.class) {
-                classes.push(r.class.clone());
-            }
-            continue;
-        }
-        // Dedupe CSS by selector (not class). Two rules can share a class
-        // while targeting different selectors; class-keyed dedupe would drop one.
-        let dedupe_key = if r.selector.is_empty() {
-            r.class.clone()
-        } else {
-            r.selector.clone()
-        };
-        if seen.insert(dedupe_key) {
-            css.push_str(&render_rule(r));
-        }
-        if !classes.iter().any(|c| c == &r.class) {
-            classes.push(r.class.clone());
-        }
-    }
-    Ok((classes.join(" "), motions))
+    Ok((append_rules(&emit_style(&style, env), css, seen), motions))
 }
