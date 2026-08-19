@@ -476,6 +476,9 @@ fn classify(cfg: &sail_lint::config::SailConfig) -> PolicyResolution {
         p.raw_containers = b;
         signal.push(format!("raw_containers: {b}"));
     }
+    if let Some(b) = cfg.style_slots {
+        signal.push(format!("style_slots: {b}"));
+    }
     if let Some(b) = cfg.compose_rhythm {
         p.compose_rhythm = b;
         signal.push(format!("compose_rhythm: {b}"));
