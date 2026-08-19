@@ -24,6 +24,7 @@ pub struct ResolvedBox {
     pub min_height: Option<String>,
     pub max_width: Option<String>,
     pub max_height: Option<String>,
+    pub aspect: Option<String>,
 }
 
 /// Space-scale steps on each padding side (`4`, `1_5`, `0`).
@@ -66,6 +67,7 @@ impl ResolvedBox {
             && self.min_height.is_none()
             && self.max_width.is_none()
             && self.max_height.is_none()
+            && self.aspect.is_none()
     }
 
     /// Overlay `other` onto self — set fields win.
@@ -109,6 +111,9 @@ impl ResolvedBox {
         }
         if other.max_height.is_some() {
             self.max_height.clone_from(&other.max_height);
+        }
+        if other.aspect.is_some() {
+            self.aspect.clone_from(&other.aspect);
         }
     }
 }
@@ -459,6 +464,9 @@ fn size_from_arg(arg: &PaintArg) -> ResolvedBox {
             {
                 out.max_height = Some(v);
             }
+            if let Some(v) = slots.get("aspect").and_then(token_arg_ref) {
+                out.aspect = Some(v);
+            }
             out
         }
         _ => ResolvedBox::default(),
@@ -524,6 +532,17 @@ mod tests {
         let elem = element_with_box(r);
         let got = resolve(&elem, &[Element::default()], 1440.0);
         assert!((got.style.flex_grow - 1.0).abs() < f32::EPSILON);
+    }
+
+    #[test]
+    fn size_grow_and_aspect_resolve_together() {
+        let r = resolved("style({ size(grow), size({ aspect: square }) })");
+        assert_eq!(r.grow, Some(1.0));
+        assert_eq!(r.aspect.as_deref(), Some("square"));
+        let elem = element_with_box(r);
+        let got = resolve(&elem, &[Element::default()], 1440.0);
+        assert!((got.style.flex_grow - 1.0).abs() < f32::EPSILON);
+        assert_eq!(got.style.aspect_ratio, Some(1.0));
     }
 
     #[test]

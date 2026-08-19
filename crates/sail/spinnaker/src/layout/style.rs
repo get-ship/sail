@@ -429,6 +429,18 @@ fn apply_resolved_box(style: &mut Style, box_style: &crate::layout::box_ir::Reso
     if let Some(h) = box_style.max_height.as_deref() {
         style.max_size.height = style_scale::size_token_to_dimension(h);
     }
+    if let Some(a) = box_style.aspect.as_deref() {
+        style.aspect_ratio = aspect_token(a);
+    }
+}
+
+fn aspect_token(tok: &str) -> Option<f32> {
+    match tok {
+        "square" => Some(1.0),
+        "video" => Some(16.0 / 9.0),
+        "auto" => None,
+        _ => None,
+    }
 }
 
 fn apply_pad_tokens(style: &mut Style, pad: &crate::layout::box_ir::PadTokens) {

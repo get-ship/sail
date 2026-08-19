@@ -146,6 +146,36 @@ where
         )
         .map_err(|e| anyhow::anyhow!("taffy compute_layout failed: {e:?}"))?;
 
+    // Flex leftover is a used size, not a specified one. Taffy only
+    // transfers aspect-ratio from specified size, so grow+aspect would
+    // stay  leftover×0. Pin the free axis from the used leftover and
+    // recompute once so the host grows with the square.
+    if transfer_used_aspect(&mut taffy, &nodes, &mut styles) {
+        crate::layout::record_layout_pass();
+        taffy
+            .compute_layout_with_measure(
+                root,
+                available,
+                |known_dimensions, available_space, node_id, ctx, _style| {
+                    let Some(_ctx) = ctx else { return Size::ZERO };
+                    let Some(&elem_index) = id_to_elem.get(&node_id) else {
+                        return Size::ZERO;
+                    };
+                    let elem = &elements[elem_index];
+                    if elem.text.is_empty() {
+                        return Size::ZERO;
+                    }
+                    let (family, size) = resolve_family_size(elem_index, &elements);
+                    let m = match metrics.get(&(family, size)) {
+                        Some(m) => m,
+                        None => return Size::ZERO,
+                    };
+                    measure_text(&elem.text, m, known_dimensions, available_space)
+                },
+            )
+            .map_err(|e| anyhow::anyhow!("taffy compute_layout failed: {e:?}"))?;
+    }
+
     // Mark every element whose subtree contains an unknown element. Walk
     // leaves-first so a parent's flag folds in every descendant's
     // contribution in one pass. The synthetic root (index 0) is excluded.
@@ -169,6 +199,56 @@ where
         viewport,
         unknown_subtree,
     })
+}
+
+fn transfer_used_aspect(
+    taffy: &mut TaffyTree<NodeContext>,
+    nodes: &[Option<NodeId>],
+    styles: &mut [ResolvedStyle],
+) -> bool {
+    let mut changed = false;
+    for (i, slot) in nodes.iter().enumerate() {
+        let Some(id) = *slot else {
+            continue;
+        };
+        let style = &styles[i].style;
+        let Some(ratio) = style.aspect_ratio else {
+            continue;
+        };
+        if ratio <= 0.0 {
+            continue;
+        }
+        let Ok(computed) = taffy.layout(id).cloned() else {
+            continue;
+        };
+        let w = computed.size.width;
+        let h = computed.size.height;
+        let mut next = style.clone();
+        let pin = if style.size.height.is_auto() && w > 0.5 {
+            let want = w / ratio;
+            if (h - want).abs() >= 0.5 {
+                next.size.height = Dimension::length(want);
+                true
+            } else {
+                false
+            }
+        } else if style.size.width.is_auto() && h > 0.5 {
+            let want = h * ratio;
+            if (w - want).abs() >= 0.5 {
+                next.size.width = Dimension::length(want);
+                true
+            } else {
+                false
+            }
+        } else {
+            false
+        };
+        if pin && taffy.set_style(id, next.clone()).is_ok() {
+            styles[i].style = next;
+            changed = true;
+        }
+    }
+    changed
 }
 
 /// Compute the measured size of a string of text given a font metric and

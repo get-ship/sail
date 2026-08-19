@@ -249,3 +249,35 @@ fn bento_span_is_wider_than_a_single_cell() {
         "col-span 2 must be ~2× a single cell: wide={widest:?} narrow={narrowest:?}"
     );
 }
+
+#[test]
+fn aspect_vs_grow_is_leftover_and_square() {
+    let src = r#"
+<scope>
+  style host = { size({ w: 32 }) }
+  style box = { size(grow), size({ aspect: square }), bg(primary) }
+</scope>
+<row style(host)>
+  <column style(box)></column>
+</row>
+"#;
+    let (_pre, boxes, _kinds) = layout(src);
+    finite(&boxes);
+    let kid = boxes
+        .iter()
+        .filter(|b| b.class.split_whitespace().any(|c| c == "sail-col"))
+        .max_by(|a, b| a.width.partial_cmp(&b.width).unwrap())
+        .expect("grow child");
+    let row = boxes
+        .iter()
+        .find(|b| b.class.split_whitespace().any(|c| c == "sail-row"))
+        .expect("row host");
+    assert!(
+        kid.width + 0.5 >= row.width * 0.9,
+        "grow must take leftover: kid={kid:?} row={row:?}"
+    );
+    assert!(
+        (kid.width - kid.height).abs() < 0.5,
+        "aspect square must match leftover width: {kid:?}"
+    );
+}
