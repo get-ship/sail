@@ -53,7 +53,7 @@ pub struct Lowered {
     /// [`crate::lower::bindings::collect_attr_imports`] when an
     /// `AttrInstr::Motion` is lowered.
     pub motion_builtins: BTreeSet<&'static str>,
-    /// Every custom-element tag the template uses (`sail-*` / `ship-*`).
+    /// Every custom-element tag the template uses (hyphenated names).
     /// Emitted as side-effect `import "@sail-tag/<tag>";` when
     /// `CompileOpts::emit_component_imports` is set, so components join the
     /// route's import graph (the per-route resolver). Collected once here; the

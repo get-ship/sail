@@ -3,7 +3,7 @@ use std::collections::BTreeSet;
 use crate::ir::Instr;
 
 /// Walk `instrs` recursively and return every distinct custom-element tag
-/// the template uses — i.e. every tag containing a `-` (`sail-*` / `ship-*`).
+/// the template uses — i.e. every tag containing a `-`.
 ///
 /// In-file `<partial>` invocations are expanded away in preprocess
 /// (SPEC-PARTIAL-1), so this walk only sees post-expansion tags — partial

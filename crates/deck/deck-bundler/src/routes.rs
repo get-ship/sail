@@ -146,9 +146,7 @@ fn module_import_path(pattern: &str) -> String {
 /// (the root layout, sibling of `routes/page.sail`); `/studio` →
 /// `./routes/studio/_layout.sail`. The codegen imports the layout's
 /// `.sail` so the chrome wrapper it composes registers at first
-/// paint (the per-route resolver chain — layout → its first
-/// `<sail-*` / `<ship-*` tag → that wrapper's source `.sail` —
-/// lands the `customElements.define` call when the module loads).
+/// paint (layout → first hyphenated CE → that wrapper's source).
 fn layout_module_path(path_prefix: &str) -> String {
     if path_prefix == "/" {
         return "./routes/_layout.sail".to_string();
@@ -184,8 +182,8 @@ fn camel_case(s: &str) -> String {
 ///   - A `routes/<name>/_layout.sail` becomes a layout entry with prefix
 ///     `/<name>`. Unchanged from the pre-root-layout codegen.
 ///
-/// The tag is read from the first `<sail-…>` or `<ship-…>` element in
-/// the file. Layouts are emitted sorted by `path_prefix` so the
+/// The tag is the first hyphenated CE in the file. Layouts are
+/// emitted sorted by `path_prefix` so the
 /// generated `routes.gen.ts` is byte-stable across runs.
 fn discover_layouts(routes_dir: &Path) -> Result<Vec<Layout>> {
     let mut layouts = Vec::new();
@@ -226,15 +224,10 @@ fn discover_layouts(routes_dir: &Path) -> Result<Vec<Layout>> {
     Ok(layouts)
 }
 
-/// Read up to the first 4 KiB of a `_layout.sail` and return the tag name
-/// of the first `<sail-…>` or `<ship-…>` element. The SAIL template grammar
-/// is HTML-flavoured; the codegen does not need a full parse — it just needs
-/// the wrapper component the runtime should import. If no qualifying tag is
-/// found, error: a layout with no `<sail-*` / `<ship-*` element has no
-/// component to mount.
+/// First hyphenated tag in `_layout.sail` — that is the wrapper CE.
+/// Custom elements require a hyphen. Prefix is not a policy (`l0-viewer`
+/// is as legal as anything else). Native tags (`div`, `column`) are skipped.
 fn extract_layout_tag(path: &Path) -> Result<String> {
-    // Cap the read so a stray giant file can't pin the codegen. The tag is
-    // always on the first line in practice; 4 KiB is generous.
     const HEAD_BYTES: usize = 4096;
     let bytes = std::fs::read(path).with_context(|| format!("reading `{}`", path.display()))?;
     let head_bytes = if bytes.len() > HEAD_BYTES {
@@ -244,11 +237,6 @@ fn extract_layout_tag(path: &Path) -> Result<String> {
     };
     let head = std::str::from_utf8(head_bytes)
         .with_context(|| format!("non-utf8 in `{}`", path.display()))?;
-    // Match the opening of the first element whose tag starts with `sail-`
-    // or `ship-`. Whitespace, a tag name (letters/digits/`-`/`_`), and
-    // either a `>` or whitespace ends the tag name. This is intentionally
-    // minimal — the layout is just a chrome wrapper, not a full template
-    // parse.
     let mut idx = 0;
     let bytes_str = head.as_bytes();
     while idx < bytes_str.len() {
@@ -257,14 +245,12 @@ fn extract_layout_tag(path: &Path) -> Result<String> {
             continue;
         }
         let after_lt = &bytes_str[idx + 1..];
-        // Skip closing tags (`</foo>`) and doctype/processing (`<!…`, `<?…`).
         if let Some(&b) = after_lt.first() {
             if b == b'/' || b == b'!' || b == b'?' {
                 idx += 1;
                 continue;
             }
         }
-        // Read tag name bytes.
         let name_start = idx + 1;
         let mut name_end = name_start;
         while name_end < bytes_str.len() {
@@ -281,13 +267,13 @@ fn extract_layout_tag(path: &Path) -> Result<String> {
         }
         let tag =
             std::str::from_utf8(&bytes_str[name_start..name_end]).context("non-utf8 tag name")?;
-        if tag.starts_with("sail-") || tag.starts_with("ship-") {
+        if tag.contains('-') {
             return Ok(tag.to_string());
         }
         idx = name_end;
     }
     bail!(
-        "`{}` has no `<sail-…>` or `<ship-…>` element — a layout must name a wrapper component",
+        "`{}` has no hyphenated wrapper CE — a layout names a custom element, not a native tag",
         path.display()
     );
 }
@@ -845,7 +831,7 @@ mod tests {
         let r = root.path().join("routes");
         std::fs::create_dir_all(r.join("foo/bar/[id]")).unwrap();
         std::fs::write(r.join("foo/bar/[id]/page.sail"), "<div/>").unwrap();
-        // Realistic layout: comment + a `<sail-*` wrapper + a `<slot>`.
+        // Realistic layout: comment + hyphenated wrapper + `<slot>`.
         std::fs::write(
             r.join("foo/_layout.sail"),
             "// chrome\n<sail-foo-chrome>\n  <slot />\n</sail-foo-chrome>\n",
@@ -858,15 +844,18 @@ mod tests {
     }
 
     #[test]
-    fn layout_discovery_ship_prefixed_tag() {
-        // `<ship-*` is also accepted (chrome wrappers under @ship/* packs).
+    fn layout_discovery_hyphenated_ce() {
         let root = tempfile::tempdir().unwrap();
         let r = root.path().join("routes");
         std::fs::create_dir_all(r.join("baz")).unwrap();
         std::fs::write(r.join("baz/page.sail"), "<div/>").unwrap();
-        std::fs::write(r.join("baz/_layout.sail"), "<ship-baz-chrome/>\n").unwrap();
+        std::fs::write(
+            r.join("baz/_layout.sail"),
+            "<l0-viewer>\n  <slot></slot>\n</l0-viewer>\n",
+        )
+        .unwrap();
         let tree = build_route_tree(&r, "app").unwrap();
-        assert_eq!(tree.layouts[0].tag, "ship-baz-chrome");
+        assert_eq!(tree.layouts[0].tag, "l0-viewer");
         assert_eq!(tree.layouts[0].path_prefix, "/baz");
     }
 
@@ -885,10 +874,10 @@ mod tests {
         std::fs::create_dir_all(r.join("studio/components/[name]")).unwrap();
         std::fs::write(r.join("page.sail"), "<div/>").unwrap();
         std::fs::write(r.join("studio/components/[name]/page.sail"), "<div/>").unwrap();
-        std::fs::write(r.join("studio/_layout.sail"), "<sail-studio-chrome/>\n").unwrap();
+        std::fs::write(r.join("studio/_layout.sail"), "<studio-chrome/>\n").unwrap();
         std::fs::write(
             r.join("_layout.sail"),
-            "<ship-hub-chrome>\n  <slot name=\"route\"/>\n</ship-hub-chrome>\n",
+            "<hub-chrome>\n  <slot name=\"route\"/>\n</hub-chrome>\n",
         )
         .unwrap();
         let tree = build_route_tree(&r, "hub").unwrap();
@@ -896,9 +885,9 @@ mod tests {
         // `/studio`).
         assert_eq!(tree.layouts.len(), 2);
         assert_eq!(tree.layouts[0].path_prefix, "/");
-        assert_eq!(tree.layouts[0].tag, "ship-hub-chrome");
+        assert_eq!(tree.layouts[0].tag, "hub-chrome");
         assert_eq!(tree.layouts[1].path_prefix, "/studio");
-        assert_eq!(tree.layouts[1].tag, "sail-studio-chrome");
+        assert_eq!(tree.layouts[1].tag, "studio-chrome");
     }
 
     #[test]
@@ -910,17 +899,15 @@ mod tests {
         let r = root.path().join("routes");
         std::fs::create_dir_all(&r).unwrap();
         std::fs::write(r.join("page.sail"), "<div/>").unwrap();
-        std::fs::write(r.join("_layout.sail"), "<ship-app-chrome/>\n").unwrap();
+        std::fs::write(r.join("_layout.sail"), "<app-chrome/>\n").unwrap();
         let tree = build_route_tree(&r, "hub").unwrap();
         assert_eq!(tree.layouts.len(), 1);
         assert_eq!(tree.layouts[0].path_prefix, "/");
-        assert_eq!(tree.layouts[0].tag, "ship-app-chrome");
+        assert_eq!(tree.layouts[0].tag, "app-chrome");
     }
 
     #[test]
     fn layout_discovery_skips_div_only_layout() {
-        // A `_layout.sail` with no `<sail-*` / `<ship-*` element errors out
-        // — a layout must name a wrapper component.
         let root = tempfile::tempdir().unwrap();
         let r = root.path().join("routes");
         std::fs::create_dir_all(r.join("home")).unwrap();
@@ -929,7 +916,7 @@ mod tests {
         let err = build_route_tree(&r, "shell").unwrap_err();
         let msg = format!("{err:#}");
         assert!(
-            msg.contains("no `<sail-…>` or `<ship-…>` element"),
+            msg.contains("hyphenated wrapper CE"),
             "expected layout-tag error, got: {msg}"
         );
     }
