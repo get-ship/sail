@@ -173,10 +173,6 @@
         "$type": "color"
       }
     },
-    "inverse": {
-      "$value": { "space": "oklch", "l": 0.16, "c": 0, "h": 0 },
-      "$type": "color"
-    },
     "syntax": {
       "keyword": { "$value": { "space": "oklch", "l": 0.5, "c": 0.2, "h": 280 }, "$type": "color" },
       "string": { "$value": { "space": "oklch", "l": 0.62, "c": 0.16, "h": 150 }, "$type": "color" },
@@ -410,8 +406,7 @@
     "subtle": { "$type": "bg", "$value": { "color": "{color.muted.default}" } },
     "surface": { "$type": "bg", "$value": { "color": "{color.surface}" } },
     "inset": { "$type": "bg", "$value": { "color": "{color.inset}" } },
-    "overlay": { "$type": "bg", "$value": { "color": "{color.overlay}" } },
-    "inverse": { "$type": "bg", "$value": { "color": "{color.inverse}" } }
+    "overlay": { "$type": "bg", "$value": { "color": "{color.overlay}" } }
   },
   "fg": {
     "foreground": { "$type": "fg", "$value": { "color": "{color.foreground}" } },

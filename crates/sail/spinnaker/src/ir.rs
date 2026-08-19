@@ -180,6 +180,22 @@ pub fn count_raw_uses_in_source(source: &str) -> usize {
     source.matches("raw(").count()
 }
 
+/// Color utility: `inverse(surface)` is the other mode's `surface`.
+/// Not a theme identity. Source stays greppable (`inverse(`).
+pub fn inverse_inner(tok: &str) -> Option<&str> {
+    let t = tok.trim();
+    let inner = t.strip_prefix("inverse(")?.strip_suffix(')')?;
+    if inner.is_empty() {
+        return None;
+    }
+    Some(inner)
+}
+
+/// Wrap a color name as `inverse(V)`.
+pub fn wrap_inverse(inner: &str) -> String {
+    format!("inverse({inner})")
+}
+
 /// Diagnostic from parse / resolve / clash.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum StyleDiagnostic {

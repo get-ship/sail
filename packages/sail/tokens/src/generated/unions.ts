@@ -208,7 +208,6 @@ export const SEMANTIC_COLOR_TOKENS = [
   'info-hover',
   'info-subtle',
   'inset',
-  'inverse',
   'muted',
   'muted-foreground',
   'neutral',
@@ -253,7 +252,6 @@ export type ColorTokenName =
   | 'background'
   | 'bg-app-color'
   | 'bg-inset-color'
-  | 'bg-inverse-color'
   | 'bg-overlay-color'
   | 'bg-subtle-color'
   | 'bg-surface-color'
@@ -279,7 +277,6 @@ export type ColorTokenName =
   | 'info-hover'
   | 'info-subtle'
   | 'inset'
-  | 'inverse'
   | 'muted'
   | 'muted-foreground'
   | 'neutral'
@@ -338,7 +335,6 @@ export type CssTokenName =
   | 'background'
   | 'bg-app-color'
   | 'bg-inset-color'
-  | 'bg-inverse-color'
   | 'bg-overlay-color'
   | 'bg-subtle-color'
   | 'bg-surface-color'
@@ -433,7 +429,6 @@ export type CssTokenName =
   | 'info-hover'
   | 'info-subtle'
   | 'inset'
-  | 'inverse'
   | 'leading-none'
   | 'leading-normal'
   | 'leading-relaxed'

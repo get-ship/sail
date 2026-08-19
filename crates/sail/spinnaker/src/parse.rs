@@ -2213,6 +2213,12 @@ fn parse_paint_arg(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>, setter:
             p.expect(Tok::RParen, diags);
             PaintArg::Token(crate::ir::wrap_raw(&inner.display()))
         }
+        Some(Tok::Word("inverse")) if p.peek() == Some(&Tok::LParen) => {
+            p.expect(Tok::LParen, diags);
+            let inner = parse_paint_arg(p, diags, setter);
+            p.expect(Tok::RParen, diags);
+            PaintArg::Token(crate::ir::wrap_inverse(&inner.display()))
+        }
         Some(Tok::Word("bind")) => {
             p.expect(Tok::LParen, diags);
             let name = match p.bump() {

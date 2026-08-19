@@ -59,7 +59,7 @@ pub use intent::{
 };
 pub use ir::{
     PaintArg, PaintOp, Style, StyleDiagnostic, StyleEnv, count_raw_uses_in_source, raw_inner,
-    wrap_raw,
+    wrap_inverse, wrap_raw, inverse_inner,
 };
 pub use parse::{
     collect_motion_attaches, collect_motion_attaches_env, looks_like_utility_string_product, parse,

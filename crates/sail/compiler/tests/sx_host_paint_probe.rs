@@ -528,6 +528,7 @@ fn switch_host_track_paint_on_host_sx() {
                 || src.contains("color: border-strong"))
             && (src.contains("bg(switch.thumb)")
                 || src.contains("bg(switch-thumb)")
+                || src.contains("bg(inverse(surface))")
                 || src.contains("bg(inverse)"))
             && src.contains("radius(full)")
             && (src.contains("w(9)") || src.contains("w: 9"))

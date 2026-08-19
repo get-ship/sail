@@ -262,7 +262,6 @@ const SEMANTIC_COLOR_GROUPS: &[&str] = &[
     "inset",
     "overlay",
     "scrim",
-    "inverse",
 ];
 
 #[derive(Debug, Clone)]
@@ -748,13 +747,16 @@ pub fn generate_with_options(
                 meta: l.meta.clone(),
                 tokens: regular,
             };
-            css_parts.push(emit_layer(&base_regular));
+            let sail_dark = themes.iter().find(|t| {
+                t.meta.theme_id.as_deref() == Some("sail") && t.meta.dark
+            });
+            css_parts.push(emit_layer(&base_regular, sail_dark));
             css_parts.push(String::new());
             if !channels.is_empty() {
                 css_parts.push(emit_channel_block(&channels));
             }
         } else {
-            css_parts.push(emit_layer(l));
+            css_parts.push(emit_layer(l, None));
         }
         css_parts.push(String::new());
     }
@@ -763,12 +765,12 @@ pub fn generate_with_options(
         css_parts.push(String::new());
     }
     if let Some(l) = by_layer.get("reduced-motion") {
-        css_parts.push(emit_layer(l));
+        css_parts.push(emit_layer(l, None));
         css_parts.push(String::new());
     }
     for name in ["density-compact", "density-spacious", "contrast"] {
         if let Some(l) = by_layer.get(name) {
-            css_parts.push(emit_layer(l));
+            css_parts.push(emit_layer(l, None));
             css_parts.push(String::new());
         }
     }
@@ -805,7 +807,10 @@ pub fn generate_with_options(
 
     let mut theme_parts: Vec<String> = vec![THEMES_HEADER.to_string()];
     for t in &ordered_themes {
-        theme_parts.push(emit_layer(t));
+        let sibling = ordered_themes.iter().copied().find(|o| {
+            o.meta.theme_id == t.meta.theme_id && o.meta.dark != t.meta.dark
+        });
+        theme_parts.push(emit_layer(t, sibling));
         theme_parts.push(String::new());
     }
     // Per-theme structural chrome from `$extensions.sail.chrome` — emit-set
@@ -3704,13 +3709,38 @@ fn products_registry_meta(axis: &ProductsAxis) -> Value {
     Value::Object(out)
 }
 
+fn color_inverse_pairs(layer: &Layer, sibling: Option<&Layer>) -> Vec<(String, String)> {
+    let other: BTreeMap<&str, &str> = sibling
+        .map(|s| {
+            s.tokens
+                .iter()
+                .filter(|t| t.r#type == "color" && !t.composite_identity)
+                .map(|t| (t.css_name.as_str(), t.css_value.as_str()))
+                .collect()
+        })
+        .unwrap_or_default();
+    let mut out = Vec::new();
+    for t in &layer.tokens {
+        if t.r#type != "color" || t.composite_identity || t.css_name.starts_with("inverse-") {
+            continue;
+        }
+        let value = other
+            .get(t.css_name.as_str())
+            .copied()
+            .unwrap_or(t.css_value.as_str());
+        out.push((format!("inverse-{}", t.css_name), value.to_string()));
+    }
+    out
+}
+
 fn emit_block(
     selector: &str,
     tokens: &[Token],
     indent: &str,
     color_scheme: Option<&str>,
+    inverse_pairs: &[(String, String)],
 ) -> String {
-    if tokens.is_empty() {
+    if tokens.is_empty() && inverse_pairs.is_empty() {
         return String::new();
     }
     let mut lines = vec![format!("{selector} {{")];
@@ -3722,6 +3752,9 @@ fn emit_block(
             continue;
         }
         lines.push(format!("{indent}--{}: {};", t.css_name, t.css_value));
+    }
+    for (name, value) in inverse_pairs {
+        lines.push(format!("{indent}--{name}: {value};"));
     }
     // bg/fg composites live on :root as `var(--muted)` / `var(--foreground)`.
     // `@property` with syntax:<color> computes them there and inherits the
@@ -3811,7 +3844,7 @@ fn emit_channel_block(tokens: &[Token]) -> String {
     lines.join("\n")
 }
 
-fn emit_layer(layer: &Layer) -> String {
+fn emit_layer(layer: &Layer, sibling: Option<&Layer>) -> String {
     let mut parts = Vec::new();
     let theme_suffix = layer
         .meta
@@ -3831,7 +3864,14 @@ fn emit_layer(layer: &Layer) -> String {
     } else {
         None
     };
-    let block = emit_block(&layer.meta.selector, &layer.tokens, "  ", color_scheme);
+    let inverse_pairs = color_inverse_pairs(layer, sibling);
+    let block = emit_block(
+        &layer.meta.selector,
+        &layer.tokens,
+        "  ",
+        color_scheme,
+        &inverse_pairs,
+    );
     let bp_media = emit_token_breakpoint_media(&layer.meta.selector, &layer.tokens);
     if let Some(media) = &layer.meta.media {
         parts.push(format!("@media {media} {{"));

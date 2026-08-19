@@ -1090,6 +1090,13 @@ pub fn lower_slot_value(
                 }
                 return lower_slot_value(spec, slot, &PaintArg::Token(inner.to_string()));
             }
+            if let Some(inner) = spinnaker::inverse_inner(tok) {
+                let (_, css) = lower_slot_value(spec, slot, &PaintArg::Token(inner.to_string()))?;
+                return Ok((
+                    slot_css(spec, slot).unwrap_or("").to_string(),
+                    invert_css_var(&css),
+                ));
+            }
             let negative = tok.starts_with('-') && tok.len() > 1;
             let bare = tok
                 .strip_prefix('-')
@@ -1162,6 +1169,21 @@ pub fn lower_slot_value(
     Ok((slot_css(spec, slot).unwrap_or("").to_string(), css))
 }
 
+/// `var(--surface)` → `var(--inverse-surface)`. Non-var colors stay as-is.
+fn invert_css_var(css: &str) -> String {
+    let t = css.trim();
+    if let Some(name) = t
+        .strip_prefix("var(--")
+        .and_then(|s| s.strip_suffix(')'))
+    {
+        if name.starts_with("inverse-") {
+            return t.to_string();
+        }
+        return format!("var(--inverse-{name})");
+    }
+    t.to_string()
+}
+
 fn is_numeric_raw(inner: &str) -> bool {
     let t = inner.trim();
     !t.is_empty() && t.replace('_', ".").parse::<f64>().is_ok()
@@ -1203,6 +1225,19 @@ mod measure_column {
         let slot = find_slot(spec, "t").expect("margin t");
         let (_, css) = lower_slot_value(spec, slot, &PaintArg::Token("-5".into())).expect("lower");
         assert_eq!(css, "calc(-1 * var(--space-5))", "{css}");
+    }
+
+    #[test]
+    fn inverse_color_lowers_to_inverse_var() {
+        let spec = find_concern("bg").expect("bg");
+        let slot = find_slot(spec, "color").expect("color");
+        let (_, css) = lower_slot_value(
+            spec,
+            slot,
+            &PaintArg::Token("inverse(surface)".into()),
+        )
+        .expect("lower");
+        assert_eq!(css, "var(--inverse-surface)", "{css}");
     }
 
     #[test]

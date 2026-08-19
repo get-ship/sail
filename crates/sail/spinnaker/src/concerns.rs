@@ -1323,6 +1323,21 @@ pub fn validate_slot_value(
             if crate::ir::raw_inner(tok).is_some() {
                 return Ok(());
             }
+            if let Some(inner) = crate::ir::inverse_inner(tok) {
+                if slot.scale != Some("color") {
+                    return Err(StyleDiagnostic::BadToken {
+                        setter: spec.name.to_string(),
+                        value: tok.clone(),
+                        source: op.source.clone(),
+                    });
+                }
+                return validate_slot_value(
+                    spec,
+                    slot,
+                    op,
+                    &PaintArg::Token(inner.to_string()),
+                );
+            }
             let bare = tok
                 .strip_prefix('-')
                 .filter(|r| !r.is_empty())
@@ -1960,6 +1975,27 @@ mod tests {
                 "3.5 is not a space step: did you mean 3 | 4 — or is this an exception: raw(3.5)?"
             ),
             "{scale:?}"
+        );
+    }
+
+    #[test]
+    fn inverse_color_utility_parses() {
+        let (style, diags) = parse("style({ bg(inverse(surface)).fg(inverse(foreground)) })");
+        assert!(
+            diags.is_empty(),
+            "{:?}",
+            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
+        let _ = style;
+    }
+
+    #[test]
+    fn inverse_on_pad_is_an_error() {
+        let (_, diags) = parse("style({ pad(inverse(4)) })");
+        assert!(
+            diags.iter().any(|d| d.message().contains("inverse")),
+            "{:?}",
+            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
         );
     }
 

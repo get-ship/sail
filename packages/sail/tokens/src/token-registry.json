@@ -76,7 +76,6 @@
     "background",
     "bg-app-color",
     "bg-inset-color",
-    "bg-inverse-color",
     "bg-overlay-color",
     "bg-subtle-color",
     "bg-surface-color",
@@ -171,7 +170,6 @@
     "info-hover",
     "info-subtle",
     "inset",
-    "inverse",
     "leading-none",
     "leading-normal",
     "leading-relaxed",
@@ -402,7 +400,6 @@
     "background",
     "bg-app-color",
     "bg-inset-color",
-    "bg-inverse-color",
     "bg-overlay-color",
     "bg-subtle-color",
     "bg-surface-color",
@@ -428,7 +425,6 @@
     "info-hover",
     "info-subtle",
     "inset",
-    "inverse",
     "muted",
     "muted-foreground",
     "neutral",
@@ -1069,13 +1065,6 @@
       "cssName": "border-strong",
       "type": "color",
       "value": "color-mix(in oklch, var(--foreground) 55.00%, transparent)"
-    },
-    "inverse": {
-      "path": "color.inverse",
-      "cssName": "inverse",
-      "type": "color",
-      "value": "oklch(0.1600 0.0000 0.00)",
-      "luminance": 0.004096000000000001
     },
     "syntax-keyword": {
       "path": "color.syntax.keyword",
@@ -2006,12 +1995,6 @@
       "type": "color",
       "value": "var(--overlay)"
     },
-    "bg-inverse-color": {
-      "path": "bg.inverse.color",
-      "cssName": "bg-inverse-color",
-      "type": "color",
-      "value": "var(--inverse)"
-    },
     "fg-foreground-color": {
       "path": "fg.foreground.color",
       "cssName": "fg-foreground-color",
@@ -2550,7 +2533,6 @@
     "color.background": "background",
     "bg.app.color": "bg-app-color",
     "bg.inset.color": "bg-inset-color",
-    "bg.inverse.color": "bg-inverse-color",
     "bg.overlay.color": "bg-overlay-color",
     "bg.subtle.color": "bg-subtle-color",
     "bg.surface.color": "bg-surface-color",
@@ -2645,7 +2627,6 @@
     "color.info.hover": "info-hover",
     "color.info.subtle": "info-subtle",
     "color.inset": "inset",
-    "color.inverse": "inverse",
     "typography.leading.none": "leading-none",
     "typography.leading.normal": "leading-normal",
     "typography.leading.relaxed": "leading-relaxed",
@@ -3229,14 +3210,6 @@
       "type": "bg",
       "members": {
         "color": "bg-overlay-color"
-      }
-    },
-    "bg.inverse": {
-      "path": "bg.inverse",
-      "cssName": "bg.inverse",
-      "type": "bg",
-      "members": {
-        "color": "bg-inverse-color"
       }
     },
     "fg.foreground": {
