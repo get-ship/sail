@@ -227,7 +227,6 @@
     "primary-foreground",
     "primary-hover",
     "primary-subtle",
-    "radius-default",
     "radius-full",
     "radius-lg",
     "radius-md",
@@ -720,12 +719,6 @@
       "cssName": "radius-full",
       "type": "dimension",
       "value": "9999px"
-    },
-    "radius-default": {
-      "path": "radius.default",
-      "cssName": "radius-default",
-      "type": "dimension",
-      "value": "var(--radius-lg)"
     },
     "icon-size-3xs": {
       "path": "icon.3xs",
@@ -2865,7 +2858,6 @@
     "color.primary.text": "primary-foreground",
     "color.primary.hover": "primary-hover",
     "color.primary.subtle": "primary-subtle",
-    "radius.default": "radius-default",
     "radius.full": "radius-full",
     "radius.lg": "radius-lg",
     "radius.md": "radius-md",

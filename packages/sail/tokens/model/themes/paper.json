@@ -70,7 +70,6 @@
       "radius": {
         "sm": { "$value": "4px", "$type": "dimension" },
         "md": { "$value": "6px", "$type": "dimension" },
-        "default": { "$value": "10px", "$type": "dimension" },
         "lg": { "$value": "12px", "$type": "dimension" },
         "xl": { "$value": "18px", "$type": "dimension" }
       },

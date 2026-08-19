@@ -72,7 +72,6 @@
       "radius": {
         "sm": { "$value": "10px", "$type": "dimension" },
         "md": { "$value": "14px", "$type": "dimension" },
-        "default": { "$value": "16px", "$type": "dimension" },
         "lg": { "$value": "20px", "$type": "dimension" },
         "xl": { "$value": "28px", "$type": "dimension" }
       },

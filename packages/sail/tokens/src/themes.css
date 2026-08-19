@@ -229,7 +229,6 @@
   --font-display: Iowan Old Style, Palatino, Palatino Linotype, Georgia, serif;
   --radius-sm: 4px;
   --radius-md: 6px;
-  --radius-default: 10px;
   --radius-lg: 12px;
   --radius-xl: 18px;
   --shadow-xs: 0 1px 2px 0 oklch(0.30 0.04 60 / 6%);
@@ -315,7 +314,6 @@
   --overlay-opacity: 1;
   --radius-sm: 10px;
   --radius-md: 14px;
-  --radius-default: 16px;
   --radius-lg: 20px;
   --radius-xl: 28px;
   --shadow-xs: -2px -2px 5px oklch(1 0 0 / 70%), 2px 2px 5px oklch(0 0 0 / 6%);
@@ -407,7 +405,6 @@
   --font-heading: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
   --font-display: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
   --font-mono: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
-  --radius-default: 2px;
   --radius-sm: 2px;
   --radius-md: 2px;
   --radius-lg: 3px;
@@ -500,7 +497,6 @@
   --overlay-opacity: 1;
   --radius-sm: 8px;
   --radius-md: 12px;
-  --radius-default: 14px;
   --radius-lg: 18px;
   --radius-xl: 24px;
   --shadow-xs: 0 1px 0 oklch(1 0 0 / 40%) inset, 0 2px 8px oklch(0.30 0.04 240 / 6%);
@@ -585,7 +581,6 @@
   --neutral-border: oklch(0.9560 0.0000 0.00);
   --neutral-foreground: oklch(0.1800 0.0000 0.00);
   --overlay-fill: none;
-  --radius-default: 0px;
   --radius-sm: 0px;
   --radius-md: 0px;
   --radius-lg: 0px;
@@ -682,7 +677,6 @@
   --font-heading: "Press Start 2P", "Press Start 2P Fallback", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
   --font-display: "Press Start 2P", "Press Start 2P Fallback", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
   --font-body: var(--font-mono);
-  --radius-default: 0px;
   --radius-sm: 0px;
   --radius-md: 0px;
   --radius-lg: 0px;

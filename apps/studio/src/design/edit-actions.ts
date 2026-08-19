@@ -414,7 +414,7 @@ export async function setTokenValueOn(
   ctx.reflectCss(cssName, writeValue)
 
   // Radius family steps — keep scale engine in sync.
-  if (path.startsWith('radius.') && path !== 'radius.default') {
+  if (path.startsWith('radius.')) {
     const key = path.slice('radius.'.length)
     const n = Number(String(value).replace(/px$/, ''))
     if (Number.isFinite(n) && ['sm', 'md', 'lg', 'xl'].includes(key)) {

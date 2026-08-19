@@ -170,7 +170,6 @@ export type SpaceToken = (typeof SPACE_TOKENS)[number]
 
 /** Radius scale token cssNames. */
 export const RADIUS_TOKENS = [
-  'radius-default',
   'radius-full',
   'radius-lg',
   'radius-md',
@@ -504,7 +503,6 @@ export type CssTokenName =
   | 'primary-foreground'
   | 'primary-hover'
   | 'primary-subtle'
-  | 'radius-default'
   | 'radius-full'
   | 'radius-lg'
   | 'radius-md'

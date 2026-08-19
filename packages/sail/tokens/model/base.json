@@ -12,7 +12,6 @@
     "lg": { "$value": "10px", "$type": "dimension" },
     "xl": { "$value": "14px", "$type": "dimension" },
     "full": { "$value": "9999px", "$type": "dimension" },
-    "default": { "$value": "{radius-lg}", "$type": "dimension" },
     "$type": "dimension",
     "$extensions": { "ordered": ["sm", "md", "lg", "xl"] }
   },
