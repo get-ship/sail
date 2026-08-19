@@ -1229,7 +1229,7 @@ describe('@ship/tokens — whole-value alias audit', () => {
     themesSites: 37,
     themesUnique: 5,
     themesKeep: 5,
-    hueFirstClass: 16,
+    hueFirstClass: 0,
     sidebarFirstClass: 0,
   } as const
 
@@ -1256,7 +1256,7 @@ describe('@ship/tokens — whole-value alias audit', () => {
     expect(thCounts.rebind).toBe(0)
   })
 
-  it('hue.* stays first-class; sidebar.* and products.css are gone from Sail', () => {
+  it('hue.* and sidebar.* and products.css are gone from Sail', () => {
     const reg = JSON.parse(loadSrc('../src/token-registry.json')) as {
       names: string[]
     }

@@ -173,37 +173,18 @@
         "$type": "color"
       }
     },
-    "knob": {
-      "$value": { "space": "oklch", "l": 1, "c": 0, "h": 0 },
-      "$type": "color",
-      "$description": "Light control face. Not surface: muted ≈ surface in dark, so a dedicated light knob keeps track/thumb contrast."
-    },
-    "hue": {
-      "red": { "$value": { "space": "oklch", "l": 0.62, "c": 0.21, "h": 25 }, "$type": "color" },
-      "orange": { "$value": { "space": "oklch", "l": 0.68, "c": 0.18, "h": 50 }, "$type": "color" },
-      "amber": { "$value": { "space": "oklch", "l": 0.74, "c": 0.16, "h": 75 }, "$type": "color" },
-      "yellow": { "$value": { "space": "oklch", "l": 0.82, "c": 0.16, "h": 95 }, "$type": "color" },
-      "lime": { "$value": { "space": "oklch", "l": 0.78, "c": 0.18, "h": 130 }, "$type": "color" },
-      "green": { "$value": { "space": "oklch", "l": 0.62, "c": 0.16, "h": 150 }, "$type": "color" },
-      "teal": { "$value": { "space": "oklch", "l": 0.62, "c": 0.13, "h": 185 }, "$type": "color" },
-      "cyan": { "$value": { "space": "oklch", "l": 0.68, "c": 0.13, "h": 220 }, "$type": "color" },
-      "sky": { "$value": { "space": "oklch", "l": 0.65, "c": 0.16, "h": 235 }, "$type": "color" },
-      "blue": { "$value": { "space": "oklch", "l": 0.55, "c": 0.2, "h": 260 }, "$type": "color" },
-      "indigo": { "$value": { "space": "oklch", "l": 0.5, "c": 0.2, "h": 280 }, "$type": "color" },
-      "violet": { "$value": { "space": "oklch", "l": 0.55, "c": 0.22, "h": 295 }, "$type": "color" },
-      "purple": { "$value": { "space": "oklch", "l": 0.55, "c": 0.22, "h": 310 }, "$type": "color" },
-      "fuchsia": { "$value": { "space": "oklch", "l": 0.6, "c": 0.25, "h": 330 }, "$type": "color" },
-      "pink": { "$value": { "space": "oklch", "l": 0.68, "c": 0.2, "h": 345 }, "$type": "color" },
-      "rose": { "$value": { "space": "oklch", "l": 0.62, "c": 0.21, "h": 5 }, "$type": "color" }
+    "inverse": {
+      "$value": { "space": "oklch", "l": 0.16, "c": 0, "h": 0 },
+      "$type": "color"
     },
     "syntax": {
-      "keyword": { "$value": { "ref": "hue-indigo" }, "$type": "color" },
-      "string": { "$value": { "ref": "hue-green" }, "$type": "color" },
-      "number": { "$value": { "ref": "hue-blue" }, "$type": "color" },
-      "function": { "$value": { "ref": "hue-purple" }, "$type": "color" },
-      "type": { "$value": { "ref": "hue-cyan" }, "$type": "color" },
-      "tag": { "$value": { "ref": "hue-red" }, "$type": "color" },
-      "attr": { "$value": { "ref": "hue-amber" }, "$type": "color" },
+      "keyword": { "$value": { "space": "oklch", "l": 0.5, "c": 0.2, "h": 280 }, "$type": "color" },
+      "string": { "$value": { "space": "oklch", "l": 0.62, "c": 0.16, "h": 150 }, "$type": "color" },
+      "number": { "$value": { "space": "oklch", "l": 0.55, "c": 0.2, "h": 260 }, "$type": "color" },
+      "function": { "$value": { "space": "oklch", "l": 0.55, "c": 0.22, "h": 310 }, "$type": "color" },
+      "type": { "$value": { "space": "oklch", "l": 0.68, "c": 0.13, "h": 220 }, "$type": "color" },
+      "tag": { "$value": { "space": "oklch", "l": 0.62, "c": 0.21, "h": 25 }, "$type": "color" },
+      "attr": { "$value": { "space": "oklch", "l": 0.74, "c": 0.16, "h": 75 }, "$type": "color" },
       "comment": { "$value": { "ref": "muted-foreground" }, "$type": "color" },
       "variable": { "$value": { "ref": "foreground" }, "$type": "color" }
     },
@@ -433,7 +414,8 @@
     "subtle": { "$type": "bg", "$value": { "color": "{color.muted.default}" } },
     "surface": { "$type": "bg", "$value": { "color": "{color.surface}" } },
     "inset": { "$type": "bg", "$value": { "color": "{color.inset}" } },
-    "overlay": { "$type": "bg", "$value": { "color": "{color.overlay}" } }
+    "overlay": { "$type": "bg", "$value": { "color": "{color.overlay}" } },
+    "inverse": { "$type": "bg", "$value": { "color": "{color.inverse}" } }
   },
   "fg": {
     "foreground": { "$type": "fg", "$value": { "color": "{color.foreground}" } },

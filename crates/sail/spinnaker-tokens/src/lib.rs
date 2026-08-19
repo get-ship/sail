@@ -262,6 +262,7 @@ const SEMANTIC_COLOR_GROUPS: &[&str] = &[
     "inset",
     "overlay",
     "scrim",
+    "inverse",
 ];
 
 #[derive(Debug, Clone)]

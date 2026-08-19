@@ -264,7 +264,51 @@ pub fn apply_theme_derivation(doc: &mut Value) -> Result<Vec<String>> {
         let mut derived = fulfill_mode_scales(body, &anchors, paint)?;
         all.append(&mut derived);
     }
+    fulfill_inverse(doc);
     Ok(all)
+}
+
+/// Each mode's inverse is the other mode's surface. Single-mode themes
+/// fall back to white (dark) or near-black (light).
+fn fulfill_inverse(doc: &mut Value) {
+    let Some(modes) = doc.get("modes").and_then(|v| v.as_object()) else {
+        return;
+    };
+    let mut surface: std::collections::BTreeMap<String, Value> = std::collections::BTreeMap::new();
+    for (name, body) in modes {
+        if let Some(s) = body.pointer("/color/surface").cloned() {
+            surface.insert(name.clone(), s);
+        }
+    }
+    let names: Vec<String> = modes.keys().cloned().collect();
+    let Some(modes_mut) = doc.get_mut("modes").and_then(|v| v.as_object_mut()) else {
+        return;
+    };
+    for name in names {
+        let other = if name == "light" { "dark" } else { "light" };
+        let fallback = if name == "dark" {
+            json!({ "$value": { "space": "oklch", "l": 1, "c": 0, "h": 0 }, "$type": "color" })
+        } else {
+            json!({ "$value": { "space": "oklch", "l": 0.16, "c": 0, "h": 0 }, "$type": "color" })
+        };
+        let value = surface.get(other).cloned().unwrap_or(fallback);
+        let Some(color) = modes_mut
+            .get_mut(&name)
+            .and_then(|b| b.as_object_mut())
+            .and_then(|b| {
+                if !b.contains_key("color") {
+                    b.insert("color".into(), json!({}));
+                }
+                b.get_mut("color")
+            })
+            .and_then(|c| c.as_object_mut())
+        else {
+            continue;
+        };
+        if !color.contains_key("inverse") {
+            color.insert("inverse".into(), value);
+        }
+    }
 }
 
 /// Apply derivation to a base document (no `modes` wrapper) using its
@@ -320,5 +364,18 @@ mod tests {
             body["color"]["primary"]["hover"]["$value"],
             "oklch(0.40 0.18 245)"
         );
+    }
+
+    #[test]
+    fn inverse_is_the_other_mode_surface() {
+        let mut doc = json!({
+            "modes": {
+                "light": { "color": { "surface": { "$value": "oklch(1 0 0)", "$type": "color" } } },
+                "dark": { "color": { "surface": { "$value": "oklch(0.2 0 0)", "$type": "color" } } }
+            }
+        });
+        apply_theme_derivation(&mut doc).unwrap();
+        assert_eq!(doc["modes"]["light"]["color"]["inverse"], doc["modes"]["dark"]["color"]["surface"]);
+        assert_eq!(doc["modes"]["dark"]["color"]["inverse"], doc["modes"]["light"]["color"]["surface"]);
     }
 }
