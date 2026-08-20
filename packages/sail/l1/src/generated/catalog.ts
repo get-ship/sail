@@ -66,13 +66,11 @@ export const COMPONENTS: readonly L1Component[] = [
   { id: 'input', host: 'input', parts: [] },
   { id: 'kbd', host: 'kbd', parts: [] },
   { id: 'label', host: 'label', parts: [] },
-  { id: 'list-row', host: 'list-row', parts: [] },
   { id: 'menu-item', host: 'menu-item', parts: [] },
   { id: 'meter', host: 'meter', parts: [] },
   { id: 'navbar', host: 'navbar', parts: [] },
   { id: 'page', host: 'page', parts: [] },
   { id: 'pagination', host: 'pagination', parts: ['page-item'] },
-  { id: 'pane', host: 'pane', parts: [] },
   { id: 'popover', host: 'popover', parts: [] },
   { id: 'progress', host: 'progress', parts: [] },
   { id: 'prose', host: 'prose', parts: [] },
@@ -92,7 +90,6 @@ export const COMPONENTS: readonly L1Component[] = [
   { id: 'ticker', host: 'ticker', parts: [] },
   { id: 'toast', host: 'toast', parts: ['toast-region'] },
   { id: 'toggle-group', host: 'toggle-group', parts: ['toggle'] },
-  { id: 'toolbar', host: 'toolbar', parts: [] },
   { id: 'tooltip', host: 'tooltip', parts: [] },
 ]
 
@@ -105,12 +102,12 @@ export const TAGS: readonly L1Tag[] = [
     acceptsChildren: true,
     props: [
       { name: 'variant', type: 'text | default | solid | soft | outline | ghost', default: 'text', values: ['text', 'default', 'solid', 'soft', 'outline', 'ghost'] },
-      { name: 'tone', type: 'primary | info | success | warning | destructive | accent | muted', values: ['primary', 'info', 'success', 'warning', 'destructive', 'accent', 'muted'] },
+      { name: 'tone', type: 'primary | info | success | warning | danger | accent | muted', values: ['primary', 'info', 'success', 'warning', 'danger', 'accent', 'muted'] },
       { name: 'disabled', type: 'bool', default: 'false' },
     ],
     axes: [
       { name: 'disabled', values: ['false', 'true'], optional: false },
-      { name: 'tone', values: ['primary', 'info', 'success', 'warning', 'destructive', 'accent', 'muted'], optional: true },
+      { name: 'tone', values: ['primary', 'info', 'success', 'warning', 'danger', 'accent', 'muted'], optional: true },
       { name: 'variant', values: ['text', 'default', 'solid', 'soft', 'outline', 'ghost'], optional: false },
     ],
     concerns: ['bg', 'border', 'elevation', 'fg', 'filter', 'play', 'size', 'type'],
@@ -142,14 +139,14 @@ export const TAGS: readonly L1Tag[] = [
     description: 'L1 inline status banner. Style value language only.',
     acceptsChildren: true,
     props: [
-      { name: 'tone', type: 'muted | info | success | warning | destructive', default: 'info', values: ['muted', 'info', 'success', 'warning', 'destructive'] },
+      { name: 'tone', type: 'muted | info | success | warning | danger', default: 'info', values: ['muted', 'info', 'success', 'warning', 'danger'] },
       { name: 'variant', type: 'default | banner', default: 'default', values: ['default', 'banner'] },
       { name: 'dismissible', type: 'bool', default: 'false' },
       { name: 'onDismiss', type: 'string' },
     ],
     axes: [
       { name: 'dismissible', values: ['false', 'true'], optional: false },
-      { name: 'tone', values: ['muted', 'info', 'success', 'warning', 'destructive'], optional: false },
+      { name: 'tone', values: ['muted', 'info', 'success', 'warning', 'danger'], optional: false },
       { name: 'variant', values: ['default', 'banner'], optional: false },
     ],
     concerns: ['bg', 'border', 'elevation', 'fg', 'play', 'position', 'size', 'type'],
@@ -165,7 +162,7 @@ export const TAGS: readonly L1Tag[] = [
       { name: 'icon-slug', type: 'string' },
       { name: 'name', type: 'string' },
       { name: 'initials', type: 'string' },
-      { name: 'tone', type: 'primary | accent | info | success | warning | destructive | muted', default: 'muted', values: ['primary', 'accent', 'info', 'success', 'warning', 'destructive', 'muted'] },
+      { name: 'tone', type: 'primary | accent | info | success | warning | danger | muted', default: 'muted', values: ['primary', 'accent', 'info', 'success', 'warning', 'danger', 'muted'] },
       { name: 'size', type: 'md | xs | sm | lg | xl', default: 'md', values: ['md', 'xs', 'sm', 'lg', 'xl'] },
       { name: 'shape', type: 'round | square', default: 'round', values: ['round', 'square'] },
       { name: 'ring', type: 'bool', default: 'false' },
@@ -178,7 +175,7 @@ export const TAGS: readonly L1Tag[] = [
       { name: 'shape', values: ['round', 'square'], optional: false },
       { name: 'size', values: ['md', 'xs', 'sm', 'lg', 'xl'], optional: false },
       { name: 'stack', values: ['false', 'true'], optional: false },
-      { name: 'tone', values: ['primary', 'accent', 'info', 'success', 'warning', 'destructive', 'muted'], optional: false },
+      { name: 'tone', values: ['primary', 'accent', 'info', 'success', 'warning', 'danger', 'muted'], optional: false },
     ],
     concerns: ['bg', 'border', 'elevation', 'fg', 'position', 'size', 'type'],
   },
@@ -189,7 +186,7 @@ export const TAGS: readonly L1Tag[] = [
     description: 'L1 language element. Style value language only.',
     acceptsChildren: true,
     props: [
-      { name: 'tone', type: 'primary | info | success | warning | destructive | accent | muted', default: 'muted', values: ['primary', 'info', 'success', 'warning', 'destructive', 'accent', 'muted'] },
+      { name: 'tone', type: 'primary | info | success | warning | danger | accent | muted', default: 'muted', values: ['primary', 'info', 'success', 'warning', 'danger', 'accent', 'muted'] },
       { name: 'variant', type: 'soft | solid | outline', default: 'soft', values: ['soft', 'solid', 'outline'] },
       { name: 'size', type: 'md | sm | lg', default: 'md', values: ['md', 'sm', 'lg'] },
       { name: 'pill', type: 'bool', default: 'false' },
@@ -199,7 +196,7 @@ export const TAGS: readonly L1Tag[] = [
       { name: 'dot', values: ['false', 'true'], optional: false },
       { name: 'pill', values: ['false', 'true'], optional: false },
       { name: 'size', values: ['md', 'sm', 'lg'], optional: false },
-      { name: 'tone', values: ['primary', 'info', 'success', 'warning', 'destructive', 'accent', 'muted'], optional: false },
+      { name: 'tone', values: ['primary', 'info', 'success', 'warning', 'danger', 'accent', 'muted'], optional: false },
       { name: 'variant', values: ['soft', 'solid', 'outline'], optional: false },
     ],
     concerns: ['bg', 'border', 'elevation', 'fg', 'filter', 'play', 'size', 'type'],
@@ -226,7 +223,7 @@ export const TAGS: readonly L1Tag[] = [
     acceptsChildren: true,
     props: [
       { name: 'variant', type: 'default | solid | soft | outline | ghost', default: 'solid', values: ['default', 'solid', 'soft', 'outline', 'ghost'] },
-      { name: 'tone', type: 'primary | info | success | warning | destructive | accent | muted', default: 'primary', values: ['primary', 'info', 'success', 'warning', 'destructive', 'accent', 'muted'] },
+      { name: 'tone', type: 'primary | info | success | warning | danger | accent | muted', default: 'primary', values: ['primary', 'info', 'success', 'warning', 'danger', 'accent', 'muted'] },
       { name: 'size', type: 'xs | sm | md | lg | icon | iconSm | iconLg', default: 'md', values: ['xs', 'sm', 'md', 'lg', 'icon', 'iconSm', 'iconLg'] },
       { name: 'disabled', type: 'bool', default: 'false' },
       { name: 'loading', type: 'bool', default: 'false' },
@@ -237,7 +234,7 @@ export const TAGS: readonly L1Tag[] = [
       { name: 'loading', values: ['false', 'true'], optional: false },
       { name: 'pill', values: ['false', 'true'], optional: false },
       { name: 'size', values: ['xs', 'sm', 'md', 'lg', 'icon', 'iconSm', 'iconLg'], optional: false },
-      { name: 'tone', values: ['primary', 'info', 'success', 'warning', 'destructive', 'accent', 'muted'], optional: false },
+      { name: 'tone', values: ['primary', 'info', 'success', 'warning', 'danger', 'accent', 'muted'], optional: false },
       { name: 'variant', values: ['default', 'solid', 'soft', 'outline', 'ghost'], optional: false },
     ],
     concerns: ['bg', 'border', 'elevation', 'fg', 'filter', 'play', 'position', 'size', 'type'],
@@ -261,7 +258,7 @@ export const TAGS: readonly L1Tag[] = [
     description: 'L1 surface with header/body/footer/image slots, tone border, status rail,',
     acceptsChildren: true,
     props: [
-      { name: 'tone', type: 'primary | info | success | warning | destructive | accent | muted', default: 'muted', values: ['primary', 'info', 'success', 'warning', 'destructive', 'accent', 'muted'] },
+      { name: 'tone', type: 'primary | info | success | warning | danger | accent | muted', default: 'muted', values: ['primary', 'info', 'success', 'warning', 'danger', 'accent', 'muted'] },
       { name: 'variant', type: 'default | outline | soft | elevated | ghost', default: 'default', values: ['default', 'outline', 'soft', 'elevated', 'ghost'] },
       { name: 'padding', type: 'md | none | sm | lg', default: 'md', values: ['md', 'none', 'sm', 'lg'] },
       { name: 'interactive', type: 'bool', default: 'false' },
@@ -277,7 +274,7 @@ export const TAGS: readonly L1Tag[] = [
       { name: 'padding', values: ['md', 'none', 'sm', 'lg'], optional: false },
       { name: 'spotlight', values: ['false', 'true'], optional: false },
       { name: 'status-rail', values: ['false', 'true'], optional: false },
-      { name: 'tone', values: ['primary', 'info', 'success', 'warning', 'destructive', 'accent', 'muted'], optional: false },
+      { name: 'tone', values: ['primary', 'info', 'success', 'warning', 'danger', 'accent', 'muted'], optional: false },
       { name: 'variant', values: ['default', 'outline', 'soft', 'elevated', 'ghost'], optional: false },
     ],
     concerns: ['bg', 'border', 'elevation', 'fg', 'filter', 'play', 'position', 'size', 'type'],
@@ -311,7 +308,7 @@ export const TAGS: readonly L1Tag[] = [
     description: 'filter/selection pill.',
     acceptsChildren: true,
     props: [
-      { name: 'tone', type: 'primary | info | success | warning | destructive | accent | muted', default: 'primary', values: ['primary', 'info', 'success', 'warning', 'destructive', 'accent', 'muted'] },
+      { name: 'tone', type: 'primary | info | success | warning | danger | accent | muted', default: 'primary', values: ['primary', 'info', 'success', 'warning', 'danger', 'accent', 'muted'] },
       { name: 'variant', type: 'solid | soft | outline | ghost', default: 'solid', values: ['solid', 'soft', 'outline', 'ghost'] },
       { name: 'size', type: 'md | sm | lg', default: 'md', values: ['md', 'sm', 'lg'] },
       { name: 'selected', type: 'bool', default: 'false' },
@@ -324,7 +321,7 @@ export const TAGS: readonly L1Tag[] = [
       { name: 'removable', values: ['false', 'true'], optional: false },
       { name: 'selected', values: ['false', 'true'], optional: false },
       { name: 'size', values: ['md', 'sm', 'lg'], optional: false },
-      { name: 'tone', values: ['primary', 'info', 'success', 'warning', 'destructive', 'accent', 'muted'], optional: false },
+      { name: 'tone', values: ['primary', 'info', 'success', 'warning', 'danger', 'accent', 'muted'], optional: false },
       { name: 'variant', values: ['solid', 'soft', 'outline', 'ghost'], optional: false },
     ],
     concerns: ['bg', 'border', 'elevation', 'fg', 'filter', 'play', 'size', 'type'],
@@ -382,7 +379,7 @@ export const TAGS: readonly L1Tag[] = [
     tag: 'context-menu',
     component: 'context-menu',
     role: 'host',
-    description: 'L1 right-click menu. Native [popover] + use:contextMenu',
+    description: 'L1 right-click menu.',
     acceptsChildren: true,
     props: [
       { name: 'for', type: 'string' },
@@ -396,7 +393,7 @@ export const TAGS: readonly L1Tag[] = [
     tag: 'date',
     component: 'date',
     role: 'host',
-    description: 'temporal picker product. Impl: native input; type prop selects',
+    description: 'temporal picker. Native <input>; type selects precision',
     acceptsChildren: false,
     props: [
       { name: 'type', type: 'date | time | datetime-local | month | week', default: 'date', values: ['date', 'time', 'datetime-local', 'month', 'week'] },
@@ -476,7 +473,7 @@ export const TAGS: readonly L1Tag[] = [
     ],
     axes: [
     ],
-    concerns: ['bg', 'border', 'elevation', 'fg', 'position', 'size'],
+    concerns: ['bg', 'border', 'elevation', 'fg', 'play', 'position', 'size'],
   },
   {
     tag: 'empty-state',
@@ -487,13 +484,13 @@ export const TAGS: readonly L1Tag[] = [
     props: [
       { name: 'variant', type: 'default | inline | placeholder | connecting', default: 'default', values: ['default', 'inline', 'placeholder', 'connecting'] },
       { name: 'size', type: 'md | sm | lg', default: 'md', values: ['md', 'sm', 'lg'] },
-      { name: 'tone', type: 'primary | info | success | warning | destructive | accent | muted', default: 'muted', values: ['primary', 'info', 'success', 'warning', 'destructive', 'accent', 'muted'] },
+      { name: 'tone', type: 'primary | info | success | warning | danger | accent | muted', default: 'muted', values: ['primary', 'info', 'success', 'warning', 'danger', 'accent', 'muted'] },
       { name: 'compact', type: 'bool', default: 'false' },
     ],
     axes: [
       { name: 'compact', values: ['false', 'true'], optional: false },
       { name: 'size', values: ['md', 'sm', 'lg'], optional: false },
-      { name: 'tone', values: ['primary', 'info', 'success', 'warning', 'destructive', 'accent', 'muted'], optional: false },
+      { name: 'tone', values: ['primary', 'info', 'success', 'warning', 'danger', 'accent', 'muted'], optional: false },
       { name: 'variant', values: ['default', 'inline', 'placeholder', 'connecting'], optional: false },
     ],
     concerns: ['bg', 'border', 'elevation', 'fg', 'play', 'size', 'type'],
@@ -564,7 +561,7 @@ export const TAGS: readonly L1Tag[] = [
     tag: 'file',
     component: 'file',
     role: 'host',
-    description: 'system file picker. Native Browse chrome is hidden.',
+    description: 'system file picker. Native Browse chrome is unthemeable; the',
     acceptsChildren: false,
     props: [
       { name: 'size', type: 'xs | sm | md | lg', default: 'md', values: ['xs', 'sm', 'md', 'lg'] },
@@ -584,7 +581,7 @@ export const TAGS: readonly L1Tag[] = [
       { name: 'size', values: ['xs', 'sm', 'md', 'lg'], optional: false },
       { name: 'variant', values: ['picker', 'drop'], optional: false },
     ],
-    concerns: ['bg', 'border', 'fg', 'filter', 'play', 'size', 'type'],
+    concerns: ['bg', 'border', 'fg', 'filter', 'play', 'position', 'size', 'type'],
   },
   {
     tag: 'form',
@@ -612,24 +609,21 @@ export const TAGS: readonly L1Tag[] = [
     ],
     axes: [
     ],
-    concerns: ['bg', 'border', 'elevation', 'fg', 'position', 'size', 'type'],
+    concerns: ['bg', 'border', 'elevation', 'fg', 'play', 'position', 'size', 'type'],
   },
   {
     tag: 'icon',
     component: 'icon',
     role: 'host',
-    description: 'glyph box + size match. use:icon owns spin.',
+    description: 'glyph box + size match. Pure structure: glyphs are compiler',
     acceptsChildren: true,
     props: [
       { name: 'name', type: 'string' },
-      { name: 'src', type: 'string' },
       { name: 'label', type: 'string' },
       { name: 'size', type: 'md | xs | sm | lg | xl', default: 'md', values: ['md', 'xs', 'sm', 'lg', 'xl'] },
-      { name: 'spin', type: 'bool', default: 'false' },
     ],
     axes: [
       { name: 'size', values: ['md', 'xs', 'sm', 'lg', 'xl'], optional: false },
-      { name: 'spin', values: ['false', 'true'], optional: false },
     ],
     concerns: ['fg', 'play', 'size'],
   },
@@ -637,7 +631,7 @@ export const TAGS: readonly L1Tag[] = [
     tag: 'input',
     component: 'input',
     role: 'host',
-    description: 'text field product. Style product only.',
+    description: 'text field product.',
     acceptsChildren: false,
     props: [
       { name: 'type', type: 'text | email | password | number | search | tel | url | hidden', default: 'text', values: ['text', 'email', 'password', 'number', 'search', 'tel', 'url', 'hidden'] },
@@ -659,6 +653,7 @@ export const TAGS: readonly L1Tag[] = [
       { name: 'autocomplete', type: 'string' },
       { name: 'inputmode', type: 'string' },
       { name: 'reveal', type: 'bool', default: 'true' },
+      { name: 'id', type: 'string' },
     ],
     axes: [
       { name: 'disabled', values: ['false', 'true'], optional: false },
@@ -670,7 +665,7 @@ export const TAGS: readonly L1Tag[] = [
       { name: 'surface', values: ['default', 'filled', 'flushed'], optional: false },
       { name: 'type', values: ['text', 'email', 'password', 'number', 'search', 'tel', 'url', 'hidden'], optional: false },
     ],
-    concerns: ['bg', 'border', 'elevation', 'fg', 'filter', 'play', 'size', 'type'],
+    concerns: ['bg', 'border', 'elevation', 'fg', 'filter', 'play', 'position', 'size', 'type'],
   },
   {
     tag: 'kbd',
@@ -713,22 +708,6 @@ export const TAGS: readonly L1Tag[] = [
     concerns: ['fg', 'type'],
   },
   {
-    tag: 'list-row',
-    component: 'list-row',
-    role: 'host',
-    description: 'hover / selected / current row. Theme and settings lists.',
-    acceptsChildren: true,
-    props: [
-      { name: 'selected', type: 'bool', default: 'false' },
-      { name: 'current', type: 'bool', default: 'false' },
-    ],
-    axes: [
-      { name: 'current', values: ['false', 'true'], optional: false },
-      { name: 'selected', values: ['false', 'true'], optional: false },
-    ],
-    concerns: ['bg', 'fg'],
-  },
-  {
     tag: 'menu-item',
     component: 'menu-item',
     role: 'host',
@@ -737,6 +716,7 @@ export const TAGS: readonly L1Tag[] = [
     props: [
       { name: 'value', type: 'string' },
       { name: 'disabled', type: 'bool', default: 'false' },
+      { name: 'onSelect', type: 'string' },
     ],
     axes: [
       { name: 'disabled', values: ['false', 'true'], optional: false },
@@ -776,11 +756,13 @@ export const TAGS: readonly L1Tag[] = [
       { name: 'autohide', type: 'bool', default: 'false' },
       { name: 'floating', type: 'bool', default: 'false' },
       { name: 'solid-on-scroll', type: 'bool', default: 'false' },
+      { name: 'expanded', type: 'bool', default: 'false' },
       { name: 'offset', type: 'string', default: '0' },
     ],
     axes: [
       { name: 'autohide', values: ['false', 'true'], optional: false },
       { name: 'bordered', values: ['false', 'true'], optional: false },
+      { name: 'expanded', values: ['false', 'true'], optional: false },
       { name: 'floating', values: ['false', 'true'], optional: false },
       { name: 'placement', values: ['top', 'bottom', 'rail'], optional: false },
       { name: 'solid-on-scroll', values: ['false', 'true'], optional: false },
@@ -823,7 +805,7 @@ export const TAGS: readonly L1Tag[] = [
     tag: 'pagination',
     component: 'pagination',
     role: 'host',
-    description: 'nav state via use:pagination (ARIA current). Host is layout-only.',
+    description: 'nav state lives in this file\'s <controller> (page signal,',
     acceptsChildren: true,
     props: [
       { name: 'value', type: 'string' },
@@ -836,20 +818,6 @@ export const TAGS: readonly L1Tag[] = [
     concerns: [],
   },
   {
-    tag: 'pane',
-    component: 'pane',
-    role: 'host',
-    description: 'bordered surface column. Settings/theme/list piles.',
-    acceptsChildren: true,
-    props: [
-      { name: 'padding', type: 'md | none | sm | lg', default: 'md', values: ['md', 'none', 'sm', 'lg'] },
-    ],
-    axes: [
-      { name: 'padding', values: ['md', 'none', 'sm', 'lg'], optional: false },
-    ],
-    concerns: ['bg', 'border', 'fg'],
-  },
-  {
     tag: 'popover',
     component: 'popover',
     role: 'host',
@@ -860,7 +828,7 @@ export const TAGS: readonly L1Tag[] = [
     ],
     axes: [
     ],
-    concerns: ['bg', 'border', 'elevation', 'fg', 'position', 'size'],
+    concerns: ['bg', 'border', 'elevation', 'fg', 'play', 'position', 'size'],
   },
   {
     tag: 'progress',
@@ -909,7 +877,7 @@ export const TAGS: readonly L1Tag[] = [
     tag: 'radio-group',
     component: 'radio-group',
     role: 'host',
-    description: 'vertical group of <radio> options. use:radioGroup wires shared',
+    description: 'vertical group of <radio> options.',
     acceptsChildren: true,
     props: [
       { name: 'value', type: 'string' },
@@ -983,13 +951,13 @@ export const TAGS: readonly L1Tag[] = [
     acceptsChildren: false,
     props: [
       { name: 'orientation', type: 'horizontal | vertical', default: 'horizontal', values: ['horizontal', 'vertical'] },
-      { name: 'tone', type: 'muted | primary | destructive', default: 'muted', values: ['muted', 'primary', 'destructive'] },
+      { name: 'tone', type: 'muted | primary | danger', default: 'muted', values: ['muted', 'primary', 'danger'] },
       { name: 'variant', type: 'solid | dashed', default: 'solid', values: ['solid', 'dashed'] },
       { name: 'label', type: 'string' },
     ],
     axes: [
       { name: 'orientation', values: ['horizontal', 'vertical'], optional: false },
-      { name: 'tone', values: ['muted', 'primary', 'destructive'], optional: false },
+      { name: 'tone', values: ['muted', 'primary', 'danger'], optional: false },
       { name: 'variant', values: ['solid', 'dashed'], optional: false },
     ],
     concerns: ['bg', 'border', 'play', 'size'],
@@ -1044,13 +1012,13 @@ export const TAGS: readonly L1Tag[] = [
     props: [
       { name: 'size', type: 'md | xs | sm | lg', default: 'md', values: ['md', 'xs', 'sm', 'lg'] },
       { name: 'variant', type: 'ring | dots | bars', default: 'ring', values: ['ring', 'dots', 'bars'] },
-      { name: 'tone', type: 'primary | info | success | warning | destructive | accent', default: 'info', values: ['primary', 'info', 'success', 'warning', 'destructive', 'accent'] },
+      { name: 'tone', type: 'primary | info | success | warning | danger | accent', default: 'info', values: ['primary', 'info', 'success', 'warning', 'danger', 'accent'] },
       { name: 'centered', type: 'bool', default: 'false' },
     ],
     axes: [
       { name: 'centered', values: ['false', 'true'], optional: false },
       { name: 'size', values: ['md', 'xs', 'sm', 'lg'], optional: false },
-      { name: 'tone', values: ['primary', 'info', 'success', 'warning', 'destructive', 'accent'], optional: false },
+      { name: 'tone', values: ['primary', 'info', 'success', 'warning', 'danger', 'accent'], optional: false },
       { name: 'variant', values: ['ring', 'dots', 'bars'], optional: false },
     ],
     concerns: ['bg', 'border', 'fg', 'play', 'position', 'size'],
@@ -1059,19 +1027,19 @@ export const TAGS: readonly L1Tag[] = [
     tag: 'switch',
     component: 'switch',
     role: 'host',
-    description: 'native checkbox restyled as sliding toggle. No controller.',
+    description: 'native checkbox restyled as sliding toggle.',
     acceptsChildren: false,
     props: [
       { name: 'checked', type: 'bool', default: 'false' },
       { name: 'disabled', type: 'bool', default: 'false' },
-      { name: 'tone', type: 'primary | info | success | warning | destructive | accent | muted', default: 'primary', values: ['primary', 'info', 'success', 'warning', 'destructive', 'accent', 'muted'] },
+      { name: 'tone', type: 'primary | info | success | warning | danger | accent | muted', default: 'primary', values: ['primary', 'info', 'success', 'warning', 'danger', 'accent', 'muted'] },
       { name: 'size', type: 'md | sm | lg', default: 'md', values: ['md', 'sm', 'lg'] },
     ],
     axes: [
       { name: 'checked', values: ['false', 'true'], optional: false },
       { name: 'disabled', values: ['false', 'true'], optional: false },
       { name: 'size', values: ['md', 'sm', 'lg'], optional: false },
-      { name: 'tone', values: ['primary', 'info', 'success', 'warning', 'destructive', 'accent', 'muted'], optional: false },
+      { name: 'tone', values: ['primary', 'info', 'success', 'warning', 'danger', 'accent', 'muted'], optional: false },
     ],
     concerns: ['bg', 'border', 'elevation', 'filter', 'play', 'position', 'size'],
   },
@@ -1087,11 +1055,9 @@ export const TAGS: readonly L1Tag[] = [
       { name: 'disabled', type: 'bool', default: 'false' },
       { name: 'variant', type: 'line | pill | enclosed', default: 'line', values: ['line', 'pill', 'enclosed'] },
       { name: 'size', type: 'md | sm | lg', default: 'md', values: ['md', 'sm', 'lg'] },
-      { name: 'orientation', type: 'horizontal | vertical', default: 'horizontal', values: ['horizontal', 'vertical'] },
     ],
     axes: [
       { name: 'disabled', values: ['false', 'true'], optional: false },
-      { name: 'orientation', values: ['horizontal', 'vertical'], optional: false },
       { name: 'size', values: ['md', 'sm', 'lg'], optional: false },
       { name: 'variant', values: ['line', 'pill', 'enclosed'], optional: false },
     ],
@@ -1101,7 +1067,7 @@ export const TAGS: readonly L1Tag[] = [
     tag: 'tab-list',
     component: 'tabs',
     role: 'part',
-    description: 'strip chrome. Sticky + variant Style. Orientation structural stamp from use:tabs.',
+    description: 'strip chrome. Sticky + variant Style. Owns its axis',
     acceptsChildren: true,
     props: [
       { name: 'sticky', type: 'bool', default: 'false' },
@@ -1119,7 +1085,7 @@ export const TAGS: readonly L1Tag[] = [
     tag: 'tab-panel',
     component: 'tabs',
     role: 'part',
-    description: 'orientation Style match (stamped by use:tabs).',
+    description: 'owns its pad. Orientation is this element\'s prop.',
     acceptsChildren: true,
     props: [
       { name: 'name', type: 'string' },
@@ -1128,7 +1094,7 @@ export const TAGS: readonly L1Tag[] = [
     axes: [
       { name: 'orientation', values: ['horizontal', 'vertical'], optional: false },
     ],
-    concerns: ['size'],
+    concerns: ['play', 'size'],
   },
   {
     tag: 'table',
@@ -1259,14 +1225,10 @@ export const TAGS: readonly L1Tag[] = [
     description: 'infinite linear marquee band. Host clips; track is a cluster',
     acceptsChildren: true,
     props: [
-      { name: 'duration', type: 'fast | normal | slow', default: 'normal', values: ['fast', 'normal', 'slow'] },
-      { name: 'reverse', type: 'bool', default: 'false' },
     ],
     axes: [
-      { name: 'duration', values: ['fast', 'normal', 'slow'], optional: false },
-      { name: 'reverse', values: ['false', 'true'], optional: false },
     ],
-    concerns: ['bg', 'fg', 'size', 'type'],
+    concerns: ['bg', 'fg', 'play', 'size', 'type'],
   },
   {
     tag: 'toast',
@@ -1275,12 +1237,12 @@ export const TAGS: readonly L1Tag[] = [
     description: 'auto-dismiss + close. Style value language only.',
     acceptsChildren: true,
     props: [
-      { name: 'tone', type: 'primary | info | success | warning | destructive | accent | muted', default: 'info', values: ['primary', 'info', 'success', 'warning', 'destructive', 'accent', 'muted'] },
+      { name: 'tone', type: 'primary | info | success | warning | danger | accent | muted', default: 'info', values: ['primary', 'info', 'success', 'warning', 'danger', 'accent', 'muted'] },
       { name: 'duration', type: 'string' },
       { name: 'onDismiss', type: 'string' },
     ],
     axes: [
-      { name: 'tone', values: ['primary', 'info', 'success', 'warning', 'destructive', 'accent', 'muted'], optional: false },
+      { name: 'tone', values: ['primary', 'info', 'success', 'warning', 'danger', 'accent', 'muted'], optional: false },
     ],
     concerns: ['bg', 'border', 'elevation', 'fg', 'filter', 'play', 'position', 'size', 'type'],
   },
@@ -1337,18 +1299,6 @@ export const TAGS: readonly L1Tag[] = [
       { name: 'variant', values: ['outline', 'ghost', 'segmented'], optional: false },
     ],
     concerns: ['bg', 'border', 'play'],
-  },
-  {
-    tag: 'toolbar',
-    component: 'toolbar',
-    role: 'host',
-    description: 'control strip. Header/action clusters.',
-    acceptsChildren: true,
-    props: [
-    ],
-    axes: [
-    ],
-    concerns: ['bg', 'border', 'fg'],
   },
   {
     tag: 'tooltip',

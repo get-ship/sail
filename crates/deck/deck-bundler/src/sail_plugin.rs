@@ -65,8 +65,6 @@ fn resolve_at_alias_on_disk(resolved: &Path) -> Option<String> {
 /// so the import is a harmless no-op. `\0` marks it virtual (Rollup/Rolldown
 /// convention: never read/written on disk).
 const SAIL_TAG_NOOP: &str = "\0sail-tag-noop";
-/// Virtual id prefix for L1 element `<controller>` extracts (`sail-l1:tabs`).
-const SAIL_L1_CTRL: &str = "\0sail-l1:";
 
 /// Detect compile mode for a `.sail` file using the HTML custom-element tag-name
 /// rule: a valid custom element tag MUST contain a hyphen (HTML spec §4.13.3).
@@ -236,11 +234,6 @@ impl Plugin for SailPlugin {
         // source `.sail` (so it compiles into the view bundle); an unknown tag
         // (view-private, or no CEM yet) → virtual no-op. Emitted only under
         // `--emit-component-imports`.
-        if let Some(tag) = spec.strip_prefix("sail-l1:") {
-            return Ok(Some(HookResolveIdOutput::from_id(format!(
-                "{SAIL_L1_CTRL}{tag}"
-            ))));
-        }
         if let Some(tag) = spec.strip_prefix("@sail-tag/") {
             return Ok(Some(match self.component_index.get(tag) {
                 Some(src) => HookResolveIdOutput::from_id(src.to_string_lossy().to_string()),
@@ -405,21 +398,6 @@ impl Plugin for SailPlugin {
             return Ok(Some(HookLoadOutput {
                 code: String::new().into(),
                 module_type: Some(ModuleType::Js),
-                ..Default::default()
-            }));
-        }
-        if let Some(tag) = id.strip_prefix(SAIL_L1_CTRL) {
-            let src = sail_compiler::stdlib::sources()
-                .iter()
-                .find(|(t, _)| *t == tag)
-                .map(|(_, s)| *s)
-                .ok_or_else(|| anyhow!("sail-l1:{tag} is not a stdlib element"))?;
-            let body = materialize_virtual_controller(src)?.ok_or_else(|| {
-                anyhow!("sail-l1:{tag} names a stdlib element with no `<controller>` block")
-            })?;
-            return Ok(Some(HookLoadOutput {
-                code: body.into(),
-                module_type: Some(ModuleType::Ts),
                 ..Default::default()
             }));
         }

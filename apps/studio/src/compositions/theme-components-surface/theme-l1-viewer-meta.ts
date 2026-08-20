@@ -204,10 +204,10 @@ const VARIANT_META: Partial<
     blurb: 'Typography scope · foreground; nested tags via type map; no size/variant props.',
   },
   ticker: {
-    variants: ['fast', 'normal', 'slow'],
-    variantAttr: 'duration',
+    variants: [],
+    variantAttr: '',
     blurb:
-      'Infinite marquee · duration/reverse drive use:marquee; host geometry only — author paint; reduced-motion settles.',
+      'Infinite marquee · compile-time loop · host geometry only — author paint; reduced-motion settles.',
   },
   tooltip: {
     variants: ['top', 'bottom', 'left', 'right'],
@@ -220,9 +220,9 @@ const VARIANT_META: Partial<
     blurb: 'Tab strip + panels (variant on tab-list).',
   },
   pagination: {
-    variants: ['sm', 'md', 'lg'],
-    variantAttr: 'size',
-    blurb: 'Page controls with ARIA current.',
+    variants: [],
+    variantAttr: '',
+    blurb: 'Page controls with ARIA current. Size Style is on each page-item.',
   },
 }
 

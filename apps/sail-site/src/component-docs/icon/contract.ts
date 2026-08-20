@@ -1,7 +1,7 @@
 import type { SurfaceContract } from '../contract-types'
 
 /**
- * Surface contract for icon — size/spin/name/label from prop-registry.
+ * Surface contract for icon — size/name/label from prop-registry.
  * No icon-specific pack (foreground is currentColor).
  */
 export const contract = {
@@ -18,12 +18,11 @@ export const contract = {
       default: 'md',
       control: 'slider',
     },
-    spin: { default: false, control: 'switch' },
   },
   faces: [],
   visual: {
     defaultRow: true,
-    cross: ['size', 'spin'],
+    cross: [.size.],
   },
   examples: true,
 } as const satisfies SurfaceContract

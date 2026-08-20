@@ -63,7 +63,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     <h2>Widgets own their private behavior</h2>
     <p>
       L1 widgets like <code>&lt;tabs&gt;</code>, <code>&lt;dropdown&gt;</code>,
-      <code>&lt;combobox&gt;</code>, <code>&lt;pagination&gt;</code>, and
+      <code>&lt;combobox&gt;</code>, and
       <code>&lt;radio-group&gt;</code> keep their keyboard/ARIA wiring as
       <em>closed implementation</em> inside the widget — not as public
       <code>use:</code> actions you reattach by hand. Prefer the widget tag.

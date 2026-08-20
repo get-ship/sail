@@ -1,25 +1,18 @@
 import type { SurfaceContract } from '../contract-types'
 
 /**
- * Surface contract for ticker — axes from prop-registry only.
+ * Surface contract for ticker — zero-props, canonical loop from prop-registry.
  * No ticker-specific pack (author Style on host).
  */
 export const contract = {
   slug: 'ticker',
   tag: 'ticker',
   kind: 'host',
-  axes: {
-    duration: {
-      values: ['fast', 'normal', 'slow'] as const,
-      default: 'normal',
-      control: 'select',
-    },
-    reverse: { default: false, control: 'switch' },
-  },
+  axes: {},
   faces: [],
   visual: {
     defaultRow: true,
-    cross: ['duration', 'reverse'],
+    cross: [],
   },
   examples: true,
 } as const satisfies SurfaceContract

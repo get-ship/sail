@@ -241,7 +241,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       <icon name="zap"></icon>
       <icon name="rocket" size="lg"></icon>
       <icon name="alarm-clock" size="xl" label="Alarm"></icon>
-      <icon name="refresh" spin></icon>
+      <icon name="refresh"></icon>
     </row>
     <p>
       An icon has no color prop — it draws in <code>currentColor</code>, the
@@ -261,9 +261,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       accessible name via semantic prop <code>label</code>; without it the
       icon is marked <code>hidden</code> — decoration, invisible to a
       screen reader. <code>size</code> runs <code>xs</code> to
-      <code>xl</code>, <code>spin</code> rotates (and respects reduced-motion),
-      and <code>src=</code> fetches any SVG URL when you need a glyph that
-      isn’t in the set.
+      <code>xl</code>. Pack glyphs resolve by <code>name</code> at compile
+      time — no <code>src=</code>, no fetch.
     </p>
 
     <h2>Prose</h2>

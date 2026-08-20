@@ -8,7 +8,7 @@ export const meta = {
   category: 'feedback',
   kind: 'host',
   blurb:
-    'Nothing-here surface: icon + title + body + action slots. Chrome via variant (bordered default, dashed inline, bare placeholder/connecting). tone defaults to muted and paints the icon slot. connecting upgrades to role=status / aria-live=polite via use:variantLive.',
+    'Nothing-here surface: icon + title + body + action slots. Chrome via variant (bordered default, dashed inline, bare placeholder/connecting). tone defaults to muted and paints the icon slot. connecting stamps role=status / aria-live=polite.',
   heading: 'prose',
   host: 'doc-empty-state',
   stageOwnsKnobs: true,
