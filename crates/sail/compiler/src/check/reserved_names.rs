@@ -1,14 +1,11 @@
 //! RESERVED NAMES — the language owns the bare-name namespace.
 //!
 //! Custom elements are hyphenated (`my-card`); the language's own elements
-//! are BARE (`card`, `dialog`, `button`). By check time, every language
-//! construct has lowered away — stdlib elements are spliced to their HTML
-//! structure, layout keywords (`<row>`/`<column>`) are `<div>`s — so any
-//! remaining BARE tag must be a real HTML/SVG element. A bare tag that is
-//! NEITHER valid HTML/SVG NOR a hyphenated component is an error: the
-//! author either typo'd (`<buton>`) or reached for a language element that
-//! does not exist yet (`<card>` before card is L1). Both should be told,
-//! not silently rendered as an unknown element.
+//! are BARE (`card`, `dialog`, `button`). Controller-less stdlib splices
+//! to HTML before this check. Controller-bearing L1 stays a language tag
+//! in the IR and compiles as a component. Layout keywords become `<div>`s.
+//! A remaining bare tag that is neither HTML/SVG nor a stdlib language
+//! element is an error: typo (`<buton>`) or a name that is not L1 yet.
 //!
 //! This is what makes L1 growth SAFE: when we promote a component to a bare
 //! language name, that name is already reserved — a user could never have
@@ -92,6 +89,11 @@ fn check_tag(el: &ElementInstr, parent_tag: Option<&str>) -> Result<(), CompileE
     }
     // `<slot>` variants and the framework's own bare tags are HTML.
     if is_known_element(tag) {
+        return Ok(());
+    }
+    // Language elements that compile as components (controller-bearing L1)
+    // remain in the IR — they are not unknown.
+    if crate::stdlib::element(tag).is_some() {
         return Ok(());
     }
     Err(CompileError::new(format!(

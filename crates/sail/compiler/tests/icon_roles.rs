@@ -62,6 +62,42 @@ fn named_pack_icon_html_contains_svg() {
         "pack roles do not use primeIconCache:\n{}",
         out.js
     );
+    assert!(
+        !out.js.contains("use:icon"),
+        "no use:icon stamp survives (icon is pure structure):\n{}",
+        out.js
+    );
+}
+
+#[test]
+fn unlabeled_icon_is_decorative_and_hidden() {
+    let out = compile(r#"<icon name="settings"></icon>"#, CompileOpts::default()).expect("compiles");
+    assert!(
+        out.js.contains("aria-hidden=\\\"true\\\""),
+        "decorative icon has aria-hidden at compile time:\n{}",
+        out.js
+    );
+    assert!(!out.js.contains("role=\\\"img\\\""), "{}", out.js);
+}
+
+#[test]
+fn labeled_icon_is_an_image_with_name() {
+    let out = compile(
+        r#"<icon label="Close" name="settings"></icon>"#,
+        CompileOpts::default(),
+    )
+    .expect("compiles");
+    assert!(
+        out.js.contains("role=\\\"img\\\""),
+        "labeled icon is role=img (anatomy, not runtime):\n{}",
+        out.js
+    );
+    assert!(
+        out.js.contains("aria-label=\\\"Close\\\""),
+        "label lowers to aria-label:\n{}",
+        out.js
+    );
+    assert!(!out.js.contains("aria-hidden"), "{}", out.js);
 }
 
 #[test]

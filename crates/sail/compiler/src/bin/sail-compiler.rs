@@ -1170,9 +1170,9 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
             Local UI: `signal` / `derived` in `<controller>`, still in the graph.\n\
          2. **Actions (`use:`)** — sanctioned DOM/measurement home. Public\n   \
             catalog is attach-anywhere capabilities (anchor, autosize, …).\n   \
-            Widget-private behavior (tabs/menu/pagination/radioGroup/combobox)\n   \
+            Widget-private behavior (tabs/menu/radioGroup/combobox)\n   \
             is closed inside L1 widgets — use the widget tag, not a public\n   \
-            `use:tabs`. Author actions live in `src/actions/` under a strict\n   \
+            `use:` of the widget name. Author actions live in `src/actions/` under a strict\n   \
             floor (ERROR: no style/class/layout, no signal/store/query/mutation,\n   \
             no network, host-only). App controllers do **not** touch `.style`\n   \
             / `createElement`.\n\

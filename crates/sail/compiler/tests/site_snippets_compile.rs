@@ -160,9 +160,8 @@ fn owned_sail_snippets_compile() {
                 continue;
             }
             checked += 1;
-            // A snippet that declares `<scope>` props/variants teaches a
-            // COMPONENT — compile it as one (a tag), or the position gate
-            // rightly refuses props in a tagless route/page compile.
+            // A snippet that declares `<scope>` props/variants is a
+            // component demo — compile it with a tag when present.
             let component_meta = snip
                 .contains("<scope>")
                 .then(|| sail_compiler::ComponentMeta {

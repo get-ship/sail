@@ -1675,10 +1675,8 @@ fn emit_globals(out: &mut String, bare_tokens: &BTreeSet<String>) {
          \x20 const dropzone: Action<unknown>\n\
          \x20 const focus: Action<boolean | null | undefined | void>\n\
          \x20 const hotkeys: Action<HotkeysMap | HotkeyEntry[] | undefined>\n\
-         \x20 const icon: Action<string | undefined>\n\
          \x20 const inView: Action<InViewHandler | undefined>\n\
          \x20 type InViewHandler = (entry: IntersectionObserverEntry) => void\n\
-         \x20 function primeIconCache(map: Record<string, string>): void\n\
          \x20 const rect: Action<string | undefined>\n\
          \x20 const tipDescribe: Action<string | undefined>\n\
          \x20 const virtualRow: Action<unknown>\n\

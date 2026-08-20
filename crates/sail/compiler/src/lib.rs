@@ -465,13 +465,18 @@ pub fn compile_element(
         ))
         .with_category("sail-element-name"));
     }
-    // Job C: `<controller>` is the L1 state home (same one-file form as
-    // app components). Extracted from the template; the block is served
-    // as `sail-l1:{tag}` and attached with `runController` — not CE.
+    // Job C: `<controller>` is the state home (same one-file form as
+    // app components). Extracted from the template; the page calls
+    // `setup(props)` — not CE, not a second runtime runner.
     let (stripped, controller_src) = parse::preprocess::extract_controller_block(source);
+    let ctrl_path = if crate::stdlib::sources().iter().any(|(t, _)| *t == name) {
+        crate::stdlib::source_file(name)
+    } else {
+        PathBuf::from(format!("stdlib/{name}.sail"))
+    };
     let parsed = controller_src.as_ref().and_then(|body| {
         check::controller_parse::parse(
-            PathBuf::from(format!("stdlib/{name}.sail")),
+            ctrl_path.clone(),
             parse::preprocess::wrap_controller_body(body),
         )
     });
@@ -491,10 +496,16 @@ pub fn compile_element(
     spinnaker::with_host_surface(Some(host), || {
         let program = parse::parse_element_source(&stripped)?;
         let bindings = check::binding::resolve(&stripped, &program, parsed.as_ref())?;
-        let mut out =
-            emit::element::emit_element_with_bindings(&program, &stripped, name, &bindings)?;
-        if controller_src.is_some() {
-            emit::element::stamp_ctrl(&mut out.structure_html, name);
+        let mut out = emit::element::emit_element_with_bindings(
+            &program,
+            &stripped,
+            name,
+            &bindings,
+            controller_src.is_some(),
+        )?;
+        if let Some(body) = &controller_src {
+            let rewritten = check::query_keys::rewrite(body)?;
+            out.controller_js = Some(parse::preprocess::wrap_controller_body(&rewritten));
         }
         Ok(out)
     })
@@ -530,6 +541,7 @@ fn compile_inner(source: &str, opts: CompileOpts) -> Result<CompileOutput, Compi
     // throws at runtime unless `name` is a valid custom-element name. Reject it
     // at compile time (fail-loud) rather than emit code that explodes on load.
     if let Some(meta) = &opts.component_meta
+        && crate::stdlib::element(&meta.name).is_none()
         && let Err(why) = validate_custom_element_name(&meta.name)
     {
         return Err(CompileError::new(format!(
@@ -562,22 +574,15 @@ fn compile_inner(source: &str, opts: CompileOpts) -> Result<CompileOutput, Compi
 
     let parsed = compile_span("parse-total", || parse::parse_full(effective_source))
         .map_err(|e| attach_path(e, &opts))?;
-    let program = parsed.program;
-    // `<scope>` member sets are POSITION-SCOPED: the same input that names a
-    // file (a tag = component; tagless = route/page) decides which members
-    // are addable. A route receives params from the router, never props from
-    // a parent — `props:` there is a modeling error, told now.
-    if opts.component_meta.is_none() && !program.props.is_empty() {
-        return Err(attach_path(
-            CompileError::new(
-                "`props:` declared in a route/page `<scope>` — a route has no \
-                 parent to fill props; it receives route params from the router. \
-                 Props are component members."
-                    .to_string(),
-            )
-            .with_category("sail-route-props"),
-            &opts,
-        ));
+    let mut program = parsed.program;
+    if let Some(tag) = opts
+        .source_path
+        .as_ref()
+        .and_then(|p| p.file_stem())
+        .and_then(|s| s.to_str())
+        && crate::stdlib::element(tag).is_some()
+    {
+        crate::semantic_props::stamp_language_anatomy(&mut program, tag);
     }
     compile_span("check-run", || {
         check::run(

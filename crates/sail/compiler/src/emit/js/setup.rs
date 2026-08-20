@@ -44,7 +44,9 @@ pub(super) fn emit_setup_body(
         w.line("const __props = ctx.props ?? {};");
         for p in &program.props {
             let ident = js_ident(&camel_of(&p.name));
-            w.line(&format!("$scope.{ident} = __props.{ident};"));
+            w.line(&format!(
+                "$scope.{ident} = (function(__v){{ return typeof __v === \"function\" ? __v : signal(__v); }})(__props.{ident});"
+            ));
         }
     }
     if opts.setup_url.is_some() {

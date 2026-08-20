@@ -142,20 +142,6 @@ pub const ACTIONS: &[ActionEntry] = &[
         writes: &[],
     },
     ActionEntry {
-        name: "combobox",
-        param: "void",
-        summary: "Internal: L1 <combobox> closed behavior (not public use: — attach the widget).",
-        auto_import: true,
-        writes: &[],
-    },
-    ActionEntry {
-        name: "contextMenu",
-        param: "void",
-        summary: "Right-click menu: open on contextmenu, close on outside-click / ESC.",
-        auto_import: true,
-        writes: &[],
-    },
-    ActionEntry {
         name: "describedControl",
         param: "void",
         summary: "Form control ↔ hint/error association (aria-describedby + aria-invalid) for any host with `.hint`/`.error`/`.control` anatomy.",
@@ -184,23 +170,9 @@ pub const ACTIONS: &[ActionEntry] = &[
         writes: &[],
     },
     ActionEntry {
-        name: "dismissible",
-        param: "void",
-        summary: "Invoke `onRemove` on a `[removable]` host for Backspace/Delete or remove-button click — the attr-gated dismiss mix-in.",
-        auto_import: true,
-        writes: &[],
-    },
-    ActionEntry {
         name: "drawerSwipe",
         param: "void",
         summary: "Internal: L1 <drawer> dismiss — swipe toward the docked edge, Escape, and light-dismiss close a dismissible non-modal dialog.",
-        auto_import: true,
-        writes: &[],
-    },
-    ActionEntry {
-        name: "dropzone",
-        param: "undefined",
-        summary: "Drag-and-drop file receiver; reads files into a controller-side handler.",
         auto_import: true,
         writes: &[],
     },
@@ -240,13 +212,6 @@ pub const ACTIONS: &[ActionEntry] = &[
         writes: &[],
     },
     ActionEntry {
-        name: "icon",
-        param: "void",
-        summary: "Internal: L1 <icon> closed behavior (not public use: — attach the widget). Resolves a glyph from the icon cache.",
-        auto_import: true,
-        writes: &[],
-    },
-    ActionEntry {
         name: "inView",
         param: "InViewHandler | undefined",
         summary: "Fire a callback when the host enters the viewport (IntersectionObserver).",
@@ -257,20 +222,6 @@ pub const ACTIONS: &[ActionEntry] = &[
         name: "liveBox",
         param: "string | null | undefined",
         summary: "Apply freeform CSS declarations for live specimen geometry (border-radius, box-shadow, …).",
-        auto_import: true,
-        writes: &[],
-    },
-    ActionEntry {
-        name: "liveRegion",
-        param: "void",
-        summary: "Sync role/aria-live from tone: warning|destructive → assertive alert; else polite status.",
-        auto_import: true,
-        writes: &[],
-    },
-    ActionEntry {
-        name: "marquee",
-        param: "void",
-        summary: "Infinite seamless track scroll for L1 <ticker> (duration/reverse on host).",
         auto_import: true,
         writes: &[],
     },
@@ -291,21 +242,7 @@ pub const ACTIONS: &[ActionEntry] = &[
     ActionEntry {
         name: "menu",
         param: "void",
-        summary: "Internal: L1 <dropdown>/<context-menu> closed behavior (not public use: — attach the widget).",
-        auto_import: true,
-        writes: &[],
-    },
-    ActionEntry {
-        name: "pagination",
-        param: "void",
-        summary: "Internal: L1 <pagination> closed behavior (not public use: — attach the widget).",
-        auto_import: true,
-        writes: &[],
-    },
-    ActionEntry {
-        name: "passwordReveal",
-        param: "void",
-        summary: "Internal: password field peek toggle (stamped on type=password when reveal is not false).",
+        summary: "Internal: L1 <dropdown> closed behavior (not public use: — attach the widget).",
         auto_import: true,
         writes: &[],
     },
@@ -322,27 +259,6 @@ pub const ACTIONS: &[ActionEntry] = &[
         summary: "Anchor a fixed-size port to the midpoint of one of its parent's four edges.",
         auto_import: true,
         writes: &["portTop", "portLeft", "portRight", "portBottom"],
-    },
-    ActionEntry {
-        name: "pressable",
-        param: "void",
-        summary: "Button semantics (role, aria-disabled/tabindex sync, Enter/Space activation) for a non-button host — the pressable mix-in.",
-        auto_import: true,
-        writes: &[],
-    },
-    ActionEntry {
-        name: "pressed",
-        param: "void",
-        summary: "Reflect `[selected]` to `aria-pressed` on a toggle host — the pressed-state mix-in (pairs with pressable).",
-        auto_import: true,
-        writes: &[],
-    },
-    ActionEntry {
-        name: "radioGroup",
-        param: "void",
-        summary: "Internal: L1 <radio-group> closed behavior (not public use: — attach the widget).",
-        auto_import: true,
-        writes: &[],
     },
     ActionEntry {
         name: "rangeFill",
@@ -401,13 +317,6 @@ pub const ACTIONS: &[ActionEntry] = &[
         writes: &[],
     },
     ActionEntry {
-        name: "tabs",
-        param: "void",
-        summary: "Internal: L1 <tabs> closed behavior (not public use: — attach the widget).",
-        auto_import: true,
-        writes: &[],
-    },
-    ActionEntry {
         name: "targetCursor",
         param: "void",
         summary: "Switch the cursor to a custom 'target' style while over the element.",
@@ -425,20 +334,6 @@ pub const ACTIONS: &[ActionEntry] = &[
         name: "tipDescribe",
         param: "void",
         summary: "Hover/focus-triggered tooltip; open on pointer-in, close on pointer-out with delay.",
-        auto_import: true,
-        writes: &[],
-    },
-    ActionEntry {
-        name: "toggleGroup",
-        param: "void",
-        summary: "Toggle-group keyboard nav: arrow keys move focus, space toggles.",
-        auto_import: true,
-        writes: &[],
-    },
-    ActionEntry {
-        name: "variantLive",
-        param: "void",
-        summary: "Variant-gated live region: variant=connecting → role=status/aria-live=polite; else role=note/aria-live=off. Re-syncs on variant mutation.",
         auto_import: true,
         writes: &[],
     },
@@ -476,15 +371,15 @@ pub const ACTIONS: &[ActionEntry] = &[
 /// auto-imported for stdlib but are not the taught package API.
 ///
 /// ACTIONS-1 diet: widget-private behaviors (`tabs`, `radioGroup`, `menu`,
-/// `pagination`, `combobox`, `icon`, `resizable`) are closed impl inside L1 widgets — not public.
+/// `combobox`, `icon`, `resizable`, `contextMenu`, `toggleGroup`) are closed
+/// impl inside L1 widgets — not public.
 /// An action is node-lifetime imperative behavior the language has no syntax
-/// for — never content, state, or data (icon fails that test; the element owns it).
-pub const PUBLIC_ACTION_COUNT: usize = 8;
+/// for — never content, state, or data (marquee fails that test; the element owns it).
+pub const PUBLIC_ACTION_COUNT: usize = 7;
 pub const PUBLIC_ACTION_NAMES: &[&str; PUBLIC_ACTION_COUNT] = &[
     "autosize",
     "clickOutside",
     "clipboard",
-    "dropzone",
     "focus",
     "hotkeys",
     "inView",
@@ -516,35 +411,23 @@ pub const BUILTIN_ACTION_NAMES: &[&str] = &[
     "chromeOffset",
     "clickOutside",
     "clipboard",
-    "combobox",
-    "contextMenu",
     "describedControl",
     "detailsDisabled",
     "detailsToggle",
     "dismissControl",
-    "dismissible",
     "drawerSwipe",
-    "dropzone",
     "eventSpan",
     "focus",
     "gridTracks",
     "hotkeys",
     "hoverSurface",
-    "icon",
     "inView",
     "liveBox",
-    "liveRegion",
-    "marquee",
     "maxWidth",
     "mediaFallback",
     "menu",
-    "pagination",
-    "passwordReveal",
     "pin",
     "portEdge",
-    "pressable",
-    "pressed",
-    "radioGroup",
     "rangeFill",
     "rangePair",
     "recoverySurface",
@@ -553,12 +436,9 @@ pub const BUILTIN_ACTION_NAMES: &[&str] = &[
     "spotlight",
     "swatch",
     "syntaxHighlight",
-    "tabs",
     "targetCursor",
     "themeSelect",
     "tipDescribe",
-    "toggleGroup",
-    "variantLive",
     "virtualRow",
     "virtualSpacer",
     "worldTransform",
@@ -592,7 +472,6 @@ pub const BARE_REFERENCED_ACTION_NAMES: &[&str] = &[
     "cellPad",
     "clickOutside",
     "clipboard",
-    "dropzone",
     "eventSpan",
     "focus",
     "gridTracks",
@@ -719,30 +598,61 @@ mod tests {
     #[test]
     fn public_action_count_matches_names_array() {
         assert_eq!(PUBLIC_ACTION_COUNT, PUBLIC_ACTION_NAMES.len());
-        assert_eq!(PUBLIC_ACTION_COUNT, 8);
+        assert_eq!(PUBLIC_ACTION_COUNT, 7);
     }
 
     #[test]
     fn diet_widget_privates_are_not_public() {
-        for name in [
-            "tabs",
-            "radioGroup",
-            "menu",
-            "pagination",
-            "combobox",
-            "icon",
-            "resizable",
-            "drawerSwipe",
-        ] {
+        assert!(
+            ACTIONS.iter().all(|a| a.name != "tabs") && !is_public_action("tabs"),
+            "tabs brain is the widget controller — gone from ACTIONS"
+        );
+        assert!(
+            ACTIONS.iter().all(|a| a.name != "combobox") && !is_public_action("combobox"),
+            "combobox brain is the widget controller — gone from ACTIONS"
+        );
+        assert!(
+            ACTIONS.iter().all(|a| a.name != "contextMenu") && !is_public_action("contextMenu"),
+            "contextMenu brain is the widget controller — gone from ACTIONS"
+        );
+        assert!(
+            ACTIONS.iter().all(|a| a.name != "dropzone") && !is_public_action("dropzone"),
+            "dropzone brain is the <file> controller — gone from ACTIONS"
+        );
+        assert!(
+            ACTIONS.iter().all(|a| a.name != "passwordReveal") && !is_public_action("passwordReveal"),
+            "passwordReveal brain is the <input> controller — gone from ACTIONS"
+        );
+        assert!(
+            ACTIONS.iter().all(|a| a.name != "radioGroup") && !is_public_action("radioGroup"),
+            "radioGroup brain is the widget controller — gone from ACTIONS"
+        );
+        assert!(
+            ACTIONS.iter().all(|a| a.name != "toggleGroup") && !is_public_action("toggleGroup"),
+            "toggleGroup brain is the widget controller — gone from ACTIONS"
+        );
+        for name in ["menu", "resizable", "drawerSwipe"] {
             assert!(
                 !is_public_action(name),
                 "{name} must not be on the public use: surface (ACTIONS-1 diet)"
             );
             assert!(
                 ACTIONS.iter().any(|a| a.name == name),
-                "{name} stays in ACTIONS as internal auto-import for stdlib widgets"
+                "{name} stays in ACTIONS as internal auto-import until its brain moves"
             );
         }
+        assert!(
+            ACTIONS.iter().all(|a| a.name != "icon") && !is_public_action("icon"),
+            "icon brain is the <icon> widget structure — gone from ACTIONS"
+        );
+        assert!(
+            ACTIONS.iter().all(|a| a.name != "marquee") && !is_public_action("marquee"),
+            "marquee brain is the <ticker> track loop (animate: play(marquee)) — gone from ACTIONS"
+        );
+        assert!(
+            ACTIONS.iter().all(|a| a.name != "pagination") && !is_public_action("pagination"),
+            "pagination brain is the <pagination>/<page-item> controllers — gone from ACTIONS"
+        );
     }
 
     #[test]

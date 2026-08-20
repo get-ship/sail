@@ -45,8 +45,29 @@ pub fn collect_attr_imports(
     match a {
         AttrInstr::Static { .. } => {}
         AttrInstr::Controller { tag, .. } => {
-            out.runtime_imports.insert("runController");
+            out.runtime_imports.insert("createChildScope");
+            out.runtime_imports.insert("withScope");
             out.l1_controllers.insert(tag.clone());
+            if let Some(std) = crate::stdlib::element(tag) {
+                for attach in &std.out.controller_attaches {
+                    match attach {
+                        crate::emit::l1_controller::ControllerAttach::Use { action, .. } => {
+                            if let Some(a) = crate::action_manifest::ACTIONS
+                                .iter()
+                                .find(|a| a.name == action.as_str())
+                            {
+                                out.runtime_imports.insert(a.name);
+                            }
+                        }
+                        crate::emit::l1_controller::ControllerAttach::On { .. } => {
+                            out.runtime_imports.insert("on");
+                        }
+                        crate::emit::l1_controller::ControllerAttach::Bind { .. } => {
+                            out.runtime_imports.insert("bindAttr");
+                        }
+                    }
+                }
+            }
         }
         AttrInstr::Expr { name, .. } => {
             // Web backend (hidden from author): CE → bindDynamic; native IDL

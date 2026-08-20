@@ -551,15 +551,16 @@ pub fn is_icon_host(el: &crate::ir::ElementInstr) -> bool {
     if tag == "icon" || tag == "sail-icon" {
         return true;
     }
-    el.attrs.iter().any(|a| {
-        matches!(
-            a,
-            AttrInstr::Use {
-                action,
-                ..
-            } if action == "icon"
-        )
-    })
+    if tag == "span" {
+        return el.attrs.iter().any(|a| {
+            if let AttrInstr::Static { name, value, .. } = a {
+                name == "class" && value.split_whitespace().any(|c| c == "sail-icon")
+            } else {
+                false
+            }
+        });
+    }
+    false
 }
 
 /// Walk template and collect static icon role names (no resolve).

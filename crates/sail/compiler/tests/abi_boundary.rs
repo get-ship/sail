@@ -103,7 +103,6 @@ fn root_barrel_does_not_export_abi_plumbing() {
         "bindIf",
         "bindText",
         "runAction",
-        "runController",
         "__tpl",
         "delegateEvents",
         "mountComponent",
@@ -125,7 +124,6 @@ fn root_barrel_does_not_export_abi_plumbing() {
         "bindIf",
         "bindText",
         "runAction",
-        "runController",
         "__tpl",
         "__sail_motion_attach",
         "delegateEvents",
@@ -246,7 +244,7 @@ fn action_table_is_exported_by_the_runtime() {
         return;
     };
 
-    assert_eq!(PUBLIC_ACTION_COUNT, 8);
+    assert_eq!(PUBLIC_ACTION_COUNT, 7);
 
     let leaked: Vec<&str> = ACTIONS
         .iter()
@@ -282,7 +280,7 @@ fn action_table_has_no_phantom_consumers() {
         return;
     };
 
-    assert_eq!(PUBLIC_ACTION_COUNT, 8);
+    assert_eq!(PUBLIC_ACTION_COUNT, 7);
 
     // Every action in the table must be re-exported from the full
     // actions barrel. Drift here is the class of bug this test exists
@@ -316,18 +314,17 @@ fn action_table_has_no_phantom_consumers() {
     );
 }
 
-/// Public `use:` is the generic toolkit (Job E). Widget-tied names
-/// stay auto-imported for stdlib until Job C moves brains into
-/// `<controller>`.
+/// Public `use:` is the generic toolkit (Job E). Widget brains are not
+/// auto-imported `use:` names.
 #[test]
 fn public_action_surface_is_curated() {
     use sail_compiler::action_manifest::{
         ACTIONS, PUBLIC_ACTION_COUNT, PUBLIC_ACTION_NAMES, is_public_action, public_actions,
     };
 
-    assert_eq!(PUBLIC_ACTION_COUNT, 8);
-    assert_eq!(PUBLIC_ACTION_NAMES.len(), 8);
-    assert_eq!(public_actions().count(), 8);
+    assert_eq!(PUBLIC_ACTION_COUNT, 7);
+    assert_eq!(PUBLIC_ACTION_NAMES.len(), 7);
+    assert_eq!(public_actions().count(), 7);
 
     let mut sorted = PUBLIC_ACTION_NAMES.to_vec();
     sorted.sort();
@@ -353,6 +350,7 @@ fn public_action_surface_is_curated() {
         "contextMenu",
         "anchor",
         "tipDescribe",
+        "dropzone",
     ] {
         assert!(
             !is_public_action(widget),
@@ -360,10 +358,9 @@ fn public_action_surface_is_curated() {
         );
     }
 
-    // Emitter pulls every builtin action (including internal) from the
-    // dedicated actions subpath — never from the front door or ABI barrel
-    // alone, so stripping internal names from index.ts does not break stdlib.
-    let src = r#"<div use:recoverySurface use:tabs use:toggleGroup></div>"#;
+    // Toolkit `use:` auto-imports from the actions subpath — never the
+    // author front door.
+    let src = r#"<div use:clickOutside use:focus use:hotkeys></div>"#;
     let out = sail_compiler::compile(
         src,
         sail_compiler::CompileOpts {
@@ -377,10 +374,10 @@ fn public_action_surface_is_curated() {
         out.contains("from \"@ship/sail-runtime/actions\""),
         "auto-imported actions must come from `@ship/sail-runtime/actions`:\n{out}"
     );
-    for name in ["recoverySurface", "tabs", "toggleGroup"] {
+    for name in ["clickOutside", "focus", "hotkeys"] {
         assert!(
             out.contains(name),
-            "expected auto-import of internal/public action `{name}`:\n{out}"
+            "expected auto-import of toolkit action `{name}`:\n{out}"
         );
     }
     // Must not pull actions through the author front door (exact root

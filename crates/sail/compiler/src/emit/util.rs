@@ -1,13 +1,13 @@
 //! Shared identifier helpers for the JS emitter.
 
-/// Binding for a virtual L1 controller import (`sail-l1:theme-picker` → `__ctrl_theme_picker`).
+/// Binding for a mount-form L1 import (`tabs` → `__mod_tabs`).
 pub fn l1_controller_ident(tag: &str) -> String {
-    format!("__ctrl_{}", js_ident(tag))
+    format!("__mod_{}", js_ident(tag))
 }
 
-/// Specifier the bundler resolves to the element's `<controller>` extract.
+/// Specifier the bundler compiles as tagless mount-form (the `.sail` itself).
 pub fn l1_controller_specifier(tag: &str) -> String {
-    format!("sail-l1:{tag}")
+    crate::stdlib::source_file(tag).display().to_string()
 }
 
 /// Coerce `name` into a valid JS identifier — replace any character

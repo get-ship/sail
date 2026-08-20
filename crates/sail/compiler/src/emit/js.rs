@@ -107,11 +107,11 @@ pub fn emit_module(
         w.push_str(&hoisted);
     }
 
-    // The mount/register split is keyed on the tag (`component_meta`), not a
-    // mode flag: a tagged source registers a custom element (`component(tag,
-    // def)`); a tagless one emits the mount-form (`component(setup)` — a deck
-    // page). Both call `component(...)`; the tag decides which overload.
-    if let Some(meta) = opts.component_meta.as_ref() {
+    // Language tags (stdlib) are mount-form even if the host passed a
+    // hyphenated `component_meta`. CE registration is for author packs.
+    if let Some(meta) = opts.component_meta.as_ref()
+        && crate::stdlib::element(&meta.name).is_none()
+    {
         component::emit_registered_component(&mut w, program, body, meta);
     } else {
         mount::emit_mount_export(&mut w, program, body);

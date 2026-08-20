@@ -72,6 +72,11 @@ pub const RUNTIME_AMBIENT: &[(&str, &str, &str)] = &[
         "coalesce multiple signal writes into one flush",
     ),
     (
+        "contextKey",
+        "contextKey",
+        "mint a typed context key for provideContext / injectContext",
+    ),
+    (
         "controller",
         "controller",
         "the controller factory — wraps a setup function into a bound scope",
@@ -168,6 +173,11 @@ pub const RUNTIME_AMBIENT: &[(&str, &str, &str)] = &[
         "write or remove a host attribute via SailHost (Pure-safe)",
     ),
     (
+        "injectContext",
+        "injectContext",
+        "read a value published via provideContext on an ancestor scope",
+    ),
+    (
         "interval",
         "interval",
         "run a callback on a fixed period while the controller is mounted",
@@ -211,6 +221,11 @@ pub const RUNTIME_AMBIENT: &[(&str, &str, &str)] = &[
         "persistTheme",
         "persistTheme",
         "persist the chosen theme id for next boot",
+    ),
+    (
+        "provideContext",
+        "provideContext",
+        "publish a value on the current controller scope for injectContext",
     ),
     (
         "provideStore",

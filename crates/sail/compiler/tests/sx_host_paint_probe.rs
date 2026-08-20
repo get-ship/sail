@@ -1860,7 +1860,7 @@ fn table_cells_are_family_parts_not_descendant_paint() {
 fn tab_list_sticky_and_variant_on_host_not_parent_pe() {
     // Sticky + variant on <tab-list> host. Pill track CVA. Child tab matrices
     // are stamped variant CVA on tab.sail (not parent host CSS). Vertical host axis
-    // is layout-owned; list/panel orientation stamped by use:tabs.
+    // is layout-owned; list/panel orientation stamped by the tabs controller.
     let src = include_str!("../stdlib/tabs/tab-list.sail");
     let out = compile_element(src, "tab-list").expect("tab-list compiles");
     assert!(
@@ -2280,8 +2280,8 @@ fn pagination_size_cva_on_page_item() {
         "pagination --pg-* host CSS must be gone from contracts"
     );
     assert!(
-        pag_src.contains("use:pagination"),
-        "pagination stamps size via use:pagination"
+        !pag_src.contains("use:pagination"),
+        "pagination brain is the controller — no use: action on the host:\n{pag_src}"
     );
 }
 

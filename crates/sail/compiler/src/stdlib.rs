@@ -17,6 +17,7 @@
 //! mechanism ever lands, this gate is the first candidate to hoist.
 
 use crate::emit::element::ElementOutput;
+use std::path::PathBuf;
 use std::sync::LazyLock;
 
 pub struct StdlibElement {
@@ -179,6 +180,21 @@ pub fn family_of(tag: &str) -> &'static str {
 /// True when `tag` is the family host (directory name / hub tile).
 pub fn is_family_host(tag: &str) -> bool {
     family_of(tag) == tag
+}
+
+/// On-disk `.sail` for a stdlib tag. Parts live under the family directory
+/// (`tab` → `stdlib/tabs/tab.sail`). The `a` host is the one filename
+/// mismatch (`anchor.sail`).
+pub fn source_file(tag: &str) -> PathBuf {
+    let family = family_of(tag);
+    let stem = match tag {
+        "a" => "anchor",
+        t => t,
+    };
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("stdlib")
+        .join(family)
+        .join(format!("{stem}.sail"))
 }
 
 /// Tags in `family`, host first, then parts by name.

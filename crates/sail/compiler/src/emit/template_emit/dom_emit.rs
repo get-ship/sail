@@ -90,6 +90,9 @@ impl TemplateEmitter {
         parent_var: &str,
         cleanups_var: &str,
     ) -> String {
+        if let Some(v) = self.emit_inlined_stdlib(w, el, parent_var, cleanups_var) {
+            return v;
+        }
         let lower = el.tag.to_ascii_lowercase();
         // ── TEMPLATE CLONE (the fast path) ──────────────────────────────────
         // If this subtree is static structure, clone it instead of building it.
@@ -107,7 +110,11 @@ impl TemplateEmitter {
             let tpl = self.hoist_template(&html);
             let v = self.fresh("e");
             w.line(&format!("const {v} = {tpl}();"));
+            let opened = self.emit_controller_scope_open(w, el, cleanups_var);
             self.wire_template(w, el, &v, cleanups_var);
+            if opened {
+                w.line("});");
+            }
             if !parent_var.is_empty() {
                 w.line(&format!("{parent_var}.appendChild({v});"));
             }
@@ -151,13 +158,29 @@ impl TemplateEmitter {
         if is_svg_root {
             self.svg_depth += 1;
         }
+        let saved_inst = self.ctrl_inst.take();
+        let opened = self.emit_controller_scope_open(w, el, cleanups_var);
         for a in &el.attrs {
             self.emit_attr(w, a, &v, cleanups_var, &el.tag, &el.attrs);
+        }
+        if crate::semantic_props::is_icon_host_ir(&el.attrs)
+            && let Some((aname, aval)) = crate::semantic_props::icon_anatomy_attr(&el.attrs)
+        {
+            w.line(&format!(
+                "{v}.setAttribute({}, {});",
+                js_string(aname),
+                js_string(aval)
+            ));
         }
         if claim_root {
             w.line(&format!("{v}.classList.add(\"sail-root\");"));
         }
         self.emit_children(w, &el.children, &v, cleanups_var);
+        self.emit_controller_attaches(w, el, &v, cleanups_var);
+        if opened {
+            w.line("});");
+        }
+        self.ctrl_inst = saved_inst;
         if is_svg_root {
             self.svg_depth -= 1;
         }
@@ -433,9 +456,13 @@ impl TemplateEmitter {
             }
             AttrInstr::Controller { tag, .. } => {
                 let ident = crate::emit::util::l1_controller_ident(tag);
+                let inst = self.fresh("inst");
+                let props = static_controller_props_js(sibling_attrs);
+                // Same `controller().setup` as an app module. No L1 runner.
                 w.line(&format!(
-                    "{cleanups_var}.push(runController({el_var}, {ident}));"
+                    "const {inst} = ({ident} && typeof {ident}.setup === \"function\") ? ({ident}.setup({props}) || {{}}) : {{}};"
                 ));
+                self.ctrl_inst = Some(inst);
             }
             AttrInstr::Motion {
                 trigger,
@@ -656,6 +683,79 @@ impl TemplateEmitter {
             _ => None,
         }
     }
+
+    fn controller_tag(el: &ElementInstr) -> Option<&str> {
+        el.attrs.iter().find_map(|a| match a {
+            AttrInstr::Controller { tag, .. } => Some(tag.as_str()),
+            _ => None,
+        })
+    }
+
+    fn emit_controller_scope_open(
+        &mut self,
+        w: &mut Writer,
+        el: &ElementInstr,
+        cleanups_var: &str,
+    ) -> bool {
+        if Self::controller_tag(el).is_none() {
+            return false;
+        }
+        let s = self.fresh("ls");
+        w.line(&format!("const {s} = createChildScope();"));
+        w.line(&format!("{cleanups_var}.push(() => {s}.dispose());"));
+        w.line(&format!("withScope({s}, () => {{"));
+        true
+    }
+
+    fn emit_controller_attaches(
+        &mut self,
+        w: &mut Writer,
+        el: &ElementInstr,
+        el_var: &str,
+        _cleanups_var: &str,
+    ) {
+        let Some(inst) = self.ctrl_inst.take() else {
+            return;
+        };
+        let Some(tag) = Self::controller_tag(el) else {
+            return;
+        };
+        let Some(std) = crate::stdlib::element(tag) else {
+            return;
+        };
+        for attach in &std.out.controller_attaches {
+            w.line(&format!(
+                "{}",
+                crate::emit::l1_controller::emit_attach_js(el_var, &inst, attach)
+            ));
+        }
+    }
+}
+
+fn static_controller_props_js(attrs: &[AttrInstr]) -> String {
+    let mut parts: Vec<String> = Vec::new();
+    for a in attrs {
+        let AttrInstr::Static { name, value, .. } = a else {
+            continue;
+        };
+        if skip_controller_prop_attr(name) {
+            continue;
+        }
+        let key = camel_of(name);
+        parts.push(format!("{key}: {}", js_string(value)));
+    }
+    format!("{{ {} }}", parts.join(", "))
+}
+
+fn skip_controller_prop_attr(name: &str) -> bool {
+    matches!(
+        name,
+        "class" | "style" | "id" | "role" | "slot" | "hidden" | "anatomy"
+    ) || name.starts_with("data-")
+        || name.starts_with("aria-")
+        || name.starts_with("use:")
+        || name.starts_with("_sail")
+        || name.contains(':')
 }
 
 pub(super) fn serialize_modifiers(mods: &[Modifier]) -> String {
@@ -933,6 +1033,11 @@ impl super::TemplateEmitter {
         if lower.starts_with("use-") {
             return None;
         }
+        // Inlined L1 projects `<slot>` at emit time. A clone would bake
+        // the empty `<slot>` into HTML and never walk the fill.
+        if lower == "slot" && !self.slot_stack.is_empty() {
+            return None;
+        }
 
         out.push('<');
         out.push_str(&el.tag);
@@ -985,6 +1090,15 @@ impl super::TemplateEmitter {
                     }
                 }
             }
+        }
+        if let Some((aname, aval)) = crate::semantic_props::icon_anatomy_attr(&el.attrs)
+            && crate::semantic_props::is_icon_host_ir(&el.attrs)
+        {
+            out.push(' ');
+            out.push_str(aname);
+            out.push_str("=\"");
+            out.push_str(&escape_attr(aval));
+            out.push('"');
         }
         if !classes.is_empty() {
             out.push_str(" class=\"");
@@ -1059,6 +1173,7 @@ impl super::TemplateEmitter {
         el_var: &str,
         cleanups_var: &str,
     ) {
+        let saved_inst = self.ctrl_inst.take();
         for a in &el.attrs {
             if !matches!(a, AttrInstr::Static { .. }) {
                 self.emit_attr(w, a, el_var, cleanups_var, &el.tag, &el.attrs);
@@ -1131,5 +1246,7 @@ impl super::TemplateEmitter {
                 _ => unreachable!("static_skeleton() rejects control flow"),
             }
         }
+        self.emit_controller_attaches(w, el, el_var, cleanups_var);
+        self.ctrl_inst = saved_inst;
     }
 }

@@ -1080,6 +1080,61 @@ fn lower_into(
                         .trim()
                         .to_string();
                     let self_closed = source[i..k].trim_end().ends_with('/');
+                    // Controller-bearing L1 is a component: keep the tag so
+                    // template emit inlines it (setup + $scope + template),
+                    // same as any other .sail. Do not splice to static HTML.
+                    if el.out.controller_js.is_some() {
+                        css_done.insert(tag);
+                        if self_closed || crate::l1_manifest::is_author_void(tag) {
+                            let mut end = k + 1;
+                            if !self_closed {
+                                let rest = source[end..].trim_start();
+                                let closer = format!("</{tag}>");
+                                if rest.starts_with(&closer) {
+                                    let ws = source[end..].len() - rest.len();
+                                    end += ws + closer.len();
+                                }
+                            }
+                            out.push_str(&source[i..end]);
+                            i = end;
+                            continue 'outer;
+                        }
+                        let open_prefix = format!("<{tag}");
+                        let close = format!("</{tag}>");
+                        let mut depth = 1usize;
+                        let mut scan = k + 1;
+                        let close_start = loop {
+                            if scan >= bytes.len() {
+                                break None;
+                            }
+                            if bytes[scan..].starts_with(close.as_bytes()) {
+                                depth -= 1;
+                                if depth == 0 {
+                                    break Some(scan);
+                                }
+                                scan += close.len();
+                            } else if bytes[scan..].starts_with(open_prefix.as_bytes())
+                                && bytes
+                                    .get(scan + open_prefix.len())
+                                    .is_some_and(|&b| b.is_ascii_whitespace() || b == b'>')
+                            {
+                                depth += 1;
+                                scan += open_prefix.len();
+                            } else {
+                                scan += 1;
+                            }
+                        };
+                        let Some(close_start) = close_start else {
+                            break;
+                        };
+                        let children = &source[k + 1..close_start];
+                        let end = close_start + close.len();
+                        out.push_str(&source[i..=k]);
+                        lower_into(children, registry, out, css, css_done)?;
+                        out.push_str(&close);
+                        i = end;
+                        continue 'outer;
+                    }
                     // Author-void L1 (`<avatar />`, `<separator>`) has no
                     // children. expand_self_close leaves those tags unpaired,
                     // so splice must not wait for `</tag>`.
@@ -1731,6 +1786,12 @@ fn splice_element(
             snippet_attrs.push((n.clone(), format!("\"{v}\"")));
         }
     }
+    // Live region is anatomy from a design attr, not a `use:` observer.
+    match el.root_class.as_str() {
+        "sail-alert" => crate::semantic_props::apply_tone_live_region(&mut snippet_attrs),
+        "sail-empty-state" => crate::semantic_props::apply_variant_live_region(&mut snippet_attrs),
+        _ => {}
+    }
     let tag_name: String = root_open[1..]
         .chars()
         .take_while(|c| c.is_ascii_alphanumeric() || *c == '-')
@@ -1844,13 +1905,47 @@ fn splice_element(
     if default_children.trim().is_empty() {
         if let Some(svg) = inline_pack_icon_svg(&snippet_attrs) {
             default_children = svg;
-            snippet_attrs.retain(|(n, _)| n != "use:icon");
         }
     }
     let body = fill_slots(rest, &default_children, &named_children);
     let body = fill_prop_holes(&body, &snippet_attrs);
+    let body = stamp_tab_panel_name(&el.root_class, &snippet_attrs, body);
     outb.push_str(&body);
     outb
+}
+
+/// Nested `<tab title>`: the body is role=tabpanel. Name it from title/name
+/// so AT / getByRole('tabpanel', { name }) match the trigger.
+fn stamp_tab_panel_name(
+    root_class: &str,
+    attrs: &[(String, String)],
+    mut body: String,
+) -> String {
+    if root_class != "sail-tab" {
+        return body;
+    }
+    let label = attrs
+        .iter()
+        .find(|(n, _)| n == "title" || n == "name")
+        .map(|(_, v)| v.trim_matches(['"', '\'']).trim().to_string())
+        .filter(|v| !v.is_empty() && !v.starts_with('{'));
+    let Some(label) = label else {
+        return body;
+    };
+    if body.contains("aria-label=") {
+        return body;
+    }
+    let needle = "role=\"tabpanel\"";
+    let Some(pos) = body.find(needle) else {
+        return body;
+    };
+    let gt = body[pos..].find('>').map(|i| pos + i);
+    let Some(gt) = gt else {
+        return body;
+    };
+    let escaped = label.replace('&', "&amp;").replace('"', "&quot;");
+    body.insert_str(gt, &format!(" aria-label=\"{escaped}\""));
+    body
 }
 
 /// Named-pack `<icon name>`: compiler inlines the SVG. `src` stays `<img>`
@@ -3960,6 +4055,16 @@ export default controller(() => {
     }
 
     #[test]
+    fn alert_warning_tone_stamps_assertive_live_region() {
+        let out = preprocess(r#"<alert tone="warning">Heads up</alert>"#).expect("preprocess");
+        assert!(
+            out.contains(r#"role="alert""#) && out.contains(r#"aria-live="assertive""#),
+            "warning is an assertive live region at splice, not a MutationObserver:\n{out}"
+        );
+        assert!(!out.contains("use:liveRegion"), "{out}");
+    }
+
+    #[test]
     fn stdlib_alert_projects_named_slots_end_to_end() {
         // The first registry element with named slots — proves compile-time
         // projection distributes use-site slotted children into the matching
@@ -3973,8 +4078,10 @@ export default controller(() => {
         assert!(out.contains(r#"tone="success""#), "tone merged: {out}");
         assert!(out.contains("dismissible"), "dismissible merged: {out}");
         assert!(
-            out.contains("use:liveRegion"),
-            "liveRegion rides the splice: {out}"
+            !out.contains("use:liveRegion")
+                && out.contains(r#"role="status""#)
+                && out.contains(r#"aria-live="polite""#),
+            "alert live region is anatomy from tone, not use:: {out}"
         );
         assert!(
             out.contains("use:dismissControl"),
@@ -4052,6 +4159,23 @@ export default controller(() => {
             !out.contains("--es-"),
             "empty-state structure: no residual --es-* custom props: {out}"
         );
+        assert!(
+            !out.contains("use:variantLive")
+                && out.contains(r#"role="note""#)
+                && out.contains(r#"aria-live="off""#),
+            "placeholder is inert anatomy, not use:variantLive: {out}"
+        );
+    }
+
+    #[test]
+    fn empty_state_connecting_stamps_polite_live_region() {
+        let out = preprocess(r#"<empty-state variant="connecting">Loading</empty-state>"#)
+            .expect("preprocess");
+        assert!(
+            out.contains(r#"role="status""#) && out.contains(r#"aria-live="polite""#),
+            "connecting is a polite live region at splice, not a MutationObserver:\n{out}"
+        );
+        assert!(!out.contains("use:variantLive"), "{out}");
     }
 
     #[test]

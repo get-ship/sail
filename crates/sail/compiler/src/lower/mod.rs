@@ -59,12 +59,12 @@ pub struct Lowered {
     /// route's import graph (the per-route resolver). Collected once here; the
     /// emitter decides whether to write the imports.
     pub used_component_tags: BTreeSet<String>,
-    /// Static icon **roles** from `<icon name="…">` / `use:icon` hosts.
-    /// The bundler resolves them through the role registry and emits only
-    /// those glyphs.
+    /// Static icon **roles** from `<icon name="…">` / lowered `sail-icon`
+    /// span hosts. The bundler resolves them through the role registry and
+    /// emits only those glyphs.
     pub used_icons: BTreeSet<String>,
-    /// L1 tags whose spliced host carries `data-sail-ctrl` — emit
-    /// `import __ctrl_{tag} from "sail-l1:{tag}"` + `runController`.
+    /// Controller-bearing L1 tags — import the mount-form `.sail` and
+    /// `mountComponent` at the use site.
     pub l1_controllers: BTreeSet<String>,
 }
 
@@ -85,6 +85,9 @@ pub fn lower(program: &Program, is_route: bool) -> Result<Lowered, CompileError>
     // rides along only when a registered component declares props.
     if !is_route && !program.props.is_empty() {
         out.runtime_imports.insert("prop");
+    }
+    if !program.props.is_empty() {
+        out.runtime_imports.insert("signal");
     }
     let mut depth = 0;
     walk_instrs(&program.template, &mut out, is_route, &mut depth)?;
@@ -200,6 +203,12 @@ fn walk_instr(
                 bindings::collect_attr_imports(a, out, is_route, *depth, &el.tag)?;
             }
             walk_instrs(&el.children, out, is_route, depth)?;
+            if let Some(std) = crate::stdlib::element(&el.tag) {
+                if std.out.controller_js.is_some() {
+                    out.l1_controllers.insert(el.tag.clone());
+                    out.runtime_imports.insert("mountComponent");
+                }
+            }
         }
         Instr::If(IfInstr {
             branches,

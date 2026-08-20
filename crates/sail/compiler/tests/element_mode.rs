@@ -168,7 +168,7 @@ fn skins_css_names_element_and_platform_provenance() {
 }
 
 #[test]
-fn ticker_loops_via_two_slots_and_marquee_action() {
+fn ticker_loops_via_two_slots_and_compile_time_motion() {
     let src = sail_compiler::stdlib::sources()
         .iter()
         .find(|(tag, _)| *tag == "ticker")
@@ -182,10 +182,11 @@ fn ticker_loops_via_two_slots_and_marquee_action() {
         "two independently-filled slots build the seamless-loop duplicate track: {}",
         el.structure_html
     );
-    // Track animation is use:marquee (fx:loop), not contracts host CSS.
+    // Track animation is compile-time anatomy (animate: play(marquee)),
+    // not use:marquee / contracts host CSS.
     assert!(
-        el.structure_html.contains("use:marquee"),
-        "track stamps use:marquee for duration/reverse-driven fx: {}",
+        !el.structure_html.contains("use:marquee"),
+        "no use:marquee stamp survives (ticker is pure structure): {}",
         el.structure_html
     );
     let contracts = include_str!(concat!(
@@ -209,13 +210,8 @@ fn ticker_loops_via_two_slots_and_marquee_action() {
     );
     let attrs = el.manifest["attributes"].as_array().unwrap();
     assert!(
-        attrs.iter().any(|a| a["name"] == "duration"),
-        "{}",
-        el.manifest
-    );
-    assert!(
-        attrs.iter().any(|a| a["name"] == "reverse"),
-        "{}",
+        attrs.is_empty(),
+        "ticker has no runtime props (duration/reverse died with use:marquee): {}",
         el.manifest
     );
 }
@@ -275,13 +271,10 @@ fn stdlib_elements_can_self_nest() {
 fn stdlib_chip_compiles_with_use_stamps() {
     let src = include_str!("../stdlib/chip/chip.sail");
     let el = compile_element(src, "chip").expect("stdlib chip compiles");
-    for stamp in ["use:pressable", "use:pressed", "use:dismissible"] {
-        assert!(
-            el.structure_html.contains(stamp),
-            "{stamp} on chip root: {}",
-            el.structure_html
-        );
-    }
+    assert!(
+        el.controller_js.is_some() && src.contains("use:hotkeys={keys}"),
+        "chip is a controller component, not mix-in stamps:\n{src}"
+    );
     // Host identity stamp is fine; ban controller *discovery* stamps only.
     assert!(
         !el.structure_html.contains("data-sail-controller")

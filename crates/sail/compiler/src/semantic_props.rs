@@ -11,6 +11,8 @@
 
 use std::borrow::Cow;
 
+use crate::ir::Instr;
+
 /// How a semantic prop's value is typed for contracts / skill surface.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SemanticKind {
@@ -62,8 +64,8 @@ pub const SEMANTIC_PROPS: &[SemanticProp] = &[
     },
     SemanticProp {
         name: "selected",
-        // Dual-stamp: keeps design attr `selected` (chip compound + use:pressed)
-        // AND stamps `aria-selected` for AT / when({ selected }). See lower path.
+        // Dual-stamp: keeps design attr `selected` (chip compound)
+        // AND stamps aria-selected (or aria-pressed on chip). See lower path.
         aria: "aria-selected",
         kind: SemanticKind::Bool,
         summary: "Selection state — stamps aria-selected; keeps selected for compound/pressed",
@@ -130,13 +132,18 @@ pub fn rewrites_name(prop: &SemanticProp) -> bool {
 }
 
 /// Extra ARIA attr dual-stamped alongside the primary name, when any.
-/// `selected` → also `aria-selected` (AT + when({ selected }) paint).
+/// `selected` → `aria-pressed` on chip (toggle); `aria-selected` elsewhere.
 /// Not on `<option>` — IDL `selected` is the platform contract there.
 pub fn dual_stamp_aria(tag: &str, name: &str) -> Option<&'static str> {
-    if name == "selected" && !tag.eq_ignore_ascii_case("option") {
-        Some("aria-selected")
-    } else {
+    if name != "selected" {
+        return None;
+    }
+    if tag.eq_ignore_ascii_case("option") {
         None
+    } else if tag.eq_ignore_ascii_case("chip") {
+        Some("aria-pressed")
+    } else {
+        Some("aria-selected")
     }
 }
 
@@ -229,6 +236,47 @@ pub fn coerce_aria_bool_static(value: &str) -> &'static str {
             }
         }
     }
+}
+
+/// `<icon>` conditional anatomy. Labeled icons are images (role=img); unlabeled
+/// (decorative) icons stay hidden (aria-hidden). Decided statically at emit —
+/// no runtime switcher. Returns the single attribute to inject, or `None` when
+/// the host already carries the relevant semantic on its own.
+pub fn icon_anatomy_attr(attrs: &[crate::ir::AttrInstr]) -> Option<(&'static str, &'static str)> {
+    use crate::ir::AttrInstr;
+    let labeled = attrs.iter().any(|a| match a {
+        AttrInstr::Static { name, value, .. } => {
+            matches!(name.as_str(), "label" | "aria-label")
+                && !value.trim_matches(['"', '\'']).is_empty()
+        }
+        AttrInstr::Expr { name, .. } => matches!(name.as_str(), "label" | "aria-label"),
+        _ => false,
+    });
+    let has = |n: &str| {
+        attrs.iter().any(|a| match a {
+            AttrInstr::Static { name, .. } | AttrInstr::Expr { name, .. } => name == n,
+            _ => false,
+        })
+    };
+    if labeled {
+        if has("role") {
+            None
+        } else {
+            Some(("role", "img"))
+        }
+    } else if has("aria-hidden") {
+        None
+    } else {
+        Some(("aria-hidden", "true"))
+    }
+}
+
+/// Is this element the lowered `<icon>` host (identity via the L1 part stamp)?
+pub fn is_icon_host_ir(attrs: &[crate::ir::AttrInstr]) -> bool {
+    use crate::ir::AttrInstr;
+    attrs.iter().any(
+        |a| matches!(a, AttrInstr::Static { name, value, .. } if name == "data-sail-host" && value.trim_matches(['"', '\'']) == "icon"),
+    )
 }
 
 /// Fixed host anatomy for L1 elements — role + fixed ARIA stamped onto the
@@ -357,6 +405,35 @@ pub const HOST_ANATOMY: &[(&str, HostAnatomy)] = &[
         },
     ),
     (
+        "tabs",
+        HostAnatomy {
+            role: Some("tablist"),
+            live: None,
+            atomic: None,
+            label: None,
+        },
+    ),
+    (
+        "tab",
+        HostAnatomy {
+            // Trigger is the inner button (stamped in emit_element). The
+            // host is display(contents) and must not itself be role=tab.
+            role: None,
+            live: None,
+            atomic: None,
+            label: None,
+        },
+    ),
+    (
+        "tab-panel",
+        HostAnatomy {
+            role: Some("tabpanel"),
+            live: None,
+            atomic: None,
+            label: None,
+        },
+    ),
+    (
         "radio-group",
         HostAnatomy {
             role: Some("radiogroup"),
@@ -477,6 +554,136 @@ pub const HOST_ANATOMY: &[(&str, HostAnatomy)] = &[
 
 pub fn host_anatomy(tag: &str) -> Option<&'static HostAnatomy> {
     HOST_ANATOMY.iter().find(|(t, _)| *t == tag).map(|(_, a)| a)
+}
+
+/// Stamp compiler anatomy onto a language widget's template IR (mount-form).
+/// `tab` trigger/body are inner nodes; other hosts take `HOST_ANATOMY.role`.
+pub fn stamp_language_anatomy(program: &mut crate::ir::Program, tag: &str) {
+    if tag == "tab" {
+        stamp_first_tag(&mut program.template, "button", "role", "tab");
+        stamp_first_tag(&mut program.template, "div", "role", "tabpanel");
+        return;
+    }
+    let Some(role) = host_anatomy(tag).and_then(|a| a.role) else {
+        return;
+    };
+    if let Some(Instr::Element(root)) = program.template.iter_mut().find(|i| matches!(i, Instr::Element(_))) {
+        stamp_attr(&mut root.attrs, "role", role);
+    }
+}
+
+fn stamp_first_tag(instrs: &mut [Instr], tag: &str, name: &str, value: &str) {
+    for i in instrs {
+        match i {
+            Instr::Element(el) => {
+                if el.tag.eq_ignore_ascii_case(tag) {
+                    stamp_attr(&mut el.attrs, name, value);
+                    return;
+                }
+                stamp_first_tag(&mut el.children, tag, name, value);
+            }
+            Instr::If(v) => {
+                for b in &mut v.branches {
+                    stamp_first_tag(&mut b.body, tag, name, value);
+                }
+                if let Some(eb) = &mut v.else_body {
+                    stamp_first_tag(eb, tag, name, value);
+                }
+            }
+            Instr::For(v) => {
+                stamp_first_tag(&mut v.body, tag, name, value);
+                if let Some(eb) = &mut v.else_body {
+                    stamp_first_tag(eb, tag, name, value);
+                }
+            }
+            Instr::Match(v) => {
+                for c in &mut v.cases {
+                    stamp_first_tag(&mut c.body, tag, name, value);
+                }
+                if let Some(d) = &mut v.default {
+                    stamp_first_tag(d, tag, name, value);
+                }
+            }
+            Instr::When(v) => {
+                stamp_first_tag(&mut v.body, tag, name, value);
+                if let Some(e) = &mut v.else_body {
+                    stamp_first_tag(e, tag, name, value);
+                }
+            }
+            _ => {}
+        }
+    }
+}
+
+fn stamp_attr(attrs: &mut Vec<crate::ir::AttrInstr>, name: &str, value: &str) {
+    if attrs.iter().any(|a| match a {
+        crate::ir::AttrInstr::Static { name: n, .. } => n == name,
+        _ => false,
+    }) {
+        return;
+    }
+    attrs.push(crate::ir::AttrInstr::Static {
+        name: name.into(),
+        value: value.into(),
+        span: crate::diagnostics::Span::point(0),
+    });
+}
+
+/// Live-region `role` / `aria-live` from L1 `tone`. Compile-time; not an action.
+/// `danger` is the stdlib token; `destructive` is a leftover synonym.
+pub fn live_region_for_tone(tone: &str) -> (&'static str, &'static str) {
+    match tone {
+        "warning" | "danger" | "destructive" => ("alert", "assertive"),
+        _ => ("status", "polite"),
+    }
+}
+
+/// Live-region from L1 `<empty-state>` `variant`. `connecting` is polite status;
+/// every other variant stays `note` / `off` (HOST_ANATOMY default).
+pub fn live_region_for_empty_variant(variant: &str) -> (&'static str, &'static str) {
+    if variant == "connecting" {
+        ("status", "polite")
+    } else {
+        ("note", "off")
+    }
+}
+
+/// Rewrite spliced host `role` / `aria-live` from a resolved `tone` attr.
+/// Dynamic `{…}` tones keep the anatomy default (first paint).
+pub fn apply_tone_live_region(attrs: &mut Vec<(String, String)>) {
+    apply_live_from_attr(attrs, "tone", "info", live_region_for_tone);
+}
+
+/// Rewrite spliced host `role` / `aria-live` from `<empty-state>` `variant`.
+pub fn apply_variant_live_region(attrs: &mut Vec<(String, String)>) {
+    apply_live_from_attr(attrs, "variant", "default", live_region_for_empty_variant);
+}
+
+fn apply_live_from_attr(
+    attrs: &mut Vec<(String, String)>,
+    attr: &str,
+    default: &str,
+    map: fn(&str) -> (&'static str, &'static str),
+) {
+    let raw = attrs
+        .iter()
+        .find(|(n, _)| n == attr)
+        .map(|(_, v)| v.trim_matches(['"', '\'']).to_string())
+        .unwrap_or_else(|| default.to_string());
+    if raw.starts_with('{') {
+        return;
+    }
+    let (role, live) = map(&raw);
+    upsert_attr(attrs, "role", &format!("\"{role}\""));
+    upsert_attr(attrs, "aria-live", &format!("\"{live}\""));
+}
+
+fn upsert_attr(attrs: &mut Vec<(String, String)>, name: &str, value: &str) {
+    if let Some(slot) = attrs.iter_mut().find(|(n, _)| n == name) {
+        slot.1 = value.to_string();
+    } else {
+        attrs.push((name.to_string(), value.to_string()));
+    }
 }
 
 /// Inject missing host-anatomy attributes into a serialized structure open tag.
@@ -605,5 +812,67 @@ mod tests {
         let s = stamp_host_anatomy("spinner", r#"<span class="sail-spinner"></span>"#);
         assert!(s.contains(r#"role="status""#), "{s}");
         assert!(s.contains(r#"aria-label="Loading""#), "{s}");
+    }
+
+    #[test]
+    fn live_region_for_tone_urgent_vs_status() {
+        assert_eq!(live_region_for_tone("info"), ("status", "polite"));
+        assert_eq!(live_region_for_tone("success"), ("status", "polite"));
+        assert_eq!(live_region_for_tone("warning"), ("alert", "assertive"));
+        assert_eq!(live_region_for_tone("danger"), ("alert", "assertive"));
+        assert_eq!(live_region_for_tone("destructive"), ("alert", "assertive"));
+    }
+
+    #[test]
+    fn apply_tone_live_region_overrides_anatomy_default() {
+        let mut attrs = vec![
+            ("role".into(), "\"status\"".into()),
+            ("aria-live".into(), "\"polite\"".into()),
+            ("tone".into(), "\"warning\"".into()),
+        ];
+        apply_tone_live_region(&mut attrs);
+        let role = attrs
+            .iter()
+            .find(|(n, _)| n == "role")
+            .map(|(_, v)| v.as_str());
+        let live = attrs
+            .iter()
+            .find(|(n, _)| n == "aria-live")
+            .map(|(_, v)| v.as_str());
+        assert_eq!(role, Some("\"alert\""));
+        assert_eq!(live, Some("\"assertive\""));
+    }
+
+    #[test]
+    fn live_region_for_empty_variant_connecting() {
+        assert_eq!(live_region_for_empty_variant("default"), ("note", "off"));
+        assert_eq!(
+            live_region_for_empty_variant("placeholder"),
+            ("note", "off")
+        );
+        assert_eq!(
+            live_region_for_empty_variant("connecting"),
+            ("status", "polite")
+        );
+    }
+
+    #[test]
+    fn apply_variant_live_region_upgrades_connecting() {
+        let mut attrs = vec![
+            ("role".into(), "\"note\"".into()),
+            ("aria-live".into(), "\"off\"".into()),
+            ("variant".into(), "\"connecting\"".into()),
+        ];
+        apply_variant_live_region(&mut attrs);
+        let role = attrs
+            .iter()
+            .find(|(n, _)| n == "role")
+            .map(|(_, v)| v.as_str());
+        let live = attrs
+            .iter()
+            .find(|(n, _)| n == "aria-live")
+            .map(|(_, v)| v.as_str());
+        assert_eq!(role, Some("\"status\""));
+        assert_eq!(live, Some("\"polite\""));
     }
 }
