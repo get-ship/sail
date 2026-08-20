@@ -1,35 +1,24 @@
-//! Job C door: parameterized `use:` / `on:` / live attrs on an L1 element
-//! with a `<controller>` attach in **controller scope**, not the page `$scope`.
+//! Single source for L1 controller attach validation + type.
 //!
-//! Controller-less static splice still refuses those constructs. With a
-//! block they are dropped from `structure_html`. The **page compiler**
-//! (not the author controller, not deck) emits the adaptor:
-//!
-//! ```js
-//! const inst = __ctrl_tabs.setup({ title: "Overview" })
-//! runAction(el, hotkeys, () => inst.keys)
-//! ```
+//! Parameterized `use:` / `on:` / live `name={expr}` on an L1 element with
+//! a `<controller>` attach in controller scope. One ident rule for all
+//! three — previously duplicated in `emit::l1_controller::inst_field`.
 
 use crate::CompileError;
 
 /// One host- or descendant-node attach compiled from the L1 template.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ControllerAttach {
-    /// `use:action={param}` — `param` is an ident on the controller return.
     Use {
         action: String,
         param: String,
-        /// Empty = the spliced host. Otherwise a `:scope > …` query from
-        /// the compiler's static path — page emit, not the controller.
         selector: String,
     },
-    /// `on:event={handler}` — `handler` is an ident on the controller return.
     On {
         event: String,
         handler: String,
         selector: String,
     },
-    /// `name={expr}` — `expr` is `ident` or `ident()` on the controller return.
     Bind {
         name: String,
         expr: String,
@@ -46,7 +35,7 @@ pub fn selector_from_path(path: &[String]) -> String {
     }
 }
 
-/// A controller binding used as a `use:` param / `on:` handler / attr expr.
+/// A controller binding used as `use:` param / `on:` handler / attr expr.
 /// Only a bare ident or `ident()` — anything richer is page `$scope` again.
 pub fn inst_field(source: &str) -> Result<String, CompileError> {
     let s = source.trim();
@@ -81,42 +70,23 @@ fn node_js(el_var: &str, selector: &str) -> String {
     }
 }
 
-/// Page-emit adaptor for one attach. The author controller never sees this.
 pub fn emit_attach_js(el_var: &str, inst_var: &str, attach: &ControllerAttach) -> String {
     match attach {
-        ControllerAttach::Use {
-            action,
-            param,
-            selector,
-        } => {
+        ControllerAttach::Use { action, param, selector } => {
             let node = node_js(el_var, selector);
             if selector.is_empty() {
                 format!("runAction({node}, {action}, () => {inst_var}.{param});")
             } else {
-                format!(
-                    "{{ const __n = {node}; if (__n) runAction(__n, {action}, () => {inst_var}.{param}); }}"
-                )
+                format!("{{ const __n = {node}; if (__n) runAction(__n, {action}, () => {inst_var}.{param}); }}")
             }
         }
-        ControllerAttach::On {
-            event,
-            handler,
-            selector,
-        } => {
+        ControllerAttach::On { event, handler, selector } => {
             let node = node_js(el_var, selector);
-            format!(
-                "{{ const __n = {node}; if (__n) on(__n, \"{event}\", (e) => {{ const __h = {inst_var}.{handler}; if (typeof __h === \"function\") __h(e); }}); }}"
-            )
+            format!("{{ const __n = {node}; if (__n) on(__n, \"{event}\", (e) => {{ const __h = {inst_var}.{handler}; if (typeof __h === \"function\") __h(e); }}); }}")
         }
-        ControllerAttach::Bind {
-            name,
-            expr,
-            selector,
-        } => {
+        ControllerAttach::Bind { name, expr, selector } => {
             let node = node_js(el_var, selector);
-            format!(
-                "{{ const __n = {node}; if (__n) bindAttr(__n, \"{name}\", () => ({inst_var}.{expr})); }}"
-            )
+            format!("{{ const __n = {node}; if (__n) bindAttr(__n, \"{name}\", () => ({inst_var}.{expr})); }}")
         }
     }
 }
@@ -124,18 +94,9 @@ pub fn emit_attach_js(el_var: &str, inst_var: &str, attach: &ControllerAttach) -
 #[cfg(test)]
 mod tests {
     use super::*;
-
     #[test]
     fn attach_js_is_instance_not_page_scope() {
-        let js = emit_attach_js(
-            "el",
-            "inst",
-            &ControllerAttach::Use {
-                action: "hotkeys".into(),
-                param: "keys".into(),
-                selector: String::new(),
-            },
-        );
+        let js = emit_attach_js("el", "inst", &ControllerAttach::Use { action: "hotkeys".into(), param: "keys".into(), selector: String::new() });
         assert_eq!(js, "runAction(el, hotkeys, () => inst.keys);");
         assert!(!js.contains("$scope"));
         assert!(!js.contains("ctx.host"));

@@ -182,19 +182,21 @@ pub fn is_family_host(tag: &str) -> bool {
     family_of(tag) == tag
 }
 
-/// On-disk `.sail` for a stdlib tag. Parts live under the family directory
-/// (`tab` → `stdlib/tabs/tab.sail`). The `a` host is the one filename
-/// mismatch (`anchor.sail`).
-pub fn source_file(tag: &str) -> PathBuf {
+/// Virtual source id for a stdlib tag (`stdlib/tabs/tab.sail`). No
+/// filesystem — logical id, host maps to disk if needed.
+pub fn virtual_source_id(tag: &str) -> String {
     let family = family_of(tag);
     let stem = match tag {
         "a" => "anchor",
         t => t,
     };
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("stdlib")
-        .join(family)
-        .join(format!("{stem}.sail"))
+    format!("stdlib/{family}/{stem}.sail")
+}
+
+/// On-disk `.sail` for a stdlib tag. Prefer [`virtual_source_id`] for
+/// pure paths; this is build/test helper only.
+pub fn source_file(tag: &str) -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(virtual_source_id(tag))
 }
 
 /// Tags in `family`, host first, then parts by name.

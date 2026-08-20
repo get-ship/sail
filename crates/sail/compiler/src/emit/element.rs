@@ -15,8 +15,9 @@
 //! L1). Those compile with the render machinery — same tag, same registry.
 //! Dynamic attributes still refuse on a **controller-less** splice. An
 //! inline `<controller>` is Job C: parameterized `use:` / `on:` / live
-//! attrs attach from the controller instance (see `l1_controller`), not
-//! the page `$scope`. The host stays an opaque splice stamped
+//! attrs attach from the controller instance, not the page `$scope`.
+//! The attach type lives in `crate::check::controller_attach`; `emit`
+//! only interprets it. The host stays an opaque splice stamped
 //! `data-sail-ctrl`.
 
 use crate::CompileError;
@@ -317,7 +318,8 @@ pub struct ElementOutput {
     pub motion_stamps: Vec<(String, String)>,
     /// Parameterized `use:` / `on:` / live attrs collected from a
     /// controller-bearing template. Not serialized into `structure_html`.
-    pub controller_attaches: Vec<super::l1_controller::ControllerAttach>,
+    /// Single source — `crate::check::controller_attach::ControllerAttach`.
+    pub controller_attaches: Vec<crate::check::controller_attach::ControllerAttach>,
     /// Wrapped `<controller>` module (`{tag}.sail.controller.ts`). `None` when the
     /// element has no block.
     pub controller_js: Option<String>,
@@ -677,7 +679,7 @@ fn serialize_static(
     path: &[String],
     has_controller: bool,
     allow_attach: bool,
-    attaches: &mut Vec<super::l1_controller::ControllerAttach>,
+    attaches: &mut Vec<crate::check::controller_attach::ControllerAttach>,
     out: &mut String,
 ) -> Result<(), CompileError> {
     out.push('<');
@@ -744,11 +746,11 @@ fn serialize_static(
                         ))
                         .with_category(RULE_ID));
                     }
-                    let field = super::l1_controller::inst_field(&p.source)?;
-                    attaches.push(super::l1_controller::ControllerAttach::Use {
+                    let field = crate::check::controller_attach::inst_field(&p.source)?;
+                    attaches.push(crate::check::controller_attach::ControllerAttach::Use {
                         action: action.clone(),
                         param: field,
-                        selector: super::l1_controller::selector_from_path(path),
+                        selector: crate::check::controller_attach::selector_from_path(path),
                     });
                     continue;
                 }
@@ -765,11 +767,11 @@ fn serialize_static(
                     ))
                     .with_category(RULE_ID));
                 }
-                let field = super::l1_controller::inst_field(&handler.source)?;
-                attaches.push(super::l1_controller::ControllerAttach::On {
+                let field = crate::check::controller_attach::inst_field(&handler.source)?;
+                attaches.push(crate::check::controller_attach::ControllerAttach::On {
                     event: event.clone(),
                     handler: field,
-                    selector: super::l1_controller::selector_from_path(path),
+                    selector: crate::check::controller_attach::selector_from_path(path),
                 });
             }
             AttrInstr::Expr { name, expr, .. } => {
@@ -782,15 +784,15 @@ fn serialize_static(
                     ))
                     .with_category(RULE_ID));
                 }
-                let field = super::l1_controller::inst_field(&expr.source)?;
-                let selector = super::l1_controller::selector_from_path(path);
-                attaches.push(super::l1_controller::ControllerAttach::Bind {
+                let field = crate::check::controller_attach::inst_field(&expr.source)?;
+                let selector = crate::check::controller_attach::selector_from_path(path);
+                attaches.push(crate::check::controller_attach::ControllerAttach::Bind {
                     name: name.clone(),
                     expr: field.clone(),
                     selector: selector.clone(),
                 });
                 if let Some(extra) = crate::semantic_props::dual_stamp_aria(&el.tag, name) {
-                    attaches.push(super::l1_controller::ControllerAttach::Bind {
+                    attaches.push(crate::check::controller_attach::ControllerAttach::Bind {
                         name: extra.to_string(),
                         expr: field,
                         selector,
@@ -884,7 +886,7 @@ fn serialize_static_children(
     path: &[String],
     has_controller: bool,
     allow_attach: bool,
-    attaches: &mut Vec<super::l1_controller::ControllerAttach>,
+    attaches: &mut Vec<crate::check::controller_attach::ControllerAttach>,
     out: &mut String,
     parent_tag: &str,
 ) -> Result<(), CompileError> {
@@ -1016,7 +1018,7 @@ fn serialize_static_instrs(
     path: &[String],
     has_controller: bool,
     allow_attach: bool,
-    attaches: &mut Vec<super::l1_controller::ControllerAttach>,
+    attaches: &mut Vec<crate::check::controller_attach::ControllerAttach>,
     out: &mut String,
 ) -> Result<(), CompileError> {
     serialize_static_children(

@@ -10,7 +10,6 @@ pub mod cem;
 pub mod dts;
 pub mod element;
 pub mod expr_rewrite;
-pub mod l1_controller;
 pub mod js;
 pub mod meta;
 pub mod schema;

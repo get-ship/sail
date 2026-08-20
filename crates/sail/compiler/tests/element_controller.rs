@@ -270,7 +270,7 @@ fn page_using_tabs_is_not_ce() {
     );
     assert!(!js.contains("use:tabs"), "{js}");
     assert!(
-        js.contains("tabs.sail")
+        js.contains("@sail/element/tabs")
             && js.contains("mountComponent")
             && js.contains("__mod_tabs")
             && !js.contains("runController")
@@ -301,7 +301,7 @@ fn page_using_chip_is_not_ce() {
         "L1 is not CE:\n{js}"
     );
     assert!(
-        js.contains("chip.sail")
+        js.contains("@sail/element/chip")
             && js.contains("mountComponent")
             && js.contains("__mod_chip")
             && !js.contains("runController")

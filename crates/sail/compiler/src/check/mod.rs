@@ -7,6 +7,7 @@
 
 pub mod binding;
 pub mod compose;
+pub mod controller_attach;
 pub mod controller_parse;
 #[cfg(test)]
 mod controller_parse_tests;

@@ -111,7 +111,7 @@ pub use semantic_props::{
     HOST_ANATOMY, HostAnatomy, SEMANTIC_PROPS, SemanticKind, SemanticProp, host_anatomy,
     is_free_aria_attr, lookup as lookup_semantic_prop, lower_attr_name_str,
 };
-pub use text_host::{is_text_host, text_host_error};
+pub use text_host::{is_text_host, is_text_host_with, stdlib_text_roots, text_host_error};
 pub use theme_surface::{
     ThemeTokenHover, ThemeTokenKind, ThemeTokenRef, catalog_theme_ids, infer_active_theme_mode,
     resolve_theme_token, theme_attr_completions, theme_attr_partial, theme_complete_at,
@@ -469,11 +469,7 @@ pub fn compile_element(
     // app components). Extracted from the template; the page calls
     // `setup(props)` — not CE, not a second runtime runner.
     let (stripped, controller_src) = parse::preprocess::extract_controller_block(source);
-    let ctrl_path = if crate::stdlib::sources().iter().any(|(t, _)| *t == name) {
-        crate::stdlib::source_file(name)
-    } else {
-        PathBuf::from(format!("stdlib/{name}.sail"))
-    };
+    let ctrl_path = PathBuf::from(crate::stdlib::virtual_source_id(name));
     let parsed = controller_src.as_ref().and_then(|body| {
         check::controller_parse::parse(
             ctrl_path.clone(),
@@ -511,29 +507,13 @@ pub fn compile_element(
     })
 }
 
-/// Hyphenated stem (not `page`/`index`) is a custom-element tag — same rule
-/// as deck `detect_mode`. Colocated `routes/<r>/<tag>.sail` is a component.
-fn component_meta_from_path(path: Option<&std::path::Path>) -> Option<ComponentMeta> {
-    let stem = path?.file_stem()?.to_str()?;
-    if stem.contains('-') && stem != "page" && stem != "index" {
-        Some(ComponentMeta {
-            name: stem.to_string(),
-        })
-    } else {
-        None
-    }
-}
-
 pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, CompileError> {
     let source_path = opts.source_path.clone();
     breakpoints::with_source_breakpoints(source_path.as_deref(), || compile_inner(source, opts))
 }
 
 fn compile_inner(source: &str, opts: CompileOpts) -> Result<CompileOutput, CompileError> {
-    let mut opts = opts;
-    if opts.component_meta.is_none() {
-        opts.component_meta = component_meta_from_path(opts.source_path.as_deref());
-    }
+    let opts = opts;
     // Light DOM is the architecture (invariant 9): components render into
     // their own element, so native events from composed L1 controls bubble
     // to the host with no boundary.

@@ -726,7 +726,7 @@ impl TemplateEmitter {
         for attach in &std.out.controller_attaches {
             w.line(&format!(
                 "{}",
-                crate::emit::l1_controller::emit_attach_js(el_var, &inst, attach)
+                crate::check::controller_attach::emit_attach_js(el_var, &inst, attach)
             ));
         }
     }

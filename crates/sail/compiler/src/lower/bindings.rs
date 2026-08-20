@@ -51,7 +51,7 @@ pub fn collect_attr_imports(
             if let Some(std) = crate::stdlib::element(tag) {
                 for attach in &std.out.controller_attaches {
                     match attach {
-                        crate::emit::l1_controller::ControllerAttach::Use { action, .. } => {
+                        crate::check::controller_attach::ControllerAttach::Use { action, .. } => {
                             if let Some(a) = crate::action_manifest::ACTIONS
                                 .iter()
                                 .find(|a| a.name == action.as_str())
@@ -59,10 +59,10 @@ pub fn collect_attr_imports(
                                 out.runtime_imports.insert(a.name);
                             }
                         }
-                        crate::emit::l1_controller::ControllerAttach::On { .. } => {
+                        crate::check::controller_attach::ControllerAttach::On { .. } => {
                             out.runtime_imports.insert("on");
                         }
-                        crate::emit::l1_controller::ControllerAttach::Bind { .. } => {
+                        crate::check::controller_attach::ControllerAttach::Bind { .. } => {
                             out.runtime_imports.insert("bindAttr");
                         }
                     }

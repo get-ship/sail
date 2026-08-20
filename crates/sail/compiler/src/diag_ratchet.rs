@@ -82,12 +82,58 @@ pub fn classify_snippet(source: &str) -> SiteClass {
     classify_with_consts(window, &consts)
 }
 
-/// Count anonymous throw sites under live `crates/sail/compiler/src/**/*.rs`.
-pub fn count_anonymous_sites() -> usize {
-    anonymous_site_locations().len()
+/// Pure classifier entry — no filesystem. Host supplies source slices.
+///
+/// Backward compat: `scan_sources` replaces the `scan_compiler_src()` FS walk.
+/// The xtask owns the walk; the library stays pure.
+pub fn scan_sources<'a>(iter: impl IntoIterator<Item = (&'a Path, &'a str)>) -> Vec<(String, usize, SiteClass)> {
+    let mut out = Vec::new();
+    for (path, src) in iter {
+        let mut sites = Vec::new();
+        scan_file(path, src, &mut sites);
+        for s in sites {
+            out.push((s.path.display().to_string(), s.line, s.class));
+        }
+    }
+    out
 }
 
-/// Stable `sail-*` ids attached at live Idd throw sites (unique, sorted).
+/// Count anonymous throw sites from caller-supplied sources (pure, no FS).
+pub fn count_anonymous_sites_from<'a>(iter: impl IntoIterator<Item = (&'a Path, &'a str)>) -> usize {
+    scan_sources(iter)
+        .into_iter()
+        .filter(|(_, _, c)| *c == SiteClass::Anonymous)
+        .count()
+}
+
+/// Legacy filesystem walk — deprecated, for xtask/hygiene only. Call
+/// `count_anonymous_sites_from` with explicit sources for pure usage.
+pub fn count_anonymous_sites() -> usize {
+    scan_compiler_src()
+        .iter()
+        .filter(|s| s.class == SiteClass::Anonymous)
+        .count()
+}
+
+/// Stable `sail-*` ids attached at live Idd throw sites (unique, sorted) — pure.
+pub fn idd_rule_ids_from<'a>(iter: impl IntoIterator<Item = (&'a Path, &'a str)>) -> Vec<String> {
+    let mut ids: Vec<String> = Vec::new();
+    for (path, src) in iter {
+        let mut sites = Vec::new();
+        scan_file(path, src, &mut sites);
+        for s in sites {
+            if s.class == SiteClass::Idd {
+                if let Some(id) = s.id {
+                    ids.push(id);
+                }
+            }
+        }
+    }
+    ids.sort();
+    ids.dedup();
+    ids
+}
+
 pub fn idd_rule_ids() -> Vec<String> {
     let mut ids: Vec<String> = scan_compiler_src()
         .into_iter()

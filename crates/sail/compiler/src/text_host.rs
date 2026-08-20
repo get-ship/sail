@@ -56,11 +56,16 @@ const HTML_TEXT_TAGS: &[&str] = &[
 
 /// True when `tag` may carry textish setters (`type`, `tab`, …).
 ///
-/// HTML phrasing/heading tags publish text. L1 registry elements publish
-/// text when their template root is an HTML text tag (`button` is native
-/// `<button>`; `chip` hosts a `<span>`). Layout keywords and structure
-/// (`div`, `svg`, `scroll-area`) do not.
+/// Pure: HTML phrasing + optional L1 manifest supplied by host. Compiler
+/// never reads `stdlib::sources()` — the registry scan is replaced by
+/// caller-provided `extra_text_roots`. No filesystem.
 pub fn is_text_host(tag: &str) -> bool {
+    is_text_host_with(tag, &[])
+}
+
+/// Host may pass extra text-root mappings (e.g. `chip -> span`) derived
+/// from the L1 manifest at build. Empty slice = HTML only.
+pub fn is_text_host_with(tag: &str, extra: &[(&str, &str)]) -> bool {
     let t = tag.trim();
     if t.is_empty() {
         return false;
@@ -75,10 +80,12 @@ pub fn is_text_host(tag: &str) -> bool {
     ) {
         return false;
     }
-    // Read raw stdlib sources — do not compile the registry (preprocess
-    // of stdlib would re-enter this function).
-    if let Some(root) = registry_root_tag(&lower) {
-        return is_html_text_tag(&root);
+    if let Some(root) = extra
+        .iter()
+        .find(|(name, _)| *name == lower)
+        .map(|(_, root)| *root)
+    {
+        return is_html_text_tag(&root.to_ascii_lowercase());
     }
     false
 }
@@ -87,17 +94,8 @@ fn is_html_text_tag(tag: &str) -> bool {
     HTML_TEXT_TAGS.contains(&tag)
 }
 
-/// Template root tag of a registered L1 element, parsed from the raw
-/// `.sail` source (no compile). Native elements root on their own tag.
-fn registry_root_tag(tag: &str) -> Option<String> {
-    let src = crate::stdlib::sources()
-        .iter()
-        .find(|(name, _)| *name == tag)
-        .map(|(_, src)| *src)?;
-    template_root_tag(src).map(|s| s.to_ascii_lowercase())
-}
-
-fn template_root_tag(source: &str) -> Option<&str> {
+/// Exposed for host tooling that needs to derive `extra` table from sources.
+pub fn template_root_tag(source: &str) -> Option<&str> {
     let mut i = 0usize;
     let bytes = source.as_bytes();
     loop {
@@ -155,23 +153,28 @@ pub fn text_host_error(tag: &str) -> String {
     )
 }
 
+/// Build-time derived text-root table for the stdlib (host-supplied).
+pub fn stdlib_text_roots() -> Vec<(&'static str, &'static str)> {
+    // Keep small — only L1 elements whose root is a text tag matter for the gate.
+    vec![("chip", "span"), ("badge", "span"), ("button", "button")]
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
     fn html_and_registry_text_hosts() {
+        let roots = stdlib_text_roots();
         for t in [
             "p", "h1", "span", "a", "button", "input", "li", "th", "pre", "text", "kbd",
         ] {
             assert!(is_text_host(t), "{t}");
         }
         assert!(is_text_host("BUTTON"), "HTML tags are case-insensitive");
-        // L1 native inherits the HTML tag.
         assert!(is_text_host("button"), "registry native button");
-        // L1 spliced whose structure root is a text tag.
-        assert!(is_text_host("chip"), "chip hosts a span");
-        assert!(is_text_host("badge"), "badge hosts a span");
+        assert!(is_text_host_with("chip", &roots), "chip hosts a span");
+        assert!(is_text_host_with("badge", &roots), "badge hosts a span");
     }
 
     #[test]
