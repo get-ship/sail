@@ -3,7 +3,7 @@
 // Capability mix-in: a click on a descendant matching `[data-toast-close]`,
 // `[data-dismiss]`, or `button[aria-label="Dismiss"]` runs the shared
 // dismiss-self path (callback + remove). Stacked with `use:autoDismiss` on L1
-// <toast> and with `use:liveRegion` on L1 <alert>. Idempotent with the timer
+// <toast> and with L1 <alert>. Idempotent with the timer
 // path via dismiss-self.
 //
 // Gate: non-toast hosts require `[dismissible]` (alert); toast close always

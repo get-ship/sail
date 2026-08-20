@@ -36,12 +36,12 @@ function entryOf(v: HotkeyEntry): { run: HotkeyHandler; allowInInputs: boolean }
 }
 
 /**
- * Listen for key combos on the document while the host is mounted.
- * Handlers receive the KeyboardEvent; default prevented when a match fires.
+ * Listen for key combos on the host (bubble). Page-level maps go on the
+ * page root; widget maps go on that widget. Not document-global.
  *
  * `use:hotkeys={{ 'mod+s': save, Escape: close }}`.
  */
-export const hotkeys: Action<HotkeysMap | undefined> = (_node, map) => {
+export const hotkeys: Action<HotkeysMap | undefined> = (node, map) => {
   let current: HotkeysMap = map ?? {}
 
   const onKey = (e: KeyboardEvent): void => {
@@ -56,18 +56,14 @@ export const hotkeys: Action<HotkeysMap | undefined> = (_node, map) => {
     }
   }
 
-  if (typeof document !== 'undefined') {
-    document.addEventListener('keydown', onKey)
-  }
+  node.addEventListener('keydown', onKey)
 
   return {
     update: (next) => {
       current = next ?? {}
     },
     destroy: () => {
-      if (typeof document !== 'undefined') {
-        document.removeEventListener('keydown', onKey)
-      }
+      node.removeEventListener('keydown', onKey)
     },
   }
 }

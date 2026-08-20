@@ -14,8 +14,8 @@
 // round-trip through Rust now. This helper is the only test-time bridge
 // between `.sail` source and a mounted DOM tree.
 
-import { existsSync, readdirSync, statSync } from 'node:fs'
-import { dirname, resolve } from 'node:path'
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
+import { basename, dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 // `/internal` carries language + ABI so rewritten compiled imports resolve.
@@ -311,7 +311,15 @@ export function evalCompiledJs(
   js: string,
   setup?: UserSetup,
 ): { setup: (ctx: unknown) => Record<string, unknown> & { __mount: (c: HTMLElement) => () => void } } {
-  const body = stripImports(js).replace(/\bexport\s+default\s+/g, 'return ')
+  const mods: Record<string, unknown> = {}
+  const withSail = js.replace(
+    /^\s*import\s+(\w+)\s+from\s+["']([^"']+\.sail)["']\s*;?\s*$/gm,
+    (_m, ident: string, spec: string) => {
+      mods[ident] = loadSailMount(spec)
+      return `const ${ident} = __mods[${JSON.stringify(ident)}];`
+    },
+  )
+  const body = stripImports(withSail).replace(/\bexport\s+default\s+/g, 'return ')
   const setupObj = wrapSetup(setup)
   const fn = new Function(
     '__runtime',
@@ -322,6 +330,7 @@ export function evalCompiledJs(
     '__motion',
     '__query',
     '__virtual',
+    '__mods',
     body,
   )
   const deps: EvalDeps = {
@@ -339,7 +348,21 @@ export function evalCompiledJs(
     sailMotion,
     sailQuery,
     sailVirtual,
+    mods,
   ) as ReturnType<typeof evalCompiledJs>
+}
+
+/** Resolve a default-import `.sail` through `compile()`, not Deck. */
+function loadSailMount(spec: string): unknown {
+  const source = readFileSync(spec, 'utf8')
+  const setupMarker = source.includes('<controller')
+    ? `./${basename(spec)}.controller.ts`
+    : undefined
+  const compiled = compileSail(source, { sourcePath: spec, setupMarker })
+  const setup = compiled.controller
+    ? evalInlineController(compiled.controller)
+    : undefined
+  return evalCompiledJs(compiled.js, setup)
 }
 
 function wrapSetup(setup: UserSetup): { setup: (ctx: unknown) => unknown } | null {

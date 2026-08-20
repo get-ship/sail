@@ -58,9 +58,8 @@ export { bindWhen, acquireMediaQuery } from './when'
 export type { BindWhenOptions } from './when'
 export { bindSlotEmpty } from './slot-empty'
 
-// ── ABI-only: action runner (use:) + L1 controller attach ──────────────────
+// ── ABI-only: action runner (use:) ─────────────────────────────────────────
 export { runAction } from './action'
-export { runController } from './compose'
 
 // ── ABI-only: template / hydrate / motion plumbing ─────────────────────────
 export { __tpl } from './tpl'

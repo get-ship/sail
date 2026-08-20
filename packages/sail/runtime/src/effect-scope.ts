@@ -328,9 +328,11 @@ export function walkScope<R>(
  */
 export type ContextKey<T> = symbol & { readonly __ctx?: T }
 
-/** Mint a typed context key. The phantom `__ctx` is for type
- *  inference only — it carries through `provideContext` /
- *  `injectContext` so the read site doesn't need an annotation. */
+/** Mint a typed context key. Each call is a unique `Symbol` — share a
+ *  key by importing the same mint (React `createContext()` in a sibling
+ *  module), not by intern. The phantom `__ctx` is for type inference
+ *  only — it carries through `provideContext` / `injectContext` so the
+ *  read site doesn't need an annotation. */
 export function contextKey<T>(description: string): ContextKey<T> {
   return Symbol(description) as ContextKey<T>
 }
