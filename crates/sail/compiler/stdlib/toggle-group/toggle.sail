@@ -3,6 +3,12 @@
   First/last join + variant/orientation/size Style.
   Binary form control → use <switch>. Action button → use <button>.
   Selected = primary tokens (not raw fg/bg invert); pressed+hover keeps identity.
+
+  State: parent `groupValue` / `select` / `focus` / `tabStop` / `orientation`
+  come from the <toggle-group> controller as props (signal cell, not a
+  snapshot). This controller computes `pressed` (stamps aria-pressed, which
+  also drives the when { pressed } paint), the roving `tabindex`, and the
+  click → select wiring. Focus moves in are `use:focus={wanted()}`.
 -->
 
 <scope>
@@ -10,7 +16,6 @@
     value = ''
     disabled = false
     variant: 'outline' | 'ghost' | 'segmented' = 'outline'
-    orientation: 'horizontal' | 'vertical' = 'horizontal'
     size: 'md' | 'sm' | 'lg' = 'md'
   }
 
@@ -28,8 +33,47 @@
   style vertCell = {size({ w: 100% }).self(stretch)}
 </scope>
 
+<controller>
+export default controller((init) => {
+  function read(v) {
+    return typeof v === 'function' ? v() : v
+  }
+  function isOn(v) {
+    const x = read(v)
+    return x === true || x === '' || x === 'true'
+  }
+  const my = String(read(init.value) || '')
+  const disabled = derived(() => isOn(init.disabled))
+  const pressed = derived(() => {
+    const live = read(init.groupValue)
+    return !!my && String(live).split(/\s+/).filter(Boolean).includes(my) ? 'true' : 'false'
+  })
+  const wanted = derived(() => !!my && read(init.focus) === my)
+  const tabindex = derived(() => {
+    if (disabled()) return '-1'
+    return !!my && read(init.tabStop) === my ? '0' : '-1'
+  })
+  const orientation = derived(() => String(read(init.orientation) || 'horizontal'))
+  function onSelect() {
+    if (disabled()) return
+    if (typeof init.select === 'function') init.select(my)
+  }
+  function onFocus() {
+    if (typeof init.noteFocus === 'function') init.noteFocus(my)
+  }
+  return { onSelect, onFocus, pressed, wanted, tabindex, orientation, disabled }
+})
+</controller>
+
 <button
   type="button"
+  use:focus={wanted()}
+  on:click={onSelect}
+  on:focusin={onFocus}
+  pressed={pressed()}
+  tabindex={tabindex()}
+  orientation={orientation()}
+  disabled={disabled()}
   style(base, {when: {hover: bg(hover-bg).fg(foreground), pressed: {bg(primary).fg(primary-foreground).border({ color: primary }), when: {hover: bg(primary).fg(primary-foreground).border({ color: primary }).filter({ opacity: 90 })}, position({ z: 1 })}, disabled: filter({ opacity: 50 }).cursor(not-allowed), focus: border({ style: solid, kind: outline, width: 2, color: ring }).position({ z: 2 })}, match: { size: { md: sizeMd, sm: sizeSm, lg: sizeLg }, variant: { outline: outline, ghost: ghost, segmented: segmented }, orientation: { vertical: vertCell } }, compound: [
       {orientation: vertical, variant: outline, margin({ t: -px, s: 0, e: 0 }).radius(none).size({ w: 100% }).self(stretch)},
       {variant: ghost, margin({ s: 0, t: 0, e: 1 }).border({ color: transparent }).radius(md)},

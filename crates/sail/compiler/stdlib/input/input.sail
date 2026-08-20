@@ -1,10 +1,14 @@
 <!--
-  <input> — text field product. Style product only.
+  <input> — text field product.
   type: text | email | password | search | tel | url | number | hidden.
   Other controls are own tags: checkbox, radio, slider, date, file, color, switch.
   Actions use <button> — type=submit is not an input type.
   Shared input / foreground / border with select/textarea.
-  reveal (default true): password peek chrome (padE + use:passwordReveal).
+
+  Look: this tag owns its Style. Slots, not :part.
+  State: this file's <controller> (kind + shown + revealable). No DOM.
+  Listen: native <button> Show/Hide; native <input>.
+  reveal (default true): password peek chrome (padE + sibling Show/Hide).
 -->
 
 <scope>
@@ -28,8 +32,12 @@
     autocomplete = ''
     inputmode = ''
     reveal = true
+    id = ''
   }
 
+  style host = {display(contents).size({ min-w: 0 }), when: { group-fill: stretch }}
+  style hostPassword = {display(inline-flex).position(relative).size({ min-w: 0 }), when: { group-fill: stretch }}
+  style hostHidden = {display(none)}
   // Replaced element: width:auto is the UA size=20 (~174px). Inside a
   // field (group-fill) the control fills the column. Naked input hugs.
   style stretch = {size({ w: 100% })}
@@ -54,6 +62,107 @@
   style surfaceDefault = {bg(inset).border({ color: border, width: 1 })}
   style surfaceFilled = {bg(muted).border({ color: transparent }).elevation(none), when: {hover: border({ color: transparent })}}
   style surfaceFlushed = {bg(transparent).elevation(none).radius(none).border({ width: 0, edge: l }).border({ width: 0, edge: r }).border({ width: 0, edge: t }).border({ width: 1, edge: b, color: border }), when: {hover: border({ color: border-strong, edge: b })}}
+  style peek = {display(none).position({ scheme: absolute, r: 2, t: 0, b: 0, z: 1 }).margin({ y: auto }).pad({ x: 2 }).bg(transparent).border({ width: 0 }).fg(muted-foreground).cursor(pointer).type({ size: sm, wrap: nowrap, leading: none, family: body }), animate: { transition: play(colors, fast) }}
 </scope>
 
-<input style({match: {type: {text: fieldSized, email: fieldSized, password: passwordSized, number: fieldSized, search: fieldSized, tel: fieldSized, url: fieldSized, hidden: style(hidden, {size({ min-h: 0 })})}, surface: { default: surfaceDefault, filled: surfaceFilled, flushed: surfaceFlushed }}, compound: [{invalid: true, border({ color: danger })}]})>
+<controller>
+export default controller((init) => {
+  function read(v) {
+    return typeof v === 'function' ? v() : v
+  }
+  function isOn(v) {
+    const x = read(v)
+    return x === true || x === '' || x === 'true'
+  }
+  function kindOf(v) {
+    const t = String(read(v) || 'text')
+    if (
+      t === 'email' ||
+      t === 'password' ||
+      t === 'number' ||
+      t === 'search' ||
+      t === 'tel' ||
+      t === 'url' ||
+      t === 'hidden'
+    ) {
+      return t
+    }
+    return 'text'
+  }
+  const shown = signal(false)
+  const kind = derived(() => kindOf(init.type))
+  const isPassword = derived(() => kind() === 'password')
+  const revealable = derived(() => isPassword() && isOn(init.reveal))
+  const fieldType = derived(() => (revealable() && shown() ? 'text' : kind()))
+  const showPeek = derived(() => revealable() && !shown())
+  const hidePeek = derived(() => revealable() && shown())
+  const invalid = derived(() => isOn(init.invalid))
+  const disabled = derived(() => isOn(init.disabled))
+  const required = derived(() => isOn(init.required))
+  const readOnly = derived(() => isOn(init.readonly))
+  function toggle() {
+    if (!revealable() || isOn(init.disabled)) return
+    shown.set(!shown())
+  }
+  return {
+    kind,
+    isPassword,
+    fieldType,
+    showPeek,
+    hidePeek,
+    toggle,
+    invalid,
+    disabled,
+    required,
+    readOnly,
+  }
+})
+</controller>
+
+<span
+  type={kind()}
+  password={isPassword()}
+  style(host, {match: { type: { hidden: hostHidden }, password: { true: hostPassword } }})
+>
+  <input
+    anatomy
+    type={fieldType()}
+    password={isPassword()}
+    invalid={invalid()}
+    disabled={disabled()}
+    required={required()}
+    readOnly={readOnly()}
+    name={name()}
+    value={value()}
+    min={min()}
+    max={max()}
+    step={step()}
+    minlength={minlength()}
+    maxlength={maxlength()}
+    pattern={pattern()}
+    autocomplete={autocomplete()}
+    inputmode={inputmode()}
+    placeholder={placeholder()}
+    size={size()}
+    id={id()}
+    style({match: {type: {text: fieldSized, email: fieldSized, password: passwordSized, number: fieldSized, search: fieldSized, tel: fieldSized, url: fieldSized, hidden: style(hidden, {size({ min-h: 0 })})}, password: { true: passwordSized }, surface: { default: surfaceDefault, filled: surfaceFilled, flushed: surfaceFlushed }}, compound: [{invalid: true, border({ color: danger })}]})
+  >
+  <button
+    type="button"
+    anatomy
+    tabindex="-1"
+    label="Show"
+    peek={showPeek()}
+    on:click={toggle}
+    style(peek, {match: {peek: {true: display(inline-flex), false: display(none)}}, when: {hover: fg(foreground), focus: border({ style: solid, kind: outline, width: 2, color: ring, offset: 2 })}})
+  >Show</button>
+  <button
+    type="button"
+    anatomy
+    tabindex="-1"
+    label="Hide"
+    peek={hidePeek()}
+    on:click={toggle}
+    style(peek, {match: {peek: {true: display(inline-flex), false: display(none)}}, when: {hover: fg(foreground), focus: border({ style: solid, kind: outline, width: 2, color: ring, offset: 2 })}})
+  >Hide</button>
+</span>

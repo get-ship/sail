@@ -1,7 +1,11 @@
 <!--
-  <date> — temporal picker product. Impl: native input; type prop selects
-  precision (date | time | datetime-local | month | week). Shared field surface.
-  Platform calendar/time UI. min · max · step · name · required · readonly · value.
+  <date> — temporal picker. Native <input>; type selects precision
+  (date | time | datetime-local | month | week). Platform calendar/time UI.
+
+  Look: this tag owns its Style. Slots, not :part.
+  State: this file's <controller> (type + invalid/disabled/required/readonly
+  as signals). No DOM. No date action.
+  Listen: native <input>. No hotkeys.
 -->
 
 <scope>
@@ -27,7 +31,42 @@
   style sizeLg = {size({ min-h: control-h-lg }).pad({ x: 4 }).type({ size: md })}
 </scope>
 
+<controller>
+export default controller((init) => {
+  function read(v) {
+    return typeof v === 'function' ? v() : v
+  }
+  function isOn(v) {
+    const x = read(v)
+    return x === true || x === '' || x === 'true'
+  }
+  function kindOf(v) {
+    const t = String(read(v) || 'date')
+    if (t === 'time' || t === 'datetime-local' || t === 'month' || t === 'week') return t
+    return 'date'
+  }
+  const type = derived(() => kindOf(init.type))
+  const invalid = derived(() => isOn(init.invalid))
+  const disabled = derived(() => isOn(init.disabled))
+  const required = derived(() => isOn(init.required))
+  const readOnly = derived(() => isOn(init.readonly))
+  return { type, invalid, disabled, required, readOnly }
+})
+</controller>
+
 <input
-  type="date"
+  anatomy
+  type={type()}
+  invalid={invalid()}
+  disabled={disabled()}
+  required={required()}
+  readOnly={readOnly()}
+  name={name()}
+  value={value()}
+  min={min()}
+  max={max()}
+  step={step()}
+  placeholder={placeholder()}
+  size={size()}
   style(base, {match: { size: { xs: sizeXs, sm: sizeSm, md: sizeMd, lg: sizeLg } }, compound: [{invalid: true, border({ color: danger })}]})
 >

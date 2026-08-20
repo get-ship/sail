@@ -27,7 +27,7 @@ Reason classes:
 | color.css | color | vendor-pseudo | Kill UA double-rim on `::-webkit-color-swatch` / `::-moz-color-swatch` | none |
 | dialog.css | dialog | native-anatomy | `::backdrop`, side-sheet `min()` geometry, slot header/section/footer | GAP-STDLIB-VOCAB-1 |
 | drawer.css | drawer | native-anatomy | Non-modal `<dialog>` edge dock + header/section/footer (same adaptor as dialog) | GAP-STDLIB-VOCAB-1 |
-| file.css | file | native-anatomy | `variant=drop` hides native picker / shows drop label (child Style cannot see host `variant`) | none |
+| file.css | file | vendor-pseudo | Hide UA Choose-file button (`::file-selector-button` / `::-webkit-file-upload-button`). Overlay input in file.sail owns click/drop | none |
 | icon.css | icon | native-anatomy | Hosted child `svg` pack (width/height 100%) — glyph fill is anatomy, not a Style verb | none |
 | meter.css | meter | vendor-pseudo | WebKit / Firefox meter bar + optimum bands | none |
 | progress.css | progress | vendor-pseudo | WebKit / Firefox progress bar + indeterminate shimmer | GAP-STDLIB-VOCAB-1 |

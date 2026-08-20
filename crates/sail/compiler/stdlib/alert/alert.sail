@@ -32,7 +32,6 @@
   nowrap
   align="start"
   gap="3"
-  use:liveRegion
   use:dismissControl
   style(base, {when: {before: style(stripe, {bg(tone)}), forced-colors: {border({ color: CanvasText }), when: {before: bg(CanvasText)}}}, match: { variant: { default: variantDefault, banner: variantBanner } }, compound: [
       {tone: muted, when: {before: bg(primary)}},

@@ -27,7 +27,7 @@
 
 <table use:tableQuery style(host)>
   <caption data-table-search-wrap style(toolbar)>
-    <input type="search" size="sm" data-table-search placeholder="Search" label="Search table" style(search)></input>
+    <input anatomy type="search" size="sm" data-table-search placeholder="Search" label="Search table" style(search)></input>
   </caption>
   <slot></slot>
 </table>

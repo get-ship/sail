@@ -34,7 +34,6 @@
   align="center"
   justify="center"
   gap="3"
-  use:variantLive
   style(base, {when: {forced-colors: border({ color: CanvasText })}, match: { size: { md: sizeMd, sm: sizeSm, lg: sizeLg }, variant: { default: variantDefault, inline: variantInline, placeholder: variantBare, connecting: variantBare }, compact: { true: compactOn } }})
 >
   <row
