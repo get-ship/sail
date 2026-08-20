@@ -1,32 +1,11 @@
-// Collapsible + toast capability behaviors — detailsToggle / detailsDisabled /
-// autoDismiss / dismissControl.
+// Collapsible + toast capability behaviors — autoDismiss / dismissControl.
 //
-// Ports the element-private collapsible/toast action contracts onto the
-// stacked `use:` mix-ins the L1 stdlib stamps instead. Each action is attached
-// directly (runAction lifecycle is covered elsewhere).
+// Accordion previously used detailsToggle / detailsDisabled; now native
+// <details> + controller on:toggle/on:click/on:keydown owns that.
+// Toast actions remain stacked use: mix-ins.
 import { describe, expect, it, afterEach, vi, beforeEach } from 'vitest'
-import { detailsToggle } from '../src/actions/details-toggle'
-import { detailsDisabled } from '../src/actions/details-disabled'
 import { autoDismiss } from '../src/actions/auto-dismiss'
 import { dismissControl } from '../src/actions/dismiss-control'
-
-function makeDetails(attrs: Record<string, string | boolean> = {}): HTMLDetailsElement {
-  const el = document.createElement('details')
-  el.className = 'sail-accordion'
-  for (const [k, v] of Object.entries(attrs)) {
-    if (v === false) continue
-    if (v === true) el.setAttribute(k, '')
-    else el.setAttribute(k, v)
-  }
-  const summary = document.createElement('summary')
-  summary.textContent = 'Trigger'
-  el.append(summary)
-  const body = document.createElement('div')
-  body.textContent = 'Content'
-  el.append(body)
-  document.body.append(el)
-  return el
-}
 
 function makeToast(attrs: Record<string, string | boolean> = {}): HTMLElement {
   const el = document.createElement('div')
@@ -50,66 +29,6 @@ function makeToast(attrs: Record<string, string | boolean> = {}): HTMLElement {
   document.body.append(el)
   return el
 }
-
-describe('detailsToggle / detailsDisabled (use: actions)', () => {
-  afterEach(() => {
-    document.body.replaceChildren()
-  })
-
-  it('detailsToggle: open flip → onToggle({ open })', () => {
-    const el = makeDetails() as HTMLDetailsElement & {
-      onToggle?: (d: { open: boolean }) => void
-    }
-    detailsToggle(el)
-
-    const events: Array<{ open: boolean }> = []
-    el.onToggle = (d) => {
-      events.push(d)
-    }
-
-    el.open = true
-    el.dispatchEvent(new Event('toggle'))
-    expect(events).toEqual([{ open: true }])
-
-    el.open = false
-    el.dispatchEvent(new Event('toggle'))
-    expect(events).toEqual([{ open: true }, { open: false }])
-  })
-
-  it('detailsDisabled: disabled blocks click activation path', () => {
-    const el = makeDetails({ disabled: true })
-    detailsDisabled(el)
-    const summary = el.querySelector('summary')!
-
-    const click = new MouseEvent('click', { bubbles: true, cancelable: true })
-    summary.dispatchEvent(click)
-    // capture listener on the details host preventDefaults while [disabled]
-    expect(click.defaultPrevented).toBe(true)
-
-    el.removeAttribute('disabled')
-    const click2 = new MouseEvent('click', { bubbles: true, cancelable: true })
-    summary.dispatchEvent(click2)
-    expect(click2.defaultPrevented).toBe(false)
-  })
-
-  it('detailsDisabled: Enter/Space preventDefault while disabled', () => {
-    const el = makeDetails({ disabled: true })
-    detailsDisabled(el)
-
-    const enter = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true })
-    el.dispatchEvent(enter)
-    expect(enter.defaultPrevented).toBe(true)
-
-    const space = new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true })
-    el.dispatchEvent(space)
-    expect(space.defaultPrevented).toBe(true)
-
-    el.removeAttribute('disabled')
-    const enter2 = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true })
-    el.dispatchEvent(enter2)
-    expect(enter2.defaultPrevented).toBe(false)
-  })
-})
 
 describe('autoDismiss / dismissControl (use: actions)', () => {
   beforeEach(() => {

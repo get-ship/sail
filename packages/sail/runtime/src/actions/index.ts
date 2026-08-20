@@ -28,8 +28,6 @@ export type { SailHtmlHighlighter } from './highlight'
 
 export { chromeOffset } from './chrome-offset'
 export { describedControl } from './described-control'
-export { detailsToggle } from './details-toggle'
-export { detailsDisabled } from './details-disabled'
 export { autoDismiss } from './auto-dismiss'
 export { dismissControl } from './dismiss-control'
 

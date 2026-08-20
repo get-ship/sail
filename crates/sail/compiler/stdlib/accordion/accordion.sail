@@ -1,7 +1,12 @@
 <!--
-  <accordion> — single disclosure. use:detailsToggle + use:detailsDisabled.
-  Shared `name` = exclusive multi-item (native details name). Omit name for
-  independent open; set `multiple` when several may stay open together.
+  <accordion> — single disclosure. Native <details> owns open/close, keyboard,
+  focus, and ARIA. Shared `name` = exclusive multi-item (native details name).
+  Omit name for independent open; set `multiple` when several may stay open.
+
+  Look: this tag owns its Style. No DOM.
+  State: this file's <controller> (open/disabled as signals, onToggle callback).
+  Listen: native `on:toggle` on <details>; disabled gate via `preventDefault`
+  on click/keydown capture — not widget `use:` actions.
 -->
 
 <scope>
@@ -20,9 +25,34 @@
   style content = {pad({ x: 4, y: 3 })}
 </scope>
 
+<controller>
+export default controller((init) => {
+  function isOn(v) {
+    const x = typeof v === 'function' ? v() : v
+    return x === true || x === '' || x === 'true'
+  }
+  const disabled = derived(() => isOn(init.disabled))
+  function onToggle(e) {
+    const target = e && e.target
+    const open = !!(target && typeof target.open === 'boolean' ? target.open : false)
+    const cb = init.onToggle
+    if (typeof cb === 'function') cb({ open })
+  }
+  function guardClick(e) {
+    if (disabled()) e.preventDefault()
+  }
+  function guardKeydown(e) {
+    if (!disabled()) return
+    if (e.key === 'Enter' || e.key === ' ') e.preventDefault()
+  }
+  return { onToggle, guardClick, guardKeydown, disabled }
+})
+</controller>
+
 <details
-  use:detailsToggle
-  use:detailsDisabled
+  on:toggle={onToggle}
+  on:click={guardClick}
+  on:keydown={guardKeydown}
   style(host, {compound: [
       {disabled: true, filter({ opacity: 50 }).cursor(not-allowed)},
     ]})

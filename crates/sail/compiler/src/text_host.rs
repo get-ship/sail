@@ -119,6 +119,12 @@ fn template_root_tag(source: &str) -> Option<&str> {
             i += end + "</scope>".len();
             continue;
         }
+        if source[i..].starts_with("<controller") {
+            let rest = &source[i..];
+            let end = rest.find("</controller>")?;
+            i += end + "</controller>".len();
+            continue;
+        }
         if source[i..].starts_with("<style") {
             let rest = &source[i..];
             let end = rest.find("</style>")?;

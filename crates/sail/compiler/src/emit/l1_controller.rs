@@ -55,7 +55,8 @@ pub fn inst_field(source: &str) -> Result<String, CompileError> {
     let Some(first) = chars.next() else {
         return Err(CompileError::new(
             "element mode: empty controller binding on a parameterized use:/on:/attr",
-        ));
+        )
+        .with_category("sail-element-controller"));
     };
     let ok = (first.is_ascii_alphabetic() || first == '_')
         && chars.all(|c| c.is_ascii_alphanumeric() || c == '_');
@@ -63,7 +64,8 @@ pub fn inst_field(source: &str) -> Result<String, CompileError> {
         return Err(CompileError::new(format!(
             "element mode: `{s}` is not a controller binding ident — parameterized \
              use:/on:/attr resolve against the controller return, not the page"
-        )));
+        ))
+        .with_category("sail-element-controller"));
     }
     Ok(s.to_string())
 }
