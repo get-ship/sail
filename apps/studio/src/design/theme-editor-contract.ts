@@ -92,7 +92,7 @@ export const THEME_EDITOR_CONTROLS: readonly ThemeEditorControl[] = [
     facet: 'overview',
     label: 'Accent',
     kind: 'scale',
-    schemaPath: 'modes.{mode}.color.brandAccent.default',
+    schemaPath: 'modes.{mode}.color.accent.default',
     modeGroup: 'color',
   },
   {

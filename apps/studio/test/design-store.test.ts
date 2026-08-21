@@ -167,7 +167,7 @@ const GATE_COLOR = {
     default: { $value: 'oklch(0.92 0 0)', $type: 'color' },
     foreground: { $value: 'oklch(0.35 0 0)', $type: 'color' },
   },
-  brandAccent: {
+  accent: {
     default: { $value: 'oklch(0.45 0.16 300)', $type: 'color' },
     foreground: { $value: 'oklch(0.98 0 0)', $type: 'color' },
   },

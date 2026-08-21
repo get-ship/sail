@@ -9,7 +9,7 @@ import type { ThemeSession } from '../theme-session/theme-session'
 import { FACET_DOORS } from '../theme-session/theme-nav'
 
 const SECONDARY_PATH = 'color.secondary.default'
-const ACCENT_PATH = 'color.brandAccent.default'
+const ACCENT_PATH = 'color.accent.default'
 
 const DISPLAY_FONTS = [
   'Fraunces',
