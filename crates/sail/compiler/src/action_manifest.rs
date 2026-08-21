@@ -205,13 +205,6 @@ pub const ACTIONS: &[ActionEntry] = &[
         writes: &["maxW"],
     },
     ActionEntry {
-        name: "mediaFallback",
-        param: "void",
-        summary: "Image-with-fallback behavior for an <avatar> element.",
-        auto_import: true,
-        writes: &[],
-    },
-    ActionEntry {
         name: "menu",
         param: "void",
         summary: "Internal: L1 <dropdown> closed behavior (not public use: — attach the widget).",
@@ -371,7 +364,6 @@ pub const BUILTIN_ACTION_NAMES: &[&str] = &[
     "inView",
     "liveBox",
     "maxWidth",
-    "mediaFallback",
     "menu",
     "pin",
     "portEdge",

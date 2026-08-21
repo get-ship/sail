@@ -14,7 +14,6 @@ export { drawerSwipe } from './drawer-swipe'
 export { focus } from './focus'
 export { inView } from './in-view'
 export type { InViewHandler } from './in-view'
-export { mediaFallback } from './media-fallback'
 
 export { recoverySurface } from './recovery-surface'
 export { resizable } from './resizable'

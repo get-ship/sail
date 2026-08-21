@@ -4,9 +4,12 @@
   contain+pad when icon-slug. tone defaults to muted (surface disc).
   Explicit tone always paints.
   ring: outer border (border-strong, or tone when set).
-  presence: status pip via host ::after — mediaFallback wipes light-DOM
-  children, so a matched child span is not viable.
+  presence: status pip via host ::after.
   stack: negative margin-inline-end so a row of avatars overlap.
+
+  Look: host Style owns paint — no DOM.
+  State: this file's <controller> (src/icon-slug/name/initials → image vs initials).
+  Listen: on:error on the <img> flips to initials; src change retries.
 -->
 
 <scope>
@@ -38,16 +41,43 @@
   style pipOffline = {when: {after: style(pip, {bg(muted-foreground)})}}
 </scope>
 
+<controller>
+export default controller((init) => {
+  function read(v) { return typeof v === 'function' ? v() : v }
+  const error = signal(false)
+  const src = derived(() => {
+    const slug = String(read(init['icon-slug']) ?? '').trim()
+    if (slug) return `https://cdn.simpleicons.org/${slug}`
+    return String(read(init.src) ?? '').trim()
+  })
+  effect(() => { src(); error.set(false) })
+  const showImg = derived(() => !!src() && !error())
+  const initials = derived(() => {
+    const explicit = String(read(init.initials) ?? '').trim()
+    if (explicit) return explicit.slice(0, 2).toUpperCase()
+    const name = String(read(init.name) ?? '').trim()
+    return name.slice(0, 1).toUpperCase() || '?'
+  })
+  const alt = derived(() => String(read(init.name) ?? ''))
+  function onError() { error.set(true) }
+  return { src, showImg, initials, alt, onError }
+})
+</controller>
+
 <row
   inline
   nowrap
   align="center"
   justify="center"
-  use:mediaFallback
   style(base, {shrink(0), match: {size: { md: sizeMd, xs: sizeXs, sm: sizeSm, lg: sizeLg, xl: sizeXl }, shape: {round: radius(full), square: radius(sm)}, ring: {true: ringOn}, stack: {true: stackOn}, presence: {online: pipOnline, busy: pipBusy, offline: pipOffline}}, compound: [
       {tone: *, bg(tone).fg(tone.foreground)},
       {tone: muted, bg(muted).fg(foreground)},
       {ring: true, tone: *, border({ color: tone })},
       {stack: true, when: {last: margin({ e: 0 })}},
     ]})
-></row>
+>
+  <if {showImg()}>
+    <img alt={alt()} src={src()} on:error={onError}>
+    {else => <span>{initials()}</span>}
+  </if>
+</row>

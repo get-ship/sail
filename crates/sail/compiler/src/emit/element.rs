@@ -937,7 +937,7 @@ fn serialize_static_children(
                         root_class,
                         path,
                         has_controller,
-                        false,
+                        allow_attach,
                         attaches,
                         out,
                     )?;
@@ -948,7 +948,7 @@ fn serialize_static_children(
                         root_class,
                         path,
                         has_controller,
-                        false,
+                        allow_attach,
                         attaches,
                         out,
                     )?;
@@ -961,7 +961,7 @@ fn serialize_static_children(
                     root_class,
                     path,
                     has_controller,
-                    false,
+                    allow_attach,
                     attaches,
                     out,
                 )?;
@@ -974,7 +974,7 @@ fn serialize_static_children(
                         root_class,
                         path,
                         has_controller,
-                        false,
+                        allow_attach,
                         attaches,
                         out,
                     )?;
@@ -985,7 +985,7 @@ fn serialize_static_children(
                         root_class,
                         path,
                         has_controller,
-                        false,
+                        allow_attach,
                         attaches,
                         out,
                     )?;
