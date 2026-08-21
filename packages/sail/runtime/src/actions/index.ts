@@ -22,7 +22,6 @@ export { registerSailHighlighter } from './highlight'
 export type { SailHtmlHighlighter } from './highlight'
 
 export { chromeOffset } from './chrome-offset'
-export { describedControl } from './described-control'
 export { autoDismiss } from './auto-dismiss'
 export { dismissControl } from './dismiss-control'
 

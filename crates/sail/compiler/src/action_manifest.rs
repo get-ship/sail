@@ -135,13 +135,6 @@ pub const ACTIONS: &[ActionEntry] = &[
         writes: &[],
     },
     ActionEntry {
-        name: "describedControl",
-        param: "void",
-        summary: "Form control ↔ hint/error association (aria-describedby + aria-invalid) for any host with `.hint`/`.error`/`.control` anatomy.",
-        auto_import: true,
-        writes: &[],
-    },
-    ActionEntry {
         name: "dismissControl",
         param: "void",
         summary: "Click on a close control (`[data-toast-close]` / `[data-dismiss]` / `button[aria-label=\"Dismiss\"]`) invokes `onDismiss` then removes the host; non-toast hosts gate on [dismissible].",
@@ -347,7 +340,6 @@ pub const BUILTIN_ACTION_NAMES: &[&str] = &[
     "chromeOffset",
     "clickOutside",
     "clipboard",
-    "describedControl",
     "dismissControl",
     "drawerSwipe",
     "eventSpan",
