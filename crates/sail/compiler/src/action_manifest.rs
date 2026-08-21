@@ -261,13 +261,6 @@ pub const ACTIONS: &[ActionEntry] = &[
         writes: &["swatchColor"],
     },
     ActionEntry {
-        name: "syntaxHighlight",
-        param: "string | null | undefined",
-        summary: "Syntax-highlight source for a <code-block>; prefer use:syntaxHighlight={code()}.",
-        auto_import: true,
-        writes: &[],
-    },
-    ActionEntry {
         name: "targetCursor",
         param: "void",
         summary: "Switch the cursor to a custom 'target' style while over the element.",
@@ -372,7 +365,6 @@ pub const BUILTIN_ACTION_NAMES: &[&str] = &[
     "resizable",
     "spotlight",
     "swatch",
-    "syntaxHighlight",
     "targetCursor",
     "themeSelect",
     "virtualRow",

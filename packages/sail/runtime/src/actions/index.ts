@@ -18,7 +18,6 @@ export type { InViewHandler } from './in-view'
 export { recoverySurface } from './recovery-surface'
 export { resizable } from './resizable'
 export { catchRender } from './catch-render'
-export { syntaxHighlight } from './syntax-highlight'
 export { registerSailHighlighter } from './highlight'
 export type { SailHtmlHighlighter } from './highlight'
 
