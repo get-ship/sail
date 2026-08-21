@@ -6,6 +6,8 @@
 //! trampoline `@ship/sail-runtime/actions` from a controller — that is
 //! not a brain.
 
+use std::path::PathBuf;
+
 use sail_compiler::{CompileMode, CompileOpts, ComponentMeta, compile, compile_element};
 
 fn page_opts() -> CompileOpts {
@@ -19,6 +21,7 @@ fn page_opts() -> CompileOpts {
         scope_capabilities: Vec::new(),
         emit_component_imports: false,
         lint_overrides: Vec::new(),
+        ..Default::default()
     }
 }
 
@@ -224,7 +227,7 @@ fn page_attaches_hotkeys_from_controller_instance() {
         stdlib_src("tabs"),
         CompileOpts {
             setup_url: Some("./tabs.sail.controller.ts".into()),
-            source_path: Some(sail_compiler::stdlib::source_file("tabs")),
+            source_path: Some(PathBuf::from(sail_compiler::stdlib::virtual_source_id("tabs"))),
             emit_dts: false,
             ..page_opts()
         },
@@ -243,7 +246,7 @@ fn page_attaches_hotkeys_from_controller_instance() {
         stdlib_src("tab"),
         CompileOpts {
             setup_url: Some("./tab.sail.controller.ts".into()),
-            source_path: Some(sail_compiler::stdlib::source_file("tab")),
+            source_path: Some(PathBuf::from(sail_compiler::stdlib::virtual_source_id("tab"))),
             emit_dts: false,
             ..page_opts()
         },
@@ -317,7 +320,7 @@ fn hyphenated_stdlib_tag_is_not_a_ce() {
         stdlib_src("tab-panel"),
         CompileOpts {
             setup_url: Some("./tab-panel.sail.controller.ts".into()),
-            source_path: Some(sail_compiler::stdlib::source_file("tab-panel")),
+            source_path: Some(PathBuf::from(sail_compiler::stdlib::virtual_source_id("tab-panel"))),
             component_meta: Some(ComponentMeta {
                 name: "tab-panel".into(),
             }),

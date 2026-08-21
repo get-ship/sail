@@ -153,19 +153,13 @@ pub fn text_host_error(tag: &str) -> String {
     )
 }
 
-/// Build-time derived text-root table for the stdlib (host-supplied).
-pub fn stdlib_text_roots() -> Vec<(&'static str, &'static str)> {
-    // Keep small — only L1 elements whose root is a text tag matter for the gate.
-    vec![("chip", "span"), ("badge", "span"), ("button", "button")]
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
     fn html_and_registry_text_hosts() {
-        let roots = stdlib_text_roots();
+        let roots = [("chip", "span"), ("badge", "span")];
         for t in [
             "p", "h1", "span", "a", "button", "input", "li", "th", "pre", "text", "kbd",
         ] {

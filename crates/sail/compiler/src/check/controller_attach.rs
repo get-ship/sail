@@ -1,42 +1,34 @@
-//! Single source for L1 controller attach validation + type.
+//! Platform-free controller attach type — no DOM, no CSS.
 //!
-//! Parameterized `use:` / `on:` / live `name={expr}` on an L1 element with
-//! a `<controller>` attach in controller scope. One ident rule for all
-//! three — previously duplicated in `emit::l1_controller::inst_field`.
+//! Validates `ident` / `ident()` bindings for parameterized `use:` /
+//! `on:` / live `name={expr}` on an L1 element with a `<controller>`.
+//! Core emits declarative `path: Vec<String>` (`:nth-of-type` steps,
+//! empty = host). Web emitter owns CSS string + querySelector.
 
 use crate::CompileError;
 
-/// One host- or descendant-node attach compiled from the L1 template.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ControllerAttach {
     Use {
         action: String,
         param: String,
-        selector: String,
+        /// Host-relative tree path (`:nth-of-type` steps), empty = host.
+        path: Vec<String>,
     },
     On {
         event: String,
         handler: String,
-        selector: String,
+        path: Vec<String>,
     },
     Bind {
         name: String,
         expr: String,
-        selector: String,
+        path: Vec<String>,
     },
 }
 
-/// CSS selector for a descendant of the L1 host, or `""` for the host itself.
-pub fn selector_from_path(path: &[String]) -> String {
-    if path.is_empty() {
-        String::new()
-    } else {
-        format!(":scope > {}", path.join(" > "))
-    }
-}
-
-/// A controller binding used as `use:` param / `on:` handler / attr expr.
-/// Only a bare ident or `ident()` — anything richer is page `$scope` again.
+/// A controller binding: bare `ident` or `ident()` — anything richer is
+/// page `$scope` again.
 pub fn inst_field(source: &str) -> Result<String, CompileError> {
     let s = source.trim();
     let ident = s.strip_suffix("()").unwrap_or(s).trim();
@@ -59,46 +51,14 @@ pub fn inst_field(source: &str) -> Result<String, CompileError> {
     Ok(s.to_string())
 }
 
-fn node_js(el_var: &str, selector: &str) -> String {
-    if selector.is_empty() {
-        el_var.to_string()
-    } else {
-        format!(
-            "{el_var}.querySelector(\"{}\")",
-            selector.replace('\\', "\\\\").replace('"', "\\\"")
-        )
-    }
-}
-
-pub fn emit_attach_js(el_var: &str, inst_var: &str, attach: &ControllerAttach) -> String {
-    match attach {
-        ControllerAttach::Use { action, param, selector } => {
-            let node = node_js(el_var, selector);
-            if selector.is_empty() {
-                format!("runAction({node}, {action}, () => {inst_var}.{param});")
-            } else {
-                format!("{{ const __n = {node}; if (__n) runAction(__n, {action}, () => {inst_var}.{param}); }}")
-            }
-        }
-        ControllerAttach::On { event, handler, selector } => {
-            let node = node_js(el_var, selector);
-            format!("{{ const __n = {node}; if (__n) on(__n, \"{event}\", (e) => {{ const __h = {inst_var}.{handler}; if (typeof __h === \"function\") __h(e); }}); }}")
-        }
-        ControllerAttach::Bind { name, expr, selector } => {
-            let node = node_js(el_var, selector);
-            format!("{{ const __n = {node}; if (__n) bindAttr(__n, \"{name}\", () => ({inst_var}.{expr})); }}")
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
     #[test]
-    fn attach_js_is_instance_not_page_scope() {
-        let js = emit_attach_js("el", "inst", &ControllerAttach::Use { action: "hotkeys".into(), param: "keys".into(), selector: String::new() });
-        assert_eq!(js, "runAction(el, hotkeys, () => inst.keys);");
-        assert!(!js.contains("$scope"));
-        assert!(!js.contains("ctx.host"));
+    fn inst_field_is_bare_ident() {
+        assert_eq!(inst_field("keys").unwrap(), "keys");
+        assert_eq!(inst_field("keys()").unwrap(), "keys()");
+        assert!(inst_field("keys.foo").is_err());
+        assert!(inst_field("").is_err());
     }
 }

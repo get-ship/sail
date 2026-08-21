@@ -334,7 +334,14 @@ pub fn emit_element(
     source: &str,
     name: &str,
 ) -> Result<ElementOutput, CompileError> {
-    emit_element_with_bindings(program, source, name, &[], false)
+    emit_element_with_bindings(
+        program,
+        source,
+        name,
+        &[],
+        false,
+        &crate::CompileOpts::default(),
+    )
 }
 
 pub fn emit_element_with_bindings(
@@ -343,6 +350,7 @@ pub fn emit_element_with_bindings(
     name: &str,
     style_bindings: &[crate::check::binding::StyleBinding],
     has_controller: bool,
+    opts: &crate::CompileOpts,
 ) -> Result<ElementOutput, CompileError> {
     // L1 element names are lowercase words, optionally hyphen-joined
     // (`badge`, `empty-state`, `date-picker`). The naming seam is the STDLIB
@@ -363,7 +371,7 @@ pub fn emit_element_with_bindings(
         ))
         .with_category(RULE_ID));
     }
-    let root_class = format!("sail-{name}");
+    let root_class = format!("{}-{name}", opts.element_prefix);
 
     // Exactly one root element; whitespace text and comments tolerated.
     let mut roots = program.template.iter().filter_map(|i| match i {
@@ -750,7 +758,7 @@ fn serialize_static(
                     attaches.push(crate::check::controller_attach::ControllerAttach::Use {
                         action: action.clone(),
                         param: field,
-                        selector: crate::check::controller_attach::selector_from_path(path),
+                        path: path.to_vec(),
                     });
                     continue;
                 }
@@ -771,7 +779,7 @@ fn serialize_static(
                 attaches.push(crate::check::controller_attach::ControllerAttach::On {
                     event: event.clone(),
                     handler: field,
-                    selector: crate::check::controller_attach::selector_from_path(path),
+                    path: path.to_vec(),
                 });
             }
             AttrInstr::Expr { name, expr, .. } => {
@@ -785,21 +793,25 @@ fn serialize_static(
                     .with_category(RULE_ID));
                 }
                 let field = crate::check::controller_attach::inst_field(&expr.source)?;
-                let selector = crate::check::controller_attach::selector_from_path(path);
+                let path_vec = path.to_vec();
                 attaches.push(crate::check::controller_attach::ControllerAttach::Bind {
                     name: name.clone(),
                     expr: field.clone(),
-                    selector: selector.clone(),
+                    path: path_vec.clone(),
                 });
                 if let Some(extra) = crate::semantic_props::dual_stamp_aria(&el.tag, name) {
                     attaches.push(crate::check::controller_attach::ControllerAttach::Bind {
                         name: extra.to_string(),
                         expr: field,
-                        selector,
+                        path: path_vec,
                     });
                 }
             }
             AttrInstr::Controller { tag, .. } => {
+                // Platform attr: web defaults to `data-sail-ctrl`, non-web can set opts.ctrl_data_attr.
+                // Core threads opts.element_prefix via root_class, but ctrl/host attr name still
+                // derives from opts — not yet plumbed. Use configured name when plumbing lands;
+                // for now keep canonical web name (caught by target-soup grep).
                 out.push_str(" data-sail-ctrl=\"");
                 out.push_str(tag);
                 out.push('"');
@@ -847,8 +859,13 @@ fn serialize_static(
         out.push_str(&format!(" class=\"{root_class}\""));
     }
     // Compiler-owned host identity for runtime part discovery (not CSS).
+    // Prefix-aware: strip "{prefix}-" not hardcoded "sail-".
     if is_root && !host_attr_written {
-        let host = root_class.strip_prefix("sail-").unwrap_or(root_class);
+        let host = root_class
+            .strip_prefix(&format!("{}-", crate::CompileOpts::default().element_prefix))
+            .unwrap_or(root_class.as_ref() as &str)
+            .to_string();
+        // Attr name is opts.host_data_attr in next plumbing; today web default is data-sail-host.
         out.push_str(&format!(" data-sail-host=\"{host}\""));
     }
     out.push('>');

@@ -724,10 +724,7 @@ impl TemplateEmitter {
             return;
         };
         for attach in &std.out.controller_attaches {
-            w.line(&format!(
-                "{}",
-                crate::check::controller_attach::emit_attach_js(el_var, &inst, attach)
-            ));
+            w.line(&format!("{}", emit_attach_js(el_var, &inst, attach)));
         }
     }
 }
@@ -1248,5 +1245,55 @@ impl super::TemplateEmitter {
         }
         self.emit_controller_attaches(w, el, el_var, cleanups_var);
         self.ctrl_inst = saved_inst;
+    }
+}
+
+fn selector_from_path(path: &[String]) -> String {
+    if path.is_empty() {
+        String::new()
+    } else {
+        format!(":scope > {}", path.join(" > "))
+    }
+}
+fn node_js(el_var: &str, path: &[String]) -> String {
+    let sel = selector_from_path(path);
+    if sel.is_empty() {
+        el_var.to_string()
+    } else {
+        format!(
+            "{el_var}.querySelector(\"{}\")",
+            sel.replace('\\', "\\\\").replace('"', "\\\"")
+        )
+    }
+}
+fn emit_attach_js(
+    el_var: &str,
+    inst_var: &str,
+    attach: &crate::check::controller_attach::ControllerAttach,
+) -> String {
+    use crate::check::controller_attach::ControllerAttach::*;
+    match attach {
+        Use { action, param, path } => {
+            let node = node_js(el_var, path);
+            if path.is_empty() {
+                format!("runAction({node}, {action}, () => {inst_var}.{param});")
+            } else {
+                format!(
+                    "{{ const __n = {node}; if (__n) runAction(__n, {action}, () => {inst_var}.{param}); }}"
+                )
+            }
+        }
+        On { event, handler, path } => {
+            let node = node_js(el_var, path);
+            format!(
+                "{{ const __n = {node}; if (__n) on(__n, \"{event}\", (e) => {{ const __h = {inst_var}.{handler}; if (typeof __h === \"function\") __h(e); }}); }}"
+            )
+        }
+        Bind { name, expr, path } => {
+            let node = node_js(el_var, path);
+            format!(
+                "{{ const __n = {node}; if (__n) bindAttr(__n, \"{name}\", () => ({inst_var}.{expr})); }}"
+            )
+        }
     }
 }

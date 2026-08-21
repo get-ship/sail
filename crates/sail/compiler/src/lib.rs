@@ -111,7 +111,7 @@ pub use semantic_props::{
     HOST_ANATOMY, HostAnatomy, SEMANTIC_PROPS, SemanticKind, SemanticProp, host_anatomy,
     is_free_aria_attr, lookup as lookup_semantic_prop, lower_attr_name_str,
 };
-pub use text_host::{is_text_host, is_text_host_with, stdlib_text_roots, text_host_error};
+pub use text_host::{is_text_host, is_text_host_with, text_host_error};
 pub use theme_surface::{
     ThemeTokenHover, ThemeTokenKind, ThemeTokenRef, catalog_theme_ids, infer_active_theme_mode,
     resolve_theme_token, theme_attr_completions, theme_attr_partial, theme_complete_at,
@@ -224,6 +224,17 @@ pub struct CompileOpts {
     /// (the default) and stays strict. See
     /// `crate::check::lint_overrides::LintOverride` for the shape.
     pub lint_overrides: Vec<check::lint_overrides::LintOverride>,
+    /// Platform element class prefix (web: `sail`). The compiler stamps
+    /// `"{prefix}-{tag}"` on the element root and on its skin sheet.
+    /// Platform-free core defaults to `sail`; a non-web target can pass
+    /// a different prefix. The compiler never decides the prefix.
+    pub element_prefix: String,
+    /// Attribute name the web runtime uses for host identity
+    /// (`data-sail-host`, `data-sail-ctrl`). Set by the platform
+    /// emitter; the core only needs the name to stamp. Defaults to
+    /// the web values — a non-web target passes its own keys.
+    pub host_data_attr: String,
+    pub ctrl_data_attr: String,
 }
 
 impl CompileOpts {
@@ -260,6 +271,9 @@ impl Default for CompileOpts {
             scope_capabilities: Vec::new(),
             emit_component_imports: false,
             lint_overrides: Vec::new(),
+            element_prefix: "sail".into(),
+            host_data_attr: "data-sail-host".into(),
+            ctrl_data_attr: "data-sail-ctrl".into(),
         }
     }
 }
@@ -498,6 +512,7 @@ pub fn compile_element(
             name,
             &bindings,
             controller_src.is_some(),
+            &crate::CompileOpts::default(),
         )?;
         if let Some(body) = &controller_src {
             let rewritten = check::query_keys::rewrite(body)?;

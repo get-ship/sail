@@ -3764,6 +3764,7 @@ pub fn check_synthetic_controller(
                         scope_capabilities: Vec::new(),
                         emit_component_imports: false,
                         lint_overrides: Vec::new(),
+                        ..Default::default()
                     };
                     if let Ok(o) = crate::compile(&sib, opts)
                         && let Some(dts) = o.dts

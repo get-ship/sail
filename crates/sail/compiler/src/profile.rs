@@ -552,6 +552,7 @@ fn compile_opts(path: &Path) -> CompileOpts {
         scope_capabilities: Vec::new(),
         emit_component_imports: false,
         lint_overrides: Policy::overrides_for(path),
+        ..Default::default()
     }
 }
 

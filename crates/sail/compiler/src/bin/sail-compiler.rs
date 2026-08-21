@@ -2244,6 +2244,7 @@ fn compile_one(
         scope_capabilities: Vec::new(),
         emit_component_imports,
         lint_overrides: Policy::overrides_for(path),
+        ..Default::default()
     };
     // compile() already gates the full Error-severity lint stream internally
     // (`check::gate`, #255) — a second check_all here re-ran the identical
