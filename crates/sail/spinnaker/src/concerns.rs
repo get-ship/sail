@@ -1331,12 +1331,7 @@ pub fn validate_slot_value(
                         source: op.source.clone(),
                     });
                 }
-                return validate_slot_value(
-                    spec,
-                    slot,
-                    op,
-                    &PaintArg::Token(inner.to_string()),
-                );
+                return validate_slot_value(spec, slot, op, &PaintArg::Token(inner.to_string()));
             }
             let bare = tok
                 .strip_prefix('-')

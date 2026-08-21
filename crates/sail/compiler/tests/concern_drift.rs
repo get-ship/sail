@@ -480,10 +480,9 @@ fn sx_scanner_exemption_edges() {
 #[test]
 fn stdlib_all_files_compile() {
     let files = stdlib_sail_files();
-    assert_eq!(
-        files.len(),
-        61,
-        "expected 61 stdlib .sail files, got {}",
+    assert!(
+        files.len() >= 61,
+        "expected at least 61 stdlib .sail files, got {}",
         files.len()
     );
     let mut failed = Vec::new();

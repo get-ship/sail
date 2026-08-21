@@ -1,6 +1,6 @@
 <scope>
   props: {
-    kind: 'hidden' | 'auto' | 'clip' | 'scroll' | 'visible' | 'clamp' | 'tall' | 'huge' = 'hidden'
+    kind: 'hidden' | 'auto' | 'clip' | 'scroll' | 'visible' | 'clamp' | 'tall' | 'huge' | 'zero' = 'hidden'
   }
   style clip = { size({ w: 16, h: 16 }), overflow(hidden), bg(muted) }
   style auto = { size({ w: 16, h: 16 }), overflow(auto), bg(muted) }
@@ -10,7 +10,8 @@
   style clamp = { size({ max-w: 16, h: 8 }), overflow(hidden), bg(muted) }
   style tall = { size({ w: 8, h: 24 }), bg(accent) }
   style huge = { size({ w: 48, h: 8 }), bg(accent) }
+  style zero = { size({ w: 0, h: 0 }), overflow(hidden), bg(primary) }
 </scope>
-<column style({ match: { kind: { hidden: clip, auto: auto, clip: clipWell, scroll: scroll, visible: vis, clamp: clamp, tall: tall, huge: huge } } })>
+<column style({ match: { kind: { hidden: clip, auto: auto, clip: clipWell, scroll: scroll, visible: vis, clamp: clamp, tall: tall, huge: huge, zero: zero } } })>
   <slot></slot>
 </column>

@@ -35,6 +35,11 @@
   <l0-case look="aspect auto" spell="size w:16 h:8 aspect:auto">
     <l0-box-face kind="auto"></l0-box-face>
   </l0-case>
+  <l0-case look="one 4-step child in a 16-step bar" spell="size w:16 h:8 · one child">
+    <l0-box-face kind="w">
+      <l0-swatch face="accent"></l0-swatch>
+    </l0-box-face>
+  </l0-case>
   <l0-case look="zero box" spell="size w:0 h:0">
     <l0-box-face kind="zero"></l0-box-face>
   </l0-case>

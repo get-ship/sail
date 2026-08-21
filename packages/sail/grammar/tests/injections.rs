@@ -78,7 +78,10 @@ const laps = signal<Lap[]>([])
 export default controller(() => ({ laps }))
 </controller>
 "#;
-    assert!(!has_error(src), "controller body must stay raw through `<` generics");
+    assert!(
+        !has_error(src),
+        "controller body must stay raw through `<` generics"
+    );
 }
 
 #[test]
@@ -93,7 +96,10 @@ fn scope_style_and_props_parse() {
   style quiet = host, { fg(muted-foreground) }
 </scope>
 "#;
-    assert!(!has_error(src), "scope must parse style_decl + props + leftover type lines");
+    assert!(
+        !has_error(src),
+        "scope must parse style_decl + props + leftover type lines"
+    );
 }
 
 #[test]
@@ -104,7 +110,10 @@ fn style_attach_on_element_parses() {
   <div style({ pad(4) })>y</div>
 </row>
 "#;
-    assert!(!has_error(src), "tag-position style() must parse as style_attr");
+    assert!(
+        !has_error(src),
+        "tag-position style() must parse as style_attr"
+    );
 }
 
 #[test]

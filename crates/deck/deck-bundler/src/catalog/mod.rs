@@ -978,6 +978,36 @@ mod tests {
     }
 
     #[test]
+    fn source_tags_include_hyphenated_stems_under_routes() {
+        let tmp = tempdir().unwrap();
+        let pkg = tmp.path();
+        write(&pkg.join("package.json"), r#"{"name":"@ship/demo"}"#);
+        write(
+            &pkg.join("src/demo-chip/demo-chip.sail"),
+            "<column></column>\n",
+        );
+        write(
+            &pkg.join("routes/widgets/demo-face.sail"),
+            "<column></column>\n",
+        );
+        write(&pkg.join("routes/widgets/page.sail"), "<column></column>\n");
+        write(
+            &pkg.join("routes/_layout.sail"),
+            "<demo-chip></demo-chip>\n",
+        );
+
+        let mut tags: Vec<String> = source_tags_for_package(pkg)
+            .into_iter()
+            .map(|(tag, _)| tag)
+            .collect();
+        tags.sort();
+        assert_eq!(tags, vec!["demo-chip", "demo-face"]);
+        let roots = component_src_roots(pkg);
+        assert!(roots.contains(&pkg.join("src")), "{roots:?}");
+        assert!(roots.contains(&pkg.join("routes")), "{roots:?}");
+    }
+
+    #[test]
     fn component_src_roots_empty_without_src_tree() {
         let tmp = tempdir().unwrap();
         let pkg = tmp.path();

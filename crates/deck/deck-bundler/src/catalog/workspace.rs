@@ -456,6 +456,7 @@ fn scan_sail_components(dir: &Path, out: &mut Vec<(String, PathBuf)>) {
 ///
 /// Same walk for both jobs:
 /// - `pkg_root/src/` (classic single-domain package)
+/// - `pkg_root/routes/` (route-local hyphenated faces next to `page.sail`)
 /// - `pkg_root/*/src/` when the package declares `sailComponents: true`
 ///   (umbrella multi-domain layout used by `@ship/sail-components`:
 ///   primitives, charts, …)
@@ -464,6 +465,10 @@ fn package_src_roots(pkg_root: &Path) -> Vec<PathBuf> {
     let src = pkg_root.join("src");
     if src.is_dir() {
         out.push(src);
+    }
+    let routes = pkg_root.join("routes");
+    if routes.is_dir() {
+        out.push(routes);
     }
     if package_is_sail_components(pkg_root) {
         if let Ok(entries) = std::fs::read_dir(pkg_root) {

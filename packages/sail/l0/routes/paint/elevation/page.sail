@@ -2,9 +2,14 @@
   Look: painted boxes on the elevation shadow slot.
   Spelling: elevation({ shadow: sm })
   Owner: language (elevation slot table)
+  Trap: fixtures/elevation-unknown.bad.sail
 -->
 <column gap="6">
-  <l0-case look="shadow — none · xs · sm · md · lg · xl" spell="elevation shadow: none | xs | sm | md | lg | xl">
+  <l0-case
+    look="shadow — none · xs · sm · md · lg · xl"
+    spell="elevation shadow: none | xs | sm | md | lg | xl"
+    note="trap: elevation({ shadow: foo }) — not none | xs | sm | md | lg | xl"
+  >
     <l0-elevation-face kind="rail">
       <row gap="3">
         <l0-elevation-face kind="none"></l0-elevation-face>

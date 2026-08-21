@@ -717,7 +717,7 @@ pub fn generate_with_options(
         ordered.push(l);
     }
 
-    let emit_platform_chrome = is_product_catalog(model_dir);
+    let emit_platform_chrome = false; // spinnaker core agnostic — deck owns document chrome
     let prepared_platform_chrome = if emit_platform_chrome {
         chrome::generate_platform_chrome()
     } else {
@@ -747,9 +747,9 @@ pub fn generate_with_options(
                 meta: l.meta.clone(),
                 tokens: regular,
             };
-            let sail_dark = themes.iter().find(|t| {
-                t.meta.theme_id.as_deref() == Some("sail") && t.meta.dark
-            });
+            let sail_dark = themes
+                .iter()
+                .find(|t| t.meta.theme_id.as_deref() == Some("sail") && t.meta.dark);
             css_parts.push(emit_layer(&base_regular, sail_dark));
             css_parts.push(String::new());
             if !channels.is_empty() {
@@ -807,9 +807,10 @@ pub fn generate_with_options(
 
     let mut theme_parts: Vec<String> = vec![THEMES_HEADER.to_string()];
     for t in &ordered_themes {
-        let sibling = ordered_themes.iter().copied().find(|o| {
-            o.meta.theme_id == t.meta.theme_id && o.meta.dark != t.meta.dark
-        });
+        let sibling = ordered_themes
+            .iter()
+            .copied()
+            .find(|o| o.meta.theme_id == t.meta.theme_id && o.meta.dark != t.meta.dark);
         theme_parts.push(emit_layer(t, sibling));
         theme_parts.push(String::new());
     }
@@ -4715,11 +4716,17 @@ mod tests {
         generate(&model, &out).expect("catalog chrome generate");
         let tokens_css = fs::read_to_string(out.join("tokens.css")).unwrap();
         assert!(
-            tokens_css.contains("body::before"),
-            "catalog emit must write generated platform chrome: {tokens_css}"
+            !tokens_css.contains("body::before"),
+            "platform chrome should be empty — deck owns document chrome: {tokens_css}"
         );
-        assert!(tokens_css.contains("var(--overlay-fill)"));
-        assert!(tokens_css.contains("var(--scrollbar-thumb)"));
+        assert!(
+            !tokens_css.contains("var(--overlay-fill)"),
+            "platform chrome should be empty — deck owns document chrome"
+        );
+        assert!(
+            !tokens_css.contains("var(--scrollbar-thumb)"),
+            "platform chrome should be empty — deck owns document chrome"
+        );
         assert!(
             !tokens_css.contains("ship-scroll"),
             "generated chrome must not revive ship-scroll utilities"

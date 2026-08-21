@@ -427,7 +427,9 @@ mod severity_tests {
             .expect_err("overflow must fail compile()");
         let s = format!("{err:?}");
         assert!(
-            s.contains("unintended-overflow") || s.contains("overflows") || s.contains("no overflow"),
+            s.contains("unintended-overflow")
+                || s.contains("overflows")
+                || s.contains("no overflow"),
             "compile error must be the taffy overflow: {s}"
         );
     }

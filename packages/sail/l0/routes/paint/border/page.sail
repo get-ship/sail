@@ -6,6 +6,17 @@
   Trap: border({ radius: md }) — radius is not a slot
 -->
 <column gap="6">
+  <l0-case
+    look="presets — the product names"
+    spell="border(subtle) · border(default) · border(strong)"
+    note="trap: border({ radius: md }) — radius is not a slot"
+  >
+    <row gap="3">
+      <l0-border-face kind="subtle"></l0-border-face>
+      <l0-border-face kind="default"></l0-border-face>
+      <l0-border-face kind="strong"></l0-border-face>
+    </row>
+  </l0-case>
   <l0-case look="color — primary · accent · muted via ref" spell="border color: ref primary | accent | muted">
     <row gap="3">
       <l0-border-face kind="color-primary"></l0-border-face>

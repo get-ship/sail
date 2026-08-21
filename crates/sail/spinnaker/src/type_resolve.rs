@@ -251,7 +251,7 @@ mod tests {
         );
         assert_eq!(t.size, expected);
         assert_eq!(t.size.as_deref(), Some("xl"));
-        assert_eq!(t.family.as_deref(), Some("display"));
+        assert_eq!(t.family.as_deref(), Some("heading"));
     }
 
     #[test]

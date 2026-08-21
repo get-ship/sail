@@ -623,7 +623,7 @@ pub fn lower_style_source_with_motion(
     if t.starts_with("style.") {
         return Err(vec![spinnaker::ir::StyleDiagnostic::ParseError {
             message: "flat `style.method(…)` chains are retired — write concern calls: \
-                      style({ size({ w: full }).pad(4).bg(surface), when: { hover: bg(muted) } })"
+                      style({ size({ w: 100% }).pad(4).bg(surface), when: { hover: bg(muted) } })"
                 .into(),
             source: t.to_string(),
         }]);

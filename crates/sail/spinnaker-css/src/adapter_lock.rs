@@ -72,8 +72,12 @@ mod tests {
     fn when_breakpoints_match_design_tokens() {
         let table = spinnaker::tokens::breakpoint_table();
         assert!(
-            table.iter().any(|(n, _)| n == "wide"),
-            "default theme must declare wide: {table:?}"
+            table.iter().any(|(n, _)| n == "desktop"),
+            "default theme must declare desktop (default 3: mobile/tablet/desktop): {table:?}"
+        );
+        assert!(
+            !table.iter().any(|(n, _)| n == "wide"),
+            "wide is theme fulfillment, not default: {table:?}"
         );
         for (name, width) in &table {
             let query = crate::condition_media(name).expect("Style condition table");
@@ -101,7 +105,7 @@ mod tests {
         }
 
         let (style, diags) = parse(
-            "style({ type({ size: sm }), when: { tablet: { type({ size: lg }) }, desktop: { type({ size: xl }) }, wide: { type({ size: xl }) } } })",
+            "style({ type({ size: sm }), when: { tablet: { type({ size: lg }) }, desktop: { type({ size: xl }) } } })",
         );
         assert!(
             diags.is_empty(),
@@ -118,8 +122,8 @@ mod tests {
             "desktop when must emit desktop media: {css}"
         );
         assert!(
-            css.contains("@media (min-width: 1600px)") || css.contains("@media(min-width: 1600px)"),
-            "wide when must emit theme width: {css}"
+            !css.contains("1600"),
+            "wide is theme fulfillment, not default — no 1600 media: {css}"
         );
         let (style2, diags2) =
             parse("style({ when: { motionReduce: { filter({ opacity: 100 }) } } })");
@@ -646,21 +650,21 @@ mod tests {
     #[ignore = "free form fixture (STYLE-BINDING-1)"]
     fn site_shell_wave_exprs_parse() {
         let exprs = [
-            "style({ size({ w: full, min-w: 0 }).overflow({ x: hidden }).bg(surface-0) })",
+            "style({ size({ w: 100%, min-w: 0 }).overflow({ x: hidden }).bg(surface-0) })",
             "style({ position({ l: 0, r: 0, t: 0, z: base }).size({ h: 64 }).bg({ glow: accent }).pointerEvents(none) })",
             "style({ fg(accent).type({ family: mono, size: xs, case: uppercase, tracking: wide }) })",
             "style({ fg(foreground).type({ size: display, family: display, weight: bold, tracking: tighter, leading: none, align: center }) })",
             "style({ position({ scheme: absolute, l: -10, r: -10, t: 12, z: popover }).rotate(-2) })",
             "style({ pad({ y: 3 }).border({ edge: t, width: 1, color: border }).border({ edge: b, width: 1, color: border }).bg(surface-2) })",
-            "style({ size({ h: full }).overflow(hidden).bg(muted).border({ width: 1, color: primary }) })",
+            "style({ size({ h: 100% }).overflow(hidden).bg(muted).border({ width: 1, color: primary }) })",
             "style({ margin({ b: -8 }).fg({ gradient: primary }).select(none).type({ size: display, family: display, weight: bold, tracking: tighter, leading: none, align: center }) })",
             "style({ pad({ x: 3, y: 1 }).radius(full).fg(muted-foreground).type({ size: sm, weight: semibold }), when: { hover: { fg(foreground) }, current: { bg(primary).fg(primary-foreground) } } })",
             "style({  pad(3).border({ width: 1, color: border }).opacity(50), when: { stateLive: {  opacity(100).border(primary).bg(muted)  } } })",
             "style({ size({ w: 1 }).radius(sm).bg(primary).origin(bottom) })",
             "style({ size({ w: 8 }).type({ family: mono, size: sm, nums: tabular, align: center }) })",
             "style({ type({ family: mono, size: 2xl, nums: tabular }) })",
-            "style({ pad(4).size({ w: full, max-w: overlay-max-w-sm }) })",
-            "style({ size({ w: full, max-w: breakpoint-desktop }).margin({ x: auto }) })",
+            "style({ pad(4).size({ w: 100%, max-w: overlay-max-w-sm }) })",
+            "style({ size({ w: 100%, max-w: breakpoint-desktop }).margin({ x: auto }) })",
             "style({ size({ max-w: breakpoint-mobile }).fg(muted-foreground).type({ size: lg, leading: relaxed, align: center }) })",
             "style({ display(block).size({ min-w: 0 }).type({ decoration: none }) })",
             "style({  fg(muted-foreground), when: { hover: {  fg(primary)  } } })",
@@ -775,7 +779,7 @@ mod tests {
 
         // Representative host-component paint from the packages Style conversion wave.
         let packages_exprs = [
-            "style({ size({ max-w: full }).group().fg(foreground).type({ family: body }) })",
+            "style({ size({ max-w: 100% }).group().fg(foreground).type({ family: body }) })",
             "style({  pad({ y: 2, x: 3 }).radius(lg).bg(surface-1).border({ width: 1, color: border }).fg(foreground).type({ size: base, leading: normal }), when: { groupStateUser: {  bg(hover-bg).border({ width: 1, color: primary })  }, groupStateSystem: {  bg(muted).fg(muted-foreground)  }, groupStateError: {  border({ width: 1, color: destructive })  }, groupStateSending: {  opacity(75)  } } })",
             "style({  pad({ y: density-row-py, x: density-row-px }).size({ min-h: control-h-md }).group().border({ edge: r, width: 1, color: border }).border({ edge: b, width: 1, color: border }), when: { stateOut: {  fg(muted-foreground).bg(muted)  }, stateWeekend: {  bg(muted)  }, stateRange: {  bg(selected-bg)  } } })",
             "style({  position({ scheme: absolute, t: bind(evtTop), l: bind(evtLeft) }).size({ h: bind(evtH), w: bind(evtW) }).pad({ y: half, x: 1 }).overflow(hidden).cursor(pointer).fg(primary).bg(hover-bg).radius(sm).type({ align: start, size: density }), when: { selected: {  border({ kind: outline, color: ring })  } } })",
@@ -786,7 +790,7 @@ mod tests {
             "style({  size({ h: control-h-sm }).radius(sm).cursor(pointer).fg(foreground).type({ align: center }), when: { hover: {  bg(hover-bg)  }, selected: {  bg(primary).fg(primary-foreground)  }, disabled: {  fg(muted-foreground).opacity(50).cursor(not-allowed)  }, stateEmpty: {  visibility(hidden)  }, stateToday: {  border({ kind: outline, color: border-strong })  }, focus: {  border({ kind: outline, color: ring })  } } })",
             "style({ cursor(cell) })",
             "style({  pad(0).size({ aspect: square }).border({ width: 1, color: border-subtle }).radius(sm).cursor(pointer).bg(bind(swatchColor)), when: { selected: {  border({ kind: outline, color: primary })  } } })",
-            "style({  position({ scheme: absolute, l: 0 }).size({ w: full }).translateY(bind(rowY)).cursor(pointer), when: { hover: {  bg(hover-bg)  }, selected: {  bg(selected-bg)  }, focus: {  border({ kind: outline, color: ring })  } } })",
+            "style({  position({ scheme: absolute, l: 0 }).size({ w: 100% }).translateY(bind(rowY)).cursor(pointer), when: { hover: {  bg(hover-bg)  }, selected: {  bg(selected-bg)  }, focus: {  border({ kind: outline, color: ring })  } } })",
         ];
         for e in packages_exprs {
             let (_, diags) = parse(e);

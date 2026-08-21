@@ -1,11 +1,16 @@
 <!--
-  Look: five painted boxes, one per radius slot
-  Spelling: radius({ all: md }) · radius({ t: lg }) · radius({ b: lg }) · radius({ l: lg }) · radius({ r: lg })
+  Look: painted boxes, one per radius name — none sm md lg xl full · all t b l r
+  Spelling: radius(none) · radius(sm) · radius(md) · radius(lg) · radius(xl) · radius(full) · radius({ all: md }) · radius({ t: lg }) · radius({ b: lg }) · radius({ l: lg }) · radius({ r: lg })
   Owner: language (radius) + theme scale
   Default: none
+  Trap: fixtures/radius-unknown.bad.sail
 -->
 <column gap="6">
-  <l0-case look="presets — the product names" spell="radius(none) · radius(sm) · radius(md) · radius(lg) · radius(xl) · radius(full)">
+  <l0-case
+    look="presets — the product names"
+    spell="radius(none) · radius(sm) · radius(md) · radius(lg) · radius(xl) · radius(full)"
+    note="trap: radius(xs) — xs is not a token on the radius scale"
+  >
     <row gap="2">
       <l0-radius-face kind="none"></l0-radius-face>
       <l0-radius-face kind="sm"></l0-radius-face>

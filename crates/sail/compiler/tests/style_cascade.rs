@@ -4,11 +4,11 @@
 //! Repro 08-16: a sibling const that spends unknown `size.wide` made
 //! `<page> style(base)` an "unknown vocabulary `base`" error.
 
+use sail_compiler::CompileMode;
+use sail_compiler::CompileOpts;
 use sail_compiler::check_all;
 use sail_compiler::compile;
 use sail_compiler::parse::preprocess::preprocess;
-use sail_compiler::CompileMode;
-use sail_compiler::CompileOpts;
 
 fn compile_component(src: &str) -> Result<String, String> {
     let out = compile(

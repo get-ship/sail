@@ -20,7 +20,7 @@
 
 pub mod highlight;
 
-pub use highlight::{HighlightSpan, highlight};
+pub use highlight::{highlight, HighlightSpan};
 
 use tree_sitter_language::LanguageFn;
 

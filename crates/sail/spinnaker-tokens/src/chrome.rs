@@ -3,111 +3,9 @@
 use serde_json::Value;
 
 /// Shared structural rules. Token channels (`--gradient-surface`,
-/// `--overlay-fill`, scrollbar vars) are the only paint inputs.
+/// scrollbar vars) are the only paint inputs. Platform chrome is empty — deck owns document chrome.
 pub fn generate_platform_chrome() -> String {
-    String::from(
-        r#"/*
- * GENERATED FILE — do not edit by hand.
- * Structural chrome from the theme engine (spinnaker-tokens).
- * Regenerate: cargo run -p sail-compiler --offline -- tokens
- */
-
-/* Surface wash — under content. Default --gradient-surface: none. */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: -1;
-  background: var(--gradient-surface);
-}
-
-/* Surface overlay — texture above content. Default --overlay-fill: none. */
-body::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 9999;
-  background: var(--overlay-fill);
-  mix-blend-mode: var(--overlay-blend);
-  opacity: var(--overlay-opacity);
-}
-
-/* Themed subtree: overlay clips to the host, not the viewport. */
-[theme]:not(:root) {
-  position: relative;
-  isolation: isolate;
-}
-[theme]:not(:root)::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: var(--z-max);
-  background: var(--overlay-fill);
-  mix-blend-mode: var(--overlay-blend);
-  opacity: var(--overlay-opacity);
-}
-@media (prefers-reduced-motion: reduce) {
-  body::after,
-  [theme]:not(:root)::after { display: none; }
-}
-
-[theme][mode='light'] {
-  color-scheme: light;
-}
-[theme][mode='dark'] {
-  color-scheme: dark;
-}
-
-/* Reduced-motion floor. Duration tokens override in reduced-motion.json;
- * this kills animation/transition on anything that has not opted in.
- * :where(...) is zero-specificity so a component that owns reduced-motion
- * (spinner ring) still wins. transition/scroll-behavior stay !important. */
-@media (prefers-reduced-motion: reduce) {
-  :where(*, *::before, *::after) {
-    animation-duration: 0.01ms;
-    animation-iteration-count: 1;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
-}
-
-/* Scrollbar — spends scrollbar.* tokens on the document. */
-html {
-  scrollbar-width: thin;
-  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
-}
-::-webkit-scrollbar {
-  width: var(--scrollbar-width);
-  height: var(--scrollbar-width);
-}
-::-webkit-scrollbar-track {
-  background: var(--scrollbar-track);
-}
-::-webkit-scrollbar-thumb {
-  background: var(--scrollbar-thumb);
-  border-radius: var(--scrollbar-radius);
-}
-
-/* Dark-mode syntax remap — mode attr only (no .dark / twin theme ids).
- * Theme blocks (higher specificity) still win when they override syntax.*.
- * Console is dark-only: cover the host that omits mode. */
-:root[mode='dark'],
-:root[theme='console']:not([mode]) {
-  --syntax-keyword:  oklch(0.78 0.16 290);
-  --syntax-string:   oklch(0.80 0.15 145);
-  --syntax-number:   oklch(0.78 0.14 230);
-  --syntax-function: oklch(0.78 0.18 60);
-  --syntax-type:     oklch(0.80 0.13 195);
-  --syntax-tag:      oklch(0.78 0.18 25);
-  --syntax-attr:     oklch(0.82 0.14 90);
-  --syntax-comment:  oklch(0.62 0.03 250);
-  --syntax-variable: var(--foreground);
-}
-"#,
-    )
+    String::new()
 }
 
 /// Per-theme structural rules from `$extensions.sail.chrome` (data, not files).
@@ -281,19 +179,9 @@ mod tests {
     #[test]
     fn platform_chrome_spends_registry_channels() {
         let css = generate_platform_chrome();
-        assert!(css.contains("var(--gradient-surface)"));
-        assert!(css.contains("var(--overlay-fill)"));
-        assert!(css.contains("var(--overlay-blend)"));
-        assert!(css.contains("var(--overlay-opacity)"));
-        assert!(css.contains("var(--scrollbar-thumb)"));
-        assert!(css.contains("var(--z-max)"));
         assert!(
-            !css.contains("var(--surface-overlay)"),
-            "J2 overlay channel is overlay-fill, not surface-overlay"
-        );
-        assert!(
-            !css.contains("ship-scroll"),
-            "ship-scroll utilities are gone; scrollbar tokens drive html/::-webkit-scrollbar"
+            css.is_empty(),
+            "platform chrome should be empty — deck owns document chrome"
         );
     }
 

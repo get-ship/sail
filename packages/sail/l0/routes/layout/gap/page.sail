@@ -81,4 +81,12 @@
       <l0-swatch></l0-swatch>
     </row>
   </l0-case>
+  <l0-case look="zero box" spell="size w:0 h:0">
+    <l0-box-face kind="zero"></l0-box-face>
+  </l0-case>
+  <l0-case look="16-step clamp, 48-step child" spell="size max-w:16 overflow(hidden) · child w:48">
+    <l0-box-face kind="clamp">
+      <l0-box-face kind="huge"></l0-box-face>
+    </l0-box-face>
+  </l0-case>
 </column>

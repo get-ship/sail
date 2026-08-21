@@ -330,8 +330,7 @@ fn empty_state_child_paint_on_structure_sx() {
         out.skin_css
     );
     assert!(
-        out.skin_css.contains("max-width:38ch")
-            || out.skin_css.contains("max-width: 38ch"),
+        out.skin_css.contains("max-width:38ch") || out.skin_css.contains("max-width: 38ch"),
         "desc max-w 38ch must emit real max-width CSS:\n{}",
         out.skin_css
     );
@@ -1051,7 +1050,9 @@ fn navbar_host_paint_on_sx_cva() {
             && (src.contains("borderEWidth(1)")
                 || src.contains("border-e")
                 || src.contains("edge: e"))
-            && (src.contains("min-w: 14rem") || src.contains("minW(14rem)") || src.contains("14rem"))
+            && (src.contains("min-w: 14rem")
+                || src.contains("minW(14rem)")
+                || src.contains("14rem"))
             && (src.contains("display(contents)")
                 || src.contains("contents")
                 || src.contains("inset: 0")
@@ -1377,7 +1378,7 @@ fn toggle_group_segmented_and_join_on_skins_not_pe() {
             && is_style_product(toggle_src)
             && (toggle_src.contains("h(control-h-md)") || toggle_src.contains("h: control-h-md"))
             && (toggle_src.contains("h(control-h-sm)") || toggle_src.contains("h: control-h-sm"))
-            && (toggle_src.contains("w(full)") || toggle_src.contains("w: full"))
+            && (toggle_src.contains("w(100%)") || toggle_src.contains("w: 100%"))
             && (toggle_src.contains("bg(toggle)")
                 || toggle_src.contains("bg: toggle")
                 || toggle_src.contains("bg(background)")),

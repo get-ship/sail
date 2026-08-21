@@ -8,41 +8,41 @@
 <column gap="6">
   <l0-case look="presets — the product molecules" spell="type(body) · type(body-sm) · type(heading) · type(label) · type(mono) · type(mono-sm) · type(display) · type(display-sm)">
     <row gap="3">
-      <l0-type-preset kind="body">Aa</l0-type-preset>
-      <l0-type-preset kind="body-sm">Aa</l0-type-preset>
-      <l0-type-preset kind="heading">Aa</l0-type-preset>
-      <l0-type-preset kind="label">Aa</l0-type-preset>
-      <l0-type-preset kind="mono">Aa</l0-type-preset>
-      <l0-type-preset kind="mono-sm">Aa</l0-type-preset>
-      <l0-type-preset kind="display">Aa</l0-type-preset>
-      <l0-type-preset kind="display-sm">Aa</l0-type-preset>
+      <l0-type-preset kind="body">body</l0-type-preset>
+      <l0-type-preset kind="body-sm">body-sm</l0-type-preset>
+      <l0-type-preset kind="heading">heading</l0-type-preset>
+      <l0-type-preset kind="label">label</l0-type-preset>
+      <l0-type-preset kind="mono">mono</l0-type-preset>
+      <l0-type-preset kind="mono-sm">mono-sm</l0-type-preset>
+      <l0-type-preset kind="display">display</l0-type-preset>
+      <l0-type-preset kind="display-sm">display-sm</l0-type-preset>
     </row>
   </l0-case>
   <l0-case look="family — body · heading · mono · display" spell="type family: body | heading | mono | display">
     <row gap="3">
-      <l0-type-face kind="family-body">Aa</l0-type-face>
-      <l0-type-face kind="family-heading">Aa</l0-type-face>
-      <l0-type-face kind="family-mono">Aa</l0-type-face>
-      <l0-type-face kind="family-display">Aa</l0-type-face>
+      <l0-type-face kind="family-body">body</l0-type-face>
+      <l0-type-face kind="family-heading">heading</l0-type-face>
+      <l0-type-face kind="family-mono">mono</l0-type-face>
+      <l0-type-face kind="family-display">display</l0-type-face>
     </row>
   </l0-case>
   <l0-case look="size — xs · sm · base · md · lg · xl · 2xl" spell="type size: xs | sm | base | md | lg | xl | 2xl">
     <row gap="3">
-      <l0-type-face kind="size-xs">Aa</l0-type-face>
-      <l0-type-face kind="size-sm">Aa</l0-type-face>
-      <l0-type-face kind="size-base">Aa</l0-type-face>
-      <l0-type-face kind="size-md">Aa</l0-type-face>
-      <l0-type-face kind="size-lg">Aa</l0-type-face>
-      <l0-type-face kind="size-xl">Aa</l0-type-face>
-      <l0-type-face kind="size-2xl">Aa</l0-type-face>
+      <l0-type-face kind="size-xs">xs</l0-type-face>
+      <l0-type-face kind="size-sm">sm</l0-type-face>
+      <l0-type-face kind="size-base">base</l0-type-face>
+      <l0-type-face kind="size-md">md</l0-type-face>
+      <l0-type-face kind="size-lg">lg</l0-type-face>
+      <l0-type-face kind="size-xl">xl</l0-type-face>
+      <l0-type-face kind="size-2xl">2xl</l0-type-face>
     </row>
   </l0-case>
   <l0-case look="weight — normal · medium · semibold · bold" spell="type weight: normal | medium | semibold | bold">
     <row gap="3">
-      <l0-type-face kind="weight-normal">Aa</l0-type-face>
-      <l0-type-face kind="weight-medium">Aa</l0-type-face>
-      <l0-type-face kind="weight-semibold">Aa</l0-type-face>
-      <l0-type-face kind="weight-bold">Aa</l0-type-face>
+      <l0-type-face kind="weight-normal">normal</l0-type-face>
+      <l0-type-face kind="weight-medium">medium</l0-type-face>
+      <l0-type-face kind="weight-semibold">semibold</l0-type-face>
+      <l0-type-face kind="weight-bold">bold</l0-type-face>
     </row>
   </l0-case>
   <l0-case look="leading — none · tight · snug · normal · relaxed" spell="type leading: none | tight | snug | normal | relaxed">

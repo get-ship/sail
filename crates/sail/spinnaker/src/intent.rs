@@ -382,7 +382,10 @@ mod tests {
         assert!(is_known_when_key("motionReduce"));
         assert!(is_known_when_key("group-hover"));
         assert!(is_known_when_key("state-weekend"));
-        assert!(is_known_when_key("wide"));
+        assert!(
+            !is_known_when_key("wide"),
+            "wide is theme fulfillment, not default known key"
+        );
         assert!(!is_known_when_key("not-a-when-key"));
         assert!(!is_known_when_key("kiosk"));
         crate::tokens::with_breakpoint_table(&[("mobile", "390px")], || {

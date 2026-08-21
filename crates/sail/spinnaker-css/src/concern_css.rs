@@ -1172,10 +1172,7 @@ pub fn lower_slot_value(
 /// `var(--surface)` → `var(--inverse-surface)`. Non-var colors stay as-is.
 fn invert_css_var(css: &str) -> String {
     let t = css.trim();
-    if let Some(name) = t
-        .strip_prefix("var(--")
-        .and_then(|s| s.strip_suffix(')'))
-    {
+    if let Some(name) = t.strip_prefix("var(--").and_then(|s| s.strip_suffix(')')) {
         if name.starts_with("inverse-") {
             return t.to_string();
         }
@@ -1231,12 +1228,8 @@ mod measure_column {
     fn inverse_color_lowers_to_inverse_var() {
         let spec = find_concern("bg").expect("bg");
         let slot = find_slot(spec, "color").expect("color");
-        let (_, css) = lower_slot_value(
-            spec,
-            slot,
-            &PaintArg::Token("inverse(surface)".into()),
-        )
-        .expect("lower");
+        let (_, css) = lower_slot_value(spec, slot, &PaintArg::Token("inverse(surface)".into()))
+            .expect("lower");
         assert_eq!(css, "var(--inverse-surface)", "{css}");
     }
 

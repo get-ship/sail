@@ -382,10 +382,14 @@ fn skip_ws_nl(bytes: &[u8], i: usize) -> Option<usize> {
 ///   `::slotted(<sel>)` → `slot > <sel>`  (projected children stay real
 ///                                         children inside the <slot> wrapper,
 ///                                         which renders display:contents)
+///   `[attr].s-…`   → `:scope[attr] .s-…`     (match/compound emit puts the
+///                                         attr on the host and the class on
+///                                         `.sail-root`; same-element compound
+///                                         never matches in light DOM)
 /// Everything else passes through untouched; the transform is purely textual
 /// and boundary-safe (ASCII scanning, balanced-paren unwrap).
 pub fn light_dom_selectors(css: &str) -> String {
-    let mut out = String::with_capacity(css.len());
+    let mut out = String::with_capacity(css.len() + 32);
     let bytes = css.as_bytes();
     let mut i = 0;
     while i < bytes.len() {
@@ -418,6 +422,11 @@ pub fn light_dom_selectors(css: &str) -> String {
                 continue;
             }
         }
+        if let Some((rewritten, next)) = rewrite_match_compound(css, i) {
+            out.push_str(&rewritten);
+            i = next;
+            continue;
+        }
         // Advance one full UTF-8 char (comments can carry multibyte text).
         let mut n = i + 1;
         while n < bytes.len() && (bytes[n] & 0xC0) == 0x80 {
@@ -427,6 +436,41 @@ pub fn light_dom_selectors(css: &str) -> String {
         i = n;
     }
     out
+}
+
+/// Match/compound emit writes `[kind='bar'].s-kind-bar-size-h8-w16`. In
+/// light DOM the attr lives on the `display:contents` host and the class
+/// lives on the template root, so the same-element compound is a miss.
+/// Rewrite at a selector start to `:scope[kind='bar'] .s-kind-bar-size-h8-w16`.
+fn rewrite_match_compound(css: &str, i: usize) -> Option<(String, usize)> {
+    if !css[i..].starts_with('[') {
+        return None;
+    }
+    if i > 0 {
+        let prev = css[..i].chars().rev().find(|c| !c.is_whitespace())?;
+        if prev != '}' && prev != ',' {
+            return None;
+        }
+    }
+    let bytes = css.as_bytes();
+    let mut j = i;
+    let mut attrs = String::new();
+    while bytes.get(j) == Some(&b'[') {
+        let close = bytes[j..].iter().position(|&b| b == b']')? + j;
+        attrs.push_str(&css[j..=close]);
+        j = close + 1;
+    }
+    if attrs.is_empty() || !css[j..].starts_with(".s-") {
+        return None;
+    }
+    let class_start = j;
+    j += 1;
+    while j < bytes.len()
+        && (bytes[j].is_ascii_alphanumeric() || bytes[j] == b'-' || bytes[j] == b'_')
+    {
+        j += 1;
+    }
+    Some((format!(":scope{attrs} {}", &css[class_start..j]), j))
 }
 
 /// Index of the `)` matching the `(` at `open`, honoring nesting.
@@ -522,6 +566,35 @@ mod tests {
         );
         assert!(out.contains(".badge { border: 0; }"), "{out}");
         assert!(!out.contains(":host"), "no :host survives: {out}");
+    }
+
+    #[test]
+    fn light_dom_rewrites_match_attr_class_compound() {
+        // Match emit: attr on the host, utility class on .sail-root.
+        let css = "[kind='bar'].s-kind-bar-size-h8-w16{height:var(--space-8)}[kind='box'].s-kind-box-size-h4-w4{height:var(--space-4)}";
+        let out = light_dom_selectors(css);
+        assert!(
+            out.contains(":scope[kind='bar'] .s-kind-bar-size-h8-w16{height:var(--space-8)}"),
+            "{out}"
+        );
+        assert!(
+            out.contains(":scope[kind='box'] .s-kind-box-size-h4-w4{height:var(--space-4)}"),
+            "{out}"
+        );
+        assert!(
+            !out.contains("[kind='bar'].s-kind-bar"),
+            "same-element compound must not survive: {out}"
+        );
+        // Class-then-attr (layout hosts, popover) is not a match compound.
+        let host = ".sail-col[popover]:not(:popover-open){display:none}";
+        assert_eq!(light_dom_selectors(host), host);
+        // Multi-attr match (variant + tone gate).
+        let gated = "[variant='soft'][tone].s-variant-soft-bg-color-tone{color:var(--tone)}";
+        let gated_out = light_dom_selectors(gated);
+        assert!(
+            gated_out.contains(":scope[variant='soft'][tone] .s-variant-soft-bg-color-tone"),
+            "{gated_out}"
+        );
     }
 
     #[test]

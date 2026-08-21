@@ -54,6 +54,20 @@ fn product_route_identity_slots_are_an_error() {
 }
 
 #[test]
+fn product_route_has_no_style() {
+    let src = r#"<column style({ pad(page) })>x</column>"#;
+    let path = "apps/sail-site/routes/docs/page.sail";
+    let diags = check_all(src, Some(path.as_ref()), &[], None);
+    assert!(
+        diags.iter().any(|d| {
+            d.rule.as_deref() == Some("sail-style-privilege")
+                && d.message.contains("documents write tags, not Style")
+        }),
+        "FileKind::Route has no Style: {diags:?}"
+    );
+}
+
+#[test]
 fn bare_full_is_not_the_flex_trap() {
     let path = "apps/studio/src/studio-panel/studio-panel.sail";
     for src in [
