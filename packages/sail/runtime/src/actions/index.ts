@@ -15,9 +15,7 @@ export { focus } from './focus'
 export { inView } from './in-view'
 export type { InViewHandler } from './in-view'
 
-export { recoverySurface } from './recovery-surface'
 export { resizable } from './resizable'
-export { catchRender } from './catch-render'
 export { registerSailHighlighter } from './highlight'
 export type { SailHtmlHighlighter } from './highlight'
 

@@ -918,16 +918,29 @@ fn serialize_static_children(
             Instr::StaticText { text, .. } => out.push_str(text),
             Instr::Comment { .. } => {}
             Instr::DynamicText { expr } => {
-                let Some(prop) = simple_prop_text(&expr.source) else {
-                    return Err(CompileError::new(format!(
-                        "element mode: <{parent_tag}> contains dynamic content that is not a prop — \
-                         bind a prop or use control flow"
-                    ))
-                    .with_category(RULE_ID));
-                };
-                out.push_str("<!--sail:prop:");
-                out.push_str(prop);
-                out.push_str("-->");
+                if has_controller {
+                    if let Some(field) = simple_prop_text(&expr.source) {
+                        out.push_str("<!--sail:prop:");
+                        out.push_str(field);
+                        out.push_str("-->");
+                    } else {
+                        let field = crate::check::controller_attach::inst_field(&expr.source)?;
+                        out.push_str("<!--sail:ctrl-text:");
+                        out.push_str(&field);
+                        out.push_str("-->");
+                    }
+                } else {
+                    let Some(prop) = simple_prop_text(&expr.source) else {
+                        return Err(CompileError::new(format!(
+                            "element mode: <{parent_tag}> contains dynamic content that is not a prop — \
+                             bind a prop or use control flow"
+                        ))
+                        .with_category(RULE_ID));
+                    };
+                    out.push_str("<!--sail:prop:");
+                    out.push_str(prop);
+                    out.push_str("-->");
+                }
             }
             Instr::If(i) => {
                 out.push_str("<!--sail:if-->");

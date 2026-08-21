@@ -2,6 +2,9 @@
   <error-state> — L1 recovery surface. Style value language only.
   Rest chrome = muted / danger when not brand/danger.
   Destructive paint via semantic tokens (no tone-* channels).
+
+  Look: host Style owns paint — no DOM.
+  State: this file's <controller> (code + details/open + aria).
 -->
 
 <scope>
@@ -31,11 +34,26 @@
   style actions = {self(center)}
 </scope>
 
+<controller>
+export default controller((init) => {
+  function read(v) { return typeof v === 'function' ? v() : v }
+  const code = derived(() => String(read(init.code) ?? ''))
+  const open = signal(false)
+  const hasDetails = signal(false)
+  const dataState = derived(() => open() ? 'has-details open' : hasDetails() ? 'has-details' : null)
+  const toggleLabel = derived(() => open() ? 'Hide details' : 'Show details')
+  function toggle() { open.set(!open()) }
+  return { code, open, hasDetails, dataState, toggleLabel, toggle }
+})
+</controller>
+
 <column
   align="center"
   justify="center"
   gap="3"
-  use:recoverySurface
+  role="alert"
+  aria-live="assertive"
+  data-state={dataState()}
   style(base, {when: {forced-colors: border({ color: CanvasText })}, match: { size: { md: sizeMd, sm: sizeSm, lg: sizeLg }, variant: { default: variantDefault, inline: variantInline } }})
 >
   <row
@@ -59,13 +77,13 @@
     <div style(desc, {when: {empty: display(none)}})>
       <slot></slot>
     </div>
-    <div style(codeBox, {when: {empty: display(none)}})></div>
+    <div style(codeBox, {when: {empty: display(none)}})>{code()}</div>
     <button
       type="button"
-      anatomy
-      expanded="false"
+      aria-expanded={open()}
+      on:click={toggle}
       style(detailsToggle, {when: {group-state-has-details: display(inline-block), hover: fg(foreground).bg(muted), focus: border({ style: solid, kind: outline, width: 2, color: ring, offset: 2 })}})
-    >Show details</button>
+    >{toggleLabel()}</button>
     <div style(details, {when: {group-state-open: display(block)}})>
       <slot name="details"></slot>
     </div>
@@ -74,3 +92,4 @@
     <slot name="action"></slot>
   </row>
 </column>
+

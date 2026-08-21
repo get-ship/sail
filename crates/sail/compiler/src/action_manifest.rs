@@ -100,13 +100,6 @@ pub const ACTIONS: &[ActionEntry] = &[
         writes: &["autosizeH"],
     },
     ActionEntry {
-        name: "catchRender",
-        param: "void",
-        summary: "Catch render errors thrown by descendants; show a fallback UI.",
-        auto_import: true,
-        writes: &[],
-    },
-    ActionEntry {
         name: "cellPad",
         param: "number | null | undefined",
         summary: "Track the current cell's left/right padding for a virtualized grid.",
@@ -219,13 +212,6 @@ pub const ACTIONS: &[ActionEntry] = &[
         writes: &["portTop", "portLeft", "portRight", "portBottom"],
     },
     ActionEntry {
-        name: "recoverySurface",
-        param: "void",
-        summary: "Error-state element behavior; arms a retry action for the call-to-action slot.",
-        auto_import: true,
-        writes: &[],
-    },
-    ActionEntry {
         name: "rect",
         param: "BoxRect | null | undefined",
         summary: "Track the element's bounding rect via ResizeObserver.",
@@ -335,7 +321,6 @@ pub fn public_actions() -> impl Iterator<Item = &'static ActionEntry> {
 pub const BUILTIN_ACTION_NAMES: &[&str] = &[
     "autoDismiss",
     "autosize",
-    "catchRender",
     "cellPad",
     "chromeOffset",
     "clickOutside",
@@ -352,7 +337,6 @@ pub const BUILTIN_ACTION_NAMES: &[&str] = &[
     "menu",
     "pin",
     "portEdge",
-    "recoverySurface",
     "rect",
     "resizable",
     "spotlight",
