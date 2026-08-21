@@ -4,21 +4,21 @@
 -->
 <scope>
   // no preset: min-w lock
-  style shellRoot = { size({ w: 100%, h: screen, min-w: 0, min-h: screen }).overflow(hidden).bg(canvas).fg(canvas) }
+  style shellRoot = { size({ w: 100%, h: screen, min-w: 0, min-h: screen }).overflow(hidden).bg(app).fg(foreground) }
   // no preset: size lock
-  style railItem = { size({ w: 10, h: 10, min-w: 10, min-h: 10 }).radius(md).fg(muted), when: { hover: bg(hover-bg).fg(canvas), current: bg(selected-bg).fg(primary) } }
+  style railItem = { size({ w: 10, h: 10, min-w: 10, min-h: 10 }).radius(md).fg(muted), when: { hover: bg(hover-bg).fg(foreground), current: bg(selected-bg).fg(primary) } }
   // no preset: size lock + border width 0
-  style exitBtn = { size({ w: 10, h: 10, min-w: 10, min-h: 10 }).radius(md).fg(muted).bg(transparent).border({ width: 0 }).cursor(pointer), when: { hover: bg(hover-bg).fg(canvas) } }
+  style exitBtn = { size({ w: 10, h: 10, min-w: 10, min-h: 10 }).radius(md).fg(muted).bg(transparent).border({ width: 0 }).cursor(pointer), when: { hover: bg(hover-bg).fg(foreground) } }
   style centerFill = { size(max) }
   style mainCol = { size(grow).overflow(hidden) }
   // no preset: size lock + edge-only border
-  style batchTray = { pad(3).size({ h: 7, min-h: 7 }).border({ edge: b, color: border-subtle, width: 1 }).bg(surface-1) }
+  style batchTray = { pad(3).size({ h: 7, min-h: 7 }).border({ edge: b, color: border-subtle, width: 1 }).bg(surface) }
   style batchLabel = { fg(muted).type(label) }
   style grow1 = { size(grow) }
   style contentRow = { size(grow).overflow(hidden) }
   style surfaceSlot = { size(grow).overflow(hidden) }
   // no preset: min-w lock + edge-only border
-  style statusBar = { size({ h: 6, min-w: 0, min-h: 6 }).pad(3).overflow(hidden).border({ edge: t, color: border, width: 1 }).bg(surface-0).fg(muted) }
+  style statusBar = { size({ h: 6, min-w: 0, min-h: 6 }).pad(3).overflow(hidden).border({ edge: t, color: border, width: 1 }).bg(app).fg(muted) }
   style statusLine = { size(grow).type(mono-sm) }
   style statusMeta = { size(hug).type(body-sm) }
   style statusMuted = { size(hug).fg(muted).type(body-sm) }

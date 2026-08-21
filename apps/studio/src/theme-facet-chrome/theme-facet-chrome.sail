@@ -6,7 +6,7 @@
   // no preset: min-w lock
   style chromeRoot = { size({ min-w: 0 }) }
   // no preset: min-w lock + edge-only border
-  style chromeBar = { pad(4).size({ h: 10, min-w: 0, min-h: 10 }).border({ edge: b, color: border-subtle, width: 1 }).bg(canvas) }
+  style chromeBar = { pad(4).size({ h: 10, min-w: 0, min-h: 10 }).border({ edge: b, color: border-subtle, width: 1 }).bg(app) }
   style growMin = { size(grow) }
   style shrink0 = { size(hug) }
   style tapFloor = { size(control-sm) }
@@ -17,7 +17,7 @@
   // no preset: panel width lock
   style diffMenu = { pad(3).size({ min-w: overlay-max-w-sm, max-w: overlay-max-w-md }) }
   style diffTitle = { fg(muted).type(label) }
-  style diffPath = { fg(canvas).type(mono-sm) }
+  style diffPath = { fg(foreground).type(mono-sm) }
   style diffDelta = { fg(muted).type(mono-sm) }
   style diffEmpty = { fg(muted).type(body-sm) }
   style modeIcon = { size(hug).fg(muted) }

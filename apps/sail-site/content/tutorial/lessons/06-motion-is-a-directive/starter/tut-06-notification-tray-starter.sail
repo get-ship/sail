@@ -9,7 +9,7 @@
 -->
 
 <scope>
-  style unreadDot = { size(1_5).radius(full).bg(destructive) }
+  style unreadDot = { size(1_5).radius(full).bg(danger) }
   style noteRow = { pad(3).bg(surface).border(subtle).radius(md) }
   style noteText = { type(body-sm).size(grow) }
   style empty = { pad(3).fg(muted).type(body-sm) }

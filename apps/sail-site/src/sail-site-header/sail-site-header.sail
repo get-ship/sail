@@ -12,7 +12,7 @@
   // no preset: overflow x auto (pill switch scrolls on narrow)
   style productSwitch = { size(grow).overflow({ x: auto }).bg(muted).border(subtle).radius(full) }
   // no preset: display inline-flex / hover+current+tablet when
-  style productLink = { display(inline-flex).size(control-sm).radius(full).fg(muted).type(label), when: { hover: fg(canvas).bg(hover-bg), current: bg(primary).fg(primary-foreground), tablet: type(body-sm) } }
+  style productLink = { display(inline-flex).size(control-sm).radius(full).fg(muted).type(label), when: { hover: fg(foreground).bg(hover-bg), current: bg(primary).fg(primary-foreground), tablet: type(body-sm) } }
   // no preset: display inline
   style brandWord = { display(inline) }
   style brandLink = { size(hug) }
@@ -22,7 +22,7 @@
   // no preset: display flex / dir column
   style appMain = { display(flex).dir(column).size(grow).overflow(hidden) }
   // no preset: display inline-flex / hover when
-  style githubLink = { display(inline-flex).radius(md).fg(muted), when: { hover: fg(canvas).bg(hover-bg) } }
+  style githubLink = { display(inline-flex).radius(md).fg(muted), when: { hover: fg(foreground).bg(hover-bg) } }
 </scope>
 
 <controller>

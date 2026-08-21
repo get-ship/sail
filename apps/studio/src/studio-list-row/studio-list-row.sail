@@ -10,7 +10,7 @@
     selected = false
   }
   // no preset: min-w lock
-  style rowRoot = { size({ h: 6, min-w: 0 }).pad(3), when: { hover: bg(hover-bg), selected: bg(surface-2) } }
+  style rowRoot = { size({ h: 6, min-w: 0 }).pad(3), when: { hover: bg(hover-bg), selected: bg(surface) } }
   style titleText = { size(grow).type(body-sm) }
   style metaText = { size(hug).fg(muted).type(body-sm) }
 </scope>

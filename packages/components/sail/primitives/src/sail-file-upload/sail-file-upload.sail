@@ -196,7 +196,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   style({ display(none) })
 />
 <if {errorMsg()}>
-  <div role="alert" style({ fg(destructive) })>
+  <div role="alert" style({ fg(danger) })>
     <span style({ display(contents).type({ size: sm }) })>
       {errorMsg()}
     </span>

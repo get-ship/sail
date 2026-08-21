@@ -6,15 +6,15 @@
   style eyebrow = { fg(muted).type(label) }
   style pathMeta = { fg(muted).type(mono-sm) }
   style muted = { fg(muted).type(body-sm) }
-  style surfaceRoot = { size(grow).overflow(hidden).bg(canvas) }
+  style surfaceRoot = { size(grow).overflow(hidden).bg(app) }
   style workbench = { size(grow).overflow(hidden) }
   // no preset: edge-only border
-  style treePane = { size(grow).overflow(hidden).border({ edge: r, color: border-subtle, width: 1 }).bg(surface-0) }
+  style treePane = { size(grow).overflow(hidden).border({ edge: r, color: border-subtle, width: 1 }).bg(app) }
   // no preset: edge-only border
   style treeHead = { size(hug).pad(4).border({ edge: b, color: border-subtle, width: 1 }) }
-  style detailPane = { size(grow).overflow(hidden).bg(canvas) }
+  style detailPane = { size(grow).overflow(hidden).bg(app) }
   // no preset: edge-only border
-  style detailHead = { size(hug).pad(5).border({ edge: b, color: border-subtle, width: 1 }).bg(surface-0) }
+  style detailHead = { size(hug).pad(5).border({ edge: b, color: border-subtle, width: 1 }).bg(app) }
   style loadRow = { size(hug).pad(4) }
   style treeBody = { size(grow).pad(1).overflow(hidden) }
   style scrollGrow = { size(grow) }

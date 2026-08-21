@@ -6,13 +6,13 @@
 
 <scope>
   // no preset: edge-only border
-  style pageHeader = { size(hug).pad(6).border({ edge: b, color: border-subtle, width: 1 }).bg(surface-1) }
+  style pageHeader = { size(hug).pad(6).border({ edge: b, color: border-subtle, width: 1 }).bg(surface) }
   // no preset: edge-only border
   style errorBand = { size(hug).pad(6).border({ edge: b, color: border, width: 1 }) }
   style loadBand = { size(hug).pad(6) }
   style workbench = { size(grow).overflow(hidden) }
   // no preset: edge-only border
-  style listPane = { size(grow).border({ edge: r, color: border-subtle, width: 1 }).bg(surface-1) }
+  style listPane = { size(grow).border({ edge: r, color: border-subtle, width: 1 }).bg(surface) }
   // no preset: edge-only border
   style listHead = { size(hug).pad(4).border({ edge: b, color: border-subtle, width: 1 }) }
   style groupLabel = { pad(2).fg(muted).type(label) }
@@ -22,11 +22,11 @@
   // no preset: size lock
   style swatchStrip = { size({ w: 14, h: 7, min-w: 14 }).overflow(hidden).radius(sm).border(subtle) }
   style swatchCell = { size(grow) }
-  style swatchCanvas = { bg(canvas) }
-  style swatchSurface2 = { bg(surface-2) }
+  style swatchCanvas = { bg(app) }
+  style swatchSurface2 = { bg(surface) }
   style swatchPrimary = { bg(primary) }
   style swatchAccent = { bg(accent) }
-  style swatchSurface1 = { bg(surface-1) }
+  style swatchSurface1 = { bg(surface) }
   style swatchSecondary = { bg(secondary) }
   style growMin = { size(grow) }
   style shrink0 = { size(hug) }
@@ -35,14 +35,14 @@
   style mutedSm = { fg(muted).type(body-sm) }
   style mutedSmLead = { fg(muted).type(body-sm) }
   style mutedXsPlain = { fg(muted).type(body-sm) }
-  style pageTitle = { fg(canvas).type(heading) }
+  style pageTitle = { fg(foreground).type(heading) }
   style libraryEyebrow = { fg(muted).type(label) }
   style sectionEyebrow = { fg(muted).type(label) }
-  style errorText = { size(grow).fg(destructive).type(body-sm) }
-  style surfaceRoot = { size(grow).overflow(hidden).bg(canvas) }
+  style errorText = { size(grow).fg(danger).type(body-sm) }
+  style surfaceRoot = { size(grow).overflow(hidden).bg(app) }
   style scrollGrow = { size(grow) }
   style listPad = { pad(3) }
-  style previewScroll = { size(grow).bg(canvas) }
+  style previewScroll = { size(grow).bg(app) }
   // no preset: size lock
   style previewCol = { pad(8).size({ max-w: overlay-max-w-lg }) }
   style previewTitle = { type(display-sm) }
@@ -52,17 +52,17 @@
   // no preset: size lock
   style storySwatch = { size({ h: 16 }).radius(md).border(subtle) }
   style storyLabel = { type(body-sm) }
-  style typeStory = { pad(4).radius(lg).border(subtle).bg(surface-1).fg(canvas) }
+  style typeStory = { pad(4).radius(lg).border(subtle).bg(surface).fg(foreground) }
   style typeDisplay = { type(display-sm) }
   style typeBody = { type(body-sm) }
   style typeMono = { type(mono-sm) }
   // no preset: size lock + transparent border
   style radiusChip = { size({ w: 8, h: 8, min-w: 8, min-h: 8 }).bg(transparent).border({ color: primary, width: 2 }) }
   // no preset: min-w lock
-  style specimen = { overflow(hidden).size({ min-w: 0 }).radius(lg).border(subtle).elevation(md).bg(canvas).fg(canvas) }
+  style specimen = { overflow(hidden).size({ min-w: 0 }).radius(lg).border(subtle).elevation(md).bg(app).fg(foreground) }
   // no preset: size lock + edge-only border
-  style specimenHead = { pad(4).size({ h: 9 }).bg(surface-1).border({ edge: b, color: border-subtle, width: 1 }) }
-  style specimenBody = { pad(5).bg(canvas) }
+  style specimenHead = { pad(4).size({ h: 9 }).bg(surface).border({ edge: b, color: border-subtle, width: 1 }) }
+  style specimenBody = { pad(5).bg(app) }
   // no preset: min-w lock
   style specimenCard = { pad(4).size({ min-w: 0 }) }
   // no preset: min-w lock
@@ -94,7 +94,7 @@
     onMenuOpen: any
     onRowMenu: any
   }
-  style scrollCanvas = { size(grow).bg(canvas) }
+  style scrollCanvas = { size(grow).bg(app) }
 </scope>
 
 <controller>

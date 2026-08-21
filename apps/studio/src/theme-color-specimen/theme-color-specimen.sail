@@ -7,33 +7,33 @@
   style mutedSm = { fg(muted).type(body-sm) }
   style mutedRelaxed = { fg(muted).type(body-sm) }
   // no preset: edge-only border
-  style specimenDock = { size(grow).overflow(hidden).border({ edge: l, color: border-subtle, width: 1 }).bg(canvas) }
+  style specimenDock = { size(grow).overflow(hidden).border({ edge: l, color: border-subtle, width: 1 }).bg(app) }
   style specimenPad = { size(grow).pad(4) }
   style specimenFrame = { size(max).overflow(hidden).elevation(lg) }
   style fillCol = { size(grow) }
   // no preset: min-w lock + edge-only border
-  style specimenChrome = { pad(3).size({ h: 8, min-w: 0, min-h: 8 }).border({ edge: b, color: border-subtle, width: 1 }).bg(surface-1) }
+  style specimenChrome = { pad(3).size({ h: 8, min-w: 0, min-h: 8 }).border({ edge: b, color: border-subtle, width: 1 }).bg(surface) }
   // no preset: size lock
   style trafficDots = { size({ min-w: 12 }) }
   // no preset: size lock
-  style trafficDotDestructive = { size({ w: 2, h: 2, min-w: 2, min-h: 2 }).radius(full).bg(destructive) }
+  style trafficDotDestructive = { size({ w: 2, h: 2, min-w: 2, min-h: 2 }).radius(full).bg(danger) }
   // no preset: size lock
   style trafficDotWarning = { size({ w: 2, h: 2, min-w: 2, min-h: 2 }).radius(full).bg(warning) }
   // no preset: size lock
   style trafficDotSuccess = { size({ w: 2, h: 2, min-w: 2, min-h: 2 }).radius(full).bg(success) }
   style chromeTitle = { size(grow).fg(muted).type(body-sm) }
   style modeMeta = { size(hug).fg(muted).type(mono-sm) }
-  style scrollGrow = { size(grow).bg(canvas) }
+  style scrollGrow = { size(grow).bg(app) }
   // no preset: min-w lock
   style bodyPad = { pad(5).size({ min-w: 0 }) }
   style productTitle = { type(heading) }
-  style fgOnSurface = { fg(canvas).type(body-sm) }
+  style fgOnSurface = { fg(foreground).type(body-sm) }
   style cardTitle = { type(body-sm) }
-  style surfaceBg = { pad(3).radius(md).border(subtle).bg(canvas) }
-  style surface1 = { pad(3).radius(md).border(subtle).bg(surface-1) }
-  style surface2 = { pad(3).radius(md).border(subtle).bg(surface-2) }
-  style surface3 = { pad(3).radius(md).border(subtle).bg(surface-3) }
-  style scrollCanvas = { size(grow).bg(canvas) }
+  style surfaceBg = { pad(3).radius(md).border(subtle).bg(app) }
+  style surface1 = { pad(3).radius(md).border(subtle).bg(surface) }
+  style surface2 = { pad(3).radius(md).border(subtle).bg(surface) }
+  style surface3 = { pad(3).radius(md).border(subtle).bg(surface) }
+  style scrollCanvas = { size(grow).bg(app) }
 </scope>
 
 <controller>

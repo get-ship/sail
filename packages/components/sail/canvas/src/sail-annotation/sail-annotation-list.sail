@@ -10,7 +10,7 @@
   style row = { pad({ x: 2, y: 1 }).bg(background).border({ color: border, width: 1 }).radius(sm) }
   style kind = { fg(muted-foreground).type({ size: xs, tracking: wide, case: uppercase }) }
   style note = { grow(1).type({ wrap: truncate }) }
-  style remove = { size({ min-h: 0 }).pad({ x: 1_5, y: half }).radius(sm).bg(transparent).border({ color: border, width: 1 }).fg(muted-foreground).cursor(pointer).type({ size: xs }), when: { hover: fg(destructive).border({ color: destructive, width: 1 }) } }
+  style remove = { size({ min-h: 0 }).pad({ x: 1_5, y: half }).radius(sm).bg(transparent).border({ color: border, width: 1 }).fg(muted-foreground).cursor(pointer).type({ size: xs }), when: { hover: fg(danger).border({ color: danger, width: 1 }) } }
 </scope>
 
 <controller>

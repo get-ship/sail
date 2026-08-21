@@ -9,7 +9,7 @@ export default null
 </scope>
 
 <partial demo-link props: DemoLinkProps>
-  <column gap="1" style({ pad(3).border({ color: border, width: 1 }).radius(md).bg(surface-1) })>
+  <column gap="1" style({ pad(3).border({ color: border, width: 1 }).radius(md).bg(surface) })>
     <a href={href}>{name}</a>
     <p style(caption)>{blurb}</p>
   </column>

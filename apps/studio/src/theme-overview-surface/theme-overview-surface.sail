@@ -9,13 +9,13 @@
   style monoMeta = { fg(muted).type(mono-sm) }
   style mutedIcon = { fg(muted) }
   // no preset: min-w lock
-  style panelCard = { pad(4).size({ h: 100%, min-w: 0 }).radius(lg).border(subtle).bg(surface-1) }
+  style panelCard = { pad(4).size({ h: 100%, min-w: 0 }).radius(lg).border(subtle).bg(surface) }
   style doorCard = { pad(3).cursor(pointer), when: { hover: bg(hover-bg) } }
   // no preset: type weight
   style doorTitle = { type({ weight: semibold }) }
   style doorHint = { fg(muted).type(body-sm) }
   // no preset: min-w lock
-  style heroCard = { overflow(hidden).size({ min-w: 0 }).radius(lg).border(subtle).bg(surface-1) }
+  style heroCard = { overflow(hidden).size({ min-w: 0 }).radius(lg).border(subtle).bg(surface) }
   // no preset: size lock + position
   style heroSwatch = { position(relative).size({ w: 100%, h: 28, min-h: 28 }).overflow(hidden).bg(bind(swatchColor)), when: { stateEdit: cursor(pointer), stateLocked: cursor(default) } }
   // no preset: border width 0 + position + filter
@@ -24,28 +24,28 @@
   // no preset: size lock
   style identityCol = { pad(6).size({ max-w: overlay-max-w-lg }) }
   // no preset: size lock
-  style iconCell = { size({ w: 9, h: 9, min-w: 9, min-h: 9 }).radius(md).border(subtle).bg(surface-0) }
+  style iconCell = { size({ w: 9, h: 9, min-w: 9, min-h: 9 }).radius(md).border(subtle).bg(app) }
   style bandStatus = { pad(4) }
   // no preset: edge-only border
   style bandError = { pad(4).border({ edge: b, color: border, width: 1 }) }
   style fullBtn = { size(control-sm) }
   // no preset: size lock
   style specimenBtn = { size({ min-w: control-h-sm, min-h: 6 }) }
-  style surfaceRoot = { size(grow).overflow(hidden).bg(canvas) }
-  style workbench = { size(grow).overflow(hidden).bg(canvas) }
-  style editorScroll = { size(grow).bg(canvas) }
+  style surfaceRoot = { size(grow).overflow(hidden).bg(app) }
+  style workbench = { size(grow).overflow(hidden).bg(app) }
+  style editorScroll = { size(grow).bg(app) }
   // no preset: edge-only border
-  style specimenDock = { size(grow).overflow(hidden).border({ edge: l, color: border-subtle, width: 1 }).bg(canvas) }
+  style specimenDock = { size(grow).overflow(hidden).border({ edge: l, color: border-subtle, width: 1 }).bg(app) }
   style specimenPad = { size(grow).pad(4) }
   style specimenFrame = { size(max).overflow(hidden).elevation(lg) }
   // no preset: min-w lock + edge-only border
-  style specimenChrome = { pad(3).size({ h: 8, min-w: 0, min-h: 8 }).border({ edge: b, color: border-subtle, width: 1 }).bg(surface-1) }
+  style specimenChrome = { pad(3).size({ h: 8, min-w: 0, min-h: 8 }).border({ edge: b, color: border-subtle, width: 1 }).bg(surface) }
   // no preset: size lock
   style trafficDots = { size({ min-w: 12 }) }
   // no preset: size lock
   style trafficDot = { size({ w: 2, h: 2, min-w: 2, min-h: 2 }).radius(full) }
   style chromeTitle = { size(grow).fg(muted).type(body-sm) }
-  style errorText = { size(grow).fg(destructive).type(body-sm) }
+  style errorText = { size(grow).fg(danger).type(body-sm) }
   style growMin = { size(grow) }
   // no preset: size lock
   style pickerHero = { size({ w: 100%, h: 20, min-h: 20 }) }
@@ -59,7 +59,7 @@
     onChange: any
   }
   style shrink0 = { size(hug) }
-  style scrollCanvas = { size(grow).bg(canvas) }
+  style scrollCanvas = { size(grow).bg(app) }
 </scope>
 
 <controller>
@@ -268,7 +268,7 @@ export default controller(() => {
           <column gap="0" style(growMin)>
             <row preview-chrome align="center" gap="2" nowrap style(specimenChrome)>
               <row gap="2" align="center" nowrap hidden="true" style(trafficDots)>
-                <stack style(trafficDot, { bg(destructive) })></stack>
+                <stack style(trafficDot, { bg(danger) })></stack>
                 <stack style(trafficDot, { bg(warning) })></stack>
                 <stack style(trafficDot, { bg(success) })></stack>
               </row>

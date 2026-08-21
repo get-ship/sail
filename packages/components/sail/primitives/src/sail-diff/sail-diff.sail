@@ -12,14 +12,14 @@
     value = ''
   }
 
-  style root = { size({ w: 100%, min-w: 0 }).overflow({ x: auto }).bg(surface-0) }
+  style root = { size({ w: 100%, min-w: 0 }).overflow({ x: auto }).bg(app) }
   style mono = { display(contents).type({ family: mono, size: xs, leading: normal }) }
   style lineAdd = { pad({ x: 2, y: px }).size({ w: 100%, min-w: 0 }).bg({ color: success, mix: 15 }) }
-  style lineDel = { pad({ x: 2, y: px }).size({ w: 100%, min-w: 0 }).bg({ color: destructive, mix: 15 }) }
+  style lineDel = { pad({ x: 2, y: px }).size({ w: 100%, min-w: 0 }).bg({ color: danger, mix: 15 }) }
   style lineHunk = { pad({ x: 2, y: px }).size({ w: 100%, min-w: 0 }).bg(muted) }
   style lineCtx = { pad({ x: 2, y: px }).size({ w: 100%, min-w: 0 }) }
   style signAdd = { shrink(0).size({ w: 4 }).fg(success).type({ weight: semibold }) }
-  style signDel = { shrink(0).size({ w: 4 }).fg(destructive).type({ weight: semibold }) }
+  style signDel = { shrink(0).size({ w: 4 }).fg(danger).type({ weight: semibold }) }
   style signHunk = { shrink(0).size({ w: 4 }).fg(info) }
   style signCtx = { shrink(0).size({ w: 4 }).fg(muted-foreground) }
   style textBody = { grow(1).size({ min-w: 0 }).fg(foreground).type({ size: xs }) }

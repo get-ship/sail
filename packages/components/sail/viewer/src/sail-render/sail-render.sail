@@ -255,12 +255,12 @@ export default controller((ctx: ControllerScope<Scope>) => {
     <if {compileError() !== null}>
       <column gap="2" data-test="compile-error">
         <alert tone="destructive">{compileErrorSummary()}</alert>
-        <div role="region" aria-label="text code block" style({ overflow({ all: hidden }).bg(surface-2).fg(foreground).border({ color: border-subtle, width: 1 }).radius(md) })>
+        <div role="region" aria-label="text code block" style({ overflow({ all: hidden }).bg(surface).fg(foreground).border({ color: border-subtle, width: 1 }).radius(md) })>
           <header style({ pad({ all: 2, x: 3 }).fg(muted-foreground).bg(muted) })>            <span style({ display(contents).type({ size: xs, weight: medium, tracking: wide }) })>              TEXT
             </span>
 </header>
           <separator style({ margin(0) })></separator>
-          <pre style({ pad({ x: 4, y: 3 }).overflow({ x: auto }).type({ leading: loose }) })>{compileErrorBody()}</pre>
+          <pre style({ pad({ x: 4, y: 3 }).overflow({ x: auto }).type({ leading: relaxed }) })>{compileErrorBody()}</pre>
         </div>
       </column>
     </if>
@@ -268,12 +268,12 @@ export default controller((ctx: ControllerScope<Scope>) => {
     <if {runtimeError() !== null}>
       <column gap="2" data-test="runtime-error">
         <alert tone="destructive">The specimen threw at runtime.</alert>
-        <div role="region" aria-label="text code block" style({ overflow({ all: hidden }).bg(surface-2).fg(foreground).border({ color: border-subtle, width: 1 }).radius(md) })>
+        <div role="region" aria-label="text code block" style({ overflow({ all: hidden }).bg(surface).fg(foreground).border({ color: border-subtle, width: 1 }).radius(md) })>
           <header style({ pad({ all: 2, x: 3 }).fg(muted-foreground).bg(muted) })>            <span style({ display(contents).type({ size: xs, weight: medium, tracking: wide }) })>              TEXT
             </span>
 </header>
           <separator style({ margin(0) })></separator>
-          <pre style({ pad({ x: 4, y: 3 }).overflow({ x: auto }).type({ leading: loose }) })>{runtimeError()}</pre>
+          <pre style({ pad({ x: 4, y: 3 }).overflow({ x: auto }).type({ leading: relaxed }) })>{runtimeError()}</pre>
         </div>
       </column>
     </if>

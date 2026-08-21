@@ -31,7 +31,7 @@ export default controller(() => {
 <scope>
   style page = { pad(6).margin({ x: auto }).size({ max-w: breakpoint-tablet }) }
   style muted = { fg(muted-foreground).type({ size: sm }) }
-  style todoRow = { pad({ x: 3, y: 2 }).border({ color: border, width: 1 }).radius(md).bg(surface-1) }
+  style todoRow = { pad({ x: 3, y: 2 }).border({ color: border, width: 1 }).radius(md).bg(surface) }
 </scope>
 
 <column gap="4" style(page)>

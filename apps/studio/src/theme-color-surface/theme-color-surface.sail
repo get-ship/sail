@@ -13,7 +13,7 @@
   // no preset: size lock
   style editorCol = { pad(6).size({ max-w: overlay-max-w-lg }) }
   // no preset: min-w lock
-  style brandCard = { overflow(hidden).size({ min-w: 0 }).radius(lg).border(subtle).bg(surface-1) }
+  style brandCard = { overflow(hidden).size({ min-w: 0 }).radius(lg).border(subtle).bg(surface) }
   // position:relative sized box — sail-color-picker host is display:contents; swatch fills this box.
   // no preset: size lock + position
   style brandSwatch = { position(relative).size({ w: 100%, h: 28, min-h: 28 }).overflow(hidden), when: { stateEdit: cursor(pointer), stateLocked: cursor(default) } }
@@ -25,20 +25,20 @@
   style tokenRow = { pad(2).size({ min-w: 0 }) }
   // no preset: size lock
   style seedDot = { size({ w: 4, h: 4, min-w: 4, min-h: 4 }).radius(full).border(subtle).bg(bind(swatchColor)) }
-  style surfaceChip = { pad(2).radius(md).border(subtle).bg(surface-0) }
+  style surfaceChip = { pad(2).radius(md).border(subtle).bg(app) }
   // no preset: size lock
   style surfaceDot = { size({ w: 3, h: 3, min-w: 3, min-h: 3 }).radius(full).border(subtle).bg(bind(swatchColor)) }
   style bandStatus = { pad(4) }
   // no preset: edge-only border
   style bandError = { pad(4).border({ edge: b, color: border, width: 1 }) }
-  style surfaceRoot = { size(grow).overflow(hidden).bg(canvas) }
-  style workbench = { size(grow).overflow(hidden).bg(canvas) }
-  style editorScroll = { size(grow).bg(canvas) }
+  style surfaceRoot = { size(grow).overflow(hidden).bg(app) }
+  style workbench = { size(grow).overflow(hidden).bg(app) }
+  style editorScroll = { size(grow).bg(app) }
   style pageTitle = { type(heading) }
   // no preset: min-w lock
-  style seedStrip = { pad(3).size({ min-w: 0 }).radius(lg).border(subtle).bg(surface-0) }
+  style seedStrip = { pad(3).size({ min-w: 0 }).radius(lg).border(subtle).bg(app) }
   style growMin = { size(grow) }
-  style errorText = { size(grow).fg(destructive).type(body-sm) }
+  style errorText = { size(grow).fg(danger).type(body-sm) }
   style pickerFill = { size(max) }
   // no preset: edge-only border
   style footerRule = { pad(2).border({ edge: t, color: border-subtle, width: 1 }) }
@@ -59,13 +59,13 @@
     onChange: any
   }
   style shrink0 = { size(hug) }
-  style scrollCanvas = { size(grow).bg(canvas) }
-  style dimBar = { pad(3).radius(md).border(subtle).bg(surface-0) }
+  style scrollCanvas = { size(grow).bg(app) }
+  style dimBar = { pad(3).radius(md).border(subtle).bg(app) }
   style rampStep = { position(relative).size({ w: 8, h: 8, min-w: 8, min-h: 8 }).overflow(hidden).radius(sm).border(subtle) }
   style gauntletGrid = { pad(2) }
   style gauntletCell = { size({ w: 6, h: 6, min-w: 6, min-h: 6 }).radius(sm).border(subtle).bg(bind(swatchColor)) }
   style contrastOk = { fg(success).type(mono-sm) }
-  style contrastFail = { fg(destructive).type(mono-sm) }
+  style contrastFail = { fg(danger).type(mono-sm) }
 </scope>
 
 <controller>

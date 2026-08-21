@@ -11,7 +11,7 @@
   style demoRow = { size(max) }
   style growCol = { size(grow) }
   style iconPrimary = { fg(primary) }
-  style iconDestructive = { fg(destructive) }
+  style iconDestructive = { fg(danger) }
 </scope>
 
 <controller>

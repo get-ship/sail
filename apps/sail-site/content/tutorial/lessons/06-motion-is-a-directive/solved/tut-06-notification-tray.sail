@@ -9,7 +9,7 @@
 -->
 
 <scope>
-  style unreadDot = { size(1_5).radius(full).bg(destructive), animate: { loop: play(fade) } }
+  style unreadDot = { size(1_5).radius(full).bg(danger), animate: { loop: play(fade) } }
   style noteRow = { pad(3).bg(surface).border(subtle).radius(md), animate: { enter: play(fade), exit: play(fade) } }
   style noteText = { type(body-sm).size(grow) }
   style empty = { pad(3).fg(muted).type(body-sm), animate: { enter: play(fade) } }

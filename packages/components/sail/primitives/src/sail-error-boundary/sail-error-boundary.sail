@@ -75,7 +75,7 @@ export default controller((_ctx: ControllerScope<Scope>, _host?: HostBag) => {
     role="alert"
     gap="3"
     align="start"
-    style({ pad({ x: 5, y: 4 }).border({ color: destructive, width: 1 }).radius(md).bg(muted).fg(foreground).elevation(xs) })
+    style({ pad({ x: 5, y: 4 }).border({ color: danger, width: 1 }).radius(md).bg(muted).fg(foreground).elevation(xs) })
   >
     <span style({ display(contents).type({ family: body, size: sm }) })>
       <svg
@@ -86,7 +86,7 @@ export default controller((_ctx: ControllerScope<Scope>, _host?: HostBag) => {
         stroke-linecap="round"
         stroke-linejoin="round"
         aria-hidden="true"
-        style({ size({ w: icon-size-lg, h: icon-size-lg, min-w: icon-size-lg }).margin({ t: 1 }).fg(destructive) })
+        style({ size({ w: icon-size-lg, h: icon-size-lg, min-w: icon-size-lg }).margin({ t: 1 }).fg(danger) })
       >
         <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"></path>
         <path d="M12 9v4"></path>

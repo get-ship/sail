@@ -11,7 +11,7 @@
     controls = true
     waveform = false
   }
-  style mediaChrome = { display(block).size({ w: 100% }).radius(md).bg(surface-1).border({ color: border, width: 1 }).elevation(xs) }
+  style mediaChrome = { display(block).size({ w: 100% }).radius(md).bg(surface).border({ color: border, width: 1 }).elevation(xs) }
 </scope>
 
 <controller>

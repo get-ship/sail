@@ -88,7 +88,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         <code>--destructive</code>, <code>--info</code>, <code>--accent</code>,
         <code>--muted</code> (and their <code>-foreground</code> partners).
         Status UI spends these directly via Style
-        (<code>style&#40;&#123; bg(destructive) &#125;&#41;</code>,
+        (<code>style&#40;&#123; bg(danger) &#125;&#41;</code>,
         <code>style&#40;&#123; bg(&#123; color: primary, mix: 15 &#125;) &#125;&#41;</code>).
         A color-group typed prop (often named <code>tone</code>, type <code>Tone</code>)
         binds in Style (<code>bg(tone)</code>, <code>fg(tone.foreground)</code>) —

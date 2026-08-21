@@ -10,12 +10,12 @@
   // Visibility is structural `<when {tablet}>` — global `.s-displaynone`
   // beats `when: { tablet: display(flex) }`.
   // no preset: display flex / dir column / overflow x hidden y auto
-  style rail = { display(flex).dir(column).size(hug).overflow({ x: hidden, y: auto }).bg(canvas).fg(canvas) }
+  style rail = { display(flex).dir(column).size(hug).overflow({ x: hidden, y: auto }).bg(app).fg(foreground) }
   style railLabel = { fg(muted).type(label) }
   // no preset: display block / hover+current when
-  style railLink = { display(block).radius(md).fg(muted).type(mono), when: { hover: fg(canvas).bg(hover-bg), current: fg(primary).bg(muted) } }
+  style railLink = { display(block).radius(md).fg(muted).type(mono), when: { hover: fg(foreground).bg(hover-bg), current: fg(primary).bg(muted) } }
   // no preset: display block / hover+current when
-  style railHub = { display(block).radius(md).fg(muted).type(body-sm), when: { hover: fg(canvas).bg(hover-bg), current: fg(primary).bg(muted) } }
+  style railHub = { display(block).radius(md).fg(muted).type(body-sm), when: { hover: fg(foreground).bg(hover-bg), current: fg(primary).bg(muted) } }
   // no preset: overflow x hidden / y auto
   style mainPane = { size(grow).overflow({ x: hidden, y: auto }) }
   style contentCol = { size(grow) }

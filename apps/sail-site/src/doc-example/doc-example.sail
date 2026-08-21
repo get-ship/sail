@@ -14,7 +14,7 @@
   style section = { size(max).overflow(visible) }
   style heading = { type(heading) }
   style leadText = { fg(muted).type(body-sm) }
-  style liveFrame = { size(grow).overflow(visible).radius(lg).border(subtle).bg(canvas) }
+  style liveFrame = { size(grow).overflow(visible).radius(lg).border(subtle).bg(app) }
   style codeCol = { size(grow) }
 </scope>
 

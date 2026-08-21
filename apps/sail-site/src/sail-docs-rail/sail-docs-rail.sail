@@ -26,11 +26,11 @@
   // — do not pair display(none) with tablet:display(flex). Global
   // `.s-displaynone` in element-skins beats the media query.
   // no preset: display flex / dir column / overflow x hidden y auto
-  style rail = { display(flex).dir(column).size(hug).overflow({ x: hidden, y: auto }).bg(canvas).fg(canvas) }
+  style rail = { display(flex).dir(column).size(hug).overflow({ x: hidden, y: auto }).bg(app).fg(foreground) }
   style railLabel = { fg(muted).type(label) }
   // Current must paint over the base muted ink — filled pill for active page.
   // no preset: display block / hover+current when
-  style railLink = { display(block).radius(md).fg(muted).type(body-sm), when: { hover: fg(canvas).bg(hover-bg), current: fg(primary).bg(muted) } }
+  style railLink = { display(block).radius(md).fg(muted).type(body-sm), when: { hover: fg(foreground).bg(hover-bg), current: fg(primary).bg(muted) } }
   // no preset: overflow x hidden / y auto
   style mainDocs = { size(grow).overflow({ x: hidden, y: auto }) }
   style contentCol = { size(grow) }

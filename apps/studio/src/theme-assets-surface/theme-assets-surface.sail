@@ -15,34 +15,34 @@
   // no preset: edge-only border
   style bandError = { pad(4).border({ edge: b, color: border, width: 1 }) }
   // no preset: size lock
-  style iconCell = { size({ w: 10, h: 10, min-w: 10, min-h: 10 }).radius(md).border(subtle).bg(surface-0) }
+  style iconCell = { size({ w: 10, h: 10, min-w: 10, min-h: 10 }).radius(md).border(subtle).bg(app) }
   style fullBtn = { size(max) }
   // no preset: min-w lock
-  style fontHit = { pad(2_5).size({ min-w: 0 }).radius(md).border(subtle).bg(surface-0) }
+  style fontHit = { pad(2_5).size({ min-w: 0 }).radius(md).border(subtle).bg(app) }
   // no preset: min-w lock
-  style fontSample = { size({ min-w: 0 }).fg(canvas).type(body) }
-  style catChip = { when: { selected: bg(selected-bg).fg(canvas).border(subtle) } }
-  style surfaceRoot = { size(grow).overflow(hidden).bg(canvas) }
-  style workbench = { size(grow).overflow(hidden).bg(canvas) }
-  style editorScroll = { size(grow).bg(canvas) }
+  style fontSample = { size({ min-w: 0 }).fg(foreground).type(body) }
+  style catChip = { when: { selected: bg(selected-bg).fg(foreground).border(subtle) } }
+  style surfaceRoot = { size(grow).overflow(hidden).bg(app) }
+  style workbench = { size(grow).overflow(hidden).bg(app) }
+  style editorScroll = { size(grow).bg(app) }
   style pageTitle = { type(heading) }
-  style errorText = { size(grow).fg(destructive).type(body-sm) }
+  style errorText = { size(grow).fg(danger).type(body-sm) }
   style growMin = { size(grow) }
   style shrink0 = { size(hug) }
   // no preset: min-w lock
   style catsScroll = { overflow({ x: auto }).size({ min-w: 0 }) }
   // no preset: edge-only border
-  style specimenDock = { size(grow).overflow(hidden).border({ edge: l, color: border-subtle, width: 1 }).bg(canvas) }
+  style specimenDock = { size(grow).overflow(hidden).border({ edge: l, color: border-subtle, width: 1 }).bg(app) }
   style specimenPad = { size(grow).pad(4) }
   style specimenFrame = { size(max).overflow(hidden).elevation(lg) }
   // no preset: min-w lock + edge-only border
-  style specimenChrome = { pad(3).size({ h: 8, min-w: 0, min-h: 8 }).border({ edge: b, color: border-subtle, width: 1 }).bg(surface-1) }
+  style specimenChrome = { pad(3).size({ h: 8, min-w: 0, min-h: 8 }).border({ edge: b, color: border-subtle, width: 1 }).bg(surface) }
   // no preset: size lock
   style trafficDots = { size({ min-w: 12 }) }
   // no preset: size lock
   style trafficDot = { size({ w: 2, h: 2, min-w: 2, min-h: 2 }).radius(full) }
   style chromeTitle = { size(grow).fg(muted).type(body-sm) }
-  style scrollGrow = { size(grow).bg(canvas) }
+  style scrollGrow = { size(grow).bg(app) }
   // no preset: min-w lock
   style stageBody = { pad(5).size({ min-w: 0 }) }
   style typeDisplay = { type(display-sm) }
@@ -64,7 +64,7 @@
     onUseRole: any
     onInstall: any
   }
-  style scrollCanvas = { size(grow).bg(canvas) }
+  style scrollCanvas = { size(grow).bg(app) }
 </scope>
 
 <controller>
@@ -298,7 +298,7 @@ export default controller(() => {
           <column gap="0" style(growMin)>
             <row preview-chrome align="center" gap="2" nowrap style(specimenChrome)>
               <row gap="2" align="center" nowrap hidden="true" style(trafficDots)>
-                <stack style(trafficDot, { bg(destructive) })></stack>
+                <stack style(trafficDot, { bg(danger) })></stack>
                 <stack style(trafficDot, { bg(warning) })></stack>
                 <stack style(trafficDot, { bg(success) })></stack>
               </row>

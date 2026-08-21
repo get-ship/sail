@@ -11,8 +11,8 @@
   style mutedXs = { fg(muted-foreground).type({ size: xs }) }
   style exampleBlock = { size({ w: 100% }).pad({ t: 2, b: 4 }).overflow({ all: visible }) }
   style sectionLabel = { fg(muted-foreground).type({ size: xs, tracking: wide, case: uppercase }) }
-  style scrollDemoV = { size({ w: 100%, h: 32, max-w: overlay-max-w-sm }).pad(3).border({ color: border-subtle, width: 1 }).radius(md).bg(surface-0) }
-  style scrollDemoH = { size({ w: 100%, max-w: overlay-max-w-sm }).pad(3).border({ color: border-subtle, width: 1 }).radius(md).bg(surface-0) }
+  style scrollDemoV = { size({ w: 100%, h: 32, max-w: overlay-max-w-sm }).pad(3).border({ color: border-subtle, width: 1 }).radius(md).bg(app) }
+  style scrollDemoH = { size({ w: 100%, max-w: overlay-max-w-sm }).pad(3).border({ color: border-subtle, width: 1 }).radius(md).bg(app) }
   style wideBand = { size({ w: overlay-max-w-lg }).type({ wrap: nowrap }) }
 </scope>
 

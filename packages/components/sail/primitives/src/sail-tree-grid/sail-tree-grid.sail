@@ -20,8 +20,6 @@
 <controller>
 // createTable navMode:cell + virtualizer; column wire in sail-tree-grid.columns.
 
-import type { Action, ControllerScope } from '@ship/sail-runtime'
-import type { Virtual } from '@ship/sail-runtime/virtual'
 import { createTable, type Table } from '../sail-table/engine/create-table'
 import type { TreeNode } from '../sail-tree/tree-node'
 import { parseJsonColumns, parseJsonNodes } from '../sail-tree/decode'
@@ -167,7 +165,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       <button slot="action" type="button" data-action="clear-filters">Clear filters</button>
     </empty-state>
   </slot>
-</div>}{else => <column role="treegrid" gap="0" use:gridTracks={gridTemplate()} aria-label={label() || null} aria-rowcount={rowCount()} aria-multiselectable={selectable() === 'multi' ? 'true' : null} style({ size({ w: 100% }).overflow({ all: hidden }).bg(surface-1).border({ color: border, width: 1 }).radius(lg) })>  <span style({ display(contents).type({ family: body, size: density }) })>    <grid tracks="--sail-grid-template" gap="0" role="row" style({ position({ scheme: sticky, t: 0 }).position({ z: sticky }).bg(surface-2).border({ edge: b, color: border, width: 1 }) })>
+</div>}{else => <column role="treegrid" gap="0" use:gridTracks={gridTemplate()} aria-label={label() || null} aria-rowcount={rowCount()} aria-multiselectable={selectable() === 'multi' ? 'true' : null} style({ size({ w: 100% }).overflow({ all: hidden }).bg(surface).border({ color: border, width: 1 }).radius(lg) })>  <span style({ display(contents).type({ family: body, size: density }) })>    <grid tracks="--sail-grid-template" gap="0" role="row" style({ position({ scheme: sticky, t: 0 }).position({ z: sticky }).bg(surface).border({ edge: b, color: border, width: 1 }) })>
     <for {headers() as h} key={h.id}>
       <row gap="1" align="center" role="columnheader" data-col-id={h.id} data-sortable={h.canSort ? 'true' : null} data-sorted={h.sorted || null} aria-sort={h.canSort ? h.ariaSort : null} style({ position(relative).pad({ x: density-row-px, y: density-row-py }).fg(foreground).border({ edge: b, color: border-subtle, width: 1 }), when: { sortable: cursor(pointer) } })>        <span style({ display(contents).type({ size: xs, weight: semibold, tracking: wide, case: uppercase, wrap: nowrap }) })>          <span style({ grow(1).size({ min-w: 0 }).type({ wrap: truncate }) })>{h.label}</span>
         <if {h.sorted === 'asc'}>

@@ -22,8 +22,8 @@
   style chipCol = { size({ min-w: 0 }) }
   // no preset: min-w lock
   style sliderRow = { size({ min-w: 0 }) }
-  style sectionPanel = { pad(3).radius(lg).border(subtle).bg(surface-1) }
-  style tokenStrip = { pad(2).fg(muted).radius(sm).bg(surface-0).type(mono-sm) }
+  style sectionPanel = { pad(3).radius(lg).border(subtle).bg(surface) }
+  style tokenStrip = { pad(2).fg(muted).radius(sm).bg(app).type(mono-sm) }
   // Outline chip shells — continuous radius via use:liveBox (token radius cannot drag continuously).
   // no preset: size lock
   style ladderChip = { size({ w: 9, h: 7, min-w: 9, min-h: 7 }).border(subtle).bg(transparent) }
@@ -61,13 +61,13 @@
   // no preset: min-w lock
   style specimenFrame = { size({ h: 100%, min-w: 0, min-h: 0 }).overflow(hidden).elevation(lg) }
   // no preset: min-w lock + edge-only border
-  style specimenChrome = { pad(3).size({ h: 8, min-w: 0, min-h: 8 }).border({ edge: b, color: border-subtle, width: 1 }).bg(surface-1) }
+  style specimenChrome = { pad(3).size({ h: 8, min-w: 0, min-h: 8 }).border({ edge: b, color: border-subtle, width: 1 }).bg(surface) }
   // no preset: size lock
   style trafficDots = { size({ min-w: 12 }) }
   // no preset: size lock
   style trafficDot = { size({ w: 2, h: 2, min-w: 2, min-h: 2 }).radius(full) }
   style chromeTitle = { size(grow).fg(muted).type(body-sm) }
-  style errorText = { size(grow).fg(destructive).type(body-sm) }
+  style errorText = { size(grow).fg(danger).type(body-sm) }
   style pageTitle = { type(heading) }
   style growMin = { size(grow) }
   // no preset: min-w lock
@@ -406,7 +406,7 @@ export default controller(() => {
           <column gap="0" style(growMin)>
             <row preview-chrome align="center" gap="2" nowrap style(specimenChrome)>
               <row gap="2" align="center" nowrap hidden="true" style(trafficDots)>
-                <stack style(trafficDot, { bg(destructive) })></stack>
+                <stack style(trafficDot, { bg(danger) })></stack>
                 <stack style(trafficDot, { bg(warning) })></stack>
                 <stack style(trafficDot, { bg(success) })></stack>
               </row>

@@ -21,30 +21,30 @@
   style chipCol = { size({ min-w: 0 }) }
   // Selected rail row: soft fill + subtle border.
   // no preset: transparent border
-  style listRow = { pad(2).radius(md).cursor(pointer).border({ color: transparent, width: 1 }), when: { hover: bg(hover-bg), selected: bg(surface-2).border(subtle) } }
+  style listRow = { pad(2).radius(md).cursor(pointer).border({ color: transparent, width: 1 }), when: { hover: bg(hover-bg), selected: bg(surface).border(subtle) } }
   style eyebrow = { fg(muted).type(label) }
-  style tokenStrip = { pad(2).fg(muted).radius(sm).bg(surface-0).type(mono-sm) }
+  style tokenStrip = { pad(2).fg(muted).radius(sm).bg(app).type(mono-sm) }
   // no preset: edge-only border
   style tokenRow = { pad(2).border({ edge: b, color: border-subtle, width: 1 }) }
-  style surfaceRoot = { size(grow).overflow(hidden).bg(canvas) }
-  style workbench = { size(grow).overflow(hidden).bg(canvas) }
+  style surfaceRoot = { size(grow).overflow(hidden).bg(app) }
+  style workbench = { size(grow).overflow(hidden).bg(app) }
   // no preset: panel width lock + edge-only border
-  style panelRail = { size({ w: overlay-max-w-sm, h: 100%, min-h: 0, max-w: overlay-max-w-sm }).border({ edge: r, color: border-subtle, width: 1 }).bg(canvas) }
+  style panelRail = { size({ w: overlay-max-w-sm, h: 100%, min-h: 0, max-w: overlay-max-w-sm }).border({ edge: r, color: border-subtle, width: 1 }).bg(app) }
   // no preset: panel width lock + edge-only border
-  style panelInspector = { size({ w: overlay-max-w-sm, h: 100%, min-h: 0, max-w: overlay-max-w-sm }).border({ edge: l, color: border-subtle, width: 1 }).bg(canvas) }
-  style specimenDock = { size(grow).overflow(hidden).bg(canvas) }
+  style panelInspector = { size({ w: overlay-max-w-sm, h: 100%, min-h: 0, max-w: overlay-max-w-sm }).border({ edge: l, color: border-subtle, width: 1 }).bg(app) }
+  style specimenDock = { size(grow).overflow(hidden).bg(app) }
   style specimenPad = { size(grow).pad(4) }
   style specimenFrame = { size(max).overflow(hidden).elevation(lg) }
   // no preset: min-w lock + edge-only border
-  style specimenChrome = { pad(3).size({ h: 8, min-w: 0, min-h: 8 }).border({ edge: b, color: border-subtle, width: 1 }).bg(surface-1) }
+  style specimenChrome = { pad(3).size({ h: 8, min-w: 0, min-h: 8 }).border({ edge: b, color: border-subtle, width: 1 }).bg(surface) }
   // no preset: min-w lock + edge-only border
-  style specimenVariants = { pad(3).size({ min-w: 0 }).border({ edge: b, color: border-subtle, width: 1 }).bg(surface-1) }
+  style specimenVariants = { pad(3).size({ min-w: 0 }).border({ edge: b, color: border-subtle, width: 1 }).bg(surface) }
   // no preset: size lock
   style trafficDots = { size({ min-w: 12 }) }
   // no preset: size lock
   style trafficDot = { size({ w: 2, h: 2, min-w: 2, min-h: 2 }).radius(full) }
   style chromeTitle = { size(grow).fg(muted).type(body-sm) }
-  style errorText = { size(grow).fg(destructive).type(body-sm) }
+  style errorText = { size(grow).fg(danger).type(body-sm) }
   style growMin = { size(grow) }
   style shrink0 = { size(hug) }
   style tapFloor = { size(control-sm) }
@@ -53,20 +53,20 @@
   // no preset: size lock
   style sampleMax = { size({ w: 100%, max-w: overlay-max-w-sm }) }
   // no preset: size lock
-  style menuItemShell = { size({ w: 100%, max-w: overlay-max-w-sm }).pad(1).border(subtle).radius(md).bg(surface-1) }
+  style menuItemShell = { size({ w: 100%, max-w: overlay-max-w-sm }).pad(1).border(subtle).radius(md).bg(surface) }
   style ctxBox = { size(max).pad(3).border(subtle).radius(md) }
   // no preset: size lock
   style scrollVert = { size({ w: 100%, max-w: overlay-max-w-sm, max-h: 32 }).pad(3).border(subtle).radius(md) }
   // no preset: size lock
   style scrollHoriz = { size({ w: 100%, max-w: overlay-max-w-sm }).pad(3).border(subtle).radius(md) }
-  style scrollGrow = { size(grow).bg(canvas) }
+  style scrollGrow = { size(grow).bg(app) }
   // no preset: min-w lock
   style stageBody = { pad(5).size({ min-w: 0, min-h: 100% }) }
   style stageTitle = { type(heading) }
   style stageBlurb = { fg(muted).type(body-sm) }
   style inspectorTitle = { type(heading) }
   // no preset: size lock + position
-  style tokenChip = { position(relative).size({ w: 9, h: 9, min-w: 9, min-h: 9 }).overflow(hidden).radius(md).border(subtle).bg(surface-0) }
+  style tokenChip = { position(relative).size({ w: 9, h: 9, min-w: 9, min-h: 9 }).overflow(hidden).radius(md).border(subtle).bg(app) }
   type ComponentRailRowProps = {
     id: string
     label: string
@@ -74,7 +74,7 @@
     selected: boolean
     hasOverride: boolean
   }
-  style scrollCanvas = { size(grow).bg(canvas) }
+  style scrollCanvas = { size(grow).bg(app) }
 </scope>
 
 <controller>
@@ -179,7 +179,7 @@ export default controller(() => {
           <column gap="0" style(growMin)>
             <row preview-chrome align="center" gap="2" nowrap style(specimenChrome)>
               <row gap="2" align="center" nowrap hidden="true" style(trafficDots)>
-                <stack style(trafficDot, { bg(destructive) })></stack>
+                <stack style(trafficDot, { bg(danger) })></stack>
                 <stack style(trafficDot, { bg(warning) })></stack>
                 <stack style(trafficDot, { bg(success) })></stack>
               </row>
@@ -778,7 +778,7 @@ export default controller(() => {
                           <span style({ fg(primary) })>
                             <icon name="heart" size="lg" label="primary ink"></icon>
                           </span>
-                          <span style({ fg(destructive) })>
+                          <span style({ fg(danger) })>
                             <icon name="heart" size="lg" label="destructive ink"></icon>
                           </span>
                         </row>

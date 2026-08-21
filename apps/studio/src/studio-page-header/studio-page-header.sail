@@ -7,7 +7,7 @@
     title = ''
   }
   // no preset: size lock + edge-only border
-  style headerRoot = { size({ h: 7 }).pad(3).border({ edge: b, color: border-subtle, width: 1 }).bg(surface-1) }
+  style headerRoot = { size({ h: 7 }).pad(3).border({ edge: b, color: border-subtle, width: 1 }).bg(surface) }
   style leadRow = { size(grow) }
   style eyebrow = { fg(muted).type(label) }
   style actionsRow = { size(hug) }

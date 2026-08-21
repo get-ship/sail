@@ -21,7 +21,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     <h1>Styling</h1>
     <p>
       Paint is the <strong>Style</strong> language:
-      <code>style&#40;&#123; pad(4).bg(surface-1) &#125;&#41;</code> on the host,
+      <code>style&#40;&#123; pad(4).bg(surface) &#125;&#41;</code> on the host,
       with optional <code>when</code>, <code>match</code>, and <code>compound</code>
       keys for conditionality, plus named Style
       (<code>style&#32;name = &#123; … &#125;</code>). Values are design tokens —
@@ -30,7 +30,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     </p>
     <p>
       Familiar spacing and color ideas still apply
-      (<code>pad(4)</code>, <code>bg(surface-1)</code>, <code>radius(lg)</code>),
+      (<code>pad(4)</code>, <code>bg(surface)</code>, <code>radius(lg)</code>),
       but the product form is a typed setter chain, not a utility string. Closed and
       token-backed is what makes the theme switch in this site’s header work —
       swap the theme and everything repaints, because nothing held a raw color.
@@ -48,7 +48,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     <code-block code={code.sxError}></code-block>
     <p>
       Prefer a named Style when the same paint repeats:
-      <code>style&#32;card = &#123; pad(5).bg(surface-1) &#125;</code> then
+      <code>style&#32;card = &#123; pad(5).bg(surface) &#125;</code> then
       attach <code>style&#40;card&#41;</code> or compose Style pieces
       <code>style&#40;base, emphasis&#41;</code> on the host. (That is paint
       composition — not an in-file <code>&lt;partial&gt;</code>, which reuses

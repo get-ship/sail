@@ -53,9 +53,9 @@ export default controller(({ data, expanded, depth }: Scope) => {
 </controller>
 
 <column gap="0">
-  <span style({ display(contents).type({ family: mono, size: sm, leading: loose }) })>
+  <span style({ display(contents).type({ family: mono, size: sm, leading: relaxed }) })>
     <if {parseError() !== ''}>
-      <span role="alert" style({ fg(destructive) })>Invalid JSON: {parseError()}</span>
+      <span role="alert" style({ fg(danger) })>Invalid JSON: {parseError()}</span>
     </if>
     <for {rows() as row} key={row.k}>
       <match {row.kind}>

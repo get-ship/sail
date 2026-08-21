@@ -147,7 +147,7 @@
         },
         "font": {
           "body": {
-            "$value": "{font-body-app}",
+            "$value": "{font-body}",
             "$type": "fontFamily"
           }
         },
@@ -405,7 +405,7 @@
         },
         "font": {
           "body": {
-            "$value": "{font-body-app}",
+            "$value": "{font-body}",
             "$type": "fontFamily"
           }
         },

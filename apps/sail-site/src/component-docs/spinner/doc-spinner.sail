@@ -12,7 +12,7 @@
   style swatchPrimary = { bg(primary) }
   style swatchSuccess = { bg(success) }
   style swatchWarning = { bg(warning) }
-  style swatchDestructive = { bg(destructive) }
+  style swatchDestructive = { bg(danger) }
   style swatchAccent = { bg(accent) }
   style swatchInfo = { bg(info) }
   style exampleBlock = { size({ w: 100% }).pad({ t: 2, b: 4 }).overflow({ all: visible }) }

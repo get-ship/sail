@@ -6,15 +6,15 @@
   style eyebrow = { fg(muted).type(label) }
   style pathMeta = { fg(muted).type(mono-sm) }
   style muted = { fg(muted).type(body-sm) }
-  style surfaceRoot = { size(grow).overflow(hidden).bg(canvas) }
+  style surfaceRoot = { size(grow).overflow(hidden).bg(app) }
   style workbench = { size(grow).overflow(hidden) }
   // no preset: edge-only border
-  style navPane = { size(grow).overflow(hidden).border({ edge: r, color: border-subtle, width: 1 }).bg(surface-0) }
+  style navPane = { size(grow).overflow(hidden).border({ edge: r, color: border-subtle, width: 1 }).bg(app) }
   // no preset: edge-only border
   style navHead = { size(hug).pad(4).border({ edge: b, color: border-subtle, width: 1 }) }
-  style detailPane = { size(grow).overflow(hidden).bg(canvas) }
+  style detailPane = { size(grow).overflow(hidden).bg(app) }
   // no preset: edge-only border
-  style detailHead = { size(hug).pad(5).border({ edge: b, color: border-subtle, width: 1 }).bg(surface-0) }
+  style detailHead = { size(hug).pad(5).border({ edge: b, color: border-subtle, width: 1 }).bg(app) }
   // no preset: min-w lock
   style detailHeadMain = { size({ min-w: 0 }).overflow({ x: auto }) }
   style scrollGrow = { size(grow) }
@@ -26,7 +26,7 @@
   // no preset: min-w lock
   style bodyPad = { pad(5).size({ min-w: 0 }) }
   // no preset: min-w lock + edge-only border
-  style specimenChrome = { pad(3).size({ h: 8, min-w: 0, min-h: 8 }).border({ edge: b, color: border-subtle, width: 1 }).bg(surface-1) }
+  style specimenChrome = { pad(3).size({ h: 8, min-w: 0, min-h: 8 }).border({ edge: b, color: border-subtle, width: 1 }).bg(surface) }
   // no preset: size lock
   style trafficDots = { size({ min-w: 12 }) }
   // no preset: size lock
@@ -35,7 +35,7 @@
   // no preset: min-w lock
   style previewFrame = { size({ min-w: 0 }).overflow(hidden).elevation(lg) }
   // no preset: size lock
-  style previewBody = { pad(6).size({ min-h: 32 }).bg(canvas) }
+  style previewBody = { pad(6).size({ min-h: 32 }).bg(app) }
   style previewTitle = { type(heading) }
   style previewHint = { fg(muted).type(body-sm) }
   // no preset: edge-only border
@@ -246,7 +246,7 @@ export default controller(() => {
             <column gap="0">
               <row specimen-chrome align="center" gap="2" nowrap style(specimenChrome)>
                 <row gap="2" align="center" nowrap hidden="true" style(trafficDots)>
-                  <stack style(trafficDot, { bg(destructive) })></stack>
+                  <stack style(trafficDot, { bg(danger) })></stack>
                   <stack style(trafficDot, { bg(warning) })></stack>
                   <stack style(trafficDot, { bg(success) })></stack>
                 </row>

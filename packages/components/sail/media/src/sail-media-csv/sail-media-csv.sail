@@ -121,7 +121,7 @@ export default controller((_ctx: Scope) => {
 
 </controller>
 <if {errorMsg()}>
-  <column role="alert" gap="0" style({ pad({ x: 4, y: 3 }).fg(destructive) })>
+  <column role="alert" gap="0" style({ pad({ x: 4, y: 3 }).fg(danger) })>
     <span style({ display(contents).type({ family: mono, size: sm }) })>
       {errorMsg()}
     </span>

@@ -8,7 +8,7 @@
     title = ''
   }
   // no preset: size lock + edge-only border
-  style sidebarRoot = { size({ w: 64, h: 100%, min-w: 64, min-h: 0 }).overflow(hidden).border({ edge: r, color: border, width: 1 }).bg(surface-1) }
+  style sidebarRoot = { size({ w: 64, h: 100%, min-w: 64, min-h: 0 }).overflow(hidden).border({ edge: r, color: border, width: 1 }).bg(surface) }
   // no preset: size lock + edge-only border
   style sidebarHeader = { size({ h: 8, min-h: 8 }).pad(3).border({ edge: b, color: border-subtle, width: 1 }) }
   style eyebrow = { fg(muted).type(label) }

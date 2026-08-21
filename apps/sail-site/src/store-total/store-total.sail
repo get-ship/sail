@@ -3,7 +3,7 @@
 -->
 <scope>
   style line = { fg(muted).type(body-sm) }
-  style total = { fg(canvas) }
+  style total = { fg(foreground) }
 </scope>
 
 <controller>

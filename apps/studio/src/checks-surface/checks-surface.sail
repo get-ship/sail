@@ -18,13 +18,13 @@
   // no preset: size lock
   style sepH = { size({ h: 4 }) }
   style mutedXs = { fg(muted).type(body-sm) }
-  style errorCount = { fg(destructive).type(body-sm) }
+  style errorCount = { fg(danger).type(body-sm) }
   style warnCount = { fg(warning).type(body-sm) }
-  style errorText = { size(grow).fg(destructive).type(body-sm) }
+  style errorText = { size(grow).fg(danger).type(body-sm) }
   // no preset: size lock + edge-only border
   style errorBand = { size({ h: 7 }).pad(3).border({ edge: b, color: border, width: 1 }) }
   // no preset: min-w lock + edge-only border
-  style panelTools = { pad(3).size({ min-w: 0 }).border({ edge: b, color: border-subtle, width: 1 }).bg(surface-1) }
+  style panelTools = { pad(3).size({ min-w: 0 }).border({ edge: b, color: border-subtle, width: 1 }).bg(surface) }
   style findingsScroll = { size(grow) }
   // no preset: size lock
   style groupHeader = { size({ h: 6 }).pad(3), when: { hover: bg(hover-bg) } }
@@ -36,13 +36,13 @@
   style fixChip = { fg(primary).type(body-sm) }
   style detailPad = { pad(2) }
   // no preset: size lock
-  style whyPre = { pad(2).size({ min-h: 0, max-h: 40 }).overflow(auto).bg(surface-0).radius(sm).type(mono-sm) }
-  style snippetBox = { pad(2).bg(surface-0).radius(sm) }
+  style whyPre = { pad(2).size({ min-h: 0, max-h: 40 }).overflow(auto).bg(app).radius(sm).type(mono-sm) }
+  style snippetBox = { pad(2).bg(app).radius(sm) }
   style snippetLine = { type(mono-sm) }
   // no preset: size lock + edge-only border
   style statusBar = { size({ h: 6 }).pad(3).border({ edge: t, color: border-subtle, width: 1 }).fg(muted) }
   // no preset: min-w lock + edge-only border
-  style reviewSheet = { pad(3).size({ min-w: 0, max-h: 56 }).overflow(auto).border({ edge: t, color: border, width: 1 }).bg(surface-1) }
+  style reviewSheet = { pad(3).size({ min-w: 0, max-h: 56 }).overflow(auto).border({ edge: t, color: border, width: 1 }).bg(surface) }
   style titleSm = { type(body-sm) }
   style fullW = { size(max) }
   // no preset: type wrap

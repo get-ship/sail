@@ -67,10 +67,10 @@
    * room so glyphs never sit under the button.
    */
   style snippetShell = { size({ w: 100%, max-w: 100% }).position(relative).group() }
-  style snippetCopy = { position({ scheme: absolute, t: 3, r: 3, z: 2 }).bg(surface-0).fg(muted-foreground).radius(sm).filter({ opacity: 0 }).pointerEvents(none).elevation(xs), when: { group-hover: filter({ opacity: 100 }).pointerEvents(auto) } }
+  style snippetCopy = { position({ scheme: absolute, t: 3, r: 3, z: 2 }).bg(app).fg(muted-foreground).radius(sm).filter({ opacity: 0 }).pointerEvents(none).elevation(xs), when: { group-hover: filter({ opacity: 100 }).pointerEvents(auto) } }
   /** Knobs rail: space scale, never panel-* tokens. Pad for focus rings. */
   style knobColumn = { size({ w: 64, min-w: 64, min-h: 64 }).shrink(0).pad(5).overflow({ all: visible }).border({ edge: l, color: border-subtle, width: 1 }) }
-  style usageFrame = { size({ w: 100% }).pad(4).overflow({ all: visible }).radius(lg).border({ color: border, width: 1 }).bg(surface-0) }
+  style usageFrame = { size({ w: 100% }).pad(4).overflow({ all: visible }).radius(lg).border({ color: border, width: 1 }).bg(app) }
   style usagePreviewPad = { size({ w: 100% }).pad(4).overflow({ all: visible }) }
 </scope>
 
@@ -185,7 +185,7 @@ export default controller(({ variants, rows, usage, snippet, usageLive, variantA
     <p style({ fg(muted-foreground) })>{blurb()}</p>
   </if>
 
-  <column gap="0" style({ pad(0).overflow({ all: visible }).radius(lg).border({ color: border, width: 1 }).bg(surface-0) })>
+  <column gap="0" style({ pad(0).overflow({ all: visible }).radius(lg).border({ color: border, width: 1 }).bg(app) })>
     <if {hasVariants()}>
       <row gap="2" align="center" style({ pad({ x: 5, t: 4, b: 2 }) })>
         <span style({ fg(muted-foreground).type({ family: mono, size: xs }) })>{variantAttr()}:</span>

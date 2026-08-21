@@ -109,10 +109,10 @@ export default controller((ctx) => {
 <if {error()}>
   <column
     gap="2"
-    style({ size({ w: 100% }).pad({ all: 3, x: 4 }).border({ color: destructive, width: 1 }).radius(md).bg(muted) })
+    style({ size({ w: 100% }).pad({ all: 3, x: 4 }).border({ color: danger, width: 1 }).radius(md).bg(muted) })
   >
     <span style({ display(contents).type({ size: sm }) })>
-      <row gap="2" align="center" style({ fg(destructive) })>
+      <row gap="2" align="center" style({ fg(danger) })>
         <span style({ display(contents).type({ weight: semibold }) })>
           <icon name="alert-triangle" label="" size="sm"></icon>
           Diagram failed to render
@@ -122,7 +122,7 @@ export default controller((ctx) => {
       <details>
         <summary style({ cursor(pointer).fg(muted-foreground).type({ size: xs }) })>mermaid source</summary>
         <pre
-          style({ pad({ all: 2, x: 3 }).margin({ t: 2 }).overflow({ x: auto }).bg(surface-2).border({ color: border-subtle, width: 1 }).radius(sm).type({ family: mono, size: xs, wrap: pre-wrap }) })
+          style({ pad({ all: 2, x: 3 }).margin({ t: 2 }).overflow({ x: auto }).bg(surface).border({ color: border-subtle, width: 1 }).radius(sm).type({ family: mono, size: xs, wrap: pre-wrap }) })
         >{value()}</pre>
       </details>
     </span>

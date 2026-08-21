@@ -138,7 +138,7 @@ export default controller(() => {
         <span style({ fg(primary) })>
           <icon name="heart" size="lg" label="primary ink"></icon>
         </span>
-        <span style({ fg(destructive) })>
+        <span style({ fg(danger) })>
           <icon name="heart" size="lg" label="destructive ink"></icon>
         </span>
       </row>

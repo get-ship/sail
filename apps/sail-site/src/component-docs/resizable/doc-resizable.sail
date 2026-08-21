@@ -13,8 +13,8 @@
   style exampleBlock = { size({ w: 100% }).pad({ t: 2, b: 4 }).overflow({ all: visible }) }
   style sectionLabel = { fg(muted-foreground).type({ size: xs, tracking: wide, case: uppercase }) }
   style splitFrame = { size({ w: 100%, h: 48 }).overflow({ all: hidden }).border({ color: border-subtle, width: 1 }).radius(md) }
-  style paneStart = { size({ w: 100%, h: 100% }).pad(3).bg(surface-1) }
-  style paneEnd = { size({ w: 100%, h: 100% }).pad(3).bg(surface-2) }
+  style paneStart = { size({ w: 100%, h: 100% }).pad(3).bg(surface) }
+  style paneEnd = { size({ w: 100%, h: 100% }).pad(3).bg(surface) }
 </scope>
 
 <controller>

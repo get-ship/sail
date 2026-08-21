@@ -287,7 +287,7 @@ export default controller(({ value, min, max, disabled }: ControllerScope<Scope>
     <div
       role="dialog"
       aria-label="Choose date"
-      style({ position({ scheme: absolute, l: 0 }).size({ w: overlay-max-w-sm }).pad(2).margin({ t: 1 }).position({ z: popover }).bg(surface-1).fg(foreground).border({ color: border, width: 1 }).radius(md).elevation(md) })
+      style({ position({ scheme: absolute, l: 0 }).size({ w: overlay-max-w-sm }).pad(2).margin({ t: 1 }).position({ z: popover }).bg(surface).fg(foreground).border({ color: border, width: 1 }).radius(md).elevation(md) })
     >
       <span style({ display(contents).type({ family: body }) })>
         <row align="center" justify="between" style({ margin({ b: 1 }) })>

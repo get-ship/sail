@@ -12,9 +12,9 @@
     open = false
   }
 
-  style host = { position(relative).overflow({ all: hidden }).group().border({ color: border, width: 1 }).radius(md).bg(surface-1) }
-  style statusBg = { when: { groupStateRunning: bg(info), groupStateOk: bg(success), groupStateError: bg(destructive) } }
-  style statusFg = { when: { groupStateRunning: fg(info), groupStateOk: fg(success), groupStateError: fg(destructive) } }
+  style host = { position(relative).overflow({ all: hidden }).group().border({ color: border, width: 1 }).radius(md).bg(surface) }
+  style statusBg = { when: { groupStateRunning: bg(info), groupStateOk: bg(success), groupStateError: bg(danger) } }
+  style statusFg = { when: { groupStateRunning: fg(info), groupStateOk: fg(success), groupStateError: fg(danger) } }
   // Status rail only — accordion owns the caret.
   style rail = { position({ scheme: absolute, t: 0, b: 0, l: 0 }).size({ w: 1 }) }
   style dot = { elevation(none) }

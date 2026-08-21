@@ -214,13 +214,13 @@ export default controller((_ctx: Scope) => {
     role="img"
     aria-label={alt()}
     use:svgInline
-    style({ position(relative).size({ w: 100%, h: 100%, min-h: 28 }).overflow({ all: hidden }).bg(surface-1).radius(md) })
+    style({ position(relative).size({ w: 100%, h: 100%, min-h: 28 }).overflow({ all: hidden }).bg(surface).radius(md) })
   ></center>
 {else =>
   <center
     tabindex="0"
     use:zoomStage
-    style({ position(relative).size({ w: 100%, h: 100%, min-h: 28 }).overflow({ all: hidden }).bg(surface-1).radius(md) })
+    style({ position(relative).size({ w: 100%, h: 100%, min-h: 28 }).overflow({ all: hidden }).bg(surface).radius(md) })
   >
     <img
       alt={alt()}
@@ -236,7 +236,7 @@ export default controller((_ctx: Scope) => {
           role="option"
           gap="0"
           aria-selected={item.selected ? 'true' : 'false'}
-          style({ grow(0).pad(0).overflow({ all: hidden }).bg(surface-1).border({ color: border, width: 1 }).radius(sm).cursor(pointer), when: { selected: border({ color: primary, width: 1 }).elevation(accent) } })
+          style({ grow(0).pad(0).overflow({ all: hidden }).bg(surface).border({ color: border, width: 1 }).radius(sm).cursor(pointer), when: { selected: border({ color: primary, width: 1 }).elevation(accent) } })
         >
           <img src={item.url} alt="" />
         </row>
