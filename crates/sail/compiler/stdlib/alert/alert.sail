@@ -83,7 +83,7 @@ export default controller((init) => {
         <slot name="actions"></slot>
       </row>
     </column>
-    <if dismissible>
+    <if {dismissible()}>
       <button
         type="button"
         anatomy
