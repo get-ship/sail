@@ -135,13 +135,6 @@ pub const ACTIONS: &[ActionEntry] = &[
         writes: &[],
     },
     ActionEntry {
-        name: "drawerSwipe",
-        param: "void",
-        summary: "Internal: L1 <drawer> dismiss — swipe toward the docked edge, Escape, and light-dismiss close a dismissible non-modal dialog.",
-        auto_import: true,
-        writes: &[],
-    },
-    ActionEntry {
         name: "eventSpan",
         param: "RectSpan | null | undefined",
         summary: "Track the bounding rect of a pointer event target across the screen.",
@@ -326,7 +319,6 @@ pub const BUILTIN_ACTION_NAMES: &[&str] = &[
     "clickOutside",
     "clipboard",
     "dismissControl",
-    "drawerSwipe",
     "eventSpan",
     "focus",
     "gridTracks",
@@ -535,7 +527,7 @@ mod tests {
             ACTIONS.iter().all(|a| a.name != "toggleGroup") && !is_public_action("toggleGroup"),
             "toggleGroup brain is the widget controller — gone from ACTIONS"
         );
-        for name in ["menu", "resizable", "drawerSwipe"] {
+        for name in ["menu", "resizable"] {
             assert!(
                 !is_public_action(name),
                 "{name} must not be on the public use: surface (ACTIONS-1 diet)"
@@ -545,6 +537,10 @@ mod tests {
                 "{name} stays in ACTIONS as internal auto-import until its brain moves"
             );
         }
+        assert!(
+            !is_public_action("drawerSwipe") && ACTIONS.iter().all(|a| a.name != "drawerSwipe"),
+            "drawerSwipe brain is the <drawer> controller — gone from ACTIONS"
+        );
         assert!(
             ACTIONS.iter().all(|a| a.name != "icon") && !is_public_action("icon"),
             "icon brain is the <icon> widget structure — gone from ACTIONS"
