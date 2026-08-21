@@ -56,12 +56,12 @@ export default controller((init) => {
 })
 </controller>
 
-<row
-  nowrap
-  align="start"
-  gap="3"
-  hidden={closed()}
-  style(base, {when: {before: style(stripe, {bg(tone)}), forced-colors: {border({ color: CanvasText }), when: {before: bg(CanvasText)}}}, match: { variant: { default: variantDefault, banner: variantBanner }, open: { false: gone } }, compound: [
+<div hidden={closed()} style({match: { open: { false: gone } }})>
+  <row
+    nowrap
+    align="start"
+    gap="3"
+    style(base, {when: {before: style(stripe, {bg(tone)}), forced-colors: {border({ color: CanvasText }), when: {before: bg(CanvasText)}}}, match: { variant: { default: variantDefault, banner: variantBanner }, open: { false: gone } }, compound: [
       {tone: muted, when: {before: bg(primary)}},
       {variant: banner, when: {before: size({ w: 2 })}},
     ]})
@@ -99,6 +99,7 @@ export default controller((init) => {
           <path d="M2 2 L8 8 M8 2 L2 8"></path>
         </svg>
       </button>
+      </if>
     </if>
-  </if>
-</row>
+  </row>
+</div>

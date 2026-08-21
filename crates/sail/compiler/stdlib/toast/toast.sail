@@ -66,27 +66,27 @@ export default controller((init) => {
 })
 </controller>
 
-<row
-  nowrap
-  align="center"
-  gap="3"
-  hidden={closed()}
-  on:pointerenter={pause}
-  on:pointerleave={start}
-  on:focusin={pause}
-  on:focusout={start}
-  style(base, {when: {before: style(stripe, {bg(tone)})}, match: { open: { false: gone } }, compound: [
+<div hidden={closed()} style({match: { open: { false: gone } }})>
+  <row
+    nowrap
+    align="center"
+    gap="3"
+    on:pointerenter={pause}
+    on:pointerleave={start}
+    on:focusin={pause}
+    on:focusout={start}
+    style(base, {when: {before: style(stripe, {bg(tone)})}, compound: [
       {tone: primary, bg({ color: primary, mix: 15 }).border({ color: primary })},
       {tone: info, bg({ color: info, mix: 15 }).border({ color: info })},
       {tone: success, bg({ color: success, mix: 15 }).border({ color: success })},
       {tone: warning, bg({ color: warning, mix: 15 }).border({ color: warning })},
       {tone: danger, bg({ color: danger, mix: 15 }).border({ color: danger })},
       {tone: accent, bg({ color: accent, mix: 15 }).border({ color: accent })},
-      {tone: muted, bg({ color: muted, mix: 15 }).border({ color: border })},
-    ]})
->
-  <if {open()}>
-    <div style(body)>
+        {tone: muted, bg({ color: muted, mix: 15 }).border({ color: border })},
+      ]})
+    >
+    <if {open()}>
+      <div style(body)>
       <slot></slot>
     </div>
     <button
@@ -96,7 +96,8 @@ export default controller((init) => {
       on:click={close}
       style(close, {shrink(0).grow(0), when: {hover: fg(foreground).bg(surface).filter({ opacity: 100 })}})
     >
-      <row inline nowrap align="center" justify="center" style(closeGlyph)>✕</row>
-    </button>
-  </if>
-</row>
+        <row inline nowrap align="center" justify="center" style(closeGlyph)>✕</row>
+      </button>
+    </if>
+  </row>
+</div>
