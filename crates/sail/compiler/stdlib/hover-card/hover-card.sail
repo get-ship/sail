@@ -70,5 +70,5 @@ export default controller((init) => {
 
 <span use:hotkeys={keys} on:mouseenter={onHostEnter} on:mouseleave={onHostLeave} on:focusin={onHostEnter} on:focusout={onHostLeave} style({display(inline-flex).position({ scheme: relative }).self(start).group()})>
   <slot name="trigger"></slot>
-  <div popover id={hoverId()} use:hotkeys={keys} on:toggle={onToggle} on:pointerenter={onPanelEnter} on:pointerleave={onPanelLeave} style(panel)><slot></slot></div>
+  <div popover role="dialog" id={hoverId()} use:hotkeys={keys} on:toggle={onToggle} on:pointerenter={onPanelEnter} on:pointerleave={onPanelLeave} style(panel)><slot></slot></div>
 </span>
