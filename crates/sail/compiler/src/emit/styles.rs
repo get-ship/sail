@@ -447,9 +447,13 @@ fn rewrite_match_compound(css: &str, i: usize) -> Option<(String, usize)> {
         return None;
     }
     if i > 0 {
-        let prev = css[..i].chars().rev().find(|c| !c.is_whitespace())?;
-        if prev != '}' && prev != ',' {
-            return None;
+        match css[..i].chars().rev().find(|c| !c.is_whitespace()) {
+            // Selector start: after a close brace, a comma, an open brace
+            // (first rule inside @media / @scope), or sheet start. Anything
+            // else means `[` continues a larger selector — leave it alone.
+            Some(prev) if prev == '}' || prev == ',' || prev == '{' => {}
+            Some(_) => return None,
+            None => {}
         }
     }
     let bytes = css.as_bytes();
@@ -594,6 +598,23 @@ mod tests {
         assert!(
             gated_out.contains(":scope[variant='soft'][tone] .s-variant-soft-bg-color-tone"),
             "{gated_out}"
+        );
+    }
+
+    #[test]
+    fn light_dom_rewrites_match_compound_inside_media() {
+        // `when:` arms emit inside @media, where the selector starts after the
+        // media block's `{` — the compound must still get the light-DOM
+        // rewrite or the arm can never match (the kind attr is on the host).
+        let css = "@media (min-width: 768px){[kind='stack'].s-kind-stack-tablet-bg-accent{background-color:var(--accent)}}";
+        let out = light_dom_selectors(css);
+        assert!(
+            out.contains(":scope[kind='stack'] .s-kind-stack-tablet-bg-accent{background-color:var(--accent)}"),
+            "{out}"
+        );
+        assert!(
+            !out.contains("@media (min-width: 768px){[kind='stack']"),
+            "bare attr+class arm must not survive inside @media: {out}"
         );
     }
 
