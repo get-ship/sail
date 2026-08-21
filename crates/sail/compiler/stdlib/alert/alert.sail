@@ -4,7 +4,7 @@
   Semantic paint = bound tone group paths.
   Host subset: muted | info | success | warning | danger (no primary/accent product use).
 
-  State: this file's <controller> (open + dismissible signals, close).
+  State: this file's <controller> (open + dismissible signals, dismiss).
   Listen: native <button> X, gated on dismissible via <if>. Dismiss fires
   onDismiss; the banner goes hidden + display(none) (element mode needs an
   element root). role=status comes from HOST_ANATOMY.
@@ -45,14 +45,14 @@ export default controller((init) => {
   }
   const dismissible = derived(() => isOn(init.dismissible))
   const open = signal(true)
-  function close() {
+  function dismiss() {
     if (!dismissible() || !open()) return
     open.set(false)
     const cb = read(init.onDismiss)
     if (typeof cb === 'function') cb()
   }
   const closed = derived(() => !open())
-  return { dismissible, open, closed, close }
+  return { dismissible, open, closed, dismiss }
 })
 </controller>
 
@@ -67,15 +67,17 @@ export default controller((init) => {
     ]})
 >
   <if {open()}>
+    <div style({when: {empty: display(none)}})>
     <row
       inline
       nowrap
       align="center"
       justify="center"
-      style(ico, {shrink(1).fg(tone), when: {empty: display(none)}, compound: [{tone: muted, bg(muted).fg(primary)}]})
+      style(ico, {shrink(1).fg(tone), compound: [{tone: muted, bg(muted).fg(primary)}]})
     >
       <slot name="icon"></slot>
     </row>
+    </div>
     <column gap="1" style(growCol)>
       <div style(title, {when: {empty: display(none)}})>
         <slot name="title"></slot>
@@ -83,16 +85,18 @@ export default controller((init) => {
       <div style(body)>
         <slot></slot>
       </div>
-      <row align="center" gap="2" style(actions, {when: {empty: display(none)}})>
+      <div style({when: {empty: display(none)}})>
+      <row align="center" gap="2" style(actions)>
         <slot name="actions"></slot>
       </row>
+      </div>
     </column>
     <if {dismissible()}>
       <button
         type="button"
         anatomy
         label="Dismiss"
-        on:click={close}
+        on:click={dismiss}
         style(close, {shrink(1), when: {group-dismissible: display(inline-block), hover: bg(muted).fg(foreground), focus: border({ style: solid, kind: outline, width: 2, color: ring, offset: 2 })}})
       >
         <svg viewBox="0 0 10 10" hidden="true" stroke-width="1.75" stroke-linecap="round" stroke="currentColor" fill="none" style(xmark)>

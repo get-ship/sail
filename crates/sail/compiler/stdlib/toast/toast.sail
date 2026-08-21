@@ -4,7 +4,7 @@
   Semantic paint = bound tone group paths.
 
   State: this file's <controller> (duration timer with hover/focus pause,
-  open signal, close). Listen: native <button> for the X; on:pointer*
+  open signal, dismiss). Listen: native <button> for the X; on:pointer*
   / on:focus* pause+resume the timer. duration ≤ 0 is sticky (no timer).
   Dismissed = hidden attr (aria-hidden) + display(none) on the host;
   element mode needs an element root, so the row stays and goes inert.
@@ -62,7 +62,7 @@ export default controller((init) => {
   start()
   onCleanup(clear)
   const closed = derived(() => !open())
-  return { open, closed, close, start, pause }
+  return { open, closed, dismiss: fire, start, pause }
 })
 </controller>
 
@@ -93,7 +93,7 @@ export default controller((init) => {
       type="button"
       anatomy
       label="Dismiss"
-      on:click={close}
+      on:click={dismiss}
       style(close, {shrink(0).grow(0), when: {hover: fg(foreground).bg(surface).filter({ opacity: 100 })}})
     >
         <row inline nowrap align="center" justify="center" style(closeGlyph)>✕</row>

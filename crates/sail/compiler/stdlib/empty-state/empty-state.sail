@@ -36,16 +36,18 @@
   gap="3"
   style(base, {when: {forced-colors: border({ color: CanvasText })}, match: { size: { md: sizeMd, sm: sizeSm, lg: sizeLg }, variant: { default: variantDefault, inline: variantInline, placeholder: variantBare, connecting: variantBare }, compact: { true: compactOn } }})
 >
+  <div style({when: {empty: display(none)}})>
   <row
     inline
     nowrap
     align="center"
     justify="center"
     hidden="true"
-    style(icon, {shrink(1).bg(muted).fg(tone), when: {empty: display(none), forced-colors: bg(Canvas).fg(CanvasText)}, compound: [{tone: muted, bg(muted).fg(muted-foreground)}, {compact: true, size(8)}]})
+    style(icon, {shrink(1).bg(muted).fg(tone), when: {forced-colors: bg(Canvas).fg(CanvasText)}, compound: [{tone: muted, bg(muted).fg(muted-foreground)}, {compact: true, size(8)}]})
   >
     <slot name="icon"></slot>
   </row>
+  </div>
   <column align="center" gap="1" style(copy, {size({ min-w: 0 })})>
     <div style(title, {when: {empty: display(none)}})>
       <slot name="title"></slot>
@@ -54,7 +56,9 @@
       <slot></slot>
     </div>
   </column>
-  <row align="center" justify="center" gap="2" style(actions, {when: {empty: display(none)}})>
+  <div style({when: {empty: display(none)}})>
+  <row align="center" justify="center" gap="2" style(actions)>
     <slot name="action"></slot>
   </row>
+  </div>
 </column>

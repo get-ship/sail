@@ -88,8 +88,10 @@ export default controller((init) => {
       <slot name="details"></slot>
     </div>
   </column>
-  <row align="center" justify="center" gap="2" style(actions, {when: {empty: display(none)}})>
+  <div style({when: {empty: display(none)}})>
+  <row align="center" justify="center" gap="2" style(actions)>
     <slot name="action"></slot>
   </row>
+  </div>
 </column>
 
