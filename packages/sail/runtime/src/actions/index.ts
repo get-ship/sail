@@ -29,9 +29,6 @@ export { describedControl } from './described-control'
 export { autoDismiss } from './auto-dismiss'
 export { dismissControl } from './dismiss-control'
 
-export { rangeFill } from './range-fill'
-export { rangePair } from './range-pair'
-
 export { themeSelect,
   setEffectiveThemeIds,
   readEffectiveThemeIds,
