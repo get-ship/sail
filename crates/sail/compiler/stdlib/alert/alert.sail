@@ -5,8 +5,9 @@
   Host subset: muted | info | success | warning | danger (no primary/accent product use).
 
   State: this file's <controller> (open + dismissible signals, close).
-  Listen: native <button> X, gated on dismissible. Dismiss fires onDismiss
-  and removes the banner (<if open>). role=status comes from HOST_ANATOMY.
+  Listen: native <button> X, gated on dismissible via <if>. Dismiss fires
+  onDismiss; the banner goes hidden + display(none) (element mode needs an
+  element root). role=status comes from HOST_ANATOMY.
 -->
 
 <scope>
@@ -30,6 +31,7 @@
   style close = {display(none).self(start).size(control-h-xs).pad(0).border({ width: 0 }).radius(sm).bg(transparent).fg(primary).cursor(pointer), animate: { transition: play(colors, fast) }}
   style xmark = {display(block).size(icon-size-sm)}
   style growCol = {grow(1).size({ min-w: 0 })}
+  style gone = {display(none).pointerEvents(none)}
 </scope>
 
 <controller>
@@ -53,16 +55,17 @@ export default controller((init) => {
 })
 </controller>
 
-<if {open()}>
-  <row
-    nowrap
-    align="start"
-    gap="3"
-    style(base, {when: {before: style(stripe, {bg(tone)}), forced-colors: {border({ color: CanvasText }), when: {before: bg(CanvasText)}}}, match: { variant: { default: variantDefault, banner: variantBanner } }, compound: [
+<row
+  nowrap
+  align="start"
+  gap="3"
+  hidden={!open()}
+  style(base, {when: {before: style(stripe, {bg(tone)}), forced-colors: {border({ color: CanvasText }), when: {before: bg(CanvasText)}}}, match: { variant: { default: variantDefault, banner: variantBanner }, open: { false: gone } }, compound: [
       {tone: muted, when: {before: bg(primary)}},
       {variant: banner, when: {before: size({ w: 2 })}},
     ]})
-  >
+>
+  <if {open()}>
     <row
       inline
       nowrap
@@ -96,5 +99,5 @@ export default controller((init) => {
         </svg>
       </button>
     </if>
-  </row>
-</if>
+  </if>
+</row>

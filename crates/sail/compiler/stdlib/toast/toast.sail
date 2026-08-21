@@ -4,8 +4,10 @@
   Semantic paint = bound tone group paths.
 
   State: this file's <controller> (duration timer with hover/focus pause,
-  open signal, close). Listen: native <button> for the X; on:pointer* /
-  on:focus* pause+resume the timer. duration ≤ 0 is sticky (no timer).
+  open signal, close). Listen: native <button> for the X; on:pointer*
+  / on:focus* pause+resume the timer. duration ≤ 0 is sticky (no timer).
+  Dismissed = hidden attr (aria-hidden) + display(none) on the host;
+  element mode needs an element root, so the row stays and goes inert.
 -->
 
 <scope>
@@ -24,6 +26,7 @@
   style body = {grow(1).size({ min-w: 0 })}
   style close = {display(inline-flex).size({ w: control-h-xs, h: control-h-xs }).pad(0).fg(foreground).bg(transparent).border({ width: 0 }).radius(sm).filter({ opacity: 70 }).cursor(pointer).type({ leading: none, align: center })}
   style closeGlyph = {size({ w: 100%, h: 100% })}
+  style gone = {display(none).pointerEvents(none)}
 </scope>
 
 <controller>
@@ -62,16 +65,16 @@ export default controller((init) => {
 })
 </controller>
 
-<if {open()}>
-  <row
-    nowrap
-    align="center"
-    gap="3"
-    on:pointerenter={pause}
-    on:pointerleave={start}
-    on:focusin={pause}
-    on:focusout={start}
-    style(base, {when: {before: style(stripe, {bg(tone)})}, compound: [
+<row
+  nowrap
+  align="center"
+  gap="3"
+  hidden={!open()}
+  on:pointerenter={pause}
+  on:pointerleave={start}
+  on:focusin={pause}
+  on:focusout={start}
+  style(base, {when: {before: style(stripe, {bg(tone)})}, match: { open: { false: gone } }, compound: [
       {tone: primary, bg({ color: primary, mix: 15 }).border({ color: primary })},
       {tone: info, bg({ color: info, mix: 15 }).border({ color: info })},
       {tone: success, bg({ color: success, mix: 15 }).border({ color: success })},
@@ -80,7 +83,8 @@ export default controller((init) => {
       {tone: accent, bg({ color: accent, mix: 15 }).border({ color: accent })},
       {tone: muted, bg({ color: muted, mix: 15 }).border({ color: border })},
     ]})
-  >
+>
+  <if {open()}>
     <div style(body)>
       <slot></slot>
     </div>
@@ -93,5 +97,5 @@ export default controller((init) => {
     >
       <row inline nowrap align="center" justify="center" style(closeGlyph)>✕</row>
     </button>
-  </row>
-</if>
+  </if>
+</row>
