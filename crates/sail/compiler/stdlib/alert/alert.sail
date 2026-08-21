@@ -3,6 +3,10 @@
   tone defaults to info — a bare <alert> is a finished status banner.
   Semantic paint = bound tone group paths.
   Host subset: muted | info | success | warning | danger (no primary/accent product use).
+
+  State: this file's <controller> (open + dismissible signals, close).
+  Listen: native <button> X, gated on dismissible. Dismiss fires onDismiss
+  and removes the banner (<if open>). role=status comes from HOST_ANATOMY.
 -->
 
 <scope>
@@ -28,45 +32,69 @@
   style growCol = {grow(1).size({ min-w: 0 })}
 </scope>
 
-<row
-  nowrap
-  align="start"
-  gap="3"
-  use:dismissControl
-  style(base, {when: {before: style(stripe, {bg(tone)}), forced-colors: {border({ color: CanvasText }), when: {before: bg(CanvasText)}}}, match: { variant: { default: variantDefault, banner: variantBanner } }, compound: [
+<controller>
+export default controller((init) => {
+  function read(v) {
+    return typeof v === 'function' ? v() : v
+  }
+  function isOn(v) {
+    const x = read(v)
+    return x === true || x === '' || x === 'true'
+  }
+  const dismissible = derived(() => isOn(init.dismissible))
+  const open = signal(true)
+  function close() {
+    if (!dismissible() || !open()) return
+    open.set(false)
+    const cb = read(init.onDismiss)
+    if (typeof cb === 'function') cb()
+  }
+  return { dismissible, open, close }
+})
+</controller>
+
+<if open>
+  <row
+    nowrap
+    align="start"
+    gap="3"
+    style(base, {when: {before: style(stripe, {bg(tone)}), forced-colors: {border({ color: CanvasText }), when: {before: bg(CanvasText)}}}, match: { variant: { default: variantDefault, banner: variantBanner } }, compound: [
       {tone: muted, when: {before: bg(primary)}},
       {variant: banner, when: {before: size({ w: 2 })}},
     ]})
->
-  <row
-    inline
-    nowrap
-    align="center"
-    justify="center"
-    style(ico, {shrink(1).fg(tone), when: {empty: display(none)}, compound: [{tone: muted, bg(muted).fg(primary)}]})
   >
-    <slot name="icon"></slot>
-  </row>
-  <column gap="1" style(growCol)>
-    <div style(title, {when: {empty: display(none)}})>
-      <slot name="title"></slot>
-    </div>
-    <div style(body)>
-      <slot></slot>
-    </div>
-    <row align="center" gap="2" style(actions, {when: {empty: display(none)}})>
-      <slot name="actions"></slot>
+    <row
+      inline
+      nowrap
+      align="center"
+      justify="center"
+      style(ico, {shrink(1).fg(tone), when: {empty: display(none)}, compound: [{tone: muted, bg(muted).fg(primary)}]})
+    >
+      <slot name="icon"></slot>
     </row>
-  </column>
-  <button
-    data-dismiss
-    type="button"
-    anatomy
-    label="Dismiss"
-    style(close, {shrink(1), when: {group-dismissible: display(inline-block), hover: bg(muted).fg(foreground), focus: border({ style: solid, kind: outline, width: 2, color: ring, offset: 2 })}})
-  >
-    <svg viewBox="0 0 10 10" hidden="true" stroke-width="1.75" stroke-linecap="round" stroke="currentColor" fill="none" style(xmark)>
-      <path d="M2 2 L8 8 M8 2 L2 8"></path>
-    </svg>
-  </button>
-</row>
+    <column gap="1" style(growCol)>
+      <div style(title, {when: {empty: display(none)}})>
+        <slot name="title"></slot>
+      </div>
+      <div style(body)>
+        <slot></slot>
+      </div>
+      <row align="center" gap="2" style(actions, {when: {empty: display(none)}})>
+        <slot name="actions"></slot>
+      </row>
+    </column>
+    <if dismissible>
+      <button
+        type="button"
+        anatomy
+        label="Dismiss"
+        on:click={close}
+        style(close, {shrink(1), when: {group-dismissible: display(inline-block), hover: bg(muted).fg(foreground), focus: border({ style: solid, kind: outline, width: 2, color: ring, offset: 2 })}})
+      >
+        <svg viewBox="0 0 10 10" hidden="true" stroke-width="1.75" stroke-linecap="round" stroke="currentColor" fill="none" style(xmark)>
+          <path d="M2 2 L8 8 M8 2 L2 8"></path>
+        </svg>
+      </button>
+    </if>
+  </row>
+</if>

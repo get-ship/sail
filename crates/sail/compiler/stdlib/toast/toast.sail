@@ -2,6 +2,10 @@
   <toast> — auto-dismiss + close. Style value language only.
   tone defaults to info — a bare <toast> is a finished notice.
   Semantic paint = bound tone group paths.
+
+  State: this file's <controller> (duration timer with hover/focus pause,
+  open signal, close). Listen: native <button> for the X; on:pointer* /
+  on:focus* pause+resume the timer. duration ≤ 0 is sticky (no timer).
 -->
 
 <scope>
@@ -22,13 +26,52 @@
   style closeGlyph = {size({ w: 100%, h: 100% })}
 </scope>
 
-<row
-  nowrap
-  align="center"
-  gap="3"
-  use:autoDismiss
-  use:dismissControl
-  style(base, {when: {before: style(stripe, {bg(tone)})}, compound: [
+<controller>
+export default controller((init) => {
+  function read(v) {
+    return typeof v === 'function' ? v() : v
+  }
+  const raw = read(init.duration)
+  const n = Number(raw)
+  const duration = raw == null || raw === '' ? 5000 : Number.isFinite(n) ? n : 5000
+  const open = signal(true)
+  let timer
+  function clear() {
+    if (timer) {
+      clearTimeout(timer)
+      timer = undefined
+    }
+  }
+  function fire() {
+    clear()
+    open.set(false)
+    const cb = read(init.onDismiss)
+    if (typeof cb === 'function') cb()
+  }
+  function start() {
+    if (!open() || duration <= 0) return
+    clear()
+    timer = setTimeout(fire, duration)
+  }
+  function pause() {
+    clear()
+  }
+  start()
+  onCleanup(clear)
+  return { open, close, start, pause }
+})
+</controller>
+
+<if open>
+  <row
+    nowrap
+    align="center"
+    gap="3"
+    on:pointerenter={pause}
+    on:pointerleave={start}
+    on:focusin={pause}
+    on:focusout={start}
+    style(base, {when: {before: style(stripe, {bg(tone)})}, compound: [
       {tone: primary, bg({ color: primary, mix: 15 }).border({ color: primary })},
       {tone: info, bg({ color: info, mix: 15 }).border({ color: info })},
       {tone: success, bg({ color: success, mix: 15 }).border({ color: success })},
@@ -37,17 +80,18 @@
       {tone: accent, bg({ color: accent, mix: 15 }).border({ color: accent })},
       {tone: muted, bg({ color: muted, mix: 15 }).border({ color: border })},
     ]})
->
-  <div style(body)>
-    <slot></slot>
-  </div>
-  <button
-    data-toast-close
-    type="button"
-    anatomy
-    label="Dismiss"
-    style(close, {shrink(0).grow(0), when: {hover: fg(foreground).bg(surface).filter({ opacity: 100 })}})
   >
-    <row inline nowrap align="center" justify="center" style(closeGlyph)>✕</row>
-  </button>
-</row>
+    <div style(body)>
+      <slot></slot>
+    </div>
+    <button
+      type="button"
+      anatomy
+      label="Dismiss"
+      on:click={close}
+      style(close, {shrink(0).grow(0), when: {hover: fg(foreground).bg(surface).filter({ opacity: 100 })}})
+    >
+      <row inline nowrap align="center" justify="center" style(closeGlyph)>✕</row>
+    </button>
+  </row>
+</if>
