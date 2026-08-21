@@ -51,7 +51,8 @@ export default controller((init) => {
     const cb = read(init.onDismiss)
     if (typeof cb === 'function') cb()
   }
-  return { dismissible, open, close }
+  const closed = derived(() => !open())
+  return { dismissible, open, closed, close }
 })
 </controller>
 
@@ -59,7 +60,7 @@ export default controller((init) => {
   nowrap
   align="start"
   gap="3"
-  hidden={!open()}
+  hidden={closed()}
   style(base, {when: {before: style(stripe, {bg(tone)}), forced-colors: {border({ color: CanvasText }), when: {before: bg(CanvasText)}}}, match: { variant: { default: variantDefault, banner: variantBanner }, open: { false: gone } }, compound: [
       {tone: muted, when: {before: bg(primary)}},
       {variant: banner, when: {before: size({ w: 2 })}},

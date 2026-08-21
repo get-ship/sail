@@ -61,7 +61,8 @@ export default controller((init) => {
   }
   start()
   onCleanup(clear)
-  return { open, close, start, pause }
+  const closed = derived(() => !open())
+  return { open, closed, close, start, pause }
 })
 </controller>
 
@@ -69,7 +70,7 @@ export default controller((init) => {
   nowrap
   align="center"
   gap="3"
-  hidden={!open()}
+  hidden={closed()}
   on:pointerenter={pause}
   on:pointerleave={start}
   on:focusin={pause}
