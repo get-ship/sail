@@ -62,7 +62,7 @@ export default controller((init) => {
 })
 </controller>
 
-<if open>
+<if {open()}>
   <row
     nowrap
     align="center"
