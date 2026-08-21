@@ -58,12 +58,11 @@
       <l0-border-face kind="edge-e"></l0-border-face>
     </row>
   </l0-case>
-  <l0-case look="kind — stroke · outline · ring · image" spell="border kind: stroke | outline | ring | image">
+  <l0-case look="kind — stroke · outline · ring" spell="border kind: stroke | outline | ring">
     <row gap="3">
       <l0-border-face kind="kind-stroke"></l0-border-face>
       <l0-border-face kind="kind-outline"></l0-border-face>
       <l0-border-face kind="kind-ring"></l0-border-face>
-      <l0-border-face kind="kind-image"></l0-border-face>
     </row>
   </l0-case>
   <l0-case look="offset — 0 · 1 · 2 · ring-offset · ring-inset on outline" spell="border offset: 0 | 1 | 2 | ring-offset | ring-inset · kind outline">

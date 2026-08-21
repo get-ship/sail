@@ -1,5 +1,5 @@
 <scope>
-  style rail = { size({ w: 24 }) }
+  style rail = { size({ w: 28 }) }
 </scope>
 <row style(rail)>
   <slot></slot>

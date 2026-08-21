@@ -22,7 +22,7 @@
       <l0-part kind="grow">grow</l0-part>
     </row>
   </l0-case>
-  <l0-case look="row — hug + max stretch" spell="size(hug) / size(max)">
+  <l0-case look="row — hug + max: max caps at the host, never takes leftover" spell="size(hug) / size(max)">
     <l0-rail>
       <l0-part kind="hug">hug</l0-part>
       <l0-part kind="max">max</l0-part>
