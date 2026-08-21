@@ -466,7 +466,7 @@ pub const HOST_ANATOMY: &[(&str, HostAnatomy)] = &[
             role: Some("region"),
             live: None,
             atomic: None,
-            label: None,
+            label: Some("Card"),
         },
     ),
     (
@@ -567,7 +567,11 @@ pub fn stamp_language_anatomy(program: &mut crate::ir::Program, tag: &str) {
     let Some(role) = host_anatomy(tag).and_then(|a| a.role) else {
         return;
     };
-    if let Some(Instr::Element(root)) = program.template.iter_mut().find(|i| matches!(i, Instr::Element(_))) {
+    if let Some(Instr::Element(root)) = program
+        .template
+        .iter_mut()
+        .find(|i| matches!(i, Instr::Element(_)))
+    {
         stamp_attr(&mut root.attrs, "role", role);
     }
 }
