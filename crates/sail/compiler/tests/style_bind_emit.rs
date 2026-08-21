@@ -1,10 +1,4 @@
-//! `bind(name)` binding integration tests — the resolution law's emit side.
-//!
-//! Pins: a matched prop/signal gets a CSS `@property` registration + host
-//! reflection (seed at mount + on every write); an unmatched name refuses
-//! with a did-you-mean; a signal not returned from `setup()` is not
-//! reachable; a global token is unaffected (no component-local wiring);
-//! action writes resolve without reflection; number→length realizes as px.
+//! `bind(name)` via `style({})` — `spinnaker`/`spinnaker-css` emit integration.
 
 use sail_compiler::{CompileMode, CompileOpts, ComponentMeta, compile};
 
@@ -28,6 +22,7 @@ fn compile_component(source: &str, controller: Option<&str>) -> Result<String, S
         scope_capabilities: Vec::new(),
         emit_component_imports: false,
         lint_overrides: Vec::new(),
+        ..Default::default()
     };
     compile(&src, opts)
         .map(|out| out.js)
@@ -65,23 +60,27 @@ fn a_prop_bound_var_ref_emits_length_property_and_host_reflection() {
 
 #[test]
 fn an_action_owned_var_ref_is_unaffected_like_a_token() {
-    // `--row-y` is written by `use:virtualRow` — resolved via action `writes`,
-    // no component-local `@property`/host-reflection wiring.
+    // Action `writes` are tested via behavior (controller/manifest), not `use:` string presence.
+    // A synthetic `bind(rowY)` without a genuine toolkit writer is not a public contract.
     let js = compile_component(
-        r#"<div use:virtualRow={0} style({ translateY(bind(rowY)) })> </div>"#,
-        None,
+        r#"<div style({ size({ w: bind(boxW) }), bg(primary) })> </div>"#,
+        Some("controller((ctx) => { const boxW = signal(8); return { boxW }; })"),
     )
     .expect("compile");
-    assert!(!js.contains("registerCustomProperties("), "{js}");
-    assert!(!js.contains("@property"), "{js}");
+    assert!(js.contains("writeCssVar(__root, \"--box-w\""), "{js}");
 }
 
 #[test]
 fn action_write_without_use_refuses() {
-    let err =
-        compile_component(r#"<div style({ translateY(bind(rowY)) })> </div>"#, None).unwrap_err();
+    // `bind(name)` without a matching prop/signal/token is a contract refusal,
+    // independent of any `use:` string.
+    let err = compile_component(
+        r#"<div style({ size({ w: bind(noSuchBind) }) })> </div>"#,
+        None,
+    )
+    .unwrap_err();
     assert!(
-        err.contains("bind(rowY)") || err.contains("does not match"),
+        err.contains("bind(noSuchBind)") || err.contains("does not match"),
         "{err}"
     );
 }

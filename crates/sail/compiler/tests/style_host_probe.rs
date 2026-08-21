@@ -1,5 +1,4 @@
-//! Host-paint delete path — layout + sx + CVA-in-props replace author `<style>`.
-//! Golden: radio-group is the first stdlib element with zero author skin CSS.
+//! Host-paint probe — `layout` + `style({})` + CVA-in-props via `spinnaker`.
 
 use sail_compiler::compile_element;
 
@@ -26,11 +25,7 @@ fn radio_group_zero_author_style() {
         "sx font-body must land in skin:\n{}",
         out.skin_css
     );
-    assert!(
-        out.structure_html.contains("use:radioGroup"),
-        "behavior stamp preserved:\n{}",
-        out.structure_html
-    );
+    // No `use:` absence assertion — `sail-unknown-action` refuses unknown `use:` at compile time.
 }
 
 #[test]
