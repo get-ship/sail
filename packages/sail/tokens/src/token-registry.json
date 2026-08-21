@@ -186,15 +186,12 @@
     "neutral-hover",
     "neutral-subtle",
     "overlay",
-    "overlay-blend",
-    "overlay-fill",
     "overlay-max-h-lg",
     "overlay-max-h-md",
     "overlay-max-h-sm",
     "overlay-max-w-lg",
     "overlay-max-w-md",
     "overlay-max-w-sm",
-    "overlay-opacity",
     "overlay-vh-lg",
     "overlay-vh-md",
     "overlay-vh-sm",
@@ -773,7 +770,7 @@
       "value": "44px",
       "breakpoints": {
         "base": "44px",
-        "desktop": "34px"
+        "desktop": "32px"
       }
     },
     "control-h-lg": {
@@ -2485,24 +2482,6 @@
         "base": "90vh"
       }
     },
-    "overlay-fill": {
-      "path": "overlay.fill",
-      "cssName": "overlay-fill",
-      "type": "string",
-      "value": "none"
-    },
-    "overlay-blend": {
-      "path": "overlay.blend",
-      "cssName": "overlay-blend",
-      "type": "string",
-      "value": "overlay"
-    },
-    "overlay-opacity": {
-      "path": "overlay.opacity",
-      "cssName": "overlay-opacity",
-      "type": "number",
-      "value": "1"
-    },
     "play-colors-property": {
       "path": "play.colors.property",
       "cssName": "play-colors-property",
@@ -2643,15 +2622,12 @@
     "color.neutral.hover": "neutral-hover",
     "color.neutral.subtle": "neutral-subtle",
     "color.overlay": "overlay",
-    "overlay.blend": "overlay-blend",
-    "overlay.fill": "overlay-fill",
     "overlay.max-h-lg": "overlay-max-h-lg",
     "overlay.max-h-md": "overlay-max-h-md",
     "overlay.max-h-sm": "overlay-max-h-sm",
     "overlay.max-w-lg": "overlay-max-w-lg",
     "overlay.max-w-md": "overlay-max-w-md",
     "overlay.max-w-sm": "overlay-max-w-sm",
-    "overlay.opacity": "overlay-opacity",
     "overlay.vh-lg": "overlay-vh-lg",
     "overlay.vh-md": "overlay-vh-md",
     "overlay.vh-sm": "overlay-vh-sm",

@@ -63,7 +63,7 @@
 
   style swatch = {position(relative).size({ w: 100%, min-w: 0, h: 20, min-h: 20 }).overflow({ all: hidden }).radius(md).bg(background).fg(foreground).isolate(), when: {group-size-compact: swatchCompact}}
   style swatchRow = {size({ w: 100%, min-w: 0, h: auto, min-h: 0 }).bg(transparent).radius(none)}
-  style overlay = {position({ scheme: absolute, inset: 0, z: 1 }).filter({ opacity: bind(overlay-opacity), blend: bind(overlay-blend) }).bg(bind(overlay-fill)).pointerEvents(none)}
+  style overlay = {position({ scheme: absolute, inset: 0, z: 1 }).pointerEvents(none)}
   style specimen = {position({ scheme: relative, z: 2 }).size({ w: 100%, h: 100%, min-w: 0 }).pad(2_5)}
   style specimenRow = {pad({ y: 2, x: 2 })}
   style hideOnMenuRow = {display(none)}

@@ -318,9 +318,6 @@
   --overlay-vh-sm: 50vh;
   --overlay-vh-md: 80vh;
   --overlay-vh-lg: 90vh;
-  --overlay-fill: none;
-  --overlay-blend: overlay;
-  --overlay-opacity: 1;
   --play-colors-property: color, background-color, border-color, outline-color, fill, stroke;
   --play-control-property: color, background-color, border-color, outline-color, transform, box-shadow, opacity;
   --play-surface-property: color, background-color, border-color, box-shadow, transform, opacity;
@@ -414,7 +411,7 @@
     --control-h-2xs: 22px;
     --control-h-xs: 24px;
     --control-h-sm: 28px;
-    --control-h-md: 34px;
+    --control-h-md: 32px;
     --control-h-lg: 40px;
     --pad-page-x: var(--space-8);
   }
