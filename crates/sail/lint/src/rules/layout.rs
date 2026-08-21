@@ -170,6 +170,12 @@ fn base_css(tag: &str) -> Vec<String> {
             // the stack's DOM order stops meaning front-to-back. All-positioned
             // restores document-order painting — layering by construction.
             ".sail-stackz>*{grid-area:1/1;position:relative}".into(),
+            // Light-DOM participation: component hosts are display:contents
+            // pass-throughs set inline by the runtime, so a custom element as
+            // a direct layer generates no box — its painted root auto-places
+            // into its own row instead of sharing cell 1/1. Force the layer
+            // box onto the host itself; `>` then lands on a real grid item.
+            ".sail-stackz>[data-component]{display:block!important}".into(),
         ],
         _ => vec![],
     }
@@ -216,6 +222,8 @@ fn inline_base_css(tag: &str) -> Vec<String> {
         "stack" => vec![
             ".sail-stackz-i{display:inline-grid}".into(),
             ".sail-stackz-i>*{grid-area:1/1;position:relative}".into(),
+            // Same light-DOM participation guard as the block stack.
+            ".sail-stackz-i>[data-component]{display:inline-block!important}".into(),
         ],
         _ => vec![],
     }
@@ -1809,6 +1817,24 @@ mod tests {
             "z-overlay child rule (all layers positioned, so DOM order IS paint order) \
              survives the swap: {css:?}"
         );
+        assert!(
+            css.iter()
+                .any(|r| r.contains(".sail-stackz-i>[data-component]{display:inline-block!important}")),
+            "contents-host layer must still generate a box: {css:?}"
+        );
+    }
+
+    #[test]
+    fn stack_layer_box_survives_contents_host() {
+        // A custom element as a direct stack layer is a display:contents host
+        // set inline by the runtime; without this rule its painted root
+        // auto-places into its own grid row and `<stack>` renders as a column.
+        let (_, css) = lower("stack", &[]).unwrap();
+        assert!(
+            css.iter()
+                .any(|r| r.contains(".sail-stackz>[data-component]{display:block!important}")),
+            "{css:?}"
+        );
     }
 
     #[test]
@@ -2101,8 +2127,7 @@ mod tests {
     }
 
     #[test]
-    fn base_css_closes_popover_on_row_col_grid() {
-        for (tag, open_display) in [
+    fn base_css_closes_popover_on_row_col_grid() {        for (tag, open_display) in [
             ("grid", "display:grid"),
             ("row", "display:flex"),
             ("column", "display:flex"),
