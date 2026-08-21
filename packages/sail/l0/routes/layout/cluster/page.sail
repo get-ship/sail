@@ -21,10 +21,13 @@
     </row>
   </l0-case>
   <l0-case look="inline — shrink-to-fit next to text" spell="&lt;row inline gap=2&gt;">
-    <row inline gap="2">
-      <l0-swatch kind="bar"></l0-swatch>
-      <l0-swatch kind="bar" face="accent"></l0-swatch>
-      <l0-swatch kind="bar" face="muted"></l0-swatch>
+    <row align="center">
+      <p>sits inline with this sentence —</p>
+      <row inline gap="2">
+        <l0-swatch kind="bar"></l0-swatch>
+        <l0-swatch kind="bar" face="accent"></l0-swatch>
+        <l0-swatch kind="bar" face="muted"></l0-swatch>
+      </row>
     </row>
   </l0-case>
 </column>

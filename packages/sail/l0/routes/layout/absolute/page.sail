@@ -16,9 +16,6 @@
   <l0-case look="relative — containing block" spell="position(relative)">
     <l0-abs-face kind="rel"></l0-abs-face>
   </l0-case>
-  <l0-case look="fixed — viewport-fixed" spell="position(fixed)">
-    <l0-abs-face kind="fixed"></l0-abs-face>
-  </l0-case>
   <l0-case look="sticky — sticks inside the scroller" spell="position sticky t:0 in overflow(auto)">
     <l0-abs-face kind="stick-well">
       <l0-abs-face kind="stick">sticky</l0-abs-face>
@@ -44,5 +41,10 @@
     <l0-abs-face kind="host">
       <l0-abs-face kind="edges-auto"></l0-abs-face>
     </l0-abs-face>
+  </l0-case>
+  <!-- Fixed pins to the viewport, so it lives last: pinned over the empty
+       stage below the last card instead of covering earlier cells' copy. -->
+  <l0-case look="fixed — viewport-fixed" spell="position(fixed)">
+    <l0-abs-face kind="fixed"></l0-abs-face>
   </l0-case>
 </column>

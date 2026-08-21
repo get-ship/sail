@@ -5,7 +5,7 @@
 -->
 <column gap="6">
   <l0-case look="grow-without-bound — grow child, host has no width" spell="size(grow) in &lt;row&gt;">
-    <row>
+    <row inline>
       <l0-seed-face kind="leftover">grow</l0-seed-face>
     </row>
   </l0-case>

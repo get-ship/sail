@@ -1,5 +1,5 @@
 <scope>
-  style faceA = { size({ w: 8, h: 8 }), pad(4), bg(surface), fg(muted), type(mono), radius(sm) }
+  style faceA = { pad(4), bg(surface), fg(muted), type(mono), radius(sm), border({ width: 1, style: solid, color: muted }) }
 </scope>
 <column data-inspect-a style(faceA)>
   <slot></slot>
