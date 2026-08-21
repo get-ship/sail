@@ -136,6 +136,7 @@ fn compile_to_result(source: &str, opts_json: &str) -> Result<NapiResult, String
         scope_capabilities: Vec::new(),
         emit_component_imports: false,
         lint_overrides,
+        ..Default::default()
     };
 
     let inline_controller = sail_compiler::parse::preprocess::extract_controller_block(source).1;
