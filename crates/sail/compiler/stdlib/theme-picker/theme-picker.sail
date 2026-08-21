@@ -102,7 +102,6 @@
   <div
     id="sail-theme-panel"
     popover
-    use:anchor
     placement="bottom"
     label="Theme"
     data-theme-listbox

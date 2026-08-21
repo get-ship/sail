@@ -86,13 +86,6 @@ pub struct ActionEntry {
 /// updated. That is the bar.
 pub const ACTIONS: &[ActionEntry] = &[
     ActionEntry {
-        name: "anchor",
-        param: "AnchorPlacement | undefined",
-        summary: "Legacy name; overlay position is CSS anchor (Job A). No geometry writes.",
-        auto_import: true,
-        writes: &[],
-    },
-    ActionEntry {
         name: "autoDismiss",
         param: "void",
         summary: "Timed self-dismiss from a `duration` attr (ms; default 5000; ≤0 sticky); pauses while hovered/focused; invokes `onDismiss` then removes the host.",
@@ -389,7 +382,6 @@ pub fn public_actions() -> impl Iterator<Item = &'static ActionEntry> {
 /// stamps resolve; only [`PUBLIC_ACTION_NAMES`] are taught / re-exported
 /// from the runtime front door.
 pub const BUILTIN_ACTION_NAMES: &[&str] = &[
-    "anchor",
     "autoDismiss",
     "autosize",
     "catchRender",
@@ -451,7 +443,6 @@ pub const BUILTIN_ACTION_NAMES: &[&str] = &[
 /// `BARE_REFERENCED_ACTION_NAMES` update when a new take-a-param
 /// action is added.
 pub const BARE_REFERENCED_ACTION_NAMES: &[&str] = &[
-    "anchor",
     "autosize",
     "cellPad",
     "clickOutside",
@@ -604,7 +595,8 @@ mod tests {
             "dropzone brain is the <file> controller — gone from ACTIONS"
         );
         assert!(
-            ACTIONS.iter().all(|a| a.name != "passwordReveal") && !is_public_action("passwordReveal"),
+            ACTIONS.iter().all(|a| a.name != "passwordReveal")
+                && !is_public_action("passwordReveal"),
             "passwordReveal brain is the <input> controller — gone from ACTIONS"
         );
         assert!(
