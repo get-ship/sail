@@ -122,11 +122,13 @@ fn alert_compiles_with_style_capability_mixins() {
     let src = include_str!("../stdlib/alert/alert.sail");
     let out = compile_element(src, "alert").expect("alert compiles");
     assert!(
-        out.structure_html.contains("use:dismissControl")
-            && !out.structure_html.contains("use:liveRegion")
-            && out.structure_html.contains("role=\"status\"")
-            && out.structure_html.contains("aria-live=\"polite\""),
-        "dismiss is use:; live region is anatomy (status/polite default): {}",
+        // Controller-era alert: dismiss is a controller fn (on:click={dismiss}),
+        // live region is anatomy (status/polite default).
+        out.structure_html.contains("role=\"status\"")
+            && out.structure_html.contains("aria-live=\"polite\"")
+            && !out.structure_html.contains("use:dismissControl")
+            && !out.structure_html.contains("use:liveRegion"),
+        "dismiss is controller fn; live region is anatomy (status/polite default): {}",
         out.structure_html
     );
     assert!(

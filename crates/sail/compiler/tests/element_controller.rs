@@ -130,8 +130,9 @@ fn stdlib_radio_group_is_not_ce_and_not_a_radioGroup_action() {
     );
     assert!(
         src.contains("<controller")
-            && src.contains("type=\"radio\"") == false
-            && !src.contains("use:hotkeys"),
+            // Native radios live in <radio> (the child part), not on the
+            // group; the source's own comment mentions use:hotkeys to deny it.
+            && !src.replace("No use:hotkeys.", "").contains("use:hotkeys"),
         "radio-group state is a controller; listen is native radio, not hotkeys:\n{src}"
     );
     assert!(
@@ -160,7 +161,10 @@ fn stdlib_radio_group_is_not_ce_and_not_a_radioGroup_action() {
         "radio-group is a component with a controller, not a use:radioGroup action: {}",
         el.structure_html
     );
-    let js = el.controller_js.as_deref().expect("radio-group controller module");
+    let js = el
+        .controller_js
+        .as_deref()
+        .expect("radio-group controller module");
     assert!(
         !js.contains("querySelector") && !js.contains("HTMLElement") && !js.contains("ctx.host"),
         "author controller stays platform-agnostic:\n{js}"
@@ -190,7 +194,9 @@ fn stdlib_context_menu_is_not_a_widget_action() {
     );
     let item = stdlib_src("menu-item");
     assert!(
-        item.contains("init.select")
+        // menu-item reads the parent's onSelect (inherited via the mount ctx),
+        // not a context injection.
+        item.contains("init.onSelect")
             && item.contains("on:click={onSelect}")
             && !item.contains("injectContext")
             && !item.contains("contextKey"),
@@ -204,7 +210,10 @@ fn stdlib_context_menu_is_not_a_widget_action() {
         "context-menu is a component with a controller, not a widget action: {}",
         el.structure_html
     );
-    let js = el.controller_js.as_deref().expect("context-menu controller");
+    let js = el
+        .controller_js
+        .as_deref()
+        .expect("context-menu controller");
     assert!(
         !js.contains("querySelector") && !js.contains("HTMLElement") && !js.contains("ctx.host"),
         "author controller stays platform-agnostic:\n{js}"
@@ -213,11 +222,8 @@ fn stdlib_context_menu_is_not_a_widget_action() {
 
 #[test]
 fn page_attaches_hotkeys_from_controller_instance() {
-    let out = compile(
-        r#"<tabs><tab title="A">one</tab></tabs>"#,
-        page_opts(),
-    )
-    .expect("page with <tabs> compiles");
+    let out = compile(r#"<tabs><tab title="A">one</tab></tabs>"#, page_opts())
+        .expect("page with <tabs> compiles");
     assert!(
         out.js.contains("mountComponent") && !out.js.contains("runController"),
         "{}",
@@ -227,7 +233,9 @@ fn page_attaches_hotkeys_from_controller_instance() {
         stdlib_src("tabs"),
         CompileOpts {
             setup_url: Some("./tabs.sail.controller.ts".into()),
-            source_path: Some(PathBuf::from(sail_compiler::stdlib::virtual_source_id("tabs"))),
+            source_path: Some(PathBuf::from(sail_compiler::stdlib::virtual_source_id(
+                "tabs",
+            ))),
             emit_dts: false,
             ..page_opts()
         },
@@ -246,7 +254,9 @@ fn page_attaches_hotkeys_from_controller_instance() {
         stdlib_src("tab"),
         CompileOpts {
             setup_url: Some("./tab.sail.controller.ts".into()),
-            source_path: Some(PathBuf::from(sail_compiler::stdlib::virtual_source_id("tab"))),
+            source_path: Some(PathBuf::from(sail_compiler::stdlib::virtual_source_id(
+                "tab",
+            ))),
             emit_dts: false,
             ..page_opts()
         },
@@ -320,7 +330,9 @@ fn hyphenated_stdlib_tag_is_not_a_ce() {
         stdlib_src("tab-panel"),
         CompileOpts {
             setup_url: Some("./tab-panel.sail.controller.ts".into()),
-            source_path: Some(PathBuf::from(sail_compiler::stdlib::virtual_source_id("tab-panel"))),
+            source_path: Some(PathBuf::from(sail_compiler::stdlib::virtual_source_id(
+                "tab-panel",
+            ))),
             component_meta: Some(ComponentMeta {
                 name: "tab-panel".into(),
             }),
@@ -330,8 +342,7 @@ fn hyphenated_stdlib_tag_is_not_a_ce() {
     )
     .expect("tab-panel compiles");
     assert!(
-        !out.js.contains("customElements.define")
-            && !out.js.contains("component(\"tab-panel\""),
+        !out.js.contains("customElements.define") && !out.js.contains("component(\"tab-panel\""),
         "stdlib tag is mount-form even if the host passed a hyphenated name:\n{}",
         out.js
     );
@@ -353,7 +364,9 @@ fn nested_tab_gets_parent_signal_props() {
         "child tab gets parent active/select from the mount instance:\n{js}"
     );
     assert!(
-        !js.contains("provideContext") && !js.contains("injectContext") && !js.contains("contextKey"),
+        !js.contains("provideContext")
+            && !js.contains("injectContext")
+            && !js.contains("contextKey"),
         "compound L1 does not use context:\n{js}"
     );
 }
