@@ -633,18 +633,9 @@ fn collect_root_motion_stamps(structure: &str) -> Vec<(String, String)> {
     out
 }
 
-/// Stamp compiler-owned controller identity on the structure root so the
-/// page parse calls that tag's `controller().setup`. Inserted inside the
-/// first open tag; a second stamp is a no-op.
-pub fn stamp_ctrl(structure: &mut String, tag: &str) {
-    if structure.contains("data-sail-ctrl=") {
-        return;
-    }
-    let Some(gt) = structure.find('>') else {
-        return;
-    };
-    structure.insert_str(gt, &format!(" data-sail-ctrl=\"{tag}\""));
-}
+/// Retained for test-compat — element stdlib attach now rides `path` via
+/// controller wiring, not DOM `data-sail-ctrl` discovery. No-op.
+pub fn stamp_ctrl(_structure: &mut String, _tag: &str) {}
 
 /// Attribute defaults for freeform hosts. Skips Identity props and bool false.
 ///
@@ -807,14 +798,9 @@ fn serialize_static(
                     });
                 }
             }
-            AttrInstr::Controller { tag, .. } => {
-                // Platform attr: web defaults to `data-sail-ctrl`, non-web can set opts.ctrl_data_attr.
-                // Core threads opts.element_prefix via root_class, but ctrl/host attr name still
-                // derives from opts — not yet plumbed. Use configured name when plumbing lands;
-                // for now keep canonical web name (caught by target-soup grep).
-                out.push_str(" data-sail-ctrl=\"");
-                out.push_str(tag);
-                out.push('"');
+            AttrInstr::Controller { .. } => {
+                // `data-sail-ctrl` retired — controller attach rides `ControllerAttach::path`,
+                // not DOM discovery. No splice attr.
             }
             // `animate: { enter: play(fade) }` — same as `use:`: toolchain
             // behavior that rides the static splice as `_sail_m_*`. The page
@@ -862,7 +848,10 @@ fn serialize_static(
     // Prefix-aware: strip "{prefix}-" not hardcoded "sail-".
     if is_root && !host_attr_written {
         let host = root_class
-            .strip_prefix(&format!("{}-", crate::CompileOpts::default().element_prefix))
+            .strip_prefix(&format!(
+                "{}-",
+                crate::CompileOpts::default().element_prefix
+            ))
             .unwrap_or(root_class.as_ref() as &str)
             .to_string();
         // Attr name is opts.host_data_attr in next plumbing; today web default is data-sail-host.

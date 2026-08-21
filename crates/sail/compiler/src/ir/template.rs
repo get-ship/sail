@@ -95,9 +95,8 @@ pub enum AttrInstr {
         param: Option<Expr>,
         span: Span,
     },
-    /// Compiler stamp `data-sail-ctrl="{tag}"` — this spliced host has a
-    /// `<controller>` module. Page emit calls `setup(props)`. Not a
-    /// custom element and not a public `use:`.
+    /// Retired — `data-sail-ctrl` discovery removed. `<controller>` module
+    /// attach now rides `ControllerAttach::path` without a DOM stamp.
     Controller { tag: String, span: Span },
 }
 

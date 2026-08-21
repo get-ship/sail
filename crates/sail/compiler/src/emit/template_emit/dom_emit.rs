@@ -1047,11 +1047,8 @@ impl super::TemplateEmitter {
             classes.push("sail-root".into());
         }
         for a in &el.attrs {
-            // Everything else is applied at runtime after the clone.
-            if let AttrInstr::Controller { tag, .. } = a {
-                out.push_str(" data-sail-ctrl=\"");
-                out.push_str(&escape_attr(tag));
-                out.push('"');
+            // `data-sail-ctrl` retired — element controllers ride `ControllerAttach::path`.
+            if let AttrInstr::Controller { .. } = a {
                 continue;
             }
             if let AttrInstr::Static { name, value, .. } = a {
@@ -1273,7 +1270,11 @@ fn emit_attach_js(
 ) -> String {
     use crate::check::controller_attach::ControllerAttach::*;
     match attach {
-        Use { action, param, path } => {
+        Use {
+            action,
+            param,
+            path,
+        } => {
             let node = node_js(el_var, path);
             if path.is_empty() {
                 format!("runAction({node}, {action}, () => {inst_var}.{param});")
@@ -1283,7 +1284,11 @@ fn emit_attach_js(
                 )
             }
         }
-        On { event, handler, path } => {
+        On {
+            event,
+            handler,
+            path,
+        } => {
             let node = node_js(el_var, path);
             format!(
                 "{{ const __n = {node}; if (__n) on(__n, \"{event}\", (e) => {{ const __h = {inst_var}.{handler}; if (typeof __h === \"function\") __h(e); }}); }}"

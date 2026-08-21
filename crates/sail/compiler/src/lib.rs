@@ -230,11 +230,9 @@ pub struct CompileOpts {
     /// a different prefix. The compiler never decides the prefix.
     pub element_prefix: String,
     /// Attribute name the web runtime uses for host identity
-    /// (`data-sail-host`, `data-sail-ctrl`). Set by the platform
-    /// emitter; the core only needs the name to stamp. Defaults to
-    /// the web values — a non-web target passes its own keys.
+    /// (`data-sail-host`). Set by the platform emitter; the core only
+    /// needs the name to stamp. Defaults to `data-sail-host`.
     pub host_data_attr: String,
-    pub ctrl_data_attr: String,
 }
 
 impl CompileOpts {
@@ -273,7 +271,6 @@ impl Default for CompileOpts {
             lint_overrides: Vec::new(),
             element_prefix: "sail".into(),
             host_data_attr: "data-sail-host".into(),
-            ctrl_data_attr: "data-sail-ctrl".into(),
         }
     }
 }

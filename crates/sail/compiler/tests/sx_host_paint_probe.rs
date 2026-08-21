@@ -1672,10 +1672,7 @@ fn theme_picker_host_paint_on_structure_sx() {
             && (out.structure_html.contains("s-isolate")
                 || out.skin_css.contains("isolation:isolate")
                 || out.skin_css.contains("isolation: isolate"))
-            && (out.structure_html.contains("data-theme-listbox")
-                || out
-                    .structure_html
-                    .contains("data-sail-ctrl=\"theme-picker\""))
+            && out.structure_html.contains("data-theme-listbox")
             && out.structure_html.contains("theme=\"")
             && (out.structure_html.contains("sail-row-i") || out.skin_css.contains("inline-flex")),
         "child paint + layout classes on structure:\nstruct={}\nskin={}",
