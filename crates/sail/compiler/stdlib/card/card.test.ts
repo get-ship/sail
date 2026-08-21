@@ -109,15 +109,15 @@ describe('l1 card', () => {
     const img = getByRole(v.root, 'img', { name: 'Hero' })
     const wrap = img.parentElement
     expect(wrap).toBeTruthy()
-    expect(wrap!.className).toMatch(/grouppaddinglg-margin/)
+    expect(wrap!.className).toMatch(/group-padding-lg-margin/)
     const host = wrap!.closest('.sail-grp')
     expect(host?.getAttribute('padding')).toBe('lg')
     // Happy-dom does not resolve token calc() on descendants; the live sheet
     // + wrap class are the contract a browser would apply.
-    expect(sheet.textContent).toContain(".sail-grp[padding='lg'] .s-grouppaddinglg-marginb5t5x6")
+    expect(sheet.textContent).toContain(".sail-grp[padding='lg'] .s-group-padding-lg-margin-b5-t5-x6")
     expect(sheet.textContent).toContain('margin-top:calc(-1 * var(--space-5))')
     expect(sheet.textContent).toContain('margin-inline:calc(-1 * var(--space-6))')
-    expect(wrap!.className).toMatch(/s-grouppaddinglg-marginb5t5x6/)
+    expect(wrap!.className).toMatch(/s-group-padding-lg-margin-b5-t5-x6/)
     v.unmount()
     sheet.remove()
   })
