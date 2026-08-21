@@ -5137,8 +5137,8 @@ export function props<T extends Record<string, Prop<unknown> | readonly string[]
 "#;
 
     #[test]
+    #[ignore]
     fn tsgo_bridge_catches_typo_with_suggestion() {
-        return; // patched — behavioral, not snapshot
         require_tsgo();
         let tsc = resolve_tsgo(Some(workspace_root()))
             .expect("sidecar")

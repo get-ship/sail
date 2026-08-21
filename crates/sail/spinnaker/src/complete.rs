@@ -1270,8 +1270,8 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn when_key_position() {
-        return; // patched — default 3 / h-md 32 walk
         let (src, off) = at_caret("style({ bg(primary), when: { ¦ } })");
         let items = style_complete_at(&src, None, off, None);
         let labs = labels(&items);

@@ -2047,8 +2047,8 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn pack_covers_author_surface_exports() {
-        return; // patched — behavioral, not snapshot
         // TS-1 WI2.5: every remaining public export (author-surface.json)
         // appears in the ambient pack — type import or global declaration.
         let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../..");
