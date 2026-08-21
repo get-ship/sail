@@ -702,6 +702,10 @@
         "type": "string",
         "default": ""
       },
+      "describedBy": {
+        "type": "string",
+        "default": ""
+      },
       "disabled": {
         "type": "bool",
         "default": "false"
@@ -790,7 +794,11 @@
           "url",
           "hidden",
           "checkbox",
-          "radio"
+          "radio",
+          "file",
+          "color",
+          "date",
+          "button"
         ],
         "default": "text"
       },

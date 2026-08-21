@@ -16,7 +16,9 @@
     // checkbox/radio: legal native types on RAW <input> inside <checkbox> /
     // <switch> / <radio> hosts. Not this tag's product surface — the registry
     // carries them so sail-prop-value does not reject sibling stdlib sources.
-    type: 'text' | 'email' | 'password' | 'number' | 'search' | 'tel' | 'url' | 'hidden' | 'checkbox' | 'radio' = 'text'
+    // file/color/date/button live here too: native types on RAW <input> inside
+    // their own hosts (<file>, <color>, <date>). Not this tag's product surface.
+    type: 'text' | 'email' | 'password' | 'number' | 'search' | 'tel' | 'url' | 'hidden' | 'checkbox' | 'radio' | 'file' | 'color' | 'date' | 'button' = 'text'
     size: 'xs' | 'sm' | 'md' | 'lg' = 'md'
     surface: 'default' | 'filled' | 'flushed' = 'default'
     invalid = false
@@ -100,6 +102,10 @@ export default controller((init) => {
   const fieldType = derived(() => (revealable() && shown() ? 'text' : kind()))
   const showPeek = derived(() => revealable() && !shown())
   const hidePeek = derived(() => revealable() && shown())
+  // CSS display:none needs the framework sheet; the a11y contract must hold
+  // headless too — state the visibility on the element.
+  const showPeekHidden = derived(() => !showPeek())
+  const hidePeekHidden = derived(() => !hidePeek())
   const invalid = derived(() => isOn(init.invalid))
   // ARIA contract lives on the control: aria-invalid mirrors the design-system
   // `invalid` presence (explicit false, not absent, so the state is stated);
@@ -123,6 +129,8 @@ export default controller((init) => {
     fieldType,
     showPeek,
     hidePeek,
+    showPeekHidden,
+    hidePeekHidden,
     toggle,
     invalid,
     ariaInvalid,
@@ -170,6 +178,7 @@ export default controller((init) => {
     tabindex="-1"
     label="Show"
     peek={showPeek()}
+    hidden={showPeekHidden()}
     on:click={toggle}
     style(peek, {match: {peek: {true: display(inline-flex), false: display(none)}}, when: {hover: fg(foreground), focus: border({ style: solid, kind: outline, width: 2, color: ring, offset: 2 })}})
   >Show</button>
@@ -179,6 +188,7 @@ export default controller((init) => {
     tabindex="-1"
     label="Hide"
     peek={hidePeek()}
+    hidden={hidePeekHidden()}
     on:click={toggle}
     style(peek, {match: {peek: {true: display(inline-flex), false: display(none)}}, when: {hover: fg(foreground), focus: border({ style: solid, kind: outline, width: 2, color: ring, offset: 2 })}})
   >Hide</button>

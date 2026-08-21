@@ -155,15 +155,16 @@ export default controller((init) => {
   }
   const keys = derived(() => {
     const allow = (run) => ({ run, allowInInputs: true })
+    // Shape is constant; open() only gates the handlers. The hotkeys type
+    // gate checks the declared shape — mutating keys in/out confuses it.
+    const noop = () => {}
     const map = {
-      ArrowDown: allow(() => move(1)),
-      ArrowUp: allow(() => move(-1)),
+      ArrowDown: allow(() => (open() ? move(1) : noop())),
+      ArrowUp: allow(() => (open() ? move(-1) : noop())),
       Escape: allow(() => close()),
-    }
-    if (open()) {
-      map.Home = allow(() => goEdge(0))
-      map.End = allow(() => goEdge(-1))
-      map.Enter = allow(() => commitActive())
+      Home: allow(() => (open() ? goEdge(0) : noop())),
+      End: allow(() => (open() ? goEdge(-1) : noop())),
+      Enter: allow(() => (open() ? commitActive() : noop())),
     }
     return map
   })
