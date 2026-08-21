@@ -7,7 +7,6 @@
   style band = { size({ w: 100% }), pad(5), bg(surface), border({ width: 1, style: solid, color: muted }), radius(md) }
   style pair = { size(hug) }
   style well = { size(hug), pad(3) }
-  style nums = { size(hug), pad({ l: 4 }) }
   style lookType = { type(label) }
   style spellType = { type(mono) }
 </scope>
@@ -27,9 +26,6 @@
   <row gap="4" align="start" style(pair)>
     <column style(well)>
       <slot></slot>
-    </column>
-    <column gap="1" style(nums)>
-      <p style(spellType)>no legal bind — inView-shaped callback into a controller signal</p>
     </column>
   </row>
 </column>
