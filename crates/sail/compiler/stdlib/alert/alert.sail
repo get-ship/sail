@@ -61,7 +61,7 @@ export default controller((init) => {
     nowrap
     align="start"
     gap="3"
-    style(base, {when: {before: style(stripe, {bg(tone)}), forced-colors: {border({ color: CanvasText }), when: {before: bg(CanvasText)}}}, match: { variant: { default: variantDefault, banner: variantBanner }, open: { false: gone } }, compound: [
+    style(base, {when: {before: style(stripe, {bg(tone)}), forced-colors: {border({ color: CanvasText }), when: {before: bg(CanvasText)}}}, match: { variant: { default: variantDefault, banner: variantBanner } }, compound: [
       {tone: muted, when: {before: bg(primary)}},
       {variant: banner, when: {before: size({ w: 2 })}},
     ]})
