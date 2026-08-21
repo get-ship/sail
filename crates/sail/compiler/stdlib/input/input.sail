@@ -13,7 +13,10 @@
 
 <scope>
   props: {
-    type: 'text' | 'email' | 'password' | 'number' | 'search' | 'tel' | 'url' | 'hidden' = 'text'
+    // checkbox/radio: legal native types on RAW <input> inside <checkbox> /
+    // <switch> / <radio> hosts. Not this tag's product surface — the registry
+    // carries them so sail-prop-value does not reject sibling stdlib sources.
+    type: 'text' | 'email' | 'password' | 'number' | 'search' | 'tel' | 'url' | 'hidden' | 'checkbox' | 'radio' = 'text'
     size: 'xs' | 'sm' | 'md' | 'lg' = 'md'
     surface: 'default' | 'filled' | 'flushed' = 'default'
     invalid = false

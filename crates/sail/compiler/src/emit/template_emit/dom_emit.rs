@@ -1014,6 +1014,20 @@ fn is_text_node(i: &Instr) -> bool {
     matches!(i, Instr::StaticText { .. } | Instr::DynamicText { .. })
 }
 
+/// Does this subtree contain an element whose tag is a controller-bearing
+/// stdlib L1 component? Such a node must be emitted through the recursive
+/// path (which mounts it via `emit_inlined_stdlib`); a template clone would
+/// serialize it as inert markup.
+fn subtree_has_controller(el: &ElementInstr) -> bool {
+    if crate::stdlib::element(&el.tag).is_some_and(|std| std.out.controller_js.is_some()) {
+        return true;
+    }
+    el.children.iter().any(|c| match c {
+        Instr::Element(child) => subtree_has_controller(child),
+        _ => false,
+    })
+}
+
 impl super::TemplateEmitter {
     /// Serialize an element's static skeleton to HTML, or `None` if the subtree
     /// cannot be templated (control flow inside, or adjacent text that would merge).
@@ -1123,7 +1137,16 @@ impl super::TemplateEmitter {
                 // Comments are dropped by the createElement path too — keep parity or
                 // the node indices diverge.
                 Instr::Comment { .. } => {}
-                Instr::Element(child) => self.write_skeleton(child, false, out)?,
+                Instr::Element(child) => {
+                    // A controller-bearing descendant (inlined L1 component)
+                    // must go through the recursive emit path so it mounts.
+                    // Baking it into a cloned skeleton leaves inert markup —
+                    // the toast-inside-controller-less-toast-region bug.
+                    if subtree_has_controller(child) {
+                        return None;
+                    }
+                    self.write_skeleton(child, false, out)?
+                }
                 // Control flow needs a runtime anchor. Not templated (yet).
                 _ => return None,
             }

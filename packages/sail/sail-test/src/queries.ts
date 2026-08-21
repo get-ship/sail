@@ -68,15 +68,21 @@ export function accessibleName(el: Element): string {
     const wrap = el.closest('label')
     if (wrap) {
       const clone = wrap.cloneNode(true) as HTMLElement
-      clone.querySelectorAll('input,textarea,select').forEach((n) => n.remove())
+      // Component stylesheets ride the mount as <style data-sail-style>; a
+      // label wrapping a bare control would otherwise swallow the whole sheet
+      // into the accessible name. ARIA excludes non-rendered content anyway.
+      clone.querySelectorAll('input,textarea,select,style,script,template').forEach((n) => n.remove())
       const t = clone.textContent?.replace(/\s+/g, ' ').trim()
       if (t) return t
     }
     if (el instanceof HTMLInputElement && el.placeholder) return el.placeholder
   }
-
   if (el instanceof HTMLElement) {
-    const t = el.innerText || el.textContent || ''
+    // Clone so aria-hidden subtrees (decorative glyphs, icon rows) can be
+    // dropped before reading text — ARIA excludes them from the accname.
+    const clone = el.cloneNode(true) as HTMLElement
+    clone.querySelectorAll('[aria-hidden="true"]').forEach((n) => n.remove())
+    const t = clone.innerText || clone.textContent || ''
     const n = t.replace(/\s+/g, ' ').trim()
     if (n) return n
   }

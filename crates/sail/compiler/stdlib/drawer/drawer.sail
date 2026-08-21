@@ -44,10 +44,10 @@ export default controller((init, host) => {
     if (!el) return
     if (el instanceof HTMLDialogElement) { if (el.open) el.close(); return }
     if (el.hasAttribute('open')) el.removeAttribute('open')
-    const cb = read(init.onClose) as unknown
+    const cb = init.onClose as unknown
     if (typeof cb === 'function') (cb as () => void)()
     else {
-      const cb2 = read(init.onDismiss) as unknown
+      const cb2 = init.onDismiss as unknown
       if (typeof cb2 === 'function') (cb2 as () => void)()
     }
   }

@@ -84,7 +84,11 @@ impl TemplateEmitter {
         for a in &el.attrs {
             match a {
                 AttrInstr::Static { name, value, .. } if !skip_seed_attr(name) => {
-                    w.line(&format!("{props}.{} = {};", camel_of(name), js_string(value)));
+                    w.line(&format!(
+                        "{props}.{} = {};",
+                        camel_of(name),
+                        js_string(value)
+                    ));
                 }
                 AttrInstr::Expr { name, expr, .. } if !skip_seed_attr(name) => {
                     let rw = self.rw(&expr.source, &[]);
@@ -167,17 +171,16 @@ impl TemplateEmitter {
         for p in pending {
             let ctx = self.fresh("x");
             w.line(&format!("const {ctx} = {{ props: {} }};", p.props));
-            w.line(&format!(
-                "if ({0}.names) {ctx}.names = {0}.names;",
-                p.props
-            ));
+            w.line(&format!("if ({0}.names) {ctx}.names = {0}.names;", p.props));
             w.line(&format!(
                 "if ({0}.labels) {ctx}.labels = {0}.labels;",
                 p.props
             ));
             for field in &p.inherit {
                 w.line(&format!(
-                    "{ctx}.{field} = {parent_inst}.instance.{field};"
+                    "{{ const __v = {parent_inst}.instance.{field}; {ctx}.{field} = __v; {props}.\
+                     {field} = __v; }}",
+                    props = p.props,
                 ));
             }
             let inst = self.fresh("m");
@@ -486,7 +489,9 @@ fn merge_static_attrs(root: &mut ElementInstr, use_attrs: &[AttrInstr]) {
             continue;
         }
         if let Some(existing) = root.attrs.iter_mut().find_map(|x| match x {
-            AttrInstr::Static { name: n, value: v, .. } if n == name => Some(v),
+            AttrInstr::Static {
+                name: n, value: v, ..
+            } if n == name => Some(v),
             _ => None,
         }) {
             if name.eq_ignore_ascii_case("class") {

@@ -38,23 +38,23 @@ export default controller((init) => {
   const n = Number(raw)
   const duration = raw == null || raw === '' ? 5000 : Number.isFinite(n) ? n : 5000
   const open = signal(true)
-  let timer
+  let timer = 0
   function clear() {
     if (timer) {
       clearTimeout(timer)
-      timer = undefined
+      timer = 0
     }
   }
-  function fire() {
+  function dismiss() {
     clear()
     open.set(false)
-    const cb = read(init.onDismiss)
+    const cb = init.onDismiss
     if (typeof cb === 'function') cb()
   }
   function start() {
     if (!open() || duration <= 0) return
     clear()
-    timer = setTimeout(fire, duration)
+    timer = Number(setTimeout(dismiss, duration))
   }
   function pause() {
     clear()
@@ -62,7 +62,7 @@ export default controller((init) => {
   start()
   onCleanup(clear)
   const closed = derived(() => !open())
-  return { open, closed, dismiss: fire, start, pause }
+  return { open, closed, dismiss, start, pause }
 })
 </controller>
 
@@ -96,7 +96,14 @@ export default controller((init) => {
       on:click={dismiss}
       style(close, {shrink(0).grow(0), when: {hover: fg(foreground).bg(surface).filter({ opacity: 100 })}})
     >
-        <row inline nowrap align="center" justify="center" style(closeGlyph)>✕</row>
+        <row
+          inline
+          nowrap
+          align="center"
+          justify="center"
+          aria-hidden="true"
+          style(closeGlyph)
+        >✕</row>
       </button>
     </if>
   </row>

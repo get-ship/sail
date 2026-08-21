@@ -41,7 +41,7 @@ export default controller((init) => {
     const n = String(next ?? '')
     if (n === value()) return
     value.set(n)
-    const cb = read(init.onChange)
+    const cb = init.onChange
     if (typeof cb === 'function') cb({ value: n })
   }
   return { value, groupValue: value, select, name, groupDisabled, required }

@@ -389,9 +389,34 @@ function stdlibElementSource(tag: string): string {
   throw new Error(`[sail-compiler-napi] no stdlib source for @sail/element/${tag}`)
 }
 
+/** Compiled-module memo — one compile+eval per specifier. Cyclic logical
+ *  imports (`input.sail` uses `<input>`; `radio.sail` uses `<input>`) would
+ *  recurse here forever without it: every specifier gets ONE cache entry,
+ *  seeded (as a lazy forwarder) BEFORE its own evaluation, then filled in.
+ *  Generated code touches imported modules only inside setup()/__mount(),
+ *  long after the real module lands — the same deal a bundler's module map
+ *  makes. */
+/** Lazy forwarder for a module still being evaluated. Generated code reads
+ *  `mod.setup` only when it MOUNTS — by then the real record is in. */
+function lazyModule(spec: string): { setup: (ctx: unknown) => unknown } {
+  return {
+    get setup() {
+      const mod = sailMountCache.get(spec) as { setup?: unknown } | undefined
+      if (typeof mod?.setup === 'function') return mod.setup
+      throw new Error(`[sail-compiler-napi] cyclic import ${spec} mounted before its module finished evaluating`)
+    },
+  } as { setup: (ctx: unknown) => unknown }
+}
+const sailMountCache = new Map<string, unknown>()
 /** Resolve a default-import through `compile()`, not Deck. Handles both a
  *  filesystem `.sail` path and the bundler's logical `@sail/element/<tag>`. */
 function loadSailMount(spec: string): unknown {
+  const existing = sailMountCache.get(spec)
+  // Re-entrant (cyclic) call while this specifier is still evaluating: hand
+  // back the lazy forwarder — the real module lands when the outermost call
+  // finishes. Compiling again here would recurse forever.
+  if (existing) return existing
+  sailMountCache.set(spec, lazyModule(spec))
   const logical = /^@sail\/element\/([a-z0-9-]+)$/.exec(spec)
   const source = logical ? stdlibElementSource(logical[1]!) : readFileSync(spec, 'utf8')
   const sourcePath = logical
@@ -404,7 +429,9 @@ function loadSailMount(spec: string): unknown {
   const setup = compiled.controller
     ? evalInlineController(compiled.controller)
     : undefined
-  return evalCompiledJs(compiled.js, setup)
+  const mod = evalCompiledJs(compiled.js, setup)
+  sailMountCache.set(spec, mod)
+  return mod
 }
 
 function wrapSetup(setup: UserSetup): { setup: (ctx: unknown) => unknown } | null {

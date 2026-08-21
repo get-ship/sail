@@ -12,7 +12,7 @@
           "info",
           "success",
           "warning",
-          "destructive",
+          "danger",
           "accent",
           "muted"
         ]
@@ -58,7 +58,7 @@
           "info",
           "success",
           "warning",
-          "destructive"
+          "danger"
         ],
         "default": "info"
       },
@@ -128,7 +128,7 @@
           "info",
           "success",
           "warning",
-          "destructive",
+          "danger",
           "muted"
         ],
         "default": "muted"
@@ -157,7 +157,7 @@
           "info",
           "success",
           "warning",
-          "destructive",
+          "danger",
           "accent",
           "muted"
         ],
@@ -213,7 +213,7 @@
           "info",
           "success",
           "warning",
-          "destructive",
+          "danger",
           "accent",
           "muted"
         ],
@@ -270,7 +270,7 @@
           "info",
           "success",
           "warning",
-          "destructive",
+          "danger",
           "accent",
           "muted"
         ],
@@ -345,7 +345,7 @@
           "info",
           "success",
           "warning",
-          "destructive",
+          "danger",
           "accent",
           "muted"
         ],
@@ -553,7 +553,7 @@
           "info",
           "success",
           "warning",
-          "destructive",
+          "danger",
           "accent",
           "muted"
         ],
@@ -597,6 +597,10 @@
       }
     },
     "field": {
+      "fill": {
+        "type": "bool",
+        "default": "true"
+      },
       "invalid": {
         "type": "bool",
         "default": "false"
@@ -651,12 +655,23 @@
       }
     },
     "form": {
+      "layout": {
+        "values": [
+          "measure",
+          "fill"
+        ],
+        "default": "measure"
+      },
       "name": {
         "type": "string",
         "default": ""
       }
     },
     "hover-card": {
+      "id": {
+        "type": "string",
+        "default": ""
+      },
       "placement": {
         "type": "string",
         "default": ""
@@ -680,14 +695,6 @@
           "xl"
         ],
         "default": "md"
-      },
-      "spin": {
-        "type": "bool",
-        "default": "false"
-      },
-      "src": {
-        "type": "string",
-        "default": ""
       }
     },
     "input": {
@@ -698,6 +705,10 @@
       "disabled": {
         "type": "bool",
         "default": "false"
+      },
+      "id": {
+        "type": "string",
+        "default": ""
       },
       "inputmode": {
         "type": "string",
@@ -777,7 +788,9 @@
           "search",
           "tel",
           "url",
-          "hidden"
+          "hidden",
+          "checkbox",
+          "radio"
         ],
         "default": "text"
       },
@@ -798,16 +811,6 @@
           "lg"
         ],
         "default": "md"
-      }
-    },
-    "list-row": {
-      "current": {
-        "type": "bool",
-        "default": "false"
-      },
-      "selected": {
-        "type": "bool",
-        "default": "false"
       }
     },
     "menu-item": {
@@ -860,6 +863,10 @@
         "default": "false"
       },
       "bordered": {
+        "type": "bool",
+        "default": "false"
+      },
+      "expanded": {
         "type": "bool",
         "default": "false"
       },
@@ -924,17 +931,6 @@
           "simple"
         ],
         "default": "default"
-      }
-    },
-    "pane": {
-      "padding": {
-        "values": [
-          "md",
-          "none",
-          "sm",
-          "lg"
-        ],
-        "default": "md"
       }
     },
     "popover": {
@@ -1059,7 +1055,7 @@
         "values": [
           "muted",
           "primary",
-          "destructive"
+          "danger"
         ],
         "default": "muted"
       },
@@ -1156,7 +1152,7 @@
           "info",
           "success",
           "warning",
-          "destructive",
+          "danger",
           "accent"
         ],
         "default": "info"
@@ -1193,7 +1189,7 @@
           "info",
           "success",
           "warning",
-          "destructive",
+          "danger",
           "accent",
           "muted"
         ],
@@ -1208,13 +1204,6 @@
       "name": {
         "type": "string",
         "default": ""
-      },
-      "orientation": {
-        "values": [
-          "horizontal",
-          "vertical"
-        ],
-        "default": "horizontal"
       },
       "size": {
         "values": [
@@ -1281,10 +1270,6 @@
         "default": "false"
       },
       "hoverable": {
-        "type": "bool",
-        "default": "false"
-      },
-      "searchable": {
         "type": "bool",
         "default": "false"
       },
@@ -1416,20 +1401,6 @@
         "default": "icon"
       }
     },
-    "ticker": {
-      "duration": {
-        "values": [
-          "fast",
-          "normal",
-          "slow"
-        ],
-        "default": "normal"
-      },
-      "reverse": {
-        "type": "bool",
-        "default": "false"
-      }
-    },
     "toast": {
       "duration": {
         "type": "string",
@@ -1441,7 +1412,7 @@
           "info",
           "success",
           "warning",
-          "destructive",
+          "danger",
           "accent",
           "muted"
         ],
@@ -1452,13 +1423,6 @@
       "disabled": {
         "type": "bool",
         "default": "false"
-      },
-      "orientation": {
-        "values": [
-          "horizontal",
-          "vertical"
-        ],
-        "default": "horizontal"
       },
       "size": {
         "values": [

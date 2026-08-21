@@ -19,6 +19,10 @@ describe('l1 dropdown', () => {
         }),
       },
     )
+    // Harness contract (test/setup.ts): closed popovers sit outside the a11y
+    // tree; open the panel before asserting its items. Native popovertarget
+    // activation is browser-only.
+    ;(v.root.querySelector('div[popover]') as HTMLElement | null)?.showPopover()
     await v.flush()
     click(getByRole(v.root, 'button', { name: 'Rename' }))
     await v.flush()

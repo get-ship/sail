@@ -48,7 +48,7 @@ export default controller((init) => {
   }
   function onRemove() {
     if (isOn(init.disabled)) return
-    const cb = read(init.onRemove)
+    const cb = init.onRemove
     if (typeof cb === 'function') cb()
   }
   const selected = derived(() => isOn(init.selected))

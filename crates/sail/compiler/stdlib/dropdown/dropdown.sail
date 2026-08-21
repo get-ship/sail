@@ -43,7 +43,7 @@ export default controller((init) => {
     }
   }
   function onSelect(detail) {
-    const cb = read(init.onSelect)
+    const cb = init.onSelect
     if (typeof cb === 'function') cb(detail)
     close()
   }
