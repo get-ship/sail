@@ -289,13 +289,6 @@ pub const ACTIONS: &[ActionEntry] = &[
         writes: &[],
     },
     ActionEntry {
-        name: "tipDescribe",
-        param: "void",
-        summary: "Hover/focus-triggered tooltip; open on pointer-in, close on pointer-out with delay.",
-        auto_import: true,
-        writes: &[],
-    },
-    ActionEntry {
         name: "virtualRow",
         param: "number | null | undefined",
         summary: "Register a virtualized row; tells the parent scroller its measured height.",
@@ -390,7 +383,6 @@ pub const BUILTIN_ACTION_NAMES: &[&str] = &[
     "syntaxHighlight",
     "targetCursor",
     "themeSelect",
-    "tipDescribe",
     "virtualRow",
     "virtualSpacer",
     "worldTransform",
