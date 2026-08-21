@@ -184,13 +184,6 @@ pub const ACTIONS: &[ActionEntry] = &[
         writes: &[],
     },
     ActionEntry {
-        name: "hoverSurface",
-        param: "void",
-        summary: "Hover-triggered card; open on pointer-in, close on pointer-out with delay.",
-        auto_import: true,
-        writes: &[],
-    },
-    ActionEntry {
         name: "inView",
         param: "InViewHandler | undefined",
         summary: "Fire a callback when the host enters the viewport (IntersectionObserver).",
@@ -382,7 +375,6 @@ pub const BUILTIN_ACTION_NAMES: &[&str] = &[
     "focus",
     "gridTracks",
     "hotkeys",
-    "hoverSurface",
     "inView",
     "liveBox",
     "maxWidth",
