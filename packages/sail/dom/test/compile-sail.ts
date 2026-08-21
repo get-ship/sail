@@ -312,13 +312,21 @@ export function evalCompiledJs(
   setup?: UserSetup,
 ): { setup: (ctx: unknown) => Record<string, unknown> & { __mount: (c: HTMLElement) => () => void } } {
   const mods: Record<string, unknown> = {}
-  const withSail = js.replace(
-    /^\s*import\s+(\w+)\s+from\s+["']([^"']+\.sail)["']\s*;?\s*$/gm,
-    (_m, ident: string, spec: string) => {
-      mods[ident] = loadSailMount(spec)
-      return `const ${ident} = __mods[${JSON.stringify(ident)}];`
-    },
-  )
+  const withSail = js
+    .replace(
+      /^\s*import\s+(\w+)\s+from\s+["']([^"']+\.sail)["']\s*;?\s*$/gm,
+      (_m, ident: string, spec: string) => {
+        mods[ident] = loadSailMount(spec)
+        return `const ${ident} = __mods[${JSON.stringify(ident)}];`
+      },
+    )
+    .replace(
+      /^\s*import\s+(\w+)\s+from\s+["']@sail\/element\/([a-z0-9-]+)["']\s*;?\s*$/gm,
+      (_m, ident: string, tag: string) => {
+        mods[ident] = loadSailMount(`@sail/element/${tag}`)
+        return `const ${ident} = __mods[${JSON.stringify(ident)}];`
+      },
+    )
   const body = stripImports(withSail).replace(/\bexport\s+default\s+/g, 'return ')
   const setupObj = wrapSetup(setup)
   const fn = new Function(
@@ -352,13 +360,47 @@ export function evalCompiledJs(
   ) as ReturnType<typeof evalCompiledJs>
 }
 
-/** Resolve a default-import `.sail` through `compile()`, not Deck. */
+/** Locate the stdlib source for a logical `@sail/element/<tag>` id. */
+const stdlibSourceCache = new Map<string, string>()
+function stdlibElementSource(tag: string): string {
+  const hit = stdlibSourceCache.get(tag)
+  if (hit) return hit
+  const direct = resolve(REPO_ROOT, 'crates/sail/compiler/stdlib', tag, `${tag}.sail`)
+  if (existsSync(direct)) {
+    const src = readFileSync(direct, 'utf8')
+    stdlibSourceCache.set(tag, src)
+    return src
+  }
+  // Family dirs may differ from the tag (`radio` → `radio-group/`).
+  const root = resolve(REPO_ROOT, 'crates/sail/compiler/stdlib')
+  const stack = [root]
+  while (stack.length > 0) {
+    const dir = stack.pop()!
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const p = resolve(dir, entry.name)
+      if (entry.isDirectory()) stack.push(p)
+      else if (entry.name === `${tag}.sail`) {
+        const src = readFileSync(p, 'utf8')
+        stdlibSourceCache.set(tag, src)
+        return src
+      }
+    }
+  }
+  throw new Error(`[sail-compiler-napi] no stdlib source for @sail/element/${tag}`)
+}
+
+/** Resolve a default-import through `compile()`, not Deck. Handles both a
+ *  filesystem `.sail` path and the bundler's logical `@sail/element/<tag>`. */
 function loadSailMount(spec: string): unknown {
-  const source = readFileSync(spec, 'utf8')
+  const logical = /^@sail\/element\/([a-z0-9-]+)$/.exec(spec)
+  const source = logical ? stdlibElementSource(logical[1]!) : readFileSync(spec, 'utf8')
+  const sourcePath = logical
+    ? `stdlib/${logical[1]}.sail`
+    : spec
   const setupMarker = source.includes('<controller')
-    ? `./${basename(spec)}.controller.ts`
+    ? `./${basename(sourcePath)}.controller.ts`
     : undefined
-  const compiled = compileSail(source, { sourcePath: spec, setupMarker })
+  const compiled = compileSail(source, { sourcePath, setupMarker })
   const setup = compiled.controller
     ? evalInlineController(compiled.controller)
     : undefined
