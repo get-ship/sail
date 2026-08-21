@@ -36,6 +36,7 @@
     inputmode = ''
     reveal = true
     id = ''
+    describedBy = ''
   }
 
   style host = {display(contents).size({ min-w: 0 }), when: { group-fill: stretch }}
@@ -100,6 +101,15 @@ export default controller((init) => {
   const showPeek = derived(() => revealable() && !shown())
   const hidePeek = derived(() => revealable() && shown())
   const invalid = derived(() => isOn(init.invalid))
+  // ARIA contract lives on the control: aria-invalid mirrors the design-system
+  // `invalid` presence (explicit false, not absent, so the state is stated);
+  // aria-describedby passes the field host's hint/error id through.
+  const ariaInvalid = derived(() => (invalid() ? 'true' : 'false'))
+  const describedBy = derived(() => String(read(init.describedBy) ?? ''))
+  const ariaDescribedBy = derived(() => {
+    const id = String(read(init.describedBy) ?? '')
+    return id === '' ? null : id
+  })
   const disabled = derived(() => isOn(init.disabled))
   const required = derived(() => isOn(init.required))
   const readOnly = derived(() => isOn(init.readonly))
@@ -115,6 +125,8 @@ export default controller((init) => {
     hidePeek,
     toggle,
     invalid,
+    ariaInvalid,
+    ariaDescribedBy,
     disabled,
     required,
     readOnly,
@@ -131,6 +143,8 @@ export default controller((init) => {
     anatomy
     type={fieldType()}
     password={isPassword()}
+    aria-invalid={ariaInvalid()}
+    aria-describedby={ariaDescribedBy()}
     invalid={invalid()}
     disabled={disabled()}
     required={required()}
