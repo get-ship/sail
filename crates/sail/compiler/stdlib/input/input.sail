@@ -4,7 +4,7 @@
   Other controls are own tags: checkbox, radio, slider, date, file, color, switch.
   Actions use <button> — type=submit is not an input type.
   Shared input / foreground / border with select/textarea.
-  reveal (default true): password peek chrome (padE + use:passwordReveal).
+  reveal (default true): password peek chrome (padE).
 -->
 
 <scope>
