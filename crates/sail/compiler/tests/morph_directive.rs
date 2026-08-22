@@ -18,6 +18,8 @@ fn compile_sail(name: &str) -> String {
     let path = fixtures_dir().join(format!("{name}.sail"));
     let source = fs::read_to_string(&path).expect("read fixture");
     let opts = CompileOpts {
+        element_prefix: "sail".into(),
+        host_data_attr: "data-sail-host".into(),
         route_params: None,
         setup_url: None,
         mode: CompileMode::Component,

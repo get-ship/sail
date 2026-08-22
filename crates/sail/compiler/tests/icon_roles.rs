@@ -71,7 +71,8 @@ fn named_pack_icon_html_contains_svg() {
 
 #[test]
 fn unlabeled_icon_is_decorative_and_hidden() {
-    let out = compile(r#"<icon name="settings"></icon>"#, CompileOpts::default()).expect("compiles");
+    let out =
+        compile(r#"<icon name="settings"></icon>"#, CompileOpts::default()).expect("compiles");
     assert!(
         out.js.contains("aria-hidden=\\\"true\\\""),
         "decorative icon has aria-hidden at compile time:\n{}",

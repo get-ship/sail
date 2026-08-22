@@ -11,6 +11,8 @@ fn compile_src(src: &str) -> Result<sail_compiler::CompileOutput, sail_compiler:
     compile(
         src,
         CompileOpts {
+            element_prefix: "sail".into(),
+            host_data_attr: "data-sail-host".into(),
             mode: CompileMode::Component,
             component_meta: Some(ComponentMeta {
                 name: "x-probe".into(),

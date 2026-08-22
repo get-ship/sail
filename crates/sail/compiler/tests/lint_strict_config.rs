@@ -52,6 +52,8 @@ fn write_fixture(config: &str, sail_body: &str) -> (tempfile::TempDir, PathBuf) 
 
 fn opts_for(path: &Path) -> CompileOpts {
     CompileOpts {
+        element_prefix: "sail".into(),
+        host_data_attr: "data-sail-host".into(),
         route_params: None,
         setup_url: None,
         mode: CompileMode::Auto,
@@ -329,6 +331,8 @@ fn compiler_errors_never_downgraded_by_lint_config() {
     // Explicit Off override on a non-lint category (if ever named) cannot
     // silence a pure parse failure either — compile still errs with empty overrides.
     let bare = CompileOpts {
+        element_prefix: "sail".into(),
+        host_data_attr: "data-sail-host".into(),
         source_path: Some(sail.clone()),
         lint_overrides: vec![LintOverride {
             rule: "expression".into(),

@@ -466,7 +466,6 @@ const ACTION_GEOMETRY_TOKENS: &[&str] = &[
     "tt-arrow-right",
     "tt-arrow-ml",
     "tt-arrow-mt",
-    "chrome-offset",
 ];
 
 #[derive(Debug)]

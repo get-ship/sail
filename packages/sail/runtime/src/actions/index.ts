@@ -18,9 +18,6 @@ export { resizable } from './resizable'
 export { registerSailHighlighter } from './highlight'
 export type { SailHtmlHighlighter } from './highlight'
 
-export { chromeOffset } from './chrome-offset'
-export { autoDismiss } from './auto-dismiss'
-export { dismissControl } from './dismiss-control'
 
 export { themeSelect,
   setEffectiveThemeIds,
@@ -29,7 +26,6 @@ export { themeSelect,
   effectiveProductThemes,
 } from './theme-select'
 export type { EffectiveSessionIds } from './theme-select'
-export { menu } from './menu'
 export { virtualRow, virtualSpacer, cellPad } from './virtual-row'
 export { eventSpan } from './event-span'
 export type { RectSpan } from './event-span'

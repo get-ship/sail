@@ -6,11 +6,11 @@ use std::path::Path;
 use serde::Serialize;
 
 use super::fix::{self, FixPlan};
-use super::node::{build_node_index, model_revision, EditNode};
+use super::node::{EditNode, build_node_index, model_revision};
 use super::ops::EditOp;
-use super::validate::{validate_source, ValidateOutcome};
-use crate::diagnostics::Diagnostic;
+use super::validate::{ValidateOutcome, validate_source};
 use crate::LintOverride;
+use crate::diagnostics::Diagnostic;
 
 /// Result of applying an edit batch (in memory; write is caller's job).
 #[derive(Debug, Clone, Serialize)]

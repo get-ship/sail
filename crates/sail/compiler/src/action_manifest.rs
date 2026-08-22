@@ -86,13 +86,6 @@ pub struct ActionEntry {
 /// updated. That is the bar.
 pub const ACTIONS: &[ActionEntry] = &[
     ActionEntry {
-        name: "autoDismiss",
-        param: "void",
-        summary: "Timed self-dismiss from a `duration` attr (ms; default 5000; ≤0 sticky); pauses while hovered/focused; invokes `onDismiss` then removes the host.",
-        auto_import: true,
-        writes: &[],
-    },
-    ActionEntry {
         name: "autosize",
         param: "void",
         summary: "Autosize a textarea (height) or single-line input (width) to its content.",
@@ -107,13 +100,6 @@ pub const ACTIONS: &[ActionEntry] = &[
         writes: &[],
     },
     ActionEntry {
-        name: "chromeOffset",
-        param: "void",
-        summary: "Navbar autohide state (`data-hidden`). Height collapse is Style.",
-        auto_import: true,
-        writes: &[],
-    },
-    ActionEntry {
         name: "clickOutside",
         param: "(() => void) | undefined",
         summary: "Fire a callback when a click lands outside the element.",
@@ -124,13 +110,6 @@ pub const ACTIONS: &[ActionEntry] = &[
         name: "clipboard",
         param: "ClipboardParam",
         summary: "Copy param text (or host text content) to the clipboard on click; optional onCopy success callback.",
-        auto_import: true,
-        writes: &[],
-    },
-    ActionEntry {
-        name: "dismissControl",
-        param: "void",
-        summary: "Click on a close control (`[data-toast-close]` / `[data-dismiss]` / `button[aria-label=\"Dismiss\"]`) invokes `onDismiss` then removes the host; non-toast hosts gate on [dismissible].",
         auto_import: true,
         writes: &[],
     },
@@ -182,13 +161,6 @@ pub const ACTIONS: &[ActionEntry] = &[
         summary: "Cap the element's content width to a max (px or CSS length).",
         auto_import: true,
         writes: &["maxW"],
-    },
-    ActionEntry {
-        name: "menu",
-        param: "void",
-        summary: "Internal: L1 <dropdown> closed behavior (not public use: — attach the widget).",
-        auto_import: true,
-        writes: &[],
     },
     ActionEntry {
         name: "pin",
@@ -527,16 +499,15 @@ mod tests {
             ACTIONS.iter().all(|a| a.name != "toggleGroup") && !is_public_action("toggleGroup"),
             "toggleGroup brain is the widget controller — gone from ACTIONS"
         );
-        for name in ["menu", "resizable"] {
-            assert!(
-                !is_public_action(name),
-                "{name} must not be on the public use: surface (ACTIONS-1 diet)"
-            );
-            assert!(
-                ACTIONS.iter().any(|a| a.name == name),
-                "{name} stays in ACTIONS as internal auto-import until its brain moves"
-            );
-        }
+        // `menu` is gone entirely — the <dropdown> controller owns close/select.
+        assert!(
+            !is_public_action("menu") && ACTIONS.iter().all(|a| a.name != "menu"),
+            "menu brain moved into the <dropdown> controller — gone from ACTIONS"
+        );
+        assert!(
+            !is_public_action("resizable"),
+            "resizable stays internal (verdict c) — not on the public use: surface"
+        );
         assert!(
             !is_public_action("drawerSwipe") && ACTIONS.iter().all(|a| a.name != "drawerSwipe"),
             "drawerSwipe brain is the <drawer> controller — gone from ACTIONS"

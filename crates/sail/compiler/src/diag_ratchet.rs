@@ -86,7 +86,9 @@ pub fn classify_snippet(source: &str) -> SiteClass {
 ///
 /// Backward compat: `scan_sources` replaces the `scan_compiler_src()` FS walk.
 /// The xtask owns the walk; the library stays pure.
-pub fn scan_sources<'a>(iter: impl IntoIterator<Item = (&'a Path, &'a str)>) -> Vec<(String, usize, SiteClass)> {
+pub fn scan_sources<'a>(
+    iter: impl IntoIterator<Item = (&'a Path, &'a str)>,
+) -> Vec<(String, usize, SiteClass)> {
     let mut out = Vec::new();
     for (path, src) in iter {
         let mut sites = Vec::new();
@@ -99,7 +101,9 @@ pub fn scan_sources<'a>(iter: impl IntoIterator<Item = (&'a Path, &'a str)>) -> 
 }
 
 /// Count anonymous throw sites from caller-supplied sources (pure, no FS).
-pub fn count_anonymous_sites_from<'a>(iter: impl IntoIterator<Item = (&'a Path, &'a str)>) -> usize {
+pub fn count_anonymous_sites_from<'a>(
+    iter: impl IntoIterator<Item = (&'a Path, &'a str)>,
+) -> usize {
     scan_sources(iter)
         .into_iter()
         .filter(|(_, _, c)| *c == SiteClass::Anonymous)

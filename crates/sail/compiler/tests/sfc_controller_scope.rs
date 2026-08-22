@@ -26,6 +26,8 @@ export default controller((ctx) => {
 
 fn opts(name: &str) -> CompileOpts {
     CompileOpts {
+        element_prefix: "sail".into(),
+        host_data_attr: "data-sail-host".into(),
         route_params: None,
         setup_url: Some(format!("./{name}.sail.controller.ts")),
         mode: CompileMode::Component,

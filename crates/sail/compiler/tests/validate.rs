@@ -23,6 +23,8 @@ fn fixtures_dir() -> PathBuf {
 
 fn opts(source_path: PathBuf) -> CompileOpts {
     CompileOpts {
+        element_prefix: "sail".into(),
+        host_data_attr: "data-sail-host".into(),
         route_params: None,
         setup_url: Some("./view.controller.ts".into()),
         mode: CompileMode::Component,

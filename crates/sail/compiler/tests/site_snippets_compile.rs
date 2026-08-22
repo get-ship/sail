@@ -168,6 +168,8 @@ fn owned_sail_snippets_compile() {
                     name: "snippet-demo".into(),
                 });
             let opts = CompileOpts {
+                element_prefix: "sail".into(),
+                host_data_attr: "data-sail-host".into(),
                 mode: CompileMode::Component,
                 component_meta,
                 ..Default::default()

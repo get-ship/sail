@@ -18,6 +18,8 @@ const COMPONENT_SRC: &str = r#"<scope>
 
 fn route_opts() -> CompileOpts {
     CompileOpts {
+        element_prefix: "sail".into(),
+        host_data_attr: "data-sail-host".into(),
         mode: CompileMode::Component,
         emit_dts: true,
         scope_capabilities: Vec::new(),
@@ -29,6 +31,8 @@ fn route_opts() -> CompileOpts {
 
 fn component_opts() -> CompileOpts {
     CompileOpts {
+        element_prefix: "sail".into(),
+        host_data_attr: "data-sail-host".into(),
         route_params: None,
         mode: CompileMode::Component,
         component_meta: Some(ComponentMeta {

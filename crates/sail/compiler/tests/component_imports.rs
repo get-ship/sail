@@ -23,6 +23,8 @@ fn off_by_default_emits_no_component_imports() {
 #[test]
 fn flag_emits_registration_import_per_used_custom_tag() {
     let opts = CompileOpts {
+        element_prefix: "sail".into(),
+        host_data_attr: "data-sail-host".into(),
         emit_component_imports: true,
         lint_overrides: Vec::new(),
         ..CompileOpts::default()
@@ -55,6 +57,8 @@ fn flag_emits_registration_import_per_used_custom_tag() {
 #[test]
 fn flag_collects_tags_nested_in_control_flow() {
     let opts = CompileOpts {
+        element_prefix: "sail".into(),
+        host_data_attr: "data-sail-host".into(),
         emit_component_imports: true,
         lint_overrides: Vec::new(),
         ..CompileOpts::default()

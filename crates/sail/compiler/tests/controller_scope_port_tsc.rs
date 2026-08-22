@@ -26,6 +26,8 @@ fn require_tsc(repo: &Path) -> PathBuf {
 
 fn generated_scope_dts() -> String {
     let opts = CompileOpts {
+        element_prefix: "sail".into(),
+        host_data_attr: "data-sail-host".into(),
         route_params: None,
         setup_url: None,
         mode: CompileMode::Component,

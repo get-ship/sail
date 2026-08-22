@@ -100,6 +100,8 @@ fn compile_fixture(f: &Fixture) -> String {
     let path = fixtures_dir().join(format!("{}.sail", f.name));
     let source = fs::read_to_string(&path).expect("read fixture");
     let opts = CompileOpts {
+        element_prefix: "sail".into(),
+        host_data_attr: "data-sail-host".into(),
         setup_url: f.setup_url.map(|s| s.to_string()),
         mode: f.mode,
         source_path: Some(path),
@@ -179,6 +181,8 @@ fn element_capture_use_action_emits_run_action() {
     let path = fixtures_dir().join("bind-this-button.sail");
     let source = std::fs::read_to_string(&path).unwrap();
     let opts = CompileOpts {
+        element_prefix: "sail".into(),
+        host_data_attr: "data-sail-host".into(),
         route_params: None,
         setup_url: None,
         mode: CompileMode::Component,
@@ -244,6 +248,8 @@ fn for_static_body_omits_v_sentinel() {
     let path = fixtures_dir().join("for-static.sail");
     let source = std::fs::read_to_string(&path).unwrap();
     let opts = CompileOpts {
+        element_prefix: "sail".into(),
+        host_data_attr: "data-sail-host".into(),
         route_params: None,
         setup_url: None,
         mode: CompileMode::Component,
@@ -303,6 +309,8 @@ fn for_body_referencing_index_refreshes_on_row_reuse() {
 </ul>
 "#;
     let opts = CompileOpts {
+        element_prefix: "sail".into(),
+        host_data_attr: "data-sail-host".into(),
         route_params: None,
         setup_url: None,
         mode: CompileMode::Component,
@@ -371,6 +379,8 @@ fn for_static_text_inlines_text_content() {
     let path = fixtures_dir().join("for-static-text.sail");
     let source = std::fs::read_to_string(&path).unwrap();
     let opts = CompileOpts {
+        element_prefix: "sail".into(),
+        host_data_attr: "data-sail-host".into(),
         route_params: None,
         setup_url: None,
         mode: CompileMode::Component,
@@ -402,6 +412,8 @@ fn for_static_attr_inlines_set_attribute() {
     let path = fixtures_dir().join("for-static-attr.sail");
     let source = std::fs::read_to_string(&path).unwrap();
     let opts = CompileOpts {
+        element_prefix: "sail".into(),
+        host_data_attr: "data-sail-host".into(),
         route_params: None,
         setup_url: None,
         mode: CompileMode::Component,
@@ -433,6 +445,8 @@ fn for_dynamic_mixed_inlines_only_static() {
     let path = fixtures_dir().join("for-dynamic-mixed.sail");
     let source = std::fs::read_to_string(&path).unwrap();
     let opts = CompileOpts {
+        element_prefix: "sail".into(),
+        host_data_attr: "data-sail-host".into(),
         route_params: None,
         setup_url: None,
         mode: CompileMode::Component,
@@ -461,6 +475,8 @@ fn for_render_closure_emits_update_field() {
     let path = fixtures_dir().join("for-update.sail");
     let source = std::fs::read_to_string(&path).unwrap();
     let opts = CompileOpts {
+        element_prefix: "sail".into(),
+        host_data_attr: "data-sail-host".into(),
         route_params: None,
         setup_url: None,
         mode: CompileMode::Component,
@@ -509,6 +525,8 @@ fn route_view_reads_route_from_ctx() {
     let path = fixtures_dir().join("route-module.sail");
     let source = std::fs::read_to_string(&path).unwrap();
     let opts = CompileOpts {
+        element_prefix: "sail".into(),
+        host_data_attr: "data-sail-host".into(),
         route_params: Some(vec!["name".to_string()]),
         setup_url: None,
         mode: CompileMode::Component,
@@ -537,6 +555,8 @@ fn routeless_route_omits_route_import() {
     let path = fixtures_dir().join("counter.sail");
     let source = std::fs::read_to_string(&path).unwrap();
     let opts = CompileOpts {
+        element_prefix: "sail".into(),
+        host_data_attr: "data-sail-host".into(),
         route_params: None,
         setup_url: None,
         mode: CompileMode::Component,
@@ -566,6 +586,8 @@ fn comment_nodes_not_emitted() {
     let path = fixtures_dir().join("comment-and-whitespace.sail");
     let source = std::fs::read_to_string(&path).unwrap();
     let opts = CompileOpts {
+        element_prefix: "sail".into(),
+        host_data_attr: "data-sail-host".into(),
         route_params: None,
         setup_url: None,
         mode: CompileMode::Component,
@@ -591,6 +613,8 @@ fn whitespace_text_nodes_dropped_between_elements() {
     let path = fixtures_dir().join("comment-and-whitespace.sail");
     let source = std::fs::read_to_string(&path).unwrap();
     let opts = CompileOpts {
+        element_prefix: "sail".into(),
+        host_data_attr: "data-sail-host".into(),
         route_params: None,
         setup_url: None,
         mode: CompileMode::Component,
@@ -623,6 +647,8 @@ fn reflect_empty_slot_emits_bind_slot_empty_call() {
     let path = fixtures_dir().join("reflect-empty-slot.sail");
     let source = std::fs::read_to_string(&path).unwrap();
     let opts = CompileOpts {
+        element_prefix: "sail".into(),
+        host_data_attr: "data-sail-host".into(),
         route_params: None,
         setup_url: None,
         mode: CompileMode::Component,
@@ -662,6 +688,8 @@ fn reflect_empty_slot_in_conditional_threads_container() {
     let path = fixtures_dir().join("reflect-empty-slot-conditional.sail");
     let source = std::fs::read_to_string(&path).unwrap();
     let opts = CompileOpts {
+        element_prefix: "sail".into(),
+        host_data_attr: "data-sail-host".into(),
         route_params: None,
         setup_url: None,
         mode: CompileMode::Component,
@@ -703,6 +731,8 @@ fn ship_button_emits_cem() {
     let path = fixtures_dir().join("ship-button.sail");
     let source = fs::read_to_string(&path).unwrap();
     let opts = CompileOpts {
+        element_prefix: "sail".into(),
+        host_data_attr: "data-sail-host".into(),
         route_params: None,
         setup_url: None,
         mode: CompileMode::Component,
@@ -728,6 +758,8 @@ fn schema_emitted_for_each_fixture() {
         let path = fixtures_dir().join(format!("{}.sail", fx.name));
         let source = fs::read_to_string(&path).unwrap();
         let opts = CompileOpts {
+            element_prefix: "sail".into(),
+            host_data_attr: "data-sail-host".into(),
             route_params: None,
             setup_url: None,
             mode: fx.mode,
@@ -754,6 +786,8 @@ fn meta_sidecar_emitted_for_each_fixture() {
         let path = fixtures_dir().join(format!("{}.sail", fx.name));
         let source = fs::read_to_string(&path).unwrap();
         let opts = CompileOpts {
+            element_prefix: "sail".into(),
+            host_data_attr: "data-sail-host".into(),
             route_params: None,
             setup_url: None,
             mode: fx.mode,

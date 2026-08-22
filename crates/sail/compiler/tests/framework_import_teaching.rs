@@ -39,6 +39,8 @@ fn has_teaching_error(findings: &[sail_lint::Finding]) -> bool {
 
 fn component_opts(name: &str, path: &str) -> CompileOpts {
     CompileOpts {
+        element_prefix: "sail".into(),
+        host_data_attr: "data-sail-host".into(),
         route_params: None,
         setup_url: Some(format!("./{name}.sail.controller.ts")),
         mode: CompileMode::Component,

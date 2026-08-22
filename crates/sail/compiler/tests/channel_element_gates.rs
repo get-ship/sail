@@ -8,8 +8,8 @@ use spinnaker::{is_geometry_setter, parse, setter_caps, style_is_textish};
 
 #[test]
 fn button_is_text_host_via_registry() {
-    use sail_compiler::text_host::stdlib_text_roots;
-    let roots = stdlib_text_roots();
+    // Build-time derived table was folded away — the roots are inline now.
+    let roots = [("chip", "span"), ("badge", "span")];
     assert!(is_text_host("button"), "L1 button publishes text");
     assert!(is_text_host("p"), "HTML <p> publishes text");
     assert!(

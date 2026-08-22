@@ -28,6 +28,8 @@ fn jsdoc_above_prop_emits_description_in_cem() {
     let path = fixtures_dir().join("jsdoc-prop.sail");
     let source = fs::read_to_string(&path).unwrap();
     let opts = CompileOpts {
+        element_prefix: "sail".into(),
+        host_data_attr: "data-sail-host".into(),
         route_params: None,
         setup_url: None,
         mode: CompileMode::Component,
@@ -79,6 +81,8 @@ fn a_documented_prop_keeps_its_name() {
     let out = compile(
         src,
         CompileOpts {
+            element_prefix: "sail".into(),
+            host_data_attr: "data-sail-host".into(),
             route_params: None,
             mode: CompileMode::Component,
             component_meta: Some(ComponentMeta {

@@ -117,6 +117,8 @@ fn synth_client_into(repo: &Path, gendir: &Path, s: &Surface) {
         let dts = compile(
             &src,
             CompileOpts {
+                element_prefix: "sail".into(),
+                host_data_attr: "data-sail-host".into(),
                 mode: s.mode,
                 emit_dts: true,
                 lint_overrides: Vec::new(),

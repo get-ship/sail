@@ -23,6 +23,8 @@ export default controller((_ctx) => {
 
 fn component_opts(setup_url: Option<&str>, component_imports: bool) -> CompileOpts {
     CompileOpts {
+        element_prefix: "sail".into(),
+        host_data_attr: "data-sail-host".into(),
         route_params: None,
         setup_url: setup_url.map(Into::into),
         mode: CompileMode::Component,

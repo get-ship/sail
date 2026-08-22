@@ -15,11 +15,7 @@ fn ticker_compiles_to_dual_track_with_motion_attach() {
         "the loop is motion engine anatomy at compile time:\n{}",
         out.js
     );
-    assert!(
-        out.js.contains("loop"),
-        "loop trigger present:\n{}",
-        out.js
-    );
+    assert!(out.js.contains("loop"), "loop trigger present:\n{}", out.js);
     assert!(
         out.js.matches("<span").count() >= 2,
         "compile-time dual track:\n{}",
@@ -39,11 +35,8 @@ fn ticker_compiles_to_dual_track_with_motion_attach() {
 
 #[test]
 fn ticker_has_no_duration_or_reverse_props() {
-    let out = compile(
-        r#"<ticker><p>tokens</p></ticker>"#,
-        CompileOpts::default(),
-    )
-    .expect("ticker compiles");
+    let out = compile(r#"<ticker><p>tokens</p></ticker>"#, CompileOpts::default())
+        .expect("ticker compiles");
     assert!(
         !out.js.contains("duration"),
         "duration prop gone from ticker (canonical loop):\n{}",

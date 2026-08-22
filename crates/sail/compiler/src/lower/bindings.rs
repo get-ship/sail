@@ -51,7 +51,9 @@ pub fn collect_attr_imports(
             if let Some(std) = crate::stdlib::element(tag) {
                 for attach in &std.out.controller_attaches {
                     match attach {
-                        crate::check::controller_attach::ControllerAttach::Use { action, .. } => {
+                        crate::check::controller_attach::ControllerAttach::Use {
+                            action, ..
+                        } => {
                             if let Some(a) = crate::action_manifest::ACTIONS
                                 .iter()
                                 .find(|a| a.name == action.as_str())

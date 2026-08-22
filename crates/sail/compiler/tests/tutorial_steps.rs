@@ -64,6 +64,8 @@ fn build(path: &Path) -> Result<(), String> {
         .map(|s| s.to_string_lossy().into_owned())
         .ok_or_else(|| format!("bad path {}", path.display()))?;
     let opts = CompileOpts {
+        element_prefix: "sail".into(),
+        host_data_attr: "data-sail-host".into(),
         mode: CompileMode::Component,
         source_path: Some(path.to_path_buf()),
         component_meta: Some(ComponentMeta { name: stem }),

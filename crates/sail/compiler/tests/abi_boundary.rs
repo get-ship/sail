@@ -22,6 +22,8 @@ const SRC: &str = r#"<button on:click={() => go()} use:tipDescribe>{label()}</bu
 
 fn opts() -> CompileOpts {
     CompileOpts {
+        element_prefix: "sail".into(),
+        host_data_attr: "data-sail-host".into(),
         route_params: None,
         setup_url: None,
         mode: CompileMode::Component,
@@ -364,6 +366,8 @@ fn public_action_surface_is_curated() {
     let out = sail_compiler::compile(
         src,
         sail_compiler::CompileOpts {
+            element_prefix: "sail".into(),
+            host_data_attr: "data-sail-host".into(),
             mode: sail_compiler::CompileMode::Component,
             ..Default::default()
         },
@@ -409,6 +413,8 @@ fn builtin_actions_emit_bare_not_scope_qualified() {
         let out = sail_compiler::compile(
             &src,
             sail_compiler::CompileOpts {
+                element_prefix: "sail".into(),
+                host_data_attr: "data-sail-host".into(),
                 mode: sail_compiler::CompileMode::Component,
                 ..Default::default()
             },

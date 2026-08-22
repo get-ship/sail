@@ -64,7 +64,12 @@ fn page_item_binds_current_and_click_to_controller() {
     let binds = out
         .controller_attaches
         .iter()
-        .filter(|a| matches!(a, sail_compiler::check::controller_attach::ControllerAttach::Bind { .. }))
+        .filter(|a| {
+            matches!(
+                a,
+                sail_compiler::check::controller_attach::ControllerAttach::Bind { .. }
+            )
+        })
         .collect::<Vec<_>>();
     assert!(
         binds.iter().any(|a| format!("{a:?}").contains("current")),

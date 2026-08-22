@@ -7,6 +7,8 @@ use sail_compiler::{CompileMode, CompileOpts, check_all, compile};
 
 fn opts(path: &str) -> CompileOpts {
     CompileOpts {
+        element_prefix: "sail".into(),
+        host_data_attr: "data-sail-host".into(),
         route_params: None,
         setup_url: None,
         mode: CompileMode::Auto,

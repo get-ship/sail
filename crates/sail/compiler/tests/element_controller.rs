@@ -12,6 +12,8 @@ use sail_compiler::{CompileMode, CompileOpts, ComponentMeta, compile, compile_el
 
 fn page_opts() -> CompileOpts {
     CompileOpts {
+        element_prefix: "sail".into(),
+        host_data_attr: "data-sail-host".into(),
         route_params: None,
         setup_url: None,
         mode: CompileMode::Component,
@@ -232,6 +234,8 @@ fn page_attaches_hotkeys_from_controller_instance() {
     let tabs = compile(
         stdlib_src("tabs"),
         CompileOpts {
+            element_prefix: "sail".into(),
+            host_data_attr: "data-sail-host".into(),
             setup_url: Some("./tabs.sail.controller.ts".into()),
             source_path: Some(PathBuf::from(sail_compiler::stdlib::virtual_source_id(
                 "tabs",
@@ -253,6 +257,8 @@ fn page_attaches_hotkeys_from_controller_instance() {
     let tab = compile(
         stdlib_src("tab"),
         CompileOpts {
+            element_prefix: "sail".into(),
+            host_data_attr: "data-sail-host".into(),
             setup_url: Some("./tab.sail.controller.ts".into()),
             source_path: Some(PathBuf::from(sail_compiler::stdlib::virtual_source_id(
                 "tab",
@@ -329,6 +335,8 @@ fn hyphenated_stdlib_tag_is_not_a_ce() {
     let out = compile(
         stdlib_src("tab-panel"),
         CompileOpts {
+            element_prefix: "sail".into(),
+            host_data_attr: "data-sail-host".into(),
             setup_url: Some("./tab-panel.sail.controller.ts".into()),
             source_path: Some(PathBuf::from(sail_compiler::stdlib::virtual_source_id(
                 "tab-panel",

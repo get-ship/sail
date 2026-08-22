@@ -245,6 +245,8 @@ fn stdlib_elements_can_self_nest() {
     // the /components showcase (a card of cards is an essential pattern).
     use sail_compiler::{CompileMode, CompileOpts, compile};
     let opts = CompileOpts {
+        element_prefix: "sail".into(),
+        host_data_attr: "data-sail-host".into(),
         route_params: None,
         setup_url: None,
         mode: CompileMode::Component,

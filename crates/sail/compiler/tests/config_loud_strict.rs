@@ -45,6 +45,8 @@ fn write_fixture(config: &str, sail_body: &str) -> (tempfile::TempDir, PathBuf) 
 
 fn opts_for(path: &Path) -> CompileOpts {
     CompileOpts {
+        element_prefix: "sail".into(),
+        host_data_attr: "data-sail-host".into(),
         route_params: None,
         setup_url: None,
         mode: CompileMode::Auto,

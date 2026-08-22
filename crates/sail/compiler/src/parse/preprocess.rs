@@ -1916,11 +1916,7 @@ fn splice_element(
 
 /// Nested `<tab title>`: the body is role=tabpanel. Name it from title/name
 /// so AT / getByRole('tabpanel', { name }) match the trigger.
-fn stamp_tab_panel_name(
-    root_class: &str,
-    attrs: &[(String, String)],
-    mut body: String,
-) -> String {
+fn stamp_tab_panel_name(root_class: &str, attrs: &[(String, String)], mut body: String) -> String {
     if root_class != "sail-tab" {
         return body;
     }
@@ -4083,10 +4079,8 @@ export default controller(() => {
                 && out.contains(r#"aria-live="polite""#),
             "alert live region is anatomy from tone, not use:: {out}"
         );
-        assert!(
-            out.contains("use:dismissControl"),
-            "dismissControl rides the splice: {out}"
-        );
+        // dismiss is a controller fn now — no use: stamp rides the splice.
+        assert!(!out.contains("use:dismissControl"), "{out}");
         // each slot region receives its projected child, none survive as <slot>
         assert!(
             !out.contains("<slot"),
