@@ -96,6 +96,16 @@ pub(super) fn emit_setup_body(
         mount_w.enter();
         for b in sx_var_bindings {
             let scope_ident = js_ident(&b.scope_name);
+            // Member sources read a field off the returned value: callable
+            // roots call first (`$scope.drag().y`), plain objects read direct.
+            let scope_read = if b.member_call {
+                match b.scope_name.split_once('.') {
+                    Some((root, member)) => format!("$scope.{root}().{member}"),
+                    None => format!("$scope.{scope_ident}()"),
+                }
+            } else {
+                format!("$scope.{scope_ident}")
+            };
             match b.unit {
                 // Color token-group: reflect var *references* for each member
                 // (`--tone: var(--primary)`, `--shade-foreground: var(--primary-foreground)`).
@@ -113,7 +123,7 @@ pub(super) fn emit_setup_body(
                         _ => "String(__v)".to_string(),
                     };
                     mount_w.line(&format!(
-                        "{{ const __v = ($scope.{scope_ident}()); if (__v == null) writeCssVar(__root, {css_prop}, null); else writeCssVar(__root, {css_prop}, {value_expr}); }}"
+                        "{{ const __v = ({scope_read}); if (__v == null) writeCssVar(__root, {css_prop}, null); else writeCssVar(__root, {css_prop}, {value_expr}); }}"
                     ));
                 }
             }

@@ -15,10 +15,10 @@
     index = 0
   }
 
-  style anchor = { position({ scheme: absolute, t: bind(pinYPx), l: bind(pinXPx) }).size({ w: 0, h: 0 }) }
+  style anchor = { position({ scheme: absolute, t: bind(box.y), l: bind(box.x) }).size({ w: 0, h: 0 }) }
   style pin = { size({ w: 6, h: 6 }).radius(full).bg(primary).fg(primary-foreground).border({ color: background, width: 1 }).elevation(sm).cursor(pointer).pointerEvents(auto), when: { stateActive: border({ kind: outline, color: ring-color }) } }
   style badge = { display(contents).type({ family: body, size: xs, weight: medium }) }
-  style region = { position({ scheme: absolute, t: bind(pinYPx), l: bind(pinXPx) }).size({ w: bind(boxWPx), h: bind(boxHPx) }).bg(hover-bg).border({ color: primary, width: 1, style: dashed }).radius(sm).cursor(pointer).pointerEvents(auto) }
+  style region = { position({ scheme: absolute, t: bind(box.y), l: bind(box.x) }).size({ w: bind(box.w), h: bind(box.h) }).bg(hover-bg).border({ color: primary, width: 1, style: dashed }).radius(sm).cursor(pointer).pointerEvents(auto) }
 </scope>
 
 <controller>
@@ -44,17 +44,9 @@ function parseRect(raw: string): BoxRect {
 
 export default controller(({ kind, rect, index, active }: Scope) => {
     const box = derived(() => parseRect(rect()))
-    const pinXPx = derived((): number => box().x)
-    const pinYPx = derived((): number => box().y)
-    const boxWPx = derived((): number => box().w)
-    const boxHPx = derived((): number => box().h)
     return {
       isPoint: derived(() => kind() !== 'region'),
       box,
-      pinXPx,
-      pinYPx,
-      boxWPx,
-      boxHPx,
       hasBox: derived(() => {
         const b = box()
         return b.w !== 0 || b.h !== 0

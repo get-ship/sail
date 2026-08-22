@@ -249,3 +249,36 @@ export default controller(() => {
         "for-member binds must resolve:\n{bind_refusals:#?}\nall={diags:#?}"
     );
 }
+
+#[test]
+fn scope_member_bind_reads_field_off_returned_object() {
+    let src = r#"
+<controller>
+export default controller(() => {
+  const drag = signal({ x: 0, y: 0, w: 0, h: 0 })
+  return { drag }
+})
+</controller>
+
+<column>
+  <stack
+    style({ position({ scheme: absolute, t: bind(drag.y), l: bind(drag.x) }).size({ w: bind(drag.w), h: bind(drag.h) }) })
+  >x</stack>
+</column>
+"#;
+    let out = compile(
+        src,
+        component_opts("scope-member-probe.sail", "scope-member-probe"),
+    )
+    .expect("scope member binds must compile");
+    assert!(
+        out.js.contains("--drag-y"),
+        "writer must target --drag-y:\n{}",
+        out.js
+    );
+    assert!(
+        out.js.contains("$scope.drag().y"),
+        "member read must call the root then take the field:\n{}",
+        out.js
+    );
+}

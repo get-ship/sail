@@ -46,6 +46,9 @@ pub enum StyleBindingSource {
     /// `<for>` row member (`bind(c.y)` under `<for {items as c}>`) — written
     /// per element by the row emitter; no host-level registration.
     ForMember,
+    /// Member read off a setup-returned object (`bind(rect.y)`) — written by
+    /// the host effect like signal binds, but without the trailing call.
+    ScopeMember,
 }
 
 /// How the bound value should realize as CSS.
@@ -83,6 +86,10 @@ pub struct StyleBinding {
     pub scope_name: String,
     pub source: StyleBindingSource,
     pub unit: StyleBindingUnit,
+    /// Member-path sources only: the root is a callable (signal/derived/
+    /// timeline) when true, a plain object when false. Drives whether the
+    /// emitted read is `$scope.root().member` or `$scope.root.member`.
+    pub member_call: bool,
 }
 
 
@@ -235,6 +242,7 @@ pub fn resolve(
             css_name,
             scope_name,
             source: StyleBindingSource::Prop,
+            member_call: false,
             unit: StyleBindingUnit::TokenGroup,
         });
     }
@@ -286,6 +294,7 @@ pub fn resolve(
                 css_name,
                 scope_name,
                 source: StyleBindingSource::Prop,
+            member_call: false,
                 unit,
             });
             continue;
@@ -306,14 +315,44 @@ pub fn resolve(
                         scope_name: scope_name.clone(),
                         source: StyleBindingSource::ForMember,
                         unit: StyleBindingUnit::Untyped,
+                        member_call: false,
                     });
                     continue;
                 }
             }
         }
 
-        // 3. Setup-returned signal / timeline / derived.
+        // 3. Setup-returned signal / timeline / derived — including member
+        // reads off them (`bind(rect.y)`): the row/host writer calls the root
+        // and reads the field; unit follows the setter dim.
         if let Some(c) = controller {
+            if scope_name.contains('.') {
+                let (root, member) = scope_name.split_once('.').unwrap();
+                if let Some(m) = c.returned.iter().find(|m| m.name == root) {
+                    let css = format!(
+                        "{}-{}",
+                        camel_to_kebab(root),
+                        camel_to_kebab(member)
+                    );
+                    let unit = match dim {
+                        SetterDim::Length => StyleBindingUnit::LengthPx,
+                        _ => StyleBindingUnit::Untyped,
+                    };
+                    out.push(StyleBinding {
+                        css_name: css,
+                        scope_name: scope_name.clone(),
+                        source: StyleBindingSource::ScopeMember,
+                        unit,
+                        member_call: matches!(
+                            m.kind,
+                            ScopeKind::Signal
+                                | ScopeKind::Derived
+                                | ScopeKind::Timeline
+                        ),
+                    });
+                    continue;
+                }
+            }
             if let Some(m) = c
                 .returned
                 .iter()
@@ -359,6 +398,7 @@ pub fn resolve(
                     scope_name,
                     source,
                     unit,
+                    member_call: true,
                 });
                 continue;
             }
