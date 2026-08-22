@@ -24,8 +24,6 @@ import {
 export { ELEV_STEPS, RADIUS_KEYS, RECIPE_IDS, type ElevKey, type RadiusKey, type RecipeId }
 
 const BORDER_WIDTH_PATH = 'color.border.width'
-/** Frost fill — translucent card surface (not decorative surface-overlay α). */
-const CARD_BG_PATH = 'color.card.default'
 const CARD_BACKDROP_PATH = 'filter.backdrop'
 const CARD_REST_PATH = 'shadow.card-rest'
 
@@ -55,7 +53,7 @@ export function mockRadiusFamily(masterMd: number): {
 
 /**
  * Apply alpha to an oklch/color string for frosted card fill.
- * Glass catalog uses e.g. `oklch(1 0 0 / 55%)` on color.card.default.
+ * Glass catalog uses e.g. `oklch(1 0 0 / 55%)` on the live specimen fill.
  */
 export function withColorAlpha(raw: string | null | undefined, alpha: number): string {
   const a = Math.max(0.1, Math.min(1, alpha))
@@ -148,7 +146,7 @@ export function createShapeEdit(session: ThemeSession) {
   let elevLocal: ElevKey | null = null
   let recipeLocal: RecipeId | null = null
   /** Base card color without alpha (for glass α dials). */
-  let cardBaseColor = 'oklch(1 0 0)'
+  const cardBaseColor = 'oklch(1 0 0)'
 
   const markCustom = () => {
     if (applyingRecipe) return
@@ -294,8 +292,7 @@ export function createShapeEdit(session: ThemeSession) {
     const fill = withColorAlpha(cardBaseColor, o)
     liveCardFill.set(fill)
     repackCardBoxes()
-    // Card fill α (frost) + backdrop blur — not surface-overlay noise layer.
-    await setTokenValue(CARD_BG_PATH, fill)
+    // Backdrop blur persists; frost fill stays live-specimen freeform.
     await setTokenValue(CARD_BACKDROP_PATH, b > 0 ? `blur(${b}px)` : 'none')
   }
 
@@ -309,7 +306,6 @@ export function createShapeEdit(session: ThemeSession) {
     const solid = stripColorAlpha(cardBaseColor)
     liveCardFill.set(solid)
     repackCardBoxes()
-    await setTokenValue(CARD_BG_PATH, solid)
     await setTokenValue(CARD_BACKDROP_PATH, 'none')
   }
 
@@ -350,22 +346,6 @@ export function createShapeEdit(session: ThemeSession) {
     elevKey.set(elev)
     elevLabel.set(elev)
     statShadow.set(elev)
-
-    const cardBgRaw = getPathValue(doc, CARD_BG_PATH, writeMode)
-    if (cardBgRaw) {
-      cardBaseColor = stripColorAlpha(cardBgRaw)
-      // Infer α from stored card fill when present.
-      const alphaM = cardBgRaw.match(/\/\s*([0-9.]+)\s*%?\s*\)/)
-      if (alphaM) {
-        let o = Number(alphaM[1])
-        if (Number.isFinite(o)) {
-          if (o > 1) o = o / 100
-          surfaceOp.set(o)
-          surfaceOpPct.set(Math.round(o * 100))
-          surfaceOpLabel.set(`${Math.round(o * 100)}%`)
-        }
-      }
-    }
 
     const blurRaw = getPathValue(doc, CARD_BACKDROP_PATH, writeMode)
     if (blurRaw != null) {

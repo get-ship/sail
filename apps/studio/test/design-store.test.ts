@@ -131,13 +131,13 @@ describe('theme doc density + inheritance + diff', () => {
       },
     }
     __setWorkingDocForTests(base)
-    await setTokenValue('color.card.default', '#22c55e')
+    await setTokenValue('color.muted.foreground', '#22c55e')
     let s = getDesignState()
     expect(s.inheritance.find((n) => n.id === 'theme')).toBeTruthy()
-    expect(s.diffRows.some((r) => r.path.includes('color.card'))).toBe(true)
-    await clearTokenValue('color.card.default')
+    expect(s.diffRows.some((r) => r.path.includes('color.muted'))).toBe(true)
+    await clearTokenValue('color.muted.foreground')
     s = getDesignState()
-    expect(s.diffRows.some((r) => r.path.includes('color.card'))).toBe(false)
+    expect(s.diffRows.some((r) => r.path.includes('color.muted'))).toBe(false)
   })
 
   it('applyRadiusToDoc writes ordered extension', () => {

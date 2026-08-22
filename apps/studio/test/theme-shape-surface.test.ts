@@ -93,12 +93,12 @@ describe('theme-shape-surface', () => {
     expect(mockRadiusFamily(8)).toEqual({ sm: 4, md: 8, lg: 12, xl: 16 })
   })
 
-  it('review: glass writes card fill α + backdrop; freeform frost fill', async () => {
+  it('review: glass writes backdrop; frost fill stays live freeform', async () => {
     const edit = readFileSync(EDIT, 'utf8')
     const sail = readFileSync(SURFACE, 'utf8')
-    // Correct frost channel — not surface-overlay noise α.
-    expect(edit).toMatch(/color\.card\.default/)
+    // Backdrop persists; frost fill is specimen freeform (no dead store write).
     expect(edit).toMatch(/filter\.backdrop/)
+    expect(edit).not.toMatch(/color\.card\.default/)
     expect(edit).toMatch(/withColorAlpha|liveCardFill/)
     // Specimen freeform fill (liveBox pack or bind).
     expect(sail).toMatch(/liveCardFill|liveCardBox|use:liveBox/)
@@ -142,7 +142,6 @@ describe('theme-shape-surface', () => {
     expect(actions).toMatch(/requestSaveTheme|saveTheme/)
     expect(edit).toMatch(/shadow\.card-rest/)
     expect(edit).toMatch(/color\.border\.width/)
-    expect(edit).toMatch(/color\.card\.default/)
     expect(edit).toMatch(/filter\.backdrop/)
   })
 
