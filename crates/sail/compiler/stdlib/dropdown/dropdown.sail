@@ -10,8 +10,8 @@
   Slotted <menu-item>s inherit this scope's onSelect: activating an item
   fires { value } and closes. Open/close + light-dismiss stay the native
   popover's (trigger wires popovertarget). Roving arrow focus died with
-  use:menu — items are native buttons (Tab reaches them); context-menu
-  set the same precedent.
+  the old menu action — items are native buttons (Tab reaches them);
+  context-menu set the same precedent.
 -->
 
 <scope>

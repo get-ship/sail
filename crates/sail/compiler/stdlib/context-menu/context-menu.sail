@@ -3,7 +3,7 @@
   Look: this host owns Style. Slots, not :part.
   State: this file's <controller> (keys + select). Signals only.
   Listen: use:hotkeys={keys} thunks; native <button> on <menu-item>;
-  native [popover] light-dismiss. (use:contextMenu diet)
+  native [popover] light-dismiss. (the old contextMenu action was dieted)
 -->
 
 <scope>

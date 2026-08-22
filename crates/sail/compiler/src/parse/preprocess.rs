@@ -1668,29 +1668,6 @@ fn stamp_native_host(
             bind_style.push_str(&format!("--{bridge}: var(--{public});"));
         }
     }
-    // Password product: stamp reveal when type=password and reveal is not off.
-    // Native freeform does not inherit use: from element structure — inject here.
-    let stamp_password_reveal = if tag_name == "input" {
-        let ty = rest_attrs
-            .iter()
-            .find(|(n, _)| *n == "type")
-            .map(|(_, v)| v.trim_matches(['"', '\'']))
-            .or_else(|| {
-                default_attrs
-                    .iter()
-                    .find(|(n, _)| n == "type")
-                    .map(|(_, v)| v.as_str())
-            })
-            .unwrap_or("text");
-        let reveal_explicit_false = rest_attrs.iter().any(|(n, v)| {
-            *n == "reveal" && matches!(v.trim_matches(['"', '\'']), "false" | "0" | "off")
-        });
-        ty == "password"
-            && !reveal_explicit_false
-            && !rest_attrs.iter().any(|(n, _)| *n == "use:passwordReveal")
-    } else {
-        false
-    };
     let mut wrote_style = false;
     for (n, v) in rest_attrs {
         outb.push(' ');
@@ -1722,9 +1699,6 @@ fn stamp_native_host(
             outb.push_str(v);
             outb.push('"');
         }
-    }
-    if stamp_password_reveal {
-        outb.push_str(" use:passwordReveal");
     }
     for (trigger, value) in motion_stamps {
         let attr = format!("_sail_m_{trigger}");

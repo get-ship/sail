@@ -19,9 +19,9 @@
 
   Defaults paint a quiet band and nowrap the slot so a bare <p> is enough.
 
-  Note: duration/reverse selectors were props keyed to use:marquee (a
-  retired runtime action). The loop preset is canonical until prop-gated
-  motion arms land. Filed: prop-gated motion arms (motion_emit).
+  Note: duration/reverse selectors were props of a retired runtime action.
+  The loop preset is canonical until prop-gated motion arms land. Filed:
+  prop-gated motion arms (motion_emit).
 -->
 
 <scope>

@@ -4,16 +4,17 @@
   Top/bottom geometry: brand (start) · center (true center, absolute) · actions (end).
   Absolute center avoids flex asymmetry from unequal brand vs actions widths.
 
-  autohide: with sticky + use:chromeOffset, bar tucks on scroll-down and returns
+  autohide: with sticky positioning, bar tucks on scroll-down and returns
   on scroll-up or pointer near the top edge (space reclaim without losing nav).
-  chromeOffset stamps data-hidden; this skin turns off pointer-events so the
-  reveal-edge can receive the hover. Do not use HTML hidden / display:none.
+  Tuck is controller state — the host carries data-hidden; this skin turns off
+  pointer-events so the reveal-edge can receive the hover. Do not use HTML
+  hidden / display:none.
 
   floating: inset chrome — margin + radius + elevation, not edge-to-edge.
 
   solid-on-scroll: LANGUAGE GAP — Style cannot key on scroll position.
-  chromeOffset measures/hides chrome but does not toggle solid paint.
-  A new use:solidOnScroll would only flip a host attribute; skip JS.
+  A scroll listener flipping a host attribute (controller) is the honest
+  shape if solid paint ever keys on it; no JS today.
 -->
 
 <scope>
@@ -50,7 +51,7 @@
   style centerInnerRail = {dir(column)}
   style actions = {shrink(0).margin({ s: auto }).size({ min-w: 0 })}
   style actionsRail = {margin({ t: auto, s: 0 }).dir(column)}
-  // Instant tuck is state: use:chromeOffset stamps data-hidden. Pointer-events
+  // Instant tuck is state: data-hidden drives the match above. Pointer-events
   // none so the bar does not steal clicks; a fixed top edge still reveals.
   // translateY(-100%) is residual on the action — Style translateY is space
   // scale (translateY(-full/-100/-screen) do not compile).
