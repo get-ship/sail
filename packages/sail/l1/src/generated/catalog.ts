@@ -116,7 +116,7 @@ export const TAGS: readonly L1Tag[] = [
     tag: 'accordion',
     component: 'accordion',
     role: 'host',
-    description: 'single disclosure. use:detailsToggle + use:detailsDisabled.',
+    description: 'single disclosure. Native <details> owns open/close, keyboard,',
     acceptsChildren: true,
     props: [
       { name: 'open', type: 'bool', default: 'false' },
@@ -606,6 +606,7 @@ export const TAGS: readonly L1Tag[] = [
     acceptsChildren: true,
     props: [
       { name: 'placement', type: 'string' },
+      { name: 'id', type: 'string' },
     ],
     axes: [
     ],
@@ -634,7 +635,7 @@ export const TAGS: readonly L1Tag[] = [
     description: 'text field product.',
     acceptsChildren: false,
     props: [
-      { name: 'type', type: 'text | email | password | number | search | tel | url | hidden', default: 'text', values: ['text', 'email', 'password', 'number', 'search', 'tel', 'url', 'hidden'] },
+      { name: 'type', type: 'text | email | password | number | search | tel | url | hidden | checkbox | radio | file | color | date | button', default: 'text', values: ['text', 'email', 'password', 'number', 'search', 'tel', 'url', 'hidden', 'checkbox', 'radio', 'file', 'color', 'date', 'button'] },
       { name: 'size', type: 'xs | sm | md | lg', default: 'md', values: ['xs', 'sm', 'md', 'lg'] },
       { name: 'surface', type: 'default | filled | flushed', default: 'default', values: ['default', 'filled', 'flushed'] },
       { name: 'invalid', type: 'bool', default: 'false' },
@@ -654,6 +655,7 @@ export const TAGS: readonly L1Tag[] = [
       { name: 'inputmode', type: 'string' },
       { name: 'reveal', type: 'bool', default: 'true' },
       { name: 'id', type: 'string' },
+      { name: 'describedBy', type: 'string' },
     ],
     axes: [
       { name: 'disabled', values: ['false', 'true'], optional: false },
@@ -663,7 +665,7 @@ export const TAGS: readonly L1Tag[] = [
       { name: 'reveal', values: ['false', 'true'], optional: false },
       { name: 'size', values: ['xs', 'sm', 'md', 'lg'], optional: false },
       { name: 'surface', values: ['default', 'filled', 'flushed'], optional: false },
-      { name: 'type', values: ['text', 'email', 'password', 'number', 'search', 'tel', 'url', 'hidden'], optional: false },
+      { name: 'type', values: ['text', 'email', 'password', 'number', 'search', 'tel', 'url', 'hidden', 'checkbox', 'radio', 'file', 'color', 'date', 'button'], optional: false },
     ],
     concerns: ['bg', 'border', 'elevation', 'fg', 'filter', 'play', 'position', 'size', 'type'],
   },
@@ -1108,17 +1110,15 @@ export const TAGS: readonly L1Tag[] = [
       { name: 'hoverable', type: 'bool', default: 'false' },
       { name: 'bordered', type: 'bool', default: 'false' },
       { name: 'sticky-header', type: 'bool', default: 'false' },
-      { name: 'searchable', type: 'bool', default: 'false' },
     ],
     axes: [
       { name: 'bordered', values: ['false', 'true'], optional: false },
       { name: 'dense', values: ['false', 'true'], optional: false },
       { name: 'hoverable', values: ['false', 'true'], optional: false },
-      { name: 'searchable', values: ['false', 'true'], optional: false },
       { name: 'sticky-header', values: ['false', 'true'], optional: false },
       { name: 'striped', values: ['false', 'true'], optional: false },
     ],
-    concerns: ['bg', 'border', 'fg', 'play', 'size', 'type'],
+    concerns: ['bg', 'border', 'fg', 'size', 'type'],
   },
   {
     tag: 'tabs',
@@ -1269,12 +1269,10 @@ export const TAGS: readonly L1Tag[] = [
       { name: 'value', type: 'string' },
       { name: 'disabled', type: 'bool', default: 'false' },
       { name: 'variant', type: 'outline | ghost | segmented', default: 'outline', values: ['outline', 'ghost', 'segmented'] },
-      { name: 'orientation', type: 'horizontal | vertical', default: 'horizontal', values: ['horizontal', 'vertical'] },
       { name: 'size', type: 'md | sm | lg', default: 'md', values: ['md', 'sm', 'lg'] },
     ],
     axes: [
       { name: 'disabled', values: ['false', 'true'], optional: false },
-      { name: 'orientation', values: ['horizontal', 'vertical'], optional: false },
       { name: 'size', values: ['md', 'sm', 'lg'], optional: false },
       { name: 'variant', values: ['outline', 'ghost', 'segmented'], optional: false },
     ],
@@ -1298,13 +1296,13 @@ export const TAGS: readonly L1Tag[] = [
       { name: 'type', values: ['single', 'multiple'], optional: false },
       { name: 'variant', values: ['outline', 'ghost', 'segmented'], optional: false },
     ],
-    concerns: ['bg', 'border', 'play'],
+    concerns: ['bg', 'border', 'filter', 'play'],
   },
   {
     tag: 'tooltip',
     component: 'tooltip',
     role: 'host',
-    description: 'hover/focus text bubble. use:tipDescribe supplies per-instance',
+    description: 'hover/focus text bubble. Style value language only.',
     acceptsChildren: true,
     props: [
       { name: 'placement', type: 'top | bottom | left | right', default: 'top', values: ['top', 'bottom', 'left', 'right'] },
