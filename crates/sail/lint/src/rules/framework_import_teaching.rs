@@ -48,7 +48,18 @@ const SUGGEST: &str = "Drop the `@ship/*` value import. Ambient names (signal, c
 /// Compiler ambient inject specifier (`runtime_ambient::RUNTIME_SPECIFIER`).
 /// Post-inject controller bodies always carry this line; never treat it as
 /// authored cargo-cult.
-const COMPILER_INJECT_SPECIFIER: &str = "@ship/sail-runtime/internal";
+/// Compiler-injected ambient specifiers — never authored cargo-cult.
+/// Mirrors `runtime_ambient::ambient_module` (sail-compiler): `/internal` is
+/// the ABI barrel; heavy batteries (`createVirtualizer`, `query`,
+/// `timeline`) inject from their own subpaths so a page that never mentions
+/// them does not download them. The teaching must not flag what the
+/// injector itself emits.
+const COMPILER_INJECT_SPECIFIERS: &[&str] = &[
+    "@ship/sail-runtime/internal",
+    "@ship/sail-runtime/virtual",
+    "@ship/sail-runtime/query",
+    "@ship/sail-runtime/motion",
+];
 
 pub fn check(path: &Path, source: &str) -> Vec<Finding> {
     if !is_app_framework_import_scope(path) {
@@ -108,8 +119,9 @@ fn is_ship_package_specifier(module: &str, from_file: &Path) -> bool {
     if !m.starts_with("@ship/") {
         return false;
     }
-    // Compiler-injected ambient line — not authored.
-    if m == COMPILER_INJECT_SPECIFIER {
+    // Compiler-injected ambient lines — not authored. See
+    // COMPILER_INJECT_SPECIFIERS above.
+    if COMPILER_INJECT_SPECIFIERS.contains(&m) {
         return false;
     }
     // Component packages (export sail custom elements) — legal to import from
@@ -373,6 +385,21 @@ mod tests {
         );
         assert_eq!(f.len(), 1, "{f:?}");
         assert!(f[0].message.contains("@ship/tokens"), "{f:?}");
+    }
+
+    #[test]
+    fn compiler_injected_battery_specifiers_pass_clean() {
+        // The wrap step injects these on the controller's behalf
+        // (runtime_ambient::ambient_module); teaching them would contradict
+        // the injector. Authored framework imports still teach.
+        for specifier in COMPILER_INJECT_SPECIFIERS {
+            let src = format!(
+                "import {{ createVirtualizer }} from '{specifier}'\n\
+                 export default controller(() => ({{}}))\n"
+            );
+            let f = lint_at("packages/components/sail/x/src/y/y.sail", &src);
+            assert!(f.is_empty(), "{specifier}: {f:?}");
+        }
     }
 
     #[test]
