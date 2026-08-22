@@ -234,7 +234,6 @@ export default controller(({ value, layout }: Scope) => {
       aria-label={n.id}
       aria-selected={selectedSet().has(n.id) ? 'true' : 'false'}
       data-node-id={n.id}
-      use:rect={{top: n.rect.y, left: n.rect.x, width: n.rect.w, height: n.rect.h}}
       on:pointerdown={nodePointerDown} style({ pad(2).boxSizing(border).bg(surface).fg(foreground).border({ color: border, width: 1 }).radius(md).cursor(grab).select(none).border({ kind: outline, style: none }), when: { focus: border({ kind: outline, color: ring, width: 2, style: solid }), selected: border({ color: primary }).border({ kind: outline, color: primary }) } })>
       <slot name={n.id}></slot>
       <for {n.ports as p} key={p.id}>

@@ -104,7 +104,7 @@ pub const ACTIONS: &[ActionEntry] = &[
         param: "void",
         summary: "Autosize a textarea (height) or single-line input (width) to its content.",
         auto_import: true,
-        writes: &["autosizeH"],
+        writes: &[],
     },
     ActionEntry {
         name: "catchRender",
@@ -275,13 +275,6 @@ pub const ACTIONS: &[ActionEntry] = &[
         writes: &[],
     },
     ActionEntry {
-        name: "pin",
-        param: "PinPoint | null | undefined",
-        summary: "Pin one corner of an element to a fixed viewport coordinate.",
-        auto_import: true,
-        writes: &["pinX", "pinY"],
-    },
-    ActionEntry {
         name: "pressable",
         param: "void",
         summary: "Button semantics (role, aria-disabled/tabindex sync, Enter/Space activation) for a non-button host — the pressable mix-in.",
@@ -322,13 +315,6 @@ pub const ACTIONS: &[ActionEntry] = &[
         summary: "Error-state element behavior; arms a retry action for the call-to-action slot.",
         auto_import: true,
         writes: &[],
-    },
-    ActionEntry {
-        name: "rect",
-        param: "BoxRect | null | undefined",
-        summary: "Track the element's bounding rect via ResizeObserver.",
-        auto_import: true,
-        writes: &["boxTop", "boxLeft", "boxW", "boxH"],
     },
     ActionEntry {
         name: "resizable",
@@ -400,7 +386,7 @@ pub const ACTIONS: &[ActionEntry] = &[
 /// `pagination`, `combobox`, `icon`, `resizable`) are closed impl inside L1 widgets — not public.
 /// An action is node-lifetime imperative behavior the language has no syntax
 /// for — never content, state, or data (icon fails that test; the element owns it).
-pub const PUBLIC_ACTION_COUNT: usize = 11;
+pub const PUBLIC_ACTION_COUNT: usize = 10;
 pub const PUBLIC_ACTION_NAMES: &[&str; PUBLIC_ACTION_COUNT] = &[
     "anchor",
     "autosize",
@@ -411,7 +397,6 @@ pub const PUBLIC_ACTION_NAMES: &[&str; PUBLIC_ACTION_COUNT] = &[
     "focus",
     "hotkeys",
     "inView",
-    "rect",
     "tipDescribe",
 ];
 
@@ -459,14 +444,12 @@ pub const BUILTIN_ACTION_NAMES: &[&str] = &[
     "mediaFallback",
     "menu",
     "pagination",
-    "pin",
     "pressable",
     "pressed",
     "radioGroup",
     "rangeFill",
     "rangePair",
     "recoverySurface",
-    "rect",
     "resizable",
     "syntaxHighlight",
     "tabs",
@@ -507,8 +490,6 @@ pub const BARE_REFERENCED_ACTION_NAMES: &[&str] = &[
     "gridTracks",
     "hotkeys",
     "inView",
-    "pin",
-    "rect",
 ];
 
 // (see drift-guard note above — the tests in `mod tests` enforce

@@ -97,8 +97,6 @@ const BUILTINS: &[&str] = &[
     "clickOutside",
     "dropzone",
     "gridTracks",
-    "pin",
-    "rect",
 ];
 
 const KEYWORDS: &[&str] = &[
