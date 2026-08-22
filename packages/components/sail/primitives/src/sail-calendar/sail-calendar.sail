@@ -52,15 +52,8 @@ function weekdayLabels(weekStartsOn: number): { key: string; label: string }[] {
 
 export default controller((ctx: ControllerScope<Scope>) => {
     const { events, focusDate, weekStartsOn, slotMinutes, dayStartHour, dayEndHour, rangeMode } = ctx
-    // tracks attr only accepts --var; action stamps --cal-time-tracks.
+    // tracks attr only accepts --var.
     const timeGridTracks = derived<string>(() => 'auto 1fr')
-    // PositionedEvent percents → use:eventSpan custom properties.
-    const eventRect = (pe: { topPct: number; heightPct: number; laneIndex: number; laneCount: number }) => ({
-      top: `${pe.topPct}%`,
-      height: `${pe.heightPct}%`,
-      left: `${(pe.laneIndex / pe.laneCount) * 100}%`,
-      width: `${(1 / pe.laneCount) * 100}%`,
-    })
     // calendar identity (mount) supersedes; seed from SSR events until then.
     const engine = signal<Calendar | null>(null)
 
@@ -122,7 +115,17 @@ export default controller((ctx: ControllerScope<Scope>) => {
         .dayColumns()
         .map((col) => ({
           key: `${col.iso}|${col.laidOut.map((p) => p.event.id).join(',')}|${col.allDayEvents.map((e) => e.id).join(',')}|${sel.join(',')}`,
-          col,
+          col: {
+            ...col,
+            // Lane geometry as ready CSS values — row member binds paint these.
+            laidOut: col.laidOut.map((p) => ({
+              ...p,
+              top: `${p.topPct}%`,
+              height: `${p.heightPct}%`,
+              left: `${(p.laneIndex / p.laneCount) * 100}%`,
+              width: `${(1 / p.laneCount) * 100}%`,
+            })),
+          },
         }))
     })
     const timeSlots = derived(() => cal().timeSlots())
@@ -289,7 +292,6 @@ export default controller((ctx: ControllerScope<Scope>) => {
       isDay,
       focusedIso,
       timeGridTracks,
-      eventRect,
     }
   })
 
@@ -388,8 +390,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
               type="button"
               data-event-id={pe.event.id}
               aria-selected={selectedIds().includes(pe.event.id) ? 'true' : 'false'}
-              use:eventSpan={eventRect(pe)}
-              title={pe.event.title} style({ position({ scheme: absolute, t: bind(evtTop), l: bind(evtLeft) }).size({ w: bind(evtW), h: bind(evtH) }).pad({ x: 1, y: half }).overflow({ all: hidden }).cursor(pointer).fg(primary).bg(hover-bg).radius(sm).type({ size: density, align: start }), when: { selected: border({ kind: outline, color: ring }) } })>{pe.event.title}</button>
+              title={pe.event.title} style({ position({ scheme: absolute, t: bind(pe.top), l: bind(pe.left) }).size({ w: bind(pe.width), h: bind(pe.height) }).pad({ x: 1, y: half }).overflow({ all: hidden }).cursor(pointer).fg(primary).bg(hover-bg).radius(sm).type({ size: density, align: start }), when: { selected: border({ kind: outline, color: ring }) } })>{pe.event.title}</button>
           </for>
         </div>
       </for>

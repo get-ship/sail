@@ -97,7 +97,6 @@ const BUILTINS: &[&str] = &[
     "cellPad",
     "clickOutside",
     "dropzone",
-    "eventSpan",
     "gridTracks",
     "pin",
     "portEdge",
