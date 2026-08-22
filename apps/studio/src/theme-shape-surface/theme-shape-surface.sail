@@ -24,13 +24,9 @@
   style sliderRow = { size({ min-w: 0 }) }
   style sectionPanel = { pad(3).radius(lg).border(subtle).bg(surface) }
   style tokenStrip = { pad(2).fg(muted).radius(sm).bg(app).type(mono-sm) }
-  // Outline chip shells — continuous radius via use:liveBox (token radius cannot drag continuously).
   // no preset: size lock
-  style ladderChip = { size({ w: 9, h: 7, min-w: 9, min-h: 7 }).border(subtle).bg(transparent) }
   // no preset: size lock
-  style ladderChipXl = { size({ w: 10, h: 8, min-w: 10, min-h: 8 }).border(subtle).bg(transparent) }
   // no preset: size lock
-  style cornerChip = { size({ w: 8, h: 6, min-w: 8, min-h: 6 }).border(subtle).bg(transparent) }
   // Elev chip marks — stepped vocabulary (none dashed → xl deep lift).
   // no preset: size lock
   style elevMarkNone = { size({ w: 5, h: 4, min-w: 5, min-h: 4 }).radius(sm).border(subtle).bg(background) }
@@ -86,7 +82,7 @@
 <controller>
 import { createThemeSession } from '../compositions/theme-session/theme-session'
 import { watchPreviewHost } from '../compositions/theme-session/bind-preview-host'
-import { createShapeEdit } from '../compositions/theme-shape-surface/theme-shape-edit'
+import { createShapeEdit, withColorAlpha, stripColorAlpha } from '../compositions/theme-shape-surface/theme-shape-edit'
 export default controller(() => {
   const session = createThemeSession({
     facet: 'shape',
@@ -94,20 +90,25 @@ export default controller(() => {
     saveSuccessMessage: 'Shape tokens saved to DTCG source.',
   })
   const shape = createShapeEdit(session)
+  const { elevKey, radiusLg, borderW, surfaceOp, showGlass } = shape
+  // Dial geometry crosses JS→paint as typed numbers: annotated deriveds give
+  // the compiler its number→length proof (px realization via @property).
+  const cardRadius = derived((): number => radiusLg())
+  const cardElev = derived<string>(() => elevKey())
+  const cardBase = 'oklch(1 0 0)'
+  const frostFill = derived<string>(() =>
+    showGlass() ? withColorAlpha(cardBase, surfaceOp()) : stripColorAlpha(cardBase) || 'oklch(1 0 0)',
+  )
   mount((host) => watchPreviewHost(host, (el) => session.attachPreviewHost(el)))
   return {
     session,
     shape,
-    liveCardBox: shape.liveCardBox,
-    liveGlassBox: shape.liveGlassBox,
-    liveLadderSmBox: shape.liveLadderSmBox,
-    liveLadderMdBox: shape.liveLadderMdBox,
-    liveLadderLgBox: shape.liveLadderLgBox,
-    liveLadderXlBox: shape.liveLadderXlBox,
-    liveCornerSmBox: shape.liveCornerSmBox,
-    liveCornerMdBox: shape.liveCornerMdBox,
-    liveCornerLgBox: shape.liveCornerLgBox,
-    liveCornerXlBox: shape.liveCornerXlBox,
+    elevKey,
+    surfaceOp,
+    showGlass,
+    cardElev,
+    cardRadius,
+    frostFill,
   }
 })
 </controller>
@@ -217,7 +218,6 @@ export default controller(() => {
               on:click={() => shape.onRadiusChip('sm')}
               style(chipCol)>
               <column gap="1" align="center">
-                <stack hidden="true" use:liveBox={liveCornerSmBox()} style(cornerChip)></stack>
                 <p style(pathMeta)>sm</p>
                 <p style(monoMeta)>{shape.radiusSmLabel()}</p>
               </column>
@@ -233,7 +233,6 @@ export default controller(() => {
               on:click={() => shape.onRadiusChip('md')}
               style(chipCol)>
               <column gap="1" align="center">
-                <stack hidden="true" use:liveBox={liveCornerMdBox()} style(cornerChip)></stack>
                 <p style(pathMeta)>md</p>
                 <p style(monoMeta)>{shape.radiusMdLabel()}</p>
               </column>
@@ -249,7 +248,6 @@ export default controller(() => {
               on:click={() => shape.onRadiusChip('lg')}
               style(chipCol)>
               <column gap="1" align="center">
-                <stack hidden="true" use:liveBox={liveCornerLgBox()} style(cornerChip)></stack>
                 <p style(pathMeta)>lg</p>
                 <p style(monoMeta)>{shape.radiusLgLabel()}</p>
               </column>
@@ -265,7 +263,6 @@ export default controller(() => {
               on:click={() => shape.onRadiusChip('xl')}
               style(chipCol)>
               <column gap="1" align="center">
-                <stack hidden="true" use:liveBox={liveCornerXlBox()} style(cornerChip)></stack>
                 <p style(pathMeta)>xl</p>
                 <p style(monoMeta)>{shape.radiusXlLabel()}</p>
               </column>
@@ -431,7 +428,7 @@ export default controller(() => {
                 </column>
 
                 <!-- Single character card: freeform fill (frost α live), not solid nested plate. -->
-                <stack spec-card use:liveBox={liveCardBox()} style(liveCard)>
+                <stack spec-card style(liveCard, { radius(bind(cardRadius)).bg(bind(frostFill)).elevation(bind(cardElev)) })>
                   <!-- no preset: size lock -->
                   <column gap="4" style({ size({ w: 100%, max-w: overlay-max-w-sm }) })>
                     <row gap="3" align="center" nowrap>
@@ -473,7 +470,7 @@ export default controller(() => {
                 </stack>
 
                 <if {shape.showGlass()}>
-                  <column glass-mini gap="2" use:liveBox={liveGlassBox()} style(glassMini)>
+                  <column glass-mini gap="2" style(glassMini, { radius(bind(cardRadius)).bg(bind(frostFill)) })>
                     <p style(pathMeta)>Glass material</p>
                     <p style({ type(heading) })>Frosted pane</p>
                     <p style({ fg(muted).type(body-sm) })>
@@ -486,27 +483,6 @@ export default controller(() => {
                   </column>
                 </if>
 
-                <column radius-ladder gap="2" align="center" hidden="true">
-                  <p style(fieldHint)>Radius ladder</p>
-                  <row gap="4" align="end" nowrap>
-                    <column gap="1" align="center">
-                      <stack use:liveBox={liveLadderSmBox()} style(ladderChip)></stack>
-                      <p style(pathMeta)>sm</p>
-                    </column>
-                    <column gap="1" align="center">
-                      <stack use:liveBox={liveLadderMdBox()} style(ladderChip)></stack>
-                      <p style(pathMeta)>md</p>
-                    </column>
-                    <column gap="1" align="center">
-                      <stack use:liveBox={liveLadderLgBox()} style(ladderChip)></stack>
-                      <p style(pathMeta)>lg</p>
-                    </column>
-                    <column gap="1" align="center">
-                      <stack use:liveBox={liveLadderXlBox()} style(ladderChipXl)></stack>
-                      <p style(pathMeta)>xl</p>
-                    </column>
-                  </row>
-                </column>
 
                 <!-- no preset: size lock -->
                 <row align="center" justify="between" gap="2" nowrap style({ size({ w: 100%, max-w: overlay-max-w-md }) })>

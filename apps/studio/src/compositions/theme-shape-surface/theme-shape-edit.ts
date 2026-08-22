@@ -110,35 +110,16 @@ export function createShapeEdit(session: ThemeSession) {
   const radiusMdLabel = signal('6')
   const radiusLgLabel = signal('10')
   const radiusXlLabel = signal('14')
+  const frostFill = derived<string>(() =>
+    showGlass() ? withColorAlpha(cardBaseColor, surfaceOp()) : stripColorAlpha(cardBaseColor) || 'oklch(1 0 0)',
+  )
   const statRadius = signal('6px')
   const statShadow = signal('md')
   const statBorder = signal('1px')
   const statRecipe = signal('soft · scaled family')
 
-  const liveCardRadius = signal('10px')
-  const liveCardShadow = signal(SHADOW_FALLBACKS.md)
-  const liveBorderW = signal('1px')
   /** Freeform fill — translucent when glass, solid otherwise. */
-  const liveCardFill = signal('oklch(1 0 0)')
-  const liveLadderSm = signal('4px')
-  const liveLadderMd = signal('6px')
-  const liveLadderLg = signal('10px')
-  const liveLadderXl = signal('14px')
-  const liveCornerSm = signal('4px')
-  const liveCornerMd = signal('6px')
-  const liveCornerLg = signal('10px')
-  const liveCornerXl = signal('14px')
   /** Packed freeform CSS for use:liveBox (specimen + corner/ladder chips). */
-  const liveCardBox = signal('')
-  const liveGlassBox = signal('')
-  const liveLadderSmBox = signal('')
-  const liveLadderMdBox = signal('')
-  const liveLadderLgBox = signal('')
-  const liveLadderXlBox = signal('')
-  const liveCornerSmBox = signal('')
-  const liveCornerMdBox = signal('')
-  const liveCornerLgBox = signal('')
-  const liveCornerXlBox = signal('')
   /** Footer mono line — radius.md + elev step (mock canvas-foot). */
   const liveCssLine = signal('--radius-md: 6px; --shadow-card-rest: md')
 
@@ -183,59 +164,8 @@ export function createShapeEdit(session: ThemeSession) {
     statRadius.set(`${formatPxLabel(fam.md)}px`)
   }
 
-  const packCardBox = (radius: string, shadow: string, border: string, fill: string) =>
-    `border-radius:${radius};box-shadow:${shadow};border-width:${border};background:${fill}`
-
-  const repackCardBoxes = () => {
-    const css = packCardBox(liveCardRadius(), liveCardShadow(), liveBorderW(), liveCardFill())
-    liveCardBox.set(css)
-    liveGlassBox.set(css)
-  }
-
   const pushLiveShape = () => {
-    const sm = radiusSm()
-    const md = radiusMd()
-    const lg = radiusLg()
-    const xl = radiusXl()
-    const px = (n: number) => `${formatPxLabel(n)}px`
-    // Mock SSOT: primary card shell uses radius.lg (not md).
-    const rCard = px(lg)
-    const rSm = px(sm)
-    const rMd = px(md)
-    const rLg = px(lg)
-    const rXl = px(xl)
-    const bw = px(borderW())
-    liveCardRadius.set(rCard)
-    liveLadderSm.set(rSm)
-    liveLadderMd.set(rMd)
-    liveLadderLg.set(rLg)
-    liveLadderXl.set(rXl)
-    liveCornerSm.set(rSm)
-    liveCornerMd.set(rMd)
-    liveCornerLg.set(rLg)
-    liveCornerXl.set(rXl)
-    liveBorderW.set(bw)
-    const elev = elevKey()
-    const ds = getDesignState()
-    const shadow = shadowValueForElev(ds.themeDoc, ds.modeId, elev)
-    liveCardShadow.set(shadow)
-    liveCssLine.set(`--radius-md: ${rMd}; --shadow-card-rest: ${elev}`)
-    // Frost fill freeform (live α); solid when not glass.
-    const fill = showGlass()
-      ? withColorAlpha(cardBaseColor, surfaceOp())
-      : stripColorAlpha(cardBaseColor) || 'oklch(1 0 0)'
-    liveCardFill.set(fill)
-    const cardCss = packCardBox(rCard, shadow, bw, fill)
-    liveCardBox.set(cardCss)
-    liveGlassBox.set(cardCss)
-    liveLadderSmBox.set(`border-radius:${rSm}`)
-    liveLadderMdBox.set(`border-radius:${rMd}`)
-    liveLadderLgBox.set(`border-radius:${rLg}`)
-    liveLadderXlBox.set(`border-radius:${rXl}`)
-    liveCornerSmBox.set(`border-radius:${rSm}`)
-    liveCornerMdBox.set(`border-radius:${rMd}`)
-    liveCornerLgBox.set(`border-radius:${rLg}`)
-    liveCornerXlBox.set(`border-radius:${rXl}`)
+    liveCssLine.set(`--radius-md: ${formatPxLabel(radiusMd())}px; --shadow-card-rest: ${elevKey()}`)
   }
 
   /**
@@ -265,8 +195,6 @@ export function createShapeEdit(session: ThemeSession) {
     statShadow.set(elev)
     const ds = getDesignState()
     const val = shadowValueForElev(ds.themeDoc, ds.modeId, elev)
-    liveCardShadow.set(val)
-    repackCardBoxes()
     await setTokenValue(CARD_REST_PATH, val)
   }
 
@@ -275,8 +203,6 @@ export function createShapeEdit(session: ThemeSession) {
     borderW.set(clamped)
     borderWLabel.set(`${formatPxLabel(clamped)}px`)
     statBorder.set(`${formatPxLabel(clamped)}px`)
-    liveBorderW.set(`${formatPxLabel(clamped)}px`)
-    repackCardBoxes()
     await setTokenValue(BORDER_WIDTH_PATH, `${clamped}px`)
   }
 
@@ -290,8 +216,6 @@ export function createShapeEdit(session: ThemeSession) {
     surfaceBlurLabel.set(`${b}px`)
     showGlass.set(true)
     const fill = withColorAlpha(cardBaseColor, o)
-    liveCardFill.set(fill)
-    repackCardBoxes()
     // Backdrop blur persists; frost fill stays live-specimen freeform.
     await setTokenValue(CARD_BACKDROP_PATH, b > 0 ? `blur(${b}px)` : 'none')
   }
@@ -304,8 +228,6 @@ export function createShapeEdit(session: ThemeSession) {
     surfaceBlurLabel.set('0px')
     showGlass.set(false)
     const solid = stripColorAlpha(cardBaseColor)
-    liveCardFill.set(solid)
-    repackCardBoxes()
     await setTokenValue(CARD_BACKDROP_PATH, 'none')
   }
 
@@ -484,33 +406,13 @@ export function createShapeEdit(session: ThemeSession) {
     radiusSmLabel,
     radiusMdLabel,
     radiusLgLabel,
+    radiusLg,
     radiusXlLabel,
     statRadius,
     statShadow,
     statBorder,
     statRecipe,
-    liveCardRadius,
-    liveCardShadow,
-    liveBorderW,
-    liveCardFill,
-    liveLadderSm,
-    liveLadderMd,
-    liveLadderLg,
-    liveLadderXl,
-    liveCornerSm,
-    liveCornerMd,
-    liveCornerLg,
-    liveCornerXl,
-    liveCardBox,
-    liveGlassBox,
-    liveLadderSmBox,
-    liveLadderMdBox,
-    liveLadderLgBox,
-    liveLadderXlBox,
-    liveCornerSmBox,
-    liveCornerMdBox,
-    liveCornerLgBox,
-    liveCornerXlBox,
+    frostFill,
     liveCssLine,
     recipes,
     elevChips,
