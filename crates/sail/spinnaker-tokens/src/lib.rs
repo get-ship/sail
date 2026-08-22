@@ -1643,16 +1643,6 @@ pub fn public_name(path: &str) -> String {
             let tail: Vec<String> = rest[1..].iter().map(|s| camel_to_kebab(s)).collect();
             return format!("anchor-{}", tail.join("-"));
         }
-        if !rest.is_empty() && rest[0] == "brandAccent" {
-            if rest.len() == 2 && matches!(rest[1], "default" | "solid") {
-                return "accent".into();
-            }
-            if rest.len() == 2 && rest[1] == "text" {
-                return "accent-foreground".into();
-            }
-            let tail: Vec<String> = rest[1..].iter().map(|s| camel_to_kebab(s)).collect();
-            return format!("accent-{}", tail.join("-"));
-        }
         if !rest.is_empty() && rest[0] == "danger" {
             // Public name is danger (destructive migrated off).
         }
@@ -4866,7 +4856,7 @@ mod tests {
           "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
           "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
         },
-        "brandAccent": {
+        "accent": {
           "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
           "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
         }
@@ -4885,7 +4875,7 @@ mod tests {
           "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
           "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
         },
-        "brandAccent": {
+        "accent": {
           "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
           "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
         }
@@ -5100,7 +5090,7 @@ mod tests {
       "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
       "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
     },
-    "brandAccent": {
+    "accent": {
       "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
       "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
     }
@@ -5145,7 +5135,7 @@ mod tests {
           "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
           "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
         },
-        "brandAccent": {
+        "accent": {
           "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
           "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
         }
@@ -5263,7 +5253,7 @@ mod tests {
           "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
           "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
         },
-        "brandAccent": {
+        "accent": {
           "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
           "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
         },
@@ -5286,7 +5276,7 @@ mod tests {
           "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
           "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
         },
-        "brandAccent": {
+        "accent": {
           "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
           "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
         },
@@ -5500,7 +5490,7 @@ mod tests {
           "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
           "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
         },
-        "brandAccent": {
+        "accent": {
           "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
           "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
         }
@@ -5523,7 +5513,7 @@ mod tests {
           "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
           "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
         },
-        "brandAccent": {
+        "accent": {
           "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
           "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
         }
@@ -5546,7 +5536,7 @@ mod tests {
           "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
           "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
         },
-        "brandAccent": {
+        "accent": {
           "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
           "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
         }
@@ -5561,7 +5551,7 @@ mod tests {
           "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
           "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
         },
-        "brandAccent": {
+        "accent": {
           "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
           "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
         }
@@ -5584,7 +5574,7 @@ mod tests {
           "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
           "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
         },
-        "brandAccent": {
+        "accent": {
           "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
           "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
         }
@@ -5599,7 +5589,7 @@ mod tests {
           "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
           "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
         },
-        "brandAccent": {
+        "accent": {
           "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
           "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
         }
@@ -5652,7 +5642,7 @@ mod tests {
           "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
           "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
         },
-        "brandAccent": {
+        "accent": {
           "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
           "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
         }
@@ -5667,7 +5657,7 @@ mod tests {
           "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
           "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
         },
-        "brandAccent": {
+        "accent": {
           "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
           "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
         }
@@ -5727,7 +5717,7 @@ mod tests {
           "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
           "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
         },
-        "brandAccent": {
+        "accent": {
           "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
           "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
         }
@@ -5758,7 +5748,7 @@ mod tests {
           "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
           "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
         },
-        "brandAccent": {
+        "accent": {
           "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
           "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
         }
@@ -5777,7 +5767,7 @@ mod tests {
           "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
           "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
         },
-        "brandAccent": {
+        "accent": {
           "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
           "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
         }
@@ -5810,7 +5800,7 @@ mod tests {
           "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
           "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
         },
-        "brandAccent": {
+        "accent": {
           "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
           "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
         }
@@ -5829,7 +5819,7 @@ mod tests {
           "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
           "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
         },
-        "brandAccent": {
+        "accent": {
           "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
           "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
         }
@@ -5863,7 +5853,7 @@ mod tests {
           "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
           "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
         },
-        "brandAccent": {
+        "accent": {
           "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
           "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
         }
@@ -5882,7 +5872,7 @@ mod tests {
           "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
           "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
         },
-        "brandAccent": {
+        "accent": {
           "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
           "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
         }
@@ -5915,7 +5905,7 @@ mod tests {
           "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
           "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
         },
-        "brandAccent": {
+        "accent": {
           "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
           "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
         }
@@ -5934,7 +5924,7 @@ mod tests {
           "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
           "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
         },
-        "brandAccent": {
+        "accent": {
           "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
           "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
         }
@@ -6287,7 +6277,7 @@ mod tests {
           "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
           "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
         },
-        "brandAccent": {
+        "accent": {
           "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
           "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
         }
@@ -6338,7 +6328,7 @@ mod tests {
           "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
           "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
         },
-        "brandAccent": {
+        "accent": {
           "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
           "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
         }
@@ -6401,7 +6391,7 @@ mod tests {
           "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
           "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
         },
-        "brandAccent": {
+        "accent": {
           "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
           "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
         }
@@ -6544,7 +6534,7 @@ mod tests {
           "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
           "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
         },
-        "brandAccent": {
+        "accent": {
           "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
           "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
         }
@@ -6598,7 +6588,7 @@ mod tests {
           "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
           "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
         },
-        "brandAccent": {
+        "accent": {
           "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
           "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
         }
@@ -6625,7 +6615,7 @@ mod tests {
           "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
           "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
         },
-        "brandAccent": {
+        "accent": {
           "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
           "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
         }
@@ -6644,7 +6634,7 @@ mod tests {
           "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
           "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
         },
-        "brandAccent": {
+        "accent": {
           "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
           "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
         }
@@ -6719,7 +6709,7 @@ mod tests {
           "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
           "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
         },
-        "brandAccent": {
+        "accent": {
           "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
           "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
         }
@@ -6751,7 +6741,7 @@ mod tests {
           "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
           "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" },
         },
-        "brandAccent": {
+        "accent": {
           "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
           "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" },
         },
@@ -6770,7 +6760,7 @@ mod tests {
           "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
           "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" },
         },
-        "brandAccent": {
+        "accent": {
           "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
           "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" },
         },
@@ -6803,7 +6793,7 @@ mod tests {
           "default": { "$value": "oklch(0.92 0 0)", "$type": "color" },
           "foreground": { "$value": "oklch(0.35 0 0)", "$type": "color" }
         },
-        "brandAccent": {
+        "accent": {
           "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
           "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
         }
@@ -7000,7 +6990,7 @@ mod tests {
       "default": { "$value": "oklch(0.45 0.12 250)", "$type": "color" },
       "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
     },
-    "brandAccent": {
+    "accent": {
       "default": { "$value": "oklch(0.45 0.16 300)", "$type": "color" },
       "foreground": { "$value": "oklch(0.98 0 0)", "$type": "color" }
     }

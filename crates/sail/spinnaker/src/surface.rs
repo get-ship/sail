@@ -224,6 +224,7 @@ const fn req(concern: &'static str, name: &'static str, meaning: &'static str) -
 pub const REQUIRED_KEYS: &[&str] = &[
     "type.body",
     "type.body-sm",
+    "type.body-semibold",
     "type.heading",
     "type.label",
     "type.mono",

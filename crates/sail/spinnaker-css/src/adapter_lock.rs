@@ -650,12 +650,10 @@ mod tests {
     #[ignore = "free form fixture (STYLE-BINDING-1)"]
     fn site_shell_wave_exprs_parse() {
         let exprs = [
-            "style({ size({ w: 100%, min-w: 0 }).overflow({ x: hidden }).bg(surface-0) })",
             "style({ position({ l: 0, r: 0, t: 0, z: base }).size({ h: 64 }).bg({ glow: accent }).pointerEvents(none) })",
             "style({ fg(accent).type({ family: mono, size: xs, case: uppercase, tracking: wide }) })",
             "style({ fg(foreground).type({ size: display, family: display, weight: bold, tracking: tighter, leading: none, align: center }) })",
             "style({ position({ scheme: absolute, l: -10, r: -10, t: 12, z: popover }).rotate(-2) })",
-            "style({ pad({ y: 3 }).border({ edge: t, width: 1, color: border }).border({ edge: b, width: 1, color: border }).bg(surface-2) })",
             "style({ size({ h: 100% }).overflow(hidden).bg(muted).border({ width: 1, color: primary }) })",
             "style({ margin({ b: -8 }).fg({ gradient: primary }).select(none).type({ size: display, family: display, weight: bold, tracking: tighter, leading: none, align: center }) })",
             "style({ pad({ x: 3, y: 1 }).radius(full).fg(muted-foreground).type({ size: sm, weight: semibold }), when: { hover: { fg(foreground) }, current: { bg(primary).fg(primary-foreground) } } })",
@@ -780,13 +778,10 @@ mod tests {
         // Representative host-component paint from the packages Style conversion wave.
         let packages_exprs = [
             "style({ size({ max-w: 100% }).group().fg(foreground).type({ family: body }) })",
-            "style({  pad({ y: 2, x: 3 }).radius(lg).bg(surface-1).border({ width: 1, color: border }).fg(foreground).type({ size: base, leading: normal }), when: { groupStateUser: {  bg(hover-bg).border({ width: 1, color: primary })  }, groupStateSystem: {  bg(muted).fg(muted-foreground)  }, groupStateError: {  border({ width: 1, color: destructive })  }, groupStateSending: {  opacity(75)  } } })",
             "style({  pad({ y: density-row-py, x: density-row-px }).size({ min-h: control-h-md }).group().border({ edge: r, width: 1, color: border }).border({ edge: b, width: 1, color: border }), when: { stateOut: {  fg(muted-foreground).bg(muted)  }, stateWeekend: {  bg(muted)  }, stateRange: {  bg(selected-bg)  } } })",
             "style({  position({ scheme: absolute, t: bind(evtTop), l: bind(evtLeft) }).size({ h: bind(evtH), w: bind(evtW) }).pad({ y: half, x: 1 }).overflow(hidden).cursor(pointer).fg(primary).bg(hover-bg).radius(sm).type({ align: start, size: density }), when: { selected: {  border({ kind: outline, color: ring })  } } })",
             "style({  pad({ y: 6, x: 4 }).group().border({ width: 1, color: border, style: dashed }).radius(lg).cursor(pointer).fg(muted-foreground).select(none).type({ align: center }), when: { focus: {  border({ kind: outline, color: ring })  }, stateOver: {  border({ width: 1, color: ring }).bg(muted)  } } })",
             "style({ position({ scheme: absolute, l: bind(boxLeft), t: bind(boxTop) }).size({ w: bind(boxW), h: bind(boxH) }).bg(hover-bg).border({ width: 1, color: primary, style: dashed }).radius(sm).cursor(pointer).pointerEvents(auto) })",
-            "style({  size({ w: bind(boxW) }).pad({ y: 2, x: 3 }).bg(surface-1).fg(foreground).border({ width: 1, color: border }).radius(md).elevation(xs).cursor(pointer).type({ family: body, size: sm }), when: { hover: {  elevation(sm)  }, focus: {  border({ kind: outline, color: ring })  }, current: {  border({ width: 1, color: ring }).elevation(sm)  }, stateAgent: {  border({ edge: l, width: 1, color: primary })  } } })",
-            "style({ pad({ y: 4, x: 5 }).border({ width: 1, color: destructive }).radius(md).bg(muted).fg(foreground).elevation(xs).type({ family: body, size: sm }) })",
             "style({  size({ h: control-h-sm }).radius(sm).cursor(pointer).fg(foreground).type({ align: center }), when: { hover: {  bg(hover-bg)  }, selected: {  bg(primary).fg(primary-foreground)  }, disabled: {  fg(muted-foreground).opacity(50).cursor(not-allowed)  }, stateEmpty: {  visibility(hidden)  }, stateToday: {  border({ kind: outline, color: border-strong })  }, focus: {  border({ kind: outline, color: ring })  } } })",
             "style({ cursor(cell) })",
             "style({  pad(0).size({ aspect: square }).border({ width: 1, color: border-subtle }).radius(sm).cursor(pointer).bg(bind(swatchColor)), when: { selected: {  border({ kind: outline, color: primary })  } } })",

@@ -147,8 +147,6 @@ pub fn fulfill_mode_scales(
     for role in CHROMATIC_ROLES {
         let authored_name = if *role == "danger" && !anchors.contains_key(*role) {
             "destructive"
-        } else if *role == "accent" && !anchors.contains_key(*role) {
-            "brandAccent"
         } else {
             *role
         };

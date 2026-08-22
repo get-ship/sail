@@ -1238,7 +1238,7 @@ mod tests {
     use serde_json::json;
     use tempfile::tempdir;
 
-    const GATE_COLOR: &str = r#""color":{"background":{"$value":"oklch(0.98 0 0)","$type":"color"},"foreground":{"$value":"oklch(0.20 0 0)","$type":"color"},"primary":{"default":{"$value":"oklch(0.45 0.12 250)","$type":"color"},"foreground":{"$value":"oklch(0.98 0 0)","$type":"color"}},"muted":{"default":{"$value":"oklch(0.92 0 0)","$type":"color"},"foreground":{"$value":"oklch(0.35 0 0)","$type":"color"}},"brandAccent":{"default":{"$value":"oklch(0.45 0.16 300)","$type":"color"},"foreground":{"$value":"oklch(0.98 0 0)","$type":"color"}}}"#;
+    const GATE_COLOR: &str = r#""color":{"background":{"$value":"oklch(0.98 0 0)","$type":"color"},"foreground":{"$value":"oklch(0.20 0 0)","$type":"color"},"primary":{"default":{"$value":"oklch(0.45 0.12 250)","$type":"color"},"foreground":{"$value":"oklch(0.98 0 0)","$type":"color"}},"muted":{"default":{"$value":"oklch(0.92 0 0)","$type":"color"},"foreground":{"$value":"oklch(0.35 0 0)","$type":"color"}},"accent":{"default":{"$value":"oklch(0.45 0.16 300)","$type":"color"},"foreground":{"$value":"oklch(0.98 0 0)","$type":"color"}}}"#;
 
     fn gate_theme(id: &str, dual: bool) -> String {
         if dual {
@@ -1441,7 +1441,7 @@ mod tests {
         );
         assert!(matches!(denied, Err(OpError::PermissionDenied(_))));
 
-        let body = r#"{"$extensions":{"sail":{"themeId":"custom","defaultMode":"light","layer":"theme"}},"modes":{"light":{"color":{"background":{"$value":"oklch(0.98 0 0)","$type":"color"},"foreground":{"$value":"oklch(0.20 0 0)","$type":"color"},"primary":{"default":{"$value":"oklch(0.45 0.12 250)","$type":"color"},"foreground":{"$value":"oklch(0.98 0 0)","$type":"color"}},"muted":{"default":{"$value":"oklch(0.92 0 0)","$type":"color"},"foreground":{"$value":"oklch(0.35 0 0)","$type":"color"}},"brandAccent":{"default":{"$value":"oklch(0.45 0.16 300)","$type":"color"},"foreground":{"$value":"oklch(0.98 0 0)","$type":"color"}}}}}}"#;
+        let body = r#"{"$extensions":{"sail":{"themeId":"custom","defaultMode":"light","layer":"theme"}},"modes":{"light":{"color":{"background":{"$value":"oklch(0.98 0 0)","$type":"color"},"foreground":{"$value":"oklch(0.20 0 0)","$type":"color"},"primary":{"default":{"$value":"oklch(0.45 0.12 250)","$type":"color"},"foreground":{"$value":"oklch(0.98 0 0)","$type":"color"}},"muted":{"default":{"$value":"oklch(0.92 0 0)","$type":"color"},"foreground":{"$value":"oklch(0.35 0 0)","$type":"color"}},"accent":{"default":{"$value":"oklch(0.45 0.16 300)","$type":"color"},"foreground":{"$value":"oklch(0.98 0 0)","$type":"color"}}}}}}"#;
         let ok = write(
             &json!({
                 "path": "apps/demo/themes/custom.json",
