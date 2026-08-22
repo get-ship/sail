@@ -1,4 +1,5 @@
 import type { Action } from '../action'
+import { writeCssVar } from '../bind'
 
 const MIN_PANE_PX = 32
 const NUDGE = 2
@@ -57,9 +58,9 @@ export const resizable: Action<void> = (node) => {
         next = (clampPx((next / 100) * total, total, handleSize) / total) * 100
       }
     }
-    pane.style.flexGrow = '0'
-    pane.style.flexShrink = '0'
-    pane.style.flexBasis = `${next}%`
+    writeCssVar(pane, 'flex-grow', '0')
+    writeCssVar(pane, 'flex-shrink', '0')
+    writeCssVar(pane, 'flex-basis', `${next}%`)
     setAttr(handle, 'aria-valuenow', String(Math.round(next)))
   }
 

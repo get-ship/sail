@@ -7,6 +7,7 @@
 // still move in the close direction.
 
 import type { Action } from '../action'
+import { writeCssVar } from '../bind'
 import { invokeCallback } from '@ship/sail-runtime/internal'
 
 type Axis = 'x' | 'y'
@@ -97,8 +98,8 @@ export const drawerSwipe: Action<void> = (node) => {
     tracking = false
     locked = null
     pid = null
-    el.style.transition = ''
-    el.style.transform = ''
+    writeCssVar(el, 'transition', '')
+    writeCssVar(el, 'transform', '')
   }
 
   const onPointerDown = (e: PointerEvent): void => {
@@ -132,7 +133,7 @@ export const drawerSwipe: Action<void> = (node) => {
         } catch {
           /* capture not available */
         }
-        el.style.transition = 'none'
+        writeCssVar(el, 'transition', 'none')
       } else {
         locked = 'ignore'
         return
@@ -141,8 +142,11 @@ export const drawerSwipe: Action<void> = (node) => {
     if (locked !== 'swipe') return
     if (e.cancelable) e.preventDefault()
     const travel = Math.max(0, toward)
-    el.style.transform =
-      axis === 'x' ? `translateX(${sign * travel}px)` : `translateY(${sign * travel}px)`
+    writeCssVar(
+      el,
+      'transform',
+      axis === 'x' ? `translateX(${sign * travel}px)` : `translateY(${sign * travel}px)`,
+    )
   }
 
   const onPointerUp = (e: PointerEvent): void => {

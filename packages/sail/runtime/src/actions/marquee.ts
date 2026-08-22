@@ -13,6 +13,7 @@
 // loop appears frozen.
 
 import type { Action } from '../action'
+import { writeCssVar } from '../bind'
 import { __sail_motion_attach, type MotionAttachConfig } from '@ship/sail-runtime/motion'
 
 const DURATION_S: Record<string, number> = {
@@ -58,9 +59,9 @@ function ensureDualCopy(track: HTMLElement): void {
   const harden = (el: HTMLElement): void => {
     // Defeat `.sail-row > * { min-width: 0 }` which collapses copies into the
     // host width so percent translate never moves past one viewport.
-    el.style.minWidth = 'max-content'
-    el.style.flexShrink = '0'
-    el.style.whiteSpace = 'nowrap'
+    writeCssVar(el, 'min-width', 'max-content')
+    writeCssVar(el, 'flex-shrink', '0')
+    writeCssVar(el, 'white-space', 'nowrap')
   }
 
   if (kids.length === 1) {

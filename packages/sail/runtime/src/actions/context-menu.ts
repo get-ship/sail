@@ -1,4 +1,5 @@
 import type { Action } from '../action'
+import { writeCssVar } from '../bind'
 
 /**
  * `use:contextMenu` — opens the L1 `<context-menu>` (a native `[popover]`) at the
@@ -64,8 +65,8 @@ export const contextMenu: Action<void> = (node) => {
       const r = root.getBoundingClientRect()
       const x = Math.min(px, Math.max(0, window.innerWidth - r.width - 8))
       const y = Math.min(py, Math.max(0, window.innerHeight - r.height - 8))
-      root.style.setProperty('--anchor-left', `${Math.max(8, x)}px`)
-      root.style.setProperty('--anchor-top', `${Math.max(8, y)}px`)
+      writeCssVar(root, '--anchor-left', `${Math.max(8, x)}px`)
+      writeCssVar(root, '--anchor-top', `${Math.max(8, y)}px`)
     }, 0)
   }
 

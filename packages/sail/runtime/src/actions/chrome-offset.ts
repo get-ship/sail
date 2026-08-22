@@ -11,6 +11,7 @@
 // often 0 on viewport-locked shells.
 
 import type { Action } from '../action'
+import { writeCssVar } from '../bind'
 
 const TOP_REVEAL_PX = 56
 const HIDE_AFTER_Y = 48
@@ -44,14 +45,14 @@ export const chromeOffset: Action<void> = (node) => {
     if (!root) return
     measureNatural()
     const h = hidden && enabled ? 0 : naturalH
-    root.style.setProperty('--chrome-offset', `${Math.max(0, h)}px`)
+    writeCssVar(root, '--chrome-offset', `${Math.max(0, h)}px`)
   }
 
   const applyHidden = (next: boolean): void => {
     if (!enabled) {
       hidden = false
-      el.style.removeProperty('transform')
-      el.style.removeProperty('pointer-events')
+      writeCssVar(el, 'transform', null)
+      writeCssVar(el, 'pointer-events', null)
       publish()
       return
     }
@@ -60,9 +61,9 @@ export const chromeOffset: Action<void> = (node) => {
       return
     }
     hidden = next
-    el.style.transform = next ? 'translateY(-100%)' : 'translateY(0)'
+    writeCssVar(el, 'transform', next ? 'translateY(-100%)' : 'translateY(0)')
     // While tucked, bar does not steal clicks; a fixed top edge still reveals.
-    el.style.pointerEvents = next ? 'none' : ''
+    writeCssVar(el, 'pointer-events', next ? 'none' : '')
     publish()
   }
 
@@ -104,8 +105,13 @@ export const chromeOffset: Action<void> = (node) => {
     edge = document.createElement('div')
     edge.setAttribute('data-chrome-reveal-edge', '')
     edge.setAttribute('aria-hidden', 'true')
-    edge.style.cssText =
-      'position:fixed;left:0;right:0;top:0;height:14px;z-index:9998;pointer-events:auto;'
+    writeCssVar(edge, 'position', 'fixed')
+    writeCssVar(edge, 'left', '0')
+    writeCssVar(edge, 'right', '0')
+    writeCssVar(edge, 'top', '0')
+    writeCssVar(edge, 'height', '14px')
+    writeCssVar(edge, 'z-index', '9998')
+    writeCssVar(edge, 'pointer-events', 'auto')
     edge.addEventListener('mouseenter', () => {
       if (enabled) applyHidden(false)
     })
@@ -167,9 +173,9 @@ export const chromeOffset: Action<void> = (node) => {
       }
       edge?.remove()
       edge = null
-      el.style.removeProperty('transform')
-      el.style.removeProperty('pointer-events')
-      root?.style.removeProperty('--chrome-offset')
+      writeCssVar(el, 'transform', null)
+      writeCssVar(el, 'pointer-events', null)
+      if (root) writeCssVar(root, '--chrome-offset', null)
     },
   }
 }

@@ -1,4 +1,5 @@
 import type { Action } from '../action'
+import { writeCssVar } from '../bind'
 
 let _seq = 0
 
@@ -21,43 +22,43 @@ const applyPlacement = (el: HTMLElement, raw: string | null): void => {
 
   // Reset box + arrow sides.
   for (const side of ['top', 'bottom', 'left', 'right'] as const) {
-    el.style.setProperty(`--tt-${side}`, 'auto')
-    el.style.setProperty(`--tt-arrow-${side}`, 'auto')
+    writeCssVar(el, `--tt-${side}`, 'auto')
+    writeCssVar(el, `--tt-arrow-${side}`, 'auto')
   }
-  el.style.setProperty('--tt-tx', '0')
-  el.style.setProperty('--sx-translate-y', '0')
-  el.style.setProperty('--tt-arrow-ml', '0px')
-  el.style.setProperty('--tt-arrow-mt', '0px')
+  writeCssVar(el, '--tt-tx', '0')
+  writeCssVar(el, '--sx-translate-y', '0')
+  writeCssVar(el, '--tt-arrow-ml', '0px')
+  writeCssVar(el, '--tt-arrow-mt', '0px')
 
   if (p === 'bottom') {
-    el.style.setProperty('--tt-top', gap)
-    el.style.setProperty('--tt-left', '50%')
-    el.style.setProperty('--tt-tx', '-50%')
-    el.style.setProperty('--tt-arrow-top', arrow)
-    el.style.setProperty('--tt-arrow-left', '50%')
-    el.style.setProperty('--tt-arrow-ml', shift)
+    writeCssVar(el, '--tt-top', gap)
+    writeCssVar(el, '--tt-left', '50%')
+    writeCssVar(el, '--tt-tx', '-50%')
+    writeCssVar(el, '--tt-arrow-top', arrow)
+    writeCssVar(el, '--tt-arrow-left', '50%')
+    writeCssVar(el, '--tt-arrow-ml', shift)
   } else if (p === 'left') {
-    el.style.setProperty('--tt-right', gap)
-    el.style.setProperty('--tt-top', '50%')
-    el.style.setProperty('--sx-translate-y', '-50%')
-    el.style.setProperty('--tt-arrow-right', arrow)
-    el.style.setProperty('--tt-arrow-top', '50%')
-    el.style.setProperty('--tt-arrow-mt', shift)
+    writeCssVar(el, '--tt-right', gap)
+    writeCssVar(el, '--tt-top', '50%')
+    writeCssVar(el, '--sx-translate-y', '-50%')
+    writeCssVar(el, '--tt-arrow-right', arrow)
+    writeCssVar(el, '--tt-arrow-top', '50%')
+    writeCssVar(el, '--tt-arrow-mt', shift)
   } else if (p === 'right') {
-    el.style.setProperty('--tt-left', gap)
-    el.style.setProperty('--tt-top', '50%')
-    el.style.setProperty('--sx-translate-y', '-50%')
-    el.style.setProperty('--tt-arrow-left', arrow)
-    el.style.setProperty('--tt-arrow-top', '50%')
-    el.style.setProperty('--tt-arrow-mt', shift)
+    writeCssVar(el, '--tt-left', gap)
+    writeCssVar(el, '--tt-top', '50%')
+    writeCssVar(el, '--sx-translate-y', '-50%')
+    writeCssVar(el, '--tt-arrow-left', arrow)
+    writeCssVar(el, '--tt-arrow-top', '50%')
+    writeCssVar(el, '--tt-arrow-mt', shift)
   } else {
     // top (default)
-    el.style.setProperty('--tt-bottom', gap)
-    el.style.setProperty('--tt-left', '50%')
-    el.style.setProperty('--tt-tx', '-50%')
-    el.style.setProperty('--tt-arrow-bottom', arrow)
-    el.style.setProperty('--tt-arrow-left', '50%')
-    el.style.setProperty('--tt-arrow-ml', shift)
+    writeCssVar(el, '--tt-bottom', gap)
+    writeCssVar(el, '--tt-left', '50%')
+    writeCssVar(el, '--tt-tx', '-50%')
+    writeCssVar(el, '--tt-arrow-bottom', arrow)
+    writeCssVar(el, '--tt-arrow-left', '50%')
+    writeCssVar(el, '--tt-arrow-ml', shift)
   }
 }
 
@@ -88,15 +89,15 @@ export const tipDescribe: Action<void> = (node) => {
   /** Instant hide — no linger after pointer leaves the host group. */
   const forceHide = (): void => {
     if (!bubble) return
-    bubble.style.transition = 'none'
-    bubble.style.opacity = '0'
+    writeCssVar(bubble, 'transition', 'none')
+    writeCssVar(bubble, 'opacity', '0')
   }
 
   /** Clear forced hide so CSS group-hover / focus-within can show again. */
   const clearForceHide = (): void => {
     if (!bubble) return
-    bubble.style.removeProperty('transition')
-    bubble.style.removeProperty('opacity')
+    writeCssVar(bubble, 'transition', null)
+    writeCssVar(bubble, 'opacity', null)
   }
 
   const sync = (): void => {
@@ -174,7 +175,7 @@ export const tipDescribe: Action<void> = (node) => {
         '--tt-arrow-ml',
         '--tt-arrow-mt',
       ]) {
-        el.style.removeProperty(prop)
+        writeCssVar(el, prop, null)
       }
     },
   }

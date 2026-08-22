@@ -338,13 +338,6 @@ pub const ACTIONS: &[ActionEntry] = &[
         writes: &[],
     },
     ActionEntry {
-        name: "themeSelect",
-        param: "void",
-        summary: "Theme switcher: click to write the picked theme to the host context.",
-        auto_import: true,
-        writes: &[],
-    },
-    ActionEntry {
         name: "tipDescribe",
         param: "void",
         summary: "Hover/focus-triggered tooltip; open on pointer-in, close on pointer-out with delay.",
@@ -453,7 +446,6 @@ pub const BUILTIN_ACTION_NAMES: &[&str] = &[
     "resizable",
     "syntaxHighlight",
     "tabs",
-    "themeSelect",
     "tipDescribe",
     "toggleGroup",
     "variantLive",

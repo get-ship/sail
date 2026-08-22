@@ -1,4 +1,5 @@
 import type { Action } from '../action'
+import { writeCssVar } from '../bind'
 
 /**
  * `use:rangeFill` — fill the WebKit track (`--rng-pct`) and, when `ticks`
@@ -23,7 +24,7 @@ export const rangeFill: Action<void> = (node) => {
     const max = parseFloat(el.max || '100')
     const val = parseFloat(el.value || '0')
     const pct = max > min ? ((val - min) / (max - min)) * 100 : 0
-    el.style.setProperty('--rng-pct', `${pct}%`)
+    writeCssVar(el, '--rng-pct', `${pct}%`)
   }
 
   const syncTicks = (): void => {
@@ -43,26 +44,26 @@ export const rangeFill: Action<void> = (node) => {
       el.after(tickRow)
     }
     const thumb = thumbVar()
-    tickRow.style.position = 'relative'
-    tickRow.style.width = '100%'
-    tickRow.style.height = '1.15rem'
-    tickRow.style.marginTop = '0.15rem'
-    tickRow.style.pointerEvents = 'none'
-    tickRow.style.setProperty('--rng-thumb', thumb)
+    writeCssVar(tickRow, 'position', 'relative')
+    writeCssVar(tickRow, 'width', '100%')
+    writeCssVar(tickRow, 'height', '1.15rem')
+    writeCssVar(tickRow, 'margin-top', '0.15rem')
+    writeCssVar(tickRow, 'pointer-events', 'none')
+    writeCssVar(tickRow, '--rng-thumb', thumb)
     tickRow.replaceChildren(
       ...labels.map((label, i) => {
         const span = document.createElement('span')
         span.textContent = label
         const t = labels.length === 1 ? 0.5 : i / (labels.length - 1)
-        span.style.position = 'absolute'
-        span.style.top = '0'
-        span.style.left = `calc(var(--rng-thumb) / 2 + ${t} * (100% - var(--rng-thumb)))`
-        span.style.transform = 'translateX(-50%)'
-        span.style.fontSize = '0.75rem'
-        span.style.fontFamily = 'var(--font-mono, ui-monospace, monospace)'
-        span.style.color = 'var(--muted-foreground)'
-        span.style.whiteSpace = 'nowrap'
-        span.style.lineHeight = '1.15rem'
+        writeCssVar(span, 'position', 'absolute')
+        writeCssVar(span, 'top', '0')
+        writeCssVar(span, 'left', `calc(var(--rng-thumb) / 2 + ${t} * (100% - var(--rng-thumb)))`)
+        writeCssVar(span, 'transform', 'translateX(-50%)')
+        writeCssVar(span, 'font-size', '0.75rem')
+        writeCssVar(span, 'font-family', 'var(--font-mono, ui-monospace, monospace)')
+        writeCssVar(span, 'color', 'var(--muted-foreground)')
+        writeCssVar(span, 'white-space', 'nowrap')
+        writeCssVar(span, 'line-height', '1.15rem')
         return span
       }),
     )

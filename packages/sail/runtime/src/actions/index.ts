@@ -43,13 +43,6 @@ export { rangePair } from './range-pair'
 export { radioGroup } from './radio-group'
 export { tabs } from './tabs'
 export { toggleGroup } from './toggle-group'
-export {
-  themeSelect,
-  setEffectiveThemeIds,
-  readEffectiveThemeIds,
-  parseEffectiveThemeIdsContent,
-  effectiveProductThemes,
-} from './theme-select'
 export type { EffectiveSessionIds } from './theme-select'
 export { pagination } from './pagination'
 export { menu } from './menu'

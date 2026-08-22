@@ -15,6 +15,7 @@
 // component needs to hand-roll a competing positioner.
 
 import type { Action } from '../action'
+import { writeCssVar } from '../bind'
 
 /**
  * Placement of the floating element relative to its trigger.
@@ -116,9 +117,9 @@ export const anchor: Action<AnchorPlacement | undefined> = (node, placement) => 
     // Publish the computed box through the sx/skin custom-property bridge.
     // --anchor-width mirrors the trigger so listboxes can min-w-(--anchor-width)
     // without CSS anchor-size() (combobox match-trigger-width).
-    el.style.setProperty('--anchor-left', `${clamp(left, GAP, Math.max(GAP, vw - w - GAP))}px`)
-    el.style.setProperty('--anchor-top', `${clamp(top, GAP, Math.max(GAP, vh - h - GAP))}px`)
-    el.style.setProperty('--anchor-width', `${Math.max(r.width, 0)}px`)
+    writeCssVar(el, '--anchor-left', `${clamp(left, GAP, Math.max(GAP, vw - w - GAP))}px`)
+    writeCssVar(el, '--anchor-top', `${clamp(top, GAP, Math.max(GAP, vh - h - GAP))}px`)
+    writeCssVar(el, '--anchor-width', `${Math.max(r.width, 0)}px`)
   }
 
   /** Double rAF so slotted content (minW / scroll-area) has measured width before place. */
@@ -158,9 +159,9 @@ export const anchor: Action<AnchorPlacement | undefined> = (node, placement) => 
       el.removeEventListener('beforetoggle', onToggle)
       window.removeEventListener('resize', reposition)
       window.removeEventListener('scroll', reposition, true)
-      el.style.removeProperty('--anchor-left')
-      el.style.removeProperty('--anchor-top')
-      el.style.removeProperty('--anchor-width')
+      writeCssVar(el, '--anchor-left', null)
+      writeCssVar(el, '--anchor-top', null)
+      writeCssVar(el, '--anchor-width', null)
     },
   }
 }
