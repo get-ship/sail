@@ -14,6 +14,8 @@ fn compile_component(src: &str) -> Result<String, String> {
     let out = compile(
         src,
         CompileOpts {
+            element_prefix: "sail".into(),
+            host_data_attr: "data-sail-host".into(),
             setup_url: None,
             mode: CompileMode::Component,
             source_path: None,

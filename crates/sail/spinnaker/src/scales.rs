@@ -206,8 +206,8 @@ pub fn lower(scale: &str, token: &str) -> Option<String> {
             // The viewport MINUS the chrome the app publishes. A fixed workbench
             // (the tutorial's editor pane) is not expressible with `screen` — it
             // overruns by the height of the navbar.
-            "fill" => "calc(100dvh - var(--chrome-offset, 0px))".into(),
-            "rail-fill" => "calc(100dvh - var(--rail-offset, 0px))".into(),
+            "fill" => "100dvh".into(),
+            "rail-fill" => "100dvh".into(),
             // A dimensional family token is used by its whole name; anything else
             // on this scale is a step of the space ramp.
             t if is_channel(t)

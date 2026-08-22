@@ -716,6 +716,7 @@ fn env_tag(env: TypeEnv) -> &'static str {
     match env {
         TypeEnv::Sail => "sail",
         TypeEnv::Action => "action",
+        TypeEnv::Writer => "writer",
     }
 }
 
@@ -776,7 +777,7 @@ pub fn diagnose_project_files(
                 let _ = c.notify_file_changed(&tsconfig_path);
             } else {
                 let rel = match env {
-                    TypeEnv::Sail => crate::ambients::PROJECT_TSCONFIG_SAIL_REL,
+                    TypeEnv::Sail | TypeEnv::Writer => crate::ambients::PROJECT_TSCONFIG_SAIL_REL,
                     TypeEnv::Action => crate::ambients::PROJECT_TSCONFIG_ACTION_REL,
                 };
                 let _ = c.notify_file_changed(&project_root.join(rel));

@@ -7,11 +7,13 @@
 
 pub mod binding;
 pub mod compose;
+pub mod controller_attach;
 pub mod controller_parse;
 #[cfg(test)]
 mod controller_parse_tests;
 pub mod controller_purity;
 pub mod css_token;
+pub mod cssom;
 pub mod expr_subset;
 pub mod for_iterable;
 pub mod handler_complexity;
@@ -94,6 +96,7 @@ pub fn run(
     // Expansion already ran in preprocess; this inspects the original text.
     pass!("partials", partials::check(source, controller, source_path))?;
     pass!("mutations", check_mutations(program))?;
+    pass!("cssom-purity", cssom::check(program, source_path))?;
     // Bare names are the language's namespace — reject unknown bare tags
     // (typos / not-yet-language elements) so L1 growth is safe.
     pass!("reserved-names", reserved_names::check(program))?;
@@ -298,6 +301,9 @@ pub fn collect(
     // `controller` is resolved by the caller from the inline `<controller>`
     // block (SFC) — the one source, no paired-file fallback.
     push(check_mutations(program), source, &mut diags);
+    if matches!(tier, DiagnosticTier::OnSave) {
+        diags.extend(cssom::collect(program, source_path));
+    }
     push_all(icons::collect(program, source_path), source, &mut diags);
     diags.extend(partials::collect(source, controller, source_path));
     push(
@@ -710,6 +716,7 @@ where
                 f(e)?;
             }
         }
+        AttrInstr::Controller { .. } => {}
         // A `fx:` config is a statically-parsed object, but any of its
         // fields may hold a signal (`duration: speed()`). Those are ordinary
         // expressions and get the ordinary treatment.

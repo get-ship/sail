@@ -44,6 +44,10 @@ pub fn collect_attr_imports(
     let direct_emit = is_route && depth == 0;
     match a {
         AttrInstr::Static { .. } | AttrInstr::ForBind { .. } => {}
+        AttrInstr::Controller { .. } => {
+            out.runtime_imports.insert("createChildScope");
+            out.runtime_imports.insert("withScope");
+        }
         AttrInstr::Expr { name, .. } => {
             // Web backend (hidden from author): CE → bindDynamic; native IDL
             // prop table → bindProp; dialog open → bindOpen; else bindAttr.

@@ -94,6 +94,13 @@ pub(super) fn emit_imports(
             ));
         }
     }
+    for tag in &lowered.l1_controllers {
+        w.line(&format!(
+            "import {} from {};",
+            crate::emit::util::l1_controller_ident(tag),
+            js_string(&crate::emit::util::l1_controller_specifier(tag))
+        ));
+    }
     w.nl();
 }
 

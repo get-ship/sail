@@ -1,9 +1,13 @@
 <!--
   <slider> — native range. Single thumb by default.
   range=true: two thumbs on one track (`<stack>` — overlay is the product).
-  ticks: named labels in a flow row under the track (not stamps on the thumb).
+  ticks: named labels in a flow row under the track.
   Empty tick row uses HTML `hidden` so `.sail-row { display:flex }` cannot
   win the cascade. Track/thumb vendor pseudos: platform/slider.css.
+
+  Look: host/track Style owns paint — no DOM.
+  State: this file's <controller> (value/valueEnd/min/max/step/disabled/range, clamping).
+  Listen: on:input on each thumb writes value/valueEnd.
 -->
 
 <scope>
@@ -31,10 +35,45 @@
   style tickRow = {size({ w: 100%, min-w: 0 }).pad({ t: 2 }).fg(muted-foreground).type({ size: xs, family: mono, wrap: nowrap })}
 </scope>
 
-<column gap="0" use:rangePair style(host)>
+<controller>
+export default controller((init) => {
+  function read(v) {
+    return typeof v === 'function' ? v() : v
+  }
+  function num(name, fb) {
+    const raw = read(init[name])
+    const n = parseFloat(raw ?? '')
+    return Number.isFinite(n) ? n : fb
+  }
+  function isOn(v) {
+    const x = read(v)
+    return x === true || x === '' || x === 'true'
+  }
+  // Snapshot props at mount — host attrs re-sync via page store if needed.
+  const min = String(read(init.min) ?? '0')
+  const max = String(read(init.max) ?? '100')
+  const step = String(read(init.step) ?? '1')
+  const disabled = isOn(init.disabled)
+  const ranged = isOn(init.range)
+  const start = signal(num('value', Number(min)))
+  const end = signal(num('value-end', Number(max)))
+  const tickLabels = String(read(init.ticks) ?? '').split(',').map(s => s.trim()).filter(Boolean)
+  function onInputA(e) {
+    const v = e?.target?.value ?? String(start())
+    start.set(Number(v))
+  }
+  function onInputB(e) {
+    const v = e?.target?.value ?? String(end())
+    end.set(Number(v))
+  }
+  return { min, max, step, disabled, ranged, start, end, tickLabels, onInputA, onInputB }
+})
+</controller>
+
+<column gap="0" style(host)>
   <stack style(track, { match: { size: { sm: sizeSm, md: sizeMd, lg: sizeLg } } })>
-    <input type="range" use:rangeFill style(base)>
-    <input type="range" use:rangeFill style(base, { match: { range: { true: thumbOn, false: thumbOff } } })>
+    <input type="range" min={min} max={max} step={step} disabled={disabled} value={start()} on:input={onInputA} style(base)>
+    <input type="range" min={min} max={max} step={step} disabled={disabled} value={end()} on:input={onInputB} style(base, { match: { range: { true: thumbOn, false: thumbOff } } })>
   </stack>
-  <row nowrap justify="between" gap="1" hidden="hidden" data-slider-ticks style(tickRow)></row>
+  <row nowrap justify="between" gap="1" hidden="hidden" data-slider-ticks style(tickRow)><for {tickLabels as label}><span>{label}</span></for></row>
 </column>

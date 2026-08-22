@@ -41,6 +41,7 @@ use crate::keys::{BindingRegistry, KeyAllocator};
 
 mod control_emit;
 mod dom_emit;
+mod stdlib_inline;
 
 /// Events the compiler routes through root delegation; exposed to tooling.
 pub fn delegatable_events() -> &'static [&'static str] {
@@ -78,6 +79,9 @@ pub struct TemplateEmitter {
     /// `js.rs::emit_bindings`, so each migrated kind moves out of the
     /// manifest and into hydrate atomically.
     pub(super) hydrate_calls: Writer,
+    /// Bindings record from the controller currently being wired
+    /// (`controller().setup` return). Nested hosts push/pop via `take`.
+    pub(super) ctrl_inst: Option<String>,
     /// True iff `hydrate_calls` includes any text-binding wiring — drives
     /// the `collectTextOpens(root)` preamble emit in `js.rs`.
     pub(super) hydrate_uses_text: bool,
@@ -171,6 +175,12 @@ pub struct TemplateEmitter {
     /// (`innerHTML` is a verbatim round-trip blob there), so the SSR walk turns
     /// this off and emits the plain `createElement` build instead.
     pub(super) tpl_enabled: bool,
+    /// Slot projection for inlined stdlib components (compile-time slots,
+    /// same as splice, but the template is emitted as a component).
+    pub(super) slot_stack: Vec<stdlib_inline::SlotProj>,
+    /// Open mount-form L1 frames. Nested controller-bearing tags defer
+    /// `mountComponent` until the parent instance exists (reactive props).
+    pub(super) l1_frames: Vec<stdlib_inline::L1Frame>,
 }
 
 impl TemplateEmitter {
@@ -198,6 +208,9 @@ impl TemplateEmitter {
             machinery_locals: Vec::new(),
             root_pending: false,
             tpl_enabled: true,
+            ctrl_inst: None,
+            slot_stack: Vec::new(),
+            l1_frames: Vec::new(),
         }
     }
 
@@ -525,6 +538,11 @@ impl TemplateEmitter {
                 self.emit_text_binding(w, &v, expr, cleanups_var, &key);
             }
             Instr::Element(el) => {
+                if el.tag.eq_ignore_ascii_case("slot")
+                    && self.emit_projected_slot(w, el, parent_var, cleanups_var)
+                {
+                    return;
+                }
                 self.emit_element(w, el, parent_var, cleanups_var);
             }
             Instr::If(if_instr) => self.emit_if(w, if_instr, parent_var, cleanups_var),

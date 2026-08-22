@@ -551,15 +551,16 @@ pub fn is_icon_host(el: &crate::ir::ElementInstr) -> bool {
     if tag == "icon" || tag == "sail-icon" {
         return true;
     }
-    el.attrs.iter().any(|a| {
-        matches!(
-            a,
-            AttrInstr::Use {
-                action,
-                ..
-            } if action == "icon"
-        )
-    })
+    if tag == "span" {
+        return el.attrs.iter().any(|a| {
+            if let AttrInstr::Static { name, value, .. } = a {
+                name == "class" && value.split_whitespace().any(|c| c == "sail-icon")
+            } else {
+                false
+            }
+        });
+    }
+    false
 }
 
 /// Walk template and collect static icon role names (no resolve).
@@ -629,6 +630,19 @@ pub fn resolve_used_glyphs(
     out.sort();
     out.dedup();
     out
+}
+
+/// Roots to search for offline pack data (`node_modules`, crate dir).
+pub fn default_glyph_search_roots() -> Vec<std::path::PathBuf> {
+    let mut roots = Vec::new();
+    if let Ok(cwd) = std::env::current_dir() {
+        roots.push(cwd.clone());
+        roots.push(cwd.join("node_modules"));
+    }
+    let manifest = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    roots.push(manifest.clone());
+    roots.push(manifest.join("../../../node_modules"));
+    roots
 }
 
 /// Load a pack glyph as a standalone SVG. Offline only — never hits a CDN.

@@ -7,9 +7,10 @@
       <tab title="Overview">panel…</tab>
     </tabs>
 
-  use:tabs projects triggers into the built-in <tab-list> rail so the
-  rail is a real layout child (not display:contents hunting). Parts form
-  still works: an authored <tab-list> is the rail; the built-in one stays idle.
+  Look: this host owns layout. Each <tab> owns its Style. Slots, not :part.
+  State: this file's <controller> (active + keys + select). No DOM.
+  Child tabs take `active` / `select` as props from this instance (signal
+  cell, not a snapshot). Listen: use:hotkeys={keys} on the host.
 -->
 <scope>
   props: {
@@ -20,13 +21,40 @@
   }
 
   style host = {size({ min-w: 0 })}
-  // Horizontal is a column: rail on top, panel under it.
-  // Vertical is a nowrap row: rail on the start edge, panel beside it.
-  // A wrapping row made vertical look like horizontal — panel dropped under.
   style horiz = {dir(column)}
   style vert = {dir(row)}
 </scope>
-<row nowrap gap="3" use:tabs style(host, {match: { orientation: { horizontal: horiz, vertical: vert } }})>
-  <tab-list data-tabs-rail hidden></tab-list>
+
+<controller>
+export default controller((init) => {
+  const names = Array.isArray(init.names) ? init.names : []
+  const active = signal(String(init.active || names[0] || ''))
+
+  function select(name) {
+    if (!name || name === active()) return
+    active.set(name)
+    const cb = init.onTabChange
+    if (typeof cb === 'function') cb({ name })
+  }
+  function move(delta) {
+    if (!names.length) return
+    let i = names.indexOf(active())
+    if (i < 0) i = 0
+    const next = names[(i + delta + names.length) % names.length]
+    if (next) select(next)
+  }
+  const keys = {
+    ArrowRight: () => move(1),
+    ArrowLeft: () => move(-1),
+    ArrowDown: () => move(1),
+    ArrowUp: () => move(-1),
+    Home: () => { if (names[0]) select(names[0]) },
+    End: () => { const n = names[names.length - 1]; if (n) select(n) },
+  }
+  return { active, keys, select }
+})
+</controller>
+
+<row nowrap gap="3" use:hotkeys={keys} style(host, {match: { orientation: { horizontal: horiz, vertical: vert } }})>
   <slot></slot>
 </row>

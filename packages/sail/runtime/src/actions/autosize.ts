@@ -19,6 +19,7 @@
 // control). Never write a zero measurement — leave `auto` so rows/min-height
 // own the box, and re-measure on the next animation frames once connected.
 
+import { writeCssVar } from '../bind'
 import type { Action } from '../action'
 import { writeCssVar } from '../bind'
 

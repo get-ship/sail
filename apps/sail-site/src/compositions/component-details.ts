@@ -601,16 +601,14 @@ const DETAILS_MAP = {
   }),
   icon: lang('icon', 'icon', {
     blurb:
-      'Glyph box on the icon-size ladder. Prefer name for pack ids (local /_deck/icons resolve — never CDN); src only same-origin SVG. Empty label is decorative (aria-hidden); set label for role=img. Ink is currentColor + glyphFill (no tone prop). spin is owned by use:icon motion.',
+      'Glyph box on the icon-size ladder. Pack ids are compiler-inlined (never CDN). Empty label is decorative (aria-hidden); set label for role=img. Ink is currentColor + glyphFill (no tone prop).',
     variants: [],
     variantAttr: '',
     props: [
       { name: 'name', desc: 'pack glyph id → local /_deck/icons/{name}.svg', type: 'string' },
-      { name: 'src', desc: 'same-origin / relative SVG only (no CDN)', type: 'string' },
       { name: 'label', desc: 'a11y name; empty → decorative aria-hidden', type: 'string' },
       { name: 'size', desc: 'glyph box on icon-size scale (xs→2xs … xl→2xl)', type: 'xs · sm · md · lg · xl' },
-      { name: 'spin', desc: 'loop rotate via use:icon (not a CSS class)', type: 'bool' },
-      { name: '(slot)', desc: 'optional one-off SVG when not using name/src', type: 'children' },
+      { name: '(slot)', desc: 'optional one-off SVG', type: 'children' },
     ],
   }),
   separator: lang('separator', 'separator', {
@@ -790,7 +788,7 @@ const DETAILS_MAP = {
   }),
   pagination: lang('pagination', 'pagination', {
     blurb:
-      'A nav of <page-item> controls. value marks the current one with aria-current; clicking emits sail-page-change — your list, your fetch. Size is authored on each <page-item>.',
+      'A nav of <page-item> controls. value marks the current one with aria-current; clicking a page-item calls onPageChange — your list, your fetch. Size is authored on each <page-item>.',
     variants: [],
     variantAttr: '',
     props: [
@@ -882,20 +880,10 @@ const DETAILS_MAP = {
   // ── Effects ──────────────────────────────────────────────────────────
   ticker: lang('ticker', 'ticker', {
     blurb:
-      'A looping band of text or icons. Drop content in — the host already clips, nowraps, and paints a quiet strip. duration and reverse set the motion. Reduced motion settles automatically.',
+      'A looping band of text or icons. Drop content in — the host already clips, nowraps, and paints a quiet strip. The loop is compile-time anatomy (the track translates the half-width seam). Reduced motion settles automatically.',
     variants: [],
     variantAttr: '',
     props: [
-      {
-        name: 'duration',
-        desc: 'loop length for use:marquee (fast 16s · normal 24s · slow 32s)',
-        type: 'fast · normal · slow',
-      },
-      {
-        name: 'reverse',
-        desc: 'presence attr — flip to +50% (rightward)',
-        type: 'boolean',
-      },
       {
         name: 'children',
         desc: 'band content — second copy is decorative/aria-hidden for the seam',

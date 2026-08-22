@@ -22,6 +22,8 @@ const UTILITY_STRING_SRC: &str = r#"<div style="p-4 bg-surface-2">x</div>"#;
 
 fn opts(component_name: &str) -> CompileOpts {
     CompileOpts {
+        element_prefix: "sail".into(),
+        host_data_attr: "data-sail-host".into(),
         component_meta: Some(ComponentMeta {
             name: component_name.into(),
         }),

@@ -7,7 +7,7 @@ export const meta = {
   key: 'alert',
   category: 'feedback',
   kind: 'host',
-  blurb: "Inline status banner. tone defaults to info and paints the left stripe + icon. warning/danger flip liveRegion to assertive role=alert; dismissible shows the close control (onDismiss then remove).",
+  blurb: "Inline status banner. tone defaults to info and paints the left stripe + icon. warning/danger stamp an assertive live region; dismissible shows the close control (onDismiss then remove).",
   heading: "prose",
   host: 'doc-alert',
   stageOwnsKnobs: true,

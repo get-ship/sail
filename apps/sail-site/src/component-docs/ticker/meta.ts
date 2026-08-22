@@ -8,7 +8,7 @@ export const meta = {
   category: 'effects',
   kind: 'host',
   blurb:
-    'A looping band of text or icons. duration and reverse set the motion. Reduced motion settles automatically.',
+    'A looping band of text or icons. The loop is compile-time anatomy; reduced motion settles automatically.',
   host: 'doc-ticker',
-  stageOwnsKnobs: true,
+  stageOwnsKnobs: false,
 } as const satisfies DocMeta

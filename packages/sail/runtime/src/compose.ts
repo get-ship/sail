@@ -18,6 +18,7 @@
 import type { MountModule } from './component-mount'
 import { createChildScope, withScope } from './effect-scope'
 import { withHost } from './signal'
+import { projectSlots } from './slot-project'
 
 /**
  * Mount a component module into `host`, returning a disposer.
@@ -40,25 +41,23 @@ export function mountComponent(
   // and also when the returned disposer fires (whichever happens first). Outside
   // any parent scope (tests, standalone) it's simply an unowned scope — the
   // returned disposer is then the only teardown path, which is correct.
+  const captured = Array.from(host.childNodes)
   const scope = createChildScope()
   let unmount: (() => void) | void
+  let instance: Record<string, unknown> = {}
   withScope(scope, () =>
     withHost(host, () => {
       const setupRet = module.setup(ctx) as Record<string, unknown> | undefined
+      if (setupRet && typeof setupRet === 'object') instance = setupRet
       const m = setupRet?.['__mount']
       if (typeof m === 'function') {
         unmount = (m as (h: HTMLElement) => (() => void) | void)(host)
       }
-      // Ambient mount() callbacks the child's setup (or a composition it
-      // called) registered on `scope` — run now that the child's DOM is
-      // built. Disposers enroll on `scope` itself (see `runMounts`), so
-      // they tear down with `scope.dispose()` below.
+      projectSlots(host, captured)
       scope.runMounts(host)
     }),
   )
-  return () => {
-    // `scope.dispose()` runs mount()-registered + onCleanup()-registered
-    // teardown before the template's own DOM unmount.
+  const dispose = () => {
     scope.dispose()
     try {
       if (typeof unmount === 'function') unmount()
@@ -66,4 +65,5 @@ export function mountComponent(
       console.error('[sail/compose] child unmount threw:', e)
     }
   }
+  return Object.assign(dispose, { instance })
 }

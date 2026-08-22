@@ -1009,6 +1009,8 @@ fn compile_one_file(
             CompileMode::Auto
         },
         source_path: Some(path.to_path_buf()),
+        element_prefix: "sail".into(),
+        host_data_attr: "data-sail-host".into(),
         component_meta,
         emit_dts: true,
         scope_capabilities: Vec::new(),

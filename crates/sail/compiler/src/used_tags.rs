@@ -62,6 +62,31 @@ fn visit(instrs: &[Instr], found: &mut BTreeSet<String>) {
     }
 }
 
+/// L1 tags authored in `source` (`<button>`, `<tabs>`, …) — before splice
+/// rewrites them to host HTML. Used-tag platform CSS keys off this, not
+/// the hyphenated CE set.
+pub fn collect_stdlib_tags_from_source(source: &str) -> BTreeSet<String> {
+    let mut found = BTreeSet::new();
+    for (tag, _) in crate::stdlib::sources() {
+        let bytes = source.as_bytes();
+        let needle = format!("<{tag}").into_bytes();
+        let mut i = 0;
+        while let Some(off) = bytes[i..]
+            .windows(needle.len())
+            .position(|w| w.eq_ignore_ascii_case(&needle))
+        {
+            let at = i + off + needle.len();
+            let next = bytes.get(at).copied().unwrap_or(b'>');
+            if matches!(next, b' ' | b'\t' | b'\n' | b'\r' | b'/' | b'>') {
+                found.insert((*tag).to_string());
+                break;
+            }
+            i = at;
+        }
+    }
+    found
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

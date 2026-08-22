@@ -116,7 +116,7 @@ export const TAGS: readonly L1Tag[] = [
     tag: 'accordion',
     component: 'accordion',
     role: 'host',
-    description: 'single disclosure. use:detailsToggle + use:detailsDisabled.',
+    description: 'single disclosure. Native <details> owns open/close, keyboard,',
     acceptsChildren: true,
     props: [
       { name: 'open', type: 'bool', default: 'false' },
@@ -379,7 +379,7 @@ export const TAGS: readonly L1Tag[] = [
     tag: 'context-menu',
     component: 'context-menu',
     role: 'host',
-    description: 'L1 right-click menu. Native [popover] + use:contextMenu',
+    description: 'L1 right-click menu.',
     acceptsChildren: true,
     props: [
       { name: 'for', type: 'string' },
@@ -393,7 +393,7 @@ export const TAGS: readonly L1Tag[] = [
     tag: 'date',
     component: 'date',
     role: 'host',
-    description: 'temporal picker product. Impl: native input; type prop selects',
+    description: 'temporal picker. Native <input>; type selects precision',
     acceptsChildren: false,
     props: [
       { name: 'type', type: 'date | time | datetime-local | month | week', default: 'date', values: ['date', 'time', 'datetime-local', 'month', 'week'] },
@@ -473,7 +473,7 @@ export const TAGS: readonly L1Tag[] = [
     ],
     axes: [
     ],
-    concerns: ['bg', 'border', 'elevation', 'fg', 'position', 'size'],
+    concerns: ['bg', 'border', 'elevation', 'fg', 'play', 'position', 'size'],
   },
   {
     tag: 'empty-state',
@@ -561,7 +561,7 @@ export const TAGS: readonly L1Tag[] = [
     tag: 'file',
     component: 'file',
     role: 'host',
-    description: 'system file picker. Native Browse chrome is hidden.',
+    description: 'system file picker. Native Browse chrome is unthemeable; the',
     acceptsChildren: false,
     props: [
       { name: 'size', type: 'xs | sm | md | lg', default: 'md', values: ['xs', 'sm', 'md', 'lg'] },
@@ -581,7 +581,7 @@ export const TAGS: readonly L1Tag[] = [
       { name: 'size', values: ['xs', 'sm', 'md', 'lg'], optional: false },
       { name: 'variant', values: ['picker', 'drop'], optional: false },
     ],
-    concerns: ['bg', 'border', 'fg', 'filter', 'play', 'size', 'type'],
+    concerns: ['bg', 'border', 'fg', 'filter', 'play', 'position', 'size', 'type'],
   },
   {
     tag: 'form',
@@ -606,27 +606,25 @@ export const TAGS: readonly L1Tag[] = [
     acceptsChildren: true,
     props: [
       { name: 'placement', type: 'string' },
+      { name: 'id', type: 'string' },
     ],
     axes: [
     ],
-    concerns: ['bg', 'border', 'elevation', 'fg', 'position', 'size', 'type'],
+    concerns: ['bg', 'border', 'elevation', 'fg', 'play', 'position', 'size', 'type'],
   },
   {
     tag: 'icon',
     component: 'icon',
     role: 'host',
-    description: 'glyph box + size match. use:icon owns spin.',
+    description: 'glyph box + size match. Pure structure: glyphs are compiler',
     acceptsChildren: true,
     props: [
       { name: 'name', type: 'string' },
-      { name: 'src', type: 'string' },
       { name: 'label', type: 'string' },
       { name: 'size', type: 'md | xs | sm | lg | xl', default: 'md', values: ['md', 'xs', 'sm', 'lg', 'xl'] },
-      { name: 'spin', type: 'bool', default: 'false' },
     ],
     axes: [
       { name: 'size', values: ['md', 'xs', 'sm', 'lg', 'xl'], optional: false },
-      { name: 'spin', values: ['false', 'true'], optional: false },
     ],
     concerns: ['fg', 'play', 'size'],
   },
@@ -634,10 +632,10 @@ export const TAGS: readonly L1Tag[] = [
     tag: 'input',
     component: 'input',
     role: 'host',
-    description: 'text field product. Style product only.',
+    description: 'text field product.',
     acceptsChildren: false,
     props: [
-      { name: 'type', type: 'text | email | password | number | search | tel | url | hidden', default: 'text', values: ['text', 'email', 'password', 'number', 'search', 'tel', 'url', 'hidden'] },
+      { name: 'type', type: 'text | email | password | number | search | tel | url | hidden | checkbox | radio | file | color | date | button', default: 'text', values: ['text', 'email', 'password', 'number', 'search', 'tel', 'url', 'hidden', 'checkbox', 'radio', 'file', 'color', 'date', 'button'] },
       { name: 'size', type: 'xs | sm | md | lg', default: 'md', values: ['xs', 'sm', 'md', 'lg'] },
       { name: 'surface', type: 'default | filled | flushed', default: 'default', values: ['default', 'filled', 'flushed'] },
       { name: 'invalid', type: 'bool', default: 'false' },
@@ -656,6 +654,8 @@ export const TAGS: readonly L1Tag[] = [
       { name: 'autocomplete', type: 'string' },
       { name: 'inputmode', type: 'string' },
       { name: 'reveal', type: 'bool', default: 'true' },
+      { name: 'id', type: 'string' },
+      { name: 'describedBy', type: 'string' },
     ],
     axes: [
       { name: 'disabled', values: ['false', 'true'], optional: false },
@@ -665,9 +665,9 @@ export const TAGS: readonly L1Tag[] = [
       { name: 'reveal', values: ['false', 'true'], optional: false },
       { name: 'size', values: ['xs', 'sm', 'md', 'lg'], optional: false },
       { name: 'surface', values: ['default', 'filled', 'flushed'], optional: false },
-      { name: 'type', values: ['text', 'email', 'password', 'number', 'search', 'tel', 'url', 'hidden'], optional: false },
+      { name: 'type', values: ['text', 'email', 'password', 'number', 'search', 'tel', 'url', 'hidden', 'checkbox', 'radio', 'file', 'color', 'date', 'button'], optional: false },
     ],
-    concerns: ['bg', 'border', 'elevation', 'fg', 'filter', 'play', 'size', 'type'],
+    concerns: ['bg', 'border', 'elevation', 'fg', 'filter', 'play', 'position', 'size', 'type'],
   },
   {
     tag: 'kbd',
@@ -718,6 +718,7 @@ export const TAGS: readonly L1Tag[] = [
     props: [
       { name: 'value', type: 'string' },
       { name: 'disabled', type: 'bool', default: 'false' },
+      { name: 'onSelect', type: 'string' },
     ],
     axes: [
       { name: 'disabled', values: ['false', 'true'], optional: false },
@@ -806,7 +807,7 @@ export const TAGS: readonly L1Tag[] = [
     tag: 'pagination',
     component: 'pagination',
     role: 'host',
-    description: 'nav state via use:pagination (ARIA current). Host is layout-only.',
+    description: 'nav state lives in this file\'s <controller> (page signal,',
     acceptsChildren: true,
     props: [
       { name: 'value', type: 'string' },
@@ -829,7 +830,7 @@ export const TAGS: readonly L1Tag[] = [
     ],
     axes: [
     ],
-    concerns: ['bg', 'border', 'elevation', 'fg', 'position', 'size'],
+    concerns: ['bg', 'border', 'elevation', 'fg', 'play', 'position', 'size'],
   },
   {
     tag: 'progress',
@@ -878,7 +879,7 @@ export const TAGS: readonly L1Tag[] = [
     tag: 'radio-group',
     component: 'radio-group',
     role: 'host',
-    description: 'vertical group of <radio> options. use:radioGroup wires shared',
+    description: 'vertical group of <radio> options.',
     acceptsChildren: true,
     props: [
       { name: 'value', type: 'string' },
@@ -1028,7 +1029,7 @@ export const TAGS: readonly L1Tag[] = [
     tag: 'switch',
     component: 'switch',
     role: 'host',
-    description: 'native checkbox restyled as sliding toggle. No controller.',
+    description: 'native checkbox restyled as sliding toggle.',
     acceptsChildren: false,
     props: [
       { name: 'checked', type: 'bool', default: 'false' },
@@ -1056,11 +1057,9 @@ export const TAGS: readonly L1Tag[] = [
       { name: 'disabled', type: 'bool', default: 'false' },
       { name: 'variant', type: 'line | pill | enclosed', default: 'line', values: ['line', 'pill', 'enclosed'] },
       { name: 'size', type: 'md | sm | lg', default: 'md', values: ['md', 'sm', 'lg'] },
-      { name: 'orientation', type: 'horizontal | vertical', default: 'horizontal', values: ['horizontal', 'vertical'] },
     ],
     axes: [
       { name: 'disabled', values: ['false', 'true'], optional: false },
-      { name: 'orientation', values: ['horizontal', 'vertical'], optional: false },
       { name: 'size', values: ['md', 'sm', 'lg'], optional: false },
       { name: 'variant', values: ['line', 'pill', 'enclosed'], optional: false },
     ],
@@ -1070,7 +1069,7 @@ export const TAGS: readonly L1Tag[] = [
     tag: 'tab-list',
     component: 'tabs',
     role: 'part',
-    description: 'strip chrome. Sticky + variant Style. Orientation structural stamp from use:tabs.',
+    description: 'strip chrome. Sticky + variant Style. Owns its axis',
     acceptsChildren: true,
     props: [
       { name: 'sticky', type: 'bool', default: 'false' },
@@ -1088,7 +1087,7 @@ export const TAGS: readonly L1Tag[] = [
     tag: 'tab-panel',
     component: 'tabs',
     role: 'part',
-    description: 'orientation Style match (stamped by use:tabs).',
+    description: 'owns its pad. Orientation is this element\'s prop.',
     acceptsChildren: true,
     props: [
       { name: 'name', type: 'string' },
@@ -1097,7 +1096,7 @@ export const TAGS: readonly L1Tag[] = [
     axes: [
       { name: 'orientation', values: ['horizontal', 'vertical'], optional: false },
     ],
-    concerns: ['size'],
+    concerns: ['play', 'size'],
   },
   {
     tag: 'table',
@@ -1111,17 +1110,15 @@ export const TAGS: readonly L1Tag[] = [
       { name: 'hoverable', type: 'bool', default: 'false' },
       { name: 'bordered', type: 'bool', default: 'false' },
       { name: 'sticky-header', type: 'bool', default: 'false' },
-      { name: 'searchable', type: 'bool', default: 'false' },
     ],
     axes: [
       { name: 'bordered', values: ['false', 'true'], optional: false },
       { name: 'dense', values: ['false', 'true'], optional: false },
       { name: 'hoverable', values: ['false', 'true'], optional: false },
-      { name: 'searchable', values: ['false', 'true'], optional: false },
       { name: 'sticky-header', values: ['false', 'true'], optional: false },
       { name: 'striped', values: ['false', 'true'], optional: false },
     ],
-    concerns: ['bg', 'border', 'fg', 'play', 'size', 'type'],
+    concerns: ['bg', 'border', 'fg', 'size', 'type'],
   },
   {
     tag: 'tabs',
@@ -1219,7 +1216,7 @@ export const TAGS: readonly L1Tag[] = [
       { name: 'size', values: ['full', 'compact'], optional: false },
       { name: 'variant', values: ['icon', 'menu-row', 'segmented'], optional: false },
     ],
-    concerns: ['bg', 'border', 'elevation', 'fg', 'play', 'position', 'size', 'type'],
+    concerns: ['bg', 'border', 'elevation', 'fg', 'filter', 'play', 'position', 'size', 'type'],
   },
   {
     tag: 'ticker',
@@ -1228,14 +1225,10 @@ export const TAGS: readonly L1Tag[] = [
     description: 'infinite linear marquee band. Host clips; track is a cluster',
     acceptsChildren: true,
     props: [
-      { name: 'duration', type: 'fast | normal | slow', default: 'normal', values: ['fast', 'normal', 'slow'] },
-      { name: 'reverse', type: 'bool', default: 'false' },
     ],
     axes: [
-      { name: 'duration', values: ['fast', 'normal', 'slow'], optional: false },
-      { name: 'reverse', values: ['false', 'true'], optional: false },
     ],
-    concerns: ['bg', 'fg', 'size', 'type'],
+    concerns: ['bg', 'fg', 'play', 'size', 'type'],
   },
   {
     tag: 'toast',
@@ -1276,12 +1269,10 @@ export const TAGS: readonly L1Tag[] = [
       { name: 'value', type: 'string' },
       { name: 'disabled', type: 'bool', default: 'false' },
       { name: 'variant', type: 'outline | ghost | segmented', default: 'outline', values: ['outline', 'ghost', 'segmented'] },
-      { name: 'orientation', type: 'horizontal | vertical', default: 'horizontal', values: ['horizontal', 'vertical'] },
       { name: 'size', type: 'md | sm | lg', default: 'md', values: ['md', 'sm', 'lg'] },
     ],
     axes: [
       { name: 'disabled', values: ['false', 'true'], optional: false },
-      { name: 'orientation', values: ['horizontal', 'vertical'], optional: false },
       { name: 'size', values: ['md', 'sm', 'lg'], optional: false },
       { name: 'variant', values: ['outline', 'ghost', 'segmented'], optional: false },
     ],
@@ -1305,13 +1296,13 @@ export const TAGS: readonly L1Tag[] = [
       { name: 'type', values: ['single', 'multiple'], optional: false },
       { name: 'variant', values: ['outline', 'ghost', 'segmented'], optional: false },
     ],
-    concerns: ['bg', 'border', 'play'],
+    concerns: ['bg', 'border', 'filter', 'play'],
   },
   {
     tag: 'tooltip',
     component: 'tooltip',
     role: 'host',
-    description: 'hover/focus text bubble. use:tipDescribe supplies per-instance',
+    description: 'hover/focus text bubble. Style value language only.',
     acceptsChildren: true,
     props: [
       { name: 'placement', type: 'top | bottom | left | right', default: 'top', values: ['top', 'bottom', 'left', 'right'] },

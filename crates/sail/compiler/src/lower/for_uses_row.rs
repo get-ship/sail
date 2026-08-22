@@ -77,7 +77,8 @@ fn attr_references(attr: &AttrInstr, var_name: &str, idx_name: Option<&str>) -> 
     match attr {
         AttrInstr::Static { .. }
         | AttrInstr::SlotReflectEmpty { .. }
-        | AttrInstr::Motion { .. } => false,
+        | AttrInstr::Motion { .. }
+        | AttrInstr::Controller { .. } => false,
         // Row member binds read the row on every keyed reuse.
         AttrInstr::ForBind { .. } => true,
         AttrInstr::Expr { expr, .. }

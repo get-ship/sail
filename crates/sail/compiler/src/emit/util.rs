@@ -1,5 +1,17 @@
 //! Shared identifier helpers for the JS emitter.
 
+/// Binding for a mount-form L1 import (`tabs` → `__mod_tabs`).
+pub fn l1_controller_ident(tag: &str) -> String {
+    format!("__mod_{}", js_ident(tag))
+}
+
+/// Specifier the bundler compiles as tagless mount-form. Logical id
+/// (`@sail/element/<tag>`), not a filesystem path — the bundler resolves
+/// it via `resolve_id`. No `CARGO_MANIFEST_DIR` in the compiler.
+pub fn l1_controller_specifier(tag: &str) -> String {
+    format!("@sail/element/{tag}")
+}
+
 /// Coerce `name` into a valid JS identifier — replace any character
 /// that wouldn't be legal in a binding with `_`.
 pub fn js_ident(name: &str) -> String {

@@ -76,6 +76,8 @@ fn list_newly_refused_controllers() {
         checked += 1;
         let (mode, component_meta) = classify(path);
         let opts = CompileOpts {
+            element_prefix: "sail".into(),
+            host_data_attr: "data-sail-host".into(),
             route_params: None,
             setup_url: None,
             mode,

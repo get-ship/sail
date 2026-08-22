@@ -14,6 +14,8 @@ use sail_compiler::{CompileMode, CompileOpts, ComponentMeta, compile};
 
 fn component_opts(setup: Option<&str>) -> CompileOpts {
     CompileOpts {
+        element_prefix: "sail".into(),
+        host_data_attr: "data-sail-host".into(),
         route_params: None,
         setup_url: setup.map(|s| s.to_string()),
         mode: CompileMode::Component,

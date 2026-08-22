@@ -140,6 +140,7 @@ impl Cx<'_> {
             | AttrInstr::Motion { .. }
             | AttrInstr::Mutation { .. }
             | AttrInstr::SlotReflectEmpty { .. }
+            | AttrInstr::Controller { .. }
             | AttrInstr::Static { .. } => {}
         }
     }

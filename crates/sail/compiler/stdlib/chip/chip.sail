@@ -3,10 +3,15 @@
   tone defaults to primary — a bare <chip> is a finished control.
   Explicit tone always paints.
 
-  Host is a text-bearing <span> (text channel + Style match). Size/variant/
+  Host is a text-bearing <span> (text channel + Style match; a host
+  <button> cannot wrap the inner label/remove buttons). Size/variant/
   selected attrs and paint classes must share one node or match CSS never
   fires. Leading + label + remove pack is the inner <row cluster> — not
   Style gap(), not host CSS. Do not wrap the host in a layout tag.
+
+  State: this file's <controller> (selected / removable / disabled as
+  signals, onRemove, keys). Listen: use:hotkeys={keys} on the host.
+  Click is the platform <button>. Selected look is Style on this host.
 -->
 
 <scope>
@@ -28,14 +33,40 @@
   // Glyph, not a button: no fill invert, no control chrome. Opacity-only hover.
   style remove = {display(none).size({ w: icon-size-3xs, h: icon-size-3xs, min-w: 0, min-h: 0 }).pad(0).border({ width: 0 }).bg(transparent).fg(currentColor).radius(none).cursor(pointer).filter({ opacity: 65 }), animate: { transition: play(colors, fast) }}
   style leading = {display(contents)}
-  style xmark = {display(block).size(grow)}
+  style xmark = {display(block).size({ w: 100%, h: 100% })}
+  style labelBtn = {appearance(none).bg(transparent).border({ width: 0 }).pad(0).fg(currentColor).cursor(pointer)}
 </scope>
 
+<controller>
+export default controller((init) => {
+  function read(v) {
+    return typeof v === 'function' ? v() : v
+  }
+  function isOn(v) {
+    const x = read(v)
+    return x === true || x === '' || x === 'true'
+  }
+  function onRemove() {
+    if (isOn(init.disabled)) return
+    const cb = init.onRemove
+    if (typeof cb === 'function') cb()
+  }
+  const selected = derived(() => isOn(init.selected))
+  const removable = derived(() => isOn(init.removable))
+  const disabled = derived(() => isOn(init.disabled))
+  const keys = isOn(init.removable)
+    ? { Backspace: () => onRemove(), Delete: () => onRemove() }
+    : {}
+  return { onRemove, keys, selected, removable, disabled }
+})
+</controller>
+
 <span
-  use:pressable
-  use:pressed
-  use:dismissible
-  style(base, {when: {pressed: bg(primary).fg(primary-foreground).border({ color: primary }).elevation(xs).type({ weight: semibold }), disabled: cursor(not-allowed).bg(muted).border({ color: border-subtle }).fg(muted-foreground).filter({ saturate: 65 }).elevation(none), focus: border({ style: solid, kind: outline, width: 2, color: ring, offset: 2 })}, match: {size: { md: sizeMd, sm: sizeSm, lg: sizeLg }, variant: {solid: {bg(muted).fg(muted-foreground).border({ color: border }), when: {hover: filter({ opacity: 90 })}}, soft: {bg(muted).fg(muted-foreground).border({ color: border }), when: {hover: filter({ opacity: 90 })}}, outline: {bg(transparent).fg(muted-foreground).border({ color: border }), when: {hover: bg(hover-bg)}}, ghost: {bg(transparent).border({ color: transparent }).fg(muted-foreground), when: {hover: bg(hover-bg)}}}}, compound: [
+  use:hotkeys={keys}
+  selected={selected()}
+  removable={removable()}
+  disabled={disabled()}
+  style(base, {when: {pressed: bg(primary).fg(primary-foreground).border({ color: primary }).elevation(xs).type({ weight: semibold }), disabled: cursor(not-allowed).bg(muted).border({ color: border-subtle }).fg(muted-foreground).filter({ saturate: 65 }).elevation(none), focusWithin: border({ style: solid, kind: outline, width: 2, color: ring, offset: 2 })}, match: {size: { md: sizeMd, sm: sizeSm, lg: sizeLg }, variant: {solid: {bg(muted).fg(muted-foreground).border({ color: border }), when: {hover: filter({ opacity: 90 })}}, soft: {bg(muted).fg(muted-foreground).border({ color: border }), when: {hover: filter({ opacity: 90 })}}, outline: {bg(transparent).fg(muted-foreground).border({ color: border }), when: {hover: bg(hover-bg)}}, ghost: {bg(transparent).border({ color: transparent }).fg(muted-foreground), when: {hover: bg(hover-bg)}}}}, compound: [
       // Tone + solid
       {tone: primary, variant: solid, bg(primary).fg(primary-foreground).border({ color: primary })},
       {tone: info, variant: solid, bg(info).fg(info-foreground).border({ color: info })},
@@ -80,13 +111,16 @@
     <span style(leading)>
       <slot name="leading"></slot>
     </span>
-    <slot></slot>
+    <button type="button" anatomy pressed={selected()} disabled={disabled()} style(labelBtn)>
+      <slot></slot>
+    </button>
     <button
       type="button"
       anatomy
-      data-dismiss
       label="Remove"
       tabindex="-1"
+      disabled={disabled()}
+      on:click|stopPropagation={onRemove}
       style(remove, {shrink(0).self(center), match: {removable: {true: display(inline-flex), false: display(none)}}, when: {hover: filter({ opacity: 100 }), focus: border({ style: solid, kind: outline, width: 2, color: ring, offset: 2 })}})
     >
       <svg viewBox="0 0 10 10" stroke-width="1.25" stroke-linecap="round" stroke="currentColor" fill="none" style(xmark)>

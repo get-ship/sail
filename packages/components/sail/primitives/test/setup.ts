@@ -1,9 +1,6 @@
-// Vitest setup for `@ship/sail-components/primitives` — JSDOM polyfills + glyph priming
-// for the runtime's `use:icon` cache (no network in jsdom). The lucide JSON
-// path is resolved cwd-independently by `@ship/test-setup`.
+// Vitest setup for `@ship/sail-components/primitives` — JSDOM polyfills.
+// No glyph priming: `<icon name=…>` glyphs are compiler pack-inline.
 
-import { initJsdomPolyfills, primeLucideIcons } from '@ship/test-setup'
-import { primeIconCache } from '@ship/sail-runtime'
+import { initJsdomPolyfills } from '@ship/test-setup'
 
 initJsdomPolyfills()
-primeLucideIcons((name, svg) => primeIconCache({ [name]: svg }))

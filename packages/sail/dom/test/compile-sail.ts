@@ -14,8 +14,8 @@
 // round-trip through Rust now. This helper is the only test-time bridge
 // between `.sail` source and a mounted DOM tree.
 
-import { existsSync, readdirSync, statSync } from 'node:fs'
-import { dirname, resolve } from 'node:path'
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
+import { basename, dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 // `/internal` carries language + ABI so rewritten compiled imports resolve.
@@ -311,7 +311,23 @@ export function evalCompiledJs(
   js: string,
   setup?: UserSetup,
 ): { setup: (ctx: unknown) => Record<string, unknown> & { __mount: (c: HTMLElement) => () => void } } {
-  const body = stripImports(js).replace(/\bexport\s+default\s+/g, 'return ')
+  const mods: Record<string, unknown> = {}
+  const withSail = js
+    .replace(
+      /^\s*import\s+(\w+)\s+from\s+["']([^"']+\.sail)["']\s*;?\s*$/gm,
+      (_m, ident: string, spec: string) => {
+        mods[ident] = loadSailMount(spec)
+        return `const ${ident} = __mods[${JSON.stringify(ident)}];`
+      },
+    )
+    .replace(
+      /^\s*import\s+(\w+)\s+from\s+["']@sail\/element\/([a-z0-9-]+)["']\s*;?\s*$/gm,
+      (_m, ident: string, tag: string) => {
+        mods[ident] = loadSailMount(`@sail/element/${tag}`)
+        return `const ${ident} = __mods[${JSON.stringify(ident)}];`
+      },
+    )
+  const body = stripImports(withSail).replace(/\bexport\s+default\s+/g, 'return ')
   const setupObj = wrapSetup(setup)
   const fn = new Function(
     '__runtime',
@@ -322,6 +338,7 @@ export function evalCompiledJs(
     '__motion',
     '__query',
     '__virtual',
+    '__mods',
     body,
   )
   const deps: EvalDeps = {
@@ -339,7 +356,82 @@ export function evalCompiledJs(
     sailMotion,
     sailQuery,
     sailVirtual,
+    mods,
   ) as ReturnType<typeof evalCompiledJs>
+}
+
+/** Locate the stdlib source for a logical `@sail/element/<tag>` id. */
+const stdlibSourceCache = new Map<string, string>()
+function stdlibElementSource(tag: string): string {
+  const hit = stdlibSourceCache.get(tag)
+  if (hit) return hit
+  const direct = resolve(REPO_ROOT, 'crates/sail/compiler/stdlib', tag, `${tag}.sail`)
+  if (existsSync(direct)) {
+    const src = readFileSync(direct, 'utf8')
+    stdlibSourceCache.set(tag, src)
+    return src
+  }
+  // Family dirs may differ from the tag (`radio` → `radio-group/`).
+  const root = resolve(REPO_ROOT, 'crates/sail/compiler/stdlib')
+  const stack = [root]
+  while (stack.length > 0) {
+    const dir = stack.pop()!
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const p = resolve(dir, entry.name)
+      if (entry.isDirectory()) stack.push(p)
+      else if (entry.name === `${tag}.sail`) {
+        const src = readFileSync(p, 'utf8')
+        stdlibSourceCache.set(tag, src)
+        return src
+      }
+    }
+  }
+  throw new Error(`[sail-compiler-napi] no stdlib source for @sail/element/${tag}`)
+}
+
+/** Compiled-module memo — one compile+eval per specifier. Cyclic logical
+ *  imports (`input.sail` uses `<input>`; `radio.sail` uses `<input>`) would
+ *  recurse here forever without it: every specifier gets ONE cache entry,
+ *  seeded (as a lazy forwarder) BEFORE its own evaluation, then filled in.
+ *  Generated code touches imported modules only inside setup()/__mount(),
+ *  long after the real module lands — the same deal a bundler's module map
+ *  makes. */
+/** Lazy forwarder for a module still being evaluated. Generated code reads
+ *  `mod.setup` only when it MOUNTS — by then the real record is in. */
+function lazyModule(spec: string): { setup: (ctx: unknown) => unknown } {
+  return {
+    get setup() {
+      const mod = sailMountCache.get(spec) as { setup?: unknown } | undefined
+      if (typeof mod?.setup === 'function') return mod.setup
+      throw new Error(`[sail-compiler-napi] cyclic import ${spec} mounted before its module finished evaluating`)
+    },
+  } as { setup: (ctx: unknown) => unknown }
+}
+const sailMountCache = new Map<string, unknown>()
+/** Resolve a default-import through `compile()`, not Deck. Handles both a
+ *  filesystem `.sail` path and the bundler's logical `@sail/element/<tag>`. */
+function loadSailMount(spec: string): unknown {
+  const existing = sailMountCache.get(spec)
+  // Re-entrant (cyclic) call while this specifier is still evaluating: hand
+  // back the lazy forwarder — the real module lands when the outermost call
+  // finishes. Compiling again here would recurse forever.
+  if (existing) return existing
+  sailMountCache.set(spec, lazyModule(spec))
+  const logical = /^@sail\/element\/([a-z0-9-]+)$/.exec(spec)
+  const source = logical ? stdlibElementSource(logical[1]!) : readFileSync(spec, 'utf8')
+  const sourcePath = logical
+    ? `stdlib/${logical[1]}.sail`
+    : spec
+  const setupMarker = source.includes('<controller')
+    ? `./${basename(sourcePath)}.controller.ts`
+    : undefined
+  const compiled = compileSail(source, { sourcePath, setupMarker })
+  const setup = compiled.controller
+    ? evalInlineController(compiled.controller)
+    : undefined
+  const mod = evalCompiledJs(compiled.js, setup)
+  sailMountCache.set(spec, mod)
+  return mod
 }
 
 function wrapSetup(setup: UserSetup): { setup: (ctx: unknown) => unknown } | null {

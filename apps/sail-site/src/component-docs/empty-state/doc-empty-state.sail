@@ -77,18 +77,17 @@ export default controller((_ctx: Scope) => {
     if (esSize() !== 'md') a.push(`size="${esSize()}"`)
     a.push(`tone="${esTone()}"`)
     const open = `<empty-state ${a.join(' ')}>`
-    const iconSpin = variant() === 'connecting' ? ' spin' : ''
     const action =
       variant() === 'connecting'
         ? ''
         : `\n  <button slot="action" variant="outline" size="sm">Clear filters</button>`
-    return `${open}\n  <icon slot="icon" name="${esIcon()}"${iconSpin}></icon>\n  <strong slot="title">${esTitle()}</strong>\n  ${esBody()}${action}\n</empty-state>`
+    return `${open}\n  <icon slot="icon" name="${esIcon()}"></icon>\n  <strong slot="title">${esTitle()}</strong>\n  ${esBody()}${action}\n</empty-state>`
   })
 
   const esExDefault = () =>
     `<empty-state>\n  <icon slot="icon" name="inbox"></icon>\n  <strong slot="title">No results</strong>\n  Try a different search.\n  <button slot="action" variant="outline" size="sm">Clear filters</button>\n</empty-state>`
   const esExConnecting = () =>
-    `<empty-state variant="connecting">\n  <icon slot="icon" name="refresh" spin></icon>\n  <strong slot="title">Connecting…</strong>\n  Establishing a secure session.\n</empty-state>`
+    `<empty-state variant="connecting">\n  <icon slot="icon" name="refresh"></icon>\n  <strong slot="title">Connecting…</strong>\n  Establishing a secure session.\n</empty-state>`
   const esExDefaultColors = () =>
     `<empty-state tone="muted">\n  <icon slot="icon" name="inbox"></icon>\n  <strong slot="title">Empty</strong>\n  tone defaults to muted and paints the icon.\n</empty-state>`
 
@@ -129,7 +128,6 @@ export default controller((_ctx: Scope) => {
         <icon
           slot="icon"
           name={esIcon()}
-          spin={variant() === 'connecting' ? 'true' : null}
         ></icon>
         <strong slot="title">{esTitle()}</strong>
         {esBody()}
@@ -234,7 +232,7 @@ export default controller((_ctx: Scope) => {
         code={esExConnecting()}
       >
         <empty-state variant="connecting" style(specimen)>
-          <icon slot="icon" name="refresh" spin></icon>
+          <icon slot="icon" name="refresh"></icon>
           <strong slot="title">Connecting…</strong>
           Establishing a secure session.
         </empty-state>

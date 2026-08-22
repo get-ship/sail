@@ -46,6 +46,7 @@ pub fn ambient_module(authored: &str) -> &'static str {
 /// `doc` is one line of prose — the reference generator's source for the
 /// controller-vocabulary section; it plays no role in import injection.
 pub const RUNTIME_AMBIENT: &[(&str, &str, &str)] = &[
+    ("THEMES", "THEMES", "presentation catalog of product themes"),
     (
         "__invalidate",
         "__invalidate",
@@ -70,6 +71,11 @@ pub const RUNTIME_AMBIENT: &[(&str, &str, &str)] = &[
         "batch",
         "batch",
         "coalesce multiple signal writes into one flush",
+    ),
+    (
+        "contextKey",
+        "contextKey",
+        "mint a typed context key for provideContext / injectContext",
     ),
     (
         "controller",
@@ -168,9 +174,24 @@ pub const RUNTIME_AMBIENT: &[(&str, &str, &str)] = &[
         "write or remove a host attribute via SailHost (Pure-safe)",
     ),
     (
+        "injectContext",
+        "injectContext",
+        "read a value published via provideContext on an ancestor scope",
+    ),
+    (
         "interval",
         "interval",
         "run a callback on a fixed period while the controller is mounted",
+    ),
+    (
+        "invokeCallback",
+        "invokeCallback",
+        "invoke a prop callback if it is a function (Pure-safe)",
+    ),
+    (
+        "isValidTheme",
+        "isValidTheme",
+        "type-guard a theme id against the presentation catalog",
     ),
     (
         "mount",
@@ -208,9 +229,19 @@ pub const RUNTIME_AMBIENT: &[(&str, &str, &str)] = &[
         "register a callback to run when the controller tears down",
     ),
     (
+        "persistMode",
+        "persistMode",
+        "persist the light/dark/system preference for next boot",
+    ),
+    (
         "persistTheme",
         "persistTheme",
         "persist the chosen theme id for next boot",
+    ),
+    (
+        "provideContext",
+        "provideContext",
+        "publish a value on the current controller scope for injectContext",
     ),
     (
         "provideStore",
@@ -221,6 +252,11 @@ pub const RUNTIME_AMBIENT: &[(&str, &str, &str)] = &[
         "query",
         "query",
         "public read primitive — compiler derives the cache key",
+    ),
+    (
+        "readModePreference",
+        "readModePreference",
+        "read the stored light/dark/system preference",
     ),
     (
         "readStoredTheme",
@@ -243,9 +279,19 @@ pub const RUNTIME_AMBIENT: &[(&str, &str, &str)] = &[
         "a reactive value cell — read by calling it, written by calling it with a value",
     ),
     (
+        "subscribeSystemPreference",
+        "subscribeSystemPreference",
+        "subscribe to prefers-color-scheme flips; returns disposer",
+    ),
+    (
         "theme",
         "theme",
         "runtime theme surface — current / preview / commit / applyScope",
+    ),
+    (
+        "themeSupportsMode",
+        "themeSupportsMode",
+        "does a theme id declare a given light/dark mode",
     ),
     (
         "timeline",

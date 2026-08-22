@@ -71,6 +71,7 @@ describe('author-surface (tier B)', () => {
       'bindIf',
       'bindText',
       'runAction',
+      'runController',
       '__tpl',
       'wireFormMutation',
       'delegateEvents',

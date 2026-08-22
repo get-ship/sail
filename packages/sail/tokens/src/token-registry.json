@@ -73,6 +73,7 @@
     "accent-subtle",
     "active-bg",
     "active-strength",
+    "backdrop",
     "background",
     "bg-app-color",
     "bg-inset-color",
@@ -146,6 +147,7 @@
     "breakpoint-desktop",
     "breakpoint-mobile",
     "breakpoint-tablet",
+    "breakpoint-wide",
     "control-frame",
     "control-h-2xs",
     "control-h-lg",
@@ -165,6 +167,7 @@
     "density-row-px",
     "density-row-py",
     "density-text",
+    "divider",
     "duration-deliberate",
     "duration-fast",
     "duration-instant",
@@ -184,6 +187,8 @@
     "fg-foreground-color",
     "fg-muted-color",
     "filter-backdrop",
+    "focus-ring",
+    "focus-ring-offset",
     "font-body",
     "font-display",
     "font-heading",
@@ -200,6 +205,22 @@
     "gradient-surface",
     "hover-bg",
     "hover-strength",
+    "hue-amber",
+    "hue-blue",
+    "hue-cyan",
+    "hue-fuchsia",
+    "hue-green",
+    "hue-indigo",
+    "hue-lime",
+    "hue-orange",
+    "hue-pink",
+    "hue-purple",
+    "hue-red",
+    "hue-rose",
+    "hue-sky",
+    "hue-teal",
+    "hue-violet",
+    "hue-yellow",
     "icon-size-2xl",
     "icon-size-2xs",
     "icon-size-3xl",
@@ -209,6 +230,7 @@
     "icon-size-sm",
     "icon-size-xl",
     "icon-size-xs",
+    "image-corner",
     "image-texture",
     "image-texture-blend",
     "image-texture-opacity",
@@ -218,6 +240,7 @@
     "info-hover",
     "info-subtle",
     "inset",
+    "knob",
     "leading-none",
     "leading-normal",
     "leading-relaxed",
@@ -234,16 +257,24 @@
     "neutral-hover",
     "neutral-subtle",
     "overlay",
-    "overlay-max-h-lg",
-    "overlay-max-h-md",
-    "overlay-max-h-sm",
-    "overlay-max-w-lg",
-    "overlay-max-w-md",
-    "overlay-max-w-sm",
-    "overlay-vh-lg",
-    "overlay-vh-md",
-    "overlay-vh-sm",
+    "overlay-blend",
+    "overlay-fill",
+    "overlay-opacity",
+    "pad-page-lg-x",
+    "pad-page-md-x",
     "pad-page-x",
+    "panel-max-h-lg",
+    "panel-max-h-md",
+    "panel-max-h-sm",
+    "panel-max-w-lg",
+    "panel-max-w-md",
+    "panel-max-w-sm",
+    "panel-min-w-lg",
+    "panel-min-w-md",
+    "panel-min-w-sm",
+    "panel-vh-lg",
+    "panel-vh-md",
+    "panel-vh-sm",
     "play-colors-property",
     "play-control-property",
     "play-surface-property",
@@ -255,6 +286,7 @@
     "primary-foreground",
     "primary-hover",
     "primary-subtle",
+    "radius-default",
     "radius-full",
     "radius-lg",
     "radius-md",
@@ -293,30 +325,21 @@
     "shadow-sticky",
     "shadow-xl",
     "shadow-xs",
-    "size-control-2xs-h",
     "size-control-lg-h",
     "size-control-md-h",
     "size-control-sm-h",
-    "size-control-xl-h",
-    "size-control-xs-h",
-    "size-icon-2xl-h",
-    "size-icon-2xl-w",
-    "size-icon-2xs-h",
-    "size-icon-2xs-w",
-    "size-icon-3xl-h",
-    "size-icon-3xl-w",
-    "size-icon-3xs-h",
-    "size-icon-3xs-w",
     "size-icon-lg-h",
     "size-icon-lg-w",
     "size-icon-md-h",
     "size-icon-md-w",
     "size-icon-sm-h",
     "size-icon-sm-w",
-    "size-icon-xl-h",
-    "size-icon-xl-w",
     "size-icon-xs-h",
     "size-icon-xs-w",
+    "size-measure-lg-max-w",
+    "size-measure-max-w",
+    "size-measure-md-max-w",
+    "size-measure-sm-max-w",
     "space-1",
     "space-10",
     "space-11",
@@ -447,6 +470,7 @@
     "accent-hover",
     "accent-subtle",
     "active-bg",
+    "backdrop",
     "background",
     "bg-app-color",
     "bg-inset-color",
@@ -481,16 +505,34 @@
     "danger-foreground",
     "danger-hover",
     "danger-subtle",
+    "divider",
     "fg-foreground-color",
     "fg-muted-color",
     "foreground",
     "hover-bg",
+    "hue-amber",
+    "hue-blue",
+    "hue-cyan",
+    "hue-fuchsia",
+    "hue-green",
+    "hue-indigo",
+    "hue-lime",
+    "hue-orange",
+    "hue-pink",
+    "hue-purple",
+    "hue-red",
+    "hue-rose",
+    "hue-sky",
+    "hue-teal",
+    "hue-violet",
+    "hue-yellow",
     "info",
     "info-border",
     "info-foreground",
     "info-hover",
     "info-subtle",
     "inset",
+    "knob",
     "muted",
     "muted-foreground",
     "neutral",
@@ -748,6 +790,12 @@
       "type": "dimension",
       "value": "9999px"
     },
+    "radius-default": {
+      "path": "radius.default",
+      "cssName": "radius-default",
+      "type": "dimension",
+      "value": "var(--radius-lg)"
+    },
     "icon-size-3xs": {
       "path": "icon.3xs",
       "cssName": "icon-size-3xs",
@@ -806,60 +854,37 @@
       "path": "control.h-2xs",
       "cssName": "control-h-2xs",
       "type": "dimension",
-      "value": "44px",
-      "breakpoints": {
-        "base": "44px",
-        "desktop": "22px"
-      }
+      "value": "22px"
     },
     "control-h-xs": {
       "path": "control.h-xs",
       "cssName": "control-h-xs",
       "type": "dimension",
-      "value": "44px",
-      "breakpoints": {
-        "base": "44px",
-        "desktop": "24px"
-      }
+      "value": "24px"
     },
     "control-h-sm": {
       "path": "control.h-sm",
       "cssName": "control-h-sm",
       "type": "dimension",
-      "value": "44px",
-      "breakpoints": {
-        "base": "44px",
-        "desktop": "28px"
-      }
+      "value": "28px"
     },
     "control-h-md": {
       "path": "control.h-md",
       "cssName": "control-h-md",
       "type": "dimension",
-      "value": "44px",
-      "breakpoints": {
-        "base": "44px",
-        "desktop": "32px"
-      }
+      "value": "34px"
     },
     "control-h-lg": {
       "path": "control.h-lg",
       "cssName": "control-h-lg",
       "type": "dimension",
-      "value": "44px",
-      "breakpoints": {
-        "base": "44px",
-        "desktop": "40px"
-      }
+      "value": "40px"
     },
     "control-h-xl": {
       "path": "control.h-xl",
       "cssName": "control-h-xl",
       "type": "dimension",
-      "value": "44px",
-      "breakpoints": {
-        "base": "44px"
-      }
+      "value": "44px"
     },
     "control-stroke": {
       "path": "control.stroke",
@@ -896,6 +921,78 @@
       "cssName": "press-shadow",
       "type": "shadow",
       "value": "0 0 0 0 transparent"
+    },
+    "panel-max-w-sm": {
+      "path": "panel.max-w-sm",
+      "cssName": "panel-max-w-sm",
+      "type": "dimension",
+      "value": "320px"
+    },
+    "panel-max-w-md": {
+      "path": "panel.max-w-md",
+      "cssName": "panel-max-w-md",
+      "type": "dimension",
+      "value": "480px"
+    },
+    "panel-max-w-lg": {
+      "path": "panel.max-w-lg",
+      "cssName": "panel-max-w-lg",
+      "type": "dimension",
+      "value": "720px"
+    },
+    "panel-max-h-sm": {
+      "path": "panel.max-h-sm",
+      "cssName": "panel-max-h-sm",
+      "type": "dimension",
+      "value": "240px"
+    },
+    "panel-max-h-md": {
+      "path": "panel.max-h-md",
+      "cssName": "panel-max-h-md",
+      "type": "dimension",
+      "value": "480px"
+    },
+    "panel-max-h-lg": {
+      "path": "panel.max-h-lg",
+      "cssName": "panel-max-h-lg",
+      "type": "dimension",
+      "value": "720px"
+    },
+    "panel-min-w-sm": {
+      "path": "panel.min-w-sm",
+      "cssName": "panel-min-w-sm",
+      "type": "dimension",
+      "value": "180px"
+    },
+    "panel-min-w-md": {
+      "path": "panel.min-w-md",
+      "cssName": "panel-min-w-md",
+      "type": "dimension",
+      "value": "240px"
+    },
+    "panel-min-w-lg": {
+      "path": "panel.min-w-lg",
+      "cssName": "panel-min-w-lg",
+      "type": "dimension",
+      "value": "320px"
+    },
+    "panel-vh-sm": {
+      "path": "panel.vh-sm",
+      "cssName": "panel-vh-sm",
+      "type": "dimension",
+      "value": "50vh"
+    },
+    "panel-vh-md": {
+      "path": "panel.vh-md",
+      "cssName": "panel-vh-md",
+      "type": "dimension",
+      "value": "80vh"
+    },
+    "panel-vh-lg": {
+      "path": "panel.vh-lg",
+      "cssName": "panel-vh-lg",
+      "type": "dimension",
+      "value": "90vh"
     },
     "text-xs": {
       "path": "typography.text.xs",
@@ -1132,54 +1229,166 @@
       "type": "color",
       "value": "color-mix(in oklch, var(--foreground) 55.00%, transparent)"
     },
+    "knob": {
+      "path": "color.knob",
+      "cssName": "knob",
+      "type": "color",
+      "value": "oklch(1.0000 0.0000 0.00)",
+      "luminance": 1.0
+    },
+    "hue-red": {
+      "path": "color.hue.red",
+      "cssName": "hue-red",
+      "type": "color",
+      "value": "oklch(0.6200 0.2100 25.00)",
+      "luminance": 0.21021554767083112
+    },
+    "hue-orange": {
+      "path": "color.hue.orange",
+      "cssName": "hue-orange",
+      "type": "color",
+      "value": "oklch(0.6800 0.1800 50.00)",
+      "luminance": 0.29226902578910674
+    },
+    "hue-amber": {
+      "path": "color.hue.amber",
+      "cssName": "hue-amber",
+      "type": "color",
+      "value": "oklch(0.7400 0.1600 75.00)",
+      "luminance": 0.3946128499303536
+    },
+    "hue-yellow": {
+      "path": "color.hue.yellow",
+      "cssName": "hue-yellow",
+      "type": "color",
+      "value": "oklch(0.8200 0.1600 95.00)",
+      "luminance": 0.5524071757968184
+    },
+    "hue-lime": {
+      "path": "color.hue.lime",
+      "cssName": "hue-lime",
+      "type": "color",
+      "value": "oklch(0.7800 0.1800 130.00)",
+      "luminance": 0.5002503503826301
+    },
+    "hue-green": {
+      "path": "color.hue.green",
+      "cssName": "hue-green",
+      "type": "color",
+      "value": "oklch(0.6200 0.1600 150.00)",
+      "luminance": 0.25886407111064363
+    },
+    "hue-teal": {
+      "path": "color.hue.teal",
+      "cssName": "hue-teal",
+      "type": "color",
+      "value": "oklch(0.6200 0.1300 185.00)",
+      "luminance": 0.266228951087432
+    },
+    "hue-cyan": {
+      "path": "color.hue.cyan",
+      "cssName": "hue-cyan",
+      "type": "color",
+      "value": "oklch(0.6800 0.1300 220.00)",
+      "luminance": 0.33174037731127687
+    },
+    "hue-sky": {
+      "path": "color.hue.sky",
+      "cssName": "hue-sky",
+      "type": "color",
+      "value": "oklch(0.6500 0.1600 235.00)",
+      "luminance": 0.29090292893379044
+    },
+    "hue-blue": {
+      "path": "color.hue.blue",
+      "cssName": "hue-blue",
+      "type": "color",
+      "value": "oklch(0.5500 0.2000 260.00)",
+      "luminance": 0.15931193068390206
+    },
+    "hue-indigo": {
+      "path": "color.hue.indigo",
+      "cssName": "hue-indigo",
+      "type": "color",
+      "value": "oklch(0.5000 0.2000 280.00)",
+      "luminance": 0.11195290371975289
+    },
+    "hue-violet": {
+      "path": "color.hue.violet",
+      "cssName": "hue-violet",
+      "type": "color",
+      "value": "oklch(0.5500 0.2200 295.00)",
+      "luminance": 0.14488624459044305
+    },
+    "hue-purple": {
+      "path": "color.hue.purple",
+      "cssName": "hue-purple",
+      "type": "color",
+      "value": "oklch(0.5500 0.2200 310.00)",
+      "luminance": 0.14251292823645703
+    },
+    "hue-fuchsia": {
+      "path": "color.hue.fuchsia",
+      "cssName": "hue-fuchsia",
+      "type": "color",
+      "value": "oklch(0.6000 0.2500 330.00)",
+      "luminance": 0.18190209794532816
+    },
+    "hue-pink": {
+      "path": "color.hue.pink",
+      "cssName": "hue-pink",
+      "type": "color",
+      "value": "oklch(0.6800 0.2000 345.00)",
+      "luminance": 0.2793534418592826
+    },
+    "hue-rose": {
+      "path": "color.hue.rose",
+      "cssName": "hue-rose",
+      "type": "color",
+      "value": "oklch(0.6200 0.2100 5.00)",
+      "luminance": 0.20818778110902858
+    },
     "syntax-keyword": {
       "path": "color.syntax.keyword",
       "cssName": "syntax-keyword",
       "type": "color",
-      "value": "oklch(0.5000 0.2000 280.00)",
-      "luminance": 0.11195290371975289
+      "value": "var(--hue-indigo)"
     },
     "syntax-string": {
       "path": "color.syntax.string",
       "cssName": "syntax-string",
       "type": "color",
-      "value": "oklch(0.6200 0.1600 150.00)",
-      "luminance": 0.25886407111064363
+      "value": "var(--hue-green)"
     },
     "syntax-number": {
       "path": "color.syntax.number",
       "cssName": "syntax-number",
       "type": "color",
-      "value": "oklch(0.5500 0.2000 260.00)",
-      "luminance": 0.15931193068390206
+      "value": "var(--hue-blue)"
     },
     "syntax-function": {
       "path": "color.syntax.function",
       "cssName": "syntax-function",
       "type": "color",
-      "value": "oklch(0.5500 0.2200 310.00)",
-      "luminance": 0.14251292823645703
+      "value": "var(--hue-purple)"
     },
     "syntax-type": {
       "path": "color.syntax.type",
       "cssName": "syntax-type",
       "type": "color",
-      "value": "oklch(0.6800 0.1300 220.00)",
-      "luminance": 0.33174037731127687
+      "value": "var(--hue-cyan)"
     },
     "syntax-tag": {
       "path": "color.syntax.tag",
       "cssName": "syntax-tag",
       "type": "color",
-      "value": "oklch(0.6200 0.2100 25.00)",
-      "luminance": 0.21021554767083112
+      "value": "var(--hue-red)"
     },
     "syntax-attr": {
       "path": "color.syntax.attr",
       "cssName": "syntax-attr",
       "type": "color",
-      "value": "oklch(0.7400 0.1600 75.00)",
-      "luminance": 0.3946128499303536
+      "value": "var(--hue-amber)"
     },
     "syntax-comment": {
       "path": "color.syntax.comment",
@@ -1193,12 +1402,55 @@
       "type": "color",
       "value": "var(--foreground)"
     },
+    "backdrop": {
+      "path": "color.backdrop",
+      "cssName": "backdrop",
+      "type": "color",
+      "value": "oklch(0.0000 0.0000 0.00 / 0.400)",
+      "luminance": 0.0
+    },
     "scrim": {
       "path": "color.scrim",
       "cssName": "scrim",
       "type": "color",
       "value": "oklch(0.0000 0.0000 0.00 / 0.200)",
       "luminance": 0.0
+    },
+    "divider": {
+      "path": "color.divider",
+      "cssName": "divider",
+      "type": "color",
+      "value": "var(--border-subtle)"
+    },
+    "gradient-primary": {
+      "path": "color.gradient.primary",
+      "cssName": "gradient-primary",
+      "type": "gradient",
+      "value": "linear-gradient(180deg, var(--primary) 0%, transparent 92%)"
+    },
+    "gradient-accent": {
+      "path": "color.gradient.accent",
+      "cssName": "gradient-accent",
+      "type": "gradient",
+      "value": "linear-gradient(180deg, var(--accent) 0%, transparent 92%)"
+    },
+    "gradient-surface": {
+      "path": "color.gradient.surface",
+      "cssName": "gradient-surface",
+      "type": "string",
+      "value": "none"
+    },
+    "glow-primary": {
+      "path": "color.glow.primary",
+      "cssName": "glow-primary",
+      "type": "gradient",
+      "value": "radial-gradient(color-mix(in oklch, var(--primary) 8.00%, transparent), transparent 60%)"
+    },
+    "glow-accent": {
+      "path": "color.glow.accent",
+      "cssName": "glow-accent",
+      "type": "gradient",
+      "value": "radial-gradient(color-mix(in oklch, var(--accent) 8.00%, transparent), transparent 60%)"
     },
     "primary": {
       "path": "color.primary.solid",
@@ -1480,36 +1732,6 @@
       "value": "oklch(0.9900 0.0004 58.00)",
       "luminance": 0.970232447312069
     },
-    "gradient-primary": {
-      "path": "gradient.primary",
-      "cssName": "gradient-primary",
-      "type": "gradient",
-      "value": "linear-gradient(180deg, var(--primary) 0%, transparent 92%)"
-    },
-    "gradient-accent": {
-      "path": "gradient.accent",
-      "cssName": "gradient-accent",
-      "type": "gradient",
-      "value": "linear-gradient(180deg, var(--accent) 0%, transparent 92%)"
-    },
-    "gradient-surface": {
-      "path": "gradient.surface",
-      "cssName": "gradient-surface",
-      "type": "string",
-      "value": "none"
-    },
-    "glow-primary": {
-      "path": "glow.primary",
-      "cssName": "glow-primary",
-      "type": "gradient",
-      "value": "radial-gradient(color-mix(in oklch, var(--primary) 8.00%, transparent), transparent 60%)"
-    },
-    "glow-accent": {
-      "path": "glow.accent",
-      "cssName": "glow-accent",
-      "type": "gradient",
-      "value": "radial-gradient(color-mix(in oklch, var(--accent) 8.00%, transparent), transparent 60%)"
-    },
     "pad-page-x": {
       "path": "pad.page.x",
       "cssName": "pad-page-x",
@@ -1517,9 +1739,20 @@
       "value": "var(--space-4)",
       "breakpoints": {
         "base": "var(--space-4)",
-        "desktop": "var(--space-8)",
         "tablet": "var(--space-6)"
       }
+    },
+    "pad-page-md-x": {
+      "path": "pad.page-md.x",
+      "cssName": "pad-page-md-x",
+      "type": "dimension",
+      "value": "var(--space-6)"
+    },
+    "pad-page-lg-x": {
+      "path": "pad.page-lg.x",
+      "cssName": "pad-page-lg-x",
+      "type": "dimension",
+      "value": "var(--space-8)"
     },
     "border-width": {
       "path": "border.width",
@@ -1599,18 +1832,6 @@
       "type": "string",
       "value": "solid"
     },
-    "size-control-2xs-h": {
-      "path": "size.control-2xs.h",
-      "cssName": "size-control-2xs-h",
-      "type": "dimension",
-      "value": "var(--control-h-2xs)"
-    },
-    "size-control-xs-h": {
-      "path": "size.control-xs.h",
-      "cssName": "size-control-xs-h",
-      "type": "dimension",
-      "value": "var(--control-h-xs)"
-    },
     "size-control-sm-h": {
       "path": "size.control-sm.h",
       "cssName": "size-control-sm-h",
@@ -1629,35 +1850,29 @@
       "type": "dimension",
       "value": "var(--control-h-lg)"
     },
-    "size-control-xl-h": {
-      "path": "size.control-xl.h",
-      "cssName": "size-control-xl-h",
+    "size-measure-max-w": {
+      "path": "size.measure.max-w",
+      "cssName": "size-measure-max-w",
       "type": "dimension",
-      "value": "var(--control-h-xl)"
+      "value": "38ch"
     },
-    "size-icon-3xs-w": {
-      "path": "size.icon-3xs.w",
-      "cssName": "size-icon-3xs-w",
+    "size-measure-sm-max-w": {
+      "path": "size.measure-sm.max-w",
+      "cssName": "size-measure-sm-max-w",
       "type": "dimension",
-      "value": "var(--icon-size-3xs)"
+      "value": "20rem"
     },
-    "size-icon-3xs-h": {
-      "path": "size.icon-3xs.h",
-      "cssName": "size-icon-3xs-h",
+    "size-measure-md-max-w": {
+      "path": "size.measure-md.max-w",
+      "cssName": "size-measure-md-max-w",
       "type": "dimension",
-      "value": "var(--icon-size-3xs)"
+      "value": "38ch"
     },
-    "size-icon-2xs-w": {
-      "path": "size.icon-2xs.w",
-      "cssName": "size-icon-2xs-w",
+    "size-measure-lg-max-w": {
+      "path": "size.measure-lg.max-w",
+      "cssName": "size-measure-lg-max-w",
       "type": "dimension",
-      "value": "var(--icon-size-2xs)"
-    },
-    "size-icon-2xs-h": {
-      "path": "size.icon-2xs.h",
-      "cssName": "size-icon-2xs-h",
-      "type": "dimension",
-      "value": "var(--icon-size-2xs)"
+      "value": "60ch"
     },
     "size-icon-xs-w": {
       "path": "size.icon-xs.w",
@@ -1706,42 +1921,6 @@
       "cssName": "size-icon-lg-h",
       "type": "dimension",
       "value": "var(--icon-size-lg)"
-    },
-    "size-icon-xl-w": {
-      "path": "size.icon-xl.w",
-      "cssName": "size-icon-xl-w",
-      "type": "dimension",
-      "value": "var(--icon-size-xl)"
-    },
-    "size-icon-xl-h": {
-      "path": "size.icon-xl.h",
-      "cssName": "size-icon-xl-h",
-      "type": "dimension",
-      "value": "var(--icon-size-xl)"
-    },
-    "size-icon-2xl-w": {
-      "path": "size.icon-2xl.w",
-      "cssName": "size-icon-2xl-w",
-      "type": "dimension",
-      "value": "var(--icon-size-2xl)"
-    },
-    "size-icon-2xl-h": {
-      "path": "size.icon-2xl.h",
-      "cssName": "size-icon-2xl-h",
-      "type": "dimension",
-      "value": "var(--icon-size-2xl)"
-    },
-    "size-icon-3xl-w": {
-      "path": "size.icon-3xl.w",
-      "cssName": "size-icon-3xl-w",
-      "type": "dimension",
-      "value": "var(--icon-size-3xl)"
-    },
-    "size-icon-3xl-h": {
-      "path": "size.icon-3xl.h",
-      "cssName": "size-icon-3xl-h",
-      "type": "dimension",
-      "value": "var(--icon-size-3xl)"
     },
     "type-body-family": {
       "path": "type.body.family",
@@ -2223,6 +2402,18 @@
       "type": "duration",
       "value": "100ms"
     },
+    "focus-ring": {
+      "path": "interaction.focus.ring",
+      "cssName": "focus-ring",
+      "type": "dimension",
+      "value": "2px solid var(--ring-color)"
+    },
+    "focus-ring-offset": {
+      "path": "interaction.focus.ring-offset",
+      "cssName": "focus-ring-offset",
+      "type": "dimension",
+      "value": "2px"
+    },
     "hover-strength": {
       "path": "interaction.hover.strength",
       "cssName": "hover-strength",
@@ -2332,6 +2523,12 @@
       "type": "dimension",
       "value": "1280px"
     },
+    "breakpoint-wide": {
+      "path": "breakpoint.wide",
+      "cssName": "breakpoint-wide",
+      "type": "dimension",
+      "value": "1600px"
+    },
     "density-row-py": {
       "path": "density.row-py",
       "cssName": "density-row-py",
@@ -2360,7 +2557,7 @@
       "path": "density.icon",
       "cssName": "density-icon",
       "type": "dimension",
-      "value": "var(--icon-size-md)"
+      "value": "16px"
     },
     "shadow-xs": {
       "path": "shadow.xs",
@@ -2500,86 +2697,29 @@
       "type": "number",
       "value": "1"
     },
-    "overlay-max-w-sm": {
-      "path": "overlay.max-w-sm",
-      "cssName": "overlay-max-w-sm",
-      "type": "dimension",
-      "value": "320px",
-      "breakpoints": {
-        "base": "320px"
-      }
+    "image-corner": {
+      "path": "image.corner",
+      "cssName": "image-corner",
+      "type": "string",
+      "value": "none"
     },
-    "overlay-max-w-md": {
-      "path": "overlay.max-w-md",
-      "cssName": "overlay-max-w-md",
-      "type": "dimension",
-      "value": "480px",
-      "breakpoints": {
-        "base": "480px"
-      }
+    "overlay-fill": {
+      "path": "overlay.fill",
+      "cssName": "overlay-fill",
+      "type": "string",
+      "value": "none"
     },
-    "overlay-max-w-lg": {
-      "path": "overlay.max-w-lg",
-      "cssName": "overlay-max-w-lg",
-      "type": "dimension",
-      "value": "720px",
-      "breakpoints": {
-        "base": "720px"
-      }
+    "overlay-blend": {
+      "path": "overlay.blend",
+      "cssName": "overlay-blend",
+      "type": "string",
+      "value": "overlay"
     },
-    "overlay-max-h-sm": {
-      "path": "overlay.max-h-sm",
-      "cssName": "overlay-max-h-sm",
-      "type": "dimension",
-      "value": "240px",
-      "breakpoints": {
-        "base": "240px"
-      }
-    },
-    "overlay-max-h-md": {
-      "path": "overlay.max-h-md",
-      "cssName": "overlay-max-h-md",
-      "type": "dimension",
-      "value": "480px",
-      "breakpoints": {
-        "base": "480px"
-      }
-    },
-    "overlay-max-h-lg": {
-      "path": "overlay.max-h-lg",
-      "cssName": "overlay-max-h-lg",
-      "type": "dimension",
-      "value": "720px",
-      "breakpoints": {
-        "base": "720px"
-      }
-    },
-    "overlay-vh-sm": {
-      "path": "overlay.vh-sm",
-      "cssName": "overlay-vh-sm",
-      "type": "dimension",
-      "value": "50vh",
-      "breakpoints": {
-        "base": "50vh"
-      }
-    },
-    "overlay-vh-md": {
-      "path": "overlay.vh-md",
-      "cssName": "overlay-vh-md",
-      "type": "dimension",
-      "value": "80vh",
-      "breakpoints": {
-        "base": "80vh"
-      }
-    },
-    "overlay-vh-lg": {
-      "path": "overlay.vh-lg",
-      "cssName": "overlay-vh-lg",
-      "type": "dimension",
-      "value": "90vh",
-      "breakpoints": {
-        "base": "90vh"
-      }
+    "overlay-opacity": {
+      "path": "overlay.opacity",
+      "cssName": "overlay-opacity",
+      "type": "number",
+      "value": "1"
     },
     "play-colors-property": {
       "path": "play.colors.property",
@@ -2896,6 +3036,7 @@
     "color.accent.subtle": "accent-subtle",
     "interaction.active.bg": "active-bg",
     "interaction.active.strength": "active-strength",
+    "color.backdrop": "backdrop",
     "color.background": "background",
     "bg.app.color": "bg-app-color",
     "bg.inset.color": "bg-inset-color",
@@ -2969,6 +3110,7 @@
     "breakpoint.desktop": "breakpoint-desktop",
     "breakpoint.mobile": "breakpoint-mobile",
     "breakpoint.tablet": "breakpoint-tablet",
+    "breakpoint.wide": "breakpoint-wide",
     "control.frame": "control-frame",
     "control.h-2xs": "control-h-2xs",
     "control.h-lg": "control-h-lg",
@@ -2988,6 +3130,7 @@
     "density.row-px": "density-row-px",
     "density.row-py": "density-row-py",
     "density.text": "density-text",
+    "color.divider": "divider",
     "motion.duration.deliberate": "duration-deliberate",
     "motion.duration.fast": "duration-fast",
     "motion.duration.instant": "duration-instant",
@@ -3007,6 +3150,8 @@
     "fg.foreground.color": "fg-foreground-color",
     "fg.muted.color": "fg-muted-color",
     "filter.backdrop": "filter-backdrop",
+    "interaction.focus.ring": "focus-ring",
+    "interaction.focus.ring-offset": "focus-ring-offset",
     "typography.font.body": "font-body",
     "typography.font.display": "font-display",
     "typography.font.heading": "font-heading",
@@ -3016,13 +3161,29 @@
     "typography.font.weight-normal": "font-weight-normal",
     "typography.font.weight-semibold": "font-weight-semibold",
     "color.foreground": "foreground",
-    "glow.accent": "glow-accent",
-    "glow.primary": "glow-primary",
-    "gradient.accent": "gradient-accent",
-    "gradient.primary": "gradient-primary",
-    "gradient.surface": "gradient-surface",
+    "color.glow.accent": "glow-accent",
+    "color.glow.primary": "glow-primary",
+    "color.gradient.accent": "gradient-accent",
+    "color.gradient.primary": "gradient-primary",
+    "color.gradient.surface": "gradient-surface",
     "interaction.hover.bg": "hover-bg",
     "interaction.hover.strength": "hover-strength",
+    "color.hue.amber": "hue-amber",
+    "color.hue.blue": "hue-blue",
+    "color.hue.cyan": "hue-cyan",
+    "color.hue.fuchsia": "hue-fuchsia",
+    "color.hue.green": "hue-green",
+    "color.hue.indigo": "hue-indigo",
+    "color.hue.lime": "hue-lime",
+    "color.hue.orange": "hue-orange",
+    "color.hue.pink": "hue-pink",
+    "color.hue.purple": "hue-purple",
+    "color.hue.red": "hue-red",
+    "color.hue.rose": "hue-rose",
+    "color.hue.sky": "hue-sky",
+    "color.hue.teal": "hue-teal",
+    "color.hue.violet": "hue-violet",
+    "color.hue.yellow": "hue-yellow",
     "icon.2xl": "icon-size-2xl",
     "icon.2xs": "icon-size-2xs",
     "icon.3xl": "icon-size-3xl",
@@ -3032,6 +3193,7 @@
     "icon.sm": "icon-size-sm",
     "icon.xl": "icon-size-xl",
     "icon.xs": "icon-size-xs",
+    "image.corner": "image-corner",
     "image.texture": "image-texture",
     "image.texture-blend": "image-texture-blend",
     "image.texture-opacity": "image-texture-opacity",
@@ -3041,6 +3203,7 @@
     "color.info.hover": "info-hover",
     "color.info.subtle": "info-subtle",
     "color.inset": "inset",
+    "color.knob": "knob",
     "typography.leading.none": "leading-none",
     "typography.leading.normal": "leading-normal",
     "typography.leading.relaxed": "leading-relaxed",
@@ -3057,16 +3220,24 @@
     "color.neutral.hover": "neutral-hover",
     "color.neutral.subtle": "neutral-subtle",
     "color.overlay": "overlay",
-    "overlay.max-h-lg": "overlay-max-h-lg",
-    "overlay.max-h-md": "overlay-max-h-md",
-    "overlay.max-h-sm": "overlay-max-h-sm",
-    "overlay.max-w-lg": "overlay-max-w-lg",
-    "overlay.max-w-md": "overlay-max-w-md",
-    "overlay.max-w-sm": "overlay-max-w-sm",
-    "overlay.vh-lg": "overlay-vh-lg",
-    "overlay.vh-md": "overlay-vh-md",
-    "overlay.vh-sm": "overlay-vh-sm",
+    "overlay.blend": "overlay-blend",
+    "overlay.fill": "overlay-fill",
+    "overlay.opacity": "overlay-opacity",
+    "pad.page-lg.x": "pad-page-lg-x",
+    "pad.page-md.x": "pad-page-md-x",
     "pad.page.x": "pad-page-x",
+    "panel.max-h-lg": "panel-max-h-lg",
+    "panel.max-h-md": "panel-max-h-md",
+    "panel.max-h-sm": "panel-max-h-sm",
+    "panel.max-w-lg": "panel-max-w-lg",
+    "panel.max-w-md": "panel-max-w-md",
+    "panel.max-w-sm": "panel-max-w-sm",
+    "panel.min-w-lg": "panel-min-w-lg",
+    "panel.min-w-md": "panel-min-w-md",
+    "panel.min-w-sm": "panel-min-w-sm",
+    "panel.vh-lg": "panel-vh-lg",
+    "panel.vh-md": "panel-vh-md",
+    "panel.vh-sm": "panel-vh-sm",
     "play.colors.property": "play-colors-property",
     "play.control.property": "play-control-property",
     "play.surface.property": "play-surface-property",
@@ -3078,6 +3249,7 @@
     "color.primary.text": "primary-foreground",
     "color.primary.hover": "primary-hover",
     "color.primary.subtle": "primary-subtle",
+    "radius.default": "radius-default",
     "radius.full": "radius-full",
     "radius.lg": "radius-lg",
     "radius.md": "radius-md",
@@ -3116,30 +3288,21 @@
     "shadow.sticky": "shadow-sticky",
     "shadow.xl": "shadow-xl",
     "shadow.xs": "shadow-xs",
-    "size.control-2xs.h": "size-control-2xs-h",
     "size.control-lg.h": "size-control-lg-h",
     "size.control-md.h": "size-control-md-h",
     "size.control-sm.h": "size-control-sm-h",
-    "size.control-xl.h": "size-control-xl-h",
-    "size.control-xs.h": "size-control-xs-h",
-    "size.icon-2xl.h": "size-icon-2xl-h",
-    "size.icon-2xl.w": "size-icon-2xl-w",
-    "size.icon-2xs.h": "size-icon-2xs-h",
-    "size.icon-2xs.w": "size-icon-2xs-w",
-    "size.icon-3xl.h": "size-icon-3xl-h",
-    "size.icon-3xl.w": "size-icon-3xl-w",
-    "size.icon-3xs.h": "size-icon-3xs-h",
-    "size.icon-3xs.w": "size-icon-3xs-w",
     "size.icon-lg.h": "size-icon-lg-h",
     "size.icon-lg.w": "size-icon-lg-w",
     "size.icon-md.h": "size-icon-md-h",
     "size.icon-md.w": "size-icon-md-w",
     "size.icon-sm.h": "size-icon-sm-h",
     "size.icon-sm.w": "size-icon-sm-w",
-    "size.icon-xl.h": "size-icon-xl-h",
-    "size.icon-xl.w": "size-icon-xl-w",
     "size.icon-xs.h": "size-icon-xs-h",
     "size.icon-xs.w": "size-icon-xs-w",
+    "size.measure-lg.max-w": "size-measure-lg-max-w",
+    "size.measure.max-w": "size-measure-max-w",
+    "size.measure-md.max-w": "size-measure-md-max-w",
+    "size.measure-sm.max-w": "size-measure-sm-max-w",
     "space.1": "space-1",
     "space.10": "space-10",
     "space.11": "space-11",
@@ -3273,6 +3436,22 @@
         "x": "pad-page-x"
       }
     },
+    "pad.page-md": {
+      "path": "pad.page-md",
+      "cssName": "pad.page-md",
+      "type": "pad",
+      "members": {
+        "x": "pad-page-md-x"
+      }
+    },
+    "pad.page-lg": {
+      "path": "pad.page-lg",
+      "cssName": "pad.page-lg",
+      "type": "pad",
+      "members": {
+        "x": "pad-page-lg-x"
+      }
+    },
     "border.none": {
       "path": "border.none",
       "cssName": "border.none",
@@ -3313,22 +3492,6 @@
         "style": "border-strong-style"
       }
     },
-    "size.control-2xs": {
-      "path": "size.control-2xs",
-      "cssName": "size.control-2xs",
-      "type": "size",
-      "members": {
-        "h": "size-control-2xs-h"
-      }
-    },
-    "size.control-xs": {
-      "path": "size.control-xs",
-      "cssName": "size.control-xs",
-      "type": "size",
-      "members": {
-        "h": "size-control-xs-h"
-      }
-    },
     "size.control-sm": {
       "path": "size.control-sm",
       "cssName": "size.control-sm",
@@ -3353,30 +3516,36 @@
         "h": "size-control-lg-h"
       }
     },
-    "size.control-xl": {
-      "path": "size.control-xl",
-      "cssName": "size.control-xl",
+    "size.measure": {
+      "path": "size.measure",
+      "cssName": "size.measure",
       "type": "size",
       "members": {
-        "h": "size-control-xl-h"
+        "max-w": "size-measure-max-w"
       }
     },
-    "size.icon-3xs": {
-      "path": "size.icon-3xs",
-      "cssName": "size.icon-3xs",
+    "size.measure-sm": {
+      "path": "size.measure-sm",
+      "cssName": "size.measure-sm",
       "type": "size",
       "members": {
-        "w": "size-icon-3xs-w",
-        "h": "size-icon-3xs-h"
+        "max-w": "size-measure-sm-max-w"
       }
     },
-    "size.icon-2xs": {
-      "path": "size.icon-2xs",
-      "cssName": "size.icon-2xs",
+    "size.measure-md": {
+      "path": "size.measure-md",
+      "cssName": "size.measure-md",
       "type": "size",
       "members": {
-        "w": "size-icon-2xs-w",
-        "h": "size-icon-2xs-h"
+        "max-w": "size-measure-md-max-w"
+      }
+    },
+    "size.measure-lg": {
+      "path": "size.measure-lg",
+      "cssName": "size.measure-lg",
+      "type": "size",
+      "members": {
+        "max-w": "size-measure-lg-max-w"
       }
     },
     "size.icon-xs": {
@@ -3413,33 +3582,6 @@
       "members": {
         "w": "size-icon-lg-w",
         "h": "size-icon-lg-h"
-      }
-    },
-    "size.icon-xl": {
-      "path": "size.icon-xl",
-      "cssName": "size.icon-xl",
-      "type": "size",
-      "members": {
-        "w": "size-icon-xl-w",
-        "h": "size-icon-xl-h"
-      }
-    },
-    "size.icon-2xl": {
-      "path": "size.icon-2xl",
-      "cssName": "size.icon-2xl",
-      "type": "size",
-      "members": {
-        "w": "size-icon-2xl-w",
-        "h": "size-icon-2xl-h"
-      }
-    },
-    "size.icon-3xl": {
-      "path": "size.icon-3xl",
-      "cssName": "size.icon-3xl",
-      "type": "size",
-      "members": {
-        "w": "size-icon-3xl-w",
-        "h": "size-icon-3xl-h"
       }
     },
     "type.body": {
@@ -3932,6 +4074,30 @@
         },
         "to": {
           "transform": "rotate(360deg)"
+        }
+      }
+    },
+    "marquee": {
+      "path": "keyframes.marquee",
+      "type": "sail.keyframes",
+      "value": {
+        "from": {
+          "transform": "translateX(0)"
+        },
+        "to": {
+          "transform": "translateX(-50%)"
+        }
+      }
+    },
+    "marquee-reverse": {
+      "path": "keyframes.marquee-reverse",
+      "type": "sail.keyframes",
+      "value": {
+        "from": {
+          "transform": "translateX(0)"
+        },
+        "to": {
+          "transform": "translateX(50%)"
         }
       }
     }

@@ -111,9 +111,13 @@ fn published_catalog_matches_catalog_ts() {
 #[test]
 fn l1_surface_count_is_documented() {
     let (stdlib, reskins) = l1_by_kind();
-    assert_eq!(stdlib.len(), 69, "stdlib L1 count");
+    assert_eq!(
+        stdlib.len(),
+        66,
+        "stdlib L1 count (list-row/pane/toolbar retired)"
+    );
     assert_eq!(reskins.len(), 0, "reskins empty");
-    assert_eq!(l1_entries().len(), 69);
+    assert_eq!(l1_entries().len(), 66);
 }
 
 #[test]
@@ -227,7 +231,11 @@ fn skeleton_description_names_loading_placeholder() {
 #[test]
 fn every_l1_entry_declares_component_tokens_and_js() {
     let entries = l1_entries();
-    assert_eq!(entries.len(), 69, "stdlib L1 count");
+    assert_eq!(
+        entries.len(),
+        66,
+        "stdlib L1 count (list-row/pane/toolbar retired)"
+    );
     for e in &entries {
         // Fields must be present (empty vec / None-kind is valid).
         let _ = &e.component_tokens;

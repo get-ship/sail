@@ -8,6 +8,10 @@
   soft / outline / ghost rest → button.* ; tone always paints when set.
   No size axis (use button for sized CTAs). disabled paint needs
   aria-disabled on anchors (native disabled is not a real <a> state).
+
+  Look: this tag owns its Style. Slots, not :part.
+  State: none — native <a> owns navigation. No controller, no widget action.
+  Listen: native <a>.
 -->
 
 <scope>

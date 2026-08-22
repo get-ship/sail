@@ -422,9 +422,21 @@ fn author_action_path_and_floor_regime() {
     assert_eq!(controller.len(), 1);
     assert_eq!(controller[0].rule, "sail-no-imperative-style");
 
-    // Framework catalog is TRUSTED — not an author-action path.
+    // Job 0 — same law everywhere. Catalog stamps are an action surface,
+    // not a trusted caste. Path classify + dispatch must lint them.
     let catalog = Path::new("/repo/packages/sail/runtime/src/actions/grid-tracks.ts");
-    assert!(!is_action_source_path(catalog));
+    assert!(
+        !is_controller_path(catalog),
+        "catalog stamp is not a controller"
+    );
+    assert!(
+        !is_pack_source_ts(catalog),
+        "catalog stamp is not pack glue"
+    );
+    assert!(
+        is_action_source_path(catalog),
+        "catalog stamp path must be an action surface (no trusted caste)"
+    );
 
     // Author hatch: apps/*/src/actions/**
     let action = Path::new("/repo/apps/demo/src/actions/autofocus.ts");
@@ -432,13 +444,22 @@ fn author_action_path_and_floor_regime() {
     assert!(!is_pack_source_ts(action));
     assert!(is_action_source_path(action));
 
-    // Author floor: NO style — not even CSS custom properties.
+    // Same CSSOM floor on author and catalog: sail-no-imperative-style.
+    // sail-action-no-style may still fire on authors for `.style`, but
+    // catalog must not get a weaker sibling.
     let action_style = lint_action_source(action, "el.style.setProperty('--row-y', y)");
     assert!(
         action_style
             .iter()
-            .any(|f| f.rule == "sail-action-no-style"),
-        "{action_style:?}"
+            .any(|f| f.rule == "sail-no-imperative-style"),
+        "author `.style` must fail sail-no-imperative-style: {action_style:?}"
+    );
+    let catalog_style = lint_action_source(catalog, "el.style.setProperty('--row-y', y)");
+    assert!(
+        catalog_style
+            .iter()
+            .any(|f| f.rule == "sail-no-imperative-style"),
+        "catalog stamp `.style` must fail sail-no-imperative-style (not a caste): {catalog_style:?}"
     );
 
     // Legal author action: host listener only.

@@ -1,9 +1,11 @@
 <!--
-  <tooltip> — hover/focus text bubble. use:tipDescribe supplies per-instance
-  anchor geometry vars (placement offsets + arrow insets), content text,
-  Escape, and data-hidden (instant hide state). Style value language only.
+  <tooltip> — hover/focus text bubble. Style value language only.
   Arrow is a border-colored caret (not a rotated square) so one edge is not a
   double/broken seam against the bubble fill + shadow.
+
+  Look: host + bubble own Style — no DOM.
+  State: this file's <controller> (bubbleId + content + hidden).
+  Listen: use:hotkeys={keys} (Escape) + pointer/focus on host.
 -->
 
 <scope>
@@ -12,35 +14,41 @@
     content = ''
   }
 
-  // inline-flex + self(start): hug the trigger. As a column flex child the
-  // host otherwise stretches full-width, so a long bubble centers on the
-  // column instead of the button chrome.
-  style host = {position(relative).display(inline-flex).self(start).group()}
-  // No opacity transition — linger after leave was a real product bug.
-  // Hug the hint. Wrap only after a real max — max-w alone makes a skinny column.
-  // Instant hide is state: use:tipDescribe stamps data-hidden; this skin
-  // beats group-hover / group-focus-within so Escape-while-hovering snaps.
+  style host = {position({ scheme: relative, name: tooltip }).display(inline-flex).self(start).group()}
   style hide = {filter({ opacity: 0 })}
   style show = {filter({ opacity: 100 }), match: { 'data-hidden': { true: hide } }}
-  style bubble = {position({ scheme: absolute, t: bind(ttTop), b: bind(ttBottom), l: bind(ttLeft), r: bind(ttRight), z: popover }).pad({ y: 1, x: 2 }).size({ w: max, min-w: max }).overflow({ all: visible }).translateX(bind(ttTx)).filter({ opacity: 0 }).bg(overlay).fg(foreground).radius(md).elevation(md).border({ width: 0 }).pointerEvents(none).type({ family: body, size: xs, weight: medium, wrap: nowrap })}
-  // Zero-box border triangle; match placement points the filled edge outward.
-  style arrowBox = {position({ scheme: absolute, t: bind(ttArrowTop), b: bind(ttArrowBottom), l: bind(ttArrowLeft), r: bind(ttArrowRight) }).size({ w: 0, h: 0 }).margin({ s: bind(ttArrowMl), t: bind(ttArrowMt) }).content(empty).bg(transparent).border({ width: 0, style: solid })}
-  // placement=top → caret on bubble bottom, points down (border-top filled).
-  // Border widths are px scale (0|1|2|3|4|8) — 4px sides ≈ prior diamond size.
+  style bubble = {position({ scheme: absolute, anchor: tooltip, area: top, z: popover }).pad({ y: 1, x: 2 }).size({ w: max, min-w: max }).overflow({ all: visible }).filter({ opacity: 0 }).bg(overlay).fg(foreground).radius(md).elevation(md).border({ width: 0 }).pointerEvents(none).type({ family: body, size: xs, weight: medium, wrap: nowrap }), match: { placement: { top: position({ area: top }), bottom: position({ area: bottom }), left: position({ area: left }), right: position({ area: right }) } }, animate: { enter: play(fade), exit: play(fade) }}
+  style arrowBox = {position({ scheme: absolute, b: auto }).size({ w: 0, h: 0 }).content(empty).bg(transparent).border({ width: 0, style: solid })}
   style arrowFromTop = {border({ width: 4, edge: l, color: transparent }).border({ width: 4, edge: r, color: transparent }).border({ width: 4, edge: t, color: overlay }).border({ width: 0, edge: b, color: transparent })}
-  // placement=bottom → caret on bubble top, points up.
   style arrowFromBottom = {border({ width: 4, edge: l, color: transparent }).border({ width: 4, edge: r, color: transparent }).border({ width: 4, edge: b, color: overlay }).border({ width: 0, edge: t, color: transparent })}
-  // placement=left → caret on bubble right, points right.
   style arrowFromLeft = {border({ width: 4, edge: t, color: transparent }).border({ width: 4, edge: b, color: transparent }).border({ width: 4, edge: l, color: overlay }).border({ width: 0, edge: r, color: transparent })}
-  // placement=right → caret on bubble left, points left.
   style arrowFromRight = {border({ width: 4, edge: t, color: transparent }).border({ width: 4, edge: b, color: transparent }).border({ width: 4, edge: r, color: overlay }).border({ width: 0, edge: l, color: transparent })}
 </scope>
 
-<span use:tipDescribe style(host)>
+<controller>
+export default controller((init) => {
+  function read(v) { return typeof v === 'function' ? v() : v }
+  const genId = `sail-tooltip-${Math.random().toString(36).slice(2, 10)}`
+  const bubbleId = derived(() => String(read(init.id) ?? '').trim() || genId)
+  const content = derived(() => String(read(init.content) ?? ''))
+  const hidden = signal(false)
+  function clearHidden() { hidden.set(false) }
+  function forceHidden() { hidden.set(true) }
+  const keys = { Escape: () => { forceHidden() } }
+  function onMouseenter() { clearHidden() }
+  function onMouseleave() { forceHidden() }
+  function onFocusin() { clearHidden() }
+  function onFocusout(e) {
+    const next = e?.relatedTarget as Node | null
+    const host = e?.currentTarget as HTMLElement | null
+    if (next && host?.contains(next)) return
+    forceHidden()
+  }
+  return { bubbleId, content, hidden, keys, onMouseenter, onMouseleave, onFocusin, onFocusout }
+})
+</controller>
+
+<span use:hotkeys={keys} on:mouseenter={onMouseenter} on:mouseleave={onMouseleave} on:focusin={onFocusin} on:focusout={onFocusout} style(host)>
   <slot></slot>
-  <!-- tooltip role stamped by use:tipDescribe (closed part anatomy) -->
-  <span
-    data-tooltip-bubble
-    style(bubble, {match: { placement: { top: { when: { after: style(arrowBox, arrowFromTop) } }, bottom: { when: { after: style(arrowBox, arrowFromBottom) } }, left: { when: { after: style(arrowBox, arrowFromLeft) } }, right: { when: { after: style(arrowBox, arrowFromRight) } } }, 'data-hidden': { true: hide } }, when: {group-hover: show, group-focus-within: show}})
-  ></span>
+  <span id={bubbleId()} role="tooltip" data-tooltip-bubble data-hidden={hidden()} style(bubble)>{content()}</span>
 </span>

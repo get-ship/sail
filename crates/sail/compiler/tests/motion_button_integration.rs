@@ -6,6 +6,8 @@ fn sail_button_with_motion_compiles() {
     // component with a motion directive (the old file-read target is gone).
     let source = "<button style({ animate: { hover: play(fade) } })>\n  Go\n</button>";
     let opts = CompileOpts {
+        element_prefix: "sail".into(),
+        host_data_attr: "data-sail-host".into(),
         route_params: None,
         setup_url: None,
         mode: CompileMode::Component,

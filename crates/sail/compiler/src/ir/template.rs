@@ -99,6 +99,9 @@ pub enum AttrInstr {
         param: Option<Expr>,
         span: Span,
     },
+    /// Retired — `data-sail-ctrl` discovery removed. `<controller>` module
+    /// attach now rides `ControllerAttach::path` without a DOM stamp.
+    Controller { tag: String, span: Span },
 }
 
 /// One animated property within a `fx:` config. The optional preset

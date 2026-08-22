@@ -8,6 +8,8 @@ use sail_compiler::{CompileMode, CompileOpts, compile};
 
 fn compile_motion(source: &str) -> Result<String, String> {
     let opts = CompileOpts {
+        element_prefix: "sail".into(),
+        host_data_attr: "data-sail-host".into(),
         scope_capabilities: Vec::new(),
         route_params: None,
         setup_url: None,

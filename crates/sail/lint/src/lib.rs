@@ -6,8 +6,9 @@
 //! app `src/actions/**` (ACTIONS-1 regime). Rule IDs are prefixed
 //! `sail-<descriptor>`.
 //!
-//! The framework catalog (`packages/sail/runtime/src/actions/*`) is trusted and
-//! is not floor-linted this cycle.
+//! Catalog stamps (`packages/sail/runtime/src/actions/*`) are the same action
+//! surface as author `src/actions/**`. Writer allowlist (theme.ts, mount.ts,
+//! generated bind paint writers) is the only CSSOM endowment.
 
 pub mod config;
 pub mod project;
@@ -22,6 +23,8 @@ pub mod source;
 // that crate directly. Tokens/scales stay re-exported so compiler/layout/ops
 // keep `sail_lint::tokens` (etc.) compiling.
 pub use spinnaker::{host_ctx, scales, style_vocab, token_groups, tokens};
+#[cfg(test)]
+mod same_law_everywhere;
 #[cfg(test)]
 mod tests;
 
@@ -179,15 +182,24 @@ pub fn is_app_source_ts(path: &std::path::Path) -> bool {
     p.contains("/src/") || p.contains("/routes/")
 }
 
-/// True iff `path` is an **author** `use:` Action module the regime floor lints.
+/// Style writers that MAY touch CSSOM (Job 0 allowlist). Access elsewhere
+/// is `sail-no-imperative-style`. Not a blanket exemption for `bind.ts`.
+pub fn is_style_writer_allowlist(path: &std::path::Path) -> bool {
+    let p = path.to_string_lossy().replace('\\', "/");
+    p.ends_with("/packages/sail/runtime/src/theme.ts")
+        || p.ends_with("packages/sail/runtime/src/theme.ts")
+        || p.ends_with("/packages/sail/runtime/src/mount.ts")
+        || p.ends_with("packages/sail/runtime/src/mount.ts")
+        || p.ends_with("/packages/sail/runtime/src/generated/bind-paint-writer.ts")
+        || p.ends_with("packages/sail/runtime/src/generated/bind-paint-writer.ts")
+}
+
+/// True iff `path` is a `use:` Action module the regime floor lints.
 ///
-/// Convention (fixed, no config knob): modules under `src/actions/**/*.ts`.
+/// Author modules under `src/actions/**/*.ts` **and** catalog stamps under
+/// `packages/sail/runtime/src/actions/**`. Same law. No trusted caste.
 ///
-/// **Exempt (trusted):** framework catalog
-/// `packages/sail/runtime/src/actions/**` — not subject to the author floor
-/// this cycle (CSS-var bridges, document listeners, etc. by design).
-///
-/// **Exempt:** tests, benches, generated files.
+/// **Exempt:** tests, benches, generated files, writer-allowlist files.
 pub fn is_action_source_path(path: &std::path::Path) -> bool {
     if path.extension().and_then(|e| e.to_str()) != Some("ts") {
         return false;
@@ -202,11 +214,13 @@ pub fn is_action_source_path(path: &std::path::Path) -> bool {
     {
         return false;
     }
-    // Framework catalog is TRUSTED — never author-floor.
-    if p.contains("/packages/sail/runtime/") {
+    if is_style_writer_allowlist(path) {
         return false;
     }
-    // Fixed convention: src/actions/**
+    if p.contains("/packages/sail/runtime/") {
+        return p.contains("/packages/sail/runtime/src/actions/")
+            || p.contains("packages/sail/runtime/src/actions/");
+    }
     p.contains("/src/actions/") || p.starts_with("src/actions/")
 }
 

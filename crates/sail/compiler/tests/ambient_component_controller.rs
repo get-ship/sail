@@ -81,6 +81,8 @@ fn app_local_component_compile_wires_virtual_controller_setup() {
     let out = compile(
         APP_LOCAL_COMPONENT,
         CompileOpts {
+            element_prefix: "sail".into(),
+            host_data_attr: "data-sail-host".into(),
             setup_url: Some("./sail-g2-probe.sail.controller.ts".into()),
             mode: CompileMode::Component,
             component_meta: Some(ComponentMeta {

@@ -3,6 +3,13 @@
   orientation horizontal (default) or vertical. use:resizable on the handle:
   pointer drag and arrow keys set flex-basis % on the start pane.
   Handle role=separator + aria-orientation are stamped by the action.
+
+  Stays INTERNAL single-tag use:, not a <controller>: split-drag is
+  node-lifetime end to end — pointermove must follow the pointer past the
+  handle (capture + window listeners), the host box is measured every move,
+  and the result lands as inline flex-basis on a sibling pane. Controllers
+  are signals-only, CSS resize resizes one element from its own corner
+  (no native splitter), and no generic drag action exists to bind instead.
 -->
 
 <scope>

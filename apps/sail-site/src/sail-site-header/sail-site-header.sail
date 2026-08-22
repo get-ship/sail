@@ -65,7 +65,7 @@ export default controller((ctx) => {
 
 <column gap="0" style(shell)>
   <if {!workbench()}>
-    <navbar sticky bordered autohide={autohide() ? true : null} use:chromeOffset>
+    <navbar sticky bordered autohide={autohide() ? true : null}>
       <a slot="brand" href="/" label="SHIP UI home" style(brandLink)>
         <row nowrap gap="2" align="center">
           <svg width="22" height="22" viewBox="0 0 26 26" fill="none" hidden="true">

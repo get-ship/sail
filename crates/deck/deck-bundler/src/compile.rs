@@ -77,6 +77,8 @@ pub fn compile_sail(
             CompileMode::Route => SailCompileMode::Component,
         },
         source_path: Some(sail_file.to_path_buf()),
+        element_prefix: "sail".into(),
+        host_data_attr: "data-sail-host".into(),
         component_meta: (mode == CompileMode::Component).then(|| ComponentMeta {
             name: stem.to_string(),
         }),

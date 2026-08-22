@@ -187,6 +187,8 @@ fn every_sail_example_in_the_agent_skill_compiles() {
         // `component_meta` is required: `<scope>` props are component
         // members, and the props check keys on the meta, not the mode.
         let opts = CompileOpts {
+            element_prefix: "sail".into(),
+            host_data_attr: "data-sail-host".into(),
             mode: CompileMode::Component,
             component_meta: Some(ComponentMeta {
                 name: "sail-skill-example".into(),

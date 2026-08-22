@@ -8,6 +8,8 @@ fn compile_route(source: &str) -> sail_compiler::CompileError {
     compile(
         source,
         CompileOpts {
+            element_prefix: "sail".into(),
+            host_data_attr: "data-sail-host".into(),
             route_params: None,
             setup_url: None,
             mode: CompileMode::Component,

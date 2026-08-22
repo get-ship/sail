@@ -32,15 +32,15 @@ export default controller((_ctx: Scope) => {
     const a: string[] = []
     if (orientation() !== 'horizontal') a.push(`orientation="${orientation()}"`)
     const open = a.length ? `<tabs ${a.join(' ')}>` : `<tabs>`
-    return `${open}\n  <tab-list variant="line">\n    <tab>Overview</tab>\n    <tab>Activity</tab>\n    <tab>Settings</tab>\n  </tab-list>\n  <tab-panel>…</tab-panel>\n  <tab-panel>…</tab-panel>\n  <tab-panel>…</tab-panel>\n</tabs>`
+    return `${open}\n  <tab title="Overview">…</tab>\n  <tab title="Activity">…</tab>\n  <tab title="Settings">…</tab>\n</tabs>`
   })
 
   const tabsExLine = () =>
-    `<tabs>\n  <tab-list variant="line">\n    <tab>Overview</tab>\n    <tab>Activity</tab>\n  </tab-list>\n  <tab-panel>…</tab-panel>\n  <tab-panel>…</tab-panel>\n</tabs>`
+    `<tabs>\n  <tab title="Overview">…</tab>\n  <tab title="Activity">…</tab>\n</tabs>`
   const tabsExPill = () =>
-    `<tabs>\n  <tab-list variant="pill">\n    <tab>A</tab>\n    <tab>B</tab>\n  </tab-list>\n  <tab-panel>…</tab-panel>\n  <tab-panel>…</tab-panel>\n</tabs>`
+    `<tabs>\n  <tab title="A" variant="pill">…</tab>\n  <tab title="B" variant="pill">…</tab>\n</tabs>`
   const tabsExVertical = () =>
-    `<tabs orientation="vertical">\n  <tab-list variant="line">\n    <tab>One</tab>\n    <tab>Two</tab>\n  </tab-list>\n  <tab-panel>…</tab-panel>\n  <tab-panel>…</tab-panel>\n</tabs>`
+    `<tabs orientation="vertical">\n  <tab title="One">…</tab>\n  <tab title="Two">…</tab>\n</tabs>`
 
   return {
     orientation,
@@ -69,14 +69,9 @@ export default controller((_ctx: Scope) => {
   >
     <column slot="specimen" gap="3" align="stretch" style(specimen)>
       <tabs orientation={orientation()} style(fullW)>
-        <tab-list variant="line">
-          <tab>Overview</tab>
-          <tab>Activity</tab>
-          <tab>Settings</tab>
-        </tab-list>
-        <tab-panel><p style(mutedSm)>Overview panel content.</p></tab-panel>
-        <tab-panel><p style(mutedSm)>Activity panel content.</p></tab-panel>
-        <tab-panel><p style(mutedSm)>Settings panel content.</p></tab-panel>
+        <tab title="Overview"><p style(mutedSm)>Overview panel content.</p></tab>
+        <tab title="Activity"><p style(mutedSm)>Activity panel content.</p></tab>
+        <tab title="Settings"><p style(mutedSm)>Settings panel content.</p></tab>
       </tabs>
     </column>
 
@@ -93,12 +88,8 @@ export default controller((_ctx: Scope) => {
 
     <column slot="usage-preview" gap="3" align="stretch" style(specimen)>
       <tabs style(fullW)>
-        <tab-list variant="line">
-          <tab>Overview</tab>
-          <tab>Activity</tab>
-        </tab-list>
-        <tab-panel><p style(mutedSm)>Overview.</p></tab-panel>
-        <tab-panel><p style(mutedSm)>Activity.</p></tab-panel>
+        <tab title="Overview"><p style(mutedSm)>Overview.</p></tab>
+        <tab title="Activity"><p style(mutedSm)>Activity.</p></tab>
       </tabs>
     </column>
 
@@ -110,12 +101,8 @@ export default controller((_ctx: Scope) => {
         code={tabsExLine()}
       >
         <tabs>
-          <tab-list variant="line">
-            <tab>Overview</tab>
-            <tab>Activity</tab>
-          </tab-list>
-          <tab-panel><p style(mutedSm)>Overview.</p></tab-panel>
-          <tab-panel><p style(mutedSm)>Activity.</p></tab-panel>
+          <tab title="Overview"><p style(mutedSm)>Overview.</p></tab>
+          <tab title="Activity"><p style(mutedSm)>Activity.</p></tab>
         </tabs>
       </doc-example>
       <doc-example
@@ -124,12 +111,8 @@ export default controller((_ctx: Scope) => {
         code={tabsExPill()}
       >
         <tabs>
-          <tab-list variant="pill">
-            <tab>A</tab>
-            <tab>B</tab>
-          </tab-list>
-          <tab-panel><p style(mutedSm)>A panel.</p></tab-panel>
-          <tab-panel><p style(mutedSm)>B panel.</p></tab-panel>
+          <tab title="A" variant="pill"><p style(mutedSm)>A panel.</p></tab>
+          <tab title="B" variant="pill"><p style(mutedSm)>B panel.</p></tab>
         </tabs>
       </doc-example>
       <doc-example
@@ -138,12 +121,8 @@ export default controller((_ctx: Scope) => {
         code={tabsExVertical()}
       >
         <tabs orientation="vertical">
-          <tab-list variant="line">
-            <tab>One</tab>
-            <tab>Two</tab>
-          </tab-list>
-          <tab-panel><p style(mutedSm)>One.</p></tab-panel>
-          <tab-panel><p style(mutedSm)>Two.</p></tab-panel>
+          <tab title="One"><p style(mutedSm)>One.</p></tab>
+          <tab title="Two"><p style(mutedSm)>Two.</p></tab>
         </tabs>
       </doc-example>
     </column>

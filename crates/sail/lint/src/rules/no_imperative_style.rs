@@ -22,9 +22,9 @@
 //!      The compiler reflects the signal onto the host as an inline custom
 //!      property; no `.style`.
 //!   2. Measurement-driven geometry (a dragged node, a measured column) → a
-//!      `use:` action. The action OWNS its custom property and is the sanctioned
-//!      home for `el.style.setProperty`; actions live in the framework runtime
-//!      (`packages/sail/runtime/src/**`), which this rule never lints.
+//!      controller signal + Style `bind(name)`, or platform CSS. Actions do
+//!      not take `Signal` and do not write style. Catalog stamps are not
+//!      exempt — same floor, same endowment.
 //!   3. A design token (theming) → tokens live in `tokens.css`; in dev, edit the
 //!      file and HMR re-themes. A live per-subtree override is a signal read as
 //!      `(--x)` on a wrapper — the inline custom property inherits to the subtree.
@@ -83,6 +83,9 @@ fn is_document_root(expr: &Expression) -> bool {
 }
 
 pub fn check(path: &Path, source: &str) -> Vec<Finding> {
+    if crate::is_style_writer_allowlist(path) {
+        return Vec::new();
+    }
     let allocator = Allocator::default();
     let ret = Parser::new(&allocator, source, SourceType::ts()).parse();
     if !ret.errors.is_empty() {
@@ -121,11 +124,9 @@ impl<'src> StyleVisitor<'src> {
 
 impl<'a, 'src> Visit<'a> for StyleVisitor<'src> {
     fn visit_call_expression(&mut self, expr: &CallExpression<'a>) {
-        // `el.style.setProperty('--x', …)` is NOT exempt here. This rule only
-        // ever runs on controller / components-package sources (the framework runtime, where
-        // `use:` actions live, is exempt at the dispatch level); inside those,
-        // a custom-property write is still `.style` from JavaScript. The
-        // `.style` member access below catches it — no special-case needed.
+        // `el.style.setProperty('--x', …)` is NOT exempt here. Catalog stamps
+        // and author actions share this floor; writer-allowlist files return
+        // before the visitor. The `.style` member access below catches it.
         if let Expression::StaticMemberExpression(m) = &expr.callee {
             let name = m.property.name.as_str();
 
@@ -271,6 +272,23 @@ impl<'a, 'src> Visit<'a> for StyleVisitor<'src> {
         }
 
         oxc_ast_visit::walk::walk_static_member_expression(self, m);
+    }
+
+    fn visit_computed_member_expression(&mut self, m: &ComputedMemberExpression<'a>) {
+        // `node['style']` is `.style` with extra punctuation. Access is the crime.
+        if let Expression::StringLiteral(lit) = &m.expression
+            && lit.value.as_str() == "style"
+        {
+            self.report(
+                m.span,
+                "controllers do not touch `.style` — a CSS property set from JavaScript \
+                 is untokenized CSS that nothing can check (computed `['style']` included)."
+                    .to_string(),
+                "Move the value into CSS without `.style` — declare a signal and read it in Style \
+                 (`bind(name)`), or use platform CSS. Actions do not paint.",
+            );
+        }
+        oxc_ast_visit::walk::walk_computed_member_expression(self, m);
     }
 
     fn visit_new_expression(&mut self, expr: &NewExpression<'a>) {

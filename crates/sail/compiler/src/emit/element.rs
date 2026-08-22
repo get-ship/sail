@@ -11,12 +11,14 @@
 //!   - the props block feeds the element MANIFEST (and, downstream, the
 //!     bare-shorthand vocabulary).
 //!
-//! The mode enforces the seam test mechanically: element *templates* are
-//! static structure + slots. Control flow, dynamic attributes, or dynamic
-//! text mean the source is a COMPONENT — the error says so. JS enhancement
-//! rides stacked `use:<behavior>` stamps on the static structure (lowered
-//! to `runAction` at the use site); an inline `<controller>` block is an
-//! L2-component facility and is REJECTED here (see `compile_element`).
+//! Element templates may include `{#if}` / `{#for}` / `{#match}` (legal in
+//! L1). Those compile with the render machinery — same tag, same registry.
+//! Dynamic attributes still refuse on a **controller-less** splice. An
+//! inline `<controller>` is Job C: parameterized `use:` / `on:` / live
+//! attrs attach from the controller instance, not the page `$scope`.
+//! The attach type lives in `crate::check::controller_attach`; `emit`
+//! only interprets it. The host stays an opaque splice stamped
+//! `data-sail-ctrl`.
 
 use crate::CompileError;
 use crate::diagnostics::Span;
@@ -310,6 +312,21 @@ pub struct ElementOutput {
     pub skin_css: String,
     /// The element manifest (contract): tag, attributes, anatomy.
     pub manifest: Value,
+    /// Root `_sail_m_<trigger>` stamps (enter/exit play). Spliced hosts
+    /// already carry them in `structure_html`; native-kind lowering copies
+    /// them onto the real tag so `/motion` still attaches.
+    pub motion_stamps: Vec<(String, String)>,
+    /// Parameterized `use:` / `on:` / live attrs collected from a
+    /// controller-bearing template. Not serialized into `structure_html`.
+    /// Single source — `crate::check::controller_attach::ControllerAttach`.
+    pub controller_attaches: Vec<crate::check::controller_attach::ControllerAttach>,
+    /// Wrapped `<controller>` module (`{tag}.sail.controller.ts`). `None` when the
+    /// element has no block.
+    pub controller_js: Option<String>,
+    /// Template IR. Controller-bearing L1 is inlined through the same
+    /// template emit as app components (nested `$scope` + `setup()`), not
+    /// a second attach runner.
+    pub template: Vec<crate::ir::Instr>,
 }
 
 pub fn emit_element(
@@ -317,7 +334,14 @@ pub fn emit_element(
     source: &str,
     name: &str,
 ) -> Result<ElementOutput, CompileError> {
-    emit_element_with_bindings(program, source, name, &[])
+    emit_element_with_bindings(
+        program,
+        source,
+        name,
+        &[],
+        false,
+        &crate::CompileOpts::default(),
+    )
 }
 
 pub fn emit_element_with_bindings(
@@ -325,6 +349,8 @@ pub fn emit_element_with_bindings(
     source: &str,
     name: &str,
     style_bindings: &[crate::check::binding::StyleBinding],
+    has_controller: bool,
+    opts: &crate::CompileOpts,
 ) -> Result<ElementOutput, CompileError> {
     // L1 element names are lowercase words, optionally hyphen-joined
     // (`badge`, `empty-state`, `date-picker`). The naming seam is the STDLIB
@@ -345,7 +371,7 @@ pub fn emit_element_with_bindings(
         ))
         .with_category(RULE_ID));
     }
-    let root_class = format!("sail-{name}");
+    let root_class = format!("{}-{name}", opts.element_prefix);
 
     // Exactly one root element; whitespace text and comments tolerated.
     let mut roots = program.template.iter().filter_map(|i| match i {
@@ -392,9 +418,26 @@ pub fn emit_element_with_bindings(
 
     let native = root.tag == name;
     let mut structure = String::new();
-    serialize_static(root, &root_class, true, &mut structure)?;
+    let mut controller_attaches = Vec::new();
+    serialize_static(
+        root,
+        &root_class,
+        true,
+        &[],
+        has_controller,
+        true,
+        &mut controller_attaches,
+        &mut structure,
+    )?;
     // Fixed host role/live/label from the anatomy table (authors don't stamp).
     structure = crate::semantic_props::stamp_host_anatomy(name, &structure);
+    if name == "tab" {
+        // Host is display(contents); the trigger/button is the tab, the
+        // body is the panel. HOST_ANATOMY on the span would nest a button
+        // inside role=tab.
+        stamp_attr_on_first_tag(&mut structure, "button", "role", "tab");
+        stamp_attr_on_first_tag(&mut structure, "div", "role", "tabpanel");
+    }
 
     // Spliced elements key their skin on the stamped root class; native-kind
     // elements key on the tag itself — the tag IS the element.
@@ -467,6 +510,7 @@ pub fn emit_element_with_bindings(
     } else {
         None
     };
+    let motion_stamps = collect_root_motion_stamps(&structure);
 
     Ok(ElementOutput {
         root_class,
@@ -478,8 +522,120 @@ pub fn emit_element_with_bindings(
         bound_props,
         skin_css,
         manifest,
+        motion_stamps,
+        controller_attaches,
+        controller_js: None,
+        template: program.template.clone(),
     })
 }
+
+/// Insert `attr="value"` on the first `<tag …>` if that attr is absent.
+fn stamp_attr_on_first_tag(html: &mut String, tag: &str, attr: &str, value: &str) {
+    let open = format!("<{tag}");
+    let Some(pos) = html.find(&open) else {
+        return;
+    };
+    let Some(gt) = html[pos..].find('>') else {
+        return;
+    };
+    let open_tag = &html[pos..pos + gt];
+    let needle = format!("{attr}=");
+    if open_tag.contains(&needle) {
+        return;
+    }
+    html.insert_str(pos + gt, &format!(" {attr}=\"{value}\""));
+}
+
+/// Reconstruct the `_sail_m_*` config object parse_motion accepts.
+fn motion_config_literal(
+    props: &[crate::ir::MotionProp],
+    stagger_ms: Option<u32>,
+    timing: &crate::ir::MotionTiming,
+) -> String {
+    let mut parts: Vec<String> = Vec::new();
+    for p in props {
+        let mut fields: Vec<String> = Vec::new();
+        if let Some(v) = &p.from {
+            fields.push(format!("from: {}", motion_value_literal(v)));
+        }
+        if let Some(v) = &p.to {
+            fields.push(format!("to: {}", motion_value_literal(v)));
+        }
+        if let Some(preset) = &p.preset
+            && preset != "inline"
+            && fields.is_empty()
+        {
+            parts.push(format!("{}: '{preset}'", p.property));
+            continue;
+        }
+        if fields.is_empty() {
+            continue;
+        }
+        parts.push(format!("{}: {{ {} }}", p.property, fields.join(", ")));
+    }
+    if let Some(ms) = stagger_ms {
+        parts.push(format!("stagger: {ms}"));
+    }
+    if let Some(v) = &timing.duration {
+        parts.push(format!("duration: {}", motion_value_literal(v)));
+    }
+    if let Some(v) = &timing.delay {
+        parts.push(format!("delay: {}", motion_value_literal(v)));
+    }
+    if let Some(v) = &timing.easing {
+        parts.push(format!("easing: {}", motion_value_literal(v)));
+    }
+    if let Some(v) = &timing.iterations {
+        parts.push(format!("iterations: {}", motion_value_literal(v)));
+    }
+    if let Some(v) = &timing.direction {
+        parts.push(format!("direction: {}", motion_value_literal(v)));
+    }
+    format!("{{ {} }}", parts.join(", "))
+}
+
+fn motion_value_literal(v: &crate::ir::MotionValue) -> String {
+    match v {
+        crate::ir::MotionValue::Num(n) if *n == n.trunc() => format!("{}", *n as i64),
+        crate::ir::MotionValue::Num(n) => format!("{n}"),
+        crate::ir::MotionValue::Str(s) => format!("'{s}'"),
+        crate::ir::MotionValue::Bezier([a, b, c, d]) => format!("[{a}, {b}, {c}, {d}]"),
+        crate::ir::MotionValue::Expr(e) => e.source.clone(),
+    }
+}
+
+/// `_sail_m_<trigger>="…"` on the structure root — native lowering copies these.
+fn collect_root_motion_stamps(structure: &str) -> Vec<(String, String)> {
+    let Some(gt) = structure.find('>') else {
+        return Vec::new();
+    };
+    let open = &structure[..gt];
+    let mut out = Vec::new();
+    let mut rest = open;
+    while let Some(idx) = rest.find("_sail_m_") {
+        rest = &rest[idx + "_sail_m_".len()..];
+        let Some(eq) = rest.find('=') else {
+            break;
+        };
+        let trigger = rest[..eq].trim().to_string();
+        rest = rest[eq + 1..].trim_start();
+        let Some(q) = rest.chars().next().filter(|c| *c == '"' || *c == '\'') else {
+            continue;
+        };
+        rest = &rest[1..];
+        let Some(end) = rest.find(q) else {
+            break;
+        };
+        let value = rest[..end].replace("&quot;", "\"");
+        out.push((trigger, value));
+        rest = &rest[end + 1..];
+    }
+    out
+}
+
+/// Retained for test-compat — element stdlib attach now rides `path` via
+/// controller wiring, not DOM `data-sail-ctrl` discovery. No-op.
+pub fn stamp_ctrl(_structure: &mut String, _tag: &str) {}
 
 /// Attribute defaults for freeform hosts. Skips Identity props and bool false.
 ///
@@ -512,12 +668,17 @@ fn default_prop_attrs(tag: &str, props: &[crate::ir::PropDecl]) -> Vec<(String, 
 }
 
 /// Serialize a static element tree. `is_root` stamps the root class so the
-/// skin and the use-site lowering agree on the key. Any dynamic construct is
-/// the seam-test error.
+/// skin and the use-site lowering agree on the key. Controller-less
+/// templates still refuse live attrs; with a controller they become
+/// [`ControllerAttach`] entries instead of splice HTML.
 fn serialize_static(
     el: &ElementInstr,
     root_class: &str,
     is_root: bool,
+    path: &[String],
+    has_controller: bool,
+    allow_attach: bool,
+    attaches: &mut Vec<crate::check::controller_attach::ControllerAttach>,
     out: &mut String,
 ) -> Result<(), CompileError> {
     out.push('<');
@@ -574,17 +735,100 @@ fn serialize_static(
             // `runAction(el, action)` call — behavior attaches where the runtime
             // already lives, the structure still inlines with zero registration.
             AttrInstr::Use { action, param, .. } => {
-                if param.is_some() {
-                    return Err(CompileError::new(format!(
-                        "element mode: use:{action}={{param}} — a reactive action \
-                         parameter is per-instance state and can't ride the static \
-                         splice yet; use a param-less action (its config lives in \
-                         the action) or author the element as a component",
-                    ))
-                    .with_category(RULE_ID));
+                if let Some(p) = param {
+                    if !has_controller || !allow_attach {
+                        return Err(CompileError::new(format!(
+                            "element mode: use:{action}={{param}} — a reactive action \
+                             parameter is per-instance state and can't ride the static \
+                             splice; add a <controller> so it attaches in controller \
+                             scope, or use a param-less action",
+                        ))
+                        .with_category(RULE_ID));
+                    }
+                    let field = crate::check::controller_attach::inst_field(&p.source)?;
+                    attaches.push(crate::check::controller_attach::ControllerAttach::Use {
+                        action: action.clone(),
+                        param: field,
+                        path: path.to_vec(),
+                    });
+                    continue;
                 }
                 out.push_str(" use:");
                 out.push_str(action);
+            }
+            AttrInstr::On { event, handler, .. } => {
+                if !has_controller || !allow_attach {
+                    return Err(CompileError::new(format!(
+                        "element mode: dynamic attribute on <{}> — elements are static \
+                         structure; per-instance behavior belongs to the use site, a \
+                         <controller>, or a component",
+                        el.tag
+                    ))
+                    .with_category(RULE_ID));
+                }
+                let field = crate::check::controller_attach::inst_field(&handler.source)?;
+                attaches.push(crate::check::controller_attach::ControllerAttach::On {
+                    event: event.clone(),
+                    handler: field,
+                    path: path.to_vec(),
+                });
+            }
+            AttrInstr::Expr { name, expr, .. } => {
+                if !has_controller || !allow_attach {
+                    return Err(CompileError::new(format!(
+                        "element mode: dynamic attribute on <{}> — elements are static \
+                         structure; per-instance behavior belongs to the use site, a \
+                         <controller>, or a component",
+                        el.tag
+                    ))
+                    .with_category(RULE_ID));
+                }
+                let field = crate::check::controller_attach::inst_field(&expr.source)?;
+                let path_vec = path.to_vec();
+                attaches.push(crate::check::controller_attach::ControllerAttach::Bind {
+                    name: name.clone(),
+                    expr: field.clone(),
+                    path: path_vec.clone(),
+                });
+                if let Some(extra) = crate::semantic_props::dual_stamp_aria(&el.tag, name) {
+                    attaches.push(crate::check::controller_attach::ControllerAttach::Bind {
+                        name: extra.to_string(),
+                        expr: field,
+                        path: path_vec,
+                    });
+                }
+            }
+            AttrInstr::Controller { .. } => {
+                // `data-sail-ctrl` retired — controller attach rides `ControllerAttach::path`,
+                // not DOM discovery. No splice attr.
+            }
+            // `animate: { enter: play(fade) }` — same as `use:`: toolchain
+            // behavior that rides the static splice as `_sail_m_*`. The page
+            // parse lowers it to `__sail_motion_attach`. Dynamic magnitudes
+            // (signal from/to) still refuse.
+            AttrInstr::Motion {
+                trigger,
+                props,
+                stagger_ms,
+                timing,
+                ..
+            } => {
+                if props.iter().any(|p| !p.exprs().is_empty()) || !timing.exprs().is_empty() {
+                    return Err(CompileError::new(format!(
+                        "element mode: dynamic motion on <{}> — enter/exit play() \
+                         must be a static play, not a per-instance signal",
+                        el.tag
+                    ))
+                    .with_category(RULE_ID));
+                }
+                let config = motion_config_literal(props, *stagger_ms, timing);
+                let value = format!("{{{config}}}");
+                let escaped = value.replace('"', "&quot;");
+                out.push_str(" _sail_m_");
+                out.push_str(trigger);
+                out.push_str("=\"");
+                out.push_str(&escaped);
+                out.push('"');
             }
             _ => {
                 return Err(CompileError::new(format!(
@@ -601,8 +845,16 @@ fn serialize_static(
         out.push_str(&format!(" class=\"{root_class}\""));
     }
     // Compiler-owned host identity for runtime part discovery (not CSS).
+    // Prefix-aware: strip "{prefix}-" not hardcoded "sail-".
     if is_root && !host_attr_written {
-        let host = root_class.strip_prefix("sail-").unwrap_or(root_class);
+        let host = root_class
+            .strip_prefix(&format!(
+                "{}-",
+                crate::CompileOpts::default().element_prefix
+            ))
+            .unwrap_or(root_class.as_ref() as &str)
+            .to_string();
+        // Attr name is opts.host_data_attr in next plumbing; today web default is data-sail-host.
         out.push_str(&format!(" data-sail-host=\"{host}\""));
     }
     out.push('>');
@@ -620,39 +872,184 @@ fn serialize_static(
         }
         return Ok(());
     }
-    for child in &el.children {
+    serialize_static_children(
+        &el.children,
+        root_class,
+        path,
+        has_controller,
+        allow_attach,
+        attaches,
+        out,
+        &el.tag,
+    )?;
+    out.push_str(&format!("</{}>", el.tag));
+    Ok(())
+}
+
+fn serialize_static_children(
+    children: &[Instr],
+    root_class: &str,
+    path: &[String],
+    has_controller: bool,
+    allow_attach: bool,
+    attaches: &mut Vec<crate::check::controller_attach::ControllerAttach>,
+    out: &mut String,
+    parent_tag: &str,
+) -> Result<(), CompileError> {
+    let mut tag_nth: std::collections::HashMap<&str, usize> = std::collections::HashMap::new();
+    for child in children {
         match child {
-            Instr::Element(c) => serialize_static(c, root_class, false, out)?,
+            Instr::Element(c) => {
+                let n = tag_nth.entry(c.tag.as_str()).or_insert(0);
+                *n += 1;
+                let mut child_path = path.to_vec();
+                child_path.push(format!("{}:nth-of-type({n})", c.tag));
+                serialize_static(
+                    c,
+                    root_class,
+                    false,
+                    &child_path,
+                    has_controller,
+                    allow_attach,
+                    attaches,
+                    out,
+                )?;
+            }
             Instr::StaticText { text, .. } => out.push_str(text),
             Instr::Comment { .. } => {}
-            // Bare prop text `{title}` / `{title()}` is a compile-time hole.
-            // splice_element fills it from the use-site attr — first paint,
-            // no runtime textContent. Anything richer is a component.
             Instr::DynamicText { expr } => {
-                let Some(prop) = simple_prop_text(&expr.source) else {
-                    return Err(CompileError::new(format!(
-                        "element mode: <{}> contains control flow or dynamic content — \
-                         this is a component; compile it with --component-name",
-                        el.tag
-                    ))
-                    .with_category(RULE_ID));
-                };
-                out.push_str("<!--sail:prop:");
-                out.push_str(prop);
-                out.push_str("-->");
+                if has_controller {
+                    if let Some(field) = simple_prop_text(&expr.source) {
+                        out.push_str("<!--sail:prop:");
+                        out.push_str(field);
+                        out.push_str("-->");
+                    } else {
+                        let field = crate::check::controller_attach::inst_field(&expr.source)?;
+                        out.push_str("<!--sail:ctrl-text:");
+                        out.push_str(&field);
+                        out.push_str("-->");
+                    }
+                } else {
+                    let Some(prop) = simple_prop_text(&expr.source) else {
+                        return Err(CompileError::new(format!(
+                            "element mode: <{parent_tag}> contains dynamic content that is not a prop — \
+                             bind a prop or use control flow"
+                        ))
+                        .with_category(RULE_ID));
+                    };
+                    out.push_str("<!--sail:prop:");
+                    out.push_str(prop);
+                    out.push_str("-->");
+                }
             }
-            _ => {
-                return Err(CompileError::new(format!(
-                    "element mode: <{}> contains control flow or dynamic content — \
-                     this is a component; compile it with --component-name",
-                    el.tag
-                ))
-                .with_category(RULE_ID));
+            Instr::If(i) => {
+                out.push_str("<!--sail:if-->");
+                for b in &i.branches {
+                    serialize_static_instrs(
+                        &b.body,
+                        root_class,
+                        path,
+                        has_controller,
+                        allow_attach,
+                        attaches,
+                        out,
+                    )?;
+                }
+                if let Some(eb) = &i.else_body {
+                    serialize_static_instrs(
+                        eb,
+                        root_class,
+                        path,
+                        has_controller,
+                        allow_attach,
+                        attaches,
+                        out,
+                    )?;
+                }
+            }
+            Instr::For(f) => {
+                out.push_str("<!--sail:for-->");
+                serialize_static_instrs(
+                    &f.body,
+                    root_class,
+                    path,
+                    has_controller,
+                    allow_attach,
+                    attaches,
+                    out,
+                )?;
+            }
+            Instr::Match(m) => {
+                out.push_str("<!--sail:match-->");
+                for c in &m.cases {
+                    serialize_static_instrs(
+                        &c.body,
+                        root_class,
+                        path,
+                        has_controller,
+                        allow_attach,
+                        attaches,
+                        out,
+                    )?;
+                }
+                if let Some(d) = &m.default {
+                    serialize_static_instrs(
+                        d,
+                        root_class,
+                        path,
+                        has_controller,
+                        allow_attach,
+                        attaches,
+                        out,
+                    )?;
+                }
+            }
+            Instr::When(w) => {
+                serialize_static_instrs(
+                    &w.body,
+                    root_class,
+                    path,
+                    has_controller,
+                    allow_attach,
+                    attaches,
+                    out,
+                )?;
+                if let Some(eb) = &w.else_body {
+                    serialize_static_instrs(
+                        eb,
+                        root_class,
+                        path,
+                        has_controller,
+                        allow_attach,
+                        attaches,
+                        out,
+                    )?;
+                }
             }
         }
     }
-    out.push_str(&format!("</{}>", el.tag));
     Ok(())
+}
+
+fn serialize_static_instrs(
+    instrs: &[Instr],
+    root_class: &str,
+    path: &[String],
+    has_controller: bool,
+    allow_attach: bool,
+    attaches: &mut Vec<crate::check::controller_attach::ControllerAttach>,
+    out: &mut String,
+) -> Result<(), CompileError> {
+    serialize_static_children(
+        instrs,
+        root_class,
+        path,
+        has_controller,
+        allow_attach,
+        attaches,
+        out,
+        "element",
+    )
 }
 
 /// Bare prop identifier, optionally called (`title` / `title()`). Anything

@@ -1,6 +1,9 @@
 <!--
   <prose> — typography scope for rendered content (markdown blobs etc.).
-  Host Style + compiler prose descendant map → element-skins (not hand contracts).
+  Look: this host owns Style. Slots, not :part. Descendant type map is
+  platform/prose.css (native-anatomy) via skins, not hand contracts.
+  State: none — no controller, no use:prose.
+  Listen: none — slotted native HTML (h1/p/a).
 -->
 
 <scope>

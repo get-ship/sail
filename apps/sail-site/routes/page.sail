@@ -154,7 +154,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     </row>
   </column>
 
-  <ticker duration="slow" reverse>
+  <ticker>
     <p>forms + validation · live data · springs + tweens · ssr · hot reload · design tokens</p>
   </ticker>
   <ticker>

@@ -77,13 +77,31 @@ fn element_emits_structure_skin_and_manifest() {
 }
 
 #[test]
-fn element_rejects_control_flow_as_component() {
-    let src = "<span class=\"x\"><if {open()}><b>y</b></if></span>";
-    let err = compile_element(src, "toggle").unwrap_err();
+fn element_mode_accepts_if() {
+    let src = r#"<span class="x"><if {open()}><b>y</b></if></span>"#;
+    let el = compile_element(src, "toggle").expect("element mode: {#if} / <if> is legal");
+    assert_eq!(el.root_class, "sail-toggle");
+    assert_eq!(el.manifest["tag"], "toggle");
     assert!(
-        format!("{err:?}").contains("component"),
-        "the seam-test error names it a component: {err:?}"
+        el.structure_html.contains("y") || el.structure_html.contains("sail:if"),
+        "control flow compiles with render machinery, not dropped: {}",
+        el.structure_html
     );
+}
+
+#[test]
+fn element_mode_accepts_for() {
+    let src = r#"<span class="x"><for {items as item}><i>{item}</i></for></span>"#;
+    let el = compile_element(src, "listish").expect("element mode: {#for} / <for> is legal");
+    assert_eq!(el.manifest["tag"], "listish");
+}
+
+#[test]
+fn element_mode_accepts_match() {
+    let src =
+        r#"<span class="x"><match {kind}>{ok => <b>yes</b>}{else => <i>no</i>}</match></span>"#;
+    let el = compile_element(src, "kinded").expect("element mode: {#match} / <match> is legal");
+    assert_eq!(el.manifest["tag"], "kinded");
 }
 
 #[test]
@@ -150,7 +168,7 @@ fn skins_css_names_element_and_platform_provenance() {
 }
 
 #[test]
-fn ticker_loops_via_two_slots_and_marquee_action() {
+fn ticker_loops_via_two_slots_and_compile_time_motion() {
     let src = sail_compiler::stdlib::sources()
         .iter()
         .find(|(tag, _)| *tag == "ticker")
@@ -164,10 +182,11 @@ fn ticker_loops_via_two_slots_and_marquee_action() {
         "two independently-filled slots build the seamless-loop duplicate track: {}",
         el.structure_html
     );
-    // Track animation is use:marquee (fx:loop), not contracts host CSS.
+    // Track animation is compile-time anatomy (animate: play(marquee)),
+    // not use:marquee / contracts host CSS.
     assert!(
-        el.structure_html.contains("use:marquee"),
-        "track stamps use:marquee for duration/reverse-driven fx: {}",
+        !el.structure_html.contains("use:marquee"),
+        "no use:marquee stamp survives (ticker is pure structure): {}",
         el.structure_html
     );
     let contracts = include_str!(concat!(
@@ -191,13 +210,8 @@ fn ticker_loops_via_two_slots_and_marquee_action() {
     );
     let attrs = el.manifest["attributes"].as_array().unwrap();
     assert!(
-        attrs.iter().any(|a| a["name"] == "duration"),
-        "{}",
-        el.manifest
-    );
-    assert!(
-        attrs.iter().any(|a| a["name"] == "reverse"),
-        "{}",
+        attrs.is_empty(),
+        "ticker has no runtime props (duration/reverse died with use:marquee): {}",
         el.manifest
     );
 }
@@ -231,6 +245,8 @@ fn stdlib_elements_can_self_nest() {
     // the /components showcase (a card of cards is an essential pattern).
     use sail_compiler::{CompileMode, CompileOpts, compile};
     let opts = CompileOpts {
+        element_prefix: "sail".into(),
+        host_data_attr: "data-sail-host".into(),
         route_params: None,
         setup_url: None,
         mode: CompileMode::Component,
@@ -251,45 +267,16 @@ fn stdlib_elements_can_self_nest() {
     assert!(n >= 2, "expected both cards lowered, got {n}:\n{}", out.js);
 }
 
-#[test]
-fn element_rejects_controller_block() {
-    // `<controller>` is the L2-component behavior channel. An element carries
-    // behavior as stacked `use:<behavior>` stamps on its static structure —
-    // an inline block is a targeted compile error, not a captured module.
-    let src = r#"
-<scope>
-  props: { selected = false }
-</scope>
-<style>
-  .sail-chip { display: inline-flex; }
-</style>
-<controller>
-export default function chip(node: Element) {
-  (node as HTMLElement).setAttribute('role', 'button')
-}
-</controller>
-<span>label</span>
-"#;
-    let err = compile_element(src, "chip").unwrap_err();
-    assert!(
-        format!("{err:?}").contains(
-            "element mode: `<controller>` is not supported — attach behavior with `use:<behavior>`."
-        ),
-        "targeted rejection: {err:?}"
-    );
-}
+// Job C: `<controller>` in element mode is legal — see `element_controller.rs`.
 
 #[test]
 fn stdlib_chip_compiles_with_use_stamps() {
     let src = include_str!("../stdlib/chip/chip.sail");
     let el = compile_element(src, "chip").expect("stdlib chip compiles");
-    for stamp in ["use:pressable", "use:pressed", "use:dismissible"] {
-        assert!(
-            el.structure_html.contains(stamp),
-            "{stamp} on chip root: {}",
-            el.structure_html
-        );
-    }
+    assert!(
+        el.controller_js.is_some() && src.contains("use:hotkeys={keys}"),
+        "chip is a controller component, not mix-in stamps:\n{src}"
+    );
     // Host identity stamp is fine; ban controller *discovery* stamps only.
     assert!(
         !el.structure_html.contains("data-sail-controller")

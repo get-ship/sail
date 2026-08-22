@@ -35,15 +35,11 @@ export const code = {
   <p>Hidden until asked for.</p>
 </accordion>`,
 
-  tabs: `<!-- composite components are small vocabularies: a <tabs> is a
-     <tab-list> of <tab>s plus a <tab-panel> per tab, paired by position. -->
+  tabs: `<!-- composite components are small vocabularies: a tab is its
+     title plus the panel it owns. -->
 <tabs>
-  <tab-list>
-    <tab>Overview</tab>
-    <tab>Activity</tab>
-  </tab-list>
-  <tab-panel>The overview panel.</tab-panel>
-  <tab-panel>The activity panel.</tab-panel>
+  <tab title="Overview">The overview panel.</tab>
+  <tab title="Activity">The activity panel.</tab>
 </tabs>`,
 
   behavior: `<!-- the behavior is already wired: this combobox filters as you
@@ -63,7 +59,7 @@ export const code = {
   <icon name="zap"></icon>
   <icon name="rocket" size="lg"></icon>
   <icon name="alarm-clock" size="xl" label="Alarm"></icon>
-  <icon name="refresh" spin></icon>
+  <icon name="refresh"></icon>
 </row>`,
 
   iconButton: `<!-- icons inherit text color, so they follow tone for free -->

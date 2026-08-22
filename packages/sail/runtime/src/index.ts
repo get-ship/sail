@@ -162,7 +162,6 @@ export type {
   HotkeyEntry,
   HotkeyHandler,
   HotkeysMap,
-  InViewHandler,
 } from './actions'
 
 // ── Errors ─────────────────────────────────────────────────────────────────
@@ -189,6 +188,8 @@ export { navigate } from './navigate'
 export type { NavigateOpts } from './navigate'
 
 // Theme session writers on runtime ambient (SPEC-AMBIENT-SURFACE-1 §3).
+// THEMES catalog + guards ride here too so stdlib controllers (theme-picker)
+// read the same ambient names the inject table declares.
 export {
   applyTheme,
   persistTheme,
@@ -198,3 +199,20 @@ export {
   persistMode,
   readStoredMode,
 } from './theme-session'
+export {
+  THEMES,
+  isValidTheme,
+  themeSupportsMode,
+  readModePreference,
+  subscribeSystemPreference,
+} from '@ship/tokens/themes'
+
+// Effective-emit-set resolution for the product theme picker (pure helpers;
+// consumed by the <theme-picker> controller and deck's meta stamp).
+export {
+  setEffectiveThemeIds,
+  parseEffectiveThemeIdsContent,
+  readEffectiveThemeIds,
+  effectiveProductThemes,
+} from './theme-catalog'
+export type { EffectiveSessionIds } from './theme-catalog'

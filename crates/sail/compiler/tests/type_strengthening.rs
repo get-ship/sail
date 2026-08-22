@@ -15,6 +15,8 @@ fn fixtures_dir() -> PathBuf {
 
 fn paired_opts(path: PathBuf) -> CompileOpts {
     CompileOpts {
+        element_prefix: "sail".into(),
+        host_data_attr: "data-sail-host".into(),
         route_params: None,
         setup_url: Some("./view.controller.ts".into()),
         mode: CompileMode::Component,
@@ -29,6 +31,8 @@ fn paired_opts(path: PathBuf) -> CompileOpts {
 
 fn standalone_opts(path: PathBuf) -> CompileOpts {
     CompileOpts {
+        element_prefix: "sail".into(),
+        host_data_attr: "data-sail-host".into(),
         route_params: None,
         setup_url: None,
         mode: CompileMode::Component,

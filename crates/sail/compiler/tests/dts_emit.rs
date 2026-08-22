@@ -7,6 +7,8 @@ use sail_compiler::{CompileMode, CompileOpts, compile};
 
 fn compile_dts(source: &str) -> String {
     let opts = CompileOpts {
+        element_prefix: "sail".into(),
+        host_data_attr: "data-sail-host".into(),
         route_params: None,
         setup_url: None,
         mode: CompileMode::Component,
@@ -39,6 +41,8 @@ fn compile_dts_with_controller(_stem: &str, sail_src: &str, controller_ts: &str)
     .unwrap();
     let path = project.join("src/widget/widget.sail");
     let opts = CompileOpts {
+        element_prefix: "sail".into(),
+        host_data_attr: "data-sail-host".into(),
         route_params: None,
         setup_url: None,
         mode: CompileMode::Component,
@@ -59,6 +63,8 @@ fn compile_dts_with_controller(_stem: &str, sail_src: &str, controller_ts: &str)
 fn compile_component_dts(source: &str) -> String {
     use sail_compiler::ComponentMeta;
     let opts = CompileOpts {
+        element_prefix: "sail".into(),
+        host_data_attr: "data-sail-host".into(),
         route_params: None,
         setup_url: None,
         mode: CompileMode::Component,
@@ -117,6 +123,8 @@ fn use_hook_with_as_emits_return_type() {
 #[test]
 fn emit_dts_false_returns_none() {
     let opts = CompileOpts {
+        element_prefix: "sail".into(),
+        host_data_attr: "data-sail-host".into(),
         route_params: None,
         setup_url: None,
         mode: CompileMode::Component,
@@ -276,6 +284,8 @@ fn compile_dts_with_capabilities_as(
 ) -> String {
     use sail_compiler::emit::dts::ScopeCapability;
     let opts = CompileOpts {
+        element_prefix: "sail".into(),
+        host_data_attr: "data-sail-host".into(),
         component_meta,
         scope_capabilities: vec![
             ScopeCapability::client("api"),
@@ -300,6 +310,8 @@ fn compile_dts_with_capabilities_as(
 
 fn base_opts() -> CompileOpts {
     CompileOpts {
+        element_prefix: "sail".into(),
+        host_data_attr: "data-sail-host".into(),
         route_params: None,
         setup_url: None,
         mode: CompileMode::Component,

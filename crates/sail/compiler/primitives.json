@@ -668,6 +668,10 @@
       }
     },
     "hover-card": {
+      "id": {
+        "type": "string",
+        "default": ""
+      },
       "placement": {
         "type": "string",
         "default": ""
@@ -691,14 +695,6 @@
           "xl"
         ],
         "default": "md"
-      },
-      "spin": {
-        "type": "bool",
-        "default": "false"
-      },
-      "src": {
-        "type": "string",
-        "default": ""
       }
     },
     "input": {
@@ -706,9 +702,17 @@
         "type": "string",
         "default": ""
       },
+      "describedBy": {
+        "type": "string",
+        "default": ""
+      },
       "disabled": {
         "type": "bool",
         "default": "false"
+      },
+      "id": {
+        "type": "string",
+        "default": ""
       },
       "inputmode": {
         "type": "string",
@@ -788,7 +792,13 @@
           "search",
           "tel",
           "url",
-          "hidden"
+          "hidden",
+          "checkbox",
+          "radio",
+          "file",
+          "color",
+          "date",
+          "button"
         ],
         "default": "text"
       },
@@ -1203,13 +1213,6 @@
         "type": "string",
         "default": ""
       },
-      "orientation": {
-        "values": [
-          "horizontal",
-          "vertical"
-        ],
-        "default": "horizontal"
-      },
       "size": {
         "values": [
           "md",
@@ -1275,10 +1278,6 @@
         "default": "false"
       },
       "hoverable": {
-        "type": "bool",
-        "default": "false"
-      },
-      "searchable": {
         "type": "bool",
         "default": "false"
       },
@@ -1410,20 +1409,6 @@
         "default": "icon"
       }
     },
-    "ticker": {
-      "duration": {
-        "values": [
-          "fast",
-          "normal",
-          "slow"
-        ],
-        "default": "normal"
-      },
-      "reverse": {
-        "type": "bool",
-        "default": "false"
-      }
-    },
     "toast": {
       "duration": {
         "type": "string",
@@ -1446,13 +1431,6 @@
       "disabled": {
         "type": "bool",
         "default": "false"
-      },
-      "orientation": {
-        "values": [
-          "horizontal",
-          "vertical"
-        ],
-        "default": "horizontal"
       },
       "size": {
         "values": [

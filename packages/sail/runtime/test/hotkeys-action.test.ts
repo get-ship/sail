@@ -32,7 +32,7 @@ describe('use:hotkeys', () => {
     withScope(scope, () => {
       runAction(el, hotkeys, () => ({ s: save }))
     })
-    keydown('s')
+    keydown('s', {}, el)
     expect(save).toHaveBeenCalledOnce()
     scope.dispose()
   })
@@ -41,8 +41,8 @@ describe('use:hotkeys', () => {
     const save = vi.fn()
     const el = document.createElement('div')
     const input = document.createElement('input')
+    el.appendChild(input)
     document.body.appendChild(el)
-    document.body.appendChild(input)
     const scope = createScope()
     withScope(scope, () => {
       runAction(el, hotkeys, () => ({ s: save }))
@@ -56,8 +56,8 @@ describe('use:hotkeys', () => {
     const save = vi.fn()
     const el = document.createElement('div')
     const input = document.createElement('input')
+    el.appendChild(input)
     document.body.appendChild(el)
-    document.body.appendChild(input)
     const scope = createScope()
     withScope(scope, () => {
       runAction(el, hotkeys, () => ({
@@ -78,7 +78,7 @@ describe('use:hotkeys', () => {
       runAction(el, hotkeys, () => ({ s: save }))
     })
     scope.dispose()
-    keydown('s')
+    keydown('s', {}, el)
     expect(save).not.toHaveBeenCalled()
   })
 })

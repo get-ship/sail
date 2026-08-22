@@ -44,6 +44,64 @@ fn lucide_id_alias_still_compiles() {
 }
 
 #[test]
+fn named_pack_icon_html_contains_svg() {
+    let src = r#"<icon name="settings"></icon>"#;
+    let out = compile(src, CompileOpts::default()).expect("named pack role compiles");
+    assert!(
+        out.js.contains("<svg"),
+        "compiled <icon name> HTML contains <svg> (compiler inline, not fetch):\n{}",
+        out.js
+    );
+    assert!(
+        !out.js.contains("/_deck/icons"),
+        "pack roles do not fetch /_deck/icons:\n{}",
+        out.js
+    );
+    assert!(
+        !out.js.contains("primeIconCache"),
+        "pack roles do not use primeIconCache:\n{}",
+        out.js
+    );
+    assert!(
+        !out.js.contains("use:icon"),
+        "no use:icon stamp survives (icon is pure structure):\n{}",
+        out.js
+    );
+}
+
+#[test]
+fn unlabeled_icon_is_decorative_and_hidden() {
+    let out =
+        compile(r#"<icon name="settings"></icon>"#, CompileOpts::default()).expect("compiles");
+    assert!(
+        out.js.contains("aria-hidden=\\\"true\\\""),
+        "decorative icon has aria-hidden at compile time:\n{}",
+        out.js
+    );
+    assert!(!out.js.contains("role=\\\"img\\\""), "{}", out.js);
+}
+
+#[test]
+fn labeled_icon_is_an_image_with_name() {
+    let out = compile(
+        r#"<icon label="Close" name="settings"></icon>"#,
+        CompileOpts::default(),
+    )
+    .expect("compiles");
+    assert!(
+        out.js.contains("role=\\\"img\\\""),
+        "labeled icon is role=img (anatomy, not runtime):\n{}",
+        out.js
+    );
+    assert!(
+        out.js.contains("aria-label=\\\"Close\\\""),
+        "label lowers to aria-label:\n{}",
+        out.js
+    );
+    assert!(!out.js.contains("aria-hidden"), "{}", out.js);
+}
+
+#[test]
 fn catalog_roles_compile() {
     let src = r#"<column>
       <icon name="sparkles"></icon>

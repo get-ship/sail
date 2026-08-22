@@ -14,6 +14,8 @@ use sail_compiler::{CompileMode, CompileOpts, ComponentMeta, Policy, check_all, 
 
 fn component_opts(path: &str, name: &str) -> CompileOpts {
     CompileOpts {
+        element_prefix: "sail".into(),
+        host_data_attr: "data-sail-host".into(),
         route_params: None,
         setup_url: None,
         mode: CompileMode::Component,
@@ -162,6 +164,8 @@ fn annotation_layer_pack_compiles() {
         .join("packages/components/sail/canvas/src/sail-annotation/sail-annotation-layer.sail");
     let src = std::fs::read_to_string(&sail).expect("read annotation-layer");
     let opts = CompileOpts {
+        element_prefix: "sail".into(),
+        host_data_attr: "data-sail-host".into(),
         route_params: None,
         setup_url: None,
         mode: CompileMode::Component,
@@ -183,6 +187,8 @@ fn bar_chart_pack_compiles_with_skeleton() {
         repo_root().join("packages/components/sail/charts/src/sail-bar-chart/sail-bar-chart.sail");
     let src = std::fs::read_to_string(&sail).expect("read bar-chart");
     let opts = CompileOpts {
+        element_prefix: "sail".into(),
+        host_data_attr: "data-sail-host".into(),
         route_params: None,
         setup_url: None,
         mode: CompileMode::Component,

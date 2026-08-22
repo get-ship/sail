@@ -20,7 +20,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     <p>
       <code>use:action</code> attaches reusable, attach-anywhere behavior.
       This table is the curated public surface. Widget-private wiring
-      (tabs, menu, pagination, radio-group, combobox) lives as closed
+      (tabs, menu, radio-group, combobox) lives as closed
       implementation inside the L1 widget — use the tag, not a public
       <code>use:</code>. Author actions live under <code>src/actions/</code>
       under a strict compile floor.

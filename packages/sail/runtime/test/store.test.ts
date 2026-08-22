@@ -239,6 +239,10 @@ describe('provideContext / injectContext', () => {
     withScope(root, () => { got = injectContext(key) })
     expect(got).toBeNull()
   })
+
+  it('mints a unique key per call — share by import, not intern', () => {
+    expect(contextKey('tabs')).not.toBe(contextKey('tabs'))
+  })
 })
 
 describe('snapshot — server-side serialization', () => {

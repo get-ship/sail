@@ -31,9 +31,9 @@ const CARD = `<card>
 </card>`
 
 describe('l1 card', () => {
-  it('default is a region with its header', () => {
+  it('default is a region named Card with its header', () => {
     const v = renderRoute(CARD)
-    expect(getByRole(v.root, 'region')).toBeTruthy()
+    expect(getByRole(v.root, 'region', { name: 'Card' })).toBeTruthy()
     expect(getByRole(v.root, 'heading', { name: 'Overview', level: 2 })).toBeTruthy()
     expect(getByText(v.root, 'Surface, radius, elevation on the element.')).toBeTruthy()
     expect(getByText(v.root, 'Updated just now')).toBeTruthy()
@@ -46,7 +46,7 @@ describe('l1 card', () => {
   <h2 slot="header">Overview</h2>
   <p>Body</p>
 </card>`)
-      expect(getByRole(v.root, 'region')).toBeTruthy()
+      expect(getByRole(v.root, 'region', { name: 'Card' })).toBeTruthy()
       expect(getByRole(v.root, 'heading', { name: 'Overview', level: 2 })).toBeTruthy()
       v.unmount()
     }
@@ -57,7 +57,7 @@ describe('l1 card', () => {
       const v = renderRoute(`<card tone="${tone}">
   <h2 slot="header">Overview</h2>
 </card>`)
-      expect(getByRole(v.root, 'region')).toBeTruthy()
+      expect(getByRole(v.root, 'region', { name: 'Card' })).toBeTruthy()
       v.unmount()
     }
   })
@@ -67,7 +67,7 @@ describe('l1 card', () => {
       const v = renderRoute(`<card padding="${padding}">
   <h2 slot="header">Overview</h2>
 </card>`)
-      expect(getByRole(v.root, 'region')).toBeTruthy()
+      expect(getByRole(v.root, 'region', { name: 'Card' })).toBeTruthy()
       v.unmount()
     }
   })
@@ -76,7 +76,7 @@ describe('l1 card', () => {
     const v = renderRoute(`<card interactive>
   <h2 slot="header">Overview</h2>
 </card>`)
-    expect(getByRole(v.root, 'region')).toBeTruthy()
+    expect(getByRole(v.root, 'region', { name: 'Card' })).toBeTruthy()
     v.unmount()
   })
 
@@ -85,7 +85,7 @@ describe('l1 card', () => {
       const v = renderRoute(`<card accent-bar="${accent}">
   <h2 slot="header">Overview</h2>
 </card>`)
-      expect(getByRole(v.root, 'region')).toBeTruthy()
+      expect(getByRole(v.root, 'region', { name: 'Card' })).toBeTruthy()
       v.unmount()
     }
   })
@@ -95,7 +95,7 @@ describe('l1 card', () => {
       const v = renderRoute(`<card ${attrs}>
   <h2 slot="header">Overview</h2>
 </card>`)
-      expect(getByRole(v.root, 'region')).toBeTruthy()
+      expect(getByRole(v.root, 'region', { name: 'Card' })).toBeTruthy()
       v.unmount()
     }
   })
@@ -114,9 +114,7 @@ describe('l1 card', () => {
     expect(host?.getAttribute('padding')).toBe('lg')
     // Happy-dom does not resolve token calc() on descendants; the live sheet
     // + wrap class are the contract a browser would apply.
-    expect(sheet.textContent).toContain(
-      ".sail-grp[padding='lg'] .s-group-padding-lg-margin-b5-t5-x6",
-    )
+    expect(sheet.textContent).toContain(".sail-grp[padding='lg'] .s-group-padding-lg-margin-b5-t5-x6")
     expect(sheet.textContent).toContain('margin-top:calc(-1 * var(--space-5))')
     expect(sheet.textContent).toContain('margin-inline:calc(-1 * var(--space-6))')
     expect(wrap!.className).toMatch(/s-group-padding-lg-margin-b5-t5-x6/)

@@ -27,32 +27,24 @@ describe('tipDescribe action', () => {
     expect(bubble.textContent).toBe('Hello tip')
     // Caret Style match is on the bubble — placement must be mirrored.
     expect(bubble.getAttribute('placement')).toBe('top')
-    expect(host.style.getPropertyValue('--tt-bottom')).toBeTruthy()
-    // Arrow centering uses half of border-triangle base (token, not free px).
-    expect(host.style.getPropertyValue('--tt-arrow-ml')).toBe(
-      'calc(-1 * var(--space-1))',
-    )
+    expect(host.style.getPropertyValue('--tt-bottom')).toBe('')
     dispose()
   })
 
   it('force-hides bubble on mouseleave (no linger)', () => {
     const { host, bubble, dispose } = mountTooltip()
     host.dispatchEvent(new Event('mouseenter', { bubbles: true }))
-    // Simulate CSS show then leave
-    bubble.style.opacity = '1'
     host.dispatchEvent(new Event('mouseleave', { bubbles: true }))
-    expect(bubble.style.opacity).toBe('0')
-    expect(bubble.style.transition).toBe('none')
+    expect(bubble.getAttribute('data-hidden')).toBe('true')
     dispose()
   })
 
   it('clears forced hide on mouseenter so CSS can show again', () => {
     const { host, bubble, dispose } = mountTooltip()
     host.dispatchEvent(new Event('mouseleave', { bubbles: true }))
-    expect(bubble.style.opacity).toBe('0')
+    expect(bubble.getAttribute('data-hidden')).toBe('true')
     host.dispatchEvent(new Event('mouseenter', { bubbles: true }))
-    expect(bubble.style.opacity).toBe('')
-    expect(bubble.style.transition).toBe('')
+    expect(bubble.hasAttribute('data-hidden')).toBe(false)
     dispose()
   })
 })

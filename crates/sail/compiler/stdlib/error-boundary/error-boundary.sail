@@ -18,11 +18,10 @@
   style message = {fg(muted-foreground).type({ leading: normal })}
   style retry = {self(start).pad({ y: 1, x: 3 }).bg(surface).border({ color: border, width: 1 }).radius(sm).fg(foreground).elevation(xs).cursor(pointer).type({ family: body, size: xs, weight: semibold })}
 </scope>
-<div use:catchRender style(root)>
+<div style(root)>
   <div style(content, {when: {group-caught: display(none)}})><slot></slot></div>
   <div style(fallback, {when: {group-caught: display(contents)}})>
-    <!-- alert role stamped by use:catchRender (closed anatomy) -->
-    <row align="start" gap="3" data-error-alert style(alert)>
+    <row align="start" gap="3" role="alert" data-error-alert style(alert)>
       <slot name="fallback">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" hidden="true" style(icon, {shrink(0)})>
           <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"></path>

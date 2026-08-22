@@ -86,6 +86,8 @@ pub fn write_component_package_cem(package_root: &Path) -> Result<Option<PathBuf
             setup_url: None,
             mode: sail_compiler::CompileMode::Component,
             source_path: Some(sail_file.to_path_buf()),
+        element_prefix: "sail".into(),
+        host_data_attr: "data-sail-host".into(),
             component_meta: Some(sail_compiler::ComponentMeta { name: stem.clone() }),
             emit_dts: false,
             scope_capabilities: Vec::new(),

@@ -34,7 +34,7 @@ export const L1_COPY: Record<string, L1Copy> = {
   alert: {
     category: 'feedback',
     blurb:
-      'Inline status banner. tone defaults to info and paints the left stripe + icon. warning/danger flip liveRegion to assertive role=alert; dismissible shows the close control (onDismiss then remove).',
+      'Inline status banner. tone defaults to info and paints the left stripe + icon. warning/danger stamp an assertive live region; dismissible shows the close control (onDismiss then remove).',
   },
   avatar: {
     category: 'display',
@@ -108,7 +108,7 @@ export const L1_COPY: Record<string, L1Copy> = {
   'empty-state': {
     category: 'feedback',
     blurb:
-      'Nothing-here surface: icon + title + body + action slots. Chrome via variant (bordered default, dashed inline, bare placeholder/connecting). tone defaults to muted and paints the icon slot. connecting upgrades to role=status / aria-live=polite via use:variantLive.',
+      'Nothing-here surface: icon + title + body + action slots. Chrome via variant (bordered default, dashed inline, bare placeholder/connecting). tone defaults to muted and paints the icon slot. connecting stamps role=status / aria-live=polite.',
   },
   'error-boundary': {
     category: 'feedback',
@@ -118,7 +118,7 @@ export const L1_COPY: Record<string, L1Copy> = {
   'error-state': {
     category: 'feedback',
     blurb:
-      'Recovery surface for failed loads and partial failures. Rest chrome paints component.error-state (bg · fg · border); icon + inline border keep brand danger. code fills a mono chip; details slot gates Show details; action slot holds Retry. use:recoverySurface stamps role=alert, syncs code, and focuses the first action.',
+      'Recovery surface for failed loads and partial failures. Rest chrome paints component.error-state (bg · fg · border); icon + inline border keep brand destructive. code fills a mono chip; details slot gates Show details; action slot holds Retry. use:recoverySurface stamps role=alert, syncs code, and focuses the first action.',
   },
   field: {
     category: 'inputs',
@@ -146,7 +146,7 @@ export const L1_COPY: Record<string, L1Copy> = {
   icon: {
     category: 'display',
     blurb:
-      'Glyph box on the icon-size ladder. Prefer name for pack ids (local /_deck/icons resolve — never CDN); src only same-origin SVG. Empty label is decorative (aria-hidden); set label for role=img. Ink is currentColor + glyphFill (no tone prop). spin is owned by use:icon motion.',
+      'Glyph box on the icon-size ladder. Pack ids are compiler-inlined (never CDN). Empty label is decorative (aria-hidden); set label for role=img. Ink is currentColor + glyphFill (no tone prop).',
   },
   input: {
     category: 'inputs',
@@ -180,7 +180,7 @@ export const L1_COPY: Record<string, L1Copy> = {
   pagination: {
     category: 'navigation',
     blurb:
-      'A nav of <page-item> controls. value marks the current one with aria-current; clicking emits sail-page-change — your list, your fetch. Size is authored on each <page-item>.',
+      'A nav of <page-item> controls. value marks the current one with aria-current; clicking a page-item calls onPageChange — your list, your fetch. Size is authored on each <page-item>.',
   },
   popover: {
     category: 'overlay',
@@ -264,7 +264,7 @@ export const L1_COPY: Record<string, L1Copy> = {
   ticker: {
     category: 'effects',
     blurb:
-      'A looping band of text or icons. Drop content in — the host clips, nowraps, and paints a quiet strip. duration and reverse set the motion. Reduced motion settles automatically.',
+      'A looping band of text or icons. Drop content in — the host clips, nowraps, and paints a quiet strip. The loop is compile-time anatomy. Reduced motion settles automatically.',
   },
   toast: {
     category: 'feedback',

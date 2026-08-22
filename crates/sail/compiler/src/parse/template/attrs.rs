@@ -99,6 +99,13 @@ fn compile_attr(
     if let Some(rest) = name.strip_prefix("use:") {
         return compile_use(rest, value, value_span, loc);
     }
+    if name == "data-sail-ctrl" {
+        return Err(CompileError::new(
+            "data-sail-ctrl is retired — controller attach does not use DOM discovery",
+        )
+        .with_span(value_span)
+        .with_category(RULE_ID));
+    }
     // Unknown colon-prefix: not an active directive. Foreign idioms already
     // handled above; everything else is generic unknown vocabulary.
     if let Some((prefix, _)) = name.split_once(':') {

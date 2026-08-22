@@ -184,6 +184,17 @@ fn kept_security_and_style_floors_remain_live() {
         live.contains("sail-no-imperative-style"),
         "sail-no-imperative-style must remain live"
     );
+    // Job 0: promote the same floor onto the action surface. Do not invent
+    // a sibling id (`sail-l1-cssom-smell` or similar).
+    let action_ids: BTreeSet<&str> = sail_lint::rules::ACTION_RULES
+        .iter()
+        .map(|(id, _)| *id)
+        .collect();
+    assert!(
+        action_ids.contains("sail-no-imperative-style"),
+        "sail-no-imperative-style must stay live on ACTION_RULES (author + catalog stamps). \
+         ACTION_RULES = {action_ids:?}"
+    );
     for id in KEPT_LIVE_IDS {
         assert!(
             all.contains(id),

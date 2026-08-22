@@ -470,6 +470,7 @@ fn visit_attr(attr: &AttrInstr, v: &mut Visitor) {
                 check_use_value_expr(action, e, v);
             }
         }
+        AttrInstr::Controller { .. } => {}
         // A signal in a `fx:` config field must resolve against scope
         // like any other expression — an undefined name there should read as
         // the same mistake it is anywhere else.

@@ -244,16 +244,16 @@ export default controller(() => {
 <if {components.stage.ticker()}>
   <column gap="3" style(sampleMax)>
     <p style(fieldHint)>
-      Geometry host + use:marquee · author paint
+      Geometry host + compile-time loop · author paint
     </p>
-    <ticker duration="normal" style(sampleMax, { overflow(hidden).pad(2).bg(muted).radius(md) })>
+    <ticker style(sampleMax, { overflow(hidden).pad(2).bg(muted).radius(md) })>
       <span style({ pad(3).fg(muted).type(mono) })>
-        Live ticker · muted band · normal ·&nbsp;
+        Live ticker · muted band ·&nbsp;
       </span>
     </ticker>
-    <ticker duration="slow" reverse style(sampleMax, { overflow(hidden).pad(2).bg(primary).radius(md) })>
+    <ticker style(sampleMax, { overflow(hidden).pad(2).bg(primary).radius(md) })>
       <span style({ pad(3).fg(primary-foreground).type(body-sm) })>
-        Reverse · slow · brand paint ·&nbsp;
+        Brand paint ·&nbsp;
       </span>
     </ticker>
   </column>

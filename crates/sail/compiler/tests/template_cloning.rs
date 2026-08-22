@@ -33,6 +33,8 @@ fn js(src: &str) -> String {
     compile(
         src,
         CompileOpts {
+            element_prefix: "sail".into(),
+            host_data_attr: "data-sail-host".into(),
             mode: CompileMode::Component,
             ..Default::default()
         },
@@ -145,6 +147,8 @@ fn the_model_a_root_class_bakes_into_the_markup() {
     let out = compile(
         r#"<div data-card="card">x</div>"#,
         CompileOpts {
+            element_prefix: "sail".into(),
+            host_data_attr: "data-sail-host".into(),
             route_params: None,
             mode: CompileMode::Component,
             component_meta: Some(ComponentMeta {

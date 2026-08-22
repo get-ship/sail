@@ -231,8 +231,9 @@ fn l0_author_sail_is_sail_env() {
 
 #[test]
 fn runtime_package_is_not_in_author_type_gate() {
-    // Runtime / dom / compiler TS is not an author surface. Classified by
-    // FileKind only — no third env that grants DOM.
+    // Runtime / dom / compiler TS that is not a stamp and not a writer
+    // allowlist file is not granted DOM. No third env that gives all of
+    // `packages/sail/**` DOM.
     let cases = [
         "packages/sail/runtime/src/index.ts",
         "packages/sail/dom/src/hydrate/index.ts",
@@ -614,4 +615,167 @@ export function go(): void {
         !ok && out.contains("TS7017"),
         "globalThis.fetch must stay TS7017 under Pure:\n{out}"
     );
+}
+
+// ── Job 0 — same law everywhere (TypeEnv) ──────────────────────────────────
+
+fn path_has_dom(path: &str, source: Option<&str>) -> bool {
+    let env = type_env_for_path(Path::new(path), source);
+    has_dom_lib(lib_for_type_env(env))
+}
+
+#[test]
+fn stdlib_stamp_path_is_action_env_without_dom() {
+    let path = Path::new("packages/sail/runtime/src/actions/grid-tracks.ts");
+    let src = "export const gridTracks = (node) => ({})\n";
+    let c = classify(path, Some(src));
+    assert_eq!(c.kind, FileKind::Action);
+    assert_eq!(
+        type_env_for_path(path, Some(src)),
+        TypeEnv::Action,
+        "stdlib stamp is in the author type gate as Action"
+    );
+    assert!(
+        !has_dom_lib(lib_for_type_env(TypeEnv::Action)),
+        "Action env has no DOM lib"
+    );
+}
+
+#[test]
+fn action_observation_ambient_does_not_declare_element_style() {
+    let dts = emit_action_observation_dts();
+    let code: String = dts
+        .lines()
+        .filter(|l| !l.trim_start().starts_with("//"))
+        .collect::<Vec<_>>()
+        .join("\n");
+    // Pull the Element interface body so teaching comments elsewhere may
+    // mention `.style`.
+    let elem = code
+        .split("interface Element")
+        .nth(1)
+        .and_then(|rest| rest.split('}').next())
+        .unwrap_or("");
+    assert!(
+        !elem.contains("style"),
+        "Action observation ambient must not declare Element.style:\n{dts}"
+    );
+    for needle in [
+        "declare var document",
+        "declare const document",
+        "declare var window",
+        "declare const window",
+    ] {
+        assert!(
+            !code.contains(needle),
+            "Action observation ambient must not declare `{needle}`:\n{dts}"
+        );
+    }
+}
+
+#[test]
+fn action_snippet_node_style_fails_typecheck() {
+    let (ok, out) = tsc_snippet(
+        TypeEnv::Action,
+        r#"
+export function paint(node: Element): void {
+  node.style.color = "red"
+}
+"#,
+    );
+    assert!(
+        !ok,
+        "Action env must fail typecheck on node.style (Cannot find name / property style); was green:\n{out}"
+    );
+    assert!(
+        out.contains("style")
+            || out.contains("Cannot find name")
+            || out.contains("2339")
+            || out.contains("2551")
+            || out.contains("2304"),
+        "tsc output should name style / cannot-find-property:\n{out}"
+    );
+}
+
+#[test]
+fn writer_allowlist_paths_may_see_dom_cssom() {
+    // Writer allowlist is the only surface that may see DOM CSSOM types.
+    // Implementer: TypeEnv::Writer or path-gated DOM on these paths.
+    let writers = [
+        "packages/sail/runtime/src/theme.ts",
+        "packages/sail/runtime/src/mount.ts",
+        "packages/sail/runtime/src/generated/bind-paint-writer.ts",
+    ];
+    for p in writers {
+        assert!(
+            path_has_dom(p, None),
+            "writer allowlist {p} must see DOM CSSOM types (theme/mount/generated-bind only)"
+        );
+    }
+}
+
+#[test]
+fn writer_allowlist_snippet_can_name_cssom() {
+    let env = type_env_for_path(
+        Path::new("packages/sail/runtime/src/theme.ts"),
+        Some("export const theme = {}\n"),
+    );
+    assert!(
+        has_dom_lib(lib_for_type_env(env)),
+        "theme.ts env must grant DOM so CSSOM types resolve (env={env:?})"
+    );
+    let (ok, out) = tsc_snippet(
+        env,
+        r#"
+export function preview(name: string, value: string): void {
+  document.documentElement.style.setProperty(name, value)
+}
+"#,
+    );
+    assert!(
+        ok,
+        "writer allowlist snippet must typecheck CSSOM writes under its env:\n{out}"
+    );
+}
+
+#[test]
+fn stamp_and_non_writer_runtime_do_not_get_dom() {
+    assert!(
+        !path_has_dom(
+            "packages/sail/runtime/src/actions/spotlight.ts",
+            Some("export const spotlight = (node) => ({})\n"),
+        ),
+        "stamp stays Action — no DOM grant"
+    );
+    assert!(
+        !path_has_dom("packages/sail/runtime/src/signal.ts", None),
+        "signal.ts is not allowlist and not a stamp — no DOM"
+    );
+    assert!(
+        !path_has_dom("packages/sail/runtime/src/bind.ts", None),
+        "bind.ts wholesale is not a generated bind writer — no DOM"
+    );
+    assert!(
+        !path_has_dom(
+            "apps/x/src/widget/widget.sail",
+            Some("<controller>\nexport default controller(() => ({}))\n</controller>\n<div/>\n"),
+        ),
+        "app controller host (.sail) stays Sail — no DOM"
+    );
+}
+
+#[test]
+fn app_controller_and_l0_stay_sail_without_dom() {
+    assert_eq!(
+        type_env_for_path(
+            Path::new("apps/x/src/widget/widget.sail"),
+            Some("export default controller(() => ({}))\n"),
+        ),
+        TypeEnv::Sail
+    );
+    assert_eq!(
+        type_env_for_path(Path::new("packages/sail/l0/src/l0-case/l0-case.sail"), None),
+        TypeEnv::Sail
+    );
+    assert!(!has_dom_lib(lib_for_type_env(TypeEnv::Sail)));
 }

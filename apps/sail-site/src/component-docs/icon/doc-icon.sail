@@ -21,7 +21,6 @@ import { DETAILS } from '../../compositions/component-details'
 export default controller((_ctx: Scope) => {
   const ICON_SIZES = ['xs', 'sm', 'md', 'lg', 'xl'] as const
   const sizeIdx = signal(2)
-  const iconSpin = signal(false)
   const iconName = signal('sparkles')
   const iconLabeled = signal(false)
   const iconSize = derived(() => {
@@ -39,7 +38,6 @@ export default controller((_ctx: Scope) => {
   const specimenCode = derived(() => {
     const a: string[] = [`name="${iconName()}"`]
     if (iconSize() !== 'md') a.push(`size="${iconSize()}"`)
-    if (iconSpin()) a.push('spin')
     if (iconLabeled()) a.push(`label="${iconName()}"`)
     return `<icon ${a.join(' ')}></icon>`
   })
@@ -48,14 +46,11 @@ export default controller((_ctx: Scope) => {
     `<icon name="check" size="sm"></icon>\n<button variant="solid" tone="primary">\n  <icon name="check" size="sm"></icon>\n  Save\n</button>`
   const iconExSizes = () =>
     `<icon name="sparkles" size="xs"></icon>\n<icon name="sparkles" size="sm"></icon>\n<icon name="sparkles"></icon>\n<icon name="sparkles" size="lg"></icon>\n<icon name="sparkles" size="xl"></icon>`
-  const iconExSpin = () =>
-    `<icon name="refresh" spin label="Refreshing"></icon>`
   const iconExColor = () =>
     `<span style({ fg(primary) })>\n  <icon name="heart"></icon>\n</span>`
 
   return {
     sizeIdx,
-    iconSpin,
     iconName,
     iconLabeled,
     iconSize,
@@ -67,7 +62,6 @@ export default controller((_ctx: Scope) => {
     usageCode,
     iconExNamed,
     iconExSizes,
-    iconExSpin,
     iconExColor,
   }
 })
@@ -88,7 +82,6 @@ export default controller((_ctx: Scope) => {
       <icon
         name={iconName()}
         size={iconSize()}
-        spin={iconSpin() ? 'true' : null}
         label={iconLabelAttr()}
       ></icon>
     </column>
@@ -111,10 +104,6 @@ export default controller((_ctx: Scope) => {
         <slider bind:value={sizeIdx} min="0" max="4" step="1" size="sm" label="Size" ticks="xs,sm,md,lg,xl"></slider>
       </column>
       <row gap="5" align="start">
-        <column gap="2" style(growCol)>
-          <label>Spin</label>
-          <switch bind:checked={iconSpin} size="sm" label="Spin"></switch>
-        </column>
         <column gap="2" style(growCol)>
           <label>Label</label>
           <switch bind:checked={iconLabeled} size="sm" label="Accessible label"></switch>
@@ -156,16 +145,6 @@ export default controller((_ctx: Scope) => {
           <icon name="sparkles"></icon>
           <icon name="sparkles" size="lg"></icon>
           <icon name="sparkles" size="xl"></icon>
-        </row>
-      </doc-example>
-
-      <doc-example
-        title="Spin + label"
-        lead="spin animates the glyph. Set label when the icon is meaningful alone."
-        code={iconExSpin()}
-      >
-        <row gap="3" align="center" style(demoRow)>
-          <icon name="refresh" spin label="Refreshing"></icon>
         </row>
       </doc-example>
 

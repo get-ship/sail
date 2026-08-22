@@ -111,7 +111,7 @@ pub use semantic_props::{
     HOST_ANATOMY, HostAnatomy, SEMANTIC_PROPS, SemanticKind, SemanticProp, host_anatomy,
     is_free_aria_attr, lookup as lookup_semantic_prop, lower_attr_name_str,
 };
-pub use text_host::{is_text_host, text_host_error};
+pub use text_host::{is_text_host, is_text_host_with, text_host_error};
 pub use theme_surface::{
     ThemeTokenHover, ThemeTokenKind, ThemeTokenRef, catalog_theme_ids, infer_active_theme_mode,
     resolve_theme_token, theme_attr_completions, theme_attr_partial, theme_complete_at,
@@ -224,6 +224,15 @@ pub struct CompileOpts {
     /// (the default) and stays strict. See
     /// `crate::check::lint_overrides::LintOverride` for the shape.
     pub lint_overrides: Vec<check::lint_overrides::LintOverride>,
+    /// Platform element class prefix (web: `sail`). The compiler stamps
+    /// `"{prefix}-{tag}"` on the element root and on its skin sheet.
+    /// Platform-free core defaults to `sail`; a non-web target can pass
+    /// a different prefix. The compiler never decides the prefix.
+    pub element_prefix: String,
+    /// Attribute name the web runtime uses for host identity
+    /// (`data-sail-host`). Set by the platform emitter; the core only
+    /// needs the name to stamp. Defaults to `data-sail-host`.
+    pub host_data_attr: String,
 }
 
 impl CompileOpts {
@@ -260,6 +269,8 @@ impl Default for CompileOpts {
             scope_capabilities: Vec::new(),
             emit_component_imports: false,
             lint_overrides: Vec::new(),
+            element_prefix: "sail".into(),
+            host_data_attr: "data-sail-host".into(),
         }
     }
 }
@@ -435,11 +446,9 @@ fn validate_custom_element_name(name: &str) -> Result<(), &'static str> {
 /// authoring technology per layer; see `emit::element`). Same parse pipeline
 /// as `compile()` — preprocess then parse — but the outputs are the element
 /// artifacts: a static structure snippet for use-site lowering, framework-sheet
-/// skin CSS keyed on `.sail-<name>`, and the element manifest. The mode enforces
-/// the seam test on the *template*: control flow or dynamic attributes are
-/// compile errors naming the source a component. A `<controller>` block is an
-/// L2-component facility — element mode REJECTS it: JS enhancement rides
-/// stacked `use:<behavior>` stamps instead.
+/// skin CSS keyed on `.sail-<name>`, and the element manifest. Control flow
+/// (`{#if}` / `{#for}` / `{#match}`) is legal in element mode. Dynamic
+/// attributes still refuse. A `<controller>` block is Job C.
 pub fn compile_element(
     source: &str,
     name: &str,
@@ -467,18 +476,19 @@ pub fn compile_element(
         ))
         .with_category("sail-element-name"));
     }
-    // A `<controller>` block is the L2-component behavior channel; L1
-    // elements carry behavior as stacked `use:<behavior>` stamps on their
-    // static structure (lowered to `runAction` at the use site), so the
-    // block is a targeted compile error here, not a captured module.
+    // Job C: `<controller>` is the state home (same one-file form as
+    // app components). Extracted from the template; the page calls
+    // `setup(props)` — not CE, not a second runtime runner.
     let (stripped, controller_src) = parse::preprocess::extract_controller_block(source);
-    if controller_src.is_some() {
-        let at = source.find("<controller").unwrap_or(0);
-        return Err(CompileError::new(
-            "element mode: `<controller>` is not supported — attach behavior with `use:<behavior>`.",
+    let ctrl_path = PathBuf::from(crate::stdlib::virtual_source_id(name));
+    let parsed = controller_src.as_ref().and_then(|body| {
+        check::controller_parse::parse(
+            ctrl_path.clone(),
+            parse::preprocess::wrap_controller_body(body),
         )
-        .with_span(crate::diagnostics::Span::point(at))
-        .with_category("sail-element-mode"));
+    });
+    if let Some(ref p) = parsed {
+        check::controller_purity::check(Some(p), &[])?;
     }
     // parse_element_source: the pipeline minus the stdlib-element pass — an
     // element source may not use stdlib elements (no recursion).
@@ -492,22 +502,21 @@ pub fn compile_element(
     };
     spinnaker::with_host_surface(Some(host), || {
         let program = parse::parse_element_source(&stripped)?;
-        let bindings = check::binding::resolve(&stripped, &program, None)?;
-        emit::element::emit_element_with_bindings(&program, &stripped, name, &bindings)
+        let bindings = check::binding::resolve(&stripped, &program, parsed.as_ref())?;
+        let mut out = emit::element::emit_element_with_bindings(
+            &program,
+            &stripped,
+            name,
+            &bindings,
+            controller_src.is_some(),
+            &crate::CompileOpts::default(),
+        )?;
+        if let Some(body) = &controller_src {
+            let rewritten = check::query_keys::rewrite(body)?;
+            out.controller_js = Some(parse::preprocess::wrap_controller_body(&rewritten));
+        }
+        Ok(out)
     })
-}
-
-/// Hyphenated stem (not `page`/`index`) is a custom-element tag — same rule
-/// as deck `detect_mode`. Colocated `routes/<r>/<tag>.sail` is a component.
-fn component_meta_from_path(path: Option<&std::path::Path>) -> Option<ComponentMeta> {
-    let stem = path?.file_stem()?.to_str()?;
-    if stem.contains('-') && stem != "page" && stem != "index" {
-        Some(ComponentMeta {
-            name: stem.to_string(),
-        })
-    } else {
-        None
-    }
 }
 
 pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, CompileError> {
@@ -516,10 +525,7 @@ pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, Compile
 }
 
 fn compile_inner(source: &str, opts: CompileOpts) -> Result<CompileOutput, CompileError> {
-    let mut opts = opts;
-    if opts.component_meta.is_none() {
-        opts.component_meta = component_meta_from_path(opts.source_path.as_deref());
-    }
+    let opts = opts;
     // Light DOM is the architecture (invariant 9): components render into
     // their own element, so native events from composed L1 controls bubble
     // to the host with no boundary.
@@ -527,6 +533,7 @@ fn compile_inner(source: &str, opts: CompileOpts) -> Result<CompileOutput, Compi
     // throws at runtime unless `name` is a valid custom-element name. Reject it
     // at compile time (fail-loud) rather than emit code that explodes on load.
     if let Some(meta) = &opts.component_meta
+        && crate::stdlib::element(&meta.name).is_none()
         && let Err(why) = validate_custom_element_name(&meta.name)
     {
         return Err(CompileError::new(format!(
@@ -559,22 +566,15 @@ fn compile_inner(source: &str, opts: CompileOpts) -> Result<CompileOutput, Compi
 
     let parsed = compile_span("parse-total", || parse::parse_full(effective_source))
         .map_err(|e| attach_path(e, &opts))?;
-    let program = parsed.program;
-    // `<scope>` member sets are POSITION-SCOPED: the same input that names a
-    // file (a tag = component; tagless = route/page) decides which members
-    // are addable. A route receives params from the router, never props from
-    // a parent — `props:` there is a modeling error, told now.
-    if opts.component_meta.is_none() && !program.props.is_empty() {
-        return Err(attach_path(
-            CompileError::new(
-                "`props:` declared in a route/page `<scope>` — a route has no \
-                 parent to fill props; it receives route params from the router. \
-                 Props are component members."
-                    .to_string(),
-            )
-            .with_category("sail-route-props"),
-            &opts,
-        ));
+    let mut program = parsed.program;
+    if let Some(tag) = opts
+        .source_path
+        .as_ref()
+        .and_then(|p| p.file_stem())
+        .and_then(|s| s.to_str())
+        && crate::stdlib::element(tag).is_some()
+    {
+        crate::semantic_props::stamp_language_anatomy(&mut program, tag);
     }
     compile_span("check-run", || {
         check::run(
