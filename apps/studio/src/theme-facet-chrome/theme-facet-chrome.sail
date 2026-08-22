@@ -267,7 +267,7 @@ export default controller(() => {
       <button type="button" size="sm" variant="ghost" tone="muted" leave-cancel on:click={onLeaveCancel}>
         Cancel
       </button>
-      <button type="button" size="sm" variant="outline" tone="destructive" leave-discard on:click={onLeaveDiscard}>
+      <button type="button" size="sm" variant="outline" tone="danger" leave-discard on:click={onLeaveDiscard}>
         Discard
       </button>
       <button type="button" size="sm" variant="solid" tone="primary" leave-save on:click={onLeaveSave}>

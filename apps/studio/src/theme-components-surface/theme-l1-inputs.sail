@@ -69,7 +69,7 @@ export default controller(() => {
         <button type="button" size="sm" variant="solid" tone="primary">Primary</button>
         <button type="button" size="sm" variant="solid" tone="success">Success</button>
         <button type="button" size="sm" variant="solid" tone="warning">Warning</button>
-        <button type="button" size="sm" variant="solid" tone="destructive">Destructive</button>
+        <button type="button" size="sm" variant="solid" tone="danger">Danger</button>
         <button type="button" size="sm" variant="solid" tone="accent">Accent</button>
         <button type="button" size="iconSm" variant="solid" tone="primary" label="Settings" style(iconBtn)>
           <icon name="settings"></icon>
@@ -105,7 +105,7 @@ export default controller(() => {
         <a href="#" variant={components.variant() || 'solid'} tone="primary">Primary</a>
         <a href="#" variant="solid" tone="success">Success</a>
         <a href="#" variant="outline" tone="warning">Warn</a>
-        <a href="#" variant="ghost" tone="destructive">Danger</a>
+        <a href="#" variant="ghost" tone="danger">Danger</a>
         <a href="#" variant="soft" tone="accent">Accent</a>
       </row>
     </column>
@@ -137,7 +137,7 @@ export default controller(() => {
     </column>
     <column gap="2">
       <p style(fieldHint)>Invalid · disabled</p>
-      <textarea invalid rows="2" placeholder="invalid → destructive border"></textarea>
+      <textarea invalid rows="2" placeholder="invalid → danger border"></textarea>
       <textarea disabled rows="2" placeholder="disabled"></textarea>
     </column>
   </column>
@@ -238,7 +238,7 @@ export default controller(() => {
         <switch tone="primary" checked></switch>
         <switch tone="success" checked></switch>
         <switch tone="warning" checked></switch>
-        <switch tone="destructive" checked></switch>
+        <switch tone="danger" checked></switch>
       </row>
     </column>
   </column>
@@ -282,7 +282,7 @@ export default controller(() => {
       <label for="theme-l1-label-lg" size="lg">Email lg</label>
     </column>
     <column gap="2">
-      <p style(fieldHint)>Required · destructive marker</p>
+      <p style(fieldHint)>Required · danger marker</p>
       <label for="theme-l1-label" size={components.variant() || 'md'} required>Email</label>
       <input id="theme-l1-label" size="sm" placeholder="ada@example.com" />
     </column>

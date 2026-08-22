@@ -507,7 +507,7 @@ export default controller(() => {
                       <badge tone="primary" size="sm" variant="solid" pill style(chipLabel)>Primary</badge>
                       <badge tone="success" size="sm" variant="solid" pill style(chipLabel)>Success</badge>
                       <badge tone="warning" size="sm" variant="solid" pill style(chipLabel)>Warning</badge>
-                      <badge tone="destructive" size="sm" variant="solid" pill style(chipLabel)>Danger</badge>
+                      <badge tone="danger" size="sm" variant="solid" pill style(chipLabel)>Danger</badge>
                     </row>
                     <input type="search" size="sm" placeholder="Search field" label="Sample search" />
                   </column>

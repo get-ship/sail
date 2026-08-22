@@ -10,7 +10,7 @@ export const contract = {
   kind: 'host',
   axes: {
     tone: {
-      values: ['muted', 'info', 'success', 'warning', 'destructive'] as const,
+      values: ['muted', 'info', 'success', 'warning', 'danger'] as const,
       default: 'info',
       control: 'swatches',
     },

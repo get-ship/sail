@@ -160,7 +160,7 @@ fn mk_dynamic(path: &Path, line: usize, col: usize) -> Finding {
                   surface style, so a dynamic value silently lowers to nothing"
             .to_string(),
         suggest: Some(
-            "Drive a primitive prop instead (e.g. `tone={ok() ? 'success' : 'destructive'}`), \
+            "Drive a primitive prop instead (e.g. `tone={ok() ? 'success' : 'danger'}`), \
              attach Style as a tag call (`style({ pad(4).bg(surface) })` on the open tag), or \
              branch with when / match / an `{#if}` between static Style values."
                 .to_string(),

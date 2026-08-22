@@ -142,7 +142,7 @@ export function contractFor(
       return { role: 'group', name: specimen }
     case 'alert':
       return {
-        role: props.tone === 'warning' || props.tone === 'destructive' ? 'alert' : 'status',
+        role: props.tone === 'warning' || props.tone === 'danger' ? 'alert' : 'status',
         name: specimen,
       }
     case 'avatar':

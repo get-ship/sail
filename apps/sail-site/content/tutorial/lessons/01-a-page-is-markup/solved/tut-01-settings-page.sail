@@ -76,13 +76,13 @@
     </card>
   </grid>
 
-  <card tone="destructive" variant="outline" padding="lg">
+  <card tone="danger" variant="outline" padding="lg">
     <row align="center" justify="between" gap="4">
       <column gap="1">
         <h3>Danger zone</h3>
         <p style(muted)>Deleting the workspace removes every project in it.</p>
       </column>
-      <button variant="outline" tone="destructive">Delete workspace</button>
+      <button variant="outline" tone="danger">Delete workspace</button>
     </row>
   </card>
 </column>

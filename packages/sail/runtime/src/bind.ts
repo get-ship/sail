@@ -91,7 +91,7 @@ const TONE_BRIDGE: Record<string, Record<string, string>> = {
   info: { '': 'info', foreground: 'info-foreground' },
   success: { '': 'success', foreground: 'success-foreground' },
   warning: { '': 'warning', foreground: 'warning-foreground' },
-  destructive: { '': 'destructive', foreground: 'destructive-foreground' },
+  danger: { '': 'danger', foreground: 'danger-foreground' },
   accent: { '': 'accent', foreground: 'accent-foreground' },
   muted: { '': 'muted', foreground: 'muted-foreground' },
 }

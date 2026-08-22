@@ -71,7 +71,7 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                         "Pick the closest tone token from \
                          packages/sail/tokens/src/tokens.css — typically \
                          --foreground, --background, --muted-foreground, \
-                         --border, --destructive, etc. Custom color \
+                         --border, --danger, etc. Custom color \
                          channels should be declared locally as \
                          `--my-channel: …;` derived from existing tokens \
                          (e.g. via color-mix(in oklch, var(--primary) 50%, transparent))."

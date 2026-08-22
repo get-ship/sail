@@ -34,7 +34,7 @@ export function severityLabel(severity: string): string {
 }
 
 export function severityToneOf(severity: string): string {
-  if (severity === 'error') return 'destructive'
+  if (severity === 'error') return 'danger'
   if (severity === 'warning') return 'warning'
   return 'muted'
 }

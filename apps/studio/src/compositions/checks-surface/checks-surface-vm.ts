@@ -96,7 +96,7 @@ const SEV_RANK: Record<string, number> = {
 
 function severityTone(severity: string): string {
   if (severity === 'warning') return 'warning'
-  if (severity === 'error') return 'destructive'
+  if (severity === 'error') return 'danger'
   return 'muted'
 }
 

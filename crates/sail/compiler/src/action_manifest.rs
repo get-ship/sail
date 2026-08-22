@@ -263,7 +263,7 @@ pub const ACTIONS: &[ActionEntry] = &[
     ActionEntry {
         name: "liveRegion",
         param: "void",
-        summary: "Sync role/aria-live from tone: warning|destructive → assertive alert; else polite status.",
+        summary: "Sync role/aria-live from tone: warning|danger → assertive alert; else polite status.",
         auto_import: true,
         writes: &[],
     },

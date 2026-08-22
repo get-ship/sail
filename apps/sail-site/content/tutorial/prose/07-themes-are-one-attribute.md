@@ -28,11 +28,11 @@ token ladder, and everything downstream just reads the new values.
 
 ## The tone contract is what makes it hold
 
-`tone="destructive"` never meant "red"; it meant *the destructive slot
+`tone="danger"` never meant "red"; it meant *the danger slot
 of the current theme's table*. That is why the tone row at the bottom
 of the solved example survives every theme change with its meaning
 intact — Console renders it in phosphor greens and ambers, Paper in
-warm print inks, and "destructive" stays legible in both.
+warm print inks, and "danger" stays legible in both.
 
 ## Previews pin their own table
 

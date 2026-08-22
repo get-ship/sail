@@ -411,7 +411,7 @@ export function tokensOfSelected(
   const found = new Set<string>()
   // Common Sail token idents in sx / attrs
   const re =
-    /\b(surface-\d|foreground|muted-foreground|border-subtle|border|primary|secondary|destructive|warning|background|accent|ring|card)\b/g
+    /\b(surface-\d|foreground|muted-foreground|border-subtle|border|primary|secondary|danger|warning|background|accent|ring|card)\b/g
   let m: RegExpExecArray | null
   while ((m = re.exec(blob))) found.add(m[1]!)
   // tone="…" values often map to semantic tokens

@@ -240,7 +240,7 @@ export default controller(() => ({ loading: signal(true) }))
   'error-state': `<error-state code="ERR_TIMEOUT">
   <strong slot="title">Couldn't load your data</strong>
   The request timed out. Retry, or check the connection.
-  <button slot="action" type="button" variant="solid" tone="destructive" size="sm">Retry</button>
+  <button slot="action" type="button" variant="solid" tone="danger" size="sm">Retry</button>
 </error-state>`,
 
   'error-boundary': `<error-boundary message="This panel could not load.">
@@ -258,7 +258,7 @@ export default controller(() => ({ loading: signal(true) }))
   <badge tone="success" style({ animate: { enter: play(fade) } })>
     Active</badge>
   <badge tone="warning">Pending</badge>
-  <badge tone="destructive" variant="outline">Failed</badge>
+  <badge tone="danger" variant="outline">Failed</badge>
   <badge tone="primary" variant="solid" pill>3</badge>
 </row>`,
 
@@ -323,7 +323,7 @@ export default controller(() => {
 
   tooltip: `<tooltip content="Deletes the branch — cannot be undone"
  placement="top" style({ animate: { enter: play(fade) } })>
-  <button tone="destructive" variant="outline">Delete branch</button>
+  <button tone="danger" variant="outline">Delete branch</button>
 </tooltip>`,
 
   'hover-card': `<button variant="ghost" popovertarget="profile">@ada</button>
@@ -348,7 +348,7 @@ export default controller(() => {
 <dropdown id="menu" style({ animate: { enter: play(fade) } })>
   <menu-item>Edit</menu-item>
   <menu-item>Duplicate</menu-item>
-  <menu-item tone="destructive">Delete</menu-item>
+  <menu-item tone="danger">Delete</menu-item>
 </dropdown>`,
 
   'context-menu': `<card id="canvas" style({ pad(6), animate: { enter: play(fade) } })>
@@ -377,7 +377,7 @@ export default controller(() => {
   <footer>
     <button command="close" commandfor="confirm" variant="ghost">Cancel</button>
     <button command="close" commandfor="confirm"
-            tone="destructive" variant="solid" on:click={confirm}>Delete</button>
+            tone="danger" variant="solid" on:click={confirm}>Delete</button>
   </footer>
 </dialog>`,
 

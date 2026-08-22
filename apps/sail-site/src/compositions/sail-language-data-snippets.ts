@@ -20,7 +20,7 @@ export default controller(() => {
 
 <match {users()}>
   {loading => <spinner></spinner>}
-  {error as err => <alert tone="destructive">{err.message}</alert>}
+  {error as err => <alert tone="danger">{err.message}</alert>}
   {ok as value =>
     <for {value as name} key={name}>
       <badge>{name}</badge>
@@ -44,7 +44,7 @@ export default controller(() => {
   states: `<!-- users.sail — the three states are explicit, never forgotten -->
 <match {users()}>
   {loading => <spinner></spinner>}
-  {error as err => <alert tone="destructive">{err.message}</alert>}
+  {error as err => <alert tone="danger">{err.message}</alert>}
   {ok as value => <ul><for {value as u} key={u.id}><li>{u.name}</li></for></ul>}
 </match>`,
 }

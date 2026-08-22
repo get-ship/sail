@@ -67,10 +67,10 @@ test('button detail: knobs change paint, size, disabled, and icon name', async (
   expect(outlineBorder, 'outline must keep a visible stroke').not.toMatch(/rgba\(0,\s*0,\s*0,\s*0\)|transparent/)
 
   await knobs.getByLabel('Variant').selectOption('solid')
-  await knobs.locator('[title="destructive"]').click()
-  await expect(specimen).toHaveAttribute('tone', 'destructive')
-  const destructive = await paint(specimen)
-  expect(destructive.bg).not.toBe(rest.bg)
+  await knobs.locator('[title="danger"]').click()
+  await expect(specimen).toHaveAttribute('tone', 'danger')
+  const danger = await paint(specimen)
+  expect(danger.bg).not.toBe(rest.bg)
 
   const range = knobs.getByRole('slider', { name: 'Size' })
   await range.fill('0')

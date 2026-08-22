@@ -41,7 +41,7 @@ export default controller((_ctx: Scope) => {
   const ddExBasic = () =>
     `<button popovertarget="menu">Actions</button>\n<dropdown id="menu" placement="bottom-start" on-select={onSelect}>\n  <menu-item value="edit">Edit</menu-item>\n  <menu-item value="dup">Duplicate</menu-item>\n</dropdown>`
   const ddExDanger = () =>
-    `<dropdown id="m" placement="bottom">\n  <menu-item value="del" tone="destructive">Delete</menu-item>\n</dropdown>`
+    `<dropdown id="m" placement="bottom">\n  <menu-item value="del" tone="danger">Delete</menu-item>\n</dropdown>`
   const ddExPlace = () =>
     `<dropdown id="m" placement="top-end">…</dropdown>`
 
@@ -124,7 +124,7 @@ export default controller((_ctx: Scope) => {
       >
         <button size="sm" variant="outline" popovertarget="doc-dd-ex2">Danger ▾</button>
         <dropdown id="doc-dd-ex2" placement="bottom">
-          <menu-item value="del" tone="destructive">Delete</menu-item>
+          <menu-item value="del" tone="danger">Delete</menu-item>
         </dropdown>
       </doc-example>
       <doc-example

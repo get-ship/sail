@@ -156,10 +156,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     <p>
       <code>tone</code> picks the color from the design system. The full set is
       <code>default</code>, <code>primary</code>, <code>info</code>,
-      <code>success</code>, <code>warning</code>, <code>destructive</code>,
+      <code>success</code>, <code>warning</code>, <code>danger</code>,
       <code>accent</code> and <code>muted</code>; a few elements accept only the
       subset that makes sense for them (an alert has no <code>primary</code>),
-      but <code>tone="destructive"</code> is the same red promise on a button,
+      but <code>tone="danger"</code> is the same red promise on a button,
       a badge, a switch or a slider.
     </p>
     <p>
@@ -175,7 +175,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     <code-block code={code.props}></code-block>
     <row gap="2" align="center">
       <button variant="solid" tone="primary">Save</button>
-      <button variant="outline" tone="destructive">Delete</button>
+      <button variant="outline" tone="danger">Delete</button>
       <button variant="ghost">Cancel</button>
       <badge tone="warning">rolling</badge>
     </row>
@@ -252,7 +252,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       <button variant="solid" tone="primary">
         <icon name="rocket"></icon> Launch
       </button>
-      <button variant="outline" tone="destructive">
+      <button variant="outline" tone="danger">
         <icon name="trash"></icon> Delete
       </button>
     </row>

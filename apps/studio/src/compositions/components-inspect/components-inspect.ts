@@ -201,7 +201,7 @@ export function createComponentsInspect(session: ComponentsSession) {
       const sev = String((d as { severity?: string }).severity ?? 'info')
       const tone =
         sev === 'error' || sev === 'Error'
-          ? 'destructive'
+          ? 'danger'
           : sev === 'warning' || sev === 'Warning'
             ? 'warning'
             : 'muted'

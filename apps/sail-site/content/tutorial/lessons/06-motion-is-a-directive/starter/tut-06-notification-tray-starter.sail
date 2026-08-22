@@ -19,7 +19,7 @@
 interface Note {
   id: number
   kind: string
-  tone: 'info' | 'success' | 'warning' | 'destructive'
+  tone: 'info' | 'success' | 'warning' | 'danger'
   text: string
 }
 
@@ -27,7 +27,7 @@ const SEED: Note[] = [
   { id: 1, kind: 'deploy', tone: 'success', text: 'production is live at v2.4.0' },
   { id: 2, kind: 'alert', tone: 'warning', text: 'p95 latency crossed 400ms on api-eu' },
   { id: 3, kind: 'review', tone: 'info', text: 'sam requested review on #482' },
-  { id: 4, kind: 'incident', tone: 'destructive', text: 'billing webhook failing since 09:12' },
+  { id: 4, kind: 'incident', tone: 'danger', text: 'billing webhook failing since 09:12' },
 ]
 
 // State stays boring on purpose — motion is a Style directive on the

@@ -86,7 +86,7 @@ export default controller((_ctx: Scope) => {
       </row>
       <p style(exampleLead)>
         When invalid, the hint hides and the error shows. Put <code>invalid</code> on the
-        control too for the destructive border.
+        control too for the danger border.
       </p>
     </column>
 

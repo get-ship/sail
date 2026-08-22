@@ -10,7 +10,7 @@
     placeholder = ''
     readonly = false
     'line-numbers' = true
-    tone: 'info' | 'success' | 'warning' | 'destructive'
+    tone: 'info' | 'success' | 'warning' | 'danger'
     theme: 'auto' | 'light' | 'dark' = 'auto'
     'wasm-url' = '/sail_compiler_bg.wasm'
     /** SailAuthoring ops base. Empty = off; "/" = same-origin. */

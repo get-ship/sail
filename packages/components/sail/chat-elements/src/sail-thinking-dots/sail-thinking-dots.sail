@@ -12,11 +12,11 @@
   props: {
     label = 'Assistant is thinking'
     size: 'md' | 'sm' | 'lg' = 'md'
-    tone: 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted'
+    tone: 'primary' | 'info' | 'success' | 'warning' | 'danger' | 'accent' | 'muted'
   }
 
   style track = { group() }
-  style dot = { size({ w: 2, h: 2 }).radius(full).bg(muted-foreground), animate: { loop: play(slide-up) }, when: { groupStateSm: scale(75), groupStateLg: scale(125), groupStatePrimary: bg(primary), groupStateInfo: bg(info), groupStateSuccess: bg(success), groupStateWarning: bg(warning), groupStateDestructive: bg(danger), groupStateAccent: bg(accent) } }
+  style dot = { size({ w: 2, h: 2 }).radius(full).bg(muted-foreground), animate: { loop: play(slide-up) }, when: { groupStateSm: scale(75), groupStateLg: scale(125), groupStatePrimary: bg(primary), groupStateInfo: bg(info), groupStateSuccess: bg(success), groupStateWarning: bg(warning), groupStateDanger: bg(danger), groupStateAccent: bg(accent) } }
 </scope>
 
 <span

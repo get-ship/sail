@@ -452,14 +452,14 @@ describe('drift pure contract (client-visible statuses)', () => {
     expect(statuses).toContain('lost')
   })
 
-  it('driftTone matrix: ok muted, moved warning, lost destructive', () => {
+  it('driftTone matrix: ok muted, moved warning, lost danger', () => {
     expect(driftTone('ok')).toBe('muted')
     expect(driftTone('moved')).toBe('warning')
-    expect(driftTone('lost')).toBe('destructive')
+    expect(driftTone('lost')).toBe('danger')
     expect(driftTone('none')).toBe('muted')
   })
 
-  it('uiAnchorCard: moved → warning + Accept; lost → destructive + Re-link; fileSpan', async () => {
+  it('uiAnchorCard: moved → warning + Accept; lost → danger + Re-link; fileSpan', async () => {
     setTasksOpsClient({
       sailTaskGet: async ({ id }) => ({
         ok: true,
@@ -528,7 +528,7 @@ describe('drift pure contract (client-visible statuses)', () => {
     await selectThread('t-lost')
     const lost = uiAnchorCard()
     expect(lost.statusRaw).toBe('lost')
-    expect(lost.statusTone).toBe('destructive')
+    expect(lost.statusTone).toBe('danger')
     expect(lost.showAcceptLive).toBe(false)
     expect(lost.showRebind).toBe(true)
     expect(lost.movedHint).toMatch(/re-link/i)

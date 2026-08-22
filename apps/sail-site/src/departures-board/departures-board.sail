@@ -83,7 +83,7 @@ export default controller((ctx: { seed: () => Array<{ id: string; city: string; 
         <span style(gate)>{f.gate}</span>
         <match {f.status}>
           {'boarding' => <badge tone="success">Boarding</badge>}
-          {'delayed' => <badge tone="destructive">Delayed</badge>}
+          {'delayed' => <badge tone="danger">Delayed</badge>}
           {else => <badge tone="muted">On time</badge>}
         </match>
       </row>

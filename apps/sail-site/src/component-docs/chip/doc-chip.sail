@@ -9,7 +9,7 @@
   style swatchPrimary = { bg(primary) }
   style swatchSuccess = { bg(success) }
   style swatchWarning = { bg(warning) }
-  style swatchDestructive = { bg(danger) }
+  style swatchDanger = { bg(danger) }
   style swatchAccent = { bg(accent) }
   style swatchMuted = { bg(muted).border(default) }
   style swatchInfo = { bg(info) }
@@ -143,10 +143,10 @@ export default controller((_ctx: Scope) => {
             style(swatch, swatchWarning)
           ></div>
           <div
-            title="destructive"
-            selected={chipTone() === 'destructive' ? 'true' : null}
-            on:click={() => pickChipTone('destructive')}
-            style(swatch, swatchDestructive)
+            title="danger"
+            selected={chipTone() === 'danger' ? 'true' : null}
+            on:click={() => pickChipTone('danger')}
+            style(swatch, swatchDanger)
           ></div>
           <div
             title="accent"

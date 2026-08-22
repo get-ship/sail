@@ -8,7 +8,7 @@
 
 <scope>
   props: {
-    tone: 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted'
+    tone: 'primary' | 'info' | 'success' | 'warning' | 'danger' | 'accent' | 'muted'
     at = ''
     interactive = false
   }

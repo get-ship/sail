@@ -15,7 +15,7 @@
   style swatchPrimary = { bg(primary) }
   style swatchSuccess = { bg(success) }
   style swatchWarning = { bg(warning) }
-  style swatchDestructive = { bg(danger) }
+  style swatchDanger = { bg(danger) }
   style swatchAccent = { bg(accent) }
   style swatchMuted = { bg(muted).border({ color: border }) }
   style swatchInfo = { bg(info) }
@@ -127,8 +127,8 @@ export default controller((_ctx: Scope) => {
           <tooltip content="warning" placement="top">
             <div title="warning" label="warning" on:click={() => pickATone('warning')} selected={aTone() === 'warning' ? 'true' : null} style(swatch, swatchWarning)></div>
           </tooltip>
-          <tooltip content="destructive" placement="top">
-            <div title="destructive" label="destructive" on:click={() => pickATone('destructive')} selected={aTone() === 'destructive' ? 'true' : null} style(swatch, swatchDestructive)></div>
+          <tooltip content="danger" placement="top">
+            <div title="danger" label="danger" on:click={() => pickATone('danger')} selected={aTone() === 'danger' ? 'true' : null} style(swatch, swatchDanger)></div>
           </tooltip>
           <tooltip content="accent" placement="top">
             <div title="accent" label="accent" on:click={() => pickATone('accent')} selected={aTone() === 'accent' ? 'true' : null} style(swatch, swatchAccent)></div>

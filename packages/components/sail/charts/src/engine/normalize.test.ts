@@ -75,8 +75,8 @@ describe('normalizeSeries — one shape, many inputs', () => {
   })
 
   it('preserves donut tone per slice', () => {
-    const out = normalizeSeries([{ label: 'red', value: 10, tone: 'destructive' }])
-    expect(out[0]!.tone).toBe('destructive')
+    const out = normalizeSeries([{ label: 'red', value: 10, tone: 'danger' }])
+    expect(out[0]!.tone).toBe('danger')
   })
 
   it('returns an empty array for an empty string', () => {

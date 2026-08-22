@@ -12,7 +12,7 @@ export const contract = {
         'info',
         'success',
         'warning',
-        'destructive',
+        'danger',
         'accent',
         'muted',
       ] as const,

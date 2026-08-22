@@ -130,7 +130,7 @@ export default controller(() => {
             <row sem-row gap="2" align="center" nowrap label="Semantic tones">
               <badge tone="success" size="sm" variant="solid" pill>Success</badge>
               <badge tone="warning" size="sm" variant="solid" pill>Warning</badge>
-              <badge tone="destructive" size="sm" variant="solid" pill>Danger</badge>
+              <badge tone="danger" size="sm" variant="solid" pill>Danger</badge>
               <badge tone="info" size="sm" variant="solid" pill>Info</badge>
             </row>
           </column>

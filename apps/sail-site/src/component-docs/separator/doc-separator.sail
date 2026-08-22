@@ -10,7 +10,7 @@
   style knobLabel = { fg(muted-foreground).type({ size: xs, weight: medium, tracking: wide, case: uppercase }) }
   style swatch = { size(7).shrink(0).radius(full).cursor(pointer).border({ color: transparent, width: 2 }).elevation(xs), when: { selected: border({ color: foreground }).elevation(sm), hover: filter({ opacity: 90 }) } }
   style swatchPrimary = { bg(primary) }
-  style swatchDestructive = { bg(danger) }
+  style swatchDanger = { bg(danger) }
   style swatchMuted = { bg(muted).border({ color: border }) }
   style exampleBlock = { size({ w: 100% }).pad({ t: 2, b: 4 }) }
   style sectionLabel = { fg(muted-foreground).type({ size: xs, tracking: wide, case: uppercase }) }
@@ -123,10 +123,10 @@ export default controller((_ctx: Scope) => {
             style(swatch, swatchPrimary)
           ></div>
           <div
-            title="destructive"
-            selected={sepTone() === 'destructive' ? 'true' : null}
-            on:click={() => pickSepTone('destructive')}
-            style(swatch, swatchDestructive)
+            title="danger"
+            selected={sepTone() === 'danger' ? 'true' : null}
+            on:click={() => pickSepTone('danger')}
+            style(swatch, swatchDanger)
           ></div>
         </row>
       </column>
@@ -168,7 +168,7 @@ export default controller((_ctx: Scope) => {
         <column gap="3" style(sepStageCol)>
           <separator variant="dashed"></separator>
           <separator variant="solid" tone="primary"></separator>
-          <separator variant="dashed" tone="destructive"></separator>
+          <separator variant="dashed" tone="danger"></separator>
         </column>
       </doc-example>
 

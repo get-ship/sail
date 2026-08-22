@@ -6,7 +6,7 @@ export type ChartTone =
   | 'info'
   | 'success'
   | 'warning'
-  | 'destructive'
+  | 'danger'
   | 'accent'
   | 'muted'
 
@@ -17,7 +17,7 @@ const TONE_VARS: Record<string, string> = {
   info: 'var(--info)',
   success: 'var(--success)',
   warning: 'var(--warning)',
-  destructive: 'var(--destructive)',
+  danger: 'var(--danger)',
   accent: 'var(--accent)',
   muted: 'var(--muted-foreground)',
 }

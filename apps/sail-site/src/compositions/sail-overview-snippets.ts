@@ -59,7 +59,7 @@ export default controller(() => {
 <grid cols="3" gap="3">…</grid>         <!-- 2D -->`,
 
   components: `<button variant="solid" tone="primary">Save</button>
-<button variant="outline" tone="destructive">Delete</button>
+<button variant="outline" tone="danger">Delete</button>
 <badge tone="success">Active</badge>
 <alert tone="info">Saved.</alert>`,
 

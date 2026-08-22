@@ -11,7 +11,7 @@
   style swatchPrimary = { bg(primary) }
   style swatchSuccess = { bg(success) }
   style swatchWarning = { bg(warning) }
-  style swatchDestructive = { bg(danger) }
+  style swatchDanger = { bg(danger) }
   style swatchAccent = { bg(accent) }
   style swatchMuted = { bg(muted).border({ color: border }) }
   style swatchInfo = { bg(info) }
@@ -49,7 +49,7 @@ export default controller((_ctx: Scope) => {
   const exSizes = () =>
     `<switch size="sm" checked />\n<switch checked />\n<switch size="lg" checked />`
   const exTones = () =>
-    `<switch tone="success" checked />\n<switch tone="warning" checked />\n<switch tone="destructive" checked />`
+    `<switch tone="success" checked />\n<switch tone="warning" checked />\n<switch tone="danger" checked />`
 
   return {
     notify,
@@ -98,7 +98,7 @@ export default controller((_ctx: Scope) => {
           <div title="primary" selected={switchTone() === 'primary' ? 'true' : null} on:click={() => pickTone('primary')} style(swatch, swatchPrimary)></div>
           <div title="success" selected={switchTone() === 'success' ? 'true' : null} on:click={() => pickTone('success')} style(swatch, swatchSuccess)></div>
           <div title="warning" selected={switchTone() === 'warning' ? 'true' : null} on:click={() => pickTone('warning')} style(swatch, swatchWarning)></div>
-          <div title="destructive" selected={switchTone() === 'destructive' ? 'true' : null} on:click={() => pickTone('destructive')} style(swatch, swatchDestructive)></div>
+          <div title="danger" selected={switchTone() === 'danger' ? 'true' : null} on:click={() => pickTone('danger')} style(swatch, swatchDanger)></div>
           <div title="accent" selected={switchTone() === 'accent' ? 'true' : null} on:click={() => pickTone('accent')} style(swatch, swatchAccent)></div>
           <div title="muted" selected={switchTone() === 'muted' ? 'true' : null} on:click={() => pickTone('muted')} style(swatch, swatchMuted)></div>
           <div title="info" selected={switchTone() === 'info' ? 'true' : null} on:click={() => pickTone('info')} style(swatch, swatchInfo)></div>
@@ -145,7 +145,7 @@ export default controller((_ctx: Scope) => {
         <row gap="3" align="center" style(demoRow)>
           <switch tone="success" checked></switch>
           <switch tone="warning" checked></switch>
-          <switch tone="destructive" checked></switch>
+          <switch tone="danger" checked></switch>
         </row>
       </doc-example>
     </column>

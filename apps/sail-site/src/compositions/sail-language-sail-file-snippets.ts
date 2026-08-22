@@ -28,7 +28,7 @@ export const code = {
         <span style({ fg(muted-foreground).type({ family: mono, size: sm }) })>
           {f.gate}</span>
         <match {f.status}>
-          {'boarding' => <badge tone="success">Boarding</badge>}{'delayed' => <badge tone="destructive">Delayed</badge>}{else => <badge tone="muted">On time</badge>}</match>
+          {'boarding' => <badge tone="success">Boarding</badge>}{'delayed' => <badge tone="danger">Delayed</badge>}{else => <badge tone="muted">On time</badge>}</match>
       </row>
     </for>
   </column>

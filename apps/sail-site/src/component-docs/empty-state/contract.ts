@@ -17,7 +17,7 @@ export const contract = {
       control: 'slider',
     },
     tone: {
-      values: ['primary', 'info', 'success', 'warning', 'destructive', 'accent', 'muted'] as const,
+      values: ['primary', 'info', 'success', 'warning', 'danger', 'accent', 'muted'] as const,
       default: 'muted',
       control: 'swatches',
     },

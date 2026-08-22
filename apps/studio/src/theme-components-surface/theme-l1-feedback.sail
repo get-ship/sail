@@ -84,7 +84,7 @@ export default controller(() => {
           <strong slot="title">Check input</strong>
           Warning is assertive liveRegion.
         </alert>
-        <alert tone="destructive" style(stageHost)>
+        <alert tone="danger" style(stageHost)>
           <strong slot="title">Failed</strong>
           Destructive is assertive liveRegion.
         </alert>
@@ -142,7 +142,7 @@ export default controller(() => {
         <spinner size="xs" tone="primary"></spinner>
         <spinner size="sm" tone="info"></spinner>
         <spinner size={components.variant() || 'md'} tone="success"></spinner>
-        <spinner size="lg" tone="destructive"></spinner>
+        <spinner size="lg" tone="danger"></spinner>
         <spinner tone="accent"></spinner>
       </row>
     </column>
@@ -203,12 +203,12 @@ export default controller(() => {
       <p style(fieldHint)>Rest · muted surface + border</p>
       <error-state code="ERR_THEME" size="sm">
         <strong slot="title">Couldn't load preview</strong>
-        Rest chrome — muted surface + destructive icon.
+        Rest chrome — muted surface + danger icon.
         <button slot="action" type="button" variant="outline" size="sm">Retry</button>
       </error-state>
     </column>
     <column gap="2">
-      <p style(fieldHint)>Inline · brand-destructive border</p>
+      <p style(fieldHint)>Inline · brand-danger border</p>
       <error-state variant="inline" size="sm" code="ERR_INLINE">
         Inline recovery row on muted fill.
         <button slot="action" type="button" variant="ghost" size="sm">Retry</button>
@@ -221,7 +221,7 @@ export default controller(() => {
         Stack collapses behind Show details.
         <span slot="details">at fetchData (api.ts:42)
   Error: gateway timeout</span>
-        <button slot="action" type="button" variant="solid" tone="destructive" size="sm">Retry</button>
+        <button slot="action" type="button" variant="solid" tone="danger" size="sm">Retry</button>
       </error-state>
     </column>
   </column>

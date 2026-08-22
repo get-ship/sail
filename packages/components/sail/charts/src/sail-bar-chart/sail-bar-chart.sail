@@ -9,7 +9,7 @@
   props: {
     data = ''
     labels = ''
-    tone: 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted'
+    tone: 'primary' | 'info' | 'success' | 'warning' | 'danger' | 'accent' | 'muted'
     orientation: 'vertical' | 'horizontal' = 'vertical'
     width = 300
     height = 200

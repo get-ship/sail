@@ -246,7 +246,7 @@ export default controller(() => {
                           <button type="button" size="sm" variant="solid" tone="primary">Primary</button>
                           <button type="button" size="sm" variant="solid" tone="success">Success</button>
                           <button type="button" size="sm" variant="solid" tone="warning">Warning</button>
-                          <button type="button" size="sm" variant="solid" tone="destructive">Destructive</button>
+                          <button type="button" size="sm" variant="solid" tone="danger">Danger</button>
                           <button type="button" size="sm" variant="solid" tone="accent">Accent</button>
                           <button type="button" size="iconSm" variant="solid" tone="primary" label="Settings" style(iconBtn)>
                             <icon name="settings"></icon>
@@ -282,7 +282,7 @@ export default controller(() => {
                           <a href="#" variant={components.variant() || 'solid'} tone="primary">Primary</a>
                           <a href="#" variant="solid" tone="success">Success</a>
                           <a href="#" variant="outline" tone="warning">Warn</a>
-                          <a href="#" variant="ghost" tone="destructive">Danger</a>
+                          <a href="#" variant="ghost" tone="danger">Danger</a>
                           <a href="#" variant="soft" tone="accent">Accent</a>
                         </row>
                       </column>
@@ -314,7 +314,7 @@ export default controller(() => {
                       </column>
                       <column gap="2">
                         <p style(fieldHint)>Invalid · disabled</p>
-                        <textarea invalid rows="2" placeholder="invalid → destructive border" />
+                        <textarea invalid rows="2" placeholder="invalid → danger border" />
                         <textarea disabled rows="2" placeholder="disabled" />
                       </column>
                     </column>
@@ -415,7 +415,7 @@ export default controller(() => {
                           <switch tone="primary" checked></switch>
                           <switch tone="success" checked></switch>
                           <switch tone="warning" checked></switch>
-                          <switch tone="destructive" checked></switch>
+                          <switch tone="danger" checked></switch>
                         </row>
                       </column>
                     </column>
@@ -459,7 +459,7 @@ export default controller(() => {
                         <label for="theme-l1-label-lg" size="lg">Email lg</label>
                       </column>
                       <column gap="2">
-                        <p style(fieldHint)>Required · destructive marker</p>
+                        <p style(fieldHint)>Required · danger marker</p>
                         <label for="theme-l1-label" size={components.variant() || 'md'} required>Email</label>
                         <input id="theme-l1-label" size="sm" placeholder="ada@example.com" />
                       </column>
@@ -539,7 +539,7 @@ export default controller(() => {
                             <strong slot="title">Check input</strong>
                             Warning is assertive liveRegion.
                           </alert>
-                          <alert tone="destructive" style(stageHost)>
+                          <alert tone="danger" style(stageHost)>
                             <strong slot="title">Failed</strong>
                             Destructive is assertive liveRegion.
                           </alert>
@@ -597,7 +597,7 @@ export default controller(() => {
                           <spinner size="xs" tone="primary"></spinner>
                           <spinner size="sm" tone="info"></spinner>
                           <spinner size={components.variant() || 'md'} tone="success"></spinner>
-                          <spinner size="lg" tone="destructive"></spinner>
+                          <spinner size="lg" tone="danger"></spinner>
                           <spinner tone="accent"></spinner>
                         </row>
                       </column>
@@ -658,12 +658,12 @@ export default controller(() => {
                         <p style(fieldHint)>Rest · muted surface + border</p>
                         <error-state code="ERR_THEME" size="sm">
                           <strong slot="title">Could not load preview</strong>
-                          Rest chrome — muted surface + destructive icon.
+                          Rest chrome — muted surface + danger icon.
                           <button slot="action" type="button" variant="outline" size="sm">Retry</button>
                         </error-state>
                       </column>
                       <column gap="2">
-                        <p style(fieldHint)>Inline · brand-destructive border</p>
+                        <p style(fieldHint)>Inline · brand-danger border</p>
                         <error-state variant="inline" size="sm" code="ERR_INLINE">
                           Inline recovery row on muted fill.
                           <button slot="action" type="button" variant="ghost" size="sm">Retry</button>
@@ -676,7 +676,7 @@ export default controller(() => {
                           Stack collapses behind Show details.
                           <span slot="details">at fetchData (api.ts:42)
   Error: gateway timeout</span>
-                          <button slot="action" type="button" variant="solid" tone="destructive" size="sm">Retry</button>
+                          <button slot="action" type="button" variant="solid" tone="danger" size="sm">Retry</button>
                         </error-state>
                       </column>
                     </column>
@@ -716,7 +716,7 @@ export default controller(() => {
                           <badge variant="soft" tone="primary" size="sm">primary</badge>
                           <badge variant="soft" tone="success" size="sm">success</badge>
                           <badge variant="solid" tone="warning" size="sm" pill>warn</badge>
-                          <badge variant="outline" tone="destructive" size="sm">err</badge>
+                          <badge variant="outline" tone="danger" size="sm">err</badge>
                           <badge variant="soft" tone="accent" size="sm" pill>12</badge>
                         </row>
                       </column>
@@ -739,7 +739,7 @@ export default controller(() => {
                           <chip variant={components.variant() || 'solid'} tone="primary" size="sm" selected>Selected</chip>
                           <chip variant="soft" tone="success" size="sm">success</chip>
                           <chip variant="outline" tone="warning" size="sm">warn</chip>
-                          <chip variant="solid" tone="destructive" size="sm" removable>err</chip>
+                          <chip variant="solid" tone="danger" size="sm" removable>err</chip>
                           <chip variant="soft" tone="accent" size="sm">12</chip>
                         </row>
                       </column>
@@ -779,7 +779,7 @@ export default controller(() => {
                             <icon name="heart" size="lg" label="primary ink"></icon>
                           </span>
                           <span style({ fg(danger) })>
-                            <icon name="heart" size="lg" label="destructive ink"></icon>
+                            <icon name="heart" size="lg" label="danger ink"></icon>
                           </span>
                         </row>
                       </column>
@@ -806,7 +806,7 @@ export default controller(() => {
                       <column gap="2">
                         <p style(fieldHint)>Toned · solid + dashed (free tones, not rest leaf)</p>
                         <separator tone="primary"></separator>
-                        <separator variant="dashed" tone="destructive"></separator>
+                        <separator variant="dashed" tone="danger"></separator>
                       </column>
                     </column>
                   </if>
@@ -876,7 +876,7 @@ export default controller(() => {
                   <!-- ── Overlay ────────────────────────────────────── -->
                   <if {components.stage.tooltip()}>
                     <tooltip content="Cannot be undone" placement={components.variant() || 'top'}>
-                      <button type="button" size="sm" variant="outline" tone="destructive">Hover me</button>
+                      <button type="button" size="sm" variant="outline" tone="danger">Hover me</button>
                     </tooltip>
                   </if>
                   <if {components.stage.hoverCard()}>

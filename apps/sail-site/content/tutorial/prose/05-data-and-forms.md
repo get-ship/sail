@@ -36,7 +36,7 @@ it has not confirmed arrived:
 <match {team()}>
   {loading => <spinner></spinner>}
   {error as err =>
-  <alert tone="destructive">{err.message}</alert>}
+  <alert tone="danger">{err.message}</alert>}
   {ok as value => <for {value as m} key={m.id}>…</for>}
 </match>
 ```

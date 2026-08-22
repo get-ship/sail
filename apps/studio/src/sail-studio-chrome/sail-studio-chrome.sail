@@ -190,7 +190,7 @@ export default controller((ctx) => {
             <badge
               findings-errors
               checks-badge-count
-              tone="destructive"
+              tone="danger"
               size="sm"
               variant="solid"
               pill

@@ -1159,7 +1159,7 @@ fn navbar_host_paint_on_sx_cva() {
 
 #[test]
 fn error_state_child_paint_on_structure_sx() {
-    // Style product: destructive semantic tokens + when(empty/group-state/forced).
+    // Style product: danger semantic tokens + when(empty/group-state/forced).
     // No --es-* / tone-* channel paint.
     let src = include_str!("../stdlib/error-state/error-state.sail");
     let out = compile_element(src, "error-state").expect("error-state compiles");
@@ -1172,8 +1172,8 @@ fn error_state_child_paint_on_structure_sx() {
             && (src.contains("grow(1)") || src.contains(" grow") || src.contains("grow min-w"))
             && src.contains("self(stretch)")
             && src.contains("self(center)")
-            && src.contains("fg(destructive)")
-            && (src.contains("outline(destructive)") || src.contains("color: destructive"))
+            && src.contains("fg(danger)")
+            && (src.contains("outline(danger)") || src.contains("color: danger"))
             && (src.contains("outline(1)") || src.contains("width: 1"))
             && (src.contains("outline(solid)") || src.contains("style: solid"))
             && (src.contains("outlineOffset(ring-inset)") || src.contains("offset: ring-inset"))
@@ -1187,7 +1187,7 @@ fn error_state_child_paint_on_structure_sx() {
             && src.contains("group-state-has-details")
             && src.contains("group-state-open")
             && src.contains("forced-colors"),
-        "error-state Style product + stretch/grow + semantic destructive + empty/group-state"
+        "error-state Style product + stretch/grow + semantic danger + empty/group-state"
     );
 
     assert!(
@@ -1203,10 +1203,10 @@ fn error_state_child_paint_on_structure_sx() {
                 || out.skin_css.contains("max-width: 38ch"))
             && (out.skin_css.contains("max-width:60ch")
                 || out.skin_css.contains("max-width: 60ch"))
-            && (out.skin_css.contains("outline-color:var(--destructive)")
-                || out.skin_css.contains("outline-color: var(--destructive)")
-                || out.structure_html.contains("outlinedestructive")
-                || out.skin_css.contains("var(--destructive)"))
+            && (out.skin_css.contains("outline-color:var(--danger)")
+                || out.skin_css.contains("outline-color: var(--danger)")
+                || out.structure_html.contains("outlinedanger")
+                || out.skin_css.contains("var(--danger)"))
             && (out
                 .skin_css
                 .contains("outline-offset:calc(-1 * var(--ring-width))")
@@ -2144,7 +2144,7 @@ fn field_empty_and_invalid_hint_on_structure_sx() {
             && src.contains("use:describedControl")
             && !src.contains(" role=")
             && (src.contains("field.hint") || src.contains("fg(muted-foreground)"))
-            && (src.contains("field.error") || src.contains("fg(destructive)")),
+            && (src.contains("field.error") || src.contains("fg(danger)")),
         "field structure must carry group + empty/group-invalid Style gates without part classes; alert via use:describedControl"
     );
     assert!(
@@ -2195,7 +2195,7 @@ fn label_req_gate_in_element_skins_anatomy() {
         !src.contains("class=")
             && (src.contains("label.required")
                 || src.contains("label-required")
-                || src.contains("fg(destructive)"))
+                || src.contains("fg(danger)"))
             && src.contains("group-required")
             && src.contains("display(none)")
             && (src.contains(".group()") || src.contains("style({ group() })")),
@@ -2229,7 +2229,7 @@ fn label_req_gate_in_element_skins_anatomy() {
         out.skin_css.contains("color:var(--label-required)")
             || out.skin_css.contains("color: var(--label-required)")
             || out.structure_html.contains("labelrequired")
-            || out.skin_css.contains("var(--destructive)"),
+            || out.skin_css.contains("var(--danger)"),
         "req paint in structure/skin:\nstruct={}\nskin={}",
         out.structure_html,
         out.skin_css

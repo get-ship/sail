@@ -287,7 +287,7 @@ export default controller(() => {
                   <badge tone="primary" size={overview.badgeSize()} variant="solid" pill style(chipLabel)>Primary</badge>
                   <badge tone="success" size={overview.badgeSize()} variant="solid" pill style(chipLabel)>Success</badge>
                   <badge tone="warning" size={overview.badgeSize()} variant="solid" pill style(chipLabel)>Warning</badge>
-                  <badge tone="destructive" size={overview.badgeSize()} variant="solid" pill style(chipLabel)>Danger</badge>
+                  <badge tone="danger" size={overview.badgeSize()} variant="solid" pill style(chipLabel)>Danger</badge>
                 </row>
                 <column type-samples gap={specimenStackGap()}>
                   <p style({ type(display-sm) })>

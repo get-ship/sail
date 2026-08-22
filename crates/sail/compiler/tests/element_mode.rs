@@ -12,14 +12,14 @@ use sail_compiler::compile_element;
 const SPINNER: &str = r#"
 <scope>
   props: {
-    tone: 'default' | 'primary' | 'destructive' = 'default'
+    tone: 'default' | 'primary' | 'danger' = 'default'
     label = 'Loading'
   }
 </scope>
 
 <style>
   .sail-spinner[tone='primary']{color:var(--primary);}
-  .sail-spinner[tone='destructive']{color:var(--destructive);}
+  .sail-spinner[tone='danger']{color:var(--danger);}
 </style>
 
 <span class="spin" role="status" aria-label="Loading">

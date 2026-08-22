@@ -6,7 +6,7 @@ export interface Message {
   from: string
   subject: string
   topic: string
-  tone: 'info' | 'warning' | 'destructive' | 'success'
+  tone: 'info' | 'warning' | 'danger' | 'success'
   read: boolean
 }
 
@@ -14,7 +14,7 @@ const MESSAGES: Message[] = [
   { id: 1, from: 'monitoring', subject: 'p95 back under 200ms', topic: 'latency', tone: 'success', read: true },
   { id: 2, from: 'jules', subject: 'refund for order #8841?', topic: 'billing', tone: 'warning', read: false },
   { id: 3, from: 'monitoring', subject: 'error budget 40% consumed', topic: 'latency', tone: 'info', read: false },
-  { id: 4, from: 'sam', subject: 'card declined on renewal', topic: 'billing', tone: 'destructive', read: false },
+  { id: 4, from: 'sam', subject: 'card declined on renewal', topic: 'billing', tone: 'danger', read: false },
   { id: 5, from: 'dana', subject: 'love the new tutorial', topic: 'feedback', tone: 'info', read: true },
 ]
 

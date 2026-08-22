@@ -10,7 +10,7 @@
     values = ''
     rows = ''
     cols = ''
-    tone: 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted'
+    tone: 'primary' | 'info' | 'success' | 'warning' | 'danger' | 'accent' | 'muted'
     'cell-size' = 20
     gap = 3
     label = 'heatmap'

@@ -44,8 +44,8 @@ describe('liveRegion / dismissControl (alert use: stack)', () => {
     expect(el.getAttribute('aria-live')).toBe('assertive')
   })
 
-  it('liveRegion: tone destructive → assertive alert', () => {
-    const el = makeAlert({ tone: 'destructive' })
+  it('liveRegion: tone danger → assertive alert', () => {
+    const el = makeAlert({ tone: 'danger' })
     liveRegion(el)
     expect(el.getAttribute('role')).toBe('alert')
     expect(el.getAttribute('aria-live')).toBe('assertive')
@@ -72,7 +72,7 @@ describe('liveRegion / dismissControl (alert use: stack)', () => {
 
   it('liveRegion: first paint syncs without waiting for observer', () => {
     // Static host props are status/polite; action must overwrite on attach.
-    const el = makeAlert({ tone: 'destructive' })
+    const el = makeAlert({ tone: 'danger' })
     expect(el.getAttribute('role')).toBe('status')
     liveRegion(el)
     expect(el.getAttribute('role')).toBe('alert')

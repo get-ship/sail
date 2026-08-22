@@ -2,8 +2,8 @@
 //! must be one of the values the element's stdlib `<scope>` props
 //! declaration allows.
 //!
-//! Catches the silent-typo failure mode: `tone="danger"` on a primitive
-//! whose tone enum is `default|primary|...|destructive`. Today the
+//! Catches the silent-typo failure mode: `tone="destructive"` on a primitive
+//! whose tone enum is `default|primary|...|danger`. Today the
 //! attribute renders, no exception fires, and the styling silently
 //! falls back to the default — exactly the slop the design system was
 //! supposed to prevent.
@@ -27,7 +27,7 @@
 //!   Bool/string/number-typed props are not type-checked here.
 //!
 //! Suggestions use Levenshtein with a small cap so common typos
-//! (`danger` → `destructive`) are reported even when the distance is
+//! (`destructive` → `danger`) are reported even when the distance is
 //! not tiny — destructive vs danger is distance 6, but the warm-misuse
 //! case is the prime motivator for this rule, so we accept up to half
 //! the candidate's length.
@@ -306,7 +306,7 @@ fn find_subslice(haystack: &[u8], needle: &[u8]) -> Option<usize> {
 
 /// Distance-bounded nearest-match for the typo suggestion. Cap is the
 /// larger of 3 or half the candidate's length, so warm-misuse cases
-/// like `danger` → `destructive` (distance 6, target length 11) still
+/// like `destructive` → `danger` (distance 6, target length 11) still
 /// suggest correctly.
 fn nearest_value(name: &str, candidates: &[String]) -> Option<String> {
     let mut best: Option<(usize, String)> = None;
@@ -392,15 +392,15 @@ mod tests {
 
     #[test]
     fn unknown_tone_value_reports_with_suggestion() {
-        // The motivating case: tone="danger" silently fell through to
+        // The motivating case: tone="destructive" silently fell through to
         // the default before this rule existed.
-        let src = r#"<badge tone="danger">Sign out</badge>"#;
+        let src = r#"<badge tone="destructive">Sign out</badge>"#;
         let f = run(src);
         assert_eq!(rule_ids(&f), vec![RULE_ID]);
-        assert!(f[0].message.contains("`danger`"), "{}", f[0].message);
+        assert!(f[0].message.contains("`destructive`"), "{}", f[0].message);
         assert!(
-            f[0].message.contains("destructive"),
-            "expected `destructive` suggestion in message, got: {}",
+            f[0].message.contains("danger"),
+            "expected `danger` suggestion in message, got: {}",
             f[0].message
         );
     }
@@ -433,11 +433,11 @@ mod tests {
 
     #[test]
     fn position_points_at_value_start() {
-        let src = "<badge tone=\"danger\">X</badge>";
+        let src = "<badge tone=\"destructive\">X</badge>";
         let f = run(src);
         assert_eq!(f.len(), 1);
         assert_eq!(f[0].line, 1);
-        // 1-based col of the first char of `danger`.
+        // 1-based col of the first char of `destructive`.
         // `<badge tone="` = 13 chars; `d` starts at col 14.
         assert_eq!(f[0].col, 14);
     }
@@ -460,7 +460,7 @@ mod tests {
 
     #[test]
     fn multiple_findings_on_one_tag() {
-        let src = r#"<badge variant="grape" tone="danger" size="huge">X</badge>"#;
+        let src = r#"<badge variant="grape" tone="destructive" size="huge">X</badge>"#;
         let f = run(src);
         assert_eq!(f.len(), 3, "{f:?}");
         assert!(f.iter().all(|x| x.rule == RULE_ID));

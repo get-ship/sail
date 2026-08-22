@@ -39,7 +39,7 @@ export default controller((_ctx: Scope) => {
   const tipExSides = () =>
     `<tooltip content="Top" placement="top">…</tooltip>\n<tooltip content="Bottom" placement="bottom">…</tooltip>`
   const tipExDanger = () =>
-    `<tooltip content="Deletes the branch — cannot be undone" placement="top">\n  <button tone="destructive" variant="outline">Delete branch</button>\n</tooltip>`
+    `<tooltip content="Deletes the branch — cannot be undone" placement="top">\n  <button tone="danger" variant="outline">Delete branch</button>\n</tooltip>`
 
   return {
     placement,
@@ -124,7 +124,7 @@ export default controller((_ctx: Scope) => {
         code={tipExDanger()}
       >
         <tooltip content="Deletes the branch — cannot be undone" placement="top">
-          <button tone="destructive" variant="outline" size="sm">Delete branch</button>
+          <button tone="danger" variant="outline" size="sm">Delete branch</button>
         </tooltip>
       </doc-example>
     </column>

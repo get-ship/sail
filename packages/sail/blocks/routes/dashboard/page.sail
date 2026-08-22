@@ -202,7 +202,7 @@
                       <dropdown id="row-1042" placement="bottom-end">
                         <menu-item value="open">Open</menu-item>
                         <menu-item value="hold">Hold</menu-item>
-                        <menu-item value="cancel" tone="destructive">Cancel</menu-item>
+                        <menu-item value="cancel" tone="danger">Cancel</menu-item>
                       </dropdown>
                     </td>
                   </tr>

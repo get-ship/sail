@@ -34,7 +34,7 @@ export const L1_COPY: Record<string, L1Copy> = {
   alert: {
     category: 'feedback',
     blurb:
-      'Inline status banner. tone defaults to info and paints the left stripe + icon. warning/destructive flip liveRegion to assertive role=alert; dismissible shows the close control (onDismiss then remove).',
+      'Inline status banner. tone defaults to info and paints the left stripe + icon. warning/danger flip liveRegion to assertive role=alert; dismissible shows the close control (onDismiss then remove).',
   },
   avatar: {
     category: 'display',
@@ -118,7 +118,7 @@ export const L1_COPY: Record<string, L1Copy> = {
   'error-state': {
     category: 'feedback',
     blurb:
-      'Recovery surface for failed loads and partial failures. Rest chrome paints component.error-state (bg · fg · border); icon + inline border keep brand destructive. code fills a mono chip; details slot gates Show details; action slot holds Retry. use:recoverySurface stamps role=alert, syncs code, and focuses the first action.',
+      'Recovery surface for failed loads and partial failures. Rest chrome paints component.error-state (bg · fg · border); icon + inline border keep brand danger. code fills a mono chip; details slot gates Show details; action slot holds Retry. use:recoverySurface stamps role=alert, syncs code, and focuses the first action.',
   },
   field: {
     category: 'inputs',

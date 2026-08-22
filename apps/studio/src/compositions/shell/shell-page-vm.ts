@@ -56,7 +56,7 @@ import {
 type BatchChipUi = { id: string; label: string; key: string }
 
 function healthTone(h: 'ok' | 'degraded' | 'down'): string {
-  return h === 'ok' ? 'success' : h === 'degraded' ? 'warning' : 'destructive'
+  return h === 'ok' ? 'success' : h === 'degraded' ? 'warning' : 'danger'
 }
 const SERVICE_OK = { ok: 'Service', degraded: 'Service slow', down: 'Service down' } as const
 const LIVE_OK = { ok: 'Live', degraded: 'Lagging', down: 'Offline' } as const
@@ -142,7 +142,7 @@ export function createShellPage(opts?: ShellPageOpts) {
     hasChecksFindings.set(err + warn > 0)
     findingsErrorLabel.set(String(err))
     findingsWarningLabel.set(String(warn))
-    findingsStatusTone.set(err > 0 ? 'destructive' : warn > 0 ? 'warning' : 'muted')
+    findingsStatusTone.set(err > 0 ? 'danger' : warn > 0 ? 'warning' : 'muted')
     findingsStatusAria.set(
       err + warn > 0
         ? `Findings · ${err} error${err === 1 ? '' : 's'} · ${warn} warning${warn === 1 ? '' : 's'}`

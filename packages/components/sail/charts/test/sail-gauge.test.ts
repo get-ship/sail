@@ -100,14 +100,14 @@ describe('<sail-gauge>', () => {
     expect(valueArc(el)).toBeNull()
   })
 
-  it('low-threshold triggers destructive arc color', async () => {
+  it('low-threshold triggers danger arc color', async () => {
     const { el } = mount(reg, 'sail-gauge', {
       value: '10',
       'low-threshold': '20',
     })
     await flush()
     const fill = valueArc(el)
-    expect(fill?.getAttribute('stroke')).toBe('var(--destructive)')
+    expect(fill?.getAttribute('stroke')).toBe('var(--danger)')
   })
 
   it('high-threshold triggers warning arc color', async () => {

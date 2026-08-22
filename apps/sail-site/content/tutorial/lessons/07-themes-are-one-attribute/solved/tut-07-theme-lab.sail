@@ -81,6 +81,6 @@ export default controller(() => {
     <badge tone="info" variant="soft" size="sm">info</badge>
     <badge tone="success" variant="soft" size="sm">success</badge>
     <badge tone="warning" variant="soft" size="sm">warning</badge>
-    <badge tone="destructive" variant="soft" size="sm">destructive</badge>
+    <badge tone="danger" variant="soft" size="sm">danger</badge>
   </row>
 </column>

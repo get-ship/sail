@@ -131,7 +131,7 @@ const sailHighlightStyle = HighlightStyle.define([
   { tag: tags.emphasis, fontStyle: 'italic' },
   { tag: tags.strong, fontWeight: '600' },
   { tag: tags.link, color: 'var(--syntax-number)', textDecoration: 'underline' },
-  { tag: tags.invalid, color: 'var(--destructive)' },
+  { tag: tags.invalid, color: 'var(--danger)' },
 ])
 
 export const sailHighlighting = syntaxHighlighting(sailHighlightStyle)

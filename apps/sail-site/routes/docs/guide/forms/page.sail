@@ -77,14 +77,14 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                   {profile.pending() ? 'Saving…' : 'Save'}
                 </button>
                 <button type="button" variant="ghost" on:click={onReset}>Reset</button>
-                <button type="button" variant="outline" tone="destructive" on:click={breakIt}>Fail the next save</button>
+                <button type="button" variant="outline" tone="danger" on:click={breakIt}>Fail the next save</button>
               </row>
 
               <if {profile.pending()}>
                 <row gap="2" align="center"><spinner></spinner> <small>saving…</small></row>
               </if>
               <if {profile.lastError()}>
-                <alert tone="destructive" testid="forms-error">{profile.lastError().message}</alert>
+                <alert tone="danger" testid="forms-error">{profile.lastError().message}</alert>
               </if>
               <if {saved()}>
                 <alert tone="success" testid="forms-success">Saved — {saved().name} ({saved().email}).</alert>

@@ -383,7 +383,7 @@ export function createThemesSurface() {
       } else {
         setNote(
           getDesignState().lastWriteError || 'Could not add that theme to the project.',
-          'destructive',
+          'danger',
         )
       }
       sync()
@@ -404,7 +404,7 @@ export function createThemesSurface() {
     void openTheme(tid).then(() => {
       const err = getDesignState().error
       if (err) {
-        setNote(err, 'destructive')
+        setNote(err, 'danger')
         selectTheme(tid)
         sync()
         return
@@ -443,7 +443,7 @@ export function createThemesSurface() {
         selectedId.set(newId)
         setNote(`Created ${describeTheme(newId).name} from ${srcName}.`, 'success')
       } else {
-        setNote(getDesignState().lastWriteError || 'Could not create theme.', 'destructive')
+        setNote(getDesignState().lastWriteError || 'Could not create theme.', 'danger')
       }
       sync()
     })
@@ -471,7 +471,7 @@ export function createThemesSurface() {
           setNote(`Remixed as ${describeTheme(newId).name}`, 'success')
           selectedId.set(newId)
         } else {
-          setNote(getDesignState().lastWriteError || 'Remix failed', 'destructive')
+          setNote(getDesignState().lastWriteError || 'Remix failed', 'danger')
         }
         sync()
       })
@@ -490,7 +490,7 @@ export function createThemesSurface() {
           if (selectedId() === id) selectedId.set('')
           setNote('Theme deleted.', 'success')
         } else {
-          setNote(getDesignState().lastWriteError || 'Could not delete theme.', 'destructive')
+          setNote(getDesignState().lastWriteError || 'Could not delete theme.', 'danger')
         }
         sync()
       })

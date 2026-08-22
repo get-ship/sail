@@ -55,7 +55,7 @@ export default controller(() => {
   <!-- TODO 4: <match {team()}> {loading => — a spinner row, so the first
        paint isn't blank. -->
 
-  <!-- TODO 5: {error as err => — an <alert tone="destructive">
+  <!-- TODO 5: {error as err => — an <alert tone="danger">
        showing err.message. -->
 
   <if {team().kind === 'ok'}>

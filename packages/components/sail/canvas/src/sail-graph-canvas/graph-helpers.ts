@@ -25,7 +25,7 @@ export const EDGE_STROKE: Record<string, string> = {
   default: 'var(--border)',
   success: 'var(--success)',
   warning: 'var(--warning)',
-  destructive: 'var(--destructive)',
+  danger: 'var(--danger)',
   info: 'var(--info)',
 }
 export const EDGE_DEFAULT = 'var(--border)'

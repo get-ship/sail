@@ -14,7 +14,7 @@
   style swatchInfo = { bg(info) }
   style swatchSuccess = { bg(success) }
   style swatchWarning = { bg(warning) }
-  style swatchDestructive = { bg(danger) }
+  style swatchDanger = { bg(danger) }
   style swatchAccent = { bg(accent) }
   style swatchMuted = { bg(muted).border({ color: border }) }
   style exampleBlock = { size({ w: 100% }).pad({ t: 2, b: 4 }).overflow({ all: visible }) }
@@ -69,7 +69,7 @@ export default controller((_ctx: Scope) => {
   const toastExSuccess = () =>
     `<toast tone="success" duration="0" on-dismiss={onDismiss}>\n  <strong>Saved.</strong> Your changes are live.\n</toast>`
   const toastExTones = () =>
-    `<toast tone="info">Info</toast>\n<toast tone="warning">Warning</toast>\n<toast tone="destructive">Error</toast>`
+    `<toast tone="info">Info</toast>\n<toast tone="warning">Warning</toast>\n<toast tone="danger">Error</toast>`
   const toastExSticky = () =>
     `<!-- duration 0 = sticky; re-push from controller after dismiss -->\n<toast duration="0" on-dismiss={onDismiss}>Sticky</toast>`
   const toastExAction = () =>
@@ -156,10 +156,10 @@ export default controller((_ctx: Scope) => {
             style(swatch, swatchWarning)
           ></div>
           <div
-            title="destructive"
-            selected={toastTone() === 'destructive' ? 'true' : null}
-            on:click={() => pickTone('destructive')}
-            style(swatch, swatchDestructive)
+            title="danger"
+            selected={toastTone() === 'danger' ? 'true' : null}
+            on:click={() => pickTone('danger')}
+            style(swatch, swatchDanger)
           ></div>
           <div
             title="accent"

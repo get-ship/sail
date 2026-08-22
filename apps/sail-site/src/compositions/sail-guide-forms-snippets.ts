@@ -60,7 +60,7 @@ export default controller(() => {
   </row>
 
   <if {profile.lastError()}>
-    <alert tone="destructive">{profile.lastError().message}</alert>
+    <alert tone="danger">{profile.lastError().message}</alert>
   </if>
   <if {saved()}>
     <alert tone="success">Saved — {saved().name} ({saved().email}).</alert>
@@ -104,7 +104,7 @@ export default controller(() => {
   </button>
 
   <if {profile.lastError()}>
-    <alert tone="destructive">{profile.lastError().message}</alert>
+    <alert tone="danger">{profile.lastError().message}</alert>
   </if>
   <if {saved()}>
     <alert tone="success">Saved — {saved().name} ({saved().email}).</alert>
@@ -124,7 +124,7 @@ export default controller(() => {
 
   <if {$mutation().kind === 'loading'}><spinner></spinner></if>
   <if {$mutation().kind === 'error'}>
-    <alert tone="destructive">{$mutation().error.message}</alert>
+    <alert tone="danger">{$mutation().error.message}</alert>
   </if>
 </form>`,
 }

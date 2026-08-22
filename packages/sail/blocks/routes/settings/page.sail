@@ -162,7 +162,7 @@
           <column gap="3">
             <h2>Danger zone</h2>
             <p>Deleting the workspace removes orders, themes, and seats.</p>
-            <button variant="outline" tone="destructive">Delete workspace</button>
+            <button variant="outline" tone="danger">Delete workspace</button>
           </column>
         </column>
         </form>

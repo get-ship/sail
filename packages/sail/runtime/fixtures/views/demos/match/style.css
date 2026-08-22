@@ -16,4 +16,4 @@
 .demo .demo-alert[data-tone='info']        { background: #ddf4ff; border-color: #54aeff; color: #0550ae; }
 .demo .demo-alert[data-tone='success']     { background: #dafbe1; border-color: #4ac26b; color: #116329; }
 .demo .demo-alert[data-tone='warning']     { background: #fff8c5; border-color: #d4a72c; color: #7d4e00; }
-.demo .demo-alert[data-tone='destructive'] { background: #ffebe9; border-color: #ff8182; color: #82071e; }
+.demo .demo-alert[data-tone='danger'] { background: #ffebe9; border-color: #ff8182; color: #82071e; }

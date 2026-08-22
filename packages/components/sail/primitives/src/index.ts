@@ -42,7 +42,7 @@ export type Tone =
   | 'info'
   | 'success'
   | 'warning'
-  | 'destructive'
+  | 'danger'
   | 'accent'
   | 'muted'
 

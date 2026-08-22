@@ -70,7 +70,7 @@ export default controller(() => {
       {'idle' => <badge tone="muted" style(fadeEnter)>idle</badge>}
       {'building' => <badge tone="warning" style(fadeEnter)>building</badge>}
       {'live' => <badge tone="success" style(fadeScaleEnter)>live</badge>}
-      {else => <badge tone="destructive" style(fadeEnter)>failed</badge>}
+      {else => <badge tone="danger" style(fadeEnter)>failed</badge>}
     </match>
   </row>
 

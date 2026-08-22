@@ -58,7 +58,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
             <if {armed()}><p>{boom()}</p></if>
             <if {!armed()}>
               <p>This subtree is protected.</p>
-              <button on:click={arm} tone="destructive" variant="outline">
+              <button on:click={arm} tone="danger" variant="outline">
                 Throw during render
               </button>
             </if>

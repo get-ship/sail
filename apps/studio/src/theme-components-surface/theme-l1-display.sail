@@ -76,7 +76,7 @@ export default controller(() => {
         <badge variant="soft" tone="primary" size="sm">primary</badge>
         <badge variant="soft" tone="success" size="sm">success</badge>
         <badge variant="solid" tone="warning" size="sm" pill>warn</badge>
-        <badge variant="outline" tone="destructive" size="sm">err</badge>
+        <badge variant="outline" tone="danger" size="sm">err</badge>
         <badge variant="soft" tone="accent" size="sm" pill>12</badge>
       </row>
     </column>
@@ -99,7 +99,7 @@ export default controller(() => {
         <chip variant={components.variant() || 'solid'} tone="primary" size="sm" selected>Selected</chip>
         <chip variant="soft" tone="success" size="sm">success</chip>
         <chip variant="outline" tone="warning" size="sm">warn</chip>
-        <chip variant="solid" tone="destructive" size="sm" removable>err</chip>
+        <chip variant="solid" tone="danger" size="sm" removable>err</chip>
         <chip variant="soft" tone="accent" size="sm">12</chip>
       </row>
     </column>
@@ -139,7 +139,7 @@ export default controller(() => {
           <icon name="heart" size="lg" label="primary ink"></icon>
         </span>
         <span style({ fg(danger) })>
-          <icon name="heart" size="lg" label="destructive ink"></icon>
+          <icon name="heart" size="lg" label="danger ink"></icon>
         </span>
       </row>
     </column>
@@ -166,7 +166,7 @@ export default controller(() => {
     <column gap="2">
       <p style(fieldHint)>Toned · solid + dashed (free tones, not rest leaf)</p>
       <separator tone="primary"></separator>
-      <separator variant="dashed" tone="destructive"></separator>
+      <separator variant="dashed" tone="danger"></separator>
     </column>
   </column>
 </if>

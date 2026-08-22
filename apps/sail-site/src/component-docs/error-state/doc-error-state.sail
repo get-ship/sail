@@ -42,11 +42,11 @@ export default controller((_ctx: Scope) => {
     if (variant() !== 'default') a.push(`variant="${variant()}"`)
     if (erSize() !== 'md') a.push(`size="${erSize()}"`)
     const open = a.length ? `<error-state ${a.join(' ')}>` : `<error-state>`
-    return `${open}\n  <strong slot="title">Could not load your data</strong>\n  The request failed after 3 retries.\n  <button slot="action" variant="solid" tone="destructive" size="sm">Retry</button>\n</error-state>`
+    return `${open}\n  <strong slot="title">Could not load your data</strong>\n  The request failed after 3 retries.\n  <button slot="action" variant="solid" tone="danger" size="sm">Retry</button>\n</error-state>`
   })
 
   const erExDefault = () =>
-    `<error-state code="ERR_TIMEOUT">\n  <strong slot="title">Could not load your data</strong>\n  The request failed after 3 retries.\n  <button slot="action" variant="solid" tone="destructive" size="sm">Retry</button>\n</error-state>`
+    `<error-state code="ERR_TIMEOUT">\n  <strong slot="title">Could not load your data</strong>\n  The request failed after 3 retries.\n  <button slot="action" variant="solid" tone="danger" size="sm">Retry</button>\n</error-state>`
   const erExInline = () =>
     `<error-state variant="inline">\n  <strong slot="title">Partial failure</strong>\n  One pane could not refresh.\n  <button slot="action" variant="outline" size="sm">Retry</button>\n</error-state>`
   const erExDefaultColors = () =>
@@ -87,7 +87,7 @@ export default controller((_ctx: Scope) => {
         <span slot="details">at fetchData (api.ts:42)
   at load (dashboard.ts:19)
   Error: gateway timeout</span>
-        <button slot="action" type="button" variant="solid" tone="destructive" size="sm">
+        <button slot="action" type="button" variant="solid" tone="danger" size="sm">
           Retry
         </button>
       </error-state>
@@ -118,7 +118,7 @@ export default controller((_ctx: Scope) => {
       <error-state code="ERR_TIMEOUT" style(fullW)>
         <strong slot="title">Could not load your data</strong>
         The request failed after 3 retries.
-        <button slot="action" type="button" variant="solid" tone="destructive" size="sm">
+        <button slot="action" type="button" variant="solid" tone="danger" size="sm">
           Retry
         </button>
       </error-state>
@@ -134,7 +134,7 @@ export default controller((_ctx: Scope) => {
         <error-state code="ERR_TIMEOUT" style(specimen)>
           <strong slot="title">Could not load your data</strong>
           The request failed after 3 retries.
-          <button slot="action" type="button" variant="solid" tone="destructive" size="sm">
+          <button slot="action" type="button" variant="solid" tone="danger" size="sm">
             Retry
           </button>
         </error-state>

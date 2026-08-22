@@ -304,7 +304,7 @@ export function createAssetsEdit(session: ThemeSession) {
   const applyRole = async (family: string, role: 'display' | 'body' | 'mono') => {
     if (!session.guardEdit()) return
     if (!isFaceName(family)) {
-      session.setNote('That is not a typeface name (CSS vars / token aliases are not fonts).', 'destructive')
+      session.setNote('That is not a typeface name (CSS vars / token aliases are not fonts).', 'danger')
       return
     }
     rememberFamily(family)

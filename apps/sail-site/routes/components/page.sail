@@ -172,7 +172,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                 {else-if {e.tag === 'button'} => <row gap="2" align="center">
                     <button variant="solid" tone="primary">Save</button>
                     <button variant="outline">Cancel</button>
-                    <button variant="ghost" tone="destructive" size="sm">Delete</button>
+                    <button variant="ghost" tone="danger" size="sm">Delete</button>
                   </row>}{else-if {e.tag === 'a'} => <column gap="2" align="center">
                     <a href="/components/a">Open the anchor docs</a>
                     <a href="/components/card">
@@ -278,7 +278,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                   </column>}{else-if {e.tag === 'badge'} => <row gap="2" align="center">
                     <badge tone="primary">v0.4</badge>
                     <badge tone="success" variant="soft">Healthy</badge>
-                    <badge tone="destructive" variant="outline">3 errors</badge>
+                    <badge tone="danger" variant="outline">3 errors</badge>
                   </row>}{else-if {e.tag === 'chip'} => <row gap="2" align="center">
                     <if {kept()}>
                       <chip size="sm" tone="primary" removable on-dismiss={dropChip}>typescript</chip>
@@ -395,7 +395,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                       </row>
                       <row align="center" justify="between">
                         <span>v0.4.0</span>
-                        <badge size="sm" tone="destructive" variant="soft">failed</badge>
+                        <badge size="sm" tone="danger" variant="soft">failed</badge>
                       </row>
                       <row align="center" justify="between">
                         <span>v0.3.9</span>

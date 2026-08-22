@@ -116,7 +116,7 @@ export default controller(() => {
                         type="button"
                         size="sm"
                         variant="default"
-                        tone="destructive"
+                        tone="danger"
                         disabled
                         title="Not available"
                         reset-studio
@@ -127,7 +127,7 @@ export default controller(() => {
                         type="button"
                         size="sm"
                         variant="ghost"
-                        tone="destructive"
+                        tone="danger"
                         disabled
                         title="Not available"
                         purge-theme-drafts

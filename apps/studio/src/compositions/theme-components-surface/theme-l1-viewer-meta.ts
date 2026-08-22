@@ -75,7 +75,7 @@ const VARIANT_META: Partial<
       'Native label · foreground + required marker; weight typography.label.weight; size sm|md|lg.',
   },
   alert: {
-    variants: ['info', 'success', 'warning', 'destructive'],
+    variants: ['info', 'success', 'warning', 'danger'],
     variantAttr: 'tone',
     blurb: 'Inline status with the right ARIA role.',
   },
@@ -140,7 +140,7 @@ const VARIANT_META: Partial<
     variants: ['default', 'inline'],
     variantAttr: 'variant',
     blurb:
-      'Recovery surface · rest uses muted + border; icon + inline border brand destructive; code + details via recoverySurface.',
+      'Recovery surface · rest uses muted + border; icon + inline border brand danger; code + details via recoverySurface.',
   },
   separator: {
     variants: ['solid', 'dashed'],

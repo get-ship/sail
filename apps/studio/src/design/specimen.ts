@@ -26,7 +26,7 @@ export function specimenSource(opts: SpecimenOpts): string {
       <row gap="2" align="center">
         <button type="button" tone="primary">Primary</button>
         <button type="button" variant="outline">Outline</button>
-        <button type="button" tone="destructive">Destructive</button>
+        <button type="button" tone="danger">Danger</button>
       </row>
     </column>
     <column gap="2">

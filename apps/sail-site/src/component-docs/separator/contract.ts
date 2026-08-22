@@ -17,7 +17,7 @@ export const contract = {
       control: 'select',
     },
     tone: {
-      values: ['muted', 'primary', 'destructive'] as const,
+      values: ['muted', 'primary', 'danger'] as const,
       default: 'muted',
       control: 'swatches',
     },

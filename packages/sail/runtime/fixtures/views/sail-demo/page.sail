@@ -18,7 +18,7 @@
       <button variant="solid" tone="primary">Primary</button>
       <button variant="solid" tone="success">Success</button>
       <button variant="solid" tone="warning">Warning</button>
-      <button variant="solid" tone="destructive">Destructive</button>
+      <button variant="solid" tone="danger">Danger</button>
       <button variant="solid" tone="info">Info</button>
     </row>
   </column>
@@ -29,7 +29,7 @@
       <button variant="soft">Default</button>
       <button variant="soft" tone="primary">Primary</button>
       <button variant="soft" tone="success">Success</button>
-      <button variant="soft" tone="destructive">Destructive</button>
+      <button variant="soft" tone="danger">Danger</button>
     </row>
   </column>
 
@@ -38,7 +38,7 @@
     <row gap="2" align="center">
       <button variant="outline" tone="primary">Primary</button>
       <button variant="outline" tone="success">Success</button>
-      <button variant="outline" tone="destructive">Destructive</button>
+      <button variant="outline" tone="danger">Danger</button>
     </row>
   </column>
 
@@ -46,7 +46,7 @@
     <h2 style(sectionTitle)>button — ghost</h2>
     <row gap="2" align="center">
       <button variant="ghost" tone="primary">Primary</button>
-      <button variant="ghost" tone="destructive">Destructive</button>
+      <button variant="ghost" tone="danger">Danger</button>
     </row>
   </column>
 
@@ -78,7 +78,7 @@
       <badge tone="success" variant="solid">success</badge>
       <badge tone="warning" variant="solid">warning solid</badge>
       <badge tone="info" variant="outline">info outline</badge>
-      <badge tone="destructive" variant="solid">destructive</badge>
+      <badge tone="danger" variant="solid">danger</badge>
     </row>
   </column>
 

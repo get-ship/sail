@@ -31,7 +31,7 @@ export interface DetailEntry {
   usage: string
 }
 
-const TONES = 'primary · info · success · warning · destructive · accent · muted'
+const TONES = 'primary · info · success · warning · danger · accent · muted'
 
 // The props table is GENERATED: names, types and defaults come from the
 // compiler's prop registry (the same <scope> props declarations the
@@ -370,7 +370,7 @@ const DETAILS_MAP = {
   // ── Feedback ─────────────────────────────────────────────────────────
   alert: lang('alert', 'alert', {
     blurb:
-      'Inline status banner. tone defaults to info and colours the left stripe and icon. warning/destructive announce assertively (role=alert); dismissible shows the close control (onDismiss then remove).',
+      'Inline status banner. tone defaults to info and colours the left stripe and icon. warning/danger announce assertively (role=alert); dismissible shows the close control (onDismiss then remove).',
     // No variant axis — stage owns tone/dismiss knobs (viewer chips hidden).
     variants: [],
     variantAttr: '',
@@ -378,7 +378,7 @@ const DETAILS_MAP = {
       {
         name: 'tone',
         desc: 'stripe + icon colour (default info)',
-        type: 'muted · info · success · warning · destructive',
+        type: 'muted · info · success · warning · danger',
       },
       { name: 'dismissible', desc: 'shows the close control ([data-dismiss])', type: 'bool' },
       { name: 'onDismiss', desc: 'fires before the host removes itself', type: 'callback' },
@@ -432,7 +432,7 @@ const DETAILS_MAP = {
       {
         name: 'tone',
         desc: 'active arc colour (default info); track always uses the theme track colour',
-        type: 'primary · info · success · warning · destructive · accent',
+        type: 'primary · info · success · warning · danger · accent',
       },
     ],
   }),
@@ -480,13 +480,13 @@ const DETAILS_MAP = {
   }),
   'error-state': lang('error-state', 'errorState', {
     blurb:
-      'Recovery surface for failed loads and partial failures. Default chrome uses theme colors; icon + inline border stay destructive. code fills a mono chip; details slot gates Show details; action slot holds Retry. Marks role=alert, syncs code, and focuses the first action.',
+      'Recovery surface for failed loads and partial failures. Default chrome uses theme colors; icon + inline border stay danger. code fills a mono chip; details slot gates Show details; action slot holds Retry. Marks role=alert, syncs code, and focuses the first action.',
     variants: ['default', 'inline'],
     variantAttr: 'variant',
     props: [
       {
         name: 'variant',
-        desc: 'default = centered card with theme colors; inline = start-aligned row with destructive border + muted fill',
+        desc: 'default = centered card with theme colors; inline = start-aligned row with danger border + muted fill',
         type: 'default · inline',
       },
       { name: 'size', desc: 'padding scale (default md)', type: 'sm · md · lg' },
@@ -620,7 +620,7 @@ const DETAILS_MAP = {
     variantAttr: 'variant',
     props: [
       { name: 'orientation', desc: 'which axis it divides', type: 'horizontal · vertical' },
-      { name: 'tone', desc: 'line colour (default muted)', type: 'muted · primary · destructive' },
+      { name: 'tone', desc: 'line colour (default muted)', type: 'muted · primary · danger' },
       { name: 'variant', desc: 'line style', type: 'solid · dashed' },
     ],
   }),
@@ -711,7 +711,7 @@ const DETAILS_MAP = {
       { name: 'placement', desc: 'which side it opens on (free string)', type: 'string' },
       { name: 'onSelect', desc: 'fires with { value } when a menu-item is chosen', type: 'callback' },
       { name: 'id + popovertarget', desc: 'the trigger link — no refs', type: 'wiring' },
-      { name: '<menu-item value>', desc: 'the items — tone for destructive', type: 'children' },
+      { name: '<menu-item value>', desc: 'the items — tone for danger', type: 'children' },
     ],
   }),
   'context-menu': lang('context-menu', 'contextMenu', {

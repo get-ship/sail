@@ -53,7 +53,7 @@ export function makeSessionShellActions(ctx: SessionActionCtx) {
               : 'Confirm save to apply changes.',
             'warning',
           )
-        } else if (err) ctx.setNote(err, 'destructive')
+        } else if (err) ctx.setNote(err, 'danger')
       }
       ctx.sync()
     })
@@ -93,7 +93,7 @@ export function makeSessionShellActions(ctx: SessionActionCtx) {
       } else {
         ctx.setNote(
           getDesignState().lastWriteError || 'Could not add that theme.',
-          'destructive',
+          'danger',
         )
       }
       ctx.sync()

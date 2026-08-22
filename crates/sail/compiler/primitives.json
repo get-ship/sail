@@ -12,7 +12,7 @@
           "info",
           "success",
           "warning",
-          "destructive",
+          "danger",
           "accent",
           "muted"
         ]
@@ -58,7 +58,7 @@
           "info",
           "success",
           "warning",
-          "destructive"
+          "danger"
         ],
         "default": "info"
       },
@@ -128,7 +128,7 @@
           "info",
           "success",
           "warning",
-          "destructive",
+          "danger",
           "muted"
         ],
         "default": "muted"
@@ -157,7 +157,7 @@
           "info",
           "success",
           "warning",
-          "destructive",
+          "danger",
           "accent",
           "muted"
         ],
@@ -213,7 +213,7 @@
           "info",
           "success",
           "warning",
-          "destructive",
+          "danger",
           "accent",
           "muted"
         ],
@@ -270,7 +270,7 @@
           "info",
           "success",
           "warning",
-          "destructive",
+          "danger",
           "accent",
           "muted"
         ],
@@ -345,7 +345,7 @@
           "info",
           "success",
           "warning",
-          "destructive",
+          "danger",
           "accent",
           "muted"
         ],
@@ -553,7 +553,7 @@
           "info",
           "success",
           "warning",
-          "destructive",
+          "danger",
           "accent",
           "muted"
         ],
@@ -597,6 +597,10 @@
       }
     },
     "field": {
+      "fill": {
+        "type": "bool",
+        "default": "true"
+      },
       "invalid": {
         "type": "bool",
         "default": "false"
@@ -651,6 +655,13 @@
       }
     },
     "form": {
+      "layout": {
+        "values": [
+          "measure",
+          "fill"
+        ],
+        "default": "measure"
+      },
       "name": {
         "type": "string",
         "default": ""
@@ -800,16 +811,6 @@
         "default": "md"
       }
     },
-    "list-row": {
-      "current": {
-        "type": "bool",
-        "default": "false"
-      },
-      "selected": {
-        "type": "bool",
-        "default": "false"
-      }
-    },
     "menu-item": {
       "disabled": {
         "type": "bool",
@@ -860,6 +861,10 @@
         "default": "false"
       },
       "bordered": {
+        "type": "bool",
+        "default": "false"
+      },
+      "expanded": {
         "type": "bool",
         "default": "false"
       },
@@ -924,17 +929,6 @@
           "simple"
         ],
         "default": "default"
-      }
-    },
-    "pane": {
-      "padding": {
-        "values": [
-          "md",
-          "none",
-          "sm",
-          "lg"
-        ],
-        "default": "md"
       }
     },
     "popover": {
@@ -1059,7 +1053,7 @@
         "values": [
           "muted",
           "primary",
-          "destructive"
+          "danger"
         ],
         "default": "muted"
       },
@@ -1156,7 +1150,7 @@
           "info",
           "success",
           "warning",
-          "destructive",
+          "danger",
           "accent"
         ],
         "default": "info"
@@ -1193,7 +1187,7 @@
           "info",
           "success",
           "warning",
-          "destructive",
+          "danger",
           "accent",
           "muted"
         ],
@@ -1441,7 +1435,7 @@
           "info",
           "success",
           "warning",
-          "destructive",
+          "danger",
           "accent",
           "muted"
         ],

@@ -13,7 +13,7 @@
   style swatch = { size(7).shrink(0).radius(full).cursor(pointer).border({ color: transparent, width: 2 }).elevation(xs), when: { selected: border({ color: foreground }).elevation(sm), hover: filter({ opacity: 90 }) } }
   style swatchSuccess = { bg(success) }
   style swatchWarning = { bg(warning) }
-  style swatchDestructive = { bg(danger) }
+  style swatchDanger = { bg(danger) }
   style swatchMuted = { bg(muted).border({ color: border }) }
   style swatchInfo = { bg(info) }
   style exampleBlock = { size({ w: 100% }).pad({ t: 2, b: 4 }).overflow({ all: visible }) }
@@ -42,7 +42,7 @@ export default controller((_ctx: Scope) => {
         return 'Saved'
       case 'warning':
         return 'Check your input'
-      case 'destructive':
+      case 'danger':
         return 'Something went wrong'
       case 'muted':
         return 'Note'
@@ -58,7 +58,7 @@ export default controller((_ctx: Scope) => {
         return 'All changes were written successfully.'
       case 'warning':
         return 'Two fields need attention before you continue.'
-      case 'destructive':
+      case 'danger':
         return 'We could not reach the server. Try again.'
       case 'muted':
         return 'A neutral callout with muted tone.'
@@ -164,10 +164,10 @@ export default controller((_ctx: Scope) => {
             style(swatch, swatchWarning)
           ></div>
           <div
-            title="destructive"
-            selected={alertTone() === 'destructive' ? 'true' : null}
-            on:click={() => pickAlertTone('destructive')}
-            style(swatch, swatchDestructive)
+            title="danger"
+            selected={alertTone() === 'danger' ? 'true' : null}
+            on:click={() => pickAlertTone('danger')}
+            style(swatch, swatchDanger)
           ></div>
           <div
             title="muted"
@@ -197,7 +197,7 @@ export default controller((_ctx: Scope) => {
       <p style(sectionLabel)>Examples</p>
       <doc-example
         title="Status tones"
-        lead="Tone brands the left stripe and icon. warning and destructive use an assertive live region."
+        lead="Tone brands the left stripe and icon. warning and danger use an assertive live region."
         code={alrtExTones()}
       >
         <column gap="2" style(fullW)>

@@ -170,7 +170,7 @@ const TONE_TOKENS: { token: string; label: string }[] = [
   { token: '--info', label: 'Info' },
   { token: '--success', label: 'Success' },
   { token: '--warning', label: 'Warning' },
-  { token: '--destructive', label: 'Destructive' },
+  { token: '--danger', label: 'Danger' },
 ]
 
 // Deterministic base palette — pure HSL math, no theme dependency and no

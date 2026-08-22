@@ -190,7 +190,7 @@ export const SUI_TABLE_LIGHT_DOM_CSS = `
   sail-table .st .lbl { color: var(--foreground); }
   sail-table .st.ok .dot { background: var(--success); box-shadow: 0 0 0 3px var(--hover-bg); }
   sail-table .st.warn .dot { background: var(--warning); box-shadow: 0 0 0 3px var(--hover-bg); }
-  sail-table .st.err .dot { background: var(--destructive); box-shadow: 0 0 0 3px var(--hover-bg); }
+  sail-table .st.err .dot { background: var(--danger); box-shadow: 0 0 0 3px var(--hover-bg); }
 
   @media (forced-colors: active) {
     sail-table th, sail-table td { border-bottom-color: CanvasText; }

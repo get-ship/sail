@@ -15,7 +15,7 @@ export const code = {
   props: `<!-- tone picks the color from the design system;
      variant picks how much of it you get; size scales the control. -->
 <button variant="solid"   tone="primary">Save</button>
-<button variant="outline" tone="destructive">Delete</button>
+<button variant="outline" tone="danger">Delete</button>
 <button variant="ghost">Cancel</button>
 <badge tone="warning">rolling</badge>
 <alert tone="info">Saved just now.</alert>`,
@@ -26,7 +26,7 @@ export const code = {
   <p>This cannot be undone.</p>
   <row gap="2">
     <button value="cancel">Cancel</button>
-    <button value="ok" tone="destructive" variant="solid">Delete</button>
+    <button value="ok" tone="danger" variant="solid">Delete</button>
   </row>
 </dialog>
 
@@ -70,7 +70,7 @@ export const code = {
 <button variant="solid" tone="primary">
   <icon name="rocket"></icon> Launch
 </button>
-<button variant="outline" tone="destructive">
+<button variant="outline" tone="danger">
   <icon name="trash"></icon> Delete
 </button>`,
 

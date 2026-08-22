@@ -82,7 +82,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
   const setStatus = (state: 'idle' | 'typing' | 'running' | 'ok' | 'error', text: string): void => {
     const tones: Record<string, string> = {
-      idle: 'muted', typing: 'info', running: 'warning', ok: 'success', error: 'destructive',
+      idle: 'muted', typing: 'info', running: 'warning', ok: 'success', error: 'danger',
     }
     statusTone.set(tones[state])
     statusText.set(text)

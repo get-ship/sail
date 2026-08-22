@@ -180,14 +180,7 @@ fn attr_path_segments() -> &'static [(String, &'static str, &'static str)] {
             (
                 "tone",
                 &[
-                    "destructive",
-                    "primary",
-                    "success",
-                    "warning",
-                    "default",
-                    "accent",
-                    "muted",
-                    "info",
+                    "danger", "primary", "success", "warning", "default", "accent", "muted", "info",
                 ],
             ),
             ("accent-bar", &["static", "hover", "off"]),

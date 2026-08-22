@@ -1,16 +1,16 @@
-<controller>
-import { controller, signal } from '@ship/sail-runtime'
-
-type Tone = 'info' | 'success' | 'warning' | 'destructive'
-
-export default controller(() => ({ tone: signal<Tone>('info') }))
-</controller>
-
 <scope>
   style page = { pad(6).margin({ x: auto }).size({ max-w: breakpoint-tablet }) }
   style muted = { fg(muted-foreground).type({ size: sm }) }
   style alert = { pad(4).border({ color: border, width: 1 }).radius(md).bg(surface) }
 </scope>
+
+<controller>
+import { controller, signal } from '@ship/sail-runtime'
+
+type Tone = 'info' | 'success' | 'warning' | 'danger'
+
+export default controller(() => ({ tone: signal<Tone>('info') }))
+</controller>
 
 <column gap="4" style(page)>
   <p><a href="/demos">← demos</a></p>
@@ -49,12 +49,12 @@ export default controller(() => ({ tone: signal<Tone>('info') }))
     >warning</button>
     <button
       role="tab"
-      data-test="tone-destructive"
-      variant={tone() === 'destructive' ? 'solid' : 'outline'}
-      tone="destructive"
-      aria-selected={tone() === 'destructive'}
-      on:click={() => tone.set('destructive')}
-    >destructive</button>
+      data-test="tone-danger"
+      variant={tone() === 'danger' ? 'solid' : 'outline'}
+      tone="danger"
+      aria-selected={tone() === 'danger'}
+      on:click={() => tone.set('danger')}
+    >danger</button>
   </row>
 
   <section data-test="alert" style(alert)>
@@ -68,7 +68,7 @@ export default controller(() => ({ tone: signal<Tone>('info') }))
       {'warning' =>
         <span><strong>Careful.</strong> This action may have side-effects.</span>
       }
-      {'destructive' =>
+      {'danger' =>
         <span><strong>Stop.</strong> This will permanently delete data.</span>
       }
       {else =>

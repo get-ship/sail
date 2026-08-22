@@ -20,7 +20,7 @@ export const contract = {
         'info',
         'success',
         'warning',
-        'destructive',
+        'danger',
         'muted',
       ] as const,
       default: 'muted',

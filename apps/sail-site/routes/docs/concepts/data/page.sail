@@ -44,7 +44,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         <card>
           <row gap="2">
             <button on:click={reload}>Reload</button>
-            <button on:click={breakIt} tone="destructive" variant="outline">Fail the next one</button>
+            <button on:click={breakIt} tone="danger" variant="outline">Fail the next one</button>
           </row>
           <match {users()}>
             {loading =>
@@ -53,7 +53,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                 <small>loading…</small>
               </row>}
             {error as err =>
-              <alert tone="destructive">{err.message}</alert>}
+              <alert tone="danger">{err.message}</alert>}
             {ok as value =>
               <row gap="2">
                 <for {value as name} key={name}>

@@ -304,7 +304,7 @@ export function driftTone(status: string): string {
     case 'moved':
       return 'warning'
     case 'lost':
-      return 'destructive'
+      return 'danger'
     default:
       return 'muted'
   }

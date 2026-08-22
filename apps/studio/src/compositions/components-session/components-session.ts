@@ -135,7 +135,7 @@ export function createComponentsSession(opts?: ComponentsSessionOpts) {
         mode: shell.modeId,
       })
       if (!doc) {
-        setNote('Could not open in Edit — try again.', 'destructive')
+        setNote('Could not open in Edit — try again.', 'danger')
         return false
       }
       if (span?.line && span.line > 0) {
@@ -144,7 +144,7 @@ export function createComponentsSession(opts?: ComponentsSessionOpts) {
       navigate(editActivityHref())
       return true
     } catch {
-      setNote('Could not open in Edit — try again.', 'destructive')
+      setNote('Could not open in Edit — try again.', 'danger')
       return false
     }
   }

@@ -42,7 +42,7 @@ export default controller((_ctx: Scope) => {
   })
 
   const dlgExModal = () =>
-    `<button command="show-modal" commandfor="confirm">Delete…</button>\n<dialog id="confirm" size="md">\n  <header>Delete project</header>\n  <section>This cannot be undone.</section>\n  <footer>\n    <button command="close" commandfor="confirm" variant="ghost">Cancel</button>\n    <button command="close" commandfor="confirm" tone="destructive">Delete</button>\n  </footer>\n</dialog>`
+    `<button command="show-modal" commandfor="confirm">Delete…</button>\n<dialog id="confirm" size="md">\n  <header>Delete project</header>\n  <section>This cannot be undone.</section>\n  <footer>\n    <button command="close" commandfor="confirm" variant="ghost">Cancel</button>\n    <button command="close" commandfor="confirm" tone="danger">Delete</button>\n  </footer>\n</dialog>`
   const dlgExSheet = () =>
     `<dialog side="end" size="sm">\n  <header>Filters</header>\n  <section>…</section>\n  <footer>…</footer>\n</dialog>`
   const dlgExLock = () =>
@@ -155,7 +155,7 @@ export default controller((_ctx: Scope) => {
         lead={'Native command="show-modal" / close — zero JS.'}
         code={dlgExModal()}
       >
-        <button size="sm" tone="destructive" command="show-modal" commandfor="doc-dlg-ex-modal">Delete…</button>
+        <button size="sm" tone="danger" command="show-modal" commandfor="doc-dlg-ex-modal">Delete…</button>
         <dialog id="doc-dlg-ex-modal" size="md">
           <header>Delete project</header>
           <section>
@@ -163,7 +163,7 @@ export default controller((_ctx: Scope) => {
           </section>
           <footer>
             <button command="close" commandfor="doc-dlg-ex-modal" variant="ghost" size="sm">Cancel</button>
-            <button command="close" commandfor="doc-dlg-ex-modal" tone="destructive" size="sm">Delete</button>
+            <button command="close" commandfor="doc-dlg-ex-modal" tone="danger" size="sm">Delete</button>
           </footer>
         </dialog>
       </doc-example>

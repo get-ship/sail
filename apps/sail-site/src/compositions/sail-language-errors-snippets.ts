@@ -21,7 +21,7 @@ export default controller(() => {
   <if {armed()}><p>{boom()}</p></if>
   <if {!armed()}>
     <p>This subtree is protected.</p>
-    <button on:click={arm} tone="destructive" variant="outline">
+    <button on:click={arm} tone="danger" variant="outline">
       Throw during render
     </button>
   </if>
@@ -38,7 +38,7 @@ export default controller(() => {
 
   async: `<!-- async failure is a STATE, not a throw — render it -->
 <match {users()}>
-  {error as err => <alert tone="destructive">{err.message}</alert>}
+  {error as err => <alert tone="danger">{err.message}</alert>}
   {else => }
 </match>`,
 }

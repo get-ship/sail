@@ -181,7 +181,7 @@ export function createThemeSession(opts: ThemeSessionOpts) {
         const routeId = themeIdFromLocation()
         if (routeId && routeId !== id) return
         const err = getDesignState().error
-        if (err) setNote(err, 'destructive')
+        if (err) setNote(err, 'danger')
         const ds = getDesignState()
         const resolved = resolvePaintId(id, ds.forkedFrom)
         if (resolved.warning && paintWarnForId !== id) {
@@ -251,7 +251,7 @@ export function createThemeSession(opts: ThemeSessionOpts) {
       if (ok) setNote(saveSuccessMessage, 'success')
       else {
         const err = getDesignState().lastWriteError
-        if (err) setNote(err, 'destructive')
+        if (err) setNote(err, 'danger')
       }
       sync()
     })

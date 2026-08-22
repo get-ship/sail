@@ -62,7 +62,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     <p>
       No component in the framework names a color. A card reads
       <code>--surface-1</code>; a primary button reads <code>--primary</code>;
-      a destructive alert reads <code>--destructive</code>. A theme is the set
+      a danger alert reads <code>--danger</code>. A theme is the set
       of values behind those names, so applying one restyles every component at
       once — including components written long before the theme existed.
       Components read tokens, themes define them, and neither knows the other’s
@@ -85,7 +85,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       <li>
         <strong>Semantic hues</strong> —
         <code>--primary</code>, <code>--success</code>, <code>--warning</code>,
-        <code>--destructive</code>, <code>--info</code>, <code>--accent</code>,
+        <code>--danger</code>, <code>--info</code>, <code>--accent</code>,
         <code>--muted</code> (and their <code>-foreground</code> partners).
         Status UI spends these directly via Style
         (<code>style&#40;&#123; bg(danger) &#125;&#41;</code>,

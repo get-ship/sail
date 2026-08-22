@@ -69,7 +69,7 @@ export default controller(() => {
 <column gap="4" align="start" theme-l1-overlay l1-stage-host style(stageHost)>
 <if {components.stage.tooltip()}>
   <tooltip content="Cannot be undone" placement={components.variant() || 'top'}>
-    <button type="button" size="sm" variant="outline" tone="destructive">Hover me</button>
+    <button type="button" size="sm" variant="outline" tone="danger">Hover me</button>
   </tooltip>
 </if>
 <if {components.stage.hoverCard()}>

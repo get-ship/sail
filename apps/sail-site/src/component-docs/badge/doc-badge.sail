@@ -13,7 +13,7 @@
   style swatchPrimary = { bg(primary) }
   style swatchSuccess = { bg(success) }
   style swatchWarning = { bg(warning) }
-  style swatchDestructive = { bg(danger) }
+  style swatchDanger = { bg(danger) }
   style swatchAccent = { bg(accent) }
   style swatchMuted = { bg(muted).border({ color: border }) }
   style swatchInfo = { bg(info) }
@@ -56,7 +56,7 @@ export default controller((_ctx: Scope) => {
   const bdgExStatus = () =>
     `<badge variant="soft" tone="success" size="sm">active</badge>\n<badge variant="outline" tone="muted" size="sm">away</badge>`
   const bdgExPill = () =>
-    `<badge variant="solid" tone="primary" pill>12</badge>\n<badge variant="soft" tone="destructive" pill>3</badge>`
+    `<badge variant="solid" tone="primary" pill>12</badge>\n<badge variant="soft" tone="danger" pill>3</badge>`
   const bdgExDefault = () =>
     `<badge variant="soft" tone="muted">muted</badge>\n<badge variant="solid" tone="muted">muted</badge>\n<badge variant="outline" tone="muted">muted</badge>`
 
@@ -132,10 +132,10 @@ export default controller((_ctx: Scope) => {
             style(swatch, swatchWarning)
           ></div>
           <div
-            title="destructive"
-            selected={badgeTone() === 'destructive' ? 'true' : null}
-            on:click={() => pickBadgeTone('destructive')}
-            style(swatch, swatchDestructive)
+            title="danger"
+            selected={badgeTone() === 'danger' ? 'true' : null}
+            on:click={() => pickBadgeTone('danger')}
+            style(swatch, swatchDanger)
           ></div>
           <div
             title="accent"
@@ -196,7 +196,7 @@ export default controller((_ctx: Scope) => {
       >
         <row gap="2" align="center" style(demoRow)>
           <badge variant="solid" tone="primary" pill>12</badge>
-          <badge variant="soft" tone="destructive" pill>3</badge>
+          <badge variant="soft" tone="danger" pill>3</badge>
           <badge variant="outline" tone="accent" pill>beta</badge>
         </row>
       </doc-example>

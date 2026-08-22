@@ -62,7 +62,7 @@ export default controller(() => {
       </row>
     }
     {error as err =>
-      <alert tone="destructive">{err.message}</alert>
+      <alert tone="danger">{err.message}</alert>
     }
     {ok =>
       <column gap="1">

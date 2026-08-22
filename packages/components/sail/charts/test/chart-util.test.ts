@@ -30,8 +30,8 @@ describe('toneColor', () => {
     expect(toneColor('warning')).toBe('var(--warning)')
   })
 
-  it('maps destructive to --destructive', () => {
-    expect(toneColor('destructive')).toBe('var(--destructive)')
+  it('maps danger to --danger', () => {
+    expect(toneColor('danger')).toBe('var(--danger)')
   })
 
   it('maps accent to --accent', () => {

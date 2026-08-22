@@ -167,7 +167,7 @@ export default controller(() => {
       <!-- no preset: min-w lock -->
       <row align="center" justify="between" nowrap gap="2" style({ size({ min-w: 0 }) })>
         <row align="center" gap="2" nowrap style(growMin)>
-          <badge error-count tone="destructive" size="sm" variant="soft" pill>{errorCountLabel()}</badge>
+          <badge error-count tone="danger" size="sm" variant="soft" pill>{errorCountLabel()}</badge>
           <badge warning-count tone="warning" size="sm" variant="soft" pill>{warningCountLabel()}</badge>
         </row>
         <button type="button" size="sm" variant="ghost" tone="muted" recheck on:click={onRecheck} style(shrink0)>
@@ -250,7 +250,7 @@ export default controller(() => {
                 {g.rule}
               </p>
               <if {g.showErrorBadge}>
-                <badge tone="destructive" size="sm" variant="soft" rule-errors>
+                <badge tone="danger" size="sm" variant="soft" rule-errors>
                   {g.errorBadge}
                 </badge>
               </if>

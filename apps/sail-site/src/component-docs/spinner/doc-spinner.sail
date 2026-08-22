@@ -12,7 +12,7 @@
   style swatchPrimary = { bg(primary) }
   style swatchSuccess = { bg(success) }
   style swatchWarning = { bg(warning) }
-  style swatchDestructive = { bg(danger) }
+  style swatchDanger = { bg(danger) }
   style swatchAccent = { bg(accent) }
   style swatchInfo = { bg(info) }
   style exampleBlock = { size({ w: 100% }).pad({ t: 2, b: 4 }).overflow({ all: visible }) }
@@ -123,10 +123,10 @@ export default controller((_ctx: Scope) => {
             style(swatch, swatchWarning)
           ></div>
           <div
-            title="destructive"
-            selected={spinnerTone() === 'destructive' ? 'true' : null}
-            on:click={() => pickSpinnerTone('destructive')}
-            style(swatch, swatchDestructive)
+            title="danger"
+            selected={spinnerTone() === 'danger' ? 'true' : null}
+            on:click={() => pickSpinnerTone('danger')}
+            style(swatch, swatchDanger)
           ></div>
           <div
             title="accent"

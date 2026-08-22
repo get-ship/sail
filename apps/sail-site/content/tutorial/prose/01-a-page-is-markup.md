@@ -39,8 +39,8 @@ error** — the language never silently drops what you wrote.
 Components speak two shared contracts:
 
 - **tone** — `primary` / `info` / `success` / `warning` /
-  `destructive` / `accent` / `muted`. Omit the attribute for rest paint.
-  Every toned component reads the same token table, so `tone="destructive"`
+  `danger` / `accent` / `muted`. Omit the attribute for rest paint.
+  Every toned component reads the same token table, so `tone="danger"`
   means the same thing on a `<badge>`, a `<button>`, a `<card>`, and a
   `<switch>`.
 - **variant** (where it applies) — `solid`, `soft`, `outline`, `ghost` —
@@ -60,7 +60,7 @@ The starter is an empty `<column>`. Build the screen:
    card (an `<avatar>`, a name, an email) and a Notifications card
    (three `<row justify="between">`s, each pairing a label column with a
    `<switch>`).
-3. **The danger zone.** A `<card tone="destructive" variant="outline">`
+3. **The danger zone.** A `<card tone="danger" variant="outline">`
    with a matching outline button. Notice you never chose a red — the
    tone did.
 

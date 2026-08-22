@@ -58,7 +58,7 @@ export default controller(() => {
   <match {inbox()}>
     {loading => }
     {error as err =>
-      <alert tone="destructive">{err.message}</alert>
+      <alert tone="danger">{err.message}</alert>
     }
     {ok =>
       <column gap="1">

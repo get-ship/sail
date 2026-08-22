@@ -10,7 +10,7 @@ export const contract = {
     checked: { default: false, control: 'switch', docsSkip: true },
     disabled: { default: false, control: 'switch' },
     tone: {
-      values: ['primary', 'info', 'success', 'warning', 'destructive', 'accent', 'muted'] as const,
+      values: ['primary', 'info', 'success', 'warning', 'danger', 'accent', 'muted'] as const,
       default: 'primary',
       control: 'swatches',
     },

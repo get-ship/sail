@@ -127,7 +127,7 @@ const GAUGE_END = 405 * DEG
 /**
  * Single-value gauge: a full 270° track plus a value arc from the start to the
  * clamped `(value-min)/(max-min)` fraction. The fill color resolves from the
- * explicit tone, else the threshold bands (below-low → destructive, below-high
+ * explicit tone, else the threshold bands (below-low → danger, below-high
  * → warning, else success when any threshold is set, else primary).
  */
 export function gaugeGeometry(value: number, opts: GaugeOptions): GaugeArc {
@@ -143,7 +143,7 @@ export function gaugeGeometry(value: number, opts: GaugeOptions): GaugeArc {
 
   let resolved = opts.tone ?? ''
   if (!resolved) {
-    if (low > 0 && value < low) resolved = 'destructive'
+    if (low > 0 && value < low) resolved = 'danger'
     else if (high > 0 && value < high) resolved = 'warning'
     else if (low > 0 || high > 0) resolved = 'success'
     else resolved = 'primary'
