@@ -198,6 +198,11 @@
   --type-body-sm-weight: var(--font-weight-normal);
   --type-body-sm-leading: var(--leading-normal);
   --type-body-sm-tracking: var(--tracking-normal);
+  --type-body-semibold-family: var(--font-body);
+  --type-body-semibold-size: var(--text-base);
+  --type-body-semibold-weight: var(--font-weight-semibold);
+  --type-body-semibold-leading: var(--leading-normal);
+  --type-body-semibold-tracking: var(--tracking-normal);
   --type-label-family: var(--font-body);
   --type-label-size: var(--text-xs);
   --type-label-weight: var(--font-weight-semibold);

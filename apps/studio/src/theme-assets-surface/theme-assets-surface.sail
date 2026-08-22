@@ -8,7 +8,7 @@
   style fieldHint = { fg(muted).type(body-sm) }
   style pathMeta = { fg(muted).type(mono-sm) }
   // no preset: type weight
-  style doorTitle = { type({ weight: semibold }) }
+  style doorTitle = { type(body-semibold) }
   // no preset: size lock
   style editorCol = { pad(6).size({ max-w: overlay-max-w-lg }) }
   style bandStatus = { pad(4) }

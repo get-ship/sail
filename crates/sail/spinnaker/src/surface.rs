@@ -151,6 +151,11 @@ pub const REQUIRED_THEME_PRESETS: &[StylePreset] = &[
     req("type", "body-sm", "small body"),
     req(
         "type",
+        "body-semibold",
+        "semibold body — emphasis without label styling",
+    ),
+    req(
+        "type",
         "heading",
         "heading typeface program — tags <h1>–<h6> spend this",
     ),

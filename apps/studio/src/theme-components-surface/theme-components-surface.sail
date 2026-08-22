@@ -8,7 +8,7 @@
   style fieldHint = { fg(muted).type(body-sm) }
   style pathMeta = { fg(muted).type(mono-sm) }
   // no preset: type weight
-  style doorTitle = { type({ weight: semibold }) }
+  style doorTitle = { type(body-semibold) }
   style bandStatus = { pad(4) }
   // no preset: edge-only border
   style bandError = { pad(4).border({ edge: b, color: border, width: 1 }) }

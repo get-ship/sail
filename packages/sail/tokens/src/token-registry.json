@@ -333,6 +333,11 @@
     "tracking-wider",
     "type-body-family",
     "type-body-leading",
+    "type-body-semibold-family",
+    "type-body-semibold-leading",
+    "type-body-semibold-size",
+    "type-body-semibold-tracking",
+    "type-body-semibold-weight",
     "type-body-size",
     "type-body-sm-family",
     "type-body-sm-leading",
@@ -1734,6 +1739,36 @@
       "type": "dimension",
       "value": "var(--tracking-normal)"
     },
+    "type-body-semibold-family": {
+      "path": "type.body-semibold.family",
+      "cssName": "type-body-semibold-family",
+      "type": "fontFamily",
+      "value": "var(--font-body)"
+    },
+    "type-body-semibold-size": {
+      "path": "type.body-semibold.size",
+      "cssName": "type-body-semibold-size",
+      "type": "dimension",
+      "value": "var(--text-base)"
+    },
+    "type-body-semibold-weight": {
+      "path": "type.body-semibold.weight",
+      "cssName": "type-body-semibold-weight",
+      "type": "number",
+      "value": "var(--font-weight-semibold)"
+    },
+    "type-body-semibold-leading": {
+      "path": "type.body-semibold.leading",
+      "cssName": "type-body-semibold-leading",
+      "type": "number",
+      "value": "var(--leading-normal)"
+    },
+    "type-body-semibold-tracking": {
+      "path": "type.body-semibold.tracking",
+      "cssName": "type-body-semibold-tracking",
+      "type": "dimension",
+      "value": "var(--tracking-normal)"
+    },
     "type-label-family": {
       "path": "type.label.family",
       "cssName": "type-label-family",
@@ -2769,6 +2804,11 @@
     "typography.tracking.wider": "tracking-wider",
     "type.body.family": "type-body-family",
     "type.body.leading": "type-body-leading",
+    "type.body-semibold.family": "type-body-semibold-family",
+    "type.body-semibold.leading": "type-body-semibold-leading",
+    "type.body-semibold.size": "type-body-semibold-size",
+    "type.body-semibold.tracking": "type-body-semibold-tracking",
+    "type.body-semibold.weight": "type-body-semibold-weight",
     "type.body.size": "type-body-size",
     "type.body-sm.family": "type-body-sm-family",
     "type.body-sm.leading": "type-body-sm-leading",
@@ -3024,6 +3064,18 @@
         "weight": "type-body-sm-weight",
         "leading": "type-body-sm-leading",
         "tracking": "type-body-sm-tracking"
+      }
+    },
+    "type.body-semibold": {
+      "path": "type.body-semibold",
+      "cssName": "type.body-semibold",
+      "type": "type",
+      "members": {
+        "family": "type-body-semibold-family",
+        "size": "type-body-semibold-size",
+        "weight": "type-body-semibold-weight",
+        "leading": "type-body-semibold-leading",
+        "tracking": "type-body-semibold-tracking"
       }
     },
     "type.label": {

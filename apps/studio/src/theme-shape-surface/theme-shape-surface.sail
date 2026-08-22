@@ -10,7 +10,7 @@
   style pathMeta = { fg(muted).type(mono-sm) }
   style monoMeta = { fg(muted).type(mono-sm) }
   // no preset: type weight
-  style doorTitle = { type({ weight: semibold }) }
+  style doorTitle = { type(body-semibold) }
   style eyebrow = { fg(muted).type(label) }
   // no preset: min-w lock
   style controlsCol = { pad(4).size({ min-w: 0 }) }

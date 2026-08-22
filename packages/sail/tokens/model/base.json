@@ -834,7 +834,17 @@
         "tracking": "{typography.tracking.normal}"
       }
     },
-    "label": {
+    "body-semibold": {
+      "$type": "type",
+      "$value": {
+        "family": "{typography.font.body}",
+        "size": "{typography.text.base}",
+        "weight": "{typography.font.weight-semibold}",
+        "leading": "{typography.leading.normal}",
+        "tracking": "{typography.tracking.normal}"
+      }
+    },
+        "label": {
       "$type": "type",
       "$value": {
         "family": "{typography.font.body}",

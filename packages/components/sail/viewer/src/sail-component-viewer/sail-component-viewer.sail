@@ -71,7 +71,6 @@
   /** Knobs rail: space scale, never panel-* tokens. Pad for focus rings. */
   style knobColumn = { size({ w: 64, min-w: 64, min-h: 64 }).shrink(0).pad(5).overflow({ all: visible }).border({ edge: l, color: border-subtle, width: 1 }) }
   style usageFrame = { size({ w: 100% }).pad(4).overflow({ all: visible }).radius(lg).border({ color: border, width: 1 }).bg(app) }
-  style usagePreviewPad = { size({ w: 100% }).pad(4).overflow({ all: visible }) }
 </scope>
 
 <controller>

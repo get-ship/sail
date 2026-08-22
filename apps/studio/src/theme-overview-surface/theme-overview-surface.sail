@@ -12,7 +12,7 @@
   style panelCard = { pad(4).size({ h: 100%, min-w: 0 }).radius(lg).border(subtle).bg(surface) }
   style doorCard = { pad(3).cursor(pointer), when: { hover: bg(hover-bg) } }
   // no preset: type weight
-  style doorTitle = { type({ weight: semibold }) }
+  style doorTitle = { type(body-semibold) }
   style doorHint = { fg(muted).type(body-sm) }
   // no preset: min-w lock
   style heroCard = { overflow(hidden).size({ min-w: 0 }).radius(lg).border(subtle).bg(surface) }

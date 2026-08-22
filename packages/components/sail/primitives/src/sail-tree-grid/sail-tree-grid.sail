@@ -22,6 +22,8 @@
 
 import { createTable, type Table } from '../sail-table/engine/create-table'
 import type { TreeNode } from '../sail-tree/tree-node'
+import type { Action, ControllerScope } from '@ship/sail-runtime'
+import type { Virtual } from '@ship/sail-runtime/virtual'
 import { parseJsonColumns, parseJsonNodes } from '../sail-tree/decode'
 import { treeTableOptions } from '../sail-tree/sail-tree.engine'
 import { treeHeaderViews, windowTreeRows, type TreeHeaderView } from '../sail-tree/sail-tree.view'
