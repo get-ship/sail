@@ -162,7 +162,6 @@ export type {
   HotkeyEntry,
   HotkeyHandler,
   HotkeysMap,
-  InViewHandler,
 } from './actions'
 
 // ── Errors ─────────────────────────────────────────────────────────────────

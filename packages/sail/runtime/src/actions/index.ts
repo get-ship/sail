@@ -11,7 +11,6 @@ export { clickOutside } from './click-outside'
 export { hotkeys } from './hotkeys'
 export type { HotkeyEntry, HotkeyHandler, HotkeysMap } from './hotkeys'
 export { focus } from './focus'
-export type { InViewHandler } from './in-view'
 
 export { resizable } from './resizable'
 export { registerSailHighlighter } from './highlight'
