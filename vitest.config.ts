@@ -21,6 +21,7 @@ const PROJECTS = [
   'packages/deck/hono',
   'packages/deck/router',
   'packages/sail/dom',
+  'packages/sail/l1',
   'packages/sail/runtime',
   'packages/sail/tokens',
   'packages/sail/test-setup',

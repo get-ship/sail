@@ -2,9 +2,9 @@
 
 Owned fixture + probe. **Not** `apps/sail-site`.
 
-- Fixture: `../fixtures/l1-matrix` — rest-state L1 strip. Add a tag here to fan out.
-- Themes: generated `THEME_META` (every catalog id × supported modes).
-- Probe: `probe.ts` — `[data-sail-host]` painted-box / contrast / hidden.
+- Fixture: `../fixtures/l1-matrix` — generated per-host routes (`bun …/l1-matrix/generate.ts`). Add a tag to fan out.
+- Cells: `cells.ts` — catalog × THEME_META fan-out (rest + axis sweeps).
+- Probe: `probe.ts` — walks cells, visits each generated route, paints the floor (`EMPTY-RENDER`, `HIDDEN`, `OPACITY-0`, `LOW-CONTRAST`, `TINY`, `INVISIBLE-LINE`) plus layout-diag flags from `layout-diags.json`.
 
 ```
 sail dev --project crates/sail/compiler/tests/fixtures/l1-matrix --addr 127.0.0.1:7892

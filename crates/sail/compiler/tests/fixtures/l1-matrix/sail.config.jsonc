@@ -7,5 +7,6 @@
   },
   "deck": {
     "render": "csr"
-  }
+  },
+  "raw_containers": true
 }

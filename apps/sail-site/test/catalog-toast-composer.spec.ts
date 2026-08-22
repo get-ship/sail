@@ -13,7 +13,7 @@ test('toast detail: dismiss then Show toast remounts', async ({ page }) => {
   const stage = page.locator('[slot="stage"]')
   await expect(stage).toBeVisible({ timeout: 30_000 })
 
-  const toast = () => page.locator('[data-sail-host="toast"]')
+  const toast = () => stage.getByRole('status')
   await expect(toast()).toHaveCount(1)
   await expect(toast()).toContainText('Saved.')
 
@@ -21,7 +21,7 @@ test('toast detail: dismiss then Show toast remounts', async ({ page }) => {
   await toast().getByRole('button', { name: /dismiss/i }).click()
   await expect(toast()).toHaveCount(0)
 
-  await stage.locator('[toast-show]').click()
+  await stage.getByRole('button', { name: 'Show toast' }).click()
   await expect(toast()).toHaveCount(1)
   await expect(toast()).toContainText('Saved.')
 

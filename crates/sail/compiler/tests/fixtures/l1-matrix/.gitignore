@@ -7,6 +7,7 @@ dist/
 routes.gen.ts
 entry.gen.ts
 components.gen.ts
+layout-diags.json
 *.sail.d.ts
 *.controller.ts
 .env

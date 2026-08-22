@@ -40,7 +40,7 @@
       <button variant="soft">Soft</button>
       <button variant="outline">Outline</button>
       <button variant="ghost">Ghost</button>
-      <button tone="destructive">Destroy</button>
+      <button tone="danger">Destroy</button>
     </row>
     <row gap="2">
       <badge>rest</badge>
