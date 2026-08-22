@@ -378,6 +378,15 @@
       ],
       "x-sail-layer": "POLICY"
     },
+    "style_slots": {
+      "default": null,
+      "description": "POLICY. Hyphenated CEs in this project may spend Style slot form (`type({ size: xs })`, `bg({ clip: text })`, `filter({ blur: 4 })`). Routes stay tag-only. Product apps omit this and stay presets. Default: off.",
+      "type": [
+        "boolean",
+        "null"
+      ],
+      "x-sail-layer": "POLICY"
+    },
     "stylesheets": {
       "default": null,
       "description": "POLICY. The CSS files this package may ship; an undeclared stylesheet fails the floor check.\n\nDefault: none.",
