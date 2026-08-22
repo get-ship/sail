@@ -108,8 +108,7 @@ export default controller(({ value }: Scope) => {
   style({ position(relative).size({ w: 100%, h: 100%, min-h: overlay-max-w-sm }).overflow({ all: hidden }).bg(background).fg(foreground).border({ color: border, width: 1 }).radius(md).cursor(grab) })
 >
   <div
-    use:worldTransform={worldTransformCss()}
-    style({ position({ scheme: absolute, t: 0, l: 0 }).transform(bind(worldTx)) })
+    style({ position({ scheme: absolute, t: 0, l: 0 }).transform(bind(worldTransformCss)) })
   >
     <slot></slot>
   </div>

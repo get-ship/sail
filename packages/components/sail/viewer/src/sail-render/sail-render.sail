@@ -42,10 +42,10 @@ export default controller((ctx: ControllerScope<Scope>) => {
     }
 
     const viewportWidth = (ctx as { viewportWidth?: () => string }).viewportWidth
-    const stageMaxWidth = (): string | null => {
+    const stageMaxWidth = derived((): string | null => {
       const w = viewportWidth ? viewportWidth() : 'full'
       return w === 'full' || !w ? null : `var(--breakpoint-${w})`
-    }
+    })
     const compiling = signal(false)
     const compileError = signal<ReturnType<typeof formatCompileError> | null>(null)
     const runtimeError = signal<string | null>(null)
@@ -278,7 +278,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
       </column>
     </if>
 
-    <div use:captureStage use:maxWidth={stageMaxWidth()} style({ size({ w: 100%, max-w: bind(maxW) }).margin({ l: auto, r: auto }) })></div>
+    <div use:captureStage style({ size({ w: 100%, max-w: bind(stageMaxWidth) }).margin({ l: auto, r: auto }) })></div>
     </span>
 </column>
 </error-boundary>

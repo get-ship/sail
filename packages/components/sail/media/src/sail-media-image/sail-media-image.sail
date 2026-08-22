@@ -81,6 +81,13 @@ export default controller((_ctx: Scope) => {
     })
 
     const zoomPanSig = signal<ZoomPanState>({ x: 0, y: 0, scale: 1 })
+    const zoomTf = derived(() => {
+      const st = zoomPanSig()
+      const x = Number.isFinite(st.x) ? st.x : 0
+      const y = Number.isFinite(st.y) ? st.y : 0
+      const sc = Number.isFinite(st.scale) ? st.scale : 1
+      return `translate(${x}px, ${y}px) scale(${sc})`
+    })
 
     let hostEl: HostBag | null = null
 
@@ -124,8 +131,9 @@ export default controller((_ctx: Scope) => {
       return { destroy: stop }
     }
 
-    // Transform stamped by use:zoomPan action (--zoom-tx); controller never touches el.style.
-    const applyTransform = (_st: ZoomPanState): void => {}
+    const applyTransform = (st: ZoomPanState): void => {
+      zoomPanSig.set(st)
+    }
     const onZoom = (scale: number): void => {
       if (hostEl) emit(hostEl, 'sail-viewer-zoom', { scale })
     }
@@ -205,7 +213,7 @@ export default controller((_ctx: Scope) => {
       }
     })
 
-    return { srcSig, activeIndex, isSvg, sources, isGallery, galleryItems, rasterImg, svgInline, zoomStage, galleryStrip, zoomPanSig }
+    return { srcSig, activeIndex, isSvg, sources, isGallery, galleryItems, rasterImg, svgInline, zoomStage, galleryStrip, zoomPanSig, zoomTf }
   })
 
 </controller>
@@ -225,8 +233,7 @@ export default controller((_ctx: Scope) => {
     <img
       alt={alt()}
       use:rasterImg
-      use:zoomPan={zoomPanSig()}
-      style({ display(block).size({ w: 100%, h: 100%, max-h: 100% }).objectFit(cover).transform(bind(zoomTx)) })
+      style({ display(block).size({ w: 100%, h: 100%, max-h: 100% }).objectFit(cover).transform(bind(zoomTf)) })
     >
   </center>
   <if {isGallery()}>

@@ -99,14 +99,11 @@ const BUILTINS: &[&str] = &[
     "dropzone",
     "eventSpan",
     "gridTracks",
-    "maxWidth",
     "pin",
     "portEdge",
     "rect",
     "virtualRow",
     "virtualSpacer",
-    "worldTransform",
-    "zoomPan",
 ];
 
 const KEYWORDS: &[&str] = &[

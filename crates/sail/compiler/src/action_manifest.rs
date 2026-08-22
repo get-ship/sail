@@ -275,13 +275,6 @@ pub const ACTIONS: &[ActionEntry] = &[
         writes: &[],
     },
     ActionEntry {
-        name: "maxWidth",
-        param: "number | string | null | undefined",
-        summary: "Cap the element's content width to a max (px or CSS length).",
-        auto_import: true,
-        writes: &["maxW"],
-    },
-    ActionEntry {
         name: "mediaFallback",
         param: "void",
         summary: "Image-with-fallback behavior for an <avatar> element.",
@@ -440,20 +433,6 @@ pub const ACTIONS: &[ActionEntry] = &[
         auto_import: true,
         writes: &["rowsH"],
     },
-    ActionEntry {
-        name: "worldTransform",
-        param: "string | null | undefined",
-        summary: "Track the cumulative CSS transform up the parent chain (for canvas positioning).",
-        auto_import: true,
-        writes: &["worldTx"],
-    },
-    ActionEntry {
-        name: "zoomPan",
-        param: "ZoomPanState | null | undefined",
-        summary: "Pinch/wheel zoom + drag pan on a surface; emits state changes to the controller.",
-        auto_import: true,
-        writes: &["zoomTx"],
-    },
 ];
 
 /// App-author `use:` surface taught in skill/docs. Internal stamps stay
@@ -463,7 +442,7 @@ pub const ACTIONS: &[ActionEntry] = &[
 /// `pagination`, `combobox`, `icon`, `resizable`) are closed impl inside L1 widgets — not public.
 /// An action is node-lifetime imperative behavior the language has no syntax
 /// for — never content, state, or data (icon fails that test; the element owns it).
-pub const PUBLIC_ACTION_COUNT: usize = 13;
+pub const PUBLIC_ACTION_COUNT: usize = 12;
 pub const PUBLIC_ACTION_NAMES: &[&str; PUBLIC_ACTION_COUNT] = &[
     "anchor",
     "autosize",
@@ -477,7 +456,6 @@ pub const PUBLIC_ACTION_NAMES: &[&str; PUBLIC_ACTION_COUNT] = &[
     "rect",
     "tipDescribe",
     "virtualRow",
-    "zoomPan",
 ];
 
 /// Whether `name` is part of the curated public `use:` surface.
@@ -524,7 +502,6 @@ pub const BUILTIN_ACTION_NAMES: &[&str] = &[
     "liveBox",
     "liveRegion",
     "marquee",
-    "maxWidth",
     "mediaFallback",
     "menu",
     "pagination",
@@ -546,8 +523,6 @@ pub const BUILTIN_ACTION_NAMES: &[&str] = &[
     "variantLive",
     "virtualRow",
     "virtualSpacer",
-    "worldTransform",
-    "zoomPan",
 ];
 
 // Drift guards: the const-time panic pattern would be cleaner but
@@ -584,14 +559,11 @@ pub const BARE_REFERENCED_ACTION_NAMES: &[&str] = &[
     "hotkeys",
     "inView",
     "liveBox",
-    "maxWidth",
     "pin",
     "portEdge",
     "rect",
     "virtualRow",
     "virtualSpacer",
-    "worldTransform",
-    "zoomPan",
 ];
 
 // (see drift-guard note above — the tests in `mod tests` enforce
