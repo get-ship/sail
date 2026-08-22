@@ -142,13 +142,6 @@ pub const ACTIONS: &[ActionEntry] = &[
         writes: &[],
     },
     ActionEntry {
-        name: "inView",
-        param: "InViewHandler | undefined",
-        summary: "Fire a callback when the host enters the viewport (IntersectionObserver).",
-        auto_import: true,
-        writes: &[],
-    },
-    ActionEntry {
         name: "liveBox",
         param: "string | null | undefined",
         summary: "Apply freeform CSS declarations for live specimen geometry (border-radius, box-shadow, …).",
@@ -191,25 +184,11 @@ pub const ACTIONS: &[ActionEntry] = &[
         writes: &[],
     },
     ActionEntry {
-        name: "spotlight",
-        param: "void",
-        summary: "Soft spotlight following the pointer; visual highlight for surfaces under it.",
-        auto_import: true,
-        writes: &[],
-    },
-    ActionEntry {
         name: "swatch",
         param: "string | null | undefined",
         summary: "Render a color swatch keyed by a token name from the active theme.",
         auto_import: true,
         writes: &["swatchColor"],
-    },
-    ActionEntry {
-        name: "targetCursor",
-        param: "void",
-        summary: "Switch the cursor to a custom 'target' style while over the element.",
-        auto_import: true,
-        writes: &["tcX", "tcY"],
     },
     ActionEntry {
         name: "themeSelect",
