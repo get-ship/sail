@@ -8,6 +8,6 @@
   </row>
   <row gap="2">
     <div style({ size(8).bg(muted).radius(full) })></div>
-    <div style({ size(12).bg(destructive).opacity(80) })></div>
+    <div style({ size(12).bg(danger).opacity(80) })></div>
   </row>
 </column>

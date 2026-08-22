@@ -5,13 +5,13 @@
   style header = { pad({ b: 4 }).border({ width: 1, color: border, edge: b }) }
   style title = { margin({ b: 2 }).fg(foreground).type({ size: 2xl, weight: bold }) }
   style lead = { fg(muted-foreground).type({ size: sm }) }
-  style card = { pad(5).border({ width: 1, color: border }).radius(lg).bg(surface-1) }
+  style card = { pad(5).border({ width: 1, color: border }).radius(lg).bg(surface) }
   style cardTitle = { fg(foreground).type({ size: lg, weight: semibold, family: mono }) }
   style body = { fg(muted-foreground).type({ size: sm, leading: relaxed }) }
-  style arm = { pad(3).border({ width: 1, color: divider }).radius(md).bg(surface-2) }
+  style arm = { pad(3).border({ width: 1, color: divider }).radius(md).bg(surface) }
   style caption = { fg(muted-foreground).type({ size: xs, weight: medium, case: lowercase, tracking: wide, family: mono }) }
-  style toolbar = { pad(2).bg(surface-1).radius(sm).border({ width: 1, color: border }) }
-  style toolBtn = { pad({ x: 2, y: 1 }).border({ width: 1, color: border }).radius(sm).bg(surface-2).fg(muted-foreground).cursor(default).type({ size: sm }) }
+  style toolbar = { pad(2).bg(surface).radius(sm).border({ width: 1, color: border }) }
+  style toolBtn = { pad({ x: 2, y: 1 }).border({ width: 1, color: border }).radius(sm).bg(surface).fg(muted-foreground).cursor(default).type({ size: sm }) }
   style pageLabel = { fg(foreground).type({ size: sm, family: mono }) }
   style toolHint = { margin({ l: auto }).fg(muted-foreground).type({ size: xs, italic: true }) }
 </scope>

@@ -3,11 +3,11 @@
   style pageHead = { pad({ b: 4 }).border({ width: 1, color: border, edge: b }) }
   style title = { margin({ b: 2 }).fg(foreground).type({ size: 2xl, weight: bold }) }
   style lede = { fg(muted-foreground).type({ size: sm }) }
-  style card = { pad(5).border({ width: 1, color: border }).radius(lg).bg(surface-1) }
+  style card = { pad(5).border({ width: 1, color: border }).radius(lg).bg(surface) }
   style cardTitle = { fg(foreground).type({ size: lg, weight: semibold, family: mono }) }
   style badge = { pad({ x: 2, y: 1 }).fg(warning-foreground).bg(warning).radius(sm).type({ size: xs, weight: medium, family: body, tracking: wide }) }
   style body = { fg(muted-foreground).type({ size: sm, leading: relaxed }) }
-  style stage = { pad(3).border({ width: 1, color: divider }).radius(md).bg(surface-2) }
+  style stage = { pad(3).border({ width: 1, color: divider }).radius(md).bg(surface) }
   style propList = { fg(muted-foreground) }
   style propRows = { display(contents).type({ size: sm }) }
 </scope>

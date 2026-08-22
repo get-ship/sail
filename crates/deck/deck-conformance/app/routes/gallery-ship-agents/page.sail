@@ -5,11 +5,11 @@
   style header = { pad({ b: 4 }).border({ width: 1, color: border, edge: b }) }
   style title = { margin({ b: 2 }).fg(foreground).type({ size: 2xl, weight: bold }) }
   style lead = { fg(muted-foreground).type({ size: sm, leading: relaxed }) }
-  style card = { pad(5).border({ width: 1, color: border }).radius(lg).bg(surface-1) }
+  style card = { pad(5).border({ width: 1, color: border }).radius(lg).bg(surface) }
   style cardTitle = { fg(foreground).type({ size: lg, weight: semibold, family: mono }) }
   style body = { fg(muted-foreground).type({ size: sm, leading: relaxed }) }
   style rowLabel = { size({ min-w: 20 }).fg(muted-foreground).type({ family: mono, size: xs }) }
-  style slotBtn = { pad({ y: 1, x: 3 }).border({ width: 1, color: border }).radius(sm).bg(surface-2).fg(foreground).cursor(default).type({ size: sm }) }
+  style slotBtn = { pad({ y: 1, x: 3 }).border({ width: 1, color: border }).radius(sm).bg(surface).fg(foreground).cursor(default).type({ size: sm }) }
   type HarnessRowProps = {
     label: string
     size: string

@@ -4,7 +4,7 @@
   style title = { margin({ b: 2 }).fg(foreground).type({ size: 2xl, weight: bold }) }
   style lede = { fg(muted-foreground).type({ size: sm }) }
   style sectionH = { margin({ b: 4 }).fg(foreground).type({ size: lg, weight: semibold, family: mono }) }
-  style card = { pad(4).border({ width: 1, color: border }).radius(lg).bg(surface-1) }
+  style card = { pad(4).border({ width: 1, color: border }).radius(lg).bg(surface) }
   style cardLabel = { fg(muted-foreground).type({ size: sm, weight: medium }) }
   style legendPrimary = { fg(primary) }
   style textSm = { type({ size: sm }) }

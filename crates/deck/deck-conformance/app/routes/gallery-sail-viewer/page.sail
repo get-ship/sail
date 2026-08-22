@@ -3,10 +3,10 @@
   style pageHead = { pad({ b: 4 }).border({ width: 1, color: border, edge: b }) }
   style title = { margin({ b: 2 }).fg(foreground).type({ size: 2xl, weight: bold }) }
   style lede = { fg(muted-foreground).type({ size: sm }) }
-  style card = { pad(5).border({ width: 1, color: border }).radius(lg).bg(surface-1) }
+  style card = { pad(5).border({ width: 1, color: border }).radius(lg).bg(surface) }
   style cardTitle = { fg(foreground).type({ size: lg, weight: semibold, family: mono }) }
   style body = { fg(muted-foreground).type({ size: sm, leading: relaxed }) }
-  style stage = { pad(3).border({ width: 1, color: divider }).radius(md).bg(surface-2) }
+  style stage = { pad(3).border({ width: 1, color: divider }).radius(md).bg(surface) }
   style caption = { fg(muted-foreground).type({ size: xs, weight: medium, case: lowercase, tracking: wide, family: mono }) }
 </scope>
 

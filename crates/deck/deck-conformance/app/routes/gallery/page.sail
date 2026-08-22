@@ -5,7 +5,7 @@
   style title = { fg(foreground).type({ size: 2xl, weight: bold }) }
   style lead = { margin({ t: 2 }).fg(muted-foreground).type({ size: sm, leading: relaxed }) }
   style strong = { fg(foreground) }
-  style section = { pad(5).border({ color: border, width: 1 }).radius(lg).bg(surface-1) }
+  style section = { pad(5).border({ color: border, width: 1 }).radius(lg).bg(surface) }
   style sectionTitle = { fg(foreground).type({ size: lg, weight: semibold }) }
   style muted = { fg(muted-foreground).type({ size: sm }) }
   style monoMuted = { fg(muted-foreground).type({ size: sm, family: mono }) }

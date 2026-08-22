@@ -268,7 +268,7 @@ export default controller(() => {
           </row>
 
           <if {attempted() && !valid() && !pending()}>
-            <p role="alert" style({ fg(destructive).type({ size: sm }) })>
+            <p role="alert" style({ fg(danger).type({ size: sm }) })>
               Fix the highlighted fields before saving.
             </p>
           </if>

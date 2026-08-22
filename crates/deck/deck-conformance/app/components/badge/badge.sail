@@ -11,7 +11,7 @@ export default controller(() => {
 </controller>
 
 <scope>
-  style host = { pad(1).radius(full).bg(surface-2).fg(foreground) }
+  style host = { pad(1).radius(full).bg(surface).fg(foreground) }
   style mono = { display(contents).type({ size: sm, family: mono }) }
 </scope>
 

@@ -3,12 +3,12 @@
   style pageHead = { pad({ b: 4 }).border({ width: 1, color: border, edge: b }) }
   style title = { margin({ b: 2 }).fg(foreground).type({ size: 2xl, weight: bold }) }
   style lede = { fg(muted-foreground).type({ size: sm }) }
-  style card = { pad(5).border({ width: 1, color: border }).radius(lg).bg(surface-1) }
+  style card = { pad(5).border({ width: 1, color: border }).radius(lg).bg(surface) }
   style cardTitle = { fg(foreground).type({ size: lg, weight: semibold }) }
   style codeTitle = { type({ family: mono }) }
   style badge = { pad({ x: 2, y: 1 }).margin({ s: 3 }).fg(warning-foreground).bg(warning).radius(full).type({ size: xs, weight: medium }) }
   style body = { fg(muted-foreground).type({ size: sm, leading: relaxed }) }
-  style stage = { pad(3).border({ width: 1, color: divider }).radius(md).bg(surface-2) }
+  style stage = { pad(3).border({ width: 1, color: divider }).radius(md).bg(surface) }
   style caption = { fg(muted-foreground).type({ size: xs, weight: medium, case: lowercase, tracking: wide, family: mono }) }
   style dialogFrame = { position(relative).overflow(hidden).border({ width: 1, style: dashed, color: border }).radius(md) }
 </scope>

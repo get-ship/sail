@@ -13,7 +13,7 @@ export default controller(() => ({
   style page = { pad(6).size({ max-w: breakpoint-tablet }).margin({ x: auto }) }
   style title = { fg(foreground).type({ size: 2xl, weight: bold }) }
   style muted = { fg(muted-foreground).type({ size: sm }) }
-  style error = { fg(destructive).type({ size: sm }) }
+  style error = { fg(danger).type({ size: sm }) }
   style mono = { fg(foreground).type({ family: mono }) }
 </scope>
 

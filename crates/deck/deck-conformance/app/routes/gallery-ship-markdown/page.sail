@@ -5,7 +5,7 @@
   style sectionH = { margin({ b: 3 }).pad({ b: 2 }).fg(muted-foreground).border({ width: 1, color: border, edge: b }).type({ size: sm, weight: semibold, case: uppercase, tracking: wide }) }
   style badge = { pad({ x: 2, y: half }).margin({ s: 3 }).fg(warning-foreground).bg(warning).border({ width: 1, color: warning }).radius(sm).type({ size: xs, weight: medium, wrap: nowrap, case: normal, tracking: normal }) }
   style body = { margin({ b: 4 }).fg(muted-foreground).type({ size: sm, leading: relaxed }) }
-  style card = { pad(5).bg(surface-1).border({ width: 1, color: border }).radius(lg) }
+  style card = { pad(5).bg(surface).border({ width: 1, color: border }).radius(lg) }
 </scope>
 
 <column gap="8" style(page)>

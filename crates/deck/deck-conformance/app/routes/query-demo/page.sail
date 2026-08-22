@@ -22,7 +22,7 @@ export default controller(() => {
   style title = { fg(foreground).type({ size: 2xl, weight: bold }) }
   style lead = { fg(muted-foreground).type({ size: sm }) }
   style muted = { fg(muted-foreground).type({ size: sm }) }
-  style error = { fg(destructive).type({ size: sm }) }
+  style error = { fg(danger).type({ size: sm }) }
   style list = { pad(0).margin(0).list(none) }
 </scope>
 
