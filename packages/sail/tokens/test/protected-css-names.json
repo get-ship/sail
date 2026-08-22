@@ -8,7 +8,6 @@
     "accent-subtle",
     "active-bg",
     "active-strength",
-
     "background",
     "bg-app-color",
     "bg-inset-color",
@@ -53,7 +52,6 @@
     "density-row-px",
     "density-row-py",
     "density-text",
-
     "duration-deliberate",
     "duration-fast",
     "duration-instant",
@@ -73,7 +71,6 @@
     "fg-foreground-color",
     "fg-muted-color",
     "filter-backdrop",
-
     "font-body",
     "font-display",
     "font-heading",
@@ -90,7 +87,6 @@
     "gradient-surface",
     "hover-bg",
     "hover-strength",
-
     "icon-size-2xl",
     "icon-size-2xs",
     "icon-size-3xl",
@@ -100,7 +96,6 @@
     "icon-size-sm",
     "icon-size-xl",
     "icon-size-xs",
-
     "image-texture",
     "image-texture-blend",
     "image-texture-opacity",
@@ -110,7 +105,6 @@
     "info-hover",
     "info-subtle",
     "inset",
-
     "leading-none",
     "leading-normal",
     "leading-relaxed",
@@ -127,19 +121,15 @@
     "neutral-hover",
     "neutral-subtle",
     "overlay",
-    "overlay-blend",
-    "overlay-fill",
     "overlay-max-h-lg",
     "overlay-max-h-md",
     "overlay-max-h-sm",
     "overlay-max-w-lg",
     "overlay-max-w-md",
     "overlay-max-w-sm",
-    "overlay-opacity",
     "overlay-vh-lg",
     "overlay-vh-md",
     "overlay-vh-sm",
-
     "pad-page-x",
     "play-colors-property",
     "play-control-property",
@@ -152,7 +142,6 @@
     "primary-foreground",
     "primary-hover",
     "primary-subtle",
-
     "radius-full",
     "radius-lg",
     "radius-md",

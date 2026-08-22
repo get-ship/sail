@@ -3,7 +3,7 @@
 -->
 <scope>
   // no preset: edge-only border
-  style toolbar = { size(hug).pad(2).border({ edge: b, color: border-subtle, width: 1 }).bg(surface) }
+  style toolbar = { size(hug).pad(2).border(subtle-b).bg(surface) }
   style filterInput = { size(max) }
   style countMono = { fg(muted).type(mono-sm) }
   style treeBody = { size(grow).pad(1).overflow(hidden).bg(app) }

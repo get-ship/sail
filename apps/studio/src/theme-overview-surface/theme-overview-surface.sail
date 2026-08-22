@@ -27,7 +27,7 @@
   style iconCell = { size({ w: 9, h: 9, min-w: 9, min-h: 9 }).radius(md).border(subtle).bg(app) }
   style bandStatus = { pad(4) }
   // no preset: edge-only border
-  style bandError = { pad(4).border({ edge: b, color: border, width: 1 }) }
+  style bandError = { pad(4).border(default-b) }
   style fullBtn = { size(control-sm) }
   // no preset: size lock
   style specimenBtn = { size({ min-w: control-h-sm, min-h: 6 }) }
@@ -35,11 +35,11 @@
   style workbench = { size(grow).overflow(hidden).bg(app) }
   style editorScroll = { size(grow).bg(app) }
   // no preset: edge-only border
-  style specimenDock = { size(grow).overflow(hidden).border({ edge: l, color: border-subtle, width: 1 }).bg(app) }
+  style specimenDock = { size(grow).overflow(hidden).border(subtle-l).bg(app) }
   style specimenPad = { size(grow).pad(4) }
   style specimenFrame = { size(max).overflow(hidden).elevation(lg) }
   // no preset: min-w lock + edge-only border
-  style specimenChrome = { pad(3).size({ h: 8, min-w: 0, min-h: 8 }).border({ edge: b, color: border-subtle, width: 1 }).bg(surface) }
+  style specimenChrome = { pad(3).size({ h: 8, min-w: 0, min-h: 8 }).border(subtle-b).bg(surface) }
   // no preset: size lock
   style trafficDots = { size({ min-w: 12 }) }
   // no preset: size lock

@@ -22,7 +22,7 @@
   // padS clears the absolute rail so the first glyph never sits under it.
   style trigger = { pad({ y: 2, l: 4, r: 3 }) }
   style nameText = { fg(foreground).type({ family: mono, size: sm, weight: medium, wrap: truncate }) }
-  style body = { pad({ y: 2, l: 4, r: 3 }).border({ edge: t, color: border, width: 1 }).type({ family: mono, size: sm, leading: normal }) }
+  style body = { pad({ y: 2, l: 4, r: 3 }).border(default-t).type({ family: mono, size: sm, leading: normal }) }
   style sectionLabel = { display(block).margin({ b: 1 }).fg(muted-foreground).type({ family: body, size: xs, tracking: wide, case: uppercase }) }
   style pre = { type({ wrap: pre-wrap }) }
   style resultBlock = { margin({ t: 2 }) }

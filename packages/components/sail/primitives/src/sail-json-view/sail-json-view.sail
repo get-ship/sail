@@ -9,7 +9,7 @@
     expanded = false
     depth = 1
   }
-  style guidePad = { size({ w: 3 }).border({ edge: l, color: border-subtle, width: 1 }) }
+  style guidePad = { size({ w: 3 }).border(subtle-l) }
 </scope>
 
 <controller>

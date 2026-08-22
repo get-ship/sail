@@ -9,12 +9,12 @@
   style surfaceRoot = { size(grow).overflow(hidden).bg(app) }
   style workbench = { size(grow).overflow(hidden) }
   // no preset: edge-only border
-  style treePane = { size(grow).overflow(hidden).border({ edge: r, color: border-subtle, width: 1 }).bg(app) }
+  style treePane = { size(grow).overflow(hidden).border(subtle-r).bg(app) }
   // no preset: edge-only border
-  style treeHead = { size(hug).pad(4).border({ edge: b, color: border-subtle, width: 1 }) }
+  style treeHead = { size(hug).pad(4).border(subtle-b) }
   style detailPane = { size(grow).overflow(hidden).bg(app) }
   // no preset: edge-only border
-  style detailHead = { size(hug).pad(5).border({ edge: b, color: border-subtle, width: 1 }).bg(app) }
+  style detailHead = { size(hug).pad(5).border(subtle-b).bg(app) }
   style loadRow = { size(hug).pad(4) }
   style treeBody = { size(grow).pad(1).overflow(hidden) }
   style scrollGrow = { size(grow) }

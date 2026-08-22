@@ -6,19 +6,19 @@
   style explorerHost = { size(max).overflow(hidden) }
   style mainCol = { size(grow).overflow(hidden) }
   // no preset: min-w lock + edge-only border
-  style tabsStrip = { size({ h: 8, min-w: 0 }).overflow(hidden).border({ edge: b, color: border, width: 1 }).bg(surface) }
+  style tabsStrip = { size({ h: 8, min-w: 0 }).overflow(hidden).border(default-b).bg(surface) }
   style tabList = { size(grow).overflow({ x: auto, y: hidden }) }
   // no preset: size lock + edge-only border
-  style docTab = { size({ h: 100%, max-w: 48 }).pad(3).border({ edge: r, color: border-subtle, width: 1 }).border({ edge: t, color: transparent, width: 2 }).bg(surface).fg(muted).cursor(pointer), when: { hover: bg(hover-bg).fg(foreground), current: bg(app).fg(foreground).border({ edge: t, color: primary }) } }
+  style docTab = { size({ h: 100%, max-w: 48 }).pad(3).border(subtle-r).border({ edge: t, color: transparent, width: 2 }).bg(surface).fg(muted).cursor(pointer), when: { hover: bg(hover-bg).fg(foreground), current: bg(app).fg(foreground).border({ edge: t, color: primary }) } }
   style tabLabel = { size(grow).type(body-sm) }
   style dirtyDot = { fg(warning).type(body-sm) }
   style tabClose = { size(control-sm) }
   // no preset: edge-only border
-  style tabsTrail = { pad(2).size(max).border({ edge: l, color: border-subtle, width: 1 }) }
+  style tabsTrail = { pad(2).size(max).border(subtle-l) }
   // no preset: size lock
   style routeLabel = { size({ max-w: 40 }).fg(muted).type(body-sm) }
   // no preset: edge-only border
-  style errorBand = { pad(3).bg(surface).border({ edge: b, color: border, width: 1 }) }
+  style errorBand = { pad(3).bg(surface).border(default-b) }
   style errorText = { fg(danger).type(body-sm) }
   style emptyHost = { size(grow).overflow(hidden).bg(app) }
   style emptyFrame = { size(max).pad(4).border(subtle).radius(md) }

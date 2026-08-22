@@ -7,24 +7,24 @@
   style surfaceRoot = { size(grow).overflow(hidden).bg(app) }
   style workbench = { size(grow).overflow(hidden) }
   // no preset: edge-only border
-  style navPane = { size(grow).overflow(hidden).border({ edge: r, color: border-subtle, width: 1 }).bg(surface) }
+  style navPane = { size(grow).overflow(hidden).border(subtle-r).bg(surface) }
   // no preset: edge-only border
-  style navHead = { size(hug).pad(3).border({ edge: b, color: border-subtle, width: 1 }) }
+  style navHead = { size(hug).pad(3).border(subtle-b) }
   style scrollGrow = { size(grow) }
   style navListPad = { pad(2) }
   style fullBtn = { size(max) }
   style mainPane = { size(grow).overflow(hidden).bg(app) }
   // no preset: edge-only border
-  style mainHead = { size(hug).pad(5).border({ edge: b, color: border-subtle, width: 1 }).bg(app) }
+  style mainHead = { size(hug).pad(5).border(subtle-b).bg(app) }
   style sectionTitle = { type(heading) }
   // no preset: min-w lock
   style bodyPad = { pad(4).size({ min-w: 0 }) }
   // no preset: min-w lock
   style configBlock = { size({ min-w: 0 }).overflow(hidden).radius(md).border(subtle).bg(app) }
   // no preset: edge-only border
-  style blockPad = { pad(3).border({ edge: b, color: border-subtle, width: 1 }) }
+  style blockPad = { pad(3).border(subtle-b) }
   // no preset: edge-only border
-  style dangerBand = { pad(4).border({ edge: b, color: border-subtle, width: 1 }).bg(surface) }
+  style dangerBand = { pad(4).border(subtle-b).bg(surface) }
   // no preset: min-w lock + tone border
   style cloudCard = { size({ min-w: 0 }).border({ color: primary, width: 1 }).bg(surface) }
   style growMin = { size(grow) }

@@ -311,7 +311,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
 </controller>
 <dialog use:dialogBridge size={size()} backdrop="blur">
-  <column gap="0" style({ size({ min-h: 0 }).fg(foreground) })>    <span style({ display(contents).type({ family: body }) })>      <row align="center" gap="2" style({ grow(0).pad({ all: 3, x: 4 }).border({ edge: b, color: border-subtle, width: 1 }) })>
+  <column gap="0" style({ size({ min-h: 0 }).fg(foreground) })>    <span style({ display(contents).type({ family: body }) })>      <row align="center" gap="2" style({ grow(0).pad({ all: 3, x: 4 }).border(subtle-b) })>
       <icon name="search" size="sm" style({ grow(0) })></icon>
       <input type="text" flush autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" role="combobox" aria-expanded="true" aria-autocomplete="list" aria-controls={listId()} aria-activedescendant={activeId()} aria-label={label()} placeholder={placeholder()} bind:value={query} use:captureInput style({ grow(1).size({ min-w: 0 }).type({ family: body, size: base, leading: normal }) })>
     </row>

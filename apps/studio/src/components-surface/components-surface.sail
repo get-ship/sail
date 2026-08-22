@@ -9,12 +9,12 @@
   style surfaceRoot = { size(grow).overflow(hidden).bg(app) }
   style workbench = { size(grow).overflow(hidden) }
   // no preset: edge-only border
-  style navPane = { size(grow).overflow(hidden).border({ edge: r, color: border-subtle, width: 1 }).bg(app) }
+  style navPane = { size(grow).overflow(hidden).border(subtle-r).bg(app) }
   // no preset: edge-only border
-  style navHead = { size(hug).pad(4).border({ edge: b, color: border-subtle, width: 1 }) }
+  style navHead = { size(hug).pad(4).border(subtle-b) }
   style detailPane = { size(grow).overflow(hidden).bg(app) }
   // no preset: edge-only border
-  style detailHead = { size(hug).pad(5).border({ edge: b, color: border-subtle, width: 1 }).bg(app) }
+  style detailHead = { size(hug).pad(5).border(subtle-b).bg(app) }
   // no preset: min-w lock
   style detailHeadMain = { size({ min-w: 0 }).overflow({ x: auto }) }
   style scrollGrow = { size(grow) }
@@ -26,7 +26,7 @@
   // no preset: min-w lock
   style bodyPad = { pad(5).size({ min-w: 0 }) }
   // no preset: min-w lock + edge-only border
-  style specimenChrome = { pad(3).size({ h: 8, min-w: 0, min-h: 8 }).border({ edge: b, color: border-subtle, width: 1 }).bg(surface) }
+  style specimenChrome = { pad(3).size({ h: 8, min-w: 0, min-h: 8 }).border(subtle-b).bg(surface) }
   // no preset: size lock
   style trafficDots = { size({ min-w: 12 }) }
   // no preset: size lock
@@ -39,9 +39,9 @@
   style previewTitle = { type(heading) }
   style previewHint = { fg(muted).type(body-sm) }
   // no preset: edge-only border
-  style propHead = { pad(1).border({ edge: b, color: border-subtle, width: 1 }) }
+  style propHead = { pad(1).border(subtle-b) }
   // no preset: edge-only border
-  style propRow = { pad(2).border({ edge: b, color: border-subtle, width: 1 }) }
+  style propRow = { pad(2).border(subtle-b) }
   // no preset: size lock
   style kvLabel = { size({ w: 24 }).fg(muted).type(body-sm) }
   style kvValue = { size(grow).type(mono) }

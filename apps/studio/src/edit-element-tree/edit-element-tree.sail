@@ -4,7 +4,7 @@
 <scope>
   style surfaceRoot = { size(grow).overflow(hidden) }
   // no preset: size lock + edge-only border
-  style headRow = { size({ h: 7 }).pad(3).border({ edge: b, color: border-subtle, width: 1 }) }
+  style headRow = { size({ h: 7 }).pad(3).border(subtle-b) }
   style eyebrow = { fg(muted).type(label) }
   style pathMeta = { size(grow).fg(muted).type(mono-sm) }
   style treeBody = { size(grow).pad(1).overflow(hidden) }

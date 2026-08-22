@@ -172,7 +172,6 @@ const SEMANTIC_TIER: ReadonlyArray<[name: string, sample: RegExp]> = [
   ['--surface', /--surface\s*:/i],
   ['--inset', /--inset\s*:/i],
   ['--overlay', /--overlay\s*:/i],
-  ['--overlay-fill', /--overlay-fill\s*:/i],
   ['--scrim', /--scrim\s*:/i],
   ['--primary', /--primary\s*:/i],
   ['--hover-bg', /--hover-bg\s*:/i],
@@ -195,7 +194,7 @@ const COMPONENT_TIER: ReadonlyArray<[name: string, sample: RegExp]> = [
  *  Stored as BARE names (no leading --); the regex prepends it. */
 const REPRSENTATIVE_PER_THEME = [
   'surface',
-  'overlay-fill',
+  'overlay',
   'overlay-max-w-md',
 ] as const
 
@@ -1171,9 +1170,11 @@ describe('@ship/tokens — DTCG SSOT / generate drift lock', () => {
     }
     expect(blocks).toBeGreaterThanOrEqual(2)
     expect(overrideNames.size).toBeGreaterThan(10)
+    const chromeAuthored = new Set(['overlay-fill', 'overlay-blend', 'overlay-opacity'])
     for (const n of overrideNames) {
       if (n.startsWith('inverse-')) continue
       if (n.startsWith('bg-') || n.startsWith('fg-')) continue
+      if (chromeAuthored.has(n)) continue
       expect(known.has(n), `theme override --${n} not in token-registry names`).toBe(true)
     }
     for (const n of ['primary', 'foreground', 'background', 'surface']) {

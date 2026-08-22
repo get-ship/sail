@@ -12,13 +12,13 @@
   style centerFill = { size(max) }
   style mainCol = { size(grow).overflow(hidden) }
   // no preset: size lock + edge-only border
-  style batchTray = { pad(3).size({ h: 7, min-h: 7 }).border({ edge: b, color: border-subtle, width: 1 }).bg(surface) }
+  style batchTray = { pad(3).size({ h: 7, min-h: 7 }).border(subtle-b).bg(surface) }
   style batchLabel = { fg(muted).type(label) }
   style grow1 = { size(grow) }
   style contentRow = { size(grow).overflow(hidden) }
   style surfaceSlot = { size(grow).overflow(hidden) }
   // no preset: min-w lock + edge-only border
-  style statusBar = { size({ h: 6, min-w: 0, min-h: 6 }).pad(3).overflow(hidden).border({ edge: t, color: border, width: 1 }).bg(app).fg(muted) }
+  style statusBar = { size({ h: 6, min-w: 0, min-h: 6 }).pad(3).overflow(hidden).border(default-t).bg(app).fg(muted) }
   style statusLine = { size(grow).type(mono-sm) }
   style statusMeta = { size(hug).type(body-sm) }
   style statusMuted = { size(hug).fg(muted).type(body-sm) }

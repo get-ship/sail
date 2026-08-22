@@ -256,6 +256,15 @@ fn lower_named_scale_step(
 
 /// Lower a resolved composite to the concern's CSS longhands (member vars).
 pub fn lower_composite(spec: &ConcernSpec, composite: &CompositeToken) -> Vec<(String, String)> {
+    let edge = if spec.name == "border" {
+        composite
+            .members
+            .iter()
+            .find(|(member, _)| *member == "edge")
+            .map(|(_, v)| v.clone())
+    } else {
+        None
+    };
     let mut out = Vec::new();
     for slot in spec.slots {
         if slot_css(spec, slot).is_none() {
@@ -266,6 +275,14 @@ pub fn lower_composite(spec: &ConcernSpec, composite: &CompositeToken) -> Vec<(S
             .iter()
             .find(|(member, _)| *member == slot.name)
         {
+            if let Some(e) = &edge {
+                if matches!(slot.name, "color" | "width" | "style") {
+                    for prop in edge_props(e, slot.name) {
+                        out.push((prop.to_string(), format!("var(--{css})")));
+                    }
+                    continue;
+                }
+            }
             if spec.name == "radius" && slot.name == "all" {
                 out.push((
                     slot_css(spec, slot).unwrap_or("").to_string(),

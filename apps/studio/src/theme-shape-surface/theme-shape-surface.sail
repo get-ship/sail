@@ -16,7 +16,7 @@
   style controlsCol = { pad(4).size({ min-w: 0 }) }
   style bandStatus = { pad(4) }
   // no preset: edge-only border
-  style bandError = { pad(4).border({ edge: b, color: border, width: 1 }) }
+  style bandError = { pad(4).border(default-b) }
   style fullBtn = { size(max) }
   // no preset: min-w lock
   style chipCol = { size({ min-w: 0 }) }
@@ -55,13 +55,13 @@
   style surfaceRoot = { size(grow).overflow(hidden).bg(background) }
   style workbench = { size(grow).overflow(hidden).bg(background) }
   // no preset: panel width lock + edge-only border
-  style panelRail = { size({ w: overlay-max-w-sm, h: 100%, min-h: 0, max-w: overlay-max-w-sm }).border({ edge: r, color: border-subtle, width: 1 }).bg(background) }
+  style panelRail = { size({ w: overlay-max-w-sm, h: 100%, min-h: 0, max-w: overlay-max-w-sm }).border(subtle-r).bg(background) }
   style specimenDock = { size(grow).overflow(hidden).bg(background) }
   style specimenPad = { size(grow).pad(4) }
   // no preset: min-w lock
   style specimenFrame = { size({ h: 100%, min-w: 0, min-h: 0 }).overflow(hidden).elevation(lg) }
   // no preset: min-w lock + edge-only border
-  style specimenChrome = { pad(3).size({ h: 8, min-w: 0, min-h: 8 }).border({ edge: b, color: border-subtle, width: 1 }).bg(surface) }
+  style specimenChrome = { pad(3).size({ h: 8, min-w: 0, min-h: 8 }).border(subtle-b).bg(surface) }
   // no preset: size lock
   style trafficDots = { size({ min-w: 12 }) }
   // no preset: size lock

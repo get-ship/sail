@@ -22,9 +22,9 @@
   style warnCount = { fg(warning).type(body-sm) }
   style errorText = { size(grow).fg(danger).type(body-sm) }
   // no preset: size lock + edge-only border
-  style errorBand = { size({ h: 7 }).pad(3).border({ edge: b, color: border, width: 1 }) }
+  style errorBand = { size({ h: 7 }).pad(3).border(default-b) }
   // no preset: min-w lock + edge-only border
-  style panelTools = { pad(3).size({ min-w: 0 }).border({ edge: b, color: border-subtle, width: 1 }).bg(surface) }
+  style panelTools = { pad(3).size({ min-w: 0 }).border(subtle-b).bg(surface) }
   style findingsScroll = { size(grow) }
   // no preset: size lock
   style groupHeader = { size({ h: 6 }).pad(3), when: { hover: bg(hover-bg) } }
@@ -40,9 +40,9 @@
   style snippetBox = { pad(2).bg(app).radius(sm) }
   style snippetLine = { type(mono-sm) }
   // no preset: size lock + edge-only border
-  style statusBar = { size({ h: 6 }).pad(3).border({ edge: t, color: border-subtle, width: 1 }).fg(muted) }
+  style statusBar = { size({ h: 6 }).pad(3).border(subtle-t).fg(muted) }
   // no preset: min-w lock + edge-only border
-  style reviewSheet = { pad(3).size({ min-w: 0, max-h: 56 }).overflow(auto).border({ edge: t, color: border, width: 1 }).bg(surface) }
+  style reviewSheet = { pad(3).size({ min-w: 0, max-h: 56 }).overflow(auto).border(default-t).bg(surface) }
   style titleSm = { type(body-sm) }
   style fullW = { size(max) }
   // no preset: type wrap

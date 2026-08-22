@@ -413,3 +413,55 @@ fn style_slots_flag_unlocks_ce_slot_form() {
         "style_slots is the grant, not a product page: {diags:?}"
     );
 }
+
+#[test]
+fn identities_spend_edge_scoped_border_molecule_by_name() {
+    let src = r#"<column style({ border(subtle-b) })>x</column>"#;
+    let path = "apps/studio/src/studio-panel/studio-panel.sail";
+    compile(src, opts(path)).expect("edged molecule identity must compile");
+    let diags = check_all(src, Some(path.as_ref()), &[], None);
+    assert!(
+        !diags
+            .iter()
+            .any(|d| d.rule.as_deref() == Some("sail-style-privilege")),
+        "name form is the legal L2 spelling: {diags:?}"
+    );
+}
+
+#[test]
+fn identities_edge_border_slot_object_stays_closed() {
+    let src = r#"<column style({ border({ edge: b, color: border-subtle, width: 1 }) })>x</column>"#;
+    let path = "apps/studio/src/studio-panel/studio-panel.sail";
+    let diags = check_all(src, Some(path.as_ref()), &[], None);
+    assert!(
+        diags
+            .iter()
+            .any(|d| d.rule.as_deref() == Some("sail-style-privilege")),
+        "slot object must stay Full-only: {diags:?}"
+    );
+}
+
+#[test]
+fn routes_reject_edge_border_identity() {
+    let src = r#"<column style({ border(subtle-b) })>x</column>"#;
+    let path = "apps/sail-site/routes/docs/page.sail";
+    let diags = check_all(src, Some(path.as_ref()), &[], None);
+    assert!(
+        diags
+            .iter()
+            .any(|d| d.rule.as_deref() == Some("sail-style-privilege")),
+        "routes stay tag-only: {diags:?}"
+    );
+}
+
+#[test]
+fn unknown_edged_border_names_the_available_identities() {
+    let src = r#"<column style({ border(subtle-diagonal) })>x</column>"#;
+    let path = "apps/studio/src/studio-panel/studio-panel.sail";
+    let diags = check_all(src, Some(path.as_ref()), &[], None);
+    let joined = format!("{diags:?}");
+    assert!(
+        joined.contains("subtle-diagonal"),
+        "error must name the spent identity: {joined}"
+    );
+}

@@ -199,6 +199,80 @@ pub const COMPOSITE_TYPES: &[&str] = &[
 /// Radius is deliberately absent — it is not a border concern.
 pub const BORDER_MEMBERS: &[&str] = &["color", "width", "style"];
 
+/// Edges every semantic border molecule is derived onto (`subtle-b`, …).
+pub const BORDER_EDGES: &[&str] = &["b", "r", "l", "t"];
+
+fn border_edge_alias(css_name: &str, known: &std::collections::HashSet<&str>) -> Option<&'static str> {
+    for (suffix, edge) in [("-b", "b"), ("-r", "r"), ("-l", "l"), ("-t", "t")] {
+        if let Some(stem) = css_name.strip_suffix(suffix) {
+            if known.contains(stem) {
+                return Some(edge);
+            }
+        }
+    }
+    None
+}
+
+fn derive_edge_border_identities(base: &[Token]) -> Vec<Token> {
+    let parents: Vec<&Token> = base
+        .iter()
+        .filter(|t| t.composite_identity && t.r#type == "border" && t.path.starts_with("border."))
+        .collect();
+    let names: std::collections::HashSet<&str> =
+        parents.iter().map(|t| t.css_name.as_str()).collect();
+    let mut out = Vec::new();
+    for parent in parents {
+        let prefix = format!("{}.", parent.path);
+        let members: Vec<&Token> = base
+            .iter()
+            .filter(|m| {
+                m.path
+                    .strip_prefix(prefix.as_str())
+                    .is_some_and(|rest| !rest.contains('.'))
+            })
+            .collect();
+        if BORDER_MEMBERS
+            .iter()
+            .any(|req| !members.iter().any(|m| m.path.ends_with(*req)))
+        {
+            continue;
+        }
+        for edge in BORDER_EDGES {
+            let path = format!("{}-{}", parent.path, edge);
+            let css_name = format!("{}-{}", parent.css_name, edge);
+            if names.contains(css_name.as_str()) {
+                continue;
+            }
+            out.push(Token {
+                path: path.clone(),
+                css_name,
+                r#type: parent.r#type.clone(),
+                value: String::new(),
+                css_value: String::new(),
+                channel: parent.channel,
+                description: None,
+                composite_identity: true,
+                breakpoints: BTreeMap::new(),
+            });
+            for m in &members {
+                let member = m.path.rsplit('.').next().unwrap_or_default().to_string();
+                out.push(Token {
+                    css_name: composite_member_css_name(&path, &member),
+                    path: format!("{path}.{member}"),
+                    r#type: m.r#type.clone(),
+                    value: m.value.clone(),
+                    css_value: m.css_value.clone(),
+                    channel: parent.channel,
+                    description: None,
+                    composite_identity: false,
+                    breakpoints: BTreeMap::new(),
+                });
+            }
+        }
+    }
+    out
+}
+
 /// Box-geometry members legal on a `$type: size` composite. Pad is space.
 pub const SIZE_MEMBERS: &[&str] = &["w", "h", "min-w", "min-h", "max-w", "max-h", "aspect"];
 
@@ -2353,7 +2427,12 @@ fn load_base_layers(
         layers.push(Layer { meta, tokens });
     }
 
-    let base_tokens = layers
+    if let Some(base) = layers.iter_mut().find(|l| l.meta.layer == "base") {
+        let derived = derive_edge_border_identities(&base.tokens);
+        base.tokens.extend(derived);
+    }
+
+    let mut base_tokens = layers
         .iter()
         .find(|l| l.meta.layer == "base")
         .map(|l| l.tokens.clone())
@@ -3964,6 +4043,16 @@ fn build_registry(
                     if !member.contains('.') {
                         members.insert(member.to_string(), Value::String(m.css_name.clone()));
                     }
+                }
+            }
+            if t.r#type == "border" {
+                let border_idents: std::collections::HashSet<&str> = base_tokens
+                    .iter()
+                    .filter(|x| x.composite_identity && x.r#type == "border")
+                    .map(|x| x.css_name.as_str())
+                    .collect();
+                if let Some(edge) = border_edge_alias(&t.css_name, &border_idents) {
+                    members.insert("edge".into(), Value::String(edge.into()));
                 }
             }
             let mut meta = Map::new();

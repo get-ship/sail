@@ -205,7 +205,7 @@ export default controller(({ value, sketchy, readonly }: Scope) => {
 
 <!-- `.toolbar` was a flex container; compose a primitive instead — flex
      layout is the floor's boundary, and `<row>` IS the row container. -->
-<row role="toolbar" aria-label="Drawing tools" gap="1" align="center" style({ pad({ x: 2, y: 1 }).border({ edge: b, color: border, width: 1 }).bg(surface) })>
+<row role="toolbar" aria-label="Drawing tools" gap="1" align="center" style({ pad({ x: 2, y: 1 }).border(default-b).bg(surface) })>
   <slot name="toolbar"></slot>
 </row>
 

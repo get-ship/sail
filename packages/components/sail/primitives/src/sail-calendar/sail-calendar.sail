@@ -294,7 +294,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
   })
 
 </controller>
-<div style({ display(block).overflow({ all: hidden }).bg(background).fg(foreground).border({ color: border, width: 1 }).radius(lg).elevation(xs) })>  <span style({ display(contents).type({ family: body, size: density }) })>    <row align="center" gap="density" style({ pad({ x: density-row-px, y: density-row-py }).border({ edge: b, color: border, width: 1 }) })>
+<div style({ display(block).overflow({ all: hidden }).bg(background).fg(foreground).border({ color: border, width: 1 }).radius(lg).elevation(xs) })>  <span style({ display(contents).type({ family: body, size: density }) })>    <row align="center" gap="density" style({ pad({ x: density-row-px, y: density-row-py }).border(default-b) })>
     <row gap="1" align="center">
       <button type="button" variant="outline" size="sm" data-nav="prev" aria-label="Previous">‹</button>
       <button type="button" variant="outline" size="sm" data-nav="today">Today</button>
@@ -318,7 +318,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
   <div role="grid" aria-label={label() || 'Calendar month'}>
     <grid cols="7" gap="0" role="presentation">
       <for {weekdays() as d} key={d.key}>
-        <span role="columnheader" style({ pad({ y: density-row-py }).fg(muted-foreground).border({ edge: b, color: border, width: 1 }).type({ size: density, weight: medium, align: center }) })>{d.label}</span>
+        <span role="columnheader" style({ pad({ y: density-row-py }).fg(muted-foreground).border(default-b).type({ size: density, weight: medium, align: center }) })>{d.label}</span>
       </for>
     </grid>
     <for {weekRows() as wk} key={wk.key}>
@@ -331,7 +331,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
             data-state={cr.state}
             aria-current={cr.cell.today ? 'date' : null}
             aria-label={cr.cell.iso}
-            gap="1" style({ pad({ x: density-row-px, y: density-row-py }).size({ min-h: 84px }).group().border({ edge: r, color: border, width: 1 }).border({ edge: b, color: border, width: 1 }), when: { stateOut: fg(muted-foreground).bg(muted), stateWeekend: bg(muted), stateRange: bg(selected-bg) } })>
+            gap="1" style({ pad({ x: density-row-px, y: density-row-py }).size({ min-h: 84px }).group().border(default-r).border(default-b), when: { stateOut: fg(muted-foreground).bg(muted), stateWeekend: bg(muted), stateRange: bg(selected-bg) } })>
             <row align="center" justify="center" gap="0" style({ size({ h: control-h-2xs, min-w: control-h-2xs }).radius(full), when: { groupStateToday: fg(primary).border({ kind: outline, color: primary }) } })>              <span style({ display(contents).type({ size: density }), when: { groupStateToday: type({ weight: semibold }) } })>                {cr.cell.day}
               </span>
 </row>
@@ -358,19 +358,19 @@ export default controller((ctx: ControllerScope<Scope>) => {
 
 <if {isWeek() || isDay()}>
   <grid use:gridTracks={timeGridTracks()} tracks="--cal-time-tracks" gap="0" role="grid" aria-label={label() || 'Calendar time grid'}>
-    <column role="rowgroup" gap="0" style({ border({ edge: r, color: border, width: 1 }) })>
+    <column role="rowgroup" gap="0" style({ border(default-r) })>
       <for {timeSlots() as slot} key={slot.key}>
-        <div data-slot={slot.minutes} role="rowheader" style({ size({ h: control-h-md }).pad({ x: density-row-px }).fg(muted-foreground).border({ edge: b, color: border, width: 1 }) })>          <span style({ display(contents).type({ size: density }) })>            {slot.label}
+        <div data-slot={slot.minutes} role="rowheader" style({ size({ h: control-h-md }).pad({ x: density-row-px }).fg(muted-foreground).border(default-b) })>          <span style({ display(contents).type({ size: density }) })>            {slot.label}
           </span>
 </div>
       </for>
     </column>
     <row gap="0" style({ grow(1) })>
       <for {dayColumns() as dc} key={dc.key}>
-        <div data-state={dc.col.today ? 'today' : ''} data-iso={dc.col.iso} style({ grow(1).position(relative).size({ min-h: 864px }).border({ edge: r, color: border, width: 1 }), when: { stateToday: bg(selected-bg) } })>
+        <div data-state={dc.col.today ? 'today' : ''} data-iso={dc.col.iso} style({ grow(1).position(relative).size({ min-h: 864px }).border(default-r), when: { stateToday: bg(selected-bg) } })>
           <column gap="0" style({ position({ scheme: absolute, t: 0, b: 0, l: 0, r: 0 }) })>
             <for {timeSlots() as slot} key={slot.key}>
-              <div data-iso={dc.col.iso} data-minutes={slot.minutes} style({ grow(1).size({ min-h: control-h-md }).cursor(cell).border({ edge: b, color: border, width: 1 }), when: { hover: bg(hover-bg) } })></div>
+              <div data-iso={dc.col.iso} data-minutes={slot.minutes} style({ grow(1).size({ min-h: control-h-md }).cursor(cell).border(default-b), when: { hover: bg(hover-bg) } })></div>
             </for>
           </column>
           <column gap="1" style({ position(relative).pad(half).position({ z: elevated }) })>

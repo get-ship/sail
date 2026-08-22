@@ -69,7 +69,7 @@
   style snippetShell = { size({ w: 100%, max-w: 100% }).position(relative).group() }
   style snippetCopy = { position({ scheme: absolute, t: 3, r: 3, z: 2 }).bg(app).fg(muted-foreground).radius(sm).filter({ opacity: 0 }).pointerEvents(none).elevation(xs), when: { group-hover: filter({ opacity: 100 }).pointerEvents(auto) } }
   /** Knobs rail: space scale, never panel-* tokens. Pad for focus rings. */
-  style knobColumn = { size({ w: 64, min-w: 64, min-h: 64 }).shrink(0).pad(5).overflow({ all: visible }).border({ edge: l, color: border-subtle, width: 1 }) }
+  style knobColumn = { size({ w: 64, min-w: 64, min-h: 64 }).shrink(0).pad(5).overflow({ all: visible }).border(subtle-l) }
   style usageFrame = { size({ w: 100% }).pad(4).overflow({ all: visible }).radius(lg).border({ color: border, width: 1 }).bg(app) }
 </scope>
 

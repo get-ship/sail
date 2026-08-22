@@ -80,19 +80,67 @@
     "bg-subtle-color",
     "bg-surface-color",
     "border",
+    "border-default-b-color",
+    "border-default-b-style",
+    "border-default-b-width",
     "border-default-color",
+    "border-default-l-color",
+    "border-default-l-style",
+    "border-default-l-width",
+    "border-default-r-color",
+    "border-default-r-style",
+    "border-default-r-width",
     "border-default-style",
+    "border-default-t-color",
+    "border-default-t-style",
+    "border-default-t-width",
     "border-default-width",
+    "border-none-b-color",
+    "border-none-b-style",
+    "border-none-b-width",
     "border-none-color",
+    "border-none-l-color",
+    "border-none-l-style",
+    "border-none-l-width",
+    "border-none-r-color",
+    "border-none-r-style",
+    "border-none-r-width",
     "border-none-style",
+    "border-none-t-color",
+    "border-none-t-style",
+    "border-none-t-width",
     "border-none-width",
     "border-strong",
+    "border-strong-b-color",
+    "border-strong-b-style",
+    "border-strong-b-width",
     "border-strong-color",
+    "border-strong-l-color",
+    "border-strong-l-style",
+    "border-strong-l-width",
+    "border-strong-r-color",
+    "border-strong-r-style",
+    "border-strong-r-width",
     "border-strong-style",
+    "border-strong-t-color",
+    "border-strong-t-style",
+    "border-strong-t-width",
     "border-strong-width",
     "border-subtle",
+    "border-subtle-b-color",
+    "border-subtle-b-style",
+    "border-subtle-b-width",
     "border-subtle-color",
+    "border-subtle-l-color",
+    "border-subtle-l-style",
+    "border-subtle-l-width",
+    "border-subtle-r-color",
+    "border-subtle-r-style",
+    "border-subtle-r-width",
     "border-subtle-style",
+    "border-subtle-t-color",
+    "border-subtle-t-style",
+    "border-subtle-t-width",
     "border-subtle-width",
     "border-width",
     "breakpoint-desktop",
@@ -406,12 +454,28 @@
     "bg-subtle-color",
     "bg-surface-color",
     "border",
+    "border-default-b-color",
     "border-default-color",
+    "border-default-l-color",
+    "border-default-r-color",
+    "border-default-t-color",
+    "border-none-b-color",
     "border-none-color",
+    "border-none-l-color",
+    "border-none-r-color",
+    "border-none-t-color",
     "border-strong",
+    "border-strong-b-color",
     "border-strong-color",
+    "border-strong-l-color",
+    "border-strong-r-color",
+    "border-strong-t-color",
     "border-subtle",
+    "border-subtle-b-color",
     "border-subtle-color",
+    "border-subtle-l-color",
+    "border-subtle-r-color",
+    "border-subtle-t-color",
     "danger",
     "danger-border",
     "danger-foreground",
@@ -2534,6 +2598,294 @@
       "cssName": "play-surface-property",
       "type": "string",
       "value": "color, background-color, border-color, box-shadow, transform, opacity"
+    },
+    "border-none-b-color": {
+      "path": "border.none-b.color",
+      "cssName": "border-none-b-color",
+      "type": "color",
+      "value": "transparent"
+    },
+    "border-none-b-width": {
+      "path": "border.none-b.width",
+      "cssName": "border-none-b-width",
+      "type": "dimension",
+      "value": "0px"
+    },
+    "border-none-b-style": {
+      "path": "border.none-b.style",
+      "cssName": "border-none-b-style",
+      "type": "string",
+      "value": "none"
+    },
+    "border-none-r-color": {
+      "path": "border.none-r.color",
+      "cssName": "border-none-r-color",
+      "type": "color",
+      "value": "transparent"
+    },
+    "border-none-r-width": {
+      "path": "border.none-r.width",
+      "cssName": "border-none-r-width",
+      "type": "dimension",
+      "value": "0px"
+    },
+    "border-none-r-style": {
+      "path": "border.none-r.style",
+      "cssName": "border-none-r-style",
+      "type": "string",
+      "value": "none"
+    },
+    "border-none-l-color": {
+      "path": "border.none-l.color",
+      "cssName": "border-none-l-color",
+      "type": "color",
+      "value": "transparent"
+    },
+    "border-none-l-width": {
+      "path": "border.none-l.width",
+      "cssName": "border-none-l-width",
+      "type": "dimension",
+      "value": "0px"
+    },
+    "border-none-l-style": {
+      "path": "border.none-l.style",
+      "cssName": "border-none-l-style",
+      "type": "string",
+      "value": "none"
+    },
+    "border-none-t-color": {
+      "path": "border.none-t.color",
+      "cssName": "border-none-t-color",
+      "type": "color",
+      "value": "transparent"
+    },
+    "border-none-t-width": {
+      "path": "border.none-t.width",
+      "cssName": "border-none-t-width",
+      "type": "dimension",
+      "value": "0px"
+    },
+    "border-none-t-style": {
+      "path": "border.none-t.style",
+      "cssName": "border-none-t-style",
+      "type": "string",
+      "value": "none"
+    },
+    "border-default-b-color": {
+      "path": "border.default-b.color",
+      "cssName": "border-default-b-color",
+      "type": "color",
+      "value": "var(--border)"
+    },
+    "border-default-b-width": {
+      "path": "border.default-b.width",
+      "cssName": "border-default-b-width",
+      "type": "dimension",
+      "value": "var(--border-width)"
+    },
+    "border-default-b-style": {
+      "path": "border.default-b.style",
+      "cssName": "border-default-b-style",
+      "type": "string",
+      "value": "solid"
+    },
+    "border-default-r-color": {
+      "path": "border.default-r.color",
+      "cssName": "border-default-r-color",
+      "type": "color",
+      "value": "var(--border)"
+    },
+    "border-default-r-width": {
+      "path": "border.default-r.width",
+      "cssName": "border-default-r-width",
+      "type": "dimension",
+      "value": "var(--border-width)"
+    },
+    "border-default-r-style": {
+      "path": "border.default-r.style",
+      "cssName": "border-default-r-style",
+      "type": "string",
+      "value": "solid"
+    },
+    "border-default-l-color": {
+      "path": "border.default-l.color",
+      "cssName": "border-default-l-color",
+      "type": "color",
+      "value": "var(--border)"
+    },
+    "border-default-l-width": {
+      "path": "border.default-l.width",
+      "cssName": "border-default-l-width",
+      "type": "dimension",
+      "value": "var(--border-width)"
+    },
+    "border-default-l-style": {
+      "path": "border.default-l.style",
+      "cssName": "border-default-l-style",
+      "type": "string",
+      "value": "solid"
+    },
+    "border-default-t-color": {
+      "path": "border.default-t.color",
+      "cssName": "border-default-t-color",
+      "type": "color",
+      "value": "var(--border)"
+    },
+    "border-default-t-width": {
+      "path": "border.default-t.width",
+      "cssName": "border-default-t-width",
+      "type": "dimension",
+      "value": "var(--border-width)"
+    },
+    "border-default-t-style": {
+      "path": "border.default-t.style",
+      "cssName": "border-default-t-style",
+      "type": "string",
+      "value": "solid"
+    },
+    "border-subtle-b-color": {
+      "path": "border.subtle-b.color",
+      "cssName": "border-subtle-b-color",
+      "type": "color",
+      "value": "var(--border-subtle)"
+    },
+    "border-subtle-b-width": {
+      "path": "border.subtle-b.width",
+      "cssName": "border-subtle-b-width",
+      "type": "dimension",
+      "value": "var(--border-width)"
+    },
+    "border-subtle-b-style": {
+      "path": "border.subtle-b.style",
+      "cssName": "border-subtle-b-style",
+      "type": "string",
+      "value": "solid"
+    },
+    "border-subtle-r-color": {
+      "path": "border.subtle-r.color",
+      "cssName": "border-subtle-r-color",
+      "type": "color",
+      "value": "var(--border-subtle)"
+    },
+    "border-subtle-r-width": {
+      "path": "border.subtle-r.width",
+      "cssName": "border-subtle-r-width",
+      "type": "dimension",
+      "value": "var(--border-width)"
+    },
+    "border-subtle-r-style": {
+      "path": "border.subtle-r.style",
+      "cssName": "border-subtle-r-style",
+      "type": "string",
+      "value": "solid"
+    },
+    "border-subtle-l-color": {
+      "path": "border.subtle-l.color",
+      "cssName": "border-subtle-l-color",
+      "type": "color",
+      "value": "var(--border-subtle)"
+    },
+    "border-subtle-l-width": {
+      "path": "border.subtle-l.width",
+      "cssName": "border-subtle-l-width",
+      "type": "dimension",
+      "value": "var(--border-width)"
+    },
+    "border-subtle-l-style": {
+      "path": "border.subtle-l.style",
+      "cssName": "border-subtle-l-style",
+      "type": "string",
+      "value": "solid"
+    },
+    "border-subtle-t-color": {
+      "path": "border.subtle-t.color",
+      "cssName": "border-subtle-t-color",
+      "type": "color",
+      "value": "var(--border-subtle)"
+    },
+    "border-subtle-t-width": {
+      "path": "border.subtle-t.width",
+      "cssName": "border-subtle-t-width",
+      "type": "dimension",
+      "value": "var(--border-width)"
+    },
+    "border-subtle-t-style": {
+      "path": "border.subtle-t.style",
+      "cssName": "border-subtle-t-style",
+      "type": "string",
+      "value": "solid"
+    },
+    "border-strong-b-color": {
+      "path": "border.strong-b.color",
+      "cssName": "border-strong-b-color",
+      "type": "color",
+      "value": "var(--border-strong)"
+    },
+    "border-strong-b-width": {
+      "path": "border.strong-b.width",
+      "cssName": "border-strong-b-width",
+      "type": "dimension",
+      "value": "var(--border-width)"
+    },
+    "border-strong-b-style": {
+      "path": "border.strong-b.style",
+      "cssName": "border-strong-b-style",
+      "type": "string",
+      "value": "solid"
+    },
+    "border-strong-r-color": {
+      "path": "border.strong-r.color",
+      "cssName": "border-strong-r-color",
+      "type": "color",
+      "value": "var(--border-strong)"
+    },
+    "border-strong-r-width": {
+      "path": "border.strong-r.width",
+      "cssName": "border-strong-r-width",
+      "type": "dimension",
+      "value": "var(--border-width)"
+    },
+    "border-strong-r-style": {
+      "path": "border.strong-r.style",
+      "cssName": "border-strong-r-style",
+      "type": "string",
+      "value": "solid"
+    },
+    "border-strong-l-color": {
+      "path": "border.strong-l.color",
+      "cssName": "border-strong-l-color",
+      "type": "color",
+      "value": "var(--border-strong)"
+    },
+    "border-strong-l-width": {
+      "path": "border.strong-l.width",
+      "cssName": "border-strong-l-width",
+      "type": "dimension",
+      "value": "var(--border-width)"
+    },
+    "border-strong-l-style": {
+      "path": "border.strong-l.style",
+      "cssName": "border-strong-l-style",
+      "type": "string",
+      "value": "solid"
+    },
+    "border-strong-t-color": {
+      "path": "border.strong-t.color",
+      "cssName": "border-strong-t-color",
+      "type": "color",
+      "value": "var(--border-strong)"
+    },
+    "border-strong-t-width": {
+      "path": "border.strong-t.width",
+      "cssName": "border-strong-t-width",
+      "type": "dimension",
+      "value": "var(--border-width)"
+    },
+    "border-strong-t-style": {
+      "path": "border.strong-t.style",
+      "cssName": "border-strong-t-style",
+      "type": "string",
+      "value": "solid"
     }
   },
   "paths": {
@@ -2551,19 +2903,67 @@
     "bg.subtle.color": "bg-subtle-color",
     "bg.surface.color": "bg-surface-color",
     "color.border.default": "border",
+    "border.default-b.color": "border-default-b-color",
+    "border.default-b.style": "border-default-b-style",
+    "border.default-b.width": "border-default-b-width",
     "border.default.color": "border-default-color",
+    "border.default-l.color": "border-default-l-color",
+    "border.default-l.style": "border-default-l-style",
+    "border.default-l.width": "border-default-l-width",
+    "border.default-r.color": "border-default-r-color",
+    "border.default-r.style": "border-default-r-style",
+    "border.default-r.width": "border-default-r-width",
     "border.default.style": "border-default-style",
+    "border.default-t.color": "border-default-t-color",
+    "border.default-t.style": "border-default-t-style",
+    "border.default-t.width": "border-default-t-width",
     "border.default.width": "border-default-width",
+    "border.none-b.color": "border-none-b-color",
+    "border.none-b.style": "border-none-b-style",
+    "border.none-b.width": "border-none-b-width",
     "border.none.color": "border-none-color",
+    "border.none-l.color": "border-none-l-color",
+    "border.none-l.style": "border-none-l-style",
+    "border.none-l.width": "border-none-l-width",
+    "border.none-r.color": "border-none-r-color",
+    "border.none-r.style": "border-none-r-style",
+    "border.none-r.width": "border-none-r-width",
     "border.none.style": "border-none-style",
+    "border.none-t.color": "border-none-t-color",
+    "border.none-t.style": "border-none-t-style",
+    "border.none-t.width": "border-none-t-width",
     "border.none.width": "border-none-width",
     "color.border.strong": "border-strong",
+    "border.strong-b.color": "border-strong-b-color",
+    "border.strong-b.style": "border-strong-b-style",
+    "border.strong-b.width": "border-strong-b-width",
     "border.strong.color": "border-strong-color",
+    "border.strong-l.color": "border-strong-l-color",
+    "border.strong-l.style": "border-strong-l-style",
+    "border.strong-l.width": "border-strong-l-width",
+    "border.strong-r.color": "border-strong-r-color",
+    "border.strong-r.style": "border-strong-r-style",
+    "border.strong-r.width": "border-strong-r-width",
     "border.strong.style": "border-strong-style",
+    "border.strong-t.color": "border-strong-t-color",
+    "border.strong-t.style": "border-strong-t-style",
+    "border.strong-t.width": "border-strong-t-width",
     "border.strong.width": "border-strong-width",
     "color.border.subtle": "border-subtle",
+    "border.subtle-b.color": "border-subtle-b-color",
+    "border.subtle-b.style": "border-subtle-b-style",
+    "border.subtle-b.width": "border-subtle-b-width",
     "border.subtle.color": "border-subtle-color",
+    "border.subtle-l.color": "border-subtle-l-color",
+    "border.subtle-l.style": "border-subtle-l-style",
+    "border.subtle-l.width": "border-subtle-l-width",
+    "border.subtle-r.color": "border-subtle-r-color",
+    "border.subtle-r.style": "border-subtle-r-style",
+    "border.subtle-r.width": "border-subtle-r-width",
     "border.subtle.style": "border-subtle-style",
+    "border.subtle-t.color": "border-subtle-t-color",
+    "border.subtle-t.style": "border-subtle-t-style",
+    "border.subtle-t.width": "border-subtle-t-width",
     "border.subtle.width": "border-subtle-width",
     "border.width": "border-width",
     "breakpoint.desktop": "breakpoint-desktop",
@@ -3278,6 +3678,182 @@
       "type": "transition",
       "members": {
         "property": "play-surface-property"
+      }
+    },
+    "border.none-b": {
+      "path": "border.none-b",
+      "cssName": "border.none-b",
+      "type": "border",
+      "members": {
+        "color": "border-none-b-color",
+        "width": "border-none-b-width",
+        "style": "border-none-b-style",
+        "edge": "b"
+      }
+    },
+    "border.none-r": {
+      "path": "border.none-r",
+      "cssName": "border.none-r",
+      "type": "border",
+      "members": {
+        "color": "border-none-r-color",
+        "width": "border-none-r-width",
+        "style": "border-none-r-style",
+        "edge": "r"
+      }
+    },
+    "border.none-l": {
+      "path": "border.none-l",
+      "cssName": "border.none-l",
+      "type": "border",
+      "members": {
+        "color": "border-none-l-color",
+        "width": "border-none-l-width",
+        "style": "border-none-l-style",
+        "edge": "l"
+      }
+    },
+    "border.none-t": {
+      "path": "border.none-t",
+      "cssName": "border.none-t",
+      "type": "border",
+      "members": {
+        "color": "border-none-t-color",
+        "width": "border-none-t-width",
+        "style": "border-none-t-style",
+        "edge": "t"
+      }
+    },
+    "border.default-b": {
+      "path": "border.default-b",
+      "cssName": "border.default-b",
+      "type": "border",
+      "members": {
+        "color": "border-default-b-color",
+        "width": "border-default-b-width",
+        "style": "border-default-b-style",
+        "edge": "b"
+      }
+    },
+    "border.default-r": {
+      "path": "border.default-r",
+      "cssName": "border.default-r",
+      "type": "border",
+      "members": {
+        "color": "border-default-r-color",
+        "width": "border-default-r-width",
+        "style": "border-default-r-style",
+        "edge": "r"
+      }
+    },
+    "border.default-l": {
+      "path": "border.default-l",
+      "cssName": "border.default-l",
+      "type": "border",
+      "members": {
+        "color": "border-default-l-color",
+        "width": "border-default-l-width",
+        "style": "border-default-l-style",
+        "edge": "l"
+      }
+    },
+    "border.default-t": {
+      "path": "border.default-t",
+      "cssName": "border.default-t",
+      "type": "border",
+      "members": {
+        "color": "border-default-t-color",
+        "width": "border-default-t-width",
+        "style": "border-default-t-style",
+        "edge": "t"
+      }
+    },
+    "border.subtle-b": {
+      "path": "border.subtle-b",
+      "cssName": "border.subtle-b",
+      "type": "border",
+      "members": {
+        "color": "border-subtle-b-color",
+        "width": "border-subtle-b-width",
+        "style": "border-subtle-b-style",
+        "edge": "b"
+      }
+    },
+    "border.subtle-r": {
+      "path": "border.subtle-r",
+      "cssName": "border.subtle-r",
+      "type": "border",
+      "members": {
+        "color": "border-subtle-r-color",
+        "width": "border-subtle-r-width",
+        "style": "border-subtle-r-style",
+        "edge": "r"
+      }
+    },
+    "border.subtle-l": {
+      "path": "border.subtle-l",
+      "cssName": "border.subtle-l",
+      "type": "border",
+      "members": {
+        "color": "border-subtle-l-color",
+        "width": "border-subtle-l-width",
+        "style": "border-subtle-l-style",
+        "edge": "l"
+      }
+    },
+    "border.subtle-t": {
+      "path": "border.subtle-t",
+      "cssName": "border.subtle-t",
+      "type": "border",
+      "members": {
+        "color": "border-subtle-t-color",
+        "width": "border-subtle-t-width",
+        "style": "border-subtle-t-style",
+        "edge": "t"
+      }
+    },
+    "border.strong-b": {
+      "path": "border.strong-b",
+      "cssName": "border.strong-b",
+      "type": "border",
+      "members": {
+        "color": "border-strong-b-color",
+        "width": "border-strong-b-width",
+        "style": "border-strong-b-style",
+        "edge": "b"
+      }
+    },
+    "border.strong-r": {
+      "path": "border.strong-r",
+      "cssName": "border.strong-r",
+      "type": "border",
+      "members": {
+        "color": "border-strong-r-color",
+        "width": "border-strong-r-width",
+        "style": "border-strong-r-style",
+        "edge": "r"
+      }
+    },
+    "border.strong-l": {
+      "path": "border.strong-l",
+      "cssName": "border.strong-l",
+      "type": "border",
+      "members": {
+        "color": "border-strong-l-color",
+        "width": "border-strong-l-width",
+        "style": "border-strong-l-style",
+        "edge": "l"
+      }
+    },
+    "border.strong-t": {
+      "path": "border.strong-t",
+      "cssName": "border.strong-t",
+      "type": "border",
+      "members": {
+        "color": "border-strong-t-color",
+        "width": "border-strong-t-width",
+        "style": "border-strong-t-style",
+        "edge": "t"
       }
     }
   },

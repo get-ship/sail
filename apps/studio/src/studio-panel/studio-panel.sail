@@ -8,7 +8,7 @@
   }
   style panelRoot = { size(grow).overflow(hidden).border(subtle).radius(md).bg(surface) }
   // no preset: size lock + edge-only border
-  style panelHeader = { size({ h: 8, min-h: 8 }).pad(3).border({ edge: b, color: border-subtle, width: 1 }) }
+  style panelHeader = { size({ h: 8, min-h: 8 }).pad(3).border(subtle-b) }
   style eyebrow = { fg(muted).type(label) }
   style actionsRow = { size(hug) }
   style panelBody = { size(grow).overflow(hidden) }

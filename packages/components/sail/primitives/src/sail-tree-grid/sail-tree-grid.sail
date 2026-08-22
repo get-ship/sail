@@ -167,9 +167,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       <button slot="action" type="button" data-action="clear-filters">Clear filters</button>
     </empty-state>
   </slot>
-</div>}{else => <column role="treegrid" gap="0" use:gridTracks={gridTemplate()} aria-label={label() || null} aria-rowcount={rowCount()} aria-multiselectable={selectable() === 'multi' ? 'true' : null} style({ size({ w: 100% }).overflow({ all: hidden }).bg(surface).border({ color: border, width: 1 }).radius(lg) })>  <span style({ display(contents).type({ family: body, size: density }) })>    <grid tracks="--sail-grid-template" gap="0" role="row" style({ position({ scheme: sticky, t: 0 }).position({ z: sticky }).bg(surface).border({ edge: b, color: border, width: 1 }) })>
+</div>}{else => <column role="treegrid" gap="0" use:gridTracks={gridTemplate()} aria-label={label() || null} aria-rowcount={rowCount()} aria-multiselectable={selectable() === 'multi' ? 'true' : null} style({ size({ w: 100% }).overflow({ all: hidden }).bg(surface).border({ color: border, width: 1 }).radius(lg) })>  <span style({ display(contents).type({ family: body, size: density }) })>    <grid tracks="--sail-grid-template" gap="0" role="row" style({ position({ scheme: sticky, t: 0 }).position({ z: sticky }).bg(surface).border(default-b) })>
     <for {headers() as h} key={h.id}>
-      <row gap="1" align="center" role="columnheader" data-col-id={h.id} data-sortable={h.canSort ? 'true' : null} data-sorted={h.sorted || null} aria-sort={h.canSort ? h.ariaSort : null} style({ position(relative).pad({ x: density-row-px, y: density-row-py }).fg(foreground).border({ edge: b, color: border-subtle, width: 1 }), when: { sortable: cursor(pointer) } })>        <span style({ display(contents).type({ size: xs, weight: semibold, tracking: wide, case: uppercase, wrap: nowrap }) })>          <span style({ grow(1).size({ min-w: 0 }).type({ wrap: truncate }) })>{h.label}</span>
+      <row gap="1" align="center" role="columnheader" data-col-id={h.id} data-sortable={h.canSort ? 'true' : null} data-sorted={h.sorted || null} aria-sort={h.canSort ? h.ariaSort : null} style({ position(relative).pad({ x: density-row-px, y: density-row-py }).fg(foreground).border(subtle-b), when: { sortable: cursor(pointer) } })>        <span style({ display(contents).type({ size: xs, weight: semibold, tracking: wide, case: uppercase, wrap: nowrap }) })>          <span style({ grow(1).size({ min-w: 0 }).type({ wrap: truncate }) })>{h.label}</span>
         <if {h.sorted === 'asc'}>
           <span aria-hidden="true" style({ fg(primary) })><icon name="chevron-up" size="xs"></icon></span>
         {else-if {h.sorted === 'desc'} => <span aria-hidden="true" style({ fg(primary) })><icon name="chevron-down" size="xs"></icon></span>}</if>
@@ -191,7 +191,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           <span aria-hidden="true" style({ position({ scheme: absolute, t: 1, b: 1, l: 0 }).size({ w: half }).radius(full).bg(primary).filter({ opacity: 0 }), when: { groupSelected: filter({ opacity: 100 }) } })></span>
           <for {w.cells as c} key={c.columnId}>
             <if {c.first}>
-              <row role="gridcell" use:cellPad={w.indent} style({ pad({ x: density-row-px, y: density-row-py, l: bind(cellPs) }).size({ min-w: 0 }).border({ edge: b, color: border-subtle, width: 1 }).fg(foreground) })>
+              <row role="gridcell" use:cellPad={w.indent} style({ pad({ x: density-row-px, y: density-row-py, l: bind(cellPs) }).size({ min-w: 0 }).border(subtle-b).fg(foreground) })>
                 <if {w.canExpand}>
                   <span aria-hidden="true" data-tree-caret style({ size({ w: density-icon, h: density-icon, min-w: density-icon }).fg(muted-foreground), when: { groupExpanded: rotate(90) } })>
                     <icon name="chevron-right" size="xs"></icon>
@@ -199,7 +199,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                 </if>
                 <span style({ grow(1).size({ min-w: 0 }).type({ wrap: truncate }) })>{c.value}</span>
               </row>
-            {else => <row role="gridcell" style({ pad({ x: density-row-px, y: density-row-py }).size({ min-w: 0 }).border({ edge: b, color: border-subtle, width: 1 }).fg(foreground) })>
+            {else => <row role="gridcell" style({ pad({ x: density-row-px, y: density-row-py }).size({ min-w: 0 }).border(subtle-b).fg(foreground) })>
                 <span style({ grow(1).size({ min-w: 0 }).type({ wrap: truncate }) })>{c.value}</span>
               </row>}</if>
           </for>

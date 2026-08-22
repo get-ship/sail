@@ -6,7 +6,7 @@
   // no preset: min-w lock
   style chromeRoot = { size({ min-w: 0 }) }
   // no preset: min-w lock + edge-only border
-  style chromeBar = { pad(4).size({ h: 10, min-w: 0, min-h: 10 }).border({ edge: b, color: border-subtle, width: 1 }).bg(app) }
+  style chromeBar = { pad(4).size({ h: 10, min-w: 0, min-h: 10 }).border(subtle-b).bg(app) }
   style growMin = { size(grow) }
   style shrink0 = { size(hug) }
   style tapFloor = { size(control-sm) }

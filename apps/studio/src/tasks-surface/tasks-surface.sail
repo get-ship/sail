@@ -4,7 +4,7 @@
 <scope>
   style surfaceRoot = { size(grow).overflow(hidden) }
   // no preset: size lock + edge-only border
-  style pageHeader = { size({ h: 10 }).pad(4).border({ edge: b, color: border-subtle, width: 1 }).bg(surface) }
+  style pageHeader = { size({ h: 10 }).pad(4).border(subtle-b).bg(surface) }
   style growMin = { size(grow) }
   style shrink0 = { size(hug) }
   style titleMd = { type(heading) }
@@ -14,31 +14,31 @@
   // no preset: size lock
   style filterActor = { size({ w: 28 }) }
   // no preset: size lock + edge-only border
-  style errorBand = { pad(3).size({ h: 7 }).border({ edge: b, color: border, width: 1 }) }
+  style errorBand = { pad(3).size({ h: 7 }).border(default-b) }
   style errorText = { size(grow).fg(danger).type(body-sm) }
   style workbench = { size(grow).overflow(hidden) }
   // no preset: edge-only border
-  style navPane = { size(grow).overflow(hidden).border({ edge: r, color: border-subtle, width: 1 }).bg(surface) }
+  style navPane = { size(grow).overflow(hidden).border(subtle-r).bg(surface) }
   style scrollGrow = { size(grow) }
   style listPad = { pad(1) }
   style detailPane = { size(grow).overflow(hidden).bg(app) }
   style emptyCenter = { size(grow).pad(4) }
   style fullW = { size(max) }
   // no preset: min-w lock + edge-only border
-  style detailHead = { size({ h: 10, min-w: 0 }).pad(3).border({ edge: b, color: border-subtle, width: 1 }).bg(surface) }
+  style detailHead = { size({ h: 10, min-w: 0 }).pad(3).border(subtle-b).bg(surface) }
   style titleTruncate = { type(body) }
   // no preset: min-w lock + edge-only border
-  style anchorRow = { pad(3).size({ min-w: 0 }).border({ edge: b, color: border-subtle, width: 1 }).bg(app) }
+  style anchorRow = { pad(3).size({ min-w: 0 }).border(subtle-b).bg(app) }
   style pathMono = { size(grow).type(mono-sm) }
   // no preset: edge-only border
-  style attachRow = { size(hug).pad(3).border({ edge: b, color: border-subtle, width: 1 }) }
+  style attachRow = { size(hug).pad(3).border(subtle-b) }
   style conversation = { size(grow).overflow(hidden) }
   // no preset: size lock
   style mdScroll = { size({ min-h: 0, max-h: 32 }) }
   style mdPad = { pad(3) }
   style messagesHost = { size(grow) }
   // no preset: edge-only border
-  style composer = { size(hug).pad(3).border({ edge: t, color: border-subtle, width: 1 }).bg(surface) }
+  style composer = { size(hug).pad(3).border(subtle-t).bg(surface) }
 </scope>
 
 <controller>

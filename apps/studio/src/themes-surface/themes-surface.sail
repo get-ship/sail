@@ -6,15 +6,15 @@
 
 <scope>
   // no preset: edge-only border
-  style pageHeader = { size(hug).pad(6).border({ edge: b, color: border-subtle, width: 1 }).bg(surface) }
+  style pageHeader = { size(hug).pad(6).border(subtle-b).bg(surface) }
   // no preset: edge-only border
-  style errorBand = { size(hug).pad(6).border({ edge: b, color: border, width: 1 }) }
+  style errorBand = { size(hug).pad(6).border(default-b) }
   style loadBand = { size(hug).pad(6) }
   style workbench = { size(grow).overflow(hidden) }
   // no preset: edge-only border
-  style listPane = { size(grow).border({ edge: r, color: border-subtle, width: 1 }).bg(surface) }
+  style listPane = { size(grow).border(subtle-r).bg(surface) }
   // no preset: edge-only border
-  style listHead = { size(hug).pad(4).border({ edge: b, color: border-subtle, width: 1 }) }
+  style listHead = { size(hug).pad(4).border(subtle-b) }
   style groupLabel = { pad(2).fg(muted).type(label) }
   style groupLabelCatalog = { pad(2).fg(muted).type(label) }
   // no preset: transparent border
@@ -61,7 +61,7 @@
   // no preset: min-w lock
   style specimen = { overflow(hidden).size({ min-w: 0 }).radius(lg).border(subtle).elevation(md).bg(app).fg(foreground) }
   // no preset: size lock + edge-only border
-  style specimenHead = { pad(4).size({ h: 9 }).bg(surface).border({ edge: b, color: border-subtle, width: 1 }) }
+  style specimenHead = { pad(4).size({ h: 9 }).bg(surface).border(subtle-b) }
   style specimenBody = { pad(5).bg(app) }
   // no preset: min-w lock
   style specimenCard = { pad(4).size({ min-w: 0 }) }

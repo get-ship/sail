@@ -5,15 +5,15 @@
 -->
 <scope>
   // no preset: size lock + edge-only border
-  style railRoot = { display(flex).dir(column).size({ w: 12, h: 100%, min-w: 12, min-h: 0, max-w: 12 }).overflow(visible).bg(app).border({ edge: r, color: border, width: 1 }) }
+  style railRoot = { display(flex).dir(column).size({ w: 12, h: 100%, min-w: 12, min-h: 0, max-w: 12 }).overflow(visible).bg(app).border(default-r) }
   // no preset: size lock + edge-only border
-  style brandSlot = { size({ w: 100%, h: 12, min-h: 12 }).pad(1).border({ edge: b, color: border-subtle, width: 1 }) }
+  style brandSlot = { size({ w: 100%, h: 12, min-h: 12 }).pad(1).border(subtle-b) }
   // no preset: size lock
   style brandMark = { size({ w: 10, h: 10, min-w: 10, min-h: 10 }).radius(md).bg(surface).fg(muted).border(subtle) }
   style itemsCol = { size(max).pad(1) }
   style spacer = { size(grow) }
   // no preset: edge-only border
-  style footerCol = { size(max).pad(1).border({ edge: t, color: border-subtle, width: 1 }) }
+  style footerCol = { size(max).pad(1).border(subtle-t) }
 </scope>
 
 <nav label="Studio activities" style(railRoot)>
