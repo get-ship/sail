@@ -189,6 +189,8 @@ export { navigate } from './navigate'
 export type { NavigateOpts } from './navigate'
 
 // Theme session writers on runtime ambient (SPEC-AMBIENT-SURFACE-1 §3).
+// THEMES catalog + guards ride here too so stdlib controllers (theme-picker)
+// read the same ambient names the inject table declares.
 export {
   applyTheme,
   persistTheme,
@@ -198,3 +200,10 @@ export {
   persistMode,
   readStoredMode,
 } from './theme-session'
+export {
+  THEMES,
+  isValidTheme,
+  themeSupportsMode,
+  readModePreference,
+  subscribeSystemPreference,
+} from '@ship/tokens/themes'

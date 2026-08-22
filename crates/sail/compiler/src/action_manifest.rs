@@ -235,14 +235,13 @@ pub const ACTIONS: &[ActionEntry] = &[
 /// impl inside L1 widgets — not public.
 /// An action is node-lifetime imperative behavior the language has no syntax
 /// for — never content, state, or data (marquee fails that test; the element owns it).
-pub const PUBLIC_ACTION_COUNT: usize = 7;
+pub const PUBLIC_ACTION_COUNT: usize = 6;
 pub const PUBLIC_ACTION_NAMES: &[&str; PUBLIC_ACTION_COUNT] = &[
     "autosize",
     "clickOutside",
     "clipboard",
     "focus",
     "hotkeys",
-    "inView",
     "rect",
 ];
 
@@ -263,28 +262,21 @@ pub fn public_actions() -> impl Iterator<Item = &'static ActionEntry> {
 /// stamps resolve; only [`PUBLIC_ACTION_NAMES`] are taught / re-exported
 /// from the runtime front door.
 pub const BUILTIN_ACTION_NAMES: &[&str] = &[
-    "autoDismiss",
     "autosize",
     "cellPad",
-    "chromeOffset",
     "clickOutside",
     "clipboard",
-    "dismissControl",
     "eventSpan",
     "focus",
     "gridTracks",
     "hotkeys",
-    "inView",
     "liveBox",
     "maxWidth",
-    "menu",
     "pin",
     "portEdge",
     "rect",
     "resizable",
-    "spotlight",
     "swatch",
-    "targetCursor",
     "themeSelect",
     "virtualRow",
     "virtualSpacer",
@@ -322,15 +314,12 @@ pub const BARE_REFERENCED_ACTION_NAMES: &[&str] = &[
     "focus",
     "gridTracks",
     "hotkeys",
-    "inView",
     "liveBox",
     "maxWidth",
     "pin",
     "portEdge",
     "rect",
-    "spotlight",
     "swatch",
-    "targetCursor",
     "virtualRow",
     "virtualSpacer",
     "worldTransform",
@@ -444,7 +433,7 @@ mod tests {
     #[test]
     fn public_action_count_matches_names_array() {
         assert_eq!(PUBLIC_ACTION_COUNT, PUBLIC_ACTION_NAMES.len());
-        assert_eq!(PUBLIC_ACTION_COUNT, 7);
+        assert_eq!(PUBLIC_ACTION_COUNT, 6);
     }
 
     #[test]

@@ -246,7 +246,7 @@ fn action_table_is_exported_by_the_runtime() {
         return;
     };
 
-    assert_eq!(PUBLIC_ACTION_COUNT, 7);
+    assert_eq!(PUBLIC_ACTION_COUNT, 6);
 
     let leaked: Vec<&str> = ACTIONS
         .iter()
@@ -282,7 +282,7 @@ fn action_table_has_no_phantom_consumers() {
         return;
     };
 
-    assert_eq!(PUBLIC_ACTION_COUNT, 7);
+    assert_eq!(PUBLIC_ACTION_COUNT, 6);
 
     // Every action in the table must be re-exported from the full
     // actions barrel. Drift here is the class of bug this test exists
@@ -324,9 +324,9 @@ fn public_action_surface_is_curated() {
         ACTIONS, PUBLIC_ACTION_COUNT, PUBLIC_ACTION_NAMES, is_public_action, public_actions,
     };
 
-    assert_eq!(PUBLIC_ACTION_COUNT, 7);
-    assert_eq!(PUBLIC_ACTION_NAMES.len(), 7);
-    assert_eq!(public_actions().count(), 7);
+    assert_eq!(PUBLIC_ACTION_COUNT, 6);
+    assert_eq!(PUBLIC_ACTION_NAMES.len(), 6);
+    assert_eq!(public_actions().count(), 6);
 
     let mut sorted = PUBLIC_ACTION_NAMES.to_vec();
     sorted.sort();
