@@ -82,6 +82,14 @@ export default controller((props: ControllerScope<Scope>, _host?: HostBag) => {
       return { left: Math.min(p.x + 12, 10_000), top: Math.min(p.y + 12, 10_000) }
     })
 
+    // Ready CSS geometry for the row/host binds below.
+    const dragTop = derived((): number => dragRect().y)
+    const dragLeft = derived((): number => dragRect().x)
+    const dragW = derived((): number => dragRect().w)
+    const dragH = derived((): number => dragRect().h)
+    const popTop = derived((): number => popoverPos().top)
+    const popLeft = derived((): number => popoverPos().left)
+
     // `off` leaves the overlay inert; point/region arm it for capture.
     const captureState = derived(() => (props.mode() === 'off' ? '' : 'capture'))
 
@@ -255,6 +263,12 @@ export default controller((props: ControllerScope<Scope>, _host?: HostBag) => {
       noteText,
       dragVisible,
       dragRect,
+      dragTop,
+      dragLeft,
+      dragW,
+      dragH,
+      popTop,
+      popLeft,
       popoverPos,
       captureState,
       markers,
@@ -274,7 +288,7 @@ export default controller((props: ControllerScope<Scope>, _host?: HostBag) => {
     <if {dragVisible()}>
       <div
         aria-hidden="true"
-        use:rect={dragRect()} style({ position({ scheme: absolute, t: bind(boxTop), l: bind(boxLeft) }).size({ w: bind(boxW), h: bind(boxH) }).pointerEvents(none).bg(hover-bg).border({ color: primary, width: 1, style: dashed }).radius(sm) })></div>
+        style({ position({ scheme: absolute, t: bind(dragTop), l: bind(dragLeft) }).size({ w: bind(dragW), h: bind(dragH) }).pointerEvents(none).bg(hover-bg).border({ color: primary, width: 1, style: dashed }).radius(sm) })></div>
     </if>
     <for {markers() as m} key={m.id}>
       <sail-annotation-marker
@@ -289,10 +303,9 @@ export default controller((props: ControllerScope<Scope>, _host?: HostBag) => {
       <column
         data-annotation-popover
         gap="2"
-        use:rect={popoverPos()}
-        on:pointerdown={(e) => e.stopPropagation()}
+                on:pointerdown={(e) => e.stopPropagation()}
 
-       style({ position({ scheme: absolute, t: bind(boxTop), l: bind(boxLeft) }).size({ min-w: overlay-max-w-sm }).pad(2).position({ z: sticky }).bg(surface).fg(foreground).border({ color: border, width: 1 }).radius(md).elevation(lg).pointerEvents(auto) })>
+       style({ position({ scheme: absolute, t: bind(popTop), l: bind(popLeft) }).size({ min-w: overlay-max-w-sm }).pad(2).position({ z: sticky }).bg(surface).fg(foreground).border({ color: border, width: 1 }).radius(md).elevation(lg).pointerEvents(auto) })>
 
         <textarea placeholder="Add a note…" bind:value={noteText} on:keydown={onNoteKeydown} style({ size({ w: 100% }).radius(sm) }) />
         <row gap="2" justify="end">

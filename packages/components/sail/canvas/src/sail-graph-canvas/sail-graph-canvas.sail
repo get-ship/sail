@@ -130,7 +130,7 @@ export default controller(({ nodes, edges, width, height, layout, selectedId }: 
   </svg>
 
   <for {nodeViews() as n} key={n.id}>
-    <div use:rect={{left: n.left, top: n.top}} style({ position({ scheme: absolute, t: bind(boxTop), l: bind(boxLeft) }).size({ w: 0, h: 0 }) })>
+    <div style({ position({ scheme: absolute, t: bind(n.top), l: bind(n.left) }).size({ w: 0, h: 0 }) })>
       <center style({ size({ h: 0 }) })>
         <column
           gap="0"
@@ -140,12 +140,11 @@ export default controller(({ nodes, edges, width, height, layout, selectedId }: 
           data-state={n.kind}
           aria-label={n.label}
           aria-current={n.selected ? 'true' : 'false'}
-          use:rect={{width: n.width}}
           on:click={() => select(n)}
           on:keydown={(e) => activate(n, e)}
           on:mouseover={() => hover(n)}
 
-         style({ size({ w: bind(boxW) }).pad({ x: 3, y: 2 }).bg(surface).fg(foreground).border({ color: border, width: 1 }).radius(md).elevation(xs).cursor(pointer), when: { hover: elevation(sm), focus: border({ kind: outline, color: ring }), current: border({ color: ring, width: 1 }).elevation(sm), stateAgent: border({ edge: l, color: primary, width: 1 }), stateSkill: border({ edge: l, color: success, width: 1 }), stateMcp: border({ edge: l, color: info, width: 1 }), stateRule: border({ edge: l, color: warning, width: 1 }), statePerm: border({ edge: l, color: danger, width: 1 }), stateHarness: border({ edge: l, color: accent, width: 1 }) } })>
+         style({ size({ w: bind(n.width) }).pad({ x: 3, y: 2 }).bg(surface).fg(foreground).border({ color: border, width: 1 }).radius(md).elevation(xs).cursor(pointer), when: { hover: elevation(sm), focus: border({ kind: outline, color: ring }), current: border({ color: ring, width: 1 }).elevation(sm), stateAgent: border({ edge: l, color: primary, width: 1 }), stateSkill: border({ edge: l, color: success, width: 1 }), stateMcp: border({ edge: l, color: info, width: 1 }), stateRule: border({ edge: l, color: warning, width: 1 }), statePerm: border({ edge: l, color: danger, width: 1 }), stateHarness: border({ edge: l, color: accent, width: 1 }) } })>
 
           <if {n.body !== ''}>
             <div use:nodeBody={n.body}></div>
