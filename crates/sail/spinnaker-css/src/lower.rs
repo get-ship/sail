@@ -1091,6 +1091,8 @@ fn css_name_for_bind(name: &str) -> String {
                 kebab.push('-');
             }
             kebab.extend(c.to_lowercase());
+        } else if c == '.' {
+            kebab.push('-');
         } else {
             kebab.push(c);
         }

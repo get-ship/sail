@@ -99,7 +99,13 @@ impl TemplateEmitter {
         // The `root_pending` flag must be consumed BEFORE serializing, because the
         // `sail-root` class is baked into the markup rather than added at runtime.
         let is_root = self.root_pending;
+        let has_for_binds = el
+            .attrs
+            .iter()
+            .any(|a| matches!(a, AttrInstr::ForBind { .. }));
+
         if self.tpl_enabled
+            && !has_for_binds
             && self.svg_depth == 0
             && let Some(html) = self.static_skeleton(el, is_root)
         {
@@ -184,6 +190,20 @@ impl TemplateEmitter {
         sibling_attrs: &[AttrInstr],
     ) {
         match a {
+            AttrInstr::ForBind { binds } => {
+                // Row-scoped channels: written per element at render and
+                // re-written unconditionally on keyed reuse (the row scope
+                // already holds the fresh item).
+                for (css_name, path) in binds {
+                    let stmt = format!(
+                        "{el_var}.style.setProperty({}, $scope.{path});",
+                        js_string(css_name)
+                    );
+                    w.line(&stmt);
+                    let use_ = self.row_use_for_source(path);
+                    self.inline_update_stmts.push((stmt, use_));
+                }
+            }
             AttrInstr::Static { name, value, .. } => {
                 let emit_name = self.attr_name_for_emit(tag, name, Some(value));
                 let emit_value = if crate::semantic_props::is_aria_bool_attr(&emit_name) {

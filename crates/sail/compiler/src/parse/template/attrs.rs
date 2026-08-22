@@ -70,6 +70,18 @@ fn compile_attr(
     if let Some(rest) = name.strip_prefix("_sail_m_") {
         return compile_motion(rest, value, value_span, loc);
     }
+    // Compiler-private for-member bind handoff (preprocess inject). Value is
+    // space-separated `--css-name=member.path` pairs; paths are qualified by
+    // the row scope at emit.
+    if name == "data-sail-fb" {
+        let mut binds = Vec::new();
+        for pair in value.split_whitespace() {
+            if let Some((css, path)) = pair.split_once('=') {
+                binds.push((css.to_string(), path.to_string()));
+            }
+        }
+        return Ok(AttrInstr::ForBind { binds });
+    }
     if name.starts_with("class:") {
         return Err(foreign_idiom_error(
             "class= / class:<name>",

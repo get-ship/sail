@@ -212,12 +212,14 @@ fn lift_tag_style(
         call_hi: usize,
         classes: String,
         motions: Vec<(String, String)>,
+        for_binds: Vec<(String, String)>,
     }
     let bytes = source.as_bytes();
     let mut lifts: Vec<Lift> = Vec::new();
     let mut css = String::new();
     let mut seen: std::collections::HashSet<String> = std::collections::HashSet::new();
     let mut hosts = spinnaker::layout::StyleHosts::default();
+    let for_vars = crate::check::binding::collect_for_vars(source);
     let mut i = 0;
     while i < bytes.len() {
         if source[i..].starts_with("<!--") {
@@ -294,6 +296,7 @@ fn lift_tag_style(
             }
             let mut authored_classes = String::new();
             let mut motions = Vec::new();
+            let mut for_binds = Vec::new();
             let mut authored_type = spinnaker::ResolvedType::default();
             if let Some((call_lo, call_hi, expr)) = style_call {
                 let (classes, m) = lower_sx_value(expr, env, &mut css, &mut seen)
@@ -314,6 +317,7 @@ fn lift_tag_style(
                 {
                     hosts.boxes.push(host);
                 }
+                for_binds = collect_for_member_binds(expr, &for_vars);
             }
             let fill = leftover_tag_type(tag, &authored_type);
             let tag_classes = if fill.is_empty() {
@@ -336,6 +340,7 @@ fn lift_tag_style(
                     call_hi,
                     classes,
                     motions,
+                    for_binds,
                 });
             }
             i = body_start;
@@ -386,6 +391,15 @@ fn lift_tag_style(
         inject.push_str(&lift.classes);
         inject.push('"');
         push_motion_attrs(&mut inject, &lift.motions);
+        if !lift.for_binds.is_empty() {
+            let pairs = lift
+                .for_binds
+                .iter()
+                .map(|(css, path)| format!("{css}={path}"))
+                .collect::<Vec<_>>()
+                .join(" ");
+            inject.push_str(&format!( " data-sail-fb=\"{pairs}\""));
+        }
         out.insert_str(inject_at, &inject);
     }
     Ok((out, css, hosts))
@@ -554,6 +568,68 @@ fn find_bad_tag_style_token(source: &str, tag_end: usize, gt_pos: usize) -> Opti
         }
     }
     None
+}
+
+
+/// Dotted `bind(root.member)` sites in a Style expression whose root is a
+/// loop variable. Returns (`--css-name`, author path) pairs.
+fn collect_for_member_binds(
+    expr: &str,
+    for_vars: &std::collections::BTreeSet<String>,
+) -> Vec<(String, String)> {
+    let mut out = Vec::new();
+    let bytes = expr.as_bytes();
+    let mut i = 0;
+    while i + 5 <= bytes.len() {
+        if !expr.is_char_boundary(i) || !expr.is_char_boundary(i + 5) {
+            i += 1;
+            while i < bytes.len() && !expr.is_char_boundary(i) {
+                i += 1;
+            }
+            continue;
+        }
+        if &expr[i..i + 5] != "bind(" {
+            i += 1;
+            while i < bytes.len() && !expr.is_char_boundary(i) {
+                i += 1;
+            }
+            continue;
+        }
+        let start = i + 5;
+        let Some(close_rel) = expr[start..].find(')') else {
+            break;
+        };
+        let name = &expr[start..start + close_rel];
+        if !name.is_empty()
+            && name
+                .chars()
+                .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '.')
+            && name.contains('.')
+            && let Some((root, member)) = name.split_once('.')
+            && for_vars.contains(root)
+        {
+            out.push((format!("--{}", bind_css_name(name)), name.to_string()));
+        }
+        i = start + close_rel;
+    }
+    out
+}
+
+/// Kebab for a dotted bind path — mirrors spinnaker-css
+/// `css_name_for_bind` (camel→dash, dot→dash).
+fn bind_css_name(path: &str) -> String {
+    let mut kebab = String::with_capacity(path.len() + 4);
+    for c in path.chars() {
+        if c.is_uppercase() {
+            kebab.push('-');
+            kebab.extend(c.to_lowercase());
+        } else if c == '.' {
+            kebab.push('-');
+        } else {
+            kebab.push(c);
+        }
+    }
+    kebab
 }
 
 fn is_style_word_at(bytes: &[u8], j: usize) -> bool {

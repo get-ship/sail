@@ -80,6 +80,7 @@ fn instr_references_ident(instr: &Instr, name: &str) -> bool {
 
 fn attr_references_ident(attr: &AttrInstr, name: &str) -> bool {
     match attr {
+        AttrInstr::ForBind { .. } => false,
         AttrInstr::Expr { expr, .. }
         | AttrInstr::BindValue { expr, .. }
         | AttrInstr::BindChecked { expr, .. }

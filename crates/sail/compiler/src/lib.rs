@@ -622,7 +622,10 @@ fn compile_inner(source: &str, opts: CompileOpts) -> Result<CompileOutput, Compi
     // the matched prop/signal bindings the emitter wires `@property` +
     // host reflection for.
     let sx_var_bindings = check::binding::resolve(effective_source, &program, controller.as_ref())
-        .map_err(|e| attach_path(e, &opts))?;
+        .map_err(|e| attach_path(e, &opts))?
+        .into_iter()
+        .filter(|b| b.source != check::binding::StyleBindingSource::ForMember)
+        .collect::<Vec<_>>();
     let bindings = bindings::build(&program);
     // `is_route` is the master route/component switch in lowering (which runtime
     // factory to import, direct-emit hydration, route detection). A source is a

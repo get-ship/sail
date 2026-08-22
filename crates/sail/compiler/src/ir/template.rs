@@ -81,6 +81,10 @@ pub enum AttrInstr {
         timing: MotionTiming,
         span: Span,
     },
+    /// Compiler-private `_sail_fb` handoff (preprocess inject): per-row
+    /// custom-property writers for `bind(item.member)` inside `<for>` bodies.
+    /// Pairs are (`--css-name`, author member path). Not an author channel.
+    ForBind { binds: Vec<(String, String)> },
     /// `use:action` or `use:action={param}` — attach a reusable behavior
     /// (an "action") to the rendered element. `action` resolves to a value
     /// in scope (a hook handle that is itself use-able, or an imported

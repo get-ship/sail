@@ -43,7 +43,7 @@ pub fn collect_attr_imports(
     // deleted in 3b.5.
     let direct_emit = is_route && depth == 0;
     match a {
-        AttrInstr::Static { .. } => {}
+        AttrInstr::Static { .. } | AttrInstr::ForBind { .. } => {}
         AttrInstr::Expr { name, .. } => {
             // Web backend (hidden from author): CE → bindDynamic; native IDL
             // prop table → bindProp; dialog open → bindOpen; else bindAttr.

@@ -43,6 +43,9 @@ pub enum StyleBindingSource {
     Signal,
     /// Setup-returned `derived` — read-only, same reflection shape as signal.
     Derived,
+    /// `<for>` row member (`bind(c.y)` under `<for {items as c}>`) — written
+    /// per element by the row emitter; no host-level registration.
+    ForMember,
 }
 
 /// How the bound value should realize as CSS.
@@ -82,6 +85,89 @@ pub struct StyleBinding {
     pub unit: StyleBindingUnit,
 }
 
+
+/// Loop-variable names declared by `<for {expr as var}>` headers in this
+/// source. Source-scan like [`find_bind_sites`] — the binding check walks
+/// raw text, not the template AST.
+pub(crate) fn collect_for_vars(source: &str) -> std::collections::BTreeSet<String> {
+    fn skip_block(rest: &str) -> Option<usize> {
+        let trimmed = rest.trim_start_matches(|c: char| c.is_whitespace() || c == '/');
+        let tag = ["scope", "controller", "style"].iter().find(|t| {
+            rest.starts_with(&format!("<{t}"))
+                && rest[t.len() + 1..]
+                    .trim_start_matches(|c: char| c.is_whitespace())
+                    .starts_with('>')
+                || rest.starts_with(&format!("<{t}>"))
+        })?;
+        let close = format!("</{tag}>");
+        rest.find(&close).map(|end| end + close.len())
+    }
+
+    let mut out = std::collections::BTreeSet::new();
+    let mut i = 0;
+    while i < source.len() {
+        if !source.is_char_boundary(i) {
+            i += 1;
+            continue;
+        }
+        let rest = &source[i..];
+        if rest.starts_with("<!--") {
+            match rest.find("-->") {
+                Some(end) => i += end + 3,
+                None => break,
+            }
+            continue;
+        }
+        if let Some(skip_to) = skip_block(rest) {
+            i += skip_to;
+            continue;
+        }
+        if rest.starts_with("<for") {
+            let after = &rest[4..];
+            let ws = after.len() - after.trim_start().len();
+            if !after[ws..].starts_with('{') {
+                i += 4;
+                continue;
+            }
+            let header_start = i + 4 + ws + 1;
+            let mut depth = 1usize;
+            let mut k = header_start;
+            let mut as_at: Option<usize> = None;
+            while k < source.len() && depth > 0 {
+                if !source.is_char_boundary(k) {
+                    k += 1;
+                    continue;
+                }
+                match source.as_bytes()[k] {
+                    b'{' => depth += 1,
+                    b'}' => depth -= 1,
+                    _ => {}
+                }
+                if depth == 1 && as_at.is_none() && source[k..].starts_with(" as ") {
+                    as_at = Some(k);
+                }
+                k += 1;
+            }
+            if depth == 0
+                && let Some(as_pos) = as_at
+            {
+                let candidate = source[as_pos + 4..k - 1].trim();
+                let name: String = candidate
+                    .chars()
+                    .take_while(|c| c.is_ascii_alphanumeric() || *c == '_')
+                    .collect();
+                if !name.is_empty() {
+                    out.insert(name);
+                }
+            }
+            i = k;
+            continue;
+        }
+        i += 1;
+    }
+    out
+}
+
 /// Resolve every `bind(name)` and every color token-group path (`bg(tone)`,
 /// `fg(shade.foreground)`) in this source. `Ok` carries the prop/signal/
 /// derived matches to wire at emit (token + action-write matches need no
@@ -92,6 +178,7 @@ pub fn resolve(
     controller: Option<&ParsedController>,
 ) -> Result<Vec<StyleBinding>, CompileError> {
     let action_writes = collect_action_writes(source);
+    let for_vars = collect_for_vars(source);
     let mut seen: BTreeSet<String> = BTreeSet::new();
     let mut out: Vec<StyleBinding> = Vec::new();
     // Per-name: strongest unit demand + color contact (for number→color error).
@@ -202,6 +289,27 @@ pub fn resolve(
                 unit,
             });
             continue;
+        }
+
+        // 2.5. For-scope member (`bind(c.y)` inside `<for {items as c}>`).
+        // Members carry ready CSS values authored in the controller — the
+        // row emitter writes them element-scoped; no host registration.
+        if scope_name.contains('.') {
+            if let Some((root, member)) = scope_name.split_once('.') {
+                if for_vars.contains(root) {
+                    unit_demand.insert(scope_name.clone(), StyleBindingUnit::Untyped);
+                    out.push(StyleBinding {
+                        css_name: format!(
+                            "{root}-{}",
+                            camel_to_kebab(member)
+                        ),
+                        scope_name: scope_name.clone(),
+                        source: StyleBindingSource::ForMember,
+                        unit: StyleBindingUnit::Untyped,
+                    });
+                    continue;
+                }
+            }
         }
 
         // 3. Setup-returned signal / timeline / derived.
@@ -673,7 +781,7 @@ fn find_bind_sites(source: &str) -> Vec<BindSite> {
                 if !name.is_empty()
                     && name
                         .chars()
-                        .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-')
+                        .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-' || c == '.')
                 {
                     // Normalize kebab bind names to camel for resolution.
                     let scope = if name.contains('-') {

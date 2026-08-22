@@ -95,7 +95,7 @@ impl Builder {
 
     fn walk_attr(&mut self, attr: &AttrInstr) {
         match attr {
-            AttrInstr::Static { .. } => {}
+            AttrInstr::Static { .. } | AttrInstr::ForBind { .. } => {}
             AttrInstr::Expr { name, expr, .. } => {
                 self.push(
                     BindingKind::Attr(name.clone()),

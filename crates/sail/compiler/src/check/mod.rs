@@ -699,7 +699,7 @@ where
     F: FnMut(&Expr) -> Result<(), CompileError>,
 {
     match attr {
-        AttrInstr::Static { .. } => {}
+        AttrInstr::Static { .. } | AttrInstr::ForBind { .. } => {}
         AttrInstr::Expr { expr, .. } => f(expr)?,
         AttrInstr::BindValue { expr, .. } | AttrInstr::BindChecked { expr, .. } => f(expr)?,
         AttrInstr::SlotReflectEmpty { .. } => {}

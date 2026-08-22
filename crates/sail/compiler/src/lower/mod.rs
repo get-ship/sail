@@ -118,6 +118,7 @@ fn check_attr_for_route(a: &AttrInstr, out: &mut Lowered) {
         return;
     }
     match a {
+        AttrInstr::ForBind { .. } => {}
         AttrInstr::Expr { expr, .. }
         | AttrInstr::BindValue { expr, .. }
         | AttrInstr::BindChecked { expr, .. }

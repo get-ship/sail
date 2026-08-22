@@ -459,7 +459,7 @@ fn visit_instr(instr: &Instr, v: &mut Visitor) {
 
 fn visit_attr(attr: &AttrInstr, v: &mut Visitor) {
     match attr {
-        AttrInstr::Static { .. } | AttrInstr::SlotReflectEmpty { .. } => {}
+        AttrInstr::Static { .. } | AttrInstr::SlotReflectEmpty { .. } | AttrInstr::ForBind { .. } => {}
         AttrInstr::Expr { expr, .. }
         | AttrInstr::BindValue { expr, .. }
         | AttrInstr::BindChecked { expr, .. } => check_expr(expr, v, &[]),

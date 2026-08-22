@@ -199,7 +199,6 @@ fn bar_chart_pack_compiles_with_skeleton() {
 }
 
 #[test]
-#[ignore = "for-member binds: resolver+emitter wiring pending (FOR-BINDS-DESIGN.md)"]
 fn for_member_bind_compiles_and_writes_per_row() {
     let src = r#"
 <controller>

@@ -131,6 +131,7 @@ impl Cx<'_> {
     fn attr(&mut self, attr: &AttrInstr) {
         match attr {
             AttrInstr::Expr { expr, .. } => self.rendered(expr),
+            AttrInstr::ForBind { .. } => {}
             // Handle-passing positions — see the module docs.
             AttrInstr::BindValue { .. }
             | AttrInstr::BindChecked { .. }

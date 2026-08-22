@@ -2221,7 +2221,7 @@ fn parse_paint_arg(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>, setter:
         }
         Some(Tok::Word("bind")) => {
             p.expect(Tok::LParen, diags);
-            let name = match p.bump() {
+            let mut name = match p.bump() {
                 Some(Tok::Word(w)) => w.to_string(),
                 _ => {
                     diags.push(StyleDiagnostic::ParseError {
@@ -2231,6 +2231,24 @@ fn parse_paint_arg(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>, setter:
                     String::new()
                 }
             };
+            // Dotted member binds (`bind(c.y)` under a `<for>`): the row
+            // emitter writes them element-scoped.
+            while p.peek() == Some(&Tok::Dot) {
+                p.bump();
+                match p.bump() {
+                    Some(Tok::Word(seg)) => {
+                        name.push('.');
+                        name.push_str(&seg);
+                    }
+                    _ => {
+                        diags.push(StyleDiagnostic::ParseError {
+                            message: "bind(name) expects an identifier after `.`".into(),
+                            source: p.remainder(),
+                        });
+                        break;
+                    }
+                }
+            }
             p.expect(Tok::RParen, diags);
             PaintArg::Bind(name)
         }
