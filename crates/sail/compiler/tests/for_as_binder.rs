@@ -197,3 +197,56 @@ fn bar_chart_pack_compiles_with_skeleton() {
     };
     compile(&src, opts).expect("bar-chart (skeleton + for-as) must compile");
 }
+
+#[test]
+#[ignore = "for-member binds: resolver+emitter wiring pending (FOR-BINDS-DESIGN.md)"]
+fn for_member_bind_compiles_and_writes_per_row() {
+    let src = r#"
+<controller>
+export default controller(() => {
+  const cards = signal([
+    { id: 'a', x: 10 },
+  ])
+  return { cards }
+})
+</controller>
+
+<column>
+  <for {cards() as c} key={c.id}>
+    <stack
+      style({ position({ scheme: absolute, t: bind(c.y), l: bind(c.x) }).size({ w: 8, h: 8 }) })
+    >{c.id}</stack>
+  </for>
+</column>
+"#;
+    let out = compile(
+        src,
+        component_opts("for-bind-probe.sail", "for-bind-probe"),
+    )
+    .expect("for-member binds must compile");
+    assert!(
+        out.js.contains("setProperty(\"--c-y\""),
+        "row writer must set --c-y from the item member:\n{}",
+        out.js
+    );
+    assert!(
+        out.js.contains("setProperty(\"--c-x\""),
+        "row writer must set --c-x:\n{}",
+        out.js
+    );
+    let diags = check_all(
+        src,
+        Some(std::path::Path::new("for-bind-probe.sail")),
+        &[],
+        None,
+    );
+    let bind_refusals: Vec<_> = diags
+        .iter()
+        .filter(|d| d.message.contains("does not match a design token"))
+        .map(|d| d.message.clone())
+        .collect();
+    assert!(
+        bind_refusals.is_empty(),
+        "for-member binds must resolve:\n{bind_refusals:#?}\nall={diags:#?}"
+    );
+}
