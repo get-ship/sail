@@ -184,6 +184,11 @@ pub const RUNTIME_AMBIENT: &[(&str, &str, &str)] = &[
         "run a callback on a fixed period while the controller is mounted",
     ),
     (
+        "invokeCallback",
+        "invokeCallback",
+        "invoke a prop callback if it is a function (Pure-safe)",
+    ),
+    (
         "isValidTheme",
         "isValidTheme",
         "type-guard a theme id against the presentation catalog",

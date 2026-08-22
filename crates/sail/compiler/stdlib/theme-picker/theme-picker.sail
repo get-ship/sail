@@ -4,12 +4,13 @@
   chrome=inline is in-flow (wraps / overflows with the surroundings).
   Cards always paint via theme= + mode= — same specimen as the popover.
   `mode-only` and `inline` remain aliases.
-  variant: icon · menu-row · segmented. Behavior: use:themeSelect.
+  variant: icon · menu-row · segmented. Behavior: this file's <controller>
+  (catalog from THEMES, selection + filter state; apply/persist via tokens).
 
   Host is <row> — never <row inline>. [inline] is the product alias so
   group-inline / group-chrome-inline can hide the popover on first paint.
   Mode trigger + inline cards live inside the popover so a closed picker
-  is only the trigger. use:themeSelect lifts them when chrome=inline / mode.
+  is only the trigger; the controller lifts them when chrome=inline / mode.
 -->
 <scope>
   props: {
@@ -82,7 +83,174 @@
   style triggerHover = {when: {hover: bg(hover-bg)}}
 </scope>
 
-<row use:themeSelect data-theme-picker="1" style(host, {match: { variant: { 'menu-row': size({ w: 100% }) }, chrome: { inline: hostInline }, orientation: { horizontal: hostHoriz, vertical: hostVert } }})>
+<controller>
+export default controller((init) => {
+  function read(v) { return typeof v === 'function' ? v() : v }
+
+  // ── catalog data (ambient THEMES, filtered by deck's effective stamp) ──
+  const metaIds = (() => {
+    if (typeof document === 'undefined') return null
+    const m = document.querySelector('meta[name="sail-effective-themes"]')
+    return m ? String(m.getAttribute('content') ?? '') : null
+  })()
+  const catalog = derived(() => {
+    const all = THEMES
+    if (metaIds == null || metaIds.trim() === '' || metaIds.trim() === 'all') {
+      return all.filter((t) => isValidTheme(t.id))
+    }
+    const allow = new Set(
+      metaIds.split(/[,\s]+/).map((x) => x.trim()).filter(Boolean),
+    )
+    return all.filter((t) => allow.has(t.id))
+  })
+
+  // ── reactive state ──
+  const open = signal(false)
+  const filter = signal('light')
+  const active = derived(() => {
+    const v = String(read(init.value) ?? '')
+    return isValidTheme(v) ? v : 'sail'
+  })
+  const modeOnly = derived(() => {
+    const v = read(init.modeOnly)
+    return v === true || v === '' || v === 'true' || read(init.mode) === true
+  })
+  const inline = derived(() => {
+    const v = read(init.inline)
+    return v === true || v === '' || v === 'true'
+  })
+  const pref = derived(() => readModePreference())
+
+  // ── derived view lists (rendered with <for>) ──
+  const modeIntent = derived(() => (filter() === 'system' ? 'system' : filter()))
+  function fire(detail) {
+    const cb = init.onThemeChange
+    if (typeof cb === 'function') cb(detail)
+  }
+
+  function applyThemeId(id) {
+    if (!isValidTheme(id)) return
+    const intent = modeIntent()
+    applyTheme(id, document.documentElement, intent)
+    persistTheme(id)
+    persistMode(intent)
+    fire({ theme: id, mode: intent === 'system' ? 'dark' : intent, preference: readModePreference() })
+  }
+
+  function setFilter(next) {
+    if (next !== 'light' && next !== 'dark' && next !== 'system') return
+    filter.set(next)
+  }
+
+  function cycleMode() {
+    const order = ['light', 'dark', 'system']
+    const cur = pref()
+    const next = order[(order.indexOf(cur) + 1) % order.length] ?? 'light'
+    applyMode(next)
+    persistMode(next)
+    fire({ theme: active(), mode: next === 'system' ? 'dark' : next, preference: next })
+  }
+
+  // ── events (delegated on the host — same precedent as tabs) ──
+  function optionFrom(e) {
+    const el = e.target
+    if (!el || !el.closest) return null
+    return el.closest('[data-theme-option]')
+  }
+  function tabFrom(e) {
+    const el = e.target
+    if (!el || !el.closest) return null
+    return el.closest('[data-mode-tab]')
+  }
+
+  const rowIds = derived(() => filtered().map((t) => t.id))
+  const rowLabels = derived(() =>
+    filtered().map((t) => {
+      const meta = THEMES.find((x) => x.id === t.id)
+      return meta ? meta.label : t.id
+    }),
+  )
+  const rowSelected = derived(() => filtered().map((t) => t.id === active()))
+  function onPick(e) {
+    if (modeOnly()) {
+      const tab = tabFrom(e)
+      if (tab) {
+        e.preventDefault()
+        cycleMode()
+      }
+      return
+    }
+    const tab = tabFrom(e)
+    if (tab) {
+      e.preventDefault()
+      setFilter(tab.getAttribute('data-mode-tab'))
+      return
+    }
+    const opt = optionFrom(e)
+    if (opt) applyThemeId(opt.getAttribute('data-theme-id') ?? '')
+  }
+
+  function onKey(e) {
+    if (e.key !== 'Enter' && e.key !== ' ') return
+    if (modeOnly()) {
+      const tab = tabFrom(e)
+      if (tab) {
+        e.preventDefault()
+        cycleMode()
+      }
+      return
+    }
+    const tab = tabFrom(e)
+    if (tab) {
+      e.preventDefault()
+      setFilter(tab.getAttribute('data-mode-tab'))
+      return
+    }
+    const opt = optionFrom(e)
+    if (opt) {
+      e.preventDefault()
+      applyThemeId(opt.getAttribute('data-theme-id') ?? '')
+    }
+  }
+
+  onCleanup(() => {})
+
+  const lightSel = derived(() => filter() === 'light')
+  const darkSel = derived(() => filter() === 'dark')
+  const systemSel = derived(() => filter() === 'system')
+  const lightAria = derived(() => (lightSel() ? 'true' : 'false'))
+  const darkAria = derived(() => (darkSel() ? 'true' : 'false'))
+  const systemAria = derived(() => (systemSel() ? 'true' : 'false'))
+  return {
+    open,
+    filter,
+    active,
+    catalog,
+    filtered,
+    modeOnly,
+    inline,
+    pref,
+    onPick,
+    onKey,
+    lightSel,
+    darkSel,
+    systemSel,
+    lightAria,
+    darkAria,
+    systemAria,
+    rowIds,
+    rowLabels,
+    rowSelected,
+  }
+})
+</controller>
+
+<row
+  data-theme-picker="1"
+  on:click={onPick}
+  on:keydown={onKey}
+  style(host, {match: { variant: { 'menu-row': size({ w: 100% }) }, chrome: { inline: hostInline },     orientation: { horizontal: hostHoriz, vertical: hostVert } }})
+>
   <button
     type="button"
     popovertarget="sail-theme-panel"
@@ -146,13 +314,13 @@
         nowrap
         style(modeSeg, {size({ min-w: 0 }), match: { variant: { segmented: modeSegRail } }})
       >
-        <button type="button" mode="light" selected="true" data-active="true" title="Light" style(modeSegBtn, {match: { variant: { segmented: modeSegBtnPill } }})>
+        <button type="button" selected={lightSel()} aria-selected={lightAria()} tabindex="-1" data-mode-tab="light" title="Light" style(modeSegBtn, {match: { variant: { segmented: modeSegBtnPill } }})>
           Light
         </button>
-        <button type="button" mode="dark" selected="false" title="Dark" style(modeSegBtn, {match: { variant: { segmented: modeSegBtnPill } }})>
+        <button type="button" selected={darkSel()} aria-selected={darkAria()} tabindex="-1" data-mode-tab="dark" title="Dark" style(modeSegBtn, {match: { variant: { segmented: modeSegBtnPill } }})>
           Dark
         </button>
-        <button type="button" mode="system" selected="false" title="System" style(modeSegBtn, {match: { variant: { segmented: modeSegBtnPill } }})>
+        <button type="button" selected={systemSel()} aria-selected={systemAria()} tabindex="-1" data-mode-tab="system" title="System" style(modeSegBtn, {match: { variant: { segmented: modeSegBtnPill } }})>
           System
         </button>
       </row>
@@ -160,20 +328,39 @@
 
     <span data-catalog-label style(catalogHead)>Light themes</span>
 
-    <column gap="2" data-theme-grid style(panelList, {size({ min-w: 0 })})>
-      <button
-        type="button"
-        value="sail"
-        style(option, {when: {hover: border({ color: border }), focus: border({ style: solid, kind: outline, width: 2, color: ring, offset: ring-offset }), selected: border({ color: primary }), forced-colors: {when: {selected: border({ color: CanvasText })}}}, match: { variant: { 'menu-row': optionRow } }})
-      >
-        <column gap="0" style(optionCol, {size({ min-w: 0 })})>
-          <column theme="sail" mode="light" hidden="true" style(swatch, {match: { variant: { 'menu-row': swatchRow } }})>
-            <span style(overlay, {match: { variant: { 'menu-row': hideOnMenuRow } }})></span>
-            <column gap="1" justify="between" style(specimen, {size({ min-w: 0 }), match: { variant: { 'menu-row': specimenRow } }})>
-              <row align="center" gap="2" nowrap style({size({ min-w: 0, w: 100% })})>
-                <span data-swatch-title style(title, {grow(1).size({ min-w: 0 })})>Sail</span>
-                <span data-selected-check hidden="true" style(checkMark, {shrink(0)})>✓</span>
-              </row>
+    <column gap="2" data-theme-grid role="listbox" aria-label="Theme" style(panelList, {size({ min-w: 0 })})>
+      <for {rowIds() as rid}>
+        <button
+          type="button"
+          data-theme-option="1"
+          data-theme-id={rid}
+          role="option"
+          style(option, {when: {hover: border({ color: border }), focus: border({ style: solid, kind: outline, width: 2, color: ring, offset: ring-offset }), selected: border({ color: primary }), forced-colors: {when: {selected: border({ color: CanvasText })}}}, match: { variant: { 'menu-row': optionRow } }})
+        >
+          <column gap="0" style(optionCol, {size({ min-w: 0 })})>
+            <column theme={rid} mode="light" hidden="true" style(swatch, {match: { variant: { 'menu-row': swatchRow } }})>
+              <span style(overlay, {match: { variant: { 'menu-row': hideOnMenuRow } }})></span>
+              <column gap="1" justify="between" style(specimen, {size({ min-w: 0 }), match: { variant: { 'menu-row': specimenRow } }})>
+                <row align="center" gap="2" nowrap style({size({ min-w: 0, w: 100% })})>
+                  <span data-swatch-title style(title, {grow(1).size({ min-w: 0 })})>{rowLabels()}</span>
+                  <span data-selected-check hidden style(checkMark, {shrink(0)})>✓</span>
+                </row>
+                <row align="center" gap="1" nowrap style({size({ min-w: 0, w: 100% }), match: { variant: { 'menu-row': hideOnMenuRow } }})}>
+                  <span style(stripPrimary, {grow(1).size({ min-w: 0 })})></span>
+                  <span style(stripSecondary, {grow(1).size({ min-w: 0 })})></span>
+                  <span style(stripAccent, {grow(1).size({ min-w: 0 })})></span>
+                </row>
+                <row align="center" gap="1" nowrap style(hideOnCompact, {size({ min-w: 0 }), match: { variant: { 'menu-row': hideOnMenuRow } }})}>
+                  <row inline nowrap style(btnGhost, {shrink(0)})>Cancel</row>
+                  <row inline nowrap style(btnSolid, {shrink(0)})>Continue</row>
+                </row>
+              </column>
+            </column>
+          </column>
+        </button>
+      </for>
+    </column>
+</row>
               <row align="center" gap="1" nowrap style({size({ min-w: 0, w: 100% }), match: { variant: { 'menu-row': hideOnMenuRow } }})>
                 <span style(stripPrimary, {grow(1).size({ min-w: 0 })})></span>
                 <span style(stripSecondary, {grow(1).size({ min-w: 0 })})></span>

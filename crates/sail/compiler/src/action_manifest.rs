@@ -191,13 +191,6 @@ pub const ACTIONS: &[ActionEntry] = &[
         writes: &["swatchColor"],
     },
     ActionEntry {
-        name: "themeSelect",
-        param: "void",
-        summary: "Theme switcher: click to write the picked theme to the host context.",
-        auto_import: true,
-        writes: &[],
-    },
-    ActionEntry {
         name: "virtualRow",
         param: "number | null | undefined",
         summary: "Register a virtualized row; tells the parent scroller its measured height.",
@@ -277,7 +270,6 @@ pub const BUILTIN_ACTION_NAMES: &[&str] = &[
     "rect",
     "resizable",
     "swatch",
-    "themeSelect",
     "virtualRow",
     "virtualSpacer",
     "worldTransform",

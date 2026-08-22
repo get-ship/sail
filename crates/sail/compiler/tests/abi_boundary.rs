@@ -347,7 +347,6 @@ fn public_action_surface_is_curated() {
         "tabs",
         "icon",
         "combobox",
-        "themeSelect",
         "syntaxHighlight",
         "contextMenu",
         "anchor",

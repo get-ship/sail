@@ -207,3 +207,13 @@ export {
   readModePreference,
   subscribeSystemPreference,
 } from '@ship/tokens/themes'
+
+// Effective-emit-set resolution for the product theme picker (pure helpers;
+// consumed by the <theme-picker> controller and deck's meta stamp).
+export {
+  setEffectiveThemeIds,
+  parseEffectiveThemeIdsContent,
+  readEffectiveThemeIds,
+  effectiveProductThemes,
+} from './theme-catalog'
+export type { EffectiveSessionIds } from './theme-catalog'

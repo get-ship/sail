@@ -18,13 +18,6 @@ export { registerSailHighlighter } from './highlight'
 export type { SailHtmlHighlighter } from './highlight'
 
 
-export { themeSelect,
-  setEffectiveThemeIds,
-  readEffectiveThemeIds,
-  parseEffectiveThemeIdsContent,
-  effectiveProductThemes,
-} from './theme-select'
-export type { EffectiveSessionIds } from './theme-select'
 export { virtualRow, virtualSpacer, cellPad } from './virtual-row'
 export { eventSpan } from './event-span'
 export type { RectSpan } from './event-span'
