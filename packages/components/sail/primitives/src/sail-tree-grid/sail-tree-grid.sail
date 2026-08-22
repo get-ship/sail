@@ -65,7 +65,11 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       if (hs.length === 0) return 'minmax(80px, 1fr)'
       return hs.map((h) => h.size).join(' ')
     })
-    const windowItems = windowTreeRows<AnyTreeNode>(tree, virt.virtualItems, () => INDENT_STEP)
+    const windowItems = windowTreeRows<AnyTreeNode>(
+      tree,
+      virt.virtualItems,
+      () => INDENT_STEP,
+    ).map((w) => ({ ...w, y: `${w.start}px`, ps: `${w.indent}px` }))
     const totalSize = virt.totalSize
     const rowCount = derived<number>(() => tree().rowCount())
 
@@ -187,11 +191,11 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   </grid>
   <div use:captureViewport style({ position(relative).size({ w: 100%, h: 100%, min-h: 0 }).overflow({ y: auto }) })>
       <for {windowItems() as w} key={`${w.key}|${w.cellsKey}`}>
-        <grid tracks="--sail-grid-template" gap="0" role="row" data-node-id={w.id} aria-level={w.level} aria-posinset={w.posInSet} aria-setsize={w.setSize} aria-rowindex={w.index + 1} aria-expanded={w.canExpand ? (w.expanded ? 'true' : 'false') : null} aria-selected={selectable() !== 'none' ? (w.selected ? 'true' : 'false') : null} data-can-expand={w.canExpand ? 'true' : null} data-expanded={w.expanded ? 'true' : null} data-selected={w.selected ? 'true' : null} tabindex={w.id === activeRowId() ? '0' : '-1'} use:virtualRow={w.start} style({ position({ scheme: absolute, l: 0 }).size({ w: 100% }).group().translateY(bind(rowY)).cursor(pointer), when: { hover: bg(hover-bg), selected: bg(selected-bg), focus: border({ kind: outline, color: ring }) } })>
+        <grid tracks="--sail-grid-template" gap="0" role="row" data-node-id={w.id} aria-level={w.level} aria-posinset={w.posInSet} aria-setsize={w.setSize} aria-rowindex={w.index + 1} aria-expanded={w.canExpand ? (w.expanded ? 'true' : 'false') : null} aria-selected={selectable() !== 'none' ? (w.selected ? 'true' : 'false') : null} data-can-expand={w.canExpand ? 'true' : null} data-expanded={w.expanded ? 'true' : null} data-selected={w.selected ? 'true' : null} tabindex={w.id === activeRowId() ? '0' : '-1'} style({ position({ scheme: absolute, l: 0 }).size({ w: 100% }).group().translateY(bind(w.y)).cursor(pointer), when: { hover: bg(hover-bg), selected: bg(selected-bg), focus: border({ kind: outline, color: ring }) } })>
           <span aria-hidden="true" style({ position({ scheme: absolute, t: 1, b: 1, l: 0 }).size({ w: half }).radius(full).bg(primary).filter({ opacity: 0 }), when: { groupSelected: filter({ opacity: 100 }) } })></span>
           <for {w.cells as c} key={c.columnId}>
             <if {c.first}>
-              <row role="gridcell" use:cellPad={w.indent} style({ pad({ x: density-row-px, y: density-row-py, l: bind(cellPs) }).size({ min-w: 0 }).border(subtle-b).fg(foreground) })>
+              <row role="gridcell" style({ pad({ x: density-row-px, y: density-row-py, l: bind(w.ps) }).size({ min-w: 0 }).border(subtle-b).fg(foreground) })>
                 <if {w.canExpand}>
                   <span aria-hidden="true" data-tree-caret style({ size({ w: density-icon, h: density-icon, min-w: density-icon }).fg(muted-foreground), when: { groupExpanded: rotate(90) } })>
                     <icon name="chevron-right" size="xs"></icon>

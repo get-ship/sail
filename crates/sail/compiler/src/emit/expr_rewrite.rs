@@ -94,15 +94,12 @@ const BUILTINS: &[&str] = &[
     // for drift by `action_manifest::tests`.
     "anchor",
     "autosize",
-    "cellPad",
     "clickOutside",
     "dropzone",
     "gridTracks",
     "pin",
     "portEdge",
     "rect",
-    "virtualRow",
-    "virtualSpacer",
 ];
 
 const KEYWORDS: &[&str] = &[

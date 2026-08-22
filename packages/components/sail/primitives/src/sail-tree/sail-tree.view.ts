@@ -69,6 +69,10 @@ export interface TreeRowView {
   pending: boolean
   /** Per-level indent (px) — depth × the density-derived step, set inline. */
   indent: number
+  /** Ready CSS translateY value for the row (virtualizer offset). */
+  y: string
+  /** Ready CSS padding-left for the caret column (depth indent). */
+  ps: string
   /** tree-grid only — the row's visible cells (label-only `sail-tree` ignores). */
   cells: TreeCellView[]
   /** The visible-column signature (tree-grid) — folded into the row `{#for}` key
@@ -145,6 +149,8 @@ function toRowView<T extends TreeNode>(
     someSelected: row.getIsSomeSelected(),
     pending,
     indent: row.depth * indentStep,
+    y: `${item.start}px`,
+    ps: `${row.depth * indentStep}px`,
     cells,
     cellsKey: cellsKeyOf(cells),
   }

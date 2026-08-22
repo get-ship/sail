@@ -114,13 +114,6 @@ pub const ACTIONS: &[ActionEntry] = &[
         writes: &[],
     },
     ActionEntry {
-        name: "cellPad",
-        param: "number | null | undefined",
-        summary: "Track the current cell's left/right padding for a virtualized grid.",
-        auto_import: true,
-        writes: &["cellPs"],
-    },
-    ActionEntry {
         name: "chromeOffset",
         param: "void",
         summary: "Publish the attached element's measured height as --chrome-offset on :root (pairs with the h:fill scale).",
@@ -405,20 +398,6 @@ pub const ACTIONS: &[ActionEntry] = &[
         auto_import: true,
         writes: &[],
     },
-    ActionEntry {
-        name: "virtualRow",
-        param: "number | null | undefined",
-        summary: "Register a virtualized row; tells the parent scroller its measured height.",
-        auto_import: true,
-        writes: &["rowY"],
-    },
-    ActionEntry {
-        name: "virtualSpacer",
-        param: "number | null | undefined",
-        summary: "Spacer row in a virtualized list; the engine reads its measured height.",
-        auto_import: true,
-        writes: &["rowsH"],
-    },
 ];
 
 /// App-author `use:` surface taught in skill/docs. Internal stamps stay
@@ -428,7 +407,7 @@ pub const ACTIONS: &[ActionEntry] = &[
 /// `pagination`, `combobox`, `icon`, `resizable`) are closed impl inside L1 widgets — not public.
 /// An action is node-lifetime imperative behavior the language has no syntax
 /// for — never content, state, or data (icon fails that test; the element owns it).
-pub const PUBLIC_ACTION_COUNT: usize = 12;
+pub const PUBLIC_ACTION_COUNT: usize = 11;
 pub const PUBLIC_ACTION_NAMES: &[&str; PUBLIC_ACTION_COUNT] = &[
     "anchor",
     "autosize",
@@ -441,7 +420,6 @@ pub const PUBLIC_ACTION_NAMES: &[&str; PUBLIC_ACTION_COUNT] = &[
     "inView",
     "rect",
     "tipDescribe",
-    "virtualRow",
 ];
 
 /// Whether `name` is part of the curated public `use:` surface.
@@ -465,7 +443,6 @@ pub const BUILTIN_ACTION_NAMES: &[&str] = &[
     "autoDismiss",
     "autosize",
     "catchRender",
-    "cellPad",
     "chromeOffset",
     "clickOutside",
     "clipboard",
@@ -505,8 +482,6 @@ pub const BUILTIN_ACTION_NAMES: &[&str] = &[
     "tipDescribe",
     "toggleGroup",
     "variantLive",
-    "virtualRow",
-    "virtualSpacer",
 ];
 
 // Drift guards: the const-time panic pattern would be cleaner but
@@ -533,7 +508,6 @@ pub const BUILTIN_ACTION_NAMES: &[&str] = &[
 pub const BARE_REFERENCED_ACTION_NAMES: &[&str] = &[
     "anchor",
     "autosize",
-    "cellPad",
     "clickOutside",
     "clipboard",
     "dropzone",
@@ -544,8 +518,6 @@ pub const BARE_REFERENCED_ACTION_NAMES: &[&str] = &[
     "pin",
     "portEdge",
     "rect",
-    "virtualRow",
-    "virtualSpacer",
 ];
 
 // (see drift-guard note above — the tests in `mod tests` enforce

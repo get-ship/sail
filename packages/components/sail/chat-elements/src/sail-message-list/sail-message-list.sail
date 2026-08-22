@@ -30,6 +30,7 @@ interface WindowMessage {
   index: number
   start: number
   size: number
+  y: string
   item: MessageItem
 }
 
@@ -52,13 +53,14 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     })
 
     const totalSize = virt.totalSize
+    const rowsH = derived<string>(() => `${totalSize()}px`)
     const windowItems: Derived<WindowMessage[]> = derived<WindowMessage[]>(() => {
       const all = items()
       const out: WindowMessage[] = []
       for (const it of virt.virtualItems() as readonly VirtualItem[]) {
         const item = all[it.index]
         if (!item) continue
-        out.push({ key: it.key, index: it.index, start: it.start, size: it.size, item })
+        out.push({ key: it.key, index: it.index, start: it.start, size: it.size, y: `${it.start}px`, item })
       }
       return out
     })
@@ -105,7 +107,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       scrollEl.set(node)
       return { destroy: () => scrollEl.set(null) }
     }
-    return { items, captureScroll, virt, totalSize, windowItems }
+    return { items, captureScroll, virt, totalSize, rowsH, windowItems }
   })
 
 </controller>
@@ -115,12 +117,11 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   style({ position(relative).size({ h: 100%, min-h: 0 }).pad(3) })
 >
   <span style({ display(contents).type({ family: body }) })>
-    <div use:virtualSpacer={totalSize()} style({ position(relative).size({ w: 100%, h: bind(rowsH) }) })>
+    <div style({ position(relative).size({ w: 100%, h: bind(rowsH) }) })>
     <for {windowItems() as w} key={w.key}>
       <column
         gap="0"
-        use:virtualRow={w.start}
-        style({ position({ scheme: absolute, l: 3, r: 3 }).translateY(bind(rowY)) })
+        style({ position({ scheme: absolute, l: 3, r: 3 }).translateY(bind(w.y)) })
       >
         <sail-message
           from={w.item.from || 'assistant'}

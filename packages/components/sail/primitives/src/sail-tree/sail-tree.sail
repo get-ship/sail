@@ -154,8 +154,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         data-pending={w.pending ? 'true' : null}
         aria-busy={w.pending ? 'true' : null}
         tabindex={w.id === activeRowId() ? '0' : '-1'}
-        use:cellPad={w.indent}
-        style({ size({ w: 100% }).pad({ y: density-row-py, l: bind(cellPs), r: density-row-px }).group().radius(sm).cursor(pointer).fg(foreground), when: { hover: bg(hover-bg), selected: bg(selected-bg), busy: fg(muted-foreground).cursor(default), focus: border({ kind: outline, color: ring }) } })
+        style({ size({ w: 100% }).pad({ y: density-row-py, l: bind(w.ps), r: density-row-px }).group().radius(sm).cursor(pointer).fg(foreground), when: { hover: bg(hover-bg), selected: bg(selected-bg), busy: fg(muted-foreground).cursor(default), focus: border({ kind: outline, color: ring }) } })
       >
         <span style({ display(contents), when: { selected: type({ weight: medium }), busy: type({ italic: true }) } })>
         <!-- Chevron paint only; expand is the row (aria-expanded / data-expanded). -->
