@@ -142,7 +142,7 @@ export const THEME_EDITOR_CONTROLS: readonly ThemeEditorControl[] = [
     facet: 'color',
     label: 'Surfaces',
     kind: 'scale',
-    schemaPath: 'modes.{mode}.color.surface.*',
+    schemaPath: 'modes.{mode}.color.surface',
     modeGroup: 'color',
   },
   {
@@ -150,7 +150,7 @@ export const THEME_EDITOR_CONTROLS: readonly ThemeEditorControl[] = [
     facet: 'color',
     label: 'Semantic tones',
     kind: 'scale',
-    schemaPath: 'modes.{mode}.color.{destructive,success,warning,info}.*',
+    schemaPath: 'modes.{mode}.color.{danger,success,warning,info}.*',
     modeGroup: 'color',
   },
 

@@ -1,8 +1,8 @@
 /**
  * Components facet color resolve — DTCG paths only for display.
  *
- * AUTHOR: component model aliases (`{color.surface.1}`) + theme overrides
- * Registry may store CSS exhaust (`var(--surface-1)`) after generate; we reverse
+ * AUTHOR: component model aliases (`{color.surface}`) + theme overrides
+ * Registry may store CSS exhaust (`var(--surface)`) after generate; we reverse
  * that via registry metadata → path, then read concrete values from the theme doc.
  * Never treat `var(--*)` as product copy.
  */
@@ -10,7 +10,7 @@ import { getKnob, getPathValue, tryPickerHex, type TokenKnob } from '../../desig
 
 /**
  * Recover a DTCG alias from a knob base value.
- * Model SSOT is `{color.surface.1}`; generated registry often has `var(--surface-1)`.
+ * Model SSOT is `{color.surface}`; generated registry often has `var(--surface)`.
  */
 export function dtcgDefaultAlias(knob: TokenKnob): string {
   const base = String(knob.base ?? '').trim()
@@ -51,7 +51,7 @@ export function resolveColorRaw(
     return v
   }
 
-  // DTCG alias {color.surface.1}
+  // DTCG alias {color.surface}
   const alias = /^\{([^}]+)\}$/.exec(v)
   if (alias) {
     const next = getPathValue(doc, alias[1]!.trim(), mode)
@@ -72,10 +72,6 @@ export function resolveColorRaw(
       if (base && base !== v) return resolveColorRaw(doc, base, mode, depth + 1)
     }
     // Heuristic path guesses when registry entry is missing
-    if (cssName.startsWith('surface-')) {
-      const next = getPathValue(doc, `color.surface.${cssName.slice('surface-'.length)}`, mode)
-      if (next) return resolveColorRaw(doc, next, mode, depth + 1)
-    }
     if (cssName === 'foreground' || cssName === 'background') {
       const next =
         getPathValue(doc, `color.${cssName}`, mode) ??

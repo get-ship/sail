@@ -29,9 +29,8 @@
   // no preset: size lock
   style surfaceDot = { size({ w: 3, h: 3, min-w: 3, min-h: 3 }).radius(full).border(subtle).bg(bind(swatchColor)) }
   style bandStatus = { pad(4) }
-  // no preset: edge-only border
-  style bandError = { pad(4).border({ edge: b, color: border, width: 1 }) }
-  style surfaceRoot = { size(grow).overflow(hidden).bg(app) }
+  style bandError = { pad(4).border(subtle) }
+  style surfaceRoot = { overflow(hidden).bg(app) }
   style workbench = { size(grow).overflow(hidden).bg(app) }
   style editorScroll = { size(grow).bg(app) }
   style pageTitle = { type(heading) }
@@ -40,8 +39,7 @@
   style growMin = { size(grow) }
   style errorText = { size(grow).fg(danger).type(body-sm) }
   style pickerFill = { size(max) }
-  // no preset: edge-only border
-  style footerRule = { pad(2).border({ edge: t, color: border-subtle, width: 1 }) }
+  style footerRule = { pad(2).border(subtle) }
   type ColorTokenRowProps = {
     token: string
     value: string
@@ -59,7 +57,6 @@
     onChange: any
   }
   style shrink0 = { size(hug) }
-  style scrollCanvas = { size(grow).bg(app) }
   style dimBar = { pad(3).radius(md).border(subtle).bg(app) }
   style rampStep = { position(relative).size({ w: 8, h: 8, min-w: 8, min-h: 8 }).overflow(hidden).radius(sm).border(subtle) }
   style gauntletGrid = { pad(2) }
@@ -85,9 +82,7 @@ export default controller(() => {
     secondaryHex: color.secondaryHex,
     accentHex: color.accentHex,
     bgHex: color.bgHex,
-    surface1Hex: color.surface1Hex,
-    surface2Hex: color.surface2Hex,
-    cardHex: color.cardHex,
+    surfaceHex: color.surfaceHex,
     fgHex: color.fgHex,
     mutedHex: color.mutedHex,
     borderHex: color.borderHex,
@@ -185,7 +180,7 @@ export default controller(() => {
           <p style(fieldHint)>Anchors · derived steps · engine contrast</p>
         </column>
 
-        <row dim-bar align="center" gap="3" wrap style(dimBar)>
+        <row dim-bar align="center" gap="3" style(dimBar)>
           <if {showMode()}>
             <row dim-mode gap="2" align="center" nowrap>
               <p style(fieldHint, shrink0)>Mode</p>
@@ -307,7 +302,7 @@ export default controller(() => {
             <p style(sectionTitle)>Gauntlet</p>
             <p style(pathMeta)>derived cells</p>
           </row>
-          <row gauntlet-grid gap="1" wrap style(gauntletGrid)>
+          <row gauntlet-grid gap="1" style(gauntletGrid)>
             <for {gauntletCells() as cell} key={cell.key}>
               <stack gauntlet-cell use:swatch={cell.color} title={cell.label} style(gauntletCell)></stack>
             </for>
@@ -354,38 +349,22 @@ export default controller(() => {
         <column section="surfaces" gap="3">
           <row align="baseline" justify="between" gap="3" nowrap>
             <p style(sectionTitle)>Surfaces</p>
-            <p style(pathMeta)>color.bg · surface · card</p>
+            <p style(pathMeta)>color.bg · surface</p>
           </row>
           <column token-list gap="1">
             <color-token-row
               token="bg"
               value={bgHex()}
               label="Background"
-              path="color.bg"
+              path="color.background"
               disabled={!session.canEdit()}
               on-change={color.onRoleColor}
             />
             <color-token-row
-              token="surface1"
-              value={surface1Hex()}
-              label="Surface 1"
-              path="color.surface.1"
-              disabled={!session.canEdit()}
-              on-change={color.onRoleColor}
-            />
-            <color-token-row
-              token="surface2"
-              value={surface2Hex()}
-              label="Surface 2"
-              path="color.surface.2"
-              disabled={!session.canEdit()}
-              on-change={color.onRoleColor}
-            />
-            <color-token-row
-              token="card"
-              value={cardHex()}
-              label="Card"
-              path="color.surface.3"
+              token="surface"
+              value={surfaceHex()}
+              label="Surface"
+              path="color.surface"
               disabled={!session.canEdit()}
               on-change={color.onRoleColor}
             />
@@ -396,16 +375,8 @@ export default controller(() => {
               <p style(pathMeta)>bg</p>
             </row>
             <row align="center" gap="1" style(surfaceChip)>
-              <stack use:swatch={surface1Hex()} style(surfaceDot)></stack>
-              <p style(pathMeta)>surface-1</p>
-            </row>
-            <row align="center" gap="1" style(surfaceChip)>
-              <stack use:swatch={surface2Hex()} style(surfaceDot)></stack>
-              <p style(pathMeta)>surface-2</p>
-            </row>
-            <row align="center" gap="1" style(surfaceChip)>
-              <stack use:swatch={cardHex()} style(surfaceDot)></stack>
-              <p style(pathMeta)>card</p>
+              <stack use:swatch={surfaceHex()} style(surfaceDot)></stack>
+              <p style(pathMeta)>surface</p>
             </row>
           </row>
         </column>

@@ -206,7 +206,7 @@ describe('component state leaf parking (SPEC-D1 rest-only)', () => {
     expect(paths.length).toBeGreaterThan(0)
     expect(paths.every((p) => !p.startsWith('component.'))).toBe(true)
     expect(paths).toContain('color.input')
-    expect(paths).toContain('color.card.default')
+    expect(paths).toContain('color.surface')
     expect(paths).toContain('color.popover.default')
     expect(paths).toContain('color.primary.default')
     expect(paths).toContain('color.foreground')

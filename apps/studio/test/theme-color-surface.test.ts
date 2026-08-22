@@ -94,7 +94,7 @@ describe('color pick pipeline (hex → oklch write)', () => {
     seedLightTheme()
     const picks: Array<{ key: keyof typeof COLOR_ROLES; hex: string }> = [
       { key: 'bg', hex: '#f8f7f6' },
-      { key: 'card', hex: '#ffffff' },
+      { key: 'surface', hex: '#ffffff' },
       { key: 'danger', hex: '#dc2626' },
       { key: 'success', hex: '#16a34a' },
     ]
@@ -116,8 +116,7 @@ describe('color pick pipeline (hex → oklch write)', () => {
       'secondary',
       'accent',
       'bg',
-      'surface1',
-      'card',
+      'surface',
       'fg',
       'muted',
       'border',

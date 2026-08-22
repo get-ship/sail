@@ -18,7 +18,7 @@ const FIELD_ROLES: { path: string; label: string }[] = [
   { path: 'color.input', label: 'Input' },
   { path: 'color.foreground', label: 'Foreground' },
   { path: 'color.border.default', label: 'Border' },
-  { path: 'color.destructive.default', label: 'Invalid' },
+  { path: 'color.danger.default', label: 'Invalid' },
   { path: 'radius.md', label: 'Radius' },
 ]
 
@@ -34,9 +34,9 @@ export const FACE_ROLES: Record<string, { path: string; label: string }[]> = {
     { path: 'color.info.default', label: 'Info' },
     { path: 'color.success.default', label: 'Success' },
     { path: 'color.warning.default', label: 'Warning' },
-    { path: 'color.destructive.default', label: 'Danger' },
+    { path: 'color.danger.default', label: 'Danger' },
     { path: 'color.muted.foreground', label: 'Muted' },
-    { path: 'color.surface.1', label: 'Surface' },
+    { path: 'color.surface', label: 'Surface' },
     { path: 'color.foreground', label: 'Foreground' },
   ],
   badge: [
@@ -54,7 +54,7 @@ export const FACE_ROLES: Record<string, { path: string; label: string }[]> = {
     { path: 'color.border.default', label: 'Border' },
   ],
   'code-block': [
-    { path: 'color.surface.1', label: 'Surface' },
+    { path: 'color.surface', label: 'Surface' },
     { path: 'color.foreground', label: 'Foreground' },
     { path: 'color.border.default', label: 'Border' },
   ],
@@ -80,11 +80,11 @@ export const FACE_ROLES: Record<string, { path: string; label: string }[]> = {
     { path: 'color.muted.default', label: 'Track' },
     { path: 'color.success.default', label: 'Success' },
     { path: 'color.warning.default', label: 'Warning' },
-    { path: 'color.destructive.default', label: 'Danger' },
+    { path: 'color.danger.default', label: 'Danger' },
   ],
   label: [
     { path: 'color.foreground', label: 'Foreground' },
-    { path: 'color.destructive.default', label: 'Required' },
+    { path: 'color.danger.default', label: 'Required' },
     { path: 'typography.label.weight', label: 'Label weight' },
     { path: 'typography.label.font', label: 'Label font' },
   ],
@@ -100,7 +100,7 @@ export const FACE_ROLES: Record<string, { path: string; label: string }[]> = {
     { path: 'color.muted.default', label: 'Muted' },
     { path: 'color.muted.foreground', label: 'Muted foreground' },
     { path: 'color.border.default', label: 'Border' },
-    { path: 'color.destructive.default', label: 'Danger' },
+    { path: 'color.danger.default', label: 'Danger' },
     { path: 'color.foreground', label: 'Foreground' },
   ],
   icon: [
@@ -113,7 +113,7 @@ export const FACE_ROLES: Record<string, { path: string; label: string }[]> = {
     { path: 'color.primary.default', label: 'Primary' },
     { path: 'color.background', label: 'Background' },
     { path: 'color.foreground', label: 'Foreground' },
-    { path: 'color.destructive.default', label: 'Danger' },
+    { path: 'color.danger.default', label: 'Danger' },
     { path: 'radius.lg', label: 'Radius' },
   ],
   a: [
@@ -124,8 +124,6 @@ export const FACE_ROLES: Record<string, { path: string; label: string }[]> = {
     { path: 'radius.md', label: 'Radius' },
   ],
   card: [
-    { path: 'color.card.default', label: 'Card' },
-    { path: 'color.card.foreground', label: 'Card foreground' },
     { path: 'filter.backdrop', label: 'Card backdrop' },
     { path: 'image.texture', label: 'Card texture' },
     { path: 'radius.lg', label: 'Radius' },
@@ -149,7 +147,7 @@ export const FACE_ROLES: Record<string, { path: string; label: string }[]> = {
   tabs: [
     { path: 'color.primary.default', label: 'Primary' },
     { path: 'color.muted.foreground', label: 'Muted' },
-    { path: 'color.surface.1', label: 'Surface' },
+    { path: 'color.surface', label: 'Surface' },
   ],
   input: FIELD_ROLES,
   textarea: FIELD_ROLES,
@@ -184,7 +182,7 @@ const FACE_HINTS: Record<string, string> = {
   badge: 'Status chips',
   button: 'Actions · default is solid primary',
   a: 'Links · bare text or button-link chrome',
-  card: 'Surfaces · card background and foreground',
+  card: 'Surfaces · backdrop · texture · radius',
   tabs: 'Tabs (list + tab + panel as one face)',
   toast: 'Toasts + region',
   'radio-group': 'Radio set',
@@ -204,7 +202,7 @@ const FACE_HINTS: Record<string, string> = {
   progress: 'Bar · muted track + primary fill',
   'scroll-area': 'Overflow · border thumb',
   slider: 'Range · muted track + primary fill',
-  'error-state': 'Recovery · muted surface + destructive',
+  'error-state': 'Recovery · muted surface + danger',
   icon: 'Glyph host · icon scale · currentColor',
   avatar: 'Face / initials',
   input: 'Native input · input background + foreground + border',
@@ -585,7 +583,7 @@ export function createComponentsEdit(session: ThemeSession) {
     }))
   }
   const toneChips = () => {
-    const tones = ['primary', 'accent', 'muted', 'success', 'warning', 'destructive']
+    const tones = ['primary', 'accent', 'muted', 'success', 'warning', 'danger']
     const cur = tone()
     return tones.map((v) => ({
       key: v,

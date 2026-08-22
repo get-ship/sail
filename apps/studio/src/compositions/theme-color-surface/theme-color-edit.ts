@@ -25,10 +25,8 @@ export const COLOR_ROLES = {
   primary: { path: 'color.primary.solid', label: 'Primary', displayPath: 'color.primary', role: 'pr', section: 'brand' },
   secondary: { path: 'color.secondary.solid', label: 'Secondary', displayPath: 'color.secondary', role: 'sc', section: 'brand' },
   accent: { path: 'color.accent.solid', label: 'Accent', displayPath: 'color.accent', role: 'ac', section: 'brand' },
-  bg: { path: 'color.background', label: 'Background', displayPath: 'color.bg', role: 'bg', section: 'surfaces' },
-  surface1: { path: 'color.surface.1', label: 'Surface 1', displayPath: 'color.surface.1', role: 's1', section: 'surfaces' },
-  surface2: { path: 'color.surface.2', label: 'Surface 2', displayPath: 'color.surface.2', role: 's2', section: 'surfaces' },
-  card: { path: 'color.surface.3', label: 'Card', displayPath: 'color.surface.3', role: 'cd', section: 'surfaces' },
+  bg: { path: 'color.background', label: 'Background', displayPath: 'color.background', role: 'bg', section: 'surfaces' },
+  surface: { path: 'color.surface', label: 'Surface', displayPath: 'color.surface', role: 'sf', section: 'surfaces' },
   fg: { path: 'color.foreground', label: 'Foreground', displayPath: 'color.foreground', role: 'fg', section: 'text' },
   muted: { path: 'color.muted.foreground', label: 'Muted', displayPath: 'color.muted', role: 'mu', section: 'text' },
   border: { path: 'color.border.default', label: 'Border', displayPath: 'color.border', role: 'bd', section: 'text' },
@@ -59,9 +57,7 @@ const FALLBACKS: Record<ColorRoleKey, string> = {
   secondary: '#64748b',
   accent: '#a855f7',
   bg: '#f8f7f6',
-  surface1: '#ffffff',
-  surface2: '#f1efed',
-  card: '#ffffff',
+  surface: '#ffffff',
   fg: '#1c1917',
   muted: '#78716c',
   border: '#e7e5e4',
@@ -109,9 +105,7 @@ export function createColorEdit(session: ThemeSession) {
   const secondaryHex = signal(FALLBACKS.secondary)
   const accentHex = signal(FALLBACKS.accent)
   const bgHex = signal(FALLBACKS.bg)
-  const surface1Hex = signal(FALLBACKS.surface1)
-  const surface2Hex = signal(FALLBACKS.surface2)
-  const cardHex = signal(FALLBACKS.card)
+  const surfaceHex = signal(FALLBACKS.surface)
   const fgHex = signal(FALLBACKS.fg)
   const mutedHex = signal(FALLBACKS.muted)
   const borderHex = signal(FALLBACKS.border)
@@ -126,9 +120,7 @@ export function createColorEdit(session: ThemeSession) {
     secondary: secondaryHex,
     accent: accentHex,
     bg: bgHex,
-    surface1: surface1Hex,
-    surface2: surface2Hex,
-    card: cardHex,
+    surface: surfaceHex,
     fg: fgHex,
     muted: mutedHex,
     border: borderHex,
@@ -285,7 +277,7 @@ export function createColorEdit(session: ThemeSession) {
     }))
 
   const surfaceRows = () =>
-    (['bg', 'surface1', 'surface2', 'card'] as const).map((key) => ({
+    (['bg', 'surface'] as const).map((key) => ({
       key,
       role: key,
       label: COLOR_ROLES[key].label,
@@ -337,7 +329,7 @@ export function createColorEdit(session: ThemeSession) {
         } else {
           session.setNote(
             getDesignState().lastWriteError || 'Generate refused by the contrast gate.',
-            'destructive',
+            'danger',
           )
         }
         session.sync()
@@ -365,9 +357,7 @@ export function createColorEdit(session: ThemeSession) {
     secondaryHex,
     accentHex,
     bgHex,
-    surface1Hex,
-    surface2Hex,
-    cardHex,
+    surfaceHex,
     fgHex,
     mutedHex,
     borderHex,
