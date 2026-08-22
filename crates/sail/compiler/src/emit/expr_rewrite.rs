@@ -98,7 +98,6 @@ const BUILTINS: &[&str] = &[
     "dropzone",
     "gridTracks",
     "pin",
-    "portEdge",
     "rect",
 ];
 

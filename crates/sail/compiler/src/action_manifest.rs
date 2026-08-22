@@ -282,13 +282,6 @@ pub const ACTIONS: &[ActionEntry] = &[
         writes: &["pinX", "pinY"],
     },
     ActionEntry {
-        name: "portEdge",
-        param: "PortSide",
-        summary: "Anchor a fixed-size port to the midpoint of one of its parent's four edges.",
-        auto_import: true,
-        writes: &["portTop", "portLeft", "portRight", "portBottom"],
-    },
-    ActionEntry {
         name: "pressable",
         param: "void",
         summary: "Button semantics (role, aria-disabled/tabindex sync, Enter/Space activation) for a non-button host — the pressable mix-in.",
@@ -467,7 +460,6 @@ pub const BUILTIN_ACTION_NAMES: &[&str] = &[
     "menu",
     "pagination",
     "pin",
-    "portEdge",
     "pressable",
     "pressed",
     "radioGroup",
@@ -516,7 +508,6 @@ pub const BARE_REFERENCED_ACTION_NAMES: &[&str] = &[
     "hotkeys",
     "inView",
     "pin",
-    "portEdge",
     "rect",
 ];
 

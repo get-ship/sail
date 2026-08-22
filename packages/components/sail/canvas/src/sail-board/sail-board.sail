@@ -45,7 +45,25 @@ export default controller(({ value, layout }: Scope) => {
   const lastPointer = signal<{ x: number; y: number } | null>(null)
   const version = signal(0)
   const changeSrc = debounce(version, 200)
-  const nodes = derived(() => board.nodes())
+  // Port anchors fold parent-edge midpoints into ready CSS offsets here —
+  // the model rect drives the rendered node size, so no measurement needed.
+  const nodes = derived(() =>
+    board.nodes().map((n) => ({
+      ...n,
+      ports: n.ports.map((p) => {
+        const midX = n.rect.w / 2 - 6
+        const midY = n.rect.h / 2 - 6
+        const off = '-6px'
+        const [t, b, l, r] =
+          p.side === 'top' ? [off, '', `${midX}px`, '']
+          : p.side === 'bottom' ? ['', off, `${midX}px`, '']
+          : p.side === 'left' ? [`${midY}px`, '', off, '']
+          : p.side === 'right' ? [`${midY}px`, '', '', off]
+          : ['', '', '', '']
+        return { ...p, t, b, l, r }
+      }),
+    })),
+  )
   const routes = derived(() => board.routes())
   const selectedSet = derived(() => new Set(board.selectedNodes()))
   const incidentSet = derived(() => new Set(board.incidentEdges()))
@@ -223,8 +241,7 @@ export default controller(({ value, layout }: Scope) => {
         <span
           data-port-id={p.id}
           data-state={p.side}
-          use:portEdge={p.side}
-          on:pointerdown={portPointerDown} style({ position({ scheme: absolute, t: bind(portTop), b: bind(portBottom), l: bind(portLeft), r: bind(portRight) }).size({ w: 3, h: 3 }).radius(full).bg(background).border({ color: primary, width: 1 }).cursor(crosshair) })></span>
+                    on:pointerdown={portPointerDown} style({ position({ scheme: absolute, t: bind(p.t), b: bind(p.b), l: bind(p.l), r: bind(p.r) }).size({ w: 3, h: 3 }).radius(full).bg(background).border({ color: primary, width: 1 }).cursor(crosshair) })></span>
       </for>
     </div>
   </for>
