@@ -1,3 +1,4 @@
+import { writeCssVar } from '../bind'
 import type { Action } from '../action'
 
 /**
@@ -36,16 +37,15 @@ export const rect: Action<BoxRect | null | undefined> = (node, initial) => {
   const el = node as HTMLElement
   const apply = (box: BoxRect | null | undefined): void => {
     if (!box) {
-      el.style.removeProperty('--box-top')
-      el.style.removeProperty('--box-left')
-      el.style.removeProperty('--box-w')
-      el.style.removeProperty('--box-h')
+      writeCssVar(el, '--box-top', null)
+      writeCssVar(el, '--box-left', null)
+      writeCssVar(el, '--box-w', null)
+      writeCssVar(el, '--box-h', null)
       return
     }
     const set = (name: string, v: number | string | null | undefined): void => {
       const val = toValue(v)
-      if (val == null) el.style.removeProperty(name)
-      else el.style.setProperty(name, val)
+      writeCssVar(el, name, val == null ? null : val)
     }
     set('--box-top', box.top)
     set('--box-left', box.left)
@@ -72,12 +72,12 @@ export const pin: Action<PinPoint | null | undefined> = (node, initial) => {
   const el = node as HTMLElement
   const apply = (p: PinPoint | null | undefined): void => {
     if (!p) {
-      el.style.removeProperty('--pin-x')
-      el.style.removeProperty('--pin-y')
+      writeCssVar(el, '--pin-x', null)
+      writeCssVar(el, '--pin-y', null)
       return
     }
-    el.style.setProperty('--pin-x', Number.isFinite(p.x) ? `${p.x}px` : '0')
-    el.style.setProperty('--pin-y', Number.isFinite(p.y) ? `${p.y}px` : '0')
+    writeCssVar(el, '--pin-x', Number.isFinite(p.x) ? `${p.x}px` : '0')
+    writeCssVar(el, '--pin-y', Number.isFinite(p.y) ? `${p.y}px` : '0')
   }
   apply(initial)
   return {

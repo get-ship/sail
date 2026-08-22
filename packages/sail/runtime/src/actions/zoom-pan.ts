@@ -1,3 +1,4 @@
+import { writeCssVar } from '../bind'
 import type { Action } from '../action'
 
 /**
@@ -29,10 +30,10 @@ export const zoomPan: Action<ZoomPanState | null | undefined> = (node, initial) 
   }
   const apply = (state: ZoomPanState | null | undefined): void => {
     if (!state) {
-      el.style.removeProperty('--zoom-tx')
+      writeCssVar(el, '--zoom-tx', null)
       return
     }
-    el.style.setProperty('--zoom-tx', compose(state))
+    writeCssVar(el, '--zoom-tx', compose(state))
   }
   apply(initial)
   return {
@@ -58,8 +59,8 @@ export const maxWidth: Action<number | string | null | undefined> = (
   }
   const apply = (v: number | string | null | undefined): void => {
     const val = toValue(v)
-    if (val == null) el.style.removeProperty('--max-w')
-    else el.style.setProperty('--max-w', val)
+    if (val == null) writeCssVar(el, '--max-w', null)
+    else writeCssVar(el, '--max-w', val)
   }
   apply(initial)
   return {
@@ -78,9 +79,9 @@ export const swatch: Action<string | null | undefined> = (node, initial) => {
   const el = node as HTMLElement
   const apply = (c: string | null | undefined): void => {
     if (c == null || c === '') {
-      el.style.removeProperty('--swatch-color')
+      writeCssVar(el, '--swatch-color', null)
     } else {
-      el.style.setProperty('--swatch-color', c)
+      writeCssVar(el, '--swatch-color', c)
     }
   }
   apply(initial)
@@ -100,7 +101,7 @@ export const liveBox: Action<string | null | undefined> = (node, initial) => {
   const el = node as HTMLElement
   let applied: string[] = []
   const clear = () => {
-    for (const p of applied) el.style.removeProperty(p)
+    for (const p of applied) writeCssVar(el, p, null)
     applied = []
   }
   const apply = (css: string | null | undefined): void => {
@@ -112,7 +113,7 @@ export const liveBox: Action<string | null | undefined> = (node, initial) => {
       const prop = part.slice(0, i).trim()
       const val = part.slice(i + 1).trim()
       if (!prop || !val) continue
-      el.style.setProperty(prop, val)
+      writeCssVar(el, prop, val)
       applied.push(prop)
     }
   }

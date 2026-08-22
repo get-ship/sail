@@ -1,3 +1,4 @@
+import { writeCssVar } from '../bind'
 import type { Action } from '../action'
 
 /**
@@ -19,9 +20,9 @@ export const gridTracks: Action<string | null | undefined> = (node, initial) => 
   const el = node as HTMLElement
   const apply = (tracks: string | null | undefined): void => {
     if (tracks == null || tracks === '') {
-      el.style.removeProperty('--sail-grid-template')
+      writeCssVar(el, '--sail-grid-template', null)
     } else {
-      el.style.setProperty('--sail-grid-template', tracks)
+      writeCssVar(el, '--sail-grid-template', tracks)
     }
   }
   apply(initial)

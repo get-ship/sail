@@ -9,6 +9,7 @@
 // wrapped factory so component() can stay declarative and the
 // underlying defineComponent stays unchanged.
 
+import { writeCssVar } from './bind'
 import { defineComponent, camelOf } from './component'
 import type { ComponentSchema } from './component'
 import { decoderFor } from './component-decoders'
@@ -314,7 +315,7 @@ export function component<Bindings>(
       // child). The host stays in the DOM — and, in modern engines, in the a11y
       // tree — carrying `data-component` + reflected attrs for the `@scope`
       // donut and `:scope[state] .sail-root` selectors.
-      host.style.display = 'contents'
+      writeCssVar(host, 'display', 'contents')
       ensureLightContracts()
       if (def.styles) injectScopedStyles(tag, def.styles)
     }

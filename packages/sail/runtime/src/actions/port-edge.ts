@@ -1,3 +1,4 @@
+import { writeCssVar } from '../bind'
 import type { Action } from '../action'
 
 /**
@@ -54,7 +55,7 @@ const writeEdge = (
   selfH: number,
 ): void => {
   if (!side) {
-    for (const k of KEYS) el.style.removeProperty(k)
+    for (const k of KEYS) writeCssVar(el, k, null)
     return
   }
   const halfW = selfW / 2
@@ -64,31 +65,31 @@ const writeEdge = (
   // box (the % in CSS resolves there).
   switch (side) {
     case 'left': {
-      el.style.setProperty('--port-top', `${parentH / 2 - halfH}px`)
-      el.style.setProperty('--port-left', `${-halfW}px`)
-      el.style.removeProperty('--port-right')
-      el.style.removeProperty('--port-bottom')
+      writeCssVar(el, '--port-top', `${parentH / 2 - halfH}px`)
+      writeCssVar(el, '--port-left', `${-halfW}px`)
+      writeCssVar(el, '--port-right', null)
+      writeCssVar(el, '--port-bottom', null)
       break
     }
     case 'right': {
-      el.style.setProperty('--port-top', `${parentH / 2 - halfH}px`)
-      el.style.removeProperty('--port-left')
-      el.style.setProperty('--port-right', `-${halfW}px`)
-      el.style.removeProperty('--port-bottom')
+      writeCssVar(el, '--port-top', `${parentH / 2 - halfH}px`)
+      writeCssVar(el, '--port-left', null)
+      writeCssVar(el, '--port-right', `-${halfW}px`)
+      writeCssVar(el, '--port-bottom', null)
       break
     }
     case 'top': {
-      el.style.setProperty('--port-top', `${-halfH}px`)
-      el.style.setProperty('--port-left', `${parentW / 2 - halfW}px`)
-      el.style.removeProperty('--port-right')
-      el.style.removeProperty('--port-bottom')
+      writeCssVar(el, '--port-top', `${-halfH}px`)
+      writeCssVar(el, '--port-left', `${parentW / 2 - halfW}px`)
+      writeCssVar(el, '--port-right', null)
+      writeCssVar(el, '--port-bottom', null)
       break
     }
     case 'bottom': {
-      el.style.setProperty('--port-bottom', `-${halfH}px`)
-      el.style.setProperty('--port-left', `${parentW / 2 - halfW}px`)
-      el.style.removeProperty('--port-right')
-      el.style.removeProperty('--port-top')
+      writeCssVar(el, '--port-bottom', `-${halfH}px`)
+      writeCssVar(el, '--port-left', `${parentW / 2 - halfW}px`)
+      writeCssVar(el, '--port-right', null)
+      writeCssVar(el, '--port-top', null)
       break
     }
   }
@@ -129,7 +130,7 @@ export const portEdge: Action<PortSide> = (node, initial) => {
     destroy() {
       observer?.disconnect()
       observer = null
-      for (const k of KEYS) el.style.removeProperty(k)
+      for (const k of KEYS) writeCssVar(el, k, null)
     },
   }
 }

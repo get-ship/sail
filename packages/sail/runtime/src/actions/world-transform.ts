@@ -1,3 +1,4 @@
+import { writeCssVar } from '../bind'
 import type { Action } from '../action'
 
 /**
@@ -18,16 +19,16 @@ import type { Action } from '../action'
  * lint cannot token-check it, BECAUSE it is a measurement, not design. The
  * seam (custom property) holds, but the value itself is unchecked JS — the
  * kept-downside of "data crosses JS". The action exists because NOT having
- * one re-opens `.style.transform = …` in every controller that touches a
+ * one re-opens raw transform writes in every controller that touches a
  * canvas.
  */
 export const worldTransform: Action<string | null | undefined> = (node, initial) => {
   const el = node as HTMLElement
   const apply = (cssTransform: string | null | undefined): void => {
     if (cssTransform == null || cssTransform === '') {
-      el.style.removeProperty('--world-tx')
+      writeCssVar(el, '--world-tx', null)
     } else {
-      el.style.setProperty('--world-tx', cssTransform)
+      writeCssVar(el, '--world-tx', cssTransform)
     }
   }
   apply(initial)

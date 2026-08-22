@@ -1,3 +1,4 @@
+import { writeCssVar } from '../bind'
 import type { Action } from '../action'
 
 /**
@@ -42,16 +43,15 @@ export const eventSpan: Action<RectSpan | null | undefined> = (node, initial) =>
   const el = node as HTMLElement
   const apply = (rect: RectSpan | null | undefined): void => {
     if (!rect) {
-      el.style.removeProperty('--evt-top')
-      el.style.removeProperty('--evt-h')
-      el.style.removeProperty('--evt-left')
-      el.style.removeProperty('--evt-w')
+      writeCssVar(el, '--evt-top', null)
+      writeCssVar(el, '--evt-h', null)
+      writeCssVar(el, '--evt-left', null)
+      writeCssVar(el, '--evt-w', null)
       return
     }
     const set = (name: string, v: number | string | null | undefined): void => {
       const val = toValue(v)
-      if (val == null) el.style.removeProperty(name)
-      else el.style.setProperty(name, val)
+      writeCssVar(el, name, val == null ? null : val)
     }
     set('--evt-top', rect.top)
     set('--evt-h', rect.height)

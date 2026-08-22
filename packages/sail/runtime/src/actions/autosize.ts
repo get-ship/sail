@@ -19,6 +19,7 @@
 // control). Never write a zero measurement — leave `auto` so rows/min-height
 // own the box, and re-measure on the next animation frames once connected.
 
+import { writeCssVar } from '../bind'
 import type { Action } from '../action'
 
 /**
@@ -42,14 +43,14 @@ export const autosize: Action<void> = (node) => {
   const reflow = () => {
     // Collapse via the skin's `height: var(--autosize-h, auto)` bridge so
     // scrollHeight reflects the full value, then publish the measurement.
-    el.style.setProperty('--autosize-h', 'auto')
+    writeCssVar(el, '--autosize-h', 'auto')
     const sh = el.scrollHeight
     if (sh > 0) {
-      el.style.setProperty('--autosize-h', `${sh}px`)
+      writeCssVar(el, '--autosize-h', `${sh}px`)
     } else {
       // Detached / pre-layout: do not pin height:0 — rows + min-height keep
       // a multi-line empty composer readable until a real measure lands.
-      el.style.removeProperty('--autosize-h')
+      writeCssVar(el, '--autosize-h', null)
     }
   }
 
@@ -77,7 +78,7 @@ export const autosize: Action<void> = (node) => {
       disposed = true
       if (raf) cancelAnimationFrame(raf)
       el.removeEventListener('input', reflow)
-      el.style.removeProperty('--autosize-h')
+      writeCssVar(el, '--autosize-h', null)
       delete el.dataset.autosize
     },
   }

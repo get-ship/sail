@@ -43,6 +43,7 @@
 // This is the one place in the runtime where a spring is "really" a
 // spring: a sampled curve the browser drives.
 
+import { writeCssVar } from './bind'
 import { setTransitionRunner } from '@ship/sail-runtime/internal'
 import { effect, untrack } from '@ship/sail-runtime'
 import type { Disposer } from '@ship/sail-runtime'
@@ -161,27 +162,27 @@ function applyRestStyle(el: Element, cfg: MotionConfig): void {
   // for the detached-mount rAF, then the real keyframes pop it back.
   switch (cfg.property) {
     case 'opacity':
-      el.style.opacity = String(withoutUnit(cfg.from, REST_VALUE.opacity))
+      writeCssVar(el, 'opacity', String(withoutUnit(cfg.from, REST_VALUE.opacity)))
       return
     case 'scale':
-      el.style.scale = String(withoutUnit(cfg.from, REST_VALUE.scale))
+      writeCssVar(el, 'scale', String(withoutUnit(cfg.from, REST_VALUE.scale)))
       return
     // Single-axis: the OTHER axis is pinned at identity (1), so `scale-x`
     // stretches horizontally only and `scale-y` vertically only.
     case 'scale-x':
-      el.style.scale = `${withoutUnit(cfg.from, REST_VALUE['scale-x'])} 1`
+      writeCssVar(el, 'scale', `${withoutUnit(cfg.from, REST_VALUE['scale-x'])} 1`)
       return
     case 'scale-y':
-      el.style.scale = `1 ${withoutUnit(cfg.from, REST_VALUE['scale-y'])}`
+      writeCssVar(el, 'scale', `1 ${withoutUnit(cfg.from, REST_VALUE['scale-y'])}`)
       return
     case 'translate-y':
-      el.style.translate = `0 ${withUnit(cfg.from, 'px', REST_VALUE['translate-y'])}`
+      writeCssVar(el, 'translate', `0 ${withUnit(cfg.from, 'px', REST_VALUE['translate-y'])}`)
       return
     case 'translate-x':
-      el.style.translate = `${withUnit(cfg.from, 'px', REST_VALUE['translate-x'])} 0`
+      writeCssVar(el, 'translate', `${withUnit(cfg.from, 'px', REST_VALUE['translate-x'])} 0`)
       return
     case 'rotate':
-      el.style.rotate = withUnit(cfg.from, 'deg', REST_VALUE.rotate)
+      writeCssVar(el, 'rotate', withUnit(cfg.from, 'deg', REST_VALUE.rotate))
       return
   }
 }
@@ -190,13 +191,13 @@ function applyFinalStyle(el: Element, cfg: MotionConfig): void {
   if (!isHTMLElement(el)) return
   const value = FINAL_VALUE[cfg.property]
   switch (cfg.property) {
-    case 'opacity': el.style.opacity = String(value); return
-    case 'scale': el.style.scale = String(value); return
-    case 'scale-x': el.style.scale = `${value} 1`; return
-    case 'scale-y': el.style.scale = `1 ${value}`; return
-    case 'translate-y': el.style.translate = '0 0'; return
-    case 'translate-x': el.style.translate = '0 0'; return
-    case 'rotate': el.style.rotate = '0deg'; return
+    case 'opacity': writeCssVar(el, 'opacity', String(value); return)
+    case 'scale': writeCssVar(el, 'scale', String(value); return)
+    case 'scale-x': writeCssVar(el, 'scale', `${value} 1`; return)
+    case 'scale-y': writeCssVar(el, 'scale', `1 ${value}`; return)
+    case 'translate-y': writeCssVar(el, 'translate', '0 0'; return)
+    case 'translate-x': writeCssVar(el, 'translate', '0 0'; return)
+    case 'rotate': writeCssVar(el, 'rotate', '0deg'; return)
   }
 }
 
@@ -267,7 +268,7 @@ function buildKeyframes(cfg: MotionConfig, el: HTMLElement): Record<string, Arra
     const [from, to] = axisRange(cfg, el)
     // Single-axis case: the other component is pinned at 0 for both
     // keyframes — the same shape `applyRestStyle`/`applyFinalStyle`
-    // already write to `el.style.translate`.
+    // already write via the translate channel.
     return cfg.property === 'translate-y'
       ? { translate: [`0px ${from}`, `0px ${to}`] }
       : { translate: [`${from} 0px`, `${to} 0px`] }
