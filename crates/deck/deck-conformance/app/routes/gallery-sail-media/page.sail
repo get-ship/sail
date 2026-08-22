@@ -7,7 +7,7 @@
   style cardTitle = { fg(foreground).type({ size: lg, weight: semibold, family: mono }) }
   style badge = { pad({ x: 2, y: 1 }).margin({ s: 3 }).fg(warning-foreground).bg(warning).radius(sm).type({ size: xs, weight: medium, family: body, tracking: wide }) }
   style body = { fg(muted-foreground).type({ size: sm, leading: relaxed }) }
-  style stage = { pad(3).border({ width: 1, color: divider }).radius(md).bg(surface) }
+  style stage = { pad(3).border({ width: 1, color: border }).radius(md).bg(surface) }
   style caption = { fg(muted-foreground).type({ size: xs, weight: medium, case: lowercase, tracking: wide, family: mono }) }
 </scope>
 

@@ -8,8 +8,8 @@
   style cardTitle = { fg(foreground).type({ size: lg, weight: semibold }) }
   style codeTitle = { type({ family: mono }) }
   style body = { fg(muted-foreground).type({ size: sm, leading: relaxed }) }
-  style stage = { pad(3).border({ width: 1, color: divider }).radius(md).bg(surface) }
-  style stageFull = { pad(3).size(grow).border({ width: 1, color: divider }).radius(md).bg(surface) }
+  style stage = { pad(3).border({ width: 1, color: border }).radius(md).bg(surface) }
+  style stageFull = { pad(3).size(grow).border({ width: 1, color: border }).radius(md).bg(surface) }
   style caption = { fg(muted-foreground).type({ size: xs, weight: medium, case: lowercase, tracking: wide, family: mono }) }
 </scope>
 

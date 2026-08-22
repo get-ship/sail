@@ -8,7 +8,7 @@
   style card = { pad(5).border({ width: 1, color: border }).radius(lg).bg(surface) }
   style cardTitle = { fg(foreground).type({ size: lg, weight: semibold, family: mono }) }
   style body = { fg(muted-foreground).type({ size: sm, leading: relaxed }) }
-  style arm = { pad(3).border({ width: 1, color: divider }).radius(md).bg(surface) }
+  style arm = { pad(3).border({ width: 1, color: border }).radius(md).bg(surface) }
   style caption = { fg(muted-foreground).type({ size: xs, weight: medium, case: lowercase, tracking: wide, family: mono }) }
   style toolbar = { pad({ x: 2, y: 1 }).fg(muted-foreground).border({ width: 1, color: border }).radius(sm).bg(surface).type({ size: xs, family: mono }) }
   style download = { fg(accent).type({ size: sm, decoration: underline }) }
