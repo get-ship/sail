@@ -1237,7 +1237,7 @@ mod tests {
             "space-",
             "radius",
             "primary",
-            "surface-",
+            "surface",
             "font-",
             "duration-",
             "shadow-",
@@ -1265,11 +1265,11 @@ mod tests {
             .find(|(n, _)| n == "space-3")
             .expect("--space-3");
         assert_eq!(space_3.1, "12px");
-        let radius = TOKENS
+        let radius_lg = TOKENS
             .iter()
-            .find(|(n, _)| n == "radius")
-            .expect("--radius");
-        assert_eq!(radius.1, "10px");
+            .find(|(n, _)| n == "radius-lg")
+            .expect("--radius-lg");
+        assert_eq!(radius_lg.1, "10px");
 
         // Convention tokens (no `:root` value) must still be merged in.
         for &name in sail_lint::tokens::CONVENTION_TOKENS {

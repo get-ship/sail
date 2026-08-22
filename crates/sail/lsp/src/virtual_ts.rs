@@ -2537,7 +2537,7 @@ export default controller((ctx) => ({ count: signal(0) }))
 
     const LANDING_SHAPED: &str = r#"
 <scope>
-  style page = { size({ w: 100%, min-w: 0 }).bg(surface-0) }
+  style page = { size({ w: 100%, min-w: 0 }).bg(app) }
   style hero = { pad(4), when: { tablet: pad(8) } }
   style display = { fg(foreground) }
   style cardLink = { display(block) }

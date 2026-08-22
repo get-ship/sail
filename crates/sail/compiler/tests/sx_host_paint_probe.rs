@@ -297,7 +297,8 @@ fn empty_state_child_paint_on_structure_sx() {
     assert!(
         !src.contains("--es-")
             && !src.contains("tone-bg")
-            && src.contains("align=\"stretch\"")
+            && src.contains("align=\"center\"")
+            && src.contains("justify=\"center\"")
             && is_style_product(src)
             && src.contains("match:")
             && src.contains("size:")
@@ -306,8 +307,6 @@ fn empty_state_child_paint_on_structure_sx() {
             && (src.contains("fg(tone)")
                 || (src.contains("bg(tone)") || src.contains("fg(tone)"))
                 || src.contains("bg(tone)"))
-            && (src.contains("grow(1)") || src.contains(" grow") || src.contains("grow min-w"))
-            && src.contains("self(stretch)")
             && src.contains("self(center)")
             && src.contains("size(12)")
             && (src.contains("fontSize(md)") || src.contains("size: md"))
@@ -315,7 +314,7 @@ fn empty_state_child_paint_on_structure_sx() {
             && (src.contains("max-w: 38ch") || src.contains("maxW(38ch)"))
             && src.contains("empty:")
             && src.contains("forced-colors"),
-        "empty-state Style product + stretch/grow + host child tokens"
+        "empty-state Style product + centered layout + host child tokens"
     );
     assert!(
         out.skin_css.contains("font-size:var(--text-md)")
@@ -563,8 +562,8 @@ fn switch_host_track_paint_on_host_sx() {
         "switch host must call boxSizing(border)"
     );
     assert!(
-        out.structure_html.contains("boxSizingborder")
-            || out.skin_css.contains("s-boxSizingborder"),
+        out.structure_html.contains("box-sizing-border")
+            || out.skin_css.contains("s-box-sizing-border"),
         "boxSizing class mint must stamp: struct={}\nskin={}",
         out.structure_html,
         out.skin_css
@@ -580,7 +579,7 @@ fn switch_host_track_paint_on_host_sx() {
         "/../../../packages/sail/tokens/src/element-skins.css"
     ));
     assert!(
-        skins_file.contains(".s-boxSizingborder{")
+        skins_file.contains(".s-box-sizing-border{")
             && (skins_file.contains("box-sizing:border-box")
                 || skins_file.contains("box-sizing: border-box")),
         "element-skins.css stale for boxSizing — run: cargo run -p sail-compiler -- framework-css"
@@ -776,18 +775,17 @@ fn toast_start_stripe_on_host_sx() {
             && !contracts.contains("[data-toast-close]"),
         "toast host stripe + close anatomy host CSS must be gone"
     );
-    // Close control is structure with sx (not parent host CSS).
+    // Close control is structure with sx (not parent host CSS): body grows,
+    // close hugs the end edge.
     let src = include_str!("../stdlib/toast/toast.sail");
     assert!(
         src.contains("data-toast-close")
-            && (src.contains("ms(auto)")
-                || src.contains("ms-auto")
-                || src.contains("ms: auto")
-                || src.contains("s: auto")
-                || src.contains("margin({ s: auto })"))
+            && (src.contains("grow(1)") || src.contains(" grow"))
+            && (src.contains("shrink(0).grow(0)")
+                || (src.contains("shrink(0)") && src.contains("grow(0)")))
             && (out.structure_html.contains("data-toast-close")
-                || out.structure_html.contains("s-msauto")
-                || out.structure_html.contains("s-marginsauto")),
+                || out.structure_html.contains("s-grow-0")
+                || out.structure_html.contains("s-shrink-0")),
         "close control must be structure with sx:\n{}",
         out.structure_html
     );
@@ -988,8 +986,8 @@ fn card_image_slot_bleeds_via_group_padding() {
     assert!(
         out.structure_html.contains(r#"slot name="image""#)
             && out.structure_html.contains("sail-grp")
-            && (out.structure_html.contains("grouppaddinglg-margin")
-                || out.skin_css.contains("grouppaddinglg")),
+            && (out.structure_html.contains("group-padding-lg-margin")
+                || out.skin_css.contains("group-padding-lg")),
         "image wrap must carry group-padding-lg bleed class:\nstruct={}\nskin={}",
         out.structure_html,
         out.skin_css
@@ -1167,10 +1165,9 @@ fn error_state_child_paint_on_structure_sx() {
     assert!(
         !src.contains("--es-")
             && !src.contains("tone-destructive")
-            && src.contains("align=\"stretch\"")
+            && src.contains("align=\"center\"")
+            && src.contains("justify=\"center\"")
             && is_style_product(src)
-            && (src.contains("grow(1)") || src.contains(" grow") || src.contains("grow min-w"))
-            && src.contains("self(stretch)")
             && src.contains("self(center)")
             && src.contains("fg(danger)")
             && (src.contains("outline(danger)") || src.contains("color: danger"))
@@ -1343,9 +1340,9 @@ fn toggle_group_segmented_and_join_on_skins_not_pe() {
                 || out
                     .skin_css
                     .contains("background-color: var(--toggle-group)")
-                || out.structure_html.contains("togglegroup")
-                || out.skin_css.contains("var(--bg-muted-color)")
-                || out.skin_css.contains("bgmuted"))
+                || out.skin_css.contains("background-color:var(--muted)")
+                || out.structure_html.contains("toggle-group")
+                || out.skin_css.contains("bg-muted"))
             && !out.skin_css.contains("--tg-"),
         "segmented Style match uses muted rest; no --tg-* writes:\n{}",
         out.skin_css
@@ -1571,7 +1568,8 @@ fn toast_region_host_paint_on_sx_cva() {
                 || out.structure_html.contains("s-pad-all4")
                 || out.structure_html.contains("s-padall4")
                 || out.skin_css.contains("padding:var(--space-4)"))
-            && out.structure_html.contains("s-pointerEventsnone")
+            && (out.structure_html.contains("s-pointerEventsnone")
+                || out.structure_html.contains("s-pointer-events-none"))
             && (out.structure_html.contains("s-top0")
                 || out.structure_html.contains("t0")
                 || out.skin_css.contains("top:0"))
@@ -1666,7 +1664,9 @@ fn theme_picker_host_paint_on_structure_sx() {
                 || out.structure_html.contains("bgthemepicker")
                 || out.skin_css.contains("var(--theme-picker)")
                 || out.skin_css.contains("var(--popover)")
-                || out.structure_html.contains("bgcolorpopover"))
+                || out.skin_css.contains("var(--overlay)")
+                || out.structure_html.contains("bgcolorpopover")
+                || out.structure_html.contains("bg-overlay"))
             && (out.structure_html.contains("s-isolate")
                 || out.skin_css.contains("isolation:isolate")
                 || out.skin_css.contains("isolation: isolate"))
@@ -1746,9 +1746,9 @@ fn prose_host_paint_on_sx_descendants_generated() {
             && ((src.contains("prose.foreground") || src.contains("prose-foreground"))
                 || src.contains("text-foreground")
                 || src.contains("fg(foreground)"))
-            && (src.contains("leading(loose)")
-                || src.contains("leading-loose")
-                || src.contains("leading: loose")),
+            && (src.contains("leading(normal)")
+                || src.contains("leading-normal")
+                || src.contains("leading: normal")),
         "prose host Style must carry block + body type/color/leading"
     );
     assert!(
@@ -1767,9 +1767,9 @@ fn prose_host_paint_on_sx_descendants_generated() {
                 || out.structure_html.contains("s-textforeground")
                 || out.structure_html.contains("s-fgforeground")
                 || out.skin_css.contains("var(--fg-foreground-color)"))
-            && (out.structure_html.contains("leadingloose")
-                || out.structure_html.contains("s-leadingloose")
-                || out.skin_css.contains("var(--leading-loose)")),
+            && (out.structure_html.contains("leadingnormal")
+                || out.structure_html.contains("leading-normal")
+                || out.skin_css.contains("var(--leading-normal)")),
         "host paint atoms on structure:\n{}",
         out.structure_html
     );
@@ -1911,13 +1911,14 @@ fn tab_list_sticky_and_variant_on_host_not_parent_pe() {
                 || out
                     .skin_css
                     .contains("background-color: var(--tab-list-rail)")
-                || out.skin_css.contains("var(--bg-muted-color)"))
+                || out.skin_css.contains("background-color:var(--muted)"))
             && (out.skin_css.contains("border-radius:var(--radius-md)")
                 || out.skin_css.contains("border-radius: var(--radius-md)")),
         "pill variant CVA must lower on tab-list with muted rail:\n{}",
         out.skin_css
     );
-    // sticky/variant/size not on <tabs> — size Style match lives on <tab>.
+    // sticky/size/tone not on <tabs> — variant is a declared <tabs> axis;
+    // size Style match lives on <tab>.
     let tabs_src = include_str!("../stdlib/tabs/tabs.sail");
     let _tabs_out = compile_element(tabs_src, "tabs").expect("tabs compiles");
     assert!(
@@ -1925,10 +1926,9 @@ fn tab_list_sticky_and_variant_on_host_not_parent_pe() {
             && !tabs_src.contains("--tab-")
             && !tabs_src.contains("sticky = false")
             && !tabs_src.contains("sticky=false")
-            && !tabs_src.contains("variant:")
             && !tabs_src.contains("size: 'sm' | 'md' | 'lg' = 'md'")
             && !tabs_src.contains("tone:"),
-        "sticky/variant/size/tone not on <tabs> (no --tab-*):\n{tabs_src}"
+        "sticky/size/tone not on <tabs> (no --tab-*):\n{tabs_src}"
     );
     // Size CVA lives on <tab> (text-sm py-2 px-3 …), not --tab-* custom props.
     let tab_src = include_str!("../stdlib/tabs/tab.sail");
@@ -2068,25 +2068,26 @@ fn scroll_area_standard_scrollbar_on_host_sx() {
 
 #[test]
 fn code_block_pre_tab_and_tok_generated() {
-    // pre tab-size:2 + line-height code → pre Style (tab(2) + leading(code)).
+    // pre tab-size:2 + line-height relaxed → pre Style (tab(2) + leading(relaxed)).
     // .tok-* highlighter ink: compiler code-block map → element-skins (not host Style).
     let src = include_str!("../stdlib/code-block/code-block.sail");
     let out = compile_element(src, "code-block").expect("code-block compiles");
     assert!(
         is_style_product(src)
             && (src.contains("tab(2)") || src.contains("tab-2") || src.contains("tab: 2"))
-            && (src.contains("leading(code)")
-                || src.contains("leading-code")
-                || src.contains("leading: code")),
-        "code-block pre Style must carry tab(2) + leading(code)"
+            && (src.contains("leading(relaxed)")
+                || src.contains("leading-relaxed")
+                || src.contains("leading: relaxed")),
+        "code-block pre Style must carry tab(2) + leading(relaxed)"
     );
     assert!(
         (out.structure_html.contains("s-tab2")
             || out.structure_html.contains("tab2")
+            || out.structure_html.contains("tab-2")
             || out.skin_css.contains("tab-size"))
-            && (out.structure_html.contains("s-leadingcode")
-                || out.structure_html.contains("leadingcode")
-                || out.skin_css.contains("var(--leading-code)")),
+            && (out.structure_html.contains("leadingrelaxed")
+                || out.structure_html.contains("leading-relaxed")
+                || out.skin_css.contains("var(--leading-relaxed)")),
         "tab/leading atoms on structure:\n{}",
         out.structure_html
     );
@@ -2099,11 +2100,11 @@ fn code_block_pre_tab_and_tok_generated() {
         out.skin_css
     );
     assert!(
-        out.skin_css.contains("line-height:var(--leading-code)")
-            || out.skin_css.contains("line-height: var(--leading-code)")
-            || out.structure_html.contains("s-leadingcode")
-            || out.structure_html.contains("leadingcode"),
-        "leading-code must lower:\n{}",
+        out.skin_css.contains("line-height:var(--leading-relaxed)")
+            || out.skin_css.contains("line-height: var(--leading-relaxed)")
+            || out.structure_html.contains("leadingrelaxed")
+            || out.structure_html.contains("leading-relaxed"),
+        "leading-relaxed must lower:\n{}",
         out.skin_css
     );
     // .tok-* highlighter ink is platform adaptor CSS, not host Style.
@@ -2483,23 +2484,30 @@ fn tooltip_geometry_and_show_on_sx_no_contracts_pe() {
     assert!(
         out.structure_html.contains("sail-grp")
             && (out.structure_html.contains("s-positionrelative")
-                || out.structure_html.contains("s-positionschemerelative"))
+                || out.structure_html.contains("s-positionschemerelative")
+                || out.structure_html.contains("s-position-scheme-relative"))
             && (out.structure_html.contains("s-positionabsolute")
                 || out.structure_html.contains("schemeabsolute")
+                || out.structure_html.contains("scheme-absolute")
                 || out.skin_css.contains("position:absolute"))
             && (out.structure_html.contains("s-topbindttTop")
                 || out.structure_html.contains("tbindttTop")
+                || out.structure_html.contains("t-bind-tt-top")
                 || out.skin_css.contains("var(--tt-top)"))
             && (out.structure_html.contains("s-grouphover-opacity100")
                 || out.structure_html.contains("grouphover-filteropacity100")
+                || out.structure_html.contains("group-hover-filter-opacity100")
                 || out.skin_css.contains("opacity:1"))
             && (out.skin_css.contains("[data-hidden]")
-                || out.structure_html.contains("datahidden"))
+                || out.structure_html.contains("datahidden")
+                || out.structure_html.contains("data-hidden"))
             && (out.structure_html.contains("borderTtooltip")
                 || out.skin_css.contains("border-top-color:var(--tooltip)")
                 || out.skin_css.contains("border-top-color: var(--tooltip)")
                 || out.skin_css.contains("border-top-color:var(--popover)")
-                || out.structure_html.contains("bordercolorpopoveredget")),
+                || out.skin_css.contains("border-top-color:var(--overlay)")
+                || out.structure_html.contains("bordercolorpopoveredget")
+                || out.structure_html.contains("border-color-overlay-edge")),
         "tooltip structure atoms (border caret):\n{}",
         out.structure_html
     );

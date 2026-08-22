@@ -1667,7 +1667,7 @@ export default controller(() => ({}))
         let mut session = TsgoSession::start(Some(&root));
         assert!(session.is_live(), "tsgo session failed to start");
         let src = r#"<scope>
-  style page = { size({ w: 100% }).bg(surface-0) }
+  style page = { size({ w: 100% }).bg(app) }
   style hero = { pad(4), when: { tablet: pad(8) } }
   style cardLink = { display(block) }
   style swatch = { size(6) }

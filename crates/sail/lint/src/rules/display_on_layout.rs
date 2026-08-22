@@ -304,7 +304,7 @@ mod tests {
 
     #[test]
     fn allows_layout_without_display() {
-        let f = run(r#"<column style({ pad(4).bg(surface-2) })>x</column>"#);
+        let f = run(r#"<column style({ pad(4).bg(surface) })>x</column>"#);
         assert!(f.is_empty(), "{f:?}");
     }
 
@@ -336,7 +336,7 @@ mod tests {
     fn allows_non_display_const_on_column() {
         let f = run(r#"
             <scope>
-              style paint = { pad(4).bg(surface-2) }
+              style paint = { pad(4).bg(surface) }
             </scope>
             <column style(paint)>x</column>
             "#);

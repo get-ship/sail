@@ -1,5 +1,5 @@
 <!-- Ten load-bearing L1 surfaces for paint goldens (RENDER-1). -->
-<column gap="4" style({ size({ w: 100% }).pad(4).bg(background).fg(foreground) })>
+<column gap="4" style({ pad(4).bg(background).fg(foreground) })>
   <row gap="3" align="center">
     <button variant="solid" tone="primary">Primary</button>
     <button>Default</button>
@@ -7,12 +7,12 @@
     <switch />
   </row>
 
-  <field style({ size({ w: 100% }) })>
+  <field>
     <label slot="label">Name</label>
-    <input type="text" placeholder="Type here" style({ size({ w: 100% }) })>
+    <input type="text" placeholder="Type here">
   </field>
 
-  <card style({ size({ w: 100% }) })>
+  <card>
     <span slot="header" style({ type({ weight: semibold }) })>Card header</span>
     <span style({ fg(muted-foreground) })>Card body with chrome.</span>
   </card>
@@ -21,8 +21,8 @@
     <span slot="brand" style({ fg(foreground).type({ weight: semibold }) })>Nav</span>
   </navbar>
 
-  <row nowrap align="stretch" style({ grow(1).size({ w: 100% }) })>
-    <column gap="1" style({ shrink(0).size({ w: 40 }).pad(3).bg(sidebar).fg(sidebar-foreground).border({ color: sidebar-border, edge: e }) })>
+  <row nowrap align="stretch" style({ grow(1) })>
+    <column gap="1" style({ shrink(0).size({ w: 40 }).pad(3).bg(surface).fg(foreground).border({ color: border, edge: e }) })>
       <span>Side</span>
     </column>
     <column gap="2" style({ grow(1).size({ min-w: 0 }).pad(3) })>

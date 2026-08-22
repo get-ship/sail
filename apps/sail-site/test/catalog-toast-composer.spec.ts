@@ -15,7 +15,7 @@ test('toast detail: dismiss then Show toast remounts', async ({ page }) => {
 
   const toast = () => stage.getByRole('status')
   await expect(toast()).toHaveCount(1)
-  await expect(toast()).toContainText('Saved.')
+  await expect(toast()).toContainText('Invite sent.')
 
   // L1 built-in close only (data-toast-close / aria-label=Dismiss).
   await toast().getByRole('button', { name: /dismiss/i }).click()
@@ -23,7 +23,7 @@ test('toast detail: dismiss then Show toast remounts', async ({ page }) => {
 
   await stage.getByRole('button', { name: 'Show toast' }).click()
   await expect(toast()).toHaveCount(1)
-  await expect(toast()).toContainText('Saved.')
+  await expect(toast()).toContainText('Invite sent.')
 
   expect(errors).toEqual([])
 })

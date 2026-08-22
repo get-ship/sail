@@ -6,17 +6,17 @@
   </navbar>
 
   <row nowrap align="stretch" style({ grow(1) })>
-    <column gap="1" style({ shrink(0).size({ w: 56 }).pad({ x: 4, y: 5 }).bg(sidebar).fg(sidebar-foreground).border({ color: sidebar-border, edge: e }) })>
+    <column gap="1" style({ shrink(0).size({ w: 56 }).pad({ x: 4, y: 5 }).bg(surface).fg(foreground).border({ color: border, edge: e }) })>
       <a
-        href="#home" style({ pad({ x: 3, y: 2 }).fg(sidebar-foreground).radius(md), when: { hover: bg(sidebar-accent).fg(sidebar-accent-foreground) } })>
+        href="#home" style({ pad({ x: 3, y: 2 }).fg(foreground).radius(md), when: { hover: bg(accent).fg(accent-foreground) } })>
         Home
       </a>
       <a
-        href="#reports" style({ pad({ x: 3, y: 2 }).fg(sidebar-foreground).radius(md), when: { hover: bg(sidebar-accent).fg(sidebar-accent-foreground) } })>
+        href="#reports" style({ pad({ x: 3, y: 2 }).fg(foreground).radius(md), when: { hover: bg(accent).fg(accent-foreground) } })>
         Reports
       </a>
       <a
-        href="#team" style({ pad({ x: 3, y: 2 }).fg(sidebar-foreground).radius(md), when: { hover: bg(sidebar-accent).fg(sidebar-accent-foreground) } })>
+        href="#team" style({ pad({ x: 3, y: 2 }).fg(foreground).radius(md), when: { hover: bg(accent).fg(accent-foreground) } })>
         Team
       </a>
     </column>
