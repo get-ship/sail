@@ -421,9 +421,12 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       aria-expanded={open() ? 'true' : 'false'}
       aria-label="Choose color"
       use:captureInput
-      use:swatch={value() || '#000000'}
-      style({ size({ w: 100%, h: 100%, min-w: 0, min-h: 0 }).pad(0).radius(md).border({ color: border-subtle, width: 1 }).bg(bind(swatchColor)).cursor(pointer).elevation(none), when: { focusWithin: border({ kind: outline, color: ring }) } })
-    ></button>
+      style({ size({ w: 100%, h: 100%, min-w: 0, min-h: 0 }).pad(0).radius(md).overflow(hidden).border({ color: border-subtle, width: 1 }).cursor(pointer).elevation(none), when: { focusWithin: border({ kind: outline, color: ring }) } })
+    >
+      <svg aria-hidden="true" width="100%" height="100%" preserveAspectRatio="none">
+        <rect width="100%" height="100%" fill={value() || '#000000'} />
+      </svg>
+    </button>
     <if {open() && !disabled()}>
       <div
         id={panelId()}
@@ -436,10 +439,13 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         <span style({ display(contents).type({ size: size-fs }) })>
           <column gap="3">
             <div
-              use:swatch={value() || '#000000'}
               aria-hidden="true"
-              style({ size({ w: 100%, h: 16 }).radius(md).border({ color: border, width: 1 }).bg(bind(swatchColor)).elevation(sm) })
-            ></div>
+              style({ size({ w: 100%, h: 16 }).radius(md).overflow(hidden).border({ color: border, width: 1 }).elevation(sm) })
+            >
+              <svg width="100%" height="100%" preserveAspectRatio="none">
+                <rect width="100%" height="100%" fill={value() || '#000000'} />
+              </svg>
+            </div>
             <grid cols="6" gap="2">
               <for {swatches() as sw} key={sw.hex}>
                 <button
@@ -447,9 +453,12 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                   aria-selected={sw.hex === value().toLowerCase() ? 'true' : 'false'}
                   data-hex={sw.hex}
                   aria-label={sw.label}
-                  use:swatch={sw.hex}
-                  style({ pad(0).size({ aspect: square }).border({ color: border-subtle, width: 1 }).radius(sm).cursor(pointer).bg(bind(swatchColor)), when: { selected: border({ kind: outline, color: primary }) } })
-                ></button>
+                  style({ pad(0).size({ aspect: square }).radius(sm).overflow(hidden).border({ color: border-subtle, width: 1 }).cursor(pointer), when: { selected: border({ kind: outline, color: primary }) } })
+                >
+                  <svg aria-hidden="true" width="100%" height="100%" preserveAspectRatio="none">
+                    <rect width="100%" height="100%" fill={sw.hex} />
+                  </svg>
+                </button>
               </for>
             </grid>
             <column gap="2">
@@ -507,9 +516,12 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         aria-expanded={open() ? 'true' : 'false'}
         aria-label="Choose color"
         use:captureInput
-        use:swatch={value() || '#000000'}
-        style({ shrink(0).size({ w: 10, h: 10, min-w: 10 }).pad(0).radius(md).border({ color: border, width: 1 }).bg(bind(swatchColor)).cursor(pointer) })
-      ></button>
+        style({ shrink(0).size({ w: 10, h: 10, min-w: 10 }).pad(0).radius(md).overflow(hidden).border({ color: border, width: 1 }).cursor(pointer) })
+      >
+        <svg aria-hidden="true" width="100%" height="100%" preserveAspectRatio="none">
+          <rect width="100%" height="100%" fill={value() || '#000000'} />
+        </svg>
+      </button>
       <if {showHexUi()}>
         <input
           type="text"
@@ -536,10 +548,13 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         <span style({ display(contents).type({ size: size-fs }) })>
           <column gap="3">
             <div
-              use:swatch={value() || '#000000'}
               aria-hidden="true"
-              style({ size({ w: 100%, h: 16 }).radius(md).border({ color: border, width: 1 }).bg(bind(swatchColor)).elevation(sm) })
-            ></div>
+              style({ size({ w: 100%, h: 16 }).radius(md).overflow(hidden).border({ color: border, width: 1 }).elevation(sm) })
+            >
+              <svg width="100%" height="100%" preserveAspectRatio="none">
+                <rect width="100%" height="100%" fill={value() || '#000000'} />
+              </svg>
+            </div>
             <grid cols="6" gap="2">
               <for {swatches() as sw} key={sw.hex}>
                 <button
@@ -547,9 +562,12 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                   aria-selected={sw.hex === value().toLowerCase() ? 'true' : 'false'}
                   data-hex={sw.hex}
                   aria-label={sw.label}
-                  use:swatch={sw.hex}
-                  style({ pad(0).size({ aspect: square }).border({ color: border-subtle, width: 1 }).radius(sm).cursor(pointer).bg(bind(swatchColor)), when: { selected: border({ kind: outline, color: primary }) } })
-                ></button>
+                  style({ pad(0).size({ aspect: square }).radius(sm).overflow(hidden).border({ color: border-subtle, width: 1 }).cursor(pointer), when: { selected: border({ kind: outline, color: primary }) } })
+                >
+                  <svg aria-hidden="true" width="100%" height="100%" preserveAspectRatio="none">
+                    <rect width="100%" height="100%" fill={sw.hex} />
+                  </svg>
+                </button>
               </for>
             </grid>
             <column gap="2">

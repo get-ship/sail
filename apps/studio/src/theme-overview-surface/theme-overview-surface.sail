@@ -17,7 +17,7 @@
   // no preset: min-w lock
   style heroCard = { overflow(hidden).size({ min-w: 0 }).radius(lg).border(subtle).bg(surface) }
   // no preset: size lock + position
-  style heroSwatch = { position(relative).size({ w: 100%, h: 28, min-h: 28 }).overflow(hidden).bg(bind(swatchColor)), when: { stateEdit: cursor(pointer), stateLocked: cursor(default) } }
+  style heroSwatch = { position(relative).size({ w: 100%, h: 28, min-h: 28 }).overflow(hidden), when: { stateEdit: cursor(pointer), stateLocked: cursor(default) } }
   // no preset: border width 0 + position + filter
   style heroColorInput = { position({ scheme: absolute, t: 0, l: 0 }).size(max).pad(0).border({ width: 0 }).cursor(pointer).filter({ opacity: 0 }), when: { disabled: cursor(not-allowed) } }
   style heroMeta = { pad(3) }
@@ -96,7 +96,10 @@ export default controller(() => {
 
 <partial hero-color-card props: HeroColorCardProps>
   <column hero-card token={token} gap="0" style(heroCard, growMin)>
-    <stack use:swatch={value} state={canEdit ? 'edit' : 'locked'} style(heroSwatch)>
+    <stack state={canEdit ? 'edit' : 'locked'} style(heroSwatch)>
+      <svg aria-hidden="true" width="100%" height="100%" preserveAspectRatio="none">
+        <rect width="100%" height="100%" fill={value} />
+      </svg>
       <sail-color-picker
         token={token}
         value={value}

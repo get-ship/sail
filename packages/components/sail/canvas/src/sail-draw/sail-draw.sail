@@ -232,21 +232,20 @@ export default controller(({ value, sketchy, readonly }: Scope) => {
           data-el-id={el.id}
           data-state={el.kind === 'pen' ? 'pen' : null}
           aria-selected={selectedSet().has(el.id) ? 'true' : 'false'}
-          use:swatch={el.color}
           on:pointerdown={elementDown}
           vector-effect="non-scaling-stroke"
           pointer-events={el.kind === 'pen' ? 'fill' : 'stroke'}
-          fill={el.kind === 'pen' ? 'currentColor' : 'none'}
-          stroke={el.kind === 'pen' ? 'none' : selectedSet().has(el.id) ? 'var(--primary)' : null}
+          fill={el.kind === 'pen' ? el.color : 'none'}
+          stroke={el.kind === 'pen' ? 'none' : selectedSet().has(el.id) ? 'var(--primary)' : el.color}
           stroke-width="2" style({ cursor(pointer) })></path>}</if>
     </for>
     <if {draftPath()}>
       <path
         d={draftPath()}
-        use:swatch={draftColor()}
         vector-effect="non-scaling-stroke"
         pointer-events="none"
         fill="none"
+        stroke={draftColor()}
         stroke-width="2" style({ filter({ opacity: 85 }) })></path>
     </if>
 

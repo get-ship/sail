@@ -68,28 +68,6 @@ export const maxWidth: Action<number | string | null | undefined> = (
 }
 
 /**
- * `use:swatch={hex}` — runtime swatch background for sail-color-picker.
- * The colour is user input (#3366ff or `oklch(...)`, whatever they typed);
- * it is not a token. The action writes the value to `--swatch-color`
- * verbatim. The consuming template reads it via
- *     style="bg-(--swatch-color)"
- */
-export const swatch: Action<string | null | undefined> = (node, initial) => {
-  const el = node as HTMLElement
-  const apply = (c: string | null | undefined): void => {
-    if (c == null || c === '') {
-      el.style.removeProperty('--swatch-color')
-    } else {
-      el.style.setProperty('--swatch-color', c)
-    }
-  }
-  apply(initial)
-  return {
-    update: (next) => apply(next),
-  }
-}
-
-/**
  * `use:liveBox={cssDecls}` — freeform specimen geometry (shape facet).
  * Param is semicolon-separated CSS declarations, e.g.
  *   `border-radius:12px;box-shadow:…;border-width:1px;background:oklch(…)`

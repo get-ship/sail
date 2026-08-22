@@ -24,10 +24,10 @@
   // no preset: min-w lock
   style tokenRow = { pad(2).size({ min-w: 0 }) }
   // no preset: size lock
-  style seedDot = { size({ w: 4, h: 4, min-w: 4, min-h: 4 }).radius(full).border(subtle).bg(bind(swatchColor)) }
+  style seedDot = { size({ w: 4, h: 4, min-w: 4, min-h: 4 }).radius(full).border(subtle) }
   style surfaceChip = { pad(2).radius(md).border(subtle).bg(app) }
   // no preset: size lock
-  style surfaceDot = { size({ w: 3, h: 3, min-w: 3, min-h: 3 }).radius(full).border(subtle).bg(bind(swatchColor)) }
+  style surfaceDot = { size({ w: 3, h: 3, min-w: 3, min-h: 3 }).radius(full).border(subtle) }
   style bandStatus = { pad(4) }
   style bandError = { pad(4).border(subtle) }
   style surfaceRoot = { overflow(hidden).bg(app) }
@@ -60,7 +60,7 @@
   style dimBar = { pad(3).radius(md).border(subtle).bg(app) }
   style rampStep = { position(relative).size({ w: 8, h: 8, min-w: 8, min-h: 8 }).overflow(hidden).radius(sm).border(subtle) }
   style gauntletGrid = { pad(2) }
-  style gauntletCell = { size({ w: 6, h: 6, min-w: 6, min-h: 6 }).radius(sm).border(subtle).bg(bind(swatchColor)) }
+  style gauntletCell = { size({ w: 6, h: 6, min-w: 6, min-h: 6 }).radius(sm).overflow(hidden).border(subtle) }
   style contrastOk = { fg(success).type(mono-sm) }
   style contrastFail = { fg(danger).type(mono-sm) }
 </scope>
@@ -221,13 +221,13 @@ export default controller(() => {
         <row seed-strip align="center" gap="3" nowrap style(seedStrip)>
           <p style(fieldHint, shrink0)>Generate</p>
           <row gap="1" align="center" nowrap hidden="true" style(growMin)>
-            <stack use:swatch={primaryHex()} style(seedDot)></stack>
-            <stack use:swatch={secondaryHex()} style(seedDot)></stack>
-            <stack use:swatch={accentHex()} style(seedDot)></stack>
-            <stack use:swatch={bgHex()} style(seedDot)></stack>
-            <stack use:swatch={fgHex()} style(seedDot)></stack>
-            <stack use:swatch={mutedHex()} style(seedDot)></stack>
-            <stack use:swatch={borderHex()} style(seedDot)></stack>
+            <stack style(seedDot, bg(primary))></stack>
+            <stack style(seedDot, bg(secondary))></stack>
+            <stack style(seedDot, bg(accent))></stack>
+            <stack style(seedDot, bg(background))></stack>
+            <stack style(seedDot, bg(foreground))></stack>
+            <stack style(seedDot, bg(muted))></stack>
+            <stack style(seedDot, bg(border))></stack>
           </row>
           <button type="button" size="sm" variant="solid" tone="primary" seed-generate disabled={!generateEnabled() || generateBusy() || !session.canEdit()} on:click={color.onSeedGenerate} title="Derive + gate via the engine">
             Generate
@@ -259,7 +259,10 @@ export default controller(() => {
                 </column>
                 <row ramp-steps gap="1" align="center" nowrap>
                   <for {ramp.steps as step} key={step.key}>
-                    <stack ramp-step use:swatch={step.color} style(rampStep)>
+                    <stack ramp-step style(rampStep)>
+                      <svg aria-hidden="true" width="100%" height="100%" preserveAspectRatio="none">
+                        <rect width="100%" height="100%" fill={step.color} />
+                      </svg>
                       <sail-color-picker
                         token={step.path}
                         value={step.color}
@@ -304,7 +307,11 @@ export default controller(() => {
           </row>
           <row gauntlet-grid gap="1" style(gauntletGrid)>
             <for {gauntletCells() as cell} key={cell.key}>
-              <stack gauntlet-cell use:swatch={cell.color} title={cell.label} style(gauntletCell)></stack>
+              <stack gauntlet-cell title={cell.label} style(gauntletCell)>
+                <svg aria-hidden="true" width="100%" height="100%" preserveAspectRatio="none">
+                  <rect width="100%" height="100%" fill={cell.color} />
+                </svg>
+              </stack>
             </for>
           </row>
         </column>
@@ -371,11 +378,11 @@ export default controller(() => {
           </column>
           <row surface-chips gap="2" align="center" nowrap hidden="true">
             <row align="center" gap="1" style(surfaceChip)>
-              <stack use:swatch={bgHex()} style(surfaceDot)></stack>
+              <stack style(surfaceDot, bg(background))></stack>
               <p style(pathMeta)>bg</p>
             </row>
             <row align="center" gap="1" style(surfaceChip)>
-              <stack use:swatch={surfaceHex()} style(surfaceDot)></stack>
+              <stack style(surfaceDot, bg(surface))></stack>
               <p style(pathMeta)>surface</p>
             </row>
           </row>
