@@ -23,7 +23,6 @@
 import { createTable, type Table } from '../sail-table/engine/create-table'
 import type { TreeNode } from '../sail-tree/tree-node'
 import type { Action, ControllerScope } from '@ship/sail-runtime'
-import type { Virtual } from '@ship/sail-runtime/virtual'
 import { parseJsonColumns, parseJsonNodes } from '../sail-tree/decode'
 import { treeTableOptions } from '../sail-tree/sail-tree.engine'
 import { treeHeaderViews, windowTreeRows, type TreeHeaderView } from '../sail-tree/sail-tree.view'
@@ -42,14 +41,14 @@ function emptyTree(): Table<AnyTreeNode> {
 
 export default controller((_ctx: ControllerScope<Scope>) => {
     const treeSig = signal<Table<AnyTreeNode> | null>(null)
-    const viewportEl = signal<HostBag | null>(null)
+    const viewportEl = signal<{ current?: unknown } | null>(null)
 
     const EMPTY = emptyTree()
     const tree = derived<Table<AnyTreeNode>>(() => treeSig() ?? EMPTY)
 
-    const virt: Virtual = createVirtualizer({
+    const virt = createVirtualizer({
       count: () => tree().rows().length,
-      estimateSize: (_index) => ROW_HEIGHT,
+      estimateSize: (_index: number) => ROW_HEIGHT,
       getScrollElement: () => viewportEl(),
       overscan: 8,
       getItemKey: (i) => tree().rows()[i]?.id ?? i,
@@ -65,11 +64,14 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       if (hs.length === 0) return 'minmax(80px, 1fr)'
       return hs.map((h) => h.size).join(' ')
     })
-    const windowItems = windowTreeRows<AnyTreeNode>(
+    const rawWindow = windowTreeRows<AnyTreeNode>(
       tree,
       virt.virtualItems,
       () => INDENT_STEP,
-    ).map((w) => ({ ...w, y: `${w.start}px`, ps: `${w.indent}px` }))
+    )
+    const windowItems = derived(() =>
+      rawWindow().map((w) => ({ ...w, y: `${w.start}px`, ps: `${w.indent}px` })),
+    )
     const totalSize = virt.totalSize
     const rowCount = derived<number>(() => tree().rowCount())
 
@@ -90,7 +92,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       // Capture pre-connect `tree={table}` identity (bindDynamic may fire first).
       const preTree = (host as { tree?: Table<AnyTreeNode> | null }).tree
       if (preTree != null) treeSig.set(preTree)
-      defineHostProperty(asSailHost(host) as HostBag, 'tree', {
+      defineHostProperty(asSailHost(host), 'tree', {
         get: () => tree(),
         set: (t: Table<AnyTreeNode> | null) => {
           treeSig.set(t)
