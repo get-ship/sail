@@ -191,13 +191,13 @@ function applyFinalStyle(el: Element, cfg: MotionConfig): void {
   if (!isHTMLElement(el)) return
   const value = FINAL_VALUE[cfg.property]
   switch (cfg.property) {
-    case 'opacity': writeCssVar(el, 'opacity', String(value); return)
-    case 'scale': writeCssVar(el, 'scale', String(value); return)
-    case 'scale-x': writeCssVar(el, 'scale', `${value} 1`; return)
-    case 'scale-y': writeCssVar(el, 'scale', `1 ${value}`; return)
-    case 'translate-y': writeCssVar(el, 'translate', '0 0'; return)
-    case 'translate-x': writeCssVar(el, 'translate', '0 0'; return)
-    case 'rotate': writeCssVar(el, 'rotate', '0deg'; return)
+    case 'opacity': writeCssVar(el, 'opacity', String(value)); return
+    case 'scale': writeCssVar(el, 'scale', String(value)); return
+    case 'scale-x': writeCssVar(el, 'scale', `${value} 1`); return
+    case 'scale-y': writeCssVar(el, 'scale', `1 ${value}`); return
+    case 'translate-y': writeCssVar(el, 'translate', '0 0'); return
+    case 'translate-x': writeCssVar(el, 'translate', '0 0'); return
+    case 'rotate': writeCssVar(el, 'rotate', '0deg'); return
   }
 }
 

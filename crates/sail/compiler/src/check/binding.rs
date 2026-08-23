@@ -184,7 +184,6 @@ pub fn resolve(
     program: &Program,
     controller: Option<&ParsedController>,
 ) -> Result<Vec<StyleBinding>, CompileError> {
-    let action_writes = collect_action_writes(source);
     let for_vars = collect_for_vars(source);
     let mut seen: BTreeSet<String> = BTreeSet::new();
     let mut out: Vec<StyleBinding> = Vec::new();
@@ -404,19 +403,8 @@ pub fn resolve(
             }
         }
 
-        // 4. Action-declared write — no component-local reflection.
-        if action_writes.contains(scope_name.as_str()) {
-            unit_demand.insert(scope_name, StyleBindingUnit::Untyped);
-            continue;
-        }
-
         return Err(refusal(
-            &scope_name,
-            &css_name,
-            program,
-            controller,
-            &action_writes,
-            site.span,
+            &scope_name, &css_name, program, controller, site.span,
         ));
     }
 
@@ -945,31 +933,6 @@ fn setter_from_concern_slot(trimmed: &str) -> Option<String> {
 }
 
 /// Collect bare `use:action` names present in the source.
-fn collect_action_writes(source: &str) -> BTreeSet<&'static str> {
-    let mut names: BTreeSet<String> = BTreeSet::new();
-    let bytes = source.as_bytes();
-    let mut i = 0;
-    while i < bytes.len() {
-        if source[i..].starts_with("use:") {
-            let start = i + 4;
-            let mut end = start;
-            while end < bytes.len() && (bytes[end].is_ascii_alphanumeric() || bytes[end] == b'_') {
-                end += 1;
-            }
-            if end > start {
-                names.insert(source[start..end].to_string());
-            }
-            i = end;
-            continue;
-        }
-        let mut n = i + 1;
-        while n < bytes.len() && (bytes[n] & 0xC0) == 0x80 {
-            n += 1;
-        }
-        i = n;
-    }
-    action_manifest::writes_for_actions(names.iter().map(|s| s.as_str()))
-}
 
 fn camel_to_kebab(name: &str) -> String {
     let mut kebab = String::with_capacity(name.len() + 4);
@@ -1081,7 +1044,6 @@ fn refusal(
     css_name: &str,
     program: &Program,
     controller: Option<&ParsedController>,
-    action_writes: &BTreeSet<&'static str>,
     span: Span,
 ) -> CompileError {
     let mut candidates: Vec<String> = program.props.iter().map(|p| camel_of(&p.name)).collect();
@@ -1093,7 +1055,6 @@ fn refusal(
                 .map(|m| m.name.clone()),
         );
     }
-    candidates.extend(action_writes.iter().map(|s| (*s).to_string()));
     // Token names as camel for did-you-mean when author used camel-ish form.
     candidates.extend(
         sail_lint::tokens::registry()

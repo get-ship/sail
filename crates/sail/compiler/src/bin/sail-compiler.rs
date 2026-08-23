@@ -822,7 +822,6 @@ fn gen_prop_registry(out: Option<PathBuf>, ts_out: Option<PathBuf>) -> Result<()
                 "param": a.param,
                 "summary": a.summary,
                 "public": sail_compiler::action_manifest::is_public_action(a.name),
-                "writes": a.writes,
             })
         })
         .collect();
@@ -833,7 +832,6 @@ fn gen_prop_registry(out: Option<PathBuf>, ts_out: Option<PathBuf>) -> Result<()
                 "param": a.param,
                 "summary": a.summary,
                 "public": true,
-                "writes": a.writes,
             })
         })
         .collect();
