@@ -1,6 +1,5 @@
 import { writeCssVar } from '../bind'
 import type { Action } from '../action'
-import { writeCssVar } from '../bind'
 
 /**
  * `use:gridTracks={tracks}` — runtime grid-template-columns/rows string.

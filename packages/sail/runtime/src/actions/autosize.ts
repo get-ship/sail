@@ -21,7 +21,6 @@
 
 import { writeCssVar } from '../bind'
 import type { Action } from '../action'
-import { writeCssVar } from '../bind'
 
 /**
  * Make a `<textarea>` grow in height, or a single-line `<input>` grow in width,

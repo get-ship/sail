@@ -1,6 +1,5 @@
 import { writeCssVar } from '../bind'
 import type { Action } from '../action'
-import { writeCssVar } from '../bind'
 
 const MIN_PANE_PX = 32
 const NUDGE = 2

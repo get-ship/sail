@@ -292,7 +292,7 @@ export default controller((props: ControllerScope<Scope>, _host?: HostBag) => {
         gap="2"
                 on:pointerdown={(e) => e.stopPropagation()}
 
-       style({ position({ scheme: absolute, t: bind(popoverPos.top), l: bind(popoverPos.left) }).size({ min-w: overlay-max-w-sm }).pad(2).position({ z: sticky }).bg(surface).fg(foreground).border({ color: border, width: 1 }).radius(md).elevation(lg).pointerEvents(auto) })>
+       style({ position({ scheme: absolute, t: bind(popoverPos.top), l: bind(popoverPos.left) }).size({ min-w: panel-max-w-sm }).pad(2).position({ z: sticky }).bg(surface).fg(foreground).border({ color: border, width: 1 }).radius(md).elevation(lg).pointerEvents(auto) })>
 
         <textarea placeholder="Add a note…" bind:value={noteText} on:keydown={onNoteKeydown} style({ size({ w: 100% }).radius(sm) }) />
         <row gap="2" justify="end">

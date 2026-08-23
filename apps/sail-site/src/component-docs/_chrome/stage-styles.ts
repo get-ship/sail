@@ -8,7 +8,7 @@
  * Prefer those slots over re-authoring a stage row in each host.
  *
  * Geometry atoms (for hosts still inlining the row). Width is space scale
- * (size({ w: 64 }) → --space-64), never overlay-max-w-* — those are panel-family tokens.
+ * (size({ w: 64 }) → --space-64), never panel-max-w-* — those are panel-family tokens.
  */
 export const STAGE_SPLIT = '{ size({ w: 100%, min-w: 0, min-h: 64 }) }'
 export const STAGE_CANVAS = '{ grow(1).size({ min-w: 0, min-h: 64, basis: 0 }).pad(8) }'

@@ -17,7 +17,7 @@ $ sail dev --project my-app
 
   firstPage: `<!-- routes/page.sail — a page is markup. The components are
      already in the language; there is nothing to import. -->
-<column gap="4" style({ pad(6).size({ max-w: overlay-max-w-lg }) })>
+<column gap="4" style({ pad(6).size({ max-w: panel-max-w-lg }) })>
   <h1>Team</h1>
   <row gap="2">
     <input placeholder="Filter people" />

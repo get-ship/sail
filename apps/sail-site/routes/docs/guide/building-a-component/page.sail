@@ -109,7 +109,7 @@ export default controller(() => {
       Two setters above are worth naming.
       <code>type(&#123; family: mono &#125;)</code> with <code>type(&#123; nums: tabular &#125;)</code> gives
       digits a fixed width, so the total does not jitter as it recalculates.
-      <code>size(&#123; max-w: overlay-max-w-sm &#125;)</code> stops the card from stretching to the
+      <code>size(&#123; max-w: panel-max-w-sm &#125;)</code> stops the card from stretching to the
       width of the page.
     </p>
 

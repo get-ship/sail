@@ -15,7 +15,7 @@
   style exampleBlock = { size({ w: 100% }).pad({ t: 2, b: 4 }) }
   style sectionLabel = { fg(muted-foreground).type({ size: xs, tracking: wide, case: uppercase }) }
   style sepVRow = { size({ h: 10 }) }
-  style sepStageCol = { size({ w: 100%, max-w: overlay-max-w-sm, min-h: 11 }) }
+  style sepStageCol = { size({ w: 100%, max-w: panel-max-w-sm, min-h: 11 }) }
 </scope>
 
 <controller>

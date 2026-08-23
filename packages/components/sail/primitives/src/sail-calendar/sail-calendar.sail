@@ -333,7 +333,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
             data-state={cr.state}
             aria-current={cr.cell.today ? 'date' : null}
             aria-label={cr.cell.iso}
-            gap="1" style({ pad({ x: density-row-px, y: density-row-py }).size({ min-h: 84px }).group().border(default-r).border(default-b), when: { stateOut: fg(muted-foreground).bg(muted), stateWeekend: bg(muted), stateRange: bg(selected-bg) } })>
+            gap="1" style({ pad({ x: density-row-px, y: density-row-py }).size({ min-h: 84px }).group().border(default-b), when: { stateOut: fg(muted-foreground).bg(muted), stateWeekend: bg(muted), stateRange: bg(selected-bg) } })>
             <row align="center" justify="center" gap="0" style({ size({ h: control-h-2xs, min-w: control-h-2xs }).radius(full), when: { groupStateToday: fg(primary).border({ kind: outline, color: primary }) } })>              <span style({ display(contents).type({ size: density }), when: { groupStateToday: type({ weight: semibold }) } })>                {cr.cell.day}
               </span>
 </row>

@@ -5,7 +5,7 @@
 
 <scope>
   style page = { size({ w: 100%, max-w: breakpoint-desktop }).margin({ x: auto }) }
-  style specimen = { size({ w: overlay-max-w-md, max-w: 100% }) }
+  style specimen = { size({ w: panel-max-w-md, max-w: 100% }) }
   style fullW = { size({ w: 100% }) }
   style mutedSm = { fg(muted-foreground).type({ size: sm }) }
   style mutedXs = { fg(muted-foreground).type({ size: xs }) }
