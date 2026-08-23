@@ -47,6 +47,13 @@ pub(super) fn write_attr(a: &Attr, out: &mut String) {
         return;
     }
     let v = a.value.as_str();
+    // Tag-position Style calls are stored as Attr { name: "style", value:
+    // "style(…)" }. They re-emit bare — never name-wrapped, or the round
+    // trip mangles them into `style="style(…)"`, which no compiler accepts.
+    if a.name == "style" && v.starts_with("style(") {
+        out.push_str(v);
+        return;
+    }
     if is_brace_expr(v) {
         out.push_str(&a.name);
         out.push('=');
