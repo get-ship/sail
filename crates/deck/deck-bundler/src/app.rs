@@ -131,6 +131,16 @@ const FRAMEWORK_ASSETS: &[(&str, &str, &str)] = &[
     // `import('@ship/sail-lsp-browser/completions' | '/diagnostics')`) are
     // registered — `/worker` and `/hover` are real exports but unused by
     // any route today, so they are not surfaced here.
+    (
+        "@ship/sail-lsp-browser/completions",
+        "sail-lsp-completions.js",
+        "_deck/lsp-completions.js",
+    ),
+    (
+        "@ship/sail-lsp-browser/diagnostics",
+        "sail-lsp-diagnostics.js",
+        "_deck/lsp-diagnostics.js",
+    ),
 ];
 
 /// Playground / LSP — not on the hello-world importmap. Still served at
