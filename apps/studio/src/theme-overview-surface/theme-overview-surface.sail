@@ -22,7 +22,7 @@
   style heroColorInput = { position({ scheme: absolute, t: 0, l: 0 }).size(max).pad(0).border({ width: 0 }).cursor(pointer).filter({ opacity: 0 }), when: { disabled: cursor(not-allowed) } }
   style heroMeta = { pad(3) }
   // no preset: size lock
-  style identityCol = { pad(6).size({ max-w: overlay-max-w-lg }) }
+  style identityCol = { pad(6).size({ max-w: panel-max-w-lg }) }
   // no preset: size lock
   style iconCell = { size({ w: 9, h: 9, min-w: 9, min-h: 9 }).radius(md).border(subtle).bg(app) }
   style bandStatus = { pad(4) }

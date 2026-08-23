@@ -15,7 +15,7 @@
   // no preset: type weight + size lock + border width 0
   style nameInput = { size({ max-w: 48 }).border({ width: 0 }).type({ weight: semibold }) }
   // no preset: panel width lock
-  style diffMenu = { pad(3).size({ min-w: overlay-max-w-sm, max-w: overlay-max-w-md }) }
+  style diffMenu = { pad(3).size({ min-w: panel-max-w-sm, max-w: panel-max-w-md }) }
   style diffTitle = { fg(muted).type(label) }
   style diffPath = { fg(foreground).type(mono-sm) }
   style diffDelta = { fg(muted).type(mono-sm) }

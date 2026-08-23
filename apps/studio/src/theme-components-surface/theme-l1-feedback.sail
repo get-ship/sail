@@ -10,7 +10,7 @@
   style tapFloor = { size(control-sm) }
   style stageHost = { size(max) }
   // no preset: size lock
-  style sampleMax = { size({ w: 100%, max-w: overlay-max-w-sm }) }
+  style sampleMax = { size({ w: 100%, max-w: panel-max-w-sm }) }
 </scope>
 
 <controller>
@@ -238,7 +238,7 @@ export default controller(() => {
 </if>
 <if {components.stage.toastRegion()}>
   <!-- no preset: size lock + position -->
-  <column gap="2" style({ size({ w: 100%, min-h: 24, max-w: overlay-max-w-sm }).position(relative) })>
+  <column gap="2" style({ size({ w: 100%, min-h: 24, max-w: panel-max-w-sm }).position(relative) })>
     <p style(fieldHint)>Toast region hosts stacked toasts (fixed in product).</p>
     <toast tone="info" duration="0">Region child toast</toast>
   </column>

@@ -43,8 +43,6 @@
   style scrollGrow = { size(grow) }
   style listPad = { pad(3) }
   style previewScroll = { size(grow).bg(app) }
-  // no preset: size lock
-  style previewCol = { pad(8).size({ max-w: overlay-max-w-lg }) }
   style previewTitle = { type(display-sm) }
   style previewDesc = { fg(muted).type(body-sm) }
   style modeLabel = { fg(muted).type(label) }
@@ -356,7 +354,7 @@ export default controller(() => {
     </column>
 
     <scroll-area themes-preview theme-preview-pane style(previewScroll)>
-      <column gap="6" style(previewCol)>
+      <column gap="6" style({ pad(8).size({ max-w: panel-max-w-lg }) })>
         <if {!hasSelected()}>
           <empty-state variant="placeholder" size="sm" themes-preview-empty style(fullW)>
             <strong slot="title">Nothing selected</strong>
