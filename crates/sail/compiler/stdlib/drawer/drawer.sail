@@ -23,27 +23,20 @@
   // (same native-<dialog> adaptor as dialog). inset:0 + w/h full made a
   // full-viewport card — that is not a drawer.
   style host = {position({ scheme: fixed, z: dialog }).pad(0).margin(0).overflow({ y: auto, overscroll: contain }).border({ color: border, width: 1 }).radius(none).bg(overlay).fg(foreground).elevation(xl).type({ family: body }), animate: { transition: play(surface, fast), enter: play(fade), exit: play(fade) }}
-  style shown = {display(flex).dir(column)}
-  style sizeSm = {size({ max-w: overlay-max-w-sm, max-h: overlay-vh-sm })}
-  style sizeMd = {size({ max-w: overlay-max-w-md, max-h: overlay-vh-md })}
-  style sizeLg = {size({ max-w: overlay-max-w-lg, max-h: overlay-vh-lg })}
-  style sideStart = {touch(pan-y)}
-  style sideEnd = {touch(pan-y)}
-  style sideTop = {touch(pan-x)}
-  style sideBottom = {touch(pan-x)}
 </scope>
 
 <controller>
-export default controller((init, host) => {
+export default controller((init) => {
+  let lastEl: unknown = null
   function read(v) { return typeof v === 'function' ? v() : v }
   function isOn(v) { const x = read(v); return x === true || x === '' || x === 'true' }
   const dismissible = derived(() => isOn(init.dismissible) ? true : String(read(init.dismissible) ?? '') !== 'false')
   const side = derived(() => String(read(init.side) ?? 'end'))
-  function close() {
-    const el = (host as unknown as HTMLElement | null) ?? null
+  function closeFrom(el: unknown) {
     if (!el) return
-    if (el instanceof HTMLDialogElement) { if (el.open) el.close(); return }
-    if (el.hasAttribute('open')) el.removeAttribute('open')
+    const box = el as { open?: boolean; close?: () => void; removeAttribute?: (n: string) => void }
+    if (box.open && typeof box.close === 'function') box.close()
+    else if (typeof box.removeAttribute === 'function') box.removeAttribute('open')
     const cb = init.onClose as unknown
     if (typeof cb === 'function') (cb as () => void)()
     else {
@@ -54,18 +47,22 @@ export default controller((init, host) => {
   function onKeydown(e) {
     if (!dismissible() || e.key !== 'Escape') return
     e.preventDefault()
-    close()
+    closeFrom(lastEl)
   }
   function onClick(e) {
     if (!dismissible()) return
-    const el = (host as unknown as HTMLElement | null) ?? null
+    const el = (e as { currentTarget?: unknown }).currentTarget
     if (!el || e.target !== el) return
-    close()
+    lastEl = el
+    closeFrom(el)
   }
   let startX = 0, startY = 0, active = false
   function onPointerdown(e) {
     if (!dismissible() || e.button !== 0) return
-    active = true; startX = e.clientX; startY = e.clientY
+    active = true
+    startX = e.clientX
+    startY = e.clientY
+    lastEl = (e as { currentTarget?: unknown }).currentTarget
   }
   function onPointerup(e) {
     if (!active) return; active = false
@@ -76,7 +73,7 @@ export default controller((init, host) => {
     const threshold = 80
     const needNeg = s === 'start' || s === 'top'
     const ok = needNeg ? dist < -threshold : dist > threshold
-    if (ok) close()
+    if (ok) closeFrom(lastEl)
   }
   return { onKeydown, onClick, onPointerdown, onPointerup }
 })
@@ -87,7 +84,7 @@ export default controller((init, host) => {
   on:click={onClick}
   on:pointerdown={onPointerdown}
   on:pointerup={onPointerup}
-  style(host, {when: { open: shown }, match: {size: { sm: sizeSm, md: sizeMd, lg: sizeLg }, side: {start: sideStart, end: sideEnd, top: sideTop, bottom: sideBottom}}})
+  style(host, {match: {size: { sm: {size({ max-w: panel-max-w-sm })}, md: {size({ max-w: panel-max-w-md })}, lg: {size({ max-w: panel-max-w-lg })} }, side: {start: {touch(pan-y)}, end: {touch(pan-y)}, top: {touch(pan-x)}, bottom: {touch(pan-x)}}}})
 >
   <slot></slot>
 </dialog>
