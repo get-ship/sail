@@ -4,22 +4,23 @@ status: drafting
 intent: clear
 review_required: false
 pending-action: write .omo/plans/sail-enforcement-architecture.md
-approach: Bottom-up pass over one six-layer enforcement stack (language → IR → capability → severity/policy → harness → culture), five independent components (A doctrine flips, B unified IR substrate, C author capability model incl. sanitization zone, D repo-agent harness gates, E testing-culture remediation). Four structural rulings pending from operator (IR depth/model, zone semantics + ownership, RI merge sequencing, goldens demote-vs-delete) before the plan is written.
+approach: Coherence pass, not an inventory pass. Order: (1) Identity Charter — sail's explicit choices (languages, runtimes, targets, rendering modes, Node.js posture); (2) Constraint Ledger — every restriction admitted ONLY with the claim it buys (agent authoring is north star); (3) Lax Ledger — deliberate ecosystem looseness with priced costs; (4) Coherence Map — every existing mechanism placed as enforcing-a-claim / theater / duplicate / misplaced, single-home ownership per rule with audience projections. Waves derive bottom-up only after ledgers stabilize. Test cull runs as parallel external mechanical workstream (operator-dispatched), env-bless/baseline judgments carved out of it. Operator drives all identity/constraint rulings; planner drafts and assesses, never rules.
 ---
 
 # Draft: sail-enforcement-architecture
 
 ## Components (topology ledger)
-<!-- Lock the SHAPE before depth. One row per top-level component that can succeed or fail independently. -->
-<!-- id | outcome (one line) | status: active|deferred | evidence path -->
+<!-- SUPERSEDED 2026-08-23 by operator correction: existence != pulling weight. -->
+<!-- The unit of planning is no longer "components A-E" but four ledgers the operator rules on line-by-line: -->
 
-| id | outcome | status | evidence |
-|---|---|---|---|
-| A | Named doctrine (L0/E rows) promoted to default-preset Error via floor/capability machinery; sail-site corpus complies | active | crates/sail/compiler/src/check/policy.rs (FLOOR_RULES), check/lint_overrides.rs; GAP-TODO L0-1..L0-5, E1-E8 |
-| B | Unified kind-tagged IR spine: stable node ids; enforcement passes (lint/tscheck/layout/capability) walk one graph; diagnostics span-keyed | active | compiler/src/ir/{mod,template,expr}.rs; spinnaker/src/ir.rs; bridge check/layout.rs |
-| C | Declarative per-kind capability model (location/imports/globals/syntax/size/return-shapes) as SSOT table generating checks + docs/LSP/skill; sanitization-zone chokepoint for ambient authority | active | lint/src/project_map.rs (@/ table), rules/mod.rs dispatch families, runtime author-surface.json; unenforced cells listed in findings |
-| D | Repo-agent harness gates: E5 generated-edit refusal, allowlist audit trail, F3 numbered acceptance, F4 done-evidence gate, dead-env scrub | active | hooks/, tests/hygiene/* (17 files), .github/workflows/hygiene.yml, mcp-tools.json |
-| E | Testing culture: env-blesses stop gating, baselines collapsed, tombstone/tautology/site-fixture debt burned down per test-doctrine ratchet; doctrine documented in-repo | active | tests/hygiene/test-doctrine.test.ts + baseline json; liveness audit (all 12 offenders STILL LIVE) |
+| ledger | outcome | status |
+|---|---|---|
+| Identity Charter | sail's explicit self-definition: authoring language + subset, impl language, runtimes, targets, rendering modes, Node.js posture, module model. Undecided items surfaced with stakes; OPERATOR rules. | drafting next |
+| Constraint Ledger | every restriction, admitted only with {binds whom, claim bought, single enforcement home, escape-hatch status}. No claim ⇒ no constraint (CSSOM precedent). | seeded from existing law |
+| Lax Ledger | deliberate looseness with priced costs: third-party npm surface, fetch/clients zone, node compat. | skeleton pending rulings |
+| Coherence Map | every mechanism placed: enforcing-claim / theater / duplicate / misplaced. Includes two-IR problem, context-dependent rule families (app/pack/stdlib/deck), lint↔hygiene projections, floor membership tribalism, env vars, skills folklore, goldens. | seeded from findings |
+
+Waves derive from these ledgers bottom-up (platform boundary → IR-as-real-spine → unified enforcement → culture continuous via parallel cull).
 
 ## Open assumptions (announced defaults)
 <!-- Record any default you adopt instead of asking, so the user can veto it at the gate. -->
@@ -98,10 +99,18 @@ Context:
 
 ## Open questions
 
-1. IR: internal enforcement spine vs semi-public contract (H12 queries/studio)? Style absorption into template spine in wave 1?
-2. Sanitization zone: directory/module convention vs runtime construct? Who writes inside it? Naming/convention?
-3. Sequencing: start after RI merge lands vs absorb merge as wave zero?
-4. Goldens: demote-to-opt-in-reports vs delete outright?
+1. Identity Charter items needing explicit ruling (drafted with stakes, operator decides): Node.js/toolchain posture; runtime+target set (browser ESM / SSR Rust-paint / others?); rendering-mode commitments; module/package model for external apps.
+2. Third-party npm + fetch/clients: assess on claim-axes (guarantee bought vs capability lost vs enforcement cost vs ecosystem cost); sanitization-zone as candidate mechanism — semantics and ownership still operator's call.
+3. Cull carve-out confirm: env-bless/baseline deletions (SAIL_GOLDEN_UPDATE, UPDATE_SNAPSHOTS, SAIL_RENDER_UPDATE_GOLDEN, count baselines) involve doctrine judgment — kept OUT of mechanical cull lane?
+4. RI merge sequencing still open (clean base vs wave-zero absorb).
+
+## Operator frame (governing, recorded verbatim 2026-08-23)
+
+Present state (operator's assessment): shitty useless tests compounding change cost; behavior varies by authoring location/context (internals vs dogfood vs external; deck vs sail); IR is theater, platform silently load-bearing; module bleed/weak boundaries; enforcement is theater that teaches agents to hack around it; agents default to bloat, bad at deleting; toolchain non-committal on Node.
+
+Desired end state: platform-decoupled core architecture (IR); behavioral-outcome tests not implementation-detail tests; agents stay in lanes without hacking around; SSOT for enforcement, compilation, types; platform boundary explicit.
+
+IR discussion scope = decoupling from platform + deciding conceptually: (1) identity choices (languages/runtimes/targets/rendering), (2) constraints that serve the identity (agent authoring = north star), (3) items allowed to be lax/ecosystem-friendly. Constraint admission test: a removal is justified only by a resulting claim about the offering (CSSOM precedent).
 
 ## Approval gate
 status: drafting
