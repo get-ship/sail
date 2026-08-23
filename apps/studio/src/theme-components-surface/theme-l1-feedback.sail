@@ -4,11 +4,9 @@
 -->
 <scope>
   style fieldHint = { fg(muted).type(body-sm) }
-  // no preset: type weight
-  style doorTitle = { type({ weight: semibold }) }
-  style iconBtn = { size(control-sm) }
-  style tapFloor = { size(control-sm) }
   style stageHost = { size(max) }
+  // no preset: size lock + position
+  style toastRegionHost = { size({ w: 100%, min-h: 24, max-w: panel-max-w-sm }).position(relative) }
   // no preset: size lock
   style sampleMax = { size({ w: 100%, max-w: panel-max-w-sm }) }
 </scope>
@@ -219,8 +217,8 @@ export default controller(() => {
       <error-state size="sm" code="ERR_STACK">
         <strong slot="title">Upstream failed</strong>
         Stack collapses behind Show details.
-        <span slot="details">at fetchData (api.ts:42)
-  Error: gateway timeout</span>
+        <p slot="details">at fetchData (api.ts:42)
+  Error: gateway timeout</p>
         <button slot="action" type="button" variant="solid" tone="danger" size="sm">Retry</button>
       </error-state>
     </column>
@@ -238,7 +236,7 @@ export default controller(() => {
 </if>
 <if {components.stage.toastRegion()}>
   <!-- no preset: size lock + position -->
-  <column gap="2" style({ size({ w: 100%, min-h: 24, max-w: panel-max-w-sm }).position(relative) })>
+  <column gap="2" style(toastRegionHost)>
     <p style(fieldHint)>Toast region hosts stacked toasts (fixed in product).</p>
     <toast tone="info" duration="0">Region child toast</toast>
   </column>

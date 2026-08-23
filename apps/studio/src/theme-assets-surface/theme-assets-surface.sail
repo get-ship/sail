@@ -16,13 +16,12 @@
   style bandError = { pad(4).border(default-b) }
   // no preset: size lock
   style iconCell = { size({ w: 10, h: 10, min-w: 10, min-h: 10 }).radius(md).border(subtle).bg(app) }
-  style fullBtn = { size(max) }
   // no preset: min-w lock
   style fontHit = { pad(2_5).size({ min-w: 0 }).radius(md).border(subtle).bg(app) }
   // no preset: min-w lock
   style fontSample = { size({ min-w: 0 }).fg(foreground).type(body) }
   style catChip = { when: { selected: bg(selected-bg).fg(foreground).border(subtle) } }
-  style surfaceRoot = { size(grow).overflow(hidden).bg(app) }
+  style surfaceRoot = { grow(1).overflow(hidden).bg(app) }
   style workbench = { size(grow).overflow(hidden).bg(app) }
   style editorScroll = { size(grow).bg(app) }
   style pageTitle = { type(heading) }
@@ -43,6 +42,8 @@
   style trafficDot = { size({ w: 2, h: 2, min-w: 2, min-h: 2 }).radius(full) }
   style chromeTitle = { size(grow).fg(muted).type(body-sm) }
   style scrollGrow = { size(grow).bg(app) }
+  // Card body fill — participation form; card is not a layout host.
+  style previewFill = { grow(1).size({ min-h: 0 }) }
   // no preset: min-w lock
   style stageBody = { pad(5).size({ min-w: 0 }) }
   style typeDisplay = { type(display-sm) }
@@ -64,7 +65,6 @@
     onUseRole: any
     onInstall: any
   }
-  style scrollCanvas = { size(grow).bg(app) }
 </scope>
 
 <controller>
@@ -295,7 +295,7 @@ export default controller(() => {
           assets-specimen
           preview-specimen
           padding="none" style(specimenFrame)>
-          <column gap="0" style(growMin)>
+          <column gap="0" style(previewFill)>
             <row preview-chrome align="center" gap="2" nowrap style(specimenChrome)>
               <row gap="2" align="center" nowrap hidden="true" style(trafficDots)>
                 <stack style(trafficDot, { bg(danger) })></stack>

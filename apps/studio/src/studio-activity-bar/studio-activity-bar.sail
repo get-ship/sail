@@ -11,7 +11,8 @@
   // no preset: size lock
   style brandMark = { size({ w: 10, h: 10, min-w: 10, min-h: 10 }).radius(md).bg(surface).fg(muted).border(subtle) }
   style itemsCol = { size(max).pad(1) }
-  style spacer = { size(grow) }
+  // Participation form — nav shell is not a layout host.
+  style spacer = { grow(1) }
   // no preset: edge-only border
   style footerCol = { size(max).pad(1).border(subtle-t) }
 </scope>

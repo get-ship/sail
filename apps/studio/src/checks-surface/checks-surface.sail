@@ -9,7 +9,7 @@
     /** true when hosted in shell findings drawer — compact layout only */
     panel = false
   }
-  style surfaceRoot = { size(grow).overflow(hidden) }
+  style surfaceRoot = { grow(1).overflow(hidden) }
   style shrink0 = { size(hug) }
   style growMin = { size(grow) }
   // no preset: size lock
@@ -45,8 +45,8 @@
   style reviewSheet = { pad(3).size({ min-w: 0, max-h: 56 }).overflow(auto).border(default-t).bg(surface) }
   style titleSm = { type(body-sm) }
   style fullW = { size(max) }
-  // no preset: type wrap
-  style chipLabel = { size(hug).type({ wrap: truncate }) }
+  // no preset: hug chip on a nowrap row — no truncate (clips on hug controls)
+  style chipLabel = { size(hug) }
 </scope>
 
 <controller>

@@ -39,7 +39,7 @@
   style libraryEyebrow = { fg(muted).type(label) }
   style sectionEyebrow = { fg(muted).type(label) }
   style errorText = { size(grow).fg(danger).type(body-sm) }
-  style surfaceRoot = { size(grow).overflow(hidden).bg(app) }
+  style surfaceRoot = { grow(1).overflow(hidden).bg(app) }
   style scrollGrow = { size(grow) }
   style listPad = { pad(3) }
   style previewScroll = { size(grow).bg(app) }
@@ -92,7 +92,6 @@
     onMenuOpen: any
     onRowMenu: any
   }
-  style scrollCanvas = { size(grow).bg(app) }
 </scope>
 
 <controller>

@@ -7,5 +7,5 @@ export default controller((_ctx: ControllerScope<any>) => {
 })
 </controller>
 <column gap="2">
-  <span>{pure()}</span>
+  <p>{pure()}</p>
 </column>

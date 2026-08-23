@@ -48,7 +48,7 @@
   style liveCard = { pad(5).border(subtle) }
   // no preset: size lock
   style glassMini = { size({ w: 100%, max-w: panel-max-w-sm }).pad(4).border(subtle) }
-  style surfaceRoot = { size(grow).overflow(hidden).bg(background) }
+  style surfaceRoot = { grow(1).overflow(hidden).bg(background) }
   style workbench = { size(grow).overflow(hidden).bg(background) }
   // no preset: panel width lock + edge-only border
   style panelRail = { size({ w: panel-max-w-sm, h: 100%, min-h: 0, max-w: panel-max-w-sm }).border(subtle-r).bg(background) }
@@ -66,6 +66,8 @@
   style errorText = { size(grow).fg(danger).type(body-sm) }
   style pageTitle = { type(heading) }
   style growMin = { size(grow) }
+  // Card body fill — participation form; card is not a layout host.
+  style previewFill = { grow(1).size({ min-h: 0 }) }
   // no preset: min-w lock
   style elevHintCol = { size({ min-w: 0 }) }
   type ElevChipProps = {
@@ -77,6 +79,12 @@
     onPick: any
   }
   style shrink0 = { size(hug) }
+  // no preset: size lock
+  style specimenBody = { pad(6).size({ w: 100%, min-w: 0 }) }
+  // no preset: size lock
+  style sampleMax = { size({ w: 100%, max-w: panel-max-w-sm }) }
+  // no preset: size lock
+  style metaRow = { size({ w: 100%, max-w: panel-max-w-md }) }
 </scope>
 
 <controller>
@@ -400,7 +408,7 @@ export default controller(() => {
           shape-specimen
           preview-specimen
           padding="none" style(specimenFrame)>
-          <column gap="0" style(growMin)>
+          <column gap="0" style(previewFill)>
             <row preview-chrome align="center" gap="2" nowrap style(specimenChrome)>
               <row gap="2" align="center" nowrap hidden="true" style(trafficDots)>
                 <stack style(trafficDot, { bg(danger) })></stack>
@@ -415,12 +423,12 @@ export default controller(() => {
 
             <scroll-area style(stageSolid, growMin)>
               <!-- no preset: min-w lock -->
-              <column
-                specimen-body
-                gap="5"
-                align="center" style({ pad(6).size({ w: 100%, min-w: 0 }) })>
+                <column
+                  specimen-body
+                  gap="5"
+                  align="center" style(specimenBody)>
                 <!-- no preset: size lock -->
-                <column gap="1" style({ size({ w: 100%, max-w: panel-max-w-sm }) })>
+                <column gap="1" style(sampleMax)>
                   <p style({ type(heading) })>Studio surface</p>
                   <p style({ fg(muted).type(body-sm) })>
                     Radius + elevation + border as character. Dial left — this card follows.
@@ -430,7 +438,7 @@ export default controller(() => {
                 <!-- Single character card: freeform fill (frost α live), not solid nested plate. -->
                 <stack spec-card style(liveCard, { radius(bind(cardRadius)).bg(bind(frostFill)).elevation(bind(cardElev)) })>
                   <!-- no preset: size lock -->
-                  <column gap="4" style({ size({ w: 100%, max-w: panel-max-w-sm }) })>
+                  <column gap="4" style(sampleMax)>
                     <row gap="3" align="center" nowrap>
                       <avatar size="sm" initials="S" tone="primary"></avatar>
                       <column gap="0" style(growMin)>
@@ -485,7 +493,7 @@ export default controller(() => {
 
 
                 <!-- no preset: size lock -->
-                <row align="center" justify="between" gap="2" nowrap style({ size({ w: 100%, max-w: panel-max-w-md }) })>
+                <row align="center" justify="between" gap="2" nowrap style(metaRow)>
                   <p style(fieldHint)>Globals only — dial once, surfaces follow.</p>
                   <p style(pathMeta)>{shape.liveCssLine()}</p>
                 </row>

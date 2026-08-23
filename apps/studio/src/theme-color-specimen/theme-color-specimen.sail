@@ -7,10 +7,11 @@
   style mutedSm = { fg(muted).type(body-sm) }
   style mutedRelaxed = { fg(muted).type(body-sm) }
   // no preset: edge-only border
-  style specimenDock = { size(grow).overflow(hidden).border(subtle-l).bg(app) }
+  style specimenDock = { grow(1).overflow(hidden).border(subtle-l).bg(app) }
   style specimenPad = { size(grow).pad(4) }
   style specimenFrame = { size(max).overflow(hidden).elevation(lg) }
-  style fillCol = { size(grow) }
+  // Card body fill — participation form; card is not a layout host.
+  style fillCol = { grow(1).size({ min-h: 0 }) }
   // no preset: min-w lock + edge-only border
   style specimenChrome = { pad(3).size({ h: 8, min-w: 0, min-h: 8 }).border(subtle-b).bg(surface) }
   // no preset: size lock
@@ -33,7 +34,6 @@
   style surface1 = { pad(3).radius(md).border(subtle).bg(surface) }
   style surface2 = { pad(3).radius(md).border(subtle).bg(surface) }
   style surface3 = { pad(3).radius(md).border(subtle).bg(surface) }
-  style scrollCanvas = { size(grow).bg(app) }
 </scope>
 
 <controller>

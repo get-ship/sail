@@ -4,7 +4,7 @@
 <scope>
   style eyebrow = { fg(muted).type(label) }
   style muted = { fg(muted).type(body-sm) }
-  style surfaceRoot = { size(grow).overflow(hidden).bg(app) }
+  style surfaceRoot = { grow(1).overflow(hidden).bg(app) }
   style workbench = { size(grow).overflow(hidden) }
   // no preset: edge-only border
   style navPane = { size(grow).overflow(hidden).border(subtle-r).bg(surface) }

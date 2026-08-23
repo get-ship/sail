@@ -6,8 +6,6 @@
   style fieldHint = { fg(muted).type(body-sm) }
   // no preset: type weight
   style doorTitle = { type({ weight: semibold }) }
-  style iconBtn = { size(control-sm) }
-  style tapFloor = { size(control-sm) }
   style stageHost = { size(max) }
   // no preset: size lock
   style sampleMax = { size({ w: 100%, max-w: panel-max-w-sm }) }
@@ -247,14 +245,18 @@ export default controller(() => {
       Geometry host + compile-time loop · author paint
     </p>
     <ticker style(sampleMax, { overflow(hidden).pad(2).bg(muted).radius(md) })>
-      <span style({ pad(3).fg(muted).type(mono) })>
-        Live ticker · muted band ·&nbsp;
-      </span>
+      <row nowrap align="center" style({ pad(3).fg(muted) })>
+        <p style({ type(mono) })>
+          Live ticker · muted band ·&nbsp;
+        </p>
+      </row>
     </ticker>
     <ticker style(sampleMax, { overflow(hidden).pad(2).bg(primary).radius(md) })>
-      <span style({ pad(3).fg(primary-foreground).type(body-sm) })>
-        Brand paint ·&nbsp;
-      </span>
+      <row nowrap align="center" style({ pad(3).fg(primary-foreground) })>
+        <p style({ type(body-sm) })>
+          Brand paint ·&nbsp;
+        </p>
+      </row>
     </ticker>
   </column>
 </if>

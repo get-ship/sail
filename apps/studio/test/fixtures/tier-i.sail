@@ -8,6 +8,6 @@ export default controller((_ctx: ControllerScope<any>) => {
 })
 </controller>
 <column gap="2">
-  <span>{seed()}</span>
+  <p>{seed()}</p>
   <p>{label()}</p>
 </column>

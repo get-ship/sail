@@ -16,17 +16,13 @@
   style railCol = { pad(3).size({ min-w: 0 }) }
   // no preset: min-w lock
   style inspectorCol = { pad(4).size({ min-w: 0 }) }
-  style fullBtn = { size(max) }
-  // no preset: min-w lock
-  style chipCol = { size({ min-w: 0 }) }
   // Selected rail row: soft fill + subtle border.
   // no preset: transparent border
   style listRow = { pad(2).radius(md).cursor(pointer).border({ color: transparent, width: 1 }), when: { hover: bg(hover-bg), selected: bg(surface).border(subtle) } }
   style eyebrow = { fg(muted).type(label) }
-  style tokenStrip = { pad(2).fg(muted).radius(sm).bg(app).type(mono-sm) }
   // no preset: edge-only border
   style tokenRow = { pad(2).border(subtle-b) }
-  style surfaceRoot = { size(grow).overflow(hidden).bg(app) }
+  style surfaceRoot = { grow(1).overflow(hidden).bg(app) }
   style workbench = { size(grow).overflow(hidden).bg(app) }
   // no preset: panel width lock + edge-only border
   style panelRail = { size({ w: panel-max-w-sm, h: 100%, min-h: 0, max-w: panel-max-w-sm }).border(subtle-r).bg(app) }
@@ -46,6 +42,10 @@
   style chromeTitle = { size(grow).fg(muted).type(body-sm) }
   style errorText = { size(grow).fg(danger).type(body-sm) }
   style growMin = { size(grow) }
+  // Card body fill — participation form; card is not a layout host.
+  style previewFill = { grow(1).size({ min-h: 0 }) }
+  // no preset: size lock + position
+  style toastRegionHost = { size({ w: 100%, min-h: 24, max-w: panel-max-w-sm }).position(relative) }
   style shrink0 = { size(hug) }
   style tapFloor = { size(control-sm) }
   style iconBtn = { size(control-sm) }
@@ -74,7 +74,6 @@
     selected: boolean
     hasOverride: boolean
   }
-  style scrollCanvas = { size(grow).bg(app) }
 </scope>
 
 <controller>
@@ -176,7 +175,7 @@ export default controller(() => {
           components-specimen
           preview-specimen
           padding="none" style(specimenFrame)>
-          <column gap="0" style(growMin)>
+          <column gap="0" style(previewFill)>
             <row preview-chrome align="center" gap="2" nowrap style(specimenChrome)>
               <row gap="2" align="center" nowrap hidden="true" style(trafficDots)>
                 <stack style(trafficDot, { bg(danger) })></stack>
@@ -674,8 +673,8 @@ export default controller(() => {
                         <error-state size="sm" code="ERR_STACK">
                           <strong slot="title">Upstream failed</strong>
                           Stack collapses behind Show details.
-                          <span slot="details">at fetchData (api.ts:42)
-  Error: gateway timeout</span>
+                          <p slot="details">at fetchData (api.ts:42)
+  Error: gateway timeout</p>
                           <button slot="action" type="button" variant="solid" tone="danger" size="sm">Retry</button>
                         </error-state>
                       </column>
@@ -693,7 +692,7 @@ export default controller(() => {
                   </if>
                   <if {components.stage.toastRegion()}>
                     <!-- no preset: size lock + position -->
-                    <column gap="2" style({ size({ w: 100%, min-h: 24, max-w: panel-max-w-sm }).position(relative) })>
+                    <column gap="2" style(toastRegionHost)>
                       <p style(fieldHint)>Toast region hosts stacked toasts (fixed in product).</p>
                       <toast tone="info" duration="0">Region child toast</toast>
                     </column>
@@ -775,12 +774,12 @@ export default controller(() => {
                         <p style(fieldHint)>size ladder · currentColor ink</p>
                         <row gap="4" align="center" nowrap>
                           <icon name="refresh" label="Refreshing"></icon>
-                          <span style({ fg(primary) })>
+                          <row nowrap align="center" style({ fg(primary) })>
                             <icon name="heart" size="lg" label="primary ink"></icon>
-                          </span>
-                          <span style({ fg(danger) })>
+                          </row>
+                          <row nowrap align="center" style({ fg(danger) })>
                             <icon name="heart" size="lg" label="danger ink"></icon>
-                          </span>
+                          </row>
                         </row>
                       </column>
                     </column>
@@ -796,11 +795,11 @@ export default controller(() => {
                         <p style(fieldHint)>Vertical · same face between labels</p>
                         <!-- no preset: size lock -->
                         <row gap="3" align="center" style({ size({ h: 10 }) })>
-                          <span style(fieldHint)>A</span>
+                          <em style(fieldHint)>A</em>
                           <separator orientation="vertical"></separator>
-                          <span style(fieldHint)>B</span>
+                          <em style(fieldHint)>B</em>
                           <separator orientation="vertical" variant="dashed"></separator>
-                          <span style(fieldHint)>C</span>
+                          <em style(fieldHint)>C</em>
                         </row>
                       </column>
                       <column gap="2">
@@ -822,7 +821,7 @@ export default controller(() => {
                         <p style(fieldHint)>Rest · muted fill + foreground + border</p>
                         <row gap="2" align="center">
                           <kbd>Ctrl</kbd>
-                          <span style(fieldHint)>+</span>
+                          <em style(fieldHint)>+</em>
                           <kbd>K</kbd>
                         </row>
                       </column>
@@ -1054,14 +1053,18 @@ export default controller(() => {
                         Geometry host + compile-time loop · author paint
                       </p>
                       <ticker style(sampleMax, { overflow(hidden).pad(2).bg(muted).radius(md) })>
-                        <span style({ pad(3).fg(muted).type(mono) })>
-                          Live ticker · muted band ·&nbsp;
-                        </span>
+                        <row nowrap align="center" style({ pad(3).fg(muted) })>
+                          <p style({ type(mono) })>
+                            Live ticker · muted band ·&nbsp;
+                          </p>
+                        </row>
                       </ticker>
                       <ticker style(sampleMax, { overflow(hidden).pad(2).bg(primary).radius(md) })>
-                        <span style({ pad(3).fg(primary-foreground).type(body-sm) })>
-                          Brand paint ·&nbsp;
-                        </span>
+                        <row nowrap align="center" style({ pad(3).fg(primary-foreground) })>
+                          <p style({ type(body-sm) })>
+                            Brand paint ·&nbsp;
+                          </p>
+                        </row>
                       </ticker>
                     </column>
                   </if>
