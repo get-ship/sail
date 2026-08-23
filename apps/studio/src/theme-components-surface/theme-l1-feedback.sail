@@ -6,9 +6,9 @@
   style fieldHint = { fg(muted).type(body-sm) }
   style stageHost = { size(max) }
   // no preset: size lock + position
-  style toastRegionHost = { size({ w: 100%, min-h: 24, max-w: panel-max-w-sm }).position(relative) }
+  style toastRegionHost = { size({ w: 100%, min-h: 24, max-w: overlay-max-w-sm }).position(relative) }
   // no preset: size lock
-  style sampleMax = { size({ w: 100%, max-w: panel-max-w-sm }) }
+  style sampleMax = { size({ w: 100%, max-w: overlay-max-w-sm }) }
 </scope>
 
 <controller>

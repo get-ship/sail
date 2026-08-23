@@ -353,7 +353,7 @@ export default controller(() => {
     </column>
 
     <scroll-area themes-preview theme-preview-pane style(previewScroll)>
-      <column gap="6" style({ pad(8).size({ max-w: panel-max-w-lg }) })>
+      <column gap="6" style({ pad(8).size({ max-w: overlay-max-w-lg }) })>
         <if {!hasSelected()}>
           <empty-state variant="placeholder" size="sm" themes-preview-empty style(fullW)>
             <strong slot="title">Nothing selected</strong>

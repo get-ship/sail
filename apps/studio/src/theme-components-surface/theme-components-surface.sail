@@ -25,9 +25,9 @@
   style surfaceRoot = { grow(1).overflow(hidden).bg(app) }
   style workbench = { size(grow).overflow(hidden).bg(app) }
   // no preset: panel width lock + edge-only border
-  style panelRail = { size({ w: panel-max-w-sm, h: 100%, min-h: 0, max-w: panel-max-w-sm }).border(subtle-r).bg(app) }
+  style panelRail = { size({ w: overlay-max-w-sm, h: 100%, min-h: 0, max-w: overlay-max-w-sm }).border(subtle-r).bg(app) }
   // no preset: panel width lock + edge-only border
-  style panelInspector = { size({ w: panel-max-w-sm, h: 100%, min-h: 0, max-w: panel-max-w-sm }).border(subtle-l).bg(app) }
+  style panelInspector = { size({ w: overlay-max-w-sm, h: 100%, min-h: 0, max-w: overlay-max-w-sm }).border(subtle-l).bg(app) }
   style specimenDock = { size(grow).overflow(hidden).bg(app) }
   style specimenPad = { size(grow).pad(4) }
   style specimenFrame = { size(max).overflow(hidden).elevation(lg) }
@@ -45,20 +45,20 @@
   // Card body fill — participation form; card is not a layout host.
   style previewFill = { grow(1).size({ min-h: 0 }) }
   // no preset: size lock + position
-  style toastRegionHost = { size({ w: 100%, min-h: 24, max-w: panel-max-w-sm }).position(relative) }
+  style toastRegionHost = { size({ w: 100%, min-h: 24, max-w: overlay-max-w-sm }).position(relative) }
   style shrink0 = { size(hug) }
   style tapFloor = { size(control-sm) }
   style iconBtn = { size(control-sm) }
   style stageHost = { size(max) }
   // no preset: size lock
-  style sampleMax = { size({ w: 100%, max-w: panel-max-w-sm }) }
+  style sampleMax = { size({ w: 100%, max-w: overlay-max-w-sm }) }
   // no preset: size lock
-  style menuItemShell = { size({ w: 100%, max-w: panel-max-w-sm }).pad(1).border(subtle).radius(md).bg(surface) }
+  style menuItemShell = { size({ w: 100%, max-w: overlay-max-w-sm }).pad(1).border(subtle).radius(md).bg(surface) }
   style ctxBox = { size(max).pad(3).border(subtle).radius(md) }
   // no preset: size lock
-  style scrollVert = { size({ w: 100%, max-w: panel-max-w-sm, max-h: 32 }).pad(3).border(subtle).radius(md) }
+  style scrollVert = { size({ w: 100%, max-w: overlay-max-w-sm, max-h: 32 }).pad(3).border(subtle).radius(md) }
   // no preset: size lock
-  style scrollHoriz = { size({ w: 100%, max-w: panel-max-w-sm }).pad(3).border(subtle).radius(md) }
+  style scrollHoriz = { size({ w: 100%, max-w: overlay-max-w-sm }).pad(3).border(subtle).radius(md) }
   style scrollGrow = { size(grow).bg(app) }
   // no preset: min-w lock
   style stageBody = { pad(5).size({ min-w: 0, min-h: 100% }) }

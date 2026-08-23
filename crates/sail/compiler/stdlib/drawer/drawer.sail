@@ -84,7 +84,7 @@ export default controller((init) => {
   on:click={onClick}
   on:pointerdown={onPointerdown}
   on:pointerup={onPointerup}
-  style(host, {match: {size: { sm: {size({ max-w: panel-max-w-sm })}, md: {size({ max-w: panel-max-w-md })}, lg: {size({ max-w: panel-max-w-lg })} }, side: {start: {touch(pan-y)}, end: {touch(pan-y)}, top: {touch(pan-x)}, bottom: {touch(pan-x)}}}})
+  style(host, {match: {size: { sm: {size({ max-w: overlay-max-w-sm })}, md: {size({ max-w: overlay-max-w-md })}, lg: {size({ max-w: overlay-max-w-lg })} }, side: {start: {touch(pan-y)}, end: {touch(pan-y)}, top: {touch(pan-x)}, bottom: {touch(pan-x)}}}})
 >
   <slot></slot>
 </dialog>

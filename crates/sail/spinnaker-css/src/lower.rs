@@ -567,29 +567,29 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
             ("w", "max") => {
                 return Ok(vec![("width".into(), "max-content".into())]);
             }
-            ("w", "panel-max-w-md") => {
-                return Ok(vec![("width".into(), "var(--panel-max-w-md)".into())]);
+            ("w", "overlay-max-w-md") => {
+                return Ok(vec![("width".into(), "var(--overlay-max-w-md)".into())]);
             }
-            ("w", "panel-max-w-sm") => {
-                return Ok(vec![("width".into(), "var(--panel-max-w-sm)".into())]);
+            ("w", "overlay-max-w-sm") => {
+                return Ok(vec![("width".into(), "var(--overlay-max-w-sm)".into())]);
             }
-            ("w", "panel-max-w-lg") => {
-                return Ok(vec![("width".into(), "var(--panel-max-w-lg)".into())]);
+            ("w", "overlay-max-w-lg") => {
+                return Ok(vec![("width".into(), "var(--overlay-max-w-lg)".into())]);
             }
-            ("w", "panel-max-w-xs") => {
-                return Ok(vec![("width".into(), "var(--panel-max-w-xs)".into())]);
+            ("w", "overlay-max-w-xs") => {
+                return Ok(vec![("width".into(), "var(--overlay-max-w-xs)".into())]);
             }
-            ("maxW", "panel-max-w-md") => {
-                return Ok(vec![("max-width".into(), "var(--panel-max-w-md)".into())]);
+            ("maxW", "overlay-max-w-md") => {
+                return Ok(vec![("max-width".into(), "var(--overlay-max-w-md)".into())]);
             }
-            ("maxW", "panel-max-w-sm") => {
-                return Ok(vec![("max-width".into(), "var(--panel-max-w-sm)".into())]);
+            ("maxW", "overlay-max-w-sm") => {
+                return Ok(vec![("max-width".into(), "var(--overlay-max-w-sm)".into())]);
             }
-            ("maxW", "panel-max-w-lg") => {
-                return Ok(vec![("max-width".into(), "var(--panel-max-w-lg)".into())]);
+            ("maxW", "overlay-max-w-lg") => {
+                return Ok(vec![("max-width".into(), "var(--overlay-max-w-lg)".into())]);
             }
-            ("maxW", "panel-max-w-xs") => {
-                return Ok(vec![("max-width".into(), "var(--panel-max-w-xs)".into())]);
+            ("maxW", "overlay-max-w-xs") => {
+                return Ok(vec![("max-width".into(), "var(--overlay-max-w-xs)".into())]);
             }
             ("maxW", "panel-ch-w-md") => {
                 return Ok(vec![("max-width".into(), "var(--panel-ch-w-md)".into())]);

@@ -47,11 +47,11 @@
   // Primary specimen card: radius.lg + elev + border + freeform fill (frost α live).
   style liveCard = { pad(5).border(subtle) }
   // no preset: size lock
-  style glassMini = { size({ w: 100%, max-w: panel-max-w-sm }).pad(4).border(subtle) }
+  style glassMini = { size({ w: 100%, max-w: overlay-max-w-sm }).pad(4).border(subtle) }
   style surfaceRoot = { grow(1).overflow(hidden).bg(background) }
   style workbench = { size(grow).overflow(hidden).bg(background) }
   // no preset: panel width lock + edge-only border
-  style panelRail = { size({ w: panel-max-w-sm, h: 100%, min-h: 0, max-w: panel-max-w-sm }).border(subtle-r).bg(background) }
+  style panelRail = { size({ w: overlay-max-w-sm, h: 100%, min-h: 0, max-w: overlay-max-w-sm }).border(subtle-r).bg(background) }
   style specimenDock = { size(grow).overflow(hidden).bg(background) }
   style specimenPad = { size(grow).pad(4) }
   // no preset: min-w lock
@@ -82,9 +82,9 @@
   // no preset: size lock
   style specimenBody = { pad(6).size({ w: 100%, min-w: 0 }) }
   // no preset: size lock
-  style sampleMax = { size({ w: 100%, max-w: panel-max-w-sm }) }
+  style sampleMax = { size({ w: 100%, max-w: overlay-max-w-sm }) }
   // no preset: size lock
-  style metaRow = { size({ w: 100%, max-w: panel-max-w-md }) }
+  style metaRow = { size({ w: 100%, max-w: overlay-max-w-md }) }
 </scope>
 
 <controller>

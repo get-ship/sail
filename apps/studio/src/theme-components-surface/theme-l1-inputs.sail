@@ -7,7 +7,7 @@
   style iconBtn = { size(control-sm) }
   style stageHost = { size(max) }
   // no preset: size lock
-  style sampleMax = { size({ w: 100%, max-w: panel-max-w-sm }) }
+  style sampleMax = { size({ w: 100%, max-w: overlay-max-w-sm }) }
 </scope>
 
 <controller>

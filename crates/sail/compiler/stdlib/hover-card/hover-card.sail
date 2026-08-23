@@ -13,7 +13,7 @@
     id = ''
   }
 
-  style panel = {position({ scheme: absolute, inset: auto, anchor: auto, area: bottom, z: popover }).pad(3).margin(0).size({ w: max, max-w: panel-max-w-sm }).fg(foreground).bg(overlay).border({ color: border, width: 1 }).radius(md).elevation(md).type({ family: body, size: sm }), match: { placement: { top: position({ area: top }), bottom: position({ area: bottom }), left: position({ area: left }), right: position({ area: right }) } }, animate: { enter: play(fade), exit: play(fade) }}
+  style panel = {position({ scheme: absolute, inset: auto, anchor: auto, area: bottom, z: popover }).pad(3).margin(0).size({ w: max, max-w: overlay-max-w-sm }).fg(foreground).bg(overlay).border({ color: border, width: 1 }).radius(md).elevation(md).type({ family: body, size: sm }), match: { placement: { top: position({ area: top }), bottom: position({ area: bottom }), left: position({ area: left }), right: position({ area: right }) } }, animate: { enter: play(fade), exit: play(fade) }}
 </scope>
 
 <controller>

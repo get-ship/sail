@@ -213,7 +213,10 @@ pub fn lower(scale: &str, token: &str) -> Option<String> {
             t if is_channel(t)
                 || t.starts_with("icon-size-")
                 || t.starts_with("control-h-")
-                || t.starts_with("panel-")
+                || t.starts_with("overlay-max-")
+                || t.starts_with("overlay-min-")
+                || t.starts_with("overlay-vh-")
+                || t.starts_with("overlay-max-h-")
                 || t.starts_with("breakpoint-") =>
             {
                 format!("var(--{t})")

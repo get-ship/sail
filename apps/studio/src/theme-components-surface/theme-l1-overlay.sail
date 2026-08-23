@@ -8,14 +8,14 @@
   style doorTitle = { type({ weight: semibold }) }
   style stageHost = { size(max) }
   // no preset: size lock
-  style sampleMax = { size({ w: 100%, max-w: panel-max-w-sm }) }
+  style sampleMax = { size({ w: 100%, max-w: overlay-max-w-sm }) }
   // no preset: size lock
-  style menuItemShell = { size({ w: 100%, max-w: panel-max-w-sm }).pad(1).border(subtle).radius(md).bg(surface) }
+  style menuItemShell = { size({ w: 100%, max-w: overlay-max-w-sm }).pad(1).border(subtle).radius(md).bg(surface) }
   style ctxBox = { size(max).pad(3).border(subtle).radius(md) }
   // no preset: size lock
-  style scrollVert = { size({ w: 100%, max-w: panel-max-w-sm, max-h: 32 }).pad(3).border(subtle).radius(md) }
+  style scrollVert = { size({ w: 100%, max-w: overlay-max-w-sm, max-h: 32 }).pad(3).border(subtle).radius(md) }
   // no preset: size lock
-  style scrollHoriz = { size({ w: 100%, max-w: panel-max-w-sm }).pad(3).border(subtle).radius(md) }
+  style scrollHoriz = { size({ w: 100%, max-w: overlay-max-w-sm }).pad(3).border(subtle).radius(md) }
 </scope>
 
 <controller>

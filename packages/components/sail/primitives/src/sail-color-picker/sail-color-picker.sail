@@ -434,7 +434,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         popover="manual"
         role="dialog"
         aria-label="Choose color"
-        style({ size({ w: panel-max-w-md, h: fit, max-h: panel-vh-md }).pad(3).position({ scheme: fixed, inset: 0, z: popover }).margin(auto).bg(surface).fg(foreground).border({ color: border, width: 1 }).radius(md).elevation(md) })
+        style({ size({ w: overlay-max-w-md, h: fit, max-h: overlay-vh-md }).pad(3).position({ scheme: fixed, inset: 0, z: popover }).margin(auto).bg(surface).fg(foreground).border({ color: border, width: 1 }).radius(md).elevation(md) })
       >
         <span style({ display(contents).type({ size: size-fs }) })>
           <column gap="3">
@@ -543,7 +543,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         popover="manual"
         role="dialog"
         aria-label="Choose color"
-        style({ size({ w: panel-max-w-md, h: fit, max-h: panel-vh-md }).pad(3).position({ scheme: fixed, inset: 0, z: popover }).margin(auto).bg(surface).fg(foreground).border({ color: border, width: 1 }).radius(md).elevation(md) })
+        style({ size({ w: overlay-max-w-md, h: fit, max-h: overlay-vh-md }).pad(3).position({ scheme: fixed, inset: 0, z: popover }).margin(auto).bg(surface).fg(foreground).border({ color: border, width: 1 }).radius(md).elevation(md) })
       >
         <span style({ display(contents).type({ size: size-fs }) })>
           <column gap="3">
