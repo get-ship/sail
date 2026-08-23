@@ -402,6 +402,96 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   Host is display:contents — size on host is ignored. Swatch must absolute-fill a
   position:relative parent; % width collapses in auto grid tracks.
 -->
+<if {isSwatchOnly()}>
+  <column
+    gap="0"
+    data-color-picker-root
+    data-variant="swatch"
+    style({ position({ scheme: absolute, t: 0, b: 0, l: 0, r: 0 }).size({ min-w: 0, min-h: 0 }) })
+  >
+    <button
+      type="button"
+      data-color-trigger
+      data-color-trigger-btn
+      data-variant="swatch"
+      size="sm"
+      variant="ghost"
+      disabled={disabled() ? true : null}
+      aria-haspopup="dialog"
+      aria-expanded={open() ? 'true' : 'false'}
+      aria-label="Choose color"
+      use:captureInput
+      style({ size({ w: 100%, h: 100%, min-w: 0, min-h: 0 }).pad(0).radius(md).overflow(hidden).border({ color: border-subtle, width: 1 }).cursor(pointer).elevation(none), when: { focusWithin: border({ kind: outline, color: ring }) } })
+    >
+      <svg aria-hidden="true" width="100%" height="100%" preserveAspectRatio="none">
+        <rect width="100%" height="100%" fill={value() || '#000000'} />
+      </svg>
+    </button>
+    <if {open() && !disabled()}>
+      <div
+        id={panelId()}
+        data-color-panel
+        popover="manual"
+        role="dialog"
+        aria-label="Choose color"
+        style({ size({ w: overlay-max-w-md, h: fit, max-h: overlay-vh-md }).pad(3).position({ scheme: fixed, inset: 0, z: popover }).margin(auto).bg(surface).fg(foreground).border({ color: border, width: 1 }).radius(md).elevation(md) })
+      >
+        <span style({ display(contents).type({ size: size-fs }) })>
+          <column gap="3">
+            <div
+              aria-hidden="true"
+              style({ size({ w: 100%, h: 16 }).radius(md).overflow(hidden).border({ color: border, width: 1 }).elevation(sm) })
+            >
+              <svg width="100%" height="100%" preserveAspectRatio="none">
+                <rect width="100%" height="100%" fill={value() || '#000000'} />
+              </svg>
+            </div>
+            <grid cols="6" gap="2">
+              <for {swatches() as sw} key={sw.hex}>
+                <button
+                  type="button"
+                  aria-selected={sw.hex === value().toLowerCase() ? 'true' : 'false'}
+                  data-hex={sw.hex}
+                  aria-label={sw.label}
+                  style({ pad(0).size({ aspect: square }).radius(sm).overflow(hidden).border({ color: border-subtle, width: 1 }).cursor(pointer), when: { selected: border({ kind: outline, color: primary }) } })
+                >
+                  <svg aria-hidden="true" width="100%" height="100%" preserveAspectRatio="none">
+                    <rect width="100%" height="100%" fill={sw.hex} />
+                  </svg>
+                </button>
+              </for>
+            </grid>
+            <column gap="2">
+              <row align="center" gap="2">
+                <label for={hueId()} style({ size({ w: 4 }).fg(muted-foreground).type({ size: xs }) })>H</label>
+                <slider id={hueId()} min="0" max="360" step="1" bind:value={hueText} data-axis="h" use:rangeFill aria-label="Hue" style({ grow(1).size({ min-w: 0 }) }) />
+                <span style({ size({ w: 8 }).fg(muted-foreground).type({ family: mono, size: xs, align: end }) })>{hue()}°</span>
+              </row>
+              <row align="center" gap="2">
+                <label for={satId()} style({ size({ w: 4 }).fg(muted-foreground).type({ size: xs }) })>S</label>
+                <slider id={satId()} min="0" max="100" step="1" bind:value={satText} data-axis="s" use:rangeFill aria-label="Saturation" style({ grow(1).size({ min-w: 0 }) }) />
+                <span style({ size({ w: 8 }).fg(muted-foreground).type({ family: mono, size: xs, align: end }) })>{sat()}%</span>
+              </row>
+              <row align="center" gap="2">
+                <label for={lightId()} style({ size({ w: 4 }).fg(muted-foreground).type({ size: xs }) })>L</label>
+                </column>
+            <row align="center" gap="2">
+              <span>Hex</span>
+              <input
+                type="text"
+                bind:value={hexDraft}
+                spellcheck="false"
+                autocomplete="off"
+                aria-label="Hex color"
+                style({ grow(1).size({ min-w: 0 }).type({ family: mono, size: xs, case: lowercase }) })
+              >
+            </row>
+          </column>
+        </span>
+      </div>
+    </if>
+  </column>
+</if>
 <if {!isSwatchOnly()}>
   <column
     gap="0"
@@ -494,6 +584,14 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                 <span style({ size({ w: 8 }).fg(muted-foreground).type({ family: mono, size: xs, align: end }) })>{light()}%</span>
               </row>
             </column>
+<slider id={lightId()} min="0" max="100" step="1" bind:value={lightText} data-axis="l" use:rangeFill aria-label="Lightness" style({ grow(1).size({ min-w: 0 }) }) />
+                <span style({ size({ w: 8 }).fg(muted-foreground).type({ family: mono, size: xs, align: end }) })>{light()}%</span>
+              </row>
+                        <if {showHexUi()}>
+              <row align="center" gap="2">
+                <span>Hex</span>
+              </row>
+            </if>
           </column>
         </span>
       </div>
