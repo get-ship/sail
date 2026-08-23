@@ -474,12 +474,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
               </row>
               <row align="center" gap="2">
                 <label for={lightId()} style({ size({ w: 4 }).fg(muted-foreground).type({ size: xs }) })>L</label>
-                <slider id={lightId()} min="0" max="100" step="1" bind:value={lightText} data-axis="l" use:rangeFill aria-label="Lightness" style({ grow(1).size({ min-w: 0 }) }) />
-                <span style({ size({ w: 8 }).fg(muted-foreground).type({ family: mono, size: xs, align: end }) })>{light()}%</span>
-              </row>
-            </column>
+                </column>
             <row align="center" gap="2">
-              <span style({ fg(muted-foreground).type({ size: xs }) })>Hex</span>
+              <span>Hex</span>
               <input
                 type="text"
                 bind:value={hexDraft}
@@ -587,17 +584,12 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                 <span style({ size({ w: 8 }).fg(muted-foreground).type({ family: mono, size: xs, align: end }) })>{light()}%</span>
               </row>
             </column>
-            <if {showHexUi()}>
+<slider id={lightId()} min="0" max="100" step="1" bind:value={lightText} data-axis="l" use:rangeFill aria-label="Lightness" style({ grow(1).size({ min-w: 0 }) }) />
+                <span style({ size({ w: 8 }).fg(muted-foreground).type({ family: mono, size: xs, align: end }) })>{light()}%</span>
+              </row>
+                        <if {showHexUi()}>
               <row align="center" gap="2">
-                <span style({ fg(muted-foreground).type({ size: xs }) })>Hex</span>
-                <input
-                  type="text"
-                  bind:value={hexDraft}
-                  spellcheck="false"
-                  autocomplete="off"
-                  aria-label="Hex color"
-                  style({ grow(1).size({ min-w: 0 }).type({ family: mono, size: xs, case: lowercase }) })
-                >
+                <span>Hex</span>
               </row>
             </if>
           </column>
