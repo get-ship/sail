@@ -18,10 +18,9 @@
   style heroCard = { overflow(hidden).size({ min-w: 0 }).radius(lg).border(subtle).bg(surface) }
   // no preset: size lock + position
   style heroSwatch = { position(relative).size({ w: 100%, h: 28, min-h: 28 }).overflow(hidden), when: { stateEdit: cursor(pointer), stateLocked: cursor(default) } }
-  // no preset: border width 0 + position + filter
   style heroMeta = { pad(3) }
   // no preset: size lock
-  style identityCol = { pad(6).size({ max-w: overlay-max-w-lg }) }
+  style identityCol = { pad(6).size({ max-w: panel-max-w-lg }) }
   // no preset: size lock
   style iconCell = { size({ w: 9, h: 9, min-w: 9, min-h: 9 }).radius(md).border(subtle).bg(app) }
   style bandStatus = { pad(4) }
@@ -30,7 +29,7 @@
   style fullBtn = { size(control-sm) }
   // no preset: size lock
   style specimenBtn = { size({ min-w: control-h-sm, min-h: 6 }) }
-  style surfaceRoot = { grow(1).overflow(hidden).bg(app) }
+  style surfaceRoot = { overflow(hidden).bg(app) }
   style workbench = { size(grow).overflow(hidden).bg(app) }
   style editorScroll = { size(grow).bg(app) }
   // no preset: edge-only border
@@ -48,8 +47,6 @@
   style growMin = { size(grow) }
   // no preset: size lock
   style pickerHero = { size({ w: 100%, h: 20, min-h: 20 }) }
-  // Card body fill — participation form; card is not a layout host.
-  style previewFill = { grow(1).size({ min-h: 0 }) }
   type HeroColorCardProps = {
     token: string
     value: string
@@ -267,7 +264,7 @@ export default controller(() => {
           preview-specimen
           density={overview.specimenDensity()}
           padding="none" style(specimenFrame)>
-          <column gap="0" style(previewFill)>
+          <column gap="0" style({ size(max) })>
             <row preview-chrome align="center" gap="2" nowrap style(specimenChrome)>
               <row gap="2" align="center" nowrap hidden="true" style(trafficDots)>
                 <stack style(trafficDot, { bg(danger) })></stack>

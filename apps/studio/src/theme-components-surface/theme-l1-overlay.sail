@@ -6,16 +6,18 @@
   style fieldHint = { fg(muted).type(body-sm) }
   // no preset: type weight
   style doorTitle = { type({ weight: semibold }) }
+  style iconBtn = { size(control-sm) }
+  style tapFloor = { size(control-sm) }
   style stageHost = { size(max) }
   // no preset: size lock
-  style sampleMax = { size({ w: 100%, max-w: overlay-max-w-sm }) }
+  style sampleMax = { size({ w: 100%, max-w: panel-max-w-sm }) }
   // no preset: size lock
-  style menuItemShell = { size({ w: 100%, max-w: overlay-max-w-sm }).pad(1).border(subtle).radius(md).bg(surface) }
+  style menuItemShell = { size({ w: 100%, max-w: panel-max-w-sm }).pad(1).border(subtle).radius(md).bg(surface) }
   style ctxBox = { size(max).pad(3).border(subtle).radius(md) }
   // no preset: size lock
-  style scrollVert = { size({ w: 100%, max-w: overlay-max-w-sm, max-h: 32 }).pad(3).border(subtle).radius(md) }
+  style scrollVert = { size({ w: 100%, max-w: panel-max-w-sm, max-h: 32 }).pad(3).border(subtle).radius(md) }
   // no preset: size lock
-  style scrollHoriz = { size({ w: 100%, max-w: overlay-max-w-sm }).pad(3).border(subtle).radius(md) }
+  style scrollHoriz = { size({ w: 100%, max-w: panel-max-w-sm }).pad(3).border(subtle).radius(md) }
 </scope>
 
 <controller>
@@ -245,18 +247,14 @@ export default controller(() => {
       Geometry host + compile-time loop · author paint
     </p>
     <ticker style(sampleMax, { overflow(hidden).pad(2).bg(muted).radius(md) })>
-      <row nowrap align="center" style({ pad(3).fg(muted) })>
-        <p style({ type(mono) })>
-          Live ticker · muted band ·&nbsp;
-        </p>
-      </row>
+      <span style({ pad(3).fg(muted).type(mono) })>
+        Live ticker · muted band ·&nbsp;
+      </span>
     </ticker>
     <ticker style(sampleMax, { overflow(hidden).pad(2).bg(primary).radius(md) })>
-      <row nowrap align="center" style({ pad(3).fg(primary-foreground) })>
-        <p style({ type(body-sm) })>
-          Brand paint ·&nbsp;
-        </p>
-      </row>
+      <span style({ pad(3).fg(primary-foreground).type(body-sm) })>
+        Brand paint ·&nbsp;
+      </span>
     </ticker>
   </column>
 </if>

@@ -30,10 +30,6 @@
   "stylesheets": ["fonts/fonts.css"],
   // Ban <div>/<span> for app-local components under src/ (routes/ has its own).
   "raw_containers": false,
-  // Theme surfaces dogfood fine-grained preview paint (wrap: truncate, edge-only
-  // borders, weight-only type) that presets cannot census. Grant Style slot
-  // form on hyphenated CEs; routes stay preset-only and filter({ stays L1-only.
-  "style_slots": true,
   // Studio layout gate (Workstream A): promote main-axis overflow, collapsed
   // boxes, and height-chain findings to Error so `sail check` / `sail dev`
   // exit non-zero. Non-studio packages omit this key and keep soft warns.

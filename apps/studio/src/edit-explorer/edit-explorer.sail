@@ -6,8 +6,7 @@
   style toolbar = { size(hug).pad(2).border(subtle-b).bg(surface) }
   style filterInput = { size(max) }
   style countMono = { fg(muted).type(mono-sm) }
-  // Participation form — sidebar slot parent is not a layout host.
-  style treeBody = { grow(1).pad(1).overflow(hidden).bg(app) }
+  style treeBody = { size(max).pad(1).overflow(hidden).bg(app) }
   style emptyFrame = { size(max).pad(3).border(subtle).radius(md) }
   style treeHost = { size(max) }
 </scope>

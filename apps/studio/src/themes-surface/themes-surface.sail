@@ -17,8 +17,8 @@
   style listHead = { size(hug).pad(4).border(subtle-b) }
   style groupLabel = { pad(2).fg(muted).type(label) }
   style groupLabelCatalog = { pad(2).fg(muted).type(label) }
-  // no preset: transparent border
-  style themeRow = { pad(2).radius(md).cursor(pointer).border({ color: transparent, width: 1 }), when: { hover: bg(hover-bg), current: bg(selected-bg).border({ color: selected-border }) } }
+  // selection ring: unselected subtle, selected strong
+  style themeRow = { pad(2).radius(md).cursor(pointer).border(subtle), when: { hover: bg(hover-bg), current: bg(selected-bg).border(strong) } }
   // no preset: size lock
   style swatchStrip = { size({ w: 14, h: 7, min-w: 14 }).overflow(hidden).radius(sm).border(subtle) }
   style swatchCell = { size(grow) }
@@ -39,7 +39,7 @@
   style libraryEyebrow = { fg(muted).type(label) }
   style sectionEyebrow = { fg(muted).type(label) }
   style errorText = { size(grow).fg(danger).type(body-sm) }
-  style surfaceRoot = { grow(1).overflow(hidden).bg(app) }
+  style surfaceRoot = { overflow(hidden).bg(app) }
   style scrollGrow = { size(grow) }
   style listPad = { pad(3) }
   style previewScroll = { size(grow).bg(app) }
@@ -54,8 +54,8 @@
   style typeDisplay = { type(display-sm) }
   style typeBody = { type(body-sm) }
   style typeMono = { type(mono-sm) }
-  // no preset: size lock + transparent border
-  style radiusChip = { size({ w: 8, h: 8, min-w: 8, min-h: 8 }).bg(transparent).border({ color: primary, width: 2 }) }
+  // no preset: size lock
+  style radiusChip = { size({ w: 8, h: 8, min-w: 8, min-h: 8 }).bg(transparent).border(strong) }
   // no preset: min-w lock
   style specimen = { overflow(hidden).size({ min-w: 0 }).radius(lg).border(subtle).elevation(md).bg(app).fg(foreground) }
   // no preset: size lock + edge-only border
@@ -65,8 +65,7 @@
   style specimenCard = { pad(4).size({ min-w: 0 }) }
   // no preset: min-w lock
   style specimenActions = { size({ min-w: 0 }).overflow({ x: auto }) }
-  // no preset: type wrap
-  style chipLabel = { size(hug).type({ wrap: truncate }) }
+  style chipLabel = { size(hug) }
   style cardTitle = { type(heading) }
   style cardBody = { fg(muted).type(body-sm) }
   style fullW = { size(max) }
@@ -353,7 +352,7 @@ export default controller(() => {
     </column>
 
     <scroll-area themes-preview theme-preview-pane style(previewScroll)>
-      <column gap="6" style({ pad(8).size({ max-w: overlay-max-w-lg }) })>
+      <column gap="6" style({ pad(8).size({ max-w: panel-max-w-lg }) })>
         <if {!hasSelected()}>
           <empty-state variant="placeholder" size="sm" themes-preview-empty style(fullW)>
             <strong slot="title">Nothing selected</strong>

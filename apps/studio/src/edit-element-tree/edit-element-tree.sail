@@ -2,13 +2,12 @@
   <edit-element-tree> — active-doc component tree (sail-tree identity bind).
 -->
 <scope>
-  style surfaceRoot = { grow(1).overflow(hidden) }
+  style surfaceRoot = { size(grow).overflow(hidden) }
   // no preset: size lock + edge-only border
   style headRow = { size({ h: 7 }).pad(3).border(subtle-b) }
   style eyebrow = { fg(muted).type(label) }
   style pathMeta = { size(grow).fg(muted).type(mono-sm) }
-  // Participation form — sidebar slot parent is not a layout host.
-  style treeBody = { grow(1).pad(1).overflow(hidden) }
+  style treeBody = { size(grow).pad(1).overflow(hidden) }
   style emptyFrame = { size(max).pad(3).border(subtle).radius(md) }
   style treeHost = { size(max) }
 </scope>

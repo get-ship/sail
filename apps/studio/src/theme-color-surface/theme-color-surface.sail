@@ -11,7 +11,7 @@
   // no preset: type weight
   style doorTitle = { type(body-semibold) }
   // no preset: size lock
-  style editorCol = { pad(6).size({ max-w: overlay-max-w-lg }) }
+  style editorCol = { pad(6).size({ max-w: panel-max-w-lg }) }
   // no preset: min-w lock
   style brandCard = { overflow(hidden).size({ min-w: 0 }).radius(lg).border(subtle).bg(surface) }
   // position:relative sized box — sail-color-picker host is display:contents; swatch fills this box.

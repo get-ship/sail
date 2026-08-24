@@ -9,7 +9,7 @@
     /** true when hosted in shell findings drawer — compact layout only */
     panel = false
   }
-  style surfaceRoot = { grow(1).overflow(hidden) }
+  style surfaceRoot = { overflow(hidden) }
   style shrink0 = { size(hug) }
   style growMin = { size(grow) }
   // no preset: size lock
@@ -45,7 +45,7 @@
   style reviewSheet = { pad(3).size({ min-w: 0, max-h: 56 }).overflow(auto).border(default-t).bg(surface) }
   style titleSm = { type(body-sm) }
   style fullW = { size(max) }
-  // no preset: hug chip on a nowrap row — no truncate (clips on hug controls)
+  // no preset: type wrap
   style chipLabel = { size(hug) }
 </scope>
 
@@ -184,8 +184,8 @@ export default controller(() => {
           <option value={opt.value}>{opt.label}</option>
         </for>
       </select>
-      <!-- no preset: type wrap -->
-      <p last-run style(mutedXs, { type({ wrap: truncate }) })>{lastRunLabel()}</p>
+      <!-- truncate not available in L2 presets; plain muted label -->
+      <p last-run style(mutedXs)>{lastRunLabel()}</p>
     </column>
   </if>
 

@@ -2,14 +2,14 @@
   <edit-surface> — file explorer + doc tabs + source editor. Live app is the host.
 -->
 <scope>
-  style surfaceRoot = { size(grow).overflow(hidden) }
+  style surfaceRoot = { overflow(hidden) }
   style explorerHost = { size(max).overflow(hidden) }
   style mainCol = { size(grow).overflow(hidden) }
   // no preset: min-w lock + edge-only border
   style tabsStrip = { size({ h: 8, min-w: 0 }).overflow(hidden).border(default-b).bg(surface) }
   style tabList = { size(grow).overflow({ x: auto, y: hidden }) }
-  // no preset: size lock + edge-only border
-  style docTab = { size({ h: 100%, max-w: 48 }).pad(3).border(subtle-r).bg(surface).fg(muted).cursor(pointer), when: { hover: bg(hover-bg).fg(foreground), current: bg(app).fg(foreground).border({ edge: t, color: primary }) } }
+  // no preset: size lock + top-edge selection border
+  style docTab = { size({ h: 100%, max-w: 48 }).pad(3).border(subtle-r).border(subtle-t).bg(surface).fg(muted).cursor(pointer), when: { hover: bg(hover-bg).fg(foreground), current: bg(app).fg(foreground).border(strong-t) } }
   style tabLabel = { size(grow).type(body-sm) }
   style dirtyDot = { fg(warning).type(body-sm) }
   style tabClose = { size(control-sm) }
@@ -20,11 +20,11 @@
   // no preset: edge-only border
   style errorBand = { pad(3).bg(surface).border(default-b) }
   style errorText = { fg(danger).type(body-sm) }
-  style emptyHost = { size(grow).overflow(hidden).bg(app) }
+  style emptyHost = { size(max).overflow(hidden).bg(app) }
   style emptyFrame = { size(max).pad(4).border(subtle).radius(md) }
-  style sourceHost = { size(grow).overflow(hidden).bg(app) }
+  style sourceHost = { size(max).overflow(hidden).bg(app) }
   style emptyInset = { size(max).pad(3).margin(3).border(subtle).radius(md) }
-  style fillCol = { size(grow).overflow(hidden) }
+  style fillCol = { size(max).overflow(hidden) }
   style editorFill = { size(grow).overflow(hidden) }
 </scope>
 

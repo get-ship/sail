@@ -4,7 +4,7 @@
 <scope>
   style eyebrow = { fg(muted).type(label) }
   style muted = { fg(muted).type(body-sm) }
-  style surfaceRoot = { grow(1).overflow(hidden).bg(app) }
+  style surfaceRoot = { overflow(hidden).bg(app) }
   style workbench = { size(grow).overflow(hidden) }
   // no preset: edge-only border
   style navPane = { size(grow).overflow(hidden).border(subtle-r).bg(surface) }
@@ -25,16 +25,14 @@
   style blockPad = { pad(3).border(subtle-b) }
   // no preset: edge-only border
   style dangerBand = { pad(4).border(subtle-b).bg(surface) }
-  // no preset: min-w lock + tone border
-  style cloudCard = { size({ min-w: 0 }).border({ color: primary, width: 1 }).bg(surface) }
+  // no preset: min-w lock
+  style cloudCard = { size({ min-w: 0 }).border(strong).bg(surface) }
   style growMin = { size(grow) }
   style shrink0 = { size(hug) }
   style cardTitle = { type(heading) }
   style fieldLabel = { type(body-sm) }
   style fieldValue = { type(mono) }
   style tableFill = { size(max) }
-  // no preset: type wrap
-  style chipLabel = { type({ wrap: truncate }) }
 </scope>
 
 <controller>
@@ -97,7 +95,7 @@ export default controller(() => {
                         <column gap="1" style(growMin)>
                           <row gap="2" align="center" nowrap>
                             <p style(cardTitle)>Ship Cloud</p>
-                            <badge tone="primary" size="sm" variant="soft" pill style(chipLabel)>official</badge>
+                            <badge tone="primary" size="sm" variant="soft" pill>official</badge>
                           </row>
                           <p style(muted)>Account, sync, and hosted agents when the plugin host is available.</p>
                         </column>

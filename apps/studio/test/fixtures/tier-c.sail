@@ -11,6 +11,6 @@ export default controller((_ctx: ControllerScope<any>) => {
 })
 </controller>
 <column gap="2">
-  <p>{ticks()}</p>
+  <span>{ticks()}</span>
   <p>live {ticks()}</p>
 </column>

@@ -6,9 +6,11 @@
   style fieldHint = { fg(muted).type(body-sm) }
   // no preset: type weight
   style doorTitle = { type({ weight: semibold }) }
+  style iconBtn = { size(control-sm) }
+  style tapFloor = { size(control-sm) }
   style stageHost = { size(max) }
   // no preset: size lock
-  style sampleMax = { size({ w: 100%, max-w: overlay-max-w-sm }) }
+  style sampleMax = { size({ w: 100%, max-w: panel-max-w-sm }) }
 </scope>
 
 <controller>
@@ -133,12 +135,12 @@ export default controller(() => {
       <p style(fieldHint)>size ladder · currentColor ink</p>
       <row gap="4" align="center" nowrap>
         <icon name="refresh" label="Refreshing"></icon>
-        <row nowrap align="center" style({ fg(primary) })>
+        <span style({ fg(primary) })>
           <icon name="heart" size="lg" label="primary ink"></icon>
-        </row>
-        <row nowrap align="center" style({ fg(danger) })>
+        </span>
+        <span style({ fg(danger) })>
           <icon name="heart" size="lg" label="danger ink"></icon>
-        </row>
+        </span>
       </row>
     </column>
   </column>
@@ -154,11 +156,11 @@ export default controller(() => {
       <p style(fieldHint)>Vertical · same face between labels</p>
       <!-- no preset: size lock -->
       <row gap="3" align="center" style({ size({ h: 10 }) })>
-        <em style(fieldHint)>A</em>
+        <span style(fieldHint)>A</span>
         <separator orientation="vertical"></separator>
-        <em style(fieldHint)>B</em>
+        <span style(fieldHint)>B</span>
         <separator orientation="vertical" variant="dashed"></separator>
-        <em style(fieldHint)>C</em>
+        <span style(fieldHint)>C</span>
       </row>
     </column>
     <column gap="2">
@@ -180,7 +182,7 @@ export default controller(() => {
       <p style(fieldHint)>Rest · muted fill + foreground + border</p>
       <row gap="2" align="center">
         <kbd>Ctrl</kbd>
-        <em style(fieldHint)>+</em>
+        <span style(fieldHint)>+</span>
         <kbd>K</kbd>
       </row>
     </column>

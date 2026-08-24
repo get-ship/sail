@@ -2,7 +2,7 @@
   <tasks-surface> — thread list + conversation + composer.
 -->
 <scope>
-  style surfaceRoot = { grow(1).overflow(hidden) }
+  style surfaceRoot = { overflow(hidden) }
   // no preset: size lock + edge-only border
   style pageHeader = { size({ h: 10 }).pad(4).border(subtle-b).bg(surface) }
   style growMin = { size(grow) }
@@ -22,7 +22,7 @@
   style scrollGrow = { size(grow) }
   style listPad = { pad(1) }
   style detailPane = { size(grow).overflow(hidden).bg(app) }
-  style emptyCenter = { grow(1).pad(4) }
+  style emptyCenter = { size(max).pad(4) }
   style fullW = { size(max) }
   // no preset: min-w lock + edge-only border
   style detailHead = { size({ h: 10, min-w: 0 }).pad(3).border(subtle-b).bg(surface) }
@@ -32,7 +32,7 @@
   style pathMono = { size(grow).type(mono-sm) }
   // no preset: edge-only border
   style attachRow = { size(hug).pad(3).border(subtle-b) }
-  style conversation = { grow(1).size({ min-h: 0 }).overflow(hidden) }
+  style conversation = { size(max).overflow(hidden) }
   // no preset: size lock
   style mdScroll = { size({ min-h: 0, max-h: 32 }) }
   style mdPad = { pad(3) }

@@ -7,11 +7,9 @@
   style mutedSm = { fg(muted).type(body-sm) }
   style mutedRelaxed = { fg(muted).type(body-sm) }
   // no preset: edge-only border
-  style specimenDock = { grow(1).overflow(hidden).border(subtle-l).bg(app) }
+  style specimenDock = { overflow(hidden).border(subtle-l).bg(app) }
   style specimenPad = { size(grow).pad(4) }
   style specimenFrame = { size(max).overflow(hidden).elevation(lg) }
-  // Card body fill — participation form; card is not a layout host.
-  style fillCol = { grow(1).size({ min-h: 0 }) }
   // no preset: min-w lock + edge-only border
   style specimenChrome = { pad(3).size({ h: 8, min-w: 0, min-h: 8 }).border(subtle-b).bg(surface) }
   // no preset: size lock
@@ -69,7 +67,7 @@ export default controller(() => {
       padding="none"
       style(specimenFrame)
     >
-      <column gap="0" style(fillCol)>
+      <column gap="0" style({ size(max) })>
         <row specimen-chrome align="center" gap="2" nowrap style(specimenChrome)>
           <row gap="2" align="center" nowrap hidden="true" style(trafficDots)>
             <stack style(trafficDotDestructive)></stack>

@@ -1,8 +1,4 @@
 <!-- Fixture for CM tokenizer + explorer (static card + signal). -->
-<scope>
-  style sampleCard = { pad(6).radius(lg) }
-</scope>
-
 <controller>
 import type { ControllerScope } from '@ship/sail-runtime'
 export default controller((_ctx: ControllerScope<any>) => {
@@ -10,6 +6,10 @@ export default controller((_ctx: ControllerScope<any>) => {
   return { ticks }
 })
 </controller>
+
+<scope>
+  style sampleCard = { pad(6).radius(lg) }
+</scope>
 
 <column gap="4">
   <card tone="primary" style(sampleCard)>

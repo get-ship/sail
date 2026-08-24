@@ -10,7 +10,7 @@
   // no preset: type weight
   style doorTitle = { type(body-semibold) }
   // no preset: size lock
-  style editorCol = { pad(6).size({ max-w: overlay-max-w-lg }) }
+  style editorCol = { pad(6).size({ max-w: panel-max-w-lg }) }
   style bandStatus = { pad(4) }
   // no preset: edge-only border
   style bandError = { pad(4).border(default-b) }
@@ -21,7 +21,7 @@
   // no preset: min-w lock
   style fontSample = { size({ min-w: 0 }).fg(foreground).type(body) }
   style catChip = { when: { selected: bg(selected-bg).fg(foreground).border(subtle) } }
-  style surfaceRoot = { grow(1).overflow(hidden).bg(app) }
+  style surfaceRoot = { overflow(hidden).bg(app) }
   style workbench = { size(grow).overflow(hidden).bg(app) }
   style editorScroll = { size(grow).bg(app) }
   style pageTitle = { type(heading) }
@@ -42,8 +42,6 @@
   style trafficDot = { size({ w: 2, h: 2, min-w: 2, min-h: 2 }).radius(full) }
   style chromeTitle = { size(grow).fg(muted).type(body-sm) }
   style scrollGrow = { size(grow).bg(app) }
-  // Card body fill — participation form; card is not a layout host.
-  style previewFill = { grow(1).size({ min-h: 0 }) }
   // no preset: min-w lock
   style stageBody = { pad(5).size({ min-w: 0 }) }
   style typeDisplay = { type(display-sm) }
@@ -295,7 +293,7 @@ export default controller(() => {
           assets-specimen
           preview-specimen
           padding="none" style(specimenFrame)>
-          <column gap="0" style(previewFill)>
+          <column gap="0" style({ size(max) })>
             <row preview-chrome align="center" gap="2" nowrap style(specimenChrome)>
               <row gap="2" align="center" nowrap hidden="true" style(trafficDots)>
                 <stack style(trafficDot, { bg(danger) })></stack>

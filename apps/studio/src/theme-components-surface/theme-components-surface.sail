@@ -16,18 +16,17 @@
   style railCol = { pad(3).size({ min-w: 0 }) }
   // no preset: min-w lock
   style inspectorCol = { pad(4).size({ min-w: 0 }) }
-  // Selected rail row: soft fill + subtle border.
-  // no preset: transparent border
-  style listRow = { pad(2).radius(md).cursor(pointer).border({ color: transparent, width: 1 }), when: { hover: bg(hover-bg), selected: bg(surface).border(subtle) } }
+  // selection ring: unselected subtle, selected strong
+  style listRow = { pad(2).radius(md).cursor(pointer).border(subtle), when: { hover: bg(hover-bg), selected: bg(surface).border(strong) } }
   style eyebrow = { fg(muted).type(label) }
   // no preset: edge-only border
   style tokenRow = { pad(2).border(subtle-b) }
-  style surfaceRoot = { grow(1).overflow(hidden).bg(app) }
+  style surfaceRoot = { overflow(hidden).bg(app) }
   style workbench = { size(grow).overflow(hidden).bg(app) }
   // no preset: panel width lock + edge-only border
-  style panelRail = { size({ w: overlay-max-w-sm, h: 100%, min-h: 0, max-w: overlay-max-w-sm }).border(subtle-r).bg(app) }
+  style panelRail = { size({ w: panel-max-w-sm, h: 100%, min-h: 0, max-w: panel-max-w-sm }).border(subtle-r).bg(app) }
   // no preset: panel width lock + edge-only border
-  style panelInspector = { size({ w: overlay-max-w-sm, h: 100%, min-h: 0, max-w: overlay-max-w-sm }).border(subtle-l).bg(app) }
+  style panelInspector = { size({ w: panel-max-w-sm, h: 100%, min-h: 0, max-w: panel-max-w-sm }).border(subtle-l).bg(app) }
   style specimenDock = { size(grow).overflow(hidden).bg(app) }
   style specimenPad = { size(grow).pad(4) }
   style specimenFrame = { size(max).overflow(hidden).elevation(lg) }
@@ -42,23 +41,19 @@
   style chromeTitle = { size(grow).fg(muted).type(body-sm) }
   style errorText = { size(grow).fg(danger).type(body-sm) }
   style growMin = { size(grow) }
-  // Card body fill — participation form; card is not a layout host.
-  style previewFill = { grow(1).size({ min-h: 0 }) }
-  // no preset: size lock + position
-  style toastRegionHost = { size({ w: 100%, min-h: 24, max-w: overlay-max-w-sm }).position(relative) }
   style shrink0 = { size(hug) }
   style tapFloor = { size(control-sm) }
   style iconBtn = { size(control-sm) }
   style stageHost = { size(max) }
   // no preset: size lock
-  style sampleMax = { size({ w: 100%, max-w: overlay-max-w-sm }) }
+  style sampleMax = { size({ w: 100%, max-w: panel-max-w-sm }) }
   // no preset: size lock
-  style menuItemShell = { size({ w: 100%, max-w: overlay-max-w-sm }).pad(1).border(subtle).radius(md).bg(surface) }
+  style menuItemShell = { size({ w: 100%, max-w: panel-max-w-sm }).pad(1).border(subtle).radius(md).bg(surface) }
   style ctxBox = { size(max).pad(3).border(subtle).radius(md) }
   // no preset: size lock
-  style scrollVert = { size({ w: 100%, max-w: overlay-max-w-sm, max-h: 32 }).pad(3).border(subtle).radius(md) }
+  style scrollVert = { size({ w: 100%, max-w: panel-max-w-sm, max-h: 32 }).pad(3).border(subtle).radius(md) }
   // no preset: size lock
-  style scrollHoriz = { size({ w: 100%, max-w: overlay-max-w-sm }).pad(3).border(subtle).radius(md) }
+  style scrollHoriz = { size({ w: 100%, max-w: panel-max-w-sm }).pad(3).border(subtle).radius(md) }
   style scrollGrow = { size(grow).bg(app) }
   // no preset: min-w lock
   style stageBody = { pad(5).size({ min-w: 0, min-h: 100% }) }
@@ -175,7 +170,7 @@ export default controller(() => {
           components-specimen
           preview-specimen
           padding="none" style(specimenFrame)>
-          <column gap="0" style(previewFill)>
+          <column gap="0" style({ size(max) })>
             <row preview-chrome align="center" gap="2" nowrap style(specimenChrome)>
               <row gap="2" align="center" nowrap hidden="true" style(trafficDots)>
                 <stack style(trafficDot, { bg(danger) })></stack>
@@ -671,8 +666,6 @@ export default controller(() => {
                       <column gap="2">
                         <p style(fieldHint)>Details + code chip</p>
                         <error-state size="sm" code="ERR_STACK">
-                          <strong slot="title">Upstream failed</strong>
-                          Stack collapses behind Show details.
                           <p slot="details">at fetchData (api.ts:42)
   Error: gateway timeout</p>
                           <button slot="action" type="button" variant="solid" tone="danger" size="sm">Retry</button>
@@ -692,7 +685,7 @@ export default controller(() => {
                   </if>
                   <if {components.stage.toastRegion()}>
                     <!-- no preset: size lock + position -->
-                    <column gap="2" style(toastRegionHost)>
+                    <column gap="2" style({ size({ w: 100%, min-h: 24, max-w: panel-max-w-sm }).position(relative) })>
                       <p style(fieldHint)>Toast region hosts stacked toasts (fixed in product).</p>
                       <toast tone="info" duration="0">Region child toast</toast>
                     </column>
@@ -1039,10 +1032,12 @@ export default controller(() => {
                         <p style(fieldHint)>Horizontal · orientation="horizontal"</p>
                         <!-- no preset: size lock -->
                         <scroll-area orientation="horizontal" style(scrollHoriz)>
-                          <!-- no preset: type wrap -->
-                          <p style({ pad(1).type({ wrap: nowrap }) })>
-                            Wide band that overflows on the x axis → scroll with thin themed thumb
-                          </p>
+                          <!-- no preset: size lock -->
+                          <row nowrap>
+                            <p style({ pad(1) })>
+                              Wide band that overflows on the x axis → scroll with thin themed thumb
+                            </p>
+                          </row>
                         </scroll-area>
                       </column>
                     </column>

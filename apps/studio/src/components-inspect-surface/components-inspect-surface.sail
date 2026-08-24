@@ -6,7 +6,7 @@
   style eyebrow = { fg(muted).type(label) }
   style pathMeta = { fg(muted).type(mono-sm) }
   style muted = { fg(muted).type(body-sm) }
-  style surfaceRoot = { grow(1).overflow(hidden).bg(app) }
+  style surfaceRoot = { overflow(hidden).bg(app) }
   style workbench = { size(grow).overflow(hidden) }
   // no preset: edge-only border
   style treePane = { size(grow).overflow(hidden).border(subtle-r).bg(app) }

@@ -7,8 +7,8 @@
   style shellRoot = { size({ w: 100%, h: screen, min-w: 0, min-h: screen }).overflow(hidden).bg(app).fg(foreground) }
   // no preset: size lock
   style railItem = { size({ w: 10, h: 10, min-w: 10, min-h: 10 }).radius(md).fg(muted), when: { hover: bg(hover-bg).fg(foreground), current: bg(selected-bg).fg(primary) } }
-  // no preset: size lock + border width 0
-  style exitBtn = { size({ w: 10, h: 10, min-w: 10, min-h: 10 }).radius(md).fg(muted).bg(transparent).border({ width: 0 }).cursor(pointer), when: { hover: bg(hover-bg).fg(foreground) } }
+  // no preset: size lock
+  style exitBtn = { size({ w: 10, h: 10, min-w: 10, min-h: 10 }).radius(md).fg(muted).bg(transparent).border(none).cursor(pointer), when: { hover: bg(hover-bg).fg(foreground) } }
   style centerFill = { size(max) }
   style mainCol = { size(grow).overflow(hidden) }
   // no preset: size lock + edge-only border
