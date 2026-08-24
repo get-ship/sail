@@ -431,12 +431,18 @@ pub fn emit_element_with_bindings(
     )?;
     // Fixed host role/live/label from the anatomy table (authors don't stamp).
     structure = crate::semantic_props::stamp_host_anatomy(name, &structure);
-    if name == "tab" {
-        // Host is display(contents); the trigger/button is the tab, the
-        // body is the panel. HOST_ANATOMY on the span would nest a button
-        // inside role=tab.
-        stamp_attr_on_first_tag(&mut structure, "button", "role", "tab");
-        stamp_attr_on_first_tag(&mut structure, "div", "role", "tabpanel");
+    // Prop defaults must land as DOM attributes on the structure root:
+    // variant-scoped skin CSS is attribute-gated (`[variant='drop']
+    // .s-variant-drop-… { position: relative; … }`), and match-arm classes
+    // alone never satisfy the attribute selector. Without this the host is
+    // unstyled — file's invisible input then resolves `inset: 0` against
+    // the viewport and swallows every click on the page.
+    let default_attrs = default_prop_attrs(name, &program.props);
+    let open_end = structure.find('>').map(|p| p + 1).unwrap_or(0);
+    for (attr_name, attr_value) in &default_attrs {
+        if !structure[..open_end].contains(&format!("{attr_name}=")) {
+            stamp_attr_on_first_tag(&mut structure, name, attr_name, attr_value);
+        }
     }
 
     // Spliced elements key their skin on the stamped root class; native-kind
@@ -498,7 +504,6 @@ pub fn emit_element_with_bindings(
     });
 
     let host_classes = root_class_attr(&structure);
-    let default_attrs = default_prop_attrs(name, &program.props);
     let bound_props: Vec<(String, crate::check::binding::StyleBindingUnit)> = style_bindings
         .iter()
         .filter(|b| b.source == crate::check::binding::StyleBindingSource::Prop)

@@ -379,13 +379,13 @@ fn lift_tag_style(
             }
         }
         out.replace_range(lo..hi, "");
-        let inject_at = if lift.gt_pos >= hi {
-            lift.gt_pos - (hi - lo)
-        } else if lift.gt_pos >= lo {
-            lo
-        } else {
-            lift.gt_pos
-        };
+        // Inject where the call was removed, not at the shifted `>` position:
+        // for self-closing / author-void tags (`<input … />`) the `/` sits
+        // between the call and `>`, so shifting gt_pos lands the injected
+        // class AFTER the slash — `<input / class="…">` — which the HTML
+        // parser then fails to close. `lo` is the call's own slot in the
+        // attribute list; inserting there keeps attr order intact.
+        let inject_at = lo;
         let mut inject = String::new();
         inject.push_str(" class=\"");
         inject.push_str(&lift.classes);

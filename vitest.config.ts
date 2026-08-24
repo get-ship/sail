@@ -24,6 +24,7 @@ const PROJECTS = [
   'packages/sail/l1',
   'packages/sail/runtime',
   'packages/sail/tokens',
+  'crates/sail/compiler/stdlib',
   'packages/sail/test-setup',
   'packages/sail/sail-test',
   'packages/sail/studio-bridge',

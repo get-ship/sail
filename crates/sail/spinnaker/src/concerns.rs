@@ -1007,6 +1007,26 @@ fn concern_edge(op: &PaintOp) -> &'static str {
             },
             _ => "all",
         },
+        // Edge-keyed molecule tokens (`border(default-r)`, `border(subtle-b)`):
+        // the trailing `-<edge>` suffix IS the edge — same as an explicit
+        // `edge:` slot. Without this, two different-edge molecules clash as
+        // if each wrote all edges (`border(default-r).border(default-b)` in
+        // one chain is a legal grid-cell pattern, not a paint conflict).
+        PaintArg::Token(name) => edge_suffix(name),
+        _ => "all",
+    }
+}
+
+/// Trailing `-<edge>` on a border token name → that edge. Multi-edge
+/// suffixes (`-rb`) are not minted; anything unrecognized is `all`.
+fn edge_suffix(name: &str) -> &'static str {
+    match name.rsplit('-').next() {
+        Some("t") => "t",
+        Some("b") => "b",
+        Some("l") => "l",
+        Some("r") => "r",
+        Some("s") => "s",
+        Some("e") => "e",
         _ => "all",
     }
 }
