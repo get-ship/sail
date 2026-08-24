@@ -328,12 +328,18 @@ export function component<Bindings>(
       const sig = seedSignal(host, attr, propDef, decode)
       propSignals[camel] = sig
       if (propDef.reflect) {
-        let first = true
+        // Reflect the initial value too: variant-scoped skin CSS is
+        // attribute-gated (`[variant='drop'].s-variant-drop-…`), and a host
+        // mounted without the attribute (default-only use) would never match
+        // its own skin rules. Only skip when the user already set one.
+        const initialRaw = host.getAttribute(attr)
+        if (initialRaw === null) {
+          const initialNext = encodeAttr(propDef, sig())
+          if (initialNext !== null) host.setAttribute(attr, initialNext)
+        }
+        let first = false
         const dispose = effect(() => {
           const v = sig()
-          // Skip the initial pass — we don't want to overwrite the host
-          // attribute the user already provided (or the default-derived
-          // null) on first connect.
           if (first) {
             first = false
             return
