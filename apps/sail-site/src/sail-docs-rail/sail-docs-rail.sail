@@ -19,7 +19,7 @@
 
 <scope>
   // Fill the site-header <main> budget. Independent rail + main scrollports.
-  style shell = { size(grow).overflow(hidden) }
+  style shell = { size(max).overflow(hidden) }
   // Hug width so the rail does not steal leftover from main. Height comes from
   // the parent row align=stretch. Pad dropped (L1-only). No L2 width attr for
   // the old 14rem rail — ledgered. Visibility is structural `<when {tablet}>`

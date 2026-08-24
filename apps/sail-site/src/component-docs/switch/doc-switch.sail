@@ -5,18 +5,18 @@
 <scope>
   style page = { size({ w: 100%, max-w: breakpoint-desktop }).margin({ x: auto }).overflow({ all: visible }) }
   style fieldShell = { size({ w: 100%, max-w: 64 }).pad(2).overflow({ all: visible }) }
-  style knobLabel = { fg(muted-foreground).type({ size: xs, weight: medium, tracking: wide, case: uppercase }) }
-  style sizeValue = { fg(muted-foreground).type({ family: mono, size: xs }) }
-  style swatch = { size(7).shrink(0).radius(full).cursor(pointer).border({ color: transparent, width: 2 }).elevation(xs), when: { selected: border({ color: foreground }).elevation(sm), hover: filter({ opacity: 90 }) } }
+  style knobLabel = { fg(muted-foreground).type(label) }
+  style sizeValue = { fg(muted-foreground).type(mono-sm) }
+  style swatch = { size(7).radius(full).cursor(pointer).border(subtle).elevation(xs), when: { selected: border(strong).elevation(sm), hover: bg(muted) } }
   style swatchPrimary = { bg(primary) }
   style swatchSuccess = { bg(success) }
   style swatchWarning = { bg(warning) }
   style swatchDanger = { bg(danger) }
   style swatchAccent = { bg(accent) }
-  style swatchMuted = { bg(muted).border({ color: border }) }
+  style swatchMuted = { bg(muted).border(default) }
   style swatchInfo = { bg(info) }
   style exampleBlock = { size({ w: 100% }).pad({ t: 2, b: 4 }).overflow({ all: visible }) }
-  style sectionLabel = { fg(muted-foreground).type({ size: xs, tracking: wide, case: uppercase }) }
+  style sectionLabel = { fg(muted-foreground).type(label) }
   style demoRow = { size({ w: 100% }).pad({ y: 2 }) }
 </scope>
 

@@ -11,9 +11,9 @@
   style card = { size(max) }
   style title = { type(body-sm) }
   style artist = { fg(muted).type(label) }
-  style eq = { size(grow) }
-  style bar = { size(1).radius(sm).bg(primary).origin(bottom), animate: { loop: play(eq) } }
-  style barDim = { size(1).radius(sm).bg(primary).origin(bottom), animate: { loop: play(eq) } }
+  style eq = { size(hug) }
+  style bar = { size(1).radius(sm).bg(primary).origin(bottom), animate: { loop: play(slide-up) } }
+  style barDim = { size(1).radius(sm).bg(primary).origin(bottom), animate: { loop: play(slide-up) } }
   style rest = { size(2).radius(full).bg(muted) }
   style meta = { size(grow) }
 </scope>

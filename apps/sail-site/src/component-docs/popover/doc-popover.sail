@@ -6,12 +6,12 @@
 
 <scope>
   style page = { size({ w: 100%, max-w: breakpoint-desktop }).margin({ x: auto }).overflow({ all: visible }) }
-  style mutedSm = { fg(muted-foreground).type({ size: sm }) }
-  style mutedXs = { fg(muted-foreground).type({ size: xs }) }
+  style mutedSm = { fg(muted-foreground).type(body-sm) }
+  style mutedXs = { fg(muted-foreground).type(body-sm) }
   style specimen = { pad(2).overflow({ all: visible }) }
-  style knobLabel = { fg(muted-foreground).type({ size: xs, weight: medium, tracking: wide, case: uppercase }) }
+  style knobLabel = { fg(muted-foreground).type(label) }
   style exampleBlock = { size({ w: 100% }).pad({ t: 2, b: 4 }).overflow({ all: visible }) }
-  style sectionLabel = { fg(muted-foreground).type({ size: xs, tracking: wide, case: uppercase }) }
+  style sectionLabel = { fg(muted-foreground).type(label) }
 </scope>
 
 <controller>

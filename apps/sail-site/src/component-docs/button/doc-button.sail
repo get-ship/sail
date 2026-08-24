@@ -5,7 +5,6 @@
 
 <scope>
   style page = { size(max) }
-  style monoXs = { fg(muted).type(mono-sm) }
   style sizeValue = { fg(muted).type(mono-sm) }
   /** Tone dots — plain divs (never <button>). size() sets w+h together. */
   style swatch = { size(7).radius(full).cursor(pointer).border(subtle).elevation(xs), when: { selected: border(strong).elevation(sm), hover: bg(muted) } }
@@ -17,9 +16,6 @@
   style swatchMuted = { bg(muted).border(default) }
   style swatchInfo = { bg(info) }
   style exampleBlock = { size(max) }
-  style exampleSection = { size(max) }
-  style exampleH = { type(heading) }
-  style exampleLead = { fg(muted).type(body-sm) }
   style sectionLabel = { fg(muted).type(label) }
   style demoRow = { size(max) }
   style growCol = { size(grow) }

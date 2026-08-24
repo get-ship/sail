@@ -3,8 +3,8 @@
   testid landing-motion-bar is the first bar (animation.spec.ts).
 -->
 <scope>
-  style bar = { size(1).radius(sm).bg(primary).origin(bottom), animate: { loop: play(eq) } }
-  style barDim = { size(1).radius(sm).bg(accent).origin(bottom), animate: { loop: play(eq) } }
+  style bar = { size(1).radius(sm).bg(primary).origin(bottom), animate: { loop: play(slide-up) } }
+  style barDim = { size(1).radius(sm).bg(accent).origin(bottom), animate: { loop: play(slide-up) } }
 </scope>
 
 <row gap="1" align="end" id="landing-motion-bars">

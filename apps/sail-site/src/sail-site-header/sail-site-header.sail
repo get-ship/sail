@@ -10,17 +10,17 @@
 <scope>
   style brandMark = { fg(primary) }
   // no preset: overflow x auto (pill switch scrolls on narrow)
-  style productSwitch = { size(grow).overflow({ x: auto }).bg(muted).border(subtle).radius(full) }
+  style productSwitch = { size({ w: 100% }).overflow({ x: auto }).bg(muted).border(subtle).radius(full) }
   // no preset: display inline-flex / hover+current+tablet when
   style productLink = { display(inline-flex).size(control-sm).radius(full).fg(muted).type(label), when: { hover: fg(foreground).bg(hover-bg), current: bg(primary).fg(primary-foreground), tablet: type(body-sm) } }
   // no preset: display inline
   style brandWord = { display(inline) }
   style brandLink = { size(hug) }
-  style shell = { size(grow) }
+  style shell = { size(max) }
   // no preset: overflow x hidden / y auto
-  style landingMain = { size(grow).overflow({ x: hidden, y: auto }) }
+  style landingMain = { size({ h: fill }).overflow({ x: hidden, y: auto }) }
   // no preset: display flex / dir column
-  style appMain = { display(flex).dir(column).size(grow).overflow(hidden) }
+  style appMain = { display(flex).dir(column).size({ h: fill }).overflow(hidden) }
   // no preset: display inline-flex / hover when
   style githubLink = { display(inline-flex).radius(md).fg(muted), when: { hover: fg(foreground).bg(hover-bg) } }
 </scope>

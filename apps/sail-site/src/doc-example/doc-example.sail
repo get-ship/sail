@@ -12,7 +12,6 @@
   }
 
   style section = { size(max).overflow(visible) }
-  style heading = { type(heading) }
   style leadText = { fg(muted).type(body-sm) }
   style liveFrame = { size(grow).overflow(visible).radius(lg).border(subtle).bg(app) }
   style codeCol = { size(grow) }
@@ -20,7 +19,7 @@
 
 <column gap="3" style(section)>
   <if {title() !== ''}>
-    <h3 style(heading)>{title()}</h3>
+    <h3>{title()}</h3>
   </if>
   <if {lead() !== ''}>
     <p style(leadText)>{lead()}</p>

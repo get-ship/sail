@@ -9,8 +9,8 @@
   style specimen = { size({ w: 64, max-w: 100% }).pad(2).overflow({ all: visible }) }
   style controlW = { size({ w: 64, max-w: 100% }) }
   style exampleBlock = { size({ w: 100% }).pad({ t: 2, b: 4 }).overflow({ all: visible }) }
-  style exampleLead = { fg(muted-foreground).type({ size: sm }) }
-  style sectionLabel = { fg(muted-foreground).type({ size: xs, tracking: wide, case: uppercase }) }
+  style exampleLead = { fg(muted-foreground).type(body-sm) }
+  style sectionLabel = { fg(muted-foreground).type(label) }
 </scope>
 
 <controller>

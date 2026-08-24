@@ -5,14 +5,14 @@
 
 <scope>
   style page = { size({ w: 100%, max-w: breakpoint-desktop }).margin({ x: auto }) }
-  style specimen = { size({ w: overlay-max-w-md, max-w: 100% }) }
+  style specimen = { size({ w: panel-max-w-md, max-w: 100% }) }
   style fullW = { size({ w: 100% }) }
-  style mutedSm = { fg(muted-foreground).type({ size: sm }) }
-  style mutedXs = { fg(muted-foreground).type({ size: xs }) }
-  style knobLabel = { fg(muted-foreground).type({ size: xs, weight: medium, tracking: wide, case: uppercase }) }
-  style sizeValue = { fg(muted-foreground).type({ family: mono, size: xs }) }
+  style mutedSm = { fg(muted-foreground).type(body-sm) }
+  style mutedXs = { fg(muted-foreground).type(body-sm) }
+  style knobLabel = { fg(muted-foreground).type(label) }
+  style sizeValue = { fg(muted-foreground).type(mono-sm) }
   style exampleBlock = { size({ w: 100% }).pad({ t: 2, b: 4 }) }
-  style sectionLabel = { fg(muted-foreground).type({ size: xs, tracking: wide, case: uppercase }) }
+  style sectionLabel = { fg(muted-foreground).type(label) }
 </scope>
 
 <controller>

@@ -4,7 +4,7 @@
 -->
 
 <scope>
-  style shell = { size(grow).overflow(hidden) }
+  style shell = { size(max).overflow(hidden) }
   // Hug width so the rail does not steal leftover from main. Pad dropped
   // (L1-only). No L2 width attr for the old 14rem rail — ledgered.
   // Visibility is structural `<when {tablet}>` — global `.s-displaynone`

@@ -22,7 +22,7 @@ export const contract = {
   faces: [],
   visual: {
     defaultRow: true,
-    cross: [.size.],
+    cross: ['size'],
   },
   examples: true,
 } as const satisfies SurfaceContract

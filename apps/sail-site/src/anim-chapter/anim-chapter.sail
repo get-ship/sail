@@ -1,23 +1,23 @@
 <!--
   Animation chapter — HEAD content. Style lives here (L2) so the route
-  does not spend it. Tiles are play(rise|pulse|bob|spin), not <spinner>.
+  does not spend it. Tiles are play(slide-up|fade|spin), not <spinner>.
 -->
 <scope>
   style pressBtn = { animate: { press: play(press) } }
-  style tile = { size(9).radius(md).bg(primary), animate: { enter: play(rise) } }
-  style tileDim = { size(9).radius(md).bg(accent), animate: { enter: play(rise) } }
+  style tile = { size(9).radius(md).bg(primary), animate: { enter: play(slide-up) } }
+  style tileDim = { size(9).radius(md).bg(accent), animate: { enter: play(slide-up) } }
   style enterCard = { animate: { enter: play(fade-scale-in), exit: play(fade) } }
-  style loopTileFast = { size(8).radius(md).bg(primary), animate: { loop: play(pulse, 500) } }
-  style loopTileSlow = { size(8).radius(md).bg(accent), animate: { loop: play(pulse, 2500) } }
+  style loopTileFast = { size(8).radius(md).bg(primary), animate: { loop: play(spin, 500) } }
+  style loopTileSlow = { size(8).radius(md).bg(accent), animate: { loop: play(fade, 2500) } }
   style revealCard = { overflow(visible), animate: { reveal: play(slide-up) } }
   style revealSpring = { overflow(visible), animate: { reveal: play(fade-scale-in) } }
-  style ambientDot = { size(4).radius(full).bg(primary), animate: { loop: play(bob) } }
-  style ambientDotDim = { size(4).radius(full).bg(accent), animate: { loop: play(bob) } }
+  style ambientDot = { size(4).radius(full).bg(primary), animate: { loop: play(fade-scale-in) } }
+  style ambientDotDim = { size(4).radius(full).bg(accent), animate: { loop: play(fade-scale-in) } }
   style spinTile = { size(8).radius(md).bg(primary), animate: { loop: play(spin) } }
   style grow1 = { size(grow) }
   style scrub = { size(grow) }
   style timelineTile = { size(9).bg(primary).radius(md) }
-  style focusBtn = { animate: { focus-visible: play(pulse) } }
+  style focusBtn = { animate: { focus-visible: play(press) } }
   style muted = { fg(muted).type(body-sm) }
   style eyebrow = { fg(accent).type(label) }
 </scope>
@@ -83,7 +83,7 @@ export default controller(() => {
   <row gap="3" align="center">
     <button on:click={replay} style(pressBtn)>Replay</button>
     <p style(muted)>
-      Five tiles, one <code>style&#40;&#123; animate: &#123; enter: play(rise) &#125; &#125;&#41;</code> each;
+      Five tiles, one <code>style&#40;&#123; animate: &#123; enter: play(slide-up) &#125; &#125;&#41;</code> each;
       <code>stagger</code> is the delay between siblings.
     </p>
   </row>
@@ -137,8 +137,8 @@ export default controller(() => {
   </row>
   <code-block code={code.express}></code-block>
   <p>
-    Common shapes have names — <code>'fade'</code>,
-    <code>'spring:snappy'</code>, <code>'pulse'</code> — and a name is just
+    Common shapes have names — <code>'spring:snappy'</code>,
+    <code>'slide-up'</code> — and a name is just
     a config you didn’t have to write. Start from one and override any
     field, or skip them entirely. One spelling rule covers every value:
     quoted is a literal, unquoted is code — which is how a signal goes
@@ -253,7 +253,7 @@ export default controller(() => {
     </column>
     <column gap="1">
       <label>Tweens</label>
-      <p style(muted)>fade · fade-out · fade-scale-in · slide-up · rise · press · release · pulse · spin</p>
+      <p style(muted)>fade · fade-out · fade-scale-in · slide-up · press · spin</p>
     </column>
   </grid>
   <p style(muted)>

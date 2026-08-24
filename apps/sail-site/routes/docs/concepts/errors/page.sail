@@ -51,18 +51,18 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
     <h2>&lt;error-boundary&gt;, live</h2>
     <grid cols="2" gap="4">
-      <column>
+      <column align="start">
         <label>Live — throw, catch, retry</label>
         <card>
-          <error-boundary on-error-reset={disarm}>
-            <if {armed()}><p>{boom()}</p></if>
-            <if {!armed()}>
-              <p>This subtree is protected.</p>
-              <button on:click={arm} tone="danger" variant="outline">
-                Throw during render
-              </button>
-            </if>
-          </error-boundary>
+            <error-boundary on-error-reset={disarm}>
+              <if {armed()}><p>{boom()}</p></if>
+              <if {!armed()}>
+                <p>This subtree is protected.</p>
+                <button on:click={arm} tone="danger" variant="outline">
+                  Throw during render
+                </button>
+              </if>
+            </error-boundary>
         </card>
       </column>
       <column>

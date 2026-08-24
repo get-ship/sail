@@ -5,12 +5,9 @@
 
 <scope>
   style page = { size({ w: 100%, max-w: breakpoint-desktop }).margin({ x: auto }).overflow({ all: visible }) }
-  style specimen = { size({ w: 100%, max-w: overlay-max-w-md }).pad(2).overflow({ all: visible }) }
-  style knobLabel = { fg(muted-foreground).type({ size: xs, weight: medium, tracking: wide, case: uppercase }) }
-  style sizeValue = { fg(muted-foreground).type({ family: mono, size: xs }) }
-  style mutedXs = { fg(muted-foreground).type({ size: xs }) }
+  style specimen = { size({ w: 100%, max-w: panel-max-w-md }).pad(2).overflow({ all: visible }) }
   style exampleBlock = { size({ w: 100% }).pad({ t: 2, b: 4 }).overflow({ all: visible }) }
-  style sectionLabel = { fg(muted-foreground).type({ size: xs, tracking: wide, case: uppercase }) }
+  style sectionLabel = { fg(muted-foreground).type(label) }
 </scope>
 
 <controller>
@@ -24,6 +21,7 @@ export default controller((_ctx: Scope) => {
   const props = () => entry.props
   const usageCode = () => entry.usage
 
+  const tickerSnippet = () => '<ticker>\n  <p>tokens · signals · a11y · hot reload · SSR</p>\n</ticker>'
   const tkExDefault = () =>
     `<ticker>
   <p>tokens · signals · a11y · hot reload · SSR</p>
@@ -47,6 +45,7 @@ export default controller((_ctx: Scope) => {
     blurb,
     props,
     usageCode,
+    tickerSnippet,
     tkExDefault,
     tkExIcons,
   }
@@ -59,7 +58,7 @@ export default controller((_ctx: Scope) => {
     blurb={blurb()}
     pack="Component primitives"
     layout="split"
-    snippet="<ticker>\n  <p>tokens · signals · a11y · hot reload · SSR</p>\n</ticker>"
+    snippet={tickerSnippet()}
     usage-live
     usage={usageCode()}
     rows={props()}

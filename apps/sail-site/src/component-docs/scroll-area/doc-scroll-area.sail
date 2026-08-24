@@ -5,15 +5,15 @@
 
 <scope>
   style page = { size({ w: 100%, max-w: breakpoint-desktop }).margin({ x: auto }).overflow({ all: visible }) }
-  style specimen = { size({ w: 100%, max-w: overlay-max-w-md }).pad(2).overflow({ all: visible }) }
-  style knobLabel = { fg(muted-foreground).type({ size: xs, weight: medium, tracking: wide, case: uppercase }) }
-  style mutedSm = { fg(muted-foreground).type({ size: sm }) }
-  style mutedXs = { fg(muted-foreground).type({ size: xs }) }
+  style specimen = { size({ w: 100%, max-w: panel-max-w-md }).pad(2).overflow({ all: visible }) }
+  style knobLabel = { fg(muted-foreground).type(label) }
+  style mutedSm = { fg(muted-foreground).type(body-sm) }
+  style mutedXs = { fg(muted-foreground).type(body-sm) }
   style exampleBlock = { size({ w: 100% }).pad({ t: 2, b: 4 }).overflow({ all: visible }) }
-  style sectionLabel = { fg(muted-foreground).type({ size: xs, tracking: wide, case: uppercase }) }
-  style scrollDemoV = { size({ w: 100%, h: 32, max-w: overlay-max-w-sm }).pad(3).border({ color: border-subtle, width: 1 }).radius(md).bg(app) }
-  style scrollDemoH = { size({ w: 100%, max-w: overlay-max-w-sm }).pad(3).border({ color: border-subtle, width: 1 }).radius(md).bg(app) }
-  style wideBand = { size({ w: overlay-max-w-lg }).type({ wrap: nowrap }) }
+  style sectionLabel = { fg(muted-foreground).type(label) }
+  style scrollDemoV = { size({ w: 100%, h: 32, max-w: panel-max-w-sm }).pad(3).border(subtle).radius(md).bg(app) }
+  style scrollDemoH = { size({ w: 100%, max-w: panel-max-w-sm }).pad(3).border(subtle).radius(md).bg(app) }
+  style wideBand = { size({ w: panel-max-w-lg }) }
 </scope>
 
 <controller>
