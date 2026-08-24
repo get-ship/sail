@@ -75,7 +75,7 @@ export default controller((init) => {
   use:hotkeys={keys}
   invalid={invalid()}
   disabled={disabled()}
-  style({group(), match: { variant: { picker: pickerHost, drop: dropHost } }, compound: [
+  style({group().position({ scheme: relative }), match: { variant: { picker: pickerHost, drop: dropHost } }, compound: [
       {invalid: true, border({ color: danger })},
       {variant: picker, size: xs, size({ min-h: control-h-2xs }).pad({ x: 2 }).type({ size: xs })},
       {variant: picker, size: sm, size({ min-h: control-h-sm }).pad({ x: 2_5 }).type({ size: sm })},

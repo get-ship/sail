@@ -17,26 +17,6 @@ import type { Action, ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './sail-file-upload.sail'
 import { fmtSize, matchesAccept } from './file-math'
 
-interface SailFile {
-  name: string
-  size: number
-  type: string
-}
-
-interface HostBag {
-  click?: () => void
-  onChange?: (v: { files: SailFile[] }) => void
-  [key: string]: unknown
-}
-
-type DomEv = {
-  preventDefault?: () => void
-  currentTarget?: unknown
-  target?: unknown
-  key?: string
-  dataTransfer?: { files?: SailFile[] }
-}
-
 interface DisplayFile {
   file: SailFile
   idx: number
@@ -102,7 +82,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
     const openPicker = () => {
       if (_ctx.disabled()) return
-      ;(inputEl() as HostBag | null)?.click?.()
+      ;(inputEl() as HostBag | null)?.click()
     }
 
     const onClick = () => openPicker()

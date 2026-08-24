@@ -31,7 +31,6 @@
   style close = {display(none).self(start).size(control-h-xs).pad(0).border({ width: 0 }).radius(sm).bg(transparent).fg(primary).cursor(pointer), animate: { transition: play(colors, fast) }}
   style xmark = {display(block).size(icon-size-sm)}
   style growCol = {grow(1).size({ min-w: 0 })}
-  style gone = {display(none).pointerEvents(none)}
 </scope>
 
 <controller>
@@ -56,7 +55,7 @@ export default controller((init) => {
 })
 </controller>
 
-<div hidden={closed()} style({match: { open: { false: gone } }})>
+<div hidden={closed()}>
   <row
     nowrap
     align="start"

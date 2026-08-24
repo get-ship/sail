@@ -18,7 +18,7 @@
     // carries them so sail-prop-value does not reject sibling stdlib sources.
     // file/color/date/button live here too: native types on RAW <input> inside
     // their own hosts (<file>, <color>, <date>). Not this tag's product surface.
-    type: 'text' | 'email' | 'password' | 'number' | 'search' | 'tel' | 'url' | 'hidden' | 'checkbox' | 'radio' | 'file' | 'color' | 'date' | 'button' = 'text'
+    type: 'text' | 'email' | 'password' | 'number' | 'search' | 'tel' | 'url' | 'hidden' | 'checkbox' | 'radio' | 'file' | 'color' | 'date' | 'button' | 'range' = 'text'
     size: 'xs' | 'sm' | 'md' | 'lg' = 'md'
     surface: 'default' | 'filled' | 'flushed' = 'default'
     invalid = false

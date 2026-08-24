@@ -75,5 +75,5 @@ export default controller((init) => {
     <input type="range" min={min} max={max} step={step} disabled={disabled} value={start()} on:input={onInputA} style(base)>
     <input type="range" min={min} max={max} step={step} disabled={disabled} value={end()} on:input={onInputB} style(base, { match: { range: { true: thumbOn, false: thumbOff } } })>
   </stack>
-  <row nowrap justify="between" gap="1" hidden="hidden" data-slider-ticks style(tickRow)><for {tickLabels as label}><span>{label}</span></for></row>
+  <row nowrap justify="between" gap="1" hidden="hidden" data-slider-ticks style(tickRow)><for {tickLabels as label} key={label}><span>{label}</span></for></row>
 </column>

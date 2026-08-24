@@ -15,14 +15,7 @@
   }
 
   style host = {position({ scheme: relative, name: tooltip }).display(inline-flex).self(start).group()}
-  style hide = {filter({ opacity: 0 })}
-  style show = {filter({ opacity: 100 }), match: { 'data-hidden': { true: hide } }}
   style bubble = {position({ scheme: absolute, anchor: tooltip, area: top, z: popover }).pad({ y: 1, x: 2 }).size({ w: max, min-w: max }).overflow({ all: visible }).filter({ opacity: 0 }).bg(overlay).fg(foreground).radius(md).elevation(md).border({ width: 0 }).pointerEvents(none).type({ family: body, size: xs, weight: medium, wrap: nowrap }), match: { placement: { top: position({ area: top }), bottom: position({ area: bottom }), left: position({ area: left }), right: position({ area: right }) } }, animate: { enter: play(fade), exit: play(fade) }}
-  style arrowBox = {position({ scheme: absolute, b: auto }).size({ w: 0, h: 0 }).content(empty).bg(transparent).border({ width: 0, style: solid })}
-  style arrowFromTop = {border({ width: 4, edge: l, color: transparent }).border({ width: 4, edge: r, color: transparent }).border({ width: 4, edge: t, color: overlay }).border({ width: 0, edge: b, color: transparent })}
-  style arrowFromBottom = {border({ width: 4, edge: l, color: transparent }).border({ width: 4, edge: r, color: transparent }).border({ width: 4, edge: b, color: overlay }).border({ width: 0, edge: t, color: transparent })}
-  style arrowFromLeft = {border({ width: 4, edge: t, color: transparent }).border({ width: 4, edge: b, color: transparent }).border({ width: 4, edge: l, color: overlay }).border({ width: 0, edge: r, color: transparent })}
-  style arrowFromRight = {border({ width: 4, edge: t, color: transparent }).border({ width: 4, edge: b, color: transparent }).border({ width: 4, edge: r, color: overlay }).border({ width: 0, edge: l, color: transparent })}
 </scope>
 
 <controller>

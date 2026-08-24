@@ -42,7 +42,7 @@
   style triggerIcon = {size(icon-size-sm).display(block)}
   style glyph = {fg(foreground).type({ size: sm, leading: none })}
 
-  style panel = {position({ scheme: absolute, inset: auto, anchor: auto, area: bottom, z: popover }).pad(0).margin(0).size({ w: overlay-max-w-sm, max-w: 24rem, min-w: 0, max-h: overlay-vh-md }).overflow({ x: hidden, y: auto, overscroll: contain }).fg(foreground).bg(overlay).border({ color: border, width: hairline }).radius(lg).elevation(lg), when: {group-inline: gone, group-chrome-inline: gone, group-mode: gone, group-mode-only: gone}}
+  style panel = {position({ scheme: absolute, inset: auto, anchor: auto, area: bottom, z: popover }).pad(0).margin(0).size({ w: panel-max-w-sm, max-w: 24rem, min-w: 0, max-h: panel-max-h-md }).overflow({ x: hidden, y: auto, overscroll: contain }).fg(foreground).bg(overlay).border({ color: border, width: hairline }).radius(lg).elevation(lg), when: {group-inline: gone, group-chrome-inline: gone, group-mode: gone, group-mode-only: gone}}
   style panelMenuRow = {size({ w: 100%, max-w: none, min-w: 0 })}
 
   style header = {size({ w: 100%, min-w: 0 }).pad({ x: 3, t: 3, b: 0 })}
@@ -163,14 +163,14 @@ export default controller((init) => {
     return el.closest('[data-mode-tab]')
   }
 
-  const rowIds = derived(() => filtered().map((t) => t.id))
+  const rowIds = derived(() => catalog().map((t) => t.id))
   const rowLabels = derived(() =>
-    filtered().map((t) => {
+    catalog().map((t) => {
       const meta = THEMES.find((x) => x.id === t.id)
       return meta ? meta.label : t.id
     }),
   )
-  const rowSelected = derived(() => filtered().map((t) => t.id === active()))
+  const rowSelected = derived(() => catalog().map((t) => t.id === active()))
   function onPick(e) {
     if (modeOnly()) {
       const tab = tabFrom(e)
@@ -226,7 +226,6 @@ export default controller((init) => {
     filter,
     active,
     catalog,
-    filtered,
     modeOnly,
     inline,
     pref,
@@ -286,15 +285,16 @@ export default controller((init) => {
       <span data-mode-icon="dark" hidden="true" style(glyph, {shrink(0)})>☾</span>
       <span data-mode-icon="system" hidden="true" style(glyph, {shrink(0)})>◐</span>
     </button>
-    <row data-inline-catalog style(inlineStrip)>
+    <div data-inline-catalog style(inlineStrip)>
+    <row style({ size({ w: 100%, max-w: 100%, min-w: 0 }).overflow({ x: auto, y: auto }) })>
       <button type="button" value="sail" theme="sail" mode="light" data-inline-card style(option, swatch, {when: {hover: border({ color: border }), focus: border({ style: solid, kind: outline, width: 2, color: ring, offset: ring-offset }), selected: border({ color: primary }), forced-colors: {when: {selected: border({ color: CanvasText })}}}})>
         <span data-swatch-title style(title)>Sail</span>
         <span data-selected-check hidden="true" style(checkMark)>✓</span>
         <span style(stripPrimary)></span>
-        <span style(stripSecondary)></span>
         <span style(stripAccent)></span>
       </button>
     </row>
+    </div>
     <column gap="2" data-picker-header style(header)>
       <div data-picker-title style({size({ min-w: 0 })})>
         <column gap="1">
@@ -329,7 +329,7 @@ export default controller((init) => {
     <span data-catalog-label style(catalogHead)>Light themes</span>
 
     <column gap="2" data-theme-grid role="listbox" aria-label="Theme" style(panelList, {size({ min-w: 0 })})>
-      <for {rowIds() as rid}>
+      <for {rowIds() as rid} key={rid}>
         <button
           type="button"
           data-theme-option="1"
@@ -345,12 +345,13 @@ export default controller((init) => {
                   <span data-swatch-title style(title, {grow(1).size({ min-w: 0 })})>{rowLabels()}</span>
                   <span data-selected-check hidden style(checkMark, {shrink(0)})>✓</span>
                 </row>
-                <row align="center" gap="1" nowrap style({size({ min-w: 0, w: 100% }), match: { variant: { 'menu-row': hideOnMenuRow } }})}>
+                <row align="center" gap="1" nowrap style({size({ min-w: 0, w: 100% }), match: { variant: { 'menu-row': hideOnMenuRow } }})>
                   <span style(stripPrimary, {grow(1).size({ min-w: 0 })})></span>
                   <span style(stripSecondary, {grow(1).size({ min-w: 0 })})></span>
                   <span style(stripAccent, {grow(1).size({ min-w: 0 })})></span>
                 </row>
-                <row align="center" gap="1" nowrap style(hideOnCompact, {size({ min-w: 0 }), match: { variant: { 'menu-row': hideOnMenuRow } }})}>
+                <row align="center" gap="1" nowrap style(hideOnCompact, {size({ min-w: 0 }), match: { variant: { 'menu-row': hideOnMenuRow } }})
+>
                   <row inline nowrap style(btnGhost, {shrink(0)})>Cancel</row>
                   <row inline nowrap style(btnSolid, {shrink(0)})>Continue</row>
                 </row>
@@ -359,21 +360,6 @@ export default controller((init) => {
           </column>
         </button>
       </for>
-    </column>
-</row>
-              <row align="center" gap="1" nowrap style({size({ min-w: 0, w: 100% }), match: { variant: { 'menu-row': hideOnMenuRow } }})>
-                <span style(stripPrimary, {grow(1).size({ min-w: 0 })})></span>
-                <span style(stripSecondary, {grow(1).size({ min-w: 0 })})></span>
-                <span style(stripAccent, {grow(1).size({ min-w: 0 })})></span>
-              </row>
-              <row align="center" gap="1" nowrap style(hideOnCompact, {size({ min-w: 0 }), match: { variant: { 'menu-row': hideOnMenuRow } }})>
-                <row inline nowrap style(btnGhost, {shrink(0)})>Cancel</row>
-                <row inline nowrap style(btnSolid, {shrink(0)})>Continue</row>
-              </row>
-            </column>
-          </column>
-        </column>
-      </button>
     </column>
   </div>
 </row>
