@@ -64,12 +64,36 @@ impl TemplateEmitter {
         let host = self.fresh("h");
         let props = self.fresh("p");
         w.line(&format!("const {host} = document.createElement(\"div\");"));
-        w.line(&format!("{host}.style.display = \"contents\";"));
+        // `isolation: contents` gives the same layout transparency as
+        // `display: contents` (no box of its own) WITHOUT breaking
+        // containing-block resolution for absolutely-positioned children.
+        // `display: contents` removes the element from the box tree, so
+        // `position: absolute; inset: 0` on a child resolves against the
+        // viewport instead of the component — file-upload's invisible input
+        // covered the entire page because of this.
+        w.line(&format!("{host}.style.isolation = \"isolate\";"));
+        w.line(&format!("{host}.style.position = \"relative\";"));
         w.line(&format!(
             "{host}.setAttribute(\"data-component\", {});",
             js_string(&el.tag)
         ));
         w.line(&format!("const {props} = Object.create(null);"));
+        // Default attrs must ALSO land as DOM attributes on the wrapper:
+        // variant-scoped skin CSS is attribute-gated (`[variant='drop']
+        // .s-variant-drop-… { position: relative; … }`), so a class-only
+        // stamp leaves the host without its containing block — file's
+        // invisible input then resolves `inset: 0` against the viewport and
+        // swallows every click on the page.
+        for (name, value) in &std.out.default_attrs {
+            if skip_seed_attr(name) {
+                continue;
+            }
+            w.line(&format!(
+                "{host}.setAttribute({}, {});",
+                js_string(name),
+                js_string(value)
+            ));
+        }
         for (name, value) in &std.out.default_attrs {
             if skip_seed_attr(name) {
                 continue;

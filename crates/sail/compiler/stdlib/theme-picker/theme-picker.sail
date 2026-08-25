@@ -84,6 +84,18 @@
 </scope>
 
 <controller>
+import {
+  THEMES,
+  isValidTheme,
+  applyTheme,
+  persistTheme,
+  applyMode,
+  readModePreference,
+  signal,
+  derived,
+  onCleanup,
+} from '@ship/sail-runtime'
+
 export default controller((init) => {
   function read(v) { return typeof v === 'function' ? v() : v }
 
