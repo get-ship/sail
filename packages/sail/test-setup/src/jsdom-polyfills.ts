@@ -21,9 +21,44 @@ export function initJsdomPolyfills(opts: JsdomPolyfillOpts = {}): void {
   installCanvasGetContext()
   installToggleEvent()
   installPointerEvent()
+  installCssEscape()
   installPopoverApi()
+  installPopoverDisplay()
   installDialogMethods()
-  if (opts.suppressRafErrors) installRafErrorSuppression()
+}
+
+function installCssEscape(): void {
+  if (typeof CSS !== 'undefined' && typeof CSS.escape === 'function') return
+  ;(globalThis as { CSS: { escape?: (s: string) => string } }).CSS ??= {}
+  ;(globalThis as { CSS: { escape: (s: string) => string } }).CSS.escape = (s: string) =>
+    s.replace(/[^a-zA-Z0-9_\u00A0-\uFFFF-]/g, (c) => `\\${c}`)
+}
+
+function installPopoverDisplay(): void {
+  // jsdom doesn't apply UA display rules for [popover]. The show/hidePopover
+  // polyfills dispatch events but don't change rendering. Set inline styles
+  // so tests that check visibility (offsetHeight > 0) work.
+  if (typeof HTMLElement === 'undefined') return
+  const proto = HTMLElement.prototype
+  if ('__sailPopoverDisplay' in proto) return
+  Object.defineProperty(proto, '__sailPopoverDisplay', { value: true, writable: true, configurable: true })
+
+  const origShow = proto.showPopover
+  Object.defineProperty(proto, 'showPopover', {
+    value(this: HTMLElement) {
+      origShow?.call(this)
+      this.style.display = ''
+    },
+    writable: true, configurable: true,
+  })
+  const origHide = proto.hidePopover
+  Object.defineProperty(proto, 'hidePopover', {
+    value(this: HTMLElement) {
+      origHide?.call(this)
+      this.style.display = 'none'
+    },
+    writable: true, configurable: true,
+  })
 }
 
 function installResizeObserver(): void {

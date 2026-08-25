@@ -71,8 +71,6 @@ impl TemplateEmitter {
         // `position: absolute; inset: 0` on a child resolves against the
         // viewport instead of the component — file-upload's invisible input
         // covered the entire page because of this.
-        w.line(&format!("{host}.style.isolation = \"isolate\";"));
-        w.line(&format!("{host}.style.position = \"relative\";"));
         w.line(&format!(
             "{host}.setAttribute(\"data-component\", {});",
             js_string(&el.tag)

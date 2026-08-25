@@ -56,6 +56,11 @@ export default defineConfig({
   test: {
     include: ['**/*.test.ts'],
     environment: 'jsdom',
+    setupFiles: [resolve(__dirname, 'test-setup.ts')],
+    // Sequential: each test spawns the native compiler addon + tsgo type gate.
+    // 35 parallel workers × (napi + tsgo) exhausts CPU and causes timeouts.
+    fileParallelism: false,
+    testTimeout: 60_000,
     ...SHIP_VITEST_DEFAULTS,
   },
 })
