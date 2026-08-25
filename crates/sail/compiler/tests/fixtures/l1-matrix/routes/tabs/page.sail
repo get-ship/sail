@@ -9,8 +9,8 @@
 
 <column gap="8" style(shell)>
   <column gap="2" style(band)>
-    <h1>tabs matrix</h1>
-    <p>Generated specimens. Not the docs site.</p>
+    <h1>tabs</h1>
+    <p>Specimens for <code>tabs</code> — rest state and axis sweeps.</p>
   </column>
 
   <column gap="2">
@@ -33,22 +33,6 @@
     <h2>tab disabled true</h2>
     <tabs active="one">
       <tab disabled name="one" title="tab disabled true">Panel</tab>
-      <tab name="two" title="Two">Two</tab>
-    </tabs>
-  </column>
-
-  <column gap="2">
-    <h2>tab orientation horizontal</h2>
-    <tabs active="one">
-      <tab  name="one" title="tab orientation horizontal">Panel</tab>
-      <tab name="two" title="Two">Two</tab>
-    </tabs>
-  </column>
-
-  <column gap="2">
-    <h2>tab orientation vertical</h2>
-    <tabs active="one">
-      <tab orientation="vertical" name="one" title="tab orientation vertical">Panel</tab>
       <tab name="two" title="Two">Two</tab>
     </tabs>
   </column>

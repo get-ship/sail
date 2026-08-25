@@ -9,8 +9,8 @@
 
 <column gap="8" style(shell)>
   <column gap="2" style(band)>
-    <h1>toggle-group matrix</h1>
-    <p>Generated specimens. Not the docs site.</p>
+    <h1>toggle-group</h1>
+    <p>Specimens for <code>toggle-group</code> — rest state and axis sweeps.</p>
   </column>
 
   <column gap="2">
@@ -33,22 +33,6 @@
     <h2>toggle disabled true</h2>
     <toggle-group value="a">
       <toggle disabled label="toggle disabled true" value="a">toggle disabled true</toggle>
-      <toggle value="b">B</toggle>
-    </toggle-group>
-  </column>
-
-  <column gap="2">
-    <h2>toggle orientation horizontal</h2>
-    <toggle-group value="a">
-      <toggle label="toggle orientation horizontal" value="a">toggle orientation horizontal</toggle>
-      <toggle value="b">B</toggle>
-    </toggle-group>
-  </column>
-
-  <column gap="2">
-    <h2>toggle orientation vertical</h2>
-    <toggle-group value="a">
-      <toggle orientation="vertical" label="toggle orientation vertical" value="a">toggle orientation vertical</toggle>
       <toggle value="b">B</toggle>
     </toggle-group>
   </column>

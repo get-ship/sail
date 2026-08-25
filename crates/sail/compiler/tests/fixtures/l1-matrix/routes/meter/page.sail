@@ -9,8 +9,8 @@
 
 <column gap="8" style(shell)>
   <column gap="2" style(band)>
-    <h1>meter matrix</h1>
-    <p>Generated specimens. Not the docs site.</p>
+    <h1>meter</h1>
+    <p>Specimens for <code>meter</code> — rest state and axis sweeps.</p>
   </column>
 
   <column gap="2">

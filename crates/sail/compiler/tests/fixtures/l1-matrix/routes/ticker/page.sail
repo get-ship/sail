@@ -9,37 +9,12 @@
 
 <column gap="8" style(shell)>
   <column gap="2" style(band)>
-    <h1>ticker matrix</h1>
-    <p>Generated specimens. Not the docs site.</p>
+    <h1>ticker</h1>
+    <p>Specimens for <code>ticker</code> — rest state and axis sweeps.</p>
   </column>
 
   <column gap="2">
     <h2>ticker rest</h2>
     <ticker label="ticker rest">ticker rest</ticker>
-  </column>
-
-  <column gap="2">
-    <h2>ticker duration fast</h2>
-    <ticker duration="fast" label="ticker duration fast">ticker duration fast</ticker>
-  </column>
-
-  <column gap="2">
-    <h2>ticker duration normal</h2>
-    <ticker label="ticker duration normal">ticker duration normal</ticker>
-  </column>
-
-  <column gap="2">
-    <h2>ticker duration slow</h2>
-    <ticker duration="slow" label="ticker duration slow">ticker duration slow</ticker>
-  </column>
-
-  <column gap="2">
-    <h2>ticker reverse false</h2>
-    <ticker label="ticker reverse false">ticker reverse false</ticker>
-  </column>
-
-  <column gap="2">
-    <h2>ticker reverse true</h2>
-    <ticker reverse label="ticker reverse true">ticker reverse true</ticker>
   </column>
 </column>

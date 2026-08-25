@@ -9,8 +9,8 @@
 
 <column gap="8" style(shell)>
   <column gap="2" style(band)>
-    <h1>dialog matrix</h1>
-    <p>Generated specimens. Not the docs site.</p>
+    <h1>dialog</h1>
+    <p>Specimens for <code>dialog</code> — rest state and axis sweeps.</p>
   </column>
 
   <column gap="2">

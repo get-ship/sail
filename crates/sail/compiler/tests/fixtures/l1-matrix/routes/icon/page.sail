@@ -9,8 +9,8 @@
 
 <column gap="8" style(shell)>
   <column gap="2" style(band)>
-    <h1>icon matrix</h1>
-    <p>Generated specimens. Not the docs site.</p>
+    <h1>icon</h1>
+    <p>Specimens for <code>icon</code> — rest state and axis sweeps.</p>
   </column>
 
   <column gap="2">
@@ -41,15 +41,5 @@
   <column gap="2">
     <h2>icon size xl</h2>
     <icon size="xl" label="icon size xl" name="check"></icon>
-  </column>
-
-  <column gap="2">
-    <h2>icon spin false</h2>
-    <icon label="icon spin false" name="check"></icon>
-  </column>
-
-  <column gap="2">
-    <h2>icon spin true</h2>
-    <icon spin label="icon spin true" name="check"></icon>
   </column>
 </column>

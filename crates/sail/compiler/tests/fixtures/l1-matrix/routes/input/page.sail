@@ -9,8 +9,8 @@
 
 <column gap="8" style(shell)>
   <column gap="2" style(band)>
-    <h1>input matrix</h1>
-    <p>Generated specimens. Not the docs site.</p>
+    <h1>input</h1>
+    <p>Specimens for <code>input</code> — rest state and axis sweeps.</p>
   </column>
 
   <column gap="2">
@@ -141,5 +141,35 @@
   <column gap="2">
     <h2>input type hidden</h2>
     <input type="hidden" reveal label="input type hidden" placeholder="input type hidden">
+  </column>
+
+  <column gap="2">
+    <h2>input type checkbox</h2>
+    <input type="checkbox" reveal label="input type checkbox" placeholder="input type checkbox">
+  </column>
+
+  <column gap="2">
+    <h2>input type radio</h2>
+    <input type="radio" reveal label="input type radio" placeholder="input type radio">
+  </column>
+
+  <column gap="2">
+    <h2>input type file</h2>
+    <input type="file" reveal label="input type file" placeholder="input type file">
+  </column>
+
+  <column gap="2">
+    <h2>input type color</h2>
+    <input type="color" reveal label="input type color" placeholder="input type color">
+  </column>
+
+  <column gap="2">
+    <h2>input type date</h2>
+    <input type="date" reveal label="input type date" placeholder="input type date">
+  </column>
+
+  <column gap="2">
+    <h2>input type button</h2>
+    <input type="button" reveal label="input type button" placeholder="input type button">
   </column>
 </column>

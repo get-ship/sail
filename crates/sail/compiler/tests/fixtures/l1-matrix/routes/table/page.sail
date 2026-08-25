@@ -9,13 +9,13 @@
 
 <column gap="8" style(shell)>
   <column gap="2" style(band)>
-    <h1>table matrix</h1>
-    <p>Generated specimens. Not the docs site.</p>
+    <h1>table</h1>
+    <p>Specimens for <code>table</code> — rest state and axis sweeps.</p>
   </column>
 
   <column gap="2">
     <h2>table rest</h2>
-    <table>
+    <table searchable>
       <thead>
         <tr>
           <th>Name</th>
@@ -37,7 +37,7 @@
 
   <column gap="2">
     <h2>table bordered false</h2>
-    <table>
+    <table searchable>
       <thead>
         <tr>
           <th>Name</th>
@@ -59,7 +59,7 @@
 
   <column gap="2">
     <h2>table bordered true</h2>
-    <table bordered>
+    <table bordered searchable>
       <thead>
         <tr>
           <th>Name</th>
@@ -81,7 +81,7 @@
 
   <column gap="2">
     <h2>table dense false</h2>
-    <table>
+    <table searchable>
       <thead>
         <tr>
           <th>Name</th>
@@ -103,7 +103,7 @@
 
   <column gap="2">
     <h2>table dense true</h2>
-    <table dense>
+    <table dense searchable>
       <thead>
         <tr>
           <th>Name</th>
@@ -125,7 +125,7 @@
 
   <column gap="2">
     <h2>table hoverable false</h2>
-    <table>
+    <table searchable>
       <thead>
         <tr>
           <th>Name</th>
@@ -147,51 +147,7 @@
 
   <column gap="2">
     <h2>table hoverable true</h2>
-    <table hoverable>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Team</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>Ada Lovelace</td>
-          <td>Engines</td>
-        </tr>
-        <tr>
-          <td>Katherine Johnson</td>
-          <td>NASA</td>
-        </tr>
-      </tbody>
-    </table>
-  </column>
-
-  <column gap="2">
-    <h2>table searchable false</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Team</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>Ada Lovelace</td>
-          <td>Engines</td>
-        </tr>
-        <tr>
-          <td>Katherine Johnson</td>
-          <td>NASA</td>
-        </tr>
-      </tbody>
-    </table>
-  </column>
-
-  <column gap="2">
-    <h2>table searchable true</h2>
-    <table searchable searchable>
+    <table hoverable searchable>
       <thead>
         <tr>
           <th>Name</th>
@@ -213,7 +169,7 @@
 
   <column gap="2">
     <h2>table sticky-header false</h2>
-    <table>
+    <table searchable>
       <thead>
         <tr>
           <th>Name</th>
@@ -235,7 +191,7 @@
 
   <column gap="2">
     <h2>table sticky-header true</h2>
-    <table sticky-header>
+    <table sticky-header searchable>
       <thead>
         <tr>
           <th>Name</th>
@@ -257,7 +213,7 @@
 
   <column gap="2">
     <h2>table striped false</h2>
-    <table>
+    <table searchable>
       <thead>
         <tr>
           <th>Name</th>
@@ -279,7 +235,7 @@
 
   <column gap="2">
     <h2>table striped true</h2>
-    <table striped>
+    <table striped searchable>
       <thead>
         <tr>
           <th>Name</th>
