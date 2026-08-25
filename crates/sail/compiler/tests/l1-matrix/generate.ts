@@ -433,8 +433,8 @@ function pageSource(component: string, all: ReturnType<typeof cells>): string {
 
 <column gap="8" style(shell)>
   <column gap="2" style(band)>
-    <h1>${component} matrix</h1>
-    <p>Generated specimens. Not the docs site.</p>
+    <h1>${component}</h1>
+    <p>Specimens for <code>${component}</code> — rest state and axis sweeps.</p>
   </column>
 
 ${sections}

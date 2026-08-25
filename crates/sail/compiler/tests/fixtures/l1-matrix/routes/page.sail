@@ -1,195 +1,114 @@
-<!--
-  Owned L1 rest-state strip. Theme paints tags. L1 owns host Style.
-  Probe inventory comes from COMPONENTS, not a hand list.
-  Overlays that need a press stay off this page.
--->
+<!-- Owned L1 index. Links to every component detail page. -->
 <scope>
-  style shell = { size({ min-h: fill }).pad(6).bg(background) }
+  style shell = { pad(6).bg(background) }
   style measure = { size({ w: 100%, max-w: breakpoint-desktop }) }
+  style cardLink = { display(block).pad(3).border({ color: border, width: 1 }).radius(md).bg(surface).fg(foreground).cursor(pointer).type({ family: body }), when: { hover: border({ color: primary }).bg(muted) } }
 </scope>
 
 <column gap="8" style(shell)>
   <column gap="2" style(measure)>
     <row gap="3" align="center" justify="between">
-      <column gap="2">
-        <small>Owned L1 matrix</small>
-        <h1>Rest state</h1>
+      <column gap="1">
+        <small>L1 Component Matrix</small>
+        <h1>Components</h1>
       </column>
       <theme-picker />
     </row>
-    <p>Not the docs site. Official themes only. Probe drives THEME_META; the picker is for eyes.</p>
+    <p>Every L1 component with rest-state and axis-sweep specimens. Click through to inspect.</p>
   </column>
 
-  <column gap="3">
-    <h2>Intrinsic</h2>
-    <p>No stretching parent — default measure.</p>
-    <row gap="2" align="end">
-      <button>Button</button>
-      <badge>Badge</badge>
-      <chip>Chip</chip>
-      <input placeholder="input" />
-      <a href="#">Link</a>
-      <kbd>⌘K</kbd>
-    </row>
-  </column>
-
-  <column gap="3" style(measure)>
+  <column gap="2" style(measure)>
     <h2>Actions</h2>
     <row gap="2">
-      <button>Solid</button>
-      <button variant="soft">Soft</button>
-      <button variant="outline">Outline</button>
-      <button variant="ghost">Ghost</button>
-      <button tone="danger">Destroy</button>
+      <a href="/button" style(cardLink)><strong>Button</strong></a>
+      <a href="/badge" style(cardLink)><strong>Badge</strong></a>
+      <a href="/chip" style(cardLink)><strong>Chip</strong></a>
+      <a href="/toggle-group" style(cardLink)><strong>Toggle Group</strong></a>
+      <a href="/menu-item" style(cardLink)><strong>Menu Item</strong></a>
+      <a href="/pagination" style(cardLink)><strong>Pagination</strong></a>
     </row>
-    <row gap="2">
-      <badge>rest</badge>
-      <badge tone="primary">primary</badge>
-      <chip>chip</chip>
-    </row>
-    <toggle-group value="day">
-      <toggle value="day">Day</toggle>
-      <toggle value="week">Week</toggle>
-    </toggle-group>
-    <menu-item value="edit">Edit</menu-item>
   </column>
 
-  <column gap="3" style(measure)>
+  <column gap="2" style(measure)>
     <h2>Fields</h2>
-    <field>
-      <label slot="label">Name</label>
-      <input placeholder="token, not hex" />
-      <span slot="hint">Field + input.</span>
-    </field>
-    <file accept="image/*" />
-    <textarea placeholder="notes"></textarea>
-    <select>
-      <option>One</option>
-      <option>Two</option>
-    </select>
-    <date />
-    <color />
-    <slider value="40" />
-    <meter value="0.4" />
-    <row gap="4" align="center">
-      <checkbox />
-      <switch />
+    <row gap="2">
+      <a href="/input" style(cardLink)><strong>Input</strong></a>
+      <a href="/field" style(cardLink)><strong>Field</strong></a>
+      <a href="/fieldset" style(cardLink)><strong>Fieldset</strong></a>
+      <a href="/file" style(cardLink)><strong>File Upload</strong></a>
+      <a href="/select" style(cardLink)><strong>Select</strong></a>
+      <a href="/combobox" style(cardLink)><strong>Combobox</strong></a>
+      <a href="/date" style(cardLink)><strong>Date</strong></a>
+      <a href="/color" style(cardLink)><strong>Color</strong></a>
+      <a href="/slider" style(cardLink)><strong>Slider</strong></a>
+      <a href="/checkbox" style(cardLink)><strong>Checkbox</strong></a>
+      <a href="/switch" style(cardLink)><strong>Switch</strong></a>
+      <a href="/radio-group" style(cardLink)><strong>Radio Group</strong></a>
+      <a href="/textarea" style(cardLink)><strong>Textarea</strong></a>
     </row>
-    <radio-group name="plan" value="a">
-      <radio value="a">A</radio>
-      <radio value="b">B</radio>
-    </radio-group>
   </column>
 
-  <card>
-    <h2 slot="header">Card</h2>
-    <p>Surface, radius, elevation on the element.</p>
-    <row slot="footer" gap="2">
-      <button variant="ghost" size="sm">Cancel</button>
-      <button size="sm">Save</button>
+  <column gap="2" style(measure)>
+    <h2>Navigation</h2>
+    <row gap="2">
+      <a href="/tabs" style(cardLink)><strong>Tabs</strong></a>
+      <a href="/accordion" style(cardLink)><strong>Accordion</strong></a>
+      <a href="/navbar" style(cardLink)><strong>Navbar</strong></a>
+      <a href="/breadcrumb" style(cardLink)><strong>Breadcrumb</strong></a>
+      <a href="/pagination" style(cardLink)><strong>Pagination</strong></a>
     </row>
-  </card>
-
-  <alert tone="info">
-    <span slot="title">Alert</span>
-    Theme tokens, not a painted div.
-  </alert>
-
-  <column gap="3" style(measure)>
-    <h2>Families</h2>
-    <p>Parts render inside the host recipe — not as peers.</p>
-    <navbar bordered>
-      <span slot="brand">Nav</span>
-    </navbar>
-    <breadcrumb>
-      <a href="#">Home</a>
-      <a href="#">Rest</a>
-      <small>Here</small>
-    </breadcrumb>
-    <tabs active="one">
-      <tab name="one" title="One">Panel one</tab>
-      <tab name="two" title="Two">Panel two</tab>
-    </tabs>
-    <fieldset>
-      <legend>Account</legend>
-      <field>
-        <label slot="label">Email</label>
-        <input placeholder="you@ship.dev" />
-      </field>
-    </fieldset>
-    <accordion>
-      <span slot="trigger">Details</span>
-      One disclosure.
-    </accordion>
-    <pagination value="1">
-      <page-item value="1">1</page-item>
-      <page-item value="2">2</page-item>
-    </pagination>
-    <table searchable>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Team</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>Ada Lovelace</td>
-          <td>Engines</td>
-        </tr>
-        <tr>
-          <td>Katherine Johnson</td>
-          <td>NASA</td>
-        </tr>
-      </tbody>
-    </table>
   </column>
 
-  <column gap="3" style(measure)>
-    <h2>Copy</h2>
-    <code-block code="const x = 1" lang="ts"></code-block>
-    <prose>
-      <p>Body with <strong>emphasis</strong>.</p>
-    </prose>
-    <ticker>
-      <span>tokens · signals · rest</span>
-    </ticker>
-    <scroll-area>
-      <p>Line one</p>
-      <p>Line two</p>
-    </scroll-area>
-    <empty-state variant="inline">
-      <span slot="title">Empty</span>
-      No items.
-    </empty-state>
-    <error-state variant="inline">
-      <span slot="title">Error</span>
-      Try again.
-    </error-state>
-    <error-boundary>
-      <p>Isolated.</p>
-    </error-boundary>
+  <column gap="2" style(measure)>
+    <h2>Feedback</h2>
+    <row gap="2">
+      <a href="/alert" style(cardLink)><strong>Alert</strong></a>
+      <a href="/toast" style(cardLink)><strong>Toast</strong></a>
+      <a href="/progress" style(cardLink)><strong>Progress</strong></a>
+      <a href="/meter" style(cardLink)><strong>Meter</strong></a>
+      <a href="/skeleton" style(cardLink)><strong>Skeleton</strong></a>
+      <a href="/spinner" style(cardLink)><strong>Spinner</strong></a>
+      <a href="/empty-state" style(cardLink)><strong>Empty State</strong></a>
+      <a href="/error-state" style(cardLink)><strong>Error State</strong></a>
+      <a href="/error-boundary" style(cardLink)><strong>Error Boundary</strong></a>
+    </row>
   </column>
 
-  <row gap="3" align="center" style(measure)>
-    <avatar />
-    <icon name="check" />
-    <spinner></spinner>
-    <skeleton />
-    <progress value="40" />
-    <kbd>⌘K</kbd>
-    <separator></separator>
-  </row>
+  <column gap="2" style(measure)>
+    <h2>Overlays</h2>
+    <row gap="2">
+      <a href="/dialog" style(cardLink)><strong>Dialog</strong></a>
+      <a href="/drawer" style(cardLink)><strong>Drawer</strong></a>
+      <a href="/popover" style(cardLink)><strong>Popover</strong></a>
+      <a href="/tooltip" style(cardLink)><strong>Tooltip</strong></a>
+      <a href="/hover-card" style(cardLink)><strong>Hover Card</strong></a>
+      <a href="/context-menu" style(cardLink)><strong>Context Menu</strong></a>
+      <a href="/dropdown" style(cardLink)><strong>Dropdown</strong></a>
+    </row>
+  </column>
 
-  <column gap="3" style(measure)>
-    <h2>Overlay</h2>
-    <button command="show" commandfor="qa-drawer">Filters</button>
-    <drawer id="qa-drawer" side="end">
-      <header>Filters</header>
-      <section>Narrow the catalog.</section>
-      <footer>
-        <button command="close" commandfor="qa-drawer">Done</button>
-      </footer>
-    </drawer>
+  <column gap="2" style(measure)>
+    <h2>Content</h2>
+    <row gap="2">
+      <a href="/card" style(cardLink)><strong>Card</strong></a>
+      <a href="/table" style(cardLink)><strong>Table</strong></a>
+      <a href="/code-block" style(cardLink)><strong>Code Block</strong></a>
+      <a href="/prose" style(cardLink)><strong>Prose</strong></a>
+      <a href="/ticker" style(cardLink)><strong>Ticker</strong></a>
+      <a href="/scroll-area" style(cardLink)><strong>Scroll Area</strong></a>
+      <a href="/resizable" style(cardLink)><strong>Resizable</strong></a>
+    </row>
+  </column>
+
+  <column gap="2" style(measure)>
+    <h2>Media & Identity</h2>
+    <row gap="2">
+      <a href="/avatar" style(cardLink)><strong>Avatar</strong></a>
+      <a href="/icon" style(cardLink)><strong>Icon</strong></a>
+      <a href="/kbd" style(cardLink)><strong>Keyboard</strong></a>
+      <a href="/separator" style(cardLink)><strong>Separator</strong></a>
+      <a href="/a" style(cardLink)><strong>Link</strong></a>
+      <a href="/theme-picker" style(cardLink)><strong>Theme Picker</strong></a>
+    </row>
   </column>
 </column>

@@ -885,15 +885,19 @@ function attachOnce(
     }
     // `loop` means "play forever". A physics preset (`spring:bouncy`) is
     // reused for one-shot triggers too, so it carries no iteration count
-    // of its own — the trigger supplies the repeat. Infinite + alternate
-    // so the element travels back and forth (a bounce) rather than
-    // snapping back to the start on every restart.
+    // of its own — the trigger supplies the repeat. Infinite iterations
+    // with 'normal' direction restart from the beginning each cycle.
+    // 'alternate' (ping-pong) must be requested explicitly via
+    // `direction: 'alternate'` in the motion config — the default
+    // is a one-way loop. Marquee, spinner, and pulse all expect
+    // a one-way restart; the old 'alternate' fallback made every
+    // loop swing back and forth like a metronome.
     const looped: MotionAttachConfig = {
       ...config,
       motions: config.motions.map((m) => ({
         ...m,
         iterations: m.iterations ?? Infinity,
-        direction: m.direction ?? 'alternate',
+        direction: m.direction ?? 'normal',
       })),
     }
     return createAnimationsWhenConnected(el, looped, delaySec, carriedTimeMs)

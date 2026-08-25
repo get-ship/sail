@@ -1,11 +1,10 @@
 <!--
   <tab-panel> — owns its pad. Orientation is this element's prop.
   Selected follow is parent `active` as a prop + Style when { selected }.
-  Pair with <tab name> / <tab title> of the same id.
 -->
+
 <scope>
   props: {
-    name = ''
     orientation: 'horizontal' | 'vertical' = 'horizontal'
   }
 
@@ -22,11 +21,10 @@ export default controller((init) => {
     const active = init.active
     return !!(typeof active === 'function' && name && active() === name)
   })
-  return { selected }
+  const hidden = derived(() => !selected())
+  return { selected, hidden }
 })
 </controller>
 
-<div
-  selected={selected()}
-  style(base, { when: { selected: on }, match: { orientation: { horizontal: horizontal, vertical: vertical } } })
+<div hidden={hidden()} style(base, { when: { selected: on }, match: { orientation: { horizontal: horizontal, vertical: vertical } } })
 ><slot></slot></div>
