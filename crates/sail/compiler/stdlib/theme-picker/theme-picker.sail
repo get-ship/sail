@@ -176,13 +176,6 @@ export default controller((init) => {
   }
 
   const rowIds = derived(() => catalog().map((t) => t.id))
-  const rowLabels = derived(() =>
-    catalog().map((t) => {
-      const meta = THEMES.find((x) => x.id === t.id)
-      return meta ? meta.label : t.id
-    }),
-  )
-  const rowSelected = derived(() => catalog().map((t) => t.id === active()))
   function onPick(e) {
     if (modeOnly()) {
       const tab = tabFrom(e)
@@ -250,8 +243,6 @@ export default controller((init) => {
     darkAria,
     systemAria,
     rowIds,
-    rowLabels,
-    rowSelected,
   }
 })
 </controller>
@@ -354,7 +345,7 @@ export default controller((init) => {
               <span style(overlay, {match: { variant: { 'menu-row': hideOnMenuRow } }})></span>
               <column gap="1" justify="between" style(specimen, {size({ min-w: 0 }), match: { variant: { 'menu-row': specimenRow } }})>
                 <row align="center" gap="2" nowrap style({size({ min-w: 0, w: 100% })})>
-                  <span data-swatch-title style(title, {grow(1).size({ min-w: 0 })})>{rowLabels()}</span>
+                  <span data-swatch-title style(title, {grow(1).size({ min-w: 0 })})>{rid}</span>
                   <span data-selected-check hidden style(checkMark, {shrink(0)})>✓</span>
                 </row>
                 <row align="center" gap="1" nowrap style({size({ min-w: 0, w: 100% }), match: { variant: { 'menu-row': hideOnMenuRow } }})>
