@@ -464,17 +464,17 @@ export default controller((_ctx: ControllerScope<Scope>) => {
             <column gap="2">
               <row align="center" gap="2">
                 <label for={hueId()} style({ size({ w: 4 }).fg(muted-foreground).type({ size: xs }) })>H</label>
-                <slider id={hueId()} min="0" max="360" step="1" bind:value={hueText} data-axis="h" use:rangeFill aria-label="Hue" style({ grow(1).size({ min-w: 0 }) }) />
+                <slider id={hueId()} min="0" max="360" step="1" bind:value={hueText} data-axis="h" aria-label="Hue" style({ grow(1).size({ min-w: 0 }) }) />
                 <span style({ size({ w: 8 }).fg(muted-foreground).type({ family: mono, size: xs, align: end }) })>{hue()}°</span>
               </row>
               <row align="center" gap="2">
                 <label for={satId()} style({ size({ w: 4 }).fg(muted-foreground).type({ size: xs }) })>S</label>
-                <slider id={satId()} min="0" max="100" step="1" bind:value={satText} data-axis="s" use:rangeFill aria-label="Saturation" style({ grow(1).size({ min-w: 0 }) }) />
+                <slider id={satId()} min="0" max="100" step="1" bind:value={satText} data-axis="s" aria-label="Saturation" style({ grow(1).size({ min-w: 0 }) }) />
                 <span style({ size({ w: 8 }).fg(muted-foreground).type({ family: mono, size: xs, align: end }) })>{sat()}%</span>
               </row>
               <row align="center" gap="2">
                 <label for={lightId()} style({ size({ w: 4 }).fg(muted-foreground).type({ size: xs }) })>L</label>
-                <slider id={lightId()} min="0" max="100" step="1" bind:value={lightText} data-axis="l" use:rangeFill aria-label="Lightness" style({ grow(1).size({ min-w: 0 }) }) />
+                <slider id={lightId()} min="0" max="100" step="1" bind:value={lightText} data-axis="l" aria-label="Lightness" style({ grow(1).size({ min-w: 0 }) }) />
                 <span style({ size({ w: 8 }).fg(muted-foreground).type({ family: mono, size: xs, align: end }) })>{light()}%</span>
               </row>
             </column>
@@ -573,17 +573,17 @@ export default controller((_ctx: ControllerScope<Scope>) => {
             <column gap="2">
               <row align="center" gap="2">
                 <label for={hueId()} style({ size({ w: 4 }).fg(muted-foreground).type({ size: xs }) })>H</label>
-                <slider id={hueId()} min="0" max="360" step="1" bind:value={hueText} data-axis="h" use:rangeFill aria-label="Hue" style({ grow(1).size({ min-w: 0 }) }) />
+                <slider id={hueId()} min="0" max="360" step="1" bind:value={hueText} data-axis="h" aria-label="Hue" style({ grow(1).size({ min-w: 0 }) }) />
                 <span style({ size({ w: 8 }).fg(muted-foreground).type({ family: mono, size: xs, align: end }) })>{hue()}°</span>
               </row>
               <row align="center" gap="2">
                 <label for={satId()} style({ size({ w: 4 }).fg(muted-foreground).type({ size: xs }) })>S</label>
-                <slider id={satId()} min="0" max="100" step="1" bind:value={satText} data-axis="s" use:rangeFill aria-label="Saturation" style({ grow(1).size({ min-w: 0 }) }) />
+                <slider id={satId()} min="0" max="100" step="1" bind:value={satText} data-axis="s" aria-label="Saturation" style({ grow(1).size({ min-w: 0 }) }) />
                 <span style({ size({ w: 8 }).fg(muted-foreground).type({ family: mono, size: xs, align: end }) })>{sat()}%</span>
               </row>
               <row align="center" gap="2">
                 <label for={lightId()} style({ size({ w: 4 }).fg(muted-foreground).type({ size: xs }) })>L</label>
-                <slider id={lightId()} min="0" max="100" step="1" bind:value={lightText} data-axis="l" use:rangeFill aria-label="Lightness" style({ grow(1).size({ min-w: 0 }) }) />
+                <slider id={lightId()} min="0" max="100" step="1" bind:value={lightText} data-axis="l" aria-label="Lightness" style({ grow(1).size({ min-w: 0 }) }) />
                 <span style({ size({ w: 8 }).fg(muted-foreground).type({ family: mono, size: xs, align: end }) })>{light()}%</span>
               </row>
             </column>
