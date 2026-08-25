@@ -280,6 +280,7 @@ const PLATFORM: &[(&str, &str)] = &[
     ),
     ("color", include_str!("../stdlib/platform/color.css")),
     ("dialog", include_str!("../stdlib/platform/dialog.css")),
+    ("drawer", include_str!("../stdlib/platform/dialog.css")),
     ("file", include_str!("../stdlib/platform/file.css")),
     ("icon", include_str!("../stdlib/platform/icon.css")),
     ("meter", include_str!("../stdlib/platform/meter.css")),
