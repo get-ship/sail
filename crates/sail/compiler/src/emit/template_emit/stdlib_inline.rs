@@ -77,6 +77,14 @@ impl TemplateEmitter {
             "{host}.setAttribute(\"data-component\", {});",
             js_string(&el.tag)
         ));
+        // Root class (`sail-<tag>`) must land on the wrapper: platform CSS
+        // (stdlib/platform/*.css) keys on `.sail-<tag>` for vendor pseudos,
+        // custom properties, and structural overrides. Without it the skin
+        // is dead — slider tracks invisible, toggle-group orientation flat.
+        w.line(&format!(
+            "{host}.classList.add({});",
+            js_string(&std.out.root_class)
+        ));
         w.line(&format!("const {props} = Object.create(null);"));
         // Default attrs must ALSO land as DOM attributes on the wrapper:
         // variant-scoped skin CSS is attribute-gated (`[variant='drop']
